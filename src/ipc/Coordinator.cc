@@ -193,7 +193,7 @@ Ipc::Coordinator::handleRebuildFinishedMessage(const StrandMessage& msg)
         return;
     }
 
-    // notify all existing strands, new strands will be notified in handleRegistrationRequest()
+    // notify all existing strands, new strands will be notified in notifySearcher()
     for (uint32_t i = 0; i < strands_.size(); ++i) {
         debugs(54, 3, "tell kid" << strands_[i].kidId << " that kid" << msg.strand.kidId << " is indexed");
         StrandReady response(msg.strand, questioners_.at(i), true);

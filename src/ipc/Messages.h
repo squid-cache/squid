@@ -26,7 +26,9 @@ typedef enum { mtNone = 0, ///< unspecified or unknown message kind; unused on t
                /// a mtFindStrand answer: the strand exists but needs more time to become usable
                /// the sender should send mtStrandReady (or more mtStrandBusy) later
                mtStrandBusy,
-               mtStrandReady, ///< an mtFindStrand answer: the strand exists and should be usable
+               /// Coordinator notification to every registered strand that the strand exists and is usable
+               /// or an mtFindStrand answer to the worker which requested this strand
+               mtStrandReady,
 
                mtForegroundRebuild, ///< the disker is building its index in foreground mode
                mtRebuildFinished, ///< the disker rebuilt its index
