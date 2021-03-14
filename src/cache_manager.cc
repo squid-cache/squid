@@ -157,8 +157,10 @@ CacheManager::createRequestedAction(const Mgr::ActionParams &params)
  \retval NULL if the action can't be found or can't be accessed by the user
  */
 Mgr::Command::Pointer
-CacheManager::ParseUrl(const char *url)
+CacheManager::ParseUrl(const AnyP::Uri &uri)
 {
+    const char *url = uri.absolute().c_str(); // XXX: convert to Tokenizer parser
+
     int t;
     LOCAL_ARRAY(char, host, MAX_URL);
     LOCAL_ARRAY(char, request, MAX_URL);
@@ -306,9 +308,9 @@ CacheManager::CheckPassword(const Mgr::Command &cmd)
 void
 CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request, StoreEntry *entry, const AccessLogEntry::Pointer &ale)
 {
-    debugs(16, 3, "CacheManager::Start: '" << entry->url() << "'" );
+    debugs(16, 3, "request-url= '" << request->url << "', entry-url='" << entry->url() << "'");
 
-    Mgr::Command::Pointer cmd = ParseUrl(entry->url());
+    Mgr::Command::Pointer cmd = ParseUrl(request->url);
     if (!cmd) {
         const auto err = new ErrorState(ERR_INVALID_URL, Http::scNotFound, request, ale);
         err->url = xstrdup(entry->url());
