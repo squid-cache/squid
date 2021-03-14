@@ -159,51 +159,50 @@ CacheManager::createRequestedAction(const Mgr::ActionParams &params)
 Mgr::Command::Pointer
 CacheManager::ParseUrl(const AnyP::Uri &uri)
 {
-    const char *url = uri.absolute().c_str(); // XXX: convert to Tokenizer parser
+    auto tmpPath = uri.path();
+    const char *url = tmpPath.c_str(); // XXX: convert to Tokenizer parser
 
-    int t;
-    LOCAL_ARRAY(char, host, MAX_URL);
+    int t = 0;
     LOCAL_ARRAY(char, request, MAX_URL);
     LOCAL_ARRAY(char, password, MAX_URL);
     LOCAL_ARRAY(char, params, MAX_URL);
-    host[0] = 0;
     request[0] = 0;
     password[0] = 0;
     params[0] = 0;
     int pos = -1;
     int len = strlen(url);
     Must(len > 0);
-    t = sscanf(url, "cache_object://%[^/]/%[^@?]%n@%[^?]?%s", host, request, &pos, password, params);
-    if (t < 3) {
-        t = sscanf(url, "cache_object://%[^/]/%[^?]%n?%s", host, request, &pos, params);
-    }
-    if (t < 1) {
-        t = sscanf(url, "http://%[^/]/squid-internal-mgr/%[^?]%n?%s", host, request, &pos, params);
-    }
-    if (t < 1) {
-        t = sscanf(url, "https://%[^/]/squid-internal-mgr/%[^?]%n?%s", host, request, &pos, params);
+    if (uri.getScheme() == AnyP::PROTO_CACHE_OBJECT) {
+        // backward compatibility for old password syntax only valid in cache_object://
+        t = sscanf(url, "/%[^@?]%n@%[^?]?%s", request, &pos, password, params);
     }
     if (t < 2) {
-        if (strncmp("cache_object://",url,15)==0)
+        t = sscanf(url, "/%[^?]%n?%s", request, &pos, params);
+    }
+    if (t < 0) {
+        t = sscanf(url, "/squid-internal-mgr/%[^?]%n?%s", request, &pos, params);
+    }
+    if (t < 1) {
+        if (uri.getScheme() == AnyP::PROTO_CACHE_OBJECT)
             xstrncpy(request, "menu", MAX_URL);
         else
             xstrncpy(request, "index", MAX_URL);
     }
 
 #if _SQUID_OS2_
-    if (t == 2 && request[0] == '\0') {
+    if (t == 1 && request[0] == '\0') {
         /*
-         * emx's sscanf insists of returning 2 because it sets request
+         * emx's sscanf insists of returning 1 because it sets request
          * to null
          */
-        if (strncmp("cache_object://",url,15)==0)
+        if (uri.getScheme() == Any::PROTO_CACHE_OBJECT)
             xstrncpy(request, "menu", MAX_URL);
         else
             xstrncpy(request, "index", MAX_URL);
     }
 #endif
 
-    debugs(16, 3, HERE << "MGR request: t=" << t << ", host='" << host << "', request='" << request << "', pos=" << pos <<
+    debugs(16, 3, "MGR request: t=" << t << ", host='" << uri.host() << "', request='" << request << "', pos=" << pos <<
            ", password='" << password << "', params='" << params << "'");
 
     Mgr::ActionProfile::Pointer profile = findAction(request);
