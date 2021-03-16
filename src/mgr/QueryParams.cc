@@ -14,6 +14,9 @@
 #include "mgr/IntParam.h"
 #include "mgr/QueryParams.h"
 #include "mgr/StringParam.h"
+#include "sbuf/StringConvert.h"
+
+#include <limits>
 
 Mgr::QueryParam::Pointer
 Mgr::QueryParams::get(const String& name) const
@@ -66,60 +69,59 @@ Mgr::QueryParams::find(const String& name) const
 }
 
 bool
-Mgr::QueryParams::ParseParam(const String& paramStr, Param& param)
+Mgr::QueryParams::ParseParam(SBuf &paramStr, Param &param)
 {
-    bool parsed = false;
-    regmatch_t pmatch[3];
-    regex_t intExpr;
-    regcomp(&intExpr, "^([a-z][a-z0-9_]*)=([0-9]+((,[0-9]+))*)$", REG_EXTENDED | REG_ICASE);
-    regex_t stringExpr;
-    regcomp(&stringExpr, "^([a-z][a-z0-9_]*)=([^&= ]+)$", REG_EXTENDED | REG_ICASE);
-    if (regexec(&intExpr, paramStr.termedBuf(), 3, pmatch, 0) == 0) {
-        param.first = paramStr.substr(pmatch[1].rm_so, pmatch[1].rm_eo);
-        std::vector<int> array;
-        int n = pmatch[2].rm_so;
-        for (int i = n; i < pmatch[2].rm_eo; ++i) {
-            if (paramStr[i] == ',') {
-                array.push_back(atoi(paramStr.substr(n, i).termedBuf()));
-                n = i + 1;
-            }
-        }
-        if (n < pmatch[2].rm_eo)
-            array.push_back(atoi(paramStr.substr(n, pmatch[2].rm_eo).termedBuf()));
-        param.second = new IntParam(array);
-        parsed = true;
-    } else if (regexec(&stringExpr, paramStr.termedBuf(), 3, pmatch, 0) == 0) {
-        param.first = paramStr.substr(pmatch[1].rm_so, pmatch[1].rm_eo);
-        param.second = new StringParam(paramStr.substr(pmatch[2].rm_so, pmatch[2].rm_eo));
-        parsed = true;
+    static const CharacterSet nameChars = CharacterSet("param-name", "_") + CharacterSet::ALPHA + CharacterSet::DIGIT;
+
+    Parser::Tokenizer tok(paramStr);
+
+    SBuf name;
+    if (!tok.prefix(name, nameChars))
+        return false;
+
+    if (!tok.skip('='))
+        return false; // TODO: support name-only parameters
+
+    static const CharacterSet badValueChars = CharacterSet("param-value-bad", "&= ");
+    SBuf valueStr = tok.remaining();
+    if (valueStr.findFirstOf(badValueChars) != SBuf::npos)
+        return false;
+
+    param.first = SBufToString(name);
+
+    std::vector<int> array;
+    int64_t intVal = 0;
+    while (tok.int64(intVal, 10, false)) {
+        static const CharacterSet comma("comma",",");
+        (void)tok.skipAll(comma);
+        Must(intVal >= std::numeric_limits<int>::min());
+        Must(intVal <= std::numeric_limits<int>::max());
+        array.emplace_back(int(intVal));
     }
-    regfree(&stringExpr);
-    regfree(&intExpr);
-    return parsed;
+
+    if (tok.atEnd())
+        param.second = new IntParam(array);
+    else
+        param.second = new StringParam(SBufToString(valueStr));
+
+    return true;
 }
 
 bool
-Mgr::QueryParams::Parse(const String& aParamsStr, QueryParams& aParams)
+Mgr::QueryParams::Parse(Parser::Tokenizer &tok, QueryParams &aParams)
 {
-    if (aParamsStr.size() != 0) {
+    static const CharacterSet paramDelim("query-param","&");
+
+    SBuf foundStr;
+    while (tok.token(foundStr, paramDelim)) {
         Param param;
-        size_t n = 0;
-        size_t len = aParamsStr.size();
-        for (size_t i = n; i < len; ++i) {
-            if (aParamsStr[i] == '&') {
-                if (!ParseParam(aParamsStr.substr(n, i), param))
-                    return false;
-                aParams.params.push_back(param);
-                n = i + 1;
-            }
-        }
-        if (n < len) {
-            if (!ParseParam(aParamsStr.substr(n, len), param))
-                return false;
-            aParams.params.push_back(param);
-        }
+        if (!ParseParam(foundStr, param))
+            return false;
+        aParams.params.push_back(param);
     }
-    return true;
+
+    // success == no garbage in query-string
+    return tok.atEnd();
 }
 
 Mgr::QueryParam::Pointer

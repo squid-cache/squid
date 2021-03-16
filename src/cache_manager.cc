@@ -27,6 +27,7 @@
 #include "mgr/Forwarder.h"
 #include "mgr/FunAction.h"
 #include "mgr/QueryParams.h"
+#include "parser/Tokenizer.h"
 #include "protos.h"
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
@@ -148,6 +149,19 @@ CacheManager::createRequestedAction(const Mgr::ActionParams &params)
     return cmd->profile->creator->create(cmd);
 }
 
+static const CharacterSet &
+MgrPathDelimiters(const AnyP::ProtocolType &protocol)
+{
+    // Deprecated cache_object:// scheme used '@' to delimit passwords
+    if (protocol == AnyP::PROTO_CACHE_OBJECT) {
+        static const CharacterSet coDelims("cache-object-delims","@?#");
+        return coDelims;
+    }
+
+    static const CharacterSet delims("mgr-delims","?#");
+    return delims;
+}
+
 /**
  \ingroup CacheManagerInternal
  * define whether the URL is a cache-manager URL and parse the action
@@ -159,72 +173,64 @@ CacheManager::createRequestedAction(const Mgr::ActionParams &params)
 Mgr::Command::Pointer
 CacheManager::ParseUrl(const AnyP::Uri &uri)
 {
-    auto tmpPath = uri.path();
-    const char *url = tmpPath.c_str(); // XXX: convert to Tokenizer parser
+    Parser::Tokenizer tok(uri.path());
 
-    int t = 0;
-    LOCAL_ARRAY(char, request, MAX_URL);
-    LOCAL_ARRAY(char, password, MAX_URL);
-    LOCAL_ARRAY(char, params, MAX_URL);
-    request[0] = 0;
-    password[0] = 0;
-    params[0] = 0;
-    int pos = -1;
-    int len = strlen(url);
-    Must(len > 0);
-    if (uri.getScheme() == AnyP::PROTO_CACHE_OBJECT) {
-        // backward compatibility for old password syntax only valid in cache_object://
-        t = sscanf(url, "/%[^@?]%n@%[^?]?%s", request, &pos, password, params);
-    }
-    if (t < 2) {
-        t = sscanf(url, "/%[^?]%n?%s", request, &pos, params);
-    }
-    if (t < 0) {
-        t = sscanf(url, "/squid-internal-mgr/%[^?]%n?%s", request, &pos, params);
-    }
-    if (t < 1) {
-        if (uri.getScheme() == AnyP::PROTO_CACHE_OBJECT)
-            xstrncpy(request, "menu", MAX_URL);
-        else
-            xstrncpy(request, "index", MAX_URL);
+    static const SBuf internalMagicPrefix("/squid-internal-mgr/");
+    if (!tok.skip(internalMagicPrefix) && !tok.skip('/')) {
+        // path is not valid for cache manager reports
+        return nullptr;
     }
 
-#if _SQUID_OS2_
-    if (t == 1 && request[0] == '\0') {
-        /*
-         * emx's sscanf insists of returning 1 because it sets request
-         * to null
-         */
-        if (uri.getScheme() == Any::PROTO_CACHE_OBJECT)
-            xstrncpy(request, "menu", MAX_URL);
-        else
-            xstrncpy(request, "index", MAX_URL);
+    Mgr::Command::Pointer cmd = new Mgr::Command;
+    cmd->params.httpUri = SBufToString(uri.absolute());
+    cmd->params.userName = String();
+
+    const auto mgrDelimiters = MgrPathDelimiters(uri.getScheme());
+    const auto fieldChars = mgrDelimiters.complement("mgr-action");
+
+    SBuf action;
+    if (!tok.prefix(action, fieldChars)) {
+        // display index page, or for cache_object:// the 'menu' report
+        if (uri.getScheme() == AnyP::PROTO_CACHE_OBJECT) {
+            static const SBuf menuReport("menu");
+            action = menuReport;
+        } else {
+            static const SBuf indexReport("index");
+            action = indexReport;
+        }
     }
-#endif
+    cmd->params.actionName = SBufToString(action);
 
-    debugs(16, 3, "MGR request: t=" << t << ", host='" << uri.host() << "', request='" << request << "', pos=" << pos <<
-           ", password='" << password << "', params='" << params << "'");
-
-    Mgr::ActionProfile::Pointer profile = findAction(request);
+    Mgr::ActionProfile::Pointer profile = findAction(action.c_str());
     if (!profile) {
-        debugs(16, DBG_IMPORTANT, "CacheManager::ParseUrl: action '" << request << "' not found");
-        return NULL;
+        debugs(16, DBG_IMPORTANT, "CacheManager action '" << action << "' not found");
+        return nullptr;
     }
 
     const char *prot = ActionProtection(profile);
     if (!strcmp(prot, "disabled") || !strcmp(prot, "hidden")) {
-        debugs(16, DBG_IMPORTANT, "CacheManager::ParseUrl: action '" << request << "' is " << prot);
-        return NULL;
+        debugs(16, DBG_IMPORTANT, "CacheManager action '" << action << "' is " << prot);
+        return nullptr;
+    }
+    cmd->profile = profile;
+
+    SBuf passwd;
+    if (tok.skip('@')) {
+        (void)tok.prefix(passwd, fieldChars);
+        cmd->params.password = SBufToString(passwd);
     }
 
-    Mgr::Command::Pointer cmd = new Mgr::Command;
-    if (!Mgr::QueryParams::Parse(params, cmd->params.queryParams))
-        return NULL;
-    cmd->profile = profile;
-    cmd->params.httpUri = url;
-    cmd->params.userName = String();
-    cmd->params.password = password;
-    cmd->params.actionName = request;
+    // TODO: fix when AnyP::Uri::parse() separates path?query#fragment
+    SBuf params;
+    if (tok.skip('?')) {
+        params = tok.remaining();
+        if (!Mgr::QueryParams::Parse(tok, cmd->params.queryParams))
+            return nullptr;
+    }
+
+    debugs(16, 3, "MGR request: host=" << uri.host() << ", action=" << action <<
+           ", password=" << passwd << ", params=" << params);
+
     return cmd;
 }
 
