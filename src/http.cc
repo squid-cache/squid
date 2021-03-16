@@ -56,6 +56,7 @@
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
+#include "store/AccumulationConstraints.h"
 #include "StrList.h"
 #include "tools.h"
 #include "util.h"
@@ -79,6 +80,11 @@
 CBDATA_CLASS_INIT(HttpStateData);
 
 static const char *const crlf = "\r\n";
+
+// When other limits allow us to read just 1 or 2 bytes from the socket, we
+// delay the read to work around delay pool implementation problems.
+// TODO: Confirm those problems and set to zero when delay pools are disabled.
+const size_t MinReadSize = 3;
 
 static void httpMaybeRemovePublic(StoreEntry *, Http::StatusCode);
 static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, const HttpRequest * request,
@@ -705,6 +711,8 @@ HttpStateData::processReplyHeader()
                 parsedOk = hp->parse(inBuf);
                 // sync the buffers after parsing.
                 inBuf = hp->remaining();
+            } else if (fullReadBuffer()) { // no space for more data
+                Must(!parsedOk);
             } else {
                 debugs(33, 5, "Incomplete response, waiting for end of response headers");
                 ctx_exit(ctx);
@@ -715,7 +723,7 @@ HttpStateData::processReplyHeader()
         if (!parsedOk) {
             // unrecoverable parsing error
             // TODO: Use Raw! XXX: inBuf no longer has the [beginning of the] malformed header.
-            debugs(11, 3, "Non-HTTP-compliant header:\n---------\n" << inBuf << "\n----------");
+            debugs(11, 3, "cannot parse header:\n---------\n" << inBuf << "\n----------");
             flags.headers_parsed = true;
             HttpReply *newrep = new HttpReply;
             newrep->sline.set(Http::ProtocolVersion(), hp->parseStatusCode);
@@ -1226,7 +1234,6 @@ void
 HttpStateData::readReply(const CommIoCbParams &io)
 {
     Must(!flags.do_next_read); // XXX: should have been set false by mayReadVirginBody()
-    flags.do_next_read = false;
 
     debugs(11, 5, io.conn);
 
@@ -1236,14 +1243,6 @@ HttpStateData::readReply(const CommIoCbParams &io)
         return;
     }
 
-    if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        abortTransaction("store entry aborted while reading reply");
-        return;
-    }
-
-    Must(Comm::IsConnOpen(serverConnection));
-    Must(io.conn->fd == serverConnection->fd);
-
     /*
      * Don't reset the timeout value here. The value should be
      * counting Config.Timeout.request and applies to the request
@@ -1251,18 +1250,17 @@ HttpStateData::readReply(const CommIoCbParams &io)
      * Plus, it breaks our lame *HalfClosed() detection
      */
 
-    Must(maybeMakeSpaceAvailable(true));
+    const bool readWanted = true;
+    const auto readSize = prepReading(readWanted);
+    if (readSize <= 0)
+        return;
+    inBuf.reserveSpace(readSize);
+
+    assert(io.conn == serverConnection);
+
     CommIoCbParams rd(this); // will be expanded with ReadNow results
     rd.conn = io.conn;
-    rd.size = entry->bytesWanted(Range<size_t>(0, inBuf.spaceSize()));
-
-    if (rd.size <= 0) {
-        assert(entry->mem_obj);
-        AsyncCall::Pointer nilCall;
-        entry->mem_obj->delayRead(DeferredRead(readDelayed, this, CommRead(io.conn, NULL, 0, nilCall)));
-        return;
-    }
-
+    rd.size = readSize;
     switch (Comm::ReadNow(rd, inBuf)) {
     case Comm::INPROGRESS:
         if (inBuf.isEmpty())
@@ -1274,11 +1272,6 @@ HttpStateData::readReply(const CommIoCbParams &io)
     case Comm::OK:
     {
         payloadSeen += rd.size;
-#if USE_DELAY_POOLS
-        DelayId delayId = entry->mem_obj->mostBytesAllowed();
-        delayId.bytesIn(rd.size);
-#endif
-
         statCounter.server.all.kbytes_in += rd.size;
         statCounter.server.http.kbytes_in += rd.size;
         ++ IOStats.Http.reads;
@@ -1290,17 +1283,28 @@ HttpStateData::readReply(const CommIoCbParams &io)
         ++ IOStats.Http.read_hist[bin];
 
         request->hier.notePeerRead();
-    }
 
-        /* Continue to process previously read data */
-    break;
+#if USE_DELAY_POOLS
+        DelayId delayId = entry->mem_obj->mostBytesAllowed();
+        delayId.bytesIn(rd.size);
+        // We were lucky to get through prepReading() checks, and now our
+        // bytesIn() call above may have depleted a shared bucket. Give less
+        // fortunate jobs sharing that bucket with us a fair chance to defer
+        // their reads before ours, so that they will get through first next
+        // time, when bucket is refilled again. TODO: Refactor delay_pools to
+        // enforce/guarantee fairness instead of using such unreliable hacks.
+        CallJobHere(11, 3, this, HttpStateData, HttpStateData::processReply);
+#else
+        processReply(); // process data we just read
+#endif
+        return;
+    }
 
     case Comm::ENDFILE: // close detected by 0-byte read
         eof = 1;
         flags.do_next_read = false;
-
-        /* Continue to process previously read data */
-        break;
+        processReply(); // process previously read data, now with EOF knowledge
+        return;
 
     // case Comm::COMM_ERROR:
     default: // no other flags should ever occur
@@ -1314,8 +1318,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
         return;
     }
 
-    /* Process next response from buffer */
-    processReply();
+    assert(false); // unreachable
 }
 
 /// processes the already read and buffered response data, possibly after
@@ -1471,14 +1474,23 @@ HttpStateData::decodeAndWriteReplyBody()
     decodedData.init();
     httpChunkDecoder->setPayloadBuffer(&decodedData);
     const bool doneParsing = httpChunkDecoder->parse(inBuf);
+    // XXX: Both httpChunkDecoder and inBuf lock the same underlying MemBlob.
+    // LockCount() == 2 forces unnecessary cow() reallocs in reserveSpace().
+    // TODO: TeChunkedParser should not keep a copy of inBuf beyond parse().
     inBuf = httpChunkDecoder->remaining(); // sync buffers after parse
     len = decodedData.contentSize();
     data=decodedData.content();
     addVirginReplyBody(data, len);
+
     if (doneParsing) {
         lastChunk = 1;
         flags.do_next_read = false;
+        return true;
     }
+
+    if (httpChunkDecoder->needsMoreData() && fullReadBuffer())
+        throw TextException("huge chunked encoding metadata", Here());
+
     SQUID_EXIT_THROWING_CODE(wasThereAnException);
     return wasThereAnException;
 }
@@ -1610,22 +1622,73 @@ HttpStateData::mayReadVirginReplyBody() const
     return !doneWithServer();
 }
 
+/// read(2) preparation code shared by maybeReadVirginBody() and readReply()
+/// \retval 0 the caller should (silently) quit
+/// \retval n>0 the caller may proceed to read up to n bytes
+size_t
+HttpStateData::prepReading(const bool readWanted)
+{
+    if (!Comm::IsConnOpen(serverConnection) || fd_table[serverConnection->fd].closing()) {
+        debugs(11, 7, "already closing; waiting for closure handlers: " << serverConnection);
+        return 0;
+    }
+
+    if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
+        abortTransaction("store entry aborted while reading reply");
+        return 0;
+    }
+
+    if (!readWanted) {
+        debugs(11, 5, "unwanted read");
+        return 0;
+    }
+
+    Store::AccumulationConstraints ac;
+
+    // a previously not-empty inBuf might suddenly become "full" if configurable
+    // limits have changed (while we waited for delay pools or 1xx processing)
+    // so we must revisit this calculation every time
+    ac.enforceHardMaximum(calcReadBufferSpaceLimit(), "inBuf space");
+    if (!ac.allowance()) {
+        // inBuf may have pieces of (1xx commands and/or the final response). We
+        // will either parse the next piece and free some space or (hopefully)
+        // terminate the transaction with a parsing error.
+        processReply();
+        return 0;
+    }
+
+    // make sure the read_ahead_gap limit does not deadlock a read-ahead parser
+    ac.enforceParserProgress(inBuf.length(), parserLookAheadDistance());
+
+    // limit incremental (i.e. from multiple reads) data accumulation in Store
+    // and ICAP pipelines while also obeying delay pools rate limits
+    const auto readGoal = calcAccumulationAllowance(ac); // may be zero
+    debugs(11, 5, readGoal << "; buf=" << inBuf.length() << '+' << inBuf.spaceSize());
+
+    // XXX: The transaction stalls if we have nothing to send to the client(s);
+    // sending is what usually kicks our delayed read, resuming this transaction
+    if (readGoal < MinReadSize) {
+        assert(entry->mem_obj);
+        flags.do_next_read = false; // one (active or delayed) read at a time
+        AsyncCall::Pointer nilCall;
+        entry->mem_obj->delayRead(DeferredRead(readDelayed, this, CommRead(serverConnection, nullptr, 0, nilCall)));
+        return 0;
+    }
+
+    assert(readGoal > 0);
+    assert(readGoal <= SBuf::maxSize);
+    return readGoal; // the assertion above makes downcast from uint64_t safe
+}
+
 void
 HttpStateData::maybeReadVirginBody()
 {
-    // too late to read
-    if (!Comm::IsConnOpen(serverConnection) || fd_table[serverConnection->fd].closing())
-        return;
-
-    if (!maybeMakeSpaceAvailable(false))
-        return;
-
     // XXX: get rid of the do_next_read flag
     // check for the proper reasons preventing read(2)
-    if (!flags.do_next_read)
+    if (!prepReading(flags.do_next_read))
         return;
 
-    flags.do_next_read = false;
+    flags.do_next_read = false; // one (active or delayed) read at a time
 
     // must not already be waiting for read(2) ...
     assert(!Comm::MonitorsRead(serverConnection->fd));
@@ -1636,40 +1699,47 @@ HttpStateData::maybeReadVirginBody()
     Comm::Read(serverConnection, call);
 }
 
-bool
-HttpStateData::maybeMakeSpaceAvailable(bool doGrow)
+/// minimum buffer capacity to keep our look-ahead header or body parser happy
+size_t
+HttpStateData::parserLookAheadDistance() const
 {
-    // how much we are allowed to buffer
-    const int limitBuffer = (flags.headers_parsed ? Config.readAheadGap : Config.maxReplyHeaderSize);
+    return
+        !flags.headers_parsed ? Config.maxReplyHeaderSize: // non-incremental header parser
+        httpChunkDecoder ? httpChunkDecoder->lookAheadDistance(): // incremental chunked body parser
+        0U; // the default body parser does not look ahead at all
+}
 
-    if (limitBuffer < 0 || inBuf.length() >= (SBuf::size_type)limitBuffer) {
-        // when buffer is at or over limit already
-        debugs(11, 7, "will not read up to " << limitBuffer << ". buffer has (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
-        debugs(11, DBG_DATA, "buffer has {" << inBuf << "}");
-        // Process next response from buffer
-        processReply();
-        return false;
+/// desired inBuf capacity based on various capacity preferences/limits
+/// a smaller buffer may not hold enough for look-ahead header/body parsers
+/// a smaller buffer may result in inefficient tiny network reads
+/// a bigger buffer may waste memory (admins tune configuration to reduce waste)
+/// a bigger buffer may exceed SBuf storage capabilities (SBuf::maxSize)
+size_t
+HttpStateData::calcReadBufferCapacityLimit() const
+{
+    const auto configurationPreferences =
+        Config.tcpRcvBufsz ? Config.tcpRcvBufsz : SQUID_TCP_SO_RCVBUF;
+    const auto lookAheadMinimum = parserLookAheadDistance();
+    // even if we do not need to look ahead, we have to receive data
+    const auto progressMinimum = size_t(1);
+    const auto combinedMaximum = std::max({progressMinimum, lookAheadMinimum, configurationPreferences, MinReadSize});
+    return std::min<size_t>(combinedMaximum, SBuf::maxSize);
+}
+
+/// maximum inBuf.spaceSize() according to calcReadBufferCapacityLimit()
+size_t
+HttpStateData::calcReadBufferSpaceLimit() const
+{
+    const auto bufferCapacityLimit = calcReadBufferCapacityLimit();
+    if (inBuf.length() >= bufferCapacityLimit) {
+        debugs(11, 5, "buffer full: " << inBuf.length() << " >= " << bufferCapacityLimit);
+        return 0;
     }
 
-    // how much we want to read
-    const size_t read_size = calcBufferSpaceToReserve(inBuf.spaceSize(), (limitBuffer - inBuf.length()));
-
-    if (!read_size) {
-        debugs(11, 7, "will not read up to " << read_size << " into buffer (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
-        return false;
-    }
-
-    // just report whether we could grow or not, do not actually do it
-    if (doGrow)
-        return (read_size >= 2);
-
-    // we may need to grow the buffer
-    inBuf.reserveSpace(read_size);
-    debugs(11, 8, (!flags.do_next_read ? "will not" : "may") <<
-           " read up to " << read_size << " bytes info buf(" << inBuf.length() << "/" << inBuf.spaceSize() <<
-           ") from " << serverConnection);
-
-    return (inBuf.spaceSize() >= 2); // only read if there is 1+ bytes of space available
+    const auto bufferSpaceLimit = bufferCapacityLimit - inBuf.length();
+    debugs(11, 7, bufferSpaceLimit << '=' << bufferCapacityLimit << '-' << inBuf.length());
+    assert(bufferSpaceLimit > 0); // paranoid
+    return bufferSpaceLimit;
 }
 
 /// called after writing the very last request byte (body, last-chunk, etc)

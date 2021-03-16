@@ -58,7 +58,16 @@ public:
     bool keepalive_broken = false;
     bool abuse_detected = false;
     bool request_sent = false;
+
+    /// whether scheduling or delaying a read(2) call is allowed
+    /// XXX: Encourages dangerous use and facilitates "forgot to change" bugs:
+    /// * made false to record permanent "we shall never read again" conditions
+    /// * made false to record temporary "we are already reading" conditions
+    /// * made false to record temporary "we do not want to read now" conditions
+    /// * made true when removing _a_ temporary condition
+    /// TODO: Replace with condition-specific tests and, if necessary, flag(s).
     bool do_next_read = false;
+
     bool chunked = false;           ///< reading a chunked response; TODO: rename
     bool chunked_request = false;   ///< writing a chunked request
     bool sentLastChunk = false;     ///< do not try to write last-chunk again

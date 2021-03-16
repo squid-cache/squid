@@ -789,6 +789,7 @@ cf.data: cf.data.pre Makefile
 	-e "s%[@]DEFAULT_ERROR_DIR[@]%$(DEFAULT_ERROR_DIR)%g" \
 	-e "s%[@]DEFAULT_PREFIX[@]%$(DEFAULT_PREFIX)%g" \
 	-e "s%[@]DEFAULT_HOSTS[@]%$(DEFAULT_HOSTS)%g" \
+	-e "s%[@]SQUID_TCP_SO_RCVBUF[@]%$(SQUID_TCP_SO_RCVBUF)%g" \
 	-e "s%[@]SQUID[@]%SQUID\ $(VERSION)%g" \
 	-f $(srcdir)/cf.data.sed \
 	< $(srcdir)/cf.data.pre >$@
@@ -1652,7 +1653,7 @@ tests_testDiskIO_SOURCES = \
 	MasterXaction.cc \
 	MasterXaction.h \
 	MemBuf.cc \
-	MemObject.cc \
+	tests/stub_MemObject.cc \
 	tests/stub_MemStore.cc \
 	Notes.cc \
 	Notes.h \
@@ -1732,16 +1733,14 @@ tests_testDiskIO_SOURCES = \
 	repl_modules.h \
 	tests/stub_stat.cc \
 	stmem.cc \
-	store.cc \
+	tests/stub_store.cc \
 	tests/stub_store_client.cc \
-	store_io.cc \
 	store_key_md5.cc \
 	store_key_md5.h \
 	tests/stub_store_rebuild.cc \
 	store_rebuild.h \
 	tests/stub_store_stats.cc \
-	store_swapmeta.cc \
-	store_swapout.cc \
+	tests/stub_store_swapout.cc \
 	tests/stub_time.cc \
 	tests/stub_tools.cc \
 	tools.h \

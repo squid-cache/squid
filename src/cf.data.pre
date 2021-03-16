@@ -6391,8 +6391,60 @@ TYPE: b_int64_t
 LOC: Config.readAheadGap
 DEFAULT: 16 KB
 DOC_START
-	The amount of data the cache will buffer ahead of what has been
-	sent to the client when retrieving an object from another server.
+	In many cases, Squid may read more response body data from the server
+	than the existing clients are ready to receive. This directive limits
+	the number of not-yet-sent-to-clients response body bytes "preloaded"
+	by Squid. The details depend on the transaction circumstances:
+
+	* If the response is being cached in a non-shared memory cache, then
+	  this directive only limits how aggressively Squid fills that memory
+	  cache storage ahead of the memory-reading clients. The directive
+	  does not limit how much data gets cached at the end: The cache entry
+	  grows and the whole response should be eventually stored in memory.
+
+	* Otherwise, the response body bytes are kept in a temporary buffer.
+	  As client(s) receive the bytes they need, Squid should be removing
+	  content from that buffer (possibly moving it to a disk or shared
+	  memory cache). This directive limits the maximum number of the
+	  response body bytes kept in that temporary buffer.
+
+	In either case, Squid counts the current "read ahead" gap as the
+	distance between the smallest-offset byte to be sent to memory-reading
+	clients and the last stored response byte (coming from a server or an
+	adaptation service). Squid suspends reading from the server when the
+	current gap reaches the configured value. This gap size calculation
+	has several known side effects:
+
+	* A single slow (or late-to-arrive) memory-reading client may create a
+	  gap that matches or exceeds the configured limit, blocking network
+	  reads and stalling concurrent cache hits that use the same buffer
+	  (until that client catches up with the others).
+
+	* Without any memory-reading clients, the gap size is considered to be
+	  zero, and the directive just limits individual network read sizes.
+	  If the response is still being received for disk-caching purposes, a
+	  combination of a fast server and slow disk may eat a lot of memory.
+
+	* For transactions participating in RESPMOD adaptation, Squid stores
+	  post-adaptation bytes rather than received-from-server bytes. Hence,
+	  the read-ahead gap size remains zero until the adaptation service
+	  responds, and Squid starts receiving adapted (or echoing virgin)
+	  response bytes. Until then, an internal adaptation pipeline buffer
+	  (with a hard-coded capacity limit of 64KB) serves as a read-ahead
+	  limit.
+
+	Squid may ignore this directive when expecting response headers. Since
+	the size of the actual response header is unknown a priori, Squid may
+	end up reading more body bytes than is allowed by this directive if
+	reply_header_max_size exceeds read_ahead_gap.
+
+	Squid may also ignore this directive if it is set to a small value
+	preventing Squid from parsing protocol elements.
+
+	Many other factors may reduce Squid's read-ahead aggressiveness,
+	including server bandwidth, Squid delay pools, Squid adaptation
+	pipeline buffers, adaptation service performance, and various Squid
+	internal limits.
 DOC_END
 
 NAME: negative_ttl
@@ -9099,12 +9151,25 @@ NAME: tcp_recv_bufsize
 COMMENT: (bytes)
 TYPE: b_size_t
 DEFAULT: 0 bytes
-DEFAULT_DOC: Use operating system TCP defaults.
+DEFAULT_DOC: Kernel uses its own settings. Squid uses @SQUID_TCP_SO_RCVBUF@ bytes.
 LOC: Config.tcpRcvBufsz
 DOC_START
-	Size of receive buffer to set for TCP sockets.  Probably just
-	as easy to change your kernel's default.
-	Omit from squid.conf to use the default buffer size.
+	Specifies the size of receive buffers for individual TCP sockets. Used
+	by two related sets of I/O buffers:
+
+	* Kernel buffers that accumulate incoming TCP payload (until Squid
+	  copies it from the kernel). See SO_RCVBUF in tcp(7) for details.
+	* Squid buffers that accumulate raw HTTP response bytes (copied from
+	  the kernel buffers) until Squid parses those bytes.
+
+	The configured value can be roughly interpreted as the maximum buffer
+	size, but the kernel and Squid may use larger buffers (e.g., Squid
+	buffers may also reflect the reply_header_max_size limit).
+
+	Relying on defaults eliminates one setsockopt(2) system call per TCP
+	socket, but a mismatch between kernel default buffer size and Squid
+	default HTTP buffer size may increase the number of read(2) system
+	calls or waste memory.
 DOC_END
 
 COMMENT_START

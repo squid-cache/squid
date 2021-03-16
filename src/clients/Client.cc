@@ -24,6 +24,7 @@
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
+#include "store/AccumulationConstraints.h"
 #include "tools.h"
 
 #if USE_ADAPTATION
@@ -753,7 +754,9 @@ Client::handleMoreAdaptedBodyAvailable()
     if (!contentSize)
         return; // XXX: bytesWanted asserts on zero-size ranges
 
-    const size_t spaceAvailable = entry->bytesWanted(Range<size_t>(0, contentSize), true);
+    Store::AccumulationConstraints ac;
+    ac.ignoreDelayPools = true; // a brute-force bug 3462 workaround
+    const size_t spaceAvailable = entry->accumulationAllowance(ac);
 
     if (spaceAvailable < contentSize ) {
         // No or partial body data consuming
@@ -1016,16 +1019,12 @@ Client::storeReplyBody(const char *data, ssize_t len)
     currentOffset += len;
 }
 
-size_t
-Client::calcBufferSpaceToReserve(size_t space, const size_t wantSpace) const
+uint64_t
+Client::calcAccumulationAllowance(Store::AccumulationConstraints &constraints) const
 {
-    if (space < wantSpace) {
-        const size_t maxSpace = SBuf::maxSize; // absolute best
-        space = min(wantSpace, maxSpace); // do not promise more than asked
-    }
-
 #if USE_ADAPTATION
     if (responseBodyBuffer) {
+        debugs(11, 7, "0 allowance due to ICAP overflow");
         return 0;   // Stop reading if already overflowed waiting for ICAP to catch up
     }
 
@@ -1038,16 +1037,21 @@ Client::calcBufferSpaceToReserve(size_t space, const size_t wantSpace) const
          * There is no code to keep pumping data into the pipe once
          * response ends and serverComplete() is called.
          */
-        const size_t adaptor_space = virginBodyDestination->buf().potentialSpaceSize();
-
-        debugs(11,9, "Client may read up to min(" <<
-               adaptor_space << ", " << space << ") bytes");
-
-        if (adaptor_space < space)
-            space = adaptor_space;
+        const auto pipeSpace = virginBodyDestination->buf().potentialSpaceSize();
+        assert(pipeSpace >= 0);
+        constraints.enforceHardMaximum(pipeSpace, "RESPMOD BodyPipe");
+        // XXX: Do apply delays_pools to received bytes destined for RESPMOD!
+        constraints.ignoreDelayPools = true;
+        // This data is piped into an adaptation service, not written to Store.
+        // Enforcing read_ahead_gap here can easily stall the transaction.
+        // See handleMoreAdaptedBodyAvailable() for the Store-writing case.
+        constraints.ignoreReadAheadGap = true;
+        // fall through
     }
 #endif
 
+    const auto space = entry->accumulationAllowance(constraints);
+    debugs(11, 7, space);
     return space;
 }
 

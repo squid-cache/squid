@@ -54,6 +54,7 @@
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "store/AccumulationConstraints.h"
 #include "StrList.h"
 #include "tools.h"
 #include "wordlist.h"
@@ -2063,7 +2064,10 @@ ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe::Pointer)
     assert(adaptedBodySource != NULL);
 
     if (size_t contentSize = adaptedBodySource->buf().contentSize()) {
-        const size_t spaceAvailable = storeEntry()->bytesWanted(Range<size_t>(0,contentSize));
+        Store::AccumulationConstraints ac;
+        // XXX: Must ignore delay_pools for request satisfaction traffic.
+        // ac.ignoreDelayPools = true; // a brute-force bug 3462 workaround
+        const auto spaceAvailable = storeEntry()->accumulationAllowance(ac);
 
         if (spaceAvailable < contentSize ) {
             // No or partial body data consuming

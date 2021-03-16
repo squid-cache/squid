@@ -18,6 +18,7 @@
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "Store.h"
+#include "store/AccumulationConstraints.h"
 #include "StoreClient.h"
 
 #if USE_DELAY_POOLS
@@ -304,20 +305,36 @@ MemObject::lowestMemReaderOffset() const
     return lowest.current;
 }
 
-/* XXX: This is wrong. It breaks *badly* on range combining */
 bool
 MemObject::readAheadPolicyCanRead() const
 {
-    const auto savedHttpHeaders = baseReply().hdr_sz;
-    const bool canRead = endOffset() - savedHttpHeaders <
-                         lowestMemReaderOffset() + Config.readAheadGap;
+    Store::AccumulationConstraints ac;
+    enforceReadAheadLimit(ac);
+    return ac.allowance() > 0;
+}
 
-    if (!canRead) {
-        debugs(19, 5, "no: " << endOffset() << '-' << savedHttpHeaders <<
-               " < " << lowestMemReaderOffset() << '+' << Config.readAheadGap);
+/* XXX: This is wrong. It breaks *badly* on range combining */
+/// adjust the given constraints to honor the read_ahead_gap configuration
+void
+MemObject::enforceReadAheadLimit(Store::AccumulationConstraints &ac) const
+{
+    if (Config.readAheadGap < 0 || ac.ignoreReadAheadGap) {
+        debugs(19, 5, "unlimited; " << Config.readAheadGap << " or " << ac.ignoreReadAheadGap);
+        return;
     }
 
-    return canRead;
+    // XXX: Do not subtract savedHttpHeaders at all or subtract them from any
+    // non-zero offset. Just like endOffset() includes headers (after they have
+    // been stored), lowestMemReaderOffset() includes headers (after they have
+    // been received by that reader).
+    const auto savedHttpHeaders = baseReply().hdr_sz;
+
+    // XXX: Limit read-ahead when there is no LowestMemReader at all.
+    const auto lowestOffset = lowestMemReaderOffset();
+    const auto highestOffset = endOffset();
+    const auto currentGap = (highestOffset - savedHttpHeaders) - lowestOffset;
+    debugs(19, 7, "gap=" << currentGap << '=' << highestOffset << '-' << savedHttpHeaders << '-' << lowestOffset);
+    ac.enforceReadAheadLimit(currentGap);
 }
 
 void
@@ -426,18 +443,26 @@ MemObject::isContiguous() const
     return result;
 }
 
-int
-MemObject::mostBytesWanted(int max, bool ignoreDelayPools) const
+uint64_t
+MemObject::accumulationAllowance(Store::AccumulationConstraints &ac) const
 {
+    enforceReadAheadLimit(ac);
+    if (!ac.allowance())
+        return 0;
+
 #if USE_DELAY_POOLS
-    if (!ignoreDelayPools) {
+    if (!ac.ignoreDelayPools) {
         /* identify delay id with largest allowance */
         DelayId largestAllowance = mostBytesAllowed ();
-        return largestAllowance.bytesWanted(0, max);
+        // TODO: Fix DelayId::bytesWanted()/etc. API to use unsigned sizes.
+        const auto intMax = std::numeric_limits<int>::max();
+        const auto poolingAllowanceRaw = largestAllowance.bytesWanted(0, intMax);
+        const auto poolingAllowance = (poolingAllowanceRaw <= 0) ? 0 : static_cast<uint64_t>(poolingAllowanceRaw);
+        ac.enforceHardMaximum(poolingAllowance, "delay_pools");
     }
 #endif
 
-    return max;
+    return ac.allowance();
 }
 
 void
@@ -457,6 +482,10 @@ void
 MemObject::delayRead(DeferredRead const &aRead)
 {
 #if USE_DELAY_POOLS
+    // XXX: The readAheadPolicyCanRead() condition was probably meant to detect
+    // cases where the caller delays read because of delay_pools, but that
+    // condition might also be true in other cases. Modern callers know better!
+    // XXX: The condition repeats caller's enforceReadAheadLimit() calculations.
     if (readAheadPolicyCanRead()) {
         if (DelayId mostAllowedId = mostBytesAllowed()) {
             mostAllowedId.delayRead(aRead);

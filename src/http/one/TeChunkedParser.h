@@ -63,12 +63,19 @@ public:
 
     bool needsMoreSpace() const;
 
+    /// shorter input prefixes may fail to parse() despite being valid
+    size_t lookAheadDistance() const;
+
     /* Http1::Parser API */
     virtual void clear();
     virtual bool parse(const SBuf &);
     virtual Parser::size_type firstLineSize() const {return 0;} // has no meaning with multiple chunks
 
 private:
+    // TODO: std::max(Config.maxRequestHeaderSize, Config.maxReplyHeaderSize) or
+    // supply the message kind when creating the parser
+    static size_t TrailerSizeMax() { return 64*1024; }
+
     bool parseChunkSize(Tokenizer &tok);
     bool parseChunkMetadataSuffix(Tokenizer &);
     void parseChunkExtensions(Tokenizer &);
