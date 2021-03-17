@@ -183,14 +183,12 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
 
     Mgr::Command::Pointer cmd = new Mgr::Command;
     cmd->params.httpUri = SBufToString(uri.absolute());
-    cmd->params.userName = String();
 
     const auto mgrDelimiters = MgrPathDelimiters(uri.getScheme());
     const auto fieldChars = mgrDelimiters.complement("mgr-action");
 
     SBuf action;
     if (!tok.prefix(action, fieldChars)) {
-        // display index page, or for cache_object:// the 'menu' report
         if (uri.getScheme() == AnyP::PROTO_CACHE_OBJECT) {
             static const SBuf menuReport("menu");
             action = menuReport;
@@ -481,4 +479,3 @@ CacheManager::GetInstance()
     }
     return instance;
 }
-
