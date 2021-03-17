@@ -163,12 +163,18 @@ MgrPathDelimiters(const AnyP::ProtocolType &protocol)
 }
 
 /**
- \ingroup CacheManagerInternal
  * define whether the URL is a cache-manager URL and parse the action
  * requested by the user. Checks via CacheManager::ActionProtection() that the
  * item is accessible by the user.
- \retval CacheManager::cachemgrStateData state object for the following handling
- \retval NULL if the action can't be found or can't be accessed by the user
+ *
+ * Syntax:
+ *
+ *  scheme "://" authority [ '/squid-internal-mgr' ] path-absolute [ '@' unreserved ] '?' query-string
+ *
+ * see RFC 3986 for definitions of scheme, authority, path-absolute, query-string
+ *
+ \retval Mgr::Command object for the following handling
+ \retval nullptr if the action can't be found or can't be accessed by the user, or errors
  */
 Mgr::Command::Pointer
 CacheManager::ParseUrl(const AnyP::Uri &uri)
