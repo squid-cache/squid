@@ -14,6 +14,7 @@
 #include "mgr/IntParam.h"
 #include "mgr/QueryParams.h"
 #include "mgr/StringParam.h"
+#include "parser/Tokenizer.h"
 #include "sbuf/StringConvert.h"
 
 #include <limits>
