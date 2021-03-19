@@ -34,18 +34,18 @@ class Coordinator: public Port
     CBDATA_CLASS(Coordinator);
 
 public:
+    typedef std::pair<QuestionerId, StrandCoord> QuestionerCoord;
+    typedef std::vector<QuestionerCoord> QuestionerCoords;
+
     static Coordinator* Instance();
 
 public:
     Coordinator();
 
-    const StrandCoords &strands() const; ///< currently registered strands
-
 protected:
     virtual void start(); // Port (AsyncJob) API
     virtual void receive(const TypedMsgHdr& message); // Port API
 
-    StrandCoord* findStrand(int kidId); ///< registered strand or NULL
     void registerStrand(const StrandMessage &); ///< adds or updates existing
     void handleRegistrationRequest(const StrandMessage &); ///< register,ACK
     /// notifies waiting searches of a not yet ready strand
@@ -70,10 +70,7 @@ protected:
     Comm::ConnectionPointer openListenSocket(const SharedListenRequest& request, int &errNo);
 
 private:
-    StrandCoords strands_; ///< registered processes and threads
-    /// questioner ids for each of StrandCoord in strands_,
-    /// i.e., questioners_[i] is the questioner id for strands_[i]
-    std::vector<QuestionerId> questioners_;
+    QuestionerCoords strands_; ///< registered processes and threads (with their questioner ids)
 
     typedef std::list<StrandSearchRequest> Searchers; ///< search requests
     Searchers searchers; ///< yet unanswered search requests in arrival order

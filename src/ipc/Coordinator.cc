@@ -32,6 +32,15 @@
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Coordinator);
 Ipc::Coordinator* Ipc::Coordinator::TheInstance = NULL;
 
+static Ipc::StrandCoords
+ToStrandCoords(const Ipc::Coordinator::QuestionerCoords &questionerCoords)
+{
+    Ipc::StrandCoords coords;
+    for (const auto p: questionerCoords)
+        coords.push_back(p.second);
+    return coords;
+}
+
 Ipc::Coordinator::Coordinator():
     Port(Ipc::Port::CoordinatorAddr())
 {
@@ -42,30 +51,20 @@ void Ipc::Coordinator::start()
     Port::start();
 }
 
-Ipc::StrandCoord* Ipc::Coordinator::findStrand(int kidId)
-{
-    typedef StrandCoords::iterator SI;
-    for (SI iter = strands_.begin(); iter != strands_.end(); ++iter) {
-        if (iter->kidId == kidId)
-            return &(*iter);
-    }
-    return NULL;
-}
-
 void Ipc::Coordinator::registerStrand(const StrandMessage& msg)
 {
     const auto &strand = msg.strand;
     debugs(54, 3, HERE << "registering kid" << strand.kidId <<
            ' ' << strand.tag);
-    if (StrandCoord* found = findStrand(strand.kidId)) {
-        const String oldTag = found->tag;
-        *found = strand;
+    auto registered = std::find_if(strands_.begin(), strands_.end(),
+    [&strand](const QuestionerCoord &coord) { return coord.second.kidId == strand.kidId; });
+    if (registered != strands_.end()) {
+        const auto oldTag = registered->second.tag;
+        registered->second = strand;
         if (oldTag.size() && !strand.tag.size())
-            found->tag = oldTag; // keep more detailed info (XXX?)
+            registered->second.tag = oldTag; // keep more detailed info (XXX?)
     } else {
-        assert(strands_.size() == questioners_.size());
-        strands_.push_back(strand);
-        questioners_.push_back(msg.qid);
+        strands_.emplace_back(msg.qid, strand);
     }
 
     // notify searchers waiting for this new strand, if any
@@ -186,7 +185,7 @@ Ipc::Coordinator::handleRebuildFinishedMessage(const StrandMessage& msg)
     rebuildFinishedStrands_.push_back(msg.strand);
 
     const auto alreadyTagged = std::find_if(strands_.begin(), strands_.end(),
-    [&msg](const StrandCoord &coord) { return msg.strand.tag == coord.tag; });
+    [&msg](const QuestionerCoord &coord) { return msg.strand.tag == coord.second.tag; });
 
     if (alreadyTagged == strands_.end()) {
         debugs(54, 3, "waiting for kid" << msg.strand.kidId << " tag to broadcast that it is indexed");
@@ -194,12 +193,12 @@ Ipc::Coordinator::handleRebuildFinishedMessage(const StrandMessage& msg)
     }
 
     // notify all existing strands, new strands will be notified in notifySearcher()
-    for (uint32_t i = 0; i < strands_.size(); ++i) {
-        debugs(54, 3, "tell kid" << strands_[i].kidId << " that kid" << msg.strand.kidId << " is indexed");
-        StrandReady response(msg.strand, questioners_.at(i), true);
+    for (const auto &strand: strands_) {
+        debugs(54, 3, "tell kid" << strand.second.kidId << " that kid" << msg.strand.kidId << " is indexed");
+        StrandReady response(msg.strand, strand.first, true);
         TypedMsgHdr message;
         response.pack(message);
-        SendMessage(MakeAddr(strandAddrLabel, strands_[i].kidId), message);
+        SendMessage(MakeAddr(strandAddrLabel, strand.second.kidId), message);
     }
 }
 
@@ -231,7 +230,7 @@ Ipc::Coordinator::handleCacheMgrRequest(const Mgr::Request& request)
     try {
         Mgr::Action::Pointer action =
             CacheManager::GetInstance()->createRequestedAction(request.params);
-        AsyncJob::Start(new Mgr::Inquirer(action, request, strands_));
+        AsyncJob::Start(new Mgr::Inquirer(action, request, ToStrandCoords(strands_)));
     } catch (const std::exception &ex) {
         debugs(54, DBG_IMPORTANT, "BUG: cannot aggregate mgr:" <<
                request.params.actionName << ": " << ex.what());
@@ -259,15 +258,11 @@ void
 Ipc::Coordinator::handleSearchRequest(const Ipc::StrandSearchRequest &request)
 {
     // do we know of a strand with the given search tag?
-    const StrandCoord *strand = NULL;
-    typedef StrandCoords::const_iterator SCCI;
-    for (SCCI i = strands_.begin(); !strand && i != strands_.end(); ++i) {
-        if (i->tag == request.tag)
-            strand = &(*i);
-    }
+    const auto alreadyTagged = std::find_if(strands_.begin(), strands_.end(),
+    [&request](const QuestionerCoord &coord) { return request.tag == coord.second.tag; });
 
-    if (strand) {
-        notifySearcher(request, *strand);
+    if (alreadyTagged != strands_.end()) {
+        notifySearcher(request, alreadyTagged->second);
         return;
     }
 
@@ -303,7 +298,7 @@ Ipc::Coordinator::handleSnmpRequest(const Snmp::Request& request)
     response.pack(message);
     SendMessage(MakeAddr(strandAddrLabel, request.requestorId), message);
 
-    AsyncJob::Start(new Snmp::Inquirer(request, strands_));
+    AsyncJob::Start(new Snmp::Inquirer(request, ToStrandCoords(strands_)));
 }
 
 void
@@ -350,11 +345,5 @@ Ipc::Coordinator* Ipc::Coordinator::Instance()
     // we could make Coordinator death fatal, except during exit, but since
     // Strands do not re-register, even process death would be pointless.
     return TheInstance;
-}
-
-const Ipc::StrandCoords&
-Ipc::Coordinator::strands() const
-{
-    return strands_;
 }
 

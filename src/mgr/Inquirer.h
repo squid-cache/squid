@@ -29,7 +29,7 @@ class Inquirer: public Ipc::Inquirer
 
 public:
     Inquirer(Action::Pointer anAction, const Request &aCause,
-             const Ipc::StrandCoords &coords);
+             Ipc::StrandCoords &&coords);
 
 protected:
     /* AsyncJob API */
@@ -45,7 +45,7 @@ private:
     void noteWroteHeader(const CommIoCbParams& params);
     void noteCommClosed(const CommCloseCbParams& params);
     void removeCloseHandler();
-    Ipc::StrandCoords applyQueryParams(const Ipc::StrandCoords& aStrands,
+    Ipc::StrandCoords applyQueryParams(Ipc::StrandCoords&& aStrands,
                                        const QueryParams& aParams);
 private:
     Action::Pointer aggrAction; //< action to aggregate

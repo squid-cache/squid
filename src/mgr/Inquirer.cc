@@ -28,12 +28,13 @@
 #include "SquidTime.h"
 #include <memory>
 #include <algorithm>
+#include <utility>
 
 CBDATA_NAMESPACED_CLASS_INIT(Mgr, Inquirer);
 
 Mgr::Inquirer::Inquirer(Action::Pointer anAction,
-                        const Request &aCause, const Ipc::StrandCoords &coords):
-    Ipc::Inquirer(aCause.clone(), applyQueryParams(coords, aCause.params.queryParams), anAction->atomic() ? 10 : 100),
+                        const Request &aCause, Ipc::StrandCoords &&coords):
+    Ipc::Inquirer(aCause.clone(), std::move(applyQueryParams(std::move(coords), aCause.params.queryParams)), anAction->atomic() ? 10 : 100),
     aggrAction(anAction)
 {
     conn = aCause.conn;
@@ -141,13 +142,12 @@ Mgr::Inquirer::doneAll() const
 }
 
 Ipc::StrandCoords
-Mgr::Inquirer::applyQueryParams(const Ipc::StrandCoords& aStrands, const QueryParams& aParams)
+Mgr::Inquirer::applyQueryParams(Ipc::StrandCoords&& aStrands, const QueryParams& aParams)
 {
     Ipc::StrandCoords sc;
 
     QueryParam::Pointer processesParam = aParams.get("processes");
     QueryParam::Pointer workersParam = aParams.get("workers");
-
     if (processesParam == NULL || workersParam == NULL) {
         if (processesParam != NULL) {
             IntParam* param = dynamic_cast<IntParam*>(processesParam.getRaw());
