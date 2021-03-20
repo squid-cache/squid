@@ -151,16 +151,16 @@ CacheManager::createRequestedAction(const Mgr::ActionParams &params)
 }
 
 static const CharacterSet &
-MgrPathDelimiters(const AnyP::ProtocolType &protocol)
+MgrFieldChars(const AnyP::ProtocolType &protocol)
 {
     // Deprecated cache_object:// scheme used '@' to delimit passwords
     if (protocol == AnyP::PROTO_CACHE_OBJECT) {
-        static const CharacterSet coDelims("cache-object-delims","@?#");
-        return coDelims;
+        static const CharacterSet fieldChars = CharacterSet("cache-object-field","@?#").complement();
+        return fieldChars;
     }
 
-    static const CharacterSet delims("mgr-delims","?#");
-    return delims;
+    static const CharacterSet actionChars = CharacterSet("mgr-field","?#").complement();
+    return actionChars;
 }
 
 /**
@@ -191,8 +191,7 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
     Mgr::Command::Pointer cmd = new Mgr::Command;
     cmd->params.httpUri = SBufToString(uri.absolute());
 
-    const auto mgrDelimiters = MgrPathDelimiters(uri.getScheme());
-    const auto fieldChars = mgrDelimiters.complement("mgr-action");
+    const auto &fieldChars = MgrFieldChars(uri.getScheme());
 
     SBuf action;
     if (!tok.prefix(action, fieldChars)) {
@@ -216,7 +215,7 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
     cmd->profile = profile;
 
     SBuf passwd;
-    if (tok.skip('@')) {
+    if (uri.getScheme() == AnyP::PROTO_CACHE_OBJECT && tok.skip('@')) {
         (void)tok.prefix(passwd, fieldChars);
         cmd->params.password = SBufToString(passwd);
     }
