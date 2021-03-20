@@ -29,6 +29,7 @@
 #include "mgr/QueryParams.h"
 #include "parser/Tokenizer.h"
 #include "protos.h"
+#include "sbuf/Stream.h"
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
@@ -179,13 +180,13 @@ MgrPathDelimiters(const AnyP::ProtocolType &protocol)
 Mgr::Command::Pointer
 CacheManager::ParseUrl(const AnyP::Uri &uri)
 {
+    try {
+
     Parser::Tokenizer tok(uri.path());
 
     static const SBuf internalMagicPrefix("/squid-internal-mgr/");
-    if (!tok.skip(internalMagicPrefix) && !tok.skip('/')) {
-        // path is not valid for cache manager reports
-        return nullptr;
-    }
+    if (!tok.skip(internalMagicPrefix) && !tok.skip('/'))
+        throw TexcHere("invalid URL path");
 
     Mgr::Command::Pointer cmd = new Mgr::Command;
     cmd->params.httpUri = SBufToString(uri.absolute());
@@ -206,16 +207,12 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
     cmd->params.actionName = SBufToString(action);
 
     Mgr::ActionProfile::Pointer profile = findAction(action.c_str());
-    if (!profile) {
-        debugs(16, DBG_IMPORTANT, "CacheManager action '" << action << "' not found");
-        return nullptr;
-    }
+    if (!profile)
+        throw TexcHere(ToSBuf("action '", action, "' not found"));
 
     const char *prot = ActionProtection(profile);
-    if (!strcmp(prot, "disabled") || !strcmp(prot, "hidden")) {
-        debugs(16, DBG_IMPORTANT, "CacheManager action '" << action << "' is " << prot);
-        return nullptr;
-    }
+    if (!strcmp(prot, "disabled") || !strcmp(prot, "hidden"))
+        throw TexcHere(ToSBuf("action '", action, "' is ", prot));
     cmd->profile = profile;
 
     SBuf passwd;
@@ -228,14 +225,22 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
     SBuf params;
     if (tok.skip('?')) {
         params = tok.remaining();
-        if (!Mgr::QueryParams::Parse(tok, cmd->params.queryParams))
-            return nullptr;
+        Mgr::QueryParams::Parse(tok, cmd->params.queryParams);
     }
+
+    if (!tok.skip('#') && !tok.atEnd())
+        throw TexcHere("invalid characters in URL");
+    // else ignore #fragment
 
     debugs(16, 3, "MGR request: host=" << uri.host() << ", action=" << action <<
            ", password=" << passwd << ", params=" << params);
 
     return cmd;
+
+    } catch (...) {
+        debugs(16, 2, "MGR request error: " << CurrentException);
+        return nullptr;
+    }
 }
 
 /// \ingroup CacheManagerInternal

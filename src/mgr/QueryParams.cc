@@ -69,7 +69,7 @@ Mgr::QueryParams::find(const String& name) const
     return iter;
 }
 
-bool
+void
 Mgr::QueryParams::ParseParam(SBuf &paramStr, Param &param)
 {
     static const CharacterSet nameChars = CharacterSet("param-name", "_") + CharacterSet::ALPHA + CharacterSet::DIGIT;
@@ -78,15 +78,15 @@ Mgr::QueryParams::ParseParam(SBuf &paramStr, Param &param)
 
     SBuf name;
     if (!tok.prefix(name, nameChars))
-        return false;
+        throw TexcHere("invalid character in action name");
 
     if (!tok.skip('='))
-        return false; // TODO: support name-only parameters
+        throw TexcHere("missing parameter value");
 
     static const CharacterSet badValueChars = CharacterSet("param-value-bad", "&= ");
     SBuf valueStr = tok.remaining();
     if (valueStr.findFirstOf(badValueChars) != SBuf::npos)
-        return false;
+        throw TexcHere("invalid character in parameter value");
 
     param.first = SBufToString(name);
 
@@ -104,11 +104,9 @@ Mgr::QueryParams::ParseParam(SBuf &paramStr, Param &param)
         param.second = new IntParam(array);
     else
         param.second = new StringParam(SBufToString(valueStr));
-
-    return true;
 }
 
-bool
+void
 Mgr::QueryParams::Parse(Parser::Tokenizer &tok, QueryParams &aParams)
 {
     static const CharacterSet paramDelim("query-param","&");
@@ -116,13 +114,9 @@ Mgr::QueryParams::Parse(Parser::Tokenizer &tok, QueryParams &aParams)
     SBuf foundStr;
     while (tok.token(foundStr, paramDelim)) {
         Param param;
-        if (!ParseParam(foundStr, param))
-            return false;
+        ParseParam(foundStr, param);
         aParams.params.push_back(param);
     }
-
-    // success == no garbage in query-string
-    return tok.atEnd();
 }
 
 Mgr::QueryParam::Pointer
