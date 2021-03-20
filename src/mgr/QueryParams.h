@@ -41,8 +41,6 @@ private:
     Params::const_iterator find(const String& name) const;
     /// creates a parameter of the specified type
     static QueryParam::Pointer CreateParam(QueryParam::Type aType);
-    /// parses string like "param=value"
-    static void ParseParam(SBuf &input, Param &result);
 
 private:
     Params params;

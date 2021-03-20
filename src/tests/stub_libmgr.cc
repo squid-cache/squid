@@ -180,7 +180,6 @@ void Mgr::QueryParams::Parse(Parser::Tokenizer &, QueryParams &) STUB
 //private:
 //Params::const_iterator Mgr::QueryParams::find(const String& name) const STUB_RETVAL(new Mgr::Params::const_iterator(*this))
 Mgr::QueryParam::Pointer Mgr::QueryParams::CreateParam(QueryParam::Type aType) STUB_RETVAL(Mgr::QueryParam::Pointer(NULL))
-void Mgr::QueryParams::ParseParam(SBuf &, Param &) STUB
 
 #include "mgr/Registration.h"
 //void Mgr::RegisterAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic);

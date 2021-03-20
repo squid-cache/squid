@@ -69,53 +69,60 @@ Mgr::QueryParams::find(const String& name) const
     return iter;
 }
 
-void
-Mgr::QueryParams::ParseParam(SBuf &paramStr, Param &param)
+/// Parses the value part of a "param=value" URL section.
+/// Value can be a comma separated list of integers, or an opaque string.
+Mgr::QueryParam::Pointer
+ParseParamValue(SBuf &valueStr)
 {
-    static const CharacterSet nameChars = CharacterSet("param-name", "_") + CharacterSet::ALPHA + CharacterSet::DIGIT;
+    static const CharacterSet comma("comma",",");
 
-    Parser::Tokenizer tok(paramStr);
-
-    SBuf name;
-    if (!tok.prefix(name, nameChars))
-        throw TexcHere("invalid character in action name");
-
-    if (!tok.skip('='))
-        throw TexcHere("missing parameter value");
-
-    static const CharacterSet badValueChars = CharacterSet("param-value-bad", "&= ");
-    SBuf valueStr = tok.remaining();
-    if (valueStr.findFirstOf(badValueChars) != SBuf::npos)
-        throw TexcHere("invalid character in parameter value");
-
-    param.first = SBufToString(name);
-
+    Parser::Tokenizer tok(valueStr);
     std::vector<int> array;
     int64_t intVal = 0;
     while (tok.int64(intVal, 10, false)) {
-        static const CharacterSet comma("comma",",");
         (void)tok.skipAll(comma);
         Must(intVal >= std::numeric_limits<int>::min());
         Must(intVal <= std::numeric_limits<int>::max());
-        array.emplace_back(int(intVal));
+        array.emplace_back(intVal);
     }
 
     if (tok.atEnd())
-        param.second = new IntParam(array);
+        return new Mgr::IntParam(array);
     else
-        param.second = new StringParam(SBufToString(valueStr));
+        return new Mgr::StringParam(SBufToString(valueStr));
 }
 
+/**
+ * Syntax:
+ *   query  = param *( '&' param ) [ '#' fragment ]
+ *   param  = name '=' value
+ *   name   = [a-zA-Z0-9]+
+ *   value  = *pchar | ( 1*DIGIT *( ',' 1*DIGIT ) )
+ */
 void
 Mgr::QueryParams::Parse(Parser::Tokenizer &tok, QueryParams &aParams)
 {
-    static const CharacterSet paramDelim("query-param","&");
+    static const CharacterSet nameChars = CharacterSet("param-name", "_") + CharacterSet::ALPHA + CharacterSet::DIGIT;
+    static const CharacterSet valueChars = CharacterSet("param-value", "&= #").complement();
 
-    SBuf foundStr;
-    while (tok.token(foundStr, paramDelim)) {
-        Param param;
-        ParseParam(foundStr, param);
-        aParams.params.push_back(param);
+    while (!tok.atEnd() && !tok.skip('#')) {
+
+        SBuf nameStr;
+        if (!tok.prefix(nameStr, nameChars))
+            throw TexcHere("invalid character in action name");
+        if (!tok.skip('='))
+            throw TexcHere("missing parameter value");
+
+        SBuf valueStr;
+        if (!tok.prefix(valueStr, valueChars))
+            throw TexcHere("invalid character in parameter value");
+
+        if (tok.skip('=') || tok.skip(' '))
+            throw TexcHere("invalid character in parameter value");
+
+        const auto name = SBufToString(nameStr);
+        const auto value = ParseParamValue(valueStr);
+        aParams.params.emplace_back(name, value);
     }
 }
 
