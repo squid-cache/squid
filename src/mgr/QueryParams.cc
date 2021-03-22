@@ -109,7 +109,7 @@ Mgr::QueryParams::Parse(Parser::Tokenizer &tok, QueryParams &aParams)
 
         SBuf nameStr;
         if (!tok.prefix(nameStr, nameChars))
-            throw TexcHere("invalid character in action name");
+            throw TexcHere("invalid query parameter name");
         if (!tok.skip('='))
             throw TexcHere("missing parameter value");
 
@@ -142,4 +142,3 @@ Mgr::QueryParams::CreateParam(QueryParam::Type aType)
     }
     return NULL;
 }
-
