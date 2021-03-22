@@ -104,10 +104,14 @@ Mgr::QueryParams::Parse(Parser::Tokenizer &tok, QueryParams &aParams)
 {
     static const CharacterSet nameChars = CharacterSet("param-name", "_") + CharacterSet::ALPHA + CharacterSet::DIGIT;
     static const CharacterSet valueChars = CharacterSet("param-value", "&= #").complement();
+    static const CharacterSet delims("param-delim", "&");
 
     // TODO: remove '#' cases when AnyP::Uri separates path?query#fragment properly
 
     while (!tok.atEnd() && tok.buf()[0] != '#') {
+
+        if (tok.skipAll(delims))
+            continue;
 
         SBuf nameStr;
         if (!tok.prefix(nameStr, nameChars))
