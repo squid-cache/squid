@@ -94,7 +94,7 @@ ParseParamValue(SBuf &valueStr)
 
 /**
  * Syntax:
- *   query  = param *( '&' param ) [ '#' fragment ]
+ *   query  = param *( '&' param )
  *   param  = name '=' value
  *   name   = [a-zA-Z0-9]+
  *   value  = *pchar | ( 1*DIGIT *( ',' 1*DIGIT ) )
@@ -105,7 +105,7 @@ Mgr::QueryParams::Parse(Parser::Tokenizer &tok, QueryParams &aParams)
     static const CharacterSet nameChars = CharacterSet("param-name", "_") + CharacterSet::ALPHA + CharacterSet::DIGIT;
     static const CharacterSet valueChars = CharacterSet("param-value", "&= #").complement();
 
-    while (!tok.atEnd() && !tok.skip('#')) {
+    while (!tok.atEnd() && tok.buf()[0] != '#') {
 
         SBuf nameStr;
         if (!tok.prefix(nameStr, nameChars))
