@@ -126,7 +126,7 @@ Note::toString(const char *sep) const
 }
 
 const Notes::Keys &
-Notes::BlockList()
+Notes::ReservedKeys()
 {
     // these keys are used for internal Squid-helper communication
     static const char *names[] = {
@@ -147,12 +147,12 @@ Notes::BlockList()
     return keys;
 }
 
-Notes::Notes(const char *aDescr, const Keys *extraBlocklist, bool allowFormatted):
+Notes::Notes(const char *aDescr, const Keys *extraReservedKeys, bool allowFormatted):
     descr(aDescr),
     formattedValues(allowFormatted)
 {
-    if (extraBlocklist)
-        blocklist = *extraBlocklist;
+    if (extraReservedKeys)
+        reservedKeys = *extraReservedKeys;
 }
 
 Note::Pointer
@@ -183,8 +183,8 @@ Notes::banReservedKey(const SBuf &key, const Keys &banned) const
 void
 Notes::validateKey(const SBuf &key) const
 {
-    banReservedKey(key, BlockList());
-    banReservedKey(key, blocklist);
+    banReservedKey(key, ReservedKeys());
+    banReservedKey(key, reservedKeys);
 
     // TODO: fix code duplication: the same set of specials is produced
     // by isKeyNameChar().
