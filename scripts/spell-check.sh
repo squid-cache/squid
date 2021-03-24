@@ -33,9 +33,9 @@ if ! git diff --quiet; then
     exit 1
 fi
 
-ALLOW_LIST=scripts/codespell-allowlist.txt
-if test ! -f "${ALLOW_LIST}"; then
-    echo "${ALLOW_LIST} does not exist"
+IGNORE_LIST=scripts/codespell-ignorelist.txt
+if test ! -f "${IGNORE_LIST}"; then
+    echo "${IGNORE_LIST} does not exist"
     exit 1
 fi
 
@@ -62,7 +62,7 @@ for FILENAME in `git ls-files "$@"`; do
     *.sql|\
     errors/templates/ERR_*|\
     INSTALL|README|QUICKSTART)
-        if ! codespell -d -q 3 -w -I "${ALLOW_LIST}" ${FILENAME}; then
+        if ! codespell -d -q 3 -w -I "${IGNORE_LIST}" ${FILENAME}; then
             echo "codespell failed for ${FILENAME}"
             exit 1
 	fi
