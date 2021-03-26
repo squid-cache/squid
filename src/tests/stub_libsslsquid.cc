@@ -11,6 +11,7 @@
 #if USE_OPENSSL
 
 #include "fatal.h"
+#include "sbuf/Algorithms.h"
 #include "sbuf/SBuf.h"
 
 /* Stub File for the ssl/libsslsquid.la convenience library */
@@ -37,24 +38,21 @@ Ssl::CertificateStorageAction::Pointer Ssl::CertificateStorageAction::Create(con
 void Ssl::CertificateStorageAction::dump(StoreEntry *sentry) STUB
 void Ssl::GlobalContextStorage::addLocalStorage(Ip::Address const & address, size_t size_of_store) STUB
 Ssl::LocalContextStorage *Ssl::GlobalContextStorage::getLocalStorage(Ip::Address const & address)
-{ fatal(STUB_API " required"); static Ssl::LocalContextStorage v(0,0); return &v; }
+{ fatal(STUB_API " required"); static LocalContextStorage v(0); return &v; }
 void Ssl::GlobalContextStorage::reconfigureStart() STUB
 //Ssl::GlobalContextStorage Ssl::TheGlobalContextStorage;
 
 #include "ssl/ErrorDetail.h"
 Security::ErrorCode parseErrorString(const char *name) STUB_RETVAL(0)
-//const char *Ssl::getErrorName(Security::ErrorCode value) STUB_RETVAL(NULL)
-Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode, X509 *, X509 *, const char *) STUB
-Ssl::ErrorDetail::ErrorDetail(ErrorDetail const &) STUB
-const String & Ssl::ErrorDetail::toString() const STUB_RETSTATREF(String)
 
 #include "ssl/support.h"
 namespace Ssl
 {
 int AskPasswordCb(char *, int, int, void *) STUB_RETVAL(0)
 bool InitServerContext(Security::ContextPointer &, AnyP::PortCfg &) STUB_RETVAL(false)
-bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, const char *) STUB_RETVAL(false)
-void SetupVerifyCallback(Security::ContextPointer &) STUB
+bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, Security::ParsedPortFlags) STUB_RETVAL(false)
+void ConfigurePeerVerification(Security::ContextPointer &, const Security::ParsedPortFlags) STUB
+void DisablePeerVerification(Security::ContextPointer &) STUB
 void MaybeSetupRsaCallback(Security::ContextPointer &) STUB
 } // namespace Ssl
 const char *sslGetUserEmail(SSL *ssl) STUB_RETVAL(NULL)

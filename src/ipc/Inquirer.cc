@@ -21,7 +21,7 @@
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Inquirer);
 
 Ipc::Inquirer::RequestsMap Ipc::Inquirer::TheRequestsMap;
-unsigned int Ipc::Inquirer::LastRequestId = 0;
+Ipc::RequestId::Index Ipc::Inquirer::LastRequestId = 0;
 
 /// compare Ipc::StrandCoord using kidId, for std::sort() below
 static bool
@@ -33,6 +33,7 @@ LesserStrandByKidId(const Ipc::StrandCoord &c1, const Ipc::StrandCoord &c2)
 Ipc::Inquirer::Inquirer(Request::Pointer aRequest, const StrandCoords& coords,
                         double aTimeout):
     AsyncJob("Ipc::Inquirer"),
+    codeContext(CodeContext::Current()),
     request(aRequest), strands(coords), pos(strands.begin()), timeout(aTimeout)
 {
     debugs(54, 5, HERE);
@@ -138,7 +139,7 @@ Ipc::Inquirer::callException(const std::exception& e)
 
 /// returns and forgets the right Inquirer callback for strand request
 AsyncCall::Pointer
-Ipc::Inquirer::DequeueRequest(unsigned int requestId)
+Ipc::Inquirer::DequeueRequest(const RequestId::Index requestId)
 {
     debugs(54, 3, HERE << " requestId " << requestId);
     Must(requestId != 0);
@@ -181,7 +182,9 @@ Ipc::Inquirer::RequestTimedOut(void* param)
     Must(param != NULL);
     Inquirer* cmi = static_cast<Inquirer*>(param);
     // use async call to enable job call protection that time events lack
-    CallJobHere(54, 5, cmi, Inquirer, requestTimedOut);
+    CallBack(cmi->codeContext, [&cmi] {
+        CallJobHere(54, 5, cmi, Inquirer, requestTimedOut);
+    });
 }
 
 /// called when the strand failed to respond (or finish responding) in time
@@ -203,7 +206,7 @@ Ipc::Inquirer::status() const
 {
     static MemBuf buf;
     buf.reset();
-    buf.appendf(" [request->requestId %u]", request->requestId);
+    buf.appendf(" [requestId %u]", request->requestId.index());
     buf.terminate();
     return buf.content();
 }

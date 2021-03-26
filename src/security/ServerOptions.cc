@@ -24,6 +24,8 @@
 #endif
 #endif
 
+#include <limits>
+
 Security::ServerOptions &
 Security::ServerOptions::operator =(const Security::ServerOptions &old) {
     if (this != &old) {
@@ -169,7 +171,7 @@ Security::ServerOptions::createBlankContext() const
 #elif USE_GNUTLS
     // Initialize for X.509 certificate exchange
     gnutls_certificate_credentials_t t;
-    if (const int x = gnutls_certificate_allocate_credentials(&t)) {
+    if (const auto x = gnutls_certificate_allocate_credentials(&t)) {
         debugs(83, DBG_CRITICAL, "ERROR: Failed to allocate TLS server context: " << Security::ErrorString(x));
     }
     ctx = convertContextFromRawPtr(t);
@@ -430,20 +432,13 @@ Security::ServerOptions::updateContextClientCa(Security::ContextPointer &ctx)
             return;
         }
 
-        if (parsedFlags & SSL_FLAG_DELAYED_AUTH) {
-            debugs(83, 9, "Not requesting client certificates until acl processing requires one");
-            SSL_CTX_set_verify(ctx.get(), SSL_VERIFY_NONE, nullptr);
-        } else {
-            debugs(83, 9, "Requiring client certificates.");
-            Ssl::SetupVerifyCallback(ctx);
-        }
+        Ssl::ConfigurePeerVerification(ctx, parsedFlags);
 
         updateContextCrl(ctx);
         updateContextTrust(ctx);
 
     } else {
-        debugs(83, 9, "Not requiring any client certificates");
-        SSL_CTX_set_verify(ctx.get(), SSL_VERIFY_NONE, NULL);
+        Ssl::DisablePeerVerification(ctx);
     }
 #endif
 }

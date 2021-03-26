@@ -37,7 +37,6 @@ class UrnState : public StoreClient
 public:
     explicit UrnState(const AccessLogEntry::Pointer &anAle): ale(anAle) {}
 
-    void created (StoreEntry *newEntry);
     void start (HttpRequest *, StoreEntry *);
     void setUriResFromRequest(HttpRequest *);
 
@@ -55,7 +54,7 @@ public:
 
 private:
     /* StoreClient API */
-    virtual LogTags *loggingTags() { return ale ? &ale->cache.code : nullptr; }
+    virtual LogTags *loggingTags() const { return ale ? &ale->cache.code : nullptr; }
     virtual void fillChecklist(ACLFilledChecklist &) const;
 
     char *urlres = nullptr;
@@ -175,29 +174,19 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
     if (urlres_r == NULL)
         return;
 
-    StoreEntry::getPublic (this, urlres, Http::METHOD_GET);
-}
+    auto urlEntry = storeGetPublic(urlres, Http::METHOD_GET);
 
-void
-UrnState::fillChecklist(ACLFilledChecklist &checklist) const
-{
-    checklist.setRequest(request.getRaw());
-    checklist.al = ale;
-}
-
-void
-UrnState::created(StoreEntry *e)
-{
-    if (!e || (e->hittingRequiresCollapsing() && !startCollapsingOn(*e, false))) {
+    if (!urlEntry || (urlEntry->hittingRequiresCollapsing() && !startCollapsingOn(*urlEntry, false))) {
         urlres_e = storeCreateEntry(urlres, urlres, RequestFlags(), Http::METHOD_GET);
         sc = storeClientListAdd(urlres_e, this);
         FwdState::Start(Comm::ConnectionPointer(), urlres_e, urlres_r.getRaw(), ale);
-        // TODO: StoreClients must either store/lock or abandon found entries.
-        //if (e)
-        //    e->abandon();
+        if (urlEntry) {
+            urlEntry->abandon(__FUNCTION__);
+            urlEntry = nullptr;
+        }
     } else {
-        urlres_e = e;
-        urlres_e->lock("UrnState::created");
+        urlres_e = urlEntry;
+        urlres_e->lock("UrnState::start");
         sc = storeClientListAdd(urlres_e, this);
     }
 
@@ -210,6 +199,13 @@ UrnState::created(StoreEntry *e)
                     tempBuffer,
                     urnHandleReply,
                     this);
+}
+
+void
+UrnState::fillChecklist(ACLFilledChecklist &checklist) const
+{
+    checklist.setRequest(request.getRaw());
+    checklist.al = ale;
 }
 
 void
@@ -429,6 +425,7 @@ urnParseReply(const char *inbuf, const HttpRequestMethod& m)
     }
 
     debugs(52, 3, "urnParseReply: Found " << i << " URLs");
+    xfree(buf);
     return list;
 }
 

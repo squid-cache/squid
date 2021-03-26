@@ -20,6 +20,7 @@
 #include "Parsing.h"
 
 #include <cerrno>
+#include <limits>
 
 CBDATA_CLASS_INIT(acl_tos);
 

@@ -1297,8 +1297,8 @@ ClientInfo::writeOrDequeue()
         const auto ccb = COMMIO_FD_WRITECB(head);
         // check that the head descriptor is still relevant
         if (headFde.clientInfo == this &&
-                quotaPeekReserv() == ccb->quotaQueueReserv &&
-                !headFde.closing()) {
+        quotaPeekReserv() == ccb->quotaQueueReserv &&
+        !headFde.closing()) {
 
             // wait for the head descriptor to become ready for writing
             Comm::SetSelect(head, COMM_SELECT_WRITE, Comm::HandleWrite, ccb, 0);
@@ -1607,6 +1607,7 @@ checkTimeouts(void)
             Comm::SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
             COMMIO_FD_WRITECB(fd)->finish(Comm::COMM_ERROR, ETIMEDOUT);
             CodeContext::Reset();
+            continue;
 #if USE_DELAY_POOLS
         } else if (F->writeQuotaHandler != nullptr && COMMIO_FD_WRITECB(fd)->conn != nullptr) {
             // TODO: Move and extract quota() call to place it inside F->codeContext.
@@ -1678,7 +1679,7 @@ commHalfClosedCheck(void *)
         if (!fd_table[c->fd].halfClosedReader) { // not reading already
             CallBack(fd_table[c->fd].codeContext, [&c] {
                 AsyncCall::Pointer call = commCbCall(5,4, "commHalfClosedReader",
-                                                     CommIoCbPtrFun(&commHalfClosedReader, nullptr));
+                CommIoCbPtrFun(&commHalfClosedReader, nullptr));
                 Comm::Read(c, call);
                 fd_table[c->fd].halfClosedReader = call;
             });

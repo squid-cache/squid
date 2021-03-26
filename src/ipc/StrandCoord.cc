@@ -10,7 +10,8 @@
 
 #include "squid.h"
 #include "Debug.h"
-#include "ipc/Messages.h"
+#include "globals.h"
+#include "ipc/Port.h"
 #include "ipc/StrandCoord.h"
 #include "ipc/TypedMsgHdr.h"
 
@@ -37,20 +38,35 @@ void Ipc::StrandCoord::pack(TypedMsgHdr &hdrMsg) const
     hdrMsg.putString(tag);
 }
 
-Ipc::HereIamMessage::HereIamMessage(const StrandCoord &aStrand):
-    strand(aStrand)
+Ipc::StrandMessage::StrandMessage(const StrandCoord &aStrand, const QuestionerId aQid):
+    strand(aStrand),
+    qid(aQid)
 {
 }
 
-Ipc::HereIamMessage::HereIamMessage(const TypedMsgHdr &hdrMsg)
+Ipc::StrandMessage::StrandMessage(const TypedMsgHdr &hdrMsg)
 {
-    hdrMsg.checkType(mtRegistration);
     strand.unpack(hdrMsg);
+    qid.unpack(hdrMsg);
 }
 
-void Ipc::HereIamMessage::pack(TypedMsgHdr &hdrMsg) const
+void
+Ipc::StrandMessage::pack(const MessageType messageType, TypedMsgHdr &hdrMsg) const
 {
-    hdrMsg.setType(mtRegistration);
+    hdrMsg.setType(messageType);
     strand.pack(hdrMsg);
+    qid.pack(hdrMsg);
+}
+
+void
+Ipc::StrandMessage::NotifyCoordinator(const MessageType msgType, const char *tag)
+{
+    static const auto pid = getpid();
+    StrandMessage message(StrandCoord(KidIdentifier, pid), MyQuestionerId());
+    if (tag)
+        message.strand.tag = tag;
+    TypedMsgHdr hdr;
+    message.pack(msgType, hdr);
+    SendMessage(Port::CoordinatorAddr(), hdr);
 }
 

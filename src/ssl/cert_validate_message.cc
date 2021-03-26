@@ -197,6 +197,13 @@ Ssl::CertValidationMsg::getCertByName(std::vector<CertItem> const &certs, std::s
     return NULL;
 }
 
+uint64_t
+Ssl::CertValidationResponse::MemoryUsedByResponse(const CertValidationResponse::Pointer &)
+{
+    // XXX: This math does not account for most of the response size!
+    return sizeof(CertValidationResponse);
+}
+
 Ssl::CertValidationResponse::RecvdError &
 Ssl::CertValidationResponse::getError(int errorId)
 {
@@ -211,42 +218,10 @@ Ssl::CertValidationResponse::getError(int errorId)
     return errors.back();
 }
 
-Ssl::CertValidationResponse::RecvdError::RecvdError(const RecvdError &old)
-{
-    id = old.id;
-    error_no = old.error_no;
-    error_reason = old.error_reason;
-    error_depth = old.error_depth;
-    setCert(old.cert.get());
-}
-
-Ssl::CertValidationResponse::RecvdError & Ssl::CertValidationResponse::RecvdError::operator = (const RecvdError &old)
-{
-    id = old.id;
-    error_no = old.error_no;
-    error_reason = old.error_reason;
-    error_depth = old.error_depth;
-    setCert(old.cert.get());
-    return *this;
-}
-
 void
 Ssl::CertValidationResponse::RecvdError::setCert(X509 *aCert)
 {
     cert.resetAndLock(aCert);
-}
-
-Ssl::CertValidationMsg::CertItem::CertItem(const CertItem &old)
-{
-    name = old.name;
-    setCert(old.cert.get());
-}
-
-Ssl::CertValidationMsg::CertItem & Ssl::CertValidationMsg::CertItem::operator = (const CertItem &old)
-{
-    name = old.name;
-    setCert(old.cert.get());
-    return *this;
 }
 
 void

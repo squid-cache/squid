@@ -12,6 +12,7 @@
 #define SQUID_IPC_FORWARDER_H
 
 #include "base/AsyncJob.h"
+#include "base/forward.h"
 #include "cbdata.h"
 #include "ipc/Request.h"
 #include "mgr/ActionParams.h"
@@ -34,10 +35,12 @@ public:
     virtual ~Forwarder();
 
     /// finds and calls the right Forwarder upon Coordinator's response
-    static void HandleRemoteAck(unsigned int requestId);
+    static void HandleRemoteAck(RequestId);
 
     /* has-to-be-public AsyncJob API */
     virtual void callException(const std::exception& e);
+
+    CodeContextPointer codeContext;
 
 protected:
     /* AsyncJob API */
@@ -56,17 +59,17 @@ private:
 
     void handleRemoteAck();
 
-    static AsyncCall::Pointer DequeueRequest(unsigned int requestId);
+    static AsyncCall::Pointer DequeueRequest(RequestId::Index);
 
 protected:
     Request::Pointer request;
     const double timeout; ///< response wait timeout in seconds
 
     /// maps request->id to Forwarder::handleRemoteAck callback
-    typedef std::map<unsigned int, AsyncCall::Pointer> RequestsMap;
+    typedef std::map<RequestId::Index, AsyncCall::Pointer> RequestsMap;
     static RequestsMap TheRequestsMap; ///< pending Coordinator requests
 
-    static unsigned int LastRequestId; ///< last requestId used
+    static RequestId::Index LastRequestId; ///< last requestId used
 };
 
 } // namespace Ipc

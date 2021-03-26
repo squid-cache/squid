@@ -36,6 +36,17 @@ KeepGoingDirective=""
 TargetAstyleVersion="2.04"
 ASTYLE='astyle'
 
+# whether to check and, if necessary, update boilerplate copyright years
+CheckAndUpdateCopyright=yes
+
+printUsage () {
+    echo "Usage: $0 [option...]"
+    echo "options:"
+    echo "    --keep-going|-k"
+    echo "    --check-and-update-copyright <yes|no>"
+    echo "    --with-astyle </path/to/astyle/executable>"
+}
+
 # command-line options
 while [ $# -ge 1 ]; do
     case "$1" in
@@ -44,13 +55,27 @@ while [ $# -ge 1 ]; do
         KeepGoingDirective=$1
         shift
         ;;
+    --check-and-update-copyright)
+        if test "x$2" != xyes -a "x$2" != xno
+        then
+            printUsage
+            echo "Error: Option $1 expects a yes or no argument but got $2"
+            exit 1;
+        fi
+        CheckAndUpdateCopyright=$2
+        shift 2
+        ;;
+    --help|-h)
+        printUsage
+        exit 0;
+        ;;
     --with-astyle)
         ASTYLE=$2
         export ASTYLE
         shift 2
         ;;
     *)
-        echo "Usage: $0 [--keep-going|-k]"
+        printUsage
         echo "Unsupported command-line option: $1"
         exit 1;
         ;;
@@ -95,8 +120,11 @@ else
 	echo "Found astyle ${ASVER}. Formatting..."
 fi
 
-COPYRIGHT_YEARS=`date +"1996-%Y"`
-echo "s/1996-2[0-9]+ The Squid Software Foundation and contributors/${COPYRIGHT_YEARS} The Squid Software Foundation and contributors/g" >>boilerplate_fix.sed
+if test $CheckAndUpdateCopyright = yes
+then
+    COPYRIGHT_YEARS=`date +"1996-%Y"`
+    echo "s/1996-2[0-9]+ The Squid Software Foundation and contributors/${COPYRIGHT_YEARS} The Squid Software Foundation and contributors/g" >> boilerplate_fix.sed
+fi
 
 # executes the specified command
 # in KeepGoing mode, remembers errors and hides them from callers
@@ -148,6 +176,31 @@ applyPluginsTo ()
         for script in `git ls-files "$@"`; do
                 run_ applyPlugin $script $source || return
         done
+}
+
+# succeeds if all MakeNamedErrorDetail() names are unique
+checkMakeNamedErrorDetails ()
+{
+    problems=1 # assume there are problems until proven otherwise
+
+    options='-h --only-matching --extended-regexp'
+    git grep $options 'MakeNamedErrorDetail[(]".*?"[)]' src |
+        sort |
+        uniq --count > \
+        MakeNamedErrorDetail.tmp
+
+    if grep --quiet --word-regexp 1 MakeNamedErrorDetail.tmp; then
+        if grep --invert-match --word-regexp 1 MakeNamedErrorDetail.tmp; then
+            echo "ERROR: Duplicated MakeNamedErrorDetail names (see above)."
+        else
+            problems=0
+        fi
+    else
+        echo "ERROR: Cannot find or process MakeNamedErrorDetail calls."
+    fi
+
+    rm MakeNamedErrorDetail.tmp # ignore (unexpected) cleanup failures
+    return $problems
 }
 
 srcFormat ()
@@ -287,7 +340,7 @@ for FILENAME in `git ls-files`; do
     esac
 
     # check for Foundation copyright blurb
-    if test -f ${FILENAME} -a "x$skip_copyright_check" = "x"; then
+    if test $CheckAndUpdateCopyright = yes -a -f ${FILENAME} -a "x$skip_copyright_check" = "x"; then
         BLURB=`grep -o "${COPYRIGHT_YEARS} The Squid Software Foundation and contributors" ${FILENAME}`;
         if test "x${BLURB}" = "x"; then
             BOILER=`grep -o -E "1996-2[0-9]+ The Squid Software Foundation and contributors" ${FILENAME}`;
@@ -350,12 +403,14 @@ printAmFile STUB_SOURCE "src/" "tests/stub_*.cc" > src/tests/Stub.am
 # Build the GPERF generated content
 make -C src/http gperf-files
 
+run_ checkMakeNamedErrorDetails || exit 1
+
 # Run formatting
 echo "" >doc/debug-sections.tmp
 srcFormat || exit 1
 sort -u <doc/debug-sections.tmp | sort -n >doc/debug-sections.tmp2
 cat scripts/boilerplate.h doc/debug-sections.tmp2 >doc/debug-sections.txt
 rm doc/debug-sections.tmp doc/debug-sections.tmp2
-rm boilerplate_fix.sed
+rm -f boilerplate_fix.sed
 
 exit $SeenErrors

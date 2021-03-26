@@ -40,11 +40,11 @@ COPIED_SOURCE= \
 	globals.cc \
 	SquidConfig.cc \
 	SquidNew.cc \
-	stub_fd.cc \
-	stub_HelperChildConfig.cc \
-	stub_libmem.cc \
-	stub_SBuf.cc \
-	STUB.h \
+	tests/stub_fd.cc \
+	tests/stub_HelperChildConfig.cc \
+	tests/stub_libmem.cc \
+	tests/stub_SBuf.cc \
+	tests/STUB.h \
 	time.cc
 
 # ICMP lookup helper
@@ -99,17 +99,17 @@ SquidConfig.cc: $(top_srcdir)/src/SquidConfig.cc
 SquidNew.cc: $(top_srcdir)/src/SquidNew.cc
 	cp $(top_srcdir)/src/SquidNew.cc $@
 
-stub_HelperChildConfig.cc: $(top_srcdir)/src/tests/stub_HelperChildConfig.cc
+tests/stub_HelperChildConfig.cc: $(top_srcdir)/src/tests/stub_HelperChildConfig.cc
 	cp $(top_srcdir)/src/tests/stub_HelperChildConfig.cc $@
 
-stub_fd.cc: $(top_srcdir)/src/tests/stub_fd.cc STUB.h
+tests/stub_fd.cc: $(top_srcdir)/src/tests/stub_fd.cc
 	cp $(top_srcdir)/src/tests/stub_fd.cc $@
 
-stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc STUB.h
+tests/stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc
 	cp $(top_srcdir)/src/tests/stub_libmem.cc $@
 
-stub_SBuf.cc: $(top_srcdir)/src/tests/stub_SBuf.cc STUB.h
+tests/stub_SBuf.cc: $(top_srcdir)/src/tests/stub_SBuf.cc
 	cp $(top_srcdir)/src/tests/stub_SBuf.cc $@
 
-STUB.h: $(top_srcdir)/src/tests/STUB.h
+tests/STUB.h: $(top_srcdir)/src/tests/STUB.h
 	cp $(top_srcdir)/src/tests/STUB.h $@
