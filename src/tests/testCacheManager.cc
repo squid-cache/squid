@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "anyp/Uri.h"
 #include "CacheManager.h"
 #include "mgr/Action.h"
 #include "Store.h"
@@ -17,11 +18,19 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testCacheManager );
 
+/// Provides test code access to CacheManager internal symbols
+class CacheManagerInternals : public CacheManager
+{
+public:
+    void ParseUrl(const AnyP::Uri &u) { CacheManager::ParseUrl(u); }
+};
+
 /* init memory pools */
 
 void testCacheManager::setUp()
 {
     Mem::Init();
+    AnyP::UriScheme::Init();
 }
 
 /*
@@ -66,3 +75,86 @@ testCacheManager::testRegister()
     CPPUNIT_ASSERT_EQUAL(1,(int)sentry->flags);
 }
 
+void
+testCacheManager::testParseUrl()
+{
+    auto *mgr = static_cast<CacheManagerInternals *>(CacheManager::GetInstance());
+    CPPUNIT_ASSERT(mgr != nullptr);
+
+    std::vector<AnyP::ProtocolType> validSchemes = {
+        AnyP::PROTO_CACHE_OBJECT,
+        AnyP::PROTO_HTTP,
+        AnyP::PROTO_HTTPS,
+        AnyP::PROTO_FTP
+    };
+
+    AnyP::Uri mgrUrl;
+    mgrUrl.host("localhost");
+    mgrUrl.port(3128);
+
+    const std::vector<const char *> validPathActions = {
+        // "", // technically valid, but not supported
+        "/",
+        "/menu",
+        // "/squid-internal-mgr", // technically valid, but not supported
+        "/squid-internal-mgr/",
+        "/squid-internal-mgr/menu"
+    };
+
+    const std::vector<const char *> validParams = {
+        "",
+        "?",
+        "?&",
+        "?&&&&&&&&&&&&",
+        "?foo=bar",
+        "?0123456789=bar",
+        "?foo=bar&",
+        "?foo=bar&&&&",
+        "?&foo=bar",
+        "?&&&&foo=bar",
+        "?&foo=bar&",
+        "?&&&&foo=bar&&&&",
+        "?foo=?_weird?~`:[]stuff&bar=okay&&&&&&"
+    };
+
+    const std::vector<const char *> validFragments = {
+        "",
+        "#frag"
+    };
+
+    unsigned caseNumber = 0;
+    unsigned success = 0;
+    for (const auto &scheme : validSchemes) {
+        mgrUrl.setScheme(scheme);
+
+        for (const auto *action : validPathActions) {
+
+            // all schemes except cache_object require "/squid-internal-mgr" path prefix
+            if (scheme != AnyP::PROTO_CACHE_OBJECT && strlen(action) <= 19)
+                continue;
+
+            for (const auto *param : validParams) {
+
+                for (const auto *frag : validFragments) {
+                    try {
+                        ++caseNumber;
+                        std::cerr << caseNumber << std::endl;
+
+                        SBuf bits;
+                        bits.append(action);
+                        bits.append(param);
+                        bits.append(frag);
+                        mgrUrl.path(bits);
+
+                        (void)mgr->ParseUrl(mgrUrl);
+                        ++success;
+                    } catch (...) {
+                        std::cerr << std::endl << "FAIL: " << mgrUrl << std::endl
+                                  << CurrentException << std::endl;
+                    }
+                    CPPUNIT_ASSERT_EQUAL(caseNumber, success);
+                }
+            }
+        }
+    }
+}
