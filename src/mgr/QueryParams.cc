@@ -71,6 +71,8 @@ Mgr::QueryParams::find(const String& name) const
 
 /// Parses the value part of a "param=value" URL section.
 /// Value can be a comma separated list of integers, or an opaque string.
+/// \note opaque string can be a list with any non-integer.
+///       For example; 1,2,3,4,5,z
 Mgr::QueryParam::Pointer
 ParseParamValue(SBuf &valueStr)
 {
@@ -106,9 +108,12 @@ Mgr::QueryParams::Parse(Parser::Tokenizer &tok, QueryParams &aParams)
     static const CharacterSet valueChars = CharacterSet("param-value", "&= #").complement();
     static const CharacterSet delims("param-delim", "&");
 
-    // TODO: remove '#' cases when AnyP::Uri separates path?query#fragment properly
+    while (!tok.atEnd()) {
 
-    while (!tok.atEnd() && tok.buf()[0] != '#') {
+        // TODO: remove '# case when AnyP::Uri separates path?query#fragment properly
+        // #fragment handled by caller. Do not throw.
+        if (tok.buf()[0] == '#')
+            return;
 
         if (tok.skipAll(delims))
             continue;
@@ -121,9 +126,6 @@ Mgr::QueryParams::Parse(Parser::Tokenizer &tok, QueryParams &aParams)
 
         SBuf valueStr;
         if (!tok.prefix(valueStr, valueChars))
-            throw TexcHere("invalid character in parameter value");
-
-        if (tok.skip('=') || tok.skip(' '))
             throw TexcHere("invalid character in parameter value");
 
         const auto name = SBufToString(nameStr);
