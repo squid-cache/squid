@@ -183,7 +183,7 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
 
     static const SBuf internalMagicPrefix("/squid-internal-mgr/");
     if (!tok.skip(internalMagicPrefix) && !tok.skip('/'))
-        throw TexcHere("invalid URL path");
+        throw TextException("invalid URL path", Here());
 
     Mgr::Command::Pointer cmd = new Mgr::Command;
     cmd->params.httpUri = SBufToString(uri.absolute());
@@ -204,11 +204,11 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
 
     Mgr::ActionProfile::Pointer profile = findAction(action.c_str());
     if (!profile)
-        throw TexcHere(ToSBuf("action '", action, "' not found"));
+        throw TextException(ToSBuf("action '", action, "' not found"), Here());
 
     const char *prot = ActionProtection(profile);
     if (!strcmp(prot, "disabled") || !strcmp(prot, "hidden"))
-        throw TexcHere(ToSBuf("action '", action, "' is ", prot));
+        throw TextException(ToSBuf("action '", action, "' is ", prot), Here());
     cmd->profile = profile;
 
     SBuf passwd;
@@ -225,7 +225,7 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
     }
 
     if (!tok.skip('#') && !tok.atEnd())
-        throw TexcHere("invalid characters in URL");
+        throw TextException("invalid characters in URL", Here());
     // else ignore #fragment
 
     debugs(16, 3, "MGR request: host=" << uri.host() << ", action=" << action <<

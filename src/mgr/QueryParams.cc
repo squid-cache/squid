@@ -120,13 +120,13 @@ Mgr::QueryParams::Parse(Parser::Tokenizer &tok, QueryParams &aParams)
 
         SBuf nameStr;
         if (!tok.prefix(nameStr, nameChars))
-            throw TexcHere("invalid query parameter name");
+            throw TextException("invalid query parameter name", Here());
         if (!tok.skip('='))
-            throw TexcHere("missing parameter value");
+            throw TextException("missing parameter value", Here());
 
         SBuf valueStr;
         if (!tok.prefix(valueStr, valueChars))
-            throw TexcHere("invalid character in parameter value");
+            throw TextException("invalid character in parameter value", Here());
 
         const auto name = SBufToString(nameStr);
         const auto value = ParseParamValue(valueStr);
