@@ -174,14 +174,11 @@ MgrFieldChars(const AnyP::ProtocolType &protocol)
  *
  * see RFC 3986 for definitions of scheme, authority, path-absolute, query-string
  *
- \retval Mgr::Command object for the following handling
- \retval nullptr if the action can't be found or can't be accessed by the user, or errors
+ * \returns Mgr::Command object with action to perform and parameters it might use
  */
 Mgr::Command::Pointer
 CacheManager::ParseUrl(const AnyP::Uri &uri)
 {
-    try {
-
     Parser::Tokenizer tok(uri.path());
 
     static const SBuf internalMagicPrefix("/squid-internal-mgr/");
@@ -235,11 +232,6 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
            ", password=" << passwd << ", params=" << params);
 
     return cmd;
-
-    } catch (...) {
-        debugs(16, 2, "MGR request error: " << CurrentException);
-        return nullptr;
-    }
 }
 
 /// \ingroup CacheManagerInternal
@@ -323,8 +315,12 @@ CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request,
 {
     debugs(16, 3, "request-url= '" << request->url << "', entry-url='" << entry->url() << "'");
 
-    Mgr::Command::Pointer cmd = ParseUrl(request->url);
-    if (!cmd) {
+    Mgr::Command::Pointer cmd;
+    try {
+        cmd = ParseUrl(request->url);
+
+    } catch (...) {
+        debugs(16, 2, "MGR request error: " << CurrentException);
         const auto err = new ErrorState(ERR_INVALID_URL, Http::scNotFound, request, ale);
         err->url = xstrdup(entry->url());
         errorAppendEntry(entry, err);
