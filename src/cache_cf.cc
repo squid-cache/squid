@@ -921,6 +921,25 @@ configDoConfigure(void)
     }
 
     for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
+        for (AnyP::PortCfgPointer s2 = HttpPortList; s2 != NULL; s2 = s2->next) {
+            if( s == s2)
+                continue;
+            if (s->name && s2->name && strcmp(s->name, s2->name) != 0)
+                continue;
+            if (s->defaultsite && s2->defaultsite && strcmp(s->defaultsite, s2->defaultsite) != 0)
+                continue;
+            if (s->transport.protocol == s2->transport.protocol &&
+                s->transport.major == s2->transport.major &&
+                s->transport.minor == s2->transport.minor) {
+                debugs(3, DBG_CRITICAL, "ERROR: multiple definitions for http_port: " <<
+                        s->name << ' ' << s->transport.protocol << ' ' <<  s->transport.major << '.' <<  s->transport.minor );
+                self_destruct();
+                return;
+            }
+        }
+    }
+
+    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (!s->secure.encryptTransport)
             continue;
         debugs(3, DBG_IMPORTANT, "Initializing " << AnyP::UriScheme(s->transport.protocol) << "_port " << s->s << " TLS contexts");
