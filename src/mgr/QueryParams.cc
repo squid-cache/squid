@@ -76,16 +76,16 @@ Mgr::QueryParams::find(const String& name) const
 Mgr::QueryParam::Pointer
 ParseParamValue(SBuf &valueStr)
 {
-    static const CharacterSet comma("comma",",");
+    static const CharacterSet comma("comma", ",");
 
     Parser::Tokenizer tok(valueStr);
     std::vector<int> array;
     int64_t intVal = 0;
     while (tok.int64(intVal, 10, false)) {
-        (void)tok.skipAll(comma);
         Must(intVal >= std::numeric_limits<int>::min());
         Must(intVal <= std::numeric_limits<int>::max());
         array.emplace_back(intVal);
+        (void)tok.skipOne(comma);
     }
 
     if (tok.atEnd())
@@ -110,9 +110,9 @@ Mgr::QueryParams::Parse(Parser::Tokenizer &tok, QueryParams &aParams)
 
     while (!tok.atEnd()) {
 
-        // TODO: remove '# case when AnyP::Uri separates path?query#fragment properly
+        // TODO: remove '#' processing when AnyP::Uri splits 'query#fragment' properly
         // #fragment handled by caller. Do not throw.
-        if (tok.buf()[0] == '#')
+        if (tok.remaining()[0] == '#')
             return;
 
         if (tok.skipAll(delims))
@@ -126,7 +126,7 @@ Mgr::QueryParams::Parse(Parser::Tokenizer &tok, QueryParams &aParams)
 
         SBuf valueStr;
         if (!tok.prefix(valueStr, valueChars))
-            throw TextException("invalid character in parameter value", Here());
+            throw TextException("missing or malformed parameter value", Here());
 
         const auto name = SBufToString(nameStr);
         const auto value = ParseParamValue(valueStr);

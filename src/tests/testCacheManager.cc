@@ -119,7 +119,10 @@ testCacheManager::testParseUrl()
 
     const std::vector<const char *> validFragments = {
         "",
-        "#frag"
+        "#",
+        "##",
+        "#?a=b",
+        "#fragment"
     };
 
     unsigned caseNumber = 0;

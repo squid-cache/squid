@@ -9,7 +9,7 @@
 #ifndef SQUID_CACHEMANAGER_H
 #define SQUID_CACHEMANAGER_H
 
-#include "anyp/Uri.h"
+#include "anyp/forward.h"
 #include "comm/forward.h"
 #include "log/forward.h"
 #include "mgr/Action.h"
@@ -63,4 +63,3 @@ protected:
 };
 
 #endif /* SQUID_CACHEMANAGER_H */
-

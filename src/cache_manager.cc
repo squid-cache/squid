@@ -155,11 +155,11 @@ MgrFieldChars(const AnyP::ProtocolType &protocol)
 {
     // Deprecated cache_object:// scheme used '@' to delimit passwords
     if (protocol == AnyP::PROTO_CACHE_OBJECT) {
-        static const CharacterSet fieldChars = CharacterSet("cache-object-field","@?#").complement();
+        static const CharacterSet fieldChars = CharacterSet("cache-object-field", "@?#").complement();
         return fieldChars;
     }
 
-    static const CharacterSet actionChars = CharacterSet("mgr-field","?#").complement();
+    static const CharacterSet actionChars = CharacterSet("mgr-field", "?#").complement();
     return actionChars;
 }
 
@@ -185,7 +185,7 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
     if (!tok.skip(internalMagicPrefix) && !tok.skip('/'))
         throw TextException("invalid URL path", Here());
 
-    Mgr::Command::Pointer cmd = new Mgr::Command;
+    Mgr::Command::Pointer cmd = new Mgr::Command();
     cmd->params.httpUri = SBufToString(uri.absolute());
 
     const auto &fieldChars = MgrFieldChars(uri.getScheme());
@@ -202,7 +202,7 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
     }
     cmd->params.actionName = SBufToString(action);
 
-    Mgr::ActionProfile::Pointer profile = findAction(action.c_str());
+    const auto profile = findAction(action.c_str());
     if (!profile)
         throw TextException(ToSBuf("action '", action, "' not found"), Here());
 
@@ -320,7 +320,7 @@ CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request,
         cmd = ParseUrl(request->url);
 
     } catch (...) {
-        debugs(16, 2, "MGR request error: " << CurrentException);
+        debugs(16, 2, "request URL error: " << CurrentException);
         const auto err = new ErrorState(ERR_INVALID_URL, Http::scNotFound, request, ale);
         err->url = xstrdup(entry->url());
         errorAppendEntry(entry, err);
