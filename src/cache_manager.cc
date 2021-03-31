@@ -485,3 +485,4 @@ CacheManager::GetInstance()
     }
     return instance;
 }
+

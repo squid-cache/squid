@@ -63,3 +63,4 @@ protected:
 };
 
 #endif /* SQUID_CACHEMANAGER_H */
+
