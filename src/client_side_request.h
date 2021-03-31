@@ -131,7 +131,7 @@ public:
 
     dlink_node active;
     dlink_list client_stream;
-    int mRangeCLen();
+    int64_t mRangeCLen() const;
 
     ClientRequestContext *calloutContext;
     void doCallouts();
@@ -147,6 +147,11 @@ public:
     /// sets log_uri and uri to an internally-generated "error:..." URI when
     /// neither the current request nor the parsed request URI are known
     void setErrorUri(const char *errorUri);
+
+    /// Prepares to satisfy a Range request with a generated HTTP 206 response.
+    /// Initializes range_iter state to allow raw range_iter access.
+    /// \returns Content-Length value for the future response; never negative
+    int64_t prepPartialResponseGeneration();
 
     /// Build an error reply. For use with the callouts.
     void calloutsError(const err_type error, const int errDetail);

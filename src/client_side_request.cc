@@ -1094,9 +1094,6 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
              * iter up at this point.
              */
             node->readBuffer.offset = request->range->lowestOffset(0);
-            http->range_iter.pos = request->range->begin();
-            http->range_iter.end = request->range->end();
-            http->range_iter.valid = true;
         }
     }
 
@@ -1953,6 +1950,30 @@ ClientHttpRequest::setErrorUri(const char *aUri)
 #if !_USE_INLINE_
 #include "client_side_request.cci"
 #endif
+
+// XXX: This should not be a _request_ method. Move range_iter elsewhere.
+int64_t
+ClientHttpRequest::prepPartialResponseGeneration()
+{
+    assert(request);
+    assert(request->range);
+
+    range_iter.pos = request->range->begin();
+    range_iter.end = request->range->end();
+    range_iter.debt_size = 0;
+    const auto multipart = request->range->specs.size() > 1;
+    if (multipart)
+        range_iter.boundary = rangeBoundaryStr();
+    range_iter.valid = true; // TODO: Remove.
+    range_iter.updateSpec(); // TODO: Refactor to initialize rather than update.
+
+    assert(range_iter.pos != range_iter.end);
+    const auto &firstRange = *range_iter.pos;
+    assert(firstRange);
+    out.offset = firstRange->offset;
+
+    return multipart ? mRangeCLen() : firstRange->length;
+}
 
 #if USE_ADAPTATION
 /// Initiate an asynchronous adaptation transaction which will call us back.
