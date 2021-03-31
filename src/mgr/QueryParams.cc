@@ -106,7 +106,7 @@ Mgr::QueryParams::Parse(Parser::Tokenizer &tok, QueryParams &aParams)
 {
     static const CharacterSet nameChars = CharacterSet("param-name", "_") + CharacterSet::ALPHA + CharacterSet::DIGIT;
     static const CharacterSet valueChars = CharacterSet("param-value", "&= #").complement();
-    static const CharacterSet delims("param-delim", "&");
+    static const CharacterSet delimChars("param-delim", "&");
 
     while (!tok.atEnd()) {
 
@@ -115,7 +115,7 @@ Mgr::QueryParams::Parse(Parser::Tokenizer &tok, QueryParams &aParams)
         if (tok.remaining()[0] == '#')
             return;
 
-        if (tok.skipAll(delims))
+        if (tok.skipAll(delimChars))
             continue;
 
         SBuf nameStr;
