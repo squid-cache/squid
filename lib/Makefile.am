@@ -66,13 +66,13 @@ libmisccontainers_la_SOURCES = \
 	hash.cc
 
 libmiscutil_la_SOURCES = \
+	$(SNPRINTFSOURCE) \
+	Splay.cc \
 	getfullhostname.c \
 	heap.c \
 	iso3307.c \
 	radix.c \
 	rfc1123.c \
-	$(SNPRINTFSOURCE) \
-	Splay.cc \
 	stub_memaccount.c \
 	util.c \
 	xusleep.c
@@ -81,9 +81,9 @@ TESTS += tests/testRFC1738
 
 check_PROGRAMS += tests/testRFC1738
 
-tests_testRFC1738_SOURCES= \
-	tests/testRFC1738.h \
-	tests/testRFC1738.cc
+tests_testRFC1738_SOURCES = \
+	tests/testRFC1738.cc \
+	tests/testRFC1738.h
 
 tests_testRFC1738_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \

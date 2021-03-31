@@ -54,16 +54,16 @@ CLEANFILES += test_tools.cc tests/stub_debug.cc time.cc tests/stub_libmem.cc tes
 bin_PROGRAMS = squidclient
 
 squidclient_SOURCES = \
-	gssapi_support.cc \
-	gssapi_support.h \
 	Parameters.h \
 	Ping.cc \
 	Ping.h \
+	Transport.cc \
+	Transport.h \
+	gssapi_support.cc \
+	gssapi_support.h \
 	squidclient.cc \
 	test_tools.cc \
-	time.cc \
-	Transport.cc \
-	Transport.h
+	time.cc
 
 nodist_squidclient_SOURCES = \
 	tests/stub_debug.cc \

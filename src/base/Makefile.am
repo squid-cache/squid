@@ -20,8 +20,8 @@ libbase_la_SOURCES = \
 	AsyncJob.h \
 	AsyncJobCalls.h \
 	ByteCounter.h \
-	CbcPointer.h \
 	CbDataList.h \
+	CbcPointer.h \
 	CharacterSet.cc \
 	CharacterSet.h \
 	CodeContext.cc \
@@ -29,7 +29,6 @@ libbase_la_SOURCES = \
 	EnumIterator.h \
 	File.cc \
 	File.h \
-	forward.h \
 	HardFun.h \
 	Here.cc \
 	Here.h \
@@ -49,4 +48,5 @@ libbase_la_SOURCES = \
 	Subscription.h \
 	TextException.cc \
 	TextException.h \
-	YesNoNone.h
+	YesNoNone.h \
+	forward.h

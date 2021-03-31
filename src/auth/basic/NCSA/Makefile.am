@@ -11,7 +11,7 @@ libexec_PROGRAMS	= basic_ncsa_auth
 man_MANS 		= basic_ncsa_auth.8
 EXTRA_DIST		= basic_ncsa_auth.8 required.m4
 
-basic_ncsa_auth_SOURCES= \
+basic_ncsa_auth_SOURCES = \
 	basic_ncsa_auth.cc \
 	crypt_md5.cc \
 	crypt_md5.h

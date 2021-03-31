@@ -72,18 +72,18 @@ DEFAULT_CACHEMGR_CONFIG = $(sysconfdir)/cachemgr.conf
 libexec_PROGRAMS = cachemgr$(CGIEXT)
 
 cachemgr__CGIEXT__SOURCES = \
-	cachemgr.cc \
 	CharacterSet.cc \
 	Here.cc \
 	MemBuf.cc \
+	cachemgr.cc \
 	test_tools.cc \
 	time.cc
 
 nodist_cachemgr__CGIEXT__SOURCES = \
-	tests/STUB.h \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
-	tests/stub_libmem.cc
+	tests/stub_libmem.cc \
+	tests/STUB.h
 
 cachemgr__CGIEXT__CXXFLAGS = -DDEFAULT_CACHEMGR_CONFIG=\"$(DEFAULT_CACHEMGR_CONFIG)\" $(AM_CXXFLAGS)
 

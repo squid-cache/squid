@@ -9,7 +9,7 @@ include $(top_srcdir)/src/Common.am
 
 libexec_PROGRAMS= basic_smb_lm_auth
 
-basic_smb_lm_auth_SOURCES= \
+basic_smb_lm_auth_SOURCES = \
 	msntauth.cc \
 	msntauth.h \
 	valid.cc \
