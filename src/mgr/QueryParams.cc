@@ -84,7 +84,8 @@ ParseParamValue(SBuf &rawValue)
         Must(intVal >= std::numeric_limits<int>::min());
         Must(intVal <= std::numeric_limits<int>::max());
         array.emplace_back(intVal);
-        (void)tok.skipOne(comma);
+        if (tok.remaining().length() > 1)
+            (void)tok.skipOne(comma);
     }
 
     if (tok.atEnd())
