@@ -114,7 +114,13 @@ testCacheManager::testParseUrl()
         "?&&&&foo=bar",
         "?&foo=bar&",
         "?&&&&foo=bar&&&&",
-        "?foo=?_weird?~`:[]stuff&bar=okay&&&&&&"
+        "?foo=?_weird?~`:[]stuff&bar=okay&&&&&&",
+        "?intlist=1",
+        "?intlist=1,2,3,4,5",
+        "?string=1a",
+        "?string=1,2,3,4,z",
+        "?string=1,2,3,4,[0]",
+        "?intlist=1,2,3,4,5&string=1,2,3,4,y"
     };
 
     const std::vector<const char *> validFragments = {
