@@ -141,7 +141,6 @@ testCacheManager::testParseUrl()
                 for (const auto *frag : validFragments) {
                     try {
                         ++caseNumber;
-                        std::cerr << caseNumber << std::endl;
 
                         SBuf bits;
                         bits.append(action);
@@ -150,12 +149,13 @@ testCacheManager::testParseUrl()
                         mgrUrl.path(bits);
 
                         (void)mgr->ParseUrl(mgrUrl);
-                        ++success;
+                        CPPUNIT_ASSERT(++success);
                     } catch (...) {
-                        std::cerr << std::endl << "FAIL: " << mgrUrl << std::endl
-                                  << CurrentException << std::endl;
+                        std::cerr << std::endl
+                                  << "FAIL: " << mgrUrl
+                                  << Debug::Extra << "error: " << CurrentException << std::endl;
+                        CPPUNIT_ASSERT_EQUAL(caseNumber, success);
                     }
-                    CPPUNIT_ASSERT_EQUAL(caseNumber, success);
                 }
             }
         }
