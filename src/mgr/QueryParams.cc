@@ -73,11 +73,11 @@ Mgr::QueryParams::find(const String& name) const
 /// Value can be a comma-separated list of integers or an opaque string.
 /// \note opaque string may be a list with a non-integer (e.g., "1,2,3,z")
 Mgr::QueryParam::Pointer
-ParseParamValue(SBuf &valueStr)
+ParseParamValue(SBuf &rawValue)
 {
     static const CharacterSet comma("comma", ",");
 
-    Parser::Tokenizer tok(valueStr);
+    Parser::Tokenizer tok(rawValue);
     std::vector<int> array;
     int64_t intVal = 0;
     while (tok.int64(intVal, 10, false)) {
@@ -90,7 +90,7 @@ ParseParamValue(SBuf &valueStr)
     if (tok.atEnd())
         return new Mgr::IntParam(array);
     else
-        return new Mgr::StringParam(SBufToString(valueStr));
+        return new Mgr::StringParam(SBufToString(rawValue));
 }
 
 /**
