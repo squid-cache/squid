@@ -70,9 +70,8 @@ Mgr::QueryParams::find(const String& name) const
 }
 
 /// Parses the value part of a "param=value" URL section.
-/// Value can be a comma separated list of integers, or an opaque string.
-/// \note opaque string can be a list with any non-integer.
-///       For example; 1,2,3,4,5,z
+/// Value can be a comma-separated list of integers or an opaque string.
+/// \note opaque string may be a list with a non-integer (e.g., "1,2,3,z")
 Mgr::QueryParam::Pointer
 ParseParamValue(SBuf &valueStr)
 {
