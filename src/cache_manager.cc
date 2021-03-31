@@ -15,6 +15,7 @@
 #include "comm/Connection.h"
 #include "Debug.h"
 #include "errorpage.h"
+#include "error/ExceptionErrorDetail.h"
 #include "fde.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -323,6 +324,7 @@ CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request,
         debugs(16, 2, "request URL error: " << CurrentException);
         const auto err = new ErrorState(ERR_INVALID_URL, Http::scNotFound, request, ale);
         err->url = xstrdup(entry->url());
+        err->detailError(new ExceptionErrorDetail(Here().id()));
         errorAppendEntry(entry, err);
         entry->expires = squid_curtime;
         return;
