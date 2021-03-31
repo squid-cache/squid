@@ -19,8 +19,8 @@ libsecurity_la_SOURCES = \
 	Context.h \
 	EncryptorAnswer.cc \
 	EncryptorAnswer.h \
-	ErrorDetail.h \
 	ErrorDetail.cc \
+	ErrorDetail.h \
 	Handshake.cc \
 	Handshake.h \
 	Io.cc \

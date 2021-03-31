@@ -10,8 +10,8 @@
 #define SQUID_SRC_SECURITY_IO_H
 
 #include "comm/forward.h"
-#include "security/forward.h"
 #include "security/ErrorDetail.h"
+#include "security/forward.h"
 
 namespace Security {
 

@@ -9,8 +9,8 @@
 #ifndef _SQUID_SRC_ERROR_ERROR_H
 #define _SQUID_SRC_ERROR_ERROR_H
 
-#include "error/forward.h"
 #include "error/Detail.h"
+#include "error/forward.h"
 
 #include <iosfwd>
 

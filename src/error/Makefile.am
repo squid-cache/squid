@@ -17,13 +17,13 @@ BUILT_SOURCES = \
 noinst_LTLIBRARIES = liberror.la
 
 liberror_la_SOURCES = \
-	forward.h \
-	Error.cc \
-	Error.h \
 	Detail.cc \
 	Detail.h \
+	Error.cc \
+	Error.h \
+	ExceptionErrorDetail.h \
 	SysErrorDetail.h \
-	ExceptionErrorDetail.h
+	forward.h
 
 nodist_liberror_la_SOURCES = \
 	$(BUILT_SOURCES)

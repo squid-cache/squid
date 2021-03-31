@@ -36,7 +36,7 @@ public:
 
 private:
     SourceLocationId exceptionId; ///< identifies the thrower or catcher
- };
+};
 
 #endif /* _SQUID_SRC_ERROR_EXCEPTIONERRORDETAIL_H */
 

@@ -406,7 +406,7 @@ static const ErrorCodeNames TheErrorCodeNames = {
 Security::ErrorCode
 Security::ErrorCodeFromName(const char *name)
 {
-    static auto TheCmp = [](const char *a, const char *b){return strcmp(a, b) < 0;};
+    static auto TheCmp = [](const char *a, const char *b) {return strcmp(a, b) < 0;};
     static std::map<const char *, ErrorCode, decltype(TheCmp)> TheErrorCodeByNameIndx(TheCmp);
     if (TheErrorCodeByNameIndx.empty()) {
         for (const auto &i: TheErrorCodeNames)
