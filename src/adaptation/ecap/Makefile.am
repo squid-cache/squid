@@ -11,18 +11,17 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libecapsquid.la
 
 libecapsquid_la_SOURCES = \
-	Config.h \
 	Config.cc \
-	Host.h \
+	Config.h \
 	Host.cc \
-	MessageRep.h \
+	Host.h \
 	MessageRep.cc \
-	ServiceRep.h \
+	MessageRep.h \
+	Registry.h \
 	ServiceRep.cc \
-	XactionRep.h \
+	ServiceRep.h \
 	XactionRep.cc \
-	\
-	Registry.h
+	XactionRep.h
 
 # add libecap using its pkg-config-produced configuration variables
 libecapsquid_la_CXXFLAGS = $(EXT_LIBECAP_CFLAGS)

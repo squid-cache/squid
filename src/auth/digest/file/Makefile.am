@@ -10,7 +10,7 @@ include $(top_srcdir)/src/Common.am
 man_MANS= digest_file_auth.8
 libexec_PROGRAMS= digest_file_auth
 
-digest_file_auth_SOURCES= \
+digest_file_auth_SOURCES = \
 	digest_common.h \
 	digest_file_auth.cc \
 	text_backend.cc \

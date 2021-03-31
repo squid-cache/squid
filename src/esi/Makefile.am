@@ -25,12 +25,12 @@ ESI_PARSER_SOURCES += \
 endif
 
 libesi_la_SOURCES = \
+	$(ESI_PARSER_SOURCES) \
 	Assign.cc \
 	Assign.h \
 	Attempt.h \
 	Context.cc \
 	Context.h \
-	$(ESI_PARSER_SOURCES) \
 	Element.h \
 	Esi.cc \
 	Esi.h \

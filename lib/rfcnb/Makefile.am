@@ -13,14 +13,13 @@ noinst_LTLIBRARIES = librfcnb.la
 
 librfcnb_la_SOURCES = \
 	byteorder.h \
-	rfcnb.h \
 	rfcnb-common.h \
 	rfcnb-error.h \
-	rfcnb-priv.h \
-	rfcnb-util.h \
-	rfcnb-io.h \
 	rfcnb-io.c \
+	rfcnb-io.h \
+	rfcnb-priv.h \
 	rfcnb-util.c \
 	rfcnb-util.h \
+	rfcnb.h \
 	session.c \
 	std-includes.h

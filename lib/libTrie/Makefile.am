@@ -15,8 +15,9 @@ noinst_LIBRARIES = libTrie.a
 
 noinst_HEADERS = Trie.h TrieNode.h TrieCharTransform.h
 
-libTrie_a_SOURCES = Trie.cc \
+libTrie_a_SOURCES = \
+	Trie.cc \
 	Trie.h \
+	TrieCharTransform.h \
 	TrieNode.cc \
-	TrieNode.h \
-	TrieCharTransform.h
+	TrieNode.h

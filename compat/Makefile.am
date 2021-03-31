@@ -16,25 +16,25 @@ include $(top_srcdir)/src/Common.am
 
 noinst_LTLIBRARIES = libcompatsquid.la
 libcompatsquid_la_SOURCES = \
+	GnuRegex.c \
+	GnuRegex.h \
 	assert.cc \
 	assert.h \
 	cmsg.h \
 	compat.cc \
 	compat.h \
 	compat_shared.h \
-	cpu.h \
 	cppunit.h \
+	cpu.h \
 	debug.cc \
 	debug.h \
-	eui64_aton.h \
 	eui64_aton.c \
+	eui64_aton.h \
 	fdsetsize.h \
 	getaddrinfo.cc \
 	getaddrinfo.h \
 	getnameinfo.cc \
 	getnameinfo.h \
-	GnuRegex.c \
-	GnuRegex.h \
 	inet_ntop.cc \
 	inet_ntop.h \
 	inet_pton.cc \
@@ -42,19 +42,37 @@ libcompatsquid_la_SOURCES = \
 	initgroups.h \
 	memrchr.cc \
 	memrchr.h \
+	mswindows.cc \
 	openssl.h \
+	os/aix.h \
+	os/android.h \
+	os/dragonfly.h \
+	os/freebsd.h \
+	os/hpux.h \
+	os/linux.h \
+	os/macosx.h \
+	os/mswindows.h \
+	os/netbsd.h \
+	os/next.h \
+	os/openbsd.h \
+	os/opensolaris_10_netdb.h \
+	os/os2.h \
+	os/qnx.h \
+	os/sgi.h \
+	os/solaris.h \
+	os/sunos.h \
 	osdetect.h \
 	psignal.h \
 	shm.cc \
 	shm.h \
-	statvfs.h \
 	statvfs.cc \
+	statvfs.h \
 	stdio.h \
 	stdvarargs.h \
+	strnrchr.c \
+	strnrchr.h \
 	strnstr.cc \
 	strtoll.h \
-	strnrchr.h \
-	strnrchr.c \
 	tempnam.h \
 	types.h \
 	valgrind.h \
@@ -66,35 +84,16 @@ libcompatsquid_la_SOURCES = \
 	xstring.cc \
 	xstring.h \
 	xstrto.cc \
-	xstrto.h \
-	\
-	os/aix.h \
-	os/android.h \
-	os/dragonfly.h \
-	os/freebsd.h \
-	os/hpux.h \
-	os/linux.h \
-	os/macosx.h \
-	os/mswindows.h \
-	mswindows.cc \
-	os/netbsd.h \
-	os/next.h \
-	os/openbsd.h \
-	os/opensolaris_10_netdb.h \
-	os/os2.h \
-	os/qnx.h \
-	os/sgi.h \
-	os/solaris.h \
-	os/sunos.h
+	xstrto.h
 
 libcompatsquid_la_LIBADD= $(LTLIBOBJS)
 
 check_PROGRAMS += testPreCompiler
 TESTS += testPreCompiler
 
-testPreCompiler_SOURCES= \
-	testPreCompiler.h \
-	testPreCompiler.cc
+testPreCompiler_SOURCES = \
+	testPreCompiler.cc \
+	testPreCompiler.h
 testPreCompiler_LDADD= $(LIBCPPUNIT_LIBS)
 testPreCompiler_LDFLAGS=
 
