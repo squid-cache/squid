@@ -92,13 +92,14 @@ testCacheManager::testParseUrl()
     mgrUrl.host("localhost");
     mgrUrl.port(3128);
 
-    const std::vector<const char *> validPathActions = {
-        // "", // technically valid, but not supported
+    const std::vector<const char *> magicPrefixes = {
         "/",
-        "/menu",
-        // "/squid-internal-mgr", // technically valid, but not supported
         "/squid-internal-mgr/",
-        "/squid-internal-mgr/menu"
+    };
+
+    const std::vector<const char *> validActions = {
+        "",
+        "menu",
     };
 
     const std::vector<const char *> validParams = {
@@ -136,31 +137,35 @@ testCacheManager::testParseUrl()
     for (const auto &scheme : validSchemes) {
         mgrUrl.setScheme(scheme);
 
-        for (const auto *action : validPathActions) {
+        for (const auto *magic : magicPrefixes) {
 
-            // all schemes except cache_object require "/squid-internal-mgr" path prefix
-            if (scheme != AnyP::PROTO_CACHE_OBJECT && strlen(action) <= 19)
+            // all schemes except cache_object require magic path prefix bytes
+            if (scheme != AnyP::PROTO_CACHE_OBJECT && strlen(magic) <= 2)
                 continue;
 
-            for (const auto *param : validParams) {
+            for (const auto *action : validActions) {
 
-                for (const auto *frag : validFragments) {
-                    try {
-                        ++caseNumber;
+                for (const auto *param : validParams) {
 
-                        SBuf bits;
-                        bits.append(action);
-                        bits.append(param);
-                        bits.append(frag);
-                        mgrUrl.path(bits);
+                    for (const auto *frag : validFragments) {
+                        try {
+                            ++caseNumber;
 
-                        (void)mgr->ParseUrl(mgrUrl);
-                        CPPUNIT_ASSERT(++success);
-                    } catch (...) {
-                        std::cerr << std::endl
-                                  << "FAIL: " << mgrUrl
-                                  << Debug::Extra << "error: " << CurrentException << std::endl;
-                        CPPUNIT_ASSERT_EQUAL(caseNumber, success);
+                            SBuf bits;
+                            bits.append(magic);
+                            bits.append(action);
+                            bits.append(param);
+                            bits.append(frag);
+                            mgrUrl.path(bits);
+
+                            (void)mgr->ParseUrl(mgrUrl);
+                            CPPUNIT_ASSERT(++success);
+                        } catch (...) {
+                            std::cerr << std::endl
+                                      << "FAIL: " << mgrUrl
+                                      << Debug::Extra << "error: " << CurrentException << std::endl;
+                            CPPUNIT_ASSERT_EQUAL(caseNumber, success);
+                        }
                     }
                 }
             }
