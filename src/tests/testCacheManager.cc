@@ -94,12 +94,16 @@ testCacheManager::testParseUrl()
 
     const std::vector<const char *> magicPrefixes = {
         "/",
-        "/squid-internal-mgr/",
+        "/squid-internal-mgr/"
     };
 
     const std::vector<const char *> validActions = {
         "",
-        "menu",
+        "menu"
+    };
+
+    const std::vector<const char *> invalidActions = {
+        "INVALID" // any unregistered name
     };
 
     const std::vector<const char *> validParams = {
@@ -124,6 +128,26 @@ testCacheManager::testParseUrl()
         "?intlist=1,2,3,4,5&string=1,2,3,4,y"
     };
 
+    const std::vector<const char *> invalidParams = {
+        "?foo",
+        "?/foo",
+        "?foo/",
+        "?foo=",
+        "?foo=&",
+        "?=foo",
+        "? foo=bar",
+        "? &",
+        "?& ",
+        "?=&",
+        "?&=",
+        "? &&&",
+        "?& &&",
+        "?&& &",
+        "?=&&&",
+        "?&=&&",
+        "?&&=&"
+    };
+
     const std::vector<const char *> validFragments = {
         "",
         "#",
@@ -132,7 +156,6 @@ testCacheManager::testParseUrl()
         "#fragment"
     };
 
-    unsigned caseNumber = 0;
     unsigned success = 0;
     for (const auto &scheme : validSchemes) {
         mgrUrl.setScheme(scheme);
@@ -143,14 +166,12 @@ testCacheManager::testParseUrl()
             if (scheme != AnyP::PROTO_CACHE_OBJECT && strlen(magic) <= 2)
                 continue;
 
+            /* Check the parser accepts all the valid cases */
+
             for (const auto *action : validActions) {
-
                 for (const auto *param : validParams) {
-
                     for (const auto *frag : validFragments) {
                         try {
-                            ++caseNumber;
-
                             SBuf bits;
                             bits.append(magic);
                             bits.append(action);
@@ -164,7 +185,36 @@ testCacheManager::testParseUrl()
                             std::cerr << std::endl
                                       << "FAIL: " << mgrUrl
                                       << Debug::Extra << "error: " << CurrentException << std::endl;
-                            CPPUNIT_ASSERT_EQUAL(caseNumber, success);
+                            CPPUNIT_FAIL("bad result");
+                        }
+                    }
+                }
+            }
+
+            /* Check that invalid parameters are rejected */
+
+            for (const auto *action : validActions) {
+                for (const auto *param : invalidParams) {
+                    for (const auto *frag : validFragments) {
+                        static const auto err = "accepted malformed input";
+                        try {
+                            SBuf bits;
+                            bits.append(magic);
+                            bits.append(action);
+                            bits.append(param);
+                            bits.append(frag);
+                            mgrUrl.path(bits);
+
+                            (void)mgr->ParseUrl(mgrUrl);
+
+                            std::cerr << std::endl
+                                      << "FAIL: " << mgrUrl
+                                      << Debug::Extra << "error: should be rejected due to '" << param << "'" << std::endl;
+                            CPPUNIT_FAIL(err);
+                        } catch (const TextException &e) {
+                            CPPUNIT_ASSERT(++success);
+                            if (strcmp(e.what(), err) == 0)
+                                throw;
                         }
                     }
                 }
