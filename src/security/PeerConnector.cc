@@ -207,7 +207,7 @@ Security::PeerConnector::negotiate()
         hidMissingIssuer = false; // prep for the next SSL_connect()
 
         if (result.category == IoResult::ioSuccess ||
-            !(result.errorDetail && result.errorDetail->errorNo() == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY))
+                !(result.errorDetail && result.errorDetail->errorNo() == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY))
             return handleMissingCertificates(result);
 
         debugs(83, DBG_IMPORTANT, "BUG: Honoring unexpected SSL_connect() error: X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY");
