@@ -163,12 +163,13 @@ Http::Stream::getNextRangeOffset() const
             return start;
         }
 
-    } else if (reply && reply->contentRange()) {
+    } else if (const auto cr = reply ? reply->contentRange() : nullptr) {
         /* request does not have ranges, but reply does */
         /** \todo FIXME: should use range_iter_pos on reply, as soon as reply->content_range
          *        becomes HttpHdrRange rather than HttpHdrRangeSpec.
          */
-        return http->out.offset + reply->contentRange()->spec.offset;
+        if (cr->spec.offset != HttpHdrRangeSpec::UnknownPosition)
+            return http->out.offset + cr->spec.offset;
     }
 
     return http->out.offset;
@@ -231,6 +232,10 @@ Http::Stream::socketState()
                    reply->contentRange()->spec.offset << ")");
 
             // did we get at least what we expected, based on range specs?
+
+            // this Content-Range does not tell us how many bytes to expect
+            if (bytesExpected == HttpHdrRangeSpec::UnknownPosition)
+                return STREAM_NONE;
 
             if (bytesSent == bytesExpected) // got everything
                 return STREAM_COMPLETE;
