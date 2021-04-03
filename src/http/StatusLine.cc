@@ -34,7 +34,6 @@ Http::StatusLine::clean()
 void
 Http::StatusLine::set(const AnyP::ProtocolVersion &newVersion, const Http::StatusCode newStatus, const char *newReason)
 {
-    protocol = AnyP::PROTO_HTTP;
     version = newVersion;
     status_ = newStatus;
     /* Note: no xstrdup for 'reason', assumes constant 'reasons' */
@@ -69,7 +68,7 @@ Http::StatusLine::packInto(Packable * p) const
     static const char *IcyStatusLineFormat = "ICY %3d %s\r\n";
 
     /* handle ICY protocol status line specially. Pass on the bad format. */
-    if (protocol == AnyP::PROTO_ICY) {
+    if (version.protocol == AnyP::PROTO_ICY) {
         debugs(57, 9, "packing sline " << this << " using " << p << ":");
         debugs(57, 9, "FORMAT=" << IcyStatusLineFormat );
         debugs(57, 9, "ICY " << packedStatus << " " << packedReason);
@@ -93,7 +92,7 @@ Http::StatusLine::parse(const String &protoPrefix, const char *start, const char
 
     if (protoPrefix.cmp("ICY", 3) == 0) {
         debugs(57, 3, "Invalid HTTP identifier. Detected ICY protocol instead.");
-        protocol = AnyP::PROTO_ICY;
+        version = AnyP::ProtocolVersion(AnyP::PROTO_ICY, 1, 0);
         start += protoPrefix.size();
     } else if (protoPrefix.caseCmp(start, protoPrefix.size()) == 0) {
 
