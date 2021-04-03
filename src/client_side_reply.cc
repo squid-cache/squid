@@ -1463,7 +1463,7 @@ clientReplyContext::buildReplyHeader()
     hdr->putStr(Http::HdrType::CACHE_STATUS, cacheStatus.c_str());
 
     const bool maySendChunkedReply = !request->multipartRangeRequest() &&
-                                     reply->sline.protocol == AnyP::PROTO_HTTP && // response is HTTP
+                                     reply->sline.version.protocol == AnyP::PROTO_HTTP && // response is HTTP
                                      (request->http_ver >= Http::ProtocolVersion(1,1));
 
     /* Check whether we should send keep-alive */
@@ -1547,7 +1547,7 @@ clientReplyContext::cloneReply()
 
     http->al->reply = reply;
 
-    if (reply->sline.protocol == AnyP::PROTO_HTTP) {
+    if (reply->sline.version.protocol == AnyP::PROTO_HTTP) {
         /* RFC 2616 requires us to advertise our version (but only on real HTTP traffic) */
         reply->sline.version = Http::ProtocolVersion();
     }
