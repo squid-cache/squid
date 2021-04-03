@@ -734,7 +734,6 @@ HttpStateData::processReplyHeader()
 
     // parse headers
     if (!newrep->parseHeader(*hp)) {
-        // XXX: when Http::ProtocolVersion is a function, remove this hack. just set with messageProtocol()
         newrep->sline.set(hp->messageProtocol(), Http::scInvalidHeader);
         debugs(11, 2, "error parsing response headers mime block");
     }
