@@ -1,3 +1,17 @@
+Changes in squid-5.0.6 (06 Apr 2021):
+
+	- Bug 5057: Generated response lacks status code
+	- TLS: Handling missing issuer certificates for TLSv1.3
+	- TLS: Detail certificate validation errors during TLS handshake
+	- TLS: Detail client closures of CONNECT tunnels during TLS handshake
+	- HTTP: Allow 1xx and 204 responses with Transfer-Encoding headers
+	- Maintenance: Start following Inclusive Naming Initiative advice
+	- Maintenance: Sort source file lists in Makefiles
+	- Maintenance: Support plugin-style scripts for source format enforcement
+	- Cleanup: Deduplicating IPC strand messages
+	- ... and some compile fixes
+	- ... and all fixes from 4.15
+
 Changes in squid-5.0.5 (02 Feb 2021):
 
 	- HTTP: Do not send Connection:keep-alive/close in HTTP Upgrade requests
@@ -89,6 +103,17 @@ Changes in squid-5.0.1 (14 Jan 2020):
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
 	- ... and all fixes from 4.10
+
+Changes in squid-4.15 (06 Apr 2021):
+
+	- Bug 5112: Excessively loud chunked reply parsing error reporting
+	- Bug 5104: Memory leak in RFC 2169 response parsing
+	- Bug 3556: "FD ... is not an open socket" for accept() problems
+	- Profiling: CPU timing implemented for MAC non-x86
+	- Fix HttpHeaderStats definition to include hoErrorDetail
+	- Fix Squid-to-client write_timeout triggers client_lifetime timeout
+	- Limit HeaderLookupTable_t::lookup() to BadHdr and specific IDs
+	- ... and some documentation updates
 
 Changes in squid-4.14 (02 Feb 2021):
 
