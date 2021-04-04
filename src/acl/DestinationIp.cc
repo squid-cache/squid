@@ -67,7 +67,7 @@ ACLDestinationIP::match(ACLChecklist *cl)
     if (ia) {
         /* Entry in cache found */
 
-        for (const auto ip: ia->goodAndBad()) {
+        for (const auto &ip: ia->goodAndBad()) {
             if (ACLIP::match(ip))
                 return 1;
         }
