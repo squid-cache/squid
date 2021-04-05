@@ -926,6 +926,10 @@ snmpLookupNodeStr(mib_tree_entry *root, const char *str)
     return e;
 }
 
+/**
+ * Try to convert an OID string representation into binary.
+ * \retval false if the string cannot be parsed entirely.
+ */
 bool
 snmpCreateOidFromStr(const char *str, oid **name, int *nl)
 {
@@ -946,7 +950,9 @@ snmpCreateOidFromStr(const char *str, oid **name, int *nl)
         s += len+1;
     }
 
-    // if we aborted before the lst octet was found, return false.
+    /* We can get here if we received an empty string, or if the loop
+       finished without parsing the last octet (if the string ends
+       with a '.', for example). */
     safe_free(*name);
     return false;
 }
