@@ -42,7 +42,7 @@ mcastJoinGroups(const ipcache_addrs *ia, const Dns::LookupDetails &, void *)
         return;
     }
 
-    for (const auto ip: ia->goodAndBad()) { // TODO: Consider using just good().
+    for (const auto &ip: ia->goodAndBad()) { // TODO: Consider using just good().
         debugs(7, 9, "Listening for ICP requests on " << ip);
 
         if (!ip.isIPv4()) {
