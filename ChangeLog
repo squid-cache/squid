@@ -113,6 +113,8 @@ Changes in squid-4.15 (06 Apr 2021):
 	- Fix HttpHeaderStats definition to include hoErrorDetail
 	- Fix Squid-to-client write_timeout triggers client_lifetime timeout
 	- Limit HeaderLookupTable_t::lookup() to BadHdr and specific IDs
+	- Handle more Range requests
+	- Handle more partial responses
 	- ... and some documentation updates
 
 Changes in squid-4.14 (02 Feb 2021):
