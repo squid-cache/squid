@@ -73,7 +73,7 @@ Mgr::QueryParams::find(const String& name) const
 /// Value can be a comma-separated list of integers or an opaque string.
 /// \note opaque string may be a list with a non-integer (e.g., "1,2,3,z")
 Mgr::QueryParam::Pointer
-ParseParamValue(SBuf &rawValue)
+ParseParamValue(const SBuf &rawValue)
 {
     static const CharacterSet comma("comma", ",");
 
@@ -150,4 +150,3 @@ Mgr::QueryParams::CreateParam(QueryParam::Type aType)
     }
     return NULL;
 }
-
