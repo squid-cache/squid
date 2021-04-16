@@ -762,16 +762,10 @@ FwdState::doneWithRetries()
 }
 
 // called by the server that failed after calling unregister()
-// err may or may not be null here depending on the type of server end.
 void
 FwdState::handleUnregisteredServerEnd()
 {
-    if(err) {
-        const auto errType = errorTypeName(err->type);
-        debugs(17, 2, HERE << "self=" << self << " err=" << errType << ' ' << entry->url());
-    } else {
-        debugs(17, 2, HERE << "self=" << self << " err=" << err << ' ' << entry->url());
-    }
+    debugs(17, 2, HERE << "self=" << self << " err=" << err << ' ' << entry->url());
     assert(!Comm::IsConnOpen(serverConn));
     retryOrBail();
 }
