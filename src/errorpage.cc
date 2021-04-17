@@ -128,6 +128,17 @@ public:
     const char *near;
 };
 
+std::ostream &
+operator <<(std::ostream &os, ErrorState *err)
+{
+    if (err)
+        os << errorTypeName(err->type);
+    else
+        os << "[none]";
+    return os;
+}
+
+
 static inline std::ostream &
 operator <<(std::ostream &os, const BuildErrorPrinter &context)
 {
