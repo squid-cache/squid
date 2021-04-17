@@ -1389,7 +1389,7 @@ ErrorState::buildBody()
     if (!Config.errorDirectory)
         err_language = Config.errorDefaultLanguage;
 #endif
-    debugs(4, 2, "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
+    debugs(4, 2, "No existing error page language negotiated for " << this << ". Using default error file.");
     return compileBody(error_text[page_id], true);
 }
 
