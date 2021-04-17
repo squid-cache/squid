@@ -119,7 +119,7 @@ private:
 };
 
 inline std::ostream &
-operator << (std::ostream &os, HttpRequestMethod const &method)
+operator <<(std::ostream &os, HttpRequestMethod const &method)
 {
     os << method.image();
     return os;

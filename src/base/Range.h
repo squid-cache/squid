@@ -29,7 +29,7 @@ public:
 };
 
 template <class C, class S>
-std::ostream& operator << (std::ostream &os, Range<C, S> const &aRange)
+std::ostream &operator <<(std::ostream &os, Range<C, S> const &aRange)
 {
     os << "[" << aRange.start << "," << aRange.end << ")";
     return os;

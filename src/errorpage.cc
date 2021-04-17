@@ -128,7 +128,6 @@ public:
     const char *near;
 };
 
-
 static inline std::ostream &
 operator <<(std::ostream &os, const BuildErrorPrinter &context)
 {

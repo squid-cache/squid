@@ -351,6 +351,6 @@ protected:
  */
 bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &pos);
 
-std::ostream & operator <<(std::ostream &os, ErrorState *err);
+std::ostream &operator <<(std::ostream &, ErrorState *);
 #endif /* SQUID_ERRORPAGE_H */
 

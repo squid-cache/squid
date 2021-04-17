@@ -72,7 +72,7 @@ private:
 } // namespace AnyP
 
 inline std::ostream &
-operator << (std::ostream &os, AnyP::UriScheme const &scheme)
+operator <<(std::ostream &os, AnyP::UriScheme const &scheme)
 {
     os << scheme.image();
     return os;
