@@ -21,7 +21,7 @@ public:
     char const *getACString() const;
 };
 
-std::ostream &operator <<(std::ostream &aStream, StreamTest &anObject)
+std::ostream &operator << (std::ostream &aStream, StreamTest &anObject)
 {
     return anObject.serialise(aStream);
 }

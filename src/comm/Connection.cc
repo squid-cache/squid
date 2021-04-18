@@ -173,7 +173,7 @@ Comm::Connection::detailCodeContext(std::ostream &os) const
 }
 
 std::ostream &
-operator <<(std::ostream &os, const Comm::Connection &conn)
+operator << (std::ostream &os, const Comm::Connection &conn)
 {
     os << conn.id;
     if (!conn.local.isNoAddr() || conn.local.port())

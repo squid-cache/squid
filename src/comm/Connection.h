@@ -205,10 +205,10 @@ private:
 
 }; // namespace Comm
 
-std::ostream &operator <<(std::ostream &os, const Comm::Connection &conn);
+std::ostream &operator << (std::ostream &os, const Comm::Connection &conn);
 
 inline std::ostream &
-operator <<(std::ostream &os, const Comm::ConnectionPointer &conn)
+operator << (std::ostream &os, const Comm::ConnectionPointer &conn)
 {
     if (conn != NULL)
         os << *conn;

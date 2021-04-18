@@ -352,7 +352,7 @@ private:
 };
 
 inline std::ostream &
-operator <<(std::ostream &os, const Address &ipa)
+operator << (std::ostream &os, const Address &ipa)
 {
     char buf[MAX_IPSTRLEN];
     os << ipa.toUrl(buf,MAX_IPSTRLEN);

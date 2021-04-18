@@ -39,7 +39,7 @@ public:
 };
 
 inline std::ostream &
-operator <<(std::ostream &os, mem_node &aNode)
+operator << (std::ostream &os, mem_node &aNode)
 {
     os << aNode.nodeBuffer.range();
     return os;

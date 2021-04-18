@@ -82,5 +82,5 @@ void Comm::Write(const Comm::ConnectionPointer &conn, MemBuf *mb, AsyncCall::Poi
 void Comm::WriteCancel(const Comm::ConnectionPointer &conn, const char *reason) STUB
 /*PF*/ void Comm::HandleWrite(int, void*) STUB
 
-std::ostream &operator <<(std::ostream &os, const Comm::Connection &conn) STUB_RETVAL(os << "[Connection object]")
+std::ostream &operator << (std::ostream &os, const Comm::Connection &conn) STUB_RETVAL(os << "[Connection object]")
 
