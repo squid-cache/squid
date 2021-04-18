@@ -156,7 +156,6 @@ testCacheManager::testParseUrl()
         "#fragment"
     };
 
-    unsigned success = 0;
     for (const auto &scheme : validSchemes) {
         mgrUrl.setScheme(scheme);
 
