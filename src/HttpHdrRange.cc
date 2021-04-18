@@ -226,7 +226,7 @@ HttpHdrRange::parseInit(const String * range_spec)
     int ilen;
     assert(range_spec);
     ++ParsedCount;
-    debugs(64, 8, "parsing range field: '" << range_spec << "'");
+    debugs(64, 8, "parsing range field: '" << *range_spec << "'");
     /* check range type */
 
     if (range_spec->caseCmp("bytes=", 6))
@@ -247,7 +247,7 @@ HttpHdrRange::parseInit(const String * range_spec)
                 delete specs.back();
                 specs.pop_back();
             }
-            debugs(64, 2, "ignoring invalid range field: '" << range_spec << "'");
+            debugs(64, 2, "ignoring invalid range field: '" << *range_spec << "'");
             break;
         }
 
