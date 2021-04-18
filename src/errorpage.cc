@@ -1527,7 +1527,7 @@ std::ostream &
 operator <<(std::ostream &os, const ErrorState *err)
 {
     if (err)
-        os << errorTypeName(err->type);
+        os << errorPageName(err->page_id);
     else
         os << "[none]";
     return os;
