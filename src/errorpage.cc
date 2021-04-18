@@ -1524,7 +1524,7 @@ ErrorPage::ValidateStaticError(const int page_id, const SBuf &inputLocation)
 }
 
 std::ostream &
-operator <<(std::ostream &os, ErrorState *err)
+operator <<(std::ostream &os, const ErrorState *err)
 {
     if (err)
         os << errorTypeName(err->type);
