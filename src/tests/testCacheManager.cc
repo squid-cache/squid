@@ -180,7 +180,6 @@ testCacheManager::testParseUrl()
                             mgrUrl.path(bits);
 
                             (void)mgr->ParseUrl(mgrUrl);
-                            CPPUNIT_ASSERT(++success);
                         } catch (...) {
                             std::cerr << std::endl
                                       << "FAIL: " << mgrUrl
@@ -212,7 +211,6 @@ testCacheManager::testParseUrl()
                                       << Debug::Extra << "error: should be rejected due to '" << param << "'" << std::endl;
                             CPPUNIT_FAIL(err);
                         } catch (const TextException &e) {
-                            CPPUNIT_ASSERT(++success);
                             if (strcmp(e.what(), err) == 0)
                                 throw;
                         }
