@@ -717,9 +717,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
 {
     assert(entry->mem_obj != NULL);
     assert (entry->isEmpty());
-    debugs(4, 4, "Creating an error page for entry " << entry <<
-           " with errorstate " << err <<
-           " page id " << err->page_id);
+    debugs(4, 4, "storing " << err << " in " << *entry);
 
     if (entry->store_status != STORE_PENDING) {
         debugs(4, 2, "Skipping error page due to store_status: " << entry->store_status);
