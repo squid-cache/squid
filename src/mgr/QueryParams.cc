@@ -69,9 +69,14 @@ Mgr::QueryParams::find(const String& name) const
     return iter;
 }
 
-/// Parses the value part of a "param=value" URL section.
-/// Value can be a comma-separated list of integers or an opaque string.
-/// \note opaque string may be a list with a non-integer (e.g., "1,2,3,z")
+/**
+ * Parses the value part of a "param=value" URL section.
+ * Value can be a comma-separated list of integers or an opaque string.
+ *
+ *   value  = *pchar | ( 1*DIGIT *( ',' 1*DIGIT ) )
+ *
+ * \note opaque string may be a list with a non-integer (e.g., "1,2,3,z")
+ */
 Mgr::QueryParam::Pointer
 ParseParamValue(const SBuf &rawValue)
 {
@@ -83,7 +88,9 @@ ParseParamValue(const SBuf &rawValue)
     while (tok.int64(intVal, 10, false)) {
         Must(intVal >= std::numeric_limits<int>::min());
         Must(intVal <= std::numeric_limits<int>::max());
+        // 1*DIGIT ...
         array.emplace_back(intVal);
+        // ',' 1*DIGIT ...
         if (tok.remaining().length() > 1)
             (void)tok.skipOne(comma);
     }
