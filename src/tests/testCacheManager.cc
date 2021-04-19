@@ -194,7 +194,6 @@ testCacheManager::testParseUrl()
             for (const auto *action : validActions) {
                 for (const auto *param : invalidParams) {
                     for (const auto *frag : validFragments) {
-                        static const auto err = "accepted malformed input";
                         try {
                             SBuf bits;
                             bits.append(magic);
@@ -208,10 +207,9 @@ testCacheManager::testParseUrl()
                             std::cerr << std::endl
                                       << "FAIL: " << mgrUrl
                                       << Debug::Extra << "error: should be rejected due to '" << param << "'" << std::endl;
-                            CPPUNIT_FAIL(err);
+                            CPPUNIT_FAIL("bad result");
                         } catch (const TextException &e) {
-                            if (strcmp(e.what(), err) == 0)
-                                throw;
+                            // success. caught bad input
                         }
                     }
                 }
