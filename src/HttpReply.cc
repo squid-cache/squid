@@ -600,7 +600,7 @@ void HttpReply::removeStaleWarnings()
 {
     String warning;
     if (header.getList(Http::HdrType::WARNING, &warning)) {
-        const String newWarning = removeStaleWarningValues(warning);
+        const auto newWarning = findFreshWarningValues(warning);
         if (warning.size() && warning.size() == newWarning.size())
             return; // some warnings are there and none changed
         header.delById(Http::HdrType::WARNING);
@@ -612,48 +612,44 @@ void HttpReply::removeStaleWarnings()
     }
 }
 
-/**
- * Remove warning-values with warn-date different from Date value from
- * a single header entry. Returns a string with all valid warning-values.
- */
-String HttpReply::removeStaleWarningValues(const String &value)
+/// \returns a list of warning-values with warn-date equal to the reply Date
+String
+HttpReply::findFreshWarningValues(const String &warningFieldValue) const
 {
     String newValue;
     const char *item = 0;
     int len = 0;
     const char *pos = 0;
-    while (strListGetItem(&value, ',', &item, &len, &pos)) {
-        bool keep = true;
-        // Does warning-value have warn-date (which contains quoted date)?
+    while (strListGetItem(&warningFieldValue, ',', &item, &len, &pos)) {
+        // Does warning-value have warn-date (which matches Date)?
         // We scan backwards, looking for two quoted strings.
         // warning-value = warn-code SP warn-agent SP warn-text [SP warn-date]
+
         const char *p = item + len - 1;
 
         while (p >= item && xisspace(*p)) --p; // skip whitespace
 
-        // warning-value MUST end with quote
+        // with or without warn-date, warning-value MUST end with a quote
         if (p >= item && *p == '"') {
             const char *const warnDateEnd = p;
             --p;
             while (p >= item && *p != '"') --p; // find the next quote
 
-            const char *warnDateBeg = p + 1;
+            const char *warnDateBeg = p + 1; // candidate; to be validated below
             --p;
             while (p >= item && xisspace(*p)) --p; // skip whitespace
 
             if (p >= item && *p == '"' && warnDateBeg - p > 2) {
-                // found warn-text
+                // found warn-text, confirming that warnDateBeg is warn-date
                 String warnDate;
                 warnDate.append(warnDateBeg, warnDateEnd - warnDateBeg);
                 const time_t time = parse_rfc1123(warnDate.termedBuf());
-                keep = (time > 0 && time == date); // keep valid and matching date
+                if (time > 0 && time == date) { // valid and matching
+                    if (newValue.size())
+                        newValue.append(", ");
+                    newValue.append(item, len);
+                }
             }
-        }
-
-        if (keep) {
-            if (newValue.size())
-                newValue.append(", ");
-            newValue.append(item, len);
         }
     }
 

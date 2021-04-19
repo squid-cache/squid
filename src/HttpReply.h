@@ -154,7 +154,7 @@ private:
      */
     void calcMaxBodySize(HttpRequest& request) const;
 
-    String removeStaleWarningValues(const String &value);
+    String findFreshWarningValues(const String &value) const;
 
     mutable int64_t bodySizeMax; /**< cached result of calcMaxBodySize */
 
