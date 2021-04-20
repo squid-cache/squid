@@ -88,9 +88,9 @@ ParseParamValue(const SBuf &rawValue)
     while (tok.int64(intVal, 10, false)) {
         Must(intVal >= std::numeric_limits<int>::min());
         Must(intVal <= std::numeric_limits<int>::max());
-        // 1*DIGIT ...
         array.emplace_back(intVal);
-        // ',' 1*DIGIT ...
+        // integer list has comma between values.
+        // Require at least one potential DIGIT after the skipped ','
         if (tok.remaining().length() > 1)
             (void)tok.skipOne(comma);
     }
