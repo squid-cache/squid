@@ -208,10 +208,10 @@ testCacheManager::testParseUrl()
                             std::cerr << std::endl
                                       << "FAIL: " << mgrUrl
                                       << Debug::Extra << "error: should be rejected due to '" << param << "'" << std::endl;
-                            CPPUNIT_FAIL("bad result");
                         } catch (const TextException &e) {
-                            // success. caught bad input
+                            continue; // success. caught bad input
                         }
+                        CPPUNIT_FAIL("bad result");
                     }
                 }
             }
