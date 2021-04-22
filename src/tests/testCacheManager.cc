@@ -123,7 +123,6 @@ testCacheManager::testParseUrl()
         "?intlist=1",
         "?intlist=1,2,3,4,5",
         "?string=1a",
-        "?string = broken", // actually invalid. testing that cppunit fails properly
         "?string=1,2,3,4,z",
         "?string=1,2,3,4,[0]",
         "?intlist=1,2,3,4,5&string=1,2,3,4,y"
