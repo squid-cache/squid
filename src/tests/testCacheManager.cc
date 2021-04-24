@@ -129,6 +129,7 @@ testCacheManager::testParseUrl()
     };
 
     const std::vector<const char *> invalidParams = {
+        "?/",
         "?foo",
         "?/foo",
         "?foo/",
@@ -143,7 +144,7 @@ testCacheManager::testParseUrl()
         "? &&&",
         "?& &&",
         "?&& &",
-        "?/", // actually OK. testing that cppunit fails properly
+        "?foo=bar", // actually OK. testing that cppunit fails properly
         "?=&&&",
         "?&=&&",
         "?&&=&"
