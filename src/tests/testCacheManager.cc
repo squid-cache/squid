@@ -144,7 +144,6 @@ testCacheManager::testParseUrl()
         "? &&&",
         "?& &&",
         "?&& &",
-        "?foo=bar", // actually OK. testing that cppunit fails properly
         "?=&&&",
         "?&=&&",
         "?&&=&"
