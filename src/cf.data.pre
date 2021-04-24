@@ -84,7 +84,7 @@ COMMENT_START
 	files using the syntax:
 		parameters("/path/filename")
 	For example:
-		acl whitelist dstdomain parameters("/etc/squid/whitelist.txt")
+		acl allowlist dstdomain parameters("/etc/squid/allowlist.txt")
 
   Conditional configuration
 
@@ -2461,7 +2461,7 @@ DOC_START
 
 	   require-proxy-header
 			Require PROXY protocol version 1 or 2 connections.
-			The proxy_protocol_access is required to whitelist
+			The proxy_protocol_access is required to permit
 			downstream proxies which can be trusted.
 
 	   worker-queues

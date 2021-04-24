@@ -58,18 +58,19 @@ std::ostream &operator <<(std::ostream &, const TextException &);
 #define TexcHere(msg) TextException((msg), Here())
 
 /// Like assert() but throws an exception instead of aborting the process
-/// and allows the caller to specify a custom exception message.
-#define Must2(condition, message) \
+/// and allows the caller to customize the exception message and location.
+/// \param description string literal describing the condition; what MUST happen
+#define Must3(condition, description, location) \
     do { \
         if (!(condition)) { \
-            const TextException Must_ex_((message), Here()); \
+            const TextException Must_ex_(("check failed: " description), (location)); \
             debugs(0, 3, Must_ex_.what()); \
             throw Must_ex_; \
         } \
     } while (/*CONSTCOND*/ false)
 
 /// Like assert() but throws an exception instead of aborting the process.
-#define Must(condition) Must2((condition), "check failed: " #condition)
+#define Must(condition) Must3((condition), #condition, Here())
 
 /// Reports and swallows all exceptions to prevent compiler warnings and runtime
 /// errors related to throwing class destructors. Should be used for most dtors.
