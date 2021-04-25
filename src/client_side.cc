@@ -1696,9 +1696,9 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
 
     const auto frameStatus = request->checkEntityFraming();
     if (frameStatus != Http::scNone) {
-        auto *node = context->getClientReplyContext();
-        auto *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-        assert(repContext);
+        clientStreamNode *node = context->getClientReplyContext();
+        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+        assert (repContext);
         conn->quitAfterError(request.getRaw());
         repContext->setReplyToError(ERR_INVALID_REQ, frameStatus, request->method, nullptr, conn, request.getRaw(), nullptr, nullptr);
         assert(context->http->out.offset == 0);
