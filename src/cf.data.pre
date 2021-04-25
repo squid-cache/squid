@@ -185,7 +185,8 @@ DOC_END
 NAME: request_entities
 TYPE: obsolete
 DOC_START
-	Remove this line. Squid now accepts GET/HEAD message body by default.
+	Remove this line. Squid now accepts HTTP/1.1 requests with bodies.
+	To simplify UI and code, Squid rejects certain HTTP/1.0 requests with bodies.
 DOC_END
 
 # Options removed in 5.x
