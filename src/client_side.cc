@@ -2338,7 +2338,6 @@ ConnStateData::acceptTls()
     return handshakeResult;
 }
 
-
 /** Handle a new connection on an HTTP socket. */
 void
 httpAccept(const CommAcceptCbParams &params)

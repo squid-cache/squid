@@ -81,7 +81,7 @@ Security::CommunicationSecrets::getClientRandom(const Connection &sconn)
     // no auto due to reinterpret_casting of the result below
     char * const space = random.rawAppendStart(expectedLength);
     const auto actualLength = SSL_get_client_random(&sconn,
-        reinterpret_cast<unsigned char*>(space), expectedLength);
+                              reinterpret_cast<unsigned char*>(space), expectedLength);
     random.rawAppendFinish(space, actualLength);
 
     IgnorePlaceholder(random);
@@ -115,7 +115,7 @@ Security::CommunicationSecrets::getMasterKey(const Session &session)
     // no auto due to reinterpret_casting of the result below
     char * const space = key.rawAppendStart(expectedLength);
     const auto actualLength = SSL_SESSION_get_master_key(&session,
-        reinterpret_cast<unsigned char*>(space), expectedLength);
+                              reinterpret_cast<unsigned char*>(space), expectedLength);
     key.rawAppendFinish(space, actualLength);
 
     IgnorePlaceholder(key);
@@ -156,3 +156,4 @@ Security::CommunicationSecrets::record(std::ostream &os) const {
         os << "\n";
     }
 }
+

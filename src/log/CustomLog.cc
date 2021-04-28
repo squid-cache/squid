@@ -47,7 +47,7 @@ FormattedLog::parseOptions(ConfigParser &parser, const char *defaultFormatName)
                 fatal = false;
             } else {
                 throw TextException(ToSBuf("unsupported ", cfg_directive, " on-error value: ", value,
-                                    Debug::Extra, "expected 'drop' or 'die'"), Here());
+                                           Debug::Extra, "expected 'drop' or 'die'"), Here());
             }
             continue;
         }

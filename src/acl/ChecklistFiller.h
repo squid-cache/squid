@@ -26,6 +26,5 @@ public:
 
 } // namespace Acl
 
-
 #endif /* SQUID_ACL_CHECKLIST_FILLER_H */
 
