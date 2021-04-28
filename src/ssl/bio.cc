@@ -245,7 +245,6 @@ Ssl::ServerBio::ServerBio(const int anFd):
     allowSplice(false),
     allowBump(false),
     holdWrite_(false),
-    holdRead_(true),
     record_(false),
     parsedHandshake(false),
     parseError(false),
@@ -317,12 +316,6 @@ Ssl::ServerBio::readAndParse(char *buf, const int size, BIO *table)
         debugs(83, 2, "parsing error on FD " << fd_ << ": " << ex.what());
         parsedHandshake = true; // done parsing (due to an error)
         parseError = true;
-    }
-
-    if (holdRead_) {
-        debugs(83, 7, "Hold flag is set, retry latter. (Hold " << size << "bytes)");
-        BIO_set_retry_read(table);
-        return -1;
     }
 
     return giveBuffered(buf, size);

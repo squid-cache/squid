@@ -55,12 +55,6 @@ public:
     ErrorDetail(ErrorCode anErrorCode, LibErrorCode aLibErrorNo, int aSysErrorNo);
 #endif
 
-    /// \returns whether we (rather than `them`) should detail ErrorState
-    bool takesPriorityOver(const ErrorDetail &them) const {
-        // to reduce pointless updates, return false if us is them
-        return this->generation < them.generation;
-    }
-
     /* ErrorDetail API */
     virtual SBuf brief() const;
     virtual SBuf verbose(const HttpRequestPointer &) const;
@@ -96,9 +90,6 @@ private:
     const char *err_descr() const;
     const char *err_lib_error() const;
     size_t convert(const char *code, const char **value) const;
-
-    static uint64_t Generations; ///< the total number of ErrorDetails ever made
-    uint64_t generation; ///< the number of ErrorDetails made before us plus one
 
     CertPointer peer_cert; ///< A pointer to the peer certificate
     CertPointer broken_cert; ///< A pointer to the broken certificate (peer or intermediate)

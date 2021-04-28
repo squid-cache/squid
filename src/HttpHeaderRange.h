@@ -18,8 +18,11 @@
 class HttpReply;
 class Packable;
 
-/* http byte-range-spec */
-
+// TODO: Refactor to disambiguate and provide message-specific APIs.
+/// either byte-range-spec (in a request Range header)
+/// or suffix-byte-range-spec (in a request Range header)
+/// or byte-range part of byte-range-resp (in a response Content-Range header)
+/// or "*" part of unsatisfied-range (in a response Content-Range header)
 class HttpHdrRangeSpec
 {
     MEMPROXY_CLASS(HttpHdrRangeSpec);
@@ -78,7 +81,6 @@ public:
     int64_t firstOffset() const;
     int64_t lowestOffset(int64_t) const;
     bool offsetLimitExceeded(const int64_t limit) const;
-    bool contains(const HttpHdrRangeSpec& r) const;
     std::vector<HttpHdrRangeSpec *> specs;
 
 private:
@@ -100,9 +102,9 @@ public:
     void updateSpec();
     int64_t debt() const;
     void debt(int64_t);
-    int64_t debt_size;      /* bytes left to send from the current spec */
+    int64_t debt_size = 0;  /* bytes left to send from the current spec */
     String boundary;        /* boundary for multipart responses */
-    bool valid;
+    bool valid = false;
 };
 
 #endif /* SQUID_HTTPHEADERRANGE_H */

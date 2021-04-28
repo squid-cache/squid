@@ -49,5 +49,6 @@ libbase_la_SOURCES = \
 	Subscription.h \
 	TextException.cc \
 	TextException.h \
+	TypeTraits.h \
 	YesNoNone.h \
 	forward.h

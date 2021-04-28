@@ -84,14 +84,6 @@ research project called The Harvest Information Discovery and Access System:
 
 ==============================================================================
 
-acinclude/ax_cxx_0x_types.m4:
-
-##
-## AX_CXX_TYPE_NULLPTR shamelessly copied from the DUNE sources under GPL version 2
-##
-
-==============================================================================
-
 acinclude/ax_cxx_compile_stdcxx_11.m4:
 
 #   Copyright (c) 2008 Benjamin Kosnik <bkoz@redhat.com>

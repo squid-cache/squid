@@ -12,6 +12,7 @@
 #define SQUID_IPC_TYPED_MSG_HDR_H
 
 #include "compat/cmsg.h"
+#include "ipc/Messages.h"
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -43,13 +44,13 @@ public:
     /* message type manipulation; these must be called before put/get*() */
     void setType(int aType); ///< sets message type; use MessageType enum
     void checkType(int aType) const; ///< throws if stored type is not aType
-    int type() const; ///< returns stored type or zero if none
+    /// received or set message kind; may not be a MessageType value
+    /// \returns 0 if no message kind has been received or set
+    int rawType() const { return msg_iov ? data.type_ : 0; }
 
-    /* access for Plain Old Data (POD)-based message parts */
-    template <class Pod>
-    void getPod(Pod &pod) const { getFixed(&pod, sizeof(pod)); } ///< load POD
-    template <class Pod>
-    void putPod(const Pod &pod) { putFixed(&pod, sizeof(pod)); } ///< store POD
+    /* access for TriviallyCopyable (a.k.a. Plain Old Data or POD) message parts */
+    template <class Pod> void getPod(Pod &pod) const; ///< load POD
+    template <class Pod> void putPod(const Pod &pod); ///< store POD
 
     /* access to message parts for selected commonly-used part types */
     void getString(String &s) const; ///< load variable-length string
@@ -109,6 +110,24 @@ private:
 };
 
 } // namespace Ipc
+
+template <class Pod>
+void
+Ipc::TypedMsgHdr::getPod(Pod &pod) const
+{
+    // TODO: Enable after fixing Ipc::SharedListenRequest::SharedListenRequest()
+    //static_assert(std::is_trivially_copyable<Pod>::value, "getPod() used for a POD");
+    getFixed(&pod, sizeof(pod));
+}
+
+template <class Pod>
+void
+Ipc::TypedMsgHdr::putPod(const Pod &pod)
+{
+    // TODO: Enable after fixing Ipc::SharedListenRequest::pack()
+    //static_assert(std::is_trivially_copyable<Pod>::value, "putPod() used for a POD");
+    putFixed(&pod, sizeof(pod));
+}
 
 #endif /* SQUID_IPC_TYPED_MSG_HDR_H */
 

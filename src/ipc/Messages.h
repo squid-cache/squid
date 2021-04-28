@@ -17,16 +17,30 @@ namespace Ipc
 {
 
 /// message class identifier
-typedef enum { mtNone = 0, mtRegistration,
-               mtStrandSearchRequest, mtStrandSearchResponse,
-               mtSharedListenRequest, mtSharedListenResponse,
+typedef enum { mtNone = 0, ///< unspecified or unknown message kind; unused on the wire
+
+               mtRegisterStrand, ///< notifies about our strand existence
+               mtStrandRegistered, ///< acknowledges mtRegisterStrand acceptance
+
+               mtFindStrand, ///< a worker requests a strand from Coordinator
+               mtStrandReady, ///< an mtFindStrand answer: the strand exists and should be usable
+
+               mtSharedListenRequest,
+               mtSharedListenResponse,
+
                mtIpcIoNotification,
+
                mtCollapsedForwardingNotification,
-               mtCacheMgrRequest, mtCacheMgrResponse
+
+               mtCacheMgrRequest,
+               mtCacheMgrResponse,
+
 #if SQUID_SNMP
-               ,
-               mtSnmpRequest, mtSnmpResponse
+               mtSnmpRequest,
+               mtSnmpResponse,
 #endif
+
+               mtEnd ///< for message kind range checks; unused on the wire
              } MessageType;
 
 } // namespace Ipc;

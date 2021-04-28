@@ -38,6 +38,10 @@ static AnyP::ProtocolVersion
 toProtocolVersion(const int v)
 {
     switch(v) {
+#if defined(TLS1_3_VERSION)
+    case TLS1_3_VERSION:
+        return AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3);
+#endif
 #if defined(TLS1_2_VERSION)
     case TLS1_2_VERSION:
         return AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 2);

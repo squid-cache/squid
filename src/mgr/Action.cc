@@ -79,7 +79,7 @@ Mgr::Action::respond(const Request &request)
 }
 
 void
-Mgr::Action::sendResponse(unsigned int requestId)
+Mgr::Action::sendResponse(const Ipc::RequestId requestId)
 {
     Response response(requestId, this);
     Ipc::TypedMsgHdr message;

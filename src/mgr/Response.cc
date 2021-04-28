@@ -12,24 +12,19 @@
 #include "base/TextException.h"
 #include "CacheManager.h"
 #include "ipc/Messages.h"
+#include "ipc/RequestId.h"
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/ActionCreator.h"
 #include "mgr/ActionProfile.h"
 #include "mgr/Response.h"
 
-Mgr::Response::Response(unsigned int aRequestId, Action::Pointer anAction):
+Mgr::Response::Response(const Ipc::RequestId aRequestId, const Action::Pointer anAction):
     Ipc::Response(aRequestId), action(anAction)
 {
     Must(!action || action->name()); // if there is an action, it must be named
 }
 
-Mgr::Response::Response(const Response& response):
-    Ipc::Response(response.requestId), action(response.action)
-{
-}
-
-Mgr::Response::Response(const Ipc::TypedMsgHdr& msg):
-    Ipc::Response(0)
+Mgr::Response::Response(const Ipc::TypedMsgHdr &msg)
 {
     msg.checkType(Ipc::mtCacheMgrResponse);
     msg.getPod(requestId);

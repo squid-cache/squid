@@ -37,7 +37,7 @@ HeaderTableRecord::HeaderTableRecord(const char *n, HdrType theId, HdrFieldType 
 const HeaderTableRecord&
 HeaderLookupTable_t::lookup (const char *buf, const std::size_t len) const {
     const HeaderTableRecord *r = HttpHeaderHashTable::lookup(buf, len);
-    if (!r)
+    if (!r || r->id == Http::HdrType::OTHER)
         return BadHdr;
     return *r;
 }

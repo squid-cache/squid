@@ -81,13 +81,6 @@ void Ipc::TypedMsgHdr::sync()
     offset = 0;
 }
 
-int
-Ipc::TypedMsgHdr::type() const
-{
-    Must(msg_iovlen == 1);
-    return data.type_;
-}
-
 void
 Ipc::TypedMsgHdr::address(const struct sockaddr_un& addr)
 {
@@ -100,7 +93,7 @@ Ipc::TypedMsgHdr::address(const struct sockaddr_un& addr)
 void
 Ipc::TypedMsgHdr::checkType(int destType) const
 {
-    Must(type() == destType);
+    Must(rawType() == destType);
 }
 
 void

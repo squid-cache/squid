@@ -78,13 +78,13 @@ void Ipc::Coordinator::registerStrand(const StrandCoord& strand)
 
 void Ipc::Coordinator::receive(const TypedMsgHdr& message)
 {
-    switch (message.type()) {
-    case mtRegistration:
+    switch (message.rawType()) {
+    case mtRegisterStrand:
         debugs(54, 6, HERE << "Registration request");
-        handleRegistrationRequest(HereIamMessage(message));
+        handleRegistrationRequest(StrandMessage(message));
         break;
 
-    case mtStrandSearchRequest: {
+    case mtFindStrand: {
         const StrandSearchRequest sr(message);
         debugs(54, 6, HERE << "Strand search request: " << sr.requestorId <<
                " tag: " << sr.tag);
@@ -107,7 +107,7 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
     case mtCacheMgrResponse: {
         debugs(54, 6, HERE << "Cache manager response");
         const Mgr::Response resp(message);
-        handleCacheMgrResponse(resp);
+        handleCacheMgrResponse(Mine(resp));
     }
     break;
 
@@ -122,24 +122,24 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
     case mtSnmpResponse: {
         debugs(54, 6, HERE << "SNMP response");
         const Snmp::Response resp(message);
-        handleSnmpResponse(resp);
+        handleSnmpResponse(Mine(resp));
     }
     break;
 #endif
 
     default:
-        debugs(54, DBG_IMPORTANT, HERE << "Unhandled message type: " << message.type());
+        Port::receive(message);
         break;
     }
 }
 
-void Ipc::Coordinator::handleRegistrationRequest(const HereIamMessage& msg)
+void Ipc::Coordinator::handleRegistrationRequest(const StrandMessage& msg)
 {
     registerStrand(msg.strand);
 
     // send back an acknowledgement; TODO: remove as not needed?
     TypedMsgHdr message;
-    msg.pack(message);
+    msg.pack(mtStrandRegistered, message);
     SendMessage(MakeAddr(strandAddrLabel, msg.strand.kidId), message);
 }
 
@@ -222,9 +222,9 @@ Ipc::Coordinator::notifySearcher(const Ipc::StrandSearchRequest &request,
 {
     debugs(54, 3, HERE << "tell kid" << request.requestorId << " that " <<
            request.tag << " is kid" << strand.kidId);
-    const StrandSearchResponse response(strand);
+    const StrandMessage response(strand, request.qid);
     TypedMsgHdr message;
-    response.pack(message);
+    response.pack(mtStrandReady, message);
     SendMessage(MakeAddr(strandAddrLabel, request.requestorId), message);
 }
 

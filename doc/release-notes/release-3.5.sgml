@@ -245,7 +245,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <p>Squid can be configured by adding an <em>http_port</em>
    with the <em>require-proxy-header</em> mode flag. The <em>proxy_protocol_access</em>
-   must also be configured with <em>src</em> ACLs to whitelist proxies which are
+   must also be configured with <em>src</em> ACLs to permit proxies which are
    trusted to send correct client details.
 
 <p>Forward-proxy traffic from a client proxy:
@@ -310,7 +310,7 @@ There have been changes to Squid's configuration file since Squid-3.4.
 <p>Squid supports reading configuration option parameters from external
    files using the syntax <em>parameters("/path/filename")</em>. For example:
 <verb>
-    acl whitelist dstdomain parameters("/etc/squid/whitelist.txt")
+    acl allowlist dstdomain parameters("/etc/squid/allowlist.txt")
 </verb>
 
 <p>The squid.conf macro <em>${service_name}</em> is added to provide the service name

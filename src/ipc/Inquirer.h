@@ -64,7 +64,7 @@ private:
 
     void handleRemoteAck(Response::Pointer response);
 
-    static AsyncCall::Pointer DequeueRequest(unsigned int requestId);
+    static AsyncCall::Pointer DequeueRequest(RequestId::Index);
 
     static void RequestTimedOut(void* param);
     void requestTimedOut();
@@ -79,10 +79,10 @@ protected:
     const double timeout; ///< number of seconds to wait for strand response
 
     /// maps request->id to Inquirer::handleRemoteAck callback
-    typedef std::map<unsigned int, AsyncCall::Pointer> RequestsMap;
+    typedef std::map<RequestId::Index, AsyncCall::Pointer> RequestsMap;
     static RequestsMap TheRequestsMap; ///< pending strand requests
 
-    static unsigned int LastRequestId; ///< last requestId used
+    static RequestId::Index LastRequestId; ///< last requestId used
 };
 
 } // namespace Ipc

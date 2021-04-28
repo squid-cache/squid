@@ -47,7 +47,7 @@ private:
     AsyncCall::Pointer closer; ///< comm_close handler for the connection
 };
 
-void SendResponse(unsigned int requestId, const Pdu& pdu);
+void SendResponse(Ipc::RequestId, const Pdu &);
 
 } // namespace Snmp
 

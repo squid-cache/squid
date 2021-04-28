@@ -20,7 +20,7 @@ namespace Http
 {
 
 /**
- * Holds the values parsed from an HTTP reply status line.
+ * Holds the values parsed from an HTTP-like reply status line.
  *
  * For example: HTTP/1.1 200 OK
  */
@@ -59,22 +59,14 @@ public:
 public:
     /* public, read only */
 
-    /**
-     * By rights protocol name should be a constant "HTTP", with no need for this field to exist.
-     * However there are protocols which violate HTTP by sending their own custom formats
-     * back with other protocol names (ICY streaming format being the current major problem).
-     */
-    // XXX: protocol is part of AnyP::ProtocolVersion. We should be able to use version.protocol instead now.
-    AnyP::ProtocolType protocol;
-
     AnyP::ProtocolVersion version;     ///< breakdown of protocol version label: (HTTP/ICY) and (0.9/1.0/1.1)
 
 private:
     /// status code. ie 100 ... 200 ... 404 ... 599
-    Http::StatusCode status_;
+    Http::StatusCode status_ = scNone;
 
     /// points to a _constant_ string (default or supplied), never free()d
-    const char *reason_;
+    const char *reason_ = nullptr;
 };
 
 } // namespace Http

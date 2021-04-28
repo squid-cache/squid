@@ -66,7 +66,7 @@ sub ComputeMustIds
         $line =~ s@/[*].*?[*]/@@; # strip simple single-line /* comments */
 
         my($id);
-        if ($line =~ /\bMust2?\s*\(/ || # Must(...) and Must2(...)
+        if ($line =~ /\bMust\s*\(/ || # Must(...)
             $line =~ /\bTexcHere\s*\(/ || # TexcHere(...)
             $line =~ /\bHere\s*\(\s*\)/) { # Here()
             $line =~ s/^\s*//;

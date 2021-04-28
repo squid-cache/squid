@@ -338,6 +338,9 @@ Ssl::PeekingPeerConnector::noteNegotiationError(const Security::ErrorDetailPoint
     // thus hiding them.
     // Abort if no certificate found probably because of malformed or
     // unsupported server Hello message (TODO: make configurable).
+    // TODO: Add/use a positive "successfully validated server cert" signal
+    // instead of relying on the "![presumably_]validation_error && serverCert"
+    // signal combo.
     if (!SSL_get_ex_data(session.get(), ssl_ex_index_ssl_error_detail) &&
             (srvBio->bumpMode() == Ssl::bumpPeek  || srvBio->bumpMode() == Ssl::bumpStare) && srvBio->holdWrite()) {
         Security::CertPointer serverCert(SSL_get_peer_certificate(session.get()));

@@ -947,7 +947,7 @@ snmpCreateOidFromStr(const char *str, oid **name, int *nl)
     }
 
     // if we aborted before the lst octet was found, return false.
-    safe_free(name);
+    safe_free(*name);
     return false;
 }
 

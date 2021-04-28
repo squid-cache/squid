@@ -39,7 +39,7 @@ protected:
 
 private:
     void registerSelf(); /// let Coordinator know this strand exists
-    void handleRegistrationResponse(const HereIamMessage &msg);
+    void handleRegistrationResponse(const StrandMessage &);
     void handleCacheMgrRequest(const Mgr::Request& request);
     void handleCacheMgrResponse(const Mgr::Response& response);
 #if SQUID_SNMP

@@ -14,6 +14,7 @@
 #include "globals.h"
 #include "HttpReply.h"
 #include "ipc/Messages.h"
+#include "ipc/RequestId.h"
 #include "ipc/TypedMsgHdr.h"
 #include "ipc/UdsOp.h"
 #include "mgr/Filler.h"

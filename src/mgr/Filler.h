@@ -12,6 +12,7 @@
 #define SQUID_MGR_FILLER_H
 
 #include "comm/forward.h"
+#include "ipc/forward.h"
 #include "mgr/Action.h"
 #include "mgr/StoreToCommWriter.h"
 
@@ -24,7 +25,7 @@ class Filler: public StoreToCommWriter
     CBDATA_CLASS(Filler);
 
 public:
-    Filler(const Action::Pointer &anAction, const Comm::ConnectionPointer &conn, unsigned int aRequestId);
+    Filler(const Action::Pointer &, const Comm::ConnectionPointer &, Ipc::RequestId);
 
 protected:
     /* AsyncJob API */
@@ -33,7 +34,7 @@ protected:
 
 private:
     Action::Pointer action; ///< action that will run() and sendResponse()
-    unsigned int requestId; ///< the ID of the Request we are responding to
+    Ipc::RequestId requestId; ///< the ID of the Request we are responding to
 };
 
 } // namespace Mgr
