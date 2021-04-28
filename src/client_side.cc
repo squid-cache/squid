@@ -2330,10 +2330,14 @@ ConnStateData::acceptTls()
 {
     const auto handshakeResult = Security::Accept(*clientConnection);
 
+#if USE_OPENSSL
     // log ASAP, even if the handshake has not completed (or failed)
     const auto fd = clientConnection->fd;
     assert(fd >= 0);
     keyLogger.checkpoint(*fd_table[fd].ssl, *this);
+#else
+    // TODO: Support fd_table[fd].ssl dereference in other builds.
+#endif
 
     return handshakeResult;
 }

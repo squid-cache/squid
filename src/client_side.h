@@ -248,6 +248,10 @@ public:
     /// The caller assumes responsibility for connection closure detection.
     void stopPinnedConnectionMonitoring();
 
+    /// Starts or resumes accepting a TLS connection. TODO: Make this helper
+    /// method protected after converting clientNegotiateSSL() into a method.
+    Security::IoResult acceptTls();
+
     /// the second part of old httpsAccept, waiting for future HttpsServer home
     void postHttpsAccept();
 
@@ -276,9 +280,6 @@ public:
     /// Process response from ssl_crtd.
     void sslCrtdHandleReply(const Helper::Reply &reply);
 
-    /// Starts or resumes accepting a TLS connection. TODO: Make this helper
-    /// method protected after converting clientNegotiateSSL() into a method.
-    Security::IoResult acceptTls();
     void switchToHttps(ClientHttpRequest *, Ssl::BumpMode bumpServerMode);
     void parseTlsHandshake();
     bool switchedToHttps() const { return switchedToHttps_; }

@@ -56,72 +56,6 @@ Security::CommunicationSecrets::learnNew(const CommunicationSecrets &news)
     return sawChange;
 }
 
-#if USE_OPENSSL
-/// Clears the given secret if it is likely to contain no secret information.
-/// When asked for a secret too early, OpenSSL (successfully!) returns a copy of
-/// the secret _storage_ (filled with zeros) rather than an actual secret.
-static void
-IgnorePlaceholder(SBuf &secret)
-{
-    static const auto NulChar = CharacterSet("NUL").add('\0');
-    if (secret.findFirstNotOf(NulChar) == SBuf::npos) // all zeros
-        secret.clear();
-}
-#endif /* USE_OPENSSL */
-
-void
-Security::CommunicationSecrets::getClientRandom(const Connection &sconn)
-{
-    random.clear();
-#if USE_OPENSSL
-    const auto expectedLength = SSL_get_client_random(&sconn, nullptr, 0);
-    if (!expectedLength)
-        return;
-
-    // no auto due to reinterpret_casting of the result below
-    char * const space = random.rawAppendStart(expectedLength);
-    const auto actualLength = SSL_get_client_random(&sconn,
-                              reinterpret_cast<unsigned char*>(space), expectedLength);
-    random.rawAppendFinish(space, actualLength);
-
-    IgnorePlaceholder(random);
-#endif /* USE_OPENSSL */
-}
-
-void
-Security::CommunicationSecrets::getSessionId(const Session &session)
-{
-    id.clear();
-#if USE_OPENSSL
-    unsigned int idLength = 0;
-    // no auto due to reinterpret_casting of the result below
-    const unsigned char * const idStart = SSL_SESSION_get_id(&session, &idLength);
-    if (idStart && idLength)
-        id.assign(reinterpret_cast<const char *>(idStart), idLength);
-
-    IgnorePlaceholder(id);
-#endif /* USE_OPENSSL */
-}
-
-void
-Security::CommunicationSecrets::getMasterKey(const Session &session)
-{
-    key.clear();
-#if USE_OPENSSL
-    const auto expectedLength = SSL_SESSION_get_master_key(&session, nullptr, 0);
-    if (!expectedLength)
-        return;
-
-    // no auto due to reinterpret_casting of the result below
-    char * const space = key.rawAppendStart(expectedLength);
-    const auto actualLength = SSL_SESSION_get_master_key(&session,
-                              reinterpret_cast<unsigned char*>(space), expectedLength);
-    key.rawAppendFinish(space, actualLength);
-
-    IgnorePlaceholder(key);
-#endif /* USE_OPENSSL */
-}
-
 /// writes the given secret (in hex) or, if there is no secret, a placeholder
 static void
 PrintSecret(std::ostream &os, const SBuf &secret)
@@ -156,4 +90,64 @@ Security::CommunicationSecrets::record(std::ostream &os) const {
         os << "\n";
     }
 }
+
+#if USE_OPENSSL
+/// Clears the given secret if it is likely to contain no secret information.
+/// When asked for a secret too early, OpenSSL (successfully!) returns a copy of
+/// the secret _storage_ (filled with zeros) rather than an actual secret.
+static void
+IgnorePlaceholder(SBuf &secret)
+{
+    static const auto NulChar = CharacterSet("NUL").add('\0');
+    if (secret.findFirstNotOf(NulChar) == SBuf::npos) // all zeros
+        secret.clear();
+}
+
+void
+Security::CommunicationSecrets::getClientRandom(const Connection &sconn)
+{
+    random.clear();
+    const auto expectedLength = SSL_get_client_random(&sconn, nullptr, 0);
+    if (!expectedLength)
+        return;
+
+    // no auto due to reinterpret_casting of the result below
+    char * const space = random.rawAppendStart(expectedLength);
+    const auto actualLength = SSL_get_client_random(&sconn,
+                              reinterpret_cast<unsigned char*>(space), expectedLength);
+    random.rawAppendFinish(space, actualLength);
+
+    IgnorePlaceholder(random);
+}
+
+void
+Security::CommunicationSecrets::getSessionId(const Session &session)
+{
+    id.clear();
+    unsigned int idLength = 0;
+    // no auto due to reinterpret_casting of the result below
+    const unsigned char * const idStart = SSL_SESSION_get_id(&session, &idLength);
+    if (idStart && idLength)
+        id.assign(reinterpret_cast<const char *>(idStart), idLength);
+
+    IgnorePlaceholder(id);
+}
+
+void
+Security::CommunicationSecrets::getMasterKey(const Session &session)
+{
+    key.clear();
+    const auto expectedLength = SSL_SESSION_get_master_key(&session, nullptr, 0);
+    if (!expectedLength)
+        return;
+
+    // no auto due to reinterpret_casting of the result below
+    char * const space = key.rawAppendStart(expectedLength);
+    const auto actualLength = SSL_SESSION_get_master_key(&session,
+                              reinterpret_cast<unsigned char*>(space), expectedLength);
+    key.rawAppendFinish(space, actualLength);
+
+    IgnorePlaceholder(key);
+}
+#endif /* USE_OPENSSL */
 

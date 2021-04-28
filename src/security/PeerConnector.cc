@@ -94,10 +94,14 @@ Security::PeerConnector::fillChecklist(ACLFilledChecklist &checklist) const
     checklist.syncAle(request.getRaw(), nullptr);
     // checklist.fd(fd); XXX: need client FD here
 
+#if USE_OPENSSL
     if (!checklist.serverCert) {
         if (const auto session = fd_table[serverConnection()->fd].ssl.get())
             checklist.serverCert.resetWithoutLocking(SSL_get_peer_certificate(session));
     }
+#else
+    // checklist.serverCert is not maintained in other builds
+#endif
 }
 
 void
@@ -198,11 +202,11 @@ Security::PeerConnector::negotiate()
 
     const auto result = Security::Connect(*serverConnection());
 
-    // log ASAP, even if the handshake has not completed (or failed)
-    keyLogger.checkpoint(*fd_table[fd].ssl, *this);
-
 #if USE_OPENSSL
     auto &sconn = *fd_table[fd].ssl;
+
+    // log ASAP, even if the handshake has not completed (or failed)
+    keyLogger.checkpoint(sconn, *this);
 
     // OpenSSL v1 APIs do not allow unthreaded applications like Squid to fetch
     // missing certificates _during_ OpenSSL certificate validation. Our

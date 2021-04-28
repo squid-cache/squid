@@ -36,9 +36,14 @@ public:
     void record(std::ostream &) const;
 
 private:
+#if USE_OPENSSL
     void getClientRandom(const Connection &sconn);
     void getSessionId(const Session &session);
     void getMasterKey(const Session &session);
+#else
+    // Secret extraction is not supported in builds using other TLS libraries.
+    // Secret extraction is impractical in builds without TLS libraries.
+#endif
 
     SBuf id; ///< TLS session ID
     SBuf random; ///< CLIENT_RANDOM from the TLS connection
