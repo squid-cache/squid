@@ -42,6 +42,9 @@ namespace Security
 void KeyData::loadFromFiles(const AnyP::PortCfg &, const char *) STUB
 }
 
+#include "security/KeyLogger.h"
+void Security::KeyLogger::maybeLog(const Connection &, const Acl::ChecklistFiller &) STUB
+
 #include "security/ErrorDetail.h"
 Security::ErrorDetail::ErrorDetail(ErrorCode, const CertPointer &, const CertPointer &, const char *) STUB
 #if USE_OPENSSL
@@ -74,6 +77,7 @@ void PeerConnector::start() STUB
 bool PeerConnector::doneAll() const STUB_RETVAL(true)
 void PeerConnector::swanSong() STUB
 const char *PeerConnector::status() const STUB_RETVAL("")
+void PeerConnector::fillChecklist(ACLFilledChecklist &) const STUB
 void PeerConnector::commCloseHandler(const CommCloseCbParams &) STUB
 void PeerConnector::commTimeoutHandler(const CommTimeoutCbParams &) STUB
 bool PeerConnector::initialize(Security::SessionPointer &) STUB_RETVAL(false)
