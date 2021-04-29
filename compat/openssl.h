@@ -178,7 +178,7 @@ extern "C" {
         if (!session || !session->master_key || session->master_key_length <= 0)
             return 0;
 
-        const auto sourceSize = session->master_key_length;
+        const auto sourceSize = static_cast<size_t>(session->master_key_length);
         if (!outSizeMax)
             return sourceSize; // special API case for sourceSize discovery
 
