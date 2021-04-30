@@ -226,7 +226,7 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
     }
 
     if (!tok.skip('#') && !tok.atEnd())
-        throw TextException("invalid characters  in URL", Here());
+        throw TextException("invalid characters in URL", Here());
     // else ignore #fragment (if any)
 
     debugs(16, 3, "MGR request: host=" << uri.host() << ", action=" << action <<
@@ -487,4 +487,3 @@ CacheManager::GetInstance()
     }
     return instance;
 }
-

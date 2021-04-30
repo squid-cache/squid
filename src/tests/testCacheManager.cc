@@ -211,7 +211,7 @@ testCacheManager::testParseUrl()
                         } catch (const TextException &e) {
                             continue; // success. caught bad input
                         }
-                        CPPUNIT_FAIL("bad result");
+                        CPPUNIT_FAIL("failed to reject an invalid URL");
                     }
                 }
             }
