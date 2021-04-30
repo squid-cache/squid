@@ -9,6 +9,7 @@
 #ifndef SQUID_CACHEMANAGER_H
 #define SQUID_CACHEMANAGER_H
 
+#include "anyp/forward.h"
 #include "comm/forward.h"
 #include "mgr/Action.h"
 #include "mgr/ActionProfile.h"
@@ -50,7 +51,7 @@ public:
 protected:
     CacheManager() {} ///< use Instance() instead
 
-    Mgr::CommandPointer ParseUrl(const char *url);
+    Mgr::CommandPointer ParseUrl(const AnyP::Uri &);
     void ParseHeaders(const HttpRequest * request, Mgr::ActionParams &params);
     int CheckPassword(const Mgr::Command &cmd);
     char *PasswdGet(Mgr::ActionPasswordList *, const char *);

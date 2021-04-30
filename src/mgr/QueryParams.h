@@ -13,9 +13,11 @@
 
 #include "ipc/forward.h"
 #include "mgr/QueryParam.h"
+#include "parser/Tokenizer.h"
 #include "SquidString.h"
-#include <vector>
+
 #include <utility>
+#include <vector>
 
 namespace Mgr
 {
@@ -32,15 +34,13 @@ public:
     void pack(Ipc::TypedMsgHdr& msg) const; ///< store params into msg
     void unpack(const Ipc::TypedMsgHdr& msg); ///< load params from msg
     /// parses the query string parameters
-    static bool Parse(const String& aParamsStr, QueryParams& aParams);
+    static void Parse(Parser::Tokenizer &, QueryParams &);
 
 private:
     /// find query parameter by name
     Params::const_iterator find(const String& name) const;
     /// creates a parameter of the specified type
     static QueryParam::Pointer CreateParam(QueryParam::Type aType);
-    /// parses string like "param=value"; returns true if success
-    static bool ParseParam(const String& paramStr, Param& param);
 
 private:
     Params params;
