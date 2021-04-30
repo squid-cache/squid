@@ -26,7 +26,9 @@
 #include "mgr/Forwarder.h"
 #include "mgr/FunAction.h"
 #include "mgr/QueryParams.h"
+#include "parser/Tokenizer.h"
 #include "protos.h"
+#include "sbuf/Stream.h"
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
@@ -147,82 +149,87 @@ CacheManager::createRequestedAction(const Mgr::ActionParams &params)
     return cmd->profile->creator->create(cmd);
 }
 
+static const CharacterSet &
+MgrFieldChars(const AnyP::ProtocolType &protocol)
+{
+    // Deprecated cache_object:// scheme used '@' to delimit passwords
+    if (protocol == AnyP::PROTO_CACHE_OBJECT) {
+        static const CharacterSet fieldChars = CharacterSet("cache-object-field", "@?#").complement();
+        return fieldChars;
+    }
+
+    static const CharacterSet actionChars = CharacterSet("mgr-field", "?#").complement();
+    return actionChars;
+}
+
 /**
- \ingroup CacheManagerInternal
  * define whether the URL is a cache-manager URL and parse the action
  * requested by the user. Checks via CacheManager::ActionProtection() that the
  * item is accessible by the user.
- \retval CacheManager::cachemgrStateData state object for the following handling
- \retval NULL if the action can't be found or can't be accessed by the user
+ *
+ * Syntax:
+ *
+ *  scheme "://" authority [ '/squid-internal-mgr' ] path-absolute [ '@' unreserved ] '?' query-string
+ *
+ * see RFC 3986 for definitions of scheme, authority, path-absolute, query-string
+ *
+ * \returns Mgr::Command object with action to perform and parameters it might use
  */
 Mgr::Command::Pointer
-CacheManager::ParseUrl(const char *url)
+CacheManager::ParseUrl(const AnyP::Uri &uri)
 {
-    int t;
-    LOCAL_ARRAY(char, host, MAX_URL);
-    LOCAL_ARRAY(char, request, MAX_URL);
-    LOCAL_ARRAY(char, password, MAX_URL);
-    LOCAL_ARRAY(char, params, MAX_URL);
-    host[0] = 0;
-    request[0] = 0;
-    password[0] = 0;
-    params[0] = 0;
-    int pos = -1;
-    int len = strlen(url);
-    Must(len > 0);
-    t = sscanf(url, "cache_object://%[^/]/%[^@?]%n@%[^?]?%s", host, request, &pos, password, params);
-    if (t < 3) {
-        t = sscanf(url, "cache_object://%[^/]/%[^?]%n?%s", host, request, &pos, params);
-    }
-    if (t < 1) {
-        t = sscanf(url, "http://%[^/]/squid-internal-mgr/%[^?]%n?%s", host, request, &pos, params);
-    }
-    if (t < 1) {
-        t = sscanf(url, "https://%[^/]/squid-internal-mgr/%[^?]%n?%s", host, request, &pos, params);
-    }
-    if (t < 2) {
-        if (strncmp("cache_object://",url,15)==0)
-            xstrncpy(request, "menu", MAX_URL);
-        else
-            xstrncpy(request, "index", MAX_URL);
-    }
+    Parser::Tokenizer tok(uri.path());
 
-#if _SQUID_OS2_
-    if (t == 2 && request[0] == '\0') {
-        /*
-         * emx's sscanf insists of returning 2 because it sets request
-         * to null
-         */
-        if (strncmp("cache_object://",url,15)==0)
-            xstrncpy(request, "menu", MAX_URL);
-        else
-            xstrncpy(request, "index", MAX_URL);
-    }
-#endif
+    static const SBuf internalMagicPrefix("/squid-internal-mgr/");
+    if (!tok.skip(internalMagicPrefix) && !tok.skip('/'))
+        throw TextException("invalid URL path", Here());
 
-    debugs(16, 3, HERE << "MGR request: t=" << t << ", host='" << host << "', request='" << request << "', pos=" << pos <<
-           ", password='" << password << "', params='" << params << "'");
+    Mgr::Command::Pointer cmd = new Mgr::Command();
+    cmd->params.httpUri = SBufToString(uri.absolute());
 
-    Mgr::ActionProfile::Pointer profile = findAction(request);
-    if (!profile) {
-        debugs(16, DBG_IMPORTANT, "CacheManager::ParseUrl: action '" << request << "' not found");
-        return NULL;
+    const auto &fieldChars = MgrFieldChars(uri.getScheme());
+
+    SBuf action;
+    if (!tok.prefix(action, fieldChars)) {
+        if (uri.getScheme() == AnyP::PROTO_CACHE_OBJECT) {
+            static const SBuf menuReport("menu");
+            action = menuReport;
+        } else {
+            static const SBuf indexReport("index");
+            action = indexReport;
+        }
     }
+    cmd->params.actionName = SBufToString(action);
+
+    const auto profile = findAction(action.c_str());
+    if (!profile)
+        throw TextException(ToSBuf("action '", action, "' not found"), Here());
 
     const char *prot = ActionProtection(profile);
-    if (!strcmp(prot, "disabled") || !strcmp(prot, "hidden")) {
-        debugs(16, DBG_IMPORTANT, "CacheManager::ParseUrl: action '" << request << "' is " << prot);
-        return NULL;
+    if (!strcmp(prot, "disabled") || !strcmp(prot, "hidden"))
+        throw TextException(ToSBuf("action '", action, "' is ", prot), Here());
+    cmd->profile = profile;
+
+    SBuf passwd;
+    if (uri.getScheme() == AnyP::PROTO_CACHE_OBJECT && tok.skip('@')) {
+        (void)tok.prefix(passwd, fieldChars);
+        cmd->params.password = SBufToString(passwd);
     }
 
-    Mgr::Command::Pointer cmd = new Mgr::Command;
-    if (!Mgr::QueryParams::Parse(params, cmd->params.queryParams))
-        return NULL;
-    cmd->profile = profile;
-    cmd->params.httpUri = url;
-    cmd->params.userName = String();
-    cmd->params.password = password;
-    cmd->params.actionName = request;
+    // TODO: fix when AnyP::Uri::parse() separates path?query#fragment
+    SBuf params;
+    if (tok.skip('?')) {
+        params = tok.remaining();
+        Mgr::QueryParams::Parse(tok, cmd->params.queryParams);
+    }
+
+    if (!tok.skip('#') && !tok.atEnd())
+        throw TextException("invalid characters in URL", Here());
+    // else ignore #fragment (if any)
+
+    debugs(16, 3, "MGR request: host=" << uri.host() << ", action=" << action <<
+           ", password=" << passwd << ", params=" << params);
+
     return cmd;
 }
 
@@ -305,11 +312,15 @@ CacheManager::CheckPassword(const Mgr::Command &cmd)
 void
 CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request, StoreEntry * entry)
 {
-    debugs(16, 3, "CacheManager::Start: '" << entry->url() << "'" );
+    debugs(16, 3, "request-url= '" << request->url << "', entry-url='" << entry->url() << "'");
 
-    Mgr::Command::Pointer cmd = ParseUrl(entry->url());
-    if (!cmd) {
-        ErrorState *err = new ErrorState(ERR_INVALID_URL, Http::scNotFound, request);
+    Mgr::Command::Pointer cmd;
+    try {
+        cmd = ParseUrl(request->url);
+
+    } catch (...) {
+        debugs(16, 2, "request URL error: " << CurrentException);
+        const auto err = new ErrorState(ERR_INVALID_URL, Http::scNotFound, request);
         err->url = xstrdup(entry->url());
         errorAppendEntry(entry, err);
         entry->expires = squid_curtime;
@@ -473,4 +484,3 @@ CacheManager::GetInstance()
     }
     return instance;
 }
-

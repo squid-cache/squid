@@ -174,11 +174,10 @@ void Mgr::IoAction::dump(StoreEntry* entry) STUB
 Mgr::QueryParam::Pointer Mgr::QueryParams::get(const String& name) const STUB_RETVAL(Mgr::QueryParam::Pointer(NULL))
 void Mgr::QueryParams::pack(Ipc::TypedMsgHdr& msg) const STUB
 void Mgr::QueryParams::unpack(const Ipc::TypedMsgHdr& msg) STUB
-bool Mgr::QueryParams::Parse(const String& aParamsStr, QueryParams& aParams) STUB_RETVAL(false)
+void Mgr::QueryParams::Parse(Parser::Tokenizer &, QueryParams &) STUB
 //private:
 //Params::const_iterator Mgr::QueryParams::find(const String& name) const STUB_RETVAL(new Mgr::Params::const_iterator(*this))
 Mgr::QueryParam::Pointer Mgr::QueryParams::CreateParam(QueryParam::Type aType) STUB_RETVAL(Mgr::QueryParam::Pointer(NULL))
-bool Mgr::QueryParams::ParseParam(const String& paramStr, Param& param) STUB_RETVAL(false)
 
 #include "mgr/Registration.h"
 //void Mgr::RegisterAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic);
