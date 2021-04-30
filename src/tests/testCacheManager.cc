@@ -184,7 +184,7 @@ testCacheManager::testParseUrl()
                             std::cerr << std::endl
                                       << "FAIL: " << mgrUrl
                                       << Debug::Extra << "error: " << CurrentException << std::endl;
-                            CPPUNIT_FAIL("bad result");
+                            CPPUNIT_FAIL("rejected a valid URL");
                         }
                     }
                 }
