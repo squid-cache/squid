@@ -46,8 +46,6 @@ public:
 
 #endif
 
-#define OFFSET_OF(TYPE, MEMBER) ((size_t) &(((TYPE) *)0)->(MEMBER))
-
 /**
  * Manage a set of registered callback data pointers.
  * One of the easiest ways to make Squid coredump is to issue a
@@ -116,25 +114,12 @@ public:
 
 #if !WITH_VALGRIND
     size_t dataSize() const { return sizeof(data);}
-    static long MakeOffset();
-    static const long Offset;
 #endif
     /* MUST be the last per-instance member */
     void *data;
 };
 
 const long cbdata::Cookie((long)0xDEADBEEF);
-#if !WITH_VALGRIND
-const long cbdata::Offset(MakeOffset());
-
-long
-cbdata::MakeOffset()
-{
-    cbdata *zero = (cbdata *)0L;
-    void **dataOffset = &zero->data;
-    return (long)dataOffset;
-}
-#endif
 
 static OBJH cbdataDump;
 #if USE_CBDATA_DEBUG
@@ -186,8 +171,7 @@ cbdataInternalInitType(cbdata_type type, const char *name, int size)
     snprintf(label, strlen(name) + 20, "cbdata %s (%d)", name, (int) type);
 
 #if !WITH_VALGRIND
-    assert((size_t)cbdata::Offset == (sizeof(cbdata) - ((cbdata *)NULL)->dataSize()));
-    size += cbdata::Offset;
+    size += offsetof(cbdata, data);
 #endif
 
     cbdata_index[type].pool = memPoolCreate(label, size);
@@ -301,7 +285,7 @@ cbdataInternalFree(void *p, const char *file, int line)
 #if WITH_VALGRIND
     c = cbdata_htable.at(p);
 #else
-    c = (cbdata *) (((char *) p) - cbdata::Offset);
+    c = (cbdata *) (((char *) p) - offsetof(cbdata,data));
 #endif
 #if USE_CBDATA_DEBUG
     debugs(45, 3, p << " " << file << ":" << line);
@@ -341,7 +325,7 @@ cbdataInternalLock(const void *p)
 #if WITH_VALGRIND
     c = cbdata_htable.at(p);
 #else
-    c = (cbdata *) (((char *) p) - cbdata::Offset);
+    c = (cbdata *) (((char *) p) - offsetof(cbdata, data));
 #endif
 
 #if USE_CBDATA_DEBUG
@@ -373,7 +357,7 @@ cbdataInternalUnlock(const void *p)
 #if WITH_VALGRIND
     c = cbdata_htable.at(p);
 #else
-    c = (cbdata *) (((char *) p) - cbdata::Offset);
+    c = (cbdata *) (((char *) p) - offsetof(cbdata, data));
 #endif
 
 #if USE_CBDATA_DEBUG
@@ -421,7 +405,7 @@ cbdataReferenceValid(const void *p)
 #if WITH_VALGRIND
     c = cbdata_htable.at(p);
 #else
-    c = (cbdata *) (((char *) p) - cbdata::Offset);
+    c = (cbdata *) (((char *) p) - offsetof(cbdata, data));
 #endif
 
     c->check(__LINE__);
@@ -502,7 +486,7 @@ cbdataDump(StoreEntry * sentry)
 #if WITH_VALGRIND
             int obj_size = pool->objectSize();
 #else
-            int obj_size = pool->objectSize() - cbdata::Offset;
+            int obj_size = pool->objectSize() - offsetof(cbdata, data);
 #endif
             storeAppendPrintf(sentry, "%s\t%d\t%ld\t%ld\n", pool->objectType() + 7, obj_size, (long int)pool->getMeter().inuse.currentLevel(), (long int)obj_size * pool->getMeter().inuse.currentLevel());
         }
