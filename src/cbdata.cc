@@ -285,7 +285,7 @@ cbdataInternalFree(void *p, const char *file, int line)
 #if WITH_VALGRIND
     c = cbdata_htable.at(p);
 #else
-    c = (cbdata *) (((char *) p) - offsetof(cbdata,data));
+    c = (cbdata *) (((char *) p) - offsetof(cbdata, data));
 #endif
 #if USE_CBDATA_DEBUG
     debugs(45, 3, p << " " << file << ":" << line);
