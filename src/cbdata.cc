@@ -16,6 +16,7 @@
 #include "Store.h"
 
 #include <climits>
+#include <cstddef>
 
 #if USE_CBDATA_DEBUG
 #include <algorithm>
@@ -126,6 +127,8 @@ public:
     /* MUST be the last per-instance member */
     void *data;
 };
+
+static_assert(std::is_standard_layout<cbdata>::value, "the behavior of offsetof(cbdata) is defined");
 
 const long cbdata::Cookie((long)0xDEADBEEF);
 
