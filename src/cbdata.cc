@@ -89,6 +89,14 @@ public:
     {}
     ~cbdata();
 
+    static cbdata *FromUserData(const void *p) {
+#if WITH_VALGRIND
+        return cbdata_htable.at(p);
+#else
+        return (cbdata *) (((char *) p) - offsetof(cbdata, data));
+#endif
+    }
+
     int valid;
     int32_t locks;
     cbdata_type type;
@@ -281,12 +289,7 @@ cbdataRealFree(cbdata *c, const char *file, const int line)
 void *
 cbdataInternalFree(void *p, const char *file, int line)
 {
-    cbdata *c;
-#if WITH_VALGRIND
-    c = cbdata_htable.at(p);
-#else
-    c = (cbdata *) (((char *) p) - offsetof(cbdata, data));
-#endif
+    auto *c = cbdata::FromUserData(p);
 #if USE_CBDATA_DEBUG
     debugs(45, 3, p << " " << file << ":" << line);
 #else
@@ -317,16 +320,10 @@ cbdataInternalLockDbg(const void *p, const char *file, int line)
 cbdataInternalLock(const void *p)
 #endif
 {
-    cbdata *c;
-
     if (p == NULL)
         return;
 
-#if WITH_VALGRIND
-    c = cbdata_htable.at(p);
-#else
-    c = (cbdata *) (((char *) p) - offsetof(cbdata, data));
-#endif
+    auto *c = cbdata::FromUserData(p);
 
 #if USE_CBDATA_DEBUG
     debugs(45, 3, p << "=" << (c ? c->locks + 1 : -1) << " " << file << ":" << line);
@@ -349,16 +346,10 @@ cbdataInternalUnlockDbg(const void *p, const char *file, int line)
 cbdataInternalUnlock(const void *p)
 #endif
 {
-    cbdata *c;
-
     if (p == NULL)
         return;
 
-#if WITH_VALGRIND
-    c = cbdata_htable.at(p);
-#else
-    c = (cbdata *) (((char *) p) - offsetof(cbdata, data));
-#endif
+    auto *c = cbdata::FromUserData(p);
 
 #if USE_CBDATA_DEBUG
     debugs(45, 3, p << "=" << (c ? c->locks - 1 : -1) << " " << file << ":" << line);
@@ -395,18 +386,12 @@ cbdataInternalUnlock(const void *p)
 int
 cbdataReferenceValid(const void *p)
 {
-    cbdata *c;
-
     if (p == NULL)
         return 1;       /* A NULL pointer cannot become invalid */
 
     debugs(45, 9, p);
 
-#if WITH_VALGRIND
-    c = cbdata_htable.at(p);
-#else
-    c = (cbdata *) (((char *) p) - offsetof(cbdata, data));
-#endif
+    auto *c = cbdata::FromUserData(p);
 
     c->check(__LINE__);
 
