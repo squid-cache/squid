@@ -53,6 +53,9 @@ typedef std::unique_ptr<SSL_SESSION, HardFun<void, SSL_SESSION*, &SSL_SESSION_fr
 #elif USE_GNUTLS
 using Connection = struct gnutls_session_int;
 
+// to be finalized when it is actually needed/used
+struct Session {};
+
 typedef std::shared_ptr<struct gnutls_session_int> SessionPointer;
 
 // wrapper function to get around gnutls_free being a typedef
@@ -61,6 +64,8 @@ typedef std::unique_ptr<gnutls_datum_t, HardFun<void, void*, &Security::squid_gn
 
 #else
 typedef std::nullptr_t Connection;
+
+struct Session {};
 
 typedef std::shared_ptr<void> SessionPointer;
 
