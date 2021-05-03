@@ -24,7 +24,11 @@ Security::CommunicationSecrets::CommunicationSecrets(const Connection &sconn)
         getMasterKey(*session);
         getSessionId(*session);
     }
-#endif /* USE_OPENSSL */
+#else
+    // Secret extraction is not supported in builds using other TLS libraries.
+    // Secret extraction is impractical in builds without TLS libraries.
+    (void)sconn;
+#endif
 }
 
 bool
