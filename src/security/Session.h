@@ -51,7 +51,8 @@ typedef std::shared_ptr<SSL> SessionPointer;
 typedef std::unique_ptr<SSL_SESSION, HardFun<void, SSL_SESSION*, &SSL_SESSION_free>> SessionStatePointer;
 
 #elif USE_GNUTLS
-using Connection = struct gnutls_session_int;
+// to be finalized when it is actually needed/used
+struct Connection {};
 
 // to be finalized when it is actually needed/used
 struct Session {};
