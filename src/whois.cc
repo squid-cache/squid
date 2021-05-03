@@ -120,6 +120,16 @@ WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t
     debugs(75, 3, HERE << conn << " read " << aBufferLength << " bytes");
     debugs(75, 5, "{" << aBuffer << "}");
 
+    // TODO: Honor delay pools.
+
+    // XXX: Update statCounter before bailing
+    if (!entry->isAccepting()) {
+        debugs(52, 3, "terminating due to bad " << *entry);
+        // TODO: Do not abuse connection for triggering cleanup.
+        conn->close();
+        return;
+    }
+
     if (flag != Comm::OK) {
         debugs(50, 2, conn << ": read failure: " << xstrerr(xerrno));
 

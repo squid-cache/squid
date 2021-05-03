@@ -1226,6 +1226,11 @@ HttpStateData::processReply()
         Must(!flags.headers_parsed);
     }
 
+    if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
+        abortTransaction("store entry aborted while we were waiting for processReply()");
+        return;
+    }
+
     if (!flags.headers_parsed) { // have not parsed headers yet?
         PROF_start(HttpStateData_processReplyHeader);
         processReplyHeader();
