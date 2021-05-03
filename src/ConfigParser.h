@@ -49,6 +49,13 @@ public:
     enum TokenType {SimpleToken, QuotedToken, FunctionParameters};
 
     void destruct();
+
+    /// stops parsing the current configuration directive
+    void closeDirective();
+
+    /// rejects configuration due to a repeated directive
+    void rejectDuplicateDirective();
+
     static void ParseUShort(unsigned short *var);
     static void ParseBool(bool *var);
     static const char *QuoteString(const String &var);

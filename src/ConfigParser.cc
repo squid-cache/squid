@@ -536,6 +536,22 @@ ConfigParser::QuoteString(const String &var)
     return quotedStr.termedBuf();
 }
 
+void
+ConfigParser::rejectDuplicateDirective()
+{
+    assert(cfg_directive);
+    throw TextException("duplicate configuration directive", Here());
+}
+
+void
+ConfigParser::closeDirective()
+{
+    assert(cfg_directive);
+    if (const auto garbage = PeekAtToken())
+        throw TextException(ToSBuf("trailing garbage at the end of a configuration directive: ", garbage), Here());
+    // TODO: cfg_directive = nullptr; // currently in generated code
+}
+
 bool
 ConfigParser::CfgFile::startParse(char *path)
 {
