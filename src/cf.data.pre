@@ -5512,6 +5512,8 @@ DOC_START
 
 	TLS key log supports all access_log key=value options with the
 	exception of logformat=name.
+
+	Requires Squid built with OpenSSL support.
 DOC_END
 
 
