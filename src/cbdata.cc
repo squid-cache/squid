@@ -94,7 +94,8 @@ public:
 #if WITH_VALGRIND
         return cbdata_htable.at(p);
 #else
-        return (cbdata *) (((char *) p) - offsetof(cbdata, data));
+        const auto t = static_cast<const char *>(p) - offsetof(cbdata, data);
+        return reinterpret_cast<cbdata *>(const_cast<char *>(t));
 #endif
     }
 
@@ -394,7 +395,7 @@ cbdataReferenceValid(const void *p)
 
     debugs(45, 9, p);
 
-    auto *c = cbdata::FromUserData(p);
+    const auto c = cbdata::FromUserData(p);
 
     c->check(__LINE__);
 
