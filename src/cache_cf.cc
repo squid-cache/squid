@@ -662,7 +662,7 @@ ParseDirective(T &raw, ConfigParser &parser)
 
     // TODO: parser.openDirective(directiveName);
     Must(!raw);
-    raw = ConfigComponent<T>::Parse(parser);
+    raw = Configuration::Component<T>::Parse(parser);
     Must(raw);
     parser.closeDirective();
 }
@@ -678,7 +678,7 @@ DumpDirective(const T &raw, StoreEntry *entry, const char *name)
 
     entry->append(name, strlen(name));
     SBufStream os;
-    ConfigComponent<T>::Print(os, raw);
+    Configuration::Component<T>::Print(os, raw);
     const auto buf = os.buf();
     if (buf.length()) {
         entry->append(" ", 1);
@@ -692,7 +692,7 @@ template <typename T>
 static void
 FreeDirective(T &raw)
 {
-    ConfigComponent<T>::Free(raw);
+    Configuration::Component<T>::Free(raw);
 
     // While the implementation may change, there is no way to avoid zeroing.
     // Even migration to a proper SquidConfig class would not help: While
