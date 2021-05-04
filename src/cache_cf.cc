@@ -630,22 +630,23 @@ parseConfigFileOrThrow(const char *file_name)
 bool
 parseConfigFile(const char *file_name)
 {
+    static const char *kparseBlurb = "Log lines above or 'squid -k parse' may have more details.";
     try {
         if (const auto err_count = parseConfigFileOrThrow(file_name)) {
             // TODO: rollback to previous working settings
             // for now any errors are a fatal condition...
-            debugs(1, DBG_CRITICAL, "FATAL: Shutdown due to " << err_count << " configuration errors." <<
-                   Debug::Extra << "Log lines above or 'squid -k parse' may have more details.");
-            if (!opt_parse_cfg_only)
-                self_destruct();
-            return false;
+            const auto errMsg = ToSBuf("Found ", err_count, " configuration issues");
+            if (opt_parse_cfg_only) {
+                debugs(1, DBG_CRITICAL, "FATAL: " << errMsg << Debug::Extra << kparseBlurb);
+                return false;
+            }
+            throw TextException(errMsg, Here());
         }
         return true;
-    }
-    catch (...) {
+
+    } catch (...) {
         debugs(3, DBG_CRITICAL, "FATAL: Configuration Error: " << ConfigParser::CurrentLocation() <<
-               Debug::Extra << CurrentException <<
-               Debug::Extra << "Log lines above or 'squid -k parse' may have more details.");
+               Debug::Extra << CurrentException << Debug::Extra << kparseBlurb);
         self_destruct();
         return false; // not reached
     }
