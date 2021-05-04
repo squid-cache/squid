@@ -218,9 +218,7 @@ protected:
 };
 
 /// Parse squid.conf or '-f file_name' configuration
-/// \retval true   on success
-/// \retval false  a detectable error or exception occured
-bool parseConfigFile(const char *file_name);
+void parseConfigFile(const char *file_name);
 
 #endif /* SQUID_CONFIGPARSER_H */
 

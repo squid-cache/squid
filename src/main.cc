@@ -925,7 +925,7 @@ mainReconfigureFinish(void *)
 
     const int oldWorkers = Config.workers;
 
-    (void) parseConfigFile(ConfigFile); // handles any config problems or dies
+    parseConfigFile(ConfigFile);
 
     if (oldWorkers != Config.workers) {
         debugs(1, DBG_CRITICAL, "WARNING: Changing 'workers' (from " <<
@@ -1587,8 +1587,7 @@ SquidMain(int argc, char **argv)
 
         Format::Token::Init(); // XXX: temporary. Use a runners registry of pre-parse runners instead.
 
-        if (!parseConfigFile(ConfigFile))
-            return EXIT_FAILURE;
+        parseConfigFile(ConfigFile);
 
         Mem::Report();
 
