@@ -266,6 +266,10 @@ This section gives a thorough account of those changes in three categories:
 	   transaction ID.
 	<p>New <em>CF</em> value for <em>%Ss</em> code to indicate the response
 	   was handled by Collapsed Forwarding.
+	<p>New <em>TLS/1.3</em> value for <em>%%ssl::<negotiated_version</em>
+	    code to indicate the request was received from client using TLS/1.3.
+	<p>New <em>TLS/1.3</em> value for <em>%ssl::>negotiated_version</em>
+	    code to indicate the response was received from server using TLS/1.3.
 	<p>Codes <em>rm</em>, <em>&lt;rm</em> and <em>&gt;rm</em> display "-"
 	   instead of the made-up method NONE.
 
