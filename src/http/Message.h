@@ -123,7 +123,7 @@ protected:
     /**
      * Validate the message start line is syntactically correct.
      * Set HTTP error status according to problems found.
-     * This method must return false if we do do not have valid headers.
+     * This method must return false if it is not passed parsed headers.
      *
      * \retval true   Status line has no serious problems.
      * \retval false  Status line has a serious problem. Correct response is indicated by error.
