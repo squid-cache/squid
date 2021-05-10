@@ -1462,6 +1462,9 @@ ftpSendCwd(Ftp::Gateway * ftpState)
 
     path = ftpState->filepath;
 
+    if(!path)
+        return;
+
     if (!strcmp(path, "..") || !strcmp(path, "/")) {
         ftpState->flags.no_dotdot = 1;
     } else {
