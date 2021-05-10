@@ -1,3 +1,19 @@
+Changes in squid-4.15 (10 May 2021):
+
+	- Bug 5112: Excessively loud chunked reply parsing error reporting
+	- Bug 5106: Broken cache manager URL parsing
+	- Bug 5104: Memory leak in RFC 2169 response parsing
+	- Bug 3556: "FD ... is not an open socket" for accept() problems
+	- Profiling: CPU timing implemented for MAC non-x86
+	- Fix HttpHeaderStats definition to include hoErrorDetail
+	- Fix Squid-to-client write_timeout triggers client_lifetime timeout
+	- Limit HeaderLookupTable_t::lookup() to BadHdr and specific IDs
+	- Handle more Range requests
+	- Handle more partial responses
+	- Stop processing a response if the Store entry is gone
+	- ... and some portability fixes
+	- ... and some documentation updates
+
 Changes in squid-4.14 (02 Feb 2021):
 
 	- Regression Fix: support for non-lowercase Transfer-Encoding value
