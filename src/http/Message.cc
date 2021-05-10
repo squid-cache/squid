@@ -85,8 +85,8 @@ Http::Message::parse(const char *buf, const size_t sz, bool eof, Http::StatusCod
     // find the end of headers
     const size_t hdr_len = headersEnd(buf, sz);
 
-    if(hdr_len > Config.maxReplyHeaderSize || (hdr_len == 0 && sz > Config.maxReplyHeaderSize))
-        debugs(58, 3, "Too large reply header (" << hdr_len << " > " << Config.maxReplyHeaderSize << ")");
+    if (hdr_len > Config.maxReplyHeaderSize || (hdr_len == 0 && sz > Config.maxReplyHeaderSize)) {
+        debugs(58, 3, "input too large: " << hdr_len << " or " << sz << " > " << Config.maxReplyHeaderSize);
         *error = Http::scHeaderTooLarge;
         return false;
     }
