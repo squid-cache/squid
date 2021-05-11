@@ -20,12 +20,9 @@ namespace Auth
 
 class Config
 {
-    explicit Config(const Config &) = delete;
-    explicit Config(const Config *) = delete;
-
 public:
     Config() = default;
-    explicit Config(Config &&) = default;
+    Config(Config &&) = delete; // no support for copying of any kind
     ~Config();
 
     /// set of auth_params directives
