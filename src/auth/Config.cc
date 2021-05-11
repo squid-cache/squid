@@ -14,3 +14,7 @@
 
 Auth::Config Auth::TheConfig;
 
+Auth::Config::~Config()
+{
+    delete schemeAccess;
+}

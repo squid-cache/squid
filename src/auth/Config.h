@@ -11,7 +11,7 @@
 
 #if USE_AUTH
 
-#include "acl/Tree.h"
+#include "acl/forward.h"
 #include "auth/SchemeConfig.h"
 #include "auth/SchemesConfig.h"
 
@@ -26,7 +26,7 @@ class Config
 public:
     Config() = default;
     explicit Config(Config &&) = default;
-    ~Config() { delete schemeAccess; }
+    ~Config();
 
     /// set of auth_params directives
     Auth::ConfigVector schemes;
