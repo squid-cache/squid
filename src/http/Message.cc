@@ -101,7 +101,7 @@ Http::Message::parse(const char *buf, const size_t sz, bool eof, Http::StatusCod
         return false;
     }
 
-    assert(hdr_len > 0); // sanityCheckStartLine() rejects unparsed headers
+    assert(hdr_len > 0); // sanityCheckStartLine() rejects buffers that cannot be parsed
 
     const int res = httpMsgParseStep(buf, sz, eof);
 
@@ -289,4 +289,3 @@ Http::Message::firstLineBuf(MemBuf &mb)
 {
     packFirstLineInto(&mb, true);
 }
-
