@@ -1090,7 +1090,7 @@ msgid ""
 "misconfigured."
 msgstr ""
 "Este caché no transmitirá su solicitud, ya que intenta imponer una relación "
-"de conexión. Quizás el cliente en% i es un caché que se ha desconfigurado."
+"de conexión. Quizás el cliente en %i es un caché que se ha desconfigurado."
 
 #: templates/ERR_GATEWAY_FAILURE+html.body.div.p:29-1
 #, fuzzy
