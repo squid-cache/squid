@@ -282,7 +282,7 @@ bool Ssl::CertificateDb::purgeCert(std::string const & key) {
 bool
 Ssl::CertificateDb::addCertAndPrivateKey(std::string const &useKey, const Security::CertPointer &cert, const Security::PrivateKeyPointer &pkey, const Security::CertPointer &orig)
 {
-    const Locker locker(dbLock, __FILE__, __LINE__);
+    const Locker locker(dbLock, __FILE__, __LINE__); // XXX: Use Here().
     load();
     if (!db || !cert || !pkey)
         return false;
@@ -707,4 +707,3 @@ Ssl::CertificateDb::ReadEntry(std::string filename, Security::CertPointer &cert,
     (void)Ssl::ReadX509Certificate(bio, orig);
     return true;
 }
-
