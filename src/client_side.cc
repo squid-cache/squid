@@ -2425,8 +2425,7 @@ clientNegotiateSSL(int fd, void *data)
     Security::CertPointer client_cert(SSL_get_peer_certificate(session.get()));
 
     if (client_cert) {
-        auto subject = Security::CertSubjectName(client_cert);
-        debugs(83, 3, "FD " << fd << " client certificate: subject: " << subject);
+        debugs(83, 3, "FD " << fd << " client certificate: subject: " << Security::CertSubjectName(client_cert));
         debugs(83, 3, "FD " << fd << " client certificate: issuer: " <<
                X509_NAME_oneline(X509_get_issuer_name(client_cert.get()), 0, 0));
     } else {
