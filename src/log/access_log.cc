@@ -185,10 +185,7 @@ accessLogRotate(void)
 #endif
 
     for (log = Config.Log.accesslogs; log; log = log->next) {
-        if (log->logfile) {
-            int16_t rc = (log->rotateCount >= 0 ? log->rotateCount : Config.Log.rotateNumber);
-            logfileRotate(log->logfile, rc);
-        }
+        log->rotate();
     }
 
 #if HEADERS_LOG

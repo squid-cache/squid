@@ -56,6 +56,11 @@ public:
     /// rejects configuration due to a repeated directive
     void rejectDuplicateDirective();
 
+    /// extracts an optional key=value token or returns false
+    /// rejects configurations with empty keys or empty values
+    /// key and value have lifetime of the current line/directive
+    bool optionalKvPair(char * &key, char * &value);
+
     static void ParseUShort(unsigned short *var);
     static void ParseBool(bool *var);
     static const char *QuoteString(const String &var);
