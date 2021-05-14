@@ -16,11 +16,11 @@
 #include "acl/DestinationIp.h"
 #include "acl/SourceAsn.h"
 #include "acl/Strategised.h"
+#include "base/Xaction.h"
 #include "FwdState.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ipcache.h"
-#include "MasterXaction.h"
 #include "mgr/Registration.h"
 #include "radix.h"
 #include "RequestFlags.h"
@@ -237,7 +237,7 @@ asnCacheStart(int as)
     debugs(53, 3, "AS " << as);
     ASState *asState = new ASState;
     asState->as_number = as;
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initAsn);
+    const Squid::XactPointer mx = new Squid::Xaction(XactionInitiator::initAsn);
     asState->request = new HttpRequest(mx);
     asState->request->url = whoisUrl;
     asState->request->method = Http::METHOD_GET;

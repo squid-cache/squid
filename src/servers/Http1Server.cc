@@ -24,7 +24,7 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Http1, Server);
 
-Http::One::Server::Server(const MasterXaction::Pointer &xact, bool beHttpsServer):
+Http::One::Server::Server(const Squid::XactPointer &xact, bool beHttpsServer):
     AsyncJob("Http1::Server"),
     ConnStateData(xact),
     isHttpsServer(beHttpsServer)
@@ -137,7 +137,7 @@ Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
     }
 
     // TODO: move URL parse into Http Parser and INVALID_URL into the above parse error handling
-    MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+    Squid::XactPointer mx = new Squid::Xaction(XactionInitiator::initClient);
     mx->tcpClient = clientConnection;
     request = HttpRequest::FromUrlXXX(http->uri, mx, parser_->method());
     if (!request) {
@@ -398,13 +398,13 @@ Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext serve
 }
 
 ConnStateData *
-Http::NewServer(MasterXactionPointer &xact)
+Http::NewServer(const Squid::XactPointer &xact)
 {
     return new Http1::Server(xact, false);
 }
 
 ConnStateData *
-Https::NewServer(MasterXactionPointer &xact)
+Https::NewServer(const Squid::XactPointer &xact)
 {
     return new Http1::Server(xact, true);
 }

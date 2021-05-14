@@ -148,7 +148,7 @@ Http::Tunneler::writeRequest()
     MemBuf mb;
 
     try {
-        request->masterXaction->generatingConnect = true;
+        request->xaction->generatingConnect = true;
 
         mb.init();
         mb.appendf("CONNECT %s HTTP/1.1\r\n", url.c_str());
@@ -162,10 +162,10 @@ Http::Tunneler::writeRequest()
         hdr_out.clean();
         mb.append("\r\n", 2);
 
-        request->masterXaction->generatingConnect = false;
+        request->xaction->generatingConnect = false;
     } catch (...) {
         // TODO: Add scope_guard; do not wait until it is in the C++ standard.
-        request->masterXaction->generatingConnect = false;
+        request->xaction->generatingConnect = false;
         throw;
     }
 

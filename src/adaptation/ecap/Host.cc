@@ -16,9 +16,9 @@
 #include "adaptation/ecap/MessageRep.h"
 #include "adaptation/ecap/ServiceRep.h"
 #include "base/TextException.h"
+#include "base/Xaction.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "MasterXaction.h"
 
 const libecap::Name Adaptation::Ecap::protocolInternal("internal", libecap::Name::NextId());
 const libecap::Name Adaptation::Ecap::protocolCacheObj("cache_object", libecap::Name::NextId());
@@ -163,7 +163,7 @@ Adaptation::Ecap::Host::closeDebug(std::ostream *debug)
 Adaptation::Ecap::Host::MessagePtr
 Adaptation::Ecap::Host::newRequest() const
 {
-    static const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initAdaptationOrphan_);
+    static const Squid::XactPointer mx = new Squid::Xaction(XactionInitiator::initAdaptationOrphan_);
     return MessagePtr(new Adaptation::Ecap::MessageRep(new HttpRequest(mx)));
 }
 

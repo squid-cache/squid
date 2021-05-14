@@ -11,12 +11,12 @@
 
 #include "anyp/Uri.h"
 #include "base/CbcPointer.h"
+#include "base/Xaction.h"
 #include "dns/forward.h"
 #include "error/Error.h"
 #include "HierarchyLogEntry.h"
 #include "http/Message.h"
 #include "http/RequestMethod.h"
-#include "MasterXaction.h"
 #include "Notes.h"
 #include "RequestFlags.h"
 
@@ -52,8 +52,8 @@ class HttpRequest: public Http::Message
 public:
     typedef RefCount<HttpRequest> Pointer;
 
-    HttpRequest(const MasterXaction::Pointer &);
-    HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *schemeImage, const char *aUrlpath, const MasterXaction::Pointer &);
+    HttpRequest(const Squid::XactPointer &);
+    HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *schemeImage, const char *aUrlpath, const Squid::XactPointer &);
     ~HttpRequest();
     virtual void reset();
 
@@ -210,10 +210,10 @@ public:
 
     static void httpRequestPack(void *obj, Packable *p);
 
-    static HttpRequest * FromUrl(const SBuf &url, const MasterXaction::Pointer &, const HttpRequestMethod &method = Http::METHOD_GET);
+    static HttpRequest * FromUrl(const SBuf &url, const Squid::XactPointer &, const HttpRequestMethod &method = Http::METHOD_GET);
 
     /// \deprecated use SBuf variant instead
-    static HttpRequest * FromUrlXXX(const char * url, const MasterXaction::Pointer &, const HttpRequestMethod &method = Http::METHOD_GET);
+    static HttpRequest * FromUrlXXX(const char * url, const Squid::XactPointer &, const HttpRequestMethod &method = Http::METHOD_GET);
 
     ConnStateData *pinnedConnection();
 
@@ -234,8 +234,8 @@ public:
     /// The Downloader object which initiated the HTTP request if any
     CbcPointer<Downloader> downloader;
 
-    /// the master transaction this request belongs to. Never nil.
-    MasterXaction::Pointer masterXaction;
+    /// the transaction this request belongs to. Never nil.
+    Squid::XactPointer xaction;
 
     /// forgets about the cached Range header (for a reason)
     void ignoreRange(const char *reason);

@@ -697,7 +697,7 @@ htcpUnpackSpecifier(char *buf, int sz)
     // Parse the request
     method.HttpRequestMethodXXX(s->method);
 
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initHtcp);
+    const Squid::XactPointer mx = new Squid::Xaction(XactionInitiator::initHtcp);
     s->request = HttpRequest::FromUrlXXX(s->uri, mx, method == Http::METHOD_NONE ? HttpRequestMethod(Http::METHOD_GET) : method);
     if (!s->request) {
         debugs(31, 3, "failed to create request. Invalid URI?");
@@ -928,7 +928,7 @@ htcpSpecifier::codeContextGist() const
     }
 
     if (request) {
-        if (const auto &mx = request->masterXaction)
+        if (const auto &mx = request->xaction)
             return mx->id.detach();
     }
 
@@ -942,8 +942,8 @@ htcpSpecifier::detailCodeContext(std::ostream &os) const
         return al->detailCodeContext(os);
 
     if (request) {
-        if (const auto &mx = request->masterXaction)
-            return os << Debug::Extra << "current master transaction: " << mx->id;
+        if (const auto &mx = request->xaction)
+            return os << Debug::Extra << "current transaction: " << mx->id;
     }
 
     // TODO: Report method, uri, and version if they have been set

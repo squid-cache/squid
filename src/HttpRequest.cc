@@ -40,17 +40,17 @@
 #include "adaptation/icap/icap_log.h"
 #endif
 
-HttpRequest::HttpRequest(const MasterXaction::Pointer &mx) :
+HttpRequest::HttpRequest(const Squid::XactPointer &mx) :
     Http::Message(hoRequest),
-    masterXaction(mx)
+    xaction(mx)
 {
     assert(mx);
     init();
 }
 
-HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aSchemeImg, const char *aUrlpath, const MasterXaction::Pointer &mx) :
+HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aSchemeImg, const char *aUrlpath, const Squid::XactPointer &mx) :
     Http::Message(hoRequest),
-    masterXaction(mx)
+    xaction(mx)
 {
     assert(mx);
     static unsigned int id = 1;
@@ -175,7 +175,7 @@ HttpRequest::reset()
 HttpRequest *
 HttpRequest::clone() const
 {
-    HttpRequest *copy = new HttpRequest(masterXaction);
+    HttpRequest *copy = new HttpRequest(xaction);
     copy->method = method;
     // TODO: move common cloning clone to Msg::copyTo() or copy ctor
     copy->header.append(&header);
@@ -515,7 +515,7 @@ HttpRequest::expectingBody(const HttpRequestMethod &, int64_t &theSize) const
  * If the request cannot be created cleanly, NULL is returned
  */
 HttpRequest *
-HttpRequest::FromUrl(const SBuf &url, const MasterXaction::Pointer &mx, const HttpRequestMethod& method)
+HttpRequest::FromUrl(const SBuf &url, const Squid::XactPointer &mx, const HttpRequestMethod& method)
 {
     std::unique_ptr<HttpRequest> req(new HttpRequest(mx));
     if (req->url.parse(method, url)) {
@@ -526,7 +526,7 @@ HttpRequest::FromUrl(const SBuf &url, const MasterXaction::Pointer &mx, const Ht
 }
 
 HttpRequest *
-HttpRequest::FromUrlXXX(const char * url, const MasterXaction::Pointer &mx, const HttpRequestMethod& method)
+HttpRequest::FromUrlXXX(const char * url, const Squid::XactPointer &mx, const HttpRequestMethod& method)
 {
     return FromUrl(SBuf(url), mx, method);
 }
@@ -786,7 +786,7 @@ const Ip::Address *
 FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry *ale)
 {
     // Check all sources of usable listening port information, giving
-    // HttpRequest and masterXaction a preference over ALE.
+    // HttpRequest and xaction a preference over ALE.
 
     const HttpRequest *request = callerRequest;
     if (!request && ale)
@@ -794,7 +794,7 @@ FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry 
     if (!request)
         return nullptr; // not enough information
 
-    const Ip::Address *ip = FindListeningPortAddressInPort(request->masterXaction->squidPort);
+    const Ip::Address *ip = FindListeningPortAddressInPort(request->xaction->squidPort);
     if (!ip && ale)
         ip = FindListeningPortAddressInPort(ale->cache.port);
 
@@ -803,7 +803,7 @@ FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry 
         return ip;
 
     /* handle non-intercepted cases that were not handled above */
-    ip = FindListeningPortAddressInConn(request->masterXaction->tcpClient);
+    ip = FindListeningPortAddressInConn(request->xaction->tcpClient);
     if (!ip && ale)
         ip = FindListeningPortAddressInConn(ale->tcpClient);
     return ip; // may still be nil

@@ -12,6 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
 #include "base/TextException.h"
+#include "base/Xaction.h"
 #include "client_db.h"
 #include "comm/AcceptLimiter.h"
 #include "comm/comm_internal.h"
@@ -26,7 +27,6 @@
 #include "ip/Intercept.h"
 #include "ip/QosConfig.h"
 #include "log/access_log.h"
-#include "MasterXaction.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
@@ -301,7 +301,7 @@ Comm::TcpAcceptor::acceptOne()
         /* register interest again */
         debugs(5, 5, "try later: " << conn << " handler Subscription: " << theCallSub);
     } else {
-        // TODO: When ALE, MasterXaction merge, use them or ClientConn instead.
+        // TODO: When ALE, Squid::Xaction merge, use them or ClientConn instead.
         CodeContext::Reset(newConnDetails);
         debugs(5, 5, "Listener: " << conn <<
                " accepted new connection " << newConnDetails <<
@@ -333,7 +333,7 @@ Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &
     if (theCallSub != NULL) {
         AsyncCall::Pointer call = theCallSub->callback();
         CommAcceptCbParams &params = GetCommParams<CommAcceptCbParams>(call);
-        params.xaction = new MasterXaction(XactionInitiator::initClient);
+        params.xaction = new Squid::Xaction(XactionInitiator::initClient);
         params.xaction->squidPort = listenPort_;
         params.fd = conn->fd;
         params.conn = params.xaction->tcpClient = newConnDetails;

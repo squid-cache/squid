@@ -41,9 +41,6 @@
 class ClientHttpRequest;
 class HttpHdrRangeSpec;
 
-class MasterXaction;
-typedef RefCount<MasterXaction> MasterXactionPointer;
-
 #if USE_OPENSSL
 namespace Ssl
 {
@@ -79,7 +76,7 @@ class ConnStateData : public Server, public HttpControlMsgSink, private Independ
 {
 
 public:
-    explicit ConnStateData(const MasterXactionPointer &xact);
+    explicit ConnStateData(const Squid::XactPointer &);
     virtual ~ConnStateData();
 
     /* ::Server API */

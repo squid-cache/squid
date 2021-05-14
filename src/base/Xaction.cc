@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "MasterXaction.h"
+#include "base/Xaction.h"
 
-InstanceIdDefinitions(MasterXaction, "master", uint64_t);
+InstanceIdDefinitions(Squid::Xaction, "squid", uint64_t);
 

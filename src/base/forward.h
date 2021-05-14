@@ -24,5 +24,10 @@ template<class RefCountableKid> class RefCount;
 typedef CbcPointer<AsyncJob> AsyncJobPointer;
 typedef RefCount<CodeContext> CodeContextPointer;
 
+namespace Squid {
+class Xaction;
+typedef RefCount<Squid::Xaction> XactPointer;
+}
+
 #endif /* SQUID_SRC_BASE_FORWARD_H */
 

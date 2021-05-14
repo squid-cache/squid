@@ -50,5 +50,7 @@ libbase_la_SOURCES = \
 	TextException.cc \
 	TextException.h \
 	TypeTraits.h \
+	Xaction.cc \
+	Xaction.h \
 	YesNoNone.h \
 	forward.h

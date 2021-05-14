@@ -22,7 +22,7 @@ class Server: public ConnStateData
     CBDATA_CLASS(Server);
 
 public:
-    Server(const MasterXaction::Pointer &xact, const bool beHttpsServer);
+    Server(const Squid::XactPointer &, const bool beHttpsServer);
     virtual ~Server() {}
 
     void readSomeHttpData();

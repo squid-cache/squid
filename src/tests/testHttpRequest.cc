@@ -10,9 +10,9 @@
 
 #include <cppunit/TestAssert.h>
 
+#include "base/Xaction.h"
 #include "HttpHeader.h"
 #include "HttpRequest.h"
-#include "MasterXaction.h"
 #include "mime_header.h"
 #include "testHttpRequest.h"
 #include "unitTestMain.h"
@@ -23,7 +23,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION( testHttpRequest );
 class PrivateHttpRequest : public HttpRequest
 {
 public:
-    PrivateHttpRequest(const MasterXaction::Pointer &mx) : HttpRequest(mx) {}
+    PrivateHttpRequest(const Squid::XactPointer &mx) : HttpRequest(mx) {}
     bool doSanityCheckStartLine(const char *b, const size_t h, Http::StatusCode *e) { return sanityCheckStartLine(b,h,e); };
 };
 
@@ -46,7 +46,7 @@ testHttpRequest::testCreateFromUrl()
     /* vanilla url, implicit method */
     unsigned short expected_port;
     SBuf url("http://foo:90/bar");
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+    const Squid::XactPointer mx = new Squid::Xaction(XactionInitiator::initClient);
     HttpRequest *aRequest = HttpRequest::FromUrl(url, mx);
     expected_port = 90;
     CPPUNIT_ASSERT(aRequest != nullptr);
@@ -109,7 +109,7 @@ testHttpRequest::testIPv6HostColonBug()
 
     /* valid IPv6 address without port */
     SBuf url("http://[2000:800::45]/foo");
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+    const Squid::XactPointer mx = new Squid::Xaction(XactionInitiator::initClient);
     aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_GET);
     expected_port = 80;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
@@ -143,7 +143,7 @@ void
 testHttpRequest::testSanityCheckStartLine()
 {
     MemBuf input;
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+    const Squid::XactPointer mx = new Squid::Xaction(XactionInitiator::initClient);
     PrivateHttpRequest engine(mx);
     Http::StatusCode error = Http::scNone;
     size_t hdr_len;

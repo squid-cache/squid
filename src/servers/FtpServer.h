@@ -33,8 +33,8 @@ typedef enum {
     fssError
 } ServerState;
 
-// TODO: This should become a part of MasterXaction when we start sending
-// master transactions to the clients/ code.
+// TODO: This should become a part of Squid::Xaction when we start sending
+// transactions to the clients/ code.
 /// Transaction information shared among our FTP client and server jobs.
 class MasterState: public RefCountable
 {
@@ -57,7 +57,7 @@ class Server: public ConnStateData
     CBDATA_CHILD(Server);
 
 public:
-    explicit Server(const MasterXaction::Pointer &xact);
+    explicit Server(const Squid::XactPointer &);
     virtual ~Server() override;
 
     /* AsyncJob API */
@@ -73,7 +73,7 @@ public:
     void stopWaitingForOrigin(int status);
 
     // This is a pointer in hope to minimize future changes when MasterState
-    // becomes a part of MasterXaction. Guaranteed not to be nil.
+    // becomes a part of Squid::Xaction. Guaranteed not to be nil.
     MasterState::Pointer master; ///< info shared among our FTP client and server jobs
 
 protected:

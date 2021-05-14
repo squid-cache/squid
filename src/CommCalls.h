@@ -11,9 +11,9 @@
 
 #include "base/AsyncCall.h"
 #include "base/AsyncJobCalls.h"
+#include "base/Xaction.h"
 #include "comm/Flag.h"
 #include "comm/forward.h"
-#include "MasterXaction.h"
 
 /* CommCalls implement AsyncCall interface for comm_* callbacks.
  * The classes cover two call dialer kinds:
@@ -102,7 +102,7 @@ public:
     void print(std::ostream &os) const;
 
     /// Transaction which this call is part of.
-    MasterXaction::Pointer xaction;
+    Squid::XactPointer xaction;
 };
 
 // connect parameters

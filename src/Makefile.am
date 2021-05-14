@@ -303,8 +303,6 @@ squid_SOURCES = \
 	IoStats.h \
 	LogTags.cc \
 	LogTags.h \
-	MasterXaction.cc \
-	MasterXaction.h \
 	MemBuf.cc \
 	MemObject.cc \
 	MemObject.h \
@@ -1127,8 +1125,6 @@ tests_testRock_SOURCES = \
 	HttpReply.cc \
 	tests/stub_HttpRequest.cc \
 	LogTags.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
 	MemBuf.cc \
 	MemObject.cc \
 	MemStore.cc \
@@ -1301,8 +1297,6 @@ tests_testUfs_SOURCES = \
 	HttpReply.cc \
 	tests/stub_HttpRequest.cc \
 	LogTags.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
 	MemBuf.cc \
 	MemObject.cc \
 	MemStore.cc \
@@ -1477,8 +1471,6 @@ tests_testStore_SOURCES = \
 	HttpHeaderTools.h \
 	tests/stub_HttpReply.cc \
 	tests/stub_HttpRequest.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
 	MemBuf.cc \
 	MemObject.cc \
 	MemStore.cc \
@@ -1649,8 +1641,6 @@ tests_testDiskIO_SOURCES = \
 	HttpReply.cc \
 	tests/stub_HttpRequest.cc \
 	LogTags.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
 	MemBuf.cc \
 	MemObject.cc \
 	tests/stub_MemStore.cc \
@@ -1894,8 +1884,6 @@ tests_test_http_range_SOURCES = \
 	IoStats.h \
 	tests/stub_IpcIoFile.cc \
 	LogTags.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
 	MemBuf.cc \
 	MemObject.cc \
 	tests/stub_MemStore.cc \
@@ -2157,8 +2145,6 @@ tests_testHttpReply_SOURCES = \
 	HttpReply.h \
 	tests/testHttpReply.h \
 	tests/stub_HttpRequest.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
 	MemBuf.cc \
 	MemBuf.h \
 	Notes.cc \
@@ -2287,8 +2273,6 @@ tests_testHttpRequest_SOURCES = \
 	IoStats.h \
 	tests/stub_IpcIoFile.cc \
 	LogTags.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
 	MemBuf.cc \
 	MemObject.cc \
 	MemStore.cc \
@@ -2593,8 +2577,6 @@ tests_testCacheManager_SOURCES = \
 	IoStats.h \
 	tests/stub_IpcIoFile.cc \
 	LogTags.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
 	MemBuf.cc \
 	MemObject.cc \
 	MemStore.cc \
@@ -2916,8 +2898,6 @@ tests_testEvent_SOURCES = \
 	IoStats.h \
 	tests/stub_IpcIoFile.cc \
 	LogTags.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
 	MemBuf.cc \
 	MemObject.cc \
 	MemStore.cc \

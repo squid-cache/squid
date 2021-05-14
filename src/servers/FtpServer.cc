@@ -49,7 +49,7 @@ static bool SupportedCommand(const SBuf &name);
 static bool CommandHasPathParameter(const SBuf &cmd);
 };
 
-Ftp::Server::Server(const MasterXaction::Pointer &xact):
+Ftp::Server::Server(const Squid::XactPointer &xact):
     AsyncJob("Ftp::Server"),
     ConnStateData(xact),
     master(new MasterState),
@@ -240,7 +240,7 @@ Ftp::Server::noteBodyConsumerAborted(BodyPipe::Pointer ptr)
 void
 Ftp::Server::AcceptCtrlConnection(const CommAcceptCbParams &params)
 {
-    MasterXaction::Pointer xact = params.xaction;
+    Squid::XactPointer xact = params.xaction;
     AnyP::PortCfgPointer s = xact->squidPort;
 
     // NP: it is possible the port was reconfigured when the call or accept() was queued.
@@ -724,7 +724,7 @@ Ftp::Server::parseOneRequest()
     const SBuf *path = (params.length() && CommandHasPathParameter(cmd)) ?
                        &params : NULL;
     calcUri(path);
-    MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+    Squid::XactPointer mx = new Squid::Xaction(XactionInitiator::initClient);
     mx->tcpClient = clientConnection;
     auto * const request = HttpRequest::FromUrl(uri, mx, method);
     if (!request) {

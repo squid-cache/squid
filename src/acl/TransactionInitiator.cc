@@ -11,10 +11,10 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/TransactionInitiator.h"
+#include "base/Xaction.h"
 #include "cache_cf.h"
 #include "Debug.h"
 #include "HttpRequest.h"
-#include "MasterXaction.h"
 #include "SquidConfig.h"
 
 ACL *
@@ -52,8 +52,8 @@ Acl::TransactionInitiator::match(ACLChecklist *checklist)
 {
     ACLFilledChecklist *filled = Filled((ACLChecklist*)checklist);
     assert(filled->request);
-    assert(filled->request->masterXaction);
-    const XactionInitiator requestInitiator = filled->request->masterXaction->initiator;
+    assert(filled->request->xaction);
+    const XactionInitiator requestInitiator = filled->request->xaction->initiator;
     return requestInitiator.in(initiators_) ? 1 : 0;
 }
 

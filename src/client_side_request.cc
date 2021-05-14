@@ -322,7 +322,7 @@ ClientHttpRequest::~ClientHttpRequest()
 int
 clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * streamcallback,
                    CSD * streamdetach, ClientStreamData streamdata, HttpHeader const *header,
-                   char *tailbuf, size_t taillen, const MasterXaction::Pointer &mx)
+                   char *tailbuf, size_t taillen, const Squid::XactPointer &mx)
 {
     size_t url_sz;
     ClientHttpRequest *http = new ClientHttpRequest(NULL);

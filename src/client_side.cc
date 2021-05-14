@@ -2217,14 +2217,14 @@ ConnStateData::lifetimeTimeout(const CommTimeoutCbParams &io)
     terminateAll(ERR_LIFETIME_EXP, lte);
 }
 
-ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
+ConnStateData::ConnStateData(const Squid::XactPointer &xact) :
     AsyncJob("ConnStateData"), // kids overwrite
     Server(xact)
 #if USE_OPENSSL
     , tlsParser(Security::HandshakeParser::fromClient)
 #endif
 {
-    // store the details required for creating more MasterXaction objects as new requests come in
+    // store the details required for creating more Squid::Xaction objects as new requests come in
     log_addr = xact->tcpClient->remote;
     log_addr.applyClientMask(Config.Addrs.client_netmask);
 
@@ -2342,8 +2342,7 @@ ConnStateData::whenClientIpKnown()
 void
 httpAccept(const CommAcceptCbParams &params)
 {
-    MasterXaction::Pointer xact = params.xaction;
-    AnyP::PortCfgPointer s = xact->squidPort;
+    AnyP::PortCfgPointer s = params.xaction->squidPort;
 
     // NP: it is possible the port was reconfigured when the call or accept() was queued.
 
@@ -2362,7 +2361,7 @@ httpAccept(const CommAcceptCbParams &params)
     ++incoming_sockets_accepted;
 
     // Socket is ready, setup the connection manager to start using it
-    auto *srv = Http::NewServer(xact);
+    auto *srv = Http::NewServer(params.xaction);
     AsyncJob::Start(srv); // usually async-calls readSomeData()
 }
 
@@ -2547,8 +2546,7 @@ httpsSslBumpAccessCheckDone(Acl::Answer answer, void *data)
 static void
 httpsAccept(const CommAcceptCbParams &params)
 {
-    MasterXaction::Pointer xact = params.xaction;
-    const AnyP::PortCfgPointer s = xact->squidPort;
+    const AnyP::PortCfgPointer s = params.xaction->squidPort;
 
     // NP: it is possible the port was reconfigured when the call or accept() was queued.
 
@@ -2567,7 +2565,7 @@ httpsAccept(const CommAcceptCbParams &params)
     ++incoming_sockets_accepted;
 
     // Socket is ready, setup the connection manager to start using it
-    auto *srv = Https::NewServer(xact);
+    auto *srv = Https::NewServer(params.xaction);
     AsyncJob::Start(srv); // usually async-calls postHttpsAccept()
 }
 
@@ -2583,7 +2581,7 @@ ConnStateData::postHttpsAccept()
             return;
         }
 
-        MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+        Squid::XactPointer mx = new Squid::Xaction(XactionInitiator::initClient);
         mx->tcpClient = clientConnection;
         // Create a fake HTTP request and ALE for the ssl_bump ACL check,
         // using tproxy/intercept provided destination IP and port.
@@ -3291,7 +3289,7 @@ ConnStateData::buildFakeRequest(Http::MethodType const method, SBuf &useHost, un
     extendLifetime();
     stream->registerWithConn();
 
-    MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+    Squid::XactPointer mx = new Squid::Xaction(XactionInitiator::initClient);
     mx->tcpClient = clientConnection;
     // Setup Http::Request object. Maybe should be replaced by a call to (modified)
     // clientProcessRequest
