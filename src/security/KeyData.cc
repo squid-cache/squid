@@ -113,7 +113,7 @@ Security::KeyData::tryAddChainCa(const Security::CertPointer &ca)
 void
 Security::KeyData::loadX509ChainFromFile()
 {
-    if (CertSelfSignedCheck(cert)) {
+    if (CertIsSelfSigned(cert)) {
         const auto name = CertSubjectName(cert);
         debugs(83, DBG_PARSE_NOTE(2), "Certificate is self-signed, will not be chained: " << name);
         return;

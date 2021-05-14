@@ -64,7 +64,7 @@ Security::CertIsIssuedBy(const CertPointer &cert, const CertPointer &issuer)
     const auto result = X509_check_issued(issuer.get(), cert.get());
     if (result == X509_V_OK)
         return true;
-    debugs(83, DBG_PARSE_NOTE(3), CertSubjectName(issuer) << " did not sign "
+    debugs(83, DBG_PARSE_NOTE(3), CertSubjectName(issuer) << " did not sign " <<
            CertSubjectName(cert) << ": " << VerifyErrorString(result) << " (" << result << ")");
     return false;
 #elif USE_GNUTLS
