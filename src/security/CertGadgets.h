@@ -17,14 +17,15 @@ namespace Security
 /// \return the SubjectName field of the given certificate
 SBuf CertSubjectName(const CertPointer &);
 
-/// \return true if cert was issued by the given issuer CA.
-///         sets checkCode to the library specific test result.
-bool CertIssuerCheck(const CertPointer &cert, const CertPointer &issuer, ErrorCode &checkCode);
+/// \returns whether cert was (correctly) issued by the given issuer
+/// Due to complexity of the underlying checks, it is impossible to clearly
+/// distinguish pure negative answers (e.g., two independent certificates)
+/// from errors (e.g., the issuer certificate lacks the right CA extension).
+bool CertIsIssuedBy(const CertPointer &cert, const CertPointer &issuer);
 
 /// convenience wrapper for checking self-signed certificates
-inline bool CertSelfSignedCheck(const CertPointer &cert) {
-    ErrorCode unused;
-    return CertIssuerCheck(cert, cert, unused);
+inline bool CertIsSelfSigned(const CertPointer &cert) {
+    return CertIsIssuedBy(cert, cert);
 }
 
 } // namespace Security

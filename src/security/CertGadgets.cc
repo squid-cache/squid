@@ -58,18 +58,19 @@ Security::CertSubjectName(const Security::CertPointer &cert)
 }
 
 bool
-Security::CertIssuerCheck(const CertPointer &cert, const CertPointer &issuer, ErrorCode &checkCode)
+Security::CertIsIssuedBy(const CertPointer &cert, const CertPointer &issuer)
 {
 #if USE_OPENSSL
-    checkCode = X509_check_issued(issuer.get(), cert.get());
-    return (checkCode == X509_V_OK);
-
+    const auto result = X509_check_issued(issuer.get(), cert.get());
+    if (result == X509_V_OK)
+        return true;
+    debugs(83, DBG_PARSE_NOTE(3), CertSubjectName(issuer) << " did not sign "
+           CertSubjectName(cert) << ": " << VerifyErrorString(result) << " (" << result << ")");
+    return false;
 #elif USE_GNUTLS
-    checkCode = gnutls_x509_crt_check_issuer(cert.get(), issuer.get());
-    return (checkCode == 1);
-
+    // GnuTLS does not detail negative answers so no debugs()
+    return gnutls_x509_crt_check_issuer(cert.get(), issuer.get()) == 1;
 #else
-    checkCode = -1;
     return false; // not implemented
 #endif
 }
