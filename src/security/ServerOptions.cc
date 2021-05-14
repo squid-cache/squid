@@ -234,7 +234,7 @@ Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &)
             return false;
         }
 
-        for (auto cert : keys.chain) {
+        for (const auto &cert : keys.chain) {
             if (SSL_CTX_add_extra_chain_cert(t.get(), cert.get())) {
                 // increase the certificate lock
                 X509_up_ref(cert.get());
@@ -249,11 +249,11 @@ Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &)
             gnutls_x509_privkey_t xkey = keys.pkey.get();
 
             const auto certCount = 1 + keys.chain.size();
-            gnutls_x509_crt_t *crt = new gnutls_x509_crt_t[certCount];
+            auto crt = new gnutls_x509_crt_t[certCount];
             crt[0] = keys.cert.get();
             if (certCount > 1) {
                 int i = 1;
-                for (auto cert : keys.chain) {
+                for (const auto &cert : keys.chain) {
                     crt[i++] = cert.get(); // gnutls_x509_crt_t is a raw-pointer
                 }
             }
