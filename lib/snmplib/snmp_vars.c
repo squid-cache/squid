@@ -89,9 +89,6 @@
 #include "asn1.h"
 #include "snmp.h"
 #include "snmp_vars.h"
-#if 0
-#include "mibii.h"
-#endif
 #include "snmp_api_error.h"
 #include "snmp_msg.h"
 #include "snmp_pdu.h"
