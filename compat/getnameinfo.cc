@@ -265,36 +265,9 @@ found:
         hp = getipnodebyaddr(addr, afd->a_addrlen, afd->a_af, &h_error);
 #else
         hp = gethostbyaddr(addr, afd->a_addrlen, afd->a_af);
-#if 0 // getnameinfo.c:161:9: error: variable 'h_error' set but not used
-#if HAVE_H_ERRNO
-        h_error = h_errno;
-#else
-        h_error = EINVAL;
-#endif
-#endif /* 0 */
 #endif
 
         if (hp) {
-#if 0
-            if (flags & NI_NOFQDN) {
-                /*
-                 * According to RFC3493 section 6.2, NI_NOFQDN
-                 * means "node name portion of the FQDN shall
-                 * be returned for local hosts."  The following
-                 * code tries to implement it by returning the
-                 * first label (the part before the first
-                 * period) of the FQDN.  However, it is not
-                 * clear if this always makes sense, since the
-                 * given address may be outside of "local
-                 * hosts."  Due to the unclear description, we
-                 * disable the code in this implementation.
-                 */
-                char *p;
-                p = strchr(hp->h_name, '.');
-                if (p)
-                    *p = '\0';
-            }
-#endif
             if (strlen(hp->h_name) + 1 > hostlen) {
 #if USE_GETIPNODEBY
                 freehostent(hp);
