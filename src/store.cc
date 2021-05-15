@@ -1719,26 +1719,6 @@ createRemovalPolicy(RemovalPolicySettings * settings)
     return NULL;                /* NOTREACHED */
 }
 
-#if 0
-void
-storeSwapFileNumberSet(StoreEntry * e, sfileno filn)
-{
-    if (e->swap_file_number == filn)
-        return;
-
-    if (filn < 0) {
-        assert(-1 == filn);
-        storeDirMapBitReset(e->swap_file_number);
-        storeDirLRUDelete(e);
-        e->swap_file_number = -1;
-    } else {
-        assert(-1 == e->swap_file_number);
-        storeDirMapBitSet(e->swap_file_number = filn);
-        storeDirLRUAdd(e);
-    }
-}
-
-#endif
 
 void
 StoreEntry::storeErrorResponse(HttpReply *reply)
