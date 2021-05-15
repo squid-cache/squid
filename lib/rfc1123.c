@@ -210,20 +210,5 @@ mkrfc1123(time_t t)
     return buf;
 }
 
-#if 0
-int
-main()
-{
-    char *x;
-    time_t t, pt;
-
-    t = time(NULL);
-    x = mkrfc1123(t);
-    printf("HTTP Time: %s\n", x);
-
-    pt = parse_rfc1123(x);
-    printf("Parsed: %d vs. %d\n", pt, t);
-}
-
 #endif
 
