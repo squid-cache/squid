@@ -911,23 +911,12 @@ main(int argc, char *argv[])
 
     char **args = argv;
     while (argc > 1 && args[1][0] == '-') {
-//        const char *value = "";
         char option = args[1][1];
         switch (option) {
         case 'd':
             debug_enabled = 1;
             break;
         default:
-#if 0 // unused for now.
-            if (strlen(args[1]) > 2) {
-                value = args[1] + 2;
-            } else if (argc > 2) {
-                value = args[2];
-                ++args;
-                --argc;
-            } else
-                value = "";
-#endif
             break;
         }
         ++args;
