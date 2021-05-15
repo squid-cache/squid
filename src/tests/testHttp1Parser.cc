@@ -704,26 +704,6 @@ testHttp1Parser::testParseRequestLineMethods()
         input.clear();
     }
 
-#if 0
-    // too-long method (over 16 bytes)
-    {
-        input.append("HELLOSTRANGEWORLD / HTTP/1.1\r\n", 31);
-        struct resultSet expect = {
-            .parsed = false,
-            .needsMore = false,
-            .parserState = Http1::HTTP_PARSE_DONE,
-            .status = Http::scNotImplemented,
-            .suffixSz = input.length(),
-            .method = HttpRequestMethod(),
-            .uri = NULL,
-            .version = AnyP::ProtocolVersion()
-        };
-        output.clear();
-        testResults(__LINE__, input, output, expect);
-        input.clear();
-    }
-#endif
-
     // method-only
     {
         input.append("A\n", 2);
