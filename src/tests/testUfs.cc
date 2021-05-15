@@ -170,11 +170,6 @@ testUfs::testUfsSearch()
      */
     StoreSearchPointer search = Store::Root().search(); /* search for everything in the store */
 
-    /* nothing should be immediately available */
-#if 0
-
-    CPPUNIT_ASSERT_EQUAL(false, search->next());
-#endif
 
     CPPUNIT_ASSERT_EQUAL(false, search->error());
     CPPUNIT_ASSERT_EQUAL(false, search->isDone());
