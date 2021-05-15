@@ -17,37 +17,6 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testUriScheme );
 
-#if 0
-/*
- * We should be able to make an HttpRequestMethod straight from a string.
- */
-void
-testHttpRequestMethod::testConstructCharStart()
-{
-    /* parse an empty string -> METHOD_NONE */
-    CPPUNIT_ASSERT(METHOD_NONE == HttpRequestMethod(NULL));
-    /* parsing a literal should work */
-    CPPUNIT_ASSERT(METHOD_GET == HttpRequestMethod("GET", NULL));
-}
-
-/*
- * We can also parse precise ranges of characters
- */
-void
-testHttpRequestMethod::testConstructCharStartEnd()
-{
-    char const * buffer;
-    /* parse an empty string -> METHOD_NONE */
-    CPPUNIT_ASSERT(METHOD_NONE == HttpRequestMethod(NULL, NULL));
-    /* parsing a literal should work */
-    CPPUNIT_ASSERT(METHOD_GET == HttpRequestMethod("GET", NULL));
-    /* parsing with an explicit end should work */
-    buffer = "POSTPLUS";
-    CPPUNIT_ASSERT(METHOD_POST == HttpRequestMethod(buffer, buffer + 4));
-}
-
-#endif
-
 /*
  * we should be able to assign a protocol_t to a AnyP::UriScheme for ease
  * of code conversion
