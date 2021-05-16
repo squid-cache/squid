@@ -192,13 +192,6 @@ authenticateDigestNonceDelete(digest_nonce_h * nonce)
 {
     if (nonce) {
         assert(nonce->references == 0);
-#if UNREACHABLECODE
-
-        if (nonce->flags.incache)
-            hash_remove_link(digest_nonce_cache, nonce);
-
-#endif
-
         assert(!nonce->flags.incache);
 
         safe_free(nonce->key);
