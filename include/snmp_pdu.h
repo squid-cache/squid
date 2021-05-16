@@ -92,37 +92,12 @@ void snmp_add_null_var(struct snmp_pdu *, oid *, int);
 #define SNMP_PDU_GET        (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x0)
 #define SNMP_PDU_GETNEXT    (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x1)
 #define SNMP_PDU_RESPONSE   (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x2)
-#ifdef UNUSED_CODE
-#define SNMP_PDU_SET        (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x3)
-#define TRP_REQ_MSG     (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x4)   /*Obsolete */
-#endif
 #define SNMP_PDU_GETBULK    (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x5)
-#ifdef UNUSED_CODE
-#define SNMP_PDU_INFORM     (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x6)
-#define SNMP_PDU_V2TRAP     (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x7)
-#define SNMP_PDU_REPORT     (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x8)
-#endif
 #define MAX_BINDINGS 2147483647 /* PDU Defaults */
 #define SNMP_DEFAULT_ERRSTAT        -1
 #define SNMP_DEFAULT_ERRINDEX       -1
 #define SNMP_DEFAULT_ADDRESS        0
 #define SNMP_DEFAULT_REQID      0
-
-/* RFC 1907: Management Information Base for SNMPv2
- *
- * RFC 1157: A Simple Network Management Protocol (SNMP)
- *
- * Trap Types
- */
-#if UNUSED_CODE
-#define SNMP_TRAP_COLDSTART             (0x0)
-#define SNMP_TRAP_WARMSTART             (0x1)
-#define SNMP_TRAP_LINKDOWN              (0x2)
-#define SNMP_TRAP_LINKUP                (0x3)
-#define SNMP_TRAP_AUTHENTICATIONFAILURE (0x4)
-#define SNMP_TRAP_EGPNEIGHBORLOSS       (0x5)
-#define SNMP_TRAP_ENTERPRISESPECIFIC    (0x6)
-#endif
 
 #ifdef __cplusplus
 }
