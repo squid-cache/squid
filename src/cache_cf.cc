@@ -3063,14 +3063,6 @@ free_time_nanoseconds(std::chrono::nanoseconds *var)
     *var = std::chrono::nanoseconds::zero();
 }
 
-#if UNUSED_CODE
-static void
-dump_size_t(StoreEntry * entry, const char *name, size_t var)
-{
-    storeAppendPrintf(entry, "%s %d\n", name, (int) var);
-}
-#endif
-
 static void
 dump_b_size_t(StoreEntry * entry, const char *name, size_t var)
 {
@@ -3082,14 +3074,6 @@ dump_b_ssize_t(StoreEntry * entry, const char *name, ssize_t var)
 {
     storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_BYTES_STR);
 }
-
-#if UNUSED_CODE
-static void
-dump_kb_size_t(StoreEntry * entry, const char *name, size_t var)
-{
-    storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_KBYTES_STR);
-}
-#endif
 
 static void
 dump_b_int64_t(StoreEntry * entry, const char *name, int64_t var)
@@ -3103,16 +3087,6 @@ dump_kb_int64_t(StoreEntry * entry, const char *name, int64_t var)
     storeAppendPrintf(entry, "%s %" PRId64 " %s\n", name, var, B_KBYTES_STR);
 }
 
-#if UNUSED_CODE
-static void
-parse_size_t(size_t * var)
-{
-    int i;
-    i = GetInteger();
-    *var = (size_t) i;
-}
-#endif
-
 static void
 parse_b_size_t(size_t * var)
 {
@@ -3124,14 +3098,6 @@ parse_b_ssize_t(ssize_t * var)
 {
     parseBytesLineSigned(var, B_BYTES_STR);
 }
-
-#if UNUSED_CODE
-static void
-parse_kb_size_t(size_t * var)
-{
-    parseBytesLine(var, B_KBYTES_STR);
-}
-#endif
 
 static void
 parse_b_int64_t(int64_t * var)
