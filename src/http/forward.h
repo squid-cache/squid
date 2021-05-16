@@ -38,7 +38,6 @@ typedef enum {
 class HttpHdrSc;
 
 class HttpRequestMethod;
-typedef RefCount<HttpRequestMethod> HttpRequestMethodPointer;
 
 class HttpRequest;
 typedef RefCount<HttpRequest> HttpRequestPointer;
