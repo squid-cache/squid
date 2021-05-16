@@ -121,35 +121,6 @@ typedef char RFCNB_Hdr[4];      /* The header is 4 bytes long with  */
 
 #define RFCNB_Pkt_Type(p) (CVAL((p), RFCNB_Pkt_Type_Offset))
 
-#if UNUSED_CODE
-typedef struct RFCNB_Hdr {
-    unsigned char type;
-    unsigned char flags;
-    int16 len;
-} RFCNB_Hdr;
-
-typedef struct RFCNB_Sess_Pkt {
-    unsigned char type;
-    unsigned char flags;
-    int16 length;
-    unsigned char n1_len;
-    char called_name[33];
-    unsigned char n2_len;
-    char calling_name[33];
-} RFCNB_Sess_Pkt;
-
-typedef struct RFCNB_Nack_Pkt {
-    struct RFCNB_Hdr hdr;
-    unsigned char error;
-} RFCNB_Nack_Pkt;
-
-typedef struct RFCNB_Retarget_Pkt {
-    struct RFCNB_Hdr hdr;
-    int dest_ip;
-    unsigned char port;
-} RFCNB_Redir_Pkt;
-#endif /* UNUSED_CODE */
-
 /* Static variables */
 
 /* Only declare this if not defined */
