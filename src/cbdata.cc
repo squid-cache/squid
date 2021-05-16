@@ -90,14 +90,7 @@ public:
     {}
     ~cbdata();
 
-    static cbdata *FromUserData(const void *p) {
-#if WITH_VALGRIND
-        return cbdata_htable.at(p);
-#else
-        const auto t = static_cast<const char *>(p) - offsetof(cbdata, data);
-        return reinterpret_cast<cbdata *>(const_cast<char *>(t));
-#endif
-    }
+    static cbdata *FromUserData(const void *);
 
     int valid;
     int32_t locks;
@@ -166,6 +159,16 @@ cbdata::~cbdata()
     void *p = this;
 #endif
     cbdata_index[type].pool->freeOne(p);
+}
+
+cbdata *
+cbdata::FromUserData(const void *p) {
+#if WITH_VALGRIND
+    return cbdata_htable.at(p);
+#else
+    const auto t = static_cast<const char *>(p) - offsetof(cbdata, data);
+    return reinterpret_cast<cbdata *>(const_cast<char *>(t));
+#endif
 }
 
 static void
