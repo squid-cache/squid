@@ -1007,6 +1007,11 @@ tests_testURL_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testDns
 tests_testDns_SOURCES = \
+	base/Here.cc \
+	Debug.h \
+	globals.cc \
+	tests/stub_debug.cc \
+	tests/stub_time.cc \
 	tests/testRFC1035.cc \
 	tests/testRFC1035.h
 nodist_tests_testDns_SOURCES=
