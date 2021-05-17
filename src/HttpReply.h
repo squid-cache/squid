@@ -33,11 +33,7 @@ public:
 
     virtual void reset();
 
-    /**
-     \retval true on success
-     \retval false and sets *error to zero when needs more data
-     \retval false and sets *error to a positive Http::StatusCode on error
-     */
+    /* Http::Message API */
     virtual bool sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *error);
 
     /** \par public, readable; never update these or their .hdr equivalents directly */
