@@ -15,7 +15,6 @@
  */
 
 #include "squid.h"
-#include "Debug.h"
 #include "dns/rfc1035.h"
 #include "dns/rfc2671.h"
 #include "util.h"
@@ -44,7 +43,12 @@
 
 #define RFC1035_MAXLABELSZ 63
 #define rfc1035_unpack_error 15
-#define DEBUG_SECTION 78
+
+#if 0
+#define RFC1035_UNPACK_DEBUG  fprintf(stderr, "unpack error at %s:%d\n", __FILE__,__LINE__)
+#else
+#define RFC1035_UNPACK_DEBUG  (void)0
+#endif
 
 /*
  * rfc1035HeaderPack()
@@ -248,7 +252,7 @@ rfc1035NameUnpack(const char *buf, size_t sz, unsigned int *off, unsigned short 
     assert(ns > 0);
     do {
         if ((*off) >= sz) {
-            debugs(DEBUG_SECTION, DBG_DATA, "unpack error: parsing beyond end");
+            RFC1035_UNPACK_DEBUG;
             return 1;
         }
         c = *(buf + (*off));
@@ -256,38 +260,42 @@ rfc1035NameUnpack(const char *buf, size_t sz, unsigned int *off, unsigned short 
             /* blasted compression */
             unsigned short s;
             unsigned int ptr;
-            if (rdepth > 64) {
-                debugs(DEBUG_SECTION,DBG_DATA,"unpack error: infinite pointer loop");
+            if (rdepth > 64) {  /* infinite pointer loop */
+                RFC1035_UNPACK_DEBUG;
                 return 1;
             }
             memcpy(&s, buf + (*off), sizeof(s));
             s = ntohs(s);
             (*off) += sizeof(s);
+            /* Sanity check */
             if ((*off) > sz) {
-                debugs(DEBUG_SECTION,DBG_DATA,"unpack error: sanity check failed");
+                RFC1035_UNPACK_DEBUG;
                 return 1;
             }
             ptr = s & 0x3FFF;
+            /* Make sure the pointer is inside this message */
             if (ptr >= sz) {
-                debugs(DEBUG_SECTION,DBG_DATA,"unpack error: pointer outside message");
+                RFC1035_UNPACK_DEBUG;
                 return 1;
             }
             return rfc1035NameUnpack(buf, sz, &ptr, rdlength, name + no, ns - no, rdepth + 1);
         } else if (c > RFC1035_MAXLABELSZ) {
-            //"(The 10 and 01 combinations are reserved for future use.)"
-            debugs(DEBUG_SECTION,DBG_DATA,"unpack error: attempt to use reserved combination");
+            /*
+             * "(The 10 and 01 combinations are reserved for future use.)"
+             */
+            RFC1035_UNPACK_DEBUG;
             return 1;
         } else {
             (*off)++;
             len = (size_t) c;
             if (len == 0)
                 break;
-            if (len > (ns - no - 1)) {
-                debugs(DEBUG_SECTION,DBG_DATA,"unpack error: label won't fit");
+            if (len > (ns - no - 1)) {  /* label won't fit */
+                RFC1035_UNPACK_DEBUG;
                 return 1;
             }
-            if ((*off) + len >= sz) {
-                debugs(DEBUG_SECTION,DBG_DATA,"unpack error: message is too short");
+            if ((*off) + len >= sz) {   /* message is too short */
+                RFC1035_UNPACK_DEBUG;
                 return 1;
             }
             memcpy(name + no, buf + (*off), len);
@@ -369,7 +377,7 @@ rfc1035RRUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_rr * RR)
     unsigned short rdlength;
     unsigned int rdata_off;
     if (rfc1035NameUnpack(buf, sz, off, NULL, RR->name, RFC1035_MAXHOSTNAMESZ, 0)) {
-        debugs(DEBUG_SECTION,DBG_DATA,"unpack error");
+        RFC1035_UNPACK_DEBUG;
         memset(RR, '\0', sizeof(*RR));
         return 1;
     }
@@ -378,7 +386,7 @@ rfc1035RRUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_rr * RR)
      * rest of the RR fields.
      */
     if ((*off) + 10 > sz) {
-        debugs(DEBUG_SECTION,DBG_DATA,"unpack error: not enough octets for remainder of rr field");
+        RFC1035_UNPACK_DEBUG;
         memset(RR, '\0', sizeof(*RR));
         return 1;
     }
@@ -399,7 +407,7 @@ rfc1035RRUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_rr * RR)
          * We got a truncated packet.  'dnscache' truncates UDP
          * replies at 512 octets, as per RFC 1035.
          */
-        debugs(DEBUG_SECTION,DBG_DATA,"unpack error: truncated packet");
+        RFC1035_UNPACK_DEBUG;
         memset(RR, '\0', sizeof(*RR));
         return 1;
     }
@@ -413,7 +421,7 @@ rfc1035RRUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_rr * RR)
         rdata_off = *off;
         RR->rdlength = 0;   /* Filled in by rfc1035NameUnpack */
         if (rfc1035NameUnpack(buf, sz, &rdata_off, &RR->rdlength, RR->rdata, RFC1035_MAXHOSTNAMESZ, 0)) {
-            debugs(DEBUG_SECTION,DBG_DATA,"unpack error");
+            RFC1035_UNPACK_DEBUG;
             return 1;
         }
         if (rdata_off > ((*off) + rdlength)) {
@@ -422,7 +430,7 @@ rfc1035RRUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_rr * RR)
              * I want to make sure that NameUnpack doesn't go beyond
              * the RDATA area.
              */
-            debugs(DEBUG_SECTION,DBG_DATA,"unpack error: NameUnpack went beyond RDATA area");
+            RFC1035_UNPACK_DEBUG;
             xfree(RR->rdata);
             memset(RR, '\0', sizeof(*RR));
             return 1;
@@ -507,12 +515,12 @@ rfc1035QueryUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_query 
 {
     unsigned short s;
     if (rfc1035NameUnpack(buf, sz, off, NULL, query->name, RFC1035_MAXHOSTNAMESZ, 0)) {
-        debugs(DEBUG_SECTION,DBG_DATA,"unpack error");
+        RFC1035_UNPACK_DEBUG;
         memset(query, '\0', sizeof(*query));
         return 1;
     }
     if (*off + 4 > sz) {
-        debugs(DEBUG_SECTION,DBG_DATA,"unpack error: read too much");
+        RFC1035_UNPACK_DEBUG;
         memset(query, '\0', sizeof(*query));
         return 1;
     }
@@ -592,28 +600,28 @@ rfc1035MessageUnpack(const char *buf,
     rfc1035_query *querys = NULL;
     msg = (rfc1035_message*)xcalloc(1, sizeof(*msg));
     if (rfc1035HeaderUnpack(buf + off, sz - off, &off, msg)) {
-        debugs(DEBUG_SECTION,DBG_DATA,"unpack error");
+        RFC1035_UNPACK_DEBUG;
         xfree(msg);
         return -rfc1035_unpack_error;
     }
     i = (unsigned int) msg->qdcount;
     if (i != 1) {
         /* This can not be an answer to our queries.. */
-        debugs(DEBUG_SECTION,DBG_DATA,"unpack error: detected spoofed repoly");
+        RFC1035_UNPACK_DEBUG;
         xfree(msg);
         return -rfc1035_unpack_error;
     }
     querys = msg->query = (rfc1035_query*)xcalloc(i, sizeof(*querys));
     for (j = 0; j < i; j++) {
         if (rfc1035QueryUnpack(buf, sz, &off, &querys[j])) {
-            debugs(DEBUG_SECTION,DBG_DATA, "error unpacking query");
+            RFC1035_UNPACK_DEBUG;
             rfc1035MessageDestroy(&msg);
             return -rfc1035_unpack_error;
         }
     }
     *answer = msg;
     if (msg->rcode) {
-        debugs(DEBUG_SECTION,DBG_DATA,"rcode " << msg->rcode);
+        RFC1035_UNPACK_DEBUG;
         return -msg->rcode;
     }
     if (msg->ancount == 0)
@@ -621,12 +629,12 @@ rfc1035MessageUnpack(const char *buf,
     i = (unsigned int) msg->ancount;
     recs = msg->answer = (rfc1035_rr*)xcalloc(i, sizeof(*recs));
     for (j = 0; j < i; j++) {
-        if (off >= sz) {
-            debugs(DEBUG_SECTION,DBG_DATA,"unpack error: corrupt packet");
+        if (off >= sz) {    /* corrupt packet */
+            RFC1035_UNPACK_DEBUG;
             break;
         }
-        if (rfc1035RRUnpack(buf, sz, &off, &recs[j])) {
-            debugs(DEBUG_SECTION,DBG_DATA,"unpack error: corrupt rr");
+        if (rfc1035RRUnpack(buf, sz, &off, &recs[j])) {     /* corrupt RR */
+            RFC1035_UNPACK_DEBUG;
             break;
         }
         nr++;
