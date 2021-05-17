@@ -24,6 +24,7 @@
 #include "comm/Read.h"
 #include "comm/Write.h"
 #include "CommRead.h"
+#include "DebugContext.h"
 #include "error/Detail.h"
 #include "errorpage.h"
 #include "fd.h"
@@ -661,14 +662,13 @@ HttpStateData::processReplyHeader()
     /** Creates a blank header. If this routine is made incremental, this will not do */
 
     /* NP: all exit points to this function MUST call ctx_exit(ctx) */
-    Ctx ctx = ctx_enter(entry->mem_obj->urlXXX());
+    DebugContext ctx(entry->mem_obj->urlXXX());
 
     debugs(11, 3, "processReplyHeader: key '" << entry->getMD5Text() << "'");
 
     assert(!flags.headers_parsed);
 
     if (!inBuf.length()) {
-        ctx_exit(ctx);
         return;
     }
 
@@ -698,7 +698,6 @@ HttpStateData::processReplyHeader()
                 inBuf = hp->remaining();
             } else {
                 debugs(33, 5, "Incomplete response, waiting for end of response headers");
-                ctx_exit(ctx);
                 return;
             }
         }
@@ -711,7 +710,6 @@ HttpStateData::processReplyHeader()
             HttpReply *newrep = new HttpReply;
             newrep->sline.set(Http::ProtocolVersion(), hp->parseStatusCode);
             setVirginReply(newrep);
-            ctx_exit(ctx);
             return;
         }
     }
@@ -747,7 +745,6 @@ HttpStateData::processReplyHeader()
 
     if (newrep->sline.version.protocol == AnyP::PROTO_HTTP && Http::Is1xx(newrep->sline.status())) {
         handle1xx(newrep);
-        ctx_exit(ctx);
         return;
     }
 
@@ -768,8 +765,6 @@ HttpStateData::processReplyHeader()
     checkDateSkew(vrep);
 
     processSurrogateControl (vrep);
-
-    ctx_exit(ctx);
 }
 
 /// ignore or start forwarding the 1xx response (a.k.a., control message)
@@ -969,7 +964,7 @@ HttpStateData::haveParsedReplyHeaders()
 {
     Client::haveParsedReplyHeaders();
 
-    Ctx ctx = ctx_enter(entry->mem_obj->urlXXX());
+    auto ctx = DebugContext(entry->mem_obj->urlXXX());
     HttpReply *rep = finalReply();
     const Http::StatusCode statusCode = rep->sline.status();
 
@@ -1094,7 +1089,6 @@ HttpStateData::haveParsedReplyHeaders()
 
 #endif
 
-    ctx_exit(ctx);
 }
 
 HttpStateData::ConnectionStatus
