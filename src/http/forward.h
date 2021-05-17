@@ -21,7 +21,6 @@ typedef RefCount<Http::Stream> StreamPointer;
 
 // TODO move these classes into Http namespace
 class HttpRequestMethod;
-typedef RefCount<HttpRequestMethod> HttpRequestMethodPointer;
 
 class HttpRequest;
 typedef RefCount<HttpRequest> HttpRequestPointer;
