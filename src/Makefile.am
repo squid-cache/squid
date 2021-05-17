@@ -1008,6 +1008,7 @@ tests_testURL_LDFLAGS = $(LIBADD_DL)
 check_PROGRAMS += tests/testDns
 tests_testDns_SOURCES = \
 	base/Here.cc \
+	base/Here.h \
 	Debug.h \
 	globals.cc \
 	tests/stub_debug.cc \
