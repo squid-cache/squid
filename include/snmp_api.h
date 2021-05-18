@@ -63,7 +63,6 @@ u_char *snmp_parse(struct snmp_session *, struct snmp_pdu *, u_char *, int);
  */
 int snmp_build(struct snmp_session *, struct snmp_pdu *, u_char *, int *);
 
-
 #ifdef __cplusplus
 }
 

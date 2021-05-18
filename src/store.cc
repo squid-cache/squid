@@ -1719,7 +1719,6 @@ createRemovalPolicy(RemovalPolicySettings * settings)
     return NULL;                /* NOTREACHED */
 }
 
-
 void
 StoreEntry::storeErrorResponse(HttpReply *reply)
 {

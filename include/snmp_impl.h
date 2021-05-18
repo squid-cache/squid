@@ -38,7 +38,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 ******************************************************************/
 
-
 #define SID_MAX_LEN 64
 
 #define READ        1
