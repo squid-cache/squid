@@ -57,9 +57,6 @@ rfcnb_alarm(int sig)
 
 }
 
-#endif /* NOT_USED */
-
-#ifdef NOT_USED
 /* Set timeout value and setup signal handling */
 int
 RFCNB_Set_Timeout(int seconds)
