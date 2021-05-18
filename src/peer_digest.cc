@@ -727,14 +727,6 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     if (!reason) {
         if (!(pd = fetch->pd))
             reason = "peer digest disappeared?!";
-
-#if DONT            /* WHY NOT? /HNO */
-
-        else if (!cbdataReferenceValid(pd))
-            reason = "invalidated peer digest?!";
-
-#endif
-
         else
             host = pd->host;
     }
