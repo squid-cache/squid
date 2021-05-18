@@ -606,12 +606,6 @@ StoreEntry::setPublicKey(const KeyScope scope)
      *
      * If RELEASE_REQUEST is set, setPublicKey() should not be called.
      */
-#if MORE_DEBUG_OUTPUT
-
-    if (EBIT_TEST(flags, RELEASE_REQUEST))
-        debugs(20, DBG_IMPORTANT, "assertion failed: RELEASE key " << key << ", url " << mem_obj->url);
-
-#endif
 
     assert(!EBIT_TEST(flags, RELEASE_REQUEST));
 
