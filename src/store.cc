@@ -967,46 +967,39 @@ StoreEntry::checkCachable()
         return 0; // avoid rerequesting release below
     }
 
-#if CACHE_ALL_METHODS
-
-    if (mem_obj->method != Http::METHOD_GET) {
-        debugs(20, 2, "StoreEntry::checkCachable: NO: non-GET method");
-        ++store_check_cachable_hist.no.non_get;
-    } else
-#endif
-        if (store_status == STORE_OK && EBIT_TEST(flags, ENTRY_BAD_LENGTH)) {
-            debugs(20, 2, "StoreEntry::checkCachable: NO: wrong content-length");
-            ++store_check_cachable_hist.no.wrong_content_length;
-        } else if (!mem_obj) {
-            // XXX: In bug 4131, we forgetHit() without mem_obj, so we need
-            // this segfault protection, but how can we get such a HIT?
-            debugs(20, 2, "StoreEntry::checkCachable: NO: missing parts: " << *this);
-            ++store_check_cachable_hist.no.missing_parts;
-        } else if (checkTooBig()) {
-            debugs(20, 2, "StoreEntry::checkCachable: NO: too big");
-            ++store_check_cachable_hist.no.too_big;
-        } else if (checkTooSmall()) {
-            debugs(20, 2, "StoreEntry::checkCachable: NO: too small");
-            ++store_check_cachable_hist.no.too_small;
-        } else if (EBIT_TEST(flags, KEY_PRIVATE)) {
-            debugs(20, 3, "StoreEntry::checkCachable: NO: private key");
-            ++store_check_cachable_hist.no.private_key;
-        } else if (hasDisk()) {
-            /*
-             * the remaining cases are only relevant if we haven't
-             * started swapping out the object yet.
-             */
-            return 1;
-        } else if (storeTooManyDiskFilesOpen()) {
-            debugs(20, 2, "StoreEntry::checkCachable: NO: too many disk files open");
-            ++store_check_cachable_hist.no.too_many_open_files;
-        } else if (fdNFree() < RESERVED_FD) {
-            debugs(20, 2, "StoreEntry::checkCachable: NO: too many FD's open");
-            ++store_check_cachable_hist.no.too_many_open_fds;
-        } else {
-            ++store_check_cachable_hist.yes.Default;
-            return 1;
-        }
+    if (store_status == STORE_OK && EBIT_TEST(flags, ENTRY_BAD_LENGTH)) {
+        debugs(20, 2, "StoreEntry::checkCachable: NO: wrong content-length");
+        ++store_check_cachable_hist.no.wrong_content_length;
+    } else if (!mem_obj) {
+        // XXX: In bug 4131, we forgetHit() without mem_obj, so we need
+        // this segfault protection, but how can we get such a HIT?
+        debugs(20, 2, "StoreEntry::checkCachable: NO: missing parts: " << *this);
+        ++store_check_cachable_hist.no.missing_parts;
+    } else if (checkTooBig()) {
+        debugs(20, 2, "StoreEntry::checkCachable: NO: too big");
+        ++store_check_cachable_hist.no.too_big;
+    } else if (checkTooSmall()) {
+        debugs(20, 2, "StoreEntry::checkCachable: NO: too small");
+        ++store_check_cachable_hist.no.too_small;
+    } else if (EBIT_TEST(flags, KEY_PRIVATE)) {
+        debugs(20, 3, "StoreEntry::checkCachable: NO: private key");
+        ++store_check_cachable_hist.no.private_key;
+    } else if (hasDisk()) {
+        /*
+            * the remaining cases are only relevant if we haven't
+            * started swapping out the object yet.
+            */
+        return 1;
+    } else if (storeTooManyDiskFilesOpen()) {
+        debugs(20, 2, "StoreEntry::checkCachable: NO: too many disk files open");
+        ++store_check_cachable_hist.no.too_many_open_files;
+    } else if (fdNFree() < RESERVED_FD) {
+        debugs(20, 2, "StoreEntry::checkCachable: NO: too many FD's open");
+        ++store_check_cachable_hist.no.too_many_open_fds;
+    } else {
+        ++store_check_cachable_hist.yes.Default;
+        return 1;
+    }
 
     releaseRequest();
     return 0;
@@ -1016,13 +1009,6 @@ void
 storeCheckCachableStats(StoreEntry *sentry)
 {
     storeAppendPrintf(sentry, "Category\t Count\n");
-
-#if CACHE_ALL_METHODS
-
-    storeAppendPrintf(sentry, "no.non_get\t%d\n",
-                      store_check_cachable_hist.no.non_get);
-#endif
-
     storeAppendPrintf(sentry, "no.not_entry_cachable\t%d\n",
                       store_check_cachable_hist.no.not_entry_cachable);
     storeAppendPrintf(sentry, "no.wrong_content_length\t%d\n",
