@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,8 +9,8 @@
 #ifndef _SQUID_SRC_ERROR_ERROR_H
 #define _SQUID_SRC_ERROR_ERROR_H
 
-#include "error/forward.h"
 #include "error/Detail.h"
+#include "error/forward.h"
 
 #include <iosfwd>
 

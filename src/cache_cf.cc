@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,6 +24,7 @@
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
 #include "CachePeer.h"
+#include "ConfigOption.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
 #include "DiskIO/DiskIOModule.h"
@@ -652,6 +653,75 @@ parseConfigFile(const char *file_name)
 
     if (opt_parse_cfg_only)
         exit(EXIT_SUCCESS);
+}
+
+/*
+ * The templated functions below are essentially ConfigParser methods. They are
+ * not implemented as such because our generated code calling them is the only
+ * code that can instantiate implementations for each T -- we cannot place these
+ * definitions into ConfigParser.cc unless cf_parser.cci is moved there.
+ */
+
+// TODO: When adding Ts incompatible with this trivial API and implementation,
+// replace both with a ConfigParser-maintained table of seen directives.
+/// whether we have seen (and, hence, configured) the given directive
+template <typename T>
+static bool
+SawDirective(const T &raw)
+{
+    return bool(raw);
+}
+
+/// Sets the given raw SquidConfig data member.
+/// Extracts and interprets parser's configuration tokens.
+template <typename T>
+static void
+ParseDirective(T &raw, ConfigParser &parser)
+{
+    if (SawDirective(raw))
+        parser.rejectDuplicateDirective();
+
+    // TODO: parser.openDirective(directiveName);
+    Must(!raw);
+    raw = Configuration::Component<T>::Parse(parser);
+    Must(raw);
+    parser.closeDirective();
+}
+
+/// reports raw SquidConfig data member configuration using squid.conf syntax
+/// \param name the name of the configuration directive being dumped
+template <typename T>
+static void
+DumpDirective(const T &raw, StoreEntry *entry, const char *name)
+{
+    if (!SawDirective(raw))
+        return; // not configured
+
+    entry->append(name, strlen(name));
+    SBufStream os;
+    Configuration::Component<T>::Print(os, raw);
+    const auto buf = os.buf();
+    if (buf.length()) {
+        entry->append(" ", 1);
+        entry->append(buf.rawContent(), buf.length());
+    }
+    entry->append("\n", 1);
+}
+
+/// frees any resources associated with the given raw SquidConfig data member
+template <typename T>
+static void
+FreeDirective(T &raw)
+{
+    Configuration::Component<T>::Free(raw);
+
+    // While the implementation may change, there is no way to avoid zeroing.
+    // Even migration to a proper SquidConfig class would not help: While
+    // ordinary destructors do not need to zero data members, a SquidConfig
+    // destructor would have to zero to protect any SquidConfig::x destruction
+    // code from accidentally dereferencing an already destroyed Config.y.
+    static_assert(std::is_trivial<T>::value, "SquidConfig member is trivial");
+    memset(&raw, 0, sizeof(raw));
 }
 
 static void
