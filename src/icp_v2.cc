@@ -680,11 +680,6 @@ icpHandleUdp(int sock, void *)
         debugs(12, 4, "icpHandleUdp: FD " << sock << ": received " <<
                (unsigned long int)len << " bytes from " << from);
 
-#ifdef ICP_PACKET_DUMP
-
-        icpPktDump(buf);
-#endif
-
         if ((size_t) len < sizeof(icp_common_t)) {
             debugs(12, 4, "icpHandleUdp: Ignoring too-small UDP packet");
             break;
