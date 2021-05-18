@@ -637,18 +637,15 @@ parseConfigFile(const char *file_name)
             // TODO: rollback to previous working settings
             // for now any errors are a fatal condition...
             const auto errMsg = ToSBuf("Found ", err_count, " configuration issues");
-            if (opt_parse_cfg_only) {
-                debugs(1, DBG_CRITICAL, "FATAL: " << errMsg << Debug::Extra << kparseBlurb);
+            if (opt_parse_cfg_only)
                 Mem::Report();
-                exit(EXIT_FAILURE);
-            }
             throw TextException(errMsg, Here());
         }
 
     } catch (...) {
         debugs(3, DBG_CRITICAL, "FATAL: Configuration Error: " << ConfigParser::CurrentLocation() <<
                Debug::Extra << CurrentException << Debug::Extra << kparseBlurb);
-        self_destruct();
+        exit(EXIT_FAILURE);
     }
 
     if (opt_parse_cfg_only)
