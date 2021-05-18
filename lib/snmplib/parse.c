@@ -403,6 +403,7 @@ do_subtree(struct snmp_mib_tree *root, struct node **nodes)
         xfree(oldnp);
 }
 
+static
 struct snmp_mib_tree *
 build_tree(struct node *nodes) {
     struct node *np;
@@ -959,6 +960,7 @@ parse_objecttype(register FILE *fp, char *name) {
  * Parses a mib file and returns a linked list of nodes found in the file.
  * Returns NULL on error.
  */
+static
 struct node *
 parse(FILE *fp) {
     char token[64];
