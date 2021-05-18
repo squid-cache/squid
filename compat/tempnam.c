@@ -120,19 +120,3 @@ tempnam(const char *dir, const char *pfx)
 {
     return _tmpnam();
 }
-
-#ifdef TEST
-int
-main()
-{
-    char *t;
-    int n = 0;
-    while ((t = tempnam(NULL, NULL))) {
-        printf("%s\n", t);
-        if (++n == 1000)
-            break;
-    }
-    return 1;
-}
-#endif
-
