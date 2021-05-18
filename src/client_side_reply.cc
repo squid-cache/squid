@@ -1284,11 +1284,6 @@ clientReplyContext::buildReplyHeader()
     HttpHeader *hdr = &reply->header;
     const bool is_hit = http->logType.isTcpHit();
     HttpRequest *request = http->request;
-#if DONT_FILTER_THESE
-    /* but you might want to if you run Squid as an HTTP accelerator */
-    /* hdr->delById(HDR_ACCEPT_RANGES); */
-    hdr->delById(HDR_ETAG);
-#endif
 
     if (is_hit || collapsedRevalidation == crSlave)
         hdr->delById(Http::HdrType::SET_COOKIE);
