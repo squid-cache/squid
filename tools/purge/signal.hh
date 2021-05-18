@@ -10,10 +10,10 @@
 // File:     signal.hh
 // Date:     Sat Feb 28 1998
 // Compiler: gcc 2.7.2.x series
-// 
+//
 // Books:    W. Richard Steven, "Advanced Programming in the UNIX Environment",
 //           Addison-Wesley, 1992.
-// 
+//
 // (c) 1998 Lehrgebiet Rechnernetze und Verteilte Systeme
 //          Universit?t Hannover, Germany
 //
@@ -69,11 +69,7 @@ typedef int bool;
 #endif
 #endif /* __cplusplus */
 
-#if 1 // so far, all systems I know use void
 # define SIGRETTYPE void
-#else
-# define SIGRETTYPE int
-#endif
 
 #if defined(SUNOS) && defined(SUN)
 # define SIGPARAM void
