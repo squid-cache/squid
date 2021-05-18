@@ -135,17 +135,6 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
         return;
     }
 
-    /* after the write to the user occurs, (ie here, or in a callback)
-     * we call */
-    if (clientHttpRequestStatus(-1, http)) {
-        /* TODO: Does thisNode if block leak htto ? */
-        /* XXX when reviewing ESI this is the first place to look */
-        node->data = NULL;
-        esiStream->finished = 1;
-        esiStream->include->includeFail (esiStream);
-        return;
-    };
-
     switch (clientStreamStatus (node, http)) {
 
     case STREAM_UNPLANNED_COMPLETE: /* fallthru ok */
