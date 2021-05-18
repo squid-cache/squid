@@ -146,10 +146,6 @@
 #include <systemd/sd-daemon.h>
 #endif
 
-#if LINGERING_CLOSE
-#define comm_close comm_lingering_close
-#endif
-
 /// dials clientListenerConnectionOpened call
 class ListeningStartedDialer: public CallDialer, public Ipc::StartListeningCb
 {
