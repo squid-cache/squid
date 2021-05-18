@@ -374,19 +374,6 @@ _heap_swap_element(heap * hp, heap_node * elm1, heap_node * elm2)
     hp->nodes[elm2->id] = elm2;
 }
 
-#ifdef  NOTDEF
-/*
- * Copy KEY and DATA fields of SRC to DEST. ID field is NOT copied.
- */
-static void
-_heap_copy_element(heap_node * src, heap_node * dest)
-{
-    dest->key = src->key;
-    dest->data = src->data;
-}
-
-#endif /* NOTDEF */
-
 /*
  * True if HP needs to be grown in size.
  */
