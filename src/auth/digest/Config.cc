@@ -231,13 +231,6 @@ authenticateDigestNonceShutdown(void)
         }
     }
 
-#if DEBUGSHUTDOWN
-    if (digest_nonce_pool) {
-        delete digest_nonce_pool;
-        digest_nonce_pool = NULL;
-    }
-
-#endif
     debugs(29, 2, "Nonce cache shutdown");
 }
 
