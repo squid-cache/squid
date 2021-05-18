@@ -544,10 +544,6 @@ DiskdIOStrategy::callback()
     }
 
     while (1) {
-#ifdef  ALWAYS_ZERO_BUFFERS
-        memset(&M, '\0', sizeof(M));
-#endif
-
         x = msgrcv(rmsgid, &M, diomsg::msg_snd_rcv_sz, 0, IPC_NOWAIT);
 
         if (x < 0)
