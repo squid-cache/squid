@@ -23,7 +23,7 @@ class Config
 public:
     Config() = default;
     Config(Config &&) = delete; // no support for copying of any kind
-    ~Config();
+    ~Config() = default;
 
     /// set of auth_params directives
     Auth::ConfigVector schemes;
