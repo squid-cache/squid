@@ -20,13 +20,10 @@ namespace Auth
 
 class Config
 {
-    explicit Config(const Config &) = delete;
-    explicit Config(const Config *) = delete;
-
 public:
     Config() = default;
-    explicit Config(Config &&) = default;
-    ~Config() { assert(!schemeAccess); }
+    Config(Config &&) = delete; // no support for copying of any kind
+    ~Config() = default;
 
     /// set of auth_params directives
     Auth::ConfigVector schemes;
