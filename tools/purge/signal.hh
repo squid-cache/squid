@@ -69,8 +69,6 @@ typedef int bool;
 #endif
 #endif /* __cplusplus */
 
-# define SIGRETTYPE void
-
 #if defined(SUNOS) && defined(SUN)
 # define SIGPARAM void
 #else // SOLARIS, LINUX, IRIX, AIX, SINIXY
@@ -78,7 +76,7 @@ typedef int bool;
 #endif
 
 extern "C" {
-  typedef SIGRETTYPE SigFunc( SIGPARAM );
+  typedef void SigFunc( SIGPARAM );
 }
 
 SigFunc*
@@ -89,7 +87,7 @@ Signal( int signo, SigFunc* newhandler, bool doInterrupt );
   //          doInterrupt (IN): interrupted system calls wanted!
   // returns: the old signal handler, or SIG_ERR in case of error.
 
-SIGRETTYPE
+void
 sigChild( int signo );
   // purpose: supply ad hoc child handler with output on stderr
   // paramtr: signo (IN): == SIGCHLD
