@@ -43,7 +43,7 @@ void LogConfig::parseFormats() STUB
 LogConfig TheConfig;
 }
 
-#include "log/CustomLog.h"
+#include "log/FormattedLog.h"
 bool FormattedLog::usesDaemon() const STUB_RETVAL(false)
 
 #include "log/File.h"
