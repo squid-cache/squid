@@ -44,7 +44,7 @@ logfile_mod_udp_write(Logfile * lf, const char *buf, size_t len)
     s = write(ll->fd, (char const *) buf, len);
     fd_bytes(ll->fd, s, FD_WRITE);
 #if 0
-    // TODO: reduce verbosity to 3 and use a FadingCounter to reduce spamminess
+    // TODO: Enable after polishing to properly log these errors.
     if (s < 0) {
         int xerrno = errno;
         debugs(1, DBG_IMPORTANT, "logfile (udp): got errno (" << errno << "):" << xstrerr(xerrno));
@@ -215,4 +215,3 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
 
     return 1;
 }
-
