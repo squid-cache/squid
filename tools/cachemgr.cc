@@ -1240,8 +1240,8 @@ check_target_acl(const char *hostname, int port)
         fp = fopen(DEFAULT_CACHEMGR_CONFIG, "r");
 
     if (fp == NULL) {
-#if defined(CACHEMGR_HOSTNAME)
-
+#ifdef CACHEMGR_HOSTNAME_DEFINED
+            //TODO: simplify and maybe get rid of CACHEMGR_HOSTNAME altogether
         if (strcmp(hostname, CACHEMGR_HOSTNAME) == 0 && port == CACHE_HTTP_PORT)
             return 1;
 
