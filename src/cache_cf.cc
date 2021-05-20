@@ -21,6 +21,7 @@
 #include "auth/Config.h"
 #include "auth/Scheme.h"
 #include "AuthReg.h"
+#include "base/PackableStream.h"
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
 #include "CachePeer.h"
@@ -4124,18 +4125,14 @@ check_null_access_log(CustomLog *customlog_definitions)
 static void
 dump_access_log(StoreEntry * entry, const char *name, CustomLog * logs)
 {
-    CustomLog *log;
-
-    for (log = logs; log; log = log->next) {
-        storeAppendPrintf(entry, "%s ", name);
-
-        SBufStream os;
-
-        os << log->filename; // including "none"
-
-        log->dumpOptions(os);
-        const auto buf = os.buf();
-        entry->append(buf.rawContent(), buf.length());
+    assert(entry);
+    for (auto log = logs; log; log = log->next) {
+        {
+            PackableStream os(*entry);
+            os << name; // directive name
+            os << ' ' << log->filename; // including "none"
+            log->dumpOptions(os);
+        }
 
         if (log->aclList)
             dump_acl_list(entry, log->aclList);
