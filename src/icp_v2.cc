@@ -630,6 +630,9 @@ icpHandleUdp(int sock, void *)
 
     while (max) {
         --max;
+
+        try {
+
         len = comm_udp_recvfrom(sock,
                                 buf,
                                 SQUID_UDP_SO_RCVBUF - 1,
@@ -694,6 +697,11 @@ icpHandleUdp(int sock, void *)
         else
             debugs(12, DBG_IMPORTANT, "WARNING: Unused ICP version " << icp_version <<
                    " received from " << from);
+
+        } catch (...) {
+            debugs(12, 2, "ERROR: ICP remote=" << from << " FD " << sock << ": " << CurrentException);
+            // ICP problems should have no effect on other transactions
+        }
     }
 }
 
