@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -28,11 +28,15 @@ libipc_la_SOURCES = \
 	Messages.h \
 	Port.cc \
 	Port.h \
+	QuestionerId.cc \
+	QuestionerId.h \
 	Queue.cc \
 	Queue.h \
 	ReadWriteLock.cc \
 	ReadWriteLock.h \
 	Request.h \
+	RequestId.cc \
+	RequestId.h \
 	Response.h \
 	SharedListen.cc \
 	SharedListen.h \

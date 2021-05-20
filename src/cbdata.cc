@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,6 +16,7 @@
 #include "Store.h"
 
 #include <climits>
+#include <cstddef>
 
 #if USE_CBDATA_DEBUG
 #include <algorithm>
@@ -45,8 +46,6 @@ public:
 };
 
 #endif
-
-#define OFFSET_OF(TYPE, MEMBER) ((size_t) &(((TYPE) *)0)->(MEMBER))
 
 /**
  * Manage a set of registered callback data pointers.
@@ -91,6 +90,8 @@ public:
     {}
     ~cbdata();
 
+    static cbdata *FromUserData(const void *);
+
     int valid;
     int32_t locks;
     cbdata_type type;
@@ -116,25 +117,14 @@ public:
 
 #if !WITH_VALGRIND
     size_t dataSize() const { return sizeof(data);}
-    static long MakeOffset();
-    static const long Offset;
 #endif
     /* MUST be the last per-instance member */
     void *data;
 };
 
-const long cbdata::Cookie((long)0xDEADBEEF);
-#if !WITH_VALGRIND
-const long cbdata::Offset(MakeOffset());
+static_assert(std::is_standard_layout<cbdata>::value, "the behavior of offsetof(cbdata) is defined");
 
-long
-cbdata::MakeOffset()
-{
-    cbdata *zero = (cbdata *)0L;
-    void **dataOffset = &zero->data;
-    return (long)dataOffset;
-}
-#endif
+const long cbdata::Cookie((long)0xDEADBEEF);
 
 static OBJH cbdataDump;
 #if USE_CBDATA_DEBUG
@@ -171,6 +161,16 @@ cbdata::~cbdata()
     cbdata_index[type].pool->freeOne(p);
 }
 
+cbdata *
+cbdata::FromUserData(const void *p) {
+#if WITH_VALGRIND
+    return cbdata_htable.at(p);
+#else
+    const auto t = static_cast<const char *>(p) - offsetof(cbdata, data);
+    return reinterpret_cast<cbdata *>(const_cast<char *>(t));
+#endif
+}
+
 static void
 cbdataInternalInitType(cbdata_type type, const char *name, int size)
 {
@@ -186,8 +186,7 @@ cbdataInternalInitType(cbdata_type type, const char *name, int size)
     snprintf(label, strlen(name) + 20, "cbdata %s (%d)", name, (int) type);
 
 #if !WITH_VALGRIND
-    assert((size_t)cbdata::Offset == (sizeof(cbdata) - ((cbdata *)NULL)->dataSize()));
-    size += cbdata::Offset;
+    size += offsetof(cbdata, data);
 #endif
 
     cbdata_index[type].pool = memPoolCreate(label, size);
@@ -297,12 +296,7 @@ cbdataRealFree(cbdata *c, const char *file, const int line)
 void *
 cbdataInternalFree(void *p, const char *file, int line)
 {
-    cbdata *c;
-#if WITH_VALGRIND
-    c = cbdata_htable.at(p);
-#else
-    c = (cbdata *) (((char *) p) - cbdata::Offset);
-#endif
+    auto *c = cbdata::FromUserData(p);
 #if USE_CBDATA_DEBUG
     debugs(45, 3, p << " " << file << ":" << line);
 #else
@@ -333,16 +327,10 @@ cbdataInternalLockDbg(const void *p, const char *file, int line)
 cbdataInternalLock(const void *p)
 #endif
 {
-    cbdata *c;
-
     if (p == NULL)
         return;
 
-#if WITH_VALGRIND
-    c = cbdata_htable.at(p);
-#else
-    c = (cbdata *) (((char *) p) - cbdata::Offset);
-#endif
+    auto *c = cbdata::FromUserData(p);
 
 #if USE_CBDATA_DEBUG
     debugs(45, 3, p << "=" << (c ? c->locks + 1 : -1) << " " << file << ":" << line);
@@ -365,16 +353,10 @@ cbdataInternalUnlockDbg(const void *p, const char *file, int line)
 cbdataInternalUnlock(const void *p)
 #endif
 {
-    cbdata *c;
-
     if (p == NULL)
         return;
 
-#if WITH_VALGRIND
-    c = cbdata_htable.at(p);
-#else
-    c = (cbdata *) (((char *) p) - cbdata::Offset);
-#endif
+    auto *c = cbdata::FromUserData(p);
 
 #if USE_CBDATA_DEBUG
     debugs(45, 3, p << "=" << (c ? c->locks - 1 : -1) << " " << file << ":" << line);
@@ -411,18 +393,12 @@ cbdataInternalUnlock(const void *p)
 int
 cbdataReferenceValid(const void *p)
 {
-    cbdata *c;
-
     if (p == NULL)
         return 1;       /* A NULL pointer cannot become invalid */
 
     debugs(45, 9, p);
 
-#if WITH_VALGRIND
-    c = cbdata_htable.at(p);
-#else
-    c = (cbdata *) (((char *) p) - cbdata::Offset);
-#endif
+    const auto c = cbdata::FromUserData(p);
 
     c->check(__LINE__);
 
@@ -502,7 +478,7 @@ cbdataDump(StoreEntry * sentry)
 #if WITH_VALGRIND
             int obj_size = pool->objectSize();
 #else
-            int obj_size = pool->objectSize() - cbdata::Offset;
+            int obj_size = pool->objectSize() - offsetof(cbdata, data);
 #endif
             storeAppendPrintf(sentry, "%s\t%d\t%ld\t%ld\n", pool->objectType() + 7, obj_size, (long int)pool->getMeter().inuse.currentLevel(), (long int)obj_size * pool->getMeter().inuse.currentLevel());
         }

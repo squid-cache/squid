@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -613,6 +613,8 @@ Entry::genParseAlias(const std::string &aName, std::ostream &fout) const
         fout << "        parse_obsolete(token);";
     } else if (!loc.size() || loc.compare("none") == 0) {
         fout << "parse_" << type << "();";
+    } else if (type.find("::") != std::string::npos) {
+        fout << "ParseDirective<" << type << ">(" << loc << ", LegacyParser);";
     } else {
         fout << "parse_" << type << "(&" << loc << (array_flag ? "[0]" : "") << ");";
     }
@@ -683,7 +685,10 @@ gen_dump(const EntryList &head, std::ostream &fout)
         if (e.ifdef.size())
             fout << "#if " << e.ifdef << std::endl;
 
-        fout << "    dump_" << e.type << "(entry, \"" << e.name << "\", " << e.loc << ");" << std::endl;
+        if (e.type.find("::") != std::string::npos)
+            fout << "    DumpDirective<" << e.type << ">(" << e.loc << ", entry, \"" << e.name << "\");\n";
+        else
+            fout << "    dump_" << e.type << "(entry, \"" << e.name << "\", " << e.loc << ");" << std::endl;
 
         if (e.ifdef.size())
             fout << "#endif" << std::endl;
@@ -711,7 +716,10 @@ gen_free(const EntryList &head, std::ostream &fout)
         if (e.ifdef.size())
             fout << "#if " << e.ifdef << std::endl;
 
-        fout << "    free_" << e.type << "(&" << e.loc << (e.array_flag ? "[0]" : "") << ");" << std::endl;
+        if (e.type.find("::") != std::string::npos)
+            fout << "    FreeDirective<" << e.type << ">(" << e.loc << ");\n";
+        else
+            fout << "    free_" << e.type << "(&" << e.loc << (e.array_flag ? "[0]" : "") << ");" << std::endl;
 
         if (e.ifdef.size())
             fout << "#endif" << std::endl;

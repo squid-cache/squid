@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -150,10 +150,7 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
         return;
     }
 
-    Ipc::StrandSearchRequest request;
-    request.requestorId = KidIdentifier;
-    request.tag = dbName;
-
+    const Ipc::StrandSearchRequest request(dbName);
     Ipc::TypedMsgHdr msg;
     request.pack(msg);
     Ipc::SendMessage(Ipc::Port::CoordinatorAddr(), msg);

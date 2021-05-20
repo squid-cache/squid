@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,8 @@
 
 #define STUB_API "lmgr/libmgr.la"
 #include "tests/STUB.h"
+
+#include "ipc/RequestId.h"
 
 // NP: used by Command.h instantiations
 #include "mgr/ActionProfile.h"
@@ -26,7 +28,7 @@ void Mgr::Action::run(StoreEntry *entry, bool writeHttpHeader) STUB
 void Mgr::Action::fillEntry(StoreEntry *entry, bool writeHttpHeader) STUB
 void Mgr::Action::add(const Action &action) STUB
 void Mgr::Action::respond(const Request &request) STUB
-void Mgr::Action::sendResponse(unsigned int requestId) STUB
+void Mgr::Action::sendResponse(const Ipc::RequestId) STUB
 bool Mgr::Action::atomic() const STUB_RETVAL(false)
 const char * Mgr::Action::name() const STUB_RETVAL(NULL)
 static Mgr::Command static_Command;
@@ -174,11 +176,10 @@ void Mgr::IoAction::dump(StoreEntry* entry) STUB
 Mgr::QueryParam::Pointer Mgr::QueryParams::get(const String& name) const STUB_RETVAL(Mgr::QueryParam::Pointer(NULL))
 void Mgr::QueryParams::pack(Ipc::TypedMsgHdr& msg) const STUB
 void Mgr::QueryParams::unpack(const Ipc::TypedMsgHdr& msg) STUB
-bool Mgr::QueryParams::Parse(const String& aParamsStr, QueryParams& aParams) STUB_RETVAL(false)
+void Mgr::QueryParams::Parse(Parser::Tokenizer &, QueryParams &) STUB
 //private:
 //Params::const_iterator Mgr::QueryParams::find(const String& name) const STUB_RETVAL(new Mgr::Params::const_iterator(*this))
 Mgr::QueryParam::Pointer Mgr::QueryParams::CreateParam(QueryParam::Type aType) STUB_RETVAL(Mgr::QueryParam::Pointer(NULL))
-bool Mgr::QueryParams::ParseParam(const String& paramStr, Param& param) STUB_RETVAL(false)
 
 #include "mgr/Registration.h"
 //void Mgr::RegisterAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic);

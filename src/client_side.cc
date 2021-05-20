@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -779,8 +779,8 @@ clientPackRangeHdr(const HttpReplyPointer &rep, const HttpHdrRangeSpec * spec, S
  * warning: assumes that HTTP headers for individual ranges at the
  *          time of the actuall assembly will be exactly the same as
  *          the headers when clientMRangeCLen() is called */
-int
-ClientHttpRequest::mRangeCLen()
+int64_t
+ClientHttpRequest::mRangeCLen() const
 {
     int64_t clen = 0;
     MemBuf mb;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -717,9 +717,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
 {
     assert(entry->mem_obj != NULL);
     assert (entry->isEmpty());
-    debugs(4, 4, "Creating an error page for entry " << entry <<
-           " with errorstate " << err <<
-           " page id " << err->page_id);
+    debugs(4, 4, "storing " << err << " in " << *entry);
 
     if (entry->store_status != STORE_PENDING) {
         debugs(4, 2, "Skipping error page due to store_status: " << entry->store_status);
@@ -1388,7 +1386,7 @@ ErrorState::buildBody()
     if (!Config.errorDirectory)
         err_language = Config.errorDefaultLanguage;
 #endif
-    debugs(4, 2, "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
+    debugs(4, 2, "No existing error page language negotiated for " << this << ". Using default error file.");
     return compileBody(error_text[page_id], true);
 }
 
@@ -1521,5 +1519,15 @@ ErrorPage::ValidateStaticError(const int page_id, const SBuf &inputLocation)
     ErrorState anErr(err_type(page_id), Http::scNone, nullptr, nullptr);
     anErr.inputLocation = inputLocation;
     anErr.validate();
+}
+
+std::ostream &
+operator <<(std::ostream &os, const ErrorState *err)
+{
+    if (err)
+        os << errorPageName(err->page_id);
+    else
+        os << "[none]";
+    return os;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -107,7 +107,7 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
     case mtCacheMgrResponse: {
         debugs(54, 6, HERE << "Cache manager response");
         const Mgr::Response resp(message);
-        handleCacheMgrResponse(resp);
+        handleCacheMgrResponse(Mine(resp));
     }
     break;
 
@@ -122,13 +122,13 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
     case mtSnmpResponse: {
         debugs(54, 6, HERE << "SNMP response");
         const Snmp::Response resp(message);
-        handleSnmpResponse(resp);
+        handleSnmpResponse(Mine(resp));
     }
     break;
 #endif
 
     default:
-        debugs(54, DBG_IMPORTANT, "WARNING: Ignoring IPC message with an unknown type: " << message.rawType());
+        Port::receive(message);
         break;
     }
 }
@@ -222,7 +222,7 @@ Ipc::Coordinator::notifySearcher(const Ipc::StrandSearchRequest &request,
 {
     debugs(54, 3, HERE << "tell kid" << request.requestorId << " that " <<
            request.tag << " is kid" << strand.kidId);
-    const StrandMessage response(strand);
+    const StrandMessage response(strand, request.qid);
     TypedMsgHdr message;
     response.pack(mtStrandReady, message);
     SendMessage(MakeAddr(strandAddrLabel, request.requestorId), message);

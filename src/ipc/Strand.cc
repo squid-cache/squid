@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,6 +18,7 @@
 #include "globals.h"
 #include "ipc/Kids.h"
 #include "ipc/Messages.h"
+#include "ipc/QuestionerId.h"
 #include "ipc/SharedListen.h"
 #include "ipc/Strand.h"
 #include "ipc/StrandCoord.h"
@@ -62,16 +63,16 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
     switch (message.rawType()) {
 
     case mtStrandRegistered:
-        handleRegistrationResponse(StrandMessage(message));
+        handleRegistrationResponse(Mine(StrandMessage(message)));
         break;
 
     case mtSharedListenResponse:
-        SharedListenJoined(SharedListenResponse(message));
+        SharedListenJoined(Mine(SharedListenResponse(message)));
         break;
 
 #if HAVE_DISKIO_MODULE_IPCIO
     case mtStrandReady:
-        IpcIoFile::HandleOpenResponse(StrandMessage(message));
+        IpcIoFile::HandleOpenResponse(Mine(StrandMessage(message)));
         break;
 
     case mtIpcIoNotification:
@@ -87,7 +88,7 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
 
     case mtCacheMgrResponse: {
         const Mgr::Response resp(message);
-        handleCacheMgrResponse(resp);
+        handleCacheMgrResponse(Mine(resp));
     }
     break;
 
@@ -104,13 +105,13 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
 
     case mtSnmpResponse: {
         const Snmp::Response resp(message);
-        handleSnmpResponse(resp);
+        handleSnmpResponse(Mine(resp));
     }
     break;
 #endif
 
     default:
-        debugs(54, DBG_IMPORTANT, "WARNING: Ignoring IPC message with an unknown type: " << message.rawType());
+        Port::receive(message);
         break;
     }
 }

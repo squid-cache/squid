@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -41,7 +41,7 @@ class Address
 {
 
 public:
-    /** @name Constructors and Destructor */
+    /** @name Constructors */
     /*@{*/
     Address() { setEmpty(); }
     Address(const struct in_addr &);
@@ -51,7 +51,6 @@ public:
     Address(const struct hostent &);
     Address(const struct addrinfo &);
     Address(const char*);
-    ~Address() {}
     /*@}*/
 
     /** @name Assignment Operators */

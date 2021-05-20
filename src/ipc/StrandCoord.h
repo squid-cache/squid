@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 
 #include "ipc/forward.h"
 #include "ipc/Messages.h"
+#include "ipc/QuestionerId.h"
 #include "SquidString.h"
 
 namespace Ipc
@@ -37,15 +38,22 @@ public:
 class StrandMessage
 {
 public:
-    explicit StrandMessage(const StrandCoord &);
+    explicit StrandMessage(const StrandCoord &, QuestionerId);
     explicit StrandMessage(const TypedMsgHdr &);
     void pack(MessageType, TypedMsgHdr &) const;
 
     /// creates and sends StrandMessage to Coordinator
     static void NotifyCoordinator(MessageType, const char *tag);
 
+    /// for Mine() tests
+    QuestionerId intendedRecepient() const { return qid; }
+
 public:
     StrandCoord strand; ///< messageType-specific coordinates (e.g., sender)
+
+    /// For IPC requests/questions: The sender of this request.
+    /// For IPC responses/answers: The sender of the corresponding request.
+    QuestionerId qid;
 };
 
 } // namespace Ipc;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,12 +16,13 @@
 #include "HttpRequest.h"
 #include "ipc/Forwarder.h"
 #include "ipc/Port.h"
+#include "ipc/RequestId.h"
 #include "ipc/TypedMsgHdr.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Forwarder);
 
 Ipc::Forwarder::RequestsMap Ipc::Forwarder::TheRequestsMap;
-unsigned int Ipc::Forwarder::LastRequestId = 0;
+Ipc::RequestId::Index Ipc::Forwarder::LastRequestId = 0;
 
 Ipc::Forwarder::Forwarder(Request::Pointer aRequest, double aTimeout):
     AsyncJob("Ipc::Forwarder"),
@@ -149,7 +150,7 @@ Ipc::Forwarder::callException(const std::exception& e)
 
 /// returns and forgets the right Forwarder callback for the request
 AsyncCall::Pointer
-Ipc::Forwarder::DequeueRequest(unsigned int requestId)
+Ipc::Forwarder::DequeueRequest(const RequestId::Index requestId)
 {
     debugs(54, 3, HERE);
     Must(requestId != 0);
@@ -172,7 +173,7 @@ Ipc::Forwarder::removeTimeoutEvent()
 }
 
 void
-Ipc::Forwarder::HandleRemoteAck(unsigned int requestId)
+Ipc::Forwarder::HandleRemoteAck(const RequestId requestId)
 {
     debugs(54, 3, HERE);
     Must(requestId != 0);

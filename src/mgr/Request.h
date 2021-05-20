@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,16 +22,13 @@ namespace Mgr
 class Request: public Ipc::Request
 {
 public:
-    Request(int aRequestorId, unsigned int aRequestId, const Comm::ConnectionPointer &aConn,
+    Request(int aRequestorId, Ipc::RequestId, const Comm::ConnectionPointer &aConn,
             const ActionParams &aParams);
 
     explicit Request(const Ipc::TypedMsgHdr& msg); ///< from recvmsg()
     /* Ipc::Request API */
     virtual void pack(Ipc::TypedMsgHdr& msg) const;
     virtual Pointer clone() const;
-
-private:
-    Request(const Request& request);
 
 public:
     Comm::ConnectionPointer conn; ///< HTTP client connection descriptor
