@@ -93,7 +93,8 @@ Auth::Ntlm::Config::init(Auth::SchemeConfig *)
             ntlmauthenticators = new statefulhelper("ntlmauthenticator");
 
         if (!proxy_auth_cache)
-            proxy_auth_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
+            proxy_auth_cache =
+                new hash_table((HASHCMP *)strcmp, hash_string, 7921);
 
         assert(proxy_auth_cache);
 

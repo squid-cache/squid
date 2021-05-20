@@ -446,8 +446,8 @@ accessLogInit(void)
 static void
 fvdbInit(void)
 {
-    via_table = hash_create((HASHCMP *) strcmp, 977, hash4);
-    forw_table = hash_create((HASHCMP *) strcmp, 977, hash4);
+    via_table = new hash_table((HASHCMP *) strcmp, hash4, 977);
+    forw_table = new hash_table((HASHCMP *)strcmp, hash4, 977);
 }
 
 static void
@@ -466,12 +466,12 @@ fvdbCount(hash_table * hash, const char *key)
     if (NULL == hash)
         return;
 
-    fv = (fvdb_entry *)hash_lookup(hash, key);
+    fv = (fvdb_entry *)hash->hash_lookup(key);
 
     if (NULL == fv) {
         fv = static_cast <fvdb_entry *>(xcalloc(1, sizeof(fvdb_entry)));
         fv->hash.key = xstrdup(key);
-        hash_join(hash, &fv->hash);
+        hash->hash_join(&fv->hash);
     }
 
     ++ fv->n;
@@ -498,11 +498,11 @@ fvdbDumpTable(StoreEntry * e, hash_table * hash)
     if (hash == NULL)
         return;
 
-    hash_first(hash);
+    hash->hash_first();
 
-    while ((h = hash_next(hash))) {
+    while ((h = hash->hash_next())) {
         fv = (fvdb_entry *) h;
-        storeAppendPrintf(e, "%9d %s\n", fv->n, hashKeyStr(&fv->hash));
+        storeAppendPrintf(e, "%9d %s\n", fv->n, fv->hash.hashKeyStr());
     }
 }
 
@@ -530,12 +530,12 @@ fvdbFreeEntry(void *data)
 static void
 fvdbClear(void)
 {
-    hashFreeItems(via_table, fvdbFreeEntry);
-    hashFreeMemory(via_table);
-    via_table = hash_create((HASHCMP *) strcmp, 977, hash4);
-    hashFreeItems(forw_table, fvdbFreeEntry);
-    hashFreeMemory(forw_table);
-    forw_table = hash_create((HASHCMP *) strcmp, 977, hash4);
+    via_table->hashFreeItems(fvdbFreeEntry);
+    delete via_table;
+    via_table = new hash_table((HASHCMP *) strcmp, hash4, 977);
+    forw_table->hashFreeItems(fvdbFreeEntry);
+    delete forw_table;
+    forw_table = new hash_table((HASHCMP *)strcmp, hash4, 977);
 }
 
 #endif

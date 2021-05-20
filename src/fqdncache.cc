@@ -138,7 +138,7 @@ static long fqdncache_low = 180;
 static long fqdncache_high = 200;
 
 /// \ingroup FQDNCacheInternal
-inline int fqdncacheCount() { return fqdn_table ? fqdn_table->count : 0; }
+inline int fqdncacheCount() { return fqdn_table ? fqdn_table->hash_count() : 0; }
 
 int
 fqdncache_entry::age() const
@@ -153,8 +153,10 @@ fqdncache_entry::age() const
 static void
 fqdncacheRelease(fqdncache_entry * f)
 {
-    hash_remove_link(fqdn_table, (hash_link *) f);
-    debugs(35, 5, "fqdncacheRelease: Released FQDN record for '" << hashKeyStr(&f->hash) << "'.");
+    fqdn_table->hash_remove_link((hash_link *) f);
+    debugs(35, 5,
+           "fqdncacheRelease: Released FQDN record for '"
+           << f->hash.hashKeyStr() << "'.");
     dlinkDelete(&f->lru, &lru_list);
     delete f;
 }
@@ -172,7 +174,7 @@ fqdncache_get(const char *name)
     f = NULL;
 
     if (fqdn_table) {
-        if ((e = (hash_link *)hash_lookup(fqdn_table, name)) != NULL)
+        if ((e = (hash_link *)fqdn_table->hash_lookup(name)) != nullptr)
             f = (fqdncache_entry *) e;
     }
 
@@ -268,7 +270,7 @@ fqdncache_entry::fqdncache_entry(const char *name) :
 static void
 fqdncacheAddEntry(fqdncache_entry * f)
 {
-    hash_link *e = (hash_link *)hash_lookup(fqdn_table, f->hash.key);
+    hash_link *e = (hash_link *)fqdn_table->hash_lookup(f->hash.key);
 
     if (NULL != e) {
         /* avoid collision */
@@ -276,7 +278,7 @@ fqdncacheAddEntry(fqdncache_entry * f)
         fqdncacheRelease(q);
     }
 
-    hash_join(fqdn_table, &f->hash);
+    fqdn_table->hash_join(&f->hash);
     dlinkAdd(f, &f->lru, &lru_list);
     f->lastref = squid_curtime;
 }
@@ -557,16 +559,14 @@ fqdnStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "%-45.45s %3s %3s %3s %s\n",
                       "Address", "Flg", "TTL", "Cnt", "Hostnames");
 
-    hash_first(fqdn_table);
+    fqdn_table->hash_first();
 
-    while ((f = (fqdncache_entry *) hash_next(fqdn_table))) {
+    while ((f = (fqdncache_entry *) fqdn_table->hash_next())) {
         ttl = (f->flags.fromhosts ? -1 : (f->expires - squid_curtime));
         storeAppendPrintf(sentry, "%-45.45s  %c%c %3.3d % 3d",
-                          hashKeyStr(&f->hash),
-                          f->flags.negcached ? 'N' : ' ',
-                          f->flags.fromhosts ? 'H' : ' ',
-                          ttl,
-                          (int) f->name_count);
+                          f->hash.hashKeyStr(), f->flags.negcached ? 'N' : ' ',
+                          f->flags.fromhosts ? 'H' : ' ', ttl,
+                          (int)f->name_count);
 
         for (k = 0; k < (int) f->name_count; ++k)
             storeAppendPrintf(sentry, " %s", f->names[k]);
@@ -617,9 +617,9 @@ fqdncache_entry::~fqdncache_entry()
 void
 fqdncacheFreeMemory(void)
 {
-    hashFreeItems(fqdn_table, fqdncacheFreeEntry);
-    hashFreeMemory(fqdn_table);
-    fqdn_table = NULL;
+    fqdn_table->hashFreeItems(fqdncacheFreeEntry);
+    delete fqdn_table;
+    fqdn_table = nullptr;
 }
 
 /**
@@ -715,9 +715,9 @@ fqdncache_init(void)
     fqdncache_low = (long) (((float) Config.fqdncache.size *
                              (float) FQDN_LOW_WATER) / (float) 100);
 
-    n = hashPrime(fqdncache_high / 4);
+    n = hash_table::hashPrime(fqdncache_high / 4);
 
-    fqdn_table = hash_create((HASHCMP *) strcmp, n, hash4);
+    fqdn_table = new hash_table((HASHCMP *) strcmp, hash4, n);
 }
 
 #if SQUID_SNMP

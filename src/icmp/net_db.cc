@@ -122,21 +122,21 @@ netdbHashInsert(netdbEntry * n, Ip::Address &addr)
 {
     networkFromInaddr(addr).toStr(n->network, MAX_IPSTRLEN);
     n->key = n->network;
-    assert(hash_lookup(addr_table, n->network) == NULL);
-    hash_join(addr_table, n);
+    assert(!addr_table->hash_lookup(n->network));
+    addr_table->hash_join(n);
 }
 
 static void
 netdbHashDelete(const char *key)
 {
-    hash_link *hptr = (hash_link *)hash_lookup(addr_table, key);
+    hash_link *hptr = (hash_link *)addr_table->hash_lookup(key);
 
     if (hptr == NULL) {
         debug_trap("netdbHashDelete: key not found");
         return;
     }
 
-    hash_remove_link(addr_table, hptr);
+    addr_table->hash_remove_link(hptr);
 }
 
 net_db_name::net_db_name(const char *hostname, netdbEntry *e) :
@@ -154,8 +154,8 @@ static void
 netdbHostInsert(netdbEntry * n, const char *hostname)
 {
     net_db_name *x = new net_db_name(hostname, n);
-    assert(hash_lookup(host_table, hostname) == NULL);
-    hash_join(host_table, x);
+    assert(!host_table->hash_lookup(hostname));
+    host_table->hash_join(x);
 }
 
 static void
@@ -174,14 +174,14 @@ netdbHostDelete(const net_db_name * x)
         }
     }
 
-    hash_remove_link(host_table, (hash_link *) x);
+    host_table->hash_remove_link((hash_link *) x);
     delete x;
 }
 
 static netdbEntry *
 netdbLookupHost(const char *key)
 {
-    net_db_name *x = (net_db_name *) hash_lookup(host_table, key);
+    net_db_name *x = (net_db_name *) host_table->hash_lookup(key);
     return x ? x->net_db_entry : NULL;
 }
 
@@ -232,9 +232,9 @@ netdbPurgeLRU(void)
     int list_count = 0;
     int removed = 0;
     list = (netdbEntry **)xcalloc(netdbEntry::UseCount(), sizeof(netdbEntry *));
-    hash_first(addr_table);
+    addr_table->hash_first();
 
-    while ((n = (netdbEntry *) hash_next(addr_table))) {
+    while ((n = (netdbEntry *) addr_table->hash_next())) {
         assert(list_count < netdbEntry::UseCount());
         *(list + list_count) = n;
         ++list_count;
@@ -263,7 +263,7 @@ netdbLookupAddr(const Ip::Address &addr)
     netdbEntry *n;
     char *key = new char[MAX_IPSTRLEN];
     networkFromInaddr(addr).toStr(key,MAX_IPSTRLEN);
-    n = (netdbEntry *) hash_lookup(addr_table, key);
+    n = (netdbEntry *)addr_table->hash_lookup(key);
     delete[] key;
     return n;
 }
@@ -315,7 +315,7 @@ netdbSendPing(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data)
 
         debugs(38, 3, "netdbSendPing: " << hostname << " moved from " << n->network << " to " << na->network);
 
-        x = (net_db_name *) hash_lookup(host_table, hostname);
+        x = (net_db_name *)host_table->hash_lookup(hostname);
 
         if (x == NULL) {
             debugs(38, DBG_IMPORTANT, "netdbSendPing: net_db_name list bug: " << hostname << " not found");
@@ -498,9 +498,9 @@ netdbSaveState(void *foo)
         return;
     }
 
-    hash_first(addr_table);
+    addr_table->hash_first();
 
-    while ((n = (netdbEntry *) hash_next(addr_table))) {
+    while ((n = (netdbEntry *) addr_table->hash_next())) {
         if (n->pings_recv == 0)
             continue;
 
@@ -514,7 +514,7 @@ netdbSaveState(void *foo)
                       (int) n->last_use_time);
 
         for (x = n->hosts; x; x = x->next)
-            logfilePrintf(lf, " %s", hashKeyStr(x));
+            logfilePrintf(lf, " %s", x->hashKeyStr());
 
         logfilePrintf(lf, "\n");
 
@@ -889,13 +889,13 @@ netdbInit(void)
     if (addr_table)
         return;
 
-    int n = hashPrime(Config.Netdb.high / 4);
+    int n = hash_table::hashPrime(Config.Netdb.high / 4);
 
-    addr_table = hash_create((HASHCMP *) strcmp, n, hash_string);
+    addr_table = new hash_table((HASHCMP *) strcmp, hash_string, n);
 
-    n = hashPrime(3 * Config.Netdb.high / 4);
+    n = hash_table::hashPrime(3 * Config.Netdb.high / 4);
 
-    host_table = hash_create((HASHCMP *) strcmp, n, hash_string);
+    host_table = new hash_table((HASHCMP *)strcmp, hash_string, n);
 
     eventAddIsh("netdbSaveState", netdbSaveState, NULL, 3600.0, 1);
 
@@ -954,12 +954,12 @@ void
 netdbFreeMemory(void)
 {
 #if USE_ICMP
-    hashFreeItems(addr_table, netdbFreeNetdbEntry);
-    hashFreeMemory(addr_table);
-    addr_table = NULL;
-    hashFreeItems(host_table, netdbFreeNameEntry);
-    hashFreeMemory(host_table);
-    host_table = NULL;
+    addr_table->hashFreeItems(netdbFreeNetdbEntry);
+    delete addr_table;
+    addr_table = nullptr;
+    host_table->hashFreeItems(netdbFreeNameEntry);
+    delete host_table;
+    host_table = nullptr;
     wordlistDestroy(&peer_names);
     peer_names = NULL;
 #endif
@@ -985,9 +985,9 @@ netdbDump(StoreEntry * sentry)
                       "Hostnames");
     list = (netdbEntry **)xcalloc(netdbEntry::UseCount(), sizeof(netdbEntry *));
     i = 0;
-    hash_first(addr_table);
+    addr_table->hash_first();
 
-    while ((n = (netdbEntry *) hash_next(addr_table))) {
+    while ((n = (netdbEntry *) addr_table->hash_next())) {
         *(list + i) = n;
         ++i;
     }
@@ -1011,7 +1011,7 @@ netdbDump(StoreEntry * sentry)
                           n->hops);
 
         for (x = n->hosts; x; x = x->next)
-            storeAppendPrintf(sentry, " %s", hashKeyStr(x));
+            storeAppendPrintf(sentry, " %s", x->hashKeyStr());
 
         storeAppendPrintf(sentry, "\n");
 
@@ -1199,9 +1199,9 @@ netdbBinaryExchange(StoreEntry * s)
     rec_sz += 1 + sizeof(int);
     buf = (char *)memAllocate(MEM_4K_BUF);
     i = 0;
-    hash_first(addr_table);
+    addr_table->hash_first();
 
-    while ((n = (netdbEntry *) hash_next(addr_table))) {
+    while ((n = (netdbEntry *) addr_table->hash_next())) {
         if (0.0 == n->rtt)
             continue;
 

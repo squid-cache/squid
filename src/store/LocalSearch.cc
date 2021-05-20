@@ -94,7 +94,7 @@ Store::LocalSearch::copyBucket()
     assert (!entries.size());
     hash_link *link_ptr = NULL;
     hash_link *link_next = NULL;
-    link_next = hash_get_bucket(store_table, bucket);
+    link_next = store_table->hash_get_bucket(bucket);
 
     while (NULL != (link_ptr = link_next)) {
         link_next = link_ptr->next;

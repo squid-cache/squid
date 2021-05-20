@@ -70,10 +70,10 @@ read_passwd_file(const char *passwordFile, int isHa1Mode)
     char *realm;
 
     if (hash != NULL) {
-        hashFreeItems(hash, my_free);
+        hash->hashFreeItems(my_free);
     }
     /* initial setup */
-    hash = hash_create((HASHCMP *) strcmp, 7921, hash_string);
+    hash = new hash_table((HASHCMP *)strcmp, hash_string, 7921 );
     if (NULL == hash) {
         fprintf(stderr, "digest_file_auth: cannot create hash table\n");
         exit(EXIT_FAILURE);
@@ -128,7 +128,7 @@ read_passwd_file(const char *passwordFile, int isHa1Mode)
                 u->ha1 = xstrdup(ha1);
             else
                 u->passwd = xstrdup(passwd);
-            hash_join(hash, &u->hash);
+            hash->hash_join(&u->hash);
         }
     }
     fclose(f);
@@ -174,10 +174,10 @@ GetPassword(RequestData * requestData)
     len = snprintf(buf, sizeof(buf), "%s:%s", requestData->user, requestData->realm);
     if (len >= static_cast<int>(sizeof(buf)))
         return NULL;
-    u = (user_data*)hash_lookup(hash, buf);
+    u = (user_data*)hash->hash_lookup(buf);
     if (u)
         return u;
-    u = (user_data*)hash_lookup(hash, requestData->user);
+    u = (user_data *)hash->hash_lookup(requestData->user);
     return u;
 }
 

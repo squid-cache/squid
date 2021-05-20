@@ -100,7 +100,7 @@ IdleConnList::removeAt(int index)
     if (parent_) {
         parent_->noteConnectionRemoved();
         if (size_ == 0) {
-            debugs(48, 3, "deleting " << hashKeyStr(this));
+            debugs(48, 3, "deleting " << hashKeyStr());
             delete this;
         }
     }
@@ -151,7 +151,7 @@ IdleConnList::closeN(size_t n)
     }
 
     if (parent_ && size_ == 0) {
-        debugs(48, 3, "deleting " << hashKeyStr(this));
+        debugs(48, 3, "deleting " << hashKeyStr());
         delete this;
     }
 }
@@ -369,10 +369,10 @@ void
 PconnPool::dumpHash(StoreEntry *e) const
 {
     hash_table *hid = table;
-    hash_first(hid);
+    hid->hash_first();
 
     int i = 0;
-    for (hash_link *walker = hash_next(hid); walker; walker = hash_next(hid)) {
+    for (hash_link *walker = hid->hash_next(); walker; walker = hid->hash_next()) {
         storeAppendPrintf(e, "\t item %d:\t%s\n", i, (char *)(walker->key));
         ++i;
     }
@@ -386,7 +386,7 @@ PconnPool::PconnPool(const char *aDescr, const CbcPointer<PeerPoolMgr> &aMgr):
     theCount(0)
 {
     int i;
-    table = hash_create((HASHCMP *) strcmp, 229, hash_string);
+    table = new hash_table((HASHCMP *)strcmp, hash_string, 229);
 
     for (i = 0; i < PCONN_HIST_SZ; ++i)
         hist[i] = 0;
@@ -403,8 +403,8 @@ DeleteIdleConnList(void *hashItem)
 PconnPool::~PconnPool()
 {
     PconnModule::GetInstance()->remove(this);
-    hashFreeItems(table, &DeleteIdleConnList);
-    hashFreeMemory(table);
+    table->hashFreeItems(&DeleteIdleConnList);
+    delete table;
     descr = NULL;
 }
 
@@ -423,14 +423,14 @@ PconnPool::push(const Comm::ConnectionPointer &conn, const char *domain)
     // TODO: also close used pconns if we exceed peer max-conn limit
 
     const char *aKey = key(conn, domain);
-    IdleConnList *list = (IdleConnList *) hash_lookup(table, aKey);
+    IdleConnList *list = (IdleConnList *)table->hash_lookup(aKey);
 
     if (list == NULL) {
         list = new IdleConnList(aKey, this);
-        debugs(48, 3, "new IdleConnList for {" << hashKeyStr(list) << "}" );
-        hash_join(table, list);
+        debugs(48, 3, "new IdleConnList for {" << list->hashKeyStr() << "}" );
+        table->hash_join(list);
     } else {
-        debugs(48, 3, "found IdleConnList for {" << hashKeyStr(list) << "}" );
+        debugs(48, 3, "found IdleConnList for {" << list->hashKeyStr() << "}");
     }
 
     list->push(conn);
@@ -469,14 +469,14 @@ PconnPool::popStored(const Comm::ConnectionPointer &dest, const char *domain, co
 {
     const char * aKey = key(dest, domain);
 
-    IdleConnList *list = (IdleConnList *)hash_lookup(table, aKey);
+    IdleConnList *list = (IdleConnList *)table->hash_lookup(aKey);
     if (list == NULL) {
         debugs(48, 3, HERE << "lookup for key {" << aKey << "} failed.");
         // failure notifications resume standby conn creation after fdUsageHigh
         notifyManager("pop lookup failure");
         return Comm::ConnectionPointer();
     } else {
-        debugs(48, 3, "found " << hashKeyStr(list) <<
+        debugs(48, 3, "found " << list->hashKeyStr() <<
                (keepOpen ? " to use" : " to kill"));
     }
 
@@ -507,15 +507,15 @@ void
 PconnPool::closeN(int n)
 {
     hash_table *hid = table;
-    hash_first(hid);
+    hid->hash_first();
 
     // close N connections, one per list, to treat all lists "fairly"
     for (int i = 0; i < n && count(); ++i) {
 
-        hash_link *current = hash_next(hid);
+        hash_link *current = hid->hash_next();
         if (!current) {
-            hash_first(hid);
-            current = hash_next(hid);
+            hid->hash_first();
+            current = hid->hash_next();
             Must(current); // must have one because the count() was positive
         }
 
@@ -529,7 +529,7 @@ PconnPool::unlinkList(IdleConnList *list)
 {
     theCount -= list->count();
     assert(theCount >= 0);
-    hash_remove_link(table, list);
+    table->hash_remove_link(list);
 }
 
 void

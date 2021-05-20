@@ -440,14 +440,14 @@ StoreEntry::hashInsert(const cache_key * someKey)
     debugs(20, 3, "StoreEntry::hashInsert: Inserting Entry " << *this << " key '" << storeKeyText(someKey) << "'");
     assert(!key);
     key = storeKeyDup(someKey);
-    hash_join(store_table, this);
+    store_table->hash_join(this);
 }
 
 void
 StoreEntry::hashDelete()
 {
     if (key) { // some test cases do not create keys and do not hashInsert()
-        hash_remove_link(store_table, this);
+        store_table->hash_remove_link(this);
         storeKeyFree((const cache_key *)key);
         key = NULL;
     }
@@ -582,7 +582,7 @@ StoreEntry::setPrivateKey(const bool shareable, const bool permanent)
         mem_obj->id = getKeyCounter();
     const cache_key *newkey = storeKeyPrivate();
 
-    assert(hash_lookup(store_table, newkey) == NULL);
+    assert(!store_table->hash_lookup(newkey));
     EBIT_SET(flags, KEY_PRIVATE);
     shareableWhenPrivate = shareable;
     hashInsert(newkey);
@@ -651,7 +651,7 @@ StoreEntry::forcePublicKey(const cache_key *newkey)
     debugs(20, 3, storeKeyText(newkey) << " for " << *this);
     assert(mem_obj);
 
-    if (StoreEntry *e2 = (StoreEntry *)hash_lookup(store_table, newkey)) {
+    if (StoreEntry *e2 = (StoreEntry *)store_table->hash_lookup(newkey)) {
         assert(e2 != this);
         debugs(20, 3, "releasing clashing " << *e2);
         e2->release(true);

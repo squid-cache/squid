@@ -167,7 +167,7 @@ external_acl::~external_acl()
         external_acl_cache_delete(this, e);
     }
     if (cache)
-        hashFreeMemory(cache);
+        delete cache;
 
     while (next) {
         external_acl *node = next;
@@ -450,7 +450,7 @@ external_acl::add(const ExternalACLEntryPointer &anEntry)
     assert (anEntry->def == NULL);
     anEntry->def = this;
     ExternalACLEntry *e = const_cast<ExternalACLEntry *>(anEntry.getRaw()); // XXX: make hash a std::map of Pointer.
-    hash_join(cache, e);
+    cache->hash_join(e);
     dlinkAdd(e, &e->lru, &lru_list);
     e->lock(); //cbdataReference(e); // lock it on behalf of the hash
     ++cache_entries;
@@ -647,7 +647,7 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
             return ACCESS_DUNNO;
         }
 
-        entry = static_cast<ExternalACLEntry *>(hash_lookup(acl->def->cache, key));
+        entry = static_cast<ExternalACLEntry *>(acl->def->cache->hash_lookup(key));
 
         const ExternalACLEntryPointer staleEntry = entry;
         if (entry != NULL && external_acl_entry_expired(acl->def, entry))
@@ -851,7 +851,8 @@ external_acl_cache_add(external_acl * def, const char *key, ExternalACLEntryData
         debugs(82,6, HERE);
 
         if (data.result == ACCESS_DUNNO) {
-            if (const ExternalACLEntryPointer oldentry = static_cast<ExternalACLEntry *>(hash_lookup(def->cache, key)))
+            if (const ExternalACLEntryPointer oldentry =
+                        static_cast<ExternalACLEntry *>(def->cache->hash_lookup(key)))
                 external_acl_cache_delete(def, oldentry);
         }
         entry = new ExternalACLEntry;
@@ -861,7 +862,7 @@ external_acl_cache_add(external_acl * def, const char *key, ExternalACLEntryData
         return entry;
     }
 
-    entry = static_cast<ExternalACLEntry *>(hash_lookup(def->cache, key));
+    entry = static_cast<ExternalACLEntry *>(def->cache->hash_lookup(key));
     debugs(82, 2, "external_acl_cache_add: Adding '" << key << "' = " << data.result);
 
     if (entry != NULL) {
@@ -886,7 +887,7 @@ external_acl_cache_delete(external_acl * def, const ExternalACLEntryPointer &ent
     assert(entry != NULL);
     assert(def->cache_size > 0 && entry->def == def);
     ExternalACLEntry *e = const_cast<ExternalACLEntry *>(entry.getRaw()); // XXX: make hash a std::map of Pointer.
-    hash_remove_link(def->cache, e);
+    def->cache->hash_remove_link(e);
     dlinkDelete(&e->lru, &def->lru_list);
     e->unlock(); // unlock on behalf of the hash
     def->cache_entries -= 1;
@@ -1092,7 +1093,7 @@ externalAclStats(StoreEntry * sentry)
 {
     for (external_acl *p = Config.externalAclHelperList; p; p = p->next) {
         storeAppendPrintf(sentry, "External ACL Statistics: %s\n", p->name);
-        storeAppendPrintf(sentry, "Cache size: %d\n", p->cache->count);
+        storeAppendPrintf(sentry, "Cache size: %d\n", p->cache->hash_count());
         assert(p->theHelper);
         p->theHelper->packStatsInto(sentry);
         storeAppendPrintf(sentry, "\n");
@@ -1112,7 +1113,7 @@ externalAclInit(void)
 {
     for (external_acl *p = Config.externalAclHelperList; p; p = p->next) {
         if (!p->cache)
-            p->cache = hash_create((HASHCMP *) strcmp, hashPrime(1024), hash4);
+            p->cache = new hash_table((HASHCMP *)strcmp, hash4, hash_table::hashPrime(1024));
 
         if (!p->theHelper)
             p->theHelper = new helper(p->name);

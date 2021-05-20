@@ -179,7 +179,7 @@ authenticateDigestNonceNew(void)
         authDigestNonceEncode(newnonce);
     }
 
-    hash_join(digest_nonce_cache, newnonce);
+    digest_nonce_cache->hash_join(newnonce);
     /* the cache's link */
     authDigestNonceLink(newnonce);
     newnonce->flags.incache = true;
@@ -195,7 +195,7 @@ authenticateDigestNonceDelete(digest_nonce_h * nonce)
 #if UNREACHABLECODE
 
         if (nonce->flags.incache)
-            hash_remove_link(digest_nonce_cache, nonce);
+            digest_nonce_cache->hash_remove_link(nonce);
 
 #endif
 
@@ -214,7 +214,7 @@ authenticateDigestNonceSetup(void)
         digest_nonce_pool = memPoolCreate("Digest Scheme nonce's", sizeof(digest_nonce_h));
 
     if (!digest_nonce_cache) {
-        digest_nonce_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
+        digest_nonce_cache = new hash_table((HASHCMP *) strcmp, hash_string, 7921);
         assert(digest_nonce_cache);
         eventAdd("Digest nonce cache maintenance", authenticateDigestNonceCacheCleanup, NULL, static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->nonceGCInterval, 1);
     }
@@ -230,9 +230,9 @@ authenticateDigestNonceShutdown(void)
 
     if (digest_nonce_cache) {
         debugs(29, 2, "Shutting down nonce cache");
-        hash_first(digest_nonce_cache);
+        digest_nonce_cache->hash_first();
 
-        while ((nonce = ((digest_nonce_h *) hash_next(digest_nonce_cache)))) {
+        while ((nonce = ((digest_nonce_h *) digest_nonce_cache->hash_next()))) {
             assert(nonce->flags.incache);
             authDigestNoncePurge(nonce);
         }
@@ -260,9 +260,9 @@ authenticateDigestNonceCacheCleanup(void *)
     digest_nonce_h *nonce;
     debugs(29, 3, "Cleaning the nonce cache now");
     debugs(29, 3, "Current time: " << current_time.tv_sec);
-    hash_first(digest_nonce_cache);
+    digest_nonce_cache->hash_first();
 
-    while ((nonce = ((digest_nonce_h *) hash_next(digest_nonce_cache)))) {
+    while ((nonce = ((digest_nonce_h *) digest_nonce_cache->hash_next()))) {
         debugs(29, 3, "nonce entry  : " << nonce << " '" << (char *) nonce->key << "'");
         debugs(29, 4, "Creation time: " << nonce->noncedata.creationtime);
 
@@ -328,7 +328,7 @@ authenticateDigestNonceFindNonce(const char *noncehex)
 
     debugs(29, 9, "looking for noncehex '" << noncehex << "' in the nonce cache.");
 
-    nonce = static_cast < digest_nonce_h * >(hash_lookup(digest_nonce_cache, noncehex));
+    nonce = static_cast < digest_nonce_h * >(digest_nonce_cache->hash_lookup(noncehex));
 
     if ((nonce == NULL) || (strcmp(authenticateDigestNonceNonceHex(nonce), noncehex)))
         return NULL;
@@ -448,7 +448,7 @@ authDigestNoncePurge(digest_nonce_h * nonce)
     if (!nonce->flags.incache)
         return;
 
-    hash_remove_link(digest_nonce_cache, nonce);
+    digest_nonce_cache->hash_remove_link(nonce);
 
     nonce->flags.incache = false;
 

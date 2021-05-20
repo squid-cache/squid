@@ -73,7 +73,7 @@ do_open(diomsg * r, int, const char *buf)
     fs->id = r->id;
     fs->key = &fs->id;          /* gack */
     fs->fd = fd;
-    hash_join(hash, (hash_link *) fs);
+    hash->hash_join((hash_link *) fs);
     DEBUG(2) {
         fprintf(stderr, "%d OPEN  id %d, FD %d, fs %p\n",
                 (int) mypid,
@@ -89,7 +89,7 @@ do_close(diomsg * r, int)
 {
     int fd;
     file_state *fs;
-    fs = (file_state *) hash_lookup(hash, &r->id);
+    fs = (file_state *)hash->hash_lookup(&r->id);
 
     if (NULL == fs) {
         errno = EBADF;
@@ -102,7 +102,7 @@ do_close(diomsg * r, int)
     }
 
     fd = fs->fd;
-    hash_remove_link(hash, (hash_link *) fs);
+    hash->hash_remove_link((hash_link *) fs);
     DEBUG(2) {
         fprintf(stderr, "%d CLOSE id %d, FD %d, fs %p\n",
                 (int) mypid,
@@ -120,7 +120,7 @@ do_read(diomsg * r, int, char *buf)
     int x;
     int readlen = r->size;
     file_state *fs;
-    fs = (file_state *) hash_lookup(hash, &r->id);
+    fs = (file_state *)hash->hash_lookup(&r->id);
 
     if (NULL == fs) {
         errno = EBADF;
@@ -170,7 +170,7 @@ do_write(diomsg * r, int, const char *buf)
     int wrtlen = r->size;
     int x;
     file_state *fs;
-    fs = (file_state *) hash_lookup(hash, &r->id);
+    fs = (file_state *)hash->hash_lookup(&r->id);
 
     if (NULL == fs) {
         errno = EBADF;
@@ -347,7 +347,7 @@ main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    hash = hash_create(fsCmp, 1 << 4, fsHash);
+    hash = new hash_table(fsCmp, fsHash, 1 << 4);
     assert(hash);
     if (fcntl(0, F_SETFL, SQUID_NONBLOCK) < 0) {
         perror(xstrerr(errno));

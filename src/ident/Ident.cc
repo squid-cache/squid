@@ -90,7 +90,7 @@ Ident::IdentStateData::swanSong()
         conn->close();
     }
 
-    hash_remove_link(ident_hash, (hash_link *) this);
+    ident_hash->hash_remove_link((hash_link *) this);
     xfree(hash.key);
 }
 
@@ -250,7 +250,7 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
     if (!ident_hash) {
         Init();
     }
-    if ((state = (IdentStateData *)hash_lookup(ident_hash, key)) != NULL) {
+    if ((state = (IdentStateData *)ident_hash->hash_lookup(key))) {
         ClientAdd(state, callback, data);
         return;
     }
@@ -269,7 +269,7 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
     state->queryMsg.appendf("%d, %d\r\n", conn->remote.port(), conn->local.port());
 
     ClientAdd(state, callback, data);
-    hash_join(ident_hash, &state->hash);
+    ident_hash->hash_join(&state->hash);
 
     AsyncCall::Pointer call = commCbCall(30,3, "Ident::ConnectDone", CommConnectCbPtrFun(Ident::ConnectDone, state));
     AsyncJob::Start(new Comm::ConnOpener(state->conn, call, Ident::TheConfig.timeout));
@@ -283,9 +283,8 @@ Ident::Init(void)
         return;
     }
 
-    ident_hash = hash_create((HASHCMP *) strcmp,
-                             hashPrime(Squid_MaxFD / 8),
-                             hash4);
+    ident_hash = new hash_table((HASHCMP *)strcmp, hash4,
+                                hash_table::hashPrime(Squid_MaxFD / 8));
 }
 
 #endif /* USE_IDENT */

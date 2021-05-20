@@ -1145,7 +1145,7 @@ idnsCallback(idns_query *q, const char *error)
         return; // wait for more answers
 
     if (master->hash.key) {
-        hash_remove_link(idns_lookup_hash, &master->hash);
+        idns_lookup_hash->hash_remove_link(&master->hash);
         master->hash.key = nullptr;
     }
 
@@ -1612,7 +1612,7 @@ Dns::Init(void)
 
     if (!init) {
         memset(RcodeMatrix, '\0', sizeof(RcodeMatrix));
-        idns_lookup_hash = hash_create((HASHCMP *) strcmp, 103, hash_string);
+        idns_lookup_hash = new hash_table((HASHCMP *) strcmp, hash_string, 103);
         ++init;
     }
 
@@ -1671,7 +1671,7 @@ Dns::ConfigRr::startReconfigure()
 static int
 idnsCachedLookup(const char *key, IDNSCB * callback, void *data)
 {
-    idns_query *old = (idns_query *) hash_lookup(idns_lookup_hash, key);
+    idns_query *old = (idns_query *) idns_lookup_hash->hash_lookup(key);
 
     if (!old)
         return 0;
@@ -1706,7 +1706,7 @@ idnsStartQuery(idns_query *q, IDNSCB * callback, void *data)
     q->callback_data = cbdataReference(data);
 
     q->hash.key = q->orig;
-    hash_join(idns_lookup_hash, &q->hash);
+    idns_lookup_hash->hash_join(&q->hash);
 
     idnsSendQuery(q);
 }

@@ -77,7 +77,7 @@ static ClientInfo *
 clientdbAdd(const Ip::Address &addr)
 {
     ClientInfo *c = new ClientInfo(addr);
-    hash_join(client_table, static_cast<hash_link*>(c));
+    client_table->hash_join(static_cast<hash_link*>(c));
     ++statCounter.client_http.clients;
 
     if ((statCounter.client_http.clients > max_clients) && !cleanup_running && cleanup_scheduled < 2) {
@@ -94,7 +94,8 @@ clientdbInit(void)
     if (client_table)
         return;
 
-    client_table = hash_create((HASHCMP *) strcmp, CLIENT_DB_HASH_SIZE, hash_string);
+    client_table =
+        new hash_table((HASHCMP *)strcmp, hash_string, CLIENT_DB_HASH_SIZE);
 }
 
 class ClientDbRr: public RegisteredRunner
@@ -127,7 +128,7 @@ ClientInfo * clientdbGetInfo(const Ip::Address &addr)
 
     addr.toStr(key,MAX_IPSTRLEN);
 
-    c = (ClientInfo *) hash_lookup(client_table, key);
+    c = (ClientInfo *) client_table->hash_lookup(key);
     if (c==NULL) {
         debugs(77, DBG_IMPORTANT,"Client db does not contain information for given IP address "<<(const char*)key);
         return NULL;
@@ -146,7 +147,7 @@ clientdbUpdate(const Ip::Address &addr, const LogTags &ltype, AnyP::ProtocolType
 
     addr.toStr(key,MAX_IPSTRLEN);
 
-    c = (ClientInfo *) hash_lookup(client_table, key);
+    c = (ClientInfo *)client_table->hash_lookup(key);
 
     if (c == NULL)
         c = clientdbAdd(addr);
@@ -190,7 +191,7 @@ clientdbEstablished(const Ip::Address &addr, int delta)
 
     addr.toStr(key,MAX_IPSTRLEN);
 
-    c = (ClientInfo *) hash_lookup(client_table, key);
+    c = (ClientInfo *)client_table->hash_lookup(key);
 
     if (c == NULL) {
         c = clientdbAdd(addr);
@@ -220,7 +221,7 @@ clientdbCutoffDenied(const Ip::Address &addr)
 
     addr.toStr(key,MAX_IPSTRLEN);
 
-    c = (ClientInfo *) hash_lookup(client_table, key);
+    c = (ClientInfo *)client_table->hash_lookup(key);
 
     if (c == NULL)
         return 0;
@@ -273,11 +274,11 @@ clientdbDump(StoreEntry * sentry)
     int http_total = 0;
     int http_hits = 0;
     storeAppendPrintf(sentry, "Cache Clients:\n");
-    hash_first(client_table);
+    client_table->hash_first();
 
-    while (hash_link *hash = hash_next(client_table)) {
+    while (hash_link *hash = client_table->hash_next()) {
         const ClientInfo *c = static_cast<const ClientInfo *>(hash);
-        storeAppendPrintf(sentry, "Address: %s\n", hashKeyStr(hash));
+        storeAppendPrintf(sentry, "Address: %s\n", hash->hashKeyStr());
         if ( (name = fqdncache_gethostbyaddr(c->addr, 0)) ) {
             storeAppendPrintf(sentry, "Name:    %s\n", name);
         }
@@ -350,9 +351,9 @@ ClientInfo::~ClientInfo()
 void
 clientdbFreeMemory(void)
 {
-    hashFreeItems(client_table, clientdbFreeItem);
-    hashFreeMemory(client_table);
-    client_table = NULL;
+    client_table->hashFreeItems(clientdbFreeItem);
+    delete client_table;
+    client_table = nullptr;
 }
 
 static void
@@ -368,7 +369,7 @@ clientdbGC(void *)
     static int bucket = 0;
     hash_link *link_next;
 
-    link_next = hash_get_bucket(client_table, bucket++);
+    link_next = client_table->hash_get_bucket(bucket++);
 
     while (link_next != NULL) {
         ClientInfo *c = (ClientInfo *)link_next;
@@ -390,7 +391,7 @@ clientdbGC(void *)
         if (age < 60)
             continue;
 
-        hash_remove_link(client_table, static_cast<hash_link*>(c));
+        client_table->hash_remove_link(static_cast<hash_link*>(c));
 
         clientdbFreeItem(c);
 
@@ -430,19 +431,19 @@ Ip::Address *
 client_entry(Ip::Address *current)
 {
     char key[MAX_IPSTRLEN];
-    hash_first(client_table);
+    client_table->hash_first();
 
     if (current) {
         current->toStr(key,MAX_IPSTRLEN);
-        while (hash_link *hash = hash_next(client_table)) {
-            if (!strcmp(key, hashKeyStr(hash)))
+        while (hash_link *hash = client_table->hash_next()) {
+            if (!strcmp(key, hash->hashKeyStr()))
                 break;
         }
     }
 
-    ClientInfo *c = static_cast<ClientInfo *>(hash_next(client_table));
+    ClientInfo *c = static_cast<ClientInfo *>(client_table->hash_next());
 
-    hash_last(client_table);
+    client_table->hash_last();
 
     return c ? &c->addr : nullptr;
 }
@@ -468,7 +469,7 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 
     keyIp.toStr(key, sizeof(key));
     debugs(49, 5, HERE << "[" << key << "] requested!");
-    c = (ClientInfo *) hash_lookup(client_table, key);
+    c = (ClientInfo *)client_table->hash_lookup(key);
 
     if (c == NULL) {
         debugs(49, 5, HERE << "not found.");

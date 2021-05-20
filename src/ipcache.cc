@@ -287,7 +287,7 @@ IpCacheLookupForwarder::forwardLookup(const char *error)
 }
 
 /// \ingroup IPCacheInternal
-inline int ipcacheCount() { return ip_table ? ip_table->count : 0; }
+inline int ipcacheCount() { return ip_table ? ip_table->hash_count() : 0; }
 
 /**
  \ingroup IPCacheInternal
@@ -309,7 +309,7 @@ ipcacheRelease(ipcache_entry * i, bool dofree)
 
     debugs(14, 3, "ipcacheRelease: Releasing entry for '" << (const char *) i->hash.key << "'");
 
-    hash_remove_link(ip_table, (hash_link *) i);
+    ip_table->hash_remove_link((hash_link *)i);
     dlinkDelete(&i->lru, &lru_list);
     if (dofree)
         ipcacheFreeEntry(i);
@@ -320,7 +320,7 @@ static ipcache_entry *
 ipcache_get(const char *name)
 {
     if (ip_table != NULL)
-        return (ipcache_entry *) hash_lookup(ip_table, name);
+        return (ipcache_entry *) ip_table->hash_lookup(name);
     else
         return NULL;
 }
@@ -417,7 +417,7 @@ ipcache_entry::ipcache_entry(const char *aName):
 static void
 ipcacheAddEntry(ipcache_entry * i)
 {
-    hash_link *e = (hash_link *)hash_lookup(ip_table, i->hash.key);
+    hash_link *e = (hash_link *)ip_table->hash_lookup(i->hash.key);
 
     if (NULL != e) {
         /* avoid collision */
@@ -425,7 +425,7 @@ ipcacheAddEntry(ipcache_entry * i)
         ipcacheRelease(q);
     }
 
-    hash_join(ip_table, &i->hash);
+    ip_table->hash_join(&i->hash);
     dlinkAdd(i, &i->lru, &lru_list);
     i->lastref = squid_curtime;
 }
@@ -662,7 +662,7 @@ ipcache_nbgethostbyname_(const char *name, IpCacheLookupForwarder handler)
     i = new ipcache_entry(name);
     i->handler = std::move(handler);
     i->handler.lookupsStarting();
-    idnsALookup(hashKeyStr(&i->hash), ipcacheHandleReply, i);
+    idnsALookup(i->hash.hashKeyStr(), ipcacheHandleReply, i);
 }
 
 /// \ingroup IPCacheInternal
@@ -693,8 +693,8 @@ ipcache_init(void)
                             (float) Config.ipcache.high) / (float) 100);
     ipcache_low = (long) (((float) Config.ipcache.size *
                            (float) Config.ipcache.low) / (float) 100);
-    n = hashPrime(ipcache_high / 4);
-    ip_table = hash_create((HASHCMP *) strcmp, n, hash4);
+    n = hash_table::hashPrime(ipcache_high / 4);
+    ip_table = new hash_table((HASHCMP *) strcmp, hash4, n);
 
     ipcacheRegisterWithCacheManager();
 }
@@ -772,7 +772,7 @@ ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
     }
 
     storeAppendPrintf(sentry, " %-32.32s %c%c %6d %6d %2d(%2d)",
-                      hashKeyStr(&i->hash),
+                      i->hash.hashKeyStr(),
                       i->flags.fromhosts ? 'H' : ' ',
                       i->flags.negcached ? 'N' : ' ',
                       (int) (squid_curtime - i->lastref),
@@ -1085,9 +1085,9 @@ ipcache_entry::~ipcache_entry()
 void
 ipcacheFreeMemory(void)
 {
-    hashFreeItems(ip_table, ipcacheFreeEntry);
-    hashFreeMemory(ip_table);
-    ip_table = NULL;
+    ip_table->hashFreeItems(ipcacheFreeEntry);
+    delete ip_table;
+    ip_table = nullptr;
 }
 
 /**

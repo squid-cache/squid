@@ -9,61 +9,55 @@
 #ifndef SQUID_HASH_H
 #define SQUID_HASH_H
 
+/*
+ * for hash_table size, it is recommended to use
+ * hash_table::hashPrime(desired_size) for optimal performance
+ */
+#define DEFAULT_HASH_SIZE 7951 /* prime number < 8192 */
+
 typedef void HASHFREE(void *);
 typedef int HASHCMP(const void *, const void *);
 typedef unsigned int HASHHASH(const void *, unsigned int);
 
 class hash_link {
 public:
-    hash_link() : key(nullptr), next(nullptr) {}
-    void *key;
-    hash_link *next;
+    hash_link() {}
+    const char *hashKeyStr() const {
+        return static_cast<const char *>(key);
+    };
+    void *key = nullptr;
+    hash_link *next = nullptr;
 };
 
 class hash_table {
 public:
-    hash_link **buckets;
-    HASHCMP *cmp;
-    HASHHASH *hash;
+    hash_table(HASHCMP *cmp_func, HASHHASH *hash_func,
+               int hash_sz = DEFAULT_HASH_SIZE);
+    ~hash_table();
+    void hash_join(hash_link *);
+    void hash_remove_link(hash_link *);
+    static uint32_t hashPrime(uint32_t n);
+    hash_link *hash_lookup(const void *);
+    hash_link *hash_next();
+    void hash_last();
+    void hash_first();
+    hash_link *hash_get_bucket(unsigned int);
+    void hashFreeItems(HASHFREE *);
+    int hash_count() const { return count; }
+
+private:
+    int count = 0;
+    hash_link *next = nullptr;
     unsigned int size;
-    unsigned int current_slot;
-    hash_link *next;
-    int count;
+    hash_link **buckets = nullptr;
+    unsigned int current_slot = 0;
+    HASHHASH *hash;
+    HASHCMP *cmp;
+    void hash_next_bucket();
 };
 
-SQUIDCEXTERN hash_table *hash_create(HASHCMP *, int, HASHHASH *);
-SQUIDCEXTERN void hash_join(hash_table *, hash_link *);
-SQUIDCEXTERN void hash_remove_link(hash_table *, hash_link *);
-SQUIDCEXTERN int hashPrime(int n);
-SQUIDCEXTERN hash_link *hash_lookup(hash_table *, const void *);
-SQUIDCEXTERN void hash_first(hash_table *);
-SQUIDCEXTERN hash_link *hash_next(hash_table *);
-SQUIDCEXTERN void hash_last(hash_table *);
-SQUIDCEXTERN hash_link *hash_get_bucket(hash_table *, unsigned int);
-SQUIDCEXTERN void hashFreeMemory(hash_table *);
-SQUIDCEXTERN void hashFreeItems(hash_table *, HASHFREE *);
 SQUIDCEXTERN HASHHASH hash_string;
 SQUIDCEXTERN HASHHASH hash4;
-SQUIDCEXTERN const char *hashKeyStr(const hash_link *);
-
-/*
- *  Here are some good prime number choices.  It's important not to
- *  choose a prime number that is too close to exact powers of 2.
- *
- *  HASH_SIZE 103               // prime number < 128
- *  HASH_SIZE 229               // prime number < 256
- *  HASH_SIZE 467               // prime number < 512
- *  HASH_SIZE 977               // prime number < 1024
- *  HASH_SIZE 1979              // prime number < 2048
- *  HASH_SIZE 4019              // prime number < 4096
- *  HASH_SIZE 6037              // prime number < 6144
- *  HASH_SIZE 7951              // prime number < 8192
- *  HASH_SIZE 12149             // prime number < 12288
- *  HASH_SIZE 16231             // prime number < 16384
- *  HASH_SIZE 33493             // prime number < 32768
- *  HASH_SIZE 65357             // prime number < 65536
- */
-#define  DEFAULT_HASH_SIZE 7951 /* prime number < 8192 */
 
 #endif /* SQUID_HASH_H */
 

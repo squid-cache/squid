@@ -211,7 +211,7 @@ cacheCreate(const char *name)
     assert(name && strlen(name));
     c = (Cache *)xcalloc(1, sizeof(Cache));
     c->name = name;
-    c->hash = hash_create(storeKeyHashCmp, (int)2e6, storeKeyHashHash);
+    c->hash = new hash_table(storeKeyHashCmp, storeKeyHashHash, (int)2e6);
     return c;
 }
 
@@ -223,15 +223,15 @@ cacheDestroy(Cache * cache)
     assert(cache);
     hash = cache->hash;
     /* destroy hash table contents */
-    hash_first(hash);
+    hash->hash_first();
 
-    while ((e = (CacheEntry *)hash_next(hash))) {
-        hash_remove_link(hash, (hash_link *) e);
+    while ((e = (CacheEntry *)hash->hash_next())) {
+        hash->hash_remove_link((hash_link *)e);
         cacheEntryDestroy(e);
     }
 
     /* destroy the hash table itself */
-    hashFreeMemory(hash);
+    delete hash;
 
     delete cache->digest;
     xfree(cache);
@@ -259,9 +259,9 @@ cacheResetDigest(Cache * cache)
 
     gettimeofday(&t_start, NULL);
 
-    hash_first(hash);
+    hash->hash_first();
 
-    while ((e = (CacheEntry *)hash_next(hash))) {
+    while ((e = (CacheEntry *)hash->hash_next())) {
         cache->digest->add(e->key);
     }
 
@@ -275,9 +275,12 @@ cacheResetDigest(Cache * cache)
             (double) 1e6 * tvSubDsec(t_start, t_end) / cache->count);
     /* check how long it takes to traverse the hash */
     gettimeofday(&t_start, NULL);
-    hash_first(hash);
+    hash->hash_first();
 
-    for (e = (CacheEntry *)hash_next(hash); e; e = (CacheEntry *)hash_next(hash)) {}
+    for (e = (CacheEntry *)hash->hash_next();
+            e;
+            e = (CacheEntry *)hash->hash_next()) {
+    }
 
     gettimeofday(&t_end, NULL);
     fprintf(stderr, "%s: hash scan took: %f sec, %f sec/M\n",
@@ -289,7 +292,7 @@ cacheResetDigest(Cache * cache)
 static void
 cacheQueryPeer(Cache * cache, const cache_key * key)
 {
-    const int peer_has_it = hash_lookup(cache->peer->hash, key) != NULL;
+    const int peer_has_it = bool(cache->peer->hash->hash_lookup(key));
     const int we_think_we_have_it = cache->digest->test(key);
 
     ++ cache->qstats.query_count;
@@ -461,13 +464,13 @@ accessLogReader(FileIterator * fi)
 static void
 cachePurge(Cache * cache, storeSwapLogData * s, int update_digest)
 {
-    CacheEntry *olde = (CacheEntry *) hash_lookup(cache->hash, s->key);
+    CacheEntry *olde = (CacheEntry *) cache->hash->hash_lookup(s->key);
 
     if (!olde) {
         ++ cache->bad_del_count;
     } else {
         assert(cache->count);
-        hash_remove_link(cache->hash, (hash_link *) olde);
+        cache->hash->hash_remove_link((hash_link *)olde);
 
         if (update_digest)
             cache->digest->remove(s->key);
@@ -481,13 +484,13 @@ cachePurge(Cache * cache, storeSwapLogData * s, int update_digest)
 static void
 cacheStore(Cache * cache, storeSwapLogData * s, int update_digest)
 {
-    CacheEntry *olde = (CacheEntry *) hash_lookup(cache->hash, s->key);
+    CacheEntry *olde = reinterpret_cast<CacheEntry *>(cache->hash->hash_lookup(s->key));
 
     if (olde) {
         ++ cache->bad_add_count;
     } else {
         CacheEntry *e = cacheEntryCreate(s);
-        hash_join(cache->hash, (hash_link *)&e->key);
+        cache->hash.hash_join(static_cast<hash_link *>(&e->key));
         ++ cache->count;
 
         if (update_digest)

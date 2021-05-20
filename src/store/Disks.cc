@@ -281,8 +281,8 @@ Store::Disks::init()
            (Config.memShared ? " [shared]" : ""));
     debugs(20, DBG_IMPORTANT, "Max Swap size: " << (Store::Root().maxSize() >> 10) << " KB");
 
-    store_table = hash_create(storeKeyHashCmp,
-                              store_hash_buckets, storeKeyHashHash);
+    store_table =
+        new hash_table(storeKeyHashCmp, storeKeyHashHash, store_hash_buckets);
 
     // Increment _before_ any possible storeRebuildComplete() calls so that
     // storeRebuildComplete() can reliably detect when all disks are done. The

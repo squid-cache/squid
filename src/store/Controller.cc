@@ -49,8 +49,8 @@ Store::Controller::~Controller()
     delete swapDir;
 
     if (store_table) {
-        hashFreeItems(store_table, destroyStoreEntry);
-        hashFreeMemory(store_table);
+        store_table->hashFreeItems(destroyStoreEntry);
+        delete store_table;
         store_table = nullptr;
     }
 }
@@ -413,7 +413,7 @@ Store::Controller::findCallbackXXX(const cache_key *key)
     // member or use an HTCP/ICP-specific index rather than store_table.
 
     // cannot reuse peekAtLocal() because HTCP/ICP callbacks may use private keys
-    return static_cast<StoreEntry*>(hash_lookup(store_table, key));
+    return static_cast<StoreEntry *>(store_table->hash_lookup(key));
 }
 
 /// \returns either an existing local reusable StoreEntry object or nil
@@ -422,7 +422,7 @@ Store::Controller::findCallbackXXX(const cache_key *key)
 StoreEntry *
 Store::Controller::peekAtLocal(const cache_key *key)
 {
-    if (StoreEntry *e = static_cast<StoreEntry*>(hash_lookup(store_table, key))) {
+    if (StoreEntry *e = static_cast<StoreEntry*>(store_table->hash_lookup(key))) {
         // callers must only search for public entries
         assert(!EBIT_TEST(e->flags, KEY_PRIVATE));
         assert(e->publicKey());
