@@ -27,8 +27,6 @@ public:
     dlink_node *tail = nullptr;
 };
 
-extern dlink_list ClientActiveRequests;
-
 void dlinkAdd(void *data, dlink_node *, dlink_list *);
 void dlinkAddAfter(void *, dlink_node *, dlink_node *, dlink_list *);
 void dlinkAddTail(void *data, dlink_node *, dlink_list *);

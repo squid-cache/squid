@@ -9,8 +9,6 @@
 #include "squid.h"
 #include "dlink.h"
 
-dlink_list ClientActiveRequests;
-
 void
 dlinkAdd(void *data, dlink_node * m, dlink_list * list)
 {

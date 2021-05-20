@@ -21,6 +21,7 @@
 #include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
 #include "base/AsyncJobCalls.h"
+#include "ClientActiveRequests.h"
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "client_side_request.h"

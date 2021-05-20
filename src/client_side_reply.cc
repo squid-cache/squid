@@ -12,6 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
+#include "ClientActiveRequests.h"
 #include "client_side_reply.h"
 #include "errorpage.h"
 #include "ETag.h"

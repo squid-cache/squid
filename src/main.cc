@@ -22,6 +22,7 @@
 #include "base/TextException.h"
 #include "cache_cf.h"
 #include "CachePeer.h"
+#include "ClientActiveRequests.h"
 #include "carp.h"
 #include "client_db.h"
 #include "client_side.h"
@@ -1228,6 +1229,7 @@ mainInitialize(void)
 
     urlInitialize();
     statInit();
+    ClientActiveRequestsInit();
     storeInit();
     mainSetCwd();
     mimeInit(Config.mimeTablePathname);

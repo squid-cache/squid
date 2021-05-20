@@ -98,7 +98,6 @@ static OBJH statPeerSelect;
 static OBJH statDigestBlob;
 static OBJH statUtilization;
 static OBJH statCountersHistograms;
-static OBJH statClientRequests;
 void GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours);
 void DumpAvgStat(Mgr::IntervalActionData& stats, StoreEntry* sentry);
 void GetInfo(Mgr::InfoActionData& stats);
@@ -1214,9 +1213,6 @@ statRegisterWithCacheManager(void)
                         statUtilization, 0, 1);
     Mgr::RegisterAction("histograms", "Full Histogram Counts",
                         statCountersHistograms, 0, 1);
-    Mgr::RegisterAction("active_requests",
-                        "Client-side Active Requests",
-                        statClientRequests, 0, 1);
 #if USE_AUTH
     Mgr::RegisterAction("username_cache",
                         "Active Cached Usernames",
@@ -1286,10 +1282,6 @@ statInit(void)
     statCountersInit(&statCounter);
 
     eventAdd("statAvgTick", statAvgTick, NULL, (double) COUNT_INTERVAL, 1);
-
-    ClientActiveRequests.head = NULL;
-
-    ClientActiveRequests.tail = NULL;
 
     statRegisterWithCacheManager();
 }
@@ -1801,76 +1793,6 @@ statByteHitRatio(int minutes)
         return Math::doublePercent(c - s, c);
     else
         return (-1.0 * Math::doublePercent(s - c, c));
-}
-
-static void
-statClientRequests(StoreEntry * s)
-{
-    dlink_node *i;
-    ClientHttpRequest *http;
-    StoreEntry *e;
-    char buf[MAX_IPSTRLEN];
-
-    for (i = ClientActiveRequests.head; i; i = i->next) {
-        const char *p = NULL;
-        http = static_cast<ClientHttpRequest *>(i->data);
-        assert(http);
-        ConnStateData * conn = http->getConn();
-        storeAppendPrintf(s, "Connection: %p\n", conn);
-
-        if (conn != NULL) {
-            const int fd = conn->clientConnection->fd;
-            storeAppendPrintf(s, "\tFD %d, read %" PRId64 ", wrote %" PRId64 "\n", fd,
-                              fd_table[fd].bytes_read, fd_table[fd].bytes_written);
-            storeAppendPrintf(s, "\tFD desc: %s\n", fd_table[fd].desc);
-            storeAppendPrintf(s, "\tin: buf %p, used %ld, free %ld\n",
-                              conn->inBuf.rawContent(), (long int) conn->inBuf.length(), (long int) conn->inBuf.spaceSize());
-            storeAppendPrintf(s, "\tremote: %s\n",
-                              conn->clientConnection->remote.toUrl(buf,MAX_IPSTRLEN));
-            storeAppendPrintf(s, "\tlocal: %s\n",
-                              conn->clientConnection->local.toUrl(buf,MAX_IPSTRLEN));
-            storeAppendPrintf(s, "\tnrequests: %u\n", conn->pipeline.nrequests);
-        }
-
-        storeAppendPrintf(s, "uri %s\n", http->uri);
-        storeAppendPrintf(s, "logType %s\n", http->logType.c_str());
-        storeAppendPrintf(s, "out.offset %ld, out.size %lu\n",
-                          (long int) http->out.offset, (unsigned long int) http->out.size);
-        storeAppendPrintf(s, "req_sz %ld\n", (long int) http->req_sz);
-        e = http->storeEntry();
-        storeAppendPrintf(s, "entry %p/%s\n", e, e ? e->getMD5Text() : "N/A");
-        storeAppendPrintf(s, "start %ld.%06d (%f seconds ago)\n",
-                          (long int) http->al->cache.start_time.tv_sec,
-                          (int) http->al->cache.start_time.tv_usec,
-                          tvSubDsec(http->al->cache.start_time, current_time));
-#if USE_AUTH
-        if (http->request->auth_user_request != NULL)
-            p = http->request->auth_user_request->username();
-        else
-#endif
-            if (http->request->extacl_user.size() > 0) {
-                p = http->request->extacl_user.termedBuf();
-            }
-
-        if (!p && conn != NULL && conn->clientConnection->rfc931[0])
-            p = conn->clientConnection->rfc931;
-
-#if USE_OPENSSL
-        if (!p && conn != NULL && Comm::IsConnOpen(conn->clientConnection))
-            p = sslGetUserEmail(fd_table[conn->clientConnection->fd].ssl.get());
-#endif
-
-        if (!p)
-            p = dash_str;
-
-        storeAppendPrintf(s, "username %s\n", p);
-
-#if USE_DELAY_POOLS
-        storeAppendPrintf(s, "delay_pool %d\n", DelayId::DelayClient(http).pool());
-#endif
-
-        storeAppendPrintf(s, "\n");
-    }
 }
 
 #if STAT_GRAPHS
