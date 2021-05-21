@@ -136,6 +136,7 @@ protected:
     bool isRetriable;  ///< can retry on persistent connection failures
     bool isRepeatable; ///< can repeat if no or unsatisfactory response
     bool ignoreLastWrite;
+    bool waitingForDns; ///< expecting a ipcache_nbgethostbyname() callback
 
     const char *stopReason;
 
