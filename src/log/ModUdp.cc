@@ -215,3 +215,4 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
 
     return 1;
 }
+
