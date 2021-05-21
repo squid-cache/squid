@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,8 +12,8 @@
 #include "cache_cf.h"
 #include "Debug.h"
 #include "log/Config.h"
-#include "log/CustomLog.h"
 #include "log/File.h"
+#include "log/FormattedLog.h"
 #include "Parsing.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"

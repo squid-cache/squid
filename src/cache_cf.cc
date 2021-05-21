@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,6 +21,7 @@
 #include "auth/Config.h"
 #include "auth/Scheme.h"
 #include "AuthReg.h"
+#include "base/PackableStream.h"
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
 #include "CachePeer.h"
@@ -661,7 +662,7 @@ ParseDirective(T &raw, ConfigParser &parser)
 
     // TODO: parser.openDirective(directiveName);
     Must(!raw);
-    raw = ConfigComponent<T>::Parse(parser);
+    raw = Configuration::Component<T>::Parse(parser);
     Must(raw);
     parser.closeDirective();
 }
@@ -677,7 +678,7 @@ DumpDirective(const T &raw, StoreEntry *entry, const char *name)
 
     entry->append(name, strlen(name));
     SBufStream os;
-    ConfigComponent<T>::Print(os, raw);
+    Configuration::Component<T>::Print(os, raw);
     const auto buf = os.buf();
     if (buf.length()) {
         entry->append(" ", 1);
@@ -691,7 +692,7 @@ template <typename T>
 static void
 FreeDirective(T &raw)
 {
-    ConfigComponent<T>::Free(raw);
+    Configuration::Component<T>::Free(raw);
 
     // While the implementation may change, there is no way to avoid zeroing.
     // Even migration to a proper SquidConfig class would not help: While
@@ -4129,18 +4130,14 @@ check_null_access_log(CustomLog *customlog_definitions)
 static void
 dump_access_log(StoreEntry * entry, const char *name, CustomLog * logs)
 {
-    CustomLog *log;
-
-    for (log = logs; log; log = log->next) {
-        storeAppendPrintf(entry, "%s ", name);
-
-        SBufStream os;
-
-        os << log->filename; // including "none"
-
-        log->dumpOptions(os);
-        const auto buf = os.buf();
-        entry->append(buf.rawContent(), buf.length());
+    assert(entry);
+    for (auto log = logs; log; log = log->next) {
+        {
+            PackableStream os(*entry);
+            os << name; // directive name
+            os << ' ' << log->filename; // including "none"
+            log->dumpOptions(os);
+        }
 
         if (log->aclList)
             dump_acl_list(entry, log->aclList);

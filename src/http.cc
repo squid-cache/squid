@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1312,6 +1312,11 @@ HttpStateData::processReply()
         debugs(11, 5, HERE << "done with 1xx handling");
         flags.handling1xx = false;
         Must(!flags.headers_parsed);
+    }
+
+    if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
+        abortTransaction("store entry aborted while we were waiting for processReply()");
+        return;
     }
 
     if (!flags.headers_parsed) { // have not parsed headers yet?

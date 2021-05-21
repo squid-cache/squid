@@ -90,14 +90,14 @@ Security::CloseLogs()
 
 template <>
 Security::KeyLog *
-ConfigComponent<Security::KeyLog*>::Parse(ConfigParser &parser)
+Configuration::Component<Security::KeyLog*>::Parse(ConfigParser &parser)
 {
     return new Security::KeyLog(parser);
 }
 
 template <>
 void
-ConfigComponent<Security::KeyLog*>::Print(std::ostream &os, Security::KeyLog* const & keyLog)
+Configuration::Component<Security::KeyLog*>::Print(std::ostream &os, Security::KeyLog* const & keyLog)
 {
     assert(keyLog);
     keyLog->dump(os);
@@ -105,7 +105,7 @@ ConfigComponent<Security::KeyLog*>::Print(std::ostream &os, Security::KeyLog* co
 
 template <>
 void
-ConfigComponent<Security::KeyLog*>::Free(Security::KeyLog * const keyLog)
+Configuration::Component<Security::KeyLog*>::Free(Security::KeyLog * const keyLog)
 {
     delete keyLog;
 }
