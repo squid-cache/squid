@@ -23,7 +23,7 @@ class SquidConfig;
  * It has a runtime extension facility to allow it to
  * efficiently support new methods
  */
-class HttpRequestMethod : public RefCountable
+class HttpRequestMethod
 {
 public:
     HttpRequestMethod() : theMethod(Http::METHOD_NONE), theImage() {}
@@ -31,12 +31,6 @@ public:
     explicit HttpRequestMethod(const SBuf &);
 
     void HttpRequestMethodXXX(char const *); // deprecated old c-string to SBuf converter.
-
-    HttpRequestMethod & operator = (const HttpRequestMethod& aMethod) {
-        theMethod = aMethod.theMethod;
-        theImage = aMethod.theImage;
-        return *this;
-    }
 
     HttpRequestMethod & operator = (Http::MethodType const aMethod) {
         theMethod = aMethod;
