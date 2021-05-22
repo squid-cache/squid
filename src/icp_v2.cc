@@ -34,6 +34,7 @@
 #include "neighbors.h"
 #include "refresh.h"
 #include "rfc1738.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
@@ -623,8 +624,6 @@ icpHandleUdp(int sock, void *)
 
     Ip::Address from;
     LOCAL_ARRAY(char, buf, SQUID_UDP_SO_RCVBUF);
-    int len;
-    int icp_version;
     int max = INCOMING_UDP_MAX;
     Comm::SetSelect(sock, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
 
@@ -633,11 +632,13 @@ icpHandleUdp(int sock, void *)
 
         try {
 
-        len = comm_udp_recvfrom(sock,
+        auto len = comm_udp_recvfrom(sock,
                                 buf,
                                 SQUID_UDP_SO_RCVBUF - 1,
                                 0,
                                 from);
+
+        debugs(12, 4, "FD " << sock << ": received " << len << " bytes from " << from);
 
         if (len == 0)
             break;
@@ -654,52 +655,54 @@ icpHandleUdp(int sock, void *)
             /* or maybe an EHOSTUNREACH "No route to host" message */
             if (xerrno != ECONNREFUSED && xerrno != EHOSTUNREACH)
 #endif
-                debugs(50, DBG_IMPORTANT, "icpHandleUdp: FD " << sock << " recvfrom: " << xstrerr(xerrno));
-
+                throw TextException(xstrerr(xerrno), Here());
             break;
         }
 
         ++(*N);
         icpCount(buf, RECV, (size_t) len, 0);
         buf[len] = '\0';
-        debugs(12, 4, "icpHandleUdp: FD " << sock << ": received " <<
-               (unsigned long int)len << " bytes from " << from);
 
-        if ((size_t) len < sizeof(icp_common_t)) {
-            debugs(12, 4, "icpHandleUdp: Ignoring too-small UDP packet");
-            break;
-        }
-
+        // XXX: possible unaligned integer access
         auto pkt = reinterpret_cast<icp_common_t *>(buf);
+        auto payloadLength = ntohs(pkt->length);
+
+        if (static_cast<size_t>(len) < sizeof(icp_common_t))
+            throw TextException("too-small UDP packet (ignoring)", Here());
+
+        if (payloadLength < len-sizeof(icp_common_t))
+            throw TextException("length value larger than data received (ignoring)", Here());
+
+        // TODO use BinaryTokenizer parse to validate fully
+        if (pkt->opcode < 0 || pkt->opcode >= ICP_END)
+            throw TextException(ToSBuf("unknown opcode ", pkt->opcode), Here());
+
         struct in_addr a;
         a.s_addr = pkt->shostid;
         debugs(12, 2, "ICP Client remote=" << from << " FD " << sock);
         debugs(12, 2, "ICP Client REQUEST:\n---------\n" <<
                "opcode=(" << std::setw(3) << pkt->opcode << ")" << icp_opcode_str[pkt->opcode] <<
                ", version=" << pkt->version <<
-               ", length=" << ntohs(pkt->length) <<
+               ", length=" << payloadLength <<
                ", reqnum=" << ntohl(pkt->reqnum) <<
                ", flags=" << std::hex << ntohl(pkt->flags) << std::dec <<
                ", shostid=" << Ip::Address(a) <<
                Debug::Extra <<
-               Raw(nullptr, (buf+sizeof(icp_common_t)), ntohs(pkt->length)).minLevel(9) <<
+               Raw(nullptr, (buf+sizeof(icp_common_t)), payloadLength).minLevel(DBG_DATA).hex() <<
                "\n----------");
-
-        icp_version = (int) buf[1]; /* cheat! */
 
         if (icpOutgoingConn->local == from)
             // ignore ICP packets which loop back (multicast usually)
-            debugs(12, 4, "icpHandleUdp: Ignoring UDP packet sent by myself");
-        else if (icp_version == ICP_VERSION_2)
+            throw TextException("UDP packet sent by myself", Here());
+        else if (pkt->version == ICP_VERSION_2)
             icpHandleIcpV2(sock, from, buf, len);
-        else if (icp_version == ICP_VERSION_3)
+        else if (pkt->version == ICP_VERSION_3)
             icpHandleIcpV3(sock, from, buf, len);
         else
-            debugs(12, DBG_IMPORTANT, "WARNING: Unused ICP version " << icp_version <<
-                   " received from " << from);
+            throw TextException(ToSBuf("unknown version ", pkt->version), Here());
 
         } catch (...) {
-            debugs(12, 2, "ERROR: ICP remote=" << from << " FD " << sock << ": " << CurrentException);
+            debugs(12, 2, "WARNING: ICP remote=" << from << " FD " << sock << ": " << CurrentException);
             // ICP problems should have no effect on other transactions
         }
     }
