@@ -964,7 +964,7 @@ HttpStateData::haveParsedReplyHeaders()
 {
     Client::haveParsedReplyHeaders();
 
-    auto ctx = DebugContext(entry->mem_obj->urlXXX());
+    const DebugContext ctx(entry->mem_obj->urlXXX());
     HttpReply *rep = finalReply();
     const Http::StatusCode statusCode = rep->sline.status();
 

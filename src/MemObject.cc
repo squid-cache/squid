@@ -107,7 +107,7 @@ MemObject::MemObject()
 MemObject::~MemObject()
 {
     debugs(20, 3, "MemObject destructed, this=" << this);
-    const auto ctx = DebugContext(hasUris() ? urlXXX() : "[unknown_ctx]");
+    const DebugContext ctx(hasUris() ? urlXXX() : "[unknown_ctx]");
 
 #if URL_CHECKSUM_DEBUG
     checkUrlChecksum();
