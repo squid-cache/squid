@@ -32,7 +32,7 @@ class ResponseParser : public Http1::ResponseParser
 private:
     int parseResponseFirstLine() override;
 
-    /// magic prefix for identifying ICAP/1.0 response messages
+    /// all ICAP/1.0 responses start with this prefix
     static const SBuf Icap1magic;
 };
 

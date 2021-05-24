@@ -98,9 +98,6 @@ public:
     HttpReplyPointer icapReply;
     bool isRetriable = false;
     bool isRepeatable = false;
-
-private:
-    XactAbortInfo &operator =(const XactAbortInfo &); // undefined
 };
 
 inline
@@ -114,4 +111,3 @@ operator <<(std::ostream &os, const XactAbortInfo &xai)
 } // namespace Adaptation
 
 #endif /* SQUID_ICAPLAUNCHER_H */
-
