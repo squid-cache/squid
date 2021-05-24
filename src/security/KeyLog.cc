@@ -88,6 +88,12 @@ Security::CloseLogs()
         Config.Log.tlsKeys->close();
 }
 
+// GCC v6 requires "reopening" of the namespace here, instead of the usual
+// definitions like Configuration::Component<T>::Parse():
+// error: specialization of Configuration::Component... in different namespace
+// TODO: Refactor to use the usual style after we stop GCC v6 support.
+namespace Configuration {
+
 template <>
 Security::KeyLog *
 Configuration::Component<Security::KeyLog*>::Parse(ConfigParser &parser)
@@ -109,4 +115,6 @@ Configuration::Component<Security::KeyLog*>::Free(Security::KeyLog * const keyLo
 {
     delete keyLog;
 }
+
+} // namespace Configuration
 
