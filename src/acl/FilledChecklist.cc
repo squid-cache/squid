@@ -146,12 +146,20 @@ ACLFilledChecklist::conn() const
 }
 
 void
-ACLFilledChecklist::conn(ConnStateData *aConn)
+ACLFilledChecklist::setConn(ConnStateData *aConn)
 {
-    if (conn() == aConn)
-        return;
-    assert (conn() == NULL);
+    if (conn_ == aConn)
+        return; // no new information
+
+    // no conn_ replacement/removal to reduce inconsistent fill concerns
+    assert(!conn_);
+    assert(aConn);
+
+    // To reduce inconsistent fill concerns, we should be the only ones calling
+    // fillConnectionLevelDetails(). Set conn_ first so that the filling method
+    // can detect (some) direct calls from others.
     conn_ = cbdataReference(aConn);
+    aConn->fillConnectionLevelDetails(*this);
 }
 
 int
@@ -252,8 +260,8 @@ void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
             src_addr = request->client_addr;
         my_addr = request->my_addr;
 
-        if (request->clientConnectionManager.valid())
-            conn(request->clientConnectionManager.get());
+        if (const auto cmgr = request->clientConnectionManager.get())
+            setConn(cmgr);
     }
 }
 

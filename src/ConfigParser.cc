@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "acl/Gadgets.h"
 #include "base/Here.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
@@ -576,6 +577,44 @@ ConfigParser::closeDirective()
     if (const auto garbage = PeekAtToken())
         throw TextException(ToSBuf("trailing garbage at the end of a configuration directive: ", garbage), Here());
     // TODO: cfg_directive = nullptr; // currently in generated code
+}
+
+SBuf
+ConfigParser::token(const char *expectedTokenDescription)
+{
+    if (const auto extractedToken = NextToken()) {
+        debugs(3, 5, CurrentLocation() << ' ' << expectedTokenDescription << ": " << extractedToken);
+        return SBuf(extractedToken);
+    }
+    throw TextException(ToSBuf("missing ", expectedTokenDescription), Here());
+}
+
+bool
+ConfigParser::skipOptional(const char *keyword)
+{
+    assert(keyword);
+    if (const auto nextToken = PeekAtToken()) {
+        if (strcmp(nextToken, keyword) == 0) {
+            (void)NextToken();
+            return true;
+        }
+        return false; // the next token on the line is not the optional keyword
+    }
+    return false; // no more tokens (i.e. we are at the end of the line)
+}
+
+Acl::Tree *
+ConfigParser::optionalAclList()
+{
+    if (!skipOptional("if"))
+        return nullptr; // OK: the directive has no ACLs
+
+    Acl::Tree *acls = nullptr;
+    const auto aclCount = aclParseAclList(*this, &acls, cfg_directive);
+    assert(acls);
+    if (aclCount <= 0)
+        throw TextException("missing ACL name(s) after 'if' keyword", Here());
+    return acls;
 }
 
 bool
