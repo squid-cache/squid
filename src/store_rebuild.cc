@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,9 +28,10 @@
 
 static StoreRebuildData counts;
 
-static struct timeval rebuild_start;
 static void storeCleanup(void *);
 
+// TODO: Either convert to Progress or replace with StoreRebuildData.
+// TODO: Handle unknown totals (UFS cache_dir that lost swap.state) correctly.
 typedef struct {
     /* total number of "swap.state" entries that will be read */
     int total;
@@ -40,11 +41,10 @@ typedef struct {
 
 static store_rebuild_progress *RebuildProgress = NULL;
 
-static int
-storeCleanupDoubleCheck(StoreEntry * e)
+void
+StoreRebuildData::updateStartTime(const timeval &dirStartTime)
 {
-    SwapDir *SD = dynamic_cast<SwapDir *>(INDEXSD(e->swap_dirn));
-    return (SD->doubleCheck(*e));
+    startTime = started() ? std::min(startTime, dirStartTime) : dirStartTime;
 }
 
 static void
@@ -79,7 +79,7 @@ storeCleanup(void *)
             continue;
 
         if (opt_store_doublecheck)
-            if (storeCleanupDoubleCheck(e))
+            if (e->disk().doubleCheck(*e))
                 ++store_errors;
 
         EBIT_SET(e->flags, ENTRY_VALIDATED);
@@ -122,17 +122,25 @@ void
 
 storeRebuildComplete(StoreRebuildData *dc)
 {
-    double dt;
-    counts.objcount += dc->objcount;
-    counts.expcount += dc->expcount;
-    counts.scancount += dc->scancount;
-    counts.clashcount += dc->clashcount;
-    counts.dupcount += dc->dupcount;
-    counts.cancelcount += dc->cancelcount;
-    counts.invalid += dc->invalid;
-    counts.badflags += dc->badflags;
-    counts.bad_log_op += dc->bad_log_op;
-    counts.zero_object_sz += dc->zero_object_sz;
+    if (dc) {
+        counts.objcount += dc->objcount;
+        counts.expcount += dc->expcount;
+        counts.scancount += dc->scancount;
+        counts.clashcount += dc->clashcount;
+        counts.dupcount += dc->dupcount;
+        counts.cancelcount += dc->cancelcount;
+        counts.invalid += dc->invalid;
+        counts.badflags += dc->badflags;
+        counts.bad_log_op += dc->bad_log_op;
+        counts.zero_object_sz += dc->zero_object_sz;
+        counts.validations += dc->validations;
+        counts.updateStartTime(dc->startTime);
+    }
+    // else the caller was not responsible for indexing its cache_dir
+
+    assert(StoreController::store_dirs_rebuilding > 1);
+    --StoreController::store_dirs_rebuilding;
+
     /*
      * When store_dirs_rebuilding == 1, it means we are done reading
      * or scanning all cache_dirs.  Now report the stats and start
@@ -142,7 +150,7 @@ storeRebuildComplete(StoreRebuildData *dc)
     if (StoreController::store_dirs_rebuilding > 1)
         return;
 
-    dt = tvSubDsec(rebuild_start, current_time);
+    const auto dt = tvSubDsec(counts.startTime, current_time);
 
     debugs(20, DBG_IMPORTANT, "Finished rebuilding storage from disk.");
     debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.scancount  << " Entries scanned");
@@ -173,7 +181,6 @@ void
 storeRebuildStart(void)
 {
     counts = StoreRebuildData(); // reset counters
-    rebuild_start = current_time;
     /*
      * Note: store_dirs_rebuilding is initialized to 1.
      *
@@ -197,6 +204,7 @@ void
 storeRebuildProgress(int sd_index, int total, int sofar)
 {
     static time_t last_report = 0;
+    // TODO: Switch to int64_t and fix handling of unknown totals.
     double n = 0.0;
     double d = 0.0;
 
@@ -221,8 +229,24 @@ storeRebuildProgress(int sd_index, int total, int sofar)
         d += (double) RebuildProgress[sd_index].total;
     }
 
-    debugs(20, DBG_IMPORTANT, "Store rebuilding is "<< std::setw(4)<< std::setprecision(2) << 100.0 * n / d << "% complete");
+    debugs(20, DBG_IMPORTANT, "Indexing cache entries: " << Progress(n, d));
     last_report = squid_curtime;
+}
+
+void
+Progress::print(std::ostream &os) const
+{
+    if (goal > 0) {
+        const auto savedPrecision = os.precision(2);
+        const auto percent = 100.0 * completed / goal;
+        os << percent << "% (" << completed << " out of " << goal << ")";
+        (void)os.precision(savedPrecision);
+    } else if (!completed && !goal) {
+        os << "nothing to do";
+    } else {
+        // unknown (i.e. negative) or buggy (i.e. zero when completed != 0) goal
+        os << completed;
+    }
 }
 
 #include "fde.h"

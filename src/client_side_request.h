@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -65,12 +65,6 @@ public:
     ConnStateData * getConn() const {
         return (cbdataReferenceValid(conn_) ? conn_ : nullptr);
     }
-    void setConn(ConnStateData *aConn) {
-        if (conn_ != aConn) {
-            cbdataReferenceDone(conn_);
-            conn_ = cbdataReference(aConn);
-        }
-    }
 
     /// Initializes the current request with the virgin request.
     /// Call this method when the virgin request becomes known.
@@ -132,12 +126,11 @@ public:
     AccessLogEntry::Pointer al; ///< access.log entry
 
     struct Flags {
-        Flags() : accel(false), internal(false), done_copying(false), purging(false) {}
+        Flags() : accel(false), internal(false), done_copying(false) {}
 
         bool accel;
         bool internal;
         bool done_copying;
-        bool purging;
     } flags;
 
     struct Redirect {
@@ -149,7 +142,7 @@ public:
 
     dlink_node active;
     dlink_list client_stream;
-    int mRangeCLen();
+    int64_t mRangeCLen() const;
 
     ClientRequestContext *calloutContext;
     void doCallouts();
@@ -166,8 +159,16 @@ public:
     /// neither the current request nor the parsed request URI are known
     void setErrorUri(const char *errorUri);
 
+    /// Prepares to satisfy a Range request with a generated HTTP 206 response.
+    /// Initializes range_iter state to allow raw range_iter access.
+    /// \returns Content-Length value for the future response; never negative
+    int64_t prepPartialResponseGeneration();
+
     /// Build an error reply. For use with the callouts.
-    void calloutsError(const err_type error, const int errDetail);
+    void calloutsError(const err_type error, const ErrorDetail::Pointer &errDetail);
+
+    /// if necessary, stores new error information (if any)
+    void updateError(const Error &error);
 
 #if USE_ADAPTATION
     // AsyncJob virtual methods
@@ -216,7 +217,7 @@ public:
 private:
     /// Handles an adaptation client request failure.
     /// Bypasses the error if possible, or build an error reply.
-    void handleAdaptationFailure(int errDetail, bool bypassable = false);
+    void handleAdaptationFailure(const ErrorDetail::Pointer &errDetail, bool bypassable = false);
 
     // Adaptation::Initiator API
     virtual void noteAdaptationAnswer(const Adaptation::Answer &answer);

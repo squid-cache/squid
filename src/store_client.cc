@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -63,7 +63,7 @@ StoreClient::onCollapsingPath() const
 }
 
 bool
-StoreClient::startCollapsingOn(const StoreEntry &e, const bool doingRevalidation)
+StoreClient::startCollapsingOn(const StoreEntry &e, const bool doingRevalidation) const
 {
     if (!e.hittingRequiresCollapsing())
         return false; // collapsing is impossible due to the entry state

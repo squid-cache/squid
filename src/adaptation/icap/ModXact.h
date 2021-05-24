@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -174,7 +174,7 @@ public:
     virtual void callException(const std::exception &e);
 
     /// record error detail in the virgin request if possible
-    virtual void detailError(int errDetail);
+    virtual void detailError(const ErrorDetail::Pointer &errDetail);
     // Icap::Xaction API
     virtual void clearError();
     /// The master transaction log entry

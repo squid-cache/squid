@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -43,8 +43,8 @@ void LogConfig::parseFormats() STUB
 LogConfig TheConfig;
 }
 
-#include "log/CustomLog.h"
-bool CustomLog::usesDaemon() const STUB_RETVAL(false)
+#include "log/FormattedLog.h"
+bool FormattedLog::usesDaemon() const STUB_RETVAL(false)
 
 #include "log/File.h"
 CBDATA_CLASS_INIT(Logfile);

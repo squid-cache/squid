@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -130,7 +130,7 @@ Ipc::Mem::Segment::create(const off_t aSize)
 }
 
 void
-Ipc::Mem::Segment::open()
+Ipc::Mem::Segment::open(const bool unlinkWhenDone)
 {
     assert(theFD < 0);
 
@@ -143,6 +143,7 @@ Ipc::Mem::Segment::open()
     }
 
     theSize = statSize("Ipc::Mem::Segment::open");
+    doUnlink = unlinkWhenDone;
 
     debugs(54, 3, HERE << "opened " << theName << " segment: " << theSize);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,9 +24,20 @@ typedef RefCount<Http::Stream> StreamPointer;
 
 } // namespace Http
 
-// TODO move these classes into Http namespace
+// TODO move these into Http namespace
+
+typedef enum {
+    SC_NO_STORE,
+    SC_NO_STORE_REMOTE,
+    SC_MAX_AGE,
+    SC_CONTENT,
+    SC_OTHER,
+    SC_ENUM_END /* also used to mean "invalid" */
+} http_hdr_sc_type;
+
+class HttpHdrSc;
+
 class HttpRequestMethod;
-typedef RefCount<HttpRequestMethod> HttpRequestMethodPointer;
 
 class HttpRequest;
 typedef RefCount<HttpRequest> HttpRequestPointer;

@@ -1,13 +1,15 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_ERR_TYPE_H
-#define _SQUID_ERR_TYPE_H
+#ifndef _SQUID_SRC_ERROR_FORWARD_H
+#define _SQUID_SRC_ERROR_FORWARD_H
+
+#include "base/forward.h"
 
 typedef enum {
     ERR_NONE,
@@ -74,6 +76,7 @@ typedef enum {
     //       a log warning if the files are missing
     TCP_RESET,                  // Send TCP RST packet instead of error page
 
+    ERR_CLIENT_GONE, // No client to send the error page to
     ERR_SECURE_ACCEPT_FAIL, // Rejects the SSL connection instead of error page
     ERR_REQUEST_START_TIMEOUT, // Aborts the connection instead of error page
     ERR_REQUEST_PARSE_TIMEOUT, // Aborts the connection instead of error page
@@ -85,26 +88,10 @@ typedef enum {
     ERR_MAX
 } err_type;
 
-extern const char *err_type_str[];
+class Error;
+class ErrorDetail;
 
-inline
-err_type
-errorTypeByName(const char *name)
-{
-    for (int i = 0; i < ERR_MAX; ++i)
-        if (strcmp(name, err_type_str[i]) == 0)
-            return (err_type)i;
-    return ERR_MAX;
-}
+typedef RefCount<ErrorDetail> ErrorDetailPointer;
 
-inline
-const char *
-errorTypeName(err_type err)
-{
-    if (err < ERR_NONE || err >= ERR_MAX)
-        return "UNKNOWN";
-    return err_type_str[err];
-}
-
-#endif /* _SQUID_ERR_TYPE_H */
+#endif /* _SQUID_SRC_ERROR_FORWARD_H */
 

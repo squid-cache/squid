@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,7 +24,8 @@
 #include "base64.h"
 #include "comm.h"
 #include "comm/Connection.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
+#include "error/ExceptionErrorDetail.h"
 #include "http/ContentLengthInterpreter.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
@@ -670,9 +671,9 @@ void Adaptation::Icap::ModXact::callException(const std::exception &e)
     if (!canStartBypass || isRetriable) {
         if (!isRetriable) {
             if (const TextException *te = dynamic_cast<const TextException *>(&e))
-                detailError(ERR_DETAIL_EXCEPTION_START + te->id());
+                detailError(new ExceptionErrorDetail(te->id()));
             else
-                detailError(ERR_DETAIL_EXCEPTION_OTHER);
+                detailError(new ExceptionErrorDetail(Here().id()));
         }
         Adaptation::Icap::Xaction::callException(e);
         return;
@@ -683,10 +684,10 @@ void Adaptation::Icap::ModXact::callException(const std::exception &e)
                e.what() << ' ' << status());
         bypassFailure();
     } catch (const TextException &bypassTe) {
-        detailError(ERR_DETAIL_EXCEPTION_START + bypassTe.id());
+        detailError(new ExceptionErrorDetail(bypassTe.id()));
         Adaptation::Icap::Xaction::callException(bypassTe);
     } catch (const std::exception &bypassE) {
-        detailError(ERR_DETAIL_EXCEPTION_OTHER);
+        detailError(new ExceptionErrorDetail(Here().id()));
         Adaptation::Icap::Xaction::callException(bypassE);
     }
 }
@@ -1281,7 +1282,8 @@ void Adaptation::Icap::ModXact::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
 // adapted body consumer aborted
 void Adaptation::Icap::ModXact::noteBodyConsumerAborted(BodyPipe::Pointer)
 {
-    detailError(ERR_DETAIL_ICAP_XACT_BODY_CONSUMER_ABORT);
+    static const auto d = MakeNamedErrorDetail("ICAP_XACT_BODY_CONSUMER_ABORT");
+    detailError(d);
     mustStop("adapted body consumer aborted");
 }
 
@@ -1299,8 +1301,10 @@ void Adaptation::Icap::ModXact::swanSong()
     stopWriting(false);
     stopSending(false);
 
-    if (theInitiator.set()) // we have not sent the answer to the initiator
-        detailError(ERR_DETAIL_ICAP_XACT_OTHER);
+    if (theInitiator.set()) { // we have not sent the answer to the initiator
+        static const auto d = MakeNamedErrorDetail("ICAP_XACT_OTHER");
+        detailError(d);
+    }
 
     // update adaptation history if start was called and we reserved a slot
     Adaptation::History::Pointer ah = virginRequest().adaptLogHistory();
@@ -1989,7 +1993,7 @@ bool Adaptation::Icap::ModXact::fillVirginHttpHeader(MemBuf &mb) const
     return true;
 }
 
-void Adaptation::Icap::ModXact::detailError(int errDetail)
+void Adaptation::Icap::ModXact::detailError(const ErrorDetail::Pointer &errDetail)
 {
     HttpRequest *request = dynamic_cast<HttpRequest*>(adapted.header);
     // if no adapted request, update virgin (and inherit its properties later)

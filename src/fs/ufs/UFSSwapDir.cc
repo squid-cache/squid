@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -826,7 +826,6 @@ Fs::Ufs::UFSSwapDir::addDiskRestore(const cache_key * key,
 void
 Fs::Ufs::UFSSwapDir::rebuild()
 {
-    ++StoreController::store_dirs_rebuilding;
     eventAdd("storeRebuild", Fs::Ufs::RebuildState::RebuildStep, new Fs::Ufs::RebuildState(this), 0.0, 1);
 }
 

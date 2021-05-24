@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,7 +15,7 @@
 #include "adaptation/Config.h"
 #endif
 #include "CachePeer.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
 #include "errorpage.h"
 #include "format/Token.h"
 #include "globals.h"
@@ -185,10 +185,7 @@ accessLogRotate(void)
 #endif
 
     for (log = Config.Log.accesslogs; log; log = log->next) {
-        if (log->logfile) {
-            int16_t rc = (log->rotateCount >= 0 ? log->rotateCount : Config.Log.rotateNumber);
-            logfileRotate(log->logfile, rc);
-        }
+        log->rotate();
     }
 
 #if HEADERS_LOG

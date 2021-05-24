@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -68,6 +68,16 @@ StoreFileSystem::FreeAllFs()
         GetFileSystems().pop_back();
         fs->done();
     }
+}
+
+StoreFileSystem *
+StoreFileSystem::FindByType(const char *type)
+{
+    for (const auto fs: FileSystems()) {
+        if (strcasecmp(type, fs->type()) == 0)
+            return fs;
+    }
+    return nullptr;
 }
 
 /* no filesystem is required to export statistics */

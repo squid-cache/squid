@@ -1,5 +1,5 @@
 /*
-+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
++ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
 + *
 + * Squid software is distributed under GPLv2+ license and includes
 + * contributions from numerous individuals and organizations.
@@ -36,7 +36,7 @@ public:
 
     template <class OtherValue>
     struct rebind {
-      typedef PoolingAllocator<OtherValue> other;
+        typedef PoolingAllocator<OtherValue> other;
     };
 
     template<class U, class ... Args> void construct(U *p, Args && ... args) { new((void *)p) U(std::forward<Args>(args)...); }

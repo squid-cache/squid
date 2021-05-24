@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -39,7 +39,7 @@ protected:
 
 private:
     void registerSelf(); /// let Coordinator know this strand exists
-    void handleRegistrationResponse(const HereIamMessage &msg);
+    void handleRegistrationResponse(const StrandMessage &);
     void handleCacheMgrRequest(const Mgr::Request& request);
     void handleCacheMgrResponse(const Mgr::Response& response);
 #if SQUID_SNMP

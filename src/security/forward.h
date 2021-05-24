@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 #define SQUID_SRC_SECURITY_FORWARD_H
 
 #include "base/CbDataList.h"
+#include "base/forward.h"
 #include "security/Context.h"
 #include "security/Session.h"
 
@@ -17,6 +18,7 @@
 #include <gnutls/abstract.h>
 #endif
 #include <list>
+#include <limits>
 #if USE_OPENSSL
 #include "compat/openssl.h"
 #if HAVE_OPENSSL_BN_H
@@ -60,12 +62,20 @@ class CertError;
 typedef CbDataList<Security::CertError> CertErrors;
 
 #if USE_OPENSSL
+typedef X509 Certificate;
+#elif USE_GNUTLS
+typedef struct gnutls_x509_crt_int Certificate;
+#else
+typedef class {} Certificate;
+#endif
+
+#if USE_OPENSSL
 CtoCpp1(X509_free, X509 *);
 typedef Security::LockingPointer<X509, X509_free_cpp, HardFun<int, X509 *, X509_up_ref> > CertPointer;
 #elif USE_GNUTLS
 typedef std::shared_ptr<struct gnutls_x509_crt_int> CertPointer;
 #else
-typedef std::shared_ptr<void> CertPointer;
+typedef std::shared_ptr<Certificate> CertPointer;
 #endif
 
 #if USE_OPENSSL
@@ -91,10 +101,26 @@ typedef void *DhePointer;
 
 class EncryptorAnswer;
 
-/// Squid defined error code (<0), an error code returned by X.509 API, or SSL_ERROR_NONE
+/// Squid-defined error code (<0), an error code returned by X.509 API, or zero
 typedef int ErrorCode;
 
-inline const char *ErrorString(const ErrorCode code) {
+/// TLS library-reported non-validation error
+#if USE_OPENSSL
+/// the result of the first ERR_get_error(3SSL) call after a library call;
+/// `openssl errstr` expands these numbers into human-friendlier strings like
+/// `error:1408F09C:SSL routines:ssl3_get_record:http request`
+typedef unsigned long LibErrorCode;
+#elif USE_GNUTLS
+/// the result of an API function like gnutls_handshake() (e.g.,
+/// GNUTLS_E_WARNING_ALERT_RECEIVED)
+typedef int LibErrorCode;
+#else
+/// should always be zero and virtually unused
+typedef int LibErrorCode;
+#endif
+
+/// converts numeric LibErrorCode into a human-friendlier string
+inline const char *ErrorString(const LibErrorCode code) {
 #if USE_OPENSSL
     return ERR_error_string(code, nullptr);
 #elif USE_GNUTLS
@@ -127,6 +153,9 @@ enum Type {
 
 } // namespace Io
 
+// TODO: Either move to Security::Io or remove/restrict the Io namespace.
+class IoResult;
+
 class KeyData;
 
 #if USE_OPENSSL
@@ -156,7 +185,29 @@ typedef std::shared_ptr<void> PrivateKeyPointer;
 
 class ServerOptions;
 
+class ErrorDetail;
+typedef RefCount<ErrorDetail> ErrorDetailPointer;
+
 } // namespace Security
+
+/// Squid-specific TLS handling errors (a subset of ErrorCode)
+/// These errors either distinguish high-level library calls/contexts or
+/// supplement official certificate validation errors to cover special cases.
+/// We use negative values, assuming that those official errors are positive.
+enum {
+    SQUID_TLS_ERR_OFFSET = std::numeric_limits<int>::min(),
+
+    /* TLS library calls/contexts other than validation (e.g., I/O) */
+    SQUID_TLS_ERR_ACCEPT, ///< failure to accept a connection from a TLS client
+    SQUID_TLS_ERR_CONNECT, ///< failure to establish a connection with a TLS server
+
+    /* certificate validation problems not covered by official errors */
+    SQUID_X509_V_ERR_CERT_CHANGE,
+    SQUID_X509_V_ERR_DOMAIN_MISMATCH,
+    SQUID_X509_V_ERR_INFINITE_VALIDATION,
+
+    SQUID_TLS_ERR_END
+};
 
 #endif /* SQUID_SRC_SECURITY_FORWARD_H */
 

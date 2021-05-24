@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,12 @@
 #include "squid.h"
 #include "base/Packable.h"
 #include "Debug.h"
+#include "http/one/ResponseParser.h"
 #include "http/StatusLine.h"
+#include "parser/forward.h"
+#include "parser/Tokenizer.h"
+
+#include <algorithm>
 
 void
 Http::StatusLine::init()
@@ -29,7 +34,6 @@ Http::StatusLine::clean()
 void
 Http::StatusLine::set(const AnyP::ProtocolVersion &newVersion, const Http::StatusCode newStatus, const char *newReason)
 {
-    protocol = AnyP::PROTO_HTTP;
     version = newVersion;
     status_ = newStatus;
     /* Note: no xstrdup for 'reason', assumes constant 'reasons' */
@@ -53,7 +57,7 @@ Http::StatusLine::packInto(Packable * p) const
     if (packedStatus == Http::scNone) {
         static unsigned int reports = 0;
         if (++reports <= 100)
-            debugs(57, DBG_IMPORTANT, "BUG: Generated response lacks status code");
+            debugs(57, DBG_IMPORTANT, "BUG: the internalized response lacks status-code");
         packedStatus = Http::scInternalServerError;
         packedReason = Http::StatusCodeString(packedStatus); // ignore custom reason_ (if any)
     }
@@ -64,7 +68,7 @@ Http::StatusLine::packInto(Packable * p) const
     static const char *IcyStatusLineFormat = "ICY %3d %s\r\n";
 
     /* handle ICY protocol status line specially. Pass on the bad format. */
-    if (protocol == AnyP::PROTO_ICY) {
+    if (version.protocol == AnyP::PROTO_ICY) {
         debugs(57, 9, "packing sline " << this << " using " << p << ":");
         debugs(57, 9, "FORMAT=" << IcyStatusLineFormat );
         debugs(57, 9, "ICY " << packedStatus << " " << packedReason);
@@ -78,12 +82,8 @@ Http::StatusLine::packInto(Packable * p) const
     p->appendf(Http1StatusLineFormat, version.major, version.minor, packedStatus, packedReason);
 }
 
-/*
- * Parse character string.
- * XXX: Note 'end' currently unused, so NULL-termination assumed.
- */
 bool
-Http::StatusLine::parse(const String &protoPrefix, const char *start, const char * /*end*/)
+Http::StatusLine::parse(const String &protoPrefix, const char *start, const char *end)
 {
     status_ = Http::scInvalidHeader;    /* Squid header parsing error */
 
@@ -92,7 +92,7 @@ Http::StatusLine::parse(const String &protoPrefix, const char *start, const char
 
     if (protoPrefix.cmp("ICY", 3) == 0) {
         debugs(57, 3, "Invalid HTTP identifier. Detected ICY protocol instead.");
-        protocol = AnyP::PROTO_ICY;
+        version = AnyP::ProtocolVersion(AnyP::PROTO_ICY, 1, 0);
         start += protoPrefix.size();
     } else if (protoPrefix.caseCmp(start, protoPrefix.size()) == 0) {
 
@@ -114,8 +114,25 @@ Http::StatusLine::parse(const String &protoPrefix, const char *start, const char
     if (!(start = strchr(start, ' ')))
         return false;
 
-    // XXX: should we be using xstrtoui() or xatoui() ?
-    status_ = static_cast<Http::StatusCode>(atoi(++start));
+    ++start; // skip SP between HTTP-version and status-code
+
+    assert(start <= end);
+    const auto stdStatusAreaLength = 4; // status-code length plus SP
+    const auto unparsedLength = end - start;
+    const auto statusAreaLength = std::min<size_t>(stdStatusAreaLength, unparsedLength);
+
+    static SBuf statusBuf;
+    statusBuf.assign(start, statusAreaLength);
+    Parser::Tokenizer tok(statusBuf);
+    try {
+        One::ResponseParser::ParseResponseStatus(tok, status_);
+    } catch (const Parser::InsufficientInput &) {
+        debugs(57, 7, "need more; have " << unparsedLength);
+        return false;
+    } catch (...) {
+        debugs(57, 3, "cannot parse status-code area: " << CurrentException);
+        return false;
+    }
 
     // XXX check if the given 'reason' is the default status string, if not save to reason_
 

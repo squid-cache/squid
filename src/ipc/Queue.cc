@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -102,9 +102,9 @@ void
 Ipc::OneToOneUniQueue::statOpen(std::ostream &os, const char *inLabel, const char *outLabel, const uint32_t count) const
 {
     os << "{ size: " << count <<
-        ", capacity: " << theCapacity <<
-        ", " << inLabel << ": " << theIn <<
-        ", " << outLabel << ": " << theOut;
+       ", capacity: " << theCapacity <<
+       ", " << inLabel << ": " << theIn <<
+       ", " << outLabel << ": " << theOut;
 }
 
 /// end state reporting started by statOpen()

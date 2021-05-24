@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -807,7 +807,7 @@ Ftp::Server::handleReply(HttpReply *reply, StoreIOBuffer data)
 void
 Ftp::Server::handleFeatReply(const HttpReply *reply, StoreIOBuffer)
 {
-    if (pipeline.front()->http->request->errType != ERR_NONE) {
+    if (pipeline.front()->http->request->error) {
         writeCustomReply(502, "Server does not support FEAT", reply);
         return;
     }
@@ -879,7 +879,7 @@ Ftp::Server::handlePasvReply(const HttpReply *reply, StoreIOBuffer)
     const Http::StreamPointer context(pipeline.front());
     assert(context != nullptr);
 
-    if (context->http->request->errType != ERR_NONE) {
+    if (context->http->request->error) {
         writeCustomReply(502, "Server does not support PASV", reply);
         return;
     }
@@ -916,7 +916,7 @@ Ftp::Server::handlePasvReply(const HttpReply *reply, StoreIOBuffer)
 void
 Ftp::Server::handlePortReply(const HttpReply *reply, StoreIOBuffer)
 {
-    if (pipeline.front()->http->request->errType != ERR_NONE) {
+    if (pipeline.front()->http->request->error) {
         writeCustomReply(502, "Server does not support PASV (converted from PORT)", reply);
         return;
     }
@@ -1054,7 +1054,7 @@ Ftp::Server::writeForwardedReply(const HttpReply *reply)
 void
 Ftp::Server::handleEprtReply(const HttpReply *reply, StoreIOBuffer)
 {
-    if (pipeline.front()->http->request->errType != ERR_NONE) {
+    if (pipeline.front()->http->request->error) {
         writeCustomReply(502, "Server does not support PASV (converted from EPRT)", reply);
         return;
     }
@@ -1067,7 +1067,7 @@ Ftp::Server::handleEprtReply(const HttpReply *reply, StoreIOBuffer)
 void
 Ftp::Server::handleEpsvReply(const HttpReply *reply, StoreIOBuffer)
 {
-    if (pipeline.front()->http->request->errType != ERR_NONE) {
+    if (pipeline.front()->http->request->error) {
         writeCustomReply(502, "Cannot connect to server", reply);
         return;
     }
@@ -1096,14 +1096,12 @@ Ftp::Server::writeErrorReply(const HttpReply *reply, const int scode)
     MemBuf mb;
     mb.init();
 
-    if (request->errType != ERR_NONE)
-        mb.appendf("%i-%s\r\n", scode, errorPageName(request->errType));
+    if (request->error)
+        mb.appendf("%i-%s\r\n", scode, errorPageName(request->error.category));
 
-    if (request->errDetail > 0) {
-        // XXX: > 0 may not always mean that this is an errno
-        mb.appendf("%i-Error: (%d) %s\r\n", scode,
-                   request->errDetail,
-                   strerror(request->errDetail));
+    if (const auto &detail = request->error.detail) {
+        mb.appendf("%i-Error-Detail-Brief: " SQUIDSBUFPH "\r\n", scode, SQUIDSBUFPRINT(detail->brief()));
+        mb.appendf("%i-Error-Detail-Verbose: " SQUIDSBUFPH "\r\n", scode, SQUIDSBUFPRINT(detail->verbose(request)));
     }
 
 #if USE_ADAPTATION
@@ -1836,16 +1834,16 @@ void Ftp::Server::completeDataDownload()
 static bool
 Ftp::SupportedCommand(const SBuf &name)
 {
-    static std::set<SBuf> BlackList;
-    if (BlackList.empty()) {
+    static std::set<SBuf> BlockList;
+    if (BlockList.empty()) {
         /* Add FTP commands that Squid cannot relay correctly. */
 
         // We probably do not support AUTH TLS.* and AUTH SSL,
         // but let's disclaim all AUTH support to KISS, for now.
-        BlackList.insert(cmdAuth());
+        BlockList.insert(cmdAuth());
     }
 
     // we claim support for all commands that we do not know about
-    return BlackList.find(name) == BlackList.end();
+    return BlockList.find(name) == BlockList.end();
 }
 

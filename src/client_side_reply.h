@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,23 +34,16 @@ public:
     void saveState();
     void restoreState();
     void purgeRequest ();
-    void purgeRequestFindObjectToPurge();
-    void purgeDoMissPurge();
-    void purgeFoundGet(StoreEntry *newEntry);
-    void purgeFoundHead(StoreEntry *newEntry);
-    void purgeFoundObject(StoreEntry *entry);
     void sendClientUpstreamResponse();
-    void purgeDoPurgeGet(StoreEntry *entry);
-    void purgeDoPurgeHead(StoreEntry *entry);
     void doGetMoreData();
     void identifyStoreObject();
-    void identifyFoundObject(StoreEntry *entry);
+    void identifyFoundObject(StoreEntry *entry, const char *detail);
     int storeOKTransferDone() const;
     int storeNotOKTransferDone() const;
     /// replaces current response store entry with the given one
     void setReplyToStoreEntry(StoreEntry *e, const char *reason);
     /// builds error using clientBuildError() and calls setReplyToError() below
-    void setReplyToError(err_type, Http::StatusCode, const HttpRequestMethod&, char const *, Ip::Address &, HttpRequest *, const char *,
+    void setReplyToError(err_type, Http::StatusCode, const HttpRequestMethod&, char const *, const ConnStateData *, HttpRequest *, const char *,
 #if USE_AUTH
                          Auth::UserRequest::Pointer);
 #else
@@ -72,12 +65,8 @@ public:
 
     Http::StatusCode purgeStatus;
 
-    /* state variable - replace with class to handle storeentries at some point */
-    int lookingforstore;
-
     /* StoreClient API */
-    virtual void created (StoreEntry *newEntry);
-    virtual LogTags *loggingTags();
+    virtual LogTags *loggingTags() const;
 
     ClientHttpRequest *http;
     /// Base reply header bytes received from Store.
@@ -90,10 +79,6 @@ public:
     size_t reqsize;
     size_t reqofs;
     char tempbuf[HTTP_REQBUF_SZ];   ///< a temporary buffer if we need working storage
-#if USE_CACHE_DIGESTS
-
-    const char *lookup_type;    /* temporary hack: storeGet() result: HIT/MISS/NONE */
-#endif
 
     struct Flags {
         Flags() : storelogiccomplete(0), complete(0), headersSent(false) {}
@@ -131,13 +116,25 @@ private:
     void triggerInitialStoreRead();
     void sendClientOldEntry();
     void purgeAllCached();
+    /// attempts to release the cached entry
+    /// \returns whether the entry was released
+    bool purgeEntry(StoreEntry &, const Http::MethodType, const char *descriptionPrefix = "");
+    /// releases both cached GET and HEAD entries
+    void purgeDoPurge();
     void forgetHit();
     bool blockedHit() const;
+    const char *storeLookupString(bool found) const { return found ? "match" : "mismatch"; }
+    void detailStoreLookup(const char *detail);
 
     void sendBodyTooLargeError();
     void sendPreconditionFailedError();
     void sendNotModified();
     void sendNotModifiedOrPreconditionFailedError();
+
+    /// Classification of the initial Store lookup.
+    /// This very first lookup happens without the Vary-driven key augmentation.
+    /// TODO: Exclude internal Store match bans from the "mismatch" category.
+    const char *firstStoreLookup_ = nullptr;
 
     StoreEntry *old_entry;
     /* ... for entry to be validated */

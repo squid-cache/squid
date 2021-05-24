@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -455,6 +455,32 @@ ConfigParser::NextQuotedOrToEol()
 }
 
 bool
+ConfigParser::optionalKvPair(char * &key, char * &value)
+{
+    key = nullptr;
+    value = nullptr;
+
+    if (const char *currentToken = PeekAtToken()) {
+        // NextKvPair() accepts "a = b" and skips "=" or "a=". To avoid
+        // misinterpreting the admin intent, we use strict checks.
+        if (const auto middle = strchr(currentToken, '=')) {
+            if (middle == currentToken)
+                throw TextException(ToSBuf("missing key in a key=value option: ", currentToken), Here());
+            if (middle + 1 == currentToken + strlen(currentToken))
+                throw TextException(ToSBuf("missing value in a key=value option: ", currentToken), Here());
+        } else
+            return false; // not a key=value token
+
+        if (!NextKvPair(key, value)) // may still fail (e.g., bad value quoting)
+            throw TextException(ToSBuf("invalid key=value option: ", currentToken), Here());
+
+        return true;
+    }
+
+    return false; // end of directive or input
+}
+
+bool
 ConfigParser::NextKvPair(char * &key, char * &value)
 {
     key = value = NULL;
@@ -534,6 +560,22 @@ ConfigParser::QuoteString(const String &var)
     }
     quotedStr.append('"');
     return quotedStr.termedBuf();
+}
+
+void
+ConfigParser::rejectDuplicateDirective()
+{
+    assert(cfg_directive);
+    throw TextException("duplicate configuration directive", Here());
+}
+
+void
+ConfigParser::closeDirective()
+{
+    assert(cfg_directive);
+    if (const auto garbage = PeekAtToken())
+        throw TextException(ToSBuf("trailing garbage at the end of a configuration directive: ", garbage), Here());
+    // TODO: cfg_directive = nullptr; // currently in generated code
 }
 
 bool

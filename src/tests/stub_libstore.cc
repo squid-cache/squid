@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,7 +37,7 @@ bool Controller::markedForDeletion(const cache_key *) const STUB_RETVAL(false)
 bool Controller::markedForDeletionAndAbandoned(const StoreEntry &) const STUB_RETVAL(false)
 bool Controller::hasReadableDiskEntry(const StoreEntry &) const STUB_RETVAL(false)
 int64_t Controller::accumulateMore(StoreEntry &) const STUB_RETVAL(0)
-void Controller::updateLimits() STUB
+void Controller::configure() STUB
 void Controller::handleIdleEntry(StoreEntry &) STUB
 void Controller::freeMemorySpace(const int) STUB
 void Controller::memoryOut(StoreEntry &, const bool) STUB
@@ -122,17 +122,19 @@ bool Disks::updateAnchored(StoreEntry &) STUB_RETVAL(false)
 void Disks::evictCached(StoreEntry &) STUB
 void Disks::evictIfFound(const cache_key *) STUB
 int Disks::callback() STUB_RETVAL(0)
-void Disks::updateLimits() STUB
+void Disks::configure() STUB
 int64_t Disks::accumulateMore(const StoreEntry&) const STUB_RETVAL(0)
 bool Disks::SmpAware() STUB_RETVAL(false)
 bool Disks::hasReadableEntry(const StoreEntry &) const STUB_RETVAL(false)
+void Disks::Parse(DiskConfig &) STUB
+void Disks::Dump(const DiskConfig &, StoreEntry &, const char *name) STUB
+SwapDir *Disks::SelectSwapDir(const StoreEntry *) STUB_RETVAL(nullptr)
 }
 void storeDirOpenSwapLogs(void) STUB
 int storeDirWriteCleanLogs(int) STUB_RETVAL(0)
 void storeDirCloseSwapLogs(void) STUB
-void allocate_new_swapdir(Store::DiskConfig *) STUB
-void free_cachedir(Store::DiskConfig *) STUB
-STDIRSELECT *storeDirSelectSwapDir = nullptr;
+void allocate_new_swapdir(Store::DiskConfig &) STUB
+void free_cachedir(Store::DiskConfig *) STUB;
 void storeDirSwapLog(const StoreEntry *, int) STUB
 
 #include "store/LocalSearch.h"

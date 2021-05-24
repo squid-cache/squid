@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1092,13 +1092,19 @@ make_pub_auth(cachemgr_request * req)
     if (!req->passwd || !strlen(req->passwd))
         return;
 
+    auto *rfc1738_username = xstrdup(rfc1738_escape(safe_str(req->user_name)));
+    auto *rfc1738_passwd = xstrdup(rfc1738_escape(req->passwd));
+
     /* host | time | user | passwd */
     const int bufLen = snprintf(buf, sizeof(buf), "%s|%d|%s|%s",
                                 req->hostname,
                                 (int) now,
-                                rfc1738_escape(safe_str(req->user_name)),
-                                rfc1738_escape(req->passwd));
+                                rfc1738_username,
+                                rfc1738_passwd);
     debug("cmgr: pre-encoded for pub: %s\n", buf);
+
+    safe_free(rfc1738_username);
+    safe_free(rfc1738_passwd);
 
     const int encodedLen = base64_encode_len(bufLen);
     req->pub_auth = (char *) xmalloc(encodedLen);

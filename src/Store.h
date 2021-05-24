@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -239,9 +239,6 @@ public:
 
 public:
     static size_t inUseCount();
-    static void getPublicByRequestMethod(StoreClient * aClient, HttpRequest * request, const HttpRequestMethod& method);
-    static void getPublicByRequest(StoreClient * aClient, HttpRequest * request);
-    static void getPublic(StoreClient * aClient, const char *uri, const HttpRequestMethod& method);
 
     void *operator new(size_t byteCount);
     void operator delete(void *address);

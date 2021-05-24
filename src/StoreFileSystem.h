@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -93,6 +93,7 @@ public:
     static void SetupAllFs();
     static void FsAdd(StoreFileSystem &);
     static void FreeAllFs();
+    static StoreFileSystem *FindByType(const char *type);
     static std::vector<StoreFileSystem*> const &FileSystems();
     typedef std::vector<StoreFileSystem*>::iterator iterator;
     typedef std::vector<StoreFileSystem*>::const_iterator const_iterator;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,6 +23,8 @@
 #include <openssl/err.h>
 #endif
 #endif
+
+#include <limits>
 
 Security::ServerOptions &
 Security::ServerOptions::operator =(const Security::ServerOptions &old) {
@@ -169,7 +171,7 @@ Security::ServerOptions::createBlankContext() const
 #elif USE_GNUTLS
     // Initialize for X.509 certificate exchange
     gnutls_certificate_credentials_t t;
-    if (const int x = gnutls_certificate_allocate_credentials(&t)) {
+    if (const auto x = gnutls_certificate_allocate_credentials(&t)) {
         debugs(83, DBG_CRITICAL, "ERROR: Failed to allocate TLS server context: " << Security::ErrorString(x));
     }
     ctx = convertContextFromRawPtr(t);

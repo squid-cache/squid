@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -108,7 +108,7 @@ HttpHdrSc::parse(const String * str)
         type = scLookupTable.lookup(SBuf(item,ilen));
 
         if (type == SC_ENUM_END) {
-            debugs(90, 2, "hdr sc: unknown control-directive: near '" << item << "' in '" << str << "'");
+            debugs(90, 2, "unknown control-directive near '" << item << "' in '" << *str << "'");
             type = SC_OTHER;
         }
 
@@ -124,15 +124,17 @@ HttpHdrSc::parse(const String * str)
         sct = sc->findTarget(target);
 
         if (!sct) {
-            sct = new HttpHdrScTarget(target);
-            addTarget(sct);
+            // XXX: if parse is left-to-right over field-value this should be emplace_back()
+            // currently placing on the front reverses the order of headers passed on downstream.
+            targets.emplace_front(target);
+            sct = &targets.front();
         }
 
         safe_free (temp);
 
         if (sct->isSet(type)) {
             if (type != SC_OTHER)
-                debugs(90, 2, "hdr sc: ignoring duplicate control-directive: near '" << item << "' in '" << str << "'");
+                debugs(90, 2, "ignoring duplicate control-directive near '" << item << "' in '" << *str << "'");
 
             ++ scHeaderStats[type].repCount;
 
@@ -189,34 +191,10 @@ HttpHdrSc::parse(const String * str)
         }
     }
 
-    return sc->targets.head != NULL;
+    return !sc->targets.empty();
 }
 
-HttpHdrSc::~HttpHdrSc()
-{
-    if (targets.head) {
-        dlink_node *sct = targets.head;
-
-        while (sct) {
-            HttpHdrScTarget *t = static_cast<HttpHdrScTarget *>(sct->data);
-            sct = sct->next;
-            dlinkDelete (&t->node, &targets);
-            delete t;
-        }
-    }
-}
-
-HttpHdrSc::HttpHdrSc(const HttpHdrSc &sc)
-{
-    dlink_node *node = sc.targets.head;
-
-    while (node) {
-        HttpHdrScTarget *dupsct = new HttpHdrScTarget(*static_cast<HttpHdrScTarget *>(node->data));
-        addTargetAtTail(dupsct);
-        node = node->next;
-    }
-}
-
+/// XXX: this function should be in HttpHdrScTarget.cc
 void
 HttpHdrScTarget::packInto(Packable * p) const
 {
@@ -249,13 +227,9 @@ HttpHdrScTarget::packInto(Packable * p) const
 void
 HttpHdrSc::packInto(Packable * p) const
 {
-    dlink_node *node;
     assert(p);
-    node = targets.head;
-
-    while (node) {
-        static_cast<HttpHdrScTarget *>(node->data)->packInto(p);
-        node = node->next;
+    for (const auto &t : targets) {
+        t.packInto(p);
     }
 }
 
@@ -266,8 +240,8 @@ HttpHdrSc::setMaxAge(char const *target, int max_age)
     HttpHdrScTarget *sct = findTarget(target);
 
     if (!sct) {
-        sct = new HttpHdrScTarget(target);
-        dlinkAddTail (sct, &sct->node, &targets);
+        targets.emplace_back(target);
+        sct = &targets.back();
     }
 
     sct->maxAge(max_age);
@@ -276,11 +250,8 @@ HttpHdrSc::setMaxAge(char const *target, int max_age)
 void
 HttpHdrSc::updateStats(StatHist * hist) const
 {
-    dlink_node *sct = targets.head;
-
-    while (sct) {
-        static_cast<HttpHdrScTarget *>(sct->data)->updateStats(hist);
-        sct = sct->next;
+    for (auto &t : targets) {
+        t.updateStats(hist);
     }
 }
 
@@ -313,18 +284,9 @@ httpHdrScStatDumper(StoreEntry * sentry, int, double val, double, int count)
 HttpHdrScTarget *
 HttpHdrSc::findTarget(const char *target)
 {
-    dlink_node *node;
-    node = targets.head;
-
-    while (node) {
-        HttpHdrScTarget *sct = (HttpHdrScTarget *)node->data;
-
-        if (target && sct->target.size() > 0 && !strcmp(target, sct->target.termedBuf()))
-            return sct;
-        else if (!target && sct->target.size() == 0)
-            return sct;
-
-        node = node->next;
+    for (auto &sct : targets) {
+        if (sct.target.cmp(target) == 0)
+            return &sct;
     }
 
     return NULL;
@@ -336,6 +298,16 @@ HttpHdrSc::getMergedTarget(const char *ourtarget)
     HttpHdrScTarget *sctus = findTarget(ourtarget);
     HttpHdrScTarget *sctgeneric = findTarget(NULL);
 
+    /* W3C Edge Architecture Specification 1.0 section 3
+     *
+     * "If more than one is targeted at a surrogate, the most specific applies.
+     *  For example,
+     *    Surrogate-Control: max-age=60, no-store;abc
+     *  The surrogate that identified itself as 'abc' would apply no-store;
+     *  others would apply max-age=60.
+     *
+     * XXX: the if statements below will *merge* the no-store and max-age settings.
+     */
     if (sctgeneric || sctus) {
         HttpHdrScTarget *sctusable = new HttpHdrScTarget(NULL);
 
@@ -349,15 +321,5 @@ HttpHdrSc::getMergedTarget(const char *ourtarget)
     }
 
     return NULL;
-}
-
-void
-HttpHdrSc::addTarget(HttpHdrScTarget *t) {
-    dlinkAdd(t, &t->node, &targets);
-}
-
-void
-HttpHdrSc::addTargetAtTail(HttpHdrScTarget *t) {
-    dlinkAddTail (t, &t->node, &targets);
 }
 

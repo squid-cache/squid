@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -49,6 +49,18 @@ public:
     enum TokenType {SimpleToken, QuotedToken, FunctionParameters};
 
     void destruct();
+
+    /// stops parsing the current configuration directive
+    void closeDirective();
+
+    /// rejects configuration due to a repeated directive
+    void rejectDuplicateDirective();
+
+    /// extracts an optional key=value token or returns false
+    /// rejects configurations with empty keys or empty values
+    /// key and value have lifetime of the current line/directive
+    bool optionalKvPair(char * &key, char * &value);
+
     static void ParseUShort(unsigned short *var);
     static void ParseBool(bool *var);
     static const char *QuoteString(const String &var);

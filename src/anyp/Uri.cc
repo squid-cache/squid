@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -343,8 +343,9 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
                 return false;
             *dst = '\0';
 
-            // bug 3074: received 'path' starting with '?', '#', or '\0' implies '/'
-            if (*src == '?' || *src == '#' || *src == '\0') {
+            // We are looking at path-abempty.
+            if (*src != '/') {
+                // path-empty, including the end of the `src` c-string cases
                 urlpath[0] = '/';
                 dst = &urlpath[1];
             } else {
@@ -358,11 +359,6 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             /* We -could- be at the end of the buffer here */
             if (i > l)
                 return false;
-            /* If the URL path is empty we set it to be "/" */
-            if (dst == urlpath) {
-                *dst = '/';
-                ++dst;
-            }
             *dst = '\0';
 
             foundPort = scheme.defaultPort(); // may be reset later

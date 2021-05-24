@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,14 +13,16 @@
 #include "fs_io.h"
 #include "helper/Reply.h"
 #include "Parsing.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "SquidTime.h"
-#include "sbuf/Stream.h"
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
 #include "wordlist.h"
+
+#include <limits>
 
 Ssl::CertValidationHelper::CacheType *Ssl::CertValidationHelper::HelperCache = nullptr;
 
@@ -207,8 +209,8 @@ void Ssl::CertValidationHelper::Init()
                     ttl = xatoi(token + 4);
                     if (ttl < 0) {
                         throw TextException(ToSBuf("Negative TTL in sslcrtvalidator_program ", Ssl::TheConfig.ssl_crt_validator,
-                            Debug::Extra, "For unlimited TTL, use ttl=infinity"),
-                            Here());
+                                                   Debug::Extra, "For unlimited TTL, use ttl=infinity"),
+                                            Here());
                     }
                     continue;
                 } else if (strncmp(token, "cache=", 6) == 0) {

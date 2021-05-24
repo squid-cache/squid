@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -47,15 +47,12 @@ public:
     class  RecvdError
     {
     public:
-        RecvdError(): id(0), error_no(SSL_ERROR_NONE), cert(NULL), error_depth(-1) {}
-        RecvdError(const RecvdError &);
-        RecvdError & operator =(const RecvdError &);
         void setCert(X509 *);  ///< Sets cert to the given certificate
-        int id; ///<  The id of the error
-        Security::ErrorCode error_no; ///< The OpenSSL error code
+        int id = 0; ///<  The id of the error
+        Security::ErrorCode error_no = 0; ///< The OpenSSL error code
         std::string error_reason; ///< A string describing the error
         Security::CertPointer cert; ///< The broken certificate
-        int error_depth; ///< The error depth
+        int error_depth = -1; ///< The error depth
     };
 
     typedef std::vector<RecvdError> RecvdErrors;
@@ -92,9 +89,6 @@ private:
     public:
         std::string name; ///< The certificate Id to use
         Security::CertPointer cert;       ///< A pointer to certificate
-        CertItem(): cert(NULL) {}
-        CertItem(const CertItem &);
-        CertItem & operator =(const CertItem &);
         void setCert(X509 *); ///< Sets cert to the given certificate
     };
 

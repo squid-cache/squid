@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,6 +34,8 @@ public:
     static Owner *New(const char *const id, const P1 &p1, const P2 &p2, const P3 &p3);
     template <class P1, class P2, class P3, class P4>
     static Owner *New(const char *const id, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4);
+    /// attaches to the existing shared memory segment, becoming its owner
+    static Owner *Old(const char *const id);
 
     ~Owner();
 
@@ -41,6 +43,7 @@ public:
     Class *object() { return theObject; }
 
 private:
+    explicit Owner(const char *const id);
     Owner(const char *const id, const off_t sharedSize);
 
     // not implemented
@@ -101,10 +104,28 @@ Owner<Class>::Owner(const char *const id, const off_t sharedSize):
 }
 
 template <class Class>
+Owner<Class>::Owner(const char *const id):
+    theSegment(id), theObject(nullptr)
+{
+    theSegment.open(true);
+    Must(theSegment.mem());
+}
+
+template <class Class>
 Owner<Class>::~Owner()
 {
     if (theObject)
         theObject->~Class();
+}
+
+template <class Class>
+Owner<Class> *
+Owner<Class>::Old(const char *const id)
+{
+    auto owner = new Owner(id);
+    owner->theObject = reinterpret_cast<Class*>(owner->theSegment.mem());
+    Must(static_cast<off_t>(owner->theObject->sharedMemorySize()) <= owner->theSegment.size());
+    return owner;
 }
 
 template <class Class>
@@ -162,7 +183,7 @@ Owner<Class>::New(const char *const id, const P1 &p1, const P2 &p2, const P3 &p3
 template <class Class>
 Object<Class>::Object(const char *const id): theSegment(id)
 {
-    theSegment.open();
+    theSegment.open(false);
     Must(theSegment.mem());
     theObject = reinterpret_cast<Class*>(theSegment.mem());
     Must(static_cast<off_t>(theObject->sharedMemorySize()) <= theSegment.size());

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -195,9 +195,9 @@ Store::Controller::maxObjectSize() const
 }
 
 void
-Store::Controller::updateLimits()
+Store::Controller::configure()
 {
-    swapDir->updateLimits();
+    swapDir->configure();
 
     store_swap_high = (long) (((float) maxSize() *
                                (float) Config.Swap.highWaterMark) / (float) 100);

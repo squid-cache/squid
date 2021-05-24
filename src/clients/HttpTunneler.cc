@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -43,7 +43,7 @@ Http::Tunneler::Tunneler(const Comm::ConnectionPointer &conn, const HttpRequest:
     assert(connection);
     assert(callback);
     assert(dynamic_cast<Http::TunnelerAnswer *>(callback->getDialer()));
-    url = request->url.authority();
+    url = request->url.authority(true);
     watchForClosures();
 }
 

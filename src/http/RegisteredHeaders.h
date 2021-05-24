@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,6 +32,7 @@ enum HdrType {
     AUTHENTICATION_INFO,            /**< RFC 2617 */
     AUTHORIZATION,                  /**< RFC 7235, 4559 */
     CACHE_CONTROL,                  /**< RFC 7234 */
+    CACHE_STATUS,                   /**< draft-ietf-httpbis-cache-header */
     CDN_LOOP,                       /**< RFC 8586 */
     CONNECTION,                     /**< RFC 7230 */
     CONTENT_BASE,                   /**< obsoleted RFC 2068 */
@@ -104,8 +105,6 @@ enum HdrType {
     VIA,                            /**< RFC 7230 */
     WARNING,                        /**< RFC 7234 */
     WWW_AUTHENTICATE,               /**< RFC 7235, 4559 */
-    X_CACHE,                        /**< Squid custom header */
-    X_CACHE_LOOKUP,                 /**< Squid custom header. temporary hack that became de-facto. TODO remove */
     X_FORWARDED_FOR,                /**< obsolete Squid custom header, RFC 7239 */
     X_REQUEST_URI,                  /**< Squid custom header appended if ADD_X_REQUEST_URI is defined */
     X_SQUID_ERROR,                  /**< Squid custom header on generated error responses */

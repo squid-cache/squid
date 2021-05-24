@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -45,7 +45,7 @@ void Ssl::CertificateStorageAction::dump (StoreEntry *sentry)
         stream << i->first << delimiter;
         LocalContextStorage & ssl_store_policy(*(i->second));
         const auto memoryPerEntry = ssl_store_policy.entries() ?
-            ssl_store_policy.memoryUsed() / ssl_store_policy.entries() : 0;
+                                    ssl_store_policy.memoryUsed() / ssl_store_policy.entries() : 0;
         stream << ssl_store_policy.memLimit() / 1024 << delimiter;
         stream << ssl_store_policy.entries() << delimiter;
         stream << memoryPerEntry / 1024 << delimiter;

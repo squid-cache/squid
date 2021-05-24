@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -67,7 +67,7 @@ ACLDestinationIP::match(ACLChecklist *cl)
     if (ia) {
         /* Entry in cache found */
 
-        for (const auto ip: ia->goodAndBad()) {
+        for (const auto &ip: ia->goodAndBad()) {
             if (ACLIP::match(ip))
                 return 1;
         }

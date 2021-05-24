@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -41,7 +41,7 @@ class Address
 {
 
 public:
-    /** @name Constructors and Destructor */
+    /** @name Constructors */
     /*@{*/
     Address() { setEmpty(); }
     Address(const struct in_addr &);
@@ -51,7 +51,6 @@ public:
     Address(const struct hostent &);
     Address(const struct addrinfo &);
     Address(const char*);
-    ~Address() {}
     /*@}*/
 
     /** @name Assignment Operators */
@@ -297,6 +296,10 @@ public:
      \retval false  lookup failed or FQDN has no IP associated.
      */
     bool GetHostByName(const char *s);
+
+    /// \returns an Address with true isNoAddr()
+    /// \see isNoAddr() for more details
+    static const Address &NoAddr() { static const Address noAddr(v6_noaddr); return noAddr; }
 
 public:
     /* XXX: When C => C++ conversion is done will be fully private.

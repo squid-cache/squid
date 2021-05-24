@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -41,6 +41,8 @@ class PeerOptions;
 bool CreateServerSession(const Security::ContextPointer &, const Comm::ConnectionPointer &, Security::PeerOptions &, const char *squidCtx);
 
 #if USE_OPENSSL
+typedef SSL Connection;
+
 typedef std::shared_ptr<SSL> SessionPointer;
 
 typedef std::unique_ptr<SSL_SESSION, HardFun<void, SSL_SESSION*, &SSL_SESSION_free>> SessionStatePointer;
@@ -53,6 +55,8 @@ inline void squid_gnutls_free(void *d) {gnutls_free(d);}
 typedef std::unique_ptr<gnutls_datum_t, HardFun<void, void*, &Security::squid_gnutls_free>> SessionStatePointer;
 
 #else
+typedef std::nullptr_t Connection;
+
 typedef std::shared_ptr<void> SessionPointer;
 
 typedef std::unique_ptr<int> SessionStatePointer;
