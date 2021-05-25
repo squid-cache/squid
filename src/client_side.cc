@@ -2422,10 +2422,11 @@ clientNegotiateSSL(int fd, void *data)
     conn->clientConnection->tlsNegotiations()->retrieveNegotiatedInfo(session);
 
 #if USE_OPENSSL
-    if (const auto client_cert = Security::CertPointer(SSL_get_peer_certificate(session.get()))) {
-        debugs(83, 3, "FD " << fd << " client certificate: subject: " << Security::CertSubjectName(client_cert));
+    if (const auto clientCert = Security::CertPointer(SSL_get_peer_certificate(session.get()))) {
+        debugs(83, 3, "FD " << fd << " client certificate: subject: " << Security::CertSubjectName(clientCert));
         debugs(83, 3, "FD " << fd << " client certificate: issuer: " <<
-               X509_NAME_oneline(X509_get_issuer_name(client_cert.get()), 0, 0));
+               X509_NAME_oneline(X509_get_issuer_name(clientCert.get()), 0, 0));
+        // XXX: leaking X509_NAME_oneline() result
     } else {
         debugs(83, 5, "FD " << fd << " has no client certificate.");
     }
@@ -4099,3 +4100,4 @@ operator <<(std::ostream &os, const ConnStateData::ServerConnectionContext &scc)
 {
     return os << scc.conn_ << ", srv_bytes=" << scc.preReadServerBytes.length();
 }
+
