@@ -889,7 +889,6 @@ storeAppendVPrintf(StoreEntry * e, const char *fmt, va_list vargs)
 struct _store_check_cachable_hist {
 
     struct {
-        int non_get;
         int not_entry_cachable;
         int wrong_content_length;
         int too_big;
