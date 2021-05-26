@@ -2605,8 +2605,7 @@ ConnStateData::httpsSslBumpStep1AccessCheck()
     // TODO: Use these request/ALE when waiting for new bumped transactions.
 
     ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, request, NULL);
-    acl_checklist->src_addr = clientConnection->remote;
-    acl_checklist->my_addr = port->s;
+    fillChecklist(*acl_checklist);
     // Build a local AccessLogEntry to allow requiresAle() acls work
     acl_checklist->al = connectAle;
     acl_checklist->al->cache.start_time = current_time;

@@ -43,7 +43,7 @@ public:
 
     /// Does not have association with a listening port.
     /// \param anInitiator any value other from XactionInitiator::initClient.
-   explicit MasterXaction(const XactionInitiator anInitiator) :
+    explicit MasterXaction(const XactionInitiator anInitiator) :
         initiator(anInitiator)
     {
         assert(!initiator.in(XactionInitiator::initClient));
