@@ -1416,7 +1416,8 @@ clientReplyContext::buildReplyHeader()
                         continue;
                     }
                     request->flags.mustKeepalive = true;
-                    if (!request->flags.accelerated && !request->flags.intercepted) {
+                    const auto port = request->masterXaction->squidPort;
+                    if (port->flags.forwarded() && request->flags.sslBumped) {
                         httpHeaderPutStrf(hdr, Http::HdrType::PROXY_SUPPORT, "Session-Based-Authentication");
                         /*
                           We send "Connection: Proxy-Support" header to mark
@@ -2175,7 +2176,8 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
      */
 
     if (http->request == NULL) {
-        const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+        const auto connManager = http->getConn();
+        const MasterXaction::Pointer mx = new MasterXaction(connManager ? connManager->port : nullptr);
         // XXX: These fake URI parameters shadow the real (or error:...) URI.
         // TODO: Either always set the request earlier and assert here OR use
         // http->uri (converted to Anyp::Uri) to create this catch-all request.

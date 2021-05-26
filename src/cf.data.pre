@@ -2501,6 +2501,12 @@ DOC_START
 	The tls-cert= option is mandatory on HTTPS ports.
 
 	See http_port for a list of modes and options.
+
+	Enabling support for PROXY protocol connections on https_port (see
+	require-proxy-header) places the port in interception mode. Squid
+	assumes that the interception happens at or near a network agent like
+	HAProxy, and that agent then forwards the intercepted TLS connection
+	to Squid using a basic TCP connection with the PROXY protocol prefix.
 DOC_END
 
 NAME: ftp_port

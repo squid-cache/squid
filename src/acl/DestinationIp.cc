@@ -45,7 +45,8 @@ ACLDestinationIP::match(ACLChecklist *cl)
     // Bypass of browser same-origin access control in intercepted communication
     // To resolve this we will force DIRECT and only to the original client destination.
     // In which case, we also need this ACL to accurately match the destination
-    if (Config.onoff.client_dst_passthru && (checklist->request->flags.intercepted || checklist->request->flags.interceptTproxy)) {
+    // TODO: use HttpRequest::mustGoToOriginalDestination() after XXX: add missing checks
+    if (Config.onoff.client_dst_passthru && checklist->request->masterXaction->hasListeningInterceptedPort()) {
         const auto conn = checklist->conn();
         return (conn && conn->clientConnection) ?
                ACLIP::match(conn->clientConnection->local) : -1;

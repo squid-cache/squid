@@ -41,7 +41,24 @@ class MasterXaction : public RefCountable
 public:
     typedef RefCount<MasterXaction> Pointer;
 
-    explicit MasterXaction(const XactionInitiator anInitiator) : initiator(anInitiator) {};
+    /// Does not have association with a listening port.
+    /// \param anInitiator any value other from XactionInitiator::initClient.
+   explicit MasterXaction(const XactionInitiator anInitiator) :
+        initiator(anInitiator)
+    {
+        assert(!initiator.in(XactionInitiator::initClient));
+    };
+
+    /// Requires a listening port.
+    /// Compatible only with XactionInitiator::initClient.
+    explicit MasterXaction(const AnyP::PortCfgPointer &port) :
+        squidPort(port),
+        initiator(XactionInitiator::initClient)
+    {};
+
+    /// a convenience method returning TrafficMode::interceptedSomewhere() for the port accepted this transaction
+    /// \see TrafficMode::interceptedSomewhere() for details
+    bool hasListeningInterceptedPort() const { return squidPort && squidPort->flags.interceptedSomewhere(); }
 
     /// transaction ID.
     InstanceId<MasterXaction, uint64_t> id;

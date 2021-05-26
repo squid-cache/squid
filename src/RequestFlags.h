@@ -58,12 +58,8 @@ public:
     bool accelerated = false;
     /** if set, ignore Cache-Control headers */
     bool ignoreCc = false;
-    /** set for intercepted requests */
-    bool intercepted = false;
     /** set if the Host: header passed verification */
     bool hostVerified = false;
-    /// Set for requests handled by a "tproxy" port.
-    bool interceptTproxy = false;
     /// The client IP address should be spoofed when connecting to the web server.
     /// This applies to TPROXY traffic that has not had spoofing disabled through
     /// the spoof_client_ip squid.conf ACL.

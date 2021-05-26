@@ -28,14 +28,6 @@ ConnStateData *NewServer(MasterXactionPointer &xact);
 
 } // namespace Http
 
-namespace Https
-{
-
-/// create a new HTTPS connection handler; never returns NULL
-ConnStateData *NewServer(MasterXactionPointer &xact);
-
-} // namespace Https
-
 namespace Ftp
 {
 
