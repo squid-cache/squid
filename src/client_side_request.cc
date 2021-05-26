@@ -74,10 +74,6 @@
 #include "ssl/support.h"
 #endif
 
-#if LINGERING_CLOSE
-#define comm_close comm_lingering_close
-#endif
-
 static const char *const crlf = "\r\n";
 
 #if FOLLOW_X_FORWARDED_FOR

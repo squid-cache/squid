@@ -98,7 +98,7 @@ Signal( int signo, SigFunc* newhandler, bool doInterrupt )
            (SigFunc*) old.sa_handler;
 }
 
-SIGRETTYPE
+void
 sigChild( int signo )
 // purpose: supply ad hoc child handler with output on stderr
 // paramtr: signo (IN): == SIGCHLD
@@ -128,9 +128,5 @@ sigChild( int signo )
         }
     }
     errno = saveerr;
-
-#if SIGRETTYPE != void
-    return 0;
-#endif
 }
 

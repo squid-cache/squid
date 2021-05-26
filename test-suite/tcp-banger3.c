@@ -133,10 +133,6 @@ get_url(const char *url)
         *t = '\0';
         port = (unsigned short) atoi(t + 1);
     }
-#if 0
-    if ((int) port != 80)
-        return 0;
-#endif
     t = strchr(url + 7, '/');
     strncpy(path, (t ? t : "/"), URL_BUF_SZ);
     memset(&S, '\0', sizeof(S));

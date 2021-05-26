@@ -192,13 +192,6 @@ authenticateDigestNonceDelete(digest_nonce_h * nonce)
 {
     if (nonce) {
         assert(nonce->references == 0);
-#if UNREACHABLECODE
-
-        if (nonce->flags.incache)
-            hash_remove_link(digest_nonce_cache, nonce);
-
-#endif
-
         assert(!nonce->flags.incache);
 
         safe_free(nonce->key);
@@ -238,13 +231,6 @@ authenticateDigestNonceShutdown(void)
         }
     }
 
-#if DEBUGSHUTDOWN
-    if (digest_nonce_pool) {
-        delete digest_nonce_pool;
-        digest_nonce_pool = NULL;
-    }
-
-#endif
     debugs(29, 2, "Nonce cache shutdown");
 }
 

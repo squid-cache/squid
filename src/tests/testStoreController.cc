@@ -145,10 +145,6 @@ testStoreController::testSearch()
     CPPUNIT_ASSERT_EQUAL(false, search->error());
     CPPUNIT_ASSERT_EQUAL(false, search->isDone());
     CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(NULL), search->currentItem());
-#if 0
-
-    CPPUNIT_ASSERT_EQUAL(false, search->next());
-#endif
 
     /* trigger a callback */
     cbcalled = false;

@@ -236,20 +236,6 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
     AsyncJob::Start(cs.get());
 }
 
-/*
- * This event handler is necessary to work around the no-rentry policy
- * of Adaptation::Icap::Xaction::callStart()
- */
-#if 0
-void
-Adaptation::Icap::Xaction::reusedConnection(void *data)
-{
-    debugs(93, 5, HERE << "reused connection");
-    Adaptation::Icap::Xaction *x = (Adaptation::Icap::Xaction*)data;
-    x->noteCommConnected(Comm::OK);
-}
-#endif
-
 void Adaptation::Icap::Xaction::closeConnection()
 {
     if (haveConnection()) {

@@ -185,25 +185,6 @@ peerDigestNeeded(PeerDigest * pd)
     peerDigestSetCheck(pd, 0);  /* check asap */
 }
 
-/* currently we do not have a reason to disable without destroying */
-#if FUTURE_CODE
-/* disables peer for good */
-static void
-peerDigestDisable(PeerDigest * pd)
-{
-    debugs(72, 2, "peerDigestDisable: peer " << pd->host.buf() << " disabled for good");
-    pd->times.disabled = squid_curtime;
-    pd->times.next_check = -1;  /* never */
-    pd->flags.usable = 0;
-
-    delete pd->cd
-    pd->cd = nullptr;
-
-    /* we do not destroy the pd itself to preserve its "history" and stats */
-}
-
-#endif
-
 /* increment retry delay [after an unsuccessful attempt] */
 static time_t
 peerDigestIncDelay(const PeerDigest * pd)
@@ -727,14 +708,6 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     if (!reason) {
         if (!(pd = fetch->pd))
             reason = "peer digest disappeared?!";
-
-#if DONT            /* WHY NOT? /HNO */
-
-        else if (!cbdataReferenceValid(pd))
-            reason = "invalidated peer digest?!";
-
-#endif
-
         else
             host = pd->host;
     }

@@ -38,18 +38,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 ******************************************************************/
 
-#if 0
-#if (defined vax) || (defined (mips))
-/*
- * This is a fairly bogus thing to do, but there seems to be no better way for
- * compilers that don't understand void pointers.
- */
-#ifndef void
-#define void char
-#endif
-#endif
-#endif
-
 #define SID_MAX_LEN 64
 
 #define READ        1
