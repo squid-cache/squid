@@ -1241,7 +1241,7 @@ check_target_acl(const char *hostname, int port)
 
     if (fp == NULL) {
 #ifdef CACHEMGR_HOSTNAME_DEFINED
-        //TODO: simplify and maybe get rid of CACHEMGR_HOSTNAME altogether
+        // TODO: simplify and maybe get rid of CACHEMGR_HOSTNAME altogether
         if (strcmp(hostname, CACHEMGR_HOSTNAME) == 0 && port == CACHE_HTTP_PORT)
             return 1;
 
