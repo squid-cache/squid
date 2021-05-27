@@ -685,7 +685,7 @@ icpHandleUdp(int sock, void *)
                ", version=" << pkt->version <<
                ", length=" << payloadLength <<
                ", reqnum=" << ntohl(pkt->reqnum) <<
-               ", flags=" << std::hex << ntohl(pkt->flags) << std::dec <<
+               ", flags=" << asHex(ntohl(pkt->flags)) <<
                ", shostid=" << Ip::Address(a) <<
                Debug::Extra <<
                Raw(nullptr, (buf+sizeof(icp_common_t)), payloadLength).minLevel(DBG_DATA).hex() <<
@@ -894,4 +894,3 @@ icpGetCacheKey(const char *url, int reqnum)
 
     return storeKeyPublic(url, Http::METHOD_GET);
 }
-
