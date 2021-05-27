@@ -671,7 +671,7 @@ icpHandleUdp(int sock, void *)
             throw TextException("too-small UDP packet (ignoring)", Here());
 
         if (payloadLength < len-sizeof(icp_common_t))
-            throw TextException("length value larger than data received (ignoring)", Here());
+            throw TextException("received truncated payload", Here());
 
         // TODO use BinaryTokenizer parse to validate fully
         if (pkt->opcode < 0 || pkt->opcode >= ICP_END)
