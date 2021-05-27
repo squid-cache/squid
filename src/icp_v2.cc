@@ -674,7 +674,7 @@ icpHandleUdp(int sock, void *)
             throw TextException("received truncated payload", Here());
 
         // TODO use BinaryTokenizer parse to validate fully
-        if (pkt->opcode < 0 || pkt->opcode >= ICP_END)
+        if (pkt->opcode <= ICP_INVALID || pkt->opcode >= ICP_END)
             throw TextException(ToSBuf("unknown opcode ", pkt->opcode), Here());
 
         struct in_addr a;
