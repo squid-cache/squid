@@ -11,8 +11,8 @@
 #include "html_quote.h"
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
+#include "security/CertGadgets.h"
 #include "security/ErrorDetail.h"
-#include "security/forward.h"
 #include "security/Io.h"
 #include "util.h"
 
@@ -613,16 +613,15 @@ Security::ErrorDetail::cn() const
 const char *
 Security::ErrorDetail::ca_name() const
 {
-#if USE_OPENSSL
-    if (broken_cert.get()) {
-        static char tmpBuffer[256]; // A temporary buffer
-        if (X509_NAME_oneline(X509_get_issuer_name(broken_cert.get()), tmpBuffer, sizeof(tmpBuffer))) {
+    if (broken_cert) {
+        static SBuf tmpBuffer;
+        tmpBuffer = Security::CertIssuerName(broken_cert);
+        if (!tmpBuffer.isEmpty()) {
             // quote to avoid possible html code injection through
             // certificate issuer subject
-            return html_quote(tmpBuffer);
+            return html_quote(tmpBuffer.c_str());
         }
     }
-#endif // USE_OPENSSL
     return "[Not available]";
 }
 

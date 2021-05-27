@@ -1270,11 +1270,9 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_SSL_USER_CERT_ISSUER:
-            if (X509 *cert = al->cache.sslClientCert.get()) {
-                if (X509_NAME *issuer = X509_get_issuer_name(cert)) {
-                    X509_NAME_oneline(issuer, tmp, sizeof(tmp));
-                    out = tmp;
-                }
+            if (const auto cert = al->cache.sslClientCert) {
+                sb = Security::CertIssuerName(cert);
+                out = sb.c_str();
             }
             break;
 

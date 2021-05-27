@@ -2424,9 +2424,7 @@ clientNegotiateSSL(int fd, void *data)
 #if USE_OPENSSL
     if (const auto clientCert = Security::CertPointer(SSL_get_peer_certificate(session.get()))) {
         debugs(83, 3, "FD " << fd << " client certificate: subject: " << Security::CertSubjectName(clientCert));
-        debugs(83, 3, "FD " << fd << " client certificate: issuer: " <<
-               X509_NAME_oneline(X509_get_issuer_name(clientCert.get()), 0, 0));
-        // XXX: leaking X509_NAME_oneline() result
+        debugs(83, 3, "FD " << fd << " client certificate: issuer: " << Security::CertIssuerName(clientCert));
     } else {
         debugs(83, 5, "FD " << fd << " has no client certificate.");
     }

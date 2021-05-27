@@ -17,6 +17,9 @@ namespace Security
 /// \return the SubjectName field of the given certificate
 SBuf CertSubjectName(const CertPointer &);
 
+/// \return the Issuer field of the given certificate
+SBuf CertIssuerName(const CertPointer &);
+
 /// \returns whether cert was (correctly) issued by the given issuer
 /// Due to complexity of the underlying checks, it is impossible to clearly
 /// distinguish pure negative answers (e.g., two independent certificates)

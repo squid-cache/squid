@@ -18,7 +18,46 @@
 #endif
 
 SBuf
-Security::CertSubjectName(const Security::CertPointer &cert)
+Security::CertIssuerName(const CertPointer &cert)
+{
+    SBuf out;
+#if USE_OPENSSL
+    auto s = X509_NAME_oneline(X509_get_issuer_name(cert.get()), nullptr, 0);
+    if (!s) {
+        const auto x = ERR_get_error();
+        debugs(83, DBG_PARSE_NOTE(2), "WARNING: issuer: " << Security::ErrorString(x));
+        return out;
+    }
+    out.append(s);
+    OPENSSL_free(s);
+
+#elif USE_GNUTLS
+    gnutls_x509_dn_t dn;
+    auto x = gnutls_x509_crt_get_issuer(cert.get(), &dn);
+    if (x != GNUTLS_E_SUCCESS) {
+        debugs(83, DBG_PARSE_NOTE(2), "WARNING: issuer: " << Security::ErrorString(x));
+        return out;
+    }
+
+    gnutls_datum_t str;
+    x = gnutls_x509_dn_get_str(dn, &str);
+    if (x != GNUTLS_E_SUCCESS) {
+        debugs(83, DBG_PARSE_NOTE(2), "WARNING: issuer: " << Security::ErrorString(x));
+        return out;
+    }
+    out.append(reinterpret_cast<const char *>(str.data), str.size);
+    gnutls_free(str.data);
+
+#else
+    out.append("[not implemented]");
+#endif
+
+    debugs(83, DBG_PARSE_NOTE(3), "found cert issuer=" << out);
+    return out;
+}
+
+SBuf
+Security::CertSubjectName(const CertPointer &cert)
 {
     SBuf out;
 #if USE_OPENSSL
