@@ -681,7 +681,7 @@ icpHandleUdp(int sock, void *)
         a.s_addr = pkt->shostid;
         debugs(12, 2, "ICP Client remote=" << from << " FD " << sock);
         debugs(12, 2, "ICP Client REQUEST:\n---------\n" <<
-               "opcode=(" << std::setw(3) << pkt->opcode << ")" << icp_opcode_str[pkt->opcode] <<
+               "opcode=" << static_cast<unsigned int>(pkt->opcode) << ' ' << icp_opcode_str[pkt->opcode] <<
                ", version=" << pkt->version <<
                ", length=" << payloadLength <<
                ", reqnum=" << ntohl(pkt->reqnum) <<
