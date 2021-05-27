@@ -482,16 +482,10 @@ fvdbCount(hash_table * hash, const char *key)
     ++ fv->n;
 }
 
-static void
-fvdbCount(HeaderValueCounts &table, const SBuf& key)
-{
-    ++table[key];
-}
-
 void
 fvdbCountVia(const SBuf &key)
 {
-    fvdbCount(via_table, key);
+    ++via_table[key];
 }
 
 void
