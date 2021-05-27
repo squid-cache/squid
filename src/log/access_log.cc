@@ -11,9 +11,11 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "acl/Checklist.h"
+#include "sbuf/Algorithms.h"
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
 #endif
+#include "base/PackableStream.h"
 #include "CachePeer.h"
 #include "error/Detail.h"
 #include "errorpage.h"
@@ -30,6 +32,7 @@
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "rfc1738.h"
+#include "sbuf/SBuf.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -38,6 +41,8 @@
 #include "eui/Eui48.h"
 #include "eui/Eui64.h"
 #endif
+
+#include <unordered_map>
 
 #if HEADERS_LOG
 static Logfile *headerslog = NULL;
@@ -56,11 +61,15 @@ typedef struct {
     hash_link hash;
     int n;
 } fvdb_entry;
-static hash_table *via_table = NULL;
+
+// counts the number of header value occurrences
+using HeaderValueCountsElem = std::pair<SBuf, uint64_t>;
+using HeaderValueCounts = std::unordered_map < SBuf, uint64_t, std::hash<SBuf>, std::equal_to<SBuf>, PoolingAllocator<HeaderValueCountsElem> >;
+static HeaderValueCounts via_table;
+
 static hash_table *forw_table = NULL;
 static void fvdbInit();
-static void fvdbDumpTable(StoreEntry * e, hash_table * hash);
-static void fvdbCount(hash_table * hash, const char *key);
+static void fvdbDumpTable(Packable *, const HeaderValueCounts&);
 static OBJH fvdbDumpVia;
 static OBJH fvdbDumpForw;
 static FREE fvdbFreeEntry;
@@ -443,7 +452,6 @@ accessLogInit(void)
 static void
 fvdbInit(void)
 {
-    via_table = hash_create((HASHCMP *) strcmp, 977, hash4);
     forw_table = hash_create((HASHCMP *) strcmp, 977, hash4);
 }
 
@@ -474,8 +482,14 @@ fvdbCount(hash_table * hash, const char *key)
     ++ fv->n;
 }
 
+static void
+fvdbCount(HeaderValueCounts &table, const SBuf& key)
+{
+    ++table[key];
+}
+
 void
-fvdbCountVia(const char *key)
+fvdbCountVia(const SBuf &key)
 {
     fvdbCount(via_table, key);
 }
@@ -504,6 +518,15 @@ fvdbDumpTable(StoreEntry * e, hash_table * hash)
 }
 
 static void
+fvdbDumpTable(Packable * e, const HeaderValueCounts& hash)
+{
+    PackableStream os(*e);
+    for (const auto & i : hash)
+        os << std::setw(9) << i.second << " " << i.first << std::endl;
+    os.flush();
+}
+
+static void
 fvdbDumpVia(StoreEntry * e)
 {
     fvdbDumpTable(e, via_table);
@@ -527,9 +550,7 @@ fvdbFreeEntry(void *data)
 static void
 fvdbClear(void)
 {
-    hashFreeItems(via_table, fvdbFreeEntry);
-    hashFreeMemory(via_table);
-    via_table = hash_create((HASHCMP *) strcmp, 977, hash4);
+    via_table.clear();
     hashFreeItems(forw_table, fvdbFreeEntry);
     hashFreeMemory(forw_table);
     forw_table = hash_create((HASHCMP *) strcmp, 977, hash4);

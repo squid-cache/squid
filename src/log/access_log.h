@@ -13,7 +13,11 @@
 
 #include "LogTags.h"
 
-void fvdbCountVia(const char *key);
+class String;
+/// count occurrences of the given Via header value
+/// XXX: this function preserves all counted values until the next log rotation
+void fvdbCountVia(const SBuf &);
+
 void fvdbCountForw(const char *key);
 
 #if HEADERS_LOG
