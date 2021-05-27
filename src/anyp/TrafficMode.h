@@ -72,7 +72,7 @@ public:
 };
 
 /**
- * Set of 'mode' flags defining types of trafic which can be received.
+ * Set of 'mode' flags defining types of traffic which can be received.
  *
  * Use to determine the processing steps which need to be applied
  * to this traffic under any special circumstances which may apply.
