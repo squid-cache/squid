@@ -15,7 +15,7 @@
 ## Source Code Format Enforcement
 #
 # A checker to recursively reformat all source files: .h .c .cc .cci
-# using a custom astyle formatter and to use MD5 to validate that
+# using a custom astyle formatter and to use CHECKSUM to validate that
 # the formatter has not altered the code syntax.
 #
 # If code alteration takes place the process is halted for manual intervention.
@@ -33,8 +33,18 @@ KeepGoingDirective=""
 # has changed in different releases.
 # if --with-astyle /path/to/astyle is used, the check is still performed
 # and a warning is printed, but the sources are reformatted
+# --only-changed-since <fork|commit-id> applies the formatting only to
+#    files changes since the fork point or the named commit-id.
+#    the verbatim name "fork" will look for changed files from upstream/master
+#    other sensible options for this value are HEAD^, master, origin/master
+#    or the name of the branch this was forked from
+#
+# some configurations can happen through environment variables:
+# - ASTYLE: path to the astyle binary to use
+# - CHECKSUM: path to the md5sum or similar checksum calculator to use
+
 TargetAstyleVersion="2.04"
-ASTYLE='astyle'
+ASTYLE="${ASTYLE:-astyle}"
 
 # whether to check and, if necessary, update boilerplate copyright years
 CheckAndUpdateCopyright=yes
@@ -45,9 +55,11 @@ printUsage () {
     echo "    --keep-going|-k"
     echo "    --check-and-update-copyright <yes|no>"
     echo "    --with-astyle </path/to/astyle/executable>"
+    echo "    --only-changed-since <fork|commit-id>"
 }
 
 # command-line options
+OnlyChangedSince=""
 while [ $# -ge 1 ]; do
     case "$1" in
     --keep-going|-k)
@@ -74,6 +86,10 @@ while [ $# -ge 1 ]; do
         export ASTYLE
         shift 2
         ;;
+    --only-changed-since)
+        OnlyChangedSince="$2"
+        shift 2
+        ;;
     *)
         printUsage
         echo "Unsupported command-line option: $1"
@@ -92,13 +108,22 @@ if ! git diff --quiet; then
 	exit 1
 fi
 
-# On squid-cache.org we have to use the python scripted md5sum
-HOST=`hostname`
-if test "$HOST" = "squid-cache.org" ; then
-	MD5="md5"
-else
-	MD5="md5sum"
+if test "x${CHECKSUM}" != "x"
+then
+    if ! "${CHECKSUM}" </dev/null >/dev/null
+    then
+        echo "user-supplied checksum utility ${CHECKSUM} cannot run"
+        exit 1
+    fi
 fi
+
+for CHECKSUM in "${CHECKSUM:-md5}" md5sum shasum sha1sum
+do
+    if "${CHECKSUM}" </dev/null >/dev/null 2>/dev/null ; then
+        break
+    fi
+done
+echo "detected checksum as is ${CHECKSUM}"
 
 ${ASTYLE} --version >/dev/null 2>/dev/null
 result=$?
@@ -106,24 +131,24 @@ if test $result -gt 0 ; then
 	echo "ERROR: cannot run ${ASTYLE}"
 	exit 1
 fi
-ASVER=`${ASTYLE} --version 2>&1 | grep -o -E "[0-9.]+"`
-if test "${ASVER}" != "${TargetAstyleVersion}" ; then
+AstyleVersion=`${ASTYLE} --version 2>&1 | grep -o -E "[0-9.]+"`
+if test "${AstyleVersion}" != "${TargetAstyleVersion}" ; then
 	if test "${ASTYLE}" = "astyle" ; then
-		echo "Astyle version problem. You have ${ASVER} instead of ${TargetAstyleVersion}"
+		echo "Astyle version problem. You have ${AstyleVersion} instead of ${TargetAstyleVersion}"
 		echo "Formatting step skipped due to version mismatch"
-		ASVER=""
+		AstyleVersion=""
 	else
-		echo "WARNING: ${ASTYLE} is version ${ASVER} instead of ${TargetAstyleVersion}"
+		echo "WARNING: ${ASTYLE} is version ${AstyleVersion} instead of ${TargetAstyleVersion}"
 		echo "Formatting anyway, please double check output before submitting"
 	fi
 else
-	echo "Found astyle ${ASVER}. Formatting..."
+	echo "Found astyle ${AstyleVersion}. Formatting..."
 fi
 
-if test $CheckAndUpdateCopyright = yes
+if test ${CheckAndUpdateCopyright} = yes
 then
-    COPYRIGHT_YEARS=`date +"1996-%Y"`
-    echo "s/1996-2[0-9]+ The Squid Software Foundation and contributors/${COPYRIGHT_YEARS} The Squid Software Foundation and contributors/g" >> boilerplate_fix.sed
+    CopyRightYears=`date +"1996-%Y"`
+    echo "s/1996-2[0-9]+ The Squid Software Foundation and contributors/${CopyRightYears} The Squid Software Foundation and contributors/g" >> boilerplate_fix.sed
 fi
 
 # executes the specified command
@@ -133,11 +158,11 @@ run_ ()
         "$@" && return; # return on success
         error=$?
 
-        if test $KeepGoing = no; then
+        if test ${KeepGoing} = no; then
                 return $error
         fi
 
-        echo "ERROR: Continuing after a failure ($error) due to $KeepGoingDirective"
+        echo "ERROR: Continuing after a failure ($error) due to ${KeepGoingDirective}"
         SeenErrors=$error # TODO: Remember the _first_ error instead
         return 0 # hide error from the caller
 }
@@ -216,33 +241,51 @@ git grep "ifn?def .*_SQUID_" |
 #
 # Scan for file-specific actions
 #
-for FILENAME in `git ls-files`; do
+ForkPoint=""
+FilesToOperateOn=""
+if test "x${OnlyChangedSince}" = "x" ; then
+    FilesToOperateOn=`git ls-files`
+fi
+if test "x${FilesToOperateOn}" = "x" && test "x${OnlyChangedSince}" = "xfork" ; then
+    ForkPoint=`git merge-base --fork-point upstream/master`
+    if test "x${ForkPoint}" = "x" ; then
+        echo "Could not identify fork point - sometimes it happens"
+        echo "Please specify commit-id explicitly"
+        exit 1
+    fi
+    OnlyChangedSince="${ForkPoint}"
+fi
+if test "x${FilesToOperateOn}" = "x" && test "x${OnlyChangedSince}" != "x" ; then
+    FilesToOperateOn=`git diff --name-only ${OnlyChangedSince}`
+fi
+
+for FileName in ${FilesToOperateOn}; do
     skip_copyright_check=""
 
     # skip subdirectories, git ls-files is recursive
-    test -d $FILENAME && continue
+    test -d ${FileName} && continue
 
-    case ${FILENAME} in
+    case ${FileName} in
 
     *.h|*.c|*.cc|*.cci)
 
 	#
 	# Code Style formatting maintenance
 	#
-	applyPluginsTo ${FILENAME} scripts/maintenance/ || return
-	if test "${ASVER}"; then
-		./scripts/formater.pl ${FILENAME}
-		if test -e $FILENAME -a -e "$FILENAME.astylebak"; then
-			md51=`cat  $FILENAME| tr -d "\n \t\r" | $MD5`;
-			md52=`cat  $FILENAME.astylebak| tr -d "\n \t\r" | $MD5`;
+	applyPluginsTo ${FileName} scripts/maintenance/ || return
+	if test "${AstyleVersion}"; then
+		./scripts/formater.pl ${FileName}
+		if test -e ${FileName} -a -e "${FileName}.astylebak"; then
+			md51=`cat  ${FileName}| tr -d "\n \t\r" | ${CHECKSUM}`;
+			md52=`cat  ${FileName}.astylebak| tr -d "\n \t\r" | ${CHECKSUM}`;
 
 			if test "$md51" != "$md52"; then
-				echo "ERROR: File $FILENAME not formatting well";
-				mv $FILENAME $FILENAME.astylebad
-				mv $FILENAME.astylebak $FILENAME
-				git checkout -- ${FILENAME}
+				echo "ERROR: File ${FileName} not formatting well";
+				mv ${FileName} ${FileName}.astylebad
+				mv ${FileName}.astylebak ${FileName}
+				git checkout -- ${FileName}
 			else
-				rm -f $FILENAME.astylebak
+				rm -f ${FileName}.astylebak
 			fi
         	fi
 	fi
@@ -250,20 +293,20 @@ for FILENAME in `git ls-files`; do
 	#
 	# REQUIRE squid.h first #include
 	#
-	case ${FILENAME} in
+	case ${FileName} in
 	src/cf_gen.cc)
 		# ignore, this is a build tool.
 		;;
 	*.c|*.cc)
-		FI=`grep "#include" ${FILENAME} | head -1`;
-		if test "${FI}" != "#include \"squid.h\"" -a "${FILENAME}" != "cf_gen.cc"; then
-			echo "ERROR: ${FILENAME} does not include squid.h first!"
+		IncludedFilesFirstLine=`grep "#include" ${FileName} | head -1`;
+		if test "${IncludedFilesFirstLine}" != "#include \"squid.h\"" -a "${FileName}" != "cf_gen.cc"; then
+			echo "ERROR: ${FileName} does not include squid.h first!"
 		fi
 		;;
 	*.h|*.cci)
-		FI=`grep "#include \"squid.h\"" ${FILENAME}`;
-		if test "x${FI}" != "x" ; then
-			echo "ERROR: ${FILENAME} duplicate include of squid.h"
+		IncludedFilesOnlySquidH=`grep "#include \"squid.h\"" ${FileName}`;
+		if test "x${IncludedFilesOnlySquidH}" != "x" ; then
+			echo "ERROR: ${FileName} duplicate include of squid.h"
 		fi
 		;;
 	esac
@@ -271,11 +314,11 @@ for FILENAME in `git ls-files`; do
 	#
 	# If a file includes openssl headers, then it must include compat/openssl.h
 	#
-	if test "${FILENAME}" != "compat/openssl.h"; then
-		FA=`grep "#include.*openssl/" "${FILENAME}" 2>/dev/null | head -1`;
-		FB=`grep '#include.*compat/openssl[.]h' "${FILENAME}" 2>/dev/null | head -1`;
-		if test "x${FA}" != "x" -a "x${FB}" = "x"; then
-			echo "ERROR: ${FILENAME} includes openssl headers without including \"compat/openssl.h\""
+	if test "${FileName}" != "compat/openssl.h"; then
+		IncludedFilesOnlyOpenSsl=`grep "#include.*openssl/" "${FileName}" 2>/dev/null | head -1`;
+		IncludedFilesOnlyCompatOpenSsl=`grep '#include.*compat/openssl[.]h' "${FileName}" 2>/dev/null | head -1`;
+		if test "x${IncludedFilesOnlyOpenSsl}" != "x" -a "x${IncludedFilesOnlyCompatOpenSsl}" = "x"; then
+			echo "ERROR: ${FileName} includes openssl headers without including \"compat/openssl.h\""
 		fi
 	fi
 
@@ -283,9 +326,9 @@ for FILENAME in `git ls-files`; do
 	# forward.h means different things to Squid code depending on the path
 	# require the full path is explicit for every include
 	#
-	FI=`grep "#include \"forward.h\"" ${FILENAME}`;
-	if test "x${FI}" != "x" ; then
-		echo "ERROR: ${FILENAME} contains reference to forward.h without path"
+	IncludedFilesOnlyForwardH=`grep "#include \"forward.h\"" ${FileName}`;
+	if test "x${IncludedFilesOnlyForwardH}" != "x" ; then
+		echo "ERROR: ${FileName} contains reference to forward.h without path"
 	fi
 
 	#
@@ -293,35 +336,35 @@ for FILENAME in `git ls-files`; do
 	# strdup() - only allowed in compat/xstring.h which defines a safe replacement.
 	# sprintf() - not allowed anywhere.
 	#
-	STRDUP=`grep -e "[^x]strdup(" ${FILENAME}`;
-	if test "x${STRDUP}" != "x" -a "${FILENAME}" != "compat/xstring.h"; then
-		echo "ERROR: ${FILENAME} contains unprotected use of strdup()"
+	IsStrdupUsedInFile=`grep -e "[^x]strdup(" ${FileName}`;
+	if test "x${IsStrdupUsedInFile}" != "x" -a "${FileName}" != "compat/xstring.h"; then
+		echo "ERROR: ${FileName} contains unprotected use of strdup()"
 	fi
-	SPRINTF=`grep -e "[^v]sprintf(" ${FILENAME}`;
-	if test "x${SPRINTF}" != "x" ; then
-		echo "ERROR: ${FILENAME} contains unsafe use of sprintf()"
+	IsSprintfUsedInFile=`grep -e "[^v]sprintf(" ${FileName}`;
+	if test "x${IsSprintfUsedInFile}" != "x" ; then
+		echo "ERROR: ${FileName} contains unsafe use of sprintf()"
 	fi
 
 	#
 	# DEBUG Section list maintenance
 	#
-	grep " DEBUG: section" <${FILENAME} | sed -e 's/ \* DEBUG: //' -e 's%/\* DEBUG: %%' -e 's% \*/%%' | sort -u >>doc/debug-sections.tmp
+	grep " DEBUG: section" <${FileName} | sed -e 's/ \* DEBUG: //' -e 's%/\* DEBUG: %%' -e 's% \*/%%' | sort -u >>doc/debug-sections.tmp
 
 	#
 	# File permissions maintenance.
 	#
-	chmod 644 ${FILENAME}
+	chmod 644 ${FileName}
 	;;
 
     *.pl|*.sh)
 	#
 	# File permissions maintenance.
 	#
-	chmod 755 ${FILENAME}
+	chmod 755 ${FileName}
 	;;
 
     *.am)
-		applyPluginsTo ${FILENAME} scripts/format-makefile-am.pl || return
+		applyPluginsTo ${FileName} scripts/format-makefile-am.pl || return
 	;;
 
     ChangeLog|CREDITS|CONTRIBUTORS|COPYING|*.png|*.po|*.pot|rfcs/|*.txt|test-suite/squidconf/empty|.bzrignore)
@@ -340,15 +383,15 @@ for FILENAME in `git ls-files`; do
     esac
 
     # check for Foundation copyright blurb
-    if test $CheckAndUpdateCopyright = yes -a -f ${FILENAME} -a "x$skip_copyright_check" = "x"; then
-        BLURB=`grep -o "${COPYRIGHT_YEARS} The Squid Software Foundation and contributors" ${FILENAME}`;
-        if test "x${BLURB}" = "x"; then
-            BOILER=`grep -o -E "1996-2[0-9]+ The Squid Software Foundation and contributors" ${FILENAME}`;
-            if test "x${BOILER}" != "x"; then
-                echo "UPDATE COPYRIGHT for ${FILENAME}"
-                sed --in-place -r -f boilerplate_fix.sed ${FILENAME}
+    if test ${CheckAndUpdateCopyright} = yes -a -f ${FileName} -a "x$skip_copyright_check" = "x"; then
+        Blurb=`grep -o "${CopyRightYears} The Squid Software Foundation and contributors" ${FileName}`;
+        if test "x${Blurb}" = "x"; then
+            BoilerPlate=`grep -o -E "1996-2[0-9]+ The Squid Software Foundation and contributors" ${FileName}`;
+            if test "x${BoilerPlate}" != "x"; then
+                echo "UPDATE COPYRIGHT for ${FileName}"
+                sed --in-place -r -f boilerplate_fix.sed ${FileName}
             else
-                echo "CHECK COPYRIGHT for ${FILENAME}"
+                echo "CHECK COPYRIGHT for ${FileName}"
             fi
         fi
     fi
@@ -413,4 +456,4 @@ cat scripts/boilerplate.h doc/debug-sections.tmp2 >doc/debug-sections.txt
 rm doc/debug-sections.tmp doc/debug-sections.tmp2
 rm -f boilerplate_fix.sed
 
-exit $SeenErrors
+exit ${SeenErrors}
