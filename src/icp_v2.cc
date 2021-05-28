@@ -104,26 +104,20 @@ Comm::ConnectionPointer icpIncomingConn = NULL;
 /// \ingroup ServerProtocolICPInternal2
 Comm::ConnectionPointer icpOutgoingConn = NULL;
 
-/* icp_common_t */
-icp_common_t::icp_common_t() :
-    opcode(ICP_INVALID), version(0), length(0), reqnum(0),
-    flags(0), pad(0), shostid(0)
-{}
-
-icp_common_t::icp_common_t(char *buf, unsigned int len) :
-    opcode(ICP_INVALID), version(0), reqnum(0), flags(0), pad(0), shostid(0)
+icp_common_t::icp_common_t(char *buf, unsigned int len)
 {
-    if (len < sizeof(icp_common_t)) {
-        /* mark as invalid */
-        length = len + 1;
-        return;
-    }
+    if (len < sizeof(icp_common_t))
+        throw TextException("too-small UDP packet", Here());
 
     memcpy(this, buf, sizeof(icp_common_t));
-    /*
-     * Convert network order sensitive fields
-     */
+
+    if (getOpCode() == ICP_INVALID)
+        throw TextException(ToSBuf("unknown opcode ", opcode), Here());
+
     length = ntohs(length);
+    if (length > len)
+        throw TextException("received truncated payload", Here());
+
     reqnum = ntohl(reqnum);
     flags = ntohl(flags);
     pad = ntohl(pad);
@@ -662,39 +656,28 @@ icpHandleUdp(int sock, void *)
         icpCount(buf, RECV, (size_t) len, 0);
         buf[len] = '\0';
 
-        // XXX: possible unaligned integer access
-        auto pkt = reinterpret_cast<icp_common_t *>(buf);
-        if (static_cast<size_t>(len) < sizeof(icp_common_t))
-            throw TextException("too-small UDP packet", Here());
-
-        auto payloadLength = ntohs(pkt->length);
-        if (payloadLength < len-sizeof(icp_common_t))
-            throw TextException("received truncated payload", Here());
-
-        // TODO use BinaryTokenizer parse to validate fully
-        if (pkt->opcode <= ICP_INVALID || pkt->opcode >= ICP_END)
-            throw TextException(ToSBuf("unknown opcode ", pkt->opcode), Here());
+        icp_common_t pkt(buf, len);
 
         debugs(12, 2, "ICP Client remote=" << from << " FD " << sock);
         debugs(12, 2, "ICP Client REQUEST:\n---------\n" <<
-               "opcode=" << static_cast<unsigned int>(pkt->opcode) << ' ' << icp_opcode_str[pkt->opcode] <<
-               ", version=" << pkt->version <<
-               ", length=" << payloadLength <<
-               ", reqnum=" << ntohl(pkt->reqnum) <<
-               ", flags=" << asHex(ntohl(pkt->flags)) <<
+               "opcode=" << static_cast<unsigned int>(pkt.opcode) << ' ' << icp_opcode_str[pkt.opcode] <<
+               ", version=" << pkt.version <<
+               ", length=" << pkt.length <<
+               ", reqnum=" << pkt.reqnum <<
+               ", flags=" << asHex(pkt.flags) <<
                Debug::Extra <<
-               Raw(nullptr, (buf+sizeof(icp_common_t)), payloadLength).minLevel(DBG_DATA).hex() <<
+               Raw(nullptr, (buf+sizeof(icp_common_t)), pkt.length).minLevel(DBG_DATA).hex() <<
                "\n----------");
 
         if (icpOutgoingConn->local == from)
             // ignore ICP packets which loop back (multicast usually)
             throw TextException("UDP packet sent by myself", Here());
-        else if (pkt->version == ICP_VERSION_2)
+        else if (pkt.version == ICP_VERSION_2)
             icpHandleIcpV2(sock, from, buf, len);
-        else if (pkt->version == ICP_VERSION_3)
+        else if (pkt.version == ICP_VERSION_3)
             icpHandleIcpV3(sock, from, buf, len);
         else
-            throw TextException(ToSBuf("unknown version ", pkt->version), Here());
+            throw TextException(ToSBuf("unknown version ", pkt.version), Here());
 
         } catch (...) {
             debugs(12, 2, "WARNING: ICP remote=" << from << " FD " << sock << ": " << CurrentException << " (ignoring)");
