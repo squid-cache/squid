@@ -675,8 +675,6 @@ icpHandleUdp(int sock, void *)
         if (pkt->opcode <= ICP_INVALID || pkt->opcode >= ICP_END)
             throw TextException(ToSBuf("unknown opcode ", pkt->opcode), Here());
 
-        struct in_addr a;
-        a.s_addr = pkt->shostid;
         debugs(12, 2, "ICP Client remote=" << from << " FD " << sock);
         debugs(12, 2, "ICP Client REQUEST:\n---------\n" <<
                "opcode=" << static_cast<unsigned int>(pkt->opcode) << ' ' << icp_opcode_str[pkt->opcode] <<
@@ -684,7 +682,6 @@ icpHandleUdp(int sock, void *)
                ", length=" << payloadLength <<
                ", reqnum=" << ntohl(pkt->reqnum) <<
                ", flags=" << asHex(ntohl(pkt->flags)) <<
-               ", shostid=" << Ip::Address(a) <<
                Debug::Extra <<
                Raw(nullptr, (buf+sizeof(icp_common_t)), payloadLength).minLevel(DBG_DATA).hex() <<
                "\n----------");
