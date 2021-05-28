@@ -12,8 +12,8 @@
 #define SQUID_LOG_ACCESS_LOG_H_
 
 #include "LogTags.h"
+#include "sbuf/forward.h"
 
-class String;
 /// count occurrences of the given Via header value
 /// XXX: this function preserves all counted values until the next log rotation
 void fvdbCountVia(const SBuf &);
