@@ -51,6 +51,7 @@
 #include "proxyp/Header.h"
 #include "redirect.h"
 #include "rfc1738.h"
+#include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -1111,7 +1112,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         }
 
 #if USE_FORW_VIA_DB
-        fvdbCountVia(s.termedBuf());
+        fvdbCountVia(StringToSBuf(s));
 
 #endif
 
