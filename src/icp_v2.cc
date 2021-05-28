@@ -638,11 +638,10 @@ icpHandleUdp(int sock, void *)
                                 0,
                                 from);
 
-        debugs(12, 4, "FD " << sock << ": received " << len << " bytes from " << from);
-
         if (len == 0)
             break;
 
+        // XXX: move these checks into comm_udp_recvfrom() without breaking other UDP protocols
         if (len < 0) {
             int xerrno = errno;
             if (ignoreErrno(xerrno))
@@ -655,7 +654,7 @@ icpHandleUdp(int sock, void *)
             /* or maybe an EHOSTUNREACH "No route to host" message */
             if (xerrno != ECONNREFUSED && xerrno != EHOSTUNREACH)
 #endif
-                throw TextException(xstrerr(xerrno), Here());
+                throw TextException(ToSBuf("recvfrom: ",xstrerr(xerrno)), Here());
             break;
         }
 
@@ -665,11 +664,10 @@ icpHandleUdp(int sock, void *)
 
         // XXX: possible unaligned integer access
         auto pkt = reinterpret_cast<icp_common_t *>(buf);
-        auto payloadLength = ntohs(pkt->length);
-
         if (static_cast<size_t>(len) < sizeof(icp_common_t))
-            throw TextException("too-small UDP packet (ignoring)", Here());
+            throw TextException("too-small UDP packet", Here());
 
+        auto payloadLength = ntohs(pkt->length);
         if (payloadLength < len-sizeof(icp_common_t))
             throw TextException("received truncated payload", Here());
 
@@ -702,7 +700,7 @@ icpHandleUdp(int sock, void *)
             throw TextException(ToSBuf("unknown version ", pkt->version), Here());
 
         } catch (...) {
-            debugs(12, 2, "WARNING: ICP remote=" << from << " FD " << sock << ": " << CurrentException);
+            debugs(12, 2, "WARNING: ICP remote=" << from << " FD " << sock << ": " << CurrentException << " (ignoring)");
             // ICP problems should have no effect on other transactions
         }
     }
