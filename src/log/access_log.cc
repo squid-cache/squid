@@ -513,9 +513,9 @@ fvdbDumpTable(StoreEntry * e, hash_table * hash)
 }
 
 static void
-fvdbDumpTable(Packable *e, const HeaderValueCounts &counts)
+fvdbDumpCounts(StoreEntry &e, const HeaderValueCounts &counts)
 {
-    PackableStream os(*e);
+    PackableStream os(e);
     for (const auto &i : counts)
         os << std::setw(9) << i.second << " " << i.first << std::endl;
 }
@@ -523,7 +523,8 @@ fvdbDumpTable(Packable *e, const HeaderValueCounts &counts)
 static void
 fvdbDumpVia(StoreEntry * e)
 {
-    fvdbDumpTable(e, via_table);
+    assert(e);
+    fvdbDumpCounts(*e, via_table);
 }
 
 static void
