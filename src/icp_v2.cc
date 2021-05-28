@@ -654,7 +654,7 @@ icpHandleUdp(int sock, void *)
             /* or maybe an EHOSTUNREACH "No route to host" message */
             if (xerrno != ECONNREFUSED && xerrno != EHOSTUNREACH)
 #endif
-                throw TextException(ToSBuf("recvfrom: ",xstrerr(xerrno)), Here());
+                debugs(50, DBG_IMPORTANT, "icpHandleUdp: FD " << sock << " recvfrom: " << xstrerr(xerrno));
             break;
         }
 
@@ -889,3 +889,4 @@ icpGetCacheKey(const char *url, int reqnum)
 
     return storeKeyPublic(url, Http::METHOD_GET);
 }
+
