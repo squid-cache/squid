@@ -517,7 +517,6 @@ fvdbDumpTable(Packable *e, const HeaderValueCounts &counts)
     PackableStream os(*e);
     for (const auto &i : counts)
         os << std::setw(9) << i.second << " " << i.first << std::endl;
-    os.flush();
 }
 
 static void
