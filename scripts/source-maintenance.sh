@@ -21,27 +21,11 @@
 # If code alteration takes place the process is halted for manual intervention.
 #
 
-# whether to continue execution after a failure
 # TODO: Expand the subset of failures covered by this feature; see run_().
 KeepGoing="no"
 # the actual name of the directive that enabled keep-going mode
 KeepGoingDirective=""
-#
-# The script checks that the version of astyle is TargetAstyleVersion.
-# if it isn't, the default behaviour is to not perform the formatting stage
-# in order to avoid unexpected massive changes if the behaviour of astyle
-# has changed in different releases.
-# if --with-astyle /path/to/astyle is used, the check is still performed
-# and a warning is printed, but the sources are reformatted
-# --only-changed-since <fork|commit-id> applies the formatting only to
-#    files changes since the fork point or the named commit-id.
-#    the verbatim name "fork" will look for changed files from upstream/master
-#    other sensible options for this value are HEAD^, master, origin/master
-#    or the name of the branch this was forked from
-#
-# some configurations can happen through environment variables:
-# - ASTYLE: path to the astyle binary to use
-# - CHECKSUM: path to the md5sum or similar checksum calculator to use
+
 
 TargetAstyleVersion="2.04"
 ASTYLE="${ASTYLE:-astyle}"
@@ -50,12 +34,30 @@ ASTYLE="${ASTYLE:-astyle}"
 CheckAndUpdateCopyright=yes
 
 printUsage () {
-    echo "Usage: $0 [option...]"
-    echo "options:"
-    echo "    --keep-going|-k"
-    echo "    --check-and-update-copyright <yes|no>"
-    echo "    --with-astyle </path/to/astyle/executable>"
-    echo "    --only-changed-since <fork|commit-id>"
+cat <<_EOF
+Usage: $0 [option...]
+options:
+    --keep-going|-k                            (default: stop on error)
+    --check-and-update-copyright <yes|no>      (default no)
+    --with-astyle </path/to/astyle/executable> (default: "astyle")
+    --only-changed-since <fork|commit-id>      (default: apply to all files)
+
+This script applies Squid mandatory code style guidelines.
+
+It requires astyle version ${TargetAstyleVersion}, or it will skip formatting
+program files.
+The path to the astyle binary can be specified using the
+--with-astyle option or with the ASTYLE environment variable.
+It will try to auto-detect a checksum program (e.g. md5sum), the path to it
+can be specified with the CHECKSUM environment variable.
+If the --only-changed-since argument is supplied, it expects a git commit-id,
+branch name or the special keyword 'fork'. The script will try identifying
+changed files since the specified commit and, if successful, only examine
+files that have changed. The keyword 'fork' will look for files changed
+since the current branch was forked off 'upstream/master'. Sensible values
+for this argument may include HEAD^, master, orgin/master, or the branch
+the current one was forked off
+_EOF
 }
 
 # command-line options
@@ -100,7 +102,6 @@ done
 
 # an error code seen by a KeepGoing-aware command (or zero)
 SeenErrors=0
-
 
 if ! git diff --quiet; then
 	echo "There are unstaged changes. This script may modify sources."
