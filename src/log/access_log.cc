@@ -65,7 +65,7 @@ typedef struct {
 // counts the number of header value occurrences
 using HeaderValueCountsElement = std::pair<SBuf, uint64_t>;
 using HeaderValueCounts = std::unordered_map<SBuf, uint64_t, std::hash<SBuf>, std::equal_to<SBuf>, PoolingAllocator<HeaderValueCountsElement> >;
-static HeaderValueCounts via_table;
+static HeaderValueCounts TheViaCounts;
 
 static hash_table *forw_table = NULL;
 static void fvdbInit();
@@ -486,7 +486,7 @@ fvdbCount(hash_table * hash, const char *key)
 void
 fvdbCountVia(const SBuf &headerValue)
 {
-    ++via_table[headerValue];
+    ++TheViaCounts[headerValue];
 }
 
 void
@@ -524,7 +524,7 @@ static void
 fvdbDumpVia(StoreEntry * e)
 {
     assert(e);
-    fvdbDumpCounts(*e, via_table);
+    fvdbDumpCounts(*e, TheViaCounts);
 }
 
 static void
@@ -545,7 +545,7 @@ fvdbFreeEntry(void *data)
 static void
 fvdbClear(void)
 {
-    via_table.clear();
+    TheViaCounts.clear();
     hashFreeItems(forw_table, fvdbFreeEntry);
     hashFreeMemory(forw_table);
     forw_table = hash_create((HASHCMP *) strcmp, 977, hash4);
