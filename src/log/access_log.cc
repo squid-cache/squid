@@ -62,9 +62,11 @@ typedef struct {
     int n;
 } fvdb_entry;
 
-// counts the number of header value occurrences
 using HeaderValueCountsElement = std::pair<SBuf, uint64_t>;
+/// counts the number of header field value occurrences
 using HeaderValueCounts = std::unordered_map<SBuf, uint64_t, std::hash<SBuf>, std::equal_to<SBuf>, PoolingAllocator<HeaderValueCountsElement> >;
+
+/// counts the number of HTTP Via header field value occurrences
 static HeaderValueCounts TheViaCounts;
 
 static hash_table *forw_table = NULL;
