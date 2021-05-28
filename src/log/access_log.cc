@@ -69,7 +69,8 @@ static HeaderValueCounts via_table;
 
 static hash_table *forw_table = NULL;
 static void fvdbInit();
-static void fvdbDumpTable(Packable *, const HeaderValueCounts&);
+static void fvdbDumpTable(StoreEntry * e, hash_table * hash);
+static void fvdbCount(hash_table * hash, const char *key);
 static OBJH fvdbDumpVia;
 static OBJH fvdbDumpForw;
 static FREE fvdbFreeEntry;
