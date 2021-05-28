@@ -1115,6 +1115,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         fvdbCountVia(StringToSBuf(s));
 
 #endif
+
         s.clean();
     }
 
