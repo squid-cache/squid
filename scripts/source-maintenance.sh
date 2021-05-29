@@ -151,7 +151,7 @@ if [ ! -f src/http/Makefile ]; then
     exit 1
 fi
 
-if test $CheckAndUpdateCopyright = yes
+if test ${CheckAndUpdateCopyright} = yes
 then
     CopyRightYears=`date +"1996-%Y"`
     echo "s/1996-2[0-9]+ The Squid Software Foundation and contributors/${CopyRightYears} The Squid Software Foundation and contributors/g" >> boilerplate_fix.sed
@@ -164,11 +164,11 @@ run_ ()
         "$@" && return; # return on success
         error=$?
 
-        if test $KeepGoing = no; then
+        if test ${KeepGoing} = no; then
                 return $error
         fi
 
-        echo "ERROR: Continuing after a failure ($error) due to $KeepGoingDirective"
+        echo "ERROR: Continuing after a failure ($error) due to ${KeepGoingDirective}"
         SeenErrors=$error # TODO: Remember the _first_ error instead
         return 0 # hide error from the caller
 }
@@ -468,4 +468,4 @@ fi
 rm doc/debug-sections.tmp doc/debug-sections.tmp2
 rm -f boilerplate_fix.sed
 
-exit $SeenErrors
+exit ${SeenErrors}
