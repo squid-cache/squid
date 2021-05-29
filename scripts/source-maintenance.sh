@@ -143,10 +143,15 @@ if test "${AstyleVersion}" != "${TargetAstyleVersion}" ; then
 		echo "Formatting anyway, please double check output before submitting"
 	fi
 else
-	echo "Found astyle ${AstyleVersion}. Formatting..."
+	echo "Found astyle ${AstyleVersion}"
 fi
 
-if test ${CheckAndUpdateCopyright} = yes
+if [ ! -f src/http/Makefile ]; then
+    echo "please run ./bootstrap.sh && ./configure to prepare xperf sources"
+    exit 1
+fi
+
+if test $CheckAndUpdateCopyright = yes
 then
     CopyRightYears=`date +"1996-%Y"`
     echo "s/1996-2[0-9]+ The Squid Software Foundation and contributors/${CopyRightYears} The Squid Software Foundation and contributors/g" >> boilerplate_fix.sed
@@ -159,11 +164,11 @@ run_ ()
         "$@" && return; # return on success
         error=$?
 
-        if test ${KeepGoing} = no; then
+        if test $KeepGoing = no; then
                 return $error
         fi
 
-        echo "ERROR: Continuing after a failure ($error) due to ${KeepGoingDirective}"
+        echo "ERROR: Continuing after a failure ($error) due to $KeepGoingDirective"
         SeenErrors=$error # TODO: Remember the _first_ error instead
         return 0 # hide error from the caller
 }
@@ -452,9 +457,15 @@ run_ checkMakeNamedErrorDetails || exit 1
 # Run formatting
 echo "" >doc/debug-sections.tmp
 srcFormat || exit 1
-sort -u <doc/debug-sections.tmp | sort -n >doc/debug-sections.tmp2
-cat scripts/boilerplate.h doc/debug-sections.tmp2 >doc/debug-sections.txt
+
+if [ -z "${OnlyChangedSince}" ]; then
+    sort -u <doc/debug-sections.tmp | sort -n >doc/debug-sections.tmp2
+    cat scripts/boilerplate.h doc/debug-sections.tmp2 >doc/debug-sections.txt
+else
+    echo "--only-changed-since specified, Skipping updating doc/debug-sections.txt"
+fi
+
 rm doc/debug-sections.tmp doc/debug-sections.tmp2
 rm -f boilerplate_fix.sed
 
-exit ${SeenErrors}
+exit $SeenErrors
