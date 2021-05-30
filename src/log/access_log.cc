@@ -64,10 +64,10 @@ using HeaderValueCounts = std::unordered_map<SBuf, uint64_t, std::hash<SBuf>, st
 /// counts the number of HTTP Via header field value occurrences
 static HeaderValueCounts TheViaCounts;
 /// counts the number of HTTP X-Forwarded-For header field value occurrences
-static HeaderValueCounts TheForwCounts;
+static HeaderValueCounts TheXFFCounts;
 
 static OBJH fvdbDumpVia;
-static OBJH fvdbDumpForw;
+static OBJH fvdbDumpXFF;
 static void fvdbClear(void);
 static void fvdbRegisterWithCacheManager();
 #endif
@@ -444,7 +444,7 @@ fvdbRegisterWithCacheManager(void)
 {
     Mgr::RegisterAction("via_headers", "Via Request Headers", fvdbDumpVia, 0, 1);
     Mgr::RegisterAction("forw_headers", "X-Forwarded-For Request Headers",
-                        fvdbDumpForw, 0, 1);
+                        fvdbDumpXFF, 0, 1);
 }
 
 void
@@ -456,7 +456,7 @@ fvdbCountVia(const SBuf &headerValue)
 void
 fvdbCountForw(const char *key)
 {
-    ++TheForwCounts[SBuf(key)];
+    ++TheXFFCounts[SBuf(key)];
 }
 
 static void
@@ -475,17 +475,17 @@ fvdbDumpVia(StoreEntry * e)
 }
 
 static void
-fvdbDumpForw(StoreEntry * e)
+fvdbDumpXFF(StoreEntry * e)
 {
     assert(e);
-    fvdbDumpCounts(*e, TheForwCounts);
+    fvdbDumpCounts(*e, TheXFFCounts);
 }
 
 static void
 fvdbClear(void)
 {
     TheViaCounts.clear();
-    TheForwCounts.clear();
+    TheXFFCounts.clear();
 }
 
 #endif
