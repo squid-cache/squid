@@ -14,11 +14,11 @@
 #include "LogTags.h"
 #include "sbuf/forward.h"
 
+/// XXX: these functions preserve all counted values until the next log rotation
 /// count occurrences of the given Via header value
-/// XXX: this function preserves all counted values until the next log rotation
 void fvdbCountVia(const SBuf &);
-
-void fvdbCountForw(const char *key);
+/// count occurrences of the given Via header value
+void fvdbCountForw(const SBuf &);
 
 #if HEADERS_LOG
 class HttpRequestMethod;
