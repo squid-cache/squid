@@ -66,7 +66,6 @@ static HeaderValueCounts TheViaCounts;
 /// counts the number of HTTP X-Forwarded-For header field value occurrences
 static HeaderValueCounts TheForwCounts;
 
-static void fvdbInit();
 static OBJH fvdbDumpVia;
 static OBJH fvdbDumpForw;
 static void fvdbClear(void);
@@ -436,20 +435,9 @@ accessLogInit(void)
     }
 
 #endif
-#if USE_FORW_VIA_DB
-
-    fvdbInit();
-
-#endif
 }
 
 #if USE_FORW_VIA_DB
-
-static void
-fvdbInit(void)
-{
-    //TODO: delete method
-}
 
 static void
 fvdbRegisterWithCacheManager(void)
