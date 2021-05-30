@@ -454,7 +454,7 @@ fvdbCountVia(const SBuf &headerValue)
 }
 
 void
-fvdbCountForw(const SBuf &key)
+fvdbCountXFF(const SBuf &key)
 {
     ++TheXFFCounts[key];
 }

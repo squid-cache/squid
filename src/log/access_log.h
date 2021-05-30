@@ -18,7 +18,7 @@
 /// count occurrences of the given Via header value
 void fvdbCountVia(const SBuf &);
 /// count occurrences of the given Via header value
-void fvdbCountForw(const SBuf &);
+void fvdbCountXFF(const SBuf &);
 
 #if HEADERS_LOG
 class HttpRequestMethod;
