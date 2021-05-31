@@ -179,10 +179,10 @@ ACLProxyAuth::matchProxyAuth(ACLChecklist *cl)
     auto &cache = checklist->auth_user_request->user()->proxyAuthAclCache;
 
     SBuf key(name);
-    if (const auto *v = cache.get(key)) {
-        debugs(28, 4, "cache hit on acl " << key << "=" << *v);
+    if (const auto cachedResult = cache.get(key)) {
+        debugs(28, 4, "cache hit on ACL " << key << "=" << cachedResult);
         checklist->auth_user_request = nullptr;
-        return *v;
+        return cachedResult;
     }
 
     const auto result = data->match(checklist->auth_user_request->username());
