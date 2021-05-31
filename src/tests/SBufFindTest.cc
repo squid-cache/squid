@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -202,15 +202,6 @@ AnyToString(const Type &value)
     sbuf << value;
     return sbuf.str();
 }
-
-#if 0
-/// helper function to convert SBuf position to a human-friendly string
-inline std::string
-PosToString(const SBuf::size_type pos)
-{
-    return pos == SBuf::npos ? std::string("npos") : AnyToString(pos);
-}
-#endif
 
 /// helper function to convert std::string position to a human-friendly string
 inline std::string

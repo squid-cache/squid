@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -209,21 +209,4 @@ mkrfc1123(time_t t)
     strftime(buf, 127, RFC1123_STRFTIME, gmt);
     return buf;
 }
-
-#if 0
-int
-main()
-{
-    char *x;
-    time_t t, pt;
-
-    t = time(NULL);
-    x = mkrfc1123(t);
-    printf("HTTP Time: %s\n", x);
-
-    pt = parse_rfc1123(x);
-    printf("Parsed: %d vs. %d\n", pt, t);
-}
-
-#endif
 

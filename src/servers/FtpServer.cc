@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1835,16 +1835,16 @@ void Ftp::Server::completeDataDownload()
 static bool
 Ftp::SupportedCommand(const SBuf &name)
 {
-    static std::set<SBuf> BlackList;
-    if (BlackList.empty()) {
+    static std::set<SBuf> BlockList;
+    if (BlockList.empty()) {
         /* Add FTP commands that Squid cannot relay correctly. */
 
         // We probably do not support AUTH TLS.* and AUTH SSL,
         // but let's disclaim all AUTH support to KISS, for now.
-        BlackList.insert(cmdAuth());
+        BlockList.insert(cmdAuth());
     }
 
     // we claim support for all commands that we do not know about
-    return BlackList.find(name) == BlackList.end();
+    return BlockList.find(name) == BlockList.end();
 }
 

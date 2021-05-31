@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -137,6 +137,7 @@ protected:
     bool isRetriable;  ///< can retry on persistent connection failures
     bool isRepeatable; ///< can repeat if no or unsatisfactory response
     bool ignoreLastWrite;
+    bool waitingForDns; ///< expecting a ipcache_nbgethostbyname() callback
 
     const char *stopReason;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -181,19 +181,6 @@ Comm::TcpAcceptor::setListen()
         debugs(5, DBG_CRITICAL, "WARNING: accept_filter not supported on your OS");
 #endif
     }
-
-#if 0
-    // Untested code.
-    // Set TOS if needed.
-    // To correctly implement TOS values on listening sockets, probably requires
-    // more work to inherit TOS values to created connection objects.
-    if (conn->tos)
-        Ip::Qos::setSockTos(conn, conn->tos)
-#if SO_MARK
-        if (conn->nfmark)
-            Ip::Qos::setSockNfmark(conn, conn->nfmark);
-#endif
-#endif
 
     typedef CommCbMemFunT<Comm::TcpAcceptor, CommCloseCbParams> Dialer;
     closer_ = JobCallback(5, 4, Dialer, this, Comm::TcpAcceptor::handleClosure);

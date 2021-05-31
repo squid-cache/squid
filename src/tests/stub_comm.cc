@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,9 +37,6 @@ void commSetTcpKeepalive(int fd, int idle, int interval, int timeout) STUB
 void _comm_close(int fd, char const *file, int line) STUB
 void old_comm_reset_close(int fd) STUB
 void comm_reset_close(const Comm::ConnectionPointer &conn) STUB
-#if LINGERING_CLOSE
-void comm_lingering_close(int fd) STUB
-#endif
 int comm_connect_addr(int sock, const Ip::Address &addr) STUB_RETVAL(-1)
 void comm_init(void) STUB
 void comm_exit(void) STUB

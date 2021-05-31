@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -156,7 +156,9 @@ enum Type {
 // TODO: Either move to Security::Io or remove/restrict the Io namespace.
 class IoResult;
 
+class CommunicationSecrets;
 class KeyData;
+class KeyLog;
 
 #if USE_OPENSSL
 typedef long ParsedOptions;
@@ -187,6 +189,12 @@ class ServerOptions;
 
 class ErrorDetail;
 typedef RefCount<ErrorDetail> ErrorDetailPointer;
+
+std::ostream &operator <<(std::ostream &, const KeyLog &);
+
+void OpenLogs(); ///< opens logs enabled in the current configuration
+void RotateLogs(); ///< rotates logs opened by OpenLogs()
+void CloseLogs(); ///< closes logs opened by OpenLogs()
 
 } // namespace Security
 

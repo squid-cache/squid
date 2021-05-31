@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -490,10 +490,6 @@ snmp_pdu_decode(u_char * Packet,    /* data */
     u_char *bufp;
     u_char PDUType;
     u_char ASNType;
-#if UNUSED_CODE
-    int four;
-    oid objid[MAX_NAME_LEN];
-#endif
 
     bufp = asn_parse_header(Packet, Length, &PDUType);
     if (bufp == NULL)

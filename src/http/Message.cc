@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -85,6 +85,12 @@ Http::Message::parse(const char *buf, const size_t sz, bool eof, Http::StatusCod
     // find the end of headers
     const size_t hdr_len = headersEnd(buf, sz);
 
+    if (hdr_len > Config.maxReplyHeaderSize || (hdr_len == 0 && sz > Config.maxReplyHeaderSize)) {
+        debugs(58, 3, "input too large: " << hdr_len << " or " << sz << " > " << Config.maxReplyHeaderSize);
+        *error = Http::scHeaderTooLarge;
+        return false;
+    }
+
     // sanity check the start line to see if this is in fact an HTTP message
     if (!sanityCheckStartLine(buf, hdr_len, error)) {
         // NP: sanityCheck sets *error and sends debug warnings on syntax errors.
@@ -95,20 +101,7 @@ Http::Message::parse(const char *buf, const size_t sz, bool eof, Http::StatusCod
         return false;
     }
 
-    if (hdr_len > Config.maxReplyHeaderSize || (hdr_len <= 0 && sz > Config.maxReplyHeaderSize)) {
-        debugs(58, DBG_IMPORTANT, "Too large reply header (" << hdr_len << " > " << Config.maxReplyHeaderSize);
-        *error = Http::scHeaderTooLarge;
-        return false;
-    }
-
-    if (hdr_len <= 0) {
-        debugs(58, 3, "failed to find end of headers (eof: " << eof << ") in '" << buf << "'");
-
-        if (eof) // iff we have seen the end, this is an error
-            *error = Http::scInvalidHeader;
-
-        return false;
-    }
+    assert(hdr_len > 0); // sanityCheckStartLine() rejects buffers that cannot be parsed
 
     const int res = httpMsgParseStep(buf, sz, eof);
 
@@ -296,4 +289,3 @@ Http::Message::firstLineBuf(MemBuf &mb)
 {
     packFirstLineInto(&mb, true);
 }
-

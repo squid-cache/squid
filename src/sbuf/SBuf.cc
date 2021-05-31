@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -148,7 +148,7 @@ SBuf::rawAppendFinish(const char *start, size_type actualSize)
     debugs(24, 8, id << " finish appending " << actualSize << " bytes");
 
     size_type newSize = length() + actualSize;
-    Must2(newSize <= min(maxSize,store_->capacity-off_), "raw append overflow");
+    Must3(newSize <= min(maxSize, store_->capacity-off_), "raw append fits", Here());
     len_ = newSize;
     store_->size = off_ + newSize;
 }
@@ -174,15 +174,8 @@ SBuf::rawSpace(size_type minSpace)
 void
 SBuf::clear()
 {
-#if 0
-    //enabling this code path, the store will be freed and reinitialized
-    store_ = GetStorePrototype(); //uncomment to actually free storage upon clear()
-#else
-    //enabling this code path, we try to release the store without deallocating it.
-    // will be lazily reallocated if needed.
     if (store_->LockCount() == 1)
         store_->clear();
-#endif
     len_ = 0;
     off_ = 0;
     ++stats.clear;
@@ -258,7 +251,7 @@ SBuf::vappendf(const char *fmt, va_list vargs)
     va_copy(ap, vargs);
     sz = vsnprintf(space, spaceSize(), fmt, ap);
     va_end(ap);
-    Must2(sz >= 0, "vsnprintf() output error");
+    Must3(sz >= 0, "vsnprintf() succeeds", Here());
 
     /* check for possible overflow */
     /* snprintf on Linux returns -1 on output errors, or the size
@@ -270,7 +263,7 @@ SBuf::vappendf(const char *fmt, va_list vargs)
         requiredSpaceEstimate = sz*2; // TODO: tune heuristics
         space = rawSpace(requiredSpaceEstimate);
         sz = vsnprintf(space, spaceSize(), fmt, vargs);
-        Must2(sz >= 0, "vsnprintf() output error despite increased buffer space");
+        Must3(sz >= 0, "vsnprintf() succeeds (with increased buffer space)", Here());
     }
 
     // data was appended, update internal state

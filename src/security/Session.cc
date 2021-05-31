@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,13 +34,6 @@ tls_read_method(int fd, char *buf, int len)
 {
     auto session = fd_table[fd].ssl.get();
     debugs(83, 3, "started for session=" << (void*)session);
-
-#if DONT_DO_THIS && USE_OPENSSL
-    if (!SSL_is_init_finished(session)) {
-        errno = ENOTCONN;
-        return -1;
-    }
-#endif
 
 #if USE_OPENSSL
     int i = SSL_read(session, buf, len);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -747,58 +747,6 @@ commCallCloseHandlers(int fd)
         }
     }
 }
-
-// XXX: This code has been broken, unused, and untested since 933dd09. Remove.
-#if LINGERING_CLOSE
-static void
-commLingerClose(int fd, void *unused)
-{
-    LOCAL_ARRAY(char, buf, 1024);
-    int n = FD_READ_METHOD(fd, buf, 1024);
-    if (n < 0) {
-        int xerrno = errno;
-        debugs(5, 3, "FD " << fd << " read: " << xstrerr(xerrno));
-    }
-    comm_close(fd);
-}
-
-static void
-commLingerTimeout(const FdeCbParams &params)
-{
-    debugs(5, 3, "commLingerTimeout: FD " << params.fd);
-    comm_close(params.fd);
-}
-
-/*
- * Inspired by apache
- */
-void
-comm_lingering_close(int fd)
-{
-    Security::SessionSendGoodbye(fd_table[fd].ssl);
-
-    if (shutdown(fd, 1) < 0) {
-        comm_close(fd);
-        return;
-    }
-
-    fd_note(fd, "lingering close");
-    AsyncCall::Pointer call = commCbCall(5,4, "commLingerTimeout", FdeCbPtrFun(commLingerTimeout, NULL));
-
-    debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
-    assert(fd_table[fd].flags.open);
-    if (callback != NULL) {
-        typedef FdeCbParams Params;
-        Params &params = GetCommParams<Params>(callback);
-        params.fd = fd;
-        fd_table[fd].timeoutHandler = callback;
-        fd_table[fd].timeout = squid_curtime + static_cast<time_t>(10);
-    }
-
-    Comm::SetSelect(fd, COMM_SELECT_READ, commLingerClose, NULL, 0);
-}
-
-#endif
 
 /**
  * enable linger with time of 0 so that when the socket is
