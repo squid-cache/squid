@@ -48,7 +48,7 @@ bool FormattedLog::usesDaemon() const STUB_RETVAL(false)
 
 #include "log/File.h"
 CBDATA_CLASS_INIT(Logfile);
-Logfile::Logfile(const char *) STUB
+Logfile::Logfile(const char *) {STUB}
 //void Logfile::f_linestart(Logfile *) STUB
 //void Logfile::f_linewrite(Logfile *, const char *, size_t) STUB
 //void Logfile::f_lineend(Logfile *) STUB
