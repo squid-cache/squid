@@ -178,7 +178,8 @@ ACLProxyAuth::matchProxyAuth(ACLChecklist *cl)
     /* check to see if we have matched the user-acl before */
     auto &cache = checklist->auth_user_request->user()->proxyAuthAclCache;
 
-    SBuf key(name);
+    // XXX: Allocation for cache lookup. TODO: Make ACL::name an SBuf.
+    const SBuf key(name);
     if (const auto cachedResult = cache.get(key)) {
         debugs(28, 4, "cache hit on ACL " << key << "=" << cachedResult);
         checklist->auth_user_request = nullptr;
@@ -191,4 +192,3 @@ ACLProxyAuth::matchProxyAuth(ACLChecklist *cl)
     checklist->auth_user_request = nullptr;
     return result;
 }
-
