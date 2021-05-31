@@ -23,21 +23,21 @@ AccessLogEntry::SslDetails::SslDetails() {STUB}
 #endif
 */
 void accessLogLogTo(CustomLog *, AccessLogEntry::Pointer &, ACLChecklist *) STUB
-    void accessLogLog(AccessLogEntry::Pointer &, ACLChecklist *) STUB
-    void accessLogRotate(void) STUB
-    void accessLogClose(void) STUB
-    void accessLogInit(void) STUB
-    const char *accessLogTime(time_t) STUB_RETVAL(nullptr)
+void accessLogLog(AccessLogEntry::Pointer &, ACLChecklist *) STUB
+void accessLogRotate(void) STUB
+void accessLogClose(void) STUB
+void accessLogInit(void) STUB
+const char *accessLogTime(time_t) STUB_RETVAL(nullptr)
 
 #include "log/access_log.h"
-        void fvdbCountVia(const SBuf &) STUB
-    void fvdbCountForward(const SBuf &) STUB
+void fvdbCountVia(const SBuf &) STUB
+void fvdbCountForward(const SBuf &) STUB
 #if HEADERS_LOG
-    void headersLog(int, int, const HttpRequestMethod &, void *) STUB
+void headersLog(int, int, const HttpRequestMethod &, void *) STUB
 #endif
 
 #include "log/Config.h"
-    namespace Log
+namespace Log
 {
 void LogConfig::parseFormats() STUB
 LogConfig TheConfig;
