@@ -59,10 +59,7 @@ Auth::User::credentials(CredentialState newCreds)
 void
 Auth::User::absorb(Auth::User::Pointer from)
 {
-    /*
-     * XXX Incomplete: it should merge in hash references too and ask the module to merge in scheme data
-     *  CacheType proxyAuthAclCache;
-     */
+    // XXX Incomplete: should merge proxyAuthAclCache and ask the module to merge in scheme data
 
     debugs(29, 5, HERE << "auth_user '" << from << "' into auth_user '" << this << "'.");
 

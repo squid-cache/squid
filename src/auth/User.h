@@ -49,8 +49,8 @@ public:
     Auth::Type auth_type;
     /** the config for this user */
     Auth::SchemeConfig *config;
-    using CacheType = ClpMap<SBuf, int>;
-    CacheType proxyAuthAclCache;    ///< Cache of results from proxy_auth ACL tests for these credentials
+    using AclResults = ClpMap<SBuf /* ACL name */, int /* (non-)match */>;
+    AclResults proxyAuthAclCache; ///< Cache of results from proxy_auth ACL tests for these credentials
     size_t ipcount;
     long expiretime;
 
