@@ -17,8 +17,8 @@
 /// XXX: these functions preserve all counted values until the next log rotation
 /// count occurrences of the given Via header value
 void fvdbCountVia(const SBuf &);
-/// count occurrences of the given Via header value
-void fvdbCountXFF(const SBuf &);
+/// count occurrences of the given X-Forwarded-For header value
+void fvdbCountForward(const SBuf &);
 
 #if HEADERS_LOG
 class HttpRequestMethod;
