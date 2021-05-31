@@ -18,7 +18,7 @@
 /// count occurrences of the given Via header value
 void fvdbCountVia(const SBuf &);
 /// count occurrences of the given X-Forwarded-For header value
-void fvdbCountForward(const SBuf &);
+void fvdbCountForwarded(const SBuf &);
 
 #if HEADERS_LOG
 class HttpRequestMethod;
