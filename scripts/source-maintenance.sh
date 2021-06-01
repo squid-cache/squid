@@ -15,8 +15,8 @@
 ## Source Code Format Enforcement
 #
 # A checker to recursively reformat all source files: .h .c .cc .cci
-# using a custom astyle formatter and to use CHECKSUM to validate that
-# the formatter has not altered the code syntax.
+# using a custom astyle formatter and to use md5sum (or siilar) to validate
+# that the formatter has not altered the code syntax.
 #
 # If code alteration takes place the process is halted for manual intervention.
 #
@@ -48,8 +48,7 @@ It requires astyle version $TargetAstyleVersion, or it will skip formatting
 program files.
 The path to the astyle binary can be specified using the
 --with-astyle option or with the ASTYLE environment variable.
-It will try to auto-detect a checksum program (e.g. md5sum), the path to it
-can be specified with the CHECKSUM environment variable.
+It will try to auto-detect a checksum program (e.g. md5sum)
 If the --only-changed-since argument is supplied, it expects a git commit-id,
 branch name or the special keyword 'fork'. The script will try identifying
 changed files since the specified commit and, if successful, only examine
@@ -109,22 +108,13 @@ if ! git diff --quiet; then
 	exit 1
 fi
 
-if test "x$CHECKSUM" != "x"
-then
-    if ! "$CHECKSUM" </dev/null >/dev/null
-    then
-        echo "user-supplied checksum utility $CHECKSUM cannot run"
-        exit 1
-    fi
-fi
-
-for CHECKSUM in "${CHECKSUM:-md5}" md5sum shasum sha1sum
+for Checksum in md5sum md5 shasum sha1sum
 do
-    if "$CHECKSUM" </dev/null >/dev/null 2>/dev/null ; then
+    if "$Checksum" </dev/null >/dev/null 2>/dev/null ; then
         break
     fi
 done
-echo "detected checksum program $CHECKSUM"
+echo "detected checksum program $Checksum"
 
 ${ASTYLE} --version >/dev/null 2>/dev/null
 result=$?
@@ -282,8 +272,8 @@ for FILENAME in $FilesToOperateOn; do
 	if test "${ASVER}"; then
 		./scripts/formater.pl ${FILENAME}
 		if test -e $FILENAME -a -e "$FILENAME.astylebak"; then
-			md51=`cat  $FILENAME| tr -d "\n \t\r" | $CHECKSUM`;
-			md52=`cat  $FILENAME.astylebak| tr -d "\n \t\r" | $CHECKSUM`;
+			md51=`cat  $FILENAME| tr -d "\n \t\r" | $Checksum`;
+			md52=`cat  $FILENAME.astylebak| tr -d "\n \t\r" | $Checksum`;
 
 			if test "$md51" != "$md52"; then
 				echo "ERROR: File $FILENAME not formatting well";
