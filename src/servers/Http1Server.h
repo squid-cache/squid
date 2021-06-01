@@ -22,7 +22,7 @@ class Server: public ConnStateData
     CBDATA_CLASS(Server);
 
 public:
-    Server(const MasterXaction::Pointer &xact, const bool beHttpsServer);
+    Server(const MasterXaction::Pointer &xact);
     virtual ~Server() {}
 
     void readSomeHttpData();
@@ -60,9 +60,6 @@ private:
 
     Http1::RequestParserPointer parser_;
     HttpRequestMethod method_; ///< parsed HTTP method
-
-    /// temporary hack to avoid creating a true HttpsServer class
-    const bool isHttpsServer;
 };
 
 } // namespace One

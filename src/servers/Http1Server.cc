@@ -24,10 +24,9 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Http1, Server);
 
-Http::One::Server::Server(const MasterXaction::Pointer &xact, bool beHttpsServer):
+Http::One::Server::Server(const MasterXaction::Pointer &xact):
     AsyncJob("Http1::Server"),
-    ConnStateData(xact),
-    isHttpsServer(beHttpsServer)
+    ConnStateData(xact)
 {
 }
 
@@ -44,7 +43,7 @@ Http::One::Server::start()
 
     // XXX: Until we create an HttpsServer class, use this hack to allow old
     // client_side.cc code to manipulate ConnStateData object directly
-    if (isHttpsServer) {
+    if (port->transport.protocol == AnyP::PROTO_HTTPS && !port->flags.tunnelSslBumping) {
         postHttpsAccept();
         return;
     }
@@ -137,7 +136,7 @@ Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
     }
 
     // TODO: move URL parse into Http Parser and INVALID_URL into the above parse error handling
-    MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+    MasterXaction::Pointer mx = new MasterXaction(port);
     mx->tcpClient = clientConnection;
     request = HttpRequest::FromUrlXXX(http->uri, mx, parser_->method());
     if (!request) {
@@ -400,12 +399,6 @@ Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext serve
 ConnStateData *
 Http::NewServer(MasterXactionPointer &xact)
 {
-    return new Http1::Server(xact, false);
-}
-
-ConnStateData *
-Https::NewServer(MasterXactionPointer &xact)
-{
-    return new Http1::Server(xact, true);
+    return new Http1::Server(xact);
 }
 

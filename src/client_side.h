@@ -154,6 +154,8 @@ public:
         AsyncCall::Pointer closeHandler; ///< The close handler for pinned server side connection
     } pinning;
 
+    /// a convenience method returning TrafficMode::interceptedSomewhere() for the port accepted this connection
+    /// \see TrafficMode::interceptedSomewhere() for details
     bool transparent() const;
 
     /// true if we stopped receiving the request
@@ -256,6 +258,10 @@ public:
     void postHttpsAccept();
 
 #if USE_OPENSSL
+    /// initiates acl checks for step1 SSL bump
+    void httpsSslBumpStep1AccessCheck();
+    /// callback for httpsSslBumpStep1AccessCheck()
+    void httpsSslBumpStep1AccessCheckDone(const Acl::Answer answer);
     /// Initializes and starts a peek-and-splice negotiation with the SSL client
     void startPeekAndSplice();
 
