@@ -1355,7 +1355,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
            "\n----------");
 
     /* deny CONNECT via accelerated ports */
-    if (hp->method() == Http::METHOD_CONNECT && port != NULL && port->flags.accelSurrogate) {
+    if (hp->method() == Http::METHOD_CONNECT && port && port->flags.accelSurrogate()) {
         debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << transferProtocol << " Accelerator port " << port->s.port());
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
         hp->parseStatusCode = Http::scMethodNotAllowed;
@@ -1403,8 +1403,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
                      clientSocketDetach, newClient, tempBuffer);
 
     /* set url */
-    debugs(33,5, "Prepare absolute URL from " <<
-           (transparent()?"intercept":(port->flags.accelSurrogate ? "accel":"")));
+
     /* Rewrite the URL in transparent or accelerator mode */
     /* NP: there are several cases to traverse here:
      *  - standard mode (forward proxy)
@@ -1432,7 +1431,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
         //  But have not parsed there yet!! flag for local-only handling.
         http->flags.internal = true;
 
-    } else if (port->flags.accelSurrogate) {
+    } else if (port->flags.accelSurrogate()) {
         /* accelerator mode */
         http->uri = prepareAcceleratedURL(this, hp);
         http->flags.accel = true;
@@ -1896,8 +1895,6 @@ ConnStateData::parseProxyProtocolHeader()
         if (proxyProtocolHeader_->hasForwardedAddresses()) {
             clientConnection->local = proxyProtocolHeader_->destinationAddress;
             clientConnection->remote = proxyProtocolHeader_->sourceAddress;
-            if ((clientConnection->flags & COMM_TRANSPARENT))
-                clientConnection->flags ^= COMM_TRANSPARENT; // prevent TPROXY spoofing of this new IP.
             debugs(33, 5, "PROXY/" << proxyProtocolHeader_->version() << " upgrade: " << clientConnection);
         }
     } catch (const Parser::BinaryTokenizer::InsufficientInput &) {
@@ -2249,7 +2246,7 @@ ConnStateData::start()
     AsyncCall::Pointer call = JobCallback(33, 5, Dialer, this, ConnStateData::connStateClosed);
     comm_add_close_handler(clientConnection->fd, call);
 
-    needProxyProtocolHeader_ = port->flags.proxySurrogate;
+    needProxyProtocolHeader_ = port->flags.proxySurrogate();
     if (needProxyProtocolHeader_) {
         if (!proxyProtocolValidateClient()) // will close the connection on failure
             return;
@@ -2591,7 +2588,6 @@ ConnStateData::postHttpsAccept()
         // XXX: Do this earlier (e.g., in Http[s]::One::Server constructor).
         HttpRequest *request = new HttpRequest(mx);
         static char ip[MAX_IPSTRLEN];
-        assert(clientConnection->flags & (COMM_TRANSPARENT | COMM_INTERCEPTION));
         request->url.host(clientConnection->local.toStr(ip, sizeof(ip)));
         request->url.port(clientConnection->local.port());
         request->myportname = port->name;
@@ -3285,7 +3281,7 @@ ConnStateData::buildFakeRequest(Http::MethodType const method, SBuf &useHost, un
     extendLifetime();
     stream->registerWithConn();
 
-    MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+    MasterXaction::Pointer mx = new MasterXaction(port);
     mx->tcpClient = clientConnection;
     // Setup Http::Request object. Maybe should be replaced by a call to (modified)
     // clientProcessRequest
@@ -3386,9 +3382,7 @@ clientHttpConnectionsOpen(void)
         s->listenConn = new Comm::Connection;
         s->listenConn->local = s->s;
 
-        s->listenConn->flags = COMM_NONBLOCKING | (s->flags.tproxyIntercept ? COMM_TRANSPARENT : 0) |
-                               (s->flags.natIntercept ? COMM_INTERCEPTION : 0) |
-                               (s->workerQueues ? COMM_REUSEPORT : 0);
+        s->listenConn->flags = COMM_NONBLOCKING | (s->workerQueues ? COMM_REUSEPORT : 0);
 
         typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
         if (s->transport.protocol == AnyP::PROTO_HTTP) {
@@ -3422,10 +3416,7 @@ clientStartListeningOn(AnyP::PortCfgPointer &port, const RefCount< CommCbFunPtrC
     // Fill out a Comm::Connection which IPC will open as a listener for us
     port->listenConn = new Comm::Connection;
     port->listenConn->local = port->s;
-    port->listenConn->flags =
-        COMM_NONBLOCKING |
-        (port->flags.tproxyIntercept ? COMM_TRANSPARENT : 0) |
-        (port->flags.natIntercept ? COMM_INTERCEPTION : 0);
+    port->listenConn->flags = COMM_NONBLOCKING;
 
     // route new connections to subCall
     typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
@@ -3455,13 +3446,9 @@ clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId port
     // TCP: setup a job to handle accept() with subscribed handler
     AsyncJob::Start(new Comm::TcpAcceptor(s, FdNote(portTypeNote), sub));
 
-    debugs(1, DBG_IMPORTANT, "Accepting " <<
-           (s->flags.natIntercept ? "NAT intercepted " : "") <<
-           (s->flags.tproxyIntercept ? "TPROXY intercepted " : "") <<
-           (s->flags.tunnelSslBumping ? "SSL bumped " : "") <<
-           (s->flags.accelSurrogate ? "reverse-proxy " : "")
-           << FdNote(portTypeNote) << " connections at "
-           << s->listenConn);
+    debugs(1, DBG_IMPORTANT, "Accepting" << s->flags << " " <<
+           FdNote(portTypeNote) << " connections " <<
+           "at " << s->listenConn);
 
     Must(AddOpenedHttpSocket(s->listenConn)); // otherwise, we have received a fd we did not ask for
 
@@ -3645,7 +3632,7 @@ ConnStateData::fillConnectionLevelDetails(ACLFilledChecklist &checklist) const
 bool
 ConnStateData::transparent() const
 {
-    return clientConnection != NULL && (clientConnection->flags & (COMM_TRANSPARENT|COMM_INTERCEPTION));
+    return port->flags.interceptedSomewhere();
 }
 
 BodyPipe::Pointer

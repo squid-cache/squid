@@ -33,8 +33,10 @@ public:
     Intercept() : transparentActive_(0), interceptActive_(0), lastReported_(0) {};
     ~Intercept() {};
 
-    /** Perform NAT lookups */
-    bool Lookup(const Comm::ConnectionPointer &newConn, const Comm::ConnectionPointer &listenConn);
+    /// perform NAT lookups
+    bool LookupNat(const Comm::ConnectionPointer &newConn);
+    /// perform Tproxy lookups
+    bool LookupTproxy(const Comm::ConnectionPointer &newConn);
 
     /**
      * Test system networking calls for TPROXY support.
@@ -95,47 +97,44 @@ private:
      * perform Lookups on fully-transparent interception targets (TPROXY).
      * Supports Netfilter, PF and IPFW.
      *
-     * \param silent   0 if errors are to be displayed. 1 if errors are to be hidden.
      * \param newConn  Details known, to be updated where relevant.
      * \return         Whether successfully located the new address.
      */
-    bool TproxyTransparent(const Comm::ConnectionPointer &newConn, int silent);
+    bool TproxyTransparent(const Comm::ConnectionPointer &newConn);
 
     /**
      * perform Lookups on Netfilter interception targets (REDIRECT, DNAT).
      *
-     * \param silent   0 if errors are to be displayed. 1 if errors are to be hidden.
      * \param newConn  Details known, to be updated where relevant.
      * \return         Whether successfully located the new address.
      */
-    bool NetfilterInterception(const Comm::ConnectionPointer &newConn, int silent);
+    bool NetfilterInterception(const Comm::ConnectionPointer &newConn);
 
     /**
      * perform Lookups on IPFW interception.
      *
-     * \param silent   0 if errors are to be displayed. 1 if errors are to be hidden.
      * \param newConn  Details known, to be updated where relevant.
      * \return         Whether successfully located the new address.
      */
-    bool IpfwInterception(const Comm::ConnectionPointer &newConn, int silent);
+    bool IpfwInterception(const Comm::ConnectionPointer &newConn);
 
     /**
      * perform Lookups on IPF interception.
      *
-     * \param silent   0 if errors are to be displayed. 1 if errors are to be hidden.
      * \param newConn  Details known, to be updated where relevant.
      * \return         Whether successfully located the new address.
      */
-    bool IpfInterception(const Comm::ConnectionPointer &newConn, int silent);
+    bool IpfInterception(const Comm::ConnectionPointer &newConn);
 
     /**
      * perform Lookups on PF interception target (REDIRECT).
      *
-     * \param silent   0 if errors are to be displayed. 1 if errors are to be hidden.
      * \param newConn  Details known, to be updated where relevant.
      * \return         Whether successfully located the new address.
      */
-    bool PfInterception(const Comm::ConnectionPointer &newConn, int silent);
+    bool PfInterception(const Comm::ConnectionPointer &newConn);
+
+    int errorReportingLevel();
 
     int transparentActive_;
     int interceptActive_;
