@@ -660,13 +660,10 @@ icpHandleUdp(int sock, void *)
 
         debugs(12, 2, "ICP Client remote=" << from << " FD " << sock);
         debugs(12, 2, "ICP Client REQUEST:\n---------\n" <<
-               "opcode=" << static_cast<unsigned int>(pkt.opcode) << ' ' << icp_opcode_str[pkt.opcode] <<
-               ", version=" << pkt.version <<
-               ", length=" << pkt.length <<
-               ", reqnum=" << pkt.reqnum <<
-               ", flags=" << asHex(pkt.flags) <<
-               Debug::Extra <<
-               Raw(nullptr, (buf+sizeof(icp_common_t)), pkt.length).minLevel(DBG_DATA).hex() <<
+               icp_opcode_str[pkt.opcode] << " #" << pkt.reqnum << " ICP/" << pkt.version << std::endl <<
+               ":length: " << pkt.length << std::endl <<
+               ":flags: " << asHex(pkt.flags) <<
+               Debug::Extra << Raw("payload", (buf+sizeof(icp_common_t)), pkt.length).minLevel(DBG_DATA).hex() <<
                "\n----------");
 
         if (icpOutgoingConn->local == from)
