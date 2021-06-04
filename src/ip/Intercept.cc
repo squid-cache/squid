@@ -129,7 +129,7 @@ Ip::Intercept::StopInterception(const char *str)
 }
 
 bool
-Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn, int silent)
+Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn)
 {
 #if LINUX_NETFILTER
     struct sockaddr_storage lookup;
@@ -143,12 +143,8 @@ Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn, int
                     newConn->local.isIPv6() ? IP6T_SO_ORIGINAL_DST : SO_ORIGINAL_DST,
                     &lookup,
                     &len) != 0) {
-        if (!silent) {
-            int xerrno = errno;
-            debugs(89, DBG_IMPORTANT, "ERROR: NF getsockopt(ORIGINAL_DST) failed on " << newConn << ": " << xstrerr(xerrno));
-            lastReported_ = squid_curtime;
-        }
-        debugs(89, 9, "address: " << newConn);
+        const auto xerrno = errno;
+        debugs(89, DBG_IMPORTANT, "ERROR: NF getsockopt(ORIGINAL_DST) failed on " << newConn << ": " << xstrerr(xerrno));
         return false;
     } else {
         newConn->local = lookup;
@@ -160,7 +156,7 @@ Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn, int
 }
 
 bool
-Ip::Intercept::TproxyTransparent(const Comm::ConnectionPointer &newConn, int)
+Ip::Intercept::TproxyTransparent(const Comm::ConnectionPointer &newConn)
 {
 #if (LINUX_NETFILTER && defined(IP_TRANSPARENT)) || \
     (PF_TRANSPARENT && defined(SO_BINDANY)) || \
@@ -177,7 +173,7 @@ Ip::Intercept::TproxyTransparent(const Comm::ConnectionPointer &newConn, int)
 }
 
 bool
-Ip::Intercept::IpfwInterception(const Comm::ConnectionPointer &newConn, int)
+Ip::Intercept::IpfwInterception(const Comm::ConnectionPointer &newConn)
 {
 #if IPFW_TRANSPARENT
     /* The getsockname() call performed already provided the TCP packet details.
@@ -192,7 +188,7 @@ Ip::Intercept::IpfwInterception(const Comm::ConnectionPointer &newConn, int)
 }
 
 bool
-Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silent)
+Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn)
 {
 #if IPF_TRANSPARENT  /* --enable-ipf-transparent */
 
@@ -243,12 +239,9 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silen
     }
 
     if (natfd < 0) {
-        if (!silent) {
-            int xerrno = errno;
-            debugs(89, DBG_IMPORTANT, "IPF (IPFilter) NAT open failed: " << xstrerr(xerrno));
-            lastReported_ = squid_curtime;
-            return false;
-        }
+        const auto xerrno = errno;
+        debugs(89, DBG_IMPORTANT, "ERROR: IPF (IPFilter) NAT open failed: " << xstrerr(xerrno));
+        return false;
     }
 
 #if defined(IPFILTER_VERSION) && (IPFILTER_VERSION >= 4000027)
@@ -278,13 +271,9 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silen
 
 #endif
     if (x < 0) {
-        int xerrno = errno;
+        const auto xerrno = errno;
         if (xerrno != ESRCH) {
-            if (!silent) {
-                debugs(89, DBG_IMPORTANT, "IPF (IPFilter) NAT lookup failed: ioctl(SIOCGNATL) (v=" << IPFILTER_VERSION << "): " << xstrerr(xerrno));
-                lastReported_ = squid_curtime;
-            }
-
+            debugs(89, DBG_IMPORTANT, "ERROR: IPF (IPFilter) NAT lookup failed: ioctl(SIOCGNATL) (v=" << IPFILTER_VERSION << "): " << xstrerr(xerrno));
             close(natfd);
             natfd = -1;
         }
@@ -310,7 +299,7 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silen
 }
 
 bool
-Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn, int silent)
+Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn)
 {
 #if PF_TRANSPARENT  /* --enable-pf-transparent */
 
@@ -333,11 +322,8 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn, int silent
         pffd = open("/dev/pf", O_RDONLY);
 
     if (pffd < 0) {
-        if (!silent) {
-            int xerrno = errno;
-            debugs(89, DBG_IMPORTANT, MYNAME << "PF open failed: " << xstrerr(xerrno));
-            lastReported_ = squid_curtime;
-        }
+        const auto xerrno = errno;
+        debugs(89, DBG_IMPORTANT, "ERROR: PF open failed: " << xstrerr(xerrno));
         return false;
     }
 
@@ -360,12 +346,9 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn, int silent
     nl.direction = PF_OUT;
 
     if (ioctl(pffd, DIOCNATLOOK, &nl)) {
-        int xerrno = errno;
+        const auto xerrno = errno;
         if (xerrno != ENOENT) {
-            if (!silent) {
-                debugs(89, DBG_IMPORTANT, HERE << "PF lookup failed: ioctl(DIOCNATLOOK): " << xstrerr(xerrno));
-                lastReported_ = squid_curtime;
-            }
+            debugs(89, DBG_IMPORTANT, "ERROR: PF lookup failed: ioctl(DIOCNATLOOK): " << xstrerr(xerrno));
             close(pffd);
             pffd = -1;
         }
@@ -394,31 +377,23 @@ Ip::Intercept::Lookup(const Comm::ConnectionPointer &newConn, const Comm::Connec
     /* --enable-pf-transparent     */
 #if IPF_TRANSPARENT || LINUX_NETFILTER || IPFW_TRANSPARENT || PF_TRANSPARENT
 
-#if 0
-    // Crop interception errors down to one per minute.
-    int silent = (squid_curtime - lastReported_ > 60 ? 0 : 1);
-#else
-    // Show all interception errors.
-    int silent = 0;
-#endif
-
     debugs(89, 5, HERE << "address BEGIN: me/client= " << newConn->local << ", destination/me= " << newConn->remote);
 
     newConn->flags |= (listenConn->flags & (COMM_TRANSPARENT|COMM_INTERCEPTION));
 
     /* NP: try TPROXY first, its much quieter than NAT when non-matching */
     if (transparentActive_ && listenConn->flags&COMM_TRANSPARENT) {
-        if (TproxyTransparent(newConn, silent)) return true;
+        if (TproxyTransparent(newConn)) return true;
     }
 
     if (interceptActive_ && listenConn->flags&COMM_INTERCEPTION) {
         /* NAT methods that use sock-opts to return client address */
-        if (NetfilterInterception(newConn, silent)) return true;
-        if (IpfwInterception(newConn, silent)) return true;
+        if (NetfilterInterception(newConn)) return true;
+        if (IpfwInterception(newConn)) return true;
 
         /* NAT methods that use ioctl to return client address AND destination address */
-        if (PfInterception(newConn, silent)) return true;
-        if (IpfInterception(newConn, silent)) return true;
+        if (PfInterception(newConn)) return true;
+        if (IpfInterception(newConn)) return true;
     }
 
 #else /* none of the transparent options configured */
