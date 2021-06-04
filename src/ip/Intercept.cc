@@ -143,7 +143,7 @@ Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn)
                     newConn->local.isIPv6() ? IP6T_SO_ORIGINAL_DST : SO_ORIGINAL_DST,
                     &lookup,
                     &len) != 0) {
-        int xerrno = errno;
+        const auto xerrno = errno;
         debugs(89, DBG_IMPORTANT, "ERROR: NF getsockopt(ORIGINAL_DST) failed on " << newConn << ": " << xstrerr(xerrno));
         return false;
     } else {
@@ -239,8 +239,8 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn)
     }
 
     if (natfd < 0) {
-        int xerrno = errno;
-        debugs(89, DBG_IMPORTANT, "IPF (IPFilter) NAT open failed: " << xstrerr(xerrno));
+        const auto xerrno = errno;
+        debugs(89, DBG_IMPORTANT, "ERROR: IPF (IPFilter) NAT open failed: " << xstrerr(xerrno));
         return false;
     }
 
@@ -271,9 +271,9 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn)
 
 #endif
     if (x < 0) {
-        int xerrno = errno;
+        const auto xerrno = errno;
         if (xerrno != ESRCH) {
-            debugs(89, DBG_IMPORTANT, "IPF (IPFilter) NAT lookup failed: ioctl(SIOCGNATL) (v=" << IPFILTER_VERSION << "): " << xstrerr(xerrno));
+            debugs(89, DBG_IMPORTANT, "ERROR: IPF (IPFilter) NAT lookup failed: ioctl(SIOCGNATL) (v=" << IPFILTER_VERSION << "): " << xstrerr(xerrno));
             close(natfd);
             natfd = -1;
         }
@@ -322,8 +322,8 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn)
         pffd = open("/dev/pf", O_RDONLY);
 
     if (pffd < 0) {
-        int xerrno = errno;
-        debugs(89, DBG_IMPORTANT, "PF open failed: " << xstrerr(xerrno));
+        const auto xerrno = errno;
+        debugs(89, DBG_IMPORTANT, "ERROR: PF open failed: " << xstrerr(xerrno));
         return false;
     }
 
@@ -346,9 +346,9 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn)
     nl.direction = PF_OUT;
 
     if (ioctl(pffd, DIOCNATLOOK, &nl)) {
-        int xerrno = errno;
+        const auto xerrno = errno;
         if (xerrno != ENOENT) {
-            debugs(89, DBG_IMPORTANT, "PF lookup failed: ioctl(DIOCNATLOOK): " << xstrerr(xerrno));
+            debugs(89, DBG_IMPORTANT, "ERROR: PF lookup failed: ioctl(DIOCNATLOOK): " << xstrerr(xerrno));
             close(pffd);
             pffd = -1;
         }
