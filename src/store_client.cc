@@ -657,16 +657,8 @@ storeClientCopyPending(store_client * sc, StoreEntry * e, void *data)
     (void)data;
 #endif
 
-#ifndef SILLY_CODE
-
     assert(sc);
-#endif
-
     assert(sc->entry == e);
-#if SILLY_CODE
-    if (sc == NULL)
-        return 0;
-#endif
 
     if (!sc->_callback.pending())
         return 0;
