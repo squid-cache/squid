@@ -61,7 +61,7 @@ void esi_charactersSAXFunc(void *ctx, const xmlChar *ch, int len)
     p->getClient()->parserDefault((const char *)ch, len);
 }
 
-xmlEntityPtr esi_getEntitySAXFunc(void * ctx,  const xmlChar * name)
+xmlEntityPtr esi_getEntitySAXFunc(void * /* ctx */,  const xmlChar * name)
 {
     xmlEntityPtr res = xmlGetDocEntity(entity_doc, name);
 

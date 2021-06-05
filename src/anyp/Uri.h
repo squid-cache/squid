@@ -260,7 +260,7 @@ enum MatchDomainNameFlags {
  * \retval -1 means the host is less than the domain
  */
 int matchDomainName(const char *host, const char *domain, MatchDomainNameFlags flags = mdnNone);
-int urlCheckRequest(const HttpRequest *);
+bool urlCheckRequest(const HttpRequest *);
 void urlExtMethodConfigure(void);
 
 #endif /* SQUID_SRC_ANYP_URI_H */

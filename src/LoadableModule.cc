@@ -36,12 +36,12 @@ LoadableModule::loaded() const
 }
 
 void
-LoadableModule::load(int mode)
+LoadableModule::load()
 {
     if (loaded())
         throw TexcHere("internal error: reusing LoadableModule object");
 
-    theHandle = openModule(mode);
+    theHandle = openModule();
 
     if (!loaded())
         throw TexcHere(errorMsg());
@@ -60,7 +60,7 @@ LoadableModule::unload()
 }
 
 void *
-LoadableModule::openModule(int mode)
+LoadableModule::openModule()
 {
     return lt_dlopen(theName.termedBuf());
 }

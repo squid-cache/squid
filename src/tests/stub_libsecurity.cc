@@ -63,7 +63,7 @@ Security::NegotiationHistory::NegotiationHistory() STUB
 void Security::NegotiationHistory::retrieveNegotiatedInfo(const Security::SessionPointer &) STUB
 void Security::NegotiationHistory::retrieveParsedInfo(Security::TlsDetails::Pointer const &) STUB
 const char *Security::NegotiationHistory::cipherName() const STUB
-const char *Security::NegotiationHistory::printTlsVersion(AnyP::ProtocolVersion const &v) const STUB
+const char *Security::NegotiationHistory::printTlsVersion(AnyP::ProtocolVersion const &) const STUB
 
 #include "security/PeerConnector.h"
 class TlsNegotiationDetails: public RefCountable {};

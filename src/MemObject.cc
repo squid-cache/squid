@@ -422,6 +422,8 @@ MemObject::mostBytesWanted(int max, bool ignoreDelayPools) const
         DelayId largestAllowance = mostBytesAllowed ();
         return largestAllowance.bytesWanted(0, max);
     }
+#else
+    (void)ignoreDelayPools;
 #endif
 
     return max;
@@ -436,7 +438,8 @@ MemObject::setNoDelay(bool const newValue)
         store_client *sc = (store_client *) node->data;
         sc->delayId.setNoDelay(newValue);
     }
-
+#else
+    (void)newValue;
 #endif
 }
 

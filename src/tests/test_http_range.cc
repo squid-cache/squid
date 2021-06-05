@@ -13,30 +13,30 @@
 
 // TODO: refactor as cppunit test
 
-void httpHeaderPutStr(HttpHeader * hdr, Http::HdrType type, const char *str)
+void httpHeaderPutStr(HttpHeader *, Http::HdrType, const char *)
 {
     fatal ("dummy function\n");
 }
 
-HttpHeaderEntry *httpHeaderGetEntry(const HttpHeader * hdr, HttpHeaderPos * pos)
+HttpHeaderEntry *httpHeaderGetEntry(const HttpHeader *, HttpHeaderPos *)
 {
     fatal ("dummy function\n");
     return NULL;
 }
 
-String httpHeaderGetList(const HttpHeader * hdr, Http::HdrType id)
+String httpHeaderGetList(const HttpHeader *, Http::HdrType)
 {
     fatal ("dummy function\n");
     return String();
 }
 
-int httpHeaderHas(const HttpHeader * hdr, Http::HdrType type)
+int httpHeaderHas(const HttpHeader *, Http::HdrType)
 {
     fatal ("dummy function\n");
     return 0;
 }
 
-void httpHeaderPutContRange(HttpHeader * hdr, const HttpHdrContRange * cr)
+void httpHeaderPutContRange(HttpHeader *, const HttpHdrContRange *)
 {
     fatal ("dummy function\n");
 }
@@ -153,7 +153,7 @@ testRangeCanonization()
 }
 
 int
-main(int argc, char **argv)
+main(int, char **)
 {
     try {
         Mem::Init();

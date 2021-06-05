@@ -15,9 +15,6 @@
 class LoadableModule
 {
 public:
-    enum LoadMode { lmNow, lmLazy };
-
-public:
     LoadableModule(const String &aName);
     ~LoadableModule();           // unloads if loaded
 
@@ -25,7 +22,7 @@ public:
     const String &name() const { return theName; }
     const String &error() const { return theError; }
 
-    void load(int mode = lmNow); // throws Texc
+    void load(); // throws Texc
     void unload(); // throws Texc
 
 protected:
@@ -34,7 +31,7 @@ protected:
     void *theHandle;
 
 private:
-    void *openModule(int mode);
+    void *openModule();
     bool closeModule();
     const char *errorMsg();
 };

@@ -789,6 +789,8 @@ DumpMallocStatistics(StoreEntry* sentry)
     storeAppendPrintf(sentry, "\nMemory allocation statistics\n");
     storeAppendPrintf(sentry, "%12s %15s %6s %12s\n","Alloc Size","Count","Delta","Alloc/sec");
     malloc_statistics(info_get_mallstat, sentry);
+#else
+    (void)sentry;
 #endif
 }
 

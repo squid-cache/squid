@@ -1081,6 +1081,7 @@ nodist_tests_testString_SOURCES = \
 	tests/stub_SBuf.cc \
 	String.cc \
 	tests/stub_debug.cc \
+	tests/stub_event.cc \
 	tests/stub_libmem.cc
 tests_testString_LDADD = \
 	base/libbase.la \
@@ -2837,6 +2838,7 @@ tests_testConfigParser_SOURCES = \
 	cache_cf.h \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
+	tests/stub_event.cc \
 	tests/stub_fatal.cc \
 	fatal.h \
 	tests/stub_libmem.cc \

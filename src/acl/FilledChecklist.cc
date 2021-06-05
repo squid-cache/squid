@@ -272,6 +272,8 @@ ACLFilledChecklist::setIdent(const char *ident)
     assert(!rfc931[0]);
     if (ident)
         xstrncpy(rfc931, ident, USER_IDENT_SZ);
+#else
+    (void)ident;
 #endif
 }
 

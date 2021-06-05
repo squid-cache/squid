@@ -23,5 +23,14 @@ void operator delete(void *address)
     xfree(address);
 }
 
+// Squid does not use C++14 yet, but this declaration avoids a
+// -Wsized-deallocation error when building with C++14 implicitly enabled.
+#if __cplusplus >= 201402L
+void operator delete(void *address, size_t)
+{
+    operator delete(address);
+}
+#endif
+
 #endif /* !defined(__clang__) */
 

@@ -107,10 +107,10 @@
 #include "proxyp/Header.h"
 #include "proxyp/Parser.h"
 #include "sbuf/Stream.h"
-#include "security/Io.h"
 #include "security/CommunicationSecrets.h"
-#include "security/NegotiationHistory.h"
+#include "security/Io.h"
 #include "security/KeyLog.h"
+#include "security/NegotiationHistory.h"
 #include "servers/forward.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
@@ -1580,7 +1580,7 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
 
 /// ConnStateData::tunnelOnError() wrapper. Reduces code changes. TODO: Remove.
 bool
-clientTunnelOnError(ConnStateData *conn, Http::StreamPointer &context, HttpRequest::Pointer &request, const HttpRequestMethod& method, err_type requestError)
+clientTunnelOnError(ConnStateData *conn, Http::StreamPointer &context, HttpRequest::Pointer &, const HttpRequestMethod& method, err_type requestError)
 {
     assert(conn);
     assert(conn->pipeline.front() == context);
@@ -1589,7 +1589,7 @@ clientTunnelOnError(ConnStateData *conn, Http::StreamPointer &context, HttpReque
 
 /// initiate tunneling if possible or return false otherwise
 bool
-ConnStateData::tunnelOnError(const HttpRequestMethod &method, const err_type requestError)
+ConnStateData::tunnelOnError(const HttpRequestMethod &, const err_type requestError)
 {
     if (!Config.accessList.on_unsupported_protocol) {
         debugs(33, 5, "disabled; send error: " << requestError);

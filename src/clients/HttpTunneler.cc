@@ -98,7 +98,7 @@ Http::Tunneler::start()
 }
 
 void
-Http::Tunneler::handleConnectionClosure(const CommCloseCbParams &params)
+Http::Tunneler::handleConnectionClosure(const CommCloseCbParams &)
 {
     closer = nullptr;
     bailWith(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al));

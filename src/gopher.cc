@@ -685,8 +685,8 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                 }
             }
 
+            break;
             }           /* HTML_CSO_RESULT */
-
         default:
             break;      /* do nothing */
 

@@ -164,13 +164,13 @@ Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Http
             /* here it makes sense to drop the connection, as auth is
              * tied to it, even if MAYBE the client could handle it - Kinkie */
             request->flags.proxyKeepalive = false;
-        /* fall through */
+        /* [[fallthrough]] */
 
         case Auth::Ok:
         /* Special case: authentication finished OK but disallowed by ACL.
          * Need to start over to give the client another chance.
          */
-        /* fall through */
+        /* [[fallthrough]] */
 
         case Auth::Unchecked:
             /* semantic change: do not drop the connection.

@@ -279,7 +279,7 @@ ESIContext::provideData (ESISegment::Pointer theData, ESIElement * source)
 }
 
 void
-ESIContext::fail (ESIElement * source, char const *anError)
+ESIContext::fail (ESIElement *, char const *anError)
 {
     setError();
     setErrorMessage (anError);
@@ -1595,7 +1595,7 @@ esiLiteral::makeUsable(esiTreeParentPtr, ESIVarState &newVarState) const
 
 /* esiRemove */
 void
-esiRemove::render(ESISegment::Pointer output)
+esiRemove::render(ESISegment::Pointer)
 {
     /* Removes do nothing dude */
     debugs(86, 5, "esiRemoveRender: Rendering remove " << this);
@@ -1828,7 +1828,7 @@ esiTry::provideData (ESISegment::Pointer data, ESIElement* source)
     }
 }
 
-esiTry::esiTry(esiTry const &old)
+esiTry::esiTry(esiTry const &)
 {
     attempt = NULL;
     except  = NULL;

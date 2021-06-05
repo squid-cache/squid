@@ -174,7 +174,7 @@ PeerPoolMgr::handleSecuredPeer(Security::EncryptorAnswer &answer)
 }
 
 void
-PeerPoolMgr::handleSecureClosure(const CommCloseCbParams &params)
+PeerPoolMgr::handleSecureClosure(const CommCloseCbParams &)
 {
     Must(closer != NULL);
     Must(securer != NULL);

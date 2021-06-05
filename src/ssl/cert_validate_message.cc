@@ -89,7 +89,7 @@ get_error_id(const char *label, size_t len)
 }
 
 bool
-Ssl::CertValidationMsg::parseResponse(CertValidationResponse &resp, std::string &error)
+Ssl::CertValidationMsg::parseResponse(CertValidationResponse &resp)
 {
     std::vector<CertItem> certs;
 

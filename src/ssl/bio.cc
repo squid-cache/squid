@@ -149,7 +149,7 @@ Ssl::Bio::read(char *buf, int size, BIO *table)
 /// Called whenever the SSL connection state changes, an alert appears, or an
 /// error occurs. See SSL_set_info_callback().
 void
-Ssl::Bio::stateChanged(const SSL *ssl, int where, int ret)
+Ssl::Bio::stateChanged(const SSL *ssl, int where, int)
 {
     // Here we can use (where & STATE) to check the current state.
     // Many STATE values are possible, including: SSL_CB_CONNECT_LOOP,
@@ -168,7 +168,6 @@ Ssl::ClientBio::ClientBio(const int anFd):
     Bio(anFd),
     holdRead_(false),
     holdWrite_(false),
-    helloSize(0),
     abortReason(nullptr)
 {
     renegotiations.configure(10*1000);
@@ -453,6 +452,9 @@ adjustSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, SBuf &helloMes
     ssl->s3->wpend_tot = mainHelloSize;
     return true;
 #else
+    (void)ssl;
+    (void)details;
+    (void)helloMessage;
     return false;
 #endif
 }

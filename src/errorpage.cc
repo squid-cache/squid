@@ -550,6 +550,8 @@ TemplateFile::loadFor(const HttpRequest *request)
             debugs(4, DBG_IMPORTANT, "WARNING: Error Pages Missing Language: " << lang);
         }
     }
+#else
+    (void)request;
 #endif
 
     return loaded();
@@ -1076,6 +1078,7 @@ ErrorState::compileLegacyCode(Build &build)
     case 'O':
         if (!building_deny_info_url)
             do_quote = 0;
+    /* [[fallthrough]] */
     case 'o':
         p = request ? request->extacl_message.termedBuf() : external_acl_message;
         if (!p && !building_deny_info_url)

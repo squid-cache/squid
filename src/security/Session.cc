@@ -130,7 +130,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
         errAction = "failed to initialize session";
         debugs(83, DBG_IMPORTANT, "TLS error: " << errAction << ": " << Security::ErrorString(errCode));
     }
-#endif
+#endif /* USE_GNUTLS */
 
     if (session) {
         const int fd = conn->fd;
@@ -149,7 +149,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
             //     this does the equivalent of SSL_set_fd() for now.
             gnutls_transport_set_int(session.get(), fd);
             gnutls_handshake_set_timeout(session.get(), GNUTLS_DEFAULT_HANDSHAKE_TIMEOUT);
-#endif
+#endif /* USE_GNUTLS */
 
             debugs(83, 5, "link FD " << fd << " to TLS session=" << (void*)session.get());
 
@@ -162,6 +162,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
 #if USE_OPENSSL
         errCode = ERR_get_error();
         errAction = "failed to initialize I/O";
+        (void)opts;
 #elif USE_GNUTLS
         errAction = "failed to assign credentials";
 #endif
@@ -169,7 +170,12 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
 
     debugs(83, DBG_IMPORTANT, "ERROR: " << squidCtx << ' ' << errAction <<
            ": " << (errCode != 0 ? Security::ErrorString(errCode) : ""));
-#endif
+#else
+    (void)ctx;
+    (void)opts;
+    (void)type;
+    (void)squidCtx;
+#endif /* USE_OPENSSL || USE_GNUTLS */
     return false;
 }
 
@@ -277,7 +283,7 @@ isTlsServer()
 
 #if USE_OPENSSL
 static int
-store_session_cb(SSL *ssl, SSL_SESSION *session)
+store_session_cb(SSL * /* ssl */, SSL_SESSION *session)
 {
     if (!SessionCache)
         return 0;

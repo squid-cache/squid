@@ -828,10 +828,9 @@ matchDomainName(const char *h, const char *d, MatchDomainNameFlags flags)
 /*
  * return true if we can serve requests for this method.
  */
-int
+bool
 urlCheckRequest(const HttpRequest * r)
 {
-    int rc = 0;
     /* protocol "independent" methods
      *
      * actually these methods are specific to HTTP:
@@ -844,7 +843,7 @@ urlCheckRequest(const HttpRequest * r)
      */
 
     if (r->method == Http::METHOD_CONNECT)
-        return 1;
+        return true;
 
     // we support OPTIONS and TRACE directed at us (with a 501 reply, for now)
     // we also support forwarding OPTIONS and TRACE, except for the *-URI ones
@@ -852,56 +851,49 @@ urlCheckRequest(const HttpRequest * r)
         return (r->header.getInt64(Http::HdrType::MAX_FORWARDS) == 0 || r->url.path() != AnyP::Uri::Asterisk());
 
     if (r->method == Http::METHOD_PURGE)
-        return 1;
+        return true;
 
     /* does method match the protocol? */
     switch (r->url.getScheme()) {
 
     case AnyP::PROTO_URN:
-
     case AnyP::PROTO_HTTP:
-
     case AnyP::PROTO_CACHE_OBJECT:
-        rc = 1;
-        break;
+        return true;
 
     case AnyP::PROTO_FTP:
-
-        if (r->method == Http::METHOD_PUT)
-            rc = 1;
+        if (r->method == Http::METHOD_PUT ||
+                r->method == Http::METHOD_GET ||
+                r->method == Http::METHOD_HEAD )
+            return true;
+        return false;
 
     case AnyP::PROTO_GOPHER:
-
     case AnyP::PROTO_WAIS:
-
     case AnyP::PROTO_WHOIS:
-        if (r->method == Http::METHOD_GET)
-            rc = 1;
-        else if (r->method == Http::METHOD_HEAD)
-            rc = 1;
-
-        break;
+        if (r->method == Http::METHOD_GET ||
+                r->method == Http::METHOD_HEAD)
+            return true;
+        return false;
 
     case AnyP::PROTO_HTTPS:
-#if USE_OPENSSL
-        rc = 1;
-#elif USE_GNUTLS
-        rc = 1;
+#if USE_OPENSSL || USE_GNUTLS
+        return true;
 #else
         /*
-        * Squid can't originate an SSL connection, so it should
-        * never receive an "https:" URL.  It should always be
-        * CONNECT instead.
-        */
-        rc = 0;
+         * Squid can't originate an SSL connection, so it should
+         * never receive an "https:" URL.  It should always be
+         * CONNECT instead.
+         */
+        return false;
 #endif
-        break;
 
     default:
-        break;
+        return false;
     }
 
-    return rc;
+    /* notreached */
+    return false;
 }
 
 AnyP::Uri::Uri(AnyP::UriScheme const &aScheme) :
@@ -916,28 +908,29 @@ AnyP::Uri::Uri(AnyP::UriScheme const &aScheme) :
 char *
 AnyP::Uri::cleanup(const char *uri)
 {
-    int flags = 0;
     char *cleanedUri = nullptr;
     switch (Config.uri_whitespace) {
-    case URI_WHITESPACE_ALLOW:
-        flags |= RFC1738_ESCAPE_NOSPACE;
-    // fall through to next case
-    case URI_WHITESPACE_ENCODE:
-        flags |= RFC1738_ESCAPE_UNESCAPED;
+    case URI_WHITESPACE_ALLOW: {
+        const auto flags = RFC1738_ESCAPE_NOSPACE | RFC1738_ESCAPE_UNESCAPED;
         cleanedUri = xstrndup(rfc1738_do_escape(uri, flags), MAX_URL);
+        break;
+    }
+
+    case URI_WHITESPACE_ENCODE:
+        cleanedUri = xstrndup(rfc1738_do_escape(uri, RFC1738_ESCAPE_UNESCAPED), MAX_URL);
         break;
 
     case URI_WHITESPACE_CHOP: {
-        flags |= RFC1738_ESCAPE_UNESCAPED;
         const auto pos = strcspn(uri, w_space);
         char *choppedUri = nullptr;
         if (pos < strlen(uri))
             choppedUri = xstrndup(uri, pos + 1);
-        cleanedUri = xstrndup(rfc1738_do_escape(choppedUri ? choppedUri : uri, flags), MAX_URL);
+        cleanedUri = xstrndup(rfc1738_do_escape(choppedUri ? choppedUri : uri,
+                                                RFC1738_ESCAPE_UNESCAPED), MAX_URL);
         cleanedUri[pos] = '\0';
         xfree(choppedUri);
+        break;
     }
-    break;
 
     case URI_WHITESPACE_DENY:
     case URI_WHITESPACE_STRIP:
@@ -957,8 +950,8 @@ AnyP::Uri::cleanup(const char *uri)
         *q = '\0';
         cleanedUri = xstrndup(rfc1738_escape_unescaped(tmp_uri), MAX_URL);
         xfree(tmp_uri);
+        break;
     }
-    break;
     }
 
     assert(cleanedUri);

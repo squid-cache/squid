@@ -37,7 +37,7 @@ public:
 
 private:
     // unused in IcmpPinger
-    virtual void SendEcho(Ip::Address &to, int opcode, const char *payload, int len) {};
+    virtual void SendEcho(Ip::Address &, int, const char *, int) {}
 
     /**
      * Control channel(s) to squid.
@@ -56,4 +56,3 @@ extern IcmpPinger control;
 #endif
 
 #endif
-

@@ -54,7 +54,7 @@ public:
     icp_common_t *msg = nullptr; ///< ICP message with network byte order fields
     DelayedUdpSend *next = nullptr; ///< invasive FIFO queue of delayed ICP messages
     AccessLogEntryPointer ale; ///< sender's master transaction summary
-    struct timeval queue_time = {0, 0}; ///< queuing timestamp
+    struct timeval queue_time = {}; ///< queuing timestamp
 };
 
 static void icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);

@@ -12,9 +12,9 @@
 #define STUB_API "event.cc"
 #include "tests/STUB.h"
 
-void eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata) STUB_NOP
-void eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int) STUB
-void eventDelete(EVH * func, void *arg) STUB
+void eventAdd(const char *, EVH *, void *, double, int, bool) STUB_NOP
+void eventAddIsh(const char *, EVH *, void *, double, int) STUB
+void eventDelete(EVH *, void *) STUB
 void eventInit(void) STUB
 void eventFreeMemory(void) STUB
 int eventFind(EVH *, void *) STUB_RETVAL(-1)
@@ -25,12 +25,12 @@ int eventFind(EVH *, void *) STUB_RETVAL(-1)
 
 EventScheduler::EventScheduler() STUB
 EventScheduler::~EventScheduler() STUB
-void EventScheduler::cancel(EVH * func, void * arg) STUB
+void EventScheduler::cancel(EVH *, void *) STUB
 int EventScheduler::timeRemaining() const STUB_RETVAL(1)
 void EventScheduler::clean() STUB
 void EventScheduler::dump(StoreEntry *) STUB
-bool EventScheduler::find(EVH * func, void * arg) STUB_RETVAL(false)
-void EventScheduler::schedule(const char *name, EVH * func, void *arg, double when, int weight, bool cbdata) STUB
-int EventScheduler::checkEvents(int timeout) STUB_RETVAL(-1)
+bool EventScheduler::find(EVH *, void *) STUB_RETVAL(false)
+void EventScheduler::schedule(const char *, EVH *, void *, double, int, bool) STUB
+int EventScheduler::checkEvents(int) STUB_RETVAL(-1)
 EventScheduler *EventScheduler::GetInstance() STUB_RETVAL(NULL)
 

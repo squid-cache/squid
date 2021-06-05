@@ -61,7 +61,7 @@ std::vector<const char *> Ssl::BumpModeStr = {
  */
 
 int
-Ssl::AskPasswordCb(char *buf, int size, int rwflag, void *userdata)
+Ssl::AskPasswordCb(char *buf, int size, int /* rwflag */, void *userdata)
 {
     FILE *in;
     int len = 0;
@@ -96,7 +96,7 @@ ssl_ask_password(SSL_CTX * context, const char * prompt)
 
 #if HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK
 static RSA *
-ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
+ssl_temp_rsa_cb(SSL *, int, int keylen)
 {
     static RSA *rsa_512 = nullptr;
     static RSA *rsa_1024 = nullptr;
@@ -173,6 +173,8 @@ Ssl::MaybeSetupRsaCallback(Security::ContextPointer &ctx)
 #if HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK
     debugs(83, 9, "Setting RSA key generation callback.");
     SSL_CTX_set_tmp_rsa_callback(ctx.get(), ssl_temp_rsa_cb);
+#else
+    (void)ctx;
 #endif
 }
 
@@ -688,7 +690,7 @@ Ssl::Initialize(void)
 }
 
 bool
-Ssl::InitServerContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
+Ssl::InitServerContext(Security::ContextPointer &ctx, AnyP::PortCfg &)
 {
     if (!ctx)
         return false;
@@ -989,7 +991,7 @@ Ssl::configureUnconfiguredSslContext(Security::ContextPointer &ctx, Ssl::CertSig
 }
 
 bool
-Ssl::configureSSL(SSL *ssl, CertificateProperties const &properties, AnyP::PortCfg &port)
+Ssl::configureSSL(SSL *ssl, CertificateProperties const &properties, AnyP::PortCfg &)
 {
     Security::CertPointer cert;
     Security::PrivateKeyPointer pkey;
@@ -1012,7 +1014,7 @@ Ssl::configureSSL(SSL *ssl, CertificateProperties const &properties, AnyP::PortC
 }
 
 bool
-Ssl::configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::PortCfg &port)
+Ssl::configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::PortCfg &)
 {
     Security::CertPointer cert;
     Security::PrivateKeyPointer pkey;
@@ -1032,7 +1034,7 @@ Ssl::configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::Po
 }
 
 bool
-Ssl::verifySslCertificate(const Security::ContextPointer &ctx, CertificateProperties const &properties)
+Ssl::verifySslCertificate(const Security::ContextPointer &ctx, CertificateProperties const &)
 {
 #if HAVE_SSL_CTX_GET0_CERTIFICATE
     X509 * cert = SSL_CTX_get0_certificate(ctx.get());
@@ -1447,7 +1449,7 @@ bio_sbuf_puts(BIO* bio, const char* data)
 }
 
 long
-bio_sbuf_ctrl(BIO* bio, int cmd, long num, void* ptr) {
+bio_sbuf_ctrl(BIO* bio, int cmd, long /* num */, void*) {
     SBuf *buf = static_cast<SBuf *>(BIO_get_data(bio));
     switch (cmd) {
     case BIO_CTRL_RESET:

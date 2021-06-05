@@ -392,8 +392,8 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
             if (request->auth_user_request == NULL) {
                 request->auth_user_request = *auth_user_request;
             }
-
-        /* fallthrough to ERROR case and do the challenge */
+            *auth_user_request = nullptr;
+            return AUTH_ACL_CHALLENGE;
 
         case Auth::CRED_ERROR:
             /* this ACL check is finished. */
