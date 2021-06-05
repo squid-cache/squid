@@ -153,7 +153,6 @@ Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn)
     }
 #else
     (void)newConn;
-    (void)silent;
 #endif
     return false;
 }
@@ -301,7 +300,6 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn)
 
 #else
     (void)newConn;
-    (void)silent;
 #endif /* --enable-ipf-transparent */
     return false;
 }
@@ -374,7 +372,6 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn)
 #endif /* --with-nat-devpf */
 #else
     (void)newConn;
-    (void)silent;
 #endif /* --enable-pf-transparent */
     return false;
 }
