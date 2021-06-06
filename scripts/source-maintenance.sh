@@ -15,7 +15,7 @@
 ## Source Code Format Enforcement
 #
 # A checker to recursively reformat all source files: .h .c .cc .cci
-# using a custom astyle formatter and to use md5sum (or siilar) to validate
+# using a custom astyle formatter and to use md5sum (or similar) to validate
 # that the formatter has not altered the code syntax.
 #
 # If code alteration takes place the process is halted for manual intervention.
@@ -45,10 +45,11 @@ options:
 This script applies Squid mandatory code style guidelines.
 
 It requires astyle version $TargetAstyleVersion, or it will skip formatting
-program files.
-The path to the astyle binary can be specified using the
+program files. The path to the astyle binary can be specified using the
 --with-astyle option or with the ASTYLE environment variable.
-It will try to auto-detect a checksum program (e.g. md5sum)
+
+It will try to auto-detect a checksum program (e.g. md5sum).
+
 If the --only-changed-since argument is supplied, it expects a git commit-id,
 branch name or the special keyword 'fork'. The script will try identifying
 changed files since the specified commit and, if successful, only examine
@@ -452,7 +453,7 @@ if [ -z "$OnlyChangedSince" ]; then
     sort -u <doc/debug-sections.tmp | sort -n >doc/debug-sections.tmp2
     cat scripts/boilerplate.h doc/debug-sections.tmp2 >doc/debug-sections.txt
 else
-    echo "--only-changed-since specified, Skipping updating doc/debug-sections.txt"
+    echo "--only-changed-since specified, Skipping update of doc/debug-sections.txt"
 fi
 
 rm doc/debug-sections.tmp doc/debug-sections.tmp2
