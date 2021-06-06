@@ -334,7 +334,6 @@ squid_SOURCES = \
 	SBufStatsAction.h \
 	SquidMath.cc \
 	SquidMath.h \
-	SquidNew.cc \
 	StatCounters.cc \
 	StatCounters.h \
 	StatHist.cc \
@@ -619,7 +618,6 @@ ufsdump_SOURCES = \
 	MemBuf.h \
 	Parsing.h \
 	RemovalPolicy.cc \
-	SquidNew.cc \
 	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
 	String.cc \
