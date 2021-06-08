@@ -254,6 +254,11 @@ processDebugMessages ()
     source="doc/debug-messages.tmp"
     destination="doc/debug-messages.dox"
 
+    if test '!' -s "$source"; then
+        echo "ERROR: empty debugs() message list"
+        return 1;
+    fi
+
     repeatedIds=`awk '{print $1}' $source | sort -n | uniq -d`
     if test "x$repeatedIds" != "x"; then
         echo "ERROR: Repeated debugs() message IDs:"
