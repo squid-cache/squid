@@ -287,6 +287,7 @@ Comm::TcpAcceptor::acceptOne()
     if (flag == Comm::NOMESSAGE) {
         /* register interest again */
         debugs(5, 5, "try later: " << conn << " handler Subscription: " << theCallSub);
+        newConnDetails->close();
     } else {
         // TODO: When ALE, MasterXaction merge, use them or ClientConn instead.
         CodeContext::Reset(newConnDetails);
@@ -323,10 +324,14 @@ Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &
         params.xaction = new MasterXaction(XactionInitiator::initClient);
         params.xaction->squidPort = listenPort_;
         params.fd = conn->fd;
+        conn->enterOrphanage();
         params.conn = params.xaction->tcpClient = newConnDetails;
         params.flag = flag;
         params.xerrno = errcode;
         ScheduleCallHere(call);
+    } else {
+        // disconnect clients we cannot respond to
+        conn->close();
     }
 }
 
@@ -375,8 +380,6 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     // so we end up with a uniform "(HTTP|FTP-data|HTTPS|...) remote-ip:remote-port"
     fd_open(sock, FD_SOCKET, "HTTP Request");
     details->fd = sock;
-    details->enterOrphanage();
-
     details->remote = *gai;
 
     // lookup the local-end details of this new connection
