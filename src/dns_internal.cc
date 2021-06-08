@@ -1125,7 +1125,7 @@ idnsCallbackAllCallersWithNewAnswer(const idns_query * const answered, const boo
     for (auto looker = master; looker; looker = looker->queue) {
         CallBack(looker->codeContext, [&] {
             (void)idnsCallbackOneWithAnswer(looker->callback, looker->callback_data,
-            *answered, lastAnswer);
+                                            *answered, lastAnswer);
         });
     }
 }
