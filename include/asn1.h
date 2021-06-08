@@ -93,11 +93,6 @@ u_char *asn_build_objid(u_char *, int *, u_char, oid *, int);
 u_char *asn_parse_null(u_char *, int *, u_char *);
 u_char *asn_build_null(u_char *, int *, u_char);
 
-#if 0
-u_char *asn_parse_bitstring(u_char *, int *, u_char *, u_char *, int *);
-u_char *asn_build_bitstring(u_char *, int *, u_char, u_char *, int);
-
-#endif
 u_char *asn_build_exception(u_char *, int *, u_char);
 
 #ifdef __cplusplus

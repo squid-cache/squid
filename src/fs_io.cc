@@ -109,12 +109,6 @@ file_close(int fd)
      */
     assert(F->write_handler == NULL);
 
-#if CALL_FSYNC_BEFORE_CLOSE
-
-    fsync(fd);
-
-#endif
-
     close(fd);
 
     debugs(6, F->flags.close_request ? 2 : 5, "file_close: FD " << fd << " really closing");

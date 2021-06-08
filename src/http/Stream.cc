@@ -73,12 +73,6 @@ Http::Stream::writeComplete(size_t size)
 
     http->out.size += size;
 
-    if (clientHttpRequestStatus(clientConnection->fd, http)) {
-        initiateClose("failure or true request status");
-        /* Do we leak here ? */
-        return;
-    }
-
     switch (socketState()) {
 
     case STREAM_NONE:

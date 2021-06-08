@@ -185,6 +185,7 @@ public:
 #if ICAP_CLIENT
         CustomLog *icaplogs;
 #endif
+        Security::KeyLog *tlsKeys; ///< one optional tls_key_log
         int rotateNumber;
     } Log;
     char *adminEmail;

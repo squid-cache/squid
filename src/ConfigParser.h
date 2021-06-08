@@ -9,6 +9,7 @@
 #ifndef SQUID_CONFIGPARSER_H
 #define SQUID_CONFIGPARSER_H
 
+#include "acl/forward.h"
 #include "sbuf/forward.h"
 #include "SquidString.h"
 
@@ -55,6 +56,20 @@ public:
 
     /// rejects configuration due to a repeated directive
     void rejectDuplicateDirective();
+
+    /// extracts and returns a required token
+    SBuf token(const char *expectedTokenDescription);
+
+    /// extracts an optional key=value token or returns false
+    /// rejects configurations with empty keys or empty values
+    /// key and value have lifetime of the current line/directive
+    bool optionalKvPair(char * &key, char * &value);
+
+    /// either extracts the given (optional) token or returns false
+    bool skipOptional(const char *keyword);
+
+    /// parses an [if [!]<acl>...] construct
+    Acl::Tree *optionalAclList();
 
     static void ParseUShort(unsigned short *var);
     static void ParseBool(bool *var);

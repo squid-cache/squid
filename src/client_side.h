@@ -11,7 +11,7 @@
 #ifndef SQUID_CLIENTSIDE_H
 #define SQUID_CLIENTSIDE_H
 
-#include "acl/forward.h"
+#include "acl/ChecklistFiller.h"
 #include "base/RunnersRegistry.h"
 #include "clientStreamForward.h"
 #include "comm.h"
@@ -27,6 +27,7 @@
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
+#include "security/KeyLogger.h"
 #if USE_OPENSSL
 #include "security/forward.h"
 #include "security/Handshake.h"
@@ -75,7 +76,11 @@ class ServerBump;
  * managing, or for graceful half-close use the stopReceiving() or
  * stopSending() methods.
  */
-class ConnStateData : public Server, public HttpControlMsgSink, private IndependentRunner
+class ConnStateData:
+    public Server,
+    public HttpControlMsgSink,
+    public Acl::ChecklistFiller,
+    private IndependentRunner
 {
 
 public:
@@ -243,6 +248,10 @@ public:
     /// The caller assumes responsibility for connection closure detection.
     void stopPinnedConnectionMonitoring();
 
+    /// Starts or resumes accepting a TLS connection. TODO: Make this helper
+    /// method protected after converting clientNegotiateSSL() into a method.
+    Security::IoResult acceptTls();
+
     /// the second part of old httpsAccept, waiting for future HttpsServer home
     void postHttpsAccept();
 
@@ -360,10 +369,23 @@ public:
     /// emplacement/convenience wrapper for updateError(const Error &)
     void updateError(const err_type c, const ErrorDetailPointer &d) { updateError(Error(c, d)); }
 
+    /* Acl::ChecklistFiller API */
+    virtual void fillChecklist(ACLFilledChecklist &) const;
+
+    /// fillChecklist() obligations not fulfilled by the front request
+    /// TODO: This is a temporary ACLFilledChecklist::setConn() callback to
+    /// allow filling checklist using our non-public information sources. It
+    /// should be removed as unnecessary by making ACLs extract the information
+    /// they need from the ACLFilledChecklist::conn() without filling/copying.
+    void fillConnectionLevelDetails(ACLFilledChecklist &) const;
+
     // Exposed to be accessible inside the ClientHttpRequest constructor.
     // TODO: Remove. Make sure there is always a suitable ALE instead.
     /// a problem that occurred without a request (e.g., while parsing headers)
     Error bareError;
+
+    /// managers logging of the being-accepted TLS connection secrets
+    Security::KeyLogger keyLogger;
 
 protected:
     void startDechunkingRequest();

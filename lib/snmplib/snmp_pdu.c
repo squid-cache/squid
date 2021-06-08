@@ -490,10 +490,6 @@ snmp_pdu_decode(u_char * Packet,    /* data */
     u_char *bufp;
     u_char PDUType;
     u_char ASNType;
-#if UNUSED_CODE
-    int four;
-    oid objid[MAX_NAME_LEN];
-#endif
 
     bufp = asn_parse_header(Packet, Length, &PDUType);
     if (bufp == NULL)

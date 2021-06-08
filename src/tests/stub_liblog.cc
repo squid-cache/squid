@@ -30,7 +30,7 @@ void accessLogInit(void) STUB
 const char *accessLogTime(time_t) STUB_RETVAL(nullptr)
 
 #include "log/access_log.h"
-void fvdbCountVia(const char *) STUB
+void fvdbCountVia(const SBuf &) STUB
 void fvdbCountForw(const char *) STUB
 #if HEADERS_LOG
 void headersLog(int, int, const HttpRequestMethod &, void *) STUB
@@ -43,8 +43,8 @@ void LogConfig::parseFormats() STUB
 LogConfig TheConfig;
 }
 
-#include "log/CustomLog.h"
-bool CustomLog::usesDaemon() const STUB_RETVAL(false)
+#include "log/FormattedLog.h"
+bool FormattedLog::usesDaemon() const STUB_RETVAL(false)
 
 #include "log/File.h"
 CBDATA_CLASS_INIT(Logfile);

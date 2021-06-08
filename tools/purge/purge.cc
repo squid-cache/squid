@@ -580,13 +580,7 @@ checkForPortOnly( const char* arg )
     unsigned long result = strtoul( arg, &errstr, 0 );
     if ( result < 65536 && errstr != arg ) return htons(result);
 
-#if 0
-    // one last try, test for a symbolical service name
-    struct servent* service = getservbyname( arg, "tcp" );
-    return service ? service->s_port : -1;
-#else
     return -1;
-#endif
 }
 
 void
