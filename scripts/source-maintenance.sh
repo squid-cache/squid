@@ -456,8 +456,6 @@ done
 
     run_ processDebugSections || return
     run_ processDebugMessages || return
-
-    rm boilerplate_fix.sed
 }
 
 # Build XPROF types file from current sources
@@ -511,5 +509,7 @@ run_ checkMakeNamedErrorDetails || exit 1
 
 # Run formatting
 srcFormat || exit 1
+
+rm -f boilerplate_fix.sed
 
 exit $SeenErrors
