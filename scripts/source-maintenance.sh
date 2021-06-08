@@ -463,11 +463,10 @@ srcFormat || exit 1
 if [ -z "$OnlyChangedSince" ]; then
     sort -u <doc/debug-sections.tmp | sort -n >doc/debug-sections.tmp2
     cat scripts/boilerplate.h doc/debug-sections.tmp2 >doc/debug-sections.txt
+    rm doc/debug-sections.tmp doc/debug-sections.tmp2
+    rm -f boilerplate_fix.sed
 else
     echo "--only-changed-since specified, Skipping update of doc/debug-sections.txt"
 fi
-
-rm doc/debug-sections.tmp doc/debug-sections.tmp2
-rm -f boilerplate_fix.sed
 
 exit $SeenErrors
