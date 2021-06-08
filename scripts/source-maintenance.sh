@@ -28,7 +28,6 @@ KeepGoingDirective=""
 
 
 TargetAstyleVersion="2.04"
-ASTYLE="${ASTYLE:-astyle}"
 
 # whether to check and, if necessary, update boilerplate copyright years
 CheckAndUpdateCopyright=yes
@@ -117,12 +116,24 @@ do
 done
 echo "detected checksum program $Checksum"
 
-${ASTYLE} --version >/dev/null 2>/dev/null
-result=$?
-if test $result -gt 0 ; then
-	echo "ERROR: cannot run ${ASTYLE}"
-	exit 1
+if [ "x$ASTYLE" != "x" ] ; then
+    if ${ASTYLE} --version >/dev/null 2>/dev/null ; then
+        :
+    else
+        echo "ERROR: cannot run user-supplied astyle ${ASTYLE}"
+    fi
+else
+    for AttemptedBinary in astyle-${TargetAstyleVersion} astyle
+    do
+        if $AttemptedBinary --version >/dev/null 2>/dev/null ; then
+            ASTYLE=$AttemptedBinary
+            echo "detected astyle program ${ASTYLE}"
+            break
+        fi
+    done
 fi
+export ASTYLE
+
 ASVER=`${ASTYLE} --version 2>&1 | grep -o -E "[0-9.]+"`
 if test "${ASVER}" != "${TargetAstyleVersion}" ; then
 	if test "${ASTYLE}" = "astyle" ; then
@@ -135,11 +146,6 @@ if test "${ASVER}" != "${TargetAstyleVersion}" ; then
 	fi
 else
 	echo "Found astyle ${ASVER}"
-fi
-
-if [ ! -f src/http/Makefile ]; then
-    echo "please run ./bootstrap.sh && ./configure to prepare xperf sources"
-    exit 1
 fi
 
 if test $CheckAndUpdateCopyright = yes
@@ -441,7 +447,12 @@ printAmFile TRANSLATE_LANGUAGES "doc/manuals/" "*.po" | sed 's%\.po%\.lang%g' > 
 printAmFile STUB_SOURCE "src/" "tests/stub_*.cc" > src/tests/Stub.am
 
 # Build the GPERF generated content
-make -C src/http gperf-files
+if [ -f src/http/Makefile ]; then
+    make -C src/http gperf-files
+else
+    echo "source tree not configured; skipping regeneration of xperf sources"
+    echo "to run it, run  ./bootstrap.sh && ./configure && $0"
+fi
 
 run_ checkMakeNamedErrorDetails || exit 1
 
