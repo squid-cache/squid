@@ -211,10 +211,10 @@ collectDebugMessagesFrom ()
 
     # Merge multi-line debugs() into one-liners and remove '//...' comments.
     awk 'BEGIN { found=0; dbgLine=""; } {
-        if ($0 ~ /\sdebugs\s*\(/)
+        if ($0 ~ /[ \t]debugs[ \t]*\(/)
             found = 1;
         if (found) {
-            commented = match($0, /\);\s*\/\//);
+            commented = match($0, /\);[ \t]*\/\//);
             if (commented)
                 $0 = substr($0, 1, RSTART+1);
             dbgLine = dbgLine $0;
