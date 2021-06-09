@@ -19,6 +19,9 @@ public:
     /// a parsed port type (http_port, https_port or ftp_port)
     typedef enum { httpPort, httpsPort, ftpPort } PortKind;
 
+    /// \returns true for HTTPS ports with SSL bump receiving PROXY protocol traffic
+    bool proxySurrogateHttpsSslBump() const { return proxySurrogateHttp && tunnelSslBumping && portKind == httpsPort; }
+
     /** marks HTTP accelerator (reverse/surrogate proxy) traffic
      *
      * Indicating the following are required:
@@ -36,20 +39,6 @@ public:
      *  - TLS is not supported
      */
     bool proxySurrogateHttp = false;
-
-    // TODO: unused
-    /** marks https ports receiving PROXY protocol traffic
-     *
-     * Indicating the following are required:
-     *  - PROXY protocol magic header
-     *  - URL translation from relative to absolute form
-     *  - src/dst IP retrieved from magic PROXY header
-     *  - indirect client IP trust verification is mandatory
-     *  - Same-Origin verification is mandatory
-     *  - TLS is supported
-     *  - Squid authentication prohibited
-     */
-    bool proxySurrogateHttps = false;
 
     /** marks NAT intercepted traffic
      *
@@ -85,8 +74,7 @@ public:
      */
     bool tunnelSslBumping = false;
 
-    // the parsed port type value
-    PortKind portKind;
+    PortKind portKind; ///< the parsed port type value
 };
 
 /**
@@ -102,7 +90,7 @@ public:
     /// to the TCP client of the accepted connection and/or to us. This port mode
     /// alone does not imply that the client of the accepted TCP connection was not
     /// connecting directly to this port (since commit 151ba0d).
-    bool interceptedSomewhere() const { return flags_.natIntercept || flags_.tproxyIntercept || flags_.proxySurrogateHttps; }
+    bool interceptedSomewhere() const { return flags_.natIntercept || flags_.tproxyIntercept || flags_.proxySurrogateHttpsSslBump(); }
 
     /// The client of the accepted TCP connection was connecting to this port.
     /// The accepted traffic may have been intercepted earlier!
@@ -121,7 +109,7 @@ public:
     bool forwarded() const { return !interceptedSomewhere() && !flags_.accelSurrogate; }
 
     /// whether the PROXY protocol header is required
-    bool proxySurrogate() const { return flags_.proxySurrogateHttp || flags_.proxySurrogateHttps; }
+    bool proxySurrogate() const { return flags_.proxySurrogateHttp || flags_.proxySurrogateHttpsSslBump(); }
 
     /// interceptedLocally() with configured NAT interception
     bool natInterceptLocally() const { return flags_.natIntercept && interceptedLocally(); }
