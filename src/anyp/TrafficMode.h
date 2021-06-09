@@ -74,6 +74,17 @@ public:
      */
     bool tproxyIntercept = false;
 
+    /** marks intercept and decryption of CONNECT (tunnel) SSL traffic
+     *
+     * Indicating the following are required:
+     *  - decryption of CONNECT request
+     *  - URL translation from relative to absolute form
+     *  - Squid authentication prohibited on unwrapped requests (only on the CONNECT tunnel)
+     *  - encrypted outbound server connections
+     *  - peer relay prohibited. TODO: re-encrypt and re-wrap with CONNECT
+     */
+    bool tunnelSslBumping = false;
+
     // the parsed port type value
     PortKind portKind;
 };
@@ -121,20 +132,11 @@ public:
     /// whether the reverse proxy is configured
     bool accelSurrogate() const { return flags_.accelSurrogate; }
 
+    bool tunnelSslBumping() const { return flags_.tunnelSslBumping; }
+
     TrafficModeFlags &rawConfig() { return flags_; }
 
     std::ostream &print(std::ostream &) const;
-
-    /** marks intercept and decryption of CONNECT (tunnel) SSL traffic
-     *
-     * Indicating the following are required:
-     *  - decryption of CONNECT request
-     *  - URL translation from relative to absolute form
-     *  - Squid authentication prohibited on unwrapped requests (only on the CONNECT tunnel)
-     *  - encrypted outbound server connections
-     *  - peer relay prohibited. TODO: re-encrypt and re-wrap with CONNECT
-     */
-    bool tunnelSslBumping = false;
 
 private:
     TrafficModeFlags flags_;
@@ -152,7 +154,7 @@ TrafficMode::print(std::ostream &os) const
     else
         os << " forward-proxy";
 
-    if (tunnelSslBumping)
+    if (flags_.tunnelSslBumping)
         os << " SSL bumped";
     if (proxySurrogate())
         os << " (with PROXY protocol header)";
