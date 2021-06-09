@@ -47,14 +47,14 @@ public:
         initiator(anInitiator)
     {
         assert(!initiator.in(XactionInitiator::initClient));
-    };
+    }
 
     /// Requires a listening port.
     /// Compatible only with XactionInitiator::initClient.
     explicit MasterXaction(const AnyP::PortCfgPointer &port) :
         squidPort(port),
         initiator(XactionInitiator::initClient)
-    {};
+    {}
 
     /// a convenience method returning TrafficMode::interceptedSomewhere() for the port accepted this transaction
     /// \see TrafficMode::interceptedSomewhere() for details
