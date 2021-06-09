@@ -3786,13 +3786,20 @@ static void
 parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
 {
     SBuf protoName;
+    AnyP::TrafficModeFlags::PortKind portKind;
     if (strcmp(optionName, "http_port") == 0 ||
-            strcmp(optionName, "ascii_port") == 0)
+            strcmp(optionName, "ascii_port") == 0) {
         protoName = "HTTP";
-    else if (strcmp(optionName, "https_port") == 0)
+        portKind = AnyP::TrafficModeFlags::httpPort;
+    }
+    else if (strcmp(optionName, "https_port") == 0) {
         protoName = "HTTPS";
-    else if (strcmp(optionName, "ftp_port") == 0)
+        portKind = AnyP::TrafficModeFlags::httpsPort;
+    }
+    else if (strcmp(optionName, "ftp_port") == 0) {
         protoName = "FTP";
+        portKind = AnyP::TrafficModeFlags::ftpPort;
+    }
     if (protoName.isEmpty()) {
         self_destruct();
         return;
@@ -3806,6 +3813,7 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
     }
 
     AnyP::PortCfgPointer s = new AnyP::PortCfg();
+    s->flags.rawConfig().portKind = portKind;
     s->transport = parsePortProtocol(protoName); // default; protocol=... overwrites
     parsePortSpecification(s, token);
 

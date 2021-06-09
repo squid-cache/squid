@@ -16,6 +16,9 @@ namespace AnyP
 class TrafficModeFlags
 {
 public:
+    /// a parsed port type (http_port, https_port or ftp_port)
+    typedef enum { httpPort, httpsPort, ftpPort } PortKind;
+
     /** marks HTTP accelerator (reverse/surrogate proxy) traffic
      *
      * Indicating the following are required:
@@ -70,6 +73,9 @@ public:
      *  - Squid authentication prohibited
      */
     bool tproxyIntercept = false;
+
+    // the parsed port type value
+    PortKind portKind;
 };
 
 /**
