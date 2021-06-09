@@ -37,7 +37,7 @@ my $ASTYLE_ARGS ="--mode=c -s4 --convert-tabs --keep-one-line-blocks --lineend=l
 GetOptions(
 	'help', sub { usage($0) },
 	'with-astyle=s', \$ASTYLE_BIN
-	);
+	) or die(usage($0));
 
 $ASTYLE_BIN=$ASTYLE_BIN." ".$ASTYLE_ARGS;
 
@@ -206,5 +206,5 @@ sub usage{
     print "\n";
     print "Options:\n";
     print "    --help              This usage text.\n";
-    print "    --with-astyle=PATH  astyle executable to use.\n";
+    print "    --with-astyle <PATH>  astyle executable to use.\n";
 }

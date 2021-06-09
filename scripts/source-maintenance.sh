@@ -230,7 +230,7 @@ for FILENAME in `git ls-files`; do
 	#
 	applyPluginsTo ${FILENAME} scripts/maintenance/ || return
 	if test "${ASVER}"; then
-		./scripts/formater.pl --with-astyle=${ASTYLE} ${FILENAME}
+		./scripts/formater.pl --with-astyle ${ASTYLE} ${FILENAME}
 		if test -e $FILENAME -a -e "$FILENAME.astylebak"; then
 			md51=`cat  $FILENAME| tr -d "\n \t\r" | $MD5`;
 			md52=`cat  $FILENAME.astylebak| tr -d "\n \t\r" | $MD5`;
