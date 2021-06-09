@@ -255,7 +255,7 @@ processDebugMessages ()
     destination="doc/debug-messages.dox"
 
     if test '!' -s "$source"; then
-        echo "ERROR: empty debugs() message list"
+        echo "ERROR: Failed to find debugs() message IDs"
         return 1;
     fi
 
