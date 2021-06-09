@@ -34,6 +34,7 @@ my $ASTYLE_BIN = "astyle";
 my $ASTYLE_ARGS ="--mode=c -s4 --convert-tabs --keep-one-line-blocks --lineend=linux";
 #$ASTYLE_ARGS="--mode=c -s4 -O --break-blocks -l";
 
+Getopt::Long::Configure("require_order");
 GetOptions(
 	'help', sub { usage($0) },
 	'with-astyle=s', \$ASTYLE_BIN
