@@ -11,9 +11,6 @@
 #ifndef SQUID_IP_IPINTERCEPT_H
 #define SQUID_IP_IPINTERCEPT_H
 
-/* for time_t */
-#include "SquidTime.h"
-
 namespace Ip
 {
 
@@ -30,7 +27,7 @@ class Address;
 class Intercept
 {
 public:
-    Intercept() : transparentActive_(0), interceptActive_(0), lastReported_(0) {};
+    Intercept() : transparentActive_(0), interceptActive_(0) {}
     ~Intercept() {};
 
     /// perform NAT lookups
@@ -134,11 +131,8 @@ private:
      */
     bool PfInterception(const Comm::ConnectionPointer &newConn);
 
-    int errorReportingLevel();
-
     int transparentActive_;
     int interceptActive_;
-    time_t lastReported_; /**< Time of last error report. Throttles NAT error display to 1 per minute */
 };
 
 #if LINUX_NETFILTER && !defined(IP_TRANSPARENT)

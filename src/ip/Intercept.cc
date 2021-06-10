@@ -143,10 +143,8 @@ Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn)
                     newConn->local.isIPv6() ? IP6T_SO_ORIGINAL_DST : SO_ORIGINAL_DST,
                     &lookup,
                     &len) != 0) {
-        int xerrno = errno;
-        debugs(89, errorReportingLevel(), "ERROR: NF getsockopt(ORIGINAL_DST) failed on " << newConn << ": " << xstrerr(xerrno));
-        lastReported_ = squid_curtime;
-        debugs(89, 9, "address: " << newConn);
+        const auto xerrno = errno;
+        debugs(89, DBG_IMPORTANT, "ERROR: NF getsockopt(ORIGINAL_DST) failed on " << newConn << ": " << xstrerr(xerrno));
         return false;
     } else {
         newConn->local = lookup;
@@ -246,8 +244,7 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn)
 
     if (natfd < 0) {
         const auto xerrno = errno;
-        debugs(89, errorReportingLevel(), "IPF (IPFilter) NAT open failed: " << xstrerr(xerrno));
-        lastReported_ = squid_curtime;
+        debugs(89, DBG_IMPORTANT, "ERROR: IPF (IPFilter) NAT open failed: " << xstrerr(xerrno));
         return false;
     }
 
@@ -278,11 +275,9 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn)
 
 #endif
     if (x < 0) {
-        int xerrno = errno;
+        const auto xerrno = errno;
         if (xerrno != ESRCH) {
-            debugs(89, errorReportingLevel(), "IPF (IPFilter) NAT lookup failed: ioctl(SIOCGNATL) (v=" << IPFILTER_VERSION << "): " << xstrerr(xerrno));
-            lastReported_ = squid_curtime;
-
+            debugs(89, DBG_IMPORTANT, "ERROR: IPF (IPFilter) NAT lookup failed: ioctl(SIOCGNATL) (v=" << IPFILTER_VERSION << "): " << xstrerr(xerrno));
             close(natfd);
             natfd = -1;
         }
@@ -332,8 +327,7 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn)
 
     if (pffd < 0) {
         const auto xerrno = errno;
-        debugs(89, errorReportingLevel(), MYNAME << "PF open failed: " << xstrerr(xerrno));
-        lastReported_ = squid_curtime;
+        debugs(89, DBG_IMPORTANT, "ERROR: PF open failed: " << xstrerr(xerrno));
         return false;
     }
 
@@ -356,10 +350,9 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn)
     nl.direction = PF_OUT;
 
     if (ioctl(pffd, DIOCNATLOOK, &nl)) {
-        int xerrno = errno;
+        const auto xerrno = errno;
         if (xerrno != ENOENT) {
-            debugs(89, errorReportingLevel(), HERE << "PF lookup failed: ioctl(DIOCNATLOOK): " << xstrerr(xerrno));
-            lastReported_ = squid_curtime;
+            debugs(89, DBG_IMPORTANT, "ERROR: PF lookup failed: ioctl(DIOCNATLOOK): " << xstrerr(xerrno));
             close(pffd);
             pffd = -1;
         }
@@ -416,17 +409,6 @@ Ip::Intercept::LookupTproxy(const Comm::ConnectionPointer &newConn)
 {
     debugs(89, 5, "address BEGIN: me/client= " << newConn->local << ", destination/me= " << newConn->remote);
     return transparentActive_ && TproxyTransparent(newConn);
-}
-
-/// XXX: TcpAcceptor::oldAccept() reports "same" errors while ignoring this code.
-/// \returns debugs() level for reporting the current error
-int
-Ip::Intercept::errorReportingLevel()
-{
-    // TODO: Consider limiting level-1 errors to, say, one per minute:
-    // const auto important = squid_curtime - lastReported_ > 60;
-    lastReported_ = squid_curtime;
-    return DBG_IMPORTANT;
 }
 
 bool
