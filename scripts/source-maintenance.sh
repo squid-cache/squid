@@ -33,7 +33,7 @@ KeepGoingDirective=""
 # has changed in different releases.
 # if --with-astyle /path/to/astyle is used, the check is still performed
 # and a warning is printed, but the sources are reformatted
-TargetAstyleVersion="2.04"
+TargetAstyleVersion="3.1"
 ASTYLE='astyle'
 
 # whether to check and, if necessary, update boilerplate copyright years
@@ -71,7 +71,6 @@ while [ $# -ge 1 ]; do
         ;;
     --with-astyle)
         ASTYLE=$2
-        export ASTYLE
         shift 2
         ;;
     *)
@@ -231,7 +230,7 @@ for FILENAME in `git ls-files`; do
 	#
 	applyPluginsTo ${FILENAME} scripts/maintenance/ || return
 	if test "${ASVER}"; then
-		./scripts/formater.pl ${FILENAME}
+		./scripts/formater.pl --with-astyle ${ASTYLE} ${FILENAME}
 		if test -e $FILENAME -a -e "$FILENAME.astylebak"; then
 			md51=`cat  $FILENAME| tr -d "\n \t\r" | $MD5`;
 			md52=`cat  $FILENAME.astylebak| tr -d "\n \t\r" | $MD5`;
