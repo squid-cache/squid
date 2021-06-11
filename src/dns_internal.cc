@@ -18,6 +18,7 @@
 #include "comm/Loops.h"
 #include "comm/Read.h"
 #include "comm/Write.h"
+#include "DebugMessages.h"
 #include "dlink.h"
 #include "dns/forward.h"
 #include "dns/rfc3596.h"
@@ -395,7 +396,7 @@ idnsParseNameservers(void)
 {
     bool result = false;
     for (auto &i : Config.dns.nameservers) {
-        debugs(78, DBG_IMPORTANT, "Adding nameserver " << i << " from squid.conf");
+        debugs(78, Important(15), "Adding nameserver " << i << " from squid.conf");
         idnsAddNameserver(i.c_str());
         result = true;
     }
@@ -1574,12 +1575,12 @@ Dns::Init(void)
          */
         if (DnsSocketB >= 0) {
             comm_local_port(DnsSocketB);
-            debugs(78, DBG_IMPORTANT, "DNS Socket created at " << addrV6 << ", FD " << DnsSocketB);
+            debugs(78, Important(16), "DNS IPv6 socket created at " << addrV6 << ", FD " << DnsSocketB);
             Comm::SetSelect(DnsSocketB, COMM_SELECT_READ, idnsRead, NULL, 0);
         }
         if (DnsSocketA >= 0) {
             comm_local_port(DnsSocketA);
-            debugs(78, DBG_IMPORTANT, "DNS Socket created at " << addrV4 << ", FD " << DnsSocketA);
+            debugs(78, Important(64), "DNS IPv4 socket created at " << addrV4 << ", FD " << DnsSocketA);
             Comm::SetSelect(DnsSocketA, COMM_SELECT_READ, idnsRead, NULL, 0);
         }
     }
