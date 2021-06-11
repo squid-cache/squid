@@ -967,8 +967,7 @@ helperReturnBuffer(helper_server * srv, helper * hlp, char * msg, size_t msgSize
     if (!srv->flags.shutdown) {
         helperKickQueue(hlp);
     } else if (!srv->flags.closing && !srv->stats.pending) {
-        srv->flags.closing=true;
-        srv->writePipe->close();
+        srv->closeWritePipeSafely(srv->parent->id_name);
     }
 }
 
