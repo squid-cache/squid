@@ -65,6 +65,7 @@ class helper
     CBDATA_CLASS(helper);
 
 public:
+    /// \param name admin-visible helper category (with this process lifetime)
     inline helper(const char *name) :
         cmdline(NULL),
         id_name(name),
