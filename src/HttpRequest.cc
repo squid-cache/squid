@@ -809,7 +809,7 @@ FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry 
     if (ip || request->masterXaction->hasListeningInterceptedPort())
         return ip;
 
-    // if (request->masterXaction->squidPort->flags.proxySurrogateHttp()) {
+    // if (request->masterXaction->squidPort->flags.proxySurrogate()) {
     //     XXX: handle PROXY protocol here when we have a flag to identify such request
     // }
 

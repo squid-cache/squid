@@ -20,7 +20,7 @@ public:
     typedef enum { httpPort, httpsPort, ftpPort } PortKind;
 
     /// \returns true for HTTPS ports with SSL bump receiving PROXY protocol traffic
-    bool proxySurrogateHttpsSslBump() const { return proxySurrogateHttp && tunnelSslBumping && portKind == httpsPort; }
+    bool proxySurrogateHttpsSslBump() const { return proxySurrogate && tunnelSslBumping && portKind == httpsPort; }
 
     /** marks HTTP accelerator (reverse/surrogate proxy) traffic
      *
@@ -38,7 +38,7 @@ public:
      *  - indirect client IP trust verification is mandatory
      *  - TLS is not supported
      */
-    bool proxySurrogateHttp = false;
+    bool proxySurrogate = false;
 
     /** marks NAT intercepted traffic
      *
@@ -109,7 +109,7 @@ public:
     bool forwarded() const { return !interceptedSomewhere() && !flags_.accelSurrogate; }
 
     /// whether the PROXY protocol header is required
-    bool proxySurrogate() const { return flags_.proxySurrogateHttp || flags_.proxySurrogateHttpsSslBump(); }
+    bool proxySurrogate() const { return flags_.proxySurrogate || flags_.proxySurrogateHttpsSslBump(); }
 
     /// interceptedLocally() with configured NAT interception
     bool natInterceptLocally() const { return flags_.natIntercept && interceptedLocally(); }

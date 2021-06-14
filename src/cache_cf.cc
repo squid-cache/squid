@@ -3596,7 +3596,7 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
         }
 
     } else if (strcmp(token, "require-proxy-header") == 0) {
-        rawFlags.proxySurrogateHttp = true;
+        rawFlags.proxySurrogate = true;
         if (rawFlags.tproxyIntercept) {
             // receiving is still permitted, so we do not unset the TPROXY flag
             // spoofing access control override takes care of the spoof disable later
@@ -3840,7 +3840,7 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
             return;
         }
 #endif
-        if (rawFlags.proxySurrogateHttp) {
+        if (rawFlags.proxySurrogate) {
             debugs(3,DBG_CRITICAL, "FATAL: https_port: require-proxy-header option is not supported on HTTPS ports.");
             self_destruct();
             return;
@@ -3852,7 +3852,7 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
             self_destruct();
             return;
         }
-        if (rawFlags.proxySurrogateHttp) {
+        if (rawFlags.proxySurrogate) {
             // Passive FTP data channel does not work without deep protocol inspection in the frontend.
             debugs(3,DBG_CRITICAL, "FATAL: require-proxy-header option is not supported on ftp_port.");
             self_destruct();
