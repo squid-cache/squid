@@ -3795,8 +3795,8 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
     else if (strcmp(optionName, "https_port") == 0) {
         protoName = "HTTPS";
         portKind = AnyP::TrafficModeFlags::httpsPort;
-    }
-    else if (strcmp(optionName, "ftp_port") == 0) {
+    } else {
+        assert(strcmp(optionName, "ftp_port") == 0);
         protoName = "FTP";
         portKind = AnyP::TrafficModeFlags::ftpPort;
     }
