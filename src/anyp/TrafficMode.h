@@ -30,7 +30,7 @@ public:
      */
     bool accelSurrogate = false;
 
-    /** marks http ports receiving PROXY protocol traffic
+    /** marks ports receiving PROXY protocol traffic
      *
      * Indicating the following are required:
      *  - PROXY protocol magic header
