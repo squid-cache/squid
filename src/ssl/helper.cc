@@ -81,7 +81,7 @@ void Ssl::Helper::Init()
     if (!found)
         return;
 
-    ssl_crtd = new helper(Ssl::TheConfig.ssl_crtd);
+    ssl_crtd = new helper("sslcrtd_program");
     ssl_crtd->childs.updateLimits(Ssl::TheConfig.ssl_crtdChildren);
     ssl_crtd->ipc_type = IPC_STREAM;
     // The crtd messages may contain the eol ('\n') character. We are
