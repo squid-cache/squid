@@ -1115,7 +1115,7 @@ externalAclInit(void)
             p->cache = hash_create((HASHCMP *) strcmp, hashPrime(1024), hash4);
 
         if (!p->theHelper)
-            p->theHelper = new helper(p->name);
+            p->theHelper = new helper("external_acl_type");
 
         p->theHelper->cmdline = p->cmdline;
 
