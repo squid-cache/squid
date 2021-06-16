@@ -336,7 +336,13 @@ int main(int argc, char *argv[])
                 if (fgets(request, HELPER_INPUT_BUFFER, stdin) == NULL)
                     exit(EXIT_FAILURE);
                 size_t gcount = strlen(request);
+                if (debug_enabled) {
+                    std::cerr << argv[0] << ": received " << gcount << " bytes from Squid" << std::endl << " " << request << std::endl;
+                }
                 parse_result = request_message.parse(request, gcount);
+                if (debug_enabled) {
+                    std::cerr << argv[0] << ": parsed result=" << parse_result << std::endl;
+                }
             }
 
             if (parse_result == Ssl::CrtdMessage::ERROR) {
