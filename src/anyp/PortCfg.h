@@ -23,7 +23,7 @@ namespace AnyP
 class PortCfg : public CodeContext
 {
 public:
-    PortCfg(const AnyP::TrafficModeFlags::PortKind aPortKind);
+    explicit PortCfg(const AnyP::TrafficModeFlags::PortKind aPortKind);
     ~PortCfg();
     AnyP::PortCfgPointer clone() const;
 

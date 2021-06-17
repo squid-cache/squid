@@ -21,9 +21,6 @@ public:
 
     explicit TrafficModeFlags(const PortKind aPortKind) : portKind(aPortKind) {}
 
-    /// \returns true for HTTPS ports with SSL bump receiving PROXY protocol traffic
-    bool proxySurrogateHttpsSslBump() const { return proxySurrogate && tunnelSslBumping && portKind == httpsPort; }
-
     /** marks HTTP accelerator (reverse/surrogate proxy) traffic
      *
      * Indicating the following are required:
@@ -88,12 +85,12 @@ public:
 class TrafficMode
 {
 public:
-    TrafficMode(const TrafficModeFlags::PortKind aPortKind) : flags_(aPortKind) {}
+    explicit TrafficMode(const TrafficModeFlags::PortKind aPortKind) : flags_(aPortKind) {}
     /// This port handles traffic that has been intercepted prior to being delivered
     /// to the TCP client of the accepted connection and/or to us. This port mode
     /// alone does not imply that the client of the accepted TCP connection was not
     /// connecting directly to this port (since commit 151ba0d).
-    bool interceptedSomewhere() const { return flags_.natIntercept || flags_.tproxyIntercept || flags_.proxySurrogateHttpsSslBump(); }
+    bool interceptedSomewhere() const { return flags_.natIntercept || flags_.tproxyIntercept || proxySurrogateHttpsSslBump(); }
 
     /// The client of the accepted TCP connection was connecting to this port.
     /// The accepted traffic may have been intercepted earlier!
@@ -112,7 +109,7 @@ public:
     bool forwarded() const { return !interceptedSomewhere() && !flags_.accelSurrogate; }
 
     /// whether the PROXY protocol header is required
-    bool proxySurrogate() const { return flags_.proxySurrogate || flags_.proxySurrogateHttpsSslBump(); }
+    bool proxySurrogate() const { return flags_.proxySurrogate; }
 
     /// interceptedLocally() with configured NAT interception
     bool natInterceptLocally() const { return flags_.natIntercept && interceptedLocally(); }
@@ -132,6 +129,11 @@ public:
     std::ostream &print(std::ostream &) const;
 
 private:
+    /// \returns true for HTTPS ports with SSL bump receiving PROXY protocol traffic
+    bool proxySurrogateHttpsSslBump() const {
+        return flags_.proxySurrogate && flags_.tunnelSslBumping && flags_.portKind == TrafficModeFlags::httpsPort;
+    }
+
     TrafficModeFlags flags_;
 };
 
