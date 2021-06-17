@@ -95,6 +95,7 @@ Ftp::Channel::opened(const Comm::ConnectionPointer &newConn,
     assert(aCloser != NULL);
 
     conn = newConn;
+    conn->leaveOrphanage();
     closer = aCloser;
     comm_add_close_handler(conn->fd, closer);
 }
@@ -181,12 +182,12 @@ Ftp::DataChannel::addr(const Ip::Address &import)
 Ftp::Client::Client(FwdState *fwdState):
     AsyncJob("Ftp::Client"),
     ::Client(fwdState),
-     ctrl(),
-     data(),
-     state(BEGIN),
-     old_request(NULL),
-     old_reply(NULL),
-     shortenReadTimeout(false)
+    ctrl(),
+    data(),
+    state(BEGIN),
+    old_request(NULL),
+    old_reply(NULL),
+    shortenReadTimeout(false)
 {
     ++statCounter.server.all.requests;
     ++statCounter.server.ftp.requests;

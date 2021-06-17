@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include "DebugMessages.h"
 #include "fd.h"
 #include "ipc/Kids.h"
 #include "SquidTime.h"
@@ -27,6 +28,7 @@ bool Debug::log_syslog = false;
 int Debug::Levels[MAX_DEBUG_SECTIONS];
 char *Debug::cache_log = NULL;
 int Debug::rotateNumber = -1;
+DebugMessages TheDebugMessages;
 static int Ctx_Lock = 0;
 static const char *debugLogTime(void);
 static const char *debugLogKid(void);

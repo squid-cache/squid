@@ -76,6 +76,7 @@
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
+#include "DebugMessages.h"
 #include "error/ExceptionErrorDetail.h"
 #include "errorpage.h"
 #include "fd.h"
@@ -2401,7 +2402,7 @@ clientNegotiateSSL(int fd, void *data)
         return;
 
     case Security::IoResult::ioError:
-        debugs(83, (handshakeResult.important ? DBG_IMPORTANT : 2), "ERROR: " << handshakeResult.errorDescription <<
+        debugs(83, (handshakeResult.important ? Important(62) : 2), "ERROR: " << handshakeResult.errorDescription <<
                " while accepting a TLS connection on " << conn->clientConnection << ": " << handshakeResult.errorDetail);
         // TODO: No ConnStateData::tunnelOnError() on this forward-proxy code
         // path because we cannot know the intended connection target?
@@ -3455,7 +3456,7 @@ clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId port
     // TCP: setup a job to handle accept() with subscribed handler
     AsyncJob::Start(new Comm::TcpAcceptor(s, FdNote(portTypeNote), sub));
 
-    debugs(1, DBG_IMPORTANT, "Accepting " <<
+    debugs(1, Important(13), "Accepting " <<
            (s->flags.natIntercept ? "NAT intercepted " : "") <<
            (s->flags.tproxyIntercept ? "TPROXY intercepted " : "") <<
            (s->flags.tunnelSslBumping ? "SSL bumped " : "") <<
@@ -3495,7 +3496,7 @@ clientConnectionsClose()
 {
     for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (s->listenConn != NULL) {
-            debugs(1, DBG_IMPORTANT, "Closing HTTP(S) port " << s->listenConn->local);
+            debugs(1, Important(14), "Closing HTTP(S) port " << s->listenConn->local);
             s->listenConn->close();
             s->listenConn = NULL;
         }
