@@ -194,13 +194,12 @@ ClpMap<Key, Value, MemoryUsedBy>::MemoryCountedFor(const Key &k, const Value &v)
 
     // approximate calculation (e.g., containers store wrappers not value_types)
     return Sum<uint64_t>(
+               keySz,
                // storage
                sizeof(typename Entries::value_type),
                MemoryUsedBy(v),
                // index
-               sizeof(typename Index::value_type),
-               // key
-               keySz);
+               sizeof(typename Index::value_type));
 }
 
 template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
