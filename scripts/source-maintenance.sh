@@ -54,7 +54,7 @@ branch name or the special keyword 'fork'. The script will try identifying
 changed files since the specified commit and, if successful, only examine
 files that have changed. The keyword 'fork' will look for files changed
 since the current branch was forked off 'upstream/master'. Sensible values
-for this argument may include HEAD^, master, orgin/master, or the branch
+for this argument may include HEAD^, master, origin/master, or the branch
 the current one was forked off
 _EOF
 }
@@ -576,4 +576,3 @@ rm -f doc/debug-sections.tmp
 rm -f boilerplate_fix.sed
 
 exit $SeenErrors
-
