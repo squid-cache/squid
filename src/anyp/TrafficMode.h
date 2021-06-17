@@ -19,6 +19,8 @@ public:
     /// a parsed port type (http_port, https_port or ftp_port)
     typedef enum { httpPort, httpsPort, ftpPort } PortKind;
 
+    explicit TrafficModeFlags(const PortKind aPortKind) : portKind(aPortKind) {}
+
     /// \returns true for HTTPS ports with SSL bump receiving PROXY protocol traffic
     bool proxySurrogateHttpsSslBump() const { return proxySurrogate && tunnelSslBumping && portKind == httpsPort; }
 
@@ -86,6 +88,7 @@ public:
 class TrafficMode
 {
 public:
+    TrafficMode(const TrafficModeFlags::PortKind aPortKind) : flags_(aPortKind) {}
     /// This port handles traffic that has been intercepted prior to being delivered
     /// to the TCP client of the accepted connection and/or to us. This port mode
     /// alone does not imply that the client of the accepted TCP connection was not
@@ -123,6 +126,8 @@ public:
     bool tunnelSslBumping() const { return flags_.tunnelSslBumping; }
 
     TrafficModeFlags &rawConfig() { return flags_; }
+
+    const TrafficModeFlags &rawConfig() const { return flags_; }
 
     std::ostream &print(std::ostream &) const;
 
