@@ -2177,9 +2177,9 @@ tests_testHttpReply_SOURCES = \
 	tests/stub_cache_cf.cc \
 	cache_cf.h \
 	tests/stub_cache_manager.cc \
-	tests/stub_client_side.cc \
 	cbdata.cc \
 	cbdata.h \
+	tests/stub_client_side.cc \
 	tests/stub_comm.cc \
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
