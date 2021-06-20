@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "CacheManager.h"
 #include "cbdata.h"
+#include "DebugMessages.h"
 #include "dlink.h"
 #include "dns/LookupDetails.h"
 #include "dns/rfc3596.h"
@@ -685,7 +686,7 @@ void
 ipcache_init(void)
 {
     int n;
-    debugs(14, DBG_IMPORTANT, "Initializing IP Cache...");
+    debugs(14, Important(24), "Initializing IP Cache...");
     memset(&IpcacheStats, '\0', sizeof(IpcacheStats));
     lru_list = dlink_list();
 

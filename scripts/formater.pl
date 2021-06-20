@@ -28,28 +28,23 @@
 
 use strict;
 use IPC::Open2;
+use Getopt::Long;
 
-my $ASTYLE_BIN = defined $ENV{'ASTYLE'} ? $ENV{'ASTYLE'} : 'astyle';
+my $ASTYLE_BIN = "astyle";
 my $ASTYLE_ARGS ="--mode=c -s4 --convert-tabs --keep-one-line-blocks --lineend=linux";
 #$ASTYLE_ARGS="--mode=c -s4 -O --break-blocks -l";
+
+Getopt::Long::Configure("require_order");
+GetOptions(
+	'help', sub { usage($0) },
+	'with-astyle=s', \$ASTYLE_BIN
+	) or die(usage($0));
 
 $ASTYLE_BIN=$ASTYLE_BIN." ".$ASTYLE_ARGS;
 
 my $INDENT = "";
 
 my $out = shift @ARGV;
-#read options, currently no options available
-while($out eq "" ||  $out =~ /^-\w+$/){
-    if($out eq "-h") {
-        usage($0);
-        exit 0;
-    } else {
-        usage($0);
-        exit -1;
-    }
-}
-
-
 while($out){
 
     if( $out !~ /\.cc$|\.cci$|\.h$|\.c$/) {
@@ -207,5 +202,10 @@ sub output_filter{
 
 sub usage{
     my($name)=@_;
-    print "Usage:\n   $name file1 file2 file3 ....\n";
+    print "Usage:\n";
+    print "   $name [options] file1 file2 file3 ....\n";
+    print "\n";
+    print "Options:\n";
+    print "    --help              This usage text.\n";
+    print "    --with-astyle <PATH>  astyle executable to use.\n";
 }
