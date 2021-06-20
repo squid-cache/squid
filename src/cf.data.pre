@@ -5534,6 +5534,52 @@ DOC_START
 	rotated with "debug_options"
 DOC_END
 
+NAME: cache_log_message
+TYPE: cache_log_message
+DEFAULT: none
+DEFAULT_DOC: Use debug_options.
+LOC: Config.debugMessages
+DOC_START
+	Configures logging of individual cache.log messages.
+
+		cache_log_message id=<number> option...
+		cache_log_message ids=<number>-<number> option...
+
+	Most messages have _not_ been instrumented to support this directive
+	yet. For the list of instrumented messages and their IDs, please see
+	the doc/debug-messages.txt file.
+
+	Message ID corresponds to the message semantics rather than message
+	text or source code location. The ID is stable across Squid
+	instances and versions. Substantial changes in message semantics
+	result in a new ID assignment. To reduce the danger of suppressing
+	an important log message, the old IDs of removed (or substantially
+	changed) messages are never reused.
+
+	If more than one cache_log_message directive refers to the same
+	message ID, the last directive wins.
+
+	Use ids=min-max syntax to apply the same message configuration to an
+	inclusive range of message IDs. An ID range with N values has
+	exactly the same effect as typing N cache_log_message lines.
+
+	At least one option is required. Supported options are:
+
+	  level=<number>: The logging level to use for the message. Squid
+		command line options (-s and -d) as well as the debug_options
+		directive control which levels go to syslog, stderr, and/or
+		cache.log. In most environments, using level=2 or higher stops
+		Squid from logging the message anywhere. By default, the
+		hard-coded message-specific level is used.
+
+	  limit=<number>: After logging the specified number of messages at
+		the configured (or default) debugging level DL, start using
+		level 3 (for DL 0 and 1) or 8 (for higher DL values). Usually,
+		level-3+ messages are not logged anywhere so this option can
+		often be used to effectively suppress the message. Each SMP
+		Squid process gets the same limit.
+DOC_END
+
 NAME: debug_options
 TYPE: eol
 DEFAULT: ALL,1

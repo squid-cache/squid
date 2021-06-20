@@ -251,6 +251,7 @@ squid_SOURCES = \
 	CpuAffinitySet.cc \
 	CpuAffinitySet.h \
 	Debug.h \
+	DebugMessages.h \
 	Downloader.cc \
 	Downloader.h \
 	ETag.cc \
@@ -334,7 +335,6 @@ squid_SOURCES = \
 	SBufStatsAction.h \
 	SquidMath.cc \
 	SquidMath.h \
-	SquidNew.cc \
 	StatCounters.cc \
 	StatCounters.h \
 	StatHist.cc \
@@ -619,7 +619,6 @@ ufsdump_SOURCES = \
 	MemBuf.h \
 	Parsing.h \
 	RemovalPolicy.cc \
-	SquidNew.cc \
 	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
 	String.cc \
@@ -2178,9 +2177,9 @@ tests_testHttpReply_SOURCES = \
 	tests/stub_cache_cf.cc \
 	cache_cf.h \
 	tests/stub_cache_manager.cc \
-	tests/stub_client_side.cc \
 	cbdata.cc \
 	cbdata.h \
+	tests/stub_client_side.cc \
 	tests/stub_comm.cc \
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \

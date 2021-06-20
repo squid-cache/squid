@@ -9,6 +9,7 @@
 /* DEBUG: section 25    MIME Parsing and Internal Icons */
 
 #include "squid.h"
+#include "DebugMessages.h"
 #include "fde.h"
 #include "fs_io.h"
 #include "globals.h"
@@ -331,7 +332,7 @@ mimeInit(char *filename)
 
     for (m = MimeTable; m != NULL; m = m->next)
         m->theIcon.load();
-    debugs(25, DBG_IMPORTANT, "Finished loading MIME types and icons.");
+    debugs(25, Important(28), "Finished loading MIME types and icons.");
 }
 
 void

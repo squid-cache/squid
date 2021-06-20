@@ -28,6 +28,7 @@
 #include "ConfigOption.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
+#include "DebugMessages.h"
 #include "DiskIO/DiskIOModule.h"
 #include "eui/Config.h"
 #include "ExternalACL.h"
@@ -161,6 +162,10 @@ static const char *const list_sep = ", \t\n\r";
 
 // std::chrono::years requires C++20. Do our own rough calculation for now.
 static const double HoursPerYear = 24*365.2522;
+
+static void parse_cache_log_message(DebugMessages **messages);
+static void dump_cache_log_message(StoreEntry *entry, const char *name, const DebugMessages *messages);
+static void free_cache_log_message(DebugMessages **messages);
 
 static void parse_access_log(CustomLog ** customlog_definitions);
 static int check_null_access_log(CustomLog *customlog_definitions);
@@ -4656,6 +4661,101 @@ static void dump_note(StoreEntry *entry, const char *name, Notes &notes)
 static void free_note(Notes *notes)
 {
     notes->clean();
+}
+
+static DebugMessageId ParseDebugMessageId(const char *value, const char eov)
+{
+    const auto id = xatoui(value, eov);
+    if (!(0 < id && id < DebugMessageIdUpperBound))
+        throw TextException(ToSBuf("unknown cache_log_message ID: ", value), Here());
+    return static_cast<DebugMessageId>(id);
+}
+
+static void parse_cache_log_message(DebugMessages **debugMessages)
+{
+    DebugMessage msg;
+    DebugMessageId minId = 0;
+    DebugMessageId maxId = 0;
+
+    char *key = nullptr;
+    char *value = nullptr;
+    while (ConfigParser::NextKvPair(key, value)) {
+        if (strcmp(key, "id") == 0) {
+            if (minId > 0)
+                break;
+            minId = maxId = ParseDebugMessageId(value, '\0');
+        } else if (strcmp(key, "ids") == 0) {
+            if (minId > 0)
+                break;
+            const auto dash = strchr(value, '-');
+            if (!dash)
+                throw TextException(ToSBuf("malformed cache_log_message ID range: ", key, '=', value), Here());
+            minId = ParseDebugMessageId(value, '-');
+            maxId = ParseDebugMessageId(dash+1, '\0');
+            if (minId > maxId)
+                throw TextException(ToSBuf("invalid cache_log_message ID range: ", key, '=', value), Here());
+        } else if (strcmp(key, "level") == 0) {
+            if (msg.levelled())
+                break;
+            const auto level = xatoi(value);
+            if (level < 0)
+                throw TextException(ToSBuf("negative cache_log_message level: ", value), Here());
+            msg.level = level;
+        } else if (strcmp(key, "limit") == 0) {
+            if (msg.limited())
+                break;
+            msg.limit = xatoull(value, 10);
+        } else {
+            throw TextException(ToSBuf("unsupported cache_log_message option: ", key), Here());
+        }
+        key = value = nullptr;
+    }
+
+    if (key && value)
+        throw TextException(ToSBuf("repeated or conflicting cache_log_message option: ", key, '=', value), Here());
+
+    if (!minId)
+        throw TextException("cache_log_message is missing a required id=... or ids=... option", Here());
+
+    if (!(msg.levelled() || msg.limited()))
+        throw TextException("cache_log_message is missing a required level=... or limit=... option", Here());
+
+    assert(debugMessages);
+    if (!*debugMessages)
+        *debugMessages = new DebugMessages();
+
+    for (auto id = minId; id <= maxId; ++id) {
+        msg.id = id;
+        (*debugMessages)->messages.at(id) = msg;
+    }
+}
+
+static void dump_cache_log_message(StoreEntry *entry, const char *name, const DebugMessages *debugMessages)
+{
+    if (!debugMessages)
+        return;
+
+    SBufStream out;
+    for (const auto &msg: debugMessages->messages) {
+        if (!msg.configured())
+            continue;
+        out << name << " id=" << msg.id;
+        if (msg.levelled())
+            out << " level=" << msg.level;
+        if (msg.limited())
+            out << " limit=" << msg.limit;
+        out << "\n";
+    }
+    const auto buf = out.buf();
+    entry->append(buf.rawContent(), buf.length()); // may be empty
+}
+
+static void free_cache_log_message(DebugMessages **debugMessages)
+{
+    // clear old messages to avoid cumulative effect across (re)configurations
+    assert(debugMessages);
+    delete *debugMessages;
+    *debugMessages = nullptr;
 }
 
 static bool FtpEspvDeprecated = false;
