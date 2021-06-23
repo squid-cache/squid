@@ -283,7 +283,7 @@ isTlsServer()
 
 #if USE_OPENSSL
 static int
-store_session_cb(SSL * /* ssl */, SSL_SESSION *session)
+store_session_cb(SSL *, SSL_SESSION *session)
 {
     if (!SessionCache)
         return 0;
