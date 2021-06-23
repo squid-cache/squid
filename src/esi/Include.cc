@@ -400,7 +400,7 @@ ESIInclude::render(ESISegment::Pointer output)
 }
 
 esiProcessResult_t
-ESIInclude::process (int)
+ESIInclude::process(int)
 {
     /* Prevent refcount race leading to free */
     Pointer me (this);

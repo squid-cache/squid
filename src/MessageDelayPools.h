@@ -98,7 +98,7 @@ class MessageDelayConfig
 {
 public:
     void parseResponseDelayPool();
-    void dumpResponseDelayPoolParameters(StoreEntry *e);
+    void dumpResponseDelayPoolParameters(StoreEntry *);
     void parseResponseDelayPoolAccess();
     void freePools();
 };

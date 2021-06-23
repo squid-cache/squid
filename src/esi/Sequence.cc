@@ -304,7 +304,7 @@ esiSequence::process (int inheritedVarsFlag)
 }
 
 void
-esiSequence::fail (ESIElement * /* source */, char const *anError)
+esiSequence::fail(ESIElement * /* source */, char const *anError)
 {
     failed = true;
 

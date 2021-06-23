@@ -279,7 +279,7 @@ ESIContext::provideData (ESISegment::Pointer theData, ESIElement * source)
 }
 
 void
-ESIContext::fail (ESIElement *, char const *anError)
+ESIContext::fail(ESIElement *, char const *anError)
 {
     setError();
     setErrorMessage (anError);

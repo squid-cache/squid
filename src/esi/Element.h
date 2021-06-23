@@ -69,7 +69,7 @@ public:
 
     virtual void render (ESISegment::Pointer) = 0;
     /* process this element */
-    virtual esiProcessResult_t process (int /* dovars */) {
+    virtual esiProcessResult_t process(int) {
         debugs(86,5, "esiProcessComplete: Processed " << this);
         return ESI_PROCESS_COMPLETE;
     }

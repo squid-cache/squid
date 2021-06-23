@@ -28,7 +28,7 @@ char const * esiBrowsers[]= {"MSIE",
 CBDATA_CLASS_INIT(ESIVarState);
 
 void
-ESIVarState::Variable::eval (ESIVarState &state, char const * /* subref */, char const *found_default) const
+ESIVarState::Variable::eval(ESIVarState &state, char const * , char const *found_default) const
 {
     /* No-op. We swallow it */
 
