@@ -1157,7 +1157,7 @@ PeerSelector::interestedInitiator()
 
 bool
 PeerSelector::wantsMoreDestinations() const {
-    int maxCount = Config.forward_max_tries;
+    const auto maxCount = Config.forward_max_tries;
     return maxCount >= 0 && foundPaths < static_cast<size_t>(maxCount);
 }
 
