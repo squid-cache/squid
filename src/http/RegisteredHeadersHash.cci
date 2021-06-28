@@ -366,7 +366,7 @@ static const class HeaderTableRecord HttpHeaderDefinitionsTable[] =
 };
 
 const class HeaderTableRecord *
-HttpHeaderHashTable::lookup (const char *str, size_t len)
+    HttpHeaderHashTable::lookup (const char *str, size_t len)
 {
     if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
     {
