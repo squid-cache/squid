@@ -363,8 +363,8 @@ if test "x$PRESET_CFLAGS" = "x"; then
   fi
 fi
 
-dnl set squid required flags
-dnl TODO use SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED instead of hardcoding
+# be very pedantic with warnings, if the compiler supports it
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wpointer-arith],[squid_cv_cc_w_pointer_arith])
 if test "$squid_cv_compiler" = "gcc"; then
   case "$squid_host_os" in
   mingw)
