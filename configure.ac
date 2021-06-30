@@ -366,6 +366,7 @@ fi
 # be very pedantic with warnings, if the compiler supports it
 SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wpointer-arith],[squid_cv_cc_w_pointer_arith])
 SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wwrite-strings],[squid_cv_cc_w_write_strings])
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wcomments],[squid_cv_cc_w_comments])
 if test "$squid_cv_compiler" = "gcc"; then
   case "$squid_host_os" in
   mingw)
