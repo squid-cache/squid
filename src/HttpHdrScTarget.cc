@@ -13,7 +13,6 @@
 #include "HttpHdrScTarget.h"
 #include "StatHist.h"
 
-// http_hdr_sc_type &operator++ (http_hdr_sc_type &aHeader);
 /* copies non-extant fields from new_sc to this sc */
 void
 HttpHdrScTarget::mergeWith(const HttpHdrScTarget * new_sc)

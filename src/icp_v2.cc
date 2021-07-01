@@ -456,15 +456,6 @@ icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
     return checklist.fastCheck().allowed();
 }
 
-// char const *
-// icpGetUrlToSend(char *url)
-// {
-//     if (strpbrk(url, w_space))
-//         return rfc1738_escape(url);
-//     else
-//         return url;
-// }
-
 HttpRequest *
 icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from)
 {
