@@ -1579,15 +1579,6 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
 }
 #endif // USE_OPENSSL
 
-/// ConnStateData::tunnelOnError() wrapper. Reduces code changes. TODO: Remove.
-bool
-clientTunnelOnError(ConnStateData *conn, Http::StreamPointer &context, HttpRequest::Pointer &, const HttpRequestMethod& method, err_type requestError)
-{
-    assert(conn);
-    assert(conn->pipeline.front() == context);
-    return conn->tunnelOnError(method, requestError);
-}
-
 /// initiate tunneling if possible or return false otherwise
 bool
 ConnStateData::tunnelOnError(const HttpRequestMethod &, const err_type requestError)
@@ -2985,7 +2976,7 @@ ConnStateData::parseTlsHandshake()
         HttpRequest::Pointer request = context->http->request;
         debugs(83, 5, "Got something other than TLS Client Hello. Cannot SslBump.");
         updateError(ERR_PROTOCOL_UNKNOWN, parseErrorDetails);
-        if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_PROTOCOL_UNKNOWN))
+        if (!tunnelOnError(HttpRequestMethod(), ERR_PROTOCOL_UNKNOWN))
             clientConnection->close();
         return;
     }
@@ -3004,7 +2995,8 @@ ConnStateData::parseTlsHandshake()
     }
 }
 
-void httpsSslBumpStep2AccessCheckDone(Acl::Answer answer, void *data)
+static void
+httpsSslBumpStep2AccessCheckDone(Acl::Answer answer, void *data)
 {
     ConnStateData *connState = (ConnStateData *) data;
 

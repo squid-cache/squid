@@ -43,11 +43,10 @@ void Ssl::GlobalContextStorage::reconfigureStart() STUB
 //Ssl::GlobalContextStorage Ssl::TheGlobalContextStorage;
 
 #include "ssl/ErrorDetail.h"
-Security::ErrorCode parseErrorString(const char *) STUB_RETVAL(0)
-
 #include "ssl/support.h"
 namespace Ssl
 {
+bool ParseErrorString(const char *, Security::Errors &) STUB_RETVAL(false)
 int AskPasswordCb(char *, int, int, void *) STUB_RETVAL(0)
 bool InitServerContext(Security::ContextPointer &, AnyP::PortCfg &) STUB_RETVAL(false)
 bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, Security::ParsedPortFlags) STUB_RETVAL(false)
@@ -68,13 +67,13 @@ namespace Ssl
 std::vector<const char *> BumpModeStr = {""};
 bool generateUntrustedCert(Security::CertPointer &, Security::PrivateKeyPointer &, Security::CertPointer const &, Security::PrivateKeyPointer const &) STUB_RETVAL(false)
 Security::ContextPointer GenerateSslContext(CertificateProperties const &, Security::ServerOptions &, bool) STUB_RETVAL(Security::ContextPointer())
-bool verifySslCertificate(Security::ContextPointer &, CertificateProperties const &) STUB_RETVAL(false)
+bool verifySslCertificate(const Security::ContextPointer &, CertificateProperties const &) STUB_RETVAL(false)
 Security::ContextPointer GenerateSslContextUsingPkeyAndCertFromMemory(const char *, Security::ServerOptions &, bool) STUB_RETVAL(Security::ContextPointer())
 int matchX509CommonNames(X509 *, void *, int (*)(void *,  ASN1_STRING *)) STUB_RETVAL(0)
 bool checkX509ServerValidity(X509 *, const char *) STUB_RETVAL(false)
 int asn1timeToString(ASN1_TIME *, char *, int) STUB_RETVAL(0)
 void setClientSNI(SSL *, const char *) STUB
-SBuf GetX509PEM(SSL *) STUB_RETVAL(SBuf())
+SBuf GetX509PEM(X509 *) STUB_RETVAL(SBuf())
 } //namespace Ssl
 
 #endif

@@ -11,6 +11,8 @@
 #ifndef SQUID_MIME_HEADER_H_
 #define SQUID_MIME_HEADER_H_
 
+#include "sbuf/SBuf.h"
+
 /**
  * Scan for the end of mime header block.
  *

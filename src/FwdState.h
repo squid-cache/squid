@@ -20,6 +20,7 @@
 #include "fde.h"
 #include "http/StatusCode.h"
 #include "ip/Address.h"
+#include "ip/NfMarkConfig.h"
 #include "PeerSelectState.h"
 #include "ResolvedPeers.h"
 #include "security/forward.h"
@@ -199,7 +200,12 @@ private:
     PconnRace pconnRace; ///< current pconn race state
 };
 
-void getOutgoingAddress(HttpRequest * request, const Comm::ConnectionPointer &conn);
+class acl_tos;
+tos_t aclMapTOS(acl_tos *head, ACLChecklist *ch);
+
+class acl_nfmark;
+Ip::NfMarkConfig aclFindNfMarkConfig(acl_nfmark *head, ACLChecklist *ch);
+void getOutgoingAddress(HttpRequest *request, const Comm::ConnectionPointer &conn);
 
 /// a collection of previously used persistent Squid-to-peer HTTP(S) connections
 extern PconnPool *fwdPconnPool;

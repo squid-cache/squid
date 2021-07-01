@@ -21,6 +21,7 @@
 #include "StatCounters.h"
 #include "store/Disk.h"
 #include "tools.h"
+#include "unlinkd.h"
 #include "xusleep.h"
 
 /* This code gets linked to Squid */

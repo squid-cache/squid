@@ -12,7 +12,7 @@
 
 #include <iostream>
 
-bool
+static bool
 CaseSensitiveCheck()
 {
     Trie aTrie;
@@ -60,7 +60,7 @@ CaseSensitiveCheck()
     return 0;
 }
 
-bool
+static bool
 CaseInsensitiveCheck()
 {
     Trie aTrie(new TrieCaseless);

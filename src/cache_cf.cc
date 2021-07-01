@@ -2586,7 +2586,7 @@ dump_int64_t(StoreEntry * entry, const char *name, int64_t var)
     storeAppendPrintf(entry, "%s %" PRId64 "\n", name, var);
 }
 
-void
+static void
 parse_int64_t(int64_t *var)
 {
     int64_t i;
@@ -2677,7 +2677,7 @@ parse_tristate(int *var)
 
 #define free_tristate free_int
 
-void
+static void
 parse_pipelinePrefetch(int *var)
 {
     char *token = ConfigParser::PeekAtToken();
@@ -3040,8 +3040,8 @@ dump_time_msec(StoreEntry * entry, const char *name, time_msec_t var)
         storeAppendPrintf(entry, "%s %d seconds\n", name, (int)(var/1000) );
 }
 
-void
-parse_time_msec(time_msec_t * var)
+static void
+parse_time_msec(time_msec_t *var)
 {
     *var = parseTimeLine<std::chrono::milliseconds>().count();
 }

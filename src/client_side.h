@@ -341,9 +341,6 @@ public:
     /// tunneling them to the server later (on_unsupported_protocol)
     bool shouldPreserveClientData() const;
 
-    // TODO: move to the protected section when removing clientTunnelOnError()
-    bool tunnelOnError(const HttpRequestMethod &, const err_type);
-
     /// build a fake http request
     ClientHttpRequest *buildFakeRequest(Http::MethodType const method, SBuf &useHost, unsigned short usePort, const SBuf &payload);
 
@@ -436,6 +433,8 @@ protected:
 
     /// whether preservedClientData is valid and should be kept up to date
     bool preservingClientData_ = false;
+
+    bool tunnelOnError(const HttpRequestMethod &, const err_type);
 
 private:
     /* ::Server API */
@@ -533,6 +532,7 @@ CSCB clientSocketRecipient;
 CSD clientSocketDetach;
 
 void clientProcessRequest(ConnStateData *, const Http1::RequestParserPointer &, Http::Stream *);
+void clientProcessRequestFinished(ConnStateData *, const HttpRequest::Pointer &);
 void clientPostHttpsAccept(ConnStateData *);
 
 std::ostream &operator <<(std::ostream &os, const ConnStateData::PinnedIdleContext &pic);

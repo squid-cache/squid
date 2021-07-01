@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "helper/protocol_defines.h"
 #include "security/cert_generators/file/certificate_db.h"
+#include "SquidTime.h"
 #include "ssl/crtd_message.h"
 
 #include <cstring>
@@ -78,13 +79,13 @@ static const char *const B_BYTES_STR = "B";
 /// Get current time.
 time_t getCurrentTime(void)
 {
-    struct timeval current_time;
+    struct timeval currentTime;
 #if GETTIMEOFDAY_NO_TZP
-    gettimeofday(&current_time);
+    gettimeofday(&currentTime);
 #else
-    gettimeofday(&current_time, NULL);
+    gettimeofday(&currentTime, NULL);
 #endif
-    return current_time.tv_sec;
+    return currentTime.tv_sec;
 }
 
 /**

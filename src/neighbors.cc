@@ -456,7 +456,7 @@ peerClearRR()
 /**
  * Perform all actions when a CachePeer is detected revived.
  */
-void
+static void
 peerAlive(CachePeer *p)
 {
     if (p->stats.logged_state == PEER_DEAD && p->tcp_up) {

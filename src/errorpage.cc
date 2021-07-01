@@ -225,7 +225,8 @@ protected:
 };
 
 /// \ingroup ErrorPageInternal
-err_type &operator++ (err_type &anErr)
+static err_type &
+operator++ (err_type &anErr)
 {
     int tmp = (int)anErr;
     anErr = (err_type)(++tmp);
@@ -233,7 +234,8 @@ err_type &operator++ (err_type &anErr)
 }
 
 /// \ingroup ErrorPageInternal
-int operator - (err_type const &anErr, err_type const &anErr2)
+static int
+operator -(err_type const &anErr, err_type const &anErr2)
 {
     return (int)anErr - (int)anErr2;
 }

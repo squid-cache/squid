@@ -383,7 +383,7 @@ Security::SetSessionCacheCallbacks(Security::ContextPointer &ctx)
 }
 #endif /* USE_OPENSSL */
 
-void
+static void
 initializeSessionCache()
 {
 #if USE_OPENSSL

@@ -153,5 +153,8 @@ private:
     CollapsedRevalidation collapsedRevalidation;
 };
 
+// TODO: move to SideAgent parent, when we have one
+void purgeEntriesByUrl(HttpRequest *, const char *);
+
 #endif /* SQUID_CLIENTSIDEREPLY_H */
 

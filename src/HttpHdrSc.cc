@@ -38,7 +38,8 @@ LookupTable<http_hdr_sc_type> scLookupTable(SC_ENUM_END, ScAttrs);
 std::vector<HttpHeaderFieldStat> scHeaderStats(SC_ENUM_END);
 
 // used when iterating over flags
-http_hdr_sc_type &operator++ (http_hdr_sc_type &aHeader)
+http_hdr_sc_type &
+operator++ (http_hdr_sc_type &aHeader)
 {
     int tmp = static_cast<int>(aHeader);
     aHeader = static_cast<http_hdr_sc_type>(++tmp);

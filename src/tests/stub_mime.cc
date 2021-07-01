@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "mime_header.h"
 
 #define STUB_API "mime.cc"
 #include "tests/STUB.h"

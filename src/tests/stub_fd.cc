@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "fd.h"
 #include "fde.h"
 
 #define STUB_API "fd.cc"

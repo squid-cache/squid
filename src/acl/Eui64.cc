@@ -44,7 +44,7 @@ ACLEui64::empty () const
     return eui64Data.empty();
 }
 
-Eui::Eui64 *
+static Eui::Eui64 *
 aclParseEuiData(const char *t)
 {
     char buf[256];

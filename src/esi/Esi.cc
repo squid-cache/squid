@@ -74,7 +74,8 @@ class ESIStreamContext;
  */
 
 /* make comparisons with refcount pointers easy */
-bool operator == (ESIElement const *lhs, ESIElement::Pointer const &rhs)
+static bool
+operator == (ESIElement const *lhs, ESIElement::Pointer const &rhs)
 {
     return lhs == rhs.getRaw();
 }

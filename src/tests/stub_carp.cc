@@ -11,6 +11,8 @@
 #define STUB_API "carp.cc"
 #include "tests/STUB.h"
 
+#include "carp.h"
+
 class CachePeer;
 class PeerSelector;
 

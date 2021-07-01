@@ -368,6 +368,7 @@ SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wpointer-arith],[squid_cv_cc_w_pointer_arith
 SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wwrite-strings],[squid_cv_cc_w_write_strings])
 SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wcomments],[squid_cv_cc_w_comments])
 SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wshadow],[squid_cv_cc_w_shadow])
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wmissing-declarations],[squid_cv_cc_w_missing_declaration])
 if test "$squid_cv_compiler" = "gcc"; then
   case "$squid_host_os" in
   mingw)

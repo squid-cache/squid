@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include "mime_header.h"
 #include "profiler/Profiler.h"
 
 size_t

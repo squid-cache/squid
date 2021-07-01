@@ -21,7 +21,6 @@ void HttpReply::setHeaders(Http::StatusCode, const char *, const char *, int64_t
 void HttpReply::packHeadersUsingFastPacker(Packable&) const STUB
 void HttpReply::packHeadersUsingSlowPacker(Packable&) const STUB
 void HttpReply::reset() STUB
-void httpBodyPackInto(const HttpBody *, Packable *) STUB
 bool HttpReply::sanityCheckStartLine(const char *, const size_t, Http::StatusCode *) STUB_RETVAL(false)
 int HttpReply::httpMsgParseError() STUB_RETVAL(0)
 bool HttpReply::expectingBody(const HttpRequestMethod&, int64_t&) const STUB_RETVAL(false)

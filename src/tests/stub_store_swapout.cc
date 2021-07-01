@@ -14,9 +14,6 @@
 
 #include <iostream>
 
-/* XXX: wrong stub file... */
-void storeUnlink(StoreEntry *) STUB
-
 char *storeSwapMetaPack(tlv *, int *) STUB_RETVAL(nullptr)
 tlv *storeSwapMetaBuild(const StoreEntry *) STUB_RETVAL(nullptr)
 void storeSwapTLVFree(tlv *) STUB

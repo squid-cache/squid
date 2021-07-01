@@ -62,7 +62,7 @@ testStoreHashIndex::testMaxSize()
     Store::FreeMemory();
 }
 
-StoreEntry *
+static StoreEntry *
 addedEntry(Store::Disk *aStore,
            String name,
            String,
@@ -94,7 +94,7 @@ addedEntry(Store::Disk *aStore,
     return e;
 }
 
-void commonInit()
+static void commonInit()
 {
     static bool inited = false;
 

@@ -35,9 +35,7 @@ void icpCreateAndSend(icp_opcode, int, char const *, int, int, int, const Ip::Ad
 icp_opcode icpGetCommonOpcode() STUB_RETVAL(ICP_INVALID)
 void icpDenyAccess(Ip::Address &, char *, int, int) STUB
 void icpHandleIcpV3(int, Ip::Address &, char *, int) STUB
-void icpConnectionsOpen(void) STUB
 void icpConnectionShutdown(void) STUB
-void icpConnectionClose(void) STUB
 int icpSetCacheKey(const cache_key *) STUB_RETVAL(0)
 const cache_key *icpGetCacheKey(const char *, int) STUB_RETVAL(NULL)
 

@@ -47,6 +47,7 @@
 #include "ssl/ServerBump.h"
 #endif
 #include "tools.h"
+#include "tunnel.h"
 #if USE_DELAY_POOLS
 #include "DelayId.h"
 #endif

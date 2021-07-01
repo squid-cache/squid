@@ -16,6 +16,7 @@
 #include "fd.h"
 #include "FwdState.h"
 #include "globals.h"
+#include "gopher.h"
 #include "html_quote.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"

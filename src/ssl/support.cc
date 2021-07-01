@@ -1429,7 +1429,7 @@ bio_sbuf_destroy(BIO* bio)
     return 1;
 }
 
-int
+static int
 bio_sbuf_write(BIO* bio, const char* data, int len)
 {
     SBuf *buf = static_cast<SBuf *>(BIO_get_data(bio));
@@ -1438,8 +1438,8 @@ bio_sbuf_write(BIO* bio, const char* data, int len)
     return len;
 }
 
-int
-bio_sbuf_puts(BIO* bio, const char* data)
+static int
+bio_sbuf_puts(BIO *bio, const char *data)
 {
     // TODO: use bio_sbuf_write() instead
     SBuf *buf = static_cast<SBuf *>(BIO_get_data(bio));
@@ -1448,8 +1448,9 @@ bio_sbuf_puts(BIO* bio, const char* data)
     return buf->length() - oldLen;
 }
 
-long
-bio_sbuf_ctrl(BIO* bio, int cmd, long /* num */, void*) {
+static long
+bio_sbuf_ctrl(BIO *bio, int cmd, long /* num */, void *)
+{
     SBuf *buf = static_cast<SBuf *>(BIO_get_data(bio));
     switch (cmd) {
     case BIO_CTRL_RESET:

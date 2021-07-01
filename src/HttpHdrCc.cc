@@ -48,7 +48,8 @@ LookupTable<HttpHdrCcType> ccLookupTable(HttpHdrCcType::CC_OTHER,CcAttrs);
 std::vector<HttpHeaderFieldStat> ccHeaderStats(HttpHdrCcType::CC_ENUM_END);
 
 /// used to walk a table of http_header_cc_type structs
-HttpHdrCcType &operator++ (HttpHdrCcType &aHeader)
+static HttpHdrCcType &
+operator++ (HttpHdrCcType &aHeader)
 {
     int tmp = (int)aHeader;
     aHeader = (HttpHdrCcType)(++tmp);

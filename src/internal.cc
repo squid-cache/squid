@@ -16,6 +16,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
+#include "internal.h"
 #include "MemBuf.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"

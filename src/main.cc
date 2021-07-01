@@ -66,6 +66,7 @@
 #include "peer_userhash.h"
 #include "PeerSelectState.h"
 #include "profiler/Profiler.h"
+#include "protos.h"
 #include "redirect.h"
 #include "refresh.h"
 #include "sbuf/Stream.h"
@@ -743,7 +744,7 @@ reconfigure(int sig)
 #endif
 }
 
-void
+static void
 master_revive_kids(int sig)
 {
     ReviveKidsSignal = sig;
@@ -757,7 +758,7 @@ master_revive_kids(int sig)
 }
 
 /// Shutdown signal handler for master process
-void
+static void
 master_shutdown(int sig)
 {
     do_shutdown = 1;

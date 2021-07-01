@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "fde.h"
+#include "log/File.h"
 
 #define STUB_API "log/liblog.la"
 #include "tests/STUB.h"
@@ -58,7 +59,7 @@ Logfile::Logfile(const char *) {STUB}
 Logfile *logfileOpen(const char *, size_t, int) STUB_RETVAL(nullptr)
 void logfileClose(Logfile *) STUB
 void logfileRotate(Logfile *, int16_t) STUB
-void logfileWrite(Logfile *, char *, size_t) STUB
+void logfileWrite(Logfile *, const char *, size_t) STUB
 void logfileFlush(Logfile *) STUB
 void logfilePrintf(Logfile *, const char *, ...) STUB
 void logfileLineStart(Logfile *) STUB

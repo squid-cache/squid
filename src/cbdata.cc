@@ -260,7 +260,7 @@ cbdataInternalAlloc(cbdata_type type, const char *file, int line)
     return p;
 }
 
-void
+static void
 cbdataRealFree(cbdata *c, const char *file, const int line)
 {
 #if WITH_VALGRIND

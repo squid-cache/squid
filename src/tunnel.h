@@ -6,13 +6,13 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#include "squid.h"
-#include "http.h"
+#ifndef TUNNEL_H_
+#define TUNNEL_H_
+
+#include "comm/forward.h"
+#include "HttpRequest.h"
 #include "sbuf/SBuf.h"
 
-#define STUB_API "http.cc"
-#include "tests/STUB.h"
+void switchToTunnel(HttpRequest *request, const Comm::ConnectionPointer &clientConn, const Comm::ConnectionPointer &srvConn, const SBuf &preReadServerData);
 
-class HttpRequest;
-class HttpReply;
-SBuf httpMakeVaryMark(HttpRequest *, HttpReply const *) STUB_RETVAL(SBuf())
+#endif /* TUNNEL_H_ */
