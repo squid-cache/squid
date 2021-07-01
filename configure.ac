@@ -371,24 +371,6 @@ SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wshadow],[squid_cv_cc_w_shadow])
 SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wmissing-prototypes],[squid_cv_cc_w_missing_prototypes])
 SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wmissing-declarations],[squid_cv_cc_w_missing_declarations])
 SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Woverloaded_virtual],[squid_cv_cc_w_overloaded_virtual])
-if test "$squid_cv_compiler" = "gcc"; then
-  case "$squid_host_os" in
-  mingw)
-dnl Guido Serassio (serassio@squid-cache.org) 20070811
-dnl Using the latest MinGW (gcc 3.4.5 + mingw-runtime 3.13) cannot build with
-dnl -Werror -Wmissing-prototypes -Wmissing-declarations
-dnl TODO: check if the problem will be present in any other newer MinGW release.
-    SQUID_CFLAGS="$SQUID_CFLAGS $squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wcomments -Wshadow"
-    ;;
-  *)
-    SQUID_CFLAGS="$SQUID_CFLAGS $squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments -Wshadow"
-    ;;
-  esac
-  SQUID_CXXFLAGS="$SQUID_CXXFLAGS $squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wcomments -Wshadow -Woverloaded-virtual"
-else
-  SQUID_CFLAGS=${SQUID_CFLAGS:-}
-  SQUID_CXXFLAGS=${SQUID_CXXFLAGS:-}
-fi
 
 dnl CentOS (and RHEL) still define ntohs() using deprecated C++ features
 SQUID_CC_REQUIRE_ARGUMENT([ac_cv_require_wno_deprecated_register],[-Werror -Wno-deprecated-register],[[#include <arpa/inet.h>]],[[int fox=ntohs(1);]])
