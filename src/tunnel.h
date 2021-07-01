@@ -10,9 +10,9 @@
 #define TUNNEL_H_
 
 #include "comm/forward.h"
-#include "HttpRequest.h"
-#include "sbuf/SBuf.h"
+#include "sbuf/forward.h"
 
+class HttpRequest;
 void switchToTunnel(HttpRequest *request, const Comm::ConnectionPointer &clientConn, const Comm::ConnectionPointer &srvConn, const SBuf &preReadServerData);
 
 #endif /* TUNNEL_H_ */
