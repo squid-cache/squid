@@ -20,6 +20,7 @@
 #include "fde.h"
 #include "http/StatusCode.h"
 #include "ip/Address.h"
+#include "ip/forward.h"
 #include "PeerSelectState.h"
 #include "ResolvedPeers.h"
 #include "security/forward.h"
@@ -202,8 +203,6 @@ private:
 class acl_tos;
 tos_t aclMapTOS(acl_tos *head, ACLChecklist *ch);
 
-class acl_nfmark;
-namespace Ip { class NfMarkConfig; }
 Ip::NfMarkConfig aclFindNfMarkConfig(acl_nfmark *head, ACLChecklist *ch);
 void getOutgoingAddress(HttpRequest *request, const Comm::ConnectionPointer &conn);
 
