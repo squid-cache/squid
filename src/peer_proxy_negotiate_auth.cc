@@ -582,5 +582,5 @@ cleanup:
 #ifdef __cplusplus
 }
 #endif
-#endif /* HAVE_KRB5 && HAVE_GSSAPI */
+#endif /* HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI */
 
