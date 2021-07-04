@@ -11,9 +11,9 @@
 #ifndef SQUID_MIME_HEADER_H_
 #define SQUID_MIME_HEADER_H_
 
-#if HAVE_STDDEF_H
-#include <stddef.h>
-#endif
+#include "sbuf/forward.h"
+
+#include <cstddef>
 
 /**
  * Scan for the end of mime header block.
@@ -34,7 +34,6 @@
  */
 size_t headersEnd(const char *, size_t, bool &containsObsFold);
 
-class SBuf;
 size_t headersEnd(const SBuf &buf, bool &containsObsFold);
 
 /// \deprecated caller needs to be fixed to handle obs-fold
