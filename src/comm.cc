@@ -1143,12 +1143,15 @@ commSetTcpNoDelay(int fd)
 #endif
 
 void
-commSetTcpKeepalive(int fd, int idle, int interval, int timeout)
+commSetTcpKeepalive(int fd, const AnyP::PortCfg::TcpKeepalive &cfg)
 {
+    if (!cfg.enabled)
+        return;
+
     int on = 1;
 #ifdef TCP_KEEPCNT
-    if (timeout && interval) {
-        int count = (timeout + interval - 1) / interval;
+    if (cfg.timeout && cfg.interval) {
+        int count = (cfg.timeout + cfg.interval - 1) / cfg.interval;
         if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &count, sizeof(on)) < 0) {
             int xerrno = errno;
             debugs(5, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
@@ -1156,16 +1159,16 @@ commSetTcpKeepalive(int fd, int idle, int interval, int timeout)
     }
 #endif
 #ifdef TCP_KEEPIDLE
-    if (idle) {
-        if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &idle, sizeof(on)) < 0) {
+    if (cfg.idle) {
+        if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &cfg.idle, sizeof(on)) < 0) {
             int xerrno = errno;
             debugs(5, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
         }
     }
 #endif
 #ifdef TCP_KEEPINTVL
-    if (interval) {
-        if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &interval, sizeof(on)) < 0) {
+    if (cfg.interval) {
+        if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &cfg.interval, sizeof(on)) < 0) {
             int xerrno = errno;
             debugs(5, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
         }

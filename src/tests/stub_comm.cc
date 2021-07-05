@@ -33,7 +33,7 @@ bool comm_iocallbackpending(void) STUB_RETVAL(false)
 int commSetNonBlocking(int fd) STUB_RETVAL(Comm::COMM_ERROR)
 int commUnsetNonBlocking(int fd) STUB_RETVAL(-1)
 void commSetCloseOnExec(int fd) STUB_NOP
-void commSetTcpKeepalive(int fd, int idle, int interval, int timeout) STUB
+void commSetTcpKeepalive(int, const AnyP::PortCfg::TcpKeepalive &) STUB
 void _comm_close(int fd, char const *file, int line) STUB
 void old_comm_reset_close(int fd) STUB
 void comm_reset_close(const Comm::ConnectionPointer &conn) STUB
