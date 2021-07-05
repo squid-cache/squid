@@ -24,7 +24,7 @@ Comm::AcceptLimiter::Instance()
 void
 Comm::AcceptLimiter::defer(const Comm::TcpAcceptor::Pointer &afd)
 {
-    debugs(5, 5, afd->conn << "; already queued: " << deferred_.size());
+    debugs(5, 5, afd->listenConn << "; already queued: " << deferred_.size());
     deferred_.push_back(afd);
 }
 
@@ -34,11 +34,11 @@ Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor::Pointer &afd)
     for (auto it = deferred_.begin(); it != deferred_.end(); ++it) {
         if (*it == afd) {
             *it = nullptr; // fast. kick() will skip empty entries later.
-            debugs(5,4, "Abandoned client TCP SYN by closing socket: " << afd->conn);
+            debugs(5,4, "Abandoned client TCP SYN by closing socket: " << afd->listenConn);
             return;
         }
     }
-    debugs(5,4, "Not found " << afd->conn << " in queue, size: " << deferred_.size());
+    debugs(5,4, "Not found " << afd->listenConn << " in queue, size: " << deferred_.size());
 }
 
 void

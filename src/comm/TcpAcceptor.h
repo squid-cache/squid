@@ -88,7 +88,7 @@ private:
 
     /// conn being listened on for new connections
     /// Reserved for read-only use.
-    ConnectionPointer conn;
+    ConnectionPointer listenConn;
 
     /// configuration details of the listening port (if provided)
     AnyP::PortCfgPointer listenPort_;
