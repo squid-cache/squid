@@ -53,7 +53,7 @@ public:
     int disable_pmtu_discovery;
     bool workerQueues; ///< whether listening queues should be worker-specific
 
-    struct {
+    struct TcpKeepalive {
         unsigned int idle;
         unsigned int interval;
         unsigned int timeout;
