@@ -54,10 +54,10 @@ public:
     bool workerQueues; ///< whether listening queues should be worker-specific
 
     struct TcpKeepalive {
-        unsigned int idle;
-        unsigned int interval;
-        unsigned int timeout;
-        bool enabled;
+        unsigned int idle = 0;
+        unsigned int interval = 0;
+        unsigned int timeout = 0;
+        bool enabled = false;
     } tcp_keepalive;
 
     /**
