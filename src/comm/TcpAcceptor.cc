@@ -369,6 +369,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     }
 
     Must(sock >= 0);
+    ++incoming_sockets_accepted;
 
     // Sync with Comm ASAP so that abandoned details can properly close().
     // XXX : these are not all HTTP requests. use a note about type and ip:port details->

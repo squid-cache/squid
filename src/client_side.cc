@@ -2360,8 +2360,6 @@ httpAccept(const CommAcceptCbParams &params)
     if (s->tcp_keepalive.enabled)
         commSetTcpKeepalive(params.conn->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
 
-    ++incoming_sockets_accepted;
-
     // Socket is ready, setup the connection manager to start using it
     auto *srv = Http::NewServer(xact);
     AsyncJob::Start(srv); // usually async-calls readSomeData()
@@ -2565,7 +2563,6 @@ httpsAccept(const CommAcceptCbParams &params)
     if (s->tcp_keepalive.enabled) {
         commSetTcpKeepalive(params.conn->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
     }
-    ++incoming_sockets_accepted;
 
     // Socket is ready, setup the connection manager to start using it
     auto *srv = Https::NewServer(xact);
