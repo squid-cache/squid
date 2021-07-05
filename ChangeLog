@@ -1,3 +1,10 @@
+Changes in squid-4.16 (04 Jul 2021):
+
+	- Regression Fix: --with-valgrind-debug build broken since 4.15
+	- Bug 5129 pt1: remove Lock use from HttpRequestMethod
+	- Bug 5128: Translation: Fix '% i' typo in es/ERR_FORWARDING_DENIED
+	- Bug 4528: ICAP transactions quit on async DNS lookups
+
 Changes in squid-4.15 (10 May 2021):
 
 	- Bug 5112: Excessively loud chunked reply parsing error reporting
