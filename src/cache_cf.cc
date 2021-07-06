@@ -3876,10 +3876,7 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
 
     // *_port line should now be fully valid so we can clone it if necessary
     if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && s->s.isAnyAddr()) {
-        // clone the port options from *s to *(s->next)
-        s->next = s->clone();
-        s->next->s.setIPv4();
-        debugs(3, 3, AnyP::UriScheme(s->transport.protocol).image() << "_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
+        s->next = s->ipV4clone();
     }
 
     while (*head != NULL)

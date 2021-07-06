@@ -124,8 +124,6 @@ public:
 
     TrafficModeFlags &rawConfig() { return flags_; }
 
-    const TrafficModeFlags &rawConfig() const { return flags_; }
-
     std::ostream &print(std::ostream &) const;
 
 private:
