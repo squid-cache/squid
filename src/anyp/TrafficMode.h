@@ -19,7 +19,7 @@ public:
     /// a parsed port type (http_port, https_port or ftp_port)
     typedef enum { httpPort, httpsPort, ftpPort } PortKind;
 
-    explicit TrafficModeFlags(const PortKind aPortKind) : portKind(aPortKind) {}
+    explicit TrafficModeFlags(const PortKind aPortKind): portKind(aPortKind) {}
 
     /** marks HTTP accelerator (reverse/surrogate proxy) traffic
      *

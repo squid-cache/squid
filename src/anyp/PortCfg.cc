@@ -24,7 +24,7 @@ AnyP::PortCfgPointer FtpPortList;
 int NHttpSockets = 0;
 int HttpSockets[MAXTCPLISTENPORTS];
 
-AnyP::PortCfg::PortCfg(const AnyP::TrafficModeFlags::PortKind aPortKind) :
+AnyP::PortCfg::PortCfg(const TrafficModeFlags::PortKind aPortKind):
     next(),
     s(),
     transport(AnyP::PROTO_HTTP,1,1), // "Squid is an HTTP proxy", etc.
@@ -59,7 +59,7 @@ AnyP::PortCfg::~PortCfg()
 AnyP::PortCfgPointer
 AnyP::PortCfg::clone() const
 {
-    AnyP::PortCfgPointer b = new AnyP::PortCfg(flags.rawConfig().portKind);
+    PortCfgPointer b = new PortCfg(flags.rawConfig().portKind);
     b->s = s;
     if (name)
         b->name = xstrdup(name);
