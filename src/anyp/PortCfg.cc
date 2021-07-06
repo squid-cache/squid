@@ -8,7 +8,6 @@
 
 #include "squid.h"
 #include "anyp/PortCfg.h"
-#include "anyp/UriScheme.h"
 #include "comm.h"
 #include "fatal.h"
 #include "security/PeerOptions.h"
@@ -87,8 +86,7 @@ AnyP::PortCfg::ipV4clone() const
 {
     const auto clone = new PortCfg(*this);
     clone->s.setIPv4();
-    debugs(3, 3, AnyP::UriScheme(transport.protocol).image() << "_port: " <<
-           "cloned wildcard address for split-stack: " << s << " and " << clone->s);
+    debugs(3, 3, "made two wildcard port cfgs for split-stack: " << s << " and " << clone->s);
     return clone;
 }
 
