@@ -3813,7 +3813,6 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
     }
 
     AnyP::PortCfgPointer s = new AnyP::PortCfg(portKind);
-    s->flags.rawConfig().portKind = portKind;
     s->transport = parsePortProtocol(protoName); // default; protocol=... overwrites
     parsePortSpecification(s, token);
 
