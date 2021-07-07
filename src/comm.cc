@@ -1143,44 +1143,6 @@ commSetTcpNoDelay(int fd)
 #endif
 
 void
-commSetTcpKeepalive(int fd, const AnyP::PortCfg::TcpKeepalive &cfg)
-{
-    if (!cfg.enabled)
-        return;
-
-    int on = 1;
-#ifdef TCP_KEEPCNT
-    if (cfg.timeout && cfg.interval) {
-        int count = (cfg.timeout + cfg.interval - 1) / cfg.interval; // XXX: unsigned-to-signed conversion
-        if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &count, sizeof(count)) < 0) {
-            int xerrno = errno;
-            debugs(5, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
-        }
-    }
-#endif
-#ifdef TCP_KEEPIDLE
-    if (cfg.idle) {
-        if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &cfg.idle, sizeof(cfg.idle)) < 0) {
-            int xerrno = errno;
-            debugs(5, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
-        }
-    }
-#endif
-#ifdef TCP_KEEPINTVL
-    if (cfg.interval) {
-        if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &cfg.interval, sizeof(cfg.interval)) < 0) {
-            int xerrno = errno;
-            debugs(5, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
-        }
-    }
-#endif
-    if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (char *) &on, sizeof(on)) < 0) {
-        int xerrno = errno;
-        debugs(5, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
-    }
-}
-
-void
 comm_init(void)
 {
     assert(fd_table);
