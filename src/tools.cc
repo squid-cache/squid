@@ -584,7 +584,7 @@ enter_suid(void)
 
     if (setuid(0) < 0) {
         const auto xerrno = errno;
-        debugs(21, 3, "enter_suid: setuid failed: " << xstrerr(xerrno));
+        debugs(21, 3, "setuid(0) failed: " << xstrerr(xerrno));
     }
 #endif
 #if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
