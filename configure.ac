@@ -450,10 +450,11 @@ AC_DEFUN([LIBATOMIC_CHECKER],[
 #include <atomic>
 #include <cstdint>
       int
-      main(int, char **) {
-          std::atomic<int> foo(0);
-          foo.exchange(1);
-          return std::atomic<uint64_t>{}.is_lock_free() ? 0 : 1;
+      main(int argc, char **) {
+          return (
+              std::atomic<int>(argc).exchange(0) &&
+              std::atomic<uint64_t>{}.is_lock_free()
+              ) ? 0 : 1;
       }
   ]])],[
     AC_MSG_RESULT(yes)
