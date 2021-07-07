@@ -452,7 +452,7 @@ AC_DEFUN([LIBATOMIC_CHECKER],[
       int
       main(int argc, char **) {
           return (
-              std::atomic<int>(argc).exchange(0) &&
+              std::atomic<uint8_t>(uint8_t(argc)).exchange(0) &&
               std::atomic<uint64_t>{}.is_lock_free()
               ) ? 0 : 1;
       }
