@@ -15,8 +15,7 @@
 #include "comm/AcceptLimiter.h"
 Comm::AcceptLimiter dummy;
 Comm::AcceptLimiter & Comm::AcceptLimiter::Instance() STUB_RETVAL(dummy)
-void Comm::AcceptLimiter::defer(const Comm::TcpAcceptor::Pointer &) STUB
-void Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor::Pointer &) STUB
+void Comm::AcceptLimiter::defer(const AsyncCall::Pointer &) STUB
 void Comm::AcceptLimiter::kick() STUB
 
 #include "comm/Connection.h"

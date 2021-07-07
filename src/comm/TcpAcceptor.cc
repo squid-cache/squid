@@ -118,7 +118,6 @@ Comm::TcpAcceptor::swanSong()
     }
 
     conn = NULL;
-    AcceptLimiter::Instance().removeDead(this);
     AsyncJob::swanSong();
 }
 
@@ -216,13 +215,13 @@ Comm::TcpAcceptor::doAccept(int fd, void *data)
         debugs(5, 2, HERE << "New connection on FD " << fd);
 
         Must(isOpen(fd));
-        TcpAcceptor *afd = static_cast<TcpAcceptor*>(data);
+        typedef CommCbMemFunT<Comm::TcpAcceptor, CommIoCbParams> Dialer;
+        AsyncCall::Pointer call = JobCallback(5, 5, Dialer, static_cast<TcpAcceptor*>(data), Comm::TcpAcceptor::acceptNext);
 
-        if (!okToAccept()) {
-            AcceptLimiter::Instance().defer(afd);
-        } else {
-            afd->acceptNext();
-        }
+        if (!okToAccept())
+            AcceptLimiter::Instance().defer(call);
+        else
+            ScheduleCallHere(call);
 
     } catch (const std::exception &e) {
         fatalf("FATAL: error while accepting new client connection: %s\n", e.what());
@@ -304,7 +303,7 @@ Comm::TcpAcceptor::acceptOne()
 }
 
 void
-Comm::TcpAcceptor::acceptNext()
+Comm::TcpAcceptor::acceptNext(const CommIoCbParams &)
 {
     Must(IsConnOpen(conn));
     debugs(5, 2, HERE << "connection on " << conn);

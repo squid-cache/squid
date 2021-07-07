@@ -22,38 +22,20 @@ Comm::AcceptLimiter::Instance()
 }
 
 void
-Comm::AcceptLimiter::defer(const Comm::TcpAcceptor::Pointer &afd)
+Comm::AcceptLimiter::defer(const AsyncCall::Pointer &call)
 {
-    debugs(5, 5, afd->conn << "; already queued: " << deferred_.size());
-    deferred_.push_back(afd);
-}
-
-void
-Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor::Pointer &afd)
-{
-    for (auto it = deferred_.begin(); it != deferred_.end(); ++it) {
-        if (*it == afd) {
-            *it = nullptr; // fast. kick() will skip empty entries later.
-            debugs(5,4, "Abandoned client TCP SYN by closing socket: " << afd->conn);
-            return;
-        }
-    }
-    debugs(5,4, "Not found " << afd->conn << " in queue, size: " << deferred_.size());
+    debugs(5, 5, call << "; already queued: " << deferred_.size());
+    deferred_.push_back(call);
 }
 
 void
 Comm::AcceptLimiter::kick()
 {
     debugs(5, 5, "size=" << deferred_.size());
-    while (deferred_.size() > 0 && Comm::TcpAcceptor::okToAccept()) {
-        /* NP: shift() is equivalent to pop_front(). Giving us a FIFO queue. */
-        TcpAcceptor::Pointer temp = deferred_.front();
+    if (deferred_.size() > 0 && Comm::TcpAcceptor::okToAccept()) {
+        auto call = deferred_.front();
         deferred_.erase(deferred_.begin());
-        if (temp.valid()) {
-            debugs(5, 5, "doing one.");
-            temp->acceptNext();
-            break;
-        }
+        ScheduleCallHere(call);
     }
 }
 

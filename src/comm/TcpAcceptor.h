@@ -17,6 +17,7 @@
 #include "comm/forward.h"
 
 class CommCloseCbParams;
+class CommIoCbParams;
 
 namespace Comm
 {
@@ -69,7 +70,7 @@ protected:
      * If one is pending already the subscribed callback handler will be scheduled
      * to handle it before this method returns.
      */
-    void acceptNext();
+    void acceptNext(const CommIoCbParams &);
 
     /// Call the subscribed callback handler with details about a new connection.
     void notify(const Comm::Flag flag, const Comm::ConnectionPointer &details) const;
