@@ -997,6 +997,25 @@ configDoConfigure(void)
         s->secure.initServerContexts(*s);
     }
 
+#if USE_OPENSSL
+    for (auto s = HttpPortList; s; s = s->next) {
+        const SBuf &scheme = AnyP::UriScheme(s->transport.protocol).image();
+        if (s->flags.tunnelSslBumping()) {
+            auto &rawFlags = s->flags.rawConfig();
+            if (!Config.accessList.ssl_bump) {
+                debugs(3, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << scheme << "_port " << s->s);
+                rawFlags.tunnelSslBumping = false;
+            }
+            if (!s->secure.staticContext && !s->secure.generateHostCertificates) {
+                debugs(3, DBG_IMPORTANT, "Will not bump SSL at " << scheme << "_port " << s->s << " due to TLS initialization failure.");
+                rawFlags.tunnelSslBumping = false;
+                if (s->transport.protocol == AnyP::PROTO_HTTP)
+                    s->secure.encryptTransport = false;
+            }
+        }
+    }
+#endif
+
     // prevent infinite fetch loops in the request parser
     // due to buffer full but not enough data received to finish parse
     if (Config.maxRequestBufferSize <= Config.maxRequestHeaderSize) {
