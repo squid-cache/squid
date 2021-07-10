@@ -20,8 +20,6 @@
 #define BUFSIZ  4096            /* make unreasonable guess */
 #endif
 
-#define BROWSERNAMELEN 128
-
 #define ACL_SUNDAY  0x01
 #define ACL_MONDAY  0x02
 #define ACL_TUESDAY 0x04
