@@ -20,16 +20,6 @@
 #define BUFSIZ  4096            /* make unreasonable guess */
 #endif
 
-#define ACL_SUNDAY  0x01
-#define ACL_MONDAY  0x02
-#define ACL_TUESDAY 0x04
-#define ACL_WEDNESDAY   0x08
-#define ACL_THURSDAY    0x10
-#define ACL_FRIDAY  0x20
-#define ACL_SATURDAY    0x40
-#define ACL_ALLWEEK 0x7F
-#define ACL_WEEKDAYS    0x3E
-
 /* Select types. */
 #define COMM_SELECT_READ   (0x1)
 #define COMM_SELECT_WRITE  (0x2)
