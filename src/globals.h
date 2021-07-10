@@ -18,7 +18,6 @@
 
 extern char *ConfigFile;    /* NULL */
 extern char *IcpOpcodeStr[];
-extern char tmp_error_buf[ERROR_BUF_SZ];
 extern char ThisCache[RFC2181_MAXHOSTNAMELEN << 1];
 extern char ThisCache2[RFC2181_MAXHOSTNAMELEN << 1];
 extern char config_input_line[BUFSIZ];
