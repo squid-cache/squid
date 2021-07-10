@@ -48,8 +48,6 @@
 #define FQDN_LOOKUP_IF_MISS 0x01
 #define FQDN_MAX_NAMES 5
 
-#define HTTP_REPLY_FIELD_SZ 128
-
 #define BUF_TYPE_8K     1
 #define BUF_TYPE_MALLOC 2
 
@@ -126,7 +124,6 @@
 #define PEER_ALIVE 1
 
 #define AUTH_MSG_SZ 4096
-#define HTTP_REPLY_BUF_SZ 4096
 #define CLIENT_REQ_BUF_SZ 4096
 
 #if !defined(ERROR_BUF_SZ) && defined(MAX_URL)
@@ -212,8 +209,6 @@
 #else
 #define FILE_MODE(x) ((x)&(O_RDONLY|O_WRONLY|O_RDWR))
 #endif
-
-#define HTTP_REQBUF_SZ  4096
 
 /* CygWin & Windows NT Port */
 #if _SQUID_WINDOWS_
