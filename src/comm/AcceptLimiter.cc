@@ -13,6 +13,14 @@
 #include "fde.h"
 #include "globals.h"
 
+class KickDialer : public CallDialer
+{
+public:
+    virtual bool canDial(AsyncCall &) { return true; }
+    virtual void dial(AsyncCall &) { Comm::AcceptLimiter::Instance().kick(); }
+    virtual void print(std::ostream &os) const { os << "()"; }
+};
+
 Comm::AcceptLimiter Comm::AcceptLimiter::Instance_;
 
 Comm::AcceptLimiter &
@@ -36,6 +44,11 @@ Comm::AcceptLimiter::kick()
         auto call = deferred_.front();
         deferred_.erase(deferred_.begin());
         ScheduleCallHere(call);
+
+        // Schedule a repeat kick() for AFTER the deferred accept(2) is dialed.
+        // This order requirement ensures okToAccept() result is correct.
+        AsyncCall::Pointer retry = asyncCall(5, 5, "Comm::AcceptLimiter::kick", KickDialer());
+        ScheduleCallHere(retry);
     }
 }
 
