@@ -40,15 +40,19 @@ void
 Comm::AcceptLimiter::kick()
 {
     debugs(5, 5, "size=" << deferred_.size());
-    if (deferred_.size() > 0 && Comm::TcpAcceptor::okToAccept()) {
-        auto call = deferred_.front();
-        deferred_.erase(deferred_.begin());
-        ScheduleCallHere(call);
+    if (deferred_.size() == 0)
+        return;
 
-        // Schedule a repeat kick() for AFTER the deferred accept(2) is dialed.
-        // This order requirement ensures okToAccept() result is correct.
-        AsyncCall::Pointer retry = asyncCall(5, 5, "Comm::AcceptLimiter::kick", KickDialer());
-        ScheduleCallHere(retry);
-    }
+    if (!Comm::TcpAcceptor::okToAccept())
+        return;
+
+    AsyncCall::Pointer call = deferred_.front();
+    deferred_.erase(deferred_.begin());
+    ScheduleCallHere(call);
+
+    // Schedule a repeat kick() for AFTER the deferred accept(2) is dialed.
+    // This order requirement ensures okToAccept() result is correct.
+    AsyncCall::Pointer retry = asyncCall(5, 5, "Comm::AcceptLimiter::kick", KickDialer());
+    ScheduleCallHere(retry);
 }
 

@@ -215,8 +215,11 @@ Comm::TcpAcceptor::doAccept(int fd, void *data)
         debugs(5, 2, HERE << "New connection on FD " << fd);
 
         Must(isOpen(fd));
-        typedef CommCbMemFunT<Comm::TcpAcceptor, CommIoCbParams> Dialer;
-        AsyncCall::Pointer call = JobCallback(5, 5, Dialer, static_cast<TcpAcceptor*>(data), Comm::TcpAcceptor::acceptNext);
+        // We are now outside the all AsyncJob protections.
+        // get back inside by scheduling another call for the accept(2).
+        typedef NullaryMemFunT<Comm::TcpAcceptor> Dialer;
+        auto *job = static_cast<Comm::TcpAcceptor *>(data);
+        AsyncCall::Pointer call = JobCallback(5, 5, Dialer, job, Comm::TcpAcceptor::acceptNext);
 
         if (!okToAccept())
             AcceptLimiter::Instance().defer(call);
@@ -303,7 +306,7 @@ Comm::TcpAcceptor::acceptOne()
 }
 
 void
-Comm::TcpAcceptor::acceptNext(const CommIoCbParams &)
+Comm::TcpAcceptor::acceptNext()
 {
     Must(IsConnOpen(conn));
     debugs(5, 2, HERE << "connection on " << conn);
