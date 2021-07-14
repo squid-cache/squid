@@ -81,6 +81,17 @@ void
 Downloader::swanSong()
 {
     debugs(33, 6, this);
+
+    if (callback_) {
+        // External callback cancellation makes our doneAll() true and, hence,
+        // may get us here. That outcome is not a bug.
+        if (!callback_->canceled()) {
+            debugs(83, DBG_IMPORTANT, "BUG: Unexpected state while downloading " << url_);
+            callBack(Http::scInternalServerError);
+        }
+        callback_ = nullptr;
+    }
+
     if (context_) {
         context_->finished();
         context_ = nullptr;
@@ -252,15 +263,13 @@ void
 Downloader::callBack(Http::StatusCode const statusCode)
 {
     assert(callback_);
-    if (!callback_->canceled()) {
-        CbDialer *dialer = dynamic_cast<CbDialer*>(callback_->getDialer());
-        Must(dialer);
-        dialer->status = statusCode;
-        if (statusCode == Http::scOkay)
-            dialer->object = object_;
-        ScheduleCallHere(callback_);
-        callback_ = nullptr;
-    }
+    CbDialer *dialer = dynamic_cast<CbDialer*>(callback_->getDialer());
+    Must(dialer);
+    dialer->status = statusCode;
+    if (statusCode == Http::scOkay)
+        dialer->object = object_;
+    ScheduleCallHere(callback_);
+    callback_ = nullptr;
 
     // We cannot deleteThis() because we may be called synchronously from
     // doCallouts() via handleReply() (XXX), and doCallouts() may crash if we
