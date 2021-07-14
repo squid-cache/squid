@@ -45,7 +45,6 @@ PeerPoolMgr::PeerPoolMgr(CachePeer *aPeer): AsyncJob("PeerPoolMgr"),
     request(),
     connWait(),
     encryptionWait(),
-    closer(),
     addrUsed(0)
 {
 }
@@ -112,11 +111,6 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
 
     // Handle TLS peers.
     if (peer->secure.encryptTransport) {
-        typedef CommCbMemFunT<PeerPoolMgr, CommCloseCbParams> CloserDialer;
-        closer = JobCallback(48, 3, CloserDialer, this,
-                             PeerPoolMgr::handleSecureClosure);
-        comm_add_close_handler(params.conn->fd, closer);
-
         AsyncCall::Pointer callback = asyncCall(48, 4, "PeerPoolMgr::handleSecuredPeer",
                                                 MyAnswerDialer(this, &PeerPoolMgr::handleSecuredPeer));
 
@@ -147,14 +141,6 @@ PeerPoolMgr::handleSecuredPeer(Security::EncryptorAnswer &answer)
 {
     encryptionWait.finish();
 
-    if (closer != NULL) {
-        if (answer.conn != NULL)
-            comm_remove_close_handler(answer.conn->fd, closer);
-        else
-            closer->cancel("securing completed");
-        closer = NULL;
-    }
-
     if (!validPeer()) {
         debugs(48, 3, "peer gone");
         if (answer.conn != NULL)
@@ -171,17 +157,6 @@ PeerPoolMgr::handleSecuredPeer(Security::EncryptorAnswer &answer)
     }
 
     pushNewConnection(answer.conn);
-}
-
-void
-PeerPoolMgr::handleSecureClosure(const CommCloseCbParams &params)
-{
-    Must(closer != NULL);
-    Must(encryptionWait);
-    encryptionWait.cancel("conn closed by a 3rd party");
-    closer = NULL;
-    // allow the closing connection to fully close before we check again
-    Checkpoint(this, "conn closure while securing");
 }
 
 void

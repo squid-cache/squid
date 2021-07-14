@@ -55,9 +55,6 @@ protected:
     /// Security::PeerConnector callback
     void handleSecuredPeer(Security::EncryptorAnswer &answer);
 
-    /// called when the connection we are trying to secure is closed by a 3rd party
-    void handleSecureClosure(const CommCloseCbParams &params);
-
     /// the final step in connection opening (and, optionally, securing) sequence
     void pushNewConnection(const Comm::ConnectionPointer &conn);
 
@@ -71,7 +68,6 @@ private:
     /// encrypts an established transport connection
     JobWait<Security::BlindPeerConnector> encryptionWait;
 
-    AsyncCall::Pointer closer; ///< monitors conn while we are securing it
     unsigned int addrUsed; ///< counter for cycling through peer addresses
 };
 
