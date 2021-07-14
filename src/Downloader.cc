@@ -82,15 +82,8 @@ Downloader::swanSong()
 {
     debugs(33, 6, this);
 
-    if (callback_) {
-        // External callback cancellation makes our doneAll() true and, hence,
-        // may get us here. That outcome is not a bug.
-        if (!callback_->canceled()) {
-            debugs(83, DBG_IMPORTANT, "BUG: Unexpected state while downloading " << url_);
-            callBack(Http::scInternalServerError);
-        }
-        callback_ = nullptr;
-    }
+    if (callback_) // job-ending emergencies like noteAbort() or callException()
+        callBack(Http::scInternalServerError);
 
     if (context_) {
         context_->finished();
