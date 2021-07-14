@@ -364,14 +364,8 @@ Http::Tunneler::bailWith(ErrorState *error)
         peerConnectFailed(p);
 
     callBack();
-
-    closeQuietly();
-}
-
-void
-Http::Tunneler::closeQuietly()
-{
     disconnect();
+
     if (noteFwdPconnUse)
         fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);
     // TODO: Reuse to-peer connections after a CONNECT error response.
@@ -421,19 +415,13 @@ Http::Tunneler::swanSong()
     AsyncJob::swanSong();
 
     if (callback) {
-        if (callback->canceled()) {
-            debugs(83, 3, "cancelled by the caller");
-            closeQuietly();
+        if (requestWritten && tunnelEstablished) {
+            sendSuccess();
         } else {
-            if (requestWritten && tunnelEstablished) {
-                sendSuccess();
-            } else {
-                // we should have bailed when we discovered the job-killing problem
-                debugs(83, DBG_IMPORTANT, "BUG: Unexpected state while establishing a CONNECT tunnel " << connection << status());
-                bailWith(new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al));
-            }
-            assert(!callback);
+            // job-ending emergencies like noteAbort() or callException()
+            bailWith(new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al));
         }
+        assert(!callback);
     }
 }
 

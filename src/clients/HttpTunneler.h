@@ -34,8 +34,6 @@ class Tunneler: virtual public AsyncJob
     CBDATA_CLASS(Tunneler);
 
 public:
-    typedef CbcPointer<Tunneler> Pointer;
-
     /// Callback dialer API to allow Tunneler to set the answer.
     template <class Initiator>
     class CbDialer: public CallDialer, public Http::TunnelerAnswer
@@ -104,8 +102,6 @@ protected:
     TunnelerAnswer &answer();
 
 private:
-    void closeQuietly();
-
     AsyncCall::Pointer writer; ///< called when the request has been written
     AsyncCall::Pointer reader; ///< called when the response should be read
     AsyncCall::Pointer closer; ///< called when the connection is being closed
