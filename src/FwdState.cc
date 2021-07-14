@@ -270,7 +270,7 @@ FwdState::completed()
     if (entry->store_status == STORE_PENDING) {
         if (entry->isEmpty()) {
             if (!err) // we quit (e.g., fd closed) before an error or content
-                saveError(new ErrorState(ERR_READ_ERROR, Http::scBadGateway, request, al));
+                fail(new ErrorState(ERR_READ_ERROR, Http::scBadGateway, request, al));
             assert(err);
             errorAppendEntry(entry, err);
             err = NULL;
@@ -452,23 +452,15 @@ FwdState::useDestinations()
         debugs(17, 3, HERE << "Connection failed: " << entry->url());
         if (!err) {
             const auto anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError, request, al);
-            saveError(anErr);
+            fail(anErr);
         } // else use actual error from last connection attempt
 
         stopAndDestroy("tried all destinations");
     }
 }
+
 void
 FwdState::fail(ErrorState * errorState)
-{
-    cleanupOnFail(errorState->type);
-    saveError(errorState);
-    destinationReceipt = nullptr; // may already be nil
-}
-
-/// remembers an error for future use
-void
-FwdState::saveError(ErrorState *errorState)
 {
     debugs(17, 3, err_type_str[errorState->type] << " \"" << Http::StatusCodeString(errorState->httpStatus) << "\"\n\t" << entry->url());
 
@@ -477,17 +469,19 @@ FwdState::saveError(ErrorState *errorState)
 
     if (!errorState->request)
         errorState->request = request;
+
+    if (err->type == ERR_ZERO_SIZE_OBJECT)
+        reactToZeroSizeObject();
+
+    destinationReceipt = nullptr; // may already be nil
 }
 
-/// actions performed after the destination failure
+/// ERR_ZERO_SIZE_OBJECT requires special adjustments
 void
-FwdState::cleanupOnFail(const err_type errType)
+FwdState::reactToZeroSizeObject()
 {
-    if (errType != ERR_ZERO_SIZE_OBJECT)
-        return;
-
     if (pconnRace == racePossible) {
-        debugs(17, 5, "pconn race happened");
+        debugs(17, 5, HERE << "pconn race happened");
         pconnRace = raceHappened;
         if (destinationReceipt) {
             destinations->reinstatePath(destinationReceipt);
@@ -804,7 +798,7 @@ FwdState::advanceDestination(const char *stepDescription, const Comm::Connection
         closePendingConnection(conn, "connection preparation exception");
         if (!err) {
             const auto error = new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request, al);
-            saveError(error);
+            fail(error);
         }
         retryOrBail();
     }
@@ -1254,7 +1248,7 @@ FwdState::dispatch()
         default:
             debugs(17, DBG_IMPORTANT, "WARNING: Cannot retrieve '" << entry->url() << "'.");
             const auto anErr = new ErrorState(ERR_UNSUP_REQ, Http::scBadRequest, request, al);
-            saveError(anErr);
+            fail(anErr);
             // Set the dont_retry flag because this is not a transient (network) error.
             flags.dont_retry = true;
             if (Comm::IsConnOpen(serverConn)) {

@@ -162,9 +162,7 @@ private:
 
     void notifyConnOpener();
 
-    void saveError(ErrorState *err);
-
-    void cleanupOnFail(err_type);
+    void reactToZeroSizeObject();
 
     void cancelStep(const char *reason);
 
