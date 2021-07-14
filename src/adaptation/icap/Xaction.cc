@@ -197,6 +197,7 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
         return;
     }
 
+    // XXX: Do not save this half-baked connection. Just pass it to ConnOpener.
     connection = new Comm::Connection;
     connection->remote = ia->current();
     connection->remote.port(s.cfg().port);
@@ -278,6 +279,9 @@ void
 Adaptation::Icap::Xaction::successfullyConnected()
 {
     assert(Comm::IsConnOpen(connection));
+
+    // XXX: We should not set timeout and closure handlers here if we are going
+    // to negotiate TLS. Only Ssl::IcapPeerConnector should own the connection.
 
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  asyncCall(93, 5, "Adaptation::Icap::Xaction::noteCommTimedout",
@@ -374,7 +378,6 @@ void Adaptation::Icap::Xaction::handleCommTimedout()
 // unexpected connection close while talking to the ICAP service
 void Adaptation::Icap::Xaction::noteCommClosed(const CommCloseCbParams &)
 {
-    encryptionWait.cancel("Connection closed before SSL negotiation finished");
     closer = NULL;
     handleCommClosed();
 }
@@ -586,11 +589,8 @@ void Adaptation::Icap::Xaction::swanSong()
 {
     // kids should sing first and then call the parent method.
     if (connWait) {
-        connWait.cancel("Icap::Xaction::swanSong");
         service().noteConnectionFailed("abort");
     }
-
-    encryptionWait.cancel("Icap::Xaction::swanSong");
 
     closeConnection(); // TODO: rename because we do not always close
 
@@ -750,3 +750,4 @@ Adaptation::Icap::Xaction::handleSecuredPeer(Security::EncryptorAnswer &answer)
 
     handleCommConnected();
 }
+
