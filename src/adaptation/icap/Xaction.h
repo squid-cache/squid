@@ -129,6 +129,7 @@ public:
     ServiceRep &service();
 
 private:
+    void successfullyConnected();
     void tellQueryAborted();
     void maybeLog();
 
@@ -157,8 +158,6 @@ protected:
     timeval icap_tio_finish;   /*time when the last byte of the ICAP responsewas received*/
 
 private:
-    void successfullyConnected();
-
     /// establishes a transport connection to the ICAP server
     JobWait<Comm::ConnOpener> connWait;
 
