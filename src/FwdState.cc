@@ -463,6 +463,7 @@ FwdState::fail(ErrorState * errorState)
 {
     cleanupOnFail(errorState->type);
     saveError(errorState);
+    destinationReceipt = nullptr; // may already be nil
 }
 
 /// remembers an error for future use
@@ -473,8 +474,6 @@ FwdState::saveError(ErrorState *errorState)
 
     delete err;
     err = errorState;
-
-    destinationReceipt = nullptr;
 
     if (!errorState->request)
         errorState->request = request;
@@ -490,8 +489,10 @@ FwdState::cleanupOnFail(const err_type errType)
     if (pconnRace == racePossible) {
         debugs(17, 5, "pconn race happened");
         pconnRace = raceHappened;
-        if (destinationReceipt)
+        if (destinationReceipt) {
             destinations->reinstatePath(destinationReceipt);
+            destinationReceipt = nullptr;
+        }
     }
 
     if (ConnStateData *pinned_connection = request->pinnedConnection()) {
