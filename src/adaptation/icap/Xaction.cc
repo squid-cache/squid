@@ -269,8 +269,8 @@ void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
 
     if (io.flag != Comm::OK)
         dieOnConnectionFailure(); // throws
-
-    successfullyConnected();
+    else
+        successfullyConnected();
 }
 
 /// called when successfully connected to an ICAP service
