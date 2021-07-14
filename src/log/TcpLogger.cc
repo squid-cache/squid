@@ -265,7 +265,6 @@ Log::TcpLogger::doConnect()
 void
 Log::TcpLogger::connectDone(const CommConnectCbParams &params)
 {
-	assert(connWait);
 	connWait.finish();
 
     if (params.flag != Comm::OK) {

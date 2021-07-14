@@ -260,7 +260,6 @@ void Adaptation::Icap::Xaction::closeConnection()
 /// called when the connection attempt to an ICAP service completes (successfully or not)
 void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
 {
-    assert(connWait);
     connWait.finish();
 
     if (io.flag == Comm::TIMEOUT) {
@@ -725,7 +724,6 @@ Ssl::IcapPeerConnector::noteNegotiationDone(ErrorState *error)
 void
 Adaptation::Icap::Xaction::handleSecuredPeer(Security::EncryptorAnswer &answer)
 {
-    Must(encryptionWait);
     encryptionWait.finish();
 
     if (closer != NULL) {

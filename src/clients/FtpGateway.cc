@@ -1720,7 +1720,6 @@ void
 Ftp::Gateway::dataChannelConnected(const CommConnectCbParams &io)
 {
     debugs(9, 3, HERE);
-    assert(dataConnWait);
     dataConnWait.finish();
 
     if (io.flag != Comm::OK) {

@@ -90,7 +90,6 @@ PeerPoolMgr::doneAll() const
 void
 PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
 {
-    assert(connWait);
     connWait.finish();
 
     if (!validPeer()) {
@@ -146,7 +145,6 @@ PeerPoolMgr::pushNewConnection(const Comm::ConnectionPointer &conn)
 void
 PeerPoolMgr::handleSecuredPeer(Security::EncryptorAnswer &answer)
 {
-    assert(encryptionWait);
     encryptionWait.finish();
 
     if (closer != NULL) {

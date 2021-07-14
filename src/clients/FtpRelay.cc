@@ -732,7 +732,6 @@ void
 Ftp::Relay::dataChannelConnected(const CommConnectCbParams &io)
 {
     debugs(9, 3, status());
-    assert(dataConnWait);
     dataConnWait.finish();
 
     if (io.flag != Comm::OK) {

@@ -874,8 +874,6 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
 void
 FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 {
-    assert(!httpConnectWait);
-
     AsyncCall::Pointer callback = asyncCall(17,4,
                                             "FwdState::tunnelEstablishmentDone",
                                             Http::Tunneler::CbDialer<FwdState>(&FwdState::tunnelEstablishmentDone, this));
@@ -968,7 +966,6 @@ FwdState::secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &conn)
 void
 FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 {
-    assert(!encryptionWait);
     HttpRequest::Pointer requestPointer = request;
     AsyncCall::Pointer callback = asyncCall(17,4,
                                             "FwdState::ConnectedToPeer",
@@ -1076,7 +1073,6 @@ FwdState::connectStart()
     Must(!request->pinnedConnection());
 
     assert(!destinations->empty());
-    assert(!tcpConnWait);
     assert(!usingDestination());
 
     // Ditch error page if it was created before.

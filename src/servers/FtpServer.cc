@@ -1701,7 +1701,6 @@ Ftp::Server::checkDataConnPost() const
 void
 Ftp::Server::connectedForData(const CommConnectCbParams &params)
 {
-    assert(dataConnWait);
     dataConnWait.finish();
 
     if (params.flag != Comm::OK) {

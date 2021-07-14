@@ -204,10 +204,9 @@ public:
     /// starts waiting for the given job to call the given callback
     void start(JobPointer, AsyncCall::Pointer);
 
-    /// ends wait (if any) after receiving the call back
+    /// ends wait (after receiving the call back)
     /// forgets the job which is likely to be gone by now
-    /// does nothing if we are not waiting (TODO: assert that we are waiting)
-    void finish() { clear(); }
+    void finish();
 
     /// aborts wait (if any) before receiving the call back
     /// does nothing if we are not waiting
@@ -240,10 +239,25 @@ JobWait<Job>::start(const JobPointer aJob, const AsyncCall::Pointer aCall)
     assert(aCall);
     assert(aJob.valid());
 
-    // TODO: Should we also assert !callback_ and !job_?
+    // "Double" waiting state leads to conflicting/mismatching callbacks
+    // detailed in finish(). Detect that bug ASAP.
+    assert(!waiting());
 
+    assert(!callback_);
+    assert(!job_);
     callback_ = aCall;
     job_ = aJob;
+}
+
+template<class Job>
+void
+JobWait<Job>::finish()
+{
+    // Unexpected callbacks might result in disasters like secrets exposure,
+    // data corruption, or expensive message routing mistakes when the callback
+    // info is applied to the wrong message part or acted upon prematurely.
+    assert(waiting());
+    clear();
 }
 
 template<class Job>

@@ -904,7 +904,10 @@ TunnelStateData::copyServerBytes()
 static void
 tunnelStartShoveling(TunnelStateData *tunnelState)
 {
+    assert(!tunnelState->tcpConnWait);
+    assert(!tunnelState->encryptionWait);
     assert(!tunnelState->httpConnectWait);
+
     assert(tunnelState->server.conn);
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
                                      CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
@@ -1162,7 +1165,6 @@ TunnelStateData::connectToPeer(const Comm::ConnectionPointer &conn)
 void
 TunnelStateData::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 {
-    assert(!encryptionWait);
     AsyncCall::Pointer callback = asyncCall(5,4, "TunnelStateData::noteSecurityPeerConnectorAnswer",
                                             MyAnswerDialer(&TunnelStateData::noteSecurityPeerConnectorAnswer, this));
     const auto connector = new Security::BlindPeerConnector(request, conn, callback, al);
@@ -1233,8 +1235,6 @@ TunnelStateData::connectedToPeer(const Comm::ConnectionPointer &conn)
 void
 TunnelStateData::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 {
-    assert(!httpConnectWait);
-
     AsyncCall::Pointer callback = asyncCall(5,4,
                                             "TunnelStateData::tunnelEstablishmentDone",
                                              Http::Tunneler::CbDialer<TunnelStateData>(&TunnelStateData::tunnelEstablishmentDone, this));
@@ -1361,7 +1361,6 @@ TunnelStateData::startConnecting()
         request->hier.startPeerClock();
 
     assert(!destinations->empty());
-    assert(!tcpConnWait);
     assert(!usingDestination());
     AsyncCall::Pointer callback = asyncCall(17, 5, "TunnelStateData::noteConnection", HappyConnOpener::CbDialer<TunnelStateData>(&TunnelStateData::noteConnection, this));
     const auto cs = new HappyConnOpener(destinations, callback, request, startTime, 0, al);
