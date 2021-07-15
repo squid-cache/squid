@@ -142,23 +142,28 @@ Security::KeyData::loadX509ChainFromFile()
         return;
     }
 
-    unsigned int listSz = 0;
-    gnutls_x509_crt_t *certChain;
-    x = gnutls_x509_crt_list_import2(&certChain, &listSz, &rawFileContent, GNUTLS_X509_FMT_PEM, 0);
+    unsigned int loadedCertCount = 0;
+    gnutls_x509_crt_t *loadedCerts = nullptr;
+    x = gnutls_x509_crt_list_import2(&loadedCerts, &loadedCertCount, &rawFileContent, GNUTLS_X509_FMT_PEM, 0);
     if (x != GNUTLS_E_SUCCESS) {
         debugs(83, DBG_IMPORTANT, "ERROR: unable to import chain file '" << certFile << "': " << ErrorString(x));
         return;
     }
 
-    for (unsigned int i = 0; i < listSz ; ++i) {
-        const auto ca = CertPointer(certChain[i], [](const gnutls_x509_crt_t p) {
+    for (unsigned int i = 0; i < loadedCertCount; ++i) {
+        const auto ca = CertPointer(loadedCerts[i], [](const gnutls_x509_crt_t p) {
             debugs(83, 5, "gnutls_x509_crt_deinit cert=" << (void*)p);
             gnutls_x509_crt_deinit(p);
         });
 
+        // abuse fact that gnutls_x509_crt_t is actually a pointer in libgnutls
+        loadedCerts[i] = nullptr; // memory this points to is managed by 'ca' now
+
         tryAddChainCa(ca);
     }
-    gnutls_free(certChain);
+    // certs in loadedCerts are now either part of the chain, or destroyed by 'ca'
+    // we just have to free the loadedCerts array itself.
+    gnutls_free(loadedCerts);
 
 #else
     debugs(83, DBG_PARSE_NOTE(2), "ERROR: Loading certificate chain from PEM files requires OpenSSL or GnuTLS.");
