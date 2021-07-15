@@ -103,7 +103,7 @@ Security::CertIsIssuedBy(const CertPointer &cert, const CertPointer &issuer)
     if (result == X509_V_OK)
         return true;
     debugs(83, DBG_PARSE_NOTE(3), CertSubjectName(issuer) << " did not sign " <<
-           CertSubjectName(cert) << ": " << VerifyErrorString(result) << " (" << result << ")");
+           CertSubjectName(cert) << ": " << X509_verify_cert_error_string(result) << " (" << result << ")");
 #elif USE_GNUTLS
     const auto result = gnutls_x509_crt_check_issuer(cert.get(), issuer.get());
     if (result == 1)

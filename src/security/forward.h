@@ -132,18 +132,6 @@ inline const char *ErrorString(const LibErrorCode code) {
 #endif
 }
 
-/// c-string representation of an X.509 certificate verify error code
-inline const char *VerifyErrorString(const ErrorCode checkCode)
-{
-#if USE_OPENSSL
-    return X509_verify_cert_error_string(checkCode);
-#elif USE_GNUTLS
-    return "[not implemented]";
-#else
-    return "[no TLS library]";
-#endif
-}
-
 /// set of Squid defined TLS error codes
 /// \note using std::unordered_set ensures values are unique, with fast lookup
 typedef std::unordered_set<Security::ErrorCode> Errors;
