@@ -1192,14 +1192,6 @@ TunnelStateData::advanceDestination(const char *stepDescription, const Comm::Con
     }
 }
 
-void
-TunnelStateData::cancelStep(const char *reason)
-{
-    tcpConnWait.cancel(reason);
-    encryptionWait.cancel(reason);
-    httpConnectWait.cancel(reason);
-}
-
 /// callback handler for the connection encryptor
 void
 TunnelStateData::noteSecurityPeerConnectorAnswer(Security::EncryptorAnswer &answer)
@@ -1354,6 +1346,17 @@ TunnelStateData::sendError(ErrorState *finalError, const char *reason)
     errorSend(client.conn, finalError);
 }
 
+/// Notify a pending subtask, if any, that we no longer need its help. We do not
+/// have to do this -- the subtask job will eventually end -- but ending it
+/// earlier reduces waste and may reduce DoS attack surface.
+void
+TunnelStateData::cancelStep(const char *reason)
+{
+    tcpConnWait.cancel(reason);
+    encryptionWait.cancel(reason);
+    httpConnectWait.cancel(reason);
+}
+
 void
 TunnelStateData::startConnecting()
 {
@@ -1379,7 +1382,7 @@ TunnelStateData::usePinned()
     Must(request);
     const auto connManager = request->pinnedConnection();
     try {
-        auto serverConn = ConnStateData::BorrowPinnedConnection(request.getRaw(), al);
+        const auto serverConn = ConnStateData::BorrowPinnedConnection(request.getRaw(), al);
         debugs(26, 7, "pinned peer connection: " << serverConn);
 
         // Set HttpRequest pinned related flags for consistency even if
