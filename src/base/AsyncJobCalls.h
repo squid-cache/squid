@@ -13,6 +13,8 @@
 #include "base/CbcPointer.h"
 #include "Debug.h"
 
+#include <iosfwd>
+
 /**
  \ingroup AsyncJobAPI
  * This is a base class for all job call dialers. It does all the job
@@ -182,27 +184,22 @@ JobDialer<Job>::dial(AsyncCall &call)
     job->callEnd(); // may delete job
 }
 
-/// manages waiting for an AsyncJob callback
-template <class Job>
-class JobWait
+/// Manages waiting for an AsyncJob callback. Use type-safe JobWait instead.
+/// This base class does not contain code specific to the actual Job type.
+class JobWaitBase
 {
 public:
-    typedef CbcPointer<Job> JobPointer;
-
-    JobWait() = default;
-    ~JobWait() { cancel("owner gone"); }
+    JobWaitBase();
+    ~JobWaitBase();
 
     /// no copying of any kind: each waiting context needs a dedicated AsyncCall
-    JobWait(JobWait &&) = delete;
+    JobWaitBase(JobWaitBase &&) = delete;
 
     explicit operator bool() const { return waiting(); }
 
     /// whether we are currently waiting for the job to call us back
     /// the job itself may be gone even if this returns true
     bool waiting() const { return bool(callback_); }
-
-    /// starts waiting for the given job to call the given callback
-    void start(JobPointer, AsyncCall::Pointer);
 
     /// ends wait (after receiving the call back)
     /// forgets the job which is likely to be gone by now
@@ -212,91 +209,52 @@ public:
     /// does nothing if we are not waiting
     void cancel(const char *reason);
 
-    /// \returns a cbdata pointer to the job we are waiting for (or nil)
-    /// the returned CbcPointer may be falsy, even if we are still waiting()
-    const JobPointer &job() const { return job_; }
-
     /// summarizes what we are waiting for (for debugging)
-    std::ostream &print(std::ostream &) const;
+    void print(std::ostream &) const;
+
+protected:
+    /// starts waiting for the given job to call the given callback
+    void start_(AsyncJob::Pointer, AsyncCall::Pointer);
 
 private:
     /// the common part of finish() and cancel()
-    void clear() { callback_ = nullptr; job_.clear(); }
+    void clear() { job_.clear(); callback_ = nullptr; }
 
     /// the job that we are waiting to call us back (or nil)
-    JobPointer job_;
+    AsyncJob::Pointer job_;
 
     /// the call we are waiting for the job_ to make (or nil)
     AsyncCall::Pointer callback_;
 };
 
-template<class Job>
-void
-JobWait<Job>::start(const JobPointer aJob, const AsyncCall::Pointer aCall)
-{
-    // Invariant: The wait will be over. We cannot guarantee that the job will
-    // call the callback, of course, but we can check these prerequisites.
-    assert(aCall);
-    assert(aJob.valid());
-
-    // "Double" waiting state leads to conflicting/mismatching callbacks
-    // detailed in finish(). Detect that bug ASAP.
-    assert(!waiting());
-
-    assert(!callback_);
-    assert(!job_);
-    callback_ = aCall;
-    job_ = aJob;
-}
-
-template<class Job>
-void
-JobWait<Job>::finish()
-{
-    // Unexpected callbacks might result in disasters like secrets exposure,
-    // data corruption, or expensive message routing mistakes when the callback
-    // info is applied to the wrong message part or acted upon prematurely.
-    assert(waiting());
-    clear();
-}
-
-template<class Job>
-void
-JobWait<Job>::cancel(const char *reason)
-{
-    if (callback_) {
-        callback_->cancel(reason);
-
-        // Instead of AsyncJob, the class parameter could be Job. That would
-        // avoid runtime child-to-parent CbcPointer conversion overheads, but
-        // complicate support for Jobs with virtual AsyncJob bases (GCC error:
-        // "pointer to member conversion via virtual base AsyncJob") and also
-        // cache-log "Job::handleStopRequest()" with a non-existent class name.
-        CallJobHere(callback_->debugSection, callback_->debugLevel, job_, AsyncJob, handleStopRequest);
-
-        clear();
-    }
-}
-
-template<class Job>
-std::ostream &
-JobWait<Job>::print(std::ostream &os) const
-{
-    // use a backarrow to emphasize that this is a callback: call24<-job6
-    if (callback_)
-        os << callback_->id << "<-";
-    if (const auto rawJob = job_.get())
-        os << rawJob->id;
-    else
-        os << job_; // raw pointer of a gone job may still be useful for triage
-    return os;
-}
-
+/// Manages waiting for an AsyncJob callback.
+/// Completes JobWaitBase by providing Job type-specific members.
 template <class Job>
-inline
-std::ostream &operator <<(std::ostream &os, const JobWait<Job> &cbPointer)
+class JobWait: public JobWaitBase
 {
-    return cbPointer.print(os);
+public:
+    typedef CbcPointer<Job> JobPointer;
+
+    /// starts waiting for the given job to call the given callback
+    void start(const JobPointer &aJob, const AsyncCall::Pointer &aCallback) {
+        start_(aJob, aCallback);
+        typedJob_ = aJob;
+    }
+
+    /// \returns a cbdata pointer to the job we are waiting for (or nil)
+    /// the returned pointer may be falsy, even if we are still waiting()
+    JobPointer job() const { return waiting() ? typedJob_ : nullptr; }
+
+private:
+    /// nearly duplicates JobWaitBase::typedJob_ but exposes the actual job type
+    JobPointer typedJob_;
+};
+
+inline
+std::ostream &operator <<(std::ostream &os, const JobWaitBase &wait)
+{
+    wait.print(os);
+    return os;
 }
 
 #endif /* SQUID_ASYNCJOBCALLS_H */
