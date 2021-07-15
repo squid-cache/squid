@@ -418,7 +418,7 @@ Http::Tunneler::swanSong()
         if (requestWritten && tunnelEstablished) {
             sendSuccess();
         } else {
-            // job-ending emergencies like noteAbort() or callException()
+            // job-ending emergencies like handleStopRequest() or callException()
             bailWith(new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al));
         }
         assert(!callback);

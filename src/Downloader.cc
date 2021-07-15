@@ -82,7 +82,7 @@ Downloader::swanSong()
 {
     debugs(33, 6, this);
 
-    if (callback_) // job-ending emergencies like noteAbort() or callException()
+    if (callback_) // job-ending emergencies like handleStopRequest() or callException()
         callBack(Http::scInternalServerError);
 
     if (context_) {

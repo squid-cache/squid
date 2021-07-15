@@ -266,12 +266,14 @@ JobWait<Job>::cancel(const char *reason)
 {
     if (callback_) {
         callback_->cancel(reason);
+
         // Instead of AsyncJob, the class parameter could be Job. That would
         // avoid runtime child-to-parent CbcPointer conversion overheads, but
         // complicate support for Jobs with virtual AsyncJob bases (GCC error:
         // "pointer to member conversion via virtual base AsyncJob") and also
-        // cache-log "Job::noteAbort()" which uses a non-existent class name.
-        CallJobHere(callback_->debugSection, callback_->debugLevel, job_, AsyncJob, noteAbort);
+        // cache-log "Job::handleStopRequest()" with a non-existent class name.
+        CallJobHere(callback_->debugSection, callback_->debugLevel, job_, AsyncJob, handleStopRequest);
+
         clear();
     }
 }
@@ -284,7 +286,7 @@ JobWait<Job>::print(std::ostream &os) const
     if (callback_)
         os << callback_->id << "<-";
     if (const auto rawJob = job_.get())
-        os << *rawJob; // TODO: make AsyncJob::id public
+        os << rawJob->id;
     else
         os << job_; // raw pointer of a gone job may still be useful for triage
     return os;
