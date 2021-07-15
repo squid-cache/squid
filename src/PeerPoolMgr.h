@@ -10,7 +10,7 @@
 #define SQUID_PEERPOOLMGR_H
 
 #include "base/AsyncJob.h"
-#include "base/forward.h"
+#include "base/JobWait.h"
 #include "comm/forward.h"
 #include "security/forward.h"
 

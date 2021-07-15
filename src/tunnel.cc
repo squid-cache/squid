@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "base/CbcPointer.h"
+#include "base/JobWait.h"
 #include "CachePeer.h"
 #include "cbdata.h"
 #include "client_side.h"

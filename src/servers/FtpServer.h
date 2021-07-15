@@ -11,7 +11,7 @@
 #ifndef SQUID_SERVERS_FTP_SERVER_H
 #define SQUID_SERVERS_FTP_SERVER_H
 
-#include "base/forward.h"
+#include "base/JobWait.h"
 #include "base/Lock.h"
 #include "client_side.h"
 #include "comm/forward.h"

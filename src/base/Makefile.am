@@ -18,7 +18,6 @@ libbase_la_SOURCES = \
 	AsyncCbdataCalls.h \
 	AsyncJob.cc \
 	AsyncJob.h \
-	AsyncJobCalls.cc \
 	AsyncJobCalls.h \
 	ByteCounter.h \
 	CbDataList.h \
@@ -36,6 +35,8 @@ libbase_la_SOURCES = \
 	Here.h \
 	InstanceId.cc \
 	InstanceId.h \
+	JobWait.cc \
+	JobWait.h \
 	Lock.h \
 	LookupTable.h \
 	Optional.h \

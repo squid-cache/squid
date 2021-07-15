@@ -13,7 +13,7 @@
 #include "adaptation/icap/Config.h"
 #include "adaptation/icap/Launcher.h"
 #include "adaptation/icap/Xaction.h"
-#include "base/AsyncJobCalls.h"
+#include "base/JobWait.h"
 #include "base/TextException.h"
 #include "comm.h"
 #include "comm/Connection.h"

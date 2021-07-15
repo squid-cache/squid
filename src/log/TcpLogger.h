@@ -10,7 +10,7 @@
 #define _SQUID_SRC_LOG_TCPLOGGER_H
 
 #include "base/AsyncJob.h"
-#include "base/forward.h"
+#include "base/JobWait.h"
 #include "comm/forward.h"
 #include "ip/Address.h"
 

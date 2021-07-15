@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "base/JobWait.h"
 #include "CachePeer.h"
 #include "cbdata.h"
 #include "comm.h"
