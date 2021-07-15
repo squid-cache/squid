@@ -25,7 +25,7 @@ Security::CertIssuerName(const CertPointer &cert)
     auto s = X509_NAME_oneline(X509_get_issuer_name(cert.get()), nullptr, 0);
     if (!s) {
         const auto x = ERR_get_error();
-        debugs(83, DBG_PARSE_NOTE(2), "WARNING: issuer: " << Security::ErrorString(x));
+        debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate Issuer: " << Security::ErrorString(x));
         return out;
     }
     out.append(s);
@@ -35,21 +35,21 @@ Security::CertIssuerName(const CertPointer &cert)
     gnutls_x509_dn_t dn;
     auto x = gnutls_x509_crt_get_issuer(cert.get(), &dn);
     if (x != GNUTLS_E_SUCCESS) {
-        debugs(83, DBG_PARSE_NOTE(2), "WARNING: issuer: " << Security::ErrorString(x));
+        debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate Issuer: " << Security::ErrorString(x));
         return out;
     }
 
     gnutls_datum_t str;
     x = gnutls_x509_dn_get_str(dn, &str);
     if (x != GNUTLS_E_SUCCESS) {
-        debugs(83, DBG_PARSE_NOTE(2), "WARNING: issuer: " << Security::ErrorString(x));
+        debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate Issuer: " << Security::ErrorString(x));
         return out;
     }
     out.append(reinterpret_cast<const char *>(str.data), str.size);
     gnutls_free(str.data);
 
 #else
-    out.append("[not implemented]");
+    debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate Issuer: [not implemented]");
 #endif
 
     debugs(83, DBG_PARSE_NOTE(3), "found cert issuer=" << out);
@@ -64,7 +64,7 @@ Security::CertSubjectName(const CertPointer &cert)
     auto s = X509_NAME_oneline(X509_get_subject_name(cert.get()), nullptr, 0);
     if (!s) {
         const auto x = ERR_get_error();
-        debugs(83, DBG_PARSE_NOTE(2), "WARNING: X509_get_subject_name: " << Security::ErrorString(x));
+        debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate SubjectName: " << Security::ErrorString(x));
         return out;
     }
     out.append(s);
@@ -74,21 +74,21 @@ Security::CertSubjectName(const CertPointer &cert)
     gnutls_x509_dn_t dn;
     auto x = gnutls_x509_crt_get_subject(cert.get(), &dn);
     if (x != GNUTLS_E_SUCCESS) {
-        debugs(83, DBG_PARSE_NOTE(2), "WARNING: gnutls_x509_crt_get_subject: " << Security::ErrorString(x));
+        debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate SubjectName: " << Security::ErrorString(x));
         return out;
     }
 
     gnutls_datum_t str;
     x = gnutls_x509_dn_get_str(dn, &str);
     if (x != GNUTLS_E_SUCCESS) {
-        debugs(83, DBG_PARSE_NOTE(2), "WARNING: gnutls_x509_dn_get_str: " << Security::ErrorString(x));
+        debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate SubjectName: " << Security::ErrorString(x));
         return out;
     }
     out.append(reinterpret_cast<const char *>(str.data), str.size);
     gnutls_free(str.data);
 
 #else
-    out.append("[not implemented]");
+    debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate SubjectName: [not implemented]");
 #endif
 
     debugs(83, DBG_PARSE_NOTE(3), "found cert subject=" << out);
@@ -104,12 +104,14 @@ Security::CertIsIssuedBy(const CertPointer &cert, const CertPointer &issuer)
         return true;
     debugs(83, DBG_PARSE_NOTE(3), CertSubjectName(issuer) << " did not sign " <<
            CertSubjectName(cert) << ": " << VerifyErrorString(result) << " (" << result << ")");
-    return false;
 #elif USE_GNUTLS
-    // GnuTLS does not detail negative answers so no debugs()
-    return gnutls_x509_crt_check_issuer(cert.get(), issuer.get()) == 1;
+    const auto result = gnutls_x509_crt_check_issuer(cert.get(), issuer.get());
+    if (result == 1)
+        return true;
+    debugs(83, DBG_PARSE_NOTE(3), CertSubjectName(issuer) << " did not sign " << CertSubjectName(cert));
 #else
-    return false; // not implemented
+    // not implemented
 #endif
+    return false;
 }
 
