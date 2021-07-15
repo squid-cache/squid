@@ -38,20 +38,20 @@ Security::KeyData::loadX509CertFromFile()
 
 #elif USE_GNUTLS
     const char *certFilename = certFile.c_str();
-    gnutls_datum_t data;
-    Security::LibErrorCode x = gnutls_load_file(certFilename, &data);
+    gnutls_datum_t rawFileContent;
+    Security::LibErrorCode x = gnutls_load_file(certFilename, &rawFileContent);
     if (x != GNUTLS_E_SUCCESS) {
         debugs(83, DBG_IMPORTANT, "ERROR: unable to load certificate file '" << certFile << "': " << ErrorString(x));
         return false;
     }
 
     gnutls_pcert_st pcrt;
-    x = gnutls_pcert_import_x509_raw(&pcrt, &data, GNUTLS_X509_FMT_PEM, 0);
+    x = gnutls_pcert_import_x509_raw(&pcrt, &rawFileContent, GNUTLS_X509_FMT_PEM, 0);
     if (x != GNUTLS_E_SUCCESS) {
         debugs(83, DBG_IMPORTANT, "ERROR: unable to import certificate from '" << certFile << "': " << ErrorString(x));
         return false;
     }
-    gnutls_free(data.data);
+    gnutls_free(rawFileContent.data);
 
     gnutls_x509_crt_t certificate;
     x = gnutls_pcert_export_x509(&pcrt, &certificate);
@@ -135,8 +135,8 @@ Security::KeyData::loadX509ChainFromFile()
 
 #elif USE_GNUTLS
     const char *certFilename = certFile.c_str();
-    gnutls_datum_t data;
-    Security::ErrorCode x = gnutls_load_file(certFilename, &data);
+    gnutls_datum_t rawFileContent;
+    Security::ErrorCode x = gnutls_load_file(certFilename, &rawFileContent);
     if (x != GNUTLS_E_SUCCESS) {
         debugs(83, DBG_IMPORTANT, "ERROR: unable to load chain file '" << certFile << "': " << ErrorString(x));
         return;
@@ -144,7 +144,7 @@ Security::KeyData::loadX509ChainFromFile()
 
     unsigned int listSz = 0;
     gnutls_x509_crt_t *certChain;
-    x = gnutls_x509_crt_list_import2(&certChain, &listSz, &data, GNUTLS_X509_FMT_PEM, 0);
+    x = gnutls_x509_crt_list_import2(&certChain, &listSz, &rawFileContent, GNUTLS_X509_FMT_PEM, 0);
     if (x != GNUTLS_E_SUCCESS) {
         debugs(83, DBG_IMPORTANT, "ERROR: unable to import chain file '" << certFile << "': " << ErrorString(x));
         return;
@@ -187,11 +187,11 @@ Security::KeyData::loadX509PrivateKeyFromFile()
 
 #elif USE_GNUTLS
     const char *keyFilename = privateKeyFile.c_str();
-    gnutls_datum_t data;
-    if (gnutls_load_file(keyFilename, &data) == GNUTLS_E_SUCCESS) {
+    gnutls_datum_t rawFileContent;
+    if (gnutls_load_file(keyFilename, &rawFileContent) == GNUTLS_E_SUCCESS) {
         gnutls_privkey_t key;
         (void)gnutls_privkey_init(&key);
-        Security::ErrorCode x = gnutls_privkey_import_x509_raw(key, &data, GNUTLS_X509_FMT_PEM, nullptr, 0);
+        Security::ErrorCode x = gnutls_privkey_import_x509_raw(key, &rawFileContent, GNUTLS_X509_FMT_PEM, nullptr, 0);
         if (x == GNUTLS_E_SUCCESS) {
             gnutls_x509_privkey_t xkey;
             gnutls_privkey_export_x509(key, &xkey);
@@ -202,7 +202,7 @@ Security::KeyData::loadX509PrivateKeyFromFile()
             });
         }
     }
-    gnutls_free(data.data);
+    gnutls_free(rawFileContent.data);
 
 #else
     // nothing to do.
