@@ -160,8 +160,8 @@ Ftp::Relay::Relay(FwdState *const fwdState):
     savedReply.lastReply = NULL;
     savedReply.replyCode = 0;
 
-    // Nothing we can do at request creation time can mark the response as
-    // uncachable, unfortunately. This prevents "found KEY_PRIVATE" WARNINGs.
+    // Prevent the future response from becoming public and being shared/cached
+    // because FTP does not support response cachability and freshness checks.
     entry->releaseRequest();
     AsyncCall::Pointer call = asyncCall(9, 4, "Ftp::Relay::Abort", cbdataDialer(&Relay::HandleStoreAbort, this));
     entry->registerAbortCallback(call);
