@@ -365,12 +365,13 @@ void Adaptation::Icap::Xaction::handleCommTimedout()
            theService->cfg().methodStr() << " " <<
            theService->cfg().uri << status());
     reuseConnection = false;
-    if (connWait) {
+    const auto whileConnecting = bool(connWait);
+    if (whileConnecting) {
         assert(!haveConnection());
         theService->noteConnectionFailed("timedout");
     } else
         closeConnection(); // so that late Comm callbacks do not disturb bypass
-    throw TexcHere(connWait ?
+    throw TexcHere(whileConnecting ?
                    "timed out while connecting to the ICAP service" :
                    "timed out while talking to the ICAP service");
 }
