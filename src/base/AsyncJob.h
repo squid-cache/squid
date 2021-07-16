@@ -74,6 +74,9 @@ protected:
     const char *stopReason; ///< reason for forcing done() to be true
     const char *typeName; ///< kid (leaf) class name, for debugging
     AsyncCall::Pointer inCall; ///< the asynchronous call being handled, if any
+
+    bool started_ = false; ///< Start() has finished successfully
+    bool swanSang_ = false; ///< swanSong() was called
 };
 
 #endif /* SQUID_ASYNC_JOB_H */

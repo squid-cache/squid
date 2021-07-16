@@ -24,6 +24,7 @@ AsyncJob::Pointer AsyncJob::Start(AsyncJob *j)
 {
     AsyncJob::Pointer job(j);
     CallJobHere(93, 5, job, AsyncJob, start);
+    job->started_ = true; // it is the attempt that counts
     return job;
 }
 
@@ -38,6 +39,7 @@ AsyncJob::~AsyncJob()
 {
     debugs(93,5, "AsyncJob destructed, this=" << this <<
            " type=" << typeName << " [" << id << ']');
+    assert(!started_ || swanSang_);
 }
 
 void AsyncJob::start()
@@ -141,9 +143,16 @@ void AsyncJob::callEnd()
         AsyncCall::Pointer inCallSaved = inCall;
         void *thisSaved = this;
 
+        // TODO: Swallow swanSong() exceptions to reduce memory leaks.
+
+        // Job callback invariant: swanSong() is (only) called for started jobs.
+        // Here to detect violations in kids that forgot to call our swanSong().
+        assert(started_);
+
+        swanSang_ = true; // it is the attempt that counts
         swanSong();
 
-        delete this; // this is the only place where the object is deleted
+        delete this; // this is the only place where a started job is deleted
 
         // careful: this object does not exist any more
         debugs(93, 6, HERE << *inCallSaved << " ended " << thisSaved);
