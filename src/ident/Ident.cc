@@ -11,6 +11,7 @@
 #include "squid.h"
 
 #if USE_IDENT
+#include "base/JobWait.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
@@ -53,8 +54,14 @@ public:
 
     Comm::ConnectionPointer conn;
     MemBuf queryMsg;  ///< the lookup message sent to IDENT server
-    IdentClient *clients;
+    IdentClient *clients = nullptr;
     char buf[IDENT_BUFSIZE];
+
+    JobWait<Comm::ConnOpener> connWait; ///< waiting for a transport connection
+
+private:
+    // use deleteThis() to destroy
+    ~IdentStateData();
 };
 
 CBDATA_CLASS_INIT(IdentStateData);
@@ -73,8 +80,9 @@ static void ClientAdd(IdentStateData * state, IDCB * callback, void *callback_da
 Ident::IdentConfig Ident::TheConfig;
 
 void
-Ident::IdentStateData::deleteThis(const char *)
+Ident::IdentStateData::deleteThis(const char *reason)
 {
+    debugs(30, 3, reason);
     swanSong();
     delete this;
 }
@@ -84,6 +92,10 @@ Ident::IdentStateData::swanSong()
 {
     if (clients != NULL)
         notify(NULL);
+}
+
+Ident::IdentStateData::~IdentStateData() {
+    assert(!clients);
 
     if (Comm::IsConnOpen(conn)) {
         comm_remove_close_handler(conn->fd, Ident::Close, this);
@@ -127,6 +139,7 @@ void
 Ident::ConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
+    state->connWait.finish();
 
     if (status != Comm::OK) {
         if (status == Comm::TIMEOUT)
@@ -272,7 +285,9 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
     hash_join(ident_hash, &state->hash);
 
     AsyncCall::Pointer call = commCbCall(30,3, "Ident::ConnectDone", CommConnectCbPtrFun(Ident::ConnectDone, state));
-    AsyncJob::Start(new Comm::ConnOpener(state->conn, call, Ident::TheConfig.timeout));
+    const auto connOpener = new Comm::ConnOpener(state->conn, call, Ident::TheConfig.timeout);
+    state->connWait.start(connOpener, call);
+    AsyncJob::Start(connOpener);
 }
 
 void
