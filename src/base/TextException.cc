@@ -58,6 +58,14 @@ TextException::what() const throw()
     return result.what();
 }
 
+[[ noreturn ]] void
+ReportAndThrow_(const int debugLevel, const char *description, const SourceLocation &location)
+{
+    const TextException ex(description, location);
+    debugs(0, debugLevel, "check failed: " << ex);
+    throw ex;
+}
+
 std::ostream &
 operator <<(std::ostream &os, const TextException &ex)
 {
