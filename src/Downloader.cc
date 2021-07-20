@@ -94,7 +94,7 @@ Downloader::swanSong()
 bool
 Downloader::doneAll() const
 {
-    return !callback_;
+    return (!callback_ || callback_->canceled()) && AsyncJob::doneAll();
 }
 
 static void
