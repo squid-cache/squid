@@ -318,6 +318,9 @@ FwdState::~FwdState()
     debugs(17, 3, "FwdState destructed, this=" << this);
 }
 
+/// Notify a pending subtask, if any, that we no longer need its help. We do not
+/// have to do this -- the subtask job will eventually end -- but ending it
+/// earlier reduces waste and may reduce DoS attack surface.
 void
 FwdState::cancelStep(const char *reason)
 {
