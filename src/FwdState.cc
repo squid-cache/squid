@@ -483,6 +483,8 @@ FwdState::fail(ErrorState * errorState)
 void
 FwdState::reactToZeroSizeObject()
 {
+    assert(err->type == ERR_ZERO_SIZE_OBJECT);
+
     if (pconnRace == racePossible) {
         debugs(17, 5, HERE << "pconn race happened");
         pconnRace = raceHappened;
