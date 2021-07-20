@@ -15,7 +15,9 @@
 ReportAndThrow_(const int debugLevel, const char *description, const SourceLocation &location)
 {
     const TextException ex(description, location);
-    debugs(0, debugLevel, "check failed: " << ex);
+    const auto label = debugLevel <= 1 ? "BUG: assertion failed" : "check failed";
+    // TODO: Consider also printing the number of BUGs reported so far.
+    debugs(0, debugLevel, label << ": " << ex);
     throw ex;
 }
 
