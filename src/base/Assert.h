@@ -43,7 +43,7 @@
 
 /* do-nothing implementations for NODEBUG builds */
 #define Assert(condition) ((void)0)
-#define Assert2(condition, description, location) ((void)0)
+#define Assert2(condition, description) ((void)0)
 
 #endif /* NODEBUG */
 
