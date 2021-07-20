@@ -76,7 +76,7 @@ public:
     JobPointer job() const { return waiting() ? typedJob_ : nullptr; }
 
 private:
-    /// nearly duplicates JobWaitBase::typedJob_ but exposes the actual job type
+    /// nearly duplicates JobWaitBase::job_ but exposes the actual job type
     JobPointer typedJob_;
 };
 
