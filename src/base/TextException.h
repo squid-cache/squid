@@ -64,8 +64,7 @@ std::ostream &operator <<(std::ostream &, const TextException &);
 #define Must(condition) \
     Assert_(3, (condition), #condition, Here())
 
-/// Like assert() but throws an exception instead of aborting the process and
-/// allows the caller to customize the exception message and location.
+/// Like Must() but supports custom exception message and location.
 /// \param description string literal describing the condition; what MUST happen
 /// Deprecated: Use Assert2() for code logic checks and throw explicitly when
 /// input validation fails.
