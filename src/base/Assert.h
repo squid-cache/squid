@@ -14,11 +14,12 @@
 /// Reports the described assertion (at the given debugging level) and throws
 /// the corresponding exception. Reduces compiled code size of Assert() and
 /// Must() callers. Do not call directly; use Assert() instead.
-/// \param description condition description (i.e. what MUST happen)
+/// \param description explains the condition (i.e. what MUST happen)
 [[ noreturn ]] void ReportAndThrow_(int debugLevel, const char *description, const SourceLocation &);
 
 /// Calls ReportAndThrow() if needed. Reduces caller code duplication.
 /// Do not call directly; use Assert() instead.
+/// \param description c-string explaining the condition (i.e. what MUST happen)
 #define Assert_(debugLevel, condition, description, location) \
     while (!(condition)) \
         ReportAndThrow_((debugLevel), (description), (location))
@@ -35,7 +36,7 @@
         Assert_(0, (condition), #condition, Here())
 
 /// Like Assert() but allows the caller to customize the exception message.
-/// \param description condition description (i.e. what MUST happen)
+/// \param description c-string explaining the condition (i.e. what MUST happen)
 #define Assert2(condition, description) \
         Assert_(0, (condition), (description), Here())
 
