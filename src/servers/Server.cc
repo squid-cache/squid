@@ -7,7 +7,6 @@
  */
 
 #include "squid.h"
-#include "anyp/PortCfg.h"
 #include "client_side.h"
 #include "comm.h"
 #include "comm/Read.h"
@@ -25,6 +24,7 @@
 
 Server::Server(const MasterXaction::Pointer &xact) :
     AsyncJob("::Server"), // kids overwrite
+    xaction(xact),
     clientConnection(xact->tcpClient),
     transferProtocol(xact->squidPort->transport),
     port(xact->squidPort),
