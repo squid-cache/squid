@@ -999,7 +999,7 @@ configDoConfigure(void)
 
 #if USE_OPENSSL
     for (auto s = HttpPortList; s; s = s->next) {
-        const SBuf &scheme = AnyP::UriScheme(s->transport.protocol).image();
+        const auto &scheme = AnyP::UriScheme(s->transport.protocol).image();
         if (s->flags.tunnelSslBumping()) {
             auto &rawFlags = s->flags.rawConfig();
             if (!Config.accessList.ssl_bump) {
