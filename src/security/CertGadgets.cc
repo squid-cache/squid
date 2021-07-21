@@ -42,7 +42,7 @@ Security::CertIssuerName(const CertPointer &cert)
     gnutls_datum_t str;
     x = gnutls_x509_dn_get_str(dn, &str);
     if (x != GNUTLS_E_SUCCESS) {
-        debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate Issuer: " << Security::ErrorString(x));
+        debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot describe certificate Issuer: " << Security::ErrorString(x));
         return out;
     }
     out.append(reinterpret_cast<const char *>(str.data), str.size);
@@ -114,4 +114,3 @@ Security::CertIsIssuedBy(const CertPointer &cert, const CertPointer &issuer)
 #endif
     return false;
 }
-
