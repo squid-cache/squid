@@ -88,7 +88,7 @@ ACLFilledChecklist::verifyAle() const
 
     if (!al->cache.port && conn()) {
         showDebugWarning("listening port");
-        al->cache.port = conn()->port;
+        al->cache.port = conn()->xaction->squidPort;
     }
 
     if (request) {

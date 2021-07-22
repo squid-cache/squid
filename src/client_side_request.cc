@@ -168,7 +168,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     al->cache.start_time = current_time;
     if (aConn) {
         al->tcpClient = clientConnection = aConn->clientConnection;
-        al->cache.port = aConn->port;
+        al->cache.port = aConn->xaction->squidPort;
         al->cache.caddr = aConn->log_addr;
         al->proxyProtocolHeader = aConn->proxyProtocolHeader();
         al->updateError(aConn->bareError);
@@ -972,7 +972,7 @@ clientCheckPinning(ClientHttpRequest * http)
     if (!http_conn)
         return;
 
-    request->flags.connectionAuthDisabled = http_conn->port->connection_auth_disabled;
+    request->flags.connectionAuthDisabled = http_conn->xaction->squidPort->connection_auth_disabled;
     if (!request->flags.connectionAuthDisabled) {
         if (Comm::IsConnOpen(http_conn->pinning.serverConnection)) {
             if (http_conn->pinning.auth) {
@@ -1428,7 +1428,7 @@ ClientRequestContext::sslBumpAccessCheck()
     // We also do not bump redirected CONNECT requests.
     if (http->request->method != Http::METHOD_CONNECT || http->redirect.status ||
             !Config.accessList.ssl_bump ||
-            !http->getConn()->port->flags.tunnelSslBumping) {
+            !http->getConn()->xaction->squidPort->flags.tunnelSslBumping) {
         http->al->ssl.bumpMode = Ssl::bumpEnd; // SslBump does not apply; log -
         debugs(85, 5, HERE << "cannot SslBump this request");
         return false;

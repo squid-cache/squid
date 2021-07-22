@@ -1293,7 +1293,7 @@ clientReplyContext::buildReplyHeader()
         if (EBIT_TEST(http->storeEntry()->flags, ENTRY_SPECIAL)) {
             hdr->delById(Http::HdrType::DATE);
             hdr->putTime(Http::HdrType::DATE, squid_curtime);
-        } else if (http->getConn() && http->getConn()->port->actAsOrigin) {
+        } else if (http->getConn() && http->getConn()->xaction->squidPort->actAsOrigin) {
             // Swap the Date: header to current time if we are simulating an origin
             HttpHeaderEntry *h = hdr->findEntry(Http::HdrType::DATE);
             if (h)
@@ -1457,8 +1457,8 @@ clientReplyContext::buildReplyHeader()
         debugs(88, 3, "pinned reply forces close");
         request->flags.proxyKeepalive = false;
     } else if (http->getConn()) {
-        ConnStateData * conn = http->getConn();
-        if (!Comm::IsConnOpen(conn->port->listenConn)) {
+        const auto &p = http->getConn()->xaction->squidPort;
+        if (!Comm::IsConnOpen(p->listenConn)) {
             // The listening port closed because of a reconfigure
             debugs(88, 3, "listening port closed");
             request->flags.proxyKeepalive = false;

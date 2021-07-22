@@ -340,7 +340,7 @@ Ftp::Server::calcUri(const SBuf *file)
     // TODO: fill a class AnyP::Uri instead of string
     uri = "ftp://";
     uri.append(host);
-    if (port->ftp_track_dirs && master->workingDir.length()) {
+    if (xaction->squidPort->ftp_track_dirs && master->workingDir.length()) {
         if (master->workingDir[0] != '/')
             uri.append("/", 1);
         uri.append(master->workingDir);
@@ -349,7 +349,7 @@ Ftp::Server::calcUri(const SBuf *file)
     if (uri[uri.length() - 1] != '/')
         uri.append("/", 1);
 
-    if (port->ftp_track_dirs && file) {
+    if (xaction->squidPort->ftp_track_dirs && file) {
         static const CharacterSet Slash("/", "/");
         Parser::Tokenizer tok(*file);
         tok.skipAll(Slash);
@@ -366,7 +366,7 @@ Ftp::Server::listenForDataConnection()
 
     Comm::ConnectionPointer conn = new Comm::Connection;
     conn->flags = COMM_NONBLOCKING;
-    conn->local = transparent() ? port->s : clientConnection->local;
+    conn->local = transparent() ? xaction->squidPort->s : clientConnection->local;
     conn->local.port(0);
     const char *const note = uri.c_str();
     comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn, note);

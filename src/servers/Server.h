@@ -107,9 +107,6 @@ public:
      */
     AnyP::ProtocolVersion transferProtocol;
 
-    /// Squid listening port details where this connection arrived.
-    AnyP::PortCfgPointer port;
-
     /// read I/O buffer for the client connection
     SBuf inBuf;
 

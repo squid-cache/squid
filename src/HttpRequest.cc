@@ -722,7 +722,7 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
     if (!clientConnectionManager.valid())
         return;
 
-    AnyP::PortCfgPointer port = clientConnectionManager->port;
+    auto &port = clientConnectionManager->xaction->squidPort;
     if (port) {
         myportname = port->name;
         flags.ignoreCc = port->ignore_cc;

@@ -640,7 +640,7 @@ Ftp::Relay::readDataReply()
 bool
 Ftp::Relay::startDirTracking()
 {
-    if (!fwd->request->clientConnectionManager->port->ftp_track_dirs)
+    if (!fwd->request->clientConnectionManager->xaction->squidPort->ftp_track_dirs)
         return false;
 
     debugs(9, 5, "start directory tracking");
