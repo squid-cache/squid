@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -226,16 +226,6 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
 #endif
 
     default:
-#if QUESTIONABLE
-        /*
-         * Any 2xx response should eject previously cached entities...
-         */
-
-        if (status >= 200 && status < 300)
-            remove = 1;
-
-#endif
-
         break;
     }
 
@@ -1314,6 +1304,11 @@ HttpStateData::processReply()
         Must(!flags.headers_parsed);
     }
 
+    if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
+        abortTransaction("store entry aborted while we were waiting for processReply()");
+        return;
+    }
+
     if (!flags.headers_parsed) { // have not parsed headers yet?
         PROF_start(HttpStateData_processReplyHeader);
         processReplyHeader();
@@ -1979,12 +1974,6 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
         if (!cc)
             cc = new HttpHdrCc();
-
-#if 0 /* see bug 2330 */
-        /* Set no-cache if determined needed but not found */
-        if (request->flags.nocache)
-            EBIT_SET(cc->mask, HttpHdrCcType::CC_NO_CACHE);
-#endif
 
         /* Add max-age only without no-cache */
         if (!cc->hasMaxAge() && !cc->hasNoCache()) {

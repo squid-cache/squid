@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -169,12 +169,6 @@ testUfs::testUfsSearch()
      * swapdir instance, we'd not be testing a clean build.
      */
     StoreSearchPointer search = Store::Root().search(); /* search for everything in the store */
-
-    /* nothing should be immediately available */
-#if 0
-
-    CPPUNIT_ASSERT_EQUAL(false, search->next());
-#endif
 
     CPPUNIT_ASSERT_EQUAL(false, search->error());
     CPPUNIT_ASSERT_EQUAL(false, search->isDone());

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,9 +28,6 @@ void _comm_close(int fd, char const *file, int line);
 #define comm_close(x) (_comm_close((x), __FILE__, __LINE__))
 void old_comm_reset_close(int fd);
 void comm_reset_close(const Comm::ConnectionPointer &conn);
-#if LINGERING_CLOSE
-void comm_lingering_close(int fd);
-#endif
 
 int comm_connect_addr(int sock, const Ip::Address &addr);
 void comm_init(void);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include "DebugMessages.h"
 #include "fd.h"
 #include "ipc/Kids.h"
 #include "SquidTime.h"
@@ -27,6 +28,7 @@ bool Debug::log_syslog = false;
 int Debug::Levels[MAX_DEBUG_SECTIONS];
 char *Debug::cache_log = NULL;
 int Debug::rotateNumber = -1;
+DebugMessages TheDebugMessages;
 static int Ctx_Lock = 0;
 static const char *debugLogTime(void);
 static const char *debugLogKid(void);
@@ -880,14 +882,17 @@ ForceAlert(std::ostream& s)
     return s;
 }
 
-/// print data bytes using hex notation
 void
-Raw::printHex(std::ostream &os) const
+PrintHex(std::ostream &os, const char *data, const size_t n)
 {
+    if (!n)
+        return;
+    assert(data);
+
     const auto savedFill = os.fill('0');
     const auto savedFlags = os.flags(); // std::ios_base::fmtflags
     os << std::hex;
-    std::for_each(data_, data_ + size_,
+    std::for_each(data, data + n,
     [&os](const char &c) { os << std::setw(2) << static_cast<uint8_t>(c); });
     os.flags(savedFlags);
     os.fill(savedFill);
@@ -912,7 +917,7 @@ Raw::print(std::ostream &os) const
             os << ' ';
         if (data_) {
             if (useHex_)
-                printHex(os);
+                PrintHex(os, data_, size_);
             else
                 os.write(data_, size_);
         } else {

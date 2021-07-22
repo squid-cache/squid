@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -5465,6 +5465,64 @@ DOC_START
 	To disable, enter "none".
 DOC_END
 
+NAME: tls_key_log
+TYPE: Security::KeyLog*
+DEFAULT: none
+LOC: Config.Log.tlsKeys
+IFDEF: USE_OPENSSL
+DOC_START
+	Configures whether and where Squid records pre-master secret and
+	related encryption details for TLS connections accepted or established
+	by Squid. These connections include connections accepted at
+	https_port, TLS connections opened to origin servers/cache_peers/ICAP
+	services, and TLS tunnels bumped by Squid using the SslBump feature.
+	This log (a.k.a. SSLKEYLOGFILE) is meant for triage with traffic
+	inspection tools like Wireshark.
+
+	    tls_key_log <destination> [options] [if [!]<acl>...]
+
+	WARNING: This log allows anybody to decrypt the corresponding
+	encrypted TLS connections, both in-flight and postmortem.
+
+	At most one log file is supported at this time. Repeated tls_key_log
+	directives are treated as fatal configuration errors. By default, no
+	log is created or updated.
+
+	If the log file does not exist, Squid creates it. Otherwise, Squid
+	appends an existing log file.
+
+	The directive is consulted whenever a TLS connection is accepted or
+	established by Squid. TLS connections that fail the handshake may be
+	logged if Squid got enough information to form a log record. A record
+	is logged only if all of the configured ACLs match.
+
+	While transport-related ACLs like src and dst should work, Squid may
+	not have access to higher-level information. For example, when logging
+	accepted https_port connections, Squid does not yet have access to the
+	expected HTTPS request. Similarly, an HTTPS response is not available
+	when logging most TLS connections established by Squid.
+
+	The log record format is meant to be compatible with TLS deciphering
+	features of Wireshark which relies on fields like CLIENT_RANDOM and
+	RSA Master-Key. A single log record usually spans multiple lines.
+	Technical documentation for that format is maintained inside the
+	Wireshark code (e.g., see tls_keylog_process_lines() comments as of
+	Wireshark commit e3d44136f0f0026c5e893fa249f458073f3b7328). TLS key
+	log does not support custom record formats.
+
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+
+	See access_log's <module>:<place> parameter for a list of supported
+	logging destinations.
+
+	TLS key log supports all access_log key=value options with the
+	exception of logformat=name.
+
+	Requires Squid built with OpenSSL support.
+DOC_END
+
+
 COMMENT_START
  OPTIONS FOR TROUBLESHOOTING
  -----------------------------------------------------------------------------
@@ -5480,6 +5538,52 @@ DOC_START
 	This is where general information about Squid behavior goes. You can
 	increase the amount of data logged to this file and how often it is
 	rotated with "debug_options"
+DOC_END
+
+NAME: cache_log_message
+TYPE: cache_log_message
+DEFAULT: none
+DEFAULT_DOC: Use debug_options.
+LOC: Config.debugMessages
+DOC_START
+	Configures logging of individual cache.log messages.
+
+		cache_log_message id=<number> option...
+		cache_log_message ids=<number>-<number> option...
+
+	Most messages have _not_ been instrumented to support this directive
+	yet. For the list of instrumented messages and their IDs, please see
+	the doc/debug-messages.txt file.
+
+	Message ID corresponds to the message semantics rather than message
+	text or source code location. The ID is stable across Squid
+	instances and versions. Substantial changes in message semantics
+	result in a new ID assignment. To reduce the danger of suppressing
+	an important log message, the old IDs of removed (or substantially
+	changed) messages are never reused.
+
+	If more than one cache_log_message directive refers to the same
+	message ID, the last directive wins.
+
+	Use ids=min-max syntax to apply the same message configuration to an
+	inclusive range of message IDs. An ID range with N values has
+	exactly the same effect as typing N cache_log_message lines.
+
+	At least one option is required. Supported options are:
+
+	  level=<number>: The logging level to use for the message. Squid
+		command line options (-s and -d) as well as the debug_options
+		directive control which levels go to syslog, stderr, and/or
+		cache.log. In most environments, using level=2 or higher stops
+		Squid from logging the message anywhere. By default, the
+		hard-coded message-specific level is used.
+
+	  limit=<number>: After logging the specified number of messages at
+		the configured (or default) debugging level DL, start using
+		level 3 (for DL 0 and 1) or 8 (for higher DL values). Usually,
+		level-3+ messages are not logged anywhere so this option can
+		often be used to effectively suppress the message. Each SMP
+		Squid process gets the same limit.
 DOC_END
 
 NAME: debug_options

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -149,6 +149,46 @@ extern "C" {
         return s->session_id;
     }
 #endif
+
+#if !HAVE_LIBSSL_SSL_GET_CLIENT_RANDOM
+    inline size_t
+    SSL_get_client_random(const SSL *ssl, unsigned char *outStart, size_t outSizeMax)
+    {
+        if (!ssl || !ssl->s3)
+            return 0;
+
+        const auto &source = ssl->s3->client_random;
+
+        const auto sourceSize = sizeof(source);
+        if (!outSizeMax)
+            return sourceSize; // special API case for sourceSize discovery
+
+        const auto sourceStart = reinterpret_cast<const char *>(source);
+        const auto outSize = std::min(sourceSize, outSizeMax);
+        assert(outStart);
+        memmove(outStart, sourceStart, outSize);
+        return outSize;
+    }
+#endif /* HAVE_LIBSSL_SSL_GET_CLIENT_RANDOM */
+
+#if !HAVE_LIBSSL_SSL_SESSION_GET_MASTER_KEY
+    inline size_t
+    SSL_SESSION_get_master_key(const SSL_SESSION *session, unsigned char *outStart, size_t outSizeMax)
+    {
+        if (!session || session->master_key_length <= 0)
+            return 0;
+
+        const auto sourceSize = static_cast<size_t>(session->master_key_length);
+        if (!outSizeMax)
+            return sourceSize; // special API case for sourceSize discovery
+
+        const auto sourceStart = reinterpret_cast<const char *>(session->master_key);
+        const auto outSize = std::min(sourceSize, outSizeMax);
+        assert(outStart);
+        memmove(outStart, sourceStart, outSize);
+        return outSize;
+    }
+#endif /* HAVE_LIBSSL_SSL_SESSION_GET_MASTER_KEY */
 
 #if !HAVE_OPENSSL_TLS_CLIENT_METHOD
 #define TLS_client_method SSLv23_client_method

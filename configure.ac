@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -450,8 +450,11 @@ AC_DEFUN([LIBATOMIC_CHECKER],[
 #include <atomic>
 #include <cstdint>
       int
-      main(int, char **) {
-          return std::atomic<uint64_t>{}.is_lock_free() ? 0 : 1;
+      main(int argc, char **) {
+          return (
+              std::atomic<uint8_t>(uint8_t(argc)).exchange(0) &&
+              std::atomic<uint64_t>{}.is_lock_free()
+              ) ? 0 : 1;
       }
   ]])],[
     AC_MSG_RESULT(yes)

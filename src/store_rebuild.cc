@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 20    Store Rebuild Routines */
 
 #include "squid.h"
+#include "DebugMessages.h"
 #include "event.h"
 #include "globals.h"
 #include "md5.h"
@@ -96,9 +97,9 @@ storeCleanup(void *)
 
     if (currentSearch->isDone()) {
         debugs(20, 2, "Seen: " << seen << " entries");
-        debugs(20, DBG_IMPORTANT, "  Completed Validation Procedure");
-        debugs(20, DBG_IMPORTANT, "  Validated " << validated << " Entries");
-        debugs(20, DBG_IMPORTANT, "  store_swap_size = " << Store::Root().currentSize() / 1024.0 << " KB");
+        debugs(20, Important(43), "Completed Validation Procedure" <<
+               Debug::Extra << "Validated " << validated << " Entries" <<
+               Debug::Extra << "store_swap_size = " << (Store::Root().currentSize()/1024.0) << " KB");
         --StoreController::store_dirs_rebuilding;
         assert(0 == StoreController::store_dirs_rebuilding);
 
@@ -152,18 +153,18 @@ storeRebuildComplete(StoreRebuildData *dc)
 
     const auto dt = tvSubDsec(counts.startTime, current_time);
 
-    debugs(20, DBG_IMPORTANT, "Finished rebuilding storage from disk.");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.scancount  << " Entries scanned");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.invalid  << " Invalid entries.");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.badflags  << " With invalid flags.");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.objcount  << " Objects loaded.");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.expcount  << " Objects expired.");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.cancelcount  << " Objects cancelled.");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.dupcount  << " Duplicate URLs purged.");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.clashcount  << " Swapfile clashes avoided.");
-    debugs(20, DBG_IMPORTANT, "  Took "<< std::setw(3)<< std::setprecision(2) << dt << " seconds ("<< std::setw(6) <<
+    debugs(20, Important(46), "Finished rebuilding storage from disk." <<
+           Debug::Extra << std::setw(7) << counts.scancount << " Entries scanned" <<
+           Debug::Extra << std::setw(7) << counts.invalid << " Invalid entries" <<
+           Debug::Extra << std::setw(7) << counts.badflags << " With invalid flags" <<
+           Debug::Extra << std::setw(7) << counts.objcount << " Objects loaded" <<
+           Debug::Extra << std::setw(7) << counts.expcount << " Objects expired" <<
+           Debug::Extra << std::setw(7) << counts.cancelcount << " Objects canceled" <<
+           Debug::Extra << std::setw(7) << counts.dupcount << " Duplicate URLs purged" <<
+           Debug::Extra << std::setw(7) << counts.clashcount << " Swapfile clashes avoided" <<
+           Debug::Extra << "Took " << std::setprecision(2) << dt << " seconds (" <<
            ((double) counts.objcount / (dt > 0.0 ? dt : 1.0)) << " objects/sec).");
-    debugs(20, DBG_IMPORTANT, "Beginning Validation Procedure");
+    debugs(20, Important(56), "Beginning Validation Procedure");
 
     eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
 
@@ -229,7 +230,7 @@ storeRebuildProgress(int sd_index, int total, int sofar)
         d += (double) RebuildProgress[sd_index].total;
     }
 
-    debugs(20, DBG_IMPORTANT, "Indexing cache entries: " << Progress(n, d));
+    debugs(20, Important(57), "Indexing cache entries: " << Progress(n, d));
     last_report = squid_curtime;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,12 +21,6 @@ class testUriScheme : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testAssignFromprotocol_t );
     CPPUNIT_TEST( testCastToprotocol_t );
     CPPUNIT_TEST( testConstructprotocol_t );
-#if 0
-
-    CPPUNIT_TEST( testConstructCharStart );
-    CPPUNIT_TEST( testConstructCharStartEnd );
-#endif
-
     CPPUNIT_TEST( testDefaultConstructor );
     CPPUNIT_TEST( testEqualprotocol_t );
     CPPUNIT_TEST( testNotEqualprotocol_t );
@@ -41,12 +35,6 @@ protected:
     void testAssignFromprotocol_t();
     void testCastToprotocol_t();
     void testConstructprotocol_t();
-#if 0
-
-    void testConstructCharStart();
-    void testConstructCharStartEnd();
-#endif
-
     void testC_str();
     void testDefaultConstructor();
     void testEqualprotocol_t();

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -580,13 +580,7 @@ checkForPortOnly( const char* arg )
     unsigned long result = strtoul( arg, &errstr, 0 );
     if ( result < 65536 && errstr != arg ) return htons(result);
 
-#if 0
-    // one last try, test for a symbolical service name
-    struct servent* service = getservbyname( arg, "tcp" );
-    return service ? service->s_port : -1;
-#else
     return -1;
-#endif
 }
 
 void

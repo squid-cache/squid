@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,6 +18,7 @@ int xatoi(const char *token);
 unsigned int xatoui(const char *token, char eov = '\0');
 long xatol(const char *token);
 int64_t xatoll(const char *token, int base, char eov = '\0');
+uint64_t xatoull(const char *token, int base, char eov = '\0');
 unsigned short xatos(const char *token);
 
 /**

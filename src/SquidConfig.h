@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -45,6 +45,7 @@ class ActionPasswordList;
 class CachePeer;
 class CustomLog;
 class CpuAffinityMap;
+class DebugMessages;
 class external_acl;
 class HeaderManglers;
 class RefreshPattern;
@@ -184,6 +185,7 @@ public:
 #if ICAP_CLIENT
         CustomLog *icaplogs;
 #endif
+        Security::KeyLog *tlsKeys; ///< one optional tls_key_log
         int rotateNumber;
     } Log;
     char *adminEmail;
@@ -558,6 +560,8 @@ public:
         int connect_gap;
         int connect_timeout;
     } happyEyeballs;
+
+    DebugMessages *debugMessages; ///< cache_log_message
 };
 
 extern SquidConfig Config;

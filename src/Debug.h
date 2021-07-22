@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -280,6 +280,9 @@ operator <<(std::ostream &os, const AsHex<Integer> number)
 /// a helper to ease AsHex object creation
 template <class Integer>
 inline AsHex<Integer> asHex(const Integer n) { return AsHex<Integer>(n); }
+
+/// Prints the first n data bytes using hex notation. Does nothing if n is 0.
+void PrintHex(std::ostream &, const char *data, size_t n);
 
 #endif /* SQUID_DEBUG_H */
 
