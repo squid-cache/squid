@@ -361,7 +361,7 @@ public:
     NotePairs::Pointer notes();
     bool hasNotes() const { return bool(theNotes) && !theNotes->empty(); }
 
-    const ProxyProtocol::HeaderPointer &proxyProtocolHeader() const { return proxyProtocolHeader_; }
+    const ProxyProtocol::HeaderPointer &proxyProtocolHeader() const { return xaction->pp2Client; }
 
     /// if necessary, stores new error information (if any)
     void updateError(const Error &);
@@ -449,11 +449,6 @@ private:
 
     void pinConnection(const Comm::ConnectionPointer &pinServerConn, const HttpRequest &request);
 
-    /* PROXY protocol functionality */
-    bool proxyProtocolValidateClient();
-    bool parseProxyProtocolHeader();
-    bool proxyProtocolError(const char *reason);
-
 #if USE_OPENSSL
     /// \returns a pointer to the matching cached TLS context or nil
     Security::ContextPointer getTlsContextFromCache(const SBuf &cacheKey, const Ssl::CertificateProperties &certProperties);
@@ -463,12 +458,6 @@ private:
     void storeTlsContextToCache(const SBuf &cacheKey, Security::ContextPointer &ctx);
     void handleSslBumpHandshakeError(const Security::IoResult &);
 #endif
-
-    /// whether PROXY protocol header is still expected
-    bool needProxyProtocolHeader_ = false;
-
-    /// the parsed PROXY protocol header
-    ProxyProtocol::HeaderPointer proxyProtocolHeader_;
 
 #if USE_AUTH
     /// some user details that can be used to perform authentication on this connection
