@@ -195,7 +195,7 @@ public:
     /// key=value pairs returned from URL rewrite/redirect helper
     NotePairs::Pointer notes;
 
-    /// see ConnStateData::proxyProtocolHeader_
+    // reference to MasterXaction::pp2Client
     ProxyProtocol::HeaderPointer proxyProtocolHeader;
 
 #if ICAP_CLIENT
