@@ -15,6 +15,7 @@
 #include "debug/Stream.h"
 #include "http/Stream.h"
 #include "Pipeline.h"
+#include "proxyp/Header.h"
 
 void
 Pipeline::add(const Http::StreamPointer &c)

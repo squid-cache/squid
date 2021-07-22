@@ -22,7 +22,7 @@
 #include "LogTags.h"
 #include "MessageSizes.h"
 #include "Notes.h"
-#include "proxyp/forward.h"
+#include "proxyp/Header.h"
 #include "sbuf/SBuf.h"
 #if ICAP_CLIENT
 #include "adaptation/icap/Elements.h"

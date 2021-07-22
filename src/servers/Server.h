@@ -19,6 +19,7 @@
 #include "CommCalls.h"
 #include "log/forward.h"
 #include "Pipeline.h"
+#include "proxyp/forward.h"
 #include "sbuf/SBuf.h"
 #include "servers/forward.h"
 
@@ -30,6 +31,7 @@ class Server : virtual public AsyncJob, public BodyProducer
 {
 public:
     Server(const MasterXactionPointer &xact);
+    Server(const AnyP::PortCfgPointer &, const Comm::ConnectionPointer &, const ProxyProtocol::HeaderPointer &, const SBuf &);
     virtual ~Server() {}
 
     /* AsyncJob API */
@@ -106,6 +108,9 @@ public:
 
     /// Squid listening port details where this connection arrived.
     AnyP::PortCfgPointer port;
+
+    /// PROXY protocol details about remote client (may be nil)
+    ProxyProtocol::HeaderPointer pp2Client;
 
     /// read I/O buffer for the client connection
     SBuf inBuf;

@@ -25,6 +25,7 @@
 #include "ipc/Kids.h"
 #include "ipcache.h"
 #include "MemBuf.h"
+#include "proxyp/Header.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"

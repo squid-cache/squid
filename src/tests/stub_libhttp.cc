@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "client_side.h"
 #include "comm/Connection.h"
+#include "proxyp/Header.h"
 #include "SquidConfig.h"
 
 #define STUB_API "http/libhttp.la"

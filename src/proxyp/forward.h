@@ -11,6 +11,7 @@
 
 #include "base/RefCount.h"
 
+/// The PROXY protocol Versions 1 & 2
 namespace ProxyProtocol
 {
 

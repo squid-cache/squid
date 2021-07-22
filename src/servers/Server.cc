@@ -18,6 +18,7 @@
 #include "http/Stream.h"
 #include "LogTags.h"
 #include "MasterXaction.h"
+#include "proxyp/Header.h"
 #include "servers/Server.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
@@ -29,6 +30,17 @@ Server::Server(const MasterXaction::Pointer &xact) :
     transferProtocol(xact->squidPort->transport),
     port(xact->squidPort),
     receivedFirstByte_(false)
+{
+    clientConnection->leaveOrphanage();
+}
+
+Server::Server(const AnyP::PortCfgPointer &aPort, const Comm::ConnectionPointer &tcp, const ProxyProtocol::HeaderPointer &pp2, const SBuf &aBuf) :
+    AsyncJob("::Server"), // kids overwrite
+    clientConnection(tcp),
+    transferProtocol(aPort->transport),
+    port(aPort),
+    pp2Client(pp2),
+    receivedFirstByte_(!pp2 || !aBuf.isEmpty())
 {
     clientConnection->leaveOrphanage();
 }
