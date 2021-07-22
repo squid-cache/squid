@@ -744,7 +744,9 @@ urlCanonicalFakeHttps(const HttpRequestPointer &request)
     // method CONNECT and port HTTPS
     if (request->method == Http::METHOD_CONNECT && request->url.port() == 443) {
         SBuf out;
-        out.appendf("https://%s/*", request->url.host());
+        out.append("https://", 8);
+        out.append(request->url.host());
+        out.append("/*", 2);
         return out;
     }
 
@@ -1048,4 +1050,3 @@ AnyP::Uri::Cleanup(const SBuf &uri)
 
     return cleanedUri;
 }
-
