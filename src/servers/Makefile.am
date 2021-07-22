@@ -15,6 +15,8 @@ libservers_la_SOURCES = \
 	FtpServer.h \
 	Http1Server.cc \
 	Http1Server.h \
+	Pp2Server.cc \
+	Pp2Server.h \
 	Server.cc \
 	Server.h \
 	forward.h
