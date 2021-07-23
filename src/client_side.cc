@@ -106,7 +106,6 @@
 #include "mime_header.h"
 #include "parser/Tokenizer.h"
 #include "proxyp/Header.h"
-#include "proxyp/Parser.h"
 #include "sbuf/Stream.h"
 #include "security/Certificate.h"
 #include "security/CommunicationSecrets.h"
@@ -114,6 +113,7 @@
 #include "security/KeyLog.h"
 #include "security/NegotiationHistory.h"
 #include "servers/forward.h"
+#include "servers/Pp2Server.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #include "StatHist.h"
@@ -3260,11 +3260,22 @@ clientHttpConnectionsOpen(void)
 
         const auto protocol = s->transport.protocol;
         assert(protocol == AnyP::PROTO_HTTP || protocol == AnyP::PROTO_HTTPS);
-        const auto isHttps = protocol == AnyP::PROTO_HTTPS;
         using AcceptCall = CommCbFunPtrCallT<CommAcceptCbPtrFun>;
-        RefCount<AcceptCall> subCall = commCbCall(5, 5, isHttps ? "httpsAccept" : "httpAccept",
-                                       CommAcceptCbPtrFun(isHttps ? httpsAccept : httpAccept, CommAcceptCbParams(nullptr)));
-        clientStartListeningOn(s, subCall, isHttps ? Ipc::fdnHttpsSocket : Ipc::fdnHttpSocket);
+        RefCount<AcceptCall> subCall;
+        if (s->flags.proxySurrogate) {
+            // setup the subscriptions such that new connections accepted by listenConn are handled by PROXY protocol
+            subCall = commCbCall(5, 5, "ProxyProtocol::OnClientAccept",
+                      CommAcceptCbPtrFun(ProxyProtocol::OnClientAccept, CommAcceptCbParams(nullptr)));
+
+        } else if (s->transport.protocol == AnyP::PROTO_HTTP) {
+            // setup the subscriptions such that new connections accepted by listenConn are handled by HTTP
+            subCall = commCbCall(5, 5, "httpAccept", CommAcceptCbPtrFun(httpAccept, CommAcceptCbParams(nullptr)));
+
+        } else if (s->transport.protocol == AnyP::PROTO_HTTPS) {
+            // setup the subscriptions such that new connections accepted by listenConn are handled by HTTPS
+            subCall = commCbCall(5, 5, "httpsAccept", CommAcceptCbPtrFun(httpsAccept, CommAcceptCbParams(nullptr)));
+        }
+        clientStartListeningOn(s, subCall, (protocol == AnyP::PROTO_HTTPS) ? Ipc::fdnHttpsSocket : Ipc::fdnHttpSocket);
     }
     CodeContext::Reset(savedContext);
 }
