@@ -8,16 +8,37 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "client_side.h"
 #include "http/Stream.h"
 #include "parser/BinaryTokenizer.h"
 #include "proxyp/Header.h"
 #include "proxyp/Parser.h"
 #include "servers/Pp2Server.h"
+#include "servers/FtpServer.h"
 #include "SquidConfig.h"
+
+CBDATA_CLASS_INIT(Pp2Server);
+
+void
+ProxyProtocol::OnClientAccept(const CommAcceptCbParams &params)
+{
+    AsyncJob::Start(new Pp2Server(params.xaction));
+}
+
+Pp2Server::Pp2Server(const MasterXactionPointer &xact) :
+        AsyncJob("Pp2Server"),
+        ::Server(xact)
+{
+}
 
 void
 Pp2Server::start()
 {
+    // XXX: remove when TcpAcceptor sets the keep-alive
+    const auto &s = xaction->squidPort;
+    if (s->tcp_keepalive.enabled)
+        commSetTcpKeepalive(xaction->tcpClient->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
+
     if (!proxyProtocolValidateClient()) // will close the connection on failure
         return;
 
@@ -32,12 +53,30 @@ Pp2Server::handleReadData()
         return true;
     }
 
+    stopReading();
     xaction->preservedClientData = inBuf; // may be empty
 
-    // TODO: initiate child Server for port
-    // on errors: terminate this Job + connection, and return true
+    switch (xaction->squidPort->transport.protocol)
+    {
+    case AnyP::PROTO_HTTP:
+        AsyncJob::Start(Http::NewServer(xaction));
+        break;
 
-    // TODO: end this Job as successful and return false
+    case AnyP::PROTO_HTTPS:
+        AsyncJob::Start(Https::NewServer(xaction));
+        break;
+
+    case AnyP::PROTO_FTP:
+        AsyncJob::Start(new Ftp::Server(xaction));
+        break;
+
+    default: // other protocols not supported yet
+        mustStop("unsupported transfer protocol");
+        return true;
+    }
+
+    clientConnection = nullptr;
+    assert(doneAll());
     return false;
 }
 
@@ -55,7 +94,11 @@ Pp2Server::terminateAll(const Error &error, const LogTagsErrors &)
 void
 Pp2Server::fillChecklist(ACLFilledChecklist &ch) const
 {
-    // TODO copy details from xaction to ch
+    ch.my_addr = xaction->squidPort->s;
+
+    ch.fd(xaction->tcpClient->fd);
+    ch.src_addr = xaction->tcpClient->remote;
+    ch.dst_addr = xaction->tcpClient->local;
 }
 
 /**

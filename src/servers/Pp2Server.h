@@ -19,8 +19,10 @@
  */
 class Pp2Server : public ::Server, public Acl::ChecklistFiller
 {
+    CBDATA_CHILD(Pp2Server);
+
 public:
-    Pp2Server(const MasterXactionPointer &xact): ::Server(xact) {}
+    Pp2Server(const MasterXactionPointer &);
     virtual ~Pp2Server() {}
 
     /* AsyncJob API */
@@ -38,6 +40,11 @@ public:
     virtual bool handleReadData();
     virtual void afterClientRead() { assert(doneAll()); }
     virtual void receivedFirstByte() {}
+
+    /** ::Server::BodyProducer API */
+    virtual void noteMoreBodySpaceAvailable(RefCount<BodyPipe>) {}
+    virtual void noteBodyConsumerAborted(RefCount<BodyPipe>) {}
+
 protected:
     virtual void terminateAll(const Error &, const LogTagsErrors &);
 
@@ -46,6 +53,12 @@ private:
     bool proxyProtocolValidateClient();
     bool parseProxyProtocolHeader();
 };
+
+namespace ProxyProtocol
+{
+/// handler to initiate Pp2Server on new client connections
+void OnClientAccept(const CommAcceptCbParams &);
+}
 
 #endif /* SQUID__SRC_SERVERS_PP2SERVER_H */
 

@@ -544,12 +544,12 @@ squid_LDADD = \
 	error/liberror.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
-	parser/libparser.la \
 	eui/libeui.la \
 	icmp/libicmp.la \
 	log/liblog.la \
 	format/libformat.la \
 	proxyp/libproxyp.la \
+	parser/libparser.la \
 	sbuf/libsbuf.la \
 	$(XTRA_OBJS) \
 	$(REPL_OBJS) \
@@ -2046,7 +2046,6 @@ tests_test_http_range_LDADD = \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
-	parser/libparser.la \
 	ip/libip.la \
 	fs/libfs.la \
 	anyp/libanyp.la \
@@ -2055,6 +2054,7 @@ tests_test_http_range_LDADD = \
 	log/liblog.la \
 	format/libformat.la \
 	proxyp/libproxyp.la \
+	parser/libparser.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
@@ -2443,7 +2443,6 @@ tests_testHttpRequest_LDADD = \
 	fs/libfs.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
-	parser/libparser.la \
 	dns/libdns.la \
 	base/libbase.la \
 	mgr/libmgr.la \
@@ -2454,6 +2453,7 @@ tests_testHttpRequest_LDADD = \
 	log/liblog.la \
 	format/libformat.la \
 	proxyp/libproxyp.la \
+	parser/libparser.la \
 	store/libstore.la \
 	sbuf/libsbuf.la \
 	$(REPL_OBJS) \
@@ -2740,7 +2740,6 @@ tests_testCacheManager_LDADD = \
 	ftp/libftp.la \
 	helper/libhelper.la \
 	http/libhttp.la \
-	parser/libparser.la \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -2755,6 +2754,7 @@ tests_testCacheManager_LDADD = \
 	log/liblog.la \
 	format/libformat.la \
 	proxyp/libproxyp.la \
+	parser/libparser.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
@@ -3066,7 +3066,6 @@ tests_testEvent_LDADD = \
 	ftp/libftp.la \
 	helper/libhelper.la \
 	http/libhttp.la \
-	parser/libparser.la \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -3081,6 +3080,7 @@ tests_testEvent_LDADD = \
 	log/liblog.la \
 	format/libformat.la \
 	proxyp/libproxyp.la \
+	parser/libparser.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
