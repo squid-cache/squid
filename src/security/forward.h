@@ -156,7 +156,9 @@ enum Type {
 // TODO: Either move to Security::Io or remove/restrict the Io namespace.
 class IoResult;
 
+class CommunicationSecrets;
 class KeyData;
+class KeyLog;
 
 #if USE_OPENSSL
 typedef long ParsedOptions;
@@ -187,6 +189,12 @@ class ServerOptions;
 
 class ErrorDetail;
 typedef RefCount<ErrorDetail> ErrorDetailPointer;
+
+std::ostream &operator <<(std::ostream &, const KeyLog &);
+
+void OpenLogs(); ///< opens logs enabled in the current configuration
+void RotateLogs(); ///< rotates logs opened by OpenLogs()
+void CloseLogs(); ///< closes logs opened by OpenLogs()
 
 } // namespace Security
 

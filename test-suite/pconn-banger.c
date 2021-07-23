@@ -278,12 +278,6 @@ get_header_string_value(const char *hdr, const char *buf, const char *end)
 void
 request_done(struct _r *r)
 {
-#if 0
-    fprintf(stderr, "DONE: %s, (%d+%d)\n",
-            r->url,
-            r->hdr_length,
-            r->content_length);
-#endif
     if (r->content_length != r->bytes_read)
         fprintf(stderr, "ERROR! Short reply, expected %d bytes got %d\n",
                 r->content_length, r->bytes_read);
@@ -343,14 +337,7 @@ handle_read(char *inbuf, int len)
         }
         /* Process headers */
         if (r->hdr_length == 0 && (end = mime_headers_end(r->reply_hdrs)) != NULL) {
-#if 0
-            fprintf(stderr, "FOUND EOH FOR %s\n", r->url);
-            */
-#endif
             r->hdr_length = end - r->reply_hdrs;
-#if 0
-            fprintf(stderr, "HDR_LENGTH = %d\n", r->hdr_length);
-#endif
             /* "unread" any body contents received */
             blen = r->hdr_offset - r->hdr_length;
             assert(blen >= 0);

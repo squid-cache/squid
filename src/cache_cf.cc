@@ -28,6 +28,7 @@
 #include "ConfigOption.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
+#include "DebugMessages.h"
 #include "DiskIO/DiskIOModule.h"
 #include "eui/Config.h"
 #include "ExternalACL.h"
@@ -161,6 +162,10 @@ static const char *const list_sep = ", \t\n\r";
 
 // std::chrono::years requires C++20. Do our own rough calculation for now.
 static const double HoursPerYear = 24*365.2522;
+
+static void parse_cache_log_message(DebugMessages **messages);
+static void dump_cache_log_message(StoreEntry *entry, const char *name, const DebugMessages *messages);
+static void free_cache_log_message(DebugMessages **messages);
 
 static void parse_access_log(CustomLog ** customlog_definitions);
 static int check_null_access_log(CustomLog *customlog_definitions);
@@ -1504,6 +1509,8 @@ free_acl(ACL ** ae)
 void
 dump_acl_list(StoreEntry * entry, ACLList * head)
 {
+    // XXX: Should dump ACL names like "foo !bar" but dumps parsing context like
+    // "(clientside_tos 0x11 line)".
     dump_SBufList(entry, head->dump());
 }
 
@@ -2022,7 +2029,10 @@ ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *d
     Acl::AndNode *rule = new Acl::AndNode;
     name.Printf("(%s rule)", desc);
     rule->context(name.c_str(), config_input_line);
-    acl ? rule->add(acl) : rule->lineParse();
+    if (acl)
+        rule->add(acl);
+    else
+        rule->lineParse();
     (*access)->add(rule, action);
 }
 
@@ -3063,14 +3073,6 @@ free_time_nanoseconds(std::chrono::nanoseconds *var)
     *var = std::chrono::nanoseconds::zero();
 }
 
-#if UNUSED_CODE
-static void
-dump_size_t(StoreEntry * entry, const char *name, size_t var)
-{
-    storeAppendPrintf(entry, "%s %d\n", name, (int) var);
-}
-#endif
-
 static void
 dump_b_size_t(StoreEntry * entry, const char *name, size_t var)
 {
@@ -3082,14 +3084,6 @@ dump_b_ssize_t(StoreEntry * entry, const char *name, ssize_t var)
 {
     storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_BYTES_STR);
 }
-
-#if UNUSED_CODE
-static void
-dump_kb_size_t(StoreEntry * entry, const char *name, size_t var)
-{
-    storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_KBYTES_STR);
-}
-#endif
 
 static void
 dump_b_int64_t(StoreEntry * entry, const char *name, int64_t var)
@@ -3103,16 +3097,6 @@ dump_kb_int64_t(StoreEntry * entry, const char *name, int64_t var)
     storeAppendPrintf(entry, "%s %" PRId64 " %s\n", name, var, B_KBYTES_STR);
 }
 
-#if UNUSED_CODE
-static void
-parse_size_t(size_t * var)
-{
-    int i;
-    i = GetInteger();
-    *var = (size_t) i;
-}
-#endif
-
 static void
 parse_b_size_t(size_t * var)
 {
@@ -3124,14 +3108,6 @@ parse_b_ssize_t(ssize_t * var)
 {
     parseBytesLineSigned(var, B_BYTES_STR);
 }
-
-#if UNUSED_CODE
-static void
-parse_kb_size_t(size_t * var)
-{
-    parseBytesLine(var, B_KBYTES_STR);
-}
-#endif
 
 static void
 parse_b_int64_t(int64_t * var)
@@ -3229,14 +3205,6 @@ parse_wordlist(wordlist ** list)
     while ((token = ConfigParser::NextQuotedToken()))
         wordlistAdd(list, token);
 }
-
-#if 0 /* now unused */
-static int
-check_null_wordlist(wordlist * w)
-{
-    return w == NULL;
-}
-#endif
 
 static int
 check_null_acl_access(acl_access * a)
@@ -4693,6 +4661,101 @@ static void dump_note(StoreEntry *entry, const char *name, Notes &notes)
 static void free_note(Notes *notes)
 {
     notes->clean();
+}
+
+static DebugMessageId ParseDebugMessageId(const char *value, const char eov)
+{
+    const auto id = xatoui(value, eov);
+    if (!(0 < id && id < DebugMessageIdUpperBound))
+        throw TextException(ToSBuf("unknown cache_log_message ID: ", value), Here());
+    return static_cast<DebugMessageId>(id);
+}
+
+static void parse_cache_log_message(DebugMessages **debugMessages)
+{
+    DebugMessage msg;
+    DebugMessageId minId = 0;
+    DebugMessageId maxId = 0;
+
+    char *key = nullptr;
+    char *value = nullptr;
+    while (ConfigParser::NextKvPair(key, value)) {
+        if (strcmp(key, "id") == 0) {
+            if (minId > 0)
+                break;
+            minId = maxId = ParseDebugMessageId(value, '\0');
+        } else if (strcmp(key, "ids") == 0) {
+            if (minId > 0)
+                break;
+            const auto dash = strchr(value, '-');
+            if (!dash)
+                throw TextException(ToSBuf("malformed cache_log_message ID range: ", key, '=', value), Here());
+            minId = ParseDebugMessageId(value, '-');
+            maxId = ParseDebugMessageId(dash+1, '\0');
+            if (minId > maxId)
+                throw TextException(ToSBuf("invalid cache_log_message ID range: ", key, '=', value), Here());
+        } else if (strcmp(key, "level") == 0) {
+            if (msg.levelled())
+                break;
+            const auto level = xatoi(value);
+            if (level < 0)
+                throw TextException(ToSBuf("negative cache_log_message level: ", value), Here());
+            msg.level = level;
+        } else if (strcmp(key, "limit") == 0) {
+            if (msg.limited())
+                break;
+            msg.limit = xatoull(value, 10);
+        } else {
+            throw TextException(ToSBuf("unsupported cache_log_message option: ", key), Here());
+        }
+        key = value = nullptr;
+    }
+
+    if (key && value)
+        throw TextException(ToSBuf("repeated or conflicting cache_log_message option: ", key, '=', value), Here());
+
+    if (!minId)
+        throw TextException("cache_log_message is missing a required id=... or ids=... option", Here());
+
+    if (!(msg.levelled() || msg.limited()))
+        throw TextException("cache_log_message is missing a required level=... or limit=... option", Here());
+
+    assert(debugMessages);
+    if (!*debugMessages)
+        *debugMessages = new DebugMessages();
+
+    for (auto id = minId; id <= maxId; ++id) {
+        msg.id = id;
+        (*debugMessages)->messages.at(id) = msg;
+    }
+}
+
+static void dump_cache_log_message(StoreEntry *entry, const char *name, const DebugMessages *debugMessages)
+{
+    if (!debugMessages)
+        return;
+
+    SBufStream out;
+    for (const auto &msg: debugMessages->messages) {
+        if (!msg.configured())
+            continue;
+        out << name << " id=" << msg.id;
+        if (msg.levelled())
+            out << " level=" << msg.level;
+        if (msg.limited())
+            out << " limit=" << msg.limit;
+        out << "\n";
+    }
+    const auto buf = out.buf();
+    entry->append(buf.rawContent(), buf.length()); // may be empty
+}
+
+static void free_cache_log_message(DebugMessages **debugMessages)
+{
+    // clear old messages to avoid cumulative effect across (re)configurations
+    assert(debugMessages);
+    delete *debugMessages;
+    *debugMessages = nullptr;
 }
 
 static bool FtpEspvDeprecated = false;

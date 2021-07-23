@@ -257,8 +257,6 @@ Ftp::Server::AcceptCtrlConnection(const CommAcceptCbParams &params)
     if (s->tcp_keepalive.enabled)
         commSetTcpKeepalive(params.conn->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
 
-    ++incoming_sockets_accepted;
-
     AsyncJob::Start(new Server(xact));
 }
 
@@ -404,7 +402,6 @@ Ftp::Server::acceptDataConnection(const CommAcceptCbParams &params)
 
     debugs(33, 4, "accepted " << params.conn);
     fd_note(params.conn->fd, "passive client ftp data");
-    ++incoming_sockets_accepted;
 
     if (!clientConnection) {
         debugs(33, 5, "late data connection?");
@@ -418,6 +415,7 @@ Ftp::Server::acceptDataConnection(const CommAcceptCbParams &params)
     } else {
         closeDataConnection();
         dataConn = params.conn;
+        dataConn->leaveOrphanage();
         uploadAvailSize = 0;
         debugs(33, 7, "ready for data");
         if (onDataAcceptCall != NULL) {

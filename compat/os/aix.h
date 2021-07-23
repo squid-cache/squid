@@ -25,11 +25,6 @@
 #define _XOPEN_SOURCE_EXTENDED 1
 #endif
 
-/* AIX 6.1 does not define recvmsg() flag MSG_DONTWAIT */
-#if !defined(MSG_DONTWAIT)
-#define MSG_DONTWAIT 0
-#endif
-
 #endif /* _SQUID_AIX_ */
 #endif /* SQUID_OS_AIX_H */
 

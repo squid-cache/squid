@@ -84,13 +84,6 @@ StoreClient::startCollapsingOn(const StoreEntry &e, const bool doingRevalidation
     return true;
 }
 
-void
-StoreClient::fillChecklist(ACLFilledChecklist &checklist) const
-{
-    // TODO: Consider moving all CF-related methods into a new dedicated class.
-    Must(!"startCollapsingOn() caller must override fillChecklist()");
-}
-
 /* store_client */
 
 bool
@@ -660,18 +653,9 @@ storeClientCopyPending(store_client * sc, StoreEntry * e, void *data)
 #if STORE_CLIENT_LIST_DEBUG
     assert(sc == storeClientListSearch(e->mem_obj, data));
 #endif
-#ifndef SILLY_CODE
 
     assert(sc);
-#endif
-
     assert(sc->entry == e);
-#if SILLY_CODE
-
-    if (sc == NULL)
-        return 0;
-
-#endif
 
     if (!sc->_callback.pending())
         return 0;

@@ -186,7 +186,7 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **treep)
 }
 
 // aclParseAclList does not expect or set actions (cf. aclParseAccessLine)
-void
+size_t
 aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
 {
     // accommodate callers unable to convert their ACL list context to string
@@ -200,7 +200,7 @@ aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
 
     Acl::AndNode *rule = new Acl::AndNode;
     rule->context(ctxLine.content(), config_input_line);
-    rule->lineParse();
+    const auto aclCount = rule->lineParse();
 
     MemBuf ctxTree;
     ctxTree.init();
@@ -215,6 +215,8 @@ aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
     assert(treep);
     assert(!*treep);
     *treep = tree;
+
+    return aclCount;
 }
 
 void

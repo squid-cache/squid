@@ -52,7 +52,7 @@ int SMB_Types[] = {SMB_P_Core,
                    SMB_P_NT1,
                    SMB_P_NT1,
                    -1
-                  };
+                   };
 
 #if UNDEFINED
 char *SMB_DOSTimToStr(int DOS_time);

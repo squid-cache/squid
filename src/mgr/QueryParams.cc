@@ -157,3 +157,4 @@ Mgr::QueryParams::CreateParam(QueryParam::Type aType)
     }
     return NULL;
 }
+
