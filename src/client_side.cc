@@ -106,13 +106,13 @@
 #include "parser/Tokenizer.h"
 #include "profiler/Profiler.h"
 #include "proxyp/Header.h"
-#include "proxyp/Parser.h"
 #include "sbuf/Stream.h"
 #include "security/CommunicationSecrets.h"
 #include "security/Io.h"
 #include "security/KeyLog.h"
 #include "security/NegotiationHistory.h"
 #include "servers/forward.h"
+#include "servers/Pp2Server.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
@@ -3262,7 +3262,17 @@ clientHttpConnectionsOpen(void)
                                (s->workerQueues ? COMM_REUSEPORT : 0);
 
         typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
-        if (s->transport.protocol == AnyP::PROTO_HTTP) {
+        if (s->flags.proxySurrogate) {
+            // setup the subscriptions such that new connections accepted by listenConn are handled by PROXY protocol
+            RefCount<AcceptCall> subCall = commCbCall(5, 5, "ProxyProtocol::OnClientAccept",
+                                                      CommAcceptCbPtrFun(ProxyProtocol::OnClientAccept, CommAcceptCbParams(nullptr)));
+            Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
+
+            AsyncCall::Pointer listenCall = asyncCall(33,2, "clientListenerConnectionOpened",
+                                            ListeningStartedDialer(&clientListenerConnectionOpened, s, Ipc::fdnHttpSocket, sub));
+            Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpSocket, listenCall);
+
+        } else if (s->transport.protocol == AnyP::PROTO_HTTP) {
             // setup the subscriptions such that new connections accepted by listenConn are handled by HTTP
             RefCount<AcceptCall> subCall = commCbCall(5, 5, "httpAccept", CommAcceptCbPtrFun(httpAccept, CommAcceptCbParams(NULL)));
             Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
