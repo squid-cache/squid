@@ -2140,7 +2140,7 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
 
     if (http->request == NULL) {
         const auto connManager = http->getConn();
-        const MasterXaction::Pointer mx = new MasterXaction(connManager ? connManager->port : nullptr);
+        const auto mx = MasterXaction::MakePortful(connManager ? connManager->port : nullptr);
         // XXX: These fake URI parameters shadow the real (or error:...) URI.
         // TODO: Either always set the request earlier and assert here OR use
         // http->uri (converted to Anyp::Uri) to create this catch-all request.

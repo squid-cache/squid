@@ -1410,7 +1410,7 @@ peerCountMcastPeersCreateAndSend(CachePeer * const p)
     snprintf(url, MAX_URL, "http://");
     p->in_addr.toUrl(url+7, MAX_URL -8 );
     strcat(url, "/");
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initPeerMcast);
+    const auto mx = MasterXaction::MakePortless<XactionInitiator::initPeerMcast>();
     auto *req = HttpRequest::FromUrlXXX(url, mx);
     assert(req != nullptr);
     const AccessLogEntry::Pointer ale = new AccessLogEntry;

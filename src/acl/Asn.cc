@@ -237,7 +237,7 @@ asnCacheStart(int as)
     debugs(53, 3, "AS " << as);
     ASState *asState = new ASState;
     asState->as_number = as;
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initAsn);
+    const auto mx = MasterXaction::MakePortless<XactionInitiator::initAsn>();
     asState->request = new HttpRequest(mx);
     asState->request->url = whoisUrl;
     asState->request->method = Http::METHOD_GET;

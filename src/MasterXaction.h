@@ -41,20 +41,20 @@ class MasterXaction : public RefCountable
 public:
     typedef RefCount<MasterXaction> Pointer;
 
-    /// Does not have association with a listening port.
-    /// \param anInitiator any value other from XactionInitiator::initClient.
-    explicit MasterXaction(const XactionInitiator anInitiator) :
-        initiator(anInitiator)
+    /// Create a master transaction not associated with a AnyP::PortCfg port.
+    template <XactionInitiator::Initiator anInitiator>
+    static Pointer MakePortless()
     {
-        assert(!initiator.in(XactionInitiator::initClient));
+        static_assert(anInitiator != XactionInitiator::initClient);
+        return new MasterXaction(anInitiator, nullptr);
     }
 
-    /// Requires a listening port.
-    /// Compatible only with XactionInitiator::initClient.
-    explicit MasterXaction(const AnyP::PortCfgPointer &port) :
-        squidPort(port),
-        initiator(XactionInitiator::initClient)
-    {}
+    /// Create a master transaction associated with a AnyP::PortCfg port.
+    /// \param aPort may be nil if port information was lost
+    static Pointer MakePortful(const AnyP::PortCfgPointer &aPort)
+    {
+        return new MasterXaction(XactionInitiator::initClient, aPort);
+    }
 
     /// a convenience method returning TrafficMode::interceptedSomewhere() for the port accepted this transaction
     /// \see TrafficMode::interceptedSomewhere() for details
@@ -76,6 +76,13 @@ public:
     bool generatingConnect = false;
 
     // TODO: add state from other Jobs in the transaction
+
+private:
+    // use public Make() functions instead
+    MasterXaction(const XactionInitiator anInitiator, const AnyP::PortCfgPointer &aPort):
+        squidPort(aPort),
+        initiator(anInitiator)
+    {}
 };
 
 #endif /* SQUID_SRC_MASTERXACTION_H */

@@ -101,7 +101,7 @@ Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::Serv
 {
     debugs(93,3, typeName << " constructed, this=" << this <<
            " [icapx" << id << ']'); // we should not call virtual status() here
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initAdaptation);
+    const auto mx = MasterXaction::MakePortless<XactionInitiator::initAdaptation>();
     icapRequest = new HttpRequest(mx);
     HTTPMSGLOCK(icapRequest);
     icap_tr_start = current_time;
