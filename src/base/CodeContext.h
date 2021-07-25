@@ -28,16 +28,12 @@
  * busy Squid instance constantly switching from one processing context to
  * another.
  *
- * To solve these problems, Squid maintains a CodeContext object tied to
- * (eventually) each processing context. CodeContext objects can report context
- * details that can be tied to access.log records. When Squid switches to
- * another processing context, it switches the current CodeContext object as
- * well. When Squid prints a level-0 or level-1 message to cache.log, it asks
- * the current CodeContext object (if any) to report context details, allowing
- * the admin to correlate the error message with an access.log record. In most
- * cases, the processing context is a master transaction that Squid is working
- * on, which is reported using a master transaction ID and can be recorded in
- * access.log using a %master_xaction logformat code.
+ * To solve these problems, Squid assigns a CodeContext object to a processing
+ * context. When Squid switches to another processing context, it switches the
+ * current CodeContext object as well. When Squid prints a level-0 or level-1
+ * message to cache.log, it asks the current CodeContext object (if any) to
+ * report context details, allowing the admin to correlate the cache.log message
+ * with an access.log record.
  *
  * Squid also reports processing context changes to cache.log when Squid
  * level-5+ debugging is enabled.
