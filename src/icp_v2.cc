@@ -111,16 +111,16 @@ icp_common_t::icp_common_t(char *buf, unsigned int len)
 
     memcpy(this, buf, sizeof(icp_common_t));
 
-    if (getOpCode() == ICP_INVALID)
-        throw TextException(ToSBuf("unknown opcode ", opcode), Here());
-
     length = ntohs(length);
-    if (length > len)
-        throw TextException("received truncated payload", Here());
-
     reqnum = ntohl(reqnum);
     flags = ntohl(flags);
     pad = ntohl(pad);
+
+    if (getOpCode() == ICP_INVALID)
+        throw TextException(ToSBuf("unknown opcode ", opcode), Here());
+
+    if (length > len)
+        throw TextException("received truncated payload", Here());
 }
 
 icp_opcode
@@ -660,8 +660,8 @@ icpHandleUdp(int sock, void *)
 
         debugs(12, 2, "ICP Client remote=" << from << " FD " << sock);
         debugs(12, 2, "ICP Client REQUEST:\n---------\n" <<
-               icp_opcode_str[pkt.opcode] << " #" << pkt.reqnum << " ICP/" << pkt.version << std::endl <<
-               ":length: " << pkt.length << std::endl <<
+               icp_opcode_str[pkt.getOpCode()] << " #" << pkt.reqnum << " ICP/" << uint16_t(pkt.version) << '\n' <<
+               ":length: " << pkt.length << '\n' <<
                ":flags: " << asHex(pkt.flags) <<
                Debug::Extra << Raw("payload", (buf+sizeof(icp_common_t)), pkt.length).minLevel(DBG_DATA).hex() <<
                "\n----------");
@@ -677,8 +677,9 @@ icpHandleUdp(int sock, void *)
             throw TextException(ToSBuf("unknown version ", pkt.version), Here());
 
         } catch (...) {
-            debugs(12, 2, "WARNING: ICP remote=" << from << " FD " << sock << ": " << CurrentException << " (ignoring)");
-            // ICP problems should have no effect on other transactions
+            debugs(12, 2, "WARNING: ignoring packet from " << from << ": " << CurrentException);
+            // continue because a single malformed ICP message or message handling
+            // problem should not affect other ICP messages and overall worker operation
         }
     }
 }
@@ -869,4 +870,3 @@ icpGetCacheKey(const char *url, int reqnum)
 
     return storeKeyPublic(url, Http::METHOD_GET);
 }
-
