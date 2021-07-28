@@ -1,3 +1,11 @@
+Changes in squid-5.1 (01 Aug 2021):
+
+	- Bug 4696: Fix leaky String move assignment operator
+	- Fix ACL-related reconfiguration memory leak
+	- Fix SSL-Bump reconfiguration leaking public key memory
+	- Fix build on RISC-V
+	- Fix build on Ubuntu 21.04
+
 Changes in squid-5.0.7 (04 Jul 2021):
 
 	- Fix a helper logging issues
