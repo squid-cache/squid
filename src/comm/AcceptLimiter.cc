@@ -37,6 +37,22 @@ Comm::AcceptLimiter::defer(const AsyncCall::Pointer &call)
 }
 
 void
+Comm::AcceptLimiter::removeDead(const AsyncCall::Pointer &call)
+{
+    int found = 0;
+    for (auto &it : deferred_) {
+        if (it != call)
+            continue;
+
+        it = nullptr;
+        debugs(5, 4, call << "; abandoned " << ++found << " client TCP SYN by closing listener FD");
+    }
+
+    if (!found)
+        debugs(5, 4, call << "; not found in queue, size=" << deferred_.size());
+}
+
+void
 Comm::AcceptLimiter::kick()
 {
     debugs(5, 5, "size=" << deferred_.size());

@@ -35,6 +35,9 @@ public:
     /** delay accepting a new client connection. */
     void defer(const AsyncCall::Pointer &);
 
+    /** forget about the given acceptor (if known) */
+    void removeDead(const AsyncCall::Pointer &);
+
     /** try to accept and begin processing any delayed client connections. */
     void kick();
 

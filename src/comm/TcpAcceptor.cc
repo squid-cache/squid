@@ -118,6 +118,7 @@ Comm::TcpAcceptor::swanSong()
     }
 
     conn = NULL;
+    AcceptLimiter::Instance().removeDead(limited);
     AsyncJob::swanSong();
 }
 
@@ -199,6 +200,14 @@ Comm::TcpAcceptor::handleClosure(const CommCloseCbParams &)
     Must(done());
 }
 
+void
+Comm::TcpAcceptor::defer(const AsyncCall::Pointer &call)
+{
+    Must(!limited || limited->LockCount() == 1);
+    limited = call;
+    AcceptLimiter::Instance().defer(call);
+}
+
 /**
  * This private callback is called whenever a filedescriptor is ready
  * to dupe itself and fob off an accept()ed connection
@@ -221,10 +230,11 @@ Comm::TcpAcceptor::doAccept(int fd, void *data)
         auto *job = static_cast<Comm::TcpAcceptor *>(data);
         AsyncCall::Pointer call = JobCallback(5, 5, Dialer, job, Comm::TcpAcceptor::acceptNext);
 
-        if (!okToAccept())
-            AcceptLimiter::Instance().defer(call);
-        else
+        if (!okToAccept()) {
+            job->defer(call);
+        } else {
             ScheduleCallHere(call);
+        }
 
     } catch (const std::exception &e) {
         fatalf("FATAL: error while accepting new client connection: %s\n", e.what());
