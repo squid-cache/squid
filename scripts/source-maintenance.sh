@@ -236,7 +236,7 @@ collectDebugMessagesFrom ()
     # - remove debugs() statement termination sugar
     grep -o -E '\bdebugs[^,]*,[^,]*(Critical|Important)[(][0-9]+.*' doc/debug-messages.tmp2 | \
         sed -r \
-            -e 's/.*?(Critical|Important)[(]([0-9]+)[)].*?,\s*/\2 /' \
+            -e 's/.*(Critical|Important)[(]([0-9]+)[)][^,]*,\s*/\2 /' \
             -e 's/<<\s*[(].*[)]\s*(<<|[)];)/<< ... \1/g' \
             -e 's/<<\s*[^"]*/.../g' \
             -e 's@([^\\])"@\1@g' \
