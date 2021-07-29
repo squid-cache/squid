@@ -15,8 +15,7 @@
 #include "base/Subscription.h"
 #include "comm/Flag.h"
 #include "comm/forward.h"
-
-class CommCloseCbParams;
+#include "CommCalls.h"
 
 namespace Comm
 {
@@ -65,12 +64,6 @@ protected:
      */
     void unsubscribe(const char *reason);
 
-    /** Try and accept another connection (synchronous).
-     * If one is pending already the subscribed callback handler will be scheduled
-     * to handle it before this method returns.
-     */
-    void acceptNext();
-
     /// Call the subscribed callback handler with details about a new connection.
     void notify(const Comm::Flag flag, const Comm::ConnectionPointer &details) const;
 
@@ -80,6 +73,16 @@ protected:
     /// Method to test if there are enough file descriptors to open a new client connection
     /// if not the accept() will be postponed
     static bool okToAccept();
+
+    /** Try and accept another connection (synchronous).
+     *
+     * If one is pending already the subscribed callback handler will be
+     * scheduled to handle it before this method returns.
+     *
+     * If there are not enough FD available to do the accept(2) safely will
+     * defer the operation until later when enough sockets become available.
+     */
+    void acceptOne(const CommIoCbParams &);
 
     friend class AcceptLimiter;
 
@@ -96,10 +99,7 @@ private:
     /// listen socket closure handler
     AsyncCall::Pointer closer_;
 
-    /// Method callback for whenever an FD is ready to accept a client connection.
-    static void doAccept(int fd, void *data);
-
-    void acceptOne();
+    Comm::Flag oldAccept(Comm::ConnectionPointer &details);
     bool acceptInto(Comm::ConnectionPointer &);
     void setListen();
     void handleClosure(const CommCloseCbParams &io);
