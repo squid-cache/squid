@@ -63,7 +63,7 @@ public:
     /// whether we are currently creating a CONNECT header (to be sent to peer)
     bool generatingConnect = false;
 
-    // bytes received early by a Job they are not handled by
+    // bytes read(2) early by a Job they are not supposed to be handled by
     SBuf preservedClientData;
 
     // TODO: add state from other Jobs in the transaction
