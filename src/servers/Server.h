@@ -113,7 +113,7 @@ public:
     /// read I/O buffer for the client connection
     SBuf inBuf;
 
-    bool receivedFirstByte_; ///< true if at least one byte received on this connection
+    bool receivedFirstByte_ = false; ///< true if at least one byte received on this connection
 
     /// set of requests waiting to be serviced
     Pipeline pipeline;
