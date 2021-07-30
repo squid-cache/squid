@@ -577,6 +577,7 @@ HappyConnOpener::openFreshConnection(Attempt &attempt, PeerConnectionPointer &de
     if (!dest->getPeer())
         cs->setHost(host_);
 
+    // XXX: Do not co-own attempt.path with ConnOpener.
     attempt.path = dest;
     attempt.connWait.start(cs, callConnect);
 
@@ -731,6 +732,8 @@ HappyConnOpener::checkForNewConnection()
     if (!destinations->empty()) {
         if (!currentPeer) {
             auto newPrime = destinations->extractFront();
+            // XXX: Do not co-own currentPeer Connection with ConnOpener
+            // (which is activated via startConnecting() below).
             currentPeer = newPrime;
             Must(currentPeer);
             debugs(17, 7, "new peer " << *currentPeer);

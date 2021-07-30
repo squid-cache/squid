@@ -1676,6 +1676,8 @@ Ftp::Server::checkDataConnPre()
         return false;
     }
 
+    // XXX: Do not co-own dataConn with ConnOpener.
+
     // active transfer: open a data connection from Squid to client
     typedef CommCbMemFunT<Server, CommConnectCbParams> Dialer;
     AsyncCall::Pointer callback = JobCallback(17, 3, Dialer, this, Ftp::Server::connectedForData);

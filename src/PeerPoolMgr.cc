@@ -121,6 +121,7 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
         const auto connector = new Security::BlindPeerConnector(request, params.conn, callback, nullptr, timeLeft);
         encryptionWait.start(connector, callback);
         AsyncJob::Start(connector); // will call our callback
+        // XXX: Exceptions orphan params.conn
         return;
     }
 
