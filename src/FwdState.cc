@@ -214,6 +214,17 @@ FwdState::stopAndDestroy(const char *reason)
     /* do not place any code here as this object may be gone by now */
 }
 
+/// Notify a pending subtask, if any, that we no longer need its help. We do not
+/// have to do this -- the subtask job will eventually end -- but ending it
+/// earlier reduces waste and may reduce DoS attack surface.
+void
+FwdState::cancelStep(const char *reason)
+{
+    tcpConnWait.cancel(reason);
+    encryptionWait.cancel(reason);
+    httpConnectWait.cancel(reason);
+}
+
 #if STRICT_ORIGINAL_DST
 /// bypasses peerSelect() when dealing with intercepted requests
 void
@@ -316,17 +327,6 @@ FwdState::~FwdState()
         closeServerConnection("~FwdState");
 
     debugs(17, 3, "FwdState destructed, this=" << this);
-}
-
-/// Notify a pending subtask, if any, that we no longer need its help. We do not
-/// have to do this -- the subtask job will eventually end -- but ending it
-/// earlier reduces waste and may reduce DoS attack surface.
-void
-FwdState::cancelStep(const char *reason)
-{
-    tcpConnWait.cancel(reason);
-    encryptionWait.cancel(reason);
-    httpConnectWait.cancel(reason);
 }
 
 /**
