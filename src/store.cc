@@ -512,9 +512,6 @@ StoreEntry::doAbandon(const char *context)
         return;
     }
 
-    if (EBIT_TEST(flags, KEY_PRIVATE))
-        debugs(20, DBG_IMPORTANT, "WARNING: " << __FILE__ << ":" << __LINE__ << ": found KEY_PRIVATE");
-
     Store::Root().handleIdleEntry(*this); // may delete us
 }
 

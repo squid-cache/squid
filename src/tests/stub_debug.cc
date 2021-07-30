@@ -37,16 +37,6 @@ DebugStream()
     return stderr;
 }
 
-Ctx
-ctx_enter(const char *)
-{
-    return -1;
-}
-
-void
-ctx_exit(Ctx)
-{}
-
 void
 _db_init(const char *, const char *)
 {}

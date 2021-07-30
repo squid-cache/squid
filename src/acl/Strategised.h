@@ -64,6 +64,7 @@ template <class MatchType>
 ACLStrategised<MatchType>::~ACLStrategised()
 {
     delete data;
+    delete matcher;
 }
 
 template <class MatchType>

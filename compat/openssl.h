@@ -175,7 +175,7 @@ extern "C" {
     inline size_t
     SSL_SESSION_get_master_key(const SSL_SESSION *session, unsigned char *outStart, size_t outSizeMax)
     {
-        if (!session || !session->master_key || session->master_key_length <= 0)
+        if (!session || session->master_key_length <= 0)
             return 0;
 
         const auto sourceSize = static_cast<size_t>(session->master_key_length);
