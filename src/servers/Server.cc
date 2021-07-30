@@ -28,10 +28,14 @@ Server::Server(const MasterXaction::Pointer &xact) :
     AsyncJob("::Server"), // kids overwrite
     clientConnection(xact->tcpClient),
     transferProtocol(xact->squidPort->transport),
-    port(xact->squidPort),
-    receivedFirstByte_(false)
+    port(xact->squidPort)
 {
     clientConnection->leaveOrphanage();
+
+    // absorb any early-data from previous transactions
+    inBuf = xact->preservedClientData;
+    xact->preservedClientData = SBuf();
+    receivedFirstByte_ = !inBuf.isEmpty();
 }
 
 Server::Server(const AnyP::PortCfgPointer &aPort, const Comm::ConnectionPointer &tcp, const ProxyProtocol::HeaderPointer &pp2, const SBuf &aBuf) :
