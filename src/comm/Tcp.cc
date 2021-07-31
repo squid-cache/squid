@@ -15,6 +15,7 @@
 #if HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
 #endif
+#include <type_traits>
 
 /// setsockopt(2) wrapper
 template <typename Option>
