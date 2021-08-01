@@ -73,6 +73,6 @@ AC_DEFUN([SQUID_CXX_STD_IS_TRIVIALLY_COPYABLE],[
       AC_LANG_POP
   ])
   SQUID_DEFINE_BOOL([HAVE_STD_IS_TRIVIALLY_COPYABLE],
-     [$squid_cv_have_std_is_trivially_copyable,
+     [$squid_cv_have_std_is_trivially_copyable],
      [Define if stdlibc support std::is_trivially_copyable])
 ])
