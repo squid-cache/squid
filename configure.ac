@@ -107,16 +107,16 @@ AS_IF([test "$squid_cv_cc_simplified" = "gcc-4"],[
     AC_MSG_NOTICE([skipping -Wextra on $squid_cv_cc_simplified])
 ],[
     # -Werror must be first
-    SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Werror],[squid_cv_cc_w_error])
-    SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wextra],[squid_cv_cc_w_extra])
+    SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Werror])
+    SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wextra])
     # -Wunused-private-field causes a huge number of false positives
     #    in unit tests. Disable that
-    SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wno-unused-private-field],[squid_cv_cc_no_unused_private_field])
+    SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wno-unused-private-field])
     # ...=2: This flexibility level allows GCC to "understand" our fallthrough
     # comments. TODO: Switch to [[fallthrough]] attributes with C++17.
-    SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wimplicit-fallthrough=2],[squid_cv_cc_implicit_fallthrough2])
+    SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wimplicit-fallthrough=2])
     AS_IF([test "x$squid_cv_cc_implicit_fallthrough2" = "xno"], [
-        SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wno-implicit-fallthrough],[squid_cv_cc_noimplicit_fallthrough])
+        SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wno-implicit-fallthrough])
     ])
 ])
 # If the user did not specify a C++ version.
@@ -364,12 +364,12 @@ if test "x$PRESET_CFLAGS" = "x"; then
 fi
 
 # useful warnings that may not be included in -Wall -Wextra
-SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wpointer-arith],[squid_cv_cc_w_pointer_arith])
-SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wwrite-strings],[squid_cv_cc_w_write_strings])
-SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wcomments],[squid_cv_cc_w_comments])
-SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wshadow],[squid_cv_cc_w_shadow])
-SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wmissing-declarations],[squid_cv_cc_w_missing_declarations])
-SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Woverloaded_virtual],[squid_cv_cc_w_overloaded_virtual])
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wpointer-arith])
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wwrite-strings])
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wcomments])
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wshadow])
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wmissing-declarations])
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Woverloaded_virtual])
 
 dnl CentOS (and RHEL) still define ntohs() using deprecated C++ features
 SQUID_CC_REQUIRE_ARGUMENT([ac_cv_require_wno_deprecated_register],[-Werror -Wno-deprecated-register],[[#include <arpa/inet.h>]],[[int fox=ntohs(1);]])

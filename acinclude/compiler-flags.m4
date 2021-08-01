@@ -12,7 +12,7 @@
 #
 AC_DEFUN([SQUID_CC_CHECK_ARGUMENT],[
   AC_CACHE_CHECK([whether compiler accepts $2],[$1],
-  [{
+  [
     AC_REQUIRE([AC_PROG_CC])
     SQUID_STATE_SAVE([ARGCHECK])
     CFLAGS="$CFLAGS $2"
@@ -20,7 +20,7 @@ AC_DEFUN([SQUID_CC_CHECK_ARGUMENT],[
     AC_TRY_LINK([],[int foo; ],
       [$1=yes],[$1=no])
     SQUID_STATE_ROLLBACK([ARGCHECK])
-  }])
+  ])
 ])
 
 # Check if the compiler requires a supplied flag to build a test program.
@@ -113,15 +113,18 @@ AC_DEFUN([SQUID_CC_GUESS_VARIANT], [
   ]) dnl AC_CACHE_CHECK
  ]) dnl AC_DEFUN
 
-dnl argument is a compiler flag. It will be attempted, and if suppported
-dnl it will be added to SQUID_CXXFLAGS in order. Second argument is the name
-dnl of a variable to support the result
-AC_DEFUN([SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED],[
+AC_DEFUN([SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED_INTERNAL],[
   SQUID_STATE_SAVE([CXXARGTEST])
   CXXFLAGS="$CXXFLAGS $SQUID_CXXFLAGS"
   SQUID_CC_CHECK_ARGUMENT([$2],[$1])
   SQUID_STATE_ROLLBACK([CXXARGTEST])
   AS_IF([test "x${$2}" = "xyes"],[SQUID_CXXFLAGS="$SQUID_CXXFLAGS $1"])
+])
+
+dnl argument is a compiler flag. It will be attempted, and if suppported
+dnl it will be added to SQUID_CXXFLAGS in the same order as calls to the macro
+AC_DEFUN([SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED],[
+  SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED_INTERNAL($1,m4_bpatsubst(m4_tolower([squid_cv_cc_arg$1]),[[^a-zA-Z0-9_]], [_]))
 ])
 
 # define the flag to use to have the compiler treat warnings as errors
