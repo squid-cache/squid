@@ -328,6 +328,10 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
         if (ignoreErrno(errcode) || errcode == ECONNABORTED) {
             debugs(50, 5, status() << ": " << xstrerr(errcode));
             return Comm::NOMESSAGE;
+        } else if (errcode == EBADF) {
+            debugs(50, 2, status() << ": " << xstrerr(errcode));
+            mustStop("Listening socket closed");
+            return Comm::NOMESSAGE;
         } else if (errcode == ENFILE || errcode == EMFILE) {
             debugs(50, 3, status() << ": " << xstrerr(errcode));
             return Comm::COMM_ERROR;
