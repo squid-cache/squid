@@ -62,7 +62,7 @@ httpHdrCcInitModule(void)
 {
     // check invariant on initialization table
     for (unsigned int j = 0; CcAttrs[j].name != nullptr; ++j) {
-        assert (static_cast<decltype(j)>(CcAttrs[j].id) == j);
+        assert(static_cast<decltype(j)>(CcAttrs[j].id) == j);
     }
 }
 
@@ -350,4 +350,3 @@ operator<< (std::ostream &s, HttpHdrCcType c)
         s << "*invalid hdrcc* [" << ic << ']';
     return s;
 }
-
