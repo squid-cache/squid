@@ -10,6 +10,8 @@
 #include "auth/toUtf.h"
 #include "sbuf/SBuf.h"
 
+#include <limits>
+
 SBuf
 Latin1ToUtf8(const char *in)
 {
@@ -56,6 +58,8 @@ Cp1251ToUtf8(const char *in)
         size_t bytesToWrite = 0;
         char sequence[4] = {0, 0, 0, 0};
 
+        // ensure that a char is exactly 8 bits, char math relies on it
+        static_assert(std::numeric_limits<unsigned char>::max() == 255);
         if (ch < 0x80)
             u = ch;
         else if (ch >= 0xC0) // 0x0410..0x044F
