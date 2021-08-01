@@ -1676,8 +1676,6 @@ Ftp::Server::checkDataConnPre()
         return false;
     }
 
-    // XXX: Do not co-own dataConn with ConnOpener.
-
     // active transfer: open a data connection from Squid to client
     typedef CommCbMemFunT<Server, CommConnectCbParams> Dialer;
     AsyncCall::Pointer callback = JobCallback(17, 3, Dialer, this, Ftp::Server::connectedForData);
@@ -1706,15 +1704,18 @@ Ftp::Server::connectedForData(const CommConnectCbParams &params)
     dataConnWait.finish();
 
     if (params.flag != Comm::OK) {
-        /* it might have been a timeout with a partially open link */
-        if (params.conn != NULL)
-            params.conn->close();
         setReply(425, "Cannot open data connection.");
         Http::StreamPointer context = pipeline.front();
         Must(context->http);
         Must(context->http->storeEntry() != NULL);
     } else {
-        Must(dataConn == params.conn);
+        // Finalize the details and start owning the supplied connection.
+        assert(params.conn);
+        assert(dataConn);
+        assert(!dataConn->isOpen());
+        dataConn = params.conn;
+        // XXX: Missing comm_add_close_handler() to track external closures.
+
         Must(Comm::IsConnOpen(params.conn));
         fd_note(params.conn->fd, "active client ftp data");
     }

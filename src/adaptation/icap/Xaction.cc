@@ -268,10 +268,18 @@ void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
         return;
     }
 
-    if (io.flag != Comm::OK)
+    if (io.flag != Comm::OK) {
         dieOnConnectionFailure(); // throws
-    else
-        successfullyConnected();
+        return;
+    }
+
+    // Finalize the details and start owning the supplied connection, possibly
+    // prematurely -- see XXX in successfullyConnected().
+    assert(io.conn);
+    assert(connection);
+    assert(!connection->isOpen());
+    connection = io.conn;
+    successfullyConnected();
 }
 
 /// called when successfully connected to an ICAP service

@@ -68,6 +68,7 @@ Comm::Connection::cloneDestinationDetails() const
     c->peerType = peerType;
     c->flags = flags;
     c->peer_ = cbdataReference(getPeer());
+    debugs(5, 5, this << " made " << c);
     assert(!c->isOpen());
     return c;
 }

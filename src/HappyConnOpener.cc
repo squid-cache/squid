@@ -331,6 +331,8 @@ HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const Asyn
     fwdStart(aFwdStart),
     callback_(aCall),
     destinations(dests),
+    prime(&HappyConnOpener::notePrimeConnectDone, "HappyConnOpener::notePrimeConnectDone"),
+    spare(&HappyConnOpener::noteSpareConnectDone, "HappyConnOpener::noteSpareConnectDone"),
     ale(anAle),
     cause(request),
     n_tries(tries)
@@ -571,43 +573,47 @@ HappyConnOpener::openFreshConnection(Attempt &attempt, PeerConnectionPointer &de
     ++n_tries;
 
     typedef CommCbMemFunT<HappyConnOpener, CommConnectCbParams> Dialer;
-    AsyncCall::Pointer callConnect = JobCallback(48, 5, Dialer, this, HappyConnOpener::connectDone);
+    AsyncCall::Pointer callConnect = asyncCall(48, 5, attempt.callbackMethodName,
+        Dialer(this, attempt.callbackMethod));
     const time_t connTimeout = dest->connectTimeout(fwdStart);
     Comm::ConnOpener *cs = new Comm::ConnOpener(dest, callConnect, connTimeout);
     if (!dest->getPeer())
         cs->setHost(host_);
 
-    // XXX: Do not co-own attempt.path with ConnOpener.
-    attempt.path = dest;
     attempt.connWait.start(cs, callConnect);
 
     AsyncJob::Start(cs);
 }
 
-/// called by Comm::ConnOpener objects after a prime or spare connection attempt
-/// completes (successfully or not)
+/// Comm::ConnOpener callback for the prime connection attempt
 void
-HappyConnOpener::connectDone(const CommConnectCbParams &params)
+HappyConnOpener::notePrimeConnectDone(const CommConnectCbParams &params)
+{
+    handleConnOpenerAnswer(prime, params, "new prime connection");
+}
+
+/// Comm::ConnOpener callback for the spare connection attempt
+void
+HappyConnOpener::noteSpareConnectDone(const CommConnectCbParams &params)
+{
+    if (gotSpareAllowance) {
+        TheSpareAllowanceGiver.jobUsedAllowance();
+        gotSpareAllowance = false;
+    }
+    handleConnOpenerAnswer(spare, params, "new spare connection");
+}
+
+/// prime/spare-agnostic processing of a Comm::ConnOpener result
+void
+HappyConnOpener::handleConnOpenerAnswer(Attempt &attempt, const CommConnectCbParams &params, const char *what)
 {
     Must(params.conn);
-    const bool itWasPrime = (params.conn == prime.path);
-    const bool itWasSpare = (params.conn == spare.path);
-    Must(itWasPrime != itWasSpare);
 
-    PeerConnectionPointer handledPath;
-    if (itWasPrime) {
-        handledPath = prime.path;
-        prime.finish();
-    } else {
-        handledPath = spare.path;
-        spare.finish();
-        if (gotSpareAllowance) {
-            TheSpareAllowanceGiver.jobUsedAllowance();
-            gotSpareAllowance = false;
-        }
-    }
+    // finalize the previously selected path before attempt.finish() forgets it
+    auto handledPath = attempt.path;
+    handledPath.finalize(params.conn); // closed on errors
+    attempt.finish();
 
-    const char *what = itWasPrime ? "new prime connection" : "new spare connection";
     if (params.flag == Comm::OK) {
         sendSuccess(handledPath, false, what);
         return;
@@ -616,7 +622,6 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
     debugs(17, 8, what << " failed: " << params.conn);
     if (const auto peer = params.conn->getPeer())
         peerConnectFailed(peer);
-    params.conn->close(); // TODO: Comm::ConnOpener should do this instead.
 
     // remember the last failure (we forward it if we cannot connect anywhere)
     lastFailedConnection = handledPath;
@@ -732,8 +737,6 @@ HappyConnOpener::checkForNewConnection()
     if (!destinations->empty()) {
         if (!currentPeer) {
             auto newPrime = destinations->extractFront();
-            // XXX: Do not co-own currentPeer Connection with ConnOpener
-            // (which is activated via startConnecting() below).
             currentPeer = newPrime;
             Must(currentPeer);
             debugs(17, 7, "new peer " << *currentPeer);
@@ -892,6 +895,12 @@ HappyConnOpener::ranOutOfTimeOrAttempts() const
     }
 
     return false;
+}
+
+HappyConnOpener::Attempt::Attempt(const CallbackMethod method, const char *methodName):
+    callbackMethod(method),
+    callbackMethodName(methodName)
+{
 }
 
 void

@@ -141,6 +141,16 @@ Ident::ConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int, 
     IdentStateData *state = (IdentStateData *)data;
     state->connWait.finish();
 
+    // Finalize the details and start owning the supplied connection (so that it
+    // is not orphaned if this function bails early). As a (tiny) optimization
+    // or perhaps just diff minimization, the close handler is added later, when
+    // we know we are not bailing. This delay is safe because
+    // comm_remove_close_handler() forgives missing handlers.
+    assert(conn); // but may be closed
+    assert(state->conn);
+    assert(!state->conn->isOpen());
+    state->conn = conn;
+
     if (status != Comm::OK) {
         if (status == Comm::TIMEOUT)
             debugs(30, 3, "IDENT connection timeout to " << state->conn->remote);
@@ -162,8 +172,8 @@ Ident::ConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int, 
         return;
     }
 
-    assert(conn != NULL && conn == state->conn);
-    comm_add_close_handler(conn->fd, Ident::Close, state);
+    assert(state->conn->isOpen());
+    comm_add_close_handler(state->conn->fd, Ident::Close, state);
 
     AsyncCall::Pointer writeCall = commCbCall(5,4, "Ident::WriteFeedback",
                                    CommIoCbPtrFun(Ident::WriteFeedback, state));
@@ -270,8 +280,6 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
 
     state = new IdentStateData;
     state->hash.key = xstrdup(key);
-
-    // XXX: Do not co-own state->conn Connection with ConnOpener.
 
     // copy the conn details. We do not want the original FD to be re-used by IDENT.
     state->conn = conn->cloneIdentDetails();

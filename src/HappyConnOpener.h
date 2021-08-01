@@ -156,6 +156,11 @@ private:
     /// a connection opening attempt in progress (or falsy)
     class Attempt {
     public:
+        /// HappyConnOpener method implementing a ConnOpener callback
+        using CallbackMethod = void (HappyConnOpener::*)(const CommConnectCbParams &);
+
+        Attempt(const CallbackMethod method, const char *methodName);
+
         explicit operator bool() const { return static_cast<bool>(path); }
 
         /// reacts to a natural attempt completion (successful or otherwise)
@@ -166,6 +171,9 @@ private:
 
         PeerConnectionPointer path; ///< the destination we are connecting to
         JobWait<Comm::ConnOpener> connWait; ///< establishes a transport connection
+
+        const CallbackMethod callbackMethod; ///< ConnOpener calls this method
+        const char * const callbackMethodName; ///< for callbackMethod debugging
     };
     friend std::ostream &operator <<(std::ostream &, const Attempt &);
 
@@ -186,7 +194,9 @@ private:
     void openFreshConnection(Attempt &, PeerConnectionPointer &);
     bool reuseOldConnection(PeerConnectionPointer &);
 
-    void connectDone(const CommConnectCbParams &);
+    void notePrimeConnectDone(const CommConnectCbParams &);
+    void noteSpareConnectDone(const CommConnectCbParams &);
+    void handleConnOpenerAnswer(Attempt &, const CommConnectCbParams &, const char *connDescription);
 
     void checkForNewConnection();
 

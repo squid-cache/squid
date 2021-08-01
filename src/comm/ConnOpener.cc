@@ -34,7 +34,7 @@ Comm::ConnOpener::ConnOpener(const Comm::ConnectionPointer &c, const AsyncCall::
     AsyncJob("Comm::ConnOpener"),
     host_(NULL),
     temporaryFd_(-1),
-    conn_(c),
+    conn_(c->cloneDestinationDetails()),
     callback_(handler),
     totalTries_(0),
     failRetries_(0),
@@ -77,6 +77,10 @@ Comm::ConnOpener::swanSong()
     // did we abort with a temporary FD assigned?
     if (temporaryFd_ >= 0)
         closeFd();
+
+    // did we abort while owning an open connection?
+    if (conn_ && conn_->isOpen())
+        conn_->close();
 
     // did we abort while waiting between retries?
     if (calls_.sleep_)
@@ -131,9 +135,21 @@ Comm::ConnOpener::sendAnswer(Comm::Flag errFlag, int xerrno, const char *why)
                    " [" << callback_->id << ']' );
             // TODO save the pconn to the pconnPool ?
         } else {
+            assert(conn_);
+
+            // free resources earlier and simplify recipients
+            if (errFlag != Comm::OK)
+                conn_->close(); // may not be opened
+            else
+                assert(conn_->isOpen());
+
+            // XXX: CommConnectCbParams imply syncWithComm(). Our recipients
+            // need a callback even if conn is closing. TODO: Do not reuse
+            // CommConnectCbParams; implement a different syncing logic.
             typedef CommConnectCbParams Params;
             Params &params = GetCommParams<Params>(callback_);
             params.conn = conn_;
+            conn_ = nullptr; // release ownership; prevent closure by us
             params.flag = errFlag;
             params.xerrno = xerrno;
             ScheduleCallHere(callback_);
@@ -152,7 +168,7 @@ Comm::ConnOpener::sendAnswer(Comm::Flag errFlag, int xerrno, const char *why)
 void
 Comm::ConnOpener::cleanFd()
 {
-    debugs(5, 4, HERE << conn_ << " closing temp FD " << temporaryFd_);
+    debugs(5, 4, conn_ << "; temp FD " << temporaryFd_);
 
     Must(temporaryFd_ >= 0);
     fde &f = fd_table[temporaryFd_];
@@ -258,6 +274,7 @@ bool
 Comm::ConnOpener::createFd()
 {
     Must(temporaryFd_ < 0);
+    assert(conn_);
 
     // our initiators signal abort by cancelling their callbacks
     if (callback_ == NULL || callback_->canceled())
