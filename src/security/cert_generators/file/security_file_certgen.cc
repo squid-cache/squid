@@ -83,7 +83,7 @@ time_t getCurrentTime(void)
 #if GETTIMEOFDAY_NO_TZP
     gettimeofday(&currentTime);
 #else
-    gettimeofday(&currentTime, NULL);
+    gettimeofday(&currentTime, nullptr);
 #endif
     return currentTime.tv_sec;
 }
@@ -355,4 +355,3 @@ int main(int argc, char *argv[])
     }
     return EXIT_SUCCESS;
 }
-
