@@ -58,8 +58,8 @@ Cp1251ToUtf8(const char *in)
         size_t bytesToWrite = 0;
         char sequence[4] = {0, 0, 0, 0};
 
-        static_assert(std::numeric_limits<unsigned char>::max() == 0xff,
-            "We reuire char to be exactly 8 bits");
+        static_assert(std::numeric_limits<unsigned char>::max() == 0xFFu,
+            "we require char to be exactly 8 bits");
         if (ch < 0x80)
             u = ch;
         else if (ch >= 0xC0) // 0x0410..0x044F
