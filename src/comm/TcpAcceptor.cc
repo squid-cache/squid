@@ -320,6 +320,8 @@ Comm::TcpAcceptor::acceptInto(Comm::ConnectionPointer &details)
         if (ignoreErrno(errcode) || errcode == ECONNABORTED) {
             debugs(50, 5, status() << ": " << xstrerr(errcode));
             return false;
+        } else if (errcode == EBADF) {
+            throw TextException(ToSBuf("Listening socket closed: ", xstrerr(errcode)), Here());
         } else {
             throw TextException(ToSBuf("Failed to accept an incoming connection: ", xstrerr(errcode)), Here());
         }
