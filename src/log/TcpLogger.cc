@@ -265,7 +265,7 @@ Log::TcpLogger::doConnect()
 void
 Log::TcpLogger::connectDone(const CommConnectCbParams &params)
 {
-	connWait.finish();
+    connWait.finish();
 
     if (params.flag != Comm::OK) {
         const double delay = 0.5; // seconds

@@ -574,7 +574,7 @@ HappyConnOpener::openFreshConnection(Attempt &attempt, PeerConnectionPointer &de
 
     typedef CommCbMemFunT<HappyConnOpener, CommConnectCbParams> Dialer;
     AsyncCall::Pointer callConnect = asyncCall(48, 5, attempt.callbackMethodName,
-        Dialer(this, attempt.callbackMethod));
+                                     Dialer(this, attempt.callbackMethod));
     const time_t connTimeout = dest->connectTimeout(fwdStart);
     Comm::ConnOpener *cs = new Comm::ConnOpener(dest, callConnect, connTimeout);
     if (!dest->getPeer())

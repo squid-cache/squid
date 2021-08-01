@@ -21,7 +21,7 @@
 class MemBuf;
 
 namespace Ssl {
-  class IcapPeerConnector;
+class IcapPeerConnector;
 }
 
 namespace Adaptation
@@ -38,7 +38,6 @@ namespace Icap
  */
 
 // Note: Xaction must be the first parent for object-unaware cbdata to work
-
 
 class Xaction: public Adaptation::Initiate
 {
