@@ -201,13 +201,12 @@ private:
 };
 
 class acl_tos;
-tos_t aclMapTOS(acl_tos *head, ACLChecklist *ch);
+tos_t aclMapTOS(acl_tos *, ACLChecklist *);
 
-Ip::NfMarkConfig aclFindNfMarkConfig(acl_nfmark *head, ACLChecklist *ch);
-void getOutgoingAddress(HttpRequest *request, const Comm::ConnectionPointer &conn);
+Ip::NfMarkConfig aclFindNfMarkConfig(acl_nfmark *, ACLChecklist *);
+void getOutgoingAddress(HttpRequest *, const Comm::ConnectionPointer &);
 
 /// a collection of previously used persistent Squid-to-peer HTTP(S) connections
 extern PconnPool *fwdPconnPool;
 
 #endif /* SQUID_FORWARD_H */
-
