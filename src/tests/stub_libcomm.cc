@@ -76,6 +76,9 @@ void Comm::TcpAcceptor::unsubscribe(const char *) STUB
 void Comm::TcpAcceptor::acceptNext() STUB
 void Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &) const STUB
 
+#include "comm/Tcp.h"
+void Comm::ApplyTcpKeepAlive(int, const TcpKeepAlive &) STUB
+
 #include "comm/Write.h"
 void Comm::Write(const Comm::ConnectionPointer &, const char *, int, AsyncCall::Pointer &, FREE *) STUB
 void Comm::Write(const Comm::ConnectionPointer &conn, MemBuf *mb, AsyncCall::Pointer &callback) STUB

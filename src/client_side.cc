@@ -2328,9 +2328,6 @@ httpAccept(const CommAcceptCbParams &params)
     debugs(33, 4, params.conn << ": accepted");
     fd_note(params.conn->fd, "client http connect");
 
-    if (s->tcp_keepalive.enabled)
-        commSetTcpKeepalive(params.conn->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
-
     // Socket is ready, setup the connection manager to start using it
     auto *srv = Http::NewServer(xact);
     AsyncJob::Start(srv); // usually async-calls readSomeData()
@@ -2530,10 +2527,6 @@ httpsAccept(const CommAcceptCbParams &params)
 
     debugs(33, 4, HERE << params.conn << " accepted, starting SSL negotiation.");
     fd_note(params.conn->fd, "client https connect");
-
-    if (s->tcp_keepalive.enabled) {
-        commSetTcpKeepalive(params.conn->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
-    }
 
     // Socket is ready, setup the connection manager to start using it
     auto *srv = Https::NewServer(xact);
