@@ -37,9 +37,8 @@ void icpDenyAccess(Ip::Address &, char *, int, int) STUB
 void icpHandleIcpV3(int, Ip::Address &, char *, int) STUB
 void icpConnectionShutdown(void) STUB
 int icpSetCacheKey(const cache_key *) STUB_RETVAL(0)
-const cache_key *icpGetCacheKey(const char *, int) STUB_RETVAL(NULL)
+const cache_key *icpGetCacheKey(const char *, int) STUB_RETVAL(nullptr)
 
 #include "icp_opcode.h"
 // dynamically generated
 #include "icp_opcode.cc"
-
