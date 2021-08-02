@@ -143,9 +143,6 @@ Comm::ConnOpener::sendAnswer(Comm::Flag errFlag, int xerrno, const char *why)
             else
                 assert(conn_->isOpen());
 
-            // XXX: CommConnectCbParams imply syncWithComm(). Our recipients
-            // need a callback even if conn is closing. TODO: Do not reuse
-            // CommConnectCbParams; implement a different syncing logic.
             typedef CommConnectCbParams Params;
             Params &params = GetCommParams<Params>(callback_);
             params.conn = conn_;

@@ -25,6 +25,7 @@ Comm::Connection::~Connection() STUB
 Comm::ConnectionPointer Comm::Connection::cloneIdentDetails() const STUB_RETVAL(nullptr)
 Comm::ConnectionPointer Comm::Connection::cloneDestinationDetails() const STUB_RETVAL(nullptr)
 void Comm::Connection::close() STUB
+void Comm::Connection::noteClosure() STUB
 CachePeer * Comm::Connection::getPeer() const STUB_RETVAL(NULL)
 void Comm::Connection::setPeer(CachePeer * p) STUB
 ScopedId Comm::Connection::codeContextGist() const STUB_RETVAL(id.detach())
