@@ -108,21 +108,34 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
 
     // Handle TLS peers.
     if (peer->secure.encryptTransport) {
-        AsyncCall::Pointer callback = asyncCall(48, 4, "PeerPoolMgr::handleSecuredPeer",
-                                                MyAnswerDialer(this, &PeerPoolMgr::handleSecuredPeer));
-
-        const auto peerTimeout = peer->connectTimeout();
-        const int timeUsed = squid_curtime - params.conn->startTime();
-        // Use positive timeout when less than one second is left for conn.
-        const int timeLeft = positiveTimeout(peerTimeout - timeUsed);
-        const auto connector = new Security::BlindPeerConnector(request, params.conn, callback, nullptr, timeLeft);
-        encryptionWait.start(connector, callback);
-        AsyncJob::Start(connector); // will call our callback
-        // XXX: Exceptions orphan params.conn
+        encryptTransport(params.conn);
         return;
     }
 
     pushNewConnection(params.conn);
+}
+
+void
+PeerPoolMgr::encryptTransport(const Comm::ConnectionPointer &conn)
+{
+    try {
+        AsyncCall::Pointer callback = asyncCall(48, 4, "PeerPoolMgr::handleSecuredPeer",
+                                                MyAnswerDialer(this, &PeerPoolMgr::handleSecuredPeer));
+
+        const auto peerTimeout = peer->connectTimeout();
+        const int timeUsed = squid_curtime - conn->startTime();
+        // Use positive timeout when less than one second is left for conn.
+        const int timeLeft = positiveTimeout(peerTimeout - timeUsed);
+        const auto connector = new Security::BlindPeerConnector(request, conn, callback, nullptr, timeLeft);
+        encryptionWait.start(connector, callback);
+        AsyncJob::Start(connector); // will call our callback
+    }
+    catch (...) {
+        conn->close();
+        // We could report and continue if we can recover from this failure, but
+        // it is difficult to determine/do that correctly so lets KISS for now.
+        throw;
+    }
 }
 
 void

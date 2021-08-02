@@ -52,6 +52,9 @@ protected:
     /// Comm::ConnOpener calls this when done opening a connection for us
     void handleOpenedConnection(const CommConnectCbParams &params);
 
+    /// initiates Security::PeerConnector work on a just-established connection
+    void encryptTransport(const Comm::ConnectionPointer &);
+
     /// Security::PeerConnector callback
     void handleSecuredPeer(Security::EncryptorAnswer &answer);
 
