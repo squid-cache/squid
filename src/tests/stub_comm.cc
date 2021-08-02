@@ -40,6 +40,7 @@ void _comm_close(int, char const *, int) STUB
 void old_comm_reset_close(int) STUB
 void comm_reset_close(const Comm::ConnectionPointer &) STUB
 int comm_connect_addr(int, const Ip::Address &) STUB_RETVAL(-1)
+
 void comm_init(void) STUB
 void comm_exit(void) STUB
 int comm_open(int, int, Ip::Address &, int, const char *) STUB_RETVAL(-1)

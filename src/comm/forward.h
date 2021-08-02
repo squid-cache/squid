@@ -23,6 +23,7 @@ namespace Comm
 
 class Connection;
 class ConnOpener;
+class TcpKeepAlive;
 
 typedef RefCount<Comm::Connection> ConnectionPointer;
 
