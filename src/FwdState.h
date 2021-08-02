@@ -210,3 +210,4 @@ void getOutgoingAddress(HttpRequest *, const Comm::ConnectionPointer &);
 extern PconnPool *fwdPconnPool;
 
 #endif /* SQUID_FORWARD_H */
+

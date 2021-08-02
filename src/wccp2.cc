@@ -463,7 +463,7 @@ int empty_portlist[WCCP2_NUMPORTS] = {0, 0, 0, 0, 0, 0, 0, 0};
 /* END WCCP V2 PROTOCOL TYPES DEFINITION */
 
 static void wccp2_add_service_list(int service, int service_id, int service_priority,
-                            int service_proto, int service_flags, int ports[], int security_type, char *password);
+                                   int service_proto, int service_flags, int ports[], int security_type, char *password);
 static void wccp2SortCacheList(struct wccp2_cache_list_t *head);
 
 /*

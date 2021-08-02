@@ -15,3 +15,4 @@
 void fatal(const char *) STUB
 void fatalf(const char *, ...) STUB
 void fatal_dump(const char *) STUB
+

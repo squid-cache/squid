@@ -350,3 +350,4 @@ operator<< (std::ostream &s, HttpHdrCcType c)
         s << "*invalid hdrcc* [" << ic << ']';
     return s;
 }
+

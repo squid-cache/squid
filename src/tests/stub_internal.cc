@@ -13,3 +13,4 @@
 #include "tests/STUB.h"
 
 char *internalLocalUri(const char *, const SBuf &) STUB_RETVAL(nullptr)
+

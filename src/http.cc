@@ -2640,3 +2640,4 @@ std::ostream &operator <<(std::ostream &os, const HttpStateData::ReuseDecision &
     return os << ReuseMessages[d.answer] << " because " << d.reason <<
            "; HTTP status " << d.statusCode << " " << *(d.entry);
 }
+
