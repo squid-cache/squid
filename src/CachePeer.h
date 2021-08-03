@@ -86,6 +86,10 @@ public:
         int conn_open = 0;               ///< current opened connections
     } stats;
 
+    struct proxyp_ {
+        int version = 0; ///< PROXY version to use (default none)
+    } proxyp;
+
     struct icp_ {
         icp_() { memset(&counts, 0, sizeof(counts)); }
         int version = ICP_VERSION_CURRENT;
