@@ -2299,6 +2299,12 @@ parse_peer(CachePeer ** head)
                     fatalf("invalid carp-key '%s'",key);
                 }
             }
+
+        } else if (!strncmp(token, "proxyp=", 7)) {
+            p->proxyp.version = xatoi(token + 7);
+            if (p->proxyp.version != 1)
+                fatalf("unsupported PROXY protocol version %d for peer %s\n", p->proxyp.version, p->name);
+
         } else if (!strcmp(token, "userhash")) {
 #if USE_AUTH
             if (p->type != PEER_PARENT)
