@@ -23,7 +23,7 @@ ACLHasComponentData::ACLHasComponentData()
 void
 ACLHasComponentData::parse()
 {
-    const char *tok = ConfigParser::NextToken();
+    const auto tok = ConfigParser::strtokFile();
     if (!tok) {
         debugs(28, DBG_CRITICAL, "FATAL: \"has\" acl argument missing");
         self_destruct();
