@@ -19,6 +19,7 @@
 #include "client_side.h"
 #include "clients/forward.h"
 #include "clients/HttpTunneler.h"
+#include "clients/ProxyProtocolConnector.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "comm/Loops.h"
@@ -835,8 +836,27 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
         return dispatch();
     }
 
+    // check if we need PROXY protocol header before use
+    sendProxypIfNeeded(answer.conn);
+}
+
+void
+FwdState::sendProxypIfNeeded(const Comm::ConnectionPointer &conn)
+{
+    if (conn->getPeer()->proxyp.version > 0) {
+        return advanceDestination("send PROXY protocol header to peer", conn, [this,&conn] {
+            sendProxypToPeer(conn);
+        });
+    }
+
+    establishTunnelThruProxyIfNeeded(conn);
+}
+
+void
+FwdState::establishTunnelThruProxyIfNeeded(const Comm::ConnectionPointer &conn)
+{
     // Check if we need to TLS before use
-    if (const auto *peer = answer.conn->getPeer()) {
+    if (const auto *peer = conn->getPeer()) {
         // Assume that it is only possible for the client-first from the
         // bumping modes to try connect to a remote server. The bumped
         // requests with other modes are using pinned connections or fails.
@@ -850,12 +870,48 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
         if (originWantsEncryptedTraffic && // the "encrypted traffic" part
                 !peer->options.originserver && // the "through a proxy" part
                 !peer->secure.encryptTransport) // the "exclude HTTPS proxies" part
-            return advanceDestination("establish tunnel through proxy", answer.conn, [this,&answer] {
-            establishTunnelThruProxy(answer.conn);
+            return advanceDestination("establish tunnel through proxy", conn, [this,&conn] {
+            establishTunnelThruProxy(conn);
         });
     }
 
-    secureConnectionToPeerIfNeeded(answer.conn);
+    secureConnectionToPeerIfNeeded(conn);
+}
+
+void
+FwdState::sendProxypToPeer(const Comm::ConnectionPointer &conn)
+{
+    AsyncCall::Pointer callback = asyncCall(17,4,
+                                            "FwdState::proxypHeaderSent",
+                                            Http::Tunneler::CbDialer<FwdState>(&FwdState::proxypHeaderSent, this));
+    HttpRequestPointer requestPointer = request;
+    AsyncJob::Start(new ProxyProtocol::Connector(conn, requestPointer, callback, al));
+    // and wait for the proxypHeaderSent() call
+}
+
+/// resumes operations after the (possibly failed) PROXY protocol header delivery
+void
+FwdState::proxypHeaderSent(Http::TunnelerAnswer &answer)
+{
+    ErrorState *error = nullptr;
+    if (!answer.positive()) {
+        Must(!Comm::IsConnOpen(answer.conn));
+        error = answer.squidError.get();
+        Must(error);
+        answer.squidError.clear(); // preserve error for fail()
+    } else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
+        // The socket could get closed while our callback was queued.
+        // We close Connection here to sync Connection::fd.
+        closePendingConnection(answer.conn, "conn was closed while waiting for proxypEstablishmentDone");
+        error = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al);
+    }
+    if (error) {
+        fail(error);
+        retryOrBail();
+        return;
+    }
+
+    establishTunnelThruProxyIfNeeded(answer.conn);
 }
 
 void
