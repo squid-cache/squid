@@ -29,7 +29,7 @@ ACLHasComponentData::parse()
         self_destruct();
         return;
     }
-    if (ConfigParser::PeekAtToken()) {
+    if (ConfigParser::strtokFile()) {
         debugs(28, DBG_CRITICAL, "FATAL: multiple components not supported for \"has\" acl");
         self_destruct();
         return;
