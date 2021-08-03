@@ -21,4 +21,6 @@ libclients_la_SOURCES = \
 	HttpTunneler.h \
 	HttpTunnelerAnswer.cc \
 	HttpTunnelerAnswer.h \
-	forward.h
+	forward.h \
+	ProxyProtocolConnector.cc \
+	ProxyProtocolConnector.h

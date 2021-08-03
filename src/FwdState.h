@@ -138,8 +138,14 @@ private:
     void connectedToPeer(Security::EncryptorAnswer &answer);
     static void RegisterWithCacheManager(void);
 
+    void sendProxypIfNeeded(const Comm::ConnectionPointer &);
+    void sendProxypToPeer(const Comm::ConnectionPointer &);
+    void proxypHeaderSent(Http::TunnelerAnswer &answer);
+
+    void establishTunnelThruProxyIfNeeded(const Comm::ConnectionPointer &);
     void establishTunnelThruProxy(const Comm::ConnectionPointer &);
     void tunnelEstablishmentDone(Http::TunnelerAnswer &answer);
+
     void secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &);
     void secureConnectionToPeer(const Comm::ConnectionPointer &);
     void successfullyConnectedToPeer(const Comm::ConnectionPointer &);
