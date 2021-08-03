@@ -1547,7 +1547,11 @@ HttpStateData::processReplyBody()
                     serverConnectionSaved->close();
                 }
             } else {
-                fwdPconnPool->push(serverConnectionSaved, request->url.host());
+                // TODO: support pooling for peer connections which use PROXY protocol
+                if (serverConnection->getPeer() && serverConnection->getPeer()->proxyp.version == 0)
+                    fwdPconnPool->push(serverConnectionSaved, request->url.host());
+                else
+                    serverConnectionSaved->close();
             }
 
             serverComplete();
