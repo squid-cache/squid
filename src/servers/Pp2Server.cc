@@ -34,15 +34,9 @@ Pp2Server::Pp2Server(const MasterXactionPointer &xact) :
 void
 Pp2Server::start()
 {
-    // XXX: remove when TcpAcceptor sets the keep-alive
-    const auto &s = xaction->squidPort;
-    if (s->tcp_keepalive.enabled)
-        commSetTcpKeepalive(xaction->tcpClient->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
-
-    if (!proxyProtocolValidateClient()) // will close the connection on failure
-        return;
-
-    readSomeData();
+    // will close the connection on failure
+    if (proxyProtocolValidateClient())
+        readSomeData();
 }
 
 bool
