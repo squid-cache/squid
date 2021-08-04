@@ -35,7 +35,6 @@ bool comm_iocallbackpending(void) STUB_RETVAL(false)
 int commSetNonBlocking(int) STUB_RETVAL(Comm::COMM_ERROR)
 int commUnsetNonBlocking(int) STUB_RETVAL(-1)
 void commSetCloseOnExec(int) STUB_NOP
-void commSetTcpKeepalive(int, int, int, int) STUB
 void _comm_close(int, char const *, int) STUB
 void old_comm_reset_close(int) STUB
 void comm_reset_close(const Comm::ConnectionPointer &) STUB
