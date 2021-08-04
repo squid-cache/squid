@@ -104,7 +104,8 @@ public:
 
     /// associates the request with a from-client connection manager
     void manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntryPointer &al);
-    /// should use the original server IP and port provided by the client
+    /// security issue or admin requires this message be sent
+    /// to the original server IP and port provided by the client
     bool mustGoToOriginalDestination() const;
 
 protected:

@@ -92,19 +92,6 @@ public:
     /// connecting directly to this port (since commit 151ba0d).
     bool interceptedSomewhere() const { return flags_.natIntercept || flags_.tproxyIntercept || proxySurrogateHttpsSslBump(); }
 
-    /// The client of the accepted TCP connection was connecting to this port.
-    /// The accepted traffic may have been intercepted earlier!
-    bool tcpToUs() const { return proxySurrogate() || !interceptedSomewhere(); }
-
-    /// The client of the accepted TCP connection was not connecting to this port.
-    /// The accepted traffic may have been intercepted earlier as well!
-    bool interceptedLocally() const { return interceptedSomewhere() && !tcpToUs(); }
-
-    // Unused yet.
-    /// This port handles traffic that has been intercepted prior to being delivered
-    /// to the TCP client of the accepted connection (which then connected to us).
-    bool interceptedRemotely() const { return interceptedSomewhere() && tcpToUs(); }
-
     /// The client of the accepted TCP connection was connecting directly to this proxy port.
     bool forwarded() const { return !interceptedSomewhere() && !flags_.accelSurrogate; }
 
@@ -112,10 +99,16 @@ public:
     bool proxySurrogate() const { return flags_.proxySurrogate; }
 
     /// interceptedLocally() with configured NAT interception
-    bool natInterceptLocally() const { return flags_.natIntercept && interceptedLocally(); }
+    bool natInterceptLocally() const {
+        assert(!flags_.natIntercept || interceptedLocally());
+        return flags_.natIntercept;
+    }
 
     /// interceptedLocally() with configured TPROXY interception
-    bool tproxyInterceptLocally() const { return flags_.tproxyIntercept && interceptedLocally(); }
+    bool tproxyInterceptLocally() const {
+        assert(!flags_.tproxyIntercept || interceptedLocally());
+        return flags_.tproxyIntercept;
+    }
 
     /// whether the reverse proxy is configured
     bool accelSurrogate() const { return flags_.accelSurrogate; }
@@ -127,6 +120,17 @@ public:
     std::ostream &print(std::ostream &) const;
 
 private:
+    /// The client of the accepted TCP connection was connecting to this port.
+    /// The accepted traffic may have been intercepted earlier!
+    bool tcpToUs() const { return proxySurrogate() || !interceptedSomewhere(); }
+
+    /// The client of the accepted connection was not connecting to this port.
+    bool interceptedLocally() const { return interceptedSomewhere() && !tcpToUs(); }
+
+    /// This port handles traffic that has been intercepted prior to being delivered
+    /// to the TCP client of the accepted connection (which then connected to us).
+    // bool interceptedRemotely() const { return interceptedSomewhere() && tcpToUs(); }
+
     /// \returns true for HTTPS ports with SSL bump receiving PROXY protocol traffic
     bool proxySurrogateHttpsSslBump() const {
         return flags_.proxySurrogate && flags_.tunnelSslBumping && flags_.portKind == TrafficModeFlags::httpsPort;

@@ -806,12 +806,12 @@ FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry 
     if (!ip && ale)
         ip = FindListeningPortAddressInPort(ale->cache.port);
 
-    if (ip || request->masterXaction->hasListeningInterceptedPort())
-        return ip;
-
     // if (request->masterXaction->squidPort->flags.proxySurrogate()) {
     //     XXX: handle PROXY protocol here when we have a flag to identify such request
     // }
+
+    if (ip || request->masterXaction->hasListeningInterceptedPort())
+        return ip;
 
     /* handle non-intercepted cases that were not handled above */
     ip = FindListeningPortAddressInConn(request->masterXaction->tcpClient);

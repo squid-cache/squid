@@ -45,7 +45,7 @@ public:
     template <XactionInitiator::Initiator anInitiator>
     static Pointer MakePortless()
     {
-        static_assert(anInitiator != XactionInitiator::initClient);
+        static_assert(anInitiator != XactionInitiator::initClient, "a portless MasterXaction");
         return new MasterXaction(anInitiator, nullptr);
     }
 
