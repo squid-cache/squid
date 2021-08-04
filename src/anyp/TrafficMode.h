@@ -98,16 +98,18 @@ public:
     /// whether the PROXY protocol header is required
     bool proxySurrogate() const { return flags_.proxySurrogate; }
 
-    /// interceptedLocally() with configured NAT interception
+    /// The client of the accepted connection was not connecting to this port,
+    /// but Squid used NAT interception to accept the client connection.
+    /// The accepted traffic may have been intercepted earlier as well!
     bool natInterceptLocally() const {
-        assert(!flags_.natIntercept || interceptedLocally());
-        return flags_.natIntercept;
+        return flags_.natIntercept && !proxySurrogate();
     }
 
-    /// interceptedLocally() with configured TPROXY interception
+    /// The client of the accepted connection was not connecting to this port,
+    /// but Squid used TPROXY interception to accept the connection.
+    /// The accepted traffic may have been intercepted earlier as well!
     bool tproxyInterceptLocally() const {
-        assert(!flags_.tproxyIntercept || interceptedLocally());
-        return flags_.tproxyIntercept;
+        return flags_.tproxyIntercept && !proxySurrogate();
     }
 
     /// whether the reverse proxy is configured
@@ -120,9 +122,6 @@ public:
     std::ostream &print(std::ostream &) const;
 
 private:
-    /// The client of the accepted connection was not connecting to this port.
-    bool interceptedLocally() const { return interceptedSomewhere() && !proxySurrogate(); }
-
     /// \returns true for HTTPS ports with SSL bump receiving PROXY protocol traffic
     bool proxySurrogateHttpsSslBump() const {
         return flags_.proxySurrogate && flags_.tunnelSslBumping && flags_.portKind == TrafficModeFlags::httpsPort;
