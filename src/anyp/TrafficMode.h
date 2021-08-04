@@ -120,16 +120,8 @@ public:
     std::ostream &print(std::ostream &) const;
 
 private:
-    /// The client of the accepted TCP connection was connecting to this port.
-    /// The accepted traffic may have been intercepted earlier!
-    bool tcpToUs() const { return proxySurrogate() || !interceptedSomewhere(); }
-
     /// The client of the accepted connection was not connecting to this port.
-    bool interceptedLocally() const { return interceptedSomewhere() && !tcpToUs(); }
-
-    /// This port handles traffic that has been intercepted prior to being delivered
-    /// to the TCP client of the accepted connection (which then connected to us).
-    // bool interceptedRemotely() const { return interceptedSomewhere() && tcpToUs(); }
+    bool interceptedLocally() const { return interceptedSomewhere() && !proxySurrogate(); }
 
     /// \returns true for HTTPS ports with SSL bump receiving PROXY protocol traffic
     bool proxySurrogateHttpsSslBump() const {
