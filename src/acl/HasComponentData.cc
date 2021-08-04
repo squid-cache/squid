@@ -29,7 +29,9 @@ ACLHasComponentData::parse()
         self_destruct();
         return;
     }
+
     parseComponent(tok);
+
     if (ConfigParser::strtokFile()) {
         debugs(28, DBG_CRITICAL, "FATAL: multiple components not supported for \"has\" acl");
         self_destruct();
