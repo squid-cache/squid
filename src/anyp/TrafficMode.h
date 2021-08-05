@@ -46,7 +46,7 @@ public:
      *  - URL translation from relative to absolute form
      *  - Same-Origin verification is mandatory
      *  - destination pinning is recommended
-     *  - Squid authentication prohibited
+     *  - authentication prohibited
      */
     bool natIntercept = false;
 
@@ -58,7 +58,7 @@ public:
      *  - URL translation from relative to absolute form
      *  - Same-Origin verification is mandatory
      *  - destination pinning is recommended
-     *  - Squid authentication prohibited
+     *  - authentication prohibited
      */
     bool tproxyIntercept = false;
 
@@ -67,7 +67,7 @@ public:
      * Indicating the following are required:
      *  - decryption of CONNECT request
      *  - URL translation from relative to absolute form
-     *  - Squid authentication prohibited on unwrapped requests (only on the CONNECT tunnel)
+     *  - authentication prohibited on unwrapped requests (only on the CONNECT tunnel)
      *  - encrypted outbound server connections
      *  - peer relay prohibited. TODO: re-encrypt and re-wrap with CONNECT
      */
