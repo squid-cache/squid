@@ -34,13 +34,21 @@ Comm::ConnOpener::ConnOpener(const Comm::ConnectionPointer &c, const AsyncCall::
     AsyncJob("Comm::ConnOpener"),
     host_(NULL),
     temporaryFd_(-1),
-    conn_(c->cloneDestinationDetails()),
+    conn_(c),
     callback_(handler),
     totalTries_(0),
     failRetries_(0),
     deadline_(squid_curtime + static_cast<time_t>(ctimeout))
 {
     debugs(5, 3, "will connect to " << c << " with " << ctimeout << " timeout");
+    assert(conn_); // we know where to go
+
+    // Sharing a being-modified Connection object with the caller is dangerous,
+    // but we cannot ban (or even check for) that using existing APIs. We do not
+    // want to clone "just in case" because cloning is a bit expensive, and most
+    // callers already have a non-owned Connection object to give us. Until the
+    // APIs improve, we can only check that the connection is not open.
+    assert(!conn_->isOpen());
 }
 
 Comm::ConnOpener::~ConnOpener()

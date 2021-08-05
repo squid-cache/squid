@@ -1679,7 +1679,7 @@ Ftp::Server::checkDataConnPre()
     // active transfer: open a data connection from Squid to client
     typedef CommCbMemFunT<Server, CommConnectCbParams> Dialer;
     AsyncCall::Pointer callback = JobCallback(17, 3, Dialer, this, Ftp::Server::connectedForData);
-    const auto cs = new Comm::ConnOpener(dataConn, callback,
+    const auto cs = new Comm::ConnOpener(dataConn->cloneProfile(), callback,
                                          Config.Timeout.connect);
     dataConnWait.start(cs, callback);
     AsyncJob::Start(cs);
@@ -1708,6 +1708,7 @@ Ftp::Server::connectedForData(const CommConnectCbParams &params)
         Http::StreamPointer context = pipeline.front();
         Must(context->http);
         Must(context->http->storeEntry() != NULL);
+        // TODO: call closeDataConnection() to reset data conn processing?
     } else {
         // Finalize the details and start owning the supplied connection.
         assert(params.conn);

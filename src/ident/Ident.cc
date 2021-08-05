@@ -124,6 +124,7 @@ void
 Ident::Close(const CommCloseCbParams &params)
 {
     IdentStateData *state = (IdentStateData *)params.data;
+    // XXX: A Connection closure handler must update its Connection object.
     state->deleteThis("connection closed");
 }
 
@@ -141,14 +142,13 @@ Ident::ConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int, 
     IdentStateData *state = (IdentStateData *)data;
     state->connWait.finish();
 
-    // Finalize the details and start owning the supplied connection (so that it
-    // is not orphaned if this function bails early). As a (tiny) optimization
-    // or perhaps just diff minimization, the close handler is added later, when
-    // we know we are not bailing. This delay is safe because
-    // comm_remove_close_handler() forgives missing handlers.
+    // Start owning the supplied connection (so that it is not orphaned if this
+    // function bails early). As a (tiny) optimization or perhaps just diff
+    // minimization, the close handler is added later, when we know we are not
+    // bailing. This delay is safe because comm_remove_close_handler() forgives
+    // missing handlers.
     assert(conn); // but may be closed
-    assert(state->conn);
-    assert(!state->conn->isOpen());
+    assert(!state->conn);
     state->conn = conn;
 
     if (status != Comm::OK) {
@@ -282,10 +282,10 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
     state->hash.key = xstrdup(key);
 
     // copy the conn details. We do not want the original FD to be re-used by IDENT.
-    state->conn = conn->cloneIdentDetails();
+    const auto identConn = conn->cloneProfile();
     // NP: use random port for secure outbound to IDENT_PORT
-    state->conn->local.port(0);
-    state->conn->remote.port(IDENT_PORT);
+    identConn->local.port(0);
+    identConn->remote.port(IDENT_PORT);
 
     // build our query from the original connection details
     state->queryMsg.init();
@@ -295,7 +295,7 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
     hash_join(ident_hash, &state->hash);
 
     AsyncCall::Pointer call = commCbCall(30,3, "Ident::ConnectDone", CommConnectCbPtrFun(Ident::ConnectDone, state));
-    const auto connOpener = new Comm::ConnOpener(state->conn, call, Ident::TheConfig.timeout);
+    const auto connOpener = new Comm::ConnOpener(identConn, call, Ident::TheConfig.timeout);
     state->connWait.start(connOpener, call);
     AsyncJob::Start(connOpener);
 }

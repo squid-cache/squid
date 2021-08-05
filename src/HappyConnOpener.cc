@@ -565,21 +565,20 @@ HappyConnOpener::openFreshConnection(Attempt &attempt, PeerConnectionPointer &de
     entry->mem_obj->checkUrlChecksum();
 #endif
 
-    GetMarkingsToServer(cause.getRaw(), *dest);
+    const auto conn = dest->cloneProfile();
+    GetMarkingsToServer(cause.getRaw(), *conn);
 
-    // ConnOpener modifies its destination argument so we reset the source port
-    // in case we are reusing the destination already used by our predecessor.
-    dest->local.port(0);
     ++n_tries;
 
     typedef CommCbMemFunT<HappyConnOpener, CommConnectCbParams> Dialer;
     AsyncCall::Pointer callConnect = asyncCall(48, 5, attempt.callbackMethodName,
                                      Dialer(this, attempt.callbackMethod));
     const time_t connTimeout = dest->connectTimeout(fwdStart);
-    Comm::ConnOpener *cs = new Comm::ConnOpener(dest, callConnect, connTimeout);
-    if (!dest->getPeer())
+    Comm::ConnOpener *cs = new Comm::ConnOpener(conn, callConnect, connTimeout);
+    if (!conn->getPeer())
         cs->setHost(host_);
 
+    attempt.path = dest; // but not the being-opened conn!
     attempt.connWait.start(cs, callConnect);
 
     AsyncJob::Start(cs);
