@@ -199,7 +199,7 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
     AsyncCall::Pointer callback = JobCallback(93, 3, ConnectDialer, this, Adaptation::Icap::Xaction::noteCommConnected);
     const auto cs = new Comm::ConnOpener(conn, callback, TheConfig.connect_timeout(service().cfg().bypass));
     cs->setHost(s.cfg().host.termedBuf());
-    connWait.start(cs, callback);
+    transportWait.start(cs, callback);
 }
 
 /*
@@ -253,7 +253,7 @@ void Adaptation::Icap::Xaction::closeConnection()
 /// called when the connection attempt to an ICAP service completes (successfully or not)
 void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
 {
-    connWait.finish();
+    transportWait.finish();
 
     if (io.flag != Comm::OK) {
         dieOnConnectionFailure(); // throws
@@ -390,7 +390,7 @@ void Adaptation::Icap::Xaction::callEnd()
 
 bool Adaptation::Icap::Xaction::doneAll() const
 {
-    return !connWait && !encryptionWait && !reader && !writer && Adaptation::Initiate::doneAll();
+    return !transportWait && !encryptionWait && !reader && !writer && Adaptation::Initiate::doneAll();
 }
 
 void Adaptation::Icap::Xaction::updateTimeout()
@@ -533,7 +533,7 @@ bool Adaptation::Icap::Xaction::doneWriting() const
 bool Adaptation::Icap::Xaction::doneWithIo() const
 {
     return haveConnection() &&
-           !connWait && !reader && !writer && // fast checks, some redundant
+           !transportWait && !reader && !writer && // fast checks, some redundant
            doneReading() && doneWriting();
 }
 
@@ -572,7 +572,7 @@ void Adaptation::Icap::Xaction::setOutcome(const Adaptation::Icap::XactOutcome &
 void Adaptation::Icap::Xaction::swanSong()
 {
     // kids should sing first and then call the parent method.
-    if (connWait || encryptionWait) {
+    if (transportWait || encryptionWait) {
         service().noteConnectionFailed("abort");
     }
 

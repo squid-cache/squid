@@ -191,7 +191,8 @@ private:
 
     AsyncCall::Pointer listener; ///< set when we are passively listening
 
-    /// establishes an FTP data connection (active open)
+    /// Waits for an FTP data connection to the client to be established/opened.
+    /// This wait only happens in FTP active mode (via PORT or EPRT).
     JobWait<Comm::ConnOpener> dataConnWait;
 
     AsyncCall::Pointer reader; ///< set when we are reading FTP data

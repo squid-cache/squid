@@ -57,7 +57,8 @@ public:
     IdentClient *clients = nullptr;
     char buf[IDENT_BUFSIZE];
 
-    JobWait<Comm::ConnOpener> connWait; ///< waiting for a transport connection
+    /// waits for a connection to the IDENT server to be established/opened
+    JobWait<Comm::ConnOpener> connWait;
 
 private:
     // use deleteThis() to destroy

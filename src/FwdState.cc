@@ -220,9 +220,9 @@ FwdState::stopAndDestroy(const char *reason)
 void
 FwdState::cancelStep(const char *reason)
 {
-    tcpConnWait.cancel(reason);
+    transportWait.cancel(reason);
     encryptionWait.cancel(reason);
-    httpConnectWait.cancel(reason);
+    peerWait.cancel(reason);
 }
 
 #if STRICT_ORIGINAL_DST
@@ -571,7 +571,7 @@ FwdState::complete()
 bool
 FwdState::usingDestination() const
 {
-    return encryptionWait || httpConnectWait || Comm::IsConnOpen(serverConn);
+    return encryptionWait || peerWait || Comm::IsConnOpen(serverConn);
 }
 
 void
@@ -594,11 +594,11 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
     if (usingDestination()) {
         // We are already using a previously opened connection, so we cannot be
         // waiting for it. We still receive destinations for backup.
-        Must(!tcpConnWait);
+        Must(!transportWait);
         return;
     }
 
-    if (tcpConnWait) {
+    if (transportWait) {
         notifyConnOpener();
         return; // and continue to wait for FwdState::noteConnection() callback
     }
@@ -634,11 +634,11 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
     if (usingDestination()) {
         // We are already using a previously opened connection, so we cannot be
         // waiting for it. We were receiving destinations for backup.
-        Must(!tcpConnWait);
+        Must(!transportWait);
         return;
     }
 
-    Must(tcpConnWait); // or we would be stuck with nothing to do or wait for
+    Must(transportWait); // or we would be stuck with nothing to do or wait for
     notifyConnOpener();
     // and continue to wait for FwdState::noteConnection() callback
 }
@@ -652,7 +652,7 @@ FwdState::notifyConnOpener()
     } else {
         debugs(17, 7, "notifying about " << *destinations);
         destinations->notificationPending = true;
-        CallJobHere(17, 5, tcpConnWait.job(), HappyConnOpener, noteCandidatesChange);
+        CallJobHere(17, 5, transportWait.job(), HappyConnOpener, noteCandidatesChange);
     }
 }
 
@@ -814,7 +814,7 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
 {
     assert(!destinationReceipt);
 
-    tcpConnWait.finish();
+    transportWait.finish();
 
     Must(n_tries <= answer.n_tries); // n_tries cannot decrease
     n_tries = answer.n_tries;
@@ -895,14 +895,14 @@ FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
     if (!conn->getPeer()->options.no_delay)
         tunneler->setDelayId(entry->mem_obj->mostBytesAllowed());
 #endif
-    httpConnectWait.start(tunneler, callback);
+    peerWait.start(tunneler, callback);
 }
 
 /// resumes operations after the (possibly failed) HTTP CONNECT exchange
 void
 FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 {
-    httpConnectWait.finish();
+    peerWait.finish();
 
     ErrorState *error = nullptr;
     if (!answer.positive()) {
@@ -1100,7 +1100,7 @@ FwdState::connectStart()
     cs->setRetriable(retriable);
     cs->allowPersistent(pconnRace != raceHappened);
     destinations->notificationPending = true; // start() is async
-    tcpConnWait.start(cs, callback);
+    transportWait.start(cs, callback);
 }
 
 /// send request on an existing connection dedicated to the requesting client

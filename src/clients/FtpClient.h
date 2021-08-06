@@ -185,7 +185,8 @@ protected:
     virtual void sentRequestBody(const CommIoCbParams &io);
     virtual void doneSendingRequestBody();
 
-    /// establishes an FTP data connection
+    /// Waits for an FTP data connection to the server to be established/opened.
+    /// This wait only happens in FTP passive mode (via PASV or EPSV).
     JobWait<Comm::ConnOpener> dataConnWait;
 
 private:

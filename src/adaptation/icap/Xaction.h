@@ -154,10 +154,10 @@ protected:
     timeval icap_tio_finish;   /*time when the last byte of the ICAP responsewas received*/
 
 private:
-    /// establishes a transport connection to the ICAP server
-    JobWait<Comm::ConnOpener> connWait;
+    /// waits for a transport connection to the ICAP server to be established/opened
+    JobWait<Comm::ConnOpener> transportWait;
 
-    /// encrypts an established transport connection
+    /// waits for the established transport connection to be secured/encrypted
     JobWait<Ssl::IcapPeerConnector> encryptionWait;
 
     /// open and, if necessary, secured connection to the ICAP server (or nil)

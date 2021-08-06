@@ -189,15 +189,15 @@ public:
     // TODO: remove after fixing deferred reads in TunnelStateData::copyRead()
     CodeContext::Pointer codeContext; ///< our creator context
 
-    /// establishes a transport connection
-    JobWait<HappyConnOpener> tcpConnWait;
+    /// waits for a transport connection to the peer to be established/opened
+    JobWait<HappyConnOpener> transportWait;
 
-    /// encrypts an established transport connection
-    JobWait<Security::BlindPeerConnector> encryptionWait;
+    /// waits for the established transport connection to be secured/encrypted
+    JobWait<Security::PeerConnector> encryptionWait;
 
-    /// establishes an HTTP CONNECT tunnel through a cache_peer
-    /// over an (encrypted, if needed), transport connection to that cache_peer
-    JobWait<Http::Tunneler> httpConnectWait;
+    /// waits for an HTTP CONNECT tunnel through a cache_peer to be negotiated
+    /// over the (encrypted, if needed) transport connection to that cache_peer
+    JobWait<Http::Tunneler> peerWait;
 
     void copyRead(Connection &from, IOCB *completion);
 
@@ -905,9 +905,9 @@ TunnelStateData::copyServerBytes()
 static void
 tunnelStartShoveling(TunnelStateData *tunnelState)
 {
-    assert(!tunnelState->tcpConnWait);
+    assert(!tunnelState->transportWait);
     assert(!tunnelState->encryptionWait);
-    assert(!tunnelState->httpConnectWait);
+    assert(!tunnelState->peerWait);
 
     assert(tunnelState->server.conn);
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
@@ -966,7 +966,7 @@ tunnelConnectedWriteDone(const Comm::ConnectionPointer &conn, char *, size_t len
 void
 TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 {
-    httpConnectWait.finish();
+    peerWait.finish();
     server.len = 0;
 
     if (logTag_ptr)
@@ -1045,7 +1045,7 @@ tunnelErrorComplete(int fd/*const Comm::ConnectionPointer &*/, void *data, size_
 void
 TunnelStateData::noteConnection(HappyConnOpener::Answer &answer)
 {
-    tcpConnWait.finish();
+    transportWait.finish();
 
     ErrorState *error = nullptr;
     if ((error = answer.error.get())) {
@@ -1234,7 +1234,7 @@ TunnelStateData::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 #if USE_DELAY_POOLS
     tunneler->setDelayId(server.delayId);
 #endif
-    httpConnectWait.start(tunneler, callback);
+    peerWait.start(tunneler, callback);
 }
 
 void
@@ -1255,11 +1255,11 @@ TunnelStateData::noteDestination(Comm::ConnectionPointer path)
     if (usingDestination()) {
         // We are already using a previously opened connection but also
         // receiving destinations in case we need to re-forward.
-        Must(!tcpConnWait);
+        Must(!transportWait);
         return;
     }
 
-    if (tcpConnWait) {
+    if (transportWait) {
         notifyConnOpener();
         return; // and continue to wait for tunnelConnectDone() callback
     }
@@ -1292,18 +1292,18 @@ TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
     if (usingDestination()) {
         // We are already using a previously opened connection but also
         // receiving destinations in case we need to re-forward.
-        Must(!tcpConnWait);
+        Must(!transportWait);
         return;
     }
 
-    Must(tcpConnWait); // or we would be stuck with nothing to do or wait for
+    Must(transportWait); // or we would be stuck with nothing to do or wait for
     notifyConnOpener();
 }
 
 bool
 TunnelStateData::usingDestination() const
 {
-    return encryptionWait || httpConnectWait || Comm::IsConnOpen(server.conn);
+    return encryptionWait || peerWait || Comm::IsConnOpen(server.conn);
 }
 
 /// remembers an error to be used if there will be no more connection attempts
@@ -1350,9 +1350,9 @@ TunnelStateData::sendError(ErrorState *finalError, const char *reason)
 void
 TunnelStateData::cancelStep(const char *reason)
 {
-    tcpConnWait.cancel(reason);
+    transportWait.cancel(reason);
     encryptionWait.cancel(reason);
-    httpConnectWait.cancel(reason);
+    peerWait.cancel(reason);
 }
 
 void
@@ -1369,7 +1369,7 @@ TunnelStateData::startConnecting()
     cs->setRetriable(false);
     cs->allowPersistent(false);
     destinations->notificationPending = true; // start() is async
-    tcpConnWait.start(cs, callback);
+    transportWait.start(cs, callback);
 }
 
 /// send request on an existing connection dedicated to the requesting client
@@ -1426,7 +1426,7 @@ TunnelStateData::notifyConnOpener()
         debugs(17, 7, "reusing pending notification");
     } else {
         destinations->notificationPending = true;
-        CallJobHere(17, 5, tcpConnWait.job(), HappyConnOpener, noteCandidatesChange);
+        CallJobHere(17, 5, transportWait.job(), HappyConnOpener, noteCandidatesChange);
     }
 }
 

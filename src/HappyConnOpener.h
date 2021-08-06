@@ -170,7 +170,9 @@ private:
         void cancel(const char *reason);
 
         PeerConnectionPointer path; ///< the destination we are connecting to
-        JobWait<Comm::ConnOpener> connWait; ///< establishes a transport connection
+
+        /// waits for a connection to the peer to be established/opened
+        JobWait<Comm::ConnOpener> connWait;
 
         const CallbackMethod callbackMethod; ///< ConnOpener calls this method
         const char * const callbackMethodName; ///< for callbackMethod debugging

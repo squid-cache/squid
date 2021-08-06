@@ -43,7 +43,7 @@ public:
 PeerPoolMgr::PeerPoolMgr(CachePeer *aPeer): AsyncJob("PeerPoolMgr"),
     peer(cbdataReference(aPeer)),
     request(),
-    connWait(),
+    transportWait(),
     encryptionWait(),
     addrUsed(0)
 {
@@ -89,7 +89,7 @@ PeerPoolMgr::doneAll() const
 void
 PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
 {
-    connWait.finish();
+    transportWait.finish();
 
     if (!validPeer()) {
         debugs(48, 3, "peer gone");
@@ -160,8 +160,8 @@ void
 PeerPoolMgr::openNewConnection()
 {
     // KISS: Do nothing else when we are already doing something.
-    if (connWait || encryptionWait || shutting_down) {
-        debugs(48, 7, "busy: " << connWait << '|' << encryptionWait << '|' << shutting_down);
+    if (transportWait || encryptionWait || shutting_down) {
+        debugs(48, 7, "busy: " << transportWait << '|' << encryptionWait << '|' << shutting_down);
         return; // there will be another checkpoint when we are done opening/securing
     }
 
@@ -200,7 +200,7 @@ PeerPoolMgr::openNewConnection()
     typedef CommCbMemFunT<PeerPoolMgr, CommConnectCbParams> Dialer;
     AsyncCall::Pointer callback = JobCallback(48, 5, Dialer, this, PeerPoolMgr::handleOpenedConnection);
     const auto cs = new Comm::ConnOpener(conn, callback, ctimeout);
-    connWait.start(cs, callback);
+    transportWait.start(cs, callback);
 }
 
 void
