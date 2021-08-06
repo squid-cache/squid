@@ -797,9 +797,9 @@ Ftp::Relay::HandleStoreAbort(Relay *ftpClient)
         ftpClient->dataComplete();
 }
 
-AsyncJob::Pointer
+void
 Ftp::StartRelay(FwdState *const fwdState)
 {
-    return AsyncJob::Start(new Ftp::Relay(fwdState));
+    AsyncJob::Start(new Ftp::Relay(fwdState));
 }
 

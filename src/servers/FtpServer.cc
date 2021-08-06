@@ -1682,8 +1682,7 @@ Ftp::Server::checkDataConnPre()
     const auto cs = new Comm::ConnOpener(dataConn->cloneProfile(), callback,
                                          Config.Timeout.connect);
     dataConnWait.start(cs, callback);
-    AsyncJob::Start(cs);
-    return false; // ConnStateData::processFtpRequest waits handleConnectDone
+    return false;
 }
 
 /// Check that client data connection is ready for immediate I/O.

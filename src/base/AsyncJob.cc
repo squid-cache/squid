@@ -20,12 +20,11 @@
 
 InstanceIdDefinitions(AsyncJob, "job");
 
-AsyncJob::Pointer AsyncJob::Start(AsyncJob *j)
+void
+AsyncJob::Start(const Pointer &job)
 {
-    AsyncJob::Pointer job(j);
     CallJobHere(93, 5, job, AsyncJob, start);
     job->started_ = true; // it is the attempt that counts
-    return job;
 }
 
 AsyncJob::AsyncJob(const char *aTypeName) :

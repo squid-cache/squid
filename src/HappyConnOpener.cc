@@ -580,8 +580,6 @@ HappyConnOpener::openFreshConnection(Attempt &attempt, PeerConnectionPointer &de
 
     attempt.path = dest; // but not the being-opened conn!
     attempt.connWait.start(cs, callConnect);
-
-    AsyncJob::Start(cs);
 }
 
 /// Comm::ConnOpener callback for the prime connection attempt

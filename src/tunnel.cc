@@ -1170,7 +1170,6 @@ TunnelStateData::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
                                             MyAnswerDialer(&TunnelStateData::noteSecurityPeerConnectorAnswer, this));
     const auto connector = new Security::BlindPeerConnector(request, conn, callback, al);
     encryptionWait.start(connector, callback);
-    AsyncJob::Start(connector); // will call our callback
 }
 
 /// starts a preparation step for an established connection; retries on failures
@@ -1236,8 +1235,6 @@ TunnelStateData::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
     tunneler->setDelayId(server.delayId);
 #endif
     httpConnectWait.start(tunneler, callback);
-    AsyncJob::Start(tunneler);
-    // and wait for the tunnelEstablishmentDone() call
 }
 
 void
@@ -1373,7 +1370,6 @@ TunnelStateData::startConnecting()
     cs->allowPersistent(false);
     destinations->notificationPending = true; // start() is async
     tcpConnWait.start(cs, callback);
-    AsyncJob::Start(cs);
 }
 
 /// send request on an existing connection dedicated to the requesting client

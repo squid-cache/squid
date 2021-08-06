@@ -258,7 +258,6 @@ Log::TcpLogger::doConnect()
     AsyncCall::Pointer call = JobCallback(MY_DEBUG_SECTION, 5, Dialer, this, Log::TcpLogger::connectDone);
     const auto cs = new Comm::ConnOpener(futureConn, call, 2);
     connWait.start(cs, call);
-    AsyncJob::Start(cs);
 }
 
 /// Comm::ConnOpener callback

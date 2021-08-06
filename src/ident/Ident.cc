@@ -297,7 +297,6 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
     AsyncCall::Pointer call = commCbCall(30,3, "Ident::ConnectDone", CommConnectCbPtrFun(Ident::ConnectDone, state));
     const auto connOpener = new Comm::ConnOpener(identConn, call, Ident::TheConfig.timeout);
     state->connWait.start(connOpener, call);
-    AsyncJob::Start(connOpener);
 }
 
 void

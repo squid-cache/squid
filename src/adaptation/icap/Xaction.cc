@@ -200,7 +200,6 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
     const auto cs = new Comm::ConnOpener(conn, callback, TheConfig.connect_timeout(service().cfg().bypass));
     cs->setHost(s.cfg().host.termedBuf());
     connWait.start(cs, callback);
-    AsyncJob::Start(cs);
 }
 
 /*
@@ -284,7 +283,6 @@ Adaptation::Icap::Xaction::useTransportConnection(const Comm::ConnectionPointer 
         const auto sslConnector = new Ssl::IcapPeerConnector(theService, conn, callback, masterLogEntry(), TheConfig.connect_timeout(service().cfg().bypass));
 
         encryptionWait.start(sslConnector, callback);
-        AsyncJob::Start(sslConnector); // will call our callback
         return;
     }
 

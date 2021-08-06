@@ -118,7 +118,6 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
         const int timeLeft = positiveTimeout(peerTimeout - timeUsed);
         const auto connector = new Security::BlindPeerConnector(request, params.conn, callback, nullptr, timeLeft);
         encryptionWait.start(connector, callback);
-        AsyncJob::Start(connector); // will call our callback
         return;
     }
 
@@ -202,7 +201,6 @@ PeerPoolMgr::openNewConnection()
     AsyncCall::Pointer callback = JobCallback(48, 5, Dialer, this, PeerPoolMgr::handleOpenedConnection);
     const auto cs = new Comm::ConnOpener(conn, callback, ctimeout);
     connWait.start(cs, callback);
-    AsyncJob::Start(cs);
 }
 
 void

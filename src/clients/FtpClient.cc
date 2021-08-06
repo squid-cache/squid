@@ -769,7 +769,6 @@ Ftp::Client::connectDataChannel()
     const auto cs = new Comm::ConnOpener(conn, callback, Config.Timeout.connect);
     cs->setHost(data.host);
     dataConnWait.start(cs, callback);
-    AsyncJob::Start(cs);
 }
 
 bool

@@ -36,8 +36,13 @@ public:
 public:
     AsyncJob(const char *aTypeName);
 
-    /// starts a freshly created job (i.e., makes the job asynchronous)
-    static Pointer Start(AsyncJob *job);
+    /// Promises to start the configured job (eventually). The job is deemed to
+    /// be running asynchronously beyond this point, so the caller should only
+    /// access the job object via AsyncCalls rather than directly.
+    ///
+    /// swanSong() is only called for jobs for which this method has returned
+    /// successfully (i.e. without throwing).
+    static void Start(const Pointer &job);
 
 protected:
     // XXX: temporary method to replace "delete this" in jobs-in-transition.

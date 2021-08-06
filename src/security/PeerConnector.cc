@@ -656,7 +656,6 @@ Security::PeerConnector::startCertDownloading(SBuf &url)
     const Downloader *csd = (request ? dynamic_cast<const Downloader*>(request->downloader.valid()) : nullptr);
     Downloader *dl = new Downloader(url, certCallback, XactionInitiator::initCertFetcher, csd ? csd->nestedLevel() + 1 : 1);
     certDownloadWait.start(dl, certCallback);
-    AsyncJob::Start(dl);
 }
 
 void

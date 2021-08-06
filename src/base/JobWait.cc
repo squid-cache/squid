@@ -36,6 +36,8 @@ JobWaitBase::start_(const AsyncJob::Pointer aJob, const AsyncCall::Pointer aCall
     assert(!job_);
     callback_ = aCall;
     job_ = aJob;
+
+    AsyncJob::Start(job_.get());
 }
 
 void

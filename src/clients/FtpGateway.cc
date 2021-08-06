@@ -2724,9 +2724,9 @@ Ftp::Gateway::mayReadVirginReplyBody() const
     return !doneWithServer();
 }
 
-AsyncJob::Pointer
+void
 Ftp::StartGateway(FwdState *const fwdState)
 {
-    return AsyncJob::Start(new Ftp::Gateway(fwdState));
+    AsyncJob::Start(new Ftp::Gateway(fwdState));
 }
 
