@@ -112,9 +112,8 @@ void Adaptation::Icap::ServiceRep::noteFailure()
     // should be configurable.
 }
 
-// returns a persistent or brand new connection; negative int on failures
 Comm::ConnectionPointer
-Adaptation::Icap::ServiceRep::getConnection(bool retriableXact, bool &reused)
+Adaptation::Icap::ServiceRep::getIdleConnection(const bool retriableXact)
 {
     Comm::ConnectionPointer connection;
 
@@ -137,7 +136,6 @@ Adaptation::Icap::ServiceRep::getConnection(bool retriableXact, bool &reused)
     else
         theIdleConns->closeN(1);
 
-    reused = Comm::IsConnOpen(connection);
     ++theBusyConns;
     debugs(93,3, HERE << "got connection: " << connection);
     return connection;
@@ -150,7 +148,6 @@ void Adaptation::Icap::ServiceRep::putConnection(const Comm::ConnectionPointer &
     // do not pool an idle connection if we owe connections
     if (isReusable && excessConnections() == 0) {
         debugs(93, 3, HERE << "pushing pconn" << comment);
-        commUnsetConnTimeout(conn);
         theIdleConns->push(conn);
     } else {
         debugs(93, 3, HERE << (sendReset ? "RST" : "FIN") << "-closing " <<

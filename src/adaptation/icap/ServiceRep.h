@@ -85,7 +85,8 @@ public:
     bool wantsPreview(const SBuf &urlPath, size_t &wantedSize) const;
     bool allows204() const;
     bool allows206() const;
-    Comm::ConnectionPointer getConnection(bool isRetriable, bool &isReused);
+    /// \returns an idle persistent ICAP connection or nil
+    Comm::ConnectionPointer getIdleConnection(bool isRetriable);
     void putConnection(const Comm::ConnectionPointer &conn, bool isReusable, bool sendReset, const char *comment);
     void noteConnectionUse(const Comm::ConnectionPointer &conn);
     void noteConnectionFailed(const char *comment);

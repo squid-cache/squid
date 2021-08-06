@@ -69,12 +69,12 @@ protected:
     virtual void start();
     virtual void noteInitiatorAborted(); // TODO: move to Adaptation::Initiate
 
+    /// starts sending/receiving ICAP messages
+    virtual void startShoveling() = 0;
+
     // comm hanndlers; called by comm handler wrappers
-    virtual void handleCommConnected() = 0;
     virtual void handleCommWrote(size_t sz) = 0;
     virtual void handleCommRead(size_t sz) = 0;
-    virtual void handleCommTimedout();
-    virtual void handleCommClosed();
 
     void handleSecuredPeer(Security::EncryptorAnswer &answer);
     /// record error detail if possible
@@ -82,7 +82,6 @@ protected:
 
     void openConnection();
     void closeConnection();
-    void dieOnConnectionFailure();
     bool haveConnection() const;
 
     void scheduleRead();
@@ -128,12 +127,13 @@ public:
     ServiceRep &service();
 
 private:
-    void successfullyConnected();
+    void useTransportConnection(const Comm::ConnectionPointer &);
+    void useIcapConnection(const Comm::ConnectionPointer &);
+    void dieOnConnectionFailure();
     void tellQueryAborted();
     void maybeLog();
 
 protected:
-    Comm::ConnectionPointer connection;     ///< ICAP server connection
     Adaptation::Icap::ServiceRep::Pointer theService;
 
     SBuf readBuf;
@@ -143,11 +143,8 @@ protected:
     bool isRepeatable; ///< can repeat if no or unsatisfactory response
     bool ignoreLastWrite;
 
-    const char *stopReason;
-
     AsyncCall::Pointer reader;
     AsyncCall::Pointer writer;
-    AsyncCall::Pointer closer;
 
     AccessLogEntry::Pointer alep; ///< icap.log entry
     AccessLogEntry &al; ///< short for *alep
@@ -162,6 +159,11 @@ private:
 
     /// encrypts an established transport connection
     JobWait<Ssl::IcapPeerConnector> encryptionWait;
+
+    /// open and, if necessary, secured connection to the ICAP server (or nil)
+    Comm::ConnectionPointer connection;
+
+    AsyncCall::Pointer closer;
 };
 
 } // namespace Icap

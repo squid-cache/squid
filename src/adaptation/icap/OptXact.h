@@ -30,8 +30,9 @@ public:
     OptXact(ServiceRep::Pointer &aService);
 
 protected:
+    /* Xaction API */
     virtual void start();
-    virtual void handleCommConnected();
+    virtual void startShoveling();
     virtual void handleCommWrote(size_t size);
     virtual void handleCommRead(size_t size);
 

@@ -80,17 +80,12 @@ Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::Serv
     icapRequest(NULL),
     icapReply(NULL),
     attempts(0),
-    connection(NULL),
     theService(aService),
     commEof(false),
     reuseConnection(true),
     isRetriable(true),
     isRepeatable(true),
     ignoreLastWrite(false),
-    stopReason(NULL),
-    reader(NULL),
-    writer(NULL),
-    closer(NULL),
     alep(new AccessLogEntry),
     al(*alep)
 {
@@ -164,11 +159,8 @@ Adaptation::Icap::Xaction::openConnection()
     if (!TheConfig.reuse_connections)
         disableRetries(); // this will also safely drain pconn pool
 
-    bool wasReused = false;
-    connection = s.getConnection(isRetriable, wasReused);
-
-    if (wasReused && Comm::IsConnOpen(connection)) {
-        successfullyConnected();
+    if (const auto pconn = s.getIdleConnection(isRetriable)) {
+        useTransportConnection(pconn);
         return;
     }
 
@@ -197,16 +189,15 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
         return;
     }
 
-    // XXX: Do not save this half-baked connection. Just pass it to ConnOpener.
-    connection = new Comm::Connection;
-    connection->remote = ia->current();
-    connection->remote.port(s.cfg().port);
-    getOutgoingAddress(NULL, connection);
+    const Comm::ConnectionPointer conn = new Comm::Connection();
+    conn->remote = ia->current();
+    conn->remote.port(s.cfg().port);
+    getOutgoingAddress(nullptr, conn);
 
     // TODO: service bypass status may differ from that of a transaction
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommConnectCbParams> ConnectDialer;
     AsyncCall::Pointer callback = JobCallback(93, 3, ConnectDialer, this, Adaptation::Icap::Xaction::noteCommConnected);
-    const auto cs = new Comm::ConnOpener(connection, callback, TheConfig.connect_timeout(service().cfg().bypass));
+    const auto cs = new Comm::ConnOpener(conn, callback, TheConfig.connect_timeout(service().cfg().bypass));
     cs->setHost(s.cfg().host.termedBuf());
     connWait.start(cs, callback);
     AsyncJob::Start(cs);
@@ -234,6 +225,8 @@ void Adaptation::Icap::Xaction::closeConnection()
             comm_remove_close_handler(connection->fd, closer);
             closer = NULL;
         }
+
+        commUnsetConnTimeout(connection);
 
         cancelRead(); // may not work
 
@@ -263,33 +256,50 @@ void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
 {
     connWait.finish();
 
-    if (io.flag == Comm::TIMEOUT) {
-        handleCommTimedout();
-        return;
-    }
-
     if (io.flag != Comm::OK) {
         dieOnConnectionFailure(); // throws
         return;
     }
 
-    // Finalize the details and start owning the supplied connection, possibly
-    // prematurely -- see XXX in successfullyConnected().
-    assert(io.conn);
-    assert(connection);
-    assert(!connection->isOpen());
-    connection = io.conn;
-    successfullyConnected();
+    useTransportConnection(io.conn);
 }
 
-/// called when successfully connected to an ICAP service
+/// React to the availability of a transport connection to the ICAP service.
+/// The given connection may (or may not) be secured already.
 void
-Adaptation::Icap::Xaction::successfullyConnected()
+Adaptation::Icap::Xaction::useTransportConnection(const Comm::ConnectionPointer &conn)
 {
-    assert(Comm::IsConnOpen(connection));
+    assert(Comm::IsConnOpen(conn));
+    assert(!connection);
 
-    // XXX: We should not set timeout and closure handlers here if we are going
-    // to negotiate TLS. Only Ssl::IcapPeerConnector should own the connection.
+    // If it is a reused connection and the TLS object is built
+    // we should not negotiate new TLS session
+    const auto &ssl = fd_table[conn->fd].ssl;
+    if (!ssl && service().cfg().secure.encryptTransport) {
+        // XXX: Exceptions orphan conn.
+        CbcPointer<Adaptation::Icap::Xaction> me(this);
+        AsyncCall::Pointer callback = asyncCall(93, 4, "Adaptation::Icap::Xaction::handleSecuredPeer",
+                                                MyIcapAnswerDialer(me, &Adaptation::Icap::Xaction::handleSecuredPeer));
+
+        const auto sslConnector = new Ssl::IcapPeerConnector(theService, conn, callback, masterLogEntry(), TheConfig.connect_timeout(service().cfg().bypass));
+
+        encryptionWait.start(sslConnector, callback);
+        AsyncJob::Start(sslConnector); // will call our callback
+        return;
+    }
+
+    useIcapConnection(conn);
+}
+
+/// react to the availability of a fully-ready ICAP connection
+void
+Adaptation::Icap::Xaction::useIcapConnection(const Comm::ConnectionPointer &conn)
+{
+    assert(!connection);
+    assert(conn);
+    assert(Comm::IsConnOpen(conn));
+    connection = conn;
+    service().noteConnectionUse(connection);
 
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  asyncCall(93, 5, "Adaptation::Icap::Xaction::noteCommTimedout",
@@ -301,25 +311,7 @@ Adaptation::Icap::Xaction::successfullyConnected()
                         CloseDialer(this,&Adaptation::Icap::Xaction::noteCommClosed));
     comm_add_close_handler(connection->fd, closer);
 
-    // If it is a reused connection and the TLS object is built
-    // we should not negotiate new TLS session
-    const auto &ssl = fd_table[connection->fd].ssl;
-    if (!ssl && service().cfg().secure.encryptTransport) {
-        CbcPointer<Adaptation::Icap::Xaction> me(this);
-        AsyncCall::Pointer callback = asyncCall(93, 4, "Adaptation::Icap::Xaction::handleSecuredPeer",
-                                                MyIcapAnswerDialer(me, &Adaptation::Icap::Xaction::handleSecuredPeer));
-
-        const auto sslConnector = new Ssl::IcapPeerConnector(theService, connection, callback, masterLogEntry(), TheConfig.connect_timeout(service().cfg().bypass));
-
-        encryptionWait.start(sslConnector, callback);
-        AsyncJob::Start(sslConnector); // will call our callback
-        return;
-    }
-
-// ??    fd_table[io.conn->fd].noteUse(icapPconnPool);
-    service().noteConnectionUse(connection);
-
-    handleCommConnected();
+    startShoveling();
 }
 
 void Adaptation::Icap::Xaction::dieOnConnectionFailure()
@@ -364,35 +356,20 @@ void Adaptation::Icap::Xaction::noteCommWrote(const CommIoCbParams &io)
 // communication timeout with the ICAP service
 void Adaptation::Icap::Xaction::noteCommTimedout(const CommTimeoutCbParams &)
 {
-    handleCommTimedout();
-}
-
-void Adaptation::Icap::Xaction::handleCommTimedout()
-{
     debugs(93, 2, HERE << typeName << " failed: timeout with " <<
            theService->cfg().methodStr() << " " <<
            theService->cfg().uri << status());
     reuseConnection = false;
-    const auto whileConnecting = bool(connWait);
-    if (whileConnecting) {
-        assert(!haveConnection());
-        theService->noteConnectionFailed("timedout");
-    } else
-        closeConnection(); // so that late Comm callbacks do not disturb bypass
-    throw TexcHere(whileConnecting ?
-                   "timed out while connecting to the ICAP service" :
-                   "timed out while talking to the ICAP service");
+    assert(haveConnection());
+    theService->noteConnectionFailed("timedout");
+    closeConnection();
+    throw TextException("timed out while talking to the ICAP service", Here());
 }
 
 // unexpected connection close while talking to the ICAP service
 void Adaptation::Icap::Xaction::noteCommClosed(const CommCloseCbParams &)
 {
     closer = NULL;
-    handleCommClosed();
-}
-
-void Adaptation::Icap::Xaction::handleCommClosed()
-{
     detailError(ERR_DETAIL_ICAP_XACT_CLOSE);
     mustStop("ICAP service connection externally closed");
 }
@@ -597,7 +574,7 @@ void Adaptation::Icap::Xaction::setOutcome(const Adaptation::Icap::XactOutcome &
 void Adaptation::Icap::Xaction::swanSong()
 {
     // kids should sing first and then call the parent method.
-    if (connWait) {
+    if (connWait || encryptionWait) {
         service().noteConnectionFailed("abort");
     }
 
@@ -735,17 +712,11 @@ Adaptation::Icap::Xaction::handleSecuredPeer(Security::EncryptorAnswer &answer)
 {
     encryptionWait.finish();
 
-    if (closer != NULL) {
-        if (Comm::IsConnOpen(answer.conn))
-            comm_remove_close_handler(answer.conn->fd, closer);
-        else
-            closer->cancel("securing completed");
-        closer = NULL;
-    }
-
     if (answer.error.get()) {
+        // XXX: Security::PeerConnector should do that for negative answers instead.
         if (answer.conn != NULL)
             answer.conn->close();
+        // TODO: Refactor dieOnConnectionFailure() to be usable here as well.
         debugs(93, 2, typeName <<
                " TLS negotiation to " << service().cfg().uri << " failed");
         service().noteConnectionFailed("failure");
@@ -755,8 +726,7 @@ Adaptation::Icap::Xaction::handleSecuredPeer(Security::EncryptorAnswer &answer)
 
     debugs(93, 5, "TLS negotiation to " << service().cfg().uri << " complete");
 
-    service().noteConnectionUse(answer.conn);
-
-    handleCommConnected();
+    // XXX: answer.conn could be closing here. Missing a syncWithComm equivalent?
+    useIcapConnection(answer.conn);
 }
 

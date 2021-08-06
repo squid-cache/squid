@@ -186,8 +186,7 @@ void Adaptation::Icap::ModXact::startWriting()
     openConnection();
 }
 
-// connection with the ICAP service established
-void Adaptation::Icap::ModXact::handleCommConnected()
+void Adaptation::Icap::ModXact::startShoveling()
 {
     Must(state.writing == State::writingConnect);
 
