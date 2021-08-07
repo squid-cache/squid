@@ -26,27 +26,27 @@ public:
     virtual ~Pp2Server() {}
 
     /* AsyncJob API */
-    virtual void start();
+    virtual void start() override;
 #if 0
     virtual bool doneAll() const;
     virtual void swanSong();
 #endif
 
     /* ChecklistFiller API */
-    virtual void fillChecklist(ACLFilledChecklist &) const;
+    virtual void fillChecklist(ACLFilledChecklist &) const override;
 
     /* ::Server API */
-    virtual bool shouldCloseOnEof() const { return true; }
-    virtual bool handleReadData();
-    virtual void afterClientRead() { assert(doneAll()); }
-    virtual void receivedFirstByte() {}
+    virtual bool shouldCloseOnEof() const override { return true; }
+    virtual bool handleReadData() override;
+    virtual void afterClientRead() override { assert(doneAll()); }
+    virtual void receivedFirstByte() override {}
 
     /** ::Server::BodyProducer API */
-    virtual void noteMoreBodySpaceAvailable(RefCount<BodyPipe>) {}
-    virtual void noteBodyConsumerAborted(RefCount<BodyPipe>) {}
+    virtual void noteMoreBodySpaceAvailable(RefCount<BodyPipe>) override {}
+    virtual void noteBodyConsumerAborted(RefCount<BodyPipe>) override {}
 
 protected:
-    virtual void terminateAll(const Error &, const LogTagsErrors &);
+    virtual void terminateAll(const Error &, const LogTagsErrors &) override;
 
 private:
     bool proxyProtocolError(const char *);
