@@ -98,14 +98,17 @@ ProxyProtocol::Connector::writeRequest()
 {
     debugs(83, 5, connection);
 
+    Two::Command cmd;
     Ip::Address srcIp;
     Ip::Address dstIp;
     if (xaction->tcpClient) {
         // pass client connection details
+        cmd = Two::cmdProxy;
         srcIp = xaction->tcpClient->remote;
         dstIp = xaction->tcpClient->local;
     } else {
         // no client exists (Squid is the client)
+        cmd = Two::cmdLocal;
         srcIp = connection->local;
         dstIp = connection->remote;
     }
@@ -114,7 +117,12 @@ ProxyProtocol::Connector::writeRequest()
     mb.init();
 
     if (peer->proxyp.version == 1) {
+#if USE_IPV6
         const auto family = (srcIp.isIPv4() ? AF_INET : AF_INET6);
+#else
+        assert(srcIp.isIPv4());
+        const auto family = AF_INET;
+#endif
         char dip[MAX_IPSTRLEN];
         dstIp.toStr(dip, sizeof(dip)-1, family);
         char sip[MAX_IPSTRLEN];
@@ -123,9 +131,51 @@ ProxyProtocol::Connector::writeRequest()
         mb.appendf("PROXY TCP%d %s %s %d %d\r\n", (family==AF_INET?4:6), sip, dip, srcIp.port(), dstIp.port());
 
     } else if (peer->proxyp.version == 2) {
-        // TODO: generate PROXYv2 header
-        bailWith(new ErrorState(ERR_GATEWAY_FAILURE, Http::scBadGateway, request.getRaw(), al));
-        return;
+        char c = '\0';
+        // PROXYv2 magic prefix
+        mb.append("\x0D\x0A\x0D\x0A\x00\x0D\x0A\x51\x55\x49\x54\x0A", 12);
+        // version | command
+        c = 0x20 | cmd;
+        mb.append(&c, 1);
+        // family | transport
+        c = ((srcIp.isIPv4()? Two::afInet : Two::afInet6)<<4) | Two::tpStream;
+        mb.append(&c, 1);
+
+        // assemble IP:port info data
+        ProxyProtocol::Addr ips;
+        uint16_t ipaSz = 0;
+        if (srcIp.isIPv4()) {
+            srcIp.getAddr(ips.ip4.src_addr);
+            ips.ip4.src_port = srcIP.port();
+            dstIp.getAddr(ips.ip4.dst_addr);
+            ips.ip4.dst_port = dstIP.port();
+            ipaSz = sizeof(ips.ip4);
+        } else {
+#if USE_IPV6
+            srcIp.getAddr(ips.ip6.src_addr);
+            ips.ip6.src_port = srcIP.port();
+            dstIp.getAddr(ips.ip6.dst_addr);
+            ips.ip6.dst_port = dstIP.port();
+            ipaSz = sizeof(ips.ip6);
+#else
+            assert(srcIp.isIPv4());
+#endif
+        }
+
+        // XXX: assemble TLVs
+
+        uint16_t len = htons((family==AF_INET? 4 : 16)*2 + 2*2) + ipaSz;
+        mb.append(static_cast<char*>(&len), 2);
+
+        // buffer IP:port data for write
+        if (srcIp.isIPv4())
+            mb.append(static_cast<char*>(&ips.ip4), ipaSz);
+#if USE_IPV6
+        else
+            mb.append(static_cast<char*>(&ips.ip6), ipaSz);
+#endif
+
+        // XXX: buffer TLVs for write
 
     } else {
         // unsupported version for PROXY protocol

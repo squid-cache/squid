@@ -64,6 +64,28 @@ typedef enum {
     tpDgram = 0x2
 } TransportProtocol;
 
+/// Layout of IP:port data in PROXYv2 header
+union Addr {
+    struct { // for TCP/UDP over IPv4, len = 12
+        struct in_addr src_addr;
+        struct in_addr dst_addr;
+        uint16_t src_port;
+        uint16_t dst_port;
+    } ip4;
+#if USE_IPV6
+    struct { // for TCP/UDP over IPv6, len = 36
+         struct in6_addr src_addr;
+         struct in6_addr dst_addr;
+         uint16_t src_port;
+         uint16_t dst_port;
+    } ip6;
+#endif
+    struct { // for AF_UNIX sockets, len = 216
+         uint8_t src_addr[108];
+         uint8_t dst_addr[108];
+    } unix;
+};
+
 /// a single Type-Length-Value (TLV) block from PROXY protocol specs
 class Tlv
 {
