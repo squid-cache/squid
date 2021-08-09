@@ -88,9 +88,17 @@ Security::PeerConnector::start()
 void
 Security::PeerConnector::commCloseHandler(const CommCloseCbParams &params)
 {
-    closeHandler = nullptr;
-
     debugs(83, 5, "FD " << params.fd << ", Security::PeerConnector=" << params.data);
+
+    closeHandler = nullptr;
+    if (serverConn) {
+        // TODO: Calling PconnPool::noteUses() should not be our responsibility.
+        if (noteFwdPconnUse && serverConn->isOpen())
+            fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
+        serverConn->noteClosure();
+        serverConn = nullptr;
+    }
+
     const auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request.getRaw(), al);
 #if USE_OPENSSL
     err->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, nullptr, nullptr);
@@ -112,6 +120,8 @@ Security::PeerConnector::commTimeoutHandler(const CommTimeoutCbParams &)
 bool
 Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
 {
+    Must(Comm::IsConnOpen(serverConnection()));
+
     Security::ContextPointer ctx(getTlsContext());
     debugs(83, 5, serverConnection() << ", ctx=" << (void*)ctx.get());
 
@@ -153,6 +163,8 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
 void
 Security::PeerConnector::recordNegotiationDetails()
 {
+    Must(Comm::IsConnOpen(serverConnection()));
+
     const int fd = serverConnection()->fd;
     Security::SessionPointer session(fd_table[fd].ssl);
 
@@ -171,6 +183,8 @@ Security::PeerConnector::recordNegotiationDetails()
 void
 Security::PeerConnector::negotiate()
 {
+    Must(Comm::IsConnOpen(serverConnection()));
+
     const int fd = serverConnection()->fd;
     if (fd_table[fd].closing())
         return;
@@ -217,6 +231,7 @@ Security::PeerConnector::sslFinalized()
 {
 #if USE_OPENSSL
     if (Ssl::TheConfig.ssl_crt_validator && useCertValidator_) {
+        Must(Comm::IsConnOpen(serverConnection()));
         const int fd = serverConnection()->fd;
         Security::SessionPointer session(fd_table[fd].ssl);
 
@@ -260,6 +275,7 @@ void
 Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointer validationResponse)
 {
     Must(validationResponse != NULL);
+    Must(Comm::IsConnOpen(serverConnection()));
 
     Ssl::ErrorDetail *errDetails = NULL;
     bool validatorFailed = false;
@@ -308,6 +324,8 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
 Security::CertErrors *
 Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &resp, Ssl::ErrorDetail *& errDetails)
 {
+    Must(Comm::IsConnOpen(serverConnection()));
+
     ACLFilledChecklist *check = NULL;
     Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
 
@@ -383,6 +401,8 @@ Security::PeerConnector::negotiateSsl()
 void
 Security::PeerConnector::handleNegotiateError(const int ret)
 {
+    Must(Comm::IsConnOpen(serverConnection()));
+
     const int fd = serverConnection()->fd;
     const Security::SessionPointer session(fd_table[fd].ssl);
     unsigned long ssl_lib_error = ret;
@@ -447,8 +467,10 @@ Security::PeerConnector::handleNegotiateError(const int ret)
 void
 Security::PeerConnector::noteWantRead()
 {
-    const int fd = serverConnection()->fd;
     debugs(83, 5, serverConnection());
+
+    Must(Comm::IsConnOpen(serverConnection()));
+    const int fd = serverConnection()->fd;
 #if USE_OPENSSL
     Security::SessionPointer session(fd_table[fd].ssl);
     BIO *b = SSL_get_rbio(session.get());
@@ -485,8 +507,10 @@ Security::PeerConnector::noteWantRead()
 void
 Security::PeerConnector::noteWantWrite()
 {
-    const int fd = serverConnection()->fd;
     debugs(83, 5, serverConnection());
+    Must(Comm::IsConnOpen(serverConnection()));
+
+    const int fd = serverConnection()->fd;
     Comm::SetSelect(fd, COMM_SELECT_WRITE, &NegotiateSsl, new Pointer(this), 0);
     return;
 }
@@ -507,6 +531,7 @@ Security::PeerConnector::noteNegotiationError(const int ret, const int ssl_error
 #endif
     int xerr = errno;
 
+    Must(Comm::IsConnOpen(serverConnection()));
     const int fd = serverConnection()->fd;
     debugs(83, DBG_IMPORTANT, "ERROR: negotiating TLS on FD " << fd <<
            ": " << Security::ErrorString(ssl_lib_error) << " (" <<
@@ -547,15 +572,21 @@ Security::PeerConnector::bail(ErrorState *error)
     Must(dialer);
     dialer->answer().error = error;
 
-    if (const auto p = serverConnection()->getPeer())
-        peerConnectFailed(p);
+    if (serverConnection()) {
+        if (const auto p = serverConnection()->getPeer())
+            peerConnectFailed(p);
+    }
 
     callBack();
     disconnect();
 
-    if (noteFwdPconnUse)
-        fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
-    serverConn->close();
+    // TODO: Close before callBack(); do not pretend to send an open connection.
+    if (Comm::IsConnOpen(serverConn)) {
+        if (noteFwdPconnUse)
+            fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
+        assert(!closeHandler); // the above disconnect() removes it
+        serverConn->close();
+    }
     serverConn = nullptr;
 }
 
@@ -569,6 +600,9 @@ Security::PeerConnector::sendSuccess()
 void
 Security::PeerConnector::disconnect()
 {
+    if (!Comm::IsConnOpen(serverConnection()))
+        return;
+
     if (closeHandler) {
         comm_remove_close_handler(serverConnection()->fd, closeHandler);
         closeHandler = nullptr;
@@ -588,7 +622,7 @@ Security::PeerConnector::callBack()
     callback = NULL; // this should make done() true
     CbDialer *dialer = dynamic_cast<CbDialer*>(cb->getDialer());
     Must(dialer);
-    dialer->answer().conn = serverConnection();
+    dialer->answer().conn = serverConnection(); // may be nil
     ScheduleCallHere(cb);
 }
 
@@ -620,7 +654,7 @@ Security::PeerConnector::status() const
         buf.append("Stopped, reason:", 16);
         buf.appendf("%s",stopReason);
     }
-    if (serverConn != NULL)
+    if (Comm::IsConnOpen(serverConn))
         buf.appendf(" FD %d", serverConn->fd);
     buf.appendf(" %s%u]", id.prefix(), id.value);
     buf.terminate();
@@ -667,6 +701,7 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     debugs(81, 5, "Certificate downloading status: " << downloadStatus << " certificate size: " << obj.length());
 
     // get ServerBio from SSL object
+    Must(Comm::IsConnOpen(serverConnection()));
     const int fd = serverConnection()->fd;
     Security::SessionPointer session(fd_table[fd].ssl);
     BIO *b = SSL_get_rbio(session.get());
@@ -714,6 +749,7 @@ Security::PeerConnector::checkForMissingCertificates()
     if (csd && csd->nestedLevel() >= MaxNestedDownloads)
         return false;
 
+    Must(Comm::IsConnOpen(serverConnection()));
     const int fd = serverConnection()->fd;
     Security::SessionPointer session(fd_table[fd].ssl);
     BIO *b = SSL_get_rbio(session.get());

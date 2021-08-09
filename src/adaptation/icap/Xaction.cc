@@ -367,6 +367,10 @@ void Adaptation::Icap::Xaction::noteCommTimedout(const CommTimeoutCbParams &)
 // unexpected connection close while talking to the ICAP service
 void Adaptation::Icap::Xaction::noteCommClosed(const CommCloseCbParams &)
 {
+    if (connection) {
+        connection->noteClosure();
+        connection = nullptr;
+    }
     closer = NULL;
     detailError(ERR_DETAIL_ICAP_XACT_CLOSE);
     mustStop("ICAP service connection externally closed");

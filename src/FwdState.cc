@@ -662,7 +662,7 @@ static void
 fwdServerClosedWrapper(const CommCloseCbParams &params)
 {
     FwdState *fwd = (FwdState *)params.data;
-    fwd->serverClosed(params.fd);
+    fwd->serverClosed();
 }
 
 /**** PRIVATE *****************************************************************/
@@ -732,14 +732,22 @@ FwdState::checkRetriable()
 }
 
 void
-FwdState::serverClosed(int fd)
+FwdState::serverClosed()
 {
-    // XXX: fd is often -1 here
-    debugs(17, 2, "FD " << fd << " " << entry->url() << " after " <<
-           (fd >= 0 ? fd_table[fd].pconn.uses : -1) << " requests");
-    if (fd >= 0 && serverConnection()->fd == fd)
-        fwdPconnPool->noteUses(fd_table[fd].pconn.uses);
+    // XXX: This method logic attempts to tolerate Connection::close() called
+    // for serverConn earlier, by one of our dispatch()ed jobs. If that happens,
+    // serverConn will already be closed here or, worse, it will already be open
+    // for the next forwarding attempt. The current code prevents us getting
+    // stuck, but the long term solution is to stop sharing serverConn.
+    debugs(17, 2, serverConn);
+    if (Comm::IsConnOpen(serverConn)) {
+        const auto uses = fd_table[serverConn->fd].pconn.uses;
+        debugs(17, 3, "prior uses: " << uses);
+        fwdPconnPool->noteUses(uses); // XXX: May not have come from fwdPconnPool
+        serverConn->noteClosure();
+    }
     serverConn = nullptr;
+    closeHandler = nullptr;
     destinationReceipt = nullptr;
     retryOrBail();
 }

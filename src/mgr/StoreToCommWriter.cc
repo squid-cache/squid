@@ -131,7 +131,11 @@ void
 Mgr::StoreToCommWriter::noteCommClosed(const CommCloseCbParams &)
 {
     debugs(16, 6, HERE);
-    Must(!Comm::IsConnOpen(clientConnection));
+    if (clientConnection) {
+        clientConnection->noteClosure();
+        clientConnection = nullptr;
+    }
+    closer = nullptr;
     mustStop("commClosed");
 }
 

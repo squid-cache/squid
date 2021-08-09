@@ -145,6 +145,8 @@ static void
 gopherStateFree(const CommCloseCbParams &params)
 {
     GopherStateData *gopherState = (GopherStateData *)params.data;
+    // Assume that FwdState is monitoring and calls noteClosure(). See XXX about
+    // Connection sharing with FwdState in gopherStart().
     delete gopherState;
 }
 
@@ -945,6 +947,7 @@ gopherStart(FwdState * fwd)
         return;
     }
 
+    // XXX: Sharing open Connection with FwdState that has its own handlers/etc.
     gopherState->serverConn = fwd->serverConnection();
     gopherSendRequest(fwd->serverConnection()->fd, gopherState);
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "gopherTimeout",

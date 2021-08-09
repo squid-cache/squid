@@ -100,6 +100,11 @@ Http::Tunneler::start()
 void
 Http::Tunneler::handleConnectionClosure(const CommCloseCbParams &params)
 {
+    if (connection) {
+        connection->noteClosure();
+        // TODO: Properly get rid of connection here instead of keeping a closed
+        // connection object for peerConnectFailed(),noteUses() in bailWith().
+    }
     closer = nullptr;
     bailWith(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al));
 }
@@ -366,10 +371,15 @@ Http::Tunneler::bailWith(ErrorState *error)
     callBack();
     disconnect();
 
-    if (noteFwdPconnUse)
-        fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);
-    // TODO: Reuse to-peer connections after a CONNECT error response.
-    connection->close();
+    // TODO: Close before callBack(); do not pretend to send an open connection.
+    if (Comm::IsConnOpen(connection)) {
+        if (noteFwdPconnUse)
+            fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);
+        // TODO: Reuse to-peer connections after a CONNECT error response.
+
+        assert(!closer); // the above disconnect() removes it
+        connection->close();
+    }
     connection = nullptr;
 }
 
@@ -390,12 +400,13 @@ Http::Tunneler::disconnect()
     }
 
     if (reader) {
-        Comm::ReadCancel(connection->fd, reader);
+        if (Comm::IsConnOpen(connection))
+            Comm::ReadCancel(connection->fd, reader);
         reader = nullptr;
     }
 
-    // remove connection timeout handler
-    commUnsetConnTimeout(connection);
+    if (Comm::IsConnOpen(connection))
+        commUnsetConnTimeout(connection);
 }
 
 void
@@ -415,7 +426,7 @@ Http::Tunneler::swanSong()
     AsyncJob::swanSong();
 
     if (callback) {
-        if (requestWritten && tunnelEstablished) {
+        if (requestWritten && tunnelEstablished && Comm::IsConnOpen(connection)) {
             sendSuccess();
         } else {
             // job-ending emergencies like handleStopRequest() or callException()

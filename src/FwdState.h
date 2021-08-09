@@ -88,7 +88,7 @@ public:
     void handleUnregisteredServerEnd();
     int reforward();
     bool reforwardableStatus(const Http::StatusCode s) const;
-    void serverClosed(int fd);
+    void serverClosed();
     void connectStart();
     void connectDone(const Comm::ConnectionPointer & conn, Comm::Flag status, int xerrno);
     bool checkRetry();

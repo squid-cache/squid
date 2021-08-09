@@ -125,7 +125,10 @@ void
 Ident::Close(const CommCloseCbParams &params)
 {
     IdentStateData *state = (IdentStateData *)params.data;
-    // XXX: A Connection closure handler must update its Connection object.
+    if (state->conn) {
+        state->conn->noteClosure();
+        state->conn = nullptr;
+    }
     state->deleteThis("connection closed");
 }
 

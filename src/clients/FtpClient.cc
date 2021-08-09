@@ -790,10 +790,11 @@ void
 Ftp::Client::dataClosed(const CommCloseCbParams &)
 {
     debugs(9, 4, status());
+    if (data.conn)
+        data.conn->noteClosure();
     if (data.listenConn != NULL) {
         data.listenConn->close();
         data.listenConn = NULL;
-        // NP clear() does the: data.fd = -1;
     }
     data.clear();
 }
@@ -858,6 +859,8 @@ void
 Ftp::Client::ctrlClosed(const CommCloseCbParams &)
 {
     debugs(9, 4, status());
+    if (ctrl.conn)
+        ctrl.conn->noteClosure();
     ctrl.clear();
     doneWithFwd = "ctrlClosed()"; // assume FwdState is monitoring too
     mustStop("Ftp::Client::ctrlClosed");

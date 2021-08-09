@@ -743,6 +743,10 @@ commCallCloseHandlers(int fd)
         // If call is not canceled schedule it for execution else ignore it
         if (!call->canceled()) {
             debugs(5, 5, "commCallCloseHandlers: ch->handler=" << call);
+            // XXX: Without the following code, callback fd may be -1.
+            // typedef CommCloseCbParams Params;
+            // auto &params = GetCommParams<Params>(call);
+            // params.fd = fd;
             ScheduleCallHere(call);
         }
     }
@@ -1787,6 +1791,10 @@ DeferredReadManager::CloseHandler(const CommCloseCbParams &params)
     CbDataList<DeferredRead> *temp = (CbDataList<DeferredRead> *)params.data;
 
     temp->element.closer = NULL;
+    if (temp->element.theRead.conn) {
+        temp->element.theRead.conn->noteClosure();
+        temp->element.theRead.conn = nullptr;
+    }
     temp->element.markCancelled();
 }
 
@@ -1860,6 +1868,11 @@ DeferredReadManager::kickARead(DeferredRead const &aRead)
     if (aRead.cancelled)
         return;
 
+    // TODO: This check still allows theReader call with a closed theRead.conn.
+    // If a delayRead() caller has a close connection handler, then such a call
+    // would be useless and dangerous. If a delayRead() caller does not have it,
+    // then the caller will get stuck when an external connection closure makes
+    // aRead.cancelled (checked above) true.
     if (Comm::IsConnOpen(aRead.theRead.conn) && fd_table[aRead.theRead.conn->fd].closing())
         return;
 
