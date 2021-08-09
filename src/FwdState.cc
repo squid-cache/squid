@@ -1001,9 +1001,10 @@ FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
 
     ErrorState *error = nullptr;
     if ((error = answer.error.get())) {
-        Must(!Comm::IsConnOpen(answer.conn));
+        assert(!answer.conn);
         answer.error.clear(); // preserve error for errorSendComplete()
     } else if (answer.tunneled) {
+        assert(!answer.conn);
         // TODO: When ConnStateData establishes tunnels, its state changes
         // [in ways that may affect logging?]. Consider informing
         // ConnStateData about our tunnel or otherwise unifying tunnel

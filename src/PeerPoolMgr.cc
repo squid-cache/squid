@@ -145,13 +145,15 @@ PeerPoolMgr::handleSecuredPeer(Security::EncryptorAnswer &answer)
         return;
     }
 
+    assert(!answer.tunneled);
     if (answer.error.get()) {
-        if (answer.conn != NULL)
-            answer.conn->close();
+        assert(!answer.conn);
         // PeerConnector calls peerConnectFailed() for us;
         checkpoint("conn securing failure"); // may retry
         return;
     }
+
+    // TODO: Check for .closing() like FwdState::connectedToPeer() does?
 
     pushNewConnection(answer.conn);
 }

@@ -150,12 +150,18 @@ protected:
     /// a bail(), sendSuccess() helper: stops monitoring the connection
     void disconnect();
 
+    /// updates connection usage history before the connection is closed
+    void countFailingConnection();
+
     /// If called the certificates validator will not used
     void bypassCertValidator() {useCertValidator_ = false;}
 
     /// Called after negotiation finishes to record connection details for
     /// logging
     void recordNegotiationDetails();
+
+    /// convenience method to get to the answer fields
+    EncryptorAnswer &answer();
 
     HttpRequestPointer request; ///< peer connection trigger or cause
     Comm::ConnectionPointer serverConn; ///< TCP connection to the peer

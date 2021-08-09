@@ -979,7 +979,7 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 
     if (!answer.positive()) {
         sawProblem = true;
-        Must(!answer.conn);
+        assert(!answer.conn);
     } else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
         sawProblem = true;
         closePendingConnection(answer.conn, "conn was closed while waiting for tunnelEstablishmentDone");
@@ -1199,8 +1199,9 @@ TunnelStateData::noteSecurityPeerConnectorAnswer(Security::EncryptorAnswer &answ
     encryptionWait.finish();
 
     ErrorState *error = nullptr;
+    assert(!answer.tunneled);
     if ((error = answer.error.get())) {
-        Must(!Comm::IsConnOpen(answer.conn));
+        assert(!answer.conn);
         answer.error.clear();
     } else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
         error = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw(), al);

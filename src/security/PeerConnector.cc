@@ -92,9 +92,7 @@ Security::PeerConnector::commCloseHandler(const CommCloseCbParams &params)
 
     closeHandler = nullptr;
     if (serverConn) {
-        // TODO: Calling PconnPool::noteUses() should not be our responsibility.
-        if (noteFwdPconnUse && serverConn->isOpen())
-            fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
+        countFailingConnection();
         serverConn->noteClosure();
         serverConn = nullptr;
     }
@@ -223,7 +221,8 @@ Security::PeerConnector::negotiate()
     if (!sslFinalized())
         return;
 
-    sendSuccess();
+    if (callback) // true sslFinalized() may bail(), calling the callback
+        sendSuccess();
 }
 
 bool
@@ -298,7 +297,8 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
 
     if (!errDetails && !validatorFailed) {
         noteNegotiationDone(NULL);
-        sendSuccess();
+        if (callback)
+            sendSuccess();
         return;
     }
 
@@ -563,66 +563,76 @@ Security::PeerConnector::noteNegotiationError(const int ret, const int ssl_error
     bail(anErr);
 }
 
+Security::EncryptorAnswer &
+Security::PeerConnector::answer()
+{
+    assert(callback);
+    const auto dialer = dynamic_cast<CbDialer*>(callback->getDialer());
+    assert(dialer);
+    return dialer->answer();
+}
+
 void
 Security::PeerConnector::bail(ErrorState *error)
 {
     Must(error); // or the recipient will not know there was a problem
-    Must(callback != NULL);
-    CbDialer *dialer = dynamic_cast<CbDialer*>(callback->getDialer());
-    Must(dialer);
-    dialer->answer().error = error;
+    answer().error = error;
 
-    if (serverConnection()) {
-        if (const auto p = serverConnection()->getPeer())
-            peerConnectFailed(p);
+    if (const auto failingConnection = serverConn) {
+        countFailingConnection();
+        disconnect();
+        failingConnection->close();
     }
 
     callBack();
-    disconnect();
-
-    // TODO: Close before callBack(); do not pretend to send an open connection.
-    if (Comm::IsConnOpen(serverConn)) {
-        if (noteFwdPconnUse)
-            fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
-        assert(!closeHandler); // the above disconnect() removes it
-        serverConn->close();
-    }
-    serverConn = nullptr;
 }
 
 void
 Security::PeerConnector::sendSuccess()
 {
-    callBack();
+    assert(Comm::IsConnOpen(serverConn));
+    answer().conn = serverConn;
     disconnect();
+    callBack();
+}
+
+void
+Security::PeerConnector::countFailingConnection()
+{
+    assert(serverConn);
+    if (const auto p = serverConn->getPeer())
+        peerConnectFailed(p);
+    // TODO: Calling PconnPool::noteUses() should not be our responsibility.
+    if (noteFwdPconnUse && serverConn->isOpen())
+        fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
 }
 
 void
 Security::PeerConnector::disconnect()
 {
-    if (!Comm::IsConnOpen(serverConnection()))
-        return;
+    const auto stillOpen = Comm::IsConnOpen(serverConn);
 
     if (closeHandler) {
-        comm_remove_close_handler(serverConnection()->fd, closeHandler);
+        if (stillOpen)
+            comm_remove_close_handler(serverConn->fd, closeHandler);
         closeHandler = nullptr;
     }
 
-    commUnsetConnTimeout(serverConnection());
+    if (stillOpen)
+        commUnsetConnTimeout(serverConn);
+
+    serverConn = nullptr;
 }
 
 void
 Security::PeerConnector::callBack()
 {
-    debugs(83, 5, "TLS setup ended for " << serverConnection());
+    debugs(83, 5, "TLS setup ended for " << answer().conn);
 
     AsyncCall::Pointer cb = callback;
     // Do this now so that if we throw below, swanSong() assert that we _tried_
     // to call back holds.
     callback = NULL; // this should make done() true
-    CbDialer *dialer = dynamic_cast<CbDialer*>(cb->getDialer());
-    Must(dialer);
-    dialer->answer().conn = serverConnection(); // may be nil
     ScheduleCallHere(cb);
 }
 

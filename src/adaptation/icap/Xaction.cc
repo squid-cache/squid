@@ -714,10 +714,9 @@ Adaptation::Icap::Xaction::handleSecuredPeer(Security::EncryptorAnswer &answer)
 {
     encryptionWait.finish();
 
+    assert(!answer.tunneled);
     if (answer.error.get()) {
-        // XXX: Security::PeerConnector should do that for negative answers instead.
-        if (answer.conn != NULL)
-            answer.conn->close();
+        assert(!answer.conn);
         // TODO: Refactor dieOnConnectionFailure() to be usable here as well.
         debugs(93, 2, typeName <<
                " TLS negotiation to " << service().cfg().uri << " failed");
@@ -729,6 +728,7 @@ Adaptation::Icap::Xaction::handleSecuredPeer(Security::EncryptorAnswer &answer)
     debugs(93, 5, "TLS negotiation to " << service().cfg().uri << " complete");
 
     // XXX: answer.conn could be closing here. Missing a syncWithComm equivalent?
+    // TODO: Check for .closing() like FwdState::connectedToPeer() does?
     useIcapConnection(answer.conn);
 }
 
