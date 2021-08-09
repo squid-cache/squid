@@ -100,12 +100,12 @@ Http::Tunneler::start()
 void
 Http::Tunneler::handleConnectionClosure(const CommCloseCbParams &params)
 {
-    if (connection) {
-        connection->noteClosure();
-        // TODO: Properly get rid of connection here instead of keeping a closed
-        // connection object for peerConnectFailed(),noteUses() in bailWith().
-    }
     closer = nullptr;
+    if (connection) {
+        countFailingConnection();
+        connection->noteClosure();
+        connection = nullptr;
+    }
     bailWith(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al));
 }
 
@@ -365,56 +365,65 @@ Http::Tunneler::bailWith(ErrorState *error)
     Must(error);
     answer().squidError = error;
 
-    if (const auto p = connection->getPeer())
-        peerConnectFailed(p);
+    if (const auto failingConnection = connection) {
+        // TODO: Reuse to-peer connections after a CONNECT error response.
+        countFailingConnection();
+        disconnect();
+        failingConnection->close();
+    }
 
     callBack();
-    disconnect();
-
-    // TODO: Close before callBack(); do not pretend to send an open connection.
-    if (Comm::IsConnOpen(connection)) {
-        if (noteFwdPconnUse)
-            fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);
-        // TODO: Reuse to-peer connections after a CONNECT error response.
-
-        assert(!closer); // the above disconnect() removes it
-        connection->close();
-    }
-    connection = nullptr;
 }
 
 void
 Http::Tunneler::sendSuccess()
 {
     assert(answer().positive());
-    callBack();
+    assert(Comm::IsConnOpen(connection));
+    answer().conn = connection;
     disconnect();
+    callBack();
+}
+
+
+void
+Http::Tunneler::countFailingConnection()
+{
+    assert(connection);
+    if (const auto p = connection->getPeer())
+        peerConnectFailed(p);
+    if (noteFwdPconnUse && connection->isOpen())
+        fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);
 }
 
 void
 Http::Tunneler::disconnect()
 {
+    const auto stillOpen = Comm::IsConnOpen(connection);
+
     if (closer) {
-        comm_remove_close_handler(connection->fd, closer);
+        if (stillOpen)
+            comm_remove_close_handler(connection->fd, closer);
         closer = nullptr;
     }
 
     if (reader) {
-        if (Comm::IsConnOpen(connection))
+        if (stillOpen)
             Comm::ReadCancel(connection->fd, reader);
         reader = nullptr;
     }
 
-    if (Comm::IsConnOpen(connection))
+    if (stillOpen)
         commUnsetConnTimeout(connection);
+
+    connection = nullptr; // may still be open
 }
 
 void
 Http::Tunneler::callBack()
 {
-    debugs(83, 5, connection << status());
-    if (answer().positive())
-        answer().conn = connection;
+    debugs(83, 5, answer().conn << status());
+    assert(!connection); // returned inside answer() or gone
     auto cb = callback;
     callback = nullptr;
     ScheduleCallHere(cb);

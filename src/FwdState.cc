@@ -914,7 +914,7 @@ FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 
     ErrorState *error = nullptr;
     if (!answer.positive()) {
-        Must(!Comm::IsConnOpen(answer.conn));
+        Must(!answer.conn);
         error = answer.squidError.get();
         Must(error);
         answer.squidError.clear(); // preserve error for fail()
