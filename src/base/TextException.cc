@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -59,11 +59,21 @@ TextException::what() const throw()
 }
 
 std::ostream &
+operator <<(std::ostream &os, const TextException &ex)
+{
+    ex.print(os);
+    return os;
+}
+
+std::ostream &
 CurrentException(std::ostream &os)
 {
     if (std::current_exception()) {
         try {
             throw; // re-throw to recognize the exception type
+        }
+        catch (const TextException &ex) {
+            os << ex; // optimization: this is a lot cheaper than what() below
         }
         catch (const std::exception &ex) {
             os << ex.what();

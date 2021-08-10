@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -80,8 +80,8 @@ Sum(const T a, const U b) {
 template <typename T, typename... Args>
 Optional<T>
 Sum(const T first, Args... args) {
-    if (const auto others = Sum(args...)) {
-        return Sum(first, others.value());
+    if (const auto others = Sum<T>(args...)) {
+        return Sum<T>(first, others.value());
     } else {
         return Optional<T>();
     }

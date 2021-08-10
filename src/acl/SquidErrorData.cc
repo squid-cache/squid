@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,7 @@
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
-#include "err_type.h"
+#include "error/Error.h"
 #include "fatal.h"
 #include "wordlist.h"
 

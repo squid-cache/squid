@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,7 +15,7 @@
 #include "clients/forward.h"
 #include "comm.h"
 #include "comm/Connection.h"
-#include "err_type.h"
+#include "error/forward.h"
 #include "fde.h"
 #include "http/StatusCode.h"
 #include "ip/Address.h"
@@ -38,14 +38,6 @@ typedef RefCount<ResolvedPeers> ResolvedPeersPointer;
 
 class HappyConnOpener;
 class HappyConnOpenerAnswer;
-
-#if USE_OPENSSL
-namespace Ssl
-{
-class ErrorDetail;
-class CertValidationResponse;
-};
-#endif
 
 /// Sets initial TOS value and Netfilter for the future outgoing connection.
 /// Updates the given Connection object, not the future transport connection.

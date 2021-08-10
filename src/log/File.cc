@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 50    Log file handling */
 
 #include "squid.h"
+#include "DebugMessages.h"
 #include "fatal.h"
 #include "fde.h"
 #include "log/File.h"
@@ -41,7 +42,7 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
     int ret;
     const char *patharg;
 
-    debugs(50, DBG_IMPORTANT, "Logfile: opening log " << path);
+    debugs(50, Important(26), "Logfile: opening log " << path);
 
     Logfile *lf = new Logfile(path);
     patharg = path;
@@ -90,7 +91,7 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
 void
 logfileClose(Logfile * lf)
 {
-    debugs(50, DBG_IMPORTANT, "Logfile: closing log " << lf->path);
+    debugs(50, Important(27), "Logfile: closing log " << lf->path);
     lf->f_flush(lf);
     lf->f_close(lf);
     delete lf;

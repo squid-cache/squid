@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,6 +14,7 @@
 #include "client_side.h"
 #include "clients/forward.h"
 #include "clients/FtpClient.h"
+#include "error/SysErrorDetail.h"
 #include "ftp/Elements.h"
 #include "ftp/Parsing.h"
 #include "http/Stream.h"
@@ -159,8 +160,8 @@ Ftp::Relay::Relay(FwdState *const fwdState):
     savedReply.lastReply = NULL;
     savedReply.replyCode = 0;
 
-    // Nothing we can do at request creation time can mark the response as
-    // uncachable, unfortunately. This prevents "found KEY_PRIVATE" WARNINGs.
+    // Prevent the future response from becoming public and being shared/cached
+    // because FTP does not support response cachability and freshness checks.
     entry->releaseRequest();
     AsyncCall::Pointer call = asyncCall(9, 4, "Ftp::Relay::Abort", cbdataDialer(&Relay::HandleStoreAbort, this));
     entry->registerAbortCallback(call);
@@ -298,7 +299,7 @@ Ftp::Relay::failedErrorMessage(err_type error, int xerrno)
     const Http::StatusCode httpStatus = failedHttpStatus(error);
     HttpReply *const reply = createHttpReply(httpStatus);
     entry->replaceHttpReply(reply);
-    fwd->request->detailError(error, xerrno);
+    fwd->request->detailError(error, SysErrorDetail::NewIfAny(xerrno));
 }
 
 void

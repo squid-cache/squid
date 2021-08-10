@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -54,7 +54,7 @@ Http::Stream::registerWithConn()
     assert(!connRegistered_);
     assert(getConn());
     connRegistered_ = true;
-    getConn()->pipeline.add(Http::StreamPointer(this));
+    getConn()->add(this);
 }
 
 bool
@@ -72,12 +72,6 @@ Http::Stream::writeComplete(size_t size)
            (entry ? entry->objectLen() : 0));
 
     http->out.size += size;
-
-    if (clientHttpRequestStatus(clientConnection->fd, http)) {
-        initiateClose("failure or true request status");
-        /* Do we leak here ? */
-        return;
-    }
 
     switch (socketState()) {
 
@@ -171,12 +165,13 @@ Http::Stream::getNextRangeOffset() const
             return start;
         }
 
-    } else if (reply && reply->contentRange()) {
+    } else if (const auto cr = reply ? reply->contentRange() : nullptr) {
         /* request does not have ranges, but reply does */
         /* TODO: should use range_iter_pos on reply, as soon as reply->content_range
          *        becomes HttpHdrRange rather than HttpHdrRangeSpec.
          */
-        return http->out.offset + reply->contentRange()->spec.offset;
+        if (cr->spec.offset != HttpHdrRangeSpec::UnknownPosition)
+            return http->out.offset + cr->spec.offset;
     }
 
     return http->out.offset;
@@ -239,6 +234,10 @@ Http::Stream::socketState()
                    reply->contentRange()->spec.offset << ")");
 
             // did we get at least what we expected, based on range specs?
+
+            // this Content-Range does not tell us how many bytes to expect
+            if (bytesExpected == HttpHdrRangeSpec::UnknownPosition)
+                return STREAM_NONE;
 
             if (bytesSent == bytesExpected) // got everything
                 return STREAM_COMPLETE;
@@ -470,59 +469,27 @@ Http::Stream::buildRangeHeader(HttpReply *rep)
     } else {
         /* XXX: TODO: Review, this unconditional set may be wrong. */
         rep->sline.set(rep->sline.version, Http::scPartialContent);
-        // web server responded with a valid, but unexpected range.
-        // will (try-to) forward as-is.
-        //TODO: we should cope with multirange request/responses
-        // TODO: review, since rep->content_range is always nil here.
-        bool replyMatchRequest = contentRange != nullptr ?
-                                 request->range->contains(contentRange->spec) :
-                                 true;
+
+        // before range_iter accesses
+        const auto actual_clen = http->prepPartialResponseGeneration();
+
         const int spec_count = http->request->range->specs.size();
-        int64_t actual_clen = -1;
 
         debugs(33, 3, "range spec count: " << spec_count <<
                " virgin clen: " << rep->content_length);
         assert(spec_count > 0);
         /* append appropriate header(s) */
         if (spec_count == 1) {
-            if (!replyMatchRequest) {
-                hdr->putContRange(contentRange);
-                actual_clen = rep->content_length;
-                //http->range_iter.pos = rep->content_range->spec.begin();
-                (*http->range_iter.pos)->offset = contentRange->spec.offset;
-                (*http->range_iter.pos)->length = contentRange->spec.length;
-
-            } else {
-                HttpHdrRange::iterator pos = http->request->range->begin();
-                assert(*pos);
-                /* append Content-Range */
-
-                if (!contentRange) {
-                    /* No content range, so this was a full object we are
-                     * sending parts of.
-                     */
-                    httpHeaderAddContRange(hdr, **pos, rep->content_length);
-                }
-
-                /* set new Content-Length to the actual number of bytes
-                 * transmitted in the message-body */
-                actual_clen = (*pos)->length;
-            }
+            const auto singleSpec = *http->request->range->begin();
+            assert(singleSpec);
+            httpHeaderAddContRange(hdr, *singleSpec, rep->content_length);
         } else {
             /* multipart! */
-            /* generate boundary string */
-            http->range_iter.boundary = http->rangeBoundaryStr();
             /* delete old Content-Type, add ours */
             hdr->delById(Http::HdrType::CONTENT_TYPE);
             httpHeaderPutStrf(hdr, Http::HdrType::CONTENT_TYPE,
                               "multipart/byteranges; boundary=\"" SQUIDSTRINGPH "\"",
                               SQUIDSTRINGPRINT(http->range_iter.boundary));
-            /* Content-Length is not required in multipart responses
-             * but it is always nice to have one */
-            actual_clen = http->mRangeCLen();
-
-            /* http->out needs to start where we want data at */
-            http->out.offset = http->range_iter.currentSpec()->offset;
         }
 
         /* replace Content-Length header */
@@ -530,9 +497,6 @@ Http::Stream::buildRangeHeader(HttpReply *rep)
         hdr->delById(Http::HdrType::CONTENT_LENGTH);
         hdr->putInt64(Http::HdrType::CONTENT_LENGTH, actual_clen);
         debugs(33, 3, "actual content length: " << actual_clen);
-
-        /* And start the range iter off */
-        http->range_iter.updateSpec();
     }
 }
 
@@ -560,12 +524,11 @@ Http::Stream::getConn() const
 
 /// remembers the abnormal connection termination for logging purposes
 void
-Http::Stream::noteIoError(const int xerrno)
+Http::Stream::noteIoError(const Error &error, const LogTagsErrors &lte)
 {
     if (http) {
-        http->logType.err.timedout = (xerrno == ETIMEDOUT);
-        // aborted even if xerrno is zero (which means read abort/eof)
-        http->logType.err.aborted = (xerrno != ETIMEDOUT);
+        http->updateError(error);
+        http->logType.err.update(lte);
     }
 }
 

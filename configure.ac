@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -450,8 +450,11 @@ AC_DEFUN([LIBATOMIC_CHECKER],[
 #include <atomic>
 #include <cstdint>
       int
-      main(int, char **) {
-          return std::atomic<uint64_t>{}.is_lock_free() ? 0 : 1;
+      main(int argc, char **) {
+          return (
+              std::atomic<uint8_t>(uint8_t(argc)).exchange(0) &&
+              std::atomic<uint64_t>{}.is_lock_free()
+              ) ? 0 : 1;
       }
   ]])],[
     AC_MSG_RESULT(yes)
@@ -2638,6 +2641,7 @@ SQUID_YESNO([$enableval],
 ])
 # Default OFF. This is a debug feature. Only check and enable if forced ON.
 if test "x$enable_cpu_profiling" = "xyes"; then
+  AC_CHECK_FUNCS(clock_gettime_nsec_np)
   SQUID_CHECK_FUNCTIONAL_CPU_PROFILER
   if test "x$squid_cv_cpu_profiler_works" = "xno"; then
     AC_MSG_ERROR([CPU profiling will not be functional in this build.])
@@ -2894,10 +2898,9 @@ AC_CHECK_SIZEOF(off_t)
 AC_CHECK_SIZEOF(size_t)
 
 dnl Some C++11 types we try to use
-AX_CXX_TYPE_NULLPTR
-AX_CXX_TYPE_UNIQUE_PTR
 AX_CXX_TYPE_UNIFORM_DISTRIBUTIONS
 SQUID_CXX_STD_UNDERLYING_TYPE
+SQUID_CXX_STD_IS_TRIVIALLY_COPYABLE
 
 dnl On Solaris 9 x86, gcc may includes a "fixed" set of old system include files
 dnl that is incompatible with the updated Solaris header files.
@@ -3742,6 +3745,7 @@ AC_CONFIG_FILES([
 	src/DiskIO/DiskThreads/Makefile
 	src/DiskIO/IpcIo/Makefile
 	src/DiskIO/Mmapped/Makefile
+	src/error/Makefile
 	src/esi/Makefile
 	src/eui/Makefile
 	src/format/Makefile

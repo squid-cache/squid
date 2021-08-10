@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,6 +15,16 @@
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "wordlist.h"
+
+#define ACL_SUNDAY  0x01
+#define ACL_MONDAY  0x02
+#define ACL_TUESDAY 0x04
+#define ACL_WEDNESDAY   0x08
+#define ACL_THURSDAY    0x10
+#define ACL_FRIDAY  0x20
+#define ACL_SATURDAY    0x40
+#define ACL_ALLWEEK 0x7F
+#define ACL_WEEKDAYS    0x3E
 
 ACLTimeData::ACLTimeData () : weekbits (0), start (0), stop (0), next (NULL) {}
 

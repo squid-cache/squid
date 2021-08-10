@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,7 +18,6 @@
 
 extern char *ConfigFile;    /* NULL */
 extern char *IcpOpcodeStr[];
-extern char tmp_error_buf[ERROR_BUF_SZ];
 extern char ThisCache[RFC2181_MAXHOSTNAMELEN << 1];
 extern char ThisCache2[RFC2181_MAXHOSTNAMELEN << 1];
 extern char config_input_line[BUFSIZ];

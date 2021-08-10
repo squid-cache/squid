@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -118,7 +118,7 @@ void Stream::buildRangeHeader(HttpReply *) STUB
 clientStreamNode *Stream::getTail() const STUB_RETVAL(nullptr)
 clientStreamNode *Stream::getClientReplyContext() const STUB_RETVAL(nullptr)
 ConnStateData *Stream::getConn() const STUB_RETVAL(nullptr)
-void Stream::noteIoError(const int) STUB
+void Stream::noteIoError(const Error &, const LogTagsErrors &) STUB
 void Stream::finished() STUB
 void Stream::initiateClose(const char *) STUB
 void Stream::deferRecipientForLater(clientStreamNode *, HttpReply *, StoreIOBuffer) STUB

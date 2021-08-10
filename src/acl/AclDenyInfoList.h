@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 #define SQUID_ACLDENYINFOLIST_H_
 
 #include "acl/forward.h"
-#include "err_type.h"
+#include "error/forward.h"
 #include "errorpage.h"
 #include "mem/forward.h"
 #include "sbuf/forward.h"

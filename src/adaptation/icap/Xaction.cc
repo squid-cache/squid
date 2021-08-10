@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,7 +21,7 @@
 #include "comm/Read.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
 #include "fde.h"
 #include "FwdState.h"
 #include "globals.h"
@@ -68,6 +68,9 @@ public:
     }
 
 private:
+    /* Acl::ChecklistFiller API */
+    virtual void fillChecklist(ACLFilledChecklist &) const;
+
     Adaptation::Icap::ServiceRep::Pointer icapService;
 };
 } // namespace Ssl
@@ -86,6 +89,7 @@ Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::Serv
     isRetriable(true),
     isRepeatable(true),
     ignoreLastWrite(false),
+    waitingForDns(false),
     alep(new AccessLogEntry),
     al(*alep)
 {
@@ -170,12 +174,17 @@ Adaptation::Icap::Xaction::openConnection()
     debugs(93,3, typeName << " opens connection to " << s.cfg().host.termedBuf() << ":" << s.cfg().port);
 
     // Locate the Service IP(s) to open
+    assert(!waitingForDns);
+    waitingForDns = true; // before the possibly-synchronous ipcache_nbgethostbyname()
     ipcache_nbgethostbyname(s.cfg().host.termedBuf(), icapLookupDnsResults, this);
 }
 
 void
 Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
 {
+    assert(waitingForDns);
+    waitingForDns = false;
+
     Adaptation::Icap::ServiceRep &s = service();
 
     if (ia == NULL) {
@@ -201,20 +210,6 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
     cs->setHost(s.cfg().host.termedBuf());
     transportWait.start(cs, callback);
 }
-
-/*
- * This event handler is necessary to work around the no-rentry policy
- * of Adaptation::Icap::Xaction::callStart()
- */
-#if 0
-void
-Adaptation::Icap::Xaction::reusedConnection(void *data)
-{
-    debugs(93, 5, HERE << "reused connection");
-    Adaptation::Icap::Xaction *x = (Adaptation::Icap::Xaction*)data;
-    x->noteCommConnected(Comm::OK);
-}
-#endif
 
 void Adaptation::Icap::Xaction::closeConnection()
 {
@@ -317,7 +312,8 @@ void Adaptation::Icap::Xaction::dieOnConnectionFailure()
     debugs(93, 2, HERE << typeName <<
            " failed to connect to " << service().cfg().uri);
     service().noteConnectionFailed("failure");
-    detailError(ERR_DETAIL_ICAP_XACT_START);
+    static const auto d = MakeNamedErrorDetail("ICAP_XACT_START");
+    detailError(d);
     throw TexcHere("cannot connect to the ICAP service");
 }
 
@@ -372,7 +368,9 @@ void Adaptation::Icap::Xaction::noteCommClosed(const CommCloseCbParams &)
         connection = nullptr;
     }
     closer = NULL;
-    detailError(ERR_DETAIL_ICAP_XACT_CLOSE);
+
+    static const auto d = MakeNamedErrorDetail("ICAP_XACT_CLOSE");
+    detailError(d);
     mustStop("ICAP service connection externally closed");
 }
 
@@ -394,7 +392,9 @@ void Adaptation::Icap::Xaction::callEnd()
 
 bool Adaptation::Icap::Xaction::doneAll() const
 {
-    return !transportWait && !encryptionWait && !reader && !writer && Adaptation::Initiate::doneAll();
+    return !waitingForDns && !transportWait && !encryptionWait &&
+           !reader && !writer &&
+           Adaptation::Initiate::doneAll();
 }
 
 void Adaptation::Icap::Xaction::updateTimeout()
@@ -553,7 +553,8 @@ void Adaptation::Icap::Xaction::noteInitiatorAborted()
     if (theInitiator.set()) {
         debugs(93,4, HERE << "Initiator gone before ICAP transaction ended");
         clearInitiator();
-        detailError(ERR_DETAIL_ICAP_INIT_GONE);
+        static const auto d = MakeNamedErrorDetail("ICAP_INIT_GONE");
+        detailError(d);
         setOutcome(xoGone);
         mustStop("initiator aborted");
     }
@@ -662,6 +663,9 @@ void Adaptation::Icap::Xaction::fillPendingStatus(MemBuf &buf) const
 
         buf.append(";", 1);
     }
+
+    if (waitingForDns)
+        buf.append("D", 1);
 }
 
 void Adaptation::Icap::Xaction::fillDoneStatus(MemBuf &buf) const
@@ -689,14 +693,18 @@ Ssl::IcapPeerConnector::initialize(Security::SessionPointer &serverSession)
     SBuf *host = new SBuf(icapService->cfg().secure.sslDomain);
     SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, host);
     setClientSNI(serverSession.get(), host->c_str());
-
-    ACLFilledChecklist *check = static_cast<ACLFilledChecklist *>(SSL_get_ex_data(serverSession.get(), ssl_ex_index_cert_error_check));
-    if (check)
-        check->dst_peer_name = *host;
 #endif
 
     Security::SetSessionResumeData(serverSession, icapService->sslSession);
     return true;
+}
+
+void
+Ssl::IcapPeerConnector::fillChecklist(ACLFilledChecklist &checklist) const
+{
+    Security::PeerConnector::fillChecklist(checklist);
+    if (checklist.dst_peer_name.isEmpty())
+        checklist.dst_peer_name = icapService->cfg().secure.sslDomain;
 }
 
 void
@@ -721,7 +729,8 @@ Adaptation::Icap::Xaction::handleSecuredPeer(Security::EncryptorAnswer &answer)
         debugs(93, 2, typeName <<
                " TLS negotiation to " << service().cfg().uri << " failed");
         service().noteConnectionFailed("failure");
-        detailError(ERR_DETAIL_ICAP_XACT_SSL_START);
+        static const auto d = MakeNamedErrorDetail("ICAP_XACT_SSL_START");
+        detailError(d);
         throw TexcHere("cannot connect to the TLS ICAP service");
     }
 
@@ -734,7 +743,8 @@ Adaptation::Icap::Xaction::handleSecuredPeer(Security::EncryptorAnswer &answer)
     if (answer.conn->isOpen() && fd_table[answer.conn->fd].closing()) {
         answer.conn->noteClosure();
         service().noteConnectionFailed("external TLS connection closure");
-        detailError(ERR_DETAIL_ICAP_XACT_SSL_START);
+        static const auto d = MakeNamedErrorDetail("ICAP_XACT_SSL_CLOSE");
+        detailError(d);
         throw TexcHere("external closure of the TLS ICAP service connection");
     }
 

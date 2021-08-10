@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,6 +26,7 @@ void requirePathnameExists(const char *name, const char *path) STUB_NOP
 void parse_time_t(time_t * var) STUB
 void ConfigParser::ParseUShort(unsigned short *var) STUB
 void ConfigParser::ParseWordList(wordlist **) STUB
+void parseBytesOptionValue(size_t *, const char *, char const * value) STUB
 void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head) STUB
 void dump_acl_list(StoreEntry*, ACLList*) STUB
 

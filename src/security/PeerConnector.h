@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 #define SQUID_SRC_SECURITY_PEERCONNECTOR_H
 
 #include "acl/Acl.h"
+#include "acl/ChecklistFiller.h"
 #include "base/AsyncCbdataCalls.h"
 #include "base/AsyncJob.h"
 #include "base/JobWait.h"
@@ -17,6 +18,7 @@
 #include "http/forward.h"
 #include "security/EncryptorAnswer.h"
 #include "security/forward.h"
+#include "security/KeyLogger.h"
 #if USE_OPENSSL
 #include "ssl/support.h"
 #endif
@@ -32,6 +34,9 @@ typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 namespace Security
 {
 
+class IoResult;
+typedef RefCount<IoResult> IoResultPointer;
+
 /**
  * Initiates encryption of a given open TCP connection to a peer or server.
  * Despite its name does not perform any connect(2) operations. Owns the
@@ -40,7 +45,7 @@ namespace Security
  * Contains common code and interfaces of various specialized PeerConnector's,
  * including peer certificate validation code.
  */
-class PeerConnector: virtual public AsyncJob
+class PeerConnector: virtual public AsyncJob, public Acl::ChecklistFiller
 {
     CBDATA_CLASS(PeerConnector);
 
@@ -73,6 +78,9 @@ protected:
     virtual void swanSong();
     virtual const char *status() const;
 
+    /* Acl::ChecklistFiller API */
+    virtual void fillChecklist(ACLFilledChecklist &) const;
+
     /// The connection read timeout callback handler.
     void commTimeoutHandler(const CommTimeoutCbParams &);
 
@@ -91,23 +99,27 @@ protected:
     /// Otherwise, returns true, regardless of negotiation success/failure.
     bool sslFinalized();
 
-    /// Called when the negotiation step aborted because data needs to
-    /// be transferred to/from server or on error. In the first case
-    /// setups the appropriate Comm::SetSelect handler. In second case
-    /// fill an error and report to the PeerConnector caller.
-    void handleNegotiateError(const int result);
+    /// Called after each negotiation step to handle the result
+    void handleNegotiationResult(const Security::IoResult &);
 
     /// Called when the openSSL SSL_connect fnction request more data from
     /// the remote SSL server. Sets the read timeout and sets the
     /// Squid COMM_SELECT_READ handler.
     void noteWantRead();
 
+    /// Whether TLS negotiation has been paused and not yet resumed
+    bool isSuspended() const { return static_cast<bool>(suspendedError_); }
+
 #if USE_OPENSSL
-    /// Run the certificates list sent by the SSL server and check if there
-    /// are missing certificates. Adds to the urlOfMissingCerts list the
-    /// URLS of missing certificates if this information provided by the
-    /// issued certificates with Authority Info Access extension.
-    bool checkForMissingCertificates();
+    /// Suspends TLS negotiation to download the missing certificates
+    /// \param lastError an error to handle when resuming negotiations
+    void suspendNegotiation(const Security::IoResult &lastError);
+
+    /// Resumes TLS negotiation paused by suspendNegotiation()
+    void resumeNegotiation();
+
+    /// Either initiates fetching of missing certificates or bails with an error
+    void handleMissingCertificates(const Security::IoResult &lastError);
 
     /// Start downloading procedure for the given URL.
     void startCertDownloading(SBuf &url);
@@ -121,10 +133,7 @@ protected:
     virtual void noteWantWrite();
 
     /// Called when the SSL_connect function aborts with an SSL negotiation error
-    /// \param result the SSL_connect return code
-    /// \param ssl_error the error code returned from the SSL_get_error function
-    /// \param ssl_lib_error the error returned from the ERR_Get_Error function
-    virtual void noteNegotiationError(const int result, const int ssl_error, const int ssl_lib_error);
+    virtual void noteNegotiationError(const Security::ErrorDetailPointer &);
 
     /// Called when the SSL negotiation to the server completed and the certificates
     /// validated using the cert validator.
@@ -172,20 +181,28 @@ private:
     PeerConnector &operator =(const PeerConnector &); // not implemented
 
 #if USE_OPENSSL
+    unsigned int certDownloadNestingLevel() const;
+
     /// Process response from cert validator helper
     void sslCrtvdHandleReply(Ssl::CertValidationResponsePointer);
 
     /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
-    Security::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, Ssl::ErrorDetail *&);
+    Security::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, ErrorDetailPointer &);
+
+    bool computeMissingCertificateUrls(const Connection &);
 #endif
 
     static void NegotiateSsl(int fd, void *data);
     void negotiateSsl();
 
-    /// The maximum allowed missing certificates downloads.
+    /// The maximum number of missing certificates a single PeerConnector may download
     static const unsigned int MaxCertsDownloads = 10;
-    /// The maximum allowed nested certificates downloads.
+
+    /// The maximum number of inter-dependent Downloader jobs a worker may initiate
     static const unsigned int MaxNestedDownloads = 3;
+
+    /// managers logging of the being-established TLS connection secrets
+    Security::KeyLogger keyLogger;
 
     AsyncCall::Pointer closeHandler; ///< we call this when the connection closed
     time_t negotiationTimeout; ///< the SSL connection timeout to use
@@ -194,6 +211,15 @@ private:
     /// The list of URLs where missing certificates should be downloaded.
     std::queue<SBuf> urlsOfMissingCerts;
     unsigned int certsDownloads; ///< the number of downloaded missing certificates
+
+#if USE_OPENSSL
+    /// successfully downloaded intermediate certificates (omitted by the peer)
+    Ssl::X509_STACK_Pointer downloadedCerts;
+#endif
+
+    /// outcome of the last (failed and) suspended negotiation attempt (or nil)
+    Security::IoResultPointer suspendedError_;
+
     JobWait<Downloader> certDownloadWait; ///< waits for the missing certificate to be downloaded
 };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -275,6 +275,10 @@ Store::Controller::dereferenceIdle(StoreEntry &e, bool wantsLocalMemory)
     // special entries do not belong to any specific Store, but are IN_MEMORY
     if (EBIT_TEST(e.flags, ENTRY_SPECIAL))
         return true;
+
+    // idle private entries cannot be reused
+    if (EBIT_TEST(e.flags, KEY_PRIVATE))
+        return false;
 
     bool keepInStoreTable = false; // keep only if somebody needs it there
 
@@ -702,6 +706,9 @@ Store::Controller::handleIdleEntry(StoreEntry &e)
     }
 
     debugs(20, 5, HERE << "keepInLocalMemory: " << keepInLocalMemory);
+
+    // formerly known as "WARNING: found KEY_PRIVATE"
+    assert(!EBIT_TEST(e.flags, KEY_PRIVATE));
 
     // TODO: move this into [non-shared] memory cache class when we have one
     if (keepInLocalMemory) {

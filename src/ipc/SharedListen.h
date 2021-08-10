@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,6 +13,8 @@
 
 #include "base/AsyncCall.h"
 #include "base/Subscription.h"
+#include "ipc/QuestionerId.h"
+#include "ipc/RequestId.h"
 
 namespace Ipc
 {
@@ -45,7 +47,7 @@ class TypedMsgHdr;
 class SharedListenRequest
 {
 public:
-    SharedListenRequest(); ///< from OpenSharedListen() which then sets public data
+    SharedListenRequest(const OpenListenerParams &, RequestId aMapId); ///< sender's constructor
     explicit SharedListenRequest(const TypedMsgHdr &hdrMsg); ///< from recvmsg()
     void pack(TypedMsgHdr &hdrMsg) const; ///< prepare for sendmsg()
 
@@ -54,21 +56,24 @@ public:
 
     OpenListenerParams params; ///< actual comm_open_sharedListen() parameters
 
-    int mapId; ///< to map future response to the requestor's callback
+    RequestId mapId; ///< to map future response to the requestor's callback
 };
 
 /// a response to SharedListenRequest
 class SharedListenResponse
 {
 public:
-    SharedListenResponse(int fd, int errNo, int mapId);
+    SharedListenResponse(int fd, int errNo, RequestId aMapId); ///< sender's constructor
     explicit SharedListenResponse(const TypedMsgHdr &hdrMsg); ///< from recvmsg()
     void pack(TypedMsgHdr &hdrMsg) const; ///< prepare for sendmsg()
+
+    /// for Mine() tests
+    QuestionerId intendedRecepient() const { return mapId.questioner(); }
 
 public:
     int fd; ///< opened listening socket or -1
     int errNo; ///< errno value from comm_open_sharedListen() call
-    int mapId; ///< to map future response to the requestor's callback
+    RequestId mapId; ///< to map future response to the requestor's callback
 };
 
 /// prepare and send SharedListenRequest to Coordinator

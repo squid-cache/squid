@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -71,10 +71,13 @@ AC_DEFUN([SQUID_CHECK_LIBCRYPTO_API],[
   AH_TEMPLATE(HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_CERT, "Define to 1 if the X509_STORE_CTX_get0_cert() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_X509_VERIFY_PARAM_GET_DEPTH, "Define to 1 if the X509_VERIFY_PARAM_get_depth() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_UNTRUSTED, "Define to 1 if the X509_STORE_CTX_get0_untrusted() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_X509_VERIFY_PARAM_SET_AUTH_LEVEL, "Define to 1 if the X509_VERIFY_PARAM_set_auth_level() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_X509_UP_REF, "Define to 1 if the X509_up_ref() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBCRYPTO_X509_CHAIN_UP_REF, "Define to 1 if the X509_chain_up_ref() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_X509_CRL_UP_REF, "Define to 1 if the X509_CRL_up_ref() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_DH_UP_REF, "Define to 1 if the DH_up_ref() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_X509_GET0_SIGNATURE, "Define to 1 if the X509_get0_signature() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_SSL_GET0_PARAM, "Define to 1 of the SSL_get0_param() OpenSSL API function exists")
   SQUID_STATE_SAVE(check_openssl_libcrypto_api)
   LIBS="$LIBS $SSLLIB"
   AC_CHECK_LIB(crypto, OPENSSL_LH_strhash, AC_DEFINE(HAVE_LIBCRYPTO_OPENSSL_LH_STRHASH, 1))
@@ -87,10 +90,13 @@ AC_DEFUN([SQUID_CHECK_LIBCRYPTO_API],[
   AC_CHECK_LIB(crypto, X509_STORE_CTX_get0_cert, AC_DEFINE(HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_CERT, 1))
   AC_CHECK_LIB(crypto, X509_VERIFY_PARAM_get_depth, AC_DEFINE(HAVE_LIBCRYPTO_X509_VERIFY_PARAM_GET_DEPTH, 1))
   AC_CHECK_LIB(crypto, X509_STORE_CTX_get0_untrusted, AC_DEFINE(HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_UNTRUSTED, 1))
+  AC_CHECK_LIB(crypto,  X509_VERIFY_PARAM_set_auth_level, AC_DEFINE(HAVE_X509_VERIFY_PARAM_SET_AUTH_LEVEL))
   AC_CHECK_LIB(crypto, X509_up_ref, AC_DEFINE(HAVE_LIBCRYPTO_X509_UP_REF, 1))
+  AC_CHECK_LIB(crypto, X509_chain_up_ref, AC_DEFINE(HAVE_LIBCRYPTO_X509_CHAIN_UP_REF, 1))
   AC_CHECK_LIB(crypto, X509_CRL_up_ref, AC_DEFINE(HAVE_LIBCRYPTO_X509_CRL_UP_REF, 1))
   AC_CHECK_LIB(crypto, DH_up_ref, AC_DEFINE(HAVE_LIBCRYPTO_DH_UP_REF, 1))
   AC_CHECK_LIB(crypto, X509_get0_signature, AC_DEFINE(HAVE_LIBCRYPTO_X509_GET0_SIGNATURE, 1), AC_DEFINE(SQUID_CONST_X509_GET0_SIGNATURE_ARGS,))
+  AC_CHECK_LIB(crypto, SSL_get0_param, AC_DEFINE(HAVE_SSL_GET0_PARAM, 1))
   SQUID_STATE_ROLLBACK(check_openssl_libcrypto_api)
 ])
 
@@ -100,12 +106,16 @@ AC_DEFUN([SQUID_CHECK_LIBSSL_API],[
   AH_TEMPLATE(HAVE_LIBSSL_SSL_CIPHER_FIND, "Define to 1 if the SSL_CIPHER_find() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK, "Define to 1 if the SSL_CTX_set_tmp_rsa_callback() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBSSL_SSL_SESSION_GET_ID, "Define to 1 if the SSL_SESSION_get_id() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBSSL_SSL_GET_CLIENT_RANDOM, "Define to 1 if the SSL_get_client_random() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBSSL_SSL_SESSION_GET_MASTER_KEY, "Define to 1 if the SSL_SESSION_get_master_key() OpenSSL API function exists")
   SQUID_STATE_SAVE(check_openssl_libssl_api)
   LIBS="$LIBS $SSLLIB"
   AC_CHECK_LIB(ssl, OPENSSL_init_ssl, AC_DEFINE(HAVE_LIBSSL_OPENSSL_INIT_SSL, 1))
   AC_CHECK_LIB(ssl, SSL_CIPHER_find, AC_DEFINE(HAVE_LIBSSL_SSL_CIPHER_FIND, 1))
   AC_CHECK_LIB(ssl, SSL_CTX_set_tmp_rsa_callback, AC_DEFINE(HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK, 1))
   AC_CHECK_LIB(ssl, SSL_SESSION_get_id, AC_DEFINE(HAVE_LIBSSL_SSL_SESSION_GET_ID, 1))
+  AC_CHECK_LIB(ssl, SSL_get_client_random, AC_DEFINE(HAVE_LIBSSL_SSL_GET_CLIENT_RANDOM, 1))
+  AC_CHECK_LIB(ssl, SSL_SESSION_get_master_key, AC_DEFINE(HAVE_LIBSSL_SSL_SESSION_GET_MASTER_KEY, 1))
   SQUID_STATE_ROLLBACK(check_openssl_libssl_api)
 ])
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,6 +21,8 @@
 #include "ssl/Config.h"
 #include "ssl/helper.h"
 #include "wordlist.h"
+
+#include <limits>
 
 Ssl::CertValidationHelper::CacheType *Ssl::CertValidationHelper::HelperCache = nullptr;
 
@@ -84,7 +86,7 @@ void Ssl::Helper::Init()
     if (!found)
         return;
 
-    ssl_crtd = new helper(Ssl::TheConfig.ssl_crtd);
+    ssl_crtd = new helper("sslcrtd_program");
     ssl_crtd->childs.updateLimits(Ssl::TheConfig.ssl_crtdChildren);
     ssl_crtd->ipc_type = IPC_STREAM;
     // The crtd messages may contain the eol ('\n') character. We are

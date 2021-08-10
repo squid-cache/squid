@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,11 +16,14 @@
 #include "comm/Read.h"
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
+#include "error/SysErrorDetail.h"
 #include "errorpage.h"
 #include "fd.h"
 #include "ftp/Parsing.h"
 #include "http/Stream.h"
 #include "ip/tools.h"
+#include "sbuf/SBuf.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "StatCounters.h"
@@ -64,6 +67,20 @@ escapeIAC(const char *buf)
     return ret;
 }
 
+/* Ftp::ErrorDetail */
+
+SBuf
+Ftp::ErrorDetail::brief() const
+{
+    return ToSBuf("FTP_REPLY_CODE=", completionCode);
+}
+
+SBuf
+Ftp::ErrorDetail::verbose(const HttpRequest::Pointer &) const
+{
+    return ToSBuf("FTP reply with completion code ", completionCode);
+}
+
 /* Ftp::Channel */
 
 /// configures the channel with a descriptor and registers a close handler
@@ -78,6 +95,7 @@ Ftp::Channel::opened(const Comm::ConnectionPointer &newConn,
     assert(aCloser != NULL);
 
     conn = newConn;
+    conn->leaveOrphanage();
     closer = aCloser;
     comm_add_close_handler(conn->fd, closer);
 }
@@ -164,12 +182,12 @@ Ftp::DataChannel::addr(const Ip::Address &import)
 Ftp::Client::Client(FwdState *fwdState):
     AsyncJob("Ftp::Client"),
     ::Client(fwdState),
-     ctrl(),
-     data(),
-     state(BEGIN),
-     old_request(NULL),
-     old_reply(NULL),
-     shortenReadTimeout(false)
+    ctrl(),
+    data(),
+    state(BEGIN),
+    old_request(NULL),
+    old_reply(NULL),
+    shortenReadTimeout(false)
 {
     ++statCounter.server.all.requests;
     ++statCounter.server.ftp.requests;
@@ -281,7 +299,7 @@ Ftp::Client::failed(err_type error, int xerrno, ErrorState *err)
         ftperr->ftp.reply = xstrdup(reply);
 
     if (!err) {
-        fwd->request->detailError(error, xerrno);
+        fwd->request->detailError(error, SysErrorDetail::NewIfAny(xerrno));
         fwd->fail(ftperr);
         closeServer(); // we failed, so no serverComplete()
     }

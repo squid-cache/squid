@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,7 +21,7 @@
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Inquirer);
 
 Ipc::Inquirer::RequestsMap Ipc::Inquirer::TheRequestsMap;
-unsigned int Ipc::Inquirer::LastRequestId = 0;
+Ipc::RequestId::Index Ipc::Inquirer::LastRequestId = 0;
 
 /// compare Ipc::StrandCoord using kidId, for std::sort() below
 static bool
@@ -139,7 +139,7 @@ Ipc::Inquirer::callException(const std::exception& e)
 
 /// returns and forgets the right Inquirer callback for strand request
 AsyncCall::Pointer
-Ipc::Inquirer::DequeueRequest(unsigned int requestId)
+Ipc::Inquirer::DequeueRequest(const RequestId::Index requestId)
 {
     debugs(54, 3, HERE << " requestId " << requestId);
     Must(requestId != 0);
@@ -206,7 +206,7 @@ Ipc::Inquirer::status() const
 {
     static MemBuf buf;
     buf.reset();
-    buf.appendf(" [request->requestId %u]", request->requestId);
+    buf.appendf(" [requestId %u]", request->requestId.index());
     buf.terminate();
     return buf.content();
 }

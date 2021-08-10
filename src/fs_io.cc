@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -108,12 +108,6 @@ file_close(int fd)
      * leaking write state data by closing the descriptor
      */
     assert(F->write_handler == NULL);
-
-#if CALL_FSYNC_BEFORE_CLOSE
-
-    fsync(fd);
-
-#endif
 
     close(fd);
 

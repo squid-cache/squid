@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -144,6 +144,10 @@ public:
         }
         return *this;
     }
+
+    // XXX: assign(s,n)/append(s,n) calls do not assign or append a c-string as
+    // documented -- they do not stop at the first NUL character! They assign or
+    // append the entire raw memory area, including any embedded NUL characters.
 
     /** Import a c-string into a SBuf, copying the data.
      *

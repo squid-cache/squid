@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -2757,7 +2757,7 @@ static int
 wordchar_p(const char *d, const char *end1, const char *string2)
 {
     return re_syntax_table[(d) == end1 ? *string2
-                           : (d) == string2 - 1 ? *(end1 - 1) : *(d)]
+                               : (d) == string2 - 1 ? *(end1 - 1) : *(d)]
            == Sword;
 }
 

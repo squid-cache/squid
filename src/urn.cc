@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -257,6 +257,12 @@ urnHandleReply(void *data, StoreIOBuffer result)
         return;
     }
 
+    if (!e->isAccepting()) {
+        debugs(52, 3, "terminating due to bad " << *e);
+        delete urnState;
+        return;
+    }
+
     /* Update reqofs to point to where in the buffer we'd be */
     urnState->reqofs += result.length;
 
@@ -425,6 +431,7 @@ urnParseReply(const char *inbuf, const HttpRequestMethod& m)
     }
 
     debugs(52, 3, "urnParseReply: Found " << i << " URLs");
+    xfree(buf);
     return list;
 }
 

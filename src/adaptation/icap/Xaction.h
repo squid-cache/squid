@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,6 +14,7 @@
 #include "adaptation/Initiate.h"
 #include "base/JobWait.h"
 #include "comm/ConnOpener.h"
+#include "error/forward.h"
 #include "HttpReply.h"
 #include "ipcache.h"
 #include "sbuf/SBuf.h"
@@ -78,7 +79,7 @@ protected:
 
     void handleSecuredPeer(Security::EncryptorAnswer &answer);
     /// record error detail if possible
-    virtual void detailError(int) {}
+    virtual void detailError(const ErrorDetailPointer &) {}
 
     void openConnection();
     void closeConnection();
@@ -142,6 +143,7 @@ protected:
     bool isRetriable;  ///< can retry on persistent connection failures
     bool isRepeatable; ///< can repeat if no or unsatisfactory response
     bool ignoreLastWrite;
+    bool waitingForDns; ///< expecting a ipcache_nbgethostbyname() callback
 
     AsyncCall::Pointer reader;
     AsyncCall::Pointer writer;

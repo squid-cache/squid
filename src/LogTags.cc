@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,16 @@
 #include "squid.h"
 #include "Debug.h"
 #include "LogTags.h"
+
+void
+LogTagsErrors::update(const LogTagsErrors &other)
+{
+    ignored = ignored || other.ignored;
+    timedout = timedout || other.timedout;
+    aborted = aborted || other.aborted;
+}
+
+/* LogTags */
 
 // old deprecated tag strings
 const char * LogTags::Str_[] = {

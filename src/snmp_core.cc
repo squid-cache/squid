@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -947,7 +947,7 @@ snmpCreateOidFromStr(const char *str, oid **name, int *nl)
     }
 
     // if we aborted before the lst octet was found, return false.
-    safe_free(name);
+    safe_free(*name);
     return false;
 }
 

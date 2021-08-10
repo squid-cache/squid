@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "comm/Connection.h"
+#include "ipc/RequestId.h"
 #include "mgr/Filler.h"
 #include "mgr/Response.h"
 #include "Store.h"
@@ -18,7 +19,7 @@
 CBDATA_NAMESPACED_CLASS_INIT(Mgr, Filler);
 
 Mgr::Filler::Filler(const Action::Pointer &anAction, const Comm::ConnectionPointer &conn,
-                    unsigned int aRequestId):
+                    const Ipc::RequestId aRequestId):
     StoreToCommWriter(conn, anAction->createStoreEntry()),
     action(anAction),
     requestId(aRequestId)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -46,18 +46,6 @@ Pipeline::back() const
 
     debugs(33, 3, "Pipeline " << (void*)this << " back " << requests.back());
     return requests.back();
-}
-
-void
-Pipeline::terminateAll(int xerrno)
-{
-    while (!requests.empty()) {
-        Http::StreamPointer context = requests.front();
-        debugs(33, 3, "Pipeline " << (void*)this << " notify(" << xerrno << ") " << context);
-        context->noteIoError(xerrno);
-        context->finished();  // cleanup and self-deregister
-        assert(context != requests.front());
-    }
 }
 
 void

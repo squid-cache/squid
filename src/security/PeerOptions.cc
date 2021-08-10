@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -254,7 +254,7 @@ Security::PeerOptions::createBlankContext() const
 #elif USE_GNUTLS
     // Initialize for X.509 certificate exchange
     gnutls_certificate_credentials_t t;
-    if (const int x = gnutls_certificate_allocate_credentials(&t)) {
+    if (const auto x = gnutls_certificate_allocate_credentials(&t)) {
         fatalf("Failed to allocate TLS client context: %s\n", Security::ErrorString(x));
     }
     ctx = convertContextFromRawPtr(t);
@@ -527,7 +527,7 @@ Security::PeerOptions::parseOptions()
     const char *err = nullptr;
     const char *priorities = str.c_str();
     gnutls_priority_t op;
-    int x = gnutls_priority_init(&op, priorities, &err);
+    const auto x = gnutls_priority_init(&op, priorities, &err);
     if (x != GNUTLS_E_SUCCESS) {
         fatalf("(%s) in TLS options '%s'", ErrorString(x), err);
     }
@@ -767,7 +767,7 @@ Security::PeerOptions::updateSessionOptions(Security::SessionPointer &s)
     SSL_set_options(s.get(), parsedOptions);
 
 #elif USE_GNUTLS
-    int x;
+    LibErrorCode x;
     SBuf errMsg;
     if (!parsedOptions) {
         debugs(83, 5, "set GnuTLS default priority/options for session=" << s);

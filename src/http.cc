@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,7 +24,7 @@
 #include "comm/Read.h"
 #include "comm/Write.h"
 #include "CommRead.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
 #include "errorpage.h"
 #include "fd.h"
 #include "fde.h"
@@ -66,15 +66,6 @@
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
-
-#define SQUID_ENTER_THROWING_CODE() try {
-#define SQUID_EXIT_THROWING_CODE(status) \
-    status = true; \
-    } \
-    catch (const std::exception &e) { \
-    debugs (11, 1, "Exception error:" << e.what()); \
-    status = false; \
-    }
 
 CBDATA_CLASS_INIT(HttpStateData);
 
@@ -235,16 +226,6 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
 #endif
 
     default:
-#if QUESTIONABLE
-        /*
-         * Any 2xx response should eject previously cached entities...
-         */
-
-        if (status >= 200 && status < 300)
-            remove = 1;
-
-#endif
-
         break;
     }
 
@@ -669,17 +650,12 @@ HttpStateData::processReplyHeader()
 {
     /** Creates a blank header. If this routine is made incremental, this will not do */
 
-    /* NP: all exit points to this function MUST call ctx_exit(ctx) */
-    Ctx ctx = ctx_enter(entry->mem_obj->urlXXX());
-
     debugs(11, 3, "processReplyHeader: key '" << entry->getMD5Text() << "'");
 
     assert(!flags.headers_parsed);
 
-    if (!inBuf.length()) {
-        ctx_exit(ctx);
+    if (!inBuf.length())
         return;
-    }
 
     /* Attempt to parse the first line; this will define where the protocol, status, reason-phrase and header begin */
     {
@@ -707,7 +683,6 @@ HttpStateData::processReplyHeader()
                 inBuf = hp->remaining();
             } else {
                 debugs(33, 5, "Incomplete response, waiting for end of response headers");
-                ctx_exit(ctx);
                 return;
             }
         }
@@ -720,7 +695,6 @@ HttpStateData::processReplyHeader()
             HttpReply *newrep = new HttpReply;
             newrep->sline.set(Http::ProtocolVersion(), hp->parseStatusCode);
             setVirginReply(newrep);
-            ctx_exit(ctx);
             return;
         }
     }
@@ -739,18 +713,11 @@ HttpStateData::processReplyHeader()
     // XXX: RFC 7230 indicates we MAY ignore the reason phrase,
     //      and use an empty string on unknown status.
     //      We do that now to avoid performance regression from using SBuf::c_str()
-    newrep->sline.set(Http::ProtocolVersion(1,1), hp->messageStatus() /* , hp->reasonPhrase() */);
-    newrep->sline.protocol = newrep->sline.version.protocol = hp->messageProtocol().protocol;
-    newrep->sline.version.major = hp->messageProtocol().major;
-    newrep->sline.version.minor = hp->messageProtocol().minor;
+    newrep->sline.set(hp->messageProtocol(), hp->messageStatus() /* , hp->reasonPhrase() */);
 
     // parse headers
     if (!newrep->parseHeader(*hp)) {
-        // XXX: when Http::ProtocolVersion is a function, remove this hack. just set with messageProtocol()
-        newrep->sline.set(Http::ProtocolVersion(), Http::scInvalidHeader);
-        newrep->sline.version.protocol = hp->messageProtocol().protocol;
-        newrep->sline.version.major = hp->messageProtocol().major;
-        newrep->sline.version.minor = hp->messageProtocol().minor;
+        newrep->sline.set(hp->messageProtocol(), Http::scInvalidHeader);
         debugs(11, 2, "error parsing response headers mime block");
     }
 
@@ -761,14 +728,13 @@ HttpStateData::processReplyHeader()
 
     newrep->removeStaleWarnings();
 
-    if (newrep->sline.protocol == AnyP::PROTO_HTTP && Http::Is1xx(newrep->sline.status())) {
+    if (newrep->sline.version.protocol == AnyP::PROTO_HTTP && Http::Is1xx(newrep->sline.status())) {
         handle1xx(newrep);
-        ctx_exit(ctx);
         return;
     }
 
     flags.chunked = false;
-    if (newrep->sline.protocol == AnyP::PROTO_HTTP && newrep->header.chunked()) {
+    if (newrep->sline.version.protocol == AnyP::PROTO_HTTP && newrep->header.chunked()) {
         flags.chunked = true;
         httpChunkDecoder = new Http1::TeChunkedParser;
     }
@@ -784,8 +750,6 @@ HttpStateData::processReplyHeader()
     checkDateSkew(vrep);
 
     processSurrogateControl (vrep);
-
-    ctx_exit(ctx);
 }
 
 /// ignore or start forwarding the 1xx response (a.k.a., control message)
@@ -985,7 +949,6 @@ HttpStateData::haveParsedReplyHeaders()
 {
     Client::haveParsedReplyHeaders();
 
-    Ctx ctx = ctx_enter(entry->mem_obj->urlXXX());
     HttpReply *rep = finalReply();
     const Http::StatusCode statusCode = rep->sline.status();
 
@@ -1109,8 +1072,6 @@ HttpStateData::haveParsedReplyHeaders()
     headersLog(1, 0, request->method, rep);
 
 #endif
-
-    ctx_exit(ctx);
 }
 
 HttpStateData::ConnectionStatus
@@ -1330,6 +1291,11 @@ HttpStateData::processReply()
         Must(!flags.headers_parsed);
     }
 
+    if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
+        abortTransaction("store entry aborted while we were waiting for processReply()");
+        return;
+    }
+
     if (!flags.headers_parsed) { // have not parsed headers yet?
         PROF_start(HttpStateData_processReplyHeader);
         processReplyHeader();
@@ -1461,26 +1427,25 @@ HttpStateData::writeReplyBody()
 bool
 HttpStateData::decodeAndWriteReplyBody()
 {
-    const char *data = NULL;
-    int len;
-    bool wasThereAnException = false;
     assert(flags.chunked);
     assert(httpChunkDecoder);
-    SQUID_ENTER_THROWING_CODE();
-    MemBuf decodedData;
-    decodedData.init();
-    httpChunkDecoder->setPayloadBuffer(&decodedData);
-    const bool doneParsing = httpChunkDecoder->parse(inBuf);
-    inBuf = httpChunkDecoder->remaining(); // sync buffers after parse
-    len = decodedData.contentSize();
-    data=decodedData.content();
-    addVirginReplyBody(data, len);
-    if (doneParsing) {
-        lastChunk = 1;
-        flags.do_next_read = false;
+    try {
+        MemBuf decodedData;
+        decodedData.init();
+        httpChunkDecoder->setPayloadBuffer(&decodedData);
+        const bool doneParsing = httpChunkDecoder->parse(inBuf);
+        inBuf = httpChunkDecoder->remaining(); // sync buffers after parse
+        addVirginReplyBody(decodedData.content(), decodedData.contentSize());
+        if (doneParsing) {
+            lastChunk = 1;
+            flags.do_next_read = false;
+        }
+        return true;
     }
-    SQUID_EXIT_THROWING_CODE(wasThereAnException);
-    return wasThereAnException;
+    catch (...) {
+        debugs (11, 2, "de-chunking failure: " << CurrentException);
+    }
+    return false;
 }
 
 /**
@@ -1996,12 +1961,6 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
         if (!cc)
             cc = new HttpHdrCc();
-
-#if 0 /* see bug 2330 */
-        /* Set no-cache if determined needed but not found */
-        if (request->flags.nocache)
-            EBIT_SET(cc->mask, HttpHdrCcType::CC_NO_CACHE);
-#endif
 
         /* Add max-age only without no-cache */
         if (!cc->hasMaxAge() && !cc->hasNoCache()) {
@@ -2630,7 +2589,8 @@ HttpStateData::handleRequestBodyProducerAborted()
         // should not matter because either client-side will provide its own or
         // there will be no response at all (e.g., if the the client has left).
         const auto err = new ErrorState(ERR_ICAP_FAILURE, Http::scInternalServerError, fwd->request, fwd->al);
-        err->detailError(ERR_DETAIL_SRV_REQMOD_REQ_BODY);
+        static const auto d = MakeNamedErrorDetail("SRV_REQMOD_REQ_BODY");
+        err->detailError(d);
         fwd->fail(err);
     }
 

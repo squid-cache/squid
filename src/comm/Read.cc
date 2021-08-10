@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -101,6 +101,7 @@ Comm::ReadNow(CommIoCbParams &params, SBuf &buf)
     } else if (retval == 0) { // remote closure (somewhat less) common
         // Note - read 0 == socket EOF, which is a valid read.
         params.flag = Comm::ENDFILE;
+        params.size = 0;
 
     } else if (retval < 0) { // connection errors are worst-case
         debugs(5, 3, params.conn << " Comm::COMM_ERROR: " << xstrerr(params.xerrno));
@@ -108,6 +109,7 @@ Comm::ReadNow(CommIoCbParams &params, SBuf &buf)
             params.flag =  Comm::INPROGRESS;
         else
             params.flag =  Comm::COMM_ERROR;
+        params.size = 0;
     }
 
     return params.flag;

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -66,7 +66,7 @@ sub ComputeMustIds
         $line =~ s@/[*].*?[*]/@@; # strip simple single-line /* comments */
 
         my($id);
-        if ($line =~ /\bMust2?\s*\(/ || # Must(...) and Must2(...)
+        if ($line =~ /\bMust\s*\(/ || # Must(...)
             $line =~ /\bTexcHere\s*\(/ || # TexcHere(...)
             $line =~ /\bHere\s*\(\s*\)/) { # Here()
             $line =~ s/^\s*//;

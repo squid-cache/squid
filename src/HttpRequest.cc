@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,7 +17,7 @@
 #include "client_side_request.h"
 #include "dns/LookupDetails.h"
 #include "Downloader.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
 #include "globals.h"
 #include "gopher.h"
 #include "http.h"
@@ -91,8 +91,7 @@ HttpRequest::init()
     body_pipe = NULL;
     // hier
     dnsWait = -1;
-    errType = ERR_NONE;
-    errDetail = ERR_DETAIL_NONE;
+    error.clear();
     peer_login = NULL;      // not allocated/deallocated by this class
     peer_domain = NULL;     // not allocated/deallocated by this class
     peer_host = NULL;
@@ -193,7 +192,7 @@ HttpRequest::clone() const
     copy->imslen = imslen;
     copy->hier = hier; // Is it safe to copy? Should we?
 
-    copy->errType = errType;
+    copy->error = error;
 
     // XXX: what to do with copy->peer_login?
 
@@ -238,8 +237,7 @@ HttpRequest::inheritProperties(const Http::Message *aMsg)
     // may eventually need cloneNullAdaptationImmune() for that.
     flags = aReq->flags.cloneAdaptationImmune();
 
-    errType = aReq->errType;
-    errDetail = aReq->errDetail;
+    error = aReq->error;
 #if USE_AUTH
     auth_user_request = aReq->auth_user_request;
     extacl_user = aReq->extacl_user;
@@ -268,7 +266,7 @@ HttpRequest::inheritProperties(const Http::Message *aMsg)
  * NP: Other errors are left for detection later in the parse.
  */
 bool
-HttpRequest::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *error)
+HttpRequest::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *scode)
 {
     // content is long enough to possibly hold a reply
     // 2 being magic size of a 1-byte request method plus space delimiter
@@ -276,7 +274,7 @@ HttpRequest::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::S
         // this is only a real error if the headers apparently complete.
         if (hdr_len > 0) {
             debugs(58, 3, HERE << "Too large request header (" << hdr_len << " bytes)");
-            *error = Http::scInvalidHeader;
+            *scode = Http::scInvalidHeader;
         }
         return false;
     }
@@ -286,7 +284,7 @@ HttpRequest::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::S
     m.HttpRequestMethodXXX(buf);
     if (m == Http::METHOD_NONE) {
         debugs(73, 3, "HttpRequest::sanityCheckStartLine: did not find HTTP request method");
-        *error = Http::scInvalidHeader;
+        *scode = Http::scInvalidHeader;
         return false;
     }
 
@@ -465,25 +463,10 @@ HttpRequest::prepForDirect()
 }
 
 void
-HttpRequest::detailError(err_type aType, int aDetail)
-{
-    if (errType || errDetail)
-        debugs(11, 5, HERE << "old error details: " << errType << '/' << errDetail);
-    debugs(11, 5, HERE << "current error details: " << aType << '/' << aDetail);
-    // checking type and detail separately may cause inconsistency, but
-    // may result in more details available if they only become available later
-    if (!errType)
-        errType = aType;
-    if (!errDetail)
-        errDetail = aDetail;
-}
-
-void
 HttpRequest::clearError()
 {
-    debugs(11, 7, HERE << "old error details: " << errType << '/' << errDetail);
-    errType = ERR_NONE;
-    errDetail = ERR_DETAIL_NONE;
+    debugs(11, 7, "old: " << error);
+    error.clear();
 }
 
 void
@@ -666,6 +649,70 @@ HttpRequest::canHandle1xx() const
 
     // others must support 1xx control messages
     return true;
+}
+
+Http::StatusCode
+HttpRequest::checkEntityFraming() const
+{
+    // RFC 7230 section 3.3.1:
+    // "
+    //  A server that receives a request message with a transfer coding it
+    //  does not understand SHOULD respond with 501 (Not Implemented).
+    // "
+    if (header.unsupportedTe())
+        return Http::scNotImplemented;
+
+    // RFC 7230 section 3.3.3 #3 paragraph 3:
+    // Transfer-Encoding overrides Content-Length
+    if (header.chunked())
+        return Http::scNone;
+
+    // RFC 7230 Section 3.3.3 #4:
+    // conflicting Content-Length(s) mean a message framing error
+    if (header.conflictingContentLength())
+        return Http::scBadRequest;
+
+    // HTTP/1.0 requirements differ from HTTP/1.1
+    if (http_ver <= Http::ProtocolVersion(1,0)) {
+        const auto m = method.id();
+
+        // RFC 1945 section 8.3:
+        // "
+        //   A valid Content-Length is required on all HTTP/1.0 POST requests.
+        // "
+        // RFC 1945 Appendix D.1.1:
+        // "
+        //   The fundamental difference between the POST and PUT requests is
+        //   reflected in the different meaning of the Request-URI.
+        // "
+        if (m == Http::METHOD_POST || m == Http::METHOD_PUT)
+            return (content_length >= 0 ? Http::scNone : Http::scLengthRequired);
+
+        // RFC 1945 section 7.2:
+        // "
+        //   An entity body is included with a request message only when the
+        //   request method calls for one.
+        // "
+        // section 8.1-2: GET and HEAD do not define ('call for') an entity
+        if (m == Http::METHOD_GET || m == Http::METHOD_HEAD)
+            return (content_length < 0 ? Http::scNone : Http::scBadRequest);
+        // appendix D1.1.2-4: DELETE, LINK, UNLINK do not define ('call for') an entity
+        if (m == Http::METHOD_DELETE || m == Http::METHOD_LINK || m == Http::METHOD_UNLINK)
+            return (content_length < 0 ? Http::scNone : Http::scBadRequest);
+
+        // other methods are not defined in RFC 1945
+        // assume they support an (optional) entity
+        return Http::scNone;
+    }
+
+    // RFC 7230 section 3.3
+    // "
+    //   The presence of a message body in a request is signaled by a
+    //   Content-Length or Transfer-Encoding header field.  Request message
+    //   framing is independent of method semantics, even if the method does
+    //   not define any use for a message body.
+    // "
+    return Http::scNone;
 }
 
 bool

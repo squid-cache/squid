@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,7 +37,7 @@ HeaderTableRecord::HeaderTableRecord(const char *n, HdrType theId, HdrFieldType 
 const HeaderTableRecord&
 HeaderLookupTable_t::lookup (const char *buf, const std::size_t len) const {
     const HeaderTableRecord *r = HttpHeaderHashTable::lookup(buf, len);
-    if (!r)
+    if (!r || r->id == Http::HdrType::OTHER)
         return BadHdr;
     return *r;
 }

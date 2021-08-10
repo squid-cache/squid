@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -375,16 +375,6 @@ void Adaptation::Icap::ServiceRep::noteTimeToUpdate()
     debugs(93,5, HERE << "performs a regular options update " << status());
     startGettingOptions();
 }
-
-#if 0
-static
-void Adaptation::Icap::ServiceRep_noteTimeToNotify(void *data)
-{
-    Adaptation::Icap::ServiceRep *service = static_cast<Adaptation::Icap::ServiceRep*>(data);
-    Must(service);
-    service->noteTimeToNotify();
-}
-#endif
 
 void Adaptation::Icap::ServiceRep::noteTimeToNotify()
 {

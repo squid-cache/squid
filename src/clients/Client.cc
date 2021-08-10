@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,7 +14,7 @@
 #include "comm/Connection.h"
 #include "comm/forward.h"
 #include "comm/Write.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
 #include "errorpage.h"
 #include "fd.h"
 #include "HttpHdrContRange.h"
@@ -520,8 +520,11 @@ Client::haveParsedReplyHeaders()
     maybePurgeOthers();
 
     // adaptation may overwrite old offset computed using the virgin response
-    const bool partial = theFinalReply->contentRange();
-    currentOffset = partial ? theFinalReply->contentRange()->spec.offset : 0;
+    currentOffset = 0;
+    if (const auto cr = theFinalReply->contentRange()) {
+        if (cr->spec.offset != HttpHdrRangeSpec::UnknownPosition)
+            currentOffset = cr->spec.offset;
+    }
 }
 
 /// whether to prevent caching of an otherwise cachable response
@@ -869,15 +872,18 @@ Client::handledEarlyAdaptationAbort()
     if (entry->isEmpty()) {
         debugs(11,8, "adaptation failure with an empty entry: " << *entry);
         const auto err = new ErrorState(ERR_ICAP_FAILURE, Http::scInternalServerError, request.getRaw(), fwd->al);
-        err->detailError(ERR_DETAIL_ICAP_RESPMOD_EARLY);
+        static const auto d = MakeNamedErrorDetail("ICAP_RESPMOD_EARLY");
+        err->detailError(d);
         fwd->fail(err);
         fwd->dontRetry(true);
         abortAll("adaptation failure with an empty entry");
         return true; // handled
     }
 
-    if (request) // update logged info directly
-        request->detailError(ERR_ICAP_FAILURE, ERR_DETAIL_ICAP_RESPMOD_LATE);
+    if (request) { // update logged info directly
+        static const auto d = MakeNamedErrorDetail("ICAP_RESPMOD_LATE");
+        request->detailError(ERR_ICAP_FAILURE, d);
+    }
 
     return false; // the caller must handle
 }
@@ -892,8 +898,10 @@ Client::handleAdaptationBlocked(const Adaptation::Answer &answer)
         return;
 
     if (!entry->isEmpty()) { // too late to block (should not really happen)
-        if (request)
-            request->detailError(ERR_ICAP_FAILURE, ERR_DETAIL_RESPMOD_BLOCK_LATE);
+        if (request) {
+            static const auto d = MakeNamedErrorDetail("RESPMOD_BLOCK_LATE");
+            request->detailError(ERR_ICAP_FAILURE, d);
+        }
         abortAll("late adaptation block");
         return;
     }
@@ -906,7 +914,8 @@ Client::handleAdaptationBlocked(const Adaptation::Answer &answer)
         page_id = ERR_ACCESS_DENIED;
 
     const auto err = new ErrorState(page_id, Http::scForbidden, request.getRaw(), fwd->al);
-    err->detailError(ERR_DETAIL_RESPMOD_BLOCK_EARLY);
+    static const auto d = MakeNamedErrorDetail("RESPMOD_BLOCK_EARLY");
+    err->detailError(d);
     fwd->fail(err);
     fwd->dontRetry(true);
 

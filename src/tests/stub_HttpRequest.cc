@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,7 +34,6 @@ void HttpRequest::adaptHistoryImport(const HttpRequest &) STUB
 Adaptation::Icap::History::Pointer HttpRequest::icapHistory() const STUB_RETVAL(Adaptation::Icap::History::Pointer())
 #endif
 void HttpRequest::recordLookup(const Dns::LookupDetails &) STUB
-void HttpRequest::detailError(err_type, int) STUB
 void HttpRequest::clearError() STUB
 void HttpRequest::clean() STUB
 void HttpRequest::init() STUB

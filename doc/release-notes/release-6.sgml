@@ -69,8 +69,23 @@ This section gives an account of those changes in three categories:
 <sect1>Removed directives<label id="removeddirectives">
 <p>
 <descrip>
-	<p>There have been no directives changed.
-
+	<tag>request_entities</tag>
+	<p>Obsolete. Squid accepts an entity (aka payload, body) on
+	   HTTP/1.1 GET or HEAD requests when a Content-Length or
+	   Transfer-Encoding header is presented to clearly determine size.
+	<p>To retain the old behaviour of rejecting GET/HEAD payloads
+	   for HTTP/1.1 use <em>http_access</em> rules:
+<verb>
+  acl fetch method GET HEAD
+  acl entity req_header Content-Length .
+  http_access deny fetch entity
+</verb>
+	<p>Squid will reject use of Content-Length header on HTTP/1.0
+	   messages with GET, HEAD, DELETE, LINK, UNLINK methods. Since
+	   the HTTP/1.0 specification defines those as not having entities.
+	   To deliver entities on these methods the chunked encoding
+	   feature defined by HTTP/1.1 must be used, or the request
+	   upgraded to an HTTP/1.1 message.
 </descrip>
 
 
@@ -162,7 +177,7 @@ This section gives an account of those changes in three categories:
 
 <sect>Copyright
 <p>
-Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+Copyright (C) 1996-2021 The Squid Software Foundation and contributors
 <p>
 Squid software is distributed under GPLv2+ license and includes
 contributions from numerous individuals and organizations.
