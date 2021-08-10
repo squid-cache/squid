@@ -834,6 +834,8 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
         Must(!Comm::IsConnOpen(answer.conn));
         answer.error.clear(); // preserve error for errorSendComplete()
     } else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
+        // The socket could get closed while our callback was queued. Sync
+        // Connection. XXX: Connection::fd may already be stale/invalid here.
         // We do not know exactly why the connection got closed, so we play it
         // safe, allowing retries only for persistent (reused) connections
         if (answer.reused) {
@@ -919,8 +921,8 @@ FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
         Must(error);
         answer.squidError.clear(); // preserve error for fail()
     } else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
-        // The socket could get closed while our callback was queued.
-        // We close Connection here to sync Connection::fd.
+        // The socket could get closed while our callback was queued. Sync
+        // Connection. XXX: Connection::fd may already be stale/invalid here.
         closePendingConnection(answer.conn, "conn was closed while waiting for tunnelEstablishmentDone");
         error = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al);
     } else if (!answer.leftovers.isEmpty()) {
@@ -1012,6 +1014,8 @@ FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
         complete(); // destroys us
         return;
     } else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
+        // The socket could get closed while our callback was queued. Sync
+        // Connection. XXX: Connection::fd may already be stale/invalid here.
         closePendingConnection(answer.conn, "conn was closed while waiting for connectedToPeer");
         error = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al);
     }

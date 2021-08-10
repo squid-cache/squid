@@ -153,7 +153,15 @@ PeerPoolMgr::handleSecuredPeer(Security::EncryptorAnswer &answer)
         return;
     }
 
-    // TODO: Check for .closing() like FwdState::connectedToPeer() does?
+    assert(answer.conn);
+
+    // The socket could get closed while our callback was queued. Sync
+    // Connection. XXX: Connection::fd may already be stale/invalid here.
+    if (answer.conn->isOpen() && fd_table[answer.conn->fd].closing()) {
+        answer.conn->noteClosure();
+        checkpoint("external connection closure"); // may retry
+        return;
+    }
 
     pushNewConnection(answer.conn);
 }

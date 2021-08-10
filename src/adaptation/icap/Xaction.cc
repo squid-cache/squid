@@ -727,8 +727,17 @@ Adaptation::Icap::Xaction::handleSecuredPeer(Security::EncryptorAnswer &answer)
 
     debugs(93, 5, "TLS negotiation to " << service().cfg().uri << " complete");
 
-    // XXX: answer.conn could be closing here. Missing a syncWithComm equivalent?
-    // TODO: Check for .closing() like FwdState::connectedToPeer() does?
+    assert(answer.conn);
+
+    // The socket could get closed while our callback was queued. Sync
+    // Connection. XXX: Connection::fd may already be stale/invalid here.
+    if (answer.conn->isOpen() && fd_table[answer.conn->fd].closing()) {
+        answer.conn->noteClosure();
+        service().noteConnectionFailed("external TLS connection closure");
+        detailError(ERR_DETAIL_ICAP_XACT_SSL_START);
+        throw TexcHere("external closure of the TLS ICAP service connection");
+    }
+
     useIcapConnection(answer.conn);
 }
 
