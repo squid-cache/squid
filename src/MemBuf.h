@@ -25,13 +25,12 @@ class MemBuf : public Packable
     CBDATA_CLASS(MemBuf);
 
 public:
-    MemBuf():
-        buf(NULL),
-        size(0),
-        max_capacity(0),
-        capacity(0),
-        stolen(0)
-    {}
+    static const mb_size_t maxSize = (2*1000*1024*1024); ///< 2000 MB
+    static const mb_size_t defaultSize = (2*1024); ///< 2 KB
+
+    MemBuf() = default;
+    MemBuf(const MemBuf &) = delete;
+    MemBuf& operator= (const MemBuf &) = delete;
     virtual ~MemBuf() {
         if (!stolen && buf)
             clean();
@@ -87,10 +86,7 @@ public:
     bool wasStolen() const { return stolen; }
 
     /** init with specific sizes */
-    void init(mb_size_t szInit, mb_size_t szMax);
-
-    /** init with defaults */
-    void init();
+    void init(mb_size_t szInit = defaultSize, mb_size_t szMax = maxSize);
 
     /** cleans mb; last function to call if you do not give .buf away */
     void clean();
@@ -113,14 +109,6 @@ public:
     virtual void vappendf(const char *fmt, va_list ap);
 
 private:
-    /**
-     * private copy constructor and assignment operator generates
-     * compiler errors if someone tries to copy/assign a MemBuf
-     */
-    MemBuf(const MemBuf &) {assert(false);}
-
-    MemBuf& operator= (const MemBuf &) {assert(false); return *this;}
-
     void grow(mb_size_t min_cap);
 
 public:
@@ -131,29 +119,25 @@ public:
      * TODO: hide these members completely and remove 0-termination
      *          so that consume() does not need to memmove all the time
      */
-    char *buf;          // available content
-    mb_size_t size;     // used space, does not count 0-terminator
+    char *buf = nullptr; ///< available content
+    mb_size_t size = 0; ///< used space, does not count 0-terminator
 
     /**
      * when grows: assert(new_capacity <= max_capacity)
      * \deprecated Use interface function instead
      * TODO: make these private after converting memBuf*() functions to methods
      */
-    mb_size_t max_capacity;
+    mb_size_t max_capacity = maxSize;
 
     /**
      * allocated space
      * \deprecated Use interface function instead
      * TODO: make these private after converting memBuf*() functions to methods
      */
-    mb_size_t capacity;
+    mb_size_t capacity = 0;
 
-    unsigned stolen:1;      /* the buffer has been stolen for use by someone else */
-
-#if 0
-
-    unsigned valid:1;       /* to be used for debugging only! */
-#endif
+    /// the buffer has been stolen for use by someone else
+    bool stolen = false;
 };
 
 /** returns free() function to be used, _freezes_ the object! */

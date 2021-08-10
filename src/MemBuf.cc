@@ -76,22 +76,8 @@
 #include "MemBuf.h"
 #include "profiler/Profiler.h"
 
-/* local constants */
-
-/* default values for buffer sizes, used by memBufDefInit */
-#define MEM_BUF_INIT_SIZE   (2*1024)
-#define MEM_BUF_MAX_SIZE    (2*1000*1024*1024)
-
 CBDATA_CLASS_INIT(MemBuf);
 
-/** init with defaults */
-void
-MemBuf::init()
-{
-    init(MEM_BUF_INIT_SIZE, MEM_BUF_MAX_SIZE);
-}
-
-/** init with specific sizes */
 void
 MemBuf::init(mb_size_t szInit, mb_size_t szMax)
 {

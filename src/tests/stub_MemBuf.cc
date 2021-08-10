@@ -19,7 +19,6 @@ void MemBuf::appended(mb_size_t) STUB
 void MemBuf::truncate(mb_size_t) STUB
 void MemBuf::terminate() STUB
 void MemBuf::init(mb_size_t, mb_size_t) STUB
-void MemBuf::init() STUB
 void MemBuf::clean() STUB
 void MemBuf::reset() STUB
 int MemBuf::isNull() const STUB_RETVAL(1)
