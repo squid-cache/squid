@@ -52,6 +52,7 @@
 #include "proxyp/Header.h"
 #include "redirect.h"
 #include "rfc1738.h"
+#include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -73,10 +74,6 @@
 #if USE_OPENSSL
 #include "ssl/ServerBump.h"
 #include "ssl/support.h"
-#endif
-
-#if LINGERING_CLOSE
-#define comm_close comm_lingering_close
 #endif
 
 static const char *const crlf = "\r\n";
@@ -1116,7 +1113,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         }
 
 #if USE_FORW_VIA_DB
-        fvdbCountVia(s.termedBuf());
+        fvdbCountVia(StringToSBuf(s));
 
 #endif
 
@@ -1140,7 +1137,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
     if (req_hdr->has(Http::HdrType::X_FORWARDED_FOR)) {
         String s = req_hdr->getList(Http::HdrType::X_FORWARDED_FOR);
-        fvdbCountForw(s.termedBuf());
+        fvdbCountForwarded(StringToSBuf(s));
         s.clean();
     }
 

@@ -67,6 +67,9 @@ public:
     }
 
 private:
+    /* Acl::ChecklistFiller API */
+    virtual void fillChecklist(ACLFilledChecklist &) const;
+
     Adaptation::Icap::ServiceRep::Pointer icapService;
 };
 } // namespace Ssl
@@ -86,6 +89,7 @@ Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::Serv
     isRetriable(true),
     isRepeatable(true),
     ignoreLastWrite(false),
+    waitingForDns(false),
     stopReason(NULL),
     connector(NULL),
     reader(NULL),
@@ -187,12 +191,17 @@ Adaptation::Icap::Xaction::openConnection()
     debugs(93,3, typeName << " opens connection to " << s.cfg().host.termedBuf() << ":" << s.cfg().port);
 
     // Locate the Service IP(s) to open
+    assert(!waitingForDns);
+    waitingForDns = true; // before the possibly-synchronous ipcache_nbgethostbyname()
     ipcache_nbgethostbyname(s.cfg().host.termedBuf(), icapLookupDnsResults, this);
 }
 
 void
 Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
 {
+    assert(waitingForDns);
+    waitingForDns = false;
+
     Adaptation::Icap::ServiceRep &s = service();
 
     if (ia == NULL) {
@@ -226,20 +235,6 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
     cs->setHost(s.cfg().host.termedBuf());
     AsyncJob::Start(cs.get());
 }
-
-/*
- * This event handler is necessary to work around the no-rentry policy
- * of Adaptation::Icap::Xaction::callStart()
- */
-#if 0
-void
-Adaptation::Icap::Xaction::reusedConnection(void *data)
-{
-    debugs(93, 5, HERE << "reused connection");
-    Adaptation::Icap::Xaction *x = (Adaptation::Icap::Xaction*)data;
-    x->noteCommConnected(Comm::OK);
-}
-#endif
 
 void Adaptation::Icap::Xaction::closeConnection()
 {
@@ -418,7 +413,8 @@ void Adaptation::Icap::Xaction::callEnd()
 
 bool Adaptation::Icap::Xaction::doneAll() const
 {
-    return !connector && !securer && !reader && !writer && Adaptation::Initiate::doneAll();
+    return !waitingForDns && !connector && !securer && !reader && !writer &&
+           Adaptation::Initiate::doneAll();
 }
 
 void Adaptation::Icap::Xaction::updateTimeout()
@@ -690,6 +686,9 @@ void Adaptation::Icap::Xaction::fillPendingStatus(MemBuf &buf) const
 
         buf.append(";", 1);
     }
+
+    if (waitingForDns)
+        buf.append("D", 1);
 }
 
 void Adaptation::Icap::Xaction::fillDoneStatus(MemBuf &buf) const
@@ -717,14 +716,18 @@ Ssl::IcapPeerConnector::initialize(Security::SessionPointer &serverSession)
     SBuf *host = new SBuf(icapService->cfg().secure.sslDomain);
     SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, host);
     setClientSNI(serverSession.get(), host->c_str());
-
-    ACLFilledChecklist *check = static_cast<ACLFilledChecklist *>(SSL_get_ex_data(serverSession.get(), ssl_ex_index_cert_error_check));
-    if (check)
-        check->dst_peer_name = *host;
 #endif
 
     Security::SetSessionResumeData(serverSession, icapService->sslSession);
     return true;
+}
+
+void
+Ssl::IcapPeerConnector::fillChecklist(ACLFilledChecklist &checklist) const
+{
+    Security::PeerConnector::fillChecklist(checklist);
+    if (checklist.dst_peer_name.isEmpty())
+        checklist.dst_peer_name = icapService->cfg().secure.sslDomain;
 }
 
 void

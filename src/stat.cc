@@ -63,8 +63,6 @@
 #include "comm.h"
 #include "StoreSearch.h"
 
-#define DEBUG_OPENFD 1
-
 typedef int STOBJFLT(const StoreEntry *);
 
 class StatObjectsState
@@ -89,9 +87,7 @@ static void statStoreEntry(MemBuf * mb, StoreEntry * e);
 static double statCPUUsage(int minutes);
 static OBJH stat_objects_get;
 static OBJH stat_vmobjects_get;
-#if DEBUG_OPENFD
 static OBJH statOpenfdObj;
-#endif
 static EVH statObjects;
 static OBJH statCountersDump;
 static OBJH statPeerSelect;
@@ -418,7 +414,6 @@ stat_vmobjects_get(StoreEntry * sentry)
     statObjectsStart(sentry, statObjectsVmFilter);
 }
 
-#if DEBUG_OPENFD
 static int
 statObjectsOpenfdFilter(const StoreEntry * e)
 {
@@ -436,8 +431,6 @@ statOpenfdObj(StoreEntry * sentry)
 {
     statObjectsStart(sentry, statObjectsOpenfdFilter);
 }
-
-#endif
 
 #if XMALLOC_STATISTICS
 static void
@@ -1218,10 +1211,8 @@ statRegisterWithCacheManager(void)
                         "Active Cached Usernames",
                         Auth::User::CredentialsCacheStats, 0, 1);
 #endif
-#if DEBUG_OPENFD
     Mgr::RegisterAction("openfd_objects", "Objects with Swapout files open",
                         statOpenfdObj, 0, 0);
-#endif
 #if STAT_GRAPHS
     Mgr::RegisterAction("graph_variables", "Display cache metrics graphically",
                         statGraphDump, 0, 1);

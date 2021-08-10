@@ -340,13 +340,6 @@ on1:
     return 0;
 }
 
-#ifdef RN_DEBUG
-int rn_nodenum;
-struct squid_radix_node *rn_clist;
-int rn_saveinfo;
-int rn_debug = 1;
-#endif
-
 struct squid_radix_node *
 squid_rn_newpair(void *v, int b, struct squid_radix_node nodes[2]) {
     register struct squid_radix_node *tt = nodes, *t = tt + 1;
@@ -358,13 +351,6 @@ squid_rn_newpair(void *v, int b, struct squid_radix_node nodes[2]) {
     tt->rn_key = (caddr_t) v;
     tt->rn_p = t;
     tt->rn_flags = t->rn_flags = RNF_ACTIVE;
-#ifdef RN_DEBUG
-    tt->rn_info = rn_nodenum++;
-    t->rn_info = rn_nodenum++;
-    tt->rn_twin = t;
-    tt->rn_ybro = rn_clist;
-    rn_clist = tt;
-#endif
     return t;
 }
 
@@ -406,11 +392,6 @@ on1:
             else
                 x = x->rn_l;
         } while (b > (unsigned) x->rn_b);   /* x->rn_b < b && x->rn_b >= 0 */
-#ifdef RN_DEBUG
-        if (rn_debug)
-            fprintf(stderr, "squid_rn_insert: Going In:\n");
-        traverse(p);
-#endif
         t = squid_rn_newpair(v_arg, b, nodes);
         tt = t->rn_l;
         if ((cp[p->rn_off] & p->rn_bmask) == 0)
@@ -425,10 +406,6 @@ on1:
             t->rn_r = tt;
             t->rn_l = x;
         }
-#ifdef RN_DEBUG
-        if (rn_debug)
-            log(LOG_DEBUG, "squid_rn_insert: Coming Out:\n"), traverse(p);
-#endif
     }
     return (tt);
 }
@@ -606,14 +583,6 @@ squid_rn_addroute(void *v_arg, void *n_arg, struct squid_radix_node_head *head, 
             tt->rn_dupedkey = t->rn_dupedkey;
             t->rn_dupedkey = tt;
         }
-#ifdef RN_DEBUG
-        t = tt + 1;
-        tt->rn_info = rn_nodenum++;
-        t->rn_info = rn_nodenum++;
-        tt->rn_twin = t;
-        tt->rn_ybro = rn_clist;
-        rn_clist = tt;
-#endif
         tt->rn_key = (caddr_t) v;
         tt->rn_b = -1;
         tt->rn_flags = RNF_ACTIVE;
@@ -762,13 +731,6 @@ on1:
      */
     if (tt->rn_flags & RNF_ROOT)
         return (0);
-#ifdef RN_DEBUG
-    /* Get us out of the creation list */
-    for (t = rn_clist; t && t->rn_ybro != tt; t = t->rn_ybro) {
-    }
-    if (t)
-        t->rn_ybro = tt->rn_ybro;
-#endif
     t = tt->rn_p;
     if ((dupedkey = saved_tt->rn_dupedkey)) {
         if (tt == saved_tt) {
@@ -788,15 +750,8 @@ on1:
         }
         t = tt + 1;
         if (t->rn_flags & RNF_ACTIVE) {
-#ifndef RN_DEBUG
             *++x = *t;
             p = t->rn_p;
-#else
-            b = t->rn_info;
-            *++x = *t;
-            t->rn_info = b;
-            p = t->rn_p;
-#endif
             if (p->rn_l == t)
                 p->rn_l = x;
             else
@@ -836,13 +791,7 @@ on1:
                         squid_MKFree(m);
                     m = mm;
                 }
-#if RN_DEBUG
-            if (m)
-                fprintf(stderr, "%s %x at %x\n",
-                        "squid_rn_delete: Orphaned Mask", (int) m, (int) x);
-#else
             assert(m == NULL);
-#endif
         }
     }
     /*
@@ -850,13 +799,7 @@ on1:
      */
     x = tt + 1;
     if (t != x) {
-#ifndef RN_DEBUG
         *t = *x;
-#else
-        b = t->rn_info;
-        *t = *x;
-        t->rn_info = b;
-#endif
         t->rn_l->rn_p = t;
         t->rn_r->rn_p = t;
         p = x->rn_p;

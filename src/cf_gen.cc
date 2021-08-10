@@ -383,11 +383,9 @@ main(int argc, char *argv[])
                     entries.back().cfgLines.push_back(buff);
                 }
                 break;
-#if 0
             case sEXIT:
                 assert(0);      /* should never get here */
                 break;
-#endif
             }
 
     }

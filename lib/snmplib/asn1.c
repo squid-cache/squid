@@ -527,42 +527,6 @@ asn_build_header_with_truth(u_char * data, int *datalength,
     return (asn_build_length(data, datalength, length, truth));
 }
 
-#if 0
-/*
- * asn_build_sequence - builds an ASN header for a sequence with the ID and
- * length specified.
- *  On entry, datalength is input as the number of valid bytes following
- *   "data".  On exit, it is returned as the number of valid bytes
- *   in this object following the id and length.
- *
- *  This only works on data types < 30, i.e. no extension octets.
- *  The maximum length is 0xFFFF;
- *
- *  Returns a pointer to the first byte of the contents of this object.
- *  Returns NULL on any error.
- */
-u_char *
-asn_build_sequence(u_char * data, int *datalength,
-                   u_char type, int length)
-/*    u_char *data;       IN - pointer to start of object */
-/*    int    *datalength; IN/OUT - # of valid bytes left in buffer */
-/*    u_char  type;       IN - ASN type of object */
-/*    int     length;     IN - length of object */
-{
-    *datalength -= 4;
-    if (*datalength < 0) {
-        *datalength += 4;   /* fix up before punting */
-        snmp_set_api_error(SNMPERR_ASN_ENCODE);
-        return (NULL);
-    }
-    *data++ = type;
-    *data++ = (u_char) (0x02 | ASN_LONG_LEN);
-    *data++ = (u_char) ((length >> 8) & 0xFF);
-    *data++ = (u_char) (length & 0xFF);
-    return (data);
-}
-#endif
-
 /*
  * asn_parse_length - interprets the length of the current object.
  *  On exit, length contains the value of this length field.
@@ -825,43 +789,6 @@ asn_build_objid(u_char * data, int *datalength,
     return (data + asnlength);
 }
 
-#if 0
-/*
- * asn_parse_null - Interprets an ASN null type.
- *  On entry, datalength is input as the number of valid bytes following
- *   "data".  On exit, it is returned as the number of valid bytes
- *   following the beginning of the next object.
- *
- *  Returns a pointer to the first byte past the end
- *   of this object (i.e. the start of the next object).
- *  Returns NULL on any error.
- */
-u_char *
-asn_parse_null(u_char * data, int *datalength, u_char * type)
-/*    u_char  *data;       IN - pointer to start of object */
-/*    int     *datalength; IN/OUT - # of valid bytes left in buf */
-/*    u_char  *type;       OUT - ASN type of object */
-{
-    /*
-     * ASN.1 null ::= 0x05 0x00
-     */
-    u_char *bufp = data;
-    u_int asn_length;
-
-    *type = *bufp++;
-    bufp = asn_parse_length(bufp, &asn_length);
-    if (bufp == NULL)
-        return (NULL);
-
-    if (asn_length != 0) {
-        snmp_set_api_error(SNMPERR_ASN_DECODE);
-        return (NULL);
-    }
-    *datalength -= (bufp - data);
-    return (bufp + asn_length);
-}
-#endif
-
 /*
  * asn_build_null - Builds an ASN null object.
  *  On entry, datalength is input as the number of valid bytes following
@@ -883,104 +810,6 @@ asn_build_null(u_char * data, int *datalength, u_char type)
      */
     return (asn_build_header_with_truth(data, datalength, type, 0, 1));
 }
-
-#if 0
-
-/*
- * asn_parse_bitstring - pulls a bitstring out of an ASN bitstring type.
- *  On entry, datalength is input as the number of valid bytes following
- *   "data".  On exit, it is returned as the number of valid bytes
- *   following the beginning of the next object.
- *
- *  "string" is filled with the bit string.
- *
- *  Returns a pointer to the first byte past the end
- *   of this object (i.e. the start of the next object).
- *  Returns NULL on any error.
- */
-u_char *
-asn_parse_bitstring(u_char * data, int *datalength,
-                    u_char * type, u_char * string, int *strlength)
-/*   u_char  *data;        IN - pointer to start of object */
-/*   int     *datalength;  IN/OUT - # of valid bytes left in buf */
-/*   u_char  *type;        OUT - asn type of object */
-/*   u_char  *string;      IN/OUT - pointer to start of output buf */
-/*   int     *strlength;   IN/OUT - size of output buffer */
-{
-    /*
-     * bitstring ::= 0x03 asnlength unused {byte}*
-     */
-    u_char *bufp = data;
-    u_int asn_length;
-
-    *type = *bufp++;
-    bufp = asn_parse_length(bufp, &asn_length);
-    if (bufp == NULL)
-        return (NULL);
-
-    if (asn_length + (bufp - data) > *datalength) {
-        snmp_set_api_error(SNMPERR_ASN_DECODE);
-        return (NULL);
-    }
-    if (asn_length > *strlength) {
-        snmp_set_api_error(SNMPERR_ASN_DECODE);
-        return (NULL);
-    }
-    if (asn_length < 1) {
-        snmp_set_api_error(SNMPERR_ASN_DECODE);
-        return (NULL);
-    }
-    if ((int) (*(char *) bufp) < 0 || (int) (*bufp) > 7) {
-        snmp_set_api_error(SNMPERR_ASN_DECODE);
-        return (NULL);
-    }
-    memcpy((char *) string, (char *) bufp, (int) asn_length);
-    *strlength = (int) asn_length;
-    *datalength -= (int) asn_length + (bufp - data);
-    return (bufp + asn_length);
-}
-
-/*
- * asn_build_bitstring - Builds an ASN bit string object containing the
- * input string.
- *  On entry, datalength is input as the number of valid bytes following
- *   "data".  On exit, it is returned as the number of valid bytes
- *   following the beginning of the next object.
- *
- *  Returns a pointer to the first byte past the end
- *   of this object (i.e. the start of the next object).
- *  Returns NULL on any error.
- */
-u_char *
-asn_build_bitstring(u_char * data, int *datalength,
-                    u_char type, u_char * string, int strlength)
-/*   u_char  *data;       IN - pointer to start of object */
-/*   int     *datalength; IN/OUT - # of valid bytes left in buf */
-/*   u_char   type;       IN - ASN type of string */
-/*   u_char  *string;     IN - pointer to start of input buffer */
-/*   int      strlength;  IN - size of input buffer */
-{
-    /*
-     * ASN.1 bit string ::= 0x03 asnlength unused {byte}*
-     */
-    if ((strlength < 1) || ((*(char *) string) < 0) || ((*string) > 7)) {
-        snmp_set_api_error(SNMPERR_ASN_ENCODE);
-        return (NULL);
-    }
-    data = asn_build_header_with_truth(data, datalength, type, strlength, 1);
-    if (data == NULL)
-        return (NULL);
-
-    if (*datalength < strlength) {
-        snmp_set_api_error(SNMPERR_ASN_ENCODE);
-        return (NULL);
-    }
-    memcpy((char *) data, (char *) string, strlength);
-    *datalength -= strlength;
-    return (data + strlength);
-}
-
-#endif
 
 /*
  * To do: Write an asn_parse_exception function to go with the new

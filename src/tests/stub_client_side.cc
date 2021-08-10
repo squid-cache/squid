@@ -41,6 +41,7 @@ void ConnStateData::requestTimeout(const CommTimeoutCbParams &) STUB
 void ConnStateData::swanSong() STUB
 void ConnStateData::quitAfterError(HttpRequest *) STUB
 NotePairs::Pointer ConnStateData::notes() STUB_RETVAL(NotePairs::Pointer())
+void ConnStateData::fillConnectionLevelDetails(ACLFilledChecklist &) const STUB
 #if USE_OPENSSL
 void ConnStateData::httpsPeeked(PinnedIdleContext) STUB
 void ConnStateData::getSslContextStart() STUB
@@ -59,4 +60,5 @@ void clientHttpConnectionsClose(void) STUB
 void httpRequestFree(void *) STUB
 void clientPackRangeHdr(const HttpReplyPointer &, const HttpHdrRangeSpec *, String, MemBuf *) STUB
 void clientPackTermBound(String, MemBuf *) STUB
+void clientAclChecklistFill(ACLFilledChecklist &, ClientHttpRequest *) STUB
 

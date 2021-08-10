@@ -276,6 +276,10 @@ Store::Controller::dereferenceIdle(StoreEntry &e, bool wantsLocalMemory)
     if (EBIT_TEST(e.flags, ENTRY_SPECIAL))
         return true;
 
+    // idle private entries cannot be reused
+    if (EBIT_TEST(e.flags, KEY_PRIVATE))
+        return false;
+
     bool keepInStoreTable = false; // keep only if somebody needs it there
 
     // Notify the fs that we are not referencing this object any more. This
@@ -702,6 +706,9 @@ Store::Controller::handleIdleEntry(StoreEntry &e)
     }
 
     debugs(20, 5, HERE << "keepInLocalMemory: " << keepInLocalMemory);
+
+    // formerly known as "WARNING: found KEY_PRIVATE"
+    assert(!EBIT_TEST(e.flags, KEY_PRIVATE));
 
     // TODO: move this into [non-shared] memory cache class when we have one
     if (keepInLocalMemory) {

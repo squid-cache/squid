@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 4.15 release notes</title>
+<title>Squid 4.16 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-4.15.
+<p>The Squid Team are pleased to announce the release of Squid-4.16.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v4/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -392,6 +392,7 @@ This section gives a thorough account of those changes in three categories:
 	<p>New <em>tls-default-ca</em> option to use the system Trusted CAs to
 	   verify the server certificate.
 	<p>New <em>tls-domain=</em> option to verify the server certificate domain.
+	<p>Squid-4.16 improved support for hostnames in ICAP service URLs.
 
 	<tag>logfile_daemon</tag>
 	<p>Now only requires that helper binary exists when daemon: log module

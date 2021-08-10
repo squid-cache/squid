@@ -74,6 +74,7 @@ TokenOrQuotedString
 refreshpattern
 removalpolicy
 securePeerOptions
+Security::KeyLog* acl
 size_t
 IpAddress_list
 string
@@ -96,3 +97,4 @@ sslproxy_ssl_bump_peeked acl
 sslproxy_cert_sign	acl
 sslproxy_cert_adapt	acl
 ftp_epsv                acl
+cache_log_message

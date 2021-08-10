@@ -13,6 +13,7 @@
 
 #include "base/AsyncJob.h"
 #include "comm/forward.h"
+#include "http/forward.h"
 #include "mgr/Action.h"
 #include "StoreIOBuffer.h"
 

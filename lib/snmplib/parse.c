@@ -273,29 +273,6 @@ print_error(const char *string, const char *token, int type)
         snmplib_debug(0, "%s: On or around line %d\n", string, Line);
 }
 
-#if TEST
-print_subtree(tree, count)
-struct snmp_mib_tree *tree;
-int count;
-{
-    struct snmp_mib_tree *tp;
-    int i;
-
-    for (i = 0; i < count; i++)
-        printf("  ");
-    printf("Children of %s:\n", tree->label);
-    count++;
-    for (tp = tree->child_list; tp; tp = tp->next_peer) {
-        for (i = 0; i < count; i++)
-            printf("  ");
-        printf("%s\n", tp->label);
-    }
-    for (tp = tree->child_list; tp; tp = tp->next_peer) {
-        print_subtree(tp, count);
-    }
-}
-#endif /* TEST */
-
 int translation_table[40];
 
 static void
@@ -426,9 +403,7 @@ do_subtree(struct snmp_mib_tree *root, struct node **nodes)
         xfree(oldnp);
 }
 
-#if !TEST
 static
-#endif
 struct snmp_mib_tree *
 build_tree(struct node *nodes) {
     struct node *np;
@@ -449,9 +424,6 @@ build_tree(struct node *nodes) {
     init_node_hash(nodes);
     /* XXX nodes isn't needed in do_subtree() ??? */
     do_subtree(tp, &nodes);
-#if TEST
-    print_subtree(tp, 0);
-#endif /* TEST */
     /* If any nodes are left, the tree is probably inconsistent */
     for (bucket = 0; bucket < NHASHSIZE; bucket++) {
         if (nbuckets[bucket]) {
@@ -988,9 +960,7 @@ parse_objecttype(register FILE *fp, char *name) {
  * Parses a mib file and returns a linked list of nodes found in the file.
  * Returns NULL on error.
  */
-#if !TEST
 static
-#endif
 struct node *
 parse(FILE *fp) {
     char token[64];
@@ -1061,22 +1031,6 @@ parse(FILE *fp) {
             return NULL;
         }
     }
-#if TEST
-    {
-        struct enum_list *ep;
-
-        for (np = root; np; np = np->next) {
-            printf("%s ::= { %s %d } (%d)\n", np->label, np->parent, np->subid,
-                   np->type);
-            if (np->enums) {
-                printf("Enums: \n");
-                for (ep = np->enums; ep; ep = ep->next) {
-                    printf("%s(%d)\n", ep->label, ep->value);
-                }
-            }
-        }
-    }
-#endif /* TEST */
     return root;
 }
 

@@ -17,6 +17,7 @@
 #include "CollapsedForwarding.h"
 #include "comm/Connection.h"
 #include "comm/Read.h"
+#include "DebugMessages.h"
 #if HAVE_DISKIO_MODULE_IPCIO
 #include "DiskIO/IpcIo/IpcIoFile.h"
 #endif
@@ -511,9 +512,6 @@ StoreEntry::doAbandon(const char *context)
         return;
     }
 
-    if (EBIT_TEST(flags, KEY_PRIVATE))
-        debugs(20, DBG_IMPORTANT, "WARNING: " << __FILE__ << ":" << __LINE__ << ": found KEY_PRIVATE");
-
     Store::Root().handleIdleEntry(*this); // may delete us
 }
 
@@ -606,12 +604,6 @@ StoreEntry::setPublicKey(const KeyScope scope)
      *
      * If RELEASE_REQUEST is set, setPublicKey() should not be called.
      */
-#if MORE_DEBUG_OUTPUT
-
-    if (EBIT_TEST(flags, RELEASE_REQUEST))
-        debugs(20, DBG_IMPORTANT, "assertion failed: RELEASE key " << key << ", url " << mem_obj->url);
-
-#endif
 
     assert(!EBIT_TEST(flags, RELEASE_REQUEST));
 
@@ -895,7 +887,6 @@ storeAppendVPrintf(StoreEntry * e, const char *fmt, va_list vargs)
 struct _store_check_cachable_hist {
 
     struct {
-        int non_get;
         int not_entry_cachable;
         int wrong_content_length;
         int too_big;
@@ -967,46 +958,39 @@ StoreEntry::checkCachable()
         return 0; // avoid rerequesting release below
     }
 
-#if CACHE_ALL_METHODS
-
-    if (mem_obj->method != Http::METHOD_GET) {
-        debugs(20, 2, "StoreEntry::checkCachable: NO: non-GET method");
-        ++store_check_cachable_hist.no.non_get;
-    } else
-#endif
-        if (store_status == STORE_OK && EBIT_TEST(flags, ENTRY_BAD_LENGTH)) {
-            debugs(20, 2, "StoreEntry::checkCachable: NO: wrong content-length");
-            ++store_check_cachable_hist.no.wrong_content_length;
-        } else if (!mem_obj) {
-            // XXX: In bug 4131, we forgetHit() without mem_obj, so we need
-            // this segfault protection, but how can we get such a HIT?
-            debugs(20, 2, "StoreEntry::checkCachable: NO: missing parts: " << *this);
-            ++store_check_cachable_hist.no.missing_parts;
-        } else if (checkTooBig()) {
-            debugs(20, 2, "StoreEntry::checkCachable: NO: too big");
-            ++store_check_cachable_hist.no.too_big;
-        } else if (checkTooSmall()) {
-            debugs(20, 2, "StoreEntry::checkCachable: NO: too small");
-            ++store_check_cachable_hist.no.too_small;
-        } else if (EBIT_TEST(flags, KEY_PRIVATE)) {
-            debugs(20, 3, "StoreEntry::checkCachable: NO: private key");
-            ++store_check_cachable_hist.no.private_key;
-        } else if (hasDisk()) {
-            /*
-             * the remaining cases are only relevant if we haven't
-             * started swapping out the object yet.
-             */
-            return 1;
-        } else if (storeTooManyDiskFilesOpen()) {
-            debugs(20, 2, "StoreEntry::checkCachable: NO: too many disk files open");
-            ++store_check_cachable_hist.no.too_many_open_files;
-        } else if (fdNFree() < RESERVED_FD) {
-            debugs(20, 2, "StoreEntry::checkCachable: NO: too many FD's open");
-            ++store_check_cachable_hist.no.too_many_open_fds;
-        } else {
-            ++store_check_cachable_hist.yes.Default;
-            return 1;
-        }
+    if (store_status == STORE_OK && EBIT_TEST(flags, ENTRY_BAD_LENGTH)) {
+        debugs(20, 2, "StoreEntry::checkCachable: NO: wrong content-length");
+        ++store_check_cachable_hist.no.wrong_content_length;
+    } else if (!mem_obj) {
+        // XXX: In bug 4131, we forgetHit() without mem_obj, so we need
+        // this segfault protection, but how can we get such a HIT?
+        debugs(20, 2, "StoreEntry::checkCachable: NO: missing parts: " << *this);
+        ++store_check_cachable_hist.no.missing_parts;
+    } else if (checkTooBig()) {
+        debugs(20, 2, "StoreEntry::checkCachable: NO: too big");
+        ++store_check_cachable_hist.no.too_big;
+    } else if (checkTooSmall()) {
+        debugs(20, 2, "StoreEntry::checkCachable: NO: too small");
+        ++store_check_cachable_hist.no.too_small;
+    } else if (EBIT_TEST(flags, KEY_PRIVATE)) {
+        debugs(20, 3, "StoreEntry::checkCachable: NO: private key");
+        ++store_check_cachable_hist.no.private_key;
+    } else if (hasDisk()) {
+        /*
+            * the remaining cases are only relevant if we haven't
+            * started swapping out the object yet.
+            */
+        return 1;
+    } else if (storeTooManyDiskFilesOpen()) {
+        debugs(20, 2, "StoreEntry::checkCachable: NO: too many disk files open");
+        ++store_check_cachable_hist.no.too_many_open_files;
+    } else if (fdNFree() < RESERVED_FD) {
+        debugs(20, 2, "StoreEntry::checkCachable: NO: too many FD's open");
+        ++store_check_cachable_hist.no.too_many_open_fds;
+    } else {
+        ++store_check_cachable_hist.yes.Default;
+        return 1;
+    }
 
     releaseRequest();
     return 0;
@@ -1016,13 +1000,6 @@ void
 storeCheckCachableStats(StoreEntry *sentry)
 {
     storeAppendPrintf(sentry, "Category\t Count\n");
-
-#if CACHE_ALL_METHODS
-
-    storeAppendPrintf(sentry, "no.non_get\t%d\n",
-                      store_check_cachable_hist.no.non_get);
-#endif
-
     storeAppendPrintf(sentry, "no.not_entry_cachable\t%d\n",
                       store_check_cachable_hist.no.not_entry_cachable);
     storeAppendPrintf(sentry, "no.wrong_content_length\t%d\n",
@@ -1216,7 +1193,7 @@ storeLateRelease(void *)
     // TODO: this works but looks unelegant.
     for (int i = 0; i < 10; ++i) {
         if (LateReleaseStack.empty()) {
-            debugs(20, DBG_IMPORTANT, "storeLateRelease: released " << n << " objects");
+            debugs(20, Important(30), "storeLateRelease: released " << n << " objects");
             return;
         } else {
             e = LateReleaseStack.top();
@@ -1718,27 +1695,6 @@ createRemovalPolicy(RemovalPolicySettings * settings)
     fatalf("ERROR: Unknown policy %s\n", settings->type);
     return NULL;                /* NOTREACHED */
 }
-
-#if 0
-void
-storeSwapFileNumberSet(StoreEntry * e, sfileno filn)
-{
-    if (e->swap_file_number == filn)
-        return;
-
-    if (filn < 0) {
-        assert(-1 == filn);
-        storeDirMapBitReset(e->swap_file_number);
-        storeDirLRUDelete(e);
-        e->swap_file_number = -1;
-    } else {
-        assert(-1 == e->swap_file_number);
-        storeDirMapBitSet(e->swap_file_number = filn);
-        storeDirLRUAdd(e);
-    }
-}
-
-#endif
 
 void
 StoreEntry::storeErrorResponse(HttpReply *reply)

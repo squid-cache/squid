@@ -20,6 +20,7 @@ libapi_la_SOURCES = \
 	BoolOps.h \
 	Checklist.cc \
 	Checklist.h \
+	ChecklistFiller.h \
 	InnerNode.cc \
 	InnerNode.h \
 	Options.cc \

@@ -106,7 +106,6 @@ MemObject::MemObject()
 MemObject::~MemObject()
 {
     debugs(20, 3, "MemObject destructed, this=" << this);
-    const Ctx ctx = ctx_enter(hasUris() ? urlXXX() : "[unknown_ctx]");
 
 #if URL_CHECKSUM_DEBUG
     checkUrlChecksum();
@@ -119,17 +118,6 @@ MemObject::~MemObject()
     }
 
     data_hdr.freeContent();
-
-#if 0
-    /*
-     * There is no way to abort FD-less clients, so they might
-     * still have mem->clients set.
-     */
-    assert(clients.head == NULL);
-
-#endif
-
-    ctx_exit(ctx);              /* must exit before we free mem->url */
 }
 
 HttpReply &
@@ -166,10 +154,6 @@ void
 MemObject::dump() const
 {
     data_hdr.dump();
-#if 0
-    /* do we want this one? */
-    debugs(20, DBG_IMPORTANT, "MemObject->data.origin_offset: " << (data_hdr.head ? data_hdr.head->nodeBuffer.offset : 0));
-#endif
 
     debugs(20, DBG_IMPORTANT, "MemObject->start_ping: " << start_ping);
     debugs(20, DBG_IMPORTANT, "MemObject->inmem_hi: " << data_hdr.endOffset());
@@ -483,19 +467,6 @@ MemObject::mostBytesAllowed() const
 
     for (dlink_node *node = clients.head; node; node = node->next) {
         store_client *sc = (store_client *) node->data;
-#if 0
-        /* This test is invalid because the client may be writing data
-         * and thus will want data immediately.
-         * If we include the test, there is a race condition when too much
-         * data is read - if all sc's are writing when a read is scheduled.
-         * XXX: fixme.
-         */
-
-        if (!sc->callbackPending())
-            /* not waiting for more data */
-            continue;
-
-#endif
 
         j = sc->delayId.bytesWanted(0, sc->copyInto.length);
 
