@@ -699,8 +699,9 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     PeerDigest *pd = NULL;
     const char *reason = NULL;  /* reason for completion */
     const char *no_bug = NULL;  /* successful completion if set */
-    const int pdcb_valid = cbdataReferenceValid(fetch->pd);
-    const int pcb_valid = cbdataReferenceValid(fetch->pd->peer);
+    /* if "pdcb_valid" or "pcb_valid" is true then "fetch->pd" is dereferenced in "peerDigestReqFinish" */
+    const int pdcb_valid = fetch->pd ? cbdataReferenceValid(fetch->pd) : 0;
+    const int pcb_valid = fetch->pd ? cbdataReferenceValid(fetch->pd->peer) : 0;
 
     /* test possible exiting conditions (the same for most steps!)
      * cases marked with '?!' should not happen */
