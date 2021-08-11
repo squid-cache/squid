@@ -27,18 +27,18 @@ CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeekingPeerConnector);
 void switchToTunnel(HttpRequest *request, const Comm::ConnectionPointer &clientConn, const Comm::ConnectionPointer &srvConn, const SBuf &preReadServerData);
 
 void
-Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone(Acl::Answer answer, void *data)
+Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone(const Acl::Answer anAnswer, void *data)
 {
     Ssl::PeekingPeerConnector *peerConnect = (Ssl::PeekingPeerConnector *) data;
     // Use job calls to add done() checks and other job logic/protections.
-    CallJobHere1(83, 7, CbcPointer<PeekingPeerConnector>(peerConnect), Ssl::PeekingPeerConnector, checkForPeekAndSpliceDone, answer);
+    CallJobHere1(83, 7, CbcPointer<PeekingPeerConnector>(peerConnect), Ssl::PeekingPeerConnector, checkForPeekAndSpliceDone, anAnswer);
 }
 
 void
-Ssl::PeekingPeerConnector::checkForPeekAndSpliceDone(Acl::Answer answer)
+Ssl::PeekingPeerConnector::checkForPeekAndSpliceDone(const Acl::Answer anAnswer)
 {
-    const Ssl::BumpMode finalAction = answer.allowed() ?
-                                      static_cast<Ssl::BumpMode>(answer.kind):
+    const Ssl::BumpMode finalAction = anAnswer.allowed() ?
+                                      static_cast<Ssl::BumpMode>(anAnswer.kind):
                                       checkForPeekAndSpliceGuess();
     checkForPeekAndSpliceMatched(finalAction);
 }
