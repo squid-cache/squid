@@ -1073,7 +1073,7 @@ Ftp::Gateway::checkUrlpath()
     auto t = request->url.path().rfind(';');
 
     if (t != SBuf::npos) {
-        auto filenameEnd = t-1;
+        const auto filenameEnd = t;
         if (request->url.path().substr(++t).cmp(str_type_eq, str_type_eq.length()) == 0) {
             t += str_type_eq.length();
             typecode = (char)xtoupper(request->url.path()[t]);
