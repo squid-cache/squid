@@ -19,9 +19,9 @@ extern "C" {
 
 /**
  * xstrdup() - same as strdup(3).  Used for portability.
- * Never returns NULL; fatal on error.
+ * Never returns nullptr; fatal on error.
  *
- * Sets errno to EINVAL if a NULL pointer is passed.
+ * Sets errno to EINVAL if a nullptr pointer is passed.
  *
  * Define failure_notify to receive error message.
  * otherwise perror() is used to display it.
@@ -35,7 +35,7 @@ char *xstrdup(const char *s);
 
 /*
  *  xstrncpy() - similar to strncpy(3) but terminates string
- *  always with '\0' if (n != 0 and dst != NULL),
+ *  always with '\0' if (n != 0 and dst != nullptr),
  *  and doesn't do padding
  */
 char *xstrncpy(char *dst, const char *src, size_t n);
@@ -45,9 +45,9 @@ char *xstrncpy(char *dst, const char *src, size_t n);
  * while strndup(3) copies up to n bytes and allocates up to n+1 bytes
  * to fit the terminating character. Assumes s is 0-terminated (another XXX).
  *
- * Never returns NULL; fatal on error.
+ * Never returns nullptr; fatal on error.
  *
- * Sets errno to EINVAL if a NULL pointer or negative
+ * Sets errno to EINVAL if a nullptr pointer or negative
  * length is passed.
  *
  * Define failure_notify to receive error message.

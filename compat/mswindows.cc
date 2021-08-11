@@ -31,7 +31,7 @@
 #endif
 
 THREADLOCAL int ws32_result;
-LPCRITICAL_SECTION dbg_mutex = NULL;
+LPCRITICAL_SECTION dbg_mutex = nullptr;
 
 void GetProcessName(pid_t, char *);
 
@@ -66,7 +66,7 @@ GetProcessName(pid_t pid, char *ProcessName)
     /* Get a handle to the process. */
     HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
     /* Get the process name. */
-    if (NULL != hProcess) {
+    if (hProcess) {
         HMODULE hMod;
         DWORD cbNeeded;
 
@@ -90,9 +90,7 @@ kill(pid_t pid, int sig)
     char ProcessNameToCheck[MAX_PATH];
 
     if (sig == 0) {
-        if ((hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
-                                    PROCESS_VM_READ,
-                                    FALSE, pid)) == NULL)
+        if (!(hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid)))
             return -1;
         else {
             CloseHandle(hProcess);
@@ -136,9 +134,9 @@ WIN32_ftruncate(int fd, off_t size)
         return -1;
 
     hfile = (HANDLE) _get_osfhandle(fd);
-    curpos = SetFilePointer(hfile, 0, NULL, FILE_CURRENT);
+    curpos = SetFilePointer(hfile, 0, nullptr, FILE_CURRENT);
     if (curpos == 0xFFFFFFFF
-            || SetFilePointer(hfile, size, NULL, FILE_BEGIN) == 0xFFFFFFFF
+            || SetFilePointer(hfile, size, nullptr, FILE_BEGIN) == 0xFFFFFFFF
             || !SetEndOfFile(hfile)) {
         int error = GetLastError();
 
@@ -177,13 +175,13 @@ WIN32_truncate(const char *pathname, off_t length)
 
 struct passwd *
 getpwnam(char *unused) {
-    static struct passwd pwd = {NULL, NULL, 100, 100, NULL, NULL, NULL};
+    static struct passwd pwd = {nullptr, nullptr, 100, 100, nullptr, nullptr, nullptr};
     return &pwd;
 }
 
 struct group *
 getgrnam(char *unused) {
-    static struct group grp = {NULL, NULL, 100, NULL};
+    static struct group grp = {nullptr, nullptr, 100, nullptr};
     return &grp;
 }
 
@@ -196,13 +194,13 @@ _free_osfhnd(int filehandle)
             (_osfhnd(filehandle) != (long) INVALID_HANDLE_VALUE)) {
         switch (filehandle) {
         case 0:
-            SetStdHandle(STD_INPUT_HANDLE, NULL);
+            SetStdHandle(STD_INPUT_HANDLE, nullptr);
             break;
         case 1:
-            SetStdHandle(STD_OUTPUT_HANDLE, NULL);
+            SetStdHandle(STD_OUTPUT_HANDLE, nullptr);
             break;
         case 2:
-            SetStdHandle(STD_ERROR_HANDLE, NULL);
+            SetStdHandle(STD_ERROR_HANDLE, nullptr);
             break;
         }
         _osfhnd(filehandle) = (long) INVALID_HANDLE_VALUE;
@@ -301,9 +299,9 @@ openlog(const char *ident, int logopt, int facility)
     if (ms_eventlog)
         return;
 
-    ms_eventlog = RegisterEventSourceA(NULL, ident);
+    ms_eventlog = RegisterEventSourceA(nullptr, ident);
 
-    // note: RegisterEventAtSourceA may fail and return NULL.
+    // note: RegisterEventAtSourceA may fail and return nullptr.
     //   in that case we'll just retry at the next message or not log
 }
 #define SYSLOG_MAX_MSG_SIZE 1024
@@ -349,8 +347,8 @@ syslog(int priority, const char *fmt, ...)
     }
 
     //Windows API suck. They are overengineered
-    ReportEventA(ms_eventlog, logtype, 0, 0, NULL, 1, 0,
-                 const_cast<const char **>(&str), NULL);
+    ReportEventA(ms_eventlog, logtype, 0, 0, nullptr, 1, 0,
+                 const_cast<const char **>(&str), nullptr);
 }
 
 /* note: this is all MSWindows-specific code; all of it should be conditional */

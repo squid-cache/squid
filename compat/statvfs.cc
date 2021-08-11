@@ -38,7 +38,7 @@ xstatvfs(const char *path, struct statvfs *sfs)
         errno = ENOENT;
         return -1;
     }
-    if (!GetVolumeInformation(drive, NULL, 0, &vsn, &maxlen, &flags, NULL, 0)) {
+    if (!GetVolumeInformation(drive, nullptr, 0, &vsn, &maxlen, &flags, nullptr, 0)) {
         errno = ENOENT;
         return -1;
     }
