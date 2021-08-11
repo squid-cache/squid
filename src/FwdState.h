@@ -153,11 +153,10 @@ private:
     /// \returns the time left for this connection to become connected or 1 second if it is less than one second left
     time_t connectingTimeout(const Comm::ConnectionPointer &conn) const;
 
-    void notifyConnOpener();
-
-    void reactToZeroSizeObject();
-
     void cancelStep(const char *reason);
+
+    void notifyConnOpener();
+    void reactToZeroSizeObject();
 
 public:
     StoreEntry *entry;
