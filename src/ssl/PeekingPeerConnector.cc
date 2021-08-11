@@ -398,4 +398,3 @@ Ssl::PeekingPeerConnector::serverCertificateVerified()
     }
 }
 
-

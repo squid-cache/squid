@@ -385,7 +385,6 @@ Http::Tunneler::sendSuccess()
     callBack();
 }
 
-
 void
 Http::Tunneler::countFailingConnection()
 {
