@@ -272,6 +272,9 @@ Comm::TcpAcceptor::acceptOne(const CommIoCbParams &)
         CodeContext::Reset(listenPort_);
     }
 
+    if (done())
+        return;
+
     typedef CommCbMemFunT<Comm::TcpAcceptor, CommIoCbParams> Dialer;
     AsyncCall::Pointer reader = JobCallback(33, 5, Dialer, this, TcpAcceptor::acceptOne);
     Comm::Read(conn, reader);
