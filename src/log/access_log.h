@@ -12,9 +12,13 @@
 #define SQUID_LOG_ACCESS_LOG_H_
 
 #include "LogTags.h"
+#include "sbuf/forward.h"
 
-void fvdbCountVia(const char *key);
-void fvdbCountForw(const char *key);
+/// XXX: these functions preserve all counted values until the next log rotation
+/// count occurrences of the given Via header value
+void fvdbCountVia(const SBuf &);
+/// count occurrences of the given X-Forwarded-For header value
+void fvdbCountForwarded(const SBuf &);
 
 #if HEADERS_LOG
 class HttpRequestMethod;

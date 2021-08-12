@@ -78,6 +78,8 @@ SQUIDCEXTERN int setresuid(uid_t, uid_t, uid_t);
 
 #endif /* _SQUID_LINUX */
 
+static char tmp_error_buf[32768]; /* 32KB */
+
 void
 releaseServerSockets(void)
 {
@@ -582,7 +584,10 @@ enter_suid(void)
     }
 #else
 
-    setuid(0);
+    if (setuid(0) < 0) {
+        const auto xerrno = errno;
+        debugs(21, 3, "setuid(0) failed: " << xstrerr(xerrno));
+    }
 #endif
 #if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
     /* Set Linux DUMPABLE flag */
@@ -791,7 +796,7 @@ setSystemLimits(void)
         rl.rlim_cur = Squid_MaxFD;
         if (setrlimit(RLIMIT_NOFILE, &rl) < 0) {
             int xerrno = errno;
-            snprintf(tmp_error_buf, ERROR_BUF_SZ, "setrlimit: RLIMIT_NOFILE: %s", xstrerr(xerrno));
+            snprintf(tmp_error_buf, sizeof(tmp_error_buf), "setrlimit: RLIMIT_NOFILE: %s", xstrerr(xerrno));
             fatal_dump(tmp_error_buf);
         }
     }
@@ -806,7 +811,7 @@ setSystemLimits(void)
 
         if (setrlimit(RLIMIT_DATA, &rl) < 0) {
             int xerrno = errno;
-            snprintf(tmp_error_buf, ERROR_BUF_SZ, "setrlimit: RLIMIT_DATA: %s", xstrerr(xerrno));
+            snprintf(tmp_error_buf, sizeof(tmp_error_buf), "setrlimit: RLIMIT_DATA: %s", xstrerr(xerrno));
             fatal_dump(tmp_error_buf);
         }
     }
@@ -824,7 +829,7 @@ setSystemLimits(void)
 
         if (setrlimit(RLIMIT_VMEM, &rl) < 0) {
             int xerrno = errno;
-            snprintf(tmp_error_buf, ERROR_BUF_SZ, "setrlimit: RLIMIT_VMEM: %s", xstrerr(xerrno));
+            snprintf(tmp_error_buf, sizeof(tmp_error_buf), "setrlimit: RLIMIT_VMEM: %s", xstrerr(xerrno));
             fatal_dump(tmp_error_buf);
         }
     }

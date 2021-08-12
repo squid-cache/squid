@@ -39,7 +39,6 @@ COPIED_SOURCE= \
 	debug.cc \
 	globals.cc \
 	SquidConfig.cc \
-	SquidNew.cc \
 	tests/stub_fd.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_libmem.cc \
@@ -95,9 +94,6 @@ time.cc: $(top_srcdir)/src/time.cc
 
 SquidConfig.cc: $(top_srcdir)/src/SquidConfig.cc
 	cp $(top_srcdir)/src/SquidConfig.cc $@
-
-SquidNew.cc: $(top_srcdir)/src/SquidNew.cc
-	cp $(top_srcdir)/src/SquidNew.cc $@
 
 tests/stub_HelperChildConfig.cc: $(top_srcdir)/src/tests/stub_HelperChildConfig.cc
 	cp $(top_srcdir)/src/tests/stub_HelperChildConfig.cc $@

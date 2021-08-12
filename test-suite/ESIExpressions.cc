@@ -40,12 +40,6 @@ main ()
 
     while (strlen (expressions[i])) {
         int result = ESIExpression::Evaluate (expressions[i]);
-#if VERBOSEDEBUG
-
-        printf("Expr '%s' = '%s' (expected %s)\n", expressions[i],
-               result ? "true" : "false",
-               results[i] ? "true" : "false");
-#endif
 
         if (result != results[i])
             return 1;

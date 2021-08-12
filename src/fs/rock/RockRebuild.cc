@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "base/AsyncJobCalls.h"
+#include "DebugMessages.h"
 #include "fs/rock/RockDbCell.h"
 #include "fs/rock/RockRebuild.h"
 #include "fs/rock/RockSwapDir.h"
@@ -339,10 +340,10 @@ Rock::Rebuild::start()
     assert(IsResponsible(*sd));
 
     if (!resuming) {
-        debugs(47, DBG_IMPORTANT, "Loading cache_dir #" << sd->index <<
+        debugs(47, Important(18), "Loading cache_dir #" << sd->index <<
                " from " << sd->filePath);
     } else {
-        debugs(47, DBG_IMPORTANT, "Resuming indexing cache_dir #" << sd->index <<
+        debugs(47, Important(63), "Resuming indexing cache_dir #" << sd->index <<
                " from " << sd->filePath << ':' << progressDescription());
     }
 

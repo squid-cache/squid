@@ -379,16 +379,6 @@ void Adaptation::Icap::ServiceRep::noteTimeToUpdate()
     startGettingOptions();
 }
 
-#if 0
-static
-void Adaptation::Icap::ServiceRep_noteTimeToNotify(void *data)
-{
-    Adaptation::Icap::ServiceRep *service = static_cast<Adaptation::Icap::ServiceRep*>(data);
-    Must(service);
-    service->noteTimeToNotify();
-}
-#endif
-
 void Adaptation::Icap::ServiceRep::noteTimeToNotify()
 {
     Must(!notifying);

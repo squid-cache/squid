@@ -464,15 +464,6 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             return false;
         }
 
-#if HARDCODE_DENY_PORTS
-        /* These ports are filtered in the default squid.conf, but
-         * maybe someone wants them hardcoded... */
-        if (foundPort == 7 || foundPort == 9 || foundPort == 19) {
-            debugs(23, DBG_CRITICAL, MYNAME << "Deny access to port " << foundPort);
-            return false;
-        }
-#endif
-
         if (stringHasWhitespace(urlpath)) {
             debugs(23, 2, "URI has whitespace: {" << rawUrl << "}");
 

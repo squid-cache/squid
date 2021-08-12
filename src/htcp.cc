@@ -18,6 +18,7 @@
 #include "comm/Loops.h"
 #include "comm/UdpOpenDialer.h"
 #include "compat/xalloc.h"
+#include "DebugMessages.h"
 #include "globals.h"
 #include "htcp.h"
 #include "http.h"
@@ -1438,7 +1439,7 @@ void
 htcpOpenPorts(void)
 {
     if (Config.Port.htcp <= 0) {
-        debugs(31, DBG_IMPORTANT, "HTCP Disabled.");
+        debugs(31, Important(21), "HTCP Disabled.");
         return;
     }
 

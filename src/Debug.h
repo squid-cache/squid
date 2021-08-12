@@ -33,11 +33,6 @@
 #define assert(EX)  ((EX)?((void)0):xassert("EX", __FILE__, __LINE__))
 #endif
 
-/* context-based debugging, the actual type is subject to change */
-typedef int Ctx;
-Ctx ctx_enter(const char *descr);
-void ctx_exit(Ctx ctx);
-
 /* defined debug section limits */
 #define MAX_DEBUG_SECTIONS 100
 
@@ -280,6 +275,9 @@ operator <<(std::ostream &os, const AsHex<Integer> number)
 /// a helper to ease AsHex object creation
 template <class Integer>
 inline AsHex<Integer> asHex(const Integer n) { return AsHex<Integer>(n); }
+
+/// Prints the first n data bytes using hex notation. Does nothing if n is 0.
+void PrintHex(std::ostream &, const char *data, size_t n);
 
 #endif /* SQUID_DEBUG_H */
 

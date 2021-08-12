@@ -44,6 +44,7 @@ logfile_mod_udp_write(Logfile * lf, const char *buf, size_t len)
     s = write(ll->fd, (char const *) buf, len);
     fd_bytes(ll->fd, s, FD_WRITE);
 #if 0
+    // TODO: Enable after polishing to properly log these errors.
     if (s < 0) {
         int xerrno = errno;
         debugs(1, DBG_IMPORTANT, "logfile (udp): got errno (" << errno << "):" << xstrerr(xerrno));

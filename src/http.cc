@@ -226,16 +226,6 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
 #endif
 
     default:
-#if QUESTIONABLE
-        /*
-         * Any 2xx response should eject previously cached entities...
-         */
-
-        if (status >= 200 && status < 300)
-            remove = 1;
-
-#endif
-
         break;
     }
 
@@ -660,17 +650,12 @@ HttpStateData::processReplyHeader()
 {
     /** Creates a blank header. If this routine is made incremental, this will not do */
 
-    /* NP: all exit points to this function MUST call ctx_exit(ctx) */
-    Ctx ctx = ctx_enter(entry->mem_obj->urlXXX());
-
     debugs(11, 3, "processReplyHeader: key '" << entry->getMD5Text() << "'");
 
     assert(!flags.headers_parsed);
 
-    if (!inBuf.length()) {
-        ctx_exit(ctx);
+    if (!inBuf.length())
         return;
-    }
 
     /* Attempt to parse the first line; this will define where the protocol, status, reason-phrase and header begin */
     {
@@ -698,7 +683,6 @@ HttpStateData::processReplyHeader()
                 inBuf = hp->remaining();
             } else {
                 debugs(33, 5, "Incomplete response, waiting for end of response headers");
-                ctx_exit(ctx);
                 return;
             }
         }
@@ -711,7 +695,6 @@ HttpStateData::processReplyHeader()
             HttpReply *newrep = new HttpReply;
             newrep->sline.set(Http::ProtocolVersion(), hp->parseStatusCode);
             setVirginReply(newrep);
-            ctx_exit(ctx);
             return;
         }
     }
@@ -747,7 +730,6 @@ HttpStateData::processReplyHeader()
 
     if (newrep->sline.version.protocol == AnyP::PROTO_HTTP && Http::Is1xx(newrep->sline.status())) {
         handle1xx(newrep);
-        ctx_exit(ctx);
         return;
     }
 
@@ -768,8 +750,6 @@ HttpStateData::processReplyHeader()
     checkDateSkew(vrep);
 
     processSurrogateControl (vrep);
-
-    ctx_exit(ctx);
 }
 
 /// ignore or start forwarding the 1xx response (a.k.a., control message)
@@ -969,7 +949,6 @@ HttpStateData::haveParsedReplyHeaders()
 {
     Client::haveParsedReplyHeaders();
 
-    Ctx ctx = ctx_enter(entry->mem_obj->urlXXX());
     HttpReply *rep = finalReply();
     const Http::StatusCode statusCode = rep->sline.status();
 
@@ -1093,8 +1072,6 @@ HttpStateData::haveParsedReplyHeaders()
     headersLog(1, 0, request->method, rep);
 
 #endif
-
-    ctx_exit(ctx);
 }
 
 HttpStateData::ConnectionStatus
@@ -1984,12 +1961,6 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
         if (!cc)
             cc = new HttpHdrCc();
-
-#if 0 /* see bug 2330 */
-        /* Set no-cache if determined needed but not found */
-        if (request->flags.nocache)
-            EBIT_SET(cc->mask, HttpHdrCcType::CC_NO_CACHE);
-#endif
 
         /* Add max-age only without no-cache */
         if (!cc->hasMaxAge() && !cc->hasNoCache()) {

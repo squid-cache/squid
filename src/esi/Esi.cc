@@ -551,16 +551,6 @@ ESIContext::send ()
     } else
         flags.oktosend = 1;
 
-#if 0
-
-    if (!flags.oktosend) {
-
-        fatal("ESIContext::send: Not OK to send.\n");
-        return 0;
-    }
-
-#endif
-
     if (!(rep || (outbound.getRaw() &&
                   outbound->len && (outbound_offset <= outbound->len)))) {
         debugs(86, 5, "ESIContext::send: Nothing to send.");

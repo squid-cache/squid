@@ -289,3 +289,4 @@ Http::Message::firstLineBuf(MemBuf &mb)
 {
     packFirstLineInto(&mb, true);
 }
+

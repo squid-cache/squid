@@ -450,8 +450,11 @@ AC_DEFUN([LIBATOMIC_CHECKER],[
 #include <atomic>
 #include <cstdint>
       int
-      main(int, char **) {
-          return std::atomic<uint64_t>{}.is_lock_free() ? 0 : 1;
+      main(int argc, char **) {
+          return (
+              std::atomic<uint8_t>(uint8_t(argc)).exchange(0) &&
+              std::atomic<uint64_t>{}.is_lock_free()
+              ) ? 0 : 1;
       }
   ]])],[
     AC_MSG_RESULT(yes)
@@ -2897,6 +2900,7 @@ AC_CHECK_SIZEOF(size_t)
 dnl Some C++11 types we try to use
 AX_CXX_TYPE_UNIFORM_DISTRIBUTIONS
 SQUID_CXX_STD_UNDERLYING_TYPE
+SQUID_CXX_STD_IS_TRIVIALLY_COPYABLE
 
 dnl On Solaris 9 x86, gcc may includes a "fixed" set of old system include files
 dnl that is incompatible with the updated Solaris header files.
