@@ -353,6 +353,8 @@ public:
 
     int pipeline_max_prefetch;
 
+    // these values are actually unsigned
+    // TODO: extend the parser to support more nuanced types
     int forward_max_tries;
     int connect_retries;
 

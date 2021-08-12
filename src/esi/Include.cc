@@ -137,8 +137,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
 
     switch (clientStreamStatus (node, http)) {
 
-    case STREAM_UNPLANNED_COMPLETE: /* fallthru ok */
-
+    case STREAM_UNPLANNED_COMPLETE:
     case STREAM_COMPLETE: /* ok */
         debugs(86, 3, "ESI subrequest finished OK");
         esiStream->include->subRequestDone (esiStream, true);
@@ -401,7 +400,7 @@ ESIInclude::render(ESISegment::Pointer output)
 }
 
 esiProcessResult_t
-ESIInclude::process (int dovars)
+ESIInclude::process(int)
 {
     /* Prevent refcount race leading to free */
     Pointer me (this);

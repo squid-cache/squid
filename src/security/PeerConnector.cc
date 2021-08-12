@@ -570,8 +570,8 @@ public:
         peerConnector_(pc) {}
 
     /* CallDialer API */
-    virtual bool canDial(AsyncCall &call) { return peerConnector_.valid(); }
-    virtual void dial(AsyncCall &call) { ((&(*peerConnector_))->*method_)(object, status); }
+    virtual bool canDial(AsyncCall &) { return peerConnector_.valid(); }
+    virtual void dial(AsyncCall &) { ((&(*peerConnector_))->*method_)(object, status); }
     Method method_; ///< The Security::PeerConnector method to dial
     CbcPointer<Security::PeerConnector> peerConnector_; ///< The Security::PeerConnector object
 };

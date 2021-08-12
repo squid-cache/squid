@@ -495,7 +495,7 @@ process_options(int argc, char *argv[])
             exit(EXIT_SUCCESS);
         case '?':
             opt = optopt;
-        /* fall thru to default */
+        /* [[fallthrough]] */
         default:
             fprintf(stderr, "%s: FATAL: Unknown option: -%c. Exiting\n", program_name, opt);
             usage(argv[0]);

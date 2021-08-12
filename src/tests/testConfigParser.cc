@@ -8,17 +8,11 @@
 
 #include "squid.h"
 #include "ConfigParser.h"
-#include "event.h"
 #include "SquidString.h"
 #include "testConfigParser.h"
 #include "unitTestMain.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testConfigParser);
-
-/* let this test link sanely */
-void
-eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata)
-{}
 
 void testConfigParser::setUp()
 {

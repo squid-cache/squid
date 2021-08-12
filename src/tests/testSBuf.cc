@@ -26,7 +26,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION( testSBuf );
 #include "event.h"
 #include "MemObject.h"
 void
-eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata)
+eventAdd(const char *, EVH *, void *, double, int, bool)
 {}
 int64_t
 MemObject::endOffset() const

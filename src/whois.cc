@@ -20,6 +20,7 @@
 #include "StatCounters.h"
 #include "Store.h"
 #include "tools.h"
+#include "whois.h"
 
 #include <cerrno>
 

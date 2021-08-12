@@ -115,7 +115,7 @@ process_options(int argc, char *argv[])
             exit(EXIT_SUCCESS);
         case '?':
             opt = optopt;
-        /* fall thru to default */
+        /* [[fallthrough]] */
         default:
             fprintf(stderr, "ERROR: unknown option: -%c. Exiting\n", opt);
             usage();

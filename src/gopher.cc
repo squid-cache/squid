@@ -16,6 +16,7 @@
 #include "fd.h"
 #include "FwdState.h"
 #include "globals.h"
+#include "gopher.h"
 #include "html_quote.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -685,8 +686,8 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                 }
             }
 
+            break;
             }           /* HTML_CSO_RESULT */
-
         default:
             break;      /* do nothing */
 

@@ -19,7 +19,7 @@
 #define STUB_API "stub_store_rebuild.cc"
 #include "tests/STUB.h"
 
-void storeRebuildProgress(int sd_index, int total, int sofar) STUB
+void storeRebuildProgress(int, int, int) STUB
 bool storeRebuildParseEntry(MemBuf &, StoreEntry &, cache_key *, StoreRebuildData &, uint64_t) STUB_RETVAL(false)
 
 void StoreRebuildData::updateStartTime(const timeval &dirStartTime)
@@ -35,7 +35,7 @@ void storeRebuildComplete(StoreRebuildData *)
 }
 
 bool
-storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, StoreRebuildData &)
+storeRebuildLoadEntry(int fd, int, MemBuf &buf, StoreRebuildData &)
 {
     if (fd < 0)
         return false;

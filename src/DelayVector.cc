@@ -48,7 +48,7 @@ DelayVector::dump(StoreEntry *entry) const
 }
 
 void
-DelayVector::update(int incr)
+DelayVector::update(int)
 {
     /*
      * Each pool updates itself,

@@ -1036,6 +1036,8 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
         loginParser(auth, false);
     }
     /* we fail with authorization-required error later IFF the FTP server requests it */
+#else
+    (void)req_hdr;
 #endif
 
     /* Test URL login syntax. Overrides any headers received. */
@@ -2580,6 +2582,8 @@ Ftp::Gateway::ftpAuthRequired(HttpRequest * request, SBuf &realm, AccessLogEntry
     /* add Authenticate header */
     // XXX: performance regression. c_str() may reallocate
     newrep->header.putAuth("Basic", realm.c_str());
+#else
+    (void)realm;
 #endif
     return newrep;
 }

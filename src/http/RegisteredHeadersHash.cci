@@ -144,7 +144,7 @@ HttpHeaderHashTable::HttpHeaderHash (const char *str, size_t len)
     {
     default:
         hval += asso_values[static_cast<unsigned char>(str[8])];
-    /*FALLTHROUGH*/
+    /* [[fallthrough]] */
     case 8:
     case 7:
     case 6:

@@ -136,7 +136,7 @@ protected:
     /// Called when the SSL negotiation to the server completed and the certificates
     /// validated using the cert validator.
     /// \param error if not NULL the SSL negotiation was aborted with an error
-    virtual void noteNegotiationDone(ErrorState *error) {}
+    virtual void noteNegotiationDone(ErrorState *) {}
 
     /// Must implemented by the kid classes to return the TLS context object to use
     /// for building the encryption context objects.

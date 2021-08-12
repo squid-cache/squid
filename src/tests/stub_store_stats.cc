@@ -15,7 +15,7 @@
 #include <cstring>
 
 StoreInfoStats &
-StoreInfoStats::operator +=(const StoreInfoStats &stats) STUB_RETVAL(*this)
+StoreInfoStats::operator +=(const StoreInfoStats &) STUB_RETVAL(*this)
 
 StoreIoStats::StoreIoStats()
 {

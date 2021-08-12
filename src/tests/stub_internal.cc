@@ -7,9 +7,10 @@
  */
 
 #include "squid.h"
+#include "internal.h"
 
 #define STUB_API "internal.cc"
 #include "tests/STUB.h"
 
-char * internalLocalUri(const char *dir, const char *name) STUB_RETVAL(NULL)
+char *internalLocalUri(const char *, const SBuf &) STUB_RETVAL(nullptr)
 
