@@ -128,6 +128,7 @@ comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, Ip::Address &from)
     int x = recvfrom(fd, buf, len, flags, AI->ai_addr, &AI->ai_addrlen);
     from = *AI;
     Ip::Address::FreeAddr(AI);
+    debugs(5, 4, "FD " << fd << ": received " << len << " bytes from " << from);
     return x;
 }
 

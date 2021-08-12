@@ -34,6 +34,7 @@
 #include "neighbors.h"
 #include "refresh.h"
 #include "rfc1738.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
@@ -103,29 +104,23 @@ Comm::ConnectionPointer icpIncomingConn = NULL;
 /// \ingroup ServerProtocolICPInternal2
 Comm::ConnectionPointer icpOutgoingConn = NULL;
 
-/* icp_common_t */
-icp_common_t::icp_common_t() :
-    opcode(ICP_INVALID), version(0), length(0), reqnum(0),
-    flags(0), pad(0), shostid(0)
-{}
-
-icp_common_t::icp_common_t(char *buf, unsigned int len) :
-    opcode(ICP_INVALID), version(0), reqnum(0), flags(0), pad(0), shostid(0)
+icp_common_t::icp_common_t(char *buf, unsigned int len)
 {
-    if (len < sizeof(icp_common_t)) {
-        /* mark as invalid */
-        length = len + 1;
-        return;
-    }
+    if (len < sizeof(icp_common_t))
+        throw TextException("too-small UDP packet", Here());
 
     memcpy(this, buf, sizeof(icp_common_t));
-    /*
-     * Convert network order sensitive fields
-     */
+
     length = ntohs(length);
     reqnum = ntohl(reqnum);
     flags = ntohl(flags);
     pad = ntohl(pad);
+
+    if (getOpCode() == ICP_INVALID)
+        throw TextException(ToSBuf("unknown opcode ", opcode), Here());
+
+    if (length > len)
+        throw TextException("received truncated payload", Here());
 }
 
 icp_opcode
@@ -616,24 +611,6 @@ icpHandleIcpV2(int fd, Ip::Address &from, char *buf, int len)
     }
 }
 
-#ifdef ICP_PKT_DUMP
-static void
-icpPktDump(icp_common_t * pkt)
-{
-    Ip::Address a;
-
-    debugs(12, 9, "opcode:     " << std::setw(3) << pkt->opcode  << " " << icp_opcode_str[pkt->opcode]);
-    debugs(12, 9, "version: "<< std::left << std::setw(8) << pkt->version);
-    debugs(12, 9, "length:  "<< std::left << std::setw(8) << ntohs(pkt->length));
-    debugs(12, 9, "reqnum:  "<< std::left << std::setw(8) << ntohl(pkt->reqnum));
-    debugs(12, 9, "flags:   "<< std::left << std::hex << std::setw(8) << ntohl(pkt->flags));
-    a = (struct in_addr)pkt->shostid;
-    debugs(12, 9, "shostid: " << a );
-    debugs(12, 9, "payload: " << (char *) pkt + sizeof(icp_common_t));
-}
-
-#endif
-
 void
 icpHandleUdp(int sock, void *)
 {
@@ -641,14 +618,15 @@ icpHandleUdp(int sock, void *)
 
     Ip::Address from;
     LOCAL_ARRAY(char, buf, SQUID_UDP_SO_RCVBUF);
-    int len;
-    int icp_version;
     int max = INCOMING_UDP_MAX;
     Comm::SetSelect(sock, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
 
     while (max) {
         --max;
-        len = comm_udp_recvfrom(sock,
+
+        try {
+
+        auto len = comm_udp_recvfrom(sock,
                                 buf,
                                 SQUID_UDP_SO_RCVBUF - 1,
                                 0,
@@ -657,6 +635,7 @@ icpHandleUdp(int sock, void *)
         if (len == 0)
             break;
 
+        // XXX: move these checks into comm_udp_recvfrom() without breaking other UDP protocols
         if (len < 0) {
             int xerrno = errno;
             if (ignoreErrno(xerrno))
@@ -670,38 +649,38 @@ icpHandleUdp(int sock, void *)
             if (xerrno != ECONNREFUSED && xerrno != EHOSTUNREACH)
 #endif
                 debugs(50, DBG_IMPORTANT, "icpHandleUdp: FD " << sock << " recvfrom: " << xstrerr(xerrno));
-
             break;
         }
 
         ++(*N);
         icpCount(buf, RECV, (size_t) len, 0);
         buf[len] = '\0';
-        debugs(12, 4, "icpHandleUdp: FD " << sock << ": received " <<
-               (unsigned long int)len << " bytes from " << from);
 
-#ifdef ICP_PACKET_DUMP
+        icp_common_t pkt(buf, len);
 
-        icpPktDump(buf);
-#endif
-
-        if ((size_t) len < sizeof(icp_common_t)) {
-            debugs(12, 4, "icpHandleUdp: Ignoring too-small UDP packet");
-            break;
-        }
-
-        icp_version = (int) buf[1]; /* cheat! */
+        debugs(12, 2, "ICP Client remote=" << from << " FD " << sock);
+        debugs(12, 2, "ICP Client REQUEST:\n---------\n" <<
+               icp_opcode_str[pkt.getOpCode()] << " #" << pkt.reqnum << " ICP/" << uint16_t(pkt.version) << '\n' <<
+               ":length: " << pkt.length << '\n' <<
+               ":flags: " << asHex(pkt.flags) <<
+               Debug::Extra << Raw("payload", (buf+sizeof(icp_common_t)), pkt.length).minLevel(DBG_DATA).hex() <<
+               "\n----------");
 
         if (icpOutgoingConn->local == from)
             // ignore ICP packets which loop back (multicast usually)
-            debugs(12, 4, "icpHandleUdp: Ignoring UDP packet sent by myself");
-        else if (icp_version == ICP_VERSION_2)
+            throw TextException("UDP packet sent by myself", Here());
+        else if (pkt.version == ICP_VERSION_2)
             icpHandleIcpV2(sock, from, buf, len);
-        else if (icp_version == ICP_VERSION_3)
+        else if (pkt.version == ICP_VERSION_3)
             icpHandleIcpV3(sock, from, buf, len);
         else
-            debugs(12, DBG_IMPORTANT, "WARNING: Unused ICP version " << icp_version <<
-                   " received from " << from);
+            throw TextException(ToSBuf("unknown version ", pkt.version), Here());
+
+        } catch (...) {
+            debugs(12, 2, "WARNING: ignoring packet from " << from << ": " << CurrentException);
+            // continue because a single malformed ICP message or message handling
+            // problem should not affect other ICP messages and overall worker operation
+        }
     }
 }
 
@@ -891,4 +870,3 @@ icpGetCacheKey(const char *url, int reqnum)
 
     return storeKeyPublic(url, Http::METHOD_GET);
 }
-

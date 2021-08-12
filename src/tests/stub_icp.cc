@@ -14,7 +14,6 @@
 #define STUB_API "icp_*.cc"
 #include "tests/STUB.h"
 
-icp_common_t::icp_common_t() STUB
 icp_common_t::icp_common_t(char *buf, unsigned int len) STUB
 void icp_common_t::handleReply(char *buf, Ip::Address &from) STUB
 icp_common_t *icp_common_t::CreateMessage(icp_opcode opcode, int flags, const char *url, int reqnum, int pad) STUB_RETVAL(nullptr)

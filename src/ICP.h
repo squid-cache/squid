@@ -32,22 +32,10 @@ typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
  * DO NOT add or move fields.
  * DO NOT add virtual methods.
  */
-class icp_common_t {
+class icp_common_t
+{
 public:
-    /** opcode */
-    unsigned char opcode;
-    /** version number */
-    unsigned char version;
-    /** total length (bytes) */
-    unsigned short length;
-    /** req number (req'd for UDP) */
-    uint32_t reqnum;
-    uint32_t flags;
-    uint32_t pad;
-    /** sender host id */
-    uint32_t shostid;
-
-    icp_common_t();
+    icp_common_t() = default;
     icp_common_t(char *buf, unsigned int len);
 
     void handleReply(char *buf, Ip::Address &from);
@@ -55,6 +43,20 @@ public:
 
     /// \returns newly allocated buffer with an ICP message, including header
     static icp_common_t *CreateMessage(icp_opcode opcode, int flags, const char *url, int reqnum, int pad);
+
+public:
+    /** opcode */
+    unsigned char opcode = ICP_INVALID;
+    /** version number */
+    unsigned char version = 0;
+    /** total length (bytes) */
+    unsigned short length = 0;
+    /** req number (req'd for UDP) */
+    uint32_t reqnum = 0;
+    uint32_t flags = 0x0;
+    uint32_t pad = 0;
+    /** sender host id */
+    uint32_t shostid = 0;
 };
 
 // TODO: mempool this
