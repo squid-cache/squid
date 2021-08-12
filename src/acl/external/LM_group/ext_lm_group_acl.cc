@@ -336,7 +336,7 @@ Valid_Global_Groups(char *UserName, const char **Groups)
     DWORD i;
     DWORD dwTotalCount = 0;
 
-    strncpy(NTDomain, UserName, sizeof(NTDomain));
+    xstrncpy(NTDomain, UserName, sizeof(NTDomain));
 
     for (j = 0; j < strlen(NTV_VALID_DOMAIN_SEPARATOR); ++j) {
         if ((domain_qualify = strchr(NTDomain, NTV_VALID_DOMAIN_SEPARATOR[j])) != NULL)
