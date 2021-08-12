@@ -258,6 +258,9 @@ Comm::TcpAcceptor::acceptOne(const CommIoCbParams &)
             newConnDetails->close(); // paranoid manual closure (and may already be closed)
         }
 
+        if (done())
+            return;
+
         using Dialer = CommCbMemFunT<Comm::TcpAcceptor, CommIoCbParams>;
         AsyncCall::Pointer reader = JobCallback(33, 5, Dialer, this, TcpAcceptor::acceptOne);
         Comm::Read(conn, reader);
