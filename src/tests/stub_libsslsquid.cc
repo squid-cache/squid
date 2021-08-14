@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,21 +33,20 @@ Ssl::Config::~Config() STUB_NOP
 Ssl::Config Ssl::TheConfig;
 
 #include "ssl/context_storage.h"
-//Ssl::CertificateStorageAction::CertificateStorageAction(const Mgr::Command::Pointer &cmd) STUB
-Ssl::CertificateStorageAction::Pointer Ssl::CertificateStorageAction::Create(const Mgr::Command::Pointer &cmd) STUB_RETSTATREF(Ssl::CertificateStorageAction::Pointer)
-void Ssl::CertificateStorageAction::dump(StoreEntry *sentry) STUB
-void Ssl::GlobalContextStorage::addLocalStorage(Ip::Address const & address, size_t size_of_store) STUB
-Ssl::LocalContextStorage *Ssl::GlobalContextStorage::getLocalStorage(Ip::Address const & address)
+//Ssl::CertificateStorageAction::CertificateStorageAction(const Mgr::Command::Pointer &) STUB
+Ssl::CertificateStorageAction::Pointer Ssl::CertificateStorageAction::Create(const Mgr::Command::Pointer &) STUB_RETSTATREF(Ssl::CertificateStorageAction::Pointer)
+void Ssl::CertificateStorageAction::dump(StoreEntry *) STUB
+void Ssl::GlobalContextStorage::addLocalStorage(Ip::Address const &, size_t ) STUB
+Ssl::LocalContextStorage *Ssl::GlobalContextStorage::getLocalStorage(Ip::Address const &)
 { fatal(STUB_API " required"); static LocalContextStorage v(0); return &v; }
 void Ssl::GlobalContextStorage::reconfigureStart() STUB
 //Ssl::GlobalContextStorage Ssl::TheGlobalContextStorage;
 
 #include "ssl/ErrorDetail.h"
-Security::ErrorCode parseErrorString(const char *name) STUB_RETVAL(0)
-
 #include "ssl/support.h"
 namespace Ssl
 {
+bool ParseErrorString(const char *, Security::Errors &) STUB_RETVAL(false)
 int AskPasswordCb(char *, int, int, void *) STUB_RETVAL(0)
 bool InitServerContext(Security::ContextPointer &, AnyP::PortCfg &) STUB_RETVAL(false)
 bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, Security::ParsedPortFlags) STUB_RETVAL(false)
@@ -55,11 +54,11 @@ void ConfigurePeerVerification(Security::ContextPointer &, const Security::Parse
 void DisablePeerVerification(Security::ContextPointer &) STUB
 void MaybeSetupRsaCallback(Security::ContextPointer &) STUB
 } // namespace Ssl
-const char *sslGetUserEmail(SSL *ssl) STUB_RETVAL(NULL)
-const char *sslGetUserAttribute(SSL *ssl, const char *attribute_name) STUB_RETVAL(NULL)
-const char *sslGetCAAttribute(SSL *ssl, const char *attribute_name) STUB_RETVAL(NULL)
-SBuf sslGetUserCertificatePEM(SSL *ssl) STUB_RETVAL(SBuf())
-SBuf sslGetUserCertificateChainPEM(SSL *ssl) STUB_RETVAL(SBuf())
+const char *sslGetUserEmail(SSL *) STUB_RETVAL(nullptr)
+const char *sslGetUserAttribute(SSL *, const char *) STUB_RETVAL(nullptr)
+const char *sslGetCAAttribute(SSL *, const char *) STUB_RETVAL(nullptr)
+SBuf sslGetUserCertificatePEM(SSL *) STUB_RETVAL(SBuf())
+SBuf sslGetUserCertificateChainPEM(SSL *) STUB_RETVAL(SBuf())
 namespace Ssl
 {
 //GETX509ATTRIBUTE GetX509UserAttribute;
@@ -68,13 +67,13 @@ namespace Ssl
 std::vector<const char *> BumpModeStr = {""};
 bool generateUntrustedCert(Security::CertPointer &, Security::PrivateKeyPointer &, Security::CertPointer const &, Security::PrivateKeyPointer const &) STUB_RETVAL(false)
 Security::ContextPointer GenerateSslContext(CertificateProperties const &, Security::ServerOptions &, bool) STUB_RETVAL(Security::ContextPointer())
-bool verifySslCertificate(Security::ContextPointer &, CertificateProperties const &) STUB_RETVAL(false)
+bool verifySslCertificate(const Security::ContextPointer &, CertificateProperties const &) STUB_RETVAL(false)
 Security::ContextPointer GenerateSslContextUsingPkeyAndCertFromMemory(const char *, Security::ServerOptions &, bool) STUB_RETVAL(Security::ContextPointer())
-int matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data)) STUB_RETVAL(0)
-bool checkX509ServerValidity(X509 *cert, const char *server) STUB_RETVAL(false)
-int asn1timeToString(ASN1_TIME *tm, char *buf, int len) STUB_RETVAL(0)
-void setClientSNI(SSL *ssl, const char *fqdn) STUB
-SBuf GetX509PEM(SSL *ssl) STUB_RETVAL(SBuf())
+int matchX509CommonNames(X509 *, void *, int (*)(void *,  ASN1_STRING *)) STUB_RETVAL(0)
+bool checkX509ServerValidity(X509 *, const char *) STUB_RETVAL(false)
+int asn1timeToString(ASN1_TIME *, char *, int) STUB_RETVAL(0)
+void setClientSNI(SSL *, const char *) STUB
+SBuf GetX509PEM(X509 *) STUB_RETVAL(SBuf())
 } //namespace Ssl
 
 #endif

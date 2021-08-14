@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,6 +20,7 @@
 #include "fde.h"
 #include "http/StatusCode.h"
 #include "ip/Address.h"
+#include "ip/forward.h"
 #include "PeerSelectState.h"
 #include "ResolvedPeers.h"
 #include "security/forward.h"
@@ -199,7 +200,11 @@ private:
     PconnRace pconnRace; ///< current pconn race state
 };
 
-void getOutgoingAddress(HttpRequest * request, const Comm::ConnectionPointer &conn);
+class acl_tos;
+tos_t aclMapTOS(acl_tos *, ACLChecklist *);
+
+Ip::NfMarkConfig aclFindNfMarkConfig(acl_nfmark *, ACLChecklist *);
+void getOutgoingAddress(HttpRequest *, const Comm::ConnectionPointer &);
 
 /// a collection of previously used persistent Squid-to-peer HTTP(S) connections
 extern PconnPool *fwdPconnPool;

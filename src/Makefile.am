@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -251,6 +251,7 @@ squid_SOURCES = \
 	CpuAffinitySet.cc \
 	CpuAffinitySet.h \
 	Debug.h \
+	DebugMessages.h \
 	Downloader.cc \
 	Downloader.h \
 	ETag.cc \
@@ -334,7 +335,6 @@ squid_SOURCES = \
 	SBufStatsAction.h \
 	SquidMath.cc \
 	SquidMath.h \
-	SquidNew.cc \
 	StatCounters.cc \
 	StatCounters.h \
 	StatHist.cc \
@@ -473,6 +473,7 @@ squid_SOURCES = \
 	tools.cc \
 	tools.h \
 	tunnel.cc \
+	tunnel.h \
 	typedefs.h \
 	urn.cc \
 	urn.h \
@@ -619,7 +620,6 @@ ufsdump_SOURCES = \
 	MemBuf.h \
 	Parsing.h \
 	RemovalPolicy.cc \
-	SquidNew.cc \
 	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
 	String.cc \
@@ -1081,6 +1081,7 @@ nodist_tests_testString_SOURCES = \
 	tests/stub_SBuf.cc \
 	String.cc \
 	tests/stub_debug.cc \
+	tests/stub_event.cc \
 	tests/stub_libmem.cc
 tests_testString_LDADD = \
 	base/libbase.la \
@@ -1165,6 +1166,7 @@ tests_testRock_SOURCES = \
 	tests/stub_cache_manager.cc \
 	cbdata.cc \
 	tests/stub_client_db.cc \
+	tests/stub_client_side.cc \
 	tests/stub_client_side_request.cc \
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
@@ -1332,13 +1334,13 @@ tests_testUfs_SOURCES = \
 	tests/testUfs.cc \
 	tests/testUfs.h \
 	tests/stub_access_log.cc \
-	tests/stub_acl.cc \
 	tests/stub_cache_cf.cc \
 	cache_cf.h \
 	tests/stub_cache_manager.cc \
 	cbdata.cc \
 	tests/stub_client_db.cc \
 	client_db.h \
+	tests/stub_client_side.cc \
 	tests/stub_client_side_request.cc \
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
@@ -1515,11 +1517,11 @@ tests_testStore_SOURCES = \
 	Transients.cc \
 	tests/stub_UdsOp.cc \
 	tests/stub_access_log.cc \
-	tests/stub_acl.cc \
 	tests/stub_cache_cf.cc \
 	cache_cf.h \
 	tests/stub_cache_manager.cc \
 	cbdata.cc \
+	tests/stub_client_side.cc \
 	tests/stub_client_side_request.cc \
 	tests/stub_comm.cc \
 	tests/stub_debug.cc \
@@ -1681,13 +1683,13 @@ tests_testDiskIO_SOURCES = \
 	Transients.cc \
 	tests/stub_UdsOp.cc \
 	tests/stub_access_log.cc \
-	tests/stub_acl.cc \
 	tests/stub_cache_cf.cc \
 	cache_cf.h \
 	tests/stub_cache_manager.cc \
 	cbdata.cc \
 	tests/stub_client_db.cc \
 	client_db.h \
+	tests/stub_client_side.cc \
 	tests/stub_client_side_request.cc \
 	client_side_request.h \
 	tests/stub_debug.cc \
@@ -2024,6 +2026,7 @@ tests_test_http_range_SOURCES = \
 	tools.cc \
 	tools.h \
 	tests/stub_tunnel.cc \
+	tunnel.h \
 	urn.cc \
 	urn.h \
 	tests/stub_wccp2.cc \
@@ -2179,6 +2182,7 @@ tests_testHttpReply_SOURCES = \
 	tests/stub_cache_manager.cc \
 	cbdata.cc \
 	cbdata.h \
+	tests/stub_client_side.cc \
 	tests/stub_comm.cc \
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
@@ -2416,6 +2420,7 @@ tests_testHttpRequest_SOURCES = \
 	tools.cc \
 	tools.h \
 	tests/stub_tunnel.cc \
+	tunnel.h \
 	urn.cc \
 	urn.h \
 	tests/stub_wccp2.cc \
@@ -2721,6 +2726,7 @@ tests_testCacheManager_SOURCES = \
 	tools.cc \
 	tools.h \
 	tests/stub_tunnel.cc \
+	tunnel.h \
 	urn.cc \
 	urn.h \
 	tests/stub_wccp2.cc \
@@ -2830,10 +2836,12 @@ tests_testConfigParser_SOURCES = \
 	tests/stub_MemBuf.cc \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
+	tests/stub_acl.cc \
 	tests/stub_cache_cf.cc \
 	cache_cf.h \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
+	tests/stub_event.cc \
 	tests/stub_fatal.cc \
 	fatal.h \
 	tests/stub_libmem.cc \
@@ -3047,6 +3055,7 @@ tests_testEvent_SOURCES = \
 	tools.cc \
 	tools.h \
 	tests/stub_tunnel.cc \
+	tunnel.h \
 	urn.cc \
 	urn.h \
 	tests/stub_wccp2.cc \

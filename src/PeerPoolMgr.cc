@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -174,7 +174,7 @@ PeerPoolMgr::handleSecuredPeer(Security::EncryptorAnswer &answer)
 }
 
 void
-PeerPoolMgr::handleSecureClosure(const CommCloseCbParams &params)
+PeerPoolMgr::handleSecureClosure(const CommCloseCbParams &)
 {
     Must(closer != NULL);
     Must(securer != NULL);

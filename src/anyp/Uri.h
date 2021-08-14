@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -260,7 +260,7 @@ enum MatchDomainNameFlags {
  * \retval -1 means the host is less than the domain
  */
 int matchDomainName(const char *host, const char *domain, MatchDomainNameFlags flags = mdnNone);
-int urlCheckRequest(const HttpRequest *);
+bool urlCheckRequest(const HttpRequest *);
 void urlExtMethodConfigure(void);
 
 #endif /* SQUID_SRC_ANYP_URI_H */

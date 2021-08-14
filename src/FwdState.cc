@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -88,8 +88,8 @@ public:
         method_(method), fwd_(fwd), answer_() {}
 
     /* CallDialer API */
-    virtual bool canDial(AsyncCall &call) { return fwd_.valid(); }
-    void dial(AsyncCall &call) { ((&(*fwd_))->*method_)(answer_); }
+    virtual bool canDial(AsyncCall &) { return fwd_.valid(); }
+    void dial(AsyncCall &) { ((&(*fwd_))->*method_)(answer_); }
     virtual void print(std::ostream &os) const {
         os << '(' << fwd_.get() << ", " << answer_ << ')';
     }

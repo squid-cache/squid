@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,11 +21,14 @@
 #include "auth/Config.h"
 #include "auth/Scheme.h"
 #include "AuthReg.h"
+#include "base/PackableStream.h"
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
 #include "CachePeer.h"
+#include "ConfigOption.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
+#include "DebugMessages.h"
 #include "DiskIO/DiskIOModule.h"
 #include "eui/Config.h"
 #include "ExternalACL.h"
@@ -155,16 +158,17 @@ static const char *const B_KBYTES_STR = "KB";
 static const char *const B_MBYTES_STR = "MB";
 static const char *const B_GBYTES_STR = "GB";
 
-static const char *const list_sep = ", \t\n\r";
-
 // std::chrono::years requires C++20. Do our own rough calculation for now.
 static const double HoursPerYear = 24*365.2522;
+
+static void parse_cache_log_message(DebugMessages **messages);
+static void dump_cache_log_message(StoreEntry *entry, const char *name, const DebugMessages *messages);
+static void free_cache_log_message(DebugMessages **messages);
 
 static void parse_access_log(CustomLog ** customlog_definitions);
 static int check_null_access_log(CustomLog *customlog_definitions);
 static void dump_access_log(StoreEntry * entry, const char *name, CustomLog * definitions);
 static void free_access_log(CustomLog ** definitions);
-static bool setLogformat(CustomLog *cl, const char *name, const bool dieWhenMissing);
 
 static void configDoConfigure(void);
 static void parse_refreshpattern(RefreshPattern **);
@@ -631,6 +635,75 @@ parseConfigFile(const char *file_name)
         self_destruct();
         return 1; // not reached
     }
+}
+
+/*
+ * The templated functions below are essentially ConfigParser methods. They are
+ * not implemented as such because our generated code calling them is the only
+ * code that can instantiate implementations for each T -- we cannot place these
+ * definitions into ConfigParser.cc unless cf_parser.cci is moved there.
+ */
+
+// TODO: When adding Ts incompatible with this trivial API and implementation,
+// replace both with a ConfigParser-maintained table of seen directives.
+/// whether we have seen (and, hence, configured) the given directive
+template <typename T>
+static bool
+SawDirective(const T &raw)
+{
+    return bool(raw);
+}
+
+/// Sets the given raw SquidConfig data member.
+/// Extracts and interprets parser's configuration tokens.
+template <typename T>
+static void
+ParseDirective(T &raw, ConfigParser &parser)
+{
+    if (SawDirective(raw))
+        parser.rejectDuplicateDirective();
+
+    // TODO: parser.openDirective(directiveName);
+    Must(!raw);
+    raw = Configuration::Component<T>::Parse(parser);
+    Must(raw);
+    parser.closeDirective();
+}
+
+/// reports raw SquidConfig data member configuration using squid.conf syntax
+/// \param name the name of the configuration directive being dumped
+template <typename T>
+static void
+DumpDirective(const T &raw, StoreEntry *entry, const char *name)
+{
+    if (!SawDirective(raw))
+        return; // not configured
+
+    entry->append(name, strlen(name));
+    SBufStream os;
+    Configuration::Component<T>::Print(os, raw);
+    const auto buf = os.buf();
+    if (buf.length()) {
+        entry->append(" ", 1);
+        entry->append(buf.rawContent(), buf.length());
+    }
+    entry->append("\n", 1);
+}
+
+/// frees any resources associated with the given raw SquidConfig data member
+template <typename T>
+static void
+FreeDirective(T &raw)
+{
+    Configuration::Component<T>::Free(raw);
+
+    // While the implementation may change, there is no way to avoid zeroing.
+    // Even migration to a proper SquidConfig class would not help: While
+    // ordinary destructors do not need to zero data members, a SquidConfig
+    // destructor would have to zero to protect any SquidConfig::x destruction
+    // code from accidentally dereferencing an already destroyed Config.y.
+    static_assert(std::is_trivial<T>::value, "SquidConfig member is trivial");
+    memset(&raw, 0, sizeof(raw));
 }
 
 static void
@@ -1434,6 +1507,8 @@ free_acl(ACL ** ae)
 void
 dump_acl_list(StoreEntry * entry, ACLList * head)
 {
+    // XXX: Should dump ACL names like "foo !bar" but dumps parsing context like
+    // "(clientside_tos 0x11 line)".
     dump_SBufList(entry, head->dump());
 }
 
@@ -1952,7 +2027,10 @@ ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *d
     Acl::AndNode *rule = new Acl::AndNode;
     name.Printf("(%s rule)", desc);
     rule->context(name.c_str(), config_input_line);
-    acl ? rule->add(acl) : rule->lineParse();
+    if (acl)
+        rule->add(acl);
+    else
+        rule->lineParse();
     (*access)->add(rule, action);
 }
 
@@ -2508,7 +2586,7 @@ dump_int64_t(StoreEntry * entry, const char *name, int64_t var)
     storeAppendPrintf(entry, "%s %" PRId64 "\n", name, var);
 }
 
-void
+static void
 parse_int64_t(int64_t *var)
 {
     int64_t i;
@@ -2599,7 +2677,7 @@ parse_tristate(int *var)
 
 #define free_tristate free_int
 
-void
+static void
 parse_pipelinePrefetch(int *var)
 {
     char *token = ConfigParser::PeekAtToken();
@@ -2962,8 +3040,8 @@ dump_time_msec(StoreEntry * entry, const char *name, time_msec_t var)
         storeAppendPrintf(entry, "%s %d seconds\n", name, (int)(var/1000) );
 }
 
-void
-parse_time_msec(time_msec_t * var)
+static void
+parse_time_msec(time_msec_t *var)
 {
     *var = parseTimeLine<std::chrono::milliseconds>().count();
 }
@@ -2993,14 +3071,6 @@ free_time_nanoseconds(std::chrono::nanoseconds *var)
     *var = std::chrono::nanoseconds::zero();
 }
 
-#if UNUSED_CODE
-static void
-dump_size_t(StoreEntry * entry, const char *name, size_t var)
-{
-    storeAppendPrintf(entry, "%s %d\n", name, (int) var);
-}
-#endif
-
 static void
 dump_b_size_t(StoreEntry * entry, const char *name, size_t var)
 {
@@ -3012,14 +3082,6 @@ dump_b_ssize_t(StoreEntry * entry, const char *name, ssize_t var)
 {
     storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_BYTES_STR);
 }
-
-#if UNUSED_CODE
-static void
-dump_kb_size_t(StoreEntry * entry, const char *name, size_t var)
-{
-    storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_KBYTES_STR);
-}
-#endif
 
 static void
 dump_b_int64_t(StoreEntry * entry, const char *name, int64_t var)
@@ -3033,16 +3095,6 @@ dump_kb_int64_t(StoreEntry * entry, const char *name, int64_t var)
     storeAppendPrintf(entry, "%s %" PRId64 " %s\n", name, var, B_KBYTES_STR);
 }
 
-#if UNUSED_CODE
-static void
-parse_size_t(size_t * var)
-{
-    int i;
-    i = GetInteger();
-    *var = (size_t) i;
-}
-#endif
-
 static void
 parse_b_size_t(size_t * var)
 {
@@ -3054,14 +3106,6 @@ parse_b_ssize_t(ssize_t * var)
 {
     parseBytesLineSigned(var, B_BYTES_STR);
 }
-
-#if UNUSED_CODE
-static void
-parse_kb_size_t(size_t * var)
-{
-    parseBytesLine(var, B_KBYTES_STR);
-}
-#endif
 
 static void
 parse_b_int64_t(int64_t * var)
@@ -3159,14 +3203,6 @@ parse_wordlist(wordlist ** list)
     while ((token = ConfigParser::NextQuotedToken()))
         wordlistAdd(list, token);
 }
-
-#if 0 /* now unused */
-static int
-check_null_wordlist(wordlist * w)
-{
-    return w == NULL;
-}
-#endif
 
 static int
 check_null_acl_access(acl_access * a)
@@ -3994,6 +4030,8 @@ requirePathnameExists(const char *name, const char *path)
  *
  * #4: Configurable logging module with name=value options such as logformat=x:
  * The first ACL name may not contain '='.
+ * Without any optional parts, directives using this style are indistinguishable
+ * from directives using style #1 until we start requiring the "module:" prefix.
  * access_log module:place [option ...] [acl ...]
  *
  */
@@ -4006,12 +4044,9 @@ parse_access_log(CustomLog ** logs)
         return;
     }
 
-    CustomLog *cl = (CustomLog *)xcalloc(1, sizeof(*cl));
+    const auto cl = new CustomLog();
 
     cl->filename = xstrdup(filename);
-    // default buffer size and fatal settings
-    cl->bufferSize = 8*MAX_URL;
-    cl->fatal = true;
 
     if (strcmp(filename, "none") == 0) {
         cl->type = Log::Format::CLF_NONE;
@@ -4022,57 +4057,22 @@ parse_access_log(CustomLog ** logs)
         return;
     }
 
-    cl->type = Log::Format::CLF_UNKNOWN;
-    cl->rotateCount = -1; // default: use global logfile_rotate setting.
-
     const char *token = ConfigParser::PeekAtToken();
-    if (!token) { // style #1
-        // no options to deal with
-    } else if (!strchr(token, '=')) { // style #3
-        // if logformat name is recognized,
-        // pop the previewed token; Else it must be an ACL name
-        if (setLogformat(cl, token, false))
-            (void)ConfigParser::NextToken();
-    } else { // style #4
-        do {
-            if (strncasecmp(token, "on-error=", 9) == 0) {
-                if (strncasecmp(token+9, "die", 3) == 0) {
-                    cl->fatal = true;
-                } else if (strncasecmp(token+9, "drop", 4) == 0) {
-                    cl->fatal = false;
-                } else {
-                    debugs(3, DBG_CRITICAL, "Unknown value for on-error '" <<
-                           token << "' expected 'drop' or 'die'");
-                    xfree(cl->filename);
-                    xfree(cl);
-                    self_destruct();
-                    return;
-                }
-            } else if (strncasecmp(token, "buffer-size=", 12) == 0) {
-                parseBytesOptionValue(&cl->bufferSize, B_BYTES_STR, token+12);
-            } else if (strncasecmp(token, "rotate=", 7) == 0) {
-                cl->rotateCount = xatoi(token + 7);
-            } else if (strncasecmp(token, "logformat=", 10) == 0) {
-                setLogformat(cl, token+10, true);
-            } else if (!strchr(token, '=')) {
-                // Do not pop the token; it must be an ACL name
-                break; // done with name=value options, now to ACLs
-            } else {
-                debugs(3, DBG_CRITICAL, "Unknown access_log option " << token);
-                xfree(cl->filename);
-                xfree(cl);
-                self_destruct();
-                return;
-            }
-            // Pop the token, it was a valid "name=value" option
-            (void)ConfigParser::NextToken();
-            // Get next with preview ConfigParser::NextToken call.
-        } while ((token = ConfigParser::PeekAtToken()) != NULL);
+    if (token && !strchr(token, '=')) { // style #3
+        // TODO: Deprecate this style to avoid this dangerous guessing.
+        if (Log::TheConfig.knownFormat(token)) {
+            cl->setLogformat(token);
+            (void)ConfigParser::NextToken(); // consume the token used above
+        } else {
+            // assume there is no explicit logformat name and use the default
+            cl->setLogformat("squid");
+        }
+    } else { // style #1 or style #4
+        // TODO: Drop deprecated style #1 support. We already warn about it, and
+        // its exceptional treatment makes detecting "module" typos impractical!
+        cl->parseOptions(LegacyParser, "squid");
     }
-
-    // set format if it has not been specified explicitly
-    if (cl->type == Log::Format::CLF_UNKNOWN)
-        setLogformat(cl, "squid", true);
+    assert(cl->type); // setLogformat() was called
 
     aclParseAclList(LegacyParser, &cl->aclList, cl->filename);
 
@@ -4080,66 +4080,6 @@ parse_access_log(CustomLog ** logs)
         logs = &(*logs)->next;
 
     *logs = cl;
-}
-
-/// sets CustomLog::type and, if needed, CustomLog::lf
-/// returns false iff there is no named log format
-static bool
-setLogformat(CustomLog *cl, const char *logdef_name, const bool dieWhenMissing)
-{
-    assert(cl);
-    assert(logdef_name);
-
-    debugs(3, 9, "possible " << cl->filename << " logformat: " << logdef_name);
-
-    if (cl->type != Log::Format::CLF_UNKNOWN) {
-        debugs(3, DBG_CRITICAL, "FATAL: Second logformat name in one access_log: " <<
-               logdef_name << " " << cl->type << " ? " << Log::Format::CLF_NONE);
-        self_destruct();
-        return false;
-    }
-
-    /* look for the definition pointer corresponding to this name */
-    Format::Format *lf = Log::TheConfig.logformats;
-
-    while (lf != NULL) {
-        debugs(3, 9, "Comparing against '" << lf->name << "'");
-
-        if (strcmp(lf->name, logdef_name) == 0)
-            break;
-
-        lf = lf->next;
-    }
-
-    if (lf != NULL) {
-        cl->type = Log::Format::CLF_CUSTOM;
-        cl->logFormat = lf;
-    } else if (strcmp(logdef_name, "auto") == 0) {
-        debugs(0, DBG_CRITICAL, "WARNING: Log format 'auto' no longer exists. Using 'squid' instead.");
-        cl->type = Log::Format::CLF_SQUID;
-    } else if (strcmp(logdef_name, "squid") == 0) {
-        cl->type = Log::Format::CLF_SQUID;
-    } else if (strcmp(logdef_name, "common") == 0) {
-        cl->type = Log::Format::CLF_COMMON;
-    } else if (strcmp(logdef_name, "combined") == 0) {
-        cl->type = Log::Format::CLF_COMBINED;
-#if ICAP_CLIENT
-    } else if (strcmp(logdef_name, "icap_squid") == 0) {
-        cl->type = Log::Format::CLF_ICAP_SQUID;
-#endif
-    } else if (strcmp(logdef_name, "useragent") == 0) {
-        cl->type = Log::Format::CLF_USERAGENT;
-    } else if (strcmp(logdef_name, "referrer") == 0) {
-        cl->type = Log::Format::CLF_REFERER;
-    } else if (dieWhenMissing) {
-        debugs(3, DBG_CRITICAL, "FATAL: Log format '" << logdef_name << "' is not defined");
-        self_destruct();
-        return false;
-    } else {
-        return false;
-    }
-
-    return true;
 }
 
 static int
@@ -4151,61 +4091,14 @@ check_null_access_log(CustomLog *customlog_definitions)
 static void
 dump_access_log(StoreEntry * entry, const char *name, CustomLog * logs)
 {
-    CustomLog *log;
-
-    for (log = logs; log; log = log->next) {
-        storeAppendPrintf(entry, "%s ", name);
-
-        switch (log->type) {
-
-        case Log::Format::CLF_CUSTOM:
-            storeAppendPrintf(entry, "%s logformat=%s", log->filename, log->logFormat->name);
-            break;
-
-        case Log::Format::CLF_NONE:
-            storeAppendPrintf(entry, "logformat=none");
-            break;
-
-        case Log::Format::CLF_SQUID:
-            // this is the default, no need to add to the dump
-            //storeAppendPrintf(entry, "%s logformat=squid", log->filename);
-            break;
-
-        case Log::Format::CLF_COMBINED:
-            storeAppendPrintf(entry, "%s logformat=combined", log->filename);
-            break;
-
-        case Log::Format::CLF_COMMON:
-            storeAppendPrintf(entry, "%s logformat=common", log->filename);
-            break;
-
-#if ICAP_CLIENT
-        case Log::Format::CLF_ICAP_SQUID:
-            storeAppendPrintf(entry, "%s logformat=icap_squid", log->filename);
-            break;
-#endif
-        case Log::Format::CLF_USERAGENT:
-            storeAppendPrintf(entry, "%s logformat=useragent", log->filename);
-            break;
-
-        case Log::Format::CLF_REFERER:
-            storeAppendPrintf(entry, "%s logformat=referrer", log->filename);
-            break;
-
-        case Log::Format::CLF_UNKNOWN:
-            break;
+    assert(entry);
+    for (auto log = logs; log; log = log->next) {
+        {
+            PackableStream os(*entry);
+            os << name; // directive name
+            os << ' ' << log->filename; // including "none"
+            log->dumpOptions(os);
         }
-
-        // default is on-error=die
-        if (!log->fatal)
-            storeAppendPrintf(entry, " on-error=drop");
-
-        // default: 64KB
-        if (log->bufferSize != 64*1024)
-            storeAppendPrintf(entry, " buffer-size=%" PRIuSIZE, log->bufferSize);
-
-        if (log->rotateCount >= 0)
-            storeAppendPrintf(entry, " rotate=%d", log->rotateCount);
 
         if (log->aclList)
             dump_acl_list(entry, log->aclList);
@@ -4220,16 +4113,7 @@ free_access_log(CustomLog ** definitions)
     while (*definitions) {
         CustomLog *log = *definitions;
         *definitions = log->next;
-
-        log->logFormat = NULL;
-        log->type = Log::Format::CLF_UNKNOWN;
-
-        if (log->aclList)
-            aclDestroyAclList(&log->aclList);
-
-        safe_free(log->filename);
-
-        xfree(log);
+        delete log;
     }
 }
 
@@ -4775,6 +4659,101 @@ static void dump_note(StoreEntry *entry, const char *name, Notes &notes)
 static void free_note(Notes *notes)
 {
     notes->clean();
+}
+
+static DebugMessageId ParseDebugMessageId(const char *value, const char eov)
+{
+    const auto id = xatoui(value, eov);
+    if (!(0 < id && id < DebugMessageIdUpperBound))
+        throw TextException(ToSBuf("unknown cache_log_message ID: ", value), Here());
+    return static_cast<DebugMessageId>(id);
+}
+
+static void parse_cache_log_message(DebugMessages **debugMessages)
+{
+    DebugMessage msg;
+    DebugMessageId minId = 0;
+    DebugMessageId maxId = 0;
+
+    char *key = nullptr;
+    char *value = nullptr;
+    while (ConfigParser::NextKvPair(key, value)) {
+        if (strcmp(key, "id") == 0) {
+            if (minId > 0)
+                break;
+            minId = maxId = ParseDebugMessageId(value, '\0');
+        } else if (strcmp(key, "ids") == 0) {
+            if (minId > 0)
+                break;
+            const auto dash = strchr(value, '-');
+            if (!dash)
+                throw TextException(ToSBuf("malformed cache_log_message ID range: ", key, '=', value), Here());
+            minId = ParseDebugMessageId(value, '-');
+            maxId = ParseDebugMessageId(dash+1, '\0');
+            if (minId > maxId)
+                throw TextException(ToSBuf("invalid cache_log_message ID range: ", key, '=', value), Here());
+        } else if (strcmp(key, "level") == 0) {
+            if (msg.levelled())
+                break;
+            const auto level = xatoi(value);
+            if (level < 0)
+                throw TextException(ToSBuf("negative cache_log_message level: ", value), Here());
+            msg.level = level;
+        } else if (strcmp(key, "limit") == 0) {
+            if (msg.limited())
+                break;
+            msg.limit = xatoull(value, 10);
+        } else {
+            throw TextException(ToSBuf("unsupported cache_log_message option: ", key), Here());
+        }
+        key = value = nullptr;
+    }
+
+    if (key && value)
+        throw TextException(ToSBuf("repeated or conflicting cache_log_message option: ", key, '=', value), Here());
+
+    if (!minId)
+        throw TextException("cache_log_message is missing a required id=... or ids=... option", Here());
+
+    if (!(msg.levelled() || msg.limited()))
+        throw TextException("cache_log_message is missing a required level=... or limit=... option", Here());
+
+    assert(debugMessages);
+    if (!*debugMessages)
+        *debugMessages = new DebugMessages();
+
+    for (auto id = minId; id <= maxId; ++id) {
+        msg.id = id;
+        (*debugMessages)->messages.at(id) = msg;
+    }
+}
+
+static void dump_cache_log_message(StoreEntry *entry, const char *name, const DebugMessages *debugMessages)
+{
+    if (!debugMessages)
+        return;
+
+    SBufStream out;
+    for (const auto &msg: debugMessages->messages) {
+        if (!msg.configured())
+            continue;
+        out << name << " id=" << msg.id;
+        if (msg.levelled())
+            out << " level=" << msg.level;
+        if (msg.limited())
+            out << " limit=" << msg.limit;
+        out << "\n";
+    }
+    const auto buf = out.buf();
+    entry->append(buf.rawContent(), buf.length()); // may be empty
+}
+
+static void free_cache_log_message(DebugMessages **debugMessages)
+{
+    // clear old messages to avoid cumulative effect across (re)configurations
+    assert(debugMessages);
+    delete *debugMessages;
+    *debugMessages = nullptr;
 }
 
 static bool FtpEspvDeprecated = false;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -350,6 +350,8 @@ protected:
  * \return true if something looking like a language token has been placed in lang, false otherwise
  */
 bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &pos);
+
+std::ostream &operator <<(std::ostream &, const ErrorState *);
 
 #endif /* SQUID_ERRORPAGE_H */
 

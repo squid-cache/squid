@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,7 @@
 
 #include "squid.h"
 
-#if HAVE_KRB5 && HAVE_GSSAPI
+#if HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI
 #if USE_APPLE_KRB5
 #define KERBEROS_APPLE_DEPRECATED(x)
 #define GSSKRB_APPLE_DEPRECATED(x)
@@ -582,5 +582,5 @@ cleanup:
 #ifdef __cplusplus
 }
 #endif
-#endif /* HAVE_KRB5 && HAVE_GSSAPI */
+#endif /* HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI */
 

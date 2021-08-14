@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -133,10 +133,6 @@ get_url(const char *url)
         *t = '\0';
         port = (unsigned short) atoi(t + 1);
     }
-#if 0
-    if ((int) port != 80)
-        return 0;
-#endif
     t = strchr(url + 7, '/');
     strncpy(path, (t ? t : "/"), URL_BUF_SZ);
     memset(&S, '\0', sizeof(S));

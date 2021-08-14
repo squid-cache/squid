@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,6 +33,7 @@
 #include "fd.h"
 #include "fde.h"
 #include "format/Token.h"
+#include "FwdState.h"
 #include "gopher.h"
 #include "helper.h"
 #include "helper/Reply.h"
@@ -51,6 +52,7 @@
 #include "proxyp/Header.h"
 #include "redirect.h"
 #include "rfc1738.h"
+#include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -72,10 +74,6 @@
 #if USE_OPENSSL
 #include "ssl/ServerBump.h"
 #include "ssl/support.h"
-#endif
-
-#if LINGERING_CLOSE
-#define comm_close comm_lingering_close
 #endif
 
 static const char *const crlf = "\r\n";
@@ -1082,9 +1080,6 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
              * iter up at this point.
              */
             node->readBuffer.offset = request->range->lowestOffset(0);
-            http->range_iter.pos = request->range->begin();
-            http->range_iter.end = request->range->end();
-            http->range_iter.valid = true;
         }
     }
 
@@ -1118,7 +1113,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         }
 
 #if USE_FORW_VIA_DB
-        fvdbCountVia(s.termedBuf());
+        fvdbCountVia(StringToSBuf(s));
 
 #endif
 
@@ -1142,7 +1137,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
     if (req_hdr->has(Http::HdrType::X_FORWARDED_FOR)) {
         String s = req_hdr->getList(Http::HdrType::X_FORWARDED_FOR);
-        fvdbCountForw(s.termedBuf());
+        fvdbCountForwarded(StringToSBuf(s));
         s.clean();
     }
 
@@ -1736,9 +1731,6 @@ ClientHttpRequest::clearRequest()
  * the callout.  This is strictly for convenience.
  */
 
-tos_t aclMapTOS (acl_tos * head, ACLChecklist * ch);
-Ip::NfMarkConfig aclFindNfMarkConfig (acl_nfmark * head, ACLChecklist * ch);
-
 void
 ClientHttpRequest::doCallouts()
 {
@@ -1949,6 +1941,30 @@ ClientHttpRequest::setErrorUri(const char *aUri)
     absorbLogUri(xstrndup(canonicalUri, MAX_URL));
 
     al->setVirginUrlForMissingRequest(errorUri);
+}
+
+// XXX: This should not be a _request_ method. Move range_iter elsewhere.
+int64_t
+ClientHttpRequest::prepPartialResponseGeneration()
+{
+    assert(request);
+    assert(request->range);
+
+    range_iter.pos = request->range->begin();
+    range_iter.end = request->range->end();
+    range_iter.debt_size = 0;
+    const auto multipart = request->range->specs.size() > 1;
+    if (multipart)
+        range_iter.boundary = rangeBoundaryStr();
+    range_iter.valid = true; // TODO: Remove.
+    range_iter.updateSpec(); // TODO: Refactor to initialize rather than update.
+
+    assert(range_iter.pos != range_iter.end);
+    const auto &firstRange = *range_iter.pos;
+    assert(firstRange);
+    out.offset = firstRange->offset;
+
+    return multipart ? mRangeCLen() : firstRange->length;
 }
 
 #if USE_ADAPTATION

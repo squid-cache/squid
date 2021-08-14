@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -123,6 +123,7 @@ protected:
     /**
      * Validate the message start line is syntactically correct.
      * Set HTTP error status according to problems found.
+     * Zero hdr_len is treated as a serious problem.
      *
      * \retval true   Status line has no serious problems.
      * \retval false  Status line has a serious problem. Correct response is indicated by error.

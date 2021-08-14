@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -182,6 +182,7 @@ Security::Handshake(Comm::Connection &transport, const ErrorCode topError, Fun i
     return ioResult;
 
 #else
+    (void)topError;
     // TLS I/O code path should never be reachable without a TLS/SSL library.
     debugs(1, DBG_CRITICAL, ForceAlert << "BUG: " <<
            "Unexpected TLS I/O in Squid built without a TLS/SSL library");

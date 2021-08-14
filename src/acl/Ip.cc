@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -84,7 +84,7 @@ acl_ip_data::toSBuf() const
  * is an entry in some address-based access control element.  This
  * function is called via ACLIP::match() and the splay library.
  */
-int
+static int
 aclIpAddrNetworkCompare(acl_ip_data * const &p, acl_ip_data * const &q)
 {
     Ip::Address A = p->addr1;

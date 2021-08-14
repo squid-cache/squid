@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -42,6 +42,9 @@ namespace Security
 void KeyData::loadFromFiles(const AnyP::PortCfg &, const char *) STUB
 }
 
+#include "security/KeyLogger.h"
+void Security::KeyLogger::maybeLog(const Connection &, const Acl::ChecklistFiller &) STUB
+
 #include "security/ErrorDetail.h"
 Security::ErrorDetail::ErrorDetail(ErrorCode, const CertPointer &, const CertPointer &, const char *) STUB
 #if USE_OPENSSL
@@ -60,7 +63,7 @@ Security::NegotiationHistory::NegotiationHistory() STUB
 void Security::NegotiationHistory::retrieveNegotiatedInfo(const Security::SessionPointer &) STUB
 void Security::NegotiationHistory::retrieveParsedInfo(Security::TlsDetails::Pointer const &) STUB
 const char *Security::NegotiationHistory::cipherName() const STUB
-const char *Security::NegotiationHistory::printTlsVersion(AnyP::ProtocolVersion const &v) const STUB
+const char *Security::NegotiationHistory::printTlsVersion(AnyP::ProtocolVersion const &) const STUB
 
 #include "security/PeerConnector.h"
 class TlsNegotiationDetails: public RefCountable {};
@@ -74,6 +77,7 @@ void PeerConnector::start() STUB
 bool PeerConnector::doneAll() const STUB_RETVAL(true)
 void PeerConnector::swanSong() STUB
 const char *PeerConnector::status() const STUB_RETVAL("")
+void PeerConnector::fillChecklist(ACLFilledChecklist &) const STUB
 void PeerConnector::commCloseHandler(const CommCloseCbParams &) STUB
 void PeerConnector::commTimeoutHandler(const CommTimeoutCbParams &) STUB
 bool PeerConnector::initialize(Security::SessionPointer &) STUB_RETVAL(false)

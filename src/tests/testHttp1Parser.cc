@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -83,6 +83,8 @@ testResults(int line, const SBuf &input, Http1::RequestParser &output, struct re
 {
 #ifdef SQUID_DEBUG_TESTS
     std::cerr << "TEST @" << line << ", in=" << Pretty(input) << "\n";
+#else
+    (void)line;
 #endif
 
     const bool parsed = output.parse(input);
@@ -703,26 +705,6 @@ testHttp1Parser::testParseRequestLineMethods()
         testResults(__LINE__, input, output, expect);
         input.clear();
     }
-
-#if 0
-    // too-long method (over 16 bytes)
-    {
-        input.append("HELLOSTRANGEWORLD / HTTP/1.1\r\n", 31);
-        struct resultSet expect = {
-            .parsed = false,
-            .needsMore = false,
-            .parserState = Http1::HTTP_PARSE_DONE,
-            .status = Http::scNotImplemented,
-            .suffixSz = input.length(),
-            .method = HttpRequestMethod(),
-            .uri = NULL,
-            .version = AnyP::ProtocolVersion()
-        };
-        output.clear();
-        testResults(__LINE__, input, output, expect);
-        input.clear();
-    }
-#endif
 
     // method-only
     {

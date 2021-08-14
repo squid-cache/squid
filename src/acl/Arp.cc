@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -72,7 +72,7 @@ ACLARP::empty () const
  *       Solaris code by R. Gancarz <radekg@solaris.elektrownia-lagisza.com.pl>
  */
 
-Eui::Eui48 *
+static Eui::Eui48 *
 aclParseArpData(const char *t)
 {
     char buf[256];

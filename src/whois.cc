@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,6 +20,7 @@
 #include "StatCounters.h"
 #include "Store.h"
 #include "tools.h"
+#include "whois.h"
 
 #include <cerrno>
 
@@ -117,6 +118,16 @@ WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t
     aBuffer[aBufferLength] = '\0';
     debugs(75, 3, HERE << conn << " read " << aBufferLength << " bytes");
     debugs(75, 5, "{" << aBuffer << "}");
+
+    // TODO: Honor delay pools.
+
+    // XXX: Update statCounter before bailing
+    if (!entry->isAccepting()) {
+        debugs(52, 3, "terminating due to bad " << *entry);
+        // TODO: Do not abuse connection for triggering cleanup.
+        conn->close();
+        return;
+    }
 
     if (flag != Comm::OK) {
         debugs(50, 2, conn << ": read failure: " << xstrerr(xerrno));

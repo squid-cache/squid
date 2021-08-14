@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "fde.h"
+#include "log/File.h"
 
 #define STUB_API "log/liblog.la"
 #include "tests/STUB.h"
@@ -30,8 +31,7 @@ void accessLogInit(void) STUB
 const char *accessLogTime(time_t) STUB_RETVAL(nullptr)
 
 #include "log/access_log.h"
-void fvdbCountVia(const char *) STUB
-void fvdbCountForw(const char *) STUB
+void fvdbCountVia(const SBuf &) STUB
 #if HEADERS_LOG
 void headersLog(int, int, const HttpRequestMethod &, void *) STUB
 #endif
@@ -43,8 +43,8 @@ void LogConfig::parseFormats() STUB
 LogConfig TheConfig;
 }
 
-#include "log/CustomLog.h"
-bool CustomLog::usesDaemon() const STUB_RETVAL(false)
+#include "log/FormattedLog.h"
+bool FormattedLog::usesDaemon() const STUB_RETVAL(false)
 
 #include "log/File.h"
 CBDATA_CLASS_INIT(Logfile);
@@ -58,7 +58,7 @@ Logfile::Logfile(const char *) {STUB}
 Logfile *logfileOpen(const char *, size_t, int) STUB_RETVAL(nullptr)
 void logfileClose(Logfile *) STUB
 void logfileRotate(Logfile *, int16_t) STUB
-void logfileWrite(Logfile *, char *, size_t) STUB
+void logfileWrite(Logfile *, const char *, size_t) STUB
 void logfileFlush(Logfile *) STUB
 void logfilePrintf(Logfile *, const char *, ...) STUB
 void logfileLineStart(Logfile *) STUB

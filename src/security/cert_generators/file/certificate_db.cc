@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,8 +23,6 @@
 #if HAVE_SYS_FILE_H
 #include <sys/file.h>
 #endif
-
-#define HERE "(security_file_certgen) " << __FILE__ << ':' << __LINE__ << ": "
 
 Ssl::Lock::Lock(std::string const &aFilename) :
     filename(aFilename),
@@ -107,12 +105,12 @@ Ssl::Locker::Locker(Lock &aLock, const char *aFileName, int aLineNo):
 
 Ssl::Locker::~Locker()
 {
+    (void)lineNo; // lineNo is unused but some find it helpful in debugging
     if (weLocked)
         lock.unlock();
 }
 
-Ssl::CertificateDb::Row::Row()
-    :   width(cnlNumber)
+Ssl::CertificateDb::Row::Row() : width(cnlNumber)
 {
     row = (char **)OPENSSL_malloc(sizeof(char *) * (width + 1));
     for (size_t i = 0; i < width + 1; ++i)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -208,9 +208,6 @@ static FTPSM ftpSendMdtm;
 static FTPSM ftpReadMdtm;
 static FTPSM ftpSendSize;
 static FTPSM ftpReadSize;
-#if 0
-static FTPSM ftpSendEPRT;
-#endif
 static FTPSM ftpReadEPRT;
 static FTPSM ftpSendPORT;
 static FTPSM ftpReadPORT;
@@ -1039,6 +1036,8 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
         loginParser(auth, false);
     }
     /* we fail with authorization-required error later IFF the FTP server requests it */
+#else
+    (void)req_hdr;
 #endif
 
     /* Test URL login syntax. Overrides any headers received. */
@@ -1072,16 +1071,17 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
 void
 Ftp::Gateway::checkUrlpath()
 {
-    static SBuf str_type_eq("type=");
-    auto t = request->url.path().rfind(';');
-
-    if (t != SBuf::npos) {
-        auto filenameEnd = t-1;
-        if (request->url.path().substr(++t).cmp(str_type_eq, str_type_eq.length()) == 0) {
-            t += str_type_eq.length();
-            typecode = (char)xtoupper(request->url.path()[t]);
-            request->url.path(request->url.path().substr(0,filenameEnd));
-        }
+    // If typecode was specified, extract it and leave just the filename in
+    // url.path. Tolerate trailing garbage or missing typecode value. Roughly:
+    // [filename] ;type=[typecode char] [trailing garbage]
+    static const SBuf middle(";type=");
+    const auto typeSpecStart = request->url.path().find(middle);
+    if (typeSpecStart != SBuf::npos) {
+        const auto fullPath = request->url.path();
+        const auto typecodePos = typeSpecStart + middle.length();
+        typecode = (typecodePos < fullPath.length()) ?
+            static_cast<char>(xtoupper(fullPath[typecodePos])) : '\0';
+        request->url.path(fullPath.substr(0, typeSpecStart));
     }
 
     int l = request->url.path().length();
@@ -1849,51 +1849,6 @@ ftpReadPORT(Ftp::Gateway * ftpState)
     ftpRestOrList(ftpState);
 }
 
-#if 0
-static void
-ftpSendEPRT(Ftp::Gateway * ftpState)
-{
-    /* check the server control channel is still available */
-    if (!ftpState || !ftpState->haveControlChannel("ftpSendEPRT"))
-        return;
-
-    if (Config.Ftp.epsv_all && ftpState->flags.epsv_all_sent) {
-        debugs(9, DBG_IMPORTANT, "FTP does not allow EPRT method after 'EPSV ALL' has been sent.");
-        return;
-    }
-
-    if (!Config.Ftp.eprt) {
-        /* Disabled. Switch immediately to attempting old PORT command. */
-        debugs(9, 3, "EPRT disabled by local administrator");
-        ftpSendPORT(ftpState);
-        return;
-    }
-
-    debugs(9, 3, HERE);
-    ftpState->flags.pasv_supported = 0;
-
-    ftpOpenListenSocket(ftpState, 0);
-    debugs(9, 3, "Listening for FTP data connection with FD " << ftpState->data.conn);
-    if (!Comm::IsConnOpen(ftpState->data.conn)) {
-        /* XXX Need to set error message */
-        ftpFail(ftpState);
-        return;
-    }
-
-    char buf[MAX_IPSTRLEN];
-
-    /* RFC 2428 defines EPRT as IPv6 equivalent to IPv4 PORT command. */
-    /* Which can be used by EITHER protocol. */
-    snprintf(cbuf, CTRL_BUFLEN, "EPRT |%d|%s|%d|\r\n",
-             ( ftpState->data.listenConn->local.isIPv6() ? 2 : 1 ),
-             ftpState->data.listenConn->local.toStr(buf,MAX_IPSTRLEN),
-             ftpState->data.listenConn->local.port() );
-
-    ftpState->writeCommand(cbuf);
-    ftpState->state = Ftp::Client::SENT_EPRT;
-}
-#endif
-
 static void
 ftpReadEPRT(Ftp::Gateway * ftpState)
 {
@@ -2628,6 +2583,8 @@ Ftp::Gateway::ftpAuthRequired(HttpRequest * request, SBuf &realm, AccessLogEntry
     /* add Authenticate header */
     // XXX: performance regression. c_str() may reallocate
     newrep->header.putAuth("Basic", realm.c_str());
+#else
+    (void)realm;
 #endif
     return newrep;
 }

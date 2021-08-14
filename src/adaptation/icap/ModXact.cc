@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -248,13 +248,11 @@ void Adaptation::Icap::ModXact::writeMore()
 
     case State::writingInit:    // waiting for service OPTIONS
         Must(state.serviceWaiting);
+        return;
 
     case State::writingConnect: // waiting for the connection to establish
-
     case State::writingHeaders: // waiting for the headers to be written
-
     case State::writingPaused:  // waiting for the ICAP server response
-
     case State::writingReallyDone: // nothing more to write
         return;
 
@@ -1578,6 +1576,9 @@ void Adaptation::Icap::ModXact::makeUsernameHeader(const HttpRequest *request, M
         } else
             buf.appendf("%s: %s\r\n", TheConfig.client_username_header, value);
     }
+#else
+    (void)request;
+    (void)buf;
 #endif
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -253,6 +253,12 @@ urnHandleReply(void *data, StoreIOBuffer result)
     debugs(52, 3, "urnHandleReply: Called with size=" << result.length << ".");
 
     if (EBIT_TEST(urlres_e->flags, ENTRY_ABORTED) || result.flags.error) {
+        delete urnState;
+        return;
+    }
+
+    if (!e->isAccepting()) {
+        debugs(52, 3, "terminating due to bad " << *e);
         delete urnState;
         return;
     }

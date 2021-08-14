@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -108,7 +108,7 @@ HttpHdrSc::parse(const String * str)
         type = scLookupTable.lookup(SBuf(item,ilen));
 
         if (type == SC_ENUM_END) {
-            debugs(90, 2, "hdr sc: unknown control-directive: near '" << item << "' in '" << str << "'");
+            debugs(90, 2, "unknown control-directive near '" << item << "' in '" << *str << "'");
             type = SC_OTHER;
         }
 
@@ -134,7 +134,7 @@ HttpHdrSc::parse(const String * str)
 
         if (sct->isSet(type)) {
             if (type != SC_OTHER)
-                debugs(90, 2, "hdr sc: ignoring duplicate control-directive: near '" << item << "' in '" << str << "'");
+                debugs(90, 2, "ignoring duplicate control-directive near '" << item << "' in '" << *str << "'");
 
             ++ scHeaderStats[type].repCount;
 

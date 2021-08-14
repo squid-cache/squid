@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,6 +18,7 @@
 #include "globals.h"
 #include "ICP.h"
 #include "ipcache.h"
+#include "send-announce.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "tools.h"

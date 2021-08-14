@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #ifndef SQUID_STORECLIENT_H
 #define SQUID_STORECLIENT_H
 
+#include "acl/ChecklistFiller.h"
 #include "base/forward.h"
 #include "dlink.h"
 #include "StoreIOBuffer.h"
@@ -21,7 +22,7 @@ class ACLFilledChecklist;
 class LogTags;
 
 /// a storeGetPublic*() caller
-class StoreClient
+class StoreClient: public Acl::ChecklistFiller
 {
 
 public:
@@ -31,9 +32,6 @@ public:
     virtual LogTags *loggingTags() const = 0;
 
 protected:
-    /// configure the ACL checklist with the current transaction state
-    virtual void fillChecklist(ACLFilledChecklist &) const = 0;
-
     /// \returns whether the caller must collapse on the given entry
     /// Before returning true, updates common collapsing-related stats.
     /// See also: StoreEntry::hittingRequiresCollapsing().

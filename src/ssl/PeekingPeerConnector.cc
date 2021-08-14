@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,10 +21,9 @@
 #include "ssl/bio.h"
 #include "ssl/PeekingPeerConnector.h"
 #include "ssl/ServerBump.h"
+#include "tunnel.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeekingPeerConnector);
-
-void switchToTunnel(HttpRequest *request, const Comm::ConnectionPointer &clientConn, const Comm::ConnectionPointer &srvConn, const SBuf &preReadServerData);
 
 void
 Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone(Acl::Answer answer, void *data)

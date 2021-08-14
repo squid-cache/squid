@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -376,8 +376,10 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
         DecipherOnly
     };
 
-    EVP_PKEY *certKey = X509_get_pubkey(mimicCert.get());
-    const bool rsaPkey = (EVP_PKEY_get0_RSA(certKey) != nullptr);
+    // XXX: Add PublicKeyPointer. In OpenSSL, public and private keys are
+    // internally represented by EVP_PKEY pair, but GnuTLS uses distinct types.
+    const Security::PrivateKeyPointer certKey(X509_get_pubkey(mimicCert.get()));
+    const auto rsaPkey = EVP_PKEY_get0_RSA(certKey.get()) != nullptr;
 
     int added = 0;
     int nid;

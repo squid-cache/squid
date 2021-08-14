@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -63,7 +63,7 @@ static const char rcsid[] = "inet_pton.c,v 1.2.206.2 2005/07/28 07:43:18 marka E
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
-#if ARPA_INET_H
+#if HAVE_ARPA_INET_H
 #include <arpa/inet.h>
 #endif
 #if HAVE_ARPA_NAMESER_H

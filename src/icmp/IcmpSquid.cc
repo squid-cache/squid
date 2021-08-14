@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -109,7 +109,7 @@ IcmpSquid::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
 // static Callback to wrap the squid-side ICMP handler.
 // the IcmpSquid::Recv cannot be declared both static and virtual.
 static void
-icmpSquidRecv(int unused1, void *unused2)
+icmpSquidRecv(int, void *)
 {
     icmpEngine.Recv();
 }
@@ -180,6 +180,9 @@ IcmpSquid::DomainPing(Ip::Address &to, const char *domain)
 #if USE_ICMP
     debugs(37, 4, HERE << "'" << domain << "' (" << to << ")");
     SendEcho(to, S_ICMP_DOM, domain, 0);
+#else
+    (void)to;
+    (void)domain;
 #endif
 }
 

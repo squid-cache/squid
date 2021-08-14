@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1607,7 +1607,7 @@ httpHeaderNoteParsedEntry(Http::HdrType id, String const &context, bool error)
 extern const HttpHeaderStat *dump_stat;     /* argh! */
 const HttpHeaderStat *dump_stat = NULL;
 
-void
+static void
 httpHeaderFieldStatDumper(StoreEntry * sentry, int, double val, double, int count)
 {
     const int id = static_cast<int>(val);

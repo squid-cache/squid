@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -120,19 +120,4 @@ tempnam(const char *dir, const char *pfx)
 {
     return _tmpnam();
 }
-
-#ifdef TEST
-int
-main()
-{
-    char *t;
-    int n = 0;
-    while ((t = tempnam(NULL, NULL))) {
-        printf("%s\n", t);
-        if (++n == 1000)
-            break;
-    }
-    return 1;
-}
-#endif
 

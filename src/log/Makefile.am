@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -17,7 +17,6 @@ noinst_LTLIBRARIES = liblog.la
 liblog_la_SOURCES = \
 	Config.cc \
 	Config.h \
-	CustomLog.cc \
 	CustomLog.h \
 	File.cc \
 	File.h \
@@ -29,6 +28,8 @@ liblog_la_SOURCES = \
 	FormatSquidReferer.cc \
 	FormatSquidUseragent.cc \
 	Formats.h \
+	FormattedLog.cc \
+	FormattedLog.h \
 	ModDaemon.cc \
 	ModDaemon.h \
 	ModStdio.cc \

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,18 +37,6 @@ WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
 ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 ******************************************************************/
-
-#if 0
-#if (defined vax) || (defined (mips))
-/*
- * This is a fairly bogus thing to do, but there seems to be no better way for
- * compilers that don't understand void pointers.
- */
-#ifndef void
-#define void char
-#endif
-#endif
-#endif
 
 #define SID_MAX_LEN 64
 

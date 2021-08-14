@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,6 +15,7 @@
 #include "adaptation/Service.h"
 #include "adaptation/ServiceGroups.h"
 #include "ConfigParser.h"
+#include "DebugMessages.h"
 #include "globals.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -228,7 +229,7 @@ void
 Adaptation::Config::Finalize(bool enabled)
 {
     Enabled = enabled;
-    debugs(93, DBG_IMPORTANT, "Adaptation support is " << (Enabled ? "on" : "off."));
+    debugs(93, Important(11), "Adaptation support is " << (Enabled ? "on" : "off."));
 
     FinalizeEach(AllServices(), "message adaptation services");
     FinalizeEach(AllGroups(), "message adaptation service groups");

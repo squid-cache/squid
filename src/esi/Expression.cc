@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -245,7 +245,7 @@ evalnegate(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
 }
 
 int
-evalliteral(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
+evalliteral(stackmember * /* stack */, int * /* depth */, int /* whereAmI */, stackmember * /* candidate */)
 {
     debugs(86, DBG_IMPORTANT, "attempt to evaluate a literal");
     /* literals can't be evaluated */
@@ -253,7 +253,7 @@ evalliteral(stackmember * stack, int *depth, int whereAmI, stackmember * candida
 }
 
 int
-evalexpr(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
+evalexpr(stackmember * /* stack */, int * /* depth */, int /* whereAmI */, stackmember * /* candidate */)
 {
     debugs(86, DBG_IMPORTANT, "attempt to evaluate a sub-expression result");
     /* sub-scpr's can't be evaluated */
@@ -664,7 +664,7 @@ evalstartexpr(stackmember * stack, int *depth, int whereAmI, stackmember * candi
 }
 
 int
-evalendexpr(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
+evalendexpr(stackmember * /* stack */, int * /* depth */, int /* whereAmI */, stackmember * /* candidate */)
 {
     /* Can't evaluate ) brackets */
     return 1;

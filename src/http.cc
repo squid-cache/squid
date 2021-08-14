@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -226,16 +226,6 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
 #endif
 
     default:
-#if QUESTIONABLE
-        /*
-         * Any 2xx response should eject previously cached entities...
-         */
-
-        if (status >= 200 && status < 300)
-            remove = 1;
-
-#endif
-
         break;
     }
 
@@ -512,7 +502,7 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
     case Http::scMisdirectedRequest:
         statusAnswer = ReuseDecision::doNotCacheButShare;
         statusReason = shareableError;
-    // fall through to the actual decision making below
+    /* [[fallthrough]] to the actual decision making below */
 
     case Http::scBadRequest: // no sharing; perhaps the server did not like something specific to this request
 #if USE_HTTP_VIOLATIONS
@@ -660,17 +650,12 @@ HttpStateData::processReplyHeader()
 {
     /** Creates a blank header. If this routine is made incremental, this will not do */
 
-    /* NP: all exit points to this function MUST call ctx_exit(ctx) */
-    Ctx ctx = ctx_enter(entry->mem_obj->urlXXX());
-
     debugs(11, 3, "processReplyHeader: key '" << entry->getMD5Text() << "'");
 
     assert(!flags.headers_parsed);
 
-    if (!inBuf.length()) {
-        ctx_exit(ctx);
+    if (!inBuf.length())
         return;
-    }
 
     /* Attempt to parse the first line; this will define where the protocol, status, reason-phrase and header begin */
     {
@@ -698,7 +683,6 @@ HttpStateData::processReplyHeader()
                 inBuf = hp->remaining();
             } else {
                 debugs(33, 5, "Incomplete response, waiting for end of response headers");
-                ctx_exit(ctx);
                 return;
             }
         }
@@ -711,7 +695,6 @@ HttpStateData::processReplyHeader()
             HttpReply *newrep = new HttpReply;
             newrep->sline.set(Http::ProtocolVersion(), hp->parseStatusCode);
             setVirginReply(newrep);
-            ctx_exit(ctx);
             return;
         }
     }
@@ -730,18 +713,11 @@ HttpStateData::processReplyHeader()
     // XXX: RFC 7230 indicates we MAY ignore the reason phrase,
     //      and use an empty string on unknown status.
     //      We do that now to avoid performance regression from using SBuf::c_str()
-    newrep->sline.set(Http::ProtocolVersion(1,1), hp->messageStatus() /* , hp->reasonPhrase() */);
-    newrep->sline.protocol = newrep->sline.version.protocol = hp->messageProtocol().protocol;
-    newrep->sline.version.major = hp->messageProtocol().major;
-    newrep->sline.version.minor = hp->messageProtocol().minor;
+    newrep->sline.set(hp->messageProtocol(), hp->messageStatus() /* , hp->reasonPhrase() */);
 
     // parse headers
     if (!newrep->parseHeader(*hp)) {
-        // XXX: when Http::ProtocolVersion is a function, remove this hack. just set with messageProtocol()
-        newrep->sline.set(Http::ProtocolVersion(), Http::scInvalidHeader);
-        newrep->sline.version.protocol = hp->messageProtocol().protocol;
-        newrep->sline.version.major = hp->messageProtocol().major;
-        newrep->sline.version.minor = hp->messageProtocol().minor;
+        newrep->sline.set(hp->messageProtocol(), Http::scInvalidHeader);
         debugs(11, 2, "error parsing response headers mime block");
     }
 
@@ -752,14 +728,13 @@ HttpStateData::processReplyHeader()
 
     newrep->removeStaleWarnings();
 
-    if (newrep->sline.protocol == AnyP::PROTO_HTTP && Http::Is1xx(newrep->sline.status())) {
+    if (newrep->sline.version.protocol == AnyP::PROTO_HTTP && Http::Is1xx(newrep->sline.status())) {
         handle1xx(newrep);
-        ctx_exit(ctx);
         return;
     }
 
     flags.chunked = false;
-    if (newrep->sline.protocol == AnyP::PROTO_HTTP && newrep->header.chunked()) {
+    if (newrep->sline.version.protocol == AnyP::PROTO_HTTP && newrep->header.chunked()) {
         flags.chunked = true;
         httpChunkDecoder = new Http1::TeChunkedParser;
     }
@@ -775,8 +750,6 @@ HttpStateData::processReplyHeader()
     checkDateSkew(vrep);
 
     processSurrogateControl (vrep);
-
-    ctx_exit(ctx);
 }
 
 /// ignore or start forwarding the 1xx response (a.k.a., control message)
@@ -891,7 +864,7 @@ HttpStateData::proceedAfter1xx()
 
     if (flags.serverSwitchedProtocols) {
         // pass server connection ownership to request->clientConnectionManager
-        ConnStateData::ServerConnectionContext scc(serverConnection, request, inBuf);
+        ConnStateData::ServerConnectionContext scc(serverConnection, inBuf);
         typedef UnaryMemFunT<ConnStateData, ConnStateData::ServerConnectionContext> MyDialer;
         AsyncCall::Pointer call = asyncCall(11, 3, "ConnStateData::noteTakeServerConnectionControl",
                                             MyDialer(request->clientConnectionManager,
@@ -976,7 +949,6 @@ HttpStateData::haveParsedReplyHeaders()
 {
     Client::haveParsedReplyHeaders();
 
-    Ctx ctx = ctx_enter(entry->mem_obj->urlXXX());
     HttpReply *rep = finalReply();
     const Http::StatusCode statusCode = rep->sline.status();
 
@@ -1100,8 +1072,6 @@ HttpStateData::haveParsedReplyHeaders()
     headersLog(1, 0, request->method, rep);
 
 #endif
-
-    ctx_exit(ctx);
 }
 
 HttpStateData::ConnectionStatus
@@ -1319,6 +1289,11 @@ HttpStateData::processReply()
         debugs(11, 5, HERE << "done with 1xx handling");
         flags.handling1xx = false;
         Must(!flags.headers_parsed);
+    }
+
+    if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
+        abortTransaction("store entry aborted while we were waiting for processReply()");
+        return;
     }
 
     if (!flags.headers_parsed) { // have not parsed headers yet?
@@ -1986,12 +1961,6 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
         if (!cc)
             cc = new HttpHdrCc();
-
-#if 0 /* see bug 2330 */
-        /* Set no-cache if determined needed but not found */
-        if (request->flags.nocache)
-            EBIT_SET(cc->mask, HttpHdrCcType::CC_NO_CACHE);
-#endif
 
         /* Add max-age only without no-cache */
         if (!cc->hasMaxAge() && !cc->hasNoCache()) {

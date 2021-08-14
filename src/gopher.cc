@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,6 +16,7 @@
 #include "fd.h"
 #include "FwdState.h"
 #include "globals.h"
+#include "gopher.h"
 #include "html_quote.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -685,8 +686,8 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                 }
             }
 
+            break;
             }           /* HTML_CSO_RESULT */
-
         default:
             break;      /* do nothing */
 
@@ -740,7 +741,10 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm
 
     assert(buf == gopherState->replybuf);
 
-    if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
+    // XXX: Should update delayId, statCounter, etc. before bailing
+    if (!entry->isAccepting()) {
+        debugs(10, 3, "terminating due to bad " << *entry);
+        // TODO: Do not abuse connection for triggering cleanup.
         gopherState->serverConn->close();
         return;
     }
@@ -835,6 +839,13 @@ gopherSendComplete(const Comm::ConnectionPointer &conn, char *, size_t size, Com
         fd_bytes(conn->fd, size, FD_WRITE);
         statCounter.server.all.kbytes_out += size;
         statCounter.server.other.kbytes_out += size;
+    }
+
+    if (!entry->isAccepting()) {
+        debugs(10, 3, "terminating due to bad " << *entry);
+        // TODO: Do not abuse connection for triggering cleanup.
+        gopherState->serverConn->close();
+        return;
     }
 
     if (errflag) {

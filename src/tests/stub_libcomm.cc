@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,8 +15,8 @@
 #include "comm/AcceptLimiter.h"
 Comm::AcceptLimiter dummy;
 Comm::AcceptLimiter & Comm::AcceptLimiter::Instance() STUB_RETVAL(dummy)
-void Comm::AcceptLimiter::defer(const Comm::TcpAcceptor::Pointer &afd) STUB
-void Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor::Pointer &afd) STUB
+void Comm::AcceptLimiter::defer(const Comm::TcpAcceptor::Pointer &) STUB
+void Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor::Pointer &) STUB
 void Comm::AcceptLimiter::kick() STUB
 
 #include "comm/Connection.h"
@@ -26,7 +26,7 @@ Comm::ConnectionPointer Comm::Connection::cloneIdentDetails() const STUB_RETVAL(
 Comm::ConnectionPointer Comm::Connection::cloneDestinationDetails() const STUB_RETVAL(nullptr)
 void Comm::Connection::close() STUB
 CachePeer * Comm::Connection::getPeer() const STUB_RETVAL(NULL)
-void Comm::Connection::setPeer(CachePeer * p) STUB
+void Comm::Connection::setPeer(CachePeer *) STUB
 ScopedId Comm::Connection::codeContextGist() const STUB_RETVAL(id.detach())
 std::ostream &Comm::Connection::detailCodeContext(std::ostream &os) const STUB_RETVAL(os)
 InstanceIdDefinitions(Comm::Connection, "conn", uint64_t);
@@ -47,8 +47,8 @@ Comm::ConnOpener::ConnOpener(const Comm::ConnectionPointer &, const AsyncCall::P
 #include "comm/IoCallback.h"
     void Comm::IoCallback::setCallback(iocb_type, AsyncCall::Pointer &, char *, FREE *, int) STUB
     void Comm::IoCallback::selectOrQueueWrite() STUB
-    void Comm::IoCallback::cancel(const char *reason) STUB
-    void Comm::IoCallback::finish(Comm::Flag code, int xerrn) STUB
+    void Comm::IoCallback::cancel(const char *) STUB
+    void Comm::IoCallback::finish(Comm::Flag, int) STUB
     Comm::CbEntry *Comm::iocb_table = NULL;
 void Comm::CallbackTableInit() STUB
 void Comm::CallbackTableDestruct() STUB
@@ -60,27 +60,30 @@ Comm::Flag Comm::DoSelect(int) STUB_RETVAL(Comm::COMM_ERROR)
 void Comm::QuickPollRequired(void) STUB
 
 #include "comm/Read.h"
-void Comm::Read(const Comm::ConnectionPointer &conn, AsyncCall::Pointer &callback) STUB
-bool Comm::MonitorsRead(int fd) STUB_RETVAL(false)
-Comm::Flag Comm::ReadNow(CommIoCbParams &params, SBuf &buf) STUB_RETVAL(Comm::COMM_ERROR)
-void Comm::ReadCancel(int fd, AsyncCall::Pointer &callback) STUB
+void Comm::Read(const Comm::ConnectionPointer &, AsyncCall::Pointer &) STUB
+bool Comm::MonitorsRead(int) STUB_RETVAL(false)
+Comm::Flag Comm::ReadNow(CommIoCbParams &, SBuf &) STUB_RETVAL(Comm::COMM_ERROR)
+void Comm::ReadCancel(int, AsyncCall::Pointer &) STUB
 //void Comm::HandleRead(int, void*) STUB
 
-void comm_read_base(const Comm::ConnectionPointer &conn, char *buf, int len, AsyncCall::Pointer &callback) STUB
-void comm_read_cancel(int fd, IOCB *callback, void *data) STUB
+void comm_read_base(const Comm::ConnectionPointer &, char *, int, AsyncCall::Pointer &) STUB
+void comm_read_cancel(int, IOCB *, void *) STUB
 
 #include "comm/TcpAcceptor.h"
-//Comm::TcpAcceptor(const Comm::ConnectionPointer &conn, const char *note, const Subscription::Pointer &aSub) STUB
-void Comm::TcpAcceptor::subscribe(const Subscription::Pointer &aSub) STUB
+//Comm::TcpAcceptor(const Comm::ConnectionPointer &, const char *, const Subscription::Pointer &) STUB
+void Comm::TcpAcceptor::subscribe(const Subscription::Pointer &) STUB
 void Comm::TcpAcceptor::unsubscribe(const char *) STUB
 void Comm::TcpAcceptor::acceptNext() STUB
-void Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &) const STUB
+void Comm::TcpAcceptor::notify(const Comm::Flag, const Comm::ConnectionPointer &) const STUB
+
+#include "comm/Tcp.h"
+void Comm::ApplyTcpKeepAlive(int, const TcpKeepAlive &) STUB
 
 #include "comm/Write.h"
 void Comm::Write(const Comm::ConnectionPointer &, const char *, int, AsyncCall::Pointer &, FREE *) STUB
-void Comm::Write(const Comm::ConnectionPointer &conn, MemBuf *mb, AsyncCall::Pointer &callback) STUB
-void Comm::WriteCancel(const Comm::ConnectionPointer &conn, const char *reason) STUB
+void Comm::Write(const Comm::ConnectionPointer &, MemBuf *, AsyncCall::Pointer &) STUB
+void Comm::WriteCancel(const Comm::ConnectionPointer &, const char *) STUB
 /*PF*/ void Comm::HandleWrite(int, void*) STUB
 
-std::ostream &operator << (std::ostream &os, const Comm::Connection &conn) STUB_RETVAL(os << "[Connection object]")
+std::ostream &operator << (std::ostream &os, const Comm::Connection &) STUB_RETVAL(os << "[Connection object]")
 

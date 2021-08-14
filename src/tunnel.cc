@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -47,6 +47,7 @@
 #include "ssl/ServerBump.h"
 #endif
 #include "tools.h"
+#include "tunnel.h"
 #if USE_DELAY_POOLS
 #include "DelayId.h"
 #endif
@@ -237,8 +238,8 @@ private:
             method_(method), tunnel_(tunnel), answer_() {}
 
         /* CallDialer API */
-        virtual bool canDial(AsyncCall &call) { return tunnel_.valid(); }
-        void dial(AsyncCall &call) { ((&(*tunnel_))->*method_)(answer_); }
+        virtual bool canDial(AsyncCall &) { return tunnel_.valid(); }
+        void dial(AsyncCall &) { ((&(*tunnel_))->*method_)(answer_); }
         virtual void print(std::ostream &os) const {
             os << '(' << tunnel_.get() << ", " << answer_ << ')';
         }
@@ -468,7 +469,7 @@ TunnelStateData::Connection::bytesWanted(int lowerbound, int upperbound) const
 #if USE_DELAY_POOLS
     return delayId.bytesWanted(lowerbound, upperbound);
 #else
-
+    (void)lowerbound;
     return upperbound;
 #endif
 }

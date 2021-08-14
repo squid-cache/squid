@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -504,9 +504,6 @@ int nds_get_password(
 
     rc = nmasldap_get_password(ld, object_dn, pwd_len, (unsigned char *)pwd);
     if (rc == LDAP_SUCCESS) {
-#ifdef DEBUG_PASSWORD
-        DEBUG(100,("nmasldap_get_password returned %s for %s\n", pwd, object_dn));
-#endif
         DEBUG(5, ("NDS Universal Password retrieved for %s\n", object_dn));
     } else {
         DEBUG(3, ("NDS Universal Password NOT retrieved for %s\n", object_dn));
@@ -515,9 +512,6 @@ int nds_get_password(
     if (rc != LDAP_SUCCESS) {
         rc = nmasldap_get_simple_pwd(ld, object_dn, *pwd_len, pwd);
         if (rc == LDAP_SUCCESS) {
-#ifdef DEBUG_PASSWORD
-            DEBUG(100,("nmasldap_get_simple_pwd returned %s for %s\n", pwd, object_dn));
-#endif
             DEBUG(5, ("NDS Simple Password retrieved for %s\n", object_dn));
         } else {
             /* We couldn't get the password */

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,8 +16,8 @@
 #include "comm/Read.h"
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
-#include "errorpage.h"
 #include "error/SysErrorDetail.h"
+#include "errorpage.h"
 #include "fd.h"
 #include "ftp/Parsing.h"
 #include "http/Stream.h"
@@ -95,6 +95,7 @@ Ftp::Channel::opened(const Comm::ConnectionPointer &newConn,
     assert(aCloser != NULL);
 
     conn = newConn;
+    conn->leaveOrphanage();
     closer = aCloser;
     comm_add_close_handler(conn->fd, closer);
 }
@@ -181,12 +182,12 @@ Ftp::DataChannel::addr(const Ip::Address &import)
 Ftp::Client::Client(FwdState *fwdState):
     AsyncJob("Ftp::Client"),
     ::Client(fwdState),
-     ctrl(),
-     data(),
-     state(BEGIN),
-     old_request(NULL),
-     old_reply(NULL),
-     shortenReadTimeout(false)
+    ctrl(),
+    data(),
+    state(BEGIN),
+    old_request(NULL),
+    old_reply(NULL),
+    shortenReadTimeout(false)
 {
     ++statCounter.server.all.requests;
     ++statCounter.server.ftp.requests;
@@ -697,7 +698,7 @@ Ftp::Client::sendPassive()
             state = SENT_EPSV_2;
             break;
         }
-    // else fall through to skip EPSV 2
+    /* [[fallthrough]] to skip EPSV 2 */
 
     case SENT_EPSV_2: /* EPSV IPv6 failed. Try EPSV IPv4 */
         if (ctrl.conn->local.isIPv4()) {
@@ -710,7 +711,7 @@ Ftp::Client::sendPassive()
             failed(ERR_FTP_FAILURE, 0);
             return false;
         }
-    // else fall through to skip EPSV 1
+    /* [[fallthrough]] to skip EPSV 1 */
 
     case SENT_EPSV_1: /* EPSV options exhausted. Try PASV now. */
         debugs(9, 5, "FTP Channel (" << ctrl.conn->remote << ") rejects EPSV connection attempts. Trying PASV instead.");
