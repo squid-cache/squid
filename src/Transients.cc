@@ -64,6 +64,8 @@ Transients::getStats(StoreInfoStats &stats) const
     stats.mem.size =
         Ipc::Mem::PageLevel(Ipc::Mem::PageId::cachePage) * pageSize;
     stats.mem.count = currentCount();
+#else
+    (void)stats;
 #endif
 }
 

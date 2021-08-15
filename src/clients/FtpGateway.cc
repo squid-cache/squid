@@ -1034,6 +1034,8 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
         loginParser(auth, false);
     }
     /* we fail with authorization-required error later IFF the FTP server requests it */
+#else
+    (void)req_hdr;
 #endif
 
     /* Test URL login syntax. Overrides any headers received. */
@@ -1067,16 +1069,17 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
 void
 Ftp::Gateway::checkUrlpath()
 {
-    static SBuf str_type_eq("type=");
-    auto t = request->url.path().rfind(';');
-
-    if (t != SBuf::npos) {
-        auto filenameEnd = t-1;
-        if (request->url.path().substr(++t).cmp(str_type_eq, str_type_eq.length()) == 0) {
-            t += str_type_eq.length();
-            typecode = (char)xtoupper(request->url.path()[t]);
-            request->url.path(request->url.path().substr(0,filenameEnd));
-        }
+    // If typecode was specified, extract it and leave just the filename in
+    // url.path. Tolerate trailing garbage or missing typecode value. Roughly:
+    // [filename] ;type=[typecode char] [trailing garbage]
+    static const SBuf middle(";type=");
+    const auto typeSpecStart = request->url.path().find(middle);
+    if (typeSpecStart != SBuf::npos) {
+        const auto fullPath = request->url.path();
+        const auto typecodePos = typeSpecStart + middle.length();
+        typecode = (typecodePos < fullPath.length()) ?
+            static_cast<char>(xtoupper(fullPath[typecodePos])) : '\0';
+        request->url.path(fullPath.substr(0, typeSpecStart));
     }
 
     int l = request->url.path().length();
@@ -2578,6 +2581,8 @@ Ftp::Gateway::ftpAuthRequired(HttpRequest * request, SBuf &realm, AccessLogEntry
     /* add Authenticate header */
     // XXX: performance regression. c_str() may reallocate
     newrep->header.putAuth("Basic", realm.c_str());
+#else
+    (void)realm;
 #endif
     return newrep;
 }

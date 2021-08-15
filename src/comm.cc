@@ -266,7 +266,7 @@ limitError(int const anErrno)
     return anErrno == ENFILE || anErrno == EMFILE;
 }
 
-void
+static void
 comm_set_v6only(int fd, int tos)
 {
 #ifdef IPV6_V6ONLY
@@ -285,7 +285,7 @@ comm_set_v6only(int fd, int tos)
  * - OpenBSD divert-to support,
  * - FreeBSD IPFW TPROXY v4 support.
  */
-void
+static void
 comm_set_transparent(int fd)
 {
 #if _SQUID_LINUX_ && defined(IP_TRANSPARENT) // Linux
@@ -785,13 +785,13 @@ old_comm_reset_close(int fd)
     comm_close(fd);
 }
 
-void
+static void
 commStartTlsClose(const FdeCbParams &params)
 {
     Security::SessionSendGoodbye(fd_table[params.fd].ssl);
 }
 
-void
+static void
 comm_close_complete(const FdeCbParams &params)
 {
     fde *F = &fd_table[params.fd];

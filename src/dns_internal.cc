@@ -28,6 +28,7 @@
 #include "ip/tools.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
+#include "snmp_agent.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"

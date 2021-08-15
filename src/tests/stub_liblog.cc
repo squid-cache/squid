@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "fde.h"
+#include "log/File.h"
 
 #define STUB_API "log/liblog.la"
 #include "tests/STUB.h"
@@ -31,7 +32,6 @@ const char *accessLogTime(time_t) STUB_RETVAL(nullptr)
 
 #include "log/access_log.h"
 void fvdbCountVia(const SBuf &) STUB
-void fvdbCountForward(const SBuf &) STUB
 #if HEADERS_LOG
 void headersLog(int, int, const HttpRequestMethod &, void *) STUB
 #endif
@@ -58,7 +58,7 @@ Logfile::Logfile(const char *) {STUB}
 Logfile *logfileOpen(const char *, size_t, int) STUB_RETVAL(nullptr)
 void logfileClose(Logfile *) STUB
 void logfileRotate(Logfile *, int16_t) STUB
-void logfileWrite(Logfile *, char *, size_t) STUB
+void logfileWrite(Logfile *, const char *, size_t) STUB
 void logfileFlush(Logfile *) STUB
 void logfilePrintf(Logfile *, const char *, ...) STUB
 void logfileLineStart(Logfile *) STUB

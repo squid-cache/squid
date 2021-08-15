@@ -151,6 +151,8 @@ Ssl::ErrorDetailsManager::getErrorDetail(Security::ErrorCode value, const HttpRe
         if (errDetails != NULL && errDetails->getRecord(value, entry))
             return true;
     }
+#else
+    (void)request;
 #endif
 
     // else try the default

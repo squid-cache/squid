@@ -16,24 +16,24 @@
 #define STUB_API "pconn.cc"
 #include "tests/STUB.h"
 
-IdleConnList::IdleConnList(const char *akey, PconnPool *parent) STUB
+IdleConnList::IdleConnList(const char *, PconnPool *) STUB
 IdleConnList::~IdleConnList() STUB
-void IdleConnList::push(const Comm::ConnectionPointer &conn) STUB
-Comm::ConnectionPointer IdleConnList::findUseable(const Comm::ConnectionPointer &akey) STUB_RETVAL(Comm::ConnectionPointer())
-void IdleConnList::clearHandlers(const Comm::ConnectionPointer &conn) STUB
+void IdleConnList::push(const Comm::ConnectionPointer &) STUB
+Comm::ConnectionPointer IdleConnList::findUseable(const Comm::ConnectionPointer &) STUB_RETVAL(Comm::ConnectionPointer())
+void IdleConnList::clearHandlers(const Comm::ConnectionPointer &) STUB
 void IdleConnList::endingShutdown() STUB
 PconnPool::PconnPool(const char *, const CbcPointer<PeerPoolMgr>&) STUB
 PconnPool::~PconnPool() STUB
 void PconnPool::moduleInit() STUB
-void PconnPool::push(const Comm::ConnectionPointer &serverConn, const char *domain) STUB
-Comm::ConnectionPointer PconnPool::pop(const Comm::ConnectionPointer &destLink, const char *domain, bool retriable) STUB_RETVAL(Comm::ConnectionPointer())
-void PconnPool::count(int uses) STUB
+void PconnPool::push(const Comm::ConnectionPointer &, const char *) STUB
+Comm::ConnectionPointer PconnPool::pop(const Comm::ConnectionPointer &, const char *, bool) STUB_RETVAL(Comm::ConnectionPointer())
+void PconnPool::count(int) STUB
 void PconnPool::noteUses(int) STUB
-void PconnPool::dumpHist(StoreEntry *e) const STUB
-void PconnPool::dumpHash(StoreEntry *e) const STUB
-void PconnPool::unlinkList(IdleConnList *list) STUB
+void PconnPool::dumpHist(StoreEntry *) const STUB
+void PconnPool::dumpHash(StoreEntry *) const STUB
+void PconnPool::unlinkList(IdleConnList *) STUB
 PconnModule * PconnModule::GetInstance() STUB_RETVAL(NULL)
-void PconnModule::DumpWrapper(StoreEntry *e) STUB
+void PconnModule::DumpWrapper(StoreEntry *) STUB
 PconnModule::PconnModule() STUB
 void PconnModule::registerWithCacheManager(void) STUB
 void PconnModule::add(PconnPool *) STUB

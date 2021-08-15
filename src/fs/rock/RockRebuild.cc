@@ -268,7 +268,7 @@ Rock::Rebuild::Stats::completed(const SwapDir &dir) const
 /* Rebuild */
 
 bool
-Rock::Rebuild::IsResponsible(const SwapDir &dir)
+Rock::Rebuild::IsResponsible(const SwapDir &)
 {
     // in SMP mode, only the disker is responsible for populating the map
     return !UsingSmp() || IamDiskProcess();

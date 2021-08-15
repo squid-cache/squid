@@ -84,7 +84,7 @@ acl_ip_data::toSBuf() const
  * is an entry in some address-based access control element.  This
  * function is called via ACLIP::match() and the splay library.
  */
-int
+static int
 aclIpAddrNetworkCompare(acl_ip_data * const &p, acl_ip_data * const &q)
 {
     Ip::Address A = p->addr1;

@@ -93,6 +93,32 @@ if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
 	AC_USE_SYSTEM_EXTENSIONS
 fi
 
+AC_MSG_CHECKING([compiler name-version])
+squid_cv_cc_name=`$CC --version | head -1 | cut -f1 -d" "`
+AS_CASE([$squid_cv_cc_name],
+  [gcc|clang],[squid_cv_cc_majversion=`$CC -dumpversion | cut -f1 -d.`],
+  [squid_cv_cc_majversion="unknown"]
+)
+squid_cv_cc_simplified="$squid_cv_cc_name-$squid_cv_cc_majversion"
+AC_MSG_RESULT($squid_cv_cc_simplified)
+
+# warning flags
+AS_IF([test "$squid_cv_cc_simplified" = "gcc-4"],[
+    AC_MSG_NOTICE([skipping -Wextra on $squid_cv_cc_simplified])
+],[
+    # -Werror must be first
+    SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Werror])
+    SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wextra])
+    # -Wunused-private-field causes a huge number of false positives
+    #    in unit tests. Disable that
+    SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wno-unused-private-field])
+    # ...=2: This flexibility level allows GCC to "understand" our fallthrough
+    # comments. TODO: Switch to [[fallthrough]] attributes with C++17.
+    SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wimplicit-fallthrough=2])
+    AS_IF([test "x$squid_cv_cc_implicit_fallthrough2" = "xno"], [
+        SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wno-implicit-fallthrough])
+    ])
+])
 # If the user did not specify a C++ version.
 user_cxx=`echo "$PRESET_CXXFLAGS" | grep -o -E "\-std="`
 if test "x$user_cxx" = "x"; then
@@ -337,25 +363,13 @@ if test "x$PRESET_CFLAGS" = "x"; then
   fi
 fi
 
-dnl set squid required flags
-if test "$squid_cv_compiler" = "gcc"; then
-  case "$squid_host_os" in
-  mingw)
-dnl Guido Serassio (serassio@squid-cache.org) 20070811
-dnl Using the latest MinGW (gcc 3.4.5 + mingw-runtime 3.13) cannot build with
-dnl -Werror -Wmissing-prototypes -Wmissing-declarations
-dnl TODO: check if the problem will be present in any other newer MinGW release.
-    SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wcomments -Wshadow"
-    ;;
-  *)
-    SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments -Wshadow"
-    ;;
-  esac
-  SQUID_CXXFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wcomments -Wshadow -Woverloaded-virtual"
-else
-  SQUID_CFLAGS=
-  SQUID_CXXFLAGS=
-fi
+# useful warnings that may not be included in -Wall -Wextra
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wpointer-arith])
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wwrite-strings])
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wcomments])
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wshadow])
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wmissing-declarations])
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Woverloaded_virtual])
 
 dnl CentOS (and RHEL) still define ntohs() using deprecated C++ features
 SQUID_CC_REQUIRE_ARGUMENT([ac_cv_require_wno_deprecated_register],[-Werror -Wno-deprecated-register],[[#include <arpa/inet.h>]],[[int fox=ntohs(1);]])
