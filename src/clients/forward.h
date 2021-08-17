@@ -47,5 +47,10 @@ const SBuf &UrlWith2f(HttpRequest *);
 
 } // namespace Ftp
 
+namespace ProxyProtocol
+{
+class Connector;
+}
+
 #endif /* SQUID_CLIENTS_FORWARD_H */
 

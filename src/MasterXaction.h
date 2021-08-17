@@ -15,6 +15,8 @@
 #include "base/Lock.h"
 #include "base/RefCount.h"
 #include "comm/forward.h"
+#include "proxyp/Header.h"
+#include "sbuf/SBuf.h"
 #include "XactionInitiator.h"
 
 /** Master transaction details.
@@ -52,11 +54,17 @@ public:
     /// the client TCP connection which originated this transaction
     Comm::ConnectionPointer tcpClient;
 
+    /// client details from the parsed PROXY protocol header
+    ProxyProtocol::HeaderPointer pp2Client;
+
     /// the initiator of this transaction
     XactionInitiator initiator;
 
     /// whether we are currently creating a CONNECT header (to be sent to peer)
     bool generatingConnect = false;
+
+    // bytes read(2) early by a Job they are not supposed to be handled by
+    SBuf preservedClientData;
 
     // TODO: add state from other Jobs in the transaction
 };

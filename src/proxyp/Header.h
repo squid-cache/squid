@@ -12,6 +12,7 @@
 #include "base/RefCount.h"
 #include "ip/Address.h"
 #include "proxyp/Elements.h"
+#include "proxyp/forward.h"
 #include "sbuf/SBuf.h"
 
 #include <vector>

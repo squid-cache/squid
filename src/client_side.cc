@@ -106,13 +106,13 @@
 #include "parser/Tokenizer.h"
 #include "profiler/Profiler.h"
 #include "proxyp/Header.h"
-#include "proxyp/Parser.h"
 #include "sbuf/Stream.h"
 #include "security/CommunicationSecrets.h"
 #include "security/Io.h"
 #include "security/KeyLog.h"
 #include "security/NegotiationHistory.h"
 #include "servers/forward.h"
+#include "servers/Pp2Server.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
@@ -1802,76 +1802,6 @@ ConnStateData::concurrentRequestQueueFilled() const
     return false;
 }
 
-/**
- * Perform proxy_protocol_access ACL tests on the client which
- * connected to PROXY protocol port to see if we trust the
- * sender enough to accept their PROXY header claim.
- */
-bool
-ConnStateData::proxyProtocolValidateClient()
-{
-    if (!Config.accessList.proxyProtocol)
-        return proxyProtocolError("PROXY client not permitted by default ACL");
-
-    ACLFilledChecklist ch(Config.accessList.proxyProtocol, nullptr);
-    fillChecklist(ch);
-    if (!ch.fastCheck().allowed())
-        return proxyProtocolError("PROXY client not permitted by ACLs");
-
-    return true;
-}
-
-/**
- * Perform cleanup on PROXY protocol errors.
- * If header parsing hits a fatal error terminate the connection,
- * otherwise wait for more data.
- */
-bool
-ConnStateData::proxyProtocolError(const char *msg)
-{
-    if (msg) {
-        // This is important to know, but maybe not so much that flooding the log is okay.
-#if QUIET_PROXY_PROTOCOL
-        // display the first of every 32 occurrences at level 1, the others at level 2.
-        static uint8_t hide = 0;
-        debugs(33, (hide++ % 32 == 0 ? DBG_IMPORTANT : 2), msg << " from " << clientConnection);
-#else
-        debugs(33, DBG_IMPORTANT, msg << " from " << clientConnection);
-#endif
-        mustStop(msg);
-    }
-    return false;
-}
-
-/// Attempts to extract a PROXY protocol header from the input buffer and,
-/// upon success, stores the parsed header in proxyProtocolHeader_.
-/// \returns true if the header was successfully parsed
-/// \returns false if more data is needed to parse the header or on error
-bool
-ConnStateData::parseProxyProtocolHeader()
-{
-    try {
-        const auto parsed = ProxyProtocol::Parse(inBuf);
-        proxyProtocolHeader_ = parsed.header;
-        assert(bool(proxyProtocolHeader_));
-        inBuf.consume(parsed.size);
-        needProxyProtocolHeader_ = false;
-        if (proxyProtocolHeader_->hasForwardedAddresses()) {
-            clientConnection->local = proxyProtocolHeader_->destinationAddress;
-            clientConnection->remote = proxyProtocolHeader_->sourceAddress;
-            if ((clientConnection->flags & COMM_TRANSPARENT))
-                clientConnection->flags ^= COMM_TRANSPARENT; // prevent TPROXY spoofing of this new IP.
-            debugs(33, 5, "PROXY/" << proxyProtocolHeader_->version() << " upgrade: " << clientConnection);
-        }
-    } catch (const Parser::BinaryTokenizer::InsufficientInput &) {
-        debugs(33, 3, "PROXY protocol: waiting for more than " << inBuf.length() << " bytes");
-        return false;
-    } catch (const std::exception &e) {
-        return proxyProtocolError(e.what());
-    }
-    return true;
-}
-
 void
 ConnStateData::receivedFirstByte()
 {
@@ -1908,21 +1838,6 @@ ConnStateData::clientParseRequests()
         /* Limit the number of concurrent requests */
         if (concurrentRequestQueueFilled())
             break;
-
-        // try to parse the PROXY protocol header magic bytes
-        if (needProxyProtocolHeader_) {
-            if (!parseProxyProtocolHeader())
-                break;
-
-            // we have been waiting for PROXY to provide client-IP
-            // for some lookups, ie rDNS and IDENT.
-            whenClientIpKnown();
-
-            // Done with PROXY protocol which has cleared preservingClientData_.
-            // If the next protocol supports on_unsupported_protocol, then its
-            // parseOneRequest() must reset preservingClientData_.
-            assert(!preservingClientData_);
-        }
 
         if (Http::StreamPointer context = parseOneRequest()) {
             debugs(33, 5, clientConnection << ": done parsing a request");
@@ -2212,14 +2127,8 @@ ConnStateData::start()
     AsyncCall::Pointer call = JobCallback(33, 5, Dialer, this, ConnStateData::connStateClosed);
     comm_add_close_handler(clientConnection->fd, call);
 
-    needProxyProtocolHeader_ = port->flags.proxySurrogate;
-    if (needProxyProtocolHeader_) {
-        if (!proxyProtocolValidateClient()) // will close the connection on failure
-            return;
-    } else
-        whenClientIpKnown();
+    whenClientIpKnown();
 
-    // requires needProxyProtocolHeader_ which is initialized above
     preservingClientData_ = shouldPreserveClientData();
 }
 
@@ -2560,7 +2469,7 @@ ConnStateData::postHttpsAccept()
         acl_checklist->al->tcpClient = clientConnection;
         acl_checklist->al->cache.port = port;
         acl_checklist->al->cache.caddr = log_addr;
-        acl_checklist->al->proxyProtocolHeader = proxyProtocolHeader_;
+        acl_checklist->al->proxyProtocolHeader = proxyProtocolHeader();
         acl_checklist->al->updateError(bareError);
         HTTPMSGUNLOCK(acl_checklist->al->request);
         acl_checklist->al->request = request;
@@ -3345,7 +3254,17 @@ clientHttpConnectionsOpen(void)
                                (s->workerQueues ? COMM_REUSEPORT : 0);
 
         typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
-        if (s->transport.protocol == AnyP::PROTO_HTTP) {
+        if (s->flags.proxySurrogate) {
+            // setup the subscriptions such that new connections accepted by listenConn are handled by PROXY protocol
+            RefCount<AcceptCall> subCall = commCbCall(5, 5, "ProxyProtocol::OnClientAccept",
+                                                      CommAcceptCbPtrFun(ProxyProtocol::OnClientAccept, CommAcceptCbParams(nullptr)));
+            Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
+
+            AsyncCall::Pointer listenCall = asyncCall(33,2, "clientListenerConnectionOpened",
+                                            ListeningStartedDialer(&clientListenerConnectionOpened, s, Ipc::fdnHttpSocket, sub));
+            Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpSocket, listenCall);
+
+        } else if (s->transport.protocol == AnyP::PROTO_HTTP) {
             // setup the subscriptions such that new connections accepted by listenConn are handled by HTTP
             RefCount<AcceptCall> subCall = commCbCall(5, 5, "httpAccept", CommAcceptCbPtrFun(httpAccept, CommAcceptCbParams(NULL)));
             Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
@@ -4047,10 +3966,6 @@ ConnStateData::checkLogging()
 bool
 ConnStateData::shouldPreserveClientData() const
 {
-    // PROXY protocol bytes are meant for us and, hence, cannot be tunneled
-    if (needProxyProtocolHeader_)
-        return false;
-
     // If our decision here is negative, configuration changes are irrelevant.
     // Otherwise, clientTunnelOnError() rechecks configuration before tunneling.
     if (!Config.accessList.on_unsupported_protocol)
