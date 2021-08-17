@@ -31,7 +31,6 @@ public:
     Eui48() { clear(); }
     bool operator== (const Eui48 &t) const { return memcmp(eui, t.eui, SZ_EUI48_BUF) == 0; }
     bool operator< (const Eui48 &t) const { return memcmp(eui, t.eui, SZ_EUI48_BUF) < 0; }
-    ~Eui48() {}
 
     const unsigned char *get(void);
 
