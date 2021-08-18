@@ -74,7 +74,6 @@ testEvent::testDump()
                      "Operation                \tNext Execution \tWeight\tCallback Valid?\n"
                      "test event               \t0.000 sec\t    0\t N/A\n"
                      "test event2              \t0.000 sec\t    0\t N/A\n", 190);
-    CPPUNIT_ASSERT_EQUAL(size_t(expect.contentSize()), strlen(expect.content()));
 
     scheduler.schedule("last event", CalledEvent::Handler, &event, 0, 0, false);
 
