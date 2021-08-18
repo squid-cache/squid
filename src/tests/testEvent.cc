@@ -67,13 +67,16 @@ testEvent::testDump()
     EventScheduler scheduler;
     CalledEvent event;
     CalledEvent event2;
+    const char *expected = "Last event to run: last event\n"
+                           "\n"
+                           "Operation                \tNext Execution \tWeight\tCallback Valid?\n"
+                           "test event               \t0.000 sec\t    0\t N/A\n"
+                           "test event2              \t0.000 sec\t    0\t N/A\n";
     MemBuf expect;
     expect.init();
-    expect.append("Last event to run: last event\n"
-                     "\n"
-                     "Operation                \tNext Execution \tWeight\tCallback Valid?\n"
-                     "test event               \t0.000 sec\t    0\t N/A\n"
-                     "test event2              \t0.000 sec\t    0\t N/A\n", 190);
+    expect.append(expected, strlen(expected));
+    CPPUNIT_ASSERT_EQUAL(strlen(expected), size_t(expect.contentSize()));
+    CPPUNIT_ASSERT(strcmp(expect.content(), expected) == 0);
 
     scheduler.schedule("last event", CalledEvent::Handler, &event, 0, 0, false);
 

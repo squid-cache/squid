@@ -282,12 +282,10 @@ EventScheduler::dump(Packable *out)
                  "Weight",
                  "Callback Valid?");
 
-    auto *e = tasks;
-    while (e) {
+    for (auto *e = tasks; e; e = e->next) {
         out->appendf("%-25s\t%0.3f sec\t%5d\t %s\n",
                      e->name, (e->when ? e->when - current_dtime : 0), e->weight,
                      (e->arg && e->cbdata) ? cbdataReferenceValid(e->arg) ? "yes" : "no" : "N/A");
-        e = e->next;
     }
 }
 
