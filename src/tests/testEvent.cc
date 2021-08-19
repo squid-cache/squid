@@ -75,8 +75,6 @@ testEvent::testDump()
     MemBuf expect;
     expect.init();
     expect.append(expected, strlen(expected));
-    CPPUNIT_ASSERT_EQUAL(strlen(expected), size_t(expect.contentSize()));
-    CPPUNIT_ASSERT(strcmp(expect.content(), expected) == 0);
 
     scheduler.schedule("last event", CalledEvent::Handler, &event, 0, 0, false);
 
