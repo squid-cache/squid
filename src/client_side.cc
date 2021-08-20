@@ -2950,6 +2950,7 @@ ConnStateData::parseTlsHandshake()
     } else if (sslServerBump->act.step1 == Ssl::bumpServerFirst) {
         Http::StreamPointer context = pipeline.front();
         ClientHttpRequest *http = context ? context->http : nullptr;
+        sslServerBump->step = XactionStep::tlsBump3; // Jump directly to TLS bumping Step3
         // will call httpsPeeked() with certificate and connection, eventually
         FwdState::Start(clientConnection, sslServerBump->entry, sslServerBump->request.getRaw(), http ? http->al : nullptr);
     } else {
@@ -3073,6 +3074,7 @@ ConnStateData::startPeekAndSplice()
     // of SSL bump
     inBuf.clear();
 
+    sslServerBump->step = XactionStep::tlsBump3; // TLS bumping Step3
     debugs(83, 5, "Peek and splice at step2 done. Start forwarding the request!!! ");
     FwdState::Start(clientConnection, sslServerBump->entry, sslServerBump->request.getRaw(), http ? http->al : NULL);
 }
