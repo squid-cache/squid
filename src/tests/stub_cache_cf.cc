@@ -18,6 +18,10 @@
 #include "tests/STUB.h"
 
 #include "cache_cf.h"
+const char *cfg_directive = nullptr;
+const char *cfg_filename = nullptr;
+int config_lineno = 0;
+char config_input_line[BUFSIZ] = {};
 void self_destruct(void) STUB
 void parse_int(int *) STUB
 void parse_onoff(int *) STUB
