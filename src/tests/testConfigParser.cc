@@ -14,6 +14,8 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testConfigParser);
 
+int shutting_down = 0;
+
 void testConfigParser::setUp()
 {
 }
