@@ -367,7 +367,13 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
         // containing ClientHello.
         Must(size >= 2); // enough for version and content_type checks below
         Must(buf[1] >= 3); // record's version.major; determines buf[0] meaning
-        Must(buf[0] >= 20 && buf[0] <= 23); // TLSPlaintext.content_type is vaild
+
+        // XXX: Remove this temporary debugging
+        if (buf[0] != 22) { // TLS record type is not "handshake"
+            debugs(83, 1, "Previously rejected: " << Raw("ClientHello", buf, size).hex());
+        }
+
+        Must(20 <= buf[0] && buf[0] <= 23); // valid TLSPlaintext.content_type
 
         //Hello message is the first message we write to server
         assert(helloMsg.isEmpty());
