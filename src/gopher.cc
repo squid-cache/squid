@@ -533,7 +533,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                         icon_url = mimeGetIconURL("internal-text");
                         break;
 
-                    case GOPHER_WWW:        
+                    case GOPHER_WWW:
                         icon_url = mimeGetIconURL("internal-link");
                         break;
 
