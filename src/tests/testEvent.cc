@@ -91,7 +91,7 @@ testEvent::testDump()
     /* loop over the strings, showing exactly where they differ (if at all) */
     printf("Actual Text:\n");
     /* TODO: these should really be just [] lookups, but String doesn't have those here yet. */
-    for (unsigned int i = 0; i < result.contentSize(); ++i) {
+    for (size_t i = 0; i < size_t(result.contentSize()); ++i) {
         CPPUNIT_ASSERT(expect.content()[i]);
         CPPUNIT_ASSERT(result.content()[i]);
 
