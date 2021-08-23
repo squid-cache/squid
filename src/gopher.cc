@@ -598,7 +598,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 
                     } else if (gtype == GOPHER_INFO) {
                         snprintf(tmpbuf, TEMP_BUF_SIZE, "\t%s\n", html_quote(name));
-                    } else if (gtype == GOPHER_WWW) {	/* Gopher pointer to W3 */
+                    } else if (gtype == GOPHER_WWW) {
                         snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"%s\">%s</A>\n",
                                      icon_url, selector, html_quote(name));
                     } else {
