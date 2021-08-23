@@ -157,8 +157,6 @@ eventFind(EVH * func, void *arg)
     return EventScheduler::GetInstance()->find(func, arg);
 }
 
-EventScheduler EventScheduler::_instance;
-
 EventScheduler::EventScheduler(): tasks(NULL)
 {}
 
@@ -306,7 +304,8 @@ EventScheduler::find(EVH * func, void * arg)
 EventScheduler *
 EventScheduler::GetInstance()
 {
-    return &_instance;
+    static EventScheduler instance;
+    return &instance;
 }
 
 void
