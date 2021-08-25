@@ -16,8 +16,8 @@
 #define PINGER_PAYLOAD_SZ   8192
 
 #define MAX_PAYLOAD 256 // WAS: SQUIDHOSTNAMELEN
-#define MAX_PKT4_SZ (sizeof(struct icmpEchoData) + sizeof(struct icmphdr) + 1)
-#define MAX_PKT6_SZ (sizeof(struct icmpEchoData) + sizeof(struct icmp6_hdr) + 1)
+#define MAX_PKT4_SZ (sizeof(struct icmphdr) + sizeof(struct icmpEchoData) + 1)
+#define MAX_PKT6_SZ (sizeof(struct icmp6_hdr) + sizeof(struct icmpEchoData) + 1)
 
 #if USE_ICMP
 
