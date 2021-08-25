@@ -94,8 +94,7 @@ ev_entry::ev_entry(char const * aName, EVH * aFunction, void * aArgument, double
     arg(haveArg ? cbdataReference(aArgument) : aArgument),
     when(evWhen),
     weight(aWeight),
-    cbdata(haveArg),
-    next(NULL)
+    cbdata(haveArg)
 {
 }
 

@@ -31,15 +31,17 @@ class ev_entry
 public:
     ev_entry(char const * name, EVH * func, void *arg, double when, int weight, bool cbdata=true);
     ~ev_entry();
-    const char *name;
+
+public:
+    const char *name = nullptr;
     EVH *func;
-    void *arg;
-    double when;
+    void *arg = nullptr;
+    double when = 0.1;
 
-    int weight;
-    bool cbdata;
+    int weight = 0;
+    bool cbdata = false;
 
-    ev_entry *next;
+    ev_entry *next = nullptr;
 };
 
 // manages time-based events
