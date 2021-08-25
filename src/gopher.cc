@@ -530,12 +530,6 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                         break;
 
                     case GOPHER_HTML:
-                        icon_url = mimeGetIconURL("internal-text");
-                        break;
-
-                    case GOPHER_WWW:
-                        icon_url = mimeGetIconURL("internal-link");
-                        break;
 
                     case GOPHER_FILE:
                         icon_url = mimeGetIconURL("internal-text");
@@ -583,6 +577,10 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 
                     case GOPHER_INFO:
                         icon_url = NULL;
+                        break;
+
+                    case GOPHER_WWW:
+                        icon_url = mimeGetIconURL("internal-link");
                         break;
 
                     default:
