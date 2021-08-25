@@ -606,7 +606,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                         snprintf(tmpbuf, TEMP_BUF_SIZE, "\t%s\n", html_quote(name));
                     } else if (gtype == GOPHER_WWW) {
                         snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"%s\">%s</A>\n",
-                                     icon_url, rfc1738_escape_part(selector), html_quote(name));
+                                     icon_url, rfc1738_escape_unescaped(selector), html_quote(name));
                     } else {
                         if (strncmp(selector, "GET /", 5) == 0) {
                             /* WWW link */
