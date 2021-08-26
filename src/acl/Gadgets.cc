@@ -23,6 +23,7 @@
 #include "acl/Gadgets.h"
 #include "acl/Strategised.h"
 #include "acl/Tree.h"
+#include "cache_cf.h"
 #include "ConfigParser.h"
 #include "errorpage.h"
 #include "globals.h"

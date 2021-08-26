@@ -19,16 +19,13 @@
 namespace Comm
 {
 
-/**
- * Async-opener of a Comm connection.
- */
+/// Asynchronously opens a TCP connection. Returns CommConnectCbParams: either
+/// Comm::OK with an open connection or another Comm::Flag with a closed one.
 class ConnOpener : public AsyncJob
 {
     CBDATA_CLASS(ConnOpener);
 
 public:
-    void noteAbort() { mustStop("externally aborted"); }
-
     typedef CbcPointer<ConnOpener> Pointer;
 
     virtual bool doneAll() const;

@@ -14,6 +14,7 @@
 
 #include "acl/Eui64.h"
 #include "acl/FilledChecklist.h"
+#include "cache_cf.h"
 #include "Debug.h"
 #include "eui/Eui64.h"
 #include "globals.h"

@@ -19,6 +19,7 @@
 #include "acl/Checklist.h"
 #include "acl/RegexData.h"
 #include "base/RegexPattern.h"
+#include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "sbuf/Algorithms.h"

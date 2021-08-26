@@ -266,6 +266,11 @@ static void free_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **prot
  */
 static ConfigParser LegacyParser = ConfigParser();
 
+const char *cfg_directive = nullptr;
+const char *cfg_filename = nullptr;
+int config_lineno = 0;
+char config_input_line[BUFSIZ] = {};
+
 void
 self_destruct(void)
 {
