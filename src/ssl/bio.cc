@@ -365,14 +365,9 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
         // complete ClientHello and nothing else, but cannot fully verify
         // that quickly. We only verify that buf starts with a v3+ record
         // containing ClientHello.
+        debugs(83, 7, "to-server" << Raw("TLSPlaintext", buf, size).hex());
         Must(size >= 2); // enough for version and content_type checks below
         Must(buf[1] >= 3); // record's version.major; determines buf[0] meaning
-
-        // XXX: Remove this temporary debugging
-        if (buf[0] != 22) { // TLS record type is not "handshake"
-            debugs(83, 1, "Previously rejected: " << Raw("ClientHello", buf, size).hex());
-        }
-
         Must(20 <= buf[0] && buf[0] <= 23); // valid TLSPlaintext.content_type
 
         //Hello message is the first message we write to server
