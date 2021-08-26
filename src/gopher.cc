@@ -588,14 +588,14 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 
                     } else if (gtype == GOPHER_INFO) {
                         snprintf(tmpbuf, TEMP_BUF_SIZE, "\t%s\n", html_quote(name));
-                    } else if (gtype == GOPHER_WWW) {
-                        snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"%s\">%s</A>\n",
-                                     icon_url, rfc1738_escape_unescaped(selector), html_quote(name));
                     } else {
                         if (strncmp(selector, "GET /", 5) == 0) {
                             /* WWW link */
                             snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"http://%s/%s\">%s</A>\n",
                                      icon_url, host, rfc1738_escape_unescaped(selector + 5), html_quote(name));
+                         } else if (gtype == GOPHER_WWW) {
+                            snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"%s\">%s</A>\n",
+                                     icon_url, rfc1738_escape_unescaped(selector), html_quote(name));
                         } else {
                             /* Standard link */
                             snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"gopher://%s/%c%s\">%s</A>\n",
@@ -973,4 +973,3 @@ gopherStart(FwdState * fwd)
                                      CommTimeoutCbPtrFun(gopherTimeout, gopherState));
     commSetConnTimeout(fwd->serverConnection(), Config.Timeout.read, timeoutCall);
 }
-
