@@ -35,7 +35,7 @@
 #include "MemObject.h"
 #endif
 
-/* gopher type code from rfc. Anawat. */
+// RFC 1436 section 3.8 gopher item-type codes
 #define GOPHER_FILE         '0'
 #define GOPHER_DIRECTORY    '1'
 #define GOPHER_CSO          '2'
@@ -51,16 +51,17 @@
 #define GOPHER_GIF          'g'
 #define GOPHER_IMAGE        'I'
 
-#define GOPHER_HTML         'h'
-#define GOPHER_INFO         'i'
-
-///  W3 address
-#define GOPHER_WWW          'w'
-#define GOPHER_SOUND        's'
-
+// Gopher+ section 2.9 extension types
+// https://github.com/jgoerzen/pygopherd/blob/master/doc/standards/Gopher%2B.txt
 #define GOPHER_PLUS_IMAGE   ':'
 #define GOPHER_PLUS_MOVIE   ';'
 #define GOPHER_PLUS_SOUND   '<'
+
+// non-standard item-type codes
+#define GOPHER_HTML         'h'
+#define GOPHER_INFO         'i'
+#define GOPHER_WWW          'w'
+#define GOPHER_SOUND        's'
 
 #define GOPHER_PORT         70
 
