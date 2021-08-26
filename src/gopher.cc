@@ -594,7 +594,6 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                     } else {
                         if (strncmp(selector, "GET /", 5) == 0) {
                             /* WWW link */
-                            icon_url = mimeGetIconURL("internal-link");
                             snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"http://%s/%s\">%s</A>\n",
                                      icon_url, host, rfc1738_escape_unescaped(selector + 5), html_quote(name));
                         } else {
