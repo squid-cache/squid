@@ -34,7 +34,7 @@
 #include "MemObject.h"
 #endif
 
-/* gopher type code from rfc. Anawat. */
+// RFC 1436 section 3.8 gopher item-type codes
 #define GOPHER_FILE         '0'
 #define GOPHER_DIRECTORY    '1'
 #define GOPHER_CSO          '2'
@@ -50,16 +50,17 @@
 #define GOPHER_GIF          'g'
 #define GOPHER_IMAGE        'I'
 
-#define GOPHER_HTML         'h'
-#define GOPHER_INFO         'i'
-
-///  W3 address
-#define GOPHER_WWW          'w'
-#define GOPHER_SOUND        's'
-
+// Gopher+ section 2.9 extension types
+// https://github.com/jgoerzen/pygopherd/blob/master/doc/standards/Gopher%2B.txt
 #define GOPHER_PLUS_IMAGE   ':'
 #define GOPHER_PLUS_MOVIE   ';'
 #define GOPHER_PLUS_SOUND   '<'
+
+// non-standard item-type codes
+#define GOPHER_HTML         'h'
+#define GOPHER_INFO         'i'
+#define GOPHER_WWW          'w'
+#define GOPHER_SOUND        's'
 
 #define GOPHER_PORT         70
 
@@ -572,6 +573,10 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                         icon_url = NULL;
                         break;
 
+                    case GOPHER_WWW:
+                        icon_url = mimeGetIconURL("internal-link");
+                        break;
+
                     default:
                         icon_url = mimeGetIconURL("internal-unknown");
                         break;
@@ -596,6 +601,9 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                             /* WWW link */
                             snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"http://%s/%s\">%s</A>\n",
                                      icon_url, host, rfc1738_escape_unescaped(selector + 5), html_quote(name));
+                        } else if (gtype == GOPHER_WWW) {
+                            snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"%s\">%s</A>\n",
+                                     icon_url, rfc1738_escape_unescaped(selector), html_quote(name));
                         } else {
                             /* Standard link */
                             snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"gopher://%s/%c%s\">%s</A>\n",
