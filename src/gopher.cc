@@ -973,3 +973,4 @@ gopherStart(FwdState * fwd)
                                      CommTimeoutCbPtrFun(gopherTimeout, gopherState));
     commSetConnTimeout(fwd->serverConnection(), Config.Timeout.read, timeoutCall);
 }
+
