@@ -12,6 +12,7 @@
 #include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
 #include "errorpage.h"
+#include "event.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ipc/Forwarder.h"

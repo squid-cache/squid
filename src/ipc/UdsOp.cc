@@ -14,6 +14,7 @@
 #include "comm/Connection.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
+#include "event.h"
 #include "ipc/UdsOp.h"
 
 Ipc::UdsOp::UdsOp(const String& pathAddr):

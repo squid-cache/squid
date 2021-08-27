@@ -23,6 +23,7 @@
 #include "comm/Read.h"
 #include "comm/Write.h"
 #include "errorpage.h"
+#include "event.h"
 #include "fd.h"
 #include "fde.h"
 #include "FwdState.h"

@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "base/AsyncJobCalls.h"
 #include "DebugMessages.h"
+#include "event.h"
 #include "fs/rock/RockDbCell.h"
 #include "fs/rock/RockRebuild.h"
 #include "fs/rock/RockSwapDir.h"

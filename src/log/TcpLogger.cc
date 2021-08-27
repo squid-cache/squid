@@ -12,6 +12,7 @@
 #include "comm/ConnOpener.h"
 #include "comm/Loops.h"
 #include "comm/Write.h"
+#include "event.h"
 #include "fatal.h"
 #include "fde.h"
 #include "globals.h" // for shutting_down

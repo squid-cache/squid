@@ -14,6 +14,7 @@
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "comm/Loops.h"
+#include "event.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"

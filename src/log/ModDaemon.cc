@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "cbdata.h"
 #include "comm/Loops.h"
+#include "event.h"
 #include "fatal.h"
 #include "fde.h"
 #include "globals.h"
