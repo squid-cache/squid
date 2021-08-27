@@ -290,7 +290,7 @@ Rock::Rebuild::Start(SwapDir &dir)
         return false;
     }
 
-    Must(AsyncJob::Start(new Rebuild(&dir, stats)));
+    AsyncJob::Start(new Rebuild(&dir, stats));
     return true;
 }
 

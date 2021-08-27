@@ -2828,38 +2828,19 @@ tests_testStatHist_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testConfigParser
 tests_testConfigParser_SOURCES = \
-	ClientInfo.h \
-	ConfigParser.cc \
 	tests/testConfigParser.cc \
-	tests/testConfigParser.h \
-	tests/stub_HelperChildConfig.cc \
-	tests/stub_MemBuf.cc \
-	tests/stub_SBufDetailedStats.cc \
+	tests/testConfigParser.h
+nodist_tests_testConfigParser_SOURCES = \
+	ConfigParser.cc \
 	String.cc \
 	tests/stub_acl.cc \
 	tests/stub_cache_cf.cc \
-	cache_cf.h \
-	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
-	tests/stub_event.cc \
 	tests/stub_fatal.cc \
-	fatal.h \
 	tests/stub_libmem.cc \
-	tests/stub_time.cc \
-	tests/stub_tools.cc \
-	tools.h \
-	wordlist.cc \
-	wordlist.h
-nodist_tests_testConfigParser_SOURCES = \
-	$(TESTSOURCES)
+	tests/stub_SBuf.cc
 tests_testConfigParser_LDADD = \
-	libsquid.la \
-	ip/libip.la \
-	sbuf/libsbuf.la \
 	base/libbase.la \
-	$(top_builddir)/lib/libmiscutil.la \
-	$(REGEXLIB) \
-	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
