@@ -18,20 +18,13 @@
 
 typedef void EVH(void *);
 
-void eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata=true);
-void eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int);
-void eventDelete(EVH * func, void *arg);
-void eventInit(void);
-void eventFreeMemory(void);
-int eventFind(EVH *, void *);
-
+/// an entry in the queue of waiting events
 class ev_entry
 {
     MEMPROXY_CLASS(ev_entry);
 
 public:
-    ev_entry(char const * name, double when, int weight, AsyncCall::Pointer &);
-    ~ev_entry() = default;
+    ev_entry(char const * name, double when, int weight, const AsyncCall::Pointer &);
 
 public:
     const char *name = nullptr;
@@ -43,32 +36,54 @@ public:
     ev_entry *next = nullptr;
 };
 
-// manages time-based events
+/// Manages time-based events
 class EventScheduler : public AsyncEngine
 {
 
 public:
     EventScheduler();
     ~EventScheduler();
-    /* cancel a scheduled but not dispatched event */
-    void cancel(EVH * func, void * arg);
-    /* clean up the used memory in the scheduler */
+
+    /// clean up the used memory in the scheduler
     void clean();
-    /* either EVENT_IDLE or milliseconds remaining until the next event */
+
+    /// either EVENT_IDLE or milliseconds remaining until the next event
     int timeRemaining() const;
-    /* cache manager output for the event queue */
+
+    /// cache manager output for the event queue
     void dump(Packable *);
-    /* find a scheduled event */
-    bool find(EVH * func, void * arg);
-    /* schedule a callback function to run in when seconds */
+
+    /// schedule an AsyncCall run in when seconds
+    void schedule(const char *name, const AsyncCall::Pointer &, double when, int weight);
+    /// \deprecated schedule a callback function to run in when seconds. Use AsyncCall instead.
     void schedule(const char *name, EVH * func, void *arg, double when, int weight, bool cbdata=true);
+
+    /// find a scheduled AsyncCall event
+    bool find(const AsyncCall::Pointer &) const;
+    /// \deprecated find a scheduled callback function. Use AsyncCall instead.
+    bool find(EVH * func, void * arg);
+
+    /// \deprecated cancel a scheduled but not dispatched event
+    /// Use AsyncCall API to cancel() the Call instead.
+    void cancel(EVH * func, void * arg);
+
+    /// dial as many due event Calls as possible within timeout seconds.
     int checkEvents(int timeout);
+
     static EventScheduler *GetInstance();
 
 private:
-    static EventScheduler _instance;
     ev_entry * tasks;
 };
+
+/* Legacy C API for event management. Use EventScheduler::GetInstance() API with AsyncCall instead */
+
+void eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata=true);
+void eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int);
+void eventDelete(EVH * func, void *arg);
+void eventInit(void);
+void eventFreeMemory(void);
+int eventFind(EVH *, void *);
 
 #endif /* SQUID_EVENT_H */
 

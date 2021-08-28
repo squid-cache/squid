@@ -90,7 +90,7 @@ EventDialer::print(std::ostream &os) const
     os << ')';
 }
 
-ev_entry::ev_entry(char const * aName, double evWhen, int aWeight, AsyncCall::Pointer &aCall) :
+ev_entry::ev_entry(char const * aName, double evWhen, int aWeight, const AsyncCall::Pointer &aCall) :
     name(aName),
     when(evWhen),
     weight(aWeight),
@@ -228,9 +228,7 @@ EventScheduler::checkEvents(int)
         ev_entry *event = tasks;
         assert(event);
 
-        auto *dialer = dynamic_cast<EventDialer*>(event->call->getDialer());
-        assert(dialer);
-        const bool heavy = event->weight && dialer->canDial(*(event->call));
+        const bool heavy = event->weight && !event->call->canceled();
 
         /* XXX assumes event->name is static memory! */
         ScheduleCallHere(event->call);
@@ -271,23 +269,28 @@ EventScheduler::dump(Packable *out)
     if (last_event_ran)
         out->appendf("Last event to run: %s\n\n", last_event_ran);
 
-    out->appendf("%-25s\t%-15s\t%s\t%s\n",
+    out->appendf("%-25s\t%-15s\t%s\n",
                  "Operation",
                  "Next Execution",
-                 "Weight",
-                 "Callback Valid?");
+                 "Weight");
 
     for (auto *e = tasks; e; e = e->next) {
-        const char *valid = "N/A";
-        if (!e->call->canceled()) {
-            auto *dialer = dynamic_cast<EventDialer*>(e->call->getDialer());
-            assert(dialer);
-            valid = (dialer->canDial(*(e->call)) ? "yes" : "no");
-        }
-        out->appendf("%-25s\t%0.3f sec\t%5d\t %s\n",
-                     e->name, (e->when ? e->when - current_dtime : 0), e->weight,
-                     valid);
+        if (e->call->canceled())
+            continue;
+        out->appendf("%-25s\t%0.3f sec\t%5d\n",
+                     e->name, (e->when ? e->when - current_dtime : 0), e->weight);
     }
+}
+
+bool
+EventScheduler::find(const AsyncCall::Pointer &call) const
+{
+    for (auto *event = tasks; event; event = event->next) {
+        if (event->call == call)
+            return true;
+    }
+
+    return false;
 }
 
 bool
@@ -316,12 +319,18 @@ EventScheduler::GetInstance()
 void
 EventScheduler::schedule(const char *name, EVH * func, void *arg, double when, int weight, bool cbdata)
 {
+    AsyncCall::Pointer call = asyncCall(41, 5, name, EventDialer(func, arg, cbdata));
+    schedule(name, call, when, weight);
+}
+
+void
+EventScheduler::schedule(const char *name, const AsyncCall::Pointer &call, double when, int weight)
+{
     // Use zero timestamp for when=0 events: Many of them are async calls that
     // must fire in the submission order. We cannot use current_dtime for them
     // because it may decrease if system clock is adjusted backwards.
     const double timestamp = when > 0.0 ? current_dtime + when : 0;
 
-    AsyncCall::Pointer call = asyncCall(41,5, name, EventDialer(func, arg, cbdata));
     auto *event = new ev_entry(name, timestamp, weight, call);
 
     ev_entry **E;
