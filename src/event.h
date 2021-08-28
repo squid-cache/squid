@@ -10,6 +10,7 @@
 #define SQUID_EVENT_H
 
 #include "AsyncEngine.h"
+#include "base/AsyncCall.h"
 #include "base/Packable.h"
 #include "mem/forward.h"
 
@@ -29,17 +30,15 @@ class ev_entry
     MEMPROXY_CLASS(ev_entry);
 
 public:
-    ev_entry(char const * name, EVH * func, void *arg, double when, int weight, bool cbdata=true);
-    ~ev_entry();
+    ev_entry(char const * name, double when, int weight, AsyncCall::Pointer &);
+    ~ev_entry() = default;
 
 public:
     const char *name = nullptr;
-    EVH *func;
-    void *arg = nullptr;
     double when = 0.1;
 
     int weight = 0;
-    bool cbdata = false;
+    AsyncCall::Pointer call;
 
     ev_entry *next = nullptr;
 };

@@ -40,6 +40,8 @@ public:
 
     void dial(AsyncCall &) { theHandler(theArg); }
 
+    bool matches(EVH *func, void *arg) const { return theHandler == func && theArg == arg; }
+
 private:
     EVH *theHandler;
     void *theArg;
@@ -88,20 +90,12 @@ EventDialer::print(std::ostream &os) const
     os << ')';
 }
 
-ev_entry::ev_entry(char const * aName, EVH * aFunction, void * aArgument, double evWhen, int aWeight, bool haveArg) :
+ev_entry::ev_entry(char const * aName, double evWhen, int aWeight, AsyncCall::Pointer &aCall) :
     name(aName),
-    func(aFunction),
-    arg(haveArg ? cbdataReference(aArgument) : aArgument),
     when(evWhen),
     weight(aWeight),
-    cbdata(haveArg)
+    call(aCall)
 {
-}
-
-ev_entry::~ev_entry()
-{
-    if (cbdata)
-        cbdataReferenceDone(arg);
 }
 
 void
@@ -171,11 +165,13 @@ EventScheduler::cancel(EVH * func, void *arg)
     ev_entry *event;
 
     for (E = &tasks; (event = *E) != NULL; E = &(*E)->next) {
-        if (event->func != func)
+
+        const auto *dialer = dynamic_cast<EventDialer*>(event->call->getDialer());
+        assert(dialer);
+        if (!dialer->matches(func,arg))
             continue;
 
-        if (arg && event->arg != arg)
-            continue;
+        event->call->cancel("EventScheduler::cancel");
 
         *E = event->next;
 
@@ -232,14 +228,14 @@ EventScheduler::checkEvents(int)
         ev_entry *event = tasks;
         assert(event);
 
+        auto *dialer = dynamic_cast<EventDialer*>(event->call->getDialer());
+        assert(dialer);
+        const bool heavy = event->weight && dialer->canDial(*(event->call));
+
         /* XXX assumes event->name is static memory! */
-        AsyncCall::Pointer call = asyncCall(41,5, event->name,
-                                            EventDialer(event->func, event->arg, event->cbdata));
-        ScheduleCallHere(call);
+        ScheduleCallHere(event->call);
 
         last_event_ran = event->name; // XXX: move this to AsyncCallQueue
-        const bool heavy = event->weight &&
-                           (!event->cbdata || cbdataReferenceValid(event->arg));
 
         tasks = event->next;
         delete event;
@@ -260,6 +256,8 @@ void
 EventScheduler::clean()
 {
     while (ev_entry * event = tasks) {
+        if (!event->call->canceled())
+            event->call->cancel("EventScheduler::clean");
         tasks = event->next;
         delete event;
     }
@@ -280,9 +278,15 @@ EventScheduler::dump(Packable *out)
                  "Callback Valid?");
 
     for (auto *e = tasks; e; e = e->next) {
+        const char *valid = "N/A";
+        if (!e->call->canceled()) {
+            auto *dialer = dynamic_cast<EventDialer*>(e->call->getDialer());
+            assert(dialer);
+            valid = (dialer->canDial(*(e->call)) ? "yes" : "no");
+        }
         out->appendf("%-25s\t%0.3f sec\t%5d\t %s\n",
                      e->name, (e->when ? e->when - current_dtime : 0), e->weight,
-                     (e->arg && e->cbdata) ? cbdataReferenceValid(e->arg) ? "yes" : "no" : "N/A");
+                     valid);
     }
 }
 
@@ -293,7 +297,9 @@ EventScheduler::find(EVH * func, void * arg)
     ev_entry *event;
 
     for (event = tasks; event != NULL; event = event->next) {
-        if (event->func == func && event->arg == arg)
+        const auto *dialer = dynamic_cast<EventDialer*>(event->call->getDialer());
+        assert(dialer);
+        if (dialer->matches(func,arg))
             return true;
     }
 
@@ -314,7 +320,9 @@ EventScheduler::schedule(const char *name, EVH * func, void *arg, double when, i
     // must fire in the submission order. We cannot use current_dtime for them
     // because it may decrease if system clock is adjusted backwards.
     const double timestamp = when > 0.0 ? current_dtime + when : 0;
-    ev_entry *event = new ev_entry(name, func, arg, timestamp, weight, cbdata);
+
+    AsyncCall::Pointer call = asyncCall(41,5, name, EventDialer(func, arg, cbdata));
+    auto *event = new ev_entry(name, timestamp, weight, call);
 
     ev_entry **E;
     debugs(41, 7, HERE << "schedule: Adding '" << name << "', in " << when << " seconds");
