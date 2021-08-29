@@ -263,12 +263,12 @@ Comm::ConnOpener::start()
         doConnect();
 }
 
-/// called at the end of Comm::ConnOpener::DelayedConnectRetry event
+/// called at the end of sleep event delay
 void
 Comm::ConnOpener::restart()
 {
     debugs(5, 5, conn_ << " restarting after sleep");
-    calls_.sleep_ = false;
+    calls_.sleep_->cancel("restart");
 
     if (createFd())
         doConnect();
@@ -400,10 +400,9 @@ Comm::ConnOpener::retrySleep()
 {
     Must(!calls_.sleep_);
     closeFd();
-    calls_.sleep_ = true;
-    eventAdd("Comm::ConnOpener::DelayedConnectRetry",
-             Comm::ConnOpener::DelayedConnectRetry,
-             new Pointer(this), 0.05, 0, false);
+    typedef NullaryMemFunT<Comm::ConnOpener> Dialer;
+    calls_.sleep_ = JobCallback(5, 4, Dialer, this, Comm::ConnOpener::restart);
+    EventScheduler::GetInstance()->schedule("Comm::ConnOpener::restart", calls_.sleep_, 0.05, 0);
 }
 
 /// cleans up this job sleep state
@@ -411,15 +410,7 @@ void
 Comm::ConnOpener::cancelSleep()
 {
     if (calls_.sleep_) {
-        // It would be nice to delete the sleep event, but it might be out of
-        // the event queue and in the async queue already, so (a) we do not know
-        // whether we can safely delete the call ptr here and (b) eventDelete()
-        // will assert if the event went async. Thus, we let the event run so
-        // that it deletes the call ptr [after this job is gone]. Note that we
-        // are called only when the job ends so this "hanging event" will do
-        // nothing but deleting the call ptr.  TODO: Revise eventDelete() API.
-        // eventDelete(Comm::ConnOpener::DelayedConnectRetry, calls_.sleep);
-        calls_.sleep_ = false;
+        calls_.sleep_->cancel("Comm::ConnOpener::cancelSleep");
         debugs(5, 9, conn_ << " stops sleeping");
     }
 }
@@ -483,24 +474,6 @@ Comm::ConnOpener::InProgressConnectRetry(int, void *data)
         // get back inside by scheduling another call...
         typedef NullaryMemFunT<Comm::ConnOpener> Dialer;
         AsyncCall::Pointer call = JobCallback(5, 4, Dialer, cs, Comm::ConnOpener::doConnect);
-        ScheduleCallHere(call);
-    }
-    delete ptr;
-}
-
-/* Legacy Wrapper for the retry event with small delay after errors.
- * XXX: As soon as eventAdd() accepts Async calls we can use a ConnOpener::restart call
- */
-void
-Comm::ConnOpener::DelayedConnectRetry(void *data)
-{
-    Pointer *ptr = static_cast<Pointer*>(data);
-    assert(ptr);
-    if (ConnOpener *cs = ptr->valid()) {
-        // Ew. we are now outside the all AsyncJob protections.
-        // get back inside by scheduling another call...
-        typedef NullaryMemFunT<Comm::ConnOpener> Dialer;
-        AsyncCall::Pointer call = JobCallback(5, 4, Dialer, cs, Comm::ConnOpener::restart);
         ScheduleCallHere(call);
     }
     delete ptr;
