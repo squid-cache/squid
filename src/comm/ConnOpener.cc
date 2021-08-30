@@ -410,7 +410,10 @@ void
 Comm::ConnOpener::cancelSleep()
 {
     if (calls_.sleep_) {
+        // callers must manually cancel the Call in case it was already scheduled to run
         calls_.sleep_->cancel("Comm::ConnOpener::cancelSleep");
+        // callers must manually remove entries from EventScheduler queue
+        EventScheduler::GetInstance()->remove(calls_.sleep_);
         calls_.sleep_ = nullptr;
         debugs(5, 9, conn_ << " stops sleeping");
     }

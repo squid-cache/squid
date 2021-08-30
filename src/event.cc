@@ -158,6 +158,23 @@ EventScheduler::~EventScheduler()
 }
 
 void
+EventScheduler::remove(const AsyncCall::Pointer &call)
+{
+    ev_entry *prev = nullptr;
+    for (auto *event = tasks; event; event = event->next) {
+        if (event->call == call) {
+            if (!prev)
+                tasks = event->next;
+            else
+                prev->next = event->next;
+            delete event;
+            continue;
+        }
+        prev = event;
+    }
+}
+
+void
 EventScheduler::cancel(EVH * func, void *arg)
 {
     ev_entry **E;
@@ -282,17 +299,6 @@ EventScheduler::dump(Packable *out)
         out->appendf("%-25s\t%0.3f sec\t%5d\n",
                      e->call->name, (e->when ? e->when - current_dtime : 0), e->weight);
     }
-}
-
-bool
-EventScheduler::find(const AsyncCall::Pointer &call) const
-{
-    for (auto *event = tasks; event; event = event->next) {
-        if (event->call == call)
-            return true;
-    }
-
-    return false;
 }
 
 bool

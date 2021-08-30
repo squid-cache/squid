@@ -59,14 +59,15 @@ public:
     /// \deprecated schedule a callback function to run in when seconds. Use AsyncCall instead.
     void schedule(const char *name, EVH * func, void *arg, double when, int weight, bool cbdata=true);
 
-    /// find a scheduled AsyncCall event
-    bool find(const AsyncCall::Pointer &) const;
     /// \deprecated find a scheduled callback function. Use AsyncCall instead.
     bool find(EVH * func, void * arg);
 
     /// \deprecated cancel a scheduled but not dispatched event
     /// Use AsyncCall API to cancel() the Call instead.
     void cancel(EVH * func, void * arg);
+
+    /// remove a scheduled but not dispatched event
+    void remove(const AsyncCall::Pointer &);
 
     /* AsyncEngine API */
     int checkEvents(int) override;
