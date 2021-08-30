@@ -90,8 +90,7 @@ EventDialer::print(std::ostream &os) const
     os << ')';
 }
 
-ev_entry::ev_entry(char const * aName, double evWhen, int aWeight, const AsyncCall::Pointer &aCall) :
-    name(aName),
+ev_entry::ev_entry(double evWhen, int aWeight, const AsyncCall::Pointer &aCall) :
     when(evWhen),
     weight(aWeight),
     call(aCall)
@@ -230,10 +229,9 @@ EventScheduler::checkEvents(int)
 
         const bool heavy = event->weight && !event->call->canceled();
 
-        /* XXX assumes event->name is static memory! */
         ScheduleCallHere(event->call);
 
-        last_event_ran = event->name; // XXX: move this to AsyncCallQueue
+        last_event_ran = event->call->name; // XXX: move this to AsyncCallQueue
 
         tasks = event->next;
         delete event;
@@ -278,7 +276,7 @@ EventScheduler::dump(Packable *out)
         if (e->call->canceled())
             continue;
         out->appendf("%-25s\t%0.3f sec\t%5d\n",
-                     e->name, (e->when ? e->when - current_dtime : 0), e->weight);
+                     e->call->name, (e->when ? e->when - current_dtime : 0), e->weight);
     }
 }
 
@@ -320,21 +318,21 @@ void
 EventScheduler::schedule(const char *name, EVH * func, void *arg, double when, int weight, bool cbdata)
 {
     AsyncCall::Pointer call = asyncCall(41, 5, name, EventDialer(func, arg, cbdata));
-    schedule(name, call, when, weight);
+    schedule(call, when, weight);
 }
 
 void
-EventScheduler::schedule(const char *name, const AsyncCall::Pointer &call, double when, int weight)
+EventScheduler::schedule(const AsyncCall::Pointer &call, double when, int weight)
 {
     // Use zero timestamp for when=0 events: Many of them are async calls that
     // must fire in the submission order. We cannot use current_dtime for them
     // because it may decrease if system clock is adjusted backwards.
     const double timestamp = when > 0.0 ? current_dtime + when : 0;
 
-    auto *event = new ev_entry(name, timestamp, weight, call);
+    auto *event = new ev_entry(timestamp, weight, call);
 
     ev_entry **E;
-    debugs(41, 7, HERE << "schedule: Adding '" << name << "', in " << when << " seconds");
+    debugs(41, 7, HERE << "schedule: Adding '" << call->name << "', in " << when << " seconds");
     /* Insert after the last event with the same or earlier time */
 
     for (E = &tasks; *E; E = &(*E)->next) {

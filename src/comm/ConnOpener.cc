@@ -402,7 +402,7 @@ Comm::ConnOpener::retrySleep()
     closeFd();
     typedef NullaryMemFunT<Comm::ConnOpener> Dialer;
     calls_.sleep_ = JobCallback(5, 4, Dialer, this, Comm::ConnOpener::restart);
-    EventScheduler::GetInstance()->schedule("Comm::ConnOpener::restart", calls_.sleep_, 0.05, 0);
+    EventScheduler::GetInstance()->schedule(calls_.sleep_, 0.05);
 }
 
 /// cleans up this job sleep state

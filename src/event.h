@@ -24,10 +24,11 @@ class ev_entry
     MEMPROXY_CLASS(ev_entry);
 
 public:
-    ev_entry(char const * name, double when, int weight, const AsyncCall::Pointer &);
+    ev_entry(double when, int weight, const AsyncCall::Pointer &);
+    // no copying or moving of any kind (for simplicity and to prevent accidental copies)
+    ev_entry(ev_entry &&) = delete;
 
 public:
-    const char *name = nullptr;
     double when = 0.1;
 
     int weight = 0;
@@ -54,7 +55,7 @@ public:
     void dump(Packable *);
 
     /// schedule an AsyncCall run in when seconds
-    void schedule(const char *name, const AsyncCall::Pointer &, double when, int weight);
+    void schedule(const AsyncCall::Pointer &, double when, int = 0);
     /// \deprecated schedule a callback function to run in when seconds. Use AsyncCall instead.
     void schedule(const char *name, EVH * func, void *arg, double when, int weight, bool cbdata=true);
 
