@@ -72,13 +72,14 @@ public:
     /* AsyncEngine API */
     int checkEvents(int) override;
 
-    static EventScheduler *GetInstance();
-
 private:
     ev_entry * tasks;
 };
 
-/* Legacy C API for event management. Use EventScheduler::GetInstance() API with AsyncCall instead */
+/// global queue of events waiting to happen
+EventScheduler &Events();
+
+/* Legacy C API for event management. Use Events() API with AsyncCall instead */
 
 void eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata=true);
 void eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int);

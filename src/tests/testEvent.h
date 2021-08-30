@@ -22,7 +22,6 @@ class testEvent : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testDump );
     CPPUNIT_TEST( testFind );
     CPPUNIT_TEST( testCheckEvents );
-    CPPUNIT_TEST( testSingleton );
     CPPUNIT_TEST( testCancel );
     CPPUNIT_TEST_SUITE_END();
 
@@ -34,7 +33,6 @@ protected:
     void testDump();
     void testFind();
     void testCheckEvents();
-    void testSingleton();
     void testCancel();
 };
 

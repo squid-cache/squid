@@ -97,10 +97,17 @@ ev_entry::ev_entry(double evWhen, int aWeight, const AsyncCall::Pointer &aCall) 
 {
 }
 
+EventScheduler &
+Events()
+{
+    static EventScheduler instance;
+    return instance;
+}
+
 void
 eventAdd(const char *name, EVH * func, void *arg, double when, int weight, bool cbdata)
 {
-    EventScheduler::GetInstance()->schedule(name, func, arg, when, weight, cbdata);
+    Events().schedule(name, func, arg, when, weight, cbdata);
 }
 
 /* same as eventAdd but adds a random offset within +-1/3 of delta_ish */
@@ -122,7 +129,7 @@ eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int weigh
 void
 eventDelete(EVH * func, void *arg)
 {
-    EventScheduler::GetInstance()->cancel(func, arg);
+    Events().cancel(func, arg);
 }
 
 void
@@ -134,19 +141,19 @@ eventInit(void)
 static void
 eventDump(StoreEntry * sentry)
 {
-    EventScheduler::GetInstance()->dump(sentry);
+    Events().dump(sentry);
 }
 
 void
 eventFreeMemory(void)
 {
-    EventScheduler::GetInstance()->clean();
+    Events().clean();
 }
 
 int
 eventFind(EVH * func, void *arg)
 {
-    return EventScheduler::GetInstance()->find(func, arg);
+    return Events().find(func, arg);
 }
 
 EventScheduler::EventScheduler(): tasks(NULL)
@@ -315,13 +322,6 @@ EventScheduler::find(EVH * func, void * arg)
     }
 
     return false;
-}
-
-EventScheduler *
-EventScheduler::GetInstance()
-{
-    static EventScheduler instance;
-    return &instance;
 }
 
 void

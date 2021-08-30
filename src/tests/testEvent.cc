@@ -145,11 +145,3 @@ testEvent::testCheckEvents()
     CPPUNIT_ASSERT_EQUAL(1, event.calls);
 }
 
-/* for convenience we have a singleton scheduler */
-void
-testEvent::testSingleton()
-{
-    EventScheduler *scheduler = dynamic_cast<EventScheduler *>(EventScheduler::GetInstance());
-    CPPUNIT_ASSERT(NULL != scheduler);
-}
-

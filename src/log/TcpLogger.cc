@@ -99,7 +99,7 @@ Log::TcpLogger::swanSong()
     if (reconnectScheduled) {
         // callers must manually manage event queue entries
         reconnectScheduled->cancel("Log::TcpLogger::swanSong");
-        EventScheduler::GetInstance()->remove(reconnectScheduled);
+        Events().remove(reconnectScheduled);
         reconnectScheduled = nullptr;
     }
     AsyncJob::swanSong();
@@ -283,7 +283,7 @@ Log::TcpLogger::connectDone(const CommConnectCbParams &params)
         if (!reconnectScheduled) {
             typedef NullaryMemFunT<TcpLogger> Dialer;
             reconnectScheduled = JobCallback(MY_DEBUG_SECTION, 5, Dialer, this, Log::TcpLogger::delayedReconnect);
-            EventScheduler::GetInstance()->schedule(reconnectScheduled, delay);
+            Events().schedule(reconnectScheduled, delay);
         }
     } else {
         if (connectFailures > 0) {
