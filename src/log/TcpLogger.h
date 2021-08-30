@@ -68,7 +68,6 @@ private:
 
     static TcpLogger *StillLogging(Logfile *lf);
 
-    static void DelayedReconnect(void *data);
     void delayedReconnect();
 
     bool canFit(const size_t len) const;
@@ -98,8 +97,8 @@ private:
     size_t flushDebt; ///< how many record bytes we still need to write ASAP
 
     bool quitOnEmpty; ///< whether this job should quit when buffers are empty
-    bool reconnectScheduled; ///< we are sleeping before the next connection attempt
     bool writeScheduled; ///< we are waiting for the latest write() results
+    AsyncCall::Pointer reconnectScheduled; ///< we are sleeping before the next connection attempt
 
     Comm::ConnectionPointer conn; ///< opened connection to the remote logger
     Ip::Address remote; ///< where the remote logger expects our records

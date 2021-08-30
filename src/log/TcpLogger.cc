@@ -42,7 +42,6 @@ Log::TcpLogger::TcpLogger(size_t bufCap, bool dieOnErr, Ip::Address them):
     bufferedSize(0),
     flushDebt(0),
     quitOnEmpty(false),
-    reconnectScheduled(false),
     writeScheduled(false),
     conn(NULL),
     remote(them),
@@ -97,6 +96,12 @@ void
 Log::TcpLogger::swanSong()
 {
     disconnect(); // optional: refcounting should close/delete conn eventually
+    if (reconnectScheduled) {
+        // callers must manually manage event queue entries
+        reconnectScheduled->cancel("Log::TcpLogger::swanSong");
+        EventScheduler::GetInstance()->remove(reconnectScheduled);
+        reconnectScheduled = nullptr;
+    }
     AsyncJob::swanSong();
 }
 
@@ -276,10 +281,9 @@ Log::TcpLogger::connectDone(const CommConnectCbParams &params)
         }
 
         if (!reconnectScheduled) {
-            reconnectScheduled = true;
-            eventAdd("Log::TcpLogger::DelayedReconnect",
-                     Log::TcpLogger::DelayedReconnect,
-                     new Pointer(this), 0.5, 0, false);
+            typedef NullaryMemFunT<TcpLogger> Dialer;
+            reconnectScheduled = JobCallback(MY_DEBUG_SECTION, 5, Dialer, this, Log::TcpLogger::delayedReconnect);
+            EventScheduler::GetInstance()->schedule(reconnectScheduled, delay);
         }
     } else {
         if (connectFailures > 0) {
@@ -301,31 +305,13 @@ Log::TcpLogger::connectDone(const CommConnectCbParams &params)
     }
 }
 
-// XXX: Needed until eventAdd() starts accepting Async calls directly.
-/// Log::TcpLogger::delayedReconnect() wrapper.
-void
-Log::TcpLogger::DelayedReconnect(void *data)
-{
-    Pointer *ptr = static_cast<Pointer*>(data);
-    assert(ptr);
-    if (TcpLogger *logger = ptr->valid()) {
-        // Get back inside AsyncJob protections by scheduling another call.
-        typedef NullaryMemFunT<TcpLogger> Dialer;
-        AsyncCall::Pointer call = JobCallback(MY_DEBUG_SECTION, 5, Dialer,
-                                              logger,
-                                              Log::TcpLogger::delayedReconnect);
-        ScheduleCallHere(call);
-    }
-    delete ptr;
-}
-
 /// "sleep a little before trying to connect again" event callback
 void
 Log::TcpLogger::delayedReconnect()
 {
     Must(reconnectScheduled);
     Must(!conn);
-    reconnectScheduled = false;
+    reconnectScheduled = nullptr;
     doConnect();
 }
 
