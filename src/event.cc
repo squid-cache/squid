@@ -167,7 +167,7 @@ EventScheduler::cancel(EVH * func, void *arg)
     for (E = &tasks; (event = *E) != NULL; E = &(*E)->next) {
 
         const auto *dialer = dynamic_cast<EventDialer*>(event->call->getDialer());
-        assert(dialer);
+        assert(dialer); // only legacy event schedulers may call this method
         if (!dialer->matches(func,arg))
             continue;
 

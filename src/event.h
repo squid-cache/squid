@@ -67,8 +67,8 @@ public:
     /// Use AsyncCall API to cancel() the Call instead.
     void cancel(EVH * func, void * arg);
 
-    /// dial as many due event Calls as possible within timeout seconds.
-    int checkEvents(int timeout);
+    /* AsyncEngine API */
+    int checkEvents(int) override;
 
     static EventScheduler *GetInstance();
 
