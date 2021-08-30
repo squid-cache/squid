@@ -227,7 +227,11 @@ EventScheduler::checkEvents(int)
         ev_entry *event = tasks;
         assert(event);
 
-        const bool heavy = event->weight && !event->call->canceled();
+        bool heavy = false;
+        if (event->weight) {
+            if (auto *dialer = dynamic_cast<EventDialer*>(event->call->getDialer()))
+                heavy = dialer->canDial(*(event->call));
+        }
 
         ScheduleCallHere(event->call);
 
