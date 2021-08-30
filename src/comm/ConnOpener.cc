@@ -92,8 +92,7 @@ Comm::ConnOpener::swanSong()
         conn_->close();
 
     // did we abort while waiting between retries?
-    if (calls_.sleep_)
-        cancelSleep();
+    cancelSleep();
 
     AsyncJob::swanSong();
 }
@@ -269,6 +268,7 @@ Comm::ConnOpener::restart()
 {
     debugs(5, 5, conn_ << " restarting after sleep");
     calls_.sleep_->cancel("restart");
+    calls_.sleep_ = nullptr;
 
     if (createFd())
         doConnect();
@@ -411,6 +411,7 @@ Comm::ConnOpener::cancelSleep()
 {
     if (calls_.sleep_) {
         calls_.sleep_->cancel("Comm::ConnOpener::cancelSleep");
+        calls_.sleep_ = nullptr;
         debugs(5, 9, conn_ << " stops sleeping");
     }
 }
