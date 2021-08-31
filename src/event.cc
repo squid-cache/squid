@@ -296,16 +296,22 @@ EventScheduler::dump(Packable *out)
     if (last_event_ran)
         out->appendf("Last event to run: %s\n\n", last_event_ran);
 
-    out->appendf("%-25s\t%-15s\t%s\n",
+    out->appendf("%-25s\t%-15s\t%s\t%s\n",
                  "Operation",
                  "Next Execution",
-                 "Weight");
+                 "Weight",
+                 "Callback Valid?");
 
     for (auto *e = tasks; e; e = e->next) {
-        if (e->call->canceled())
-            continue;
-        out->appendf("%-25s\t%0.3f sec\t%5d\n",
-                     e->call->name, (e->when ? e->when - current_dtime : 0), e->weight);
+        const char *cbValid = "N/A";
+        if (e->call->canceled()) {
+            cbValid = "no";
+        } else if (auto *dialer = dynamic_cast<EventDialer*>(e->call->getDialer())) {
+            cbValid = (dialer->canDial(*(e->call)) ? "yes" : "no");
+        }
+        out->appendf("%-25s\t%0.3f sec\t%5d\t%s\n",
+                     e->call->name, (e->when ? e->when - current_dtime : 0),
+                     e->weight, cbValid);
     }
 }
 
