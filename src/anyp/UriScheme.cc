@@ -48,7 +48,7 @@ AnyP::UriScheme::Init()
     }
 }
 
-const AnyP::ProtocolType
+AnyP::ProtocolType
 AnyP::UriScheme::FindProtocolType(const SBuf &scheme)
 {
     if (scheme.isEmpty())

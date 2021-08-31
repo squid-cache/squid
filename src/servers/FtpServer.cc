@@ -61,7 +61,7 @@ Ftp::Server::Server(const MasterXaction::Pointer &xact):
     dataConn(),
     uploadAvailSize(0),
     listener(),
-    connector(),
+    dataConnWait(),
     reader(),
     waitingForOrigin(false),
     originDataDownloadAbortedOnError(false)
@@ -254,11 +254,6 @@ Ftp::Server::AcceptCtrlConnection(const CommAcceptCbParams &params)
     debugs(33, 4, params.conn << ": accepted");
     fd_note(params.conn->fd, "client ftp connect");
 
-    if (s->tcp_keepalive.enabled)
-        commSetTcpKeepalive(params.conn->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
-
-    ++incoming_sockets_accepted;
-
     AsyncJob::Start(new Server(xact));
 }
 
@@ -404,7 +399,6 @@ Ftp::Server::acceptDataConnection(const CommAcceptCbParams &params)
 
     debugs(33, 4, "accepted " << params.conn);
     fd_note(params.conn->fd, "passive client ftp data");
-    ++incoming_sockets_accepted;
 
     if (!clientConnection) {
         debugs(33, 5, "late data connection?");
@@ -1681,11 +1675,11 @@ Ftp::Server::checkDataConnPre()
 
     // active transfer: open a data connection from Squid to client
     typedef CommCbMemFunT<Server, CommConnectCbParams> Dialer;
-    connector = JobCallback(17, 3, Dialer, this, Ftp::Server::connectedForData);
-    Comm::ConnOpener *cs = new Comm::ConnOpener(dataConn, connector,
-            Config.Timeout.connect);
-    AsyncJob::Start(cs);
-    return false; // ConnStateData::processFtpRequest waits handleConnectDone
+    AsyncCall::Pointer callback = JobCallback(17, 3, Dialer, this, Ftp::Server::connectedForData);
+    const auto cs = new Comm::ConnOpener(dataConn->cloneProfile(), callback,
+                                         Config.Timeout.connect);
+    dataConnWait.start(cs, callback);
+    return false;
 }
 
 /// Check that client data connection is ready for immediate I/O.
@@ -1703,18 +1697,22 @@ Ftp::Server::checkDataConnPost() const
 void
 Ftp::Server::connectedForData(const CommConnectCbParams &params)
 {
-    connector = NULL;
+    dataConnWait.finish();
 
     if (params.flag != Comm::OK) {
-        /* it might have been a timeout with a partially open link */
-        if (params.conn != NULL)
-            params.conn->close();
         setReply(425, "Cannot open data connection.");
         Http::StreamPointer context = pipeline.front();
         Must(context->http);
         Must(context->http->storeEntry() != NULL);
+        // TODO: call closeDataConnection() to reset data conn processing?
     } else {
-        Must(dataConn == params.conn);
+        // Finalize the details and start owning the supplied connection.
+        assert(params.conn);
+        assert(dataConn);
+        assert(!dataConn->isOpen());
+        dataConn = params.conn;
+        // XXX: Missing comm_add_close_handler() to track external closures.
+
         Must(Comm::IsConnOpen(params.conn));
         fd_note(params.conn->fd, "active client ftp data");
     }

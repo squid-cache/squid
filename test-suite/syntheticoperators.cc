@@ -91,7 +91,7 @@ HasExplicit::Assignments(int const &newValue)
     Assignments_ = newValue;
 }
 
-void
+static void
 CheckHasExplicitWorks()
 {
     assert (HasExplicit::Instances() == 0);
@@ -123,7 +123,7 @@ public:
     HasExplicit aMember;
 };
 
-void
+static void
 CheckSyntheticWorks()
 {
     assert (HasExplicit::Instances() == 0);

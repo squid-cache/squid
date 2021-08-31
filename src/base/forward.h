@@ -20,6 +20,7 @@ template <typename Value> class Optional;
 
 template<class Cbc> class CbcPointer;
 template<class RefCountableKid> class RefCount;
+template<class Job> class JobWait;
 
 typedef CbcPointer<AsyncJob> AsyncJobPointer;
 typedef RefCount<CodeContext> CodeContextPointer;

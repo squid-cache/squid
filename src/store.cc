@@ -17,6 +17,7 @@
 #include "CollapsedForwarding.h"
 #include "comm/Connection.h"
 #include "comm/Read.h"
+#include "DebugMessages.h"
 #if HAVE_DISKIO_MODULE_IPCIO
 #include "DiskIO/IpcIo/IpcIoFile.h"
 #endif
@@ -510,9 +511,6 @@ StoreEntry::doAbandon(const char *context)
         this->release();
         return;
     }
-
-    if (EBIT_TEST(flags, KEY_PRIVATE))
-        debugs(20, DBG_IMPORTANT, "WARNING: " << __FILE__ << ":" << __LINE__ << ": found KEY_PRIVATE");
 
     Store::Root().handleIdleEntry(*this); // may delete us
 }
@@ -1195,7 +1193,7 @@ storeLateRelease(void *)
     // TODO: this works but looks unelegant.
     for (int i = 0; i < 10; ++i) {
         if (LateReleaseStack.empty()) {
-            debugs(20, DBG_IMPORTANT, "storeLateRelease: released " << n << " objects");
+            debugs(20, Important(30), "storeLateRelease: released " << n << " objects");
             return;
         } else {
             e = LateReleaseStack.top();

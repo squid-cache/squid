@@ -14,6 +14,7 @@
 #include "anyp/TrafficMode.h"
 #include "base/CodeContext.h"
 #include "comm/Connection.h"
+#include "comm/Tcp.h"
 #include "sbuf/SBuf.h"
 #include "security/ServerOptions.h"
 
@@ -56,12 +57,7 @@ public:
     int disable_pmtu_discovery;
     bool workerQueues; ///< whether listening queues should be worker-specific
 
-    struct {
-        unsigned int idle;
-        unsigned int interval;
-        unsigned int timeout;
-        bool enabled;
-    } tcp_keepalive;
+    Comm::TcpKeepAlive tcp_keepalive;
 
     /**
      * The listening socket details.

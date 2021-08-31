@@ -11,6 +11,8 @@
 
 #include "http/one/forward.h"
 
+#define HTTP_REQBUF_SZ  4096
+
 namespace Http
 {
 

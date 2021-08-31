@@ -33,6 +33,7 @@
 #include "fd.h"
 #include "fde.h"
 #include "format/Token.h"
+#include "FwdState.h"
 #include "gopher.h"
 #include "helper.h"
 #include "helper/Reply.h"
@@ -1137,7 +1138,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
     if (req_hdr->has(Http::HdrType::X_FORWARDED_FOR)) {
         String s = req_hdr->getList(Http::HdrType::X_FORWARDED_FOR);
-        fvdbCountForw(s.termedBuf());
+        fvdbCountForwarded(StringToSBuf(s));
         s.clean();
     }
 
@@ -1733,9 +1734,6 @@ ClientHttpRequest::clearRequest()
  * Note that we set the _done flags here before actually starting
  * the callout.  This is strictly for convenience.
  */
-
-tos_t aclMapTOS (acl_tos * head, ACLChecklist * ch);
-Ip::NfMarkConfig aclFindNfMarkConfig (acl_nfmark * head, ACLChecklist * ch);
 
 void
 ClientHttpRequest::doCallouts()

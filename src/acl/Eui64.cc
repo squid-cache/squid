@@ -14,6 +14,7 @@
 
 #include "acl/Eui64.h"
 #include "acl/FilledChecklist.h"
+#include "cache_cf.h"
 #include "Debug.h"
 #include "eui/Eui64.h"
 #include "globals.h"
@@ -44,7 +45,7 @@ ACLEui64::empty () const
     return eui64Data.empty();
 }
 
-Eui::Eui64 *
+static Eui::Eui64 *
 aclParseEuiData(const char *t)
 {
     char buf[256];

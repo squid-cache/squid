@@ -10,7 +10,9 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include "mime_header.h"
 #include "profiler/Profiler.h"
+#include "sbuf/SBuf.h"
 
 size_t
 headersEnd(const char *mime, size_t l, bool &containsObsFold)
@@ -64,5 +66,11 @@ headersEnd(const char *mime, size_t l, bool &containsObsFold)
         return e;
 
     return 0;
+}
+
+size_t
+headersEnd(const SBuf &buf, bool &containsObsFold)
+{
+    return headersEnd(buf.rawContent(), buf.length(), containsObsFold);
 }
 

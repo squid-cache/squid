@@ -42,7 +42,6 @@ AnyP::PortCfg::PortCfg(const TrafficModeFlags::PortKind aPortKind):
     workerQueues(false),
     listenConn()
 {
-    memset(&tcp_keepalive, 0, sizeof(tcp_keepalive));
 }
 
 AnyP::PortCfg::~PortCfg()

@@ -25,12 +25,12 @@ typedef enum {
 class ESIElement;
 
 struct esiTreeParent : public RefCountable {
-    virtual void provideData (ESISegment::Pointer data, ESIElement * source) {
+    virtual void provideData (ESISegment::Pointer /* data  */ , ESIElement * /* source */ ) {
         /* make abstract when all functionality complete */
         assert (0);
     }
 
-    virtual void fail(ESIElement * source, char const *reason = NULL) {}
+    virtual void fail(ESIElement * /* source */, char const * /* reason */ = nullptr) {}
 
     virtual ~esiTreeParent() {}
 };
@@ -69,7 +69,7 @@ public:
 
     virtual void render (ESISegment::Pointer) = 0;
     /* process this element */
-    virtual esiProcessResult_t process (int dovars) {
+    virtual esiProcessResult_t process(int) {
         debugs(86,5, "esiProcessComplete: Processed " << this);
         return ESI_PROCESS_COMPLETE;
     }

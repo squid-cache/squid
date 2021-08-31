@@ -67,22 +67,22 @@ hash4(const void *data, unsigned int size)
         break;
     case 7:
         HASH4;
-    /* FALLTHROUGH */
+    /* [[fallthrough]] */
     case 6:
         HASH4;
-    /* FALLTHROUGH */
+    /* [[fallthrough]] */
     case 5:
         HASH4;
-    /* FALLTHROUGH */
+    /* [[fallthrough]] */
     case 4:
         HASH4;
-    /* FALLTHROUGH */
+    /* [[fallthrough]] */
     case 3:
         HASH4;
-    /* FALLTHROUGH */
+    /* [[fallthrough]] */
     case 2:
         HASH4;
-    /* FALLTHROUGH */
+    /* [[fallthrough]] */
     case 1:
         HASH4;
     }

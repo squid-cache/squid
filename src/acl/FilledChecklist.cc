@@ -11,6 +11,7 @@
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "comm/forward.h"
+#include "DebugMessages.h"
 #include "ExternalACLEntry.h"
 #include "http/Stream.h"
 #include "HttpReply.h"
@@ -75,7 +76,7 @@ showDebugWarning(const char *msg)
         return;
 
     ++count;
-    debugs(28, DBG_IMPORTANT, "ALE missing " << msg);
+    debugs(28, Important(58), "ALE missing " << msg);
 }
 
 void
@@ -272,6 +273,8 @@ ACLFilledChecklist::setIdent(const char *ident)
     assert(!rfc931[0]);
     if (ident)
         xstrncpy(rfc931, ident, USER_IDENT_SZ);
+#else
+    (void)ident;
 #endif
 }
 
