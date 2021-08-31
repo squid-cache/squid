@@ -40,7 +40,8 @@ public:
 
     void dial(AsyncCall &) { theHandler(theArg); }
 
-    bool matches(EVH *func, void *arg) const { return theHandler == func && theArg == arg; }
+    bool matchForCancel(EVH *func, void *arg) const { return theHandler == func && (!arg || theArg == arg); }
+    bool matchForFind(EVH *func, void *arg) const { return theHandler == func; }
 
 private:
     EVH *theHandler;
@@ -191,7 +192,7 @@ EventScheduler::cancel(EVH * func, void *arg)
 
         const auto *dialer = dynamic_cast<EventDialer*>(event->call->getDialer());
         assert(dialer); // only legacy event schedulers may call this method
-        if (!dialer->matches(func,arg))
+        if (!dialer->matchForCancel(func,arg))
             continue;
 
         event->call->cancel("EventScheduler::cancel");
@@ -317,7 +318,7 @@ EventScheduler::find(EVH * func, void * arg)
     for (event = tasks; event != NULL; event = event->next) {
         const auto *dialer = dynamic_cast<EventDialer*>(event->call->getDialer());
         assert(dialer);
-        if (dialer->matches(func,arg))
+        if (dialer->matchForFind(func,arg))
             return true;
     }
 
