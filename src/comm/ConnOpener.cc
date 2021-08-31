@@ -267,7 +267,6 @@ void
 Comm::ConnOpener::restart()
 {
     debugs(5, 5, conn_ << " restarting after sleep");
-    calls_.sleep_->cancel("restart");
     calls_.sleep_ = nullptr;
 
     if (createFd())
