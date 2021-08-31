@@ -29,10 +29,9 @@ public:
     ev_entry(ev_entry &&) = delete;
 
 public:
-    double when = 0.1;
-
-    int weight = 0;
-    AsyncCall::Pointer call;
+    double when; ///< when this event is due to run
+    int weight; ///< deprecated weight hack, avoids
+    AsyncCall::Pointer call; ///< the AsyncCall which will perform this event
 
     ev_entry *next = nullptr;
 };
