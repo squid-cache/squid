@@ -406,7 +406,6 @@ Ip::Intercept::LookupNat(const Comm::ConnectionPointer &newConn)
 
 #else /* none of the transparent options configured */
     (void)newConn;
-    (void)listenConn;
     debugs(89, DBG_IMPORTANT, "WARNING: transparent proxying not supported");
 #endif
 
