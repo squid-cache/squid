@@ -70,8 +70,8 @@ testEvent::testDump()
     const char *expected = "Last event to run: last event\n"
                            "\n"
                            "Operation                \tNext Execution \tWeight\tCallback Valid?\n"
-                           "test event               \t0.000 sec\t    0\tyes\n"
-                           "test event2              \t0.000 sec\t    0\tyes\n";
+                           "test event               \t0.000 sec\t    0\t" "yes\n"
+                           "test event2              \t0.000 sec\t    0\t" "yes\n";
     MemBuf expect;
     expect.init();
     expect.append(expected, strlen(expected));
