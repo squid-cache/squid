@@ -98,6 +98,13 @@ ev_entry::ev_entry(double evWhen, int aWeight, const AsyncCall::Pointer &aCall) 
 {
 }
 
+static std::ostream &
+operator <<(std::ostream &os, ev_entry &e)
+{
+    os << e.call->name << " [" << e.call->id << ']';
+    return os;
+}
+
 EventScheduler &
 Events()
 {
@@ -195,7 +202,7 @@ EventScheduler::cancel(EVH * func, void *arg)
         if (!dialer->matchForCancel(func,arg))
             continue;
 
-        event->call->cancel("EventScheduler::cancel");
+        debugs(41, 5, *event);
 
         *E = event->next;
 
