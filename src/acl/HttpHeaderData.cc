@@ -14,6 +14,7 @@
 #include "acl/HttpHeaderData.h"
 #include "acl/RegexData.h"
 #include "base/RegexPattern.h"
+#include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "HttpHeaderTools.h"

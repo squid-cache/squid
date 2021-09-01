@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "comm/Connection.h"
+#include "Downloader.h"
 #include "HttpRequest.h"
 
 #define STUB_API "security/libsecurity.la"
@@ -92,7 +93,9 @@ void PeerConnector::bail(ErrorState *) STUB
 void PeerConnector::sendSuccess() STUB
 void PeerConnector::callBack() STUB
 void PeerConnector::disconnect() STUB
+void PeerConnector::countFailingConnection() STUB
 void PeerConnector::recordNegotiationDetails() STUB
+EncryptorAnswer &PeerConnector::answer() STUB_RETREF(EncryptorAnswer)
 }
 
 #include "security/PeerOptions.h"
