@@ -112,12 +112,6 @@ Events()
     return instance;
 }
 
-void
-eventAdd(const char *name, EVH * func, void *arg, double when, int weight, bool cbdata)
-{
-    Events().schedule(name, func, arg, when, weight, cbdata);
-}
-
 /* same as eventAdd but adds a random offset within +-1/3 of delta_ish */
 void
 eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int weight)
@@ -135,13 +129,7 @@ eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int weigh
 }
 
 void
-eventDelete(EVH * func, void *arg)
-{
-    Events().cancel(func, arg);
-}
-
-void
-eventInit(void)
+eventInit()
 {
     Mgr::RegisterAction("events", "Event Queue", eventDump, 0, 1);
 }
@@ -150,18 +138,6 @@ static void
 eventDump(StoreEntry * sentry)
 {
     Events().dump(sentry);
-}
-
-void
-eventFreeMemory(void)
-{
-    Events().clean();
-}
-
-int
-eventFind(EVH * func, void *arg)
-{
-    return Events().find(func, arg);
 }
 
 EventScheduler::EventScheduler(): tasks(NULL)
@@ -343,6 +319,21 @@ EventScheduler::schedule(const char *name, EVH * func, void *arg, double when, i
 {
     AsyncCall::Pointer call = asyncCall(41, 5, name, EventDialer(func, arg, cbdata));
     schedule(call, when, weight);
+}
+
+void
+EventScheduler::scheduleIsh(const AsyncCall::Pointer &call, double when)
+{
+    if (when >= 3.0) {
+        // Default seed is fine. We just need values random enough
+        // relative to each other to prevent waves of synchronised activity.
+        static std::mt19937 rng;
+        auto third = (when/3.0);
+        xuniform_real_distribution<> thirdIsh(when - third, when + third);
+        when = thirdIsh(rng);
+    }
+
+    schedule(call, when);
 }
 
 void

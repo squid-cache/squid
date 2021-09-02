@@ -55,6 +55,8 @@ public:
 
     /// schedule an AsyncCall run in when seconds
     void schedule(const AsyncCall::Pointer &, double when, int = 0);
+    /// schedule an AsyncCall run in when +/-30% seconds
+    void scheduleIsh(const AsyncCall::Pointer &, double when);
     /// \deprecated schedule a callback function to run in when seconds. Use AsyncCall instead.
     void schedule(const char *name, EVH * func, void *arg, double when, int weight, bool cbdata=true);
 
@@ -78,14 +80,62 @@ private:
 /// global queue of events waiting to happen
 EventScheduler &Events();
 
-/* Legacy C API for event management. Use Events() API with AsyncCall instead */
+/// perform any startup tasks needed by the EventScheduler
+extern void eventInit();
 
-void eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata=true);
+/// \see EventScheduler::clean()
+inline void
+eventFreeMemory()
+{
+    Events().clean();
+}
+
+/// \see EventScheduler::schedule()
+inline void
+eventAdd(AsyncCall::Pointer &c, double when)
+{
+    Events().schedule(c, when);
+}
+
+/// \see EventScheduler::scheduleIsh()
+inline void
+eventAddIsh(AsyncCall::Pointer &c, double when)
+{
+    Events().scheduleIsh(c, when);
+}
+
+/// \see EventScheduler::remove()
+inline void
+eventDelete(AsyncCall::Pointer &c)
+{
+    Events().remove(c);
+}
+
+/* Legacy C API for event management. Use API with AsyncCall instead */
+
+/// \see EventScheduler::schedule()
+inline void
+eventAdd(const char *name, EVH * func, void *arg, double when, int weight, bool cbdata = true)
+{
+    Events().schedule(name, func, arg, when, weight, cbdata);
+}
+
+/// \see EventScheduler::scheduleIsh()
 void eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int);
-void eventDelete(EVH * func, void *arg);
-void eventInit(void);
-void eventFreeMemory(void);
-int eventFind(EVH *, void *);
+
+/// \see EventScheduler::find()
+inline bool
+eventFind(EVH * func, void *arg)
+{
+    return Events().find(func, arg);
+}
+
+/// \see EventScheduler::cancel()
+inline void
+eventDelete(EVH * func, void *arg)
+{
+    Events().cancel(func, arg);
+}
 
 #endif /* SQUID_EVENT_H */
 

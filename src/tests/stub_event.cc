@@ -19,13 +19,12 @@ int EventScheduler::timeRemaining() const STUB_RETVAL(1)
 void EventScheduler::clean() STUB
 void EventScheduler::dump(Packable *) STUB
 bool EventScheduler::find(EVH *, void *) STUB_RETVAL(false)
+void EventScheduler::schedule(const AsyncCall::Pointer &, double, int) STUB
 void EventScheduler::schedule(const char *, EVH *, void *, double, int, bool) STUB
+void EventScheduler::scheduleIsh(const AsyncCall::Pointer &, double) STUB
+void EventScheduler::remove(const AsyncCall::Pointer &) STUB
 int EventScheduler::checkEvents(int) STUB_RETVAL(-1)
 EventScheduler &Events() STUB_RETREF(EventScheduler)
-void eventAdd(const char *, EVH *, void *, double, int, bool) STUB_NOP
 void eventAddIsh(const char *, EVH *, void *, double, int) STUB
-void eventDelete(EVH *, void *) STUB
 void eventInit(void) STUB
-void eventFreeMemory(void) STUB
-int eventFind(EVH *, void *) STUB_RETVAL(-1)
 
