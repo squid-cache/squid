@@ -41,7 +41,7 @@ public:
     void dial(AsyncCall &) { theHandler(theArg); }
 
     bool matchForCancel(EVH *func, void *arg) const { return theHandler == func && (!arg || theArg == arg); }
-    bool matchForFind(EVH *func, void *arg) const { return theHandler == func; }
+    bool matchForFind(EVH *func, void *) const { return theHandler == func; }
 
 private:
     EVH *theHandler;
