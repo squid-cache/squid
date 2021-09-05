@@ -126,7 +126,7 @@ public:
 
     virtual void configureContentLengthInterpreter(Http::ContentLengthInterpreter &);
     /// parses reply header using Parser
-    bool parseHeader(Http1::Parser &hp);
+    bool parseHeader(Http::Parser &hp);
 
 private:
     /** initialize */
