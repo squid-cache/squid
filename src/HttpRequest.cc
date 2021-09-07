@@ -415,7 +415,10 @@ HttpRequest::adaptHistory(bool createIfNone) const
 Adaptation::History::Pointer
 HttpRequest::adaptLogHistory() const
 {
-    return HttpRequest::adaptHistory(Log::TheConfig.hasAdaptToken);
+    // XXX Adaptation history creation is always turned on so that the
+    // adaptation_rep_header acl works.  Needs to be fixed to only
+    // turn on when a adaptation_rep_header is configured.
+    return HttpRequest::adaptHistory(true);
 }
 
 void

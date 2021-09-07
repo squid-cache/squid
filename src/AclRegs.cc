@@ -11,6 +11,7 @@
 #if USE_ADAPTATION
 #include "acl/AdaptationService.h"
 #include "acl/AdaptationServiceData.h"
+#include "acl/AdaptationRepHeader.h"
 #endif
 #include "acl/AllOf.h"
 #include "acl/AnnotateClient.h"
@@ -196,6 +197,7 @@ Acl::Init()
 
 #if USE_ADAPTATION
     RegisterMaker("adaptation_service", [](TypeName name)->ACL* { return new ACLStrategised<const char *>(new ACLAdaptationServiceData, new ACLAdaptationServiceStrategy, name); });
+    RegisterMaker("adaptation_rep_header", [](TypeName name)->ACL* { return new ACLStrategised<HttpHeader*>(new ACLHTTPHeaderData, new ACLAdaptationRepHeaderStrategy, name); });
 #endif
 
 #if SQUID_SNMP

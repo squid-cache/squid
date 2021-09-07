@@ -183,6 +183,8 @@ endif
 EXTRA_libacls_la_SOURCES += $(SSL_ACLS)
 
 ADAPT_ACLS= \
+	AdaptationRepHeader.h \
+	AdaptationRepHeader.cc \
 	AdaptationService.h \
 	AdaptationService.cc \
 	AdaptationServiceData.h \

@@ -1422,6 +1422,10 @@ endif
 	  # adaptation_meta because it starts matching immediately after
 	  # the service has been selected for adaptation.
 
+	acl aclname adaptation_rep_header header-name [-i] any\.regex\.here
+	  # regex match against the adaptation reply headers.  e.g. ICAP
+	  # reply headers. [fast]
+
 	acl aclname transaction_initiator initiator ...
 	  # Matches transaction's initiator [fast]
 	  #

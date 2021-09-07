@@ -56,7 +56,8 @@ This section gives an account of those changes in three categories:
 <sect1>New directives<label id="newdirectives">
 <p>
 <descrip>
-	<p>There have been no directives added.
+	<tag>adaptation_rep_header</tag>
+	<p>regex match against the adaptation reply headers.</p>
 </descrip>
 
 <sect1>Changes to existing directives<label id="modifieddirectives">
