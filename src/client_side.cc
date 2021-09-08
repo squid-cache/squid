@@ -107,6 +107,7 @@
 #include "profiler/Profiler.h"
 #include "proxyp/Header.h"
 #include "proxyp/Parser.h"
+#include "quic/Acceptor.h"
 #include "sbuf/Stream.h"
 #include "security/CommunicationSecrets.h"
 #include "security/Io.h"
@@ -3348,13 +3349,21 @@ clientHttpConnectionsOpen(void)
 
         typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
         if (s->transport.protocol == AnyP::PROTO_HTTP) {
-            // setup the subscriptions such that new connections accepted by listenConn are handled by HTTP
-            RefCount<AcceptCall> subCall = commCbCall(5, 5, "httpAccept", CommAcceptCbPtrFun(httpAccept, CommAcceptCbParams(NULL)));
-            Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
 
-            AsyncCall::Pointer listenCall = asyncCall(33,2, "clientListenerConnectionOpened",
-                                            ListeningStartedDialer(&clientListenerConnectionOpened, s, Ipc::fdnHttpSocket, sub));
-            Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpSocket, listenCall);
+            // HTTP/3 is over UDP
+            if (s->transport == Http::ProtocolVersion(3, 0)) {
+                AsyncCall::Pointer listenCall = asyncCall(33,2, "clientListenerConnectionOpened",
+                                                ListeningStartedDialer(&clientListenerConnectionOpened, s, Ipc::fdnHttpSocket, nullptr));
+                Ipc::StartListening(SOCK_DGRAM, IPPROTO_UDP, s->listenConn, Ipc::fdnHttpSocket, listenCall);
+            } else {
+                // setup the subscriptions such that new connections accepted by listenConn are handled by HTTP
+                RefCount<AcceptCall> subCall = commCbCall(5, 5, "httpAccept", CommAcceptCbPtrFun(httpAccept, CommAcceptCbParams(nullptr)));
+                Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
+
+                AsyncCall::Pointer listenCall = asyncCall(33,2, "clientListenerConnectionOpened",
+                                                ListeningStartedDialer(&clientListenerConnectionOpened, s, Ipc::fdnHttpSocket, sub));
+                Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpSocket, listenCall);
+            }
 
         } else if (s->transport.protocol == AnyP::PROTO_HTTPS) {
             // setup the subscriptions such that new connections accepted by listenConn are handled by HTTPS
@@ -3408,8 +3417,14 @@ clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId port
 
     Must(Comm::IsConnOpen(s->listenConn));
 
-    // TCP: setup a job to handle accept() with subscribed handler
-    AsyncJob::Start(new Comm::TcpAcceptor(s, FdNote(portTypeNote), sub));
+    if (s->transport == Http::ProtocolVersion(3, 0)) {
+        // UDP: setup a job to receive client connections
+        AsyncJob::Start(new Quic::Acceptor(s));
+
+    } else {
+        // TCP: setup a job to handle accept() with subscribed handler
+        AsyncJob::Start(new Comm::TcpAcceptor(s, FdNote(portTypeNote), sub));
+    }
 
     debugs(1, Important(13), "Accepting " <<
            (s->flags.natIntercept ? "NAT intercepted " : "") <<
