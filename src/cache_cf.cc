@@ -3478,6 +3478,9 @@ parsePortProtocol(const SBuf &value)
     if (value.cmp("HTTP") == 0 || value.cmp("HTTP/1.1") == 0)
         return Http::ProtocolVersion(1,1);
 
+    if (value.cmp("HTTP/3") == 0)
+        return Http::ProtocolVersion(3, 0);
+
     if (value.cmp("HTTPS") == 0 || value.cmp("HTTPS/1.1") == 0)
         return AnyP::ProtocolVersion(AnyP::PROTO_HTTPS, 1,1);
 

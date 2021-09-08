@@ -107,6 +107,7 @@
 #include "parser/Tokenizer.h"
 #include "proxyp/Header.h"
 #include "proxyp/Parser.h"
+#include "quic/Acceptor.h"
 #include "sbuf/Stream.h"
 #include "security/Certificate.h"
 #include "security/CommunicationSecrets.h"
@@ -3375,15 +3376,22 @@ clientStartListeningOn(AnyP::PortCfgPointer &port, const RefCount< CommCbFunPtrC
         (port->flags.natIntercept ? COMM_INTERCEPTION : 0) |
         (port->workerQueues ? COMM_REUSEPORT : 0);
 
-    // route new connections to subCall
-    typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
-    Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
-    const auto listenCall =
-        asyncCall(33, 2, "clientListenerConnectionOpened",
-                  ListeningStartedDialer(&clientListenerConnectionOpened,
+    // HTTP/3 is over UDP
+    if (port->transport == Http::ProtocolVersion(3, 0)) {
+        const auto listenCall = asyncCall(33, 2, "clientListenerConnectionOpened",
+                                        ListeningStartedDialer(&clientListenerConnectionOpened, port, fdNote, nullptr));
+        Ipc::StartListening(SOCK_DGRAM, IPPROTO_UDP, port->listenConn, Ipc::fdnHttpSocket, listenCall);
+    } else {
+        // route new connections to subCall
+        typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
+        Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
+
+        const auto listenCall = asyncCall(33, 2, "clientListenerConnectionOpened",
+                                          ListeningStartedDialer(&clientListenerConnectionOpened,
                                          port, fdNote, sub));
-    AsyncCallback<Ipc::StartListeningAnswer> callback(listenCall);
-    Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, port->listenConn, fdNote, callback);
+        AsyncCallback<Ipc::StartListeningAnswer> callback(listenCall);
+        Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, port->listenConn, fdNote, callback);
+    }
 
     assert(NHttpSockets < MAXTCPLISTENPORTS);
     HttpSockets[NHttpSockets] = -1;
@@ -3401,8 +3409,14 @@ clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId port
 
     Must(Comm::IsConnOpen(s->listenConn));
 
-    // TCP: setup a job to handle accept() with subscribed handler
-    AsyncJob::Start(new Comm::TcpAcceptor(s, FdNote(portTypeNote), sub));
+    if (s->transport == Http::ProtocolVersion(3, 0)) {
+        // UDP: setup a job to receive client connections
+        AsyncJob::Start(new Quic::Acceptor(s));
+
+    } else {
+        // TCP: setup a job to handle accept() with subscribed handler
+        AsyncJob::Start(new Comm::TcpAcceptor(s, FdNote(portTypeNote), sub));
+    }
 
     debugs(1, Important(13), "Accepting " <<
            (s->flags.natIntercept ? "NAT intercepted " : "") <<
