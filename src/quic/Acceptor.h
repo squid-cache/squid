@@ -13,6 +13,7 @@
 #include "base/AsyncJob.h"
 #include "base/CbcPointer.h"
 #include "comm/forward.h"
+#include "quic/forward.h"
 #include "sbuf/forward.h"
 
 class CommCloseCbParams;
@@ -48,6 +49,7 @@ private:
     void handleClosure(const CommCloseCbParams &);
     void logAcceptError() const;
     void dispatch(const SBuf &, Ip::Address &);
+    void negotiateVersion(Connection &);
 
     /// errno of the last accept() or listen() action if one occurred.
     int xerrno = 0;

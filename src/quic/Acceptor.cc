@@ -219,7 +219,6 @@ Quic::Acceptor::dispatch(const SBuf &buf, Ip::Address &from)
     debugs(94, 2, "QUIC packet header " << tok.parsed() << " bytes");
 
     if (pkt.version == QUIC_VERSION_NEGOTIATION) {
-        // TODO implement RFC 8999 section 6 version negotiation with client
         debugs(94, 3, "ignoring attempt to negotiate version change from " << from);
         return;
 
@@ -227,13 +226,51 @@ Quic::Acceptor::dispatch(const SBuf &buf, Ip::Address &from)
         // RFC 9000 section 17.2 bit claiming a valid QUIC compliant packet found
         debugs(94, 4, "confirmed QUIC packet type=" << AsHex(pkt.vsBits & QUIC_RFC9000_PTYPE) << " from " << from);
 
-        // TODO: implement Quic::NewServer(from, buf)
+        // RFC 9000 forced version (re-)negotiation
+        if ((pkt.version & QUIC_VERSION_FORCE_NEGOTIATE_MASK) == QUIC_VERSION_FORCE_NEGOTIATE_MASK) {
+            debugs(94, 3, "forced version change from " << from);
+            negotiateVersion(pkt);
+            return;
+        }
+
+        // TODO: implement Quic::NewServer(pkt, tok)
         return;
 
     } else {
         // reject unsupported QUIC versions
         debugs(94, 3, "ignoring unknown version " << pkt.version << " from " << from);
         return;
+    }
+}
+
+void
+Quic::Acceptor::negotiateVersion(Connection &c)
+{
+    SBuf out;
+    // see RFC 9000 section 17.2.1 version-specific bits requirements
+    out.append(char(QUIC_PACKET_TYPE_MASK | QUIC_RFC9000_PACKET_VALID));
+    // QUIC_VERSION_NEGOTIATION
+    out.append(char(0x00));
+    out.append(char(0x00));
+    out.append(char(0x00));
+    out.append(char(0x00));
+    // mirror src CID as dst CID
+    out.append(char(c.srcConnectionId.length()));
+    out.append(c.srcConnectionId);
+    // mirror dst CID as src CID
+    out.append(char(c.dstConnectionId.length()));
+    out.append(c.dstConnectionId);
+    // request QUIC version 0x00000001
+    out.append(char(0x00));
+    out.append(char(0x00));
+    out.append(char(0x00));
+    out.append(char(0x01));
+
+    if (comm_udp_sendto(listenConn->fd, c.clientAddress, out.rawContent(), out.length()) < 0) {
+        xerrno = errno;
+        debugs(94, 3, listenConn << " sendto: " << xstrerr(xerrno));
+    } else {
+        debugs(94, 2, "QUIC version negotiate with FD " << listenConn->fd << " remote=" << c.clientAddress);
     }
 }
 
