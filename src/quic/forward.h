@@ -21,7 +21,10 @@ namespace Quic
 /// RFC 8999 section 5.4 reserved version value */
 #define QUIC_VERSION_NEGOTIATION 0x00000000
 
-// TODO: implement RFC 8999 section 6 QUIC version negotiation
+/// RFC 9000 section 15 reserved version values.
+/// Any packet received with one of these versions must be ignored or
+/// responded to using RFC 8999 section 6 Version Negotiation process.
+#define QUIC_VERSION_FORCE_NEGOTIATE_MASK  ntohl(0x0A0A0A0A)
 
 /// RFC 9000 section 17.2 flag to indicating valid packets (bit 1)
 #define QUIC_RFC9000_PACKET_VALID 0x40
