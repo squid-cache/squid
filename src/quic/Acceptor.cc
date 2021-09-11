@@ -221,12 +221,19 @@ Quic::Acceptor::dispatch(const SBuf &buf, Ip::Address &from)
     if (pkt.version == QUIC_VERSION_NEGOTIATION) {
         // TODO implement RFC 8999 section 6 version negotiation with client
         debugs(94, 3, "ignoring attempt to negotiate version change from " << from);
+        return;
+
+    } else if ((pkt.vsBits & QUIC_RFC9000_PACKET_VALID)) {
+        // RFC 9000 section 17.2 bit claiming a valid QUIC compliant packet found
+        debugs(94, 4, "confirmed QUIC packet type=" << AsHex(pkt.vsBits & QUIC_RFC9000_PTYPE) << " from " << from);
+
+        // TODO: implement Quic::NewServer(from, buf)
+        return;
+
     } else {
         // reject unsupported QUIC versions
         debugs(94, 3, "ignoring unknown version " << pkt.version << " from " << from);
         return;
     }
-
-    // TODO: implement Quic::NewServer(from, buf)
 }
 

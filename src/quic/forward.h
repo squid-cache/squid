@@ -23,6 +23,15 @@ namespace Quic
 
 // TODO: implement RFC 8999 section 6 QUIC version negotiation
 
+/// RFC 9000 section 17.2 flag to indicating valid packets (bit 1)
+#define QUIC_RFC9000_PACKET_VALID 0x40
+
+/// RFC 9000 section 17.2 mask for extracting the QUIC packet-type (bits 2-3)
+#define QUIC_RFC9000_PTYPE 0x30
+
+/// RFC 9000 section 17.2 mask for extracting the QUIC type-specific bits (bits 4-7)
+#define QUIC_RFC9000_PTYPE_BITS 0x0F
+
 class Connection;
 
 } // namespace Quic
