@@ -35,6 +35,9 @@ namespace Quic
 /// RFC 9000 section 17.2 mask for extracting the QUIC type-specific bits (bits 4-7)
 #define QUIC_RFC9000_PTYPE_BITS 0x0F
 
+/// RFC 9000 section 17.2 Packet Number Length field is present (bits 6-7)
+#define QUIC_RFC9000_PTYPE_NLEN 0x03
+
 class Connection;
 
 } // namespace Quic
