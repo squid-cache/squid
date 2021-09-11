@@ -28,12 +28,7 @@
 #include "SquidConfig.h"
 #include "src/sbuf/Stream.h"
 
-#include <set>
 #include <algorithm>
-
-using AclSet = std::set<Acl::Node *>;
-/// Accumulates all ACLs to facilitate their clean deletion despite reuse.
-static AclSet *RegisteredAcls; // TODO: Remove when ACLs are refcounted
 
 err_type
 FindDenyInfoPage(const Acl::Answer &answer, const bool redirect_allowed)
@@ -125,7 +120,7 @@ aclParseDenyInfoLine(AclDenyInfoList ** head)
 }
 
 void
-aclParseAccessLine(const char *directive, ConfigParser &, acl_access **treep)
+aclParseAccessLine(const char *directive, ConfigParser &, acl_access **config)
 {
     /* first expect either 'allow' or 'deny' */
     const char *t = ConfigParser::NextToken();
@@ -147,7 +142,8 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **treep)
         return;
     }
 
-    const int ruleId = ((treep && *treep) ? (*treep)->childrenCount() : 0) + 1;
+    assert(config);
+    const int ruleId = (*config ? (*config)->raw->childrenCount() : 0) + 1;
 
     Acl::AndNode *rule = new Acl::AndNode;
     rule->context(ToSBuf(directive, '#', ruleId), config_input_line);
@@ -161,15 +157,16 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **treep)
 
     /* Append to the end of this list */
 
-    assert(treep);
-    if (!*treep) {
-        *treep = new Acl::Tree;
-        (*treep)->context(SBuf(directive), config_input_line);
+    if (!*config)
+        *config = new acl_access();
+    auto &treep = (*config)->raw;
+
+    if (!treep) {
+        treep = new Acl::Tree();
+        treep->context(SBuf(directive), config_input_line);
     }
 
-    (*treep)->add(rule, action);
-
-    /* We lock _acl_access structures in ACLChecklist::matchNonBlocking() */
+    treep->add(rule, action);
 }
 
 // aclParseAclList does not expect or set actions (cf. aclParseAccessLine)
@@ -184,7 +181,7 @@ aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
     rule->context(ToSBuf('(', cfg_directive, ' ', label, " line)"), config_input_line);
     const auto aclCount = rule->lineParse();
 
-    // We want a cbdata-protected Tree (despite giving it only one child node).
+    // TODO: Remove this extra node after figuring what to do with its context!
     Acl::Tree *tree = new Acl::Tree;
     tree->add(rule);
     tree->context(ToSBuf(cfg_directive, ' ', label), config_input_line);
@@ -196,69 +193,44 @@ aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
     return aclCount;
 }
 
-void
-aclRegister(Acl::Node *acl)
+// TODO: Who calls this new function? How did the code work before this?
+size_t
+aclParseAclList(ConfigParser &parser, ACLList **configPtr, const char *label)
 {
-    if (!acl->registered) {
-        if (!RegisteredAcls)
-            RegisteredAcls = new AclSet;
-        RegisteredAcls->insert(acl);
-        acl->registered = true;
-    }
-}
+    Acl::Tree *tree = nullptr; // the aclParseAclList() call below assumes this
+    const auto aclCount = aclParseAclList(parser, &tree, label);
 
-/// remove registered acl from the centralized deletion set
-static
-void
-aclDeregister(Acl::Node *acl)
-{
-    if (acl->registered) {
-        if (RegisteredAcls)
-            RegisteredAcls->erase(acl);
-        acl->registered = false;
-    }
+    assert(configPtr);
+    auto &config = *configPtr;
+    assert(!config);
+    config = new acl_access();
+    config->raw = tree;
+
+    return aclCount;
 }
 
 /*********************/
 /* Destroy functions */
 /*********************/
 
-/// called to delete ALL Acls.
-void
-aclDestroyAcls(Acl::Node ** head)
-{
-    *head = nullptr; // Config.aclList
-    if (AclSet *acls = RegisteredAcls) {
-        debugs(28, 8, "deleting all " << acls->size() << " ACLs");
-        while (!acls->empty()) {
-            auto *acl = *acls->begin();
-            // We use centralized deletion (this function) so ~Acl::Node should not
-            // delete other ACLs, but we still deregister first to prevent any
-            // accesses to the being-deleted Acl::Node via RegisteredAcls.
-            assert(acl->registered); // make sure we are making progress
-            aclDeregister(acl);
-            delete acl;
-        }
-    }
-}
-
 void
 aclDestroyAclList(ACLList **list)
 {
     debugs(28, 8, "aclDestroyAclList: invoked");
     assert(list);
-    delete *list;
+    delete *list; // XXX
     *list = nullptr;
 }
 
 void
-aclDestroyAccessList(acl_access ** list)
+aclDestroyAccessList(acl_access **config)
 {
-    assert(list);
-    if (*list)
-        debugs(28, 3, "destroying: " << *list << ' ' << (*list)->name);
-    delete *list;
-    *list = nullptr;
+    assert(config);
+    if (const auto list = *config) {
+        debugs(28, 3, "destroying: " << list->raw << ' ' << list->raw->name);
+        delete list; // XXX
+        *config = nullptr;
+    }
 }
 
 /* maex@space.net (06.09.1996)

@@ -13,7 +13,6 @@
 
 class ACLChecklist;
 class ACLFilledChecklist;
-class ACLList;
 
 class AclDenyInfoList;
 class AclSizeLimit;
@@ -31,6 +30,11 @@ class NotNode;
 class OrNode;
 class Tree;
 
+using TreePointer = RefCount<Acl::Tree>;
+using NodePointer = RefCount<Acl::Node>;
+
+class NamedRules;
+
 /// prepares to parse ACLs configuration
 void Init(void);
 
@@ -38,10 +42,14 @@ void Init(void);
 
 typedef void ACLCB(Acl::Answer, void *);
 
-// TODO: Consider renaming all users and removing. Cons: hides the difference
-// between ACLList tree without actions and acl_access Tree with actions.
-#define acl_access Acl::Tree
-#define ACLList Acl::Tree
+/// deprecated; use Acl::TreePointer directly
+class acl_access {
+public:
+    RefCount<Acl::Tree> raw;
+};
+
+/// deprecated; use Acl::TreePointer directly
+using ACLList = acl_access;
 
 class ExternalACLEntry;
 typedef RefCount<ExternalACLEntry> ExternalACLEntryPointer;

@@ -72,7 +72,7 @@ public:
     bool skipOptional(const char *keyword);
 
     /// parses an [if [!]<acl>...] construct
-    Acl::Tree *optionalAclList();
+    ACLList *optionalAclList();
 
     /// extracts and returns a regex (including any optional flags)
     std::unique_ptr<RegexPattern> regex(const char *expectedRegexDescription);

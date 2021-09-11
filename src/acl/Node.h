@@ -22,14 +22,18 @@ namespace Acl {
 /// Can evaluate itself in FilledChecklist context.
 /// Does not change during evaluation.
 /// \ingroup ACLAPI
-class Node
+class Node: public RefCountable
 {
 
 public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    using Pointer = NodePointer;
 
-    static void ParseAclLine(ConfigParser &parser, Acl::Node **head);
+    // force pooling of specific ACL types (e.g., via MEMPROXY_CLASS)
+    void *operator new(size_t) = delete;
+
+    /// parses acl directive parts that follow directive name (i.e. "acl")
+    static void ParseNamedRule(ConfigParser &, NamedRules *&);
+
     static void Initialize();
 
     /// A configured ACL with a given name or nil.
@@ -40,7 +44,6 @@ public:
 
     Node();
     Node(Node &&) = delete;  // no copying of any kind
-    virtual ~Node();
 
     /// sets user-specified ACL name and squid.conf context
     void context(const SBuf &aName, const char *configuration);
@@ -80,8 +83,10 @@ public:
     SBuf name;
 
     char *cfgline;
-    Acl::Node *next;  // XXX: remove or at least use refcounting
-    bool registered;  ///< added to the global list of ACLs via aclRegister()
+
+protected:
+    friend class RefCount<Node>;
+    virtual ~Node();
 
 private:
     /// Matches the actual data in checklist against this Acl::Node.
@@ -102,7 +107,7 @@ private:
     /// \see Acl::Node::options()
     virtual const Acl::Options &lineOptions() { return Acl::NoOptions(); }
 
-    static void ParseNamed(ConfigParser &, Node **head, const SBuf &name);
+    static void ParseNamed(ConfigParser &, NamedRules *&, const SBuf &name);
 };
 
 } // namespace Acl

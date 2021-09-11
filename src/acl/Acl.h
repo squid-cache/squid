@@ -18,6 +18,8 @@
 #include <optional>
 #include <ostream>
 
+class ConfigParser;
+
 namespace Acl {
 
 /// the ACL type name known to admins
@@ -124,6 +126,11 @@ operator <<(std::ostream &o, const Answer &a)
     }
     return o;
 }
+
+/// report the given list of "acl" directives (using squid.conf syntax)
+void DumpNamedRules(std::ostream &, const char *directiveName, NamedRules *);
+/// delete the given list of "acl" directives
+void FreeNamedRules(NamedRules *);
 
 } // namespace Acl
 
