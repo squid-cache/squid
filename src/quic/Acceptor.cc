@@ -28,7 +28,8 @@ CBDATA_NAMESPACED_CLASS_INIT(Quic, Acceptor);
 Quic::Acceptor::Acceptor(const AnyP::PortCfgPointer &p) :
     AsyncJob("Quic::Acceptor"),
     listenConn(p->listenConn),
-    listenPort(p)
+    listenPort(p),
+    clients((1<<21) /* 2MB cap */, (5*60) /* 3min TTL */)
 {}
 
 void
@@ -224,7 +225,7 @@ Quic::Acceptor::dispatch(const SBuf &buf, Ip::Address &from)
 
     } else if ((pkt->vsBits & QUIC_RFC9000_PACKET_VALID)) {
         // RFC 9000 section 17.2 bit claiming a valid QUIC compliant packet found
-        debugs(94, 4, "confirmed QUIC packet type=" << AsHex(pkt->vsBits & QUIC_RFC9000_PTYPE) << " from " << from);
+        debugs(94, 4, "confirmed QUIC packet type=0x" << AsHex(pkt->vsBits & QUIC_RFC9000_PTYPE) << " from " << from);
 
         // RFC 9000 forced version (re-)negotiation
         if ((pkt->version & QUIC_VERSION_FORCE_NEGOTIATE_MASK) == QUIC_VERSION_FORCE_NEGOTIATE_MASK) {
@@ -233,7 +234,16 @@ Quic::Acceptor::dispatch(const SBuf &buf, Ip::Address &from)
             return;
         }
 
-        // TODO: implement Quic::NewServer(pkt, tok)
+        SBuf key = clientCacheKey(pkt);
+        if (auto *clientConn = clients.get(key)) {
+            debugs(94, 3, "existing QUIC client connection" << Raw("key",key.rawContent(), key.length()).hex());
+            // TODO: find the Server Job and send it (pkt, tok)
+
+        } else {
+            clients.add(key, pkt);
+            debugs(94, 3, "new QUIC client connection" << Raw("key",key.rawContent(), key.length()).hex());
+            // TODO: implement Quic::NewServer(pkt, tok)
+        }
         return;
 
     } else {
@@ -272,5 +282,18 @@ Quic::Acceptor::negotiateVersion(Connection &c)
     } else {
         debugs(94, 2, "QUIC version negotiate with FD " << listenConn->fd << " remote=" << c.clientAddress);
     }
+}
+
+/// produce the unique ID for this QUIC connection
+SBuf
+Quic::Acceptor::clientCacheKey(ConnectionPointer &p) const
+{
+    SBuf key = p->srcConnectionId;
+    key.append(p->dstConnectionId);
+    char *buf = key.rawAppendStart(MAX_IPSTRLEN);
+    auto len = p->clientAddress.toHostStr(buf, key.spaceSize());
+    if (len > 0)
+        key.rawAppendFinish(buf, len);
+    return key;
 }
 
