@@ -175,7 +175,10 @@ StoreEntry::swapOut()
     Store::Root().memoryOut(*this, weAreOrMayBeSwappingOut);
 
     if (mem_obj->swapout.decision < MemObject::SwapOut::swPossible)
-        return; // nothing else to do
+        return; // decided not to write to disk (at least for now)
+
+    if (!weAreOrMayBeSwappingOut)
+        return; // finished writing to disk after an earlier swStarted decision
 
     // Aborted entries have STORE_OK, but swapoutPossible rejects them. Thus,
     // store_status == STORE_OK below means we got everything we wanted.
