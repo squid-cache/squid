@@ -12,8 +12,9 @@
 #include "anyp/forward.h"
 #include "base/AsyncJob.h"
 #include "base/CbcPointer.h"
+#include "base/ClpMap.h"
 #include "comm/forward.h"
-#include "quic/forward.h"
+#include "quic/Connection.h"
 #include "sbuf/forward.h"
 
 class CommCloseCbParams;
@@ -50,6 +51,7 @@ private:
     void logAcceptError() const;
     void dispatch(const SBuf &, Ip::Address &);
     void negotiateVersion(Connection &);
+    SBuf clientCacheKey(ConnectionPointer &) const;
 
     /// errno of the last accept() or listen() action if one occurred.
     int xerrno = 0;
@@ -65,6 +67,9 @@ private:
 
     /// waiting for a Comm::Read to indicate UDP packets are available
     AsyncCall::Pointer reader;
+
+    /// registry of known client connections
+    ClpMap<SBuf, Quic::ConnectionPointer, Quic::MemoryUsedByConnection> clients;
 };
 
 } // namespace Quic

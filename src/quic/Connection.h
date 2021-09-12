@@ -46,6 +46,12 @@ public:
     SBuf srcConnectionId;
 };
 
+inline uint64_t
+MemoryUsedByConnection(const Quic::ConnectionPointer &c)
+{
+    return uint64_t(sizeof(c)) + c->srcConnectionId.length() + c->dstConnectionId.length();
+}
+
 } // namespace Quic
 
 #endif /* _SQUID__SRC_QUIC_CONNECTION_H */
