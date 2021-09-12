@@ -1714,15 +1714,14 @@ StoreEntry::startWriting()
     rep->packHeadersUsingSlowPacker(*this);
     mem_obj->markEndOfReplyHeaders();
 
+    // Same-worker collapsing risks end with the receipt of the headers.
+    // SMP collapsing risks remain until the headers are actually cached, but
+    // that event is announced via CF-agnostic disk I/O broadcasts.
+    if (hittingRequiresCollapsing())
+        setCollapsingRequirement(false);
+
     rep->body.packInto(this);
     flush();
-
-    // The entry headers are written, new clients
-    // should not collapse anymore.
-    if (hittingRequiresCollapsing()) {
-        setCollapsingRequirement(false);
-        Store::Root().transientsClearCollapsingRequirement(*this);
-    }
 }
 
 char const *
@@ -1992,6 +1991,10 @@ StoreEntry::describeTimestamps() const
 void
 StoreEntry::setCollapsingRequirement(const bool required)
 {
+    if (hittingRequiresCollapsing() == required)
+        return; // no change
+
+    debugs(20, 5, (required ? "adding to " : "removing from ") << *this);
     if (required)
         EBIT_SET(flags, ENTRY_REQUIRES_COLLAPSING);
     else
