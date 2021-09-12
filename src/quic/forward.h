@@ -11,6 +11,8 @@
 
 /* DEBUG: section 94    QUIC Protocol */
 
+#include "base/RefCount.h"
+
 /// QUIC Protocol
 namespace Quic
 {
@@ -39,6 +41,7 @@ namespace Quic
 #define QUIC_RFC9000_PTYPE_NLEN 0x03
 
 class Connection;
+typedef RefCount<Quic::Connection> ConnectionPointer;
 
 } // namespace Quic
 

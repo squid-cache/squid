@@ -193,43 +193,43 @@ Quic::Acceptor::dispatch(const SBuf &buf, Ip::Address &from)
     // TODO: support NAT, TPROXY, EUI and NF ConnMark on UDP traffic
 
     ::Parser::BinaryTokenizer tok(buf);
-    Quic::Connection pkt;
-    pkt.clientAddress = from;
-    pkt.vsBits = tok.uint8("QUIC-version-specific-bits");
+    Quic::ConnectionPointer pkt = new Quic::Connection();
+    pkt->clientAddress = from;
+    pkt->vsBits = tok.uint8("QUIC-version-specific-bits");
 
     // discard QUIC Short packets as unsupported
-    if ((pkt.vsBits & QUIC_PACKET_TYPE_MASK) == 0) {
+    if ((pkt->vsBits & QUIC_PACKET_TYPE_MASK) == 0) {
         debugs(94, 4, "ignoring unsupported 'Short' packet type from " << from);
         return;
     }
 
-    pkt.version = ntohl(tok.uint32("QUIC-version"));
+    pkt->version = ntohl(tok.uint32("QUIC-version"));
     uint32_t dstIdLen = tok.uint8("QUIC-dst-connection-ID-length");
     if (dstIdLen > 0) {
-        pkt.dstConnectionId = tok.area(dstIdLen, "QUIC-dst-connection-ID");
-        debugs(94, 8, "dst " << Raw("CID", pkt.dstConnectionId.rawContent(), pkt.dstConnectionId.length()).hex());
+        pkt->dstConnectionId = tok.area(dstIdLen, "QUIC-dst-connection-ID");
+        debugs(94, 8, "dst " << Raw("CID", pkt->dstConnectionId.rawContent(), pkt->dstConnectionId.length()).hex());
     }
     uint32_t srcIdLen = tok.uint8("QUIC-src-connection-ID-length");
     if (srcIdLen > 0) {
-        pkt.srcConnectionId = tok.area(srcIdLen,"QUIC-src-connection-ID");
-        debugs(94, 8, "src " << Raw("CID", pkt.srcConnectionId.rawContent(), pkt.srcConnectionId.length()).hex());
+        pkt->srcConnectionId = tok.area(srcIdLen,"QUIC-src-connection-ID");
+        debugs(94, 8, "src " << Raw("CID", pkt->srcConnectionId.rawContent(), pkt->srcConnectionId.length()).hex());
     }
 
     debugs(94, 2, "QUIC client, FD " << listenConn->fd << ", remote=" << from);
     debugs(94, 2, "QUIC packet header " << tok.parsed() << " bytes");
 
-    if (pkt.version == QUIC_VERSION_NEGOTIATION) {
+    if (pkt->version == QUIC_VERSION_NEGOTIATION) {
         debugs(94, 3, "ignoring attempt to negotiate version change from " << from);
         return;
 
-    } else if ((pkt.vsBits & QUIC_RFC9000_PACKET_VALID)) {
+    } else if ((pkt->vsBits & QUIC_RFC9000_PACKET_VALID)) {
         // RFC 9000 section 17.2 bit claiming a valid QUIC compliant packet found
-        debugs(94, 4, "confirmed QUIC packet type=" << AsHex(pkt.vsBits & QUIC_RFC9000_PTYPE) << " from " << from);
+        debugs(94, 4, "confirmed QUIC packet type=" << AsHex(pkt->vsBits & QUIC_RFC9000_PTYPE) << " from " << from);
 
         // RFC 9000 forced version (re-)negotiation
-        if ((pkt.version & QUIC_VERSION_FORCE_NEGOTIATE_MASK) == QUIC_VERSION_FORCE_NEGOTIATE_MASK) {
+        if ((pkt->version & QUIC_VERSION_FORCE_NEGOTIATE_MASK) == QUIC_VERSION_FORCE_NEGOTIATE_MASK) {
             debugs(94, 3, "forced version change from " << from);
-            negotiateVersion(pkt);
+            negotiateVersion(*pkt);
             return;
         }
 
@@ -238,7 +238,7 @@ Quic::Acceptor::dispatch(const SBuf &buf, Ip::Address &from)
 
     } else {
         // reject unsupported QUIC versions
-        debugs(94, 3, "ignoring unknown version " << pkt.version << " from " << from);
+        debugs(94, 3, "ignoring unknown version " << pkt->version << " from " << from);
         return;
     }
 }

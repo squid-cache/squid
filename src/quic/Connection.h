@@ -26,7 +26,7 @@ namespace Quic
  *
  * see RFC 8999 section 5
  */
-class Connection
+class Connection : public RefCountable
 {
 public:
     /// IP:port of client this packet was received from
