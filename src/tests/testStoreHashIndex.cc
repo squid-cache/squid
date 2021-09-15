@@ -101,6 +101,8 @@ static void commonInit()
     if (inited)
         return;
 
+    inited = true;
+
     Mem::Init();
 
     Config.Store.avgObjectSize = 1024;
