@@ -108,6 +108,8 @@ static void commonInit()
     Config.Store.objectsPerBucket = 20;
 
     Config.Store.maxObjectSize = 2048;
+
+    Config.memShared.defaultTo(false);
 }
 
 /* TODO make this a cbdata class */
