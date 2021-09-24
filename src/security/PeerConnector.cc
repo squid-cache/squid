@@ -653,10 +653,10 @@ Security::PeerConnector::handleMissingCertificates(const Security::IoResult &ioR
     Must(callerHandlesMissingCertificates);
     callerHandlesMissingCertificates = false;
 
-    if (!computeMissingCertificateUrls(sconn))
-        return handleNegotiationResult(ioResult);
-
     suspendNegotiation(ioResult);
+
+    if (!computeMissingCertificateUrls(sconn))
+        return resumeNegotiation();
 
     assert(!urlsOfMissingCerts.empty());
     startCertDownloading(urlsOfMissingCerts.front());
