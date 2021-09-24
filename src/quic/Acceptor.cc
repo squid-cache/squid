@@ -186,6 +186,52 @@ Quic::Acceptor::doClientRead(const CommIoCbParams &io)
     readSomeData();
 }
 
+uint64_t
+Quic::Acceptor::decodeVarInt(::Parser::BinaryTokenizer &tok, const char *description)
+{
+    auto msb = tok.uint8(description);
+    uint64_t result = (msb & 0x3F);
+    uint8_t len = 2 ^ ((msb & 0xC0) >> 6);
+    Must(tok.leftovers().length() >= len);
+    for (; len ; --len) {
+        result <<= 8;
+        result += tok.uint8(description);
+    }
+    return result;
+}
+
+SBuf
+Quic::Acceptor::getToken(::Parser::BinaryTokenizer &tok)
+{
+    auto len = decodeVarInt(tok, "token-length");
+    Must(tok.leftovers().length() >= len);
+    return tok.area(len, "token");
+}
+
+uint64_t
+Quic::Acceptor::getPayloadLength(::Parser::BinaryTokenizer &tok)
+{
+    auto len = decodeVarInt(tok, "length");
+    Must(tok.leftovers().length() >= len);
+    return len;
+}
+
+uint64_t
+Quic::Acceptor::getPacketNumber(::Parser::BinaryTokenizer &tok, uint8_t nl)
+{
+    switch (nl & QUIC_RFC9000_PTYPE_NLEN) {
+    case 0:
+        return tok.uint8("number");
+    case 1:
+        return tok.uint16("number");
+    case 2:
+        return tok.uint24("number");
+    case 3:
+        return tok.uint32("number");
+    }
+    return 0; // unreachable
+}
+
 /// Determine QUIC version-agnostic details and initiate a Server to handle the packet received.
 /// Governed by RFC 8999
 void
@@ -234,12 +280,34 @@ Quic::Acceptor::dispatch(const SBuf &buf, Ip::Address &from)
             return;
         }
 
+        int pType = (pkt->vsBits & QUIC_RFC9000_PTYPE);
+        // RFC 9000 section Retry packet is server-to-client only
+        // higher packet numbers are not supported
+        if (pType > 0x02) {
+            debugs(94, 3, "unknown type=0x" << AsHex(pkt->vsBits & QUIC_RFC9000_PTYPE) << " from " << from);
+            return;
+        }
+
+        // RFC 9000 section 17.2.2 Initial Packet
+        if (pType == 0x00)
+            pkt->token = getToken(tok);
+
+        auto plen = getPayloadLength(tok);
+        auto number = getPacketNumber(tok, pkt->vsBits);
+        auto payload = tok.area(plen -1 -(pkt->vsBits & QUIC_RFC9000_PTYPE_NLEN), "payload");
+        if (!tok.atEnd()) {
+            debugs(94, 2, "ignoring garbage input" << Raw("buf",tok.leftovers().rawContent(), tok.leftovers().length()));
+        }
+
         SBuf key = clientCacheKey(pkt);
-        if (auto *clientConn = clients.get(key)) {
+        if (auto clientConn = clients.get(key)) {
             debugs(94, 3, "existing QUIC client connection" << Raw("key",key.rawContent(), key.length()).hex());
-            // TODO: find the Server Job and send it (pkt, tok)
+            (*clientConn)->inQueue.emplace_back(number, payload);
+// XXX: sort the inQueue by number before spawning the Call
+// spawn a clientConn->notifyOnClientRead Call to handle the new data
 
         } else {
+            pkt->inQueue.emplace_back(number, payload);
             clients.add(key, pkt);
             debugs(94, 3, "new QUIC client connection" << Raw("key",key.rawContent(), key.length()).hex());
             // TODO: implement Quic::NewServer(pkt, tok)
