@@ -9,9 +9,13 @@
 #ifndef _SQUID__SRC_QUIC_CONNECTION_H
 #define _SQUID__SRC_QUIC_CONNECTION_H
 
+#include "base/Subscription.h"
 #include "ip/Address.h"
 #include "quic/forward.h"
 #include "sbuf/SBuf.h"
+
+#include <list>
+#include <utility>
 
 namespace Quic
 {
@@ -44,6 +48,17 @@ public:
 
     /// Source Connection ID (0..2040),
     SBuf srcConnectionId;
+
+    /// Initial Packet assigned token
+    SBuf token;
+
+    typedef std::pair<uint64_t, SBuf> PacketBuf; // {packet number, packet data}
+    /// queue of packets received and awaiting handler
+    /// TODO maintain sorted by number
+    std::list<PacketBuf> inQueue;
+
+    /// Call to schedule when data is received from the client
+    Subscription::Pointer notifyOnClientRead;
 };
 
 inline uint64_t
