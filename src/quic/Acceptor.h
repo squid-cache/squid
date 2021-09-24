@@ -53,6 +53,11 @@ private:
     void negotiateVersion(Connection &);
     SBuf clientCacheKey(ConnectionPointer &) const;
 
+    uint64_t decodeVarInt(::Parser::BinaryTokenizer &, const char *);
+    SBuf getToken(::Parser::BinaryTokenizer &);
+    uint64_t getPacketNumber(::Parser::BinaryTokenizer &, uint8_t);
+    uint64_t getPayloadLength(::Parser::BinaryTokenizer &);
+
     /// errno of the last accept() or listen() action if one occurred.
     int xerrno = 0;
 
