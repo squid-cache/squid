@@ -86,8 +86,8 @@ IncreaseSum(const S s, const T t) {
         // our callers use negative values specially (e.g., for do-not-use or
         // do-not-limit settings) and are not supposed to do math with them.
         (Less(s, 0) || Less(t, 0)) ? Optional<S>() :
-        // Avoids undefined behavior of signed under/overflows. When A is not T,
-        // a or t undergoes (safe) integral conversion in these expressions.
+        // Avoids undefined behavior of signed under/overflows. When S is not T,
+        // s or t undergoes (safe) integral conversion in these expressions.
         // Sum overflow condition: s + t > maxS or, here, maxS - s < t.
         // If the sum exceeds maxT, integral conversions will use S, not T.
         Less(std::numeric_limits<S>::max() - s, t) ? Optional<S>() :

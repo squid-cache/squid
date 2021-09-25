@@ -872,10 +872,11 @@ tests_testBoilerplate_LDFLAGS = $(LIBADD_DL)
 # which uses it.
 
 ## Tests of SquidMath.h
-
 check_PROGRAMS += tests/testMath
 tests_testMath_SOURCES = \
-	tests/testMath.cc
+	 tests/testMath.cc
+nodist_tests_testMath_SOURCES = \
+	 SquidMath.h
 tests_testMath_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
