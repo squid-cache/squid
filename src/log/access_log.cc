@@ -75,7 +75,7 @@ static void fvdbRegisterWithCacheManager();
 int LogfileStatus = LOG_DISABLE;
 
 void
-accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist * checklist)
+accessLogLogTo(CustomLog *log, const AccessLogEntry::Pointer &al, ACLChecklist *checklist)
 {
 
     if (al->url.isEmpty())
@@ -145,7 +145,7 @@ accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist * check
 }
 
 void
-accessLogLog(AccessLogEntry::Pointer &al, ACLChecklist * checklist)
+accessLogLog(const AccessLogEntry::Pointer &al, ACLChecklist *checklist)
 {
     if (LogfileStatus != LOG_ENABLE)
         return;

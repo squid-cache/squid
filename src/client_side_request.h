@@ -123,7 +123,7 @@ public:
     // NP: still an enum so each stage altering it must take care when replacing it.
     LogTags logType;
 
-    AccessLogEntry::Pointer al; ///< access.log entry
+    const AccessLogEntry::Pointer al; ///< access.log entry
 
     struct Flags {
         Flags() : accel(false), internal(false), done_copying(false) {}

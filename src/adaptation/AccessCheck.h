@@ -36,7 +36,7 @@ public:
 
     // use this to start async ACL checks; returns true if started
     static bool Start(Method method, VectPoint vp, HttpRequest *req,
-                      HttpReply *rep, AccessLogEntry::Pointer &al, Adaptation::Initiator *initiator);
+                      HttpReply *, const AccessLogEntry::Pointer &, Adaptation::Initiator *);
 
 protected:
     // use Start to start adaptation checks

@@ -1311,7 +1311,7 @@ void Adaptation::Icap::ModXact::swanSong()
     Adaptation::Icap::Xaction::swanSong();
 }
 
-void prepareLogWithRequestDetails(HttpRequest *, AccessLogEntry::Pointer &);
+void prepareLogWithRequestDetails(HttpRequest *, const AccessLogEntry::Pointer &);
 
 void Adaptation::Icap::ModXact::finalizeLogInfo()
 {

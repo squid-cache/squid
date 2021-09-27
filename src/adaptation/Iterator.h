@@ -34,7 +34,7 @@ class Iterator: public Initiate, public Initiator
 
 public:
     Iterator(Http::Message *virginHeader, HttpRequest *virginCause,
-             AccessLogEntry::Pointer &alp,
+             const AccessLogEntry::Pointer &,
              const Adaptation::ServiceGroupPointer &aGroup);
     virtual ~Iterator();
 

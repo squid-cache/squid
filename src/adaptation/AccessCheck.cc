@@ -29,7 +29,7 @@ cbdata_type Adaptation::AccessCheck::CBDATA_AccessCheck = CBDATA_UNKNOWN;
 bool
 Adaptation::AccessCheck::Start(Method method, VectPoint vp,
                                HttpRequest *req, HttpReply *rep,
-                               AccessLogEntry::Pointer &al, Adaptation::Initiator *initiator)
+                               const AccessLogEntry::Pointer &al, Adaptation::Initiator *initiator)
 {
 
     if (Config::Enabled) {
