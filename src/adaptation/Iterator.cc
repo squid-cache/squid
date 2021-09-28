@@ -21,7 +21,7 @@
 
 Adaptation::Iterator::Iterator(
     Http::Message *aMsg, HttpRequest *aCause,
-    const AccessLogEntry::Pointer &alp,
+    const AccessLogEntryPointer &alp,
     const ServiceGroupPointer &aGroup):
     AsyncJob("Iterator"),
     Adaptation::Initiate("Iterator"),

@@ -186,7 +186,7 @@ static void clientUpdateStatHistCounters(const LogTags &logType, int svc_time);
 static void clientUpdateStatCounters(const LogTags &logType);
 static void clientUpdateHierCounters(HierarchyLogEntry *);
 static bool clientPingHasFinished(ping_data const *aPing);
-void prepareLogWithRequestDetails(HttpRequest *, const AccessLogEntry::Pointer &);
+void prepareLogWithRequestDetails(HttpRequest *, const AccessLogEntryPointer &);
 static void ClientSocketContextPushDeferredIfNeeded(Http::StreamPointer deferredRequest, ConnStateData * conn);
 
 char *skipLeadingSpace(char *aString);
@@ -325,7 +325,7 @@ ClientHttpRequest::updateCounters()
 }
 
 void
-prepareLogWithRequestDetails(HttpRequest *request, const AccessLogEntry::Pointer &aLogEntry)
+prepareLogWithRequestDetails(HttpRequest *request, const AccessLogEntryPointer &aLogEntry)
 {
     assert(request);
     assert(aLogEntry != NULL);

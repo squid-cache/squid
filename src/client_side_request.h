@@ -9,12 +9,12 @@
 #ifndef SQUID_CLIENTSIDEREQUEST_H
 #define SQUID_CLIENTSIDEREQUEST_H
 
-#include "AccessLogEntry.h"
 #include "acl/forward.h"
 #include "client_side.h"
 #include "clientStream.h"
 #include "http/forward.h"
 #include "HttpHeaderRange.h"
+#include "log/forward.h"
 #include "LogTags.h"
 #include "Store.h"
 
@@ -123,7 +123,7 @@ public:
     // NP: still an enum so each stage altering it must take care when replacing it.
     LogTags logType;
 
-    const AccessLogEntry::Pointer al; ///< access.log entry
+    const AccessLogEntryPointer al; ///< access.log entry
 
     struct Flags {
         Flags() : accel(false), internal(false), done_copying(false) {}
