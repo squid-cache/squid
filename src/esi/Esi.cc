@@ -37,6 +37,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/Address.h"
+#include "log/forward.h"
 #include "MemBuf.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
