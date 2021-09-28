@@ -1413,7 +1413,7 @@ ESIContext::freeResources ()
     /* don't touch incoming, it's a pointer into buffered anyway */
 }
 
-ErrorState *clientBuildError(err_type, Http::StatusCode, char const *, const ConnStateData *, HttpRequest *, const AccessLogEntry::Pointer &);
+ErrorState *clientBuildError(err_type, Http::StatusCode, char const *, const ConnStateData *, HttpRequest *, const AccessLogEntryPointer &);
 
 /* This can ONLY be used before we have sent *any* data to the client */
 void
