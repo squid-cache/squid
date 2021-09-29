@@ -25,6 +25,28 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeekingPeerConnector);
 
+Ssl::PeekingPeerConnector::PeekingPeerConnector(HttpRequestPointer &aRequest,
+        const Comm::ConnectionPointer &aServerConn,
+        const Comm::ConnectionPointer &aClientConn,
+        AsyncCall::Pointer &aCallback,
+        const AccessLogEntryPointer &alp,
+        const time_t timeout):
+    AsyncJob("Ssl::PeekingPeerConnector"),
+    Security::PeerConnector(aServerConn, aCallback, alp, timeout),
+    clientConn(aClientConn),
+    splice(false),
+    serverCertificateHandled(false)
+{
+    request = aRequest;
+
+    if (const auto csd = request->clientConnectionManager.valid()) {
+        const auto serverBump = csd->serverBump();
+        Must(serverBump);
+        Must(serverBump->at(XactionStep::tlsBump3));
+    }
+    // else the client is gone, and we cannot check the step, but must carry on
+}
+
 void
 Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone(const Acl::Answer aclAnswer, void *data)
 {
@@ -45,12 +67,6 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceDone(const Acl::Answer aclAnswer
 void
 Ssl::PeekingPeerConnector::checkForPeekAndSplice()
 {
-    if (!request->clientConnectionManager)
-        return;
-    const auto serverBump = request->clientConnectionManager->serverBump();
-    Must(serverBump);
-    Must(serverBump->at(XactionStep::tlsBump3));
-
     handleServerCertificate();
 
     ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(
@@ -166,8 +182,6 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
         if (hostName)
             SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, (void*)hostName);
 
-        Must(csd->serverBump());
-        Must(csd->serverBump()->at(XactionStep::tlsBump3));
         if (csd->sslBumpMode == Ssl::bumpPeek || csd->sslBumpMode == Ssl::bumpStare) {
             auto clientSession = fd_table[clientConn->fd].ssl.get();
             Must(clientSession);
