@@ -3074,8 +3074,8 @@ ConnStateData::startPeekAndSplice()
     // of SSL bump
     inBuf.clear();
 
-    sslServerBump->step = XactionStep::tlsBump3; // TLS bumping Step3
     debugs(83, 5, "Peek and splice at step2 done. Start forwarding the request!!! ");
+    sslServerBump->step = XactionStep::tlsBump3;
     FwdState::Start(clientConnection, sslServerBump->entry, sslServerBump->request.getRaw(), http ? http->al : NULL);
 }
 
