@@ -9,7 +9,7 @@
 #ifndef SQUID_CLIENTSIDEREQUEST_H
 #define SQUID_CLIENTSIDEREQUEST_H
 
-#include "acl/forward.h"
+#include "AccessLogEntry.h"
 #include "client_side.h"
 #include "clientStream.h"
 #include "http/forward.h"
@@ -125,7 +125,7 @@ public:
     HttpHdrRangeIter range_iter;    /* data for iterating thru range specs */
     size_t req_sz;      /* raw request size on input, not current request size */
 
-    const AccessLogEntryPointer al; ///< access.log entry
+    const AccessLogEntry::Pointer al; ///< access.log entry
 
     struct Flags {
         Flags() : accel(false), internal(false), done_copying(false) {}
