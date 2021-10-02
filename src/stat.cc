@@ -9,6 +9,7 @@
 /* DEBUG: section 18    Cache Manager Statistics */
 
 #include "squid.h"
+#include "AccessLogEntry.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
 #include "client_side.h"

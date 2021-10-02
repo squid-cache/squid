@@ -151,6 +151,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     uri(NULL),
     log_uri(NULL),
     req_sz(0),
+    al(new AccessLogEntry()),
     calloutContext(NULL),
     maxReplyBodySize_(0),
     entry_(NULL),
@@ -164,7 +165,6 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     , request_satisfaction_offset(0)
 #endif
 {
-    al = new AccessLogEntry;
     CodeContext::Reset(al);
     al->cache.start_time = current_time;
     if (aConn) {
