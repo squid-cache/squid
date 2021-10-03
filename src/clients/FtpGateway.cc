@@ -1081,7 +1081,7 @@ Ftp::Gateway::checkUrlpath()
         const auto fullPath = request->url.path();
         const auto typecodePos = typeSpecStart + middle.length();
         typecode = (typecodePos < fullPath.length()) ?
-            static_cast<char>(xtoupper(fullPath[typecodePos])) : '\0';
+                   static_cast<char>(xtoupper(fullPath[typecodePos])) : '\0';
         request->url.path(fullPath.substr(0, typeSpecStart));
     }
 

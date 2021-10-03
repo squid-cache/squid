@@ -1,3 +1,10 @@
+Changes in squid-5.2 (03 Oct 2021):
+
+	- Bug 5164: a copy-paste typo in HttpHdrCc::hasMinFresh()
+	- Bug 4922: Improve ftp://... filename extraction
+	- TLS: Fix X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY handling
+	- ... and all fixes from 4.17
+
 Changes in squid-5.1 (01 Aug 2021):
 
 	- Bug 4696: Fix leaky String move assignment operator
@@ -119,6 +126,10 @@ Changes in squid-5.0.1 (14 Jan 2020):
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
 	- ... and all fixes from 4.10
+
+Changes in squid-4.17 (03 Oct 2021):
+
+	- WCCP: Validate packets better
 
 Changes in squid-4.16 (04 Jul 2021):
 
