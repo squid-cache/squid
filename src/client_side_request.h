@@ -9,7 +9,7 @@
 #ifndef SQUID_CLIENTSIDEREQUEST_H
 #define SQUID_CLIENTSIDEREQUEST_H
 
-#include "acl/forward.h"
+#include "AccessLogEntry.h"
 #include "client_side.h"
 #include "clientStream.h"
 #include "http/forward.h"
@@ -76,6 +76,12 @@ public:
     /// the request. To set the virgin request, use initRequest().
     void resetRequest(HttpRequest *);
 
+    /// update the code in the transaction processing tags
+    void updateLoggingTags(const LogTags_ot code) { al->cache.code.update(code); }
+
+    /// the processing tags associated with this request transaction.
+    const LogTags &loggingTags() const { return al->cache.code; }
+
     /** Details of the client socket which produced us.
      * Treat as read-only for the lifetime of this HTTP request.
      */
@@ -119,11 +125,7 @@ public:
     HttpHdrRangeIter range_iter;    /* data for iterating thru range specs */
     size_t req_sz;      /* raw request size on input, not current request size */
 
-    /// the processing tags associated with this request transaction.
-    // NP: still an enum so each stage altering it must take care when replacing it.
-    LogTags logType;
-
-    const AccessLogEntryPointer al; ///< access.log entry
+    const AccessLogEntry::Pointer al; ///< access.log entry
 
     struct Flags {
         Flags() : accel(false), internal(false), done_copying(false) {}
