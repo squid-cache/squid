@@ -1,3 +1,7 @@
+Changes in squid-4.17 (03 Oct 2021):
+
+	- WCCP: Validate packets better
+
 Changes in squid-4.16 (04 Jul 2021):
 
 	- Regression Fix: --with-valgrind-debug build broken since 4.15
