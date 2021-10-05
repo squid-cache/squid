@@ -89,6 +89,7 @@ public:
         HTML_header_added(0),
         HTML_pre(0),
         type_id(GOPHER_FILE /* '0' */),
+        overflowed(false),
         cso_recno(0),
         len(0),
         buf(NULL),
@@ -116,8 +117,15 @@ public:
     int HTML_pre;
     char type_id;
     char request[MAX_URL];
+
+    /// some received bytes ignored due to internal buffer capacity limits
+    bool overflowed;
+
     int cso_recno;
+
+    /// the number of not-yet-parsed Gopher line bytes in this->buf
     int len;
+
     char *buf;          /* pts to a 4k page */
     Comm::ConnectionPointer serverConn;
     FwdState::Pointer fwd;
@@ -431,6 +439,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
         if (gopherState->len + llen >= TEMP_BUF_SIZE) {
             debugs(10, DBG_IMPORTANT, "GopherHTML: Buffer overflow. Lost some data on URL: " << entry->url()  );
             llen = TEMP_BUF_SIZE - gopherState->len - 1;
+            gopherState->overflowed = true; // may already be true
         }
         if (!lpos) {
             /* there is no complete line in inbuf */
@@ -804,6 +813,10 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm
 
         entry->timestampsSet();
         entry->flush();
+
+        if (!gopherState->len && !gopherState->overflowed)
+            gopherState->fwd->markStoredReplyAsWhole("gopher EOF after receiving/storing some bytes");
+
         gopherState->fwd->complete();
         gopherState->serverConn->close();
     } else {
@@ -962,6 +975,7 @@ gopherStart(FwdState * fwd)
         }
 
         gopherToHTML(gopherState, (char *) NULL, 0);
+        fwd->markStoredReplyAsWhole("gopher instant internal request satisfaction");
         fwd->complete();
         return;
     }
