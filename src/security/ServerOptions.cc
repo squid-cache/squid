@@ -19,6 +19,9 @@
 #include "compat/openssl.h"
 #include "ssl/support.h"
 
+#if HAVE_OPENSSL_DECODER_H
+#include <openssl/decoder.h>
+#endif
 #if HAVE_OPENSSL_ERR_H
 #include <openssl/err.h>
 #endif
@@ -353,6 +356,7 @@ Security::ServerOptions::loadDhParams()
         return;
 
 #if USE_OPENSSL
+#if OPENSSL_VERSION_MAJOR < 3
     DH *dhp = nullptr;
     if (FILE *in = fopen(dhParamsFile.c_str(), "r")) {
         dhp = PEM_read_DHparams(in, nullptr, nullptr, nullptr);
@@ -364,7 +368,6 @@ Security::ServerOptions::loadDhParams()
         return;
     }
 
-#if OPENSSL_VERSION_MAJOR < 3
     // DH_check() removed in OpenSSL 3.0.
     // TODO: use the EVP API instead, which also works in OpenSSL 1.1.
     // But it is not yet clear exactly how that API works for DH.
@@ -376,10 +379,31 @@ Security::ServerOptions::loadDhParams()
             dhp = nullptr;
         }
     }
-#endif
-
     parsedDhParams.resetWithoutLocking(dhp);
+
+#else // OpenSSL 3.0+
+    EVP_PKEY *pkey = nullptr;
+    if (auto *dctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, "PEM", nullptr, "DH", OSSL_KEYMGMT_SELECT_ALL, nullptr, nullptr)) {
+        if (auto *in = fopen(dhParamsFile.c_str(), "r")) {
+            if (OSSL_DECODER_from_fp(dctx, in) == 1) {
+
+                /* pkey is created with the decoded data from the bio */
+                Must(pkey);
+                parsedDhParams.resetWithoutLocking(pkey);
+
+            } else {
+                debugs(83, DBG_IMPORTANT, "WARNING: Failed to decode DH parameters '" << dhParamsFile << "'");
+            }
+            fclose(in);
+        }
+        OSSL_DECODER_CTX_free(dctx);
+
+    } else {
+        debugs(83, DBG_IMPORTANT, "WARNING: no suitable potential decoders found for DH parameters");
+        return;
+    }
 #endif
+#endif // USE_OPENSSL
 }
 
 bool

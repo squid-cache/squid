@@ -101,8 +101,23 @@ typedef std::list<Security::CertPointer> CertList;
 typedef std::list<Security::CrlPointer> CertRevokeList;
 
 #if USE_OPENSSL
+CtoCpp1(EVP_PKEY_free, EVP_PKEY *)
+typedef Security::LockingPointer<EVP_PKEY, EVP_PKEY_free_cpp, HardFun<int, EVP_PKEY *, EVP_PKEY_up_ref> > PrivateKeyPointer;
+#elif USE_GNUTLS
+typedef std::shared_ptr<struct gnutls_x509_privkey_int> PrivateKeyPointer;
+#else
+typedef std::shared_ptr<void> PrivateKeyPointer;
+#endif
+
+#if USE_OPENSSL
+#if OPENSSL_VERSION_MAJOR < 3
 CtoCpp1(DH_free, DH *);
 typedef Security::LockingPointer<DH, DH_free_cpp, HardFun<int, DH *, DH_up_ref> > DhePointer;
+#else
+typedef PrivateKeyPointer DhePointer;
+#endif
+#elif USE_GNUTLS
+typedef void *DhePointer;
 #else
 typedef void *DhePointer;
 #endif
@@ -185,15 +200,6 @@ typedef long ParsedPortFlags;
 class PeerConnector;
 class BlindPeerConnector;
 class PeerOptions;
-
-#if USE_OPENSSL
-CtoCpp1(EVP_PKEY_free, EVP_PKEY *)
-typedef Security::LockingPointer<EVP_PKEY, EVP_PKEY_free_cpp, HardFun<int, EVP_PKEY *, EVP_PKEY_up_ref> > PrivateKeyPointer;
-#elif USE_GNUTLS
-typedef std::shared_ptr<struct gnutls_x509_privkey_int> PrivateKeyPointer;
-#else
-typedef std::shared_ptr<void> PrivateKeyPointer;
-#endif
 
 class ServerOptions;
 
