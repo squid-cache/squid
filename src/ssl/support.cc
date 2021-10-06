@@ -657,8 +657,8 @@ Ssl::Initialize(void)
 
     SQUID_OPENSSL_init_ssl();
 
-#if !defined(OPENSSL_NO_ENGINE)
     if (::Config.SSL.ssl_engine) {
+#if !defined(OPENSSL_NO_ENGINE) && OPENSSL_VERSION_MAJOR < 3
         ENGINE_load_builtin_engines();
         ENGINE *e;
         if (!(e = ENGINE_by_id(::Config.SSL.ssl_engine)))
@@ -668,11 +668,10 @@ Ssl::Initialize(void)
             const auto ssl_error = ERR_get_error();
             fatalf("Failed to initialise SSL engine: %s\n", Security::ErrorString(ssl_error));
         }
-    }
 #else
-    if (::Config.SSL.ssl_engine)
         fatalf("Your OpenSSL has no SSL engine support\n");
 #endif
+    }
 
     const char *defName = ::Config.SSL.certSignHash ? ::Config.SSL.certSignHash : SQUID_SSL_SIGN_HASH_IF_NONE;
     Ssl::DefaultSignHash = EVP_get_digestbyname(defName);

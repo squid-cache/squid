@@ -3061,6 +3061,8 @@ DEFAULT: none
 DOC_START
 	The OpenSSL engine to use. You will need to set this if you
 	would like to use hardware SSL acceleration for example.
+
+	Note: OpenSSL 3.0 and newer do not provide Engine support.
 DOC_END
 
 NAME: sslproxy_session_ttl

@@ -85,7 +85,7 @@ static bool setSerialNumber(ASN1_INTEGER *ai, BIGNUM const* serial)
         if (!bn)
             return false;
 
-        if (!BN_pseudo_rand(bn.get(), 64, 0, 0))
+        if (!BN_rand(bn.get(), 64, 0, 0))
             return false;
     }
 
