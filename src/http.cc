@@ -686,8 +686,8 @@ HttpStateData::processReplyHeader()
             debugs(11, 3, "Non-HTTP-compliant header:\n---------\n" << inBuf << "\n----------");
             flags.headers_parsed = true;
             HttpReply *newrep = new HttpReply;
-            // hp->needsMoreData() means hp->parseStatusCode is unusable, but it
-            // also means that the reply header got truncated by a premature EOF
+            // hp->needsMoreData() means hp->parseStatusCode is unusable, but, here,
+            // it also means that the reply header got truncated by a premature EOF
             assert(!hp->needsMoreData() || eof);
             const auto scode = hp->needsMoreData() ? Http::scInvalidHeader : hp->parseStatusCode;
             newrep->sline.set(Http::ProtocolVersion(), scode);
