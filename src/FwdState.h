@@ -210,7 +210,7 @@ private:
 
     /// Whether the entire reply (including any body) was written to Store.
     /// The string literal value is only used for debugging.
-    const char *storedWholeReply_ = nullptr;
+    const char *storedWholeReply_ ;
 };
 
 class acl_tos;

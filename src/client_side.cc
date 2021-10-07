@@ -3999,7 +3999,7 @@ ConnStateData::terminateAll(const Error &rawError, const LogTagsErrors &lte)
     // We detail even ERR_NONE: There should be no transactions left, and
     // detailed ERR_NONE will be unused. Otherwise, this detail helps in triage.
     if (!error.detail) {
-        static const auto d = MakeNamedErrorDetail("WITH_CLT");
+        static const auto d = MakeNamedErrorDetail("WITH_CLIENT");
         error.detail = d;
     }
 

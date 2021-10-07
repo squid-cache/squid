@@ -267,7 +267,7 @@ FwdState::updateAleWithFinalError()
     lte.timedout = (err->xerrno == ETIMEDOUT || err->type == ERR_READ_TIMEOUT);
     al->cache.code.err.update(lte);
     if (!err->detail) {
-        static const auto d = MakeNamedErrorDetail("WITH_SRV");
+        static const auto d = MakeNamedErrorDetail("WITH_SERVER");
         err->detailError(d);
     }
     al->updateError(Error(err->type, err->detail));
