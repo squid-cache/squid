@@ -672,8 +672,15 @@ HttpStateData::processReplyHeader()
 
         if (hp->needsMoreData()) {
             if (eof) { // no more data coming
-                assert(!parsedOk);
-                // fall through to handle this premature EOF as an error
+                /* Bug 2879: Replies may terminate with \r\n then EOF instead of \r\n\r\n.
+                 * We also may receive truncated responses.
+                 * Ensure here that we have at minimum two \r\n when EOF is seen.
+                 */
+                inBuf.append("\r\n\r\n", 4);
+                // retry the parse
+                parsedOk = hp->parse(inBuf);
+                // sync the buffers after parsing.
+                inBuf = hp->remaining();
             } else {
                 debugs(33, 5, "Incomplete response, waiting for end of response headers");
                 return;
@@ -686,11 +693,7 @@ HttpStateData::processReplyHeader()
             debugs(11, 3, "Non-HTTP-compliant header:\n---------\n" << inBuf << "\n----------");
             flags.headers_parsed = true;
             HttpReply *newrep = new HttpReply;
-            // hp->needsMoreData() means hp->parseStatusCode is unusable, but it
-            // also means that the reply header got truncated by a premature EOF
-            assert(!hp->needsMoreData() || eof);
-            const auto scode = hp->needsMoreData() ? Http::scInvalidHeader : hp->parseStatusCode;
-            newrep->sline.set(Http::ProtocolVersion(), scode);
+            newrep->sline.set(Http::ProtocolVersion(), hp->parseStatusCode);
             setVirginReply(newrep);
             return;
         }
