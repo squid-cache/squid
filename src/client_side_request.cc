@@ -2136,7 +2136,7 @@ ClientHttpRequest::endRequestSatisfaction()
         // We received the entire reply per receivedWholeAdaptedReply.
         // We are called when we consumed everything received (per our callers).
         // We consume only what we store per noteMoreBodyDataAvailable().
-        storeEntry()->completeSuccessfully("received,consumed=>stored the entire REQMOD reply");
+        storeEntry()->completeSuccessfully("received, consumed, and, hence, stored the entire REQMOD reply");
     } else {
         storeEntry()->completeTruncated("REQMOD request satisfaction default");
     }
