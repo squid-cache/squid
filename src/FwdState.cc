@@ -150,7 +150,8 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     start_t(squid_curtime),
     n_tries(0),
     destinations(new ResolvedPeers()),
-    pconnRace(raceImpossible)
+    pconnRace(raceImpossible),
+    storedWholeReply_(nullptr)
 {
     debugs(17, 2, "Forwarding client request " << client << ", url=" << e->url());
     HTTPMSGLOCK(request);
@@ -259,6 +260,23 @@ FwdState::selectPeerForIntercepted()
 }
 #endif
 
+/// updates ALE when we finalize the transaction error (if any)
+void
+FwdState::updateAleWithFinalError()
+{
+    if (!err || !al)
+        return;
+
+    LogTagsErrors lte;
+    lte.timedout = (err->xerrno == ETIMEDOUT || err->type == ERR_READ_TIMEOUT);
+    al->cache.code.err.update(lte);
+    if (!err->detail) {
+        static const auto d = MakeNamedErrorDetail("WITH_SERVER");
+        err->detailError(d);
+    }
+    al->updateError(Error(err->type, err->detail));
+}
+
 void
 FwdState::completed()
 {
@@ -283,20 +301,26 @@ FwdState::completed()
 
     if (entry->store_status == STORE_PENDING) {
         if (entry->isEmpty()) {
+            assert(!storedWholeReply_);
             if (!err) // we quit (e.g., fd closed) before an error or content
                 fail(new ErrorState(ERR_READ_ERROR, Http::scBadGateway, request, al));
             assert(err);
+            updateAleWithFinalError();
             errorAppendEntry(entry, err);
             err = NULL;
 #if USE_OPENSSL
             if (request->flags.sslPeek && request->clientConnectionManager.valid()) {
                 CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
                              ConnStateData::httpsPeeked, ConnStateData::PinnedIdleContext(Comm::ConnectionPointer(nullptr), request));
+                // no flags.dont_retry: completed() is a post-reforward() act
             }
 #endif
         } else {
-            entry->complete();
-            entry->releaseRequest();
+            updateAleWithFinalError(); // if any
+            if (storedWholeReply_)
+                entry->completeSuccessfully(storedWholeReply_);
+            else
+                entry->completeTruncated("FwdState default");
         }
     }
 
@@ -543,6 +567,7 @@ FwdState::complete()
         if (Comm::IsConnOpen(serverConn))
             unregister(serverConn);
 
+        storedWholeReply_ = nullptr;
         entry->reset();
 
         useDestinations();
@@ -552,13 +577,23 @@ FwdState::complete()
             debugs(17, 3, "server FD " << serverConnection()->fd << " not re-forwarding status " << replyStatus);
         else
             debugs(17, 3, "server (FD closed) not re-forwarding status " << replyStatus);
-        entry->complete();
 
-        if (!Comm::IsConnOpen(serverConn))
-            completed();
+        completed();
 
         stopAndDestroy("forwarding completed");
     }
+}
+
+void
+FwdState::markStoredReplyAsWhole(const char * const whyWeAreSure)
+{
+    debugs(17, 5, whyWeAreSure << " for " << *entry);
+
+    // the caller wrote everything to Store, but Store may silently abort writes
+    if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
+        return;
+
+    storedWholeReply_ = whyWeAreSure;
 }
 
 void
@@ -979,6 +1014,8 @@ FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
         // [in ways that may affect logging?]. Consider informing
         // ConnStateData about our tunnel or otherwise unifying tunnel
         // establishment [side effects].
+        flags.dont_retry = true; // TunnelStateData took forwarding control
+        entry->abort();
         complete(); // destroys us
         return;
     } else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
@@ -1173,9 +1210,12 @@ FwdState::dispatch()
 
 #if USE_OPENSSL
     if (request->flags.sslPeek) {
+        // we were just asked to peek at the server, and we did that
         CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
                      ConnStateData::httpsPeeked, ConnStateData::PinnedIdleContext(serverConnection(), request));
         unregister(serverConn); // async call owns it now
+        flags.dont_retry = true; // we gave up forwarding control
+        entry->abort();
         complete(); // destroys us
         return;
     }

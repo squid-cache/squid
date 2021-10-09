@@ -239,6 +239,9 @@ private:
     CbcPointer<Adaptation::Initiate> virginHeadSource;
     BodyPipe::Pointer adaptedBodySource;
 
+    /// noteBodyProductionEnded() was called
+    bool receivedWholeAdaptedReply;
+
     bool request_satisfaction_mode;
     int64_t request_satisfaction_offset;
 #endif
