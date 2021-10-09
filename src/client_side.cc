@@ -3993,8 +3993,16 @@ ConnStateData::unpinConnection(const bool andClose)
 }
 
 void
-ConnStateData::terminateAll(const Error &error, const LogTagsErrors &lte)
+ConnStateData::terminateAll(const Error &rawError, const LogTagsErrors &lte)
 {
+    auto error = rawError; // (cheap) copy so that we can detail
+    // We detail even ERR_NONE: There should be no transactions left, and
+    // detailed ERR_NONE will be unused. Otherwise, this detail helps in triage.
+    if (!error.detail) {
+        static const auto d = MakeNamedErrorDetail("WITH_CLIENT");
+        error.detail = d;
+    }
+
     debugs(33, 3, pipeline.count() << '/' << pipeline.nrequests << " after " << error);
 
     if (pipeline.empty()) {
