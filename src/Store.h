@@ -67,9 +67,18 @@ public:
     bool isEmpty() const { return mem().endOffset() == 0; }
     bool isAccepting() const;
     size_t bytesWanted(Range<size_t> const aRange, bool ignoreDelayPool = false) const;
-    /// flags [truncated or too big] entry with ENTRY_BAD_LENGTH and releases it
-    void lengthWentBad(const char *reason);
+
+    /// Signals that the entire response has been stored and no more append()
+    /// calls should be expected; cf. completeTruncated().
+    void completeSuccessfully(const char *whyWeAreSureWeStoredTheWholeReply);
+
+    /// Signals that a partial response (if any) has been stored but no more
+    /// append() calls should be expected; cf. completeSuccessfully().
+    void completeTruncated(const char *whyWeConsiderTheReplyTruncated);
+
+    /// \deprecated use either completeSuccessfully() or completeTruncated() instead
     void complete();
+
     store_client_t storeClientType() const;
     /// \returns a malloc()ed buffer containing a length-long packed swap header
     const char *getSerialisedMetaData(size_t &length) const;
@@ -310,6 +319,9 @@ private:
     void forcePublicKey(const cache_key *newkey);
     StoreEntry *adjustVary();
     const cache_key *calcPublicKey(const KeyScope keyScope);
+
+    /// flags [truncated or too big] entry with ENTRY_BAD_LENGTH and releases it
+    void lengthWentBad(const char *reason);
 
     static MemAllocator *pool;
 
