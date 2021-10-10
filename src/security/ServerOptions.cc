@@ -383,7 +383,12 @@ Security::ServerOptions::loadDhParams()
 
 #else // OpenSSL 3.0+
     EVP_PKEY *pkey = nullptr;
-    if (auto *dctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, "PEM", nullptr, "DH", OSSL_KEYMGMT_SELECT_ALL, nullptr, nullptr)) {
+    const char *type = "DH";
+    if (!eecdhCurve.isEmpty())
+        type = "EC";
+    // XXX: use the eecdhCurve name when generating the EVP_KEY object. or at least verify it matches the loaded params.
+
+    if (auto *dctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, "PEM", nullptr, type, OSSL_KEYMGMT_SELECT_ALL, nullptr, nullptr)) {
         if (auto *in = fopen(dhParamsFile.c_str(), "r")) {
             if (OSSL_DECODER_from_fp(dctx, in) == 1) {
 
@@ -483,6 +488,9 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
         debugs(83, 9, "Setting Ephemeral ECDH curve to " << eecdhCurve << ".");
 
 #if USE_OPENSSL && OPENSSL_VERSION_NUMBER >= 0x0090800fL && !defined(OPENSSL_NO_ECDH)
+
+    // OpenSSL 3.0+ generates the key in loadDhParams()
+#if OPENSSL_VERSION_MAJOR < 3
         int nid = OBJ_sn2nid(eecdhCurve.c_str());
         if (!nid) {
             debugs(83, DBG_CRITICAL, "ERROR: Unknown EECDH curve '" << eecdhCurve << "'");
@@ -490,6 +498,9 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
         }
 
         auto ecdh = EC_KEY_new_by_curve_name(nid);
+#else
+        auto ecdh = parsedDhParams.get();
+#endif
         if (!ecdh) {
             const auto x = ERR_get_error();
             debugs(83, DBG_CRITICAL, "ERROR: Unable to configure Ephemeral ECDH: " << Security::ErrorString(x));
@@ -500,7 +511,11 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
             const auto x = ERR_get_error();
             debugs(83, DBG_CRITICAL, "ERROR: Unable to set Ephemeral ECDH: " << Security::ErrorString(x));
         }
+#if OPENSSL_VERSION_MAJOR < 3
         EC_KEY_free(ecdh);
+#else
+        return;
+#endif
 
 #else
         debugs(83, DBG_CRITICAL, "ERROR: EECDH is not available in this build." <<
@@ -509,8 +524,8 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
 #endif
     }
 
-    // set DH parameters into the server context
 #if USE_OPENSSL
+    // set DH parameters into the server context
     if (parsedDhParams) {
         SSL_CTX_set_tmp_dh(ctx.get(), parsedDhParams.get());
     }
