@@ -2700,28 +2700,6 @@ AS_IF([test "x$with_cppunit" != "xno"],[
   ])
 ])
 
-# Force some compilers to use ANSI features
-#
-case "$host" in
-  *-hp-hpux*)
-    if test "x$ac_cv_prog_CC" = "xcc" ; then
-      AC_MSG_NOTICE([adding '-Ae' to cc args for $host])
-      CC="cc -Ae";
-      ac_cv_prog_CC="$CC"
-    fi
-    ;;
-esac
-
-
-dnl automake handles this AC_PATH_PROG(MAKEDEPEND, makedepend, $TRUE)
-
-case "$host" in
-  *hpux*)
-    AC_MSG_NOTICE([Disabling ranlib for HP-UX...])
-    RANLIB=":"
-    ;;
-esac
-
 dnl Check for headers
 AC_HEADER_DIRENT
 AC_HEADER_STDC
