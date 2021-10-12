@@ -177,7 +177,6 @@ public:
 
     Connection client, server;
     int *status_ptr;        ///< pointer for logging HTTP status
-    LogTags *logTag_ptr;    ///< pointer for logging Squid processing code
 
     SBuf preReadClientData;
     SBuf preReadServerData;
@@ -374,7 +373,6 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     server.size_ptr = &clientRequest->out.size;
     client.size_ptr = &clientRequest->al->http.clientRequestSz.payloadData;
     status_ptr = &clientRequest->al->http.code;
-    logTag_ptr = &clientRequest->logType;
     al = clientRequest->al;
     http = clientRequest;
 
@@ -491,8 +489,7 @@ void
 TunnelStateData::syncHierNote(const Comm::ConnectionPointer &conn, const char *origin)
 {
     request->hier.resetPeerNotes(conn, origin);
-    if (al)
-        al->hier.resetPeerNotes(conn, origin);
+    al->hier.resetPeerNotes(conn, origin);
 }
 
 int
@@ -916,8 +913,7 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
     commSetConnTimeout(tunnelState->server.conn, Config.Timeout.read, timeoutCall);
 
     *tunnelState->status_ptr = Http::scOkay;
-    if (tunnelState->logTag_ptr)
-        tunnelState->logTag_ptr->update(LOG_TCP_TUNNEL);
+    tunnelState->al->cache.code.update(LOG_TCP_TUNNEL);
     if (cbdataReferenceValid(tunnelState)) {
 
         // Shovel any payload already pushed into reply buffer by the server response
@@ -970,8 +966,7 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
     peerWait.finish();
     server.len = 0;
 
-    if (logTag_ptr)
-        logTag_ptr->update(LOG_TCP_TUNNEL);
+    al->cache.code.update(LOG_TCP_TUNNEL);
 
     if (answer.peerResponseStatus != Http::scNone)
         *status_ptr = answer.peerResponseStatus;
