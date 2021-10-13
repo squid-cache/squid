@@ -9,11 +9,12 @@
 #ifndef SQUID_SSL_GADGETS_H
 #define SQUID_SSL_GADGETS_H
 
+#if USE_OPENSSL
+
 #include "base/HardFun.h"
 #include "security/forward.h"
 #include "ssl/crtd_message.h"
 
-#if USE_OPENSSL
 #include "compat/openssl.h"
 #if HAVE_OPENSSL_ASN1_H
 #include <openssl/asn1.h>
@@ -24,7 +25,7 @@
 #if HAVE_OPENSSL_X509V3_H
 #include <openssl/x509v3.h>
 #endif
-#endif
+
 #include <string>
 
 namespace Ssl
@@ -113,11 +114,9 @@ void ReadPrivateKeyFromFile(char const * keyFilename, Security::PrivateKeyPointe
  */
 bool OpenCertsFileForReading(BIO_Pointer &bio, const char *filename);
 
-/**
- \ingroup SslCrtdSslAPI
- * Read a certificate from bio
- */
-bool ReadX509Certificate(BIO_Pointer &bio, Security::CertPointer & cert);
+/// reads and returns a certificate using the given bio
+/// \returns a nil pointer on errors (TODO: throw instead)
+Security::CertPointer ReadX509Certificate(const BIO_Pointer &bio);
 
 /**
  \ingroup SslCrtdSslAPI
@@ -279,5 +278,8 @@ bool CertificatesCmp(const Security::CertPointer &cert1, const Security::CertPoi
 const ASN1_BIT_STRING *X509_get_signature(const Security::CertPointer &);
 
 } // namespace Ssl
+
+#endif // USE_OPENSSL
+
 #endif // SQUID_SSL_GADGETS_H
 
