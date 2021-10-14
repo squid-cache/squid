@@ -16,6 +16,8 @@
 #include "security/forward.h"
 #include "ssl/crtd_message.h"
 
+#include <string>
+
 #if HAVE_OPENSSL_ASN1_H
 #include <openssl/asn1.h>
 #endif
@@ -25,8 +27,6 @@
 #if HAVE_OPENSSL_X509V3_H
 #include <openssl/x509v3.h>
 #endif
-
-#include <string>
 
 namespace Ssl
 {
