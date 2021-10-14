@@ -63,7 +63,9 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing directives<label id="modifieddirectives">
 <p>
 <descrip>
-	<p>There have been no directives changed.
+	<tag>ssl_engine</tag>
+	<p>OpenSSL 3.0.0 removes the Engine feature. This directive is
+	   only supported when Squid is built for older OpenSSL versions.
 
 </descrip>
 
@@ -111,7 +113,9 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<p>There have been no options changed.
+	<tag>--with-openssl</tag>
+	<p>OpenSSL features are now auto-enabled when OpenSSL 3.0.0
+	   or later is detected during build.
 
 </descrip>
 </p>
