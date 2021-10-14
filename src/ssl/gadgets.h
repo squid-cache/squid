@@ -114,9 +114,9 @@ void ReadPrivateKeyFromFile(char const * keyFilename, Security::PrivateKeyPointe
  */
 bool OpenCertsFileForReading(BIO_Pointer &bio, const char *filename);
 
-/// reads and returns a certificate using the given bio
+/// reads and returns a certificate using the given OpenSSL BIO
 /// \returns a nil pointer on errors (TODO: throw instead)
-Security::CertPointer ReadX509Certificate(const BIO_Pointer &bio);
+Security::CertPointer ReadX509Certificate(const BIO_Pointer &);
 
 /**
  \ingroup SslCrtdSslAPI
