@@ -12,10 +12,10 @@
 #if USE_OPENSSL
 
 #include "base/HardFun.h"
+#include "compat/openssl.h"
 #include "security/forward.h"
 #include "ssl/crtd_message.h"
 
-#include "compat/openssl.h"
 #if HAVE_OPENSSL_ASN1_H
 #include <openssl/asn1.h>
 #endif
