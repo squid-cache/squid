@@ -280,6 +280,5 @@ const ASN1_BIT_STRING *X509_get_signature(const Security::CertPointer &);
 } // namespace Ssl
 
 #endif // USE_OPENSSL
-
 #endif // SQUID_SSL_GADGETS_H
 
