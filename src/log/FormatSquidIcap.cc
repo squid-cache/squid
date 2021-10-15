@@ -31,8 +31,7 @@ Log::Format::SquidIcap(const AccessLogEntry::Pointer &al, Logfile * logfile)
     if (al->cache.caddr.isAnyAddr()) { // ICAP OPTIONS xactions lack client
         client = "-";
     } else {
-        if (Config.onoff.log_fqdn)
-            client = fqdncache_gethostbyaddr(al->cache.caddr, FQDN_LOOKUP_IF_MISS);
+        client = fqdncache_gethostbyaddr(al->cache.caddr, FQDN_LOOKUP_IF_MISS);
         if (!client)
             client = al->cache.caddr.toStr(clientbuf, MAX_IPSTRLEN);
     }
