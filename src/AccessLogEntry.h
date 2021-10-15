@@ -55,6 +55,11 @@ public:
     /// including indirect forwarded-for IP if configured to log that
     void getLogClientIp(char *buf, size_t bufsz) const;
 
+    /// %>A: Compute client FQDN if possible, using the supplied buf if needed.
+    /// \returns result for immediate logging (not necessarily pointing to buf)
+    /// Side effect: Enables reverse DNS lookups of future client addresses.
+    const char *getLogClientFqdn(char *buf, size_t bufSize) const;
+
     /// Fetch the client IDENT string, or nil if none is available.
     const char *getClientIdent() const;
 

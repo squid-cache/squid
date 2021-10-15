@@ -1111,6 +1111,7 @@ tests_testRock_SOURCES = \
 	EventLoop.cc \
 	FadingCounter.cc \
 	FileMap.h \
+	tests/stub_fqdncache.cc \
 	tests/stub_HelperChildConfig.cc \
 	HttpBody.cc \
 	HttpBody.h \
@@ -1285,6 +1286,7 @@ tests_testUfs_SOURCES = \
 	EventLoop.cc \
 	FadingCounter.cc \
 	FileMap.h \
+	tests/stub_fqdncache.cc \
 	tests/stub_HelperChildConfig.cc \
 	HttpBody.cc \
 	HttpBody.h \
@@ -1633,6 +1635,7 @@ tests_testDiskIO_SOURCES = \
 	EventLoop.cc \
 	FadingCounter.cc \
 	FileMap.h \
+	tests/stub_fqdncache.cc \
 	tests/stub_HelperChildConfig.cc \
 	HttpBody.cc \
 	HttpBody.h \
