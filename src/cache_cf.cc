@@ -4396,7 +4396,7 @@ static void free_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 
 static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
 {
-    char *al = ConfigParser::NextToken();;
+    const auto al = ConfigParser::NextToken();
     if (!al) {
         self_destruct();
         return;
