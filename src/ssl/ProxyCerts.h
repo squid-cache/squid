@@ -17,6 +17,8 @@
 class sslproxy_cert_sign
 {
 public:
+    sslproxy_cert_sign() = default;
+    sslproxy_cert_sign(const sslproxy_cert_sign &) = delete; // prohibit all copy/move
     ~sslproxy_cert_sign() {
         if (aclList)
             aclDestroyAclList(&aclList);
@@ -31,6 +33,8 @@ public:
 class sslproxy_cert_adapt
 {
 public:
+    sslproxy_cert_adapt() = default;
+    sslproxy_cert_adapt(const sslproxy_cert_adapt &) = delete; // prohibit all copy/move
     ~sslproxy_cert_adapt() {
         xfree(param);
         if (aclList)

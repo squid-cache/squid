@@ -4340,7 +4340,7 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
     } else
         param = NULL;
 
-    auto *ca = new sslproxy_cert_adapt;
+    std::unique_ptr<sslproxy_cert_adapt> ca(new sslproxy_cert_adapt);
     if (strcmp(al, Ssl::CertAdaptAlgorithmStr[Ssl::algSetValidAfter]) == 0) {
         ca->alg = Ssl::algSetValidAfter;
         ca->param = xstrdup("on");
@@ -4352,7 +4352,6 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
         if (param) {
             if (strlen(param) > 64) {
                 debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_adapt: setCommonName{" <<param << "} : using common name longer than 64 bytes is not supported");
-                delete ca;
                 self_destruct();
                 return;
             }
@@ -4360,7 +4359,6 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
         }
     } else {
         debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_adapt: unknown cert adaptation algorithm: " << al);
-        delete ca;
         self_destruct();
         return;
     }
@@ -4370,7 +4368,7 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
     while (*cert_adapt)
         cert_adapt = &(*cert_adapt)->next;
 
-    *cert_adapt = ca;
+    *cert_adapt = ca.release();
 }
 
 static void dump_sslproxy_cert_adapt(StoreEntry *entry, const char *name, sslproxy_cert_adapt *cert_adapt)
@@ -4402,7 +4400,7 @@ static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
         return;
     }
 
-    auto *cs = new sslproxy_cert_sign;
+    std::unique_ptr<sslproxy_cert_sign> cs(new sslproxy_cert_sign);
     if (strcmp(al, Ssl::CertSignAlgorithmStr[Ssl::algSignTrusted]) == 0)
         cs->alg = Ssl::algSignTrusted;
     else if (strcmp(al, Ssl::CertSignAlgorithmStr[Ssl::algSignUntrusted]) == 0)
@@ -4411,7 +4409,6 @@ static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
         cs->alg = Ssl::algSignSelf;
     else {
         debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_sign: unknown cert signing algorithm: " << al);
-        delete cs;
         self_destruct();
         return;
     }
@@ -4421,7 +4418,7 @@ static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
     while (*cert_sign)
         cert_sign = &(*cert_sign)->next;
 
-    *cert_sign = cs;
+    *cert_sign = cs.release();
 }
 
 static void dump_sslproxy_cert_sign(StoreEntry *entry, const char *name, sslproxy_cert_sign *cert_sign)
