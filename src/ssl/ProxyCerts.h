@@ -22,6 +22,11 @@ public:
     ~sslproxy_cert_sign() {
         if (aclList)
             aclDestroyAclList(&aclList);
+        while (next) {
+            auto *tmp = next;
+            next = next->next;
+            delete tmp;
+        }
     }
 
 public:
@@ -39,6 +44,11 @@ public:
         xfree(param);
         if (aclList)
             aclDestroyAclList(&aclList);
+        while (next) {
+            auto *tmp = next;
+            next = next->next;
+            delete tmp;
+        }
     }
 
 public:

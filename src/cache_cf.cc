@@ -4384,12 +4384,8 @@ static void dump_sslproxy_cert_adapt(StoreEntry *entry, const char *name, sslpro
 
 static void free_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 {
-    while (*cert_adapt) {
-        auto *ca = *cert_adapt;
-        *cert_adapt = ca->next;
-        delete ca;
-    }
-    cert_adapt = nullptr;
+    delete *cert_adapt;
+    *cert_adapt = nullptr;
 }
 
 static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
@@ -4434,12 +4430,8 @@ static void dump_sslproxy_cert_sign(StoreEntry *entry, const char *name, sslprox
 
 static void free_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
 {
-    while (*cert_sign) {
-        auto *cs = *cert_sign;
-        *cert_sign = cs->next;
-        delete cs;
-    }
-    cert_sign = nullptr;
+    delete *cert_sign;
+    *cert_sign = nullptr;
 }
 
 class sslBumpCfgRr: public ::RegisteredRunner
