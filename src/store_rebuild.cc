@@ -48,6 +48,17 @@ StoreRebuildData::updateStartTime(const timeval &dirStartTime)
     startTime = started() ? std::min(startTime, dirStartTime) : dirStartTime;
 }
 
+/// handles the completion of zero or more post-rebuild storeCleanup() steps
+static void
+storeCleanupComplete()
+{
+    assert(StoreController::store_dirs_rebuilding == 1); // we are the last act
+    --StoreController::store_dirs_rebuilding;
+
+    if (store_digest)
+        storeDigestNoteStoreReady();
+}
+
 static void
 storeCleanup(void *)
 {
@@ -100,8 +111,6 @@ storeCleanup(void *)
         debugs(20, Important(43), "Completed Validation Procedure" <<
                Debug::Extra << "Validated " << validated << " Entries" <<
                Debug::Extra << "store_swap_size = " << (Store::Root().currentSize()/1024.0) << " KB");
-        --StoreController::store_dirs_rebuilding;
-        assert(0 == StoreController::store_dirs_rebuilding);
 
         if (opt_store_doublecheck && store_errors) {
             fatalf("Quitting after finding %d cache index inconsistencies. " \
@@ -110,8 +119,7 @@ storeCleanup(void *)
                    "cache index (at your own risk).\n", store_errors);
         }
 
-        if (store_digest)
-            storeDigestNoteStoreReady();
+        storeCleanupComplete();
 
         currentSearch = NULL;
     } else
@@ -141,15 +149,21 @@ storeRebuildComplete(StoreRebuildData *dc)
 
     assert(StoreController::store_dirs_rebuilding > 1);
     --StoreController::store_dirs_rebuilding;
-
-    /*
-     * When store_dirs_rebuilding == 1, it means we are done reading
-     * or scanning all cache_dirs.  Now report the stats and start
-     * the validation (storeCleanup()) thread.
-     */
-
     if (StoreController::store_dirs_rebuilding > 1)
+        return; // wait for more rebuilding cache_dirs to call us
+
+    // rebuilt all cache_dirs (if any)
+
+    safe_free(RebuildProgress);
+
+    if (!counts.started()) {
+        assert(!counts.scancount);
+        debugs(20, 5, "not responsible for rebuilding any cache_dirs: " << Config.cacheSwap.n_configured);
+        // we did not even try to load any entries so we skip storeCleanup()'s
+        // entry validation reports
+        storeCleanupComplete();
         return;
+    }
 
     const auto dt = tvSubDsec(counts.startTime, current_time);
 
@@ -167,10 +181,6 @@ storeRebuildComplete(StoreRebuildData *dc)
     debugs(20, Important(56), "Beginning Validation Procedure");
 
     eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
-
-    xfree(RebuildProgress);
-
-    RebuildProgress = NULL;
 }
 
 /*
@@ -188,10 +198,9 @@ storeRebuildStart(void)
      * When we parse the configuration and construct each swap dir,
      * the construction of that raises the rebuild count.
      *
-     * This prevents us from trying to write clean logs until we
-     * finished rebuilding - including after a reconfiguration that opens an
-     * existing swapdir.  The corresponding decrement * occurs in
-     * storeCleanup(), when it is finished.
+     * This prevents us from trying to write clean logs until we finished
+     * rebuilding - including after a reconfiguration that opens an existing
+     * swapdir.  The corresponding decrement occurs in storeCleanupComplete().
      */
     RebuildProgress = (store_rebuild_progress *)xcalloc(Config.cacheSwap.n_configured,
                       sizeof(store_rebuild_progress));
