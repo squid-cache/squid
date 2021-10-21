@@ -1717,6 +1717,13 @@ SQUID_DEFINE_BOOL(USE_UNLINKD,${enable_unlinkd:=yes},
 AM_CONDITIONAL(ENABLE_UNLINKD,test "x$enable_unlinkd" = "xyes")
 AC_MSG_NOTICE([unlinkd enabled: $enable_unlinkd])
 
+AC_ARG_ENABLE(urn-thttp,
+  AS_HELP_STRING([--enable-urn-thttp],[Use URN Trivial HTTP resolution]), [
+  SQUID_YESNO([$enableval],[unrecognized argument to --enable-urn-thttp: $enableval])
+])
+SQUID_DEFINE_BOOL(USE_URN_THTTP,[${enable_urn_thttp:=no}],[Enable URN Trivial HTTP resolution])
+AC_MSG_NOTICE([URN Trivial HTTP resolution enabled: $enable_urn_thttp])
+
 # Enable backtraces on fatal errors
 AC_ARG_ENABLE(stacktraces,
   AS_HELP_STRING([--enable-stacktraces],

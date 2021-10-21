@@ -78,6 +78,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-mempools \
 	--disable-win32-service \
 	--disable-unlinkd \
+	--disable-urn-thttp \
 	--disable-stacktraces \
 	--disable-cpu-profiling \
 	--disable-vary \

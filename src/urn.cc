@@ -6,9 +6,12 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 52    URN Parsing */
+/* DEBUG: section 52    URN Trivial HTTP (THTTP) resolution protocol */
 
 #include "squid.h"
+
+#if USE_URN_THTTP
+
 #include "AccessLogEntry.h"
 #include "acl/FilledChecklist.h"
 #include "base/TextException.h"
@@ -410,3 +413,4 @@ urnParseReply(const SBuf &inBuf, const HttpRequestMethod &m)
     return list;
 }
 
+#endif /* USE_URN_THTTP */

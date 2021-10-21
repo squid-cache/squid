@@ -390,9 +390,11 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
 
     switch (request->url.getScheme()) {
 
+#if USE_URN_THTTP
     case AnyP::PROTO_URN:
         urnStart(request, entry, al);
         return;
+#endif
 
     default:
         FwdState::Pointer fwd = new FwdState(clientConn, entry, request, al);
@@ -1273,7 +1275,7 @@ FwdState::dispatch()
             break;
 
         case AnyP::PROTO_URN:
-            fatal_dump("Should never get here");
+            httpStart(this); // relay as HTTP with urn://
             break;
 
         case AnyP::PROTO_WHOIS:
