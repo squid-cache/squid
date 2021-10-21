@@ -98,7 +98,7 @@ Ipc::ReadWriteLock::unlockSharedAndSwitchToExclusive()
     if (!writeLevel++) { // we are the first writer + lock "new" readers out
         assert(!appending);
         unlockShared();
-        if (!readers) {
+        if (!readLevel) { // no old readers and nobody is becoming one
             writing = true;
             return true;
         }
