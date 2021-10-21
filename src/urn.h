@@ -6,10 +6,12 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 52    URN Parsing */
+/* DEBUG: section 52    URN Trivial HTTP (THTTP) resolution protocol */
 
 #ifndef SQUID_URN_H_
 #define SQUID_URN_H_
+
+#if USE_URN_THTTP
 
 #include "log/forward.h"
 
@@ -18,5 +20,6 @@ class StoreEntry;
 
 void urnStart(HttpRequest *, StoreEntry *, const AccessLogEntryPointer &ale);
 
+#endif /* USE_URN_THTTP */
 #endif /* SQUID_URN_H_ */
 
