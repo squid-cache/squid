@@ -2948,7 +2948,7 @@ ConnStateData::parseTlsHandshake()
         getSslContextStart();
         return;
     } else if (sslServerBump->act.step1 == Ssl::bumpServerFirst) {
-        debugs(83, 5, "server-first skips at step1 and step2. Start forwarding the request.");
+        debugs(83, 5, "server-first skips step2; start forwarding the request");
         sslServerBump->step = XactionStep::tlsBump3;
         Http::StreamPointer context = pipeline.front();
         ClientHttpRequest *http = context ? context->http : nullptr;
