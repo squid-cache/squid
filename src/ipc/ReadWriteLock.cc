@@ -21,26 +21,17 @@ void Ipc::AssertFlagIsSet(std::atomic_flag &flag)
 }
 
 /// common lockExclusive() and unlockSharedAndSwitchToExclusive() logic:
-/// either finish exclusive locking or bail, lowering the writeLevel
-/// Precondition: The caller must (be the first to) increment writeLevel.
+/// either finish exclusive locking or bail properly
+/// \pre The caller must (be the first to) increment writeLevel.
+/// \returns whether we got the exclusive lock
 bool
 Ipc::ReadWriteLock::finalizeExclusive()
 {
-    assert(writeLevel);
-    if (!readLevel) { // no old readers and nobody is becoming one
+    assert(writeLevel); // "new" readers are locked out by the caller
+    if (!readLevel) { // no old readers and nobody is becoming a reader
         writing = true;
         return true;
     }
-    --writeLevel;
-    return false;
-}
-
-bool
-Ipc::ReadWriteLock::lockExclusive()
-{
-    if (!writeLevel++) // we are the first writer + lock "new" readers out
-        return finalizeExclusive(); // decrements writeLevel on failures
-
     --writeLevel;
     return false;
 }
@@ -54,6 +45,16 @@ Ipc::ReadWriteLock::lockShared()
         return true;
     }
     --readLevel;
+    return false;
+}
+
+bool
+Ipc::ReadWriteLock::lockExclusive()
+{
+    if (!writeLevel++) // we are the first writer + lock "new" readers out
+        return finalizeExclusive(); // decrements writeLevel on failures
+
+    --writeLevel;
     return false;
 }
 
@@ -113,7 +114,7 @@ Ipc::ReadWriteLock::unlockSharedAndSwitchToExclusive()
         return finalizeExclusive(); // decrements writeLevel on failures
     }
 
-    // somebody is still writing: just stop reading
+    // somebody is still writing, so we just stop reading
     unlockShared();
     --writeLevel;
     return false;
