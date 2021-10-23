@@ -28,6 +28,7 @@ bool
 Ipc::ReadWriteLock::finalizeExclusive()
 {
     assert(writeLevel); // "new" readers are locked out by the caller
+    assert(!appending); // nobody can be appending without an exclusive lock
     if (!readLevel) { // no old readers and nobody is becoming a reader
         writing = true;
         return true;
@@ -109,7 +110,6 @@ Ipc::ReadWriteLock::unlockSharedAndSwitchToExclusive()
 {
     assert(readers > 0);
     if (!writeLevel++) { // we are the first writer + lock "new" readers out
-        assert(!appending);
         unlockShared();
         return finalizeExclusive(); // decrements writeLevel on failures
     }
