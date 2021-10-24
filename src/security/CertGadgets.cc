@@ -17,6 +17,8 @@
 #endif
 #endif
 
+#if SQUID_CAN_INTERROGATE_X509_CERTIFICATES
+
 SBuf
 Security::CertIssuerName(const CertPointer &cert)
 {
@@ -49,7 +51,7 @@ Security::CertIssuerName(const CertPointer &cert)
     gnutls_free(str.data);
 
 #else
-    debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate Issuer: [not implemented]");
+    static_assert(false, "unreachable code");
 #endif
 
     debugs(83, DBG_PARSE_NOTE(3), "found cert issuer=" << out);
@@ -88,7 +90,7 @@ Security::CertSubjectName(const CertPointer &cert)
     gnutls_free(str.data);
 
 #else
-    debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate SubjectName: [not implemented]");
+    static_assert(false, "unreachable code");
 #endif
 
     debugs(83, DBG_PARSE_NOTE(3), "found cert subject=" << out);
@@ -110,7 +112,10 @@ Security::CertIsIssuedBy(const CertPointer &cert, const CertPointer &issuer)
         return true;
     debugs(83, DBG_PARSE_NOTE(3), CertSubjectName(issuer) << " did not sign " << CertSubjectName(cert));
 #else
-    // not implemented
+    static_assert(false, "unreachable code");
 #endif
     return false;
 }
+
+#endif // SQUID_CAN_INTERROGATE_X509_CERTIFICATES
+

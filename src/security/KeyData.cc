@@ -15,6 +15,8 @@
 #include "ssl/bio.h"
 #include "ssl/gadgets.h"
 
+#if SQUID_CAN_INTERROGATE_X509_CERTIFICATES
+
 /**
  * Read certificate from file.
  * See also: Ssl::ReadX509Certificate function, gadgets.cc file
@@ -216,9 +218,12 @@ Security::KeyData::loadX509PrivateKeyFromFile()
     return bool(pkey);
 }
 
+#endif // SQUID_CAN_INTERROGATE_X509_CERTIFICATES
+
 void
 Security::KeyData::loadFromFiles(const AnyP::PortCfg &port, const char *portType)
 {
+#if SQUID_CAN_INTERROGATE_X509_CERTIFICATES
     char buf[128];
     if (!loadX509CertFromFile()) {
         debugs(83, DBG_IMPORTANT, "WARNING: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' missing certificate in '" << certFile << "'");
@@ -234,4 +239,10 @@ Security::KeyData::loadFromFiles(const AnyP::PortCfg &port, const char *portType
         cert.reset();
         chain.clear();
     }
+
+#else
+    (void)port;
+    (void)portType;
+    throw TextException("cannot load certificates from files without OpenSSL or GnuTLS", Here());
+#endif
 }

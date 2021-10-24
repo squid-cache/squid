@@ -613,6 +613,7 @@ Security::ErrorDetail::cn() const
 const char *
 Security::ErrorDetail::ca_name() const
 {
+#if SQUID_CAN_INTERROGATE_X509_CERTIFICATES
     if (broken_cert) {
         static SBuf tmpBuffer;
         tmpBuffer = Security::CertIssuerName(broken_cert);
@@ -622,6 +623,7 @@ Security::ErrorDetail::ca_name() const
             return html_quote(tmpBuffer.c_str());
         }
     }
+#endif
     return "[Not available]";
 }
 
