@@ -81,10 +81,10 @@ Ssl::PeekingPeerConnector::checkForPeekAndSplice()
     Security::SessionPointer session(fd_table[serverConn->fd].ssl);
     BIO *b = SSL_get_rbio(session.get());
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
-    if (request->clientConnectionManager->serverBump()->act.step2 != Ssl::bumpPeek)
-        acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpSplice));
-    else if (request->clientConnectionManager->serverBump()->act.step2 == Ssl::bumpPeek)
+    if (request->clientConnectionManager->serverBump()->act.step2 == Ssl::bumpPeek)
         acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpBump));
+    else
+        acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpSplice));
     acl_checklist->syncAle(request.getRaw(), nullptr);
     acl_checklist->nonBlockingCheck(Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone, this);
 }
