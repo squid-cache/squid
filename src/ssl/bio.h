@@ -152,10 +152,6 @@ public:
     void holdWrite(bool h) {holdWrite_ = h;}
     /// Enables or disables the input data recording, for internal analysis.
     void recordInput(bool r) {record_ = r;}
-    /// Whether we can splice or not the SSL stream
-    bool canSplice() {return allowSplice;}
-    /// Whether we can bump or not the SSL stream
-    bool canBump() {return allowBump;}
     /// The bumping mode
     void mode(Ssl::BumpMode m) {bumpMode_ = m;}
     Ssl::BumpMode bumpMode() {return bumpMode_;} ///< return the bumping mode
@@ -182,8 +178,6 @@ private:
     SBuf helloMsg; ///< Used to buffer output data.
     mb_size_t  helloMsgSize;
     bool helloBuild; ///< True if the client hello message sent to the server
-    bool allowSplice; ///< True if the SSL stream can be spliced
-    bool allowBump;  ///< True if the SSL stream can be bumped
     bool holdWrite_;  ///< The write hold state of the bio.
     bool record_; ///< If true the input data recorded to rbuf for internal use
     bool parsedHandshake; ///< whether we are done parsing TLS Hello

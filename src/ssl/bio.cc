@@ -241,8 +241,6 @@ Ssl::ServerBio::ServerBio(const int anFd):
     Bio(anFd),
     helloMsgSize(0),
     helloBuild(false),
-    allowSplice(false),
-    allowBump(false),
     holdWrite_(false),
     record_(false),
     parsedHandshake(false),
@@ -376,12 +374,9 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
             if (bumpMode_ == Ssl::bumpPeek) {
                 // we should not be here if we failed to parse the client-sent ClientHello
                 Must(!clientSentHello.isEmpty());
-                allowSplice = true;
                 // Replace OpenSSL-generated ClientHello with client-sent one.
                 helloMsg.append(clientSentHello);
                 debugs(83, 7,  "FD " << fd_ << ": Using client-sent ClientHello for peek mode");
-            } else { /*Ssl::bumpStare*/
-                allowBump = true;
             }
         }
         // if we did not use the client-sent ClientHello, then use the OpenSSL-generated one
@@ -390,9 +385,8 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
 
         helloBuild = true;
         helloMsgSize = helloMsg.length();
-        //allowBump = true;
 
-        if (allowSplice) {
+        if (bumpMode_ == Ssl::bumpPeek) {
             // Do not write yet.....
             BIO_set_retry_write(table);
             return -1;
