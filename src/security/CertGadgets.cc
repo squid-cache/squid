@@ -17,17 +17,12 @@
 #endif
 #endif
 
-// TODO: Define a USING_TLS_LIBRARY or a similar macro to distinguish builds
-// that support TLS (using any library) in library-agnostic cases like this one.
-#if USE_OPENSSL
-#elif USE_GNUTLS
-#else
-static void
-rejectUnsupportedInterrogation(const SourceLocation &caller)
+inline
+const char *
+MissingLibraryError()
 {
-    throw TextException("cannot interrogate x509 certificates without OpenSSL or GnuTLS", caller);
+    return "[need OpenSSL or GnuTLS]";
 }
-#endif
 
 SBuf
 Security::CertIssuerName(const CertPointer &cert)
@@ -61,7 +56,8 @@ Security::CertIssuerName(const CertPointer &cert)
     gnutls_free(str.data);
 
 #else
-    rejectUnsupportedInterrogation(Here());
+    debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate Issuer: " << MissingLibraryError());
+    return out;
 #endif
 
     debugs(83, DBG_PARSE_NOTE(3), "found cert issuer=" << out);
@@ -100,7 +96,8 @@ Security::CertSubjectName(const CertPointer &cert)
     gnutls_free(str.data);
 
 #else
-    rejectUnsupportedInterrogation(Here());
+    debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate SubjectName: " << MissingLibraryError());
+    return out;
 #endif
 
     debugs(83, DBG_PARSE_NOTE(3), "found cert subject=" << out);
@@ -122,7 +119,7 @@ Security::CertIsIssuedBy(const CertPointer &cert, const CertPointer &issuer)
         return true;
     debugs(83, DBG_PARSE_NOTE(3), CertSubjectName(issuer) << " did not sign " << CertSubjectName(cert));
 #else
-    rejectUnsupportedInterrogation(Here());
+    debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot determine certificates relationship: " << MissingLibraryError());
 #endif
     return false;
 }
