@@ -919,7 +919,9 @@ mainReconfigureFinish(void *)
 
     // Reset needsAdaptationHistory to false.  It will be changed to true later
     // by anything that requires adaptation history to be created.
+#if USE_ADAPTATION
     Log::TheConfig.needsAdaptationHistory = false;
+#endif
 
     // parse the config returns a count of errors encountered.
     const int oldWorkers = Config.workers;
