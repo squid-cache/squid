@@ -62,14 +62,6 @@ public:
 
     /// list of token namespaces registered
     std::list<TokenNamespace> tokens;
-
-#if USE_ADAPTATION
-    bool hasAdaptToken;
-#endif
-
-#if ICAP_CLIENT
-    bool hasIcapToken;
-#endif
 };
 
 extern FmtConfig TheConfig;

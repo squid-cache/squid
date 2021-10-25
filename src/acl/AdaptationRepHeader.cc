@@ -10,7 +10,13 @@
 #include "acl/FilledChecklist.h"
 #include "acl/HttpHeaderData.h"
 #include "acl/AdaptationRepHeader.h"
-#include "HttpReply.h"
+#include "HttpRequest.h"
+#include "log/Config.h"
+
+ACLAdaptationRepHeaderStrategy::ACLAdaptationRepHeaderStrategy()
+{
+    Log::TheConfig.needsAdaptationHistory = true;
+}
 
 int
 ACLAdaptationRepHeaderStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)

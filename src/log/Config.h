@@ -46,7 +46,7 @@ public:
     ::Format::Format *logformats;
 
 #if USE_ADAPTATION
-    bool hasAdaptToken;
+    bool needsAdaptationHistory;
 #endif
 
 #if ICAP_CLIENT

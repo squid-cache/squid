@@ -1423,8 +1423,13 @@ endif
 	  # the service has been selected for adaptation.
 
 	acl aclname adaptation_rep_header header-name [-i] any\.regex\.here
-	  # regex match against the adaptation reply headers.  e.g. ICAP
-	  # reply headers. [fast]
+	  # Regex match against the adaptation reply headers. The reply headers
+	  # from later adaptation callouts will have been merged with those
+	  # from earlier callouts, with the earlier header being replaced in
+	  # the event of a conflict. This ACL will not match if no adaptation
+          # responses have been received. Matching against adaptation headers
+	  # provided as part of a 100 Continue response, or adaptation trailers
+	  # is not currently supported. [fast]
 
 	acl aclname transaction_initiator initiator ...
 	  # Matches transaction's initiator [fast]

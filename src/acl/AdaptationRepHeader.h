@@ -18,9 +18,9 @@ class ACLAdaptationRepHeaderStrategy : public ACLStrategy<HttpHeader*>
 {
 
 public:
+    ACLAdaptationRepHeaderStrategy();
     virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
     virtual bool requiresRequest() const { return true; }
 };
 
 #endif /* SQUID_ACLADAPTATIONREPHEADER_H */
-

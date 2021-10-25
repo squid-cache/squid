@@ -85,6 +85,7 @@
 #include "wccp.h"
 #include "wccp2.h"
 #include "WinSvc.h"
+#include "log/Config.h"
 
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
@@ -915,6 +916,10 @@ mainReconfigureFinish(void *)
     // we may have disabled the need for PURGE
     if (Config2.onoff.enable_purge)
         Config2.onoff.enable_purge = 2;
+
+    // Reset needsAdaptationHistory to false.  It will be changed to true later
+    // by anything that requires adaptation history to be created.
+    Log::TheConfig.needsAdaptationHistory = false;
 
     // parse the config returns a count of errors encountered.
     const int oldWorkers = Config.workers;
