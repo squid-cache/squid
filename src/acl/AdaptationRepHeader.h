@@ -9,11 +9,10 @@
 #ifndef SQUID_ACLADAPTATIONREPHEADER_H
 #define SQUID_ACLADAPTATIONREPHEADER_H
 
-#include "acl/Strategised.h"
 #include "acl/Strategy.h"
 #include "HttpHeader.h"
 
-/// \ingroup ACLAPI
+/// adaptation_rep_header
 class ACLAdaptationRepHeaderStrategy : public ACLStrategy<HttpHeader*>
 {
 
@@ -24,3 +23,4 @@ public:
 };
 
 #endif /* SQUID_ACLADAPTATIONREPHEADER_H */
+

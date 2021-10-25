@@ -23,7 +23,7 @@ ACLAdaptationRepHeaderStrategy::match (ACLData<MatchType> * &data, ACLFilledChec
 {
     HttpRequest::Pointer request = checklist->request;
     if (request == NULL)
-        return 0;
+        return 0; // bug or misconfiguration; ACL::matches() warned the admin
     Adaptation::History::Pointer ah = request->adaptHistory();
     if (ah == NULL)
         return 0;
