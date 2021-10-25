@@ -15,8 +15,6 @@
 #include "ssl/bio.h"
 #include "ssl/gadgets.h"
 
-#if SQUID_CAN_INTERROGATE_X509_CERTIFICATES
-
 /**
  * Read certificate from file.
  * See also: Ssl::ReadX509Certificate function, gadgets.cc file
@@ -70,7 +68,7 @@ Security::KeyData::loadX509CertFromFile()
     }
 
 #else
-    // do nothing.
+    assert(false); // unreachable code
 #endif
 
     if (!cert) {
@@ -168,7 +166,7 @@ Security::KeyData::loadX509ChainFromFile()
     gnutls_free(loadedCerts);
 
 #else
-    debugs(83, DBG_PARSE_NOTE(2), "ERROR: Loading certificate chain from PEM files requires OpenSSL or GnuTLS.");
+    assert(false); // unreachable code
 #endif
 }
 
@@ -212,18 +210,17 @@ Security::KeyData::loadX509PrivateKeyFromFile()
     gnutls_free(rawFileContent.data);
 
 #else
-    // nothing to do.
+    assert(false); // unreachable code
 #endif
 
     return bool(pkey);
 }
 
-#endif // SQUID_CAN_INTERROGATE_X509_CERTIFICATES
-
 void
 Security::KeyData::loadFromFiles(const AnyP::PortCfg &port, const char *portType)
 {
-#if SQUID_CAN_INTERROGATE_X509_CERTIFICATES
+    assert(CanInterrogateX509s);
+
     char buf[128];
     if (!loadX509CertFromFile()) {
         debugs(83, DBG_IMPORTANT, "WARNING: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' missing certificate in '" << certFile << "'");
@@ -239,10 +236,4 @@ Security::KeyData::loadFromFiles(const AnyP::PortCfg &port, const char *portType
         cert.reset();
         chain.clear();
     }
-
-#else
-    (void)port;
-    (void)portType;
-    throw TextException("cannot load certificates from files without OpenSSL or GnuTLS", Here());
-#endif
 }

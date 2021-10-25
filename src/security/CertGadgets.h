@@ -14,8 +14,6 @@
 namespace Security
 {
 
-#if SQUID_CAN_INTERROGATE_X509_CERTIFICATES
-
 /// \return the SubjectName field of the given certificate (if found), or an empty SBuf
 SBuf CertSubjectName(const CertPointer &);
 
@@ -32,8 +30,6 @@ bool CertIsIssuedBy(const CertPointer &cert, const CertPointer &issuer);
 inline bool CertIsSelfSigned(const CertPointer &cert) {
     return CertIsIssuedBy(cert, cert);
 }
-
-#endif // SQUID_CAN_INTERROGATE_X509_CERTIFICATES
 
 } // namespace Security
 

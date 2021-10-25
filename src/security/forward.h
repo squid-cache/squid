@@ -64,13 +64,13 @@ typedef CbDataList<Security::CertError> CertErrors;
 
 #if USE_OPENSSL
 typedef X509 Certificate;
-#define SQUID_CAN_INTERROGATE_X509_CERTIFICATES true
+constexpr bool CanInterrogateX509s = true;
 #elif USE_GNUTLS
 typedef struct gnutls_x509_crt_int Certificate;
-#define SQUID_CAN_INTERROGATE_X509_CERTIFICATES true
+constexpr bool CanInterrogateX509s = true;
 #else
 typedef class {} Certificate;
-#define SQUID_CAN_INTERROGATE_X509_CERTIFICATES false
+constexpr bool CanInterrogateX509s = false;
 #endif
 
 #if USE_OPENSSL

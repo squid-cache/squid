@@ -43,6 +43,8 @@ Security::PeerOptions::parse(const char *token)
         return;
     }
 
+    // TODO: Reject configurations with options that require certificate
+    // interrogation when CanInterrogateX509s is false.
     if (strncmp(token, "cert=", 5) == 0) {
         KeyData t;
         t.privateKeyFile = t.certFile = SBuf(token + 5);
