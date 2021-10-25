@@ -68,7 +68,7 @@ Security::KeyData::loadX509CertFromFile()
     }
 
 #else
-    assert(false); // unreachable code
+    // do nothing.
 #endif
 
     if (!cert) {
@@ -166,7 +166,7 @@ Security::KeyData::loadX509ChainFromFile()
     gnutls_free(loadedCerts);
 
 #else
-    assert(false); // unreachable code
+    debugs(83, DBG_PARSE_NOTE(2), "ERROR: Loading certificate chain from PEM files requires OpenSSL or GnuTLS.");
 #endif
 }
 
@@ -210,7 +210,7 @@ Security::KeyData::loadX509PrivateKeyFromFile()
     gnutls_free(rawFileContent.data);
 
 #else
-    assert(false); // unreachable code
+    // nothing to do.
 #endif
 
     return bool(pkey);
@@ -219,8 +219,6 @@ Security::KeyData::loadX509PrivateKeyFromFile()
 void
 Security::KeyData::loadFromFiles(const AnyP::PortCfg &port, const char *portType)
 {
-    assert(CanInterrogateX509s);
-
     char buf[128];
     if (!loadX509CertFromFile()) {
         debugs(83, DBG_IMPORTANT, "WARNING: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' missing certificate in '" << certFile << "'");

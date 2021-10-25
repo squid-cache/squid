@@ -64,13 +64,10 @@ typedef CbDataList<Security::CertError> CertErrors;
 
 #if USE_OPENSSL
 typedef X509 Certificate;
-constexpr bool CanInterrogateX509s = true;
 #elif USE_GNUTLS
 typedef struct gnutls_x509_crt_int Certificate;
-constexpr bool CanInterrogateX509s = true;
 #else
 typedef class {} Certificate;
-constexpr bool CanInterrogateX509s = false;
 #endif
 
 #if USE_OPENSSL
