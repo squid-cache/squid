@@ -271,7 +271,7 @@ Quic::Acceptor::dispatch(const SBuf &buf, Ip::Address &from)
 
     } else if ((pkt->vsBits & QUIC_RFC9000_PACKET_VALID)) {
         // RFC 9000 section 17.2 bit claiming a valid QUIC compliant packet found
-        debugs(94, 4, "confirmed QUIC packet type=0x" << AsHex(pkt->vsBits & QUIC_RFC9000_PTYPE) << " from " << from);
+        debugs(94, 4, "confirmed QUIC packet type=0x" << asHex(pkt->vsBits & QUIC_RFC9000_PTYPE) << " from " << from);
 
         // RFC 9000 forced version (re-)negotiation
         if ((pkt->version & QUIC_VERSION_FORCE_NEGOTIATE_MASK) == QUIC_VERSION_FORCE_NEGOTIATE_MASK) {
@@ -284,7 +284,7 @@ Quic::Acceptor::dispatch(const SBuf &buf, Ip::Address &from)
         // RFC 9000 section Retry packet is server-to-client only
         // higher packet numbers are not supported
         if (pType > 0x02) {
-            debugs(94, 3, "unknown type=0x" << AsHex(pkt->vsBits & QUIC_RFC9000_PTYPE) << " from " << from);
+            debugs(94, 3, "unknown type=0x" << asHex(pkt->vsBits & QUIC_RFC9000_PTYPE) << " from " << from);
             return;
         }
 
