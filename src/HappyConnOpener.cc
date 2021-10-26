@@ -446,6 +446,7 @@ HappyConnOpener::status() const
         os << "spare:" << spare;
     if (n_tries)
         os << " tries:" << n_tries;
+    os << " dst:" << *destinations;
     os << ' ' << id << ']';
 
     buf = os.buf();
