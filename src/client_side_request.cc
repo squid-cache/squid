@@ -2022,6 +2022,23 @@ ClientHttpRequest::handleAdaptedHeader(Http::Message *msg)
     } else if (HttpReply *new_rep = dynamic_cast<HttpReply*>(msg)) {
         debugs(85,3,HERE << "REQMOD reply is HTTP reply");
 
+        if (request->method == Http::METHOD_CONNECT) {
+            // CONNECT requests that REQMOD produces a reply for need special
+            // handling.
+            if (new_rep->sline.status() == Http::scOkay) {
+                // REQMOD replying with a 200 is a bug, since Squid won't have
+                // connected to the origin server.  The request will hit the "abandoning"
+                // section in ConnStateData::kick().
+                debugs(85, DBG_IMPORTANT, HERE << "REQMOD produced '200 Ok' reply for a CONNECT request");
+            } else {
+                // Returning an error to the client, so turn readMore back on
+                // so we can keep the connection alive for the next request.
+                debugs(85,3,HERE << "REQMOD reply rejected a CONNECT");
+                ConnStateData * conn = getConn();
+                if (conn) conn->flags.readMore = 1;
+            }
+        }
+
         // subscribe to receive reply body
         if (new_rep->body_pipe != NULL) {
             adaptedBodySource = new_rep->body_pipe;
