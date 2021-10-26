@@ -789,7 +789,7 @@ Ip::Address::port(unsigned short prt)
 }
 
 /**
- * toStr Given a buffer writes a readable ascii version of the IPA and/or port stored
+ * toStr Given a buffer writes a readable ascii version of the IPA
  *
  * Buffer must be of a size large enough to hold the converted address.
  * This size is provided in the form of a global defined variable MAX_IPSTRLEN
