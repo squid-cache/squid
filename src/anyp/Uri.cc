@@ -112,10 +112,9 @@ AnyP::Uri::host(const char *src)
 SBuf
 AnyP::Uri::hostOrIp() const
 {
-    static char ip[MAX_IPSTRLEN];
-    unsigned int hostStrLen;
     if (hostIsNumeric()) {
-        hostStrLen = hostIP().toHostStr(ip, sizeof(ip));
+        static char ip[MAX_IPSTRLEN];
+        const auto hostStrLen = hostIP().toHostStr(ip, sizeof(ip));
         return SBuf(ip, hostStrLen);
     } else
         return SBuf(host());
