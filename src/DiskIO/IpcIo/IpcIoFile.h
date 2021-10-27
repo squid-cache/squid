@@ -127,7 +127,6 @@ private:
     static void DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo);
     static bool WaitBeforePop();
 
-    /// handle all available disker or worker mesages at start, including 'previous generation' requests
     static void HandleMessagesAtStart();
 
 private:

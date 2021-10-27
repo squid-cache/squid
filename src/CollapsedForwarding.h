@@ -46,7 +46,6 @@ public:
     static void StatQueue(std::ostream &);
 
 private:
-    /// handle all available messages at start, including 'previous generation' messages
     static void HandleNewDataAtStart();
 
     typedef Ipc::MultiQueue Queue;
