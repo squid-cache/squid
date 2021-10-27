@@ -769,11 +769,10 @@ HappyConnOpener::noteSpareAllowance()
 void
 HappyConnOpener::maybeOpenPrimeConnection()
 {
-    if (prime)
-        return; // nothing to do
+    Must(!prime);
 
     if (destinations->empty())
-        return; // nothing can be done (for now)
+        return;
 
     if (!currentPeer) {
         auto newPrime = destinations->extractFront();
