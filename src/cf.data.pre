@@ -1113,9 +1113,8 @@ if USE_SQUID_EUI
 	  # It works on Linux, Solaris, Windows, FreeBSD, and some other
 	  # BSD variants.
 	  #
-	  # The eui_lookup directive is required to be 'on' (the default)
-	  # and Squid built with --enable-eui for MAC/EUI addresses to be
-	  # available for this ACL.
+	  # The eui_lookup directive is required to be 'on' for MAC/EUI
+	  # addresses to be available for this ACL.
 	  #
 	  # Squid can only determine the MAC/EUI address for IPv4
 	  # clients that are on the same subnet. If the client is on a
@@ -10588,7 +10587,7 @@ DOC_END
 NAME: eui_lookup
 TYPE: onoff
 IFDEF: USE_SQUID_EUI
-DEFAULT: on
+DEFAULT: off
 LOC: Eui::TheConfig.euiLookup
 DOC_START
 	Whether to lookup the EUI or MAC address of a connected client.
