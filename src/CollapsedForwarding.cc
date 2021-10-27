@@ -158,7 +158,7 @@ void
 CollapsedForwarding::HandleNewDataAtStart()
 {
     queue->clearAllReaderSignals();
-    HandleNewData("after start");
+    HandleNewData("at start");
 }
 
 void
