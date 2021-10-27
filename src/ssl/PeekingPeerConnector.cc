@@ -202,7 +202,7 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
             // Set client SSL options
             ::Security::ProxyOutgoingConfig.updateSessionOptions(serverSession);
 
-            const bool redirected = request->flags.redirected && ::Config.onoff.redir_rewrites_host;
+            const bool redirected = request->flags.redirected_origin && ::Config.onoff.redir_rewrites_host;
             const char *sniServer = (!hostName || redirected) ?
                                     request->url.host() :
                                     hostName->c_str();

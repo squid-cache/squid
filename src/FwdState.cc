@@ -189,7 +189,7 @@ void FwdState::start(Pointer aSelf)
     // Bug 3243: CVE 2009-0801
     // Bypass of browser same-origin access control in intercepted communication
     // To resolve this we must force DIRECT and only to the original client destination.
-    const bool isIntercepted = request && !request->flags.redirected && (request->flags.intercepted || request->flags.interceptTproxy);
+    const bool isIntercepted = request && !request->flags.redirected_origin && (request->flags.intercepted || request->flags.interceptTproxy);
     const bool useOriginalDst = Config.onoff.client_dst_passthru || (request && !request->flags.hostVerified);
     if (isIntercepted && useOriginalDst) {
         selectPeerForIntercepted();
@@ -903,12 +903,18 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
         // bumping modes to try connect to a remote server. The bumped
         // requests with other modes are using pinned connections or fails.
         const bool clientFirstBump = request->flags.sslBumped;
+        const bool needsBump =
+           (request->flags.sslPeek || clientFirstBump)
+           && (
+               (! request->flags.redirected_origin)
+               || (request->method == Http::METHOD_CONNECT)
+           );
         // We need a CONNECT tunnel to send encrypted traffic through a proxy,
         // but we do not support TLS inside TLS, so we exclude HTTPS proxies.
         const bool originWantsEncryptedTraffic =
             request->method == Http::METHOD_CONNECT ||
-            request->flags.sslPeek ||
-            clientFirstBump;
+            needsBump;
+
         if (originWantsEncryptedTraffic && // the "encrypted traffic" part
                 !peer->options.originserver && // the "through a proxy" part
                 !peer->secure.encryptTransport) // the "exclude HTTPS proxies" part
@@ -993,7 +999,12 @@ FwdState::secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &conn)
                                         request->method == Http::METHOD_CONNECT;
     const bool needTlsToPeer = peerWantsTls && !userWillTlsToPeerForUs;
     const bool clientFirstBump = request->flags.sslBumped; // client-first (already) bumped connection
-    const bool needsBump = request->flags.sslPeek || clientFirstBump;
+    const bool needsBump =
+       (request->flags.sslPeek || clientFirstBump)
+       && (
+           (! request->flags.redirected_origin)
+           || (request->method == Http::METHOD_CONNECT)
+       );
 
     // 'GET https://...' requests. If a peer is used the request is forwarded
     // as is

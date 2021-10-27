@@ -2155,7 +2155,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
          */
         if (request->peer_domain)
             hdr_out->putStr(Http::HdrType::HOST, request->peer_domain);
-        else if (request->flags.redirected && !Config.onoff.redir_rewrites_host)
+        else if (request->flags.redirected_origin && !Config.onoff.redir_rewrites_host)
             hdr_out->addEntry(e->clone());
         else {
             SBuf authority = request->url.authority();

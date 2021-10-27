@@ -110,6 +110,7 @@ enum HdrType {
     X_SQUID_ERROR,                  /**< Squid custom header on generated error responses */
     HDR_X_ACCELERATOR_VARY,             /**< obsolete Squid custom header. */
     X_NEXT_SERVICES,                /**< Squid custom ICAP header */
+    X_ALT_HOST,                     /**< Squid custom ICAP header */
     SURROGATE_CAPABILITY,           /**< Edge Side Includes (ESI) header */
     SURROGATE_CONTROL,              /**< Edge Side Includes (ESI) header */
     FRONT_END_HTTPS,                /**< MS Exchange custom header we may have to add */
