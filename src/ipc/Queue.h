@@ -173,7 +173,7 @@ public:
     /// clears the reader notification received by the local process from the remote process
     void clearReaderSignal(const int remoteProcessId);
 
-    /// clears the reader notification (probably lost), sent from some remote process some time ago
+    /// clears all reader notifications received by the local process
     void clearAllReaderSignals();
 
     /// picks a process and calls OneToOneUniQueue::pop() using its queue
