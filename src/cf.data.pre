@@ -9467,7 +9467,7 @@ DOC_START
 	To activate a service, use the adaptation_access directive. To group
 	services, use adaptation_service_chain and adaptation_service_set.
 
-	Adaptation services may produce an X-Alt-Host reponse header to cause
+	Adaptation services may produce an X-Alt-Host response header to cause
 	Squid to connect to an alternative origin server. This is useful where
 	services offer alternative "virtual IPs" that clients can connect to in
 	order to receive a modified service, such as forcing "Safe Search"
