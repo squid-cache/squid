@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,29 +11,24 @@
 
 #include "base/AsyncCall.h"
 
-// dialer to run a callback function with no arguments
-class NullaryFunDialer : public CallDialer
+#include <iostream>
+
+/// Calls a function without arguments. See also: NullaryMemFunT.
+class NullaryFunDialer: public CallDialer
 {
 public:
-    typedef void Handler();
+    using Handler = void ();
 
-    NullaryFunDialer(Handler *aHandler) :
-        handler(aHandler) {}
+    explicit NullaryFunDialer(Handler * const aHandler): handler(aHandler) {}
 
     /* CallDialer API */
     bool canDial(AsyncCall &) { return bool(handler); }
     void dial(AsyncCall &) { handler(); }
-    virtual void print(std::ostream &os) const override {  os << '(' << handler << ')'; }
+    virtual void print(std::ostream &os) const override { os << "()"; }
 
 private:
-    Handler *handler;
+    Handler *handler; ///< the function to call (or nil)
 };
 
-inline NullaryFunDialer
-funDialer(NullaryFunDialer::Handler *handler)
-{
-    return NullaryFunDialer(handler);
-}
-
-#endif
+#endif /* SQUID_BASE_ASYNCFUNCALLS_H */
 

@@ -126,7 +126,8 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 
     if (!queue.get()) {
         queue.reset(new Queue(ShmLabel, IamWorkerProcess() ? Queue::groupA : Queue::groupB, KidIdentifier));
-        AsyncCall::Pointer call = asyncCall(79, 4, "IpcIoFile::HandleMessagesAtStart", funDialer(&IpcIoFile::HandleMessagesAtStart));
+        AsyncCall::Pointer call = asyncCall(79, 4, "IpcIoFile::HandleMessagesAtStart",
+                                            NullaryFunDialer(&IpcIoFile::HandleMessagesAtStart));
         ScheduleCallHere(call);
     }
 

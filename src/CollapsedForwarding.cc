@@ -61,7 +61,7 @@ CollapsedForwarding::Init()
     if (UsingSmp() && IamWorkerProcess()) {
         queue.reset(new Queue(ShmLabel, KidIdentifier));
         AsyncCall::Pointer callback = asyncCall(17, 4, "CollapsedForwarding::HandleNewDataAtStart",
-                funDialer(&CollapsedForwarding::HandleNewDataAtStart));
+                                                NullaryFunDialer(&CollapsedForwarding::HandleNewDataAtStart));
         ScheduleCallHere(callback);
     }
 }
