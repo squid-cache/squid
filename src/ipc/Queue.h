@@ -601,7 +601,7 @@ BaseMultiQueue::stat(std::ostream &os) const
 
     const auto &reader = localReader();
     os << "  kid" << theLocalProcessId << " reader flags: " <<
-        "{ blocked: " << reader.blocked() << ", signaled: " << reader.signaled() << " }\n";
+       "{ blocked: " << reader.blocked() << ", signaled: " << reader.signaled() << " }\n";
 }
 
 // FewToFewBiQueue
