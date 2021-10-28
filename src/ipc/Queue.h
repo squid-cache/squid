@@ -33,7 +33,7 @@ public:
     /// whether the reader is waiting for a notification signal
     bool blocked() const { return popBlocked.load(); }
 
-    /// whether the reader was notified by the signal
+    /// \copydoc popSignal
     bool signaled() const { return popSignal.load(); }
 
     /// marks the reader as blocked, waiting for a notification signal
