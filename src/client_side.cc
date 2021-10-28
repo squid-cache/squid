@@ -986,10 +986,7 @@ ConnStateData::kick()
         debugs(33, 3, clientConnection << ": calling readNextRequest()");
         readNextRequest();
     } else {
-        // This happens for CONNECT tunnels if adaptation produces a 200
-        // response, since Squid won't have created the tunnel.
-        // XXX: Can this happen in other circumstances?  CONNECT tunnels
-        // have deferredRequest set.
+        // XXX: Can this happen? CONNECT tunnels have deferredRequest set.
         debugs(33, DBG_IMPORTANT, MYNAME << "abandoning " << clientConnection);
         clientConnection->close();
     }
