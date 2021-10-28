@@ -842,6 +842,9 @@ HappyConnOpener::maybeOpenSpareConnection()
     if (ranOutOfTimeOrAttempts())
         return; // too late
 
+    if (destinations->empty())
+        return;
+
     // jobGotInstantAllowance() call conditions below rely on the readyNow() check here
     if (!ignoreSpareRestrictions && // we have to honor spare restrictions
             !TheSpareAllowanceGiver.readyNow(*this) && // all new spares must wait
