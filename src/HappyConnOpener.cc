@@ -786,6 +786,7 @@ HappyConnOpener::maybeOpenPrimeConnection()
 
         Must(prime);
         maybeGivePrimeItsChance();
+        return;
     }
 
     // currentPeer implies there is a spare attempt; meanwhile, the previous
