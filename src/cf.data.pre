@@ -1427,7 +1427,7 @@ endif
 	  # from later adaptation callouts will have been merged with those
 	  # from earlier callouts, with the earlier header being replaced in
 	  # the event of a conflict. This ACL will not match if no adaptation
-          # responses have been received. Matching against adaptation headers
+	  # responses have been received. Matching against adaptation headers
 	  # provided as part of a 100 Continue response, or adaptation trailers
 	  # is not currently supported. [fast]
 

@@ -57,6 +57,7 @@
 #include "ipc/Kids.h"
 #include "ipc/Strand.h"
 #include "ipcache.h"
+#include "log/Config.h"
 #include "mime.h"
 #include "neighbors.h"
 #include "parser/Tokenizer.h"
@@ -85,7 +86,6 @@
 #include "wccp.h"
 #include "wccp2.h"
 #include "WinSvc.h"
-#include "log/Config.h"
 
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
@@ -917,9 +917,9 @@ mainReconfigureFinish(void *)
     if (Config2.onoff.enable_purge)
         Config2.onoff.enable_purge = 2;
 
+#if USE_ADAPTATION
     // Reset needsAdaptationHistory to false.  It will be changed to true later
     // by anything that requires adaptation history to be created.
-#if USE_ADAPTATION
     Log::TheConfig.needsAdaptationHistory = false;
 #endif
 

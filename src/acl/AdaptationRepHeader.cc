@@ -7,9 +7,9 @@
  */
 
 #include "squid.h"
+#include "acl/AdaptationRepHeader.h"
 #include "acl/FilledChecklist.h"
 #include "acl/HttpHeaderData.h"
-#include "acl/AdaptationRepHeader.h"
 #include "HttpRequest.h"
 #include "log/Config.h"
 
@@ -19,7 +19,7 @@ ACLAdaptationRepHeaderStrategy::ACLAdaptationRepHeaderStrategy()
 }
 
 int
-ACLAdaptationRepHeaderStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+ACLAdaptationRepHeaderStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
     HttpRequest::Pointer request = checklist->request;
     if (request == NULL)
@@ -29,3 +29,4 @@ ACLAdaptationRepHeaderStrategy::match (ACLData<MatchType> * &data, ACLFilledChec
         return 0;
     return data->match(&ah->allMeta);
 }
+

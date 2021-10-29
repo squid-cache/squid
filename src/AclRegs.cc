@@ -9,9 +9,9 @@
 #include "squid.h"
 
 #if USE_ADAPTATION
+#include "acl/AdaptationRepHeader.h"
 #include "acl/AdaptationService.h"
 #include "acl/AdaptationServiceData.h"
-#include "acl/AdaptationRepHeader.h"
 #endif
 #include "acl/AllOf.h"
 #include "acl/AnnotateClient.h"

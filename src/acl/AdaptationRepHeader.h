@@ -13,9 +13,8 @@
 #include "HttpHeader.h"
 
 /// adaptation_rep_header
-class ACLAdaptationRepHeaderStrategy : public ACLStrategy<HttpHeader*>
+class ACLAdaptationRepHeaderStrategy: public ACLStrategy<HttpHeader*>
 {
-
 public:
     ACLAdaptationRepHeaderStrategy();
     virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
