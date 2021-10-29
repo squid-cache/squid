@@ -909,7 +909,6 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
             request->method == Http::METHOD_CONNECT ||
             request->flags.sslPeek ||
             clientFirstBump;
-
         if (originWantsEncryptedTraffic && // the "encrypted traffic" part
                 !peer->options.originserver && // the "through a proxy" part
                 !peer->secure.encryptTransport) // the "exclude HTTPS proxies" part
