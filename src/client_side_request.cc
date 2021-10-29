@@ -1269,11 +1269,7 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
                     if (
                         (old_request->url.port() != new_request->url.port())
                         || strcasecmp(old_request->url.host(), new_request->url.host()) != 0
-                   ) {
-                        new_request->flags.redirected_origin = true;
-                        ConnStateData * conn = http->getConn();
-                        if (conn) conn->unpinConnection(true);
-                    }
+                   ) new_request->flags.redirected_origin = true;
 
                     // unlink bodypipe from the old request. Not needed there any longer.
                     if (old_request->body_pipe != NULL) {
@@ -2028,11 +2024,7 @@ ClientHttpRequest::handleAdaptedHeader(Http::Message *msg)
             if (
                 (request->url.port() != new_req->url.port())
                 || strcasecmp(request->url.host(), new_req->url.host())
-            ) {
-                new_req->flags.redirected_origin = true;
-                ConnStateData * conn = getConn();
-                if (conn) conn->unpinConnection(true);
-            }
+            ) new_req->flags.redirected_origin = true;
         }
         resetRequest(new_req);
         assert(request->method.id());

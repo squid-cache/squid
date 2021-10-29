@@ -903,17 +903,12 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
         // bumping modes to try connect to a remote server. The bumped
         // requests with other modes are using pinned connections or fails.
         const bool clientFirstBump = request->flags.sslBumped;
-        const bool needsBump =
-           (request->flags.sslPeek || clientFirstBump)
-           && (
-               (! request->flags.redirected_origin)
-               || (request->method == Http::METHOD_CONNECT)
-           );
         // We need a CONNECT tunnel to send encrypted traffic through a proxy,
         // but we do not support TLS inside TLS, so we exclude HTTPS proxies.
         const bool originWantsEncryptedTraffic =
             request->method == Http::METHOD_CONNECT ||
-            needsBump;
+            request->flags.sslPeek ||
+            clientFirstBump;
 
         if (originWantsEncryptedTraffic && // the "encrypted traffic" part
                 !peer->options.originserver && // the "through a proxy" part
@@ -999,12 +994,7 @@ FwdState::secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &conn)
                                         request->method == Http::METHOD_CONNECT;
     const bool needTlsToPeer = peerWantsTls && !userWillTlsToPeerForUs;
     const bool clientFirstBump = request->flags.sslBumped; // client-first (already) bumped connection
-    const bool needsBump =
-       (request->flags.sslPeek || clientFirstBump)
-       && (
-           (! request->flags.redirected_origin)
-           || (request->method == Http::METHOD_CONNECT)
-       );
+    const bool needsBump = request->flags.sslPeek || clientFirstBump;
 
     // 'GET https://...' requests. If a peer is used the request is forwarded
     // as is

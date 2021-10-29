@@ -732,7 +732,7 @@ HttpRequest::parseHeader(const char *buffer, const size_t size)
 ConnStateData *
 HttpRequest::pinnedConnection()
 {
-    if (clientConnectionManager.valid() && clientConnectionManager->pinning.pinned && (! flags.redirected_origin))
+    if (clientConnectionManager.valid() && clientConnectionManager->pinning.pinned)
         return clientConnectionManager.get();
     return NULL;
 }
