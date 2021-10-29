@@ -10,7 +10,8 @@
 #define SQUID_ACLADAPTATIONREPHEADER_H
 
 #include "acl/Strategy.h"
-#include "HttpHeader.h"
+
+class HttpHeader;
 
 /// adaptation_rep_header
 class ACLAdaptationRepHeaderStrategy: public ACLStrategy<HttpHeader*>
