@@ -9,7 +9,6 @@
 #include "squid.h"
 #include "acl/AdaptationRepHeader.h"
 #include "acl/FilledChecklist.h"
-#include "acl/HttpHeaderData.h"
 #include "HttpRequest.h"
 #include "log/Config.h"
 
