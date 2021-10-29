@@ -18,8 +18,10 @@ class ACLAdaptationRepHeaderStrategy: public ACLStrategy<HttpHeader*>
 {
 public:
     ACLAdaptationRepHeaderStrategy();
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
-    virtual bool requiresRequest() const { return true; }
+
+    /* ACLStrategy API */
+    virtual int match(ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    virtual bool requiresRequest() const override { return true; }
 };
 
 #endif /* SQUID_ACLADAPTATIONREPHEADER_H */
