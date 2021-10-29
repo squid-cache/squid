@@ -21,12 +21,13 @@ ACLAdaptationRepHeaderStrategy::ACLAdaptationRepHeaderStrategy()
 int
 ACLAdaptationRepHeaderStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
-    HttpRequest::Pointer request = checklist->request;
-    if (request == NULL)
+    const auto &request = checklist->request;
+    if (!request)
         return 0; // bug or misconfiguration; ACL::matches() warned the admin
-    Adaptation::History::Pointer ah = request->adaptHistory();
-    if (ah == NULL)
-        return 0;
-    return data->match(&ah->allMeta);
+
+    if (const auto &ah = request->adaptHistory())
+        return data->match(&ah->allMeta);
+
+    return 0;
 }
 
