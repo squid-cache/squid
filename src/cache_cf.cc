@@ -602,7 +602,15 @@ parseConfigFileOrThrow(const char *file_name)
 
     configFreeMemory();
 
+    // Reset configuration-dependent globals to their defaults. They will be
+    // recomputed based on the latest/fresh configuration.
+
     ACLMethodData::ThePurgeCount = 0;
+
+#if USE_ADAPTATION
+    Log::TheConfig.needsAdaptationHistory = false;
+#endif
+
     default_all();
 
     err_count = parseOneConfigFile(file_name, 0);
