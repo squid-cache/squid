@@ -185,12 +185,12 @@ private:
     virtual void swanSong() override;
     virtual const char *status() const override;
 
-    void maybeOpenAnotherPrimeConnection();
+    void maybeOpenPrimeConnection();
+    void maybeOpenSpareConnection();
 
     void maybeGivePrimeItsChance();
     void stopGivingPrimeItsChance();
     void stopWaitingForSpareAllowance();
-    void maybeOpenSpareConnection();
 
     void startConnecting(Attempt &, PeerConnectionPointer &);
     void openFreshConnection(Attempt &, PeerConnectionPointer &);
