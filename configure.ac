@@ -1379,7 +1379,6 @@ if test "x$with_openssl" = "xyes"; then
     SQUID_CHECK_OPENSSL_CONST_SSL_SESSION_CB_ARG
     SQUID_CHECK_OPENSSL_CONST_X509_GET0_SIGNATURE_ARGS
     SQUID_CHECK_OPENSSL_TXTDB
-    SQUID_CHECK_OPENSSL_HELLO_OVERWRITE_HACK
   fi
   if test "x$SSLLIB" = "x"; then
     AC_MSG_ERROR([Required OpenSSL library not found])
