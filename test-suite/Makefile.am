@@ -21,6 +21,7 @@ LDADD = \
 EXTRA_PROGRAMS = mem_node_test splay tcp-banger2
 
 EXTRA_DIST = \
+	mk-tls-test-certs.sh \
 	$(srcdir)/squidconf/* \
 	testheaders.sh
 
@@ -139,9 +140,42 @@ VirtualDeleteOperator_SOURCES = \
 	VirtualDeleteOperator.cc \
 	stub_libmem.cc
 
-squid-conf-tests: $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
-	@failed=0; cfglist="$?"; rm -f $@ || $(TRUE); \
-	for cfg in $$cfglist ; do \
+CLEANFILES += \
+	ca-mid-root-rsa.pem \
+	ca-mid-rsa.crt \
+	ca-mid-rsa.pem \
+	ca-mid-rsa.pkey \
+	ca-root-rsa.crt \
+	ca-root-rsa.pem \
+	ca-root-rsa.pkey \
+	leaf-root-rsa.pem \
+	leaf-chain-nokey-rsa.pem \
+	leaf-key-rsa.pem \
+	leaf-rsa.crt \
+	leaf-rsa.pkey
+
+CFG_TEST_FILES= \
+	$(top_builddir)/src/squid.conf.default \
+	$(srcdir)/squidconf/empty \
+	$(srcdir)/squidconf/external_acl_type \
+	$(srcdir)/squidconf/mgr_passwd \
+	$(srcdir)/squidconf/regex \
+	$(srcdir)/squidconf/regressions-3.3 \
+	$(srcdir)/squidconf/regressions-3.4.0.1 \
+	$(srcdir)/squidconf/regressions-3.5.0.2 \
+	$(srcdir)/squidconf/regressions-4.0.18
+
+if ENABLE_CERT_TESTS
+CFG_TEST_FILES += $(srcdir)/squidconf/tls-certs
+generate-test-certificates:
+	$(srcdir)/mk-tls-test-certs.sh "$(OPENSSL_BIN)" "$(CERTTOOL_BIN)"
+else
+generate-test-certificates:
+endif
+
+squid-conf-tests: generate-test-certificates $(top_builddir)/src/squid.conf.default
+	@failed=0; rm -f $@ || $(TRUE); \
+	for cfg in $(CFG_TEST_FILES) ; do \
 		$(top_builddir)/src/squid -k parse -f $$cfg || \
 			{ echo "FAIL: squid.conf test: $$cfg" | \
 				sed s%$(top_builddir)/src/%% | \
@@ -157,3 +191,5 @@ squid-conf-tests: $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
 	if test "$$failed" -eq 0; then cp $(TRUE) $@ ; fi
 
 CLEANFILES += squid-conf-tests
+
+.PHONY: generate-test-certificates
