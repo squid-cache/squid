@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -234,8 +234,8 @@ MemStore::stat(StoreEntry &e) const
         if (slotLimit > 0) {
             const unsigned int slotsFree =
                 Ipc::Mem::PagesAvailable(Ipc::Mem::PageId::cachePage);
-            if (slotsFree <= static_cast<const unsigned int>(slotLimit)) {
-                const int usedSlots = slotLimit - static_cast<const int>(slotsFree);
+            if (slotsFree <= static_cast<unsigned int>(slotLimit)) {
+                const int usedSlots = slotLimit - static_cast<int>(slotsFree);
                 storeAppendPrintf(&e, "Used slots:      %9d %.2f%%\n",
                                   usedSlots, (100.0 * usedSlots / slotLimit));
             }
@@ -1010,7 +1010,7 @@ MemStoreRr::create()
     assert(entryLimit > 0);
 
     Ipc::Mem::PageStack::Config spaceConfig;
-    spaceConfig.poolId = Ipc::Mem::PageStack::IdForMemStoreSpace(),
+    spaceConfig.poolId = Ipc::Mem::PageStack::IdForMemStoreSpace();
     spaceConfig.pageSize = 0; // the pages are stored in Ipc::Mem::Pages
     spaceConfig.capacity = entryLimit;
     spaceConfig.createFull = true; // all pages are initially available

@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -74,7 +74,8 @@ codeSkip == 1		{ next }
 
 END {
 	if (sbuf) print "#include \"sbuf/SBuf.h\""
-	print "#include \"" nspath type ".h\""
+	if (ifile != "") print "#include \"" ifile "\""
+        else print "#include \"" nspath type ".h\""
 
 	# if namespace is not empty ??
 	if (namespace) print "namespace " namespace

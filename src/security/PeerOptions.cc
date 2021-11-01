@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,6 +18,8 @@
 #if USE_OPENSSL
 #include "ssl/support.h"
 #endif
+
+#include <bitset>
 
 Security::PeerOptions Security::ProxyOutgoingConfig;
 
@@ -252,7 +254,7 @@ Security::PeerOptions::createBlankContext() const
 #elif USE_GNUTLS
     // Initialize for X.509 certificate exchange
     gnutls_certificate_credentials_t t;
-    if (const int x = gnutls_certificate_allocate_credentials(&t)) {
+    if (const auto x = gnutls_certificate_allocate_credentials(&t)) {
         fatalf("Failed to allocate TLS client context: %s\n", Security::ErrorString(x));
     }
     ctx = convertContextFromRawPtr(t);
@@ -525,7 +527,7 @@ Security::PeerOptions::parseOptions()
     const char *err = nullptr;
     const char *priorities = str.c_str();
     gnutls_priority_t op;
-    int x = gnutls_priority_init(&op, priorities, &err);
+    const auto x = gnutls_priority_init(&op, priorities, &err);
     if (x != GNUTLS_E_SUCCESS) {
         fatalf("(%s) in TLS options '%s'", ErrorString(x), err);
     }
@@ -539,7 +541,7 @@ Security::PeerOptions::parseOptions()
 /**
  * Parses the TLS flags squid.conf parameter
  */
-long
+Security::ParsedPortFlags
 Security::PeerOptions::parseFlags()
 {
     if (sslFlags.isEmpty())
@@ -547,11 +549,12 @@ Security::PeerOptions::parseFlags()
 
     static struct {
         SBuf label;
-        long mask;
+        ParsedPortFlags mask;
     } flagTokens[] = {
         { SBuf("NO_DEFAULT_CA"), SSL_FLAG_NO_DEFAULT_CA },
         { SBuf("DELAYED_AUTH"), SSL_FLAG_DELAYED_AUTH },
         { SBuf("DONT_VERIFY_PEER"), SSL_FLAG_DONT_VERIFY_PEER },
+        { SBuf("CONDITIONAL_AUTH"), SSL_FLAG_CONDITIONAL_AUTH },
         { SBuf("DONT_VERIFY_DOMAIN"), SSL_FLAG_DONT_VERIFY_DOMAIN },
         { SBuf("NO_SESSION_REUSE"), SSL_FLAG_NO_SESSION_REUSE },
 #if X509_V_FLAG_CRL_CHECK
@@ -564,10 +567,11 @@ Security::PeerOptions::parseFlags()
     ::Parser::Tokenizer tok(sslFlags);
     static const CharacterSet delims("Flag-delimiter", ":,");
 
-    long fl = 0;
+    ParsedPortFlags fl = 0;
     do {
-        long found = 0;
+        ParsedPortFlags found = 0;
         for (size_t i = 0; flagTokens[i].mask; ++i) {
+            // XXX: skips FOO in FOOBAR, missing merged flags and trailing typos
             if (tok.skip(flagTokens[i].label)) {
                 found = flagTokens[i].mask;
                 break;
@@ -583,6 +587,18 @@ Security::PeerOptions::parseFlags()
         } else
             fl |= found;
     } while (tok.skipOne(delims));
+
+    const auto mutuallyExclusive =
+        SSL_FLAG_DONT_VERIFY_PEER|
+        SSL_FLAG_DELAYED_AUTH|
+        SSL_FLAG_CONDITIONAL_AUTH;
+    typedef std::bitset<sizeof(decltype(fl))> ParsedPortFlagBits;
+    if (ParsedPortFlagBits(fl & mutuallyExclusive).count() > 1) {
+        if (fl & SSL_FLAG_CONDITIONAL_AUTH)
+            throw TextException("CONDITIONAL_AUTH is not compatible with NO_DEFAULT_CA and DELAYED_AUTH flags", Here());
+        debugs(83, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Mixtures of incompatible TLS flags" <<
+               " are deprecated and will become a fatal configuration error");
+    }
 
     return fl;
 }
@@ -618,13 +634,16 @@ Security::PeerOptions::updateContextOptions(Security::ContextPointer &ctx)
     SSL_CTX_set_options(ctx.get(), parsedOptions);
 #elif USE_GNUTLS
     // NP: GnuTLS uses 'priorities' which are set only per-session instead.
+    (void)ctx;
+#else
+    (void)ctx;
 #endif
 }
 
 #if USE_OPENSSL && defined(TLSEXT_TYPE_next_proto_neg)
 // Dummy next_proto_neg callback
 static int
-ssl_next_proto_cb(SSL *s, unsigned char **out, unsigned char *outlen, const unsigned char *in, unsigned int inlen, void *arg)
+ssl_next_proto_cb(SSL *, unsigned char **out, unsigned char *outlen, const unsigned char *in, unsigned int inlen, void * /* arg */)
 {
     static const unsigned char supported_protos[] = {8, 'h','t','t', 'p', '/', '1', '.', '1'};
     (void)SSL_select_next_proto(out, outlen, in, inlen, supported_protos, sizeof(supported_protos));
@@ -640,10 +659,11 @@ Security::PeerOptions::updateContextNpn(Security::ContextPointer &ctx)
 
 #if USE_OPENSSL && defined(TLSEXT_TYPE_next_proto_neg)
     SSL_CTX_set_next_proto_select_cb(ctx.get(), &ssl_next_proto_cb, nullptr);
-#endif
-
+#else
     // NOTE: GnuTLS does not support the obsolete NPN extension.
     //       it does support ALPN per-session, not per-context.
+    (void)ctx;
+#endif
 }
 
 static const char *
@@ -721,6 +741,8 @@ Security::PeerOptions::updateContextCrl(Security::ContextPointer &ctx)
         X509_STORE_set_flags(st, X509_V_FLAG_CRL_CHECK);
 #endif
 
+#else /* USE_OPENSSL */
+    (void)ctx;
 #endif /* USE_OPENSSL */
 }
 
@@ -738,6 +760,9 @@ Security::PeerOptions::updateContextTrust(Security::ContextPointer &ctx)
 #endif
 #elif USE_GNUTLS
     // Modern GnuTLS versions trust intermediate CA certificates by default.
+    (void)ctx;
+#else
+    (void)ctx;
 #endif /* TLS library */
 }
 
@@ -751,7 +776,7 @@ Security::PeerOptions::updateSessionOptions(Security::SessionPointer &s)
     SSL_set_options(s.get(), parsedOptions);
 
 #elif USE_GNUTLS
-    int x;
+    LibErrorCode x;
     SBuf errMsg;
     if (!parsedOptions) {
         debugs(83, 5, "set GnuTLS default priority/options for session=" << s);
@@ -767,6 +792,8 @@ Security::PeerOptions::updateSessionOptions(Security::SessionPointer &s)
     if (x != GNUTLS_E_SUCCESS) {
         debugs(83, DBG_IMPORTANT, "ERROR: session=" << s << " Failed to set TLS options (" << errMsg << ":" << tlsMinVersion << "). error: " << Security::ErrorString(x));
     }
+#else
+    (void)s;
 #endif
 }
 

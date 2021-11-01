@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,7 +21,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION( testStoreController );
 static void
 addSwapDir(TestSwapDirPointer aStore)
 {
-    allocate_new_swapdir(&Config.cacheSwap);
+    allocate_new_swapdir(Config.cacheSwap);
     Config.cacheSwap.swapDirs[Config.cacheSwap.n_configured] = aStore.getRaw();
     ++Config.cacheSwap.n_configured;
 }
@@ -87,9 +87,8 @@ testStoreController::testMaxSize()
 static StoreEntry *
 addedEntry(Store::Disk *aStore,
            String name,
-           String varySpec,
-           String varyKey
-
+           String,
+           String
           )
 {
     StoreEntry *e = new StoreEntry();
@@ -122,7 +121,7 @@ addedEntry(Store::Disk *aStore,
 static bool cbcalled;
 
 static void
-searchCallback(void *cbdata)
+searchCallback(void *)
 {
     cbcalled = true;
 }
@@ -145,10 +144,6 @@ testStoreController::testSearch()
     CPPUNIT_ASSERT_EQUAL(false, search->error());
     CPPUNIT_ASSERT_EQUAL(false, search->isDone());
     CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(NULL), search->currentItem());
-#if 0
-
-    CPPUNIT_ASSERT_EQUAL(false, search->next());
-#endif
 
     /* trigger a callback */
     cbcalled = false;

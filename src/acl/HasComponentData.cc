@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,18 +23,20 @@ ACLHasComponentData::ACLHasComponentData()
 void
 ACLHasComponentData::parse()
 {
-    const char *tok = ConfigParser::NextToken();
+    const auto tok = ConfigParser::strtokFile();
     if (!tok) {
         debugs(28, DBG_CRITICAL, "FATAL: \"has\" acl argument missing");
         self_destruct();
         return;
     }
-    if (ConfigParser::PeekAtToken()) {
+
+    parseComponent(tok);
+
+    if (ConfigParser::strtokFile()) {
         debugs(28, DBG_CRITICAL, "FATAL: multiple components not supported for \"has\" acl");
         self_destruct();
         return;
     }
-    parseComponent(tok);
 }
 
 bool

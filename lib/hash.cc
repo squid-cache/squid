@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -67,22 +67,22 @@ hash4(const void *data, unsigned int size)
         break;
     case 7:
         HASH4;
-    /* FALLTHROUGH */
+    /* [[fallthrough]] */
     case 6:
         HASH4;
-    /* FALLTHROUGH */
+    /* [[fallthrough]] */
     case 5:
         HASH4;
-    /* FALLTHROUGH */
+    /* [[fallthrough]] */
     case 4:
         HASH4;
-    /* FALLTHROUGH */
+    /* [[fallthrough]] */
     case 3:
         HASH4;
-    /* FALLTHROUGH */
+    /* [[fallthrough]] */
     case 2:
         HASH4;
-    /* FALLTHROUGH */
+    /* [[fallthrough]] */
     case 1:
         HASH4;
     }

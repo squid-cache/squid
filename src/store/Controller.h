@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -74,8 +74,8 @@ public:
     /// reduce the risk of selecting the wrong disk cache for the growing entry.
     int64_t accumulateMore(StoreEntry &) const;
 
-    /// slowly calculate (and cache) hi/lo watermarks and similar limits
-    void updateLimits();
+    /// update configuration, including limits (re)calculation
+    void configure();
 
     /// called when the entry is no longer needed by any transaction
     void handleIdleEntry(StoreEntry &);

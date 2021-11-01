@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -38,6 +38,10 @@ static AnyP::ProtocolVersion
 toProtocolVersion(const int v)
 {
     switch(v) {
+#if defined(TLS1_3_VERSION)
+    case TLS1_3_VERSION:
+        return AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3);
+#endif
 #if defined(TLS1_2_VERSION)
     case TLS1_2_VERSION:
         return AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 2);
@@ -82,6 +86,8 @@ Security::NegotiationHistory::retrieveNegotiatedInfo(const Security::SessionPoin
                " SSL version " << version_ <<
                " negotiated cipher " << cipherName());
     }
+#else
+    (void)session;
 #endif
 }
 

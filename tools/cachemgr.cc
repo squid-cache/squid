@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -216,7 +216,7 @@ xstrtok(char **str, char del)
         return "";
 }
 
-bool
+static bool
 hostname_check(const char *uri)
 {
     static CharacterSet hostChars = CharacterSet("host",".:[]_") +
@@ -693,7 +693,7 @@ read_reply(int s, cachemgr_request * req)
             }
 
             istate = isActions;
-        /* yes, fall through, we do not want to loose the first line */
+        /* [[fallthrough]] we do not want to lose the first line */
 
         case isActions:
             if (strncmp(buf, "action:", 7) == 0) {
@@ -709,7 +709,7 @@ read_reply(int s, cachemgr_request * req)
             }
 
             istate = isBody;
-        /* yes, fall through, we do not want to loose the first line */
+        /* [[fallthrough]] we do not want to lose the first line */
 
         case isBody:
         {
@@ -911,23 +911,12 @@ main(int argc, char *argv[])
 
     char **args = argv;
     while (argc > 1 && args[1][0] == '-') {
-//        const char *value = "";
         char option = args[1][1];
         switch (option) {
         case 'd':
             debug_enabled = 1;
             break;
         default:
-#if 0 // unused for now.
-            if (strlen(args[1]) > 2) {
-                value = args[1] + 2;
-            } else if (argc > 2) {
-                value = args[2];
-                ++args;
-                --argc;
-            } else
-                value = "";
-#endif
             break;
         }
         ++args;
@@ -1092,13 +1081,19 @@ make_pub_auth(cachemgr_request * req)
     if (!req->passwd || !strlen(req->passwd))
         return;
 
+    auto *rfc1738_username = xstrdup(rfc1738_escape(safe_str(req->user_name)));
+    auto *rfc1738_passwd = xstrdup(rfc1738_escape(req->passwd));
+
     /* host | time | user | passwd */
     const int bufLen = snprintf(buf, sizeof(buf), "%s|%d|%s|%s",
                                 req->hostname,
                                 (int) now,
-                                rfc1738_escape(safe_str(req->user_name)),
-                                rfc1738_escape(req->passwd));
+                                rfc1738_username,
+                                rfc1738_passwd);
     debug("cmgr: pre-encoded for pub: %s\n", buf);
+
+    safe_free(rfc1738_username);
+    safe_free(rfc1738_passwd);
 
     const int encodedLen = base64_encode_len(bufLen);
     req->pub_auth = (char *) xmalloc(encodedLen);
@@ -1246,7 +1241,7 @@ check_target_acl(const char *hostname, int port)
 
     if (fp == NULL) {
 #ifdef CACHEMGR_HOSTNAME_DEFINED
-
+        // TODO: simplify and maybe get rid of CACHEMGR_HOSTNAME altogether
         if (strcmp(hostname, CACHEMGR_HOSTNAME) == 0 && port == CACHE_HTTP_PORT)
             return 1;
 

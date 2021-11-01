@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,6 +32,7 @@ enum HdrType {
     AUTHENTICATION_INFO,            /**< RFC 2617 */
     AUTHORIZATION,                  /**< RFC 7235, 4559 */
     CACHE_CONTROL,                  /**< RFC 7234 */
+    CACHE_STATUS,                   /**< draft-ietf-httpbis-cache-header */
     CDN_LOOP,                       /**< RFC 8586 */
     CONNECTION,                     /**< RFC 7230 */
     CONTENT_BASE,                   /**< obsoleted RFC 2068 */
@@ -104,8 +105,6 @@ enum HdrType {
     VIA,                            /**< RFC 7230 */
     WARNING,                        /**< RFC 7234 */
     WWW_AUTHENTICATE,               /**< RFC 7235, 4559 */
-    X_CACHE,                        /**< Squid custom header */
-    X_CACHE_LOOKUP,                 /**< Squid custom header. temporary hack that became de-facto. TODO remove */
     X_FORWARDED_FOR,                /**< obsolete Squid custom header, RFC 7239 */
     X_REQUEST_URI,                  /**< Squid custom header appended if ADD_X_REQUEST_URI is defined */
     X_SQUID_ERROR,                  /**< Squid custom header on generated error responses */
@@ -151,22 +150,20 @@ enum HdrKind {
 };
 
 /* POD for HeaderTable */
-class HeaderTableRecord {
-public:
-    HeaderTableRecord();
+struct HeaderTableRecord {
+    HeaderTableRecord() = default;
     HeaderTableRecord(const char *n);
     HeaderTableRecord(const char *, Http::HdrType, Http::HdrFieldType, int /* HdrKind */);
 
-public:
-    const char *name;
-    Http::HdrType id;
-    Http::HdrFieldType type;
+    const char *name = "";
+    Http::HdrType id = HdrType::BAD_HDR;
+    Http::HdrFieldType type = HdrFieldType::ftInvalid;
     // flags set by constructor from HdrKind parameter
-    bool list;       ///<header with field values defined as #(values) in HTTP/1.1
-    bool request;    ///<header is a request header
-    bool reply;      ///<header is a reply header
-    bool hopbyhop;   ///<header is hop by hop
-    bool denied304;  ///<header is not to be updated on receiving a 304 in cache revalidation (see HttpReply.cc)
+    bool list = false;; ///< header with field values defined as #(values) in HTTP/1.1
+    bool request = false; ///< header is a request header
+    bool reply = false; ///< header is a reply header
+    bool hopbyhop = false; ///< header is hop by hop
+    bool denied304 = false; ///< header is not to be updated on receiving a 304 in cache revalidation (see HttpReply.cc)
 };
 
 /** Class for looking up registered header definitions

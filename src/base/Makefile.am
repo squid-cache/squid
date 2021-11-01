@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -36,6 +36,8 @@ libbase_la_SOURCES = \
 	Here.h \
 	InstanceId.cc \
 	InstanceId.h \
+	JobWait.cc \
+	JobWait.h \
 	Lock.h \
 	LookupTable.h \
 	Optional.h \
@@ -50,5 +52,6 @@ libbase_la_SOURCES = \
 	Subscription.h \
 	TextException.cc \
 	TextException.h \
+	TypeTraits.h \
 	YesNoNone.h \
 	forward.h

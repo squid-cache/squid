@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,6 +18,7 @@
 #include "comm/Loops.h"
 #include "comm/UdpOpenDialer.h"
 #include "compat/xalloc.h"
+#include "DebugMessages.h"
 #include "globals.h"
 #include "htcp.h"
 #include "http.h"
@@ -139,8 +140,7 @@ public:
     virtual std::ostream &detailCodeContext(std::ostream &os) const; // override
 
     /* StoreClient API */
-    void created(StoreEntry *);
-    virtual LogTags *loggingTags();
+    virtual LogTags *loggingTags() const;
     virtual void fillChecklist(ACLFilledChecklist &) const;
 
 public:
@@ -305,6 +305,10 @@ htcpHexdump(const char *tag, const char *s, int sz)
 
         memset(hex, '\0', sizeof(hex));
     }
+#else
+    (void)tag;
+    (void)s;
+    (void)sz;
 #endif
 }
 
@@ -969,24 +973,19 @@ htcpSpecifier::checkHit()
         return;
     }
 
-    StoreEntry::getPublicByRequest(this, checkHitRequest.getRaw());
-}
-
-void
-htcpSpecifier::created(StoreEntry *e)
-{
+    const auto e = storeGetPublicByRequest(checkHitRequest.getRaw());
     StoreEntry *hit = nullptr;
 
     if (!e) {
-        debugs(31, 3, "htcpCheckHit: NO; public object not found");
+        debugs(31, 3, "NO; public object not found");
     } else if (!e->validToSend()) {
-        debugs(31, 3, "htcpCheckHit: NO; entry not valid to send" );
+        debugs(31, 3, "NO; entry not valid to send" );
     } else if (refreshCheckHTCP(e, checkHitRequest.getRaw())) {
-        debugs(31, 3, "htcpCheckHit: NO; cached response is stale");
+        debugs(31, 3, "NO; cached response is stale");
     } else if (e->hittingRequiresCollapsing() && !startCollapsingOn(*e, false)) {
-        debugs(31, 3, "htcpCheckHit: NO; prohibited CF hit: " << *e);
+        debugs(31, 3, "NO; prohibited CF hit: " << *e);
     } else {
-        debugs(31, 3, "htcpCheckHit: YES!?");
+        debugs(31, 3, "YES!?");
         hit = e;
     }
 
@@ -998,7 +997,7 @@ htcpSpecifier::created(StoreEntry *e)
 }
 
 LogTags *
-htcpSpecifier::loggingTags()
+htcpSpecifier::loggingTags() const
 {
     // calling htcpSyncAle() here would not change cache.code
     if (!al)
@@ -1444,7 +1443,7 @@ void
 htcpOpenPorts(void)
 {
     if (Config.Port.htcp <= 0) {
-        debugs(31, DBG_IMPORTANT, "HTCP Disabled.");
+        debugs(31, Important(21), "HTCP Disabled.");
         return;
     }
 

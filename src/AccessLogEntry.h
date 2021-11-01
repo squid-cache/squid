@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,7 @@
 #include "anyp/PortCfg.h"
 #include "base/CodeContext.h"
 #include "comm/Connection.h"
+#include "error/Error.h"
 #include "HierarchyLogEntry.h"
 #include "http/ProtocolVersion.h"
 #include "http/RequestMethod.h"
@@ -255,7 +256,17 @@ public:
             virginUrlForMissingRequest_ = vu;
     }
 
+    /// \returns stored transaction error information (or nil)
+    const Error *error() const;
+
+    /// sets (or updates the already stored) transaction error as needed
+    void updateError(const Error &);
+
 private:
+    /// transaction problem
+    /// if set, overrides (and should eventually replace) request->error
+    Error error_;
+
     /// Client URI (or equivalent) for effectiveVirginUrl() when HttpRequest is
     /// missing. This member is ignored unless the request member is nil.
     SBuf virginUrlForMissingRequest_;
@@ -265,8 +276,8 @@ class ACLChecklist;
 class StoreEntry;
 
 /* Should be in 'AccessLog.h' as the driver */
-void accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist* checklist = NULL);
-void accessLogLog(AccessLogEntry::Pointer &, ACLChecklist * checklist);
+void accessLogLogTo(CustomLog *, const AccessLogEntryPointer &, ACLChecklist *checklist = nullptr);
+void accessLogLog(const AccessLogEntryPointer &, ACLChecklist *);
 void accessLogRotate(void);
 void accessLogClose(void);
 void accessLogInit(void);

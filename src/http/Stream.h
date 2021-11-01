@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -116,7 +116,7 @@ public:
     ConnStateData *getConn() const;
 
     /// update state to reflect I/O error
-    void noteIoError(const int xerrno);
+    void noteIoError(const Error &, const LogTagsErrors &);
 
     /// cleanup when the transaction has finished. may destroy 'this'
     void finished();

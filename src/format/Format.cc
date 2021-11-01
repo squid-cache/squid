@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 #include "base64.h"
 #include "client_side.h"
 #include "comm/Connection.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
 #include "errorpage.h"
 #include "fde.h"
 #include "format/Format.h"
@@ -108,8 +108,9 @@ Format::AssembleOne(const char *token, MemBuf &mb, const AccessLogEntryPointer &
         fmt.format = &tkn;
         fmt.assemble(mb, ale, 0);
         fmt.format = nullptr;
-    } else
+    } else {
         mb.append("-", 1);
+    }
     return static_cast<size_t>(tokenSize);
 }
 
@@ -387,7 +388,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         int dofree = 0;
         int64_t outoff = 0;
         int dooff = 0;
-        struct timeval outtv = {0, 0};
+        struct timeval outtv = {};
         int doMsec = 0;
         int doSec = 0;
         bool doUint64 = false;
@@ -993,29 +994,17 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_SQUID_ERROR:
-            if (al->request && al->request->errType != ERR_NONE)
-                out = errorPageName(al->request->errType);
+            if (const auto error = al->error())
+                out = errorPageName(error->category);
             break;
 
         case LFT_SQUID_ERROR_DETAIL:
-#if USE_OPENSSL
-            if (al->request && al->request->errType == ERR_SECURE_CONNECT_FAIL) {
-                out = Ssl::GetErrorName(al->request->errDetail, true);
-            } else
-#endif
-                if (al->request && al->request->errDetail != ERR_DETAIL_NONE) {
-                    if (al->request->errDetail > ERR_DETAIL_START && al->request->errDetail < ERR_DETAIL_MAX)
-                        out = errorDetailName(al->request->errDetail);
-                    else {
-                        if (al->request->errDetail >= ERR_DETAIL_EXCEPTION_START)
-                            sb.appendf("%s=0x%X",
-                                       errorDetailName(al->request->errDetail), (uint32_t) al->request->errDetail);
-                        else
-                            sb.appendf("%s=%d",
-                                       errorDetailName(al->request->errDetail), al->request->errDetail);
-                        out = sb.c_str();
-                    }
+            if (const auto error = al->error()) {
+                if (const auto detail = error->detail) {
+                    sb = detail->brief();
+                    out = sb.c_str();
                 }
+            }
             break;
 
         case LFT_SQUID_HIERARCHY:
@@ -1382,6 +1371,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_REQUEST_URLGROUP_OLD_2X:
             assert(LFT_REQUEST_URLGROUP_OLD_2X == 0); // should never happen.
+            break;
 
         case LFT_NOTE:
             tmp[0] = fmt->data.header.separator;

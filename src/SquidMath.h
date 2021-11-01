@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -40,10 +40,10 @@ using EnableIfType = typename std::enable_if<B,T>::type;
 /// reduces code duplication in Sum() declarations below
 template <typename T, typename U>
 using AllUnsigned = typename std::conditional<
-    std::is_unsigned<T>::value && std::is_unsigned<U>::value,
-    std::true_type,
-    std::false_type
-    >::type;
+                    std::is_unsigned<T>::value && std::is_unsigned<U>::value,
+                    std::true_type,
+                    std::false_type
+                    >::type;
 
 /// \returns a non-overflowing sum of the two unsigned arguments (or nothing)
 template <typename T, typename U, EnableIfType<AllUnsigned<T,U>::value, int> = 0>
@@ -72,16 +72,16 @@ Sum(const T a, const U b) {
 
     // tests below avoid undefined behavior of signed under/overflows
     return b >= 0 ?
-        ((a > std::numeric_limits<U>::max() - b) ? Optional<T>() : Optional<T>(a + b)):
-        ((a < std::numeric_limits<U>::min() - b) ? Optional<T>() : Optional<T>(a + b));
+           ((a > std::numeric_limits<U>::max() - b) ? Optional<T>() : Optional<T>(a + b)):
+           ((a < std::numeric_limits<U>::min() - b) ? Optional<T>() : Optional<T>(a + b));
 }
 
 /// \returns a non-overflowing sum of the arguments (or nothing)
 template <typename T, typename... Args>
 Optional<T>
 Sum(const T first, Args... args) {
-    if (const auto others = Sum(args...)) {
-        return Sum(first, others.value());
+    if (const auto others = Sum<T>(args...)) {
+        return Sum<T>(first, others.value());
     } else {
         return Optional<T>();
     }

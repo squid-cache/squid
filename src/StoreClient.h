@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #ifndef SQUID_STORECLIENT_H
 #define SQUID_STORECLIENT_H
 
+#include "acl/ChecklistFiller.h"
 #include "base/forward.h"
 #include "dlink.h"
 #include "StoreIOBuffer.h"
@@ -20,30 +21,21 @@ class StoreEntry;
 class ACLFilledChecklist;
 class LogTags;
 
-/// A StoreEntry::getPublic*() caller.
-class StoreClient
+/// a storeGetPublic*() caller
+class StoreClient: public Acl::ChecklistFiller
 {
 
 public:
     virtual ~StoreClient () {}
 
-    // TODO: Remove? Probably added to make lookups asynchronous, but they are
-    // still blocking. A lot more is needed to support async callbacks.
-    /// Handle a StoreEntry::getPublic*() result.
-    /// A nil entry indicates a cache miss.
-    virtual void created(StoreEntry *) = 0;
-
     /// \return LogTags (if the class logs transactions) or nil (otherwise)
-    virtual LogTags *loggingTags() = 0;
+    virtual LogTags *loggingTags() const = 0;
 
 protected:
-    /// configure the ACL checklist with the current transaction state
-    virtual void fillChecklist(ACLFilledChecklist &) const = 0;
-
     /// \returns whether the caller must collapse on the given entry
     /// Before returning true, updates common collapsing-related stats.
     /// See also: StoreEntry::hittingRequiresCollapsing().
-    bool startCollapsingOn(const StoreEntry &, const bool doingRevalidation);
+    bool startCollapsingOn(const StoreEntry &, const bool doingRevalidation) const;
 
     // These methods only interpret Squid configuration. Their allowances are
     // provisional -- other factors may prevent collapsed forwarding. The first

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -256,13 +256,16 @@ Log::TcpLogger::doConnect()
 
     typedef CommCbMemFunT<TcpLogger, CommConnectCbParams> Dialer;
     AsyncCall::Pointer call = JobCallback(MY_DEBUG_SECTION, 5, Dialer, this, Log::TcpLogger::connectDone);
-    AsyncJob::Start(new Comm::ConnOpener(futureConn, call, 2));
+    const auto cs = new Comm::ConnOpener(futureConn, call, 2);
+    connWait.start(cs, call);
 }
 
 /// Comm::ConnOpener callback
 void
 Log::TcpLogger::connectDone(const CommConnectCbParams &params)
 {
+    connWait.finish();
+
     if (params.flag != Comm::OK) {
         const double delay = 0.5; // seconds
         if (connectFailures++ % 100 == 0) {
@@ -367,7 +370,10 @@ Log::TcpLogger::handleClosure(const CommCloseCbParams &)
 {
     assert(inCall != NULL);
     closer = NULL;
-    conn = NULL;
+    if (conn) {
+        conn->noteClosure();
+        conn = nullptr;
+    }
     // in all current use cases, we should not try to reconnect
     mustStop("Log::TcpLogger::handleClosure");
 }

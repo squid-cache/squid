@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -107,11 +107,14 @@ Mgr::Inquirer::noteWroteHeader(const CommIoCbParams& params)
 
 /// called when the HTTP client or some external force closed our socket
 void
-Mgr::Inquirer::noteCommClosed(const CommCloseCbParams& params)
+Mgr::Inquirer::noteCommClosed(const CommCloseCbParams &)
 {
     debugs(16, 5, HERE);
-    Must(!Comm::IsConnOpen(conn) && params.conn.getRaw() == conn.getRaw());
-    conn = NULL;
+    closer = nullptr;
+    if (conn) {
+        conn->noteClosure();
+        conn = nullptr;
+    }
     mustStop("commClosed");
 }
 

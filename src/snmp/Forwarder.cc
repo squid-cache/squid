@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,7 +23,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Snmp, Forwarder);
 
 Snmp::Forwarder::Forwarder(const Pdu& aPdu, const Session& aSession, int aFd,
                            const Ip::Address& anAddress):
-    Ipc::Forwarder(new Request(KidIdentifier, 0, aPdu, aSession, aFd, anAddress), 2),
+    Ipc::Forwarder(new Request(KidIdentifier, Ipc::RequestId(), aPdu, aSession, aFd, anAddress), 2),
     fd(aFd)
 {
     debugs(49, 5, HERE << "FD " << aFd);
@@ -53,6 +53,7 @@ Snmp::Forwarder::noteCommClosed(const CommCloseCbParams& params)
 {
     debugs(49, 5, HERE);
     Must(fd == params.fd);
+    closer = nullptr;
     fd = -1;
     mustStop("commClosed");
 }
@@ -68,8 +69,7 @@ void
 Snmp::Forwarder::handleException(const std::exception& e)
 {
     debugs(49, 3, HERE << e.what());
-    if (fd >= 0)
-        sendError(SNMP_ERR_GENERR);
+    sendError(SNMP_ERR_GENERR);
     Ipc::Forwarder::handleException(e);
 }
 
@@ -78,6 +78,10 @@ void
 Snmp::Forwarder::sendError(int error)
 {
     debugs(49, 3, HERE);
+
+    if (fd < 0)
+        return; // client gone
+
     Snmp::Request& req = static_cast<Snmp::Request&>(*request);
     req.pdu.command = SNMP_PDU_RESPONSE;
     req.pdu.errstat = error;
@@ -88,7 +92,7 @@ Snmp::Forwarder::sendError(int error)
 }
 
 void
-Snmp::SendResponse(unsigned int requestId, const Pdu& pdu)
+Snmp::SendResponse(const Ipc::RequestId requestId, const Pdu &pdu)
 {
     debugs(49, 5, HERE);
     // snmpAgentResponse() can modify arg

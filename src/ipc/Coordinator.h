@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -47,7 +47,7 @@ protected:
 
     StrandCoord* findStrand(int kidId); ///< registered strand or NULL
     void registerStrand(const StrandCoord &); ///< adds or updates existing
-    void handleRegistrationRequest(const HereIamMessage &); ///< register,ACK
+    void handleRegistrationRequest(const StrandMessage &); ///< register,ACK
 
     /// answer the waiting search request
     void notifySearcher(const StrandSearchRequest &request, const StrandCoord&);

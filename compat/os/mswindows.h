@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -496,12 +496,6 @@ write(int fd, const void * buf, size_t siz)
         return ::send(sock, (char FAR *) buf, siz, 0);
     else
         return _write(fd, buf, siz);
-}
-
-inline char *
-index(const char *s, int c)
-{
-    return (char *)strchr(s,c);
 }
 
 // stdlib <functional> definitions are required before std API redefinitions.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,6 +14,7 @@
 #include "client_side.h"
 #include "clients/forward.h"
 #include "clients/FtpClient.h"
+#include "error/SysErrorDetail.h"
 #include "ftp/Elements.h"
 #include "ftp/Parsing.h"
 #include "http/Stream.h"
@@ -159,8 +160,8 @@ Ftp::Relay::Relay(FwdState *const fwdState):
     savedReply.lastReply = NULL;
     savedReply.replyCode = 0;
 
-    // Nothing we can do at request creation time can mark the response as
-    // uncachable, unfortunately. This prevents "found KEY_PRIVATE" WARNINGs.
+    // Prevent the future response from becoming public and being shared/cached
+    // because FTP does not support response cachability and freshness checks.
     entry->releaseRequest();
     AsyncCall::Pointer call = asyncCall(9, 4, "Ftp::Relay::Abort", cbdataDialer(&Relay::HandleStoreAbort, this));
     entry->registerAbortCallback(call);
@@ -298,7 +299,7 @@ Ftp::Relay::failedErrorMessage(err_type error, int xerrno)
     const Http::StatusCode httpStatus = failedHttpStatus(error);
     HttpReply *const reply = createHttpReply(httpStatus);
     entry->replaceHttpReply(reply);
-    fwd->request->detailError(error, xerrno);
+    fwd->request->detailError(error, SysErrorDetail::NewIfAny(xerrno));
 }
 
 void
@@ -385,6 +386,7 @@ Ftp::Relay::forwardReply()
     reply->sources |= Http::Message::srcFtp;
 
     setVirginReply(reply);
+    markParsedVirginReplyAsWhole("Ftp::Relay::handleControlReply() does not forward partial replies");
     adaptOrFinalizeReply();
 
     serverComplete();
@@ -718,7 +720,12 @@ Ftp::Relay::readTransferDoneReply()
 {
     debugs(9, 3, status());
 
-    if (ctrl.replycode != 226 && ctrl.replycode != 250) {
+    // RFC 959 says that code 226 may indicate a successful response to a file
+    // transfer and file abort commands, but since we do not send abort
+    // commands, let's assume it was a successful file transfer.
+    if (ctrl.replycode == 226 || ctrl.replycode == 250) {
+        markParsedVirginReplyAsWhole("Ftp::Relay::readTransferDoneReply() code 226 or 250");
+    } else {
         debugs(9, DBG_IMPORTANT, "got FTP code " << ctrl.replycode <<
                " after reading response data");
     }
@@ -732,7 +739,7 @@ void
 Ftp::Relay::dataChannelConnected(const CommConnectCbParams &io)
 {
     debugs(9, 3, status());
-    data.opener = NULL;
+    dataConnWait.finish();
 
     if (io.flag != Comm::OK) {
         debugs(9, 2, "failed to connect FTP server data channel");
@@ -797,9 +804,9 @@ Ftp::Relay::HandleStoreAbort(Relay *ftpClient)
         ftpClient->dataComplete();
 }
 
-AsyncJob::Pointer
+void
 Ftp::StartRelay(FwdState *const fwdState)
 {
-    return AsyncJob::Start(new Ftp::Relay(fwdState));
+    AsyncJob::Start(new Ftp::Relay(fwdState));
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -91,7 +91,7 @@ ACLHTTPStatus::empty () const
     return data->empty();
 }
 
-acl_httpstatus_data*
+static acl_httpstatus_data*
 aclParseHTTPStatusData(const char *t)
 {
     int status;

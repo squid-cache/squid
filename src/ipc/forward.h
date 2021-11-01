@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,14 +14,15 @@
 namespace Ipc
 {
 
-class TypedMsgHdr;
-class StrandCoord;
-class HereIamMessage;
-class StrandSearchResponse;
 class Forwarder;
 class Inquirer;
+class QuestionerId;
 class Request;
+class RequestId;
 class Response;
+class StrandCoord;
+class StrandMessage;
+class TypedMsgHdr;
 
 } // namespace Ipc
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,7 +14,8 @@
 #include "clients/forward.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
+#include "error/SysErrorDetail.h"
 #include "errorpage.h"
 #include "fde.h"
 #include "format/Format.h"
@@ -169,6 +170,10 @@ error_hard_text[] = {
         "reset"
     },
     {
+        ERR_CLIENT_GONE,
+        "unexpected client disconnect"
+    },
+    {
         ERR_SECURE_ACCEPT_FAIL,
         "secure accept fail"
     },
@@ -220,7 +225,8 @@ protected:
 };
 
 /// \ingroup ErrorPageInternal
-err_type &operator++ (err_type &anErr)
+static err_type &
+operator++ (err_type &anErr)
 {
     int tmp = (int)anErr;
     anErr = (err_type)(++tmp);
@@ -228,7 +234,8 @@ err_type &operator++ (err_type &anErr)
 }
 
 /// \ingroup ErrorPageInternal
-int operator - (err_type const &anErr, err_type const &anErr2)
+static int
+operator -(err_type const &anErr, err_type const &anErr2)
 {
     return (int)anErr - (int)anErr2;
 }
@@ -545,6 +552,8 @@ TemplateFile::loadFor(const HttpRequest *request)
             debugs(4, DBG_IMPORTANT, "WARNING: Error Pages Missing Language: " << lang);
         }
     }
+#else
+    (void)request;
 #endif
 
     return loaded();
@@ -712,9 +721,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
 {
     assert(entry->mem_obj != NULL);
     assert (entry->isEmpty());
-    debugs(4, 4, "Creating an error page for entry " << entry <<
-           " with errorstate " << err <<
-           " page id " << err->page_id);
+    debugs(4, 4, "storing " << err << " in " << *entry);
 
     if (entry->store_status != STORE_PENDING) {
         debugs(4, 2, "Skipping error page due to store_status: " << entry->store_status);
@@ -796,9 +803,6 @@ ErrorState::~ErrorState()
     if (err_language != Config.errorDefaultLanguage)
 #endif
         safe_free(err_language);
-#if USE_OPENSSL
-    delete detail;
-#endif
 }
 
 int
@@ -962,18 +966,13 @@ ErrorState::compileLegacyCode(Build &build)
     case 'D':
         if (!build.allowRecursion)
             p = "%D";  // if recursion is not allowed, do not convert
-#if USE_OPENSSL
-        // currently only SSL error details implemented
         else if (detail) {
-            detail->useRequest(request.getRaw());
-            const String &errDetail = detail->toString();
-            if (errDetail.size() > 0) {
-                const auto compiledDetail = compileBody(errDetail.termedBuf(), false);
-                mb.append(compiledDetail.rawContent(), compiledDetail.length());
-                do_quote = 0;
-            }
+            auto rawDetail = detail->verbose(request);
+            // XXX: Performance regression. c_str() reallocates
+            const auto compiledDetail = compileBody(rawDetail.c_str(), false);
+            mb.append(compiledDetail.rawContent(), compiledDetail.length());
+            do_quote = 0;
         }
-#endif
         if (!mb.contentSize())
             mb.append("[No Error Detail]", 17);
         break;
@@ -1081,6 +1080,7 @@ ErrorState::compileLegacyCode(Build &build)
     case 'O':
         if (!building_deny_info_url)
             do_quote = 0;
+    /* [[fallthrough]] */
     case 'o':
         p = request ? request->extacl_message.termedBuf() : external_acl_message;
         if (!p && !building_deny_info_url)
@@ -1204,13 +1204,12 @@ ErrorState::compileLegacyCode(Build &build)
         break;
 
     case 'x':
-#if USE_OPENSSL
-        if (detail)
-            mb.appendf("%s", detail->errorName());
-        else
-#endif
-            if (!building_deny_info_url)
-                p = "[Unknown Error Code]";
+        if (detail) {
+            const auto brief = detail->brief();
+            mb.append(brief.rawContent(), brief.length());
+        } else if (!building_deny_info_url) {
+            p = "[Unknown Error Code]";
+        }
         break;
 
     case 'z':
@@ -1351,17 +1350,10 @@ ErrorState::BuildHttpReply()
     // Make sure error codes get back to the client side for logging and
     // error tracking.
     if (request) {
-        int edc = ERR_DETAIL_NONE; // error detail code
-#if USE_OPENSSL
         if (detail)
-            edc = detail->errorNo();
+            request->detailError(type, detail);
         else
-#endif
-            if (detailCode)
-                edc = detailCode;
-            else
-                edc = xerrno;
-        request->detailError(type, edc);
+            request->detailError(type, SysErrorDetail::NewIfAny(xerrno));
     }
 
     return rep;
@@ -1399,7 +1391,7 @@ ErrorState::buildBody()
     if (!Config.errorDirectory)
         err_language = Config.errorDefaultLanguage;
 #endif
-    debugs(4, 2, "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
+    debugs(4, 2, "No existing error page language negotiated for " << this << ". Using default error file.");
     return compileBody(error_text[page_id], true);
 }
 
@@ -1532,5 +1524,15 @@ ErrorPage::ValidateStaticError(const int page_id, const SBuf &inputLocation)
     ErrorState anErr(err_type(page_id), Http::scNone, nullptr, nullptr);
     anErr.inputLocation = inputLocation;
     anErr.validate();
+}
+
+std::ostream &
+operator <<(std::ostream &os, const ErrorState *err)
+{
+    if (err)
+        os << errorPageName(err->page_id);
+    else
+        os << "[none]";
+    return os;
 }
 

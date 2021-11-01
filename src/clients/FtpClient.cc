@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,11 +16,14 @@
 #include "comm/Read.h"
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
+#include "error/SysErrorDetail.h"
 #include "errorpage.h"
 #include "fd.h"
 #include "ftp/Parsing.h"
 #include "http/Stream.h"
 #include "ip/tools.h"
+#include "sbuf/SBuf.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "StatCounters.h"
@@ -64,6 +67,20 @@ escapeIAC(const char *buf)
     return ret;
 }
 
+/* Ftp::ErrorDetail */
+
+SBuf
+Ftp::ErrorDetail::brief() const
+{
+    return ToSBuf("FTP_REPLY_CODE=", completionCode);
+}
+
+SBuf
+Ftp::ErrorDetail::verbose(const HttpRequest::Pointer &) const
+{
+    return ToSBuf("FTP reply with completion code ", completionCode);
+}
+
 /* Ftp::Channel */
 
 /// configures the channel with a descriptor and registers a close handler
@@ -78,6 +95,7 @@ Ftp::Channel::opened(const Comm::ConnectionPointer &newConn,
     assert(aCloser != NULL);
 
     conn = newConn;
+    conn->leaveOrphanage();
     closer = aCloser;
     comm_add_close_handler(conn->fd, closer);
 }
@@ -164,12 +182,12 @@ Ftp::DataChannel::addr(const Ip::Address &import)
 Ftp::Client::Client(FwdState *fwdState):
     AsyncJob("Ftp::Client"),
     ::Client(fwdState),
-     ctrl(),
-     data(),
-     state(BEGIN),
-     old_request(NULL),
-     old_reply(NULL),
-     shortenReadTimeout(false)
+    ctrl(),
+    data(),
+    state(BEGIN),
+    old_request(NULL),
+    old_reply(NULL),
+    shortenReadTimeout(false)
 {
     ++statCounter.server.all.requests;
     ++statCounter.server.ftp.requests;
@@ -184,10 +202,6 @@ Ftp::Client::Client(FwdState *fwdState):
 
 Ftp::Client::~Client()
 {
-    if (data.opener != NULL) {
-        data.opener->cancel("Ftp::Client destructed");
-        data.opener = NULL;
-    }
     data.close();
 
     safe_free(old_request);
@@ -285,7 +299,7 @@ Ftp::Client::failed(err_type error, int xerrno, ErrorState *err)
         ftperr->ftp.reply = xstrdup(reply);
 
     if (!err) {
-        fwd->request->detailError(error, xerrno);
+        fwd->request->detailError(error, SysErrorDetail::NewIfAny(xerrno));
         fwd->fail(ftperr);
         closeServer(); // we failed, so no serverComplete()
     }
@@ -680,7 +694,7 @@ Ftp::Client::sendPassive()
             state = SENT_EPSV_2;
             break;
         }
-    // else fall through to skip EPSV 2
+    /* [[fallthrough]] to skip EPSV 2 */
 
     case SENT_EPSV_2: /* EPSV IPv6 failed. Try EPSV IPv4 */
         if (ctrl.conn->local.isIPv4()) {
@@ -693,7 +707,7 @@ Ftp::Client::sendPassive()
             failed(ERR_FTP_FAILURE, 0);
             return false;
         }
-    // else fall through to skip EPSV 1
+    /* [[fallthrough]] to skip EPSV 1 */
 
     case SENT_EPSV_1: /* EPSV options exhausted. Try PASV now. */
         debugs(9, 5, "FTP Channel (" << ctrl.conn->remote << ") rejects EPSV connection attempts. Trying PASV instead.");
@@ -769,10 +783,10 @@ Ftp::Client::connectDataChannel()
     debugs(9, 3, "connecting to " << conn->remote);
 
     typedef CommCbMemFunT<Client, CommConnectCbParams> Dialer;
-    data.opener = JobCallback(9, 3, Dialer, this, Ftp::Client::dataChannelConnected);
-    Comm::ConnOpener *cs = new Comm::ConnOpener(conn, data.opener, Config.Timeout.connect);
+    AsyncCall::Pointer callback = JobCallback(9, 3, Dialer, this, Ftp::Client::dataChannelConnected);
+    const auto cs = new Comm::ConnOpener(conn, callback, Config.Timeout.connect);
     cs->setHost(data.host);
-    AsyncJob::Start(cs);
+    dataConnWait.start(cs, callback);
 }
 
 bool
@@ -794,10 +808,11 @@ void
 Ftp::Client::dataClosed(const CommCloseCbParams &)
 {
     debugs(9, 4, status());
+    if (data.conn)
+        data.conn->noteClosure();
     if (data.listenConn != NULL) {
         data.listenConn->close();
         data.listenConn = NULL;
-        // NP clear() does the: data.fd = -1;
     }
     data.clear();
 }
@@ -862,6 +877,8 @@ void
 Ftp::Client::ctrlClosed(const CommCloseCbParams &)
 {
     debugs(9, 4, status());
+    if (ctrl.conn)
+        ctrl.conn->noteClosure();
     ctrl.clear();
     doneWithFwd = "ctrlClosed()"; // assume FwdState is monitoring too
     mustStop("Ftp::Client::ctrlClosed");

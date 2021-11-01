@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 
 #include "base/YesNoNone.h"
 #include "ConfigParser.h"
+#include "security/forward.h"
 #include "security/KeyData.h"
 
 class Packable;
@@ -69,7 +70,7 @@ public:
     virtual void dumpCfg(Packable *, const char *pfx) const;
 
 private:
-    long parseFlags();
+    ParsedPortFlags parseFlags();
     void loadCrlFile();
     void loadKeysFile();
 
@@ -97,7 +98,7 @@ private:
     bool optsReparse = true;
 
 public:
-    long parsedFlags = 0;   ///< parsed value of sslFlags
+    ParsedPortFlags parsedFlags = 0; ///< parsed value of sslFlags
 
     std::list<Security::KeyData> certs; ///< details from the cert= and file= config parameters
     std::list<SBuf> caFiles;  ///< paths of files containing trusted Certificate Authority

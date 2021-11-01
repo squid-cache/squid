@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,11 +7,13 @@
  */
 
 #include "squid.h"
+#include "client_side_request.h"
+#include "FwdState.h"
+#include "http/Stream.h"
+#include "tunnel.h"
 
 #define STUB_API "tunnel.cc"
 #include "tests/STUB.h"
-
-#include "FwdState.h"
 class ClientHttpRequest;
 
 void tunnelStart(ClientHttpRequest *) STUB

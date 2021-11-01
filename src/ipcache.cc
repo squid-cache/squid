@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "CacheManager.h"
 #include "cbdata.h"
+#include "DebugMessages.h"
 #include "dlink.h"
 #include "dns/LookupDetails.h"
 #include "dns/rfc3596.h"
@@ -19,6 +20,7 @@
 #include "ip/tools.h"
 #include "ipcache.h"
 #include "mgr/Registration.h"
+#include "snmp_agent.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
@@ -685,7 +687,7 @@ void
 ipcache_init(void)
 {
     int n;
-    debugs(14, DBG_IMPORTANT, "Initializing IP Cache...");
+    debugs(14, Important(24), "Initializing IP Cache...");
     memset(&IpcacheStats, '\0', sizeof(IpcacheStats));
     lru_list = dlink_list();
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -65,6 +65,7 @@ class helper
     CBDATA_CLASS(helper);
 
 public:
+    /// \param name admin-visible helper category (with this process lifetime)
     inline helper(const char *name) :
         cmdline(NULL),
         id_name(name),

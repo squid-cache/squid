@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -84,7 +84,7 @@ COMMENT_START
 	files using the syntax:
 		parameters("/path/filename")
 	For example:
-		acl whitelist dstdomain parameters("/etc/squid/whitelist.txt")
+		acl allowlist dstdomain parameters("/etc/squid/allowlist.txt")
 
   Conditional configuration
 
@@ -179,6 +179,14 @@ NAME: refresh_stale_hit
 TYPE: obsolete
 DOC_START
 	This option is not yet supported by Squid-3.
+DOC_END
+
+# Options removed in 6.x
+NAME: request_entities
+TYPE: obsolete
+DOC_START
+	Remove this line. Squid now accepts HTTP/1.1 requests with bodies.
+	To simplify UI and code, Squid rejects certain HTTP/1.0 requests with bodies.
 DOC_END
 
 # Options removed in 5.x
@@ -2399,6 +2407,11 @@ DOC_START
 				Don't request client certificates
 				immediately, but wait until acl processing
 				requires a certificate (not yet implemented).
+			    CONDITIONAL_AUTH
+				Request a client certificate during the TLS
+				handshake, but ignore certificate absence in
+				the TLS client Hello. If the client does
+				supply a certificate, it is validated.
 			    NO_SESSION_REUSE
 				Don't allow for session reuse. Each connection
 				will result in a new SSL session.
@@ -2450,7 +2463,7 @@ DOC_START
 
 	   require-proxy-header
 			Require PROXY protocol version 1 or 2 connections.
-			The proxy_protocol_access is required to whitelist
+			The proxy_protocol_access is required to permit
 			downstream proxies which can be trusted.
 
 	   worker-queues
@@ -4969,10 +4982,29 @@ DOC_START
 	If ICAP is enabled, the following code becomes available (as
 	well as ICAP log codes documented with the icap_log option):
 
-		icap::tt        Total ICAP processing time for the HTTP
-				transaction. The timer ticks when ICAP
-				ACLs are checked and when ICAP
-				transaction is in progress.
+		icap::tt Total ICAP "blocking" time for the HTTP transaction. The
+				timer ticks while Squid checks adaptation_access and while
+				ICAP transaction(s) expect ICAP response headers, including
+				the embedded adapted HTTP message headers (where applicable).
+				This measurement is meant to estimate ICAP impact on HTTP
+				transaction response times, but it does not currently account
+				for slow ICAP response body delivery blocking HTTP progress.
+
+				Once Squid receives the final ICAP response headers (e.g.,
+				ICAP 200 or 204) and the associated adapted HTTP message
+				headers (if any) from the ICAP service, the corresponding ICAP
+				transaction stops affecting this measurement, even though the
+				transaction itself may continue for a long time (e.g., to
+				finish sending the ICAP request and/or to finish receiving the
+				ICAP response body).
+
+				When "blocking" sections of multiple concurrent ICAP
+				transactions overlap in time, the overlapping segment is
+				counted only once.
+
+				To see complete ICAP transaction response times (rather than
+				the cumulative effect of their blocking sections) use the
+				%adapt::all_trs logformat code or the icap_log directive.
 
 	If adaptation is enabled the following codes become available:
 
@@ -4991,11 +5023,12 @@ DOC_START
 				milliseconds.  When a failed transaction is
 				being retried or repeated, its time is not
 				logged individually but added to the
-				replacement (next) transaction. See also:
-				adapt::all_trs.
+				replacement (next) transaction. Lifetimes of individually
+				listed adaptation transactions may overlap.
+				See also: %icap::tt and %adapt::all_trs.
 
 		adapt::all_trs All adaptation transaction response times.
-				Same as adaptation_strs but response times of
+				Same as %adapt::sum_trs but response times of
 				individual transactions are never added
 				together. Instead, all transaction response
 				times are recorded individually.
@@ -5454,6 +5487,64 @@ DOC_START
 	To disable, enter "none".
 DOC_END
 
+NAME: tls_key_log
+TYPE: Security::KeyLog*
+DEFAULT: none
+LOC: Config.Log.tlsKeys
+IFDEF: USE_OPENSSL
+DOC_START
+	Configures whether and where Squid records pre-master secret and
+	related encryption details for TLS connections accepted or established
+	by Squid. These connections include connections accepted at
+	https_port, TLS connections opened to origin servers/cache_peers/ICAP
+	services, and TLS tunnels bumped by Squid using the SslBump feature.
+	This log (a.k.a. SSLKEYLOGFILE) is meant for triage with traffic
+	inspection tools like Wireshark.
+
+	    tls_key_log <destination> [options] [if [!]<acl>...]
+
+	WARNING: This log allows anybody to decrypt the corresponding
+	encrypted TLS connections, both in-flight and postmortem.
+
+	At most one log file is supported at this time. Repeated tls_key_log
+	directives are treated as fatal configuration errors. By default, no
+	log is created or updated.
+
+	If the log file does not exist, Squid creates it. Otherwise, Squid
+	appends an existing log file.
+
+	The directive is consulted whenever a TLS connection is accepted or
+	established by Squid. TLS connections that fail the handshake may be
+	logged if Squid got enough information to form a log record. A record
+	is logged only if all of the configured ACLs match.
+
+	While transport-related ACLs like src and dst should work, Squid may
+	not have access to higher-level information. For example, when logging
+	accepted https_port connections, Squid does not yet have access to the
+	expected HTTPS request. Similarly, an HTTPS response is not available
+	when logging most TLS connections established by Squid.
+
+	The log record format is meant to be compatible with TLS deciphering
+	features of Wireshark which relies on fields like CLIENT_RANDOM and
+	RSA Master-Key. A single log record usually spans multiple lines.
+	Technical documentation for that format is maintained inside the
+	Wireshark code (e.g., see tls_keylog_process_lines() comments as of
+	Wireshark commit e3d44136f0f0026c5e893fa249f458073f3b7328). TLS key
+	log does not support custom record formats.
+
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+
+	See access_log's <module>:<place> parameter for a list of supported
+	logging destinations.
+
+	TLS key log supports all access_log key=value options with the
+	exception of logformat=name.
+
+	Requires Squid built with OpenSSL support.
+DOC_END
+
+
 COMMENT_START
  OPTIONS FOR TROUBLESHOOTING
  -----------------------------------------------------------------------------
@@ -5469,6 +5560,52 @@ DOC_START
 	This is where general information about Squid behavior goes. You can
 	increase the amount of data logged to this file and how often it is
 	rotated with "debug_options"
+DOC_END
+
+NAME: cache_log_message
+TYPE: cache_log_message
+DEFAULT: none
+DEFAULT_DOC: Use debug_options.
+LOC: Config.debugMessages
+DOC_START
+	Configures logging of individual cache.log messages.
+
+		cache_log_message id=<number> option...
+		cache_log_message ids=<number>-<number> option...
+
+	Most messages have _not_ been instrumented to support this directive
+	yet. For the list of instrumented messages and their IDs, please see
+	the doc/debug-messages.txt file.
+
+	Message ID corresponds to the message semantics rather than message
+	text or source code location. The ID is stable across Squid
+	instances and versions. Substantial changes in message semantics
+	result in a new ID assignment. To reduce the danger of suppressing
+	an important log message, the old IDs of removed (or substantially
+	changed) messages are never reused.
+
+	If more than one cache_log_message directive refers to the same
+	message ID, the last directive wins.
+
+	Use ids=min-max syntax to apply the same message configuration to an
+	inclusive range of message IDs. An ID range with N values has
+	exactly the same effect as typing N cache_log_message lines.
+
+	At least one option is required. Supported options are:
+
+	  level=<number>: The logging level to use for the message. Squid
+		command line options (-s and -d) as well as the debug_options
+		directive control which levels go to syslog, stderr, and/or
+		cache.log. In most environments, using level=2 or higher stops
+		Squid from logging the message anywhere. By default, the
+		hard-coded message-specific level is used.
+
+	  limit=<number>: After logging the specified number of messages at
+		the configured (or default) debugging level DL, start using
+		level 3 (for DL 0 and 1) or 8 (for higher DL values). Usually,
+		level-3+ messages are not logged anywhere so this option can
+		often be used to effectively suppress the message. Each SMP
+		Squid process gets the same limit.
 DOC_END
 
 NAME: debug_options
@@ -5698,71 +5835,81 @@ TYPE: wordlist
 LOC: Config.Program.redirect
 DEFAULT: none
 DOC_START
-	Specify the location of the executable URL rewriter to use.
-	Since they can perform almost any function there isn't one included.
+	The name and command line parameters of an admin-provided executable
+	for redirecting clients or adjusting/replacing client request URLs.
 
-	For each requested URL, the rewriter will receive on line with the format
+	This helper is consulted after the received request is cleared by
+	http_access and adapted using eICAP/ICAP services (if any). If the
+	helper does not redirect the client, Squid checks adapted_http_access
+	and may consult the cache or forward the request to the next hop.
 
-	  [channel-ID <SP>] URL [<SP> extras]<NL>
 
-	See url_rewrite_extras on how to send "extras" with optional values to
-	the helper.
-	After processing the request the helper must reply using the following format:
+	For each request, the helper gets one line in the following format:
 
-	  [channel-ID <SP>] result [<SP> kv-pairs]
+	  [channel-ID <SP>] request-URL [<SP> extras] <NL>
 
-	The result code can be:
+	Use url_rewrite_extras to configure what Squid sends as 'extras'.
 
-	  OK status=30N url="..."
-		Redirect the URL to the one supplied in 'url='.
-		'status=' is optional and contains the status code to send
-		the client in Squids HTTP response. It must be one of the
-		HTTP redirect status codes: 301, 302, 303, 307, 308.
-		When no status is given Squid will use 302.
+
+	The helper must reply to each query using a single line:
+
+	  [channel-ID <SP>] result [<SP> kv-pairs] <NL>
+
+	The result section must match exactly one of the following outcomes:
+
+	  OK [status=30N] url="..."
+
+		Redirect the client to a URL supplied in the 'url' parameter.
+		Optional 'status' specifies the status code to send to the
+		client in Squid's HTTP redirect response. It must be one of
+		the standard HTTP redirect status codes: 301, 302, 303, 307,
+		or 308. When no specific status is requested, Squid uses 302.
 
 	  OK rewrite-url="..."
-		Rewrite the URL to the one supplied in 'rewrite-url='.
-		The new URL is fetched directly by Squid and returned to
-		the client as the response to its request.
+
+		Replace the current request URL with the one supplied in the
+		'rewrite-url' parameter. Squid fetches the resource specified
+		by the new URL and forwards the received response (or its
+		cached copy) to the client.
+
+		WARNING: Avoid rewriting URLs! When possible, redirect the
+		client using an "OK url=..." helper response instead.
+		Rewriting URLs may create inconsistent requests and/or break
+		synchronization between internal client and origin server
+		states, especially when URLs or other message parts contain
+		snippets of that state. For example, Squid does not adjust
+		Location headers and embedded URLs after the helper rewrites
+		the request URL.
 
 	  OK
-		When neither of url= and rewrite-url= are sent Squid does
-		not change the URL.
+		Keep the client request intact.
 
 	  ERR
-		Do not change the URL.
+		Keep the client request intact.
 
-	  BH
-		An internal error occurred in the helper, preventing
-		a result being identified. The 'message=' key name is
-		reserved for delivering a log message.
+	  BH [message="..."]
+		A helper problem that should be reported to the Squid admin
+		via a level-1 cache.log message. The 'message' parameter is
+		reserved for specifying the log message.
 
+	In addition to the kv-pairs mentioned above, Squid also understands
+	the following optional kv-pairs in URL rewriter responses:
 
-	In addition to the above kv-pairs Squid also understands the following
-	optional kv-pairs received from URL rewriters:
 	  clt_conn_tag=TAG
 		Associates a TAG with the client TCP connection.
-		The TAG is treated as a regular annotation but persists across
-		future requests on the client connection rather than just the
-		current request. A helper may update the TAG during subsequent
-		requests be returning a new kv-pair.
 
-	When using the concurrency= option the protocol is changed by
-	introducing a query channel tag in front of the request/response.
-	The query channel tag is a number between 0 and concurrency-1.
-	This value must be echoed back unchanged to Squid as the first part
-	of the response relating to its request.
+		The clt_conn_tag=TAG pair is treated as a regular transaction
+		annotation for the current request and also annotates future
+		requests on the same client connection. A helper may update
+		the TAG during subsequent requests by returning a new kv-pair.
 
-	WARNING: URL re-writing ability should be avoided whenever possible.
-		 Use the URL redirect form of response instead.
 
-	Re-write creates a difference in the state held by the client
-	and server. Possibly causing confusion when the server response
-	contains snippets of its view state. Embedded URLs, response
-	and content Location headers, etc. are not re-written by this
-	interface.
+	Helper messages contain the channel-ID part if and only if the
+	url_rewrite_children directive specifies positive concurrency. As a
+	channel-ID value, Squid sends a number between 0 and concurrency-1.
+	The helper must echo back the received channel-ID in its response.
 
-	By default, a URL rewriter is not used.
+	By default, Squid does not use a URL rewriter.
 DOC_END
 
 NAME: url_rewrite_children redirect_children
@@ -6637,22 +6784,6 @@ DOC_START
 
 	WARNING: If turned on this may eventually cause some
 	varying objects not intended for caching to get cached.
-DOC_END
-
-NAME: request_entities
-TYPE: onoff
-LOC: Config.onoff.request_entities
-DEFAULT: off
-DOC_START
-	Squid defaults to deny GET and HEAD requests with request entities,
-	as the meaning of such requests are undefined in the HTTP standard
-	even if not explicitly forbidden.
-
-	Set this directive to on if you have clients which insists
-	on sending request entities in GET or HEAD requests. But be warned
-	that there is server software (both proxies and web servers) which
-	can fail to properly process this kind of request which may make you
-	vulnerable to cache pollution attacks if enabled.
 DOC_END
 
 NAME: request_header_access

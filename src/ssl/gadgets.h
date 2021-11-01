@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,12 +9,15 @@
 #ifndef SQUID_SSL_GADGETS_H
 #define SQUID_SSL_GADGETS_H
 
+#if USE_OPENSSL
+
 #include "base/HardFun.h"
+#include "compat/openssl.h"
 #include "security/forward.h"
 #include "ssl/crtd_message.h"
 
-#if USE_OPENSSL
-#include "compat/openssl.h"
+#include <string>
+
 #if HAVE_OPENSSL_ASN1_H
 #include <openssl/asn1.h>
 #endif
@@ -24,8 +27,6 @@
 #if HAVE_OPENSSL_X509V3_H
 #include <openssl/x509v3.h>
 #endif
-#endif
-#include <string>
 
 namespace Ssl
 {
@@ -70,6 +71,7 @@ typedef std::unique_ptr<GENERAL_NAME, HardFun<void, GENERAL_NAME*, &GENERAL_NAME
 
 typedef std::unique_ptr<X509_EXTENSION, HardFun<void, X509_EXTENSION*, &X509_EXTENSION_free>> X509_EXTENSION_Pointer;
 
+typedef std::unique_ptr<X509_STORE_CTX, HardFun<void, X509_STORE_CTX *, &X509_STORE_CTX_free>> X509_STORE_CTX_Pointer;
 /**
  \ingroup SslCrtdSslAPI
  * Create 1024 bits rsa key.
@@ -112,11 +114,9 @@ void ReadPrivateKeyFromFile(char const * keyFilename, Security::PrivateKeyPointe
  */
 bool OpenCertsFileForReading(BIO_Pointer &bio, const char *filename);
 
-/**
- \ingroup SslCrtdSslAPI
- * Read a certificate from bio
- */
-bool ReadX509Certificate(BIO_Pointer &bio, Security::CertPointer & cert);
+/// reads and returns a certificate using the given OpenSSL BIO
+/// \returns a nil pointer on errors (TODO: throw instead)
+Security::CertPointer ReadX509Certificate(const BIO_Pointer &);
 
 /**
  \ingroup SslCrtdSslAPI
@@ -278,5 +278,7 @@ bool CertificatesCmp(const Security::CertPointer &cert1, const Security::CertPoi
 const ASN1_BIT_STRING *X509_get_signature(const Security::CertPointer &);
 
 } // namespace Ssl
+
+#endif // USE_OPENSSL
 #endif // SQUID_SSL_GADGETS_H
 

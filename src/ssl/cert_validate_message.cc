@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -89,7 +89,7 @@ get_error_id(const char *label, size_t len)
 }
 
 bool
-Ssl::CertValidationMsg::parseResponse(CertValidationResponse &resp, std::string &error)
+Ssl::CertValidationMsg::parseResponse(CertValidationResponse &resp)
 {
     std::vector<CertItem> certs;
 
@@ -218,42 +218,10 @@ Ssl::CertValidationResponse::getError(int errorId)
     return errors.back();
 }
 
-Ssl::CertValidationResponse::RecvdError::RecvdError(const RecvdError &old)
-{
-    id = old.id;
-    error_no = old.error_no;
-    error_reason = old.error_reason;
-    error_depth = old.error_depth;
-    setCert(old.cert.get());
-}
-
-Ssl::CertValidationResponse::RecvdError & Ssl::CertValidationResponse::RecvdError::operator = (const RecvdError &old)
-{
-    id = old.id;
-    error_no = old.error_no;
-    error_reason = old.error_reason;
-    error_depth = old.error_depth;
-    setCert(old.cert.get());
-    return *this;
-}
-
 void
 Ssl::CertValidationResponse::RecvdError::setCert(X509 *aCert)
 {
     cert.resetAndLock(aCert);
-}
-
-Ssl::CertValidationMsg::CertItem::CertItem(const CertItem &old)
-{
-    name = old.name;
-    setCert(old.cert.get());
-}
-
-Ssl::CertValidationMsg::CertItem & Ssl::CertValidationMsg::CertItem::operator = (const CertItem &old)
-{
-    name = old.name;
-    setCert(old.cert.get());
-    return *this;
 }
 
 void

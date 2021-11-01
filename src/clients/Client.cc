@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,7 +14,7 @@
 #include "comm/Connection.h"
 #include "comm/forward.h"
 #include "comm/Write.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
 #include "errorpage.h"
 #include "fd.h"
 #include "HttpHdrContRange.h"
@@ -153,6 +153,27 @@ Client::setFinalReply(HttpReply *rep)
     entry->startWriting(); // write the updated entry to store
 
     return theFinalReply;
+}
+
+void
+Client::markParsedVirginReplyAsWhole(const char *reasonWeAreSure)
+{
+    assert(reasonWeAreSure);
+    debugs(11, 3, reasonWeAreSure);
+
+    // The code storing adapted reply takes care of markStoredReplyAsWhole().
+    // We need to take care of the remaining regular network-to-store case.
+#if USE_ADAPTATION
+    if (startedAdaptation) {
+        debugs(11, 5, "adaptation handles markStoredReplyAsWhole()");
+        return;
+    }
+#endif
+
+    // Convert the "parsed whole virgin reply" event into the "stored..." event
+    // because, without adaptation, we store everything we parse: There is no
+    // buffer for parsed content; addVirginReplyBody() stores every parsed byte.
+    fwd->markStoredReplyAsWhole(reasonWeAreSure);
 }
 
 // called when no more server communication is expected; may quit
@@ -520,8 +541,11 @@ Client::haveParsedReplyHeaders()
     maybePurgeOthers();
 
     // adaptation may overwrite old offset computed using the virgin response
-    const bool partial = theFinalReply->contentRange();
-    currentOffset = partial ? theFinalReply->contentRange()->spec.offset : 0;
+    currentOffset = 0;
+    if (const auto cr = theFinalReply->contentRange()) {
+        if (cr->spec.offset != HttpHdrRangeSpec::UnknownPosition)
+            currentOffset = cr->spec.offset;
+    }
 }
 
 /// whether to prevent caching of an otherwise cachable response
@@ -719,6 +743,7 @@ Client::handleAdaptedHeader(Http::Message *msg)
         assert(result);
     } else {
         // no body
+        fwd->markStoredReplyAsWhole("setFinalReply() stored header-only adapted reply");
         if (doneWithAdaptation()) // we may still be sending virgin response
             handleAdaptationCompleted();
     }
@@ -793,6 +818,9 @@ Client::handleAdaptedBodyProductionEnded()
     if (abortOnBadEntry("entry went bad while waiting for adapted body eof"))
         return;
 
+    // distinguish this code path from handleAdaptedBodyProducerAborted()
+    receivedWholeAdaptedReply = true;
+
     // end consumption if we consumed everything
     if (adaptedBodySource != NULL && adaptedBodySource->exhausted())
         endAdaptedBodyConsumption();
@@ -803,6 +831,14 @@ void
 Client::endAdaptedBodyConsumption()
 {
     stopConsumingFrom(adaptedBodySource);
+
+    if (receivedWholeAdaptedReply) {
+        // We received the entire adapted reply per receivedWholeAdaptedReply.
+        // We are called when we consumed everything received (per our callers).
+        // We consume only what we store per handleMoreAdaptedBodyAvailable().
+        fwd->markStoredReplyAsWhole("received,consumed=>stored the entire RESPMOD reply");
+    }
+
     handleAdaptationCompleted();
 }
 
@@ -823,7 +859,6 @@ void Client::handleAdaptedBodyProducerAborted()
     if (handledEarlyAdaptationAbort())
         return;
 
-    entry->lengthWentBad("body adaptation aborted");
     handleAdaptationCompleted(); // the user should get a truncated response
 }
 
@@ -869,15 +904,18 @@ Client::handledEarlyAdaptationAbort()
     if (entry->isEmpty()) {
         debugs(11,8, "adaptation failure with an empty entry: " << *entry);
         const auto err = new ErrorState(ERR_ICAP_FAILURE, Http::scInternalServerError, request.getRaw(), fwd->al);
-        err->detailError(ERR_DETAIL_ICAP_RESPMOD_EARLY);
+        static const auto d = MakeNamedErrorDetail("ICAP_RESPMOD_EARLY");
+        err->detailError(d);
         fwd->fail(err);
         fwd->dontRetry(true);
         abortAll("adaptation failure with an empty entry");
         return true; // handled
     }
 
-    if (request) // update logged info directly
-        request->detailError(ERR_ICAP_FAILURE, ERR_DETAIL_ICAP_RESPMOD_LATE);
+    if (request) { // update logged info directly
+        static const auto d = MakeNamedErrorDetail("ICAP_RESPMOD_LATE");
+        request->detailError(ERR_ICAP_FAILURE, d);
+    }
 
     return false; // the caller must handle
 }
@@ -892,8 +930,10 @@ Client::handleAdaptationBlocked(const Adaptation::Answer &answer)
         return;
 
     if (!entry->isEmpty()) { // too late to block (should not really happen)
-        if (request)
-            request->detailError(ERR_ICAP_FAILURE, ERR_DETAIL_RESPMOD_BLOCK_LATE);
+        if (request) {
+            static const auto d = MakeNamedErrorDetail("RESPMOD_BLOCK_LATE");
+            request->detailError(ERR_ICAP_FAILURE, d);
+        }
         abortAll("late adaptation block");
         return;
     }
@@ -906,7 +946,8 @@ Client::handleAdaptationBlocked(const Adaptation::Answer &answer)
         page_id = ERR_ACCESS_DENIED;
 
     const auto err = new ErrorState(page_id, Http::scForbidden, request.getRaw(), fwd->al);
-    err->detailError(ERR_DETAIL_RESPMOD_BLOCK_EARLY);
+    static const auto d = MakeNamedErrorDetail("RESPMOD_BLOCK_EARLY");
+    err->detailError(d);
     fwd->fail(err);
     fwd->dontRetry(true);
 

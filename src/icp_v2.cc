@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -54,7 +54,7 @@ public:
     icp_common_t *msg = nullptr; ///< ICP message with network byte order fields
     DelayedUdpSend *next = nullptr; ///< invasive FIFO queue of delayed ICP messages
     AccessLogEntryPointer ale; ///< sender's master transaction summary
-    struct timeval queue_time = {0, 0}; ///< queuing timestamp
+    struct timeval queue_time = {}; ///< queuing timestamp
 };
 
 static void icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);
@@ -155,7 +155,20 @@ ICPState::~ICPState()
 }
 
 bool
-ICPState::confirmAndPrepHit(const StoreEntry &e)
+ICPState::isHit() const
+{
+    const auto e = storeGetPublic(url, Http::METHOD_GET);
+
+    const auto hit = e && confirmAndPrepHit(*e);
+
+    if (e)
+        e->abandon(__FUNCTION__);
+
+    return hit;
+}
+
+bool
+ICPState::confirmAndPrepHit(const StoreEntry &e) const
 {
     if (!e.validToSend())
         return false;
@@ -170,7 +183,7 @@ ICPState::confirmAndPrepHit(const StoreEntry &e)
 }
 
 LogTags *
-ICPState::loggingTags()
+ICPState::loggingTags() const
 {
     // calling icpSyncAle(LOG_TAG_NONE) here would not change cache.code
     if (!al)
@@ -199,7 +212,6 @@ public:
         ICPState(aHeader, aRequest),rtt(0),src_rtt(0),flags(0) {}
 
     ~ICP2State();
-    virtual void created(StoreEntry * newEntry) override;
 
     int rtt;
     int src_rtt;
@@ -208,39 +220,6 @@ public:
 
 ICP2State::~ICP2State()
 {}
-
-void
-ICP2State::created(StoreEntry *e)
-{
-    debugs(12, 5, "icpHandleIcpV2: OPCODE " << icp_opcode_str[header.opcode]);
-    icp_opcode codeToSend;
-
-    if (e && confirmAndPrepHit(*e)) {
-        codeToSend = ICP_HIT;
-    } else {
-#if USE_ICMP
-        if (Config.onoff.test_reachability && rtt == 0) {
-            if ((rtt = netdbHostRtt(request->url.host())) == 0)
-                netdbPingSite(request->url.host());
-        }
-#endif /* USE_ICMP */
-
-        if (icpGetCommonOpcode() != ICP_ERR)
-            codeToSend = icpGetCommonOpcode();
-        else if (Config.onoff.test_reachability && rtt == 0)
-            codeToSend = ICP_MISS_NOFETCH;
-        else
-            codeToSend = ICP_MISS;
-    }
-
-    icpCreateAndSend(codeToSend, flags, url, header.reqnum, src_rtt, fd, from, al);
-
-    // TODO: StoreClients must either store/lock or abandon found entries.
-    //if (e)
-    //    e->abandon();
-
-    delete this;
-}
 
 /* End ICP2State */
 
@@ -274,7 +253,7 @@ icpLogIcp(const Ip::Address &caddr, const LogTags_ot logcode, const int len, con
 }
 
 /// \ingroup ServerProtocolICPInternal2
-void
+static void
 icpUdpSendQueue(int fd, void *)
 {
     DelayedUdpSend *q;
@@ -477,15 +456,6 @@ icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
     return checklist.fastCheck().allowed();
 }
 
-char const *
-icpGetUrlToSend(char *url)
-{
-    if (strpbrk(url, w_space))
-        return rfc1738_escape(url);
-    else
-        return url;
-}
-
 HttpRequest *
 icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from)
 {
@@ -536,15 +506,35 @@ doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
 #endif /* USE_ICMP */
 
     /* The peer is allowed to use this cache */
-    ICP2State *state = new ICP2State(header, icp_request);
-    state->fd = fd;
-    state->from = from;
-    state->url = xstrdup(url);
-    state->flags = flags;
-    state->rtt = rtt;
-    state->src_rtt = src_rtt;
+    ICP2State state(header, icp_request);
+    state.fd = fd;
+    state.from = from;
+    state.url = xstrdup(url);
+    state.flags = flags;
+    state.rtt = rtt;
+    state.src_rtt = src_rtt;
 
-    StoreEntry::getPublic(state, url, Http::METHOD_GET);
+    icp_opcode codeToSend;
+
+    if (state.isHit()) {
+        codeToSend = ICP_HIT;
+    } else {
+#if USE_ICMP
+        if (Config.onoff.test_reachability && state.rtt == 0) {
+            if ((state.rtt = netdbHostRtt(state.request->url.host())) == 0)
+                netdbPingSite(state.request->url.host());
+        }
+#endif /* USE_ICMP */
+
+        if (icpGetCommonOpcode() != ICP_ERR)
+            codeToSend = icpGetCommonOpcode();
+        else if (Config.onoff.test_reachability && rtt == 0)
+            codeToSend = ICP_MISS_NOFETCH;
+        else
+            codeToSend = ICP_MISS;
+    }
+
+    icpCreateAndSend(codeToSend, flags, url, header.reqnum, src_rtt, fd, from, state.al);
 
     HTTPMSGUNLOCK(icp_request);
 }
@@ -583,6 +573,8 @@ icpHandleIcpV2(int fd, Ip::Address &from, char *buf, int len)
         debugs(12, 3, "icpHandleIcpV2: ICP message is too small");
         return;
     }
+
+    debugs(12, 5, "OPCODE " << icp_opcode_str[header.getOpCode()] << '=' << uint8_t(header.opcode));
 
     switch (header.opcode) {
 

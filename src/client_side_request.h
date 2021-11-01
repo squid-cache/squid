@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,11 +10,11 @@
 #define SQUID_CLIENTSIDEREQUEST_H
 
 #include "AccessLogEntry.h"
-#include "acl/forward.h"
 #include "client_side.h"
 #include "clientStream.h"
 #include "http/forward.h"
 #include "HttpHeaderRange.h"
+#include "log/forward.h"
 #include "LogTags.h"
 #include "Store.h"
 
@@ -65,12 +65,6 @@ public:
     ConnStateData * getConn() const {
         return (cbdataReferenceValid(conn_) ? conn_ : nullptr);
     }
-    void setConn(ConnStateData *aConn) {
-        if (conn_ != aConn) {
-            cbdataReferenceDone(conn_);
-            conn_ = cbdataReference(aConn);
-        }
-    }
 
     /// Initializes the current request with the virgin request.
     /// Call this method when the virgin request becomes known.
@@ -81,6 +75,12 @@ public:
     /// request. Call this every time adaptation or redirection changes
     /// the request. To set the virgin request, use initRequest().
     void resetRequest(HttpRequest *);
+
+    /// update the code in the transaction processing tags
+    void updateLoggingTags(const LogTags_ot code) { al->cache.code.update(code); }
+
+    /// the processing tags associated with this request transaction.
+    const LogTags &loggingTags() const { return al->cache.code; }
 
     /** Details of the client socket which produced us.
      * Treat as read-only for the lifetime of this HTTP request.
@@ -125,19 +125,14 @@ public:
     HttpHdrRangeIter range_iter;    /* data for iterating thru range specs */
     size_t req_sz;      /* raw request size on input, not current request size */
 
-    /// the processing tags associated with this request transaction.
-    // NP: still an enum so each stage altering it must take care when replacing it.
-    LogTags logType;
-
-    AccessLogEntry::Pointer al; ///< access.log entry
+    const AccessLogEntry::Pointer al; ///< access.log entry
 
     struct Flags {
-        Flags() : accel(false), internal(false), done_copying(false), purging(false) {}
+        Flags() : accel(false), internal(false), done_copying(false) {}
 
         bool accel;
         bool internal;
         bool done_copying;
-        bool purging;
     } flags;
 
     struct Redirect {
@@ -149,7 +144,7 @@ public:
 
     dlink_node active;
     dlink_list client_stream;
-    int mRangeCLen();
+    int64_t mRangeCLen() const;
 
     ClientRequestContext *calloutContext;
     void doCallouts();
@@ -166,8 +161,16 @@ public:
     /// neither the current request nor the parsed request URI are known
     void setErrorUri(const char *errorUri);
 
+    /// Prepares to satisfy a Range request with a generated HTTP 206 response.
+    /// Initializes range_iter state to allow raw range_iter access.
+    /// \returns Content-Length value for the future response; never negative
+    int64_t prepPartialResponseGeneration();
+
     /// Build an error reply. For use with the callouts.
-    void calloutsError(const err_type error, const int errDetail);
+    void calloutsError(const err_type error, const ErrorDetail::Pointer &errDetail);
+
+    /// if necessary, stores new error information (if any)
+    void updateError(const Error &error);
 
 #if USE_ADAPTATION
     // AsyncJob virtual methods
@@ -216,7 +219,7 @@ public:
 private:
     /// Handles an adaptation client request failure.
     /// Bypasses the error if possible, or build an error reply.
-    void handleAdaptationFailure(int errDetail, bool bypassable = false);
+    void handleAdaptationFailure(const ErrorDetail::Pointer &errDetail, bool bypassable = false);
 
     // Adaptation::Initiator API
     virtual void noteAdaptationAnswer(const Adaptation::Answer &answer);
@@ -237,6 +240,9 @@ private:
     CbcPointer<Adaptation::Initiate> virginHeadSource;
     BodyPipe::Pointer adaptedBodySource;
 
+    /// noteBodyProductionEnded() was called
+    bool receivedWholeAdaptedReply;
+
     bool request_satisfaction_mode;
     int64_t request_satisfaction_offset;
 #endif
@@ -247,7 +253,6 @@ char *clientConstructTraceEcho(ClientHttpRequest *);
 
 ACLFilledChecklist *clientAclChecklistCreate(const acl_access * acl,ClientHttpRequest * http);
 void clientAclChecklistFill(ACLFilledChecklist &, ClientHttpRequest *);
-int clientHttpRequestStatus(int fd, ClientHttpRequest const *http);
 void clientAccessCheck(ClientHttpRequest *);
 
 /* ones that should be elsewhere */

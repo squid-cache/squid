@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,21 +25,13 @@ public:
                          const Comm::ConnectionPointer &aClientConn,
                          AsyncCall::Pointer &aCallback,
                          const AccessLogEntryPointer &alp,
-                         const time_t timeout = 0) :
-        AsyncJob("Ssl::PeekingPeerConnector"),
-        Security::PeerConnector(aServerConn, aCallback, alp, timeout),
-        clientConn(aClientConn),
-        splice(false),
-        serverCertificateHandled(false)
-    {
-        request = aRequest;
-    }
+                         time_t timeout = 0);
 
     /* Security::PeerConnector API */
     virtual bool initialize(Security::SessionPointer &);
     virtual Security::ContextPointer getTlsContext();
     virtual void noteWantWrite();
-    virtual void noteNegotiationError(const int result, const int ssl_error, const int ssl_lib_error);
+    virtual void noteNegotiationError(const Security::ErrorDetailPointer &);
     virtual void noteNegotiationDone(ErrorState *error);
 
     /// Updates associated client connection manager members
@@ -51,7 +43,7 @@ public:
     void checkForPeekAndSplice();
 
     /// Callback function for ssl_bump acl check in step3  SSL bump step.
-    void checkForPeekAndSpliceDone(Acl::Answer answer);
+    void checkForPeekAndSpliceDone(Acl::Answer);
 
     /// Handles the final bumping decision.
     void checkForPeekAndSpliceMatched(const Ssl::BumpMode finalMode);
@@ -67,7 +59,7 @@ public:
     void startTunneling();
 
     /// A wrapper function for checkForPeekAndSpliceDone for use with acl
-    static void cbCheckForPeekAndSpliceDone(Acl::Answer answer, void *data);
+    static void cbCheckForPeekAndSpliceDone(Acl::Answer, void *data);
 
 private:
 

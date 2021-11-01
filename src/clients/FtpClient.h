@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,12 +12,31 @@
 #define SQUID_FTP_CLIENT_H
 
 #include "clients/Client.h"
+#include "error/Detail.h"
 
 class String;
 namespace Ftp
 {
 
 extern const char *const crlf;
+
+/// Holds FTP server reply error code
+/// Squid needs to interpret internally FTP reply codes and respond with
+/// custom error (eg in the case of Ftp::Gateway), however still we need
+/// to log the exact FTP server error reply code as the reason of error.
+class ErrorDetail: public ::ErrorDetail {
+    MEMPROXY_CLASS(Ftp::ErrorDetail);
+
+public:
+    explicit ErrorDetail(const int code): completionCode(code) {}
+
+    /* ErrorDetail API */
+    virtual SBuf brief() const override;
+    virtual SBuf verbose(const HttpRequestPointer &) const override;
+
+private:
+    int completionCode; ///< FTP reply completion code
+};
 
 /// Common code for FTP server control and data channels.
 /// Does not own the channel descriptor, which is managed by Ftp::Client.
@@ -45,7 +64,6 @@ public:
      */
     Comm::ConnectionPointer listenConn;
 
-    AsyncCall::Pointer opener; ///< Comm opener handler callback.
 private:
     AsyncCall::Pointer closer; ///< Comm close handler callback
 };
@@ -185,6 +203,10 @@ protected:
     // sending of the request body to the server
     virtual void sentRequestBody(const CommIoCbParams &io);
     virtual void doneSendingRequestBody();
+
+    /// Waits for an FTP data connection to the server to be established/opened.
+    /// This wait only happens in FTP passive mode (via PASV or EPSV).
+    JobWait<Comm::ConnOpener> dataConnWait;
 
 private:
     bool parseControlReply(size_t &bytesUsed);

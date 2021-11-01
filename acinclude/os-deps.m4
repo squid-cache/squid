@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -792,6 +792,7 @@ AC_DEFUN([SQUID_CHECK_FUNCTIONAL_CPU_PROFILER],[
   AC_CACHE_CHECK([for operational CPU clock access], 
                  squid_cv_cpu_profiler_works,
     AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
+#include <ctime>
 #if defined(__GNUC__) && ( defined(__i386) || defined(__i386__) )
 // okay
 #elif defined(__GNUC__) && ( defined(__x86_64) || defined(__x86_64__) )
@@ -799,6 +800,8 @@ AC_DEFUN([SQUID_CHECK_FUNCTIONAL_CPU_PROFILER],[
 #elif defined(__GNUC__) && defined(__alpha)
 // okay
 #elif defined(_M_IX86) && defined(_MSC_VER) /* x86 platform on Microsoft C Compiler ONLY */
+// okay
+#elif defined(HAVE_CLOCK_GETTIME_NSEC_NP) && defined(CLOCK_MONOTONIC_RAW)
 // okay
 #else
 #error This CPU is unsupported. No profiling available here.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "fd.h"
 #include "fde.h"
 
 #define STUB_API "fd.cc"
@@ -15,9 +16,9 @@
 fde *fde::Table = NULL;
 
 int fdNFree(void) STUB_RETVAL(-1)
-void fd_open(int fd, unsigned int type, const char *desc) STUB
-void fd_close(int fd) STUB
-void fd_bytes(int fd, int len, unsigned int type) STUB
-void fd_note(int fd, const char *s) STUB
+void fd_open(int, unsigned int, const char *) STUB
+void fd_close(int) STUB
+void fd_bytes(int, int, unsigned int) STUB
+void fd_note(int, const char *) STUB
 void fdAdjustReserved() STUB
 

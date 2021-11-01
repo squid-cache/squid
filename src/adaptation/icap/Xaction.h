@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,12 +12,18 @@
 #include "AccessLogEntry.h"
 #include "adaptation/icap/ServiceRep.h"
 #include "adaptation/Initiate.h"
+#include "base/JobWait.h"
 #include "comm/ConnOpener.h"
+#include "error/forward.h"
 #include "HttpReply.h"
 #include "ipcache.h"
 #include "sbuf/SBuf.h"
 
 class MemBuf;
+
+namespace Ssl {
+class IcapPeerConnector;
+}
 
 namespace Adaptation
 {
@@ -64,20 +70,19 @@ protected:
     virtual void start();
     virtual void noteInitiatorAborted(); // TODO: move to Adaptation::Initiate
 
+    /// starts sending/receiving ICAP messages
+    virtual void startShoveling() = 0;
+
     // comm hanndlers; called by comm handler wrappers
-    virtual void handleCommConnected() = 0;
     virtual void handleCommWrote(size_t sz) = 0;
     virtual void handleCommRead(size_t sz) = 0;
-    virtual void handleCommTimedout();
-    virtual void handleCommClosed();
 
     void handleSecuredPeer(Security::EncryptorAnswer &answer);
     /// record error detail if possible
-    virtual void detailError(int) {}
+    virtual void detailError(const ErrorDetailPointer &) {}
 
     void openConnection();
     void closeConnection();
-    void dieOnConnectionFailure();
     bool haveConnection() const;
 
     void scheduleRead();
@@ -123,11 +128,13 @@ public:
     ServiceRep &service();
 
 private:
+    void useTransportConnection(const Comm::ConnectionPointer &);
+    void useIcapConnection(const Comm::ConnectionPointer &);
+    void dieOnConnectionFailure();
     void tellQueryAborted();
     void maybeLog();
 
 protected:
-    Comm::ConnectionPointer connection;     ///< ICAP server connection
     Adaptation::Icap::ServiceRep::Pointer theService;
 
     SBuf readBuf;
@@ -136,14 +143,10 @@ protected:
     bool isRetriable;  ///< can retry on persistent connection failures
     bool isRepeatable; ///< can repeat if no or unsatisfactory response
     bool ignoreLastWrite;
+    bool waitingForDns; ///< expecting a ipcache_nbgethostbyname() callback
 
-    const char *stopReason;
-
-    // active (pending) comm callbacks for the ICAP server connection
-    AsyncCall::Pointer connector;
     AsyncCall::Pointer reader;
     AsyncCall::Pointer writer;
-    AsyncCall::Pointer closer;
 
     AccessLogEntry::Pointer alep; ///< icap.log entry
     AccessLogEntry &al; ///< short for *alep
@@ -153,8 +156,16 @@ protected:
     timeval icap_tio_finish;   /*time when the last byte of the ICAP responsewas received*/
 
 private:
-    Comm::ConnOpener::Pointer cs;
-    AsyncCall::Pointer securer; ///< whether we are securing a connection
+    /// waits for a transport connection to the ICAP server to be established/opened
+    JobWait<Comm::ConnOpener> transportWait;
+
+    /// waits for the established transport connection to be secured/encrypted
+    JobWait<Ssl::IcapPeerConnector> encryptionWait;
+
+    /// open and, if necessary, secured connection to the ICAP server (or nil)
+    Comm::ConnectionPointer connection;
+
+    AsyncCall::Pointer closer;
 };
 
 } // namespace Icap

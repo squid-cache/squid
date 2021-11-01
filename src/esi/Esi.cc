@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,6 +37,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/Address.h"
+#include "log/forward.h"
 #include "MemBuf.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
@@ -74,7 +75,8 @@ class ESIStreamContext;
  */
 
 /* make comparisons with refcount pointers easy */
-bool operator == (ESIElement const *lhs, ESIElement::Pointer const &rhs)
+static bool
+operator == (ESIElement const *lhs, ESIElement::Pointer const &rhs)
 {
     return lhs == rhs.getRaw();
 }
@@ -279,7 +281,7 @@ ESIContext::provideData (ESISegment::Pointer theData, ESIElement * source)
 }
 
 void
-ESIContext::fail (ESIElement * source, char const *anError)
+ESIContext::fail(ESIElement *, char const *anError)
 {
     setError();
     setErrorMessage (anError);
@@ -550,16 +552,6 @@ ESIContext::send ()
         return 0;
     } else
         flags.oktosend = 1;
-
-#if 0
-
-    if (!flags.oktosend) {
-
-        fatal("ESIContext::send: Not OK to send.\n");
-        return 0;
-    }
-
-#endif
 
     if (!(rep || (outbound.getRaw() &&
                   outbound->len && (outbound_offset <= outbound->len)))) {
@@ -1421,7 +1413,7 @@ ESIContext::freeResources ()
     /* don't touch incoming, it's a pointer into buffered anyway */
 }
 
-ErrorState *clientBuildError(err_type, Http::StatusCode, char const *, Ip::Address &, HttpRequest *, const AccessLogEntry::Pointer &);
+ErrorState *clientBuildError(err_type, Http::StatusCode, char const *, const ConnStateData *, HttpRequest *, const AccessLogEntryPointer &);
 
 /* This can ONLY be used before we have sent *any* data to the client */
 void
@@ -1439,7 +1431,7 @@ ESIContext::fail ()
     flags.error = 1;
     /* create an error object */
     // XXX: with the in-direction on remote IP. does the http->getConn()->clientConnection exist?
-    const auto err = clientBuildError(errorpage, errorstatus, nullptr, http->getConn()->clientConnection->remote, http->request, http->al);
+    const auto err = clientBuildError(errorpage, errorstatus, nullptr, http->getConn(), http->request, http->al);
     err->err_msg = errormessage;
     errormessage = NULL;
     rep = err->BuildHttpReply();
@@ -1605,7 +1597,7 @@ esiLiteral::makeUsable(esiTreeParentPtr, ESIVarState &newVarState) const
 
 /* esiRemove */
 void
-esiRemove::render(ESISegment::Pointer output)
+esiRemove::render(ESISegment::Pointer)
 {
     /* Removes do nothing dude */
     debugs(86, 5, "esiRemoveRender: Rendering remove " << this);
@@ -1838,7 +1830,7 @@ esiTry::provideData (ESISegment::Pointer data, ESIElement* source)
     }
 }
 
-esiTry::esiTry(esiTry const &old)
+esiTry::esiTry(esiTry const &)
 {
     attempt = NULL;
     except  = NULL;

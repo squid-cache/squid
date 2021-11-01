@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 18    Cache Manager Statistics */
 
 #include "squid.h"
+#include "AccessLogEntry.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
 #include "client_side.h"
@@ -63,8 +64,6 @@
 #include "comm.h"
 #include "StoreSearch.h"
 
-#define DEBUG_OPENFD 1
-
 typedef int STOBJFLT(const StoreEntry *);
 
 class StatObjectsState
@@ -89,9 +88,7 @@ static void statStoreEntry(MemBuf * mb, StoreEntry * e);
 static double statCPUUsage(int minutes);
 static OBJH stat_objects_get;
 static OBJH stat_vmobjects_get;
-#if DEBUG_OPENFD
 static OBJH statOpenfdObj;
-#endif
 static EVH statObjects;
 static OBJH statCountersDump;
 static OBJH statPeerSelect;
@@ -419,7 +416,6 @@ stat_vmobjects_get(StoreEntry * sentry)
     statObjectsStart(sentry, statObjectsVmFilter);
 }
 
-#if DEBUG_OPENFD
 static int
 statObjectsOpenfdFilter(const StoreEntry * e)
 {
@@ -437,8 +433,6 @@ statOpenfdObj(StoreEntry * sentry)
 {
     statObjectsStart(sentry, statObjectsOpenfdFilter);
 }
-
-#endif
 
 #if XMALLOC_STATISTICS
 static void
@@ -796,6 +790,8 @@ DumpMallocStatistics(StoreEntry* sentry)
     storeAppendPrintf(sentry, "\nMemory allocation statistics\n");
     storeAppendPrintf(sentry, "%12s %15s %6s %12s\n","Alloc Size","Count","Delta","Alloc/sec");
     malloc_statistics(info_get_mallstat, sentry);
+#else
+    (void)sentry;
 #endif
 }
 
@@ -1222,10 +1218,8 @@ statRegisterWithCacheManager(void)
                         "Active Cached Usernames",
                         Auth::User::CredentialsCacheStats, 0, 1);
 #endif
-#if DEBUG_OPENFD
     Mgr::RegisterAction("openfd_objects", "Objects with Swapout files open",
                         statOpenfdObj, 0, 0);
-#endif
 #if STAT_GRAPHS
     Mgr::RegisterAction("graph_variables", "Display cache metrics graphically",
                         statGraphDump, 0, 1);
@@ -1833,7 +1827,7 @@ statClientRequests(StoreEntry * s)
         }
 
         storeAppendPrintf(s, "uri %s\n", http->uri);
-        storeAppendPrintf(s, "logType %s\n", http->logType.c_str());
+        storeAppendPrintf(s, "logType %s\n", http->loggingTags().c_str());
         storeAppendPrintf(s, "out.offset %ld, out.size %lu\n",
                           (long int) http->out.offset, (unsigned long int) http->out.size);
         storeAppendPrintf(s, "req_sz %ld\n", (long int) http->req_sz);

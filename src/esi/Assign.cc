@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -89,7 +89,7 @@ ESIAssign::provideData (ESISegment::Pointer data, ESIElement * source)
 }
 
 esiProcessResult_t
-ESIAssign::process (int dovars)
+ESIAssign::process (int)
 {
     assert (varState);
 
@@ -167,7 +167,7 @@ ESIVariableExpression::ESIVariableExpression (String const &aString) : expressio
 {}
 
 void
-ESIVariableExpression::eval (ESIVarState &state, char const *subref, char const *defaultOnEmpty) const
+ESIVariableExpression::eval (ESIVarState &state, char const *, char const *) const
 {
     /* XXX: Implement evaluation of the expression */
     ESISegment::ListAppend (state.getOutput(), expression.rawBuf(), expression.size());

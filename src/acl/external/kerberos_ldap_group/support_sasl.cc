@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -241,7 +241,7 @@ tool_sasl_bind(LDAP * ld, char *binddn, char *ssl)
      * char  *sasl_secprops = (char *)"maxssf=56";
      * char  *sasl_secprops = NULL;
      */
-    struct berval passwd = {0, NULL};
+    struct berval passwd = {};
     void *defaults;
     int rc = LDAP_SUCCESS;
 

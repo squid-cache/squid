@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -149,7 +149,7 @@ Ssl::Bio::read(char *buf, int size, BIO *table)
 /// Called whenever the SSL connection state changes, an alert appears, or an
 /// error occurs. See SSL_set_info_callback().
 void
-Ssl::Bio::stateChanged(const SSL *ssl, int where, int ret)
+Ssl::Bio::stateChanged(const SSL *ssl, int where, int)
 {
     // Here we can use (where & STATE) to check the current state.
     // Many STATE values are possible, including: SSL_CB_CONNECT_LOOP,
@@ -168,7 +168,6 @@ Ssl::ClientBio::ClientBio(const int anFd):
     Bio(anFd),
     holdRead_(false),
     holdWrite_(false),
-    helloSize(0),
     abortReason(nullptr)
 {
     renegotiations.configure(10*1000);
@@ -245,7 +244,6 @@ Ssl::ServerBio::ServerBio(const int anFd):
     allowSplice(false),
     allowBump(false),
     holdWrite_(false),
-    holdRead_(true),
     record_(false),
     parsedHandshake(false),
     parseError(false),
@@ -317,12 +315,6 @@ Ssl::ServerBio::readAndParse(char *buf, const int size, BIO *table)
         debugs(83, 2, "parsing error on FD " << fd_ << ": " << ex.what());
         parsedHandshake = true; // done parsing (due to an error)
         parseError = true;
-    }
-
-    if (holdRead_) {
-        debugs(83, 7, "Hold flag is set, retry latter. (Hold " << size << "bytes)");
-        BIO_set_retry_read(table);
-        return -1;
     }
 
     return giveBuffered(buf, size);
@@ -460,6 +452,9 @@ adjustSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, SBuf &helloMes
     ssl->s3->wpend_tot = mainHelloSize;
     return true;
 #else
+    (void)ssl;
+    (void)details;
+    (void)helloMessage;
     return false;
 #endif
 }
@@ -559,7 +554,7 @@ bool
 Ssl::ServerBio::encryptedCertificates() const
 {
     return parser_.details->tlsSupportedVersion &&
-        Security::Tls1p3orLater(parser_.details->tlsSupportedVersion);
+           Security::Tls1p3orLater(parser_.details->tlsSupportedVersion);
 }
 
 /// initializes BIO table after allocation

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -63,7 +63,7 @@ StoreClient::onCollapsingPath() const
 }
 
 bool
-StoreClient::startCollapsingOn(const StoreEntry &e, const bool doingRevalidation)
+StoreClient::startCollapsingOn(const StoreEntry &e, const bool doingRevalidation) const
 {
     if (!e.hittingRequiresCollapsing())
         return false; // collapsing is impossible due to the entry state
@@ -82,13 +82,6 @@ StoreClient::startCollapsingOn(const StoreEntry &e, const bool doingRevalidation
 
     debugs(85, 5, e << " doingRevalidation=" << doingRevalidation);
     return true;
-}
-
-void
-StoreClient::fillChecklist(ACLFilledChecklist &checklist) const
-{
-    // TODO: Consider moving all CF-related methods into a new dedicated class.
-    Must(!"startCollapsingOn() caller must override fillChecklist()");
 }
 
 /* store_client */
@@ -143,7 +136,8 @@ storeClientListAdd(StoreEntry * e, void *data)
     if (storeClientListSearch(mem, data) != NULL)
         /* XXX die! */
         assert(1 == 0);
-
+#else
+    (void)data;
 #endif
 
     sc = new store_client (e);
@@ -659,19 +653,12 @@ storeClientCopyPending(store_client * sc, StoreEntry * e, void *data)
 {
 #if STORE_CLIENT_LIST_DEBUG
     assert(sc == storeClientListSearch(e->mem_obj, data));
+#else
+    (void)data;
 #endif
-#ifndef SILLY_CODE
 
     assert(sc);
-#endif
-
     assert(sc->entry == e);
-#if SILLY_CODE
-
-    if (sc == NULL)
-        return 0;
-
-#endif
 
     if (!sc->_callback.pending())
         return 0;
@@ -688,8 +675,9 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 {
     MemObject *mem = e->mem_obj;
 #if STORE_CLIENT_LIST_DEBUG
-
     assert(sc == storeClientListSearch(e->mem_obj, data));
+#else
+    (void)data;
 #endif
 
     if (mem == NULL)

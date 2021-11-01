@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -71,8 +71,8 @@ ResolvedPeers::findPrime(const Comm::Connection &currentPeer)
 {
     const auto path = start();
     const auto foundNextOrSpare = path != paths_.end() &&
-        (currentPeer.getPeer() != path->connection->getPeer() || // next peer
-            ConnectionFamily(currentPeer) != ConnectionFamily(*path->connection));
+                                  (currentPeer.getPeer() != path->connection->getPeer() || // next peer
+                                   ConnectionFamily(currentPeer) != ConnectionFamily(*path->connection));
     return makeFinding(path, foundNextOrSpare);
 }
 
@@ -93,7 +93,7 @@ ResolvedPeers::findSpare(const Comm::Connection &currentPeer)
         return false;
     });
     const auto foundNext = path != paths_.end() &&
-        primePeer != path->connection->getPeer();
+                           primePeer != path->connection->getPeer();
     return makeFinding(path, foundNext);
 }
 
@@ -103,7 +103,7 @@ ResolvedPeers::findPeer(const Comm::Connection &currentPeer)
 {
     const auto path = start();
     const auto foundNext = path != paths_.end() &&
-        currentPeer.getPeer() != path->connection->getPeer();
+                           currentPeer.getPeer() != path->connection->getPeer();
     return makeFinding(path, foundNext);
 }
 
@@ -151,7 +151,7 @@ ResolvedPeers::extractFound(const char *description, const Paths::iterator &foun
         while (++pathsToSkip < paths_.size() && !paths_[pathsToSkip].available) {}
     }
 
-    const auto cleanPath = path.connection->cloneDestinationDetails();
+    const auto cleanPath = path.connection->cloneProfile();
     return PeerConnectionPointer(cleanPath, found - paths_.begin());
 }
 
@@ -239,3 +239,4 @@ PeerConnectionPointer::print(std::ostream &os) const
     if (position_ != npos)
         os << " @" << position_;
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -91,7 +91,6 @@ Store::LocalSearch::copyBucket()
 {
     /* probably need to lock the store entries...
      * we copy them all to prevent races on the links. */
-    debugs(47, 3, "Store::LocalSearch::copyBucket #" << bucket);
     assert (!entries.size());
     hash_link *link_ptr = NULL;
     hash_link *link_next = NULL;
@@ -104,7 +103,10 @@ Store::LocalSearch::copyBucket()
         entries.push_back(e);
     }
 
+    // minimize debugging: we may be called more than a million times on startup
+    if (const auto count = entries.size())
+        debugs(47, 8, "bucket #" << bucket << " entries: " << count);
+
     ++bucket;
-    debugs(47,3, "got entries: " << entries.size());
 }
 
