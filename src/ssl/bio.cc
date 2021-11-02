@@ -361,13 +361,15 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
     }
 
     if (!helloBuild && (bumpMode_ == Ssl::bumpPeek || bumpMode_ == Ssl::bumpStare)) {
-        // buf contains OpenSSL-generated ClientHello. We assume it has a
-        // complete ClientHello and nothing else, but cannot fully verify
-        // that quickly. We only verify that buf starts with a v3+ record
-        // containing ClientHello.
+        // We have not seen any bytes, so the buffer must start with an
+        // OpenSSL-generated TLSPlaintext record containing, for example, a
+        // ClientHello or an alert message. We check these assumptions before we
+        // substitute that record/message with clientSentHello.
+        // TODO: Move these checks to where we actually rely on them.
+        debugs(83, 7, "to-server" << Raw("TLSPlaintext", buf, size).hex());
         Must(size >= 2); // enough for version and content_type checks below
         Must(buf[1] >= 3); // record's version.major; determines buf[0] meaning
-        Must(buf[0] == 22); // TLSPlaintext.content_type == handshake in v3+
+        Must(20 <= buf[0] && buf[0] <= 23); // valid TLSPlaintext.content_type
 
         //Hello message is the first message we write to server
         assert(helloMsg.isEmpty());
