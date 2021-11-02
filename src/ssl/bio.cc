@@ -364,7 +364,7 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
         // We have not seen any bytes, so the buffer must start with an
         // OpenSSL-generated TLSPlaintext record containing, for example, a
         // ClientHello or an alert message. We check these assumptions before we
-        // adjustSSL() and substitute that record/message with clientSentHello.
+        // substitute that record/message with clientSentHello.
         // TODO: Move these checks to where we actually rely on them.
         debugs(83, 7, "to-server" << Raw("TLSPlaintext", buf, size).hex());
         Must(size >= 2); // enough for version and content_type checks below
