@@ -881,7 +881,7 @@ tests_testMath_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testMem_LDFLAGS = $(LIBADD_DL)
+tests_testMath_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of mem/*
 
