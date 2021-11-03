@@ -11,6 +11,7 @@
 
 #include "acl/forward.h"
 #include "base/forward.h"
+#include "cfg/forward.h"
 #include "sbuf/forward.h"
 #include "SquidString.h"
 
@@ -21,16 +22,6 @@
 
 class CachePeer;
 class wordlist;
-
-/**
- * Limit to how long any given config line may be.
- * This affects squid.conf and all included files.
- *
- * Behaviour when setting larger than 2KB is unknown.
- * The config parser read mechanism can cope, but the other systems
- * receiving the data from its buffers on such lines may not.
- */
-#define CONFIG_LINE_LIMIT   2048
 
 /**
  * A configuration file Parser. Instances of this class track
