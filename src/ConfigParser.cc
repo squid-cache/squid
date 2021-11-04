@@ -16,6 +16,7 @@
 #include "fatal.h"
 #include "globals.h"
 #include "neighbors.h"
+#include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
 
 bool ConfigParser::RecognizeQuotedValues = true;
@@ -64,7 +65,7 @@ ConfigParser::strtokFile()
         return ConfigParser::NextToken();
 
     static int fromFile = 0;
-    static FILE *wordFile = nullptr;
+    static std::unique_ptr<Cfg::File> wordFile;
 
     char *t;
     static char buf[CONFIG_LINE_LIMIT];
@@ -86,15 +87,8 @@ ConfigParser::strtokFile()
 
                 *t = '\0';
 
-                if ((wordFile = fopen(fn, "r")) == nullptr) {
-                    debugs(3, DBG_CRITICAL, "ERROR: Can not open file " << fn << " for reading");
-                    return nullptr;
-                }
-
-#if _SQUID_WINDOWS_
-                setmode(fileno(wordFile), O_TEXT);
-#endif
-
+                wordFile.reset(new Cfg::File(fn));
+                wordFile->tryLoadFile();
                 fromFile = 1;
             } else {
                 return t;
@@ -102,26 +96,16 @@ ConfigParser::strtokFile()
         }
 
         /* fromFile */
-        if (fgets(buf, sizeof(buf), wordFile) == nullptr) {
+        auto line = wordFile->nextLine();
+        if (line.isEmpty()) {
             /* stop reading from file */
-            fclose(wordFile);
             wordFile = nullptr;
             fromFile = 0;
             return nullptr;
         } else {
-            char *t2, *t3;
+            assert(line.length() < CONFIG_LINE_LIMIT);
+            SBufToCstring(buf, line);
             t = buf;
-            /* skip leading and trailing white space */
-            t += strspn(buf, w_space);
-            t2 = t + strcspn(t, w_space);
-            t3 = t2 + strspn(t2, w_space);
-
-            while (*t3 && *t3 != '#') {
-                t2 = t3 + strcspn(t3, w_space);
-                t3 = t2 + strspn(t2, w_space);
-            }
-
-            *t2 = '\0';
         }
 
         /* skip comments */
