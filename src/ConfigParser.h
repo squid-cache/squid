@@ -11,7 +11,7 @@
 
 #include "acl/forward.h"
 #include "base/forward.h"
-#include "cfg/forward.h"
+#include "cfg/File.h"
 #include "sbuf/forward.h"
 #include "SquidString.h"
 
@@ -158,16 +158,16 @@ protected:
     class CfgFile
     {
     public:
-        CfgFile(): wordFile(nullptr), parsePos(nullptr), lineNo(0) { parseBuffer[0] = '\0';}
-        ~CfgFile();
-        /// True if the configuration file is open
-        bool isOpen() {return wordFile != nullptr;}
+        CfgFile(const char *path) : confFileData(path) { *parseBuffer = 0; }
 
-        /**
-         * Open the file given by 'path' and initializes the CfgFile object
-         * to start parsing
-         */
-        bool startParse(char *path);
+        /// True if the configuration file is open
+        bool isOpen() const { return confFileData.isOpen(); }
+
+        // filename and line number for debug display
+        SourceLocation lineInfo() const { return confFileData.lineInfo(); }
+
+        /// Initializes the CfgFile object to start parsing
+        void startParse();
 
         /**
          * Do the next parsing step:
@@ -178,19 +178,17 @@ protected:
         char *parse(TokenType &type);
 
     private:
-        bool getFileLine();   ///< Read the next line from the file
         /**
          * Return the body of the next element. If the wasQuoted is given
          * set to true if the element was quoted.
          */
         char *nextElement(TokenType &type);
-        FILE *wordFile; ///< Pointer to the file.
+
+    private:
+        Cfg::File confFileData; ///< actual file manager holding unparsed file content
+
         char parseBuffer[CONFIG_LINE_LIMIT]; ///< Temporary buffer to store data to parse
-        const char *parsePos; ///< The next element position in parseBuffer string
-    public:
-        std::string filePath; ///< The file path
-        std::string currentLine; ///< The current line to parse
-        int lineNo; ///< Current line number
+        const char *parsePos = nullptr; ///< The next element position in parseBuffer string
     };
 
     /**
