@@ -40,17 +40,13 @@ ConfigParser::destruct()
     shutting_down = 1;
     if (!CfgFiles.empty()) {
         std::ostringstream message;
-        CfgFile *f = CfgFiles.top();
-        message << "Bungled " << f->filePath << " line " << f->lineNo <<
-                ": " << f->currentLine << std::endl;
+        message << "Bungled " << CfgFiles.top()->lineInfo() << std::endl;
+        delete CfgFiles.top();
         CfgFiles.pop();
-        delete f;
         while (!CfgFiles.empty()) {
-            f = CfgFiles.top();
-            message << " included from " << f->filePath << " line " <<
-                    f->lineNo << ": " << f->currentLine << std::endl;
+            message << " included from " << CfgFiles.top()->lineInfo() << std::endl;
+            delete CfgFiles.top();
             CfgFiles.pop();
-            delete f;
         }
         message << " included from " <<  cfg_filename << " line " <<
                 config_lineno << ": " << config_input_line << std::endl;
@@ -341,7 +337,7 @@ ConfigParser::NextToken()
             if (!token) {
                 assert(!wordfile->isOpen());
                 CfgFiles.pop();
-                debugs(3, 4, "CfgFiles.pop " << wordfile->filePath);
+                debugs(3, 4, "CfgFiles.pop " << wordfile->lineInfo());
                 delete wordfile;
             }
         }
@@ -361,6 +357,12 @@ ConfigParser::NextToken()
                 return nullptr;
             }
 
+            if (!path) {
+                debugs(3, DBG_CRITICAL, "FATAL: filename missing: " << token);
+                self_destruct();
+                return nullptr;
+            }
+
             // The next token in current cfg file line must be a ")"
             char *end = NextToken();
             ConfigParser::PreviewMode_ = savePreview;
@@ -376,14 +378,9 @@ ConfigParser::NextToken()
                 return nullptr;
             }
 
-            ConfigParser::CfgFile *wordfile = new ConfigParser::CfgFile();
-            if (!path || !wordfile->startParse(path)) {
-                debugs(3, DBG_CRITICAL, "FATAL: Error opening config file: " << token);
-                delete wordfile;
-                self_destruct();
-                return nullptr;
-            }
-            CfgFiles.push(wordfile);
+            std::unique_ptr<ConfigParser::CfgFile> wordfile(new ConfigParser::CfgFile(path));
+            wordfile->startParse(); // throws on error
+            CfgFiles.push(wordfile.release());
             token = nullptr;
         }
     } while (token == nullptr && !CfgFiles.empty());
@@ -608,54 +605,32 @@ ConfigParser::optionalAclList()
     return acls;
 }
 
-bool
-ConfigParser::CfgFile::startParse(char *path)
+void
+ConfigParser::CfgFile::startParse()
 {
-    assert(wordFile == nullptr);
-    debugs(3, 3, "Parsing from " << path);
-    if ((wordFile = fopen(path, "r")) == nullptr) {
-        debugs(3, DBG_CRITICAL, "WARNING: file :" << path << " not found");
-        return false;
-    }
-
-#if _SQUID_WINDOWS_
-    setmode(fileno(wordFile), O_TEXT);
-#endif
-
-    filePath = path;
-    return getFileLine();
-}
-
-bool
-ConfigParser::CfgFile::getFileLine()
-{
-    // Else get the next line
-    if (fgets(parseBuffer, CONFIG_LINE_LIMIT, wordFile) == nullptr) {
-        /* stop reading from file */
-        fclose(wordFile);
-        wordFile = nullptr;
-        parseBuffer[0] = '\0';
-        return false;
-    }
-    parsePos = parseBuffer;
-    currentLine = parseBuffer;
-    lineNo++;
-    return true;
+    assert(isOpen());
+    confFileData.tryLoadFile();
+    debugs(3, 3, "Parsing from " << confFileData.lineInfo());
 }
 
 char *
 ConfigParser::CfgFile::parse(ConfigParser::TokenType &type)
 {
-    if (!wordFile)
-        return nullptr;
-
     if (!*parseBuffer)
         return nullptr;
 
     char *token;
     while (!(token = nextElement(type))) {
-        if (!getFileLine())
+        auto line = confFileData.nextLine();
+        if (line.isEmpty()) {
+            *parseBuffer = 0;
             return nullptr;
+        }
+
+        assert(line.length() < CONFIG_LINE_LIMIT);
+
+        SBufToCstring(parseBuffer, line);
+        parsePos = parseBuffer;
     }
     return token;
 }
@@ -669,11 +644,5 @@ ConfigParser::CfgFile::nextElement(ConfigParser::TokenType &type)
         parsePos = pos;
     // else next call will read the same token;
     return token;
-}
-
-ConfigParser::CfgFile::~CfgFile()
-{
-    if (wordFile)
-        fclose(wordFile);
 }
 
