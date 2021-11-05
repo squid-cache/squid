@@ -19,6 +19,8 @@
 #include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
 
+#include <memory>
+
 bool ConfigParser::RecognizeQuotedValues = true;
 bool ConfigParser::StrictMode = true;
 std::stack<ConfigParser::CfgFile *> ConfigParser::CfgFiles;
