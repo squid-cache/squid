@@ -59,7 +59,11 @@ static void mcast_encode(unsigned int *, size_t, const unsigned int *);
 
 using HeaderValueCountsElement = std::pair<SBuf, uint64_t>;
 /// counts the number of header field value occurrences
+#if STD_UNORDERED_MAP_ALLOCATOR_WORKS
 using HeaderValueCounts = std::unordered_map<SBuf, uint64_t, std::hash<SBuf>, std::equal_to<SBuf>, PoolingAllocator<HeaderValueCountsElement> >;
+#else
+using HeaderValueCounts = std::unordered_map<SBuf, uint64_t, std::hash<SBuf>, std::equal_to<SBuf> >;
+#endif
 
 /// counts the number of HTTP Via header field value occurrences
 static HeaderValueCounts TheViaCounts;
