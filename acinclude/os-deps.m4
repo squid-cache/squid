@@ -990,7 +990,7 @@ static Map testMap;
     [squid_cv_std_unordered_map_allocator_works=yes],
     [squid_cv_std_unordered_map_allocator_works=no])
   )
-  if test "x$squid_cv_std_unordered_map_allocator_works" = "xyes" ; then
+  AS_IF([test "x$squid_cv_std_unordered_map_allocator_works" = "xyes"],[
     AC_DEFINE([STD_UNORDERED_MAP_ALLOCATOR_WORKS],1)
-  fi
+  ])
 ])

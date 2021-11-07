@@ -386,9 +386,9 @@ fi
 dnl openbsd is super strict when dealing with system headers
 SQUID_CC_CHECK_ARGUMENT([ac_cv_support_wno_error_system_headers],
                          [-Werror -Wno-system-headers])
-if test "x$ac_cv_support_wno_error_system_headers" != "xno"; then
+AS_IF([test "x$ac_cv_support_wno_error_system_headers" != "xno"],[
   SQUID_CXXFLAGS="$SQUID_CXXFLAGS -Wno-system-headers"
-fi
+])
 
 # squid_cv_cc_arg_pipe is set by SQUID_CC_GUESS_OPTIONS
 SQUID_CXXFLAGS="$SQUID_CXXFLAGS $squid_cv_cc_arg_pipe"
