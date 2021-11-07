@@ -72,7 +72,7 @@ else
 fi
 
 echo "PWD: $PWD"
-echo "$base/../configure ${DISTCHECK_CONFIGURE_FLAGS} ${configcache} ..." 
+echo "$base/../configure ${DISTCHECK_CONFIGURE_FLAGS} ${configcache} ..."
 eval "$base/../configure ${DISTCHECK_CONFIGURE_FLAGS} ${configcache}" \
     2>&1 && \
     ${MAKE:-make} ${pjobs} ${MAKETEST} 2>&1
