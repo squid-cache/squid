@@ -968,30 +968,3 @@ AC_DEFUN([SQUID_CHECK_BROKEN_SOLARIS_IPFILTER],[
   ])
 
 ])
-
-AH_TEMPLATE(STD_UNORDERED_MAP_ALLOCATOR_WORKS,
-  [OpenBSD brokenness: for some reason it messes up const-ness in std::unordered_map if a allocator is supplied])
-AC_DEFUN([SQUID_CHECK_UNORDERED_MAP_ALLOCATOR_WORKS],[
-  AC_CACHE_CHECK([if std::unordered_map can accept an allocator],
-    squid_cv_std_unordered_map_allocator_works,
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include <memory>
-#include <unordered_map>
-template <class T>
-class SomeAllocator : public std::allocator<T>
-{};
-
-using Element = std::pair<int, uint64_t>;
-using AllocatorElement = std::pair<const int, uint64_t>;
-using Map = std::unordered_map<int, uint64_t, std::hash<int>, std::equal_to<int>, SomeAllocator<AllocatorElement> >;
-
-static Map testMap;
-]], [[
-]])],
-    [squid_cv_std_unordered_map_allocator_works=yes],
-    [squid_cv_std_unordered_map_allocator_works=no])
-  )
-  AS_IF([test "x$squid_cv_std_unordered_map_allocator_works" = "xyes"],[
-    AC_DEFINE([STD_UNORDERED_MAP_ALLOCATOR_WORKS],1)
-  ])
-])
