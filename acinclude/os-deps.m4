@@ -982,7 +982,8 @@ class SomeAllocator : public std::allocator<T>
 {};
 
 using Element = std::pair<int, uint64_t>;
-using Map = std::unordered_map<int, uint64_t, std::hash<int>, std::equal_to<int>, SomeAllocator<Element> >;
+using AllocatorElement = std::pair<const int, uint64_t>;
+using Map = std::unordered_map<int, uint64_t, std::hash<int>, std::equal_to<int>, SomeAllocator<AllocatorElement> >;
 
 static Map testMap;
 ]], [[
