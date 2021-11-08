@@ -36,7 +36,7 @@ inline int sched_getaffinity(int, size_t, cpu_set_t *) { return ENOTSUP; }
 #endif
 
 #if !defined(CPU_SET)
-inline void CPU_SET(int, const cpu_set_t *) {}
+inline void CPU_SET(int, cpu_set_t *) {}
 #endif
 
 #if !defined(CPU_CLR)
@@ -45,7 +45,7 @@ inline void CPU_SET(int, const cpu_set_t *) {}
 
 #if !defined(CPU_ISSET)
 inline bool
-CPU_ISSET(int, const cpu_set_t *)
+CPU_ISSET(int, cpu_set_t *)
 {
     return false;
 }
@@ -56,7 +56,7 @@ CPU_ISSET(int, const cpu_set_t *)
 #define CPU_COUNT(set) CpuCount(set)
 /// CPU_COUNT replacement
 inline int
-CpuCount(const cpu_set_t *set)
+CpuCount(cpu_set_t *set)
 {
     int count = 0;
     for (int i = 0; i < CPU_SETSIZE; ++i) {
@@ -72,7 +72,7 @@ CpuCount(const cpu_set_t *set)
 #define CPU_AND(destset, srcset1, srcset2) CpuAnd((destset), (srcset1), (srcset2))
 /// CPU_AND replacement
 inline void
-CpuAnd(cpu_set_t *destset, const cpu_set_t *srcset1, const cpu_set_t *srcset2)
+CpuAnd(cpu_set_t *destset, cpu_set_t *srcset1, cpu_set_t *srcset2)
 {
     for (int i = 0; i < CPU_SETSIZE; ++i) {
         if (CPU_ISSET(i, srcset1) && CPU_ISSET(i, srcset2))
