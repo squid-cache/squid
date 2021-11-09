@@ -105,10 +105,9 @@ private:
     using Entries = std::list<Entry, PoolingAllocator<Entry> >;
     using EntriesIterator = typename Entries::iterator;
 
-    using IndexItem = std::pair<Key, EntriesIterator>;
-    using IndexItemAllocatorElement = std::pair<const Key, EntriesIterator>;
+    using IndexItemt = std::pair<const Key, EntriesIterator>;
     /// key:entry_position mapping for fast entry lookups by key
-    using Index = std::unordered_map<Key, EntriesIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<IndexItemAllocatorElement> >;
+    using Index = std::unordered_map<Key, EntriesIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<IndexItem> >;
     using IndexIterator = typename Index::iterator;
 
     static Optional<uint64_t> MemoryCountedFor(const Key &, const Value &);
