@@ -638,10 +638,8 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
         return; // and continue to wait for FwdState::noteConnection() callback
     }
 
-    if (transporting()) {
-        Must(!transportWait);
+    if (transporting())
         return; // and continue to receive destinations for backup
-    }
 
     // This is the first path candidate we have seen. Use it.
     useDestinations();
