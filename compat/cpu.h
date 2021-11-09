@@ -45,7 +45,7 @@ inline void CpuSet(int, const cpu_set_t *) {}
 #endif
 
 #if !defined(CPU_ISSET)
-#defnie CPU_ISSET(cpunum, cpuset) CpuIsSet(cpunum, cpuset)
+#define CPU_ISSET(cpunum, cpuset) CpuIsSet(cpunum, cpuset)
 inline bool CpuIsSet(int, const cpu_set_t *) { return false; }
 #endif
 
