@@ -30,7 +30,6 @@
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
 #include "pconn.h"
-#include "profiler/Profiler.h"
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
@@ -337,7 +336,6 @@ comm_openex(int sock_type,
     int new_socket;
     struct addrinfo *AI = NULL;
 
-    PROF_start(comm_open);
     /* Create socket for accepting new connections. */
     ++ statCounter.syscalls.sock.sockets;
 
@@ -379,7 +377,6 @@ comm_openex(int sock_type,
 
         Ip::Address::FreeAddr(AI);
 
-        PROF_stop(comm_open);
         errno = xerrno; // restore for caller
         return -1;
     }
@@ -403,8 +400,6 @@ comm_openex(int sock_type,
     new_socket = comm_apply_flags(conn->fd, addr, flags, AI);
 
     Ip::Address::FreeAddr(AI);
-
-    PROF_stop(comm_open);
 
     // XXX transition only. prevent conn from closing the new FD on function exit.
     conn->fd = -1;
@@ -611,7 +606,6 @@ comm_connect_addr(int sock, const Ip::Address &address)
     int err = 0;
     socklen_t errlen;
     struct addrinfo *AI = NULL;
-    PROF_start(comm_connect_addr);
 
     assert(address.port() != 0);
 
@@ -703,8 +697,6 @@ comm_connect_addr(int sock, const Ip::Address &address)
     }
 
     Ip::Address::FreeAddr(AI);
-
-    PROF_stop(comm_connect_addr);
 
     errno = xerrno;
     if (xerrno == 0 || xerrno == EISCONN)
@@ -842,8 +834,6 @@ _comm_close(int fd, char const *file, int line)
 
     assert(F->type != FD_FILE);
 
-    PROF_start(comm_close);
-
     F->flags.close_request = true;
 
     // We have caller's context and fde::codeContext. In the unlikely event they
@@ -892,8 +882,6 @@ _comm_close(int fd, char const *file, int line)
     // must use async call to wait for all callbacks
     // scheduled before comm_close() to finish
     ScheduleCallHere(completeCall);
-
-    PROF_stop(comm_close);
 }
 
 /* Send a udp datagram to specified TO_ADDR. */
@@ -903,7 +891,6 @@ comm_udp_sendto(int fd,
                 const void *buf,
                 int len)
 {
-    PROF_start(comm_udp_sendto);
     ++ statCounter.syscalls.sock.sendtos;
 
     debugs(50, 3, "comm_udp_sendto: Attempt to send UDP packet to " << to_addr <<
@@ -914,8 +901,6 @@ comm_udp_sendto(int fd,
     int x = sendto(fd, buf, len, 0, AI->ai_addr, AI->ai_addrlen);
     int xerrno = errno;
     Ip::Address::FreeAddr(AI);
-
-    PROF_stop(comm_udp_sendto);
 
     if (x >= 0) {
         errno = xerrno; // restore for caller to use
@@ -1843,7 +1828,6 @@ comm_open_uds(int sock_type,
 
     int new_socket;
 
-    PROF_start(comm_open);
     /* Create socket for accepting new connections. */
     ++ statCounter.syscalls.sock.sockets;
 
@@ -1872,8 +1856,6 @@ comm_open_uds(int sock_type,
         } else {
             debugs(50, DBG_CRITICAL, MYNAME << "socket failure: " << xstrerr(xerrno));
         }
-
-        PROF_stop(comm_open);
         return -1;
     }
 
@@ -1896,7 +1878,6 @@ comm_open_uds(int sock_type,
     if (flags & COMM_NONBLOCKING) {
         if (commSetNonBlocking(new_socket) != Comm::OK) {
             comm_close(new_socket);
-            PROF_stop(comm_open);
             return -1;
         }
     }
@@ -1904,7 +1885,6 @@ comm_open_uds(int sock_type,
     if (flags & COMM_DOBIND) {
         if (commBind(new_socket, AI) != Comm::OK) {
             comm_close(new_socket);
-            PROF_stop(comm_open);
             return -1;
         }
     }
@@ -1917,8 +1897,6 @@ comm_open_uds(int sock_type,
 
     if (Config.tcpRcvBufsz > 0 && sock_type == SOCK_STREAM)
         commSetTcpRcvbuf(new_socket, Config.tcpRcvBufsz);
-
-    PROF_stop(comm_open);
 
     return new_socket;
 }

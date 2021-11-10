@@ -124,12 +124,6 @@ else
 DELAY_POOL_SOURCE =
 endif
 
-if ENABLE_XPROF_STATS
-XPROF_STATS_SOURCE = ProfStats.cc
-else
-XPROF_STATS_SOURCE =
-endif
-
 if ENABLE_HTCP
 HTCPSOURCE = htcp.cc htcp.h
 endif
@@ -220,7 +214,6 @@ squid_SOURCES = \
 	$(UNLINKDSOURCE) \
 	$(WIN32_SOURCE) \
 	$(WINSVC_SOURCE) \
-	$(XPROF_STATS_SOURCE) \
 	AccessLogEntry.cc \
 	AccessLogEntry.h \
 	AsyncEngine.cc \
@@ -494,7 +487,6 @@ EXTRA_squid_SOURCES = \
 	$(WIN32_ALL_SOURCE) \
 	$(all_AUTHMODULES) \
 	ConfigOption.h \
-	ProfStats.cc \
 	htcp.cc \
 	htcp.h \
 	ipc.cc \
