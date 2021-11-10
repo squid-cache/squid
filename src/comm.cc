@@ -112,6 +112,8 @@ comm_empty_os_read_buffers(int fd)
     if (fd_table[fd].flags.nonblocking && fd_table[fd].type != FD_MSGHDR) {
         while (FD_READ_METHOD(fd, buf, SQUID_TCP_SO_RCVBUF) > 0) {};
     }
+#else
+    (void)fd;
 #endif
 }
 
