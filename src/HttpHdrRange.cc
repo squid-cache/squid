@@ -193,6 +193,8 @@ HttpHdrRangeSpec::mergeWith(const HttpHdrRangeSpec * donor)
             offset <= donor->offset && donor->offset < rhs;
     }
 
+#else
+    (void)donor;
 #endif
     return merged;
 }

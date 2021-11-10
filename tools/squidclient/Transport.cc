@@ -503,6 +503,8 @@ Transport::MaybeStartTls(const char *hostname)
             return false;
         }
     }
+#else
+    (void)hostname;
 #endif
     return true;
 }

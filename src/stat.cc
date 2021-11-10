@@ -9,6 +9,7 @@
 /* DEBUG: section 18    Cache Manager Statistics */
 
 #include "squid.h"
+#include "AccessLogEntry.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
 #include "client_side.h"
@@ -789,6 +790,8 @@ DumpMallocStatistics(StoreEntry* sentry)
     storeAppendPrintf(sentry, "\nMemory allocation statistics\n");
     storeAppendPrintf(sentry, "%12s %15s %6s %12s\n","Alloc Size","Count","Delta","Alloc/sec");
     malloc_statistics(info_get_mallstat, sentry);
+#else
+    (void)sentry;
 #endif
 }
 
@@ -1824,7 +1827,7 @@ statClientRequests(StoreEntry * s)
         }
 
         storeAppendPrintf(s, "uri %s\n", http->uri);
-        storeAppendPrintf(s, "logType %s\n", http->logType.c_str());
+        storeAppendPrintf(s, "logType %s\n", http->loggingTags().c_str());
         storeAppendPrintf(s, "out.offset %ld, out.size %lu\n",
                           (long int) http->out.offset, (unsigned long int) http->out.size);
         storeAppendPrintf(s, "req_sz %ld\n", (long int) http->req_sz);

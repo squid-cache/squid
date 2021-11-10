@@ -1136,7 +1136,10 @@ restoreCapabilities(bool keep)
         cap_free(caps);
     }
 #elif _SQUID_LINUX_
+    (void)keep;
     Ip::Interceptor.StopTransparency("Missing needed capability support.");
+#else
+    (void)keep;
 #endif /* HAVE_SYS_CAPABILITY_H */
 }
 

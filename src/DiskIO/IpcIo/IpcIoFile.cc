@@ -64,7 +64,7 @@ struct SipcIo {
     int disker;
 };
 
-std::ostream &
+static std::ostream &
 operator <<(std::ostream &os, const SipcIo &sio)
 {
     return os << "ipcIo" << sio.worker << '.' << sio.msg.requestId <<

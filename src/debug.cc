@@ -9,6 +9,7 @@
 /* DEBUG: section 00    Debug Routines */
 
 #include "squid.h"
+#include "base/TextException.h"
 #include "Debug.h"
 #include "DebugMessages.h"
 #include "fd.h"
@@ -171,6 +172,8 @@ _db_print(const bool forceAlert, const char *format,...)
 
 #if HAVE_SYSLOG
     _db_print_syslog(forceAlert, format, args3);
+#else
+    (void)forceAlert;
 #endif
 
 #if _SQUID_WINDOWS_
@@ -449,6 +452,14 @@ _db_set_syslog(const char *facility)
         fprintf(stderr, "syslog facility type not supported on your system\n");
 
 #endif /* LOG_LOCAL4 */
+}
+
+#else /* HAVE_SYSLOG */
+
+void
+_db_set_syslog(const char *)
+{
+    throw TextException("Logging to syslog is not available on this platform", Here());
 }
 
 #endif

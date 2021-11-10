@@ -18,6 +18,7 @@
 #include "globals.h"
 #include "ICP.h"
 #include "ipcache.h"
+#include "send-announce.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "tools.h"

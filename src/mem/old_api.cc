@@ -473,7 +473,8 @@ Mem::Report()
            " MB");
 }
 
-mem_type &operator++ (mem_type &aMem)
+static mem_type &
+operator++(mem_type &aMem)
 {
     int tmp = (int)aMem;
     aMem = (mem_type)(++tmp);

@@ -369,7 +369,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
 
     case Helper::Unknown:
         debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication Helper crashed (" << reply.reservationId << ")");
-    /* continue to the next case */
+    /* [[fallthrough]] */
 
     case Helper::TimedOut:
     case Helper::BrokenHelper:

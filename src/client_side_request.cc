@@ -33,6 +33,7 @@
 #include "fd.h"
 #include "fde.h"
 #include "format/Token.h"
+#include "FwdState.h"
 #include "gopher.h"
 #include "helper.h"
 #include "helper/Reply.h"
@@ -150,6 +151,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     uri(NULL),
     log_uri(NULL),
     req_sz(0),
+    al(new AccessLogEntry()),
     calloutContext(NULL),
     maxReplyBodySize_(0),
     entry_(NULL),
@@ -159,11 +161,11 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     , sslBumpNeed_(Ssl::bumpEnd)
 #endif
 #if USE_ADAPTATION
+    , receivedWholeAdaptedReply(false)
     , request_satisfaction_mode(false)
     , request_satisfaction_offset(0)
 #endif
 {
-    al = new AccessLogEntry;
     CodeContext::Reset(al);
     al->cache.start_time = current_time;
     if (aConn) {
@@ -772,7 +774,7 @@ ClientRequestContext::clientAccessCheckDone(const Acl::Answer &answer)
          */
         page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, answer != ACCESS_AUTH_REQUIRED);
 
-        http->logType.update(LOG_TCP_DENIED);
+        http->updateLoggingTags(LOG_TCP_DENIED);
 
         if (auth_challenge) {
 #if USE_AUTH
@@ -1528,8 +1530,8 @@ ClientHttpRequest::httpStart()
 {
     PROF_start(httpStart);
     // XXX: Re-initializes rather than updates. Should not be needed at all.
-    logType.update(LOG_TAG_NONE);
-    debugs(85, 4, logType.c_str() << " for '" << uri << "'");
+    updateLoggingTags(LOG_TAG_NONE);
+    debugs(85, 4, loggingTags().c_str() << " for '" << uri << "'");
 
     /* no one should have touched this */
     assert(out.offset == 0);
@@ -1730,9 +1732,6 @@ ClientHttpRequest::clearRequest()
  * the callout.  This is strictly for convenience.
  */
 
-tos_t aclMapTOS (acl_tos * head, ACLChecklist * ch);
-Ip::NfMarkConfig aclFindNfMarkConfig (acl_nfmark * head, ACLChecklist * ch);
-
 void
 ClientHttpRequest::doCallouts()
 {
@@ -1894,7 +1893,7 @@ ClientHttpRequest::doCallouts()
 #if ICAP_CLIENT
     Adaptation::Icap::History::Pointer ih = request->icapHistory();
     if (ih != NULL)
-        ih->logType = logType;
+        ih->logType = loggingTags();
 #endif
 }
 
@@ -2115,6 +2114,11 @@ void
 ClientHttpRequest::noteBodyProductionEnded(BodyPipe::Pointer)
 {
     assert(!virginHeadSource);
+
+    // distinguish this code path from future noteBodyProducerAborted() that
+    // would continue storing/delivering (truncated) reply if necessary (TODO)
+    receivedWholeAdaptedReply = true;
+
     // should we end request satisfaction now?
     if (adaptedBodySource != NULL && adaptedBodySource->exhausted())
         endRequestSatisfaction();
@@ -2128,7 +2132,14 @@ ClientHttpRequest::endRequestSatisfaction()
     stopConsumingFrom(adaptedBodySource);
 
     // TODO: anything else needed to end store entry formation correctly?
-    storeEntry()->complete();
+    if (receivedWholeAdaptedReply) {
+        // We received the entire reply per receivedWholeAdaptedReply.
+        // We are called when we consumed everything received (per our callers).
+        // We consume only what we store per noteMoreBodyDataAvailable().
+        storeEntry()->completeSuccessfully("received, consumed, and, hence, stored the entire REQMOD reply");
+    } else {
+        storeEntry()->completeTruncated("REQMOD request satisfaction default");
+    }
 }
 
 void

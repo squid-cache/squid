@@ -83,6 +83,8 @@ testResults(int line, const SBuf &input, Http1::RequestParser &output, struct re
 {
 #ifdef SQUID_DEBUG_TESTS
     std::cerr << "TEST @" << line << ", in=" << Pretty(input) << "\n";
+#else
+    (void)line;
 #endif
 
     const bool parsed = output.parse(input);

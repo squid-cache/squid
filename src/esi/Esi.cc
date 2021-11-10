@@ -37,6 +37,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/Address.h"
+#include "log/forward.h"
 #include "MemBuf.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
@@ -74,7 +75,8 @@ class ESIStreamContext;
  */
 
 /* make comparisons with refcount pointers easy */
-bool operator == (ESIElement const *lhs, ESIElement::Pointer const &rhs)
+static bool
+operator == (ESIElement const *lhs, ESIElement::Pointer const &rhs)
 {
     return lhs == rhs.getRaw();
 }
@@ -279,7 +281,7 @@ ESIContext::provideData (ESISegment::Pointer theData, ESIElement * source)
 }
 
 void
-ESIContext::fail (ESIElement * source, char const *anError)
+ESIContext::fail(ESIElement *, char const *anError)
 {
     setError();
     setErrorMessage (anError);
@@ -1411,7 +1413,7 @@ ESIContext::freeResources ()
     /* don't touch incoming, it's a pointer into buffered anyway */
 }
 
-ErrorState *clientBuildError(err_type, Http::StatusCode, char const *, const ConnStateData *, HttpRequest *, const AccessLogEntry::Pointer &);
+ErrorState *clientBuildError(err_type, Http::StatusCode, char const *, const ConnStateData *, HttpRequest *, const AccessLogEntryPointer &);
 
 /* This can ONLY be used before we have sent *any* data to the client */
 void
@@ -1595,7 +1597,7 @@ esiLiteral::makeUsable(esiTreeParentPtr, ESIVarState &newVarState) const
 
 /* esiRemove */
 void
-esiRemove::render(ESISegment::Pointer output)
+esiRemove::render(ESISegment::Pointer)
 {
     /* Removes do nothing dude */
     debugs(86, 5, "esiRemoveRender: Rendering remove " << this);
@@ -1828,7 +1830,7 @@ esiTry::provideData (ESISegment::Pointer data, ESIElement* source)
     }
 }
 
-esiTry::esiTry(esiTry const &old)
+esiTry::esiTry(esiTry const &)
 {
     attempt = NULL;
     except  = NULL;

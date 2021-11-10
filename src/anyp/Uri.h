@@ -87,8 +87,8 @@ public:
     Ip::Address const & hostIP(void) const {return hostAddr_;}
 
     /// \returns the host subcomponent of the authority component
-    /// If the host is an IPv6 address, returns that IP address without
-    /// [brackets]! See RFC 3986 Section 3.2.2.
+    /// If the host is an IPv6 address, returns that IP address with
+    /// [brackets]. See RFC 3986 Section 3.2.2.
     SBuf hostOrIp() const;
 
     void port(unsigned short p) {port_=p; touch();}
@@ -260,7 +260,7 @@ enum MatchDomainNameFlags {
  * \retval -1 means the host is less than the domain
  */
 int matchDomainName(const char *host, const char *domain, MatchDomainNameFlags flags = mdnNone);
-int urlCheckRequest(const HttpRequest *);
+bool urlCheckRequest(const HttpRequest *);
 void urlExtMethodConfigure(void);
 
 #endif /* SQUID_SRC_ANYP_URI_H */

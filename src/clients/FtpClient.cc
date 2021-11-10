@@ -202,10 +202,6 @@ Ftp::Client::Client(FwdState *fwdState):
 
 Ftp::Client::~Client()
 {
-    if (data.opener != NULL) {
-        data.opener->cancel("Ftp::Client destructed");
-        data.opener = NULL;
-    }
     data.close();
 
     safe_free(old_request);
@@ -698,7 +694,7 @@ Ftp::Client::sendPassive()
             state = SENT_EPSV_2;
             break;
         }
-    // else fall through to skip EPSV 2
+    /* [[fallthrough]] to skip EPSV 2 */
 
     case SENT_EPSV_2: /* EPSV IPv6 failed. Try EPSV IPv4 */
         if (ctrl.conn->local.isIPv4()) {
@@ -711,7 +707,7 @@ Ftp::Client::sendPassive()
             failed(ERR_FTP_FAILURE, 0);
             return false;
         }
-    // else fall through to skip EPSV 1
+    /* [[fallthrough]] to skip EPSV 1 */
 
     case SENT_EPSV_1: /* EPSV options exhausted. Try PASV now. */
         debugs(9, 5, "FTP Channel (" << ctrl.conn->remote << ") rejects EPSV connection attempts. Trying PASV instead.");
@@ -787,10 +783,10 @@ Ftp::Client::connectDataChannel()
     debugs(9, 3, "connecting to " << conn->remote);
 
     typedef CommCbMemFunT<Client, CommConnectCbParams> Dialer;
-    data.opener = JobCallback(9, 3, Dialer, this, Ftp::Client::dataChannelConnected);
-    Comm::ConnOpener *cs = new Comm::ConnOpener(conn, data.opener, Config.Timeout.connect);
+    AsyncCall::Pointer callback = JobCallback(9, 3, Dialer, this, Ftp::Client::dataChannelConnected);
+    const auto cs = new Comm::ConnOpener(conn, callback, Config.Timeout.connect);
     cs->setHost(data.host);
-    AsyncJob::Start(cs);
+    dataConnWait.start(cs, callback);
 }
 
 bool
@@ -812,10 +808,11 @@ void
 Ftp::Client::dataClosed(const CommCloseCbParams &)
 {
     debugs(9, 4, status());
+    if (data.conn)
+        data.conn->noteClosure();
     if (data.listenConn != NULL) {
         data.listenConn->close();
         data.listenConn = NULL;
-        // NP clear() does the: data.fd = -1;
     }
     data.clear();
 }
@@ -880,6 +877,8 @@ void
 Ftp::Client::ctrlClosed(const CommCloseCbParams &)
 {
     debugs(9, 4, status());
+    if (ctrl.conn)
+        ctrl.conn->noteClosure();
     ctrl.clear();
     doneWithFwd = "ctrlClosed()"; // assume FwdState is monitoring too
     mustStop("Ftp::Client::ctrlClosed");

@@ -502,7 +502,7 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
     case Http::scMisdirectedRequest:
         statusAnswer = ReuseDecision::doNotCacheButShare;
         statusReason = shareableError;
-    // fall through to the actual decision making below
+    /* [[fallthrough]] to the actual decision making below */
 
     case Http::scBadRequest: // no sharing; perhaps the server did not like something specific to this request
 #if USE_HTTP_VIOLATIONS
@@ -672,15 +672,8 @@ HttpStateData::processReplyHeader()
 
         if (hp->needsMoreData()) {
             if (eof) { // no more data coming
-                /* Bug 2879: Replies may terminate with \r\n then EOF instead of \r\n\r\n.
-                 * We also may receive truncated responses.
-                 * Ensure here that we have at minimum two \r\n when EOF is seen.
-                 */
-                inBuf.append("\r\n\r\n", 4);
-                // retry the parse
-                parsedOk = hp->parse(inBuf);
-                // sync the buffers after parsing.
-                inBuf = hp->remaining();
+                assert(!parsedOk);
+                // fall through to handle this premature EOF as an error
             } else {
                 debugs(33, 5, "Incomplete response, waiting for end of response headers");
                 return;
@@ -693,7 +686,11 @@ HttpStateData::processReplyHeader()
             debugs(11, 3, "Non-HTTP-compliant header:\n---------\n" << inBuf << "\n----------");
             flags.headers_parsed = true;
             HttpReply *newrep = new HttpReply;
-            newrep->sline.set(Http::ProtocolVersion(), hp->parseStatusCode);
+            // hp->needsMoreData() means hp->parseStatusCode is unusable, but, here,
+            // it also means that the reply header got truncated by a premature EOF
+            assert(!hp->needsMoreData() || eof);
+            const auto scode = hp->needsMoreData() ? Http::scInvalidHeader : hp->parseStatusCode;
+            newrep->sline.set(Http::ProtocolVersion(), scode);
             setVirginReply(newrep);
             return;
         }
@@ -864,7 +861,7 @@ HttpStateData::proceedAfter1xx()
 
     if (flags.serverSwitchedProtocols) {
         // pass server connection ownership to request->clientConnectionManager
-        ConnStateData::ServerConnectionContext scc(serverConnection, request, inBuf);
+        ConnStateData::ServerConnectionContext scc(serverConnection, inBuf);
         typedef UnaryMemFunT<ConnStateData, ConnStateData::ServerConnectionContext> MyDialer;
         AsyncCall::Pointer call = asyncCall(11, 3, "ConnStateData::noteTakeServerConnectionControl",
                                             MyDialer(request->clientConnectionManager,
@@ -1422,6 +1419,19 @@ HttpStateData::writeReplyBody()
     int len = inBuf.length();
     addVirginReplyBody(data, len);
     inBuf.consume(len);
+
+    // after addVirginReplyBody() wrote (when not adapting) everything we have
+    // received to Store, check whether we have received/parsed the entire reply
+    int64_t clen = -1;
+    const char *parsedWhole = nullptr;
+    if (!virginReply()->expectingBody(request->method, clen))
+        parsedWhole = "http parsed header-only reply";
+    else if (clen >= 0 && clen == payloadSeen - payloadTruncated)
+        parsedWhole = "http parsed Content-Length body bytes";
+    else if (clen < 0 && eof)
+        parsedWhole = "http parsed body ending with expected/required EOF";
+    if (parsedWhole)
+        markParsedVirginReplyAsWhole(parsedWhole);
 }
 
 bool
@@ -1439,6 +1449,7 @@ HttpStateData::decodeAndWriteReplyBody()
         if (doneParsing) {
             lastChunk = 1;
             flags.do_next_read = false;
+            markParsedVirginReplyAsWhole("http parsed last-chunk");
         }
         return true;
     }
@@ -1556,8 +1567,6 @@ HttpStateData::processReplyBody()
 
         case COMPLETE_NONPERSISTENT_MSG:
             debugs(11, 5, "processReplyBody: COMPLETE_NONPERSISTENT_MSG from " << serverConnection);
-            if (flags.chunked && !lastChunk)
-                entry->lengthWentBad("missing last-chunk");
 
             serverComplete();
             return;

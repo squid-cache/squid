@@ -874,7 +874,7 @@ snmpTreeEntry(oid entry, snint len, mib_tree_entry * current)
     return (next);
 }
 
-void
+static void
 snmpAddNodeChild(mib_tree_entry *entry, mib_tree_entry *child)
 {
     debugs(49, 5, "snmpAddNodeChild: assigning " << child << " to parent " << entry);

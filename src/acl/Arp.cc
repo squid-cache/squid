@@ -14,6 +14,7 @@
 
 #include "acl/Arp.h"
 #include "acl/FilledChecklist.h"
+#include "cache_cf.h"
 #include "Debug.h"
 #include "eui/Eui48.h"
 #include "globals.h"
@@ -72,7 +73,7 @@ ACLARP::empty () const
  *       Solaris code by R. Gancarz <radekg@solaris.elektrownia-lagisza.com.pl>
  */
 
-Eui::Eui48 *
+static Eui::Eui48 *
 aclParseArpData(const char *t)
 {
     char buf[256];

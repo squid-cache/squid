@@ -91,7 +91,7 @@ ACLHTTPStatus::empty () const
     return data->empty();
 }
 
-acl_httpstatus_data*
+static acl_httpstatus_data*
 aclParseHTTPStatusData(const char *t)
 {
     int status;
