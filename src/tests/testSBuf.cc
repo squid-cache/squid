@@ -83,6 +83,14 @@ testSBuf::testSBufConstructDestruct()
         CPPUNIT_ASSERT_EQUAL(0,strcmp("",s1.c_str()));
     }
 
+    // TEST: copy-construct c-string (implicit destructor non-crash test)
+    {
+        SBuf s1(fox);
+        SBuf::size_type len = strlen(fox);
+        CPPUNIT_ASSERT_EQUAL(len,s1.length());
+        CPPUNIT_ASSERT_EQUAL(0,strcmp(fox,s1.c_str()));
+    }
+
     // TEST: copy-construct from a SBuf
     {
         SBuf s1(empty_sbuf);
@@ -193,13 +201,16 @@ testSBuf::testAppendStdString()
     const char *alphabet="abcdefghijklmnopqrstuvwxyz";
     {
         SBuf alpha(alphabet), s;
-        s.append(alphabet,5).append(alphabet+5);
+        s.append(alphabet, 5);
+        s.append(alphabet+5);
         CPPUNIT_ASSERT_EQUAL(alpha,s);
     }
     {
         SBuf s;
         std::string control;
-        s.append(alphabet,5).append("\0",1).append(alphabet+6,SBuf::npos);
+        s.append(alphabet, 5);
+        s.append("\0", 1);
+        s.append(alphabet+6);
         control.append(alphabet,5).append(1,'\0').append(alphabet,6,std::string::npos);
         SBuf scontrol(control); // we need this to test the equality. sigh.
         CPPUNIT_ASSERT_EQUAL(scontrol,s);
@@ -804,8 +815,16 @@ testSBuf::testGrow()
     const char *match=t.rawContent();
     CPPUNIT_ASSERT(match!=ref);
     ref=match;
-    t.append(literal).append(literal).append(literal).append(literal).append(literal);
-    t.append(t).append(t).append(t).append(t).append(t);
+    t.append(literal);
+    t.append(literal);
+    t.append(literal);
+    t.append(literal);
+    t.append(literal);
+    t.append(t);
+    t.append(t);
+    t.append(t);
+    t.append(t);
+    t.append(t);
     CPPUNIT_ASSERT_EQUAL(ref,match);
 }
 

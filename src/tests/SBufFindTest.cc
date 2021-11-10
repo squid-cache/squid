@@ -424,7 +424,8 @@ SBufFindTest::placeNeedle(const SBuf &cleanHay)
     case placeMiddle: {
         const SBuf firstHalf = cleanHay.substr(0, cleanHay.length()/2);
         const SBuf secondHalf = cleanHay.substr(cleanHay.length()/2);
-        theSBufHay.assign(firstHalf).append(theSBufNeedle).append(secondHalf);
+        theSBufHay.assign(firstHalf).append(theSBufNeedle);
+        theSBufHay.append(secondHalf);
         break;
     }
 

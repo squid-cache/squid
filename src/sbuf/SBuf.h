@@ -12,6 +12,7 @@
 #define SQUID_SBUF_H
 
 #include "base/InstanceId.h"
+#include "base/Packable.h"
 #include "base/TextException.h"
 #include "Debug.h"
 #include "globals.h"
@@ -83,7 +84,7 @@ protected:
  * operations, copy-on-write to isolate change operations to each instance.
  * Where possible, we're trying to mimic std::string's interface.
  */
-class SBuf
+class SBuf : public Packable
 {
 public:
     typedef MemBlob::size_type size_type;
@@ -176,47 +177,24 @@ public:
      */
     void clear();
 
-    /** Append operation
-     *
-     * Append the supplied SBuf to the current one; extend storage as needed.
-     */
-    SBuf& append(const SBuf & S);
+    /// Append the supplied SBuf to the current one; extend storage as needed.
+    void append(const SBuf &);
 
     /// Append a single character. The character may be NUL (\0).
-    SBuf& append(const char c);
+    void append(const char c) { lowAppend(&c, 1); }
 
-    /** Append operation for C-style strings.
-     *
-     * Append the supplied c-string to the SBuf; extend storage
-     * as needed.
-     *
-     * \param S the c string to be copied. Can be NULL.
-     * \param Ssize how many bytes to import into the SBuf. If it is npos
-     *              or unspecified, imports to end-of-cstring. If S is NULL,
-     *              Ssize is ignored.
-     * \note to append a std::string use the pattern
-     *     cstr_append(stdstr.data(), stdstd.length())
-     */
-    SBuf& append(const char * S, size_type Ssize);
-    SBuf& append(const char * S) { return append(S,npos); }
+    /// Append the supplied c-string to the SBuf; extend storage as needed.
+    void append(const char * S) { if (S) append(S, strlen(S)); }
+
+    /* Packable API */
+    virtual void append(const char *, int) override;
+    virtual void vappendf(const char *, va_list) override;
 
     /** Assignment operation with printf(3)-style definition
      * \note arguments may be evaluated more than once, be careful
      *       of side-effects
      */
     SBuf& Printf(const char *fmt, ...);
-
-    /** Append operation with printf-style arguments
-     * \note arguments may be evaluated more than once, be careful
-     *       of side-effects
-     */
-    SBuf& appendf(const char *fmt, ...);
-
-    /** Append operation, with vsprintf(3)-style arguments.
-     * \note arguments may be evaluated more than once, be careful
-     *       of side-effects
-     */
-    SBuf& vappendf(const char *fmt, va_list vargs);
 
     /// print the SBuf contents to the supplied ostream
     std::ostream& print(std::ostream &os) const;

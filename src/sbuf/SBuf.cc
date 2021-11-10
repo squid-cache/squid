@@ -59,7 +59,7 @@ SBuf::SBuf(const char *S, size_type n) : store_(GetStorePrototype())
 
 SBuf::SBuf(const char *S) : store_(GetStorePrototype())
 {
-    append(S,npos);
+    append(S);
     ++stats.alloc;
     ++stats.allocFromCString;
     ++stats.live;
@@ -98,7 +98,8 @@ SBuf::assign(const char *S, size_type n)
     const Locker blobKeeper(this, S);
     debugs(24, 6, id << " from c-string, n=" << n << ")");
     clear();
-    return append(S, n); //bounds checked in append()
+    append(S, n); //bounds checked in append()
+    return *this;
 }
 
 void
@@ -181,33 +182,28 @@ SBuf::clear()
     ++stats.clear;
 }
 
-SBuf&
+void
 SBuf::append(const SBuf &S)
 {
-    if (isEmpty() && store_ == GetStorePrototype())
-        return (*this = S); // optimization: avoid needless copying
-
-    const Locker blobKeeper(this, S.buf());
-    return lowAppend(S.buf(), S.length());
+    if (isEmpty() && store_ == GetStorePrototype()) {
+        *this = S; // optimization: avoid needless copying
+    } else {
+        const Locker blobKeeper(this, S.buf());
+        lowAppend(S.buf(), S.length());
+    }
 }
 
-SBuf &
-SBuf::append(const char * S, size_type Ssize)
+void
+SBuf::append(const char * S, int Ssize)
 {
     const Locker blobKeeper(this, S);
-    if (S == NULL)
-        return *this;
-    if (Ssize == SBuf::npos)
+    if (!S || Ssize == 0)
+        return;
+    if (Ssize < 0 /* int(SBuf::npos) is -1 */)
         Ssize = strlen(S);
     debugs(24, 7, "from c-string to id " << id);
     // coverity[access_dbuff_in_call]
-    return lowAppend(S, Ssize);
-}
-
-SBuf &
-SBuf::append(const char c)
-{
-    return lowAppend(&c, 1);
+    lowAppend(S, Ssize);
 }
 
 SBuf&
@@ -225,17 +221,7 @@ SBuf::Printf(const char *fmt, ...)
     return *this;
 }
 
-SBuf&
-SBuf::appendf(const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    vappendf(fmt, args);
-    va_end(args);
-    return *this;
-}
-
-SBuf&
+void
 SBuf::vappendf(const char *fmt, va_list vargs)
 {
     // with (v)appendf() the fmt or an arg might be a dangerous char*
@@ -287,8 +273,6 @@ SBuf::vappendf(const char *fmt, va_list vargs)
 
     store_->size += sz;
     ++stats.append;
-
-    return *this;
 }
 
 std::ostream&

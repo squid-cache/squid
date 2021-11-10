@@ -70,7 +70,8 @@ JoinContainerIntoSBuf(SBuf &dest, const ContainerIterator &begin,
                       const SBuf& prefix = SBuf(), const SBuf& suffix = SBuf())
 {
     if (begin == end) {
-        dest.append(prefix).append(suffix);
+        dest.append(prefix);
+        dest.append(suffix);
         return dest;
     }
 
@@ -86,8 +87,10 @@ JoinContainerIntoSBuf(SBuf &dest, const ContainerIterator &begin,
     dest.append(prefix);
     dest.append(*i);
     ++i;
-    for (; i != end; ++i)
-        dest.append(separator).append(*i);
+    for (; i != end; ++i) {
+        dest.append(separator);
+        dest.append(*i);
+    }
     dest.append(suffix);
     return dest;
 }
