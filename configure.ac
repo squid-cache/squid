@@ -2636,36 +2636,6 @@ SQUID_DEFINE_BOOL(PRINT_STACK_TRACE,${enable_stacktraces:=no},
                       [Print stack traces on fatal errors])
 AC_MSG_NOTICE([Automatically print stack trace on fatal errors: $enable_stacktraces])
 
-
-# CPU Profiling options handling
-AC_ARG_ENABLE(cpu-profiling,
-  AS_HELP_STRING([--enable-cpu-profiling],
-                 [Enable instrumentation to try and understand how CPU power 
-                 is spent by squid, by enabling specific probes in selected
-                 functions.
-                 New probes can only be added by modifying the source code.
-                 It is meant to help developers in optimizing performance
-                 of Squid internal functions.
-                 If you are not developer you should not enable this, 
-                 as it slows squid down somewhat.
-                 See lib/Profiler.c for more details.]), [
-SQUID_YESNO([$enableval],
-            [unrecognized argument to --enable-cpu-profiling: $enableval])
-])
-# Default OFF. This is a debug feature. Only check and enable if forced ON.
-if test "x$enable_cpu_profiling" = "xyes"; then
-  AC_CHECK_FUNCS(clock_gettime_nsec_np)
-  SQUID_CHECK_FUNCTIONAL_CPU_PROFILER
-  if test "x$squid_cv_cpu_profiler_works" = "xno"; then
-    AC_MSG_ERROR([CPU profiling will not be functional in this build.])
-  fi
-fi
-SQUID_DEFINE_BOOL(USE_XPROF_STATS,${enable_cpu_profiling:=no},
-                      [Define to enable CPU profiling within Squid])
-AM_CONDITIONAL(ENABLE_XPROF_STATS,
-               test "x$enable_cpu_profiling" = "xyes")
-AC_MSG_NOTICE([CPU profiling enabled: $enable_cpu_profiling])
-
 # Enable X-Accelerator-Vary for Vary support within an accelerator setup
 AC_ARG_ENABLE(x-accelerator-vary,
   AS_HELP_STRING([--enable-x-accelerator-vary],
@@ -3673,7 +3643,6 @@ AC_CONFIG_FILES([
 	lib/libTrie/Makefile
 	lib/libTrie/test/Makefile
 	lib/ntlmauth/Makefile
-	lib/profiler/Makefile
 	lib/rfcnb/Makefile
 	lib/smblib/Makefile
 	lib/snmplib/Makefile
