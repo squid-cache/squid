@@ -16,17 +16,7 @@ namespace Adaptation
 namespace Icap
 {
 
-/** ICAP/1.x protocol response parser
- *
- * Works on a raw character I/O buffer and tokenizes the content into
- * the major CRLF delimited segments of an ICAP/1 response message:
- *
- * \li status-line (version SP status SP reash-phrase)
- * \li mime-header (set of RFC2822 syntax header fields)
- *
- * RFC 3507 ICAP syntax is based on HTTP/1 message syntax (with differences)
- * most of the HTTP/1 response parser can be re-used.
- */
+/// ICAP/1.0 response header parser
 class ResponseParser : public Http1::ResponseParser
 {
 private:
