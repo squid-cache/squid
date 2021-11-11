@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "adaptation/Service.h"
 #include "adaptation/ServiceFilter.h"
+#include "http/two/StreamContext.h"
 #include "HttpRequest.h"
 
 Adaptation::Service::Service(const ServiceConfigPointer &aConfig): theConfig(aConfig)

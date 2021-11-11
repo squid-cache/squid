@@ -14,6 +14,7 @@
 #include "client_side.h"
 #include "Debug.h"
 #include "http/Stream.h"
+#include "http/two/StreamContext.h"
 #include "Pipeline.h"
 
 void

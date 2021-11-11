@@ -9,6 +9,7 @@
 #include "squid.h"
 #include <cppunit/TestAssert.h>
 
+#include "http/two/StreamContext.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "mime_header.h"

@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "fde.h"
 #include "log/File.h"
+#include "http/two/StreamContext.h"
 
 #define STUB_API "log/liblog.la"
 #include "tests/STUB.h"

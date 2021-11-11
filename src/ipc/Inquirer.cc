@@ -12,10 +12,12 @@
 #include "base/TextException.h"
 #include "comm.h"
 #include "comm/Write.h"
+#include "http/two/StreamContext.h"
 #include "ipc/Inquirer.h"
 #include "ipc/Port.h"
 #include "ipc/TypedMsgHdr.h"
 #include "MemBuf.h"
+
 #include <algorithm>
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Inquirer);

@@ -12,6 +12,7 @@
 #include "comm/TcpAcceptor.h"
 #include "fde.h"
 #include "globals.h"
+#include "http/two/StreamContext.h"
 
 Comm::AcceptLimiter Comm::AcceptLimiter::Instance_;
 

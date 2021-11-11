@@ -464,7 +464,7 @@ HttpReply::configureContentLengthInterpreter(Http::ContentLengthInterpreter &int
 }
 
 bool
-HttpReply::parseHeader(Http1::Parser &hp)
+HttpReply::parseHeader(Http::Parser &hp)
 {
     Http::ContentLengthInterpreter clen;
     return Message::parseHeader(hp, clen);

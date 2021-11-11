@@ -17,6 +17,7 @@
 #include "hash.h"
 #include "http/forward.h"
 #include "http/RequestMethod.h"
+#include "http/two/StreamContext.h"
 #include "HttpReply.h"
 #include "MemObject.h"
 #include "RemovalPolicy.h"

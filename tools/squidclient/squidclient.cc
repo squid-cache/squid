@@ -12,6 +12,7 @@
 #include "ip/tools.h"
 #include "rfc1123.h"
 #include "tools/squidclient/gssapi_support.h"
+#include "tools/squidclient/Http2.h"
 #include "tools/squidclient/Parameters.h"
 #include "tools/squidclient/Ping.h"
 #include "tools/squidclient/Transport.h"
@@ -554,15 +555,53 @@ main(int argc, char *argv[])
 
     uint32_t loops = Ping::Init();
 
+    static char http2_prefix[] =
+                "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n" // 24 bytes magic
+                "\0\0\0\4\0\0\0\0\0" // 9 bytes SETTINGS frame header
+                "" // 0 bytes SETTINGS payload
+    ;
+
+    const bool useHttp2 = (strcmp(version, "2.0") == 0);
+
     for (uint32_t i = 0; loops == 0 || i < loops; ++i) {
         size_t fsize = 0;
 
         if (!Transport::Connect())
             continue;
 
+        /* For HTTP/2 send connection prefix. */
+        if (useHttp2) {
+            bytesWritten = Transport::Write(http2_prefix, sizeof(http2_prefix)-1);
+
+            if (bytesWritten < 0 || (unsigned) bytesWritten != sizeof(http2_prefix)-1) {
+                std::cerr << "ERROR: writing HTTP/2 client prefix and SETTINGS" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+        }
+
         /* Send the HTTP request */
         debugVerbose(2, "Sending HTTP request ... ");
-        bytesWritten = Transport::Write(messageHeader.data(), messageHeader.length());
+        if (useHttp2) {
+            // send HEADERS frame containing msg
+            struct Http2::FrameHeader fh;
+            fh.streamId(1);
+            fh.type(Http2::HEADERS);
+            fh.length(messageHeader.length());
+            fh.flags( Http2::FLAG_END_HEADERS |
+                      (!put_file? Http2::FLAG_END_STREAM : 0)
+                     );
+            bytesWritten = Transport::Write(&fh, sizeof(fh));
+
+            if (bytesWritten < 0 || (unsigned) bytesWritten != sizeof(fh)) {
+                std::cerr << "ERROR: writing HTTP/2 HEADERS frame" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            // XXX: need to HPACK the msg/payload
+            bytesWritten = Transport::Write(messageHeader.data(), messageHeader.length());
+
+        } else {
+            bytesWritten = Transport::Write(messageHeader.data(), messageHeader.length());
+        }
 
         if (bytesWritten < 0) {
             std::cerr << "ERROR: write" << std::endl;
@@ -583,19 +622,46 @@ main(int argc, char *argv[])
 
             } else while ((x = read(put_fd, buf, sizeof(buf))) > 0) {
 
-                    x = Transport::Write(buf, x);
+                if (useHttp2) {
+                    // send DATA frame containing the upload file
+                    struct Http2::FrameHeader fh;
+                    fh.streamId(1);
+                    fh.type(Http2::DATA);
+                    fh.length(x);
+                    int y = Transport::Write(&fh, sizeof(fh));
 
-                    total_bytes += x;
-
-                    if (x <= 0)
-                        break;
+                    if (y < 0 || (unsigned) y != sizeof(fh)) {
+                        std::cerr << "ERROR: writing HTTP/2 DATA frame header" << std::endl;
+                    }
                 }
+
+                if ((x = Transport::Write(buf, x)) <= 0)
+                    break;
+
+                total_bytes += x;
+            }
 
             if (x != 0)
                 std::cerr << "ERROR: Cannot send file." << std::endl;
-            else
+            else {
+                if (useHttp2) {
+                    // send DATA frame containing the upload file
+                    struct Http2::FrameHeader fh;
+                    fh.streamId(1);
+                    fh.type(Http2::DATA);
+                    fh.length(0);
+                    fh.flags(Http2::FLAG_END_STREAM);
+                    int y = Transport::Write(&fh, sizeof(fh));
+
+                    if (y < 0 || (unsigned) y != sizeof(fh)) {
+                        std::cerr << "ERROR: writing HTTP/2 DATA frame header" << std::endl;
+                        break;
+                    }
+                }
                 debugVerbose(1, "done.");
+            }
         }
+
         /* Read the data */
 
 #if _SQUID_WINDOWS_
@@ -605,9 +671,14 @@ main(int argc, char *argv[])
         while ((len = Transport::Read(buf, sizeof(buf))) > 0) {
             fsize += len;
 
-            if (to_stdout && fwrite(buf, len, 1, stdout) != 1) {
-                int xerrno = errno;
-                std::cerr << "ERROR: writing to stdout: " << xstrerr(xerrno) << std::endl;
+            // HTTP/2 is binary protocol, cannot simply dump it to stdout as-is
+            if (useHttp2) {
+                Http2::display(reinterpret_cast<uint8_t*>(buf), len);
+            } else {
+                if (to_stdout && fwrite(buf, len, 1, stdout) != 1) {
+                    int xerrno = errno;
+                    std::cerr << "ERROR: writing to stdout: " << xstrerr(xerrno) << std::endl;
+                }
             }
         }
 

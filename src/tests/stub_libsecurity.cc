@@ -10,6 +10,7 @@
 #include "AccessLogEntry.h"
 #include "comm/Connection.h"
 #include "Downloader.h"
+#include "http/two/StreamContext.h"
 #include "HttpRequest.h"
 
 #define STUB_API "security/libsecurity.la"

@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "acl/Checklist.h"
 #include "acl/SslErrorData.h"
+#include "http/two/StreamContext.h"
 #include "security/CertError.h"
 #include "ssl/ErrorDetail.h"
 

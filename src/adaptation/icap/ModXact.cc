@@ -27,6 +27,8 @@
 #include "error/Detail.h"
 #include "error/ExceptionErrorDetail.h"
 #include "http/ContentLengthInterpreter.h"
+#include "http/one/TeChunkedParser.h"
+#include "http/two/StreamContext.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "MasterXaction.h"

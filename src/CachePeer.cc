@@ -10,6 +10,7 @@
 #include "acl/Gadgets.h"
 #include "CachePeer.h"
 #include "defines.h"
+#include "http/two/StreamContext.h"
 #include "NeighborTypeDomainList.h"
 #include "pconn.h"
 #include "PeerPoolMgr.h"

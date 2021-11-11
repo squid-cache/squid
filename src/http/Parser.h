@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_HTTP_ONE_PARSER_H
-#define _SQUID_SRC_HTTP_ONE_PARSER_H
+#ifndef _SQUID_SRC_HTTP_PARSER_H
+#define _SQUID_SRC_HTTP_PARSER_H
 
 #include "anyp/ProtocolVersion.h"
 #include "http/one/forward.h"
@@ -16,7 +16,6 @@
 #include "sbuf/SBuf.h"
 
 namespace Http {
-namespace One {
 
 // Parser states
 enum ParseState {
@@ -26,16 +25,36 @@ enum ParseState {
     HTTP_PARSE_CHUNK_EXT, ///< HTTP/1.1 chunked encoding chunk-ext
     HTTP_PARSE_CHUNK,     ///< HTTP/1.1 chunked encoding chunk-data
     HTTP_PARSE_MIME,      ///< HTTP/1 mime-header block
+    HTTP_PARSE_FRAMES,    ///< HTTP/2 multiplexed frame sequence (after magic prefix)
     HTTP_PARSE_DONE       ///< parsed a message header, or reached a terminal syntax error
 };
 
-/** HTTP/1.x protocol parser
+/** HTTP protocol parser
  *
  * Works on a raw character I/O buffer and tokenizes the content into
- * the major CRLF delimited segments of an HTTP/1 procotol message:
+ * the major frames / segments of an HTTP protocol message.
  *
- * \li first-line (request-line / simple-request / status-line)
+ * HTTP general design:
+ *
+ * Messages are formally a fixed sequence of segments
+ *
+ *  HTTP-message = start-line mime-header message-body
+ *
+ * \li start-line (request-line / simple-request / status-line)
  * \li mime-header 0*( header-name ':' SP field-value CRLF)
+ *
+ * The ordering of message segments is identical for all versions of HTTP.
+ * How they are represented differs greatly.
+ *
+ * HTTP/1: RFC 7230 section 3
+ * Segments are separated from each other by CRLF. There is no formal
+ * separator between messages, the message endpoint is determined by which
+ * segments exist and transfer encoding used.
+ *
+ * HTTP/2: RFC 7540 section 4
+ * Segments are encapsulated in explicitly defined frames.
+ * All frames begin with a fixed 9-octet header followed by a variable-
+ * length payload containing all or some of the segment being sent.
  */
 class Parser : public RefCountable
 {
@@ -52,39 +71,59 @@ public:
 
     /// Set this parser back to a default state.
     /// Will DROP any reference to a buffer (does not free).
-    virtual void clear() = 0;
+    virtual void clear();
 
-    /// attempt to parse a message from the buffer
-    /// \retval true if a full message was found and parsed
-    /// \retval false if incomplete, invalid or no message was found
+    /// attempt to parse a message (HTTP/1.x) or frame (HTTP/2) from the buffer
+    /// \retval true if a full message/frame was found and parsed
+    /// \retval false if incomplete, invalid or no message/frame was found
     virtual bool parse(const SBuf &aBuf) = 0;
 
-    /** Whether the parser is waiting on more data to complete parsing a message.
+    /** Whether the parser is waiting on more data to complete parsing.
      * Use to distinguish between incomplete data and error results
      * when parse() returns false.
      */
     bool needsMoreData() const {return parsingStage_!=HTTP_PARSE_DONE;}
 
-    /// size in bytes of the first line including CRLF terminator
+    /**
+     * For HTTP/1.x the size in bytes of the HTTP/1.x first line including CRLF terminator.
+     *
+     * For HTTP/2 the size of the frame header octets.
+     */
     virtual size_type firstLineSize() const = 0;
 
-    /// size in bytes of the message headers including CRLF terminator(s)
-    /// but excluding first-line bytes
+    /**
+     * For HTTP/0.9 returns 0.
+     *
+     * For HTTP/1.x the size in bytes of the message headers including CRLF
+     * terminator(s) but excluding first-line bytes.
+     *
+     * For HTTP/2 returns 0.
+     */
     size_type headerBlockSize() const {return mimeHeaderBlock_.length();}
 
-    /// size in bytes of HTTP message block, includes first-line and mime headers
-    /// excludes any body/entity/payload bytes
-    /// excludes any garbage prefix before the first-line
+    /**
+     * For HTTP/0.9 returns size of first-line.
+     *
+     * For HTTP/1.x the size in bytes of the message block, includes first-line
+     * and mime headers
+     *
+     * For HTTP/2 returns size of frame header octets.
+     *
+     * For all versions:
+     * - excludes any body/entity/payload bytes
+     * - excludes any garbage or prefix before the first-line
+     */
     size_type messageHeaderSize() const {return firstLineSize() + headerBlockSize();}
 
     /// buffer containing HTTP mime headers, excluding message first-line.
+    /// (HTTP/1.x only)
     SBuf mimeHeader() const {return mimeHeaderBlock_;}
 
     /// the protocol label for this message
     const AnyP::ProtocolVersion & messageProtocol() const {return msgProtocol_;}
 
     /**
-     * Scan the mime header block (badly) for a Host header.
+     * Scan the HTTP/1 mime header block (badly) for a header with the given name.
      *
      * BUG: omits lines when searching for headers with obs-fold or multiple entries.
      *
@@ -96,6 +135,35 @@ public:
 
     /// the remaining unprocessed section of buffer
     const SBuf &remaining() const {return buf_;}
+
+    // HTTP/2 detection methods
+
+    /// RFC 7540 section 3.5 - 24 magic octets
+    static const SBuf Http2magic; // should be protected, but some Servers use it
+
+    /// whether the buffer content so far matches the HTTP/2 magic octets
+    /// \returns true on partial matches. Use parseHttp2magicPrefix() for full match.
+    bool incompleteHttp2magicPrefix() const {
+        return memcmp(Http2magic.rawContent(),buf_.rawContent(),buf_.length())==0;
+    }
+
+    /**
+     * Attempt to parse the magic octets of a new HTTP/2 connection
+     *
+     * Governed by:
+     *  RFC 7540 section 3.5
+     *
+     * The return value tells you whether the parsing state fields are valid or
+     * not. Use incompleteHttp2MagicPrefix() to test if the buffer needs more
+     * octets to parse.
+     *
+     * \retval  true   buffer matches the magic octets.
+     *                 member fields contain the request-line items for a
+     *                 pseudo-HTTP/1 request
+     *
+     * \retval  false  buffer does not contain the full set of magic octets.
+     */
+    virtual bool parseHttp2magicPrefix(const SBuf &);
 
     /**
      * HTTP status code resulting from the parse process.
@@ -171,8 +239,7 @@ void ParseBws(Parser::Tokenizer &);
 /// the right debugs() level for logging HTTP violation messages
 int ErrorLevel();
 
-} // namespace One
 } // namespace Http
 
-#endif /*  _SQUID_SRC_HTTP_ONE_PARSER_H */
+#endif /*  _SQUID_SRC_HTTP_PARSER_H */
 

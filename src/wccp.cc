@@ -16,6 +16,7 @@
 #include "comm/Loops.h"
 #include "event.h"
 #include "fatal.h"
+#include "http/two/StreamContext.h"
 #include "SquidConfig.h"
 #include "wccp.h"
 

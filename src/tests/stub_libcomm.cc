@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "base/AsyncJob.h"
+#include "http/two/StreamContext.h"
 
 #define STUB_API "comm/libcomm.la"
 #include "tests/STUB.h"

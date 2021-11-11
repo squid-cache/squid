@@ -14,6 +14,7 @@
 #include "comm/Connection.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
+#include "http/two/StreamContext.h"
 #include "ipc/UdsOp.h"
 
 Ipc::UdsOp::UdsOp(const String& pathAddr):

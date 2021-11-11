@@ -16,6 +16,7 @@
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
+#include "http/two/StreamContext.h"
 #include "profiler/Profiler.h"
 #include "SquidTime.h"
 

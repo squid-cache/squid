@@ -9,6 +9,7 @@
 /* DEBUG: section 83    SSL accelerator support */
 
 #include "squid.h"
+#include "http/two/StreamContext.h"
 #include "ssl/support.h"
 
 /* support.cc says this is needed */

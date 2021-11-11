@@ -13,6 +13,7 @@
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
+#include "http/two/StreamContext.h"
 #include "ip/Address.h"
 #include "ipc/Kid.h"
 #include "rfc1738.h"

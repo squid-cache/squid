@@ -9,6 +9,8 @@
 #ifndef _SQUID_TOOLS_SQUIDCLIENT_PARAMETERS_H
 #define _SQUID_TOOLS_SQUIDCLIENT_PARAMETERS_H
 
+#include <iostream>
+
 /**
  * squidclient command line parameters.
  */

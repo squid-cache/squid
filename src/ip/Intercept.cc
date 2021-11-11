@@ -14,6 +14,7 @@
 #include "squid.h"
 #include "comm/Connection.h"
 #include "fde.h"
+#include "http/two/StreamContext.h"
 #include "ip/Intercept.h"
 #include "src/tools.h"
 

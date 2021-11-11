@@ -16,6 +16,7 @@
 #include "adaptation/ServiceFilter.h"
 #include "adaptation/ServiceGroups.h"
 #include "base/TextException.h"
+#include "http/two/StreamContext.h"
 #include "HttpReply.h"
 #include "sbuf/StringConvert.h"
 

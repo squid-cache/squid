@@ -254,7 +254,7 @@ public:
 
     /// Parses request header using Parser.
     /// Use it in contexts where the Parser object is available.
-    bool parseHeader(Http1::Parser &hp);
+    bool parseHeader(Http::Parser &hp);
     /// Parses request header from the buffer.
     /// Use it in contexts where the Parser object not available.
     bool parseHeader(const char *buffer, const size_t size);

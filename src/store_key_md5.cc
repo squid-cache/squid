@@ -9,6 +9,7 @@
 /* DEBUG: section 20    Storage Manager MD5 Cache Keys */
 
 #include "squid.h"
+#include "http/two/StreamContext.h"
 #include "HttpRequest.h"
 #include "md5.h"
 #include "store_key_md5.h"

@@ -16,6 +16,7 @@
 #include "format/Format.h"
 #include "helper.h"
 #include "helper/Reply.h"
+#include "http/two/StreamContext.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "rfc1738.h"

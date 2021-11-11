@@ -30,6 +30,8 @@ section 08    Swap File Bitmap
 section 09    File Transfer Protocol (FTP)
 section 10    Gopher
 section 11    Hypertext Transfer Protocol (HTTP)
+section 11    Hypertext Transfer Protocol (HTTP/1.x)
+section 11    Hypertext Transfer Protocol (HTTP/2)
 section 12    Internet Cache Protocol (ICP)
 section 13    High Level Memory Pool Management
 section 14    IP Cache
@@ -73,6 +75,8 @@ section 31    Hypertext Caching Protocol
 section 32    Asynchronous Disk I/O
 section 33    Client Request Pipeline
 section 33    Client-side Routines
+section 33    Transfer protocol server for HTTP/1.x
+section 33    Transfer protocol server for HTTP/2
 section 33    Transfer protocol servers
 section 35    FQDN Cache
 section 37    ICMP Routines

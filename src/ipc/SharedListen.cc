@@ -13,6 +13,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "globals.h"
+#include "http/two/StreamContext.h"
 #include "ipc/Kids.h"
 #include "ipc/Messages.h"
 #include "ipc/Port.h"

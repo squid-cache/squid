@@ -27,7 +27,6 @@ bool ConnStateData::transparent() const STUB_RETVAL(false)
 void ConnStateData::stopReceiving(const char *) STUB
 void ConnStateData::stopSending(const char *) STUB
 void ConnStateData::expectNoForwarding() STUB
-void ConnStateData::noteMoreBodySpaceAvailable(BodyPipe::Pointer) STUB
 void ConnStateData::noteBodyConsumerAborted(BodyPipe::Pointer) STUB
 bool ConnStateData::handleReadData() STUB_RETVAL(false)
 bool ConnStateData::handleRequestBodyData() STUB_RETVAL(false)

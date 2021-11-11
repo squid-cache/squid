@@ -15,6 +15,7 @@
 #include "Debug.h"
 #include "fd.h"
 #include "fde.h"
+#include "http/two/StreamContext.h"
 #include "ipc/MemMap.h"
 #include "security/Session.h"
 #include "SquidConfig.h"

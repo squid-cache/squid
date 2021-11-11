@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "errorpage.h"
 #include "fatal.h"
+#include "http/two/StreamContext.h"
 #include "ssl/ErrorDetail.h"
 #include "ssl/ErrorDetailManager.h"
 

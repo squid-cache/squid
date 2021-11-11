@@ -24,6 +24,7 @@
 #include "fde.h"
 #include "FwdState.h"
 #include "html_quote.h"
+#include "http/two/StreamContext.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeader.h"
 #include "HttpHeaderRange.h"

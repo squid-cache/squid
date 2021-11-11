@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "ftp/Elements.h"
+#include "http/two/StreamContext.h"
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "sbuf/SBuf.h"

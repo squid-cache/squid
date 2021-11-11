@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "http/two/StreamContext.h"
 
 #define STUB_API "HttpControlMsg.cc"
 #include "tests/STUB.h"

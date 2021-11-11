@@ -14,6 +14,7 @@
 #include "fatal.h"
 #include "fd.h"
 #include "fs_io.h"
+#include "http/two/StreamContext.h"
 #include "log/File.h"
 #include "log/ModUdp.h"
 #include "Parsing.h"

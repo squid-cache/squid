@@ -13,6 +13,7 @@
 #include "comm.h"
 #include "CommCalls.h"
 #include "globals.h"
+#include "http/two/StreamContext.h"
 #include "ipc/Port.h"
 #include "snmp/Forwarder.h"
 #include "snmp/Request.h"

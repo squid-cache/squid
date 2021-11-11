@@ -14,6 +14,7 @@
 #include "fde.h"
 #include "fs_io.h"
 #include "globals.h"
+#include "http/two/StreamContext.h"
 #include "log/File.h"
 #include "log/ModStdio.h"
 #include "SquidConfig.h"

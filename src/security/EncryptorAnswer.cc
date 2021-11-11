@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "comm/Connection.h"
 #include "errorpage.h"
+#include "http/two/StreamContext.h"
 #include "security/EncryptorAnswer.h"
 
 Security::EncryptorAnswer::~EncryptorAnswer()

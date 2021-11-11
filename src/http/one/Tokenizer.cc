@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "Debug.h"
-#include "http/one/Parser.h"
+#include "http/Parser.h"
 #include "http/one/Tokenizer.h"
 #include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
