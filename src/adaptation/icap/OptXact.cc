@@ -113,7 +113,8 @@ bool Adaptation::Icap::OptXact::parseResponse()
     readBuf = replyParser->remaining(); // leave any unparsed bytes in the I/O buffer
 
     /* We know the whole response is in parser now */
-    debugs(93, 2, "ICAP Server " << connection);
+    // XXX: server connection details not available in this scope
+    // debugs(93, 2, "ICAP Server " << connection);
     debugs(93, 2, "ICAP Server RESPONSE:\n---------\n" <<
            replyParser->messageProtocol() << " " << replyParser->messageStatus() << " " << replyParser->reasonPhrase() << "\n" <<
            replyParser->mimeHeader() <<
