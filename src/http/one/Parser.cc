@@ -6,6 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
+/* DEBUG: section 11    HTTP Header Parser */
+
 #include "squid.h"
 #include "base/CharacterSet.h"
 #include "Debug.h"
@@ -208,6 +210,64 @@ Http::One::Parser::grabMimeBlock(const char *which, const size_t limit)
     parsingStage_ = HTTP_PARSE_DONE;
 
     return true;
+}
+
+SBuf
+Http::One::Parser::ParseFieldName(Parser::Tokenizer &tok, const http_hdr_owner_type msgType)
+{
+    /* RFC 7230 section 3.2:
+     *
+     *  header-field   = field-name ":" OWS field-value OWS
+     *  field-name     = token
+     *  token          = 1*TCHAR
+     */
+    SBuf fieldName;
+    if (tok.prefix(fieldName, CharacterSet::TCHAR) && tok.skip(':')) {
+        debugs(11, 5, "quickly found " << fieldName);
+        return fieldName;
+    }
+
+    static const SBuf nil;
+    /*
+     * RFC 7230 section 3.2.4:
+     * "No whitespace is allowed between the header field-name and colon.
+     * ...
+     *  A server MUST reject any received request message that contains
+     *  whitespace between a header field-name and colon with a response code
+     *  of 400 (Bad Request).  A proxy MUST remove any such whitespace from a
+     *  response message before forwarding the message downstream."
+     */
+    if (msgType == hoRequest) {
+        debugs(11, 2, "invalid characters found in request header field-name");
+        return nil;
+    }
+
+    /*
+     * RFC 7230 section 3.2.4:
+     * "No whitespace is allowed between the header field-name and colon.
+     * ...
+     *  A proxy MUST remove any such whitespace from a response message
+     * before forwarding the message downstream."
+     */
+    // for now, also let relaxed parser remove this BWS from any non-HTTP messages
+    const bool stripWhitespace = (msgType == hoReply) ||
+                                 Config.onoff.relaxed_header_parser;
+    if (!stripWhitespace) {
+        debugs(11, 2, "invalid characters found in response header field-name");
+        return nil; // reject if we cannot strip
+    }
+
+    debugs(11, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
+               "NOTICE: Whitespace after header field-name in '" << fieldName << tok.remaining() << "'");
+
+    if (tok.skipAll(Http1::Parser::WhitespaceCharacters()) && tok.skip(':')) {
+        if (fieldName.isEmpty())
+            debugs(11, 2, "found header with only whitespace for name");
+        return fieldName; // field-name is okay after stripping BWS suffix
+    }
+
+    debugs(11, 2, "invalid characters found in header field-name");
+    return nil;
 }
 
 // arbitrary maximum-length for headers which can be found by Http1Parser::getHostHeaderField()

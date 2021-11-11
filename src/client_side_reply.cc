@@ -1297,14 +1297,13 @@ clientReplyContext::buildReplyHeader()
             hdr->putTime(Http::HdrType::DATE, squid_curtime);
         } else if (http->getConn() && http->getConn()->port->actAsOrigin) {
             // Swap the Date: header to current time if we are simulating an origin
-            HttpHeaderEntry *h = hdr->findEntry(Http::HdrType::DATE);
-            if (h)
-                hdr->putExt("X-Origin-Date", h->value.termedBuf());
+            if (auto *origDate = hdr->findEntry(Http::HdrType::DATE))
+                hdr->putExt("X-Origin-Date", origDate->value.termedBuf());
             hdr->delById(Http::HdrType::DATE);
             hdr->putTime(Http::HdrType::DATE, squid_curtime);
-            h = hdr->findEntry(Http::HdrType::EXPIRES);
-            if (h && http->storeEntry()->expires >= 0) {
-                hdr->putExt("X-Origin-Expires", h->value.termedBuf());
+            auto *origExpire = hdr->findEntry(Http::HdrType::EXPIRES);
+            if (origExpire && http->storeEntry()->expires >= 0) {
+                hdr->putExt("X-Origin-Expires", origExpire->value.termedBuf());
                 hdr->delById(Http::HdrType::EXPIRES);
                 hdr->putTime(Http::HdrType::EXPIRES, squid_curtime + http->storeEntry()->expires - http->storeEntry()->timestamp);
             }
@@ -1361,10 +1360,9 @@ clientReplyContext::buildReplyHeader()
     if (http->loggingTags().oldType != LOG_TCP_DENIED &&
             hdr->has(Http::HdrType::WWW_AUTHENTICATE)) {
         HttpHeaderPos pos = HttpHeaderInitPos;
-        HttpHeaderEntry *e;
 
         int connection_auth_blocked = 0;
-        while ((e = hdr->getEntry(&pos))) {
+        while (const auto *e = hdr->getEntry(&pos)) {
             if (e->id == Http::HdrType::WWW_AUTHENTICATE) {
                 const char *value = e->value.rawBuf();
 

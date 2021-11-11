@@ -771,7 +771,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_ICAP_REQ_ALL_HEADERS:
             if (al->icap.request) {
                 HttpHeaderPos pos = HttpHeaderInitPos;
-                while (const HttpHeaderEntry *e = al->icap.request->header.getEntry(&pos)) {
+                while (const auto *e = al->icap.request->header.getEntry(&pos)) {
                     sb.append(e->name);
                     sb.append(": ");
                     sb.append(StringToSBuf(e->value));
@@ -801,7 +801,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_ICAP_REP_ALL_HEADERS:
             if (al->icap.reply) {
                 HttpHeaderPos pos = HttpHeaderInitPos;
-                while (const HttpHeaderEntry *e = al->icap.reply->header.getEntry(&pos)) {
+                while (const auto *e = al->icap.reply->header.getEntry(&pos)) {
                     sb.append(e->name);
                     sb.append(": ");
                     sb.append(StringToSBuf(e->value));

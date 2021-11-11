@@ -18,6 +18,9 @@ namespace Http
 
 class ContentLengthInterpreter;
 
+class HeaderField;
+using HeaderFieldPointer = RefCount<Http::HeaderField>;
+
 class Message;
 typedef RefCount<Http::Message> MessagePointer;
 
@@ -46,6 +49,20 @@ typedef RefCount<HttpRequest> HttpRequestPointer;
 
 class HttpReply;
 typedef RefCount<HttpReply> HttpReplyPointer;
+
+/** Possible owners of http header */
+typedef enum {
+    hoNone =0,
+#if USE_HTCP
+    hoHtcpReply,
+#endif
+    hoRequest,
+    hoReply,
+#if USE_OPENSSL
+    hoErrorDetail,
+#endif
+    hoEnd
+} http_hdr_owner_type;
 
 #endif /* SQUID_SRC_HTTP_FORWARD_H */
 

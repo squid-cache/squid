@@ -220,9 +220,8 @@ Http::Message::parseHeader(Http1::Parser &hp, Http::ContentLengthInterpreter &cl
 {
     // HTTP/1 message contains "zero or more header fields"
     // zero does not need parsing
-    // XXX: c_str() reallocates. performance regression.
     configureContentLengthInterpreter(clen);
-    if (hp.headerBlockSize() && !header.parse(hp.mimeHeader().c_str(), hp.headerBlockSize(), clen)) {
+    if (hp.headerBlockSize() && !header.parse(hp.mimeHeader(), clen)) {
         pstate = Http::Message::psError;
         return false;
     }

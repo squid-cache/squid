@@ -26,6 +26,7 @@ enum ParseState {
     HTTP_PARSE_CHUNK_EXT, ///< HTTP/1.1 chunked encoding chunk-ext
     HTTP_PARSE_CHUNK,     ///< HTTP/1.1 chunked encoding chunk-data
     HTTP_PARSE_MIME,      ///< HTTP/1 mime-header block
+    HTTP_PARSE_MIME_FIELDS, ///< mime-header field-line(s)
     HTTP_PARSE_DONE       ///< parsed a message header, or reached a terminal syntax error
 };
 
@@ -118,6 +119,14 @@ public:
     /// See also: WhitespaceCharacters().
     /// XXX: Misnamed and overused.
     static const CharacterSet &DelimiterCharacters();
+
+    /**
+     * Detect and validate an HTTP header field-name.
+     * Governed by RFC 7230 section 3.2 definition of valid field-name
+     *
+     * \returns a valid field-name found in the provided field buffer, or empty SBuf.
+     */
+    static SBuf ParseFieldName(Parser::Tokenizer &, const http_hdr_owner_type);
 
 protected:
     /**

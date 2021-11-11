@@ -131,7 +131,6 @@ HttpReply::make304() const
 
     const HttpReplyPointer rv(new HttpReply);
     int t;
-    HttpHeaderEntry *e;
 
     /* rv->content_length; */
     rv->date = date;
@@ -143,7 +142,7 @@ HttpReply::make304() const
     rv->sline.set(Http::ProtocolVersion(), Http::scNotModified, NULL);
 
     for (t = 0; ImsEntries[t] != Http::HdrType::OTHER; ++t) {
-        if ((e = header.findEntry(ImsEntries[t])))
+        if (const auto *e = header.findEntry(ImsEntries[t]))
             rv->header.addEntry(e->clone());
     }
 
@@ -605,8 +604,7 @@ void HttpReply::removeStaleWarnings()
             return; // some warnings are there and none changed
         header.delById(Http::HdrType::WARNING);
         if (newWarning.size()) { // some warnings left
-            HttpHeaderEntry *const e =
-                new HttpHeaderEntry(Http::HdrType::WARNING, SBuf(), newWarning.termedBuf());
+            auto *e = new Http::HeaderField(Http::HdrType::WARNING, SBuf(), newWarning.termedBuf());
             header.addEntry(e);
         }
     }

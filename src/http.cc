@@ -72,7 +72,7 @@ CBDATA_CLASS_INIT(HttpStateData);
 static const char *const crlf = "\r\n";
 
 static void httpMaybeRemovePublic(StoreEntry *, Http::StatusCode);
-static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, const HttpRequest * request,
+static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const Http::HeaderField *, const String strConnection, const HttpRequest *,
         HttpHeader * hdr_out, const int we_do_ranges, const Http::StateFlags &);
 
 HttpStateData::HttpStateData(FwdState *theFwdState) :
@@ -1848,7 +1848,6 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     LOCAL_ARRAY(char, bbuf, BBUF_SZ);
     LOCAL_ARRAY(char, ntoabuf, MAX_IPSTRLEN);
     const HttpHeader *hdr_in = &request->header;
-    const HttpHeaderEntry *e = NULL;
     HttpHeaderPos pos = HttpHeaderInitPos;
     assert (hdr_out->owner == hoRequest);
 
@@ -1859,15 +1858,14 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     // Add our own If-None-Match field if the cached entry has a strong ETag.
     // copyOneHeaderFromClientsideRequestToUpstreamRequest() adds client ones.
     if (request->etag.size() > 0) {
-        hdr_out->addEntry(new HttpHeaderEntry(Http::HdrType::IF_NONE_MATCH, SBuf(),
-                                              request->etag.termedBuf()));
+        hdr_out->addEntry(new Http::HeaderField(Http::HdrType::IF_NONE_MATCH, SBuf(), request->etag.termedBuf()));
     }
 
     bool we_do_ranges = decideIfWeDoRanges (request);
 
     String strConnection (hdr_in->getList(Http::HdrType::CONNECTION));
 
-    while ((e = hdr_in->getEntry(&pos)))
+    while (const auto *e = hdr_in->getEntry(&pos))
         copyOneHeaderFromClientsideRequestToUpstreamRequest(e, strConnection, request, hdr_out, we_do_ranges, flags);
 
     /* Abstraction break: We should interpret multipart/byterange responses
@@ -2088,7 +2086,7 @@ HttpStateData::forwardUpgrade(HttpHeader &hdrOut)
  * to our outgoing fetch request.
  */
 void
-copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, const HttpRequest * request, HttpHeader * hdr_out, const int we_do_ranges, const Http::StateFlags &flags)
+copyOneHeaderFromClientsideRequestToUpstreamRequest(const Http::HeaderField *e, const String strConnection, const HttpRequest *request, HttpHeader *hdr_out, const int we_do_ranges, const Http::StateFlags &flags)
 {
     debugs(11, 5, "httpBuildRequestHeader: " << e->name << ": " << e->value );
 
@@ -2196,9 +2194,9 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
         /** \par Max-Forwards:
          * pass only on TRACE or OPTIONS requests */
         if (request->method == Http::METHOD_TRACE || request->method == Http::METHOD_OPTIONS) {
-            const int64_t hops = e->getInt64();
-
-            if (hops > 0)
+            int64_t hops = -1;
+            const bool ok = httpHeaderParseOffset(e->value.termedBuf(), &hops);
+            if (ok && hops > 0)
                 hdr_out->putInt64(Http::HdrType::MAX_FORWARDS, hops - 1);
         }
 

@@ -11,6 +11,7 @@
 
 #include "anyp/ProtocolVersion.h"
 #include "base/LookupTable.h"
+#include "http/HeaderField.h"
 #include "http/RegisteredHeaders.h"
 /* because we pass a spec by value */
 #include "HttpHeaderMask.h"
@@ -27,43 +28,11 @@ class HttpHdrRange;
 class HttpHdrSc;
 class Packable;
 
-/** Possible owners of http header */
-typedef enum {
-    hoNone =0,
-#if USE_HTCP
-    hoHtcpReply,
-#endif
-    hoRequest,
-    hoReply,
-#if USE_OPENSSL
-    hoErrorDetail,
-#endif
-    hoEnd
-} http_hdr_owner_type;
-
 /** Iteration for headers; use HttpHeaderPos as opaque type, do not interpret */
 typedef ssize_t HttpHeaderPos;
 
 /* use this and only this to initialize HttpHeaderPos */
 #define HttpHeaderInitPos (-1)
-
-class HttpHeaderEntry
-{
-    MEMPROXY_CLASS(HttpHeaderEntry);
-
-public:
-    HttpHeaderEntry(Http::HdrType id, const SBuf &name, const char *value);
-    ~HttpHeaderEntry();
-    static HttpHeaderEntry *parse(const char *field_start, const char *field_end, const http_hdr_owner_type msgType);
-    HttpHeaderEntry *clone() const;
-    void packInto(Packable *p) const;
-    int getInt() const;
-    int64_t getInt64() const;
-
-    Http::HdrType id;
-    SBuf name;
-    String value;
-};
 
 class ETag;
 class TimeOrTag;
@@ -89,15 +58,16 @@ public:
     /// \returns whether calling update(fresh) would change our set of fields
     bool needUpdate(const HttpHeader *fresh) const;
     void compact();
-    int parse(const char *header_start, size_t len, Http::ContentLengthInterpreter &interpreter);
-    /// Parses headers stored in a buffer.
-    /// \returns 1 and sets hdr_sz on success
-    /// \returns 0 when needs more data
-    /// \returns -1 on error
+
+    /// Parse a series of 0-N HTTP header lines.
+    /// The buffer provided must contain only the expected headers.
+    int parse(const SBuf &, Http::ContentLengthInterpreter &);
+    /// \deprecated use SBuf method instead.
     int parse(const char *buf, size_t buf_len, bool atEnd, size_t &hdr_sz, Http::ContentLengthInterpreter &interpreter);
+
     void packInto(Packable * p, bool mask_sensitive_info=false) const;
-    HttpHeaderEntry *getEntry(HttpHeaderPos * pos) const;
-    HttpHeaderEntry *findEntry(Http::HdrType id) const;
+    Http::HeaderField *getEntry(HttpHeaderPos * pos) const;
+    Http::HeaderField *findEntry(Http::HdrType id) const;
     /// deletes all fields with a given name, if any.
     /// \return #fields deleted
     int delByName(const SBuf &name);
@@ -106,8 +76,8 @@ public:
     int delById(Http::HdrType id);
     void delAt(HttpHeaderPos pos, int &headers_deleted);
     void refreshMask();
-    void addEntry(HttpHeaderEntry * e);
-    void insertEntry(HttpHeaderEntry * e);
+    void addEntry(Http::HeaderField * e);
+    void insertEntry(Http::HeaderField * e);
     String getList(Http::HdrType id) const;
     bool getList(Http::HdrType id, String *s) const;
     bool conflictingContentLength() const { return conflictingContentLength_; }
@@ -168,7 +138,7 @@ public:
     bool unsupportedTe() const { return teUnsupported_; }
 
     /* protected, do not use these, use interface functions instead */
-    std::vector<HttpHeaderEntry*, PoolingAllocator<HttpHeaderEntry*> > entries; /**< parsed fields in raw format */
+    std::vector<Http::HeaderField*, PoolingAllocator<Http::HeaderField*> > entries; /**< parsed fields in raw format */
     HttpHeaderMask mask;    /**< bit set <=> entry present */
     http_hdr_owner_type owner;  /**< request or reply */
     int len;            /**< length when packed, not counting terminating null-byte */
@@ -187,7 +157,9 @@ protected:
     void updateWarnings();
 
 private:
-    HttpHeaderEntry *findLastEntry(Http::HdrType id) const;
+    SBuf parseFieldName(Parser::Tokenizer &, const http_hdr_owner_type);
+    SBuf isolateFieldValue(Parser::Tokenizer &);
+    Http::HeaderField *findLastEntry(Http::HdrType id) const;
     bool conflictingContentLength_; ///< found different Content-Length fields
     /// unsupported encoding, unnecessary syntax characters, and/or
     /// invalid field-value found in Transfer-Encoding header

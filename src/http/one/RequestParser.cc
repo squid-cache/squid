@@ -398,6 +398,12 @@ Http::One::RequestParser::doParse(const SBuf &aBuf)
         }
     }
 
+    // stage 4: split mime header into field-lines
+    if (parsingStage_ == HTTP_PARSE_MIME_FIELDS) {
+
+        parsingStage_ = HTTP_PARSE_DONE;
+    }
+
     return !needsMoreData();
 }
 
