@@ -64,7 +64,7 @@ Http::StatusLine::packInto(Packable * p) const
 
     /* local constants */
     /* AYJ: see bug 2469 - RFC2616 confirms stating 'SP characters' plural! */
-    static const char *Http1StatusLineFormat = "%s/%d.%d %3d %s\r\n";
+    static const char *DefaultStatusLineFormat = "%s/%d.%d %3d %s\r\n";
     static const char *IcyStatusLineFormat = "ICY %3d %s\r\n";
 
     /* handle ICY protocol status line specially. Pass on the bad format. */
@@ -77,9 +77,9 @@ Http::StatusLine::packInto(Packable * p) const
     }
 
     debugs(57, 9, "packing sline " << this << " using " << p << ":");
-    debugs(57, 9, "FORMAT=" << Http1StatusLineFormat );
+    debugs(57, 9, "FORMAT=" << DefaultStatusLineFormat );
     debugs(57, 9, version << " " << packedStatus << " " << packedReason);
-    p->appendf(Http1StatusLineFormat, AnyP::ProtocolType_str[version.protocol], version.major, version.minor, packedStatus, packedReason);
+    p->appendf(DefaultStatusLineFormat, AnyP::ProtocolType_str[version.protocol], version.major, version.minor, packedStatus, packedReason);
 }
 
 bool
