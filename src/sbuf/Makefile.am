@@ -23,5 +23,4 @@ libsbuf_la_SOURCES = \
 	SBuf.h \
 	Stats.cc \
 	Stats.h \
-	Stream.h \
 	forward.h

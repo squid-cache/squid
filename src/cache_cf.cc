@@ -60,7 +60,6 @@
 #include "RefreshPattern.h"
 #include "rfc1738.h"
 #include "sbuf/List.h"
-#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "ssl/ProxyCerts.h"
@@ -684,15 +683,11 @@ DumpDirective(const T &raw, StoreEntry *entry, const char *name)
     if (!SawDirective(raw))
         return; // not configured
 
-    entry->append(name, strlen(name));
-    SBufStream os;
+    PackableStream os(*entry);
+    os << name << " ";
     Configuration::Component<T>::Print(os, raw);
-    const auto buf = os.buf();
-    if (buf.length()) {
-        entry->append(" ", 1);
-        entry->append(buf.rawContent(), buf.length());
-    }
-    entry->append("\n", 1);
+    os << "\n";
+    os.flush();
 }
 
 /// frees any resources associated with the given raw SquidConfig data member
@@ -4739,7 +4734,7 @@ static void dump_cache_log_message(StoreEntry *entry, const char *name, const De
     if (!debugMessages)
         return;
 
-    SBufStream out;
+    PackableStream out(*entry);
     for (const auto &msg: debugMessages->messages) {
         if (!msg.configured())
             continue;
@@ -4750,8 +4745,7 @@ static void dump_cache_log_message(StoreEntry *entry, const char *name, const De
             out << " limit=" << msg.limit;
         out << "\n";
     }
-    const auto buf = out.buf();
-    entry->append(buf.rawContent(), buf.length()); // may be empty
+    out.flush();
 }
 
 static void free_cache_log_message(DebugMessages **debugMessages)

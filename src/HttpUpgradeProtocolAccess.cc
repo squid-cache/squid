@@ -13,7 +13,7 @@
 #include "ConfigParser.h"
 #include "globals.h"
 #include "HttpUpgradeProtocolAccess.h"
-#include "sbuf/Stream.h"
+#include "sbuf/Algorithms.h"
 
 #include <algorithm>
 

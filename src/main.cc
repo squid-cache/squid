@@ -68,7 +68,6 @@
 #include "protos.h"
 #include "redirect.h"
 #include "refresh.h"
-#include "sbuf/Stream.h"
 #include "SBufStatsAction.h"
 #include "send-announce.h"
 #include "SquidConfig.h"

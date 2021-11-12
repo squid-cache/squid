@@ -13,7 +13,6 @@
 #include "fs_io.h"
 #include "helper/Reply.h"
 #include "Parsing.h"
-#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "SquidTime.h"

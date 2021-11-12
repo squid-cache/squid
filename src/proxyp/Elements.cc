@@ -9,7 +9,7 @@
 #include "squid.h"
 #include "parser/Tokenizer.h"
 #include "proxyp/Elements.h"
-#include "sbuf/Stream.h"
+#include "sbuf/Algorithms.h"
 
 #include <algorithm>
 #include <limits>

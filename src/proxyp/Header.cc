@@ -10,7 +10,6 @@
 #include "base/EnumIterator.h"
 #include "proxyp/Elements.h"
 #include "proxyp/Header.h"
-#include "sbuf/Stream.h"
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "StrList.h"
@@ -24,66 +23,69 @@ ProxyProtocol::Header::Header(const SBuf &ver, const Two::Command cmd):
 SBuf
 ProxyProtocol::Header::toMime() const
 {
-    SBufStream result;
+    SBuf result;
+    PackableStream os(result);
     for (const auto fieldType: EnumRange(Two::htPseudoBegin, Two::htPseudoEnd)) {
         const auto value = getValues(fieldType);
         if (!value.isEmpty())
-            result << PseudoFieldTypeToFieldName(fieldType) << ": " << value << "\r\n";
+            os << PseudoFieldTypeToFieldName(fieldType) << ": " << value << "\r\n";
     }
     // cannot reuse Header::getValues(): need the original TLVs layout
     for (const auto &tlv: tlvs)
-        result << tlv.type << ": " << tlv.value << "\r\n";
-    return result.buf();
+        os << tlv.type << ": " << tlv.value << "\r\n";
+    return result;
 }
 
 SBuf
 ProxyProtocol::Header::getValues(const uint32_t headerType, const char sep) const
 {
+    static char ipBuf[MAX_IPSTRLEN];
+    SBuf result;
+    PackableStream os(result);
+
     switch (headerType) {
 
     case Two::htPseudoVersion:
-        return version_;
+        os << version_;
+        break;
 
     case Two::htPseudoCommand:
-        return ToSBuf(command_);
+        os << command_;
+        break;
 
-    case Two::htPseudoSrcAddr: {
+    case Two::htPseudoSrcAddr:
+        if (hasAddresses()) {
+            auto logAddr = sourceAddress;
+            logAddr.applyClientMask(Config.Addrs.client_netmask);
+            os << logAddr.toStr(ipBuf, sizeof(ipBuf));
+        }
+        break;
+
+    case Two::htPseudoDstAddr:
         if (!hasAddresses())
-            return SBuf();
-        auto logAddr = sourceAddress;
-        logAddr.applyClientMask(Config.Addrs.client_netmask);
-        char ipBuf[MAX_IPSTRLEN];
-        return SBuf(logAddr.toStr(ipBuf, sizeof(ipBuf)));
-    }
+            os << destinationAddress.toStr(ipBuf, sizeof(ipBuf));
+        break;
 
-    case Two::htPseudoDstAddr: {
-        if (!hasAddresses())
-            return SBuf();
-        char ipBuf[MAX_IPSTRLEN];
-        return SBuf(destinationAddress.toStr(ipBuf, sizeof(ipBuf)));
-    }
+    case Two::htPseudoSrcPort:
+        if (hasAddresses())
+            os << sourceAddress.port();
+        break;
 
-    case Two::htPseudoSrcPort: {
-        return hasAddresses() ? ToSBuf(sourceAddress.port()) : SBuf();
-    }
+    case Two::htPseudoDstPort:
+        if (hasAddresses())
+            os << destinationAddress.port();
+        break;
 
-    case Two::htPseudoDstPort: {
-        return hasAddresses() ? ToSBuf(destinationAddress.port()) : SBuf();
-    }
-
-    default: {
-        SBufStream result;
+    default:
         for (const auto &m: tlvs) {
             if (m.type == headerType) {
-                // XXX: result.tellp() always returns -1
-                if (!result.buf().isEmpty())
-                    result << sep;
-                result << m.value;
+                if (!result.isEmpty())
+                    os << sep;
+                os << m.value;
             }
         }
-        return result.buf();
     }
-    }
+    return result;
 }
 
 SBuf

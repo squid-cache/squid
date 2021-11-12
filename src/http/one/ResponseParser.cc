@@ -11,7 +11,6 @@
 #include "http/one/ResponseParser.h"
 #include "http/ProtocolVersion.h"
 #include "parser/Tokenizer.h"
-#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 
 const SBuf Http::One::ResponseParser::IcyMagic("ICY ");

@@ -10,7 +10,7 @@
 #include "acl/Options.h"
 #include "ConfigParser.h"
 #include "Debug.h"
-#include "sbuf/Stream.h"
+#include "sbuf/Algorithms.h"
 
 #include <iostream>
 #include <vector>

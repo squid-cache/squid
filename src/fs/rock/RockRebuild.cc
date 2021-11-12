@@ -17,7 +17,6 @@
 #include "fs_io.h"
 #include "globals.h"
 #include "md5.h"
-#include "sbuf/Stream.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
@@ -910,8 +909,8 @@ Rock::Rebuild::useNewSlot(const SlotId slotId, const DbCellHeader &header)
 SBuf
 Rock::Rebuild::progressDescription() const
 {
-    SBufStream str;
-
+    SBuf out;
+    PackableStream str(out);
     str << Debug::Extra << "slots loaded: " << Progress(loadingPos, dbSlotLimit);
 
     const auto validatingEntries = validationPos < dbEntryLimit;
@@ -922,6 +921,6 @@ Rock::Rebuild::progressDescription() const
         str << Debug::Extra << "slots validated: " << Progress(slotsValidated, dbSlotLimit);
     }
 
-    return str.buf();
+    return out;
 }
 

@@ -11,7 +11,7 @@
 #include "http/one/Parser.h"
 #include "http/one/Tokenizer.h"
 #include "parser/Tokenizer.h"
-#include "sbuf/Stream.h"
+#include "sbuf/Algorithms.h"
 
 /// Extracts quoted-string after the caller removes the initial '"'.
 /// \param http1p0 whether to prohibit \-escaped characters in quoted strings

@@ -17,7 +17,6 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "parser/Tokenizer.h"
-#include "sbuf/Stream.h"
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "Store.h"

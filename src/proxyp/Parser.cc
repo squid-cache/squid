@@ -12,7 +12,7 @@
 #include "proxyp/Elements.h"
 #include "proxyp/Header.h"
 #include "proxyp/Parser.h"
-#include "sbuf/Stream.h"
+#include "sbuf/Algorithms.h"
 
 #include <algorithm>
 #include <limits>

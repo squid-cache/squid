@@ -15,7 +15,6 @@
 #include "MemBuf.h"
 #include "parser/Tokenizer.h"
 #include "Parsing.h"
-#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 
 Http::One::TeChunkedParser::TeChunkedParser():

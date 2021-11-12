@@ -15,7 +15,7 @@
 #include "Debug.h"
 #include "globals.h"
 #include "Parsing.h"
-#include "sbuf/Stream.h"
+#include "sbuf/Algorithms.h"
 
 /*
  * These functions is the same as atoi/l/f, except that they check for errors

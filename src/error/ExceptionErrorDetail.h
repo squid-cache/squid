@@ -11,7 +11,6 @@
 
 #include "error/Detail.h"
 #include "sbuf/SBuf.h"
-#include "sbuf/Stream.h"
 
 /// offset for exception ID details, for backward compatibility
 #define SQUID_EXCEPTION_START_BASE 110000

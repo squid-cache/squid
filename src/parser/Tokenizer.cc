@@ -12,7 +12,7 @@
 #include "Debug.h"
 #include "parser/forward.h"
 #include "parser/Tokenizer.h"
-#include "sbuf/Stream.h"
+#include "sbuf/Algorithms.h"
 
 #include <cerrno>
 #if HAVE_CTYPE_H

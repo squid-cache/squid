@@ -14,7 +14,7 @@
 #include "Debug.h"
 #include "fatal.h"
 #include "globals.h"
-#include "sbuf/Stream.h"
+#include "sbuf/Algorithms.h"
 
 bool ConfigParser::RecognizeQuotedValues = true;
 bool ConfigParser::StrictMode = true;

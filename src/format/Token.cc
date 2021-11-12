@@ -12,7 +12,6 @@
 #include "format/TokenTableEntry.h"
 #include "globals.h"
 #include "proxyp/Elements.h"
-#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "Store.h"
 

@@ -30,7 +30,6 @@
 #include "mgr/QueryParams.h"
 #include "parser/Tokenizer.h"
 #include "protos.h"
-#include "sbuf/Stream.h"
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"

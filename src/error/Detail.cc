@@ -10,7 +10,6 @@
 #include "error/Detail.h"
 #include "HttpRequest.h"
 #include "sbuf/SBuf.h"
-#include "sbuf/Stream.h"
 
 /// details an error by tying it to a uniquely named circumstance
 class NamedErrorDetail: public ErrorDetail

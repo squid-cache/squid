@@ -28,7 +28,6 @@
 #include "errorpage.h"
 #include "globals.h"
 #include "HttpRequest.h"
-#include "src/sbuf/Stream.h"
 
 #include <set>
 #include <algorithm>

@@ -10,8 +10,6 @@
 #include "base/CharacterSet.h"
 #include "HttpReply.h"
 #include "sbuf/Algorithms.h"
-#include "sbuf/SBuf.h"
-#include "sbuf/Stream.h"
 #include "tests/SBufFindTest.h"
 #include "tests/testSBuf.h"
 #include "unitTestMain.h"
@@ -977,24 +975,6 @@ testSBuf::testStartsWith()
     CPPUNIT_ASSERT(literal.startsWith(SBuf(fox1),caseInsensitive));
     casebuf = "tha quick";
     CPPUNIT_ASSERT_EQUAL(false,literal.startsWith(casebuf,caseInsensitive));
-}
-
-void
-testSBuf::testSBufStream()
-{
-    SBuf b("const.string, int 10 and a float 10.5");
-    SBufStream ss;
-    ss << "const.string, int " << 10 << " and a float " << 10.5;
-    SBuf o=ss.buf();
-    CPPUNIT_ASSERT_EQUAL(b,o);
-    ss.clearBuf();
-    o=ss.buf();
-    CPPUNIT_ASSERT_EQUAL(SBuf(),o);
-    SBuf f1(fox1);
-    SBufStream ss2(f1);
-    ss2 << fox2;
-    CPPUNIT_ASSERT_EQUAL(ss2.buf(),literal);
-    CPPUNIT_ASSERT_EQUAL(f1,SBuf(fox1));
 }
 
 void

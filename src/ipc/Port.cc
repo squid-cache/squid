@@ -14,7 +14,7 @@
 #include "comm/Read.h"
 #include "CommCalls.h"
 #include "ipc/Port.h"
-#include "sbuf/Stream.h"
+#include "sbuf/Algorithms.h"
 #include "tools.h"
 #include "util.h"
 

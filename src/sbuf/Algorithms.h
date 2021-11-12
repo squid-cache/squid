@@ -9,6 +9,7 @@
 #ifndef SQUID_SBUFALGOS_H_
 #define SQUID_SBUFALGOS_H_
 
+#include "base/PackableStream.h"
 #include "sbuf/SBuf.h"
 
 #include <algorithm>
@@ -127,6 +128,20 @@ class CaseInsensitiveSBufHash
 public:
     std::size_t operator()(const SBuf &) const noexcept;
 };
+
+/// slowly stream-prints all arguments into a freshly allocated SBuf
+template <typename... Args>
+inline
+SBuf ToSBuf(Args&&... args)
+{
+    // TODO: Make this code readable after requiring C++17.
+    SBuf result;
+    PackableStream out(result);
+    using expander = int[];
+    (void)expander {0, (void(out << std::forward<Args>(args)),0)...};
+    out.flush();
+    return result;
+}
 
 #endif /* SQUID_SBUFALGOS_H_ */
 

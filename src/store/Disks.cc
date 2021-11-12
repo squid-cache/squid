@@ -14,7 +14,6 @@
 #include "Debug.h"
 #include "DebugMessages.h"
 #include "globals.h"
-#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "store/Disk.h"

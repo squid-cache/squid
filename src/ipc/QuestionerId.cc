@@ -10,7 +10,7 @@
 #include "base/TextException.h"
 #include "ipc/QuestionerId.h"
 #include "ipc/TypedMsgHdr.h"
-#include "sbuf/Stream.h"
+#include "sbuf/Algorithms.h"
 
 #include <iostream>
 

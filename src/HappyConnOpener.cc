@@ -18,7 +18,6 @@
 #include "neighbors.h"
 #include "pconn.h"
 #include "PeerPoolMgr.h"
-#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 
 CBDATA_CLASS_INIT(HappyConnOpener);
@@ -435,9 +434,9 @@ HappyConnOpener::status() const
     static SBuf buf;
     buf.clear();
 
-    SBufStream os(buf);
+    PackableStream os(buf);
 
-    os.write(" [", 2);
+    os << " [";
     if (stopReason)
         os << "Stopped:" << stopReason;
     if (prime)
@@ -449,7 +448,6 @@ HappyConnOpener::status() const
     os << " dst:" << *destinations;
     os << ' ' << id << ']';
 
-    buf = os.buf();
     return buf.c_str();
 }
 

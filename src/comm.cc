@@ -31,7 +31,6 @@
 #include "ip/tools.h"
 #include "pconn.h"
 #include "sbuf/SBuf.h"
-#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #include "StoreIOBuffer.h"

@@ -15,7 +15,6 @@
 #include "log/File.h"
 #include "log/FormattedLog.h"
 #include "Parsing.h"
-#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 
 FormattedLog::~FormattedLog()

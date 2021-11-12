@@ -12,7 +12,6 @@
 #include "fs_io.h"
 #include "Instance.h"
 #include "parser/Tokenizer.h"
-#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "tools.h"
 

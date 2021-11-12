@@ -23,7 +23,6 @@
 #include "MemBuf.h"
 #include "proxyp/Header.h"
 #include "rfc1738.h"
-#include "sbuf/Stream.h"
 #include "sbuf/StringConvert.h"
 #include "security/CertError.h"
 #include "security/NegotiationHistory.h"

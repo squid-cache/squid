@@ -23,7 +23,6 @@
 #include "http/Stream.h"
 #include "ip/tools.h"
 #include "sbuf/SBuf.h"
-#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "StatCounters.h"

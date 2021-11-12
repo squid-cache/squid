@@ -10,8 +10,7 @@
 #define _SQUID_SRC_ERROR_SYSERRORDETAIL_H
 
 #include "error/Detail.h"
-#include "sbuf/SBuf.h"
-#include "sbuf/Stream.h"
+#include "sbuf/Algorithms.h"
 
 /// system call failure detail based on standard errno(3)/strerror(3) APIs
 class SysErrorDetail: public ErrorDetail

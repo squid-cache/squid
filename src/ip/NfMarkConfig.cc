@@ -11,7 +11,7 @@
 #include "ConfigParser.h"
 #include "ip/NfMarkConfig.h"
 #include "parser/Tokenizer.h"
-#include "sbuf/Stream.h"
+#include "sbuf/Algorithms.h"
 
 #include <limits>
 

@@ -27,7 +27,6 @@
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "rfc1738.h"
-#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"

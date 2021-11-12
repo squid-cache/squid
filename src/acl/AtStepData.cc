@@ -13,7 +13,7 @@
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
-#include "sbuf/Stream.h"
+#include "sbuf/Algorithms.h"
 #include "wordlist.h"
 
 static inline const char *

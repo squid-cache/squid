@@ -14,7 +14,6 @@
 #include "client_side.h"
 #include "Debug.h"
 #include "http/Stream.h"
-#include "sbuf/Stream.h"
 
 bool
 Acl::ConnMark::empty() const

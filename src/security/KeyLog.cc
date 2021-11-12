@@ -16,7 +16,6 @@
 #include "HttpReply.h"
 #include "log/File.h"
 #include "Parsing.h"
-#include "sbuf/Stream.h"
 #include "security/CommunicationSecrets.h"
 #include "security/KeyLog.h"
 #include "security/Session.h"
@@ -39,7 +38,8 @@ Security::KeyLog::record(const CommunicationSecrets &secrets)
 {
     assert(logfile);
 
-    SBufStream os;
+    SBuf result;
+    PackableStream os(result);
 
     // report current context to ease small-scale triage of logging problems
     os << "# " << logfile->sequence_number;
@@ -48,10 +48,9 @@ Security::KeyLog::record(const CommunicationSecrets &secrets)
     os << '\n';
 
     secrets.record(os);
-    const auto buf = os.buf();
 
     logfileLineStart(logfile);
-    logfilePrintf(logfile, SQUIDSBUFPH, SQUIDSBUFPRINT(buf));
+    logfilePrintf(logfile, SQUIDSBUFPH, SQUIDSBUFPRINT(result));
     logfileLineEnd(logfile);
 }
 
