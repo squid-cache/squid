@@ -4419,7 +4419,7 @@ static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
 
 static void dump_sslproxy_cert_sign(StoreEntry *entry, const char *name, sslproxy_cert_sign *cert_sign)
 {
-    for (auto *cs = cert_sign; cs; cs = cs->next) {
+    for (const auto *cs = cert_sign; cs; cs = cs->next) {
         storeAppendPrintf(entry, "%s ", name);
         storeAppendPrintf(entry, "%s ", Ssl::certSignAlgorithm(cs->alg));
         if (cs->aclList)
