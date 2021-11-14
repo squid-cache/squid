@@ -436,7 +436,7 @@ HappyConnOpener::status() const
 
     PackableStream os(buf);
 
-    os << " [";
+    os.write(" [", 2);
     if (stopReason)
         os << "Stopped:" << stopReason;
     if (prime)

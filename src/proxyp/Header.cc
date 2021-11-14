@@ -39,53 +39,52 @@ ProxyProtocol::Header::toMime() const
 SBuf
 ProxyProtocol::Header::getValues(const uint32_t headerType, const char sep) const
 {
-    static char ipBuf[MAX_IPSTRLEN];
-    SBuf result;
-    PackableStream os(result);
-
     switch (headerType) {
 
     case Two::htPseudoVersion:
-        os << version_;
-        break;
+        return version_;
 
     case Two::htPseudoCommand:
-        os << command_;
-        break;
+        return ToSBuf(command_);
 
-    case Two::htPseudoSrcAddr:
-        if (hasAddresses()) {
-            auto logAddr = sourceAddress;
-            logAddr.applyClientMask(Config.Addrs.client_netmask);
-            os << logAddr.toStr(ipBuf, sizeof(ipBuf));
-        }
-        break;
-
-    case Two::htPseudoDstAddr:
+    case Two::htPseudoSrcAddr: {
         if (!hasAddresses())
-            os << destinationAddress.toStr(ipBuf, sizeof(ipBuf));
-        break;
+            return SBuf();
+        auto logAddr = sourceAddress;
+        logAddr.applyClientMask(Config.Addrs.client_netmask);
+        char ipBuf[MAX_IPSTRLEN];
+        return SBuf(logAddr.toStr(ipBuf, sizeof(ipBuf)));
+    }
 
-    case Two::htPseudoSrcPort:
-        if (hasAddresses())
-            os << sourceAddress.port();
-        break;
+    case Two::htPseudoDstAddr: {
+        if (!hasAddresses())
+            return SBuf();
+        char ipBuf[MAX_IPSTRLEN];
+        return SBuf(destinationAddress.toStr(ipBuf, sizeof(ipBuf)));
+    }
 
-    case Two::htPseudoDstPort:
-        if (hasAddresses())
-            os << destinationAddress.port();
-        break;
+    case Two::htPseudoSrcPort: {
+        return hasAddresses() ? ToSBuf(sourceAddress.port()) : SBuf();
+    }
 
-    default:
+    case Two::htPseudoDstPort: {
+        return hasAddresses() ? ToSBuf(destinationAddress.port()) : SBuf();
+    }
+
+    default: {
+        SBuf result;
+        PackableStream os;
         for (const auto &m: tlvs) {
             if (m.type == headerType) {
+                // XXX: result.tellp() always returns -1
                 if (!result.isEmpty())
                     os << sep;
                 os << m.value;
             }
         }
+        return result;
     }
-    return result;
+    }
 }
 
 SBuf
