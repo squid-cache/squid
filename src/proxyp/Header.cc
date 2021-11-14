@@ -73,7 +73,7 @@ ProxyProtocol::Header::getValues(const uint32_t headerType, const char sep) cons
 
     default: {
         SBuf result;
-        PackableStream os;
+        PackableStream os(result);
         for (const auto &m: tlvs) {
             if (m.type == headerType) {
                 // XXX: result.tellp() always returns -1
