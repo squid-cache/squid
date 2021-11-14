@@ -22,10 +22,9 @@ public:
     ~sslproxy_cert_sign() {
         if (aclList)
             aclDestroyAclList(&aclList);
-        while (next) {
-            auto *tmp = next;
-            next = next->next;
-            delete tmp;
+        while (const auto first = next) {
+            next = first->next;
+            delete first;
         }
     }
 
@@ -39,15 +38,14 @@ class sslproxy_cert_adapt
 {
 public:
     sslproxy_cert_adapt() = default;
-    sslproxy_cert_adapt(const sslproxy_cert_adapt &) = delete; // prohibit all copy/move
+    sslproxy_cert_adapt(sslproxy_cert_adapt &&) = delete; // prohibit all copy/move
     ~sslproxy_cert_adapt() {
         xfree(param);
         if (aclList)
             aclDestroyAclList(&aclList);
-        while (next) {
-            auto *tmp = next;
-            next = next->next;
-            delete tmp;
+        while (const auto first = next) {
+            next = first->next;
+            delete first;
         }
     }
 
