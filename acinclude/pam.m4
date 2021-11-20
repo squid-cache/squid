@@ -38,11 +38,10 @@ static struct pam_conv conv = { &password_conversation, 0 };
   ])
     ])
   ])
-  case $squid_cv_pam_conv_signature in
-    linux) AC_DEFINE([PAM_CONV_FUNC_CONST_PARM],[const]) ;;
-    solaris) AC_DEFINE([PAM_CONV_FUNC_CONST_PARM],[]) ;;
-    *) AC_DEFINE([PAM_CONV_FUNC_CONST_PARM],[]) ;;
-  esac
+  AS_IF([test "$squid_cv_pam_conv_signature" = "linux"],
+    AC_DEFINE([PAM_CONV_FUNC_CONST_PARM],[const]),
+    AC_DEFINE([PAM_CONV_FUNC_CONST_PARM],[])
+  )
 ]) dnl CHECK_STRUCT_PAM_CONV
 
 

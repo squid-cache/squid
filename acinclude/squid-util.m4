@@ -145,11 +145,11 @@ dnl 0: "no" , "false", 0, ""
 dnl aborts with an error for unknown values
 AC_DEFUN([SQUID_DEFINE_BOOL],[
 squid_tmp_define=""
-case "$2" in
-  yes|true|1) squid_tmp_define="1" ;;
-  no|false|0|"") squid_tmp_define="0" ;;
-  *) AC_MSG_ERROR([SQUID_DEFINE[]_BOOL: unrecognized value for $1: '$2']) ;;
-esac
+AS_CASE(["$2"],
+  [yes|true|1],[squid_tmp_define="1"],
+  [no|false|0|""],[squid_tmp_define="0"],
+  [AC_MSG_ERROR([SQUID_DEFINE[]_BOOL: unrecognized value for $1: '$2'])]
+)
 ifelse([$#],3,
   [AC_DEFINE_UNQUOTED([$1], [$squid_tmp_define],[$3])],
   [AC_DEFINE_UNQUOTED([$1], [$squid_tmp_define])]
@@ -202,31 +202,28 @@ AC_DEFUN([SQUID_EMBED_BUILD_INFO],[
        Default is not to add anything. If the string is not specified,
        tries to determine nick and revision number of the current
        bazaar branch]),[
-  case "$enableval" in
-    no) ${TRUE}
-        ;;
-    yes)
-      if test -d "${srcdir}/.bzr"; then
-        AC_PATH_PROG(BZR,bzr,$FALSE)
-        squid_bzr_branch_nick=`cd ${srcdir} && ${BZR} nick 2>/dev/null`
-        if test $? -eq 0 -a "x$squid_bzr_branch_nick" != "x"; then
-          squid_bzr_branch_revno=`cd ${srcdir} && ${BZR} revno 2>/dev/null | sed 's/\"//g'`
-        fi
-        if test $? -eq 0 -a "x$squid_bzr_branch_revno" != "x"; then
-          sh -c "cd ${srcdir} && ${BZR} diff 2>&1 >/dev/null"
-          if test $? -eq 1; then
+    AS_CASE(["$enableval"],
+      [no],[:],
+      [yes],[
+        if test -d "${srcdir}/.bzr"; then
+          AC_PATH_PROG(BZR,bzr,$FALSE)
+          squid_bzr_branch_nick=`cd ${srcdir} && ${BZR} nick 2>/dev/null`
+          if test $? -eq 0 -a "x$squid_bzr_branch_nick" != "x"; then
+            squid_bzr_branch_revno=`cd ${srcdir} && ${BZR} revno 2>/dev/null | sed 's/\"//g'`
+          fi
+          if test $? -eq 0 -a "x$squid_bzr_branch_revno" != "x"; then
+            sh -c "cd ${srcdir} && ${BZR} diff 2>&1 >/dev/null"
+            if test $? -eq 1; then
               squid_bzr_branch_revno="$squid_bzr_branch_revno+changes"
+            fi
+          fi
+          if test "x$squid_bzr_branch_revno" != "x"; then
+            squid_build_info="Built branch: ${squid_bzr_branch_nick}-r${squid_bzr_branch_revno}"
           fi
         fi
-        if test "x$squid_bzr_branch_revno" != "x"; then
-          squid_build_info="Built branch: ${squid_bzr_branch_nick}-r${squid_bzr_branch_revno}"
-        fi
-      fi
-      ;;
-    *)
-      squid_build_info=$enableval
-      ;;
-  esac
+      ],
+      [squid_build_info=$enableval]
+    )
   ])
   AC_DEFINE_UNQUOTED([SQUID_BUILD_INFO],["$squid_build_info"],
      [Squid extended build info field for "squid -v" output])
@@ -269,18 +266,16 @@ AC_DEFUN([SQUID_CHECK_SASL],[
       squid_cv_check_sasl="no"
     ])
   ])
-  case "$squid_host_os" in
-    Darwin)
-      if test "$ac_cv_lib_sasl2_sasl_errstring" = "yes" ; then
-        AC_DEFINE(HAVE_SASL_DARWIN,1,[Define to 1 if Mac Darwin without sasl.h])
-        echo "checking for MAC Darwin without sasl.h ... yes"
-        squid_cv_check_sasl="yes"
-      else
-        echo "checking for MAC Darwin without sasl.h ... no"
-        squid_cv_check_sasl="no"
-      fi
-      ;;
-  esac
+  AS_IF([test "$squid_host_os" = "Darwin"],[
+    if test "$ac_cv_lib_sasl2_sasl_errstring" = "yes" ; then
+      AC_DEFINE(HAVE_SASL_DARWIN,1,[Define to 1 if Mac Darwin without sasl.h])
+      echo "checking for MAC Darwin without sasl.h ... yes"
+      squid_cv_check_sasl="yes"
+    else
+      echo "checking for MAC Darwin without sasl.h ... no"
+      squid_cv_check_sasl="no"
+    fi
+  ])
   if test "x$squid_cv_check_sasl" = "xno"; then
     AC_MSG_WARN([Neither SASL nor SASL2 found])
   else

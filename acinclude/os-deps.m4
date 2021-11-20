@@ -736,24 +736,20 @@ void squid_getprotobynumber(void) {
 }
   ])
   AC_MSG_CHECKING([for winsock library])
-  case "$ac_cv_search_squid_getprotobynumber" in
-    "no")
-      AC_MSG_RESULT([winsock library not found])
-      ;;
-    "none required")
-      AC_MSG_RESULT([winsock library already in LIBS])
-      ;;
-    "-lws2_32")
+  AS_CASE(["$ac_cv_search_squid_getprotobynumber"],
+    ["no"],[AC_MSG_RESULT([winsock library not found])],
+    ["none required"],[AC_MSG_RESULT([winsock library already in LIBS])],
+    ["-lws2_32"],[
       AC_MSG_RESULT([winsock2])
       XTRA_LIBS="-lws2_32 $XTRA_LIBS"
-      ac_cv_func_select='yes'
-      ;;
-    "-lwsock32")
+      ac_cv_func_select="yes"
+    ],
+    ["-lwsock32"],[
       AC_MSG_RESULT([winsock])
       XTRA_LIBS="-lwsock32 $XTRA_LIBS"
-      ac_cv_func_select='yes'
-      ;;
-  esac
+      ac_cv_func_select="yes"
+    ]
+  )
   SQUID_STATE_ROLLBACK(winsock)
 ])
 
