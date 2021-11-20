@@ -9,12 +9,12 @@ dnl check that strnstr() works fine. On Macos X it can cause a buffer overrun
 dnl sets squid_cv_func_strnstr to "yes" or "no", and defines HAVE_STRNSTR
 AC_DEFUN([SQUID_CHECK_FUNC_STRNSTR],[
 
-# Yay!  This one is  a MacOSX brokenness.  Its not good enough
-# to know that strnstr() exists, because MacOSX 10.4 have a bad
-# copy that crashes with a buffer over-run!
-AH_TEMPLATE(HAVE_STRNSTR,[MacOS brokenness: strnstr() can overrun on that system])
-AC_CACHE_CHECK([if strnstr is well implemented], squid_cv_func_strnstr,
-  AC_RUN_IFELSE([AC_LANG_SOURCE([[
+  # Yay!  This one is  a MacOSX brokenness.  Its not good enough
+  # to know that strnstr() exists, because MacOSX 10.4 have a bad
+  # copy that crashes with a buffer over-run!
+  AH_TEMPLATE(HAVE_STRNSTR,[MacOS brokenness: strnstr() can overrun on that system])
+  AC_CACHE_CHECK([if strnstr is well implemented], squid_cv_func_strnstr,
+    AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -28,12 +28,9 @@ int main(int argc, char **argv)
     strnstr(str, "fubar", size);
     return 0;
 }
-  ]])],[squid_cv_func_strnstr="yes"],[squid_cv_func_strnstr="no"],[:])
-)
-if test "$squid_cv_func_strnstr" = "yes" ; then
-  AC_DEFINE(HAVE_STRNSTR,1)
-fi
-
+    ]])],[squid_cv_func_strnstr="yes"],[squid_cv_func_strnstr="no"],[:])
+  )
+  AS_IF([test "x$squid_cv_func_strnstr" = "xyes"],[AC_DEFINE(HAVE_STRNSTR,1)])
 ]) dnl SQUID_CHECK_FUNC_STRNSTR
 
 dnl check that epoll actually works
@@ -235,8 +232,8 @@ int main(int argc, char **argv) {
   dnl Microsoft MSVCRT.DLL supports 2048 maximum FDs
   AS_CASE(["$host_os"],[mingw|mingw32],[squid_filedescriptors_limit="2048"])
   AC_MSG_RESULT($squid_filedescriptors_limit)
-  AS_IF([ test "x$squid_filedescriptors_num" = "x" ],[
-    AS_IF([ test "x$squid_filedescriptors_limit" != "x" ],[
+  AS_IF([test "x$squid_filedescriptors_num" = "x"],[
+    AS_IF([test "x$squid_filedescriptors_limit" != "x"],[
       squid_filedescriptors_num=$squid_filedescriptors_limit
     ],[
       AC_MSG_NOTICE([Unable to detect filedescriptor limits. Assuming 256 is okay.])
@@ -462,12 +459,12 @@ int main(int argc, char **argv)
 	return 0;
 }
 ]])],[SQUID_TCP_SO_SNDBUF=`cat conftestval`],[SQUID_TCP_SO_SNDBUF=16384],[SQUID_TCP_SO_SNDBUF=16384])
-AC_MSG_RESULT($SQUID_TCP_SO_SNDBUF)
-if test $SQUID_TCP_SO_SNDBUF -gt 32768; then
+  AC_MSG_RESULT($SQUID_TCP_SO_SNDBUF)
+  AS_IF([test $SQUID_TCP_SO_SNDBUF -gt 32768],[
     AC_MSG_NOTICE([Limiting send buffer size to 32K])
     SQUID_TCP_SO_SNDBUF=32768
-fi
-AC_DEFINE_UNQUOTED(SQUID_TCP_SO_SNDBUF, $SQUID_TCP_SO_SNDBUF,[TCP send buffer size])
+  ])
+  AC_DEFINE_UNQUOTED(SQUID_TCP_SO_SNDBUF, $SQUID_TCP_SO_SNDBUF,[TCP send buffer size])
 ])
 
 
@@ -516,12 +513,12 @@ int main(int argc, char **argv)
 	return 0;
 }
 ]])],[SQUID_TCP_SO_RCVBUF=`cat conftestval`],[SQUID_TCP_SO_RCVBUF=16384],[SQUID_TCP_SO_RCVBUF=16384])
-AC_MSG_RESULT($SQUID_TCP_SO_RCVBUF)
-if test $SQUID_TCP_SO_RCVBUF -gt 65535; then
+  AC_MSG_RESULT($SQUID_TCP_SO_RCVBUF)
+  AS_IF([test $SQUID_TCP_SO_RCVBUF -gt 65535],[
     AC_MSG_NOTICE([Limiting receive buffer size to 64K])
     SQUID_TCP_SO_RCVBUF=65535
-fi
-AC_DEFINE_UNQUOTED(SQUID_TCP_SO_RCVBUF, $SQUID_TCP_SO_RCVBUF,[TCP receive buffer size])
+  ])
+  AC_DEFINE_UNQUOTED(SQUID_TCP_SO_RCVBUF, $SQUID_TCP_SO_RCVBUF, [TCP receive buffer size])
 ])
 
 
@@ -633,12 +630,12 @@ AC_DEFUN([SQUID_CHECK_RESOLVER_FIELDS],[
     [[_res_ext.nsaddr_list[[0]].s_addr;]])],[
       ac_cv_have_res_ext_nsaddr_list="yes" ],[
       ac_cv_have_res_ext_nsaddr_list="no"]))
-  if test "$ac_cv_have_res_ext_nsaddr_list" = "yes" ; then
+  AS_IF([test "x$ac_cv_have_res_ext_nsaddr_list" = "xyes"],[
     AC_DEFINE(_SQUID_RES_NSADDR6_LARRAY,_res_ext.nsaddr_list,[If _res_ext structure has nsaddr_list member])
     AC_DEFINE(_SQUID_RES_NSADDR6_COUNT,ns6count,[Nameserver Counter for IPv6 _res_ext])
-  fi
+  ])
 
-if test "$_SQUID_RES_NSADDR6_LIST" = ""; then
+AS_IF([test "x$_SQUID_RES_NSADDR6_LIST" = "x"],[
   AC_CACHE_CHECK(for _res._u._ext.nsaddrs, ac_cv_have_res_ext_nsaddrs,
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #if HAVE_SYS_TYPES_H
@@ -659,11 +656,11 @@ if test "$_SQUID_RES_NSADDR6_LIST" = ""; then
     ]], i
     [[_res._u._ext.nsaddrs[[0]]->sin6_addr;]])],
     [ac_cv_have_res_ext_nsaddrs="yes"],[ac_cv_have_res_ext_nsaddrs="no"]))
-  if test "$ac_cv_have_res_ext_nsaddrs" = "yes" ; then
+  AS_IF([test "x$ac_cv_have_res_ext_nsaddrs" = "xyes"],[
     AC_DEFINE(_SQUID_RES_NSADDR6_LPTR,_res._u._ext.nsaddrs,[If _res structure has _ext.nsaddrs member])
     AC_DEFINE(_SQUID_RES_NSADDR6_COUNT,_res._u._ext.nscount6,[Nameserver Counter for IPv6 _res])
-  fi
-fi
+  ])
+])
 
 AC_CACHE_CHECK(for _res.nsaddr_list, ac_cv_have_res_nsaddr_list,
   AC_COMPILE_IFELSE([
@@ -685,12 +682,12 @@ AC_CACHE_CHECK(for _res.nsaddr_list, ac_cv_have_res_nsaddr_list,
 #endif
   ]], [[_res.nsaddr_list[[0]];]])],
   [ac_cv_have_res_nsaddr_list="yes"],[ac_cv_have_res_nsaddr_list="no"]))
-  if test $ac_cv_have_res_nsaddr_list = "yes" ; then
+  AS_IF([test "x$ac_cv_have_res_nsaddr_list" = "xyes"],[
     AC_DEFINE(_SQUID_RES_NSADDR_LIST,_res.nsaddr_list,[If _res structure has nsaddr_list member])
     AC_DEFINE(_SQUID_RES_NSADDR_COUNT,_res.nscount,[Nameserver counter for IPv4 _res])
-  fi
+  ])
 
-  if test "$_SQUID_RES_NSADDR_LIST" = ""; then
+  AS_IF([test "x$_SQUID_RES_NSADDR_LIST" = "x"],[
     AC_CACHE_CHECK(for _res.ns_list, ac_cv_have_res_ns_list,
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #if HAVE_SYS_TYPES_H
@@ -708,14 +705,13 @@ AC_CACHE_CHECK(for _res.nsaddr_list, ac_cv_have_res_nsaddr_list,
 #if HAVE_RESOLV_H
 #include <resolv.h>
 #endif
-  ]],
-  [[_res.ns_list[[0]].addr;]])],
+  ]],[[_res.ns_list[[0]].addr;]])],
   [ac_cv_have_res_ns_list="yes"],[ac_cv_have_res_ns_list="no"]))
-  if test $ac_cv_have_res_ns_list = "yes" ; then
-    AC_DEFINE(_SQUID_RES_NSADDR_LIST,_res.ns_list,[If _res structure has ns_list member])
-    AC_DEFINE(_SQUID_RES_NSADDR_COUNT,_res.nscount,[Nameserver counter for IPv4 _res])
-  fi
-fi
+    AS_IF([test "x$ac_cv_have_res_ns_list" = "xyes"],[
+      AC_DEFINE(_SQUID_RES_NSADDR_LIST,_res.ns_list,[If _res structure has ns_list member])
+      AC_DEFINE(_SQUID_RES_NSADDR_COUNT,_res.nscount,[Nameserver counter for IPv4 _res])
+    ])
+  ])
 ])
 
 
@@ -757,8 +753,7 @@ dnl check that setresuid is properly implemented.
 dnl sets squid_cv_resuid_works to "yes" or "no"
 AC_DEFUN([SQUID_CHECK_SETRESUID_WORKS],[
   AC_CACHE_CHECK(if setresuid is actually implemented, squid_cv_resuid_works,
-    AC_RUN_IFELSE([
-      AC_LANG_SOURCE([[
+    AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #if HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
@@ -775,9 +770,7 @@ AC_DEFUN([SQUID_CHECK_SETRESUID_WORKS],[
     }
     return 0;
   }
-  ]])],[
-    squid_cv_resuid_works="yes" ],[
-    squid_cv_resuid_works="no" ],[:])
+    ]])],[squid_cv_resuid_works="yes"],[squid_cv_resuid_works="no"],[:])
   )
 ])
 
@@ -810,7 +803,7 @@ int main (int argc, char ** argv) {
 
 dnl check whether Solaris has broken IPFilter headers (Solaris 10 at least does)
 AC_DEFUN([SQUID_CHECK_BROKEN_SOLARIS_IPFILTER],[
-  if test "x$squid_cv_broken_ipfilter_minor_t" = "x"; then
+  AS_IF([test "x$squid_cv_broken_ipfilter_minor_t" = "x"],[
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #     include <sys/types.h>
 #     include <sys/time.h>
@@ -842,7 +835,7 @@ AC_DEFUN([SQUID_CHECK_BROKEN_SOLARIS_IPFILTER],[
         AC_MSG_ERROR(unable to make IPFilter work with netinet/ headers)
       ])
     ])
-  fi
+  ])
 
   AC_DEFINE_UNQUOTED(USE_SOLARIS_IPFILTER_MINOR_T_HACK,$squid_cv_broken_ipfilter_minor_t,
     [Workaround IPFilter minor_t breakage])

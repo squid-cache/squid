@@ -75,9 +75,7 @@ AC_DEFUN([SQUID_LOOK_FOR_MODULES],[
 $2=""
 for dir in $1/*; do
   module="`basename $dir`"
-  if test -d "$dir" && test "$module" != CVS; then
-      $2="$$2 $module"
-  fi
+  AS_IF([test -d "$dir" -a "$module" != "CVS"], $2="$$2 $module")
 done
 ])
 
@@ -90,14 +88,14 @@ do
   squid_cleanup_tmp_dupe=0
   for squid_cleanup_tmp2 in $squid_cleanup_tmp_outlist
   do
-    if test "$squid_cleanup_tmp" = "$squid_cleanup_tmp2"; then
+    AS_IF([test "$squid_cleanup_tmp" = "$squid_cleanup_tmp2"],[
       squid_cleanup_tmp_dupe=1
       break
-    fi
+    ])
   done
-  if test $squid_cleanup_tmp_dupe -eq 0; then
+  AS_IF([test $squid_cleanup_tmp_dupe -eq 0],[
     squid_cleanup_tmp_outlist="${squid_cleanup_tmp_outlist} $squid_cleanup_tmp"
-  fi
+  ])
 done
 $1=$squid_cleanup_tmp_outlist
 unset squid_cleanup_tmp_outlist
@@ -118,13 +116,12 @@ dnl and $foo_module_candidates_gazonk to "yes"
 AC_DEFUN([SQUID_CHECK_EXISTING_MODULES],[
   for squid_module_check_exist_tmp in $$2
   do
-    if test -d $1/$squid_module_check_exist_tmp
-    then
+    AS_IF([test -d $1/$squid_module_check_exist_tmp],[
       eval "$2_$squid_module_check_exist_tmp='yes'"
       #echo "defining $2_$squid_module_check_exist_tmp"
-    else
+    ],[
       AC_MSG_ERROR([$squid_module_check_exist_tmp not found in $1])
-    fi
+    ])
   done
 ])
 
@@ -160,9 +157,7 @@ unset squid_tmp_define
 dnl aborts with an error specified as the second argument if the first argument doesn't
 dnl contain either "yes" or "no"
 AC_DEFUN([SQUID_YESNO],[
-if test "$1" != "yes" -a "$1" != "no" ; then
-  AC_MSG_ERROR([$2])
-fi
+  AS_IF([test "$1" != "yes" -a "$1" != "no"],[AC_MSG_ERROR([$2])])
 ])
 
 dnl check the build parameters for a library to auto-enable
@@ -205,22 +200,22 @@ AC_DEFUN([SQUID_EMBED_BUILD_INFO],[
     AS_CASE(["$enableval"],
       [no],[:],
       [yes],[
-        if test -d "${srcdir}/.bzr"; then
+        AS_IF([test -d "${srcdir}/.bzr"],[
           AC_PATH_PROG(BZR,bzr,$FALSE)
           squid_bzr_branch_nick=`cd ${srcdir} && ${BZR} nick 2>/dev/null`
-          if test $? -eq 0 -a "x$squid_bzr_branch_nick" != "x"; then
+          AS_IF([test $? -eq 0 -a "x$squid_bzr_branch_nick" != "x"],[
             squid_bzr_branch_revno=`cd ${srcdir} && ${BZR} revno 2>/dev/null | sed 's/\"//g'`
-          fi
-          if test $? -eq 0 -a "x$squid_bzr_branch_revno" != "x"; then
+          ])
+          AS_IF([test $? -eq 0 -a "x$squid_bzr_branch_revno" != "x"],[
             sh -c "cd ${srcdir} && ${BZR} diff 2>&1 >/dev/null"
-            if test $? -eq 1; then
+            AS_IF([test $? -eq 1],[
               squid_bzr_branch_revno="$squid_bzr_branch_revno+changes"
-            fi
-          fi
-          if test "x$squid_bzr_branch_revno" != "x"; then
+            ])
+          ])
+          AS_IF([test "x$squid_bzr_branch_revno" != "x"],[
             squid_build_info="Built branch: ${squid_bzr_branch_nick}-r${squid_bzr_branch_revno}"
-          fi
-        fi
+          ])
+        ])
       ],
       [squid_build_info=$enableval]
     )
@@ -237,12 +232,12 @@ AC_CACHE_CHECK([for library containing $1], [ac_Search],
 [ac_func_search_save_LIBS=$LIBS
 AC_LANG_CONFTEST([AC_LANG_PROGRAM([$6], [$1()])])
 for ac_lib in '' $2; do
-  if test -z "$ac_lib"; then
+  AS_IF([test -z "$ac_lib"],[
     ac_res="none required"
-  else
+  ],[
     ac_res=-l$ac_lib
     LIBS="-l$ac_lib $5 $ac_func_search_save_LIBS"
-  fi
+  ])
   AC_LINK_IFELSE([], [AS_VAR_SET([ac_Search], [$ac_res])])
   AS_VAR_SET_IF([ac_Search], [break])
 done
@@ -250,10 +245,9 @@ AS_VAR_SET_IF([ac_Search], , [AS_VAR_SET([ac_Search], [no])])
 rm conftest.$ac_ext
 LIBS=$ac_func_search_save_LIBS])
 ac_res=AS_VAR_GET([ac_Search])
-AS_IF([test "$ac_res" != no],
-  [test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-  $3],
-      [$4])
+AS_IF([test "$ac_res" != no],[
+  AS_IF([test "$ac_res" != "none required"],[LIBS="$ac_res $LIBS"])
+  $3],[$4])
 AS_VAR_POPDEF([ac_Search])dnl
 ])
 
@@ -267,19 +261,19 @@ AC_DEFUN([SQUID_CHECK_SASL],[
     ])
   ])
   AS_IF([test "$squid_host_os" = "Darwin"],[
-    if test "$ac_cv_lib_sasl2_sasl_errstring" = "yes" ; then
+    AS_IF([test "$ac_cv_lib_sasl2_sasl_errstring" = "yes"],[
       AC_DEFINE(HAVE_SASL_DARWIN,1,[Define to 1 if Mac Darwin without sasl.h])
       echo "checking for MAC Darwin without sasl.h ... yes"
       squid_cv_check_sasl="yes"
-    else
+    ],[
       echo "checking for MAC Darwin without sasl.h ... no"
       squid_cv_check_sasl="no"
-    fi
+    ])
   ])
-  if test "x$squid_cv_check_sasl" = "xno"; then
+  AS_IF([test "x$squid_cv_check_sasl" = "xno"],[
     AC_MSG_WARN([Neither SASL nor SASL2 found])
-  else
+  ],[
     squid_cv_check_sasl="yes"
-  fi
+  ])
   AC_SUBST(LIBSASL)
 ])
