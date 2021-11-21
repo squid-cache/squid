@@ -17,8 +17,7 @@ AC_DEFUN([SQUID_CC_CHECK_ARGUMENT],[
     SQUID_STATE_SAVE([ARGCHECK])
     CFLAGS="$CFLAGS $2"
     CXXFLAGS="$CXXFLAGS $2"
-    AC_TRY_LINK([],[],
-      [$1=yes],[$1=no])
+    AC_LINK_IFELSE([],[$1=yes],[$1=no])
     SQUID_STATE_ROLLBACK([ARGCHECK])
   ])
 ])
