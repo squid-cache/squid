@@ -54,7 +54,7 @@ AC_SUBST(SECURITY_CERTGEN_HELPERS)
 
 # XXX: Enabling the interface in Squid still requires separate option
 AC_ARG_ENABLE(ssl-crtd,
-  AC_HELP_STRING([--enable-ssl-crtd],
+  AS_HELP_STRING([--enable-ssl-crtd],
                  [Prevent Squid from directly generating TLS/SSL private key
                   and certificate. Instead enables the certificate generator
                   processes.]), [
