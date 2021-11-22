@@ -374,25 +374,23 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
         //Hello message is the first message we write to server
         assert(helloMsg.isEmpty());
 
-        if (auto ssl = fd_table[fd_].ssl.get()) {
-            if (bumpMode_ == Ssl::bumpPeek) {
-                // we should not be here if we failed to parse the client-sent ClientHello
-                Must(!clientSentHello.isEmpty());
-                allowSplice = true;
-                // Replace OpenSSL-generated ClientHello with client-sent one.
-                helloMsg.append(clientSentHello);
-                debugs(83, 7,  "FD " << fd_ << ": Using client-sent ClientHello for peek mode");
-            } else { /*Ssl::bumpStare*/
-                allowBump = true;
-            }
+        if (bumpMode_ == Ssl::bumpPeek) {
+            // we should not be here if we failed to parse the client-sent ClientHello
+            Must(!clientSentHello.isEmpty());
+            allowSplice = true;
+            // Replace OpenSSL-generated ClientHello with client-sent one.
+            helloMsg.append(clientSentHello);
+            debugs(83, 7,  "FD " << fd_ << ": Using client-sent ClientHello for peek mode");
+        } else { /*Ssl::bumpStare*/
+            allowBump = true;
         }
+
         // if we did not use the client-sent ClientHello, then use the OpenSSL-generated one
         if (helloMsg.isEmpty())
             helloMsg.append(buf, size);
 
         helloBuild = true;
         helloMsgSize = helloMsg.length();
-        //allowBump = true;
 
         if (allowSplice) {
             // Do not write yet.....
