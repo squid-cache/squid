@@ -457,7 +457,6 @@ AC_ARG_ENABLE(disk-io,
     [no],[squid_opt_enable_diskio="no"],
     [
       squid_opt_enable_diskio="yes"
-      squid_disk_module_candidates=" `echo $enableval| sed -e 's/,/ /g;s/  */ /g'` "
       SQUID_CLEANUP_MODULES_LIST([squid_disk_module_candidates])
   ])
 ])

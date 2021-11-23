@@ -79,11 +79,11 @@ for dir in $1/*; do
 done
 ])
 
-dnl remove duplicates out of a list.
+dnl remove commas, extra whitespace, and duplicates out of a list.
 dnl argument is the name of a variable to be checked and cleaned up
 AC_DEFUN([SQUID_CLEANUP_MODULES_LIST],[
 squid_cleanup_tmp_outlist=""
-for squid_cleanup_tmp in $$1
+for squid_cleanup_tmp in `echo "$$1" | sed -e 's/,/ /g;s/  */ /g'`
 do
   squid_cleanup_tmp_dupe=0
   for squid_cleanup_tmp2 in $squid_cleanup_tmp_outlist
@@ -123,6 +123,60 @@ AC_DEFUN([SQUID_CHECK_EXISTING_MODULES],[
       AC_MSG_ERROR([$squid_module_check_exist_tmp not found in $1])
     ])
   done
+])
+
+dnl Check the requirements for a helper to be built.
+dnl Requirements can be provided as an M4/autoconf script (required.m4)
+dnl which sets a variable BUILD_HELPER to the name of the helper
+dnl directory if the helper is to be added to the built SUBDIRS list.
+dnl Or, a shell script (config.test) which returns 0 exit status if
+dnl the helper is to be built.
+AC_DEFUN([SQUID_CHECK_HELPER],[
+  AS_IF([test "x$helper" = "x$1"],[
+    AS_IF([test -d "$ac_top_srcdir/src/$2/$1"],[
+      dnl find helpers providing autoconf M4 requirement checks
+      m4_include(m4_echo([src/$2/$1/required.m4]))
+      dnl find helpers not yet converted to autoconf (or third party drop-in's)
+      AS_IF([test -f "$ac_top_srcdir/src/$2/$1/config.test" && sh "$ac_top_srcdir/src/$2/$1/config.test" "$squid_host_os"],[
+        BUILD_HELPER="$1"
+      ])
+      AS_IF(
+        [test "x$BUILD_HELPER" = "x$1"],
+          squid_cv_BUILD_HELPERS="$squid_cv_BUILD_HELPERS $BUILD_HELPER",
+        [test "x$auto_helpers" = "xyes"],
+          AC_MSG_NOTICE([helper $2/$1 ... found but cannot be built]),
+        [AC_MSG_ERROR([required helper $2/$1 ... found but cannot be built])]
+      )
+    ],[
+      AC_MSG_ERROR([helper $2/$1 ... not found])
+    ])
+    unset BUILD_HELPER
+  ])
+])
+
+dnl macro to simplify and deduplicate logic in all helpers.m4 files
+dnl Usage:
+dnl SQUID_HELPER_FEATURE_CHECK(var_name, default, path, checks)
+dnl
+AC_DEFUN([SQUID_HELPER_FEATURE_CHECK],[
+  auto_helpers=no
+  squid_cv_BUILD_HELPERS=""
+  AS_IF([test "x$enable_$1" = "x"],[enable_$1=$2],
+    [test "x$enable_$1" = "xnone"],[enable_$1=""])
+  AS_IF([test "x$enable_$1" = "xyes"],[
+    SQUID_LOOK_FOR_MODULES([$$ac_top_srcdir/src/$3], enable_$1)
+    auto_helpers=yes
+  ])
+  SQUID_CLEANUP_MODULES_LIST([enable_$1])
+  AC_MSG_NOTICE([checking $3 helpers: $enable_$1])
+  AS_IF([test "x$enable_$1" != "xno" -a test "x$enable_$1" != "x"],[
+    SQUID_CHECK_EXISTING_MODULES([$$ac_top_srcdir/src/$3],[enable_$1])
+    for helper in $enable_$1 ; do
+      $4
+    done
+  ])
+  AC_MSG_NOTICE([$3 helpers to be built: $squid_cv_BUILD_HELPERS])
+  unset auto_helpers
 ])
 
 dnl lowercases the contents of the variable whose name is passed by argument
