@@ -2624,13 +2624,8 @@ SQUID_BSDNET_INCLUDES)
 AC_C_CONST
 AC_C_BIGENDIAN
 
-AC_STRUCT_TM
 AC_CHECK_MEMBERS([struct tm.tm_gmtoff],,,[
-#if TM_IN_SYS_TIME
-#if HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
-#elif HAVE_TIME_H
+#if HAVE_TIME_H
 #include <time.h>
 #endif
 ])
