@@ -22,16 +22,9 @@
 #if defined(assert)
 #undef assert
 #endif
-
-#if PURIFY
-#define assert(EX) ((void)0)
-#elif defined(NODEBUG)
-#define assert(EX) ((void)0)
-#elif STDC_HEADERS
-#define assert(EX)  ((EX)?((void)0):xassert( # EX , __FILE__, __LINE__))
-#else
-#define assert(EX)  ((EX)?((void)0):xassert("EX", __FILE__, __LINE__))
-#endif
+// re-do custom assert definitions
+#undef SQUID_ASSERT_H
+#include "compat/assert.h"
 
 /* defined debug section limits */
 #define MAX_DEBUG_SECTIONS 100
