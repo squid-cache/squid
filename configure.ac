@@ -2508,8 +2508,6 @@ AS_IF([test "x$with_cppunit" != "xno"],[
 ])
 
 dnl Check for headers
-AC_HEADER_DIRENT
-
 AC_CHECK_HEADERS( \
   arpa/inet.h \
   arpa/nameser.h \
@@ -2518,6 +2516,7 @@ AC_CHECK_HEADERS( \
   crypt.h \
   ctype.h \
   direct.h \
+  dirent.h \
   errno.h \
   execinfo.h \
   fcntl.h \
