@@ -369,7 +369,7 @@ SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wwrite-strings])
 SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wcomments])
 SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wshadow])
 SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wmissing-declarations])
-SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Woverloaded_virtual])
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Woverloaded-virtual])
 
 dnl CentOS (and RHEL) still define ntohs() using deprecated C++ features
 SQUID_CC_REQUIRE_ARGUMENT([ac_cv_require_wno_deprecated_register],[-Werror -Wno-deprecated-register],[[#include <arpa/inet.h>]],[[int fox=ntohs(1);]])
