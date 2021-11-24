@@ -3173,20 +3173,23 @@ AS_IF([test "x$enable_ipf_transparent" != "xno"],[
   SQUID_CHECK_BROKEN_SOLARIS_IPFILTER
   AC_MSG_CHECKING(for availability of IP-Filter header files)
   # hold on to your hats...
-  AS_IF([test "x$ac_cv_header_ip_compat_h" = "xyes" -o \
+  AS_IF(
+  [test "x$ac_cv_header_ip_compat_h" = "xyes" -o \
     "x$ac_cv_header_ip_fil_compat_h" = "xyes" -o \
     "x$ac_cv_header_netinet_ip_compat_h" = "xyes" -o \
-    "x$ac_cv_header_netinet_ip_fil_compat_h" = "xyes"
-  ],[have_ipfilter_compat_header="yes"])
+    "x$ac_cv_header_netinet_ip_fil_compat_h" = "xyes"],
+  [have_ipfilter_compat_header="yes"])
 
-  AS_IF([test "x$have_ipfilter_compat_header" = "xyes" -a \
+  AS_IF(
+  [test "x$have_ipfilter_compat_header" = "xyes" -a \
     "x$ac_cv_header_ip_fil_h" = "xyes" -a \
-    "x$ac_cv_header_ip_nat_h" = "xyes"
-  ],[enable_ipf_transparent="yes"],
+    "x$ac_cv_header_ip_nat_h" = "xyes"],[enable_ipf_transparent="yes"],
+
   [test "x$have_ipfilter_compat_header" = "xyes" -a \
     "x$ac_cv_header_netinet_ip_fil_h" = "xyes" -a \
-    "x$ac_cv_header_netinet_ip_nat_h" = "xyes"
-  ],[enable_ipf_transparent="yes"],[enable_ipf_transparent="no"])
+    "x$ac_cv_header_netinet_ip_nat_h" = "xyes"],[enable_ipf_transparent="yes"],
+  [enable_ipf_transparent="no"])
+
   AC_MSG_RESULT($IPF_TRANSPARENT)
 
 ## On Solaris Ipfilter includes expect that SOLARIS2 is defined with the
