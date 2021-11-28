@@ -361,7 +361,6 @@ void Adaptation::Icap::Xaction::noteCommTimedout(const CommTimeoutCbParams &)
            theService->cfg().uri << status());
     reuseConnection = false;
     assert(haveConnection());
-    theService->noteConnectionFailed("timedout");
     closeConnection();
     throw TextException("timed out while talking to the ICAP service", Here());
 }
