@@ -112,6 +112,8 @@ void Adaptation::Icap::ServiceRep::noteFailure()
     // should be configurable.
 }
 
+// TODO: getIdleConnection() and putConnection()/noteConnectionFailed() manage a
+// "used connection slot" resource. Automate that resource tracking (RAII/etc.).
 Comm::ConnectionPointer
 Adaptation::Icap::ServiceRep::getIdleConnection(const bool retriableXact)
 {
