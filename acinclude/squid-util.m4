@@ -116,7 +116,7 @@ dnl and $foo_module_candidates_gazonk to "yes"
 AC_DEFUN([SQUID_CHECK_EXISTING_MODULES],[
   for squid_module_check_exist_tmp in $$2
   do
-    AS_IF([test -d $1/$squid_module_check_exist_tmp],[
+    AS_IF([test -d "$1/$squid_module_check_exist_tmp"],[
       eval "$2_$squid_module_check_exist_tmp='yes'"
       #echo "defining $2_$squid_module_check_exist_tmp"
     ],[

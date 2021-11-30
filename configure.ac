@@ -63,7 +63,7 @@ AS_IF([test "x${enable_arch_native}" != "xno"],[
 # NP: BUILDCXXFLAGS defined at the end of configure after CXXFLAGS fully known.
 AC_ARG_VAR([BUILDCXX],[path to compiler for building compile-time tools. e.g. cf_gen])
 AS_IF([test "x$HOSTCXX" != "x" -a "x$BUILDCXX" = "x"],[
-  AC_MSG_WARN([Cross-compiling with HOSTCXX is deprecated. Uses BUILDCXX instead.])
+  AC_MSG_WARN([Cross-compiling with HOSTCXX is deprecated. Use BUILDCXX instead.])
   BUILDCXX="$HOSTCXX"
 ])
 AS_IF([test "x$BUILDCXX" = "x"],[
@@ -149,14 +149,13 @@ AC_MSG_NOTICE([strict error checking enabled: ${enable_strict_error_checking:=ye
 # LT_INIT requires libtool v2, might as well state it loud
 LT_PREREQ([2.2])
 LT_INIT([dlopen])
-if ! test "${ac_top_build_prefix}" = "";
-then
-	# LTDL v3-v7 macros assume the autoconf 2.62 variable top_build_prefix is defined
-	# But from autoconf 2.64 its called ac_top_build_prefix and not automatically added to the Makefile
-	# This fixes Linux LTDLv3-v7, and BSD LTDL v2.2
-	top_build_prefix=${ac_top_build_prefix}
-	AC_SUBST(top_build_prefix)
-fi
+AS_IF([test "x$ac_top_build_prefix" != "x"],[
+  # LTDL v3-v7 macros assume the autoconf 2.62 variable top_build_prefix is defined
+  # But from autoconf 2.64 its called ac_top_build_prefix and not automatically added to the Makefile
+  # This fixes Linux LTDLv3-v7, and BSD LTDL v2.2
+  top_build_prefix=${ac_top_build_prefix}
+  AC_SUBST(top_build_prefix)
+])
 LTDL_INIT
 
 dnl LibTool environment is now prepared for setup. Check that it is usable and initialize.
@@ -184,7 +183,7 @@ AC_SUBST(CGIEXT)
 AM_CONDITIONAL(ENABLE_WIN32SPECIFIC,[test "x$squid_host_os" = "xmingw"])
 AM_CONDITIONAL(ENABLE_WIN32_IPC,[test "x$squid_host_os" = "xmingw"])
 
-AS_CASE([$squid_host_os],
+AS_CASE(["$squid_host_os"],
   [mingw],[
     AC_PATH_PROG(WIN32_PSAPI, psapi.dll, none)
     CFLAGS="$CFLAGS -mthreads"
@@ -3260,7 +3259,7 @@ SQUID_DEFINE_BOOL(USE_QOS_TOS,${enable_zph_qos:=yes},
           [Enable Zero Penalty Hit QOS. When set, Squid will alter the
            TOS field of HIT responses to help policing network traffic])
 AC_MSG_NOTICE([ZPH QOS enabled: $enable_zph_qos])
-AS_IF(test x"$enable_zph_qos" = "xyes"],[
+AS_IF(test "x$enable_zph_qos" = "xyes"],[
   AC_MSG_NOTICE([QOS netfilter mark preservation enabled: $with_netfilter_conntrack])
   SQUID_DEFINE_BOOL(USE_LIBNETFILTERCONNTRACK,${with_netfilter_conntrack:=no},
     [Enable support for QOS netfilter mark preservation])
