@@ -18,7 +18,8 @@ class ACLData
 {
 
 public:
-
+    ACLData() = default;
+    ACLData(ACLData<M> &&) = delete; // no copying of any kind
     virtual ~ACLData() {}
 
     /// \returns the flags supported by these ACL parameters (e.g., "-i")
