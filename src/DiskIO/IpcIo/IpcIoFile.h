@@ -15,6 +15,7 @@
 #include "DiskIO/IORequestor.h"
 #include "ipc/forward.h"
 #include "ipc/mem/Page.h"
+#include "mem/PoolingAllocator.h"
 #include "SquidString.h"
 #include <list>
 #include <map>
@@ -140,8 +141,9 @@ private:
 
     unsigned int lastRequestId; ///< last requestId used
 
+    typedef std::pair<unsigned int, IpcIoPendingRequest*> RequestMapItem;
     /// maps requestId to the handleResponse callback
-    typedef std::map<unsigned int, IpcIoPendingRequest*> RequestMap;
+    typedef std::map<unsigned int, IpcIoPendingRequest*, std::less<unsigned int>, PoolingAllocator<RequestMapItem> > RequestMap;
     RequestMap requestMap1; ///< older (or newer) pending requests
     RequestMap requestMap2; ///< newer (or older) pending requests
     RequestMap *olderRequests; ///< older requests (map1 or map2)
@@ -154,8 +156,9 @@ private:
     typedef WaitingFiles::value_type FileWait;
     /// being open diskers, ordered by their absolute deadlines
     static WaitingFiles WaitingForOpen;
-    static void StartWaiting(const Pointer &);
-    static IpcIoFile::Pointer StopWaiting(const Ipc::StrandCoord &);
+    static void StartWaitingFor(const Pointer &);
+    static void StartWaiting();
+    static Pointer StopWaiting(const Ipc::StrandCoord &);
 
     ///< maps diskerId to IpcIoFile, cleared in destructor
     typedef std::map<int, IpcIoFile*> IpcIoFilesMap;

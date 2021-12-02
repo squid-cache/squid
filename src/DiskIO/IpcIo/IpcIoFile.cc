@@ -155,7 +155,7 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
     request.pack(msg);
     Ipc::SendMessage(Ipc::Port::CoordinatorAddr(), msg);
 
-    StartWaiting(this);
+    StartWaitingFor(this);
 }
 
 void
@@ -451,27 +451,32 @@ IpcIoFile::HandleStrandReadyResponse(const Ipc::StrandReady &response)
     if (const auto file = StopWaiting(response.strand))
         file->openCompleted(&response);
     else
-        debugs(47, 4, "premature or late disker response");
+        debugs(47, 4, "late disker response");
 }
 
-/// reschedules IpcIoFile open request timeout for the head of the waiting queue
+/// start monitoring IpcIoFile open request timeout
 /// \param file an IpcIoFile to be queued
 void
-IpcIoFile::StartWaiting(const Pointer &file)
+IpcIoFile::StartWaitingFor(const Pointer &file)
 {
-    if (file) {
-        auto expireTime = current_time;
-        expireTime.tv_sec += Timeout;
-        WaitingForOpen.emplace(expireTime, file);
-    }
+    assert(file);
+    auto expireTime = current_time;
+    expireTime.tv_sec += Timeout;
+    WaitingForOpen.emplace(expireTime, file);
+    StartWaiting();
+}
 
+/// restart monitoring IpcIoFile open request timeout
+void
+IpcIoFile::StartWaiting()
+{
     assert(!WaitingForOpen.empty());
     eventDelete(&IpcIoFile::OpenTimeout, nullptr); // deletes all OpenTimeout handlers
     const auto interval = tvSubDsec(current_time, WaitingForOpen.begin()->first);
     eventAdd("IpcIoFile::OpenTimeout", &IpcIoFile::OpenTimeout, nullptr, interval, 0, false);
 }
 
-/// removes the IpcIoFile specified by the response from the waiting queue
+/// returns the matching IpcIoFile (after removing it from the wait queue) or nil
 IpcIoFile::Pointer
 IpcIoFile::StopWaiting(const Ipc::StrandCoord &responseStrand)
 {
@@ -480,6 +485,8 @@ IpcIoFile::StopWaiting(const Ipc::StrandCoord &responseStrand)
     if (it != WaitingForOpen.end()) {
         const auto file = it->second;
         WaitingForOpen.erase(it);
+        if (WaitingForOpen.empty())
+            eventDelete(&IpcIoFile::OpenTimeout, nullptr);
         return file;
     }
     return nullptr;
@@ -490,11 +497,9 @@ IpcIoFile::HandleStrandBusyResponse(const Ipc::StrandMessage &response)
 {
     assert(opt_foreground_rebuild);
     debugs(47, 7, "disker" << response.strand.kidId << " foreground rebuild is still in progress");
-    const auto file = StopWaiting(response.strand);
-    if (file) {
-        // reschedule open timeout
-        StartWaiting(file);
-    } // else: ignore a presumably late message
+    if (const auto file = StopWaiting(response.strand))
+        StartWaitingFor(file); // schedule open timeout
+    // else: ignore a presumably late response
 }
 
 void
@@ -571,11 +576,11 @@ IpcIoFile::OpenTimeout(void *const param)
 {
     while (!WaitingForOpen.empty() && current_time >= WaitingForOpen.begin()->first) {
         const auto file = WaitingForOpen.begin()->second;
-        file->openCompleted(nullptr);
         WaitingForOpen.erase(WaitingForOpen.begin());
+        file->openCompleted(nullptr);
     }
     if (!WaitingForOpen.empty())
-        StartWaiting(nullptr);
+        StartWaiting();
 }
 
 /// IpcIoFile::checkTimeouts wrapper
