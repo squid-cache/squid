@@ -36,8 +36,6 @@ class ACLIdent : public ACL
 
 public:
     ACLIdent(ACLData<char const *> *newData, char const *);
-    ACLIdent (ACLIdent const &old);
-    ACLIdent & operator= (ACLIdent const &rhs);
     ~ACLIdent();
 
     /* ACL API */
@@ -48,7 +46,6 @@ public:
     virtual int match(ACLChecklist *checklist);
     virtual SBufList dump() const;
     virtual bool empty () const;
-    virtual ACL *clone()const;
 
 private:
     ACLData<char const *> *data;

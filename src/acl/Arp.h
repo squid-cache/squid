@@ -25,11 +25,8 @@ class ACLARP : public ACL
 
 public:
     ACLARP(char const *);
-    ACLARP(ACLARP const &);
     ~ACLARP() {}
-    ACLARP&operator=(ACLARP const &);
 
-    virtual ACL *clone()const;
     virtual char const *typeString() const;
     virtual void parse();
     virtual int match(ACLChecklist *checklist);
