@@ -3495,13 +3495,10 @@ AC_ARG_ENABLE(gnuregex,
                  library built in.]), [
 SQUID_YESNO([$enableval],[unrecognized argument to --enable-gnuregex: $enableval])
 ])
-# force-enable on old solaris and nextstep
+# force-enable on old solaris
 if test "x${enable_gnuregex:=auto}" = "xauto" ; then
     case "$host" in
     *-sun-solaris2.[[0-4]])
-	  enable_gnuregex="yes"
-	  ;;
-    *-next-nextstep*)
 	  enable_gnuregex="yes"
 	  ;;
     esac
