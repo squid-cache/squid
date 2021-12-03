@@ -334,11 +334,6 @@ if test "x$PRESET_CFLAGS" = "x"; then
     case "$host" in
       *-sun-sunos*)
         # sunos has too many warnings for this to be useful
-        # motorola too
-        ;;
-      *m88k*)
-        # Motorola cc/ld does not like -02 but is ok on -O
-        CFLAGS=`echo $CFLAGS | sed -e 's/-O[0-9]/-O/'`
         ;;
       *)
         CFLAGS="$squid_cv_cc_option_wall $CFLAGS"
@@ -3125,12 +3120,6 @@ assert(myBar != NULL);
     fi
     ;;
 
-    *m88k*)
-      SQUID_CFLAGS="$SQUID_CFLAGS -D_SQUID_MOTOROLA_"
-      SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_SQUID_MOTOROLA_"
-      AC_DEFINE(GETTIMEOFDAY_NO_TZP,1,
-        [If gettimeofday is known to take only one argument])
-    ;;
     [*-*-solaris2.[0-4]])
       AC_DEFINE(GETTIMEOFDAY_NO_TZP,1)
     ;;
