@@ -3627,9 +3627,6 @@ AC_MSG_NOTICE([BUILD C++ FLAGS: $CXXFLAGS])
 AC_MSG_NOTICE([BUILD EXTRA C++ FLAGS: $SQUID_CXXFLAGS])
 AC_MSG_NOTICE([BUILD Tools C++ FLAGS: $BUILDCXXFLAGS])
 
-dnl Clean up after OSF/1 core dump bug
-rm -f core 
-
 AC_CONFIG_FILES([
 	Makefile
 	compat/Makefile

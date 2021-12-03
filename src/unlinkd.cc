@@ -202,10 +202,7 @@ unlinkdInit(void)
     localhost.setLocalhost();
 
     pid = ipcCreate(
-#if USE_POLL && _SQUID_OSF_
-              /* pipes and poll() don't get along on DUNIX -DW */
-              IPC_STREAM,
-#elif _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_
               /* select() will fail on a pipe */
               IPC_TCP_SOCKET,
 #else

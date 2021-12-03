@@ -34,9 +34,6 @@
 #elif defined(__hpux)       /* HP-UX - SysV-like? */
 #define _SQUID_HPUX_ 1
 
-#elif defined(__osf__)      /* OSF/1 */
-#define _SQUID_OSF_ 1
-
 #elif defined(_AIX)     /* AIX */
 #define _SQUID_AIX_ 1
 

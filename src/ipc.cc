@@ -74,10 +74,6 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     int x;
     int xerrno;
 
-#if USE_POLL && _SQUID_OSF_
-    assert(type != IPC_FIFO);
-#endif
-
     if (rfd)
         *rfd = -1;
 

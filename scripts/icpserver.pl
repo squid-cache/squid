@@ -49,7 +49,6 @@ if ($SERVER ne "0.0.0.0") { # i.e. multicast
     $IP_ADD_MEMBERSHIP=5;
     $whoami =~ /SunOS [^\s]+ 5/ && ($IP_MULTICAST_TTL=19);
     $whoami =~ /IRIX [^\s]+ 5/ && ($IP_MULTICAST_TTL=23);
-    $whoami =~ /OSF1/ && ($IP_MULTICAST_TTL=12);
     # any more funnies ?
 
     setsockopt(S, 0, $IP_ADD_MEMBERSHIP, $SERVERIP."\0\0\0\0")
