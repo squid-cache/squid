@@ -3067,6 +3067,7 @@ esac
 
 dnl System-specific library modifications
 dnl
+AH_TEMPLATE(GETTIMEOFDAY_NO_TZP,[If gettimeofday is known to take only one argument])
 case "$host" in
   i386-*-solaris2.*)
     if test "x$GCC" = "xyes"; then
