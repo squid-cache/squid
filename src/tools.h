@@ -88,11 +88,7 @@ void releaseServerSockets(void);
 void PrintRusage(void);
 void dumpMallocStats(void);
 
-#if _SQUID_NEXT_
-typedef union wait PidStatus;
-#else
 typedef int PidStatus;
-#endif
 
 /**
  * Compatibility wrapper function for waitpid
