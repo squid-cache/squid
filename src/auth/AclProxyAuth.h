@@ -48,7 +48,6 @@ public:
     virtual bool empty() const;
     virtual bool requiresRequest() const {return true;}
     virtual ACL *clone() const;
-    virtual int matchForCache(ACLChecklist *checklist);
 
 private:
     int matchProxyAuth(ACLChecklist *);

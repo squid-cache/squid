@@ -40,7 +40,7 @@ void Auth::Scheme::FreeAll() STUB
 void Auth::SchemesConfig::expand() STUB
 
 #include "auth/User.h"
-Auth::User::User(Auth::SchemeConfig *, const char *) STUB
+Auth::User::User(Auth::SchemeConfig *, const char *) : proxyAuthAclCache(0) {STUB}
 Auth::CredentialState Auth::User::credentials() const STUB_RETVAL(credentials_state)
 void Auth::User::credentials(CredentialState) STUB
 void Auth::User::absorb(Auth::User::Pointer) STUB

@@ -309,68 +309,6 @@ ACL::dumpOptions()
     return result;
 }
 
-/* ACL result caching routines */
-
-int
-ACL::matchForCache(ACLChecklist *)
-{
-    /* This is a fatal to ensure that cacheMatchAcl calls are _only_
-     * made for supported acl types */
-    fatal("aclCacheMatchAcl: unknown or unexpected ACL type");
-    return 0;       /* NOTREACHED */
-}
-
-/*
- * we lookup an acl's cached results, and if we cannot find the acl being
- * checked we check it and cache the result. This function is a template
- * method to support caching of multiple acl types.
- * Note that caching of time based acl's is not
- * wise in long lived caches (i.e. the auth_user proxy match cache)
- * RBC
- * TODO: does a dlink_list perform well enough? Kinkie
- */
-int
-ACL::cacheMatchAcl(dlink_list * cache, ACLChecklist *checklist)
-{
-    acl_proxy_auth_match_cache *auth_match;
-    dlink_node *link;
-    link = cache->head;
-
-    while (link) {
-        auth_match = (acl_proxy_auth_match_cache *)link->data;
-
-        if (auth_match->acl_data == this) {
-            debugs(28, 4, "ACL::cacheMatchAcl: cache hit on acl '" << name << "' (" << this << ")");
-            return auth_match->matchrv;
-        }
-
-        link = link->next;
-    }
-
-    auth_match = new acl_proxy_auth_match_cache(matchForCache(checklist), this);
-    dlinkAddTail(auth_match, &auth_match->link, cache);
-    debugs(28, 4, "ACL::cacheMatchAcl: miss for '" << name << "'. Adding result " << auth_match->matchrv);
-    return auth_match->matchrv;
-}
-
-void
-aclCacheMatchFlush(dlink_list * cache)
-{
-    acl_proxy_auth_match_cache *auth_match;
-    dlink_node *link, *tmplink;
-    link = cache->head;
-
-    debugs(28, 8, "aclCacheMatchFlush called for cache " << cache);
-
-    while (link) {
-        auth_match = (acl_proxy_auth_match_cache *)link->data;
-        tmplink = link;
-        link = link->next;
-        dlinkDelete(tmplink, cache);
-        delete auth_match;
-    }
-}
-
 bool
 ACL::requiresAle() const
 {

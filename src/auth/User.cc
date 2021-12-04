@@ -24,13 +24,13 @@
 Auth::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
     auth_type(Auth::AUTH_UNKNOWN),
     config(aConfig),
+    proxyAuthAclCache(1024),
     ipcount(0),
     expiretime(0),
     credentials_state(Auth::Unchecked),
     username_(nullptr),
     requestRealm_(aRequestRealm)
 {
-    proxy_match_cache.head = proxy_match_cache.tail = NULL;
     ip_list.head = ip_list.tail = NULL;
     debugs(29, 5, HERE << "Initialised auth_user '" << this << "'.");
 }
@@ -59,10 +59,7 @@ Auth::User::credentials(CredentialState newCreds)
 void
 Auth::User::absorb(Auth::User::Pointer from)
 {
-    /*
-     * XXX Incomplete: it should merge in hash references too and ask the module to merge in scheme data
-     *  dlink_list proxy_match_cache;
-     */
+    // XXX Incomplete: should merge proxyAuthAclCache and ask the module to merge in scheme data
 
     debugs(29, 5, HERE << "auth_user '" << from << "' into auth_user '" << this << "'.");
 
@@ -122,9 +119,6 @@ Auth::User::~User()
 {
     debugs(29, 5, HERE << "Freeing auth_user '" << this << "'.");
     assert(LockCount() == 0);
-
-    /* free cached acl results */
-    aclCacheMatchFlush(&proxy_match_cache);
 
     /* free seen ip address's */
     clearIp();

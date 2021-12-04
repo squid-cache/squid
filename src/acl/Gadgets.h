@@ -56,8 +56,6 @@ void aclDestroyDenyInfoList(AclDenyInfoList **);
 /// \ingroup ACLAPI
 wordlist *aclDumpGeneric(const ACL *);
 /// \ingroup ACLAPI
-void aclCacheMatchFlush(dlink_list * cache);
-/// \ingroup ACLAPI
 void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head);
 /// \ingroup ACLAPI
 void dump_acl_list(StoreEntry * entry, ACLList * head);

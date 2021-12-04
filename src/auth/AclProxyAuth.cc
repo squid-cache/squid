@@ -161,14 +161,6 @@ ACLProxyAuth::clone() const
     return new ACLProxyAuth(*this);
 }
 
-int
-ACLProxyAuth::matchForCache(ACLChecklist *cl)
-{
-    ACLFilledChecklist *checklist = Filled(cl);
-    assert (checklist->auth_user_request != NULL);
-    return data->match(checklist->auth_user_request->username());
-}
-
 /* aclMatchProxyAuth can return two exit codes:
  * 0 : Authorisation for this ACL failed. (Did not match)
  * 1 : Authorisation OK. (Matched)
@@ -182,9 +174,22 @@ ACLProxyAuth::matchProxyAuth(ACLChecklist *cl)
             return 0;
         }
     }
+
     /* check to see if we have matched the user-acl before */
-    int result = cacheMatchAcl(&checklist->auth_user_request->user()->proxy_match_cache, checklist);
-    checklist->auth_user_request = NULL;
+    auto &cache = checklist->auth_user_request->user()->proxyAuthAclCache;
+
+    // XXX: Allocation for cache lookup. TODO: Make ACL::name an SBuf.
+    const SBuf key(name);
+    if (const auto *cachedResult = cache.get(key)) {
+        debugs(28, 4, "cache hit on ACL " << key << "=" << *cachedResult);
+        checklist->auth_user_request = nullptr;
+        return *cachedResult;
+    }
+
+    const auto result = data->match(checklist->auth_user_request->username());
+    debugs(28, 4, "cache miss on acl " << key << ". Adding " << result);
+    cache.add(key, result, (checklist->auth_user_request->user()->expiretime - squid_curtime));
+    checklist->auth_user_request = nullptr;
     return result;
 }
 
