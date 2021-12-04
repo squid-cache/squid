@@ -16,11 +16,6 @@
 
 int ACLMethodData::ThePurgeCount = 0;
 
-ACLMethodData::ACLMethodData(ACLMethodData const &old)
-{
-    assert(old.values.empty());
-}
-
 ACLMethodData::~ACLMethodData()
 {
     values.clear();
@@ -61,12 +56,5 @@ ACLMethodData::parse()
         if (values.back() == Http::METHOD_PURGE)
             ++ThePurgeCount; // configuration code wants to know
     }
-}
-
-ACLData<HttpRequestMethod> *
-ACLMethodData::clone() const
-{
-    assert(values.empty());
-    return new ACLMethodData(*this);
 }
 

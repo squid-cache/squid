@@ -18,11 +18,8 @@ class ACLMaxConnection : public ACL
 
 public:
     ACLMaxConnection(char const *);
-    ACLMaxConnection(ACLMaxConnection const &);
     ~ACLMaxConnection();
-    ACLMaxConnection&operator=(ACLMaxConnection const &);
 
-    virtual ACL *clone()const;
     virtual char const *typeString() const;
     virtual void parse();
     virtual int match(ACLChecklist *checklist);

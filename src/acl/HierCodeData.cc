@@ -19,11 +19,6 @@ ACLHierCodeData::ACLHierCodeData()
     memset(values, 0, sizeof(values));
 }
 
-ACLHierCodeData::ACLHierCodeData(ACLHierCodeData const &old)
-{
-    memcpy(values, old.values, sizeof(values) );
-}
-
 ACLHierCodeData::~ACLHierCodeData()
 { }
 
@@ -72,11 +67,5 @@ ACLHierCodeData::empty() const
         if (values[iter]) return false; // not empty.
     }
     return true;
-}
-
-ACLData<hier_code> *
-ACLHierCodeData::clone() const
-{
-    return new ACLHierCodeData(*this);
 }
 

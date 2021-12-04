@@ -25,7 +25,6 @@ public:
     virtual SBufList dump() const;
     virtual void parse();
     virtual bool empty() const;
-    virtual ACLData<err_type> *clone() const;
 
 private:
     CbDataListContainer <err_type> errors;
