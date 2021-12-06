@@ -97,7 +97,7 @@ do
     squid_cleanup_tmp_outlist="${squid_cleanup_tmp_outlist} $squid_cleanup_tmp"
   ])
 done
-$1=$squid_cleanup_tmp_outlist
+$1=`echo "$squid_cleanup_tmp_outlist" | sed -e 's/^ *//'`
 unset squid_cleanup_tmp_outlist
 unset squid_cleanup_tmp_dupe
 unset squid_cleanup_tmp2

@@ -441,41 +441,31 @@ AS_IF([test "x$ac_cv_search_shm_open" != "xno"],[
   AC_DEFINE(HAVE_SHM,1,[Support shared memory features])
 ])
 
-AC_MSG_CHECKING([for DiskIO modules to be enabled])
 squid_disk_module_candidates=""
-squid_opt_enable_diskio="auto"  #values: no, yes, "auto"(=yes+detect modules)
 AC_ARG_ENABLE(disk-io,
   AS_HELP_STRING([--enable-disk-io="list of modules"],
     [Build support for the list of disk I/O modules.
      Set without a value or omitted, all available modules will be built.
      See src/DiskIO for a list of available modules, or
      Programmers Guide section on DiskIO
-     for details on how to build your custom disk module]), [
-  AS_CASE([$enableval],
-    [yes],[],
-    [no],[squid_opt_enable_diskio="no"],
+     for details on how to build your custom disk module]),
+  AS_CASE(["$enableval"],
+    [yes],[
+      SQUID_LOOK_FOR_MODULES([$srcdir/src/DiskIO],[squid_disk_module_candidates])
+      AS_IF([test "x$ac_cv_search_shm_open" = "xno"],[
+        squid_disk_module_candidates=`echo "$squid_disk_module_candidates" | sed 's/IpcIo//g'`
+      ])
+    ],
+    [no|none],[enable_disk_io="no"],
     [
-      squid_opt_enable_diskio="yes"
-      SQUID_CLEANUP_MODULES_LIST([squid_disk_module_candidates])
+      enable_disk_io="yes"
+      squid_disk_module_candidates="$enableval"
   ])
-])
-
-# if requested to autodetect, find out what we have
-AS_IF([test "x$squid_opt_enable_diskio" = "xauto"],[
-  squid_opt_enable_diskio="yes"
-  SQUID_LOOK_FOR_MODULES([$srcdir/src/DiskIO],[squid_disk_module_candidates])
-  AS_IF([test "x$ac_cv_search_shm_open" = "xno"],[
-    # disable IpcIo
-    squid_disk_module_candidates=`echo $squid_disk_module_candidates|sed 's/IpcIo//'`
-  ])
-])
-
-AC_MSG_RESULT([${squid_disk_module_candidates:-none}])
+)
+SQUID_CLEANUP_MODULES_LIST([squid_disk_module_candidates])
 SQUID_CHECK_EXISTING_MODULES([$srcdir/src/DiskIO],[squid_disk_module_candidates])
-SQUID_DEFINE_BOOL(USE_DISKIO,$squid_opt_enable_diskio,
-    [DiskIO modules are expected to be available.])
-
-
+AC_MSG_NOTICE([DiskIO modules built: ${squid_disk_module_candidates:-none}])
+SQUID_DEFINE_BOOL(USE_DISKIO,$enable_disk_io,[DiskIO modules are expected to be available.])
 
 dnl Some autoconf.h defines we might enable later...
 AC_ARG_WITH(pthreads,AS_HELP_STRING([--without-pthreads],[Disable POSIX Threads]))
@@ -688,7 +678,6 @@ AM_CONDITIONAL(ENABLE_DISKIO_MMAPPED, test "x$squid_disk_module_candidates_Mmapp
 
 dnl Check what Storage formats are wanted.
 dnl This version will error out with a message saying why if a required DiskIO is missing.
-squid_opt_enable_storeio=auto
 AC_ARG_ENABLE([storeio],
   AS_HELP_STRING([--enable-storeio="list of modules"],
                  [Build support for the list of store I/O modules.
@@ -696,30 +685,24 @@ AC_ARG_ENABLE([storeio],
                   See src/fs for a list of available modules, or
                   Programmers Guide section <not yet written>
                   for details on how to build your custom store module]), [
-  AS_CASE([$enableval],
-    [yes],[squid_opt_enable_storeio=auto],
-    [no],[squid_opt_enable_storeio=no],
+  AS_CASE(["$enableval"],
+    [yes],[
+      SQUID_LOOK_FOR_MODULES([$srcdir/src/fs],[squid_storeio_module_candidates])
+    ],
+    [no|none],[enable_storeio=no],
     [
-      squid_opt_enable_storeio=yes
-      squid_storeio_module_candidates="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+      enable_storeio=yes
       # ufs is really always needed as it has low-level routines
       # if it is a dupe it will be cleaned-up later
-      squid_storeio_module_candidates="$squid_storeio_module_candidates ufs"
+      squid_storeio_module_candidates="$enableval ufs"
   ])
 ])
-AS_IF([test "x$squid_opt_enable_storeio" = "xauto"],[
-  squid_opt_enable_storeio=yes
-  AC_MSG_CHECKING([for available StoreIO modules])
-  SQUID_LOOK_FOR_MODULES([$srcdir/src/fs],[squid_storeio_module_candidates])
-  AC_MSG_RESULT([$squid_storeio_module_candidates])
-])
-
 SQUID_CLEANUP_MODULES_LIST([squid_storeio_module_candidates])
 SQUID_CHECK_EXISTING_MODULES([$srcdir/src/fs],[squid_storeio_module_candidates])
-AC_MSG_NOTICE([Store modules built: $squid_storeio_module_candidates])
+AC_MSG_NOTICE([Store modules built: ${squid_storeio_module_candidates:-none}])
 
-for fs in $squid_storeio_module_candidates none; do
-  AS_CASE(["$fs"],
+for fs in ${squid_storeio_module_candidates:-none}; do
+  AS_CASE([$fs],
     [diskd],[
       AS_IF([test "x$squid_disk_module_candidates_Blocking" != "xyes" -a \
         "x$squid_disk_module_candidates_DiskDaemon" != "xyes"],[
@@ -786,18 +769,17 @@ AC_ARG_ENABLE(removal-policies,
                   See src/repl for a list of available modules, or
                   Programmers Guide section 9.9 for details on how
                   to build your custom policy]), [
-  AS_CASE([$enableval],
-    [yes],[SQUID_LOOK_FOR_MODULES([$srcdir/src/repl],[REPL_POLICIES])],
-    [no],[:],
-    [ REPL_POLICIES="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`" ]
+  AS_CASE(["$enableval"],
+    [yes],[ SQUID_LOOK_FOR_MODULES([$srcdir/src/repl],[REPL_POLICIES]) ],
+    [no],[],
+    [ REPL_POLICIES="$enableval" ]
   )
 ])
-AS_IF([test "x$REPL_POLICIES" != "x"],[
-  SQUID_CHECK_EXISTING_MODULES([$srcdir/src/repl],[REPL_POLICIES])
-  AC_MSG_NOTICE([Removal policies to build: $REPL_POLICIES])
-  REPL_OBJS="repl/lib`echo $REPL_POLICIES|sed -e 's% %.a repl/lib%g'`.a"
-  REPL_LIBS="`echo $REPL_OBJS|sed -e 's%repl/%%g'`"
-])
+SQUID_CLEANUP_MODULES_LIST([REPL_POLICIES])
+SQUID_CHECK_EXISTING_MODULES([$srcdir/src/repl],[REPL_POLICIES])
+AC_MSG_NOTICE([Removal policies to build: $REPL_POLICIES])
+REPL_OBJS="repl/lib`echo \"$REPL_POLICIES\" | sed -e 's% %.a repl/lib%g'`.a"
+REPL_LIBS=`echo "$REPL_OBJS" | sed -e 's%repl/%%g'`
 AC_SUBST(REPL_POLICIES)
 AC_SUBST(REPL_OBJS)
 AC_SUBST(REPL_LIBS)
@@ -918,7 +900,6 @@ AC_SUBST(EXPATLIB)
 AM_CONDITIONAL(ENABLE_LIBXML2, test "x$HAVE_LIBXML2" = "x1")
 AC_SUBST(XMLLIB)
 
-# icap argument handling
 AC_ARG_ENABLE(icap-client,
   AS_HELP_STRING([--disable-icap-client],[Disable the ICAP client.]),[
   SQUID_YESNO([$enableval],[Unrecognized argument to --disable-icap-client: $enableval])
@@ -927,23 +908,12 @@ SQUID_DEFINE_BOOL(ICAP_CLIENT,${enable_icap_client:=yes}, [Enable ICAP client fe
 AS_IF(test "x$enable_icap_client" != "xno", squid_opt_use_adaptation="yes")
 AM_CONDITIONAL(ENABLE_ICAP_CLIENT, test "x$enable_icap_client" != "xno")
 
-squid_opt_use_ecap=1
-AC_MSG_CHECKING(whether to support eCAP)
 AC_ARG_ENABLE(ecap,
   AS_HELP_STRING([--enable-ecap],[support loadable content adaptation modules]),[
-  AS_CASE([$enableval],
-    [yes|no],[squid_opt_use_ecap=$enableval],
-    [AC_MSG_ERROR([bad value $enableval for --enable-ecap])]
-  )
-  AC_MSG_RESULT([$squid_opt_use_ecap, explicitly])
-],[
-  squid_opt_use_ecap=no
-  AC_MSG_RESULT([$squid_opt_use_ecap, implicitly])
+  SQUID_YESNO([$enableval],[bad value $enableval for --enable-ecap])
 ])
-
 dnl Perform configuration consistency checks for eCAP
-AS_IF([test "x$squid_opt_use_ecap" != "xno"],[
-  dnl eCAP support requires loadable modules, which are enabled by default
+AS_IF([test "x$enable_ecap" != "xno"],[
   AS_IF([test "x$enable_shared" != "xyes"],[
     AC_MSG_ERROR([eCAP support requires loadable modules. Please do not use --disable-shared with --enable-ecap.])
   ])
@@ -969,7 +939,7 @@ AS_IF([test "x$squid_opt_use_ecap" != "xno"],[
     squid_opt_use_adaptation=yes
   ],[
     AC_MSG_RESULT(no)
-    AS_IF([test "x$squid_opt_use_ecap" = "xyes"],[
+    AS_IF([test "x$enable_ecap" = "xyes"],[
       AC_MSG_ERROR([eCAP library will not link.
                   You may need to rebuild libecap using the same version of GCC as Squid.
                   There have been breaking ABI changes in the libstdc++ STL with GCC 5.])
@@ -977,13 +947,13 @@ AS_IF([test "x$squid_opt_use_ecap" != "xno"],[
       AC_MSG_NOTICE([eCAP library will not link.
                   You may need to rebuild libecap using the same version of GCC as Squid.
                   There have been breaking ABI changes in the libstdc++ STL with GCC 5.])
-      squid_opt_use_ecap="no"
+      enable_ecap="no"
     ])
   ])
   SQUID_STATE_ROLLBACK(squid_ecap_state)
 ])
-SQUID_DEFINE_BOOL(USE_ECAP,${squid_opt_use_ecap:=no},[Whether to use eCAP support])
-AM_CONDITIONAL(ENABLE_ECAP, test "x$squid_opt_use_ecap" = "xyes")
+SQUID_DEFINE_BOOL(USE_ECAP,${enable_ecap:=no},[Whether to use eCAP support])
+AM_CONDITIONAL(ENABLE_ECAP, test "x$enable_ecap" = "xyes")
 
 dnl enable adaptation if requested by specific adaptation mechanisms
 ADAPTATION_LIBS=""
