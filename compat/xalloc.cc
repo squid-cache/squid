@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,7 +8,6 @@
 
 #include "squid.h"
 #include "compat/xalloc.h"
-#include "profiler/Profiler.h"
 
 #if XMALLOC_STATISTICS
 #define XMS_DBG_MAXSIZE   (1024*1024)
@@ -71,17 +70,13 @@ malloc_statistics(void (*func) (int, int, int, void *), void *data)
 void *
 xcalloc(size_t n, size_t sz)
 {
-    PROF_start(xcalloc);
-
     if (n < 1)
         n = 1;
 
     if (sz < 1)
         sz = 1;
 
-    PROF_start(calloc);
     void *p = calloc(n, sz);
-    PROF_stop(calloc);
 
     if (p == NULL) {
         if (failure_notify) {
@@ -98,21 +93,16 @@ xcalloc(size_t n, size_t sz)
     malloc_stat(sz * n);
 #endif
 
-    PROF_stop(xcalloc);
     return p;
 }
 
 void *
 xmalloc(size_t sz)
 {
-    PROF_start(xmalloc);
-
     if (sz < 1)
         sz = 1;
 
-    PROF_start(malloc);
     void *p = malloc(sz);
-    PROF_stop(malloc);
 
     if (p == NULL) {
         if (failure_notify) {
@@ -129,21 +119,16 @@ xmalloc(size_t sz)
     malloc_stat(sz);
 #endif
 
-    PROF_stop(xmalloc);
     return (p);
 }
 
 void *
 xrealloc(void *s, size_t sz)
 {
-    PROF_start(xrealloc);
-
     if (sz < 1)
         sz = 1;
 
-    PROF_start(realloc);
     void *p= realloc(s, sz);
-    PROF_stop(realloc);
 
     if (p == NULL) {
         if (failure_notify) {
@@ -161,7 +146,6 @@ xrealloc(void *s, size_t sz)
     malloc_stat(sz);
 #endif
 
-    PROF_stop(xrealloc);
     return (p);
 }
 
@@ -170,10 +154,6 @@ free_const(const void *s_const)
 {
     void *s = const_cast<void *>(s_const);
 
-    PROF_start(free_const);
-    PROF_start(free);
     free(s);
-    PROF_stop(free);
-    PROF_stop(free_const);
 }
 

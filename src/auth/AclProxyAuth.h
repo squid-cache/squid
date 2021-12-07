@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,8 +34,6 @@ class ACLProxyAuth : public ACL
 public:
     ~ACLProxyAuth();
     ACLProxyAuth(ACLData<char const *> *, char const *);
-    ACLProxyAuth(ACLProxyAuth const &);
-    ACLProxyAuth &operator =(ACLProxyAuth const &);
 
     /* ACL API */
     virtual char const *typeString() const;
@@ -47,7 +45,6 @@ public:
     virtual bool valid() const;
     virtual bool empty() const;
     virtual bool requiresRequest() const {return true;}
-    virtual ACL *clone() const;
     virtual int matchForCache(ACLChecklist *checklist);
 
 private:

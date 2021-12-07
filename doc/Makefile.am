@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -12,4 +12,5 @@ DEFAULT_MIME_TABLE      = $(sysconfdir)/mime.conf
 DEFAULT_ERROR_DIR       = $(datadir)/errors
 
 EXTRA_DIST = \
+	debug-messages.dox \
 	debug-sections.txt

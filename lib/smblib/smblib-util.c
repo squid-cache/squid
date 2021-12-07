@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -52,7 +52,7 @@ int SMB_Types[] = {SMB_P_Core,
                    SMB_P_NT1,
                    SMB_P_NT1,
                    -1
-                  };
+                   };
 
 #if UNDEFINED
 char *SMB_DOSTimToStr(int DOS_time);

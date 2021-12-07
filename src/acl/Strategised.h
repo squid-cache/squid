@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,7 +34,6 @@ public:
 
     ~ACLStrategised();
     ACLStrategised(ACLData<MatchType> *, ACLStrategy<MatchType> *, char const *);
-    ACLStrategised(ACLStrategised const &&) = delete;
 
     virtual char const *typeString() const;
     virtual void parseFlags();
@@ -64,6 +63,7 @@ template <class MatchType>
 ACLStrategised<MatchType>::~ACLStrategised()
 {
     delete data;
+    delete matcher;
 }
 
 template <class MatchType>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,13 +9,13 @@
 #ifndef SQUID_ADAPTATION__ACCESS_CHECK_H
 #define SQUID_ADAPTATION__ACCESS_CHECK_H
 
-#include "AccessLogEntry.h"
 #include "acl/Acl.h"
 #include "adaptation/Elements.h"
 #include "adaptation/forward.h"
 #include "adaptation/Initiator.h"
 #include "adaptation/ServiceFilter.h"
 #include "base/AsyncJob.h"
+#include "log/forward.h"
 
 class HttpRequest;
 class HttpReply;
@@ -36,7 +36,7 @@ public:
 
     // use this to start async ACL checks; returns true if started
     static bool Start(Method method, VectPoint vp, HttpRequest *req,
-                      HttpReply *rep, AccessLogEntry::Pointer &al, Adaptation::Initiator *initiator);
+                      HttpReply *, const AccessLogEntryPointer &, Adaptation::Initiator *);
 
 protected:
     // use Start to start adaptation checks

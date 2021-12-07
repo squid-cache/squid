@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -788,16 +788,6 @@ Ip::Address::port(unsigned short prt)
     return prt;
 }
 
-/**
- * toStr Given a buffer writes a readable ascii version of the IPA and/or port stored
- *
- * Buffer must be of a size large enough to hold the converted address.
- * This size is provided in the form of a global defined variable MAX_IPSTRLEN
- * Should a buffer shorter be provided the string result will be truncated
- * at the length of the available buffer.
- *
- * A copy of the buffer is also returned for simple immediate display.
- */
 char *
 Ip::Address::toStr(char* buf, const unsigned int blen, int force) const
 {

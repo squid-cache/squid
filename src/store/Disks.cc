@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,9 +12,8 @@
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
+#include "DebugMessages.h"
 #include "globals.h"
-#include "ipc/StrandCoord.h"
-#include "profiler/Profiler.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "Store.h"
@@ -270,17 +269,17 @@ Store::Disks::init()
     /* this is very bogus, its specific to the any Store maintaining an
      * in-core index, not global */
     size_t buckets = (Store::Root().maxSize() + Config.memMaxSize) / Config.Store.avgObjectSize;
-    debugs(20, DBG_IMPORTANT, "Swap maxSize " << (Store::Root().maxSize() >> 10) <<
+    debugs(20, Important(31), "Swap maxSize " << (Store::Root().maxSize() >> 10) <<
            " + " << ( Config.memMaxSize >> 10) << " KB, estimated " << buckets << " objects");
     buckets /= Config.Store.objectsPerBucket;
-    debugs(20, DBG_IMPORTANT, "Target number of buckets: " << buckets);
+    debugs(20, Important(32), "Target number of buckets: " << buckets);
     /* ideally the full scan period should be configurable, for the
      * moment it remains at approximately 24 hours.  */
     store_hash_buckets = storeKeyHashBuckets(buckets);
-    debugs(20, DBG_IMPORTANT, "Using " << store_hash_buckets << " Store buckets");
-    debugs(20, DBG_IMPORTANT, "Max Mem  size: " << ( Config.memMaxSize >> 10) << " KB" <<
+    debugs(20, Important(33), "Using " << store_hash_buckets << " Store buckets");
+    debugs(20, Important(34), "Max Mem  size: " << ( Config.memMaxSize >> 10) << " KB" <<
            (Config.memShared ? " [shared]" : ""));
-    debugs(20, DBG_IMPORTANT, "Max Swap size: " << (Store::Root().maxSize() >> 10) << " KB");
+    debugs(20, Important(35), "Max Swap size: " << (Store::Root().maxSize() >> 10) << " KB");
 
     store_table = hash_create(storeKeyHashCmp,
                               store_hash_buckets, storeKeyHashHash);
@@ -309,7 +308,7 @@ Store::Disks::init()
         debugs(47, DBG_IMPORTANT, "Using Round Robin store dir selection");
     } else {
         storeDirSelectSwapDir = storeDirSelectSwapDirLeastLoad;
-        debugs(47, DBG_IMPORTANT, "Using Least Load store dir selection");
+        debugs(47, Important(36), "Using Least Load store dir selection");
     }
 }
 
@@ -734,12 +733,12 @@ storeDirWriteCleanLogs(int reopen)
     // initialization phases, before store log is initialized and ready. Also,
     // some stores do not support log cleanup during Store rebuilding.
     if (!Store::Root().indexReady()) {
-        debugs(20, DBG_IMPORTANT, "Not currently OK to rewrite swap log.");
-        debugs(20, DBG_IMPORTANT, "storeDirWriteCleanLogs: Operation aborted.");
+        debugs(20, Important(37), "Not currently OK to rewrite swap log.");
+        debugs(20, Important(38), "storeDirWriteCleanLogs: Operation aborted.");
         return 0;
     }
 
-    debugs(20, DBG_IMPORTANT, "storeDirWriteCleanLogs: Starting...");
+    debugs(20, Important(39), "storeDirWriteCleanLogs: Starting...");
     getCurrentTime();
     start = current_time;
 
@@ -797,8 +796,8 @@ storeDirWriteCleanLogs(int reopen)
 
     dt = tvSubDsec(start, current_time);
 
-    debugs(20, DBG_IMPORTANT, "  Finished.  Wrote " << n << " entries.");
-    debugs(20, DBG_IMPORTANT, "  Took "<< std::setw(3)<< std::setprecision(2) << dt <<
+    debugs(20, Important(40), "  Finished.  Wrote " << n << " entries.");
+    debugs(20, Important(41), "  Took "<< std::setw(3) << std::setprecision(2) << dt <<
            " seconds ("<< std::setw(6) << ((double) n / (dt > 0.0 ? dt : 1.0)) << " entries/sec).");
 
     return n;

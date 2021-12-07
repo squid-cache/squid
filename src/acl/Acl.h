@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -48,6 +48,7 @@ public:
     static ACL *FindByName(const char *name);
 
     ACL();
+    ACL(ACL &&) = delete; // no copying of any kind
     virtual ~ACL();
 
     /// sets user-specified ACL name and squid.conf context

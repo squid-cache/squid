@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,6 +16,7 @@
 #include "CachePeer.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
+#include "DebugMessages.h"
 #include "event.h"
 #include "FwdState.h"
 #include "globals.h"
@@ -455,7 +456,7 @@ peerClearRR()
 /**
  * Perform all actions when a CachePeer is detected revived.
  */
-void
+static void
 peerAlive(CachePeer *p)
 {
     if (p->stats.logged_state == PEER_DEAD && p->tcp_up) {
@@ -793,7 +794,9 @@ peerDigestLookup(CachePeer * p, PeerSelector * ps)
     debugs(15, 5, "peerDigestLookup: peer " << p->host << " says HIT!");
 
     return LOOKUP_HIT;
-
+#else
+    (void)p;
+    (void)ps;
 #endif
 
     return LOOKUP_NONE;
@@ -860,6 +863,8 @@ neighborsDigestSelect(PeerSelector *ps)
                          best_p ? LOOKUP_HIT : (choice_count ? LOOKUP_MISS : LOOKUP_NONE));
     request->hier.n_choices = choice_count;
     request->hier.n_ichoices = ichoice_count;
+#else
+    (void)ps;
 #endif
 
     return best_p;
@@ -876,6 +881,10 @@ peerNoteDigestLookup(HttpRequest * request, CachePeer * p, lookup_t lookup)
 
     request->hier.cd_lookup = lookup;
     debugs(15, 4, "peerNoteDigestLookup: peer " << (p? p->host : "<none>") << ", lookup: " << lookup_t_str[lookup]  );
+#else
+    (void)request;
+    (void)p;
+    (void)lookup;
 #endif
 }
 
@@ -1199,7 +1208,7 @@ peerDNSConfigure(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data
     CachePeer *p = (CachePeer *)data;
 
     if (p->n_addresses == 0) {
-        debugs(15, DBG_IMPORTANT, "Configuring " << neighborTypeStr(p) << " " << p->host << "/" << p->http_port << "/" << p->icp.port);
+        debugs(15, Important(29), "Configuring " << neighborTypeStr(p) << " " << p->host << "/" << p->http_port << "/" << p->icp.port);
 
         if (p->type == PEER_MULTICAST)
             debugs(15, DBG_IMPORTANT, "    Multicast TTL = " << p->mcast.ttl);

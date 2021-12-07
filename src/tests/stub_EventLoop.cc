@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,5 +18,5 @@ EventLoop::EventLoop(): errcount(0), last_loop(false), timeService(NULL),
     primaryEngine(NULL), loop_delay(0), error(false), runOnceResult(false)
     STUB_NOP
 
-    void EventLoop::registerEngine(AsyncEngine *engine) STUB
+    void EventLoop::registerEngine(AsyncEngine *) STUB
 

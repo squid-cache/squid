@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,6 +15,7 @@
 #include "comm/Connection.h"
 #include "comm/Read.h"
 #include "comm/Write.h"
+#include "DebugMessages.h"
 #include "fd.h"
 #include "fde.h"
 #include "format/Quoting.h"
@@ -92,6 +93,8 @@ HelperServerBase::closePipesSafely(const char *id_name)
         }
         CloseHandle(hIpc);
     }
+#else
+    (void)id_name;
 #endif
 }
 
@@ -116,6 +119,8 @@ HelperServerBase::closeWritePipeSafely(const char *id_name)
         }
         CloseHandle(hIpc);
     }
+#else
+    (void)id_name;
 #endif
 }
 
@@ -223,10 +228,10 @@ helperOpenServers(helper * hlp)
     /* figure out how many new child are actually needed. */
     int need_new = hlp->childs.needNew();
 
-    debugs(84, DBG_IMPORTANT, "helperOpenServers: Starting " << need_new << "/" << hlp->childs.n_max << " '" << shortname << "' processes");
+    debugs(84, Important(19), "helperOpenServers: Starting " << need_new << "/" << hlp->childs.n_max << " '" << shortname << "' processes");
 
     if (need_new < 1) {
-        debugs(84, DBG_IMPORTANT, "helperOpenServers: No '" << shortname << "' processes needed.");
+        debugs(84, Important(20), "helperOpenServers: No '" << shortname << "' processes needed.");
     }
 
     procname = (char *)xmalloc(strlen(shortname) + 3);
@@ -967,8 +972,7 @@ helperReturnBuffer(helper_server * srv, helper * hlp, char * msg, size_t msgSize
     if (!srv->flags.shutdown) {
         helperKickQueue(hlp);
     } else if (!srv->flags.closing && !srv->stats.pending) {
-        srv->flags.closing=true;
-        srv->writePipe->close();
+        srv->closeWritePipeSafely(srv->parent->id_name);
     }
 }
 

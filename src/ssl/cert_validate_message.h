@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -100,7 +100,7 @@ public:
     void composeRequest(CertValidationRequest const &vcert);
 
     /// Parse a response message and fill the resp object with parsed information
-    bool parseResponse(CertValidationResponse &resp, std::string &error);
+    bool parseResponse(CertValidationResponse &resp);
 
     /// Search a CertItems list for the certificate with ID "name"
     X509 *getCertByName(std::vector<CertItem> const &, std::string const & name);

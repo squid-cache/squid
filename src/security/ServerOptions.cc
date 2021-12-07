@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,6 +23,8 @@
 #include <openssl/err.h>
 #endif
 #endif
+
+#include <limits>
 
 Security::ServerOptions &
 Security::ServerOptions::operator =(const Security::ServerOptions &old) {
@@ -204,7 +206,7 @@ Security::ServerOptions::initServerContexts(AnyP::PortCfg &port)
 }
 
 bool
-Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &port)
+Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &)
 {
     updateTlsVersionLimits();
 
@@ -438,6 +440,8 @@ Security::ServerOptions::updateContextClientCa(Security::ContextPointer &ctx)
     } else {
         Ssl::DisablePeerVerification(ctx);
     }
+#else
+    (void)ctx;
 #endif
 }
 
@@ -471,6 +475,7 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
 #else
         debugs(83, DBG_CRITICAL, "ERROR: EECDH is not available in this build." <<
                " Please link against OpenSSL>=0.9.8 and ensure OPENSSL_NO_ECDH is not set.");
+        (void)ctx;
 #endif
     }
 
@@ -488,6 +493,8 @@ Security::ServerOptions::updateContextSessionId(Security::ContextPointer &ctx)
 #if USE_OPENSSL
     if (!staticContextSessionId.isEmpty())
         SSL_CTX_set_session_id_context(ctx.get(), reinterpret_cast<const unsigned char*>(staticContextSessionId.rawContent()), staticContextSessionId.length());
+#else
+    (void)ctx;
 #endif
 }
 

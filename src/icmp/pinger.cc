@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -96,12 +96,9 @@ int icmp_pkts_sent = 0;
 /**
  \ingroup pinger
  \par This is the pinger external process.
- *
- \param argc Ignored.
- \param argv Ignored.
  */
 int
-main(int argc, char *argv[])
+main(int, char **)
 {
     fd_set R;
     int x;

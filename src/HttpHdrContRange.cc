@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -161,9 +161,13 @@ httpHdrContRangeParseInit(HttpHdrContRange * range, const char *str)
 
     ++p;
 
-    if (*p == '*')
+    if (*p == '*') {
+        if (!known_spec(range->spec.offset)) {
+            debugs(68, 2, "invalid (*/*) content-range-spec near: '" << str << "'");
+            return 0;
+        }
         range->elength = range_spec_unknown;
-    else if (!httpHeaderParseOffset(p, &range->elength))
+    } else if (!httpHeaderParseOffset(p, &range->elength))
         return 0;
     else if (range->elength <= 0) {
         /* Additional paranoidal check for BUG2155 - entity-length MUST be > 0 */
@@ -171,6 +175,12 @@ httpHdrContRangeParseInit(HttpHdrContRange * range, const char *str)
         return 0;
     } else if (known_spec(range->spec.length) && range->elength < (range->spec.offset + range->spec.length)) {
         debugs(68, 2, "invalid (range is outside entity-length) content-range-spec near: '" << str << "'");
+        return 0;
+    }
+
+    // reject unsatisfied-range and such; we only use well-defined ranges today
+    if (!known_spec(range->spec.offset) || !known_spec(range->spec.length)) {
+        debugs(68, 2, "unwanted content-range-spec near: '" << str << "'");
         return 0;
     }
 

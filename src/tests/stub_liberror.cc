@@ -11,4 +11,5 @@ void Error::update(const Error &) STUB_NOP
 
 std::ostream &operator <<(std::ostream &os, const Error &) STUB_RETVAL(os)
 
-ErrorDetail::Pointer MakeNamedErrorDetail(const char *name) STUB_RETVAL(ErrorDetail::Pointer())
+ErrorDetail::Pointer MakeNamedErrorDetail(const char *) STUB_RETVAL(ErrorDetail::Pointer())
+

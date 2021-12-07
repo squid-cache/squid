@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -127,11 +127,11 @@ SQUIDCEXTERN int log_enabled;
 #define error(X...) \
                      fprintf(stderr, "%s(%d): pid=%ld :", __FILE__, __LINE__, (long)getpid() ); \
                      fprintf(stderr,X); \
- 
+
 #define warn(X...) \
                      fprintf(stderr, "%s(%d): pid=%ld :", __FILE__, __LINE__, (long)getpid() ); \
                      fprintf(stderr,X); \
- 
+
 #else /* __GNUC__ */
 
 /* non-GCC compilers can't do the above macro define yet. */

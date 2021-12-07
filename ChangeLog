@@ -1,3 +1,47 @@
+Changes in squid-5.3 (06 Dec 2021):
+
+	- Bug 5169: StoreMap.cc:517 "!s.reading()" assertion
+	- Bug 5158: AnyP::Uri::host() mishandles [escaped] IPv6 addresses
+	- Bug 5060: Parallel builds are not reliable
+	- Documentation updates for logformat directive
+
+Changes in squid-5.2 (03 Oct 2021):
+
+	- Bug 5164: a copy-paste typo in HttpHdrCc::hasMinFresh()
+	- Bug 4922: Improve ftp://... filename extraction
+	- TLS: Fix X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY handling
+	- ... and all fixes from 4.17
+
+Changes in squid-5.1 (01 Aug 2021):
+
+	- Bug 4696: Fix leaky String move assignment operator
+	- Fix ACL-related reconfiguration memory leak
+	- Fix SSL-Bump reconfiguration leaking public key memory
+	- Fix build on RISC-V
+	- Fix build on Ubuntu 21.04
+
+Changes in squid-5.0.7 (04 Jul 2021):
+
+	- Fix a helper logging issues
+	- Fix some helper connection issues
+	- Cleanup: remove much unused code
+	- ... and all fixes from 4.16
+
+Changes in squid-5.0.6 (10 May 2021):
+
+	- Bug 5057: Generated response lacks status code
+	- TLS: Handling missing issuer certificates for TLSv1.3
+	- TLS: Detail certificate validation errors during TLS handshake
+	- TLS: Detail client closures of CONNECT tunnels during TLS handshake
+	- TLS: %ssl::<negotiated_version and %ssl::>negotiated_version for TLS/1.3
+	- HTTP: Allow 1xx and 204 responses with Transfer-Encoding headers
+	- Maintenance: Start following Inclusive Naming Initiative advice
+	- Maintenance: Sort source file lists in Makefiles
+	- Maintenance: Support plugin-style scripts for source format enforcement
+	- Cleanup: Deduplicating IPC strand messages
+	- ... and some compile and debugging fixes
+	- ... and all fixes from 4.15
+
 Changes in squid-5.0.5 (02 Feb 2021):
 
 	- HTTP: Do not send Connection:keep-alive/close in HTTP Upgrade requests
@@ -89,6 +133,33 @@ Changes in squid-5.0.1 (14 Jan 2020):
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
 	- ... and all fixes from 4.10
+
+Changes in squid-4.17 (03 Oct 2021):
+
+	- WCCP: Validate packets better
+
+Changes in squid-4.16 (04 Jul 2021):
+
+	- Regression Fix: --with-valgrind-debug build broken since 4.15
+	- Bug 5129 pt1: remove Lock use from HttpRequestMethod
+	- Bug 5128: Translation: Fix '% i' typo in es/ERR_FORWARDING_DENIED
+	- Bug 4528: ICAP transactions quit on async DNS lookups
+
+Changes in squid-4.15 (10 May 2021):
+
+	- Bug 5112: Excessively loud chunked reply parsing error reporting
+	- Bug 5106: Broken cache manager URL parsing
+	- Bug 5104: Memory leak in RFC 2169 response parsing
+	- Bug 3556: "FD ... is not an open socket" for accept() problems
+	- Profiling: CPU timing implemented for MAC non-x86
+	- Fix HttpHeaderStats definition to include hoErrorDetail
+	- Fix Squid-to-client write_timeout triggers client_lifetime timeout
+	- Limit HeaderLookupTable_t::lookup() to BadHdr and specific IDs
+	- Handle more Range requests
+	- Handle more partial responses
+	- Stop processing a response if the Store entry is gone
+	- ... and some portability fixes
+	- ... and some documentation updates
 
 Changes in squid-4.14 (02 Feb 2021):
 

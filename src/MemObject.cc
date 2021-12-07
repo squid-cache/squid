@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,7 +15,6 @@
 #include "HttpReply.h"
 #include "MemBuf.h"
 #include "MemObject.h"
-#include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "StoreClient.h"
@@ -106,7 +105,6 @@ MemObject::MemObject()
 MemObject::~MemObject()
 {
     debugs(20, 3, "MemObject destructed, this=" << this);
-    const Ctx ctx = ctx_enter(hasUris() ? urlXXX() : "[unknown_ctx]");
 
 #if URL_CHECKSUM_DEBUG
     checkUrlChecksum();
@@ -119,17 +117,6 @@ MemObject::~MemObject()
     }
 
     data_hdr.freeContent();
-
-#if 0
-    /*
-     * There is no way to abort FD-less clients, so they might
-     * still have mem->clients set.
-     */
-    assert(clients.head == NULL);
-
-#endif
-
-    ctx_exit(ctx);              /* must exit before we free mem->url */
 }
 
 HttpReply &
@@ -150,7 +137,6 @@ MemObject::replaceBaseReply(const HttpReplyPointer &r)
 void
 MemObject::write(const StoreIOBuffer &writeBuffer)
 {
-    PROF_start(MemObject_write);
     debugs(19, 6, "memWrite: offset " << writeBuffer.offset << " len " << writeBuffer.length);
 
     /* We don't separate out mime headers yet, so ensure that the first
@@ -159,17 +145,12 @@ MemObject::write(const StoreIOBuffer &writeBuffer)
     assert (data_hdr.endOffset() || writeBuffer.offset == 0);
 
     assert (data_hdr.write (writeBuffer));
-    PROF_stop(MemObject_write);
 }
 
 void
 MemObject::dump() const
 {
     data_hdr.dump();
-#if 0
-    /* do we want this one? */
-    debugs(20, DBG_IMPORTANT, "MemObject->data.origin_offset: " << (data_hdr.head ? data_hdr.head->nodeBuffer.offset : 0));
-#endif
 
     debugs(20, DBG_IMPORTANT, "MemObject->start_ping: " << start_ping);
     debugs(20, DBG_IMPORTANT, "MemObject->inmem_hi: " << data_hdr.endOffset());
@@ -435,6 +416,8 @@ MemObject::mostBytesWanted(int max, bool ignoreDelayPools) const
         DelayId largestAllowance = mostBytesAllowed ();
         return largestAllowance.bytesWanted(0, max);
     }
+#else
+    (void)ignoreDelayPools;
 #endif
 
     return max;
@@ -449,7 +432,8 @@ MemObject::setNoDelay(bool const newValue)
         store_client *sc = (store_client *) node->data;
         sc->delayId.setNoDelay(newValue);
     }
-
+#else
+    (void)newValue;
 #endif
 }
 
@@ -483,19 +467,6 @@ MemObject::mostBytesAllowed() const
 
     for (dlink_node *node = clients.head; node; node = node->next) {
         store_client *sc = (store_client *) node->data;
-#if 0
-        /* This test is invalid because the client may be writing data
-         * and thus will want data immediately.
-         * If we include the test, there is a race condition when too much
-         * data is read - if all sc's are writing when a read is scheduled.
-         * XXX: fixme.
-         */
-
-        if (!sc->callbackPending())
-            /* not waiting for more data */
-            continue;
-
-#endif
 
         j = sc->delayId.bytesWanted(0, sc->copyInto.length);
 

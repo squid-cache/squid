@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,7 +27,6 @@
 #include "ip/QosConfig.h"
 #include "log/access_log.h"
 #include "MasterXaction.h"
-#include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
@@ -182,19 +181,6 @@ Comm::TcpAcceptor::setListen()
 #endif
     }
 
-#if 0
-    // Untested code.
-    // Set TOS if needed.
-    // To correctly implement TOS values on listening sockets, probably requires
-    // more work to inherit TOS values to created connection objects.
-    if (conn->tos)
-        Ip::Qos::setSockTos(conn, conn->tos)
-#if SO_MARK
-        if (conn->nfmark)
-            Ip::Qos::setSockNfmark(conn, conn->nfmark);
-#endif
-#endif
-
     typedef CommCbMemFunT<Comm::TcpAcceptor, CommCloseCbParams> Dialer;
     closer_ = JobCallback(5, 4, Dialer, this, Comm::TcpAcceptor::handleClosure);
     comm_add_close_handler(conn->fd, closer_);
@@ -206,7 +192,10 @@ void
 Comm::TcpAcceptor::handleClosure(const CommCloseCbParams &)
 {
     closer_ = NULL;
-    conn = NULL;
+    if (conn) {
+        conn->noteClosure();
+        conn = nullptr;
+    }
     Must(done());
 }
 
@@ -355,7 +344,6 @@ Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &
 Comm::Flag
 Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
 {
-    PROF_start(comm_accept);
     ++statCounter.syscalls.sock.accepts;
     int sock;
     struct addrinfo *gai = NULL;
@@ -366,8 +354,6 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
         errcode = errno; // store last accept errno locally.
 
         Ip::Address::FreeAddr(gai);
-
-        PROF_stop(comm_accept);
 
         if (ignoreErrno(errcode) || errcode == ECONNABORTED) {
             debugs(50, 5, status() << ": " << xstrerr(errcode));
@@ -382,7 +368,15 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     }
 
     Must(sock >= 0);
+    ++incoming_sockets_accepted;
+
+    // Sync with Comm ASAP so that abandoned details can properly close().
+    // XXX : these are not all HTTP requests. use a note about type and ip:port details->
+    // so we end up with a uniform "(HTTP|FTP-data|HTTPS|...) remote-ip:remote-port"
+    fd_open(sock, FD_SOCKET, "HTTP Request");
     details->fd = sock;
+    details->enterOrphanage();
+
     details->remote = *gai;
 
     // lookup the local-end details of this new connection
@@ -392,7 +386,6 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, "ERROR: getsockname() failed to locate local-IP on " << details << ": " << xstrerr(xerrno));
         Ip::Address::FreeAddr(gai);
-        PROF_stop(comm_accept);
         return Comm::COMM_ERROR;
     }
     details->local = *gai;
@@ -402,7 +395,6 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     if (conn->flags&(COMM_TRANSPARENT|COMM_INTERCEPTION) && !Ip::Interceptor.Lookup(details, conn)) {
         debugs(50, DBG_IMPORTANT, "ERROR: NAT/TPROXY lookup failed to locate original IPs on " << details);
         // Failed.
-        PROF_stop(comm_accept);
         return Comm::COMM_ERROR;
     }
 
@@ -421,15 +413,9 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     if (Config.client_ip_max_connections >= 0) {
         if (clientdbEstablished(details->remote, 0) > Config.client_ip_max_connections) {
             debugs(50, DBG_IMPORTANT, "WARNING: " << details->remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
-            PROF_stop(comm_accept);
             return Comm::NOMESSAGE;
         }
     }
-
-    /* fdstat update */
-    // XXX : these are not all HTTP requests. use a note about type and ip:port details->
-    // so we end up with a uniform "(HTTP|FTP-data|HTTPS|...) remote-ip:remote-port"
-    fd_open(sock, FD_SOCKET, "HTTP Request");
 
     fde *F = &fd_table[sock];
     details->remote.toStr(F->ipaddr,MAX_IPSTRLEN);
@@ -440,11 +426,11 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     // set socket flags
     commSetCloseOnExec(sock);
     commSetNonBlocking(sock);
+    Comm::ApplyTcpKeepAlive(sock, listenPort_->tcp_keepalive);
 
     /* IFF the socket is (tproxy) transparent, pass the flag down to allow spoofing */
     F->flags.transparent = fd_table[conn->fd].flags.transparent; // XXX: can we remove this line yet?
 
-    PROF_stop(comm_accept);
     return Comm::OK;
 }
 

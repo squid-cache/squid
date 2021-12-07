@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,6 +19,7 @@
 #include "acl/Checklist.h"
 #include "acl/RegexData.h"
 #include "base/RegexPattern.h"
+#include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "sbuf/Algorithms.h"
@@ -265,13 +266,5 @@ bool
 ACLRegexData::empty() const
 {
     return data.empty();
-}
-
-ACLData<char const *> *
-ACLRegexData::clone() const
-{
-    /* Regex's don't clone yet. */
-    assert(data.empty());
-    return new ACLRegexData;
 }
 

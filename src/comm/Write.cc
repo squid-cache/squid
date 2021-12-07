@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,7 +16,6 @@
 #include "fde.h"
 #include "globals.h"
 #include "MemBuf.h"
-#include "profiler/Profiler.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #if USE_DELAY_POOLS
@@ -64,7 +63,6 @@ Comm::HandleWrite(int fd, void *data)
     assert(state->conn != NULL);
     assert(state->conn->fd == fd);
 
-    PROF_start(commHandleWrite);
     debugs(5, 5, HERE << state->conn << ": off " <<
            (long int) state->offset << ", sz " << (long int) state->size << ".");
 
@@ -76,7 +74,6 @@ Comm::HandleWrite(int fd, void *data)
         assert(bucket->selectWaiting);
         bucket->selectWaiting = false;
         if (nleft > 0 && !bucket->applyQuota(nleft, state)) {
-            PROF_stop(commHandleWrite);
             return;
         }
     }
@@ -131,7 +128,5 @@ Comm::HandleWrite(int fd, void *data)
             state->finish(nleft ? Comm::OK : Comm::COMM_ERROR, 0);
         }
     }
-
-    PROF_stop(commHandleWrite);
 }
 

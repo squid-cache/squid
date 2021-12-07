@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,7 +30,6 @@
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
 #include "pconn.h"
-#include "profiler/Profiler.h"
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
@@ -112,6 +111,8 @@ comm_empty_os_read_buffers(int fd)
     if (fd_table[fd].flags.nonblocking && fd_table[fd].type != FD_MSGHDR) {
         while (FD_READ_METHOD(fd, buf, SQUID_TCP_SO_RCVBUF) > 0) {};
     }
+#else
+    (void)fd;
 #endif
 }
 
@@ -266,7 +267,7 @@ limitError(int const anErrno)
     return anErrno == ENFILE || anErrno == EMFILE;
 }
 
-void
+static void
 comm_set_v6only(int fd, int tos)
 {
 #ifdef IPV6_V6ONLY
@@ -285,7 +286,7 @@ comm_set_v6only(int fd, int tos)
  * - OpenBSD divert-to support,
  * - FreeBSD IPFW TPROXY v4 support.
  */
-void
+static void
 comm_set_transparent(int fd)
 {
 #if _SQUID_LINUX_ && defined(IP_TRANSPARENT) // Linux
@@ -337,7 +338,6 @@ comm_openex(int sock_type,
     int new_socket;
     struct addrinfo *AI = NULL;
 
-    PROF_start(comm_open);
     /* Create socket for accepting new connections. */
     ++ statCounter.syscalls.sock.sockets;
 
@@ -379,7 +379,6 @@ comm_openex(int sock_type,
 
         Ip::Address::FreeAddr(AI);
 
-        PROF_stop(comm_open);
         errno = xerrno; // restore for caller
         return -1;
     }
@@ -403,8 +402,6 @@ comm_openex(int sock_type,
     new_socket = comm_apply_flags(conn->fd, addr, flags, AI);
 
     Ip::Address::FreeAddr(AI);
-
-    PROF_stop(comm_open);
 
     // XXX transition only. prevent conn from closing the new FD on function exit.
     conn->fd = -1;
@@ -611,7 +608,6 @@ comm_connect_addr(int sock, const Ip::Address &address)
     int err = 0;
     socklen_t errlen;
     struct addrinfo *AI = NULL;
-    PROF_start(comm_connect_addr);
 
     assert(address.port() != 0);
 
@@ -704,8 +700,6 @@ comm_connect_addr(int sock, const Ip::Address &address)
 
     Ip::Address::FreeAddr(AI);
 
-    PROF_stop(comm_connect_addr);
-
     errno = xerrno;
     if (xerrno == 0 || xerrno == EISCONN)
         status = Comm::OK;
@@ -743,62 +737,14 @@ commCallCloseHandlers(int fd)
         // If call is not canceled schedule it for execution else ignore it
         if (!call->canceled()) {
             debugs(5, 5, "commCallCloseHandlers: ch->handler=" << call);
+            // XXX: Without the following code, callback fd may be -1.
+            // typedef CommCloseCbParams Params;
+            // auto &params = GetCommParams<Params>(call);
+            // params.fd = fd;
             ScheduleCallHere(call);
         }
     }
 }
-
-// XXX: This code has been broken, unused, and untested since 933dd09. Remove.
-#if LINGERING_CLOSE
-static void
-commLingerClose(int fd, void *unused)
-{
-    LOCAL_ARRAY(char, buf, 1024);
-    int n = FD_READ_METHOD(fd, buf, 1024);
-    if (n < 0) {
-        int xerrno = errno;
-        debugs(5, 3, "FD " << fd << " read: " << xstrerr(xerrno));
-    }
-    comm_close(fd);
-}
-
-static void
-commLingerTimeout(const FdeCbParams &params)
-{
-    debugs(5, 3, "commLingerTimeout: FD " << params.fd);
-    comm_close(params.fd);
-}
-
-/*
- * Inspired by apache
- */
-void
-comm_lingering_close(int fd)
-{
-    Security::SessionSendGoodbye(fd_table[fd].ssl);
-
-    if (shutdown(fd, 1) < 0) {
-        comm_close(fd);
-        return;
-    }
-
-    fd_note(fd, "lingering close");
-    AsyncCall::Pointer call = commCbCall(5,4, "commLingerTimeout", FdeCbPtrFun(commLingerTimeout, NULL));
-
-    debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
-    assert(fd_table[fd].flags.open);
-    if (callback != NULL) {
-        typedef FdeCbParams Params;
-        Params &params = GetCommParams<Params>(callback);
-        params.fd = fd;
-        fd_table[fd].timeoutHandler = callback;
-        fd_table[fd].timeout = squid_curtime + static_cast<time_t>(10);
-    }
-
-    Comm::SetSelect(fd, COMM_SELECT_READ, commLingerClose, NULL, 0);
-}
-
-#endif
 
 /**
  * enable linger with time of 0 so that when the socket is
@@ -833,13 +779,13 @@ old_comm_reset_close(int fd)
     comm_close(fd);
 }
 
-void
+static void
 commStartTlsClose(const FdeCbParams &params)
 {
     Security::SessionSendGoodbye(fd_table[params.fd].ssl);
 }
 
-void
+static void
 comm_close_complete(const FdeCbParams &params)
 {
     fde *F = &fd_table[params.fd];
@@ -890,8 +836,6 @@ _comm_close(int fd, char const *file, int line)
 
     assert(F->type != FD_FILE);
 
-    PROF_start(comm_close);
-
     F->flags.close_request = true;
 
     // We have caller's context and fde::codeContext. In the unlikely event they
@@ -940,8 +884,6 @@ _comm_close(int fd, char const *file, int line)
     // must use async call to wait for all callbacks
     // scheduled before comm_close() to finish
     ScheduleCallHere(completeCall);
-
-    PROF_stop(comm_close);
 }
 
 /* Send a udp datagram to specified TO_ADDR. */
@@ -951,7 +893,6 @@ comm_udp_sendto(int fd,
                 const void *buf,
                 int len)
 {
-    PROF_start(comm_udp_sendto);
     ++ statCounter.syscalls.sock.sendtos;
 
     debugs(50, 3, "comm_udp_sendto: Attempt to send UDP packet to " << to_addr <<
@@ -962,8 +903,6 @@ comm_udp_sendto(int fd,
     int x = sendto(fd, buf, len, 0, AI->ai_addr, AI->ai_addrlen);
     int xerrno = errno;
     Ip::Address::FreeAddr(AI);
-
-    PROF_stop(comm_udp_sendto);
 
     if (x >= 0) {
         errno = xerrno; // restore for caller to use
@@ -1195,41 +1134,6 @@ commSetTcpNoDelay(int fd)
 #endif
 
 void
-commSetTcpKeepalive(int fd, int idle, int interval, int timeout)
-{
-    int on = 1;
-#ifdef TCP_KEEPCNT
-    if (timeout && interval) {
-        int count = (timeout + interval - 1) / interval;
-        if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &count, sizeof(on)) < 0) {
-            int xerrno = errno;
-            debugs(5, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
-        }
-    }
-#endif
-#ifdef TCP_KEEPIDLE
-    if (idle) {
-        if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &idle, sizeof(on)) < 0) {
-            int xerrno = errno;
-            debugs(5, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
-        }
-    }
-#endif
-#ifdef TCP_KEEPINTVL
-    if (interval) {
-        if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &interval, sizeof(on)) < 0) {
-            int xerrno = errno;
-            debugs(5, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
-        }
-    }
-#endif
-    if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (char *) &on, sizeof(on)) < 0) {
-        int xerrno = errno;
-        debugs(5, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
-    }
-}
-
-void
 comm_init(void)
 {
     assert(fd_table);
@@ -1297,8 +1201,8 @@ ClientInfo::writeOrDequeue()
         const auto ccb = COMMIO_FD_WRITECB(head);
         // check that the head descriptor is still relevant
         if (headFde.clientInfo == this &&
-        quotaPeekReserv() == ccb->quotaQueueReserv &&
-        !headFde.closing()) {
+                quotaPeekReserv() == ccb->quotaQueueReserv &&
+                !headFde.closing()) {
 
             // wait for the head descriptor to become ready for writing
             Comm::SetSelect(head, COMM_SELECT_WRITE, Comm::HandleWrite, ccb, 0);
@@ -1679,7 +1583,7 @@ commHalfClosedCheck(void *)
         if (!fd_table[c->fd].halfClosedReader) { // not reading already
             CallBack(fd_table[c->fd].codeContext, [&c] {
                 AsyncCall::Pointer call = commCbCall(5,4, "commHalfClosedReader",
-                CommIoCbPtrFun(&commHalfClosedReader, nullptr));
+                                                     CommIoCbPtrFun(&commHalfClosedReader, nullptr));
                 Comm::Read(c, call);
                 fd_table[c->fd].halfClosedReader = call;
             });
@@ -1787,6 +1691,10 @@ DeferredReadManager::CloseHandler(const CommCloseCbParams &params)
     CbDataList<DeferredRead> *temp = (CbDataList<DeferredRead> *)params.data;
 
     temp->element.closer = NULL;
+    if (temp->element.theRead.conn) {
+        temp->element.theRead.conn->noteClosure();
+        temp->element.theRead.conn = nullptr;
+    }
     temp->element.markCancelled();
 }
 
@@ -1860,6 +1768,11 @@ DeferredReadManager::kickARead(DeferredRead const &aRead)
     if (aRead.cancelled)
         return;
 
+    // TODO: This check still allows theReader call with a closed theRead.conn.
+    // If a delayRead() caller has a close connection handler, then such a call
+    // would be useless and dangerous. If a delayRead() caller does not have it,
+    // then the caller will get stuck when an external connection closure makes
+    // aRead.cancelled (checked above) true.
     if (Comm::IsConnOpen(aRead.theRead.conn) && fd_table[aRead.theRead.conn->fd].closing())
         return;
 
@@ -1917,7 +1830,6 @@ comm_open_uds(int sock_type,
 
     int new_socket;
 
-    PROF_start(comm_open);
     /* Create socket for accepting new connections. */
     ++ statCounter.syscalls.sock.sockets;
 
@@ -1946,8 +1858,6 @@ comm_open_uds(int sock_type,
         } else {
             debugs(50, DBG_CRITICAL, MYNAME << "socket failure: " << xstrerr(xerrno));
         }
-
-        PROF_stop(comm_open);
         return -1;
     }
 
@@ -1970,7 +1880,6 @@ comm_open_uds(int sock_type,
     if (flags & COMM_NONBLOCKING) {
         if (commSetNonBlocking(new_socket) != Comm::OK) {
             comm_close(new_socket);
-            PROF_stop(comm_open);
             return -1;
         }
     }
@@ -1978,7 +1887,6 @@ comm_open_uds(int sock_type,
     if (flags & COMM_DOBIND) {
         if (commBind(new_socket, AI) != Comm::OK) {
             comm_close(new_socket);
-            PROF_stop(comm_open);
             return -1;
         }
     }
@@ -1991,8 +1899,6 @@ comm_open_uds(int sock_type,
 
     if (Config.tcpRcvBufsz > 0 && sock_type == SOCK_STREAM)
         commSetTcpRcvbuf(new_socket, Config.tcpRcvBufsz);
-
-    PROF_stop(comm_open);
 
     return new_socket;
 }

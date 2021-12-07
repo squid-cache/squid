@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -126,6 +126,7 @@ inline const char *ErrorString(const LibErrorCode code) {
 #elif USE_GNUTLS
     return gnutls_strerror(code);
 #else
+    (void)code;
     return "[no TLS library]";
 #endif
 }
@@ -156,7 +157,9 @@ enum Type {
 // TODO: Either move to Security::Io or remove/restrict the Io namespace.
 class IoResult;
 
+class CommunicationSecrets;
 class KeyData;
+class KeyLog;
 
 #if USE_OPENSSL
 typedef long ParsedOptions;
@@ -172,6 +175,7 @@ class ParsedOptions {}; // we never parse/use TLS options in this case
 typedef long ParsedPortFlags;
 
 class PeerConnector;
+class BlindPeerConnector;
 class PeerOptions;
 
 #if USE_OPENSSL
@@ -187,6 +191,12 @@ class ServerOptions;
 
 class ErrorDetail;
 typedef RefCount<ErrorDetail> ErrorDetailPointer;
+
+std::ostream &operator <<(std::ostream &, const KeyLog &);
+
+void OpenLogs(); ///< opens logs enabled in the current configuration
+void RotateLogs(); ///< rotates logs opened by OpenLogs()
+void CloseLogs(); ///< closes logs opened by OpenLogs()
 
 } // namespace Security
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,17 +8,13 @@
 
 #include "squid.h"
 #include "ConfigParser.h"
-#include "event.h"
 #include "SquidString.h"
-#include "testConfigParser.h"
+#include "tests/testConfigParser.h"
 #include "unitTestMain.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testConfigParser);
 
-/* let this test link sanely */
-void
-eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata)
-{}
+int shutting_down = 0;
 
 void testConfigParser::setUp()
 {

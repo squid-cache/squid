@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -53,7 +53,6 @@ libcompatsquid_la_SOURCES = \
 	os/macosx.h \
 	os/mswindows.h \
 	os/netbsd.h \
-	os/next.h \
 	os/openbsd.h \
 	os/opensolaris_10_netdb.h \
 	os/os2.h \

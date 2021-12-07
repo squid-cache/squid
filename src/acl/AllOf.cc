@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,19 +10,14 @@
 #include "acl/AllOf.h"
 #include "acl/BoolOps.h"
 #include "acl/Checklist.h"
-#include "globals.h"
+#include "cache_cf.h"
 #include "MemBuf.h"
+#include "sbuf/SBuf.h"
 
 char const *
 Acl::AllOf::typeString() const
 {
     return "all-of";
-}
-
-ACL *
-Acl::AllOf::clone() const
-{
-    return new AllOf;
 }
 
 SBufList

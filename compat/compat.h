@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -70,7 +70,6 @@
 #include "compat/os/macosx.h"
 #include "compat/os/mswindows.h"
 #include "compat/os/netbsd.h"
-#include "compat/os/next.h"
 #include "compat/os/openbsd.h"
 #include "compat/os/os2.h"
 #include "compat/os/qnx.h"

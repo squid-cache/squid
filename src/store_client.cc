@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,7 +18,6 @@
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "mime_header.h"
-#include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #include "Store.h"
@@ -84,13 +83,6 @@ StoreClient::startCollapsingOn(const StoreEntry &e, const bool doingRevalidation
     return true;
 }
 
-void
-StoreClient::fillChecklist(ACLFilledChecklist &checklist) const
-{
-    // TODO: Consider moving all CF-related methods into a new dedicated class.
-    Must(!"startCollapsingOn() caller must override fillChecklist()");
-}
-
 /* store_client */
 
 bool
@@ -143,7 +135,8 @@ storeClientListAdd(StoreEntry * e, void *data)
     if (storeClientListSearch(mem, data) != NULL)
         /* XXX die! */
         assert(1 == 0);
-
+#else
+    (void)data;
 #endif
 
     sc = new store_client (e);
@@ -265,12 +258,10 @@ store_client::copy(StoreEntry * anEntry,
     static bool copying (false);
     assert (!copying);
     copying = true;
-    PROF_start(storeClient_kickReads);
     /* we might be blocking comm reads due to readahead limits
      * now we have a new offset, trigger those reads...
      */
     entry->mem_obj->kickReads();
-    PROF_stop(storeClient_kickReads);
     copying = false;
 
     anEntry->lock("store_client::copy"); // see deletion note below
@@ -659,19 +650,12 @@ storeClientCopyPending(store_client * sc, StoreEntry * e, void *data)
 {
 #if STORE_CLIENT_LIST_DEBUG
     assert(sc == storeClientListSearch(e->mem_obj, data));
+#else
+    (void)data;
 #endif
-#ifndef SILLY_CODE
 
     assert(sc);
-#endif
-
     assert(sc->entry == e);
-#if SILLY_CODE
-
-    if (sc == NULL)
-        return 0;
-
-#endif
 
     if (!sc->_callback.pending())
         return 0;
@@ -688,8 +672,9 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 {
     MemObject *mem = e->mem_obj;
 #if STORE_CLIENT_LIST_DEBUG
-
     assert(sc == storeClientListSearch(e->mem_obj, data));
+#else
+    (void)data;
 #endif
 
     if (mem == NULL)
@@ -771,8 +756,6 @@ StoreEntry::invokeHandlers()
     dlink_node *nx = NULL;
     dlink_node *node;
 
-    PROF_start(InvokeHandlers);
-
     debugs(90, 3, mem_obj->nclients << " clients; " << *this << ' ' << getMD5Text());
     /* walk the entire list looking for valid callbacks */
 
@@ -793,7 +776,6 @@ StoreEntry::invokeHandlers()
         storeClientCopy2(this, sc);
     }
     CodeContext::Reset(savedContext);
-    PROF_stop(InvokeHandlers);
 }
 
 // Does not account for remote readers/clients.

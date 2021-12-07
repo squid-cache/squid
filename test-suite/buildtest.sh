@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -15,7 +15,6 @@
 
 action="${1}"
 config="${2}"
-base="`dirname ${0}`"
 
 # cache_file may be set by environment variable
 configcache=""
@@ -66,9 +65,17 @@ fi
 # do not build any of the install's ...
 #
 # eval is need to correctly handle quoted arguments
-	eval "$base/../configure ${DISTCHECK_CONFIGURE_FLAGS} ${configcache}" \
-		2>&1 && \
-	${MAKE:-make} ${pjobs} ${MAKETEST} 2>&1
+if test -x "../configure" ; then
+    base="."
+else
+    base="`dirname ${0}`"
+fi
+
+echo "PWD: $PWD"
+echo "$base/../configure ${DISTCHECK_CONFIGURE_FLAGS} ${configcache} ..."
+eval "$base/../configure ${DISTCHECK_CONFIGURE_FLAGS} ${configcache}" \
+    2>&1 && \
+    ${MAKE:-make} ${pjobs} ${MAKETEST} 2>&1
 
 # Remember and then explicitly return the result of the last command
 # to the script caller. Probably not needed on most or all platforms.

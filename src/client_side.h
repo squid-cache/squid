@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 #ifndef SQUID_CLIENTSIDE_H
 #define SQUID_CLIENTSIDE_H
 
-#include "acl/forward.h"
+#include "acl/ChecklistFiller.h"
 #include "base/RunnersRegistry.h"
 #include "clientStreamForward.h"
 #include "comm.h"
@@ -27,6 +27,7 @@
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
+#include "security/KeyLogger.h"
 #if USE_OPENSSL
 #include "security/forward.h"
 #include "security/Handshake.h"
@@ -75,7 +76,11 @@ class ServerBump;
  * managing, or for graceful half-close use the stopReceiving() or
  * stopSending() methods.
  */
-class ConnStateData : public Server, public HttpControlMsgSink, private IndependentRunner
+class ConnStateData:
+    public Server,
+    public HttpControlMsgSink,
+    public Acl::ChecklistFiller,
+    private IndependentRunner
 {
 
 public:
@@ -208,7 +213,7 @@ public:
     /// noteTakeServerConnectionControl() callback parameter
     class ServerConnectionContext {
     public:
-        ServerConnectionContext(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req, const SBuf &post101Bytes): preReadServerBytes(post101Bytes), conn_(conn) { conn_->enterOrphanage(); }
+        ServerConnectionContext(const Comm::ConnectionPointer &conn, const SBuf &post101Bytes) : preReadServerBytes(post101Bytes), conn_(conn) { conn_->enterOrphanage(); }
 
         /// gives to-server connection to the new owner
         Comm::ConnectionPointer connection() { conn_->leaveOrphanage(); return conn_; }
@@ -242,6 +247,10 @@ public:
 
     /// The caller assumes responsibility for connection closure detection.
     void stopPinnedConnectionMonitoring();
+
+    /// Starts or resumes accepting a TLS connection. TODO: Make this helper
+    /// method protected after converting clientNegotiateSSL() into a method.
+    Security::IoResult acceptTls();
 
     /// the second part of old httpsAccept, waiting for future HttpsServer home
     void postHttpsAccept();
@@ -332,9 +341,6 @@ public:
     /// tunneling them to the server later (on_unsupported_protocol)
     bool shouldPreserveClientData() const;
 
-    // TODO: move to the protected section when removing clientTunnelOnError()
-    bool tunnelOnError(const HttpRequestMethod &, const err_type);
-
     /// build a fake http request
     ClientHttpRequest *buildFakeRequest(Http::MethodType const method, SBuf &useHost, unsigned short usePort, const SBuf &payload);
 
@@ -360,10 +366,23 @@ public:
     /// emplacement/convenience wrapper for updateError(const Error &)
     void updateError(const err_type c, const ErrorDetailPointer &d) { updateError(Error(c, d)); }
 
+    /* Acl::ChecklistFiller API */
+    virtual void fillChecklist(ACLFilledChecklist &) const;
+
+    /// fillChecklist() obligations not fulfilled by the front request
+    /// TODO: This is a temporary ACLFilledChecklist::setConn() callback to
+    /// allow filling checklist using our non-public information sources. It
+    /// should be removed as unnecessary by making ACLs extract the information
+    /// they need from the ACLFilledChecklist::conn() without filling/copying.
+    void fillConnectionLevelDetails(ACLFilledChecklist &) const;
+
     // Exposed to be accessible inside the ClientHttpRequest constructor.
     // TODO: Remove. Make sure there is always a suitable ALE instead.
     /// a problem that occurred without a request (e.g., while parsing headers)
     Error bareError;
+
+    /// managers logging of the being-accepted TLS connection secrets
+    Security::KeyLogger keyLogger;
 
 protected:
     void startDechunkingRequest();
@@ -414,6 +433,8 @@ protected:
 
     /// whether preservedClientData is valid and should be kept up to date
     bool preservingClientData_ = false;
+
+    bool tunnelOnError(const HttpRequestMethod &, const err_type);
 
 private:
     /* ::Server API */
@@ -511,6 +532,7 @@ CSCB clientSocketRecipient;
 CSD clientSocketDetach;
 
 void clientProcessRequest(ConnStateData *, const Http1::RequestParserPointer &, Http::Stream *);
+void clientProcessRequestFinished(ConnStateData *, const HttpRequest::Pointer &);
 void clientPostHttpsAccept(ConnStateData *);
 
 std::ostream &operator <<(std::ostream &os, const ConnStateData::PinnedIdleContext &pic);

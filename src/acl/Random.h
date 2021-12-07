@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,11 +17,8 @@ class ACLRandom : public ACL
 
 public:
     ACLRandom(char const *);
-    ACLRandom(ACLRandom const &);
     ~ACLRandom();
-    ACLRandom&operator=(ACLRandom const &);
 
-    virtual ACL *clone()const;
     virtual char const *typeString() const;
     virtual void parse();
     virtual int match(ACLChecklist *checklist);

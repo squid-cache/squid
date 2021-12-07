@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,8 +37,8 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/Address.h"
+#include "log/forward.h"
 #include "MemBuf.h"
-#include "profiler/Profiler.h"
 #include "SquidConfig.h"
 
 /* quick reference on behaviour here.
@@ -74,7 +74,8 @@ class ESIStreamContext;
  */
 
 /* make comparisons with refcount pointers easy */
-bool operator == (ESIElement const *lhs, ESIElement::Pointer const &rhs)
+static bool
+operator == (ESIElement const *lhs, ESIElement::Pointer const &rhs)
 {
     return lhs == rhs.getRaw();
 }
@@ -279,7 +280,7 @@ ESIContext::provideData (ESISegment::Pointer theData, ESIElement * source)
 }
 
 void
-ESIContext::fail (ESIElement * source, char const *anError)
+ESIContext::fail(ESIElement *, char const *anError)
 {
     setError();
     setErrorMessage (anError);
@@ -550,16 +551,6 @@ ESIContext::send ()
         return 0;
     } else
         flags.oktosend = 1;
-
-#if 0
-
-    if (!flags.oktosend) {
-
-        fatal("ESIContext::send: Not OK to send.\n");
-        return 0;
-    }
-
-#endif
 
     if (!(rep || (outbound.getRaw() &&
                   outbound->len && (outbound_offset <= outbound->len)))) {
@@ -1257,8 +1248,6 @@ ESIContext::parse()
         parserState.parsing = 1;
         /* we don't keep any data around */
 
-        PROF_start(esiParsing);
-
         try {
             while (buffered.getRaw() && !flags.error)
                 parseOneBuffer();
@@ -1277,8 +1266,6 @@ ESIContext::parse()
             setError();
             setErrorMessage("ESI parser error");
         }
-
-        PROF_stop(esiParsing);
 
         /* Tel the read code to allocate a new buffer */
         incoming = NULL;
@@ -1333,7 +1320,6 @@ ESIContext::process ()
      */
     {
         esiProcessResult_t status;
-        PROF_start(esiProcessing);
         processing = true;
         status = tree->process(0);
         processing = false;
@@ -1357,9 +1343,6 @@ ESIContext::process ()
             setError();
 
             setErrorMessage("esiProcess: ESI template Processing failed.");
-
-            PROF_stop(esiProcessing);
-
             return ESI_PROCESS_FAILED;
 
             break;
@@ -1380,7 +1363,6 @@ ESIContext::process ()
             flags.finished = 1;
         }
 
-        PROF_stop(esiProcessing);
         return status; /* because we have no callbacks */
     }
 }
@@ -1421,7 +1403,7 @@ ESIContext::freeResources ()
     /* don't touch incoming, it's a pointer into buffered anyway */
 }
 
-ErrorState *clientBuildError(err_type, Http::StatusCode, char const *, const ConnStateData *, HttpRequest *, const AccessLogEntry::Pointer &);
+ErrorState *clientBuildError(err_type, Http::StatusCode, char const *, const ConnStateData *, HttpRequest *, const AccessLogEntryPointer &);
 
 /* This can ONLY be used before we have sent *any* data to the client */
 void
@@ -1605,7 +1587,7 @@ esiLiteral::makeUsable(esiTreeParentPtr, ESIVarState &newVarState) const
 
 /* esiRemove */
 void
-esiRemove::render(ESISegment::Pointer output)
+esiRemove::render(ESISegment::Pointer)
 {
     /* Removes do nothing dude */
     debugs(86, 5, "esiRemoveRender: Rendering remove " << this);
@@ -1838,7 +1820,7 @@ esiTry::provideData (ESISegment::Pointer data, ESIElement* source)
     }
 }
 
-esiTry::esiTry(esiTry const &old)
+esiTry::esiTry(esiTry const &)
 {
     attempt = NULL;
     except  = NULL;

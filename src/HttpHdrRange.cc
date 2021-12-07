@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -193,6 +193,8 @@ HttpHdrRangeSpec::mergeWith(const HttpHdrRangeSpec * donor)
             offset <= donor->offset && donor->offset < rhs;
     }
 
+#else
+    (void)donor;
 #endif
     return merged;
 }
@@ -226,7 +228,7 @@ HttpHdrRange::parseInit(const String * range_spec)
     int ilen;
     assert(range_spec);
     ++ParsedCount;
-    debugs(64, 8, "parsing range field: '" << range_spec << "'");
+    debugs(64, 8, "parsing range field: '" << *range_spec << "'");
     /* check range type */
 
     if (range_spec->caseCmp("bytes=", 6))
@@ -247,7 +249,7 @@ HttpHdrRange::parseInit(const String * range_spec)
                 delete specs.back();
                 specs.pop_back();
             }
-            debugs(64, 2, "ignoring invalid range field: '" << range_spec << "'");
+            debugs(64, 2, "ignoring invalid range field: '" << *range_spec << "'");
             break;
         }
 
@@ -524,23 +526,6 @@ HttpHdrRange::offsetLimitExceeded(const int64_t limit) const
         return false;
 
     return true;
-}
-
-bool
-HttpHdrRange::contains(const HttpHdrRangeSpec& r) const
-{
-    assert(r.length >= 0);
-    HttpHdrRangeSpec::HttpRange rrange(r.offset, r.offset + r.length);
-
-    for (const_iterator i = begin(); i != end(); ++i) {
-        HttpHdrRangeSpec::HttpRange irange((*i)->offset, (*i)->offset + (*i)->length);
-        HttpHdrRangeSpec::HttpRange intersection = rrange.intersection(irange);
-
-        if (intersection.start == irange.start && intersection.size() == irange.size())
-            return true;
-    }
-
-    return false;
 }
 
 const HttpHdrRangeSpec *

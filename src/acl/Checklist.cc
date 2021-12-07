@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,6 @@
 #include "acl/Checklist.h"
 #include "acl/Tree.h"
 #include "Debug.h"
-#include "profiler/Profiler.h"
 
 #include <algorithm>
 
@@ -307,8 +306,6 @@ ACLChecklist::matchAndFinish()
 Acl::Answer const &
 ACLChecklist::fastCheck(const Acl::Tree * list)
 {
-    PROF_start(aclCheckFast);
-
     preCheck("fast ACLs");
     asyncCaller_ = false;
 
@@ -325,7 +322,6 @@ ACLChecklist::fastCheck(const Acl::Tree * list)
 
     changeAcl(savedList);
     occupied_ = false;
-    PROF_stop(aclCheckFast);
     return currentAnswer();
 }
 
@@ -335,8 +331,6 @@ ACLChecklist::fastCheck(const Acl::Tree * list)
 Acl::Answer const &
 ACLChecklist::fastCheck()
 {
-    PROF_start(aclCheckFast);
-
     preCheck("fast rules");
     asyncCaller_ = false;
 
@@ -349,7 +343,6 @@ ACLChecklist::fastCheck()
         if (finished()) {
             cbdataReferenceDone(acl);
             occupied_ = false;
-            PROF_stop(aclCheckFast);
             return currentAnswer();
         }
 
@@ -360,7 +353,6 @@ ACLChecklist::fastCheck()
     calcImplicitAnswer();
     cbdataReferenceDone(acl);
     occupied_ = false;
-    PROF_stop(aclCheckFast);
 
     return currentAnswer();
 }

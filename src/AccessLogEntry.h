@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -276,8 +276,8 @@ class ACLChecklist;
 class StoreEntry;
 
 /* Should be in 'AccessLog.h' as the driver */
-void accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist* checklist = NULL);
-void accessLogLog(AccessLogEntry::Pointer &, ACLChecklist * checklist);
+void accessLogLogTo(CustomLog *, const AccessLogEntryPointer &, ACLChecklist *checklist = nullptr);
+void accessLogLog(const AccessLogEntryPointer &, ACLChecklist *);
 void accessLogRotate(void);
 void accessLogClose(void);
 void accessLogInit(void);

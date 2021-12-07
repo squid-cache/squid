@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,23 +14,14 @@
 
 #include "acl/Eui64.h"
 #include "acl/FilledChecklist.h"
+#include "cache_cf.h"
 #include "Debug.h"
 #include "eui/Eui64.h"
 #include "globals.h"
 #include "ip/Address.h"
 
-ACL *
-ACLEui64::clone() const
-{
-    return new ACLEui64(*this);
-}
-
 ACLEui64::ACLEui64 (char const *theClass) : class_ (theClass)
 {}
-
-ACLEui64::ACLEui64 (ACLEui64 const & old) : eui64Data(old.eui64Data), class_ (old.class_)
-{
-}
 
 char const *
 ACLEui64::typeString() const
@@ -44,7 +35,7 @@ ACLEui64::empty () const
     return eui64Data.empty();
 }
 
-Eui::Eui64 *
+static Eui::Eui64 *
 aclParseEuiData(const char *t)
 {
     char buf[256];

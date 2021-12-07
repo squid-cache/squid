@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -54,7 +54,7 @@ public:
     icp_common_t *msg = nullptr; ///< ICP message with network byte order fields
     DelayedUdpSend *next = nullptr; ///< invasive FIFO queue of delayed ICP messages
     AccessLogEntryPointer ale; ///< sender's master transaction summary
-    struct timeval queue_time = {0, 0}; ///< queuing timestamp
+    struct timeval queue_time = {}; ///< queuing timestamp
 };
 
 static void icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);
@@ -253,7 +253,7 @@ icpLogIcp(const Ip::Address &caddr, const LogTags_ot logcode, const int len, con
 }
 
 /// \ingroup ServerProtocolICPInternal2
-void
+static void
 icpUdpSendQueue(int fd, void *)
 {
     DelayedUdpSend *q;
@@ -454,15 +454,6 @@ icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
     checklist.src_addr = from;
     checklist.my_addr.setNoAddr();
     return checklist.fastCheck().allowed();
-}
-
-char const *
-icpGetUrlToSend(char *url)
-{
-    if (strpbrk(url, w_space))
-        return rfc1738_escape(url);
-    else
-        return url;
 }
 
 HttpRequest *

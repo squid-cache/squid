@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -50,11 +50,6 @@ StepValue(const char *name)
 ACLAtStepData::ACLAtStepData()
 {}
 
-ACLAtStepData::ACLAtStepData(ACLAtStepData const &old)
-{
-    values.assign(old.values.begin(), old.values.end());
-}
-
 ACLAtStepData::~ACLAtStepData()
 {
 }
@@ -90,11 +85,5 @@ bool
 ACLAtStepData::empty() const
 {
     return values.empty();
-}
-
-ACLAtStepData *
-ACLAtStepData::clone() const
-{
-    return new ACLAtStepData(*this);
 }
 

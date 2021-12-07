@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,6 @@
 #include "Debug.h"
 #include "esi/Esi.h"
 #include "esi/Expression.h"
-#include "profiler/Profiler.h"
 
 #include <cerrno>
 #include <cmath>
@@ -245,7 +244,7 @@ evalnegate(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
 }
 
 int
-evalliteral(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
+evalliteral(stackmember * /* stack */, int * /* depth */, int /* whereAmI */, stackmember * /* candidate */)
 {
     debugs(86, DBG_IMPORTANT, "attempt to evaluate a literal");
     /* literals can't be evaluated */
@@ -253,7 +252,7 @@ evalliteral(stackmember * stack, int *depth, int whereAmI, stackmember * candida
 }
 
 int
-evalexpr(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
+evalexpr(stackmember * /* stack */, int * /* depth */, int /* whereAmI */, stackmember * /* candidate */)
 {
     debugs(86, DBG_IMPORTANT, "attempt to evaluate a sub-expression result");
     /* sub-scpr's can't be evaluated */
@@ -664,7 +663,7 @@ evalstartexpr(stackmember * stack, int *depth, int whereAmI, stackmember * candi
 }
 
 int
-evalendexpr(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
+evalendexpr(stackmember * /* stack */, int * /* depth */, int /* whereAmI */, stackmember * /* candidate */)
 {
     /* Can't evaluate ) brackets */
     return 1;
@@ -1002,7 +1001,6 @@ ESIExpression::Evaluate(char const *s)
     stackmember stack[ESI_STACK_DEPTH_LIMIT];
     int stackdepth = 0;
     char const *end;
-    PROF_start(esiExpressionEval);
 
     while (*s) {
         stackmember candidate = getsymbol(s, &end);
@@ -1011,7 +1009,6 @@ ESIExpression::Evaluate(char const *s)
             assert(s != end);
 
             if (!addmember(stack, &stackdepth, &candidate)) {
-                PROF_stop(esiExpressionEval);
                 return 0;
             }
 
@@ -1019,7 +1016,6 @@ ESIExpression::Evaluate(char const *s)
         } else {
             assert (s == end);
             debugs(86, DBG_IMPORTANT, "failed parsing expression");
-            PROF_stop(esiExpressionEval);
             return 0;
         }
     }
@@ -1033,14 +1029,12 @@ ESIExpression::Evaluate(char const *s)
                 eval(stack, &stackdepth, stackdepth - 2, &rv)) {
             /* special case - leading operator failed */
             debugs(86, DBG_IMPORTANT, "invalid expression");
-            PROF_stop(esiExpressionEval);
             return 0;
         }
     }
 
     if (stackdepth == 0) {
         /* Empty expression - evaluate to false */
-        PROF_stop(esiExpressionEval);
         return 0;
     }
 
@@ -1048,8 +1042,6 @@ ESIExpression::Evaluate(char const *s)
     assert(stackdepth == 1);
 
     assert(stack[0].valuetype == ESI_EXPR_EXPR);
-
-    PROF_stop(esiExpressionEval);
 
     return stack[0].value.integral ? 1 : 0;
 }

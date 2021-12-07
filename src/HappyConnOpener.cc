@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,6 +18,7 @@
 #include "neighbors.h"
 #include "pconn.h"
 #include "PeerPoolMgr.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 
 CBDATA_CLASS_INIT(HappyConnOpener);
@@ -330,6 +331,8 @@ HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const Asyn
     fwdStart(aFwdStart),
     callback_(aCall),
     destinations(dests),
+    prime(&HappyConnOpener::notePrimeConnectDone, "HappyConnOpener::notePrimeConnectDone"),
+    spare(&HappyConnOpener::noteSpareConnectDone, "HappyConnOpener::noteSpareConnectDone"),
     ale(anAle),
     cause(request),
     n_tries(tries)
@@ -410,33 +413,44 @@ HappyConnOpener::swanSong()
     AsyncJob::swanSong();
 }
 
+/// HappyConnOpener::Attempt printer for debugging
+std::ostream &
+operator <<(std::ostream &os, const HappyConnOpener::Attempt &attempt)
+{
+    if (!attempt.path)
+        os << '-';
+    else if (attempt.path->isOpen())
+        os << "FD " << attempt.path->fd;
+    else if (attempt.connWait)
+        os << attempt.connWait;
+    else // destination is known; connection closed (and we are not opening any)
+        os << attempt.path->id;
+    return os;
+}
+
 const char *
 HappyConnOpener::status() const
 {
-    static MemBuf buf;
-    buf.reset();
+    // TODO: In a redesigned status() API, the caller may mimic this approach.
+    static SBuf buf;
+    buf.clear();
 
-    buf.append(" [", 2);
+    SBufStream os(buf);
+
+    os.write(" [", 2);
     if (stopReason)
-        buf.appendf("Stopped, reason:%s", stopReason);
-    if (prime) {
-        if (prime.path && prime.path->isOpen())
-            buf.appendf(" prime FD %d", prime.path->fd);
-        else if (prime.connector)
-            buf.appendf(" prime call%ud", prime.connector->id.value);
-    }
-    if (spare) {
-        if (spare.path && spare.path->isOpen())
-            buf.appendf(" spare FD %d", spare.path->fd);
-        else if (spare.connector)
-            buf.appendf(" spare call%ud", spare.connector->id.value);
-    }
+        os << "Stopped:" << stopReason;
+    if (prime)
+        os << "prime:" << prime;
+    if (spare)
+        os << "spare:" << spare;
     if (n_tries)
-        buf.appendf(" tries %d", n_tries);
-    buf.appendf(" %s%u]", id.prefix(), id.value);
-    buf.terminate();
+        os << " tries:" << n_tries;
+    os << " dst:" << *destinations;
+    os << ' ' << id << ']';
 
-    return buf.content();
+    buf = os.buf();
+    return buf.c_str();
 }
 
 /// Create "503 Service Unavailable" or "504 Gateway Timeout" error depending
@@ -516,7 +530,7 @@ void
 HappyConnOpener::startConnecting(Attempt &attempt, PeerConnectionPointer &dest)
 {
     Must(!attempt.path);
-    Must(!attempt.connector);
+    Must(!attempt.connWait);
     Must(dest);
 
     const auto bumpThroughPeer = cause->flags.sslBumped && dest->getPeer();
@@ -552,51 +566,52 @@ HappyConnOpener::openFreshConnection(Attempt &attempt, PeerConnectionPointer &de
     entry->mem_obj->checkUrlChecksum();
 #endif
 
-    GetMarkingsToServer(cause.getRaw(), *dest);
+    const auto conn = dest->cloneProfile();
+    GetMarkingsToServer(cause.getRaw(), *conn);
 
-    // ConnOpener modifies its destination argument so we reset the source port
-    // in case we are reusing the destination already used by our predecessor.
-    dest->local.port(0);
     ++n_tries;
 
     typedef CommCbMemFunT<HappyConnOpener, CommConnectCbParams> Dialer;
-    AsyncCall::Pointer callConnect = JobCallback(48, 5, Dialer, this, HappyConnOpener::connectDone);
+    AsyncCall::Pointer callConnect = asyncCall(48, 5, attempt.callbackMethodName,
+                                     Dialer(this, attempt.callbackMethod));
     const time_t connTimeout = dest->connectTimeout(fwdStart);
-    Comm::ConnOpener *cs = new Comm::ConnOpener(dest, callConnect, connTimeout);
-    if (!dest->getPeer())
+    auto cs = new Comm::ConnOpener(conn, callConnect, connTimeout);
+    if (!conn->getPeer())
         cs->setHost(host_);
 
-    attempt.path = dest;
-    attempt.connector = callConnect;
-    attempt.opener = cs;
-
-    AsyncJob::Start(cs);
+    attempt.path = dest; // but not the being-opened conn!
+    attempt.connWait.start(cs, callConnect);
 }
 
-/// called by Comm::ConnOpener objects after a prime or spare connection attempt
-/// completes (successfully or not)
+/// Comm::ConnOpener callback for the prime connection attempt
 void
-HappyConnOpener::connectDone(const CommConnectCbParams &params)
+HappyConnOpener::notePrimeConnectDone(const CommConnectCbParams &params)
+{
+    handleConnOpenerAnswer(prime, params, "new prime connection");
+}
+
+/// Comm::ConnOpener callback for the spare connection attempt
+void
+HappyConnOpener::noteSpareConnectDone(const CommConnectCbParams &params)
+{
+    if (gotSpareAllowance) {
+        TheSpareAllowanceGiver.jobUsedAllowance();
+        gotSpareAllowance = false;
+    }
+    handleConnOpenerAnswer(spare, params, "new spare connection");
+}
+
+/// prime/spare-agnostic processing of a Comm::ConnOpener result
+void
+HappyConnOpener::handleConnOpenerAnswer(Attempt &attempt, const CommConnectCbParams &params, const char *what)
 {
     Must(params.conn);
-    const bool itWasPrime = (params.conn == prime.path);
-    const bool itWasSpare = (params.conn == spare.path);
-    Must(itWasPrime != itWasSpare);
 
-    PeerConnectionPointer handledPath;
-    if (itWasPrime) {
-        handledPath = prime.path;
-        prime.finish();
-    } else {
-        handledPath = spare.path;
-        spare.finish();
-        if (gotSpareAllowance) {
-            TheSpareAllowanceGiver.jobUsedAllowance();
-            gotSpareAllowance = false;
-        }
-    }
+    // finalize the previously selected path before attempt.finish() forgets it
+    auto handledPath = attempt.path;
+    handledPath.finalize(params.conn); // closed on errors
+    attempt.finish();
 
-    const char *what = itWasPrime ? "new prime connection" : "new spare connection";
     if (params.flag == Comm::OK) {
         sendSuccess(handledPath, false, what);
         return;
@@ -605,7 +620,6 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
     debugs(17, 8, what << " failed: " << params.conn);
     if (const auto peer = params.conn->getPeer())
         peerConnectFailed(peer);
-    params.conn->close(); // TODO: Comm::ConnOpener should do this instead.
 
     // remember the last failure (we forward it if we cannot connect anywhere)
     lastFailedConnection = handledPath;
@@ -677,14 +691,13 @@ HappyConnOpener::cancelSpareWait(const char *reason)
 
 /** Called when an external event changes initiator interest, destinations,
  * prime, spare, or spareWaiting. Leaves HappyConnOpener in one of these
- * (mutually exclusive beyond the exceptional state #0) "stable" states:
+ * mutually exclusive "stable" states:
  *
- * 0. Exceptional termination: done()
- * 1. Processing a single peer: currentPeer
+ * 1. Processing a single peer: currentPeer && !done()
  *    1.1. Connecting: prime || spare
  *    1.2. Waiting for spare gap and/or paths: !prime && !spare
- * 2. Waiting for a new peer: destinations->empty() && !destinations->destinationsFinalized && !currentPeer
- * 3. Finished: destinations->empty() && destinations->destinationsFinalized && !currentPeer
+ * 2. Waiting for a new peer: destinations->empty() && !destinations->destinationsFinalized && !currentPeer && !done()
+ * 3. Terminating: done()
  */
 void
 HappyConnOpener::checkForNewConnection()
@@ -717,43 +730,13 @@ HappyConnOpener::checkForNewConnection()
         spareWaiting.forNewPeer = true;
     }
 
-    // open a new prime and/or a new spare connection if needed
-    if (!destinations->empty()) {
-        if (!currentPeer) {
-            auto newPrime = destinations->extractFront();
-            currentPeer = newPrime;
-            Must(currentPeer);
-            debugs(17, 7, "new peer " << *currentPeer);
-            primeStart = current_dtime;
-            startConnecting(prime, newPrime);
-            // TODO: if reuseOldConnection() in startConnecting() above succeeds,
-            // then we should not get here, and Must(prime) below will fail.
-            maybeGivePrimeItsChance();
-            Must(prime); // entering state #1.1
-        } else {
-            if (!prime)
-                maybeOpenAnotherPrimeConnection(); // may make destinations empty()
-        }
+    if (!prime)
+        maybeOpenPrimeConnection();
 
-        if (!spare && !spareWaiting)
-            maybeOpenSpareConnection(); // may make destinations empty()
+    if (!spare && !done())
+        maybeOpenSpareConnection();
 
-        Must(currentPeer);
-    }
-
-    if (currentPeer) {
-        debugs(17, 7, "working on " << *currentPeer);
-        return; // remaining in state #1.1 or #1.2
-    }
-
-    if (!destinations->destinationsFinalized) {
-        debugs(17, 7, "waiting for more peers");
-        return; // remaining in state #2
-    }
-
-    debugs(17, 7, "done; no more peers");
-    Must(doneAll());
-    // entering state #3
+    // any state is possible at this point
 }
 
 void
@@ -784,9 +767,30 @@ HappyConnOpener::noteSpareAllowance()
 
 /// starts a prime connection attempt if possible or does nothing otherwise
 void
-HappyConnOpener::maybeOpenAnotherPrimeConnection()
+HappyConnOpener::maybeOpenPrimeConnection()
 {
-    Must(currentPeer);
+    Must(!prime);
+
+    if (destinations->empty())
+        return;
+
+    if (!currentPeer) {
+        auto newPrime = destinations->extractFront();
+        currentPeer = newPrime;
+        Must(currentPeer);
+        debugs(17, 7, "new peer " << *currentPeer);
+        primeStart = current_dtime;
+        startConnecting(prime, newPrime);
+        if (done()) // probably reused a pconn
+            return;
+
+        Must(prime);
+        maybeGivePrimeItsChance();
+        return;
+    }
+
+    // currentPeer implies there is a spare attempt; meanwhile, the previous
+    // primary attempt has failed; do another attempt on the primary track
     if (auto dest = destinations->extractPrime(*currentPeer))
         startConnecting(prime, dest);
     // else wait for more prime paths or their exhaustion
@@ -830,11 +834,16 @@ HappyConnOpener::maybeOpenSpareConnection()
 {
     Must(currentPeer);
     Must(!spare);
-    Must(!spareWaiting);
     Must(!gotSpareAllowance);
 
+    if (spareWaiting)
+        return; // too early
+
     if (ranOutOfTimeOrAttempts())
-        return; // will quit or continue working on prime
+        return; // too late
+
+    if (destinations->empty())
+        return;
 
     // jobGotInstantAllowance() call conditions below rely on the readyNow() check here
     if (!ignoreSpareRestrictions && // we have to honor spare restrictions
@@ -881,13 +890,23 @@ HappyConnOpener::ranOutOfTimeOrAttempts() const
     return false;
 }
 
+HappyConnOpener::Attempt::Attempt(const CallbackMethod method, const char *methodName):
+    callbackMethod(method),
+    callbackMethodName(methodName)
+{
+}
+
+void
+HappyConnOpener::Attempt::finish()
+{
+    connWait.finish();
+    path = nullptr;
+}
+
 void
 HappyConnOpener::Attempt::cancel(const char *reason)
 {
-    if (connector) {
-        connector->cancel(reason);
-        CallJobHere(17, 3, opener, Comm::ConnOpener, noteAbort);
-    }
-    clear();
+    connWait.cancel(reason);
+    path = nullptr;
 }
 

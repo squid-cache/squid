@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -421,7 +421,7 @@ Aggregate::parse()
 }
 
 DelayIdComposite::Pointer
-Aggregate::id(CompositeSelectionDetails &details)
+Aggregate::id(CompositeSelectionDetails &)
 {
     if (rate()->restore_bps != -1)
         return new AggregateId (this);
@@ -482,7 +482,7 @@ DelayPools::FreeDelayData()
 }
 
 void
-DelayPools::Update(void *unused)
+DelayPools::Update(void *)
 {
     if (!pools())
         return;

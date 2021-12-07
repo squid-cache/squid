@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 20    Storage Manager Logging Functions */
 
 #include "squid.h"
+#include "DebugMessages.h"
 #include "format/Token.h"
 #include "HttpReply.h"
 #include "log/File.h"
@@ -125,7 +126,7 @@ storeLogOpen(void)
     storeLogRegisterWithCacheManager();
 
     if (Config.Log.store == NULL || strcmp(Config.Log.store, "none") == 0) {
-        debugs(20, DBG_IMPORTANT, "Store logging disabled");
+        debugs(20, Important(42), "Store logging disabled");
         return;
     }
 

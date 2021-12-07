@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,17 +28,6 @@ ACLIdent::~ACLIdent()
 }
 
 ACLIdent::ACLIdent(ACLData<char const *> *newData, char const *newType) : data (newData), type_ (newType) {}
-
-ACLIdent::ACLIdent (ACLIdent const &old) : data (old.data->clone()), type_ (old.type_)
-{}
-
-ACLIdent &
-ACLIdent::operator= (ACLIdent const &rhs)
-{
-    data = rhs.data->clone();
-    type_ = rhs.type_;
-    return *this;
-}
 
 char const *
 ACLIdent::typeString() const
@@ -96,12 +85,6 @@ bool
 ACLIdent::empty () const
 {
     return data->empty();
-}
-
-ACL *
-ACLIdent::clone() const
-{
-    return new ACLIdent(*this);
 }
 
 IdentLookup IdentLookup::instance_;

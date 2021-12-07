@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -406,7 +406,7 @@ static const ErrorCodeNames TheErrorCodeNames = {
 Security::ErrorCode
 Security::ErrorCodeFromName(const char *name)
 {
-    static auto TheCmp = [](const char *a, const char *b){return strcmp(a, b) < 0;};
+    static auto TheCmp = [](const char *a, const char *b) {return strcmp(a, b) < 0;};
     static std::map<const char *, ErrorCode, decltype(TheCmp)> TheErrorCodeByNameIndx(TheCmp);
     if (TheErrorCodeByNameIndx.empty()) {
         for (const auto &i: TheErrorCodeNames)
@@ -533,6 +533,8 @@ Security::ErrorDetail::verbose(const HttpRequestPointer &request) const
 #if USE_OPENSSL
     if (Ssl::ErrorDetailsManager::GetInstance().getErrorDetail(error_no, request, detailEntry))
         format = detailEntry.detail.termedBuf();
+#else
+    (void)request;
 #endif
     if (!format)
         format = "SSL handshake error (%err_name)";

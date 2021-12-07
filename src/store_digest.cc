@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -180,6 +180,8 @@ storeDigestDel(const StoreEntry * entry)
             debugs(71, 6, "storeDigestDel: deled entry, key: " << entry->getMD5Text());
         }
     }
+#else
+    (void)entry;
 #endif //USE_CACHE_DIGESTS
 }
 
@@ -206,7 +208,8 @@ storeDigestReport(StoreEntry * e)
     } else {
         storeAppendPrintf(e, "store digest: disabled.\n");
     }
-
+#else
+    (void)e;
 #endif //USE_CACHE_DIGESTS
 }
 
@@ -295,7 +298,7 @@ storeDigestAdd(const StoreEntry * entry)
 
 /* rebuilds digest from scratch */
 static void
-storeDigestRebuildStart(void *datanotused)
+storeDigestRebuildStart(void *)
 {
     assert(store_digest);
     /* prevent overlapping if rebuild schedule is too tight */
@@ -376,7 +379,7 @@ storeDigestRebuildFinish(void)
 
 /* recalculate a few hash buckets per invocation; schedules next step */
 static void
-storeDigestRebuildStep(void *datanotused)
+storeDigestRebuildStep(void *)
 {
     /* TODO: call Store::Root().size() to determine this.. */
     int count = Config.Store.objectsPerBucket * (int) ceil((double) store_hash_buckets *
@@ -397,7 +400,7 @@ storeDigestRebuildStep(void *datanotused)
 
 /* starts swap out sequence for the digest */
 static void
-storeDigestRewriteStart(void *datanotused)
+storeDigestRewriteStart(void *)
 {
     assert(store_digest);
     /* prevent overlapping if rewrite schedule is too tight */

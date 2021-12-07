@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,8 +21,6 @@ class ACLExtUser : public ACL
 
 public:
     ACLExtUser(ACLData<char const *> *newData, char const *);
-    ACLExtUser (ACLExtUser const &old);
-    ACLExtUser & operator= (ACLExtUser const &rhs);
     ~ACLExtUser();
 
     /* ACL API */
@@ -32,7 +30,6 @@ public:
     virtual int match(ACLChecklist *checklist);
     virtual SBufList dump() const;
     virtual bool empty () const;
-    virtual ACL *clone()const;
 
 private:
     ACLData<char const *> *data;

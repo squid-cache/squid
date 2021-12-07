@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,6 +14,7 @@
 
 #include "acl/Arp.h"
 #include "acl/FilledChecklist.h"
+#include "cache_cf.h"
 #include "Debug.h"
 #include "eui/Eui48.h"
 #include "globals.h"
@@ -21,18 +22,8 @@
 
 #include <algorithm>
 
-ACL *
-ACLARP::clone() const
-{
-    return new ACLARP(*this);
-}
-
 ACLARP::ACLARP (char const *theClass) : class_ (theClass)
 {}
-
-ACLARP::ACLARP (ACLARP const & old) : class_ (old.class_), aclArpData(old.aclArpData)
-{
-}
 
 char const *
 ACLARP::typeString() const
@@ -72,7 +63,7 @@ ACLARP::empty () const
  *       Solaris code by R. Gancarz <radekg@solaris.elektrownia-lagisza.com.pl>
  */
 
-Eui::Eui48 *
+static Eui::Eui48 *
 aclParseArpData(const char *t)
 {
     char buf[256];
