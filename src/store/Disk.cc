@@ -69,6 +69,11 @@ Store::Disk::stat(StoreEntry &output) const
                       path);
     storeAppendPrintf(&output, "FS Block Size %d Bytes\n",
                       fs.blksize);
+    if (disker) {
+        storeAppendPrintf(&output, "Disker status: ready: %d, indexed: %d\n",
+                          diskerReady, diskerIndexed);
+    }
+
     statfs(output);
 
     if (repl) {

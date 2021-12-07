@@ -107,6 +107,8 @@ public:
     RemovalPolicy *repl;
     int removals;
     int scanned;
+    /// if has a dedicated disker - the same as diskerIndexed
+    /// otherwise whether this SwapDir has been indexed
     bool indexed;
 
     struct Flags {

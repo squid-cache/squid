@@ -101,6 +101,8 @@ private:
 
     bool sameEntry(const sfileno fileno, const DbCellHeader &header) const;
 
+    void extendWait();
+
     SBuf progressDescription() const;
 
     SwapDir *sd;
@@ -126,9 +128,6 @@ private:
     const bool resuming;
 
     static void Steps(void *data);
-
-    /// informs Coordinator that we are still foreground-rebuilding
-    void extendWait();
 };
 
 } // namespace Rock

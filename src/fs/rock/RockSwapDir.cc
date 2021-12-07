@@ -891,17 +891,6 @@ Rock::SwapDir::writeCompleted(int errflag, size_t, RefCount< ::WriteRequest> r)
         CollapsedForwarding::Broadcast(*sio.e);
 }
 
-void
-Rock::SwapDir::remoteIndexingCompleted()
-{
-    assert(IamWorkerProcess());
-
-    if(!theFile || theFile->error())
-        return; // the Rock db file is not open/initialized
-
-    storeRebuildComplete(nullptr, *this);
-}
-
 /// code shared by writeCompleted() success handling cases
 void
 Rock::SwapDir::handleWriteCompletionSuccess(const WriteRequest &request)

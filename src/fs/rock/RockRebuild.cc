@@ -400,6 +400,7 @@ Rock::Rebuild::doneAll() const
     return doneLoading() && doneValidating() && AsyncJob::doneAll();
 }
 
+/// informs Coordinator that we are still foreground-rebuilding
 void
 Rock::Rebuild::extendWait()
 {

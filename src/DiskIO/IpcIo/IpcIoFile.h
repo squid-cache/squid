@@ -141,9 +141,8 @@ private:
 
     unsigned int lastRequestId; ///< last requestId used
 
-    typedef std::pair<unsigned int, IpcIoPendingRequest*> RequestMapItem;
     /// maps requestId to the handleResponse callback
-    typedef std::map<unsigned int, IpcIoPendingRequest*, std::less<unsigned int>, PoolingAllocator<RequestMapItem> > RequestMap;
+    typedef std::map<unsigned int, IpcIoPendingRequest*> RequestMap;
     RequestMap requestMap1; ///< older (or newer) pending requests
     RequestMap requestMap2; ///< newer (or older) pending requests
     RequestMap *olderRequests; ///< older requests (map1 or map2)
@@ -152,8 +151,9 @@ private:
 
     static const double Timeout; ///< timeout value in seconds
 
-    typedef std::multimap<timeval, Pointer, std::less<timeval> > WaitingFiles;
-    typedef WaitingFiles::value_type FileWait;
+    using WaitingFilesItem = std::pair<const timeval, Pointer>;
+    using WaitingFiles = std::multimap<timeval, Pointer, std::less<timeval>, PoolingAllocator<WaitingFilesItem> >;
+    using FileWait = WaitingFiles::value_type;
     /// being open diskers, ordered by their absolute deadlines
     static WaitingFiles WaitingForOpen;
     static void StartWaitingFor(const Pointer &);
