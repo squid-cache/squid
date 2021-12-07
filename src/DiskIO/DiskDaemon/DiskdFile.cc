@@ -355,7 +355,7 @@ DiskdFile::readDone(diomsg * M)
     if (readRequest != NULL) {
         const uint32_t lcount = readRequest->unlock();
         if (lcount == 0)
-            debugs(79, DBG_IMPORTANT, "invariant check failed: readRequest reference count is 0");
+            debugs(79, DBG_IMPORTANT, "ERROR: invariant check failed: readRequest reference count is 0");
     }
 
     if (M->status < 0) {
@@ -384,7 +384,7 @@ DiskdFile::writeDone(diomsg *M)
     if (writeRequest != NULL) {
         const uint32_t lcount = writeRequest->unlock();
         if (lcount == 0)
-            debugs(79, DBG_IMPORTANT, "invariant check failed: writeRequest reference count is 0");
+            debugs(79, DBG_IMPORTANT, "ERROR: invariant check failed: writeRequest reference count is 0");
     }
 
     if (M->status < 0) {

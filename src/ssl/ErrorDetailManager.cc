@@ -212,15 +212,13 @@ Ssl::ErrorDetailFile::parse()
             Http::ContentLengthInterpreter interpreter;
             // no applyStatusCodeRules() -- error templates lack HTTP status code
             if (!parser.parse(s, e - s, interpreter)) {
-                debugs(83, DBG_IMPORTANT, HERE <<
-                       "WARNING! parse error on:" << s);
+                debugs(83, DBG_IMPORTANT, "WARNING: parse error on:" << s);
                 return false;
             }
 
             const String errorName = parser.getByName("name");
             if (!errorName.size()) {
-                debugs(83, DBG_IMPORTANT, HERE <<
-                       "WARNING! invalid or no error detail name on:" << s);
+                debugs(83, DBG_IMPORTANT, "WARNING: invalid or no error detail name on:" << s);
                 return false;
             }
 
@@ -228,8 +226,7 @@ Ssl::ErrorDetailFile::parse()
             if (ssl_error != SSL_ERROR_NONE) {
 
                 if (theDetails->getErrorDetail(ssl_error)) {
-                    debugs(83, DBG_IMPORTANT, HERE <<
-                           "WARNING! duplicate entry: " << errorName);
+                    debugs(83, DBG_IMPORTANT, "WARNING: duplicate entry: " << errorName);
                     return false;
                 }
 
@@ -243,14 +240,12 @@ Ssl::ErrorDetailFile::parse()
                 // TODO: Validate "descr" and "detail" field values.
 
                 if (!detailsParseOk || !descrParseOk) {
-                    debugs(83, DBG_IMPORTANT, HERE <<
-                           "WARNING! missing important field for detail error: " <<  errorName);
+                    debugs(83, DBG_IMPORTANT, "WARNING: missing important field for detail error: " <<  errorName);
                     return false;
                 }
 
             } else if (!Ssl::ErrorIsOptional(errorName.termedBuf())) {
-                debugs(83, DBG_IMPORTANT, HERE <<
-                       "WARNING! invalid error detail name: " << errorName);
+                debugs(83, DBG_IMPORTANT, "WARNING: invalid error detail name: " << errorName);
                 return false;
             }
 

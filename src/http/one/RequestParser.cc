@@ -69,7 +69,7 @@ Http::One::RequestParser::parseMethodField(Tokenizer &tok)
 
     SBuf methodFound;
     if (!tok.prefix(methodFound, CharacterSet::TCHAR, maxMethodLength)) {
-        debugs(33, ErrorLevel(), "invalid request-line: missing or malformed method");
+        debugs(33, ErrorLevel(), "ERROR: invalid request-line: missing or malformed method");
         parseStatusCode = Http::scBadRequest;
         return false;
     }
@@ -155,14 +155,14 @@ Http::One::RequestParser::parseUriField(Tokenizer &tok)
     SBuf uriFound;
     if (!tok.prefix(uriFound, RequestTargetCharacters())) {
         parseStatusCode = Http::scBadRequest;
-        debugs(33, ErrorLevel(), "invalid request-line: missing or malformed URI");
+        debugs(33, ErrorLevel(), "ERROR: invalid request-line: missing or malformed URI");
         return false;
     }
 
     if (uriFound.length() > maxUriLength) {
         // RFC 7230 section 3.1.1 mandatory (MUST) 414 response
         parseStatusCode = Http::scUriTooLong;
-        debugs(33, ErrorLevel(), "invalid request-line: " << uriFound.length() <<
+        debugs(33, ErrorLevel(), "ERROR: invalid request-line: " << uriFound.length() <<
                "-byte URI exceeds " << maxUriLength << "-byte limit");
         return false;
     }
@@ -216,7 +216,7 @@ Http::One::RequestParser::parseHttpVersionField(Tokenizer &tok)
         return true;
     }
 
-    debugs(33, ErrorLevel(), "invalid request-line: not HTTP");
+    debugs(33, ErrorLevel(), "ERROR: invalid request-line: not HTTP");
     parseStatusCode = Http::scBadRequest;
     return false;
 }
@@ -230,14 +230,14 @@ bool
 Http::One::RequestParser::skipDelimiter(const size_t count, const char *where)
 {
     if (count <= 0) {
-        debugs(33, ErrorLevel(), "invalid request-line: missing delimiter " << where);
+        debugs(33, ErrorLevel(), "ERROR: invalid request-line: missing delimiter " << where);
         parseStatusCode = Http::scBadRequest;
         return false;
     }
 
     // tolerant parser allows multiple whitespace characters between request-line fields
     if (count > 1 && !Config.onoff.relaxed_header_parser) {
-        debugs(33, ErrorLevel(), "invalid request-line: too many delimiters " << where);
+        debugs(33, ErrorLevel(), "ERROR: invalid request-line: too many delimiters " << where);
         parseStatusCode = Http::scBadRequest;
         return false;
     }
@@ -253,7 +253,7 @@ Http::One::RequestParser::skipTrailingCrs(Tokenizer &tok)
         (void)tok.skipAllTrailing(CharacterSet::CR); // optional; multiple OK
     } else {
         if (!tok.skipOneTrailing(CharacterSet::CR)) {
-            debugs(33, ErrorLevel(), "invalid request-line: missing CR before LF");
+            debugs(33, ErrorLevel(), "ERROR: invalid request-line: missing CR before LF");
             parseStatusCode = Http::scBadRequest;
             return false;
         }
@@ -293,7 +293,7 @@ Http::One::RequestParser::parseRequestFirstLine()
                 return -1; // blame a bad method (or its delimiter)
 
             // assume it is the URI
-            debugs(74, ErrorLevel(), "invalid request-line: URI exceeds " <<
+            debugs(74, ErrorLevel(), "ERROR: invalid request-line: URI exceeds " <<
                    Config.maxRequestHeaderSize << "-byte limit");
             parseStatusCode = Http::scUriTooLong;
             return -1;
@@ -323,7 +323,7 @@ Http::One::RequestParser::parseRequestFirstLine()
         return -1;
 
     if (!tok.atEnd()) {
-        debugs(33, ErrorLevel(), "invalid request-line: garbage after URI");
+        debugs(33, ErrorLevel(), "ERROR: invalid request-line: garbage after URI");
         parseStatusCode = Http::scBadRequest;
         return -1;
     }

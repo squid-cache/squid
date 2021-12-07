@@ -316,7 +316,7 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
         ++end;                 // back to space
 
         if (2 != sscanf(ver + 5, "%d.%d", &http_ver.major, &http_ver.minor)) {
-            debugs(73, DBG_IMPORTANT, "parseRequestLine: Invalid HTTP identifier.");
+            debugs(73, DBG_IMPORTANT, "ERROR: parseRequestLine: Invalid HTTP identifier.");
             return false;
         }
     } else {

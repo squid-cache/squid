@@ -845,7 +845,7 @@ Ipc::StoreMap::validateHit(const sfileno fileno)
 
     ++statCounter.hitValidation.failures;
 
-    debugs(54, DBG_IMPORTANT, "BUG: purging corrupted cache entry " << fileno <<
+    debugs(54, DBG_IMPORTANT, "ERROR: Squid BUG: purging corrupted cache entry " << fileno <<
            " from " << path <<
            " expected swap_file_sz=" << expectedByteCount <<
            " actual swap_file_sz=" << actualByteCount <<

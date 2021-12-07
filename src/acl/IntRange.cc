@@ -39,7 +39,7 @@ ACLIntRange::parse()
             RangeType temp(port1, port2+1);
             ranges.push_back(temp);
         } else {
-            debugs(28, DBG_CRITICAL, "ACLIntRange::parse: Invalid port value");
+            debugs(28, DBG_CRITICAL, "ERROR: ACLIntRange::parse: Invalid port value");
             self_destruct();
         }
     }

@@ -702,7 +702,7 @@ getsymbol(const char *s, char const **endptr)
 
             if (s == end || errno) {
                 /* Couldn't convert to float */
-                debugs(86, DBG_IMPORTANT, "failed to convert '" << s << "' to float ");
+                debugs(86, DBG_IMPORTANT, "ERROR: failed to convert '" << s << "' to float ");
                 *endptr = origs;
             } else {
                 debugs(86,6, "found " << rv.value.floating << " of length " << end - s);
@@ -719,7 +719,7 @@ getsymbol(const char *s, char const **endptr)
 
             if (s == end || errno) {
                 /* Couldn't convert to int */
-                debugs(86, DBG_IMPORTANT, "failed to convert '" << s << "' to int ");
+                debugs(86, DBG_IMPORTANT, "ERROR: failed to convert '" << s << "' to int ");
                 *endptr = origs;
             } else {
                 debugs(86,6, "found " << rv.value.integral << " of length " << end - s);
@@ -752,7 +752,7 @@ getsymbol(const char *s, char const **endptr)
             ++t;
 
         if (!*t) {
-            debugs(86, DBG_IMPORTANT, "missing end \' in '" << s << "'");
+            debugs(86, DBG_IMPORTANT, "ERROR: missing end \' in '" << s << "'");
             *endptr = origs;
         } else {
             *endptr = t + 1;
@@ -805,7 +805,7 @@ getsymbol(const char *s, char const **endptr)
             rv.precedence = 5;
             rv.eval = evalequals;
         } else {
-            debugs(86, DBG_IMPORTANT, "invalid expr '" << s << "'");
+            debugs(86, DBG_IMPORTANT, "ERROR: invalid expr '" << s << "'");
             *endptr = origs;
         }
     } else if ('<' == *s) {
@@ -853,7 +853,7 @@ getsymbol(const char *s, char const **endptr)
         rv.precedence = 1;
         rv.eval = evalexpr;
     } else {
-        debugs(86, DBG_IMPORTANT, "invalid expr '" << s << "'");
+        debugs(86, DBG_IMPORTANT, "ERROR: invalid expr '" << s << "'");
         *endptr = origs;
     }
 
@@ -983,7 +983,7 @@ addmember(stackmember * stack, int *stackdepth, stackmember * candidate)
                 /* cleanup candidate and stack */
                 dumpstack(stack, *stackdepth);
                 cleanmember(candidate);
-                debugs(86, DBG_IMPORTANT, "invalid expression");
+                debugs(86, DBG_IMPORTANT, "ERROR: invalid expression");
                 return 0;
             }
         } else {
@@ -1015,7 +1015,7 @@ ESIExpression::Evaluate(char const *s)
             s = end;
         } else {
             assert (s == end);
-            debugs(86, DBG_IMPORTANT, "failed parsing expression");
+            debugs(86, DBG_IMPORTANT, "ERROR: failed parsing expression");
             return 0;
         }
     }
@@ -1028,7 +1028,7 @@ ESIExpression::Evaluate(char const *s)
         if (stack[stackdepth - 2].
                 eval(stack, &stackdepth, stackdepth - 2, &rv)) {
             /* special case - leading operator failed */
-            debugs(86, DBG_IMPORTANT, "invalid expression");
+            debugs(86, DBG_IMPORTANT, "ERROR: invalid expression");
             return 0;
         }
     }

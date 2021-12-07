@@ -171,7 +171,7 @@ Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time
 
         if (epoll_ctl(kdpfd, epoll_ctl_type, fd, &ev) < 0) {
             int xerrno = errno;
-            debugs(5, DEBUG_EPOLL ? 0 : 8, "epoll_ctl(," << epolltype_atoi(epoll_ctl_type) <<
+            debugs(5, DEBUG_EPOLL ? 0 : 8, "ERROR: epoll_ctl(," << epolltype_atoi(epoll_ctl_type) <<
                    ",,): failed on FD " << fd << ": " << xstrerr(xerrno));
         }
     }

@@ -909,7 +909,7 @@ GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours)
 
         l = &CountHourHist[hours];
     } else {
-        debugs(18, DBG_IMPORTANT, "statAvgDump: Invalid args, minutes=" << minutes << ", hours=" << hours);
+        debugs(18, DBG_IMPORTANT, "ERROR: statAvgDump: Invalid args, minutes=" << minutes << ", hours=" << hours);
         return;
     }
 

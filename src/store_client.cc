@@ -505,7 +505,7 @@ store_client::readBody(const char *, ssize_t len)
     if (copyInto.offset == 0 && len > 0 && rep && rep->sline.status() == Http::scNone) {
         /* Our structure ! */
         if (!entry->mem_obj->adjustableBaseReply().parseCharBuf(copyInto.data, headersEnd(copyInto.data, len))) {
-            debugs(90, DBG_CRITICAL, "Could not parse headers from on disk object");
+            debugs(90, DBG_CRITICAL, "ERROR: Could not parse headers from on disk object");
         } else {
             parsed_header = 1;
         }

@@ -120,7 +120,7 @@ Http::Message::parse(const char *buf, const size_t sz, bool eof, Http::StatusCod
     debugs(58, 9, "success (" << hdr_len << " bytes) near '" << buf << "'");
 
     if (hdr_sz != (int)hdr_len) {
-        debugs(58, DBG_IMPORTANT, "internal Http::Message::parse vs. headersEnd error: " <<
+        debugs(58, DBG_IMPORTANT, "ERROR: internal Http::Message::parse vs. headersEnd failure: " <<
                hdr_sz << " != " << hdr_len);
         hdr_sz = (int)hdr_len; // because old http.cc code used hdr_len
     }

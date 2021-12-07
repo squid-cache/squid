@@ -182,7 +182,7 @@ comm_local_port(int fd)
 
     if (getsockname(fd, addr->ai_addr, &(addr->ai_addrlen)) ) {
         int xerrno = errno;
-        debugs(50, DBG_IMPORTANT, MYNAME << "Failed to retrieve TCP/UDP port number for socket: FD " << fd << ": " << xstrerr(xerrno));
+        debugs(50, DBG_IMPORTANT, "ERROR: " << MYNAME << "Failed to retrieve TCP/UDP port number for socket: FD " << fd << ": " << xstrerr(xerrno));
         Ip::Address::FreeAddr(addr);
         return 0;
     }
@@ -211,7 +211,7 @@ commBind(int s, struct addrinfo &inaddr)
         return Comm::OK;
     }
     int xerrno = errno;
-    debugs(50, DBG_CRITICAL, MYNAME << "Cannot bind socket FD " << s << " to " << fd_table[s].local_addr << ": " << xstrerr(xerrno));
+    debugs(50, DBG_CRITICAL, "ERROR: " << MYNAME << "Cannot bind socket FD " << s << " to " << fd_table[s].local_addr << ": " << xstrerr(xerrno));
 
     return Comm::COMM_ERROR;
 }
@@ -467,7 +467,7 @@ comm_apply_flags(int new_socket,
         if ( !(flags & COMM_DOBIND) && addr.isAnyAddr() )
             debugs(5, DBG_IMPORTANT,"WARNING: Squid is attempting to bind() port " << addr << " without being a listener.");
         if ( addr.isNoAddr() )
-            debugs(5,0,"CRITICAL: Squid is attempting to bind() port " << addr << "!!");
+            debugs(5, DBG_CRITICAL, "ERROR: Squid is attempting to bind() port " << addr << "!!");
 
 #if defined(SO_REUSEPORT)
         if (flags & COMM_REUSEPORT) {
@@ -829,7 +829,7 @@ _comm_close(int fd, char const *file, int line)
 
     /* The following fails because ipc.c is doing calls to pipe() to create sockets! */
     if (!isOpen(fd)) {
-        debugs(50, DBG_IMPORTANT, HERE << "BUG 3556: FD " << fd << " is not an open socket.");
+        debugs(50, DBG_IMPORTANT, "ERROR: Squid BUG #3556: FD " << fd << " is not an open socket.");
         // XXX: do we need to run close(fd) or fd_close(fd) here?
         return;
     }
@@ -1109,7 +1109,7 @@ commSetCloseOnExec(int fd)
 
     if (fcntl(fd, F_SETFD, flags | FD_CLOEXEC) < 0) {
         int xerrno = errno;
-        debugs(50, DBG_CRITICAL, MYNAME << "FD " << fd << ": set close-on-exec failed: " << xstrerr(xerrno));
+        debugs(50, DBG_CRITICAL, "ERROR: " << MYNAME << "FD " << fd << ": set close-on-exec failed: " << xstrerr(xerrno));
     }
 
     fd_table[fd].flags.close_on_exec = true;

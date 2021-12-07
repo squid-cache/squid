@@ -563,7 +563,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
                     }
                 } catch (...) {
                     // fatal for now
-                    debugs(3, DBG_CRITICAL, "configuration error: " << CurrentException);
+                    debugs(3, DBG_CRITICAL, "ERROR: configuration failure: " << CurrentException);
                     self_destruct();
                 }
             }
@@ -1862,7 +1862,7 @@ parse_http_header_access(HeaderManglers **pm)
 
     if ((t = ConfigParser::NextToken()) == NULL) {
         debugs(3, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(3, DBG_CRITICAL, "parse_http_header_access: missing header name.");
+        debugs(3, DBG_CRITICAL, "ERROR: parse_http_header_access: missing header name.");
         return;
     }
 
@@ -1901,7 +1901,7 @@ parse_http_header_replace(HeaderManglers **pm)
 
     if ((t = ConfigParser::NextToken()) == NULL) {
         debugs(3, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(3, DBG_CRITICAL, "parse_http_header_replace: missing header name.");
+        debugs(3, DBG_CRITICAL, "ERROR: parse_http_header_replace: missing header name.");
         return;
     }
 
@@ -1951,7 +1951,7 @@ parse_authparam(Auth::ConfigVector * config)
         Auth::Scheme::Pointer theScheme = Auth::Scheme::Find(type_str);
 
         if (theScheme == NULL) {
-            debugs(3, DBG_CRITICAL, "Parsing Config File: Unknown authentication scheme '" << type_str << "'.");
+            debugs(3, DBG_CRITICAL, "ERROR: Failure while parsing Config File: Unknown authentication scheme '" << type_str << "'.");
             self_destruct();
             return;
         }
@@ -2869,14 +2869,14 @@ parse_refreshpattern(RefreshPattern ** head)
                   ) {
             debugs(22, DBG_PARSE_NOTE(2), "UPGRADE: refresh_pattern option '" << token << "' is obsolete. Remove it.");
         } else
-            debugs(22, DBG_CRITICAL, "refreshAddToList: Unknown option '" << pattern << "': " << token);
+            debugs(22, DBG_CRITICAL, "ERROR: refreshAddToList: Unknown option '" << pattern << "': " << token);
     }
 
     if ((errcode = regcomp(&comp, pattern, flags)) != 0) {
         char errbuf[256];
         regerror(errcode, &comp, errbuf, sizeof errbuf);
         debugs(22, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(22, DBG_CRITICAL, "refreshAddToList: Invalid regular expression '" << pattern << "': " << errbuf);
+        debugs(22, DBG_CRITICAL, "ERROR: refreshAddToList: Invalid regular expression '" << pattern << "': " << errbuf);
         xfree(pattern);
         return;
     }
@@ -3727,7 +3727,7 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
     } else if (strncmp(token, "key=", 4) == 0) {
         s->secure.parse(token);
     } else if (strncmp(token, "version=", 8) == 0) {
-        debugs(3, DBG_PARSE_NOTE(1), "UPGRADE WARNING: '" << token << "' is deprecated " <<
+        debugs(3, DBG_PARSE_NOTE(1), "WARNING: UPGRADE: '" << token << "' is deprecated " <<
                "in " << cfg_directive << ". Use 'options=' instead.");
         s->secure.parse(token);
     } else if (strncmp(token, "options=", 8) == 0) {
@@ -3737,7 +3737,7 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
     } else if (strncmp(token, "clientca=", 9) == 0) {
         s->secure.parse(token);
     } else if (strncmp(token, "cafile=", 7) == 0) {
-        debugs(3, DBG_PARSE_NOTE(1), "UPGRADE WARNING: '" << token << "' is deprecated " <<
+        debugs(3, DBG_PARSE_NOTE(1), "WARNING: UPGRADE: '" << token << "' is deprecated " <<
                "in " << cfg_directive << ". Use 'tls-cafile=' instead.");
         s->secure.parse(token);
     } else if (strncmp(token, "capath=", 7) == 0) {

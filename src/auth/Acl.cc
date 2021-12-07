@@ -45,7 +45,7 @@ AuthenticateAcl(ACLChecklist *ch)
         /* WWW authorization on accelerated requests */
         headertype = Http::HdrType::AUTHORIZATION;
     } else if (request->flags.intercepted || request->flags.interceptTproxy) {
-        debugs(28, DBG_IMPORTANT, "NOTICE: Authentication not applicable on intercepted requests.");
+        debugs(28, DBG_IMPORTANT, "WARNING: Authentication not applicable on intercepted requests.");
         return ACCESS_DENIED;
     } else {
         /* Proxy authorization on proxy requests */

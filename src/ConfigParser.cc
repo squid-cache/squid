@@ -486,7 +486,7 @@ ConfigParser::NextKvPair(char * &key, char * &value)
     if (!key)
         return false;
     if (!value) {
-        debugs(3, DBG_CRITICAL, "Error while parsing key=value token. Value missing after: " << key);
+        debugs(3, DBG_CRITICAL, "ERROR: Failure while parsing key=value token. Value missing after: " << key);
         return false;
     }
 

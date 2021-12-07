@@ -124,7 +124,7 @@ EventLoop::runOnce()
 
     if (error) {
         ++errcount;
-        debugs(1, DBG_CRITICAL, "Select loop Error. Retry " << errcount);
+        debugs(1, DBG_CRITICAL, "ERROR: Select loop Error. Retry " << errcount);
     } else
         errcount = 0;
 

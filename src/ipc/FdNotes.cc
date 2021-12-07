@@ -31,7 +31,7 @@ Ipc::FdNote(int fdNoteId)
     if (fdnNone < fdNoteId && fdNoteId < fdnEnd)
         return FdNotes[fdNoteId];
 
-    debugs(54, DBG_IMPORTANT, HERE << "salvaged bug: wrong fd_note ID: " << fdNoteId);
+    debugs(54, DBG_IMPORTANT, "ERROR: Squid BUG: wrong fd_note ID: " << fdNoteId);
     return FdNotes[fdnNone];
 }
 
