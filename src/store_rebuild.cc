@@ -153,7 +153,7 @@ storeRebuildComplete(StoreRebuildData *dc)
 
     const auto dt = tvSubDsec(counts.startTime, current_time);
 
-    debugs(20, Important(46), "ERROR: Finished rebuilding storage from disk." <<
+    debugs(20, Important(46), "Finished rebuilding storage from disk." <<
            Debug::Extra << std::setw(7) << counts.scancount << " Entries scanned" <<
            Debug::Extra << std::setw(7) << counts.invalid << " Invalid entries" <<
            Debug::Extra << std::setw(7) << counts.badflags << " With invalid flags" <<
