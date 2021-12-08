@@ -915,7 +915,10 @@ Ip::Address::fromHost(const char *host)
 
     char *tmp = xstrdup(start); // XXX: Slow. TODO: Bail on huge strings and use an on-stack buffer.
     tmp[strlen(tmp)-1] = '\0'; // XXX: Wasteful: xstrdup() just did strlen().
-    const bool result = lookupHostIP(tmp, true);
+    /* force result to false if IPv6 is disabled and the bracketed value is an IPv6 address */
+    /* NB: RFC 6874 specifies that square brackets are for all IP addresses that are IPv6 */
+    /*      or newer, not just IPv6. */
+    const bool result = lookupHostIP(tmp, true) && (Ip::EnableIpv6 || !isIPv6());
     xfree(tmp);
     return result;
 }
