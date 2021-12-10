@@ -572,7 +572,7 @@ IpcIoFile::StatQueue(std::ostream &os)
 
 /// handles open request timeout
 void
-IpcIoFile::OpenTimeout(void *const param)
+IpcIoFile::OpenTimeout(void *const)
 {
     while (!WaitingForOpen.empty() && current_time >= WaitingForOpen.begin()->first) {
         const auto file = WaitingForOpen.begin()->second;
