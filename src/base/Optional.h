@@ -50,6 +50,13 @@ public:
         return hasValue_ ? value_ : static_cast<Value>(std::forward<Other>(defaultValue));
     }
 
+    template <class Other = Value>
+    constexpr Optional &operator =(Other &&otherValue) {
+        value_ = std::forward<Other>(otherValue);
+        hasValue_ = true;
+        return *this;
+    }
+
 private:
     Value value_; // stored value; inaccessible/uninitialized unless hasValue_
     bool hasValue_ = false;

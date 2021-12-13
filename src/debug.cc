@@ -9,6 +9,7 @@
 /* DEBUG: section 00    Debug Routines */
 
 #include "squid.h"
+#include "base/Optional.h"
 #include "base/TextException.h"
 #include "Debug.h"
 #include "DebugMessages.h"
@@ -44,9 +45,7 @@ static DebugModule *Module_ = nullptr;
 /// Explicitly configured maximum level for debugs() messages written to stderr.
 /// debugs() messages with this (or lower) level will be written to stderr (and
 /// possibly other channels).
-static int ExplicitStderrLevel = -1;
-// TODO: Use static Optional<int> ExplicitStderrLevel;
-static bool ExplicitStderrLevelSet = false;
+static Optional<int> ExplicitStderrLevel;
 
 /// ExplicitStderrLevel preference or default: Just like with
 /// ExplicitStderrLevel, debugs() messages with this (or lower) level will be
@@ -586,8 +585,8 @@ StderrChannel::enabled(const int level) const
     if (!stderr)
         return false; // nowhere to write
 
-    if (ExplicitStderrLevelSet) // explicit admin restrictions (-d)
-        return level <= ExplicitStderrLevel;
+    if (ExplicitStderrLevel.has_value()) // explicit admin restrictions (-d)
+        return level <= ExplicitStderrLevel.value();
 
     // whether the given level is allowed by emergency handling circumstances
     // (coveringForCacheLog) or configuration aspects (e.g., -k or -z)
@@ -638,7 +637,6 @@ void
 Debug::ResetStderrLevel(const int maxLevel)
 {
     ExplicitStderrLevel = maxLevel; // may set, increase, or decrease
-    ExplicitStderrLevelSet = true;
 }
 
 void
