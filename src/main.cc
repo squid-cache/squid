@@ -1877,8 +1877,6 @@ GoIntoBackground()
         exit(EXIT_SUCCESS);
     }
     // child, running as a background daemon
-    extern const char *XXX_Role;
-    XXX_Role = "master";
     Must(setsid() > 0); // ought to succeed after fork()
 }
 

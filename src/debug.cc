@@ -74,11 +74,6 @@ typedef BOOL (WINAPI * PFInitializeCriticalSectionAndSpinCount) (LPCRITICAL_SECT
 
 static void ResetSections(const int level = DBG_IMPORTANT);
 
-/// a cached calculateMyLeadingRole() result
-extern const char *XXX_Role;
-const char *XXX_Role = nullptr;
-static const char *myLeadingRole_XXX();
-
 /// a named FILE with very-early/late usage safety mechanisms
 class DebugFile
 {
@@ -115,8 +110,6 @@ public:
     int section; ///< debugs() section
     int level; ///< debugs() level
     bool forceAlert; ///< debugs() forceAlert flag
-
-    const char *role_XXX; ///< debugs() caller process role
 };
 
 /// a fully processed debugs(), ready to be logged
@@ -543,8 +536,7 @@ DebugChannel::saveMessage(const DebugMessageHeader &header, const std::string &b
 void
 DebugChannel::writeToStream(FILE &destination, const DebugMessageHeader &header, const std::string &body)
 {
-    fprintf(&destination, "role=%s # %s%s| %s\n",
-            header.role_XXX,
+    fprintf(&destination, "%s%s| %s\n",
             debugLogTime(header.timestamp),
             debugLogKid(),
             body.c_str());
@@ -655,8 +647,7 @@ DebugMessageHeader::DebugMessageHeader(const DebugRecordCount aRecordNumber, con
     timestamp(getCurrentTime()),
     section(context.section),
     level(context.level),
-    forceAlert(context.forceAlert),
-    role_XXX(myLeadingRole_XXX())
+    forceAlert(context.forceAlert)
 {
 }
 
@@ -691,47 +682,6 @@ DebugFile::reset(FILE *newFile, const char *newName)
     // all open files must have a name
     // all cleared files must not have a name
     assert(!file_ == !name);
-}
-
-/// Works around the fact that IamWorkerProcess() and such lie until
-/// command-line arguments are parsed.
-static const char*
-calculateMyLeadingRole()
-{
-    static bool Checked = false;
-    assert(!Checked); // no recursion
-    Checked = true;
-
-    const auto fd = open("/proc/self/cmdline", O_RDONLY);
-    assert(fd >= 0);
-    char buf[128];
-    const auto readBytes = read(fd, buf, sizeof(buf));
-    assert(readBytes > 13);
-    buf[readBytes-1] = '\0';
-
-    if (buf[0] != '(')
-        return "head"; // daemonized master overwrites in GoIntoBackground()
-
-    if (strncmp(buf, "(squid-coord-", 13) == 0)
-        return "coordinator";
-
-    if (strncmp(buf, "(squid-disk-", 12) == 0)
-        return "disker";
-
-    if (strncmp(buf, "(squid-", 7) == 0)
-        return "worker"; // XXX: did not check for a digit
-
-    return "other";
-}
-
-static const char*
-myLeadingRole_XXX()
-{
-    if (!XXX_Role) {
-        XXX_Role = calculateMyLeadingRole();
-        assert(XXX_Role);
-    }
-    return XXX_Role;
 }
 
 /// broadcasts debugs() message to the logging channels
