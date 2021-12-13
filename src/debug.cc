@@ -112,17 +112,30 @@ public:
     bool forceAlert; ///< debugs() forceAlert flag
 };
 
+// Avoid SBuf for CompiledDebugMessageBody:
+// * SBuf's own debugging may create a lot of reentrant debugging noise.
+// * Debug::Context::buf is an std::string-based STL ostream. Converting its
+//   buf() result to a different kind of string may increase complexity/cost.
+// TODO: Consider switching to a simple fixed-size buffer and a matching stream!
+/// The processed "content" (i.e. the last parameter) part of a debugs() call.
+using CompiledDebugMessageBody = std::string;
+
 /// a fully processed debugs(), ready to be logged
 class CompiledDebugMessage
 {
 public:
     using Header = DebugMessageHeader;
-    CompiledDebugMessage(const Header &aHeader, const std::string &aBody);
+    using Body = CompiledDebugMessageBody;
+
+    CompiledDebugMessage(const Header &aHeader, const Body &aBody);
 
     Header header; ///< debugs() meta-information; reflected in log line prefix
-    std::string body; ///< the log line after the prefix (without the newline)
+    Body body; ///< the log line after the prefix (without the newline)
 };
 
+// We avoid PoolingAllocator for CompiledDebugMessages to minimize reentrant
+// debugging noise. This noise reduction has negligible performance overhead
+// because it only applied to early messages, and there are few of them.
 /// debugs() messages captured in LogMessage() call order
 using CompiledDebugMessages = std::deque<CompiledDebugMessage>;
 
@@ -150,7 +163,7 @@ public:
 
     /// Write the message to the channel if the channel accepts (such) messages.
     /// This writing may be delayed until the channel configuration is settled.
-    void log(const DebugMessageHeader &, const std::string &body);
+    void log(const DebugMessageHeader &, const CompiledDebugMessageBody &);
 
 protected:
     /// output iterator for writing CompiledDebugMessages to a given channel
@@ -187,16 +200,16 @@ protected:
     virtual bool shouldWrite(const DebugMessageHeader &) const = 0;
 
     /// write the corresponding debugs() message into the channel
-    virtual void write(const DebugMessageHeader &, const std::string &body) = 0;
+    virtual void write(const DebugMessageHeader &, const CompiledDebugMessageBody &) = 0;
 
     /// stores the given early message (if possible) or forgets it (otherwise)
-    void saveMessage(const DebugMessageHeader &, const std::string &body);
+    void saveMessage(const DebugMessageHeader &, const CompiledDebugMessageBody &);
 
     /// stop saving and log() any "early" messages, in recordNumber order
     static void StopSavingAndLog(DebugChannel &, DebugChannel * = nullptr);
 
     /// Formats a validated debugs() record and writes it to the given FILE.
-    void writeToStream(FILE &, const DebugMessageHeader &, const std::string &body);
+    void writeToStream(FILE &, const DebugMessageHeader &, const CompiledDebugMessageBody &);
 
     /// reacts to a written a debugs() message
     void noteWritten(const DebugMessageHeader &);
@@ -225,7 +238,7 @@ public:
 protected:
     /* DebugChannel API */
     virtual bool shouldWrite(const DebugMessageHeader &) const final;
-    virtual void write(const DebugMessageHeader &, const std::string &body) final;
+    virtual void write(const DebugMessageHeader &, const CompiledDebugMessageBody &) final;
 };
 
 /// DebugChannel managing messages destined for "standard error stream" (stderr)
@@ -246,7 +259,7 @@ public:
 protected:
     /* DebugChannel API */
     virtual bool shouldWrite(const DebugMessageHeader &) const final;
-    virtual void write(const DebugMessageHeader &, const std::string &body) final;
+    virtual void write(const DebugMessageHeader &, const CompiledDebugMessageBody &) final;
 
 private:
     /// whether we are the last resort for logging debugs() messages
@@ -264,7 +277,7 @@ public:
 protected:
     /* DebugChannel API */
     virtual bool shouldWrite(const DebugMessageHeader &) const final;
-    virtual void write(const DebugMessageHeader &, const std::string &body) final;
+    virtual void write(const DebugMessageHeader &, const CompiledDebugMessageBody &) final;
 
 private:
     bool opened = false; ///< whether openlog() was called
@@ -287,7 +300,7 @@ public:
 
     /// Log the given debugs() message to appropriate channel(s) (eventually).
     /// Assumes the message has passed the global section/level filter.
-    void log(const DebugMessageHeader &, const std::string &body);
+    void log(const DebugMessageHeader &, const CompiledDebugMessageBody &);
 
     /// Start using an open cache_log file as the primary debugs() destination.
     /// Stop using stderr as a cache_log replacement (if we were doing that).
@@ -375,7 +388,7 @@ DebugModule::DebugModule()
 }
 
 void
-DebugModule::log(const DebugMessageHeader &header, const std::string &body)
+DebugModule::log(const DebugMessageHeader &header, const CompiledDebugMessageBody &body)
 {
     cacheLogChannel.log(header, body);
     stderrChannel.log(header, body);
@@ -458,7 +471,7 @@ DebugChannel::stopEarlyMessageCollection()
 }
 
 void
-DebugChannel::log(const DebugMessageHeader &header, const std::string &body)
+DebugChannel::log(const DebugMessageHeader &header, const CompiledDebugMessageBody &body)
 {
     if (header.recordNumber <= lastWrittenRecordNumber)
         return;
@@ -515,7 +528,7 @@ DebugChannel::StopSavingAndLog(DebugChannel &channelA, DebugChannel *channelBOrN
 }
 
 void
-DebugChannel::saveMessage(const DebugMessageHeader &header, const std::string &body)
+DebugChannel::saveMessage(const DebugMessageHeader &header, const CompiledDebugMessageBody &body)
 {
     if (!earlyMessages)
         return; // we have stopped saving early messages
@@ -534,7 +547,7 @@ DebugChannel::saveMessage(const DebugMessageHeader &header, const std::string &b
 }
 
 void
-DebugChannel::writeToStream(FILE &destination, const DebugMessageHeader &header, const std::string &body)
+DebugChannel::writeToStream(FILE &destination, const DebugMessageHeader &header, const CompiledDebugMessageBody &body)
 {
     fprintf(&destination, "%s%s| %s\n",
             debugLogTime(header.timestamp),
@@ -559,7 +572,7 @@ CacheLogChannel::shouldWrite(const DebugMessageHeader &) const
 }
 
 void
-CacheLogChannel::write(const DebugMessageHeader &header, const std::string &body)
+CacheLogChannel::write(const DebugMessageHeader &header, const CompiledDebugMessageBody &body)
 {
     writeToStream(*TheLog.file(), header, body);
     fflush(TheLog.file());
@@ -588,7 +601,7 @@ StderrChannel::shouldWrite(const DebugMessageHeader &header) const
 }
 
 void
-StderrChannel::write(const DebugMessageHeader &header, const std::string &body)
+StderrChannel::write(const DebugMessageHeader &header, const CompiledDebugMessageBody &body)
 {
     writeToStream(*stderr, header, body);
 }
@@ -653,7 +666,7 @@ DebugMessageHeader::DebugMessageHeader(const DebugRecordCount aRecordNumber, con
 
 /* CompiledDebugMessage */
 
-CompiledDebugMessage::CompiledDebugMessage(const Header &aHeader, const std::string &aBody):
+CompiledDebugMessage::CompiledDebugMessage(const Header &aHeader, const Body &aBody):
     header(aHeader),
     body(aBody)
 {
@@ -961,7 +974,7 @@ SyslogPriority(const DebugMessageHeader &header)
 }
 
 void
-SyslogChannel::write(const DebugMessageHeader &header, const std::string &body)
+SyslogChannel::write(const DebugMessageHeader &header, const CompiledDebugMessageBody &body)
 {
     syslog(SyslogPriority(header), "%s", body.c_str());
     noteWritten(header);
@@ -970,7 +983,7 @@ SyslogChannel::write(const DebugMessageHeader &header, const std::string &body)
 #else
 
 void
-SyslogChannel::write(const DebugMessageHeader &, const std::string &)
+SyslogChannel::write(const DebugMessageHeader &, const CompiledDebugMessageBody &)
 {
     assert(!"unreachable code because opened, shouldWrite() are always false");
 }
@@ -1219,7 +1232,7 @@ Debug::Context::rewind(const int aSection, const int aLevel)
     assert(upper == Current);
     assert(!waitingForIdle);
 
-    buf.str(std::string());
+    buf.str(CompiledDebugMessageBody());
     buf.clear();
     // debugs() users are supposed to preserve format, but
     // some do not, so we have to waste cycles resetting it for all.
