@@ -963,7 +963,6 @@ SyslogPriority(const DebugMessageHeader &header)
 void
 SyslogChannel::write(const DebugMessageHeader &header, const std::string &body)
 {
-    // TODO: Use SQUIDSBUFPH/SQUIDSBUFPRINT if all syslog()s support %.*s
     syslog(SyslogPriority(header), "%s", body.c_str());
     noteWritten(header);
 }
