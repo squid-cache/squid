@@ -165,6 +165,14 @@ RemoveInstance()
         return; // nothing to do
 
     debugs(50, Important(22), "Removing " << PidFileDescription(ThePidFileToRemove));
+
+    // Do not write to cache_log after our PID file is removed because another
+    // instance may already be logging there. Stop logging now because, if we
+    // wait until safeunlink(), some debugs() may slip through into the now
+    // "unlocked" cache_log, especially if we avoid the sensitive suid() area.
+    // Use stderr to capture late debugs() that did not make it into cache_log.
+    Debug::StopCacheLogUse();
+
     const char *filename = ThePidFileToRemove.c_str(); // avoid complex operations inside enter_suid()
     enter_suid();
     safeunlink(filename, 0);
