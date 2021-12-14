@@ -52,7 +52,7 @@ public:
     }
 
     template <class Other = Value>
-    constexpr Optional &operator =(Other &&otherValue) {
+    Optional &operator =(Other &&otherValue) {
         value_ = std::forward<Other>(otherValue);
         hasValue_ = true;
         return *this;
