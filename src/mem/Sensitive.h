@@ -13,6 +13,8 @@
 
 namespace mem {
 
+/// zeros the given memory area while disallowing the compiler to skip (i.e.
+/// optimize away) this cleanup, unlike a regular call to std::memset() or alike
 inline void
 ZeroSensitiveMemory(void *dst, const size_t len)
 {
@@ -21,16 +23,6 @@ ZeroSensitiveMemory(void *dst, const size_t len)
 
     assert(dst);
 
-    /**
-     * to zero a buffer in a more secure manner meant for a handful of purposes.
-     * e.g. for password clearing matters.
-     * The compiler can optimize away a memset call to gain performance here
-     * making sure it does not occur.
-     *
-     * address in a volatile pointer avoid gcc's likes doing optimizations.
-     * thus it is not mean as memset replacement which would cause a performance
-     * drop.
-     */
     volatile const auto setMemory = &std::memset;
     (void)setMemory(dst, 0, len);
 }
