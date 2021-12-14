@@ -35,16 +35,17 @@ static StoreRebuildData counts;
 static void storeCleanup(void *);
 static void StoreRebuildFinalize();
 
-// TODO: Either convert to Progress or replace with StoreRebuildData.
 // TODO: Handle unknown totals (UFS cache_dir that lost swap.state) correctly.
-typedef struct {
+class RebuildProgressCounters
+{
+public:
     /* total number of "swap.state" entries that will be read */
     int total = 0;
     /* number of entries read so far */
     int scanned = 0;
-} store_rebuild_progress;
+};
 
-typedef std::vector<store_rebuild_progress> RebuildProgressStats;
+typedef std::vector<RebuildProgressCounters> RebuildProgressStats;
 static RebuildProgressStats *RebuildProgress = nullptr;
 
 void
