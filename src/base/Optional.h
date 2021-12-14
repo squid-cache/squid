@@ -10,6 +10,7 @@
 #define SQUID__SRC_BASE_OPTIONAL_H
 
 #include <exception>
+#include <type_traits>
 
 /// std::bad_optional_access replacement (until we upgrade to C++17)
 class BadOptionalAccess: public std::exception
