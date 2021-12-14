@@ -11,6 +11,7 @@
 
 #include <exception>
 #include <type_traits>
+#include <utility>
 
 /// std::bad_optional_access replacement (until we upgrade to C++17)
 class BadOptionalAccess: public std::exception
