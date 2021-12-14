@@ -131,8 +131,8 @@ main(int, char **)
     try {
         Mem::Init();
         /* enable for debugging to console */
-        //    _db_init (NULL, NULL);
-        //    Debug::Levels[64] = 9;
+        // Debug::debugOptions = xstrdup("ALL,1 64,9");
+        // Debug::BanCacheLogUse();
         testRangeParser("bytes=0-3");
         testRangeParser("bytes=-3");
         testRangeParser("bytes=1-");
