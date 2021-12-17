@@ -76,9 +76,6 @@ protected:
 
     /** Try and accept another connection (synchronous).
      *
-     * If one is pending already the subscribed callback handler will be
-     * scheduled to handle it.
-     *
      * If there are not enough FD available to do the accept(2) safely will
      * defer the operation until later when enough sockets become available.
      */
