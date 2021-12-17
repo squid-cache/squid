@@ -144,7 +144,7 @@ msgid ""
 "or server may be down or congested. Please retry your request."
 msgstr ""
 "Превышен интервал времени ожидания при получении данных из сети. Сеть или "
-"сервер могут бытьнедоступны или перегружены. Повторите попытку позже."
+"сервер могут быть недоступны или перегружены. Повторите попытку позже."
 
 #: templates/ERR_URN_RESOLVE+html.body.div.h2:16-1
 msgid "A URL for the requested URN could not be retrieved"

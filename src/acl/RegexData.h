@@ -26,7 +26,6 @@ public:
     virtual void parse();
     virtual const Acl::ParameterFlags &supportedFlags() const;
     virtual bool empty() const;
-    virtual ACLData<char const *> *clone() const;
 
 private:
     std::list<RegexPattern> data;

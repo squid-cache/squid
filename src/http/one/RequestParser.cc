@@ -11,7 +11,6 @@
 #include "http/one/RequestParser.h"
 #include "http/ProtocolVersion.h"
 #include "parser/Tokenizer.h"
-#include "profiler/Profiler.h"
 #include "SquidConfig.h"
 
 Http1::Parser::size_type
@@ -366,7 +365,6 @@ Http::One::RequestParser::doParse(const SBuf &aBuf)
 
     // stage 2: parse the request-line
     if (parsingStage_ == HTTP_PARSE_FIRST) {
-        PROF_start(HttpParserParseReqLine);
         const int retcode = parseRequestFirstLine();
 
         // first-line (or a look-alike) found successfully.
@@ -379,7 +377,6 @@ Http::One::RequestParser::doParse(const SBuf &aBuf)
         debugs(74, 5, "request-line: url: " << uri_);
         debugs(74, 5, "request-line: proto: " << msgProtocol_);
         debugs(74, 5, "Parser: bytes processed=" << (aBuf.length()-buf_.length()));
-        PROF_stop(HttpParserParseReqLine);
 
         // syntax errors already
         if (retcode < 0) {

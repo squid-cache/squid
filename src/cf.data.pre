@@ -4982,10 +4982,29 @@ DOC_START
 	If ICAP is enabled, the following code becomes available (as
 	well as ICAP log codes documented with the icap_log option):
 
-		icap::tt        Total ICAP processing time for the HTTP
-				transaction. The timer ticks when ICAP
-				ACLs are checked and when ICAP
-				transaction is in progress.
+		icap::tt Total ICAP "blocking" time for the HTTP transaction. The
+				timer ticks while Squid checks adaptation_access and while
+				ICAP transaction(s) expect ICAP response headers, including
+				the embedded adapted HTTP message headers (where applicable).
+				This measurement is meant to estimate ICAP impact on HTTP
+				transaction response times, but it does not currently account
+				for slow ICAP response body delivery blocking HTTP progress.
+
+				Once Squid receives the final ICAP response headers (e.g.,
+				ICAP 200 or 204) and the associated adapted HTTP message
+				headers (if any) from the ICAP service, the corresponding ICAP
+				transaction stops affecting this measurement, even though the
+				transaction itself may continue for a long time (e.g., to
+				finish sending the ICAP request and/or to finish receiving the
+				ICAP response body).
+
+				When "blocking" sections of multiple concurrent ICAP
+				transactions overlap in time, the overlapping segment is
+				counted only once.
+
+				To see complete ICAP transaction response times (rather than
+				the cumulative effect of their blocking sections) use the
+				%adapt::all_trs logformat code or the icap_log directive.
 
 	If adaptation is enabled the following codes become available:
 
@@ -5004,11 +5023,12 @@ DOC_START
 				milliseconds.  When a failed transaction is
 				being retried or repeated, its time is not
 				logged individually but added to the
-				replacement (next) transaction. See also:
-				adapt::all_trs.
+				replacement (next) transaction. Lifetimes of individually
+				listed adaptation transactions may overlap.
+				See also: %icap::tt and %adapt::all_trs.
 
 		adapt::all_trs All adaptation transaction response times.
-				Same as adaptation_strs but response times of
+				Same as %adapt::sum_trs but response times of
 				individual transactions are never added
 				together. Instead, all transaction response
 				times are recorded individually.

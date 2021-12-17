@@ -19,7 +19,6 @@
 #include "Debug.h"
 #include "fatal.h"
 #include "globals.h"
-#include "profiler/Profiler.h"
 #include "sbuf/List.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
@@ -120,7 +119,6 @@ bool ACL::valid () const
 bool
 ACL::matches(ACLChecklist *checklist) const
 {
-    PROF_start(ACL_matches);
     debugs(28, 5, "checking " << name);
 
     // XXX: AclMatchedName does not contain a matched ACL name when the acl
@@ -149,7 +147,6 @@ ACL::matches(ACLChecklist *checklist) const
 
     const char *extra = checklist->asyncInProgress() ? " async" : "";
     debugs(28, 3, "checked: " << name << " = " << result << extra);
-    PROF_stop(ACL_matches);
     return result == 1; // true for match; false for everything else
 }
 

@@ -57,7 +57,7 @@ static void mcast_encode(unsigned int *, size_t, const unsigned int *);
 
 #if USE_FORW_VIA_DB
 
-using HeaderValueCountsElement = std::pair<SBuf, uint64_t>;
+using HeaderValueCountsElement = std::pair<const SBuf, uint64_t>;
 /// counts the number of header field value occurrences
 using HeaderValueCounts = std::unordered_map<SBuf, uint64_t, std::hash<SBuf>, std::equal_to<SBuf>, PoolingAllocator<HeaderValueCountsElement> >;
 

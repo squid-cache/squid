@@ -21,11 +21,8 @@ class ConnectionsEncrypted : public ACL
 
 public:
     ConnectionsEncrypted(char const *);
-    ConnectionsEncrypted(ConnectionsEncrypted const &);
     virtual ~ConnectionsEncrypted();
-    ConnectionsEncrypted &operator =(ConnectionsEncrypted const &);
 
-    virtual ACL *clone()const;
     virtual char const *typeString() const;
     virtual void parse();
     virtual int match(ACLChecklist *checklist);

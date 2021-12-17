@@ -39,7 +39,6 @@
 #include "ip/Address.h"
 #include "log/forward.h"
 #include "MemBuf.h"
-#include "profiler/Profiler.h"
 #include "SquidConfig.h"
 
 /* quick reference on behaviour here.
@@ -1249,8 +1248,6 @@ ESIContext::parse()
         parserState.parsing = 1;
         /* we don't keep any data around */
 
-        PROF_start(esiParsing);
-
         try {
             while (buffered.getRaw() && !flags.error)
                 parseOneBuffer();
@@ -1269,8 +1266,6 @@ ESIContext::parse()
             setError();
             setErrorMessage("ESI parser error");
         }
-
-        PROF_stop(esiParsing);
 
         /* Tel the read code to allocate a new buffer */
         incoming = NULL;
@@ -1325,7 +1320,6 @@ ESIContext::process ()
      */
     {
         esiProcessResult_t status;
-        PROF_start(esiProcessing);
         processing = true;
         status = tree->process(0);
         processing = false;
@@ -1349,9 +1343,6 @@ ESIContext::process ()
             setError();
 
             setErrorMessage("esiProcess: ESI template Processing failed.");
-
-            PROF_stop(esiProcessing);
-
             return ESI_PROCESS_FAILED;
 
             break;
@@ -1372,7 +1363,6 @@ ESIContext::process ()
             flags.finished = 1;
         }
 
-        PROF_stop(esiProcessing);
         return status; /* because we have no callbacks */
     }
 }

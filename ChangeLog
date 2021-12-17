@@ -1,3 +1,10 @@
+Changes in squid-5.3 (06 Dec 2021):
+
+	- Bug 5169: StoreMap.cc:517 "!s.reading()" assertion
+	- Bug 5158: AnyP::Uri::host() mishandles [escaped] IPv6 addresses
+	- Bug 5060: Parallel builds are not reliable
+	- Documentation updates for logformat directive
+
 Changes in squid-5.2 (03 Oct 2021):
 
 	- Bug 5164: a copy-paste typo in HttpHdrCc::hasMinFresh()

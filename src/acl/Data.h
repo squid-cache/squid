@@ -18,7 +18,8 @@ class ACLData
 {
 
 public:
-
+    ACLData() = default;
+    ACLData(ACLData<M> &&) = delete; // no copying of any kind
     virtual ~ACLData() {}
 
     /// \returns the flags supported by these ACL parameters (e.g., "-i")
@@ -27,7 +28,6 @@ public:
     virtual bool match(M) =0;
     virtual SBufList dump() const =0;
     virtual void parse() =0;
-    virtual ACLData *clone() const =0;
     virtual void prepareForUse() {}
 
     virtual bool empty() const =0;

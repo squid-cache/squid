@@ -34,8 +34,6 @@ public:
     virtual const Acl::Options &options();
     virtual int match(ACLChecklist *checklist);
 
-    virtual ACL *clone()const;
-
 private:
     Acl::BooleanOptionValue lookupBanned; ///< are DNS lookups allowed?
 };

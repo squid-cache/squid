@@ -33,7 +33,6 @@
 #include "MemStore.h"
 #include "mgr/Registration.h"
 #include "mgr/StoreIoAction.h"
-#include "profiler/Profiler.h"
 #include "repl_modules.h"
 #include "RequestFlags.h"
 #include "SquidConfig.h"
@@ -796,14 +795,12 @@ StoreEntry::write (StoreIOBuffer writeBuffer)
 {
     assert(mem_obj != NULL);
     /* This assert will change when we teach the store to update */
-    PROF_start(StoreEntry_write);
     assert(store_status == STORE_PENDING);
 
     // XXX: caller uses content offset, but we also store headers
     writeBuffer.offset += mem_obj->baseReply().hdr_sz;
 
     debugs(20, 5, "storeWrite: writing " << writeBuffer.length << " bytes for '" << getMD5Text() << "'");
-    PROF_stop(StoreEntry_write);
     storeGetMemSpace(writeBuffer.length);
     mem_obj->write(writeBuffer);
 
@@ -1137,10 +1134,8 @@ StoreEntry::abort()
 void
 storeGetMemSpace(int size)
 {
-    PROF_start(storeGetMemSpace);
     if (!shutting_down) // Store::Root() is FATALly missing during shutdown
         Store::Root().freeMemorySpace(size);
-    PROF_stop(storeGetMemSpace);
 }
 
 /* thunk through to Store::Root().maintain(). Note that this would be better still
@@ -1165,14 +1160,12 @@ Store::Maintain(void *)
 void
 StoreEntry::release(const bool shareable)
 {
-    PROF_start(storeRelease);
     debugs(20, 3, shareable << ' ' << *this << ' ' << getMD5Text());
     /* If, for any reason we can't discard this object because of an
      * outstanding request, mark it for pending release */
 
     if (locked()) {
         releaseRequest(shareable);
-        PROF_stop(storeRelease);
         return;
     }
 
@@ -1183,14 +1176,12 @@ StoreEntry::release(const bool shareable)
         lock("storeLateRelease");
         releaseRequest(shareable);
         LateReleaseStack.push(this);
-        PROF_stop(storeRelease);
         return;
     }
 
     storeLog(STORE_LOG_RELEASE, this);
     Store::Root().evictCached(*this);
     destroyStoreEntry(static_cast<hash_link *>(this));
-    PROF_stop(storeRelease);
 }
 
 static void

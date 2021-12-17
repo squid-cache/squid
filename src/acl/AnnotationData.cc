@@ -45,9 +45,3 @@ ACLAnnotationData::annotate(NotePairs::Pointer pairs, const CharacterSet *delimi
     notes->updateNotePairs(pairs, delimiters, al);
 }
 
-ACLData<NotePairs::Entry *> *
-ACLAnnotationData::clone() const
-{
-    return new ACLAnnotationData;
-}
-

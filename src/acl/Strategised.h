@@ -34,7 +34,6 @@ public:
 
     ~ACLStrategised();
     ACLStrategised(ACLData<MatchType> *, ACLStrategy<MatchType> *, char const *);
-    ACLStrategised(ACLStrategised const &&) = delete;
 
     virtual char const *typeString() const;
     virtual void parseFlags();

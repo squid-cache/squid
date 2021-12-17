@@ -24,7 +24,6 @@ class TransactionInitiator : public ACL
 public:
     TransactionInitiator(char const *);
 
-    virtual ACL *clone()const;
     virtual char const *typeString() const;
     virtual void parse();
     virtual int match(ACLChecklist *checklist);

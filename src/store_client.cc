@@ -18,7 +18,6 @@
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "mime_header.h"
-#include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #include "Store.h"
@@ -259,12 +258,10 @@ store_client::copy(StoreEntry * anEntry,
     static bool copying (false);
     assert (!copying);
     copying = true;
-    PROF_start(storeClient_kickReads);
     /* we might be blocking comm reads due to readahead limits
      * now we have a new offset, trigger those reads...
      */
     entry->mem_obj->kickReads();
-    PROF_stop(storeClient_kickReads);
     copying = false;
 
     anEntry->lock("store_client::copy"); // see deletion note below
@@ -759,8 +756,6 @@ StoreEntry::invokeHandlers()
     dlink_node *nx = NULL;
     dlink_node *node;
 
-    PROF_start(InvokeHandlers);
-
     debugs(90, 3, mem_obj->nclients << " clients; " << *this << ' ' << getMD5Text());
     /* walk the entire list looking for valid callbacks */
 
@@ -781,7 +776,6 @@ StoreEntry::invokeHandlers()
         storeClientCopy2(this, sc);
     }
     CodeContext::Reset(savedContext);
-    PROF_stop(InvokeHandlers);
 }
 
 // Does not account for remote readers/clients.

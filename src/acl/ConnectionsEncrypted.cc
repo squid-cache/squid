@@ -16,16 +16,7 @@
 #include "HttpRequest.h"
 #include "SquidConfig.h"
 
-ACL *
-Acl::ConnectionsEncrypted::clone() const
-{
-    return new Acl::ConnectionsEncrypted(*this);
-}
-
 Acl::ConnectionsEncrypted::ConnectionsEncrypted (char const *theClass) : class_ (theClass)
-{}
-
-Acl::ConnectionsEncrypted::ConnectionsEncrypted (Acl::ConnectionsEncrypted const & old) :class_ (old.class_)
 {}
 
 Acl::ConnectionsEncrypted::~ConnectionsEncrypted()

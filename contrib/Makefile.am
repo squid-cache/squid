@@ -18,14 +18,6 @@ EXTRA_DIST = \
 	config.site \
 	user-agents.pl \
 	url-normalizer.pl \
-	nextstep/Makefile \
-	nextstep/Makefile.real \
-	nextstep/README \
-	nextstep/Squid.pkg.README \
-	nextstep/info.in \
-	nextstep/makepkg \
-	nextstep/post_install \
-	nextstep/pre_install \
 	solaris/solaris-krb5-include.patch
 
 all: 

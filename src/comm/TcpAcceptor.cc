@@ -27,7 +27,6 @@
 #include "ip/QosConfig.h"
 #include "log/access_log.h"
 #include "MasterXaction.h"
-#include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
@@ -345,7 +344,6 @@ Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &
 Comm::Flag
 Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
 {
-    PROF_start(comm_accept);
     ++statCounter.syscalls.sock.accepts;
     int sock;
     struct addrinfo *gai = NULL;
@@ -356,8 +354,6 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
         errcode = errno; // store last accept errno locally.
 
         Ip::Address::FreeAddr(gai);
-
-        PROF_stop(comm_accept);
 
         if (ignoreErrno(errcode) || errcode == ECONNABORTED) {
             debugs(50, 5, status() << ": " << xstrerr(errcode));
@@ -390,7 +386,6 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, "ERROR: getsockname() failed to locate local-IP on " << details << ": " << xstrerr(xerrno));
         Ip::Address::FreeAddr(gai);
-        PROF_stop(comm_accept);
         return Comm::COMM_ERROR;
     }
     details->local = *gai;
@@ -400,7 +395,6 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     if (conn->flags&(COMM_TRANSPARENT|COMM_INTERCEPTION) && !Ip::Interceptor.Lookup(details, conn)) {
         debugs(50, DBG_IMPORTANT, "ERROR: NAT/TPROXY lookup failed to locate original IPs on " << details);
         // Failed.
-        PROF_stop(comm_accept);
         return Comm::COMM_ERROR;
     }
 
@@ -419,7 +413,6 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     if (Config.client_ip_max_connections >= 0) {
         if (clientdbEstablished(details->remote, 0) > Config.client_ip_max_connections) {
             debugs(50, DBG_IMPORTANT, "WARNING: " << details->remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
-            PROF_stop(comm_accept);
             return Comm::NOMESSAGE;
         }
     }
@@ -438,7 +431,6 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     /* IFF the socket is (tproxy) transparent, pass the flag down to allow spoofing */
     F->flags.transparent = fd_table[conn->fd].flags.transparent; // XXX: can we remove this line yet?
 
-    PROF_stop(comm_accept);
     return Comm::OK;
 }
 

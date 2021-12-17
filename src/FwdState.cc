@@ -149,6 +149,7 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     clientConn(client),
     start_t(squid_curtime),
     n_tries(0),
+    waitingForDispatched(false),
     destinations(new ResolvedPeers()),
     pconnRace(raceImpossible),
     storedWholeReply_(nullptr)
@@ -565,6 +566,9 @@ FwdState::complete()
 
     logReplyStatus(n_tries, replyStatus);
 
+    // will already be false if complete() was called before/without dispatch()
+    waitingForDispatched = false;
+
     if (reforward()) {
         debugs(17, 3, "re-forwarding " << replyStatus << " " << entry->url());
 
@@ -590,10 +594,13 @@ FwdState::complete()
     }
 }
 
+/// Whether a forwarding attempt to some selected destination X is in progress
+/// (after successfully opening/reusing a transport connection to X).
+/// See also: transportWait
 bool
-FwdState::usingDestination() const
+FwdState::transporting() const
 {
-    return encryptionWait || peerWait || Comm::IsConnOpen(serverConn);
+    return peerWait || encryptionWait || waitingForDispatched;
 }
 
 void
@@ -625,17 +632,14 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
 
     destinations->addPath(path);
 
-    if (usingDestination()) {
-        // We are already using a previously opened connection, so we cannot be
-        // waiting for it. We still receive destinations for backup.
-        Must(!transportWait);
-        return;
-    }
-
     if (transportWait) {
+        assert(!transporting());
         notifyConnOpener();
         return; // and continue to wait for FwdState::noteConnection() callback
     }
+
+    if (transporting())
+        return; // and continue to receive destinations for backup
 
     // This is the first path candidate we have seen. Use it.
     useDestinations();
@@ -665,16 +669,13 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
     // if all of them fail, forwarding as whole will fail
     Must(!selectionError); // finding at least one path means selection succeeded
 
-    if (usingDestination()) {
-        // We are already using a previously opened connection, so we cannot be
-        // waiting for it. We were receiving destinations for backup.
-        Must(!transportWait);
-        return;
+    if (transportWait) {
+        assert(!transporting());
+        notifyConnOpener();
+        return; // and continue to wait for FwdState::noteConnection() callback
     }
 
-    Must(transportWait); // or we would be stuck with nothing to do or wait for
-    notifyConnOpener();
-    // and continue to wait for FwdState::noteConnection() callback
+    Must(transporting()); // or we would be stuck with nothing to do or wait for
 }
 
 /// makes sure connection opener knows that the destinations have changed
@@ -783,6 +784,10 @@ FwdState::serverClosed()
     serverConn = nullptr;
     closeHandler = nullptr;
     destinationReceipt = nullptr;
+
+    // will already be false if this closure happened before/without dispatch()
+    waitingForDispatched = false;
+
     retryOrBail();
 }
 
@@ -826,6 +831,10 @@ FwdState::handleUnregisteredServerEnd()
     assert(!Comm::IsConnOpen(serverConn));
     serverConn = nullptr;
     destinationReceipt = nullptr;
+
+    // might already be false due to uncertainties documented in serverClosed()
+    waitingForDispatched = false;
+
     retryOrBail();
 }
 
@@ -1124,7 +1133,7 @@ FwdState::connectStart()
     Must(!request->pinnedConnection());
 
     assert(!destinations->empty());
-    assert(!usingDestination());
+    assert(!transporting());
 
     // Ditch error page if it was created before.
     // A new one will be created if there's another problem
@@ -1199,6 +1208,9 @@ FwdState::dispatch()
      * is closed.
      */
     assert(Comm::IsConnOpen(serverConn));
+
+    assert(!waitingForDispatched);
+    waitingForDispatched = true;
 
     fd_note(serverConnection()->fd, entry->url());
 

@@ -65,7 +65,6 @@
 #include "peer_sourcehash.h"
 #include "peer_userhash.h"
 #include "PeerSelectState.h"
-#include "profiler/Profiler.h"
 #include "protos.h"
 #include "redirect.h"
 #include "refresh.h"
@@ -241,8 +240,6 @@ private:
 int
 SignalEngine::checkEvents(int)
 {
-    PROF_start(SignalEngine_checkEvents);
-
     if (do_reconfigure)
         mainReconfigureStart();
     else if (do_rotate)
@@ -251,7 +248,6 @@ SignalEngine::checkEvents(int)
         doShutdown(do_shutdown > 0 ? (int) Config.shutdownLifetime : 0);
     if (do_handle_stopped_child)
         handleStoppedChild();
-    PROF_stop(SignalEngine_checkEvents);
     return EVENT_IDLE;
 }
 
@@ -1333,12 +1329,6 @@ mainInitialize(void)
     eventAdd("ipcache_purgelru", ipcache_purgelru, nullptr, 10.0, 1);
 
     eventAdd("fqdncache_purgelru", fqdncache_purgelru, nullptr, 15.0, 1);
-
-#if USE_XPROF_STATS
-
-    eventAdd("cpuProfiling", xprof_event, nullptr, 1.0, 1);
-
-#endif
 
     eventAdd("memPoolCleanIdlePools", Mem::CleanIdlePools, nullptr, 15.0, 1);
 

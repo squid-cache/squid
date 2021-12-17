@@ -17,7 +17,6 @@
 #include "http/one/RequestParser.h"
 #include "http/Stream.h"
 #include "HttpHeaderTools.h"
-#include "profiler/Profiler.h"
 #include "servers/Http1Server.h"
 #include "SquidConfig.h"
 #include "Store.h"
@@ -73,8 +72,6 @@ Http::One::Server::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
 Http::Stream *
 Http::One::Server::parseOneRequest()
 {
-    PROF_start(HttpServer_parseOneRequest);
-
     // reset because the protocol may have changed if this is the first request
     // and because we never bypass parsing failures of N+1st same-proto request
     preservingClientData_ = shouldPreserveClientData();
@@ -88,7 +85,6 @@ Http::One::Server::parseOneRequest()
     /* Process request */
     Http::Stream *context = parseHttpRequest(parser_);
 
-    PROF_stop(HttpServer_parseOneRequest);
     return context;
 }
 

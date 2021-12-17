@@ -145,9 +145,3 @@ ACLUserData::empty() const
     return userDataNames.empty();
 }
 
-ACLData<char const *> *
-ACLUserData::clone() const
-{
-    return new ACLUserData;
-}
-

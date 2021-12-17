@@ -24,11 +24,8 @@ class ACLEui64 : public ACL
 
 public:
     ACLEui64(char const *);
-    ACLEui64(ACLEui64 const &);
     ~ACLEui64() {}
-    ACLEui64&operator=(ACLEui64 const &);
 
-    virtual ACL *clone()const;
     virtual char const *typeString() const;
     virtual void parse();
     virtual int match(ACLChecklist *checklist);

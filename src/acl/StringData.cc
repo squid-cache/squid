@@ -14,10 +14,6 @@
 #include "ConfigParser.h"
 #include "Debug.h"
 
-ACLStringData::ACLStringData(ACLStringData const &old) : stringValues(old.stringValues)
-{
-}
-
 void
 ACLStringData::insert(const char *value)
 {
@@ -64,12 +60,5 @@ bool
 ACLStringData::empty() const
 {
     return stringValues.empty();
-}
-
-ACLData<char const *> *
-ACLStringData::clone() const
-{
-    /* Splay trees don't clone yet. */
-    return new ACLStringData(*this);
 }
 

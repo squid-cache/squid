@@ -64,15 +64,6 @@ ACLIntRange::match(int i)
     return false;
 }
 
-ACLData<int> *
-ACLIntRange::clone() const
-{
-    if (!ranges.empty())
-        fatal("ACLIntRange::clone: attempt to clone used ACL");
-
-    return new ACLIntRange(*this);
-}
-
 ACLIntRange::~ACLIntRange()
 {}
 
