@@ -236,8 +236,15 @@ Comm::TcpAcceptor::logAcceptError(const ConnectionPointer &tcpClient) const
 }
 
 void
-Comm::TcpAcceptor::acceptOne(const CommIoCbParams &)
+Comm::TcpAcceptor::acceptOne(const CommIoCbParams &io)
 {
+    // Bail out. close handlers will clean up
+    if (io.flag == Comm::ERR_CLOSING)
+{
+    debugs(5, 0, "Listener socket closing on " << conn);
+        return;
+}
+
     debugs(5, 2, "new connection on " << conn);
 
     if (!okToAccept()) {
@@ -247,33 +254,31 @@ Comm::TcpAcceptor::acceptOne(const CommIoCbParams &)
 
     /* Accept a new connection */
     ConnectionPointer newConnDetails = new Connection();
-    const Comm::Flag flag = oldAccept(newConnDetails);
+    switch (oldAccept(newConnDetails)) {
 
-    if (flag == Comm::COMM_ERROR) {
-        // A non-recoverable error; notify the caller */
-        debugs(5, 5, HERE << "non-recoverable error:" << status() << " handler Subscription: " << theCallSub);
-        if (intendedForUserConnections())
-            logAcceptError(newConnDetails);
-        notify(flag, newConnDetails);
-        mustStop("Listener socket closed");
-        return;
-    }
-
-    if (flag == Comm::NOMESSAGE) {
-        /* register interest again */
+    case Comm::NOMESSAGE:
         debugs(5, 5, "try later: " << conn << " handler Subscription: " << theCallSub);
-    } else {
+        break;
+
+    case Comm::OK:
         // TODO: When ALE, MasterXaction merge, use them or ClientConn instead.
         CodeContext::Reset(newConnDetails);
         debugs(5, 5, "Listener: " << conn <<
                " accepted new connection " << newConnDetails <<
                " handler Subscription: " << theCallSub);
-        notify(flag, newConnDetails);
+        notify(Comm::OK, newConnDetails);
         CodeContext::Reset(listenPort_);
-    }
+        break;
 
-    if (done())
+    case Comm::COMM_ERROR:
+        // A non-recoverable error; notify the caller */
+        debugs(5, 5, HERE << "non-recoverable error:" << status() << " handler Subscription: " << theCallSub);
+        if (intendedForUserConnections())
+            logAcceptError(newConnDetails);
+        notify(Comm::COMM_ERROR, newConnDetails);
+        mustStop("Listener socket closed");
         return;
+    }
 
     typedef CommCbMemFunT<Comm::TcpAcceptor, CommIoCbParams> Dialer;
     AsyncCall::Pointer reader = JobCallback(33, 5, Dialer, this, TcpAcceptor::acceptOne);
@@ -283,12 +288,6 @@ Comm::TcpAcceptor::acceptOne(const CommIoCbParams &)
 void
 Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &newConnDetails) const
 {
-    // listener socket handlers just abandon the port with Comm::ERR_CLOSING
-    // it should only happen when this object is deleted...
-    if (flag == Comm::ERR_CLOSING) {
-        return;
-    }
-
     if (theCallSub != NULL) {
         AsyncCall::Pointer call = theCallSub->callback();
         CommAcceptCbParams &params = GetCommParams<CommAcceptCbParams>(call);
@@ -330,10 +329,6 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
 
         if (ignoreErrno(errcode) || errcode == ECONNABORTED) {
             debugs(50, 5, status() << ": " << xstrerr(errcode));
-            return Comm::NOMESSAGE;
-        } else if (errcode == EBADF) {
-            debugs(50, 2, status() << ": " << xstrerr(errcode));
-            mustStop("Listening socket closed");
             return Comm::NOMESSAGE;
         } else if (errcode == ENFILE || errcode == EMFILE) {
             debugs(50, 3, status() << ": " << xstrerr(errcode));
