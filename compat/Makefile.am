@@ -53,7 +53,6 @@ libcompatsquid_la_SOURCES = \
 	os/macosx.h \
 	os/mswindows.h \
 	os/netbsd.h \
-	os/next.h \
 	os/openbsd.h \
 	os/opensolaris_10_netdb.h \
 	os/os2.h \

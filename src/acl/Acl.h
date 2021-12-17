@@ -48,6 +48,7 @@ public:
     static ACL *FindByName(const char *name);
 
     ACL();
+    ACL(ACL &&) = delete; // no copying of any kind
     virtual ~ACL();
 
     /// sets user-specified ACL name and squid.conf context

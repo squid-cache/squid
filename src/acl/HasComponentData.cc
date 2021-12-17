@@ -76,9 +76,3 @@ ACLHasComponentData::parseComponent(const char *token)
     }
 }
 
-ACLData<ACLChecklist *> *
-ACLHasComponentData::clone() const
-{
-    return new ACLHasComponentData(*this);
-}
-

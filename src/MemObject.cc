@@ -15,7 +15,6 @@
 #include "HttpReply.h"
 #include "MemBuf.h"
 #include "MemObject.h"
-#include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "StoreClient.h"
@@ -138,7 +137,6 @@ MemObject::replaceBaseReply(const HttpReplyPointer &r)
 void
 MemObject::write(const StoreIOBuffer &writeBuffer)
 {
-    PROF_start(MemObject_write);
     debugs(19, 6, "memWrite: offset " << writeBuffer.offset << " len " << writeBuffer.length);
 
     /* We don't separate out mime headers yet, so ensure that the first
@@ -147,7 +145,6 @@ MemObject::write(const StoreIOBuffer &writeBuffer)
     assert (data_hdr.endOffset() || writeBuffer.offset == 0);
 
     assert (data_hdr.write (writeBuffer));
-    PROF_stop(MemObject_write);
 }
 
 void

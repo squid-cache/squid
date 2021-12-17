@@ -446,6 +446,7 @@ HappyConnOpener::status() const
         os << "spare:" << spare;
     if (n_tries)
         os << " tries:" << n_tries;
+    os << " dst:" << *destinations;
     os << ' ' << id << ']';
 
     buf = os.buf();
@@ -690,14 +691,13 @@ HappyConnOpener::cancelSpareWait(const char *reason)
 
 /** Called when an external event changes initiator interest, destinations,
  * prime, spare, or spareWaiting. Leaves HappyConnOpener in one of these
- * (mutually exclusive beyond the exceptional state #0) "stable" states:
+ * mutually exclusive "stable" states:
  *
- * 0. Exceptional termination: done()
- * 1. Processing a single peer: currentPeer
+ * 1. Processing a single peer: currentPeer && !done()
  *    1.1. Connecting: prime || spare
  *    1.2. Waiting for spare gap and/or paths: !prime && !spare
- * 2. Waiting for a new peer: destinations->empty() && !destinations->destinationsFinalized && !currentPeer
- * 3. Finished: destinations->empty() && destinations->destinationsFinalized && !currentPeer
+ * 2. Waiting for a new peer: destinations->empty() && !destinations->destinationsFinalized && !currentPeer && !done()
+ * 3. Terminating: done()
  */
 void
 HappyConnOpener::checkForNewConnection()
@@ -730,43 +730,13 @@ HappyConnOpener::checkForNewConnection()
         spareWaiting.forNewPeer = true;
     }
 
-    // open a new prime and/or a new spare connection if needed
-    if (!destinations->empty()) {
-        if (!currentPeer) {
-            auto newPrime = destinations->extractFront();
-            currentPeer = newPrime;
-            Must(currentPeer);
-            debugs(17, 7, "new peer " << *currentPeer);
-            primeStart = current_dtime;
-            startConnecting(prime, newPrime);
-            // TODO: if reuseOldConnection() in startConnecting() above succeeds,
-            // then we should not get here, and Must(prime) below will fail.
-            maybeGivePrimeItsChance();
-            Must(prime); // entering state #1.1
-        } else {
-            if (!prime)
-                maybeOpenAnotherPrimeConnection(); // may make destinations empty()
-        }
+    if (!prime)
+        maybeOpenPrimeConnection();
 
-        if (!spare && !spareWaiting)
-            maybeOpenSpareConnection(); // may make destinations empty()
+    if (!spare && !done())
+        maybeOpenSpareConnection();
 
-        Must(currentPeer);
-    }
-
-    if (currentPeer) {
-        debugs(17, 7, "working on " << *currentPeer);
-        return; // remaining in state #1.1 or #1.2
-    }
-
-    if (!destinations->destinationsFinalized) {
-        debugs(17, 7, "waiting for more peers");
-        return; // remaining in state #2
-    }
-
-    debugs(17, 7, "done; no more peers");
-    Must(doneAll());
-    // entering state #3
+    // any state is possible at this point
 }
 
 void
@@ -797,9 +767,30 @@ HappyConnOpener::noteSpareAllowance()
 
 /// starts a prime connection attempt if possible or does nothing otherwise
 void
-HappyConnOpener::maybeOpenAnotherPrimeConnection()
+HappyConnOpener::maybeOpenPrimeConnection()
 {
-    Must(currentPeer);
+    Must(!prime);
+
+    if (destinations->empty())
+        return;
+
+    if (!currentPeer) {
+        auto newPrime = destinations->extractFront();
+        currentPeer = newPrime;
+        Must(currentPeer);
+        debugs(17, 7, "new peer " << *currentPeer);
+        primeStart = current_dtime;
+        startConnecting(prime, newPrime);
+        if (done()) // probably reused a pconn
+            return;
+
+        Must(prime);
+        maybeGivePrimeItsChance();
+        return;
+    }
+
+    // currentPeer implies there is a spare attempt; meanwhile, the previous
+    // primary attempt has failed; do another attempt on the primary track
     if (auto dest = destinations->extractPrime(*currentPeer))
         startConnecting(prime, dest);
     // else wait for more prime paths or their exhaustion
@@ -843,11 +834,16 @@ HappyConnOpener::maybeOpenSpareConnection()
 {
     Must(currentPeer);
     Must(!spare);
-    Must(!spareWaiting);
     Must(!gotSpareAllowance);
 
+    if (spareWaiting)
+        return; // too early
+
     if (ranOutOfTimeOrAttempts())
-        return; // will quit or continue working on prime
+        return; // too late
+
+    if (destinations->empty())
+        return;
 
     // jobGotInstantAllowance() call conditions below rely on the readyNow() check here
     if (!ignoreSpareRestrictions && // we have to honor spare restrictions

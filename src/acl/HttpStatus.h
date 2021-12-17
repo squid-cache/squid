@@ -30,11 +30,8 @@ class ACLHTTPStatus : public ACL
 
 public:
     ACLHTTPStatus(char const *);
-    ACLHTTPStatus(ACLHTTPStatus const &);
     ~ACLHTTPStatus();
-    ACLHTTPStatus&operator=(ACLHTTPStatus const &);
 
-    virtual ACL *clone()const;
     virtual char const *typeString() const;
     virtual void parse();
     virtual int match(ACLChecklist *checklist);

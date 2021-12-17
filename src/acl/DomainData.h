@@ -24,7 +24,6 @@ public:
     virtual SBufList dump() const;
     void parse();
     bool empty() const;
-    virtual ACLData<char const *> *clone() const;
 
     Splay<char *> *domains;
 };

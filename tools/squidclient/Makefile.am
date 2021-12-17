@@ -30,17 +30,20 @@ include $(top_srcdir)/doc/manuals/Substitute.am
 test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
 	cp $(top_srcdir)/test-suite/test_tools.cc $@
 
-tests/stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc
+tests/stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc | tests
 	cp $(top_srcdir)/src/tests/stub_debug.cc $@
 
 time.cc: $(top_srcdir)/src/time.cc
 	cp $(top_srcdir)/src/time.cc $@
 
-tests/stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc
+tests/stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc | tests
 	cp $(top_srcdir)/src/tests/stub_libmem.cc $@
 
-tests/STUB.h: $(top_srcdir)/src/tests/STUB.h
+tests/STUB.h: $(top_srcdir)/src/tests/STUB.h | tests
 	cp $(top_srcdir)/src/tests/STUB.h $@
+
+tests:
+	mkdir -p $@
 
 # stock tools for unit tests - library independent versions of dlink_list
 # etc.

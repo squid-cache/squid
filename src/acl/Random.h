@@ -17,11 +17,8 @@ class ACLRandom : public ACL
 
 public:
     ACLRandom(char const *);
-    ACLRandom(ACLRandom const &);
     ~ACLRandom();
-    ACLRandom&operator=(ACLRandom const &);
 
-    virtual ACL *clone()const;
     virtual char const *typeString() const;
     virtual void parse();
     virtual int match(ACLChecklist *checklist);

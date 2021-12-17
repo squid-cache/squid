@@ -56,20 +56,8 @@ int acl_httpstatus_data::compare(acl_httpstatus_data* const& a, acl_httpstatus_d
     return ret;
 }
 
-ACL *
-ACLHTTPStatus::clone() const
-{
-    return new ACLHTTPStatus(*this);
-}
-
 ACLHTTPStatus::ACLHTTPStatus (char const *theClass) : data(NULL), class_ (theClass)
 {}
-
-ACLHTTPStatus::ACLHTTPStatus (ACLHTTPStatus const & old) : data(NULL), class_ (old.class_)
-{
-    /* we don't have copy constructors for the data yet */
-    assert(!old.data);
-}
 
 ACLHTTPStatus::~ACLHTTPStatus()
 {

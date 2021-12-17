@@ -25,15 +25,7 @@ public:
                          const Comm::ConnectionPointer &aClientConn,
                          AsyncCall::Pointer &aCallback,
                          const AccessLogEntryPointer &alp,
-                         const time_t timeout = 0) :
-        AsyncJob("Ssl::PeekingPeerConnector"),
-        Security::PeerConnector(aServerConn, aCallback, alp, timeout),
-        clientConn(aClientConn),
-        splice(false),
-        serverCertificateHandled(false)
-    {
-        request = aRequest;
-    }
+                         time_t timeout = 0);
 
     /* Security::PeerConnector API */
     virtual bool initialize(Security::SessionPointer &);

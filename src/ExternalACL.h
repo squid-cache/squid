@@ -42,11 +42,8 @@ public:
     static void ExternalAclLookup(ACLChecklist * ch, ACLExternal *);
 
     ACLExternal(char const *);
-    ACLExternal(ACLExternal const &);
     ~ACLExternal();
-    ACLExternal&operator=(ACLExternal const &);
 
-    virtual ACL *clone()const;
     virtual char const *typeString() const;
     virtual void parse();
     virtual int match(ACLChecklist *checklist);

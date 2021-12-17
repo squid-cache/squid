@@ -23,6 +23,8 @@
 #error compat/openssl.h depends on USE_OPENSSL
 #endif
 
+#include <algorithm>
+
 #if HAVE_OPENSSL_ASN1_H
 #include <openssl/asn1.h>
 #endif

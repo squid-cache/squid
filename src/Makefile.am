@@ -124,12 +124,6 @@ else
 DELAY_POOL_SOURCE =
 endif
 
-if ENABLE_XPROF_STATS
-XPROF_STATS_SOURCE = ProfStats.cc
-else
-XPROF_STATS_SOURCE =
-endif
-
 if ENABLE_HTCP
 HTCPSOURCE = htcp.cc htcp.h
 endif
@@ -165,7 +159,6 @@ noinst_LTLIBRARIES = libsquid.la
 
 EXTRA_PROGRAMS = \
 	unlinkd \
-	recv-announce \
 	ufsdump
 
 ## cfgen is used when building squid
@@ -220,7 +213,6 @@ squid_SOURCES = \
 	$(UNLINKDSOURCE) \
 	$(WIN32_SOURCE) \
 	$(WINSVC_SOURCE) \
-	$(XPROF_STATS_SOURCE) \
 	AccessLogEntry.cc \
 	AccessLogEntry.h \
 	AsyncEngine.cc \
@@ -494,7 +486,6 @@ EXTRA_squid_SOURCES = \
 	$(WIN32_ALL_SOURCE) \
 	$(all_AUTHMODULES) \
 	ConfigOption.h \
-	ProfStats.cc \
 	htcp.cc \
 	htcp.h \
 	ipc.cc \
@@ -592,8 +583,6 @@ unlinkd_SOURCES = unlinkd_daemon.cc
 unlinkd_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-
-recv_announce_SOURCES = recv-announce.cc
 
 ## What requires what..
 ## many things want ACLChecklist.cc

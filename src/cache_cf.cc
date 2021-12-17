@@ -4149,6 +4149,7 @@ static void
 parse_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap)
 {
 #if !HAVE_CPU_AFFINITY
+    (void)cpuAffinityMap;
     debugs(3, DBG_CRITICAL, "FATAL: Squid built with no CPU affinity " <<
            "support, do not set 'cpu_affinity_map'");
     self_destruct();

@@ -50,14 +50,6 @@ ACLServerNameData::match(const char *host)
 
 }
 
-ACLData<char const *> *
-ACLServerNameData::clone() const
-{
-    /* Splay trees don't clone yet. */
-    assert (!domains);
-    return new ACLServerNameData;
-}
-
 /// A helper function to be used with Ssl::matchX509CommonNames().
 /// \retval 0 when the name (cn or an alternate name) matches acl data
 /// \retval 1 when the name does not match

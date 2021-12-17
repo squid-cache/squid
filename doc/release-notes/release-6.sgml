@@ -119,7 +119,9 @@ This section gives an account of those changes in three categories:
 <sect1>Removed options<label id="removedoptions">
 <p>
 <descrip>
-	<p>There have been no options changed.
+	<tag>--enable-cpu-profiling</tag>
+	<p>This feature has been unreliable for many years. Other tools such as
+	   oprofile provide better tracking and should be used instead.
 
 </descrip>
 
