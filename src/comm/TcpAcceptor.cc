@@ -233,8 +233,14 @@ Comm::TcpAcceptor::logAcceptError(const ConnectionPointer &tcpClient) const
 }
 
 void
-Comm::TcpAcceptor::acceptOne(const CommIoCbParams &)
+Comm::TcpAcceptor::acceptOne(const CommIoCbParams &io)
 {
+    // Bail out. close handlers will clean up
+    if (io.flag == Comm::ERR_CLOSING) {
+        debugs(5, 0, "Listener socket closing on " << conn);
+        return;
+    }
+
     debugs(5, 2, "new connection on " << conn);
 
     if (!okToAccept()) {
@@ -248,10 +254,12 @@ Comm::TcpAcceptor::acceptOne(const CommIoCbParams &)
         if (acceptInto(newConnDetails)) {
             Assure(newConnDetails->isOpen());
             CallBack(newConnDetails, [&] {
+                CodeContext::Reset(newConnDetails);
                 debugs(5, 5, "Listener: " << conn <<
                        " accepted new connection " << newConnDetails <<
                        " handler Subscription: " << theCallSub);
                 notify(Comm::OK, newConnDetails);
+                CodeContext::Reset(listenPort_);
             });
         } else {
             debugs(5, 5, "try later: " << conn << " handler Subscription: " << theCallSub);
