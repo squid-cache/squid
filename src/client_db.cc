@@ -6,9 +6,10 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 00    Client Database */
+/* DEBUG: section 77    Client Database */
 
 #include "squid.h"
+#include "base/PackableStream.h"
 #include "base/RunnersRegistry.h"
 #include "client_db.h"
 #include "ClientInfo.h"
@@ -29,12 +30,11 @@
 #include "snmp_core.h"
 #endif
 
-static hash_table *client_table = NULL;
+#include <map>
+
+static std::map<Ip::Address, ClientInfo::Pointer> client_table;
 
 static ClientInfo *clientdbAdd(const Ip::Address &addr);
-static FREE clientdbFreeItem;
-static void clientdbStartGC(void);
-static void clientdbScheduledGC(void *);
 
 #if USE_DELAY_POOLS
 static int max_clients = 32768;
@@ -42,117 +42,157 @@ static int max_clients = 32768;
 static int max_clients = 32;
 #endif
 
-static int cleanup_running = 0;
 static int cleanup_scheduled = 0;
-static int cleanup_removed;
-
-#if USE_DELAY_POOLS
-#define CLIENT_DB_HASH_SIZE 65357
-#else
-#define CLIENT_DB_HASH_SIZE 467
-#endif
 
 ClientInfo::ClientInfo(const Ip::Address &ip) :
 #if USE_DELAY_POOLS
     BandwidthBucket(0, 0, 0),
 #endif
-    addr(ip),
-    n_established(0),
-    last_seen(0)
-#if USE_DELAY_POOLS
-    , writeLimitingActive(false),
-    firstTimeConnection(true),
-    quotaQueue(nullptr),
-    rationedQuota(0),
-    rationedCount(0),
-    eventWaiting(false)
-#endif
+    addr(ip)
 {
     debugs(77, 9, "ClientInfo constructed, this=" << static_cast<void*>(this));
-    char *buf = static_cast<char*>(xmalloc(MAX_IPSTRLEN)); // becomes hash.key
-    key = addr.toStr(buf,MAX_IPSTRLEN);
+}
+
+static void
+clientdbGC(void *)
+{
+    max_clients = statCounter.client_http.clients;
+
+    int cleanup_removed = 0;
+    for(auto itr = client_table.begin(); itr != client_table.end(); ) {
+        const auto &c = itr->second;
+        int age = squid_curtime - c->last_seen;
+
+        auto skip = (c->n_established) ||
+                    (age < 24 * 3600 && c->Http.n_requests > 100) ||
+                    (age < 4 * 3600 && (c->Http.n_requests > 10 || c->Icp.n_requests > 10)) ||
+                    (age < 5 * 60 && (c->Http.n_requests > 1 || c->Icp.n_requests > 1)) ||
+                    (age < 60);
+        if (skip)
+            ++itr;
+        else {
+            itr = client_table.erase(itr);
+            --statCounter.client_http.clients;
+            ++cleanup_removed;
+        }
+    }
+    debugs(49, 2, "removed " << cleanup_removed << " entries");
+
+    if (!cleanup_scheduled) {
+        ++cleanup_scheduled;
+        eventAdd("client_db garbage collector", clientdbGC, NULL, 6 * 3600, 0);
+    }
+    max_clients = statCounter.client_http.clients * 3 / 2;
 }
 
 static ClientInfo *
 clientdbAdd(const Ip::Address &addr)
 {
-    ClientInfo *c = new ClientInfo(addr);
-    hash_join(client_table, static_cast<hash_link*>(c));
+    ClientInfo::Pointer c = new ClientInfo(addr);
+    client_table[addr] = c;
     ++statCounter.client_http.clients;
 
-    if ((statCounter.client_http.clients > max_clients) && !cleanup_running && cleanup_scheduled < 2) {
+    if ((statCounter.client_http.clients > max_clients) && cleanup_scheduled < 2) {
         ++cleanup_scheduled;
-        eventAdd("client_db garbage collector", clientdbScheduledGC, NULL, 90, 0);
+        eventAdd("client_db garbage collector", clientdbGC, NULL, 90, 0);
     }
 
-    return c;
+    return c.getRaw();
 }
 
 static void
-clientdbInit(void)
+clientdbDump(StoreEntry *sentry)
 {
-    if (client_table)
-        return;
+    int icp_total = 0;
+    int icp_hits = 0;
+    int http_total = 0;
+    int http_hits = 0;
 
-    client_table = hash_create((HASHCMP *) strcmp, CLIENT_DB_HASH_SIZE, hash_string);
+    PackableStream out(*sentry);
+    out << "Cache Clients:\n";
+
+    for (const auto &itr : client_table) {
+        const auto c = itr.second;
+        out << "Address: " << c->addr << "\n";
+        if (const auto name = fqdncache_gethostbyaddr(c->addr, 0))
+            out << "Name:    " << name << "\n";
+
+        out << "Currently established connections: " << c->n_established << "\n";
+        out << "    ICP  Requests " << c->Icp.n_requests << "\n";
+
+        for (LogTags_ot l = LOG_TAG_NONE; l < LOG_TYPE_MAX; ++l) {
+            if (c->Icp.result_hist[l] == 0)
+                continue;
+
+            icp_total += c->Icp.result_hist[l];
+
+            if (LOG_UDP_HIT == l)
+                icp_hits += c->Icp.result_hist[l];
+
+            out << "        " << LogTags(l).c_str() << " " << c->Icp.result_hist[l] << " " << Math::intPercent(c->Icp.result_hist[l], c->Icp.n_requests) << "%\n";
+        }
+
+        out << "    HTTP Requests: " << c->Http.n_requests << "\n";
+
+        for (LogTags_ot l = LOG_TAG_NONE; l < LOG_TYPE_MAX; ++l) {
+            if (c->Http.result_hist[l] == 0)
+                continue;
+
+            http_total += c->Http.result_hist[l];
+
+            if (LogTags(l).isTcpHit())
+                http_hits += c->Http.result_hist[l];
+
+            out << "        " << LogTags(l).c_str() << " " << c->Http.result_hist[l] << " " << Math::intPercent(c->Http.result_hist[l], c->Http.n_requests) << "%\n";
+        }
+
+        out << "\n";
+    }
+
+    out << "TOTALS\n";
+    out << "ICP : " << icp_total << " Queries, " << icp_hits << " Hits (" << Math::intPercent(icp_hits, icp_total) << "%)\n";
+    out << "HTTP: " << http_total << " Requests, " << http_hits << " Hits (" << Math::intPercent(http_hits, http_total) << "%)\n";
+    out.flush();
 }
 
 class ClientDbRr: public RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void useConfig();
+    virtual void useConfig() override {
+        if (Config.onoff.client_db)
+            Mgr::RegisterAction("client_list", "Cache Client List", clientdbDump, 0, 1);
+    }
+    virtual void finishShutdown() override {
+        client_table.clear();
+    }
 };
 RunnerRegistrationEntry(ClientDbRr);
 
-void
-ClientDbRr::useConfig()
+/// \returns ClientInfo for given IP addr, or nullptr
+ClientInfo *
+clientdbGetInfo(const Ip::Address &addr)
 {
-    clientdbInit();
-    Mgr::RegisterAction("client_list", "Cache Client List", clientdbDump, 0, 1);
-}
-
-#if USE_DELAY_POOLS
-/* returns ClientInfo for given IP addr
-   Returns NULL if no such client (or clientdb turned off)
-   (it is assumed that clientdbEstablished will be called before and create client record if needed)
-*/
-ClientInfo * clientdbGetInfo(const Ip::Address &addr)
-{
-    char key[MAX_IPSTRLEN];
-    ClientInfo *c;
-
-    if (!Config.onoff.client_db)
-        return NULL;
-
-    addr.toStr(key,MAX_IPSTRLEN);
-
-    c = (ClientInfo *) hash_lookup(client_table, key);
-    if (c==NULL) {
-        debugs(77, DBG_IMPORTANT,"Client db does not contain information for given IP address "<<(const char*)key);
-        return NULL;
+    ClientInfo::Pointer c;
+    if (Config.onoff.client_db) {
+        auto result = client_table.find(addr);
+        if (result == client_table.end())
+            debugs(77, 2, "client DB does not contain " << addr);
+        else
+            c = result->second;
     }
-    return c;
+    return c.getRaw();
 }
-#endif
+
 void
 clientdbUpdate(const Ip::Address &addr, const LogTags &ltype, AnyP::ProtocolType p, size_t size)
 {
-    char key[MAX_IPSTRLEN];
-    ClientInfo *c;
-
     if (!Config.onoff.client_db)
         return;
 
-    addr.toStr(key,MAX_IPSTRLEN);
-
-    c = (ClientInfo *) hash_lookup(client_table, key);
-
-    if (c == NULL)
+    auto c = clientdbGetInfo(addr);
+    if (!c)
         c = clientdbAdd(addr);
-
-    if (c == NULL)
-        debug_trap("clientdbUpdate: Failed to add entry");
 
     if (p == AnyP::PROTO_HTTP) {
         ++ c->Http.n_requests;
@@ -182,22 +222,12 @@ clientdbUpdate(const Ip::Address &addr, const LogTags &ltype, AnyP::ProtocolType
 int
 clientdbEstablished(const Ip::Address &addr, int delta)
 {
-    char key[MAX_IPSTRLEN];
-    ClientInfo *c;
-
     if (!Config.onoff.client_db)
         return 0;
 
-    addr.toStr(key,MAX_IPSTRLEN);
-
-    c = (ClientInfo *) hash_lookup(client_table, key);
-
-    if (c == NULL) {
+    auto c = clientdbGetInfo(addr);
+    if (!c)
         c = clientdbAdd(addr);
-    }
-
-    if (c == NULL)
-        debug_trap("clientdbUpdate: Failed to add entry");
 
     c->n_established += delta;
 
@@ -209,20 +239,11 @@ int
 
 clientdbCutoffDenied(const Ip::Address &addr)
 {
-    char key[MAX_IPSTRLEN];
-    int NR;
-    int ND;
-    double p;
-    ClientInfo *c;
-
     if (!Config.onoff.client_db)
         return 0;
 
-    addr.toStr(key,MAX_IPSTRLEN);
-
-    c = (ClientInfo *) hash_lookup(client_table, key);
-
-    if (c == NULL)
+    auto c = clientdbGetInfo(addr);
+    if (!c)
         return 0;
 
     /*
@@ -235,19 +256,19 @@ clientdbCutoffDenied(const Ip::Address &addr)
      * Calculate the percent of DENIED replies since the last
      * cutoff time.
      */
-    NR = c->Icp.n_requests - c->cutoff.n_req;
+    auto NR = c->Icp.n_requests - c->cutoff.n_req;
 
     if (NR < 150)
         NR = 150;
 
-    ND = c->Icp.result_hist[LOG_UDP_DENIED] - c->cutoff.n_denied;
+    auto ND = c->Icp.result_hist[LOG_UDP_DENIED] - c->cutoff.n_denied;
 
-    p = 100.0 * ND / NR;
+    double p = 100.0 * ND / NR;
 
     if (p < 95.0)
         return 0;
 
-    debugs(1, DBG_CRITICAL, "WARNING: Probable misconfigured neighbor at " << key);
+    debugs(1, DBG_CRITICAL, "WARNING: Probable misconfigured neighbor at " << addr);
 
     debugs(1, DBG_CRITICAL, "WARNING: " << ND << " of the last " << NR <<
            " ICP replies are DENIED");
@@ -264,79 +285,8 @@ clientdbCutoffDenied(const Ip::Address &addr)
     return 1;
 }
 
-void
-clientdbDump(StoreEntry * sentry)
-{
-    const char *name;
-    int icp_total = 0;
-    int icp_hits = 0;
-    int http_total = 0;
-    int http_hits = 0;
-    storeAppendPrintf(sentry, "Cache Clients:\n");
-    hash_first(client_table);
-
-    while (hash_link *hash = hash_next(client_table)) {
-        const ClientInfo *c = static_cast<const ClientInfo *>(hash);
-        storeAppendPrintf(sentry, "Address: %s\n", hashKeyStr(hash));
-        if ( (name = fqdncache_gethostbyaddr(c->addr, 0)) ) {
-            storeAppendPrintf(sentry, "Name:    %s\n", name);
-        }
-        storeAppendPrintf(sentry, "Currently established connections: %d\n",
-                          c->n_established);
-        storeAppendPrintf(sentry, "    ICP  Requests %d\n",
-                          c->Icp.n_requests);
-
-        for (LogTags_ot l = LOG_TAG_NONE; l < LOG_TYPE_MAX; ++l) {
-            if (c->Icp.result_hist[l] == 0)
-                continue;
-
-            icp_total += c->Icp.result_hist[l];
-
-            if (LOG_UDP_HIT == l)
-                icp_hits += c->Icp.result_hist[l];
-
-            storeAppendPrintf(sentry, "        %-20.20s %7d %3d%%\n", LogTags(l).c_str(), c->Icp.result_hist[l], Math::intPercent(c->Icp.result_hist[l], c->Icp.n_requests));
-        }
-
-        storeAppendPrintf(sentry, "    HTTP Requests %d\n", c->Http.n_requests);
-
-        for (LogTags_ot l = LOG_TAG_NONE; l < LOG_TYPE_MAX; ++l) {
-            if (c->Http.result_hist[l] == 0)
-                continue;
-
-            http_total += c->Http.result_hist[l];
-
-            if (LogTags(l).isTcpHit())
-                http_hits += c->Http.result_hist[l];
-
-            storeAppendPrintf(sentry,
-                              "        %-20.20s %7d %3d%%\n",
-                              LogTags(l).c_str(),
-                              c->Http.result_hist[l],
-                              Math::intPercent(c->Http.result_hist[l], c->Http.n_requests));
-        }
-
-        storeAppendPrintf(sentry, "\n");
-    }
-
-    storeAppendPrintf(sentry, "TOTALS\n");
-    storeAppendPrintf(sentry, "ICP : %d Queries, %d Hits (%3d%%)\n",
-                      icp_total, icp_hits, Math::intPercent(icp_hits, icp_total));
-    storeAppendPrintf(sentry, "HTTP: %d Requests, %d Hits (%3d%%)\n",
-                      http_total, http_hits, Math::intPercent(http_hits, http_total));
-}
-
-static void
-clientdbFreeItem(void *data)
-{
-    ClientInfo *c = (ClientInfo *)data;
-    delete c;
-}
-
 ClientInfo::~ClientInfo()
 {
-    safe_free(key);
-
 #if USE_DELAY_POOLS
     if (CommQuotaQueue *q = quotaQueue) {
         q->clientInfo = NULL;
@@ -347,111 +297,28 @@ ClientInfo::~ClientInfo()
     debugs(77, 9, "ClientInfo destructed, this=" << static_cast<void*>(this));
 }
 
-void
-clientdbFreeMemory(void)
-{
-    hashFreeItems(client_table, clientdbFreeItem);
-    hashFreeMemory(client_table);
-    client_table = NULL;
-}
-
-static void
-clientdbScheduledGC(void *)
-{
-    cleanup_scheduled = 0;
-    clientdbStartGC();
-}
-
-static void
-clientdbGC(void *)
-{
-    static int bucket = 0;
-    hash_link *link_next;
-
-    link_next = hash_get_bucket(client_table, bucket++);
-
-    while (link_next != NULL) {
-        ClientInfo *c = (ClientInfo *)link_next;
-        int age = squid_curtime - c->last_seen;
-        link_next = link_next->next;
-
-        if (c->n_established)
-            continue;
-
-        if (age < 24 * 3600 && c->Http.n_requests > 100)
-            continue;
-
-        if (age < 4 * 3600 && (c->Http.n_requests > 10 || c->Icp.n_requests > 10))
-            continue;
-
-        if (age < 5 * 60 && (c->Http.n_requests > 1 || c->Icp.n_requests > 1))
-            continue;
-
-        if (age < 60)
-            continue;
-
-        hash_remove_link(client_table, static_cast<hash_link*>(c));
-
-        clientdbFreeItem(c);
-
-        --statCounter.client_http.clients;
-
-        ++cleanup_removed;
-    }
-
-    if (bucket < CLIENT_DB_HASH_SIZE)
-        eventAdd("client_db garbage collector", clientdbGC, NULL, 0.15, 0);
-    else {
-        bucket = 0;
-        cleanup_running = 0;
-        max_clients = statCounter.client_http.clients * 3 / 2;
-
-        if (!cleanup_scheduled) {
-            cleanup_scheduled = 1;
-            eventAdd("client_db garbage collector", clientdbScheduledGC, NULL, 6 * 3600, 0);
-        }
-
-        debugs(49, 2, "clientdbGC: Removed " << cleanup_removed << " entries");
-    }
-}
-
-static void
-clientdbStartGC(void)
-{
-    max_clients = statCounter.client_http.clients;
-    cleanup_running = 1;
-    cleanup_removed = 0;
-    clientdbGC(NULL);
-}
-
 #if SQUID_SNMP
 
-Ip::Address *
-client_entry(Ip::Address *current)
+const Ip::Address *
+client_entry(const Ip::Address *current)
 {
-    char key[MAX_IPSTRLEN];
-    hash_first(client_table);
+    if (client_table.empty())
+        return nullptr;
 
     if (current) {
-        current->toStr(key,MAX_IPSTRLEN);
-        while (hash_link *hash = hash_next(client_table)) {
-            if (!strcmp(key, hashKeyStr(hash)))
-                break;
-        }
+        auto itr = client_table.find(*current);
+        ++itr;
+        if (itr == client_table.end())
+            return nullptr;
+        return &(itr->first);
     }
 
-    ClientInfo *c = static_cast<ClientInfo *>(hash_next(client_table));
-
-    hash_last(client_table);
-
-    return c ? &c->addr : nullptr;
+    return &(client_table.begin()->first);
 }
 
 variable_list *
 snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 {
-    char key[MAX_IPSTRLEN];
-    ClientInfo *c = NULL;
     Ip::Address keyIp;
 
     *ErrP = SNMP_ERR_NOERROR;
@@ -466,15 +333,14 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
         return NULL;
     }
 
-    keyIp.toStr(key, sizeof(key));
-    debugs(49, 5, HERE << "[" << key << "] requested!");
-    c = (ClientInfo *) hash_lookup(client_table, key);
-
-    if (c == NULL) {
+    debugs(49, 5, "[" << keyIp << "] requested!");
+    const auto itr = client_table.find(keyIp);
+    if (itr == client_table.end()) {
         debugs(49, 5, HERE << "not found.");
         *ErrP = SNMP_ERR_NOSUCHNAME;
         return NULL;
     }
+    const auto c = itr->second;
 
     variable_list *Answer = NULL;
     int aggr = 0;

@@ -2134,7 +2134,6 @@ SquidShutdown()
     ipcacheFreeMemory();
     fqdncacheFreeMemory();
     asnFreeMemory();
-    clientdbFreeMemory();
     statFreeMemory();
     eventFreeMemory();
     mimeFreeMemory();

@@ -14,15 +14,13 @@
 #include "client_db.h"
 void clientdbUpdate(const Ip::Address &, const LogTags &, AnyP::ProtocolType, size_t) STUB
 int clientdbCutoffDenied(const Ip::Address &) STUB_RETVAL(-1)
-void clientdbDump(StoreEntry *) STUB
-void clientdbFreeMemory(void) STUB
 int clientdbEstablished(const Ip::Address &, int) STUB_RETVAL(-1)
+ClientInfo *clientdbGetInfo(const Ip::Address &) STUB_RETVAL(nullptr)
 #if USE_DELAY_POOLS
 void clientdbSetWriteLimiter(ClientInfo *, const int,const double,const double) STUB
-ClientInfo *clientdbGetInfo(const Ip::Address &) STUB_RETVAL(nullptr)
 #endif
 #if SQUID_SNMP
-Ip::Address *client_entry(Ip::Address *) STUB_RETVAL(nullptr)
+const Ip::Address *client_entry(const Ip::Address *) STUB_RETVAL(nullptr)
 variable_list *snmp_meshCtblFn(variable_list *, snint *) STUB_RETVAL(nullptr)
 #endif
 

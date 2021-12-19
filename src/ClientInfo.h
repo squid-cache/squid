@@ -9,17 +9,18 @@
 #ifndef SQUID__SRC_CLIENTINFO_H
 #define SQUID__SRC_CLIENTINFO_H
 
-#if USE_DELAY_POOLS
-#include "BandwidthBucket.h"
-#endif
 #include "base/ByteCounter.h"
-#include "cbdata.h"
+#include "base/RefCount.h"
 #include "enums.h"
-#include "hash.h"
 #include "ip/Address.h"
 #include "LogTags.h"
 #include "mem/forward.h"
 #include "typedefs.h"
+
+#if USE_DELAY_POOLS
+#include "BandwidthBucket.h"
+#include "cbdata.h"
+#endif
 
 #include <deque>
 
@@ -27,7 +28,7 @@
 class CommQuotaQueue;
 #endif
 
-class ClientInfo : public hash_link
+class ClientInfo : public RefCountable
 #if USE_DELAY_POOLS
     , public BandwidthBucket
 #endif
@@ -35,40 +36,40 @@ class ClientInfo : public hash_link
     MEMPROXY_CLASS(ClientInfo);
 
 public:
+    typedef RefCount<ClientInfo> Pointer;
+
     explicit ClientInfo(const Ip::Address &);
     ~ClientInfo();
 
     Ip::Address addr;
 
     struct Protocol {
-        Protocol() : n_requests(0) {
+        Protocol() {
             memset(result_hist, 0, sizeof(result_hist));
         }
 
         int result_hist[LOG_TYPE_MAX];
-        int n_requests;
+        int n_requests = 0;
         ByteCounter kbytes_in;
         ByteCounter kbytes_out;
         ByteCounter hit_kbytes_out;
     } Http, Icp;
 
     struct Cutoff {
-        Cutoff() : time(0), n_req(0), n_denied(0) {}
-
-        time_t time;
-        int n_req;
-        int n_denied;
+        time_t time = 0;
+        int n_req = 0;
+        int n_denied = 0;
     } cutoff;
-    int n_established;          /* number of current established connections */
-    time_t last_seen;
+    int n_established = 0; ///< number of current established connections
+    time_t last_seen = 0;
 #if USE_DELAY_POOLS
-    bool writeLimitingActive; ///< Is write limiter active
-    bool firstTimeConnection;///< is this first time connection for this client
+    bool writeLimitingActive = false; ///< Is write limiter active
+    bool firstTimeConnection = true;///< is this first time connection for this client
 
-    CommQuotaQueue *quotaQueue; ///< clients waiting for more write quota
-    int rationedQuota; ///< precomputed quota preserving fairness among clients
-    int rationedCount; ///< number of clients that will receive rationedQuota
-    bool eventWaiting; ///< waiting for commHandleWriteHelper event to fire
+    CommQuotaQueue *quotaQueue = nullptr; ///< clients waiting for more write quota
+    int rationedQuota = 0; ///< precomputed quota preserving fairness among clients
+    int rationedCount = 0; ///< number of clients that will receive rationedQuota
+    bool eventWaiting = false; ///< waiting for commHandleWriteHelper event to fire
 
     // all those functions access Comm fd_table and are defined in comm.cc
     bool hasQueue() const;  ///< whether any clients are waiting for write quota
