@@ -63,7 +63,6 @@
 #include "base/Subscription.h"
 #include "base/TextException.h"
 #include "CachePeer.h"
-#include "client_db.h"
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "client_side_request.h"

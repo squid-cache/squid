@@ -363,7 +363,6 @@ squid_SOURCES = \
 	clientStream.cc \
 	clientStream.h \
 	clientStreamForward.h \
-	client_db.h \
 	client_side.cc \
 	client_side.h \
 	client_side_reply.cc \
