@@ -11,7 +11,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/MaxConnection.h"
-#include "client_db.h"
+#include "clientdb/Cache.h"
 #include "Debug.h"
 #include "SquidConfig.h"
 
@@ -66,7 +66,7 @@ ACLMaxConnection::parse()
 int
 ACLMaxConnection::match(ACLChecklist *checklist)
 {
-    return clientdbEstablished(Filled(checklist)->src_addr, 0) > limit ? 1 : 0;
+    return ClientDb::Established(Filled(checklist)->src_addr, 0) > limit ? 1 : 0;
 }
 
 SBufList

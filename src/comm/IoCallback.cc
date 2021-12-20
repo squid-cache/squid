@@ -7,7 +7,6 @@
  */
 
 #include "squid.h"
-#include "ClientInfo.h"
 #include "comm/Connection.h"
 #include "comm/IoCallback.h"
 #include "comm/Loops.h"

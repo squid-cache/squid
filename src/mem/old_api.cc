@@ -10,7 +10,6 @@
 
 #include "squid.h"
 #include "base/PackableStream.h"
-#include "ClientInfo.h"
 #include "dlink.h"
 #include "event.h"
 #include "fs_io.h"

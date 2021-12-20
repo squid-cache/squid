@@ -12,7 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "base/CbcPointer.h"
 #include "CachePeer.h"
-#include "client_db.h"
+#include "clientdb/SnmpGadgets.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"

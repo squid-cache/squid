@@ -17,7 +17,7 @@
 #include "AccessLogEntry.h"
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
-#include "client_db.h"
+#include "clientdb/Cache.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
@@ -239,7 +239,7 @@ icpLogIcp(const Ip::Address &caddr, const LogTags_ot logcode, const int len, con
         return; // we never log queries
 
     if (!Config.onoff.log_udp) {
-        clientdbUpdate(caddr, al ? al->cache.code : LogTags(logcode), AnyP::PROTO_ICP, len);
+        ClientDb::Update(caddr, al ? al->cache.code : LogTags(logcode), AnyP::PROTO_ICP, len);
         return;
     }
 
@@ -248,7 +248,7 @@ icpLogIcp(const Ip::Address &caddr, const LogTags_ot logcode, const int len, con
         icpSyncAle(al, caddr, url, len, delay);
         al->cache.code.update(logcode);
     }
-    clientdbUpdate(caddr, al->cache.code, AnyP::PROTO_ICP, len);
+    ClientDb::Update(caddr, al->cache.code, AnyP::PROTO_ICP, len);
     accessLogLog(al, NULL);
 }
 
@@ -432,12 +432,12 @@ icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
 {
     debugs(12, 2, "icpDenyAccess: Access Denied for " << from << " by " << AclMatchedName << ".");
 
-    if (clientdbCutoffDenied(from)) {
+    if (ClientDb::IcpCutoffDenied(from)) {
         /*
          * count this DENIED query in the clientdb, even though
          * we're not sending an ICP reply...
          */
-        clientdbUpdate(from, LogTags(LOG_UDP_DENIED), AnyP::PROTO_ICP, 0);
+        ClientDb::Update(from, LogTags(LOG_UDP_DENIED), AnyP::PROTO_ICP, 0);
     } else {
         icpCreateAndSend(ICP_DENIED, 0, url, reqnum, 0, fd, from, nullptr);
     }

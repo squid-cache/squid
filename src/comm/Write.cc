@@ -18,9 +18,6 @@
 #include "MemBuf.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
-#if USE_DELAY_POOLS
-#include "ClientInfo.h"
-#endif
 
 #include <cerrno>
 

@@ -31,8 +31,8 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.cc \
 	LoadableModules.h
 
-SUBDIRS = mem base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
-DIST_SUBDIRS = mem base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
+SUBDIRS = mem base anyp helper dns ftp parser comm error eui acl format clientdb clients sbuf servers fs repl store DiskIO proxyp
+DIST_SUBDIRS = mem base anyp helper dns ftp parser comm error eui acl format clientdb clients sbuf servers fs repl store DiskIO proxyp
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -225,7 +225,6 @@ squid_SOURCES = \
 	CacheManager.h \
 	CachePeer.cc \
 	CachePeer.h \
-	ClientInfo.h \
 	ClientRequestContext.h \
 	CollapsedForwarding.cc \
 	CollapsedForwarding.h \
@@ -364,7 +363,6 @@ squid_SOURCES = \
 	clientStream.cc \
 	clientStream.h \
 	clientStreamForward.h \
-	client_db.cc \
 	client_db.h \
 	client_side.cc \
 	client_side.h \
@@ -512,6 +510,7 @@ nodist_squid_SOURCES = \
 	$(BUILT_SOURCES)
 
 squid_LDADD = \
+	clientdb/libclientdb.la \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
@@ -603,7 +602,6 @@ unlinkd_LDADD = \
 ## libbase.la wants MemBuf.*
 ufsdump_SOURCES = \
 	$(WIN32_SOURCE) \
-	ClientInfo.h \
 	tests/stub_HelperChildConfig.cc \
 	MemBuf.cc \
 	MemBuf.h \
@@ -1154,7 +1152,6 @@ tests_testRock_SOURCES = \
 	cache_cf.h \
 	tests/stub_cache_manager.cc \
 	cbdata.cc \
-	tests/stub_client_db.cc \
 	tests/stub_client_side.cc \
 	tests/stub_client_side_request.cc \
 	tests/stub_debug.cc \
@@ -1213,7 +1210,8 @@ nodist_tests_testRock_SOURCES = \
 	SquidMath.cc \
 	SquidMath.h \
 	hier_code.cc \
-	swap_log_op.cc
+	swap_log_op.cc \
+	tests/stub_libclientdb.cc
 tests_testRock_LDADD = \
 	http/libhttp.la \
 	parser/libparser.la \
@@ -1266,7 +1264,6 @@ tests_testUfs_SOURCES = \
 	tests/stub_CacheDigest.cc \
 	CacheDigest.h \
 	tests/stub_CachePeer.cc \
-	ClientInfo.h \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
@@ -1327,8 +1324,6 @@ tests_testUfs_SOURCES = \
 	cache_cf.h \
 	tests/stub_cache_manager.cc \
 	cbdata.cc \
-	tests/stub_client_db.cc \
-	client_db.h \
 	tests/stub_client_side.cc \
 	tests/stub_client_side_request.cc \
 	tests/stub_debug.cc \
@@ -1391,7 +1386,8 @@ nodist_tests_testUfs_SOURCES = \
 	SquidMath.cc \
 	SquidMath.h \
 	hier_code.cc \
-	swap_log_op.cc
+	swap_log_op.cc \
+	tests/stub_libclientdb.cc
 tests_testUfs_LDADD = \
 	http/libhttp.la \
 	parser/libparser.la \
@@ -1444,7 +1440,6 @@ tests_testStore_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	tests/stub_CacheDigest.cc \
 	CacheDigest.h \
-	ClientInfo.h \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
@@ -1612,7 +1607,6 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_CacheDigest.cc \
 	CacheDigest.h \
 	tests/stub_CachePeer.cc \
-	ClientInfo.h \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
@@ -1676,8 +1670,6 @@ tests_testDiskIO_SOURCES = \
 	cache_cf.h \
 	tests/stub_cache_manager.cc \
 	cbdata.cc \
-	tests/stub_client_db.cc \
-	client_db.h \
 	tests/stub_client_side.cc \
 	tests/stub_client_side_request.cc \
 	client_side_request.h \
@@ -1743,7 +1735,8 @@ nodist_tests_testDiskIO_SOURCES = \
 	SquidMath.cc \
 	SquidMath.h \
 	hier_code.cc \
-	swap_log_op.cc
+	swap_log_op.cc \
+	tests/stub_libclientdb.cc
 tests_testDiskIO_LDADD = \
 	libsquid.la \
 	http/libhttp.la \
@@ -1848,7 +1841,6 @@ tests_test_http_range_SOURCES = \
 	CacheDigest.h \
 	CachePeer.cc \
 	CachePeer.h \
-	ClientInfo.h \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
@@ -1927,7 +1919,6 @@ tests_test_http_range_SOURCES = \
 	carp.h \
 	cbdata.cc \
 	clientStream.cc \
-	tests/stub_client_db.cc \
 	client_side.cc \
 	client_side.h \
 	client_side_reply.cc \
@@ -2025,7 +2016,8 @@ tests_test_http_range_SOURCES = \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_test_http_range_SOURCES = \
-	$(BUILT_SOURCES)
+	$(BUILT_SOURCES) \
+	tests/stub_libclientdb.cc
 tests_test_http_range_LDADD = \
 	libsquid.la \
 	clients/libclients.la \
@@ -2239,7 +2231,6 @@ tests_testHttpRequest_SOURCES = \
 	CacheDigest.h \
 	CachePeer.cc \
 	CachePeer.h \
-	ClientInfo.h \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
@@ -2321,7 +2312,6 @@ tests_testHttpRequest_SOURCES = \
 	carp.h \
 	cbdata.cc \
 	clientStream.cc \
-	tests/stub_client_db.cc \
 	client_side.cc \
 	client_side.h \
 	client_side_reply.cc \
@@ -2419,7 +2409,8 @@ tests_testHttpRequest_SOURCES = \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testHttpRequest_SOURCES = \
-	$(BUILT_SOURCES)
+	$(BUILT_SOURCES) \
+	tests/stub_libclientdb.cc
 tests_testHttpRequest_LDADD = \
 	libsquid.la \
 	clients/libclients.la \
@@ -2549,7 +2540,6 @@ tests_testCacheManager_SOURCES = \
 	tests/testCacheManager.h \
 	CachePeer.cc \
 	CachePeer.h \
-	ClientInfo.h \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
@@ -2628,7 +2618,6 @@ tests_testCacheManager_SOURCES = \
 	carp.h \
 	cbdata.cc \
 	clientStream.cc \
-	tests/stub_client_db.cc \
 	client_side.cc \
 	client_side.h \
 	client_side_reply.cc \
@@ -2725,7 +2714,8 @@ tests_testCacheManager_SOURCES = \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testCacheManager_SOURCES = \
-	$(BUILT_SOURCES)
+	$(BUILT_SOURCES) \
+	tests/stub_libclientdb.cc
 # comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
 	libsquid.la \

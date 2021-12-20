@@ -67,6 +67,7 @@
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "client_side_request.h"
+#include "clientdb/Cache.h"
 #include "ClientRequestContext.h"
 #include "clientStream.h"
 #include "comm.h"
@@ -124,7 +125,6 @@
 #include "auth/UserRequest.h"
 #endif
 #if USE_DELAY_POOLS
-#include "ClientInfo.h"
 #include "MessageDelayPools.h"
 #endif
 #if USE_OPENSSL
@@ -471,7 +471,7 @@ ClientHttpRequest::logRequest()
             updateCounters();
 
         if (getConn() != NULL && getConn()->clientConnection != NULL)
-            clientdbUpdate(getConn()->clientConnection->remote, loggingTags(), AnyP::PROTO_HTTP, out.size);
+            ClientDb::Update(getConn()->clientConnection->remote, loggingTags(), AnyP::PROTO_HTTP, out.size);
     }
 }
 
@@ -609,7 +609,7 @@ ConnStateData::swanSong()
     debugs(33, 2, HERE << clientConnection);
 
     flags.readMore = false;
-    clientdbEstablished(clientConnection->remote, -1);  /* decrement */
+    ClientDb::Established(clientConnection->remote, -1);
 
     terminateAll(ERR_NONE, LogTagsErrors());
     checkLogging();
@@ -2236,7 +2236,7 @@ ConnStateData::whenClientIpKnown()
     }
 #endif
 
-    clientdbEstablished(clientConnection->remote, 1);
+    ClientDb::Established(clientConnection->remote, 1);
 
 #if USE_DELAY_POOLS
     fd_table[clientConnection->fd].clientInfo = NULL;
@@ -2260,7 +2260,7 @@ ConnStateData::whenClientIpKnown()
 
                     /*  request client information from db after we did all checks
                         this will save hash lookup if client failed checks */
-                    ClientInfo * cli = clientdbGetInfo(clientConnection->remote);
+                    auto *cli = ClientDb::Get(clientConnection->remote);
                     assert(cli);
 
                     /* put client info in FDE */

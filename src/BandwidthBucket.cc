@@ -11,7 +11,7 @@
 #if USE_DELAY_POOLS
 
 #include "BandwidthBucket.h"
-#include "ClientInfo.h"
+#include "clientdb/ClientInfo.h"
 #include "comm/Connection.h"
 #include "Debug.h"
 #include "fde.h"
