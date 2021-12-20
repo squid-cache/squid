@@ -297,7 +297,7 @@ static struct wccp2_capability_info_header_t wccp2_capability_info_header;
 struct wccp2_capability_element_t {
     uint16_t capability_type;
     uint16_t capability_length;
-    uint32_t capability_value;
+    uint32_t capability_value; // All capabilities have length of 4
 };
 static struct wccp2_capability_element_t wccp2_capability_element;
 
@@ -305,8 +305,8 @@ static struct wccp2_capability_element_t wccp2_capability_element;
 #define WCCP2_CAPABILITY_FORWARDING_METHOD  0x01
 #define WCCP2_CAPABILITY_ASSIGNMENT_METHOD  0x02
 #define WCCP2_CAPABILITY_RETURN_METHOD      0x03
-// 0x04 ?? - advertised by a 4507 (ios v15.1) Cisco switch
-// 0x05 ?? - advertised by a 4507 (ios v15.1) Cisco switch
+#define WCCP2_CAPABILITY_TRANSMIT_T         0x04
+#define WCCP2_CAPABILITY_TIMER_SCALE        0x05
 
 /* capability values */
 #define WCCP2_METHOD_GRE        0x00000001
@@ -372,17 +372,22 @@ struct router_identity_info_t {
     /* dynamic list of cache IP addresses */
 };
 
-/* The received packet for a mask assignment is unusual */
+/* The received packet for a mask assignment contains no mask elements */
 
 /** \interface WCCPv2_Protocol
  * Sect 5.7.7 Mask Element  ???
- * see code below. apparently the supposed IP address at position num1 can be equal to 3.
+ * Only applicable in case mask_element_count == 0
  */
 struct cache_mask_info_t {
     struct in_addr addr;
-    uint32_t num1;
-    uint32_t num2;
-    uint32_t num3;
+    uint16_t hash_revision;
+    uint16_t bits;
+//#define WCCP2_ASSIGNMENT_CURRENT    0x1
+//#define WCCP2_MASK_ASSIGNMENT_DATA  0x2
+    uint32_t mask_element_count;
+
+    uint16_t weight;
+    uint16_t status;
 };
 
 /** \interface WCCPv2_Protocol
@@ -1136,15 +1141,17 @@ CheckSectionLength(const void *sectionStart, const size_t sectionLength, const v
 
 /// Checks that the area contains at least dataLength bytes after the header.
 /// The size of the field header itself is not included in dataLength.
+/// Struct FieldHeader does not contain the data itself for router_capability_header,
+/// but it does in case of router_capability_element, so specified as headerLength.
 /// \returns the total field size -- the field header and field data combined
 template<class FieldHeader>
 static size_t
-CheckFieldDataLength(const FieldHeader *header, const size_t dataLength, const void *areaStart, const size_t areaSize, const char *error)
+CheckFieldDataLength(const FieldHeader *header, const size_t headerLength, const size_t dataLength, const void *areaStart, const size_t areaSize, const char *error)
 {
     assert(header);
-    const auto dataStart = reinterpret_cast<const char*>(header) + sizeof(header);
+    const auto dataStart = reinterpret_cast<const char*>(header) + headerLength;
     CheckSectionLength(dataStart, dataLength, areaStart, areaSize, error);
-    return sizeof(header) + dataLength; // no overflow after CheckSectionLength()
+    return headerLength + dataLength; // no overflow after CheckSectionLength()
 }
 
 /// Positions the given field at a given start within a given packet area.
@@ -1202,7 +1209,7 @@ wccp2HandleUdp(int sock, void *)
     struct in_addr cache_address;
     uint32_t tmp;
     char *ptr;
-    int num_caches;
+    unsigned int num_caches;
 
     debugs(80, 6, "wccp2HandleUdp: Called.");
 
@@ -1243,8 +1250,9 @@ wccp2HandleUdp(int sock, void *)
         char *data = wccp2_i_see_you.data;
 
         const auto itemHeader = reinterpret_cast<const wccp2_item_header_t*>(&data[offset]);
-        const auto itemSize = CheckFieldDataLength(itemHeader, ntohs(itemHeader->length),
+        const auto itemSize = CheckFieldDataLength(itemHeader, sizeof(*itemHeader), ntohs(itemHeader->length),
                               data, data_length, "truncated record");
+        debugs(80, 7, "Offset: " << offset << " Item type: " << ntohs(itemHeader->type) << " size: " << itemSize << ".");
         // XXX: Check "The specified length must be a multiple of 4 octets"
         // requirement to avoid unaligned memory reads after the first item.
 
@@ -1279,7 +1287,8 @@ wccp2HandleUdp(int sock, void *)
             SetField(router_capability_header, itemHeader, itemHeader, itemSize,
                      "router_capability definition truncated");
 
-            CheckFieldDataLength(router_capability_header, ntohs(router_capability_header->capability_info_length),
+            CheckFieldDataLength(router_capability_header, sizeof(*router_capability_header),
+                                 ntohs(router_capability_header->capability_info_length),
                                  itemHeader, itemSize, "capability info truncated");
             router_capability_data_start = reinterpret_cast<char*>(router_capability_header) +
                                            sizeof(*router_capability_header);
@@ -1370,7 +1379,8 @@ wccp2HandleUdp(int sock, void *)
                      router_capability_data_start, router_capability_data_length,
                      "capability element header truncated");
             const auto elementSize = CheckFieldDataLength(
-                                         router_capability_element, ntohs(router_capability_element->capability_length),
+                                         router_capability_element, 4, // All elements have 4 bytes header and 4 bytes value
+                                         ntohs(router_capability_element->capability_length),
                                          router_capability_data_start, router_capability_data_length,
                                          "capability element truncated");
 
@@ -1406,8 +1416,8 @@ wccp2HandleUdp(int sock, void *)
 
                 break;
 
-            case 4:
-            case 5:
+            case WCCP2_CAPABILITY_TRANSMIT_T:
+            case WCCP2_CAPABILITY_TIMER_SCALE:
                 break; // ignore silently for now
 
             default:
@@ -1452,7 +1462,7 @@ wccp2HandleUdp(int sock, void *)
     ptr += sizeof(*routerCountRaw);
     const auto ipCount = ntohl(*routerCountRaw);
     const auto ipsSize = ipCount * sizeof(struct in_addr); // we check for unsigned overflow below
-    Must3(ipsSize / sizeof(struct in_addr) != ipCount, "huge IP address count", Here());
+    Must3(ipsSize / sizeof(struct in_addr) == ipCount, "wrong IP address count", Here());
     CheckSectionLength(ptr, ipsSize, router_view_header, router_view_size, "invalid IP address count");
     ptr += ipsSize;
 
@@ -1460,13 +1470,13 @@ wccp2HandleUdp(int sock, void *)
     const uint32_t *cacheCountRaw = nullptr;
     SetField(cacheCountRaw, ptr, router_view_header, router_view_size,
              "malformed packet (truncated router view info w/o cache count)");
-    memcpy(&tmp, cacheCountRaw, sizeof(tmp)); // TODO: Replace tmp with cacheCount
-    ptr += sizeof(tmp);
+    const uint32_t cacheCount = ntohl(*cacheCountRaw);
+    ptr += sizeof(*cacheCountRaw);
 
-    if (ntohl(tmp) != 0) {
+    if (cacheCount != 0) {
         /* search through the list of received-from ip addresses */
 
-        for (num_caches = 0; num_caches < (int) ntohl(tmp); ++num_caches) {
+        for (num_caches = 0; num_caches < cacheCount; ++num_caches) {
             /* Get a copy of the ip */
             memset(&cache_address, 0, sizeof(cache_address)); // Make GCC happy
 
@@ -1476,6 +1486,9 @@ wccp2HandleUdp(int sock, void *)
 
                 SetField(cache_identity, ptr, router_view_header, router_view_size,
                          "malformed packet (truncated router view info cache w/o assignment hash)");
+                if (cache_identity->bits & 6 >> 1 != 0) {
+                    fatalf("Assignment type mismatch in router view");
+                }
 
                 ptr += sizeof(struct wccp2_cache_identity_info_t);
 
@@ -1488,25 +1501,33 @@ wccp2HandleUdp(int sock, void *)
 
                 SetField(cache_mask_info, ptr, router_view_header, router_view_size,
                          "malformed packet (truncated router view info cache w/o assignment mask)");
-
-                /* The mask assignment has an undocumented variable length entry here */
-
-                if (ntohl(cache_mask_info->num1) == 3) {
-
-                    SetField(cache_mask_identity, ptr, router_view_header, router_view_size,
-                             "malformed packet (truncated router view info cache w/o assignment mask identity)");
-
-                    ptr += sizeof(struct wccp2_cache_mask_identity_info_t);
-
-                    memcpy(&cache_address, &cache_mask_identity->addr, sizeof(struct in_addr));
-                } else {
-
-                    ptr += sizeof(struct cache_mask_info_t);
-
-                    memcpy(&cache_address, &cache_mask_info->addr, sizeof(struct in_addr));
+                if (cache_mask_info->bits & 6 >> 1 != 1) {
+                    fatalf("Assignment type mismatch in router view");
                 }
 
-                cache_list_ptr->weight = 0;
+                if (ntohl(cache_mask_info->mask_element_count) == 0) {
+
+                    ptr += sizeof(struct cache_mask_info_t);
+                    cache_list_ptr->weight = ntohs(cache_mask_info->weight);
+
+                } else if (ntohl(cache_mask_info->mask_element_count) == 1 ) {
+                    cache_mask_identity = reinterpret_cast<wccp2_cache_mask_identity_info_t*>(cache_mask_info);
+                    if (ntohl(cache_mask_identity->mask.number_values) == 0) {
+                        // Need to set entire field
+                        SetField(cache_mask_identity, ptr, router_view_header, router_view_size,
+                             "malformed packet (truncated router view info cache mask)");
+
+                        ptr += sizeof(struct wccp2_cache_mask_identity_info_t);
+                        cache_list_ptr->weight = ntohs(cache_mask_identity->weight);
+                    } else {
+                        fatalf("Unexpected cache assignment info number of mask values received\n");
+                    }
+
+                } else {
+                    fatalf("Unexpected mask cache assignment info element count received\n");
+                }
+
+                memcpy(&cache_address, &cache_mask_info->addr, sizeof(struct in_addr));
                 break;
 
             default:
