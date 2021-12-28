@@ -1264,14 +1264,14 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_SSL_USER_CERT_SUBJECT:
             if (const auto &cert = al->cache.sslClientCert) {
-                sb = Security::CertSubjectName(cert);
+                sb = Security::CertSubjectName(*cert);
                 out = sb.c_str();
             }
             break;
 
         case LFT_SSL_USER_CERT_ISSUER:
             if (const auto &cert = al->cache.sslClientCert) {
-                sb = Security::CertIssuerName(cert);
+                sb = Security::CertIssuerName(*cert);
                 out = sb.c_str();
             }
             break;

@@ -15,10 +15,10 @@ namespace Security
 {
 
 /// \return the SubjectName field of the given certificate (if found), or an empty SBuf
-SBuf CertSubjectName(const CertPointer &);
+SBuf CertSubjectName(const Certificate &);
 
 /// \return the Issuer field of the given certificate (if found), or an empty SBuf
-SBuf CertIssuerName(const CertPointer &);
+SBuf CertIssuerName(const Certificate &);
 
 /// \returns whether cert was (correctly) issued by the given issuer
 /// Due to complexity of the underlying checks, it is impossible to clearly

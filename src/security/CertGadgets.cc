@@ -25,11 +25,11 @@ MissingLibraryError()
 }
 
 SBuf
-Security::CertIssuerName(const CertPointer &cert)
+Security::CertIssuerName(const Certificate &cert)
 {
     SBuf out;
 #if USE_OPENSSL
-    auto s = X509_NAME_oneline(X509_get_issuer_name(cert.get()), nullptr, 0);
+    const auto s = X509_NAME_oneline(X509_get_issuer_name(&cert), nullptr, 0);
     if (!s) {
         const auto x = ERR_get_error();
         debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate Issuer: " << Security::ErrorString(x));
@@ -40,7 +40,7 @@ Security::CertIssuerName(const CertPointer &cert)
 
 #elif USE_GNUTLS
     gnutls_x509_dn_t dn;
-    auto x = gnutls_x509_crt_get_issuer(cert.get(), &dn);
+    auto x = gnutls_x509_crt_get_issuer(&cert, &dn);
     if (x != GNUTLS_E_SUCCESS) {
         debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate Issuer: " << Security::ErrorString(x));
         return out;
@@ -65,11 +65,11 @@ Security::CertIssuerName(const CertPointer &cert)
 }
 
 SBuf
-Security::CertSubjectName(const CertPointer &cert)
+Security::CertSubjectName(const Certificate &cert)
 {
     SBuf out;
 #if USE_OPENSSL
-    auto s = X509_NAME_oneline(X509_get_subject_name(cert.get()), nullptr, 0);
+    auto s = X509_NAME_oneline(X509_get_subject_name(&cert), nullptr, 0);
     if (!s) {
         const auto x = ERR_get_error();
         debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate SubjectName: " << Security::ErrorString(x));
@@ -80,7 +80,7 @@ Security::CertSubjectName(const CertPointer &cert)
 
 #elif USE_GNUTLS
     gnutls_x509_dn_t dn;
-    auto x = gnutls_x509_crt_get_subject(cert.get(), &dn);
+    auto x = gnutls_x509_crt_get_subject(&cert, &dn);
     if (x != GNUTLS_E_SUCCESS) {
         debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate SubjectName: " << Security::ErrorString(x));
         return out;
@@ -111,13 +111,13 @@ Security::CertIsIssuedBy(const CertPointer &cert, const CertPointer &issuer)
     const auto result = X509_check_issued(issuer.get(), cert.get());
     if (result == X509_V_OK)
         return true;
-    debugs(83, DBG_PARSE_NOTE(3), CertSubjectName(issuer) << " did not sign " <<
-           CertSubjectName(cert) << ": " << X509_verify_cert_error_string(result) << " (" << result << ")");
+    debugs(83, DBG_PARSE_NOTE(3), CertSubjectName(*issuer) << " did not sign " <<
+           CertSubjectName(*cert) << ": " << X509_verify_cert_error_string(result) << " (" << result << ")");
 #elif USE_GNUTLS
     const auto result = gnutls_x509_crt_check_issuer(cert.get(), issuer.get());
     if (result == 1)
         return true;
-    debugs(83, DBG_PARSE_NOTE(3), CertSubjectName(issuer) << " did not sign " << CertSubjectName(cert));
+    debugs(83, DBG_PARSE_NOTE(3), CertSubjectName(*issuer) << " did not sign " << CertSubjectName(*cert));
 #else
     debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot determine certificates relationship: " << MissingLibraryError());
 #endif

@@ -615,7 +615,7 @@ Security::ErrorDetail::ca_name() const
 {
     if (broken_cert) {
         static SBuf tmpBuffer;
-        tmpBuffer = Security::CertIssuerName(broken_cert);
+        tmpBuffer = Security::CertIssuerName(*broken_cert);
         if (!tmpBuffer.isEmpty()) {
             // quote to avoid possible html code injection through
             // certificate issuer subject

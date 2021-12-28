@@ -663,7 +663,7 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     // TODO: support collection of certificates
     const unsigned char *raw = (const unsigned char*)obj.rawContent();
     if (auto cert = CertPointer(d2i_X509(nullptr, &raw, obj.length()))) {
-        debugs(81, 5, "Retrieved certificate: " << CertSubjectName(cert));
+        debugs(81, 5, "Retrieved certificate: " << CertSubjectName(*cert));
 
         if (!downloadedCerts)
             downloadedCerts.reset(sk_X509_new_null());
@@ -673,12 +673,12 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
         const auto certsList = SSL_get_peer_cert_chain(&sconn);
         if (!Ssl::findIssuerCertificate(cert.get(), certsList, ctx)) {
             if (const auto issuerUri = Ssl::findIssuerUri(cert.get())) {
-                debugs(81, 5, "certificate " << CertSubjectName(cert) <<
+                debugs(81, 5, "certificate " << CertSubjectName(*cert) <<
                        " points to its missing issuer certificate at " << issuerUri);
                 urlsOfMissingCerts.push(SBuf(issuerUri));
             } else {
                 debugs(81, 3, "found a certificate with no IAI, " <<
-                       "signed by a missing issuer certificate:  " << CertSubjectName(cert));
+                       "signed by a missing issuer certificate:  " << CertSubjectName(*cert));
                 // We could short-circuit here, proceeding to chain validation
                 // that is likely to fail. Instead, we keep going because we
                 // hope that if we find at least one certificate to fetch, it
