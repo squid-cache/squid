@@ -14,11 +14,13 @@
 namespace Security
 {
 
-/// \return the SubjectName field of the given certificate (if found), or an empty SBuf
-SBuf CertSubjectName(const Certificate &);
+/// The SubjectName field of the given certificate (if found) or an empty SBuf.
+/// Some implementations modify the argument while searching (e.g., GnuTLS).
+SBuf CertSubjectName(Certificate &);
 
-/// \return the Issuer field of the given certificate (if found), or an empty SBuf
-SBuf CertIssuerName(const Certificate &);
+/// The Issuer field of the given certificate (if found) or an empty SBuf.
+/// Some implementations modify the argument while searching (e.g., GnuTLS).
+SBuf CertIssuerName(Certificate &);
 
 /// \returns whether cert was (correctly) issued by the given issuer
 /// Due to complexity of the underlying checks, it is impossible to clearly

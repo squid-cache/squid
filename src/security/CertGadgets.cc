@@ -25,7 +25,7 @@ MissingLibraryError()
 }
 
 SBuf
-Security::CertIssuerName(const Certificate &cert)
+Security::CertIssuerName(Certificate &cert)
 {
     SBuf out;
 #if USE_OPENSSL
@@ -65,7 +65,7 @@ Security::CertIssuerName(const Certificate &cert)
 }
 
 SBuf
-Security::CertSubjectName(const Certificate &cert)
+Security::CertSubjectName(Certificate &cert)
 {
     SBuf out;
 #if USE_OPENSSL

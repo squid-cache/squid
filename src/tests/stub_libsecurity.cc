@@ -29,8 +29,8 @@ Security::EncryptorAnswer::~EncryptorAnswer() {}
 std::ostream &Security::operator <<(std::ostream &os, const Security::EncryptorAnswer &) STUB_RETVAL(os)
 
 #include "security/CertGadgets.h"
-SBuf Security::CertSubjectName(const Certificate &) STUB_RETVAL(SBuf())
-SBuf Security::CertIssuerName(const Certificate &) STUB_RETVAL(SBuf())
+SBuf Security::CertSubjectName(Certificate &) STUB_RETVAL(SBuf())
+SBuf Security::CertIssuerName(Certificate &) STUB_RETVAL(SBuf())
 bool Security::CertIsIssuedBy(const CertPointer &, const CertPointer &) STUB_RETVAL(false)
 
 #include "security/Handshake.h"
