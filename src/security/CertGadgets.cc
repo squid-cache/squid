@@ -105,19 +105,19 @@ Security::CertSubjectName(Certificate &cert)
 }
 
 bool
-Security::CertIsIssuedBy(const CertPointer &cert, const CertPointer &issuer)
+Security::CertIsIssuedBy(Certificate &cert, Certificate &issuer)
 {
 #if USE_OPENSSL
-    const auto result = X509_check_issued(issuer.get(), cert.get());
+    const auto result = X509_check_issued(&issuer, &cert);
     if (result == X509_V_OK)
         return true;
-    debugs(83, DBG_PARSE_NOTE(3), CertSubjectName(*issuer) << " did not sign " <<
-           CertSubjectName(*cert) << ": " << X509_verify_cert_error_string(result) << " (" << result << ")");
+    debugs(83, DBG_PARSE_NOTE(3), CertSubjectName(issuer) << " did not sign " <<
+           CertSubjectName(cert) << ": " << X509_verify_cert_error_string(result) << " (" << result << ")");
 #elif USE_GNUTLS
-    const auto result = gnutls_x509_crt_check_issuer(cert.get(), issuer.get());
+    const auto result = gnutls_x509_crt_check_issuer(&cert, &issuer);
     if (result == 1)
         return true;
-    debugs(83, DBG_PARSE_NOTE(3), CertSubjectName(*issuer) << " did not sign " << CertSubjectName(*cert));
+    debugs(83, DBG_PARSE_NOTE(3), CertSubjectName(issuer) << " did not sign " << CertSubjectName(cert));
 #else
     debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot determine certificates relationship: " << MissingLibraryError());
 #endif

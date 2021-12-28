@@ -14,8 +14,10 @@
 namespace Security
 {
 
+// The accessing/testing functions below require a non-constant Certificate when
+// it is modified by an underlying library implementation (e.g., GnuTLS).
+
 /// The SubjectName field of the given certificate (if found) or an empty SBuf.
-/// Some implementations modify the argument while searching (e.g., GnuTLS).
 SBuf CertSubjectName(Certificate &);
 
 /// The Issuer field of the given certificate (if found) or an empty SBuf.
@@ -26,12 +28,10 @@ SBuf CertIssuerName(Certificate &);
 /// Due to complexity of the underlying checks, it is impossible to clearly
 /// distinguish pure negative answers (e.g., two independent certificates)
 /// from errors (e.g., the issuer certificate lacks the right CA extension).
-bool CertIsIssuedBy(const CertPointer &cert, const CertPointer &issuer);
+bool CertIsIssuedBy(Certificate &cert, Certificate &issuer);
 
 /// convenience wrapper for checking self-signed certificates
-inline bool CertIsSelfSigned(const CertPointer &cert) {
-    return CertIsIssuedBy(cert, cert);
-}
+inline bool CertIsSelfSigned(Certificate &c) { return CertIsIssuedBy(c, c); }
 
 } // namespace Security
 
