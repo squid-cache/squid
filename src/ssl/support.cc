@@ -1132,7 +1132,7 @@ Ssl::loadCerts(const char *certsFile, Ssl::CertsIndexedList &list)
 static X509 *
 findCertIssuerFast(Ssl::CertsIndexedList &list, X509 *cert)
 {
-    assert(cert); // XXX: Either require the cert using C++ or return nil
+    assert(cert); // TODO: Convert cert parameter to a reference instead.
     const auto issuerName = Security::CertIssuerName(*cert);
     if (issuerName.isEmpty())
         return nullptr;
