@@ -2423,7 +2423,7 @@ clientNegotiateSSL(int fd, void *data)
 
 #if USE_OPENSSL
     if (const auto clientCert = SSL_get_peer_certificate(session.get())) {
-        debugs(83, 3, "FD " << fd << " client certificate: subject: " << Security::CertSubjectName(*clientCert));
+        debugs(83, 3, "FD " << fd << " client certificate: subject: " << *clientCert);
         debugs(83, 3, "FD " << fd << " client certificate: issuer: " << Security::CertIssuerName(*clientCert));
     } else {
         debugs(83, 5, "FD " << fd << " has no client certificate.");

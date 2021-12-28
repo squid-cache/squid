@@ -88,7 +88,7 @@ Security::KeyData::tryAddChainCa(const Security::CertPointer &ca)
 #if TLS_CHAIN_NO_SELFSIGNED
     // self-signed certificates are not valid in a sent chain
     if (CertIsSelfSigned(*ca)) {
-        debugs(83, DBG_PARSE_NOTE(2), "CA " << CertSubjectName(*ca) << " is self-signed, will not be chained.");
+        debugs(83, DBG_PARSE_NOTE(2), "CA " << *ca << " is self-signed, will not be chained.");
         return;
     }
 #endif
@@ -96,12 +96,12 @@ Security::KeyData::tryAddChainCa(const Security::CertPointer &ca)
     CertPointer latestCert(chain.empty() ? cert : chain.front());
 
     if (CertIsIssuedBy(*latestCert, *ca)) {
-        debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << CertSubjectName(*ca));
+        debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << *ca);
         // OpenSSL API requires that we order certificates such that the
         // chain can be appended directly into the on-wire traffic.
         chain.emplace_back(ca);
     } else {
-        debugs(83, DBG_PARSE_NOTE(2), "Ignoring non-issuer CA " << CertSubjectName(*ca));
+        debugs(83, DBG_PARSE_NOTE(2), "Ignoring non-issuer CA " << *ca);
     }
 }
 
@@ -113,8 +113,7 @@ void
 Security::KeyData::loadX509ChainFromFile()
 {
     if (CertIsSelfSigned(*cert)) {
-        const auto name = CertSubjectName(*cert);
-        debugs(83, DBG_PARSE_NOTE(2), "Certificate is self-signed, will not be chained: " << name);
+        debugs(83, DBG_PARSE_NOTE(2), "Certificate is self-signed, will not be chained: " << *cert);
         return;
     }
 

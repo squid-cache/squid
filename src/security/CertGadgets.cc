@@ -11,6 +11,7 @@
 #include "sbuf/SBuf.h"
 #include "security/CertGadgets.h"
 
+#include <iostream>
 #if USE_OPENSSL
 #if HAVE_OPENSSL_X509V3_H
 #include <openssl/x509v3.h>
@@ -111,16 +112,28 @@ Security::CertIsIssuedBy(Certificate &cert, Certificate &issuer)
     const auto result = X509_check_issued(&issuer, &cert);
     if (result == X509_V_OK)
         return true;
-    debugs(83, DBG_PARSE_NOTE(3), CertSubjectName(issuer) << " did not sign " <<
-           CertSubjectName(cert) << ": " << X509_verify_cert_error_string(result) << " (" << result << ")");
+    debugs(83, DBG_PARSE_NOTE(3), issuer << " did not sign " << cert << ": " <<
+           X509_verify_cert_error_string(result) << " (" << result << ")");
 #elif USE_GNUTLS
     const auto result = gnutls_x509_crt_check_issuer(&cert, &issuer);
     if (result == 1)
         return true;
-    debugs(83, DBG_PARSE_NOTE(3), CertSubjectName(issuer) << " did not sign " << CertSubjectName(cert));
+    debugs(83, DBG_PARSE_NOTE(3), issuer << " did not sign " << cert);
 #else
     debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot determine certificates relationship: " << MissingLibraryError());
 #endif
     return false;
+}
+
+std::ostream &
+Security::operator <<(std::ostream &os, Certificate &cert)
+{
+    // TODO: Optimize by avoiding memory allocation for this written temporary
+    const auto name = CertSubjectName(cert);
+    if (name.isEmpty())
+        os << "[no subject name]";
+    else
+        os << name;
+    return os;
 }
 

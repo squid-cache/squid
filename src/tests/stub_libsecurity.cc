@@ -32,6 +32,7 @@ std::ostream &Security::operator <<(std::ostream &os, const Security::EncryptorA
 SBuf Security::CertSubjectName(Certificate &) STUB_RETVAL(SBuf())
 SBuf Security::CertIssuerName(Certificate &) STUB_RETVAL(SBuf())
 bool Security::CertIsIssuedBy(Certificate &, Certificate &) STUB_RETVAL(false)
+std::ostream &Security::operator <<(std::ostream &os, Certificate &) STUB_RETVAL(os)
 
 #include "security/Handshake.h"
 Security::HandshakeParser::HandshakeParser(MessageSource) STUB

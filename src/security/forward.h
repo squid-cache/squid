@@ -198,6 +198,9 @@ typedef RefCount<ErrorDetail> ErrorDetailPointer;
 
 std::ostream &operator <<(std::ostream &, const KeyLog &);
 
+/// reports a one-line gist of the Certificate Subject Name (for debugging)
+std::ostream &operator <<(std::ostream &, Security::Certificate &);
+
 void OpenLogs(); ///< opens logs enabled in the current configuration
 void RotateLogs(); ///< rotates logs opened by OpenLogs()
 void CloseLogs(); ///< closes logs opened by OpenLogs()
