@@ -404,7 +404,12 @@ Ip::Address::lookupHostIP(const char *s, bool nodns)
         }
         if (maybeIpv4 != NULL)
             res = maybeIpv4;
-        // else IPv6-only host, let the caller deal with first-IP anyway.
+
+        // leave this object unchanged if an IPv6 address was found
+        if (res->ai_family == AF_INET6) {
+            freeaddrinfo(resHead);
+            return false;
+        }
     }
 
     /*
@@ -915,10 +920,7 @@ Ip::Address::fromHost(const char *host)
 
     char *tmp = xstrdup(start); // XXX: Slow. TODO: Bail on huge strings and use an on-stack buffer.
     tmp[strlen(tmp)-1] = '\0'; // XXX: Wasteful: xstrdup() just did strlen().
-    /* force result to false if IPv6 is disabled and the bracketed value is an IPv6 address */
-    /* NB: RFC 6874 specifies that square brackets are for all IP addresses that are IPv6 */
-    /*      or newer, not just IPv6. */
-    const bool result = lookupHostIP(tmp, true) && (Ip::EnableIpv6 || !isIPv6());
+    const bool result = lookupHostIP(tmp, true);
     xfree(tmp);
     return result;
 }
