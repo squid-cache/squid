@@ -88,7 +88,9 @@ nodist_cachemgr__CGIEXT__SOURCES = \
 	tests/stub_libmem.cc \
 	tests/STUB.h
 
-cachemgr__CGIEXT__CXXFLAGS = -DDEFAULT_CACHEMGR_CONFIG=\"$(DEFAULT_CACHEMGR_CONFIG)\" $(AM_CXXFLAGS)
+cachemgr__CGIEXT__CXXFLAGS = \
+	$(AM_CXXFLAGS) \
+	-DDEFAULT_CACHEMGR_CONFIG=\"$(DEFAULT_CACHEMGR_CONFIG)\"
 
 EXTRA_DIST += cachemgr.conf cachemgr.cgi.8 cachemgr.cgi.8.in
 CLEANFILES += cachemgr.cgi.8
