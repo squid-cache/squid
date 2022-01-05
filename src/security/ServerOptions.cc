@@ -410,6 +410,7 @@ Security::ServerOptions::updateContextConfig(Security::ContextPointer &ctx)
     updateContextClientCa(ctx);
 
 #if USE_OPENSSL
+    SSL_CTX_set_mode(ctx.get(), SSL_MODE_NO_AUTO_CHAIN);
     if (parsedFlags & SSL_FLAG_DONT_VERIFY_DOMAIN)
         SSL_CTX_set_ex_data(ctx.get(), ssl_ctx_ex_index_dont_verify_domain, (void *) -1);
 
