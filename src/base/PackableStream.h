@@ -13,20 +13,18 @@
 
 #include <ostream>
 
-/**
- * Provides a streambuf interface for writing to Packable objects.
- * Typical use is via a PackableStream rather than direct manipulation
- */
-class PackableStreamBuf : public std::streambuf
+// TODO: Move to src/base/AppendingStreamBuf.h
+/// write-only std::streambuf that append()s all writes to a given Buffer
+template <class Buffer>
+class AppendingStreamBuf : public std::streambuf
 {
 public:
-    explicit PackableStreamBuf(Packable &p) : buf_(p) { buf_.buffer(); }
-    virtual ~PackableStreamBuf() = default;
+    explicit AppendingStreamBuf(Buffer &p): buf_(p) { postInit(); }
+    virtual ~AppendingStreamBuf() = default;
 
 protected:
-    /** flush the current buffer and the character that is overflowing
-     * to the Packable.
-     */
+    /* std::streambuf API */
+
     virtual int_type overflow(int_type aChar = traits_type::eof()) override {
         std::streamsize pending(pptr() - pbase());
 
@@ -42,27 +40,37 @@ protected:
         return aChar;
     }
 
-    /** push the buffer to the Packable */
     virtual int sync() override {
         std::streamsize pending(pptr() - pbase());
         lowAppend(pbase(), pending);
-        buf_.flush();
+        postSync();
         return 0;
     }
 
-    /** write multiple characters to the Packable
-     * - this is an optimisation method.
-     */
     virtual std::streamsize xsputn(const char * chars, std::streamsize number) override {
         lowAppend(chars, number);
         return number;
     }
 
 private:
+    /// for specializations that must customize the last construction step
+    void postInit() {}
+
+    /// for specializations that must customize the last sync() step
+    void postSync() {}
+
     void lowAppend(const char *s, const std::streamsize n) {buf_.append(s,n);}
 
-    Packable &buf_;
+    Buffer &buf_; ///< the associated character sequence (a.k.a. the sink)
 };
+
+/**
+ * Provides a streambuf interface for writing to Packable objects.
+ * Typical use is via a PackableStream rather than direct manipulation
+ */
+using PackableStreamBuf = AppendingStreamBuf<Packable>;
+template <> inline void PackableStreamBuf::postInit() { buf_.buffer(); }
+template <> inline void PackableStreamBuf::postSync() { buf_.flush(); }
 
 class PackableStream : public std::ostream
 {
