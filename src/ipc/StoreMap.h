@@ -288,7 +288,7 @@ public:
     /// opens entry (identified by key) for reading, increments read level
     const Anchor *openForReading(const cache_key *const key, sfileno &fileno);
     /// opens entry (identified by sfileno) for reading, increments read level
-    const Anchor *openForReadingAt(const sfileno fileno);
+    const Anchor *openForReadingAt(const sfileno, const cache_key *const);
     /// closes open entry after reading, decrements read level
     void closeForReading(const sfileno fileno);
     /// same as closeForReading() but also frees the entry if it is unlocked

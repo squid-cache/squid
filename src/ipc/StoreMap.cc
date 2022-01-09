@@ -102,7 +102,7 @@ Ipc::StoreMap::openOrCreateForReading(const cache_key *const key, sfileno &filen
 
     // start with reading so that we do not overwrite an existing unlocked entry
     auto idx = fileNoByKey(key);
-    if (const auto anchor = openForReadingAt(idx)) {
+    if (const auto anchor = openForReadingAt(idx, key)) {
         fileno = idx;
         return anchor;
     }
@@ -122,7 +122,7 @@ Ipc::StoreMap::openOrCreateForReading(const cache_key *const key, sfileno &filen
     // we lost the above race; see if the winner-created entry is now readable
     // TODO: Do some useful housekeeping work here to give the winner more time.
     idx = fileNoByKey(key);
-    if (const auto anchor = openForReadingAt(idx)) {
+    if (const auto anchor = openForReadingAt(idx, key)) {
         fileno = idx;
         return anchor;
     }
@@ -437,19 +437,15 @@ Ipc::StoreMap::openForReading(const cache_key *const key, sfileno &fileno)
     debugs(54, 5, "opening entry with key " << storeKeyText(key)
            << " for reading " << path);
     const int idx = fileNoByKey(key);
-    if (const Anchor *slot = openForReadingAt(idx)) {
-        if (slot->sameKey(key)) {
-            fileno = idx;
-            return slot; // locked for reading
-        }
-        slot->lock.unlockShared();
-        debugs(54, 7, "closed wrong-key entry " << idx << " for reading " << path);
+    if (const auto anchor = openForReadingAt(idx, key)) {
+        fileno = idx;
+        return anchor; // locked for reading
     }
     return NULL;
 }
 
 const Ipc::StoreMap::Anchor *
-Ipc::StoreMap::openForReadingAt(const sfileno fileno)
+Ipc::StoreMap::openForReadingAt(const sfileno fileno, const cache_key *const key)
 {
     debugs(54, 5, "opening entry " << fileno << " for reading " << path);
     Anchor &s = anchorAt(fileno);
@@ -472,6 +468,13 @@ Ipc::StoreMap::openForReadingAt(const sfileno fileno)
         debugs(54, 7, "cannot open marked entry " << fileno <<
                " for reading " << path);
         return NULL;
+    }
+
+    if (!s.sameKey(key)) {
+        s.lock.unlockShared();
+        debugs(54, 5, "cannot open wrong-key entry " << fileno <<
+               " for reading " << path);
+        return nullptr;
     }
 
     debugs(54, 5, "opened entry " << fileno << " for reading " << path);
@@ -524,13 +527,7 @@ Ipc::StoreMap::openForUpdating(Update &update, const sfileno fileNoHint)
 
     // Unreadable entries cannot (e.g., empty and otherwise problematic entries)
     // or should not (e.g., entries still forming their metadata) be updated.
-    if (const Anchor *anchor = openForReadingAt(update.stale.fileNo)) {
-        if (!anchor->sameKey(key)) {
-            closeForReading(update.stale.fileNo);
-            debugs(54, 5, "cannot open wrong-key entry " << update.stale.fileNo << " for updating " << path);
-            return false;
-        }
-    } else {
+    if (!openForReadingAt(update.stale.fileNo, key)) {
         debugs(54, 5, "cannot open unreadable entry " << update.stale.fileNo << " for updating " << path);
         return false;
     }
