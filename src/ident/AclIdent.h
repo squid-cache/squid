@@ -42,12 +42,14 @@ public:
     virtual char const *typeString() const;
     virtual void parse();
     virtual bool isProxyAuth() const {return true;}
-    virtual void parseFlags();
     virtual int match(ACLChecklist *checklist);
     virtual SBufList dump() const;
     virtual bool empty () const;
 
 private:
+    /* ACL API */
+    virtual const Acl::Options &lineOptions();
+
     ACLData<char const *> *data;
     char const *type_;
 };

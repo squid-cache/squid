@@ -35,10 +35,10 @@ ACLIdent::typeString() const
     return type_;
 }
 
-void
-ACLIdent::parseFlags()
+const Acl::Options &
+ACLIdent::lineOptions()
 {
-    ParseFlags(Acl::NoOptions(), data->supportedFlags());
+    return data->lineOptions();
 }
 
 void

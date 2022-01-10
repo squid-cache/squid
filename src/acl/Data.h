@@ -9,6 +9,7 @@
 #ifndef SQUID_ACLDATA_H
 #define SQUID_ACLDATA_H
 
+#include "acl/forward.h"
 #include "acl/Options.h"
 #include "sbuf/List.h"
 
@@ -22,8 +23,8 @@ public:
     ACLData(ACLData<M> &&) = delete; // no copying of any kind
     virtual ~ACLData() {}
 
-    /// \returns the flags supported by these ACL parameters (e.g., "-i")
-    virtual const Acl::ParameterFlags &supportedFlags() const { return Acl::NoFlags(); }
+    /// supported ACL "line" options (e.g., "-i")
+    virtual const Acl::Options &lineOptions() { return Acl::NoOptions(); }
 
     virtual bool match(M) =0;
     virtual SBufList dump() const =0;

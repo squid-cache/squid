@@ -32,10 +32,10 @@ ACLExtUser::typeString() const
     return type_;
 }
 
-void
-ACLExtUser::parseFlags()
+const Acl::Options &
+ACLExtUser::lineOptions()
 {
-    ParseFlags(Acl::NoOptions(), data->supportedFlags());
+    return data->lineOptions();
 }
 
 void

@@ -66,6 +66,12 @@ ACLHTTPHeaderData::dump() const
     return sl;
 }
 
+const Acl::Options &
+ACLHTTPHeaderData::lineOptions()
+{
+    return regex_rule->lineOptions();
+}
+
 void
 ACLHTTPHeaderData::parse()
 {
