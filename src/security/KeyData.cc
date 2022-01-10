@@ -124,7 +124,7 @@ Security::KeyData::loadX509ChainFromFile()
                 // OpenSSL API requires that we order certificates such that the
                 // chain can be appended directly into the on-wire traffic.
                 latestCert = CertPointer(ca);
-                chain.emplace_front(latestCert);
+                chain.emplace_back(latestCert);
             } else {
                 debugs(83, DBG_PARSE_NOTE(2), certFile << ": Ignoring non-issuer CA " << nameStr << ": " << X509_verify_cert_error_string(checkCode) << " (" << checkCode << ")");
             }
