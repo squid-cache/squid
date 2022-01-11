@@ -163,12 +163,12 @@ Adaptation::Ecap::XactionRep::usernameValue() const
 }
 
 const libecap::Area
-Adaptation::Ecap::XactionRep::masterxSharedValue(const libecap::Name &name) const
+Adaptation::Ecap::XactionRep::masterxSharedValue(const libecap::Name &aName) const
 {
     const HttpRequest *request = dynamic_cast<const HttpRequest*>(theCauseRep ?
                                  theCauseRep->raw().header : theVirginRep.raw().header);
     Must(request);
-    if (name.known()) { // must check to avoid empty names matching unset cfg
+    if (aName.known()) { // must check to avoid empty names matching unset cfg
         Adaptation::History::Pointer ah = request->adaptHistory(false);
         if (ah != NULL) {
             String name, value;
@@ -482,7 +482,6 @@ Adaptation::Ecap::XactionRep::updateHistory(Http::Message *adapted)
 
     // update the adaptation plan if needed
     if (service().cfg().routing) {
-        String services;
         if (const libecap::Area services = theMaster->option(libecap::metaNextServices)) {
             Adaptation::History::Pointer ah = request->adaptHistory(true);
             if (ah != NULL)
