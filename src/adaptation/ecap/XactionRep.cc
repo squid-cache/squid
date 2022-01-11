@@ -163,12 +163,12 @@ Adaptation::Ecap::XactionRep::usernameValue() const
 }
 
 const libecap::Area
-Adaptation::Ecap::XactionRep::masterxSharedValue(const libecap::Name &aName) const
+Adaptation::Ecap::XactionRep::masterxSharedValue(const libecap::Name &sharedName) const
 {
     const HttpRequest *request = dynamic_cast<const HttpRequest*>(theCauseRep ?
                                  theCauseRep->raw().header : theVirginRep.raw().header);
     Must(request);
-    if (aName.known()) { // must check to avoid empty names matching unset cfg
+    if (sharedName.known()) { // must check to avoid empty names matching unset cfg
         Adaptation::History::Pointer ah = request->adaptHistory(false);
         if (ah != NULL) {
             String name, value;
