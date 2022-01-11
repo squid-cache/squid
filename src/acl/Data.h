@@ -9,7 +9,6 @@
 #ifndef SQUID_ACLDATA_H
 #define SQUID_ACLDATA_H
 
-#include "acl/forward.h"
 #include "acl/Options.h"
 #include "sbuf/List.h"
 

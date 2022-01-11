@@ -40,7 +40,7 @@
 //
 // The option name spelling determines the option kind and effect.
 // Both option kinds use the same general option configuration syntax:
-//   option = name[=value]
+//   option = name [ '=' value ]
 // where "name" is option-specific spelling that looks like -x, +x, or --long
 //
 // On each "acl ..." line, global options can only appear before the first

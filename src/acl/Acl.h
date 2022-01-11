@@ -99,7 +99,7 @@ private:
     virtual const Acl::Options &options() { return Acl::NoOptions(); }
 
     /// \returns (linked) "line" Options supported by this ACL
-    /// See also: options()
+    /// \see ACL::options()
     virtual const Acl::Options &lineOptions() { return Acl::NoOptions(); }
 };
 
