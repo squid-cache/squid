@@ -181,7 +181,7 @@ public:
     virtual void print(std::ostream &os) const override
     {
         if (configured()) {
-            os << (disabled() ? offName : onName);
+            os << ' ' << (disabled() ? offName : onName);
             if (valued())
                 os << '=' << recipient_->value;
         }
