@@ -37,10 +37,10 @@ ACLProxyAuth::typeString() const
     return type_;
 }
 
-void
-ACLProxyAuth::parseFlags()
+const Acl::Options &
+ACLProxyAuth::lineOptions()
 {
-    ParseFlags(Acl::NoOptions(), data->supportedFlags());
+    return data->lineOptions();
 }
 
 void

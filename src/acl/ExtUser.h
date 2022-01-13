@@ -26,12 +26,14 @@ public:
     /* ACL API */
     virtual char const *typeString() const;
     virtual void parse();
-    virtual void parseFlags();
     virtual int match(ACLChecklist *checklist);
     virtual SBufList dump() const;
     virtual bool empty () const;
 
 private:
+    /* ACL API */
+    virtual const Acl::Options &lineOptions();
+
     ACLData<char const *> *data;
     char const *type_;
 };
