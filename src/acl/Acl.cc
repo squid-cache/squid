@@ -19,7 +19,6 @@
 #include "Debug.h"
 #include "fatal.h"
 #include "globals.h"
-#include "profiler/Profiler.h"
 #include "sbuf/List.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
@@ -120,7 +119,6 @@ bool ACL::valid () const
 bool
 ACL::matches(ACLChecklist *checklist) const
 {
-    PROF_start(ACL_matches);
     debugs(28, 5, "checking " << name);
 
     // XXX: AclMatchedName does not contain a matched ACL name when the acl
@@ -149,7 +147,6 @@ ACL::matches(ACLChecklist *checklist) const
 
     const char *extra = checklist->asyncInProgress() ? " async" : "";
     debugs(28, 3, "checked: " << name << " = " << result << extra);
-    PROF_stop(ACL_matches);
     return result == 1; // true for match; false for everything else
 }
 
@@ -291,15 +288,23 @@ ACL::isProxyAuth() const
 void
 ACL::parseFlags()
 {
-    // ACL kids that carry ACLData which supports parameter flags override this
-    Acl::ParseFlags(options(), Acl::NoFlags());
+    Acl::Options allOptions = options();
+    for (const auto lineOption: lineOptions()) {
+        lineOption->unconfigure(); // forget any previous "acl ..." line effects
+        allOptions.push_back(lineOption);
+    }
+    Acl::ParseFlags(allOptions);
 }
 
 SBufList
 ACL::dumpOptions()
 {
     SBufList result;
+
     const auto &myOptions = options();
+    // XXX: No lineOptions() call here because we do not remember ACL "line"
+    // boundaries and associated "line" options; we cannot report them.
+
     // optimization: most ACLs do not have myOptions
     // this check also works around dump_SBufList() adding ' ' after empty items
     if (!myOptions.empty()) {

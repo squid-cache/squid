@@ -26,8 +26,8 @@ ACLDestinationIP::typeString() const
 const Acl::Options &
 ACLDestinationIP::options()
 {
-    static const Acl::BooleanOption LookupBan;
-    static const Acl::Options MyOptions = { { "-n", &LookupBan } };
+    static const Acl::BooleanOption LookupBan("-n");
+    static const Acl::Options MyOptions = { &LookupBan };
     LookupBan.linkWith(&lookupBanned);
     return MyOptions;
 }
@@ -106,11 +106,5 @@ DestinationIPLookup::LookupDone(const ipcache_addrs *, const Dns::LookupDetails 
     checklist->request->flags.destinationIpLookedUp = true;
     checklist->request->recordLookup(details);
     checklist->resumeNonBlockingCheck(DestinationIPLookup::Instance());
-}
-
-ACL *
-ACLDestinationIP::clone() const
-{
-    return new ACLDestinationIP(*this);
 }
 

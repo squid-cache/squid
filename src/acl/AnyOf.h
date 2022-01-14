@@ -22,7 +22,6 @@ class AnyOf: public Acl::OrNode
 public:
     /* ACL API */
     virtual char const *typeString() const;
-    virtual ACL *clone() const;
     virtual void parse();
 };
 

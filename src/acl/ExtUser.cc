@@ -26,27 +26,16 @@ ACLExtUser::~ACLExtUser()
 
 ACLExtUser::ACLExtUser(ACLData<char const *> *newData, char const *newType) : data (newData), type_ (newType) {}
 
-ACLExtUser::ACLExtUser (ACLExtUser const &old) : data (old.data->clone()), type_ (old.type_)
-{}
-
-ACLExtUser &
-ACLExtUser::operator= (ACLExtUser const &rhs)
-{
-    data = rhs.data->clone();
-    type_ = rhs.type_;
-    return *this;
-}
-
 char const *
 ACLExtUser::typeString() const
 {
     return type_;
 }
 
-void
-ACLExtUser::parseFlags()
+const Acl::Options &
+ACLExtUser::lineOptions()
 {
-    ParseFlags(Acl::NoOptions(), data->supportedFlags());
+    return data->lineOptions();
 }
 
 void
@@ -76,12 +65,6 @@ bool
 ACLExtUser::empty () const
 {
     return data->empty();
-}
-
-ACL *
-ACLExtUser::clone() const
-{
-    return new ACLExtUser(*this);
 }
 
 #endif /* USE_AUTH */

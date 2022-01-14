@@ -34,7 +34,6 @@ public:
     virtual SBufList dump() const;
     virtual void parse();
     bool empty() const;
-    virtual ACLData<Ip::Address> *clone() const;
     virtual void prepareForUse();
 
 private:
