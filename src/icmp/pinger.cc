@@ -96,12 +96,9 @@ int icmp_pkts_sent = 0;
 /**
  \ingroup pinger
  \par This is the pinger external process.
- *
- \param argc Ignored.
- \param argv Ignored.
  */
 int
-main(int argc, char *argv[])
+main(int, char **)
 {
     fd_set R;
     int x;

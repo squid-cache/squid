@@ -16,7 +16,7 @@
 #include <iostream>
 #include <sstream>
 
-void
+static void
 testLowAndHigh()
 {
     mem_hdr aHeader;
@@ -40,7 +40,7 @@ testLowAndHigh()
     assert (!aHeader.hasContigousContentRange(Range<int64_t>(10,101)));
 }
 
-void
+static void
 testSplayOfNodes()
 {
     Splay<mem_node *> aSplay;
@@ -71,7 +71,7 @@ testSplayOfNodes()
     aSplay.destroy();
 }
 
-void
+static void
 testHdrVisit()
 {
     mem_hdr aHeader;

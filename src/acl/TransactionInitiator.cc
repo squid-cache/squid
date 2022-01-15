@@ -17,12 +17,6 @@
 #include "MasterXaction.h"
 #include "SquidConfig.h"
 
-ACL *
-Acl::TransactionInitiator::clone() const
-{
-    return new Acl::TransactionInitiator(*this);
-}
-
 Acl::TransactionInitiator::TransactionInitiator (const char *aClass) : class_ (aClass), initiators_(0)
 {}
 

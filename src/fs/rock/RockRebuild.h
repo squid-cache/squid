@@ -53,7 +53,7 @@ public:
     static bool Start(SwapDir &dir);
 
 protected:
-    /// whether the current kid is responsible for rebuilding this db file
+    /// whether the current kid is responsible for rebuilding the given cache_dir
     static bool IsResponsible(const SwapDir &);
 
     Rebuild(SwapDir *dir, const Ipc::Mem::Pointer<Stats> &);

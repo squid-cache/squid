@@ -234,8 +234,8 @@ MemStore::stat(StoreEntry &e) const
         if (slotLimit > 0) {
             const unsigned int slotsFree =
                 Ipc::Mem::PagesAvailable(Ipc::Mem::PageId::cachePage);
-            if (slotsFree <= static_cast<const unsigned int>(slotLimit)) {
-                const int usedSlots = slotLimit - static_cast<const int>(slotsFree);
+            if (slotsFree <= static_cast<unsigned int>(slotLimit)) {
+                const int usedSlots = slotLimit - static_cast<int>(slotsFree);
                 storeAppendPrintf(&e, "Used slots:      %9d %.2f%%\n",
                                   usedSlots, (100.0 * usedSlots / slotLimit));
             }

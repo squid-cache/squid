@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "store_digest.h"
 
 #define STUB_API "store_digets.cc"
 #include "tests/STUB.h"

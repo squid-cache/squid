@@ -357,12 +357,12 @@ Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 
     case Helper::TT:
         debugs(29, DBG_IMPORTANT, "ERROR: Digest auth does not support the result code received. Using the wrong helper program? received: " << reply);
-    // fall through to next case. Handle this as an ERR response.
+    // [[fallthrough]] to handle this as an ERR response
 
     case Helper::TimedOut:
     case Helper::BrokenHelper:
+    // [[fallthrough]] to (silently) handle this as an ERR response
     // TODO retry the broken lookup on another helper?
-    // fall through to next case for now. Handle this as an ERR response silently.
     case Helper::Error: {
         /* allow this because the digest_request pointer is purely local */
         Auth::Digest::UserRequest *digest_request = dynamic_cast<Auth::Digest::UserRequest *>(auth_user_request.getRaw());
@@ -376,6 +376,7 @@ Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
             digest_request->setDenyMessage(msgNote.c_str());
         } else if (reply.other().hasContent()) {
             // old helpers did send ERR result but a bare message string instead of message= key name.
+            // TODO deprecate and remove old auth digest helper protocol
             digest_request->setDenyMessage(reply.other().content());
             if (!oldHelperWarningDone) {
                 debugs(29, DBG_IMPORTANT, "WARNING: Digest auth helper returned old format ERR response. It needs to be upgraded.");

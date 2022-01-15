@@ -29,7 +29,6 @@ public:
 private:
     /* ACL API */
     virtual char const *typeString() const;
-    virtual ACL *clone() const;
     virtual void parse();
     virtual SBufList dump() const;
 
@@ -47,7 +46,6 @@ class AndNode: public InnerNode
 public:
     /* ACL API */
     virtual char const *typeString() const;
-    virtual ACL *clone() const;
     virtual void parse();
 
 private:
@@ -68,7 +66,6 @@ public:
 
     /* ACL API */
     virtual char const *typeString() const;
-    virtual ACL *clone() const;
     virtual void parse();
 
 protected:

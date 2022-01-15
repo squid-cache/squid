@@ -64,7 +64,6 @@ public:
      */
     Comm::ConnectionPointer listenConn;
 
-    AsyncCall::Pointer opener; ///< Comm opener handler callback.
 private:
     AsyncCall::Pointer closer; ///< Comm close handler callback
 };
@@ -204,6 +203,10 @@ protected:
     // sending of the request body to the server
     virtual void sentRequestBody(const CommIoCbParams &io);
     virtual void doneSendingRequestBody();
+
+    /// Waits for an FTP data connection to the server to be established/opened.
+    /// This wait only happens in FTP passive mode (via PASV or EPSV).
+    JobWait<Comm::ConnOpener> dataConnWait;
 
 private:
     bool parseControlReply(size_t &bytesUsed);

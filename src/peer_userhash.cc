@@ -18,6 +18,7 @@
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
 #include "neighbors.h"
+#include "peer_userhash.h"
 #include "PeerSelectState.h"
 #include "SquidConfig.h"
 #include "Store.h"

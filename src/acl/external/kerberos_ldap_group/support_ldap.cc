@@ -131,7 +131,7 @@ ldap_sasl_rebind(LDAP * ld,
     struct ldap_creds *cp = (struct ldap_creds *) params;
     return tool_sasl_bind(ld, cp->dn, cp->pw);
 }
-#endif
+#endif /* HAVE_SASL_H || HAVE_SASL_SASL_H || HAVE_SASL_DARWIN */
 
 static LDAP_REBIND_PROC ldap_simple_rebind;
 
@@ -152,7 +152,7 @@ ldap_simple_rebind(LDAP * ld,
 #elif HAVE_LDAP_REBIND_FUNCTION
 #ifndef LDAP_REFERRALS
 #define LDAP_REFERRALS
-#endif
+#endif /* LDAP_REFERRALS */
 #if HAVE_SASL_H || HAVE_SASL_SASL_H || HAVE_SASL_DARWIN
 static LDAP_REBIND_FUNCTION ldap_sasl_rebind;
 
@@ -196,8 +196,8 @@ ldap_simple_rebind(LDAP * ld,
 static LDAP_REBIND_PROC ldap_sasl_rebind;
 
 static int
-ldap_sasl_rebind(LDAP * ld, LDAP_CONST char *, ber_tag_t request,
-                 ber_int_t msgid, void *params)
+ldap_sasl_rebind(LDAP * ld, LDAP_CONST char *, ber_tag_t,
+                 ber_int_t, void *params)
 {
     struct ldap_creds *cp = (struct ldap_creds *) params;
     return tool_sasl_bind(ld, cp->dn, cp->pw);
@@ -207,8 +207,8 @@ ldap_sasl_rebind(LDAP * ld, LDAP_CONST char *, ber_tag_t request,
 static LDAP_REBIND_PROC ldap_simple_rebind;
 
 static int
-ldap_simple_rebind(LDAP * ld, LDAP_CONST char *, ber_tag_t request,
-                   ber_int_t msgid, void *params)
+ldap_simple_rebind(LDAP * ld, LDAP_CONST char *, ber_tag_t,
+                   ber_int_t, void *params)
 {
 
     struct ldap_creds *cp = (struct ldap_creds *) params;

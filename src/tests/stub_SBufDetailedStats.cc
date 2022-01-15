@@ -7,15 +7,17 @@
  */
 
 #include "squid.h"
+#include "sbuf/DetailedStats.h"
 #include "sbuf/SBuf.h"
+#include "StatHist.h"
 
 #define STUB_API "sbuf/DetailedStats.cc"
 #include "tests/STUB.h"
 
-class StatHist;
+static StatHist s;
 
 void recordSBufSizeAtDestruct(SBuf::size_type) {} // STUB_NOP
-const StatHist * collectSBufDestructTimeStats() STUB_RETVAL(nullptr)
+StatHist &collectSBufDestructTimeStats() STUB_RETVAL(s)
 void recordMemBlobSizeAtDestruct(SBuf::size_type) {} // STUB_NOP
-const StatHist * collectMemBlobDestructTimeStats() STUB_RETVAL(nullptr)
+StatHist &collectMemBlobDestructTimeStats() STUB_RETVAL(s)
 

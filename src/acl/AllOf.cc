@@ -10,19 +10,14 @@
 #include "acl/AllOf.h"
 #include "acl/BoolOps.h"
 #include "acl/Checklist.h"
-#include "globals.h"
+#include "cache_cf.h"
 #include "MemBuf.h"
+#include "sbuf/SBuf.h"
 
 char const *
 Acl::AllOf::typeString() const
 {
     return "all-of";
-}
-
-ACL *
-Acl::AllOf::clone() const
-{
-    return new AllOf;
 }
 
 SBufList

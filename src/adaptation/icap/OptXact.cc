@@ -37,7 +37,7 @@ void Adaptation::Icap::OptXact::start()
     openConnection();
 }
 
-void Adaptation::Icap::OptXact::handleCommConnected()
+void Adaptation::Icap::OptXact::startShoveling()
 {
     scheduleRead();
 

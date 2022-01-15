@@ -75,6 +75,9 @@ Ip::Qos::getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde)
         int xerrno = errno;
         debugs(33, DBG_IMPORTANT, "QOS: error in setsockopt(IP_RECVTOS) on " << server << " " << xstrerr(xerrno));
     }
+#else
+    (void)server;
+    (void)clientFde;
 #endif
 }
 
@@ -166,6 +169,9 @@ Ip::Qos::getNfConnmark(const Comm::ConnectionPointer &conn, const Ip::Qos::Conne
     } else {
         debugs(17, 2, "QOS: Failed to allocate new conntrack for netfilter CONNMARK retrieval.");
     }
+#else
+    (void)conn;
+    (void)connDir;
 #endif
     return mark;
 }
@@ -207,7 +213,11 @@ Ip::Qos::setNfConnmark(Comm::ConnectionPointer &conn, const Ip::Qos::ConnectionD
     } else {
         debugs(17, 2, "QOS: Failed to allocate new conntrack for netfilter CONNMARK modification.");
     }
-#endif
+#else /* USE_LIBNETFILTERCONNTRACK */
+    (void)conn;
+    (void)connDir;
+    (void)cm;
+#endif /* USE_LIBNETFILTERCONNTRACK */
     return ret;
 }
 
@@ -575,9 +585,13 @@ Ip::Qos::setSockNfmark(const int fd, nfmark_t mark)
     }
     return x;
 #elif USE_LIBCAP
+    (void)mark;
+    (void)fd;
     debugs(50, DBG_IMPORTANT, "WARNING: setsockopt(SO_MARK) not supported on this platform");
     return -1;
 #else
+    (void)mark;
+    (void)fd;
     debugs(50, DBG_IMPORTANT, "WARNING: Netfilter marking disabled (netfilter marking requires build with LIBCAP)");
     return -1;
 #endif

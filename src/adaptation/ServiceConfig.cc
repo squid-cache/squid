@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "adaptation/ServiceConfig.h"
+#include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "globals.h"

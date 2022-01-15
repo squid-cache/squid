@@ -11,9 +11,11 @@
 #define STUB_API "carp.cc"
 #include "tests/STUB.h"
 
+#include "carp.h"
+
 class CachePeer;
 class PeerSelector;
 
 void carpInit(void) STUB
-CachePeer *carpSelectParent(PeerSelector *ps) STUB_RETVAL(nullptr)
+CachePeer *carpSelectParent(PeerSelector *) STUB_RETVAL(nullptr)
 

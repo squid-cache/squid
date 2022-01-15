@@ -68,13 +68,6 @@ endif
 ## XXX: Do we really need this? Does auto-dependency tracking work?
 $(OBJS): $(top_srcdir)/include/version.h $(top_builddir)/include/autoconf.h
 
-## Internal profiler is used even by some of the compat library stuff.
-if ENABLE_XPROF_STATS
-LIBPROFILER = $(top_builddir)/lib/profiler/libprofiler.la
-else
-LIBPROFILER=
-endif
-
 ## Because compatibility is almost universal. And the link order is important.
 COMPAT_LIB = $(top_builddir)/compat/libcompatsquid.la $(LIBPROFILER)
 

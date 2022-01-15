@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "wccp2.h"
 
 #if USE_WCCPv2
 
@@ -15,7 +16,6 @@
 
 class StoreEntry;
 
-void wccp2_add_service_list(int, int, int, int, int, int[], int, char *) STUB
 void wccp2Init(void) STUB
 void wccp2ConnectionOpen(void) STUB
 void wccp2ConnectionClose(void) STUB

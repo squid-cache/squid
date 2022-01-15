@@ -35,6 +35,8 @@ libbase_la_SOURCES = \
 	Here.h \
 	InstanceId.cc \
 	InstanceId.h \
+	JobWait.cc \
+	JobWait.h \
 	Lock.h \
 	LookupTable.h \
 	Optional.h \

@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "protos.h"
 
 #define STUB_API "stub_main_cc.cc"
 #include "tests/STUB.h"

@@ -11,6 +11,10 @@
 #ifndef SQUID_MIME_HEADER_H_
 #define SQUID_MIME_HEADER_H_
 
+#include "sbuf/forward.h"
+
+#include <cstddef>
+
 /**
  * Scan for the end of mime header block.
  *
@@ -30,11 +34,7 @@
  */
 size_t headersEnd(const char *, size_t, bool &containsObsFold);
 
-inline size_t
-headersEnd(const SBuf &buf, bool &containsObsFold)
-{
-    return headersEnd(buf.rawContent(), buf.length(), containsObsFold);
-}
+size_t headersEnd(const SBuf &buf, bool &containsObsFold);
 
 /// \deprecated caller needs to be fixed to handle obs-fold
 inline size_t

@@ -88,7 +88,11 @@ Snmp::Inquirer::noteCommClosed(const CommCloseCbParams& params)
 {
     debugs(49, 5, HERE);
     Must(!Comm::IsConnOpen(conn) || conn->fd == params.conn->fd);
-    conn = NULL;
+    closer = nullptr;
+    if (conn) {
+        conn->noteClosure();
+        conn = nullptr;
+    }
     mustStop("commClosed");
 }
 
@@ -102,6 +106,10 @@ void
 Snmp::Inquirer::sendResponse()
 {
     debugs(49, 5, HERE);
+
+    if (!Comm::IsConnOpen(conn))
+        return; // client gone
+
     aggrPdu.fixAggregate();
     aggrPdu.command = SNMP_PDU_RESPONSE;
     u_char buffer[SNMP_REQUEST_SIZE];

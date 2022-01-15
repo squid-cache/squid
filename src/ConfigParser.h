@@ -134,12 +134,6 @@ public:
      */
     static char *PeekAtToken();
 
-    /**
-     * The next NextToken call will return the token as next element
-     * It can be used repeatedly to add more than one tokens in a FIFO list.
-     */
-    static void TokenPutBack(const char *token);
-
     /// Set the configuration file line to parse.
     static void SetCfgLine(char *line);
 
@@ -205,9 +199,6 @@ protected:
         int lineNo; ///< Current line number
     };
 
-    /// Return the last TokenPutBack() queued element or NULL if none exist
-    static char *Undo();
-
     /**
      * Unquotes the token, which must be quoted.
      * \param next if it is not NULL, it is set after the end of token.
@@ -230,7 +221,6 @@ protected:
     static const char *CfgLine; ///< The current line to parse
     static const char *CfgPos; ///< Pointer to the next element in cfgLine string
     static std::queue<char *> CfgLineTokens_; ///< Store the list of tokens for current configuration line
-    static std::queue<std::string> Undo_; ///< The list with TokenPutBack() queued elements
     static bool AllowMacros_;
     static bool ParseQuotedOrToEol_; ///< The next tokens will be handled as quoted or to_eol token
     static bool RecognizeQuotedPair_; ///< The next tokens may contain quoted-pair (\-escaped) characters

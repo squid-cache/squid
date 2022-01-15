@@ -14,6 +14,7 @@
 #include "adaptation/History.h"
 #include "adaptation/Service.h"
 #include "adaptation/ServiceGroups.h"
+#include "cache_cf.h"
 #include "ConfigParser.h"
 #include "DebugMessages.h"
 #include "globals.h"

@@ -24,12 +24,15 @@ public:
     ACLUserData();
     bool match(char const *user);
     virtual SBufList dump() const;
-    void parse();
-    virtual const Acl::ParameterFlags &supportedFlags() const;
+    virtual void parse();
     bool empty() const;
-    virtual ACLData<char const *> *clone() const;
 
 private:
+    /// whether parse() is called in a case insensitive context
+    static Acl::BooleanOptionValue CaseInsensitive_;
+
+    /* ACLData API */
+    virtual const Acl::Options &lineOptions();
 
     typedef std::set<SBuf,bool(*)(const SBuf&, const SBuf&)> UserDataNames_t;
     UserDataNames_t userDataNames;

@@ -86,6 +86,8 @@ Security::NegotiationHistory::retrieveNegotiatedInfo(const Security::SessionPoin
                " SSL version " << version_ <<
                " negotiated cipher " << cipherName());
     }
+#else
+    (void)session;
 #endif
 }
 

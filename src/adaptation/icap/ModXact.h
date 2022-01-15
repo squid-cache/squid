@@ -155,10 +155,11 @@ public:
     virtual void noteBodyProductionEnded(BodyPipe::Pointer);
     virtual void noteBodyProducerAborted(BodyPipe::Pointer);
 
-    // comm handlers
-    virtual void handleCommConnected();
+    /* Xaction API */
+    virtual void startShoveling();
     virtual void handleCommWrote(size_t size);
     virtual void handleCommRead(size_t size);
+
     void handleCommWroteHeaders();
     void handleCommWroteBody();
 

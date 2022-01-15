@@ -48,12 +48,6 @@ void
 DelayUserFree(DelayUserBucket::Pointer &)
 {}
 
-void
-DelayUserStatsWalkee(DelayUserBucket::Pointer const &current, void *state)
-{
-    current->stats ((StoreEntry *)state);
-}
-
 struct DelayUserStatsVisitor {
     StoreEntry *se;
     explicit DelayUserStatsVisitor(StoreEntry *s) : se(s) {}
@@ -94,14 +88,6 @@ struct DelayUserUpdater {
     DelaySpec spec;
     int incr;
 };
-
-void
-DelayUserUpdateWalkee(DelayUserBucket::Pointer const &current, void *state)
-{
-    DelayUserUpdater *t = (DelayUserUpdater *)state;
-    /* This doesn't change the value of the DelayUserBucket, so is safe */
-    const_cast<DelayUserBucket *>(current.getRaw())->theBucket.update(t->spec, t->incr);
-}
 
 struct DelayUserUpdateVisitor {
     DelayUserUpdater *t;

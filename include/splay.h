@@ -423,7 +423,7 @@ SplayConstIterator<V>::operator ++ ()
 
 template <class V>
 SplayConstIterator<V>
-SplayConstIterator<V>::operator ++ (int dummy)
+SplayConstIterator<V>::operator ++ (int)
 {
     SplayConstIterator<V> result = *this;
     advance();

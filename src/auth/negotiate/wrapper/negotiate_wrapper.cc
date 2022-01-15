@@ -82,7 +82,8 @@ LogTime()
     return buf;
 }
 
-void usage(void)
+static void
+usage()
 {
     fprintf(stderr, "Usage: \n");
     fprintf(stderr, "negotiate_wrapper [-h] [-d] --ntlm ntlm helper + arguments --kerberos kerberos helper + arguments\n");

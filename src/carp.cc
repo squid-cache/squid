@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "CachePeer.h"
+#include "carp.h"
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
 #include "neighbors.h"

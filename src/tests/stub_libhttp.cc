@@ -61,7 +61,6 @@ const SBuf MethodType_sb[1] = {SBuf()};
 #include "http/RegisteredHeaders.h"
 namespace Http
 {
-HeaderTableRecord::HeaderTableRecord() {STUB_NOP}
 HeaderTableRecord::HeaderTableRecord(const char *) {STUB_NOP}
 HeaderTableRecord::HeaderTableRecord(const char *, Http::HdrType, Http::HdrFieldType, int) {STUB}
 HeaderLookupTable_t::HeaderLookupTable_t() {STUB_NOP}

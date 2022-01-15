@@ -25,7 +25,6 @@ public:
     virtual SBufList dump() const override;
     virtual void parse() override;
     virtual bool empty() const override { return false; }
-    virtual ACLData<ACLChecklist *> *clone() const override;
 
 private:
     enum ComponentKind { coRequest = 0, coResponse, coAle, coEnd };

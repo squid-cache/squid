@@ -28,7 +28,7 @@ MemObject::endOffset() const
 
 void MemObject::trimSwappable() STUB
 void MemObject::trimUnSwappable() STUB
-int64_t MemObject::policyLowestOffsetToKeep(bool swap) const STUB_RETVAL(-1)
+int64_t MemObject::policyLowestOffsetToKeep(bool) const STUB_RETVAL(-1)
 MemObject::MemObject() {
     ping_reply_callback = nullptr;
     memset(&start_ping, 0, sizeof(start_ping));
@@ -36,17 +36,17 @@ MemObject::MemObject() {
 
 const char *MemObject::storeId() const STUB_RETVAL(NULL)
 const char *MemObject::logUri() const STUB_RETVAL(NULL)
-void MemObject::setUris(char const *aStoreId, char const *aLogUri, const HttpRequestMethod &aMethod) STUB
+void MemObject::setUris(char const *, char const *, const HttpRequestMethod &) STUB
 void MemObject::reset() STUB
-void MemObject::delayRead(DeferredRead const &aRead) STUB
+void MemObject::delayRead(DeferredRead const &) STUB
 bool MemObject::readAheadPolicyCanRead() const STUB_RETVAL(false)
-void MemObject::setNoDelay(bool const newValue) STUB
+void MemObject::setNoDelay(bool const) STUB
 MemObject::~MemObject() STUB
-int MemObject::mostBytesWanted(int max, bool ignoreDelayPools) const STUB_RETVAL(-1)
+int MemObject::mostBytesWanted(int, bool) const STUB_RETVAL(-1)
 #if USE_DELAY_POOLS
 DelayId MemObject::mostBytesAllowed() const STUB_RETVAL(DelayId())
 #endif
-void MemObject::write(const StoreIOBuffer &writeBuffer) STUB
+void MemObject::write(const StoreIOBuffer &) STUB
 int64_t MemObject::lowestMemReaderOffset() const STUB_RETVAL(0)
 void MemObject::kickReads() STUB
 int64_t MemObject::objectBytesOnDisk() const STUB_RETVAL(0)

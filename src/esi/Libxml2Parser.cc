@@ -25,7 +25,8 @@ static htmlDocPtr entity_doc = NULL;
 EsiParserDefinition(ESILibxml2Parser);
 
 // the SAX callback functions
-void esi_startElementSAXFunc(void * ctx, const xmlChar * name, const xmlChar ** atts)
+static void
+esi_startElementSAXFunc(void * ctx, const xmlChar * name, const xmlChar ** atts)
 {
     int count=0;
     xmlChar **tmp = (xmlChar **)atts;
@@ -43,25 +44,29 @@ void esi_startElementSAXFunc(void * ctx, const xmlChar * name, const xmlChar ** 
     p->getClient()->start((const char *)name, (const char **)atts, count);
 }
 
-void esi_endElementSAXFunc(void * ctx, const xmlChar * name)
+static void
+esi_endElementSAXFunc(void *ctx, const xmlChar *name)
 {
     ESILibxml2Parser *p = (ESILibxml2Parser *)ctx;
     p->getClient()->end((const char *)name);
 }
 
-void esi_commentSAXFunc(void * ctx, const xmlChar * value)
+static void
+esi_commentSAXFunc(void *ctx, const xmlChar *value)
 {
     ESILibxml2Parser *p = (ESILibxml2Parser *)ctx;
     p->getClient()->parserComment((const char *)value);
 }
 
-void esi_charactersSAXFunc(void *ctx, const xmlChar *ch, int len)
+static void
+esi_charactersSAXFunc(void *ctx, const xmlChar *ch, int len)
 {
     ESILibxml2Parser *p = (ESILibxml2Parser *)ctx;
     p->getClient()->parserDefault((const char *)ch, len);
 }
 
-xmlEntityPtr esi_getEntitySAXFunc(void * ctx,  const xmlChar * name)
+static xmlEntityPtr
+esi_getEntitySAXFunc(void * /* ctx */, const xmlChar *name)
 {
     xmlEntityPtr res = xmlGetDocEntity(entity_doc, name);
 

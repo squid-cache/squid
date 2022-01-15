@@ -18,7 +18,6 @@ class ACLServerNameData : public ACLDomainData {
 public:
     ACLServerNameData() : ACLDomainData() {}
     virtual bool match(const char *);
-    virtual ACLData<char const *> *clone() const;
 };
 
 class ACLServerNameStrategy : public ACLStrategy<char const *>

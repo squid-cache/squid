@@ -47,7 +47,7 @@ ACLSquidErrorData::dump() const
 void
 ACLSquidErrorData::parse()
 {
-    while (char *token = ConfigParser::NextToken()) {
+    while (const auto token = ConfigParser::strtokFile()) {
         err_type err = errorTypeByName(token);
 
         if (err < ERR_MAX)
@@ -64,14 +64,5 @@ bool
 ACLSquidErrorData::empty() const
 {
     return errors.empty();
-}
-
-ACLData<err_type> *
-ACLSquidErrorData::clone() const
-{
-    if (!errors.empty())
-        fatal("ACLSquidError::clone: attempt to clone used ACL");
-
-    return new ACLSquidErrorData (*this);
 }
 

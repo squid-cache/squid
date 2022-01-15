@@ -93,6 +93,8 @@ HelperServerBase::closePipesSafely(const char *id_name)
         }
         CloseHandle(hIpc);
     }
+#else
+    (void)id_name;
 #endif
 }
 
@@ -117,6 +119,8 @@ HelperServerBase::closeWritePipeSafely(const char *id_name)
         }
         CloseHandle(hIpc);
     }
+#else
+    (void)id_name;
 #endif
 }
 

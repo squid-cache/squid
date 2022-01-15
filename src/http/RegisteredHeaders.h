@@ -150,22 +150,20 @@ enum HdrKind {
 };
 
 /* POD for HeaderTable */
-class HeaderTableRecord {
-public:
-    HeaderTableRecord();
+struct HeaderTableRecord {
+    HeaderTableRecord() = default;
     HeaderTableRecord(const char *n);
     HeaderTableRecord(const char *, Http::HdrType, Http::HdrFieldType, int /* HdrKind */);
 
-public:
-    const char *name;
-    Http::HdrType id;
-    Http::HdrFieldType type;
+    const char *name = "";
+    Http::HdrType id = HdrType::BAD_HDR;
+    Http::HdrFieldType type = HdrFieldType::ftInvalid;
     // flags set by constructor from HdrKind parameter
-    bool list;       ///<header with field values defined as #(values) in HTTP/1.1
-    bool request;    ///<header is a request header
-    bool reply;      ///<header is a reply header
-    bool hopbyhop;   ///<header is hop by hop
-    bool denied304;  ///<header is not to be updated on receiving a 304 in cache revalidation (see HttpReply.cc)
+    bool list = false;; ///< header with field values defined as #(values) in HTTP/1.1
+    bool request = false; ///< header is a request header
+    bool reply = false; ///< header is a reply header
+    bool hopbyhop = false; ///< header is hop by hop
+    bool denied304 = false; ///< header is not to be updated on receiving a 304 in cache revalidation (see HttpReply.cc)
 };
 
 /** Class for looking up registered header definitions

@@ -7,17 +7,12 @@
  */
 
 #include "squid.h"
-#include "event.h"
+#include "mem/forward.h"
 #include "SquidString.h"
 #include "testString.h"
 #include "unitTestMain.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testString );
-
-/* let this test link sanely */
-void
-eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata)
-{}
 
 /* init memory pools */
 

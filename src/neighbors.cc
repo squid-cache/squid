@@ -456,7 +456,7 @@ peerClearRR()
 /**
  * Perform all actions when a CachePeer is detected revived.
  */
-void
+static void
 peerAlive(CachePeer *p)
 {
     if (p->stats.logged_state == PEER_DEAD && p->tcp_up) {
@@ -793,7 +793,9 @@ peerDigestLookup(CachePeer * p, PeerSelector * ps)
     debugs(15, 5, "peerDigestLookup: peer " << p->host << " says HIT!");
 
     return LOOKUP_HIT;
-
+#else
+    (void)p;
+    (void)ps;
 #endif
 
     return LOOKUP_NONE;
@@ -860,6 +862,8 @@ neighborsDigestSelect(PeerSelector *ps)
                          best_p ? LOOKUP_HIT : (choice_count ? LOOKUP_MISS : LOOKUP_NONE));
     request->hier.n_choices = choice_count;
     request->hier.n_ichoices = ichoice_count;
+#else
+    (void)ps;
 #endif
 
     return best_p;
@@ -876,6 +880,10 @@ peerNoteDigestLookup(HttpRequest * request, CachePeer * p, lookup_t lookup)
 
     request->hier.cd_lookup = lookup;
     debugs(15, 4, "peerNoteDigestLookup: peer " << (p? p->host : "<none>") << ", lookup: " << lookup_t_str[lookup]  );
+#else
+    (void)request;
+    (void)p;
+    (void)lookup;
 #endif
 }
 

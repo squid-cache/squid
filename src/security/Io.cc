@@ -182,6 +182,7 @@ Security::Handshake(Comm::Connection &transport, const ErrorCode topError, Fun i
     return ioResult;
 
 #else
+    (void)topError;
     // TLS I/O code path should never be reachable without a TLS/SSL library.
     debugs(1, DBG_CRITICAL, ForceAlert << "BUG: " <<
            "Unexpected TLS I/O in Squid built without a TLS/SSL library");

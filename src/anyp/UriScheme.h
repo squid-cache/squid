@@ -55,7 +55,7 @@ public:
     static void Init();
 
     /// \returns ProtocolType for the given scheme name or PROTO_UNKNOWN
-    static const AnyP::ProtocolType FindProtocolType(const SBuf &);
+    static AnyP::ProtocolType FindProtocolType(const SBuf &);
 
 private:
     /// optimization: stores down-cased protocol scheme names, copied from

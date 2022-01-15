@@ -16,8 +16,6 @@
 int DebugSignal = -1;
 SBuf service_name(APP_SHORTNAME);
 void releaseServerSockets(void) STUB_NOP
-char * dead_msg(void) STUB_RETVAL(NULL)
-void mail_warranty(void) STUB
 void dumpMallocStats(void) STUB
 void squid_getrusage(struct rusage *) STUB
 double rusage_cputime(struct rusage *) STUB_RETVAL(0)
@@ -71,7 +69,6 @@ int getMyPort(void) STUB_RETVAL(0)
 void setUmask(mode_t) STUB
 void strwordquote(MemBuf *, const char *) STUB
 void keepCapabilities(void) STUB
-void restoreCapabilities(bool) STUB
 pid_t WaitForOnePid(pid_t, PidStatus &, int) STUB_RETVAL(0)
 
 #if _SQUID_WINDOWS_

@@ -651,6 +651,70 @@ HttpRequest::canHandle1xx() const
     return true;
 }
 
+Http::StatusCode
+HttpRequest::checkEntityFraming() const
+{
+    // RFC 7230 section 3.3.1:
+    // "
+    //  A server that receives a request message with a transfer coding it
+    //  does not understand SHOULD respond with 501 (Not Implemented).
+    // "
+    if (header.unsupportedTe())
+        return Http::scNotImplemented;
+
+    // RFC 7230 section 3.3.3 #3 paragraph 3:
+    // Transfer-Encoding overrides Content-Length
+    if (header.chunked())
+        return Http::scNone;
+
+    // RFC 7230 Section 3.3.3 #4:
+    // conflicting Content-Length(s) mean a message framing error
+    if (header.conflictingContentLength())
+        return Http::scBadRequest;
+
+    // HTTP/1.0 requirements differ from HTTP/1.1
+    if (http_ver <= Http::ProtocolVersion(1,0)) {
+        const auto m = method.id();
+
+        // RFC 1945 section 8.3:
+        // "
+        //   A valid Content-Length is required on all HTTP/1.0 POST requests.
+        // "
+        // RFC 1945 Appendix D.1.1:
+        // "
+        //   The fundamental difference between the POST and PUT requests is
+        //   reflected in the different meaning of the Request-URI.
+        // "
+        if (m == Http::METHOD_POST || m == Http::METHOD_PUT)
+            return (content_length >= 0 ? Http::scNone : Http::scLengthRequired);
+
+        // RFC 1945 section 7.2:
+        // "
+        //   An entity body is included with a request message only when the
+        //   request method calls for one.
+        // "
+        // section 8.1-2: GET and HEAD do not define ('call for') an entity
+        if (m == Http::METHOD_GET || m == Http::METHOD_HEAD)
+            return (content_length < 0 ? Http::scNone : Http::scBadRequest);
+        // appendix D1.1.2-4: DELETE, LINK, UNLINK do not define ('call for') an entity
+        if (m == Http::METHOD_DELETE || m == Http::METHOD_LINK || m == Http::METHOD_UNLINK)
+            return (content_length < 0 ? Http::scNone : Http::scBadRequest);
+
+        // other methods are not defined in RFC 1945
+        // assume they support an (optional) entity
+        return Http::scNone;
+    }
+
+    // RFC 7230 section 3.3
+    // "
+    //   The presence of a message body in a request is signaled by a
+    //   Content-Length or Transfer-Encoding header field.  Request message
+    //   framing is independent of method semantics, even if the method does
+    //   not define any use for a message body.
+    // "
+    return Http::scNone;
+}
+
 bool
 HttpRequest::parseHeader(Http1::Parser &hp)
 {

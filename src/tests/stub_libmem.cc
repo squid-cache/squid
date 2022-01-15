@@ -12,6 +12,8 @@
 #include "tests/STUB.h"
 
 #include "mem/AllocatorProxy.h"
+#include "mem/forward.h"
+
 void *Mem::AllocatorProxy::alloc() {return xmalloc(64*1024);}
 void Mem::AllocatorProxy::freeOne(void *address) {xfree(address);}
 int Mem::AllocatorProxy::inUseCount() const {return 0;}
@@ -23,16 +25,16 @@ int Mem::AllocatorProxy::getStats(MemPoolStats *) STUB_RETVAL(0)
 void Mem::Init() STUB_NOP
 void Mem::Report() STUB_NOP
 void Mem::Stats(StoreEntry *) STUB_NOP
-void CleanIdlePools(void *) STUB_NOP
-void Report(std::ostream &) STUB_NOP
-void PoolReport(const MemPoolStats *, const MemPoolMeter *, std::ostream &) STUB_NOP
+void Mem::CleanIdlePools(void *) STUB_NOP
+void Mem::Report(std::ostream &) STUB_NOP
+void Mem::PoolReport(const MemPoolStats *, const MemPoolMeter *, std::ostream &) STUB_NOP
 //const size_t squidSystemPageSize = 4096;
 void memClean(void) STUB
 void memInitModule(void) STUB
 void memCleanModule(void) STUB
 void memConfigure(void) STUB
 
-void * memAllocate(mem_type)
+void *memAllocate(mem_type)
 {
     // let's waste plenty of memory. This should cover any possible need
     return xmalloc(64*1024);

@@ -16,6 +16,7 @@
 #include "fd.h"
 #include "FwdState.h"
 #include "globals.h"
+#include "gopher.h"
 #include "html_quote.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -34,7 +35,7 @@
 #include "MemObject.h"
 #endif
 
-/* gopher type code from rfc. Anawat. */
+// RFC 1436 section 3.8 gopher item-type codes
 #define GOPHER_FILE         '0'
 #define GOPHER_DIRECTORY    '1'
 #define GOPHER_CSO          '2'
@@ -50,16 +51,17 @@
 #define GOPHER_GIF          'g'
 #define GOPHER_IMAGE        'I'
 
-#define GOPHER_HTML         'h'
-#define GOPHER_INFO         'i'
-
-///  W3 address
-#define GOPHER_WWW          'w'
-#define GOPHER_SOUND        's'
-
+// Gopher+ section 2.9 extension types
+// https://github.com/jgoerzen/pygopherd/blob/master/doc/standards/Gopher%2B.txt
 #define GOPHER_PLUS_IMAGE   ':'
 #define GOPHER_PLUS_MOVIE   ';'
 #define GOPHER_PLUS_SOUND   '<'
+
+// non-standard item-type codes
+#define GOPHER_HTML         'h'
+#define GOPHER_INFO         'i'
+#define GOPHER_WWW          'w'
+#define GOPHER_SOUND        's'
 
 #define GOPHER_PORT         70
 
@@ -87,6 +89,7 @@ public:
         HTML_header_added(0),
         HTML_pre(0),
         type_id(GOPHER_FILE /* '0' */),
+        overflowed(false),
         cso_recno(0),
         len(0),
         buf(NULL),
@@ -97,11 +100,8 @@ public:
         entry->lock("gopherState");
         *replybuf = 0;
     }
-    ~GopherStateData() {if(buf) swanSong();}
 
-    /* AsyncJob API emulated */
-    void deleteThis(const char *aReason);
-    void swanSong();
+    ~GopherStateData();
 
 public:
     StoreEntry *entry;
@@ -117,8 +117,15 @@ public:
     int HTML_pre;
     char type_id;
     char request[MAX_URL];
+
+    /// some received bytes ignored due to internal buffer capacity limits
+    bool overflowed;
+
     int cso_recno;
+
+    /// the number of not-yet-parsed Gopher line bytes in this->buf
     int len;
+
     char *buf;          /* pts to a 4k page */
     Comm::ConnectionPointer serverConn;
     FwdState::Pointer fwd;
@@ -148,30 +155,18 @@ static void
 gopherStateFree(const CommCloseCbParams &params)
 {
     GopherStateData *gopherState = (GopherStateData *)params.data;
-
-    if (gopherState == NULL)
-        return;
-
-    gopherState->deleteThis("gopherStateFree");
+    // Assume that FwdState is monitoring and calls noteClosure(). See XXX about
+    // Connection sharing with FwdState in gopherStart().
+    delete gopherState;
 }
 
-void
-GopherStateData::deleteThis(const char *)
-{
-    swanSong();
-    delete this;
-}
-
-void
-GopherStateData::swanSong()
+GopherStateData::~GopherStateData()
 {
     if (entry)
         entry->unlock("gopherState");
 
-    if (buf) {
+    if (buf)
         memFree(buf, MEM_4K_BUF);
-        buf = nullptr;
-    }
 }
 
 /**
@@ -444,6 +439,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
         if (gopherState->len + llen >= TEMP_BUF_SIZE) {
             debugs(10, DBG_IMPORTANT, "GopherHTML: Buffer overflow. Lost some data on URL: " << entry->url()  );
             llen = TEMP_BUF_SIZE - gopherState->len - 1;
+            gopherState->overflowed = true; // may already be true
         }
         if (!lpos) {
             /* there is no complete line in inbuf */
@@ -578,6 +574,10 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                         icon_url = NULL;
                         break;
 
+                    case GOPHER_WWW:
+                        icon_url = mimeGetIconURL("internal-link");
+                        break;
+
                     default:
                         icon_url = mimeGetIconURL("internal-unknown");
                         break;
@@ -602,6 +602,9 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                             /* WWW link */
                             snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"http://%s/%s\">%s</A>\n",
                                      icon_url, host, rfc1738_escape_unescaped(selector + 5), html_quote(name));
+                         } else if (gtype == GOPHER_WWW) {
+                            snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"%s\">%s</A>\n",
+                                     icon_url, rfc1738_escape_unescaped(selector), html_quote(name));
                         } else {
                             /* Standard link */
                             snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"gopher://%s/%c%s\">%s</A>\n",
@@ -685,8 +688,8 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                 }
             }
 
+            break;
             }           /* HTML_CSO_RESULT */
-
         default:
             break;      /* do nothing */
 
@@ -810,6 +813,10 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm
 
         entry->timestampsSet();
         entry->flush();
+
+        if (!gopherState->len && !gopherState->overflowed)
+            gopherState->fwd->markStoredReplyAsWhole("gopher EOF after receiving/storing some bytes");
+
         gopherState->fwd->complete();
         gopherState->serverConn->close();
     } else {
@@ -968,10 +975,12 @@ gopherStart(FwdState * fwd)
         }
 
         gopherToHTML(gopherState, (char *) NULL, 0);
+        fwd->markStoredReplyAsWhole("gopher instant internal request satisfaction");
         fwd->complete();
         return;
     }
 
+    // XXX: Sharing open Connection with FwdState that has its own handlers/etc.
     gopherState->serverConn = fwd->serverConnection();
     gopherSendRequest(fwd->serverConnection()->fd, gopherState);
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "gopherTimeout",

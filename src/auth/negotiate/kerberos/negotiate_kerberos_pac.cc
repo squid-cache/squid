@@ -114,7 +114,7 @@ get1byt(void)
     return var;
 }
 
-char *
+static char *
 pstrcpy( char *src, const char *dst)
 {
     if (dst) {
@@ -126,7 +126,7 @@ pstrcpy( char *src, const char *dst)
         return src;
 }
 
-char *
+static char *
 pstrcat( char *src, const char *dst)
 {
     if (dst) {

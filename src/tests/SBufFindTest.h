@@ -65,7 +65,6 @@ private:
     SBuf theSBufNeedle; ///< the string to be found
     SBuf::size_type thePos; ///< search position limit
     Placement thePlacement; ///< where in the hay the needle is placed
-    std::string::size_type theStringPos; ///< thePos converted to std::string::size_type
     std::string theStringHay; ///< theHay converted to std::string
     std::string theStringNeedle; ///< theNeedle converted to std::string
 

@@ -12,17 +12,15 @@
 #define STUB_API "helper.cc"
 #include "tests/STUB.h"
 
-void helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data) STUB
-void helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, void *data, helper_stateful_server * lastserver) STUB
+void helperSubmit(helper *, const char *, HLPCB *, void *) STUB
+void helperStatefulSubmit(statefulhelper *, const char *, HLPCB *, void *, uint64_t) STUB
 helper::~helper() STUB
 CBDATA_CLASS_INIT(helper);
-void helper::packStatsInto(Packable *p, const char *label) const STUB
+void helper::packStatsInto(Packable *, const char *) const STUB
 
-void helperShutdown(helper * hlp) STUB
-void helperStatefulShutdown(statefulhelper * hlp) STUB
-void helperOpenServers(helper * hlp) STUB
-void helperStatefulOpenServers(statefulhelper * hlp) STUB
-helper_stateful_server *helperStatefulDefer(statefulhelper * hlp) STUB_RETVAL(NULL)
-void helperStatefulReleaseServer(helper_stateful_server * srv) STUB
+void helperShutdown(helper *) STUB
+void helperStatefulShutdown(statefulhelper *) STUB
+void helperOpenServers(helper *) STUB
+void helperStatefulOpenServers(statefulhelper *) STUB
 CBDATA_CLASS_INIT(statefulhelper);
 

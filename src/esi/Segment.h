@@ -15,7 +15,7 @@
 
 #include "base/RefCount.h"
 #include "cbdata.h"
-#include "defines.h"
+#include "http/forward.h"
 #include "SquidString.h"
 
 class ESISegment : public RefCountable

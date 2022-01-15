@@ -53,7 +53,7 @@ struct SMBDOMAIN *lastdom = NULL;
  * to the read command of the bourne shell.
  */
 
-void
+static void
 print_esc(FILE * p, char *s)
 {
     char buf[HELPER_INPUT_BUFFER];

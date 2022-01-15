@@ -18,6 +18,7 @@
 #include "HttpRequest.h"
 #include "MemObject.h"
 #include "mgr/Registration.h"
+#include "refresh.h"
 #include "RefreshPattern.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"

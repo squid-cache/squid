@@ -12,17 +12,15 @@
 #
 AC_DEFUN([SQUID_CC_CHECK_ARGUMENT],[
   AC_CACHE_CHECK([whether compiler accepts $2],[$1],
-  [{
+  [
     AC_REQUIRE([AC_PROG_CC])
-    SAVED_CFLAGS="$CFLAGS"
-    SAVED_CXXFLAGS="$CXXFLAGS"
+    SQUID_STATE_SAVE([ARGCHECK])
     CFLAGS="$CFLAGS $2"
     CXXFLAGS="$CXXFLAGS $2"
     AC_TRY_LINK([],[int foo; ],
       [$1=yes],[$1=no])
-    CFLAGS="$SAVED_CFLAGS"
-    CXXFLAGS="$SAVED_CXXFLAGS"
-  }])
+    SQUID_STATE_ROLLBACK([ARGCHECK])
+  ])
 ])
 
 # Check if the compiler requires a supplied flag to build a test program.
@@ -38,16 +36,14 @@ AC_DEFUN([SQUID_CC_REQUIRE_ARGUMENT],[
   AC_CACHE_CHECK([whether compiler requires $2],[$1],
   [{
     AC_REQUIRE([AC_PROG_CC])
-    SAVED_CFLAGS="$CFLAGS"
-    SAVED_CXXFLAGS="$CXXFLAGS"
+    SQUID_STATE_SAVE([ARGREQ])
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM($3,$4)],[$1=no],[],[$1=no])
     if test "x$$1" != "xno" ; then
       CFLAGS="$CFLAGS $2"
       CXXFLAGS="$CXXFLAGS $2"
       AC_COMPILE_IFELSE([AC_LANG_PROGRAM($3,$4)],[$1=yes],[$1=no],[$1=no])
     fi
-    CFLAGS="$SAVED_CFLAGS"
-    CXXFLAGS="$SAVED_CXXFLAGS"
+    SQUID_STATE_ROLLBACK([ARGREQ])
   }])
 ])
 
@@ -117,6 +113,20 @@ AC_DEFUN([SQUID_CC_GUESS_VARIANT], [
   ]) dnl AC_CACHE_CHECK
  ]) dnl AC_DEFUN
 
+AC_DEFUN([SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED_INTERNAL],[
+  SQUID_STATE_SAVE([CXXARGTEST])
+  CXXFLAGS="$CXXFLAGS $SQUID_CXXFLAGS"
+  SQUID_CC_CHECK_ARGUMENT([$2],[$1])
+  SQUID_STATE_ROLLBACK([CXXARGTEST])
+  AS_IF([test "x${$2}" = "xyes"],[SQUID_CXXFLAGS="$SQUID_CXXFLAGS $1"])
+])
+
+dnl argument is a compiler flag. It will be attempted, and if suppported
+dnl it will be added to SQUID_CXXFLAGS in the same order as calls to the macro
+AC_DEFUN([SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED],[
+  SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED_INTERNAL($1,m4_bpatsubst(m4_tolower([squid_cv_cc_arg$1]),[[^a-zA-Z0-9_]], [_]))
+])
+
 # define the flag to use to have the compiler treat warnings as errors
 # requirs SQUID_CC_GUESS_VARIANT
 # Sets a few variables to contain some compiler-dependent command line
@@ -147,7 +157,7 @@ AC_DEFUN([SQUID_CC_GUESS_OPTIONS], [
    squid_cv_cc_arg_pipe=""
    ;;
   clang) 
-   squid_cv_cxx_option_werror="-Werror -Qunused-arguments"
+   squid_cv_cxx_option_werror="-Werror"
    squid_cv_cc_option_werror="$squid_cv_cxx_option_werror"
    squid_cv_cc_option_wall="-Wall"
    squid_cv_cc_option_optimize="-O2"

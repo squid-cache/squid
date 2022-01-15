@@ -27,7 +27,6 @@ public:
     virtual SBufList dump() const;
     virtual void parse();
     virtual bool empty() const;
-    virtual ACLData<NotePairs::Entry *> *clone() const;
 
 private:
     SBuf name;                   ///< Note name to check. It is always set

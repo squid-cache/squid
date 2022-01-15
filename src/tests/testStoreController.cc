@@ -87,9 +87,8 @@ testStoreController::testMaxSize()
 static StoreEntry *
 addedEntry(Store::Disk *aStore,
            String name,
-           String varySpec,
-           String varyKey
-
+           String,
+           String
           )
 {
     StoreEntry *e = new StoreEntry();
@@ -122,7 +121,7 @@ addedEntry(Store::Disk *aStore,
 static bool cbcalled;
 
 static void
-searchCallback(void *cbdata)
+searchCallback(void *)
 {
     cbcalled = true;
 }

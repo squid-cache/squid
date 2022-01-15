@@ -151,6 +151,8 @@ Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn)
         debugs(89, 5, "address NAT: " << newConn);
         return true;
     }
+#else
+    (void)newConn;
 #endif
     return false;
 }
@@ -168,6 +170,7 @@ Ip::Intercept::TproxyTransparent(const Comm::ConnectionPointer &newConn)
     debugs(89, 5, HERE << "address TPROXY: " << newConn);
     return true;
 #else
+    (void)newConn;
     return false;
 #endif
 }
@@ -183,6 +186,7 @@ Ip::Intercept::IpfwInterception(const Comm::ConnectionPointer &newConn)
     debugs(89, 5, HERE << "address NAT: " << newConn);
     return true;
 #else
+    (void)newConn;
     return false;
 #endif
 }
@@ -210,7 +214,7 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn)
         newConn->local.getInAddr(natLookup.nl_inipaddr.in4);
         newConn->remote.getInAddr(natLookup.nl_outipaddr.in4);
     }
-#else
+#else /* HAVE_STRUCT_NATLOOKUP_NL_INIPADDR_IN6 */
         // warn once every 10 at critical level, then push down a level each repeated event
         static int warningLevel = DBG_CRITICAL;
         debugs(89, warningLevel, "Your IPF (IPFilter) NAT does not support IPv6. Please upgrade it.");
@@ -219,7 +223,7 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn)
     }
     newConn->local.getInAddr(natLookup.nl_inip);
     newConn->remote.getInAddr(natLookup.nl_outip);
-#endif
+#endif /* HAVE_STRUCT_NATLOOKUP_NL_INIPADDR_IN6 */
     natLookup.nl_inport = htons(newConn->local.port());
     natLookup.nl_outport = htons(newConn->remote.port());
     // ... and the TCP flag
@@ -269,7 +273,7 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn)
         x = ioctl(natfd, SIOCGNATL, &natLookup);
     }
 
-#endif
+#endif /* defined(IPFILTER_VERSION) ... */
     if (x < 0) {
         const auto xerrno = errno;
         if (xerrno != ESRCH) {
@@ -294,6 +298,8 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn)
         return true;
     }
 
+#else
+    (void)newConn;
 #endif /* --enable-ipf-transparent */
     return false;
 }
@@ -364,6 +370,8 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn)
         return true;
     }
 #endif /* --with-nat-devpf */
+#else
+    (void)newConn;
 #endif /* --enable-pf-transparent */
     return false;
 }
@@ -397,6 +405,8 @@ Ip::Intercept::Lookup(const Comm::ConnectionPointer &newConn, const Comm::Connec
     }
 
 #else /* none of the transparent options configured */
+    (void)newConn;
+    (void)listenConn;
     debugs(89, DBG_IMPORTANT, "WARNING: transparent proxying not supported");
 #endif
 

@@ -137,7 +137,7 @@ public:
     void clearMaxStale() {setValue(max_stale,MAX_STALE_UNKNOWN,HttpHdrCcType::CC_MAX_STALE,false);}
 
     //manipulation for Cache-Control:min-fresh header
-    bool hasMinFresh(int32_t *val = nullptr) const { return hasDirective(HttpHdrCcType::CC_MIN_FRESH, max_stale, val); }
+    bool hasMinFresh(int32_t *val = nullptr) const { return hasDirective(HttpHdrCcType::CC_MIN_FRESH, min_fresh, val); }
     void minFresh(int32_t v) {if (v < 0) return; setValue(min_fresh,v,HttpHdrCcType::CC_MIN_FRESH); }
     void clearMinFresh() {setValue(min_fresh,MIN_FRESH_UNKNOWN,HttpHdrCcType::CC_MIN_FRESH,false);}
 

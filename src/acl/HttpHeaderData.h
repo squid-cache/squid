@@ -25,9 +25,11 @@ public:
     virtual SBufList dump() const;
     virtual void parse();
     virtual bool empty() const;
-    virtual ACLData<HttpHeader*> *clone() const;
 
 private:
+    /* ACLData API */
+    virtual const Acl::Options &lineOptions();
+
     Http::HdrType hdrId;            /**< set if header is known */
     SBuf hdrName;                   /**< always set */
     ACLData<char const *> * regex_rule;

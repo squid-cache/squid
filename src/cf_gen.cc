@@ -369,7 +369,7 @@ main(int argc, char *argv[])
                     state = sSTART;
                 } else if (strcmp(buff, "CONFIG_START") == 0) {
                     state = sCFGLINES;
-                } else { // if (buff != NULL) {
+                } else {
                     assert(buff != NULL);
                     entries.back().doc.push_back(buff);
                 }
@@ -378,7 +378,7 @@ main(int argc, char *argv[])
             case sCFGLINES:
                 if (strcmp(buff, "CONFIG_END") == 0) {
                     state = sDOC;
-                } else { // if (buff != NULL) {
+                } else {
                     assert(buff != NULL);
                     entries.back().cfgLines.push_back(buff);
                 }
@@ -848,13 +848,14 @@ gen_quote_escape(const std::string &var)
     static std::string esc;
     esc.clear();
 
-    for (int i = 0; i < var.length(); ++i) {
-        switch (var[i]) {
+    for (const auto c : var) {
+        switch (c) {
         case '"':
         case '\\':
             esc += '\\';
+        /* [[fallthrough]] */
         default:
-            esc += var[i];
+            esc += c;
         }
     }
 

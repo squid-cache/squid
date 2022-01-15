@@ -126,6 +126,7 @@ inline const char *ErrorString(const LibErrorCode code) {
 #elif USE_GNUTLS
     return gnutls_strerror(code);
 #else
+    (void)code;
     return "[no TLS library]";
 #endif
 }
@@ -174,6 +175,7 @@ class ParsedOptions {}; // we never parse/use TLS options in this case
 typedef long ParsedPortFlags;
 
 class PeerConnector;
+class BlindPeerConnector;
 class PeerOptions;
 
 #if USE_OPENSSL

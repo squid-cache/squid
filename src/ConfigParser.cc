@@ -23,7 +23,6 @@ ConfigParser::TokenType ConfigParser::LastTokenType = ConfigParser::SimpleToken;
 const char *ConfigParser::CfgLine = NULL;
 const char *ConfigParser::CfgPos = NULL;
 std::queue<char *> ConfigParser::CfgLineTokens_;
-std::queue<std::string> ConfigParser::Undo_;
 bool ConfigParser::AllowMacros_ = false;
 bool ConfigParser::ParseQuotedOrToEol_ = false;
 bool ConfigParser::ParseKvPair_ = false;
@@ -60,27 +59,6 @@ ConfigParser::destruct()
                cfg_filename, config_lineno, config_input_line);
 }
 
-void
-ConfigParser::TokenPutBack(const char *tok)
-{
-    assert(tok);
-    Undo_.push(tok);
-}
-
-char *
-ConfigParser::Undo()
-{
-    static char undoToken[CONFIG_LINE_LIMIT];
-    if (!Undo_.empty()) {
-        xstrncpy(undoToken, Undo_.front().c_str(), sizeof(undoToken));
-        undoToken[sizeof(undoToken) - 1] = '\0';
-        if (!PreviewMode_)
-            Undo_.pop();
-        return undoToken;
-    }
-    return NULL;
-}
-
 char *
 ConfigParser::strtokFile()
 {
@@ -92,9 +70,6 @@ ConfigParser::strtokFile()
 
     char *t;
     static char buf[CONFIG_LINE_LIMIT];
-
-    if ((t = ConfigParser::Undo()))
-        return t;
 
     do {
 
@@ -356,10 +331,6 @@ char *
 ConfigParser::NextToken()
 {
     char *token = NULL;
-    if ((token = ConfigParser::Undo())) {
-        debugs(3, 6, "TOKEN (undone): " << token);
-        return token;
-    }
 
     do {
         while (token == NULL && !CfgFiles.empty()) {

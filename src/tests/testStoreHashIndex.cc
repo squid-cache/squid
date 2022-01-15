@@ -62,12 +62,11 @@ testStoreHashIndex::testMaxSize()
     Store::FreeMemory();
 }
 
-StoreEntry *
+static StoreEntry *
 addedEntry(Store::Disk *aStore,
            String name,
-           String varySpec,
-           String varyKey
-
+           String,
+           String
           )
 {
     StoreEntry *e = new StoreEntry();
@@ -95,7 +94,7 @@ addedEntry(Store::Disk *aStore,
     return e;
 }
 
-void commonInit()
+static void commonInit()
 {
     static bool inited = false;
 
@@ -116,7 +115,7 @@ void commonInit()
 static bool cbcalled;
 
 static void
-searchCallback(void *cbdata)
+searchCallback(void *)
 {
     cbcalled = true;
 }

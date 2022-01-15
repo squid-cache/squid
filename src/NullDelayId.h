@@ -21,7 +21,7 @@ class NullDelayId : public DelayIdComposite
 public:
     virtual int bytesWanted (int minimum, int maximum) const {return max(minimum,maximum);}
 
-    virtual void bytesIn(int qty) {}
+    virtual void bytesIn(int) {}
 };
 #endif
 #endif /* NULLDELAYID_H */

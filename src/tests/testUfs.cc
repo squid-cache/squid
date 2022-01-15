@@ -42,7 +42,7 @@ addSwapDir(MySwapDirPointer aStore)
 static bool cbcalled;
 
 static void
-searchCallback(void *cbdata)
+searchCallback(void *)
 {
     cbcalled = true;
 }

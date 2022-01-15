@@ -11,7 +11,6 @@
 #include "squid.h"
 #include "mem_node.h"
 #include "MemStore.h"
-#include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
 #include "store/Controller.h"
@@ -94,7 +93,6 @@ Store::Controller::maintain()
 {
     static time_t last_warn_time = 0;
 
-    PROF_start(storeMaintainSwapSpace);
     swapDir->maintain();
 
     /* this should be emitted by the oversize dir, not globally */
@@ -107,8 +105,6 @@ Store::Controller::maintain()
             last_warn_time = squid_curtime;
         }
     }
-
-    PROF_stop(storeMaintainSwapSpace);
 }
 
 void
@@ -232,15 +228,8 @@ Store::Controller::sync(void)
 int
 Store::Controller::callback()
 {
-    /* This will likely double count. That's ok. */
-    PROF_start(storeDirCallback);
-
     /* mem cache callbacks ? */
-    int result = swapDir->callback();
-
-    PROF_stop(storeDirCallback);
-
-    return result;
+    return swapDir->callback();
 }
 
 /// update reference counters of the recently touched entry
@@ -763,7 +752,7 @@ Store::Controller::updateOnNotModified(StoreEntry *old, StoreEntry &e304)
 
 bool
 Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
-                                   const HttpRequestMethod &reqMethod)
+                                   const HttpRequestMethod &)
 {
     const KeyScope keyScope = reqFlags.refresh ? ksRevalidation : ksDefault;
     // set the flag now so that it gets copied into the Transients entry

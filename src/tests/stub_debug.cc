@@ -37,16 +37,6 @@ DebugStream()
     return stderr;
 }
 
-Ctx
-ctx_enter(const char *)
-{
-    return -1;
-}
-
-void
-ctx_exit(Ctx)
-{}
-
 void
 _db_init(const char *, const char *)
 {}
@@ -62,7 +52,7 @@ _db_rotate_log(void)
 static void
 _db_print_stderr(const char *format, va_list args);
 
-void
+static void
 _db_print(const char *format,...)
 {
     static char f[BUFSIZ];

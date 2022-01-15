@@ -109,7 +109,7 @@ private:
     bool alwaysAllowResponse(Http::StatusCode sline) const;
     int checkTransferDone();
     void processOnlyIfCachedMiss();
-    bool processConditional(StoreIOBuffer &result);
+    bool processConditional();
     void cacheHit(StoreIOBuffer result);
     void handleIMSReply(StoreIOBuffer result);
     void sendMoreData(StoreIOBuffer result);
@@ -152,6 +152,9 @@ private:
 
     CollapsedRevalidation collapsedRevalidation;
 };
+
+// TODO: move to SideAgent parent, when we have one
+void purgeEntriesByUrl(HttpRequest *, const char *);
 
 #endif /* SQUID_CLIENTSIDEREPLY_H */
 

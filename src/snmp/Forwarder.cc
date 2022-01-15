@@ -53,6 +53,7 @@ Snmp::Forwarder::noteCommClosed(const CommCloseCbParams& params)
 {
     debugs(49, 5, HERE);
     Must(fd == params.fd);
+    closer = nullptr;
     fd = -1;
     mustStop("commClosed");
 }
@@ -68,8 +69,7 @@ void
 Snmp::Forwarder::handleException(const std::exception& e)
 {
     debugs(49, 3, HERE << e.what());
-    if (fd >= 0)
-        sendError(SNMP_ERR_GENERR);
+    sendError(SNMP_ERR_GENERR);
     Ipc::Forwarder::handleException(e);
 }
 
@@ -78,6 +78,10 @@ void
 Snmp::Forwarder::sendError(int error)
 {
     debugs(49, 3, HERE);
+
+    if (fd < 0)
+        return; // client gone
+
     Snmp::Request& req = static_cast<Snmp::Request&>(*request);
     req.pdu.command = SNMP_PDU_RESPONSE;
     req.pdu.errstat = error;

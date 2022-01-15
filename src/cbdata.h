@@ -245,11 +245,11 @@ void cbdataInternalUnlock(const void *p);
  \code
         void *cbdata;
         ...
-        if (cbdataReferenceValidDone(reference, &cbdata)) != NULL)
+        if (cbdataReferenceValidDone(reference, &cbdata)))
             callback(..., cbdata);
  \endcode
  *
- * \param var The reference variable. Will be automatically cleared to NULL.
+ * \param var The reference variable. Will be automatically cleared to nullptr
  * \param ptr A temporary pointer to the referenced data (if valid).
  */
 int cbdataInternalReferenceDoneValid(void **p, void **tp);
@@ -345,9 +345,9 @@ public:
  *
  * \deprecated Prefer the use of CbcPointer<> smart pointer.
  *
- * \param var The reference variable. Will be automatically cleared to NULL.
+ * \param var The reference variable. Will be automatically cleared to nullptr
  */
-#define cbdataReferenceDone(var) do {if (var) {cbdataInternalUnlock(var); var = NULL;}} while(0)
+#define cbdataReferenceDone(var) do {if (var) {cbdataInternalUnlock(var); var = nullptr;}} while(0)
 
 /**
  * A generic wrapper for passing object pointers through cbdata.
