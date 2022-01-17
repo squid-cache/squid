@@ -400,7 +400,7 @@ static int nmasldap_get_simple_pwd(
     }
 
     if (pwdBuf != NULL) {
-        mem::ZeroSensitiveMemory(pwdBuf, bufferLen);
+        Mem::ZeroSensitiveMemory(pwdBuf, bufferLen);
         free(pwdBuf);
     }
 
@@ -483,7 +483,7 @@ static int nmasldap_get_password(
     }
 
     if (pwdBuf != NULL) {
-        mem::ZeroSensitiveMemory(pwdBuf, bufferLen);
+        Mem::ZeroSensitiveMemory(pwdBuf, bufferLen);
         free(pwdBuf);
     }
 

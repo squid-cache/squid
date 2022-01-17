@@ -11,7 +11,7 @@
 
 #include <cstring>
 
-namespace mem {
+namespace Mem {
 
 /// zeros the given memory area while disallowing the compiler to skip (i.e.
 /// optimize away) this cleanup, unlike a regular call to std::memset() or alike
