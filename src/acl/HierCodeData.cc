@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,11 +17,6 @@ ACLHierCodeData::ACLHierCodeData()
 {
     // initialize mask to NULL
     memset(values, 0, sizeof(values));
-}
-
-ACLHierCodeData::ACLHierCodeData(ACLHierCodeData const &old)
-{
-    memcpy(values, old.values, sizeof(values) );
 }
 
 ACLHierCodeData::~ACLHierCodeData()
@@ -72,11 +67,5 @@ ACLHierCodeData::empty() const
         if (values[iter]) return false; // not empty.
     }
     return true;
-}
-
-ACLData<hier_code> *
-ACLHierCodeData::clone() const
-{
-    return new ACLHierCodeData(*this);
 }
 

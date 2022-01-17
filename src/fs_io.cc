@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,7 +15,6 @@
 #include "fs_io.h"
 #include "globals.h"
 #include "MemBuf.h"
-#include "profiler/Profiler.h"
 #include "StatCounters.h"
 
 #include <cerrno>
@@ -46,7 +45,6 @@ int
 file_open(const char *path, int mode)
 {
     int fd;
-    PROF_start(file_open);
 
     if (FILE_MODE(mode) == O_WRONLY)
         mode |= O_APPEND;
@@ -67,7 +65,6 @@ file_open(const char *path, int mode)
         fd_open(fd, FD_FILE, path);
     }
 
-    PROF_stop(file_open);
     return fd;
 }
 
@@ -77,7 +74,6 @@ file_close(int fd)
 {
     fde *F = &fd_table[fd];
     PF *read_callback;
-    PROF_start(file_close);
     assert(fd >= 0);
     assert(F->flags.open);
 
@@ -97,7 +93,6 @@ file_close(int fd)
 #else
         F->flags.close_request = true;
         debugs(6, 2, "file_close: FD " << fd << ", delaying close");
-        PROF_stop(file_close);
         return;
 #endif
 
@@ -109,12 +104,6 @@ file_close(int fd)
      */
     assert(F->write_handler == NULL);
 
-#if CALL_FSYNC_BEFORE_CLOSE
-
-    fsync(fd);
-
-#endif
-
     close(fd);
 
     debugs(6, F->flags.close_request ? 2 : 5, "file_close: FD " << fd << " really closing");
@@ -122,8 +111,6 @@ file_close(int fd)
     fd_close(fd);
 
     ++ statCounter.syscalls.disk.closes;
-
-    PROF_stop(file_close);
 }
 
 /*
@@ -197,8 +184,6 @@ diskHandleWrite(int fd, void *)
 
     if (NULL == q)
         return;
-
-    PROF_start(diskHandleWrite);
 
     debugs(6, 3, "diskHandleWrite: FD " << fd);
 
@@ -325,7 +310,6 @@ diskHandleWrite(int fd, void *)
              * NOTE, this callback can close the FD, so we must
              * not touch 'F', 'fdd', etc. after this.
              */
-            PROF_stop(diskHandleWrite);
             return;
             /* XXX But what about close_request??? */
         }
@@ -333,8 +317,6 @@ diskHandleWrite(int fd, void *)
 
     if (do_close)
         file_close(fd);
-
-    PROF_stop(diskHandleWrite);
 }
 
 /* write block to a file */
@@ -351,7 +333,6 @@ file_write(int fd,
 {
     dwrite_q *wq = NULL;
     fde *F = &fd_table[fd];
-    PROF_start(file_write);
     assert(fd >= 0);
     assert(F->flags.open);
     /* if we got here. Caller is eligible to write. */
@@ -383,8 +364,6 @@ file_write(int fd,
     if (!F->flags.write_daemon) {
         diskHandleWrite(fd, NULL);
     }
-
-    PROF_stop(file_write);
 }
 
 /*
@@ -417,8 +396,6 @@ diskHandleRead(int fd, void *data)
         return;
     }
 
-    PROF_start(diskHandleRead);
-
 #if WRITES_MAINTAIN_DISK_OFFSET
     if (F->disk.offset != ctrl_dat->offset) {
 #else
@@ -450,7 +427,6 @@ diskHandleRead(int fd, void *data)
     if (len < 0) {
         if (ignoreErrno(xerrno)) {
             Comm::SetSelect(fd, COMM_SELECT_READ, diskHandleRead, ctrl_dat, 0);
-            PROF_stop(diskHandleRead);
             return;
         }
 
@@ -467,8 +443,6 @@ diskHandleRead(int fd, void *data)
     cbdataReferenceDone(ctrl_dat->client_data);
 
     memFree(ctrl_dat, MEM_DREAD_CTRL);
-
-    PROF_stop(diskHandleRead);
 }
 
 /* start read operation */
@@ -479,7 +453,6 @@ void
 file_read(int fd, char *buf, int req_len, off_t offset, DRCB * handler, void *client_data)
 {
     dread_ctrl *ctrl_dat;
-    PROF_start(file_read);
     assert(fd >= 0);
     ctrl_dat = (dread_ctrl *)memAllocate(MEM_DREAD_CTRL);
     ctrl_dat->fd = fd;
@@ -490,7 +463,6 @@ file_read(int fd, char *buf, int req_len, off_t offset, DRCB * handler, void *cl
     ctrl_dat->handler = handler;
     ctrl_dat->client_data = cbdataReference(client_data);
     diskHandleRead(fd, ctrl_dat);
-    PROF_stop(file_read);
 }
 
 void

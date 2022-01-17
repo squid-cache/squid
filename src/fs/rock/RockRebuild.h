@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -53,7 +53,7 @@ public:
     static bool Start(SwapDir &dir);
 
 protected:
-    /// whether the current kid is responsible for rebuilding this db file
+    /// whether the current kid is responsible for rebuilding the given cache_dir
     static bool IsResponsible(const SwapDir &);
 
     Rebuild(SwapDir *dir, const Ipc::Mem::Pointer<Stats> &);

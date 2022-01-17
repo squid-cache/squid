@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,16 +33,16 @@ void aclDestroyAclList(ACLList **);
 void aclParseAccessLine(const char *directive, ConfigParser &parser, Acl::Tree **);
 /// Parses a single line of a "some context followed by acls" directive (e.g., note n v).
 /// The label parameter identifies the context (for debugging).
-/// \ingroup ACLAPI
-void aclParseAclList(ConfigParser &parser, Acl::Tree **, const char *label);
+/// \returns the number of parsed ACL names
+size_t aclParseAclList(ConfigParser &parser, Acl::Tree **, const char *label);
 /// Template to convert various context labels to strings. \ingroup ACLAPI
 template <class Any>
-inline
-void aclParseAclList(ConfigParser &parser, Acl::Tree **tree, const Any any)
+inline size_t
+aclParseAclList(ConfigParser &parser, Acl::Tree **tree, const Any any)
 {
     std::ostringstream buf;
     buf << any;
-    aclParseAclList(parser, tree, buf.str().c_str());
+    return aclParseAclList(parser, tree, buf.str().c_str());
 }
 
 /// \ingroup ACLAPI

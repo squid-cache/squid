@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #ifndef SQUID_CONFIGPARSER_H
 #define SQUID_CONFIGPARSER_H
 
+#include "acl/forward.h"
 #include "sbuf/forward.h"
 #include "SquidString.h"
 
@@ -49,6 +50,27 @@ public:
     enum TokenType {SimpleToken, QuotedToken, FunctionParameters};
 
     void destruct();
+
+    /// stops parsing the current configuration directive
+    void closeDirective();
+
+    /// rejects configuration due to a repeated directive
+    void rejectDuplicateDirective();
+
+    /// extracts and returns a required token
+    SBuf token(const char *expectedTokenDescription);
+
+    /// extracts an optional key=value token or returns false
+    /// rejects configurations with empty keys or empty values
+    /// key and value have lifetime of the current line/directive
+    bool optionalKvPair(char * &key, char * &value);
+
+    /// either extracts the given (optional) token or returns false
+    bool skipOptional(const char *keyword);
+
+    /// parses an [if [!]<acl>...] construct
+    Acl::Tree *optionalAclList();
+
     static void ParseUShort(unsigned short *var);
     static void ParseBool(bool *var);
     static const char *QuoteString(const String &var);
@@ -111,12 +133,6 @@ public:
      * error message as token.
      */
     static char *PeekAtToken();
-
-    /**
-     * The next NextToken call will return the token as next element
-     * It can be used repeatedly to add more than one tokens in a FIFO list.
-     */
-    static void TokenPutBack(const char *token);
 
     /// Set the configuration file line to parse.
     static void SetCfgLine(char *line);
@@ -183,9 +199,6 @@ protected:
         int lineNo; ///< Current line number
     };
 
-    /// Return the last TokenPutBack() queued element or NULL if none exist
-    static char *Undo();
-
     /**
      * Unquotes the token, which must be quoted.
      * \param next if it is not NULL, it is set after the end of token.
@@ -208,7 +221,6 @@ protected:
     static const char *CfgLine; ///< The current line to parse
     static const char *CfgPos; ///< Pointer to the next element in cfgLine string
     static std::queue<char *> CfgLineTokens_; ///< Store the list of tokens for current configuration line
-    static std::queue<std::string> Undo_; ///< The list with TokenPutBack() queued elements
     static bool AllowMacros_;
     static bool ParseQuotedOrToEol_; ///< The next tokens will be handled as quoted or to_eol token
     static bool RecognizeQuotedPair_; ///< The next tokens may contain quoted-pair (\-escaped) characters

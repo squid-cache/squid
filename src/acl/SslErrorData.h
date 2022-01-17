@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,14 +19,11 @@ class ACLSslErrorData : public ACLData<const Security::CertErrors *>
 
 public:
     ACLSslErrorData() = default;
-    ACLSslErrorData(ACLSslErrorData const &);
-    ACLSslErrorData &operator= (ACLSslErrorData const &);
     virtual ~ACLSslErrorData() {}
     bool match(const Security::CertErrors *);
     virtual SBufList dump() const;
     void parse();
     bool empty() const { return values.empty(); }
-    virtual  ACLSslErrorData *clone() const;
 
     Security::Errors values;
 };

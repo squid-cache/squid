@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,8 +26,8 @@ ACLDestinationIP::typeString() const
 const Acl::Options &
 ACLDestinationIP::options()
 {
-    static const Acl::BooleanOption LookupBan;
-    static const Acl::Options MyOptions = { { "-n", &LookupBan } };
+    static const Acl::BooleanOption LookupBan("-n");
+    static const Acl::Options MyOptions = { &LookupBan };
     LookupBan.linkWith(&lookupBanned);
     return MyOptions;
 }
@@ -67,7 +67,7 @@ ACLDestinationIP::match(ACLChecklist *cl)
     if (ia) {
         /* Entry in cache found */
 
-        for (const auto ip: ia->goodAndBad()) {
+        for (const auto &ip: ia->goodAndBad()) {
             if (ACLIP::match(ip))
                 return 1;
         }
@@ -106,11 +106,5 @@ DestinationIPLookup::LookupDone(const ipcache_addrs *, const Dns::LookupDetails 
     checklist->request->flags.destinationIpLookedUp = true;
     checklist->request->recordLookup(details);
     checklist->resumeNonBlockingCheck(DestinationIPLookup::Instance());
-}
-
-ACL *
-ACLDestinationIP::clone() const
-{
-    return new ACLDestinationIP(*this);
 }
 

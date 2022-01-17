@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -112,9 +112,10 @@ void Adaptation::Icap::ServiceRep::noteFailure()
     // should be configurable.
 }
 
-// returns a persistent or brand new connection; negative int on failures
+// TODO: getIdleConnection() and putConnection()/noteConnectionFailed() manage a
+// "used connection slot" resource. Automate that resource tracking (RAII/etc.).
 Comm::ConnectionPointer
-Adaptation::Icap::ServiceRep::getConnection(bool retriableXact, bool &reused)
+Adaptation::Icap::ServiceRep::getIdleConnection(const bool retriableXact)
 {
     Comm::ConnectionPointer connection;
 
@@ -137,7 +138,6 @@ Adaptation::Icap::ServiceRep::getConnection(bool retriableXact, bool &reused)
     else
         theIdleConns->closeN(1);
 
-    reused = Comm::IsConnOpen(connection);
     ++theBusyConns;
     debugs(93,3, HERE << "got connection: " << connection);
     return connection;
@@ -150,7 +150,6 @@ void Adaptation::Icap::ServiceRep::putConnection(const Comm::ConnectionPointer &
     // do not pool an idle connection if we owe connections
     if (isReusable && excessConnections() == 0) {
         debugs(93, 3, HERE << "pushing pconn" << comment);
-        commUnsetConnTimeout(conn);
         theIdleConns->push(conn);
     } else {
         debugs(93, 3, HERE << (sendReset ? "RST" : "FIN") << "-closing " <<
@@ -378,16 +377,6 @@ void Adaptation::Icap::ServiceRep::noteTimeToUpdate()
     debugs(93,5, HERE << "performs a regular options update " << status());
     startGettingOptions();
 }
-
-#if 0
-static
-void Adaptation::Icap::ServiceRep_noteTimeToNotify(void *data)
-{
-    Adaptation::Icap::ServiceRep *service = static_cast<Adaptation::Icap::ServiceRep*>(data);
-    Must(service);
-    service->noteTimeToNotify();
-}
-#endif
 
 void Adaptation::Icap::ServiceRep::noteTimeToNotify()
 {

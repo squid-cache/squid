@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,7 +21,7 @@
 
 Adaptation::Iterator::Iterator(
     Http::Message *aMsg, HttpRequest *aCause,
-    AccessLogEntry::Pointer &alp,
+    const AccessLogEntryPointer &alp,
     const ServiceGroupPointer &aGroup):
     AsyncJob("Iterator"),
     Adaptation::Initiate("Iterator"),

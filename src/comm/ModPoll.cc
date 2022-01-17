@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,7 +19,6 @@
 #include "globals.h"
 #include "ICP.h"
 #include "mgr/Registration.h"
-#include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
@@ -188,7 +187,6 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
     int npfds;
 
     struct pollfd pfds[3 + MAXTCPLISTENPORTS];
-    PROF_start(comm_check_incoming);
     incoming_sockets_accepted = 0;
 
     for (i = npfds = 0; i < nfds; ++i) {
@@ -210,18 +208,14 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
         }
     }
 
-    if (!nfds) {
-        PROF_stop(comm_check_incoming);
+    if (!nfds)
         return -1;
-    }
 
     getCurrentTime();
     ++ statCounter.syscalls.selects;
 
-    if (poll(pfds, npfds, 0) < 1) {
-        PROF_stop(comm_check_incoming);
+    if (poll(pfds, npfds, 0) < 1)
         return incoming_sockets_accepted;
-    }
 
     for (i = 0; i < npfds; ++i) {
         int revents;
@@ -246,7 +240,6 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
         }
     }
 
-    PROF_stop(comm_check_incoming);
     return incoming_sockets_accepted;
 }
 
@@ -351,8 +344,6 @@ Comm::DoSelect(int msec)
         if (commCheckTcpIncoming)
             comm_poll_tcp_incoming();
 
-        PROF_start(comm_poll_prep_pfds);
-
         calldns = calludp = calltcp = 0;
 
         nfds = 0;
@@ -383,8 +374,6 @@ Comm::DoSelect(int msec)
             }
         }
 
-        PROF_stop(comm_poll_prep_pfds);
-
         if (npending)
             msec = 0;
 
@@ -404,12 +393,10 @@ Comm::DoSelect(int msec)
         }
 
         for (;;) {
-            PROF_start(comm_poll_normal);
             ++ statCounter.syscalls.selects;
             num = poll(pfds, nfds, msec);
             int xerrno = errno;
             ++ statCounter.select_loops;
-            PROF_stop(comm_poll_normal);
 
             if (num >= 0 || npending > 0)
                 break;
@@ -437,7 +424,6 @@ Comm::DoSelect(int msec)
         /* scan each socket but the accept socket. Poll this
          * more frequently to minimize losses due to the 5 connect
          * limit in SunOS */
-        PROF_start(comm_handle_ready_fd);
 
         for (size_t loopIndex = 0; loopIndex < nfds; ++loopIndex) {
             fde *F;
@@ -474,10 +460,8 @@ Comm::DoSelect(int msec)
                 debugs(5, 6, "comm_poll: FD " << fd << " ready for reading");
 
                 if ((hdl = F->read_handler)) {
-                    PROF_start(comm_read_handler);
                     F->read_handler = NULL;
                     hdl(fd, F->read_data);
-                    PROF_stop(comm_read_handler);
                     ++ statCounter.select_fds;
 
                     if (commCheckUdpIncoming)
@@ -495,10 +479,8 @@ Comm::DoSelect(int msec)
                 debugs(5, 6, "comm_poll: FD " << fd << " ready for writing");
 
                 if ((hdl = F->write_handler)) {
-                    PROF_start(comm_write_handler);
                     F->write_handler = NULL;
                     hdl(fd, F->write_data);
-                    PROF_stop(comm_write_handler);
                     ++ statCounter.select_fds;
 
                     if (commCheckUdpIncoming)
@@ -539,8 +521,6 @@ Comm::DoSelect(int msec)
                     fd_close(fd);
             }
         }
-
-        PROF_stop(comm_handle_ready_fd);
 
         if (calludp)
             comm_poll_udp_incoming();

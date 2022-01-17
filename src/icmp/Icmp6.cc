@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -124,6 +124,8 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     struct addrinfo *S = NULL;
     size_t icmp6_pktsize = 0;
 
+    static_assert(sizeof(*icmp) + sizeof(*echo) <= sizeof(pkt), "our custom ICMPv6 Echo payload fits the packet buffer");
+
     memset(pkt, '\0', MAX_PKT6_SZ);
     icmp = (struct icmp6_hdr *)pkt;
 
@@ -146,7 +148,7 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     icmp6_pktsize = sizeof(struct icmp6_hdr);
 
     // Fill Icmp6 ECHO data content
-    echo = (icmpEchoData *) (pkt + sizeof(icmp6_hdr));
+    echo = reinterpret_cast<icmpEchoData *>(reinterpret_cast<char *>(pkt) + sizeof(*icmp));
     echo->opcode = (unsigned char) opcode;
     memcpy(&echo->tv, &current_time, sizeof(struct timeval));
 

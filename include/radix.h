@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -44,7 +44,6 @@
  *      @(#)radix.h     8.2 (Berkeley) 10/31/94
  */
 
-#undef RN_DEBUG
 /*
  * Radix search tree node layout.
  */
@@ -78,14 +77,6 @@ struct squid_radix_node {
             struct squid_radix_node *rn_R;  /* progeny */
         } rn_node;
     } rn_u;
-#ifdef RN_DEBUG
-
-    int rn_info;
-
-    struct squid_radix_node *rn_twin;
-
-    struct squid_radix_node *rn_ybro;
-#endif
 };
 
 #define rn_key rn_u.rn_leaf.rn_Key

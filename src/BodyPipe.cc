@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -335,6 +335,7 @@ BodyPipe::startAutoConsumptionIfNeeded()
         return;
 
     theConsumer = new BodySink(this);
+    AsyncJob::Start(theConsumer);
     debugs(91,7, HERE << "starting auto consumption" << status());
     scheduleBodyDataNotification();
 }

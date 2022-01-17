@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -98,7 +98,7 @@ heap_add(RemovalPolicy * policy, StoreEntry * entry, RemovalPolicyNode * node)
 }
 
 static void
-heap_remove(RemovalPolicy * policy, StoreEntry * entry,
+heap_remove(RemovalPolicy * policy, StoreEntry *,
             RemovalPolicyNode * node)
 {
     HeapPolicyData *h = (HeapPolicyData *)policy->_data;

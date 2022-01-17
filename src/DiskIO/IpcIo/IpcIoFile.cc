@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -64,7 +64,7 @@ struct SipcIo {
     int disker;
 };
 
-std::ostream &
+static std::ostream &
 operator <<(std::ostream &os, const SipcIo &sio)
 {
     return os << "ipcIo" << sio.worker << '.' << sio.msg.requestId <<
@@ -615,7 +615,7 @@ IpcIoFile::scheduleTimeoutCheck()
     CallService(nullptr, [&] {
         // we check all older requests at once so some may be wait for 2*Timeout
         eventAdd("IpcIoFile::CheckTimeouts", &IpcIoFile::CheckTimeouts,
-        reinterpret_cast<void *>(diskId), Timeout, 0, false);
+                 reinterpret_cast<void *>(diskId), Timeout, 0, false);
         timeoutCheckScheduled = true;
     });
 }

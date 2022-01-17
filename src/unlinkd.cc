@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,6 +21,7 @@
 #include "StatCounters.h"
 #include "store/Disk.h"
 #include "tools.h"
+#include "unlinkd.h"
 #include "xusleep.h"
 
 /* This code gets linked to Squid */

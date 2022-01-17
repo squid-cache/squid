@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,14 +18,11 @@ class ACLTimeData : public ACLData<time_t>
 
 public:
     ACLTimeData();
-    ACLTimeData(ACLTimeData const &);
-    ACLTimeData&operator=(ACLTimeData const &);
     virtual ~ACLTimeData();
     bool match(time_t);
     virtual SBufList dump() const;
     void parse();
     bool empty() const;
-    virtual ACLData<time_t> *clone() const;
 
 private:
     int weekbits;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -109,7 +109,7 @@ private:
     bool alwaysAllowResponse(Http::StatusCode sline) const;
     int checkTransferDone();
     void processOnlyIfCachedMiss();
-    bool processConditional(StoreIOBuffer &result);
+    bool processConditional();
     void cacheHit(StoreIOBuffer result);
     void handleIMSReply(StoreIOBuffer result);
     void sendMoreData(StoreIOBuffer result);
@@ -152,6 +152,9 @@ private:
 
     CollapsedRevalidation collapsedRevalidation;
 };
+
+// TODO: move to SideAgent parent, when we have one
+void purgeEntriesByUrl(HttpRequest *, const char *);
 
 #endif /* SQUID_CLIENTSIDEREPLY_H */
 

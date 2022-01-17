@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,20 +17,9 @@
 
 #include <random>
 
-ACL *
-ACLRandom::clone() const
-{
-    return new ACLRandom(*this);
-}
-
 ACLRandom::ACLRandom(char const *theClass) : data(0.0), class_(theClass)
 {
     memset(pattern, 0, sizeof(pattern));
-}
-
-ACLRandom::ACLRandom(ACLRandom const & old) : data(old.data), class_(old.class_)
-{
-    memcpy(pattern, old.pattern, sizeof(pattern));
 }
 
 ACLRandom::~ACLRandom()

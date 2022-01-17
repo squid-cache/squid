@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,8 +16,8 @@
 #define PINGER_PAYLOAD_SZ   8192
 
 #define MAX_PAYLOAD 256 // WAS: SQUIDHOSTNAMELEN
-#define MAX_PKT4_SZ (MAX_PAYLOAD + sizeof(struct timeval) + sizeof (char) + sizeof(struct icmphdr) + 1)
-#define MAX_PKT6_SZ (MAX_PAYLOAD + sizeof(struct timeval) + sizeof (char) + sizeof(struct icmp6_hdr) + 1)
+#define MAX_PKT4_SZ (sizeof(struct icmphdr) + sizeof(struct icmpEchoData) + 1)
+#define MAX_PKT6_SZ (sizeof(struct icmp6_hdr) + sizeof(struct icmpEchoData) + 1)
 
 #if USE_ICMP
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -175,7 +175,10 @@ StoreEntry::swapOut()
     Store::Root().memoryOut(*this, weAreOrMayBeSwappingOut);
 
     if (mem_obj->swapout.decision < MemObject::SwapOut::swPossible)
-        return; // nothing else to do
+        return; // decided not to write to disk (at least for now)
+
+    if (!weAreOrMayBeSwappingOut)
+        return; // finished writing to disk after an earlier swStarted decision
 
     // Aborted entries have STORE_OK, but swapoutPossible rejects them. Thus,
     // store_status == STORE_OK below means we got everything we wanted.

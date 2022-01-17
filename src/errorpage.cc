@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -225,7 +225,8 @@ protected:
 };
 
 /// \ingroup ErrorPageInternal
-err_type &operator++ (err_type &anErr)
+static err_type &
+operator++ (err_type &anErr)
 {
     int tmp = (int)anErr;
     anErr = (err_type)(++tmp);
@@ -233,7 +234,8 @@ err_type &operator++ (err_type &anErr)
 }
 
 /// \ingroup ErrorPageInternal
-int operator - (err_type const &anErr, err_type const &anErr2)
+static int
+operator -(err_type const &anErr, err_type const &anErr2)
 {
     return (int)anErr - (int)anErr2;
 }
@@ -550,6 +552,8 @@ TemplateFile::loadFor(const HttpRequest *request)
             debugs(4, DBG_IMPORTANT, "WARNING: Error Pages Missing Language: " << lang);
         }
     }
+#else
+    (void)request;
 #endif
 
     return loaded();
@@ -717,9 +721,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
 {
     assert(entry->mem_obj != NULL);
     assert (entry->isEmpty());
-    debugs(4, 4, "Creating an error page for entry " << entry <<
-           " with errorstate " << err <<
-           " page id " << err->page_id);
+    debugs(4, 4, "storing " << err << " in " << *entry);
 
     if (entry->store_status != STORE_PENDING) {
         debugs(4, 2, "Skipping error page due to store_status: " << entry->store_status);
@@ -1078,6 +1080,7 @@ ErrorState::compileLegacyCode(Build &build)
     case 'O':
         if (!building_deny_info_url)
             do_quote = 0;
+    /* [[fallthrough]] */
     case 'o':
         p = request ? request->extacl_message.termedBuf() : external_acl_message;
         if (!p && !building_deny_info_url)
@@ -1388,7 +1391,7 @@ ErrorState::buildBody()
     if (!Config.errorDirectory)
         err_language = Config.errorDefaultLanguage;
 #endif
-    debugs(4, 2, "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
+    debugs(4, 2, "No existing error page language negotiated for " << this << ". Using default error file.");
     return compileBody(error_text[page_id], true);
 }
 
@@ -1521,5 +1524,15 @@ ErrorPage::ValidateStaticError(const int page_id, const SBuf &inputLocation)
     ErrorState anErr(err_type(page_id), Http::scNone, nullptr, nullptr);
     anErr.inputLocation = inputLocation;
     anErr.validate();
+}
+
+std::ostream &
+operator <<(std::ostream &os, const ErrorState *err)
+{
+    if (err)
+        os << errorPageName(err->page_id);
+    else
+        os << "[none]";
+    return os;
 }
 

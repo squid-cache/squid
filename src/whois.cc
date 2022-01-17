@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,6 +20,7 @@
 #include "StatCounters.h"
 #include "Store.h"
 #include "tools.h"
+#include "whois.h"
 
 #include <cerrno>
 
@@ -118,6 +119,16 @@ WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t
     debugs(75, 3, HERE << conn << " read " << aBufferLength << " bytes");
     debugs(75, 5, "{" << aBuffer << "}");
 
+    // TODO: Honor delay pools.
+
+    // XXX: Update statCounter before bailing
+    if (!entry->isAccepting()) {
+        debugs(52, 3, "terminating due to bad " << *entry);
+        // TODO: Do not abuse connection for triggering cleanup.
+        conn->close();
+        return;
+    }
+
     if (flag != Comm::OK) {
         debugs(50, 2, conn << ": read failure: " << xstrerr(xerrno));
 
@@ -159,6 +170,9 @@ WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t
     if (!entry->makePublic())
         entry->makePrivate(true);
 
+    if (dataWritten) // treat zero-length responses as incomplete
+        fwd->markStoredReplyAsWhole("whois received/stored the entire response");
+
     fwd->complete();
     debugs(75, 3, "whoisReadReply: Done: " << entry->url());
     conn->close();
@@ -169,6 +183,7 @@ whoisClose(const CommCloseCbParams &params)
 {
     WhoisState *p = (WhoisState *)params.data;
     debugs(75, 3, "whoisClose: FD " << params.fd);
+    // We do not own a Connection. Assume that FwdState is also monitoring.
     p->entry->unlock("whoisClose");
     delete p;
 }

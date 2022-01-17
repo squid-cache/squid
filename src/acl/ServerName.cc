@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -48,14 +48,6 @@ ACLServerNameData::match(const char *host)
 
     return (result != NULL);
 
-}
-
-ACLData<char const *> *
-ACLServerNameData::clone() const
-{
-    /* Splay trees don't clone yet. */
-    assert (!domains);
-    return new ACLServerNameData;
 }
 
 /// A helper function to be used with Ssl::matchX509CommonNames().
@@ -127,15 +119,10 @@ ACLServerNameStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *ch
 const Acl::Options &
 ACLServerNameStrategy::options()
 {
-    static const Acl::BooleanOption ClientRequested;
-    static const Acl::BooleanOption ServerProvided;
-    static const Acl::BooleanOption Consensus;
-    static const Acl::Options MyOptions = {
-        {"--client-requested", &ClientRequested},
-        {"--server-provided", &ServerProvided},
-        {"--consensus", &Consensus}
-    };
-
+    static const Acl::BooleanOption ClientRequested("--client-requested");
+    static const Acl::BooleanOption ServerProvided("--server-provided");
+    static const Acl::BooleanOption Consensus("--consensus");
+    static const Acl::Options MyOptions = { &ClientRequested, &ServerProvided, &Consensus };
     ClientRequested.linkWith(&useClientRequested);
     ServerProvided.linkWith(&useServerProvided);
     Consensus.linkWith(&useConsensus);

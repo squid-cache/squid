@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,29 +31,16 @@ ACLProxyAuth::ACLProxyAuth(ACLData<char const *> *newData, char const *theType) 
     type_(theType)
 {}
 
-ACLProxyAuth::ACLProxyAuth(ACLProxyAuth const &old) :
-    data(old.data->clone()),
-    type_(old.type_)
-{}
-
-ACLProxyAuth &
-ACLProxyAuth::operator=(ACLProxyAuth const &rhs)
-{
-    data = rhs.data->clone();
-    type_ = rhs.type_;
-    return *this;
-}
-
 char const *
 ACLProxyAuth::typeString() const
 {
     return type_;
 }
 
-void
-ACLProxyAuth::parseFlags()
+const Acl::Options &
+ACLProxyAuth::lineOptions()
 {
-    ParseFlags(Acl::NoOptions(), data->supportedFlags());
+    return data->lineOptions();
 }
 
 void
@@ -153,12 +140,6 @@ ProxyAuthLookup::LookupDone(void *data)
     }
 
     checklist->resumeNonBlockingCheck(ProxyAuthLookup::Instance());
-}
-
-ACL *
-ACLProxyAuth::clone() const
-{
-    return new ACLProxyAuth(*this);
 }
 
 int

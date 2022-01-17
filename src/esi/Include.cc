@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -135,21 +135,9 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
         return;
     }
 
-    /* after the write to the user occurs, (ie here, or in a callback)
-     * we call */
-    if (clientHttpRequestStatus(-1, http)) {
-        /* TODO: Does thisNode if block leak htto ? */
-        /* XXX when reviewing ESI this is the first place to look */
-        node->data = NULL;
-        esiStream->finished = 1;
-        esiStream->include->includeFail (esiStream);
-        return;
-    };
-
     switch (clientStreamStatus (node, http)) {
 
-    case STREAM_UNPLANNED_COMPLETE: /* fallthru ok */
-
+    case STREAM_UNPLANNED_COMPLETE:
     case STREAM_COMPLETE: /* ok */
         debugs(86, 3, "ESI subrequest finished OK");
         esiStream->include->subRequestDone (esiStream, true);
@@ -412,7 +400,7 @@ ESIInclude::render(ESISegment::Pointer output)
 }
 
 esiProcessResult_t
-ESIInclude::process (int dovars)
+ESIInclude::process(int)
 {
     /* Prevent refcount race leading to free */
     Pointer me (this);

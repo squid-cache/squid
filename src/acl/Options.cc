@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,6 +13,7 @@
 #include "sbuf/Stream.h"
 
 #include <iostream>
+#include <utility>
 #include <vector>
 
 namespace Acl {
@@ -46,31 +47,28 @@ private:
 class OptionsParser
 {
 public:
-    OptionsParser(const Options &options, const ParameterFlags &flags);
+    explicit OptionsParser(const Options &options);
 
     // fill previously supplied options container, throwing on errors
     void parse();
 
 private:
-    const Option *findOption(/* const */ SBuf &rawName);
-
-    /// ACL parameter flags in parsing order
-    typedef std::vector<OptionName> Names;
-    /// parsed ACL parameter flags that must be preserved for ACLData::parse()
-    static Names flagsToSkip;
+    using SupportedOption = std::pair<const Option *, bool /* enable */ >;
+    SupportedOption supportedOption(const SBuf &name) const;
 
     const Options &options_; ///< caller-supported, linked options
-    const ParameterFlags &parameterFlags_; ///< caller-supported parameter flags
 };
 
 } // namespace Acl
 
-/* Acl::OptionNameCmp */
+/* Acl::Option */
 
-bool
-Acl::OptionNameCmp::operator()(const OptionName a, const OptionName b) const
+Acl::Option::Option(const char * const nameThatEnables, const char * const nameThatDisables, const ValueExpectation vex):
+    onName(nameThatEnables),
+    offName(nameThatDisables),
+    valueExpectation(vex)
 {
-    return strcmp(a, b) < 0;
+    assert(onName);
 }
 
 /* Acl::OptionExtractor */
@@ -168,78 +166,67 @@ Acl::OptionExtractor::extractShort()
 
 /* Acl::OptionsParser */
 
-// being "static" is an optimization to avoid paying for vector creation/growth
-Acl::OptionsParser::Names Acl::OptionsParser::flagsToSkip;
-
-Acl::OptionsParser::OptionsParser(const Options &options, const ParameterFlags &flags):
-    options_(options),
-    parameterFlags_(flags)
+Acl::OptionsParser::OptionsParser(const Options &options):
+    options_(options)
 {
 }
 
-const Acl::Option *
-Acl::OptionsParser::findOption(/* const */ SBuf &rawNameBuf)
+/// \returns named supported option paired with a name-based enable/disable flag
+Acl::OptionsParser::SupportedOption
+Acl::OptionsParser::supportedOption(const SBuf &name) const
 {
-    // TODO: new std::map::find() in C++14 does not require this conversion
-    const auto rawName = rawNameBuf.c_str();
-
-    const auto optionPos = options_.find(rawName);
-    if (optionPos != options_.end())
-        return optionPos->second;
-
-    const auto flagPos = parameterFlags_.find(rawName);
-    if (flagPos != parameterFlags_.end()) {
-        flagsToSkip.push_back(*flagPos); // *flagPos is permanent unlike rawName
-        return nullptr;
+    for (const auto option: options_) {
+        if (name.cmp(option->onName) == 0)
+            return SupportedOption(option, true);
+        if (option->offName && name.cmp(option->offName) == 0)
+            return SupportedOption(option, false);
     }
 
-    throw TexcHere(ToSBuf("unsupported ACL option: ", rawNameBuf));
+    throw TexcHere(ToSBuf("unsupported ACL option: ", name));
 }
 
 void
 Acl::OptionsParser::parse()
 {
-    flagsToSkip.clear();
-
     OptionExtractor oex;
     while (oex.extractOne()) {
-        /* const */ auto rawName = oex.name;
-        if (const Option *optionPtr = findOption(rawName)) {
-            const Option &option = *optionPtr;
+        const auto explicitOption = supportedOption(oex.name);
+        const auto &option = *explicitOption.first;
+        if (explicitOption.second) {
+            /* configuration enables this option */
             if (option.configured())
-                debugs(28, 7, "acl uses multiple " << rawName << " options");
+                debugs(28, 7, "acl uses multiple " << oex.name << " options");
             switch (option.valueExpectation)
             {
             case Option::valueNone:
                 if (oex.hasValue)
-                    throw TexcHere(ToSBuf("unexpected value for an ACL option: ", rawName, '=', oex.value()));
-                option.configureDefault();
+                    throw TexcHere(ToSBuf("unexpected value for an ACL option: ", oex.name, '=', oex.value()));
+                option.enable();
                 break;
             case Option::valueRequired:
                 if (!oex.hasValue)
-                    throw TexcHere(ToSBuf("missing required value for ACL option ", rawName));
+                    throw TexcHere(ToSBuf("missing required value for ACL option ", oex.name));
                 option.configureWith(oex.value());
                 break;
             case Option::valueOptional:
                 if (oex.hasValue)
                     option.configureWith(oex.value());
                 else
-                    option.configureDefault();
+                    option.enable();
                 break;
             }
+        } else {
+            if (oex.hasValue)
+                throw TexcHere(ToSBuf("unexpected value when disabling an ACL option: ", oex.name, '=', oex.value()));
+            option.disable();
         }
-        // else skip supported parameter flag
     }
-
-    /* hack: regex code wants to parse all -i and +i flags itself */
-    for (const auto name: flagsToSkip)
-        ConfigParser::TokenPutBack(name);
 }
 
 void
-Acl::ParseFlags(const Options &options, const ParameterFlags &flags)
+Acl::ParseFlags(const Options &options)
 {
-    OptionsParser parser(options, flags);
+    OptionsParser parser(options);
     parser.parse();
 }
 
@@ -250,32 +237,26 @@ Acl::NoOptions()
     return none;
 }
 
-const Acl::ParameterFlags &
-Acl::NoFlags()
+const Acl::BooleanOption &
+Acl::CaseSensitivityOption()
 {
-    static const ParameterFlags none;
-    return none;
+    static const BooleanOption MyOption("-i", "+i");
+    return MyOption;
 }
 
 std::ostream &
 operator <<(std::ostream &os, const Acl::Option &option)
 {
-    if (option.valued()) {
-        os << '=';
-        option.print(os);
-    }
+    option.print(os);
     return os;
 }
 
 std::ostream &
 operator <<(std::ostream &os, const Acl::Options &options)
 {
-    for (const auto pos: options) {
-        assert(pos.second);
-        const auto &option = *pos.second;
-        if (option.configured())
-            os << pos.first << option;
-    }
+    for (const auto option: options)
+        os << *option;
+
     // TODO: Remember "--" presence and print that delimiter when present.
     // Detecting its need is difficult because parameter flags start with "-".
     return os;

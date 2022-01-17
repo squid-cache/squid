@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -469,7 +469,7 @@ sortPeerByRtt(const void *A, const void *B)
 }
 
 static void
-netdbSaveState(void *foo)
+netdbSaveState(void *)
 {
     if (strcmp(Config.netdbFilename, "none") == 0)
         return;
@@ -916,7 +916,8 @@ netdbPingSite(const char *hostname)
 
     ipcache_nbgethostbyname(hostname, netdbSendPing,
                             new generic_cbdata(xstrdup(hostname)));
-
+#else
+    (void)hostname;
 #endif
 }
 
@@ -946,7 +947,10 @@ netdbHandlePingReply(const Ip::Address &from, int hops, int rtt)
     debugs(38, 3, "netdbHandlePingReply: " << n->network  << "; rtt="<<
            std::setw(5)<< std::setprecision(2) << n->rtt << "  hops="<<
            std::setw(4) << n->hops);
-
+#else
+    (void)from;
+    (void)hops;
+    (void)rtt;
 #endif
 }
 
@@ -1042,7 +1046,8 @@ netdbHostHops(const char *host)
         n->last_use_time = squid_curtime;
         return (int) (n->hops + 0.5);
     }
-
+#else
+    (void)host;
 #endif
     return 0;
 }
@@ -1058,6 +1063,8 @@ netdbHostRtt(const char *host)
         return (int) (n->rtt + 0.5);
     }
 
+#else
+    (void)host;
 #endif
     return 0;
 }
@@ -1079,6 +1086,11 @@ netdbHostData(const char *host, int *samp, int *rtt, int *hops)
 
     n->last_use_time = squid_curtime;
 
+#else
+    (void)hops;
+    (void)rtt;
+    (void)samp;
+    (void)host;
 #endif
 }
 
@@ -1115,6 +1127,11 @@ netdbUpdatePeer(const AnyP::Uri &url, CachePeer *e, int irtt, int ihops)
           sizeof(net_db_peer),
           sortPeerByRtt);
 
+#else
+    (void)ihops;
+    (void)irtt;
+    (void)e;
+    (void)url;
 #endif
 }
 
@@ -1157,6 +1174,11 @@ netdbExchangeUpdatePeer(Ip::Address &addr, CachePeer * e, double rtt, double hop
           sizeof(net_db_peer),
           sortPeerByRtt);
 
+#else
+    (void)hops;
+    (void)rtt;
+    (void)e;
+    (void)addr;
 #endif
 }
 
@@ -1172,6 +1194,8 @@ netdbDeleteAddrNetwork(Ip::Address &addr)
     debugs(38, 3, "netdbDeleteAddrNetwork: " << n->network);
 
     netdbRelease(n);
+#else
+    (void)addr;
 #endif
 }
 
@@ -1300,6 +1324,8 @@ netdbExchangeStart(void *data)
         ex->r->url.userInfo(SBuf(p->login));
 
     FwdState::fwdStart(Comm::ConnectionPointer(), ex->e, ex->r.getRaw());
+#else
+    (void)data;
 #endif
 }
 
@@ -1359,6 +1385,8 @@ netdbClosestParent(PeerSelector *ps)
         return p;
     }
 
+#else
+    (void)ps;
 #endif
     return NULL;
 }

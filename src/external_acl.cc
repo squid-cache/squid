@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1115,7 +1115,7 @@ externalAclInit(void)
             p->cache = hash_create((HASHCMP *) strcmp, hashPrime(1024), hash4);
 
         if (!p->theHelper)
-            p->theHelper = new helper(p->name);
+            p->theHelper = new helper("external_acl_type");
 
         p->theHelper->cmdline = p->cmdline;
 
@@ -1169,20 +1169,8 @@ ExternalACLLookup::LookupDone(void *data, const ExternalACLEntryPointer &result)
     checklist->resumeNonBlockingCheck(ExternalACLLookup::Instance());
 }
 
-ACL *
-ACLExternal::clone() const
-{
-    return new ACLExternal(*this);
-}
-
 ACLExternal::ACLExternal(char const *theClass) : data(NULL), class_(xstrdup(theClass))
 {}
-
-ACLExternal::ACLExternal(ACLExternal const & old) : data(NULL), class_(old.class_ ? xstrdup(old.class_) : NULL)
-{
-    /* we don't have copy constructors for the data yet */
-    assert(!old.data);
-}
 
 char const *
 ACLExternal::typeString() const

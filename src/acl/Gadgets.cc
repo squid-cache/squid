@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,6 +23,7 @@
 #include "acl/Gadgets.h"
 #include "acl/Strategised.h"
 #include "acl/Tree.h"
+#include "cache_cf.h"
 #include "ConfigParser.h"
 #include "errorpage.h"
 #include "globals.h"
@@ -186,7 +187,7 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **treep)
 }
 
 // aclParseAclList does not expect or set actions (cf. aclParseAccessLine)
-void
+size_t
 aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
 {
     // accommodate callers unable to convert their ACL list context to string
@@ -200,7 +201,7 @@ aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
 
     Acl::AndNode *rule = new Acl::AndNode;
     rule->context(ctxLine.content(), config_input_line);
-    rule->lineParse();
+    const auto aclCount = rule->lineParse();
 
     MemBuf ctxTree;
     ctxTree.init();
@@ -215,6 +216,8 @@ aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
     assert(treep);
     assert(!*treep);
     *treep = tree;
+
+    return aclCount;
 }
 
 void

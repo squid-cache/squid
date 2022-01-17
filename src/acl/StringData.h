@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,8 +21,6 @@ class ACLStringData : public ACLData<char const *>
 
 public:
     ACLStringData() {}
-    ACLStringData(ACLStringData const &);
-    ACLStringData &operator= (ACLStringData const &);
     virtual ~ACLStringData() {}
     /// \deprecated use match(SBuf&) instead.
     bool match(char const *);
@@ -30,7 +28,7 @@ public:
     virtual SBufList dump() const;
     virtual void parse();
     bool empty() const;
-    virtual ACLData<char const *> *clone() const;
+
     /// Insert a string data value
     void insert(const char *);
 

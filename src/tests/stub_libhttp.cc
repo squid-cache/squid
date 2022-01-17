@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -61,7 +61,6 @@ const SBuf MethodType_sb[1] = {SBuf()};
 #include "http/RegisteredHeaders.h"
 namespace Http
 {
-HeaderTableRecord::HeaderTableRecord() {STUB_NOP}
 HeaderTableRecord::HeaderTableRecord(const char *) {STUB_NOP}
 HeaderTableRecord::HeaderTableRecord(const char *, Http::HdrType, Http::HdrFieldType, int) {STUB}
 HeaderLookupTable_t::HeaderLookupTable_t() {STUB_NOP}

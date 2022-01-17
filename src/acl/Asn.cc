@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -570,15 +570,6 @@ ACLASN::parse()
     }
 }
 
-ACLData<Ip::Address> *
-ACLASN::clone() const
-{
-    if (data)
-        fatal ("cloning of ACLASN not implemented");
-
-    return new ACLASN(*this);
-}
-
 /* explicit template instantiation required for some systems */
 
 template class ACLStrategised<Ip::Address>;
@@ -595,7 +586,7 @@ ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist
     const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->url.host(), IP_LOOKUP_IF_MISS);
 
     if (ia) {
-        for (const auto ip: ia->goodAndBad()) {
+        for (const auto &ip: ia->goodAndBad()) {
             if (data->match(ip))
                 return 1;
         }
