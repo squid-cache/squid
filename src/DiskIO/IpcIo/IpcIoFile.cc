@@ -533,9 +533,8 @@ IpcIoFile::HandleNotification(const Ipc::TypedMsgHdr &msg)
         HandleResponses("after notification");
 }
 
-/// Handle incoming messages in IPC queue without relying on the queue state
-/// being in sync with our state (because the queue may be reflecting the state
-/// of our killed predecessor).
+/// Handle queued IPC messages for the first time in this process lifetime, when
+/// the queue may be reflecting the state of our killed predecessor.
 /// \sa CollapsedForwarding::HandleNewDataAtStart()
 void
 IpcIoFile::HandleMessagesAtStart()
