@@ -153,10 +153,10 @@ CollapsedForwarding::HandleNotification(const Ipc::TypedMsgHdr &msg)
 
 /// Handle queued IPC messages for the first time in this process lifetime, when
 /// the queue may be reflecting the state of our killed predecessor.
-/// \sa IpcIoFile::HandleMessagesAtStart()
 void
 CollapsedForwarding::HandleNewDataAtStart()
 {
+    /// \sa IpcIoFile::HandleMessagesAtStart() -- duplicates this logic
     queue->clearAllReaderSignals();
     HandleNewData("at start");
 }

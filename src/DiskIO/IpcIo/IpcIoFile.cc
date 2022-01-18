@@ -533,12 +533,11 @@ IpcIoFile::HandleNotification(const Ipc::TypedMsgHdr &msg)
         HandleResponses("after notification");
 }
 
-/// Handle queued IPC messages for the first time in this process lifetime, when
-/// the queue may be reflecting the state of our killed predecessor.
-/// \sa CollapsedForwarding::HandleNewDataAtStart()
+/// \copydoc CollapsedForwarding::HandleNewDataAtStart()
 void
 IpcIoFile::HandleMessagesAtStart()
 {
+    /// \sa CollapsedForwarding::HandleNewDataAtStart() -- duplicates this logic
     queue->clearAllReaderSignals();
     if (IamDiskProcess())
         DiskerHandleRequests();
