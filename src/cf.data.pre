@@ -2315,7 +2315,7 @@ DOC_START
 			If this certificate is constrained by KeyUsage TLS
 			feature it must allow HTTP server usage, along with
 			any additional restrictions imposed by your choice
-			of options= settings.
+			of tls-options= settings.
 
 			When OpenSSL is used this file may also contain a
 			chain of intermediate CA certificates to send in the
@@ -2343,39 +2343,14 @@ DOC_START
 			      omitted the ciphers may be silently ignored
 			      by the OpenSSL library.
 
-	   options=	Various SSL implementation options. The most important
-			being:
+	   tls-options=	Library specific options.
 
-			    NO_SSLv3    Disallow the use of SSLv3
+			For OpenSSL these are SSL OP flags (without the "SSL_OP_" prefix).
+			Options relevant only to SSLv2 are not supported.
+			see https://wiki.openssl.org/index.php/List_of_SSL_OP_Flags
 
-			    NO_TLSv1    Disallow the use of TLSv1.0
-
-			    NO_TLSv1_1  Disallow the use of TLSv1.1
-
-			    NO_TLSv1_2  Disallow the use of TLSv1.2
-
-			    SINGLE_DH_USE
-				      Always create a new key when using
-				      temporary/ephemeral DH key exchanges
-
-			    SINGLE_ECDH_USE
-				      Enable ephemeral ECDH key exchange.
-				      The adopted curve should be specified
-				      using the tls-dh option.
-
-			    NO_TICKET
-				      Disable use of RFC5077 session tickets.
-				      Some servers may have problems
-				      understanding the TLS extension due
-				      to ambiguous specification in RFC4507.
-
-			    ALL       Enable various bug workarounds
-				      suggested as "harmless" by OpenSSL
-				      Be warned that this reduces SSL/TLS
-				      strength to some attacks.
-
-			See the OpenSSL SSL_CTX_set_options documentation for a
-			more complete list.
+			For GnuTLS these are a list of priority strings.
+			see https://www.gnutls.org/manual/gnutls.html#Priority-Strings
 
 	   clientca=	File containing the list of CAs to use when
 			requesting a client certificate.
@@ -2969,15 +2944,21 @@ DOC_START
 			To control SSLv3 use the options= parameter.
 			Supported Values: 1.0 (default), 1.1, 1.2, 1.3
 
-	options=...	Specify various TLS/SSL implementation options.
+	options=	Library specific options.
 
-			OpenSSL options most important are:
+			For OpenSSL these are SSL OP flags.
+			The most important being:
 
 			    NO_SSLv3    Disallow the use of SSLv3
 
 			    SINGLE_DH_USE
 				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
+
+			    SINGLE_ECDH_USE
+				      Enable ephemeral ECDH key exchange.
+				      The adopted curve should be specified
+				      using the tls-dh option.
 
 			    NO_TICKET
 				      Disable use of RFC5077 session tickets.
@@ -2990,21 +2971,21 @@ DOC_START
 				      Be warned that this reduces SSL/TLS
 				      strength to some attacks.
 
-				See the OpenSSL SSL_CTX_set_options documentation
-				for a more complete list.
+			see https://wiki.openssl.org/index.php/List_of_SSL_OP_Flags
+			for a more complete list. Options relevant only to SSLv2 are
+			not supported.
 
-			GnuTLS options most important are:
+			For GnuTLS these are a list of priority strings.
+			The most important being:
 
-			    %NO_TICKETS
+				%NO_TICKETS
 				      Disable use of RFC5077 session tickets.
 				      Some servers may have problems
 				      understanding the TLS extension due
 				      to ambiguous specification in RFC4507.
 
-				See the GnuTLS Priority Strings documentation
-				for a more complete list.
-				http://www.gnutls.org/manual/gnutls.html#Priority-Strings
-
+			see https://www.gnutls.org/manual/gnutls.html#Priority-Strings
+			for a more complete list and documentation.
 	
 	cafile=		PEM file containing CA certificates to use when verifying
 			the peer certificate. May be repeated to load multiple files.
@@ -3779,41 +3760,14 @@ DOC_START
 			SSLv3 use the tls-options= parameter.
 			Supported Values: 1.0 (default), 1.1, 1.2
 
-	tls-options=...	Specify various TLS implementation options.
+	tls-options=	Library specific options.
 
-			OpenSSL options most important are:
+			For OpenSSL these are SSL OP flags (without the "SSL_OP_" prefix).
+			Options relevant only to SSLv2 are not supported.
+			see https://wiki.openssl.org/index.php/List_of_SSL_OP_Flags
 
-			    NO_SSLv3    Disallow the use of SSLv3
-
-			    SINGLE_DH_USE
-				      Always create a new key when using
-				      temporary/ephemeral DH key exchanges
-
-			    NO_TICKET
-				      Disable use of RFC5077 session tickets.
-				      Some servers may have problems
-				      understanding the TLS extension due
-				      to ambiguous specification in RFC4507.
-
-			    ALL       Enable various bug workarounds
-				      suggested as "harmless" by OpenSSL
-				      Be warned that this reduces SSL/TLS
-				      strength to some attacks.
-
-			See the OpenSSL SSL_CTX_set_options documentation for a
-			more complete list.
-
-			GnuTLS options most important are:
-
-			    %NO_TICKETS
-				      Disable use of RFC5077 session tickets.
-				      Some servers may have problems
-				      understanding the TLS extension due
-				      to ambiguous specification in RFC4507.
-
-				See the GnuTLS Priority Strings documentation
-				for a more complete list.
-				http://www.gnutls.org/manual/gnutls.html#Priority-Strings
+			For GnuTLS these are a list of priority strings.
+			see https://www.gnutls.org/manual/gnutls.html#Priority-Strings
 
 	tls-cafile=	PEM file containing CA certificates to use when verifying
 			the peer certificate. May be repeated to load multiple files.
@@ -9569,22 +9523,14 @@ DOC_START
 			SSLv3 use the tls-options= parameter.
 			Supported Values: 1.0 (default), 1.1, 1.2
 
-	tls-options=...	Specify various OpenSSL library options:
+	tls-options=	Library specific options.
 
-			    NO_SSLv3    Disallow the use of SSLv3
+			For OpenSSL these are SSL OP flags (without the "SSL_OP_" prefix).
+			Options relevant only to SSLv2 are not supported.
+			see https://wiki.openssl.org/index.php/List_of_SSL_OP_Flags
 
-			    SINGLE_DH_USE
-				      Always create a new key when using
-				      temporary/ephemeral DH key exchanges
-
-			    ALL       Enable various bug workarounds
-				      suggested as "harmless" by OpenSSL
-				      Be warned that this reduces SSL/TLS
-				      strength to some attacks.
-
-			See the OpenSSL SSL_CTX_set_options documentation for a
-			more complete list. Options relevant only to SSLv2 are
-			not supported.
+			For GnuTLS these are a list of priority strings.
+			see https://www.gnutls.org/manual/gnutls.html#Priority-Strings
 
 	tls-cafile=	PEM file containing CA certificates to use when verifying
 			the icap server certificate.

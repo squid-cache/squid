@@ -3728,7 +3728,7 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
         s->secure.parse(token);
     } else if (strncmp(token, "version=", 8) == 0) {
         debugs(3, DBG_PARSE_NOTE(1), "UPGRADE WARNING: '" << token << "' is deprecated " <<
-               "in " << cfg_directive << ". Use 'options=' instead.");
+               "in " << cfg_directive << ". Use 'tls-options=' instead.");
         s->secure.parse(token);
     } else if (strncmp(token, "options=", 8) == 0) {
         s->secure.parse(token);
