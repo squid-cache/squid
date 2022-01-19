@@ -229,7 +229,8 @@ protected:
     static enum ParsingStates {atParseKey, atParseValue} KvPairState_; ///< Parsing state while parsing kv-pair tokens
 };
 
-int parseConfigFile(const char *file_name);
+/// Parse squid.conf or '-f file_name' configuration
+void parseConfigFile(const char *file_name);
 
 #endif /* SQUID_CONFIGPARSER_H */
 
