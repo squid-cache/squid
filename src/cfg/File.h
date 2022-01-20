@@ -44,7 +44,11 @@ public:
 private:
     std::string filePath; ///< The file path
     FILE *fd = nullptr; ///< Pointer to the file.
-    SBufList fileData; ///< bytes read from this file in advance of parsing
+
+    /// Random-size blocks of raw configuration bytes, in read(2) order.
+    /// We do not concatenate these blocks to avoid overflowing SBuf.
+    SBufList fileData;
+
     int lineNo = 0; ///< Current line number being parsed
 
     /// Whether this is a FIFO pipe instead of a file.
