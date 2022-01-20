@@ -42,8 +42,8 @@ public:
     void load();
 
 private:
-    std::string filePath; ///< The file path
-    FILE *fd = nullptr; ///< Pointer to the file.
+    std::string filePath;
+    FILE *fd = nullptr;
 
     /// Random-size blocks of raw file bytes, in fread(2) order.
     /// We do not concatenate these blocks to avoid overflowing SBuf.
