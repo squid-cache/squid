@@ -41,9 +41,6 @@ Cfg::File::load()
         throw TextException(ToSBuf("configuration file ", filePath, " error: ", xstrerr(xerrno)), lineInfo());
     }
 
-    if (S_ISFIFO(data.st_mode))
-        isPipe = true;
-
     debugs(3, 2, "Loading " << (isPipe ? "pipe" : "file") << " " << filePath);
 
     if (isPipe && !(fd = popen(filePath.c_str(), "r")))
