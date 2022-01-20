@@ -45,7 +45,7 @@ private:
     std::string filePath; ///< The file path
     FILE *fd = nullptr; ///< Pointer to the file.
 
-    /// Random-size blocks of raw configuration bytes, in read(2) order.
+    /// Random-size blocks of raw file bytes, in fread(2) order.
     /// We do not concatenate these blocks to avoid overflowing SBuf.
     SBufList fileData;
 
