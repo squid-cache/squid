@@ -51,8 +51,7 @@ private:
 
     int lineNo = 0; ///< Current line number being parsed
 
-    /// Whether this is a FIFO pipe instead of a file.
-    /// Enables '#line' notation support for this source.
+    /// Whether this is a FIFO pipe instead of a regular file.
     bool isPipe = false;
 };
 
