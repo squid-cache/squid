@@ -26,7 +26,7 @@ Cfg::File::~File()
 }
 
 void
-Cfg::File::tryLoadFile()
+Cfg::File::load()
 {
     if (filePath[0] == '!' || filePath[0] == '|') {
         isPipe = true;

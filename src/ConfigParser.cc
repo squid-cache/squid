@@ -90,7 +90,7 @@ ConfigParser::strtokFile()
                 *t = '\0';
 
                 wordFile.reset(new Cfg::File(fn));
-                wordFile->tryLoadFile();
+                wordFile->load();
                 fromFile = 1;
             } else {
                 return t;
@@ -595,7 +595,7 @@ void
 ConfigParser::CfgFile::startParse()
 {
     assert(isOpen());
-    confFileData.tryLoadFile();
+    confFileData.load();
     debugs(3, 3, "Parsing from " << confFileData.lineInfo());
 }
 
