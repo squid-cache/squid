@@ -26,7 +26,7 @@ namespace Cfg
 class File
 {
 public:
-    File(const char *path) : filePath(path) {}
+    File(const char *path);
     ~File();
 
     /// \return true if the configuration file is open

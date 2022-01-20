@@ -15,6 +15,16 @@
 #include <sys/stat.h>
 #endif
 
+
+Cfg::File::File(const char *path) :
+    filePath(path)
+{
+    if (filePath[0] == '!' || filePath[0] == '|') {
+        isPipe = true;
+        filePath.erase(0,1);
+    }
+}
+
 Cfg::File::~File()
 {
     if (fd) {
@@ -28,19 +38,6 @@ Cfg::File::~File()
 void
 Cfg::File::load()
 {
-    if (filePath[0] == '!' || filePath[0] == '|') {
-        isPipe = true;
-        filePath.erase(0,1);
-    }
-
-    struct stat data;
-    memset(&data, 0, sizeof(data));
-
-    if (::stat(filePath.c_str(), &data) != 0) {
-        int xerrno = errno;
-        throw TextException(ToSBuf("configuration file ", filePath, " error: ", xstrerr(xerrno)), lineInfo());
-    }
-
     debugs(3, 2, "Loading " << (isPipe ? "pipe" : "file") << " " << filePath);
 
     if (isPipe && !(fd = popen(filePath.c_str(), "r")))
