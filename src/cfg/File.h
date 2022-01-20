@@ -39,7 +39,7 @@ public:
     SourceLocation lineInfo() const { return SourceLocation("parsing", filePath.c_str(), lineNo); }
 
     /// open and load contents from the file
-    void tryLoadFile();
+    void load();
 
 private:
     std::string filePath; ///< The file path

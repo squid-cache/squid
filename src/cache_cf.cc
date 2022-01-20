@@ -439,7 +439,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
     }
 
     Cfg::File cfg(file_name);
-    cfg.tryLoadFile(); // throws on error
+    cfg.load(); // throws on error
 
     memset(config_input_line, '\0', BUFSIZ);
 
