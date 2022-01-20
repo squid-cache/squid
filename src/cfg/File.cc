@@ -46,9 +46,6 @@ Cfg::File::load()
 
     debugs(3, 2, "Loading " << (isPipe ? "pipe" : "file") << " " << filePath);
 
-    if (data.st_size == 0)
-        return; // optimization: dont bother reading empty files
-
     if (isPipe && !(fd = popen(filePath.c_str(), "r")))
         throw TextException(ToSBuf("configuration pipe :", filePath, " not found"), lineInfo());
 
@@ -59,27 +56,22 @@ Cfg::File::load()
     setmode(fileno(fd), O_TEXT);
 #endif
 
-    // try to load the entire file into parseBuffer
-    off_t fileSz = data.st_size;
-    off_t readSz = 0;
-    while (fileSz - readSz) {
+     // try to load the entire file into fileData
+     off_t readSz = 0;
+     while (!feof(fd) && !ferror(fd)) {
         SBuf parseBuffer;
-
-        auto len = fileSz - readSz;
         // limit at 1/2 max capacity, so we can combine two SBuf later
-        if (len > SBuf::maxSize>>1)
-            len = SBuf::maxSize>>1;
-
+        off_t len = SBuf::maxSize/2;
         auto *p = parseBuffer.rawAppendStart(len);
-
         auto n = fread(p, 1, len, fd);
-        assert(n != 0);
-        debugs(3, 2, "Loaded " << n << " bytes (at " << readSz << "/" << fileSz << ") from " << filePath);
-
-        readSz += n;
-        parseBuffer.rawAppendFinish(p, n);
-        fileData.emplace_back(parseBuffer);
+        debugs(3, 2, "Loaded " << n << " bytes (at " << readSz << ") from " << filePath);
+        if (n > 0) {
+            readSz += n;
+            parseBuffer.rawAppendFinish(p, n);
+            fileData.emplace_back(parseBuffer);
+        }
     }
+
     // cleanly handle files that do not end with CRLF
     fileData.emplace_back(SBuf("\n"));
 }
