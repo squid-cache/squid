@@ -115,7 +115,7 @@ Cfg::File::nextLine()
         // ignore comment lines
         if (tok.skip('#')) {
             static const SBuf ln("line");
-            if (isPipe && tok.skip(ln)) {
+            if (tok.skip(ln)) {
                 (void)tok.skipAll(CharacterSet::WSP);
                 int64_t num = 0;
                 SBuf name;
