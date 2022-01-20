@@ -71,9 +71,6 @@ Cfg::File::load()
             fileData.emplace_back(parseBuffer);
         }
     }
-
-    // cleanly handle files that do not end with CRLF
-    fileData.emplace_back(SBuf("\n"));
 }
 
 SBuf
@@ -85,17 +82,15 @@ Cfg::File::nextLine()
     SBuf lineBuf;
     while (!lineBuf.isEmpty() || !fileData.empty()) {
         auto eol = lineBuf.find('\n');
-
-        if (!fileData.empty()) {
-            while (eol == SBuf::npos && lineBuf.length() + fileData.front().length() < SBuf::maxSize) {
-                lineBuf.append(fileData.front());
-                debugs(3, 2, "Process chunk " << fileData.size() << " of " << filePath);
-                fileData.pop_front();
-                eol = lineBuf.find('\n');
-            }
+        while (eol == SBuf::npos && !fileData.empty()) {
+            auto nextBlob = fileData.front();
+            if (lineBuf.length() + nextBlob.length() >= SBuf::maxSize)
+                throw TextException(ToSBuf("line too long at ", lineBuf.length(), " bytes"), lineInfo());
+            lineBuf.append(nextBlob);
+            debugs(3, 2, "Process chunk " << fileData.size() << " of " << filePath);
+            fileData.pop_front();
+            eol = lineBuf.find('\n');
         }
-        if (eol == SBuf::npos)
-            throw TextException(ToSBuf("line too long at ", lineBuf.length(), " bytes"), lineInfo());
         lineNo++;
 
         debugs(3, 2, "Process line " << lineNo << " of " << filePath);
