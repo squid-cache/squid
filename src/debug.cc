@@ -1197,7 +1197,7 @@ debugLogKid(void)
     return "";
 }
 
-/// The number of xassert() calls in the call stack. Treat as private to
+/// Whether there are any xassert() calls in the call stack. Treat as private to
 /// xassert(): It is moved out only to simplify the asserting code path.
 static auto Asserting_ = false;
 
