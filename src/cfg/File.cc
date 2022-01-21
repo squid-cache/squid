@@ -92,14 +92,14 @@ Cfg::File::nextLine()
         ::Parser::Tokenizer tok(lineBuf.substr(0, eol));
         lineBuf.chop(eol+1);
 
-        // trim prefix whitespace
+        /// trim prefix whitespace
         (void)tok.skipAll(CharacterSet::WSP);
 
-        // trim CRLF terminator
+        /// trim CRLF terminator
         static const CharacterSet crlf = (CharacterSet::CR + CharacterSet::LF);
         (void)tok.skipAllTrailing(crlf);
 
-        // if line ends with \-escape, append the next line before parsing
+        /// if line ends with \-escape, append the next line before parsing
         static const CharacterSet wrap("line-wrap", "\\");
         if (tok.skipOneTrailing(wrap)) {
             SBuf tmp = tok.remaining();
@@ -109,11 +109,12 @@ Cfg::File::nextLine()
             continue;
         }
 
-        // trim any trailing whitespace
+        /// trim any trailing whitespace
         (void)tok.skipAllTrailing(CharacterSet::WSP);
 
-        // ignore comment lines
+        /// ignore ( '#' comment ) lines
         if (tok.skip('#')) {
+            /// handle ( '#line ' 1*DIGIT ' "' filepath '"' ) syntax
             static const SBuf ln("line");
             if (tok.skip(ln)) {
                 (void)tok.skipAll(CharacterSet::WSP);
@@ -131,7 +132,7 @@ Cfg::File::nextLine()
             continue;
         }
 
-        // ignore empty lines
+        /// ignore empty lines
         if (tok.atEnd()) {
             debugs(3, 2, "Skip empty line " << lineNo << " of " << filePath);
             continue;

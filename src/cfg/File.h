@@ -20,7 +20,7 @@ namespace Cfg
 {
 
 /**
- * Class used to store required information for the current
+ * Class used to store required information from a
  * configuration file.
  */
 class File
@@ -32,7 +32,8 @@ public:
     /// \return true if the configuration file is open
     bool isOpen() const { return bool(fd); }
 
-    /// \return the next line to be parsed from this file
+    /// Provide the next line of configuration.
+    /// \return the next line to be parsed from this file, or if none an empty SBuf.
     SBuf nextLine();
 
     /// \return the configuration file name and line number being processed
