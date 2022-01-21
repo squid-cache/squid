@@ -442,7 +442,8 @@ DebugModule::banCacheLogUse()
 /// safe access to the debugging module
 static
 DebugModule &
-Module() {
+Module()
+{
     if (!Module_) {
         Module_ = new DebugModule();
 #if !HAVE_SYSLOG
