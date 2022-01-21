@@ -144,7 +144,7 @@ class DebugChannel
 public:
     using EarlyMessages = std::unique_ptr<CompiledDebugMessages>;
 
-    explicit DebugChannel(const char * const aName): name(aName), earlyMessages(new CompiledDebugMessages()) {}
+    explicit DebugChannel(const char *aName);
     virtual ~DebugChannel() = default;
 
     // no copying or moving or any kind (for simplicity sake and to prevent accidental copies)
@@ -461,6 +461,12 @@ ResyncDebugLog(FILE *newFile)
 }
 
 /* DebugChannel */
+
+DebugChannel::DebugChannel(const char * const aName):
+    name(aName),
+    earlyMessages(new CompiledDebugMessages())
+{
+}
 
 void
 DebugChannel::stopEarlyMessageCollection()
