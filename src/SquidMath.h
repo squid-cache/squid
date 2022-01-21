@@ -10,6 +10,7 @@
 #define _SQUID_SRC_SQUIDMATH_H
 
 #include "base/forward.h"
+#include "base/Optional.h"
 
 #include <limits>
 #include <type_traits>
@@ -28,16 +29,16 @@ double doubleAverage(const double, const double, int, const int);
 
 } // namespace Math
 
-// If Sum() performance becomes important, consider using GCC and clang
+// If IncreaseSumInternal() speed becomes important, consider using compiler
 // built-ins like __builtin_add_overflow() instead of manual overflow checks.
 
 /// std::enable_if_t replacement until C++14
-/// simplifies Sum() declarations below
+/// simplifies IncreaseSumInternal() declarations below
 template <bool B, class T = void>
 using EnableIfType = typename std::enable_if<B,T>::type;
 
 /// detects a pair of unsigned types
-/// reduces code duplication in Sum() declarations below
+/// reduces code duplication in IncreaseSumInternal() declarations below
 template <typename A, typename B>
 using AllUnsigned = typename std::conditional<
                     std::is_unsigned<A>::value && std::is_unsigned<B>::value,
@@ -45,6 +46,7 @@ using AllUnsigned = typename std::conditional<
                     std::false_type
                     >::type;
 
+// TODO: Replace with std::cmp_less() after migrating to C++20.
 /// whether integer a is less than integer b, with correct overflow handling
 template <typename A, typename B>
 constexpr bool
@@ -59,47 +61,80 @@ Less(const A a, const B b) {
         /* (a >= 0) == (b >= 0) */ static_cast<AB>(a) < static_cast<AB>(b);
 }
 
+/// ensure that T is supported by NaturalSum() and friends
+template<typename T>
+constexpr void
+AssertNaturalType()
+{
+    static_assert(std::numeric_limits<T>::is_bounded, "std::numeric_limits<T>::max() is meaningful");
+    static_assert(std::numeric_limits<T>::is_exact, "no silent loss of precision");
+    static_assert(!std::is_enum<T>::value, "no silent creation of non-enumerated values");
+}
+
+// TODO: Investigate whether this optimization can be expanded to [signed] types
+// S and T when std::numeric_limits<decltype(S(0)+T(0))>::is_modulo is true.
+/// This IncreaseSumInternal() overload is optimized for speed.
 /// \returns a non-overflowing sum of the two unsigned arguments (or nothing)
+/// \prec both argument types are unsigned
 template <typename S, typename T, EnableIfType<AllUnsigned<S,T>::value, int> = 0>
 Optional<S>
-IncreaseSum(const S s, const T t) {
-    // this optimized implementation relies on unsigned overflows
-    static_assert(std::is_unsigned<S>::value, "the first argument is unsigned");
-    static_assert(std::is_unsigned<T>::value, "the second argument is unsigned");
+IncreaseSumInternal(const S s, const T t) {
+    AssertNaturalType<S>();
+    AssertNaturalType<T>();
+
     // For the sum overflow check below to work, we cannot restrict the sum
     // type which, due to integral promotions, may exceed common_type<S,T>!
     const auto sum = s + t;
-    // 1. when summation overflows, the result becomes smaller than any operand
+    static_assert(std::numeric_limits<decltype(sum)>::is_modulo, "we can detect overflows");
+    // 1. modulo math: overflowed sum is smaller than any of its operands
     // 2. the unknown (see above) "auto" type may hold more than S can hold
     return (s <= sum && sum <= std::numeric_limits<S>::max()) ?
            Optional<S>(sum) : Optional<S>();
 }
 
+/// This IncreaseSumInternal() overload supports a larger variety of types.
 /// \returns a non-overflowing sum of the two arguments (or nothing)
 /// \returns nothing if at least one of the arguments is negative
-/// at least one of the arguments is signed
+/// \prec at least one of the argument types is signed
 template <typename S, typename T, EnableIfType<!AllUnsigned<S,T>::value, int> = 0>
 Optional<S> constexpr
-IncreaseSum(const S s, const T t) {
+IncreaseSumInternal(const S s, const T t) {
+    AssertNaturalType<S>();
+    AssertNaturalType<T>();
     return
         // We could support a non-under/overflowing sum of negative numbers, but
         // our callers use negative values specially (e.g., for do-not-use or
         // do-not-limit settings) and are not supposed to do math with them.
-        (Less(s, 0) || Less(t, 0)) ? Optional<S>() :
-        // Avoids undefined behavior of signed under/overflows. When S is not T,
-        // s or t undergoes (safe) integral conversion in these expressions.
-        // Sum overflow condition: s + t > maxS or, here, maxS - s < t.
-        // If the sum exceeds maxT, integral conversions will use S, not T.
+        (s < 0 || t < 0) ? Optional<S>() :
+        // To avoid undefined behavior of signed overflow, we must not compute
+        // the raw s+t sum if it may overflow. When S is not T, s or t undergoes
+        // (safe for non-negatives) integral conversion in these expressions, so
+        // we do not know the resulting s+t type ST and its maximum. We must
+        // also detect subsequent casting-to-S overflows.
+        // Overflow condition: (s + t > maxST) or (s + t > maxS).
+        // Since maxS <= maxST, it is sufficient to just check: s + t > maxS,
+        // which is the same as the overflow-safe condition here: maxS - s < t.
         Less(std::numeric_limits<S>::max() - s, t) ? Optional<S>() :
         Optional<S>(s + t);
+}
+
+/// argument pack expansion termination for IncreaseSum<S, T, Args...>()
+template <typename S, typename T>
+Optional<S>
+IncreaseSum(const S s, const T t)
+{
+    // Force (always safe) integral promotions now, to give EnableIfType<>
+    // promoted types instead of entering IncreaseSumInternal<AllUnsigned>(s,t)
+    // but getting a _signed_ promoted value of s or t in s + t.
+    return IncreaseSumInternal<S>(+s, +t);
 }
 
 /// \returns a non-overflowing sum of the arguments (or nothing)
 template <typename S, typename T, typename... Args>
 Optional<S>
-IncreaseSum(const S sum, const T t, Args... args) {
-    if (const auto head = IncreaseSum<S>(sum, t)) {
-        return IncreaseSum<S>(head.value(), args...);
+IncreaseSum(const S sum, const T t, const Args... args) {
+    if (const auto head = IncreaseSum(sum, t)) {
+        return IncreaseSum(head.value(), args...);
     } else {
         return Optional<S>();
     }
@@ -108,7 +143,7 @@ IncreaseSum(const S sum, const T t, Args... args) {
 /// \returns an exact, non-overflowing sum of the arguments (or nothing)
 template <typename SummationType, typename... Args>
 Optional<SummationType>
-NaturalSum(Args... args) {
+NaturalSum(const Args... args) {
     return IncreaseSum<SummationType>(0, args...);
 }
 
@@ -117,7 +152,7 @@ NaturalSum(Args... args) {
 /// \returns the new variable value (like an assignment operator would)
 template <typename S, typename... Args>
 S
-SetToNaturalSumOrMax(S &var, Args... args)
+SetToNaturalSumOrMax(S &var, const Args... args)
 {
     var = NaturalSum<S>(args...).value_or(std::numeric_limits<S>::max());
     return var;

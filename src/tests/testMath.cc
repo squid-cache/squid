@@ -96,7 +96,7 @@ RawSum(A a, Args... args)
 /// Tests NaturalSum<S>() calls that are supposed to succeed.
 /// Implemented as a class to pass it as a template template parameter.
 template <typename S>
-class SuccessTester
+class SuccessSumTester
 {
 public:
     template <typename... Args>
@@ -106,7 +106,7 @@ public:
         //std::cout << SumToString<S>(args...) << " = " << +sum << "\n";
 
         const auto ns = NaturalSum<S>(args...);
-        CPPUNIT_ASSERT_MESSAGE(SumToString<S>(args...) + " must overflow",
+        CPPUNIT_ASSERT_MESSAGE(SumToString<S>(args...) + " does not overflow",
                                ns.has_value());
 
         const auto sum = ns.value();
@@ -122,7 +122,7 @@ public:
 /// Tests NaturalSum<S>() calls that are supposed to overflow.
 /// Implemented as a class to pass it as a template template parameter.
 template <typename S>
-class OverflowTester
+class OverflowSumTester
 {
 public:
     template <typename... Args>
@@ -171,8 +171,8 @@ template <typename A, typename B>
 static void
 TestOverflowForEitherSummationType(const A a, const B b)
 {
-    TestOrder<A, OverflowTester>(a, b);
-    TestOrder<B, OverflowTester>(a, b);
+    TestOrder<A, OverflowSumTester>(a, b);
+    TestOrder<B, OverflowSumTester>(a, b);
 }
 
 /// checks that a+b and similar sums succeed for summation type A but overflow
@@ -181,8 +181,8 @@ template <typename A, typename B>
 static void
 TestSuccessForFirstSummationType(const A a, const B b)
 {
-    TestOrder<A, SuccessTester>(a, b);
-    TestOrder<B, OverflowTester>(a, b);
+    TestOrder<A, SuccessSumTester>(a, b);
+    TestOrder<B, OverflowSumTester>(a, b);
 }
 
 /// \returns successful a+b value using summation type S (which defaults to A)
@@ -190,7 +190,7 @@ template <typename A, typename... Args, typename S = A>
 static S
 GoodSum(const A a, Args... args)
 {
-    return SuccessTester<S>::Test(a, args...);
+    return SuccessSumTester<S>::Test(a, args...);
 }
 
 void
