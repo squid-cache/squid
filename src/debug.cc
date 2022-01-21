@@ -126,7 +126,7 @@ public:
     using Header = DebugMessageHeader;
     using Body = CompiledDebugMessageBody;
 
-    CompiledDebugMessage(const Header &aHeader, const Body &aBody);
+    CompiledDebugMessage(const Header &, const Body &);
 
     Header header; ///< debugs() meta-information; reflected in log line prefix
     Body body; ///< the log line after the prefix (without the newline)
