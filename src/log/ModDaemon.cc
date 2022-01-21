@@ -338,7 +338,7 @@ logfile_mod_daemon_flush(Logfile * lf)
 {
     l_daemon_t *ll = static_cast<l_daemon_t *>(lf->data);
     if (commUnsetNonBlocking(ll->wfd)) {
-        debugs(50, DBG_IMPORTANT, "ERROR: Logfile Daemon: Could not set the pipe blocking for flush! You're now missing some log entries.");
+        debugs(50, DBG_IMPORTANT, "ERROR: Logfile Daemon: Could not set the pipe blocking for flush! You are now missing some log entries.");
         return;
     }
     while (ll->bufs.head != NULL) {
