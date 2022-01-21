@@ -642,7 +642,21 @@ Debug::ResetStderrLevel(const int maxLevel)
 void
 Debug::SettleStderr()
 {
-    Module().stderrChannel.stopEarlyMessageCollection();
+    auto &stderrChannel = Module().stderrChannel;
+
+    stderrChannel.stopEarlyMessageCollection();
+
+    if (override_X) {
+        // Some users might expect -X to force -d9. Tell them what is happening.
+        const auto outcome =
+            stderrChannel.enabled(DBG_DATA) ? "; stderr will see all messages":
+            stderrChannel.enabled(DBG_CRITICAL) ? "; stderr will not see some messages":
+            "; stderr will see no messages";
+        if (ExplicitStderrLevel)
+            debugs(0, DBG_CRITICAL, "Using -X and -d" << ExplicitStderrLevel.value() << outcome);
+        else
+            debugs(0, DBG_CRITICAL, "Using -X without -d" << outcome);
+    }
 }
 
 bool

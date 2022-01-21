@@ -401,6 +401,7 @@ usage(void)
             "       -R        Do not set REUSEADDR on port.\n"
             "       -S        Double-check swap during rebuild.\n"
             "       -X        Force full debugging.\n"
+            "                 Add -d9 to also write full debugging to stderr.\n"
             "       -Y        Only return UDP_HIT or UDP_MISS_NOFETCH during fast reload.\n",
             APP_SHORTNAME, CACHE_HTTP_PORT, DEFAULT_CONFIG_FILE, CACHE_ICP_PORT);
     exit(EXIT_FAILURE);
