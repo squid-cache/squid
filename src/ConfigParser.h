@@ -152,8 +152,8 @@ public:
 
 protected:
     /**
-     * Class used to store required information for the current
-     * configuration file.
+     * Wrapper class around Cfg::File for ConfigParser API internal use.
+     * Presents configuration syntax as a series of token/element rather than lines.
      */
     class CfgFile
     {
