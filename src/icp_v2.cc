@@ -601,7 +601,7 @@ icpHandleIcpV2(int fd, Ip::Address &from, char *buf, int len)
         break;
 
     default:
-        debugs(12, DBG_CRITICAL, "icpHandleIcpV2: UNKNOWN OPCODE: " << header.opcode << " from " << from);
+        debugs(12, DBG_CRITICAL, "ERROR: icpHandleIcpV2: Unknown opcode: " << header.opcode << " from " << from);
 
         break;
     }

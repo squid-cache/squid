@@ -343,7 +343,7 @@ Adaptation::Ecap::CheckUnusedAdapterServices(const Adaptation::Services& cfgs)
             found = (*cfged)->cfg().uri == loaded->second->uri().c_str();
         }
         if (!found)
-            debugs(93, DBG_IMPORTANT, "Warning: loaded eCAP service has no matching " <<
+            debugs(93, DBG_IMPORTANT, "WARNING: loaded eCAP service has no matching " <<
                    "ecap_service config option: " << loaded->second->uri());
     }
 }

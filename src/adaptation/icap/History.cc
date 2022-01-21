@@ -32,7 +32,7 @@ void Adaptation::Icap::History::start(const char *context)
 void Adaptation::Icap::History::stop(const char *context)
 {
     if (!concurrencyLevel) {
-        debugs(93, DBG_IMPORTANT, HERE << "Internal error: poor history accounting " << this);
+        debugs(93, DBG_IMPORTANT, "ERROR: Squid BUG: poor history accounting " << this);
         return;
     }
 

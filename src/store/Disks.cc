@@ -721,7 +721,7 @@ storeDirWriteCleanLogs(int reopen)
         auto &sd = SwapDirByIndex(dirn);
 
         if (sd.writeCleanStart() < 0) {
-            debugs(20, DBG_IMPORTANT, "log.clean.start() failed for dir #" << sd.index);
+            debugs(20, DBG_IMPORTANT, "ERROR: log.clean.start() failed for dir #" << sd.index);
             continue;
         }
     }

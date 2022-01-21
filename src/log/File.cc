@@ -73,7 +73,7 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
         if (fatal_flag)
             fatalf("logfileOpen: %s: couldn't open!\n", path);
         else
-            debugs(50, DBG_IMPORTANT, "logfileOpen: " << path << ": couldn't open!");
+            debugs(50, DBG_IMPORTANT, "ERROR: logfileOpen: " << path << ": could not open!");
         lf->f_close(lf);
         delete lf;
         return NULL;

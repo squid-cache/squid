@@ -107,7 +107,7 @@ ssl_temp_rsa_cb(SSL *, int, int keylen)
     if (!e) {
         e = BN_new();
         if (!e || !BN_set_word(e, RSA_F4)) {
-            debugs(83, DBG_IMPORTANT, "ssl_temp_rsa_cb: Failed to set exponent for key " << keylen);
+            debugs(83, DBG_IMPORTANT, "ERROR: ssl_temp_rsa_cb: Failed to set exponent for key " << keylen);
             BN_free(e);
             e = nullptr;
             return nullptr;
@@ -147,12 +147,12 @@ ssl_temp_rsa_cb(SSL *, int, int keylen)
         break;
 
     default:
-        debugs(83, DBG_IMPORTANT, "ssl_temp_rsa_cb: Unexpected key length " << keylen);
+        debugs(83, DBG_IMPORTANT, "ERROR: ssl_temp_rsa_cb: Unexpected key length " << keylen);
         return NULL;
     }
 
     if (rsa == NULL) {
-        debugs(83, DBG_IMPORTANT, "ssl_temp_rsa_cb: Failed to generate key " << keylen);
+        debugs(83, DBG_IMPORTANT, "ERROR: ssl_temp_rsa_cb: Failed to generate key " << keylen);
         return NULL;
     }
 
@@ -346,7 +346,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         if (const char *err_descr = Ssl::GetErrorDescr(error_no))
             debugs(83, 5, err_descr << ": " << buffer);
         else
-            debugs(83, DBG_IMPORTANT, "SSL unknown certificate error " << error_no << " in " << buffer);
+            debugs(83, DBG_IMPORTANT, "ERROR: SSL unknown certificate error " << error_no << " in " << buffer);
 
         // Check if the certificate error can be bypassed.
         // Infinity validation loop errors can not bypassed.
@@ -412,7 +412,7 @@ Ssl::ConfigurePeerVerification(Security::ContextPointer &ctx, const Security::Pa
     // assume each flag is exclusive; flags creator must check this assumption
     if (flags & SSL_FLAG_DONT_VERIFY_PEER) {
         debugs(83, DBG_IMPORTANT, "SECURITY WARNING: Peer certificates are not verified for validity!");
-        debugs(83, DBG_IMPORTANT, "UPGRADE NOTICE: The DONT_VERIFY_PEER flag is deprecated. Remove the clientca= option to disable client certificates.");
+        debugs(83, DBG_IMPORTANT, "WARNING: UPGRADE: The DONT_VERIFY_PEER flag is deprecated. Remove the clientca= option to disable client certificates.");
         mode = SSL_VERIFY_NONE;
     }
     else if (flags & SSL_FLAG_DELAYED_AUTH) {
@@ -1113,7 +1113,7 @@ Ssl::loadCerts(const char *certsFile, Ssl::CertsIndexedList &list)
 {
     const BIO_Pointer in(BIO_new_file(certsFile, "r"));
     if (!in) {
-        debugs(83, DBG_IMPORTANT, "Failed to open '" << certsFile << "' to load certificates");
+        debugs(83, DBG_IMPORTANT, "ERROR: Failed to open '" << certsFile << "' to load certificates");
         return false;
     }
 
@@ -1174,7 +1174,7 @@ findIssuerInCaDb(X509 *cert, const Security::ContextPointer &connContext)
 
     X509_STORE_CTX *storeCtx = X509_STORE_CTX_new();
     if (!storeCtx) {
-        debugs(83, DBG_IMPORTANT, "Failed to allocate STORE_CTX object");
+        debugs(83, DBG_IMPORTANT, "ERROR: Failed to allocate STORE_CTX object");
         return nullptr;
     }
 
@@ -1192,7 +1192,7 @@ findIssuerInCaDb(X509 *cert, const Security::ContextPointer &connContext)
         }
     } else {
         const auto ssl_error = ERR_get_error();
-        debugs(83, DBG_IMPORTANT, "Failed to initialize STORE_CTX object: " << Security::ErrorString(ssl_error));
+        debugs(83, DBG_IMPORTANT, "ERROR: Failed to initialize STORE_CTX object: " << Security::ErrorString(ssl_error));
     }
 
     X509_STORE_CTX_free(storeCtx);

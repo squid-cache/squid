@@ -318,7 +318,7 @@ netdbSendPing(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data)
         x = (net_db_name *) hash_lookup(host_table, hostname);
 
         if (x == NULL) {
-            debugs(38, DBG_IMPORTANT, "netdbSendPing: net_db_name list bug: " << hostname << " not found");
+            debugs(38, DBG_IMPORTANT, "ERROR: Squid BUG: net_db_name list bug: " << hostname << " not found");
             xfree(hostname);
             return;
         }
@@ -807,7 +807,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
                 break;
 
             default:
-                debugs(38, DBG_IMPORTANT, "netdbExchangeHandleReply: corrupt data, aborting");
+                debugs(38, DBG_IMPORTANT, "ERROR: netdbExchangeHandleReply: corrupt data, aborting");
                 delete ex;
                 return;
             }
@@ -1301,7 +1301,7 @@ netdbExchangeStart(void *data)
     HttpRequestPointer req(HttpRequest::FromUrlXXX(uri, mx));
 
     if (!req) {
-        debugs(38, DBG_IMPORTANT, MYNAME << ": Bad URI " << uri);
+        debugs(38, DBG_IMPORTANT, "ERROR: " << MYNAME << ": Bad URI " << uri);
         return;
     }
 

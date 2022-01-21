@@ -384,7 +384,7 @@ Store::Controller::allowSharing(StoreEntry &entry, const cache_key *key)
         if (!found) {
             // !found should imply hittingRequiresCollapsing() regardless of writer presence
             if (!entry.hittingRequiresCollapsing()) {
-                debugs(20, DBG_IMPORTANT, "BUG: missing ENTRY_REQUIRES_COLLAPSING for " << entry);
+                debugs(20, DBG_IMPORTANT, "ERROR: Squid BUG: missing ENTRY_REQUIRES_COLLAPSING for " << entry);
                 throw TextException("transients entry missing ENTRY_REQUIRES_COLLAPSING", Here());
             }
 

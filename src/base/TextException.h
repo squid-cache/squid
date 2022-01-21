@@ -78,7 +78,7 @@ std::ostream &operator <<(std::ostream &, const TextException &);
     try { \
         code \
     } catch (...) { \
-        debugs(0, DBG_IMPORTANT, "BUG: ignoring exception;" << \
+        debugs(0, DBG_IMPORTANT, "ERROR: Squid BUG: ignoring exception;" << \
                Debug::Extra << "bug location: " << Here() << \
                Debug::Extra << "ignored exception: " << CurrentException); \
     }

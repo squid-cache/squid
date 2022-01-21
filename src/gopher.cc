@@ -789,7 +789,7 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm
     }
 
     if (flag != Comm::OK) {
-        debugs(50, DBG_IMPORTANT, MYNAME << "error reading: " << xstrerr(xerrno));
+        debugs(50, DBG_IMPORTANT, "ERROR: " << MYNAME << "reading: " << xstrerr(xerrno));
 
         if (ignoreErrno(xerrno)) {
             AsyncCall::Pointer call = commCbCall(5,4, "gopherReadReply",

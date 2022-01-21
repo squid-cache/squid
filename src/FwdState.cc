@@ -278,7 +278,7 @@ void
 FwdState::completed()
 {
     if (flags.forward_completed) {
-        debugs(17, DBG_IMPORTANT, HERE << "FwdState::completed called on a completed request! Bad!");
+        debugs(17, DBG_IMPORTANT, "ERROR: FwdState::completed called on a completed request! Bad!");
         return;
     }
 

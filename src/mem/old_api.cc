@@ -101,7 +101,7 @@ GetStrPool(size_t type)
             strPools[i]->zeroBlocks(false);
 
             if (strPools[i]->objectSize() != PoolAttrs[i].obj_size)
-                debugs(13, DBG_IMPORTANT, "NOTICE: " << PoolAttrs[i].name <<
+                debugs(13, DBG_IMPORTANT, "WARNING: " << PoolAttrs[i].name <<
                        " is " << strPools[i]->objectSize() <<
                        " bytes instead of requested " <<
                        PoolAttrs[i].obj_size << " bytes");

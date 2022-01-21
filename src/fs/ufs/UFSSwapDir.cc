@@ -745,7 +745,7 @@ Fs::Ufs::UFSSwapDir::openLog()
 
     if (swaplog_fd < 0) {
         int xerrno = errno;
-        debugs(50, DBG_IMPORTANT, "ERROR opening swap log " << logPath << ": " << xstrerr(xerrno));
+        debugs(50, DBG_IMPORTANT, "ERROR: opening swap log " << logPath << ": " << xstrerr(xerrno));
         fatal("UFSSwapDir::openLog: Failed to open swap log.");
     }
 

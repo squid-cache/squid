@@ -949,7 +949,7 @@ IpcIoFile::DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo)
     } catch (const Queue::Full &) {
         // The worker pop queue should not overflow because the worker can
         // push only if pendingRequests() is less than QueueCapacity.
-        debugs(47, DBG_IMPORTANT, "BUG: Worker I/O pop queue for " <<
+        debugs(47, DBG_IMPORTANT, "ERROR: Squid BUG: Worker I/O pop queue for " <<
                DbName << " overflow: " <<
                SipcIo(workerId, ipcIo, KidIdentifier)); // TODO: report queue len
 

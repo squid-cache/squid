@@ -387,7 +387,7 @@ Client::sentRequestBody(const CommIoCbParams &io)
     request->hier.notePeerWrite();
 
     if (io.flag) {
-        debugs(11, DBG_IMPORTANT, "sentRequestBody error: FD " << io.fd << ": " << xstrerr(io.xerrno));
+        debugs(11, DBG_IMPORTANT, "ERROR: sentRequestBody failure: FD " << io.fd << ": " << xstrerr(io.xerrno));
         ErrorState *err;
         err = new ErrorState(ERR_WRITE_ERROR, Http::scBadGateway, fwd->request, fwd->al);
         err->xerrno = io.xerrno;

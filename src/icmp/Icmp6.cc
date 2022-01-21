@@ -223,7 +223,7 @@ Icmp6::Recv(void)
                  &from->ai_addrlen);
 
     if (n <= 0) {
-        debugs(42, DBG_CRITICAL, HERE << "Error when calling recvfrom() on ICMPv6 socket.");
+        debugs(42, DBG_CRITICAL, "ERROR: when calling recvfrom() on ICMPv6 socket.");
         Ip::Address::FreeAddr(from);
         return;
     }

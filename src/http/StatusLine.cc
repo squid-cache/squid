@@ -57,7 +57,7 @@ Http::StatusLine::packInto(Packable * p) const
     if (packedStatus == Http::scNone) {
         static unsigned int reports = 0;
         if (++reports <= 100)
-            debugs(57, DBG_IMPORTANT, "BUG: the internalized response lacks status-code");
+            debugs(57, DBG_IMPORTANT, "ERROR: Squid BUG: the internalized response lacks status-code");
         packedStatus = Http::scInternalServerError;
         packedReason = Http::StatusCodeString(packedStatus); // ignore custom reason_ (if any)
     }

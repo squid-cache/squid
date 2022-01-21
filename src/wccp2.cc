@@ -624,7 +624,7 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
     }
 
     if (srv->wccp2_security_type != WCCP2_MD5_SECURITY) {
-        debugs(80, DBG_IMPORTANT, "wccp2_check_security: invalid security option");
+        debugs(80, DBG_IMPORTANT, "ERROR: wccp2_check_security: invalid security option");
         return 0;
     }
 
@@ -1293,7 +1293,7 @@ wccp2HandleUdp(int sock, void *)
             break;
 
         default:
-            debugs(80, DBG_IMPORTANT, "Unknown record type in WCCPv2 Packet (" << ntohs(itemHeader->type) << ").");
+            debugs(80, DBG_IMPORTANT, "ERROR: Unknown record type in WCCPv2 Packet (" << ntohs(itemHeader->type) << ").");
         }
 
         offset += itemSize;
@@ -1319,17 +1319,17 @@ wccp2HandleUdp(int sock, void *)
     }
 
     if (service_list_ptr == NULL) {
-        debugs(80, DBG_IMPORTANT, "WCCPv2 Unknown service received from router (" << service_info->service_id << ")");
+        debugs(80, DBG_IMPORTANT, "ERROR: WCCPv2 Unknown service received from router (" << service_info->service_id << ")");
         return;
     }
 
     if (ntohl(security_info->security_option) != ntohl(service_list_ptr->security_info->security_option)) {
-        debugs(80, DBG_IMPORTANT, "Invalid security option in WCCPv2 Packet (" << ntohl(security_info->security_option) << " vs " << ntohl(service_list_ptr->security_info->security_option) << ").");
+        debugs(80, DBG_IMPORTANT, "ERROR: Invalid security option in WCCPv2 Packet (" << ntohl(security_info->security_option) << " vs " << ntohl(service_list_ptr->security_info->security_option) << ").");
         return;
     }
 
     if (!wccp2_check_security(service_list_ptr, (char *) security_info, (char *) &wccp2_i_see_you, len)) {
-        debugs(80, DBG_IMPORTANT, "Received WCCPv2 Packet failed authentication");
+        debugs(80, DBG_IMPORTANT, "ERROR: Received WCCPv2 Packet failed authentication");
         return;
     }
 
@@ -1353,7 +1353,7 @@ wccp2HandleUdp(int sock, void *)
     /* TODO: check return/forwarding methods */
     if (router_capability_header == NULL) {
         if ((Config.Wccp2.return_method != WCCP2_PACKET_RETURN_METHOD_GRE) || (Config.Wccp2.forwarding_method != WCCP2_FORWARDING_METHOD_GRE)) {
-            debugs(80, DBG_IMPORTANT, "wccp2HandleUdp: fatal error - A WCCP router does not support the forwarding method specified, only GRE supported");
+            debugs(80, DBG_IMPORTANT, "ERROR: wccp2HandleUdp: fatal error - A WCCP router does not support the forwarding method specified, only GRE supported");
             wccp2ConnectionClose();
             return;
         }
@@ -1379,7 +1379,7 @@ wccp2HandleUdp(int sock, void *)
             case WCCP2_CAPABILITY_FORWARDING_METHOD:
 
                 if (!(ntohl(router_capability_element->capability_value) & Config.Wccp2.forwarding_method)) {
-                    debugs(80, DBG_IMPORTANT, "wccp2HandleUdp: fatal error - A WCCP router has specified a different forwarding method " << ntohl(router_capability_element->capability_value) << ", expected " << Config.Wccp2.forwarding_method);
+                    debugs(80, DBG_IMPORTANT, "ERROR: wccp2HandleUdp: fatal error - A WCCP router has specified a different forwarding method " << ntohl(router_capability_element->capability_value) << ", expected " << Config.Wccp2.forwarding_method);
                     wccp2ConnectionClose();
                     return;
                 }
@@ -1389,7 +1389,7 @@ wccp2HandleUdp(int sock, void *)
             case WCCP2_CAPABILITY_ASSIGNMENT_METHOD:
 
                 if (!(ntohl(router_capability_element->capability_value) & Config.Wccp2.assignment_method)) {
-                    debugs(80, DBG_IMPORTANT, "wccp2HandleUdp: fatal error - A WCCP router has specified a different assignment method " << ntohl(router_capability_element->capability_value) << ", expected "<< Config.Wccp2.assignment_method);
+                    debugs(80, DBG_IMPORTANT, "ERROR: wccp2HandleUdp: fatal error - A WCCP router has specified a different assignment method " << ntohl(router_capability_element->capability_value) << ", expected "<< Config.Wccp2.assignment_method);
                     wccp2ConnectionClose();
                     return;
                 }
@@ -1399,7 +1399,7 @@ wccp2HandleUdp(int sock, void *)
             case WCCP2_CAPABILITY_RETURN_METHOD:
 
                 if (!(ntohl(router_capability_element->capability_value) & Config.Wccp2.return_method)) {
-                    debugs(80, DBG_IMPORTANT, "wccp2HandleUdp: fatal error - A WCCP router has specified a different return method " << ntohl(router_capability_element->capability_value) << ", expected " << Config.Wccp2.return_method);
+                    debugs(80, DBG_IMPORTANT, "ERROR: wccp2HandleUdp: fatal error - A WCCP router has specified a different return method " << ntohl(router_capability_element->capability_value) << ", expected " << Config.Wccp2.return_method);
                     wccp2ConnectionClose();
                     return;
                 }
@@ -1411,7 +1411,7 @@ wccp2HandleUdp(int sock, void *)
                 break; // ignore silently for now
 
             default:
-                debugs(80, DBG_IMPORTANT, "Unknown capability type in WCCPv2 Packet (" << ntohs(router_capability_element->capability_type) << ").");
+                debugs(80, DBG_IMPORTANT, "ERROR: Unknown capability type in WCCPv2 Packet (" << ntohs(router_capability_element->capability_type) << ").");
             }
 
             router_capability_data_current += elementSize;
@@ -2056,7 +2056,7 @@ parse_wccp2_method(int *method)
 
     /* Snarf the method */
     if ((t = ConfigParser::NextToken()) == NULL) {
-        debugs(80, DBG_CRITICAL, "wccp2_*_method: missing setting.");
+        debugs(80, DBG_CRITICAL, "ERROR: wccp2_*_method: missing setting.");
         self_destruct();
         return;
     }
@@ -2067,7 +2067,7 @@ parse_wccp2_method(int *method)
     } else if (strcmp(t, "l2") == 0 || strcmp(t, "2") == 0) {
         *method = WCCP2_METHOD_L2;
     } else {
-        debugs(80, DBG_CRITICAL, "wccp2_*_method: unknown setting, got " << t );
+        debugs(80, DBG_CRITICAL, "ERROR: wccp2_*_method: unknown setting, got " << t );
         self_destruct();
     }
 }
@@ -2104,7 +2104,7 @@ parse_wccp2_amethod(int *method)
 
     /* Snarf the method */
     if ((t = ConfigParser::NextToken()) == NULL) {
-        debugs(80, DBG_CRITICAL, "wccp2_assignment_method: missing setting.");
+        debugs(80, DBG_CRITICAL, "ERROR: wccp2_assignment_method: missing setting.");
         self_destruct();
         return;
     }
@@ -2115,7 +2115,7 @@ parse_wccp2_amethod(int *method)
     } else if (strcmp(t, "mask") == 0 || strcmp(t, "2") == 0) {
         *method = WCCP2_ASSIGNMENT_METHOD_MASK;
     } else {
-        debugs(80, DBG_CRITICAL, "wccp2_assignment_method: unknown setting, got " << t );
+        debugs(80, DBG_CRITICAL, "ERROR: wccp2_assignment_method: unknown setting, got " << t );
         self_destruct();
     }
 }
@@ -2161,7 +2161,7 @@ parse_wccp2_service(void *)
 
     /* Snarf the type */
     if ((t = ConfigParser::NextToken()) == NULL) {
-        debugs(80, DBG_CRITICAL, "wccp2ParseServiceInfo: missing service info type (standard|dynamic)");
+        debugs(80, DBG_CRITICAL, "ERROR: wccp2ParseServiceInfo: missing service info type (standard|dynamic)");
         self_destruct();
         return;
     }
@@ -2171,7 +2171,7 @@ parse_wccp2_service(void *)
     } else if (strcmp(t, "dynamic") == 0) {
         service = WCCP2_SERVICE_DYNAMIC;
     } else {
-        debugs(80, DBG_CRITICAL, "wccp2ParseServiceInfo: bad service info type (expected standard|dynamic, got " << t << ")");
+        debugs(80, DBG_CRITICAL, "ERROR: wccp2ParseServiceInfo: bad service info type (expected standard|dynamic, got " << t << ")");
         self_destruct();
         return;
     }

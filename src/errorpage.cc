@@ -371,7 +371,7 @@ TemplateFile::loadDefault()
     /** test error_default_language location */
     if (!loaded() && Config.errorDefaultLanguage) {
         if (!tryLoadTemplate(Config.errorDefaultLanguage)) {
-            debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "Unable to load default error language files. Reset to backups.");
+            debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "ERROR: Unable to load default error language files. Reset to backups.");
         }
     }
 #endif

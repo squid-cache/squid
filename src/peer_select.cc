@@ -244,7 +244,7 @@ PeerSelector::~PeerSelector()
     }
 
     if (acl_checklist) {
-        debugs(44, DBG_IMPORTANT, "BUG: peer selector gone while waiting for a slow ACL");
+        debugs(44, DBG_IMPORTANT, "ERROR: Squid BUG: peer selector gone while waiting for a slow ACL");
         delete acl_checklist;
     }
 

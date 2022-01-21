@@ -59,7 +59,7 @@ Acl::InnerNode::lineParse()
         ACL *a = ACL::FindByName(t);
 
         if (a == NULL) {
-            debugs(28, DBG_CRITICAL, "ACL not found: " << t);
+            debugs(28, DBG_CRITICAL, "ERROR: ACL not found: " << t);
             self_destruct();
             return count; // not reached
         }

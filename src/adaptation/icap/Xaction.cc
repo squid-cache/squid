@@ -188,7 +188,7 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
     Adaptation::Icap::ServiceRep &s = service();
 
     if (ia == NULL) {
-        debugs(44, DBG_IMPORTANT, "ICAP: Unknown service host: " << s.cfg().host);
+        debugs(44, DBG_IMPORTANT, "ERROR: ICAP: Unknown service host: " << s.cfg().host);
 
 #if WHEN_IPCACHE_NBGETHOSTBYNAME_USES_ASYNC_CALLS
         dieOnConnectionFailure(); // throws

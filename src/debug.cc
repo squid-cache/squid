@@ -543,7 +543,7 @@ _db_rotate_log(void)
         errno = 0;
         if (rename(from, to) == -1) {
             const auto saved_errno = errno;
-            debugs(0, DBG_IMPORTANT, "log rotation failed: " << xstrerr(saved_errno));
+            debugs(0, DBG_IMPORTANT, "ERROR: log rotation failed: " << xstrerr(saved_errno));
         }
     }
 
@@ -557,14 +557,14 @@ _db_rotate_log(void)
         errno = 0;
         if (remove(to) == -1) {
             const auto saved_errno = errno;
-            debugs(0, DBG_IMPORTANT, "removal of log file " << to << " failed: " << xstrerr(saved_errno));
+            debugs(0, DBG_IMPORTANT, "ERROR: removal of log file " << to << " failed: " << xstrerr(saved_errno));
         }
         TheLog.clear(); // Windows cannot rename() open files
 #endif
         errno = 0;
         if (rename(from, to) == -1) {
             const auto saved_errno = errno;
-            debugs(0, DBG_IMPORTANT, "renaming file " << from << " to "
+            debugs(0, DBG_IMPORTANT, "ERROR: renaming file " << from << " to "
                    << to << "failed: " << xstrerr(saved_errno));
         }
     }
@@ -621,7 +621,7 @@ debugLogKid(void)
 void
 xassert(const char *msg, const char *file, int line)
 {
-    debugs(0, DBG_CRITICAL, "assertion failed: " << file << ":" << line << ": \"" << msg << "\"");
+    debugs(0, DBG_CRITICAL, "FATAL: assertion failed: " << file << ":" << line << ": \"" << msg << "\"");
 
     if (!shutting_down)
         abort();

@@ -53,7 +53,7 @@ send_announce(const ipcache_addrs *ia, const Dns::LookupDetails &, void *)
     int fd;
 
     if (ia == NULL) {
-        debugs(27, DBG_IMPORTANT, "send_announce: Unknown host '" << host << "'");
+        debugs(27, DBG_IMPORTANT, "ERROR: send_announce: Unknown host '" << host << "'");
         return;
     }
 

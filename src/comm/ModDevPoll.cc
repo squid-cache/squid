@@ -360,10 +360,8 @@ Comm::DoSelect(int msec)
 
         /* handle errors */
         if (do_poll.dp_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-            debugs(
-                5,
-                DEBUG_DEVPOLL ? 0 : 8,
-                HERE << "devpoll event error: fd " << fd
+            debugs(5, DEBUG_DEVPOLL ? 0 : 8,
+                "ERROR: devpoll event failure: fd " << fd
             );
             continue;
         }

@@ -86,7 +86,7 @@ Security::ServerOptions::parse(const char *token)
 
     } else if (strncmp(token, "dhparams=", 9) == 0) {
         if (!eecdhCurve.isEmpty()) {
-            debugs(83, DBG_PARSE_NOTE(1), "UPGRADE WARNING: EECDH settings in tls-dh= override dhparams=");
+            debugs(83, DBG_PARSE_NOTE(1), "WARNING: UPGRADE: EECDH settings in tls-dh= override dhparams=");
             return;
         }
 

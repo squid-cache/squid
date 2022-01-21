@@ -53,7 +53,7 @@ ACLRandom::parse()
 
     char *t = ConfigParser::strtokFile();
     if (!t) {
-        debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "ACL random missing pattern");
+        debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: ACL random missing pattern");
         return;
     }
 
