@@ -177,7 +177,8 @@ protected:
 
         explicit Logger(DebugChannel &ch): channel(ch) {}
 
-        Logger &operator=(const CompiledDebugMessage &message) {
+        Logger &operator=(const CompiledDebugMessage &message)
+        {
             if (Debug::Enabled(message.header.section, message.header.level))
                 channel.get().log(message.header, message.body);
             return *this;
