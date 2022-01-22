@@ -63,12 +63,13 @@ Less(const A a, const B b) {
 
 /// ensure that T is supported by NaturalSum() and friends
 template<typename T>
-constexpr void
+constexpr bool
 AssertNaturalType()
 {
     static_assert(std::numeric_limits<T>::is_bounded, "std::numeric_limits<T>::max() is meaningful");
     static_assert(std::numeric_limits<T>::is_exact, "no silent loss of precision");
     static_assert(!std::is_enum<T>::value, "no silent creation of non-enumerated values");
+    return true; // for static_assert convenience in C++11 constexpr callers
 }
 
 // TODO: Investigate whether this optimization can be expanded to [signed] types
@@ -79,8 +80,9 @@ AssertNaturalType()
 template <typename S, typename T, EnableIfType<AllUnsigned<S,T>::value, int> = 0>
 Optional<S>
 IncreaseSumInternal(const S s, const T t) {
-    AssertNaturalType<S>();
-    AssertNaturalType<T>();
+    // TODO: Just call AssertNaturalType() after upgrading to C++14.
+    static_assert(AssertNaturalType<S>(), "S is a supported type");
+    static_assert(AssertNaturalType<T>(), "T is a supported type");
 
     // For the sum overflow check below to work, we cannot restrict the sum
     // type which, due to integral promotions, may exceed common_type<S,T>!
@@ -99,8 +101,8 @@ IncreaseSumInternal(const S s, const T t) {
 template <typename S, typename T, EnableIfType<!AllUnsigned<S,T>::value, int> = 0>
 Optional<S> constexpr
 IncreaseSumInternal(const S s, const T t) {
-    AssertNaturalType<S>();
-    AssertNaturalType<T>();
+    static_assert(AssertNaturalType<S>(), "S is a supported type");
+    static_assert(AssertNaturalType<T>(), "T is a supported type");
     return
         // We could support a non-under/overflowing sum of negative numbers, but
         // our callers use negative values specially (e.g., for do-not-use or
