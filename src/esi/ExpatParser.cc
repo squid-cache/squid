@@ -12,7 +12,27 @@
 
 #if USE_SQUID_ESI && HAVE_LIBEXPAT
 
+#include "base/RunnersRegistry.h"
 #include "esi/ExpatParser.h"
+
+static ESIParser::Register *prExpat = nullptr;
+
+class EsiExpatRr : public RegisteredRunner
+{
+public:
+    void finalizeConfig()
+    {
+        prExpat = new ESIParser::Register("expat", &ESIExpatParser::NewParser);
+    }
+
+    void finishShutdown()
+    {
+      delete prExpat;
+      prExpat = nullptr;
+    }
+};
+
+RunnerRegistrationEntry(EsiExpatRr);
 
 EsiParserDefinition(ESIExpatParser);
 

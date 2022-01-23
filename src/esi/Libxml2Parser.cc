@@ -16,7 +16,27 @@
 
 #if USE_SQUID_ESI && HAVE_LIBXML2
 
+#include "base/RunnersRegistry.h"
 #include "esi/Libxml2Parser.h"
+
+static ESIParser::Register *prLibxml = nullptr;
+
+class EsiXml2Rr : public RegisteredRunner
+{
+public:
+    void finalizeConfig()
+    {
+        prLibxml = new ESIParser::Register("libxml2", &ESILibxml2Parser::NewParser);
+    }
+
+    void finishShutdown()
+    {
+      delete prLibxml;
+      prLibxml = nullptr;
+    }
+};
+
+RunnerRegistrationEntry(EsiXml2Rr);
 
 // the global document that will store the resolved entity
 // definitions
