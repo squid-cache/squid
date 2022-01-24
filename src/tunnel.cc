@@ -1276,7 +1276,7 @@ TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
             return sendError(selectionError, "path selection has failed");
 
         if (savedError)
-            return sendError(savedError, "all found paths have failed");
+            return sendError(savedError, "early error (TODO: impossible?) and no paths to try");
 
         return sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError, request.getRaw(), al),
                          "path selection found no paths");
@@ -1292,8 +1292,12 @@ TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
         return;
     }
 
-    Must(transportWait); // or we would be stuck with nothing to do or wait for
-    notifyConnOpener();
+    if (transportWait)
+        return notifyConnOpener();
+
+    // destinationsFound, but none of them worked, and we were waiting for more
+    assert(savedError);
+    sendError(savedError, "all found paths have failed");
 }
 
 bool
