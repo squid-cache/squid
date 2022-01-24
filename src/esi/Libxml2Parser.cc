@@ -19,24 +19,26 @@
 #include "base/RunnersRegistry.h"
 #include "esi/Libxml2Parser.h"
 
-static ESIParser::Register *prLibxml = nullptr;
+#include <memory>
 
-class EsiXml2Rr : public RegisteredRunner
+namespace Esi
+{
+
+class Xml2Rr : public RegisteredRunner
 {
 public:
     void finalizeConfig()
     {
-        prLibxml = new ESIParser::Register("libxml2", &ESILibxml2Parser::NewParser);
+        prLibxml.reset(new ESIParser::Register("libxml2", &ESILibxml2Parser::NewParser));
     }
 
-    void finishShutdown()
-    {
-      delete prLibxml;
-      prLibxml = nullptr;
-    }
+private:
+    std::unique_ptr<ESIParser::Register> prLibxml;
 };
 
-RunnerRegistrationEntry(EsiXml2Rr);
+RunnerRegistrationEntry(Xml2Rr);
+
+}
 
 // the global document that will store the resolved entity
 // definitions

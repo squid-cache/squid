@@ -15,24 +15,26 @@
 #include "base/RunnersRegistry.h"
 #include "esi/ExpatParser.h"
 
-static ESIParser::Register *prExpat = nullptr;
+#include <memory>
 
-class EsiExpatRr : public RegisteredRunner
+namespace Esi
+{
+
+class ExpatRr : public RegisteredRunner
 {
 public:
     void finalizeConfig()
     {
-        prExpat = new ESIParser::Register("expat", &ESIExpatParser::NewParser);
+        prExpat.reset(new ESIParser::Register("expat", &ESIExpatParser::NewParser));
     }
 
-    void finishShutdown()
-    {
-      delete prExpat;
-      prExpat = nullptr;
-    }
+private:
+    std::unique_ptr<ESIParser::Register> prExpat;
 };
 
-RunnerRegistrationEntry(EsiExpatRr);
+RunnerRegistrationEntry(ExpatRr);
+
+}
 
 EsiParserDefinition(ESIExpatParser);
 
