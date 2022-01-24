@@ -107,7 +107,7 @@ Mgr::Inquirer::noteWroteHeader(const CommIoCbParams& params)
 
 /// called when the HTTP client or some external force closed our socket
 void
-Mgr::Inquirer::noteCommClosed(const CommCloseCbParams& params)
+Mgr::Inquirer::noteCommClosed(const CommCloseCbParams &)
 {
     debugs(16, 5, HERE);
     closer = nullptr;
