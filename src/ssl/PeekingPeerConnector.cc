@@ -27,18 +27,18 @@ CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeekingPeerConnector);
 void switchToTunnel(HttpRequest *request, const Comm::ConnectionPointer &clientConn, const Comm::ConnectionPointer &srvConn, const SBuf &preReadServerData);
 
 void
-Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone(Acl::Answer answer, void *data)
+Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone(const Acl::Answer aclAnswer, void *data)
 {
     Ssl::PeekingPeerConnector *peerConnect = (Ssl::PeekingPeerConnector *) data;
     // Use job calls to add done() checks and other job logic/protections.
-    CallJobHere1(83, 7, CbcPointer<PeekingPeerConnector>(peerConnect), Ssl::PeekingPeerConnector, checkForPeekAndSpliceDone, answer);
+    CallJobHere1(83, 7, CbcPointer<PeekingPeerConnector>(peerConnect), Ssl::PeekingPeerConnector, checkForPeekAndSpliceDone, aclAnswer);
 }
 
 void
-Ssl::PeekingPeerConnector::checkForPeekAndSpliceDone(Acl::Answer answer)
+Ssl::PeekingPeerConnector::checkForPeekAndSpliceDone(const Acl::Answer aclAnswer)
 {
-    const Ssl::BumpMode finalAction = answer.allowed() ?
-                                      static_cast<Ssl::BumpMode>(answer.kind):
+    const Ssl::BumpMode finalAction = aclAnswer.allowed() ?
+                                      static_cast<Ssl::BumpMode>(aclAnswer.kind):
                                       checkForPeekAndSpliceGuess();
     checkForPeekAndSpliceMatched(finalAction);
 }
@@ -106,10 +106,8 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceMatched(const Ssl::BumpMode acti
         splice = true;
         // Ssl Negotiation stops here. Last SSL checks for valid certificates
         // and if done, switch to tunnel mode
-        if (sslFinalized()) {
-            debugs(83,5, "Abort NegotiateSSL on FD " << serverConn->fd << " and splice the connection");
+        if (sslFinalized() && callback)
             callBack();
-        }
     }
 }
 
@@ -272,8 +270,11 @@ Ssl::PeekingPeerConnector::startTunneling()
     auto b = SSL_get_rbio(session.get());
     auto srvBio = static_cast<Ssl::ServerBio*>(BIO_get_data(b));
 
+    debugs(83, 5, "will tunnel instead of negotiating TLS");
     switchToTunnel(request.getRaw(), clientConn, serverConn, srvBio->rBufData());
-    tunnelInsteadOfNegotiating();
+    answer().tunneled = true;
+    disconnect();
+    callBack();
 }
 
 void
@@ -395,15 +396,5 @@ Ssl::PeekingPeerConnector::serverCertificateVerified()
                    " bumped: " << *serverConnection());
         }
     }
-}
-
-void
-Ssl::PeekingPeerConnector::tunnelInsteadOfNegotiating()
-{
-    Must(callback != NULL);
-    CbDialer *dialer = dynamic_cast<CbDialer*>(callback->getDialer());
-    Must(dialer);
-    dialer->answer().tunneled = true;
-    debugs(83, 5, "The SSL negotiation with server aborted");
 }
 

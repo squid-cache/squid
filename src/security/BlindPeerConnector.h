@@ -20,6 +20,8 @@ namespace Security
 class BlindPeerConnector: public Security::PeerConnector {
     CBDATA_CLASS(BlindPeerConnector);
 public:
+    typedef CbcPointer<BlindPeerConnector> Pointer;
+
     BlindPeerConnector(HttpRequestPointer &aRequest,
                        const Comm::ConnectionPointer &aServerConn,
                        AsyncCall::Pointer &aCallback,

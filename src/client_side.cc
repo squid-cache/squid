@@ -503,6 +503,10 @@ httpRequestFree(void *data)
 /* This is a handler normally called by comm_close() */
 void ConnStateData::connStateClosed(const CommCloseCbParams &)
 {
+    if (clientConnection) {
+        clientConnection->noteClosure();
+        // keep closed clientConnection for logging, clientdb cleanup, etc.
+    }
     deleteThis("ConnStateData::connStateClosed");
 }
 
