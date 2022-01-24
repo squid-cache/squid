@@ -1297,6 +1297,7 @@ TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
 
     // destinationsFound, but none of them worked, and we were waiting for more
     assert(savedError);
+    // XXX: Honor clientExpectsConnectResponse() before replying.
     sendError(savedError, "all found paths have failed");
 }
 
