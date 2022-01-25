@@ -9,6 +9,8 @@
 /* DEBUG: section 86    ESI processing */
 
 #include "squid.h"
+#include "base/TextException.h"
+#include "Debug.h"
 #include "esi/Parser.h"
 #include "fatal.h"
 
@@ -25,19 +27,29 @@ ESIParser::GetRegistry()
 ESIParser::Pointer
 ESIParser::NewParser(ESIParserClient *aClient)
 {
-    if (Parser == NULL) {
-        Parser = GetRegistry().front();
-
-        // if type name matters, use it
+    if (!Parser) {
+        const char *use;
         if (strcasecmp(Type, "auto") != 0) {
-            for (auto *p : GetRegistry()) {
-                if (p && strcasecmp(p->name, Type) != 0)
-                    Parser = p;
-            }
+            // if esi_parser is configured, use that
+            use = Type;
+        } else {
+#if HAVE_LIBXML2
+            // libxml2 is the more secure. prefer when possible
+            use = "libxml2";
+#else
+            // expat is more widely available
+            use = "expat";
+#endif
         }
 
-        if (Parser == NULL)
-            fatal ("Unknown ESI Parser type");
+        for (auto *p : GetRegistry()) {
+            if (p && strcasecmp(p->name, use) == 0)
+                Parser = p;
+        }
+
+        if (!Parser)
+            fatalf("Unknown ESI Parser type '%s'", use);
+        debugs(86, 2, "Starting " << Parser->name << " ESI parser.");
     }
 
     return (Parser->newParser)(aClient);

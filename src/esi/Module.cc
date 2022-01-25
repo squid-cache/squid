@@ -22,8 +22,6 @@ static ESIParser::Register *prExpat = 0;
 
 void Esi::Init()
 {
-    // register in reverse order of preference.
-    // The latest registered parser will be used as default.
 #if HAVE_LIBEXPAT
     assert(!prExpat); // we should be called once
     prExpat = new ESIParser::Register("expat", &ESIExpatParser::NewParser);
