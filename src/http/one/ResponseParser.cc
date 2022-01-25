@@ -11,7 +11,6 @@
 #include "http/one/ResponseParser.h"
 #include "http/ProtocolVersion.h"
 #include "parser/Tokenizer.h"
-#include "profiler/Profiler.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
 
@@ -214,8 +213,6 @@ Http::One::ResponseParser::parse(const SBuf &aBuf)
 
     // stage 2: parse the status-line
     if (parsingStage_ == HTTP_PARSE_FIRST) {
-        PROF_start(HttpParserParseReplyLine);
-
         const int retcode = parseResponseFirstLine();
 
         // first-line (or a look-alike) found successfully.
@@ -226,7 +223,6 @@ Http::One::ResponseParser::parse(const SBuf &aBuf)
         debugs(74, 5, "status-line: status-code " << statusCode_);
         debugs(74, 5, "status-line: reason-phrase " << reasonPhrase_);
         debugs(74, 5, "Parser: bytes processed=" << (aBuf.length()-buf_.length()));
-        PROF_stop(HttpParserParseReplyLine);
 
         // syntax errors already
         if (retcode < 0) {

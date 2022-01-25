@@ -48,7 +48,6 @@
 #include "neighbors.h"
 #include "pconn.h"
 #include "peer_proxy_negotiate_auth.h"
-#include "profiler/Profiler.h"
 #include "refresh.h"
 #include "RefreshPattern.h"
 #include "rfc1738.h"
@@ -1294,9 +1293,7 @@ HttpStateData::processReply()
     }
 
     if (!flags.headers_parsed) { // have not parsed headers yet?
-        PROF_start(HttpStateData_processReplyHeader);
         processReplyHeader();
-        PROF_stop(HttpStateData_processReplyHeader);
 
         if (!continueAfterParsingHeader()) // parsing error or need more data
             return; // TODO: send errors to ICAP
@@ -1305,9 +1302,7 @@ HttpStateData::processReply()
     }
 
     // kick more reads if needed and/or process the response body, if any
-    PROF_start(HttpStateData_processReplyBody);
     processReplyBody(); // may call serverComplete()
-    PROF_stop(HttpStateData_processReplyBody);
 }
 
 /**

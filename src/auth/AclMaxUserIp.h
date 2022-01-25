@@ -21,7 +21,6 @@ class ACLMaxUserIP : public ACL
 public:
     explicit ACLMaxUserIP(char const *theClass);
 
-    virtual ACL *clone() const;
     virtual char const *typeString() const;
     virtual const Acl::Options &options();
     virtual void parse();

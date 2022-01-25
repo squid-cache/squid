@@ -11,7 +11,6 @@
 #include "squid.h"
 #include "event.h"
 #include "mgr/Registration.h"
-#include "profiler/Profiler.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
@@ -229,8 +228,6 @@ EventScheduler::checkEvents(int)
     if (result != 0)
         return result;
 
-    PROF_start(eventRun);
-
     do {
         ev_entry *event = tasks;
         assert(event);
@@ -255,7 +252,6 @@ EventScheduler::checkEvents(int)
             break; // do not dequeue events following a heavy event
     } while (result == 0);
 
-    PROF_stop(eventRun);
     return result;
 }
 
