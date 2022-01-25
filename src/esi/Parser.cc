@@ -27,11 +27,9 @@ ESIParser::Pointer
 ESIParser::NewParser(ESIParserClient *aClient)
 {
     if (!Parser) {
-        const char *use;
-        if (strcasecmp(Type, "auto") != 0) {
-            // if esi_parser is configured, use that
-            use = Type;
-        } else {
+        // if esi_parser is configured, use that
+        const char *use = Type;
+        if (!use || strcasecmp(use, "auto") == 0) {
 #if HAVE_LIBXML2
             // libxml2 is the more secure. prefer when possible
             use = "libxml2";
