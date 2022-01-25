@@ -9,7 +9,6 @@
 /* DEBUG: section 86    ESI processing */
 
 #include "squid.h"
-#include "base/TextException.h"
 #include "Debug.h"
 #include "esi/Parser.h"
 #include "fatal.h"
