@@ -28,24 +28,24 @@ ESIParser::NewParser(ESIParserClient *aClient)
 {
     if (!Parser) {
         // if esi_parser is configured, use that
-        const char *use = Type;
-        if (!use || strcasecmp(use, "auto") == 0) {
+        const char *selectParserName = Type;
+        if (!selectParserName || strcasecmp(selectParserName, "auto") == 0) {
 #if HAVE_LIBXML2
             // libxml2 is the more secure. prefer when possible
-            use = "libxml2";
+            selectParserName = "libxml2";
 #else
             // expat is more widely available
-            use = "expat";
+            selectParserName = "expat";
 #endif
         }
 
         for (auto *p : GetRegistry()) {
-            if (p && strcasecmp(p->name, use) == 0)
+            if (p && strcasecmp(p->name, selectParserName) == 0)
                 Parser = p;
         }
 
         if (!Parser)
-            fatalf("Unknown ESI Parser type '%s'", use);
+            fatalf("Unknown ESI Parser type '%s'", selectParserName);
         debugs(86, 2, "Starting " << Parser->name << " ESI parser.");
     }
 
