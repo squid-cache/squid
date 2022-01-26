@@ -109,14 +109,10 @@ section 54    Windows Interprocess Communication
 section 55    HTTP Header
 section 57    HTTP Status-line
 section 58    HTTP Reply (Response)
-section 59    auto-growing Memory Buffer with printf
 section 61    Redirector
-section 62    Generic Histogram
-section 63    Low Level Memory Pool Management
 section 64    HTTP Range Header
 section 65    HTTP Cache Control Header
 section 66    HTTP Header Tools
-section 67    String
 section 68    HTTP Content-Range Header
 section 70    Cache Digest
 section 71    Store Digest Manager

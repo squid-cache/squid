@@ -6,8 +6,6 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 62    Generic Histogram */
-
 #include "squid.h"
 #include "StatHist.h"
 
