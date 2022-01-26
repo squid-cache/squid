@@ -107,7 +107,6 @@ section 53    Radix Tree data structure implementation
 section 54    Interprocess Communication
 section 54    Windows Interprocess Communication
 section 55    HTTP Header
-section 56    HTTP Message Body
 section 57    HTTP Status-line
 section 58    HTTP Reply (Response)
 section 59    auto-growing Memory Buffer with printf
