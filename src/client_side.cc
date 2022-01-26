@@ -2224,7 +2224,8 @@ ConnStateData::start()
 void
 ConnStateData::whenClientIpKnown()
 {
-    if (Config.onoff.log_fqdn)
+    debugs(33, 7, clientConnection->remote);
+    if (Dns::ResolveClientAddressesAsap)
         fqdncache_gethostbyaddr(clientConnection->remote, FQDN_LOOKUP_IF_MISS);
 
 #if USE_IDENT

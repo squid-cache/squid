@@ -593,10 +593,6 @@ Format::Token::parse(const char *def, Quoting *quoting)
 
         break;
 
-    case LFT_CLIENT_FQDN:
-        Config.onoff.log_fqdn = 1;
-        break;
-
     case LFT_TIME_TO_HANDLE_REQUEST:
     case LFT_PEER_RESPONSE_TIME:
     case LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME:

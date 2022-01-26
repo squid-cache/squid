@@ -17,7 +17,6 @@
 #include "format/Format.h"
 #include "format/Quoting.h"
 #include "format/Token.h"
-#include "fqdncache.h"
 #include "http/Stream.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
@@ -410,14 +409,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_CLIENT_FQDN:
-            if (al->cache.caddr.isAnyAddr()) // e.g., ICAP OPTIONS lack client
-                out = "-";
-            else
-                out = fqdncache_gethostbyaddr(al->cache.caddr, FQDN_LOOKUP_IF_MISS);
-
-            if (!out) {
-                out = al->cache.caddr.toStr(tmp, sizeof(tmp));
-            }
+            out = al->getLogClientFqdn(tmp, sizeof(tmp));
             break;
 
         case LFT_CLIENT_PORT:

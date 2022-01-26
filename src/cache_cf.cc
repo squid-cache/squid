@@ -33,6 +33,7 @@
 #include "eui/Config.h"
 #include "ExternalACL.h"
 #include "format/Format.h"
+#include "fqdncache.h"
 #include "ftp/Elements.h"
 #include "globals.h"
 #include "HttpHeaderTools.h"
@@ -3985,6 +3986,7 @@ void
 configFreeMemory(void)
 {
     free_all();
+    Dns::ResolveClientAddressesAsap = false;
     Config.ssl_client.sslContext.reset();
 #if USE_OPENSSL
     Ssl::unloadSquidUntrusted();

@@ -289,7 +289,6 @@ public:
         int buffered_logs;
         int common_log;
         int log_mime_hdrs;
-        int log_fqdn;
         int announce;
         int mem_pools;
         int test_reachability;
