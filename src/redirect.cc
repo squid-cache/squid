@@ -259,7 +259,7 @@ constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientH
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(ERR_GATEWAY_FAILURE, status,
-                                    NULL,
+                                    nullptr,
                                     http->getConn(),
                                     http->request,
                                     NULL,

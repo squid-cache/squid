@@ -1667,7 +1667,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
         conn->quitAfterError(request.getRaw());
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        repContext->setReplyToError(ERR_UNSUP_REQ, Http::scNotImplemented, NULL,
+        repContext->setReplyToError(ERR_UNSUP_REQ, Http::scNotImplemented, nullptr,
                                     conn, request.getRaw(), nullptr, nullptr);
         assert(context->http->out.offset == 0);
         context->pullData();
@@ -1717,7 +1717,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
             assert (repContext);
             conn->quitAfterError(request.getRaw());
             repContext->setReplyToError(ERR_TOO_BIG,
-                                        Http::scPayloadTooLarge, NULL,
+                                        Http::scPayloadTooLarge, nullptr,
                                         conn, http->request, nullptr, nullptr);
             assert(context->http->out.offset == 0);
             context->pullData();
@@ -3244,8 +3244,7 @@ ConnStateData::buildFakeRequest(SBuf &useHost, unsigned short usePort, const SBu
     // Setup Http::Request object. Maybe should be replaced by a call to (modified)
     // clientProcessRequest
     HttpRequest::Pointer request = new HttpRequest(mx);
-    AnyP::ProtocolType proto = AnyP::PROTO_AUTHORITY_FORM;
-    request->url.setScheme(proto, nullptr);
+    request->url.setScheme(AnyP::PROTO_AUTHORITY_FORM, nullptr);
     request->method = Http::METHOD_CONNECT;
     request->url.host(useHost.c_str());
     request->url.port(usePort);
