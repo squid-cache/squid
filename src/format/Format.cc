@@ -17,7 +17,6 @@
 #include "format/Format.h"
 #include "format/Quoting.h"
 #include "format/Token.h"
-#include "fqdncache.h"
 #include "http/Stream.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
@@ -108,8 +107,9 @@ Format::AssembleOne(const char *token, MemBuf &mb, const AccessLogEntryPointer &
         fmt.format = &tkn;
         fmt.assemble(mb, ale, 0);
         fmt.format = nullptr;
-    } else
+    } else {
         mb.append("-", 1);
+    }
     return static_cast<size_t>(tokenSize);
 }
 
@@ -387,7 +387,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         int dofree = 0;
         int64_t outoff = 0;
         int dooff = 0;
-        struct timeval outtv = {0, 0};
+        struct timeval outtv = {};
         int doMsec = 0;
         int doSec = 0;
         bool doUint64 = false;
@@ -409,14 +409,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_CLIENT_FQDN:
-            if (al->cache.caddr.isAnyAddr()) // e.g., ICAP OPTIONS lack client
-                out = "-";
-            else
-                out = fqdncache_gethostbyaddr(al->cache.caddr, FQDN_LOOKUP_IF_MISS);
-
-            if (!out) {
-                out = al->cache.caddr.toStr(tmp, sizeof(tmp));
-            }
+            out = al->getLogClientFqdn(tmp, sizeof(tmp));
             break;
 
         case LFT_CLIENT_PORT:
@@ -1370,6 +1363,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_REQUEST_URLGROUP_OLD_2X:
             assert(LFT_REQUEST_URLGROUP_OLD_2X == 0); // should never happen.
+            break;
 
         case LFT_NOTE:
             tmp[0] = fmt->data.header.separator;

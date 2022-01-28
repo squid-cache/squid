@@ -99,7 +99,7 @@ redirectHandleReply(void *data, const Helper::Reply &reply)
             size_t replySize = 0;
             if (const char *t = strchr(res, ' ')) {
                 static int warn = 0;
-                debugs(61, (!(warn++%50)? DBG_CRITICAL:2), "UPGRADE WARNING: URL rewriter reponded with garbage '" << t <<
+                debugs(61, (!(warn++%50)? DBG_CRITICAL:2), "WARNING: UPGRADE: URL rewriter reponded with garbage '" << t <<
                        "'. Future Squid will treat this as part of the URL.");
                 replySize = t - res;
             } else
@@ -125,7 +125,7 @@ redirectHandleReply(void *data, const Helper::Reply &reply)
                 if (*result == '!') {
                     static int urlgroupWarning = 0;
                     if (!urlgroupWarning++)
-                        debugs(85, DBG_IMPORTANT, "UPGRADE WARNING: URL rewriter using obsolete Squid-2 urlgroup feature needs updating.");
+                        debugs(85, DBG_IMPORTANT, "WARNING: UPGRADE: URL rewriter using obsolete Squid-2 urlgroup feature needs updating.");
                     if (char *t = strchr(result+1, '!')) {
                         *t = '\0';
                         newReply.notes.add("urlgroup", result+1);

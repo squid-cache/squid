@@ -23,6 +23,7 @@
 #include "Parsing.h"
 #include "SquidConfig.h"
 #include "Store.h"
+#include "wccp2.h"
 
 #if HAVE_NETDB_H
 #include <netdb.h>
@@ -461,8 +462,8 @@ int empty_portlist[WCCP2_NUMPORTS] = {0, 0, 0, 0, 0, 0, 0, 0};
 
 /* END WCCP V2 PROTOCOL TYPES DEFINITION */
 
-void wccp2_add_service_list(int service, int service_id, int service_priority,
-                            int service_proto, int service_flags, int ports[], int security_type, char *password);
+static void wccp2_add_service_list(int service, int service_id, int service_priority,
+                                   int service_proto, int service_flags, int ports[], int security_type, char *password);
 static void wccp2SortCacheList(struct wccp2_cache_list_t *head);
 
 /*
@@ -623,7 +624,7 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
     }
 
     if (srv->wccp2_security_type != WCCP2_MD5_SECURITY) {
-        debugs(80, DBG_IMPORTANT, "wccp2_check_security: invalid security option");
+        debugs(80, DBG_IMPORTANT, "ERROR: wccp2_check_security: invalid security option");
         return 0;
     }
 
@@ -1108,6 +1109,59 @@ wccp2ConnectionClose(void)
  * Functions for handling the requests.
  */
 
+/// Checks that the given area section ends inside the given (whole) area.
+/// \param error the message to throw when the section does not fit
+static void
+CheckSectionLength(const void *sectionStart, const size_t sectionLength, const void *wholeStart, const size_t wholeSize, const char *error)
+{
+    assert(sectionStart);
+    assert(wholeStart);
+
+    const auto wholeEnd = static_cast<const char*>(wholeStart) + wholeSize;
+    assert(sectionStart >= wholeStart && "we never go backwards");
+    assert(sectionStart <= wholeEnd && "we never go beyond our whole (but zero-sized fields are OK)");
+    static_assert(sizeof(wccp2_i_see_you_t) <= PTRDIFF_MAX, "paranoid: no UB when subtracting in-whole pointers");
+    // subtraction safe due to the three assertions above
+    const auto remainderDiff = wholeEnd - static_cast<const char*>(sectionStart);
+
+    // casting safe due to the assertions above (and size_t definition)
+    assert(remainderDiff >= 0);
+    const auto remainderSize = static_cast<size_t>(remainderDiff);
+
+    if (sectionLength <= remainderSize)
+        return;
+
+    throw TextException(error, Here());
+}
+
+/// Checks that the area contains at least dataLength bytes after the header.
+/// The size of the field header itself is not included in dataLength.
+/// \returns the total field size -- the field header and field data combined
+template<class FieldHeader>
+static size_t
+CheckFieldDataLength(const FieldHeader *header, const size_t dataLength, const void *areaStart, const size_t areaSize, const char *error)
+{
+    assert(header);
+    const auto dataStart = reinterpret_cast<const char*>(header) + sizeof(header);
+    CheckSectionLength(dataStart, dataLength, areaStart, areaSize, error);
+    return sizeof(header) + dataLength; // no overflow after CheckSectionLength()
+}
+
+/// Positions the given field at a given start within a given packet area.
+/// The Field type determines the correct field size (used for bounds checking).
+/// \param field the field pointer the function should set
+/// \param areaStart the start of a packet (sub)structure containing the field
+/// \param areaSize the size of the packet (sub)structure starting at areaStart
+/// \param fieldStart the start of a field within the given area
+/// \param error the message to throw when the field does not fit the area
+template<class Field>
+static void
+SetField(Field *&field, const void *fieldStart, const void *areaStart, const size_t areaSize, const char *error)
+{
+    CheckSectionLength(fieldStart, sizeof(Field), areaStart, areaSize, error);
+    field = static_cast<Field*>(const_cast<void*>(fieldStart));
+}
+
 /*
  * Accept the UDP packet
  */
@@ -1124,8 +1178,6 @@ wccp2HandleUdp(int sock, void *)
 
     /* These structs form the parts of the packet */
 
-    struct wccp2_item_header_t *header = NULL;
-
     struct wccp2_security_none_t *security_info = NULL;
 
     struct wccp2_service_info_t *service_info = NULL;
@@ -1141,14 +1193,13 @@ wccp2HandleUdp(int sock, void *)
     struct wccp2_cache_identity_info_t *cache_identity = NULL;
 
     struct wccp2_capability_info_header_t *router_capability_header = NULL;
+    char *router_capability_data_start = nullptr;
 
     struct wccp2_capability_element_t *router_capability_element;
 
     struct sockaddr_in from;
 
     struct in_addr cache_address;
-    int len, found;
-    short int data_length, offset;
     uint32_t tmp;
     char *ptr;
     int num_caches;
@@ -1161,20 +1212,18 @@ wccp2HandleUdp(int sock, void *)
     Ip::Address from_tmp;
     from_tmp.setIPv4();
 
-    len = comm_udp_recvfrom(sock,
-                            &wccp2_i_see_you,
-                            WCCP_RESPONSE_SIZE,
-                            0,
-                            from_tmp);
+    const auto lenOrError = comm_udp_recvfrom(sock, &wccp2_i_see_you, WCCP_RESPONSE_SIZE, 0, from_tmp);
 
-    if (len < 0)
+    if (lenOrError < 0)
         return;
+    const auto len = static_cast<size_t>(lenOrError);
 
-    if (ntohs(wccp2_i_see_you.version) != WCCP2_VERSION)
-        return;
-
-    if (ntohl(wccp2_i_see_you.type) != WCCP2_I_SEE_YOU)
-        return;
+    try {
+        // TODO: Remove wccp2_i_see_you.data and use a buffer to read messages.
+        const auto message_header_size = sizeof(wccp2_i_see_you) - sizeof(wccp2_i_see_you.data);
+        Must3(len >= message_header_size, "incomplete WCCP message header", Here());
+        Must3(ntohs(wccp2_i_see_you.version) == WCCP2_VERSION, "WCCP version unsupported", Here());
+        Must3(ntohl(wccp2_i_see_you.type) == WCCP2_I_SEE_YOU, "WCCP packet type unsupported", Here());
 
     // XXX: drop conversion boundary
     from_tmp.getSockAddr(from);
@@ -1182,73 +1231,60 @@ wccp2HandleUdp(int sock, void *)
     debugs(80, 3, "Incoming WCCPv2 I_SEE_YOU length " << ntohs(wccp2_i_see_you.length) << ".");
 
     /* Record the total data length */
-    data_length = ntohs(wccp2_i_see_you.length);
+    const auto data_length = ntohs(wccp2_i_see_you.length);
+    Must3(data_length <= len - message_header_size,
+          "malformed packet claiming it's bigger than received data", Here());
 
-    offset = 0;
-
-    if (data_length > len) {
-        debugs(80, DBG_IMPORTANT, "ERROR: Malformed WCCPv2 packet claiming it's bigger than received data");
-        return;
-    }
+    size_t offset = 0;
 
     /* Go through the data structure */
-    while (data_length > offset) {
+    while (offset + sizeof(struct wccp2_item_header_t) <= data_length) {
 
         char *data = wccp2_i_see_you.data;
 
-        header = (struct wccp2_item_header_t *) &data[offset];
+        const auto itemHeader = reinterpret_cast<const wccp2_item_header_t*>(&data[offset]);
+        const auto itemSize = CheckFieldDataLength(itemHeader, ntohs(itemHeader->length),
+                              data, data_length, "truncated record");
+        // XXX: Check "The specified length must be a multiple of 4 octets"
+        // requirement to avoid unaligned memory reads after the first item.
 
-        switch (ntohs(header->type)) {
+        switch (ntohs(itemHeader->type)) {
 
         case WCCP2_SECURITY_INFO:
-
-            if (security_info != NULL) {
-                debugs(80, DBG_IMPORTANT, "Duplicate security definition");
-                return;
-            }
-
-            security_info = (struct wccp2_security_none_t *) &wccp2_i_see_you.data[offset];
+            Must3(!security_info, "duplicate security definition", Here());
+            SetField(security_info, itemHeader, itemHeader, itemSize,
+                     "security definition truncated");
             break;
 
         case WCCP2_SERVICE_INFO:
-
-            if (service_info != NULL) {
-                debugs(80, DBG_IMPORTANT, "Duplicate service_info definition");
-                return;
-            }
-
-            service_info = (struct wccp2_service_info_t *) &wccp2_i_see_you.data[offset];
+            Must3(!service_info, "duplicate service_info definition", Here());
+            SetField(service_info, itemHeader, itemHeader, itemSize,
+                     "service_info definition truncated");
             break;
 
         case WCCP2_ROUTER_ID_INFO:
-
-            if (router_identity_info != NULL) {
-                debugs(80, DBG_IMPORTANT, "Duplicate router_identity_info definition");
-                return;
-            }
-
-            router_identity_info = (struct router_identity_info_t *) &wccp2_i_see_you.data[offset];
+            Must3(!router_identity_info, "duplicate router_identity_info definition", Here());
+            SetField(router_identity_info, itemHeader, itemHeader, itemSize,
+                     "router_identity_info definition truncated");
             break;
 
         case WCCP2_RTR_VIEW_INFO:
-
-            if (router_view_header != NULL) {
-                debugs(80, DBG_IMPORTANT, "Duplicate router_view definition");
-                return;
-            }
-
-            router_view_header = (struct router_view_t *) &wccp2_i_see_you.data[offset];
+            Must3(!router_view_header, "duplicate router_view definition", Here());
+            SetField(router_view_header, itemHeader, itemHeader, itemSize,
+                     "router_view definition truncated");
             break;
 
-        case WCCP2_CAPABILITY_INFO:
+        case WCCP2_CAPABILITY_INFO: {
+            Must3(!router_capability_header, "duplicate router_capability definition", Here());
+            SetField(router_capability_header, itemHeader, itemHeader, itemSize,
+                     "router_capability definition truncated");
 
-            if (router_capability_header != NULL) {
-                debugs(80, DBG_IMPORTANT, "Duplicate router_capability definition");
-                return;
-            }
-
-            router_capability_header = (struct wccp2_capability_info_header_t *) &wccp2_i_see_you.data[offset];
+            CheckFieldDataLength(router_capability_header, ntohs(router_capability_header->capability_info_length),
+                                 itemHeader, itemSize, "capability info truncated");
+            router_capability_data_start = reinterpret_cast<char*>(router_capability_header) +
+                                           sizeof(*router_capability_header);
             break;
+        }
 
         /* Nothing to do for the types below */
 
@@ -1257,22 +1293,17 @@ wccp2HandleUdp(int sock, void *)
             break;
 
         default:
-            debugs(80, DBG_IMPORTANT, "Unknown record type in WCCPv2 Packet (" << ntohs(header->type) << ").");
+            debugs(80, DBG_IMPORTANT, "ERROR: Unknown record type in WCCPv2 Packet (" << ntohs(itemHeader->type) << ").");
         }
 
-        offset += sizeof(struct wccp2_item_header_t);
-        offset += ntohs(header->length);
-
-        if (offset > data_length) {
-            debugs(80, DBG_IMPORTANT, "Error: WCCPv2 packet tried to tell us there is data beyond the end of the packet");
-            return;
-        }
+        offset += itemSize;
+        assert(offset <= data_length && "CheckFieldDataLength(itemHeader...) established that");
     }
 
-    if ((security_info == NULL) || (service_info == NULL) || (router_identity_info == NULL) || (router_view_header == NULL)) {
-        debugs(80, DBG_IMPORTANT, "Incomplete WCCPv2 Packet");
-        return;
-    }
+    Must3(security_info, "packet missing security definition", Here());
+    Must3(service_info, "packet missing service_info definition", Here());
+    Must3(router_identity_info, "packet missing router_identity_info definition", Here());
+    Must3(router_view_header, "packet missing router_view definition", Here());
 
     debugs(80, 5, "Complete packet received");
 
@@ -1288,17 +1319,17 @@ wccp2HandleUdp(int sock, void *)
     }
 
     if (service_list_ptr == NULL) {
-        debugs(80, DBG_IMPORTANT, "WCCPv2 Unknown service received from router (" << service_info->service_id << ")");
+        debugs(80, DBG_IMPORTANT, "ERROR: WCCPv2 Unknown service received from router (" << service_info->service_id << ")");
         return;
     }
 
     if (ntohl(security_info->security_option) != ntohl(service_list_ptr->security_info->security_option)) {
-        debugs(80, DBG_IMPORTANT, "Invalid security option in WCCPv2 Packet (" << ntohl(security_info->security_option) << " vs " << ntohl(service_list_ptr->security_info->security_option) << ").");
+        debugs(80, DBG_IMPORTANT, "ERROR: Invalid security option in WCCPv2 Packet (" << ntohl(security_info->security_option) << " vs " << ntohl(service_list_ptr->security_info->security_option) << ").");
         return;
     }
 
     if (!wccp2_check_security(service_list_ptr, (char *) security_info, (char *) &wccp2_i_see_you, len)) {
-        debugs(80, DBG_IMPORTANT, "Received WCCPv2 Packet failed authentication");
+        debugs(80, DBG_IMPORTANT, "ERROR: Received WCCPv2 Packet failed authentication");
         return;
     }
 
@@ -1308,10 +1339,7 @@ wccp2HandleUdp(int sock, void *)
             break;
     }
 
-    if (router_list_ptr->next == NULL) {
-        debugs(80, DBG_IMPORTANT, "WCCPv2 Packet received from unknown router");
-        return;
-    }
+    Must3(router_list_ptr->next, "packet received from unknown router", Here());
 
     /* Set the router id */
     router_list_ptr->info->router_address = router_identity_info->router_id_element.router_address;
@@ -1325,24 +1353,33 @@ wccp2HandleUdp(int sock, void *)
     /* TODO: check return/forwarding methods */
     if (router_capability_header == NULL) {
         if ((Config.Wccp2.return_method != WCCP2_PACKET_RETURN_METHOD_GRE) || (Config.Wccp2.forwarding_method != WCCP2_FORWARDING_METHOD_GRE)) {
-            debugs(80, DBG_IMPORTANT, "wccp2HandleUdp: fatal error - A WCCP router does not support the forwarding method specified, only GRE supported");
+            debugs(80, DBG_IMPORTANT, "ERROR: wccp2HandleUdp: fatal error - A WCCP router does not support the forwarding method specified, only GRE supported");
             wccp2ConnectionClose();
             return;
         }
     } else {
 
-        char *end = ((char *) router_capability_header) + sizeof(*router_capability_header) + ntohs(router_capability_header->capability_info_length) - sizeof(struct wccp2_capability_info_header_t);
+        const auto router_capability_data_length = ntohs(router_capability_header->capability_info_length);
+        assert(router_capability_data_start);
+        const auto router_capability_data_end = router_capability_data_start +
+                                                router_capability_data_length;
+        for (auto router_capability_data_current = router_capability_data_start;
+                router_capability_data_current < router_capability_data_end;) {
 
-        router_capability_element = (struct wccp2_capability_element_t *) (((char *) router_capability_header) + sizeof(*router_capability_header));
-
-        while ((char *) router_capability_element <= end) {
+            SetField(router_capability_element, router_capability_data_current,
+                     router_capability_data_start, router_capability_data_length,
+                     "capability element header truncated");
+            const auto elementSize = CheckFieldDataLength(
+                                         router_capability_element, ntohs(router_capability_element->capability_length),
+                                         router_capability_data_start, router_capability_data_length,
+                                         "capability element truncated");
 
             switch (ntohs(router_capability_element->capability_type)) {
 
             case WCCP2_CAPABILITY_FORWARDING_METHOD:
 
                 if (!(ntohl(router_capability_element->capability_value) & Config.Wccp2.forwarding_method)) {
-                    debugs(80, DBG_IMPORTANT, "wccp2HandleUdp: fatal error - A WCCP router has specified a different forwarding method " << ntohl(router_capability_element->capability_value) << ", expected " << Config.Wccp2.forwarding_method);
+                    debugs(80, DBG_IMPORTANT, "ERROR: wccp2HandleUdp: fatal error - A WCCP router has specified a different forwarding method " << ntohl(router_capability_element->capability_value) << ", expected " << Config.Wccp2.forwarding_method);
                     wccp2ConnectionClose();
                     return;
                 }
@@ -1352,7 +1389,7 @@ wccp2HandleUdp(int sock, void *)
             case WCCP2_CAPABILITY_ASSIGNMENT_METHOD:
 
                 if (!(ntohl(router_capability_element->capability_value) & Config.Wccp2.assignment_method)) {
-                    debugs(80, DBG_IMPORTANT, "wccp2HandleUdp: fatal error - A WCCP router has specified a different assignment method " << ntohl(router_capability_element->capability_value) << ", expected "<< Config.Wccp2.assignment_method);
+                    debugs(80, DBG_IMPORTANT, "ERROR: wccp2HandleUdp: fatal error - A WCCP router has specified a different assignment method " << ntohl(router_capability_element->capability_value) << ", expected "<< Config.Wccp2.assignment_method);
                     wccp2ConnectionClose();
                     return;
                 }
@@ -1362,7 +1399,7 @@ wccp2HandleUdp(int sock, void *)
             case WCCP2_CAPABILITY_RETURN_METHOD:
 
                 if (!(ntohl(router_capability_element->capability_value) & Config.Wccp2.return_method)) {
-                    debugs(80, DBG_IMPORTANT, "wccp2HandleUdp: fatal error - A WCCP router has specified a different return method " << ntohl(router_capability_element->capability_value) << ", expected " << Config.Wccp2.return_method);
+                    debugs(80, DBG_IMPORTANT, "ERROR: wccp2HandleUdp: fatal error - A WCCP router has specified a different return method " << ntohl(router_capability_element->capability_value) << ", expected " << Config.Wccp2.return_method);
                     wccp2ConnectionClose();
                     return;
                 }
@@ -1374,10 +1411,10 @@ wccp2HandleUdp(int sock, void *)
                 break; // ignore silently for now
 
             default:
-                debugs(80, DBG_IMPORTANT, "Unknown capability type in WCCPv2 Packet (" << ntohs(router_capability_element->capability_type) << ").");
+                debugs(80, DBG_IMPORTANT, "ERROR: Unknown capability type in WCCPv2 Packet (" << ntohs(router_capability_element->capability_type) << ").");
             }
 
-            router_capability_element = (struct wccp2_capability_element_t *) (((char *) router_capability_element) + sizeof(struct wccp2_item_header_t) + ntohs(router_capability_element->capability_length));
+            router_capability_data_current += elementSize;
         }
     }
 
@@ -1396,23 +1433,34 @@ wccp2HandleUdp(int sock, void *)
     num_caches = 0;
 
     /* Check to see if we're the master cache and update the cache list */
-    found = 0;
+    bool found = false;
     service_list_ptr->lowest_ip = 1;
     cache_list_ptr = &router_list_ptr->cache_list_head;
 
     /* to find the list of caches, we start at the end of the router view header */
 
     ptr = (char *) (router_view_header) + sizeof(struct router_view_t);
+    const auto router_view_size = sizeof(struct router_view_t) +
+                                  ntohs(router_view_header->header.length);
 
     /* Then we read the number of routers */
-    memcpy(&tmp, ptr, sizeof(tmp));
+    const uint32_t *routerCountRaw = nullptr;
+    SetField(routerCountRaw, ptr, router_view_header, router_view_size,
+             "malformed packet (truncated router view info w/o number of routers)");
 
     /* skip the number plus all the ip's */
-
-    ptr += sizeof(tmp) + (ntohl(tmp) * sizeof(struct in_addr));
+    ptr += sizeof(*routerCountRaw);
+    const auto ipCount = ntohl(*routerCountRaw);
+    const auto ipsSize = ipCount * sizeof(struct in_addr); // we check for unsigned overflow below
+    Must3(ipsSize / sizeof(struct in_addr) != ipCount, "huge IP address count", Here());
+    CheckSectionLength(ptr, ipsSize, router_view_header, router_view_size, "invalid IP address count");
+    ptr += ipsSize;
 
     /* Then read the number of caches */
-    memcpy(&tmp, ptr, sizeof(tmp));
+    const uint32_t *cacheCountRaw = nullptr;
+    SetField(cacheCountRaw, ptr, router_view_header, router_view_size,
+             "malformed packet (truncated router view info w/o cache count)");
+    memcpy(&tmp, cacheCountRaw, sizeof(tmp)); // TODO: Replace tmp with cacheCount
     ptr += sizeof(tmp);
 
     if (ntohl(tmp) != 0) {
@@ -1426,7 +1474,8 @@ wccp2HandleUdp(int sock, void *)
 
             case WCCP2_ASSIGNMENT_METHOD_HASH:
 
-                cache_identity = (struct wccp2_cache_identity_info_t *) ptr;
+                SetField(cache_identity, ptr, router_view_header, router_view_size,
+                         "malformed packet (truncated router view info cache w/o assignment hash)");
 
                 ptr += sizeof(struct wccp2_cache_identity_info_t);
 
@@ -1437,13 +1486,15 @@ wccp2HandleUdp(int sock, void *)
 
             case WCCP2_ASSIGNMENT_METHOD_MASK:
 
-                cache_mask_info = (struct cache_mask_info_t *) ptr;
+                SetField(cache_mask_info, ptr, router_view_header, router_view_size,
+                         "malformed packet (truncated router view info cache w/o assignment mask)");
 
                 /* The mask assignment has an undocumented variable length entry here */
 
                 if (ntohl(cache_mask_info->num1) == 3) {
 
-                    cache_mask_identity = (struct wccp2_cache_mask_identity_info_t *) ptr;
+                    SetField(cache_mask_identity, ptr, router_view_header, router_view_size,
+                             "malformed packet (truncated router view info cache w/o assignment mask identity)");
 
                     ptr += sizeof(struct wccp2_cache_mask_identity_info_t);
 
@@ -1474,10 +1525,7 @@ wccp2HandleUdp(int sock, void *)
             debugs (80, 5,  "checking cache list: (" << std::hex << cache_address.s_addr << ":" <<  router_list_ptr->local_ip.s_addr << ")");
 
             /* Check to see if it's the master, or us */
-
-            if (cache_address.s_addr == router_list_ptr->local_ip.s_addr) {
-                found = 1;
-            }
+            found = found || (cache_address.s_addr == router_list_ptr->local_ip.s_addr);
 
             if (cache_address.s_addr < router_list_ptr->local_ip.s_addr) {
                 service_list_ptr->lowest_ip = 0;
@@ -1494,7 +1542,7 @@ wccp2HandleUdp(int sock, void *)
         cache_list_ptr->next = NULL;
 
         service_list_ptr->lowest_ip = 1;
-        found = 1;
+        found = true;
         num_caches = 1;
     }
 
@@ -1502,7 +1550,7 @@ wccp2HandleUdp(int sock, void *)
 
     router_list_ptr->num_caches = htonl(num_caches);
 
-    if ((found == 1) && (service_list_ptr->lowest_ip == 1)) {
+    if (found && (service_list_ptr->lowest_ip == 1)) {
         if (ntohl(router_view_header->change_number) != router_list_ptr->member_change) {
             debugs(80, 4, "Change detected - queueing up new assignment");
             router_list_ptr->member_change = ntohl(router_view_header->change_number);
@@ -1514,6 +1562,10 @@ wccp2HandleUdp(int sock, void *)
     } else {
         eventDelete(wccp2AssignBuckets, NULL);
         debugs(80, 5, "I am not the lowest ip cache - not assigning buckets");
+    }
+
+    } catch (...) {
+        debugs(80, DBG_IMPORTANT, "ERROR: Ignoring WCCPv2 message: " << CurrentException);
     }
 }
 
@@ -2004,7 +2056,7 @@ parse_wccp2_method(int *method)
 
     /* Snarf the method */
     if ((t = ConfigParser::NextToken()) == NULL) {
-        debugs(80, DBG_CRITICAL, "wccp2_*_method: missing setting.");
+        debugs(80, DBG_CRITICAL, "ERROR: wccp2_*_method: missing setting.");
         self_destruct();
         return;
     }
@@ -2015,7 +2067,7 @@ parse_wccp2_method(int *method)
     } else if (strcmp(t, "l2") == 0 || strcmp(t, "2") == 0) {
         *method = WCCP2_METHOD_L2;
     } else {
-        debugs(80, DBG_CRITICAL, "wccp2_*_method: unknown setting, got " << t );
+        debugs(80, DBG_CRITICAL, "ERROR: wccp2_*_method: unknown setting, got " << t );
         self_destruct();
     }
 }
@@ -2052,7 +2104,7 @@ parse_wccp2_amethod(int *method)
 
     /* Snarf the method */
     if ((t = ConfigParser::NextToken()) == NULL) {
-        debugs(80, DBG_CRITICAL, "wccp2_assignment_method: missing setting.");
+        debugs(80, DBG_CRITICAL, "ERROR: wccp2_assignment_method: missing setting.");
         self_destruct();
         return;
     }
@@ -2063,7 +2115,7 @@ parse_wccp2_amethod(int *method)
     } else if (strcmp(t, "mask") == 0 || strcmp(t, "2") == 0) {
         *method = WCCP2_ASSIGNMENT_METHOD_MASK;
     } else {
-        debugs(80, DBG_CRITICAL, "wccp2_assignment_method: unknown setting, got " << t );
+        debugs(80, DBG_CRITICAL, "ERROR: wccp2_assignment_method: unknown setting, got " << t );
         self_destruct();
     }
 }
@@ -2109,7 +2161,7 @@ parse_wccp2_service(void *)
 
     /* Snarf the type */
     if ((t = ConfigParser::NextToken()) == NULL) {
-        debugs(80, DBG_CRITICAL, "wccp2ParseServiceInfo: missing service info type (standard|dynamic)");
+        debugs(80, DBG_CRITICAL, "ERROR: wccp2ParseServiceInfo: missing service info type (standard|dynamic)");
         self_destruct();
         return;
     }
@@ -2119,7 +2171,7 @@ parse_wccp2_service(void *)
     } else if (strcmp(t, "dynamic") == 0) {
         service = WCCP2_SERVICE_DYNAMIC;
     } else {
-        debugs(80, DBG_CRITICAL, "wccp2ParseServiceInfo: bad service info type (expected standard|dynamic, got " << t << ")");
+        debugs(80, DBG_CRITICAL, "ERROR: wccp2ParseServiceInfo: bad service info type (expected standard|dynamic, got " << t << ")");
         self_destruct();
         return;
     }

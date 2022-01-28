@@ -90,6 +90,8 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     size_t icmp_pktsize = sizeof(struct icmphdr);
     struct addrinfo *S = NULL;
 
+    static_assert(sizeof(*icmp) + sizeof(*echo) <= sizeof(pkt), "our custom ICMPv4 Echo payload fits the packet buffer");
+
     memset(pkt, '\0', MAX_PKT4_SZ);
 
     icmp = (struct icmphdr *) (void *) pkt;
@@ -111,7 +113,7 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     ++icmp_pkts_sent;
 
     // Construct ICMP packet data content
-    echo = (icmpEchoData *) (icmp + 1);
+    echo = reinterpret_cast<icmpEchoData *>(reinterpret_cast<char *>(pkt) + sizeof(*icmp));
     echo->opcode = (unsigned char) opcode;
     memcpy(&echo->tv, &current_time, sizeof(struct timeval));
 
@@ -180,7 +182,7 @@ Icmp4::Recv(void)
                  &from->ai_addrlen);
 
     if (n <= 0) {
-        debugs(42, DBG_CRITICAL, HERE << "Error when calling recvfrom() on ICMP socket.");
+        debugs(42, DBG_CRITICAL, "ERROR: when calling recvfrom() on ICMP socket.");
         Ip::Address::FreeAddr(from);
         return;
     }
@@ -242,7 +244,7 @@ Icmp4::Recv(void)
     preply.psize = n - iphdrlen - (sizeof(icmpEchoData) - MAX_PKT4_SZ);
 
     if (preply.psize < 0) {
-        debugs(42, DBG_CRITICAL, HERE << "Malformed ICMP packet.");
+        debugs(42, DBG_CRITICAL, "ERROR: Malformed ICMP packet.");
         Ip::Address::FreeAddr(from);
         return;
     }

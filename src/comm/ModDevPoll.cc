@@ -35,7 +35,6 @@
 #include "fd.h"
 #include "fde.h"
 #include "mgr/Registration.h"
-#include "profiler/Profiler.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "StatHist.h"
@@ -316,8 +315,6 @@ Comm::DoSelect(int msec)
     fde *F;
     PF *hdl;
 
-    PROF_start(comm_check_incoming);
-
     if (msec > max_poll_time)
         msec = max_poll_time;
 
@@ -338,19 +335,15 @@ Comm::DoSelect(int msec)
 
         /* error during poll */
         getCurrentTime();
-        PROF_stop(comm_check_incoming);
         return Comm::COMM_ERROR;
     }
 
-    PROF_stop(comm_check_incoming);
     getCurrentTime();
 
     statCounter.select_fds_hist.count(num);
 
     if (num == 0)
         return Comm::TIMEOUT; /* no error */
-
-    PROF_start(comm_handle_ready_fd);
 
     for (i = 0; i < num; ++i) {
         int fd = (int)do_poll.dp_fds[i].fd;
@@ -367,10 +360,8 @@ Comm::DoSelect(int msec)
 
         /* handle errors */
         if (do_poll.dp_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-            debugs(
-                5,
-                DEBUG_DEVPOLL ? 0 : 8,
-                HERE << "devpoll event error: fd " << fd
+            debugs(5, DEBUG_DEVPOLL ? 0 : 8,
+                "ERROR: devpoll event failure: fd " << fd
             );
             continue;
         }
@@ -383,10 +374,8 @@ Comm::DoSelect(int msec)
                     DEBUG_DEVPOLL ? 0 : 8,
                     HERE << "Calling read handler on FD " << fd
                 );
-                PROF_start(comm_read_handler);
                 F->read_handler = NULL;
                 hdl(fd, F->read_data);
-                PROF_stop(comm_read_handler);
                 ++ statCounter.select_fds;
             } else {
                 debugs(
@@ -407,10 +396,8 @@ Comm::DoSelect(int msec)
                     DEBUG_DEVPOLL ? 0 : 8,
                     HERE << "Calling write handler on FD " << fd
                 );
-                PROF_start(comm_write_handler);
                 F->write_handler = NULL;
                 hdl(fd, F->write_data);
-                PROF_stop(comm_write_handler);
                 ++ statCounter.select_fds;
             } else {
                 debugs(
@@ -424,7 +411,6 @@ Comm::DoSelect(int msec)
         }
     }
 
-    PROF_stop(comm_handle_ready_fd);
     return Comm::OK;
 }
 

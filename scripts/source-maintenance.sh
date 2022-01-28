@@ -33,7 +33,7 @@ KeepGoingDirective=""
 # has changed in different releases.
 # if --with-astyle /path/to/astyle is used, the check is still performed
 # and a warning is printed, but the sources are reformatted
-TargetAstyleVersion="2.04"
+TargetAstyleVersion="3.1"
 ASTYLE='astyle'
 
 # whether to check and, if necessary, update boilerplate copyright years
@@ -71,7 +71,6 @@ while [ $# -ge 1 ]; do
         ;;
     --with-astyle)
         ASTYLE=$2
-        export ASTYLE
         shift 2
         ;;
     *)
@@ -203,8 +202,110 @@ checkMakeNamedErrorDetails ()
     return $problems
 }
 
+# extract IDs and gists of cache_log_message debugs() in the given source file
+collectDebugMessagesFrom ()
+{
+    source="$1"
+    destination="doc/debug-messages.tmp"
+
+    # Merge multi-line debugs() into one-liners and remove '//...' comments.
+    awk 'BEGIN { found=0; dbgLine=""; } {
+        if ($0 ~ /[ \t]debugs[ \t]*\(/)
+            found = 1;
+        if (found) {
+            commented = match($0, /\);[ \t]*\/\//);
+            if (commented)
+                $0 = substr($0, 1, RSTART+1);
+            dbgLine = dbgLine $0;
+        }
+        if ($0 ~ /\);/) {
+            if (found) {
+                found = 0;
+                print dbgLine;
+                dbgLine = "";
+            }
+        }
+    }' $source > doc/debug-messages.tmp2
+
+    # sed expressions:
+    # - replace debugs() prefix with the message ID contained in it
+    # - remove simple parenthesized non-"string" items like (a ? b : c)
+    # - replace any remaining non-"string" items with ...
+    # - remove quotes around "strings"
+    # - remove excessive whitespace
+    # - remove debugs() statement termination sugar
+    grep -o -E '\bdebugs[^,]*,[^,]*(Critical|Important)[(][0-9]+.*' doc/debug-messages.tmp2 | \
+        sed -r \
+            -e 's/.*(Critical|Important)[(]([0-9]+)[)][^,]*,\s*/\2 /' \
+            -e 's/<<\s*[(].*[)]\s*(<<|[)];)/<< ... \1/g' \
+            -e 's/<<\s*[^"]*/.../g' \
+            -e 's@([^\\])"@\1@g' \
+            -e 's/\s\s*/ /g' \
+            -e 's/[)];$//g' \
+        >> $destination
+
+    rm -f doc/debug-messages.tmp2
+}
+
+# make doc/debug-messages.dox from aggregate collectDebugMessagesFrom results
+processDebugMessages ()
+{
+    source="doc/debug-messages.tmp"
+    destination="doc/debug-messages.dox"
+
+    if test '!' -s "$source"; then
+        echo "ERROR: Failed to find debugs() message IDs"
+        return 1;
+    fi
+
+    repeatedIds=`awk '{print $1}' $source | sort -n | uniq -d`
+    if test "x$repeatedIds" != "x"; then
+        echo "ERROR: Repeated debugs() message IDs:"
+        echo "$repeatedIds"
+        echo ""
+        return 1;
+    fi
+
+    repeatedGists=`awk '{$1=""; print substr($0,2)}' $source | sort | uniq -d`
+    if test "x$repeatedGists" != "x"; then
+        echo "ERROR: Repeated debugs() message gists:"
+        echo "$repeatedGists"
+        echo ""
+        return 1;
+    fi
+
+    cat scripts/boilerplate.h > $destination
+    printf '/**\n' >> $destination
+    printf '\\page ControlledCacheLogMessages Message IDs and gists for cache_log_message\n' >> $destination
+    printf '\\verbatim\n' >> $destination
+    printf 'ID Message gist\n' >> $destination
+    printf '== ============\n' >> $destination
+    sort -n < $source >> $destination
+    printf '\\endverbatim\n' >> $destination
+    printf '*/\n' >> $destination
+
+    rm -f $source
+}
+
+# make doc/debug-sections.txt from aggregated by srcFormat extracts
+processDebugSections ()
+{
+    destination="doc/debug-sections.txt"
+
+    sort -u < doc/debug-sections.tmp | sort -n > doc/debug-sections.tmp2
+    cat scripts/boilerplate.h > $destination
+    echo "" >> $destination
+    cat doc/debug-sections.tmp2 >> $destination
+
+    rm -f doc/debug-sections.tmp*
+}
+
 srcFormat ()
 {
+    # remove stale temporary files that accumulate info extracted below
+    rm -f doc/debug-messages.tmp*
+    rm -f doc/debug-sections.tmp*
+
 #
 # Scan for incorrect use of #ifdef/#ifndef
 #
@@ -231,7 +332,7 @@ for FILENAME in `git ls-files`; do
 	#
 	applyPluginsTo ${FILENAME} scripts/maintenance/ || return
 	if test "${ASVER}"; then
-		./scripts/formater.pl ${FILENAME}
+		./scripts/formater.pl --with-astyle ${ASTYLE} ${FILENAME}
 		if test -e $FILENAME -a -e "$FILENAME.astylebak"; then
 			md51=`cat  $FILENAME| tr -d "\n \t\r" | $MD5`;
 			md52=`cat  $FILENAME.astylebak| tr -d "\n \t\r" | $MD5`;
@@ -302,6 +403,8 @@ for FILENAME in `git ls-files`; do
 		echo "ERROR: ${FILENAME} contains unsafe use of sprintf()"
 	fi
 
+	collectDebugMessagesFrom ${FILENAME}
+
 	#
 	# DEBUG Section list maintenance
 	#
@@ -354,25 +457,10 @@ for FILENAME in `git ls-files`; do
     fi
 
 done
-}
 
-# Build XPROF types file from current sources
-(
-cat scripts/boilerplate.h
-echo "#ifndef _PROFILER_XPROF_TYPE_H_"
-echo "#define _PROFILER_XPROF_TYPE_H_"
-echo "/* AUTO-GENERATED FILE */"
-echo "#if USE_XPROF_STATS"
-echo "typedef enum {"
-echo "    XPROF_PROF_UNACCOUNTED,"
-grep -R -h "PROF_start.*" ./* | grep -v probename | sed -e 's/ //g; s/PROF_start(/    XPROF_/; s/);/,/;' | sort -u
-echo "    XPROF_LAST"
-echo "} xprof_type;"
-echo "#endif"
-echo "#endif"
-echo ""
-) >lib/profiler/list
-mv lib/profiler/list lib/profiler/xprof_type.h
+    run_ processDebugSections || return
+    run_ processDebugMessages || return
+}
 
 printAmFile ()
 {
@@ -406,11 +494,8 @@ make -C src/http gperf-files
 run_ checkMakeNamedErrorDetails || exit 1
 
 # Run formatting
-echo "" >doc/debug-sections.tmp
 srcFormat || exit 1
-sort -u <doc/debug-sections.tmp | sort -n >doc/debug-sections.tmp2
-cat scripts/boilerplate.h doc/debug-sections.tmp2 >doc/debug-sections.txt
-rm doc/debug-sections.tmp doc/debug-sections.tmp2
+
 rm -f boilerplate_fix.sed
 
 exit $SeenErrors

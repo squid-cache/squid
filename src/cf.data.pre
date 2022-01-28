@@ -181,6 +181,14 @@ DOC_START
 	This option is not yet supported by Squid-3.
 DOC_END
 
+# Options removed in 6.x
+NAME: request_entities
+TYPE: obsolete
+DOC_START
+	Remove this line. Squid now accepts HTTP/1.1 requests with bodies.
+	To simplify UI and code, Squid rejects certain HTTP/1.0 requests with bodies.
+DOC_END
+
 # Options removed in 5.x
 NAME: dns_v4_first
 TYPE: obsolete
@@ -4974,10 +4982,29 @@ DOC_START
 	If ICAP is enabled, the following code becomes available (as
 	well as ICAP log codes documented with the icap_log option):
 
-		icap::tt        Total ICAP processing time for the HTTP
-				transaction. The timer ticks when ICAP
-				ACLs are checked and when ICAP
-				transaction is in progress.
+		icap::tt Total ICAP "blocking" time for the HTTP transaction. The
+				timer ticks while Squid checks adaptation_access and while
+				ICAP transaction(s) expect ICAP response headers, including
+				the embedded adapted HTTP message headers (where applicable).
+				This measurement is meant to estimate ICAP impact on HTTP
+				transaction response times, but it does not currently account
+				for slow ICAP response body delivery blocking HTTP progress.
+
+				Once Squid receives the final ICAP response headers (e.g.,
+				ICAP 200 or 204) and the associated adapted HTTP message
+				headers (if any) from the ICAP service, the corresponding ICAP
+				transaction stops affecting this measurement, even though the
+				transaction itself may continue for a long time (e.g., to
+				finish sending the ICAP request and/or to finish receiving the
+				ICAP response body).
+
+				When "blocking" sections of multiple concurrent ICAP
+				transactions overlap in time, the overlapping segment is
+				counted only once.
+
+				To see complete ICAP transaction response times (rather than
+				the cumulative effect of their blocking sections) use the
+				%adapt::all_trs logformat code or the icap_log directive.
 
 	If adaptation is enabled the following codes become available:
 
@@ -4996,11 +5023,12 @@ DOC_START
 				milliseconds.  When a failed transaction is
 				being retried or repeated, its time is not
 				logged individually but added to the
-				replacement (next) transaction. See also:
-				adapt::all_trs.
+				replacement (next) transaction. Lifetimes of individually
+				listed adaptation transactions may overlap.
+				See also: %icap::tt and %adapt::all_trs.
 
 		adapt::all_trs All adaptation transaction response times.
-				Same as adaptation_strs but response times of
+				Same as %adapt::sum_trs but response times of
 				individual transactions are never added
 				together. Instead, all transaction response
 				times are recorded individually.
@@ -5532,6 +5560,52 @@ DOC_START
 	This is where general information about Squid behavior goes. You can
 	increase the amount of data logged to this file and how often it is
 	rotated with "debug_options"
+DOC_END
+
+NAME: cache_log_message
+TYPE: cache_log_message
+DEFAULT: none
+DEFAULT_DOC: Use debug_options.
+LOC: Config.debugMessages
+DOC_START
+	Configures logging of individual cache.log messages.
+
+		cache_log_message id=<number> option...
+		cache_log_message ids=<number>-<number> option...
+
+	Most messages have _not_ been instrumented to support this directive
+	yet. For the list of instrumented messages and their IDs, please see
+	the doc/debug-messages.txt file.
+
+	Message ID corresponds to the message semantics rather than message
+	text or source code location. The ID is stable across Squid
+	instances and versions. Substantial changes in message semantics
+	result in a new ID assignment. To reduce the danger of suppressing
+	an important log message, the old IDs of removed (or substantially
+	changed) messages are never reused.
+
+	If more than one cache_log_message directive refers to the same
+	message ID, the last directive wins.
+
+	Use ids=min-max syntax to apply the same message configuration to an
+	inclusive range of message IDs. An ID range with N values has
+	exactly the same effect as typing N cache_log_message lines.
+
+	At least one option is required. Supported options are:
+
+	  level=<number>: The logging level to use for the message. Squid
+		command line options (-s and -d) as well as the debug_options
+		directive control which levels go to syslog, stderr, and/or
+		cache.log. In most environments, using level=2 or higher stops
+		Squid from logging the message anywhere. By default, the
+		hard-coded message-specific level is used.
+
+	  limit=<number>: After logging the specified number of messages at
+		the configured (or default) debugging level DL, start using
+		level 3 (for DL 0 and 1) or 8 (for higher DL values). Usually,
+		level-3+ messages are not logged anywhere so this option can
+		often be used to effectively suppress the message. Each SMP
+		Squid process gets the same limit.
 DOC_END
 
 NAME: debug_options
@@ -6710,22 +6784,6 @@ DOC_START
 
 	WARNING: If turned on this may eventually cause some
 	varying objects not intended for caching to get cached.
-DOC_END
-
-NAME: request_entities
-TYPE: onoff
-LOC: Config.onoff.request_entities
-DEFAULT: off
-DOC_START
-	Squid defaults to deny GET and HEAD requests with request entities,
-	as the meaning of such requests are undefined in the HTTP standard
-	even if not explicitly forbidden.
-
-	Set this directive to on if you have clients which insists
-	on sending request entities in GET or HEAD requests. But be warned
-	that there is server software (both proxies and web servers) which
-	can fail to properly process this kind of request which may make you
-	vulnerable to cache pollution attacks if enabled.
 DOC_END
 
 NAME: request_header_access

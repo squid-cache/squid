@@ -225,7 +225,8 @@ protected:
 };
 
 /// \ingroup ErrorPageInternal
-err_type &operator++ (err_type &anErr)
+static err_type &
+operator++ (err_type &anErr)
 {
     int tmp = (int)anErr;
     anErr = (err_type)(++tmp);
@@ -233,7 +234,8 @@ err_type &operator++ (err_type &anErr)
 }
 
 /// \ingroup ErrorPageInternal
-int operator - (err_type const &anErr, err_type const &anErr2)
+static int
+operator -(err_type const &anErr, err_type const &anErr2)
 {
     return (int)anErr - (int)anErr2;
 }
@@ -369,7 +371,7 @@ TemplateFile::loadDefault()
     /** test error_default_language location */
     if (!loaded() && Config.errorDefaultLanguage) {
         if (!tryLoadTemplate(Config.errorDefaultLanguage)) {
-            debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "Unable to load default error language files. Reset to backups.");
+            debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "ERROR: Unable to load default error language files. Reset to backups.");
         }
     }
 #endif
@@ -550,6 +552,8 @@ TemplateFile::loadFor(const HttpRequest *request)
             debugs(4, DBG_IMPORTANT, "WARNING: Error Pages Missing Language: " << lang);
         }
     }
+#else
+    (void)request;
 #endif
 
     return loaded();
@@ -1076,6 +1080,7 @@ ErrorState::compileLegacyCode(Build &build)
     case 'O':
         if (!building_deny_info_url)
             do_quote = 0;
+    /* [[fallthrough]] */
     case 'o':
         p = request ? request->extacl_message.termedBuf() : external_acl_message;
         if (!p && !building_deny_info_url)

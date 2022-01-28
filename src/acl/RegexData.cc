@@ -19,20 +19,25 @@
 #include "acl/Checklist.h"
 #include "acl/RegexData.h"
 #include "base/RegexPattern.h"
+#include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "sbuf/Algorithms.h"
 #include "sbuf/List.h"
 
+Acl::BooleanOptionValue ACLRegexData::CaseInsensitive_;
+
 ACLRegexData::~ACLRegexData()
 {
 }
 
-const Acl::ParameterFlags &
-ACLRegexData::supportedFlags() const
+const Acl::Options &
+ACLRegexData::lineOptions()
 {
-    static const Acl::ParameterFlags flags = { "-i", "+i" };
-    return flags;
+    static auto MyCaseSensitivityOption = Acl::CaseSensitivityOption();
+    static const Acl::Options MyOptions = { &MyCaseSensitivityOption };
+    MyCaseSensitivityOption.linkWith(&CaseInsensitive_);
+    return MyOptions;
 }
 
 bool
@@ -147,12 +152,12 @@ compileRE(std::list<RegexPattern> &curlist, const SBufList &RE, int flags)
  * called only once per ACL.
  */
 static int
-compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl)
+compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl, const int flagsAtLineStart)
 {
     std::list<RegexPattern> newlist;
     SBufList accumulatedRE;
     int numREs = 0, reSize = 0;
-    int flags = REG_EXTENDED | REG_NOSUB;
+    auto flags = flagsAtLineStart;
 
     for (const SBuf & configurationLineWord : sl) {
         static const SBuf minus_i("-i");
@@ -220,9 +225,9 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl)
 }
 
 static void
-compileUnoptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl)
+compileUnoptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl, const int flagsAtLineStart)
 {
-    int flags = REG_EXTENDED | REG_NOSUB;
+    auto flags = flagsAtLineStart;
 
     static const SBuf minus_i("-i"), plus_i("+i");
     for (auto configurationLineWord : sl) {
@@ -243,6 +248,10 @@ ACLRegexData::parse()
 {
     debugs(28, 2, "new Regex line or file");
 
+    int flagsAtLineStart = REG_EXTENDED | REG_NOSUB;
+    if (CaseInsensitive_)
+        flagsAtLineStart |= REG_ICASE;
+
     SBufList sl;
     while (char *t = ConfigParser::RegexStrtokFile()) {
         const char *clean = removeUnnecessaryWildcards(t);
@@ -255,9 +264,9 @@ ACLRegexData::parse()
         }
     }
 
-    if (!compileOptimisedREs(data, sl)) {
+    if (!compileOptimisedREs(data, sl, flagsAtLineStart)) {
         debugs(28, DBG_IMPORTANT, "WARNING: optimisation of regular expressions failed; using fallback method without optimisation");
-        compileUnoptimisedREs(data, sl);
+        compileUnoptimisedREs(data, sl, flagsAtLineStart);
     }
 }
 
@@ -265,13 +274,5 @@ bool
 ACLRegexData::empty() const
 {
     return data.empty();
-}
-
-ACLData<char const *> *
-ACLRegexData::clone() const
-{
-    /* Regex's don't clone yet. */
-    assert(data.empty());
-    return new ACLRegexData;
 }
 

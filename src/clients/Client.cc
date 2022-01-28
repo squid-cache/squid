@@ -155,6 +155,27 @@ Client::setFinalReply(HttpReply *rep)
     return theFinalReply;
 }
 
+void
+Client::markParsedVirginReplyAsWhole(const char *reasonWeAreSure)
+{
+    assert(reasonWeAreSure);
+    debugs(11, 3, reasonWeAreSure);
+
+    // The code storing adapted reply takes care of markStoredReplyAsWhole().
+    // We need to take care of the remaining regular network-to-store case.
+#if USE_ADAPTATION
+    if (startedAdaptation) {
+        debugs(11, 5, "adaptation handles markStoredReplyAsWhole()");
+        return;
+    }
+#endif
+
+    // Convert the "parsed whole virgin reply" event into the "stored..." event
+    // because, without adaptation, we store everything we parse: There is no
+    // buffer for parsed content; addVirginReplyBody() stores every parsed byte.
+    fwd->markStoredReplyAsWhole(reasonWeAreSure);
+}
+
 // called when no more server communication is expected; may quit
 void
 Client::serverComplete()
@@ -366,7 +387,7 @@ Client::sentRequestBody(const CommIoCbParams &io)
     request->hier.notePeerWrite();
 
     if (io.flag) {
-        debugs(11, DBG_IMPORTANT, "sentRequestBody error: FD " << io.fd << ": " << xstrerr(io.xerrno));
+        debugs(11, DBG_IMPORTANT, "ERROR: sentRequestBody failure: FD " << io.fd << ": " << xstrerr(io.xerrno));
         ErrorState *err;
         err = new ErrorState(ERR_WRITE_ERROR, Http::scBadGateway, fwd->request, fwd->al);
         err->xerrno = io.xerrno;
@@ -722,6 +743,7 @@ Client::handleAdaptedHeader(Http::Message *msg)
         assert(result);
     } else {
         // no body
+        fwd->markStoredReplyAsWhole("setFinalReply() stored header-only adapted reply");
         if (doneWithAdaptation()) // we may still be sending virgin response
             handleAdaptationCompleted();
     }
@@ -796,6 +818,9 @@ Client::handleAdaptedBodyProductionEnded()
     if (abortOnBadEntry("entry went bad while waiting for adapted body eof"))
         return;
 
+    // distinguish this code path from handleAdaptedBodyProducerAborted()
+    receivedWholeAdaptedReply = true;
+
     // end consumption if we consumed everything
     if (adaptedBodySource != NULL && adaptedBodySource->exhausted())
         endAdaptedBodyConsumption();
@@ -806,6 +831,14 @@ void
 Client::endAdaptedBodyConsumption()
 {
     stopConsumingFrom(adaptedBodySource);
+
+    if (receivedWholeAdaptedReply) {
+        // We received the entire adapted reply per receivedWholeAdaptedReply.
+        // We are called when we consumed everything received (per our callers).
+        // We consume only what we store per handleMoreAdaptedBodyAvailable().
+        fwd->markStoredReplyAsWhole("received,consumed=>stored the entire RESPMOD reply");
+    }
+
     handleAdaptationCompleted();
 }
 
@@ -826,7 +859,6 @@ void Client::handleAdaptedBodyProducerAborted()
     if (handledEarlyAdaptationAbort())
         return;
 
-    entry->lengthWentBad("body adaptation aborted");
     handleAdaptationCompleted(); // the user should get a truncated response
 }
 

@@ -28,7 +28,6 @@ SBufFindTest::SBufFindTest():
     maxHayLength(40),
     thePos(0),
     thePlacement(placeEof),
-    theStringPos(0),
     theBareNeedlePos(0),
     theFindString(0),
     theFindSBuf(0),

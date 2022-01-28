@@ -12,6 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "base/AsyncCbdataCalls.h"
 #include "base/InstanceId.h"
+#include "base/TypeTraits.h"
 #include "CachePeer.h"
 #include "carp.h"
 #include "client_side.h"
@@ -171,7 +172,7 @@ PeerSelectorPingMonitor::noteWaitOver()
         CallBack(selector->al, [selector,this] {
             selector->ping.monitorRegistration = npos();
             AsyncCall::Pointer callback = asyncCall(44, 4, "PeerSelector::HandlePingTimeout",
-            cbdataDialer(PeerSelector::HandlePingTimeout, selector));
+                                                    cbdataDialer(PeerSelector::HandlePingTimeout, selector));
             ScheduleCallHere(callback);
         });
         selectors.erase(selectors.begin());
@@ -243,7 +244,7 @@ PeerSelector::~PeerSelector()
     }
 
     if (acl_checklist) {
-        debugs(44, DBG_IMPORTANT, "BUG: peer selector gone while waiting for a slow ACL");
+        debugs(44, DBG_IMPORTANT, "ERROR: Squid BUG: peer selector gone while waiting for a slow ACL");
         delete acl_checklist;
     }
 
@@ -940,6 +941,8 @@ PeerSelector::handleIcpParentMiss(CachePeer *p, icp_common_t *header)
             }
         }
     }
+#else
+    (void)header;
 #endif /* USE_ICMP */
 
     /* if closest-only is set, then don't allow FIRST_PARENT_MISS */
@@ -1034,6 +1037,8 @@ PeerSelector::handleHtcpParentMiss(CachePeer *p, HtcpReplyData *htcp)
             }
         }
     }
+#else
+    (void)htcp;
 #endif /* USE_ICMP */
 
     /* if closest-only is set, then don't allow FIRST_PARENT_MISS */
@@ -1153,8 +1158,7 @@ PeerSelector::interestedInitiator()
 bool
 PeerSelector::wantsMoreDestinations() const {
     const auto maxCount = Config.forward_max_tries;
-    return maxCount >= 0 && foundPaths <
-           static_cast<std::make_unsigned<decltype(maxCount)>::type>(maxCount);
+    return maxCount >= 0 && foundPaths < static_cast<size_t>(maxCount);
 }
 
 void

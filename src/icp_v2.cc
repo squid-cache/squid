@@ -54,7 +54,7 @@ public:
     icp_common_t *msg = nullptr; ///< ICP message with network byte order fields
     DelayedUdpSend *next = nullptr; ///< invasive FIFO queue of delayed ICP messages
     AccessLogEntryPointer ale; ///< sender's master transaction summary
-    struct timeval queue_time = {0, 0}; ///< queuing timestamp
+    struct timeval queue_time = {}; ///< queuing timestamp
 };
 
 static void icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);
@@ -253,7 +253,7 @@ icpLogIcp(const Ip::Address &caddr, const LogTags_ot logcode, const int len, con
 }
 
 /// \ingroup ServerProtocolICPInternal2
-void
+static void
 icpUdpSendQueue(int fd, void *)
 {
     DelayedUdpSend *q;
@@ -456,15 +456,6 @@ icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
     return checklist.fastCheck().allowed();
 }
 
-char const *
-icpGetUrlToSend(char *url)
-{
-    if (strpbrk(url, w_space))
-        return rfc1738_escape(url);
-    else
-        return url;
-}
-
 HttpRequest *
 icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from)
 {
@@ -610,7 +601,7 @@ icpHandleIcpV2(int fd, Ip::Address &from, char *buf, int len)
         break;
 
     default:
-        debugs(12, DBG_CRITICAL, "icpHandleIcpV2: UNKNOWN OPCODE: " << header.opcode << " from " << from);
+        debugs(12, DBG_CRITICAL, "ERROR: icpHandleIcpV2: Unknown opcode: " << header.opcode << " from " << from);
 
         break;
     }

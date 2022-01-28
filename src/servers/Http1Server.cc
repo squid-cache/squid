@@ -17,10 +17,10 @@
 #include "http/one/RequestParser.h"
 #include "http/Stream.h"
 #include "HttpHeaderTools.h"
-#include "profiler/Profiler.h"
 #include "servers/Http1Server.h"
 #include "SquidConfig.h"
 #include "Store.h"
+#include "tunnel.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Http1, Server);
 
@@ -72,8 +72,6 @@ Http::One::Server::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
 Http::Stream *
 Http::One::Server::parseOneRequest()
 {
-    PROF_start(HttpServer_parseOneRequest);
-
     // reset because the protocol may have changed if this is the first request
     // and because we never bypass parsing failures of N+1st same-proto request
     preservingClientData_ = shouldPreserveClientData();
@@ -87,12 +85,10 @@ Http::One::Server::parseOneRequest()
     /* Process request */
     Http::Stream *context = parseHttpRequest(parser_);
 
-    PROF_stop(HttpServer_parseOneRequest);
     return context;
 }
 
 void clientProcessRequestFinished(ConnStateData *conn, const HttpRequest::Pointer &request);
-bool clientTunnelOnError(ConnStateData *conn, Http::StreamPointer &context, HttpRequest::Pointer &request, const HttpRequestMethod& method, err_type requestError);
 
 bool
 Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
@@ -127,7 +123,7 @@ Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
         assert(http->log_uri);
 
         const char * requestErrorBytes = inBuf.c_str();
-        if (!clientTunnelOnError(this, context, request, parser_->method(), errPage)) {
+        if (!tunnelOnError(parser_->method(), errPage)) {
             setReplyError(context, request, parser_->method(), errPage, parser_->parseStatusCode, requestErrorBytes);
             // HttpRequest object not build yet, there is no reason to call
             // clientProcessRequestFinished method
@@ -146,7 +142,7 @@ Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
         http->setLogUriToRawUri(http->uri, parser_->method());
 
         const char * requestErrorBytes = inBuf.c_str();
-        if (!clientTunnelOnError(this, context, request, parser_->method(), ERR_INVALID_URL)) {
+        if (!tunnelOnError(parser_->method(), ERR_INVALID_URL)) {
             setReplyError(context, request, parser_->method(), ERR_INVALID_URL, Http::scBadRequest, requestErrorBytes);
             // HttpRequest object not build yet, there is no reason to call
             // clientProcessRequestFinished method
@@ -165,7 +161,7 @@ Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
         http->setLogUriToRawUri(http->uri, parser_->method());
 
         const char * requestErrorBytes = NULL; //HttpParserHdrBuf(parser_);
-        if (!clientTunnelOnError(this, context, request, parser_->method(), ERR_UNSUP_HTTPVERSION)) {
+        if (!tunnelOnError(parser_->method(), ERR_UNSUP_HTTPVERSION)) {
             setReplyError(context, request, parser_->method(), ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, requestErrorBytes);
             clientProcessRequestFinished(this, request);
         }
@@ -178,7 +174,7 @@ Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
         // setReplyToError() requires log_uri
         http->setLogUriToRawUri(http->uri, parser_->method());
         const char * requestErrorBytes = NULL; //HttpParserHdrBuf(parser_);
-        if (!clientTunnelOnError(this, context, request, parser_->method(), ERR_INVALID_REQ)) {
+        if (!tunnelOnError(parser_->method(), ERR_INVALID_REQ)) {
             setReplyError(context, request, parser_->method(), ERR_INVALID_REQ, Http::scBadRequest, requestErrorBytes);
             clientProcessRequestFinished(this, request);
         }
@@ -378,8 +374,6 @@ Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &ca
     delete mb;
     return true;
 }
-
-void switchToTunnel(HttpRequest *request, const Comm::ConnectionPointer &clientConn, const Comm::ConnectionPointer &srvConn, const SBuf &preReadServerData);
 
 void
 Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext server)

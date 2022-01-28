@@ -43,7 +43,7 @@ ACLAtStepStrategy::match(ACLData<XactionStep> * &data, ACLFilledChecklist *check
             return 0; // we have warned about the missing request earlier
 
         if (!checklist->request->masterXaction) {
-            debugs(28, DBG_IMPORTANT, "BUG: at_step GeneratingCONNECT ACL is missing master transaction info. Assuming mismatch.");
+            debugs(28, DBG_IMPORTANT, "ERROR: Squid BUG: at_step GeneratingCONNECT ACL is missing master transaction info. Assuming mismatch.");
             return 0;
         }
 

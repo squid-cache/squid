@@ -29,27 +29,16 @@ ACLIdent::~ACLIdent()
 
 ACLIdent::ACLIdent(ACLData<char const *> *newData, char const *newType) : data (newData), type_ (newType) {}
 
-ACLIdent::ACLIdent (ACLIdent const &old) : data (old.data->clone()), type_ (old.type_)
-{}
-
-ACLIdent &
-ACLIdent::operator= (ACLIdent const &rhs)
-{
-    data = rhs.data->clone();
-    type_ = rhs.type_;
-    return *this;
-}
-
 char const *
 ACLIdent::typeString() const
 {
     return type_;
 }
 
-void
-ACLIdent::parseFlags()
+const Acl::Options &
+ACLIdent::lineOptions()
 {
-    ParseFlags(Acl::NoOptions(), data->supportedFlags());
+    return data->lineOptions();
 }
 
 void
@@ -78,7 +67,7 @@ ACLIdent::match(ACLChecklist *cl)
         }
         // else fall through to ACCESS_DUNNO failure below
     } else {
-        debugs(28, DBG_IMPORTANT, HERE << "Can't start ident lookup. No client connection" );
+        debugs(28, DBG_IMPORTANT, "ERROR: Cannot start ident lookup. No client connection" );
         // fall through to ACCESS_DUNNO failure below
     }
 
@@ -96,12 +85,6 @@ bool
 ACLIdent::empty () const
 {
     return data->empty();
-}
-
-ACL *
-ACLIdent::clone() const
-{
-    return new ACLIdent(*this);
 }
 
 IdentLookup IdentLookup::instance_;

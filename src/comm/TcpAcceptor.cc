@@ -27,7 +27,6 @@
 #include "ip/QosConfig.h"
 #include "log/access_log.h"
 #include "MasterXaction.h"
-#include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
@@ -193,7 +192,10 @@ void
 Comm::TcpAcceptor::handleClosure(const CommCloseCbParams &)
 {
     closer_ = NULL;
-    conn = NULL;
+    if (conn) {
+        conn->noteClosure();
+        conn = nullptr;
+    }
     Must(done());
 }
 
@@ -237,7 +239,7 @@ Comm::TcpAcceptor::okToAccept()
         return true;
 
     if (last_warn + 15 < squid_curtime) {
-        debugs(5, DBG_CRITICAL, "WARNING! Your cache is running out of filedescriptors");
+        debugs(5, DBG_CRITICAL, "WARNING: Your cache is running out of filedescriptors");
         last_warn = squid_curtime;
     }
 
@@ -343,7 +345,6 @@ Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &
 Comm::Flag
 Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
 {
-    PROF_start(comm_accept);
     ++statCounter.syscalls.sock.accepts;
     int sock;
     struct addrinfo *gai = NULL;
@@ -354,8 +355,6 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
         errcode = errno; // store last accept errno locally.
 
         Ip::Address::FreeAddr(gai);
-
-        PROF_stop(comm_accept);
 
         if (ignoreErrno(errcode) || errcode == ECONNABORTED) {
             debugs(50, 5, status() << ": " << xstrerr(errcode));
@@ -370,6 +369,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     }
 
     Must(sock >= 0);
+    ++incoming_sockets_accepted;
 
     // Sync with Comm ASAP so that abandoned details can properly close().
     // XXX : these are not all HTTP requests. use a note about type and ip:port details->
@@ -387,7 +387,6 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, "ERROR: getsockname() failed to locate local-IP on " << details << ": " << xstrerr(xerrno));
         Ip::Address::FreeAddr(gai);
-        PROF_stop(comm_accept);
         return Comm::COMM_ERROR;
     }
     details->local = *gai;
@@ -396,7 +395,6 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     // Perform NAT or TPROXY operations to retrieve the real client/dest IP addresses
     if (conn->flags&(COMM_TRANSPARENT|COMM_INTERCEPTION) && !Ip::Interceptor.Lookup(details, conn)) {
         debugs(50, DBG_IMPORTANT, "ERROR: NAT/TPROXY lookup failed to locate original IPs on " << details);
-        PROF_stop(comm_accept);
         return Comm::NOMESSAGE;
     }
 
@@ -415,7 +413,6 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     if (Config.client_ip_max_connections >= 0) {
         if (clientdbEstablished(details->remote, 0) > Config.client_ip_max_connections) {
             debugs(50, DBG_IMPORTANT, "WARNING: " << details->remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
-            PROF_stop(comm_accept);
             return Comm::NOMESSAGE;
         }
     }
@@ -429,11 +426,11 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     // set socket flags
     commSetCloseOnExec(sock);
     commSetNonBlocking(sock);
+    Comm::ApplyTcpKeepAlive(sock, listenPort_->tcp_keepalive);
 
     /* IFF the socket is (tproxy) transparent, pass the flag down to allow spoofing */
     F->flags.transparent = fd_table[conn->fd].flags.transparent; // XXX: can we remove this line yet?
 
-    PROF_stop(comm_accept);
     return Comm::OK;
 }
 

@@ -29,6 +29,7 @@
 #include "CommandLine.h"
 #include "ConfigParser.h"
 #include "CpuAffinity.h"
+#include "DebugMessages.h"
 #include "DiskIO/DiskIOModule.h"
 #include "dns/forward.h"
 #include "errorpage.h"
@@ -64,7 +65,7 @@
 #include "peer_sourcehash.h"
 #include "peer_userhash.h"
 #include "PeerSelectState.h"
-#include "profiler/Profiler.h"
+#include "protos.h"
 #include "redirect.h"
 #include "refresh.h"
 #include "sbuf/Stream.h"
@@ -239,8 +240,6 @@ private:
 int
 SignalEngine::checkEvents(int)
 {
-    PROF_start(SignalEngine_checkEvents);
-
     if (do_reconfigure)
         mainReconfigureStart();
     else if (do_rotate)
@@ -249,7 +248,6 @@ SignalEngine::checkEvents(int)
         doShutdown(do_shutdown > 0 ? (int) Config.shutdownLifetime : 0);
     if (do_handle_stopped_child)
         handleStoppedChild();
-    PROF_stop(SignalEngine_checkEvents);
     return EVENT_IDLE;
 }
 
@@ -290,8 +288,8 @@ SignalEngine::doShutdown(time_t wait)
     if (AvoidSignalAction("shutdown", do_shutdown))
         return;
 
-    debugs(1, DBG_IMPORTANT, "Preparing for shutdown after " << statCounter.client_http.requests << " requests");
-    debugs(1, DBG_IMPORTANT, "Waiting " << wait << " seconds for active connections to finish");
+    debugs(1, Important(2), "Preparing for shutdown after " << statCounter.client_http.requests << " requests");
+    debugs(1, Important(3), "Waiting " << wait << " seconds for active connections to finish");
 
 #if KILL_PARENT_OPT
     if (!IamMasterProcess() && !parentKillNotified && ShutdownSignal > 0 && parentPid > 1) {
@@ -641,22 +639,14 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
          * then performs actions for -s option. */
         xfree(opt_syslog_facility); // ignore any previous options sent
         opt_syslog_facility = xstrdup(optValue);
+        _db_set_syslog(opt_syslog_facility);
+        break;
 
     case 's':
         /** \par s
          * Initialize the syslog for output */
-#if HAVE_SYSLOG
-
         _db_set_syslog(opt_syslog_facility);
-
         break;
-
-#else
-
-        fatal("Logging to syslog not available on this platform");
-
-        /* NOTREACHED */
-#endif
 
     case 'u':
         /** \par u
@@ -750,7 +740,7 @@ reconfigure(int sig)
 #endif
 }
 
-void
+static void
 master_revive_kids(int sig)
 {
     ReviveKidsSignal = sig;
@@ -764,7 +754,7 @@ master_revive_kids(int sig)
 }
 
 /// Shutdown signal handler for master process
-void
+static void
 master_shutdown(int sig)
 {
     do_shutdown = 1;
@@ -788,10 +778,8 @@ shut_down(int sig)
         shutdown_status = EXIT_FAILURE;
 #endif
 
-#if !_SQUID_WINDOWS_
-#if !HAVE_SIGACTION
+#if !defined(_SQUID_WINDOWS_) && !defined(HAVE_SIGACTION)
     signal(sig, shut_down);
-#endif
 #endif
 }
 
@@ -800,10 +788,10 @@ sig_child(int sig)
 {
     do_handle_stopped_child = 1;
 
-#if !_SQUID_WINDOWS_
-#if !HAVE_SIGACTION
+#if !defined(_SQUID_WINDOWS_) && !defined(HAVE_SIGACTION)
     signal(sig, sig_child);
-#endif
+#else
+    (void)sig;
 #endif
 }
 
@@ -1117,7 +1105,7 @@ mainSetCwd(void)
 
     if (Config.coredump_dir && strcmp("none", Config.coredump_dir) != 0) {
         if (mainChangeDir(Config.coredump_dir)) {
-            debugs(0, DBG_IMPORTANT, "Set Current Directory to " << Config.coredump_dir);
+            debugs(0, Important(4), "Set Current Directory to " << Config.coredump_dir);
             return;
         }
     }
@@ -1150,7 +1138,7 @@ mainInitialize(void)
         Config.Port.icp = (unsigned short) icpPortNumOverride;
 
     debugs(1, DBG_CRITICAL, "Starting Squid Cache version " << version_string << " for " << CONFIG_HOST_TYPE << "...");
-    debugs(1, DBG_CRITICAL, "Service Name: " << service_name);
+    debugs(1, Critical(5), "Service Name: " << service_name);
 
 #if _SQUID_WINDOWS_
     if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
@@ -1159,12 +1147,12 @@ mainInitialize(void)
         debugs(1, DBG_CRITICAL, "Running on " << WIN32_OS_string);
 #endif
 
-    debugs(1, DBG_IMPORTANT, "Process ID " << getpid());
+    debugs(1, Important(6), "Process ID " << getpid());
 
-    debugs(1, DBG_IMPORTANT, "Process Roles:" << ProcessRoles());
+    debugs(1, Important(7), "Process Roles:" << ProcessRoles());
 
     setSystemLimits();
-    debugs(1, DBG_IMPORTANT, "With " << Squid_MaxFD << " file descriptors available");
+    debugs(1, Important(8), "With " << Squid_MaxFD << " file descriptors available");
 
 #if _SQUID_WINDOWS_
 
@@ -1341,12 +1329,6 @@ mainInitialize(void)
     eventAdd("ipcache_purgelru", ipcache_purgelru, nullptr, 10.0, 1);
 
     eventAdd("fqdncache_purgelru", fqdncache_purgelru, nullptr, 15.0, 1);
-
-#if USE_XPROF_STATS
-
-    eventAdd("cpuProfiling", xprof_event, nullptr, 1.0, 1);
-
-#endif
 
     eventAdd("memPoolCleanIdlePools", Mem::CleanIdlePools, nullptr, 15.0, 1);
 
@@ -2084,7 +2066,7 @@ SquidShutdown()
     WIN32_svcstatusupdate(SERVICE_STOP_PENDING, 10000);
 #endif
 
-    debugs(1, DBG_IMPORTANT, "Shutting down...");
+    debugs(1, Important(9), "Shutting down...");
 #if USE_SSL_CRTD
     Ssl::Helper::Shutdown();
 #endif
@@ -2168,7 +2150,7 @@ SquidShutdown()
 
     memClean();
 
-    debugs(1, DBG_IMPORTANT, "Squid Cache (Version " << version_string << "): Exiting normally.");
+    debugs(1, Important(10), "Squid Cache (Version " << version_string << "): Exiting normally.");
 
     /*
      * DPW 2006-10-23

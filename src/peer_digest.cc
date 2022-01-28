@@ -775,7 +775,7 @@ peerDigestFetchAbort(DigestFetchState * fetch, char *buf, const char *reason)
 
 /* complete the digest transfer, update stats, unlock/release everything */
 static void
-peerDigestReqFinish(DigestFetchState * fetch, char *buf,
+peerDigestReqFinish(DigestFetchState * fetch, char * /* buf */,
                     int fcb_valid, int pdcb_valid, int pcb_valid,
                     const char *reason, int err)
 {
@@ -855,7 +855,7 @@ peerDigestPDFinish(DigestFetchState * fetch, int pcb_valid, int err)
 /* free fetch state structures
  * must be called only when fetch cbdata is valid */
 static void
-peerDigestFetchFinish(DigestFetchState * fetch, int err)
+peerDigestFetchFinish(DigestFetchState * fetch, int /* err */)
 {
     assert(fetch->entry && fetch->request);
 
@@ -968,7 +968,7 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
 
     /* there are some things we cannot do yet */
     if (cblock.hash_func_count != CacheDigestHashFuncCount) {
-        debugs(72, DBG_CRITICAL, "" << host << " digest: unsupported #hash functions: " <<
+        debugs(72, DBG_CRITICAL, "ERROR: " << host << " digest: unsupported #hash functions: " <<
                cblock.hash_func_count << " ? " << CacheDigestHashFuncCount << ".");
         return 0;
     }
@@ -1008,7 +1008,7 @@ peerDigestUseful(const PeerDigest * pd)
     const auto bit_util = pd->cd->usedMaskPercent();
 
     if (bit_util > 65.0) {
-        debugs(72, DBG_CRITICAL, "Warning: " << pd->host <<
+        debugs(72, DBG_CRITICAL, "WARNING: " << pd->host <<
                " peer digest has too many bits on (" << bit_util << "%).");
         return 0;
     }

@@ -14,6 +14,7 @@
 
 #include "acl/Arp.h"
 #include "acl/FilledChecklist.h"
+#include "cache_cf.h"
 #include "Debug.h"
 #include "eui/Eui48.h"
 #include "globals.h"
@@ -21,18 +22,8 @@
 
 #include <algorithm>
 
-ACL *
-ACLARP::clone() const
-{
-    return new ACLARP(*this);
-}
-
 ACLARP::ACLARP (char const *theClass) : class_ (theClass)
 {}
-
-ACLARP::ACLARP (ACLARP const & old) : class_ (old.class_), aclArpData(old.aclArpData)
-{
-}
 
 char const *
 ACLARP::typeString() const
@@ -72,7 +63,7 @@ ACLARP::empty () const
  *       Solaris code by R. Gancarz <radekg@solaris.elektrownia-lagisza.com.pl>
  */
 
-Eui::Eui48 *
+static Eui::Eui48 *
 aclParseArpData(const char *t)
 {
     char buf[256];
@@ -80,14 +71,14 @@ aclParseArpData(const char *t)
     debugs(28, 5, "aclParseArpData: " << t);
 
     if (sscanf(t, "%[0-9a-fA-F:]", buf) != 1) {
-        debugs(28, DBG_CRITICAL, "aclParseArpData: Bad ethernet address: '" << t << "'");
+        debugs(28, DBG_CRITICAL, "ERROR: aclParseArpData: Bad ethernet address: '" << t << "'");
         delete q;
         return NULL;
     }
 
     if (!q->decode(buf)) {
         debugs(28, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(28, DBG_CRITICAL, "aclParseArpData: Ignoring invalid ARP acl entry: can't parse '" << buf << "'");
+        debugs(28, DBG_CRITICAL, "ERROR: aclParseArpData: Ignoring invalid ARP acl entry: cannot parse '" << buf << "'");
         delete q;
         return NULL;
     }

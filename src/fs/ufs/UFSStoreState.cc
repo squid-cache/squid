@@ -162,7 +162,7 @@ Fs::Ufs::UFSStoreState::write(char const *buf, size_t size, off_t aOffset, FREE 
            std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen);
 
     if (theFile->error()) {
-        debugs(79, DBG_IMPORTANT,HERE << "avoid write on theFile with error");
+        debugs(79, DBG_IMPORTANT, "ERROR: avoid write on theFile with error");
         debugs(79, DBG_IMPORTANT,HERE << "calling free_func for " << (void*) buf);
         free_func((void*)buf);
         return false;
@@ -204,7 +204,7 @@ Fs::Ufs::UFSStoreState::doWrite()
     auto &q = pending_writes.front();
 
     if (theFile->error()) {
-        debugs(79, DBG_IMPORTANT, MYNAME << " avoid write on theFile with error");
+        debugs(79, DBG_IMPORTANT, "ERROR: " << MYNAME << "avoid write on theFile with error");
         pending_writes.pop();
         return;
     }

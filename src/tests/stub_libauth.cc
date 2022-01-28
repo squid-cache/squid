@@ -15,7 +15,7 @@
 #include "auth/SchemeConfig.h"
 namespace Auth
 {
-Auth::UserRequest::Pointer SchemeConfig::CreateAuthUser(const char *, AccessLogEntry::Pointer &al) STUB_RETVAL(NULL)
+Auth::UserRequest::Pointer SchemeConfig::CreateAuthUser(const char *, AccessLogEntry::Pointer &) STUB_RETVAL(nullptr)
 Auth::SchemeConfig * SchemeConfig::Find(const char *) STUB_RETVAL(NULL)
 void SchemeConfig::registerWithCacheManager(void) STUB_NOP
 Auth::ConfigVector TheConfig;

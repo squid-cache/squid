@@ -64,7 +64,7 @@ struct SipcIo {
     int disker;
 };
 
-std::ostream &
+static std::ostream &
 operator <<(std::ostream &os, const SipcIo &sio)
 {
     return os << "ipcIo" << sio.worker << '.' << sio.msg.requestId <<
@@ -615,7 +615,7 @@ IpcIoFile::scheduleTimeoutCheck()
     CallService(nullptr, [&] {
         // we check all older requests at once so some may be wait for 2*Timeout
         eventAdd("IpcIoFile::CheckTimeouts", &IpcIoFile::CheckTimeouts,
-        reinterpret_cast<void *>(diskId), Timeout, 0, false);
+                 reinterpret_cast<void *>(diskId), Timeout, 0, false);
         timeoutCheckScheduled = true;
     });
 }
@@ -949,7 +949,7 @@ IpcIoFile::DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo)
     } catch (const Queue::Full &) {
         // The worker pop queue should not overflow because the worker can
         // push only if pendingRequests() is less than QueueCapacity.
-        debugs(47, DBG_IMPORTANT, "BUG: Worker I/O pop queue for " <<
+        debugs(47, DBG_IMPORTANT, "ERROR: Squid BUG: Worker I/O pop queue for " <<
                DbName << " overflow: " <<
                SipcIo(workerId, ipcIo, KidIdentifier)); // TODO: report queue len
 

@@ -18,6 +18,9 @@ class StoreEntry;
 namespace Dns
 {
 class LookupDetails;
+
+/// whether to do reverse DNS lookups for source IPs of accepted connections
+extern bool ResolveClientAddressesAsap;
 }
 
 typedef void FQDNH(const char *, const Dns::LookupDetails &details, void *);

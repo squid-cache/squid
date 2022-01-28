@@ -100,7 +100,7 @@ public:
     void composeRequest(CertValidationRequest const &vcert);
 
     /// Parse a response message and fill the resp object with parsed information
-    bool parseResponse(CertValidationResponse &resp, std::string &error);
+    bool parseResponse(CertValidationResponse &resp);
 
     /// Search a CertItems list for the certificate with ID "name"
     X509 *getCertByName(std::vector<CertItem> const &, std::string const & name);

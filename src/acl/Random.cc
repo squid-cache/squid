@@ -17,20 +17,9 @@
 
 #include <random>
 
-ACL *
-ACLRandom::clone() const
-{
-    return new ACLRandom(*this);
-}
-
 ACLRandom::ACLRandom(char const *theClass) : data(0.0), class_(theClass)
 {
     memset(pattern, 0, sizeof(pattern));
-}
-
-ACLRandom::ACLRandom(ACLRandom const & old) : data(old.data), class_(old.class_)
-{
-    memcpy(pattern, old.pattern, sizeof(pattern));
 }
 
 ACLRandom::~ACLRandom()
@@ -64,7 +53,7 @@ ACLRandom::parse()
 
     char *t = ConfigParser::strtokFile();
     if (!t) {
-        debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "ACL random missing pattern");
+        debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: ACL random missing pattern");
         return;
     }
 

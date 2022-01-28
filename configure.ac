@@ -93,6 +93,32 @@ if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
 	AC_USE_SYSTEM_EXTENSIONS
 fi
 
+AC_MSG_CHECKING([compiler name-version])
+squid_cv_cc_name=`$CC --version | head -1 | cut -f1 -d" "`
+AS_CASE([$squid_cv_cc_name],
+  [gcc|clang],[squid_cv_cc_majversion=`$CC -dumpversion | cut -f1 -d.`],
+  [squid_cv_cc_majversion="unknown"]
+)
+squid_cv_cc_simplified="$squid_cv_cc_name-$squid_cv_cc_majversion"
+AC_MSG_RESULT($squid_cv_cc_simplified)
+
+# warning flags
+AS_IF([test "$squid_cv_cc_simplified" = "gcc-4"],[
+    AC_MSG_NOTICE([skipping -Wextra on $squid_cv_cc_simplified])
+],[
+    # -Werror must be first
+    SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Werror])
+    SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wextra])
+    # -Wunused-private-field causes a huge number of false positives
+    #    in unit tests. Disable that
+    SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wno-unused-private-field])
+    # ...=2: This flexibility level allows GCC to "understand" our fallthrough
+    # comments. TODO: Switch to [[fallthrough]] attributes with C++17.
+    SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wimplicit-fallthrough=2])
+    AS_IF([test "x$squid_cv_cc_implicit_fallthrough2" = "xno"], [
+        SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wno-implicit-fallthrough])
+    ])
+])
 # If the user did not specify a C++ version.
 user_cxx=`echo "$PRESET_CXXFLAGS" | grep -o -E "\-std="`
 if test "x$user_cxx" = "x"; then
@@ -308,11 +334,6 @@ if test "x$PRESET_CFLAGS" = "x"; then
     case "$host" in
       *-sun-sunos*)
         # sunos has too many warnings for this to be useful
-        # motorola too
-        ;;
-      *m88k*)
-        # Motorola cc/ld does not like -02 but is ok on -O
-        CFLAGS=`echo $CFLAGS | sed -e 's/-O[0-9]/-O/'`
         ;;
       *)
         CFLAGS="$squid_cv_cc_option_wall $CFLAGS"
@@ -337,25 +358,13 @@ if test "x$PRESET_CFLAGS" = "x"; then
   fi
 fi
 
-dnl set squid required flags
-if test "$squid_cv_compiler" = "gcc"; then
-  case "$squid_host_os" in
-  mingw)
-dnl Guido Serassio (serassio@squid-cache.org) 20070811
-dnl Using the latest MinGW (gcc 3.4.5 + mingw-runtime 3.13) cannot build with
-dnl -Werror -Wmissing-prototypes -Wmissing-declarations
-dnl TODO: check if the problem will be present in any other newer MinGW release.
-    SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wcomments -Wshadow"
-    ;;
-  *)
-    SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments -Wshadow"
-    ;;
-  esac
-  SQUID_CXXFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wcomments -Wshadow -Woverloaded-virtual"
-else
-  SQUID_CFLAGS=
-  SQUID_CXXFLAGS=
-fi
+# useful warnings that may not be included in -Wall -Wextra
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wpointer-arith])
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wwrite-strings])
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wcomments])
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wshadow])
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wmissing-declarations])
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Woverloaded-virtual])
 
 dnl CentOS (and RHEL) still define ntohs() using deprecated C++ features
 SQUID_CC_REQUIRE_ARGUMENT([ac_cv_require_wno_deprecated_register],[-Werror -Wno-deprecated-register],[[#include <arpa/inet.h>]],[[int fox=ntohs(1);]])
@@ -450,8 +459,11 @@ AC_DEFUN([LIBATOMIC_CHECKER],[
 #include <atomic>
 #include <cstdint>
       int
-      main(int, char **) {
-          return std::atomic<uint64_t>{}.is_lock_free() ? 0 : 1;
+      main(int argc, char **) {
+          return (
+              std::atomic<uint8_t>(uint8_t(argc)).exchange(0) &&
+              std::atomic<uint64_t>{}.is_lock_free()
+              ) ? 0 : 1;
       }
   ]])],[
     AC_MSG_RESULT(yes)
@@ -1362,7 +1374,6 @@ if test "x$with_openssl" = "xyes"; then
     SQUID_CHECK_OPENSSL_CONST_SSL_SESSION_CB_ARG
     SQUID_CHECK_OPENSSL_CONST_X509_GET0_SIGNATURE_ARGS
     SQUID_CHECK_OPENSSL_TXTDB
-    SQUID_CHECK_OPENSSL_HELLO_OVERWRITE_HACK
   fi
   if test "x$SSLLIB" = "x"; then
     AC_MSG_ERROR([Required OpenSSL library not found])
@@ -2620,36 +2631,6 @@ SQUID_DEFINE_BOOL(PRINT_STACK_TRACE,${enable_stacktraces:=no},
                       [Print stack traces on fatal errors])
 AC_MSG_NOTICE([Automatically print stack trace on fatal errors: $enable_stacktraces])
 
-
-# CPU Profiling options handling
-AC_ARG_ENABLE(cpu-profiling,
-  AS_HELP_STRING([--enable-cpu-profiling],
-                 [Enable instrumentation to try and understand how CPU power 
-                 is spent by squid, by enabling specific probes in selected
-                 functions.
-                 New probes can only be added by modifying the source code.
-                 It is meant to help developers in optimizing performance
-                 of Squid internal functions.
-                 If you are not developer you should not enable this, 
-                 as it slows squid down somewhat.
-                 See lib/Profiler.c for more details.]), [
-SQUID_YESNO([$enableval],
-            [unrecognized argument to --enable-cpu-profiling: $enableval])
-])
-# Default OFF. This is a debug feature. Only check and enable if forced ON.
-if test "x$enable_cpu_profiling" = "xyes"; then
-  AC_CHECK_FUNCS(clock_gettime_nsec_np)
-  SQUID_CHECK_FUNCTIONAL_CPU_PROFILER
-  if test "x$squid_cv_cpu_profiler_works" = "xno"; then
-    AC_MSG_ERROR([CPU profiling will not be functional in this build.])
-  fi
-fi
-SQUID_DEFINE_BOOL(USE_XPROF_STATS,${enable_cpu_profiling:=no},
-                      [Define to enable CPU profiling within Squid])
-AM_CONDITIONAL(ENABLE_XPROF_STATS,
-               test "x$enable_cpu_profiling" = "xyes")
-AC_MSG_NOTICE([CPU profiling enabled: $enable_cpu_profiling])
-
 # Enable X-Accelerator-Vary for Vary support within an accelerator setup
 AC_ARG_ENABLE(x-accelerator-vary,
   AS_HELP_STRING([--enable-x-accelerator-vary],
@@ -2682,28 +2663,6 @@ AS_IF([test "x$with_cppunit" != "xno"],[
     AC_MSG_WARN([cppunit does not appear to be installed. Squid does not require this, but code testing with 'make check' will fail.])
   ])
 ])
-
-# Force some compilers to use ANSI features
-#
-case "$host" in
-  *-hp-hpux*)
-    if test "x$ac_cv_prog_CC" = "xcc" ; then
-      AC_MSG_NOTICE([adding '-Ae' to cc args for $host])
-      CC="cc -Ae";
-      ac_cv_prog_CC="$CC"
-    fi
-    ;;
-esac
-
-
-dnl automake handles this AC_PATH_PROG(MAKEDEPEND, makedepend, $TRUE)
-
-case "$host" in
-  *hpux*)
-    AC_MSG_NOTICE([Disabling ranlib for HP-UX...])
-    RANLIB=":"
-    ;;
-esac
 
 dnl Check for headers
 AC_HEADER_DIRENT
@@ -2897,6 +2856,7 @@ AC_CHECK_SIZEOF(size_t)
 dnl Some C++11 types we try to use
 AX_CXX_TYPE_UNIFORM_DISTRIBUTIONS
 SQUID_CXX_STD_UNDERLYING_TYPE
+SQUID_CXX_STD_IS_TRIVIALLY_COPYABLE
 
 dnl On Solaris 9 x86, gcc may includes a "fixed" set of old system include files
 dnl that is incompatible with the updated Solaris header files.
@@ -3107,6 +3067,7 @@ esac
 
 dnl System-specific library modifications
 dnl
+AH_TEMPLATE(GETTIMEOFDAY_NO_TZP,[If gettimeofday is known to take only one argument])
 case "$host" in
   i386-*-solaris2.*)
     if test "x$GCC" = "xyes"; then
@@ -3160,12 +3121,6 @@ assert(myBar != NULL);
     fi
     ;;
 
-    *m88k*)
-      SQUID_CFLAGS="$SQUID_CFLAGS -D_SQUID_MOTOROLA_"
-      SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_SQUID_MOTOROLA_"
-      AC_DEFINE(GETTIMEOFDAY_NO_TZP,1,
-        [If gettimeofday is known to take only one argument])
-    ;;
     [*-*-solaris2.[0-4]])
       AC_DEFINE(GETTIMEOFDAY_NO_TZP,1)
     ;;
@@ -3530,13 +3485,10 @@ AC_ARG_ENABLE(gnuregex,
                  library built in.]), [
 SQUID_YESNO([$enableval],[unrecognized argument to --enable-gnuregex: $enableval])
 ])
-# force-enable on old solaris and nextstep
+# force-enable on old solaris
 if test "x${enable_gnuregex:=auto}" = "xauto" ; then
     case "$host" in
     *-sun-solaris2.[[0-4]])
-	  enable_gnuregex="yes"
-	  ;;
-    *-next-nextstep*)
 	  enable_gnuregex="yes"
 	  ;;
     esac
@@ -3678,7 +3630,6 @@ AC_CONFIG_FILES([
 	lib/libTrie/Makefile
 	lib/libTrie/test/Makefile
 	lib/ntlmauth/Makefile
-	lib/profiler/Makefile
 	lib/rfcnb/Makefile
 	lib/smblib/Makefile
 	lib/snmplib/Makefile

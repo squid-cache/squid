@@ -101,7 +101,7 @@ GetStrPool(size_t type)
             strPools[i]->zeroBlocks(false);
 
             if (strPools[i]->objectSize() != PoolAttrs[i].obj_size)
-                debugs(13, DBG_IMPORTANT, "NOTICE: " << PoolAttrs[i].name <<
+                debugs(13, DBG_IMPORTANT, "WARNING: " << PoolAttrs[i].name <<
                        " is " << strPools[i]->objectSize() <<
                        " bytes instead of requested " <<
                        PoolAttrs[i].obj_size << " bytes");
@@ -473,7 +473,8 @@ Mem::Report()
            " MB");
 }
 
-mem_type &operator++ (mem_type &aMem)
+static mem_type &
+operator++(mem_type &aMem)
 {
     int tmp = (int)aMem;
     aMem = (mem_type)(++tmp);

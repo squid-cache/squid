@@ -365,7 +365,7 @@ Ftp::Gateway::~Gateway()
     debugs(9, 3, entry->url());
 
     if (Comm::IsConnOpen(ctrl.conn)) {
-        debugs(9, DBG_IMPORTANT, "Internal bug: FTP Gateway left open " <<
+        debugs(9, DBG_IMPORTANT, "ERROR: Squid BUG: FTP Gateway left open " <<
                "control channel " << ctrl.conn);
     }
 
@@ -458,7 +458,7 @@ Ftp::Gateway::listenForDataChannel(const Comm::ConnectionPointer &conn)
     if (!Comm::IsConnOpen(conn)) {
         conn->fd = comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn->local, conn->flags, note);
         if (!Comm::IsConnOpen(conn)) {
-            debugs(5, DBG_CRITICAL, HERE << "comm_open_listener failed:" << conn->local << " error: " << errno);
+            debugs(5, DBG_CRITICAL, "ERROR: comm_open_listener failed:" << conn->local << " error: " << errno);
             return;
         }
         debugs(9, 3, HERE << "Unconnected data socket created on " << conn);
@@ -483,11 +483,9 @@ Ftp::Gateway::timeout(const CommTimeoutCbParams &io)
         flags.pasv_supported = false;
         debugs(9, DBG_IMPORTANT, "FTP Gateway timeout in SENT_PASV state");
 
-        // cancel the data connection setup.
-        if (data.opener != NULL) {
-            data.opener->cancel("timeout");
-            data.opener = NULL;
-        }
+        // cancel the data connection setup, if any
+        dataConnWait.cancel("timeout");
+
         data.close();
     }
 
@@ -1036,6 +1034,8 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
         loginParser(auth, false);
     }
     /* we fail with authorization-required error later IFF the FTP server requests it */
+#else
+    (void)req_hdr;
 #endif
 
     /* Test URL login syntax. Overrides any headers received. */
@@ -1069,16 +1069,17 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
 void
 Ftp::Gateway::checkUrlpath()
 {
-    static SBuf str_type_eq("type=");
-    auto t = request->url.path().rfind(';');
-
-    if (t != SBuf::npos) {
-        auto filenameEnd = t-1;
-        if (request->url.path().substr(++t).cmp(str_type_eq, str_type_eq.length()) == 0) {
-            t += str_type_eq.length();
-            typecode = (char)xtoupper(request->url.path()[t]);
-            request->url.path(request->url.path().substr(0,filenameEnd));
-        }
+    // If typecode was specified, extract it and leave just the filename in
+    // url.path. Tolerate trailing garbage or missing typecode value. Roughly:
+    // [filename] ;type=[typecode char] [trailing garbage]
+    static const SBuf middle(";type=");
+    const auto typeSpecStart = request->url.path().find(middle);
+    if (typeSpecStart != SBuf::npos) {
+        const auto fullPath = request->url.path();
+        const auto typecodePos = typeSpecStart + middle.length();
+        typecode = (typecodePos < fullPath.length()) ?
+            static_cast<char>(xtoupper(fullPath[typecodePos])) : '\0';
+        request->url.path(fullPath.substr(0, typeSpecStart));
     }
 
     int l = request->url.path().length();
@@ -1719,7 +1720,7 @@ void
 Ftp::Gateway::dataChannelConnected(const CommConnectCbParams &io)
 {
     debugs(9, 3, HERE);
-    data.opener = NULL;
+    dataConnWait.finish();
 
     if (io.flag != Comm::OK) {
         debugs(9, 2, HERE << "Failed to connect. Retrying via another method.");
@@ -1915,7 +1916,7 @@ Ftp::Gateway::ftpAcceptDataConnection(const CommAcceptCbParams &io)
         // accept if either our data or ctrl connection is talking to this remote peer.
         if (data.conn->remote != io.conn->remote && ctrl.conn->remote != io.conn->remote) {
             debugs(9, DBG_IMPORTANT,
-                   "FTP data connection from unexpected server (" <<
+                   "ERROR: FTP data connection from unexpected server (" <<
                    io.conn->remote << "), expecting " <<
                    data.conn->remote << " or " << ctrl.conn->remote);
 
@@ -2028,7 +2029,7 @@ void Ftp::Gateway::readStor()
         debugs(9, 3, "ftpReadStor: accepting data channel");
         listenForDataChannel(data.conn);
     } else {
-        debugs(9, DBG_IMPORTANT, HERE << "Unexpected reply code "<< std::setfill('0') << std::setw(3) << code);
+        debugs(9, DBG_IMPORTANT, "ERROR: Unexpected reply code "<< std::setfill('0') << std::setw(3) << code);
         ftpFail(this);
     }
 }
@@ -2232,6 +2233,7 @@ ftpReadTransferDone(Ftp::Gateway * ftpState)
             ftpState->completedListing();
             /* QUIT operation handles sending the reply to client */
         }
+        ftpState->markParsedVirginReplyAsWhole("ftpReadTransferDone code 226 or 250");
         ftpSendQuit(ftpState);
     } else {            /* != 226 */
         debugs(9, DBG_IMPORTANT, HERE << "Got code " << code << " after reading data");
@@ -2531,7 +2533,7 @@ Ftp::Gateway::appendSuccessHeader()
          * not be seeing this condition any more because we'll only
          * send REST if we know the theSize and if it is less than theSize.
          */
-        debugs(0,DBG_CRITICAL,HERE << "Whoops! " <<
+        debugs(0, DBG_CRITICAL, "ERROR: " <<
                " current offset=" << getCurrentOffset() <<
                ", but theSize=" << theSize <<
                ".  assuming full content response");
@@ -2580,6 +2582,8 @@ Ftp::Gateway::ftpAuthRequired(HttpRequest * request, SBuf &realm, AccessLogEntry
     /* add Authenticate header */
     // XXX: performance regression. c_str() may reallocate
     newrep->header.putAuth("Basic", realm.c_str());
+#else
+    (void)realm;
 #endif
     return newrep;
 }
@@ -2662,7 +2666,7 @@ Ftp::Gateway::haveControlChannel(const char *caller_name) const
 
     /* doneWithServer() only checks BOTH channels are closed. */
     if (!Comm::IsConnOpen(ctrl.conn)) {
-        debugs(9, DBG_IMPORTANT, "WARNING! FTP Server Control channel is closed, but Data channel still active.");
+        debugs(9, DBG_IMPORTANT, "WARNING: FTP Server Control channel is closed, but Data channel still active.");
         debugs(9, 2, caller_name << ": attempted on a closed FTP channel.");
         return false;
     }
@@ -2677,9 +2681,9 @@ Ftp::Gateway::mayReadVirginReplyBody() const
     return !doneWithServer();
 }
 
-AsyncJob::Pointer
+void
 Ftp::StartGateway(FwdState *const fwdState)
 {
-    return AsyncJob::Start(new Ftp::Gateway(fwdState));
+    AsyncJob::Start(new Ftp::Gateway(fwdState));
 }
 

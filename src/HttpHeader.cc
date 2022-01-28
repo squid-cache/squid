@@ -24,7 +24,6 @@
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "mime_header.h"
-#include "profiler/Profiler.h"
 #include "rfc1123.h"
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
@@ -193,8 +192,6 @@ HttpHeader::clean()
     assert(owner > hoNone && owner < hoEnd);
     debugs(55, 7, "cleaning hdr: " << this << " owner: " << owner);
 
-    PROF_start(HttpHeaderClean);
-
     if (owner <= hoReply) {
         /*
          * An unfortunate bug.  The entries array is initialized
@@ -218,7 +215,7 @@ HttpHeader::clean()
         if (e == nullptr)
             continue;
         if (!Http::any_valid_header(e->id)) {
-            debugs(55, DBG_CRITICAL, "BUG: invalid entry (" << e->id << "). Ignored.");
+            debugs(55, DBG_CRITICAL, "ERROR: Squid BUG: invalid entry (" << e->id << "). Ignored.");
         } else {
             if (owner <= hoReply)
                 HttpHeaderStats[owner].fieldTypeDistr.count(e->id);
@@ -231,7 +228,6 @@ HttpHeader::clean()
     len = 0;
     conflictingContentLength_ = false;
     teUnsupported_ = false;
-    PROF_stop(HttpHeaderClean);
 }
 
 /* append entries (also see httpHeaderUpdate) */
@@ -384,8 +380,6 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
     const char *header_end = header_start + hdrLen; // XXX: remove
     int warnOnError = (Config.onoff.relaxed_header_parser <= 0 ? DBG_IMPORTANT : 2);
 
-    PROF_start(HttpHeaderParse);
-
     assert(header_start && header_end);
     debugs(55, 7, "parsing hdr: (" << this << ")" << std::endl << getStringPrefix(header_start, hdrLen));
     ++ HttpHeaderStats[owner].parsedCount;
@@ -394,7 +388,6 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
     if ((nulpos = (char*)memchr(header_start, '\0', hdrLen))) {
         debugs(55, DBG_IMPORTANT, "WARNING: HTTP header contains NULL characters {" <<
                getStringPrefix(header_start, nulpos-header_start) << "}\nNULL\n{" << getStringPrefix(nulpos+1, hdrLen-(nulpos-header_start)-1));
-        PROF_stop(HttpHeaderParse);
         clean();
         return 0;
     }
@@ -414,7 +407,6 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
 
             if (!field_ptr) {
                 // missing <LF>
-                PROF_stop(HttpHeaderParse);
                 clean();
                 return 0;
             }
@@ -436,7 +428,6 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
                         debugs(55, DBG_IMPORTANT, "SECURITY WARNING: Rejecting HTTP request with a CR+ "
                                "header field to prevent request smuggling attacks: {" <<
                                getStringPrefix(header_start, hdrLen) << "}");
-                        PROF_stop(HttpHeaderParse);
                         clean();
                         return 0;
                     }
@@ -457,7 +448,6 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
                         ++p;
                     }
                 } else {
-                    PROF_stop(HttpHeaderParse);
                     clean();
                     return 0;
                 }
@@ -466,7 +456,6 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
             if (this_line + 1 == field_end && this_line > field_start) {
                 debugs(55, warnOnError, "WARNING: Blank continuation line in HTTP header {" <<
                        getStringPrefix(header_start, hdrLen) << "}");
-                PROF_stop(HttpHeaderParse);
                 clean();
                 return 0;
             }
@@ -476,7 +465,6 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
             if (field_ptr < header_end) {
                 debugs(55, warnOnError, "WARNING: unparsable HTTP header field near {" <<
                        getStringPrefix(field_start, hdrLen-(field_start-header_start)) << "}");
-                PROF_stop(HttpHeaderParse);
                 clean();
                 return 0;
             }
@@ -490,7 +478,6 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
                    getStringPrefix(field_start, field_end-field_start) << "}");
             debugs(55, warnOnError, " in {" << getStringPrefix(header_start, hdrLen) << "}");
 
-            PROF_stop(HttpHeaderParse);
             clean();
             return 0;
         }
@@ -501,7 +488,6 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
                 if (!hasBareCr) // already warned about bare CRs
                     debugs(55, warnOnError, "WARNING: obs-fold in framing-sensitive " << e->name << ": " << e->value);
                 delete e;
-                PROF_stop(HttpHeaderParse);
                 clean();
                 return 0;
             }
@@ -513,7 +499,6 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
             if (Config.onoff.relaxed_header_parser)
                 continue; // clen has printed any necessary warnings
 
-            PROF_stop(HttpHeaderParse);
             clean();
             return 0;
         }
@@ -574,7 +559,6 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
         }
     }
 
-    PROF_stop(HttpHeaderParse);
     return 1;           /* even if no fields where found, it is a valid header */
 }
 
@@ -1239,7 +1223,6 @@ HttpHeader::getCc() const
 {
     if (!CBIT_TEST(mask, Http::HdrType::CACHE_CONTROL))
         return NULL;
-    PROF_start(HttpHeader_getCc);
 
     String s;
     getList(Http::HdrType::CACHE_CONTROL, &s);
@@ -1257,8 +1240,6 @@ HttpHeader::getCc() const
         httpHdrCcUpdateStats(cc, &HttpHeaderStats[owner].ccTypeDistr);
 
     httpHeaderNoteParsedEntry(Http::HdrType::CACHE_CONTROL, s, !cc);
-
-    PROF_stop(HttpHeader_getCc);
 
     return cc;
 }
@@ -1479,7 +1460,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end, const htt
             return nullptr; // reject if we cannot strip
 
         debugs(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
-               "NOTICE: Whitespace after header name in '" << getStringPrefix(field_start, field_end-field_start) << "'");
+               "WARNING: Whitespace after header name in '" << getStringPrefix(field_start, field_end-field_start) << "'");
 
         while (name_len > 0 && xisspace(field_start[name_len - 1]))
             --name_len;
@@ -1607,7 +1588,7 @@ httpHeaderNoteParsedEntry(Http::HdrType id, String const &context, bool error)
 extern const HttpHeaderStat *dump_stat;     /* argh! */
 const HttpHeaderStat *dump_stat = NULL;
 
-void
+static void
 httpHeaderFieldStatDumper(StoreEntry * sentry, int, double val, double, int count)
 {
     const int id = static_cast<int>(val);

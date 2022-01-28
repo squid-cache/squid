@@ -33,6 +33,7 @@
 #include "fd.h"
 #include "fde.h"
 #include "format/Token.h"
+#include "FwdState.h"
 #include "gopher.h"
 #include "helper.h"
 #include "helper/Reply.h"
@@ -47,7 +48,6 @@
 #include "log/access_log.h"
 #include "MemObject.h"
 #include "Parsing.h"
-#include "profiler/Profiler.h"
 #include "proxyp/Header.h"
 #include "redirect.h"
 #include "rfc1738.h"
@@ -150,6 +150,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     uri(NULL),
     log_uri(NULL),
     req_sz(0),
+    al(new AccessLogEntry()),
     calloutContext(NULL),
     maxReplyBodySize_(0),
     entry_(NULL),
@@ -159,11 +160,11 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     , sslBumpNeed_(Ssl::bumpEnd)
 #endif
 #if USE_ADAPTATION
+    , receivedWholeAdaptedReply(false)
     , request_satisfaction_mode(false)
     , request_satisfaction_offset(0)
 #endif
 {
-    al = new AccessLogEntry;
     CodeContext::Reset(al);
     al->cache.start_time = current_time;
     if (aConn) {
@@ -267,7 +268,6 @@ checkFailureRatio(err_type etype, hier_code hcode)
 ClientHttpRequest::~ClientHttpRequest()
 {
     debugs(33, 3, "httpRequestFree: " << uri);
-    PROF_start(httpRequestFree);
 
     // Even though freeResources() below may destroy the request,
     // we no longer set request->body_pipe to NULL here
@@ -303,8 +303,6 @@ ClientHttpRequest::~ClientHttpRequest()
 
     /* moving to the next connection is handled by the context free */
     dlinkDelete(&active, &ClientActiveRequests);
-
-    PROF_stop(httpRequestFree);
 }
 
 /**
@@ -772,7 +770,7 @@ ClientRequestContext::clientAccessCheckDone(const Acl::Answer &answer)
          */
         page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, answer != ACCESS_AUTH_REQUIRED);
 
-        http->logType.update(LOG_TCP_DENIED);
+        http->updateLoggingTags(LOG_TCP_DENIED);
 
         if (auth_challenge) {
 #if USE_AUTH
@@ -1136,7 +1134,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
     if (req_hdr->has(Http::HdrType::X_FORWARDED_FOR)) {
         String s = req_hdr->getList(Http::HdrType::X_FORWARDED_FOR);
-        fvdbCountForw(s.termedBuf());
+        fvdbCountForwarded(StringToSBuf(s));
         s.clean();
     }
 
@@ -1526,17 +1524,15 @@ ClientHttpRequest::processRequest()
 void
 ClientHttpRequest::httpStart()
 {
-    PROF_start(httpStart);
     // XXX: Re-initializes rather than updates. Should not be needed at all.
-    logType.update(LOG_TAG_NONE);
-    debugs(85, 4, logType.c_str() << " for '" << uri << "'");
+    updateLoggingTags(LOG_TAG_NONE);
+    debugs(85, 4, loggingTags().c_str() << " for '" << uri << "'");
 
     /* no one should have touched this */
     assert(out.offset == 0);
     /* Use the Stream Luke */
     clientStreamNode *node = (clientStreamNode *)client_stream.tail->data;
     clientStreamRead(node, this, node->readBuffer);
-    PROF_stop(httpStart);
 }
 
 #if USE_OPENSSL
@@ -1730,9 +1726,6 @@ ClientHttpRequest::clearRequest()
  * the callout.  This is strictly for convenience.
  */
 
-tos_t aclMapTOS (acl_tos * head, ACLChecklist * ch);
-Ip::NfMarkConfig aclFindNfMarkConfig (acl_nfmark * head, ACLChecklist * ch);
-
 void
 ClientHttpRequest::doCallouts()
 {
@@ -1894,7 +1887,7 @@ ClientHttpRequest::doCallouts()
 #if ICAP_CLIENT
     Adaptation::Icap::History::Pointer ih = request->icapHistory();
     if (ih != NULL)
-        ih->logType = logType;
+        ih->logType = loggingTags();
 #endif
 }
 
@@ -2115,6 +2108,11 @@ void
 ClientHttpRequest::noteBodyProductionEnded(BodyPipe::Pointer)
 {
     assert(!virginHeadSource);
+
+    // distinguish this code path from future noteBodyProducerAborted() that
+    // would continue storing/delivering (truncated) reply if necessary (TODO)
+    receivedWholeAdaptedReply = true;
+
     // should we end request satisfaction now?
     if (adaptedBodySource != NULL && adaptedBodySource->exhausted())
         endRequestSatisfaction();
@@ -2128,7 +2126,14 @@ ClientHttpRequest::endRequestSatisfaction()
     stopConsumingFrom(adaptedBodySource);
 
     // TODO: anything else needed to end store entry formation correctly?
-    storeEntry()->complete();
+    if (receivedWholeAdaptedReply) {
+        // We received the entire reply per receivedWholeAdaptedReply.
+        // We are called when we consumed everything received (per our callers).
+        // We consume only what we store per noteMoreBodyDataAvailable().
+        storeEntry()->completeSuccessfully("received, consumed, and, hence, stored the entire REQMOD reply");
+    } else {
+        storeEntry()->completeTruncated("REQMOD request satisfaction default");
+    }
 }
 
 void

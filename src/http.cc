@@ -48,7 +48,6 @@
 #include "neighbors.h"
 #include "pconn.h"
 #include "peer_proxy_negotiate_auth.h"
-#include "profiler/Profiler.h"
 #include "refresh.h"
 #include "RefreshPattern.h"
 #include "rfc1738.h"
@@ -502,7 +501,7 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
     case Http::scMisdirectedRequest:
         statusAnswer = ReuseDecision::doNotCacheButShare;
         statusReason = shareableError;
-    // fall through to the actual decision making below
+    /* [[fallthrough]] to the actual decision making below */
 
     case Http::scBadRequest: // no sharing; perhaps the server did not like something specific to this request
 #if USE_HTTP_VIOLATIONS
@@ -650,17 +649,12 @@ HttpStateData::processReplyHeader()
 {
     /** Creates a blank header. If this routine is made incremental, this will not do */
 
-    /* NP: all exit points to this function MUST call ctx_exit(ctx) */
-    Ctx ctx = ctx_enter(entry->mem_obj->urlXXX());
-
     debugs(11, 3, "processReplyHeader: key '" << entry->getMD5Text() << "'");
 
     assert(!flags.headers_parsed);
 
-    if (!inBuf.length()) {
-        ctx_exit(ctx);
+    if (!inBuf.length())
         return;
-    }
 
     /* Attempt to parse the first line; this will define where the protocol, status, reason-phrase and header begin */
     {
@@ -677,18 +671,10 @@ HttpStateData::processReplyHeader()
 
         if (hp->needsMoreData()) {
             if (eof) { // no more data coming
-                /* Bug 2879: Replies may terminate with \r\n then EOF instead of \r\n\r\n.
-                 * We also may receive truncated responses.
-                 * Ensure here that we have at minimum two \r\n when EOF is seen.
-                 */
-                inBuf.append("\r\n\r\n", 4);
-                // retry the parse
-                parsedOk = hp->parse(inBuf);
-                // sync the buffers after parsing.
-                inBuf = hp->remaining();
+                assert(!parsedOk);
+                // fall through to handle this premature EOF as an error
             } else {
                 debugs(33, 5, "Incomplete response, waiting for end of response headers");
-                ctx_exit(ctx);
                 return;
             }
         }
@@ -699,9 +685,12 @@ HttpStateData::processReplyHeader()
             debugs(11, 3, "Non-HTTP-compliant header:\n---------\n" << inBuf << "\n----------");
             flags.headers_parsed = true;
             HttpReply *newrep = new HttpReply;
-            newrep->sline.set(Http::ProtocolVersion(), hp->parseStatusCode);
+            // hp->needsMoreData() means hp->parseStatusCode is unusable, but, here,
+            // it also means that the reply header got truncated by a premature EOF
+            assert(!hp->needsMoreData() || eof);
+            const auto scode = hp->needsMoreData() ? Http::scInvalidHeader : hp->parseStatusCode;
+            newrep->sline.set(Http::ProtocolVersion(), scode);
             setVirginReply(newrep);
-            ctx_exit(ctx);
             return;
         }
     }
@@ -737,7 +726,6 @@ HttpStateData::processReplyHeader()
 
     if (newrep->sline.version.protocol == AnyP::PROTO_HTTP && Http::Is1xx(newrep->sline.status())) {
         handle1xx(newrep);
-        ctx_exit(ctx);
         return;
     }
 
@@ -758,8 +746,6 @@ HttpStateData::processReplyHeader()
     checkDateSkew(vrep);
 
     processSurrogateControl (vrep);
-
-    ctx_exit(ctx);
 }
 
 /// ignore or start forwarding the 1xx response (a.k.a., control message)
@@ -874,7 +860,7 @@ HttpStateData::proceedAfter1xx()
 
     if (flags.serverSwitchedProtocols) {
         // pass server connection ownership to request->clientConnectionManager
-        ConnStateData::ServerConnectionContext scc(serverConnection, request, inBuf);
+        ConnStateData::ServerConnectionContext scc(serverConnection, inBuf);
         typedef UnaryMemFunT<ConnStateData, ConnStateData::ServerConnectionContext> MyDialer;
         AsyncCall::Pointer call = asyncCall(11, 3, "ConnStateData::noteTakeServerConnectionControl",
                                             MyDialer(request->clientConnectionManager,
@@ -959,7 +945,6 @@ HttpStateData::haveParsedReplyHeaders()
 {
     Client::haveParsedReplyHeaders();
 
-    Ctx ctx = ctx_enter(entry->mem_obj->urlXXX());
     HttpReply *rep = finalReply();
     const Http::StatusCode statusCode = rep->sline.status();
 
@@ -1083,8 +1068,6 @@ HttpStateData::haveParsedReplyHeaders()
     headersLog(1, 0, request->method, rep);
 
 #endif
-
-    ctx_exit(ctx);
 }
 
 HttpStateData::ConnectionStatus
@@ -1310,9 +1293,7 @@ HttpStateData::processReply()
     }
 
     if (!flags.headers_parsed) { // have not parsed headers yet?
-        PROF_start(HttpStateData_processReplyHeader);
         processReplyHeader();
-        PROF_stop(HttpStateData_processReplyHeader);
 
         if (!continueAfterParsingHeader()) // parsing error or need more data
             return; // TODO: send errors to ICAP
@@ -1321,9 +1302,7 @@ HttpStateData::processReply()
     }
 
     // kick more reads if needed and/or process the response body, if any
-    PROF_start(HttpStateData_processReplyBody);
     processReplyBody(); // may call serverComplete()
-    PROF_stop(HttpStateData_processReplyBody);
 }
 
 /**
@@ -1435,6 +1414,19 @@ HttpStateData::writeReplyBody()
     int len = inBuf.length();
     addVirginReplyBody(data, len);
     inBuf.consume(len);
+
+    // after addVirginReplyBody() wrote (when not adapting) everything we have
+    // received to Store, check whether we have received/parsed the entire reply
+    int64_t clen = -1;
+    const char *parsedWhole = nullptr;
+    if (!virginReply()->expectingBody(request->method, clen))
+        parsedWhole = "http parsed header-only reply";
+    else if (clen >= 0 && clen == payloadSeen - payloadTruncated)
+        parsedWhole = "http parsed Content-Length body bytes";
+    else if (clen < 0 && eof)
+        parsedWhole = "http parsed body ending with expected/required EOF";
+    if (parsedWhole)
+        markParsedVirginReplyAsWhole(parsedWhole);
 }
 
 bool
@@ -1452,6 +1444,7 @@ HttpStateData::decodeAndWriteReplyBody()
         if (doneParsing) {
             lastChunk = 1;
             flags.do_next_read = false;
+            markParsedVirginReplyAsWhole("http parsed last-chunk");
         }
         return true;
     }
@@ -1569,8 +1562,6 @@ HttpStateData::processReplyBody()
 
         case COMPLETE_NONPERSISTENT_MSG:
             debugs(11, 5, "processReplyBody: COMPLETE_NONPERSISTENT_MSG from " << serverConnection);
-            if (flags.chunked && !lastChunk)
-                entry->lengthWentBad("missing last-chunk");
 
             serverComplete();
             return;
@@ -1914,7 +1905,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             static int warnedCount = 0;
             if (warnedCount++ < 100) {
                 const SBuf url(entry ? SBuf(entry->url()) : request->effectiveRequestUri());
-                debugs(11, DBG_IMPORTANT, "Warning: likely forwarding loop with " << url);
+                debugs(11, DBG_IMPORTANT, "WARNING: likely forwarding loop with " << url);
             }
         }
 

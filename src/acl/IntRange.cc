@@ -39,7 +39,7 @@ ACLIntRange::parse()
             RangeType temp(port1, port2+1);
             ranges.push_back(temp);
         } else {
-            debugs(28, DBG_CRITICAL, "ACLIntRange::parse: Invalid port value");
+            debugs(28, DBG_CRITICAL, "ERROR: ACLIntRange::parse: Invalid port value");
             self_destruct();
         }
     }
@@ -62,15 +62,6 @@ ACLIntRange::match(int i)
     }
 
     return false;
-}
-
-ACLData<int> *
-ACLIntRange::clone() const
-{
-    if (!ranges.empty())
-        fatal("ACLIntRange::clone: attempt to clone used ACL");
-
-    return new ACLIntRange(*this);
 }
 
 ACLIntRange::~ACLIntRange()

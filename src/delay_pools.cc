@@ -421,7 +421,7 @@ Aggregate::parse()
 }
 
 DelayIdComposite::Pointer
-Aggregate::id(CompositeSelectionDetails &details)
+Aggregate::id(CompositeSelectionDetails &)
 {
     if (rate()->restore_bps != -1)
         return new AggregateId (this);
@@ -482,7 +482,7 @@ DelayPools::FreeDelayData()
 }
 
 void
-DelayPools::Update(void *unused)
+DelayPools::Update(void *)
 {
     if (!pools())
         return;

@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "adaptation/ServiceConfig.h"
+#include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "globals.h"
@@ -97,11 +98,11 @@ Adaptation::ServiceConfig::parse()
         if (strcmp(option, "0") == 0) { // backward compatibility
             name = "bypass";
             value = "off";
-            debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "UPGRADE: Please use 'bypass=off' option to disable service bypass");
+            debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: UPGRADE: Please use 'bypass=off' option to disable service bypass");
         }  else if (strcmp(option, "1") == 0) { // backward compatibility
             name = "bypass";
             value = "on";
-            debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "UPGRADE: Please use 'bypass=on' option to enable service bypass");
+            debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: UPGRADE: Please use 'bypass=on' option to enable service bypass");
         } else {
             char *eq = strstr(option, "=");
             const char *sffx = strstr(option, "://");
@@ -345,7 +346,7 @@ bool
 Adaptation::ServiceConfig::grokExtension(const char *name, const char *value)
 {
     // we do not accept extensions by default
-    debugs(3, DBG_CRITICAL, cfg_filename << ':' << config_lineno << ": " <<
+    debugs(3, DBG_CRITICAL, "ERROR: " << cfg_filename << ':' << config_lineno << ": " <<
            "ERROR: unknown adaptation service option: " <<
            name << '=' << value);
     return false;

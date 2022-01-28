@@ -28,10 +28,12 @@
 #include "ConfigOption.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
+#include "DebugMessages.h"
 #include "DiskIO/DiskIOModule.h"
 #include "eui/Config.h"
 #include "ExternalACL.h"
 #include "format/Format.h"
+#include "fqdncache.h"
 #include "ftp/Elements.h"
 #include "globals.h"
 #include "HttpHeaderTools.h"
@@ -157,10 +159,12 @@ static const char *const B_KBYTES_STR = "KB";
 static const char *const B_MBYTES_STR = "MB";
 static const char *const B_GBYTES_STR = "GB";
 
-static const char *const list_sep = ", \t\n\r";
-
 // std::chrono::years requires C++20. Do our own rough calculation for now.
 static const double HoursPerYear = 24*365.2522;
+
+static void parse_cache_log_message(DebugMessages **messages);
+static void dump_cache_log_message(StoreEntry *entry, const char *name, const DebugMessages *messages);
+static void free_cache_log_message(DebugMessages **messages);
 
 static void parse_access_log(CustomLog ** customlog_definitions);
 static int check_null_access_log(CustomLog *customlog_definitions);
@@ -262,6 +266,11 @@ static void free_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **prot
  * provided to them in their parserFOO methods.
  */
 static ConfigParser LegacyParser = ConfigParser();
+
+const char *cfg_directive = nullptr;
+const char *cfg_filename = nullptr;
+int config_lineno = 0;
+char config_input_line[BUFSIZ] = {};
 
 void
 self_destruct(void)
@@ -555,7 +564,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
                     }
                 } catch (...) {
                     // fatal for now
-                    debugs(3, DBG_CRITICAL, "configuration error: " << CurrentException);
+                    debugs(3, DBG_CRITICAL, "ERROR: configuration failure: " << CurrentException);
                     self_destruct();
                 }
             }
@@ -1854,7 +1863,7 @@ parse_http_header_access(HeaderManglers **pm)
 
     if ((t = ConfigParser::NextToken()) == NULL) {
         debugs(3, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(3, DBG_CRITICAL, "parse_http_header_access: missing header name.");
+        debugs(3, DBG_CRITICAL, "ERROR: parse_http_header_access: missing header name.");
         return;
     }
 
@@ -1893,7 +1902,7 @@ parse_http_header_replace(HeaderManglers **pm)
 
     if ((t = ConfigParser::NextToken()) == NULL) {
         debugs(3, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(3, DBG_CRITICAL, "parse_http_header_replace: missing header name.");
+        debugs(3, DBG_CRITICAL, "ERROR: parse_http_header_replace: missing header name.");
         return;
     }
 
@@ -1943,7 +1952,7 @@ parse_authparam(Auth::ConfigVector * config)
         Auth::Scheme::Pointer theScheme = Auth::Scheme::Find(type_str);
 
         if (theScheme == NULL) {
-            debugs(3, DBG_CRITICAL, "Parsing Config File: Unknown authentication scheme '" << type_str << "'.");
+            debugs(3, DBG_CRITICAL, "ERROR: Failure while parsing Config File: Unknown authentication scheme '" << type_str << "'.");
             self_destruct();
             return;
         }
@@ -2583,7 +2592,7 @@ dump_int64_t(StoreEntry * entry, const char *name, int64_t var)
     storeAppendPrintf(entry, "%s %" PRId64 "\n", name, var);
 }
 
-void
+static void
 parse_int64_t(int64_t *var)
 {
     int64_t i;
@@ -2674,7 +2683,7 @@ parse_tristate(int *var)
 
 #define free_tristate free_int
 
-void
+static void
 parse_pipelinePrefetch(int *var)
 {
     char *token = ConfigParser::PeekAtToken();
@@ -2861,14 +2870,14 @@ parse_refreshpattern(RefreshPattern ** head)
                   ) {
             debugs(22, DBG_PARSE_NOTE(2), "UPGRADE: refresh_pattern option '" << token << "' is obsolete. Remove it.");
         } else
-            debugs(22, DBG_CRITICAL, "refreshAddToList: Unknown option '" << pattern << "': " << token);
+            debugs(22, DBG_CRITICAL, "ERROR: refreshAddToList: Unknown option '" << pattern << "': " << token);
     }
 
     if ((errcode = regcomp(&comp, pattern, flags)) != 0) {
         char errbuf[256];
         regerror(errcode, &comp, errbuf, sizeof errbuf);
         debugs(22, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(22, DBG_CRITICAL, "refreshAddToList: Invalid regular expression '" << pattern << "': " << errbuf);
+        debugs(22, DBG_CRITICAL, "ERROR: refreshAddToList: Invalid regular expression '" << pattern << "': " << errbuf);
         xfree(pattern);
         return;
     }
@@ -3037,8 +3046,8 @@ dump_time_msec(StoreEntry * entry, const char *name, time_msec_t var)
         storeAppendPrintf(entry, "%s %d seconds\n", name, (int)(var/1000) );
 }
 
-void
-parse_time_msec(time_msec_t * var)
+static void
+parse_time_msec(time_msec_t *var)
 {
     *var = parseTimeLine<std::chrono::milliseconds>().count();
 }
@@ -3719,7 +3728,7 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
     } else if (strncmp(token, "key=", 4) == 0) {
         s->secure.parse(token);
     } else if (strncmp(token, "version=", 8) == 0) {
-        debugs(3, DBG_PARSE_NOTE(1), "UPGRADE WARNING: '" << token << "' is deprecated " <<
+        debugs(3, DBG_PARSE_NOTE(1), "WARNING: UPGRADE: '" << token << "' is deprecated " <<
                "in " << cfg_directive << ". Use 'options=' instead.");
         s->secure.parse(token);
     } else if (strncmp(token, "options=", 8) == 0) {
@@ -3729,7 +3738,7 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
     } else if (strncmp(token, "clientca=", 9) == 0) {
         s->secure.parse(token);
     } else if (strncmp(token, "cafile=", 7) == 0) {
-        debugs(3, DBG_PARSE_NOTE(1), "UPGRADE WARNING: '" << token << "' is deprecated " <<
+        debugs(3, DBG_PARSE_NOTE(1), "WARNING: UPGRADE: '" << token << "' is deprecated " <<
                "in " << cfg_directive << ". Use 'tls-cafile=' instead.");
         s->secure.parse(token);
     } else if (strncmp(token, "capath=", 7) == 0) {
@@ -3977,6 +3986,7 @@ void
 configFreeMemory(void)
 {
     free_all();
+    Dns::ResolveClientAddressesAsap = false;
     Config.ssl_client.sslContext.reset();
 #if USE_OPENSSL
     Ssl::unloadSquidUntrusted();
@@ -4141,6 +4151,7 @@ static void
 parse_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap)
 {
 #if !HAVE_CPU_AFFINITY
+    (void)cpuAffinityMap;
     debugs(3, DBG_CRITICAL, "FATAL: Squid built with no CPU affinity " <<
            "support, do not set 'cpu_affinity_map'");
     self_destruct();
@@ -4656,6 +4667,101 @@ static void dump_note(StoreEntry *entry, const char *name, Notes &notes)
 static void free_note(Notes *notes)
 {
     notes->clean();
+}
+
+static DebugMessageId ParseDebugMessageId(const char *value, const char eov)
+{
+    const auto id = xatoui(value, eov);
+    if (!(0 < id && id < DebugMessageIdUpperBound))
+        throw TextException(ToSBuf("unknown cache_log_message ID: ", value), Here());
+    return static_cast<DebugMessageId>(id);
+}
+
+static void parse_cache_log_message(DebugMessages **debugMessages)
+{
+    DebugMessage msg;
+    DebugMessageId minId = 0;
+    DebugMessageId maxId = 0;
+
+    char *key = nullptr;
+    char *value = nullptr;
+    while (ConfigParser::NextKvPair(key, value)) {
+        if (strcmp(key, "id") == 0) {
+            if (minId > 0)
+                break;
+            minId = maxId = ParseDebugMessageId(value, '\0');
+        } else if (strcmp(key, "ids") == 0) {
+            if (minId > 0)
+                break;
+            const auto dash = strchr(value, '-');
+            if (!dash)
+                throw TextException(ToSBuf("malformed cache_log_message ID range: ", key, '=', value), Here());
+            minId = ParseDebugMessageId(value, '-');
+            maxId = ParseDebugMessageId(dash+1, '\0');
+            if (minId > maxId)
+                throw TextException(ToSBuf("invalid cache_log_message ID range: ", key, '=', value), Here());
+        } else if (strcmp(key, "level") == 0) {
+            if (msg.levelled())
+                break;
+            const auto level = xatoi(value);
+            if (level < 0)
+                throw TextException(ToSBuf("negative cache_log_message level: ", value), Here());
+            msg.level = level;
+        } else if (strcmp(key, "limit") == 0) {
+            if (msg.limited())
+                break;
+            msg.limit = xatoull(value, 10);
+        } else {
+            throw TextException(ToSBuf("unsupported cache_log_message option: ", key), Here());
+        }
+        key = value = nullptr;
+    }
+
+    if (key && value)
+        throw TextException(ToSBuf("repeated or conflicting cache_log_message option: ", key, '=', value), Here());
+
+    if (!minId)
+        throw TextException("cache_log_message is missing a required id=... or ids=... option", Here());
+
+    if (!(msg.levelled() || msg.limited()))
+        throw TextException("cache_log_message is missing a required level=... or limit=... option", Here());
+
+    assert(debugMessages);
+    if (!*debugMessages)
+        *debugMessages = new DebugMessages();
+
+    for (auto id = minId; id <= maxId; ++id) {
+        msg.id = id;
+        (*debugMessages)->messages.at(id) = msg;
+    }
+}
+
+static void dump_cache_log_message(StoreEntry *entry, const char *name, const DebugMessages *debugMessages)
+{
+    if (!debugMessages)
+        return;
+
+    SBufStream out;
+    for (const auto &msg: debugMessages->messages) {
+        if (!msg.configured())
+            continue;
+        out << name << " id=" << msg.id;
+        if (msg.levelled())
+            out << " level=" << msg.level;
+        if (msg.limited())
+            out << " limit=" << msg.limit;
+        out << "\n";
+    }
+    const auto buf = out.buf();
+    entry->append(buf.rawContent(), buf.length()); // may be empty
+}
+
+static void free_cache_log_message(DebugMessages **debugMessages)
+{
+    // clear old messages to avoid cumulative effect across (re)configurations
+    assert(debugMessages);
+    delete *debugMessages;
+    *debugMessages = nullptr;
 }
 
 static bool FtpEspvDeprecated = false;

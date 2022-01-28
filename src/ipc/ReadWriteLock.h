@@ -52,6 +52,8 @@ public:
     std::atomic_flag updating; ///< a reader is updating metadata/headers
 
 private:
+    bool finalizeExclusive();
+
     mutable std::atomic<uint32_t> readLevel; ///< number of users reading (or trying to)
     std::atomic<uint32_t> writeLevel; ///< number of users writing (or trying to write)
 };

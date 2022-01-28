@@ -57,25 +57,17 @@ static void mcast_encode(unsigned int *, size_t, const unsigned int *);
 
 #if USE_FORW_VIA_DB
 
-typedef struct {
-    hash_link hash;
-    int n;
-} fvdb_entry;
-
-using HeaderValueCountsElement = std::pair<SBuf, uint64_t>;
+using HeaderValueCountsElement = std::pair<const SBuf, uint64_t>;
 /// counts the number of header field value occurrences
 using HeaderValueCounts = std::unordered_map<SBuf, uint64_t, std::hash<SBuf>, std::equal_to<SBuf>, PoolingAllocator<HeaderValueCountsElement> >;
 
 /// counts the number of HTTP Via header field value occurrences
 static HeaderValueCounts TheViaCounts;
+/// counts the number of HTTP X-Forwarded-For header field value occurrences
+static HeaderValueCounts TheForwardedCounts;
 
-static hash_table *forw_table = NULL;
-static void fvdbInit();
-static void fvdbDumpTable(StoreEntry * e, hash_table * hash);
-static void fvdbCount(hash_table * hash, const char *key);
 static OBJH fvdbDumpVia;
-static OBJH fvdbDumpForw;
-static FREE fvdbFreeEntry;
+static OBJH fvdbDumpForwarded;
 static void fvdbClear(void);
 static void fvdbRegisterWithCacheManager();
 #endif
@@ -83,7 +75,7 @@ static void fvdbRegisterWithCacheManager();
 int LogfileStatus = LOG_DISABLE;
 
 void
-accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist * checklist)
+accessLogLogTo(CustomLog *log, const AccessLogEntryPointer &al, ACLChecklist *checklist)
 {
 
     if (al->url.isEmpty())
@@ -153,7 +145,7 @@ accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist * check
 }
 
 void
-accessLogLog(AccessLogEntry::Pointer &al, ACLChecklist * checklist)
+accessLogLog(const AccessLogEntryPointer &al, ACLChecklist *checklist)
 {
     if (LogfileStatus != LOG_ENABLE)
         return;
@@ -443,46 +435,16 @@ accessLogInit(void)
     }
 
 #endif
-#if USE_FORW_VIA_DB
-
-    fvdbInit();
-
-#endif
 }
 
 #if USE_FORW_VIA_DB
-
-static void
-fvdbInit(void)
-{
-    forw_table = hash_create((HASHCMP *) strcmp, 977, hash4);
-}
 
 static void
 fvdbRegisterWithCacheManager(void)
 {
     Mgr::RegisterAction("via_headers", "Via Request Headers", fvdbDumpVia, 0, 1);
     Mgr::RegisterAction("forw_headers", "X-Forwarded-For Request Headers",
-                        fvdbDumpForw, 0, 1);
-}
-
-static void
-fvdbCount(hash_table * hash, const char *key)
-{
-    fvdb_entry *fv;
-
-    if (NULL == hash)
-        return;
-
-    fv = (fvdb_entry *)hash_lookup(hash, key);
-
-    if (NULL == fv) {
-        fv = static_cast <fvdb_entry *>(xcalloc(1, sizeof(fvdb_entry)));
-        fv->hash.key = xstrdup(key);
-        hash_join(hash, &fv->hash);
-    }
-
-    ++ fv->n;
+                        fvdbDumpForwarded, 0, 1);
 }
 
 void
@@ -492,26 +454,9 @@ fvdbCountVia(const SBuf &headerValue)
 }
 
 void
-fvdbCountForw(const char *key)
+fvdbCountForwarded(const SBuf &key)
 {
-    fvdbCount(forw_table, key);
-}
-
-static void
-fvdbDumpTable(StoreEntry * e, hash_table * hash)
-{
-    hash_link *h;
-    fvdb_entry *fv;
-
-    if (hash == NULL)
-        return;
-
-    hash_first(hash);
-
-    while ((h = hash_next(hash))) {
-        fv = (fvdb_entry *) h;
-        storeAppendPrintf(e, "%9d %s\n", fv->n, hashKeyStr(&fv->hash));
-    }
+    ++TheForwardedCounts[key];
 }
 
 static void
@@ -530,27 +475,17 @@ fvdbDumpVia(StoreEntry * e)
 }
 
 static void
-fvdbDumpForw(StoreEntry * e)
+fvdbDumpForwarded(StoreEntry * e)
 {
-    fvdbDumpTable(e, forw_table);
-}
-
-static
-void
-fvdbFreeEntry(void *data)
-{
-    fvdb_entry *fv = static_cast <fvdb_entry *>(data);
-    xfree(fv->hash.key);
-    xfree(fv);
+    assert(e);
+    fvdbDumpCounts(*e, TheForwardedCounts);
 }
 
 static void
 fvdbClear(void)
 {
     TheViaCounts.clear();
-    hashFreeItems(forw_table, fvdbFreeEntry);
-    hashFreeMemory(forw_table);
-    forw_table = hash_create((HASHCMP *) strcmp, 977, hash4);
+    TheForwardedCounts.clear();
 }
 
 #endif

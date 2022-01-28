@@ -260,7 +260,7 @@ CacheManager::ParseHeaders(const HttpRequest * request, Mgr::ActionParams &param
 
     const auto colonPos = basic_cookie.find(':');
     if (colonPos == SBuf::npos) {
-        debugs(16, DBG_IMPORTANT, "CacheManager::ParseHeaders: unknown basic_cookie format '" << basic_cookie << "'");
+        debugs(16, DBG_IMPORTANT, "ERROR: CacheManager::ParseHeaders: unknown basic_cookie format '" << basic_cookie << "'");
         return;
     }
 

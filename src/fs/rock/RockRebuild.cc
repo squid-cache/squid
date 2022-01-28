@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "base/AsyncJobCalls.h"
+#include "DebugMessages.h"
 #include "fs/rock/RockDbCell.h"
 #include "fs/rock/RockRebuild.h"
 #include "fs/rock/RockSwapDir.h"
@@ -267,7 +268,7 @@ Rock::Rebuild::Stats::completed(const SwapDir &dir) const
 /* Rebuild */
 
 bool
-Rock::Rebuild::IsResponsible(const SwapDir &dir)
+Rock::Rebuild::IsResponsible(const SwapDir &)
 {
     // in SMP mode, only the disker is responsible for populating the map
     return !UsingSmp() || IamDiskProcess();
@@ -289,7 +290,7 @@ Rock::Rebuild::Start(SwapDir &dir)
         return false;
     }
 
-    Must(AsyncJob::Start(new Rebuild(&dir, stats)));
+    AsyncJob::Start(new Rebuild(&dir, stats));
     return true;
 }
 
@@ -339,10 +340,10 @@ Rock::Rebuild::start()
     assert(IsResponsible(*sd));
 
     if (!resuming) {
-        debugs(47, DBG_IMPORTANT, "Loading cache_dir #" << sd->index <<
+        debugs(47, Important(18), "Loading cache_dir #" << sd->index <<
                " from " << sd->filePath);
     } else {
-        debugs(47, DBG_IMPORTANT, "Resuming indexing cache_dir #" << sd->index <<
+        debugs(47, Important(63), "Resuming indexing cache_dir #" << sd->index <<
                " from " << sd->filePath << ':' << progressDescription());
     }
 

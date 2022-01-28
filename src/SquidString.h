@@ -42,6 +42,7 @@ public:
     String &operator =(String const &);
     String &operator =(String && S) {
         if (this != &S) {
+            clean();
             size_ = S.size_;
             len_ = S.len_;
             buf_ = S.buf_;

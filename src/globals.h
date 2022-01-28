@@ -18,13 +18,8 @@
 
 extern char *ConfigFile;    /* NULL */
 extern char *IcpOpcodeStr[];
-extern char tmp_error_buf[ERROR_BUF_SZ];
 extern char ThisCache[RFC2181_MAXHOSTNAMELEN << 1];
 extern char ThisCache2[RFC2181_MAXHOSTNAMELEN << 1];
-extern char config_input_line[BUFSIZ];
-/// During parsing, the name of the current squid.conf directive being parsed.
-extern const char *cfg_directive; /* NULL */
-extern const char *cfg_filename;    /* NULL */
 extern const char *dash_str;    /* "-" */
 extern const char *null_string; /* "" */
 extern const char *version_string;  /* VERSION */
@@ -42,7 +37,6 @@ extern int Opening_FD;      /* 0 */
 extern int NDnsServersAlloc;    /* 0 */
 extern int RESERVED_FD;
 extern int Squid_MaxFD;     /* SQUID_MAXFD */
-extern int config_lineno;   /* 0 */
 extern int opt_reuseaddr;   /* 1 */
 extern int neighbors_do_private_keys;   /* 1 */
 extern int opt_catch_signals;   /* 1 */

@@ -34,12 +34,12 @@ storeSwapInStart(store_client * sc)
     debugs(20, 3, *e << " " <<  e->getMD5Text());
 
     if (!e->hasDisk()) {
-        debugs(20, DBG_IMPORTANT, "BUG: Attempt to swap in a not-stored entry " << *e << ". Salvaged.");
+        debugs(20, DBG_IMPORTANT, "ERROR: Squid BUG: Attempt to swap in a not-stored entry " << *e << ". Salvaged.");
         return;
     }
 
     if (e->swapoutFailed()) {
-        debugs(20, DBG_IMPORTANT, "BUG: Attempt to swap in a failed-to-store entry " << *e << ". Salvaged.");
+        debugs(20, DBG_IMPORTANT, "ERROR: Squid BUG: Attempt to swap in a failed-to-store entry " << *e << ". Salvaged.");
         return;
     }
 

@@ -11,7 +11,6 @@
 #include "squid.h"
 #include "mem_node.h"
 #include "MemStore.h"
-#include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
 #include "store/Controller.h"
@@ -94,7 +93,6 @@ Store::Controller::maintain()
 {
     static time_t last_warn_time = 0;
 
-    PROF_start(storeMaintainSwapSpace);
     swapDir->maintain();
 
     /* this should be emitted by the oversize dir, not globally */
@@ -107,8 +105,6 @@ Store::Controller::maintain()
             last_warn_time = squid_curtime;
         }
     }
-
-    PROF_stop(storeMaintainSwapSpace);
 }
 
 void
@@ -232,15 +228,8 @@ Store::Controller::sync(void)
 int
 Store::Controller::callback()
 {
-    /* This will likely double count. That's ok. */
-    PROF_start(storeDirCallback);
-
     /* mem cache callbacks ? */
-    int result = swapDir->callback();
-
-    PROF_stop(storeDirCallback);
-
-    return result;
+    return swapDir->callback();
 }
 
 /// update reference counters of the recently touched entry
@@ -275,6 +264,10 @@ Store::Controller::dereferenceIdle(StoreEntry &e, bool wantsLocalMemory)
     // special entries do not belong to any specific Store, but are IN_MEMORY
     if (EBIT_TEST(e.flags, ENTRY_SPECIAL))
         return true;
+
+    // idle private entries cannot be reused
+    if (EBIT_TEST(e.flags, KEY_PRIVATE))
+        return false;
 
     bool keepInStoreTable = false; // keep only if somebody needs it there
 
@@ -391,7 +384,7 @@ Store::Controller::allowSharing(StoreEntry &entry, const cache_key *key)
         if (!found) {
             // !found should imply hittingRequiresCollapsing() regardless of writer presence
             if (!entry.hittingRequiresCollapsing()) {
-                debugs(20, DBG_IMPORTANT, "BUG: missing ENTRY_REQUIRES_COLLAPSING for " << entry);
+                debugs(20, DBG_IMPORTANT, "ERROR: Squid BUG: missing ENTRY_REQUIRES_COLLAPSING for " << entry);
                 throw TextException("transients entry missing ENTRY_REQUIRES_COLLAPSING", Here());
             }
 
@@ -703,6 +696,9 @@ Store::Controller::handleIdleEntry(StoreEntry &e)
 
     debugs(20, 5, HERE << "keepInLocalMemory: " << keepInLocalMemory);
 
+    // formerly known as "WARNING: found KEY_PRIVATE"
+    assert(!EBIT_TEST(e.flags, KEY_PRIVATE));
+
     // TODO: move this into [non-shared] memory cache class when we have one
     if (keepInLocalMemory) {
         e.setMemStatus(IN_MEMORY);
@@ -756,7 +752,7 @@ Store::Controller::updateOnNotModified(StoreEntry *old, StoreEntry &e304)
 
 bool
 Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
-                                   const HttpRequestMethod &reqMethod)
+                                   const HttpRequestMethod &)
 {
     const KeyScope keyScope = reqFlags.refresh ? ksRevalidation : ksDefault;
     // set the flag now so that it gets copied into the Transients entry

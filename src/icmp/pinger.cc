@@ -96,12 +96,9 @@ int icmp_pkts_sent = 0;
 /**
  \ingroup pinger
  \par This is the pinger external process.
- *
- \param argc Ignored.
- \param argv Ignored.
  */
 int
-main(int argc, char *argv[])
+main(int, char **)
 {
     fd_set R;
     int x;
@@ -135,14 +132,14 @@ main(int argc, char *argv[])
 
     icmp4_worker = icmp4.Open();
     if (icmp4_worker < 0) {
-        debugs(42, DBG_CRITICAL, "pinger: Unable to start ICMP pinger.");
+        debugs(42, DBG_CRITICAL, "ERROR: pinger: Unable to start ICMP pinger.");
     }
     max_fd = max(max_fd, icmp4_worker);
 
 #if USE_IPV6
     icmp6_worker = icmp6.Open();
     if (icmp6_worker <0 ) {
-        debugs(42, DBG_CRITICAL, "pinger: Unable to start ICMPv6 pinger.");
+        debugs(42, DBG_CRITICAL, "ERROR: pinger: Unable to start ICMPv6 pinger.");
     }
     max_fd = max(max_fd, icmp6_worker);
 #endif
@@ -221,7 +218,7 @@ main(int argc, char *argv[])
 
         if (x < 0) {
             int xerrno = errno;
-            debugs(42, DBG_CRITICAL, HERE << " FATAL Shutdown. select()==" << x << ", ERR: " << xstrerr(xerrno));
+            debugs(42, DBG_CRITICAL, "FATAL: select()==" << x << ", ERR: " << xstrerr(xerrno));
             control.Close();
             exit(EXIT_FAILURE);
         }

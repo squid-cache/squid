@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "acl/Checklist.h"
+#include "acl/Options.h"
 #include "acl/UserData.h"
 #include "ConfigParser.h"
 #include "Debug.h"
@@ -17,12 +18,7 @@
 #include "sbuf/Algorithms.h"
 #include "util.h"
 
-const Acl::ParameterFlags &
-ACLUserData::supportedFlags() const
-{
-    static const Acl::ParameterFlags flagNames = { "-i", "+i" };
-    return flagNames;
-}
+Acl::BooleanOptionValue ACLUserData::CaseInsensitive_;
 
 bool
 ACLUserData::match(char const *user)
@@ -82,10 +78,20 @@ ACLUserData::ACLUserData() :
     flags.required = false;
 }
 
+const Acl::Options &
+ACLUserData::lineOptions()
+{
+    static auto MyCaseSensitivityOption = Acl::CaseSensitivityOption();
+    static const Acl::Options MyOptions = { &MyCaseSensitivityOption };
+    MyCaseSensitivityOption.linkWith(&CaseInsensitive_);
+    return MyOptions;
+}
+
 void
 ACLUserData::parse()
 {
     debugs(28, 2, "parsing user list");
+    flags.case_insensitive = bool(CaseInsensitive_);
 
     char *t = NULL;
     if ((t = ConfigParser::strtokFile())) {
@@ -143,11 +149,5 @@ ACLUserData::empty() const
     if (flags.required)
         return false;
     return userDataNames.empty();
-}
-
-ACLData<char const *> *
-ACLUserData::clone() const
-{
-    return new ACLUserData;
 }
 

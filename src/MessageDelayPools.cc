@@ -195,7 +195,7 @@ MessageDelayConfig::freePools()
 }
 
 void
-MessageDelayConfig::dumpResponseDelayPoolParameters(StoreEntry *entry, const char *name)
+MessageDelayConfig::dumpResponseDelayPoolParameters(StoreEntry *entry)
 {
     auto &pools = MessageDelayPools::Instance()->pools;
     for (auto pool: pools)

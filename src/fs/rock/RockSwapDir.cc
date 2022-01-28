@@ -961,7 +961,7 @@ Rock::SwapDir::full() const
 void
 Rock::SwapDir::diskFull()
 {
-    debugs(20, DBG_IMPORTANT, "BUG: No space left with rock cache_dir: " <<
+    debugs(20, DBG_IMPORTANT, "ERROR: Squid BUG: No space left with rock cache_dir: " <<
            filePath);
 }
 
@@ -1059,8 +1059,8 @@ Rock::SwapDir::statfs(StoreEntry &e) const
     storeAppendPrintf(&e, "Maximum slots:   %9d\n", slotLimit);
     if (map && slotLimit > 0) {
         const unsigned int slotsFree = !freeSlots ? 0 : freeSlots->size();
-        if (slotsFree <= static_cast<const unsigned int>(slotLimit)) {
-            const int usedSlots = slotLimit - static_cast<const int>(slotsFree);
+        if (slotsFree <= static_cast<unsigned int>(slotLimit)) {
+            const int usedSlots = slotLimit - static_cast<int>(slotsFree);
             storeAppendPrintf(&e, "Used slots:      %9d %.2f%%\n",
                               usedSlots, (100.0 * usedSlots / slotLimit));
         }

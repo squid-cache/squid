@@ -18,6 +18,7 @@
 #include "comm/Loops.h"
 #include "comm/Read.h"
 #include "comm/Write.h"
+#include "DebugMessages.h"
 #include "dlink.h"
 #include "dns/forward.h"
 #include "dns/rfc3596.h"
@@ -27,6 +28,7 @@
 #include "ip/tools.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
+#include "snmp_agent.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -395,7 +397,7 @@ idnsParseNameservers(void)
 {
     bool result = false;
     for (auto &i : Config.dns.nameservers) {
-        debugs(78, DBG_IMPORTANT, "Adding nameserver " << i << " from squid.conf");
+        debugs(78, Important(15), "Adding nameserver " << i << " from squid.conf");
         idnsAddNameserver(i.c_str());
         result = true;
     }
@@ -696,7 +698,7 @@ idnsParseWIN32Registry(void)
         break;
 
     default:
-        debugs(78, DBG_IMPORTANT, "Failed to read nameserver from Registry: Unknown System Type.");
+        debugs(78, DBG_IMPORTANT, "ERROR: Failed to read nameserver from Registry: Unknown System Type.");
     }
 
     return result;
@@ -854,7 +856,7 @@ idnsInitVCConnected(const Comm::ConnectionPointer &conn, Comm::Flag status, int,
         char buf[MAX_IPSTRLEN] = "";
         if (vc->ns < nameservers.size())
             nameservers[vc->ns].S.toStr(buf,MAX_IPSTRLEN);
-        debugs(78, DBG_IMPORTANT, HERE << "Failed to connect to nameserver " << buf << " using TCP.");
+        debugs(78, DBG_IMPORTANT, "ERROR: Failed to connect to nameserver " << buf << " using TCP.");
         return;
     }
 
@@ -872,6 +874,10 @@ static void
 idnsVCClosed(const CommCloseCbParams &params)
 {
     nsvc * vc = (nsvc *)params.data;
+    if (vc->conn) {
+        vc->conn->noteClosure();
+        vc->conn = nullptr;
+    }
     delete vc;
 }
 
@@ -919,7 +925,7 @@ idnsSendQueryVC(idns_query * q, size_t nsn)
 
     if (!vc) {
         char buf[MAX_IPSTRLEN];
-        debugs(78, DBG_IMPORTANT, "idnsSendQuery: Failed to initiate TCP connection to nameserver " << nameservers[nsn].S.toStr(buf,MAX_IPSTRLEN) << "!");
+        debugs(78, DBG_IMPORTANT, "ERROR: idnsSendQuery: Failed to initiate TCP connection to nameserver " << nameservers[nsn].S.toStr(buf,MAX_IPSTRLEN) << "!");
 
         return;
     }
@@ -1051,7 +1057,7 @@ idnsQueryID()
         ++id;
 
         if (id == first_id) {
-            debugs(78, DBG_IMPORTANT, "idnsQueryID: Warning, too many pending DNS requests");
+            debugs(78, DBG_IMPORTANT, "WARNING: idnsQueryID: too many pending DNS requests");
             break;
         }
     }
@@ -1125,7 +1131,7 @@ idnsCallbackAllCallersWithNewAnswer(const idns_query * const answered, const boo
     for (auto looker = master; looker; looker = looker->queue) {
         CallBack(looker->codeContext, [&] {
             (void)idnsCallbackOneWithAnswer(looker->callback, looker->callback_data,
-            *answered, lastAnswer);
+                                            *answered, lastAnswer);
         });
     }
 }
@@ -1160,7 +1166,7 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
     int n = rfc1035MessageUnpack(buf, sz, &message);
 
     if (message == NULL) {
-        debugs(78, DBG_IMPORTANT, "idnsGrokReply: Malformed DNS response");
+        debugs(78, DBG_IMPORTANT, "ERROR: idnsGrokReply: Malformed DNS response");
         return;
     }
 
@@ -1574,12 +1580,12 @@ Dns::Init(void)
          */
         if (DnsSocketB >= 0) {
             comm_local_port(DnsSocketB);
-            debugs(78, DBG_IMPORTANT, "DNS Socket created at " << addrV6 << ", FD " << DnsSocketB);
+            debugs(78, Important(16), "DNS IPv6 socket created at " << addrV6 << ", FD " << DnsSocketB);
             Comm::SetSelect(DnsSocketB, COMM_SELECT_READ, idnsRead, NULL, 0);
         }
         if (DnsSocketA >= 0) {
             comm_local_port(DnsSocketA);
-            debugs(78, DBG_IMPORTANT, "DNS Socket created at " << addrV4 << ", FD " << DnsSocketA);
+            debugs(78, Important(64), "DNS IPv4 socket created at " << addrV4 << ", FD " << DnsSocketA);
             Comm::SetSelect(DnsSocketA, COMM_SELECT_READ, idnsRead, NULL, 0);
         }
     }
@@ -1597,7 +1603,7 @@ Dns::Init(void)
 #endif
 
     if (!nsFound) {
-        debugs(78, DBG_IMPORTANT, "Warning: Could not find any nameservers. Trying to use localhost");
+        debugs(78, DBG_IMPORTANT, "WARNING: Could not find any nameservers. Trying to use localhost");
 #if _SQUID_WINDOWS_
         debugs(78, DBG_IMPORTANT, "Please check your TCP-IP settings or /etc/resolv.conf file");
 #else
