@@ -365,7 +365,7 @@ Ftp::Gateway::~Gateway()
     debugs(9, 3, entry->url());
 
     if (Comm::IsConnOpen(ctrl.conn)) {
-        debugs(9, DBG_IMPORTANT, "Internal bug: FTP Gateway left open " <<
+        debugs(9, DBG_IMPORTANT, "ERROR: Squid BUG: FTP Gateway left open " <<
                "control channel " << ctrl.conn);
     }
 
@@ -458,7 +458,7 @@ Ftp::Gateway::listenForDataChannel(const Comm::ConnectionPointer &conn)
     if (!Comm::IsConnOpen(conn)) {
         conn->fd = comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn->local, conn->flags, note);
         if (!Comm::IsConnOpen(conn)) {
-            debugs(5, DBG_CRITICAL, HERE << "comm_open_listener failed:" << conn->local << " error: " << errno);
+            debugs(5, DBG_CRITICAL, "ERROR: comm_open_listener failed:" << conn->local << " error: " << errno);
             return;
         }
         debugs(9, 3, HERE << "Unconnected data socket created on " << conn);
@@ -1916,7 +1916,7 @@ Ftp::Gateway::ftpAcceptDataConnection(const CommAcceptCbParams &io)
         // accept if either our data or ctrl connection is talking to this remote peer.
         if (data.conn->remote != io.conn->remote && ctrl.conn->remote != io.conn->remote) {
             debugs(9, DBG_IMPORTANT,
-                   "FTP data connection from unexpected server (" <<
+                   "ERROR: FTP data connection from unexpected server (" <<
                    io.conn->remote << "), expecting " <<
                    data.conn->remote << " or " << ctrl.conn->remote);
 
@@ -2029,7 +2029,7 @@ void Ftp::Gateway::readStor()
         debugs(9, 3, "ftpReadStor: accepting data channel");
         listenForDataChannel(data.conn);
     } else {
-        debugs(9, DBG_IMPORTANT, HERE << "Unexpected reply code "<< std::setfill('0') << std::setw(3) << code);
+        debugs(9, DBG_IMPORTANT, "ERROR: Unexpected reply code "<< std::setfill('0') << std::setw(3) << code);
         ftpFail(this);
     }
 }
@@ -2533,7 +2533,7 @@ Ftp::Gateway::appendSuccessHeader()
          * not be seeing this condition any more because we'll only
          * send REST if we know the theSize and if it is less than theSize.
          */
-        debugs(0,DBG_CRITICAL,HERE << "Whoops! " <<
+        debugs(0, DBG_CRITICAL, "ERROR: " <<
                " current offset=" << getCurrentOffset() <<
                ", but theSize=" << theSize <<
                ".  assuming full content response");
@@ -2666,7 +2666,7 @@ Ftp::Gateway::haveControlChannel(const char *caller_name) const
 
     /* doneWithServer() only checks BOTH channels are closed. */
     if (!Comm::IsConnOpen(ctrl.conn)) {
-        debugs(9, DBG_IMPORTANT, "WARNING! FTP Server Control channel is closed, but Data channel still active.");
+        debugs(9, DBG_IMPORTANT, "WARNING: FTP Server Control channel is closed, but Data channel still active.");
         debugs(9, 2, caller_name << ": attempted on a closed FTP channel.");
         return false;
     }

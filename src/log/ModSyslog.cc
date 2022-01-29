@@ -87,7 +87,7 @@ syslog_ntoa(const char *s)
         if (!strcmp(s, p->name) || !strcasecmp(s, p->name + 4))
             return p->value;
 
-    debugs(1, DBG_IMPORTANT, "Unknown syslog facility/priority '" << s << "'");
+    debugs(1, DBG_IMPORTANT, "ERROR: Unknown syslog facility/priority '" << s << "'");
     return 0;
 }
 

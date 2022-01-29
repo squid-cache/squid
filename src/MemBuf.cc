@@ -6,8 +6,6 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 59    auto-growing Memory Buffer with printf */
-
 /**
  \verbatim
  * Rationale:

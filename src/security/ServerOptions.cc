@@ -86,7 +86,7 @@ Security::ServerOptions::parse(const char *token)
 
     } else if (strncmp(token, "dhparams=", 9) == 0) {
         if (!eecdhCurve.isEmpty()) {
-            debugs(83, DBG_PARSE_NOTE(1), "UPGRADE WARNING: EECDH settings in tls-dh= override dhparams=");
+            debugs(83, DBG_PARSE_NOTE(1), "WARNING: UPGRADE: EECDH settings in tls-dh= override dhparams=");
             return;
         }
 
@@ -410,6 +410,7 @@ Security::ServerOptions::updateContextConfig(Security::ContextPointer &ctx)
     updateContextClientCa(ctx);
 
 #if USE_OPENSSL
+    SSL_CTX_set_mode(ctx.get(), SSL_MODE_NO_AUTO_CHAIN);
     if (parsedFlags & SSL_FLAG_DONT_VERIFY_DOMAIN)
         SSL_CTX_set_ex_data(ctx.get(), ssl_ctx_ex_index_dont_verify_domain, (void *) -1);
 

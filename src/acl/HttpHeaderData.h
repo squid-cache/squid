@@ -27,6 +27,9 @@ public:
     virtual bool empty() const;
 
 private:
+    /* ACLData API */
+    virtual const Acl::Options &lineOptions();
+
     Http::HdrType hdrId;            /**< set if header is known */
     SBuf hdrName;                   /**< always set */
     ACLData<char const *> * regex_rule;

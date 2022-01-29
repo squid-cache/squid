@@ -132,7 +132,7 @@ Auth::SchemeConfig::parse(Auth::SchemeConfig * scheme, int, char *param_str)
     } else if (strcmp(param_str, "utf8") == 0) {
         parse_onoff(&utf8);
     } else {
-        debugs(29, DBG_CRITICAL, "Unrecognised " << scheme->type() << " auth scheme parameter '" << param_str << "'");
+        debugs(29, DBG_CRITICAL, "ERROR: Unrecognised " << scheme->type() << " auth scheme parameter '" << param_str << "'");
     }
 }
 

@@ -146,7 +146,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
         return;
 
     case STREAM_FAILED:
-        debugs(86, DBG_IMPORTANT, "ESI subrequest failed transfer");
+        debugs(86, DBG_IMPORTANT, "ERROR: ESI subrequest failed transfer");
         esiStream->include->includeFail (esiStream);
         esiStream->finished = 1;
         httpRequestFree (http);
@@ -289,7 +289,7 @@ ESIInclude::Start (ESIStreamContext::Pointer stream, char const *url, ESIVarStat
     debugs(86, 5, "ESIIncludeStart: Starting subrequest with url '" << tempUrl << "'");
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initEsi);
     if (clientBeginRequest(Http::METHOD_GET, tempUrl, esiBufferRecipient, esiBufferDetach, stream.getRaw(), &tempheaders, stream->localbuffer->buf, HTTP_REQBUF_SZ, mx)) {
-        debugs(86, DBG_CRITICAL, "starting new ESI subrequest failed");
+        debugs(86, DBG_CRITICAL, "ERROR: starting new ESI subrequest failed");
     }
 
     tempheaders.clean();
@@ -332,7 +332,7 @@ ESIInclude::ESIInclude(esiTreeParentPtr aParent, int attrcount, char const **att
                 flags.onerrorcontinue = 1;
             } else {
                 /* ignore mistyped attributes */
-                debugs(86, DBG_IMPORTANT, "invalid value for onerror='" << attr[i+1] << "'");
+                debugs(86, DBG_IMPORTANT, "ERROR: invalid value for onerror='" << attr[i+1] << "'");
             }
         } else {
             /* ignore mistyped attributes. TODO:? error on these for user feedback - config parameter needed
@@ -512,7 +512,7 @@ ESIInclude::subRequestDone (ESIStreamContext::Pointer stream, bool success)
          * 'this.finish' while the subrequest is still not completed.
          */
         if (parent.getRaw() == NULL) {
-            debugs (86, 0, "ESIInclude::subRequestDone: Sub request completed "
+            debugs(86, DBG_CRITICAL, "ERROR: Squid Bug #951: ESIInclude::subRequestDone: Sub request completed "
                     "after finish() called and parent unlinked. Unable to "
                     "continue handling the request, and may be memory leaking. "
                     "See http://www.squid-cache.org/bugs/show_bug.cgi?id=951 - we "

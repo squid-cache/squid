@@ -179,9 +179,8 @@ Log::TcpLogger::canFit(const size_t len) const
     }
 
     if (!drops || dieOnError) {
-        debugs(MY_DEBUG_SECTION,
-               dieOnError ? DBG_CRITICAL : DBG_IMPORTANT,
-               "tcp:" << remote << " logger " << bufferCapacity << "-byte " <<
+        debugs(MY_DEBUG_SECTION, dieOnError ? DBG_CRITICAL : DBG_IMPORTANT,
+               "ERROR: tcp:" << remote << " logger " << bufferCapacity << "-byte " <<
                "buffer overflowed; cannot fit " <<
                (bufferedSize+len-bufferCapacity) << " bytes");
     }
@@ -269,7 +268,7 @@ Log::TcpLogger::connectDone(const CommConnectCbParams &params)
     if (params.flag != Comm::OK) {
         const double delay = 0.5; // seconds
         if (connectFailures++ % 100 == 0) {
-            debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "tcp:" << remote <<
+            debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "ERROR: tcp:" << remote <<
                    " logger connection attempt #" << connectFailures <<
                    " failed. Will keep trying every " << delay << " seconds.");
         }
@@ -465,7 +464,7 @@ Log::TcpLogger::Open(Logfile * lf, const char *path, size_t bufsz, int fatalFlag
         if (lf->flags.fatal) {
             fatalf("Invalid TCP logging address '%s'\n", lf->path);
         } else {
-            debugs(50, DBG_IMPORTANT, "Invalid TCP logging address '" << lf->path << "'");
+            debugs(50, DBG_IMPORTANT, "ERROR: Invalid TCP logging address '" << lf->path << "'");
             safe_free(strAddr);
             return FALSE;
         }

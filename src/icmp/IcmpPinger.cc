@@ -211,7 +211,7 @@ IcmpPinger::Recv(void)
                        pecho.payload,
                        pecho.psize);
     } else {
-        debugs(42, DBG_IMPORTANT, HERE << " IP has unknown Type. " << pecho.to );
+        debugs(42, DBG_IMPORTANT, "ERROR: IP has unknown Type. " << pecho.to );
     }
 }
 
@@ -222,7 +222,7 @@ IcmpPinger::SendResult(pingerReplyData &preply, int len)
 
     if (send(socket_to_squid, &preply, len, 0) < 0) {
         int xerrno = errno;
-        debugs(42, DBG_CRITICAL, "pinger: FATAL error on send: " << xstrerr(xerrno));
+        debugs(42, DBG_CRITICAL, "FATAL: pinger: send failure: " << xstrerr(xerrno));
         Close();
         exit(EXIT_FAILURE);
     }

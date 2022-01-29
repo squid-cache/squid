@@ -377,7 +377,7 @@ acl_ip_data::FactoryParse(const char *t)
             if (strcmp(addr1, "::1") == 0) {
                 debugs(28, DBG_IMPORTANT, "aclIpParseIpData: IPv6 has not been enabled in host DNS resolver.");
             } else {
-                debugs(28, DBG_CRITICAL, "aclIpParseIpData: Bad host/IP: '" << addr1 <<
+                debugs(28, DBG_CRITICAL, "ERROR: aclIpParseIpData: Bad host/IP: '" << addr1 <<
                        "' in '" << t << "', flags=" << hints.ai_flags <<
                        " : (" << errcode << ") " << gai_strerror(errcode) );
                 self_destruct();
@@ -416,7 +416,7 @@ acl_ip_data::FactoryParse(const char *t)
         freeaddrinfo(hp);
 
         if (*Q != NULL) {
-            debugs(28, DBG_CRITICAL, "aclIpParseIpData: Bad host/IP: '" << t << "'");
+            debugs(28, DBG_CRITICAL, "ERROR: aclIpParseIpData: Bad host/IP: '" << t << "'");
             self_destruct();
             return NULL;
         }
@@ -433,7 +433,7 @@ acl_ip_data::FactoryParse(const char *t)
 
     /* Decode addr1 */
     if (!*addr1 || !(q->addr1 = addr1)) {
-        debugs(28, DBG_CRITICAL, "aclIpParseIpData: unknown first address in '" << t << "'");
+        debugs(28, DBG_CRITICAL, "ERROR: aclIpParseIpData: unknown first address in '" << t << "'");
         delete q;
         self_destruct();
         return NULL;
@@ -443,7 +443,7 @@ acl_ip_data::FactoryParse(const char *t)
     if (!*addr2)
         q->addr2.setAnyAddr();
     else if (!(q->addr2=addr2) ) {
-        debugs(28, DBG_CRITICAL, "aclIpParseIpData: unknown second address in '" << t << "'");
+        debugs(28, DBG_CRITICAL, "ERROR: aclIpParseIpData: unknown second address in '" << t << "'");
         delete q;
         self_destruct();
         return NULL;
@@ -451,7 +451,7 @@ acl_ip_data::FactoryParse(const char *t)
 
     /* Decode mask (NULL or empty means a exact host mask) */
     if (!DecodeMask(mask, q->mask, iptype)) {
-        debugs(28, DBG_CRITICAL, "aclParseIpData: unknown netmask '" << mask << "' in '" << t << "'");
+        debugs(28, DBG_CRITICAL, "ERROR: aclParseIpData: unknown netmask '" << mask << "' in '" << t << "'");
         delete q;
         self_destruct();
         return NULL;
@@ -462,7 +462,7 @@ acl_ip_data::FactoryParse(const char *t)
     changed += q->addr2.applyMask(q->mask);
 
     if (changed)
-        debugs(28, DBG_CRITICAL, "aclIpParseIpData: WARNING: Netmask masks away part of the specified IP in '" << t << "'");
+        debugs(28, DBG_CRITICAL, "WARNING: aclIpParseIpData: Netmask masks away part of the specified IP in '" << t << "'");
 
     debugs(28,9, HERE << "Parsed: " << q->addr1 << "-" << q->addr2 << "/" << q->mask << "(/" << q->mask.cidr() <<")");
 

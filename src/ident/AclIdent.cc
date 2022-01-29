@@ -35,10 +35,10 @@ ACLIdent::typeString() const
     return type_;
 }
 
-void
-ACLIdent::parseFlags()
+const Acl::Options &
+ACLIdent::lineOptions()
 {
-    ParseFlags(Acl::NoOptions(), data->supportedFlags());
+    return data->lineOptions();
 }
 
 void
@@ -67,7 +67,7 @@ ACLIdent::match(ACLChecklist *cl)
         }
         // else fall through to ACCESS_DUNNO failure below
     } else {
-        debugs(28, DBG_IMPORTANT, HERE << "Can't start ident lookup. No client connection" );
+        debugs(28, DBG_IMPORTANT, "ERROR: Cannot start ident lookup. No client connection" );
         // fall through to ACCESS_DUNNO failure below
     }
 

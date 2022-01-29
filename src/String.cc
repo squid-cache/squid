@@ -6,8 +6,6 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 67    String */
-
 #include "squid.h"
 #include "base/TextException.h"
 #include "mgr/Registration.h"

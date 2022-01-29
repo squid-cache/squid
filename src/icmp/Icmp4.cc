@@ -182,7 +182,7 @@ Icmp4::Recv(void)
                  &from->ai_addrlen);
 
     if (n <= 0) {
-        debugs(42, DBG_CRITICAL, HERE << "Error when calling recvfrom() on ICMP socket.");
+        debugs(42, DBG_CRITICAL, "ERROR: when calling recvfrom() on ICMP socket.");
         Ip::Address::FreeAddr(from);
         return;
     }
@@ -244,7 +244,7 @@ Icmp4::Recv(void)
     preply.psize = n - iphdrlen - (sizeof(icmpEchoData) - MAX_PKT4_SZ);
 
     if (preply.psize < 0) {
-        debugs(42, DBG_CRITICAL, HERE << "Malformed ICMP packet.");
+        debugs(42, DBG_CRITICAL, "ERROR: Malformed ICMP packet.");
         Ip::Address::FreeAddr(from);
         return;
     }

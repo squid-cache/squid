@@ -287,7 +287,7 @@ asHandleReply(void *data, StoreIOBuffer result)
         delete asState;
         return;
     } else if (result.flags.error) {
-        debugs(53, DBG_IMPORTANT, "asHandleReply: Called with Error set and size=" << (unsigned int) result.length);
+        debugs(53, DBG_IMPORTANT, "ERROR: asHandleReply: Called with Error set and size=" << (unsigned int) result.length);
         delete asState;
         return;
     } else if (e->mem().baseReply().sline.status() != Http::scOkay) {

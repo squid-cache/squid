@@ -665,10 +665,10 @@ ConnStateData::~ConnStateData()
     debugs(33, 3, HERE << clientConnection);
 
     if (isOpen())
-        debugs(33, DBG_IMPORTANT, "BUG: ConnStateData did not close " << clientConnection);
+        debugs(33, DBG_IMPORTANT, "ERROR: Squid BUG: ConnStateData did not close " << clientConnection);
 
     if (!flags.swanSang)
-        debugs(33, DBG_IMPORTANT, "BUG: ConnStateData was not destroyed properly; " << clientConnection);
+        debugs(33, DBG_IMPORTANT, "ERROR: Squid BUG: ConnStateData was not destroyed properly; " << clientConnection);
 
     if (bodyPipe != NULL)
         stopProducingFor(bodyPipe, false);
@@ -2200,7 +2200,7 @@ ConnStateData::start()
         static bool reported = false;
 
         if (!reported) {
-            debugs(33, DBG_IMPORTANT, "NOTICE: Path MTU discovery disabling is not supported on your platform.");
+            debugs(33, DBG_IMPORTANT, "WARNING: Path MTU discovery disabling is not supported on your platform.");
             reported = true;
         }
 #endif
@@ -2224,7 +2224,8 @@ ConnStateData::start()
 void
 ConnStateData::whenClientIpKnown()
 {
-    if (Config.onoff.log_fqdn)
+    debugs(33, 7, clientConnection->remote);
+    if (Dns::ResolveClientAddressesAsap)
         fqdncache_gethostbyaddr(clientConnection->remote, FQDN_LOOKUP_IF_MISS);
 
 #if USE_IDENT

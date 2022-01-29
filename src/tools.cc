@@ -515,7 +515,7 @@ leave_suid(void)
 
         if (setgid(Config2.effectiveGroupID) < 0) {
             int xerrno = errno;
-            debugs(50, DBG_CRITICAL, "ALERT: setgid: " << xstrerr(xerrno));
+            debugs(50, DBG_CRITICAL, "ERROR: setgid: " << xstrerr(xerrno));
         }
     }
 
@@ -532,11 +532,11 @@ leave_suid(void)
 
         if (setgid(Config2.effectiveGroupID) < 0) {
             int xerrno = errno;
-            debugs(50, DBG_CRITICAL, "ALERT: setgid: " << xstrerr(xerrno));
+            debugs(50, DBG_CRITICAL, "ERROR: setgid: " << xstrerr(xerrno));
         }
 
         if (initgroups(Config.effectiveUser, Config2.effectiveGroupID) < 0) {
-            debugs(50, DBG_CRITICAL, "ALERT: initgroups: unable to set groups for User " <<
+            debugs(50, DBG_CRITICAL, "ERROR: initgroups: unable to set groups for User " <<
                    Config.effectiveUser << " and Group " <<
                    (unsigned) Config2.effectiveGroupID << "");
         }
@@ -818,7 +818,7 @@ setSystemLimits(void)
     }
 #endif /* RLIMIT_DATA */
     if (Config.max_filedescriptors > Squid_MaxFD) {
-        debugs(50, DBG_IMPORTANT, "NOTICE: Could not increase the number of filedescriptors");
+        debugs(50, DBG_IMPORTANT, "WARNING: Could not increase the number of filedescriptors");
     }
 
 #if HAVE_SETRLIMIT && defined(RLIMIT_VMEM) && !_SQUID_CYGWIN_

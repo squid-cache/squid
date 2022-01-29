@@ -306,7 +306,7 @@ createRemovalPolicy_heap(wordlist * args)
     else if (!strcmp(keytype, "LRU"))
         heap_data->keyfunc = HeapKeyGen_StoreEntry_LRU;
     else {
-        debugs(81, DBG_CRITICAL, "createRemovalPolicy_heap: Unknown key type \"" << keytype << "\". Using LRU");
+        debugs(81, DBG_CRITICAL, "ERROR: createRemovalPolicy_heap: Unknown key type \"" << keytype << "\". Using LRU");
         heap_data->keyfunc = HeapKeyGen_StoreEntry_LRU;
     }
 

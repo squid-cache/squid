@@ -38,7 +38,7 @@ mcastJoinGroups(const ipcache_addrs *ia, const Dns::LookupDetails &, void *)
     struct ip_mreq mr;
 
     if (ia == NULL) {
-        debugs(7, DBG_CRITICAL, "comm_join_mcast_groups: Unknown host");
+        debugs(7, DBG_CRITICAL, "ERROR: comm_join_mcast_groups: Unknown host");
         return;
     }
 

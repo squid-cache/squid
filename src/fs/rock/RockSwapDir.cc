@@ -961,7 +961,7 @@ Rock::SwapDir::full() const
 void
 Rock::SwapDir::diskFull()
 {
-    debugs(20, DBG_IMPORTANT, "BUG: No space left with rock cache_dir: " <<
+    debugs(20, DBG_IMPORTANT, "ERROR: Squid BUG: No space left with rock cache_dir: " <<
            filePath);
 }
 

@@ -192,7 +192,7 @@ Notes::validateKey(const SBuf &key) const
             CharacterSet::DIGIT + CharacterSet("specials", "-_");
     const auto specialIndex = key.findFirstNotOf(allowedSpecials);
     if (specialIndex != SBuf::npos) {
-        debugs(28, DBG_CRITICAL, "Warning: used special character '" <<
+        debugs(28, DBG_CRITICAL, "WARNING: used special character '" <<
                key[specialIndex] << "' within annotation name. " <<
                "Future Squid versions will not support this.");
     }
@@ -231,7 +231,7 @@ Notes::parseKvPair() {
         else {
             assert(method == Note::Value::mhReplace);
             if (Note::Pointer oldNote = find(SBuf(k, keyLen)))
-                debugs(28, DBG_CRITICAL, "Warning: annotation configuration with key " << k <<
+                debugs(28, DBG_CRITICAL, "WARNING: annotation configuration with key " << k <<
                        " already exists and will be overwritten");
         }
         SBuf key(k, keyLen);

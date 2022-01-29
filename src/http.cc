@@ -1905,7 +1905,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             static int warnedCount = 0;
             if (warnedCount++ < 100) {
                 const SBuf url(entry ? SBuf(entry->url()) : request->effectiveRequestUri());
-                debugs(11, DBG_IMPORTANT, "Warning: likely forwarding loop with " << url);
+                debugs(11, DBG_IMPORTANT, "WARNING: likely forwarding loop with " << url);
             }
         }
 

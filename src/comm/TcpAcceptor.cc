@@ -239,7 +239,7 @@ Comm::TcpAcceptor::okToAccept()
         return true;
 
     if (last_warn + 15 < squid_curtime) {
-        debugs(5, DBG_CRITICAL, "WARNING! Your cache is running out of filedescriptors");
+        debugs(5, DBG_CRITICAL, "WARNING: Your cache is running out of filedescriptors");
         last_warn = squid_curtime;
     }
 

@@ -382,7 +382,7 @@ Ftp::Client::readControlReply(const CommIoCbParams &io)
 
     if (io.flag != Comm::OK) {
         debugs(50, ignoreErrno(io.xerrno) ? 3 : DBG_IMPORTANT,
-               "FTP control reply read error: " << xstrerr(io.xerrno));
+               "ERROR: FTP control reply read failure: " << xstrerr(io.xerrno));
 
         if (ignoreErrno(io.xerrno)) {
             scheduleReadControlReply(0);
@@ -502,7 +502,7 @@ Ftp::Client::handleEpsvReply(Ip::Address &remoteAddr)
             /* handle broken servers (RFC 2428 says OK code for EPSV MUST be 229 not 200) */
             /* vsftpd for one send '200 EPSV ALL ok.' without even port info.
              * Its okay to re-send EPSV 1/2 but nothing else. */
-            debugs(9, DBG_IMPORTANT, "Broken FTP Server at " << ctrl.conn->remote << ". Wrong accept code for EPSV");
+            debugs(9, DBG_IMPORTANT, "ERROR: Broken FTP Server at " << ctrl.conn->remote << ". Wrong accept code for EPSV");
         } else {
             debugs(9, 2, "EPSV not supported by remote end");
         }
@@ -526,7 +526,7 @@ Ftp::Client::handleEpsvReply(Ip::Address &remoteAddr)
 
         if (buf == NULL || *buf == '\0') {
             /* handle broken server (RFC 2428 says MUST specify supported protocols in 522) */
-            debugs(9, DBG_IMPORTANT, "Broken FTP Server at " << ctrl.conn->remote << ". 522 error missing protocol negotiation hints");
+            debugs(9, DBG_IMPORTANT, "ERROR: Broken FTP Server at " << ctrl.conn->remote << ". 522 error missing protocol negotiation hints");
             return sendPassive();
         } else if (strcmp(buf, "(1)") == 0) {
             state = SENT_EPSV_2; /* simulate having sent and failed EPSV 2 */
@@ -567,7 +567,7 @@ Ftp::Client::handleEpsvReply(Ip::Address &remoteAddr)
     int n = sscanf(buf, "(%c%c%c%hu%c)", &h1, &h2, &h3, &port, &h4);
 
     if (n < 4 || h1 != h2 || h1 != h3 || h1 != h4) {
-        debugs(9, DBG_IMPORTANT, "Invalid EPSV reply from " <<
+        debugs(9, DBG_IMPORTANT, "ERROR: Invalid EPSV reply from " <<
                ctrl.conn->remote << ": " <<
                ctrl.last_reply);
 
@@ -865,7 +865,7 @@ Ftp::Client::writeCommandCallback(const CommIoCbParams &io)
         return;
 
     if (io.flag) {
-        debugs(9, DBG_IMPORTANT, "FTP command write error: " << io.conn << ": " << xstrerr(io.xerrno));
+        debugs(9, DBG_IMPORTANT, "ERROR: FTP command write failure: " << io.conn << ": " << xstrerr(io.xerrno));
         failed(ERR_WRITE_ERROR, io.xerrno);
         /* failed closes ctrl.conn and frees ftpState */
         return;
@@ -977,7 +977,7 @@ Ftp::Client::dataRead(const CommIoCbParams &io)
 
     if (io.flag != Comm::OK) {
         debugs(50, ignoreErrno(io.xerrno) ? 3 : DBG_IMPORTANT,
-               "FTP data read error: " << xstrerr(io.xerrno));
+               "ERROR: FTP data read failure: " << xstrerr(io.xerrno));
 
         if (ignoreErrno(io.xerrno)) {
             maybeReadVirginBody();

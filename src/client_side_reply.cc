@@ -1344,7 +1344,7 @@ clientReplyContext::buildReplyHeader()
         else if (http->storeEntry()->timestamp > 0)
             hdr->putTime(Http::HdrType::DATE, http->storeEntry()->timestamp);
         else {
-            debugs(88,DBG_IMPORTANT,"BUG 3279: HTTP reply without Date:");
+            debugs(88, DBG_IMPORTANT, "ERROR: Squid BUG #3279: HTTP reply without Date:");
             /* dump something useful about the problem */
             http->storeEntry()->dump(DBG_IMPORTANT);
         }

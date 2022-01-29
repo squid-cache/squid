@@ -44,8 +44,8 @@ ACLMaxUserIP::valid() const
 const Acl::Options &
 ACLMaxUserIP::options()
 {
-    static const Acl::BooleanOption BeStrict;
-    static const Acl::Options MyOptions = { { "-s", &BeStrict } };
+    static const Acl::BooleanOption BeStrict("-s");
+    static const Acl::Options MyOptions = { &BeStrict };
     BeStrict.linkWith(&beStrict);
     return MyOptions;
 }

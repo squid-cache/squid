@@ -155,7 +155,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
                 }
 
                 if (last_broken_addr != request->client_addr) {
-                    debugs(29, DBG_IMPORTANT, "Digest POST bug detected from " <<
+                    debugs(29, DBG_IMPORTANT, "ERROR: User agent Digest Authentication POST bug detected from " <<
                            request->client_addr << " using '" <<
                            (useragent ? useragent : "-") <<
                            "'. Please upgrade browser. See Bug #630 for details.");

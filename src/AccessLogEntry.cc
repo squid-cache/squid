@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "fqdncache.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
@@ -44,6 +45,27 @@ AccessLogEntry::getLogClientIp(char *buf, size_t bufsz) const
     log_ip.applyClientMask(Config.Addrs.client_netmask);
 
     log_ip.toStr(buf, bufsz);
+}
+
+const char *
+AccessLogEntry::getLogClientFqdn(char * const buf, const size_t bufSize) const
+{
+    // TODO: Use indirect client and tcpClient like getLogClientIp() does.
+    const auto &client = cache.caddr;
+
+    // internally generated (and ICAP OPTIONS) requests lack client IP
+    if (client.isAnyAddr())
+        return "-";
+
+    // If we are here, Squid was configured to use %>A or equivalent.
+    // Improve our chances of getting FQDN by resolving client IPs ASAP.
+    Dns::ResolveClientAddressesAsap = true; // may already be true
+
+    // Too late for ours, but FQDN_LOOKUP_IF_MISS might help the next caller.
+    if (const auto fqdn = fqdncache_gethostbyaddr(client, FQDN_LOOKUP_IF_MISS))
+        return fqdn; // TODO: Return a safe SBuf from fqdncache_gethostbyaddr().
+
+    return client.toStr(buf, bufSize);
 }
 
 SBuf

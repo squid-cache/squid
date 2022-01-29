@@ -51,6 +51,6 @@ Format::FmtConfig::registerTokens(const SBuf &nsName, TokenTableEntry const *tok
     if (tokenArray)
         tokens.emplace_back(TokenNamespace(nsName, tokenArray));
     else
-        debugs(0, DBG_CRITICAL, "BUG: format tokens for '" << nsName << "' missing!");
+        debugs(0, DBG_CRITICAL, "ERROR: Squid BUG: format tokens for '" << nsName << "' missing!");
 }
 

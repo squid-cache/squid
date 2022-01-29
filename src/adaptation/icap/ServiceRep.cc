@@ -615,7 +615,7 @@ void Adaptation::Icap::ServiceRep::scheduleUpdate(time_t when)
         if (eventFind(&ServiceRep_noteTimeToUpdate, this))
             eventDelete(&ServiceRep_noteTimeToUpdate, this);
         else
-            debugs(93, DBG_IMPORTANT, "XXX: ICAP service lost an update event.");
+            debugs(93, DBG_IMPORTANT, "ERROR: Squid BUG: ICAP service lost an update event.");
         updateScheduled = false;
     }
 

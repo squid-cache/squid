@@ -167,7 +167,7 @@ IcmpSquid::Recv()
         break;
 
     default:
-        debugs(37, DBG_IMPORTANT, HERE << "Bad opcode: " << preply.opcode << " from " << F);
+        debugs(37, DBG_IMPORTANT, "ERROR: Bad opcode: " << preply.opcode << " from " << F);
         break;
     }
 }
