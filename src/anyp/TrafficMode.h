@@ -102,7 +102,7 @@ public:
     /// The user agent was explicitly configured to use a proxy at this port. We
     /// are configured to assume that no interception has happened on the way.
     /// This port configuration is also known as a forward proxy.
-    bool explicitProxy() const { return !interceptedSomewhere() && !flags_.accelSurrogate; }
+    bool explicitProxy() const { return !interceptedSomewhere() && !accelSurrogate(); }
 
     /// whether the PROXY protocol header is required
     bool proxySurrogate() const { return flags_.proxySurrogate; }
