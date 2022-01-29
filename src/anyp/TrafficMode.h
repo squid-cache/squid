@@ -86,13 +86,21 @@ class TrafficMode
 {
 public:
     explicit TrafficMode(const TrafficModeFlags::PortKind aPortKind) : flags_(aPortKind) {}
-    /// This port handles traffic that has been intercepted prior to being delivered
-    /// to the TCP client of the accepted connection and/or to us. This port mode
-    /// alone does not imply that the client of the accepted TCP connection was not
-    /// connecting directly to this port (since commit 151ba0d).
+
+    /// This is a gateway (a.k.a. reverse proxy) port. TODO: Rename.
+    bool accelSurrogate() const { return flags_.accelSurrogate; }
+
+    /// This port handles intercepted traffic. Traffic may be intercepted many
+    /// times (at various locations) before reaching this port, including:
+    /// * between the user agent and the connecting TCP client and/or
+    /// * between the connecting TCP client and this Squid port.
+    /// This port mode alone does not imply that the client of the accepted TCP
+    /// connection was not connecting directly to this port (since commit
+    /// 151ba0d). In other words, we may not be an interception proxy ourselves.
     bool interceptedSomewhere() const { return flags_.natIntercept || flags_.tproxyIntercept || proxySurrogateHttpsSslBump(); }
 
-    /// The client of the accepted TCP connection was connecting directly to this proxy port.
+    /// The user agent was explicitly configured to use a proxy at this port. We
+    /// are configured to assume that no interception has happened on the way.
     bool forwarded() const { return !interceptedSomewhere() && !flags_.accelSurrogate; }
 
     /// whether the PROXY protocol header is required
@@ -111,9 +119,6 @@ public:
     bool tproxyInterceptLocally() const {
         return flags_.tproxyIntercept && !proxySurrogate();
     }
-
-    /// whether the reverse proxy is configured
-    bool accelSurrogate() const { return flags_.accelSurrogate; }
 
     bool tunnelSslBumping() const { return flags_.tunnelSslBumping; }
 
