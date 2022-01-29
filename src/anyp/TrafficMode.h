@@ -110,16 +110,12 @@ public:
     /// The client of the accepted connection was not connecting to this port,
     /// but Squid used NAT interception to accept the client connection.
     /// The accepted traffic may have been intercepted earlier as well!
-    bool natInterceptLocally() const {
-        return flags_.natIntercept && !proxySurrogate();
-    }
+    bool natInterceptLocally() const { return flags_.natIntercept && !proxySurrogate(); }
 
     /// The client of the accepted connection was not connecting to this port,
     /// but Squid used TPROXY interception to accept the connection.
     /// The accepted traffic may have been intercepted earlier as well!
-    bool tproxyInterceptLocally() const {
-        return flags_.tproxyIntercept && !proxySurrogate();
-    }
+    bool tproxyInterceptLocally() const { return flags_.tproxyIntercept && !proxySurrogate(); }
 
     bool tunnelSslBumping() const { return flags_.tunnelSslBumping; }
 
@@ -129,8 +125,10 @@ public:
 
 private:
     /// \returns true for HTTPS ports with SSL bump receiving PROXY protocol traffic
-    bool proxySurrogateHttpsSslBump() const {
-        return flags_.proxySurrogate && flags_.tunnelSslBumping && flags_.portKind == TrafficModeFlags::httpsPort;
+    bool proxySurrogateHttpsSslBump() const
+    {
+        return flags_.proxySurrogate && flags_.tunnelSslBumping &&
+               flags_.portKind == TrafficModeFlags::httpsPort;
     }
 
     TrafficModeFlags flags_;
