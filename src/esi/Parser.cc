@@ -46,7 +46,7 @@ ESIParser::NewParser(ESIParserClient *aClient)
 
         if (!Parser)
             fatalf("Unknown ESI Parser type '%s'", selectParserName);
-        debugs(86, 2, "Starting " << Parser->name << " ESI parser.");
+        debugs(86, 2, "selected ESI parser: " << Parser->name);
     }
 
     return (Parser->newParser)(aClient);
