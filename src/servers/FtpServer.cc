@@ -1439,7 +1439,7 @@ Ftp::Server::createDataConnection(Ip::Address cltAddr)
     Comm::ConnectionPointer conn = new Comm::Connection();
     conn->flags |= COMM_DOBIND;
 
-    if (port->flags.tproxyInterceptLocally() || port->flags.forwarded()) {
+    if (port->flags.tproxyInterceptLocally() || port->flags.explicitProxy()) {
        // In the case of explicit-proxy the local IP of the control connection
        // is the Squid IP the client is knowingly talking to.
        //

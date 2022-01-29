@@ -1382,7 +1382,7 @@ clientReplyContext::buildReplyHeader()
                     }
                     request->flags.mustKeepalive = true;
                     const auto port = request->masterXaction->squidPort;
-                    if (port->flags.forwarded() && request->flags.sslBumped) {
+                    if (port->flags.explicitProxy() && request->flags.sslBumped) {
                         httpHeaderPutStrf(hdr, Http::HdrType::PROXY_SUPPORT, "Session-Based-Authentication");
                         /*
                           We send "Connection: Proxy-Support" header to mark

@@ -159,7 +159,7 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
             // While we are peeking at the certificate, we may not know the server
             // name that the client will request (after interception or CONNECT)
             // unless it was the CONNECT request with a user-typed address.
-            const auto isConnectRequest = csd->port->flags.forwarded();
+            const auto isConnectRequest = csd->port->flags.explicitProxy();
             if (!request->flags.sslPeek || isConnectRequest)
                 hostName = new SBuf(request->url.host());
         }
@@ -232,7 +232,7 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
             // For intercepted connections, set the host name to the server
             // certificate CN. Otherwise, we just hope that CONNECT is using
             // a user-entered address (a host name or a user-entered IP).
-            const auto isConnectRequest = request->clientConnectionManager->port->flags.forwarded();
+            const auto isConnectRequest = request->clientConnectionManager->port->flags.explicitProxy();
             if (request->flags.sslPeek && !isConnectRequest) {
                 if (X509 *srvX509 = serverBump->serverCert.get()) {
                     if (const char *name = Ssl::CommonHostName(srvX509)) {
