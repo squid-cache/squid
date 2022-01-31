@@ -25,12 +25,7 @@ public:
     RegexPattern(int aFlags, const char *aPattern);
     ~RegexPattern();
 
-    // regex type varies by library, usually not safe to copy
-    RegexPattern(const RegexPattern &) = delete;
-    RegexPattern &operator =(const RegexPattern &) = delete;
-
-    RegexPattern(RegexPattern &&);
-    RegexPattern &operator =(RegexPattern &&);
+    RegexPattern(RegexPattern &&) = delete; // no copying of any kind
 
     const char * c_str() const {return pattern;}
     bool match(const char *str) const {return regexec(&regex,str,0,NULL,0)==0;}
