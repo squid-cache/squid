@@ -104,28 +104,21 @@ removeUnnecessaryWildcards(char * t)
     return t;
 }
 
-/// XXX: This was returning false on regcomp() failures, but it now throws.
-static bool
+static void
 compileRE(std::list<RegexPattern> &curlist, const SBuf &RE, int flags)
 {
-    if (RE.isEmpty())
-        return curlist.empty(); // XXX: old code did this. It looks wrong.
-
     curlist.emplace_back(RE, flags);
-
-    return true;
 }
 
-static bool
-compileRE(std::list<RegexPattern> &curlist, const SBufList &RE, int flags)
+static void
+compileREs(std::list<RegexPattern> &curlist, const SBufList &RE, int flags)
 {
-    if (RE.empty())
-        return curlist.empty(); // XXX: old code did this. It looks wrong.
+    assert(!RE.empty());
     SBuf regexp;
     static const SBuf openparen("("), closeparen(")"), separator(")|(");
     JoinContainerIntoSBuf(regexp, RE.begin(), RE.end(), separator, openparen,
                           closeparen);
-    return compileRE(curlist, regexp, flags);
+    compileRE(curlist, regexp, flags);
 }
 
 /** Compose and compile one large RE from a set of (small) REs.
@@ -149,11 +142,12 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl, const 
                 debugs(28, 2, "optimisation of -i ... -i" );
             } else {
                 debugs(28, 2, "-i" );
-                if (!compileRE(newlist, accumulatedRE, flags))
-                    return 0;
+                if (!accumulatedRE.empty()) {
+                    compileREs(newlist, accumulatedRE, flags);
+                    accumulatedRE.clear();
+                    reSize = 0;
+                }
                 flags |= REG_ICASE;
-                accumulatedRE.clear();
-                reSize = 0;
             }
             continue;
         } else if (configurationLineWord == plus_i) {
@@ -162,11 +156,12 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl, const 
                 debugs(28, 2, "optimisation of +i ... +i");
             } else {
                 debugs(28, 2, "+i");
-                if (!compileRE(newlist, accumulatedRE, flags))
-                    return 0;
+                if (!accumulatedRE.empty()) {
+                    compileREs(newlist, accumulatedRE, flags);
+                    accumulatedRE.clear();
+                    reSize = 0;
+                }
                 flags &= ~REG_ICASE;
-                accumulatedRE.clear();
-                reSize = 0;
             }
             continue;
         }
@@ -178,19 +173,18 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl, const 
 
         if (reSize > 1024) { // must be < BUFSIZ everything included
             debugs(28, 2, "buffer full, generating new optimised RE..." );
-            if (!compileRE(newlist, accumulatedRE, flags))
-                return 0;
+            compileREs(newlist, accumulatedRE, flags);
             accumulatedRE.clear();
             reSize = 0;
             continue;    /* do the loop again to add the RE to largeRE */
         }
     }
 
-    if (!compileRE(newlist, accumulatedRE, flags))
-        return 0;
-
-    accumulatedRE.clear();
-    reSize = 0;
+    if (!accumulatedRE.empty()) {
+        compileREs(newlist, accumulatedRE, flags);
+        accumulatedRE.clear();
+        reSize = 0;
+    }
 
     /* all was successful, so put the new list at the tail */
     curlist.splice(curlist.end(), newlist);
@@ -217,9 +211,13 @@ compileUnoptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl, cons
         } else if (configurationLineWord == plus_i) {
             flags &= ~REG_ICASE;
         } else {
-            if (!compileRE(curlist, configurationLineWord, flags))
-                debugs(28, DBG_CRITICAL, "ERROR: Skipping regular expression. "
-                       "Compile failed: '" << configurationLineWord << "'");
+            try {
+                compileRE(curlist, configurationLineWord, flags);
+            } catch (...) {
+                // TODO: Make these configuration failures fatal (by default).
+                debugs(28, DBG_CRITICAL, "ERROR: Skipping regular expression: '" << configurationLineWord << "'" <<
+                       Debug::Extra << "compilation failure: " << CurrentException);
+            }
         }
     }
 }
@@ -245,8 +243,11 @@ ACLRegexData::parse()
         }
     }
 
-    if (!compileOptimisedREs(data, sl, flagsAtLineStart)) {
-        debugs(28, DBG_IMPORTANT, "WARNING: optimisation of regular expressions failed; using fallback method without optimisation");
+    try {
+        compileOptimisedREs(data, sl, flagsAtLineStart);
+    } catch (...) {
+        debugs(28, DBG_IMPORTANT, "WARNING: optimisation of regular expressions failed; using fallback method without optimisation" <<
+               Debug::Extra << "optimisation failure: " << CurrentException);
         compileUnoptimisedREs(data, sl, flagsAtLineStart);
     }
 }
