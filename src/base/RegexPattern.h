@@ -11,6 +11,7 @@
 
 #include "compat/GnuRegex.h"
 #include "mem/forward.h"
+#include "sbuf/SBuf.h"
 
 /**
  * A regular expression,
@@ -22,19 +23,17 @@ class RegexPattern
 
 public:
     RegexPattern() = delete;
-    RegexPattern(const char *aPattern, int aFlags);
+    RegexPattern(const SBuf &aPattern, int aFlags);
     ~RegexPattern();
 
     RegexPattern(RegexPattern &&) = delete; // no copying of any kind
-
-    const char * c_str() const {return pattern;}
 
     /// whether the regex differentiates letter case
     bool caseSensitive() const { return !(flags & REG_ICASE); }
 
     /// Whether this is an "any single character" regex ("."). In some contexts,
     /// that regex is (ab)used as a special "should match anything" default.
-    bool isDot() const { return *pattern == '.' && !*pattern; }
+    bool isDot() const { return pattern.length() == 1 && pattern[0] == '.'; }
 
     bool match(const char *str) const {return regexec(&regex,str,0,NULL,0)==0;}
 
@@ -45,7 +44,7 @@ public:
 
 private:
     /// a regular expression in the text form, suitable for regcomp(3)
-    char * const pattern;
+    SBuf pattern;
 
     /// bitmask of REG_* flags for regcomp(3)
     const int flags;

@@ -15,12 +15,12 @@
 #include <iostream>
 #include <utility>
 
-RegexPattern::RegexPattern(const char * const aPattern, const int aFlags):
-    pattern(xstrdup(aPattern)),
+RegexPattern::RegexPattern(const SBuf &aPattern, const int aFlags):
+    pattern(aPattern),
     flags(aFlags)
 {
     memset(&regex, 0, sizeof(regex)); // paranoid; POSIX does not require this
-    if (const auto errCode = regcomp(&regex, pattern, flags)) {
+    if (const auto errCode = regcomp(&regex, pattern.c_str(), flags)) {
         char errBuf[256];
         // for simplicity, ignore any error message truncation
         (void)regerror(errCode, &regex, errBuf, sizeof(errBuf));
@@ -28,7 +28,6 @@ RegexPattern::RegexPattern(const char * const aPattern, const int aFlags):
         // presumably, regcom() frees any allocated memory on failures
         throw TextException(ToSBuf("POSIX regcomp(3) failure: (", errCode, ") ", errBuf,
             Debug::Extra, "regular expression: ", pattern), Here());
-        // XXX: Leaking pattern
     }
 
     debugs(28, 2, *this);
@@ -36,7 +35,6 @@ RegexPattern::RegexPattern(const char * const aPattern, const int aFlags):
 
 RegexPattern::~RegexPattern()
 {
-    xfree(pattern);
     regfree(&regex);
 }
 

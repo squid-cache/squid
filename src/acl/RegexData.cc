@@ -52,7 +52,7 @@ ACLRegexData::match(char const *word)
     // walk the list of patterns to see if one matches
     for (auto &i : data) {
         if (i.match(word)) {
-            debugs(28, 2, '\'' << i.c_str() << "' found in '" << word << '\'');
+            debugs(28, 2, '\'' << i << "' found in '" << word << '\'');
             // TODO: old code also popped the pattern to second place of the list
             // in order to reduce patterns search times.
             return 1;
@@ -106,9 +106,9 @@ removeUnnecessaryWildcards(char * t)
 
 /// XXX: This was returning false on regcomp() failures, but it now throws.
 static bool
-compileRE(std::list<RegexPattern> &curlist, const char * RE, int flags)
+compileRE(std::list<RegexPattern> &curlist, const SBuf &RE, int flags)
 {
-    if (RE == NULL || *RE == '\0')
+    if (RE.isEmpty())
         return curlist.empty(); // XXX: old code did this. It looks wrong.
 
     curlist.emplace_back(RE, flags);
@@ -125,7 +125,7 @@ compileRE(std::list<RegexPattern> &curlist, const SBufList &RE, int flags)
     static const SBuf openparen("("), closeparen(")"), separator(")|(");
     JoinContainerIntoSBuf(regexp, RE.begin(), RE.end(), separator, openparen,
                           closeparen);
-    return compileRE(curlist, regexp.c_str(), flags);
+    return compileRE(curlist, regexp, flags);
 }
 
 /** Compose and compile one large RE from a set of (small) REs.
@@ -211,13 +211,13 @@ compileUnoptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl, cons
     auto flags = flagsAtLineStart;
 
     static const SBuf minus_i("-i"), plus_i("+i");
-    for (auto configurationLineWord : sl) {
+    for (const auto &configurationLineWord: sl) {
         if (configurationLineWord == minus_i) {
             flags |= REG_ICASE;
         } else if (configurationLineWord == plus_i) {
             flags &= ~REG_ICASE;
         } else {
-            if (!compileRE(curlist, configurationLineWord.c_str(), flags))
+            if (!compileRE(curlist, configurationLineWord, flags))
                 debugs(28, DBG_CRITICAL, "ERROR: Skipping regular expression. "
                        "Compile failed: '" << configurationLineWord << "'");
         }

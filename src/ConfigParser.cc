@@ -500,7 +500,7 @@ ConfigParser::regex(const char *expectedRegexDescription)
     }
     ConfigParser::RecognizeQuotedPair_ = false;
 
-    return std::unique_ptr<RegexPattern>(new RegexPattern(pattern.c_str(), flags));
+    return std::unique_ptr<RegexPattern>(new RegexPattern(pattern, flags));
 }
 
 char *
