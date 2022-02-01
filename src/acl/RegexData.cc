@@ -24,6 +24,7 @@
 #include "Debug.h"
 #include "sbuf/Algorithms.h"
 #include "sbuf/List.h"
+#include "sbuf/Stream.h"
 
 Acl::BooleanOptionValue ACLRegexData::CaseInsensitive_;
 
@@ -64,25 +65,15 @@ ACLRegexData::match(char const *word)
 SBufList
 ACLRegexData::dump() const
 {
-    SBufList sl;
-    int flags = REG_EXTENDED | REG_NOSUB;
+    SBufStream os;
 
-    // walk and dump the list
-    // keeping the flags values consistent
-    for (auto &i : data) {
-        if (i.flags != flags) {
-            if ((i.flags&REG_ICASE) != 0) {
-                sl.emplace_back("-i");
-            } else {
-                sl.emplace_back("+i");
-            }
-            flags = i.flags;
-        }
-
-        sl.emplace_back(i.c_str());
+    const RegexPattern *previous = nullptr;
+    for (const auto &i: data) {
+        i.print(os, previous); // skip flags implied by the previous entry
+        previous = &i;
     }
 
-    return sl;
+    return SBufList(1, os.buf());
 }
 
 static const char *
@@ -113,24 +104,14 @@ removeUnnecessaryWildcards(char * t)
     return t;
 }
 
+/// XXX: This was returning false on regcomp() failures, but it now throws.
 static bool
 compileRE(std::list<RegexPattern> &curlist, const char * RE, int flags)
 {
     if (RE == NULL || *RE == '\0')
         return curlist.empty(); // XXX: old code did this. It looks wrong.
 
-    regex_t comp;
-    if (int errcode = regcomp(&comp, RE, flags)) {
-        char errbuf[256];
-        regerror(errcode, &comp, errbuf, sizeof errbuf);
-        debugs(28, DBG_CRITICAL, cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(28, DBG_CRITICAL, "ERROR: invalid regular expression: '" << RE << "': " << errbuf);
-        return false;
-    }
-    debugs(28, 2, "compiled '" << RE << "' with flags " << flags);
-
-    curlist.emplace_back(flags, RE);
-    curlist.back().regex = comp;
+    curlist.emplace_back(RE, flags);
 
     return true;
 }

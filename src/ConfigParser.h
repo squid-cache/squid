@@ -10,6 +10,7 @@
 #define SQUID_CONFIGPARSER_H
 
 #include "acl/forward.h"
+#include "base/forward.h"
 #include "sbuf/forward.h"
 #include "SquidString.h"
 
@@ -71,6 +72,9 @@ public:
     /// parses an [if [!]<acl>...] construct
     Acl::Tree *optionalAclList();
 
+    /// extracts and returns a regex (including any optional flags)
+    RegexPattern *regex(const char *expectedRegexDescription);
+
     static void ParseUShort(unsigned short *var);
     static void ParseBool(bool *var);
     static const char *QuoteString(const String &var);
@@ -97,12 +101,6 @@ public:
      * set to 'off' this interprets the quoted tokens as filenames.
      */
     static char *RegexStrtokFile();
-
-    /**
-     * Parse the next token as a regex pattern. The regex patterns are non quoted
-     * tokens.
-     */
-    static char *RegexPattern();
 
     /**
      * Parse the next token with support for quoted values enabled even if
