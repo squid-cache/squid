@@ -740,10 +740,10 @@ RefreshPattern::printHead(std::ostream &os) const
 {
     printPattern(os);
     os <<
-        // these adjustments are safe: raw values were configured using integers
-        ' ' << intmax_t(min/60) << // to minutes
-        ' ' << intmax_t(100.0 * pct + 0.5) << '%' << // to percentage points
-        ' ' << intmax_t(max/60); // to minutes
+       // these adjustments are safe: raw values were configured using integers
+       ' ' << intmax_t(min/60) << // to minutes
+       ' ' << intmax_t(100.0 * pct + 0.5) << '%' << // to percentage points
+       ' ' << intmax_t(max/60); // to minutes
 }
 
 static void

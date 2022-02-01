@@ -27,7 +27,7 @@ RegexPattern::RegexPattern(const SBuf &aPattern, const int aFlags):
         // POSIX examples show no regfree(&regex) after a regcomp() error;
         // presumably, regcom() frees any allocated memory on failures
         throw TextException(ToSBuf("POSIX regcomp(3) failure: (", errCode, ") ", errBuf,
-            Debug::Extra, "regular expression: ", pattern), Here());
+                                   Debug::Extra, "regular expression: ", pattern), Here());
     }
 
     debugs(28, 2, *this);
