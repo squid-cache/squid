@@ -2779,7 +2779,7 @@ parse_refreshpattern(RefreshPattern ** head)
     int i;
     RefreshPattern *t;
 
-    RefreshPattern::RegexPointer regex(LegacyParser.regex("refresh_pattern regex"));
+    auto regex = LegacyParser.regex("refresh_pattern regex");
 
     i = GetInteger();       /* token: min */
 

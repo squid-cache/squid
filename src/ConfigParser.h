@@ -14,6 +14,7 @@
 #include "sbuf/forward.h"
 #include "SquidString.h"
 
+#include <memory>
 #include <queue>
 #include <stack>
 #include <string>
@@ -73,7 +74,7 @@ public:
     Acl::Tree *optionalAclList();
 
     /// extracts and returns a regex (including any optional flags)
-    RegexPattern *regex(const char *expectedRegexDescription);
+    std::unique_ptr<RegexPattern> regex(const char *expectedRegexDescription);
 
     static void ParseUShort(unsigned short *var);
     static void ParseBool(bool *var);

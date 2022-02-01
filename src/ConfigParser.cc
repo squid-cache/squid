@@ -478,7 +478,7 @@ ConfigParser::RegexStrtokFile()
     return token;
 }
 
-RegexPattern *
+std::unique_ptr<RegexPattern>
 ConfigParser::regex(const char *expectedRegexDescription)
 {
     if (RecognizeQuotedValues)
@@ -500,7 +500,7 @@ ConfigParser::regex(const char *expectedRegexDescription)
     }
     ConfigParser::RecognizeQuotedPair_ = false;
 
-    return new RegexPattern(pattern.c_str(), flags);
+    return std::unique_ptr<RegexPattern>(new RegexPattern(pattern.c_str(), flags));
 }
 
 char *
