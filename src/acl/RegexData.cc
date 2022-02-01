@@ -125,7 +125,7 @@ compileREs(std::list<RegexPattern> &curlist, const SBufList &RE, int flags)
  * The ultimate goal is to have only one RE per ACL so that match() is
  * called only once per ACL.
  */
-static int
+static void
 compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl, const int flagsAtLineStart)
 {
     std::list<RegexPattern> newlist;
@@ -195,8 +195,6 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl, const 
         debugs(28, (opt_parse_cfg_only?DBG_IMPORTANT:2), "WARNING: there are more than 100 regular expressions. " <<
                "Consider using less REs or use rules without expressions like 'dstdomain'.");
     }
-
-    return 1;
 }
 
 static void
@@ -216,7 +214,8 @@ compileUnoptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl, cons
             } catch (...) {
                 // TODO: Make these configuration failures fatal (by default).
                 debugs(28, DBG_CRITICAL, "ERROR: Skipping regular expression: '" << configurationLineWord << "'" <<
-                       Debug::Extra << "compilation failure: " << CurrentException);
+                       Debug::Extra << "configuration: " << cfg_filename << " line " << config_lineno << ": " << config_input_line <<
+                       Debug::Extra << "regex compilation failure: " << CurrentException);
             }
         }
     }
@@ -247,7 +246,9 @@ ACLRegexData::parse()
         compileOptimisedREs(data, sl, flagsAtLineStart);
     } catch (...) {
         debugs(28, DBG_IMPORTANT, "WARNING: optimisation of regular expressions failed; using fallback method without optimisation" <<
+               Debug::Extra << "configuration: " << cfg_filename << " line " << config_lineno << ": " << config_input_line <<
                Debug::Extra << "optimisation failure: " << CurrentException);
+
         compileUnoptimisedREs(data, sl, flagsAtLineStart);
     }
 }
