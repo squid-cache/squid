@@ -93,9 +93,9 @@ private:
 };
 
 inline std::ostream &
-operator <<(std::ostream &os, const RefreshPattern &rp)
+operator <<(std::ostream &os, const RefreshPattern &r)
 {
-    rp.printHead(os);
+    r.printHead(os);
     return os;
 }
 
