@@ -243,13 +243,18 @@ ACLRegexData::parse()
     }
 
     try {
+        // ignore the danger of merging invalid REs into a valid "optimized" RE
         compileOptimisedREs(data, sl, flagsAtLineStart);
     } catch (...) {
-        debugs(28, DBG_IMPORTANT, "WARNING: optimisation of regular expressions failed; using fallback method without optimisation" <<
-               Debug::Extra << "configuration: " << cfg_filename << " line " << config_lineno << ": " << config_input_line <<
-               Debug::Extra << "optimisation failure: " << CurrentException);
-
         compileUnoptimisedREs(data, sl, flagsAtLineStart);
+        // Delay compileOptimisedREs() failure reporting until we know that
+        // compileUnoptimisedREs() above have succeeded. If
+        // compileUnoptimisedREs() also fails, then the compileOptimisedREs()
+        // exception caught earlier was probably not related to _optimization_
+        // (and we do not want to report the same RE compilation problem twice).
+        debugs(28, DBG_IMPORTANT, "WARNING: Failed to optimize a set of regular expressions; will use them as-is instead;" <<
+               Debug::Extra << "configuration: " << cfg_filename << " line " << config_lineno << ": " << config_input_line <<
+               Debug::Extra << "optimization error: " << CurrentException);
     }
 }
 
