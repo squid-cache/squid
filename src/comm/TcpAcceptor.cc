@@ -12,7 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
 #include "base/TextException.h"
-#include "client_db.h"
+#include "clientdb/Cache.h"
 #include "comm/AcceptLimiter.h"
 #include "comm/comm_internal.h"
 #include "comm/Connection.h"
@@ -411,7 +411,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     details->nfConnmark = Ip::Qos::getNfConnmark(details, Ip::Qos::dirAccepted);
 
     if (Config.client_ip_max_connections >= 0) {
-        if (clientdbEstablished(details->remote, 0) > Config.client_ip_max_connections) {
+        if (ClientDb::Established(details->remote, 0) > Config.client_ip_max_connections) {
             debugs(50, DBG_IMPORTANT, "WARNING: " << details->remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
             return Comm::NOMESSAGE;
         }

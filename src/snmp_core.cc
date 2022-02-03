@@ -12,7 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "base/CbcPointer.h"
 #include "CachePeer.h"
-#include "client_db.h"
+#include "clientdb/SnmpGadgets.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
@@ -765,12 +765,11 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
 {
     oid *instance = NULL;
     Ip::Address laddr;
-    Ip::Address *aux;
     int size = 0;
     int newshift = 0;
 
     if (*len <= current->len) {
-        aux  = client_entry(NULL);
+        const auto aux  = client_entry(nullptr);
         if (aux)
             laddr = *aux;
         else
@@ -793,7 +792,7 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
     } else {
         int shift = *len - current->len ; // i.e 4 or 16
         oid2addr(&name[*len - shift], laddr,shift);
-        aux = client_entry(&laddr);
+        const auto aux = client_entry(&laddr);
         if (aux)
             laddr = *aux;
         else

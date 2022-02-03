@@ -9,7 +9,7 @@
 /* DEBUG: section 05    Socket Functions */
 
 #include "squid.h"
-#include "ClientInfo.h"
+#include "clientdb/ClientInfo.h"
 #include "comm/AcceptLimiter.h"
 #include "comm/comm_internal.h"
 #include "comm/Connection.h"
@@ -1346,7 +1346,7 @@ ClientInfo::reduceBucket(const int len)
 void
 ClientInfo::setWriteLimiter(const int aWriteSpeedLimit, const double anInitialBurst, const double aHighWatermark)
 {
-    debugs(77,5, "Write limits for " << (const char*)key <<
+    debugs(77,5, "Write limits for " << addr <<
            " speed=" << aWriteSpeedLimit << " burst=" << anInitialBurst <<
            " highwatermark=" << aHighWatermark);
 
@@ -1383,7 +1383,7 @@ CommQuotaQueue::~CommQuotaQueue()
 unsigned int
 CommQuotaQueue::enqueue(int fd)
 {
-    debugs(77,5, "clt" << (const char*)clientInfo->key <<
+    debugs(77,5, "clt" << clientInfo->addr <<
            ": FD " << fd << " with qqid" << (ins+1) << ' ' << fds.size());
     fds.push_back(fd);
     fd_table[fd].codeContext = CodeContext::Current();
@@ -1395,7 +1395,7 @@ void
 CommQuotaQueue::dequeue()
 {
     assert(!fds.empty());
-    debugs(77,5, "clt" << (const char*)clientInfo->key <<
+    debugs(77,5, "clt" << clientInfo->addr <<
            ": FD " << fds.front() << " with qqid" << (outs+1) << ' ' <<
            fds.size());
     fds.pop_front();

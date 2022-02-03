@@ -23,7 +23,6 @@
 #include "cache_cf.h"
 #include "CachePeer.h"
 #include "carp.h"
-#include "client_db.h"
 #include "client_side.h"
 #include "comm.h"
 #include "CommandLine.h"
@@ -2123,7 +2122,6 @@ SquidShutdown()
     ipcacheFreeMemory();
     fqdncacheFreeMemory();
     asnFreeMemory();
-    clientdbFreeMemory();
     statFreeMemory();
     eventFreeMemory();
     mimeFreeMemory();

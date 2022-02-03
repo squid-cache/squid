@@ -15,7 +15,6 @@
 #include "TimeOrTag.h"
 #if USE_DELAY_POOLS
 #include "acl/FilledChecklist.h"
-#include "ClientInfo.h"
 #include "fde.h"
 #include "MessageDelayPools.h"
 #endif
