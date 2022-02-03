@@ -10,6 +10,8 @@
 #define SQUID__SRC_BASE_OPTIONAL_H
 
 #include <exception>
+#include <type_traits>
+#include <utility>
 
 /// std::bad_optional_access replacement (until we upgrade to C++17)
 class BadOptionalAccess: public std::exception
@@ -48,6 +50,14 @@ public:
     constexpr Value value_or(Other &&defaultValue) const &
     {
         return hasValue_ ? value_ : static_cast<Value>(std::forward<Other>(defaultValue));
+    }
+
+    template <class Other = Value>
+    Optional &operator =(Other &&otherValue)
+    {
+        value_ = std::forward<Other>(otherValue);
+        hasValue_ = true;
+        return *this;
     }
 
 private:
