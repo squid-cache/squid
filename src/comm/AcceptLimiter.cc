@@ -49,10 +49,11 @@ Comm::AcceptLimiter::kick()
         /* NP: shift() is equivalent to pop_front(). Giving us a FIFO queue. */
         TcpAcceptor::Pointer temp = deferred_.front();
         deferred_.erase(deferred_.begin());
-        if (temp.valid()) {
+        if (const auto job = temp.valid()) {
             debugs(5, 5, "doing one.");
-            temp->acceptNext();
-            break;
+            typedef CommCbMemFunT<Comm::TcpAcceptor, CommIoCbParams> Dialer;
+            AsyncCall::Pointer call = JobCallback(33, 5, Dialer, job, TcpAcceptor::acceptOne);
+            ScheduleCallHere(call);
         }
     }
 }

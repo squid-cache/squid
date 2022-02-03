@@ -16,9 +16,8 @@
 #include "comm/AcceptLimiter.h"
 #include "comm/comm_internal.h"
 #include "comm/Connection.h"
-#include "comm/Loops.h"
+#include "comm/Read.h"
 #include "comm/TcpAcceptor.h"
-#include "CommCalls.h"
 #include "eui/Config.h"
 #include "fd.h"
 #include "fde.h"
@@ -84,8 +83,11 @@ Comm::TcpAcceptor::start()
     conn->noteStart();
 
     // if no error so far start accepting connections.
-    if (errcode == 0)
-        SetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
+    if (errcode == 0) {
+        typedef CommCbMemFunT<Comm::TcpAcceptor, CommIoCbParams> Dialer;
+        AsyncCall::Pointer reader = JobCallback(33, 5, Dialer, this, TcpAcceptor::acceptOne);
+        Comm::Read(conn, reader);
+    }
 }
 
 bool
@@ -199,37 +201,6 @@ Comm::TcpAcceptor::handleClosure(const CommCloseCbParams &)
     Must(done());
 }
 
-/**
- * This private callback is called whenever a filedescriptor is ready
- * to dupe itself and fob off an accept()ed connection
- *
- * It will either do that accept operation. Or if there are not enough FD
- * available to do the clone safely will push the listening FD into a list
- * of deferred operations. The list gets kicked and the dupe/accept() actually
- * done later when enough sockets become available.
- */
-void
-Comm::TcpAcceptor::doAccept(int fd, void *data)
-{
-    try {
-        debugs(5, 2, HERE << "New connection on FD " << fd);
-
-        Must(isOpen(fd));
-        TcpAcceptor *afd = static_cast<TcpAcceptor*>(data);
-
-        if (!okToAccept()) {
-            AcceptLimiter::Instance().defer(afd);
-        } else {
-            afd->acceptNext();
-        }
-
-    } catch (const std::exception &e) {
-        fatalf("FATAL: error while accepting new client connection: %s\n", e.what());
-    } catch (...) {
-        fatal("FATAL: error while accepting new client connection: [unknown]\n");
-    }
-}
-
 bool
 Comm::TcpAcceptor::okToAccept()
 {
@@ -264,61 +235,58 @@ Comm::TcpAcceptor::logAcceptError(const ConnectionPointer &tcpClient) const
 }
 
 void
-Comm::TcpAcceptor::acceptOne()
+Comm::TcpAcceptor::acceptOne(const CommIoCbParams &io)
 {
-    /*
-     * We don't worry about running low on FDs here.  Instead,
-     * doAccept() will use AcceptLimiter if we reach the limit
-     * there.
-     */
+    // Bail out. close handlers will clean up
+    if (io.flag == Comm::ERR_CLOSING)
+{
+    debugs(5, 0, "Listener socket closing on " << conn);
+        return;
+}
 
-    /* Accept a new connection */
-    ConnectionPointer newConnDetails = new Connection();
-    const Comm::Flag flag = oldAccept(newConnDetails);
+    debugs(5, 2, "new connection on " << conn);
 
-    if (flag == Comm::COMM_ERROR) {
-        // A non-recoverable error; notify the caller */
-        debugs(5, 5, HERE << "non-recoverable error:" << status() << " handler Subscription: " << theCallSub);
-        if (intendedForUserConnections())
-            logAcceptError(newConnDetails);
-        notify(flag, newConnDetails);
-        mustStop("Listener socket closed");
+    if (!okToAccept()) {
+        AcceptLimiter::Instance().defer(this);
         return;
     }
 
-    if (flag == Comm::NOMESSAGE) {
-        /* register interest again */
+    /* Accept a new connection */
+    ConnectionPointer newConnDetails = new Connection();
+    switch (oldAccept(newConnDetails)) {
+
+    case Comm::NOMESSAGE:
         debugs(5, 5, "try later: " << conn << " handler Subscription: " << theCallSub);
-    } else {
+        break;
+
+    case Comm::OK:
         // TODO: When ALE, MasterXaction merge, use them or ClientConn instead.
         CodeContext::Reset(newConnDetails);
         debugs(5, 5, "Listener: " << conn <<
                " accepted new connection " << newConnDetails <<
                " handler Subscription: " << theCallSub);
-        notify(flag, newConnDetails);
+        notify(Comm::OK, newConnDetails);
         CodeContext::Reset(listenPort_);
+        break;
+
+    case Comm::COMM_ERROR:
+        // A non-recoverable error; notify the caller */
+        debugs(5, 5, HERE << "non-recoverable error:" << status() << " handler Subscription: " << theCallSub);
+        if (intendedForUserConnections())
+            logAcceptError(newConnDetails);
+        notify(Comm::COMM_ERROR, newConnDetails);
+        mustStop("Listener socket closed");
+        return;
     }
 
-    SetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
-}
-
-void
-Comm::TcpAcceptor::acceptNext()
-{
-    Must(IsConnOpen(conn));
-    debugs(5, 2, HERE << "connection on " << conn);
-    acceptOne();
+    typedef CommCbMemFunT<Comm::TcpAcceptor, CommIoCbParams> Dialer;
+    AsyncCall::Pointer reader = JobCallback(33, 5, Dialer, this, TcpAcceptor::acceptOne);
+    Comm::Read(conn, reader);
 }
 
 void
 Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &newConnDetails) const
 {
-    // listener socket handlers just abandon the port with Comm::ERR_CLOSING
-    // it should only happen when this object is deleted...
-    if (flag == Comm::ERR_CLOSING) {
-        return;
-    }
-
     if (theCallSub != NULL) {
         AsyncCall::Pointer call = theCallSub->callback();
         CommAcceptCbParams &params = GetCommParams<CommAcceptCbParams>(call);
