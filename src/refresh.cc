@@ -13,6 +13,7 @@
 #endif
 
 #include "squid.h"
+#include "base/PackableStream.h"
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -20,7 +21,6 @@
 #include "mgr/Registration.h"
 #include "refresh.h"
 #include "RefreshPattern.h"
-#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -684,13 +684,13 @@ refreshStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\nRefresh pattern usage:\n\n");
     storeAppendPrintf(sentry, "  Used      \tChecks    \t%% Matches\tPattern\n");
     for (const RefreshPattern *R = Config.Refresh; R; R = R->next) {
-        SBufStream os;
-        R->printPattern(os);
-        storeAppendPrintf(sentry, "  %10" PRIu64 "\t%10" PRIu64 "\t%6.2f\t" SQUIDSBUFPH "\n",
+        storeAppendPrintf(sentry, "  %10" PRIu64 "\t%10" PRIu64 "\t%6.2f\t",
                           R->stats.matchCount,
                           R->stats.matchTests,
-                          xpercent(R->stats.matchCount, R->stats.matchTests),
-                          SQUIDSBUFPRINT(os.buf()));
+                          xpercent(R->stats.matchCount, R->stats.matchTests));
+        PackableStream os(*sentry);
+        R->printPattern(os);
+        os << "\n";
     }
 
     int i;

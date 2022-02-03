@@ -2713,11 +2713,9 @@ static void
 dump_refreshpattern(StoreEntry * entry, const char *name, RefreshPattern * head)
 {
     while (head != NULL) {
-        SBufStream os;
+        PackableStream os(*entry);
         os << name << ' ';
         head->printHead(os);
-        const auto prefix = os.buf();
-        entry->append(prefix.rawContent(), prefix.length());
 
         if (head->max_stale >= 0)
             storeAppendPrintf(entry, " max-stale=%d", head->max_stale);
