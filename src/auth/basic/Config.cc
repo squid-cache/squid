@@ -123,15 +123,15 @@ Auth::Basic::Config::dump(StoreEntry * entry, const char *name, Auth::SchemeConf
     if (!Auth::SchemeConfig::dump(entry, name, scheme))
         return false; // not configured
 
-    storeAppendPrintf(entry, "%s basic credentialsttl %d seconds\n", name, (int) credentialsTTL);
     storeAppendPrintf(entry, "%s basic casesensitive %s\n", name, casesensitive ? "on" : "off");
     return true;
 }
 
 Auth::Basic::Config::Config() :
-    credentialsTTL( 2*60*60 ),
     casesensitive(0)
 {
+    credentialsTtl = Auth::Ttl(2*60*60); // 2hrs
+
     static const SBuf defaultRealm("Squid proxy-caching web server");
     realm = defaultRealm;
 }
@@ -139,9 +139,7 @@ Auth::Basic::Config::Config() :
 void
 Auth::Basic::Config::parse(Auth::SchemeConfig * scheme, int n_configured, char *param_str)
 {
-    if (strcmp(param_str, "credentialsttl") == 0) {
-        parse_time_t(&credentialsTTL);
-    } else if (strcmp(param_str, "casesensitive") == 0) {
+    if (strcmp(param_str, "casesensitive") == 0) {
         parse_onoff(&casesensitive);
     } else
         Auth::SchemeConfig::parse(scheme, n_configured, param_str);
@@ -274,8 +272,7 @@ Auth::Basic::Config::decode(char const *proxy_auth, const HttpRequest *request, 
         debugs(29, 9, HERE << "Creating new user '" << lb->username() << "'");
         /* set the auth_user type */
         lb->auth_type = Auth::AUTH_BASIC;
-        /* current time for timeouts */
-        lb->expiretime = current_time.tv_sec;
+        lb->updateExpiration(Auth::Ttl::zero()); //  fresh until the end of the current second
 
         /* this basic_user struct is the 'lucky one' to get added to the username cache */
         /* the requests after this link to the basic_user */
@@ -325,4 +322,3 @@ Auth::Basic::Config::registerWithCacheManager(void)
                         "Basic User Authenticator Stats",
                         authenticateBasicStats, 0, 1);
 }
-

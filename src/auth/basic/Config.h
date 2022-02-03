@@ -40,7 +40,6 @@ public:
     virtual const char * type() const;
 
 public:
-    time_t credentialsTTL;
     int casesensitive;
 
 private:
