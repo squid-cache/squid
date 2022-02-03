@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -112,7 +112,7 @@ Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time
     int epoll_ctl_type = 0;
 
     assert(fd >= 0);
-    debugs(5, 5, HERE << "FD " << fd << ", type=" << type <<
+    debugs(5, 5, "FD " << fd << ", type=" << type <<
            ", handler=" << handler << ", client_data=" << client_data <<
            ", timeout=" << timeout);
 
@@ -253,7 +253,7 @@ Comm::DoSelect(int msec)
         fd = cevents->data.fd;
         F = &fd_table[fd];
         CodeContext::Reset(F->codeContext);
-        debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "got FD " << fd << " events=" <<
+        debugs(5, DEBUG_EPOLL ? 0 : 8, "got FD " << fd << " events=" <<
                std::hex << cevents->events << " monitoring=" << F->epoll_state <<
                " F->read_handler=" << F->read_handler << " F->write_handler=" << F->write_handler);
 
@@ -261,12 +261,12 @@ Comm::DoSelect(int msec)
 
         if (cevents->events & (EPOLLIN|EPOLLHUP|EPOLLERR) || F->flags.read_pending) {
             if ((hdl = F->read_handler) != NULL) {
-                debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "Calling read handler on FD " << fd);
+                debugs(5, DEBUG_EPOLL ? 0 : 8, "Calling read handler on FD " << fd);
                 F->read_handler = NULL;
                 hdl(fd, F->read_data);
                 ++ statCounter.select_fds;
             } else {
-                debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "no read handler for FD " << fd);
+                debugs(5, DEBUG_EPOLL ? 0 : 8, "no read handler for FD " << fd);
                 // remove interest since no handler exist for this event.
                 SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
             }
@@ -274,12 +274,12 @@ Comm::DoSelect(int msec)
 
         if (cevents->events & (EPOLLOUT|EPOLLHUP|EPOLLERR)) {
             if ((hdl = F->write_handler) != NULL) {
-                debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "Calling write handler on FD " << fd);
+                debugs(5, DEBUG_EPOLL ? 0 : 8, "Calling write handler on FD " << fd);
                 F->write_handler = NULL;
                 hdl(fd, F->write_data);
                 ++ statCounter.select_fds;
             } else {
-                debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "no write handler for FD " << fd);
+                debugs(5, DEBUG_EPOLL ? 0 : 8, "no write handler for FD " << fd);
                 // remove interest since no handler exist for this event.
                 SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
             }

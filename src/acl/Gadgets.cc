@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -48,11 +48,11 @@ aclGetDenyInfoPage(AclDenyInfoList ** head, const char *name, int redirect_allow
 
     AclDenyInfoList *A = NULL;
 
-    debugs(28, 8, HERE << "got called for " << name);
+    debugs(28, 8, "got called for " << name);
 
     for (A = *head; A; A = A->next) {
         if (!redirect_allowed && strchr(A->err_page_name, ':') ) {
-            debugs(28, 8, HERE << "Skip '" << A->err_page_name << "' 30x redirects not allowed as response here.");
+            debugs(28, 8, "Skip '" << A->err_page_name << "' 30x redirects not allowed as response here.");
             continue;
         }
 

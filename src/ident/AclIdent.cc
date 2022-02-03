@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -45,7 +45,7 @@ void
 ACLIdent::parse()
 {
     if (!data) {
-        debugs(28, 3, HERE << "current is null. Creating");
+        debugs(28, 3, "current is null. Creating");
         data = new ACLUserData;
     }
 
@@ -102,7 +102,7 @@ IdentLookup::checkForAsync(ACLChecklist *cl)const
     const ConnStateData *conn = checklist->conn();
     // check that ACLIdent::match() tested this lookup precondition
     assert(conn && Comm::IsConnOpen(conn->clientConnection));
-    debugs(28, 3, HERE << "Doing ident lookup" );
+    debugs(28, 3, "Doing ident lookup" );
     Ident::Start(checklist->conn()->clientConnection, LookupDone, checklist);
 }
 

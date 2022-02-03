@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -133,12 +133,12 @@ BodyPipe::BodyPipe(Producer *aProducer): theBodySize(-1),
     // TODO: teach MemBuf to start with zero minSize
     // TODO: limit maxSize by theBodySize, when known?
     theBuf.init(2*1024, MaxCapacity);
-    debugs(91,7, HERE << "created BodyPipe" << status());
+    debugs(91,7, "created BodyPipe" << status());
 }
 
 BodyPipe::~BodyPipe()
 {
-    debugs(91,7, HERE << "destroying BodyPipe" << status());
+    debugs(91,7, "destroying BodyPipe" << status());
     assert(!theProducer);
     assert(!theConsumer);
     theBuf.clean();
@@ -155,7 +155,7 @@ void BodyPipe::setBodySize(uint64_t aBodySize)
     assert(!theConsumer);
 
     theBodySize = aBodySize;
-    debugs(91,7, HERE << "set body size" << status());
+    debugs(91,7, "set body size" << status());
 }
 
 uint64_t BodyPipe::bodySize() const
@@ -194,13 +194,13 @@ void
 BodyPipe::clearProducer(bool atEof)
 {
     if (theProducer.set()) {
-        debugs(91,7, HERE << "clearing BodyPipe producer" << status());
+        debugs(91,7, "clearing BodyPipe producer" << status());
         theProducer.clear();
         if (atEof) {
             if (!bodySizeKnown())
                 theBodySize = thePutSize;
             else if (bodySize() != thePutSize)
-                debugs(91,3, HERE << "aborting on premature eof" << status());
+                debugs(91,3, "aborting on premature eof" << status());
         } else {
             // asserta that we can detect the abort if the consumer joins later
             assert(!bodySizeKnown() || bodySize() != thePutSize);
@@ -241,7 +241,7 @@ BodyPipe::setConsumerIfNotLate(const Consumer::Pointer &aConsumer)
     Must(!abortedConsumption); // did not promise to never consume
 
     theConsumer = aConsumer;
-    debugs(91,7, HERE << "set consumer" << status());
+    debugs(91,7, "set consumer" << status());
     if (theBuf.hasContent())
         scheduleBodyDataNotification();
     if (!theProducer)
@@ -254,7 +254,7 @@ void
 BodyPipe::clearConsumer()
 {
     if (theConsumer.set()) {
-        debugs(91,7, HERE << "clearing consumer" << status());
+        debugs(91,7, "clearing consumer" << status());
         theConsumer.clear();
         // do not abort if we have not consumed so that HTTP or ICAP can retry
         // benign xaction failures due to persistent connection race conditions
@@ -316,7 +316,7 @@ void
 BodyPipe::enableAutoConsumption()
 {
     mustAutoConsume = true;
-    debugs(91,5, HERE << "enabled auto consumption" << status());
+    debugs(91,5, "enabled auto consumption" << status());
     startAutoConsumptionIfNeeded();
 }
 
@@ -336,7 +336,7 @@ BodyPipe::startAutoConsumptionIfNeeded()
 
     theConsumer = new BodySink(this);
     AsyncJob::Start(theConsumer);
-    debugs(91,7, HERE << "starting auto consumption" << status());
+    debugs(91,7, "starting auto consumption" << status());
     scheduleBodyDataNotification();
 }
 
@@ -381,7 +381,7 @@ BodyPipe::postConsume(size_t size)
 {
     assert(!isCheckedOut);
     theGetSize += size;
-    debugs(91,7, HERE << "consumed " << size << " bytes" << status());
+    debugs(91,7, "consumed " << size << " bytes" << status());
     if (mayNeedMoreData()) {
         AsyncCall::Pointer call=  asyncCall(91, 7,
                                             "BodyProducer::noteMoreBodySpaceAvailable",
@@ -396,7 +396,7 @@ BodyPipe::postAppend(size_t size)
 {
     assert(!isCheckedOut);
     thePutSize += size;
-    debugs(91,7, HERE << "added " << size << " bytes" << status());
+    debugs(91,7, "added " << size << " bytes" << status());
 
     // We should not consume here even if mustAutoConsume because the
     // caller may not be ready for the data to be consumed during this call.
@@ -492,7 +492,7 @@ BodyPipeCheckout::~BodyPipeCheckout()
         // Do not pipe.undoCheckOut(*this) because it asserts or throws
         // TODO: consider implementing the long-term solution discussed at
         // http://www.mail-archive.com/squid-dev@squid-cache.org/msg07910.html
-        debugs(91,2, HERE << "Warning: cannot undo BodyPipeCheckout");
+        debugs(91,2, "Warning: cannot undo BodyPipeCheckout");
         thePipe.checkIn(*this);
     }
 }

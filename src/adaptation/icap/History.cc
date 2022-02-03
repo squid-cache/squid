@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,7 +25,7 @@ void Adaptation::Icap::History::start(const char *context)
     if (!concurrencyLevel++)
         currentStart = current_time;
 
-    debugs(93,4, HERE << "start " << context << " level=" << concurrencyLevel
+    debugs(93,4, "start " << context << " level=" << concurrencyLevel
            << " time=" << tvToMsec(pastTime) << ' ' << this);
 }
 
@@ -38,7 +38,7 @@ void Adaptation::Icap::History::stop(const char *context)
 
     struct timeval current;
     currentTime(current);
-    debugs(93,4, HERE << "stop " << context << " level=" << concurrencyLevel <<
+    debugs(93,4, "stop " << context << " level=" << concurrencyLevel <<
            " time=" << tvToMsec(pastTime) << '+' << tvToMsec(current) << ' ' << this);
 
     if (!--concurrencyLevel)
@@ -50,7 +50,7 @@ Adaptation::Icap::History::processingTime(timeval &total) const
 {
     currentTime(total);
     tvAssignAdd(total, pastTime);
-    debugs(93,7, HERE << " current total: " << tvToMsec(total) << ' ' << this);
+    debugs(93,7, " current total: " << tvToMsec(total) << ' ' << this);
 }
 
 void

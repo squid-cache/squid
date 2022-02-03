@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -65,13 +65,13 @@ void
 storeClose(StoreIOState::Pointer sio, int how)
 {
     if (sio->flags.closing) {
-        debugs(20,3,HERE << "storeClose: flags.closing already set, bailing");
+        debugs(20,3, "storeClose: flags.closing already set, bailing");
         return;
     }
 
     sio->flags.closing = true;
 
-    debugs(20,3,HERE << "storeClose: calling sio->close(" << how << ")");
+    debugs(20,3, "storeClose: calling sio->close(" << how << ")");
     sio->close(how);
 }
 

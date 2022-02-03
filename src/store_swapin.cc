@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,7 +29,7 @@ storeSwapInStart(store_client * sc)
     }
 
     if (e->mem_status != NOT_IN_MEMORY)
-        debugs(20, 3, HERE << "already IN_MEMORY");
+        debugs(20, 3, "already IN_MEMORY");
 
     debugs(20, 3, *e << " " <<  e->getMD5Text());
 

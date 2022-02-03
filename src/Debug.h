@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -144,7 +144,7 @@ std::ostream& ForceAlert(std::ostream& s);
  *
  * Its purpose is to inactivate calls made following previous debugs()
  * guidelines such as
- * debugs(1,2, HERE << "some message");
+ * debugs(1,2, "some message");
  *
  * His former objective is now absorbed in the debugs call itself
  */

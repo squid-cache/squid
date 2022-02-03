@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -272,11 +272,11 @@ const char *
 Format::Token::scanForToken(TokenTableEntry const table[], const char *cur)
 {
     for (TokenTableEntry const *lte = table; lte->configTag != NULL; ++lte) {
-        debugs(46, 8, HERE << "compare tokens '" << lte->configTag << "' with '" << cur << "'");
+        debugs(46, 8, "compare tokens '" << lte->configTag << "' with '" << cur << "'");
         if (strncmp(lte->configTag, cur, strlen(lte->configTag)) == 0) {
             type = lte->tokenType;
             label = lte->configTag;
-            debugs(46, 7, HERE << "Found token '" << label << "'");
+            debugs(46, 7, "Found token '" << label << "'");
             return cur + strlen(lte->configTag);
         }
     }
@@ -434,16 +434,16 @@ Format::Token::parse(const char *def, Quoting *quoting)
             //     mistakes made with overlapping names. (Bug 3310)
 
             // Scan for various long tokens
-            debugs(46, 5, HERE << "scan for possible Misc token");
+            debugs(46, 5, "scan for possible Misc token");
             cur = scanForToken(TokenTableMisc, cur);
             // scan for 2-char tokens
             if (type == LFT_NONE) {
-                debugs(46, 5, HERE << "scan for possible 2C token");
+                debugs(46, 5, "scan for possible 2C token");
                 cur = scanForToken(TokenTable2C, cur);
             }
             // finally scan for 1-char tokens.
             if (type == LFT_NONE) {
-                debugs(46, 5, HERE << "scan for possible 1C token");
+                debugs(46, 5, "scan for possible 1C token");
                 cur = scanForToken(TokenTable1C, cur);
             }
         }

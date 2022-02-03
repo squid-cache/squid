@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -115,7 +115,7 @@ ProxyAuthLookup::checkForAsync(ACLChecklist *cl) const
 {
     ACLFilledChecklist *checklist = Filled(cl);
 
-    debugs(28, 3, HERE << "checking password via authenticator");
+    debugs(28, 3, "checking password via authenticator");
 
     /* make sure someone created auth_user_request for us */
     assert(checklist->auth_user_request != NULL);

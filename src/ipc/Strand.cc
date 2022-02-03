@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -51,7 +51,7 @@ void Ipc::Strand::start()
 
 void Ipc::Strand::registerSelf()
 {
-    debugs(54, 6, HERE);
+    debugs(54, 6, MYNAME);
     Must(!isRegistered);
 
     StrandMessage::NotifyCoordinator(mtRegisterStrand, nullptr);
@@ -145,20 +145,20 @@ void Ipc::Strand::handleCacheMgrResponse(const Mgr::Response& response)
 #if SQUID_SNMP
 void Ipc::Strand::handleSnmpRequest(const Snmp::Request& request)
 {
-    debugs(54, 6, HERE);
+    debugs(54, 6, MYNAME);
     Snmp::SendResponse(request.requestId, request.pdu);
 }
 
 void Ipc::Strand::handleSnmpResponse(const Snmp::Response& response)
 {
-    debugs(54, 6, HERE);
+    debugs(54, 6, MYNAME);
     Snmp::Forwarder::HandleRemoteAck(response.requestId);
 }
 #endif
 
 void Ipc::Strand::timedout()
 {
-    debugs(54, 6, HERE << isRegistered);
+    debugs(54, 6, isRegistered);
     if (!isRegistered)
         fatalf("kid%d registration timed out", KidIdentifier);
 }

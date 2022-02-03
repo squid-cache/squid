@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -347,7 +347,7 @@ getRoundRobinParent(PeerSelector *ps)
     if (q)
         ++ q->rr_count;
 
-    debugs(15, 3, HERE << "returning " << (q ? q->host : "NULL"));
+    debugs(15, 3, "returning " << (q ? q->host : "NULL"));
 
     return q;
 }
