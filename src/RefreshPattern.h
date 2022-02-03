@@ -32,11 +32,11 @@ public:
 
     // If given a regex, becomes its owner, creating an explicit refresh_pattern
     // rule. Otherwise, creates an implicit/default refresh_pattern rule.
-    explicit RefreshPattern(RegexPointer regex):
+    explicit RefreshPattern(RegexPointer aRegex):
         min(0), pct(0.20), max(REFRESH_DEFAULT_MAX),
         next(NULL),
         max_stale(0),
-        regex_(std::move(regex))
+        regex_(std::move(aRegex))
     {
         memset(&flags, 0, sizeof(flags));
     }
