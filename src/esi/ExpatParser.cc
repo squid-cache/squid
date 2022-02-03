@@ -25,11 +25,11 @@ class ExpatRr : public RegisteredRunner
 public:
     void finalizeConfig()
     {
-        prExpat.reset(new ESIParser::Register("expat", &ESIExpatParser::NewParser));
+        registration.reset(new ESIParser::Register("expat", &ESIExpatParser::NewParser));
     }
 
 private:
-    std::unique_ptr<ESIParser::Register> prExpat;
+    std::unique_ptr<ESIParser::Register> registration;
 };
 
 RunnerRegistrationEntry(ExpatRr);

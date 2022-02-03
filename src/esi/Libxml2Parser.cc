@@ -24,19 +24,19 @@
 namespace Esi
 {
 
-class Xml2Rr : public RegisteredRunner
+class Libxml2Rr : public RegisteredRunner
 {
 public:
     void finalizeConfig()
     {
-        prLibxml.reset(new ESIParser::Register("libxml2", &ESILibxml2Parser::NewParser));
+        registration.reset(new ESIParser::Register("libxml2", &ESILibxml2Parser::NewParser));
     }
 
 private:
-    std::unique_ptr<ESIParser::Register> prLibxml;
+    std::unique_ptr<ESIParser::Register> registration;
 };
 
-RunnerRegistrationEntry(Xml2Rr);
+RunnerRegistrationEntry(Libxml2Rr);
 
 }
 
