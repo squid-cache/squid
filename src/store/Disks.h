@@ -9,6 +9,7 @@
 #ifndef SQUID_STORE_DISKS_H
 #define SQUID_STORE_DISKS_H
 
+#include "ipc/forward.h"
 #include "store/Controlled.h"
 #include "store/forward.h"
 
@@ -57,6 +58,10 @@ public:
     static SwapDir *SelectSwapDir(const StoreEntry *);
     /// whether any of disk caches has entry with e.key
     bool hasReadableEntry(const StoreEntry &) const;
+    /// \returns true if each of active cache_dirs is indexed or there are no active dirs at all
+    static bool AllIndexed();
+    /// handles the Coordinator notification about a ready disker
+    static void DiskerReadyNotification(int kidId, bool indexed);
 
 private:
     /* migration logic */

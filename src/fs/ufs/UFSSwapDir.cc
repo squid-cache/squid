@@ -452,7 +452,7 @@ Fs::Ufs::UFSSwapDir::maintain()
 
     /* We can't delete objects while rebuilding swap */
     /* XXX each store should start maintaining as it comes online. */
-    if (StoreController::store_dirs_rebuilding) {
+    if (!Store::Root().indexReady()) {
         // suppress the warnings, except once each minute
         static int64_t lastWarn = 0;
         int warnLevel = 3;
@@ -460,7 +460,7 @@ Fs::Ufs::UFSSwapDir::maintain()
             lastWarn = squid_curtime;
             warnLevel = DBG_IMPORTANT;
         }
-        debugs(47, warnLevel, StoreController::store_dirs_rebuilding << " cache_dir still rebuilding. Skip GC for " << path);
+        debugs(47, warnLevel, "cache_dir still rebuilding. Skip GC for " << path);
         return;
     }
 
@@ -1018,7 +1018,7 @@ Fs::Ufs::UFSSwapDir::writeCleanDone()
     }
 
     /* touch a timestamp file if we're not still validating */
-    if (StoreController::store_dirs_rebuilding)
+    if (!Store::Root().indexReady())
         (void) 0;
     else if (fd < 0)
         (void) 0;
@@ -1085,7 +1085,7 @@ Fs::Ufs::UFSSwapDir::HandleCleanEvent()
     }
 
     /* if the rebuild is finished, start cleaning directories. */
-    if (0 == StoreController::store_dirs_rebuilding) {
+    if (Store::Root().indexReady()) {
         n = DirClean(swap_index);
         ++swap_index;
     }

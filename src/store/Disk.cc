@@ -23,9 +23,9 @@
 
 Store::Disk::Disk(char const *aType): theType(aType),
     max_size(0), min_objsize(-1), max_objsize (-1),
-    path(NULL), index(-1), disker(-1),
+    path(nullptr), index(-1), disker(-1), diskerReady(false), diskerIndexed(false),
     repl(NULL), removals(0), scanned(0),
-    cleanLog(NULL)
+    indexed(false), cleanLog(nullptr)
 {
     fs.blksize = 1024;
 }
@@ -69,6 +69,11 @@ Store::Disk::stat(StoreEntry &output) const
                       path);
     storeAppendPrintf(&output, "FS Block Size %d Bytes\n",
                       fs.blksize);
+    if (disker) {
+        storeAppendPrintf(&output, "Disker status: ready: %d, indexed: %d\n",
+                          diskerReady, diskerIndexed);
+    }
+
     statfs(output);
 
     if (repl) {

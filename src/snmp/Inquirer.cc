@@ -21,8 +21,8 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Snmp, Inquirer);
 
-Snmp::Inquirer::Inquirer(const Request& aRequest, const Ipc::StrandCoords& coords):
-    Ipc::Inquirer(aRequest.clone(), coords, 2),
+Snmp::Inquirer::Inquirer(const Request& aRequest, Ipc::StrandCoords&& coords):
+    Ipc::Inquirer(aRequest.clone(), std::move(coords), 2),
     aggrPdu(aRequest.pdu)
 {
     conn = new Comm::Connection;

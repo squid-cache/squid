@@ -34,6 +34,7 @@
 #include "snmp/Request.h"
 #include "snmp/Response.h"
 #endif
+#include "store/Disks.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Strand);
 
@@ -71,9 +72,18 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
         break;
 
 #if HAVE_DISKIO_MODULE_IPCIO
-    case mtStrandReady:
-        IpcIoFile::HandleOpenResponse(Mine(StrandMessage(message)));
-        break;
+    case mtStrandReady: {
+        const StrandReady resp(message);
+        IpcIoFile::HandleStrandReadyResponse(Mine(resp));
+        Store::Disks::DiskerReadyNotification(resp.strand.kidId, resp.indexed);
+    }
+    break;
+
+    case mtStrandBusy: {
+        const StrandMessage resp(message);
+        IpcIoFile::HandleStrandBusyResponse(Mine(resp));
+    }
+    break;
 
     case mtIpcIoNotification:
         IpcIoFile::HandleNotification(message);
@@ -117,17 +127,10 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
 }
 
 void
-Ipc::Strand::handleRegistrationResponse(const StrandMessage &msg)
+Ipc::Strand::handleRegistrationResponse(const StrandMessage &)
 {
-    // handle registration response from the coordinator; it could be stale
-    if (msg.strand.kidId == KidIdentifier && msg.strand.pid == getpid()) {
-        debugs(54, 6, "kid" << KidIdentifier << " registered");
-        clearTimeout(); // we are done
-    } else {
-        // could be an ACK to the registration message of our dead predecessor
-        debugs(54, 6, "kid" << KidIdentifier << " is not yet registered");
-        // keep listening, with a timeout
-    }
+    debugs(54, 6, "kid" << KidIdentifier << " registered");
+    clearTimeout(); // we are done
 }
 
 void Ipc::Strand::handleCacheMgrRequest(const Mgr::Request& request)

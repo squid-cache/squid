@@ -102,9 +102,14 @@ public:
     char *path;
     int index;          /* This entry's index into the swapDirs array */
     int disker; ///< disker kid id dedicated to this SwapDir or -1
+    bool diskerReady; ///< notified by the disker that it is ready
+    bool diskerIndexed; ///< notified by the disker that it is indexed
     RemovalPolicy *repl;
     int removals;
     int scanned;
+    /// if has a dedicated disker - the same as diskerIndexed
+    /// otherwise whether this SwapDir has been indexed
+    bool indexed;
 
     struct Flags {
         Flags() : selected(false), read_only(false) {}

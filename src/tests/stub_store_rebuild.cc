@@ -12,6 +12,8 @@
 #include "MemBuf.h"
 #include "SquidTime.h"
 #include "store/Controller.h"
+#include "store/Disk.h"
+#include "store/Disks.h"
 #include "store_rebuild.h"
 
 #include <cstring>
@@ -21,17 +23,22 @@
 
 void storeRebuildProgress(int, int, int) STUB
 bool storeRebuildParseEntry(MemBuf &, StoreEntry &, cache_key *, StoreRebuildData &, uint64_t) STUB_RETVAL(false)
+unsigned int rebuildMaxBlockMsec()
+{
+    return 50;
+}
 
 void StoreRebuildData::updateStartTime(const timeval &dirStartTime)
 {
     startTime = started() ? std::min(startTime, dirStartTime) : dirStartTime;
 }
 
-void storeRebuildComplete(StoreRebuildData *)
+void storeRebuildComplete(StoreRebuildData *, SwapDir &dir)
 {
-    --StoreController::store_dirs_rebuilding;
-    if (StoreController::store_dirs_rebuilding == 1)
-        --StoreController::store_dirs_rebuilding; // normally in storeCleanup()
+    dir.indexed = true;
+    // normally, storeCleanup() validates first, but stubbed code does not validate indexed entries
+    if (Store::Disks::AllIndexed())
+        Store::Root().markValidated();
 }
 
 bool

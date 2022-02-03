@@ -15,6 +15,7 @@
 #include "DiskIO/IORequestor.h"
 #include "ipc/forward.h"
 #include "ipc/mem/Page.h"
+#include "mem/PoolingAllocator.h"
 #include "SquidString.h"
 #include <list>
 #include <map>
@@ -86,8 +87,10 @@ public:
     virtual bool canWrite() const;
     virtual bool ioInProgress() const;
 
-    /// handle open response from coordinator
-    static void HandleOpenResponse(const Ipc::StrandMessage &);
+    /// called when Coordinator reports that the strand exists and is usable
+    static void HandleStrandReadyResponse(const Ipc::StrandReady &);
+    /// called when Coordinator reports that the strand exists but is not usable (yet)
+    static void HandleStrandBusyResponse(const Ipc::StrandMessage &);
 
     /// handle queue push notifications from worker or disker
     static void HandleNotification(const Ipc::TypedMsgHdr &msg);
@@ -148,8 +151,14 @@ private:
 
     static const double Timeout; ///< timeout value in seconds
 
-    typedef std::list<Pointer> IpcIoFileList;
-    static IpcIoFileList WaitingForOpen; ///< pending open requests
+    using WaitingFilesItem = std::pair<const timeval, Pointer>;
+    using WaitingFiles = std::multimap<timeval, Pointer, std::less<timeval>, PoolingAllocator<WaitingFilesItem> >;
+    using FileWait = WaitingFiles::value_type;
+    /// being open diskers, ordered by their absolute deadlines
+    static WaitingFiles WaitingForOpen;
+    static void StartWaitingFor(const Pointer &);
+    static void StartWaiting();
+    static Pointer StopWaiting(const Ipc::StrandCoord &);
 
     ///< maps diskerId to IpcIoFile, cleared in destructor
     typedef std::map<int, IpcIoFile*> IpcIoFilesMap;

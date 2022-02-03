@@ -28,7 +28,7 @@ class Inquirer: public Ipc::Inquirer
     CBDATA_CLASS(Inquirer);
 
 public:
-    Inquirer(const Request& aRequest, const Ipc::StrandCoords& coords);
+    Inquirer(const Request& aRequest, Ipc::StrandCoords&& coords);
 
 protected:
     /* AsyncJob API */

@@ -15,11 +15,11 @@
 #include "ipc/StrandCoord.h"
 #include "ipc/TypedMsgHdr.h"
 
-Ipc::StrandCoord::StrandCoord(): kidId(-1), pid(0)
+Ipc::StrandCoord::StrandCoord(): kidId(-1)
 {
 }
 
-Ipc::StrandCoord::StrandCoord(int aKidId, pid_t aPid): kidId(aKidId), pid(aPid)
+Ipc::StrandCoord::StrandCoord(int aKidId): kidId(aKidId)
 {
 }
 
@@ -27,14 +27,12 @@ void
 Ipc::StrandCoord::unpack(const TypedMsgHdr &hdrMsg)
 {
     hdrMsg.getPod(kidId);
-    hdrMsg.getPod(pid);
     hdrMsg.getString(tag);
 }
 
 void Ipc::StrandCoord::pack(TypedMsgHdr &hdrMsg) const
 {
     hdrMsg.putPod(kidId);
-    hdrMsg.putPod(pid);
     hdrMsg.putString(tag);
 }
 
@@ -61,12 +59,24 @@ Ipc::StrandMessage::pack(const MessageType messageType, TypedMsgHdr &hdrMsg) con
 void
 Ipc::StrandMessage::NotifyCoordinator(const MessageType msgType, const char *tag)
 {
-    static const auto pid = getpid();
-    StrandMessage message(StrandCoord(KidIdentifier, pid), MyQuestionerId());
+    StrandMessage message(StrandCoord(KidIdentifier), MyQuestionerId());
     if (tag)
         message.strand.tag = tag;
     TypedMsgHdr hdr;
     message.pack(msgType, hdr);
     SendMessage(Port::CoordinatorAddr(), hdr);
+}
+
+Ipc::StrandReady::StrandReady(const TypedMsgHdr &hdrMsg):
+    StrandMessage(hdrMsg)
+{
+    hdrMsg.getPod(indexed);
+}
+
+void
+Ipc::StrandReady::pack(TypedMsgHdr &hdrMsg) const
+{
+    StrandMessage::pack(mtStrandReady, hdrMsg);
+    hdrMsg.putPod(indexed);
 }
 

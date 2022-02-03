@@ -64,13 +64,16 @@ operator <<(std::ostream &os, const Progress &p)
 }
 
 void storeRebuildStart(void);
-void storeRebuildComplete(StoreRebuildData *);
+void storeRebuildComplete(StoreRebuildData *, SwapDir &);
 void storeRebuildProgress(int sd_index, int total, int sofar);
 
 /// loads entry from disk; fills supplied memory buffer on success
 bool storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, StoreRebuildData &counts);
 /// parses entry buffer and validates entry metadata; fills e on success
 bool storeRebuildParseEntry(MemBuf &buf, StoreEntry &e, cache_key *key, StoreRebuildData &counts, uint64_t expectedSize);
+
+/// approximate upper limit for blocking the main loop iteration while rebuilding the store index
+unsigned int rebuildMaxBlockMsec();
 
 #endif /* SQUID_STORE_REBUILD_H_ */
 

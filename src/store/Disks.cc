@@ -284,11 +284,6 @@ Store::Disks::init()
     store_table = hash_create(storeKeyHashCmp,
                               store_hash_buckets, storeKeyHashHash);
 
-    // Increment _before_ any possible storeRebuildComplete() calls so that
-    // storeRebuildComplete() can reliably detect when all disks are done. The
-    // level is decremented in each corresponding storeRebuildComplete() call.
-    StoreController::store_dirs_rebuilding += Config.cacheSwap.n_configured;
-
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
         /* this starts a search of the store dirs, loading their
          * index. under the new Store api this should be
@@ -306,8 +301,6 @@ Store::Disks::init()
          */
         if (Dir(i).active())
             store(i)->init();
-        else
-            storeRebuildComplete(nullptr);
     }
 
     if (strcasecmp(Config.store_dir_select_algorithm, "round-robin") == 0) {
@@ -380,9 +373,6 @@ Store::Disks::maxObjectSize() const
 void
 Store::Disks::configure()
 {
-    if (!Config.cacheSwap.swapDirs)
-        Controller::store_dirs_rebuilding = 0; // nothing to index
-
     largestMinimumObjectSize = -1;
     largestMaximumObjectSize = -1;
     secondLargestMaximumObjectSize = -1;
@@ -670,6 +660,41 @@ Store::Disks::hasReadableEntry(const StoreEntry &e) const
     return false;
 }
 
+bool
+Store::Disks::AllIndexed()
+{
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        const auto &dir = Dir(i);
+        if (!dir.active())
+            continue;
+        if (!dir.indexed)
+            return false;
+    }
+    return true;
+}
+
+void
+Store::Disks::DiskerReadyNotification(const int kidId, const bool indexed)
+{
+    assert(UsingSmp());
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        auto &dir = Dir(i);
+        if (dir.active() && IamWorkerProcess() && dir.disker == kidId) {
+            assert(dir.smpAware());
+            dir.diskerReady = true;
+            if (!indexed)
+                continue;
+            if (dir.diskerIndexed) {
+                debugs(20, 4, "Ignoring repeated 'indexing completed' notification from disker" << kidId);
+            } else {
+                assert(!dir.indexed);
+                dir.diskerIndexed = true;
+                storeRebuildComplete(nullptr, dir);
+            }
+        }
+    }
+}
+
 void
 storeDirOpenSwapLogs()
 {
@@ -704,10 +729,10 @@ storeDirWriteCleanLogs(int reopen)
     int dirn;
     int notdone = 1;
 
-    // Check for store_dirs_rebuilding because fatal() often calls us in early
+    // Check StoreController::indexReady() because fatal() often calls us in early
     // initialization phases, before store log is initialized and ready. Also,
     // some stores do not support log cleanup during Store rebuilding.
-    if (StoreController::store_dirs_rebuilding) {
+    if (!Store::Root().indexReady()) {
         debugs(20, Important(37), "Not currently OK to rewrite swap log.");
         debugs(20, Important(38), "storeDirWriteCleanLogs: Operation aborted.");
         return 0;

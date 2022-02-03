@@ -99,7 +99,7 @@ Fs::Ufs::RebuildState::RebuildStep(void *data)
     if (!rb->isDone() || reconfiguring)
         eventAdd("storeRebuild", RebuildStep, rb, 0.01, 1);
     else {
-        storeRebuildComplete(&rb->counts);
+        storeRebuildComplete(&rb->counts, *(rb->sd));
         delete rb;
     }
 }
@@ -108,10 +108,7 @@ Fs::Ufs::RebuildState::RebuildStep(void *data)
 void
 Fs::Ufs::RebuildState::rebuildStep()
 {
-    // Balance our desire to maximize the number of entries processed at once
-    // (and, hence, minimize overheads and total rebuild time) with a
-    // requirement to also process Coordinator events, disk I/Os, etc.
-    const int maxSpentMsec = 50; // keep small: most RAM I/Os are under 1ms
+    const auto maxSpentMsec = rebuildMaxBlockMsec();
     const timeval loopStart = current_time;
 
     const int totalEntries = LogParser ? LogParser->SwapLogEntries() : -1;
@@ -125,9 +122,6 @@ Fs::Ufs::RebuildState::rebuildStep()
         // TODO: teach storeRebuildProgress to handle totalEntries <= 0
         if (totalEntries > 0 && (n_read % 4000 == 0))
             storeRebuildProgress(sd->index, totalEntries, n_read);
-
-        if (opt_foreground_rebuild)
-            continue; // skip "few entries at a time" check below
 
         getCurrentTime();
         const double elapsedMsec = tvSubMsec(loopStart, current_time);

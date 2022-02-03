@@ -22,6 +22,9 @@
 #include "fs/rock/RockSwapDir.h"
 #include "globals.h"
 #include "ipc/mem/Pages.h"
+#include "ipc/Port.h"
+#include "ipc/StrandCoord.h"
+#include "ipc/UdsOp.h"
 #include "MemObject.h"
 #include "Parsing.h"
 #include "SquidConfig.h"
@@ -817,8 +820,29 @@ Rock::SwapDir::ioCompletedNotification()
            std::setw(7) << map->entryLimit() << " entries, and " <<
            std::setw(7) << map->sliceLimit() << " slots");
 
-    if (!Rebuild::Start(*this))
-        storeRebuildComplete(nullptr);
+    (void)Rebuild::Start(*this);
+}
+
+void
+Rock::SwapDir::startAcceptingRequests()
+{
+    debugs(47, 7, filePath);
+    if (!UsingSmp())
+        return; // no special work
+    assert(IamDiskProcess());
+    Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRegisterStrand, filePath);
+    // else the kid is not responsible for accepting worker requests
+}
+
+void
+Rock::SwapDir::noteRebuildCompleted(StoreRebuildData &counts, const bool startAccepting)
+{
+    storeRebuildComplete(&counts, *this);
+    if (UsingSmp() && IamDiskProcess())
+        Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRebuildFinished, filePath);
+    if (startAccepting)
+        startAcceptingRequests();
+    // else should be accepting already
 }
 
 void

@@ -12,6 +12,7 @@
 #define SQUID_IPC_COORDINATOR_H
 
 #include "ipc/Messages.h"
+#include "ipc/QuestionerId.h"
 #include "ipc/Port.h"
 #include "ipc/SharedListen.h"
 #include "ipc/StrandCoords.h"
@@ -22,6 +23,7 @@
 #endif
 #include <list>
 #include <map>
+#include <vector>
 
 namespace Ipc
 {
@@ -32,22 +34,24 @@ class Coordinator: public Port
     CBDATA_CLASS(Coordinator);
 
 public:
+    typedef std::pair<QuestionerId, StrandCoord> QuestionerCoord;
+    typedef std::vector<QuestionerCoord> QuestionerCoords;
+
     static Coordinator* Instance();
 
 public:
     Coordinator();
 
-    void broadcastSignal(int sig) const; ///< send sig to registered strands
-
-    const StrandCoords &strands() const; ///< currently registered strands
-
 protected:
     virtual void start(); // Port (AsyncJob) API
     virtual void receive(const TypedMsgHdr& message); // Port API
 
-    StrandCoord* findStrand(int kidId); ///< registered strand or NULL
-    void registerStrand(const StrandCoord &); ///< adds or updates existing
+    void registerStrand(const StrandMessage &); ///< adds or updates existing
     void handleRegistrationRequest(const StrandMessage &); ///< register,ACK
+    /// notifies waiting searches of a not yet ready strand
+    void handleForegroundRebuildMessage(const StrandMessage &);
+    /// notifies all strands of an indexed strand
+    void handleRebuildFinishedMessage(const StrandMessage &);
 
     /// answer the waiting search request
     void notifySearcher(const StrandSearchRequest &request, const StrandCoord&);
@@ -66,13 +70,15 @@ protected:
     Comm::ConnectionPointer openListenSocket(const SharedListenRequest& request, int &errNo);
 
 private:
-    StrandCoords strands_; ///< registered processes and threads
+    QuestionerCoords strands_; ///< registered processes and threads (with their questioner ids)
 
     typedef std::list<StrandSearchRequest> Searchers; ///< search requests
     Searchers searchers; ///< yet unanswered search requests in arrival order
 
     typedef std::map<OpenListenerParams, Comm::ConnectionPointer> Listeners; ///< params:connection map
     Listeners listeners; ///< cached comm_open_listener() results
+
+    StrandCoords rebuildFinishedStrands_; ///< disker processes, completed their indexing
 
     static Coordinator* TheInstance; ///< the only class instance in existence
 

@@ -101,6 +101,8 @@ private:
 
     bool sameEntry(const sfileno fileno, const DbCellHeader &header) const;
 
+    void extendWait();
+
     SBuf progressDescription() const;
 
     SwapDir *sd;

@@ -1590,7 +1590,7 @@ wccp2HereIam(void *)
     }
 
     /* Wait if store dirs are rebuilding */
-    if (StoreController::store_dirs_rebuilding && Config.Wccp2.rebuildwait) {
+    if (!Store::Root().indexReady() && Config.Wccp2.rebuildwait) {
         eventAdd("wccp2HereIam", wccp2HereIam, NULL, 1.0, 1);
         return;
     }

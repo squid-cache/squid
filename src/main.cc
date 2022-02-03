@@ -170,6 +170,7 @@ static void mainHandleCommandLineOption(const int optId, const char *optValue);
 static void sendSignal(void);
 static void serverConnectionsOpen(void);
 static void serverConnectionsClose(void);
+static void startWorkerServices();
 static void watch_child(const CommandLine &);
 static void setEffectiveUser(void);
 static void SquidShutdown(void);
@@ -182,6 +183,15 @@ static const char *squid_start_script = "squid_start";
 #if TEST_ACCESS
 #include "test_access.c"
 #endif
+
+class OpenListeningPortsRr: public RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    virtual void useFullyIndexedStore() override {
+        serverConnectionsOpen();
+    }
+};
 
 /** temporary thunk across to the unrefactored store interface */
 
@@ -795,6 +805,8 @@ sig_child(int sig)
 static void
 serverConnectionsOpen(void)
 {
+    assert(!Store::Root().waitingForIndex());
+
     if (IamPrimaryProcess()) {
 #if USE_WCCP
         wccpConnectionOpen();
@@ -815,19 +827,30 @@ serverConnectionsOpen(void)
 #if SQUID_SNMP
         snmpOpenPorts();
 #endif
-
-        icmpEngine.Open();
-        netdbInit();
-        asnInit();
-        ACL::Initialize();
-        peerSelectInit();
-
-        carpInit();
-#if USE_AUTH
-        peerUserHashInit();
-#endif
-        peerSourceHashInit();
     }
+
+    // TODO: Refactor:
+    // * Diskers do not need cache_peer services at all.
+    // * Check what neighbors_init() parts Coordinator needs.
+    neighbors_init();
+}
+
+/// startServices() part for services that are only provided by workers
+static void
+startWorkerServices()
+{
+    assert(IamWorkerProcess());
+
+    icmpEngine.Open();
+    netdbInit();
+    asnInit();
+    ACL::Initialize();
+    peerSelectInit();
+    carpInit();
+#if USE_AUTH
+    peerUserHashInit();
+#endif
+    peerSourceHashInit();
 }
 
 static void
@@ -895,6 +918,32 @@ mainReconfigureStart(void)
 
     eventAdd("mainReconfigureFinish", &mainReconfigureFinish, NULL, 0, 1,
              false);
+}
+
+// TODO: move here the rest of the common startup/reconfiguration routines
+/// configures and starts services common for both startup and reconfiguration
+static void
+startServices()
+{
+    if (IamPrimaryProcess()) {
+#if USE_WCCP
+        wccpInit();
+#endif
+#if USE_WCCPv2
+        wccp2Init();
+#endif
+    }
+
+    if (IamWorkerProcess())
+        startWorkerServices();
+
+    if (Store::Root().waitingForIndex()) {
+        debugs(1, DBG_IMPORTANT, "Waiting for Store indexing completion before opening listening sockets "
+               "and/or contacting cache_peers");
+        RunnerRegistrationEntry(OpenListeningPortsRr);
+    } else {
+        serverConnectionsOpen();
+    }
 }
 
 static void
@@ -982,20 +1031,7 @@ mainReconfigureFinish(void *)
 #endif
     externalAclInit();
 
-    if (IamPrimaryProcess()) {
-#if USE_WCCP
-
-        wccpInit();
-#endif
-#if USE_WCCPv2
-
-        wccp2Init();
-#endif
-    }
-
-    serverConnectionsOpen();
-
-    neighbors_init();
+    startServices();
 
     storeDirOpenSwapLogs();
 
@@ -1242,23 +1278,7 @@ mainInitialize(void)
     // PconnModule::GetInstance()->registerWithCacheManager();
     // moved to PconnModule::PconnModule()
 
-    if (IamPrimaryProcess()) {
-#if USE_WCCP
-        wccpInit();
-
-#endif
-#if USE_WCCPv2
-
-        wccp2Init();
-
-#endif
-    }
-
-    serverConnectionsOpen();
-
-    neighbors_init();
-
-    // neighborsRegisterWithCacheManager(); //moved to neighbors_init()
+    startServices();
 
     if (Config.chroot_dir)
         no_suid();

@@ -30,7 +30,7 @@ class Inquirer: public AsyncJob
     CBDATA_CLASS(Inquirer);
 
 public:
-    Inquirer(Request::Pointer aRequest, const Ipc::StrandCoords& coords, double aTimeout);
+    Inquirer(Request::Pointer aRequest, Ipc::StrandCoords&& coords, double aTimeout);
     virtual ~Inquirer();
 
     /// finds and calls the right Inquirer upon strand's response

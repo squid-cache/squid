@@ -30,11 +30,11 @@ LesserStrandByKidId(const Ipc::StrandCoord &c1, const Ipc::StrandCoord &c2)
     return c1.kidId < c2.kidId;
 }
 
-Ipc::Inquirer::Inquirer(Request::Pointer aRequest, const StrandCoords& coords,
+Ipc::Inquirer::Inquirer(Request::Pointer aRequest, StrandCoords&& coords,
                         double aTimeout):
     AsyncJob("Ipc::Inquirer"),
     codeContext(CodeContext::Current()),
-    request(aRequest), strands(coords), pos(strands.begin()), timeout(aTimeout)
+    request(aRequest), strands(std::move(coords)), pos(strands.begin()), timeout(aTimeout)
 {
     debugs(54, 5, HERE);
 

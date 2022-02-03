@@ -23,15 +23,6 @@
 #include <sys/wait.h>
 #endif
 
-/*
- * store_dirs_rebuilding is initialized to _1_ as a hack so that
- * storeDirWriteCleanLogs() doesn't try to do anything unless _all_
- * cache_dirs have been read.  For example, without this hack, Squid
- * will try to write clean log files if -kparse fails (because it
- * calls fatal()).
- */
-int Store::Controller::store_dirs_rebuilding = 1;
-
 Store::Controller::Controller() :
     swapDir(new Disks),
     sharedMemStore(nullptr),
@@ -916,6 +907,12 @@ bool
 Store::Controller::SmpAware()
 {
     return MemStore::Enabled() || Disks::SmpAware();
+}
+
+bool
+Store::Controller::indexReady()
+{
+    return Disks::AllIndexed() && validated_;
 }
 
 void

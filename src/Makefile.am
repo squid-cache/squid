@@ -1970,7 +1970,6 @@ tests_test_http_range_SOURCES = \
 	tests/stub_libeui.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
-	tests/stub_libstore.cc \
 	tests/stub_main_cc.cc \
 	mem_node.cc \
 	mime.cc \
@@ -2364,7 +2363,6 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_libeui.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
-	tests/stub_libstore.cc \
 	tests/stub_main_cc.cc \
 	mem_node.cc \
 	mime.cc \
@@ -2670,7 +2668,6 @@ tests_testCacheManager_SOURCES = \
 	tests/stub_libdiskio.cc \
 	tests/stub_liberror.cc \
 	tests/stub_libsecurity.cc \
-	tests/stub_libstore.cc \
 	tests/stub_main_cc.cc \
 	mem_node.cc \
 	mime.cc \

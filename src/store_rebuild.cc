@@ -9,38 +9,44 @@
 /* DEBUG: section 20    Store Rebuild Routines */
 
 #include "squid.h"
+#include "base/RunnersRegistry.h"
 #include "DebugMessages.h"
 #include "event.h"
 #include "globals.h"
+#include "ipc/StrandCoord.h"
 #include "md5.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
-#include "store/Disk.h"
-#include "store_digest.h"
+#include "store/Disks.h"
 #include "store_key_md5.h"
 #include "store_rebuild.h"
 #include "StoreSearch.h"
+#include "tools.h"
 // for tvSubDsec() which should be in SquidTime.h
 #include "util.h"
 
 #include <cerrno>
+#include <vector>
 
 static StoreRebuildData counts;
 
 static void storeCleanup(void *);
+static void StoreRebuildFinalize();
 
-// TODO: Either convert to Progress or replace with StoreRebuildData.
 // TODO: Handle unknown totals (UFS cache_dir that lost swap.state) correctly.
-typedef struct {
+class RebuildProgressCounters
+{
+public:
     /* total number of "swap.state" entries that will be read */
-    int total;
+    int total = 0;
     /* number of entries read so far */
-    int scanned;
-} store_rebuild_progress;
+    int scanned = 0;
+};
 
-static store_rebuild_progress *RebuildProgress = NULL;
+typedef std::vector<RebuildProgressCounters> RebuildProgressStats;
+static RebuildProgressStats *RebuildProgress = nullptr;
 
 void
 StoreRebuildData::updateStartTime(const timeval &dirStartTime)
@@ -51,13 +57,19 @@ StoreRebuildData::updateStartTime(const timeval &dirStartTime)
 static void
 storeCleanup(void *)
 {
+    Store::Root().validate();
+}
+
+void
+Store::Controller::validate()
+{
     static int store_errors = 0;
     static StoreSearchPointer currentSearch;
     static int validated = 0;
     static int seen = 0;
 
     if (currentSearch == NULL || currentSearch->isDone())
-        currentSearch = Store::Root().search();
+        currentSearch = search();
 
     size_t statCount = 500;
 
@@ -99,9 +111,7 @@ storeCleanup(void *)
         debugs(20, 2, "Seen: " << seen << " entries");
         debugs(20, Important(43), "Completed Validation Procedure" <<
                Debug::Extra << "Validated " << validated << " Entries" <<
-               Debug::Extra << "store_swap_size = " << (Store::Root().currentSize()/1024.0) << " KB");
-        --StoreController::store_dirs_rebuilding;
-        assert(0 == StoreController::store_dirs_rebuilding);
+               Debug::Extra << "store_swap_size = " << (currentSize()/1024.0) << " KB");
 
         if (opt_store_doublecheck && store_errors) {
             fatalf("Quitting after finding %d cache index inconsistencies. " \
@@ -110,19 +120,20 @@ storeCleanup(void *)
                    "cache index (at your own risk).\n", store_errors);
         }
 
-        if (store_digest)
-            storeDigestNoteStoreReady();
-
         currentSearch = NULL;
+        markValidated();
+        RunRegisteredHere(RegisteredRunner::useFullyIndexedStore);
     } else
         eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
 }
 
+// TODO: Convert to Store::Disk::noteRebuildCompleted(). Check other Disk-specific functions here.
 /* meta data recreated from disk image in swap directory */
 void
-
-storeRebuildComplete(StoreRebuildData *dc)
+storeRebuildComplete(StoreRebuildData *dc, SwapDir &dir)
 {
+    dir.indexed = true;
+
     if (dc) {
         counts.objcount += dc->objcount;
         counts.expcount += dc->expcount;
@@ -139,18 +150,13 @@ storeRebuildComplete(StoreRebuildData *dc)
     }
     // else the caller was not responsible for indexing its cache_dir
 
-    assert(StoreController::store_dirs_rebuilding > 1);
-    --StoreController::store_dirs_rebuilding;
+    if (Store::Disks::AllIndexed())
+        StoreRebuildFinalize();
+}
 
-    /*
-     * When store_dirs_rebuilding == 1, it means we are done reading
-     * or scanning all cache_dirs.  Now report the stats and start
-     * the validation (storeCleanup()) thread.
-     */
-
-    if (StoreController::store_dirs_rebuilding > 1)
-        return;
-
+static void
+StoreRebuildPrint()
+{
     const auto dt = tvSubDsec(counts.startTime, current_time);
 
     debugs(20, Important(46), "Finished rebuilding storage from disk." <<
@@ -164,13 +170,27 @@ storeRebuildComplete(StoreRebuildData *dc)
            Debug::Extra << std::setw(7) << counts.clashcount << " Swapfile clashes avoided" <<
            Debug::Extra << "Took " << std::setprecision(2) << dt << " seconds (" <<
            ((double) counts.objcount / (dt > 0.0 ? dt : 1.0)) << " objects/sec).");
+}
+
+static void
+StoreRebuildFinalize()
+{
+    assert(Store::Disks::AllIndexed());
+
+    /*
+     * We are done reading or scanning all cache_dirs. Now report the stats and start
+     * the validation (storeCleanup()) thread.
+     */
+
+    // avoid printing misleading zero counters in kids that do not index cache_dirs
+    if (counts.scancount)
+        StoreRebuildPrint();
+
+    delete RebuildProgress;
+    RebuildProgress = nullptr;
+
     debugs(20, Important(56), "Beginning Validation Procedure");
-
-    eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
-
-    xfree(RebuildProgress);
-
-    RebuildProgress = NULL;
+    eventAdd("storeCleanup", storeCleanup, nullptr, 0.0, 1);
 }
 
 /*
@@ -182,19 +202,8 @@ void
 storeRebuildStart(void)
 {
     counts = StoreRebuildData(); // reset counters
-    /*
-     * Note: store_dirs_rebuilding is initialized to 1.
-     *
-     * When we parse the configuration and construct each swap dir,
-     * the construction of that raises the rebuild count.
-     *
-     * This prevents us from trying to write clean logs until we
-     * finished rebuilding - including after a reconfiguration that opens an
-     * existing swapdir.  The corresponding decrement * occurs in
-     * storeCleanup(), when it is finished.
-     */
-    RebuildProgress = (store_rebuild_progress *)xcalloc(Config.cacheSwap.n_configured,
-                      sizeof(store_rebuild_progress));
+    if (Store::Disks::AllIndexed())
+        StoreRebuildFinalize();
 }
 
 /*
@@ -215,19 +224,19 @@ storeRebuildProgress(int sd_index, int total, int sofar)
     if (sd_index >= Config.cacheSwap.n_configured)
         return;
 
-    if (NULL == RebuildProgress)
-        return;
+    if (!RebuildProgress)
+        RebuildProgress = new RebuildProgressStats(Config.cacheSwap.n_configured);
 
-    RebuildProgress[sd_index].total = total;
+    RebuildProgress->at(sd_index).total = total;
 
-    RebuildProgress[sd_index].scanned = sofar;
+    RebuildProgress->at(sd_index).scanned = sofar;
 
     if (squid_curtime - last_report < 15)
         return;
 
     for (sd_index = 0; sd_index < Config.cacheSwap.n_configured; ++sd_index) {
-        n += (double) RebuildProgress[sd_index].scanned;
-        d += (double) RebuildProgress[sd_index].total;
+        n += static_cast<double>(RebuildProgress->at(sd_index).scanned);
+        d += static_cast<double>(RebuildProgress->at(sd_index).total);
     }
 
     debugs(20, Important(57), "Indexing cache entries: " << Progress(n, d));
@@ -382,5 +391,20 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
     }
 
     return true;
+}
+
+unsigned int
+rebuildMaxBlockMsec()
+{
+    // Balance our desire to maximize the number of entries processed at once
+    // (and, hence, minimize overheads and total rebuild time) with a
+    // requirement to also process Coordinator events, network I/Os, etc.
+
+    // keep small: most RAM I/Os are under 1ms
+    static const unsigned int backgroundMsec = 50;
+    // we do not need to react to signals immediately, but this still
+    // needs to be small enough to prevent timeouts in waiting workers
+    static const unsigned int foregroundMsec = 1000;
+    return opt_foreground_rebuild ? foregroundMsec : backgroundMsec;
 }
 

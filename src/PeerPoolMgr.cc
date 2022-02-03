@@ -25,6 +25,7 @@
 #include "security/BlindPeerConnector.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
+#include "store/Controller.h"
 
 CBDATA_CLASS_INIT(PeerPoolMgr);
 
@@ -251,6 +252,12 @@ public:
     /* RegisteredRunner API */
     virtual void useConfig() { syncConfig(); }
     virtual void syncConfig();
+    virtual void useFullyIndexedStore();
+
+private:
+    void configure();
+    /// whether configure() is waiting for the Store index to be built
+    bool waitingForStoreIndex = false;
 };
 
 RunnerRegistrationEntry(PeerPoolMgrsRr);
@@ -258,6 +265,35 @@ RunnerRegistrationEntry(PeerPoolMgrsRr);
 void
 PeerPoolMgrsRr::syncConfig()
 {
+    if (waitingForStoreIndex)
+        return; // continue waiting for useFullyIndexedStore()
+
+    if (Store::Root().waitingForIndex()) {
+        // Delay opening outgoing connections with possibly local addresses:
+        // peers may misinterpret this as indication that Squid started
+        // listening on those addresses.
+        waitingForStoreIndex = true;
+        return; // wait for useFullyIndexedStore()
+    }
+    configure();
+}
+
+void
+PeerPoolMgrsRr::useFullyIndexedStore()
+{
+    if (waitingForStoreIndex) {
+        waitingForStoreIndex = false;
+        configure();
+    }
+    // else configure() ran inside useConfig() already
+}
+
+void
+PeerPoolMgrsRr::configure()
+{
+    assert(!waitingForStoreIndex);
+    assert(!Store::Root().waitingForIndex());
+
     for (CachePeer *p = Config.peers; p; p = p->next) {
         // On reconfigure, Squid deletes the old config (and old peers in it),
         // so should always be dealing with a brand new configuration.

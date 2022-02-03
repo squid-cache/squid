@@ -22,15 +22,13 @@ class StrandCoord
 {
 public:
     StrandCoord(); ///< unknown location
-    StrandCoord(int akidId, pid_t aPid);
+    explicit StrandCoord(int akidId);
 
     void pack(TypedMsgHdr &hdrMsg) const; ///< prepare for sendmsg()
     void unpack(const TypedMsgHdr &hdrMsg); ///< from recvmsg()
 
 public:
     int kidId; ///< internal Squid process number
-    pid_t pid; ///< OS process or thread identifier
-
     String tag; ///< optional unique well-known key (e.g., cache_dir path)
 };
 
@@ -54,6 +52,23 @@ public:
     /// For IPC requests/questions: The sender of this request.
     /// For IPC responses/answers: The sender of the corresponding request.
     QuestionerId qid;
+};
+
+/// mtStrandReady IPC message
+class StrandReady : public StrandMessage
+{
+public:
+    StrandReady(const StrandCoord &aCoord, QuestionerId aQid, bool anIndexed):
+        StrandMessage(aCoord, aQid),
+        indexed(anIndexed)
+    {}
+
+    StrandReady(const TypedMsgHdr &hdrMsg);
+
+    void pack(TypedMsgHdr &) const;
+
+public:
+    bool indexed; ///< whether the found strand is 'indexed'
 };
 
 } // namespace Ipc;

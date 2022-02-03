@@ -8,12 +8,6 @@
 
 /* DEBUG: section 71    Store Digest Manager */
 
-/*
- * TODO: We probably do not track all the cases when
- *       storeDigestNoteStoreReady() must be called; this may prevent
- *       storeDigestRebuild/write schedule to be activated
- */
-
 #include "squid.h"
 #include "Debug.h"
 #include "event.h"
@@ -22,6 +16,7 @@
 #include "store_digest.h"
 
 #if USE_CACHE_DIGESTS
+#include "base/RunnersRegistry.h"
 #include "CacheDigest.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -80,6 +75,20 @@ static void storeDigestRewriteFinish(StoreEntry * e);
 static EVH storeDigestSwapOutStep;
 static void storeDigestCBlockSwapOut(StoreEntry * e);
 static void storeDigestAdd(const StoreEntry *);
+
+class StoreDigestRr: public RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    virtual void useFullyIndexedStore() override {
+        if (store_digest && Config.onoff.digest_generation) {
+            storeDigestRebuildStart(nullptr);
+            storeDigestRewriteStart(nullptr);
+        }
+    }
+};
+
+RunnerRegistrationEntry(StoreDigestRr);
 
 /// calculates digest capacity
 static uint64_t
@@ -145,20 +154,6 @@ storeDigestInit(void)
 #else
     store_digest = NULL;
     debugs(71, 3, "Local cache digest is 'off'");
-#endif
-}
-
-/* called when store_rebuild completes */
-void
-storeDigestNoteStoreReady(void)
-{
-#if USE_CACHE_DIGESTS
-
-    if (Config.onoff.digest_generation) {
-        storeDigestRebuildStart(NULL);
-        storeDigestRewriteStart(NULL);
-    }
-
 #endif
 }
 

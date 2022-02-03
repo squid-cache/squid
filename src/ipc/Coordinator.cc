@@ -26,10 +26,20 @@
 #include "snmp/Response.h"
 #endif
 
+#include <algorithm>
 #include <cerrno>
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Coordinator);
 Ipc::Coordinator* Ipc::Coordinator::TheInstance = NULL;
+
+static Ipc::StrandCoords
+ToStrandCoords(const Ipc::Coordinator::QuestionerCoords &questionerCoords)
+{
+    Ipc::StrandCoords coords;
+    for (const auto p: questionerCoords)
+        coords.push_back(p.second);
+    return coords;
+}
 
 Ipc::Coordinator::Coordinator():
     Port(Ipc::Port::CoordinatorAddr())
@@ -41,27 +51,20 @@ void Ipc::Coordinator::start()
     Port::start();
 }
 
-Ipc::StrandCoord* Ipc::Coordinator::findStrand(int kidId)
+void Ipc::Coordinator::registerStrand(const StrandMessage& msg)
 {
-    typedef StrandCoords::iterator SI;
-    for (SI iter = strands_.begin(); iter != strands_.end(); ++iter) {
-        if (iter->kidId == kidId)
-            return &(*iter);
-    }
-    return NULL;
-}
-
-void Ipc::Coordinator::registerStrand(const StrandCoord& strand)
-{
+    const auto &strand = msg.strand;
     debugs(54, 3, HERE << "registering kid" << strand.kidId <<
            ' ' << strand.tag);
-    if (StrandCoord* found = findStrand(strand.kidId)) {
-        const String oldTag = found->tag;
-        *found = strand;
+    auto registered = std::find_if(strands_.begin(), strands_.end(),
+    [&strand](const QuestionerCoord &coord) { return coord.second.kidId == strand.kidId; });
+    if (registered != strands_.end()) {
+        const auto oldTag = registered->second.tag;
+        registered->second = strand;
         if (oldTag.size() && !strand.tag.size())
-            found->tag = oldTag; // keep more detailed info (XXX?)
+            registered->second.tag = oldTag; // keep more detailed info (XXX?)
     } else {
-        strands_.push_back(strand);
+        strands_.emplace_back(msg.qid, strand);
     }
 
     // notify searchers waiting for this new strand, if any
@@ -82,6 +85,16 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
     case mtRegisterStrand:
         debugs(54, 6, HERE << "Registration request");
         handleRegistrationRequest(StrandMessage(message));
+        break;
+
+    case mtForegroundRebuild:
+        debugs(54, 6, "Foreground rebuild message");
+        handleForegroundRebuildMessage(StrandMessage(message));
+        break;
+
+    case mtRebuildFinished:
+        debugs(54, 6, "Rebuild finished message");
+        handleRebuildFinishedMessage(StrandMessage(message));
         break;
 
     case mtFindStrand: {
@@ -135,12 +148,58 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
 
 void Ipc::Coordinator::handleRegistrationRequest(const StrandMessage& msg)
 {
-    registerStrand(msg.strand);
+    registerStrand(msg);
 
     // send back an acknowledgement; TODO: remove as not needed?
     TypedMsgHdr message;
     msg.pack(mtStrandRegistered, message);
     SendMessage(MakeAddr(strandAddrLabel, msg.strand.kidId), message);
+}
+
+void
+Ipc::Coordinator::handleForegroundRebuildMessage(const StrandMessage& msg)
+{
+    // notify any searchers waiting for this strand
+    for (const auto &searchRequest: searchers) {
+        if (searchRequest.tag != msg.strand.tag)
+            continue;
+
+        StrandMessage response(msg.strand, searchRequest.qid);
+        TypedMsgHdr message;
+        response.pack(mtStrandBusy, message);
+        SendMessage(MakeAddr(strandAddrLabel, searchRequest.requestorId), message);
+    }
+}
+
+void
+Ipc::Coordinator::handleRebuildFinishedMessage(const StrandMessage& msg)
+{
+    const auto alreadyFinished = std::find_if(rebuildFinishedStrands_.begin(), rebuildFinishedStrands_.end(),
+    [&msg](const StrandCoord &coord) { return msg.strand.kidId == coord.kidId; });
+    if (alreadyFinished != rebuildFinishedStrands_.end()) {
+        // A message from a possibly restarted disker.
+        // Do not notify other strands the second time, only refresh the coord.
+        *alreadyFinished = msg.strand;
+        return;
+    }
+    rebuildFinishedStrands_.push_back(msg.strand);
+
+    const auto alreadyTagged = std::find_if(strands_.begin(), strands_.end(),
+    [&msg](const QuestionerCoord &coord) { return msg.strand.tag == coord.second.tag; });
+
+    if (alreadyTagged == strands_.end()) {
+        debugs(54, 3, "waiting for kid" << msg.strand.kidId << " tag to broadcast that it is indexed");
+        return;
+    }
+
+    // notify all existing strands, new strands will be notified in notifySearcher()
+    for (const auto &strand: strands_) {
+        debugs(54, 3, "tell kid" << strand.second.kidId << " that kid" << msg.strand.kidId << " is indexed");
+        StrandReady response(msg.strand, strand.first, true);
+        TypedMsgHdr message;
+        response.pack(message);
+        SendMessage(MakeAddr(strandAddrLabel, strand.second.kidId), message);
+    }
 }
 
 void
@@ -171,7 +230,7 @@ Ipc::Coordinator::handleCacheMgrRequest(const Mgr::Request& request)
     try {
         Mgr::Action::Pointer action =
             CacheManager::GetInstance()->createRequestedAction(request.params);
-        AsyncJob::Start(new Mgr::Inquirer(action, request, strands_));
+        AsyncJob::Start(new Mgr::Inquirer(action, request, ToStrandCoords(strands_)));
     } catch (const std::exception &ex) {
         debugs(54, DBG_IMPORTANT, "ERROR: Squid BUG: cannot aggregate mgr:" <<
                request.params.actionName << ": " << ex.what());
@@ -199,15 +258,11 @@ void
 Ipc::Coordinator::handleSearchRequest(const Ipc::StrandSearchRequest &request)
 {
     // do we know of a strand with the given search tag?
-    const StrandCoord *strand = NULL;
-    typedef StrandCoords::const_iterator SCCI;
-    for (SCCI i = strands_.begin(); !strand && i != strands_.end(); ++i) {
-        if (i->tag == request.tag)
-            strand = &(*i);
-    }
+    const auto alreadyTagged = std::find_if(strands_.begin(), strands_.end(),
+    [&request](const QuestionerCoord &coord) { return request.tag == coord.second.tag; });
 
-    if (strand) {
-        notifySearcher(request, *strand);
+    if (alreadyTagged != strands_.end()) {
+        notifySearcher(request, alreadyTagged->second);
         return;
     }
 
@@ -220,11 +275,15 @@ void
 Ipc::Coordinator::notifySearcher(const Ipc::StrandSearchRequest &request,
                                  const StrandCoord& strand)
 {
-    debugs(54, 3, HERE << "tell kid" << request.requestorId << " that " <<
-           request.tag << " is kid" << strand.kidId);
-    const StrandMessage response(strand, request.qid);
+    const auto isIndexed = std::find_if(rebuildFinishedStrands_.begin(), rebuildFinishedStrands_.end(),
+    [&strand](const StrandCoord &coord) { return strand.kidId == coord.kidId; }) != rebuildFinishedStrands_.end();
+
+    debugs(54, 3, "tell kid" << request.requestorId << " that " <<
+           request.tag << " is kid" << strand.kidId << " (indexed:" << isIndexed << ")");
+
+    const StrandReady response(strand, request.qid, isIndexed);
     TypedMsgHdr message;
-    response.pack(mtStrandReady, message);
+    response.pack(message);
     SendMessage(MakeAddr(strandAddrLabel, request.requestorId), message);
 }
 
@@ -239,7 +298,7 @@ Ipc::Coordinator::handleSnmpRequest(const Snmp::Request& request)
     response.pack(message);
     SendMessage(MakeAddr(strandAddrLabel, request.requestorId), message);
 
-    AsyncJob::Start(new Snmp::Inquirer(request, strands_));
+    AsyncJob::Start(new Snmp::Inquirer(request, ToStrandCoords(strands_)));
 }
 
 void
@@ -278,16 +337,6 @@ Ipc::Coordinator::openListenSocket(const SharedListenRequest& request,
     return newConn;
 }
 
-void Ipc::Coordinator::broadcastSignal(int sig) const
-{
-    typedef StrandCoords::const_iterator SCI;
-    for (SCI iter = strands_.begin(); iter != strands_.end(); ++iter) {
-        debugs(54, 5, HERE << "signal " << sig << " to kid" << iter->kidId <<
-               ", PID=" << iter->pid);
-        kill(iter->pid, sig);
-    }
-}
-
 Ipc::Coordinator* Ipc::Coordinator::Instance()
 {
     if (!TheInstance)
@@ -296,11 +345,5 @@ Ipc::Coordinator* Ipc::Coordinator::Instance()
     // we could make Coordinator death fatal, except during exit, but since
     // Strands do not re-register, even process death would be pointless.
     return TheInstance;
-}
-
-const Ipc::StrandCoords&
-Ipc::Coordinator::strands() const
-{
-    return strands_;
 }
 

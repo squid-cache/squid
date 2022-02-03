@@ -135,8 +135,17 @@ public:
     /// whether there are any SMP-aware storages
     static bool SmpAware();
 
-    /// the number of cache_dirs being rebuilt; TODO: move to Disks::Rebuilding
-    static int store_dirs_rebuilding;
+    /// whether we are currently building the Store index in foreground mode
+    bool waitingForIndex() { return opt_foreground_rebuild && !indexReady(); }
+
+    /// the Store index was fully loaded and validated
+    bool indexReady();
+
+    /// start treating the Store index as validated
+    void markValidated() { validated_ = true; }
+
+    /// perform Store validation procedure
+    void validate();
 
 private:
     bool memoryCacheHasSpaceFor(const int pagesRequired) const;
@@ -165,6 +174,8 @@ private:
 
     /// Hack: Relays page shortage from freeMemorySpace() to handleIdleEntry().
     int memoryPagesDebt_ = 0;
+    /// whether the "Validation Procedure" is finished
+    bool validated_ = false;
 };
 
 /// safely access controller singleton
