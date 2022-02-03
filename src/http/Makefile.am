@@ -20,6 +20,8 @@ libhttp_la_SOURCES = \
 	Message.h \
 	MethodType.cc \
 	MethodType.h \
+	Parser.cc \
+	Parser.h \
 	ProtocolVersion.h \
 	RegisteredHeaders.cc \
 	RegisteredHeaders.h \

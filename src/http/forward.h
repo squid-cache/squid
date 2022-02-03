@@ -21,6 +21,9 @@ class ContentLengthInterpreter;
 class Message;
 typedef RefCount<Http::Message> MessagePointer;
 
+class Parser;
+typedef RefCount<Http::Parser> ParserPointer;
+
 class Stream;
 typedef RefCount<Http::Stream> StreamPointer;
 

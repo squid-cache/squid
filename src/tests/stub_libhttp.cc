@@ -49,7 +49,7 @@ int Message::httpMsgParseStep(const char *, int, int) STUB_RETVAL(-1)
 int Message::httpMsgParseError() STUB_RETVAL(0)
 void Message::firstLineBuf(MemBuf&) STUB
 void Message::hdrCacheInit() STUB
-bool Message::parseHeader(Http1::Parser &, Http::ContentLengthInterpreter &) STUB_RETVAL(false)
+bool Message::parseHeader(Http::Parser &, Http::ContentLengthInterpreter &) STUB_RETVAL(false)
 }
 
 #include "http/MethodType.h"

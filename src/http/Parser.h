@@ -6,17 +6,16 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_HTTP_ONE_PARSER_H
-#define _SQUID_SRC_HTTP_ONE_PARSER_H
+#ifndef _SQUID_SRC_HTTP_PARSER_H
+#define _SQUID_SRC_HTTP_PARSER_H
 
 #include "anyp/ProtocolVersion.h"
-#include "http/one/forward.h"
+#include "http/forward.h"
 #include "http/StatusCode.h"
 #include "parser/forward.h"
 #include "sbuf/SBuf.h"
 
 namespace Http {
-namespace One {
 
 // Parser states
 enum ParseState {
@@ -29,10 +28,10 @@ enum ParseState {
     HTTP_PARSE_DONE       ///< parsed a message header, or reached a terminal syntax error
 };
 
-/** HTTP/1.x protocol parser
+/** HTTP protocol parser
  *
  * Works on a raw character I/O buffer and tokenizes the content into
- * the major CRLF delimited segments of an HTTP/1 procotol message:
+ * the major CRLF delimited segments of an HTTP/1 protocol message:
  *
  * \li first-line (request-line / simple-request / status-line)
  * \li mime-header 0*( header-name ':' SP field-value CRLF)
@@ -171,8 +170,7 @@ void ParseBws(Parser::Tokenizer &);
 /// the right debugs() level for logging HTTP violation messages
 int ErrorLevel();
 
-} // namespace One
 } // namespace Http
 
-#endif /*  _SQUID_SRC_HTTP_ONE_PARSER_H */
+#endif /*  _SQUID_SRC_HTTP_PARSER_H */
 

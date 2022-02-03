@@ -16,10 +16,10 @@
 
 const SBuf Http::One::ResponseParser::IcyMagic("ICY ");
 
-Http1::Parser::size_type
+Http::Parser::size_type
 Http::One::ResponseParser::firstLineSize() const
 {
-    Http1::Parser::size_type result = 0;
+    Http::Parser::size_type result = 0;
 
     switch (msgProtocol_.protocol)
     {

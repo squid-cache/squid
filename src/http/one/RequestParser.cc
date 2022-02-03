@@ -13,7 +13,7 @@
 #include "parser/Tokenizer.h"
 #include "SquidConfig.h"
 
-Http1::Parser::size_type
+Http::Parser::size_type
 Http::One::RequestParser::firstLineSize() const
 {
     // RFC 7230 section 2.6
