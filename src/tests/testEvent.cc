@@ -70,8 +70,8 @@ testEvent::testDump()
     const char *expected = "Last event to run: last event\n"
                            "\n"
                            "Operation                \tNext Execution \tWeight\tCallback Valid?\n"
-                           "test event               \t0.000 sec\t    0\t N/A\n"
-                           "test event2              \t0.000 sec\t    0\t N/A\n";
+                           "test event               \t0.000 sec\t    0\t" "yes\n"
+                           "test event2              \t0.000 sec\t    0\t" "yes\n";
     MemBuf expect;
     expect.init();
     expect.append(expected, strlen(expected));
@@ -143,13 +143,5 @@ testEvent::testCheckEvents()
     CPPUNIT_ASSERT_EQUAL(2000, scheduler.checkEvents(0));
     AsyncCallQueue::Instance().fire();
     CPPUNIT_ASSERT_EQUAL(1, event.calls);
-}
-
-/* for convenience we have a singleton scheduler */
-void
-testEvent::testSingleton()
-{
-    EventScheduler *scheduler = dynamic_cast<EventScheduler *>(EventScheduler::GetInstance());
-    CPPUNIT_ASSERT(NULL != scheduler);
 }
 

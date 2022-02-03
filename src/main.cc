@@ -1668,7 +1668,7 @@ SquidMain(int argc, char **argv)
     mainLoop.registerEngine(&signalEngine);
 
     /* TODO: stop requiring the singleton here */
-    mainLoop.registerEngine(EventScheduler::GetInstance());
+    mainLoop.registerEngine(&Events());
 
     StoreRootEngine store_engine;
 

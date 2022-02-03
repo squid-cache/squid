@@ -49,7 +49,6 @@ private:
     void timeout(const CommTimeoutCbParams &);
     void sendAnswer(Comm::Flag errFlag, int xerrno, const char *why);
     static void InProgressConnectRetry(int fd, void *data);
-    static void DelayedConnectRetry(void *data);
     void doConnect();
     void connected();
     void lookupLocalAddress();
@@ -80,9 +79,8 @@ private:
     struct Calls {
         AsyncCall::Pointer earlyAbort_;
         AsyncCall::Pointer timeout_;
-        /// Whether we are idling before retrying to connect; not yet a call
-        /// [that we can cancel], but it will probably become one eventually.
-        bool sleep_;
+        /// Whether we are idling before retrying to connect
+        AsyncCall::Pointer sleep_;
     } calls_;
 };
 

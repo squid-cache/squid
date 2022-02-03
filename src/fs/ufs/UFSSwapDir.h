@@ -9,6 +9,7 @@
 #ifndef SQUID_FS_UFS_UFSSWAPDIR_H
 #define SQUID_FS_UFS_UFSSWAPDIR_H
 
+#include "event.h"
 #include "SquidString.h"
 #include "Store.h"
 #include "store/Disk.h"

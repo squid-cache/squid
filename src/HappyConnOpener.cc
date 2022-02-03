@@ -11,6 +11,7 @@
 #include "base/CodeContext.h"
 #include "CachePeer.h"
 #include "errorpage.h"
+#include "event.h"
 #include "FwdState.h"
 #include "HappyConnOpener.h"
 #include "HttpRequest.h"

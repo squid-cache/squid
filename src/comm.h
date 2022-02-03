@@ -9,6 +9,7 @@
 #ifndef __COMM_H__
 #define __COMM_H__
 
+#include "AsyncEngine.h"
 #include "comm/IoCallback.h"
 #include "CommCalls.h"
 #include "StoreIOBuffer.h"

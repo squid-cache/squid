@@ -11,7 +11,6 @@
 
 #include "base/CodeContext.h"
 #include "base/InstanceId.h"
-#include "event.h"
 #include "RefCount.h"
 
 /**

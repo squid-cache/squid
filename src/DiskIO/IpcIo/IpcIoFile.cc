@@ -16,6 +16,7 @@
 #include "DiskIO/IpcIo/IpcIoFile.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
+#include "event.h"
 #include "fd.h"
 #include "fs_io.h"
 #include "globals.h"
