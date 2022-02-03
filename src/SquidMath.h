@@ -73,24 +73,40 @@ AssertNaturalType()
 }
 
 // TODO: Investigate whether this optimization can be expanded to [signed] types
-// S and T when std::numeric_limits<decltype(S(0)+T(0))>::is_modulo is true.
+// U and T when std::numeric_limits<decltype(U(0)+T(0))>::is_modulo is true.
 /// This IncreaseSumInternal() overload is optimized for speed.
 /// \returns a non-overflowing sum of the two unsigned arguments (or nothing)
 /// \prec both argument types are unsigned
-template <typename S, typename T, EnableIfType<AllUnsigned<S,T>::value, int> = 0>
+template <typename S, typename U, typename T, EnableIfType<AllUnsigned<U,T>::value, int> = 0>
 Optional<S>
-IncreaseSumInternal(const S s, const T t) {
+IncreaseSumInternal(const U u, const T t) {
+    // paranoid: AllUnsigned<U,T> precondition established that already
+    static_assert(std::is_unsigned<U>::value, "AllUnsigned dispatch worked for U");
+    static_assert(std::is_unsigned<T>::value, "AllUnsigned dispatch worked for U");
+
     // TODO: Just call AssertNaturalType() after upgrading to C++14.
     static_assert(AssertNaturalType<S>(), "S is a supported type");
+    static_assert(AssertNaturalType<U>(), "U is a supported type");
     static_assert(AssertNaturalType<T>(), "T is a supported type");
 
-    // For the sum overflow check below to work, we cannot restrict the sum
-    // type which, due to integral promotions, may exceed common_type<S,T>!
-    const auto sum = s + t;
-    static_assert(std::numeric_limits<decltype(sum)>::is_modulo, "we can detect overflows");
+    // we should only be called by IncreaseSum(); it forces integer promotion
+    static_assert(std::is_same<U, decltype(+u)>::value, "u will not be promoted");
+    static_assert(std::is_same<T, decltype(+t)>::value, "t will not be promoted");
+    // and without integer promotions, a sum of unsigned integers is unsigned
+    static_assert(std::is_unsigned<decltype(u+t)>::value, "u+t is unsigned");
+
+    // with integer promotions ruled out, u or t can only undergo integer
+    // conversion to the higher rank type (U or T, we do not know which)
+    using UT = typename std::common_type<U, T>::type;
+    static_assert(std::is_same<UT, U>::value || std::is_same<UT, T>::value, "no unexpected conversions");
+    static_assert(std::is_same<UT, decltype(u+t)>::value, "lossless assignment");
+    const UT sum = u + t;
+
+    static_assert(std::numeric_limits<UT>::is_modulo, "we can detect overflows");
     // 1. modulo math: overflowed sum is smaller than any of its operands
-    // 2. the unknown (see above) "auto" type may hold more than S can hold
-    return (s <= sum && sum <= std::numeric_limits<S>::max()) ?
+    // 2. the sum may overflow S (i.e. the return base type)
+    // We do not need Less() here because we compare promoted unsigned types.
+    return (sum >= u && sum <= std::numeric_limits<S>::max()) ?
            Optional<S>(sum) : Optional<S>();
 }
 
@@ -98,26 +114,35 @@ IncreaseSumInternal(const S s, const T t) {
 /// \returns a non-overflowing sum of the two arguments (or nothing)
 /// \returns nothing if at least one of the arguments is negative
 /// \prec at least one of the argument types is signed
-template <typename S, typename T, EnableIfType<!AllUnsigned<S,T>::value, int> = 0>
+template <typename S, typename U, typename T, EnableIfType<!AllUnsigned<U,T>::value, int> = 0>
 Optional<S> constexpr
-IncreaseSumInternal(const S s, const T t) {
+IncreaseSumInternal(const U u, const T t) {
     static_assert(AssertNaturalType<S>(), "S is a supported type");
+    static_assert(AssertNaturalType<U>(), "U is a supported type");
     static_assert(AssertNaturalType<T>(), "T is a supported type");
+
+    // we should only be called by IncreaseSum() that does integer promotion
+    static_assert(std::is_same<U, decltype(+u)>::value, "u will not be promoted");
+    static_assert(std::is_same<T, decltype(+t)>::value, "t will not be promoted");
+
     return
         // We could support a non-under/overflowing sum of negative numbers, but
         // our callers use negative values specially (e.g., for do-not-use or
         // do-not-limit settings) and are not supposed to do math with them.
-        (s < 0 || t < 0) ? Optional<S>() :
+        (u < 0 || t < 0) ? Optional<S>() :
         // To avoid undefined behavior of signed overflow, we must not compute
-        // the raw s+t sum if it may overflow. When S is not T, s or t undergoes
-        // (safe for non-negatives) integral conversion in these expressions, so
-        // we do not know the resulting s+t type ST and its maximum. We must
+        // the raw u+t sum if it may overflow. When U is not T, u or t undergoes
+        // (safe for non-negatives) integer conversion in these expressions, so
+        // we do not know the resulting u+t type UT and its maximum. We must
         // also detect subsequent casting-to-S overflows.
-        // Overflow condition: (s + t > maxST) or (s + t > maxS).
-        // Since maxS <= maxST, it is sufficient to just check: s + t > maxS,
-        // which is the same as the overflow-safe condition here: maxS - s < t.
-        Less(std::numeric_limits<S>::max() - s, t) ? Optional<S>() :
-        Optional<S>(s + t);
+        // Overflow condition: (u + t > maxUT) or (u + t > maxS).
+        // U is an integral promotion of S, so maxS <= maxU <= maxUT.
+        // Since maxS <= maxUT, it is sufficient to just check: u + t > maxS,
+        // which is the same as the overflow-safe condition here: maxS - u < t.
+        // Finally, (maxS - u) cannot overflow because u is not negative and
+        // cannot underflow because u is a promotion of s: 0 <= u <= maxS.
+        Less(std::numeric_limits<S>::max() - u, t) ? Optional<S>() :
+        Optional<S>(u + t);
 }
 
 /// argument pack expansion termination for IncreaseSum<S, T, Args...>()
