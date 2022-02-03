@@ -32,6 +32,7 @@
 
 #include "squid.h"
 #include "auth/digest/eDirectory/digest_common.h"
+#include "mem/Sensitive.h"
 
 #if _SQUID_WINDOWS_ && !_SQUID_CYGWIN_
 
@@ -399,7 +400,7 @@ static int nmasldap_get_simple_pwd(
     }
 
     if (pwdBuf != NULL) {
-        memset(pwdBuf, 0, bufferLen);
+        Mem::ZeroSensitiveMemory(pwdBuf, bufferLen);
         free(pwdBuf);
     }
 
@@ -482,7 +483,7 @@ static int nmasldap_get_password(
     }
 
     if (pwdBuf != NULL) {
-        memset(pwdBuf, 0, bufferLen);
+        Mem::ZeroSensitiveMemory(pwdBuf, bufferLen);
         free(pwdBuf);
     }
 
