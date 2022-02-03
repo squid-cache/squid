@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -126,11 +126,11 @@ bool
 Auth::Negotiate::Config::configured() const
 {
     if (authenticateProgram && (authenticateChildren.n_max != 0)) {
-        debugs(29, 9, HERE << "returning configured");
+        debugs(29, 9, "returning configured");
         return true;
     }
 
-    debugs(29, 9, HERE << "returning unconfigured");
+    debugs(29, 9, "returning unconfigured");
     return false;
 }
 
@@ -146,7 +146,7 @@ Auth::Negotiate::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request,
 
     /* New request, no user details */
     if (auth_user_request == NULL) {
-        debugs(29, 9, HERE << "Sending type:" << reqType << " header: 'Negotiate'");
+        debugs(29, 9, "Sending type:" << reqType << " header: 'Negotiate'");
         httpHeaderPutStrf(&rep->header, reqType, "Negotiate");
 
         if (!keep_alive) {
@@ -172,11 +172,11 @@ Auth::Negotiate::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request,
              * Need to start over to give the client another chance.
              */
             if (negotiate_request->server_blob) {
-                debugs(29, 9, HERE << "Sending type:" << reqType << " header: 'Negotiate " << negotiate_request->server_blob << "'");
+                debugs(29, 9, "Sending type:" << reqType << " header: 'Negotiate " << negotiate_request->server_blob << "'");
                 httpHeaderPutStrf(&rep->header, reqType, "Negotiate %s", negotiate_request->server_blob);
                 safe_free(negotiate_request->server_blob);
             } else {
-                debugs(29, 9, HERE << "Connection authenticated");
+                debugs(29, 9, "Connection authenticated");
                 httpHeaderPutStrf(&rep->header, reqType, "Negotiate");
             }
             break;
@@ -184,13 +184,13 @@ Auth::Negotiate::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request,
         case Auth::Unchecked:
             /* semantic change: do not drop the connection.
              * 2.5 implementation used to keep it open - Kinkie */
-            debugs(29, 9, HERE << "Sending type:" << reqType << " header: 'Negotiate'");
+            debugs(29, 9, "Sending type:" << reqType << " header: 'Negotiate'");
             httpHeaderPutStrf(&rep->header, reqType, "Negotiate");
             break;
 
         case Auth::Handshake:
             /* we're waiting for a response from the client. Pass it the blob */
-            debugs(29, 9, HERE << "Sending type:" << reqType << " header: 'Negotiate " << negotiate_request->server_blob << "'");
+            debugs(29, 9, "Sending type:" << reqType << " header: 'Negotiate " << negotiate_request->server_blob << "'");
             httpHeaderPutStrf(&rep->header, reqType, "Negotiate %s", negotiate_request->server_blob);
             safe_free(negotiate_request->server_blob);
             break;
@@ -226,7 +226,7 @@ Auth::Negotiate::Config::decode(char const *proxy_auth, const HttpRequest *, con
     auth_user_request->user()->BuildUserKey(proxy_auth, aRequestRealm);
 
     /* all we have to do is identify that it's Negotiate - the helper does the rest */
-    debugs(29, 9, HERE << "decode Negotiate authentication");
+    debugs(29, 9, "decode Negotiate authentication");
     return auth_user_request;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1077,7 +1077,7 @@ clientReplyContext::storeOKTransferDone() const
     assert(http->storeEntry()->objectLen() >= 0);
     assert(http->storeEntry()->objectLen() >= headers_sz);
     if (http->out.offset >= http->storeEntry()->objectLen() - headers_sz) {
-        debugs(88,3,HERE << "storeOKTransferDone " <<
+        debugs(88,3, "storeOKTransferDone " <<
                " out.offset=" << http->out.offset <<
                " objectLen()=" << http->storeEntry()->objectLen() <<
                " headers_sz=" << headers_sz);
@@ -1124,7 +1124,7 @@ clientReplyContext::storeNotOKTransferDone() const
     if (http->out.size < expectedLength)
         return 0;
     else {
-        debugs(88,3,HERE << "storeNotOKTransferDone " <<
+        debugs(88,3, "storeNotOKTransferDone " <<
                " out.size=" << http->out.size <<
                " expectedLength=" << expectedLength);
         return 1;

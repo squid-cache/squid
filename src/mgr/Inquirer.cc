@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -39,7 +39,7 @@ Mgr::Inquirer::Inquirer(Action::Pointer anAction,
     conn = aCause.conn;
     Ipc::ImportFdIntoComm(conn, SOCK_STREAM, IPPROTO_TCP, Ipc::fdnHttpSocket);
 
-    debugs(16, 5, HERE << conn << " action: " << aggrAction);
+    debugs(16, 5, conn << " action: " << aggrAction);
 
     closer = asyncCall(16, 5, "Mgr::Inquirer::noteCommClosed",
                        CommCbMemFunT<Inquirer, CommCloseCbParams>(this, &Inquirer::noteCommClosed));
@@ -68,7 +68,7 @@ Mgr::Inquirer::removeCloseHandler()
 void
 Mgr::Inquirer::start()
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     Ipc::Inquirer::start();
     Must(Comm::IsConnOpen(conn));
     Must(aggrAction != NULL);
@@ -96,7 +96,7 @@ Mgr::Inquirer::start()
 void
 Mgr::Inquirer::noteWroteHeader(const CommIoCbParams& params)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     writer = NULL;
     Must(params.flag == Comm::OK);
     Must(params.conn.getRaw() == conn.getRaw());
@@ -109,7 +109,7 @@ Mgr::Inquirer::noteWroteHeader(const CommIoCbParams& params)
 void
 Mgr::Inquirer::noteCommClosed(const CommCloseCbParams &)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     closer = nullptr;
     if (conn) {
         conn->noteClosure();
@@ -176,9 +176,9 @@ Mgr::Inquirer::applyQueryParams(const Ipc::StrandCoords& aStrands, const QueryPa
         }
     }
 
-    debugs(16, 4, HERE << "strands kid IDs = ");
+    debugs(16, 4, "strands kid IDs = ");
     for (Ipc::StrandCoords::const_iterator iter = sc.begin(); iter != sc.end(); ++iter) {
-        debugs(16, 4, HERE << iter->kidId);
+        debugs(16, 4, iter->kidId);
     }
 
     return sc;

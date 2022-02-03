@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -42,7 +42,7 @@ SetSocketOption(const int fd, const int level, const int optName, const Option &
 static bool
 SetBooleanSocketOption(const int fd, const int level, const int optName, const bool enable)
 {
-    const int optValue = enable ? 1 : 0;
+    const int optValue = enable ? 1 :0;
     return SetSocketOption(fd, level, optName, optValue);
 }
 

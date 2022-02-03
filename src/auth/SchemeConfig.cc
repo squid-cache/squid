@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,7 +33,7 @@ Auth::UserRequest::Pointer
 Auth::SchemeConfig::CreateAuthUser(const char *proxy_auth, AccessLogEntry::Pointer &al)
 {
     assert(proxy_auth != NULL);
-    debugs(29, 9, HERE << "header = '" << proxy_auth << "'");
+    debugs(29, 9, "header = '" << proxy_auth << "'");
 
     Auth::SchemeConfig *config = Find(proxy_auth);
 

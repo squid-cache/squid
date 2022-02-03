@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -52,27 +52,27 @@ Auth::UserRequest::start(HttpRequest *request, AccessLogEntry::Pointer &al, AUTH
 bool
 Auth::UserRequest::valid() const
 {
-    debugs(29, 9, HERE << "Validating Auth::UserRequest '" << this << "'.");
+    debugs(29, 9, "Validating Auth::UserRequest '" << this << "'.");
 
     if (user() == NULL) {
-        debugs(29, 4, HERE << "No associated Auth::User data");
+        debugs(29, 4, "No associated Auth::User data");
         return false;
     }
 
     if (user()->auth_type == Auth::AUTH_UNKNOWN) {
-        debugs(29, 4, HERE << "Auth::User '" << user() << "' uses unknown scheme.");
+        debugs(29, 4, "Auth::User '" << user() << "' uses unknown scheme.");
         return false;
     }
 
     if (user()->auth_type == Auth::AUTH_BROKEN) {
-        debugs(29, 4, HERE << "Auth::User '" << user() << "' is broken for it's scheme.");
+        debugs(29, 4, "Auth::User '" << user() << "' is broken for it's scheme.");
         return false;
     }
 
     /* any other sanity checks that we need in the future */
 
     /* finally return ok */
-    debugs(29, 5, HERE << "Validated. Auth::UserRequest '" << this << "'.");
+    debugs(29, 5, "Validated. Auth::UserRequest '" << this << "'.");
     return true;
 }
 
@@ -94,13 +94,13 @@ Auth::UserRequest::UserRequest():
     message(NULL),
     lastReply(AUTH_ACL_CANNOT_AUTHENTICATE)
 {
-    debugs(29, 5, HERE << "initialised request " << this);
+    debugs(29, 5, "initialised request " << this);
 }
 
 Auth::UserRequest::~UserRequest()
 {
     assert(LockCount()==0);
-    debugs(29, 5, HERE << "freeing request " << this);
+    debugs(29, 5, "freeing request " << this);
 
     if (user() != NULL) {
         /* release our references to the user credentials */
@@ -289,7 +289,7 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
     /* a) can we find other credentials to use? and b) are they logged in already? */
     if (proxy_auth == NULL && !authenticateUserAuthenticated(authTryGetUser(*auth_user_request,conn,request))) {
         /* no header or authentication failed/got corrupted - restart */
-        debugs(29, 4, HERE << "No Proxy-Auth header and no working alternative. Requesting auth header.");
+        debugs(29, 4, "No Proxy-Auth header and no working alternative. Requesting auth header.");
 
         /* something wrong with the AUTH credentials. Force a new attempt */
 
@@ -327,11 +327,11 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
 
     /* we have a proxy auth header and as far as we know this connection has
      * not had bungled connection oriented authentication happen on it. */
-    debugs(29, 9, HERE << "header " << (proxy_auth ? proxy_auth : "-") << ".");
+    debugs(29, 9, "header " << (proxy_auth ? proxy_auth : "-") << ".");
 
     if (*auth_user_request == NULL) {
         if (conn != NULL) {
-            debugs(29, 9, HERE << "This is a new checklist test on:" << conn->clientConnection);
+            debugs(29, 9, "This is a new checklist test on:" << conn->clientConnection);
         }
 
         if (proxy_auth && request->auth_user_request == NULL && conn != NULL && conn->getAuth() != NULL) {
@@ -349,7 +349,7 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
 
         if (request->auth_user_request == NULL && (conn == NULL || conn->getAuth() == NULL)) {
             /* beginning of a new request check */
-            debugs(29, 4, HERE << "No connection authentication type");
+            debugs(29, 4, "No connection authentication type");
 
             *auth_user_request = Auth::SchemeConfig::CreateAuthUser(proxy_auth, al);
             if (*auth_user_request == NULL)
@@ -374,7 +374,7 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
                 *auth_user_request = conn->getAuth();
             } else {
                 /* failed connection based authentication */
-                debugs(29, 4, HERE << "Auth user request " << *auth_user_request << " conn-auth missing and failed to authenticate.");
+                debugs(29, 4, "Auth user request " << *auth_user_request << " conn-auth missing and failed to authenticate.");
                 *auth_user_request = NULL;
                 return AUTH_ACL_CHALLENGE;
             }
@@ -520,7 +520,7 @@ Auth::UserRequest::AddReplyAuthHeader(HttpReply * rep, Auth::UserRequest::Pointe
                     else
                         scheme->fixHeader(NULL, rep, type, request);
                 } else
-                    debugs(29, 4, HERE << "Configured scheme " << scheme->type() << " not Active");
+                    debugs(29, 4, "Configured scheme " << scheme->type() << " not Active");
             }
         }
 

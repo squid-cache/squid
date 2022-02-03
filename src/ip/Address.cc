@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -386,7 +386,7 @@ Ip::Address::lookupHostIP(const char *s, bool nodns)
     int err = 0;
     struct addrinfo *res = NULL;
     if ( (err = getaddrinfo(s, NULL, &want, &res)) != 0) {
-        debugs(14,3, HERE << "Given Non-IP '" << s << "': " << gai_strerror(err) );
+        debugs(14,3, "Given Non-IP '" << s << "': " << gai_strerror(err) );
         /* free the memory getaddrinfo() dynamically allocated. */
         if (res)
             freeaddrinfo(res);

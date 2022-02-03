@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,7 +36,7 @@ void Ipc::Port::start()
 
 void Ipc::Port::doListen()
 {
-    debugs(54, 6, HERE);
+    debugs(54, 6, MYNAME);
     buf.prepForReading();
     typedef CommCbMemFunT<Port, CommIoCbParams> Dialer;
     AsyncCall::Pointer readHandler = JobCallback(54, 6,
@@ -95,7 +95,7 @@ Ipc::Port::receiveOrIgnore(const TypedMsgHdr &message)
 
 void Ipc::Port::noteRead(const CommIoCbParams& params)
 {
-    debugs(54, 6, HERE << params.conn << " flag " << params.flag <<
+    debugs(54, 6, params.conn << " flag " << params.flag <<
            " [" << this << ']');
     if (params.flag == Comm::OK) {
         assert(params.buf == buf.raw());

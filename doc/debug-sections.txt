@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,7 +7,6 @@
  */
 
 
-section 00    Announcement Server
 section 00    Client Database
 section 00    Debug Routines
 section 00    Hash Tables
@@ -24,6 +23,7 @@ section 05    Disk I/O pipe manager
 section 05    Listener Socket Handler
 section 05    Socket Connection Opener
 section 05    Socket Functions
+section 05    TCP Socket Functions
 section 06    Disk I/O Routines
 section 07    Multicast
 section 08    Swap File Bitmap
@@ -113,6 +113,7 @@ section 61    Redirector
 section 64    HTTP Range Header
 section 65    HTTP Cache Control Header
 section 66    HTTP Header Tools
+section 67    String
 section 68    HTTP Content-Range Header
 section 70    Cache Digest
 section 71    Store Digest Manager
@@ -130,7 +131,6 @@ section 79    Squid-side Disk I/O functions.
 section 79    Storage Manager UFS Interface
 section 80    WCCP Support
 section 81    aio_xxx() POSIX emulation on Windows
-section 81    CPU Profiling Routines
 section 81    Store HEAP Removal Policies
 section 82    External ACL
 section 83    SSL accelerator support

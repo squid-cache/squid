@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -170,7 +170,7 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
 
     assert(icmp6_pktsize <= MAX_PKT6_SZ);
 
-    debugs(42, 5, HERE << "Send Icmp6 packet to " << to << ".");
+    debugs(42, 5, "Send Icmp6 packet to " << to << ".");
 
     x = sendto(icmp_sock,
                (const void *) pkt,
@@ -183,7 +183,7 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
         int xerrno = errno;
         debugs(42, DBG_IMPORTANT, MYNAME << "ERROR: sending to ICMPv6 packet to " << to << ": " << xstrerr(xerrno));
     }
-    debugs(42,9, HERE << "x=" << x);
+    debugs(42,9, "x=" << x);
 
     Log(to, 0, NULL, 0, 0);
     Ip::Address::FreeAddr(S);
@@ -205,7 +205,7 @@ Icmp6::Recv(void)
     static pingerReplyData preply;
 
     if (icmp_sock < 0) {
-        debugs(42, DBG_CRITICAL, HERE << "dropping ICMPv6 read. No socket!?");
+        debugs(42, DBG_CRITICAL, "dropping ICMPv6 read. No socket!?");
         return;
     }
 
@@ -240,7 +240,7 @@ Icmp6::Recv(void)
 
 #endif
 
-    debugs(42, 8, HERE << n << " bytes from " << preply.from);
+    debugs(42, 8, n << " bytes from " << preply.from);
 
 // XXX: The IPv6 Header (ip6_hdr) is not available directly
 //
@@ -261,7 +261,7 @@ Icmp6::Recv(void)
         ip = (struct ip6_hdr *) pkt;
         //  += sizeof(ip6_hdr);
 
-    debugs(42, DBG_CRITICAL, HERE << "ip6_nxt=" << ip->ip6_nxt <<
+    debugs(42, DBG_CRITICAL, "ip6_nxt=" << ip->ip6_nxt <<
             ", ip6_plen=" << ip->ip6_plen <<
             ", ip6_hlim=" << ip->ip6_hlim <<
             ", ip6_hops=" << ip->ip6_hops   <<
@@ -281,7 +281,7 @@ Icmp6::Recv(void)
             break;
 
         default:
-            debugs(42, 8, HERE << preply.from << " said: " << icmp6header->icmp6_type << "/" << (int)icmp6header->icmp6_code << " " <<
+            debugs(42, 8, preply.from << " said: " << icmp6header->icmp6_type << "/" << (int)icmp6header->icmp6_code << " " <<
                    IcmpPacketType(icmp6header->icmp6_type));
         }
         Ip::Address::FreeAddr(from);
@@ -289,7 +289,7 @@ Icmp6::Recv(void)
     }
 
     if (icmp6header->icmp6_id != icmp_ident) {
-        debugs(42, 8, HERE << "dropping Icmp6 read. IDENT check failed. ident=='" << icmp_ident << "'=='" << icmp6header->icmp6_id << "'");
+        debugs(42, 8, "dropping Icmp6 read. IDENT check failed. ident=='" << icmp_ident << "'=='" << icmp6header->icmp6_id << "'");
         Ip::Address::FreeAddr(from);
         return;
     }

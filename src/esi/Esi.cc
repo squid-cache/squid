@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1384,7 +1384,7 @@ ESIContext::ParserState::popAll()
 void
 ESIContext::freeResources ()
 {
-    debugs(86, 5, HERE << "Freeing for this=" << this);
+    debugs(86, 5, "Freeing for this=" << this);
 
     rep = nullptr; // refcounted
 

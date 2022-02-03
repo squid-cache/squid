@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -125,11 +125,11 @@ bool
 Auth::Ntlm::Config::configured() const
 {
     if ((authenticateProgram != NULL) && (authenticateChildren.n_max != 0)) {
-        debugs(29, 9, HERE << "returning configured");
+        debugs(29, 9, "returning configured");
         return true;
     }
 
-    debugs(29, 9, HERE << "returning unconfigured");
+    debugs(29, 9, "returning unconfigured");
     return false;
 }
 
@@ -147,7 +147,7 @@ Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Http
 
     /* New request, no user details */
     if (auth_user_request == NULL) {
-        debugs(29, 9, HERE << "Sending type:" << hdrType << " header: 'NTLM'");
+        debugs(29, 9, "Sending type:" << hdrType << " header: 'NTLM'");
         httpHeaderPutStrf(&rep->header, hdrType, "NTLM");
 
         if (!keep_alive) {
@@ -175,13 +175,13 @@ Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Http
         case Auth::Unchecked:
             /* semantic change: do not drop the connection.
              * 2.5 implementation used to keep it open - Kinkie */
-            debugs(29, 9, HERE << "Sending type:" << hdrType << " header: 'NTLM'");
+            debugs(29, 9, "Sending type:" << hdrType << " header: 'NTLM'");
             httpHeaderPutStrf(&rep->header, hdrType, "NTLM");
             break;
 
         case Auth::Handshake:
             /* we're waiting for a response from the client. Pass it the blob */
-            debugs(29, 9, HERE << "Sending type:" << hdrType << " header: 'NTLM " << ntlm_request->server_blob << "'");
+            debugs(29, 9, "Sending type:" << hdrType << " header: 'NTLM " << ntlm_request->server_blob << "'");
             httpHeaderPutStrf(&rep->header, hdrType, "NTLM %s", ntlm_request->server_blob);
             safe_free(ntlm_request->server_blob);
             break;
@@ -217,7 +217,7 @@ Auth::Ntlm::Config::decode(char const *proxy_auth, const HttpRequest *, const ch
     auth_user_request->user()->BuildUserKey(proxy_auth, aRequestRealm);
 
     /* all we have to do is identify that it's NTLM - the helper does the rest */
-    debugs(29, 9, HERE << "decode: NTLM authentication");
+    debugs(29, 9, "decode: NTLM authentication");
     return auth_user_request;
 }
 

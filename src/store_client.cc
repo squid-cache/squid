@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -360,7 +360,7 @@ store_client::doCopy(StoreEntry *anEntry)
 
     if (!moreToSend()) {
         /* There is no more to send! */
-        debugs(33, 3, HERE << "There is no more to send!");
+        debugs(33, 3, "There is no more to send!");
         callback(0);
         flags.store_copying = false;
         return;

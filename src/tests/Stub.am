@@ -1,5 +1,5 @@
 ##
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -30,6 +30,7 @@ STUB_SOURCE = \
     tests/stub_external_acl.cc \
     tests/stub_fatal.cc \
     tests/stub_fd.cc \
+    tests/stub_fqdncache.cc \
     tests/stub_gopher.cc \
     tests/stub_helper.cc \
     tests/stub_HelperChildConfig.cc \

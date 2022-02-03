@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -38,7 +38,7 @@ AsyncCall::~AsyncCall()
 void
 AsyncCall::make()
 {
-    debugs(debugSection, debugLevel, HERE << "make call " << name <<
+    debugs(debugSection, debugLevel, "make call " << name <<
            " [" << id << ']');
     if (canFire()) {
         fire();
@@ -48,14 +48,14 @@ AsyncCall::make()
     if (!isCanceled) // we did not cancel() when returning false from canFire()
         isCanceled = "unknown reason";
 
-    debugs(debugSection, debugLevel, HERE << "will not call " << name <<
+    debugs(debugSection, debugLevel, "will not call " << name <<
            " [" << id << ']' << " because of " << isCanceled);
 }
 
 bool
 AsyncCall::cancel(const char *reason)
 {
-    debugs(debugSection, debugLevel, HERE << "will not call " << name <<
+    debugs(debugSection, debugLevel, "will not call " << name <<
            " [" << id << "] " << (isCanceled ? "also " : "") <<
            "because " << reason);
 
