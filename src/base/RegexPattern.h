@@ -31,8 +31,7 @@ public:
     /// whether the regex differentiates letter case
     bool caseSensitive() const { return !(flags & REG_ICASE); }
 
-    /// Whether this is an "any single character" regex ("."). In some contexts,
-    /// that regex is (ab)used as a special "should match anything" default.
+    /// whether this is an "any single character" regex (".")
     bool isDot() const { return pattern.length() == 1 && pattern[0] == '.'; }
 
     bool match(const char *str) const {return regexec(&regex,str,0,NULL,0)==0;}
