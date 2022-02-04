@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "acl/Gadgets.h"
 #include "base/Here.h"
+#include "base/RegexPattern.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
@@ -477,17 +478,29 @@ ConfigParser::RegexStrtokFile()
     return token;
 }
 
-char *
-ConfigParser::RegexPattern()
+std::unique_ptr<RegexPattern>
+ConfigParser::regex(const char *expectedRegexDescription)
 {
-    if (ConfigParser::RecognizeQuotedValues) {
-        debugs(3, DBG_CRITICAL, "FATAL: Can not read regex expression while configuration_includes_quoted_values is enabled");
-        self_destruct();
-    }
+    if (RecognizeQuotedValues)
+        throw TextException("Cannot read regex expression while configuration_includes_quoted_values is enabled", Here());
+
+    SBuf pattern;
+    int flags = REG_EXTENDED | REG_NOSUB;
+
     ConfigParser::RecognizeQuotedPair_ = true;
-    char * token = NextToken();
+    const auto flagOrPattern = token(expectedRegexDescription);
+    if (flagOrPattern.cmp("-i") == 0) {
+        flags |= REG_ICASE;
+        pattern = token(expectedRegexDescription);
+    } else if (flagOrPattern.cmp("+i") == 0) {
+        flags &= ~REG_ICASE;
+        pattern = token(expectedRegexDescription);
+    } else {
+        pattern = flagOrPattern;
+    }
     ConfigParser::RecognizeQuotedPair_ = false;
-    return token;
+
+    return std::unique_ptr<RegexPattern>(new RegexPattern(pattern, flags));
 }
 
 char *
