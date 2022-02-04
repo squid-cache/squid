@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -493,7 +493,7 @@ getMyHostname(void)
 const char *
 uniqueHostname(void)
 {
-    debugs(21, 3, HERE << " Config: '" << Config.uniqueHostname << "'");
+    debugs(21, 3, " Config: '" << Config.uniqueHostname << "'");
     return Config.uniqueHostname ? Config.uniqueHostname : getMyHostname();
 }
 

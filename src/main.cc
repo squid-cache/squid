@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -116,9 +116,6 @@
 #endif
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
-#endif
-#if USE_SQUID_ESI
-#include "esi/Module.h"
 #endif
 #if SQUID_SNMP
 #include "snmp_core.h"
@@ -1313,10 +1310,6 @@ mainInitialize(void)
     Adaptation::Config::Finalize(enableAdaptation);
 #endif
 
-#if USE_SQUID_ESI
-    Esi::Init();
-#endif
-
 #if USE_DELAY_POOLS
     Config.ClientDelay.finalize();
 #endif
@@ -2093,10 +2086,6 @@ SquidShutdown()
 
     releaseServerSockets();
     commCloseAllSockets();
-
-#if USE_SQUID_ESI
-    Esi::Clean();
-#endif
 
 #if USE_DELAY_POOLS
     DelayPools::FreePools();

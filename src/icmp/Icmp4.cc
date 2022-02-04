@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -134,7 +134,7 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     ((sockaddr_in*)S->ai_addr)->sin_port = 0;
     assert(icmp_pktsize <= MAX_PKT4_SZ);
 
-    debugs(42, 5, HERE << "Send ICMP packet to " << to << ".");
+    debugs(42, 5, "Send ICMP packet to " << to << ".");
 
     x = sendto(icmp_sock,
                (const void *) pkt,
@@ -166,7 +166,7 @@ Icmp4::Recv(void)
     static pingerReplyData preply;
 
     if (icmp_sock < 0) {
-        debugs(42, DBG_CRITICAL, HERE << "No socket! Recv() should not be called.");
+        debugs(42, DBG_CRITICAL, "No socket! Recv() should not be called.");
         return;
     }
 
@@ -199,7 +199,7 @@ Icmp4::Recv(void)
 
 #endif
 
-    debugs(42, 8, HERE << n << " bytes from " << preply.from);
+    debugs(42, 8, n << " bytes from " << preply.from);
 
     ip = (struct iphdr *) (void *) pkt;
 

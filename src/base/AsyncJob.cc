@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -104,7 +104,7 @@ bool AsyncJob::canBeCalled(AsyncCall &call) const
     if (inCall != NULL) {
         // This may happen when we have bugs or some module is not calling
         // us asynchronously (comm used to do that).
-        debugs(93, 5, HERE << inCall << " is in progress; " <<
+        debugs(93, 5, inCall << " is in progress; " <<
                call << " cannot reenter the job.");
         return call.cancel("reentrant job call");
     }
@@ -154,7 +154,7 @@ void AsyncJob::callEnd()
         delete this; // this is the only place where a started job is deleted
 
         // careful: this object does not exist any more
-        debugs(93, 6, HERE << *inCallSaved << " ended " << thisSaved);
+        debugs(93, 6, *inCallSaved << " ended " << thisSaved);
         return;
     }
 

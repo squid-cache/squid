@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -167,7 +167,7 @@ Ip::Intercept::TproxyTransparent(const Comm::ConnectionPointer &newConn)
     /* Trust the user configured properly. If not no harm done.
      * We will simply attempt a bind outgoing on our own IP.
      */
-    debugs(89, 5, HERE << "address TPROXY: " << newConn);
+    debugs(89, 5, "address TPROXY: " << newConn);
     return true;
 #else
     (void)newConn;
@@ -183,7 +183,7 @@ Ip::Intercept::IpfwInterception(const Comm::ConnectionPointer &newConn)
      * There is no way to identify whether they came from NAT or not.
      * Trust the user configured properly.
      */
-    debugs(89, 5, HERE << "address NAT: " << newConn);
+    debugs(89, 5, "address NAT: " << newConn);
     return true;
 #else
     (void)newConn;
@@ -282,7 +282,7 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn)
             natfd = -1;
         }
 
-        debugs(89, 9, HERE << "address: " << newConn);
+        debugs(89, 9, "address: " << newConn);
         return false;
     } else {
 #if HAVE_STRUCT_NATLOOKUP_NL_REALIPADDR_IN6
@@ -294,7 +294,7 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn)
         newConn->local = natLookup.nl_realip;
 #endif
         newConn->local.port(ntohs(natLookup.nl_realport));
-        debugs(89, 5, HERE << "address NAT: " << newConn);
+        debugs(89, 5, "address NAT: " << newConn);
         return true;
     }
 
@@ -316,7 +316,7 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn)
      *
      * Trust the user configured properly.
      */
-    debugs(89, 5, HERE << "address NAT divert-to: " << newConn);
+    debugs(89, 5, "address NAT divert-to: " << newConn);
     return true;
 
 #else /* USE_NAT_DEVPF / --with-nat-devpf */
@@ -358,7 +358,7 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn)
             close(pffd);
             pffd = -1;
         }
-        debugs(89, 9, HERE << "address: " << newConn);
+        debugs(89, 9, "address: " << newConn);
         return false;
     } else {
         if (newConn->remote.isIPv6())
@@ -366,7 +366,7 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn)
         else
             newConn->local = nl.rdaddr.v4;
         newConn->local.port(ntohs(nl.rdport));
-        debugs(89, 5, HERE << "address NAT: " << newConn);
+        debugs(89, 5, "address NAT: " << newConn);
         return true;
     }
 #endif /* --with-nat-devpf */
@@ -385,7 +385,7 @@ Ip::Intercept::Lookup(const Comm::ConnectionPointer &newConn, const Comm::Connec
     /* --enable-pf-transparent     */
 #if IPF_TRANSPARENT || LINUX_NETFILTER || IPFW_TRANSPARENT || PF_TRANSPARENT
 
-    debugs(89, 5, HERE << "address BEGIN: me/client= " << newConn->local << ", destination/me= " << newConn->remote);
+    debugs(89, 5, "address BEGIN: me/client= " << newConn->local << ", destination/me= " << newConn->remote);
 
     newConn->flags |= (listenConn->flags & (COMM_TRANSPARENT|COMM_INTERCEPTION));
 

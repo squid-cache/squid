@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -288,7 +288,7 @@ Auth::Digest::UserRequest::startHelperLookup(HttpRequest *request, AccessLogEntr
     char buf[8192];
 
     assert(user() != NULL && user()->auth_type == Auth::AUTH_DIGEST);
-    debugs(29, 9, HERE << "'\"" << user()->username() << "\":\"" << realm << "\"'");
+    debugs(29, 9, "'\"" << user()->username() << "\":\"" << realm << "\"'");
 
     if (static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->authenticateProgram == NULL) {
         debugs(29, DBG_CRITICAL, "ERROR: No Digest authentication program configured.");
@@ -310,7 +310,7 @@ void
 Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 {
     Auth::StateData *replyData = static_cast<Auth::StateData *>(data);
-    debugs(29, 9, HERE << "reply=" << reply);
+    debugs(29, 9, "reply=" << reply);
 
     assert(replyData->auth_user_request != NULL);
     Auth::UserRequest::Pointer auth_user_request = replyData->auth_user_request;

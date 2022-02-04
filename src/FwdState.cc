@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -111,7 +111,7 @@ FwdState::HandleStoreAbort(FwdState *fwd)
     if (Comm::IsConnOpen(fwd->serverConnection())) {
         fwd->closeServerConnection("store entry aborted");
     } else {
-        debugs(17, 7, HERE << "store entry aborted; no connection to close");
+        debugs(17, 7, "store entry aborted; no connection to close");
     }
     fwd->stopAndDestroy("store entry aborted");
 }
@@ -249,7 +249,7 @@ FwdState::selectPeerForIntercepted()
     p->remote = clientConn->local;
     getOutgoingAddress(request, p);
 
-    debugs(17, 3, HERE << "using client original destination: " << *p);
+    debugs(17, 3, "using client original destination: " << *p);
     destinations->addPath(p);
     destinations->destinationsFinalized = true;
     PeerSelectionInitiator::subscribed = false;
@@ -287,7 +287,7 @@ FwdState::completed()
     request->hier.stopPeerClock(false);
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        debugs(17, 3, HERE << "entry aborted");
+        debugs(17, 3, "entry aborted");
         return ;
     }
 
@@ -391,7 +391,7 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
         }
     }
 
-    debugs(17, 3, HERE << "'" << entry->url() << "'");
+    debugs(17, 3, "'" << entry->url() << "'");
     /*
      * This seems like an odd place to bind mem_obj and request.
      * Might want to assert that request is NULL at this point
@@ -476,7 +476,7 @@ FwdState::useDestinations()
             return; // expect a noteDestination*() call
         }
 
-        debugs(17, 3, HERE << "Connection failed: " << entry->url());
+        debugs(17, 3, "Connection failed: " << entry->url());
         if (!err) {
             const auto anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError, request, al);
             fail(anErr);
@@ -510,7 +510,7 @@ FwdState::reactToZeroSizeObject()
     assert(err->type == ERR_ZERO_SIZE_OBJECT);
 
     if (pconnRace == racePossible) {
-        debugs(17, 5, HERE << "pconn race happened");
+        debugs(17, 5, "pconn race happened");
         pconnRace = raceHappened;
         if (destinationReceipt) {
             destinations->reinstatePath(destinationReceipt);
@@ -530,7 +530,7 @@ FwdState::reactToZeroSizeObject()
 void
 FwdState::unregister(Comm::ConnectionPointer &conn)
 {
-    debugs(17, 3, HERE << entry->url() );
+    debugs(17, 3, entry->url() );
     assert(serverConnection() == conn);
     assert(Comm::IsConnOpen(conn));
     comm_remove_close_handler(conn->fd, closeHandler);
@@ -543,7 +543,7 @@ FwdState::unregister(Comm::ConnectionPointer &conn)
 void
 FwdState::unregister(int fd)
 {
-    debugs(17, 3, HERE << entry->url() );
+    debugs(17, 3, entry->url() );
     assert(fd == serverConnection()->fd);
     unregister(serverConn);
 }
@@ -716,7 +716,7 @@ FwdState::checkRetry()
         return false;
 
     if (!self) { // we have aborted before the server called us back
-        debugs(17, 5, HERE << "not retrying because of earlier abort");
+        debugs(17, 5, "not retrying because of earlier abort");
         // we will be destroyed when the server clears its Pointer to us
         return false;
     }
@@ -795,7 +795,7 @@ void
 FwdState::retryOrBail()
 {
     if (checkRetry()) {
-        debugs(17, 3, HERE << "re-forwarding (" << n_tries << " tries, " << (squid_curtime - start_t) << " secs)");
+        debugs(17, 3, "re-forwarding (" << n_tries << " tries, " << (squid_curtime - start_t) << " secs)");
         useDestinations();
         return;
     }
@@ -827,7 +827,7 @@ FwdState::doneWithRetries()
 void
 FwdState::handleUnregisteredServerEnd()
 {
-    debugs(17, 2, HERE << "self=" << self << " err=" << err << ' ' << entry->url());
+    debugs(17, 2, "self=" << self << " err=" << err << ' ' << entry->url());
     assert(!Comm::IsConnOpen(serverConn));
     serverConn = nullptr;
     destinationReceipt = nullptr;
@@ -1332,7 +1332,7 @@ FwdState::reforward()
     StoreEntry *e = entry;
 
     if (EBIT_TEST(e->flags, ENTRY_ABORTED)) {
-        debugs(17, 3, HERE << "entry aborted");
+        debugs(17, 3, "entry aborted");
         return 0;
     }
 
@@ -1343,7 +1343,7 @@ FwdState::reforward()
     e->mem_obj->checkUrlChecksum();
 #endif
 
-    debugs(17, 3, HERE << e->url() << "?" );
+    debugs(17, 3, e->url() << "?" );
 
     if (request->flags.pinned && !pinnedCanRetry()) {
         debugs(17, 3, "pinned connection; cannot retry");
@@ -1351,7 +1351,7 @@ FwdState::reforward()
     }
 
     if (!EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT)) {
-        debugs(17, 3, HERE << "No, ENTRY_FWD_HDR_WAIT isn't set");
+        debugs(17, 3, "No, ENTRY_FWD_HDR_WAIT isn't set");
         return 0;
     }
 
@@ -1362,12 +1362,12 @@ FwdState::reforward()
         return 0;
 
     if (destinations->empty() && !PeerSelectionInitiator::subscribed) {
-        debugs(17, 3, HERE << "No alternative forwarding paths left");
+        debugs(17, 3, "No alternative forwarding paths left");
         return 0;
     }
 
     const auto s = entry->mem().baseReply().sline.status();
-    debugs(17, 3, HERE << "status " << s);
+    debugs(17, 3, "status " << s);
     return reforwardableStatus(s);
 }
 

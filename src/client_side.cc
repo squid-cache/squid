@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -606,7 +606,7 @@ ConnStateData::extendLifetime()
 void
 ConnStateData::swanSong()
 {
-    debugs(33, 2, HERE << clientConnection);
+    debugs(33, 2, clientConnection);
 
     flags.readMore = false;
     clientdbEstablished(clientConnection->remote, -1);  /* decrement */
@@ -662,7 +662,7 @@ ConnStateData::isOpen() const
 
 ConnStateData::~ConnStateData()
 {
-    debugs(33, 3, HERE << clientConnection);
+    debugs(33, 3, clientConnection);
 
     if (isOpen())
         debugs(33, DBG_IMPORTANT, "ERROR: Squid BUG: ConnStateData did not close " << clientConnection);
@@ -872,7 +872,7 @@ clientSocketDetach(clientStreamNode * node, ClientHttpRequest * http)
 void
 ConnStateData::readNextRequest()
 {
-    debugs(33, 5, HERE << clientConnection << " reading next req");
+    debugs(33, 5, clientConnection << " reading next req");
 
     fd_note(clientConnection->fd, "Idle client: Waiting for next request");
     /**
@@ -887,7 +887,7 @@ ConnStateData::readNextRequest()
 static void
 ClientSocketContextPushDeferredIfNeeded(Http::StreamPointer deferredRequest, ConnStateData * conn)
 {
-    debugs(33, 2, HERE << conn->clientConnection << " Sending next");
+    debugs(33, 2, conn->clientConnection << " Sending next");
 
     /** If the client stream is waiting on a socket write to occur, then */
 
@@ -990,19 +990,19 @@ ConnStateData::kick()
 void
 ConnStateData::stopSending(const char *error)
 {
-    debugs(33, 4, HERE << "sending error (" << clientConnection << "): " << error <<
+    debugs(33, 4, "sending error (" << clientConnection << "): " << error <<
            "; old receiving error: " <<
            (stoppedReceiving() ? stoppedReceiving_ : "none"));
 
     if (const char *oldError = stoppedSending()) {
-        debugs(33, 3, HERE << "already stopped sending: " << oldError);
+        debugs(33, 3, "already stopped sending: " << oldError);
         return; // nothing has changed as far as this connection is concerned
     }
     stoppedSending_ = error;
 
     if (!stoppedReceiving()) {
         if (const int64_t expecting = mayNeedToReadMoreBody()) {
-            debugs(33, 5, HERE << "must still read " << expecting <<
+            debugs(33, 5, "must still read " << expecting <<
                    " request body bytes with " << inBuf.length() << " unused");
             return; // wait for the request receiver to finish reading
         }
@@ -1456,7 +1456,7 @@ ConnStateData::clientAfterReadingRequests()
 {
     // Were we expecting to read more request body from half-closed connection?
     if (mayNeedToReadMoreBody() && commIsHalfClosed(clientConnection->fd)) {
-        debugs(33, 3, HERE << "truncated body: closing half-closed " << clientConnection);
+        debugs(33, 3, "truncated body: closing half-closed " << clientConnection);
         clientConnection->close();
         return;
     }
@@ -1474,7 +1474,7 @@ ConnStateData::quitAfterError(HttpRequest *request)
     if (request)
         request->flags.proxyKeepalive = false;
     flags.readMore = false;
-    debugs(33,4, HERE << "Will close after error: " << clientConnection);
+    debugs(33,4, "Will close after error: " << clientConnection);
 }
 
 #if USE_OPENSSL
@@ -1593,7 +1593,7 @@ clientProcessRequestFinished(ConnStateData *conn, const HttpRequest::Pointer &re
      * be freed before accessing.
      */
     if (request != NULL && request->flags.resetTcp && Comm::IsConnOpen(conn->clientConnection)) {
-        debugs(33, 3, HERE << "Sending TCP RST on " << conn->clientConnection);
+        debugs(33, 3, "Sending TCP RST on " << conn->clientConnection);
         conn->flags.readMore = false;
         comm_reset_close(conn->clientConnection);
     }
@@ -1890,7 +1890,7 @@ ConnStateData::clientParseRequests()
 {
     bool parsed_req = false;
 
-    debugs(33, 5, HERE << clientConnection << ": attempting to parse");
+    debugs(33, 5, clientConnection << ": attempting to parse");
 
     // Loop while we have read bytes that are not needed for producing the body
     // On errors, bodyPipe may become nil, but readMore will be cleared
@@ -1937,7 +1937,7 @@ ConnStateData::clientParseRequests()
             parsed_req = true; // XXX: do we really need to parse everything right NOW ?
 
             if (context->mayUseConnection()) {
-                debugs(33, 3, HERE << "Not parsing new requests, as this request may need the connection");
+                debugs(33, 3, "Not parsing new requests, as this request may need the connection");
                 break;
             }
         } else {
@@ -2018,7 +2018,7 @@ ConnStateData::handleRequestBodyData()
             return false;
         }
     } else { // identity encoding
-        debugs(33,5, HERE << "handling plain request body for " << clientConnection);
+        debugs(33,5, "handling plain request body for " << clientConnection);
         const size_t putSize = bodyPipe->putMoreData(inBuf.c_str(), inBuf.length());
         if (putSize > 0)
             consumeInput(putSize);
@@ -2030,13 +2030,13 @@ ConnStateData::handleRequestBodyData()
     }
 
     if (!bodyPipe) {
-        debugs(33,5, HERE << "produced entire request body for " << clientConnection);
+        debugs(33,5, "produced entire request body for " << clientConnection);
 
         if (const char *reason = stoppedSending()) {
             /* we've finished reading like good clients,
              * now do the close that initiateClose initiated.
              */
-            debugs(33, 3, HERE << "closing for earlier sending error: " << reason);
+            debugs(33, 3, "closing for earlier sending error: " << reason);
             clientConnection->close();
             return false;
         }
@@ -2078,11 +2078,11 @@ ConnStateData::handleChunkedRequestBody()
         // if parser needs more space and we can consume nothing, we will stall
         Must(!bodyParser->needsMoreSpace() || bodyPipe->buf().hasContent());
     } catch (...) { // TODO: be more specific
-        debugs(33, 3, HERE << "malformed chunks" << bodyPipe->status());
+        debugs(33, 3, "malformed chunks" << bodyPipe->status());
         return ERR_INVALID_REQ;
     }
 
-    debugs(33, 7, HERE << "need more chunked data" << *bodyPipe->status());
+    debugs(33, 7, "need more chunked data" << *bodyPipe->status());
     return ERR_NONE;
 }
 
@@ -2115,7 +2115,7 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
         comm_reset_close(clientConnection);
     }
 #else
-    debugs(33, 3, HERE << "aborting chunked request without error " << error);
+    debugs(33, 3, "aborting chunked request without error " << error);
     comm_reset_close(clientConnection);
 #endif
     flags.readMore = false;
@@ -2273,7 +2273,7 @@ ConnStateData::whenClientIpKnown()
                     cli->setWriteLimiter(pools[pool]->rate, burst, pools[pool]->highwatermark);
                     break;
                 } else {
-                    debugs(83, 4, HERE << "Delay pool " << pool << " skipped because ACL " << answer);
+                    debugs(83, 4, "Delay pool " << pool << " skipped because ACL " << answer);
                 }
             }
         }
@@ -2515,7 +2515,7 @@ httpsAccept(const CommAcceptCbParams &params)
         return;
     }
 
-    debugs(33, 4, HERE << params.conn << " accepted, starting SSL negotiation.");
+    debugs(33, 4, params.conn << " accepted, starting SSL negotiation.");
     fd_note(params.conn->fd, "client https connect");
 
     // Socket is ready, setup the connection manager to start using it
@@ -2597,7 +2597,7 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
     if (reply.result == Helper::BrokenHelper) {
         debugs(33, 5, "Certificate for " << tlsConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply);
     } else if (!reply.other().hasContent()) {
-        debugs(1, DBG_IMPORTANT, HERE << "\"ssl_crtd\" helper returned <NULL> reply.");
+        debugs(1, DBG_IMPORTANT, "\"ssl_crtd\" helper returned <NULL> reply.");
     } else {
         Ssl::CrtdMessage reply_message(Ssl::CrtdMessage::REPLY);
         if (reply_message.parse(reply.other().content(), reply.other().contentSize()) != Ssl::CrtdMessage::OK) {
@@ -2665,7 +2665,7 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
                 else if (ca->alg == Ssl::algSetValidBefore)
                     certProperties.setValidBefore = true;
 
-                debugs(33, 5, HERE << "Matches certificate adaptation aglorithm: " <<
+                debugs(33, 5, "Matches certificate adaptation aglorithm: " <<
                        alg << " param: " << (param ? param : "-"));
             }
         }
@@ -2755,11 +2755,11 @@ ConnStateData::getSslContextStart()
 
 #if USE_SSL_CRTD
         try {
-            debugs(33, 5, HERE << "Generating SSL certificate for " << certProperties.commonName << " using ssl_crtd.");
+            debugs(33, 5, "Generating SSL certificate for " << certProperties.commonName << " using ssl_crtd.");
             Ssl::CrtdMessage request_message(Ssl::CrtdMessage::REQUEST);
             request_message.setCode(Ssl::CrtdMessage::code_new_certificate);
             request_message.composeRequest(certProperties);
-            debugs(33, 5, HERE << "SSL crtd request: " << request_message.compose().c_str());
+            debugs(33, 5, "SSL crtd request: " << request_message.compose().c_str());
             Ssl::Helper::Submit(request_message, sslCrtdHandleReplyWrapper, this);
             return;
         } catch (const std::exception &e) {
@@ -2771,7 +2771,7 @@ ConnStateData::getSslContextStart()
         }
 #endif // USE_SSL_CRTD
 
-        debugs(33, 5, HERE << "Generating SSL certificate for " << certProperties.commonName);
+        debugs(33, 5, "Generating SSL certificate for " << certProperties.commonName);
         if (sslServerBump && (sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare)) {
             doPeekAndSpliceStep();
             auto ssl = fd_table[clientConnection->fd].ssl.get();
@@ -3636,19 +3636,19 @@ ConnStateData::mayNeedToReadMoreBody() const
 void
 ConnStateData::stopReceiving(const char *error)
 {
-    debugs(33, 4, HERE << "receiving error (" << clientConnection << "): " << error <<
+    debugs(33, 4, "receiving error (" << clientConnection << "): " << error <<
            "; old sending error: " <<
            (stoppedSending() ? stoppedSending_ : "none"));
 
     if (const char *oldError = stoppedReceiving()) {
-        debugs(33, 3, HERE << "already stopped receiving: " << oldError);
+        debugs(33, 3, "already stopped receiving: " << oldError);
         return; // nothing has changed as far as this connection is concerned
     }
 
     stoppedReceiving_ = error;
 
     if (const char *sendError = stoppedSending()) {
-        debugs(33, 3, HERE << "closing because also stopped sending: " << sendError);
+        debugs(33, 3, "closing because also stopped sending: " << sendError);
         clientConnection->close();
     }
 }
@@ -3657,7 +3657,7 @@ void
 ConnStateData::expectNoForwarding()
 {
     if (bodyPipe != NULL) {
-        debugs(33, 4, HERE << "no consumer for virgin body " << bodyPipe->status());
+        debugs(33, 4, "no consumer for virgin body " << bodyPipe->status());
         bodyPipe->expectNoConsumption();
     }
 }
@@ -3667,7 +3667,7 @@ void
 ConnStateData::startDechunkingRequest()
 {
     Must(bodyPipe != NULL);
-    debugs(33, 5, HERE << "start dechunking" << bodyPipe->status());
+    debugs(33, 5, "start dechunking" << bodyPipe->status());
     assert(!bodyParser);
     bodyParser = new Http1::TeChunkedParser;
 }
@@ -3676,10 +3676,10 @@ ConnStateData::startDechunkingRequest()
 void
 ConnStateData::finishDechunkingRequest(bool withSuccess)
 {
-    debugs(33, 5, HERE << "finish dechunking: " << withSuccess);
+    debugs(33, 5, "finish dechunking: " << withSuccess);
 
     if (bodyPipe != NULL) {
-        debugs(33, 7, HERE << "dechunked tail: " << bodyPipe->status());
+        debugs(33, 7, "dechunked tail: " << bodyPipe->status());
         BodyPipe::Pointer myPipe = bodyPipe;
         stopProducingFor(bodyPipe, withSuccess); // sets bodyPipe->bodySize()
         Must(!bodyPipe); // we rely on it being nil after we are done with body
@@ -3705,7 +3705,7 @@ ConnStateData::sendControlMsg(HttpControlMsg msg)
     }
 
     if (!isOpen()) {
-        debugs(33, 3, HERE << "ignoring 1xx due to earlier closure");
+        debugs(33, 3, "ignoring 1xx due to earlier closure");
         return;
     }
 
@@ -3726,7 +3726,7 @@ ConnStateData::sendControlMsg(HttpControlMsg msg)
         return;
     }
 
-    debugs(33, 3, HERE << " closing due to missing context for 1xx");
+    debugs(33, 3, " closing due to missing context for 1xx");
     clientConnection->close();
 }
 
@@ -3794,7 +3794,7 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, const Htt
 
     pinning.serverConnection = pinServer;
 
-    debugs(33, 3, HERE << pinning.serverConnection);
+    debugs(33, 3, pinning.serverConnection);
 
     Must(pinning.serverConnection != NULL);
 
@@ -3964,7 +3964,7 @@ ConnStateData::BorrowPinnedConnection(HttpRequest *request, const AccessLogEntry
 void
 ConnStateData::unpinConnection(const bool andClose)
 {
-    debugs(33, 3, HERE << pinning.serverConnection);
+    debugs(33, 3, pinning.serverConnection);
 
     if (pinning.peer)
         cbdataReferenceDone(pinning.peer);

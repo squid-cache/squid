@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -44,7 +44,7 @@ void Adaptation::Icap::Launcher::launchXaction(const char *xkind)
 {
     Must(!theXaction);
     ++theLaunches;
-    debugs(93,4, HERE << "launching " << xkind << " xaction #" << theLaunches);
+    debugs(93,4, "launching " << xkind << " xaction #" << theLaunches);
     Adaptation::Icap::Xaction *x = createXaction();
     x->attempts = theLaunches;
     if (theLaunches > 1) {
@@ -59,7 +59,7 @@ void Adaptation::Icap::Launcher::launchXaction(const char *xkind)
 
 void Adaptation::Icap::Launcher::noteAdaptationAnswer(const Answer &answer)
 {
-    debugs(93,5, HERE << "launches: " << theLaunches << " answer: " << answer);
+    debugs(93,5, "launches: " << theLaunches << " answer: " << answer);
 
     // XXX: akError is unused by ICAPXaction in favor of noteXactAbort()
     Must(answer.kind != Answer::akError);
@@ -80,7 +80,7 @@ void Adaptation::Icap::Launcher::noteInitiatorAborted()
 
 void Adaptation::Icap::Launcher::noteXactAbort(XactAbortInfo info)
 {
-    debugs(93,5, HERE << "theXaction:" << theXaction << " launches: " << theLaunches);
+    debugs(93,5, "theXaction:" << theXaction << " launches: " << theLaunches);
 
     // TODO: add more checks from FwdState::checkRetry()?
     if (canRetry(info)) {
@@ -90,7 +90,7 @@ void Adaptation::Icap::Launcher::noteXactAbort(XactAbortInfo info)
         clearAdaptation(theXaction);
         launchXaction("repeat");
     } else {
-        debugs(93,3, HERE << "cannot retry or repeat a failed transaction");
+        debugs(93,3, "cannot retry or repeat a failed transaction");
         clearAdaptation(theXaction);
         tellQueryAborted(false); // caller decides based on bypass, consumption
         Must(done());
@@ -122,15 +122,15 @@ bool Adaptation::Icap::Launcher::canRetry(Adaptation::Icap::XactAbortInfo &info)
 
 bool Adaptation::Icap::Launcher::canRepeat(Adaptation::Icap::XactAbortInfo &info) const
 {
-    debugs(93,9, HERE << shutting_down);
+    debugs(93,9, shutting_down);
     if (theLaunches >= TheConfig.repeat_limit || shutting_down)
         return false;
 
-    debugs(93,9, HERE << info.isRepeatable); // TODO: update and use status()
+    debugs(93,9, info.isRepeatable); // TODO: update and use status()
     if (!info.isRepeatable)
         return false;
 
-    debugs(93,9, HERE << info.icapReply);
+    debugs(93,9, info.icapReply);
     if (!info.icapReply) // did not get to read an ICAP reply; a timeout?
         return true;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1555,12 +1555,12 @@ helper_server::checkForTimedOutRequests(bool const retry)
 void
 helper_server::requestTimeout(const CommTimeoutCbParams &io)
 {
-    debugs(26, 3, HERE << io.conn);
+    debugs(26, 3, io.conn);
     helper_server *srv = static_cast<helper_server *>(io.data);
 
     srv->checkForTimedOutRequests(srv->parent->retryTimedOut);
 
-    debugs(84, 3, HERE << io.conn << " establish new helper_server::requestTimeout");
+    debugs(84, 3, io.conn << " establish new helper_server::requestTimeout");
     AsyncCall::Pointer timeoutCall = commCbCall(84, 4, "helper_server::requestTimeout",
                                      CommTimeoutCbPtrFun(helper_server::requestTimeout, srv));
 

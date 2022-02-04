@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1214,7 +1214,7 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
     q->pending = 0;
 
     if (message->tc) {
-        debugs(78, 3, HERE << "Resolver requested TC (" << q->query.name << ")");
+        debugs(78, 3, "Resolver requested TC (" << q->query.name << ")");
         rfc1035MessageDestroy(&message);
 
         if (!q->need_vc) {
@@ -1224,7 +1224,7 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
         } else {
             // Strange: A TCP DNS response with the truncation bit (TC) set.
             // Return an error and cleanup; no point in trying TCP again.
-            debugs(78, 3, HERE << "TCP DNS response");
+            debugs(78, 3, "TCP DNS response");
             idnsCallback(q, "Truncated TCP DNS response");
         }
 
@@ -1472,7 +1472,7 @@ idnsReadVC(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Fla
     }
 
     assert(vc->ns < nameservers.size());
-    debugs(78, 3, HERE << conn << ": received " << vc->msg->contentSize() << " bytes via TCP from " << nameservers[vc->ns].S << ".");
+    debugs(78, 3, conn << ": received " << vc->msg->contentSize() << " bytes via TCP from " << nameservers[vc->ns].S << ".");
 
     idnsGrokReply(vc->msg->buf, vc->msg->contentSize(), vc->ns);
     vc->msg->clean();
@@ -1727,7 +1727,7 @@ idnsSendSlaveAAAAQuery(idns_query *master)
     q->query_id = idnsQueryID();
     q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), q->query_id, &q->query, Config.dns.packet_max);
 
-    debugs(78, 3, HERE << "buf is " << q->sz << " bytes for " << q->name <<
+    debugs(78, 3, "buf is " << q->sz << " bytes for " << q->name <<
            ", id = 0x" << std::hex << q->query_id);
     if (!q->sz) {
         delete q;

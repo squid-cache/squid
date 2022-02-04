@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -64,7 +64,7 @@ void
 Fs::Ufs::UFSStoreState::openDone()
 {
     if (closing)
-        debugs(0, DBG_CRITICAL, HERE << "already closing in openDone()!?");
+        debugs(0, DBG_CRITICAL, "already closing in openDone()!?");
 
     if (theFile->error()) {
         tryClosing();
@@ -95,7 +95,7 @@ Fs::Ufs::UFSStoreState::closeCompleted()
            theFile->error());
 
     if (theFile->error()) {
-        debugs(79,3,HERE<< "theFile->error() ret " << theFile->error());
+        debugs(79,3, "theFile->error() ret " << theFile->error());
         doCloseCallback(DISK_ERROR);
     } else {
         doCloseCallback(DISK_OK);
@@ -163,7 +163,7 @@ Fs::Ufs::UFSStoreState::write(char const *buf, size_t size, off_t aOffset, FREE 
 
     if (theFile->error()) {
         debugs(79, DBG_IMPORTANT, "ERROR: avoid write on theFile with error");
-        debugs(79, DBG_IMPORTANT,HERE << "calling free_func for " << (void*) buf);
+        debugs(79, DBG_IMPORTANT, "calling free_func for " << (void*) buf);
         free_func((void*)buf);
         return false;
     }
@@ -272,7 +272,7 @@ Fs::Ufs::UFSStoreState::readCompleted(const char *buf, int len, int, RefCount<Re
 void
 Fs::Ufs::UFSStoreState::writeCompleted(int, size_t len, RefCount<WriteRequest>)
 {
-    debugs(79, 3, HERE << "dirno " << swap_dirn << ", fileno " <<
+    debugs(79, 3, "dirno " << swap_dirn << ", fileno " <<
            std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen <<
            ", len " << len);
     /*
@@ -284,7 +284,7 @@ Fs::Ufs::UFSStoreState::writeCompleted(int, size_t len, RefCount<WriteRequest>)
     offset_ += len;
 
     if (theFile->error()) {
-        debugs(79,2,HERE << " detected an error, will try to close");
+        debugs(79,2, " detected an error, will try to close");
         tryClosing();
     }
 
@@ -429,13 +429,13 @@ Fs::Ufs::UFSStoreState::drainWriteQueue()
 void
 Fs::Ufs::UFSStoreState::tryClosing()
 {
-    debugs(79,3,HERE << this << " tryClosing()" <<
+    debugs(79,3, this << " tryClosing()" <<
            " closing = " << closing <<
            " flags.try_closing = " << flags.try_closing <<
            " ioInProgress = " << theFile->ioInProgress());
 
     if (theFile->ioInProgress()) {
-        debugs(79, 3, HERE << this <<
+        debugs(79, 3, this <<
                " won't close since ioInProgress is true, bailing");
         flags.try_closing = true;
         return;

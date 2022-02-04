@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -65,7 +65,7 @@ ACLFilledChecklist::~ACLFilledChecklist()
     cbdataReferenceDone(sslErrors);
 #endif
 
-    debugs(28, 4, HERE << "ACLFilledChecklist destroyed " << this);
+    debugs(28, 4, "ACLFilledChecklist destroyed " << this);
 }
 
 static void

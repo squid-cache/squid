@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -59,14 +59,14 @@ ACLChecklist::markFinished(const Acl::Answer &finalAnswer, const char *reason)
     assert (!finished() && !asyncInProgress());
     finished_ = true;
     answer_ = finalAnswer;
-    debugs(28, 3, HERE << this << " answer " << answer_ << " for " << reason);
+    debugs(28, 3, this << " answer " << answer_ << " for " << reason);
 }
 
 /// Called first (and once) by all checks to initialize their state
 void
 ACLChecklist::preCheck(const char *what)
 {
-    debugs(28, 3, HERE << this << " checking " << what);
+    debugs(28, 3, this << " checking " << what);
 
     // concurrent checks using the same Checklist are not supported
     assert(!occupied_);
@@ -372,7 +372,7 @@ ACLChecklist::calcImplicitAnswer()
     // else we saw no rules and will respond with ACCESS_DUNNO
 
     implicitRuleAnswer.implicit = true;
-    debugs(28, 3, HERE << this << " NO match found, last action " <<
+    debugs(28, 3, this << " NO match found, last action " <<
            lastAction << " so returning " << implicitRuleAnswer);
     markFinished(implicitRuleAnswer, "implicit rule won");
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -58,7 +58,7 @@ Comm::TcpAcceptor::TcpAcceptor(const AnyP::PortCfgPointer &p, const char *, cons
 void
 Comm::TcpAcceptor::subscribe(const Subscription::Pointer &aSub)
 {
-    debugs(5, 5, HERE << status() << " AsyncCall Subscription: " << aSub);
+    debugs(5, 5, status() << " AsyncCall Subscription: " << aSub);
     unsubscribe("subscription change");
     theCallSub = aSub;
 }
@@ -66,7 +66,7 @@ Comm::TcpAcceptor::subscribe(const Subscription::Pointer &aSub)
 void
 Comm::TcpAcceptor::unsubscribe(const char *reason)
 {
-    debugs(5, 5, HERE << status() << " AsyncCall Subscription " << theCallSub << " removed: " << reason);
+    debugs(5, 5, status() << " AsyncCall Subscription " << theCallSub << " removed: " << reason);
     theCallSub = NULL;
 }
 
@@ -75,7 +75,7 @@ Comm::TcpAcceptor::start()
 {
     if (listenPort_)
         CodeContext::Reset(listenPort_);
-    debugs(5, 5, HERE << status() << " AsyncCall Subscription: " << theCallSub);
+    debugs(5, 5, status() << " AsyncCall Subscription: " << theCallSub);
 
     Must(IsConnOpen(conn));
 
@@ -108,7 +108,7 @@ Comm::TcpAcceptor::doneAll() const
 void
 Comm::TcpAcceptor::swanSong()
 {
-    debugs(5,5, HERE);
+    debugs(5,5, MYNAME);
     unsubscribe("swanSong");
     if (IsConnOpen(conn)) {
         if (closer_ != NULL)
@@ -212,7 +212,7 @@ void
 Comm::TcpAcceptor::doAccept(int fd, void *data)
 {
     try {
-        debugs(5, 2, HERE << "New connection on FD " << fd);
+        debugs(5, 2, "New connection on FD " << fd);
 
         Must(isOpen(fd));
         TcpAcceptor *afd = static_cast<TcpAcceptor*>(data);
@@ -278,7 +278,7 @@ Comm::TcpAcceptor::acceptOne()
 
     if (flag == Comm::COMM_ERROR) {
         // A non-recoverable error; notify the caller */
-        debugs(5, 5, HERE << "non-recoverable error:" << status() << " handler Subscription: " << theCallSub);
+        debugs(5, 5, "non-recoverable error:" << status() << " handler Subscription: " << theCallSub);
         if (intendedForUserConnections())
             logAcceptError(newConnDetails);
         notify(flag, newConnDetails);
@@ -306,7 +306,7 @@ void
 Comm::TcpAcceptor::acceptNext()
 {
     Must(IsConnOpen(conn));
-    debugs(5, 2, HERE << "connection on " << conn);
+    debugs(5, 2, "connection on " << conn);
     acceptOne();
 }
 

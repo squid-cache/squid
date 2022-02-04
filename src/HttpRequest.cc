@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -54,7 +54,7 @@ HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aP
 {
     assert(mx);
     static unsigned int id = 1;
-    debugs(93,7, HERE << "constructed, this=" << this << " id=" << ++id);
+    debugs(93,7, "constructed, this=" << this << " id=" << ++id);
     init();
     initHTTP(aMethod, aProtocol, aSchemeImg, aUrlpath);
 }
@@ -62,7 +62,7 @@ HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aP
 HttpRequest::~HttpRequest()
 {
     clean();
-    debugs(93,7, HERE << "destructed, this=" << this);
+    debugs(93,7, "destructed, this=" << this);
 }
 
 void
@@ -273,7 +273,7 @@ HttpRequest::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::S
     if (hdr_len < 2) {
         // this is only a real error if the headers apparently complete.
         if (hdr_len > 0) {
-            debugs(58, 3, HERE << "Too large request header (" << hdr_len << " bytes)");
+            debugs(58, 3, "Too large request header (" << hdr_len << " bytes)");
             *scode = Http::scInvalidHeader;
         }
         return false;
@@ -392,7 +392,7 @@ HttpRequest::icapHistory() const
     if (!icapHistory_) {
         if (Log::TheConfig.hasIcapToken || IcapLogfileStatus == LOG_ENABLE) {
             icapHistory_ = new Adaptation::Icap::History();
-            debugs(93,4, HERE << "made " << icapHistory_ << " for " << this);
+            debugs(93,4, "made " << icapHistory_ << " for " << this);
         }
     }
 
@@ -406,7 +406,7 @@ HttpRequest::adaptHistory(bool createIfNone) const
 {
     if (!adaptHistory_ && createIfNone) {
         adaptHistory_ = new Adaptation::History();
-        debugs(93,4, HERE << "made " << adaptHistory_ << " for " << this);
+        debugs(93,4, "made " << adaptHistory_ << " for " << this);
     }
 
     return adaptHistory_;
