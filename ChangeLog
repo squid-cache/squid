@@ -6,6 +6,7 @@ Changes in squid-5.4 (07 Feb 2021):
 	- Bug 5134: assertion failed: Transients.cc:221: "old == e"
 	- Bug 5132: Close the tunnel if to-server conn closes after client
 	- langpack: Fix typo in Russian texts
+	- copyright years and CONTRIBUTORS update
 
 Changes in squid-5.3 (06 Dec 2021):
 
