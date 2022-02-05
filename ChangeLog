@@ -1,6 +1,6 @@
 Changes in squid-5.4 (07 Feb 2021):
 
-	- Bug 5189: Preserve configured order of intermediate CA certificate chain
+	- Bug 5190: Preserve configured order of intermediate CA certificate chain
 	- Bug 5188: Fix reconfiguration leaking tls-cert=... memory
 	- Bug 5187: Properly track (and mark) truncated store entries
 	- Bug 5134: assertion failed: Transients.cc:221: "old == e"
