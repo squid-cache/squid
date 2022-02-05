@@ -37,6 +37,12 @@
 #if HAVE_SYS_PRCTL_H
 #include <sys/prctl.h>
 #endif
+#if HAVE_SYS_PROCCTL_H
+#include <sys/procctl.h>
+#endif
+#if HAVE_PRIV_H
+#include <priv.h>
+#endif
 #if HAVE_WIN32_PSAPI
 #include <psapi.h>
 #endif
@@ -270,6 +276,24 @@ rusage_pagefaults(struct rusage *r)
 #else
 
     return r->ru_majflt;
+#endif
+}
+
+int
+
+proc_settraceable(void)
+{
+#if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
+	return prctl(PR_SET_DUMPABLE, 1);
+#elif HAVE_PROCCTL && defined(PROC_TRACE_CTL)
+	// TODO: when FreeBSD 14 becomes the lowest version, we can
+	// possibly save one getpid syscall, for now still necessary.
+	int traceable = PROC_TRACE_CTL_ENABLE;
+	return procctl(P_PID, getpid(), PROC_TRACE_CTL, &traceable);
+#elif HAVE_SETPFLAGS
+	return setpflags(__PROC_PROTECT, 0);
+#else
+	return ENOSYS;
 #endif
 }
 
@@ -564,13 +588,10 @@ leave_suid(void)
 
     restoreCapabilities(true);
 
-#if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
-    /* Set Linux DUMPABLE flag */
-    if (Config.coredump_dir && prctl(PR_SET_DUMPABLE, 1) != 0) {
+    if (Config.coredump_dir && proc_settraceable() != 0) {
         int xerrno = errno;
-        debugs(50, 2, "ALERT: prctl: " << xstrerr(xerrno));
+        debugs(50, 2, "ALERT: proc_settraceable: " << xstrerr(xerrno));
     }
-#endif
 }
 
 /* Enter a privilegied section */
@@ -590,14 +611,11 @@ enter_suid(void)
         debugs(21, 3, "setuid(0) failed: " << xstrerr(xerrno));
     }
 #endif
-#if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
-    /* Set Linux DUMPABLE flag */
 
-    if (Config.coredump_dir && prctl(PR_SET_DUMPABLE, 1) != 0) {
+    if (Config.coredump_dir && proc_settraceable() != 0) {
         int xerrno = errno;
-        debugs(50, 2, "ALERT: prctl: " << xstrerr(xerrno));
+        debugs(50, 2, "ALERT: proc_settraceable: " << xstrerr(xerrno));
     }
-#endif
 }
 
 /* Give up the possibility to gain privilegies.
@@ -623,13 +641,10 @@ no_suid(void)
 
     restoreCapabilities(false);
 
-#if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
-    /* Set Linux DUMPABLE flag */
-    if (Config.coredump_dir && prctl(PR_SET_DUMPABLE, 1) != 0) {
+    if (Config.coredump_dir && proc_settraceable() != 0) {
         int xerrno = errno;
-        debugs(50, 2, "ALERT: prctl: " << xstrerr(xerrno));
+        debugs(50, 2, "ALERT: proc_settraceable: " << xstrerr(xerrno));
     }
-#endif
 }
 
 bool
