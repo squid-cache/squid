@@ -279,9 +279,11 @@ rusage_pagefaults(struct rusage *r)
 #endif
 }
 
-int
+// Traceable processes may support attachment via ptrace(2) or ktrace(2)
+// debugging sysctls, hwpmc(4), dtrace(1) and core dumping.
 
-proc_settraceable(void)
+static int
+makeTraceable(void)
 {
 #if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
 	return prctl(PR_SET_DUMPABLE, 1);
@@ -588,9 +590,9 @@ leave_suid(void)
 
     restoreCapabilities(true);
 
-    if (Config.coredump_dir && proc_settraceable() != 0) {
+    if (Config.coredump_dir && makeTraceable() != 0) {
         int xerrno = errno;
-        debugs(50, 2, "ALERT: proc_settraceable: " << xstrerr(xerrno));
+        debugs(50, DBG_IMPORTANT, "ERROR: failed to make the process traceable:" << xstrerr(xerrno));
     }
 }
 
@@ -612,9 +614,9 @@ enter_suid(void)
     }
 #endif
 
-    if (Config.coredump_dir && proc_settraceable() != 0) {
+    if (Config.coredump_dir && makeTraceable() != 0) {
         int xerrno = errno;
-        debugs(50, 2, "ALERT: proc_settraceable: " << xstrerr(xerrno));
+        debugs(50, DBG_IMPORTANT, "ERROR: failed to make the process traceable:" << xstrerr(xerrno));
     }
 }
 
@@ -641,9 +643,9 @@ no_suid(void)
 
     restoreCapabilities(false);
 
-    if (Config.coredump_dir && proc_settraceable() != 0) {
+    if (Config.coredump_dir && makeTraceable() != 0) {
         int xerrno = errno;
-        debugs(50, 2, "ALERT: proc_settraceable: " << xstrerr(xerrno));
+        debugs(50, DBG_IMPORTANT, "ERROR: failed to make the process traceable:" << xstrerr(xerrno));
     }
 }
 
