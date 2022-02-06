@@ -5639,6 +5639,12 @@ DOC_START
 	that exists, Squid will chdir() to that directory at startup
 	and coredump files will be left there.
 
+	Linux, FreeBSD, Solaris/Illumos:
+
+	Note on supported platforms, the processes permissions are updated
+	to be able to be traced in order to be able to generate a core
+	file.
+
 CONFIG_START
 
 # Leave coredumps in the first cache dir
