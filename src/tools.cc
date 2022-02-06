@@ -279,9 +279,8 @@ rusage_pagefaults(struct rusage *r)
 #endif
 }
 
-// Traceable processes may support attachment via ptrace(2) or ktrace(2)
-// debugging sysctls, hwpmc(4), dtrace(1) and core dumping.
-
+/// Traceable processes may support attachment via ptrace(2) or ktrace(2),
+/// debugging sysctls, hwpmc(4), dtrace(1) and core dumping.
 static int
 makeTraceable(void)
 {
