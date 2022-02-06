@@ -2713,13 +2713,9 @@ static void
 dump_refreshpattern(StoreEntry * entry, const char *name, RefreshPattern * head)
 {
     while (head != NULL) {
-        storeAppendPrintf(entry, "%s%s %s %d %d%% %d",
-                          name,
-                          head->pattern.flags&REG_ICASE ? " -i" : null_string,
-                          head->pattern.c_str(),
-                          (int) head->min / 60,
-                          (int) (100.0 * head->pct + 0.5),
-                          (int) head->max / 60);
+        PackableStream os(*entry);
+        os << name << ' ';
+        head->printHead(os);
 
         if (head->max_stale >= 0)
             storeAppendPrintf(entry, " max-stale=%d", head->max_stale);
@@ -2761,7 +2757,6 @@ static void
 parse_refreshpattern(RefreshPattern ** head)
 {
     char *token;
-    char *pattern;
     time_t min = 0;
     double pct = 0.0;
     time_t max = 0;
@@ -2781,29 +2776,8 @@ parse_refreshpattern(RefreshPattern ** head)
 
     int i;
     RefreshPattern *t;
-    regex_t comp;
-    int errcode;
-    int flags = REG_EXTENDED | REG_NOSUB;
 
-    if ((token = ConfigParser::RegexPattern()) != NULL) {
-
-        if (strcmp(token, "-i") == 0) {
-            flags |= REG_ICASE;
-            token = ConfigParser::RegexPattern();
-        } else if (strcmp(token, "+i") == 0) {
-            flags &= ~REG_ICASE;
-            token = ConfigParser::RegexPattern();
-        }
-
-    }
-
-    if (token == NULL) {
-        debugs(3, DBG_CRITICAL, "FATAL: refresh_pattern missing the regex pattern parameter");
-        self_destruct();
-        return;
-    }
-
-    pattern = xstrdup(token);
+    auto regex = LegacyParser.regex("refresh_pattern regex");
 
     i = GetInteger();       /* token: min */
 
@@ -2870,22 +2844,12 @@ parse_refreshpattern(RefreshPattern ** head)
                   ) {
             debugs(22, DBG_PARSE_NOTE(2), "UPGRADE: refresh_pattern option '" << token << "' is obsolete. Remove it.");
         } else
-            debugs(22, DBG_CRITICAL, "ERROR: refreshAddToList: Unknown option '" << pattern << "': " << token);
-    }
-
-    if ((errcode = regcomp(&comp, pattern, flags)) != 0) {
-        char errbuf[256];
-        regerror(errcode, &comp, errbuf, sizeof errbuf);
-        debugs(22, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(22, DBG_CRITICAL, "ERROR: refreshAddToList: Invalid regular expression '" << pattern << "': " << errbuf);
-        xfree(pattern);
-        return;
+            debugs(22, DBG_CRITICAL, "ERROR: Unknown refresh_pattern option: " << token);
     }
 
     pct = pct < 0.0 ? 0.0 : pct;
     max = max < 0 ? 0 : max;
-    t = new RefreshPattern(pattern, flags);
-    t->pattern.regex = comp;
+    t = new RefreshPattern(std::move(regex));
     t->min = min;
     t->pct = pct;
     t->max = max;
@@ -2925,8 +2889,6 @@ parse_refreshpattern(RefreshPattern ** head)
         head = &(*head)->next;
 
     *head = t;
-
-    xfree(pattern);
 }
 
 static void
