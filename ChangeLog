@@ -1,3 +1,13 @@
+Changes in squid-5.4 (07 Feb 2021):
+
+	- Bug 5190: Preserve configured order of intermediate CA certificate chain
+	- Bug 5188: Fix reconfiguration leaking tls-cert=... memory
+	- Bug 5187: Properly track (and mark) truncated store entries
+	- Bug 5134: assertion failed: Transients.cc:221: "old == e"
+	- Bug 5132: Close the tunnel if to-server conn closes after client
+	- langpack: Fix typo in Russian texts
+	- copyright years and CONTRIBUTORS update
+
 Changes in squid-5.3 (06 Dec 2021):
 
 	- Bug 5169: StoreMap.cc:517 "!s.reading()" assertion
