@@ -24,7 +24,7 @@
     while (!(condition)) \
         ReportAndThrow_((debugLevel), (description), (location))
 
-#if !defined(NODEBUG)
+#if !defined(NDEBUG)
 
 /// Like assert() but throws an exception instead of aborting the process.
 /// Use this macro to detect code logic mistakes (i.e. bugs) where aborting
@@ -42,11 +42,11 @@
 
 #else
 
-/* do-nothing implementations for NODEBUG builds */
+/* do-nothing implementations for NDEBUG builds */
 #define Assert(condition) ((void)0)
 #define Assert2(condition, description) ((void)0)
 
-#endif /* NODEBUG */
+#endif /* NDEBUG */
 
 #endif /* SQUID_SRC_BASE_ASSERT_H */
 
