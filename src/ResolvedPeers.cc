@@ -151,7 +151,7 @@ ResolvedPeers::extractFound(const char *description, const Paths::iterator &foun
         while (++pathsToSkip < paths_.size() && !paths_[pathsToSkip].available) {}
     }
 
-    const auto cleanPath = path.connection->cloneDestinationDetails();
+    const auto cleanPath = path.connection->cloneProfile();
     return PeerConnectionPointer(cleanPath, found - paths_.begin());
 }
 

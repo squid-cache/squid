@@ -872,6 +872,10 @@ static void
 idnsVCClosed(const CommCloseCbParams &params)
 {
     nsvc * vc = (nsvc *)params.data;
+    if (vc->conn) {
+        vc->conn->noteClosure();
+        vc->conn = nullptr;
+    }
     delete vc;
 }
 

@@ -335,6 +335,7 @@ BodyPipe::startAutoConsumptionIfNeeded()
         return;
 
     theConsumer = new BodySink(this);
+    AsyncJob::Start(theConsumer);
     debugs(91,7, HERE << "starting auto consumption" << status());
     scheduleBodyDataNotification();
 }
