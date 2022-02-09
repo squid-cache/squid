@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "base/Assert.h"
+#include "base/Assure.h"
 #include "base/TextException.h"
 #include "Debug.h"
 

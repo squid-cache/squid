@@ -6,21 +6,21 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_BASE_ASSERT_H
-#define SQUID_SRC_BASE_ASSERT_H
+#ifndef SQUID_SRC_BASE_ASSURE_H
+#define SQUID_SRC_BASE_ASSURE_H
 
 #include "base/Here.h"
 
 /// Reports the described assertion (at the given debugging level) and throws
-/// the corresponding exception. Reduces compiled code size of Assert() and
-/// Must() callers. Do not call directly; use Assert() instead.
+/// the corresponding exception. Reduces compiled code size of Assure() and
+/// Must() callers. Do not call directly; use Assure() instead.
 /// \param description explains the condition (i.e. what MUST happen)
 [[ noreturn ]] void ReportAndThrow_(int debugLevel, const char *description, const SourceLocation &);
 
 /// Calls ReportAndThrow() if needed. Reduces caller code duplication.
-/// Do not call directly; use Assert() instead.
+/// Do not call directly; use Assure() instead.
 /// \param description c-string explaining the condition (i.e. what MUST happen)
-#define Assert_(debugLevel, condition, description, location) \
+#define Assure_(debugLevel, condition, description, location) \
     while (!(condition)) \
         ReportAndThrow_((debugLevel), (description), (location))
 
@@ -32,21 +32,21 @@
 /// Squid service integrity. For example, this macro is not appropriate for
 /// detecting bugs that indicate a dangerous global state corruption that
 /// may go unnoticed by other jobs after the current job or task is aborted.
-#define Assert(condition) \
-        Assert_(0, (condition), #condition, Here())
+#define Assure(condition) \
+        Assure_(0, (condition), #condition, Here())
 
-/// Like Assert() but allows the caller to customize the exception message.
+/// Like Assure() but allows the caller to customize the exception message.
 /// \param description c-string explaining the condition (i.e. what MUST happen)
-#define Assert2(condition, description) \
-        Assert_(0, (condition), (description), Here())
+#define Assure2(condition, description) \
+        Assure_(0, (condition), (description), Here())
 
 #else
 
 /* do-nothing implementations for NDEBUG builds */
-#define Assert(condition) ((void)0)
-#define Assert2(condition, description) ((void)0)
+#define Assure(condition) ((void)0)
+#define Assure2(condition, description) ((void)0)
 
 #endif /* NDEBUG */
 
-#endif /* SQUID_SRC_BASE_ASSERT_H */
+#endif /* SQUID_SRC_BASE_ASSURE_H */
 
