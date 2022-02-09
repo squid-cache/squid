@@ -279,23 +279,46 @@ rusage_pagefaults(struct rusage *r)
 #endif
 }
 
+/// Make the process traceable if possible. Call setTraceability() instead!
 /// Traceable processes may support attachment via ptrace(2) or ktrace(2),
 /// debugging sysctls, hwpmc(4), dtrace(1) and core dumping.
-static int
+static void
 makeTraceable(void)
 {
+    const auto handleError = [](const char * const syscall, const int savedErrno) {
+        throw TextException(ToSBuf(syscall, " failure: ", xstrerr(savedErrno)), Here());
+    };
 #if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
-	return prctl(PR_SET_DUMPABLE, 1);
+    if (prctl(PR_SET_DUMPABLE, 1) != 0)
+        handleError("prctl(PR_SET_DUMPABLE)", errno);
 #elif HAVE_PROCCTL && defined(PROC_TRACE_CTL)
 	// TODO: when FreeBSD 14 becomes the lowest version, we can
 	// possibly save one getpid syscall, for now still necessary.
 	int traceable = PROC_TRACE_CTL_ENABLE;
-	return procctl(P_PID, getpid(), PROC_TRACE_CTL, &traceable);
+    if (procctl(P_PID, getpid(), PROC_TRACE_CTL, &traceable) != 0)
+        handleError("procctl(PROC_TRACE_CTL_ENABLE)", errno);
 #elif HAVE_SETPFLAGS
-	return setpflags(__PROC_PROTECT, 0);
+    if (setpflags(__PROC_PROTECT, 0) != 0)
+        handleError("setpflags(__PROC_PROTECT)", errno);
 #else
-	return ENOSYS;
+    debugs(50, 2, "WARNING: Assuming this process is traceable");
 #endif
+}
+
+/// Make the process traceable if necessary. \sa makeTraceable()
+static void
+setTraceability()
+{
+    // for now, setting coredump_dir is required to make the process traceable
+    if (!Config.coredump_dir)
+        return;
+
+    try {
+        makeTraceable();
+    } catch (...) {
+        debugs(50, DBG_IMPORTANT, "ERROR: Cannot make the process traceable:" <<
+               Debug::Extra << "exception: " << CurrentException);
+    }
 }
 
 void
@@ -588,11 +611,7 @@ leave_suid(void)
 #endif
 
     restoreCapabilities(true);
-
-    if (Config.coredump_dir && makeTraceable() != 0) {
-        int xerrno = errno;
-        debugs(50, DBG_IMPORTANT, "ERROR: failed to make the process traceable:" << xstrerr(xerrno));
-    }
+    setTraceability();
 }
 
 /* Enter a privilegied section */
@@ -613,10 +632,8 @@ enter_suid(void)
     }
 #endif
 
-    if (Config.coredump_dir && makeTraceable() != 0) {
-        int xerrno = errno;
-        debugs(50, DBG_IMPORTANT, "ERROR: failed to make the process traceable:" << xstrerr(xerrno));
-    }
+
+    setTraceability();
 }
 
 /* Give up the possibility to gain privilegies.
@@ -641,11 +658,7 @@ no_suid(void)
     }
 
     restoreCapabilities(false);
-
-    if (Config.coredump_dir && makeTraceable() != 0) {
-        int xerrno = errno;
-        debugs(50, DBG_IMPORTANT, "ERROR: failed to make the process traceable:" << xstrerr(xerrno));
-    }
+    setTraceability();
 }
 
 bool
