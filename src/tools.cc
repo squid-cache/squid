@@ -283,7 +283,7 @@ rusage_pagefaults(struct rusage *r)
 /// Traceable processes may support attachment via ptrace(2) or ktrace(2),
 /// debugging sysctls, hwpmc(4), dtrace(1) and core dumping.
 static void
-makeTraceable(void)
+makeTraceable()
 {
     const auto handleError = [](const char * const syscall, const int savedErrno) {
         throw TextException(ToSBuf(syscall, " failure: ", xstrerr(savedErrno)), Here());
@@ -292,9 +292,9 @@ makeTraceable(void)
     if (prctl(PR_SET_DUMPABLE, 1) != 0)
         handleError("prctl(PR_SET_DUMPABLE)", errno);
 #elif HAVE_PROCCTL && defined(PROC_TRACE_CTL)
-	// TODO: when FreeBSD 14 becomes the lowest version, we can
-	// possibly save one getpid syscall, for now still necessary.
-	int traceable = PROC_TRACE_CTL_ENABLE;
+    // TODO: when FreeBSD 14 becomes the lowest version, we can
+    // possibly save one getpid syscall, for now still necessary.
+    int traceable = PROC_TRACE_CTL_ENABLE;
     if (procctl(P_PID, getpid(), PROC_TRACE_CTL, &traceable) != 0)
         handleError("procctl(PROC_TRACE_CTL_ENABLE)", errno);
 #elif HAVE_SETPFLAGS
@@ -305,7 +305,8 @@ makeTraceable(void)
 #endif
 }
 
-/// Make the process traceable if necessary. \sa makeTraceable()
+/// Make the process traceable if necessary.
+/// \sa makeTraceable()
 static void
 setTraceability()
 {
@@ -631,7 +632,6 @@ enter_suid(void)
         debugs(21, 3, "setuid(0) failed: " << xstrerr(xerrno));
     }
 #endif
-
 
     setTraceability();
 }
