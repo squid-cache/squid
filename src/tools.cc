@@ -302,6 +302,7 @@ makeTraceable()
         handleError("setpflags(__PROC_PROTECT)", errno);
 #else
     debugs(50, 2, "WARNING: Assuming this process is traceable");
+    (void)handleError; // just "use" the variable; there is no error here
 #endif
 }
 
