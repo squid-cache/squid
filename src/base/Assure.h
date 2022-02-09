@@ -26,12 +26,12 @@
 
 #if !defined(NDEBUG)
 
-/// Like assert() but throws an exception instead of aborting the process.
-/// Use this macro to detect code logic mistakes (i.e. bugs) where aborting
-/// the current AsyncJob or a similar task does not create a threat to the
-/// Squid service integrity. For example, this macro is not appropriate for
-/// detecting bugs that indicate a dangerous global state corruption that
-/// may go unnoticed by other jobs after the current job or task is aborted.
+/// Like assert() but throws an exception instead of aborting the process. Use
+/// this macro to detect code logic mistakes (i.e. bugs) where aborting the
+/// current AsyncJob or a similar task is unlikely to jeopardize Squid service
+/// integrity. For example, this macro is _not_ appropriate for detecting bugs
+/// that indicate a dangerous global state corruption which may go unnoticed by
+/// other jobs after the current job or task is aborted.
 #define Assure(condition) \
         Assure_(0, (condition), #condition, Here())
 
