@@ -16,7 +16,7 @@ ReportAndThrow_(const int debugLevel, const char *description, const SourceLocat
 {
     const TextException ex(description, location);
     const auto label = debugLevel <= DBG_IMPORTANT ?
-                       "BUG: assertion failed" : "check failed";
+                       "ERROR: Squid BUG: assurance failed" : "check failed";
     // TODO: Consider also printing the number of BUGs reported so far. It would
     // require GC, but we could even print the number of same-location reports.
     debugs(0, debugLevel, label << ": " << ex);
