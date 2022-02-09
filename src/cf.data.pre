@@ -5642,9 +5642,7 @@ DOC_START
 	In addition to changing the directory, the process permissions are updated
 	to enable process tracing and/or coredump file generation. The details are
 	OS-specific, but look for prctl(2) PR_SET_DUMPABLE and procctl(2)
-	PROC_TRACE_CTL documentation as guiding examples. If Squid does not know
-	how to update relevant process permissions in your build environment, it
-	logs an ENOSYS-based ERROR message.
+	PROC_TRACE_CTL documentation as guiding examples.
 
 CONFIG_START
 
