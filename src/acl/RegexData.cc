@@ -209,14 +209,7 @@ compileUnoptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl, cons
         } else if (configurationLineWord == plus_i) {
             flags &= ~REG_ICASE;
         } else {
-            try {
-                compileRE(curlist, configurationLineWord, flags);
-            } catch (...) {
-                // TODO: Make these configuration failures fatal (by default).
-                debugs(28, DBG_CRITICAL, "ERROR: Skipping regular expression: '" << configurationLineWord << "'" <<
-                       Debug::Extra << "configuration: " << cfg_filename << " line " << config_lineno << ": " << config_input_line <<
-                       Debug::Extra << "regex compilation failure: " << CurrentException);
-            }
+            compileRE(curlist, configurationLineWord, flags);
         }
     }
 }
