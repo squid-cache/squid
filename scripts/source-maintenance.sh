@@ -493,6 +493,27 @@ make -C src/http gperf-files
 
 run_ checkMakeNamedErrorDetails || exit 1
 
+# extract Author details from commit log
+collectAuthors ()
+{
+  tail -n +5 CONTRIBUTORS | sed -e 's/^[ ]*//' >AUTHORS.tmp
+
+  git log |
+    grep -E "^[ ]*[aA]uthor:" |
+    sed -e 's/^[ \t]*//' -e 's/[Aa]uthor:[ ]*//' -e 's/"//g' |
+    sed -e 's/[ ]*[,+&] /\n/g' >>AUTHORS.tmp
+
+  (
+    head -n 4 CONTRIBUTORS
+    sort -uf AUTHORS.tmp | while read line ; do echo "    $line" ; done
+  )>CONTRIBUTORS.new
+  rm -f AUTHORS.tmp || true
+  mv CONTRIBUTORS.new CONTRIBUTORS
+}
+
+# Update CONTRIBUTORS content
+run_ collectAuthors || exit 1
+
 # Run formatting
 srcFormat || exit 1
 
