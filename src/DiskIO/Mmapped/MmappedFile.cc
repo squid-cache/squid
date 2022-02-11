@@ -20,6 +20,9 @@
 #include <cerrno>
 #if HAVE_SYS_MMAN_H
 #include <sys/mman.h>
+#ifndef MAP_NOSYNC
+#define MAP_NOSYNC 0
+#endif
 #endif
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
@@ -236,7 +239,9 @@ Mmapping::map()
     static const int pageSize = getpagesize();
     delta = offset % pageSize;
 
-    buf = mmap(NULL, length + delta, prot, flags, fd, offset - delta);
+    // on FreeBSD/DragonFlyBSD MAP_NOSYNC allows to optimize the data being
+    // flushed to the disk allowing to gain performance over time.
+    buf = mmap(NULL, length + delta, prot, flags | MAP_NOSYNC, fd, offset - delta);
 
     if (buf == MAP_FAILED) {
         const int errNo = errno;
