@@ -19,6 +19,5 @@ acl G dstdom_regex \.g...le\.com$
 acl B browser ^Mozilla
 acl B browser ^Java/[0-9]+(\.[0-9]+)?
 
-# invalid pattern - this should ERROR
-acl foo browser *
-
+# TODO: Support testing invalid configurations, like this one:
+# acl foo browser *
