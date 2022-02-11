@@ -5639,6 +5639,11 @@ DOC_START
 	that exists, Squid will chdir() to that directory at startup
 	and coredump files will be left there.
 
+	In addition to changing the directory, the process permissions are updated
+	to enable process tracing and/or coredump file generation. The details are
+	OS-specific, but look for prctl(2) PR_SET_DUMPABLE and procctl(2)
+	PROC_TRACE_CTL documentation as guiding examples.
+
 CONFIG_START
 
 # Leave coredumps in the first cache dir
