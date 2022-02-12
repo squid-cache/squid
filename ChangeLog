@@ -1,3 +1,26 @@
+Changes in squid-5.4.1 (12 Feb 2021):
+
+	- Bug 5055: FATAL FwdState::noteDestinationsEnd exception: opening
+	- Fix FATAL ServiceRep::putConnection exception: theBusyConns > 0
+	- Fix ConnOpener orphan connection warnings when requester ends early
+	- Fix ConnOpener connection handling when sending negative answers
+	- Fix Comm::ConnOpener::cleanFd() debugging
+	- Fix ConnOpener callback's syncWithComm()
+	- Fix FwdState::advanceDestination() losing ERR_GATEWAY_FAILURE details
+	- Fix Tunneler handling of last-resort callback on premature job ending
+	- Fix PeerConnector handling of last-resort callback on premature job ending
+	- Fix FreeBSD 14 build
+	- Fix OpenBSD 7.0 build
+	- Add Comm::Connection::cloneDestinationDetails() debugging
+	- Improve Security::PeerConnector::serverConn and Http::Tunneler::connection management
+	- Refactor ConnOpener users to stop relying on the answer providing Comm::Connection
+	- Refactor ICAP connection-establishing code
+	- Polish PeerPoolMgr code
+	- Polish IDENT code
+	- Polish Gopher code
+	- Polished AsyncJob::Start() API
+	- ... and update code documentation
+
 Changes in squid-5.4 (07 Feb 2021):
 
 	- Bug 5190: Preserve configured order of intermediate CA certificate chain
