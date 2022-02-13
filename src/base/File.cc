@@ -25,10 +25,6 @@
 #include <unistd.h>
 #endif
 
-#if _SQUID_SOLARIS_
-int fcntlLock(const int, const short);
-#endif
-
 /* FileOpeningConfig */
 
 FileOpeningConfig
@@ -111,7 +107,7 @@ FileOpeningConfig::createdIfMissing()
 // nothing better on Solaris, but do not be tempted to use this elsewhere. For
 // more info, see http://bugs.squid-cache.org/show_bug.cgi?id=4212#c14
 /// fcntl(... struct flock) convenience wrapper
-int
+static int
 fcntlLock(const int fd, const short lockType)
 {
     // the exact composition and order of flock data members is unknown!
