@@ -135,7 +135,7 @@ PFldap_start_tls_s Win32_ldap_start_tls_s;
 #include <ldap.h>
 
 #if _SQUID_SOLARIS_
-#define LDAP_SECURITY_ERROR(err) (err >= 0x2f && err <= 0x32) // LDAP_SECURITY_ERROR codes are between 47 and 50
+#define LDAP_SECURITY_ERROR(err) (0x2f <= (err) && (err) <= 0x32) // [47, 50]
 #endif
 
 #endif
