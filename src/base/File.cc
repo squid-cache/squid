@@ -25,6 +25,10 @@
 #include <unistd.h>
 #endif
 
+#if _SQUID_SOLARIS_
+int fcntlLock(const int, const short);
+#endif
+
 /* FileOpeningConfig */
 
 FileOpeningConfig
