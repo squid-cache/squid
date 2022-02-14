@@ -15,6 +15,7 @@ class CallDialer;
 class CodeContext;
 class ScopedId;
 class BadOptionalAccess;
+class Raw;
 class RegexPattern;
 
 template <typename Value> class Optional;

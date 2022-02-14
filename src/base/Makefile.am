@@ -43,6 +43,8 @@ libbase_la_SOURCES = \
 	Packable.h \
 	PackableStream.h \
 	Range.h \
+	Raw.cc \
+	Raw.h \
 	RefCount.h \
 	RegexPattern.cc \
 	RegexPattern.h \
