@@ -9,7 +9,7 @@
 #include "squid.h"
 #include "acl/Options.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "sbuf/Stream.h"
 
 #include <iostream>

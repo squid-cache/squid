@@ -14,7 +14,7 @@
 #include "adaptation/ServiceFilter.h"
 #include "adaptation/ServiceGroups.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "StrList.h"
 #include "wordlist.h"
 

@@ -9,7 +9,7 @@
 /* Inspired by previous work by Romeo Anghelache & Eric Stern. */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "globals.h"
 #include "protos.h"
 #include "SquidConfig.h"

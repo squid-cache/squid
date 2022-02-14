@@ -11,7 +11,7 @@
 #include "auth/CredentialsCache.h"
 #include "auth/digest/Config.h"
 #include "auth/digest/User.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "dlink.h"
 
 Auth::Digest::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :

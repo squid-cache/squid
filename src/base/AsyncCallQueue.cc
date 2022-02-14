@@ -11,7 +11,7 @@
 #include "squid.h"
 #include "base/AsyncCall.h"
 #include "base/AsyncCallQueue.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 AsyncCallQueue *AsyncCallQueue::TheInstance = 0;
 

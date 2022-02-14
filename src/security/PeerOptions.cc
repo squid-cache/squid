@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "base/Packable.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "fatal.h"
 #include "globals.h"
 #include "parser/Tokenizer.h"

@@ -14,7 +14,7 @@
 
 #if USE_ICMP
 
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "Icmp4.h"
 #include "IcmpPinger.h"
 #include "SquidTime.h"

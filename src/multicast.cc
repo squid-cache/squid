@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "comm/Connection.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 // XXX: for icpIncomingConn - need to pass it as a generic parameter.
 #include "ICP.h"
 #include "ipcache.h"

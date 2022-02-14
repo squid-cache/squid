@@ -13,7 +13,7 @@
 #include "CachePeer.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "fd.h"
 #include "FwdState.h"
 #include "globals.h"

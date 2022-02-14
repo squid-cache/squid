@@ -13,7 +13,7 @@
 #include "base/TextException.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "error/ExceptionErrorDetail.h"
 #include "errorpage.h"
 #include "fde.h"

@@ -40,7 +40,7 @@
  */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "SquidTime.h"
 
 #if USE_ICMP

@@ -9,6 +9,7 @@
 /* DEBUG: section 83    SSL-Bump Server/Peer negotiation */
 
 #include "squid.h"
+#include "base/Raw.h"
 #include "sbuf/Stream.h"
 #include "security/Handshake.h"
 #if USE_OPENSSL

@@ -14,7 +14,7 @@
  * not abort the unit test.
  */
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 #define STUB_API "debug/libdebug.la"
 #include "tests/STUB.h"

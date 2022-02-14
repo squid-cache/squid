@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "base/File.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "sbuf/Stream.h"
 #include "tools.h"
 #include "xusleep.h"

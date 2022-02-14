@@ -14,7 +14,7 @@
 #include "acl/InnerNode.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "globals.h"
 #include <algorithm>
 

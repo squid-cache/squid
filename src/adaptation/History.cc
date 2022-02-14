@@ -10,7 +10,7 @@
 #include "adaptation/Config.h"
 #include "adaptation/History.h"
 #include "base/TextException.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "globals.h"
 #include "SquidTime.h"
 

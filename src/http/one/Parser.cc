@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "base/CharacterSet.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "http/one/Parser.h"
 #include "mime_header.h"
 #include "parser/Tokenizer.h"

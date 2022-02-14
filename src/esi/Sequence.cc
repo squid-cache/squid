@@ -9,7 +9,7 @@
 /* DEBUG: section 86    ESI processing */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "fatal.h"
 
 /* MS Visual Studio Projects are monolithic, so we need the following

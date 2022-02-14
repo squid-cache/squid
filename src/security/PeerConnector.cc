@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "base/Raw.h"
 #include "comm/Loops.h"
 #include "comm/Read.h"
 #include "Downloader.h"

@@ -11,7 +11,7 @@
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "comm/forward.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "ExternalACLEntry.h"
 #include "http/Stream.h"
 #include "HttpReply.h"

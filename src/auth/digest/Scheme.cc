@@ -9,8 +9,8 @@
 #include "squid.h"
 #include "auth/digest/Config.h"
 #include "auth/digest/Scheme.h"
-#include "Debug.h"
-#include "DebugMessages.h"
+#include "debug/Stream.h"
+#include "debug/Messages.h"
 #include "globals.h"
 #include "helper.h"
 

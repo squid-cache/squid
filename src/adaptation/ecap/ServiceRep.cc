@@ -15,7 +15,7 @@
 #include "adaptation/ecap/XactionRep.h"
 #include "AsyncEngine.h"
 #include "base/TextException.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "EventLoop.h"
 
 #include <libecap/adapter/service.h>

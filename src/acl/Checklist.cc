@@ -11,7 +11,7 @@
 #include "squid.h"
 #include "acl/Checklist.h"
 #include "acl/Tree.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 #include <algorithm>
 

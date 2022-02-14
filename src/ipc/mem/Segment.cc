@@ -11,7 +11,7 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "compat/shm.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "fatal.h"
 #include "ipc/mem/Segment.h"
 #include "sbuf/SBuf.h"

@@ -9,8 +9,8 @@
 #include "squid.h"
 #include "auth/basic/Config.h"
 #include "auth/basic/Scheme.h"
-#include "Debug.h"
-#include "DebugMessages.h"
+#include "debug/Stream.h"
+#include "debug/Messages.h"
 #include "helper.h"
 
 Auth::Scheme::Pointer Auth::Basic::Scheme::_instance = NULL;

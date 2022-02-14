@@ -18,7 +18,7 @@
 #include "base/TextException.h"
 #include "comm/Connection.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "fde.h"
 #include "globals.h"
 #include "HttpReply.h"

@@ -12,7 +12,7 @@
 #include "base/TextException.h"
 #include "CpuAffinityMap.h"
 #include "CpuAffinitySet.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 bool
 CpuAffinityMap::add(const std::vector<int> &aProcesses, const std::vector<int> &aCores)

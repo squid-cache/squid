@@ -9,7 +9,7 @@
 /* DEBUG: section 24    SBuf */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "parser/forward.h"
 #include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"

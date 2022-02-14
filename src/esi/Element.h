@@ -10,7 +10,7 @@
 #define SQUID_ESIELEMENT_H
 
 #include "base/RefCount.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "esi/Segment.h"
 
 #include <vector>

@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "CacheManager.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "mgr/Registration.h"
 
 #define STUB_API "cache_manager.cc"

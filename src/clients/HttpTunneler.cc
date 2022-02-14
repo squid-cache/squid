@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "base/Raw.h"
 #include "CachePeer.h"
 #include "clients/HttpTunneler.h"
 #include "comm/Read.h"
