@@ -1286,15 +1286,17 @@ TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
     // if all of them fail, tunneling as whole will fail
     Must(!selectionError); // finding at least one path means selection succeeded
 
-    if (usingDestination()) {
-        // We are already using a previously opened connection but also
-        // receiving destinations in case we need to re-forward.
-        Must(!transportWait);
-        return;
+    if (transportWait) {
+        assert(!usingDestination());
+        notifyConnOpener();
+        return; // and continue to wait for the noteConnection() callback
     }
 
-    if (transportWait)
-        return notifyConnOpener();
+    if (usingDestination()) {
+        // We are already using a previously opened connection (but were also
+        // receiving more destinations in case we need to re-forward).
+        return;
+    }
 
     // destinationsFound, but none of them worked, and we were waiting for more
     assert(savedError);
