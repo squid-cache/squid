@@ -1295,6 +1295,7 @@ TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
     if (usingDestination()) {
         // We are already using a previously opened connection (but were also
         // receiving more destinations in case we need to re-forward).
+        debugs(17, 7, "keep transporting");
         return;
     }
 
