@@ -1275,8 +1275,9 @@ TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
         if (selectionError)
             return sendError(selectionError, "path selection has failed");
 
+        // TODO: Merge with FwdState and remove this likely unnecessary check.
         if (savedError)
-            return sendError(savedError, "early error (TODO: impossible?) and no paths to try");
+            return sendError(savedError, "path selection found no paths (with an impossible early error)");
 
         return sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError, request.getRaw(), al),
                          "path selection found no paths");

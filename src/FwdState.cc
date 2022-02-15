@@ -656,10 +656,7 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
             debugs(17, 3, "Will abort forwarding because path selection has failed.");
             Must(!err); // if we tried to connect, then path selection succeeded
             fail(selectionError);
-        }
-        else if (err)
-            debugs(17, 3, "Will abort forwarding because all found paths have failed.");
-        else
+        } else
             debugs(17, 3, "Will abort forwarding because path selection found no paths.");
 
         useDestinations(); // will detect and handle the lack of paths
