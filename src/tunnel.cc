@@ -1308,7 +1308,9 @@ TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
 bool
 TunnelStateData::usingDestination() const
 {
-    return encryptionWait || peerWait || Comm::IsConnOpen(server.conn);
+    // server.conn->close() does not end usingDestination(); we may receive new
+    // paths while server.conn is closing (XXX: and client is still writing)
+    return encryptionWait || peerWait || server.conn;
 }
 
 /// remembers an error to be used if there will be no more connection attempts
