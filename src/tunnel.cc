@@ -98,6 +98,9 @@ public:
         return (server.conn != NULL && server.conn->getPeer() ? server.conn->getPeer()->host : request->url.host());
     };
 
+    /// start owning the given to-server connection; do not look for any other
+    void commitToServer(const Comm::ConnectionPointer &);
+
     /// Whether the client sent a CONNECT request to us.
     bool clientExpectsConnectResponse() const {
         // If we are forcing a tunnel after receiving a client CONNECT, then we
@@ -186,6 +189,10 @@ public:
     /// whether another destination may be still attempted if the TCP connection
     /// was unexpectedly closed
     bool retriable;
+
+    /// whether we will not consider using any other server
+    bool committedToServer;
+
     // TODO: remove after fixing deferred reads in TunnelStateData::copyRead()
     CodeContext::Pointer codeContext; ///< our creator context
 
@@ -263,9 +270,8 @@ private:
 
     /// \returns whether the request should be retried (nil) or the description why it should not
     const char *checkRetry();
-    /// whether the successfully selected path destination or the established
-    /// server connection is still in use
-    bool usingDestination() const;
+
+    bool transporting() const;
 
     /// details of the "last tunneling attempt" failure (if it failed)
     ErrorState *savedError = nullptr;
@@ -362,6 +368,7 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     destinations(new ResolvedPeers()),
     destinationsFound(false),
     retriable(true),
+    committedToServer(false),
     codeContext(CodeContext::Current())
 {
     debugs(26, 3, "TunnelStateData constructed this=" << this);
@@ -1005,8 +1012,7 @@ void
 TunnelStateData::notePeerReadyToShovel(const Comm::ConnectionPointer &conn)
 {
     assert(!client.dirty);
-    retriable = false;
-    server.initConnection(conn, tunnelServerClosed, "tunnelServerClosed", this);
+    commitToServer(conn);
 
     if (!clientExpectsConnectResponse())
         tunnelStartShoveling(this); // ssl-bumped connection, be quiet
@@ -1019,6 +1025,15 @@ TunnelStateData::notePeerReadyToShovel(const Comm::ConnectionPointer &conn)
         client.write(mb->content(), mb->contentSize(), call, mb->freeFunc());
         delete mb;
     }
+}
+
+void
+TunnelStateData::commitToServer(const Comm::ConnectionPointer &conn)
+{
+    committedToServer = true;
+    retriable = false; // may already be false
+    PeerSelectionInitiator::subscribed = false; // may already be false
+    server.initConnection(conn, tunnelServerClosed, "tunnelServerClosed", this);
 }
 
 static void
@@ -1248,17 +1263,16 @@ TunnelStateData::noteDestination(Comm::ConnectionPointer path)
 
     destinations->addPath(path);
 
-    if (usingDestination()) {
-        // We are already using a previously opened connection but also
-        // receiving destinations in case we need to re-forward.
-        Must(!transportWait);
-        return;
-    }
-
     if (transportWait) {
+        assert(!transporting());
         notifyConnOpener();
         return; // and continue to wait for tunnelConnectDone() callback
     }
+
+    // the current commitToServer()-based code cannot receive new destinations
+    // while transporting(), but future enhancements may enable this code path
+    if (transporting())
+        return; // and continue to receive destinations for backup
 
     startConnecting();
 }
@@ -1287,12 +1301,12 @@ TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
     Must(!selectionError); // finding at least one path means selection succeeded
 
     if (transportWait) {
-        assert(!usingDestination());
+        assert(!transporting());
         notifyConnOpener();
         return; // and continue to wait for the noteConnection() callback
     }
 
-    if (usingDestination()) {
+    if (transporting()) {
         // We are already using a previously opened connection (but were also
         // receiving more destinations in case we need to re-forward).
         debugs(17, 7, "keep transporting");
@@ -1305,12 +1319,13 @@ TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
     sendError(savedError, "all found paths have failed");
 }
 
+/// Whether a tunneling attempt to some selected destination X is in progress
+/// (after successfully opening/reusing a transport connection to X).
+/// \sa transportWait
 bool
-TunnelStateData::usingDestination() const
+TunnelStateData::transporting() const
 {
-    // server.conn->close() does not end usingDestination(); we may receive new
-    // paths while server.conn is closing (XXX: and client is still writing)
-    return encryptionWait || peerWait || server.conn;
+    return encryptionWait || peerWait || committedToServer;
 }
 
 /// remembers an error to be used if there will be no more connection attempts
@@ -1369,7 +1384,7 @@ TunnelStateData::startConnecting()
         request->hier.startPeerClock();
 
     assert(!destinations->empty());
-    assert(!usingDestination());
+    assert(!transporting());
     AsyncCall::Pointer callback = asyncCall(17, 5, "TunnelStateData::noteConnection", HappyConnOpener::CbDialer<TunnelStateData>(&TunnelStateData::noteConnection, this));
     const auto cs = new HappyConnOpener(destinations, callback, request, startTime, 0, al);
     cs->setHost(request->url.host());
@@ -1464,11 +1479,9 @@ switchToTunnel(HttpRequest *request, const Comm::ConnectionPointer &clientConn, 
     debugs(26, 3, request->method << " " << context->http->uri << " " << request->http_ver);
 
     TunnelStateData *tunnelState = new TunnelStateData(context->http);
-    tunnelState->retriable = false;
+    tunnelState->commitToServer(srvConn);
 
     request->hier.resetPeerNotes(srvConn, tunnelState->getHost());
-
-    tunnelState->server.initConnection(srvConn, tunnelServerClosed, "tunnelServerClosed", tunnelState);
 
 #if USE_DELAY_POOLS
     /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
