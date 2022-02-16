@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,6 @@
 
 #include "squid.h"
 #include "hash.h"
-#include "profiler/Profiler.h"
 
 #include <cassert>
 #include <cmath>
@@ -147,17 +146,14 @@ hash_link *
 hash_lookup(hash_table * hid, const void *k)
 {
     int b;
-    PROF_start(hash_lookup);
     assert(k != NULL);
     b = hid->hash(k, hid->size);
     for (hash_link *walker = hid->buckets[b]; walker != NULL; walker = walker->next) {
         if ((hid->cmp) (k, walker->key) == 0) {
-            PROF_stop(hash_lookup);
             return (walker);
         }
         assert(walker != walker->next);
     }
-    PROF_stop(hash_lookup);
     return NULL;
 }
 

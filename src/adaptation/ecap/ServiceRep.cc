@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -194,7 +194,7 @@ Adaptation::Ecap::ServiceRep::finalize()
 void
 Adaptation::Ecap::ServiceRep::tryConfigureAndStart()
 {
-    debugs(93,2, HERE << "configuring eCAP service: " << theService->uri());
+    debugs(93,2, "configuring eCAP service: " << theService->uri());
     const ConfigRep cfgRep(dynamic_cast<const ServiceConfig&>(cfg()));
     theService->configure(cfgRep);
 
@@ -343,7 +343,7 @@ Adaptation::Ecap::CheckUnusedAdapterServices(const Adaptation::Services& cfgs)
             found = (*cfged)->cfg().uri == loaded->second->uri().c_str();
         }
         if (!found)
-            debugs(93, DBG_IMPORTANT, "Warning: loaded eCAP service has no matching " <<
+            debugs(93, DBG_IMPORTANT, "WARNING: loaded eCAP service has no matching " <<
                    "ecap_service config option: " << loaded->second->uri());
     }
 }

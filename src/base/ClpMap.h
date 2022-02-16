@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -105,7 +105,7 @@ private:
     using Entries = std::list<Entry, PoolingAllocator<Entry> >;
     using EntriesIterator = typename Entries::iterator;
 
-    using IndexItem = std::pair<Key, EntriesIterator>;
+    using IndexItem = std::pair<const Key, EntriesIterator>;
     /// key:entry_position mapping for fast entry lookups by key
     using Index = std::unordered_map<Key, EntriesIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<IndexItem> >;
     using IndexIterator = typename Index::iterator;

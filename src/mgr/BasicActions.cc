@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,13 +27,13 @@ Mgr::IndexAction::Create(const Command::Pointer &cmd)
 
 Mgr::IndexAction::IndexAction(const Command::Pointer &aCmd): Action(aCmd)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
 }
 
 void
 Mgr::IndexAction::dump(StoreEntry *)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
 }
 
 Mgr::MenuAction::Pointer
@@ -44,13 +44,13 @@ Mgr::MenuAction::Create(const Command::Pointer &cmd)
 
 Mgr::MenuAction::MenuAction(const Command::Pointer &aCmd): Action(aCmd)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
 }
 
 void
 Mgr::MenuAction::dump(StoreEntry* entry)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     Must(entry != NULL);
 
     typedef CacheManager::Menu::const_iterator Iterator;
@@ -71,7 +71,7 @@ Mgr::ShutdownAction::Create(const Command::Pointer &cmd)
 
 Mgr::ShutdownAction::ShutdownAction(const Command::Pointer &aCmd): Action(aCmd)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
 }
 
 void
@@ -90,7 +90,7 @@ Mgr::ReconfigureAction::Create(const Command::Pointer &cmd)
 Mgr::ReconfigureAction::ReconfigureAction(const Command::Pointer &aCmd):
     Action(aCmd)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
 }
 
 void
@@ -109,7 +109,7 @@ Mgr::RotateAction::Create(const Command::Pointer &cmd)
 
 Mgr::RotateAction::RotateAction(const Command::Pointer &aCmd): Action(aCmd)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
 }
 
 void
@@ -133,7 +133,7 @@ Mgr::OfflineToggleAction::Create(const Command::Pointer &cmd)
 Mgr::OfflineToggleAction::OfflineToggleAction(const Command::Pointer &aCmd):
     Action(aCmd)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
 }
 
 void

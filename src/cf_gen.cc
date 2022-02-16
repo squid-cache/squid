@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -670,7 +670,7 @@ gen_dump(const EntryList &head, std::ostream &fout)
          "static void" << std::endl <<
          "dump_config(StoreEntry *entry)" << std::endl <<
          "{" << std::endl <<
-         "    debugs(5, 4, HERE);" << std::endl;
+         "    debugs(5, 4, MYNAME);" << std::endl;
 
     for (const auto &e : head) {
 
@@ -702,7 +702,7 @@ gen_free(const EntryList &head, std::ostream &fout)
          "static void" << std::endl <<
          "free_all(void)" << std::endl <<
          "{" << std::endl <<
-         "    debugs(5, 4, HERE);" << std::endl;
+         "    debugs(5, 4, MYNAME);" << std::endl;
 
     for (const auto &e : head) {
         if (!e.loc.size() || e.loc.compare("none") == 0)

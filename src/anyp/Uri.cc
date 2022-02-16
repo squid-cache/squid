@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -97,8 +97,7 @@ AnyP::Uri::SlashPath()
 void
 AnyP::Uri::host(const char *src)
 {
-    hostAddr_.setEmpty();
-    hostAddr_ = src;
+    hostAddr_.fromHost(src);
     if (hostAddr_.isAnyAddr()) {
         xstrncpy(host_, src, sizeof(host_));
         hostIsNumeric_ = false;
@@ -113,10 +112,11 @@ AnyP::Uri::host(const char *src)
 SBuf
 AnyP::Uri::hostOrIp() const
 {
-    static char ip[MAX_IPSTRLEN];
-    if (hostIsNumeric())
-        return SBuf(hostIP().toStr(ip, sizeof(ip)));
-    else
+    if (hostIsNumeric()) {
+        static char ip[MAX_IPSTRLEN];
+        const auto hostStrLen = hostIP().toHostStr(ip, sizeof(ip));
+        return SBuf(ip, hostStrLen);
+    } else
         return SBuf(host());
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,6 @@
 #include "squid.h"
 #include "mem_node.h"
 #include "MemStore.h"
-#include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
 #include "store/Controller.h"
@@ -94,7 +93,6 @@ Store::Controller::maintain()
 {
     static time_t last_warn_time = 0;
 
-    PROF_start(storeMaintainSwapSpace);
     swapDir->maintain();
 
     /* this should be emitted by the oversize dir, not globally */
@@ -107,8 +105,6 @@ Store::Controller::maintain()
             last_warn_time = squid_curtime;
         }
     }
-
-    PROF_stop(storeMaintainSwapSpace);
 }
 
 void
@@ -232,15 +228,8 @@ Store::Controller::sync(void)
 int
 Store::Controller::callback()
 {
-    /* This will likely double count. That's ok. */
-    PROF_start(storeDirCallback);
-
     /* mem cache callbacks ? */
-    int result = swapDir->callback();
-
-    PROF_stop(storeDirCallback);
-
-    return result;
+    return swapDir->callback();
 }
 
 /// update reference counters of the recently touched entry
@@ -395,7 +384,7 @@ Store::Controller::allowSharing(StoreEntry &entry, const cache_key *key)
         if (!found) {
             // !found should imply hittingRequiresCollapsing() regardless of writer presence
             if (!entry.hittingRequiresCollapsing()) {
-                debugs(20, DBG_IMPORTANT, "BUG: missing ENTRY_REQUIRES_COLLAPSING for " << entry);
+                debugs(20, DBG_IMPORTANT, "ERROR: Squid BUG: missing ENTRY_REQUIRES_COLLAPSING for " << entry);
                 throw TextException("transients entry missing ENTRY_REQUIRES_COLLAPSING", Here());
             }
 
@@ -464,7 +453,7 @@ Store::Controller::peek(const cache_key *key)
 
     if (sharedMemStore) {
         if (StoreEntry *e = sharedMemStore->get(key)) {
-            debugs(20, 3, HERE << "got mem-cached entry: " << *e);
+            debugs(20, 3, "got mem-cached entry: " << *e);
             return e;
         }
     }
@@ -610,7 +599,7 @@ Store::Controller::memoryOut(StoreEntry &e, const bool preserveSwappable)
     else if (localMemStore)
         keepInLocalMemory = keepForLocalMemoryCache(e);
 
-    debugs(20, 7, HERE << "keepInLocalMemory: " << keepInLocalMemory);
+    debugs(20, 7, "keepInLocalMemory: " << keepInLocalMemory);
 
     if (!keepInLocalMemory)
         e.trimMemory(preserveSwappable);
@@ -700,12 +689,12 @@ Store::Controller::handleIdleEntry(StoreEntry &e)
     // An idle, unlocked entry that only belongs to a SwapDir which controls
     // its own index, should not stay in the global store_table.
     if (!dereferenceIdle(e, keepInLocalMemory)) {
-        debugs(20, 5, HERE << "destroying unlocked entry: " << &e << ' ' << e);
+        debugs(20, 5, "destroying unlocked entry: " << &e << ' ' << e);
         destroyStoreEntry(static_cast<hash_link*>(&e));
         return;
     }
 
-    debugs(20, 5, HERE << "keepInLocalMemory: " << keepInLocalMemory);
+    debugs(20, 5, "keepInLocalMemory: " << keepInLocalMemory);
 
     // formerly known as "WARNING: found KEY_PRIVATE"
     assert(!EBIT_TEST(e.flags, KEY_PRIVATE));

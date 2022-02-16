@@ -1,17 +1,14 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 67    String */
-
 #include "squid.h"
 #include "base/TextException.h"
 #include "mgr/Registration.h"
-#include "profiler/Profiler.h"
 #include "Store.h"
 
 #include <climits>
@@ -21,11 +18,9 @@
 void
 String::allocBuffer(String::size_type sz)
 {
-    PROF_start(StringInitBuf);
     assert (undefined());
     char *newBuffer = (char*)memAllocString(sz, &sz);
     setBuffer(newBuffer, sz);
-    PROF_stop(StringInitBuf);
 }
 
 // low-level buffer assignment
@@ -102,13 +97,11 @@ String::assign(const char *str, int len)
 void
 String::allocAndFill(const char *str, int len)
 {
-    PROF_start(StringAllocAndFill);
     assert(str);
     allocBuffer(len + 1);
     len_ = len;
     memcpy(buf_, str, len);
     buf_[len] = '\0';
-    PROF_stop(StringAllocAndFill);
 }
 
 String::String(String const &old) : size_(0), len_(0), buf_(NULL)
@@ -124,8 +117,6 @@ String::String(String const &old) : size_(0), len_(0), buf_(NULL)
 void
 String::clean()
 {
-    PROF_start(StringClean);
-
     /* TODO if mempools has already closed this will FAIL!! */
     if (defined())
         memFreeString(size_, buf_);
@@ -135,7 +126,6 @@ String::clean()
     size_ = 0;
 
     buf_ = NULL;
-    PROF_stop(StringClean);
 }
 
 String::~String()
@@ -150,11 +140,9 @@ String::~String()
 void
 String::reset(char const *str)
 {
-    PROF_start(StringReset);
     clean(); // TODO: optimize to avoid cleaning the buffer if we can reuse it
     if (str)
         allocAndFill(str, strlen(str));
-    PROF_stop(StringReset);
 }
 
 void
@@ -162,7 +150,6 @@ String::append( char const *str, int len)
 {
     assert(str && len >= 0);
 
-    PROF_start(StringAppend);
     if (len_ + len + 1 /*'\0'*/ < size_) {
         xstrncpy(buf_+len_, str, len+1);
         len_ += len;
@@ -183,7 +170,6 @@ String::append( char const *str, int len)
 
         absorb(snew);
     }
-    PROF_stop(StringAppend);
 }
 
 void

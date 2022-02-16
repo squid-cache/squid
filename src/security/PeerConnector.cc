@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -143,7 +143,7 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
     if (!ctx || !Security::CreateClientSession(ctx, serverConnection(), "server https start")) {
         const auto xerrno = errno;
         if (!ctx) {
-            debugs(83, DBG_IMPORTANT, "Error initializing TLS connection: No security context.");
+            debugs(83, DBG_IMPORTANT, "ERROR: initializing TLS connection: No security context.");
         } // else CreateClientSession() did the appropriate debugs() already
         const auto anErr = new ErrorState(ERR_SOCKET_FAILURE, Http::scInternalServerError, request.getRaw(), al);
         anErr->xerrno = xerrno;
@@ -241,7 +241,7 @@ Security::PeerConnector::negotiate()
                 !(result.errorDetail && result.errorDetail->errorNo() == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY))
             return handleMissingCertificates(result);
 
-        debugs(83, DBG_IMPORTANT, "BUG: Honoring unexpected SSL_connect() error: X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY");
+        debugs(83, DBG_IMPORTANT, "ERROR: Squid BUG: Honoring unexpected SSL_connect() failure: X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY");
         // fall through to regular error handling
     }
 #endif
@@ -717,10 +717,10 @@ Security::PeerConnector::handleMissingCertificates(const Security::IoResult &ioR
     Must(callerHandlesMissingCertificates);
     callerHandlesMissingCertificates = false;
 
-    if (!computeMissingCertificateUrls(sconn))
-        return handleNegotiationResult(ioResult);
-
     suspendNegotiation(ioResult);
+
+    if (!computeMissingCertificateUrls(sconn))
+        return resumeNegotiation();
 
     assert(!urlsOfMissingCerts.empty());
     startCertDownloading(urlsOfMissingCerts.front());

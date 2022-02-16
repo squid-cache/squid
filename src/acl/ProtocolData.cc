@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,11 +14,6 @@
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "wordlist.h"
-
-ACLProtocolData::ACLProtocolData(ACLProtocolData const &old)
-{
-    assert(old.values.empty());
-}
 
 ACLProtocolData::~ACLProtocolData()
 {
@@ -66,13 +61,5 @@ ACLProtocolData::parse()
             // XXX: store the text pattern of this protocol name for live comparisons
         }
     }
-}
-
-ACLData<AnyP::ProtocolType> *
-ACLProtocolData::clone() const
-{
-    /* Splay trees don't clone yet. */
-    assert(values.empty());
-    return new ACLProtocolData(*this);
 }
 

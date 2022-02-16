@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,7 +21,7 @@
 
 Adaptation::Iterator::Iterator(
     Http::Message *aMsg, HttpRequest *aCause,
-    AccessLogEntry::Pointer &alp,
+    const AccessLogEntryPointer &alp,
     const ServiceGroupPointer &aGroup):
     AsyncJob("Iterator"),
     Adaptation::Initiate("Iterator"),
@@ -71,7 +71,7 @@ void Adaptation::Iterator::start()
 void Adaptation::Iterator::step()
 {
     ++iterations;
-    debugs(93,5, HERE << '#' << iterations << " plan: " << thePlan);
+    debugs(93,5, '#' << iterations << " plan: " << thePlan);
 
     Must(!theLauncher);
 
@@ -97,7 +97,7 @@ void Adaptation::Iterator::step()
 
     ServicePointer service = thePlan.current();
     Must(service != NULL);
-    debugs(93,5, HERE << "using adaptation service: " << service->cfg().key);
+    debugs(93,5, "using adaptation service: " << service->cfg().key);
 
     if (Adaptation::Config::needHistory) {
         Adaptation::History::Pointer ah = request->adaptHistory(true);
@@ -139,7 +139,7 @@ Adaptation::Iterator::handleAdaptedHeader(Http::Message *aMsg)
                 // definitely sent request, now use it as the cause
                 theCause = cause; // moving the lock
                 theMsg = 0;
-                debugs(93,3, HERE << "in request satisfaction mode");
+                debugs(93,3, "in request satisfaction mode");
             }
         }
     }
@@ -165,7 +165,7 @@ void Adaptation::Iterator::noteInitiatorAborted()
 
 void Adaptation::Iterator::handleAdaptationBlock(const Answer &answer)
 {
-    debugs(93,5, HERE << "blocked by " << answer);
+    debugs(93,5, "blocked by " << answer);
     clearAdaptation(theLauncher);
     updatePlan(false);
     sendAnswer(answer);
@@ -174,7 +174,7 @@ void Adaptation::Iterator::handleAdaptationBlock(const Answer &answer)
 
 void Adaptation::Iterator::handleAdaptationError(bool final)
 {
-    debugs(93,5, HERE << "final: " << final << " plan: " << thePlan);
+    debugs(93,5, "final: " << final << " plan: " << thePlan);
     clearAdaptation(theLauncher);
     updatePlan(false);
 
@@ -184,18 +184,18 @@ void Adaptation::Iterator::handleAdaptationError(bool final)
     // can we ignore the failure (compute while thePlan is not exhausted)?
     Must(!thePlan.exhausted());
     const bool canIgnore = thePlan.current()->cfg().bypass;
-    debugs(85,5, HERE << "flags: " << srcIntact << canIgnore << adapted);
+    debugs(85,5, "flags: " << srcIntact << canIgnore << adapted);
 
     if (srcIntact) {
         if (thePlan.replacement(filter()) != NULL) {
-            debugs(93,3, HERE << "trying a replacement service");
+            debugs(93,3, "trying a replacement service");
             step();
             return;
         }
     }
 
     if (canIgnore && srcIntact && adapted) {
-        debugs(85,3, HERE << "responding with older adapted msg");
+        debugs(85,3, "responding with older adapted msg");
         sendAnswer(Answer::Forward(theMsg));
         mustStop("sent older adapted msg");
         return;
@@ -230,22 +230,22 @@ bool Adaptation::Iterator::updatePlan(bool adopt)
 
     Adaptation::History::Pointer ah = r->adaptHistory();
     if (!ah) {
-        debugs(85,9, HERE << "no history to store a service-proposed plan");
+        debugs(85,9, "no history to store a service-proposed plan");
         return false; // the feature is not enabled or is not triggered
     }
 
     String services;
     if (!ah->extractNextServices(services)) { // clears history
-        debugs(85,9, HERE << "no service-proposed plan received");
+        debugs(85,9, "no service-proposed plan received");
         return false; // the service did not provide a new plan
     }
 
     if (!adopt) {
-        debugs(85,3, HERE << "rejecting service-proposed plan");
+        debugs(85,3, "rejecting service-proposed plan");
         return false;
     }
 
-    debugs(85,3, HERE << "retiring old plan: " << thePlan);
+    debugs(85,3, "retiring old plan: " << thePlan);
 
     Adaptation::ServiceFilter f = this->filter();
     DynamicGroupCfg current, future;
@@ -253,13 +253,13 @@ bool Adaptation::Iterator::updatePlan(bool adopt)
 
     if (!future.empty()) {
         ah->setFutureServices(future);
-        debugs(85,3, HERE << "noted future service-proposed plan: " << future);
+        debugs(85,3, "noted future service-proposed plan: " << future);
     }
 
     // use the current config even if it is empty; we must replace the old plan
     theGroup = new DynamicServiceChain(current, f); // refcounted
     thePlan = ServicePlan(theGroup, f);
-    debugs(85,3, HERE << "adopted service-proposed plan: " << thePlan);
+    debugs(85,3, "adopted service-proposed plan: " << thePlan);
     return true;
 }
 

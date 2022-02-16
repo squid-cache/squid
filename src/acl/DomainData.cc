@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -80,7 +80,7 @@ aclDomainCompare(T const &a, T const &b)
             bool d3big = (strlen(d3) > strlen(d4)); // Always suggest removing the longer one.
             debugs(28, DBG_IMPORTANT, "WARNING: '" << (d3big?d3:d4) << "' is a subdomain of '" << (d3big?d4:d3) << "'");
             debugs(28, DBG_IMPORTANT, "WARNING: You should remove '" << (d3big?d3:d4) << "' from the ACL named '" << AclMatchedName << "'");
-            debugs(28, 2, HERE << "Ignore '" << d3 << "' to keep splay tree searching predictable");
+            debugs(28, 2, "Ignore '" << d3 << "' to keep splay tree searching predictable");
         }
     } else if (ret == 0) {
         // It may be an exact duplicate. No problem. Just drop.
@@ -148,13 +148,5 @@ bool
 ACLDomainData::empty() const
 {
     return domains->empty();
-}
-
-ACLData<char const *> *
-ACLDomainData::clone() const
-{
-    /* Splay trees don't clone yet. */
-    assert (!domains);
-    return new ACLDomainData;
 }
 

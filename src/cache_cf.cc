@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,6 +33,7 @@
 #include "eui/Config.h"
 #include "ExternalACL.h"
 #include "format/Format.h"
+#include "fqdncache.h"
 #include "ftp/Elements.h"
 #include "globals.h"
 #include "HttpHeaderTools.h"
@@ -563,7 +564,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
                     }
                 } catch (...) {
                     // fatal for now
-                    debugs(3, DBG_CRITICAL, "configuration error: " << CurrentException);
+                    debugs(3, DBG_CRITICAL, "ERROR: configuration failure: " << CurrentException);
                     self_destruct();
                 }
             }
@@ -598,7 +599,7 @@ parseConfigFileOrThrow(const char *file_name)
 {
     int err_count = 0;
 
-    debugs(5, 4, HERE);
+    debugs(5, 4, MYNAME);
 
     configFreeMemory();
 
@@ -1881,7 +1882,7 @@ parse_http_header_access(HeaderManglers **pm)
 
     if ((t = ConfigParser::NextToken()) == NULL) {
         debugs(3, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(3, DBG_CRITICAL, "parse_http_header_access: missing header name.");
+        debugs(3, DBG_CRITICAL, "ERROR: parse_http_header_access: missing header name.");
         return;
     }
 
@@ -1920,7 +1921,7 @@ parse_http_header_replace(HeaderManglers **pm)
 
     if ((t = ConfigParser::NextToken()) == NULL) {
         debugs(3, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(3, DBG_CRITICAL, "parse_http_header_replace: missing header name.");
+        debugs(3, DBG_CRITICAL, "ERROR: parse_http_header_replace: missing header name.");
         return;
     }
 
@@ -1970,7 +1971,7 @@ parse_authparam(Auth::ConfigVector * config)
         Auth::Scheme::Pointer theScheme = Auth::Scheme::Find(type_str);
 
         if (theScheme == NULL) {
-            debugs(3, DBG_CRITICAL, "Parsing Config File: Unknown authentication scheme '" << type_str << "'.");
+            debugs(3, DBG_CRITICAL, "ERROR: Failure while parsing Config File: Unknown authentication scheme '" << type_str << "'.");
             self_destruct();
             return;
         }
@@ -2731,13 +2732,9 @@ static void
 dump_refreshpattern(StoreEntry * entry, const char *name, RefreshPattern * head)
 {
     while (head != NULL) {
-        storeAppendPrintf(entry, "%s%s %s %d %d%% %d",
-                          name,
-                          head->pattern.flags&REG_ICASE ? " -i" : null_string,
-                          head->pattern.c_str(),
-                          (int) head->min / 60,
-                          (int) (100.0 * head->pct + 0.5),
-                          (int) head->max / 60);
+        PackableStream os(*entry);
+        os << name << ' ';
+        head->printHead(os);
 
         if (head->max_stale >= 0)
             storeAppendPrintf(entry, " max-stale=%d", head->max_stale);
@@ -2779,7 +2776,6 @@ static void
 parse_refreshpattern(RefreshPattern ** head)
 {
     char *token;
-    char *pattern;
     time_t min = 0;
     double pct = 0.0;
     time_t max = 0;
@@ -2799,29 +2795,8 @@ parse_refreshpattern(RefreshPattern ** head)
 
     int i;
     RefreshPattern *t;
-    regex_t comp;
-    int errcode;
-    int flags = REG_EXTENDED | REG_NOSUB;
 
-    if ((token = ConfigParser::RegexPattern()) != NULL) {
-
-        if (strcmp(token, "-i") == 0) {
-            flags |= REG_ICASE;
-            token = ConfigParser::RegexPattern();
-        } else if (strcmp(token, "+i") == 0) {
-            flags &= ~REG_ICASE;
-            token = ConfigParser::RegexPattern();
-        }
-
-    }
-
-    if (token == NULL) {
-        debugs(3, DBG_CRITICAL, "FATAL: refresh_pattern missing the regex pattern parameter");
-        self_destruct();
-        return;
-    }
-
-    pattern = xstrdup(token);
+    auto regex = LegacyParser.regex("refresh_pattern regex");
 
     i = GetInteger();       /* token: min */
 
@@ -2888,22 +2863,12 @@ parse_refreshpattern(RefreshPattern ** head)
                   ) {
             debugs(22, DBG_PARSE_NOTE(2), "UPGRADE: refresh_pattern option '" << token << "' is obsolete. Remove it.");
         } else
-            debugs(22, DBG_CRITICAL, "refreshAddToList: Unknown option '" << pattern << "': " << token);
-    }
-
-    if ((errcode = regcomp(&comp, pattern, flags)) != 0) {
-        char errbuf[256];
-        regerror(errcode, &comp, errbuf, sizeof errbuf);
-        debugs(22, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(22, DBG_CRITICAL, "refreshAddToList: Invalid regular expression '" << pattern << "': " << errbuf);
-        xfree(pattern);
-        return;
+            debugs(22, DBG_CRITICAL, "ERROR: Unknown refresh_pattern option: " << token);
     }
 
     pct = pct < 0.0 ? 0.0 : pct;
     max = max < 0 ? 0 : max;
-    t = new RefreshPattern(pattern, flags);
-    t->pattern.regex = comp;
+    t = new RefreshPattern(std::move(regex));
     t->min = min;
     t->pct = pct;
     t->max = max;
@@ -2943,8 +2908,6 @@ parse_refreshpattern(RefreshPattern ** head)
         head = &(*head)->next;
 
     *head = t;
-
-    xfree(pattern);
 }
 
 static void
@@ -3747,7 +3710,7 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
     } else if (strncmp(token, "key=", 4) == 0) {
         s->secure.parse(token);
     } else if (strncmp(token, "version=", 8) == 0) {
-        debugs(3, DBG_PARSE_NOTE(1), "UPGRADE WARNING: '" << token << "' is deprecated " <<
+        debugs(3, DBG_PARSE_NOTE(1), "WARNING: UPGRADE: '" << token << "' is deprecated " <<
                "in " << cfg_directive << ". Use 'options=' instead.");
         s->secure.parse(token);
     } else if (strncmp(token, "options=", 8) == 0) {
@@ -3757,7 +3720,7 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
     } else if (strncmp(token, "clientca=", 9) == 0) {
         s->secure.parse(token);
     } else if (strncmp(token, "cafile=", 7) == 0) {
-        debugs(3, DBG_PARSE_NOTE(1), "UPGRADE WARNING: '" << token << "' is deprecated " <<
+        debugs(3, DBG_PARSE_NOTE(1), "WARNING: UPGRADE: '" << token << "' is deprecated " <<
                "in " << cfg_directive << ". Use 'tls-cafile=' instead.");
         s->secure.parse(token);
     } else if (strncmp(token, "capath=", 7) == 0) {
@@ -4015,6 +3978,7 @@ void
 configFreeMemory(void)
 {
     free_all();
+    Dns::ResolveClientAddressesAsap = false;
     Config.ssl_client.sslContext.reset();
 #if USE_OPENSSL
     Ssl::unloadSquidUntrusted();
@@ -4179,6 +4143,7 @@ static void
 parse_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap)
 {
 #if !HAVE_CPU_AFFINITY
+    (void)cpuAffinityMap;
     debugs(3, DBG_CRITICAL, "FATAL: Squid built with no CPU affinity " <<
            "support, do not set 'cpu_affinity_map'");
     self_destruct();

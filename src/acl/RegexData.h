@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,11 +24,15 @@ public:
     virtual bool match(char const *user);
     virtual SBufList dump() const;
     virtual void parse();
-    virtual const Acl::ParameterFlags &supportedFlags() const;
     virtual bool empty() const;
-    virtual ACLData<char const *> *clone() const;
 
 private:
+    /// whether parse() is called in a case insensitive context
+    static Acl::BooleanOptionValue CaseInsensitive_;
+
+    /* ACLData API */
+    virtual const Acl::Options &lineOptions();
+
     std::list<RegexPattern> data;
 };
 

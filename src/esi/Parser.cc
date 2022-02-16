@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 86    ESI processing */
 
 #include "squid.h"
+#include "Debug.h"
 #include "esi/Parser.h"
 #include "fatal.h"
 
@@ -25,19 +26,27 @@ ESIParser::GetRegistry()
 ESIParser::Pointer
 ESIParser::NewParser(ESIParserClient *aClient)
 {
-    if (Parser == NULL) {
-        Parser = GetRegistry().front();
-
-        // if type name matters, use it
-        if (strcasecmp(Type, "auto") != 0) {
-            for (auto *p : GetRegistry()) {
-                if (p && strcasecmp(p->name, Type) != 0)
-                    Parser = p;
-            }
+    if (!Parser) {
+        // if esi_parser is configured, use that
+        const char *selectParserName = Type;
+        if (!selectParserName || strcasecmp(selectParserName, "auto") == 0) {
+#if HAVE_LIBXML2
+            // libxml2 is the more secure. prefer when possible
+            selectParserName = "libxml2";
+#else
+            // expat is more widely available
+            selectParserName = "expat";
+#endif
         }
 
-        if (Parser == NULL)
-            fatal ("Unknown ESI Parser type");
+        for (auto *p : GetRegistry()) {
+            if (p && strcasecmp(p->name, selectParserName) == 0)
+                Parser = p;
+        }
+
+        if (!Parser)
+            fatalf("Unknown ESI Parser type '%s'", selectParserName);
+        debugs(86, 2, "selected ESI parser: " << Parser->name);
     }
 
     return (Parser->newParser)(aClient);

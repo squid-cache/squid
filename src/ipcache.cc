@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -455,7 +455,7 @@ ipcacheCallback(ipcache_entry *i, const bool hit, const int wait)
 void
 ipcache_entry::latestError(const char *text, const int debugLevel)
 {
-    debugs(14, debugLevel, "DNS error while resolving " << name() << ": " << text);
+    debugs(14, debugLevel, "ERROR: DNS failure while resolving " << name() << ": " << text);
     safe_free(error_message);
     error_message = xstrdup(text);
 }
@@ -763,12 +763,12 @@ ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
     char buf[MAX_IPSTRLEN];
 
     if (!sentry) {
-        debugs(14, DBG_CRITICAL, HERE << "CRITICAL: sentry is NULL!");
+        debugs(14, DBG_CRITICAL, "ERROR: sentry is NULL!");
         return;
     }
 
     if (!i) {
-        debugs(14, DBG_CRITICAL, HERE << "CRITICAL: ipcache_entry is NULL!");
+        debugs(14, DBG_CRITICAL, "ERROR: ipcache_entry is NULL!");
         storeAppendPrintf(sentry, "CRITICAL ERROR\n");
         return;
     }
@@ -1131,7 +1131,7 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
         if (strchr(ipaddr, ':') && strspn(ipaddr, "0123456789abcdefABCDEF:") == strlen(ipaddr)) {
             debugs(14, 3, "ipcacheAddEntryFromHosts: Skipping IPv6 address '" << ipaddr << "'");
         } else {
-            debugs(14, DBG_IMPORTANT, "ipcacheAddEntryFromHosts: Bad IP address '" << ipaddr << "'");
+            debugs(14, DBG_IMPORTANT, "ERROR: ipcacheAddEntryFromHosts: Bad IP address '" << ipaddr << "'");
         }
 
         return 1;
@@ -1146,7 +1146,7 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
         if (1 == i->flags.fromhosts) {
             ipcacheUnlockEntry(i);
         } else if (i->locks > 0) {
-            debugs(14, DBG_IMPORTANT, "ipcacheAddEntryFromHosts: can't add static entry for locked name '" << name << "'");
+            debugs(14, DBG_IMPORTANT, "ERROR: ipcacheAddEntryFromHosts: cannot add static entry for locked name '" << name << "'");
             return 1;
         } else {
             ipcacheRelease(i);

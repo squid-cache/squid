@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,10 +8,10 @@
 
 #include "squid.h"
 #include "repl_modules.h"
+#include "Store.h"
 #include "store_digest.h"
 #include "store_log.h"
 #include "store_rebuild.h"
-#include "Store.h"
 #include "StoreClient.h"
 
 #define STUB_API "store_client.cc"

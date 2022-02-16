@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1004,7 +1004,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::
 
     if (!srv->stats.pending && !srv->stats.timedout) {
         /* someone spoke without being spoken to */
-        debugs(84, DBG_IMPORTANT, "helperHandleRead: unexpected read from " <<
+        debugs(84, DBG_IMPORTANT, "ERROR: helperHandleRead: unexpected read from " <<
                hlp->id_name << " #" << srv->index << ", " << (int)len <<
                " bytes '" << srv->rbuf << "'");
 
@@ -1048,7 +1048,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::
                 if (srv->stats.timedout) {
                     debugs(84, 3, "Timedout reply received for request-ID: " << i << " , ignore");
                 } else {
-                    debugs(84, DBG_IMPORTANT, "helperHandleRead: unexpected reply on channel " <<
+                    debugs(84, DBG_IMPORTANT, "ERROR: helperHandleRead: unexpected reply on channel " <<
                            i << " from " << hlp->id_name << " #" << srv->index <<
                            " '" << srv->rbuf << "'");
                 }
@@ -1123,7 +1123,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len
 
     if (r == NULL) {
         /* someone spoke without being spoken to */
-        debugs(84, DBG_IMPORTANT, "helperStatefulHandleRead: unexpected read from " <<
+        debugs(84, DBG_IMPORTANT, "ERROR: helperStatefulHandleRead: unexpected read from " <<
                hlp->id_name << " #" << srv->index << ", " << (int)len <<
                " bytes '" << srv->rbuf << "'");
 
@@ -1392,7 +1392,7 @@ helperDispatch(helper_server * srv, Helper::Xaction * r)
     const uint64_t reqId = ++srv->nextRequestId;
 
     if (!cbdataReferenceValid(r->request.data)) {
-        debugs(84, DBG_IMPORTANT, "helperDispatch: invalid callback data");
+        debugs(84, DBG_IMPORTANT, "ERROR: helperDispatch: invalid callback data");
         delete r;
         return;
     }
@@ -1438,7 +1438,7 @@ helperStatefulDispatch(helper_stateful_server * srv, Helper::Xaction * r)
     statefulhelper *hlp = srv->parent;
 
     if (!cbdataReferenceValid(r->request.data)) {
-        debugs(84, DBG_IMPORTANT, "helperStatefulDispatch: invalid callback data");
+        debugs(84, DBG_IMPORTANT, "ERROR: helperStatefulDispatch: invalid callback data");
         delete r;
         hlp->cancelReservation(srv->reservationId);
         return;
@@ -1555,12 +1555,12 @@ helper_server::checkForTimedOutRequests(bool const retry)
 void
 helper_server::requestTimeout(const CommTimeoutCbParams &io)
 {
-    debugs(26, 3, HERE << io.conn);
+    debugs(26, 3, io.conn);
     helper_server *srv = static_cast<helper_server *>(io.data);
 
     srv->checkForTimedOutRequests(srv->parent->retryTimedOut);
 
-    debugs(84, 3, HERE << io.conn << " establish new helper_server::requestTimeout");
+    debugs(84, 3, io.conn << " establish new helper_server::requestTimeout");
     AsyncCall::Pointer timeoutCall = commCbCall(84, 4, "helper_server::requestTimeout",
                                      CommTimeoutCbPtrFun(helper_server::requestTimeout, srv));
 

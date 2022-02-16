@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -105,8 +105,6 @@ main(int, char **)
     int max_fd = 0;
 
     struct timeval tv;
-    const char *debug_args = "ALL,10";
-    char *t;
     time_t last_check_time = 0;
 
     /*
@@ -118,28 +116,28 @@ main(int, char **)
     int squid_link = -1;
 
     /** start by initializing the pinger debug cache.log-pinger. */
-    if ((t = getenv("SQUID_DEBUG")))
-        debug_args = xstrdup(t);
+    const auto envOptions = getenv("SQUID_DEBUG");
+    Debug::debugOptions = xstrdup(envOptions ? envOptions : "ALL,10");
 
     getCurrentTime();
 
     // determine IPv4 or IPv6 capabilities before using sockets.
     Ip::ProbeTransport();
 
-    _db_init(NULL, debug_args);
+    Debug::BanCacheLogUse();
 
     debugs(42, DBG_CRITICAL, "pinger: Initialising ICMP pinger ...");
 
     icmp4_worker = icmp4.Open();
     if (icmp4_worker < 0) {
-        debugs(42, DBG_CRITICAL, "pinger: Unable to start ICMP pinger.");
+        debugs(42, DBG_CRITICAL, "ERROR: pinger: Unable to start ICMP pinger.");
     }
     max_fd = max(max_fd, icmp4_worker);
 
 #if USE_IPV6
     icmp6_worker = icmp6.Open();
     if (icmp6_worker <0 ) {
-        debugs(42, DBG_CRITICAL, "pinger: Unable to start ICMPv6 pinger.");
+        debugs(42, DBG_CRITICAL, "ERROR: pinger: Unable to start ICMPv6 pinger.");
     }
     max_fd = max(max_fd, icmp6_worker);
 #endif
@@ -218,7 +216,7 @@ main(int, char **)
 
         if (x < 0) {
             int xerrno = errno;
-            debugs(42, DBG_CRITICAL, HERE << " FATAL Shutdown. select()==" << x << ", ERR: " << xstrerr(xerrno));
+            debugs(42, DBG_CRITICAL, "FATAL: select()==" << x << ", ERR: " << xstrerr(xerrno));
             control.Close();
             exit(EXIT_FAILURE);
         }

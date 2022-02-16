@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "acl/Gadgets.h"
 #include "base/Here.h"
+#include "base/RegexPattern.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
@@ -23,7 +24,6 @@ ConfigParser::TokenType ConfigParser::LastTokenType = ConfigParser::SimpleToken;
 const char *ConfigParser::CfgLine = NULL;
 const char *ConfigParser::CfgPos = NULL;
 std::queue<char *> ConfigParser::CfgLineTokens_;
-std::queue<std::string> ConfigParser::Undo_;
 bool ConfigParser::AllowMacros_ = false;
 bool ConfigParser::ParseQuotedOrToEol_ = false;
 bool ConfigParser::ParseKvPair_ = false;
@@ -60,27 +60,6 @@ ConfigParser::destruct()
                cfg_filename, config_lineno, config_input_line);
 }
 
-void
-ConfigParser::TokenPutBack(const char *tok)
-{
-    assert(tok);
-    Undo_.push(tok);
-}
-
-char *
-ConfigParser::Undo()
-{
-    static char undoToken[CONFIG_LINE_LIMIT];
-    if (!Undo_.empty()) {
-        xstrncpy(undoToken, Undo_.front().c_str(), sizeof(undoToken));
-        undoToken[sizeof(undoToken) - 1] = '\0';
-        if (!PreviewMode_)
-            Undo_.pop();
-        return undoToken;
-    }
-    return NULL;
-}
-
 char *
 ConfigParser::strtokFile()
 {
@@ -92,9 +71,6 @@ ConfigParser::strtokFile()
 
     char *t;
     static char buf[CONFIG_LINE_LIMIT];
-
-    if ((t = ConfigParser::Undo()))
-        return t;
 
     do {
 
@@ -356,10 +332,6 @@ char *
 ConfigParser::NextToken()
 {
     char *token = NULL;
-    if ((token = ConfigParser::Undo())) {
-        debugs(3, 6, "TOKEN (undone): " << token);
-        return token;
-    }
 
     do {
         while (token == NULL && !CfgFiles.empty()) {
@@ -486,7 +458,7 @@ ConfigParser::NextKvPair(char * &key, char * &value)
     if (!key)
         return false;
     if (!value) {
-        debugs(3, DBG_CRITICAL, "Error while parsing key=value token. Value missing after: " << key);
+        debugs(3, DBG_CRITICAL, "ERROR: Failure while parsing key=value token. Value missing after: " << key);
         return false;
     }
 
@@ -506,17 +478,29 @@ ConfigParser::RegexStrtokFile()
     return token;
 }
 
-char *
-ConfigParser::RegexPattern()
+std::unique_ptr<RegexPattern>
+ConfigParser::regex(const char *expectedRegexDescription)
 {
-    if (ConfigParser::RecognizeQuotedValues) {
-        debugs(3, DBG_CRITICAL, "FATAL: Can not read regex expression while configuration_includes_quoted_values is enabled");
-        self_destruct();
-    }
+    if (RecognizeQuotedValues)
+        throw TextException("Cannot read regex expression while configuration_includes_quoted_values is enabled", Here());
+
+    SBuf pattern;
+    int flags = REG_EXTENDED | REG_NOSUB;
+
     ConfigParser::RecognizeQuotedPair_ = true;
-    char * token = NextToken();
+    const auto flagOrPattern = token(expectedRegexDescription);
+    if (flagOrPattern.cmp("-i") == 0) {
+        flags |= REG_ICASE;
+        pattern = token(expectedRegexDescription);
+    } else if (flagOrPattern.cmp("+i") == 0) {
+        flags &= ~REG_ICASE;
+        pattern = token(expectedRegexDescription);
+    } else {
+        pattern = flagOrPattern;
+    }
     ConfigParser::RecognizeQuotedPair_ = false;
-    return token;
+
+    return std::unique_ptr<RegexPattern>(new RegexPattern(pattern, flags));
 }
 
 char *

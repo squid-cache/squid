@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -78,6 +78,11 @@ public:
     void unregister(Comm::ConnectionPointer &conn);
     void unregister(int fd);
     void complete();
+
+    /// Mark reply as written to Store in its entirety, including the header and
+    /// any body. If the reply has a body, the entire body has to be stored.
+    void markStoredReplyAsWhole(const char *whyWeAreSure);
+
     void handleUnregisteredServerEnd();
     int reforward();
     bool reforwardableStatus(const Http::StatusCode s) const;
@@ -109,9 +114,8 @@ private:
     /* PeerSelectionInitiator API */
     virtual void noteDestination(Comm::ConnectionPointer conn) override;
     virtual void noteDestinationsEnd(ErrorState *selectionError) override;
-    /// whether the successfully selected path destination or the established
-    /// server connection is still in use
-    bool usingDestination() const;
+
+    bool transporting() const;
 
     void noteConnection(HappyConnOpenerAnswer &);
 
@@ -159,6 +163,8 @@ private:
     void notifyConnOpener();
     void reactToZeroSizeObject();
 
+    void updateAleWithFinalError();
+
 public:
     StoreEntry *entry;
     HttpRequest *request;
@@ -191,6 +197,9 @@ private:
     /// over the (encrypted, if needed) transport connection to that cache_peer
     JobWait<Http::Tunneler> peerWait;
 
+    /// whether we are waiting for the last dispatch()ed activity to end
+    bool waitingForDispatched;
+
     ResolvedPeersPointer destinations; ///< paths for forwarding the request
     Comm::ConnectionPointer serverConn; ///< a successfully opened connection to a server.
     PeerConnectionPointer destinationReceipt; ///< peer selection result (or nil)
@@ -200,6 +209,10 @@ private:
     /// possible pconn race states
     typedef enum { raceImpossible, racePossible, raceHappened } PconnRace;
     PconnRace pconnRace; ///< current pconn race state
+
+    /// Whether the entire reply (including any body) was written to Store.
+    /// The string literal value is only used for debugging.
+    const char *storedWholeReply_;
 };
 
 class acl_tos;
