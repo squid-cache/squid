@@ -641,7 +641,6 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
     if (transporting())
         return; // and continue to receive destinations for backup
 
-    // This is the first path candidate we have seen. Use it.
     useDestinations();
 }
 
