@@ -31,36 +31,18 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.cc \
 	LoadableModules.h
 
-SUBDIRS = \
-	mem \
-	debug \
-	base \
-	anyp \
-	helper \
-	dns \
-	ftp \
-	parser \
-	comm \
-	error \
-	eui \
-	acl \
-	format \
-	clients \
-	sbuf \
-	servers \
-	fs \
-	repl \
-	store \
-	DiskIO \
-	proxyp
+SUBDIRS = mem debug base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
+DIST_SUBDIRS = mem debug base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
 
 if ENABLE_AUTH
 SUBDIRS += auth
 AUTH_LIBS= auth/libauth.la
 AUTH_ACL_LIBS= auth/libacls.la
 endif
+DIST_SUBDIRS += auth
 
 SUBDIRS	+= http ip icmp ident log ipc mgr
+DIST_SUBDIRS += http ip icmp ident log ipc mgr
 
 SSL_LIBS=
 if ENABLE_SSL
@@ -69,6 +51,7 @@ SSL_LIBS += \
 	ssl/libsslsquid.la \
 	ssl/libsslutil.la
 endif
+DIST_SUBDIRS += ssl security
 SUBDIRS += security
 
 SNMP_ALL_SOURCE = \
@@ -84,10 +67,12 @@ SNMP_LIBS = snmp/libsnmp.la $(SNMPLIB)
 else
 SNMP_SOURCE =
 endif
+DIST_SUBDIRS += snmp
 
 if ENABLE_ADAPTATION
 SUBDIRS += adaptation
 endif
+DIST_SUBDIRS += adaptation
 
 if ENABLE_ESI
 SUBDIRS += esi
@@ -99,6 +84,7 @@ ESI_LIBS = \
 else
 ESI_LIBS =
 endif
+DIST_SUBDIRS += esi
 
 DELAY_POOL_ALL_SOURCE = \
 	BandwidthBucket.cc \
