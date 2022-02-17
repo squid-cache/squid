@@ -134,6 +134,10 @@ PFldap_start_tls_s Win32_ldap_start_tls_s;
 #include <lber.h>
 #include <ldap.h>
 
+#ifndef LDAP_SECURITY_ERROR
+#define LDAP_SECURITY_ERROR(err) (0x2f <= (err) && (err) <= 0x32) // [47, 50]
+#endif
+
 #endif
 
 #define PROGRAM_NAME "basic_ldap_auth"
