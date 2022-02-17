@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "base/CharacterSet.h"
-#include "base/Raw.h"
+#include "base/IoManip.h"
 #include "security/CommunicationSecrets.h"
 #include "security/Session.h"
 

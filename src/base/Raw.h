@@ -11,8 +11,7 @@
 #ifndef SQUID_SRC_BASE_RAW_H
 #define SQUID_SRC_BASE_RAW_H
 
-#include <iostream>
-#include <iomanip>
+#include <iosfwd>
 
 /// Prints raw and/or non-terminated data safely, efficiently, and beautifully.
 /// Allows raw data debugging in debugs() statements with low debugging levels
@@ -55,67 +54,12 @@ private:
     bool useGap_; ///< whether to print leading space if label is missing
 };
 
-inline
-std::ostream &operator <<(std::ostream &os, const Raw &raw)
-{
-    return raw.print(os);
-}
-
-/// debugs objects pointed by possibly nil pointers: label=object
-template <class Pointer>
-class RawPointerT {
-public:
-    RawPointerT(const char *aLabel, const Pointer &aPtr):
-        label(aLabel), ptr(aPtr) {}
-    const char *label; /// the name or description of the being-debugged object
-    const Pointer &ptr; /// a possibly nil pointer to the being-debugged object
-};
-
-/// convenience wrapper for creating  RawPointerT<> objects
-template <class Pointer>
-inline RawPointerT<Pointer>
-RawPointer(const char *label, const Pointer &ptr)
-{
-    return RawPointerT<Pointer>(label, ptr);
-}
-
-/// prints RawPointerT<>, dereferencing the raw pointer if possible
-template <class Pointer>
 inline std::ostream &
-operator <<(std::ostream &os, const RawPointerT<Pointer> &pd)
+operator <<(std::ostream &os, const Raw &raw)
 {
-    os << pd.label << '=';
-    if (pd.ptr)
-        return os << *pd.ptr;
-    else
-        return os << "[nil]";
-}
-
-/// std::ostream manipulator to print integers as hex numbers prefixed by 0x
-template <class Integer>
-class AsHex
-{
-public:
-    explicit AsHex(const Integer n): raw(n) {}
-    Integer raw; ///< the integer to print
-};
-
-template <class Integer>
-inline std::ostream &
-operator <<(std::ostream &os, const AsHex<Integer> number)
-{
-    const auto oldFlags = os.flags();
-    os << std::hex << std::showbase << number.raw;
-    os.setf(oldFlags);
+    raw.print(os);
     return os;
 }
-
-/// a helper to ease AsHex object creation
-template <class Integer>
-inline AsHex<Integer> asHex(const Integer n) { return AsHex<Integer>(n); }
-
-/// Prints the first n data bytes using hex notation. Does nothing if n is 0.
-void PrintHex(std::ostream &, const char *data, size_t n);
 
 #endif /* SQUID_SRC_BASE_RAW_H */
 
