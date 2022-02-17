@@ -11,7 +11,7 @@
 
 #include "base/Here.h"
 
-/// Reports the described assertion (at the given debugging level) and throws
+/// Reports the description (at the given debugging level) and throws
 /// the corresponding exception. Reduces compiled code size of Assure() and
 /// Must() callers. Do not call directly; use Assure() instead.
 /// \param description explains the condition (i.e. what MUST happen)
