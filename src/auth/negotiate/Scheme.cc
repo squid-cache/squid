@@ -9,8 +9,8 @@
 #include "squid.h"
 #include "auth/negotiate/Config.h"
 #include "auth/negotiate/Scheme.h"
-#include "debug/Stream.h"
 #include "debug/Messages.h"
+#include "debug/Stream.h"
 #include "helper.h"
 
 Auth::Scheme::Pointer Auth::Negotiate::Scheme::_instance = NULL;

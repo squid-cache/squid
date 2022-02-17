@@ -9,8 +9,8 @@
 #include "squid.h"
 #include "auth/ntlm/Config.h"
 #include "auth/ntlm/Scheme.h"
-#include "debug/Stream.h"
 #include "debug/Messages.h"
+#include "debug/Stream.h"
 #include "helper.h"
 
 Auth::Scheme::Pointer Auth::Ntlm::Scheme::_instance = NULL;
