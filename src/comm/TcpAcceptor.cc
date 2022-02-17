@@ -282,6 +282,7 @@ Comm::TcpAcceptor::acceptOne()
         if (intendedForUserConnections())
             logAcceptError(newConnDetails);
         notify(flag, newConnDetails);
+        // XXX: not under async job call protections
         mustStop("Listener socket closed");
         return;
     }
@@ -395,12 +396,12 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     if (listenPort_->flags.tproxyInterceptLocally()) {
         if (!Ip::Interceptor.LookupTproxy(details)) {
              debugs(50, DBG_IMPORTANT, "ERROR: TPROXY lookup failed to locate original IPs on " << details);
-             return Comm::COMM_ERROR;
+             return Comm::NOMESSAGE;
          }
     } else if (listenPort_->flags.natInterceptLocally()) {
         if (!Ip::Interceptor.LookupNat(details)) {
             debugs(50, DBG_IMPORTANT, "ERROR: NAT lookup failed to locate original IPs on " << details);
-            return Comm::COMM_ERROR;
+            return Comm::NOMESSAGE;
         }
     }
 
