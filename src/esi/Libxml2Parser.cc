@@ -91,7 +91,6 @@ ESILibxml2Parser::ESILibxml2Parser(ESIParserClient *aClient) : theClient (aClien
 
     /* TODO: grab the document encoding from the headers */
     parser = xmlCreatePushParserCtxt(&sax, static_cast<void *>(this), NULL, 0, NULL);
-    xmlSetFeature(parser, "substitute entities", 0);
 
     if (entity_doc == NULL)
         entity_doc = htmlNewDoc(NULL, NULL);
