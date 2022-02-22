@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "base/CharacterSet.h"
 #include "base/EnumIterator.h"
+#include "base/Raw.h"
 #include "base64.h"
 #include "globals.h"
 #include "http/ContentLengthInterpreter.h"

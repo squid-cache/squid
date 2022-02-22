@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "comm/Tcp.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 #if HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>

@@ -9,7 +9,7 @@
 /* DEBUG: section 20    Swap Dir base object */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "defines.h"
 #include "Store.h"
 #include "StoreIOState.h"

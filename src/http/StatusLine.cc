@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "base/Packable.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "http/one/ResponseParser.h"
 #include "http/StatusLine.h"
 #include "parser/forward.h"

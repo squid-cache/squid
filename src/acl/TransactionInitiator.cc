@@ -12,7 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "acl/TransactionInitiator.h"
 #include "cache_cf.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "HttpRequest.h"
 #include "MasterXaction.h"
 #include "SquidConfig.h"

@@ -13,7 +13,7 @@
 #define private public
 #define protected public
 
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "http/one/RequestParser.h"
 #include "http/RequestMethod.h"
 #include "MemBuf.h"

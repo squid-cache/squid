@@ -8,8 +8,9 @@
 
 #include "squid.h"
 #include "base/CharacterSet.h"
+#include "base/Raw.h"
 #include "base/RefCount.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "sbuf/DetailedStats.h"
 #include "sbuf/SBuf.h"
 #include "util.h"

@@ -12,7 +12,7 @@
 #include "cache_cf.h"
 #include "compat/strtoll.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "globals.h"
 #include "Parsing.h"
 #include "sbuf/Stream.h"

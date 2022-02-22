@@ -9,7 +9,7 @@
 /* DEBUG: section 50    Log file handling */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 #if HAVE_SYSLOG
 

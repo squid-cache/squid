@@ -11,7 +11,7 @@
 #ifndef SQUID_DEBUG_MESSAGES_H
 #define SQUID_DEBUG_MESSAGES_H
 
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "SquidConfig.h"
 
 #include <array>

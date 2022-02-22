@@ -28,7 +28,7 @@
 #include "ConfigOption.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "DiskIO/DiskIOModule.h"
 #include "eui/Config.h"
 #include "ExternalACL.h"

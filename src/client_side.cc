@@ -76,7 +76,7 @@
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "error/ExceptionErrorDetail.h"
 #include "errorpage.h"
 #include "fd.h"

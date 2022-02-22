@@ -14,7 +14,7 @@
 #include "anyp/Uri.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "util.h"
 
 template<class T>

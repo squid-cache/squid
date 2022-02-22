@@ -29,7 +29,7 @@
 #include "CommandLine.h"
 #include "ConfigParser.h"
 #include "CpuAffinity.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "DiskIO/DiskIOModule.h"
 #include "dns/forward.h"
 #include "errorpage.h"

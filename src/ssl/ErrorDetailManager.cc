@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "base/Raw.h"
 #include "ErrorDetail.h"
 #include "ErrorDetailManager.h"
 #include "errorpage.h"

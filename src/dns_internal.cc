@@ -18,7 +18,7 @@
 #include "comm/Loops.h"
 #include "comm/Read.h"
 #include "comm/Write.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "dlink.h"
 #include "dns/forward.h"
 #include "dns/rfc3596.h"

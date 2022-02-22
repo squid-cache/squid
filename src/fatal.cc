@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "fatal.h"
 #include "globals.h"
 #include "store/Disks.h"

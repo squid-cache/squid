@@ -13,7 +13,7 @@
 #include "CpuAffinity.h"
 #include "CpuAffinityMap.h"
 #include "CpuAffinitySet.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "globals.h"
 #include "SquidConfig.h"
 #include "tools.h"

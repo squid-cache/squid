@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "base/TextException.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "ipc/RequestId.h"
 
 #include <iostream>

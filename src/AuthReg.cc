@@ -24,7 +24,7 @@
 #include "auth/ntlm/Scheme.h"
 #endif
 
-#include "Debug.h"
+#include "debug/Stream.h"
 
 /**
  * Initialize the authentication modules (if any)

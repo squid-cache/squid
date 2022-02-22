@@ -9,7 +9,7 @@
 /* DEBUG: section 14    IP Storage and Handling */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "util.h"

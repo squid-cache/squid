@@ -13,7 +13,7 @@
 
 #include "base/InstanceId.h"
 #include "base/TextException.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "globals.h"
 #include "sbuf/forward.h"
 #include "sbuf/MemBlob.h"

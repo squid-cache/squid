@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "helper.h"
 #include "helper/Reply.h"
 #include "rfc1738.h"

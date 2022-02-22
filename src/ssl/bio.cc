@@ -14,6 +14,7 @@
 /* support.cc says this is needed */
 #if USE_OPENSSL
 
+#include "base/Raw.h"
 #include "comm.h"
 #include "fd.h"
 #include "fde.h"

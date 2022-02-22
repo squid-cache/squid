@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-
+#include "base/IoManip.h"
 #include "ConfigParser.h"
 #include "ip/NfMarkConfig.h"
 #include "parser/Tokenizer.h"

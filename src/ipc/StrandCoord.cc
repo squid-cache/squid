@@ -9,7 +9,7 @@
 /* DEBUG: section 54    Interprocess Communication */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "globals.h"
 #include "ipc/Port.h"
 #include "ipc/StrandCoord.h"

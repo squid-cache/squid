@@ -11,7 +11,7 @@
 #include "base/AsyncCallQueue.h"
 #include "base/CodeContext.h"
 #include "cbdata.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include <ostream>
 
 InstanceIdDefinitions(AsyncCall, "call");

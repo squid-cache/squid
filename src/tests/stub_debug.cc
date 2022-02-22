@@ -14,9 +14,9 @@
  * not abort the unit test.
  */
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
-#define STUB_API "debug.cc"
+#define STUB_API "debug/libdebug.la"
 #include "tests/STUB.h"
 
 char *Debug::debugOptions;
@@ -94,28 +94,5 @@ std::ostream&
 ForceAlert(std::ostream& s)
 {
     return s;
-}
-
-std::ostream &
-Raw::print(std::ostream &os) const
-{
-    if (label_)
-        os << ' ' << label_ << '[' << size_ << ']';
-
-    if (!size_)
-        return os;
-
-    // finalize debugging level if no level was set explicitly via minLevel()
-    const int finalLevel = (level >= 0) ? level :
-                           (size_ > 40 ? DBG_DATA : Debug::SectionLevel());
-    if (finalLevel <= Debug::SectionLevel()) {
-        os << (label_ ? '=' : ' ');
-        if (data_)
-            os.write(data_, size_);
-        else
-            os << "[null]";
-    }
-
-    return os;
 }
 
