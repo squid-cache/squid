@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -69,11 +69,11 @@ Ip::Qos::getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde)
             }
         } else {
             int xerrno = errno;
-            debugs(33, DBG_IMPORTANT, "QOS: error in getsockopt(IP_PKTOPTIONS) on " << server << " " << xstrerr(xerrno));
+            debugs(33, DBG_IMPORTANT, "ERROR: QOS: getsockopt(IP_PKTOPTIONS) failure on " << server << " " << xstrerr(xerrno));
         }
     } else {
         int xerrno = errno;
-        debugs(33, DBG_IMPORTANT, "QOS: error in setsockopt(IP_RECVTOS) on " << server << " " << xstrerr(xerrno));
+        debugs(33, DBG_IMPORTANT, "ERROR: QOS: setsockopt(IP_RECVTOS) failure on " << server << " " << xstrerr(xerrno));
     }
 #else
     (void)server;

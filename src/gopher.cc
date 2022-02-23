@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -602,7 +602,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                             /* WWW link */
                             snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"http://%s/%s\">%s</A>\n",
                                      icon_url, host, rfc1738_escape_unescaped(selector + 5), html_quote(name));
-                         } else if (gtype == GOPHER_WWW) {
+                        } else if (gtype == GOPHER_WWW) {
                             snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"%s\">%s</A>\n",
                                      icon_url, rfc1738_escape_unescaped(selector), html_quote(name));
                         } else {
@@ -711,7 +711,7 @@ static void
 gopherTimeout(const CommTimeoutCbParams &io)
 {
     GopherStateData *gopherState = static_cast<GopherStateData *>(io.data);
-    debugs(10, 4, HERE << io.conn << ": '" << gopherState->entry->url() << "'" );
+    debugs(10, 4, io.conn << ": '" << gopherState->entry->url() << "'" );
 
     gopherState->fwd->fail(new ErrorState(ERR_READ_TIMEOUT, Http::scGatewayTimeout, gopherState->fwd->request, gopherState->fwd->al));
 
@@ -766,7 +766,7 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm
         statCounter.server.other.kbytes_in += len;
     }
 
-    debugs(10, 5, HERE << conn << " read len=" << len);
+    debugs(10, 5, conn << " read len=" << len);
 
     if (flag == Comm::OK && len > 0) {
         AsyncCall::Pointer nil;
@@ -789,7 +789,7 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm
     }
 
     if (flag != Comm::OK) {
-        debugs(50, DBG_IMPORTANT, MYNAME << "error reading: " << xstrerr(xerrno));
+        debugs(50, DBG_IMPORTANT, "ERROR: " << MYNAME << "reading: " << xstrerr(xerrno));
 
         if (ignoreErrno(xerrno)) {
             AsyncCall::Pointer call = commCbCall(5,4, "gopherReadReply",
@@ -839,7 +839,7 @@ gopherSendComplete(const Comm::ConnectionPointer &conn, char *, size_t size, Com
 {
     GopherStateData *gopherState = (GopherStateData *) data;
     StoreEntry *entry = gopherState->entry;
-    debugs(10, 5, HERE << conn << " size: " << size << " errflag: " << errflag);
+    debugs(10, 5, conn << " size: " << size << " errflag: " << errflag);
 
     if (size > 0) {
         fd_bytes(conn->fd, size, FD_WRITE);

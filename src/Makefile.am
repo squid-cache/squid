@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -1167,6 +1167,7 @@ tests_testRock_SOURCES = \
 	fde.cc \
 	fde.h \
 	filemap.cc \
+	tests/stub_fqdncache.cc \
 	fs_io.cc \
 	fs_io.h \
 	tests/stub_http.cc \
@@ -1341,6 +1342,7 @@ tests_testUfs_SOURCES = \
 	fde.cc \
 	fde.h \
 	filemap.cc \
+	tests/stub_fqdncache.cc \
 	fs_io.cc \
 	fs_io.h \
 	tests/stub_helper.cc \
@@ -1691,6 +1693,7 @@ tests_testDiskIO_SOURCES = \
 	fde.cc \
 	fde.h \
 	filemap.cc \
+	tests/stub_fqdncache.cc \
 	fs_io.cc \
 	fs_io.h \
 	tests/stub_helper.cc \
@@ -2821,13 +2824,13 @@ tests_testConfigParser_SOURCES = \
 	tests/testConfigParser.h
 nodist_tests_testConfigParser_SOURCES = \
 	ConfigParser.cc \
+	tests/stub_SBuf.cc \
 	String.cc \
 	tests/stub_acl.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
-	tests/stub_libmem.cc \
-	tests/stub_SBuf.cc
+	tests/stub_libmem.cc
 tests_testConfigParser_LDADD = \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
@@ -2842,13 +2845,13 @@ tests_testEvent_SOURCES = \
 	tests/testEvent.cc \
 	tests/testEvent.h
 nodist_tests_testEvent_SOURCES = \
-	event.cc \
 	MemBuf.cc \
+	tests/stub_SBuf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
+	event.cc \
 	tests/stub_libmem.cc \
-	tests/stub_SBuf.cc \
 	tests/stub_time.cc \
 	tests/stub_tools.cc
 tests_testEvent_LDADD = \

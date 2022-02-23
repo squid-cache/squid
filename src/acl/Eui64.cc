@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -43,14 +43,14 @@ aclParseEuiData(const char *t)
     debugs(28, 5, "aclParseEuiData: " << t);
 
     if (sscanf(t, "%[0-9a-fA-F:]", buf) != 1) {
-        debugs(28, DBG_CRITICAL, "aclParseEuiData: Bad EUI-64 address: '" << t << "'");
+        debugs(28, DBG_CRITICAL, "ERROR: aclParseEuiData: Bad EUI-64 address: '" << t << "'");
         delete q;
         return NULL;
     }
 
     if (!q->decode(buf)) {
         debugs(28, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(28, DBG_CRITICAL, "aclParseEuiData: Ignoring invalid EUI-64 acl entry: can't parse '" << buf << "'");
+        debugs(28, DBG_CRITICAL, "ERROR: aclParseEuiData: Ignoring invalid EUI-64 acl entry: cannot parse '" << buf << "'");
         delete q;
         return NULL;
     }

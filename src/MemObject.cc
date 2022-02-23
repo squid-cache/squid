@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -53,7 +53,7 @@ const char *
 MemObject::storeId() const
 {
     if (!storeId_.size()) {
-        debugs(20, DBG_IMPORTANT, "Bug: Missing MemObject::storeId value");
+        debugs(20, DBG_IMPORTANT, "ERROR: Squid BUG: Missing MemObject::storeId value");
         dump();
         storeId_ = "[unknown_URI]";
     }

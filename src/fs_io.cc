@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -203,7 +203,7 @@ diskHandleWrite(int fd, void *)
         errno = 0;
         if (lseek(fd, fdd->write_q->file_offset, SEEK_SET) == -1) {
             int xerrno = errno;
-            debugs(50, DBG_IMPORTANT, "error in seek for FD " << fd << ": " << xstrerr(xerrno));
+            debugs(50, DBG_IMPORTANT, "ERROR: in seek for FD " << fd << ": " << xstrerr(xerrno));
             // XXX: handle error?
         }
     }
@@ -222,7 +222,7 @@ diskHandleWrite(int fd, void *)
         if (!ignoreErrno(errno)) {
             status = errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
             int xerrno = errno;
-            debugs(50, DBG_IMPORTANT, "diskHandleWrite: FD " << fd << ": disk write error: " << xstrerr(xerrno));
+            debugs(50, DBG_IMPORTANT, "ERROR: diskHandleWrite: FD " << fd << ": disk write failure: " << xstrerr(xerrno));
 
             /*
              * If there is no write callback, then this file is
@@ -406,7 +406,7 @@ diskHandleRead(int fd, void *data)
         if (lseek(fd, ctrl_dat->offset, SEEK_SET) == -1) {
             xerrno = errno;
             // shouldn't happen, let's detect that
-            debugs(50, DBG_IMPORTANT, "error in seek for FD " << fd << ": " << xstrerr(xerrno));
+            debugs(50, DBG_IMPORTANT, "ERROR: in seek for FD " << fd << ": " << xstrerr(xerrno));
             // XXX handle failures?
         }
         ++ statCounter.syscalls.disk.seeks;
@@ -472,7 +472,7 @@ safeunlink(const char *s, int quiet)
 
     if (unlink(s) < 0 && !quiet) {
         int xerrno = errno;
-        debugs(50, DBG_IMPORTANT, "safeunlink: Couldn't delete " << s << ": " << xstrerr(xerrno));
+        debugs(50, DBG_IMPORTANT, "ERROR: safeunlink: Could not delete " << s << ": " << xstrerr(xerrno));
     }
 }
 
@@ -494,7 +494,7 @@ FileRename(const SBuf &from, const SBuf &to)
         return true;
 
     int xerrno = errno;
-    debugs(21, (errno == ENOENT ? 2 : DBG_IMPORTANT), "Cannot rename " << from << " to " << to << ": " << xstrerr(xerrno));
+    debugs(21, (errno == ENOENT ? 2 : DBG_IMPORTANT), "ERROR: Cannot rename " << from << " to " << to << ": " << xstrerr(xerrno));
 
     return false;
 }

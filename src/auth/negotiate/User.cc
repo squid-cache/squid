@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,7 +19,7 @@ Auth::Negotiate::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRea
 
 Auth::Negotiate::User::~User()
 {
-    debugs(29, 5, HERE << "doing nothing to clear Negotiate scheme data for '" << this << "'");
+    debugs(29, 5, "doing nothing to clear Negotiate scheme data for '" << this << "'");
 }
 
 int32_t

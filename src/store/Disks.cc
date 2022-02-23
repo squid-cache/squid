@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -721,7 +721,7 @@ storeDirWriteCleanLogs(int reopen)
         auto &sd = SwapDirByIndex(dirn);
 
         if (sd.writeCleanStart() < 0) {
-            debugs(20, DBG_IMPORTANT, "log.clean.start() failed for dir #" << sd.index);
+            debugs(20, DBG_IMPORTANT, "ERROR: log.clean.start() failed for dir #" << sd.index);
             continue;
         }
     }

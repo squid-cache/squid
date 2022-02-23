@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -277,27 +277,27 @@ mimeInit(char *filename)
         xstrncpy(chopbuf, buf, BUFSIZ);
 
         if ((pattern = strtok(chopbuf, w_space)) == NULL) {
-            debugs(25, DBG_IMPORTANT, "mimeInit: parse error: '" << buf << "'");
+            debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: parse failure: '" << buf << "'");
             continue;
         }
 
         if ((type = strtok(NULL, w_space)) == NULL) {
-            debugs(25, DBG_IMPORTANT, "mimeInit: parse error: '" << buf << "'");
+            debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: parse failure: '" << buf << "'");
             continue;
         }
 
         if ((icon = strtok(NULL, w_space)) == NULL) {
-            debugs(25, DBG_IMPORTANT, "mimeInit: parse error: '" << buf << "'");
+            debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: parse failure: '" << buf << "'");
             continue;
         }
 
         if ((encoding = strtok(NULL, w_space)) == NULL) {
-            debugs(25, DBG_IMPORTANT, "mimeInit: parse error: '" << buf << "'");
+            debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: parse failure: '" << buf << "'");
             continue;
         }
 
         if ((mode = strtok(NULL, w_space)) == NULL) {
-            debugs(25, DBG_IMPORTANT, "mimeInit: parse error: '" << buf << "'");
+            debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: parse failure: '" << buf << "'");
             continue;
         }
 
@@ -310,11 +310,11 @@ mimeInit(char *filename)
             else if (!strcmp(option, "+view"))
                 view_option = 1;
             else
-                debugs(25, DBG_IMPORTANT, "mimeInit: unknown option: '" << buf << "' (" << option << ")");
+                debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: unknown option: '" << buf << "' (" << option << ")");
         }
 
         if (regcomp(&re, pattern, re_flags) != 0) {
-            debugs(25, DBG_IMPORTANT, "mimeInit: regcomp error: '" << buf << "'");
+            debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: regcomp failure: '" << buf << "'");
             continue;
         }
 

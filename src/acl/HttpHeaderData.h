@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,6 +27,9 @@ public:
     virtual bool empty() const;
 
 private:
+    /* ACLData API */
+    virtual const Acl::Options &lineOptions();
+
     Http::HdrType hdrId;            /**< set if header is known */
     SBuf hdrName;                   /**< always set */
     ACLData<char const *> * regex_rule;

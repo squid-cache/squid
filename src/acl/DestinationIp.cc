@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,8 +26,8 @@ ACLDestinationIP::typeString() const
 const Acl::Options &
 ACLDestinationIP::options()
 {
-    static const Acl::BooleanOption LookupBan;
-    static const Acl::Options MyOptions = { { "-n", &LookupBan } };
+    static const Acl::BooleanOption LookupBan("-n");
+    static const Acl::Options MyOptions = { &LookupBan };
     LookupBan.linkWith(&lookupBanned);
     return MyOptions;
 }

@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -5638,6 +5638,11 @@ DOC_START
 	it was started. If you set 'coredump_dir' to a directory
 	that exists, Squid will chdir() to that directory at startup
 	and coredump files will be left there.
+
+	In addition to changing the directory, the process permissions are updated
+	to enable process tracing and/or coredump file generation. The details are
+	OS-specific, but look for prctl(2) PR_SET_DUMPABLE and procctl(2)
+	PROC_TRACE_CTL documentation as guiding examples.
 
 CONFIG_START
 

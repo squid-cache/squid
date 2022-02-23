@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -909,7 +909,7 @@ GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours)
 
         l = &CountHourHist[hours];
     } else {
-        debugs(18, DBG_IMPORTANT, "statAvgDump: Invalid args, minutes=" << minutes << ", hours=" << hours);
+        debugs(18, DBG_IMPORTANT, "ERROR: statAvgDump: Invalid args, minutes=" << minutes << ", hours=" << hours);
         return;
     }
 

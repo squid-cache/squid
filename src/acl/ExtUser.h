@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,12 +26,14 @@ public:
     /* ACL API */
     virtual char const *typeString() const;
     virtual void parse();
-    virtual void parseFlags();
     virtual int match(ACLChecklist *checklist);
     virtual SBufList dump() const;
     virtual bool empty () const;
 
 private:
+    /* ACL API */
+    virtual const Acl::Options &lineOptions();
+
     ACLData<char const *> *data;
     char const *type_;
 };

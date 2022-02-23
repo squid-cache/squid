@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -56,7 +56,7 @@ ID Message gist
 46 Finished rebuilding storage from disk. ... Entries scanned ... Invalid entries ... With invalid flags ... Objects loaded ... Objects expired ... Objects canceled ... Duplicate URLs purged ... Swapfile clashes avoided ...Took ... seconds ( ... objects/sec).
 56 Beginning Validation Procedure
 57 Indexing cache entries: ...
-58 ALE missing ...
+58 ERROR: ALE missing ...
 59 Shutdown: Digest authentication.
 60 Shutdown: Negotiate authentication.
 61 Shutdown: NTLM authentication.

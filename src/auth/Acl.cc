@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -45,7 +45,7 @@ AuthenticateAcl(ACLChecklist *ch)
         /* WWW authorization on accelerated requests */
         headertype = Http::HdrType::AUTHORIZATION;
     } else if (request->flags.intercepted || request->flags.interceptTproxy) {
-        debugs(28, DBG_IMPORTANT, "NOTICE: Authentication not applicable on intercepted requests.");
+        debugs(28, DBG_IMPORTANT, "WARNING: Authentication not applicable on intercepted requests.");
         return ACCESS_DENIED;
     } else {
         /* Proxy authorization on proxy requests */
@@ -60,7 +60,7 @@ AuthenticateAcl(ACLChecklist *ch)
     switch (result) {
 
     case AUTH_ACL_CANNOT_AUTHENTICATE:
-        debugs(28, 4, HERE << "returning " << ACCESS_DENIED << " user authenticated but not authorised.");
+        debugs(28, 4, "returning " << ACCESS_DENIED << " user authenticated but not authorised.");
         return ACCESS_DENIED;
 
     case AUTH_AUTHENTICATED:
@@ -75,7 +75,7 @@ AuthenticateAcl(ACLChecklist *ch)
         return ACCESS_DUNNO; // XXX: break this down into DUNNO, EXPIRED_OK, EXPIRED_BAD states
 
     case AUTH_ACL_CHALLENGE:
-        debugs(28, 4, HERE << "returning " << ACCESS_AUTH_REQUIRED << " sending authentication challenge.");
+        debugs(28, 4, "returning " << ACCESS_AUTH_REQUIRED << " sending authentication challenge.");
         /* Client is required to resend the request with correct authentication
          * credentials. (This may be part of a stateful auth protocol.)
          * The request is denied.

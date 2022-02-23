@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -145,7 +145,7 @@ ACLTimeData::parse()
                 default:
                     debugs(28, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno <<
                            ": " << config_input_line);
-                    debugs(28, DBG_CRITICAL, "aclParseTimeSpec: Bad Day '" << *t << "'" );
+                    debugs(28, DBG_CRITICAL, "ERROR: aclParseTimeSpec: Bad Day '" << *t << "'" );
                     break;
                 }
             }
@@ -153,7 +153,7 @@ ACLTimeData::parse()
             /* assume its time-of-day spec */
 
             if ((sscanf(t, "%d:%d-%d:%d", &h1, &m1, &h2, &m2) < 4) || (!((h1 >= 0 && h1 < 24) && ((h2 >= 0 && h2 < 24) || (h2 == 24 && m2 == 0)) && (m1 >= 0 && m1 < 60) && (m2 >= 0 && m2 < 60)))) {
-                debugs(28, DBG_CRITICAL, "aclParseTimeSpec: Bad time range '" << t << "'");
+                debugs(28, DBG_CRITICAL, "ERROR: aclParseTimeSpec: Bad time range '" << t << "'");
                 self_destruct();
 
                 if (q != this)

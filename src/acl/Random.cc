@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -53,7 +53,7 @@ ACLRandom::parse()
 
     char *t = ConfigParser::strtokFile();
     if (!t) {
-        debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "ACL random missing pattern");
+        debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: ACL random missing pattern");
         return;
     }
 

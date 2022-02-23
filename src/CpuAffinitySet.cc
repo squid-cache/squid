@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -38,7 +38,7 @@ CpuAffinitySet::apply()
     } else {
         cpu_set_t cpuSet;
         memcpy(&cpuSet, &theCpuSet, sizeof(cpuSet));
-        (void) CPU_AND(&cpuSet, &cpuSet, &theOrigCpuSet);
+        CPU_AND(&cpuSet, &cpuSet, &theOrigCpuSet);
         if (CPU_COUNT(&cpuSet) <= 0) {
             debugs(54, DBG_IMPORTANT, "ERROR: invalid CPU affinity for process "
                    "PID " << getpid() << ", may be caused by an invalid core in "

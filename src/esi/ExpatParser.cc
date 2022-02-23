@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,29 @@
 
 #if USE_SQUID_ESI && HAVE_LIBEXPAT
 
+#include "base/RunnersRegistry.h"
 #include "esi/ExpatParser.h"
+
+#include <memory>
+
+namespace Esi
+{
+
+class ExpatRr : public RegisteredRunner
+{
+public:
+    void finalizeConfig()
+    {
+        registration.reset(new ESIParser::Register("expat", &ESIExpatParser::NewParser));
+    }
+
+private:
+    std::unique_ptr<ESIParser::Register> registration;
+};
+
+RunnerRegistrationEntry(ExpatRr);
+
+}
 
 EsiParserDefinition(ESIExpatParser);
 

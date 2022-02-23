@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -43,7 +43,7 @@ public:
     /// replaces current response store entry with the given one
     void setReplyToStoreEntry(StoreEntry *e, const char *reason);
     /// builds error using clientBuildError() and calls setReplyToError() below
-    void setReplyToError(err_type, Http::StatusCode, const HttpRequestMethod&, char const *, const ConnStateData *, HttpRequest *, const char *,
+    void setReplyToError(err_type, Http::StatusCode, char const *, const ConnStateData *, HttpRequest *, const char *,
 #if USE_AUTH
                          Auth::UserRequest::Pointer);
 #else

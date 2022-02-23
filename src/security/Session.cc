@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -115,7 +115,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
     if (!session) {
         errCode = ERR_get_error();
         errAction = "failed to allocate handle";
-        debugs(83, DBG_IMPORTANT, "TLS error: " << errAction << ": " << Security::ErrorString(errCode));
+        debugs(83, DBG_IMPORTANT, "ERROR: TLS failure: " << errAction << ": " << Security::ErrorString(errCode));
     }
 #elif USE_GNUTLS
     gnutls_session_t tmp;
@@ -128,7 +128,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
     if (errCode != GNUTLS_E_SUCCESS) {
         session.reset();
         errAction = "failed to initialize session";
-        debugs(83, DBG_IMPORTANT, "TLS error: " << errAction << ": " << Security::ErrorString(errCode));
+        debugs(83, DBG_IMPORTANT, "ERROR: TLS failure: " << errAction << ": " << Security::ErrorString(errCode));
     }
 #endif /* USE_GNUTLS */
 

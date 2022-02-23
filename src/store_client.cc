@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -360,7 +360,7 @@ store_client::doCopy(StoreEntry *anEntry)
 
     if (!moreToSend()) {
         /* There is no more to send! */
-        debugs(33, 3, HERE << "There is no more to send!");
+        debugs(33, 3, "There is no more to send!");
         callback(0);
         flags.store_copying = false;
         return;
@@ -505,7 +505,7 @@ store_client::readBody(const char *, ssize_t len)
     if (copyInto.offset == 0 && len > 0 && rep && rep->sline.status() == Http::scNone) {
         /* Our structure ! */
         if (!entry->mem_obj->adjustableBaseReply().parseCharBuf(copyInto.data, headersEnd(copyInto.data, len))) {
-            debugs(90, DBG_CRITICAL, "Could not parse headers from on disk object");
+            debugs(90, DBG_CRITICAL, "ERROR: Could not parse headers from on disk object");
         } else {
             parsed_header = 1;
         }

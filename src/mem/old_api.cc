@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -101,7 +101,7 @@ GetStrPool(size_t type)
             strPools[i]->zeroBlocks(false);
 
             if (strPools[i]->objectSize() != PoolAttrs[i].obj_size)
-                debugs(13, DBG_IMPORTANT, "NOTICE: " << PoolAttrs[i].name <<
+                debugs(13, DBG_IMPORTANT, "WARNING: " << PoolAttrs[i].name <<
                        " is " << strPools[i]->objectSize() <<
                        " bytes instead of requested " <<
                        PoolAttrs[i].obj_size << " bytes");
@@ -429,13 +429,6 @@ Mem::Init(void)
     static bool MemIsInitialized = false;
     if (MemIsInitialized)
         return;
-
-    /** \par
-     * NOTE: Mem::Init() is called before the config file is parsed
-     * and before the debugging module has been initialized.  Any
-     * debug messages here at level 0 or 1 will always be printed
-     * on stderr.
-     */
 
     /**
      * Then initialize all pools.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,8 +22,8 @@ public:
     ACLData(ACLData<M> &&) = delete; // no copying of any kind
     virtual ~ACLData() {}
 
-    /// \returns the flags supported by these ACL parameters (e.g., "-i")
-    virtual const Acl::ParameterFlags &supportedFlags() const { return Acl::NoFlags(); }
+    /// supported ACL "line" options (e.g., "-i")
+    virtual const Acl::Options &lineOptions() { return Acl::NoOptions(); }
 
     virtual bool match(M) =0;
     virtual SBufList dump() const =0;

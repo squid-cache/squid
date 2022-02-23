@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -15,7 +15,9 @@ basic_sspi_auth_SOURCES = \
 	basic_sspi_auth.cc \
 	valid.cc \
 	valid.h
-basic_sspi_auth_CXXFLAGS = -Wl,--enable-auto-import
+basic_sspi_auth_CXXFLAGS = \
+	$(AM_CXXFLAGS) \
+	-Wl,--enable-auto-import
 basic_sspi_auth_LDADD = \
 	$(top_builddir)/lib/libsspwin32.la \
 	$(top_builddir)/lib/libmiscencoding.la \

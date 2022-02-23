@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -64,6 +64,12 @@ ACLHTTPHeaderData::dump() const
     sl.push_back(SBuf(hdrName));
     sl.splice(sl.end(), regex_rule->dump());
     return sl;
+}
+
+const Acl::Options &
+ACLHTTPHeaderData::lineOptions()
+{
+    return regex_rule->lineOptions();
 }
 
 void

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -42,7 +42,7 @@ void ProxyAuthLookup::checkForAsync(ACLChecklist *) const STUB
 void ProxyAuthLookup::LookupDone(void *) STUB
 int ACLProxyAuth::matchForCache(ACLChecklist *) STUB_RETVAL(0)
 int ACLProxyAuth::matchProxyAuth(ACLChecklist *) STUB_RETVAL(0)
-void ACLProxyAuth::parseFlags() STUB
+const Acl::Options &ACLProxyAuth::lineOptions() STUB_RETVAL(Acl::NoOptions())
 
 #endif /* USE_AUTH */
 

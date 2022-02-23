@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -131,8 +131,8 @@ main(int, char **)
     try {
         Mem::Init();
         /* enable for debugging to console */
-        //    _db_init (NULL, NULL);
-        //    Debug::Levels[64] = 9;
+        // Debug::debugOptions = xstrdup("ALL,1 64,9");
+        // Debug::BanCacheLogUse();
         testRangeParser("bytes=0-3");
         testRangeParser("bytes=-3");
         testRangeParser("bytes=1-");

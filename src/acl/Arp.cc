@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -71,14 +71,14 @@ aclParseArpData(const char *t)
     debugs(28, 5, "aclParseArpData: " << t);
 
     if (sscanf(t, "%[0-9a-fA-F:]", buf) != 1) {
-        debugs(28, DBG_CRITICAL, "aclParseArpData: Bad ethernet address: '" << t << "'");
+        debugs(28, DBG_CRITICAL, "ERROR: aclParseArpData: Bad ethernet address: '" << t << "'");
         delete q;
         return NULL;
     }
 
     if (!q->decode(buf)) {
         debugs(28, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(28, DBG_CRITICAL, "aclParseArpData: Ignoring invalid ARP acl entry: can't parse '" << buf << "'");
+        debugs(28, DBG_CRITICAL, "ERROR: aclParseArpData: Ignoring invalid ARP acl entry: cannot parse '" << buf << "'");
         delete q;
         return NULL;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,14 +36,12 @@ public:
     ACLStrategised(ACLData<MatchType> *, ACLStrategy<MatchType> *, char const *);
 
     virtual char const *typeString() const;
-    virtual void parseFlags();
 
     virtual bool requiresRequest() const {return matcher->requiresRequest();}
 
     virtual bool requiresReply() const {return matcher->requiresReply();}
 
     virtual void prepareForUse() { data->prepareForUse();}
-    virtual const Acl::Options &options() { return matcher->options(); }
     virtual void parse();
     virtual int match(ACLChecklist *checklist);
     virtual int match (M const &);
@@ -52,6 +50,10 @@ public:
     virtual bool valid () const;
 
 private:
+    /* ACL API */
+    virtual const Acl::Options &options() { return matcher->options(); }
+    virtual const Acl::Options &lineOptions() { return data->lineOptions(); }
+
     ACLData<MatchType> *data;
     char const *type_;
     ACLStrategy<MatchType> *matcher;
@@ -75,13 +77,6 @@ char const *
 ACLStrategised<MatchType>::typeString() const
 {
     return type_;
-}
-
-template <class MatchType>
-void
-ACLStrategised<MatchType>::parseFlags()
-{
-    ParseFlags(options(), data->supportedFlags());
 }
 
 template <class MatchType>

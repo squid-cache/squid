@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -98,7 +98,7 @@ clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
  */
 void
 clientReplyContext::setReplyToError(
-    err_type err, Http::StatusCode status, const HttpRequestMethod& method, char const *uri,
+    err_type err, Http::StatusCode status, char const *uri,
     const ConnStateData *conn, HttpRequest *failedrequest, const char *unparsedrequest,
 #if USE_AUTH
     Auth::UserRequest::Pointer auth_user_request
@@ -115,7 +115,7 @@ clientReplyContext::setReplyToError(
 #if USE_AUTH
     errstate->auth_user_request = auth_user_request;
 #endif
-    setReplyToError(method, errstate);
+    setReplyToError(failedrequest ? failedrequest->method : HttpRequestMethod(Http::METHOD_NONE), errstate);
 }
 
 void clientReplyContext::setReplyToError(const HttpRequestMethod& method, ErrorState *errstate)
@@ -1077,7 +1077,7 @@ clientReplyContext::storeOKTransferDone() const
     assert(http->storeEntry()->objectLen() >= 0);
     assert(http->storeEntry()->objectLen() >= headers_sz);
     if (http->out.offset >= http->storeEntry()->objectLen() - headers_sz) {
-        debugs(88,3,HERE << "storeOKTransferDone " <<
+        debugs(88,3, "storeOKTransferDone " <<
                " out.offset=" << http->out.offset <<
                " objectLen()=" << http->storeEntry()->objectLen() <<
                " headers_sz=" << headers_sz);
@@ -1124,7 +1124,7 @@ clientReplyContext::storeNotOKTransferDone() const
     if (http->out.size < expectedLength)
         return 0;
     else {
-        debugs(88,3,HERE << "storeNotOKTransferDone " <<
+        debugs(88,3, "storeNotOKTransferDone " <<
                " out.size=" << http->out.size <<
                " expectedLength=" << expectedLength);
         return 1;
@@ -1344,7 +1344,7 @@ clientReplyContext::buildReplyHeader()
         else if (http->storeEntry()->timestamp > 0)
             hdr->putTime(Http::HdrType::DATE, http->storeEntry()->timestamp);
         else {
-            debugs(88,DBG_IMPORTANT,"BUG 3279: HTTP reply without Date:");
+            debugs(88, DBG_IMPORTANT, "ERROR: Squid BUG #3279: HTTP reply without Date:");
             /* dump something useful about the problem */
             http->storeEntry()->dump(DBG_IMPORTANT);
         }

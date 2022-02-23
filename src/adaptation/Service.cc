@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,7 +16,7 @@
 Adaptation::Service::Service(const ServiceConfigPointer &aConfig): theConfig(aConfig)
 {
     Must(theConfig != NULL);
-    debugs(93,3, HERE << "creating adaptation service " << cfg().key);
+    debugs(93,3, "creating adaptation service " << cfg().key);
 }
 
 Adaptation::Service::~Service()

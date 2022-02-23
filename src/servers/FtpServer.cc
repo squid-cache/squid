@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -368,7 +368,7 @@ Ftp::Server::listenForDataConnection()
     const char *const note = uri.c_str();
     comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn, note);
     if (!Comm::IsConnOpen(conn)) {
-        debugs(5, DBG_CRITICAL, "comm_open_listener failed for FTP data: " <<
+        debugs(5, DBG_CRITICAL, "ERROR: comm_open_listener failed for FTP data: " <<
                conn->local << " error: " << errno);
         writeCustomReply(451, "Internal error");
         return 0;

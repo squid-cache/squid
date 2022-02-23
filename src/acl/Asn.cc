@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -287,7 +287,7 @@ asHandleReply(void *data, StoreIOBuffer result)
         delete asState;
         return;
     } else if (result.flags.error) {
-        debugs(53, DBG_IMPORTANT, "asHandleReply: Called with Error set and size=" << (unsigned int) result.length);
+        debugs(53, DBG_IMPORTANT, "ERROR: asHandleReply: Called with Error set and size=" << (unsigned int) result.length);
         delete asState;
         return;
     } else if (e->mem().baseReply().sline.status() != Http::scOkay) {

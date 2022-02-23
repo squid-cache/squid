@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -215,7 +215,7 @@ HttpHeader::clean()
         if (e == nullptr)
             continue;
         if (!Http::any_valid_header(e->id)) {
-            debugs(55, DBG_CRITICAL, "BUG: invalid entry (" << e->id << "). Ignored.");
+            debugs(55, DBG_CRITICAL, "ERROR: Squid BUG: invalid entry (" << e->id << "). Ignored.");
         } else {
             if (owner <= hoReply)
                 HttpHeaderStats[owner].fieldTypeDistr.count(e->id);
@@ -1460,7 +1460,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end, const htt
             return nullptr; // reject if we cannot strip
 
         debugs(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
-               "NOTICE: Whitespace after header name in '" << getStringPrefix(field_start, field_end-field_start) << "'");
+               "WARNING: Whitespace after header name in '" << getStringPrefix(field_start, field_end-field_start) << "'");
 
         while (name_len > 0 && xisspace(field_start[name_len - 1]))
             --name_len;

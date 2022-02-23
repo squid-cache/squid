@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1147,7 +1147,7 @@ ESIContext::parserComment (const char *s)
         if (!tempParser->parse("<div>", 5,0) ||
                 !tempParser->parse(s + 3, strlen(s) - 3, 0) ||
                 !tempParser->parse("</div>",6,1)) {
-            debugs(86, DBG_CRITICAL, "ESIContext::parserComment: Parsing fragment '" << s + 3 << "' failed.");
+            debugs(86, DBG_CRITICAL, "ERROR: ESIContext::parserComment: Parsing fragment '" << s + 3 << "' failed.");
             setError();
             char tempstr[1024];
             snprintf(tempstr, 1023, "ESIContext::parserComment: Parse error at line %ld:\n%s\n",
@@ -1339,7 +1339,7 @@ ESIContext::process ()
             break;
 
         case ESI_PROCESS_FAILED:
-            debugs(86, DBG_CRITICAL, "esiProcess: tree Processed FAILED");
+            debugs(86, DBG_CRITICAL, "ERROR: esiProcess: tree Processed FAILED");
             setError();
 
             setErrorMessage("esiProcess: ESI template Processing failed.");
@@ -1384,7 +1384,7 @@ ESIContext::ParserState::popAll()
 void
 ESIContext::freeResources ()
 {
-    debugs(86, 5, HERE << "Freeing for this=" << this);
+    debugs(86, 5, "Freeing for this=" << this);
 
     rep = nullptr; // refcounted
 
@@ -1668,7 +1668,7 @@ esiTry::addElement(ESIElement::Pointer element)
 
     if (dynamic_cast<esiAttempt*>(element.getRaw())) {
         if (attempt.getRaw()) {
-            debugs(86, DBG_IMPORTANT, "esiTryAdd: Failed for " << this << " - try already has an attempt node (section 3.4)");
+            debugs(86, DBG_IMPORTANT, "ERROR: esiTryAdd: Failed for " << this << " - try already has an attempt node (section 3.4)");
             return false;
         }
 
@@ -1678,7 +1678,7 @@ esiTry::addElement(ESIElement::Pointer element)
 
     if (dynamic_cast<esiExcept*>(element.getRaw())) {
         if (except.getRaw()) {
-            debugs(86, DBG_IMPORTANT, "esiTryAdd: Failed for " << this << " - try already has an except node (section 3.4)");
+            debugs(86, DBG_IMPORTANT, "ERROR: esiTryAdd: Failed for " << this << " - try already has an except node (section 3.4)");
             return false;
         }
 
@@ -1686,7 +1686,7 @@ esiTry::addElement(ESIElement::Pointer element)
         return true;
     }
 
-    debugs(86, DBG_IMPORTANT, "esiTryAdd: Failed to add element " << element.getRaw() << " to try " << this << ", incorrect element type (see section 3.4)");
+    debugs(86, DBG_IMPORTANT, "ERROR: esiTryAdd: Failed to add element " << element.getRaw() << " to try " << this << ", incorrect element type (see section 3.4)");
     return false;
 }
 
@@ -1705,12 +1705,12 @@ esiTry::process (int dovars)
     esiProcessResult_t rv = ESI_PROCESS_PENDING_MAYFAIL;
 
     if (!attempt.getRaw()) {
-        debugs(86, DBG_CRITICAL, "esiTryProcess: Try has no attempt element - ESI template is invalid (section 3.4)");
+        debugs(86, DBG_CRITICAL, "ERROR: esiTryProcess: Try has no attempt element - ESI template is invalid (section 3.4)");
         return ESI_PROCESS_FAILED;
     }
 
     if (!except.getRaw()) {
-        debugs(86, DBG_CRITICAL, "esiTryProcess: Try has no except element - ESI template is invalid (section 3.4)");
+        debugs(86, DBG_CRITICAL, "ERROR: esiTryProcess: Try has no except element - ESI template is invalid (section 3.4)");
         return ESI_PROCESS_FAILED;
     }
 
@@ -1922,7 +1922,7 @@ esiChoose::addElement(ESIElement::Pointer element)
 
     /* Some elements require specific parents */
     if (!(dynamic_cast<esiWhen*>(element.getRaw()) || dynamic_cast<esiOtherwise*>(element.getRaw()))) {
-        debugs(86, DBG_CRITICAL, "esiChooseAdd: invalid child node for esi:choose (section 3.3)");
+        debugs(86, DBG_CRITICAL, "ERROR: esiChooseAdd: invalid child node for esi:choose (section 3.3)");
         return false;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -311,7 +311,7 @@ StoreEntry::storeClientType() const
 
         if (mem_obj->inmem_lo == 0 && !isEmpty()) {
             if (swappedOut()) {
-                debugs(20,7, HERE << mem_obj << " lo: " << mem_obj->inmem_lo << " hi: " << mem_obj->endOffset() << " size: " << mem_obj->object_sz);
+                debugs(20,7, mem_obj << " lo: " << mem_obj->inmem_lo << " hi: " << mem_obj->endOffset() << " size: " << mem_obj->object_sz);
                 if (mem_obj->endOffset() == mem_obj->object_sz) {
                     /* hot object fully swapped in (XXX: or swapped out?) */
                     return STORE_MEM_CLIENT;
@@ -415,7 +415,7 @@ StoreEntry::destroyMemObject()
 void
 destroyStoreEntry(void *data)
 {
-    debugs(20, 3, HERE << "destroyStoreEntry: destroying " <<  data);
+    debugs(20, 3, "destroyStoreEntry: destroying " <<  data);
     StoreEntry *e = static_cast<StoreEntry *>(static_cast<hash_link *>(data));
     assert(e != NULL);
 
