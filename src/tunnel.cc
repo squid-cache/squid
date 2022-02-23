@@ -98,7 +98,8 @@ public:
         return (server.conn != NULL && server.conn->getPeer() ? server.conn->getPeer()->host : request->url.host());
     };
 
-    /// start owning the given to-server connection; do not look for any other
+    /// store the given to-server connection; prohibit retries and do not look
+    /// for any other destinations
     void commitToServer(const Comm::ConnectionPointer &);
 
     /// Whether the client sent a CONNECT request to us.
