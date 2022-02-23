@@ -910,7 +910,8 @@ AM_CONDITIONAL(ENABLE_ICAP_CLIENT, test "x$enable_icap_client" != "xno")
 
 AC_ARG_ENABLE(ecap,
   AS_HELP_STRING([--enable-ecap],[support loadable content adaptation modules]),[
-  SQUID_YESNO([$enableval],[bad value $enableval for --enable-ecap])
+  SQUID_YESNO([$enableval],[bad value $enableval for --enable-ecap])],[
+  enable_ecap="no"
 ])
 dnl Perform configuration consistency checks for eCAP
 AS_IF([test "x$enable_ecap" != "xno"],[
