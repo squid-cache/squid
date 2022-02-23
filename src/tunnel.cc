@@ -1269,8 +1269,6 @@ TunnelStateData::noteDestination(Comm::ConnectionPointer path)
         return; // and continue to wait for tunnelConnectDone() callback
     }
 
-    // the current commitToServer()-based code cannot receive new destinations
-    // while transporting(), but future enhancements may enable this code path
     if (transporting())
         return; // and continue to receive destinations for backup
 
