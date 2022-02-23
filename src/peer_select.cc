@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -244,7 +244,7 @@ PeerSelector::~PeerSelector()
     }
 
     if (acl_checklist) {
-        debugs(44, DBG_IMPORTANT, "BUG: peer selector gone while waiting for a slow ACL");
+        debugs(44, DBG_IMPORTANT, "ERROR: Squid BUG: peer selector gone while waiting for a slow ACL");
         delete acl_checklist;
     }
 

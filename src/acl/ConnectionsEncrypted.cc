@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,16 +16,7 @@
 #include "HttpRequest.h"
 #include "SquidConfig.h"
 
-ACL *
-Acl::ConnectionsEncrypted::clone() const
-{
-    return new Acl::ConnectionsEncrypted(*this);
-}
-
 Acl::ConnectionsEncrypted::ConnectionsEncrypted (char const *theClass) : class_ (theClass)
-{}
-
-Acl::ConnectionsEncrypted::ConnectionsEncrypted (Acl::ConnectionsEncrypted const & old) :class_ (old.class_)
 {}
 
 Acl::ConnectionsEncrypted::~ConnectionsEncrypted()

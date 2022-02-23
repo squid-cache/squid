@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -64,14 +64,5 @@ bool
 ACLSquidErrorData::empty() const
 {
     return errors.empty();
-}
-
-ACLData<err_type> *
-ACLSquidErrorData::clone() const
-{
-    if (!errors.empty())
-        fatal("ACLSquidError::clone: attempt to clone used ACL");
-
-    return new ACLSquidErrorData (*this);
 }
 

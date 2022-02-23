@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -95,6 +95,7 @@ fatal_dump(const char *message)
     if (opt_catch_signals)
         storeDirWriteCleanLogs(0);
 
+    Debug::PrepareToDie();
     abort();
 }
 

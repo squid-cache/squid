@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -334,11 +334,6 @@ if test "x$PRESET_CFLAGS" = "x"; then
     case "$host" in
       *-sun-sunos*)
         # sunos has too many warnings for this to be useful
-        # motorola too
-        ;;
-      *m88k*)
-        # Motorola cc/ld does not like -02 but is ok on -O
-        CFLAGS=`echo $CFLAGS | sed -e 's/-O[0-9]/-O/'`
         ;;
       *)
         CFLAGS="$squid_cv_cc_option_wall $CFLAGS"
@@ -369,7 +364,7 @@ SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wwrite-strings])
 SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wcomments])
 SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wshadow])
 SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wmissing-declarations])
-SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Woverloaded_virtual])
+SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Woverloaded-virtual])
 
 dnl CentOS (and RHEL) still define ntohs() using deprecated C++ features
 SQUID_CC_REQUIRE_ARGUMENT([ac_cv_require_wno_deprecated_register],[-Werror -Wno-deprecated-register],[[#include <arpa/inet.h>]],[[int fox=ntohs(1);]])
@@ -1379,7 +1374,6 @@ if test "x$with_openssl" = "xyes"; then
     SQUID_CHECK_OPENSSL_CONST_SSL_SESSION_CB_ARG
     SQUID_CHECK_OPENSSL_CONST_X509_GET0_SIGNATURE_ARGS
     SQUID_CHECK_OPENSSL_TXTDB
-    SQUID_CHECK_OPENSSL_HELLO_OVERWRITE_HACK
   fi
   if test "x$SSLLIB" = "x"; then
     AC_MSG_ERROR([Required OpenSSL library not found])
@@ -2637,36 +2631,6 @@ SQUID_DEFINE_BOOL(PRINT_STACK_TRACE,${enable_stacktraces:=no},
                       [Print stack traces on fatal errors])
 AC_MSG_NOTICE([Automatically print stack trace on fatal errors: $enable_stacktraces])
 
-
-# CPU Profiling options handling
-AC_ARG_ENABLE(cpu-profiling,
-  AS_HELP_STRING([--enable-cpu-profiling],
-                 [Enable instrumentation to try and understand how CPU power 
-                 is spent by squid, by enabling specific probes in selected
-                 functions.
-                 New probes can only be added by modifying the source code.
-                 It is meant to help developers in optimizing performance
-                 of Squid internal functions.
-                 If you are not developer you should not enable this, 
-                 as it slows squid down somewhat.
-                 See lib/Profiler.c for more details.]), [
-SQUID_YESNO([$enableval],
-            [unrecognized argument to --enable-cpu-profiling: $enableval])
-])
-# Default OFF. This is a debug feature. Only check and enable if forced ON.
-if test "x$enable_cpu_profiling" = "xyes"; then
-  AC_CHECK_FUNCS(clock_gettime_nsec_np)
-  SQUID_CHECK_FUNCTIONAL_CPU_PROFILER
-  if test "x$squid_cv_cpu_profiler_works" = "xno"; then
-    AC_MSG_ERROR([CPU profiling will not be functional in this build.])
-  fi
-fi
-SQUID_DEFINE_BOOL(USE_XPROF_STATS,${enable_cpu_profiling:=no},
-                      [Define to enable CPU profiling within Squid])
-AM_CONDITIONAL(ENABLE_XPROF_STATS,
-               test "x$enable_cpu_profiling" = "xyes")
-AC_MSG_NOTICE([CPU profiling enabled: $enable_cpu_profiling])
-
 # Enable X-Accelerator-Vary for Vary support within an accelerator setup
 AC_ARG_ENABLE(x-accelerator-vary,
   AS_HELP_STRING([--enable-x-accelerator-vary],
@@ -2737,6 +2701,7 @@ AC_CHECK_HEADERS( \
   netinet/tcp.h \
   paths.h \
   poll.h \
+  priv.h \
   pwd.h \
   regex.h \
   sched.h \
@@ -2754,6 +2719,7 @@ AC_CHECK_HEADERS( \
   sys/ipc.cc \
   sys/param.h \
   sys/prctl.h \
+  sys/procctl.h \
   sys/md5.h \
   sys/mman.h \
   sys/msg.h \
@@ -3103,6 +3069,7 @@ esac
 
 dnl System-specific library modifications
 dnl
+AH_TEMPLATE(GETTIMEOFDAY_NO_TZP,[If gettimeofday is known to take only one argument])
 case "$host" in
   i386-*-solaris2.*)
     if test "x$GCC" = "xyes"; then
@@ -3156,12 +3123,6 @@ assert(myBar != NULL);
     fi
     ;;
 
-    *m88k*)
-      SQUID_CFLAGS="$SQUID_CFLAGS -D_SQUID_MOTOROLA_"
-      SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_SQUID_MOTOROLA_"
-      AC_DEFINE(GETTIMEOFDAY_NO_TZP,1,
-        [If gettimeofday is known to take only one argument])
-    ;;
     [*-*-solaris2.[0-4]])
       AC_DEFINE(GETTIMEOFDAY_NO_TZP,1)
     ;;
@@ -3228,6 +3189,7 @@ AC_CHECK_FUNCS(\
 	mstats \
 	poll \
 	prctl \
+	procctl \
 	pthread_attr_setschedparam \
 	pthread_attr_setscope \
 	pthread_setschedparam \
@@ -3244,6 +3206,7 @@ AC_CHECK_FUNCS(\
 	select \
 	seteuid \
 	setgroups \
+	setpflags \
 	setpgrp \
 	setsid \
 	sigaction \
@@ -3526,13 +3489,10 @@ AC_ARG_ENABLE(gnuregex,
                  library built in.]), [
 SQUID_YESNO([$enableval],[unrecognized argument to --enable-gnuregex: $enableval])
 ])
-# force-enable on old solaris and nextstep
+# force-enable on old solaris
 if test "x${enable_gnuregex:=auto}" = "xauto" ; then
     case "$host" in
     *-sun-solaris2.[[0-4]])
-	  enable_gnuregex="yes"
-	  ;;
-    *-next-nextstep*)
 	  enable_gnuregex="yes"
 	  ;;
     esac
@@ -3674,7 +3634,6 @@ AC_CONFIG_FILES([
 	lib/libTrie/Makefile
 	lib/libTrie/test/Makefile
 	lib/ntlmauth/Makefile
-	lib/profiler/Makefile
 	lib/rfcnb/Makefile
 	lib/smblib/Makefile
 	lib/snmplib/Makefile

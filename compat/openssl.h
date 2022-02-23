@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,6 +22,8 @@
 #if !USE_OPENSSL
 #error compat/openssl.h depends on USE_OPENSSL
 #endif
+
+#include <algorithm>
 
 #if HAVE_OPENSSL_ASN1_H
 #include <openssl/asn1.h>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,15 +25,7 @@ public:
                          const Comm::ConnectionPointer &aClientConn,
                          AsyncCall::Pointer &aCallback,
                          const AccessLogEntryPointer &alp,
-                         const time_t timeout = 0) :
-        AsyncJob("Ssl::PeekingPeerConnector"),
-        Security::PeerConnector(aServerConn, aCallback, alp, timeout),
-        clientConn(aClientConn),
-        splice(false),
-        serverCertificateHandled(false)
-    {
-        request = aRequest;
-    }
+                         time_t timeout = 0);
 
     /* Security::PeerConnector API */
     virtual bool initialize(Security::SessionPointer &);

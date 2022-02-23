@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -88,11 +88,7 @@ void releaseServerSockets(void);
 void PrintRusage(void);
 void dumpMallocStats(void);
 
-#if _SQUID_NEXT_
-typedef union wait PidStatus;
-#else
 typedef int PidStatus;
-#endif
 
 /**
  * Compatibility wrapper function for waitpid

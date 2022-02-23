@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -47,7 +47,7 @@ Rock::StoreFileSystem::registerWithCacheManager()
 void
 Rock::StoreFileSystem::setup()
 {
-    debugs(92,2, HERE << "Will use Rock FS");
+    debugs(92,2, "Will use Rock FS");
 }
 
 void

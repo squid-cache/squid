@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -306,7 +306,7 @@ createRemovalPolicy_heap(wordlist * args)
     else if (!strcmp(keytype, "LRU"))
         heap_data->keyfunc = HeapKeyGen_StoreEntry_LRU;
     else {
-        debugs(81, DBG_CRITICAL, "createRemovalPolicy_heap: Unknown key type \"" << keytype << "\". Using LRU");
+        debugs(81, DBG_CRITICAL, "ERROR: createRemovalPolicy_heap: Unknown key type \"" << keytype << "\". Using LRU");
         heap_data->keyfunc = HeapKeyGen_StoreEntry_LRU;
     }
 

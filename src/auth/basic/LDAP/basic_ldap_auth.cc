@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -133,6 +133,10 @@ PFldap_start_tls_s Win32_ldap_start_tls_s;
 
 #include <lber.h>
 #include <ldap.h>
+
+#ifndef LDAP_SECURITY_ERROR
+#define LDAP_SECURITY_ERROR(err) (0x2f <= (err) && (err) <= 0x32) // [47, 50]
+#endif
 
 #endif
 

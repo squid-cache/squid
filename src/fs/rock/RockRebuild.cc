@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -441,7 +441,7 @@ Rock::Rebuild::loadingSteps()
         getCurrentTime();
         const double elapsedMsec = tvSubMsec(loopStart, current_time);
         if (elapsedMsec > maxSpentMsec || elapsedMsec < 0) {
-            debugs(47, 5, HERE << "pausing after " << loaded << " entries in " <<
+            debugs(47, 5, "pausing after " << loaded << " entries in " <<
                    elapsedMsec << "ms; " << (elapsedMsec/loaded) << "ms per entry");
             break;
         }
@@ -668,7 +668,7 @@ Rock::Rebuild::freeBadEntry(const sfileno fileno, const char *eDescription)
 void
 Rock::Rebuild::swanSong()
 {
-    debugs(47,3, HERE << "cache_dir #" << sd->index << " rebuild level: " <<
+    debugs(47,3, "cache_dir #" << sd->index << " rebuild level: " <<
            StoreController::store_dirs_rebuilding);
     storeRebuildComplete(&counts);
 }

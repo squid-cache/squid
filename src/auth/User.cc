@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,7 +32,7 @@ Auth::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
 {
     proxy_match_cache.head = proxy_match_cache.tail = NULL;
     ip_list.head = ip_list.tail = NULL;
-    debugs(29, 5, HERE << "Initialised auth_user '" << this << "'.");
+    debugs(29, 5, "Initialised auth_user '" << this << "'.");
 }
 
 Auth::CredentialState
@@ -64,7 +64,7 @@ Auth::User::absorb(Auth::User::Pointer from)
      *  dlink_list proxy_match_cache;
      */
 
-    debugs(29, 5, HERE << "auth_user '" << from << "' into auth_user '" << this << "'.");
+    debugs(29, 5, "auth_user '" << from << "' into auth_user '" << this << "'.");
 
     // combine the helper response annotations. Ensuring no duplicates are copied.
     notes.appendNewOnly(&from->notes);
@@ -120,7 +120,7 @@ Auth::User::absorb(Auth::User::Pointer from)
 
 Auth::User::~User()
 {
-    debugs(29, 5, HERE << "Freeing auth_user '" << this << "'.");
+    debugs(29, 5, "Freeing auth_user '" << this << "'.");
     assert(LockCount() == 0);
 
     /* free cached acl results */
@@ -223,7 +223,7 @@ Auth::User::addIp(Ip::Address ipaddr)
 
     ++ipcount;
 
-    debugs(29, 2, HERE << "user '" << username() << "' has been seen at a new IP address (" << ipaddr << ")");
+    debugs(29, 2, "user '" << username() << "' has been seen at a new IP address (" << ipaddr << ")");
 }
 
 SBuf

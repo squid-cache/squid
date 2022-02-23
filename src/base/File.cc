@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -107,7 +107,7 @@ FileOpeningConfig::createdIfMissing()
 // nothing better on Solaris, but do not be tempted to use this elsewhere. For
 // more info, see http://bugs.squid-cache.org/show_bug.cgi?id=4212#c14
 /// fcntl(... struct flock) convenience wrapper
-int
+static int
 fcntlLock(const int fd, const short lockType)
 {
     // the exact composition and order of flock data members is unknown!

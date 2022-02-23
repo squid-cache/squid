@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -95,17 +95,20 @@ time.cc: $(top_srcdir)/src/time.cc
 SquidConfig.cc: $(top_srcdir)/src/SquidConfig.cc
 	cp $(top_srcdir)/src/SquidConfig.cc $@
 
-tests/stub_HelperChildConfig.cc: $(top_srcdir)/src/tests/stub_HelperChildConfig.cc
+tests/stub_HelperChildConfig.cc: $(top_srcdir)/src/tests/stub_HelperChildConfig.cc | tests
 	cp $(top_srcdir)/src/tests/stub_HelperChildConfig.cc $@
 
-tests/stub_fd.cc: $(top_srcdir)/src/tests/stub_fd.cc
+tests/stub_fd.cc: $(top_srcdir)/src/tests/stub_fd.cc | tests
 	cp $(top_srcdir)/src/tests/stub_fd.cc $@
 
-tests/stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc
+tests/stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc | tests
 	cp $(top_srcdir)/src/tests/stub_libmem.cc $@
 
-tests/stub_SBuf.cc: $(top_srcdir)/src/tests/stub_SBuf.cc
+tests/stub_SBuf.cc: $(top_srcdir)/src/tests/stub_SBuf.cc | tests
 	cp $(top_srcdir)/src/tests/stub_SBuf.cc $@
 
-tests/STUB.h: $(top_srcdir)/src/tests/STUB.h
+tests/STUB.h: $(top_srcdir)/src/tests/STUB.h | tests
 	cp $(top_srcdir)/src/tests/STUB.h $@
+
+tests:
+	mkdir -p $@

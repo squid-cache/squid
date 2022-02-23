@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -185,12 +185,12 @@ private:
     virtual void swanSong() override;
     virtual const char *status() const override;
 
-    void maybeOpenAnotherPrimeConnection();
+    void maybeOpenPrimeConnection();
+    void maybeOpenSpareConnection();
 
     void maybeGivePrimeItsChance();
     void stopGivingPrimeItsChance();
     void stopWaitingForSpareAllowance();
-    void maybeOpenSpareConnection();
 
     void startConnecting(Attempt &, PeerConnectionPointer &);
     void openFreshConnection(Attempt &, PeerConnectionPointer &);

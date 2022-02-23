@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -114,9 +114,8 @@ private:
     /* PeerSelectionInitiator API */
     virtual void noteDestination(Comm::ConnectionPointer conn) override;
     virtual void noteDestinationsEnd(ErrorState *selectionError) override;
-    /// whether the successfully selected path destination or the established
-    /// server connection is still in use
-    bool usingDestination() const;
+
+    bool transporting() const;
 
     void noteConnection(HappyConnOpenerAnswer &);
 
@@ -197,6 +196,9 @@ private:
     /// waits for an HTTP CONNECT tunnel through a cache_peer to be negotiated
     /// over the (encrypted, if needed) transport connection to that cache_peer
     JobWait<Http::Tunneler> peerWait;
+
+    /// whether we are waiting for the last dispatch()ed activity to end
+    bool waitingForDispatched;
 
     ResolvedPeersPointer destinations; ///< paths for forwarding the request
     Comm::ConnectionPointer serverConn; ///< a successfully opened connection to a server.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,7 +15,6 @@
 #include "HttpReply.h"
 #include "MemBuf.h"
 #include "MemObject.h"
-#include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "StoreClient.h"
@@ -54,7 +53,7 @@ const char *
 MemObject::storeId() const
 {
     if (!storeId_.size()) {
-        debugs(20, DBG_IMPORTANT, "Bug: Missing MemObject::storeId value");
+        debugs(20, DBG_IMPORTANT, "ERROR: Squid BUG: Missing MemObject::storeId value");
         dump();
         storeId_ = "[unknown_URI]";
     }
@@ -138,7 +137,6 @@ MemObject::replaceBaseReply(const HttpReplyPointer &r)
 void
 MemObject::write(const StoreIOBuffer &writeBuffer)
 {
-    PROF_start(MemObject_write);
     debugs(19, 6, "memWrite: offset " << writeBuffer.offset << " len " << writeBuffer.length);
 
     /* We don't separate out mime headers yet, so ensure that the first
@@ -147,7 +145,6 @@ MemObject::write(const StoreIOBuffer &writeBuffer)
     assert (data_hdr.endOffset() || writeBuffer.offset == 0);
 
     assert (data_hdr.write (writeBuffer));
-    PROF_stop(MemObject_write);
 }
 
 void

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,7 +35,6 @@
 #include "fd.h"
 #include "fde.h"
 #include "mgr/Registration.h"
-#include "profiler/Profiler.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "StatHist.h"
@@ -107,7 +106,7 @@ comm_flush_updates(void)
     debugs(
         5,
         DEBUG_DEVPOLL ? 0 : 8,
-        HERE << (devpoll_update.cur + 1) << " fds queued"
+        (devpoll_update.cur + 1) << " fds queued"
     );
 
     i = write(
@@ -135,7 +134,7 @@ comm_update_fd(int fd, int events)
     debugs(
         5,
         DEBUG_DEVPOLL ? 0 : 8,
-        HERE << "FD " << fd << ", events=" << events
+        "FD " << fd << ", events=" << events
     );
 
     /* Is the array already full and in need of flushing? */
@@ -225,7 +224,7 @@ void
 Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t timeout)
 {
     assert(fd >= 0);
-    debugs(5, 5, HERE << "FD " << fd << ", type=" << type <<
+    debugs(5, 5, "FD " << fd << ", type=" << type <<
            ", handler=" << handler << ", client_data=" << client_data <<
            ", timeout=" << timeout);
 
@@ -316,8 +315,6 @@ Comm::DoSelect(int msec)
     fde *F;
     PF *hdl;
 
-    PROF_start(comm_check_incoming);
-
     if (msec > max_poll_time)
         msec = max_poll_time;
 
@@ -338,11 +335,9 @@ Comm::DoSelect(int msec)
 
         /* error during poll */
         getCurrentTime();
-        PROF_stop(comm_check_incoming);
         return Comm::COMM_ERROR;
     }
 
-    PROF_stop(comm_check_incoming);
     getCurrentTime();
 
     statCounter.select_fds_hist.count(num);
@@ -350,15 +345,13 @@ Comm::DoSelect(int msec)
     if (num == 0)
         return Comm::TIMEOUT; /* no error */
 
-    PROF_start(comm_handle_ready_fd);
-
     for (i = 0; i < num; ++i) {
         int fd = (int)do_poll.dp_fds[i].fd;
         F = &fd_table[fd];
         debugs(
             5,
             DEBUG_DEVPOLL ? 0 : 8,
-            HERE << "got FD " << fd
+            "got FD " << fd
             << ",events=" << std::hex << do_poll.dp_fds[i].revents
             << ",monitoring=" << devpoll_state[fd].state
             << ",F->read_handler=" << F->read_handler
@@ -367,11 +360,9 @@ Comm::DoSelect(int msec)
 
         /* handle errors */
         if (do_poll.dp_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-            debugs(
-                5,
-                DEBUG_DEVPOLL ? 0 : 8,
-                HERE << "devpoll event error: fd " << fd
-            );
+            debugs(5, DEBUG_DEVPOLL ? 0 : 8,
+                   "ERROR: devpoll event failure: fd " << fd
+                  );
             continue;
         }
 
@@ -381,18 +372,16 @@ Comm::DoSelect(int msec)
                 debugs(
                     5,
                     DEBUG_DEVPOLL ? 0 : 8,
-                    HERE << "Calling read handler on FD " << fd
+                    "Calling read handler on FD " << fd
                 );
-                PROF_start(comm_read_handler);
                 F->read_handler = NULL;
                 hdl(fd, F->read_data);
-                PROF_stop(comm_read_handler);
                 ++ statCounter.select_fds;
             } else {
                 debugs(
                     5,
                     DEBUG_DEVPOLL ? 0 : 8,
-                    HERE << "no read handler for FD " << fd
+                    "no read handler for FD " << fd
                 );
                 // remove interest since no handler exist for this event.
                 SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
@@ -405,18 +394,16 @@ Comm::DoSelect(int msec)
                 debugs(
                     5,
                     DEBUG_DEVPOLL ? 0 : 8,
-                    HERE << "Calling write handler on FD " << fd
+                    "Calling write handler on FD " << fd
                 );
-                PROF_start(comm_write_handler);
                 F->write_handler = NULL;
                 hdl(fd, F->write_data);
-                PROF_stop(comm_write_handler);
                 ++ statCounter.select_fds;
             } else {
                 debugs(
                     5,
                     DEBUG_DEVPOLL ? 0 : 8,
-                    HERE << "no write handler for FD " << fd
+                    "no write handler for FD " << fd
                 );
                 // remove interest since no handler exist for this event.
                 SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
@@ -424,7 +411,6 @@ Comm::DoSelect(int msec)
         }
     }
 
-    PROF_stop(comm_handle_ready_fd);
     return Comm::OK;
 }
 

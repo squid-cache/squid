@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,7 +30,6 @@
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
 #include "pconn.h"
-#include "profiler/Profiler.h"
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
@@ -112,6 +111,8 @@ comm_empty_os_read_buffers(int fd)
     if (fd_table[fd].flags.nonblocking && fd_table[fd].type != FD_MSGHDR) {
         while (FD_READ_METHOD(fd, buf, SQUID_TCP_SO_RCVBUF) > 0) {};
     }
+#else
+    (void)fd;
 #endif
 }
 
@@ -181,7 +182,7 @@ comm_local_port(int fd)
 
     if (getsockname(fd, addr->ai_addr, &(addr->ai_addrlen)) ) {
         int xerrno = errno;
-        debugs(50, DBG_IMPORTANT, MYNAME << "Failed to retrieve TCP/UDP port number for socket: FD " << fd << ": " << xstrerr(xerrno));
+        debugs(50, DBG_IMPORTANT, "ERROR: " << MYNAME << "Failed to retrieve TCP/UDP port number for socket: FD " << fd << ": " << xstrerr(xerrno));
         Ip::Address::FreeAddr(addr);
         return 0;
     }
@@ -210,7 +211,7 @@ commBind(int s, struct addrinfo &inaddr)
         return Comm::OK;
     }
     int xerrno = errno;
-    debugs(50, DBG_CRITICAL, MYNAME << "Cannot bind socket FD " << s << " to " << fd_table[s].local_addr << ": " << xstrerr(xerrno));
+    debugs(50, DBG_CRITICAL, "ERROR: " << MYNAME << "Cannot bind socket FD " << s << " to " << fd_table[s].local_addr << ": " << xstrerr(xerrno));
 
     return Comm::COMM_ERROR;
 }
@@ -337,7 +338,6 @@ comm_openex(int sock_type,
     int new_socket;
     struct addrinfo *AI = NULL;
 
-    PROF_start(comm_open);
     /* Create socket for accepting new connections. */
     ++ statCounter.syscalls.sock.sockets;
 
@@ -379,7 +379,6 @@ comm_openex(int sock_type,
 
         Ip::Address::FreeAddr(AI);
 
-        PROF_stop(comm_open);
         errno = xerrno; // restore for caller
         return -1;
     }
@@ -404,8 +403,6 @@ comm_openex(int sock_type,
 
     Ip::Address::FreeAddr(AI);
 
-    PROF_stop(comm_open);
-
     // XXX transition only. prevent conn from closing the new FD on function exit.
     conn->fd = -1;
     errno = xerrno; // restore for caller
@@ -422,7 +419,7 @@ comm_init_opened(const Comm::ConnectionPointer &conn,
     assert(AI);
 
     /* update fdstat */
-    debugs(5, 5, HERE << conn << " is a new socket");
+    debugs(5, 5, conn << " is a new socket");
 
     assert(!isOpen(conn->fd)); // NP: global isOpen checks the fde entry for openness not the Comm::Connection
     fd_open(conn->fd, FD_SOCKET, note);
@@ -470,7 +467,7 @@ comm_apply_flags(int new_socket,
         if ( !(flags & COMM_DOBIND) && addr.isAnyAddr() )
             debugs(5, DBG_IMPORTANT,"WARNING: Squid is attempting to bind() port " << addr << " without being a listener.");
         if ( addr.isNoAddr() )
-            debugs(5,0,"CRITICAL: Squid is attempting to bind() port " << addr << "!!");
+            debugs(5, DBG_CRITICAL, "ERROR: Squid is attempting to bind() port " << addr << "!!");
 
 #if defined(SO_REUSEPORT)
         if (flags & COMM_REUSEPORT) {
@@ -515,7 +512,7 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
                    const char *note,
                    struct addrinfo *AI)
 {
-    debugs(5, 2, HERE << conn);
+    debugs(5, 2, conn);
     assert(Comm::IsConnOpen(conn));
     assert(AI);
 
@@ -553,7 +550,7 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
 void
 commUnsetFdTimeout(int fd)
 {
-    debugs(5, 3, HERE << "Remove timeout for FD " << fd);
+    debugs(5, 3, "Remove timeout for FD " << fd);
     assert(fd >= 0);
     assert(fd < Squid_MaxFD);
     fde *F = &fd_table[fd];
@@ -566,7 +563,7 @@ commUnsetFdTimeout(int fd)
 int
 commSetConnTimeout(const Comm::ConnectionPointer &conn, int timeout, AsyncCall::Pointer &callback)
 {
-    debugs(5, 3, HERE << conn << " timeout " << timeout);
+    debugs(5, 3, conn << " timeout " << timeout);
     assert(Comm::IsConnOpen(conn));
     assert(conn->fd < Squid_MaxFD);
     fde *F = &fd_table[conn->fd];
@@ -592,7 +589,7 @@ commSetConnTimeout(const Comm::ConnectionPointer &conn, int timeout, AsyncCall::
 int
 commUnsetConnTimeout(const Comm::ConnectionPointer &conn)
 {
-    debugs(5, 3, HERE << "Remove timeout for " << conn);
+    debugs(5, 3, "Remove timeout for " << conn);
     AsyncCall::Pointer nil;
     return commSetConnTimeout(conn, -1, nil);
 }
@@ -611,11 +608,10 @@ comm_connect_addr(int sock, const Ip::Address &address)
     int err = 0;
     socklen_t errlen;
     struct addrinfo *AI = NULL;
-    PROF_start(comm_connect_addr);
 
     assert(address.port() != 0);
 
-    debugs(5, 9, HERE << "connecting socket FD " << sock << " to " << address << " (want family: " << F->sock_family << ")");
+    debugs(5, 9, "connecting socket FD " << sock << " to " << address << " (want family: " << F->sock_family << ")");
 
     /* Handle IPv6 over IPv4-only socket case.
      * this case must presently be handled here since the getAddrInfo asserts on bad mappings.
@@ -703,8 +699,6 @@ comm_connect_addr(int sock, const Ip::Address &address)
     }
 
     Ip::Address::FreeAddr(AI);
-
-    PROF_stop(comm_connect_addr);
 
     errno = xerrno;
     if (xerrno == 0 || xerrno == EISCONN)
@@ -835,14 +829,12 @@ _comm_close(int fd, char const *file, int line)
 
     /* The following fails because ipc.c is doing calls to pipe() to create sockets! */
     if (!isOpen(fd)) {
-        debugs(50, DBG_IMPORTANT, HERE << "BUG 3556: FD " << fd << " is not an open socket.");
+        debugs(50, DBG_IMPORTANT, "ERROR: Squid BUG #3556: FD " << fd << " is not an open socket.");
         // XXX: do we need to run close(fd) or fd_close(fd) here?
         return;
     }
 
     assert(F->type != FD_FILE);
-
-    PROF_start(comm_close);
 
     F->flags.close_request = true;
 
@@ -892,8 +884,6 @@ _comm_close(int fd, char const *file, int line)
     // must use async call to wait for all callbacks
     // scheduled before comm_close() to finish
     ScheduleCallHere(completeCall);
-
-    PROF_stop(comm_close);
 }
 
 /* Send a udp datagram to specified TO_ADDR. */
@@ -903,7 +893,6 @@ comm_udp_sendto(int fd,
                 const void *buf,
                 int len)
 {
-    PROF_start(comm_udp_sendto);
     ++ statCounter.syscalls.sock.sendtos;
 
     debugs(50, 3, "comm_udp_sendto: Attempt to send UDP packet to " << to_addr <<
@@ -914,8 +903,6 @@ comm_udp_sendto(int fd,
     int x = sendto(fd, buf, len, 0, AI->ai_addr, AI->ai_addrlen);
     int xerrno = errno;
     Ip::Address::FreeAddr(AI);
-
-    PROF_stop(comm_udp_sendto);
 
     if (x >= 0) {
         errno = xerrno; // restore for caller to use
@@ -1122,7 +1109,7 @@ commSetCloseOnExec(int fd)
 
     if (fcntl(fd, F_SETFD, flags | FD_CLOEXEC) < 0) {
         int xerrno = errno;
-        debugs(50, DBG_CRITICAL, MYNAME << "FD " << fd << ": set close-on-exec failed: " << xstrerr(xerrno));
+        debugs(50, DBG_CRITICAL, "ERROR: " << MYNAME << "FD " << fd << ": set close-on-exec failed: " << xstrerr(xerrno));
     }
 
     fd_table[fd].flags.close_on_exec = true;
@@ -1303,12 +1290,12 @@ ClientInfo::quota()
         // Rounding errors do not accumulate here, but we round down to avoid
         // negative bucket sizes after write with rationedCount=1.
         rationedQuota = static_cast<int>(floor(bucketLevel/rationedCount));
-        debugs(77,5, HERE << "new rationedQuota: " << rationedQuota <<
+        debugs(77,5, "new rationedQuota: " << rationedQuota <<
                '*' << rationedCount);
     }
 
     --rationedCount;
-    debugs(77,7, HERE << "rationedQuota: " << rationedQuota <<
+    debugs(77,7, "rationedQuota: " << rationedQuota <<
            " rations remaining: " << rationedCount);
 
     // update 'last seen' time to prevent clientdb GC from dropping us
@@ -1563,7 +1550,7 @@ checkTimeouts(void)
 void
 commStartHalfClosedMonitor(int fd)
 {
-    debugs(5, 5, HERE << "adding FD " << fd << " to " << *TheHalfClosed);
+    debugs(5, 5, "adding FD " << fd << " to " << *TheHalfClosed);
     assert(isOpen(fd) && !commHasHalfClosedMonitor(fd));
     (void)TheHalfClosed->add(fd); // could also assert the result
     fd_table[fd].codeContext = CodeContext::Current();
@@ -1586,7 +1573,7 @@ static
 void
 commHalfClosedCheck(void *)
 {
-    debugs(5, 5, HERE << "checking " << *TheHalfClosed);
+    debugs(5, 5, "checking " << *TheHalfClosed);
 
     typedef DescriptorSet::const_iterator DSCI;
     const DSCI end = TheHalfClosed->end();
@@ -1620,7 +1607,7 @@ commHasHalfClosedMonitor(int fd)
 void
 commStopHalfClosedMonitor(int const fd)
 {
-    debugs(5, 5, HERE << "removing FD " << fd << " from " << *TheHalfClosed);
+    debugs(5, 5, "removing FD " << fd << " from " << *TheHalfClosed);
 
     // cancel the read if one was scheduled
     AsyncCall::Pointer reader = fd_table[fd].halfClosedReader;
@@ -1648,7 +1635,7 @@ commHalfClosedReader(const Comm::ConnectionPointer &conn, char *, size_t size, C
 
     // if read failed, close the connection
     if (flag != Comm::OK) {
-        debugs(5, 3, HERE << "closing " << conn);
+        debugs(5, 3, "closing " << conn);
         conn->close();
         return;
     }
@@ -1843,7 +1830,6 @@ comm_open_uds(int sock_type,
 
     int new_socket;
 
-    PROF_start(comm_open);
     /* Create socket for accepting new connections. */
     ++ statCounter.syscalls.sock.sockets;
 
@@ -1858,7 +1844,7 @@ comm_open_uds(int sock_type,
     AI.ai_canonname = NULL;
     AI.ai_next = NULL;
 
-    debugs(50, 3, HERE << "Attempt open socket for: " << addr->sun_path);
+    debugs(50, 3, "Attempt open socket for: " << addr->sun_path);
 
     if ((new_socket = socket(AI.ai_family, AI.ai_socktype, AI.ai_protocol)) < 0) {
         int xerrno = errno;
@@ -1872,15 +1858,13 @@ comm_open_uds(int sock_type,
         } else {
             debugs(50, DBG_CRITICAL, MYNAME << "socket failure: " << xstrerr(xerrno));
         }
-
-        PROF_stop(comm_open);
         return -1;
     }
 
     debugs(50, 3, "Opened UDS FD " << new_socket << " : family=" << AI.ai_family << ", type=" << AI.ai_socktype << ", protocol=" << AI.ai_protocol);
 
     /* update fdstat */
-    debugs(50, 5, HERE << "FD " << new_socket << " is a new socket");
+    debugs(50, 5, "FD " << new_socket << " is a new socket");
 
     assert(!isOpen(new_socket));
     fd_open(new_socket, FD_MSGHDR, addr->sun_path);
@@ -1896,7 +1880,6 @@ comm_open_uds(int sock_type,
     if (flags & COMM_NONBLOCKING) {
         if (commSetNonBlocking(new_socket) != Comm::OK) {
             comm_close(new_socket);
-            PROF_stop(comm_open);
             return -1;
         }
     }
@@ -1904,7 +1887,6 @@ comm_open_uds(int sock_type,
     if (flags & COMM_DOBIND) {
         if (commBind(new_socket, AI) != Comm::OK) {
             comm_close(new_socket);
-            PROF_stop(comm_open);
             return -1;
         }
     }
@@ -1917,8 +1899,6 @@ comm_open_uds(int sock_type,
 
     if (Config.tcpRcvBufsz > 0 && sock_type == SOCK_STREAM)
         commSetTcpRcvbuf(new_socket, Config.tcpRcvBufsz);
-
-    PROF_stop(comm_open);
 
     return new_socket;
 }

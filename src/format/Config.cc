@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -51,6 +51,6 @@ Format::FmtConfig::registerTokens(const SBuf &nsName, TokenTableEntry const *tok
     if (tokenArray)
         tokens.emplace_back(TokenNamespace(nsName, tokenArray));
     else
-        debugs(0, DBG_CRITICAL, "BUG: format tokens for '" << nsName << "' missing!");
+        debugs(0, DBG_CRITICAL, "ERROR: Squid BUG: format tokens for '" << nsName << "' missing!");
 }
 

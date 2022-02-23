@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -48,7 +48,6 @@
 #include "neighbors.h"
 #include "pconn.h"
 #include "peer_proxy_negotiate_auth.h"
-#include "profiler/Profiler.h"
 #include "refresh.h"
 #include "RefreshPattern.h"
 #include "rfc1738.h"
@@ -84,7 +83,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) :
     payloadTruncated(0),
     sawDateGoBack(false)
 {
-    debugs(11,5,HERE << "HttpStateData " << this << " created");
+    debugs(11,5, "HttpStateData " << this << " created");
     ignoreCacheControl = false;
     surrogateNoStore = false;
     serverConnection = fwd->serverConnection();
@@ -131,7 +130,7 @@ HttpStateData::~HttpStateData()
 
     delete upgradeHeaderOut;
 
-    debugs(11,5, HERE << "HttpStateData " << this << " destroyed; " << serverConnection);
+    debugs(11,5, "HttpStateData " << this << " destroyed; " << serverConnection);
 }
 
 const Comm::ConnectionPointer &
@@ -396,12 +395,12 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
         bool mayStore = false;
         // HTTPbis pt6 section 3.2: a response CC:public is present
         if (rep->cache_control->hasPublic()) {
-            debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:public");
+            debugs(22, 3, "Authenticated but server reply Cache-Control:public");
             mayStore = true;
 
             // HTTPbis pt6 section 3.2: a response CC:must-revalidate is present
         } else if (rep->cache_control->hasMustRevalidate()) {
-            debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:must-revalidate");
+            debugs(22, 3, "Authenticated but server reply Cache-Control:must-revalidate");
             mayStore = true;
 
 #if USE_HTTP_VIOLATIONS
@@ -410,13 +409,13 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
             // some. The caching+revalidate is not exactly unsafe though with Squids interpretation of no-cache
             // (without parameters) as equivalent to must-revalidate in the reply.
         } else if (rep->cache_control->hasNoCacheWithoutParameters()) {
-            debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:no-cache (equivalent to must-revalidate)");
+            debugs(22, 3, "Authenticated but server reply Cache-Control:no-cache (equivalent to must-revalidate)");
             mayStore = true;
 #endif
 
             // HTTPbis pt6 section 3.2: a response CC:s-maxage is present
         } else if (rep->cache_control->hasSMaxAge()) {
-            debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:s-maxage");
+            debugs(22, 3, "Authenticated but server reply Cache-Control:s-maxage");
             mayStore = true;
         }
 
@@ -793,7 +792,7 @@ HttpStateData::handle1xx(HttpReply *reply)
             return drop1xx(reason);
     }
 
-    debugs(11, 2, HERE << "forwarding 1xx to client");
+    debugs(11, 2, "forwarding 1xx to client");
 
     // the Sink will use this to call us back after writing 1xx to the client
     typedef NullaryMemFunT<HttpStateData> CbDialer;
@@ -1125,7 +1124,7 @@ HttpStateData::statusIfComplete() const
 HttpStateData::ConnectionStatus
 HttpStateData::persistentConnStatus() const
 {
-    debugs(11, 3, HERE << serverConnection << " eof=" << eof);
+    debugs(11, 3, serverConnection << " eof=" << eof);
     if (eof) // already reached EOF
         return COMPLETE_NONPERSISTENT_MSG;
 
@@ -1283,7 +1282,7 @@ HttpStateData::processReply()
 {
 
     if (flags.handling1xx) { // we came back after handling a 1xx response
-        debugs(11, 5, HERE << "done with 1xx handling");
+        debugs(11, 5, "done with 1xx handling");
         flags.handling1xx = false;
         Must(!flags.headers_parsed);
     }
@@ -1294,9 +1293,7 @@ HttpStateData::processReply()
     }
 
     if (!flags.headers_parsed) { // have not parsed headers yet?
-        PROF_start(HttpStateData_processReplyHeader);
         processReplyHeader();
-        PROF_stop(HttpStateData_processReplyHeader);
 
         if (!continueAfterParsingHeader()) // parsing error or need more data
             return; // TODO: send errors to ICAP
@@ -1305,9 +1302,7 @@ HttpStateData::processReply()
     }
 
     // kick more reads if needed and/or process the response body, if any
-    PROF_start(HttpStateData_processReplyBody);
     processReplyBody(); // may call serverComplete()
-    PROF_stop(HttpStateData_processReplyBody);
 }
 
 /**
@@ -1317,7 +1312,7 @@ bool
 HttpStateData::continueAfterParsingHeader()
 {
     if (flags.handling1xx) {
-        debugs(11, 5, HERE << "wait for 1xx handling");
+        debugs(11, 5, "wait for 1xx handling");
         Must(!flags.headers_parsed);
         return false;
     }
@@ -1476,7 +1471,7 @@ HttpStateData::processReplyBody()
     }
 
 #if USE_ADAPTATION
-    debugs(11,5, HERE << "adaptationAccessCheckPending=" << adaptationAccessCheckPending);
+    debugs(11,5, "adaptationAccessCheckPending=" << adaptationAccessCheckPending);
     if (adaptationAccessCheckPending)
         return;
 
@@ -1650,7 +1645,7 @@ HttpStateData::maybeMakeSpaceAvailable(bool doGrow)
 void
 HttpStateData::wroteLast(const CommIoCbParams &io)
 {
-    debugs(11, 5, HERE << serverConnection << ": size " << io.size << ": errflag " << io.flag << ".");
+    debugs(11, 5, serverConnection << ": size " << io.size << ": errflag " << io.flag << ".");
 #if URL_CHECKSUM_DEBUG
 
     entry->mem_obj->checkUrlChecksum();
@@ -1706,7 +1701,7 @@ HttpStateData::sendComplete()
 void
 HttpStateData::closeServer()
 {
-    debugs(11,5, HERE << "closing HTTP server " << serverConnection << " this " << this);
+    debugs(11,5, "closing HTTP server " << serverConnection << " this " << this);
 
     if (Comm::IsConnOpen(serverConnection)) {
         fwd->unregister(serverConnection);
@@ -1910,7 +1905,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             static int warnedCount = 0;
             if (warnedCount++ < 100) {
                 const SBuf url(entry ? SBuf(entry->url()) : request->effectiveRequestUri());
-                debugs(11, DBG_IMPORTANT, "Warning: likely forwarding loop with " << url);
+                debugs(11, DBG_IMPORTANT, "WARNING: likely forwarding loop with " << url);
             }
         }
 
@@ -2344,10 +2339,10 @@ HttpStateData::sendRequest()
 {
     MemBuf mb;
 
-    debugs(11, 5, HERE << serverConnection << ", request " << request << ", this " << this << ".");
+    debugs(11, 5, serverConnection << ", request " << request << ", this " << this << ".");
 
     if (!Comm::IsConnOpen(serverConnection)) {
-        debugs(11,3, HERE << "cannot send request to closing " << serverConnection);
+        debugs(11,3, "cannot send request to closing " << serverConnection);
         assert(closeHandler != NULL);
         return false;
     }
@@ -2492,7 +2487,7 @@ HttpStateData::finishingBrokenPost()
 {
 #if USE_HTTP_VIOLATIONS
     if (!Config.accessList.brokenPosts) {
-        debugs(11, 5, HERE << "No brokenPosts list");
+        debugs(11, 5, "No brokenPosts list");
         return false;
     }
 
@@ -2500,12 +2495,12 @@ HttpStateData::finishingBrokenPost()
     ch.al = fwd->al;
     ch.syncAle(originalRequest().getRaw(), nullptr);
     if (!ch.fastCheck().allowed()) {
-        debugs(11, 5, HERE << "didn't match brokenPosts");
+        debugs(11, 5, "didn't match brokenPosts");
         return false;
     }
 
     if (!Comm::IsConnOpen(serverConnection)) {
-        debugs(11, 3, HERE << "ignoring broken POST for closed " << serverConnection);
+        debugs(11, 3, "ignoring broken POST for closed " << serverConnection);
         assert(closeHandler != NULL);
         return true; // prevent caller from proceeding as if nothing happened
     }
@@ -2526,7 +2521,7 @@ bool
 HttpStateData::finishingChunkedRequest()
 {
     if (flags.sentLastChunk) {
-        debugs(11, 5, HERE << "already sent last-chunk");
+        debugs(11, 5, "already sent last-chunk");
         return false;
     }
 
@@ -2543,7 +2538,7 @@ void
 HttpStateData::doneSendingRequestBody()
 {
     Client::doneSendingRequestBody();
-    debugs(11,5, HERE << serverConnection);
+    debugs(11,5, serverConnection);
 
     // do we need to write something after the last body byte?
     if (flags.chunked_request && finishingChunkedRequest())
@@ -2562,7 +2557,7 @@ HttpStateData::handleMoreRequestBodyAvailable()
         // XXX: we should check this condition in other callbacks then!
         // TODO: Check whether this can actually happen: We should unsubscribe
         // as a body consumer when the above condition(s) are detected.
-        debugs(11, DBG_IMPORTANT, HERE << "Transaction aborted while reading HTTP body");
+        debugs(11, DBG_IMPORTANT, "Transaction aborted while reading HTTP body");
         return;
     }
 
@@ -2619,7 +2614,7 @@ HttpStateData::sentRequestBody(const CommIoCbParams &io)
 void
 HttpStateData::abortAll(const char *reason)
 {
-    debugs(11,5, HERE << "aborting transaction for " << reason <<
+    debugs(11,5, "aborting transaction for " << reason <<
            "; " << serverConnection << ", this " << this);
     mustStop(reason);
 }
