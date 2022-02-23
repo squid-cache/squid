@@ -4285,10 +4285,8 @@ static void free_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
 #if USE_OPENSSL
 static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 {
-    char *al;
-    sslproxy_cert_adapt *ca = (sslproxy_cert_adapt *) xcalloc(1, sizeof(sslproxy_cert_adapt));
-    if ((al = ConfigParser::NextToken()) == NULL) {
-        xfree(ca);
+    auto *al = ConfigParser::NextToken();
+    if (!al) {
         self_destruct();
         return;
     }
@@ -4300,7 +4298,6 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
         param = s;
         s = strchr(s, '}');
         if (!s) {
-            xfree(ca);
             self_destruct();
             return;
         }
@@ -4308,6 +4305,7 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
     } else
         param = NULL;
 
+    std::unique_ptr<sslproxy_cert_adapt> ca(new sslproxy_cert_adapt);
     if (strcmp(al, Ssl::CertAdaptAlgorithmStr[Ssl::algSetValidAfter]) == 0) {
         ca->alg = Ssl::algSetValidAfter;
         ca->param = xstrdup("on");
@@ -4319,7 +4317,6 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
         if (param) {
             if (strlen(param) > 64) {
                 debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_adapt: setCommonName{" <<param << "} : using common name longer than 64 bytes is not supported");
-                xfree(ca);
                 self_destruct();
                 return;
             }
@@ -4327,7 +4324,6 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
         }
     } else {
         debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_adapt: unknown cert adaptation algorithm: " << al);
-        xfree(ca);
         self_destruct();
         return;
     }
@@ -4337,12 +4333,12 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
     while (*cert_adapt)
         cert_adapt = &(*cert_adapt)->next;
 
-    *cert_adapt = ca;
+    *cert_adapt = ca.release();
 }
 
 static void dump_sslproxy_cert_adapt(StoreEntry *entry, const char *name, sslproxy_cert_adapt *cert_adapt)
 {
-    for (sslproxy_cert_adapt *ca = cert_adapt; ca != NULL; ca = ca->next) {
+    for (const auto *ca = cert_adapt; ca; ca = ca->next) {
         storeAppendPrintf(entry, "%s ", name);
         storeAppendPrintf(entry, "%s{%s} ", Ssl::sslCertAdaptAlgoritm(ca->alg), ca->param);
         if (ca->aclList)
@@ -4353,28 +4349,19 @@ static void dump_sslproxy_cert_adapt(StoreEntry *entry, const char *name, sslpro
 
 static void free_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 {
-    while (*cert_adapt) {
-        sslproxy_cert_adapt *ca = *cert_adapt;
-        *cert_adapt = ca->next;
-        safe_free(ca->param);
-
-        if (ca->aclList)
-            aclDestroyAclList(&ca->aclList);
-
-        safe_free(ca);
-    }
+    delete *cert_adapt;
+    *cert_adapt = nullptr;
 }
 
 static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
 {
-    char *al;
-    sslproxy_cert_sign *cs = (sslproxy_cert_sign *) xcalloc(1, sizeof(sslproxy_cert_sign));
-    if ((al = ConfigParser::NextToken()) == NULL) {
-        xfree(cs);
+    const auto al = ConfigParser::NextToken();
+    if (!al) {
         self_destruct();
         return;
     }
 
+    std::unique_ptr<sslproxy_cert_sign> cs(new sslproxy_cert_sign);
     if (strcmp(al, Ssl::CertSignAlgorithmStr[Ssl::algSignTrusted]) == 0)
         cs->alg = Ssl::algSignTrusted;
     else if (strcmp(al, Ssl::CertSignAlgorithmStr[Ssl::algSignUntrusted]) == 0)
@@ -4383,7 +4370,6 @@ static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
         cs->alg = Ssl::algSignSelf;
     else {
         debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_sign: unknown cert signing algorithm: " << al);
-        xfree(cs);
         self_destruct();
         return;
     }
@@ -4393,13 +4379,12 @@ static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
     while (*cert_sign)
         cert_sign = &(*cert_sign)->next;
 
-    *cert_sign = cs;
+    *cert_sign = cs.release();
 }
 
 static void dump_sslproxy_cert_sign(StoreEntry *entry, const char *name, sslproxy_cert_sign *cert_sign)
 {
-    sslproxy_cert_sign *cs;
-    for (cs = cert_sign; cs != NULL; cs = cs->next) {
+    for (const auto *cs = cert_sign; cs; cs = cs->next) {
         storeAppendPrintf(entry, "%s ", name);
         storeAppendPrintf(entry, "%s ", Ssl::certSignAlgorithm(cs->alg));
         if (cs->aclList)
@@ -4410,15 +4395,8 @@ static void dump_sslproxy_cert_sign(StoreEntry *entry, const char *name, sslprox
 
 static void free_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
 {
-    while (*cert_sign) {
-        sslproxy_cert_sign *cs = *cert_sign;
-        *cert_sign = cs->next;
-
-        if (cs->aclList)
-            aclDestroyAclList(&cs->aclList);
-
-        safe_free(cs);
-    }
+    delete *cert_sign;
+    *cert_sign = nullptr;
 }
 
 class sslBumpCfgRr: public ::RegisteredRunner
