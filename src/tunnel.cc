@@ -190,7 +190,7 @@ public:
     /// was unexpectedly closed
     bool retriable;
 
-    /// whether we will not consider using any other server
+    /// whether the decision to tunnel to a particular destination was final
     bool committedToServer;
 
     // TODO: remove after fixing deferred reads in TunnelStateData::copyRead()
