@@ -20,12 +20,13 @@ public:
     sslproxy_cert_sign() = default;
     sslproxy_cert_sign(sslproxy_cert_sign &&) = delete; // prohibit all copy/move
     ~sslproxy_cert_sign() {
-        if (aclList)
-            aclDestroyAclList(&aclList);
         while (const auto first = next) {
             next = first->next;
+            first->next = nullptr;
             delete first;
         }
+        if (aclList)
+            aclDestroyAclList(&aclList);
     }
 
 public:
@@ -40,13 +41,14 @@ public:
     sslproxy_cert_adapt() = default;
     sslproxy_cert_adapt(sslproxy_cert_adapt &&) = delete; // prohibit all copy/move
     ~sslproxy_cert_adapt() {
+        while (const auto first = next) {
+            next = first->next;
+            first->next = nullptr;
+            delete first;
+        }
         xfree(param);
         if (aclList)
             aclDestroyAclList(&aclList);
-        while (const auto first = next) {
-            next = first->next;
-            delete first;
-        }
     }
 
 public:
