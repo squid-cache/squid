@@ -4286,7 +4286,7 @@ static void free_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
 static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 {
     auto *al = ConfigParser::NextToken();
-    if (al) {
+    if (!al) {
         self_destruct();
         return;
     }
