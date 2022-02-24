@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,7 @@
 #define STUB_API "stub_libformat.cc"
 #include "tests/STUB.h"
 
-void Format::Format::assemble(MemBuf &mb, const AccessLogEntryPointer &al, int logSequenceNumber) const STUB
+void Format::Format::assemble(MemBuf &, const AccessLogEntryPointer &, int) const STUB
 bool Format::Format::parse(char const*) STUB_RETVAL(false)
 Format::Format::Format(char const*) STUB
 Format::Format::~Format() STUB

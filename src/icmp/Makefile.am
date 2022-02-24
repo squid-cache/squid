@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -36,7 +36,6 @@ libicmp_la_LIBADD= libicmpcore.la
 
 # pinger depends on these but install/dist is done elsewhere.
 COPIED_SOURCE= \
-	debug.cc \
 	globals.cc \
 	SquidConfig.cc \
 	tests/stub_fd.cc \
@@ -61,6 +60,7 @@ pinger_LDFLAGS = $(LIBADD_DL)
 pinger_LDADD=\
 	libicmpcore.la \
 	$(top_builddir)/src/ip/libip.la \
+	$(top_builddir)/src/debug/libdebug.la \
 	$(top_builddir)/src/base/libbase.la \
 	$(COMPAT_LIB) \
 	$(SSLLIB) \
@@ -83,9 +83,6 @@ CLEANFILES += $(COPIED_SOURCE)
 
 ## files we need to pull in from other locations
 ## copied like this to avoid subdir-objects collisions on 'make clean'
-debug.cc: $(top_srcdir)/src/debug.cc
-	cp $(top_srcdir)/src/debug.cc $@
-
 globals.cc: $(top_srcdir)/src/globals.h
 	cp $(top_builddir)/src/globals.cc $@
 
@@ -95,17 +92,20 @@ time.cc: $(top_srcdir)/src/time.cc
 SquidConfig.cc: $(top_srcdir)/src/SquidConfig.cc
 	cp $(top_srcdir)/src/SquidConfig.cc $@
 
-tests/stub_HelperChildConfig.cc: $(top_srcdir)/src/tests/stub_HelperChildConfig.cc
+tests/stub_HelperChildConfig.cc: $(top_srcdir)/src/tests/stub_HelperChildConfig.cc | tests
 	cp $(top_srcdir)/src/tests/stub_HelperChildConfig.cc $@
 
-tests/stub_fd.cc: $(top_srcdir)/src/tests/stub_fd.cc
+tests/stub_fd.cc: $(top_srcdir)/src/tests/stub_fd.cc | tests
 	cp $(top_srcdir)/src/tests/stub_fd.cc $@
 
-tests/stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc
+tests/stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc | tests
 	cp $(top_srcdir)/src/tests/stub_libmem.cc $@
 
-tests/stub_SBuf.cc: $(top_srcdir)/src/tests/stub_SBuf.cc
+tests/stub_SBuf.cc: $(top_srcdir)/src/tests/stub_SBuf.cc | tests
 	cp $(top_srcdir)/src/tests/stub_SBuf.cc $@
 
-tests/STUB.h: $(top_srcdir)/src/tests/STUB.h
+tests/STUB.h: $(top_srcdir)/src/tests/STUB.h | tests
 	cp $(top_srcdir)/src/tests/STUB.h $@
+
+tests:
+	mkdir -p $@

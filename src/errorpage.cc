@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -225,7 +225,8 @@ protected:
 };
 
 /// \ingroup ErrorPageInternal
-err_type &operator++ (err_type &anErr)
+static err_type &
+operator++ (err_type &anErr)
 {
     int tmp = (int)anErr;
     anErr = (err_type)(++tmp);
@@ -233,7 +234,8 @@ err_type &operator++ (err_type &anErr)
 }
 
 /// \ingroup ErrorPageInternal
-int operator - (err_type const &anErr, err_type const &anErr2)
+static int
+operator -(err_type const &anErr, err_type const &anErr2)
 {
     return (int)anErr - (int)anErr2;
 }
@@ -369,7 +371,7 @@ TemplateFile::loadDefault()
     /** test error_default_language location */
     if (!loaded() && Config.errorDefaultLanguage) {
         if (!tryLoadTemplate(Config.errorDefaultLanguage)) {
-            debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "Unable to load default error language files. Reset to backups.");
+            debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "ERROR: Unable to load default error language files. Reset to backups.");
         }
     }
 #endif
@@ -406,7 +408,7 @@ TemplateFile::tryLoadTemplate(const char *lang)
     if ( strlen(lang) == 2) {
         /* TODO glob the error directory for sub-dirs matching: <tag> '-*'   */
         /* use first result. */
-        debugs(4,2, HERE << "wildcard fallback errors not coded yet.");
+        debugs(4,2, "wildcard fallback errors not coded yet.");
     }
 #endif
 
@@ -530,17 +532,17 @@ TemplateFile::loadFor(const HttpRequest *request)
     char lang[256];
     size_t pos = 0; // current parsing position in header string
 
-    debugs(4, 6, HERE << "Testing Header: '" << hdr << "'");
+    debugs(4, 6, "Testing Header: '" << hdr << "'");
 
     while ( strHdrAcptLangGetItem(hdr, lang, 256, pos) ) {
 
         /* wildcard uses the configured default language */
         if (lang[0] == '*' && lang[1] == '\0') {
-            debugs(4, 6, HERE << "Found language '" << lang << "'. Using configured default.");
+            debugs(4, 6, "Found language '" << lang << "'. Using configured default.");
             return false;
         }
 
-        debugs(4, 6, HERE << "Found language '" << lang << "', testing for available template");
+        debugs(4, 6, "Found language '" << lang << "', testing for available template");
 
         if (tryLoadTemplate(lang)) {
             /* store the language we found for the Content-Language reply header */
@@ -550,6 +552,8 @@ TemplateFile::loadFor(const HttpRequest *request)
             debugs(4, DBG_IMPORTANT, "WARNING: Error Pages Missing Language: " << lang);
         }
     }
+#else
+    (void)request;
 #endif
 
     return loaded();
@@ -771,7 +775,7 @@ static void
 errorSendComplete(const Comm::ConnectionPointer &conn, char *, size_t size, Comm::Flag errflag, int, void *data)
 {
     ErrorState *err = static_cast<ErrorState *>(data);
-    debugs(4, 3, HERE << conn << ", size=" << size);
+    debugs(4, 3, conn << ", size=" << size);
 
     if (errflag != Comm::ERR_CLOSING) {
         if (err->callback) {
@@ -1076,6 +1080,7 @@ ErrorState::compileLegacyCode(Build &build)
     case 'O':
         if (!building_deny_info_url)
             do_quote = 0;
+    /* [[fallthrough]] */
     case 'o':
         p = request ? request->extacl_message.termedBuf() : external_acl_message;
         if (!p && !building_deny_info_url)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -48,7 +48,8 @@ LookupTable<HttpHdrCcType> ccLookupTable(HttpHdrCcType::CC_OTHER,CcAttrs);
 std::vector<HttpHeaderFieldStat> ccHeaderStats(HttpHdrCcType::CC_ENUM_END);
 
 /// used to walk a table of http_header_cc_type structs
-HttpHdrCcType &operator++ (HttpHdrCcType &aHeader)
+static HttpHdrCcType &
+operator++ (HttpHdrCcType &aHeader)
 {
     int tmp = (int)aHeader;
     aHeader = (HttpHdrCcType)(++tmp);
@@ -61,7 +62,7 @@ httpHdrCcInitModule(void)
 {
     // check invariant on initialization table
     for (unsigned int j = 0; CcAttrs[j].name != nullptr; ++j) {
-        assert (static_cast<int>(CcAttrs[j].id) == j);
+        assert(static_cast<decltype(j)>(CcAttrs[j].id) == j);
     }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -53,6 +53,9 @@ CommAcceptCbParams::CommAcceptCbParams(void *aData):
 {
 }
 
+// XXX: Add CommAcceptCbParams::syncWithComm(). Adjust syncWithComm() API if all
+// implementations always return true.
+
 void
 CommAcceptCbParams::print(std::ostream &os) const
 {
@@ -72,13 +75,24 @@ CommConnectCbParams::CommConnectCbParams(void *aData):
 bool
 CommConnectCbParams::syncWithComm()
 {
-    // drop the call if the call was scheduled before comm_close but
-    // is being fired after comm_close
-    if (fd >= 0 && fd_table[fd].closing()) {
-        debugs(5, 3, HERE << "dropping late connect call: FD " << fd);
-        return false;
+    assert(conn);
+
+    // change parameters if this is a successful callback that was scheduled
+    // after its Comm-registered connection started to close
+
+    if (flag != Comm::OK) {
+        assert(!conn->isOpen());
+        return true; // not a successful callback; cannot go out of sync
     }
-    return true; // now we are in sync and can handle the call
+
+    assert(conn->isOpen());
+    if (!fd_table[conn->fd].closing())
+        return true; // no closing in progress; in sync (for now)
+
+    debugs(5, 3, "converting to Comm::ERR_CLOSING: " << conn);
+    conn->noteClosure();
+    flag = Comm::ERR_CLOSING;
+    return true; // now the callback is in sync with Comm again
 }
 
 /* CommIoCbParams */
@@ -94,7 +108,7 @@ CommIoCbParams::syncWithComm()
     // change parameters if the call was scheduled before comm_close but
     // is being fired after comm_close
     if ((conn->fd < 0 || fd_table[conn->fd].closing()) && flag != Comm::ERR_CLOSING) {
-        debugs(5, 3, HERE << "converting late call to Comm::ERR_CLOSING: " << conn);
+        debugs(5, 3, "converting late call to Comm::ERR_CLOSING: " << conn);
         flag = Comm::ERR_CLOSING;
     }
     return true; // now we are in sync and can handle the call

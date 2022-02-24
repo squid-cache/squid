@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,7 +24,7 @@ public:
     virtual void Close() {};
 
     /// Construct ECHO request
-    virtual void SendEcho(Ip::Address &to, int opcode, const char *payload, int len) {};
+    virtual void SendEcho(Ip::Address &, int, const char *, int) {}
 
     /// Handle ICMP responses.
     virtual void Recv(void) {};

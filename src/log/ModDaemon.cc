@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -115,7 +115,7 @@ logfileHandleWrite(int, void *data)
             ll->flush_pending = 1;
             return;
         }
-        debugs(50, DBG_IMPORTANT,"logfileHandleWrite: " << lf->path << ": error writing (" << xstrerr(xerrno) << ")");
+        debugs(50, DBG_IMPORTANT, "ERROR: logfileHandleWrite: " << lf->path << ": error writing (" << xstrerr(xerrno) << ")");
         /* XXX should handle this better */
         fatal("I don't handle this error well!");
     }
@@ -338,7 +338,7 @@ logfile_mod_daemon_flush(Logfile * lf)
 {
     l_daemon_t *ll = static_cast<l_daemon_t *>(lf->data);
     if (commUnsetNonBlocking(ll->wfd)) {
-        debugs(50, DBG_IMPORTANT, "Logfile Daemon: Couldn't set the pipe blocking for flush! You're now missing some log entries.");
+        debugs(50, DBG_IMPORTANT, "ERROR: Logfile Daemon: Could not set the pipe blocking for flush! You are now missing some log entries.");
         return;
     }
     while (ll->bufs.head != NULL) {

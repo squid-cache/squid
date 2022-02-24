@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,6 +18,9 @@ class StoreEntry;
 namespace Dns
 {
 class LookupDetails;
+
+/// whether to do reverse DNS lookups for source IPs of accepted connections
+extern bool ResolveClientAddressesAsap;
 }
 
 typedef void FQDNH(const char *, const Dns::LookupDetails &details, void *);

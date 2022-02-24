@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,11 +20,11 @@
 
 InstanceIdDefinitions(AsyncJob, "job");
 
-AsyncJob::Pointer AsyncJob::Start(AsyncJob *j)
+void
+AsyncJob::Start(const Pointer &job)
 {
-    AsyncJob::Pointer job(j);
     CallJobHere(93, 5, job, AsyncJob, start);
-    return job;
+    job->started_ = true; // it is the attempt that counts
 }
 
 AsyncJob::AsyncJob(const char *aTypeName) :
@@ -38,6 +38,7 @@ AsyncJob::~AsyncJob()
 {
     debugs(93,5, "AsyncJob destructed, this=" << this <<
            " type=" << typeName << " [" << id << ']');
+    assert(!started_ || swanSang_);
 }
 
 void AsyncJob::start()
@@ -103,7 +104,7 @@ bool AsyncJob::canBeCalled(AsyncCall &call) const
     if (inCall != NULL) {
         // This may happen when we have bugs or some module is not calling
         // us asynchronously (comm used to do that).
-        debugs(93, 5, HERE << inCall << " is in progress; " <<
+        debugs(93, 5, inCall << " is in progress; " <<
                call << " cannot reenter the job.");
         return call.cancel("reentrant job call");
     }
@@ -141,12 +142,19 @@ void AsyncJob::callEnd()
         AsyncCall::Pointer inCallSaved = inCall;
         void *thisSaved = this;
 
+        // TODO: Swallow swanSong() exceptions to reduce memory leaks.
+
+        // Job callback invariant: swanSong() is (only) called for started jobs.
+        // Here to detect violations in kids that forgot to call our swanSong().
+        assert(started_);
+
+        swanSang_ = true; // it is the attempt that counts
         swanSong();
 
-        delete this; // this is the only place where the object is deleted
+        delete this; // this is the only place where a started job is deleted
 
         // careful: this object does not exist any more
-        debugs(93, 6, HERE << *inCallSaved << " ended " << thisSaved);
+        debugs(93, 6, *inCallSaved << " ended " << thisSaved);
         return;
     }
 

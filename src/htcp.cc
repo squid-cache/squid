@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,7 +18,7 @@
 #include "comm/Loops.h"
 #include "comm/UdpOpenDialer.h"
 #include "compat/xalloc.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "globals.h"
 #include "htcp.h"
 #include "http.h"
@@ -305,6 +305,10 @@ htcpHexdump(const char *tag, const char *s, int sz)
 
         memset(hex, '\0', sizeof(hex));
     }
+#else
+    (void)tag;
+    (void)s;
+    (void)sz;
 #endif
 }
 

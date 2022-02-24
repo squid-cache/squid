@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -51,13 +51,13 @@ Mgr::IoAction::Create(const CommandPointer &cmd)
 Mgr::IoAction::IoAction(const CommandPointer &aCmd):
     Action(aCmd), data()
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
 }
 
 void
 Mgr::IoAction::add(const Action& action)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     data += dynamic_cast<const IoAction&>(action).data;
 }
 
@@ -70,7 +70,7 @@ Mgr::IoAction::collect()
 void
 Mgr::IoAction::dump(StoreEntry* entry)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     Must(entry != NULL);
     DumpIoStats(data, entry);
 }

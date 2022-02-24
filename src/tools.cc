@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,6 +36,12 @@
 #include <cerrno>
 #if HAVE_SYS_PRCTL_H
 #include <sys/prctl.h>
+#endif
+#if HAVE_SYS_PROCCTL_H
+#include <sys/procctl.h>
+#endif
+#if HAVE_PRIV_H
+#include <priv.h>
 #endif
 #if HAVE_WIN32_PSAPI
 #include <psapi.h>
@@ -273,6 +279,50 @@ rusage_pagefaults(struct rusage *r)
 #endif
 }
 
+/// Make the process traceable if possible. Call setTraceability() instead!
+/// Traceable processes may support attachment via ptrace(2) or ktrace(2),
+/// debugging sysctls, hwpmc(4), dtrace(1) and core dumping.
+static void
+makeTraceable()
+{
+    const auto handleError = [](const char * const syscall, const int savedErrno) {
+        throw TextException(ToSBuf(syscall, " failure: ", xstrerr(savedErrno)), Here());
+    };
+#if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
+    if (prctl(PR_SET_DUMPABLE, 1) != 0)
+        handleError("prctl(PR_SET_DUMPABLE)", errno);
+#elif HAVE_PROCCTL && defined(PROC_TRACE_CTL)
+    // TODO: when FreeBSD 14 becomes the lowest version, we can
+    // possibly save one getpid syscall, for now still necessary.
+    int traceable = PROC_TRACE_CTL_ENABLE;
+    if (procctl(P_PID, getpid(), PROC_TRACE_CTL, &traceable) != 0)
+        handleError("procctl(PROC_TRACE_CTL_ENABLE)", errno);
+#elif HAVE_SETPFLAGS
+    if (setpflags(__PROC_PROTECT, 0) != 0)
+        handleError("setpflags(__PROC_PROTECT)", errno);
+#else
+    debugs(50, 2, "WARNING: Assuming this process is traceable");
+    (void)handleError; // just "use" the variable; there is no error here
+#endif
+}
+
+/// Make the process traceable if necessary.
+/// \sa makeTraceable()
+static void
+setTraceability()
+{
+    // for now, setting coredump_dir is required to make the process traceable
+    if (!Config.coredump_dir)
+        return;
+
+    try {
+        makeTraceable();
+    } catch (...) {
+        debugs(50, DBG_IMPORTANT, "ERROR: Cannot make the process traceable:" <<
+               Debug::Extra << "exception: " << CurrentException);
+    }
+}
+
 void
 PrintRusage(void)
 {
@@ -358,6 +408,7 @@ death(int sig)
         puts(dead_msg());
     }
 
+    Debug::PrepareToDie();
     abort();
 }
 
@@ -493,7 +544,7 @@ getMyHostname(void)
 const char *
 uniqueHostname(void)
 {
-    debugs(21, 3, HERE << " Config: '" << Config.uniqueHostname << "'");
+    debugs(21, 3, " Config: '" << Config.uniqueHostname << "'");
     return Config.uniqueHostname ? Config.uniqueHostname : getMyHostname();
 }
 
@@ -514,7 +565,7 @@ leave_suid(void)
 
         if (setgid(Config2.effectiveGroupID) < 0) {
             int xerrno = errno;
-            debugs(50, DBG_CRITICAL, "ALERT: setgid: " << xstrerr(xerrno));
+            debugs(50, DBG_CRITICAL, "ERROR: setgid: " << xstrerr(xerrno));
         }
     }
 
@@ -531,11 +582,11 @@ leave_suid(void)
 
         if (setgid(Config2.effectiveGroupID) < 0) {
             int xerrno = errno;
-            debugs(50, DBG_CRITICAL, "ALERT: setgid: " << xstrerr(xerrno));
+            debugs(50, DBG_CRITICAL, "ERROR: setgid: " << xstrerr(xerrno));
         }
 
         if (initgroups(Config.effectiveUser, Config2.effectiveGroupID) < 0) {
-            debugs(50, DBG_CRITICAL, "ALERT: initgroups: unable to set groups for User " <<
+            debugs(50, DBG_CRITICAL, "ERROR: initgroups: unable to set groups for User " <<
                    Config.effectiveUser << " and Group " <<
                    (unsigned) Config2.effectiveGroupID << "");
         }
@@ -562,14 +613,7 @@ leave_suid(void)
 #endif
 
     restoreCapabilities(true);
-
-#if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
-    /* Set Linux DUMPABLE flag */
-    if (Config.coredump_dir && prctl(PR_SET_DUMPABLE, 1) != 0) {
-        int xerrno = errno;
-        debugs(50, 2, "ALERT: prctl: " << xstrerr(xerrno));
-    }
-#endif
+    setTraceability();
 }
 
 /* Enter a privilegied section */
@@ -589,14 +633,8 @@ enter_suid(void)
         debugs(21, 3, "setuid(0) failed: " << xstrerr(xerrno));
     }
 #endif
-#if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
-    /* Set Linux DUMPABLE flag */
 
-    if (Config.coredump_dir && prctl(PR_SET_DUMPABLE, 1) != 0) {
-        int xerrno = errno;
-        debugs(50, 2, "ALERT: prctl: " << xstrerr(xerrno));
-    }
-#endif
+    setTraceability();
 }
 
 /* Give up the possibility to gain privilegies.
@@ -621,14 +659,7 @@ no_suid(void)
     }
 
     restoreCapabilities(false);
-
-#if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
-    /* Set Linux DUMPABLE flag */
-    if (Config.coredump_dir && prctl(PR_SET_DUMPABLE, 1) != 0) {
-        int xerrno = errno;
-        debugs(50, 2, "ALERT: prctl: " << xstrerr(xerrno));
-    }
-#endif
+    setTraceability();
 }
 
 bool
@@ -817,7 +848,7 @@ setSystemLimits(void)
     }
 #endif /* RLIMIT_DATA */
     if (Config.max_filedescriptors > Squid_MaxFD) {
-        debugs(50, DBG_IMPORTANT, "NOTICE: Could not increase the number of filedescriptors");
+        debugs(50, DBG_IMPORTANT, "WARNING: Could not increase the number of filedescriptors");
     }
 
 #if HAVE_SETRLIMIT && defined(RLIMIT_VMEM) && !_SQUID_CYGWIN_
@@ -1136,18 +1167,17 @@ restoreCapabilities(bool keep)
         cap_free(caps);
     }
 #elif _SQUID_LINUX_
+    (void)keep;
     Ip::Interceptor.StopTransparency("Missing needed capability support.");
+#else
+    (void)keep;
 #endif /* HAVE_SYS_CAPABILITY_H */
 }
 
 pid_t
 WaitForOnePid(pid_t pid, PidStatus &status, int flags)
 {
-#if _SQUID_NEXT_
-    if (pid < 0)
-        return wait3(&status, flags, NULL);
-    return wait4(pid, &status, flags, NULL);
-#elif _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_
     return 0; // function not used on Windows
 #else
     return waitpid(pid, &status, flags);

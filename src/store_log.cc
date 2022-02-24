@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 /* DEBUG: section 20    Storage Manager Logging Functions */
 
 #include "squid.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "format/Token.h"
 #include "HttpReply.h"
 #include "log/File.h"

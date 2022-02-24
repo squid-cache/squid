@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "base/CharacterSet.h"
+#include "base/Raw.h"
 #include "base/RefCount.h"
 #include "base/Subscription.h"
 #include "client_side_reply.h"
@@ -61,7 +62,7 @@ Ftp::Server::Server(const MasterXaction::Pointer &xact):
     dataConn(),
     uploadAvailSize(0),
     listener(),
-    connector(),
+    dataConnWait(),
     reader(),
     waitingForOrigin(false),
     originDataDownloadAbortedOnError(false)
@@ -368,7 +369,7 @@ Ftp::Server::listenForDataConnection()
     const char *const note = uri.c_str();
     comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn, note);
     if (!Comm::IsConnOpen(conn)) {
-        debugs(5, DBG_CRITICAL, "comm_open_listener failed for FTP data: " <<
+        debugs(5, DBG_CRITICAL, "ERROR: comm_open_listener failed for FTP data: " <<
                conn->local << " error: " << errno);
         writeCustomReply(451, "Internal error");
         return 0;
@@ -1671,11 +1672,11 @@ Ftp::Server::checkDataConnPre()
 
     // active transfer: open a data connection from Squid to client
     typedef CommCbMemFunT<Server, CommConnectCbParams> Dialer;
-    connector = JobCallback(17, 3, Dialer, this, Ftp::Server::connectedForData);
-    Comm::ConnOpener *cs = new Comm::ConnOpener(dataConn, connector,
-            Config.Timeout.connect);
-    AsyncJob::Start(cs);
-    return false; // ConnStateData::processFtpRequest waits handleConnectDone
+    AsyncCall::Pointer callback = JobCallback(17, 3, Dialer, this, Ftp::Server::connectedForData);
+    const auto cs = new Comm::ConnOpener(dataConn->cloneProfile(), callback,
+                                         Config.Timeout.connect);
+    dataConnWait.start(cs, callback);
+    return false;
 }
 
 /// Check that client data connection is ready for immediate I/O.
@@ -1693,18 +1694,22 @@ Ftp::Server::checkDataConnPost() const
 void
 Ftp::Server::connectedForData(const CommConnectCbParams &params)
 {
-    connector = NULL;
+    dataConnWait.finish();
 
     if (params.flag != Comm::OK) {
-        /* it might have been a timeout with a partially open link */
-        if (params.conn != NULL)
-            params.conn->close();
         setReply(425, "Cannot open data connection.");
         Http::StreamPointer context = pipeline.front();
         Must(context->http);
         Must(context->http->storeEntry() != NULL);
+        // TODO: call closeDataConnection() to reset data conn processing?
     } else {
-        Must(dataConn == params.conn);
+        // Finalize the details and start owning the supplied connection.
+        assert(params.conn);
+        assert(dataConn);
+        assert(!dataConn->isOpen());
+        dataConn = params.conn;
+        // XXX: Missing comm_add_close_handler() to track external closures.
+
         Must(Comm::IsConnOpen(params.conn));
         fd_note(params.conn->fd, "active client ftp data");
     }

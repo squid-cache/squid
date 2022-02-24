@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,9 +17,9 @@
 MemStore::MemStore() STUB
 MemStore::~MemStore() STUB
 bool MemStore::keepInLocalMemory(const StoreEntry &) const STUB_RETVAL(false)
-void MemStore::write(StoreEntry &e) STUB
-void MemStore::completeWriting(StoreEntry &e) STUB
-void MemStore::disconnect(StoreEntry &e) STUB
+void MemStore::write(StoreEntry &) STUB
+void MemStore::completeWriting(StoreEntry &) STUB
+void MemStore::disconnect(StoreEntry &) STUB
 void MemStore::reference(StoreEntry &) STUB
 void MemStore::updateHeaders(StoreEntry *) STUB
 void MemStore::maintain() STUB

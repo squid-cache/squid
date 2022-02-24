@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,7 @@
 #if USE_SQUID_EUI
 
 #include "compat/eui64_aton.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "eui/Eui64.h"
 #include "globals.h"
 #include "ip/Address.h"

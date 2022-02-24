@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -158,22 +158,22 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         errno = 0;
         if (setsockopt(fds[0], SOL_SOCKET, SO_SNDBUF, (void *) &buflen, sizeof(buflen)) == -1)  {
             xerrno = errno;
-            debugs(54, DBG_IMPORTANT, "setsockopt failed: " << xstrerr(xerrno));
+            debugs(54, DBG_IMPORTANT, "ERROR: setsockopt failed: " << xstrerr(xerrno));
             errno = 0;
         }
         if (setsockopt(fds[0], SOL_SOCKET, SO_RCVBUF, (void *) &buflen, sizeof(buflen)) == -1) {
             xerrno = errno;
-            debugs(54, DBG_IMPORTANT, "setsockopt failed: " << xstrerr(xerrno));
+            debugs(54, DBG_IMPORTANT, "ERROR: setsockopt failed: " << xstrerr(xerrno));
             errno = 0;
         }
         if (setsockopt(fds[1], SOL_SOCKET, SO_SNDBUF, (void *) &buflen, sizeof(buflen)) == -1) {
             xerrno = errno;
-            debugs(54, DBG_IMPORTANT, "setsockopt failed: " << xstrerr(xerrno));
+            debugs(54, DBG_IMPORTANT, "ERROR: setsockopt failed: " << xstrerr(xerrno));
             errno = 0;
         }
         if (setsockopt(fds[1], SOL_SOCKET, SO_RCVBUF, (void *) &buflen, sizeof(buflen)) == -1) {
             xerrno = errno;
-            debugs(54, DBG_IMPORTANT, "setsockopt failed: " << xstrerr(xerrno));
+            debugs(54, DBG_IMPORTANT, "ERROR: setsockopt failed: " << xstrerr(xerrno));
             errno = 0;
         }
         fd_open(prfd = pwfd = fds[0], FD_PIPE, "IPC UNIX STREAM Parent");
@@ -281,11 +281,11 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
             hello_buf[x] = '\0';
 
         if (x < 0) {
-            debugs(54, DBG_CRITICAL, "ipcCreate: PARENT: hello read test failed");
+            debugs(54, DBG_CRITICAL, "ERROR: ipcCreate: PARENT: hello read test failed");
             debugs(54, DBG_CRITICAL, "--> read: " << xstrerr(xerrno));
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         } else if (strcmp(hello_buf, hello_string)) {
-            debugs(54, DBG_CRITICAL, "ipcCreate: PARENT: hello read test failed");
+            debugs(54, DBG_CRITICAL, "ERROR: ipcCreate: PARENT: hello read test failed");
             debugs(54, DBG_CRITICAL, "--> read returned " << x);
             debugs(54, DBG_CRITICAL, "--> got '" << rfc1738_escape(hello_buf) << "'");
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
@@ -352,14 +352,14 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         if (x < 0) {
             xerrno = errno;
             debugs(54, DBG_CRITICAL, "sendto FD " << cwfd << ": " << xstrerr(xerrno));
-            debugs(54, DBG_CRITICAL, "ipcCreate: CHILD: hello write test failed");
+            debugs(54, DBG_CRITICAL, "ERROR: ipcCreate: CHILD: hello write test failed");
             _exit(1);
         }
     } else {
         if (write(cwfd, hello_string, strlen(hello_string) + 1) < 0) {
             xerrno = errno;
             debugs(54, DBG_CRITICAL, "write FD " << cwfd << ": " << xstrerr(xerrno));
-            debugs(54, DBG_CRITICAL, "ipcCreate: CHILD: hello write test failed");
+            debugs(54, DBG_CRITICAL, "ERROR: ipcCreate: CHILD: hello write test failed");
             _exit(1);
         }
     }

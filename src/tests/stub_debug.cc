@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,9 +14,9 @@
  * not abort the unit test.
  */
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
-#define STUB_API "debug.cc"
+#define STUB_API "debug/libdebug.la"
 #include "tests/STUB.h"
 
 char *Debug::debugOptions;
@@ -24,11 +24,9 @@ char *Debug::cache_log= NULL;
 int Debug::rotateNumber = 0;
 int Debug::Levels[MAX_DEBUG_SECTIONS];
 int Debug::override_X = 0;
-int Debug::log_stderr = 1;
 bool Debug::log_syslog = false;
 void Debug::ForceAlert() STUB
 
-void StopUsingDebugLog() STUB
 void ResyncDebugLog(FILE *) STUB
 
 FILE *
@@ -38,51 +36,25 @@ DebugStream()
 }
 
 void
-_db_init(const char *, const char *)
-{}
-
-void
-_db_set_syslog(const char *)
-{}
-
-void
 _db_rotate_log(void)
 {}
 
-static void
-_db_print_stderr(const char *format, va_list args);
-
 void
-_db_print(const char *format,...)
+Debug::LogMessage(const Context &context)
 {
-    static char f[BUFSIZ];
-    va_list args1;
-    va_list args2;
-    va_list args3;
-
-    va_start(args1, format);
-    va_start(args2, format);
-    va_start(args3, format);
-
-    snprintf(f, BUFSIZ, "%s| %s",
-             "stub time", //debugLogTime(squid_curtime),
-             format);
-
-    _db_print_stderr(f, args2);
-
-    va_end(args1);
-    va_end(args2);
-    va_end(args3);
-}
-
-static void
-_db_print_stderr(const char *format, va_list args)
-{
-    if (1 < Debug::Level())
+    if (context.level > DBG_IMPORTANT)
         return;
 
-    vfprintf(stderr, format, args);
+    if (!stderr)
+        return;
+
+    fprintf(stderr, "%s| %s\n",
+            "stub time", // debugLogTime(squid_curtime),
+            context.buf.str().c_str());
 }
+
+bool Debug::StderrEnabled() STUB_RETVAL(false)
+void Debug::PrepareToDie() STUB
 
 void
 Debug::parseOptions(char const *)
@@ -91,6 +63,7 @@ Debug::parseOptions(char const *)
 Debug::Context *Debug::Current = nullptr;
 
 Debug::Context::Context(const int aSection, const int aLevel):
+    section(aSection),
     level(aLevel),
     sectionLevel(Levels[aSection]),
     upper(Current),
@@ -111,7 +84,7 @@ void
 Debug::Finish()
 {
     if (Current) {
-        _db_print("%s\n", Current->buf.str().c_str());
+        LogMessage(*Current);
         delete Current;
         Current = nullptr;
     }
@@ -121,28 +94,5 @@ std::ostream&
 ForceAlert(std::ostream& s)
 {
     return s;
-}
-
-std::ostream &
-Raw::print(std::ostream &os) const
-{
-    if (label_)
-        os << ' ' << label_ << '[' << size_ << ']';
-
-    if (!size_)
-        return os;
-
-    // finalize debugging level if no level was set explicitly via minLevel()
-    const int finalLevel = (level >= 0) ? level :
-                           (size_ > 40 ? DBG_DATA : Debug::SectionLevel());
-    if (finalLevel <= Debug::SectionLevel()) {
-        os << (label_ ? '=' : ' ');
-        if (data_)
-            os.write(data_, size_);
-        else
-            os << "[null]";
-    }
-
-    return os;
 }
 

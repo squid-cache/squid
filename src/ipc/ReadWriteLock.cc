@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,6 +20,23 @@ void Ipc::AssertFlagIsSet(std::atomic_flag &flag)
     assert(flag.test_and_set(std::memory_order_relaxed));
 }
 
+/// common lockExclusive() and unlockSharedAndSwitchToExclusive() logic:
+/// either finish exclusive locking or bail properly
+/// \pre The caller must (be the first to) increment writeLevel.
+/// \returns whether we got the exclusive lock
+bool
+Ipc::ReadWriteLock::finalizeExclusive()
+{
+    assert(writeLevel); // "new" readers are locked out by the caller
+    assert(!appending); // nobody can be appending without an exclusive lock
+    if (!readLevel) { // no old readers and nobody is becoming a reader
+        writing = true;
+        return true;
+    }
+    --writeLevel;
+    return false;
+}
+
 bool
 Ipc::ReadWriteLock::lockShared()
 {
@@ -35,12 +52,9 @@ Ipc::ReadWriteLock::lockShared()
 bool
 Ipc::ReadWriteLock::lockExclusive()
 {
-    if (!writeLevel++) { // we are the first writer + lock "new" readers out
-        if (!readLevel) { // no old readers and nobody is becoming one
-            writing = true;
-            return true;
-        }
-    }
+    if (!writeLevel++) // we are the first writer + lock "new" readers out
+        return finalizeExclusive(); // decrements writeLevel on failures
+
     --writeLevel;
     return false;
 }
@@ -96,17 +110,12 @@ Ipc::ReadWriteLock::unlockSharedAndSwitchToExclusive()
 {
     assert(readers > 0);
     if (!writeLevel++) { // we are the first writer + lock "new" readers out
-        assert(!appending);
         unlockShared();
-        if (!readers) {
-            writing = true;
-            return true;
-        }
-        // somebody is still reading: fall through
-    } else {
-        // somebody is still writing: just stop reading
-        unlockShared();
+        return finalizeExclusive(); // decrements writeLevel on failures
     }
+
+    // somebody is still writing, so we just stop reading
+    unlockShared();
     --writeLevel;
     return false;
 }

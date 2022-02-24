@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,6 @@
 #include "squid.h"
 #include "event.h"
 #include "mgr/Registration.h"
-#include "profiler/Profiler.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
@@ -229,8 +228,6 @@ EventScheduler::checkEvents(int)
     if (result != 0)
         return result;
 
-    PROF_start(eventRun);
-
     do {
         ev_entry *event = tasks;
         assert(event);
@@ -255,7 +252,6 @@ EventScheduler::checkEvents(int)
             break; // do not dequeue events following a heavy event
     } while (result == 0);
 
-    PROF_stop(eventRun);
     return result;
 }
 
@@ -271,25 +267,21 @@ EventScheduler::clean()
 }
 
 void
-EventScheduler::dump(StoreEntry * sentry)
+EventScheduler::dump(Packable *out)
 {
-
-    ev_entry *e = tasks;
-
     if (last_event_ran)
-        storeAppendPrintf(sentry, "Last event to run: %s\n\n", last_event_ran);
+        out->appendf("Last event to run: %s\n\n", last_event_ran);
 
-    storeAppendPrintf(sentry, "%-25s\t%-15s\t%s\t%s\n",
-                      "Operation",
-                      "Next Execution",
-                      "Weight",
-                      "Callback Valid?");
+    out->appendf("%-25s\t%-15s\t%s\t%s\n",
+                 "Operation",
+                 "Next Execution",
+                 "Weight",
+                 "Callback Valid?");
 
-    while (e != NULL) {
-        storeAppendPrintf(sentry, "%-25s\t%0.3f sec\t%5d\t %s\n",
-                          e->name, e->when ? e->when - current_dtime : 0, e->weight,
-                          (e->arg && e->cbdata) ? cbdataReferenceValid(e->arg) ? "yes" : "no" : "N/A");
-        e = e->next;
+    for (auto *e = tasks; e; e = e->next) {
+        out->appendf("%-25s\t%0.3f sec\t%5d\t %s\n",
+                     e->name, (e->when ? e->when - current_dtime : 0), e->weight,
+                     (e->arg && e->cbdata) ? cbdataReferenceValid(e->arg) ? "yes" : "no" : "N/A");
     }
 }
 
@@ -323,7 +315,7 @@ EventScheduler::schedule(const char *name, EVH * func, void *arg, double when, i
     ev_entry *event = new ev_entry(name, func, arg, timestamp, weight, cbdata);
 
     ev_entry **E;
-    debugs(41, 7, HERE << "schedule: Adding '" << name << "', in " << when << " seconds");
+    debugs(41, 7, "schedule: Adding '" << name << "', in " << when << " seconds");
     /* Insert after the last event with the same or earlier time */
 
     for (E = &tasks; *E; E = &(*E)->next) {

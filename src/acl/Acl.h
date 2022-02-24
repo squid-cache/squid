@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -48,6 +48,7 @@ public:
     static ACL *FindByName(const char *name);
 
     ACL();
+    ACL(ACL &&) = delete; // no copying of any kind
     virtual ~ACL();
 
     /// sets user-specified ACL name and squid.conf context
@@ -59,11 +60,8 @@ public:
     /// Updates the checklist state on match, async, and failure.
     bool matches(ACLChecklist *checklist) const;
 
-    /// \returns (linked) Options supported by this ACL
-    virtual const Acl::Options &options() { return Acl::NoOptions(); }
-
     /// configures ACL options, throwing on configuration errors
-    virtual void parseFlags();
+    void parseFlags();
 
     /// parses node representation in squid.conf; dies on failures
     virtual void parse() = 0;
@@ -95,6 +93,14 @@ private:
     virtual bool requiresRequest() const;
     /// whether our (i.e. shallow) match() requires checklist to have a reply
     virtual bool requiresReply() const;
+
+    // TODO: Rename to globalOptions(); these are not the only supported options
+    /// \returns (linked) 'global' Options supported by this ACL
+    virtual const Acl::Options &options() { return Acl::NoOptions(); }
+
+    /// \returns (linked) "line" Options supported by this ACL
+    /// \see ACL::options()
+    virtual const Acl::Options &lineOptions() { return Acl::NoOptions(); }
 };
 
 /// \ingroup ACLAPI

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -234,8 +234,8 @@ MemStore::stat(StoreEntry &e) const
         if (slotLimit > 0) {
             const unsigned int slotsFree =
                 Ipc::Mem::PagesAvailable(Ipc::Mem::PageId::cachePage);
-            if (slotsFree <= static_cast<const unsigned int>(slotLimit)) {
-                const int usedSlots = slotLimit - static_cast<const int>(slotsFree);
+            if (slotsFree <= static_cast<unsigned int>(slotLimit)) {
+                const int usedSlots = slotLimit - static_cast<int>(slotsFree);
                 storeAppendPrintf(&e, "Used slots:      %9d %.2f%%\n",
                                   usedSlots, (100.0 * usedSlots / slotLimit));
             }
@@ -582,7 +582,7 @@ MemStore::shouldCache(StoreEntry &e) const
     }
 
     if (!e.memoryCachable()) {
-        debugs(20, 7, HERE << "Not memory cachable: " << e);
+        debugs(20, 7, "Not memory cachable: " << e);
         return false; // will not cache due to entry state or properties
     }
 
@@ -598,7 +598,7 @@ MemStore::shouldCache(StoreEntry &e) const
     const int64_t loadedSize = e.mem_obj->endOffset();
     const int64_t ramSize = max(loadedSize, expectedSize);
     if (ramSize > maxObjectSize()) {
-        debugs(20, 5, HERE << "Too big max(" <<
+        debugs(20, 5, "Too big max(" <<
                loadedSize << ", " << expectedSize << "): " << e);
         return false; // will not cache due to cachable entry size limits
     }
@@ -609,7 +609,7 @@ MemStore::shouldCache(StoreEntry &e) const
     }
 
     if (!map) {
-        debugs(20, 5, HERE << "No map to mem-cache " << e);
+        debugs(20, 5, "No map to mem-cache " << e);
         return false;
     }
 
@@ -628,7 +628,7 @@ MemStore::startCaching(StoreEntry &e)
     sfileno index = 0;
     Ipc::StoreMapAnchor *slot = map->openForWriting(reinterpret_cast<const cache_key *>(e.key), index);
     if (!slot) {
-        debugs(20, 5, HERE << "No room in mem-cache map to index " << e);
+        debugs(20, 5, "No room in mem-cache map to index " << e);
         return false;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,5 +12,5 @@
 #define STUB_API "UdsOp.cc"
 #include "tests/STUB.h"
 
-void Ipc::SendMessage(const String& toAddress, const TypedMsgHdr& message) STUB
+void Ipc::SendMessage(const String&, const TypedMsgHdr&) STUB
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -118,9 +118,7 @@ bool Ssl::readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, Security
     Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
     BIO_puts(bio.get(), bufferToRead);
 
-    X509 * certPtr = NULL;
-    cert.resetWithoutLocking(PEM_read_bio_X509(bio.get(), &certPtr, 0, 0));
-    if (!cert)
+    if (!(cert = Ssl::ReadX509Certificate(bio)))
         return false;
 
     EVP_PKEY * pkeyPtr = NULL;
@@ -136,9 +134,7 @@ bool Ssl::readCertFromMemory(Security::CertPointer & cert, char const * bufferTo
     Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
     BIO_puts(bio.get(), bufferToRead);
 
-    X509 * certPtr = NULL;
-    cert.resetWithoutLocking(PEM_read_bio_X509(bio.get(), &certPtr, 0, 0));
-    if (!cert)
+    if (!(cert = Ssl::ReadX509Certificate(bio)))
         return false;
 
     return true;
@@ -695,15 +691,11 @@ Ssl::OpenCertsFileForReading(Ssl::BIO_Pointer &bio, const char *filename)
     return true;
 }
 
-bool
-Ssl::ReadX509Certificate(Ssl::BIO_Pointer &bio, Security::CertPointer & cert)
+Security::CertPointer
+Ssl::ReadX509Certificate(const BIO_Pointer &bio)
 {
     assert(bio);
-    if (X509 *certificate = PEM_read_bio_X509(bio.get(), NULL, NULL, NULL)) {
-        cert.resetWithoutLocking(certificate);
-        return true;
-    }
-    return false;
+    return Security::CertPointer(PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr));
 }
 
 bool

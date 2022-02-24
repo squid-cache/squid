@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,7 +25,7 @@ HttpHeader::HttpHeader() {STUB}
 HttpHeader::HttpHeader(const http_hdr_owner_type) {STUB}
 HttpHeader::HttpHeader(const HttpHeader &) {STUB}
 HttpHeader::~HttpHeader() {STUB}
-HttpHeader &HttpHeader::operator =(const HttpHeader &other) STUB_RETVAL(*this)
+HttpHeader &HttpHeader::operator =(const HttpHeader &) STUB_RETVAL(*this)
 void HttpHeader::clean() STUB
 void HttpHeader::append(const HttpHeader *) STUB
 void HttpHeader::update(const HttpHeader *) STUB
@@ -82,7 +82,7 @@ int HttpHeader::hasByNameListMember(const char *, const char *, const char) cons
 void HttpHeader::removeHopByHopEntries() STUB
 void HttpHeader::removeConnectionHeaderEntries() STUB
 bool HttpHeader::Isolate(const char **, size_t, const char **, const char **) STUB_RETVAL(false)
-bool HttpHeader::needUpdate(const HttpHeader *fresh) const STUB_RETVAL(false)
+bool HttpHeader::needUpdate(const HttpHeader *) const STUB_RETVAL(false)
 bool HttpHeader::skipUpdateHeader(const Http::HdrType) const STUB_RETVAL(false)
 void HttpHeader::updateWarnings() STUB
 int httpHeaderParseQuotedString(const char *, const int, String *) STUB_RETVAL(-1)

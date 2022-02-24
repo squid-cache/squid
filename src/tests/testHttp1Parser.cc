@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,7 @@
 #define private public
 #define protected public
 
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "http/one/RequestParser.h"
 #include "http/RequestMethod.h"
 #include "MemBuf.h"
@@ -83,6 +83,8 @@ testResults(int line, const SBuf &input, Http1::RequestParser &output, struct re
 {
 #ifdef SQUID_DEBUG_TESTS
     std::cerr << "TEST @" << line << ", in=" << Pretty(input) << "\n";
+#else
+    (void)line;
 #endif
 
     const bool parsed = output.parse(input);

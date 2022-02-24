@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -386,6 +386,7 @@ Ftp::Relay::forwardReply()
     reply->sources |= Http::Message::srcFtp;
 
     setVirginReply(reply);
+    markParsedVirginReplyAsWhole("Ftp::Relay::handleControlReply() does not forward partial replies");
     adaptOrFinalizeReply();
 
     serverComplete();
@@ -719,7 +720,12 @@ Ftp::Relay::readTransferDoneReply()
 {
     debugs(9, 3, status());
 
-    if (ctrl.replycode != 226 && ctrl.replycode != 250) {
+    // RFC 959 says that code 226 may indicate a successful response to a file
+    // transfer and file abort commands, but since we do not send abort
+    // commands, let's assume it was a successful file transfer.
+    if (ctrl.replycode == 226 || ctrl.replycode == 250) {
+        markParsedVirginReplyAsWhole("Ftp::Relay::readTransferDoneReply() code 226 or 250");
+    } else {
         debugs(9, DBG_IMPORTANT, "got FTP code " << ctrl.replycode <<
                " after reading response data");
     }
@@ -733,7 +739,7 @@ void
 Ftp::Relay::dataChannelConnected(const CommConnectCbParams &io)
 {
     debugs(9, 3, status());
-    data.opener = NULL;
+    dataConnWait.finish();
 
     if (io.flag != Comm::OK) {
         debugs(9, 2, "failed to connect FTP server data channel");
@@ -798,9 +804,9 @@ Ftp::Relay::HandleStoreAbort(Relay *ftpClient)
         ftpClient->dataComplete();
 }
 
-AsyncJob::Pointer
+void
 Ftp::StartRelay(FwdState *const fwdState)
 {
-    return AsyncJob::Start(new Ftp::Relay(fwdState));
+    AsyncJob::Start(new Ftp::Relay(fwdState));
 }
 

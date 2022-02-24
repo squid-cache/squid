@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -77,13 +77,12 @@ public:
     /** Clear the connection properties and close any open socket. */
     virtual ~Connection();
 
-    /// Create a new (closed) IDENT Connection object based on our from-Squid
-    /// connection properties.
-    ConnectionPointer cloneIdentDetails() const;
+    /// To prevent accidental copying of Connection objects that we started to
+    /// open or that are open, use cloneProfile() instead.
+    Connection(const Connection &&) = delete;
 
-    /// Create a new (closed) Connection object pointing to the same destination
-    /// as this from-Squid connection.
-    ConnectionPointer cloneDestinationDetails() const;
+    /// Create a new closed Connection with the same configuration as this one.
+    ConnectionPointer cloneProfile() const;
 
     /// close the still-open connection when its last reference is gone
     void enterOrphanage() { flags |= COMM_ORPHANED; }
@@ -139,17 +138,6 @@ public:
     /* CodeContext API */
     virtual ScopedId codeContextGist() const override;
     virtual std::ostream &detailCodeContext(std::ostream &os) const override;
-
-private:
-    /** These objects may not be exactly duplicated. Use cloneIdentDetails() or
-     * cloneDestinationDetails() instead.
-     */
-    Connection(const Connection &c);
-
-    /** These objects may not be exactly duplicated. Use cloneIdentDetails() or
-     * cloneDestinationDetails() instead.
-     */
-    Connection & operator =(const Connection &c);
 
 public:
     /** Address/Port for the Squid end of a TCP link. */

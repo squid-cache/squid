@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 #include "squid.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "globals.h"
 #include "helper/ChildConfig.h"
 #include "Parsing.h"
@@ -94,7 +94,7 @@ Helper::ChildConfig::parseConfig()
         } else if (strncmp(token, "idle=", 5) == 0) {
             n_idle = xatoui(token + 5);
             if (n_idle < 1) {
-                debugs(0, DBG_CRITICAL, "WARNING OVERRIDE: Using idle=0 for helpers causes request failures. Overriding to use idle=1 instead.");
+                debugs(0, DBG_CRITICAL, "WARNING: OVERRIDE: Using idle=0 for helpers causes request failures. Overriding to use idle=1 instead.");
                 n_idle = 1;
             }
         } else if (strncmp(token, "concurrency=", 12) == 0) {
@@ -125,12 +125,12 @@ Helper::ChildConfig::parseConfig()
     /* simple sanity. */
 
     if (n_startup > n_max) {
-        debugs(0, DBG_CRITICAL, "WARNING OVERRIDE: Capping startup=" << n_startup << " to the defined maximum (" << n_max <<")");
+        debugs(0, DBG_CRITICAL, "WARNING: OVERRIDE: Capping startup=" << n_startup << " to the defined maximum (" << n_max <<")");
         n_startup = n_max;
     }
 
     if (n_idle > n_max) {
-        debugs(0, DBG_CRITICAL, "WARNING OVERRIDE: Capping idle=" << n_idle << " to the defined maximum (" << n_max <<")");
+        debugs(0, DBG_CRITICAL, "WARNING: OVERRIDE: Capping idle=" << n_idle << " to the defined maximum (" << n_max <<")");
         n_idle = n_max;
     }
 

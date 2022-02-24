@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,12 +36,12 @@ LoadableModule::loaded() const
 }
 
 void
-LoadableModule::load(int mode)
+LoadableModule::load()
 {
     if (loaded())
         throw TexcHere("internal error: reusing LoadableModule object");
 
-    theHandle = openModule(mode);
+    theHandle = openModule();
 
     if (!loaded())
         throw TexcHere(errorMsg());
@@ -60,7 +60,7 @@ LoadableModule::unload()
 }
 
 void *
-LoadableModule::openModule(int mode)
+LoadableModule::openModule()
 {
     return lt_dlopen(theName.termedBuf());
 }

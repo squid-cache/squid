@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,16 +33,16 @@ public:
     int i;
 };
 
-int
-compareintvoid(void * const &a, void * const &n)
+static int
+compareintvoid(void *const &a, void *const &n)
 {
     intnode *A = (intnode *)a;
     intnode *B = (intnode *)n;
     return A->i - B->i;
 }
 
-int
-compareint(intnode * const &a, intnode * const &b)
+static int
+compareint(intnode *const &a, intnode *const &b)
 {
     return a->i - b->i;
 }
@@ -104,27 +104,27 @@ SplayCheck::WalkNodeRef (intnode const &a, void *)
     CheckNode (a);
 }
 
-void
-destintvoid(void * &data)
+static void
+destintvoid(void *&data)
 {
     intnode *i = (intnode *)data;
     xfree (i);
 }
 
-void
-destint(intnode * &data)
+static void
+destint(intnode *&data)
 {
     delete data;
 }
 
-int
+static int
 compareintref(intnode const &a, intnode const &b)
 {
     return a.i - b.i;
 }
 
-void
-destintref (intnode &)
+static void
+destintref(intnode &)
 {}
 
 int

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,17 +7,12 @@
  */
 
 #include "squid.h"
-#include "event.h"
+#include "mem/forward.h"
 #include "SquidString.h"
 #include "testString.h"
 #include "unitTestMain.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testString );
-
-/* let this test link sanely */
-void
-eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata)
-{}
 
 /* init memory pools */
 

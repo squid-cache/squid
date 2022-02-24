@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -155,7 +155,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
                 }
 
                 if (last_broken_addr != request->client_addr) {
-                    debugs(29, DBG_IMPORTANT, "Digest POST bug detected from " <<
+                    debugs(29, DBG_IMPORTANT, "ERROR: User agent Digest Authentication POST bug detected from " <<
                            request->client_addr << " using '" <<
                            (useragent ? useragent : "-") <<
                            "'. Please upgrade browser. See Bug #630 for details.");
@@ -288,7 +288,7 @@ Auth::Digest::UserRequest::startHelperLookup(HttpRequest *request, AccessLogEntr
     char buf[8192];
 
     assert(user() != NULL && user()->auth_type == Auth::AUTH_DIGEST);
-    debugs(29, 9, HERE << "'\"" << user()->username() << "\":\"" << realm << "\"'");
+    debugs(29, 9, "'\"" << user()->username() << "\":\"" << realm << "\"'");
 
     if (static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->authenticateProgram == NULL) {
         debugs(29, DBG_CRITICAL, "ERROR: No Digest authentication program configured.");
@@ -310,7 +310,7 @@ void
 Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 {
     Auth::StateData *replyData = static_cast<Auth::StateData *>(data);
-    debugs(29, 9, HERE << "reply=" << reply);
+    debugs(29, 9, "reply=" << reply);
 
     assert(replyData->auth_user_request != NULL);
     Auth::UserRequest::Pointer auth_user_request = replyData->auth_user_request;
@@ -357,12 +357,12 @@ Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 
     case Helper::TT:
         debugs(29, DBG_IMPORTANT, "ERROR: Digest auth does not support the result code received. Using the wrong helper program? received: " << reply);
-    // fall through to next case. Handle this as an ERR response.
+    // [[fallthrough]] to handle this as an ERR response
 
     case Helper::TimedOut:
     case Helper::BrokenHelper:
+    // [[fallthrough]] to (silently) handle this as an ERR response
     // TODO retry the broken lookup on another helper?
-    // fall through to next case for now. Handle this as an ERR response silently.
     case Helper::Error: {
         /* allow this because the digest_request pointer is purely local */
         Auth::Digest::UserRequest *digest_request = dynamic_cast<Auth::Digest::UserRequest *>(auth_user_request.getRaw());
@@ -376,6 +376,7 @@ Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
             digest_request->setDenyMessage(msgNote.c_str());
         } else if (reply.other().hasContent()) {
             // old helpers did send ERR result but a bare message string instead of message= key name.
+            // TODO deprecate and remove old auth digest helper protocol
             digest_request->setDenyMessage(reply.other().content());
             if (!oldHelperWarningDone) {
                 debugs(29, DBG_IMPORTANT, "WARNING: Digest auth helper returned old format ERR response. It needs to be upgraded.");

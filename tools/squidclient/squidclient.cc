@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -293,6 +293,8 @@ main(int argc, char *argv[])
             case 'p':       /* port number */
                 // rewind and let the Transport::Config parser handle
                 optind -= 2;
+                Transport::Config.parseCommandOpts(argc, argv, c, optIndex);
+                continue;
 
             case '\3': // request over a TLS connection
                 Transport::Config.parseCommandOpts(argc, argv, c, optIndex);

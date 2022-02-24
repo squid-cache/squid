@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "md5.h"
 #include "StoreSwapLogData.h"
 #include "swap_log_op.h"
@@ -99,7 +99,7 @@ Fs::Ufs::UFSSwapLogParser::GetUFSSwapLogParser(FILE *fp)
         if (fseek(fp, header.record_size, SEEK_SET) != 0)
             return NULL;
 
-        debugs(47, DBG_IMPORTANT, "Rejecting swap file v1 to avoid cache " <<
+        debugs(47, DBG_IMPORTANT, "ERROR: Rejecting swap file v1 to avoid cache " <<
                "index corruption. Forcing a full cache index rebuild. " <<
                "See Squid bug #3441.");
         return NULL;
@@ -121,7 +121,7 @@ Fs::Ufs::UFSSwapLogParser::GetUFSSwapLogParser(FILE *fp)
 
     // TODO: v3: write to disk in network-order bytes for the larger fields?
 
-    debugs(47, DBG_IMPORTANT, "Unknown swap file version: " << header.version);
+    debugs(47, DBG_IMPORTANT, "ERROR: Unknown swap file version: " << header.version);
     return NULL;
 }
 

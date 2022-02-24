@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -57,7 +57,7 @@ static void mcast_encode(unsigned int *, size_t, const unsigned int *);
 
 #if USE_FORW_VIA_DB
 
-using HeaderValueCountsElement = std::pair<SBuf, uint64_t>;
+using HeaderValueCountsElement = std::pair<const SBuf, uint64_t>;
 /// counts the number of header field value occurrences
 using HeaderValueCounts = std::unordered_map<SBuf, uint64_t, std::hash<SBuf>, std::equal_to<SBuf>, PoolingAllocator<HeaderValueCountsElement> >;
 
@@ -75,7 +75,7 @@ static void fvdbRegisterWithCacheManager();
 int LogfileStatus = LOG_DISABLE;
 
 void
-accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist * checklist)
+accessLogLogTo(CustomLog *log, const AccessLogEntryPointer &al, ACLChecklist *checklist)
 {
 
     if (al->url.isEmpty())
@@ -145,7 +145,7 @@ accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist * check
 }
 
 void
-accessLogLog(AccessLogEntry::Pointer &al, ACLChecklist * checklist)
+accessLogLog(const AccessLogEntryPointer &al, ACLChecklist *checklist)
 {
     if (LogfileStatus != LOG_ENABLE)
         return;
