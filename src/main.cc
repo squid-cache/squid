@@ -1208,10 +1208,6 @@ mainInitialize(void)
     icapLogOpen();
 #endif
 
-#if USE_IDENT
-    Ident::Init();
-#endif
-
 #if SQUID_SNMP
 
     snmpInit();

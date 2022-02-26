@@ -28,12 +28,6 @@ namespace Ident
  */
 void Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *cbdata);
 
-/**
- * Initialize IDENT lookup manager.
- * Currently a hash list of open ident requests.
- */
-void Init(void);
-
 } // namespace Ident
 
 #endif /* USE_IDENT */
