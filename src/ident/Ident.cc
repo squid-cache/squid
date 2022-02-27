@@ -11,7 +11,10 @@
 #include "squid.h"
 
 #if USE_IDENT
+#include "acl/RegexData.h"
+#include "acl/UserData.h"
 #include "base/JobWait.h"
+#include "base/RunnersRegistry.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
@@ -19,6 +22,7 @@
 #include "comm/Write.h"
 #include "CommCalls.h"
 #include "globals.h"
+#include "ident/AclIdent.h"
 #include "ident/Config.h"
 #include "ident/Ident.h"
 #include "MemBuf.h"
@@ -77,6 +81,17 @@ static hash_table *ident_hash = NULL;
 static void ClientAdd(IdentStateData * state, IDCB * callback, void *callback_data);
 
 } // namespace Ident
+
+class IdentRr : public RegisteredRunner
+{
+public:
+    IdentRr() {
+        Acl::RegisterMaker("ident", [](Acl::TypeName name)->ACL* { return new ACLIdent(new ACLUserData, name); });
+        Acl::RegisterMaker("ident_regex", [](Acl::TypeName name)->ACL* { return new ACLIdent(new ACLRegexData, name); });
+    }
+};
+
+RunnerRegistrationEntry(IdentRr);
 
 Ident::IdentConfig Ident::TheConfig;
 

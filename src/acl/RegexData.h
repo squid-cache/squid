@@ -10,10 +10,9 @@
 #define SQUID_ACLREGEXDATA_H
 
 #include "acl/Data.h"
+#include "base/RegexPattern.h"
 
 #include <list>
-
-class RegexPattern;
 
 class ACLRegexData : public ACLData<char const *>
 {
