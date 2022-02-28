@@ -22,9 +22,7 @@ namespace Ident
 
 /**
  * Open a connection and request IDENT information from a peer machine.
- * Callback will be called whan the lookup is completed.
- * Self-registers with a global ident lookup manager,
- * will call Ident::Init() itself if the manager has not been initialized already.
+ * Callback will be called when the lookup is completed.
  */
 void Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *cbdata);
 
