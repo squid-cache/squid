@@ -1589,6 +1589,8 @@ SquidMain(int argc, char **argv)
 
         Format::Token::Init(); // XXX: temporary. Use a runners registry of pre-parse runners instead.
 
+        RunRegisteredHere(RegisteredRunner::bootstrapConfig);
+
         try {
             parse_err = parseConfigFile(ConfigFile);
         } catch (...) {
