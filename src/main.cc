@@ -50,7 +50,6 @@
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
 #include "ICP.h"
-#include "ident/Ident.h"
 #include "Instance.h"
 #include "ip/tools.h"
 #include "ipc/Coordinator.h"
@@ -1206,10 +1205,6 @@ mainInitialize(void)
 
 #if ICAP_CLIENT
     icapLogOpen();
-#endif
-
-#if USE_IDENT
-    Ident::Init();
 #endif
 
 #if SQUID_SNMP
