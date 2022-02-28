@@ -50,7 +50,6 @@
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
 #include "ICP.h"
-#include "ident/Ident.h"
 #include "Instance.h"
 #include "ip/tools.h"
 #include "ipc/Coordinator.h"
