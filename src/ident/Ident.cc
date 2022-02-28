@@ -14,6 +14,7 @@
 #include "acl/RegexData.h"
 #include "acl/UserData.h"
 #include "base/JobWait.h"
+#include "base/RegexPattern.h"
 #include "base/RunnersRegistry.h"
 #include "comm.h"
 #include "comm/Connection.h"
