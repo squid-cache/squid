@@ -217,7 +217,6 @@ squid_SOURCES = \
 	ConfigParser.cc \
 	ConfigParser.h \
 	CpuAffinity.cc \
-	CpuAffinity.h \
 	CpuAffinityMap.cc \
 	CpuAffinityMap.h \
 	CpuAffinitySet.cc \

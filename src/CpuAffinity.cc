@@ -9,8 +9,8 @@
 /* DEBUG: section 54    Interprocess Communication */
 
 #include "squid.h"
+#include "base/RunnersRegistry.h"
 #include "base/TextException.h"
-#include "CpuAffinity.h"
 #include "CpuAffinityMap.h"
 #include "CpuAffinitySet.h"
 #include "debug/Stream.h"
@@ -22,7 +22,8 @@
 
 static CpuAffinitySet *TheCpuAffinitySet = nullptr;
 
-void
+/// set CPU affinity for this process on startup
+static void
 CpuAffinityInit()
 {
     Must(!TheCpuAffinitySet);
@@ -34,7 +35,8 @@ CpuAffinityInit()
     }
 }
 
-void
+/// reconfigure CPU affinity for this process
+static void
 CpuAffinityReconfigure()
 {
     if (TheCpuAffinitySet) {
@@ -45,7 +47,8 @@ CpuAffinityReconfigure()
     CpuAffinityInit();
 }
 
-void
+/// check CPU affinity configuration and print warnings if needed
+static void
 CpuAffinityCheck()
 {
     if (Config.cpuAffinityMap) {
@@ -63,4 +66,22 @@ CpuAffinityCheck()
         }
     }
 }
+
+class CpuAffinityRr : public RegisteredRunner
+{
+public:
+    virtual void finalizeConfig() override {
+        if (IamPrimaryProcess())
+            CpuAffinityCheck();
+        CpuAffinityInit();
+    }
+
+    virtual void syncConfig() override {
+        if (IamPrimaryProcess())
+            CpuAffinityCheck();
+        CpuAffinityReconfigure();
+    }
+};
+
+RunnerRegistrationEntry(CpuAffinityRr);
 
