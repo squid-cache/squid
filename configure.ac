@@ -218,13 +218,6 @@ LT_LIB_DLLOAD
 AC_SUBST(INCLTDL)
 AC_SUBST(LIBLTDL)
 
-if test "x$enable_loadable_modules" = "xyes";
-then
-  # Why is this needed? Should not LT_INIT (or LT_LIB_DLLOAD) from libtool do that?
-  LIBADD_DL=${lt_cv_dlopen_libs}
-  AC_SUBST([LIBADD_DL])
-fi
-
 SQUID_CC_GUESS_VARIANT
 SQUID_CC_GUESS_OPTIONS
 
