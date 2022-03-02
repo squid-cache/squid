@@ -6,11 +6,11 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID__SRC_CFG_FORWARD_H
-#define _SQUID__SRC_CFG_FORWARD_H
+#ifndef _SQUID__SRC_CONFIGURATION_FORWARD_H
+#define _SQUID__SRC_CONFIGURATION_FORWARD_H
 
 /// Squid Configuration management
-namespace Cfg
+namespace Configuration
 {
 
 /**
@@ -25,6 +25,6 @@ namespace Cfg
 
 class File;
 
-} // namespace Cfg
+} // namespace Configuration
 
-#endif /* _SQUID__SRC_CFG_FORWARD_H */
+#endif /* _SQUID__SRC_CONFIGURATION_FORWARD_H */

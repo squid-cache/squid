@@ -11,7 +11,7 @@
 
 #include "acl/forward.h"
 #include "base/forward.h"
-#include "cfg/File.h"
+#include "configuration/File.h"
 #include "sbuf/forward.h"
 #include "SquidString.h"
 
@@ -152,7 +152,7 @@ public:
 
 protected:
     /**
-     * Wrapper class around Cfg::File for ConfigParser API internal use.
+     * Wrapper class around Configuration::File for ConfigParser API internal use.
      * Presents configuration syntax as a series of token/element rather than lines.
      */
     class CfgFile
@@ -185,7 +185,7 @@ protected:
         char *nextElement(TokenType &type);
 
     private:
-        Cfg::File confFileData; ///< actual file manager holding unparsed file content
+        Configuration::File confFileData; ///< actual file manager holding unparsed file content
 
         char parseBuffer[CONFIG_LINE_LIMIT]; ///< Temporary buffer to store data to parse
         const char *parsePos = nullptr; ///< The next element position in parseBuffer string

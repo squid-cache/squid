@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "cfg/File.h"
+#include "configuration/File.h"
 #include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
 
@@ -15,8 +15,7 @@
 #include <sys/stat.h>
 #endif
 
-
-Cfg::File::File(const char *path) :
+Configuration::File::File(const char *path) :
     filePath(path)
 {
     if (filePath[0] == '!' || filePath[0] == '|') {
@@ -25,7 +24,7 @@ Cfg::File::File(const char *path) :
     }
 }
 
-Cfg::File::~File()
+Configuration::File::~File()
 {
     if (fd) {
         if (isPipe)
@@ -36,7 +35,7 @@ Cfg::File::~File()
 }
 
 void
-Cfg::File::load()
+Configuration::File::load()
 {
     debugs(3, 2, "Loading " << (isPipe ? "pipe" : "file") << " " << filePath);
 
@@ -68,7 +67,7 @@ Cfg::File::load()
 }
 
 SBuf
-Cfg::File::nextLine()
+Configuration::File::nextLine()
 {
     if (fileData.empty())
         return SBuf();

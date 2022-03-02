@@ -69,7 +69,7 @@ ConfigParser::strtokFile()
         return ConfigParser::NextToken();
 
     static int fromFile = 0;
-    static std::unique_ptr<Cfg::File> wordFile;
+    static std::unique_ptr<Configuration::File> wordFile;
 
     char *t;
     static char buf[CONFIG_LINE_LIMIT];
@@ -91,7 +91,7 @@ ConfigParser::strtokFile()
 
                 *t = '\0';
 
-                wordFile.reset(new Cfg::File(fn));
+                wordFile.reset(new Configuration::File(fn));
                 wordFile->load();
                 fromFile = 1;
             } else {
