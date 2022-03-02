@@ -6,17 +6,17 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID__SRC_CFG_FILE_H
-#define _SQUID__SRC_CFG_FILE_H
+#ifndef _SQUID__SRC_CONFIGURATION_FILE_H
+#define _SQUID__SRC_CONFIGURATION_FILE_H
 
 #include "base/Here.h"
-#include "cfg/forward.h"
+#include "configuration/forward.h"
 #include "sbuf/SBuf.h"
 
 #include <cstdio>
 #include <string>
 
-namespace Cfg
+namespace Configuration
 {
 
 /**
@@ -56,6 +56,6 @@ private:
     bool isPipe = false;
 };
 
-} // namespace Cfg
+} // namespace Configuration
 
-#endif /* _SQUID__SRC_CFG_FILE_H */
+#endif /* _SQUID__SRC_CONFIGURATION_FILE_H */

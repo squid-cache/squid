@@ -8,9 +8,9 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
-noinst_LTLIBRARIES = libcfg.la
+noinst_LTLIBRARIES = libconfiguration.la
 
-libcfg_la_SOURCES = \
+libconfiguration_la_SOURCES = \
 	File.cc \
 	File.h \
 	forward.h
