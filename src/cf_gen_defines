@@ -39,7 +39,7 @@ BEGIN {
 	define["USE_HTTP_VIOLATIONS"]="--enable-http-violations"
 	define["USE_ICMP"]="--enable-icmp"
 	define["USE_IDENT"]="--enable-ident-lookups"
-	define["USE_LOADABLE_MODULES"]="--enable-loadable-modules"
+	define["USE_LOADABLE_MODULES"]="--enable-shared"
 	define["USE_OPENSSL"]="--with-openssl"
 	define["USE_QOS_TOS"]="--enable-zph-qos"
 	define["USE_SQUID_ESI"]="--enable-esi"
