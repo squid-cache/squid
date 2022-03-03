@@ -42,16 +42,16 @@ ConfigParser::destruct()
 {
     shutting_down = 1;
     if (!CfgFiles.empty()) {
-        auto *drop = CfgFiles.top();
-        CfgFiles.pop();
         std::ostringstream message;
-        message << "Bungled " << drop->lineInfo() << std::endl;
-        delete drop;
+        CfgFile *f = CfgFiles.top();
+        message << "Bungled " << f->lineInfo() << std::endl;
+        CfgFiles.pop();
+        delete f;
         while (!CfgFiles.empty()) {
-            drop = CfgFiles.top();
-            message << " included from " << drop->lineInfo() << std::endl;
+            f = CfgFiles.top();
+            message << " included from " << f->lineInfo() << std::endl;
             CfgFiles.pop();
-            delete drop;
+            delete f;
         }
         message << " included from " <<  cfg_filename << " line " <<
                 config_lineno << ": " << config_input_line << std::endl;
