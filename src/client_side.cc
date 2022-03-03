@@ -1375,8 +1375,6 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
                      clientReplyStatus, newServer, clientSocketRecipient,
                      clientSocketDetach, newClient, tempBuffer);
 
-    /* set url */
-
     /* Rewrite the URL in transparent or accelerator mode */
     /* NP: there are several cases to traverse here:
      *  - standard mode (forward proxy)
