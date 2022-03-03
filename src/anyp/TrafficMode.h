@@ -117,6 +117,7 @@ public:
     /// The accepted traffic may have been intercepted earlier as well!
     bool tproxyInterceptLocally() const { return flags_.tproxyIntercept && !proxySurrogate(); }
 
+    /// this port was configured with SSL bump
     bool tunnelSslBumping() const { return flags_.tunnelSslBumping; }
 
     TrafficModeFlags &rawConfig() { return flags_; }
