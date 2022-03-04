@@ -25,8 +25,11 @@ class PortCfg : public CodeContext
 {
 public:
     PortCfg();
+    PortCfg(PortCfg &&) = delete; // all other forms of copying prohibited
     ~PortCfg();
-    AnyP::PortCfgPointer clone() const;
+
+    /// creates the same port configuration but listening on any IPv4 address
+    PortCfg *ipV4clone() const;
 
     /* CodeContext API */
     virtual ScopedId codeContextGist() const override;
@@ -65,6 +68,9 @@ public:
 
     /// TLS configuration options for this listening port
     Security::ServerOptions secure;
+
+private:
+    explicit PortCfg(const PortCfg &other); // for ipV4clone() needs only!
 };
 
 } // namespace AnyP
