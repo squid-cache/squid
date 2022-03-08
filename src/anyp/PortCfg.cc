@@ -57,7 +57,7 @@ AnyP::PortCfg::~PortCfg()
 }
 
 AnyP::PortCfg::PortCfg(const PortCfg &other):
-    next(),
+    next(), // special case; see assert() below
     s(other.s),
     transport(other.transport),
     name(other.name ? xstrdup(other.name) : nullptr),
@@ -73,7 +73,7 @@ AnyP::PortCfg::PortCfg(const PortCfg &other):
     disable_pmtu_discovery(other.disable_pmtu_discovery),
     workerQueues(other.workerQueues),
     tcp_keepalive(other.tcp_keepalive),
-    listenConn(),
+    listenConn(), // special case; see assert() below
     secure(other.secure)
 {
     // to simplify, we only support port copying during parsing
