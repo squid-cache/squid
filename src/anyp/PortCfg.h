@@ -25,7 +25,8 @@ class PortCfg : public CodeContext
 {
 public:
     PortCfg();
-    PortCfg(PortCfg &&) = delete; // all other forms of copying prohibited
+    // no public copying/moving but see ipV4clone()
+    PortCfg(PortCfg &&) = delete;
     ~PortCfg();
 
     /// creates the same port configuration but listening on any IPv4 address
