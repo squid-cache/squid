@@ -28,7 +28,7 @@ public:
     static STCB HandleIMSReply;
     static STCB SendMoreData;
 
-    clientReplyContext(ClientHttpRequest *);
+    clientReplyContext(ClientHttpRequest *, const MasterXaction::Pointer &);
     ~clientReplyContext();
 
     void saveState();
@@ -151,6 +151,9 @@ private:
     } CollapsedRevalidation;
 
     CollapsedRevalidation collapsedRevalidation;
+
+    /// the master transaction this context belongs to
+    MasterXaction::Pointer masterXaction;
 };
 
 // TODO: move to SideAgent parent, when we have one

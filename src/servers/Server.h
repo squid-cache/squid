@@ -124,6 +124,9 @@ protected:
 
     AsyncCall::Pointer reader; ///< set when we are reading
     AsyncCall::Pointer writer; ///< set when we are writing
+
+    /// the master transaction this server connection belongs to
+    MasterXaction::Pointer masterXaction;
 };
 
 #endif /* SQUID_SERVERS_SERVER_H */

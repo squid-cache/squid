@@ -756,7 +756,7 @@ Ftp::Server::parseOneRequest()
     tempBuffer.data = result->reqbuf;
     tempBuffer.length = HTTP_REQBUF_SZ;
 
-    ClientStreamData newServer = new clientReplyContext(http);
+    ClientStreamData newServer = new clientReplyContext(http, mx);
     ClientStreamData newClient = result;
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
                      clientReplyStatus, newServer, clientSocketRecipient,

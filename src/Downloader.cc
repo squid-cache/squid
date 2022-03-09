@@ -165,7 +165,7 @@ Downloader::buildRequest()
     tempBuffer.data = context_->requestBuffer;
     tempBuffer.length = HTTP_REQBUF_SZ;
 
-    ClientStreamData newServer = new clientReplyContext(http);
+    ClientStreamData newServer = new clientReplyContext(http, masterXaction_);
     ClientStreamData newClient = context_.getRaw();
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
                      clientReplyStatus, newServer, downloaderRecipient,

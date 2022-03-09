@@ -72,7 +72,7 @@ clientReplyContext::~clientReplyContext()
     HTTPMSGUNLOCK(reply);
 }
 
-clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
+clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext, const MasterXaction::Pointer &mx) :
     purgeStatus(Http::scNone),
     http(cbdataReference(clientContext)),
     headers_sz(0),
@@ -86,7 +86,8 @@ clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
     old_sc(NULL),
     old_lastmod(-1),
     deleting(false),
-    collapsedRevalidation(crNone)
+    collapsedRevalidation(crNone),
+    masterXaction(mx)
 {
     *tempbuf = 0;
 }
@@ -2140,12 +2141,10 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
      */
 
     if (http->request == NULL) {
-        const auto connManager = http->getConn();
-        const auto mx = MasterXaction::MakePortful(connManager ? connManager->port : nullptr);
         // XXX: These fake URI parameters shadow the real (or error:...) URI.
         // TODO: Either always set the request earlier and assert here OR use
         // http->uri (converted to Anyp::Uri) to create this catch-all request.
-        const_cast<HttpRequest *&>(http->request) =  new HttpRequest(m, AnyP::PROTO_NONE, "http", null_string, mx);
+        const_cast<HttpRequest *&>(http->request) = new HttpRequest(m, AnyP::PROTO_NONE, "http", null_string, masterXaction);
         HTTPMSGLOCK(http->request);
     }
 

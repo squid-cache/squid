@@ -1037,7 +1037,7 @@ ConnStateData::abortRequestParsing(const char *const uri)
     tempBuffer.data = context->reqbuf;
     tempBuffer.length = HTTP_REQBUF_SZ;
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
-                     clientReplyStatus, new clientReplyContext(http), clientSocketRecipient,
+                     clientReplyStatus, new clientReplyContext(http, masterXaction), clientSocketRecipient,
                      clientSocketDetach, context, tempBuffer);
     return context;
 }
@@ -1369,7 +1369,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
     tempBuffer.data = result->reqbuf;
     tempBuffer.length = HTTP_REQBUF_SZ;
 
-    ClientStreamData newServer = new clientReplyContext(http);
+    ClientStreamData newServer = new clientReplyContext(http, masterXaction);
     ClientStreamData newClient = result;
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
                      clientReplyStatus, newServer, clientSocketRecipient,
@@ -3229,7 +3229,7 @@ ConnStateData::buildFakeRequest(SBuf &useHost, unsigned short usePort, const SBu
     tempBuffer.data = stream->reqbuf;
     tempBuffer.length = HTTP_REQBUF_SZ;
 
-    ClientStreamData newServer = new clientReplyContext(http);
+    ClientStreamData newServer = new clientReplyContext(http, masterXaction);
     ClientStreamData newClient = stream;
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
                      clientReplyStatus, newServer, clientSocketRecipient,

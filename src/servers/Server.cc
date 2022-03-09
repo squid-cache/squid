@@ -28,7 +28,8 @@ Server::Server(const MasterXaction::Pointer &xact) :
     clientConnection(xact->tcpClient),
     transferProtocol(xact->squidPort->transport),
     port(xact->squidPort),
-    receivedFirstByte_(false)
+    receivedFirstByte_(false),
+    masterXaction(xact)
 {
     clientConnection->leaveOrphanage();
 }
