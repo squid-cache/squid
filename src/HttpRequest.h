@@ -193,6 +193,9 @@ public:
     /// whether we have responded with HTTP 100 or FTP 150 already
     bool forcedBodyContinuation;
 
+    /// whether we are currently creating a CONNECT header (to be sent to peer)
+    bool generatingConnect = false;
+
 public:
     bool multipartRangeRequest() const;
 

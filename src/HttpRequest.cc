@@ -247,6 +247,7 @@ HttpRequest::inheritProperties(const Http::Message *aMsg)
     myportname = aReq->myportname;
 
     forcedBodyContinuation = aReq->forcedBodyContinuation;
+    generatingConnect = aReq->generatingConnect;
 
     // main property is which connection the request was received on (if any)
     clientConnectionManager = aReq->clientConnectionManager;
