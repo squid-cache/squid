@@ -170,11 +170,13 @@ main(int argc, char *argv[])
         case 'p':
             check_pw = 1;
             break;
-        case 'g':
-            grents = (char**)realloc(grents, sizeof(*grents) * (ngroups+1));
+        case 'g': {
+            char **tmpgrents = (char**)xrealloc(grents, sizeof(*grents) * (ngroups+1));
+            grents = tmpgrents;
             grents[ngroups] = optarg;
             ++ngroups;
             break;
+        }
         case '?':
             if (xisprint(optopt)) {
                 fprintf(stderr, "Unknown option '-%c'.\n", optopt);
@@ -184,13 +186,13 @@ main(int argc, char *argv[])
         /* [[fallthrough]] */
         default:
             usage(argv[0]);
-            exit(EXIT_FAILURE);
+            goto fail;
         }
     }
     if (optind < argc) {
         fprintf(stderr, "FATAL: Unknown option '%s'\n", argv[optind]);
         usage(argv[0]);
-        exit(EXIT_FAILURE);
+        goto fail;
     }
     while (fgets(buf, HELPER_INPUT_BUFFER, stdin)) {
         j = 0;
@@ -244,6 +246,10 @@ main(int argc, char *argv[])
             SEND_ERR("");
         }
     }
+    xfree(grents);
     return EXIT_SUCCESS;
+fail:
+    xfree(grents);
+    exit(EXIT_FAILURE); 
 }
 
