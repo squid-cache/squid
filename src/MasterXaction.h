@@ -52,10 +52,9 @@ public:
     }
 
     /// Create a master transaction associated with a AnyP::PortCfg port.
-    /// \param aPort cannot be nil
+    /// \param aPort may be nil if port information was lost
     static Pointer MakePortful(const AnyP::PortCfgPointer &aPort)
     {
-        assert(aPort);
         return new MasterXaction(XactionInitiator::initClient, aPort);
     }
 

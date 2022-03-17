@@ -331,7 +331,7 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     tempBuffer.data = tailbuf;
     /* client stream setup */
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
-                     clientReplyStatus, new clientReplyContext(http, mx), streamcallback,
+                     clientReplyStatus, new clientReplyContext(http), streamcallback,
                      streamdetach, streamdata, tempBuffer);
     /* make it visible in the 'current acctive requests list' */
     /* Set flags */
