@@ -289,6 +289,5 @@ const Ip::Address *FindListeningPortAddress(const HttpRequest *, const AccessLog
 /// nil parameter(s) indicate missing caller information and are handled safely
 unsigned short FindListeningPortNumber(const HttpRequest *, const AccessLogEntry *);
 
-
 #endif /* SQUID_HTTPREQUEST_H */
 
