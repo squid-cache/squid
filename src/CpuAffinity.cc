@@ -22,7 +22,8 @@
 
 static CpuAffinitySet *TheCpuAffinitySet = nullptr;
 
-/// set CPU affinity for this process on startup
+/// Makes CPU affinity of this process match configured CPU affinity.
+/// Assumes that we have never set the CPU affinity or have cleared it.
 static void
 CpuAffinityInit()
 {
