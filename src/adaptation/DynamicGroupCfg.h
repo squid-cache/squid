@@ -27,6 +27,10 @@ public:
     Store services; ///< services in the group
 
     bool empty() const { return services.empty(); } ///< no services added
+
+    /// configured service IDs in X-Next-Services value (comma-separated) format
+    const String &serviceIds() const { return id; }
+
     void add(const String &item); ///< updates group id and services
     void clear(); ///< makes the config empty
 };
