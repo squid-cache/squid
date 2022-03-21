@@ -9,7 +9,7 @@
 /* DEBUG: section 74    HTTP Message */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "http/ContentLengthInterpreter.h"
 #include "http/Message.h"
 #include "http/one/Parser.h"

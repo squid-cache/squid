@@ -10,7 +10,7 @@
 #include "auth/CredentialsCache.h"
 #include "auth/negotiate/User.h"
 #include "auth/SchemeConfig.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 Auth::Negotiate::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
     Auth::User(aConfig, aRequestRealm)

@@ -16,7 +16,7 @@
 #include "adaptation/ServiceGroups.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "globals.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"

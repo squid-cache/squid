@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "base/Raw.h"
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "client_side_request.h"

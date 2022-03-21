@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "base/AsyncJobCalls.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "fs/rock/RockDbCell.h"
 #include "fs/rock/RockRebuild.h"
 #include "fs/rock/RockSwapDir.h"

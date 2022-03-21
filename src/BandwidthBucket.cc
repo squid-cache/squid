@@ -13,7 +13,7 @@
 #include "BandwidthBucket.h"
 #include "ClientInfo.h"
 #include "comm/Connection.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "fde.h"
 
 BandwidthBucket::BandwidthBucket(const int speed, const int initialLevelPercent, const double sizeLimit) :

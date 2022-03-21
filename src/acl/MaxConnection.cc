@@ -12,7 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "acl/MaxConnection.h"
 #include "client_db.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "SquidConfig.h"
 
 ACLMaxConnection::ACLMaxConnection (char const *theClass) : class_ (theClass), limit(-1)

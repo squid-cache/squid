@@ -11,7 +11,7 @@
 #include "squid.h"
 #include "acl/ConnectionsEncrypted.h"
 #include "acl/FilledChecklist.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "SquidConfig.h"

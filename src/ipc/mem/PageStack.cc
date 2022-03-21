@@ -10,7 +10,7 @@
 
 #include "squid.h"
 
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "ipc/mem/Page.h"
 #include "ipc/mem/PageStack.h"
 

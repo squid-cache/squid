@@ -181,26 +181,9 @@ AC_ARG_ENABLE(strict-error-checking,
 ])
 AC_MSG_NOTICE([strict error checking enabled: ${enable_strict_error_checking:=yes}])
 
-AC_MSG_CHECKING(whether to use loadable modules)
-AC_ARG_ENABLE(loadable-modules,
-  AS_HELP_STRING([--disable-loadable-modules],[do not support loadable modules]) , [
-  SQUID_YESNO([$enableval],
-    [Unrecognized argument to --disable-loadable-modules: $enableval])
-])
-AM_CONDITIONAL(ENABLE_LOADABLE_MODULES, test "x${enable_loadable_modules:=yes}" = "xyes")
-AC_MSG_RESULT([$enable_loadable_modules])
-
-if test "x$enable_loadable_modules" = "xyes";
-then
-  AC_DEFINE(USE_LOADABLE_MODULES, 1, [Support Loadable Modules])
-  AC_ENABLE_SHARED
-else
-  AC_DISABLE_SHARED
-fi
-
 # LT_INIT requires libtool v2, might as well state it loud
 LT_PREREQ([2.2])
-LT_INIT([dlopen],[disable-shared])
+LT_INIT([dlopen])
 if ! test "${ac_top_build_prefix}" = "";
 then
 	# LTDL v3-v7 macros assume the autoconf 2.62 variable top_build_prefix is defined
@@ -218,12 +201,10 @@ LT_LIB_DLLOAD
 AC_SUBST(INCLTDL)
 AC_SUBST(LIBLTDL)
 
-if test "x$enable_loadable_modules" = "xyes";
-then
-  # Why is this needed? Should not LT_INIT (or LT_LIB_DLLOAD) from libtool do that?
-  LIBADD_DL=${lt_cv_dlopen_libs}
-  AC_SUBST([LIBADD_DL])
-fi
+AC_MSG_CHECKING(whether to use loadable modules)
+AS_IF([test "x${enable_shared:=yes}" = "xyes"],[AC_DEFINE(USE_LOADABLE_MODULES,1,[Support Loadable Modules])])
+AM_CONDITIONAL(ENABLE_LOADABLE_MODULES, test "x${enable_shared:=yes}" = "xyes")
+AC_MSG_RESULT([$enable_shared])
 
 SQUID_CC_GUESS_VARIANT
 SQUID_CC_GUESS_OPTIONS
@@ -1026,9 +1007,9 @@ dnl Perform configuration consistency checks for eCAP
 if test "x$squid_opt_use_ecap" != "xno";
 then
   dnl eCAP support requires loadable modules, which are enabled by default
-  if test "x$enable_loadable_modules" != "xyes"
+  if test "x$enable_shared" != "xyes"
   then
-    AC_MSG_ERROR([eCAP support requires loadable modules. Please do not use --disable-loadable-modules with --enable-ecap.])
+    AC_MSG_ERROR([eCAP support requires loadable modules. Please do not use --disable-shared with --enable-ecap.])
   fi
 
   if test -n "$PKG_CONFIG"; then
@@ -3688,6 +3669,7 @@ AC_CONFIG_FILES([
 	src/base/Makefile
 	src/clients/Makefile
 	src/comm/Makefile
+	src/debug/Makefile
 	src/dns/Makefile
 	src/DiskIO/Makefile
 	src/DiskIO/AIO/Makefile

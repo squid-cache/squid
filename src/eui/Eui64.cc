@@ -13,7 +13,7 @@
 #if USE_SQUID_EUI
 
 #include "compat/eui64_aton.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "eui/Eui64.h"
 #include "globals.h"
 #include "ip/Address.h"

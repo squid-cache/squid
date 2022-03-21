@@ -13,7 +13,7 @@
 #include "auth/Config.h"
 #include "auth/CredentialsCache.h"
 #include "base/RunnersRegistry.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "event.h"
 
 namespace Auth {

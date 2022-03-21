@@ -10,7 +10,7 @@
 #include "acl/Gadgets.h"
 #include "base/TextException.h"
 #include "cache_cf.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "log/Config.h"
 #include "log/File.h"
 #include "log/FormattedLog.h"

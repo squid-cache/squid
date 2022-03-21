@@ -9,6 +9,7 @@
 /* DEBUG: section 83    TLS I/O */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "fde.h"
 #include "security/Io.h"
 

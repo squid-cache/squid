@@ -12,7 +12,7 @@
 #include "anyp/PortCfg.h"
 #include "base/RunnersRegistry.h"
 #include "CachePeer.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "fd.h"
 #include "fde.h"
 #include "ipc/MemMap.h"

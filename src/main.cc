@@ -29,7 +29,7 @@
 #include "CommandLine.h"
 #include "ConfigParser.h"
 #include "CpuAffinity.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "DiskIO/DiskIOModule.h"
 #include "dns/forward.h"
 #include "errorpage.h"
@@ -50,7 +50,6 @@
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
 #include "ICP.h"
-#include "ident/Ident.h"
 #include "Instance.h"
 #include "ip/tools.h"
 #include "ipc/Coordinator.h"
@@ -1208,10 +1207,6 @@ mainInitialize(void)
     icapLogOpen();
 #endif
 
-#if USE_IDENT
-    Ident::Init();
-#endif
-
 #if SQUID_SNMP
 
     snmpInit();
@@ -1588,6 +1583,8 @@ SquidMain(int argc, char **argv)
         Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
 
         Format::Token::Init(); // XXX: temporary. Use a runners registry of pre-parse runners instead.
+
+        RunRegisteredHere(RegisteredRunner::bootstrapConfig);
 
         try {
             parse_err = parseConfigFile(ConfigFile);

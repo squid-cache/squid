@@ -36,7 +36,6 @@ libicmp_la_LIBADD= libicmpcore.la
 
 # pinger depends on these but install/dist is done elsewhere.
 COPIED_SOURCE= \
-	debug.cc \
 	globals.cc \
 	SquidConfig.cc \
 	tests/stub_fd.cc \
@@ -61,6 +60,7 @@ pinger_LDFLAGS = $(LIBADD_DL)
 pinger_LDADD=\
 	libicmpcore.la \
 	$(top_builddir)/src/ip/libip.la \
+	$(top_builddir)/src/debug/libdebug.la \
 	$(top_builddir)/src/base/libbase.la \
 	$(COMPAT_LIB) \
 	$(SSLLIB) \
@@ -83,9 +83,6 @@ CLEANFILES += $(COPIED_SOURCE)
 
 ## files we need to pull in from other locations
 ## copied like this to avoid subdir-objects collisions on 'make clean'
-debug.cc: $(top_srcdir)/src/debug.cc
-	cp $(top_srcdir)/src/debug.cc $@
-
 globals.cc: $(top_srcdir)/src/globals.h
 	cp $(top_builddir)/src/globals.cc $@
 

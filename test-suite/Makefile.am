@@ -34,7 +34,7 @@ else
 endif
 
 ## Sort by dependencies - test lowest layers first
-TESTS += debug \
+TESTS += \
 	syntheticoperators \
 	VirtualDeleteOperator \
 	splay\
@@ -44,7 +44,7 @@ TESTS += debug \
 	squid-conf-tests
 
 ## Sort by alpha - any build failures are significant.
-check_PROGRAMS += debug \
+check_PROGRAMS += \
 		$(ESI_TESTS) \
 		mem_node_test\
 		mem_hdr_test \
@@ -59,20 +59,17 @@ tcp_banger2_LDADD = $(top_builddir)/lib/libmiscutil.la
 # several tests whose purpose is testing libmem itself.
 STUBS = \
 	stub_cbdata.cc \
-	stub_debug.cc \
 	stub_MemBuf.cc \
 	stub_SBuf.cc \
 	stub_tools.cc \
 	stub_fatal.cc \
+	stub_fd.cc \
 	STUB.h
 DEBUG_SOURCE = test_tools.cc $(STUBS)
 CLEANFILES += $(STUBS) stub_libmem.cc
 
 stub_cbdata.cc: $(top_srcdir)/src/tests/stub_cbdata.cc
 	cp $(top_srcdir)/src/tests/stub_cbdata.cc $@
-
-stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc
-	cp $(top_srcdir)/src/tests/stub_debug.cc $@
 
 stub_MemBuf.cc: $(top_srcdir)/src/tests/stub_MemBuf.cc
 	cp $(top_srcdir)/src/tests/stub_MemBuf.cc $@
@@ -86,25 +83,21 @@ stub_tools.cc: $(top_srcdir)/src/tests/stub_tools.cc
 stub_fatal.cc: $(top_srcdir)/src/tests/stub_fatal.cc
 	cp $(top_srcdir)/src/tests/stub_fatal.cc $@
 
+stub_fd.cc: $(top_srcdir)/src/tests/stub_fd.cc
+	cp $(top_srcdir)/src/tests/stub_fd.cc $@
+
 stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc STUB.h
 	cp $(top_srcdir)/src/tests/stub_libmem.cc $@
 	
 STUB.h: $(top_srcdir)/src/tests/STUB.h
 	cp $(top_srcdir)/src/tests/STUB.h $@
 
-## XXX: somewhat broken. Its meant to test our debugs() implementation.
-## but it has never been linked to the actual src/debug.cc implementation !!
-## all it tests are the stream operators and macro in src/Debug.h
-debug_SOURCES = \
-	$(DEBUG_SOURCE) \
-	debug.cc \
-	stub_libmem.cc
-
 ESIExpressions_SOURCES = \
 	$(DEBUG_SOURCE) \
 	ESIExpressions.cc \
 	stub_libmem.cc
 ESIExpressions_LDADD = $(top_builddir)/src/esi/Expression.o \
+	$(top_builddir)/src/debug/libdebug.la \
 		$(LDADD)
 
 mem_node_test_SOURCES = \
@@ -113,6 +106,7 @@ mem_node_test_SOURCES = \
 mem_node_test_LDADD = \
 	$(top_builddir)/src/mem_node.o \
 	$(top_builddir)/src/mem/libmem.la \
+	$(top_builddir)/src/debug/libdebug.la \
 	$(LDADD)
 
 mem_hdr_test_SOURCES = \
@@ -122,6 +116,7 @@ mem_hdr_test_LDADD = \
 	$(top_builddir)/src/stmem.o \
 	$(top_builddir)/src/mem_node.o \
 	$(top_builddir)/src/mem/libmem.la \
+	$(top_builddir)/src/debug/libdebug.la \
 	$(LDADD)
 
 splay_SOURCES = \

@@ -9,7 +9,7 @@
 /* DEBUG: section 86    ESI processing */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "esi/Segment.h"
 #include "SquidString.h"
 

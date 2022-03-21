@@ -16,7 +16,7 @@
 #include "CachePeer.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "event.h"
 #include "FwdState.h"
 #include "globals.h"

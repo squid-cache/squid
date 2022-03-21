@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "anyp/PortCfg.h"
+#include "anyp/UriScheme.h"
 #include "comm.h"
 #include "fatal.h"
 #include "security/PeerOptions.h"
@@ -56,7 +57,7 @@ AnyP::PortCfg::~PortCfg()
 }
 
 AnyP::PortCfg::PortCfg(const PortCfg &other):
-    next(),
+    next(), // special case; see assert() below
     s(other.s),
     transport(other.transport),
     name(other.name ? xstrdup(other.name) : nullptr),
@@ -72,7 +73,7 @@ AnyP::PortCfg::PortCfg(const PortCfg &other):
     disable_pmtu_discovery(other.disable_pmtu_discovery),
     workerQueues(other.workerQueues),
     tcp_keepalive(other.tcp_keepalive),
-    listenConn(),
+    listenConn(), // special case; see assert() below
     secure(other.secure)
 {
     // to simplify, we only support port copying during parsing
@@ -85,7 +86,8 @@ AnyP::PortCfg::ipV4clone() const
 {
     const auto clone = new PortCfg(*this);
     clone->s.setIPv4();
-    debugs(3, 3, "made two wildcard port cfgs for split-stack: " << s << " and " << clone->s);
+    debugs(3, 3, AnyP::UriScheme(transport.protocol).image() << "_port: " <<
+           "cloned wildcard address for split-stack: " << s << " and " << clone->s);
     return clone;
 }
 

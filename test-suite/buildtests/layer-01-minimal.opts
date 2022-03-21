@@ -38,7 +38,7 @@ MAKETEST="distcheck"
 #     we use it to perform the same duty between our nested scripts.
 DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-build-info \
-	--disable-loadable-modules \
+	--disable-shared \
 	--disable-gnuregex \
 	--disable-debug-cbdata \
 	--disable-xmalloc-statistics \

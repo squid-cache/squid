@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "anyp/Uri.h"
+#include "base/Raw.h"
 #include "globals.h"
 #include "HttpRequest.h"
 #include "parser/Tokenizer.h"

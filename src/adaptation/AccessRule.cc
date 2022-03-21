@@ -13,7 +13,7 @@
 #include "adaptation/Service.h"
 #include "adaptation/ServiceGroups.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 int Adaptation::AccessRule::LastId = 0;
 

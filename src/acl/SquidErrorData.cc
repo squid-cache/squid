@@ -11,7 +11,7 @@
 #include "acl/SquidErrorData.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "error/Error.h"
 #include "fatal.h"
 #include "wordlist.h"

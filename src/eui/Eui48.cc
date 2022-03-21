@@ -12,7 +12,7 @@
 
 #if USE_SQUID_EUI
 
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "eui/Eui48.h"
 #include "globals.h"
 #include "ip/Address.h"

@@ -9,7 +9,7 @@
 /* DEBUG: section 47    Store Search */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "globals.h"
 #include "store/LocalSearch.h"
 #include "StoreSearch.h"

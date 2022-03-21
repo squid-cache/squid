@@ -9,7 +9,7 @@
 /* DEBUG: section 08    Swap File Bitmap */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "FileMap.h"
 
 /* Number of bits in a long */
