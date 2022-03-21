@@ -323,9 +323,9 @@ Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &
     if (theCallSub != NULL) {
         AsyncCall::Pointer call = theCallSub->callback();
         CommAcceptCbParams &params = GetCommParams<CommAcceptCbParams>(call);
-        params.xaction = MasterXaction::MakePortful(listenPort_);
+        params.port = listenPort_;
         params.fd = conn->fd;
-        params.conn = params.xaction->tcpClient = newConnDetails;
+        params.conn = newConnDetails;
         params.flag = flag;
         params.xerrno = errcode;
         ScheduleCallHere(call);

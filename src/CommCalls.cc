@@ -49,7 +49,7 @@ CommCommonCbParams::print(std::ostream &os) const
 /* CommAcceptCbParams */
 
 CommAcceptCbParams::CommAcceptCbParams(void *aData):
-    CommCommonCbParams(aData), xaction()
+    CommCommonCbParams(aData)
 {
 }
 
@@ -61,8 +61,8 @@ CommAcceptCbParams::print(std::ostream &os) const
 {
     CommCommonCbParams::print(os);
 
-    if (xaction != NULL)
-        os << ", " << xaction->id;
+    if (port)
+        os << ", " << port->listenConn;
 }
 
 /* CommConnectCbParams */
