@@ -24,7 +24,6 @@
 #include "HttpReply.h"
 #include "ip/tools.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 
 #define DEFAULT_ICAP_PORT   1344
 #define DEFAULT_ICAPS_PORT 11344

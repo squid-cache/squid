@@ -14,7 +14,6 @@
 #include "debug/Stream.h"
 #include "EventLoop.h"
 #include "fatal.h"
-#include "SquidTime.h"
 
 EventLoop *EventLoop::Running = NULL;
 
@@ -159,7 +158,7 @@ EventLoop::setPrimaryEngine(AsyncEngine * engine)
 }
 
 void
-EventLoop::setTimeService(TimeEngine *engine)
+EventLoop::setTimeService(Time::Engine *engine)
 {
     timeService = engine;
 }

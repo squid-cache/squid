@@ -6,15 +6,12 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 28    Access Control */
-
 #include "squid.h"
-#include "acl/Time.h"
-#include "acl/TimeData.h"
+#include "time/Engine.h"
+#include "time/forward.h"
 
-int
-ACLTimeStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *)
+void
+Time::Engine::tick()
 {
-    return data->match(squid_curtime);
+    getCurrentTime();
 }
-

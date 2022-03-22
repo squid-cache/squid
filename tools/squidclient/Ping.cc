@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "SquidTime.h"
+#include "time/forward.h"
 #include "tools/squidclient/Parameters.h"
 #include "tools/squidclient/Ping.h"
 

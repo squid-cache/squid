@@ -28,7 +28,6 @@
 #include "log/access_log.h"
 #include "MasterXaction.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 
 #include <cerrno>

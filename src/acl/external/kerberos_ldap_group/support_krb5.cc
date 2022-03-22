@@ -31,7 +31,7 @@
  */
 
 #include "squid.h"
-#include "util.h"
+#include "time/forward.h"
 
 #if HAVE_LDAP && HAVE_KRB5
 

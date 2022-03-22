@@ -22,7 +22,6 @@
 #include "HttpRequest.h"
 #include "sbuf/SBuf.h"
 #include "servers/FtpServer.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
 

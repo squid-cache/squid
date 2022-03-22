@@ -13,6 +13,7 @@
 
 #include "rfc1123.h"
 
+#include <chrono>
 #include <ctime>
 #include <iosfwd>
 /* NP: sys/time.h is provided by libcompat */
@@ -25,8 +26,21 @@ extern struct timeval current_time;
 extern double current_dtime;
 extern time_t squid_curtime;
 
-time_t getCurrentTime(void);
-int tvSubMsec(struct timeval, struct timeval);
+/// Update squid_curtime, current_time, and current_dtime
+/// \returns new value of squid_curtime
+time_t getCurrentTime();
+
+/// timeval subtraction operation.
+/// \returns (A-B) in whole microseconds
+int tvSubUsec(struct timeval A, struct timeval B);
+
+/// timeval subtraction operation.
+/// \returns (A-B) in seconds (with microsecond decimal)
+double tvSubDsec(struct timeval A, struct timeval B);
+
+/// timeval subtraction operation.
+/// \returns (A-B) in whole milliseconds
+int tvSubMsec(struct timeval A, struct timeval B);
 
 /// timeval subtraction operation
 /// \param[out] res = t2 - t1
@@ -46,63 +60,17 @@ inline long int tvToMsec(struct timeval &t)
     return t.tv_sec * 1000 + t.tv_usec / 1000;
 }
 
-/** event class for doing synthetic time etc */
-class TimeEngine
-{
-
-public:
-    virtual ~TimeEngine();
-
-    /** tick the clock - update from the OS or other time source, */
-    virtual void tick();
-};
-
-// TODO: Remove direct timercmp() calls in legacy code.
-
-inline bool
-operator <(const timeval &a, const timeval &b)
-{
-    return timercmp(&a, &b, <);
-}
-
-inline bool
-operator >(const timeval &a, const timeval &b)
-{
-    return timercmp(&a, &b, >);
-}
-
-inline bool
-operator !=(const timeval &a, const timeval &b)
-{
-    return timercmp(&a, &b, !=);
-}
-
-// Operators for timeval below avoid timercmp() because Linux timeradd(3) manual
-// page says that their timercmp() versions "do not work" on some platforms.
-
-inline bool
-operator <=(const timeval &a, const timeval &b)
-{
-    return !(a > b);
-}
-
-inline bool
-operator >=(const timeval &a, const timeval &b)
-{
-    return !(a < b);
-}
-
-inline bool
-operator ==(const timeval &a, const timeval &b)
-{
-    return !(a != b);
-}
-
 /// prints <seconds>.<microseconds>
 std::ostream &operator <<(std::ostream &, const timeval &);
 
+/// Convert from ISO 3307 style time: YYYYMMDDHHMMSS or YYYYMMDDHHMMSS.xxx
+time_t parse_iso3307_time(const char *);
+
+/// Time and Date handling tools
 namespace Time
 {
+
+class Engine;
 
 /** Display time as a formatted human-readable string.
  * Time syntax is

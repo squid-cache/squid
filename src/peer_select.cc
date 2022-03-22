@@ -34,9 +34,8 @@
 #include "peer_userhash.h"
 #include "PeerSelectState.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
-#include "util.h" // for tvSubDsec() which should be in SquidTime.h
+#include "time/operators.h"
 
 /**
  * A CachePeer which has been selected as a possible destination.

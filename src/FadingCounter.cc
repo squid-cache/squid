@@ -10,7 +10,7 @@
 #include "base/TextException.h"
 #include "debug/Stream.h"
 #include "FadingCounter.h"
-#include "SquidTime.h"
+#include "time/forward.h"
 
 #include <cmath>
 

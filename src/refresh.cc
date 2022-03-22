@@ -22,7 +22,6 @@
 #include "refresh.h"
 #include "RefreshPattern.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "util.h"
 

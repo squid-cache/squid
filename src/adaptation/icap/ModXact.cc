@@ -32,7 +32,6 @@
 #include "MasterXaction.h"
 #include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
-#include "SquidTime.h"
 
 // flow and terminology:
 //     HTTP| --> receive --> encode --> write --> |network

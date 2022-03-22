@@ -17,7 +17,7 @@
 #include "debug/Stream.h"
 #include "Icmp4.h"
 #include "IcmpPinger.h"
-#include "SquidTime.h"
+#include "time/forward.h"
 
 static const char *
 IcmpPacketType(uint8_t v)

@@ -12,7 +12,7 @@
 #include "base/Optional.h"
 #include "mem/PoolingAllocator.h"
 #include "SquidMath.h"
-#include "SquidTime.h"
+#include "time/forward.h"
 
 #include <functional>
 #include <limits>

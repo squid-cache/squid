@@ -7,16 +7,13 @@
  */
 
 #include "squid.h"
-#include "util.h"
+#include "time/forward.h"
 
 #if HAVE_STRING_H
 #include <string.h>
 #endif
 #if HAVE_CTYPE_H
 #include <ctype.h>
-#endif
-#if HAVE_TIME_H
-#include <time.h>
 #endif
 
 #define ASCII_DIGIT(c) ((c)-48)

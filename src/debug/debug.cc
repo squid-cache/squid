@@ -14,7 +14,7 @@
 #include "debug/Stream.h"
 #include "fd.h"
 #include "ipc/Kids.h"
-#include "SquidTime.h"
+#include "time/forward.h"
 #include "util.h"
 
 #include <algorithm>

@@ -38,15 +38,12 @@
 #include "PeerDigest.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
-#include "SquidTime.h"
 #include "stat.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "store_digest.h"
 #include "StoreClient.h"
 #include "tools.h"
-// for tvSubDsec() which should be in SquidTime.h
-#include "util.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif

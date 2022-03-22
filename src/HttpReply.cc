@@ -22,7 +22,6 @@
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "StrList.h"
 

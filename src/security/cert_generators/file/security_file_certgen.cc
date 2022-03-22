@@ -9,8 +9,8 @@
 #include "squid.h"
 #include "helper/protocol_defines.h"
 #include "security/cert_generators/file/certificate_db.h"
-#include "SquidTime.h"
 #include "ssl/crtd_message.h"
+#include "time/forward.h"
 
 #include <cstring>
 #include <iostream>

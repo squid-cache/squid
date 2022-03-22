@@ -36,7 +36,6 @@
 #include "repl_modules.h"
 #include "RequestFlags.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "stmem.h"
 #include "Store.h"

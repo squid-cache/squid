@@ -10,7 +10,7 @@
 #include "adaptation/icap/History.h"
 #include "debug/Stream.h"
 #include "globals.h"
-#include "SquidTime.h"
+#include "time/forward.h"
 
 Adaptation::Icap::History::History():
     req_sz(0),

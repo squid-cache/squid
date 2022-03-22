@@ -41,7 +41,6 @@
 
 #include "squid.h"
 #include "debug/Stream.h"
-#include "SquidTime.h"
 
 #if USE_ICMP
 
@@ -49,6 +48,7 @@
 #include "Icmp6.h"
 #include "IcmpPinger.h"
 #include "ip/tools.h"
+#include "time/forward.h"
 
 #if _SQUID_WINDOWS_
 

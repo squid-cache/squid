@@ -113,7 +113,6 @@
 #include "security/NegotiationHistory.h"
 #include "servers/forward.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "StatHist.h"
 #include "Store.h"
@@ -136,8 +135,7 @@
 #include "ssl/ServerBump.h"
 #include "ssl/support.h"
 #endif
-
-// for tvSubUsec() which should be in SquidTime.h
+// for tvSubUsec() which should be in time/forward.h
 #include "util.h"
 
 #include <climits>

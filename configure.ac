@@ -3697,6 +3697,7 @@ AC_CONFIG_FILES([
 	src/store/Makefile
 	src/store/id_rewriters/Makefile
 	src/store/id_rewriters/file/Makefile
+	src/time/Makefile
 	test-suite/Makefile
 	tools/Makefile
 	tools/apparmor/Makefile

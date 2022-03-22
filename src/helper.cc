@@ -27,7 +27,6 @@
 #include "SquidConfig.h"
 #include "SquidIpc.h"
 #include "SquidMath.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
 
