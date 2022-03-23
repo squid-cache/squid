@@ -58,18 +58,17 @@ std::ostream &operator <<(std::ostream &, const TextException &);
 /// legacy convenience macro; it is not difficult to type Here() now
 #define TexcHere(msg) TextException((msg), Here())
 
-/// Like Assure() but only logs the exception if level-3 debugging is enabled
-/// and runs even when NDEBUG macro is defined. Deprecated: Use Assure() for
-/// code logic checks and throw explicitly when input validation fails.
-#define Must(condition) \
-    Must3((condition), #condition, Here())
-
 /// Like Must() but supports custom exception message and location.
 /// \param description string literal describing the condition; what MUST happen
 /// Deprecated: Use Assure2() for code logic checks and throw explicitly when
 /// input validation fails.
 #define Must3(condition, description, location) \
     Assure_(3, (condition), (description), (location))
+
+/// Like Assure() but only logs the exception if level-3 debugging is enabled
+/// and runs even when NDEBUG macro is defined. Deprecated: Use Assure() for
+/// code logic checks and throw explicitly when input validation fails.
+#define Must(condition) Must3((condition), #condition, Here())
 
 /// Reports and swallows all exceptions to prevent compiler warnings and runtime
 /// errors related to throwing class destructors. Should be used for most dtors.
