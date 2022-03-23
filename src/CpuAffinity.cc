@@ -74,12 +74,14 @@ public:
     virtual void finalizeConfig() override {
         if (IamPrimaryProcess())
             CpuAffinityCheck();
+    }
+
+    virtual void useConfig() override {
         CpuAffinityInit();
     }
 
     virtual void syncConfig() override {
-        if (IamPrimaryProcess())
-            CpuAffinityCheck();
+        finalizeConfig();
         CpuAffinityReconfigure();
     }
 };
