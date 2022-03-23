@@ -62,7 +62,7 @@ std::ostream &operator <<(std::ostream &, const TextException &);
 /// and runs even when NDEBUG macro is defined. Deprecated: Use Assure() for
 /// code logic checks and throw explicitly when input validation fails.
 #define Must(condition) \
-    Assure_(3, (condition), #condition, Here())
+    Must3((condition), #condition, Here())
 
 /// Like Must() but supports custom exception message and location.
 /// \param description string literal describing the condition; what MUST happen

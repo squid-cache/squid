@@ -33,7 +33,7 @@
 /// that indicate a dangerous global state corruption which may go unnoticed by
 /// other jobs after the current job or task is aborted.
 #define Assure(condition) \
-        Assure_(0, (condition), #condition, Here())
+        Assure2((condition), #condition)
 
 /// Like Assure() but allows the caller to customize the exception message.
 /// \param description c-string explaining the condition (i.e. what MUST happen)
