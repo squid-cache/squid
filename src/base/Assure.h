@@ -36,9 +36,9 @@
         Assure2((condition), #condition)
 
 /// Like Assure() but allows the caller to customize the exception message.
-/// \param description c-string explaining the condition (i.e. what MUST happen)
+/// \param description string literal describing the condition (i.e. what MUST happen)
 #define Assure2(condition, description) \
-        Assure_(0, (condition), (description), Here())
+        Assure_(0, (condition), ("assurance failed: " description), Here())
 
 #else
 
