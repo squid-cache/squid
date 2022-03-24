@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,9 +10,8 @@
 #define SQUID_EVENT_H
 
 #include "AsyncEngine.h"
+#include "base/Packable.h"
 #include "mem/forward.h"
-
-class StoreEntry;
 
 /* event scheduling facilities - run a callback after a given time period. */
 
@@ -57,7 +56,7 @@ public:
     /* either EVENT_IDLE or milliseconds remaining until the next event */
     int timeRemaining() const;
     /* cache manager output for the event queue */
-    void dump(StoreEntry *);
+    void dump(Packable *);
     /* find a scheduled event */
     bool find(EVH * func, void * arg);
     /* schedule a callback function to run in when seconds */

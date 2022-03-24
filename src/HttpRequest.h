@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -247,6 +247,10 @@ public:
     bool hasNotes() const { return bool(theNotes) && !theNotes->empty(); }
 
     virtual void configureContentLengthInterpreter(Http::ContentLengthInterpreter &) {}
+
+    /// Check whether the message framing headers are valid.
+    /// \returns Http::scNone or an HTTP error status
+    Http::StatusCode checkEntityFraming() const;
 
     /// Parses request header using Parser.
     /// Use it in contexts where the Parser object is available.

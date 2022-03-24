@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -53,7 +53,7 @@ struct SMBDOMAIN *lastdom = NULL;
  * to the read command of the bourne shell.
  */
 
-void
+static void
 print_esc(FILE * p, char *s)
 {
     char buf[HELPER_INPUT_BUFFER];

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,7 +25,7 @@ StoreMeta::validType(char type)
 {
     /* VOID is reserved, and new types have to be added as classes */
     if (type <= STORE_META_VOID || type >= STORE_META_END + 10) {
-        debugs(20, DBG_CRITICAL, "storeSwapMetaUnpack: bad type (" << type << ")!");
+        debugs(20, DBG_CRITICAL, "ERROR: storeSwapMetaUnpack: bad type (" << type << ")!");
         return false;
     }
 
@@ -42,7 +42,7 @@ StoreMeta::validType(char type)
             type == STORE_META_KEY_SHA ||
             type == STORE_META_HITMETERING ||
             type == STORE_META_VALID) {
-        debugs(20, DBG_CRITICAL, "Obsolete and unused type (" << type << ") in disk metadata");
+        debugs(20, DBG_CRITICAL, "ERROR: Obsolete and unused type (" << type << ") in disk metadata");
         return false;
     }
 
@@ -99,7 +99,7 @@ StoreMeta::Factory (char type, size_t len, void const *value)
         break;
 
     default:
-        debugs(20, DBG_CRITICAL, "Attempt to create unknown concrete StoreMeta");
+        debugs(20, DBG_CRITICAL, "ERROR: Attempt to create unknown concrete StoreMeta");
         return NULL;
     }
 

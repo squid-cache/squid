@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -24,5 +24,7 @@ libecapsquid_la_SOURCES = \
 	XactionRep.h
 
 # add libecap using its pkg-config-produced configuration variables
-libecapsquid_la_CXXFLAGS = $(EXT_LIBECAP_CFLAGS)
+libecapsquid_la_CXXFLAGS = \
+	$(AM_CXXFLAGS) \
+	$(EXT_LIBECAP_CFLAGS)
 libecapsquid_la_LIBADD = $(EXT_LIBECAP_LIBS)

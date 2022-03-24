@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 /* DEBUG: section 20    Store Rebuild Routines */
 
 #include "squid.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "event.h"
 #include "globals.h"
 #include "md5.h"
@@ -330,7 +330,7 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
     int swap_hdr_len = 0;
     StoreMetaUnpacker aBuilder(buf.content(), buf.contentSize(), &swap_hdr_len);
     if (aBuilder.isBufferZero()) {
-        debugs(47,5, HERE << "skipping empty record.");
+        debugs(47,5, "skipping empty record.");
         return false;
     }
 

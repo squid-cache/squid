@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,7 @@
 #include "adaptation/Service.h"
 #include "adaptation/ServiceGroups.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 int Adaptation::AccessRule::LastId = 0;
 
@@ -36,7 +36,7 @@ void
 Adaptation::AccessRule::finalize()
 {
     if (!group()) { // no explicit group
-        debugs(93,7, HERE << "no service group: " << groupId);
+        debugs(93,7, "no service group: " << groupId);
         // try to add a one-service group
         if (FindService(groupId) != NULL) {
             ServiceGroupPointer g = new SingleService(groupId);

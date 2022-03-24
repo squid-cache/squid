@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -56,4 +56,23 @@ enum class testEnum { one, two, three };
   SQUID_DEFINE_BOOL([HAVE_STD_UNDERLYING_TYPE],
      [$squid_cv_have_std_underlying_type],
      [Define if stdlibc support std::underlying_type for enums])
+])
+
+## SQUID_CXX_STD_IS_TRIVIALLY_COPYABLE
+## checks whether the std::is_trivially_copyable<> trait exists
+## (known to be missing in GCC until version 5.1)
+AC_DEFUN([SQUID_CXX_STD_IS_TRIVIALLY_COPYABLE],[
+  AC_CACHE_CHECK([whether compiler supports std::is_trivially_copyable],
+    [squid_cv_have_std_is_trivially_copyable],[
+      AC_REQUIRE([AC_PROG_CXX])
+      AC_LANG_PUSH([C++])
+      AC_TRY_COMPILE([#include <type_traits>],
+        [return std::is_trivially_copyable<int>::value ? 1 : 0;],
+        [squid_cv_have_std_is_trivially_copyable=yes],
+        [squid_cv_have_std_is_trivially_copyable=no])
+      AC_LANG_POP
+  ])
+  SQUID_DEFINE_BOOL([HAVE_STD_IS_TRIVIALLY_COPYABLE],
+     [$squid_cv_have_std_is_trivially_copyable],
+     [Define if stdlibc support std::is_trivially_copyable])
 ])

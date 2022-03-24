@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -268,21 +268,20 @@ static void
 sslCrtvdHandleReplyWrapper(void *data, const ::Helper::Reply &reply)
 {
     Ssl::CertValidationMsg replyMsg(Ssl::CrtdMessage::REPLY);
-    std::string error;
 
     submitData *crtdvdData = static_cast<submitData *>(data);
     assert(crtdvdData->ssl.get());
     Ssl::CertValidationResponse::Pointer validationResponse = new Ssl::CertValidationResponse(crtdvdData->ssl);
     if (reply.result == ::Helper::BrokenHelper) {
-        debugs(83, DBG_IMPORTANT, "\"ssl_crtvd\" helper error response: " << reply.other().content());
+        debugs(83, DBG_IMPORTANT, "ERROR: \"ssl_crtvd\" helper error response: " << reply.other().content());
         validationResponse->resultCode = ::Helper::BrokenHelper;
     } else if (!reply.other().hasContent()) {
         debugs(83, DBG_IMPORTANT, "\"ssl_crtvd\" helper returned NULL response");
         validationResponse->resultCode = ::Helper::BrokenHelper;
     } else if (replyMsg.parse(reply.other().content(), reply.other().contentSize()) != Ssl::CrtdMessage::OK ||
-               !replyMsg.parseResponse(*validationResponse, error) ) {
+               !replyMsg.parseResponse(*validationResponse) ) {
         debugs(83, DBG_IMPORTANT, "WARNING: Reply from ssl_crtvd for " << " is incorrect");
-        debugs(83, DBG_IMPORTANT, "Certificate cannot be validated. ssl_crtvd response: " << replyMsg.getBody());
+        debugs(83, DBG_IMPORTANT, "ERROR: Certificate cannot be validated. ssl_crtvd response: " << replyMsg.getBody());
         validationResponse->resultCode = ::Helper::BrokenHelper;
     } else
         validationResponse->resultCode = reply.result;

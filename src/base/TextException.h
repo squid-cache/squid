@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -76,7 +76,7 @@ std::ostream &operator <<(std::ostream &, const TextException &);
     try { \
         code \
     } catch (...) { \
-        debugs(0, DBG_IMPORTANT, "BUG: ignoring exception;" << \
+        debugs(0, DBG_IMPORTANT, "ERROR: Squid BUG: ignoring exception;" << \
                Debug::Extra << "bug location: " << Here() << \
                Debug::Extra << "ignored exception: " << CurrentException); \
     }

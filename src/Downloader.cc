@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "base/Raw.h"
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "client_side_request.h"
@@ -81,6 +82,10 @@ void
 Downloader::swanSong()
 {
     debugs(33, 6, this);
+
+    if (callback_) // job-ending emergencies like handleStopRequest() or callException()
+        callBack(Http::scInternalServerError);
+
     if (context_) {
         context_->finished();
         context_ = nullptr;
@@ -251,6 +256,7 @@ Downloader::downloadFinished()
 void
 Downloader::callBack(Http::StatusCode const statusCode)
 {
+    assert(callback_);
     CbDialer *dialer = dynamic_cast<CbDialer*>(callback_->getDialer());
     Must(dialer);
     dialer->status = statusCode;

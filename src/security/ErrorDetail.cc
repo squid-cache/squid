@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "error/SysErrorDetail.h"
 #include "html_quote.h"
 #include "sbuf/SBuf.h"
@@ -533,6 +534,8 @@ Security::ErrorDetail::verbose(const HttpRequestPointer &request) const
 #if USE_OPENSSL
     if (Ssl::ErrorDetailsManager::GetInstance().getErrorDetail(error_no, request, detailEntry))
         format = detailEntry.detail.termedBuf();
+#else
+    (void)request;
 #endif
     if (!format)
         format = "SSL handshake error (%err_name)";

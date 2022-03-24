@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,29 +31,16 @@ ACLProxyAuth::ACLProxyAuth(ACLData<char const *> *newData, char const *theType) 
     type_(theType)
 {}
 
-ACLProxyAuth::ACLProxyAuth(ACLProxyAuth const &old) :
-    data(old.data->clone()),
-    type_(old.type_)
-{}
-
-ACLProxyAuth &
-ACLProxyAuth::operator=(ACLProxyAuth const &rhs)
-{
-    data = rhs.data->clone();
-    type_ = rhs.type_;
-    return *this;
-}
-
 char const *
 ACLProxyAuth::typeString() const
 {
     return type_;
 }
 
-void
-ACLProxyAuth::parseFlags()
+const Acl::Options &
+ACLProxyAuth::lineOptions()
 {
-    ParseFlags(Acl::NoOptions(), data->supportedFlags());
+    return data->lineOptions();
 }
 
 void
@@ -103,12 +90,12 @@ bool
 ACLProxyAuth::valid() const
 {
     if (authenticateSchemeCount() == 0) {
-        debugs(28, DBG_CRITICAL, "Can't use proxy auth because no authentication schemes were compiled.");
+        debugs(28, DBG_CRITICAL, "ERROR: Cannot use proxy auth because no authentication schemes were compiled.");
         return false;
     }
 
     if (authenticateActiveSchemeCount() == 0) {
-        debugs(28, DBG_CRITICAL, "Can't use proxy auth because no authentication schemes are fully configured.");
+        debugs(28, DBG_CRITICAL, "ERROR: Cannot use proxy auth because no authentication schemes are fully configured.");
         return false;
     }
 
@@ -128,7 +115,7 @@ ProxyAuthLookup::checkForAsync(ACLChecklist *cl) const
 {
     ACLFilledChecklist *checklist = Filled(cl);
 
-    debugs(28, 3, HERE << "checking password via authenticator");
+    debugs(28, 3, "checking password via authenticator");
 
     /* make sure someone created auth_user_request for us */
     assert(checklist->auth_user_request != NULL);
@@ -153,12 +140,6 @@ ProxyAuthLookup::LookupDone(void *data)
     }
 
     checklist->resumeNonBlockingCheck(ProxyAuthLookup::Instance());
-}
-
-ACL *
-ACLProxyAuth::clone() const
-{
-    return new ACLProxyAuth(*this);
 }
 
 int

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 #include "auth/CredentialsCache.h"
 #include "auth/digest/Config.h"
 #include "auth/digest/User.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "dlink.h"
 
 Auth::Digest::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -175,21 +175,24 @@ StoreEntry::swapOut()
     Store::Root().memoryOut(*this, weAreOrMayBeSwappingOut);
 
     if (mem_obj->swapout.decision < MemObject::SwapOut::swPossible)
-        return; // nothing else to do
+        return; // decided not to write to disk (at least for now)
+
+    if (!weAreOrMayBeSwappingOut)
+        return; // finished writing to disk after an earlier swStarted decision
 
     // Aborted entries have STORE_OK, but swapoutPossible rejects them. Thus,
     // store_status == STORE_OK below means we got everything we wanted.
 
-    debugs(20, 7, HERE << "storeSwapOut: mem->inmem_lo = " << mem_obj->inmem_lo);
-    debugs(20, 7, HERE << "storeSwapOut: mem->endOffset() = " << mem_obj->endOffset());
-    debugs(20, 7, HERE << "storeSwapOut: swapout.queue_offset = " << mem_obj->swapout.queue_offset);
+    debugs(20, 7, "storeSwapOut: mem->inmem_lo = " << mem_obj->inmem_lo);
+    debugs(20, 7, "storeSwapOut: mem->endOffset() = " << mem_obj->endOffset());
+    debugs(20, 7, "storeSwapOut: swapout.queue_offset = " << mem_obj->swapout.queue_offset);
 
     if (mem_obj->swapout.sio != NULL)
         debugs(20, 7, "storeSwapOut: storeOffset() = " << mem_obj->swapout.sio->offset()  );
 
     int64_t const lowest_offset = mem_obj->lowestMemReaderOffset();
 
-    debugs(20, 7, HERE << "storeSwapOut: lowest_offset = " << lowest_offset);
+    debugs(20, 7, "storeSwapOut: lowest_offset = " << lowest_offset);
 
 #if SIZEOF_OFF_T <= 4
 
@@ -304,7 +307,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
         debugs(20, 3, "storeSwapOutFileClosed: SwapOut complete: '" << e->url() << "' to " <<
                e->swap_dirn  << ", " << std::hex << std::setw(8) << std::setfill('0') <<
                std::uppercase << e->swap_filen);
-        debugs(20, 5, HERE << "swap_file_sz = " <<
+        debugs(20, 5, "swap_file_sz = " <<
                e->objectLen() << " + " << mem->swap_hdr_sz);
 
         e->swap_file_sz = e->objectLen() + mem->swap_hdr_sz;
@@ -344,7 +347,7 @@ StoreEntry::mayStartSwapOut()
 
     // if we decided that starting is not possible, do not repeat same checks
     if (decision == MemObject::SwapOut::swImpossible) {
-        debugs(20, 3, HERE << " already rejected");
+        debugs(20, 3, " already rejected");
         return false;
     }
 
@@ -376,13 +379,13 @@ StoreEntry::mayStartSwapOut()
     }
 
     if (!checkCachable()) {
-        debugs(20, 3,  HERE << "not cachable");
+        debugs(20, 3, "not cachable");
         swapOutDecision(MemObject::SwapOut::swImpossible);
         return false;
     }
 
     if (EBIT_TEST(flags, ENTRY_SPECIAL)) {
-        debugs(20, 3,  HERE  << url() << " SPECIAL");
+        debugs(20, 3, url() << " SPECIAL");
         swapOutDecision(MemObject::SwapOut::swImpossible);
         return false;
     }
@@ -405,9 +408,9 @@ StoreEntry::mayStartSwapOut()
 
         // use guaranteed maximum if it is known
         const int64_t expectedEnd = mem_obj->expectedReplySize();
-        debugs(20, 7,  HERE << "expectedEnd = " << expectedEnd);
+        debugs(20, 7, "expectedEnd = " << expectedEnd);
         if (expectedEnd > store_maxobjsize) {
-            debugs(20, 3,  HERE << "will not fit: " << expectedEnd <<
+            debugs(20, 3, "will not fit: " << expectedEnd <<
                    " > " << store_maxobjsize);
             swapOutDecision(MemObject::SwapOut::swImpossible);
             return false; // known to outgrow the limit eventually
@@ -416,7 +419,7 @@ StoreEntry::mayStartSwapOut()
         // use current minimum (always known)
         const int64_t currentEnd = mem_obj->endOffset();
         if (currentEnd > store_maxobjsize) {
-            debugs(20, 3,  HERE << "does not fit: " << currentEnd <<
+            debugs(20, 3, "does not fit: " << currentEnd <<
                    " > " << store_maxobjsize);
             swapOutDecision(MemObject::SwapOut::swImpossible);
             return false; // already does not fit and may only get bigger

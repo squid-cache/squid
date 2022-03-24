@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,10 +15,10 @@
 #include "neighbors.h"
 
 void
-peerConnClosed(CachePeer *p) STUB
+peerConnClosed(CachePeer *) STUB
 
 time_t
 FwdState::ForwardTimeout(const time_t) STUB_RETVAL(0)
 bool
-FwdState::EnoughTimeToReForward(const time_t fwdStart) STUB_RETVAL(false)
+FwdState::EnoughTimeToReForward(const time_t) STUB_RETVAL(false)
 

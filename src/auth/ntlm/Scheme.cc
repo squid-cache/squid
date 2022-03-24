@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,8 +9,8 @@
 #include "squid.h"
 #include "auth/ntlm/Config.h"
 #include "auth/ntlm/Scheme.h"
-#include "Debug.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
+#include "debug/Stream.h"
 #include "helper.h"
 
 Auth::Scheme::Pointer Auth::Ntlm::Scheme::_instance = NULL;

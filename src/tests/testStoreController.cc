@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -87,9 +87,8 @@ testStoreController::testMaxSize()
 static StoreEntry *
 addedEntry(Store::Disk *aStore,
            String name,
-           String varySpec,
-           String varyKey
-
+           String,
+           String
           )
 {
     StoreEntry *e = new StoreEntry();
@@ -122,7 +121,7 @@ addedEntry(Store::Disk *aStore,
 static bool cbcalled;
 
 static void
-searchCallback(void *cbdata)
+searchCallback(void *)
 {
     cbcalled = true;
 }

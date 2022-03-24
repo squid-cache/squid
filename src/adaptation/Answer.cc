@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,7 +18,7 @@ Adaptation::Answer::Error(bool final)
 {
     Answer answer(akError);
     answer.final = final;
-    debugs(93, 4, HERE << "error: " << final);
+    debugs(93, 4, "error: " << final);
     return answer;
 }
 
@@ -27,7 +27,7 @@ Adaptation::Answer::Forward(Http::Message *aMsg)
 {
     Answer answer(akForward);
     answer.message = aMsg;
-    debugs(93, 4, HERE << "forwarding: " << (void*)aMsg);
+    debugs(93, 4, "forwarding: " << (void*)aMsg);
     return answer;
 }
 
@@ -36,7 +36,7 @@ Adaptation::Answer::Block(const String &aRule)
 {
     Answer answer(akBlock);
     answer.ruleId = aRule;
-    debugs(93, 4, HERE << "blocking rule: " << aRule);
+    debugs(93, 4, "blocking rule: " << aRule);
     return answer;
 }
 

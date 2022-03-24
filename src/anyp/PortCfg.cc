@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "anyp/PortCfg.h"
+#include "anyp/UriScheme.h"
 #include "comm.h"
 #include "fatal.h"
 #include "security/PeerOptions.h"
@@ -42,7 +43,6 @@ AnyP::PortCfg::PortCfg() :
     workerQueues(false),
     listenConn()
 {
-    memset(&tcp_keepalive, 0, sizeof(tcp_keepalive));
 }
 
 AnyP::PortCfg::~PortCfg()
@@ -56,29 +56,39 @@ AnyP::PortCfg::~PortCfg()
     safe_free(defaultsite);
 }
 
-AnyP::PortCfgPointer
-AnyP::PortCfg::clone() const
+AnyP::PortCfg::PortCfg(const PortCfg &other):
+    next(), // special case; see assert() below
+    s(other.s),
+    transport(other.transport),
+    name(other.name ? xstrdup(other.name) : nullptr),
+    defaultsite(other.defaultsite ? xstrdup(other.defaultsite) : nullptr),
+    flags(other.flags),
+    allow_direct(other.allow_direct),
+    vhost(other.vhost),
+    actAsOrigin(other.actAsOrigin),
+    ignore_cc(other.ignore_cc),
+    connection_auth_disabled(other.connection_auth_disabled),
+    ftp_track_dirs(other.ftp_track_dirs),
+    vport(other.vport),
+    disable_pmtu_discovery(other.disable_pmtu_discovery),
+    workerQueues(other.workerQueues),
+    tcp_keepalive(other.tcp_keepalive),
+    listenConn(), // special case; see assert() below
+    secure(other.secure)
 {
-    AnyP::PortCfgPointer b = new AnyP::PortCfg();
-    b->s = s;
-    if (name)
-        b->name = xstrdup(name);
-    if (defaultsite)
-        b->defaultsite = xstrdup(defaultsite);
+    // to simplify, we only support port copying during parsing
+    assert(!other.next);
+    assert(!other.listenConn);
+}
 
-    b->transport = transport;
-    b->flags = flags;
-    b->allow_direct = allow_direct;
-    b->vhost = vhost;
-    b->vport = vport;
-    b->connection_auth_disabled = connection_auth_disabled;
-    b->workerQueues = workerQueues;
-    b->ftp_track_dirs = ftp_track_dirs;
-    b->disable_pmtu_discovery = disable_pmtu_discovery;
-    b->tcp_keepalive = tcp_keepalive;
-    b->secure = secure;
-
-    return b;
+AnyP::PortCfg *
+AnyP::PortCfg::ipV4clone() const
+{
+    const auto clone = new PortCfg(*this);
+    clone->s.setIPv4();
+    debugs(3, 3, AnyP::UriScheme(transport.protocol).image() << "_port: " <<
+           "cloned wildcard address for split-stack: " << s << " and " << clone->s);
+    return clone;
 }
 
 ScopedId

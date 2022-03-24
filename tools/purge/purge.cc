@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -198,8 +198,8 @@ REList::match( const char* check ) const
 
 // ----------------------------------------------------------------------
 
-char*
-concat( const char* start, ... )
+static char *
+concat(const char *start, ...)
 // purpose: concatinate an arbitrary number of C strings.
 // paramtr: start (IN): first C string
 //          ... (IN): further C strings, terminated with a NULL pointer
@@ -231,7 +231,7 @@ concat( const char* start, ... )
     return result;
 }
 
-bool
+static bool
 isxstring( const char* s, size_t testlen )
 // purpose: test a string for conforming to xdigit
 // paramtr: s (IN): string to test
@@ -307,9 +307,9 @@ log_extended( const char* fn, int code, long size, const SquidMetaList* meta )
 static struct in_addr serverHost;
 static unsigned short serverPort;
 
-bool
-action( int fd, size_t metasize,
-        const char* fn, const char* url, const SquidMetaList& meta )
+static bool
+action(int fd, size_t metasize,
+       const char *fn, const char *url, const SquidMetaList &meta)
 // purpose: if cmdline-requested, send the purge request to the cache
 // paramtr: fd (IN): open FD for the object file
 //        metasize (IN): offset into data portion of file (meta data size)
@@ -394,8 +394,8 @@ action( int fd, size_t metasize,
     return flag;
 }
 
-bool
-match( const char* fn, const REList* list )
+static bool
+match(const char *fn, const REList *list)
 // purpose: do something with the given cache content filename
 // paramtr: fn (IN): filename of cache file
 // returns: true for successful action, false otherwise.
@@ -488,8 +488,8 @@ match( const char* fn, const REList* list )
     return flag;
 }
 
-bool
-filelevel( const char* directory, const REList* list )
+static bool
+filelevel(const char *directory, const REList *list)
 // purpose: from given starting point, look for squid xxxxxxxx files.
 // example: "/var/spool/cache/08/7F" as input, do action over files
 // paramtr: directory (IN): starting point
@@ -528,8 +528,8 @@ filelevel( const char* directory, const REList* list )
     return flag;
 }
 
-bool
-dirlevel( const char* dirname, const REList* list, bool level=false )
+static bool
+dirlevel(const char *dirname, const REList *list, bool level = false)
 // purpose: from given starting point, look for squid 00..FF directories.
 // paramtr: dirname (IN): starting point
 //          list (IN): list of rexps to match URLs against
@@ -565,8 +565,8 @@ dirlevel( const char* dirname, const REList* list, bool level=false )
     return flag;
 }
 
-int
-checkForPortOnly( const char* arg )
+static int
+checkForPortOnly(const char *arg)
 // purpose: see if somebody just put in a port instead of a hostname
 // paramtr: optarg (IN): argument from commandline
 // returns: 0..65535 is the valid port number in network byte order,
@@ -583,8 +583,8 @@ checkForPortOnly( const char* arg )
     return -1;
 }
 
-void
-helpMe( void )
+static void
+helpMe(void)
 // purpuse: write help message and exit
 {
     printf( "\nUsage:\t%s\t[-a] [-c cf] [-d l] [-(f|F) fn | -(e|E) re] "
@@ -613,10 +613,10 @@ helpMe( void )
 
 }
 
-void
-parseCommandline( int argc, char* argv[], REList*& head,
-                  char*& conffile, char*& copyDirPath,
-                  struct in_addr& serverHostIp, unsigned short& serverHostPort )
+static void
+parseCommandline(int argc, char *argv[], REList *&head,
+                 char *&conffile, char *&copyDirPath,
+                 struct in_addr &serverHostIp, unsigned short &serverHostPort)
 // paramtr: argc: see ::main().
 //          argv: see ::main().
 // returns: Does terminate the program on errors!

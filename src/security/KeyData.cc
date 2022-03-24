@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,7 @@
 #include "security/KeyData.h"
 #include "SquidConfig.h"
 #include "ssl/bio.h"
+#include "ssl/gadgets.h"
 
 /**
  * Read certificate from file.
@@ -32,9 +33,7 @@ Security::KeyData::loadX509CertFromFile()
         return false;
     }
 
-    if (X509 *certificate = PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr)) {
-        cert.resetWithoutLocking(certificate);
-    }
+    cert = Ssl::ReadX509Certificate(bio); // error detected/reported below
 
 #elif USE_GNUTLS
     const char *certFilename = certFile.c_str();
@@ -106,26 +105,26 @@ Security::KeyData::loadX509ChainFromFile()
         // and add to the chain any other certificate exist in the file
         CertPointer latestCert = cert;
 
-        while (auto ca = PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr)) {
+        while (const auto ca = Ssl::ReadX509Certificate(bio)) {
             // get Issuer name of the cert for debug display
-            char *nameStr = X509_NAME_oneline(X509_get_subject_name(ca), nullptr, 0);
+            char *nameStr = X509_NAME_oneline(X509_get_subject_name(ca.get()), nullptr, 0);
 
 #if TLS_CHAIN_NO_SELFSIGNED // ignore self-signed certs in the chain
             // self-signed certificates are not valid in a sent chain
-            if (X509_check_issued(ca, ca) == X509_V_OK) {
+            if (X509_check_issued(ca.get(), ca.get()) == X509_V_OK) {
                 debugs(83, DBG_PARSE_NOTE(2), "CA " << nameStr << " is self-signed, will not be chained: " << nameStr);
                 OPENSSL_free(nameStr);
                 continue;
             }
 #endif
             // checks that the chained certs are actually part of a chain for validating cert
-            const auto checkCode = X509_check_issued(ca, latestCert.get());
+            const auto checkCode = X509_check_issued(ca.get(), latestCert.get());
             if (checkCode == X509_V_OK) {
                 debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << nameStr);
                 // OpenSSL API requires that we order certificates such that the
                 // chain can be appended directly into the on-wire traffic.
                 latestCert = CertPointer(ca);
-                chain.emplace_front(latestCert);
+                chain.emplace_back(latestCert);
             } else {
                 debugs(83, DBG_PARSE_NOTE(2), certFile << ": Ignoring non-issuer CA " << nameStr << ": " << X509_verify_cert_error_string(checkCode) << " (" << checkCode << ")");
             }

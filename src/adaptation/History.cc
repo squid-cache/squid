@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,8 +9,9 @@
 #include "squid.h"
 #include "adaptation/Config.h"
 #include "adaptation/History.h"
+#include "adaptation/ServiceGroups.h"
 #include "base/TextException.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "globals.h"
 #include "SquidTime.h"
 
@@ -120,8 +121,8 @@ bool Adaptation::History::getXxRecord(String &name, String &value) const
 void Adaptation::History::updateNextServices(const String &services)
 {
     if (theNextServices != TheNullServices)
-        debugs(93,3, HERE << "old services: " << theNextServices);
-    debugs(93,3, HERE << "new services: " << services);
+        debugs(93,3, "old services: " << theNextServices);
+    debugs(93,3, "new services: " << services);
     Must(services != TheNullServices);
     theNextServices = services;
 }
@@ -155,18 +156,17 @@ void
 Adaptation::History::setFutureServices(const DynamicGroupCfg &services)
 {
     if (!theFutureServices.empty())
-        debugs(93,3, HERE << "old future services: " << theFutureServices);
-    debugs(93,3, HERE << "new future services: " << services);
+        debugs(93,3, "old future services: " << theFutureServices);
+    debugs(93,3, "new future services: " << services);
     theFutureServices = services; // may be empty
 }
 
-bool Adaptation::History::extractFutureServices(DynamicGroupCfg &value)
+Adaptation::DynamicGroupCfg
+Adaptation::History::extractCurrentServices(const ServiceFilter &filter)
 {
-    if (theFutureServices.empty())
-        return false;
-
-    value = theFutureServices;
-    theFutureServices.clear();
-    return true;
+    DynamicGroupCfg current, future;
+    DynamicServiceChain::Split(filter, theFutureServices.serviceIds(), current, future);
+    theFutureServices = future; // may already be the same
+    return current; // may be empty
 }
 

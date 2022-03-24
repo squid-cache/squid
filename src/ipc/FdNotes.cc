@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 /* DEBUG: section 54    Interprocess Communication */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "ipc/FdNotes.h"
 
 const char *
@@ -31,7 +31,7 @@ Ipc::FdNote(int fdNoteId)
     if (fdnNone < fdNoteId && fdNoteId < fdnEnd)
         return FdNotes[fdNoteId];
 
-    debugs(54, DBG_IMPORTANT, HERE << "salvaged bug: wrong fd_note ID: " << fdNoteId);
+    debugs(54, DBG_IMPORTANT, "ERROR: Squid BUG: wrong fd_note ID: " << fdNoteId);
     return FdNotes[fdnNone];
 }
 

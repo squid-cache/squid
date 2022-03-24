@@ -1,3 +1,58 @@
+Changes in squid-5.4.1 (12 Feb 2021):
+
+	- Bug 5055: FATAL FwdState::noteDestinationsEnd exception: opening
+	- Fix FATAL ServiceRep::putConnection exception: theBusyConns > 0
+	- Fix ConnOpener orphan connection warnings when requester ends early
+	- Fix ConnOpener connection handling when sending negative answers
+	- Fix Comm::ConnOpener::cleanFd() debugging
+	- Fix ConnOpener callback's syncWithComm()
+	- Fix FwdState::advanceDestination() losing ERR_GATEWAY_FAILURE details
+	- Fix Tunneler handling of last-resort callback on premature job ending
+	- Fix PeerConnector handling of last-resort callback on premature job ending
+	- Fix FreeBSD 14 build
+	- Fix OpenBSD 7.0 build
+	- Add Comm::Connection::cloneDestinationDetails() debugging
+	- Improve Security::PeerConnector::serverConn and Http::Tunneler::connection management
+	- Refactor ConnOpener users to stop relying on the answer providing Comm::Connection
+	- Refactor ICAP connection-establishing code
+	- Polish PeerPoolMgr code
+	- Polish IDENT code
+	- Polish Gopher code
+	- Polished AsyncJob::Start() API
+	- ... and update code documentation
+
+Changes in squid-5.4 (07 Feb 2021):
+
+	- Bug 5190: Preserve configured order of intermediate CA certificate chain
+	- Bug 5188: Fix reconfiguration leaking tls-cert=... memory
+	- Bug 5187: Properly track (and mark) truncated store entries
+	- Bug 5134: assertion failed: Transients.cc:221: "old == e"
+	- Bug 5132: Close the tunnel if to-server conn closes after client
+	- langpack: Fix typo in Russian texts
+	- copyright years and CONTRIBUTORS update
+
+Changes in squid-5.3 (06 Dec 2021):
+
+	- Bug 5169: StoreMap.cc:517 "!s.reading()" assertion
+	- Bug 5158: AnyP::Uri::host() mishandles [escaped] IPv6 addresses
+	- Bug 5060: Parallel builds are not reliable
+	- Documentation updates for logformat directive
+
+Changes in squid-5.2 (03 Oct 2021):
+
+	- Bug 5164: a copy-paste typo in HttpHdrCc::hasMinFresh()
+	- Bug 4922: Improve ftp://... filename extraction
+	- TLS: Fix X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY handling
+	- ... and all fixes from 4.17
+
+Changes in squid-5.1 (01 Aug 2021):
+
+	- Bug 4696: Fix leaky String move assignment operator
+	- Fix ACL-related reconfiguration memory leak
+	- Fix SSL-Bump reconfiguration leaking public key memory
+	- Fix build on RISC-V
+	- Fix build on Ubuntu 21.04
+
 Changes in squid-5.0.7 (04 Jul 2021):
 
 	- Fix a helper logging issues
@@ -111,6 +166,10 @@ Changes in squid-5.0.1 (14 Jan 2020):
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
 	- ... and all fixes from 4.10
+
+Changes in squid-4.17 (03 Oct 2021):
+
+	- WCCP: Validate packets better
 
 Changes in squid-4.16 (04 Jul 2021):
 

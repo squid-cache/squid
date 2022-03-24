@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -53,7 +53,7 @@ Ipc::StrandCoord* Ipc::Coordinator::findStrand(int kidId)
 
 void Ipc::Coordinator::registerStrand(const StrandCoord& strand)
 {
-    debugs(54, 3, HERE << "registering kid" << strand.kidId <<
+    debugs(54, 3, "registering kid" << strand.kidId <<
            ' ' << strand.tag);
     if (StrandCoord* found = findStrand(strand.kidId)) {
         const String oldTag = found->tag;
@@ -80,32 +80,32 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
 {
     switch (message.rawType()) {
     case mtRegisterStrand:
-        debugs(54, 6, HERE << "Registration request");
+        debugs(54, 6, "Registration request");
         handleRegistrationRequest(StrandMessage(message));
         break;
 
     case mtFindStrand: {
         const StrandSearchRequest sr(message);
-        debugs(54, 6, HERE << "Strand search request: " << sr.requestorId <<
+        debugs(54, 6, "Strand search request: " << sr.requestorId <<
                " tag: " << sr.tag);
         handleSearchRequest(sr);
         break;
     }
 
     case mtSharedListenRequest:
-        debugs(54, 6, HERE << "Shared listen request");
+        debugs(54, 6, "Shared listen request");
         handleSharedListenRequest(SharedListenRequest(message));
         break;
 
     case mtCacheMgrRequest: {
-        debugs(54, 6, HERE << "Cache manager request");
+        debugs(54, 6, "Cache manager request");
         const Mgr::Request req(message);
         handleCacheMgrRequest(req);
     }
     break;
 
     case mtCacheMgrResponse: {
-        debugs(54, 6, HERE << "Cache manager response");
+        debugs(54, 6, "Cache manager response");
         const Mgr::Response resp(message);
         handleCacheMgrResponse(Mine(resp));
     }
@@ -113,14 +113,14 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
 
 #if SQUID_SNMP
     case mtSnmpRequest: {
-        debugs(54, 6, HERE << "SNMP request");
+        debugs(54, 6, "SNMP request");
         const Snmp::Request req(message);
         handleSnmpRequest(req);
     }
     break;
 
     case mtSnmpResponse: {
-        debugs(54, 6, HERE << "SNMP response");
+        debugs(54, 6, "SNMP response");
         const Snmp::Response resp(message);
         handleSnmpResponse(Mine(resp));
     }
@@ -146,14 +146,14 @@ void Ipc::Coordinator::handleRegistrationRequest(const StrandMessage& msg)
 void
 Ipc::Coordinator::handleSharedListenRequest(const SharedListenRequest& request)
 {
-    debugs(54, 4, HERE << "kid" << request.requestorId <<
+    debugs(54, 4, "kid" << request.requestorId <<
            " needs shared listen FD for " << request.params.addr);
     Listeners::const_iterator i = listeners.find(request.params);
     int errNo = 0;
     const Comm::ConnectionPointer c = (i != listeners.end()) ?
                                       i->second : openListenSocket(request, errNo);
 
-    debugs(54, 3, HERE << "sending shared listen " << c << " for " <<
+    debugs(54, 3, "sending shared listen " << c << " for " <<
            request.params.addr << " to kid" << request.requestorId <<
            " mapId=" << request.mapId);
 
@@ -166,14 +166,14 @@ Ipc::Coordinator::handleSharedListenRequest(const SharedListenRequest& request)
 void
 Ipc::Coordinator::handleCacheMgrRequest(const Mgr::Request& request)
 {
-    debugs(54, 4, HERE);
+    debugs(54, 4, MYNAME);
 
     try {
         Mgr::Action::Pointer action =
             CacheManager::GetInstance()->createRequestedAction(request.params);
         AsyncJob::Start(new Mgr::Inquirer(action, request, strands_));
     } catch (const std::exception &ex) {
-        debugs(54, DBG_IMPORTANT, "BUG: cannot aggregate mgr:" <<
+        debugs(54, DBG_IMPORTANT, "ERROR: Squid BUG: cannot aggregate mgr:" <<
                request.params.actionName << ": " << ex.what());
         // TODO: Avoid half-baked Connections or teach them how to close.
         ::close(request.conn->fd);
@@ -212,7 +212,7 @@ Ipc::Coordinator::handleSearchRequest(const Ipc::StrandSearchRequest &request)
     }
 
     searchers.push_back(request);
-    debugs(54, 3, HERE << "cannot yet tell kid" << request.requestorId <<
+    debugs(54, 3, "cannot yet tell kid" << request.requestorId <<
            " who " << request.tag << " is");
 }
 
@@ -220,7 +220,7 @@ void
 Ipc::Coordinator::notifySearcher(const Ipc::StrandSearchRequest &request,
                                  const StrandCoord& strand)
 {
-    debugs(54, 3, HERE << "tell kid" << request.requestorId << " that " <<
+    debugs(54, 3, "tell kid" << request.requestorId << " that " <<
            request.tag << " is kid" << strand.kidId);
     const StrandMessage response(strand, request.qid);
     TypedMsgHdr message;
@@ -232,7 +232,7 @@ Ipc::Coordinator::notifySearcher(const Ipc::StrandSearchRequest &request,
 void
 Ipc::Coordinator::handleSnmpRequest(const Snmp::Request& request)
 {
-    debugs(54, 4, HERE);
+    debugs(54, 4, MYNAME);
 
     Snmp::Response response(request.requestId);
     TypedMsgHdr message;
@@ -245,7 +245,7 @@ Ipc::Coordinator::handleSnmpRequest(const Snmp::Request& request)
 void
 Ipc::Coordinator::handleSnmpResponse(const Snmp::Response& response)
 {
-    debugs(54, 4, HERE);
+    debugs(54, 4, MYNAME);
     Snmp::Inquirer::HandleRemoteAck(response);
 }
 #endif
@@ -256,7 +256,7 @@ Ipc::Coordinator::openListenSocket(const SharedListenRequest& request,
 {
     const OpenListenerParams &p = request.params;
 
-    debugs(54, 6, HERE << "opening listen FD at " << p.addr << " for kid" <<
+    debugs(54, 6, "opening listen FD at " << p.addr << " for kid" <<
            request.requestorId);
 
     Comm::ConnectionPointer newConn = new Comm::Connection;
@@ -268,7 +268,7 @@ Ipc::Coordinator::openListenSocket(const SharedListenRequest& request,
     errNo = Comm::IsConnOpen(newConn) ? 0 : errno;
     leave_suid();
 
-    debugs(54, 6, HERE << "tried listening on " << newConn << " for kid" <<
+    debugs(54, 6, "tried listening on " << newConn << " for kid" <<
            request.requestorId);
 
     // cache positive results
@@ -282,7 +282,7 @@ void Ipc::Coordinator::broadcastSignal(int sig) const
 {
     typedef StrandCoords::const_iterator SCI;
     for (SCI iter = strands_.begin(); iter != strands_.end(); ++iter) {
-        debugs(54, 5, HERE << "signal " << sig << " to kid" << iter->kidId <<
+        debugs(54, 5, "signal " << sig << " to kid" << iter->kidId <<
                ", PID=" << iter->pid);
         kill(iter->pid, sig);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,7 +18,6 @@
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "mime_header.h"
-#include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #include "Store.h"
@@ -136,7 +135,8 @@ storeClientListAdd(StoreEntry * e, void *data)
     if (storeClientListSearch(mem, data) != NULL)
         /* XXX die! */
         assert(1 == 0);
-
+#else
+    (void)data;
 #endif
 
     sc = new store_client (e);
@@ -258,12 +258,10 @@ store_client::copy(StoreEntry * anEntry,
     static bool copying (false);
     assert (!copying);
     copying = true;
-    PROF_start(storeClient_kickReads);
     /* we might be blocking comm reads due to readahead limits
      * now we have a new offset, trigger those reads...
      */
     entry->mem_obj->kickReads();
-    PROF_stop(storeClient_kickReads);
     copying = false;
 
     anEntry->lock("store_client::copy"); // see deletion note below
@@ -362,7 +360,7 @@ store_client::doCopy(StoreEntry *anEntry)
 
     if (!moreToSend()) {
         /* There is no more to send! */
-        debugs(33, 3, HERE << "There is no more to send!");
+        debugs(33, 3, "There is no more to send!");
         callback(0);
         flags.store_copying = false;
         return;
@@ -507,7 +505,7 @@ store_client::readBody(const char *, ssize_t len)
     if (copyInto.offset == 0 && len > 0 && rep && rep->sline.status() == Http::scNone) {
         /* Our structure ! */
         if (!entry->mem_obj->adjustableBaseReply().parseCharBuf(copyInto.data, headersEnd(copyInto.data, len))) {
-            debugs(90, DBG_CRITICAL, "Could not parse headers from on disk object");
+            debugs(90, DBG_CRITICAL, "ERROR: Could not parse headers from on disk object");
         } else {
             parsed_header = 1;
         }
@@ -652,6 +650,8 @@ storeClientCopyPending(store_client * sc, StoreEntry * e, void *data)
 {
 #if STORE_CLIENT_LIST_DEBUG
     assert(sc == storeClientListSearch(e->mem_obj, data));
+#else
+    (void)data;
 #endif
 
     assert(sc);
@@ -672,8 +672,9 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 {
     MemObject *mem = e->mem_obj;
 #if STORE_CLIENT_LIST_DEBUG
-
     assert(sc == storeClientListSearch(e->mem_obj, data));
+#else
+    (void)data;
 #endif
 
     if (mem == NULL)
@@ -755,8 +756,6 @@ StoreEntry::invokeHandlers()
     dlink_node *nx = NULL;
     dlink_node *node;
 
-    PROF_start(InvokeHandlers);
-
     debugs(90, 3, mem_obj->nclients << " clients; " << *this << ' ' << getMD5Text());
     /* walk the entire list looking for valid callbacks */
 
@@ -777,7 +776,6 @@ StoreEntry::invokeHandlers()
         storeClientCopy2(this, sc);
     }
     CodeContext::Reset(savedContext);
-    PROF_stop(InvokeHandlers);
 }
 
 // Does not account for remote readers/clients.

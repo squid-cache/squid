@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -156,22 +156,28 @@ private:
     /// a connection opening attempt in progress (or falsy)
     class Attempt {
     public:
+        /// HappyConnOpener method implementing a ConnOpener callback
+        using CallbackMethod = void (HappyConnOpener::*)(const CommConnectCbParams &);
+
+        Attempt(const CallbackMethod method, const char *methodName);
+
         explicit operator bool() const { return static_cast<bool>(path); }
 
         /// reacts to a natural attempt completion (successful or otherwise)
-        void finish() { clear(); }
+        void finish();
 
         /// aborts an in-progress attempt
         void cancel(const char *reason);
 
         PeerConnectionPointer path; ///< the destination we are connecting to
-        AsyncCall::Pointer connector; ///< our opener callback
-        Comm::ConnOpener::Pointer opener; ///< connects to path and calls us
 
-    private:
-        /// cleans up after the attempt ends (successfully or otherwise)
-        void clear() { path = nullptr; connector = nullptr; opener = nullptr; }
+        /// waits for a connection to the peer to be established/opened
+        JobWait<Comm::ConnOpener> connWait;
+
+        const CallbackMethod callbackMethod; ///< ConnOpener calls this method
+        const char * const callbackMethodName; ///< for callbackMethod debugging
     };
+    friend std::ostream &operator <<(std::ostream &, const Attempt &);
 
     /* AsyncJob API */
     virtual void start() override;
@@ -179,18 +185,20 @@ private:
     virtual void swanSong() override;
     virtual const char *status() const override;
 
-    void maybeOpenAnotherPrimeConnection();
+    void maybeOpenPrimeConnection();
+    void maybeOpenSpareConnection();
 
     void maybeGivePrimeItsChance();
     void stopGivingPrimeItsChance();
     void stopWaitingForSpareAllowance();
-    void maybeOpenSpareConnection();
 
     void startConnecting(Attempt &, PeerConnectionPointer &);
     void openFreshConnection(Attempt &, PeerConnectionPointer &);
     bool reuseOldConnection(PeerConnectionPointer &);
 
-    void connectDone(const CommConnectCbParams &);
+    void notePrimeConnectDone(const CommConnectCbParams &);
+    void noteSpareConnectDone(const CommConnectCbParams &);
+    void handleConnOpenerAnswer(Attempt &, const CommConnectCbParams &, const char *connDescription);
 
     void checkForNewConnection();
 

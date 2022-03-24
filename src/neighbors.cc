@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,7 +16,7 @@
 #include "CachePeer.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "event.h"
 #include "FwdState.h"
 #include "globals.h"
@@ -347,7 +347,7 @@ getRoundRobinParent(PeerSelector *ps)
     if (q)
         ++ q->rr_count;
 
-    debugs(15, 3, HERE << "returning " << (q ? q->host : "NULL"));
+    debugs(15, 3, "returning " << (q ? q->host : "NULL"));
 
     return q;
 }
@@ -456,7 +456,7 @@ peerClearRR()
 /**
  * Perform all actions when a CachePeer is detected revived.
  */
-void
+static void
 peerAlive(CachePeer *p)
 {
     if (p->stats.logged_state == PEER_DEAD && p->tcp_up) {
@@ -645,7 +645,7 @@ neighborsUdpPing(HttpRequest * request,
 #if USE_HTCP
         if (p->options.htcp && !p->options.htcp_only_clr) {
             if (Config.Port.htcp <= 0) {
-                debugs(15, DBG_CRITICAL, "HTCP is disabled! Cannot send HTCP request to peer.");
+                debugs(15, DBG_CRITICAL, "ERROR: HTCP is disabled! Cannot send HTCP request to peer.");
                 continue;
             }
 
@@ -656,7 +656,7 @@ neighborsUdpPing(HttpRequest * request,
 #endif
         {
             if (Config.Port.icp <= 0 || !Comm::IsConnOpen(icpOutgoingConn)) {
-                debugs(15, DBG_CRITICAL, "ICP is disabled! Cannot send ICP request to peer.");
+                debugs(15, DBG_CRITICAL, "ERROR: ICP is disabled! Cannot send ICP request to peer.");
                 continue;
             } else {
 
@@ -793,7 +793,9 @@ peerDigestLookup(CachePeer * p, PeerSelector * ps)
     debugs(15, 5, "peerDigestLookup: peer " << p->host << " says HIT!");
 
     return LOOKUP_HIT;
-
+#else
+    (void)p;
+    (void)ps;
 #endif
 
     return LOOKUP_NONE;
@@ -860,6 +862,8 @@ neighborsDigestSelect(PeerSelector *ps)
                          best_p ? LOOKUP_HIT : (choice_count ? LOOKUP_MISS : LOOKUP_NONE));
     request->hier.n_choices = choice_count;
     request->hier.n_ichoices = ichoice_count;
+#else
+    (void)ps;
 #endif
 
     return best_p;
@@ -876,6 +880,10 @@ peerNoteDigestLookup(HttpRequest * request, CachePeer * p, lookup_t lookup)
 
     request->hier.cd_lookup = lookup;
     debugs(15, 4, "peerNoteDigestLookup: peer " << (p? p->host : "<none>") << ", lookup: " << lookup_t_str[lookup]  );
+#else
+    (void)request;
+    (void)p;
+    (void)lookup;
 #endif
 }
 
@@ -1059,7 +1067,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
     }
 
     if (!mem->ircb_data) {
-        debugs(12, DBG_IMPORTANT, "BUG: missing ICP callback data for " << *entry);
+        debugs(12, DBG_IMPORTANT, "ERROR: Squid BUG: missing ICP callback data for " << *entry);
         neighborCountIgnored(p);
         return;
     }
@@ -1117,7 +1125,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
     } else if (opcode == ICP_MISS_NOFETCH) {
         mem->ping_reply_callback(p, ntype, AnyP::PROTO_ICP, header, mem->ircb_data);
     } else {
-        debugs(15, DBG_CRITICAL, "neighborsUdpAck: Unexpected ICP reply: " << opcode_d);
+        debugs(15, DBG_CRITICAL, "ERROR: neighborsUdpAck: Unexpected ICP reply: " << opcode_d);
     }
 }
 
@@ -1290,7 +1298,7 @@ peerConnectFailedSilent(CachePeer * p)
 void
 peerConnectFailed(CachePeer *p)
 {
-    debugs(15, DBG_IMPORTANT, "TCP connection to " << p->host << "/" << p->http_port << " failed");
+    debugs(15, DBG_IMPORTANT, "ERROR: TCP connection to " << p->host << "/" << p->http_port << " failed");
     peerConnectFailedSilent(p);
 }
 
@@ -1781,7 +1789,7 @@ neighborsHtcpReply(const cache_key * key, HtcpReplyData * htcp, const Ip::Addres
     }
 
     if (!mem->ircb_data) {
-        debugs(12, DBG_IMPORTANT, "BUG: missing HTCP callback data for " << *e);
+        debugs(12, DBG_IMPORTANT, "ERROR: Squid BUG: missing HTCP callback data for " << *e);
         neighborCountIgnored(p);
         return;
     }

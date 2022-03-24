@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "base/JobWait.h"
 #include "CachePeer.h"
 #include "cbdata.h"
 #include "comm.h"
@@ -60,26 +61,44 @@ Comm::Connection::~Connection()
 }
 
 Comm::ConnectionPointer
-Comm::Connection::cloneDestinationDetails() const
+Comm::Connection::cloneProfile() const
 {
-    const ConnectionPointer c = new Comm::Connection;
-    c->setAddrs(local, remote);
-    c->peerType = peerType;
-    c->flags = flags;
-    c->peer_ = cbdataReference(getPeer());
-    assert(!c->isOpen());
-    return c;
-}
+    const ConnectionPointer clone = new Comm::Connection;
+    auto &c = *clone; // optimization
 
-Comm::ConnectionPointer
-Comm::Connection::cloneIdentDetails() const
-{
-    auto c = cloneDestinationDetails();
-    c->tos = tos;
-    c->nfmark = nfmark;
-    c->nfConnmark = nfConnmark;
-    c->startTime_ = startTime_;
-    return c;
+    /*
+     * Copy or excuse each data member. Excused members do not belong to a
+     * Connection configuration profile because their values cannot be reused
+     * across (co-existing) Connection objects and/or are tied to their own
+     * object lifetime.
+     */
+
+    c.setAddrs(local, remote);
+    c.peerType = peerType;
+    // fd excused
+    c.tos = tos;
+    c.nfmark = nfmark;
+    c.nfConnmark = nfConnmark;
+    // COMM_ORPHANED is not a part of connection opening instructions
+    c.flags = flags & ~COMM_ORPHANED;
+    // rfc931 is excused
+
+#if USE_SQUID_EUI
+    // These are currently only set when accepting connections and never used
+    // for establishing new ones, so this copying is currently in vain, but,
+    // technically, they can be a part of connection opening instructions.
+    c.remoteEui48 = remoteEui48;
+    c.remoteEui64 = remoteEui64;
+#endif
+
+    // id excused
+    c.peer_ = cbdataReference(getPeer());
+    // startTime_ excused
+    // tlsHistory excused
+
+    debugs(5, 5, this << " made " << c);
+    assert(!c.isOpen());
+    return clone;
 }
 
 void

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "base/Raw.h"
 #include "ErrorDetail.h"
 #include "ErrorDetailManager.h"
 #include "errorpage.h"
@@ -106,7 +107,7 @@ Ssl::ErrorDetailsList::Pointer Ssl::ErrorDetailsManager::getCachedDetails(const 
     Cache::iterator it;
     it = cache.find(lang);
     if (it != cache.end()) {
-        debugs(83, 8, HERE << "Found template details in cache for language: " << lang);
+        debugs(83, 8, "Found template details in cache for language: " << lang);
         return it->second;
     }
 
@@ -136,12 +137,12 @@ Ssl::ErrorDetailsManager::getErrorDetail(Security::ErrorCode value, const HttpRe
         errDetails = getCachedDetails(lang); // search in cache
 
         if (!errDetails) { // Else try to load from disk
-            debugs(83, 8, HERE << "Creating new ErrDetailList to read from disk");
+            debugs(83, 8, "Creating new ErrDetailList to read from disk");
             errDetails = new ErrorDetailsList();
             ErrorDetailFile detailTmpl(errDetails);
             if (detailTmpl.loadFor(request.getRaw())) {
                 if (detailTmpl.language()) {
-                    debugs(83, 8, HERE << "Found details on disk for language " << detailTmpl.language());
+                    debugs(83, 8, "Found details on disk for language " << detailTmpl.language());
                     errDetails->errLanguage = detailTmpl.language();
                     cacheDetails(errDetails);
                 }
@@ -151,11 +152,13 @@ Ssl::ErrorDetailsManager::getErrorDetail(Security::ErrorCode value, const HttpRe
         if (errDetails != NULL && errDetails->getRecord(value, entry))
             return true;
     }
+#else
+    (void)request;
 #endif
 
     // else try the default
     if (theDefaultErrorDetails->getRecord(value, entry)) {
-        debugs(83, 8, HERE << "Found default details record for error: " << GetErrorName(value));
+        debugs(83, 8, "Found default details record for error: " << GetErrorName(value));
         return true;
     }
 
@@ -210,15 +213,13 @@ Ssl::ErrorDetailFile::parse()
             Http::ContentLengthInterpreter interpreter;
             // no applyStatusCodeRules() -- error templates lack HTTP status code
             if (!parser.parse(s, e - s, interpreter)) {
-                debugs(83, DBG_IMPORTANT, HERE <<
-                       "WARNING! parse error on:" << s);
+                debugs(83, DBG_IMPORTANT, "WARNING: parse error on:" << s);
                 return false;
             }
 
             const String errorName = parser.getByName("name");
             if (!errorName.size()) {
-                debugs(83, DBG_IMPORTANT, HERE <<
-                       "WARNING! invalid or no error detail name on:" << s);
+                debugs(83, DBG_IMPORTANT, "WARNING: invalid or no error detail name on:" << s);
                 return false;
             }
 
@@ -226,8 +227,7 @@ Ssl::ErrorDetailFile::parse()
             if (ssl_error != SSL_ERROR_NONE) {
 
                 if (theDetails->getErrorDetail(ssl_error)) {
-                    debugs(83, DBG_IMPORTANT, HERE <<
-                           "WARNING! duplicate entry: " << errorName);
+                    debugs(83, DBG_IMPORTANT, "WARNING: duplicate entry: " << errorName);
                     return false;
                 }
 
@@ -241,14 +241,12 @@ Ssl::ErrorDetailFile::parse()
                 // TODO: Validate "descr" and "detail" field values.
 
                 if (!detailsParseOk || !descrParseOk) {
-                    debugs(83, DBG_IMPORTANT, HERE <<
-                           "WARNING! missing important field for detail error: " <<  errorName);
+                    debugs(83, DBG_IMPORTANT, "WARNING: missing important field for detail error: " <<  errorName);
                     return false;
                 }
 
             } else if (!Ssl::ErrorIsOptional(errorName.termedBuf())) {
-                debugs(83, DBG_IMPORTANT, HERE <<
-                       "WARNING! invalid error detail name: " << errorName);
+                debugs(83, DBG_IMPORTANT, "WARNING: invalid error detail name: " << errorName);
                 return false;
             }
 

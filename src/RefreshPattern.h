@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,8 @@
 #define SQUID_REFRESHPATTERN_H_
 
 #include "base/RegexPattern.h"
+
+#include <memory>
 
 /// a representation of a refresh pattern.
 class RefreshPattern
@@ -26,11 +28,15 @@ public:
      */
 #define REFRESH_DEFAULT_MAX static_cast<time_t>(259200)
 
-    RefreshPattern(const char *aPattern, const decltype(RegexPattern::flags) &reFlags) :
-        pattern(reFlags, aPattern),
+    using RegexPointer = std::unique_ptr<RegexPattern>;
+
+    // If given a regex, becomes its owner, creating an explicit refresh_pattern
+    // rule. Otherwise, creates an implicit/default refresh_pattern rule.
+    explicit RefreshPattern(RegexPointer aRegex):
         min(0), pct(0.20), max(REFRESH_DEFAULT_MAX),
         next(NULL),
-        max_stale(0)
+        max_stale(0),
+        regex_(std::move(aRegex))
     {
         memset(&flags, 0, sizeof(flags));
     }
@@ -42,9 +48,7 @@ public:
             delete t;
         }
     }
-    // ~RefreshPattern() default destructor is fine
 
-    RegexPattern pattern;
     time_t min;
     double pct;
     time_t max;
@@ -72,7 +76,28 @@ public:
         uint64_t matchCount;
         // TODO: some stats to indicate how useful/less the flags are would be nice.
     } stats;
+
+    /// reports configuration excluding trailing options
+    void printHead(std::ostream &) const;
+
+    /// reports the configured pattern or a fake pattern of the implicit rule
+    void printPattern(std::ostream &os) const;
+
+    // TODO: Refactor external refresh_pattern rules iterators to make private.
+    /// configured regex; do not use except when iterating configured rules
+    const RegexPattern &regex() const;
+
+private:
+    /// configured regex or, for the implicit refresh_pattern rule, nil
+    RegexPointer regex_;
 };
+
+inline std::ostream &
+operator <<(std::ostream &os, const RefreshPattern &r)
+{
+    r.printHead(os);
+    return os;
+}
 
 #endif /* SQUID_REFRESHPATTERN_H_ */
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,10 +9,9 @@
 /* DEBUG: section 86    ESI processing */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "esi/Esi.h"
 #include "esi/Expression.h"
-#include "profiler/Profiler.h"
 
 #include <cerrno>
 #include <cmath>
@@ -245,7 +244,7 @@ evalnegate(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
 }
 
 int
-evalliteral(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
+evalliteral(stackmember * /* stack */, int * /* depth */, int /* whereAmI */, stackmember * /* candidate */)
 {
     debugs(86, DBG_IMPORTANT, "attempt to evaluate a literal");
     /* literals can't be evaluated */
@@ -253,7 +252,7 @@ evalliteral(stackmember * stack, int *depth, int whereAmI, stackmember * candida
 }
 
 int
-evalexpr(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
+evalexpr(stackmember * /* stack */, int * /* depth */, int /* whereAmI */, stackmember * /* candidate */)
 {
     debugs(86, DBG_IMPORTANT, "attempt to evaluate a sub-expression result");
     /* sub-scpr's can't be evaluated */
@@ -664,7 +663,7 @@ evalstartexpr(stackmember * stack, int *depth, int whereAmI, stackmember * candi
 }
 
 int
-evalendexpr(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
+evalendexpr(stackmember * /* stack */, int * /* depth */, int /* whereAmI */, stackmember * /* candidate */)
 {
     /* Can't evaluate ) brackets */
     return 1;
@@ -703,7 +702,7 @@ getsymbol(const char *s, char const **endptr)
 
             if (s == end || errno) {
                 /* Couldn't convert to float */
-                debugs(86, DBG_IMPORTANT, "failed to convert '" << s << "' to float ");
+                debugs(86, DBG_IMPORTANT, "ERROR: failed to convert '" << s << "' to float ");
                 *endptr = origs;
             } else {
                 debugs(86,6, "found " << rv.value.floating << " of length " << end - s);
@@ -720,7 +719,7 @@ getsymbol(const char *s, char const **endptr)
 
             if (s == end || errno) {
                 /* Couldn't convert to int */
-                debugs(86, DBG_IMPORTANT, "failed to convert '" << s << "' to int ");
+                debugs(86, DBG_IMPORTANT, "ERROR: failed to convert '" << s << "' to int ");
                 *endptr = origs;
             } else {
                 debugs(86,6, "found " << rv.value.integral << " of length " << end - s);
@@ -753,7 +752,7 @@ getsymbol(const char *s, char const **endptr)
             ++t;
 
         if (!*t) {
-            debugs(86, DBG_IMPORTANT, "missing end \' in '" << s << "'");
+            debugs(86, DBG_IMPORTANT, "ERROR: missing end \' in '" << s << "'");
             *endptr = origs;
         } else {
             *endptr = t + 1;
@@ -806,7 +805,7 @@ getsymbol(const char *s, char const **endptr)
             rv.precedence = 5;
             rv.eval = evalequals;
         } else {
-            debugs(86, DBG_IMPORTANT, "invalid expr '" << s << "'");
+            debugs(86, DBG_IMPORTANT, "ERROR: invalid expr '" << s << "'");
             *endptr = origs;
         }
     } else if ('<' == *s) {
@@ -854,7 +853,7 @@ getsymbol(const char *s, char const **endptr)
         rv.precedence = 1;
         rv.eval = evalexpr;
     } else {
-        debugs(86, DBG_IMPORTANT, "invalid expr '" << s << "'");
+        debugs(86, DBG_IMPORTANT, "ERROR: invalid expr '" << s << "'");
         *endptr = origs;
     }
 
@@ -984,7 +983,7 @@ addmember(stackmember * stack, int *stackdepth, stackmember * candidate)
                 /* cleanup candidate and stack */
                 dumpstack(stack, *stackdepth);
                 cleanmember(candidate);
-                debugs(86, DBG_IMPORTANT, "invalid expression");
+                debugs(86, DBG_IMPORTANT, "ERROR: invalid expression");
                 return 0;
             }
         } else {
@@ -1002,7 +1001,6 @@ ESIExpression::Evaluate(char const *s)
     stackmember stack[ESI_STACK_DEPTH_LIMIT];
     int stackdepth = 0;
     char const *end;
-    PROF_start(esiExpressionEval);
 
     while (*s) {
         stackmember candidate = getsymbol(s, &end);
@@ -1011,15 +1009,13 @@ ESIExpression::Evaluate(char const *s)
             assert(s != end);
 
             if (!addmember(stack, &stackdepth, &candidate)) {
-                PROF_stop(esiExpressionEval);
                 return 0;
             }
 
             s = end;
         } else {
             assert (s == end);
-            debugs(86, DBG_IMPORTANT, "failed parsing expression");
-            PROF_stop(esiExpressionEval);
+            debugs(86, DBG_IMPORTANT, "ERROR: failed parsing expression");
             return 0;
         }
     }
@@ -1032,15 +1028,13 @@ ESIExpression::Evaluate(char const *s)
         if (stack[stackdepth - 2].
                 eval(stack, &stackdepth, stackdepth - 2, &rv)) {
             /* special case - leading operator failed */
-            debugs(86, DBG_IMPORTANT, "invalid expression");
-            PROF_stop(esiExpressionEval);
+            debugs(86, DBG_IMPORTANT, "ERROR: invalid expression");
             return 0;
         }
     }
 
     if (stackdepth == 0) {
         /* Empty expression - evaluate to false */
-        PROF_stop(esiExpressionEval);
         return 0;
     }
 
@@ -1048,8 +1042,6 @@ ESIExpression::Evaluate(char const *s)
     assert(stackdepth == 1);
 
     assert(stack[0].valuetype == ESI_EXPR_EXPR);
-
-    PROF_stop(esiExpressionEval);
 
     return stack[0].value.integral ? 1 : 0;
 }

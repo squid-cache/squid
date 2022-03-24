@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,7 +16,7 @@
 #include <iostream>
 #include <sstream>
 
-void
+static void
 testLowAndHigh()
 {
     mem_hdr aHeader;
@@ -40,7 +40,7 @@ testLowAndHigh()
     assert (!aHeader.hasContigousContentRange(Range<int64_t>(10,101)));
 }
 
-void
+static void
 testSplayOfNodes()
 {
     Splay<mem_node *> aSplay;
@@ -71,7 +71,7 @@ testSplayOfNodes()
     aSplay.destroy();
 }
 
-void
+static void
 testHdrVisit()
 {
     mem_hdr aHeader;

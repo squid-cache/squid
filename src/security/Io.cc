@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 83    TLS I/O */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "fde.h"
 #include "security/Io.h"
 
@@ -182,8 +183,9 @@ Security::Handshake(Comm::Connection &transport, const ErrorCode topError, Fun i
     return ioResult;
 
 #else
+    (void)topError;
     // TLS I/O code path should never be reachable without a TLS/SSL library.
-    debugs(1, DBG_CRITICAL, ForceAlert << "BUG: " <<
+    debugs(1, DBG_CRITICAL, ForceAlert << "ERROR: Squid BUG: " <<
            "Unexpected TLS I/O in Squid built without a TLS/SSL library");
     assert(false); // we want a stack trace which fatal() does not produce
     return IoResult(nullptr); // not reachable

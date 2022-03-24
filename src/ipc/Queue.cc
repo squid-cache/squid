@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "base/TextException.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "globals.h"
 #include "ipc/Queue.h"
 
@@ -47,7 +47,7 @@ InstanceIdDefinitions(Ipc::QueueReader, "ipcQR");
 Ipc::QueueReader::QueueReader(): popBlocked(true), popSignal(false),
     rateLimit(0), balance(0)
 {
-    debugs(54, 7, HERE << "constructed " << id);
+    debugs(54, 7, "constructed " << id);
 }
 
 /* QueueReaders */

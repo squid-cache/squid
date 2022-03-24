@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,7 +36,8 @@ inline int sched_getaffinity(int, size_t, cpu_set_t *) { return ENOTSUP; }
 #endif
 
 #if !defined(CPU_SET)
-#define CPU_SET(cpu, set) (void)0
+#define CPU_SET(cpunum, cpuset) CpuSet(cpunum, cpuset)
+inline void CpuSet(int, const cpu_set_t *) {}
 #endif
 
 #if !defined(CPU_CLR)
@@ -44,7 +45,8 @@ inline int sched_getaffinity(int, size_t, cpu_set_t *) { return ENOTSUP; }
 #endif
 
 #if !defined(CPU_ISSET)
-#define CPU_ISSET(cpu, set) false
+#define CPU_ISSET(cpunum, cpuset) CpuIsSet(cpunum, cpuset)
+inline bool CpuIsSet(int, const cpu_set_t *) { return false; }
 #endif
 
 // glibc prior to 2.6 lacks CPU_COUNT

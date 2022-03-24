@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 #include "auth/basic/User.h"
 #include "auth/Config.h"
 #include "auth/CredentialsCache.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 Auth::Basic::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
     Auth::User(aConfig, aRequestRealm),
@@ -61,12 +61,12 @@ Auth::Basic::User::valid() const
 void
 Auth::Basic::User::updateCached(Auth::Basic::User *from)
 {
-    debugs(29, 9, HERE << "Found user '" << from->username() << "' already in the user cache as '" << this << "'");
+    debugs(29, 9, "Found user '" << from->username() << "' already in the user cache as '" << this << "'");
 
     assert(strcmp(from->username(), username()) == 0);
 
     if (strcmp(from->passwd, passwd)) {
-        debugs(29, 4, HERE << "new password found. Updating in user master record and resetting auth state to unchecked");
+        debugs(29, 4, "new password found. Updating in user master record and resetting auth state to unchecked");
         credentials(Auth::Unchecked);
         xfree(passwd);
         passwd = from->passwd;
@@ -74,7 +74,7 @@ Auth::Basic::User::updateCached(Auth::Basic::User *from)
     }
 
     if (credentials() == Auth::Failed) {
-        debugs(29, 4, HERE << "last attempt to authenticate this user failed, resetting auth state to unchecked");
+        debugs(29, 4, "last attempt to authenticate this user failed, resetting auth state to unchecked");
         credentials(Auth::Unchecked);
     }
 }

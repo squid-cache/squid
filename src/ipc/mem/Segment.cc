@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "compat/shm.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "fatal.h"
 #include "ipc/mem/Segment.h"
 #include "sbuf/SBuf.h"
@@ -145,7 +145,7 @@ Ipc::Mem::Segment::open(const bool unlinkWhenDone)
     theSize = statSize("Ipc::Mem::Segment::open");
     doUnlink = unlinkWhenDone;
 
-    debugs(54, 3, HERE << "opened " << theName << " segment: " << theSize);
+    debugs(54, 3, "opened " << theName << " segment: " << theSize);
 
     attach();
 }
@@ -314,7 +314,7 @@ Ipc::Mem::Segment::~Segment()
         delete [] static_cast<char *>(theMem);
         theMem = NULL;
         Segments.erase(theName);
-        debugs(54, 3, HERE << "unlinked " << theName << " fake segment");
+        debugs(54, 3, "unlinked " << theName << " fake segment");
     }
 }
 
@@ -339,7 +339,7 @@ Ipc::Mem::Segment::create(const off_t aSize)
     theSize = aSize;
     doUnlink = true;
 
-    debugs(54, 3, HERE << "created " << theName << " fake segment: " << theSize);
+    debugs(54, 3, "created " << theName << " fake segment: " << theSize);
 }
 
 void
@@ -356,14 +356,14 @@ Ipc::Mem::Segment::open()
     theMem = segment.theMem;
     theSize = segment.theSize;
 
-    debugs(54, 3, HERE << "opened " << theName << " fake segment: " << theSize);
+    debugs(54, 3, "opened " << theName << " fake segment: " << theSize);
 }
 
 void
 Ipc::Mem::Segment::checkSupport(const char *const context)
 {
     if (!Enabled()) {
-        debugs(54, 5, HERE << context <<
+        debugs(54, 5, context <<
                ": True shared memory segments are not supported. "
                "Cannot fake shared segments in SMP config.");
         fatalf("Ipc::Mem::Segment: Cannot fake shared segments in SMP config (%s)\n",

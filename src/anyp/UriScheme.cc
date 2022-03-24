@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -48,7 +48,7 @@ AnyP::UriScheme::Init()
     }
 }
 
-const AnyP::ProtocolType
+AnyP::ProtocolType
 AnyP::UriScheme::FindProtocolType(const SBuf &scheme)
 {
     if (scheme.isEmpty())

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,9 +7,10 @@
  */
 
 #include "squid.h"
+#include "internal.h"
 
 #define STUB_API "internal.cc"
 #include "tests/STUB.h"
 
-char * internalLocalUri(const char *dir, const char *name) STUB_RETVAL(NULL)
+char *internalLocalUri(const char *, const SBuf &) STUB_RETVAL(nullptr)
 

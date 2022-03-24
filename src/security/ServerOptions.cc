@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -86,7 +86,7 @@ Security::ServerOptions::parse(const char *token)
 
     } else if (strncmp(token, "dhparams=", 9) == 0) {
         if (!eecdhCurve.isEmpty()) {
-            debugs(83, DBG_PARSE_NOTE(1), "UPGRADE WARNING: EECDH settings in tls-dh= override dhparams=");
+            debugs(83, DBG_PARSE_NOTE(1), "WARNING: UPGRADE: EECDH settings in tls-dh= override dhparams=");
             return;
         }
 
@@ -206,7 +206,7 @@ Security::ServerOptions::initServerContexts(AnyP::PortCfg &port)
 }
 
 bool
-Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &port)
+Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &)
 {
     updateTlsVersionLimits();
 
@@ -410,6 +410,7 @@ Security::ServerOptions::updateContextConfig(Security::ContextPointer &ctx)
     updateContextClientCa(ctx);
 
 #if USE_OPENSSL
+    SSL_CTX_set_mode(ctx.get(), SSL_MODE_NO_AUTO_CHAIN);
     if (parsedFlags & SSL_FLAG_DONT_VERIFY_DOMAIN)
         SSL_CTX_set_ex_data(ctx.get(), ssl_ctx_ex_index_dont_verify_domain, (void *) -1);
 
@@ -440,6 +441,8 @@ Security::ServerOptions::updateContextClientCa(Security::ContextPointer &ctx)
     } else {
         Ssl::DisablePeerVerification(ctx);
     }
+#else
+    (void)ctx;
 #endif
 }
 
@@ -473,6 +476,7 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
 #else
         debugs(83, DBG_CRITICAL, "ERROR: EECDH is not available in this build." <<
                " Please link against OpenSSL>=0.9.8 and ensure OPENSSL_NO_ECDH is not set.");
+        (void)ctx;
 #endif
     }
 
@@ -490,6 +494,8 @@ Security::ServerOptions::updateContextSessionId(Security::ContextPointer &ctx)
 #if USE_OPENSSL
     if (!staticContextSessionId.isEmpty())
         SSL_CTX_set_session_id_context(ctx.get(), reinterpret_cast<const unsigned char*>(staticContextSessionId.rawContent()), staticContextSessionId.length());
+#else
+    (void)ctx;
 #endif
 }
 

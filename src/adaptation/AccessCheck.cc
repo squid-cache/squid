@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,7 +29,7 @@ cbdata_type Adaptation::AccessCheck::CBDATA_AccessCheck = CBDATA_UNKNOWN;
 bool
 Adaptation::AccessCheck::Start(Method method, VectPoint vp,
                                HttpRequest *req, HttpReply *rep,
-                               AccessLogEntry::Pointer &al, Adaptation::Initiator *initiator)
+                               const AccessLogEntryPointer &al, Adaptation::Initiator *initiator)
 {
 
     if (Config::Enabled) {
@@ -39,7 +39,7 @@ Adaptation::AccessCheck::Start(Method method, VectPoint vp,
         return true;
     }
 
-    debugs(83, 3, HERE << "adaptation off, skipping");
+    debugs(83, 3, "adaptation off, skipping");
     return false;
 }
 
@@ -55,8 +55,7 @@ Adaptation::AccessCheck::AccessCheck(const ServiceFilter &aFilter,
         h->start("ACL");
 #endif
 
-    debugs(93, 5, HERE << "AccessCheck constructed for " <<
-           methodStr(filter.method) << " " << vectPointStr(filter.point));
+    debugs(93, 5, "AccessCheck constructed for " << filter);
 }
 
 Adaptation::AccessCheck::~AccessCheck()
@@ -85,13 +84,13 @@ Adaptation::AccessCheck::usedDynamicRules()
     if (!ah)
         return false; // dynamic rules not enabled or not triggered
 
-    DynamicGroupCfg services;
-    if (!ah->extractFutureServices(services)) { // clears history
-        debugs(85,9, HERE << "no service-proposed rules stored");
-        return false; // earlier service did not plan for the future
+    const auto services = ah->extractCurrentServices(filter); // updates history
+    if (services.empty()) {
+        debugs(85, 5, "no service-proposed rules for " << filter);
+        return false;
     }
 
-    debugs(85,3, HERE << "using stored service-proposed rules: " << services);
+    debugs(85,3, "using stored service-proposed rules: " << services);
 
     ServiceGroupPointer g = new DynamicServiceChain(services, filter);
     callBack(g);
@@ -103,13 +102,13 @@ Adaptation::AccessCheck::usedDynamicRules()
 void
 Adaptation::AccessCheck::check()
 {
-    debugs(93, 4, HERE << "start checking");
+    debugs(93, 4, "start checking");
 
     typedef AccessRules::iterator ARI;
     for (ARI i = AllRules().begin(); i != AllRules().end(); ++i) {
         AccessRule *r = *i;
         if (isCandidate(*r)) {
-            debugs(93, 5, HERE << "check: rule '" << r->id << "' is a candidate");
+            debugs(93, 5, "check: rule '" << r->id << "' is a candidate");
             candidates.push_back(r->id);
         }
     }
@@ -125,7 +124,7 @@ Adaptation::AccessCheck::check()
 void
 Adaptation::AccessCheck::checkCandidates()
 {
-    debugs(93, 4, HERE << "has " << candidates.size() << " rules");
+    debugs(93, 4, "has " << candidates.size() << " rules");
 
     while (!candidates.empty()) {
         if (AccessRule *r = FindRule(topCandidate())) {
@@ -143,7 +142,7 @@ Adaptation::AccessCheck::checkCandidates()
         candidates.erase(candidates.begin()); // the rule apparently went away (reconfigure)
     }
 
-    debugs(93, 4, HERE << "NO candidates left");
+    debugs(93, 4, "NO candidates left");
     callBack(NULL);
     Must(done());
 }
@@ -151,7 +150,7 @@ Adaptation::AccessCheck::checkCandidates()
 void
 Adaptation::AccessCheck::AccessCheckCallbackWrapper(Acl::Answer answer, void *data)
 {
-    debugs(93, 8, HERE << "callback answer=" << answer);
+    debugs(93, 8, "callback answer=" << answer);
     AccessCheck *ac = (AccessCheck*)data;
 
     /* TODO: AYJ 2008-06-12: If answer == ACCESS_AUTH_REQUIRED
@@ -173,7 +172,7 @@ void
 Adaptation::AccessCheck::noteAnswer(Acl::Answer answer)
 {
     Must(!candidates.empty()); // the candidate we were checking must be there
-    debugs(93,5, HERE << topCandidate() << " answer=" << answer);
+    debugs(93,5, topCandidate() << " answer=" << answer);
 
     if (answer.allowed()) { // the rule matched
         ServiceGroupPointer g = topGroup();
@@ -194,7 +193,7 @@ Adaptation::AccessCheck::noteAnswer(Acl::Answer answer)
 void
 Adaptation::AccessCheck::callBack(const ServiceGroupPointer &g)
 {
-    debugs(93,3, HERE << g);
+    debugs(93,3, g);
     CallJobHere1(93, 5, theInitiator, Adaptation::Initiator,
                  noteAdaptationAclCheckDone, g);
     mustStop("done"); // called back or will never be able to call back
@@ -207,12 +206,12 @@ Adaptation::AccessCheck::topGroup() const
     if (candidates.size()) {
         if (AccessRule *r = FindRule(topCandidate())) {
             g = FindGroup(r->groupId);
-            debugs(93,5, HERE << "top group for " << r->id << " is " << g);
+            debugs(93,5, "top group for " << r->id << " is " << g);
         } else {
-            debugs(93,5, HERE << "no rule for " << topCandidate());
+            debugs(93,5, "no rule for " << topCandidate());
         }
     } else {
-        debugs(93,5, HERE << "no candidates"); // should not happen
+        debugs(93,5, "no candidates"); // should not happen
     }
 
     return g;
@@ -223,18 +222,18 @@ Adaptation::AccessCheck::topGroup() const
 bool
 Adaptation::AccessCheck::isCandidate(AccessRule &r)
 {
-    debugs(93,7,HERE << "checking candidacy of " << r.id << ", group " <<
+    debugs(93,7, "checking candidacy of " << r.id << ", group " <<
            r.groupId);
 
     ServiceGroupPointer g = FindGroup(r.groupId);
 
     if (!g) {
-        debugs(93,7,HERE << "lost " << r.groupId << " group in rule" << r.id);
+        debugs(93,7, "lost " << r.groupId << " group in rule" << r.id);
         return false;
     }
 
     const bool wants = g->wants(filter);
-    debugs(93,7,HERE << r.groupId << (wants ? " wants" : " ignores"));
+    debugs(93,7, r.groupId << (wants ? " wants" : " ignores"));
     return wants;
 }
 
