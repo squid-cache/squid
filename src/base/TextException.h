@@ -9,8 +9,8 @@
 #ifndef SQUID__TEXTEXCEPTION_H
 #define SQUID__TEXTEXCEPTION_H
 
-#include "base/Here.h"
 #include "base/Assure.h"
+#include "base/Here.h"
 
 #include <stdexcept>
 
