@@ -9,7 +9,7 @@
 #ifndef SQUID_EVENTLOOP_H
 #define SQUID_EVENTLOOP_H
 
-#include "time/Engine.h"
+#include "time/forward.h"
 
 #include <vector>
 
