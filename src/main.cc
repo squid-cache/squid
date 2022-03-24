@@ -77,6 +77,7 @@
 #include "store/Disks.h"
 #include "store_log.h"
 #include "StoreFileSystem.h"
+#include "time/Engine.h"
 #include "tools.h"
 #include "unlinkd.h"
 #include "wccp.h"

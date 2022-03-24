@@ -14,6 +14,7 @@
 #include "debug/Stream.h"
 #include "EventLoop.h"
 #include "fatal.h"
+#include "time/Engine.h"
 
 EventLoop *EventLoop::Running = NULL;
 

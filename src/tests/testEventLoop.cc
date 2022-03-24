@@ -10,6 +10,7 @@
 #include "AsyncEngine.h"
 #include "EventLoop.h"
 #include "tests/testEventLoop.h"
+#include "time/Engine.h"
 #include "unitTestMain.h"
 
 #include <cppunit/TestAssert.h>
