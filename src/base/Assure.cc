@@ -9,7 +9,7 @@
 #include "squid.h"
 #include "base/Assure.h"
 #include "base/TextException.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 [[ noreturn ]] void
 ReportAndThrow_(const int debugLevel, const char *description, const SourceLocation &location)
