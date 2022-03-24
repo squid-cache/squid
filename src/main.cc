@@ -80,8 +80,6 @@
 #include "time/Engine.h"
 #include "tools.h"
 #include "unlinkd.h"
-#include "wccp.h"
-#include "wccp2.h"
 #include "WinSvc.h"
 
 #if USE_ADAPTATION
@@ -804,16 +802,6 @@ sig_child(int sig)
 static void
 serverConnectionsOpen(void)
 {
-    if (IamPrimaryProcess()) {
-#if USE_WCCP
-        wccpConnectionOpen();
-#endif
-
-#if USE_WCCPv2
-
-        wccp2ConnectionOpen();
-#endif
-    }
     // start various proxying services if we are responsible for them
     if (IamWorkerProcess()) {
         clientOpenListenSockets();
@@ -844,16 +832,6 @@ serverConnectionsClose(void)
 {
     assert(shutting_down || reconfiguring);
 
-    if (IamPrimaryProcess()) {
-#if USE_WCCP
-
-        wccpConnectionClose();
-#endif
-#if USE_WCCPv2
-
-        wccp2ConnectionClose();
-#endif
-    }
     if (IamWorkerProcess()) {
         clientConnectionsClose();
         icpConnectionShutdown();
@@ -990,17 +968,6 @@ mainReconfigureFinish(void *)
     authenticateInit(&Auth::TheConfig.schemes);
 #endif
     externalAclInit();
-
-    if (IamPrimaryProcess()) {
-#if USE_WCCP
-
-        wccpInit();
-#endif
-#if USE_WCCPv2
-
-        wccp2Init();
-#endif
-    }
 
     serverConnectionsOpen();
 
@@ -1246,18 +1213,6 @@ mainInitialize(void)
     // TODO: pconn is a good candidate for new-style registration
     // PconnModule::GetInstance()->registerWithCacheManager();
     // moved to PconnModule::PconnModule()
-
-    if (IamPrimaryProcess()) {
-#if USE_WCCP
-        wccpInit();
-
-#endif
-#if USE_WCCPv2
-
-        wccp2Init();
-
-#endif
-    }
 
     serverConnectionsOpen();
 
@@ -2084,15 +2039,6 @@ SquidShutdown()
 #if SQUID_SNMP
     snmpClosePorts();
 #endif
-#if USE_WCCP
-
-    wccpConnectionClose();
-#endif
-#if USE_WCCPv2
-
-    wccp2ConnectionClose();
-#endif
-
     releaseServerSockets();
     commCloseAllSockets();
 

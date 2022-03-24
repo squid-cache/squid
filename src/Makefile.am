@@ -463,7 +463,6 @@ squid_SOURCES = \
 	urn.cc \
 	urn.h \
 	wccp.cc \
-	wccp.h \
 	wccp2.cc \
 	wccp2.h \
 	whois.cc \

@@ -11,13 +11,14 @@
 #include "squid.h"
 
 #if USE_WCCP
+#include "base/RunnersRegistry.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "event.h"
 #include "fatal.h"
 #include "SquidConfig.h"
-#include "wccp.h"
+#include "tools.h"
 
 #define WCCP_PORT 2048
 #define WCCP_REVISION 0
@@ -87,8 +88,8 @@ static void wccpAssignBuckets(void);
  * wccpConnectionClose
  */
 
-void
-wccpInit(void)
+static void
+wccpInit()
 {
     debugs(80, 5, "wccpInit: Called");
     memset(&wccp_here_i_am, '\0', sizeof(wccp_here_i_am));
@@ -105,8 +106,8 @@ wccpInit(void)
             eventAdd("wccpHereIam", wccpHereIam, NULL, 5.0, 1);
 }
 
-void
-wccpConnectionOpen(void)
+static void
+wccpConnectionOpen()
 {
     debugs(80, 5, "wccpConnectionOpen: Called");
 
@@ -157,8 +158,8 @@ wccpConnectionOpen(void)
     local_ip = local;
 }
 
-void
-wccpConnectionClose(void)
+static void
+wccpConnectionClose()
 {
     if (theWccpConnection > -1) {
         debugs(80, DBG_IMPORTANT, "FD " << theWccpConnection << " Closing WCCPv1 socket");
@@ -166,6 +167,29 @@ wccpConnectionClose(void)
         theWccpConnection = -1;
     }
 }
+
+class WccpRr : public RegisteredRunner
+{
+public:
+    virtual void useConfig() override {
+        if (IamPrimaryProcess()) {
+            wccpInit();
+            wccpConnectionOpen();
+        }
+    }
+
+    // reconfigure fully shuts down, then restarts WCCP
+    virtual void startReconfigure() override { startShutdown(); }
+    virtual void syncConfig() override { useConfig(); }
+
+    // must run before comm_exit()
+    virtual void startShutdown() override {
+        if (IamPrimaryProcess())
+            wccpConnectionClose();
+    }
+};
+
+RunnerRegistrationEntry(WccpRr);
 
 /*
  * Functions for handling the requests.
