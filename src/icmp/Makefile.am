@@ -41,7 +41,6 @@ COPIED_SOURCE= \
 	tests/stub_fd.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_libmem.cc \
-	tests/stub_SBuf.cc \
 	tests/STUB.h \
 	time.cc
 
@@ -60,6 +59,7 @@ pinger_LDFLAGS = $(LIBADD_DL)
 pinger_LDADD=\
 	libicmpcore.la \
 	$(top_builddir)/src/ip/libip.la \
+	$(top_builddir)/src/sbuf/libsbuf.la \
 	$(top_builddir)/src/debug/libdebug.la \
 	$(top_builddir)/src/base/libbase.la \
 	$(COMPAT_LIB) \
@@ -100,9 +100,6 @@ tests/stub_fd.cc: $(top_srcdir)/src/tests/stub_fd.cc | tests
 
 tests/stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc | tests
 	cp $(top_srcdir)/src/tests/stub_libmem.cc $@
-
-tests/stub_SBuf.cc: $(top_srcdir)/src/tests/stub_SBuf.cc | tests
-	cp $(top_srcdir)/src/tests/stub_SBuf.cc $@
 
 tests/STUB.h: $(top_srcdir)/src/tests/STUB.h | tests
 	cp $(top_srcdir)/src/tests/STUB.h $@

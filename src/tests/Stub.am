@@ -75,7 +75,6 @@ STUB_SOURCE = \
     tests/stub_Port.cc \
     tests/stub_redirect.cc \
     tests/stub_SBuf.cc \
-    tests/stub_SBufDetailedStats.cc \
     tests/stub_stat.cc \
     tests/stub_StatHist.cc \
     tests/stub_stmem.cc \
