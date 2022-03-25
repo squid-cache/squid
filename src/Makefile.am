@@ -929,7 +929,6 @@ tests_testLookupTable_SOURCES = \
 	tests/testLookupTable.cc \
 	tests/testLookupTable.h
 nodist_tests_testLookupTable_SOURCES = \
-	tests/stub_SBufDetailedStats.cc \
 	base/LookupTable.h \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc
@@ -1143,7 +1142,6 @@ tests_testRock_SOURCES = \
 	ResolvedPeers.h \
 	tests/testRock.cc \
 	tests/testRock.h \
-	tests/stub_SBufDetailedStats.cc \
 	StatCounters.cc \
 	StatCounters.h \
 	tests/stub_StatHist.cc \
@@ -1315,7 +1313,6 @@ tests_testUfs_SOURCES = \
 	RemovalPolicy.cc \
 	RequestFlags.cc \
 	RequestFlags.h \
-	tests/stub_SBufDetailedStats.cc \
 	StatCounters.cc \
 	StatCounters.h \
 	StatHist.cc \
@@ -1494,7 +1491,6 @@ tests_testStore_SOURCES = \
 	RemovalPolicy.cc \
 	RequestFlags.cc \
 	RequestFlags.h \
-	tests/stub_SBufDetailedStats.cc \
 	StatCounters.cc \
 	StatCounters.h \
 	StatHist.cc \
@@ -1666,7 +1662,6 @@ tests_testDiskIO_SOURCES = \
 	RequestFlags.h \
 	ResolvedPeers.cc \
 	ResolvedPeers.h \
-	tests/stub_SBufDetailedStats.cc \
 	StatCounters.cc \
 	StatCounters.h \
 	tests/stub_StatHist.cc \
@@ -1916,7 +1911,6 @@ tests_test_http_range_SOURCES = \
 	RequestFlags.h \
 	ResolvedPeers.cc \
 	ResolvedPeers.h \
-	tests/stub_SBufDetailedStats.cc \
 	SquidMath.cc \
 	SquidMath.h \
 	StatCounters.cc \
@@ -2092,7 +2086,6 @@ tests_testHttp1Parser_SOURCES = \
 	MemBuf.cc \
 	MemBuf.h \
 	tests/stub_MemObject.cc \
-	tests/stub_SBufDetailedStats.cc \
 	String.cc \
 	tests/stub_cache_cf.cc \
 	cache_cf.h \
@@ -2167,7 +2160,6 @@ tests_testHttpReply_SOURCES = \
 	MemBuf.h \
 	Notes.cc \
 	Notes.h \
-	tests/stub_SBufDetailedStats.cc \
 	SquidString.h \
 	SquidTime.h \
 	StatCounters.cc \
@@ -2310,7 +2302,6 @@ tests_testHttpRequest_SOURCES = \
 	RequestFlags.h \
 	ResolvedPeers.cc \
 	ResolvedPeers.h \
-	tests/stub_SBufDetailedStats.cc \
 	SquidMath.cc \
 	SquidMath.h \
 	StatCounters.cc \
@@ -2617,7 +2608,6 @@ tests_testCacheManager_SOURCES = \
 	RequestFlags.h \
 	ResolvedPeers.cc \
 	ResolvedPeers.h \
-	tests/stub_SBufDetailedStats.cc \
 	SquidMath.cc \
 	SquidMath.h \
 	StatCounters.cc \
@@ -2791,7 +2781,6 @@ tests_testStatHist_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_MemBuf.cc \
 	tests/stub_MemObject.cc \
-	tests/stub_SBufDetailedStats.cc \
 	StatHist.cc \
 	tests/testStatHist.cc \
 	StatHist.h \

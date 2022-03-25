@@ -26,6 +26,12 @@ public:
 
     SBufStats& operator +=(const SBufStats&);
 
+    /// Record the size a SBuf had when it was destructed
+    static void RecordSBufSizeAtDestruct(size_t);
+
+    /// Record the size a MemBlob had when it was destructed
+    static void RecordMemBlobSizeAtDestruct(size_t);
+
 public:
     uint64_t alloc = 0; ///<number of calls to SBuf constructors
     uint64_t allocCopy = 0; ///<number of calls to SBuf copy-constructor
@@ -51,6 +57,13 @@ public:
     uint64_t cowJustAlloc = 0; ///< number of cow() calls requiring just a new empty buffer
     uint64_t cowAllocCopy = 0; ///< number of cow() calls requiring copying into a new buffer
     uint64_t live = 0;  ///<number of currently-allocated SBuf
+
+    /// function for collecting detailed size-related statistics
+    using SizeRecorder = void (*)(size_t);
+    /// collects statistics about SBuf sizes at SBuf destruction time
+    static SizeRecorder SBufSizeAtDestructRecorder;
+    /// collects statistics about MemBlob capacity at MemBlob destruction time
+    static SizeRecorder MemBlobSizeAtDestructRecorder;
 };
 
 #endif /* SQUID_SBUF_STATS_H */
