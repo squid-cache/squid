@@ -169,7 +169,7 @@ AC_DEFUN([SQUID_HELPER_FEATURE_CHECK],[
   ])
   SQUID_CLEANUP_MODULES_LIST([enable_$1])
   AC_MSG_NOTICE([checking $3 helpers: $enable_$1])
-  AS_IF([test "x$enable_$1" != "xno" -a test "x$enable_$1" != "x"],[
+  AS_IF([test "x$enable_$1" != "xno" -a "x$enable_$1" != "x"],[
     SQUID_CHECK_EXISTING_MODULES([$$ac_top_srcdir/src/$3],[enable_$1])
     for helper in $enable_$1 ; do
       $4
