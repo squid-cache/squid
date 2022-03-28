@@ -2981,9 +2981,8 @@ case "$squid_host_os" in
     AC_MSG_NOTICE([Use MSVCRT for math functions.])
     ;;
   *)
-    dnl rint() and log() are only used in old C code for now.
+    dnl log() are only used in old C code for now.
     AC_LANG_PUSH([C])
-    AC_SEARCH_LIBS([rint],[m])
     AC_SEARCH_LIBS([log],[m])
     AC_LANG_POP([C])
     ;;
@@ -3037,16 +3036,6 @@ if test "x$enable_ipv6" = "xyes" ; then
 fi
 SQUID_CHECK_SS_LEN_IN_SOCKADDR_STORAGE
 SQUID_CHECK_SIN_LEN_IN_SOCKADDR_IN
-
-
-dnl -lintl is needed on SCO version 3.2v4.2 for strftime()
-dnl Robert Side <rside@aiinc.bc.ca>
-dnl Mon, 18 Jan 1999 17:48:00 GMT
-case "$host" in
-	*-pc-sco3.2*)
-		AC_CHECK_LIB(intl, strftime)
-		;;
-esac
 
 dnl System-specific library modifications
 dnl
@@ -3134,12 +3123,6 @@ if test "x$ac_cv_func_poll" = "x" ; then
       ;;
     [powerpc-ibm-aix4.1.*])
       # Mike Laster (mlaster@metavillage.com) 19981021
-      AC_MSG_NOTICE([disabling poll for $host...])
-      ac_cv_func_poll='no'
-      ;;
-    [*-pc-sco3.2*])
-      # Robert Side <rside@aiinc.bc.ca>
-      # Mon, 18 Jan 1999 17:48:00 GMT
       AC_MSG_NOTICE([disabling poll for $host...])
       ac_cv_func_poll='no'
       ;;
