@@ -46,6 +46,8 @@ public:
     static void StatQueue(std::ostream &);
 
 private:
+    static void HandleNewDataAtStart();
+
     typedef Ipc::MultiQueue Queue;
     static std::unique_ptr<Queue> queue; ///< IPC queue
 };
