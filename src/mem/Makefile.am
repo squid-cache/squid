@@ -17,7 +17,6 @@ noinst_HEADERS = \
 	Sensitive.h \
 	forward.h
 
-
 # a full-featured memory management library for sbin/squid use
 libmem_la_SOURCES = \
 	AllocatorProxy.cc \
