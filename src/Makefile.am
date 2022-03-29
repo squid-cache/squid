@@ -614,7 +614,6 @@ ufsdump_SOURCES = \
 	cbdata.h \
 	dlink.cc \
 	dlink.h \
-	tests/stub_fd.cc \
 	fd.h \
 	helper/ChildConfig.h \
 	int.cc \
@@ -637,6 +636,7 @@ ufsdump_LDADD = \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	debug/libdebug.la \
+	comm/libminimal.la \
 	$(XTRA_OBJS) \
 	$(REPL_OBJS) \
 	$(NETTLELIB) \
