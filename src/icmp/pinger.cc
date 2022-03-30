@@ -115,9 +115,8 @@ main(int, char **)
     int icmp6_worker = -1;
     int squid_link = -1;
 
-    /** start by initializing the pinger debug cache.log-pinger. */
-    const auto envOptions = getenv("SQUID_DEBUG");
-    Debug::debugOptions = xstrdup(envOptions ? envOptions : "ALL,10");
+    if (const auto envOptions = getenv("SQUID_DEBUG"))
+        Debug::debugOptions = xstrdup(envOptions);
     Debug::NameThisHelper("pinger");
 
     getCurrentTime();
