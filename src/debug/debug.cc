@@ -74,6 +74,12 @@ typedef BOOL (WINAPI * PFInitializeCriticalSectionAndSpinCount) (LPCRITICAL_SECT
 
 static void ResetSections(const int level = DBG_IMPORTANT);
 
+/// Whether ResetSections() has been called already. We need to keep track of
+/// this state because external code may trigger ResetSections() before the
+/// DebugModule constructor has a chance to ResetSections() to their defaults.
+/// TODO: Find a way to static-initialize Debug::Levels instead.
+static bool DidResetSections = false;
+
 /// a named FILE with very-early/late usage safety mechanisms
 class DebugFile
 {
@@ -355,6 +361,7 @@ DebugStream() {
 static void
 ResetSections(const int level)
 {
+    DidResetSections = true;
     for (auto &sectionLevel: Debug::Levels)
         sectionLevel = level;
 }
@@ -423,7 +430,7 @@ DebugModule::DebugModule()
 
     (void)std::atexit(&Debug::PrepareToDie);
 
-    if (!Debug::override_X)
+    if (!DidResetSections)
         ResetSections();
 }
 
