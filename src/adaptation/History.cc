@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "adaptation/Config.h"
 #include "adaptation/History.h"
+#include "adaptation/ServiceGroups.h"
 #include "base/TextException.h"
 #include "debug/Stream.h"
 #include "globals.h"
@@ -160,13 +161,12 @@ Adaptation::History::setFutureServices(const DynamicGroupCfg &services)
     theFutureServices = services; // may be empty
 }
 
-bool Adaptation::History::extractFutureServices(DynamicGroupCfg &value)
+Adaptation::DynamicGroupCfg
+Adaptation::History::extractCurrentServices(const ServiceFilter &filter)
 {
-    if (theFutureServices.empty())
-        return false;
-
-    value = theFutureServices;
-    theFutureServices.clear();
-    return true;
+    DynamicGroupCfg current, future;
+    DynamicServiceChain::Split(filter, theFutureServices.serviceIds(), current, future);
+    theFutureServices = future; // may already be the same
+    return current; // may be empty
 }
 

@@ -55,8 +55,7 @@ Adaptation::AccessCheck::AccessCheck(const ServiceFilter &aFilter,
         h->start("ACL");
 #endif
 
-    debugs(93, 5, "AccessCheck constructed for " <<
-           methodStr(filter.method) << " " << vectPointStr(filter.point));
+    debugs(93, 5, "AccessCheck constructed for " << filter);
 }
 
 Adaptation::AccessCheck::~AccessCheck()
@@ -85,10 +84,10 @@ Adaptation::AccessCheck::usedDynamicRules()
     if (!ah)
         return false; // dynamic rules not enabled or not triggered
 
-    DynamicGroupCfg services;
-    if (!ah->extractFutureServices(services)) { // clears history
-        debugs(85,9, "no service-proposed rules stored");
-        return false; // earlier service did not plan for the future
+    const auto services = ah->extractCurrentServices(filter); // updates history
+    if (services.empty()) {
+        debugs(85, 5, "no service-proposed rules for " << filter);
+        return false;
     }
 
     debugs(85,3, "using stored service-proposed rules: " << services);
