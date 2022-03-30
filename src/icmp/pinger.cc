@@ -118,13 +118,12 @@ main(int, char **)
     /** start by initializing the pinger debug cache.log-pinger. */
     const auto envOptions = getenv("SQUID_DEBUG");
     Debug::debugOptions = xstrdup(envOptions ? envOptions : "ALL,10");
+    Debug::NameThisHelper("pinger");
 
     getCurrentTime();
 
     // determine IPv4 or IPv6 capabilities before using sockets.
     Ip::ProbeTransport();
-
-    Debug::BanCacheLogUse();
 
     debugs(42, DBG_CRITICAL, "pinger: Initialising ICMP pinger ...");
 

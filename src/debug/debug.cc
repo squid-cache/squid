@@ -56,8 +56,11 @@ static int DefaultStderrLevel = -1;
 /// early debugs() with higher level are not buffered and, hence, may be lost
 static constexpr int EarlyMessagesLevel = DBG_IMPORTANT;
 
+/// pre-formatted name of the current process for debugs() messages (or empty)
+static std::string ProcessLabel;
+
 static const char *debugLogTime(time_t t);
-static const char *debugLogKid(void);
+
 #if HAVE_SYSLOG
 #ifdef LOG_LOCAL4
 static int syslog_facility = 0;
@@ -356,6 +359,45 @@ ResetSections(const int level)
         sectionLevel = level;
 }
 
+/// optimization: formats ProcessLabel once for frequent debugs() reuse
+static void
+LabelThisProcess(const char * const name, const Optional<int> id = Optional<int>())
+{
+    assert(name);
+    assert(strlen(name));
+    std::stringstream os;
+    os << ' ' << name;
+    if (id.has_value()) {
+        assert(id.value() >= 0);
+        os << id.value();
+    }
+    ProcessLabel = os.str();
+}
+
+void
+Debug::NameThisHelper(const char * const name)
+{
+    LabelThisProcess(name);
+
+    // do not restrict helper (i.e. stderr) logging beyond debug_options
+    EnsureDefaultStderrLevel(DBG_DATA);
+
+    BanCacheLogUse();
+    SettleStderr();
+    SettleSyslog();
+}
+
+void
+Debug::NameThisKid(const int kidIdentifier)
+{
+    // to reduce noise and for backward compatibility, do not label kid messages
+    // in non-SMP mode
+    if (kidIdentifier)
+        LabelThisProcess("kid", Optional<int>(kidIdentifier));
+    else
+        ProcessLabel.clear(); // probably already empty
+}
+
 /* LoggingSectionGuard */
 
 LoggingSectionGuard::LoggingSectionGuard()
@@ -556,7 +598,7 @@ DebugChannel::writeToStream(FILE &destination, const DebugMessageHeader &header,
 {
     fprintf(&destination, "%s%s| %s\n",
             debugLogTime(header.timestamp),
-            debugLogKid(),
+            ProcessLabel.c_str(),
             body.c_str());
     noteWritten(header);
 }
@@ -1188,19 +1230,6 @@ debugLogTime(const time_t t)
 
     buf[sizeof(buf)-1] = '\0';
     return buf;
-}
-
-static const char *
-debugLogKid(void)
-{
-    if (KidIdentifier != 0) {
-        static char buf[16];
-        if (!*buf) // optimization: fill only once after KidIdentifier is set
-            snprintf(buf, sizeof(buf), " kid%d", KidIdentifier);
-        return buf;
-    }
-
-    return "";
 }
 
 /// Whether there are any xassert() calls in the call stack. Treat as private to
