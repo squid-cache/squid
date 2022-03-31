@@ -115,8 +115,6 @@ main(int, char **)
     int icmp6_worker = -1;
     int squid_link = -1;
 
-    if (const auto envOptions = getenv("SQUID_DEBUG"))
-        Debug::debugOptions = xstrdup(envOptions);
     Debug::NameThisHelper("pinger");
 
     getCurrentTime();

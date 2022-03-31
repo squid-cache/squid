@@ -386,6 +386,11 @@ Debug::NameThisHelper(const char * const name)
 {
     LabelThisProcess(name);
 
+    if (const auto parentProcessDebugOptions = getenv("SQUID_DEBUG")) {
+        assert(!debugOptions);
+        debugOptions = xstrdup(parentProcessDebugOptions);
+    }
+
     // do not restrict helper (i.e. stderr) logging beyond debug_options
     EnsureDefaultStderrLevel(DBG_DATA);
 
