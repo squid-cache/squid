@@ -394,7 +394,10 @@ Debug::NameThisHelper(const char * const name)
     // do not restrict helper (i.e. stderr) logging beyond debug_options
     EnsureDefaultStderrLevel(DBG_DATA);
 
+    // helpers do not write to cache.log directly; instead, ipcCreate()
+    // diverts helper stderr output to cache.log of the parent process
     BanCacheLogUse();
+
     SettleStderr();
     SettleSyslog();
 }
