@@ -158,12 +158,9 @@ endif
 noinst_LTLIBRARIES = libsquid.la
 
 EXTRA_PROGRAMS = \
-	unlinkd \
-	ufsdump
+	unlinkd
 
 ## cfgen is used when building squid
-## ufsdump is a debug utility, it is possibly useful for end users with cache
-## corruption, but at this point we do not install it.
 noinst_PROGRAMS = \
 	cf_gen
 
@@ -581,89 +578,6 @@ unlinkd_SOURCES = unlinkd_daemon.cc
 unlinkd_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-
-## What requires what..
-## many things want ACLChecklist.cc
-## ACLChecklist.cc wants AuthUserRequest.cc
-## ACLChecklist.cc wants AuthScheme.cc
-## ACLChecklist.cc wants ACLProxyAuth.cc directly
-## ACLProxyAuth.cc wants ACLUserData
-## ACLProxyAuth.cc wants ACLRegexData
-## cache_cf.cc wants $(AUTH_LIBS)
-## cache_cf.cc wants store/libstore.la
-## cache_cf.cc wants AnyP::PortCfg
-## client_side wants client_db
-## client_db wants SNMP_SOURCE
-## snmp_core wants ACLStringData
-## tools.cc wants ip/libip.la
-## client_side.cc wants ip/libip.la
-## libbase.la wants cbdata.*
-## libbase.la wants MemBuf.*
-ufsdump_SOURCES = \
-	$(WIN32_SOURCE) \
-	ClientInfo.h \
-	tests/stub_HelperChildConfig.cc \
-	MemBuf.cc \
-	MemBuf.h \
-	Parsing.h \
-	RemovalPolicy.cc \
-	tests/stub_StoreMeta.cc \
-	StoreMetaUnpacker.cc \
-	String.cc \
-	cbdata.cc \
-	cbdata.h \
-	dlink.cc \
-	dlink.h \
-	tests/stub_fd.cc \
-	fd.h \
-	helper/ChildConfig.h \
-	int.cc \
-	int.h \
-	mem/forward.h \
-	store_key_md5.cc \
-	store_key_md5.h \
-	tests/stub_time.cc \
-	ufsdump.cc
-ufsdump_LDADD = \
-	ident/libident.la \
-	acl/libacls.la \
-	eui/libeui.la \
-	acl/libstate.la \
-	acl/libapi.la \
-	base/libbase.la \
-	libsquid.la \
-	ip/libip.la \
-	fs/libfs.la \
-	ipc/libipc.la \
-	mgr/libmgr.la \
-	debug/libdebug.la \
-	$(XTRA_OBJS) \
-	$(REPL_OBJS) \
-	$(NETTLELIB) \
-	$(CRYPTLIB) \
-	$(REGEXLIB) \
-	$(SSLLIB) \
-	$(COMPAT_LIB) \
-	$(EPOLL_LIBS) \
-	$(MINGW_LIBS) \
-	$(XTRA_LIBS)
-ufsdump_DEPENDENCIES = \
-	ident/libident.la \
-	acl/libacls.la \
-	eui/libeui.la \
-	acl/libstate.la \
-	acl/libapi.la \
-	base/libbase.la \
-	libsquid.la \
-	ip/libip.la \
-	fs/libfs.la \
-	ipc/libipc.la \
-	mgr/libmgr.la \
-	DiskIO/libdiskio.la \
-	$(REPL_OBJS)
-
-nodist_ufsdump_SOURCES = \
-	globals.cc
 
 sysconf_DATA = \
 	squid.conf.default \
