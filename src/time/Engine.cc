@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "time/Engine.h"
-#include "time/forward.h"
+#include "time/gadgets.h"
 
 void
 Time::Engine::tick()

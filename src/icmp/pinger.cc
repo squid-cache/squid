@@ -48,7 +48,7 @@
 #include "Icmp6.h"
 #include "IcmpPinger.h"
 #include "ip/tools.h"
-#include "time/forward.h"
+#include "time/gadgets.h"
 
 #if _SQUID_WINDOWS_
 

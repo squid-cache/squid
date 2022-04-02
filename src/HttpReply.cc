@@ -644,7 +644,7 @@ String HttpReply::removeStaleWarningValues(const String &value)
                 // found warn-text
                 String warnDate;
                 warnDate.append(warnDateBeg, warnDateEnd - warnDateBeg);
-                const time_t time = parse_rfc1123(warnDate.termedBuf());
+                const time_t time = Time::ParseRfc1123(warnDate.termedBuf());
                 keep = (time > 0 && time == date); // keep valid and matching date
             }
         }

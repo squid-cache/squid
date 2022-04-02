@@ -23,7 +23,7 @@
 #include "ip/Address.h"
 #include "ip/forward.h"
 #include "mem/forward.h"
-#include "time/forward.h"
+#include "time/gadgets.h"
 
 #include <iosfwd>
 #include <ostream>

@@ -833,7 +833,7 @@ ErrorState::Dump(MemBuf * mb)
         str.appendf("DNS ErrMsg: %s\r\n", dnsError.termedBuf());
 
     /* - TimeStamp */
-    str.appendf("TimeStamp: %s\r\n\r\n", mkrfc1123(squid_curtime));
+    str.appendf("TimeStamp: %s\r\n\r\n", Time::FormatRfc1123(squid_curtime));
 
     /* - IP stuff */
     str.appendf("ClientIP: %s\r\n", src_addr.toStr(ntoabuf,MAX_IPSTRLEN));
@@ -1164,7 +1164,7 @@ ErrorState::compileLegacyCode(Build &build)
         break;
 
     case 'T':
-        mb.appendf("%s", mkrfc1123(squid_curtime));
+        mb.appendf("%s", Time::FormatRfc1123(squid_curtime));
         break;
 
     case 'U':

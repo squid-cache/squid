@@ -14,6 +14,7 @@ libtime_la_SOURCES = \
 	Engine.cc \
 	Engine.h \
 	forward.h \
+	gadgets.cc \
+	gadgets.h \
 	iso3307.cc \
-	old_api.cc \
-	operators.h
+	rfc1123.cc

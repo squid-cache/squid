@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "time/forward.h"
+#include "time/gadgets.h"
 
 #if HAVE_STRING_H
 #include <string.h>
@@ -19,7 +19,7 @@
 #define ASCII_DIGIT(c) ((c)-48)
 
 time_t
-parse_iso3307_time(const char *buf)
+Time::ParseIso3307(const char *buf)
 {
     /* buf is an ISO 3307 style time: YYYYMMDDHHMMSS or YYYYMMDDHHMMSS.xxx */
     struct tm tms;

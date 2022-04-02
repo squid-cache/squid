@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "ExternalACLEntry.h"
-#include "time/forward.h"
+#include "time/gadgets.h"
 
 /******************************************************************
  * external_acl cache

@@ -13,7 +13,7 @@
 #include "base/TextException.h"
 #include "debug/Stream.h"
 #include "globals.h"
-#include "time/forward.h"
+#include "time/gadgets.h"
 
 /// impossible services value to identify unset theNextServices
 const static char *TheNullServices = ",null,";

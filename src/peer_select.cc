@@ -35,7 +35,7 @@
 #include "PeerSelectState.h"
 #include "SquidConfig.h"
 #include "Store.h"
-#include "time/operators.h"
+#include "time/gadgets.h"
 
 /**
  * A CachePeer which has been selected as a possible destination.

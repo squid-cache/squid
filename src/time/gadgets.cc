@@ -9,7 +9,7 @@
 /* DEBUG: section 21    Time Functions */
 
 #include "squid.h"
-#include "time/forward.h"
+#include "time/gadgets.h"
 
 #include <iomanip>
 #include <ostream>
@@ -19,7 +19,7 @@ double current_dtime;
 time_t squid_curtime = 0;
 
 time_t
-getCurrentTime(void)
+getCurrentTime()
 {
 #if GETTIMEOFDAY_NO_TZP
     gettimeofday(&current_time);

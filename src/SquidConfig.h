@@ -29,7 +29,9 @@
 #endif
 #include "store/Disk.h"
 #include "store/forward.h"
-#include "time/forward.h"
+#include "time/gadgets.h"
+
+#include <chrono>
 
 #if USE_OPENSSL
 class sslproxy_cert_sign;

@@ -11,7 +11,7 @@
 #include "squid.h"
 #include "debug/Stream.h"
 #include "Icmp.h"
-#include "time/forward.h"
+#include "time/gadgets.h"
 
 Icmp::Icmp()
 {
