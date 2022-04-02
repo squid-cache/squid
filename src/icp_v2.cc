@@ -40,8 +40,6 @@
 #include "store_key_md5.h"
 #include "tools.h"
 #include "wordlist.h"
-// for tvSubUsec() which should be in time/forward.h
-#include "util.h"
 
 #include <cerrno>
 
