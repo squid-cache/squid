@@ -120,6 +120,8 @@ private:
     static void DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo);
     static bool WaitBeforePop();
 
+    static void HandleMessagesAtStart();
+
 private:
     const String dbName; ///< the name of the file we are managing
     const pid_t myPid; ///< optimization: cached process ID of our process
