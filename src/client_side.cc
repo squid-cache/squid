@@ -135,8 +135,6 @@
 #include "ssl/ServerBump.h"
 #include "ssl/support.h"
 #endif
-// for tvSubUsec() which should be in time/forward.h
-#include "util.h"
 
 #include <climits>
 #include <cmath>
