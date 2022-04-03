@@ -38,7 +38,6 @@ libicmp_la_LIBADD= libicmpcore.la
 COPIED_SOURCE= \
 	globals.cc \
 	SquidConfig.cc \
-	tests/stub_fd.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/STUB.h \
 	time.cc
@@ -60,6 +59,7 @@ pinger_LDADD=\
 	$(top_builddir)/src/ip/libip.la \
 	$(top_builddir)/src/sbuf/libsbuf.la \
 	$(top_builddir)/src/debug/libdebug.la \
+	$(top_builddir)/src/comm/libminimal.la \
 	$(top_builddir)/src/base/libbase.la \
 	$(top_builddir)/src/mem/libminimal.la \
 	$(COMPAT_LIB) \
@@ -94,9 +94,6 @@ SquidConfig.cc: $(top_srcdir)/src/SquidConfig.cc
 
 tests/stub_HelperChildConfig.cc: $(top_srcdir)/src/tests/stub_HelperChildConfig.cc | tests
 	cp $(top_srcdir)/src/tests/stub_HelperChildConfig.cc $@
-
-tests/stub_fd.cc: $(top_srcdir)/src/tests/stub_fd.cc | tests
-	cp $(top_srcdir)/src/tests/stub_fd.cc $@
 
 tests/STUB.h: $(top_srcdir)/src/tests/STUB.h | tests
 	cp $(top_srcdir)/src/tests/STUB.h $@
