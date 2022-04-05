@@ -10,6 +10,7 @@
 
 #include "base/IoManip.h"
 #include "base/RandomUuid.h"
+#include "base/TextException.h"
 #include "defines.h"
 
 #include <iostream>
@@ -47,6 +48,29 @@ RandomUuid::RandomUuid(const Serialized &bytes)
 {
     static_assert(sizeof(*this) == sizeof(Serialized), "RandomUuid is deserialized with 128/8 bytes");
     memcpy(raw(), bytes.data(), sizeof(*this));
+    timeHiAndVersion = ntohs(timeHiAndVersion);
+    if (!check())
+        throw TextException("malformed version 4 variant 1 UUID", Here());
+}
+
+bool
+RandomUuid::check() const
+{
+    return (!EBIT_TEST(clockSeqHiAndReserved, 6) &&
+            EBIT_TEST(clockSeqHiAndReserved, 7) &&
+            !EBIT_TEST(timeHiAndVersion, 13) &&
+            EBIT_TEST(timeHiAndVersion, 14) &&
+            !EBIT_TEST(timeHiAndVersion, 15) &&
+            !EBIT_TEST(timeHiAndVersion, 16));
+}
+
+RandomUuid::Serialized
+RandomUuid::serialize() const
+{
+    auto serialized = serialize();
+    auto *t = reinterpret_cast<uint16_t *>(&serialized[0] + offsetof(RandomUuid, timeHiAndVersion));
+    *t = htons(*t);
+    return serialized;
 }
 
 void

@@ -17,6 +17,7 @@
 class RandomUuid
 {
 public:
+    /// UUID representation independent of machine byte-order architecture
     using Serialized = std::array<char, 128/8>;
 
     /// creates a new unique ID (i.e. not a "nil UUID" in RFC 4122 terminology)
@@ -34,7 +35,7 @@ public:
     RandomUuid &operator=(const RandomUuid &) = delete;
 
     /// exports UUID value; suitable for long-term storage
-    Serialized serialize() const { return *reinterpret_cast<const Serialized *>(raw()); }
+    Serialized serialize() const;
 
     bool operator ==(const RandomUuid &) const;
     bool operator !=(const RandomUuid &other) const { return !(*this == other); }
@@ -51,6 +52,9 @@ private:
 
     /// read-only access to storage bytes
     const char *raw() const { return reinterpret_cast<const char*>(this); }
+
+    /// whether this is a correct version 4 variant 1 format
+    bool check() const;
 
     /*
      * These field sizes and names come from RFC 4122 Section 4.1.2. They do not
