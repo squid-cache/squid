@@ -23,8 +23,7 @@ RandomUuid::RandomUuid()
     // Generate random bits for populating our UUID.
     // STL implementation bugs notwithstanding (e.g., MinGW bug #338), this is
     // our best chance of getting a non-deterministic seed value for the r.n.g.
-    static std::random_device dev; // unknown a priori size (sizeof(int)) values
-    static std::mt19937_64 rng(dev()); // known 64-bit size values
+    static std::mt19937_64 rng(std::random_device{}()); // produces 64-bit sized values
     const auto rnd1 = rng();
     const auto rnd2 = rng();
 
