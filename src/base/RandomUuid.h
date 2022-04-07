@@ -35,7 +35,7 @@ public:
     RandomUuid &operator=(const RandomUuid &) = delete;
 
     /// exports UUID value; suitable for long-term storage
-    Serialized serialize() const;
+    Serialized const &serialize() const { return raw_; }
 
     bool operator ==(const RandomUuid &) const;
     bool operator !=(const RandomUuid &other) const { return !(*this == other); }
@@ -47,26 +47,33 @@ public:
     void print(std::ostream &os) const;
 
 private:
-    /// read/write access to storage bytes
-    char *raw() { return reinterpret_cast<char*>(this); }
-
-    /// read-only access to storage bytes
-    const char *raw() const { return reinterpret_cast<const char*>(this); }
-
-    /// whether this (being constructed) object follows UUID version 4 variant 1 format
-    bool sane() const;
-
-    /*
+   /*
      * These field sizes and names come from RFC 4122 Section 4.1.2. They do not
      * accurately represent the actual UUID version 4 structure which, the six
      * version/variant bits aside, contains just random bits.
      */
-    uint32_t timeLow;
-    uint16_t timeMid;
-    uint16_t timeHiAndVersion;
-    uint8_t clockSeqHiAndReserved;
-    uint8_t clockSeqLow;
-    uint8_t node[6];
+    struct Layout {
+        uint32_t timeLow;
+        uint16_t timeMid;
+        uint16_t timeHiAndVersion;
+        uint8_t clockSeqHiAndReserved;
+        uint8_t clockSeqLow;
+        uint8_t node[6];
+    };
+    /// read/write access to storage bytes
+    char *raw() { return &raw_[0]; }
+    /// read-only access to storage bytes
+    const char *raw() const { return &raw_[0]; }
+
+    // convenience methods for accessing raw data
+    uint8_t *rawTimeHiAndVersion();
+    const uint8_t *rawTimeHiAndVersion() const;
+    uint8_t *rawClockSeqHiAndReserved();
+    const uint8_t *rawClockSeqHiAndReserved() const;
+
+    bool sane() const;
+
+    Serialized raw_;
 };
 
 #endif /* SQUID_SRC_BASE_RANDOM_UUID_H */
