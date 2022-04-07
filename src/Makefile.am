@@ -881,6 +881,23 @@ tests_testMath_LDADD = \
 	$(XTRA_LIBS)
 tests_testMath_LDFLAGS = $(LIBADD_DL)
 
+## Tests of RandomUuid.h
+check_PROGRAMS += tests/testRandomUuid
+tests_testRandomUuid_SOURCES = \
+	tests/testRandomUuid.cc
+nodist_tests_testRandomUuid_SOURCES = \
+	RandomUuid.h \
+	tests/stub_debug.cc \
+	tests/stub_libmem.cc
+tests_testRandomUuid_LDADD = \
+	libsquid.la \
+	base/libbase.la \
+	sbuf/libsbuf.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testRandomUuid_LDFLAGS = $(LIBADD_DL)
+
 ## Tests of mem/*
 
 check_PROGRAMS += tests/testMem
