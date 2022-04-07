@@ -37,10 +37,10 @@ RandomUuid::RandomUuid()
     EBIT_SET(clockSeqHiAndReserved, 7);
 
     // bullet 2 of RFC 4122 Section 4.4 algorithm
-    EBIT_CLR(timeHiAndVersion, 13);
-    EBIT_SET(timeHiAndVersion, 14);
+    EBIT_CLR(timeHiAndVersion, 12);
+    EBIT_SET(timeHiAndVersion, 13);
+    EBIT_CLR(timeHiAndVersion, 14);
     EBIT_CLR(timeHiAndVersion, 15);
-    EBIT_CLR(timeHiAndVersion, 16);
 
     assert(sane());
 }
@@ -60,16 +60,16 @@ RandomUuid::sane() const
 {
     return (!EBIT_TEST(clockSeqHiAndReserved, 6) &&
             EBIT_TEST(clockSeqHiAndReserved, 7) &&
-            !EBIT_TEST(timeHiAndVersion, 13) &&
-            EBIT_TEST(timeHiAndVersion, 14) &&
-            !EBIT_TEST(timeHiAndVersion, 15) &&
-            !EBIT_TEST(timeHiAndVersion, 16));
+            !EBIT_TEST(timeHiAndVersion, 12) &&
+            EBIT_TEST(timeHiAndVersion, 13) &&
+            !EBIT_TEST(timeHiAndVersion, 14) &&
+            !EBIT_TEST(timeHiAndVersion, 15));
 }
 
 RandomUuid::Serialized
 RandomUuid::serialize() const
 {
-    auto serialized = serialize();
+    auto serialized = *reinterpret_cast<Serialized *>(const_cast<char *>(raw()));
     auto *t = reinterpret_cast<uint16_t *>(&serialized[0] + offsetof(RandomUuid, timeHiAndVersion));
     *t = htons(*t);
     return serialized;
