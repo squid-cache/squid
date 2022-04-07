@@ -53,8 +53,8 @@ private:
     /// read-only access to storage bytes
     const char *raw() const { return reinterpret_cast<const char*>(this); }
 
-    /// whether this is a correct version 4 variant 1 format
-    bool check() const;
+    /// whether this (being constructed) object follows UUID version 4 variant 1 format
+    bool sane() const;
 
     /*
      * These field sizes and names come from RFC 4122 Section 4.1.2. They do not

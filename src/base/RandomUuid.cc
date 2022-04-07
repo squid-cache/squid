@@ -41,6 +41,8 @@ RandomUuid::RandomUuid()
     EBIT_SET(timeHiAndVersion, 14);
     EBIT_CLR(timeHiAndVersion, 15);
     EBIT_CLR(timeHiAndVersion, 16);
+
+    assert(sane());
 }
 
 RandomUuid::RandomUuid(const Serialized &bytes)
@@ -48,12 +50,13 @@ RandomUuid::RandomUuid(const Serialized &bytes)
     static_assert(sizeof(*this) == sizeof(Serialized), "RandomUuid is deserialized with 128/8 bytes");
     memcpy(raw(), bytes.data(), sizeof(*this));
     timeHiAndVersion = ntohs(timeHiAndVersion);
-    if (!check())
+    if (!sane())
         throw TextException("malformed version 4 variant 1 UUID", Here());
 }
 
+/// whether this (being constructed) object follows UUID version 4 variant 1 format
 bool
-RandomUuid::check() const
+RandomUuid::sane() const
 {
     return (!EBIT_TEST(clockSeqHiAndReserved, 6) &&
             EBIT_TEST(clockSeqHiAndReserved, 7) &&
