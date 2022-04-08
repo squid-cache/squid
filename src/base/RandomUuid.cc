@@ -32,15 +32,15 @@ RandomUuid::RandomUuid()
     memcpy(raw(), &rnd1, sizeof(rnd1));
     memcpy(raw() + sizeof(rnd1), &rnd2, sizeof(rnd2));
 
+    // bullet 2 of RFC 4122 Section 4.4 algorithm
+    EBIT_CLR(timeHiAndVersion, 12);
+    EBIT_CLR(timeHiAndVersion, 13);
+    EBIT_SET(timeHiAndVersion, 14);
+    EBIT_CLR(timeHiAndVersion, 15);
+
     // bullet 1 of RFC 4122 Section 4.4 algorithm
     EBIT_CLR(clockSeqHiAndReserved, 6);
     EBIT_SET(clockSeqHiAndReserved, 7);
-
-    // bullet 2 of RFC 4122 Section 4.4 algorithm
-    EBIT_CLR(timeHiAndVersion, 12);
-    EBIT_SET(timeHiAndVersion, 13);
-    EBIT_CLR(timeHiAndVersion, 14);
-    EBIT_CLR(timeHiAndVersion, 15);
 
     assert(sane());
 }
@@ -49,6 +49,8 @@ RandomUuid::RandomUuid(const Serialized &bytes)
 {
     static_assert(sizeof(*this) == sizeof(Serialized), "RandomUuid is deserialized with 128/8 bytes");
     memcpy(raw(), bytes.data(), sizeof(*this));
+    timeLow = ntohl(timeLow);
+    timeMid = ntohs(timeMid);
     timeHiAndVersion = ntohs(timeHiAndVersion);
     if (!sane())
         throw TextException("malformed version 4 variant 1 UUID", Here());
@@ -61,8 +63,8 @@ RandomUuid::sane() const
     return (!EBIT_TEST(clockSeqHiAndReserved, 6) &&
             EBIT_TEST(clockSeqHiAndReserved, 7) &&
             !EBIT_TEST(timeHiAndVersion, 12) &&
-            EBIT_TEST(timeHiAndVersion, 13) &&
-            !EBIT_TEST(timeHiAndVersion, 14) &&
+            !EBIT_TEST(timeHiAndVersion, 13) &&
+            EBIT_TEST(timeHiAndVersion, 14) &&
             !EBIT_TEST(timeHiAndVersion, 15));
 }
 
@@ -70,20 +72,36 @@ RandomUuid::Serialized
 RandomUuid::serialize() const
 {
     auto serialized = *reinterpret_cast<Serialized *>(const_cast<char *>(raw()));
-    auto *t = reinterpret_cast<uint16_t *>(&serialized[0] + offsetof(RandomUuid, timeHiAndVersion));
-    *t = htons(*t);
+    auto *low = reinterpret_cast<uint32_t *>(&serialized[0] + offsetof(RandomUuid, timeLow));
+    *low = htonl(*low);
+    auto *mid = reinterpret_cast<uint16_t *>(&serialized[0] + offsetof(RandomUuid, timeMid));
+    *mid = htons(*mid);
+    auto *hi = reinterpret_cast<uint16_t *>(&serialized[0] + offsetof(RandomUuid, timeHiAndVersion));
+    *hi = htons(*hi);
     return serialized;
 }
 
 void
 RandomUuid::print(std::ostream &os) const
 {
-    PrintHex(os << "UUID:", raw(), sizeof(*this));
+    os << std::setfill('0') << std::hex << std::setw(8) << timeLow  << '-' <<
+        std::setw(4) << timeMid << '-' <<
+        std::setw(4) << timeHiAndVersion << '-' <<
+        std::setw(2) << +clockSeqHiAndReserved << std::setw(2) << +clockSeqLow << '-';
+    for (size_t i = 0; i < sizeof(node); ++i)
+        os << std::setw(2) << +node[i];
 }
 
 bool
 RandomUuid::operator ==(const RandomUuid &other) const
 {
     return memcmp(raw(), other.raw(), sizeof(*this)) == 0;
+}
+
+std::ostream &
+operator<<(std::ostream &os, const RandomUuid &uuid)
+{
+    uuid.print(os);
+    return os;
 }
 

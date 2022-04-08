@@ -18,7 +18,7 @@ class RandomUuid
 {
 public:
     /// UUID representation independent of machine byte-order architecture
-    using Serialized = std::array<char, 128/8>;
+    using Serialized = std::array<uint8_t, 128/8>;
 
     /// creates a new unique ID (i.e. not a "nil UUID" in RFC 4122 terminology)
     RandomUuid();
@@ -68,6 +68,8 @@ private:
     uint8_t clockSeqLow;
     uint8_t node[6];
 };
+
+std::ostream &operator<<(std::ostream &os, const RandomUuid &uuid);
 
 #endif /* SQUID_SRC_BASE_RANDOM_UUID_H */
 
