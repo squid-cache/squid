@@ -1,4 +1,4 @@
-Changes in squid-5.5 (06 Apr 2022):
+Changes in squid-5.5 (12 Apr 2022):
 
 	- Regression Bug 5192: esi_parser default is incorrect
 	- Bug 5177: clientca certificates sent to https_port clients

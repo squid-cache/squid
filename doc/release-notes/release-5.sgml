@@ -267,9 +267,9 @@ This section gives a thorough account of those changes in three categories:
 	   listening queue for each worker in SMP.
 	<p>New <em>CONDITIONAL_AUTH</em> flag for <em>sslflags=</em> option to
 	   request client certificate(s) but not reject clients without any.
-	<p>Squid-5.5 introduces the OpenSSL <em>SSL_MODE_NO_AUTO_CHAIN</em> when
-	   delivering server CA certificates. The <em>tls-cert=</em> file must
-	   now contain both the server certificate and CA chain to send.
+	<p>Squid-5.5 will no longer use <em>tls-clientca=</em> certificates
+	   as possible intermediary CA for the server CA certificate chain when
+	   OpenSSL library supports <em>SSL_MODE_NO_AUTO_CHAIN</em> mode.
 
 	<tag>logformat</tag>
 	<p>New <em>ssl::&lt;cert</em> macro code to display received server X.509
