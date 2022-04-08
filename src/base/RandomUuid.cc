@@ -33,14 +33,14 @@ RandomUuid::RandomUuid()
     memcpy(raw() + sizeof(rnd1), &rnd2, sizeof(rnd2));
 
     // bullet 1 of RFC 4122 Section 4.4 algorithm
-    EBIT_CLR(*rawClockSeqHiAndReserved(), 6);
-    EBIT_SET(*rawClockSeqHiAndReserved(), 7);
+    EBIT_CLR(clockSeqHiAndReserved, 6);
+    EBIT_SET(clockSeqHiAndReserved, 7);
 
     // bullet 2 of RFC 4122 Section 4.4 algorithm
-    EBIT_CLR(*rawTimeHiAndVersion(), 4);
-    EBIT_SET(*rawTimeHiAndVersion(), 5);
-    EBIT_CLR(*rawTimeHiAndVersion(), 6);
-    EBIT_CLR(*rawTimeHiAndVersion(), 7);
+    EBIT_CLR(timeHiAndVersion, 12);
+    EBIT_SET(timeHiAndVersion, 13);
+    EBIT_CLR(timeHiAndVersion, 14);
+    EBIT_CLR(timeHiAndVersion, 15);
 
     assert(sane());
 }
@@ -49,44 +49,30 @@ RandomUuid::RandomUuid(const Serialized &bytes)
 {
     static_assert(sizeof(*this) == sizeof(Serialized), "RandomUuid is deserialized with 128/8 bytes");
     memcpy(raw(), bytes.data(), sizeof(*this));
+    timeHiAndVersion = ntohs(timeHiAndVersion);
     if (!sane())
         throw TextException("malformed version 4 variant 1 UUID", Here());
-}
-
-uint8_t *
-RandomUuid::rawTimeHiAndVersion()
-{
-    return reinterpret_cast<uint8_t *>(raw() + offsetof(Layout, timeHiAndVersion));
-}
-
-const uint8_t *
-RandomUuid::rawTimeHiAndVersion() const
-{
-    return reinterpret_cast<const uint8_t *>(raw() + offsetof(Layout, timeHiAndVersion));
-}
-
-uint8_t *
-RandomUuid::rawClockSeqHiAndReserved()
-{
-    return reinterpret_cast<uint8_t *>(raw() + offsetof(Layout, clockSeqHiAndReserved));
-}
-
-const uint8_t *
-RandomUuid::rawClockSeqHiAndReserved() const
-{
-    return reinterpret_cast<const uint8_t *>(raw() + offsetof(Layout, clockSeqHiAndReserved));
 }
 
 /// whether this (being constructed) object follows UUID version 4 variant 1 format
 bool
 RandomUuid::sane() const
 {
-    return (!EBIT_TEST(*rawClockSeqHiAndReserved(), 6) &&
-            EBIT_TEST(*rawClockSeqHiAndReserved(), 7) &&
-            !EBIT_TEST(*rawTimeHiAndVersion(), 4) &&
-            EBIT_TEST(*rawTimeHiAndVersion(), 5) &&
-            !EBIT_TEST(*rawTimeHiAndVersion(), 6) &&
-            !EBIT_TEST(*rawTimeHiAndVersion(), 7));
+    return (!EBIT_TEST(clockSeqHiAndReserved, 6) &&
+            EBIT_TEST(clockSeqHiAndReserved, 7) &&
+            !EBIT_TEST(timeHiAndVersion, 12) &&
+            EBIT_TEST(timeHiAndVersion, 13) &&
+            !EBIT_TEST(timeHiAndVersion, 14) &&
+            !EBIT_TEST(timeHiAndVersion, 15));
+}
+
+RandomUuid::Serialized
+RandomUuid::serialize() const
+{
+    auto serialized = *reinterpret_cast<Serialized *>(const_cast<char *>(raw()));
+    auto *t = reinterpret_cast<uint16_t *>(&serialized[0] + offsetof(RandomUuid, timeHiAndVersion));
+    *t = htons(*t);
+    return serialized;
 }
 
 void
