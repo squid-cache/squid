@@ -2412,7 +2412,6 @@ nodist_tests_testIcmp_SOURCES = \
 	tests/stub_SBuf.cc \
 	SquidTime.h \
 	tests/stub_debug.cc \
-	globals.cc \
 	icmp/Icmp.h \
 	tests/stub_libmem.cc \
 	time.cc
@@ -2433,7 +2432,6 @@ nodist_tests_testNetDb_SOURCES = \
 	tests/stub_SBuf.cc \
 	SquidTime.h \
 	tests/stub_debug.cc \
-	globals.cc \
 	tests/stub_libmem.cc \
 	time.cc
 tests_testNetDb_LDADD = \
