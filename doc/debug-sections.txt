@@ -10,7 +10,6 @@
 section 00    Client Database
 section 00    Debug Routines
 section 00    Hash Tables
-section 00    UFS Store Dump Tool
 section 01    Main Loop
 section 01    Startup and Main Loop
 section 02    Unlink Daemon
