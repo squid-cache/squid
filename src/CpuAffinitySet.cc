@@ -38,7 +38,10 @@ CpuAffinitySet::apply()
     } else {
         cpu_set_t cpuSet;
         memcpy(&cpuSet, &theCpuSet, sizeof(cpuSet));
-        CPU_AND(&cpuSet, &cpuSet, &theOrigCpuSet);
+        // hack for clang on ubuntu-xenial, where CPU_AND returns a value
+        // which under very strict compiler checks fails the build
+        auto s = CPU_AND(&cpuSet, &cpuSet, &theOrigCpuSet);
+        (void) s;
         if (CPU_COUNT(&cpuSet) <= 0) {
             debugs(54, DBG_IMPORTANT, "ERROR: invalid CPU affinity for process "
                    "PID " << getpid() << ", may be caused by an invalid core in "
