@@ -27,6 +27,9 @@ RandomUuid::RandomUuid()
     const auto rnd1 = rng();
     const auto rnd2 = rng();
 
+    // No real r.n.g. is perfect, but we assume that std::mt19937_64 quality is
+    // high enough to make any imperfections irrelevant to this specific code.
+
     // bullet 3 of RFC 4122 Section 4.4 algorithm but setting _all_ bits (KISS)
     static_assert(sizeof(rnd1) + sizeof(rnd2) == sizeof(*this), "random bits fill a UUID");
     memcpy(raw(), &rnd1, sizeof(rnd1));
