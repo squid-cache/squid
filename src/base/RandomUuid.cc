@@ -72,12 +72,9 @@ RandomUuid::Serialized
 RandomUuid::serialize() const
 {
     auto serialized = *reinterpret_cast<Serialized *>(const_cast<char *>(raw()));
-    auto *low = reinterpret_cast<uint32_t *>(&serialized[0] + offsetof(RandomUuid, timeLow));
-    *low = htonl(*low);
-    auto *mid = reinterpret_cast<uint16_t *>(&serialized[0] + offsetof(RandomUuid, timeMid));
-    *mid = htons(*mid);
-    auto *hi = reinterpret_cast<uint16_t *>(&serialized[0] + offsetof(RandomUuid, timeHiAndVersion));
-    *hi = htons(*hi);
+    *reinterpret_cast<uint32_t *>(&serialized[0]) = htonl(timeLow);
+    *reinterpret_cast<uint16_t *>(&serialized[0] + 4) = htons(timeMid);
+    *reinterpret_cast<uint16_t *>(&serialized[0] + 6) = htons(timeHiAndVersion);
     return serialized;
 }
 
