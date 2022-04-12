@@ -1586,7 +1586,7 @@ SquidMain(int argc, char **argv)
 
         leave_suid();
         RunRegisteredHere(RegisteredRunner::bootstrapConfig);
-        enter_suid(); // TODO remove. parser should handle SUID level (if needed at all)
+        enter_suid();
 
         try {
             parse_err = parseConfigFile(ConfigFile);
