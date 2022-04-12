@@ -106,7 +106,7 @@ Icmp6::Open(void)
     }
 
     icmp_ident = getpid() & 0xffff;
-    debugs(42, DBG_IMPORTANT, "pinger: ICMPv6 socket opened");
+    debugs(42, DBG_IMPORTANT, "ICMPv6 socket opened");
 
     return icmp_sock;
 }
