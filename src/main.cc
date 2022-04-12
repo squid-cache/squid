@@ -1584,7 +1584,9 @@ SquidMain(int argc, char **argv)
 
         Format::Token::Init(); // XXX: temporary. Use a runners registry of pre-parse runners instead.
 
+        leave_suid();
         RunRegisteredHere(RegisteredRunner::bootstrapConfig);
+        enter_suid(); // TODO remove. parser should handle SUID level (if needed at all)
 
         try {
             parse_err = parseConfigFile(ConfigFile);
