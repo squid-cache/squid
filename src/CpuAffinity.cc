@@ -40,6 +40,7 @@ CpuAffinityInit()
 static void
 CpuAffinityReconfigure()
 {
+    CpuAffinityCheck();
     if (TheCpuAffinitySet) {
         TheCpuAffinitySet->undo();
         delete TheCpuAffinitySet;
@@ -52,6 +53,8 @@ CpuAffinityReconfigure()
 static void
 CpuAffinityCheck()
 {
+    if (!IamPrimaryProcess())
+        return;
     if (Config.cpuAffinityMap) {
         Must(!Config.cpuAffinityMap->processes().empty());
         const int maxProcess =
@@ -72,8 +75,7 @@ class CpuAffinityRr : public RegisteredRunner
 {
 public:
     virtual void finalizeConfig() override {
-        if (IamPrimaryProcess())
-            CpuAffinityCheck();
+        CpuAffinityCheck();
     }
 
     virtual void useConfig() override {
@@ -81,7 +83,6 @@ public:
     }
 
     virtual void syncConfig() override {
-        finalizeConfig();
         CpuAffinityReconfigure();
     }
 };
