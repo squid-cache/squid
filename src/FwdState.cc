@@ -641,7 +641,6 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
     if (transporting())
         return; // and continue to receive destinations for backup
 
-    // This is the first path candidate we have seen. Use it.
     useDestinations();
 }
 
@@ -657,12 +656,8 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
             Must(!err); // if we tried to connect, then path selection succeeded
             fail(selectionError);
         }
-        else if (err)
-            debugs(17, 3, "Will abort forwarding because all found paths have failed.");
-        else
-            debugs(17, 3, "Will abort forwarding because path selection found no paths.");
 
-        useDestinations(); // will detect and handle the lack of paths
+        stopAndDestroy("path selection found no paths");
         return;
     }
     // else continue to use one of the previously noted destinations;
@@ -675,7 +670,16 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
         return; // and continue to wait for FwdState::noteConnection() callback
     }
 
-    Must(transporting()); // or we would be stuck with nothing to do or wait for
+    if (transporting()) {
+        // We are already using a previously opened connection (but were also
+        // receiving more destinations in case we need to re-forward).
+        debugs(17, 7, "keep transporting");
+        return;
+    }
+
+    // destinationsFound, but none of them worked, and we were waiting for more
+    assert(err);
+    stopAndDestroy("all found paths have failed");
 }
 
 /// makes sure connection opener knows that the destinations have changed
