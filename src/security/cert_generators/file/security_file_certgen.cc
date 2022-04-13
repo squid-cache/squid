@@ -10,6 +10,7 @@
 #include "base/TextException.h"
 #include "debug/Stream.h"
 #include "helper/protocol_defines.h"
+#include "sbuf/Stream.h"
 #include "security/cert_generators/file/certificate_db.h"
 #include "ssl/crtd_message.h"
 #include "time/gadgets.h"
@@ -173,7 +174,7 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
     Ssl::CertificateProperties certProperties;
     std::string error;
     if (!request_message.parseRequest(certProperties, error) || true) // XXX
-        throw std::runtime_error("Error while parsing the crtd request: " + error);
+        throw TextException(ToSBuf("Cannot parse sslcrtd_program request: ", error), Here());
 
     // TODO: create a DB object only once, instead re-allocating here on every call.
     std::unique_ptr<Ssl::CertificateDb> db;
