@@ -39,8 +39,7 @@ COPIED_SOURCE= \
 	globals.cc \
 	SquidConfig.cc \
 	tests/stub_HelperChildConfig.cc \
-	tests/STUB.h \
-	time.cc
+	tests/STUB.h
 
 # ICMP lookup helper
 pinger_SOURCES = \
@@ -60,6 +59,7 @@ pinger_LDADD=\
 	$(top_builddir)/src/sbuf/libsbuf.la \
 	$(top_builddir)/src/debug/libdebug.la \
 	$(top_builddir)/src/comm/libminimal.la \
+	$(top_builddir)/src/time/libtime.la \
 	$(top_builddir)/src/base/libbase.la \
 	$(top_builddir)/src/mem/libminimal.la \
 	$(COMPAT_LIB) \
@@ -85,9 +85,6 @@ CLEANFILES += $(COPIED_SOURCE)
 ## copied like this to avoid subdir-objects collisions on 'make clean'
 globals.cc: $(top_srcdir)/src/globals.h
 	cp $(top_builddir)/src/globals.cc $@
-
-time.cc: $(top_srcdir)/src/time.cc
-	cp $(top_srcdir)/src/time.cc $@
 
 SquidConfig.cc: $(top_srcdir)/src/SquidConfig.cc
 	cp $(top_srcdir)/src/SquidConfig.cc $@

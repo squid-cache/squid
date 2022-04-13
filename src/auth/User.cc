@@ -18,7 +18,6 @@
 #include "auth/UserRequest.h"
 #include "event.h"
 #include "globals.h"
-#include "SquidTime.h"
 #include "Store.h"
 
 Auth::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :

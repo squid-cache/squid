@@ -17,7 +17,6 @@
 #include "log/File.h"
 #include "log/Formats.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 
 void
 Log::Format::SquidNative(const AccessLogEntry::Pointer &al, Logfile * logfile)

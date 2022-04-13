@@ -24,7 +24,6 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MasterXaction.h"
-#include "SquidTime.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Ecap::XactionRep, XactionRep);
 

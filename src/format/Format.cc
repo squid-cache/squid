@@ -26,7 +26,6 @@
 #include "sbuf/StringConvert.h"
 #include "security/CertError.h"
 #include "security/NegotiationHistory.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 #if USE_OPENSSL

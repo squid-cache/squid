@@ -23,7 +23,6 @@
 #include "http/Stream.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
-#include "SquidTime.h"
 
 Auth::Ntlm::UserRequest::UserRequest() :
     server_blob(nullptr),

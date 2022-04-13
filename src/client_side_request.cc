@@ -53,7 +53,6 @@
 #include "rfc1738.h"
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "StrList.h"
 #include "tools.h"

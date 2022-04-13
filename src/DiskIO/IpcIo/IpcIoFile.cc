@@ -29,7 +29,6 @@
 #include "ipc/UdsOp.h"
 #include "sbuf/SBuf.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "tools.h"
 

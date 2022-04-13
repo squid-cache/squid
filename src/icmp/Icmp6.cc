@@ -17,7 +17,7 @@
 #include "debug/Stream.h"
 #include "Icmp6.h"
 #include "IcmpPinger.h"
-#include "SquidTime.h"
+#include "time/gadgets.h"
 
 // Some system headers are only neeed internally here.
 // They should not be included via the header.

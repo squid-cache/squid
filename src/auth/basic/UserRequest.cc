@@ -19,7 +19,6 @@
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "rfc1738.h"
-#include "SquidTime.h"
 
 #if !defined(HELPER_INPUT_BUFFER)
 #define HELPER_INPUT_BUFFER  8192

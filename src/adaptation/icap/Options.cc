@@ -11,7 +11,6 @@
 #include "adaptation/icap/Options.h"
 #include "base/TextException.h"
 #include "HttpReply.h"
-#include "SquidTime.h"
 #include "StrList.h"
 #include "wordlist.h"
 

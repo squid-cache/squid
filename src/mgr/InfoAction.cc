@@ -21,7 +21,6 @@
 #include "mgr/InfoAction.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 

@@ -21,7 +21,6 @@
 #include "Parsing.h"
 #include "sbuf/MemBlob.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 
 // a single I/O buffer should be large enough to store any access.log record
 const size_t Log::TcpLogger::IoBufSize = 2*MAX_URL;

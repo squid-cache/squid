@@ -19,7 +19,6 @@
 #include "squid.h"
 #include "heap.h"
 #include "MemObject.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "store_heap_replacement.h"
 

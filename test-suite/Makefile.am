@@ -13,7 +13,7 @@ AM_CPPFLAGS += -I$(srcdir)
 LDADD = \
 	$(top_builddir)/src/base/libbase.la \
 	$(top_builddir)/src/globals.o \
-	$(top_builddir)/src/time.o \
+	$(top_builddir)/src/time/libtime.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)

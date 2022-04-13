@@ -9,8 +9,8 @@
 #include "squid.h"
 #include "helper/protocol_defines.h"
 #include "security/cert_generators/file/certificate_db.h"
-#include "SquidTime.h"
 #include "ssl/crtd_message.h"
+#include "time/gadgets.h"
 
 #include <cstring>
 #include <iostream>
@@ -75,18 +75,6 @@ static const char *const B_KBYTES_STR = "KB";
 static const char *const B_MBYTES_STR = "MB";
 static const char *const B_GBYTES_STR = "GB";
 static const char *const B_BYTES_STR = "B";
-
-/// Get current time.
-time_t getCurrentTime(void)
-{
-    struct timeval currentTime;
-#if GETTIMEOFDAY_NO_TZP
-    gettimeofday(&currentTime);
-#else
-    gettimeofday(&currentTime, nullptr);
-#endif
-    return currentTime.tv_sec;
-}
 
 /**
  * Parse bytes unit. It would be one of the next value: MB, GB, KB or B.

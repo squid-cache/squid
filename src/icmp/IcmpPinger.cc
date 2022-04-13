@@ -18,7 +18,6 @@
 #include "Icmp4.h"
 #include "Icmp6.h"
 #include "IcmpPinger.h"
-#include "SquidTime.h"
 
 #include <cerrno>
 
