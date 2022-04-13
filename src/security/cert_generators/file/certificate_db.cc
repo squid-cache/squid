@@ -94,8 +94,10 @@ Ssl::Lock::~Lock()
         unlock();
 }
 
-Ssl::Locker::Locker(Lock &aLock, const char *aFileName, int aLineNo):
-    weLocked(false), lock(aLock), fileName(aFileName), lineNo(aLineNo)
+Ssl::Locker::Locker(Lock &aLock, const SourceLocation &aCaller):
+    weLocked(false),
+    lock(aLock),
+    caller(aCaller)
 {
     if (!lock.locked()) {
         lock.lock();
@@ -105,7 +107,6 @@ Ssl::Locker::Locker(Lock &aLock, const char *aFileName, int aLineNo):
 
 Ssl::Locker::~Locker()
 {
-    (void)lineNo; // lineNo is unused but some find it helpful in debugging
     if (weLocked)
         lock.unlock();
 }
@@ -260,13 +261,13 @@ Ssl::CertificateDb::CertificateDb(std::string const & aDb_path, size_t aMax_db_s
 bool
 Ssl::CertificateDb::find(std::string const &key, const Security::CertPointer &expectedOrig, Security::CertPointer &cert, Security::PrivateKeyPointer &pkey)
 {
-    const Locker locker(dbLock, Here);
+    const Locker locker(dbLock, Here());
     load();
     return pure_find(key, expectedOrig, cert, pkey);
 }
 
 bool Ssl::CertificateDb::purgeCert(std::string const & key) {
-    const Locker locker(dbLock, Here);
+    const Locker locker(dbLock, Here());
     load();
     if (!db)
         return false;
@@ -281,7 +282,7 @@ bool Ssl::CertificateDb::purgeCert(std::string const & key) {
 bool
 Ssl::CertificateDb::addCertAndPrivateKey(std::string const &useKey, const Security::CertPointer &cert, const Security::PrivateKeyPointer &pkey, const Security::CertPointer &orig)
 {
-    const Locker locker(dbLock, Here);
+    const Locker locker(dbLock, Here());
     load();
     if (!db || !cert || !pkey)
         return false;

@@ -7,6 +7,8 @@
  */
 
 #include "squid.h"
+#include "base/TextException.h"
+#include "debug/Stream.h"
 #include "helper/protocol_defines.h"
 #include "security/cert_generators/file/certificate_db.h"
 #include "ssl/crtd_message.h"
@@ -170,7 +172,7 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
 {
     Ssl::CertificateProperties certProperties;
     std::string error;
-    if (!request_message.parseRequest(certProperties, error))
+    if (!request_message.parseRequest(certProperties, error) || true) // XXX
         throw std::runtime_error("Error while parsing the crtd request: " + error);
 
     // TODO: create a DB object only once, instead re-allocating here on every call.
@@ -188,9 +190,10 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
         if (db)
             db->find(certKey, certProperties.mimicCert, cert, pkey);
 
-    } catch (std::runtime_error &err) {
+    } catch (...) {
         dbFailed = true;
-        error = err.what();
+        debugs(83, DBG_IMPORTANT, "ERROR: Database search failure: " << CurrentException <<
+               Debug::Extra << "database location: " << db_path);
     }
 
     if (!cert || !pkey) {
@@ -211,14 +214,12 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
             if (!dbFailed && db && !db->addCertAndPrivateKey(certKey, cert, pkey, certProperties.mimicCert))
                 throw std::runtime_error("Cannot add certificate to db.");
 
-        } catch (const std::runtime_error &err) {
+        } catch (...) {
             dbFailed = true;
-            error = err.what();
+            debugs(83, DBG_IMPORTANT, "ERROR: Database update failure: " << CurrentException <<
+                   Debug::Extra << "database location: " << db_path);
         }
     }
-
-    if (dbFailed)
-        std::cerr << "security_file_certgen helper database '" << db_path  << "' failed: " << error << std::endl;
 
     std::string bufferToWrite;
     if (!Ssl::writeCertAndPrivateKeyToMemory(cert, pkey, bufferToWrite))
@@ -238,6 +239,8 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
 int main(int argc, char *argv[])
 {
     try {
+        Debug::NameThisHelper("sslcrtd_program");
+
         size_t max_db_size = 0;
         size_t fs_block_size = 0;
         int8_t c;
@@ -337,8 +340,8 @@ int main(int argc, char *argv[])
             }
             std::cout.flush();
         }
-    } catch (std::runtime_error & error) {
-        std::cerr << argv[0] << ": " << error.what() << std::endl;
+    } catch (...) {
+        debugs(83, DBG_CRITICAL, "FATAL: Cannot generate certificates: " << CurrentException);
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
