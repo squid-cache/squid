@@ -15,7 +15,7 @@
 /* Use uint64_t to store milliseconds */
 typedef uint64_t time_msec_t;
 
-/// the current UNIX time in seconds (with microsecond decimal)
+/// the current UNIX time in seconds (with microsecond precision)
 extern double current_dtime;
 
 /// the current UNIX time in seconds
