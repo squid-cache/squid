@@ -24,3 +24,4 @@ public:
 } // namespace Time
 
 #endif /* SQUID__SRC_TIME_ENGINE_H */
+

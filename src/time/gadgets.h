@@ -140,3 +140,4 @@ operator ==(const timeval &a, const timeval &b)
 }
 
 #endif /* SQUID__SRC_TIME_GADGETS_H */
+

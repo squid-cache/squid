@@ -18,3 +18,4 @@ class Engine;
 } // namespace Time
 
 #endif /* SQUID__SRC_TIME_FORWARD_H */
+

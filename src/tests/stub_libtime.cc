@@ -34,3 +34,4 @@ time_t ParseRfc1123(const char *) STUB_RETVAL(0)
 const char *FormatStrf(time_t) STUB_RETVAL("")
 const char *FormatHttpd(time_t) STUB_RETVAL("")
 }
+
