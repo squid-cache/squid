@@ -68,7 +68,7 @@ extern struct timeval current_time;
 int tvSubUsec(struct timeval A, struct timeval B);
 
 /// timeval subtraction operation.
-/// \returns (A-B) in seconds (with microsecond decimal)
+/// \returns (A-B) in seconds (with microsecond precision)
 double tvSubDsec(struct timeval A, struct timeval B);
 
 /// timeval subtraction operation.
