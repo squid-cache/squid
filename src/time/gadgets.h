@@ -9,17 +9,14 @@
 #ifndef SQUID__SRC_TIME_GADGETS_H
 #define SQUID__SRC_TIME_GADGETS_H
 
-/* old Squid API for for milli- and micro- second time access */
+#include <ctime>
+#include <iosfwd>
 
 /* Use uint64_t to store milliseconds */
 typedef uint64_t time_msec_t;
 
 /// the current UNIX time in seconds (with microsecond decimal)
 extern double current_dtime;
-
-/* old C time_t API */
-
-#include <ctime>
 
 /// the current UNIX time in seconds
 extern time_t squid_curtime;
@@ -61,11 +58,6 @@ const char *FormatStrf(time_t);
 const char *FormatHttpd(time_t);
 
 } // namespace Time
-
-/* old C struct timeval API */
-
-#include <iosfwd>
-// NP: sys/time.h is included by libcompat
 
 /// the current UNIX time in timeval {seconds, microseconds} format
 extern struct timeval current_time;
