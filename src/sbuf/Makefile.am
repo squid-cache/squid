@@ -23,7 +23,3 @@ libsbuf_la_SOURCES = \
 	Stats.h \
 	Stream.h \
 	forward.h
-
-libsbuf_la_LIBADD = \
-	$(top_builddir)/src/base/libbase.la \
-	$(top_builddir)/src/debug/libdebug.la
