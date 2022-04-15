@@ -1114,7 +1114,8 @@ public:
     virtual void startReconfigure() override { startShutdown(); }
     virtual void syncConfig() override { useConfig(); }
 
-    // must run before comm_exit()
+    // we use startShutdown() instead of later events because 
+    // Comm socket closures require main loop iterations
     virtual void startShutdown() override {
         if (IamPrimaryProcess())
             wccp2ConnectionClose();
