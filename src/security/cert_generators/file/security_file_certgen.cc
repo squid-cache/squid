@@ -7,7 +7,6 @@
  */
 
 #include "squid.h"
-#include "base/CodeContext.h"
 #include "base/TextException.h"
 #include "debug/Stream.h"
 #include "helper/protocol_defines.h"
@@ -242,10 +241,6 @@ int main(int argc, char *argv[])
 {
     try {
         Debug::NameThisHelper("sslcrtd_program");
-
-        // XXX: Without this explicit CurrentCodeContextDetail use, linking
-        // fails due to circular dependency between libbase and libdebug.
-        debugs(83, DBG_DATA, argv[0] << ' ' << CurrentCodeContextDetail);
 
         size_t max_db_size = 0;
         size_t fs_block_size = 0;
