@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "rfc1123.h"
+#include "time/gadgets.h"
 
 /*
  *  Adapted from HTSUtils.c in CERN httpd 3.0 (http://info.cern.ch/httpd/)
@@ -79,7 +79,7 @@ static struct tm *
 parse_date_elements(const char *day, const char *month, const char *year,
                     const char *aTime, const char *zone) {
     static struct tm tm;
-    char *t;
+    const char *t;
     memset(&tm, 0, sizeof(tm));
 
     if (!day || !month || !year || !aTime || (zone && strcmp(zone, "GMT")))
@@ -156,7 +156,7 @@ parse_date(const char *str) {
 }
 
 time_t
-parse_rfc1123(const char *str)
+Time::ParseRfc1123(const char *str)
 {
     struct tm *tm;
     time_t t;
@@ -199,7 +199,7 @@ parse_rfc1123(const char *str)
 }
 
 const char *
-mkrfc1123(time_t t)
+Time::FormatRfc1123(time_t t)
 {
     static char buf[128];
 

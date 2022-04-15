@@ -23,7 +23,6 @@
 #include "StoreFileSystem.h"
 #include "swap_log_op.h"
 #include "tools.h"
-#include "util.h" // for tvSubDsec() which should be in SquidTime.h
 
 typedef SwapDir *STDIRSELECT(const StoreEntry *e);
 

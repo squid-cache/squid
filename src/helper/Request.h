@@ -10,7 +10,7 @@
 #define _SQUID_SRC_HELPER_REQUEST_H
 
 #include "helper/forward.h"
-#include "SquidTime.h"
+#include "time/gadgets.h"
 
 namespace Helper
 {

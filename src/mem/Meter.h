@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_MEM_METER_H
 #define SQUID_SRC_MEM_METER_H
 
-#include "SquidTime.h"
+#include "time/gadgets.h"
 
 namespace Mem
 {

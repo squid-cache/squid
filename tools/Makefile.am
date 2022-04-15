@@ -18,6 +18,7 @@ DISTCLEANFILES=
 LDADD= \
 	$(top_builddir)/src/ip/libip.la \
 	$(top_builddir)/src/mem/libminimal.la \
+	$(top_builddir)/src/time/libtime.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(COMPAT_LIB) \
@@ -44,9 +45,6 @@ CharacterSet.cc: $(top_srcdir)/src/base/CharacterSet.cc
 MemBuf.cc: $(top_srcdir)/src/MemBuf.cc
 	cp $(top_srcdir)/src/MemBuf.cc $@
 
-time.cc: $(top_srcdir)/src/time.cc
-	cp $(top_srcdir)/src/time.cc $@
-
 tests/stub_cbdata.cc: $(top_srcdir)/src/tests/stub_cbdata.cc | tests
 	cp $(top_srcdir)/src/tests/stub_cbdata.cc $@
 
@@ -61,7 +59,7 @@ tests:
 # globals.cc is needed by test_tools.cc.
 # Neither of these should be disted from here.
 TESTSOURCES= test_tools.cc
-CLEANFILES += test_tools.cc Here.cc CharacterSet.cc MemBuf.cc tests/stub_debug.cc time.cc tests/stub_cbdata.cc tests/STUB.h
+CLEANFILES += test_tools.cc Here.cc CharacterSet.cc MemBuf.cc tests/stub_debug.cc tests/stub_cbdata.cc tests/STUB.h
 
 ## Test Scripts
 EXTRA_DIST += helper-ok-dying.pl helper-ok.pl
@@ -77,8 +75,7 @@ cachemgr__CGIEXT__SOURCES = \
 	Here.cc \
 	MemBuf.cc \
 	cachemgr.cc \
-	test_tools.cc \
-	time.cc
+	test_tools.cc
 
 nodist_cachemgr__CGIEXT__SOURCES = \
 	tests/stub_cbdata.cc \

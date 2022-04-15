@@ -36,7 +36,6 @@
 #include "mgr/Registration.h"
 #include "NullDelayId.h"
 #include "SquidString.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"
 

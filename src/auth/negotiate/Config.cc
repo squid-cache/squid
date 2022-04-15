@@ -27,7 +27,6 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
 

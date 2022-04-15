@@ -19,7 +19,6 @@
 #include "mgr/Registration.h"
 #include "snmp_agent.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "util.h"

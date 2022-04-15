@@ -25,7 +25,6 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
-#include "SquidTime.h"
 
 Auth::Negotiate::UserRequest::UserRequest() :
     server_blob(nullptr),

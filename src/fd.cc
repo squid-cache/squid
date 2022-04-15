@@ -16,7 +16,6 @@
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
-#include "SquidTime.h"
 
 // Solaris and possibly others lack MSG_NOSIGNAL optimization
 // TODO: move this into compat/? Use a dedicated compat file to avoid dragging

@@ -21,7 +21,6 @@
 #include "globals.h"
 #include "ip/Address.h"
 #include "parser/BinaryTokenizer.h"
-#include "SquidTime.h"
 #include "ssl/bio.h"
 
 #if _SQUID_WINDOWS_

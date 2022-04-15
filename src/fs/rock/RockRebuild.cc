@@ -18,7 +18,6 @@
 #include "globals.h"
 #include "md5.h"
 #include "sbuf/Stream.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 
