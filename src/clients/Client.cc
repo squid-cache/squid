@@ -21,7 +21,6 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "tools.h"

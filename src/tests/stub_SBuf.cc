@@ -19,6 +19,8 @@ SBufStats SBuf::stats;
 const SBuf::size_type SBuf::npos;
 const SBuf::size_type SBuf::maxSize;
 
+SBufStats::SizeRecorder SBufStats::SBufSizeAtDestructRecorder = nullptr;
+SBufStats::SizeRecorder SBufStats::MemBlobSizeAtDestructRecorder = nullptr;
 std::ostream& SBufStats::dump(std::ostream &os) const STUB_RETVAL(os)
 SBufStats& SBufStats::operator +=(const SBufStats&) STUB_RETVAL(*this)
 

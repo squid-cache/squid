@@ -31,7 +31,6 @@
 #include "pconn.h"
 #include "security/PeerConnector.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 
 /// Gives Security::PeerConnector access to Answer in the PeerPoolMgr callback dialer.
 class MyIcapAnswerDialer: public UnaryMemFunT<Adaptation::Icap::Xaction, Security::EncryptorAnswer, Security::EncryptorAnswer&>,

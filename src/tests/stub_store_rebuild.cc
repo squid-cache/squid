@@ -10,9 +10,9 @@
 
 #include "squid.h"
 #include "MemBuf.h"
-#include "SquidTime.h"
 #include "store/Controller.h"
 #include "store_rebuild.h"
+#include "time/gadgets.h"
 
 #include <cstring>
 

@@ -824,30 +824,25 @@ HttpRequest::canonicalCleanUrl() const
     return urlCanonicalCleanWithoutRequest(effectiveRequestUri(), method, url.getScheme());
 }
 
-/// a helper for validating FindListeningPortAddress()-found address candidates
-static const Ip::Address *
-FindListeningPortAddressInAddress(const Ip::Address *ip)
-{
-    // FindListeningPortAddress() callers do not want INADDR_ANY addresses
-    return (ip && !ip->isAnyAddr()) ? ip : nullptr;
-}
-
 /// a helper for handling PortCfg cases of FindListeningPortAddress()
+template <typename Filter>
 static const Ip::Address *
-FindListeningPortAddressInPort(const AnyP::PortCfgPointer &port)
+FindGoodListeningPortAddressInPort(const AnyP::PortCfgPointer &port, const Filter isGood)
 {
-    return port ? FindListeningPortAddressInAddress(&port->s) : nullptr;
+    return (port && isGood(port->s)) ? &port->s : nullptr;
 }
 
 /// a helper for handling Connection cases of FindListeningPortAddress()
+template <typename Filter>
 static const Ip::Address *
-FindListeningPortAddressInConn(const Comm::ConnectionPointer &conn)
+FindGoodListeningPortAddressInConn(const Comm::ConnectionPointer &conn, const Filter isGood)
 {
-    return conn ? FindListeningPortAddressInAddress(&conn->local) : nullptr;
+    return (conn && isGood(conn->local)) ? &conn->local : nullptr;
 }
 
+template <typename Filter>
 const Ip::Address *
-FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry *ale)
+FindGoodListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry *ale, const Filter filter)
 {
     // Check all sources of usable listening port information, giving
     // HttpRequest and masterXaction a preference over ALE.
@@ -858,18 +853,35 @@ FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry 
     if (!request)
         return nullptr; // not enough information
 
-    const Ip::Address *ip = FindListeningPortAddressInPort(request->masterXaction->squidPort);
+    auto ip = FindGoodListeningPortAddressInPort(request->masterXaction->squidPort, filter);
     if (!ip && ale)
-        ip = FindListeningPortAddressInPort(ale->cache.port);
+        ip = FindGoodListeningPortAddressInPort(ale->cache.port, filter);
 
     // XXX: also handle PROXY protocol here when we have a flag to identify such request
     if (ip || request->flags.interceptTproxy || request->flags.intercepted)
         return ip;
 
     /* handle non-intercepted cases that were not handled above */
-    ip = FindListeningPortAddressInConn(request->masterXaction->tcpClient);
+    ip = FindGoodListeningPortAddressInConn(request->masterXaction->tcpClient, filter);
     if (!ip && ale)
-        ip = FindListeningPortAddressInConn(ale->tcpClient);
+        ip = FindGoodListeningPortAddressInConn(ale->tcpClient, filter);
     return ip; // may still be nil
 }
 
+const Ip::Address *
+FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry *ale)
+{
+    return FindGoodListeningPortAddress(callerRequest, ale, [](const Ip::Address &address) {
+        // FindListeningPortAddress() callers do not want INADDR_ANY addresses
+        return !address.isAnyAddr();
+    });
+}
+
+unsigned short
+FindListeningPortNumber(const HttpRequest *callerRequest, const AccessLogEntry *ale)
+{
+    const auto ip = FindGoodListeningPortAddress(callerRequest, ale, [](const Ip::Address &address) {
+        return address.port() > 0;
+    });
+    return ip ? ip->port() : 0;
+}

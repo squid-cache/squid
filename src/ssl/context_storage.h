@@ -18,7 +18,6 @@
 #include "mgr/Action.h"
 #include "mgr/Command.h"
 #include "security/forward.h"
-#include "SquidTime.h"
 #include "ssl/gadgets.h"
 
 #include <list>

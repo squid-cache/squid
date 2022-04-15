@@ -17,7 +17,7 @@
 #include "neighbors.h"
 #include "security/NegotiationHistory.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
+
 #include <ostream>
 
 InstanceIdDefinitions(Comm::Connection, "conn", uint64_t);

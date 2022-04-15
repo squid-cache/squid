@@ -18,13 +18,11 @@
 #include "snmp_core.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
-#include "SquidTime.h"
 #include "stat.h"
 #include "StatCounters.h"
 #include "StatHist.h"
 #include "Store.h"
 #include "tools.h"
-// for tvSubDsec() which should be in SquidTime.h
 #include "util.h"
 
 /************************************************************************

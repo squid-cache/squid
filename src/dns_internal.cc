@@ -30,7 +30,6 @@
 #include "mgr/Registration.h"
 #include "snmp_agent.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 #include "util.h"

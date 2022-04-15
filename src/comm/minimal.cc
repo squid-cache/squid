@@ -6,19 +6,19 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_RFC1123_H
-#define _SQUID_RFC1123_H
+#include "squid.h"
+#include "debug/Stream.h"
+#include "fd.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-extern const char *mkhttpdlogtime(const time_t *);
-extern const char *mkrfc1123(time_t);
-extern time_t parse_rfc1123(const char *str);
-
-#ifdef __cplusplus
+void
+fd_open(const int fd, unsigned int, const char *description)
+{
+    debugs(51, 3, "FD " << fd << ' ' << description);
 }
-#endif
-#endif /* _SQUID_RFC1123_H */
+
+void
+fd_close(const int fd)
+{
+    debugs(51, 3, "FD " << fd);
+}
 

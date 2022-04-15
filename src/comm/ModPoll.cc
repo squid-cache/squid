@@ -20,7 +20,6 @@
 #include "ICP.h"
 #include "mgr/Registration.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 

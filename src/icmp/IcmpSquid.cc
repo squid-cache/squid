@@ -19,7 +19,6 @@
 #include "ip/tools.h"
 #include "SquidConfig.h"
 #include "SquidIpc.h"
-#include "SquidTime.h"
 
 #include <cerrno>
 

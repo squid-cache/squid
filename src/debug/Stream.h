@@ -88,6 +88,16 @@ public:
     static int override_X;
     static bool log_syslog;
 
+    // TODO: Convert all helpers to use debugs() and NameThisHelper() APIs.
+    /// Use the given name for debugs() messages from this helper process.
+    /// Side effect: Commits to using helper-appropriate debug levels/channels.
+    /// \sa NameThisKid()
+    static void NameThisHelper(const char *name);
+
+    /// Use the given ID for debugs() messages from this SMP kid process.
+    /// \sa NameThisHelper()
+    static void NameThisKid(int kidIdentifier);
+
     static void parseOptions(char const *);
 
     /// minimum level required by the current debugs() call
