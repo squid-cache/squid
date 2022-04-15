@@ -173,7 +173,7 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
 {
     Ssl::CertificateProperties certProperties;
     std::string error;
-    if (!request_message.parseRequest(certProperties, error) || true) // XXX
+    if (!request_message.parseRequest(certProperties, error))
         throw TextException(ToSBuf("Cannot parse sslcrtd_program request: ", error), Here());
 
     // TODO: create a DB object only once, instead re-allocating here on every call.
