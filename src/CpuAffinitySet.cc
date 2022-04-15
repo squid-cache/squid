@@ -12,6 +12,8 @@
 #include "base/TextException.h"
 #include "CpuAffinitySet.h"
 #include "debug/Stream.h"
+#include "globals.h"
+#include "tools.h"
 #include "util.h"
 
 #include <cerrno>

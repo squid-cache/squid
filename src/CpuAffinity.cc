@@ -22,39 +22,10 @@
 
 static CpuAffinitySet *TheCpuAffinitySet = nullptr;
 
-/// Makes CPU affinity of this process match configured CPU affinity.
-/// Assumes that we have never set the CPU affinity or have cleared it.
-static void
-CpuAffinityInit()
-{
-    Must(!TheCpuAffinitySet);
-    if (Config.cpuAffinityMap) {
-        const int processNumber = InDaemonMode() ? KidIdentifier : 1;
-        TheCpuAffinitySet = Config.cpuAffinityMap->calculateSet(processNumber);
-        if (TheCpuAffinitySet)
-            TheCpuAffinitySet->apply();
-    }
-}
-
-/// reconfigure CPU affinity for this process
-static void
-CpuAffinityReconfigure()
-{
-    CpuAffinityCheck();
-    if (TheCpuAffinitySet) {
-        TheCpuAffinitySet->undo();
-        delete TheCpuAffinitySet;
-        TheCpuAffinitySet = nullptr;
-    }
-    CpuAffinityInit();
-}
-
 /// check CPU affinity configuration and print warnings if needed
 static void
 CpuAffinityCheck()
 {
-    if (!IamPrimaryProcess())
-        return;
     if (Config.cpuAffinityMap) {
         Must(!Config.cpuAffinityMap->processes().empty());
         const int maxProcess =
@@ -71,19 +42,36 @@ CpuAffinityCheck()
     }
 }
 
+/// Makes CPU affinity of this process match configured CPU affinity.
+/// Assumes that we have never set the CPU affinity or have cleared it.
+static void
+CpuAffinityInit()
+{
+    if (IamPrimaryProcess())
+        CpuAffinityCheck();
+    Must(!TheCpuAffinitySet);
+    if (Config.cpuAffinityMap) {
+        const int processNumber = InDaemonMode() ? KidIdentifier : 1;
+        TheCpuAffinitySet = Config.cpuAffinityMap->calculateSet(processNumber);
+        if (TheCpuAffinitySet)
+            TheCpuAffinitySet->apply();
+    }
+}
+
 class CpuAffinityRr : public RegisteredRunner
 {
 public:
-    virtual void finalizeConfig() override {
-        CpuAffinityCheck();
-    }
-
     virtual void useConfig() override {
         CpuAffinityInit();
     }
 
     virtual void syncConfig() override {
-        CpuAffinityReconfigure();
+        if (TheCpuAffinitySet) {
+            TheCpuAffinitySet->undo();
+            delete TheCpuAffinitySet;
+            TheCpuAffinitySet = nullptr;
+        }
+        CpuAffinityInit();
     }
 };
 
