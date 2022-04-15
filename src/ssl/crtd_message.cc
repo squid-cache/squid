@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "base/TextException.h"
 #include "ssl/crtd_message.h"
 #include "ssl/gadgets.h"
 
@@ -253,10 +254,10 @@ void Ssl::CrtdMessage::composeRequest(Ssl::CertificateProperties const &certProp
 
     std::string certsPart;
     if (!Ssl::writeCertAndPrivateKeyToMemory(certProperties.signWithX509, certProperties.signWithPkey, certsPart))
-        throw std::runtime_error("Ssl::writeCertAndPrivateKeyToMemory()");
+        throw TextException("Ssl::writeCertAndPrivateKeyToMemory()", Here());
     if (certProperties.mimicCert.get()) {
         if (!Ssl::appendCertToMemory(certProperties.mimicCert, certsPart))
-            throw std::runtime_error("Ssl::appendCertToMemory()");
+            throw TextException("Ssl::appendCertToMemory()", Here());
     }
     body += "\n" + certsPart;
 }
