@@ -33,7 +33,10 @@
  */
 
 /// a runnable registrant API
-/// kids must override [only] the methods they are interested in
+/// Kids must override [only] the methods they are interested in.
+/// Runners operate with low privilege level, methods needing
+/// high privilege must ensure they have reduced privileges
+/// before returning.
 class RegisteredRunner
 {
 public:
