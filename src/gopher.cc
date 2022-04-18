@@ -365,7 +365,6 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     char *lpos = NULL;
     char *tline = NULL;
     LOCAL_ARRAY(char, line, TEMP_BUF_SIZE);
-    LOCAL_ARRAY(char, tmpbuf, TEMP_BUF_SIZE);
     char *name = NULL;
     char *selector = NULL;
     char *host = NULL;
@@ -375,7 +374,6 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     char gtype;
     StoreEntry *entry = NULL;
 
-    memset(tmpbuf, '\0', TEMP_BUF_SIZE);
     memset(line, '\0', TEMP_BUF_SIZE);
 
     entry = gopherState->entry;
@@ -410,7 +408,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
         return;
     }
 
-    String outbuf;
+    SBuf outbuf;
 
     if (!gopherState->HTML_header_added) {
         if (gopherState->conversion == GopherStateData::HTML_CSO_RESULT)
@@ -582,37 +580,34 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                         break;
                     }
 
-                    memset(tmpbuf, '\0', TEMP_BUF_SIZE);
-
                     if ((gtype == GOPHER_TELNET) || (gtype == GOPHER_3270)) {
                         if (strlen(escaped_selector) != 0)
-                            snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"telnet://%s@%s%s%s/\">%s</A>\n",
-                                     icon_url, escaped_selector, rfc1738_escape_part(host),
-                                     *port ? ":" : "", port, html_quote(name));
+                            outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"telnet://%s@%s%s%s/\">%s</A>\n",
+                                           icon_url, escaped_selector, rfc1738_escape_part(host),
+                                           *port ? ":" : "", port, html_quote(name));
                         else
-                            snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"telnet://%s%s%s/\">%s</A>\n",
-                                     icon_url, rfc1738_escape_part(host), *port ? ":" : "",
-                                     port, html_quote(name));
+                            outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"telnet://%s%s%s/\">%s</A>\n",
+                                           icon_url, rfc1738_escape_part(host), *port ? ":" : "",
+                                           port, html_quote(name));
 
                     } else if (gtype == GOPHER_INFO) {
-                        snprintf(tmpbuf, TEMP_BUF_SIZE, "\t%s\n", html_quote(name));
+                        outbuf.appendf("\t%s\n", html_quote(name));
                     } else {
                         if (strncmp(selector, "GET /", 5) == 0) {
                             /* WWW link */
-                            snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"http://%s/%s\">%s</A>\n",
-                                     icon_url, host, rfc1738_escape_unescaped(selector + 5), html_quote(name));
+                            outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"http://%s/%s\">%s</A>\n",
+                                           icon_url, host, rfc1738_escape_unescaped(selector + 5), html_quote(name));
                         } else if (gtype == GOPHER_WWW) {
-                            snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"%s\">%s</A>\n",
-                                     icon_url, rfc1738_escape_unescaped(selector), html_quote(name));
+                            outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"gopher://%s/%c%s\">%s</A>\n",
+                                           icon_url, rfc1738_escape_unescaped(selector), html_quote(name));
                         } else {
                             /* Standard link */
-                            snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"gopher://%s/%c%s\">%s</A>\n",
-                                     icon_url, host, gtype, escaped_selector, html_quote(name));
+                            outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"gopher://%s/%c%s\">%s</A>\n",
+                                           icon_url, host, gtype, escaped_selector, html_quote(name));
                         }
                     }
 
                     safe_free(escaped_selector);
-                    outbuf.append(tmpbuf);
                 } else {
                     memset(line, '\0', TEMP_BUF_SIZE);
                     continue;
@@ -645,13 +640,12 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                     break;
 
                 if (gopherState->cso_recno != recno) {
-                    snprintf(tmpbuf, TEMP_BUF_SIZE, "</PRE><HR noshade size=\"1px\"><H2>Record# %d<br><i>%s</i></H2>\n<PRE>", recno, html_quote(result));
+                    outbuf.appendf("</PRE><HR noshade size=\"1px\"><H2>Record# %d<br><i>%s</i></H2>\n<PRE>", recno, html_quote(result));
                     gopherState->cso_recno = recno;
                 } else {
-                    snprintf(tmpbuf, TEMP_BUF_SIZE, "%s\n", html_quote(result));
+                    outbuf.appendf("%s\n", html_quote(result));
                 }
 
-                outbuf.append(tmpbuf);
                 break;
             } else {
                 int code;
@@ -679,8 +673,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 
                 case 502: { /* Too Many Matches */
                     /* Print the message the server returns */
-                    snprintf(tmpbuf, TEMP_BUF_SIZE, "</PRE><HR noshade size=\"1px\"><H2>%s</H2>\n<PRE>", html_quote(result));
-                    outbuf.append(tmpbuf);
+                    outbuf.appendf("</PRE><HR noshade size=\"1px\"><H2>%s</H2>\n<PRE>", html_quote(result));
                     break;
                 }
 
@@ -696,13 +689,12 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 
     }               /* while loop */
 
-    if (outbuf.size() > 0) {
-        entry->append(outbuf.rawBuf(), outbuf.size());
+    if (outbuf.length() > 0) {
+        entry->append(outbuf.rawContent(), outbuf.length());
         /* now let start sending stuff to client */
         entry->flush();
     }
 
-    outbuf.clean();
     return;
 }
 
