@@ -957,8 +957,8 @@ ConnStateData::kick()
      * half-closed _AND_ then, sometimes, spending "Timeout" time in
      * the keepalive "Waiting for next request" state.
      */
-    if (commIsHalfClosed(clientConnection->fd) && pipeline.empty()) {
-        debugs(33, 3, "half-closed client with no pending requests, closing");
+    if (fd_table[clientConnection->fd].flags.write_only && pipeline.empty()) {
+        debugs(33, 3, "write-only client with no pending requests, closing");
         clientConnection->close();
         return;
     }
@@ -1451,8 +1451,8 @@ void
 ConnStateData::clientAfterReadingRequests()
 {
     // Were we expecting to read more request body from half-closed connection?
-    if (mayNeedToReadMoreBody() && commIsHalfClosed(clientConnection->fd)) {
-        debugs(33, 3, "truncated body: closing half-closed " << clientConnection);
+    if (mayNeedToReadMoreBody() && fd_table[clientConnection->fd].flags.write_only) {
+        debugs(33, 3, "truncated body: closing write-only " << clientConnection);
         clientConnection->close();
         return;
     }
@@ -1968,8 +1968,8 @@ ConnStateData::afterClientRead()
         // We may get here if the client half-closed after sending a partial
         // request. See doClientRead() and shouldCloseOnEof().
         // XXX: This partially duplicates ConnStateData::kick().
-        if (pipeline.empty() && commIsHalfClosed(clientConnection->fd)) {
-            debugs(33, 5, clientConnection << ": half-closed connection, no completed request parsed, connection closing.");
+        if (pipeline.empty() && fd_table[clientConnection->fd].flags.write_only) {
+            debugs(33, 5, clientConnection << ": write-only connection, no completed request parsed, connection closing.");
             clientConnection->close();
             return;
         }

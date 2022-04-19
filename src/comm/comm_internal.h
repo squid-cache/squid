@@ -12,7 +12,6 @@
 /* misc collection of bits shared by Comm code, but not needed by the rest of Squid. */
 
 bool isOpen(const int fd);
-void commStopHalfClosedMonitor(int fd);
 
 #endif
 

@@ -17,6 +17,14 @@ class MemBuf;
 namespace Comm
 {
 
+/// switch to write-only mode.
+/// Read will be monitored and any input will close
+/// the connection.
+void SetWriteOnly(const Comm::ConnectionPointer &);
+
+/// switch out of write-only mode.
+void StopWriteOnly(const Comm::ConnectionPointer &);
+
 /**
  * Queue a write. callback is scheduled when the write
  * completes, on error, or on file descriptor close.

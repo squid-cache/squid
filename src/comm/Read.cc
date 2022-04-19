@@ -13,6 +13,7 @@
 #include "comm/IoCallback.h"
 #include "comm/Loops.h"
 #include "comm/Read.h"
+#include "comm/Write.h"
 #include "comm_internal.h"
 #include "CommCalls.h"
 #include "debug/Stream.h"
@@ -67,7 +68,7 @@ comm_read_base(const Comm::ConnectionPointer &conn, char *buf, int size, AsyncCa
     if (ccb->active()) {
         // if the assertion below fails, we have an active comm_read conflict
         assert(fd_table[conn->fd].halfClosedReader != NULL);
-        commStopHalfClosedMonitor(conn->fd);
+        Comm::StopWriteOnly(conn);
         assert(!ccb->active());
     }
     ccb->conn = conn;
