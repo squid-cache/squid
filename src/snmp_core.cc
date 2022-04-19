@@ -212,7 +212,7 @@ snmpInit(void)
     /* cachePeerTable - 1.3.6.1.4.1.3495.1.5.1 */
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.5", MESH_PTBL, NULL, NULL);
 
-    /* CachePeerTableEntry (version 3) - 1.3.6.1.4.1.3495.1.5.1.3 */
+    /* CachePeerEntry (version 3) - 1.3.6.1.4.1.3495.1.5.1.3 */
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1", 3, NULL, NULL);
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_INDEX, snmp_meshPtblFn, peer_Inst);
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_NAME, snmp_meshPtblFn, peer_Inst);
