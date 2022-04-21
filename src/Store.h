@@ -42,7 +42,6 @@ class StoreEntry : public hash_link, public Packable
 {
 
 public:
-    static DeferredRead::DeferrableRead DeferReader;
     bool checkDeferRead(int fd) const;
 
     const char *getMD5Text() const;
@@ -170,8 +169,6 @@ public:
     void unregisterAbortCallback(const char *reason);
     void destroyMemObject();
     int checkTooSmall();
-
-    void delayAwareRead(const Comm::ConnectionPointer &conn, char *buf, int len, AsyncCall::Pointer callback);
 
     void setNoDelay (bool const);
     void lastModified(const time_t when) { lastModified_ = when; }

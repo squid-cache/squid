@@ -1171,12 +1171,16 @@ HttpStateData::persistentConnStatus() const
     return statusIfComplete();
 }
 
-static void
-readDelayed(void *context, CommRead const &)
+void
+HttpStateData::noteDelayAwareReadChance()
 {
-    HttpStateData *state = static_cast<HttpStateData*>(context);
-    state->flags.do_next_read = true;
-    state->maybeReadVirginBody();
+    if (!Comm::IsConnOpen(serverConnection) || fd_table[serverConnection->fd].closing()) {
+        debugs(11, 3, "will not read from " << serverConnection);
+        return;
+    }
+
+    flags.do_next_read = true;
+    maybeReadVirginBody();
 }
 
 void
@@ -1214,9 +1218,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
     rd.size = entry->bytesWanted(Range<size_t>(0, inBuf.spaceSize()));
 
     if (rd.size <= 0) {
-        assert(entry->mem_obj);
-        AsyncCall::Pointer nilCall;
-        entry->mem_obj->delayRead(DeferredRead(readDelayed, this, CommRead(io.conn, NULL, 0, nilCall)));
+        delayRead();
         return;
     }
 

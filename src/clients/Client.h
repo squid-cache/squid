@@ -159,6 +159,12 @@ protected:
     size_t calcBufferSpaceToReserve(const size_t space, const size_t wantSpace) const;
 
     void adjustBodyBytesRead(const int64_t delta);
+    /// called when a previously delayed read may become possible
+    virtual void noteDelayAwareReadChance() = 0;
+
+    /// Defer reading until it is likely to become possible.
+    /// Eventually a noteDelayAwareReadChance() callback will be called.
+    void delayRead();
 
     // These should be private
     int64_t currentOffset = 0;  /**< Our current offset in the StoreEntry */

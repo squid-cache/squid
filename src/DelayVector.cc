@@ -11,6 +11,7 @@
 #include "squid.h"
 
 #if USE_DELAY_POOLS
+#include "base/AsyncCall.h"
 #include "comm/Connection.h"
 #include "CommRead.h"
 #include "DelayVector.h"
@@ -126,7 +127,7 @@ DelayVector::Id::bytesIn(int qty)
 }
 
 void
-DelayVector::Id::delayRead(DeferredRead const &aRead)
+DelayVector::Id::delayRead(const AsyncCallPointer &aRead)
 {
     theVector->delayRead(aRead);
 }

@@ -14,6 +14,7 @@
 #if USE_DELAY_POOLS
 
 #include "auth/Gadgets.h"
+#include "base/forward.h"
 #include "CompositePoolNode.h"
 #include "DelayBucket.h"
 #include "DelayIdComposite.h"
@@ -64,7 +65,7 @@ private:
         ~Id();
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);
-        virtual void delayRead(DeferredRead const &);
+        virtual void delayRead(const AsyncCallPointer &);
 
     private:
         RefCount<DelayTagged> theTagged;

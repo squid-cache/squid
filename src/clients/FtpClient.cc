@@ -10,6 +10,8 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "base/AsyncJobCalls.h"
+#include "base/Range.h"
 #include "client_side.h"
 #include "clients/FtpClient.h"
 #include "comm/ConnOpener.h"
@@ -914,6 +916,26 @@ Ftp::Client::maybeReadVirginBody()
 
     initReadBuf();
 
+    delayAwareRead();
+}
+
+void
+Ftp::Client::noteDelayAwareReadChance()
+{
+    if (!Comm::IsConnOpen(data.conn) || fd_table[data.conn->fd].closing()) {
+        debugs(9, 3, "will not read from " << data.conn);
+        return;
+    }
+
+    delayAwareRead();
+}
+
+void
+Ftp::Client::delayAwareRead()
+{
+    Assure(Comm::IsConnOpen(data.conn));
+    Assure(!fd_table[data.conn->fd].closing());
+
     const int read_sz = replyBodySpace(*data.readBuf, 0);
 
     debugs(9, 9, "FTP may read up to " << read_sz << " bytes");
@@ -930,9 +952,16 @@ Ftp::Client::maybeReadVirginBody()
 
     debugs(9,5,"queueing read on FD " << data.conn->fd);
 
-    typedef CommCbMemFunT<Client, CommIoCbParams> Dialer;
-    entry->delayAwareRead(data.conn, data.readBuf->space(), read_sz,
-                          JobCallback(9, 5, Dialer, this, Ftp::Client::dataRead));
+    const auto amountToRead = entry->bytesWanted(Range<size_t>(0, read_sz));
+
+    if (amountToRead <= 0) {
+        delayRead();
+        return;
+    }
+
+    using ReadDialer = CommCbMemFunT<Client, CommIoCbParams>;
+    AsyncCall::Pointer readCallback = JobCallback(9, 5, ReadDialer, this, Client::dataRead);
+    comm_read(data.conn, data.readBuf->space(), amountToRead, readCallback);
 }
 
 void

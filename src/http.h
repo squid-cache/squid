@@ -80,6 +80,8 @@ protected:
     void proceedAfter1xx();
     void handle1xx(HttpReply *msg);
     void drop1xx(const char *reason);
+    /* Client API */
+    virtual void noteDelayAwareReadChance();
 
 private:
     /**

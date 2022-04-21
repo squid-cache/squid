@@ -13,6 +13,7 @@
 
 #if USE_DELAY_POOLS
 #include "auth/UserRequest.h"
+#include "base/forward.h"
 #include "CommRead.h"
 #include "DelayIdComposite.h"
 #include "DelayPools.h"
@@ -37,7 +38,7 @@ public:
 
     class CompositeSelectionDetails;
     virtual DelayIdComposite::Pointer id(CompositeSelectionDetails &) = 0;
-    void delayRead(DeferredRead const &);
+    void delayRead(const AsyncCallPointer &);
 
     /// \ingroup DelayPoolsAPI
     class CompositeSelectionDetails

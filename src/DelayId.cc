@@ -164,7 +164,7 @@ DelayId::bytesIn(int qty)
 }
 
 void
-DelayId::delayRead(DeferredRead const &aRead)
+DelayId::delayRead(const AsyncCall::Pointer &aRead)
 {
     assert (compositeId != NULL);
     compositeId->delayRead(aRead);

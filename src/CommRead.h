@@ -11,54 +11,23 @@
 #ifndef COMMREAD_H
 #define COMMREAD_H
 
-#include "base/CbDataList.h"
-#include "comm.h"
-#include "comm/forward.h"
-#include "CommCalls.h"
+#include "base/forward.h"
 
-class CommRead
-{
+#include <vector>
 
-public:
-    CommRead();
-    CommRead(const Comm::ConnectionPointer &c, char *buf, int len, AsyncCall::Pointer &callback);
-    Comm::ConnectionPointer conn;
-    char *buf;
-    int len;
-    AsyncCall::Pointer callback;
-};
-
-class DeferredRead
-{
-
-public:
-    typedef void DeferrableRead(void *context, CommRead const &);
-    DeferredRead ();
-    DeferredRead (DeferrableRead *, void *, CommRead const &);
-    void markCancelled();
-    DeferrableRead *theReader;
-    void *theContext;
-    CommRead theRead;
-    bool cancelled;
-    AsyncCall::Pointer closer; ///< internal close handler used by Comm
-
-private:
-};
-
+// TODO: create dedicated header/source files
+/// maintains a list of async calls and schedules them at once
 class DeferredReadManager
 {
-
 public:
-    ~DeferredReadManager();
-    void delayRead(DeferredRead const &);
-    void kickReads(int const count);
+    ~DeferredReadManager() { kickReads(); }
+    /// stores an async call in a list
+    void delayRead(const AsyncCallPointer &);
+    /// schedules all previously stored async calls and clears the list
+    void kickReads();
 
 private:
-    static CLCB CloseHandler;
-    static DeferredRead popHead(CbDataListContainer<DeferredRead> &deferredReads);
-    void kickARead(DeferredRead const &);
-    void flushReads();
-    CbDataListContainer<DeferredRead> deferredReads;
+    std::vector<AsyncCallPointer> deferredReads;
 };
 
 #endif /* COMMREAD_H */

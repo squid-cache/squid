@@ -9,6 +9,7 @@
 #ifndef SQUID_MEMOBJECT_H
 #define SQUID_MEMOBJECT_H
 
+#include "base/forward.h"
 #include "CommRead.h"
 #include "dlink.h"
 #include "http/RequestMethod.h"
@@ -192,7 +193,7 @@ public:
     PeerSelector *ircb_data = nullptr;
 
     /// used for notifying StoreEntry writers about 3rd-party initiated aborts
-    AsyncCall::Pointer abortCallback;
+    AsyncCallPointer abortCallback;
     RemovalPolicyNode repl;
     int id = 0;
     int64_t object_sz = -1;
@@ -203,7 +204,7 @@ public:
 
     SBuf vary_headers;
 
-    void delayRead(DeferredRead const &);
+    void delayRead(const AsyncCallPointer &);
     void kickReads();
 
 private:

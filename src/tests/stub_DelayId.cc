@@ -20,7 +20,7 @@
 DelayId::DelayId(): pool_(0), compositeId(NULL), markedAsNoDelay(false) {}
 DelayId::~DelayId() {}
 
-void DelayId::delayRead(DeferredRead const&) STUB_NOP
+void DelayId::delayRead(const AsyncCall::Pointer &) STUB_NOP
 void BandwidthBucket::refillBucket() STUB
 bool BandwidthBucket::applyQuota(int &, Comm::IoCallback *) STUB_RETVAL(false)
 BandwidthBucket *BandwidthBucket::SelectBucket(fde *) STUB_RETVAL(nullptr)

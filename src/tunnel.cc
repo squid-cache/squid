@@ -863,7 +863,7 @@ TunnelStateData::copyRead(Connection &from, IOCB *completion)
     int bw = from.bytesWanted(1, SQUID_TCP_SO_RCVBUF);
     // XXX: Delay pools must not delay client-to-Squid traffic (i.e. when
     // from.readPendingFunc is tunnelDelayedClientRead()).
-    // XXX: Bug #4913: Use DeferredRead instead.
+    // XXX: Bug #4913: for delay pools, use delayRead() API instead.
     if (bw == 1 && ++from.delayedLoops < 10) {
         from.readPending = this;
         eventAdd("tunnelDelayedServerRead", from.readPendingFunc, from.readPending, 0.3, true);
