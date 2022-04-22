@@ -27,7 +27,7 @@ template<class Job> class JobWait;
 
 typedef CbcPointer<AsyncJob> AsyncJobPointer;
 typedef RefCount<CodeContext> CodeContextPointer;
-typedef RefCount <AsyncCall> AsyncCallPointer;
+typedef RefCount<AsyncCall> AsyncCallPointer;
 
 #endif /* SQUID_SRC_BASE_FORWARD_H */
 

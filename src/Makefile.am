@@ -227,7 +227,7 @@ squid_SOURCES = \
 	CollapsedForwarding.cc \
 	CollapsedForwarding.h \
 	CollapsingHistory.h \
-	CommRead.h \
+	DeferredReadManager.h \
 	CommandLine.cc \
 	CommandLine.h \
 	ConfigOption.cc \

@@ -8,8 +8,8 @@
 
 /* DEBUG: section 05    Comm */
 
-#ifndef COMMREAD_H
-#define COMMREAD_H
+#ifndef SQUID_DEFERREDREADMANAGER_H
+#define SQUID_DEFERREDREADMANAGER_H
 
 #include "base/forward.h"
 
@@ -30,5 +30,5 @@ private:
     std::vector<AsyncCallPointer> deferredReads;
 };
 
-#endif /* COMMREAD_H */
+#endif /* SQUID_DEFERREDREADMANAGER_H */
 

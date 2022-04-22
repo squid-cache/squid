@@ -13,7 +13,7 @@
 #if USE_DELAY_POOLS
 #include "base/AsyncCall.h"
 #include "comm/Connection.h"
-#include "CommRead.h"
+#include "DeferredReadManager.h"
 #include "DelayVector.h"
 
 DelayVector::DelayVector()

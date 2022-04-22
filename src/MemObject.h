@@ -10,7 +10,7 @@
 #define SQUID_MEMOBJECT_H
 
 #include "base/forward.h"
-#include "CommRead.h"
+#include "DeferredReadManager.h"
 #include "dlink.h"
 #include "http/RequestMethod.h"
 #include "RemovalPolicy.h"

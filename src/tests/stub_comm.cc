@@ -21,8 +21,8 @@
 // void comm_read(const Comm::ConnectionPointer &, char *, int, IOCB *, void *) STUB
 // void comm_read(const Comm::ConnectionPointer &, char*, int, AsyncCall::Pointer &) STUB
 
-/* should be in stub_CommRead */
-#include "CommRead.h"
+/* should be in stub_DeferredReadManager */
+#include "DeferredReadManager.h"
 void DeferredReadManager::delayRead(const AsyncCall::Pointer &) STUB
 void DeferredReadManager::kickReads() STUB
 

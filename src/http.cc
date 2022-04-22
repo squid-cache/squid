@@ -24,7 +24,7 @@
 #include "comm/Connection.h"
 #include "comm/Read.h"
 #include "comm/Write.h"
-#include "CommRead.h"
+#include "DeferredReadManager.h"
 #include "error/Detail.h"
 #include "errorpage.h"
 #include "fd.h"

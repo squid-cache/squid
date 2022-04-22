@@ -13,7 +13,7 @@
 #include "base/Range.h"
 #include "base/RefCount.h"
 #include "comm/forward.h"
-#include "CommRead.h"
+#include "DeferredReadManager.h"
 #include "hash.h"
 #include "http/forward.h"
 #include "http/RequestMethod.h"
