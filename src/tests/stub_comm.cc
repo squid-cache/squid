@@ -23,7 +23,7 @@
 
 /* should be in stub_CommRead */
 #include "CommRead.h"
-void DeferredReadManager::delayRead(const AsyncCall::Pointer &aRead) STUB
+void DeferredReadManager::delayRead(const AsyncCall::Pointer &) STUB
 void DeferredReadManager::kickReads() STUB
 
 #include "comm.h"
