@@ -1648,17 +1648,15 @@ void
 DeferredReadManager::delayRead(const AsyncCall::Pointer &aRead)
 {
     debugs(5, 3, aRead << " after " << deferredReads.size());
-    deferredReads.push_back(aRead);
+    deferredReads.add(aRead);
 }
 
 void
 DeferredReadManager::kickReads()
 {
     // XXX: For fairness this SHOULD randomize the order
-    for (auto &call : deferredReads)
+    while (auto call = deferredReads.extract())
         ScheduleCallHere(call);
-
-    deferredReads.clear();
 }
 
 int

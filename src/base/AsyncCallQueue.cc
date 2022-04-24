@@ -15,21 +15,8 @@
 
 AsyncCallQueue *AsyncCallQueue::TheInstance = 0;
 
-AsyncCallQueue::AsyncCallQueue(): theHead(NULL), theTail(NULL)
+AsyncCallQueue::AsyncCallQueue()
 {
-}
-
-void AsyncCallQueue::schedule(AsyncCall::Pointer &call)
-{
-    assert(call != NULL);
-    assert(!call->theNext);
-    if (theHead != NULL) { // append
-        assert(!theTail->theNext);
-        theTail->theNext = call;
-        theTail = call;
-    } else { // create queue from cratch
-        theHead = theTail = call;
-    }
 }
 
 // Fire all scheduled calls; returns true if at least one call was fired.
@@ -37,28 +24,16 @@ void AsyncCallQueue::schedule(AsyncCall::Pointer &call)
 bool
 AsyncCallQueue::fire()
 {
-    const bool made = theHead != NULL;
-    while (theHead) {
-        CodeContext::Reset(theHead->codeContext);
-        fireNext();
+    const auto made = list.size();
+    while (auto call = list.extract()) {
+        CodeContext::Reset(call->codeContext);
+        debugs(call->debugSection, call->debugLevel, "entering " << *call);
+        call->make();
+        debugs(call->debugSection, call->debugLevel, "leaving " << *call);
     }
     if (made)
         CodeContext::Reset();
     return made;
-}
-
-void
-AsyncCallQueue::fireNext()
-{
-    AsyncCall::Pointer call = theHead;
-    theHead = call->theNext;
-    call->theNext = NULL;
-    if (theTail == call)
-        theTail = NULL;
-
-    debugs(call->debugSection, call->debugLevel, "entering " << *call);
-    call->make();
-    debugs(call->debugSection, call->debugLevel, "leaving " << *call);
 }
 
 AsyncCallQueue &

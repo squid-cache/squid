@@ -10,6 +10,7 @@
 #define SQUID_ASYNCCALLQUEUE_H
 
 #include "base/AsyncCall.h"
+#include "base/AsyncCallList.h"
 
 //class AsyncCall;
 
@@ -22,7 +23,7 @@ public:
     static AsyncCallQueue &Instance();
 
     // make this async call when we get a chance
-    void schedule(AsyncCall::Pointer &call);
+    void schedule(AsyncCall::Pointer &call) { list.add(call); }
 
     // fire all scheduled calls; returns true if at least one was fired
     bool fire();
@@ -30,10 +31,7 @@ public:
 private:
     AsyncCallQueue();
 
-    void fireNext();
-
-    AsyncCall::Pointer theHead;
-    AsyncCall::Pointer theTail;
+    AsyncCallList list; ///< scheduled calls in a FIFO list
 
     static AsyncCallQueue *TheInstance;
 };

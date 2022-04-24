@@ -15,6 +15,8 @@ libbase_la_SOURCES = \
 	Assure.h \
 	AsyncCall.cc \
 	AsyncCall.h \
+	AsyncCallList.cc \
+	AsyncCallList.h \
 	AsyncCallQueue.cc \
 	AsyncCallQueue.h \
 	AsyncCbdataCalls.h \

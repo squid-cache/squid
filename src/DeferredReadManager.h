@@ -11,6 +11,7 @@
 #ifndef SQUID_DEFERREDREADMANAGER_H
 #define SQUID_DEFERREDREADMANAGER_H
 
+#include "base/AsyncCallList.h"
 #include "base/forward.h"
 
 #include <vector>
@@ -27,7 +28,7 @@ public:
     void kickReads();
 
 private:
-    std::vector<AsyncCallPointer> deferredReads;
+    AsyncCallList deferredReads;
 };
 
 #endif /* SQUID_DEFERREDREADMANAGER_H */

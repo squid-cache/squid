@@ -41,7 +41,7 @@ class AsyncCall: public RefCountable
 {
 public:
     typedef RefCount <AsyncCall> Pointer;
-    friend class AsyncCallQueue;
+    friend class AsyncCallList;
 
     AsyncCall(int aDebugSection, int aDebugLevel, const char *aName);
     virtual ~AsyncCall();
