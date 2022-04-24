@@ -103,7 +103,7 @@ public:
     ~GopherStateData();
 
     /// URL for icon to display, given the item-type code
-    const char *iconUrl(const char);
+    const char *iconUrl(char);
 
 public:
     StoreEntry *entry;
