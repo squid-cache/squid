@@ -75,10 +75,11 @@ static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeader
         HttpHeader * hdr_out, const int we_do_ranges, const Http::StateFlags &);
 
 HttpStateData::HttpStateData(FwdState *theFwdState) :
+    _peer(nullptr),
     AsyncJob("HttpStateData"),
     Client(theFwdState),
-    lastChunk(0),
     httpChunkDecoder(NULL),
+    lastChunk(0),
     payloadSeen(0),
     payloadTruncated(0),
     sawDateGoBack(false)
@@ -88,7 +89,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) :
     surrogateNoStore = false;
     serverConnection = fwd->serverConnection();
 
-    if (fwd->serverConnection() != NULL)
+    if (fwd->serverConnection())
         _peer = cbdataReference(fwd->serverConnection()->getPeer());         /* might be NULL */
 
     flags.peering =  _peer;
