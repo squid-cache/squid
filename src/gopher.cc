@@ -85,14 +85,6 @@ class GopherStateData
 public:
     GopherStateData(FwdState *aFwd) :
         entry(aFwd->entry),
-        conversion(NORMAL),
-        HTML_header_added(0),
-        HTML_pre(0),
-        type_id(GOPHER_FILE /* '0' */),
-        overflowed(false),
-        cso_recno(0),
-        len(0),
-        buf(NULL),
         fwd(aFwd)
     {
         *request = 0;
@@ -110,8 +102,11 @@ public:
     /// The returned c-string is invalidated by the next call to this function.
     const char *iconUrl(const char) const;
 
+public: /* replicates ::Client API */
+    StoreEntry *entry = nullptr;
+    FwdState::Pointer fwd;
+
 public:
-    StoreEntry *entry;
     enum {
         NORMAL,
         HTML_DIR,
@@ -119,23 +114,22 @@ public:
         HTML_CSO_RESULT,
         HTML_INDEX_PAGE,
         HTML_CSO_PAGE
-    } conversion;
-    int HTML_header_added;
-    int HTML_pre;
-    char type_id;
+    } conversion = NORMAL;
+    int HTML_header_added = 0;
+    int HTML_pre = 0;
+    char type_id = GOPHER_FILE;
     char request[MAX_URL];
 
     /// some received bytes ignored due to internal buffer capacity limits
-    bool overflowed;
+    bool overflowed = false;
 
-    int cso_recno;
+    int cso_recno = 0;
 
     /// the number of not-yet-parsed Gopher line bytes in this->buf
-    int len;
+    int len = 0;
 
-    char *buf;          /* pts to a 4k page */
+    char *buf = nullptr; /* pts to a 4k page */
     Comm::ConnectionPointer serverConn;
-    FwdState::Pointer fwd;
     HttpReply::Pointer reply_;
     char replybuf[BUFSIZ];
 };
