@@ -6,30 +6,27 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 05    Comm */
-
-#ifndef SQUID_DEFERREDREADMANAGER_H
-#define SQUID_DEFERREDREADMANAGER_H
+#ifndef SQUID_BASE_DELAYEDASYNCCALLS_H
+#define SQUID_BASE_DELAYEDASYNCCALLS_H
 
 #include "base/AsyncCallList.h"
 #include "base/forward.h"
 
 #include <vector>
 
-// TODO: create dedicated header/source files
 /// maintains a list of async calls and schedules them at once
-class DeferredReadManager
+class DelayedAsyncCalls
 {
 public:
-    ~DeferredReadManager() { kickReads(); }
+    ~DelayedAsyncCalls() { kick(); }
     /// stores an async call in a list
-    void delayRead(const AsyncCallPointer &);
+    void delay(const AsyncCallPointer &);
     /// schedules all previously stored async calls and clears the list
-    void kickReads();
+    void kick();
 
 private:
     AsyncCallList deferredReads;
 };
 
-#endif /* SQUID_DEFERREDREADMANAGER_H */
+#endif /* SQUID_BASE_DELAYEDASYNCCALLS_H */
 

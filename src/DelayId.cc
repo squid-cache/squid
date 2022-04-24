@@ -15,8 +15,8 @@
  */
 #if USE_DELAY_POOLS
 #include "acl/FilledChecklist.h"
+#include "base/DelayedAsyncCalls.h"
 #include "client_side_request.h"
-#include "DeferredReadManager.h"
 #include "DelayId.h"
 #include "DelayPool.h"
 #include "DelayPools.h"

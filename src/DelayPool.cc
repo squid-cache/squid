@@ -79,7 +79,7 @@ DelayPool::freeData()
 void
 CompositePoolNode::delayRead(const AsyncCall::Pointer &aRead)
 {
-    deferredReads.delayRead(aRead);
+    deferredReads.delay(aRead);
 }
 
 #include "comm.h"
@@ -87,7 +87,7 @@ CompositePoolNode::delayRead(const AsyncCall::Pointer &aRead)
 void
 CompositePoolNode::kickReads()
 {
-    deferredReads.kickReads();
+    deferredReads.kick();
 }
 
 #endif /* USE_DELAY_POOLS */

@@ -9,11 +9,11 @@
 #ifndef SQUID_STORE_H
 #define SQUID_STORE_H
 
+#include "base/DelayedAsyncCalls.h"
 #include "base/Packable.h"
 #include "base/Range.h"
 #include "base/RefCount.h"
 #include "comm/forward.h"
-#include "DeferredReadManager.h"
 #include "hash.h"
 #include "http/forward.h"
 #include "http/RequestMethod.h"

@@ -9,8 +9,8 @@
 #ifndef SQUID_MEMOBJECT_H
 #define SQUID_MEMOBJECT_H
 
+#include "base/DelayedAsyncCalls.h"
 #include "base/forward.h"
-#include "DeferredReadManager.h"
 #include "dlink.h"
 #include "http/RequestMethod.h"
 #include "RemovalPolicy.h"
@@ -214,7 +214,7 @@ private:
     mutable String storeId_; ///< StoreId for our entry (usually request URI)
     mutable String logUri_;  ///< URI used for logging (usually request URI)
 
-    DeferredReadManager deferredReads;
+    DelayedAsyncCalls deferredReads;
 };
 
 /** global current memory removal policy */

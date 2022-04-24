@@ -448,13 +448,13 @@ MemObject::delayRead(const AsyncCall::Pointer &aRead)
         }
     }
 #endif
-    deferredReads.delayRead(aRead);
+    deferredReads.delay(aRead);
 }
 
 void
 MemObject::kickReads()
 {
-    deferredReads.kickReads();
+    deferredReads.kick();
 }
 
 #if USE_DELAY_POOLS

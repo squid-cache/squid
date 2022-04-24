@@ -18,7 +18,6 @@
 #include "comm/Read.h"
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
-#include "DeferredReadManager.h"
 #include "compat/cmsg.h"
 #include "DescriptorSet.h"
 #include "event.h"
@@ -809,7 +808,7 @@ comm_close_complete(const FdeCbParams &params)
  * + call closing handlers
  *
  * NOTE: Comm::ERR_CLOSING will NOT be called for read handlers, sitting in a
- * DeferredReadManager.
+ * DelayedAsyncCalls.
  */
 void
 _comm_close(int fd, char const *file, int line)
@@ -1642,21 +1641,6 @@ commHalfClosedReader(const Comm::ConnectionPointer &conn, char *, size_t size, C
 
     // continue waiting for close or error
     commPlanHalfClosedCheck(); // make sure this fd will be checked again
-}
-
-void
-DeferredReadManager::delayRead(const AsyncCall::Pointer &aRead)
-{
-    debugs(5, 3, aRead << " after " << deferredReads.size());
-    deferredReads.add(aRead);
-}
-
-void
-DeferredReadManager::kickReads()
-{
-    // XXX: For fairness this SHOULD randomize the order
-    while (auto call = deferredReads.extract())
-        ScheduleCallHere(call);
 }
 
 int
