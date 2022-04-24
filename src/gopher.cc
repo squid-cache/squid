@@ -9,7 +9,7 @@
 /* DEBUG: section 10    Gopher */
 
 #include "squid.h"
-#include "base/AsyncCbdataCalls.h"
+#include "base/AsyncJob.h"
 #include "comm.h"
 #include "comm/Read.h"
 #include "comm/Write.h"
@@ -78,12 +78,13 @@
  * Gopher is somewhat complex and gross because it must convert from
  * the Gopher protocol to HTTP.
  */
-class GopherStateData
+class GopherStateData : public AsyncJob
 {
     CBDATA_CLASS(GopherStateData);
 
 public:
     GopherStateData(FwdState *aFwd) :
+        AsyncJob("GopherStateData"),
         entry(aFwd->entry),
         fwd(aFwd)
     {
@@ -95,16 +96,36 @@ public:
 
     ~GopherStateData();
 
-    /// queues or defers a read call
-    static void DelayAwareRead(GopherStateData *);
+    /* AsyncJob API */
+    static void Start(const AsyncJob::Pointer &);
+    virtual void start() override;
 
     /// URL for icon to display (or nil), given the Gopher item-type code.
     /// The returned c-string is invalidated by the next call to this function.
     const char *iconUrl(const char) const;
 
+    /// generate and send Gopher format request to server/peer
+    void sendRequest();
+
+    /// called when Gopher request is completely sent
+    void wroteLast(const CommIoCbParams &);
+
+    /// queues or defers a read call
+    void delayAwareRead();
+
+    /// called when Gopher reply data is available
+    void readReply(const CommIoCbParams &);
+
+    /// callback handler for early closure of server/peer connection
+    void serverConnClosed(const CommCloseCbParams &);
+
+    /// callback handler for timeouts on server/peer connection
+    void serverTimeout(const CommTimeoutCbParams &);
+
 public: /* replicates ::Client API */
     StoreEntry *entry = nullptr;
     FwdState::Pointer fwd;
+    const char *doneWithFwd = nullptr;
 
 public:
     enum {
@@ -129,37 +150,25 @@ public:
     int len = 0;
 
     char *buf = nullptr; /* pts to a 4k page */
-    Comm::ConnectionPointer serverConn;
     HttpReply::Pointer reply_;
     char replybuf[BUFSIZ];
+
+private:
+    AsyncCall::Pointer closeHandler;
 };
 
 CBDATA_CLASS_INIT(GopherStateData);
 
-static CLCB gopherStateFree;
 static void gopherMimeCreate(GopherStateData *);
 static void gopher_request_parse(const HttpRequest * req,
                                  char *type_id,
                                  char *request);
 static void gopherEndHTML(GopherStateData *);
 static void gopherToHTML(GopherStateData *, char *inbuf, int len);
-static CTCB gopherTimeout;
-static IOCB gopherReadReply;
-static IOCB gopherSendComplete;
-static PF gopherSendRequest;
 
 static char def_gopher_bin[] = "www/unknown";
 
 static char def_gopher_text[] = "text/plain";
-
-static void
-gopherStateFree(const CommCloseCbParams &params)
-{
-    GopherStateData *gopherState = (GopherStateData *)params.data;
-    // Assume that FwdState is monitoring and calls noteClosure(). See XXX about
-    // Connection sharing with FwdState in gopherStart().
-    delete gopherState;
-}
 
 GopherStateData::~GopherStateData()
 {
@@ -686,181 +695,163 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     return;
 }
 
-static void
-gopherTimeout(const CommTimeoutCbParams &io)
+void
+GopherStateData::serverConnClosed(const CommCloseCbParams &params)
 {
-    GopherStateData *gopherState = static_cast<GopherStateData *>(io.data);
-    debugs(10, 4, io.conn << ": '" << gopherState->entry->url() << "'" );
-
-    gopherState->fwd->fail(new ErrorState(ERR_READ_TIMEOUT, Http::scGatewayTimeout, gopherState->fwd->request, gopherState->fwd->al));
-
-    if (Comm::IsConnOpen(io.conn))
-        io.conn->close();
+    debugs(10, 5, "FD " << params.fd << ", gopherState=" << params.data);
+    doneWithFwd = "GopherStateData::serverConnClosed()"; // assume FwdState is monitoring too
+    mustStop("GopherStateData::serverConnClosed");
 }
 
-/**
- * This will be called when data is ready to be read from fd.
- * Read until error or connection closed.
- */
-static void
-gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
+void
+GopherStateData::serverTimeout(const CommTimeoutCbParams &params)
 {
-    GopherStateData *gopherState = (GopherStateData *)data;
-    StoreEntry *entry = gopherState->entry;
-    int clen;
-    int bin;
-    size_t read_sz = BUFSIZ;
+    debugs(10, 4, params.conn << ": '" << entry->url() << "'");
+
+    if (entry->store_status == STORE_PENDING) {
+        fwd->fail(new ErrorState(ERR_READ_TIMEOUT, Http::scGatewayTimeout, fwd->request, fwd->al));
+    }
+
+    if (Comm::IsConnOpen(params.conn))
+        params.conn->close();
+    mustStop("GopherStateData::serverTimeout");
+}
+
+void
+GopherStateData::readReply(const CommIoCbParams &io)
+{
 #if USE_DELAY_POOLS
     DelayId delayId = entry->mem_obj->mostBytesAllowed();
 #endif
 
     /* Bail out early on Comm::ERR_CLOSING - close handlers will tidy up for us */
-
-    if (flag == Comm::ERR_CLOSING) {
+    if (io.flag == Comm::ERR_CLOSING)
         return;
-    }
 
-    assert(buf == gopherState->replybuf);
+    assert(io.buf == replybuf);
 
-    // XXX: Should update delayId, statCounter, etc. before bailing
-    if (!entry->isAccepting()) {
-        debugs(10, 3, "terminating due to bad " << *entry);
-        // TODO: Do not abuse connection for triggering cleanup.
-        gopherState->serverConn->close();
-        return;
-    }
-
-#if USE_DELAY_POOLS
-    read_sz = delayId.bytesWanted(1, read_sz);
-#endif
+    debugs(10, 5, io.conn << " read len=" << io.size);
 
     /* leave one space for \0 in gopherToHTML */
 
-    if (flag == Comm::OK && len > 0) {
+    if (io.flag == Comm::OK && io.size > 0) {
 #if USE_DELAY_POOLS
-        delayId.bytesIn(len);
+        delayId.bytesIn(io.size);
 #endif
 
-        statCounter.server.all.kbytes_in += len;
-        statCounter.server.other.kbytes_in += len;
-    }
+        statCounter.server.all.kbytes_in += io.size;
+        statCounter.server.other.kbytes_in += io.size;
 
-    debugs(10, 5, conn << " read len=" << len);
-
-    if (flag == Comm::OK && len > 0) {
         AsyncCall::Pointer nil;
-        commSetConnTimeout(conn, Config.Timeout.read, nil);
+        commSetConnTimeout(io.conn, Config.Timeout.read, nil);
         ++IOStats.Gopher.reads;
 
-        for (clen = len - 1, bin = 0; clen; ++bin)
+        int bin = 0;
+        for (auto clen = io.size - 1; clen; ++bin)
             clen >>= 1;
-
         ++IOStats.Gopher.read_hist[bin];
 
-        HttpRequest *req = gopherState->fwd->request;
+        auto &req = fwd->request;
         if (req->hier.bodyBytesRead < 0) {
             req->hier.bodyBytesRead = 0;
             // first bytes read, update Reply flags:
-            gopherState->reply_->sources |= Http::Message::srcGopher;
+            reply_->sources |= Http::Message::srcGopher;
         }
 
-        req->hier.bodyBytesRead += len;
+        req->hier.bodyBytesRead += io.size;
     }
 
-    if (flag != Comm::OK) {
-        debugs(50, DBG_IMPORTANT, "ERROR: " << MYNAME << "reading: " << xstrerr(xerrno));
+    Assure(entry->isAccepting());
 
-        if (ignoreErrno(xerrno)) {
-            AsyncCall::Pointer call = commCbCall(5,4, "gopherReadReply",
-                                                 CommIoCbPtrFun(gopherReadReply, gopherState));
-            comm_read(conn, buf, read_sz, call);
+    if (io.flag != Comm::OK) {
+        debugs(50, DBG_IMPORTANT, "ERROR: " << MYNAME << "reading: " << xstrerr(io.xerrno));
+
+        if (ignoreErrno(io.xerrno)) {
+            // wait for read(2) to be possible.
+            delayAwareRead();
+
         } else {
-            const auto err = new ErrorState(ERR_READ_ERROR, Http::scInternalServerError, gopherState->fwd->request, gopherState->fwd->al);
-            err->xerrno = xerrno;
-            gopherState->fwd->fail(err);
-            gopherState->serverConn->close();
+            const auto err = new ErrorState(ERR_READ_ERROR, Http::scInternalServerError, fwd->request, fwd->al);
+            err->xerrno = io.xerrno;
+            fwd->fail(err);
+            io.conn->close();
         }
-    } else if (len == 0 && entry->isEmpty()) {
-        gopherState->fwd->fail(new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, gopherState->fwd->request, gopherState->fwd->al));
-        gopherState->serverConn->close();
-    } else if (len == 0) {
+
+    } else if (io.size == 0 && entry->isEmpty()) {
+        fwd->fail(new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, fwd->request, fwd->al));
+        io.conn->close();
+
+    } else if (io.size == 0) {
         /* Connection closed; retrieval done. */
         /* flush the rest of data in temp buf if there is one. */
 
-        if (gopherState->conversion != GopherStateData::NORMAL)
-            gopherEndHTML(gopherState);
+        if (conversion != GopherStateData::NORMAL)
+            gopherEndHTML(this);
 
         entry->timestampsSet();
         entry->flush();
 
-        if (!gopherState->len && !gopherState->overflowed)
-            gopherState->fwd->markStoredReplyAsWhole("gopher EOF after receiving/storing some bytes");
+        if (!len && !overflowed)
+            fwd->markStoredReplyAsWhole("gopher EOF after receiving/storing some bytes");
 
-        gopherState->fwd->complete();
-        gopherState->serverConn->close();
+        fwd->complete();
+        io.conn->close();
+
     } else {
-        if (gopherState->conversion != GopherStateData::NORMAL) {
-            gopherToHTML(gopherState, buf, len);
+        if (conversion != GopherStateData::NORMAL) {
+            gopherToHTML(this, io.buf, io.size);
         } else {
-            entry->append(buf, len);
+            entry->append(io.buf, io.size);
         }
-        GopherStateData::DelayAwareRead(gopherState);
+
+        delayAwareRead();
     }
 }
 
 void
-GopherStateData::DelayAwareRead(GopherStateData *gopherState)
+GopherStateData::delayAwareRead()
 {
-    const auto &conn = gopherState->serverConn;
-
-    if (!Comm::IsConnOpen(conn) || fd_table[conn->fd].closing()) {
-        debugs(10, 3, "will not read from " << conn);
+    if (!Comm::IsConnOpen(serverConn) || fd_table[serverConn->fd].closing()) {
+        debugs(10, 3, "will not read from " << serverConn);
         return;
     }
 
-    const auto amountToRead = gopherState->entry->bytesWanted(Range<size_t>(0, BUFSIZ));
+    const auto amountToRead = entry->bytesWanted(Range<size_t>(0, BUFSIZ));
 
-    if (amountToRead <= 0) {
-        AsyncCall::Pointer delayCall = asyncCall(10, 3, "GopherStateData::DelayAwareRead",
-                                                 cbdataDialer(&GopherStateData::DelayAwareRead, gopherState));
-        gopherState->entry->mem().delayRead(delayCall);
-        return;
-    }
+    typedef CommCbMemFunT<GopherStateData, CommIoCbParams> Dialer;
+    AsyncCall::Pointer call = JobCallback(10, 5, Dialer, this, GopherStateData::readReply);
 
-    AsyncCall::Pointer readCall = commCbCall(5, 5, "gopherReadReply", CommIoCbPtrFun(gopherReadReply, gopherState));
-    comm_read(conn, gopherState->replybuf, amountToRead, readCall);
+    if (amountToRead <= 0)
+        entry->mem().delayRead(call);
+    else
+        comm_read(serverConn, replybuf, amountToRead, call);
 }
 
-/**
- * This will be called when request write is complete. Schedule read of reply.
- */
-static void
-gopherSendComplete(const Comm::ConnectionPointer &conn, char *, size_t size, Comm::Flag errflag, int xerrno, void *data)
+GopherStateData::wroteLast(const CommIoCbParams &io)
 {
-    GopherStateData *gopherState = (GopherStateData *) data;
-    StoreEntry *entry = gopherState->entry;
-    debugs(10, 5, conn << " size: " << size << " errflag: " << errflag);
+    debugs(10, 5, io.conn << " size=" << io.size << " flag=" << io.flag);
 
-    if (size > 0) {
-        fd_bytes(conn->fd, size, FD_WRITE);
-        statCounter.server.all.kbytes_out += size;
-        statCounter.server.other.kbytes_out += size;
+    if (io.size > 0) {
+        fd_bytes(io.fd, io.size, FD_WRITE);
+        statCounter.server.all.kbytes_out += io.size;
+        statCounter.server.other.kbytes_out += io.size;
     }
 
-    if (!entry->isAccepting()) {
-        debugs(10, 3, "terminating due to bad " << *entry);
-        // TODO: Do not abuse connection for triggering cleanup.
-        gopherState->serverConn->close();
+    if (io.flag == Comm::ERR_CLOSING)
         return;
-    }
 
-    if (errflag) {
-        const auto err = new ErrorState(ERR_WRITE_ERROR, Http::scServiceUnavailable, gopherState->fwd->request, gopherState->fwd->al);
-        err->xerrno = xerrno;
-        err->port = gopherState->fwd->request->url.port();
-        err->url = xstrdup(entry->url());
-        gopherState->fwd->fail(err);
-        gopherState->serverConn->close();
+    fwd->request->hier.notePeerWrite();
+
+    Assure(entry->isAccepting());
+
+    if (io.flag) {
+        const auto err = new ErrorState(ERR_WRITE_ERROR, Http::scServiceUnavailable, fwd->request, fwd->al);
+        err->xerrno = io.xerrno;
+        err->port = fwd->request->url.port(); // XXX: redundant?
+        err->url = xstrdup(entry->url()); // XXX: redundant?
+        fwd->fail(err);
+        io.conn->close();
+        mustStop("GopherStateData::wroteLast");
         return;
     }
 
@@ -870,49 +861,45 @@ gopherSendComplete(const Comm::ConnectionPointer &conn, char *, size_t size, Com
      */
     entry->buffer();
 
-    gopherMimeCreate(gopherState);
+    gopherMimeCreate(this);
 
-    switch (gopherState->type_id) {
+    switch (type_id) {
 
     case GOPHER_DIRECTORY:
-        /* we got to convert it first */
-        gopherState->conversion = GopherStateData::HTML_DIR;
-        gopherState->HTML_header_added = 0;
+        /* we have to convert it first */
+        conversion = GopherStateData::HTML_DIR;
+        HTML_header_added = 0;
         break;
 
     case GOPHER_INDEX:
-        /* we got to convert it first */
-        gopherState->conversion = GopherStateData::HTML_INDEX_RESULT;
-        gopherState->HTML_header_added = 0;
+        /* we have to convert it first */
+        conversion = GopherStateData::HTML_INDEX_RESULT;
+        HTML_header_added = 0;
         break;
 
     case GOPHER_CSO:
-        /* we got to convert it first */
-        gopherState->conversion = GopherStateData::HTML_CSO_RESULT;
-        gopherState->cso_recno = 0;
-        gopherState->HTML_header_added = 0;
+        /* we have to convert it first */
+        conversion = GopherStateData::HTML_CSO_RESULT;
+        cso_recno = 0;
+        HTML_header_added = 0;
         break;
 
     default:
-        gopherState->conversion = GopherStateData::NORMAL;
+        conversion = GopherStateData::NORMAL;
         entry->flush();
     }
 
-    GopherStateData::DelayAwareRead(gopherState);
+    delayAwareRead();
 }
 
-/**
- * This will be called when connect completes. Write request.
- */
-static void
-gopherSendRequest(int, void *data)
+void
+GopherStateData::sendRequest()
 {
-    GopherStateData *gopherState = (GopherStateData *)data;
     MemBuf mb;
     mb.init();
 
-    if (gopherState->type_id == GOPHER_CSO) {
-        const char *t = strchr(gopherState->request, '?');
+    if (type_id == GOPHER_CSO) {
+        const char *t = strchr(request, '?');
 
         if (t)
             ++t;        /* skip the ? */
@@ -921,67 +908,72 @@ gopherSendRequest(int, void *data)
 
         mb.appendf("query %s\r\nquit", t);
     } else {
-        if (gopherState->type_id == GOPHER_INDEX) {
-            if (char *t = strchr(gopherState->request, '?'))
+        if (type_id == GOPHER_INDEX) {
+            if (char *t = strchr(request, '?'))
                 *t = '\t';
         }
-        mb.append(gopherState->request, strlen(gopherState->request));
+        mb.append(request, strlen(request));
     }
     mb.append("\r\n", 2);
 
-    debugs(10, 5, gopherState->serverConn);
-    AsyncCall::Pointer call = commCbCall(5,5, "gopherSendComplete",
-                                         CommIoCbPtrFun(gopherSendComplete, gopherState));
-    Comm::Write(gopherState->serverConn, &mb, call);
+    debugs(10, 5, fwd->serverConnection());
 
-    if (!gopherState->entry->makePublic())
-        gopherState->entry->makePrivate(true);
+    typedef CommCbMemFunT<GopherStateData, CommIoCbParams> Dialer;
+    AsyncCall::Pointer call = JobCallback(10, 5, Dialer, this, GopherStateData::wroteLast);
+    Comm::Write(fwd->serverConnection(), &mb, call);
+
+    if (!entry->makePublic())
+        entry->makePrivate(true);
 }
 
 void
 gopherStart(FwdState * fwd)
 {
-    GopherStateData *gopherState = new GopherStateData(fwd);
+    debugs(10, 3, fwd->request->method << ' ' << fwd->entry->url());
+    AsyncJob::Start(new GopherStateData(fwd));
+}
 
-    debugs(10, 3, gopherState->entry->url());
-
+void
+GopherStateData::start()
+{
     ++ statCounter.server.all.requests;
 
     ++ statCounter.server.other.requests;
 
     /* Parse url. */
-    gopher_request_parse(fwd->request,
-                         &gopherState->type_id, gopherState->request);
+    gopher_request_parse(fwd->request, &type_id, request);
 
-    comm_add_close_handler(fwd->serverConnection()->fd, gopherStateFree, gopherState);
+    typedef CommCbMemFunT<GopherStateData, CommCloseCbParams> Dialer;
+    closeHandler = JobCallback(10, 5, Dialer, this, GopherStateData::serverConnClosed);
+    comm_add_close_handler(fwd->serverConnection()->fd, closeHandler);
 
-    if (((gopherState->type_id == GOPHER_INDEX) || (gopherState->type_id == GOPHER_CSO))
-            && (strchr(gopherState->request, '?') == NULL)) {
+    if ((type_id == GOPHER_INDEX || type_id == GOPHER_CSO) && strchr(request, '?') == nullptr) {
         /* Index URL without query word */
         /* We have to generate search page back to client. No need for connection */
-        gopherMimeCreate(gopherState);
+        gopherMimeCreate(this);
 
-        if (gopherState->type_id == GOPHER_INDEX) {
-            gopherState->conversion = GopherStateData::HTML_INDEX_PAGE;
+        if (type_id == GOPHER_INDEX) {
+            conversion = GopherStateData::HTML_INDEX_PAGE;
         } else {
-            if (gopherState->type_id == GOPHER_CSO) {
-                gopherState->conversion = GopherStateData::HTML_CSO_PAGE;
+            if (type_id == GOPHER_CSO) {
+                conversion = GopherStateData::HTML_CSO_PAGE;
             } else {
-                gopherState->conversion = GopherStateData::HTML_INDEX_PAGE;
+                conversion = GopherStateData::HTML_INDEX_PAGE;
             }
         }
 
-        gopherToHTML(gopherState, (char *) NULL, 0);
+        gopherToHTML(this, nullptr, 0);
         fwd->markStoredReplyAsWhole("gopher instant internal request satisfaction");
         fwd->complete();
+        mustStop("gopher instant internal request satisfaction");
         return;
     }
 
-    // XXX: Sharing open Connection with FwdState that has its own handlers/etc.
-    gopherState->serverConn = fwd->serverConnection();
-    gopherSendRequest(fwd->serverConnection()->fd, gopherState);
-    AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "gopherTimeout",
-                                     CommTimeoutCbPtrFun(gopherTimeout, gopherState));
+    sendRequest();
+
+    typedef CommCbMemFunT<GopherStateData, CommTimeoutCbParams> TimeoutDialer;
+    AsyncCall::Pointer timeoutCall =  JobCallback(10, 5,
+                                      TimeoutDialer, this, GopherStateData::serverTimeout);
     commSetConnTimeout(fwd->serverConnection(), Config.Timeout.read, timeoutCall);
 }
 
