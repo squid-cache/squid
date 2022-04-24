@@ -108,7 +108,7 @@ public:
 
     /// URL for icon to display (or nil), given the Gopher item-type code.
     /// The returned c-string is invalidated by the next call to this function.
-    const char *iconUrl(char);
+    const char *iconUrl(const char) const;
 
 public:
     StoreEntry *entry;
@@ -177,7 +177,7 @@ GopherStateData::~GopherStateData()
 }
 
 const char *
-GopherStateData::iconUrl(const char gtype)
+GopherStateData::iconUrl(const char gtype) const
 {
     switch (gtype) {
 
