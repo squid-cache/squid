@@ -423,7 +423,6 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     char *host = NULL;
     char *port = NULL;
     char *escaped_selector = NULL;
-    const char *icon_url = NULL;
     char gtype;
     StoreEntry *entry = NULL;
 
@@ -568,7 +567,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                     /* escape a selector here */
                     escaped_selector = xstrdup(rfc1738_escape_part(selector));
 
-                    icon_url = gopherState->iconUrl(gtype);
+                    const auto icon_url = gopherState->iconUrl(gtype);
 
                     if ((gtype == GOPHER_TELNET) || (gtype == GOPHER_3270)) {
                         if (strlen(escaped_selector) != 0)
