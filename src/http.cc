@@ -75,14 +75,8 @@ static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeader
         HttpHeader * hdr_out, const int we_do_ranges, const Http::StateFlags &);
 
 HttpStateData::HttpStateData(FwdState *theFwdState) :
-    _peer(nullptr),
     AsyncJob("HttpStateData"),
-    Client(theFwdState),
-    httpChunkDecoder(NULL),
-    lastChunk(0),
-    payloadSeen(0),
-    payloadTruncated(0),
-    sawDateGoBack(false)
+    Client(theFwdState)
 {
     debugs(11,5, "HttpStateData " << this << " created");
     ignoreCacheControl = false;
