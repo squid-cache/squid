@@ -444,7 +444,7 @@ DisplayConf()
     if (edui_conf.mode & EDUI_MODE_PERSIST) {
         local_printfx("	Persistent mode: ON\n");
         if (edui_conf.persist_timeout > 0)
-            local_printfx("	Persistent mode idle timeout: %d\n", static_cast<int>(edui_conf.persist_timeout));
+            local_printfx("	Persistent mode idle timeout: %ld\n", static_cast<long int>(edui_conf.persist_timeout));
         else
             local_printfx("	Persistent mode idle timeout: OFF\n");
     } else
