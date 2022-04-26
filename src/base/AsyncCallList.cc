@@ -15,10 +15,10 @@ void
 AsyncCallList::add(const AsyncCallPointer &call)
 {
     assert(call);
-    assert(!call->theNext);
+    assert(!call->Next());
     if (head) { // append
-        assert(!tail->theNext);
-        tail->theNext = call;
+        assert(!tail->Next());
+        tail->setNext(call);
         tail = call;
     } else { // create queue from cratch
         head = tail = call;
@@ -32,8 +32,8 @@ AsyncCallList::extract()
     if (!head)
 	    return AsyncCallPointer();
     auto call = head;
-    head = call->theNext;
-    call->theNext = nullptr;
+    head = call->Next();
+    call->setNext(nullptr);
     if (tail == call)
         tail = nullptr;
     if (length)
