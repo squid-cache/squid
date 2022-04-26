@@ -397,6 +397,8 @@ Debug::NameThisHelper(const char * const name)
 
     SettleStderr();
     SettleSyslog();
+
+    debugs(84, 2, "starting " << name << " with PID " << getpid());
 }
 
 void
