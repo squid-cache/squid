@@ -79,11 +79,9 @@ HttpStateData::HttpStateData(FwdState *theFwdState) :
     Client(theFwdState)
 {
     debugs(11,5, "HttpStateData " << this << " created");
-    ignoreCacheControl = false;
-    surrogateNoStore = false;
     serverConnection = fwd->serverConnection();
 
-    if (fwd->serverConnection())
+    if (fwd->serverConnection() != NULL)
         _peer = cbdataReference(fwd->serverConnection()->getPeer());         /* might be NULL */
 
     flags.peering =  _peer;
