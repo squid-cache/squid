@@ -257,6 +257,7 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
                 return 0;
             }
         }
+        buff[sizeof(buff)-1] = '\0';
         fprintf(stdout,"%s",buff);
         if (debug_enabled)
             fprintf(stderr, "%s| %s: Return '%s'\n",
