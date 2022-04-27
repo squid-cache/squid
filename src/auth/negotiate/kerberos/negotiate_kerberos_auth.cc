@@ -370,6 +370,7 @@ main(int argc, char *const argv[])
     const unsigned char *spnegoToken = NULL;
     size_t spnegoTokenLength = 0;
 
+    default_keytab[0] = '\0';
     setbuf(stdout, NULL);
     setbuf(stdin, NULL);
 
