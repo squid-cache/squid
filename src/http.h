@@ -32,13 +32,14 @@ public:
         enum Answers { reuseNot = 0, cachePositively, cacheNegatively, doNotCacheButShare };
 
         ReuseDecision(const StoreEntry *e, const Http::StatusCode code);
+        ReuseDecision() = delete;
         /// stores the corresponding decision
         Answers make(const Answers ans, const char *why);
 
-        Answers answer; ///< the decision id
-        const char *reason; ///< the decision reason
-        const StoreEntry *entry; ///< entry for debugging
-        const Http::StatusCode statusCode; ///< HTTP status for debugging
+        Answers answer = reuseNot; ///< the decision id
+        const char *reason = nullptr; ///< the decision reason
+        const StoreEntry *entry = nullptr;
+        const Http::StatusCode statusCode = Http::StatusCode::scNone;
     };
 
     HttpStateData(FwdState *);
