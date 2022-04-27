@@ -18,7 +18,7 @@ class AsyncCallList
 public:
     /// appends the back element to the list
     void add(const AsyncCallPointer &);
-    /// removes and returns front element of the list  
+    /// removes and returns front element of the list
     AsyncCallPointer extract();
     /// the list length
     size_t size() const { return length; }

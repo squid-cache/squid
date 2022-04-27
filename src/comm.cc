@@ -938,7 +938,7 @@ comm_add_close_handler(int fd, AsyncCall::Pointer &call)
 //    for (c = fd_table[fd].closeHandler; c; c = c->next)
 //        assert(c->handler != handler || c->data != data);
 
-    // TODO: check whether we can use AsyncCallList for close handlers 
+    // TODO: check whether we can use AsyncCallList for close handlers
     call->setNext(fd_table[fd].closeHandler);
 
     fd_table[fd].closeHandler = call;
