@@ -35,10 +35,12 @@ public:
         /// stores the corresponding decision
         Answers make(const Answers ans, const char *why);
 
-        Answers answer; ///< the decision id
-        const char *reason; ///< the decision reason
-        const StoreEntry *entry; ///< entry for debugging
-        const Http::StatusCode statusCode; ///< HTTP status for debugging
+        Answers answer = reuseNot; ///< the decision id
+        const char *reason = nullptr; ///< the decision reason
+        const StoreEntry *entry = nullptr; ///< entry for debugging
+        const Http::StatusCode statusCode = scNone; ///< HTTP status for debugging
+    private:
+        ReuseDecision();
     };
 
     HttpStateData(FwdState *);
