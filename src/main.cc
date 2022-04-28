@@ -568,6 +568,7 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
             /** \li On interrupt send SIGINT. */
             opt_send_signal = SIGINT;
         else if (!strncmp(optValue, "kill", strlen(optValue)))
+            // XXX: In SMP mode, uncatchable SIGKILL only kills the master process
             /** \li On kill send SIGKILL. */
             opt_send_signal = SIGKILL;
 
