@@ -2620,7 +2620,7 @@ HttpStateData::abortAll(const char *reason)
 }
 
 HttpStateData::ReuseDecision::ReuseDecision(const StoreEntry *e, const Http::StatusCode code)
-    : answer(HttpStateData::ReuseDecision::reuseNot), reason(nullptr), entry(e), statusCode(code) {}
+    : entry(e), statusCode(code) {}
 
 HttpStateData::ReuseDecision::Answers
 HttpStateData::ReuseDecision::make(const HttpStateData::ReuseDecision::Answers ans, const char *why)
