@@ -32,7 +32,6 @@ public:
         enum Answers { reuseNot = 0, cachePositively, cacheNegatively, doNotCacheButShare };
 
         ReuseDecision(const StoreEntry *e, const Http::StatusCode code);
-        ReuseDecision() = delete;
         /// stores the corresponding decision
         Answers make(const Answers ans, const char *why);
 
