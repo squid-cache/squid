@@ -21,7 +21,7 @@ my $inside = 0;
 my $currentGroup = 0;
 my $lastReportedGroup = undef();
 while (<>) {
-    if (/\bCodeContext.*?\bEntering: (\S+)/) {
+    if (/\bCodeContext.*?\bEntering: (.*)/) {
         my $wasInside = $inside;
         $inside = $1 eq $ContextId;
 
