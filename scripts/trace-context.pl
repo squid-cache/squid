@@ -40,7 +40,7 @@ while (<>) {
         ++$currentGroup;
     }
 
-    if ($inside && /\bCodeContext.*?\bLeaving:/) {
+    if ($inside && /\bCodeContext.*?\bLeaving: /) {
         $inside = 0;
         ++$currentGroup;
     }
