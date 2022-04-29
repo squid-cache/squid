@@ -15,25 +15,34 @@ use warnings;
 die("usage: $0 <CodeContext id> [log filename]\n") unless @ARGV;
 my $ContextId = shift;
 
-my $inside = 0;
+my $GroupSeparator = "--\n";
 
+my $inside = 0;
+my $currentGroup = 0;
+my $lastReportedGroup = undef();
 while (<>) {
     if (/\bCodeContext.*?\bEntering: (\S+)/) {
         my $wasInside = $inside;
         $inside = $1 eq $ContextId;
 
-        # switched from our CodeContext to another
-        print "\n" if $wasInside && !$inside;
+        # detect no-Leaving switches from our CodeContext to another
+        ++$currentGroup if $wasInside && !$inside;
     }
 
     my $external = !$inside && /\b$ContextId\b/o;
 
-    print $_ if $inside || $external;
-    print "\n" if $external;
+    if ($inside || $external) {
+        ++$currentGroup if $external;
+        print $GroupSeparator if defined($lastReportedGroup) && $currentGroup != $lastReportedGroup;
+        print $_;
+        $lastReportedGroup = $currentGroup;
+    } else {
+        ++$currentGroup;
+    }
 
     if ($inside && /\bCodeContext.*?\bLeaving:/) {
         $inside = 0;
-        print "\n";
+        ++$currentGroup;
     }
 }
 
