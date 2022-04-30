@@ -45,19 +45,6 @@
 
 #define KE_LENGTH        128
 
-/* jlemon goofed up and didn't add EV_SET until fbsd 4.3 */
-
-#ifndef EV_SET
-#define EV_SET(kevp, a, b, c, d, e, f) do {     \
-        (kevp)->ident = (a);                    \
-        (kevp)->filter = (b);                   \
-        (kevp)->flags = (c);                    \
-        (kevp)->fflags = (d);                   \
-        (kevp)->data = (e);                     \
-        (kevp)->udata = (f);                    \
-} while(0)
-#endif
-
 static void kq_update_events(int, short, PF *);
 static int kq;
 
