@@ -2931,7 +2931,6 @@ AC_SEARCH_LIBS([res_init],[resolv])
 AC_SEARCH_LIBS([__res_search],[resolv])
 AC_SEARCH_LIBS([bind],[socket])
 AC_SEARCH_LIBS([opcom_stack_trace],[opcom_stack])
-AC_SEARCH_LIBS([strlcpy], [bsd])
 AC_SEARCH_LIBS([yp_match], [nsl nss_nis nss_nisplus])
 dnl Check for Winsock only on MinGW, on Cygwin we must use emulated BSD socket API
 if test "x$squid_host_os" = "xmingw" ; then
@@ -3054,16 +3053,8 @@ case "$host" in
     AC_MSG_NOTICE([Removing -lnsl for IRIX...])
     LIBS=`echo $LIBS | sed -e s/-lnsl//`
     ac_cv_lib_nsl_main=no
-    AC_MSG_NOTICE([Removing -lbsd for IRIX...])
-    LIBS=`echo $LIBS | sed -e s/-lbsd//`
   ;;
-dnl From: c0032033@ws.rz.tu-bs.de (Joerg Schumacher)
-dnl Date: Thu, 17 Oct 1996 04:09:30 +0200
-dnl Please change your configure script.  AIX doesn't need -lbsd.
   *-ibm-aix*)
-    AC_MSG_NOTICE([Removing -lbsd for AIX...])
-    LIBS=`echo $LIBS | sed -e s/-lbsd//`
-
     SQUID_CC_REQUIRE_ARGUMENT([ac_cv_require_rtti],[-rtti],[[
 #include <assert.h>
 #ifndef NULL
