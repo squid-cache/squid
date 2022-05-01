@@ -35,7 +35,6 @@
  */
 
 class CallDialer;
-class AsyncCallQueue;
 
 class AsyncCall: public RefCountable
 {
@@ -82,7 +81,7 @@ protected:
 
     virtual void fire() = 0;
 
-    AsyncCall::Pointer theNext; // used exclusively by AsyncCallQueue
+    AsyncCall::Pointer theNext; ///< for AsyncCallList and similar lists
 
 private:
     const char *isCanceled; // set to the cancellation reason by cancel()

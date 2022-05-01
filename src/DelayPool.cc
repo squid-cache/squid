@@ -87,7 +87,7 @@ CompositePoolNode::delayRead(const AsyncCall::Pointer &aRead)
 void
 CompositePoolNode::kickReads()
 {
-    deferredReads.kick();
+    deferredReads.schedule();
 }
 
 #endif /* USE_DELAY_POOLS */

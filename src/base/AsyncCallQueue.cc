@@ -15,17 +15,15 @@
 
 AsyncCallQueue *AsyncCallQueue::TheInstance = 0;
 
-AsyncCallQueue::AsyncCallQueue()
-{
-}
+AsyncCallQueue::AsyncCallQueue() = default;
 
 // Fire all scheduled calls; returns true if at least one call was fired.
 // The calls may be added while the current call is in progress.
 bool
 AsyncCallQueue::fire()
 {
-    const auto made = list.size();
-    while (auto call = list.extract()) {
+    const auto made = scheduled.size() > 0;
+    while (const auto call = scheduled.extract()) {
         CodeContext::Reset(call->codeContext);
         debugs(call->debugSection, call->debugLevel, "entering " << *call);
         call->make();

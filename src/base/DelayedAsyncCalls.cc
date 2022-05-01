@@ -20,7 +20,7 @@ DelayedAsyncCalls::delay(const AsyncCall::Pointer &call)
 }
 
 void
-DelayedAsyncCalls::kick()
+DelayedAsyncCalls::schedule()
 {
     // XXX: For fairness this SHOULD randomize the order
     while (auto call = deferredReads.extract())

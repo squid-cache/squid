@@ -9,10 +9,8 @@
 #ifndef SQUID_ASYNCCALLQUEUE_H
 #define SQUID_ASYNCCALLQUEUE_H
 
-#include "base/AsyncCall.h"
 #include "base/AsyncCallList.h"
-
-//class AsyncCall;
+#include "base/forward.h"
 
 // The queue of asynchronous calls. All calls are fired during a single main
 // loop iteration until the queue is exhausted
@@ -23,7 +21,7 @@ public:
     static AsyncCallQueue &Instance();
 
     // make this async call when we get a chance
-    void schedule(const AsyncCallPointer &call) { list.add(call); }
+    void schedule(const AsyncCallPointer &call) { scheduled.add(call); }
 
     // fire all scheduled calls; returns true if at least one was fired
     bool fire();
@@ -31,7 +29,7 @@ public:
 private:
     AsyncCallQueue();
 
-    AsyncCallList list; ///< scheduled calls in FIFO order
+    AsyncCallList scheduled; ///< calls waiting to be fire()d, in FIFO order
 
     static AsyncCallQueue *TheInstance;
 };

@@ -454,7 +454,7 @@ MemObject::delayRead(const AsyncCall::Pointer &aRead)
 void
 MemObject::kickReads()
 {
-    deferredReads.kick();
+    deferredReads.schedule();
 }
 
 #if USE_DELAY_POOLS

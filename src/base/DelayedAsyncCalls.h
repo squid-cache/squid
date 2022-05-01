@@ -13,20 +13,20 @@
 #include "base/forward.h"
 
 /// a FIFO list of async calls, all to be scheduled in FIFO order (on demand via
-/// the kick() method or automatically at object destruction time)
+/// the schedule() method or automatically at object destruction time)
 class DelayedAsyncCalls
 {
 public:
-    ~DelayedAsyncCalls() { kick(); }
+    ~DelayedAsyncCalls() { schedule(); }
 
-    /// stores the given call to schedule it at kick() or destruction time
+    /// stores the given call to schedule it at schedule() or destruction time
     void delay(const AsyncCallPointer &);
 
     /// schedules and forgets all async calls previously stored by delay()
-    void kick();
+    void schedule();
 
 private:
-    /// delay()-ed calls waiting to be kick()-ed, in delay() call order
+    /// delay()-ed calls waiting to be scheduled, in delay() call order
     AsyncCallList deferredReads;
 };
 

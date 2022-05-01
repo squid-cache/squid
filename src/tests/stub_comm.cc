@@ -24,7 +24,7 @@
 /* should be in stub_DelayedAsyncCalls */
 #include "base/DelayedAsyncCalls.h"
 void DelayedAsyncCalls::delay(const AsyncCall::Pointer &) STUB
-void DelayedAsyncCalls::kick() STUB
+void DelayedAsyncCalls::schedule() STUB
 
 #include "comm.h"
 bool comm_iocallbackpending(void) STUB_RETVAL(false)

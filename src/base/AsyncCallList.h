@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ASYNCCALLLIST_H
-#define SQUID_ASYNCCALLLIST_H
+#ifndef SQUID_BASE_ASYNCCALLLIST_H
+#define SQUID_BASE_ASYNCCALLLIST_H
 
 #include "base/forward.h"
 #include "base/RefCount.h"
@@ -35,5 +35,5 @@ private:
 
 };
 
-#endif /* SQUID_ASYNCCALLLIST_H */
+#endif /* SQUID_BASE_ASYNCCALLLIST_H */
 
