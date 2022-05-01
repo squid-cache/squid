@@ -37,7 +37,7 @@ AsyncCallList::extract()
 
     Assure(tail);
     Assure(length);
-    auto call = head;
+    const auto call = head;
     head = call->Next();
     call->setNext(nullptr);
     if (tail == call)
