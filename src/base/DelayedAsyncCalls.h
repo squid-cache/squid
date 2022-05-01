@@ -12,8 +12,6 @@
 #include "base/AsyncCallList.h"
 #include "base/forward.h"
 
-#include <vector>
-
 /// a FIFO list of async calls, all to be scheduled in FIFO order (on demand via
 /// the kick() method or automatically at object destruction time)
 class DelayedAsyncCalls
