@@ -2289,19 +2289,6 @@ DOC_START
 	SSL Bump Mode Options:
 	    In addition to these options ssl-bump requires TLS/SSL options.
 
-	   generate-host-certificates[=<on|off>]
-			Dynamically create SSL server certificates for the
-			destination hosts of bumped CONNECT requests.When 
-			enabled, the cert and key options are used to sign
-			generated certificates. Otherwise generated
-			certificate will be selfsigned.
-			If there is a CA certificate lifetime of the generated 
-			certificate equals lifetime of the CA certificate. If
-			generated certificate is selfsigned lifetime is three 
-			years.
-			This option is enabled by default when ssl-bump is used.
-			See the ssl-bump option above for more information.
-			
 	   dynamic_cert_mem_cache_size=SIZE
 			Approximate total RAM size spent on cached generated
 			certificates. If set to zero, caching is disabled. The
@@ -2336,6 +2323,32 @@ DOC_START
 			If tls-key= is not specified tls-cert= is assumed to
 			reference a PEM file containing both the certificate
 			and private key.
+
+	   generate-host-certificates=[off|FILE]
+			Dynamically create X.509 server certificates for the
+			destination hosts of received (or bumped) TLS traffic.
+
+			FILE is the path to file containing an X.509 CA
+			certificate and private key in PEM format, to be used
+			for signing certificates generated for the TLS
+			handshake ServerHello.
+
+			If there is a CA certificate, lifetime of the generated
+			certificate equals lifetime of the CA certificate. If
+			generated certificate is self-signed lifetime is three
+			years.
+
+			Set it to 'off' to disable certificate generation and
+			use only a static certificate from tls-cert=.
+
+			For backward compatibility with older configurations
+			when Squid is built with OpenSSL this option defaults
+			to enabled and the first tls-cert= is expected to
+			contain a CA certificate capable of signing the
+			automatically generated certificates.
+
+			NOTE: certificate generation is currently only
+			      performed when ssl-bump is configured.
 
 	   cipher=	Colon separated list of supported ciphers.
 			NOTE: some ciphers such as EDH ciphers depend on

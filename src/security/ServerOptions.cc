@@ -107,11 +107,21 @@ Security::ServerOptions::parse(const char *token)
         }
 
     } else if (strcmp(token, "generate-host-certificates") == 0) {
+        debugs(83, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Option '" << token << "' missing a value.");
         generateHostCertificates = true;
     } else if (strcmp(token, "generate-host-certificates=on") == 0) {
         generateHostCertificates = true;
+        debugs(83, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Option '" << token << "' deprecated. A file with CA certificate is now expected.");
     } else if (strcmp(token, "generate-host-certificates=off") == 0) {
         generateHostCertificates = false;
+    } else if (strncmp(token, "generate-host-certificates=", 27) == 0) {
+        generateHostCertificates = true;
+        // file given must contain both cert and private key in PEM format
+        signingCa.certFile = signingCa.privateKeyFile = SBuf(token+27);
+
+        if (signingCa.certFile.isEmpty()) {
+            debugs(83, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Option '" << token << "' missing a value");
+        }
 
     } else if (strncmp(token, "context=", 8) == 0) {
 #if USE_OPENSSL
@@ -146,6 +156,8 @@ Security::ServerOptions::dumpCfg(Packable *p, const char *pfx) const
 
     if (!generateHostCertificates)
         p->appendf(" %sgenerate-host-certificates=off", pfx);
+    else if (signingCa.certFile == signingCa.privateKeyFile)
+        p->appendf(" %sgenerate-host-certificates=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(signingCa.certFile));
 
     if (dynamicCertMemCacheSize != 4*1024*1024) // 4MB default, no 'tls-' prefix
         p->appendf(" dynamic_cert_mem_cache_size=%" PRIuSIZE "bytes", dynamicCertMemCacheSize);
@@ -283,7 +295,10 @@ Security::ServerOptions::createSigningContexts(const AnyP::PortCfg &port)
     // contexts are generated as needed. This method initializes the cert
     // and key pointers used to sign those contexts later.
 
-    signingCa = certs.front();
+    // backward compatibility for old configs using cert= as signing CA.
+    if (generateHostCertificates && signingCa.certFile.isEmpty()) {
+        signingCa = certs.front();
+    }
 
     const char *portType = AnyP::ProtocolType_str[port.transport.protocol];
     if (!signingCa.cert) {

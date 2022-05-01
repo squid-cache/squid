@@ -14,6 +14,18 @@
 #include "ssl/bio.h"
 #include "ssl/gadgets.h"
 
+bool
+Security::KeyData::certSelfSigned() const
+{
+#if USE_OPENSSL
+    return X509_check_issued(cert.get(), cert.get()) == X509_V_OK;
+#elif USE_GNUTLS
+    return gnutls_x509_crt_check_issuer(cert.get(), cert.get()) == GNUTLS_E_SUCCESS;
+#else
+    return false;
+#endif
+}
+
 /**
  * Read certificate from file.
  * See also: Ssl::ReadX509Certificate function, gadgets.cc file
@@ -84,6 +96,11 @@ Security::KeyData::loadX509CertFromFile()
 void
 Security::KeyData::loadX509ChainFromFile()
 {
+    if (certSelfSigned()) {
+        debugs(83, 5, "Certificate is self-signed, will not be chained");
+        return;
+    }
+
 #if USE_OPENSSL
     const char *certFilename = certFile.c_str();
     Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));

@@ -355,6 +355,8 @@ This section gives a thorough account of those changes in three categories:
 	<p>Manual squid.conf update may be required on upgrade.
 	<p>Replaced <em>cafile=</em> with <em>tls-cafile=</em> which takes multiple entries.
 	<p>Changed default value of <em>generate-host-certificates</em> to ON.
+	   Added support for configuring the CA certificate PEM file via this parameter
+	   instead of with tls-cert= parameter.
 
 	<tag>https_port</tag>
 	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.
@@ -368,6 +370,8 @@ This section gives a thorough account of those changes in three categories:
 	<p>Manual squid.conf update may be required on upgrade.
 	<p>Replaced <em>cafile=</em> with <em>tls-cafile=</em> which takes multiple entries.
 	<p>Changed default value of <em>generate-host-certificates</em> to ON.
+	   Added support for configuring the CA certificate PEM file via this parameter
+	   instead of with tls-cert= parameter.
 
 	<tag>icap_service</tag>
 	<p>New scheme <em>icaps://</em> to enable TLS/SSL connections to Secure ICAP

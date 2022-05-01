@@ -3717,9 +3717,9 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
     } else if (strncmp(token, "sslcontext=", 11) == 0) {
         // NP: deprecation warnings output by secure.parse() when relevant
         s->secure.parse(token+3);
+#endif
     } else if (strncmp(token, "generate-host-certificates", 26) == 0) {
         s->secure.parse(token);
-#endif
     } else if (strncmp(token, "dynamic_cert_mem_cache_size=", 28) == 0) {
         s->secure.parse(token);
     } else if (strncmp(token, "tls-", 4) == 0) {
