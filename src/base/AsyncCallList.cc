@@ -7,23 +7,26 @@
  */
 
 #include "squid.h"
-
+#include "base/Assure.h"
 #include "base/AsyncCall.h"
 #include "base/AsyncCallList.h"
 
 void
 AsyncCallList::add(const AsyncCall::Pointer &call)
 {
-    assert(call);
-    assert(!call->Next());
-    if (head) { // append
-        assert(!tail->Next());
+    Assure(call);
+    Assure(!call->Next());
+    if (tail) { // append to the existing list
+        Assure(head);
+        Assure(!tail->Next());
         tail->setNext(call);
         tail = call;
     } else { // create a list from scratch
+        Assure(!head);
         head = tail = call;
     }
-    length++;
+    ++length;
+    Assure(length); // no overflows
 }
 
 AsyncCall::Pointer
@@ -32,13 +35,14 @@ AsyncCallList::extract()
     if (!head)
 	    return AsyncCallPointer();
 
+    Assure(tail);
+    Assure(length);
     auto call = head;
     head = call->Next();
     call->setNext(nullptr);
     if (tail == call)
         tail = nullptr;
-    if (length)
-        length--;
+    --length;
     return call;
 }
 
