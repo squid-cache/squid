@@ -12,21 +12,27 @@
 #include "base/forward.h"
 #include "base/RefCount.h"
 
-/// AsyncCall FIFO storage
+/// An efficient (but intrusive) AsyncCall storage preserving FIFO order.
+/// A given AsyncCall object may reside in at most one such storage.
 class AsyncCallList
 {
 public:
-    /// appends the back element to the list
+    /// stores the given async call
     void add(const AsyncCallPointer &);
-    /// removes and returns front element of the list
+
+    /// removes the earliest add()-ed call that is still stored (if any)
+    /// \returns the removed call (or nil)
+    /// \retval nil means the list stored no calls at extract() time
     AsyncCallPointer extract();
-    /// the list length
+
+    /// the number of currently stored calls
     size_t size() const { return length; }
 
 private:
-    AsyncCallPointer head;
-    AsyncCallPointer tail;
-    size_t length = 0;
+    AsyncCallPointer head; ///< the earliest still-stored call (or nil)
+    AsyncCallPointer tail; ///< the latest still-stored call (or nil)
+    size_t length = 0; ///< \copydoc size()
+
 };
 
 #endif /* SQUID_ASYNCCALLLIST_H */

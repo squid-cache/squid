@@ -807,8 +807,8 @@ comm_close_complete(const FdeCbParams &params)
  * + call read handlers with ERR_CLOSING
  * + call closing handlers
  *
- * NOTE: Comm::ERR_CLOSING will NOT be called for read handlers, sitting in a
- * DelayedAsyncCalls.
+ * A deferred reader has no Comm read handler mentioned above. To stay in sync,
+ * such a reader must register a Comm closing handler.
  */
 void
 _comm_close(int fd, char const *file, int line)
@@ -938,7 +938,8 @@ comm_add_close_handler(int fd, AsyncCall::Pointer &call)
 //    for (c = fd_table[fd].closeHandler; c; c = c->next)
 //        assert(c->handler != handler || c->data != data);
 
-    // TODO: check whether we can use AsyncCallList for close handlers
+    // TODO: Consider enhancing AsyncCallList to support random-access close
+    // handlers, perhaps after upgrading the remaining legacy CLCB handlers.
     call->setNext(fd_table[fd].closeHandler);
 
     fd_table[fd].closeHandler = call;

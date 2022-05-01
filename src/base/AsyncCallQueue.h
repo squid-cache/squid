@@ -23,7 +23,7 @@ public:
     static AsyncCallQueue &Instance();
 
     // make this async call when we get a chance
-    void schedule(AsyncCall::Pointer &call) { list.add(call); }
+    void schedule(const AsyncCallPointer &call) { list.add(call); }
 
     // fire all scheduled calls; returns true if at least one was fired
     bool fire();
@@ -31,7 +31,7 @@ public:
 private:
     AsyncCallQueue();
 
-    AsyncCallList list; ///< scheduled calls in a FIFO list
+    AsyncCallList list; ///< scheduled calls in FIFO order
 
     static AsyncCallQueue *TheInstance;
 };

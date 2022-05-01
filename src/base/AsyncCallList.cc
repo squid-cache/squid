@@ -12,7 +12,7 @@
 #include "base/AsyncCallList.h"
 
 void
-AsyncCallList::add(const AsyncCallPointer &call)
+AsyncCallList::add(const AsyncCall::Pointer &call)
 {
     assert(call);
     assert(!call->Next());
@@ -20,17 +20,18 @@ AsyncCallList::add(const AsyncCallPointer &call)
         assert(!tail->Next());
         tail->setNext(call);
         tail = call;
-    } else { // create queue from cratch
+    } else { // create a list from scratch
         head = tail = call;
     }
     length++;
 }
 
-AsyncCallPointer
+AsyncCall::Pointer
 AsyncCallList::extract()
 {
     if (!head)
 	    return AsyncCallPointer();
+
     auto call = head;
     head = call->Next();
     call->setNext(nullptr);

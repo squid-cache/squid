@@ -14,17 +14,21 @@
 
 #include <vector>
 
-/// maintains a list of async calls and schedules them at once
+/// a FIFO list of async calls, all to be scheduled in FIFO order (on demand via
+/// the kick() method or automatically at object destruction time)
 class DelayedAsyncCalls
 {
 public:
     ~DelayedAsyncCalls() { kick(); }
-    /// stores an async call in a list
+
+    /// stores the given call to schedule it at kick() or destruction time
     void delay(const AsyncCallPointer &);
-    /// schedules all previously stored async calls and clears the list
+
+    /// schedules and forgets all async calls previously stored by delay()
     void kick();
 
 private:
+    /// delay()-ed calls waiting to be kick()-ed, in delay() call order
     AsyncCallList deferredReads;
 };
 

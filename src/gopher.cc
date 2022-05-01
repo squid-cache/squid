@@ -105,7 +105,8 @@ public:
 
     /// queues or defers a read call
     static void DelayAwareRead(GopherStateData *);
-    /// a callback used by DelayAwareRead()
+
+    /// a deferred read callback used by DelayAwareRead()
     static void NoteDelayedRead(GopherStateData *);
 
 public:
