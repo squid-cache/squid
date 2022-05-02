@@ -905,6 +905,13 @@ Ftp::Client::dataConnection() const
 }
 
 void
+Ftp::Client::delayAwareRead()
+{
+    data.read_pending = false;
+    maybeReadVirginBody();
+}
+
+void
 Ftp::Client::maybeReadVirginBody()
 {
     // too late to read
@@ -915,15 +922,6 @@ Ftp::Client::maybeReadVirginBody()
         return;
 
     initReadBuf();
-
-    delayAwareRead();
-}
-
-void
-Ftp::Client::delayAwareRead()
-{
-    Assure(Comm::IsConnOpen(data.conn));
-    Assure(!fd_table[data.conn->fd].closing());
 
     const int read_sz = replyBodySpace(*data.readBuf, 0);
 
