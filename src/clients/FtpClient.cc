@@ -920,17 +920,6 @@ Ftp::Client::maybeReadVirginBody()
 }
 
 void
-Ftp::Client::noteDelayAwareReadChance()
-{
-    if (!Comm::IsConnOpen(data.conn) || fd_table[data.conn->fd].closing()) {
-        debugs(9, 3, "will not read from " << data.conn);
-        return;
-    }
-
-    delayAwareRead();
-}
-
-void
 Ftp::Client::delayAwareRead()
 {
     Assure(Comm::IsConnOpen(data.conn));

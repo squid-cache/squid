@@ -1172,13 +1172,8 @@ HttpStateData::persistentConnStatus() const
 }
 
 void
-HttpStateData::noteDelayAwareReadChance()
+HttpStateData::delayAwareRead()
 {
-    if (!Comm::IsConnOpen(serverConnection) || fd_table[serverConnection->fd].closing()) {
-        debugs(11, 3, "will not read from " << serverConnection);
-        return;
-    }
-
     flags.do_next_read = true;
     maybeReadVirginBody();
 }

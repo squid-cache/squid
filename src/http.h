@@ -77,7 +77,7 @@ public:
 
 protected:
     /* Client API */
-    virtual void noteDelayAwareReadChance();
+    virtual void delayAwareRead();
 
     void processReply();
     void proceedAfter1xx();
