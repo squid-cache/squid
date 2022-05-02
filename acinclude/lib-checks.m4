@@ -15,7 +15,7 @@ AC_DEFUN([SQUID_CHECK_REGEX_WORKS],[
 #include <sys/types.h>
 #endif
 #if HAVE_REGEX_H
-#include <regex.h> 
+#include <regex.h>
 #endif
 ]], [[
 regex_t t; regcomp(&t,"",0);]])],
@@ -197,7 +197,7 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
 SQUID_STATE_ROLLBACK(check_SSL_get_certificate)
 ])
 
-dnl Checks whether the  SSL_CTX_new and similar functions require 
+dnl Checks whether the  SSL_CTX_new and similar functions require
 dnl a const 'SSL_METHOD *' argument
 AC_DEFUN([SQUID_CHECK_OPENSSL_CONST_SSL_METHOD],[
   AH_TEMPLATE(SQUID_USE_CONST_SSL_METHOD, "Define to 1 if the SSL_CTX_new and similar openSSL API functions require 'const SSL_METHOD *'")

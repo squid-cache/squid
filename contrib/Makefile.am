@@ -28,7 +28,7 @@ EXTRA_DIST = \
 	nextstep/pre_install \
 	solaris/solaris-krb5-include.patch
 
-all: 
+all:
 
 install: install-@host_os@
 

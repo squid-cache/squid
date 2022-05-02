@@ -70,7 +70,7 @@ SQUID_STATE_COMMIT($1)
 
 dnl look for modules in the base-directory supplied as argument.
 dnl fill-in the variable pointed-to by the second argument with the
-dnl space-separated list of modules 
+dnl space-separated list of modules
 AC_DEFUN([SQUID_LOOK_FOR_MODULES],[
 $2=""
 for dir in $1/*; do
@@ -113,7 +113,7 @@ dnl named $2_modulename to value "yes"
 dnl e.g. SQUID_CHECK_EXISTING_MODULES([$srcdir/src/fs],[foo_module_candidates])
 dnl where $foo_module_candidates is "foo bar gazonk"
 dnl checks whether $srcdir/src/fs/{foo,bar,gazonk} exist and are all dirs
-dnl AND sets $foo_module_candidates_foo, $foo_module_candidates_bar 
+dnl AND sets $foo_module_candidates_foo, $foo_module_candidates_bar
 dnl and $foo_module_candidates_gazonk to "yes"
 AC_DEFUN([SQUID_CHECK_EXISTING_MODULES],[
   for squid_module_check_exist_tmp in $$2
@@ -145,12 +145,12 @@ dnl 0: "no" , "false", 0, ""
 dnl aborts with an error for unknown values
 AC_DEFUN([SQUID_DEFINE_BOOL],[
 squid_tmp_define=""
-case "$2" in 
+case "$2" in
   yes|true|1) squid_tmp_define="1" ;;
   no|false|0|"") squid_tmp_define="0" ;;
   *) AC_MSG_ERROR([SQUID_DEFINE[]_BOOL: unrecognized value for $1: '$2']) ;;
 esac
-ifelse([$#],3, 
+ifelse([$#],3,
   [AC_DEFINE_UNQUOTED([$1], [$squid_tmp_define],[$3])],
   [AC_DEFINE_UNQUOTED([$1], [$squid_tmp_define])]
 )
@@ -170,7 +170,7 @@ AC_DEFUN([SQUID_EMBED_BUILD_INFO],[
     AS_HELP_STRING([--enable-build-info="build info string"],
       [Add an additional string in the output of "squid -v".
        Default is not to add anything. If the string is not specified,
-       tries to determine nick and revision number of the current 
+       tries to determine nick and revision number of the current
        bazaar branch]),[
   case "$enableval" in
     no) ${TRUE}

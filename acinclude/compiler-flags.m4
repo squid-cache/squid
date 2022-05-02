@@ -6,7 +6,7 @@
 ##
 
 # check if the compiler accepts a supplied flag
-# first argument is the variable containing the result 
+# first argument is the variable containing the result
 # (will be set to "yes" or "no")
 # second argument is the flag to be tested, verbatim
 #
@@ -28,7 +28,7 @@ AC_DEFUN([SQUID_CC_CHECK_ARGUMENT],[
 # Check if the compiler requires a supplied flag to build a test program.
 # When cross-compiling set flags explicitly.
 #
-# first argument is the variable containing the result 
+# first argument is the variable containing the result
 # (will be set to "yes" or "no")
 # second argument is the flag to be tested, verbatim
 # third is the #include and global setup for test program, verbatim
@@ -57,8 +57,8 @@ AC_DEFUN([SQUID_CC_REQUIRE_ARGUMENT],[
 #  - gcc
 #  - sunstudio
 #  - none (undetected)
-# 
-AC_DEFUN([SQUID_CC_GUESS_VARIANT], [ 
+#
+AC_DEFUN([SQUID_CC_GUESS_VARIANT], [
  AC_CACHE_CHECK([what kind of compiler we're using],[squid_cv_compiler],
  [
   AC_REQUIRE([AC_PROG_CC])
@@ -127,42 +127,42 @@ AC_DEFUN([SQUID_CC_GUESS_VARIANT], [
 # squid_cv_cxx_option_werror  (-Werror)
 # squid_cv_cc_option_wall     (-Wall)
 # squid_cv_cc_option_optimize (-O3)
-# 
+#
 AC_DEFUN([SQUID_CC_GUESS_OPTIONS], [
  AC_REQUIRE([SQUID_CC_GUESS_VARIANT])
  AC_MSG_CHECKING([for compiler variant])
  case "$squid_cv_compiler" in
-  gcc) 
-   squid_cv_cc_option_werror="-Werror" 
-   squid_cv_cxx_option_werror="-Werror" 
+  gcc)
+   squid_cv_cc_option_werror="-Werror"
+   squid_cv_cxx_option_werror="-Werror"
    squid_cv_cc_option_wall="-Wall"
    squid_cv_cc_option_optimize="-O3"
    squid_cv_cc_arg_pipe="-pipe"
    ;;
-  sunstudio) 
-   squid_cv_cc_option_werror="-errwarn=%all -errtags" 
-   squid_cv_cxx_option_werror="-errwarn=%all,no%badargtype2w,no%wbadinit,no%wbadasg -errtags" 
+  sunstudio)
+   squid_cv_cc_option_werror="-errwarn=%all -errtags"
+   squid_cv_cxx_option_werror="-errwarn=%all,no%badargtype2w,no%wbadinit,no%wbadasg -errtags"
    squid_cv_cc_option_wall="+w"
    squid_cv_cc_option_optimize="-fast"
    squid_cv_cc_arg_pipe=""
    ;;
-  clang) 
+  clang)
    squid_cv_cxx_option_werror="-Werror -Qunused-arguments"
    squid_cv_cc_option_werror="$squid_cv_cxx_option_werror"
    squid_cv_cc_option_wall="-Wall"
    squid_cv_cc_option_optimize="-O2"
    squid_cv_cc_arg_pipe=""
    ;;
-  icc) 
+  icc)
    squid_cv_cxx_option_werror="-Werror"
-   squid_cv_cc_option_werror="$squid_cv_cxx_option_werror" 
+   squid_cv_cc_option_werror="$squid_cv_cxx_option_werror"
    squid_cv_cc_option_wall="-Wall"
    squid_cv_cc_option_optimize="-O2"
    squid_cv_cc_arg_pipe=""
    ;;
-  *) 
-   squid_cv_cxx_option_werror="" 
-   squid_cv_cc_option_werror="" 
+  *)
+   squid_cv_cxx_option_werror=""
+   squid_cv_cc_option_werror=""
    squid_cv_cc_option_wall=""
    squid_cv_cc_option_optimize="-O"
    squid_cv_cc_arg_pipe=""
