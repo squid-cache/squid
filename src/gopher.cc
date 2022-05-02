@@ -106,9 +106,6 @@ public:
     /// queues or defers a read call
     static void DelayAwareRead(GopherStateData *);
 
-    /// a deferred read callback used by DelayAwareRead()
-    static void NoteDelayedRead(GopherStateData *);
-
 public:
     StoreEntry *entry;
     enum {
@@ -828,19 +825,15 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm
 }
 
 void
-GopherStateData::NoteDelayedRead(GopherStateData *gopherState)
+GopherStateData::DelayAwareRead(GopherStateData *gopherState)
 {
     const auto &conn = gopherState->serverConn;
+
     if (!Comm::IsConnOpen(conn) || fd_table[conn->fd].closing()) {
         debugs(10, 3, "will not read from " << conn);
         return;
     }
-    DelayAwareRead(gopherState);
-}
 
-void
-GopherStateData::DelayAwareRead(GopherStateData *gopherState)
-{
     const auto amountToRead = gopherState->entry->bytesWanted(Range<size_t>(0, BUFSIZ));
 
     if (amountToRead <= 0) {
@@ -851,7 +844,7 @@ GopherStateData::DelayAwareRead(GopherStateData *gopherState)
     }
 
     AsyncCall::Pointer readCall = commCbCall(5, 5, "gopherReadReply", CommIoCbPtrFun(gopherReadReply, gopherState));
-    comm_read(gopherState->serverConn, gopherState->replybuf, amountToRead, readCall);
+    comm_read(conn, gopherState->replybuf, amountToRead, readCall);
 }
 
 /**
