@@ -118,13 +118,13 @@ connectTo( struct in_addr host, unsigned short port, bool nodelay = false,
   // paramtr: host (IN): address describing the server
   //          port (IN): port to connect at the server
   //          nodelay (IN): true=set TCP_NODELAY option.
-  //          sendBufferSize (IN): don't set (use sys defaults) if < 0 
-  //          recvBufferSize (IN): don't set (use sys defaults) if < 0 
+  //          sendBufferSize (IN): don't set (use sys defaults) if < 0
+  //          recvBufferSize (IN): don't set (use sys defaults) if < 0
   // returns: >=0 is the descriptor of the opened, connected socket,
   //          -1  is an indication of an error (errno may have been reset).
 
 int
-serverSocket( struct in_addr host, unsigned short port, 
+serverSocket( struct in_addr host, unsigned short port,
 	      int backlog = SOMAXCONN, bool reuse = true, bool nodelay = false,
 	      int sendBufferSize = -1, int recvBufferSize = -1 );
   // purpose: open a server socket for listening
@@ -134,8 +134,8 @@ serverSocket( struct in_addr host, unsigned short port,
   //          reuse (IN): set SO_REUSEADDR option - default usefully
   //          nodelay (IN): true=set TCP_NODELAY option.
   //            SETTING TCP_NODELAY ON A SERVER SOCKET DOES NOT MAKE SENSE!
-  //          sendBufferSize (IN): don't set (use sys defaults) if < 0 
-  //          recvBufferSize (IN): don't set (use sys defaults) if < 0 
+  //          sendBufferSize (IN): don't set (use sys defaults) if < 0
+  //          recvBufferSize (IN): don't set (use sys defaults) if < 0
   // returns: opened listening fd, or -1 on error.
   // warning: error message will be printed on stderr and errno reset.
 
