@@ -8,7 +8,7 @@
 #
 # Minimal configuration options.
 # - Everthing that can be disabled is
-# - Everyhing that can be done without is 
+# - Everyhing that can be done without is
 #
 #
 # Check - everything MUST work at this level
@@ -33,7 +33,7 @@ MAKETEST="distcheck"
 #  GCC-9 cannot (yet) test this due to segmentation faults in std::string template optimizations (via cppunit)
 #	--disable-optimizations \
 #
-# NP: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the 
+# NP: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the
 #     distcheck target recursive tests beteen scripted runs.
 #     we use it to perform the same duty between our nested scripts.
 DISTCHECK_CONFIGURE_FLAGS=" \

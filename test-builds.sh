@@ -170,7 +170,7 @@ else
 fi
 
 for t in $tests; do
-    if test -e "$t"; then 
+    if test -e "$t"; then
 	# A configuration file
         cfg="$t"
     elif test -e "$top/test-suite/buildtests/${t}.opts"; then
