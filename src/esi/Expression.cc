@@ -32,7 +32,7 @@
  * ) has 0
  */
 
-typedef struct _stackmember stackmember;
+struct stackmember;
 
 typedef int evaluate(stackmember * stack, int *depth, int whereAmI,
                      stackmember * candidate);
@@ -62,16 +62,23 @@ typedef enum {
     ESI_LITERAL_INVALID
 } literalhint;
 
-struct _stackmember {
+struct stackmember {
     evaluate *eval = nullptr;
     union {
-        char *string = nullptr;
+        char *string;
         double floating;
         int integral;
     } value;
     literalhint valuestored = ESI_LITERAL_INVALID;
     evaltype valuetype = ESI_EXPR_INVALID;
     int precedence = 0;
+
+    stackmember() :
+        eval(nullptr), valuestored(ESI_LITERAL_INVALID),
+        valuetype(ESI_EXPR_INVALID), precedence(0)
+    {
+        memset(&value, 0, sizeof(value));
+    }
 };
 
 static void cleanmember(stackmember *);
