@@ -1172,7 +1172,7 @@ HttpStateData::persistentConnStatus() const
 }
 
 void
-HttpStateData::delayAwareRead()
+HttpStateData::noteDelayAwareReadChance()
 {
     flags.do_next_read = true;
     maybeReadVirginBody();

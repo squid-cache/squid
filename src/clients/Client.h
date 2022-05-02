@@ -114,8 +114,8 @@ protected:
     virtual bool mayReadVirginReplyBody() const = 0;
 
     /// Called when a previously delayed dataConnection() read may be possible.
-    /// \sa delayRead() and delayAwareRead()
-    virtual void delayAwareRead() = 0;
+    /// \sa delayRead()
+    virtual void noteDelayAwareReadChance() = 0;
 
     /// Entry-dependent callbacks use this check to quit if the entry went bad
     bool abortOnBadEntry(const char *abortReason);
@@ -201,8 +201,6 @@ protected:
 private:
     void sendBodyIsTooLargeError();
     void maybePurgeOthers();
-
-    void noteDelayAwareReadChance();
 
     HttpReply *theVirginReply = nullptr;       /**< reply received from the origin server */
     HttpReply *theFinalReply = nullptr;        /**< adapted reply from ICAP or virgin reply */

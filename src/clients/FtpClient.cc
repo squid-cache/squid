@@ -905,7 +905,7 @@ Ftp::Client::dataConnection() const
 }
 
 void
-Ftp::Client::delayAwareRead()
+Ftp::Client::noteDelayAwareReadChance()
 {
     data.read_pending = false;
     maybeReadVirginBody();

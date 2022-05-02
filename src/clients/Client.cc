@@ -1035,19 +1035,6 @@ Client::delayRead()
     entry->mem_obj->delayRead(call);
 }
 
-/// a delayRead() callback
-void
-Client::noteDelayAwareReadChance()
-{
-    const auto &conn = dataConnection();
-    if (!Comm::IsConnOpen(conn) || fd_table[conn->fd].closing()) {
-        debugs(11, 3, "will not read from " << conn);
-        return;
-    }
-
-    delayAwareRead();
-}
-
 void
 Client::addVirginReplyBody(const char *data, ssize_t len)
 {
