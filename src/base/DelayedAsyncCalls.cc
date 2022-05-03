@@ -7,7 +7,6 @@
  */
 
 #include "squid.h"
-
 #include "base/AsyncCall.h"
 #include "base/DelayedAsyncCalls.h"
 #include "debug/Stream.h"
@@ -22,7 +21,6 @@ DelayedAsyncCalls::delay(const AsyncCall::Pointer &call)
 void
 DelayedAsyncCalls::schedule()
 {
-    // XXX: For fairness this SHOULD randomize the order
     while (auto call = deferredReads.extract())
         ScheduleCallHere(call);
 }

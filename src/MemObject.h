@@ -10,7 +10,6 @@
 #define SQUID_MEMOBJECT_H
 
 #include "base/DelayedAsyncCalls.h"
-#include "base/forward.h"
 #include "dlink.h"
 #include "http/RequestMethod.h"
 #include "RemovalPolicy.h"

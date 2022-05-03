@@ -10,7 +10,6 @@
 #define SQUID_BASE_DELAYEDASYNCCALLS_H
 
 #include "base/AsyncCallList.h"
-#include "base/forward.h"
 
 /// a FIFO list of async calls, all to be scheduled in FIFO order (on demand via
 /// the schedule() method or automatically at object destruction time)
