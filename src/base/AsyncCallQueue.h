@@ -27,8 +27,6 @@ public:
     bool fire();
 
 private:
-    AsyncCallQueue();
-
     AsyncCallList scheduled; ///< calls waiting to be fire()d, in FIFO order
 
     static AsyncCallQueue *TheInstance;
