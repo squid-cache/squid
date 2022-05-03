@@ -436,7 +436,7 @@ void Adaptation::Icap::ModXact::virginConsume()
     const bool wantToPostpone = isRepeatable || canStartBypass || protectGroupBypass;
 
     // Why > 2? HttpState does not use the last bytes in the buffer
-    // because delayAwareRead() is arguably broken. See
+    // because Client::delayRead() is arguably broken. See
     // HttpStateData::maybeReadVirginBody for more details.
     if (wantToPostpone && bp.buf().spaceSize() > 2) {
         // Postponing may increase memory footprint and slow the HTTP side
