@@ -31,9 +31,6 @@ EVP_PKEY * Ssl::createSslPrivateKey()
     if (!RSA_generate_key_ex(rsa.get(), num, bn.get(), NULL))
         return NULL;
 
-    if (!rsa)
-        return NULL;
-
     if (!EVP_PKEY_assign_RSA(pkey.get(), (rsa.get())))
         return NULL;
 
