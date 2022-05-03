@@ -72,6 +72,16 @@ typedef std::unique_ptr<GENERAL_NAME, HardFun<void, GENERAL_NAME*, &GENERAL_NAME
 typedef std::unique_ptr<X509_EXTENSION, HardFun<void, X509_EXTENSION*, &X509_EXTENSION_free>> X509_EXTENSION_Pointer;
 
 typedef std::unique_ptr<X509_STORE_CTX, HardFun<void, X509_STORE_CTX *, &X509_STORE_CTX_free>> X509_STORE_CTX_Pointer;
+
+/// Clear any errors accumulated by OpenSSL in its global storage.
+void ForgetErrors();
+
+/// Manipulator to report errors accumulated by OpenSSL in its global storage.
+/// Each error is reported on a dedicated Debug::Extra line.
+/// Nothing is reported if there are no errors.
+/// Also clears all reported errors.
+std::ostream &ReportAndForgetErrors(std::ostream &);
+
 /**
  \ingroup SslCrtdSslAPI
  * Create 1024 bits rsa key.
@@ -114,14 +124,19 @@ void ReadPrivateKeyFromFile(char const * keyFilename, Security::PrivateKeyPointe
  */
 bool OpenCertsFileForReading(BIO_Pointer &bio, const char *filename);
 
-/// reads and returns a certificate using the given OpenSSL BIO
-/// \returns a nil pointer on errors (TODO: throw instead)
+/// Reads and returns a certificate using the given OpenSSL BIO.
+/// Never returns a nil pointer.
 Security::CertPointer ReadX509Certificate(const BIO_Pointer &);
 
-/**
- \ingroup SslCrtdSslAPI
- * Read a private key from bio
- */
+/// Reads and returns a certificate using the given OpenSSL BIO.
+/// \returns a nil pointer if the given BIO is empty or exhausted
+Security::CertPointer ReadOptionalX509Certificate(const BIO_Pointer &);
+
+/// Reads and returns a required private certificate key from the given BIO.
+/// Supports an optional password-obtaining callback. Never returns nil.
+Security::PrivateKeyPointer ReadPrivateKey(BIO_Pointer &, pem_password_cb *);
+
+/// Deprecated. Use ReadPrivateKey(BIO_Pointer&, pem_password_cb*) instead.
 bool ReadPrivateKey(BIO_Pointer &bio, Security::PrivateKeyPointer &pkey, pem_password_cb *passwd_callback);
 
 /**

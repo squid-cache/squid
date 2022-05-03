@@ -7,7 +7,19 @@
  */
 
 #include "squid.h"
+#include "base/IoManip.h"
+#include "error/SysErrorDetail.h"
+#include "security/Io.h"
+#include "sbuf/Stream.h"
 #include "ssl/gadgets.h"
+
+/// Report the exception caught by our caller -- a catch {} statement. A helper
+/// for legacy API implementations that convert exceptions to false results.
+static void
+ReportCaughtException()
+{
+    debugs(83, DBG_CRITICAL, CurrentException);
+}
 
 EVP_PKEY * Ssl::createSslPrivateKey()
 {
@@ -114,16 +126,16 @@ bool Ssl::readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, Security
 {
     Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
     BIO_puts(bio.get(), bufferToRead);
-
-    if (!(cert = Ssl::ReadX509Certificate(bio)))
+    try {
+        cert = ReadX509Certificate(bio);
+        pkey = ReadPrivateKey(bio, nullptr); // XXX: no password callback?
+        return true;
+    } catch (...) {
+        ReportCaughtException();
+        cert.reset();
+        pkey.reset();
         return false;
-
-    EVP_PKEY * pkeyPtr = NULL;
-    pkey.resetWithoutLocking(PEM_read_bio_PrivateKey(bio.get(), &pkeyPtr, 0, 0));
-    if (!pkey)
-        return false;
-
-    return true;
+     }
 }
 
 bool Ssl::readCertFromMemory(Security::CertPointer & cert, char const * bufferToRead)
@@ -688,22 +700,88 @@ Ssl::OpenCertsFileForReading(Ssl::BIO_Pointer &bio, const char *filename)
     return true;
 }
 
+void
+Ssl::ForgetErrors()
+{
+    if (ERR_peek_last_error()) {
+        debugs(83, 5, "forgetting stale OpenSSL errors:" << ReportAndForgetErrors);
+        // forget errors if section/level-specific debugging above was disabled
+        while (ERR_get_error()) {}
+    }
+}
+
+std::ostream &
+Ssl::ReportAndForgetErrors(std::ostream &os)
+{
+    unsigned int reported = 0; // efficiently marks ForgetErrors() call boundary
+    while (const auto errorToForget = ERR_get_error())
+        os << Debug::Extra << "OpenSSL-saved error #" << (++reported) << ": " << asHex(errorToForget);
+    return os;
+}
+
+[[ noreturn ]] static void
+ThrowErrors(const char * const action, const int savedErrno, const SourceLocation &where)
+{
+    throw TextException(ToSBuf("failure while ", action, ": ",
+                               Ssl::ReportAndForgetErrors,
+                               ReportSysError(savedErrno)), // XXX: May be stale/irrelevant
+                        where);
+}
+
+Security::CertPointer
+Ssl::ReadOptionalX509Certificate(const BIO_Pointer &bio)
+{
+    Assure(bio);
+    ForgetErrors();
+    if (const auto cert = PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr))
+        return Security::CertPointer(cert);
+    const auto savedErrno = errno;
+
+    if (ERR_GET_REASON(ERR_peek_last_error()) == PEM_R_NO_START_LINE) { // EOF
+        // consume PEM_R_NO_START_LINE to clean global error queue (if that was
+        // the only error) and/or to let us check for other errors (otherwise)
+        (void)ERR_get_error();
+        if (!ERR_peek_last_error())
+            return nullptr; // EOF without any other errors
+    }
+
+    ThrowErrors("reading certificate in PEM format", savedErrno, Here());
+}
+
 Security::CertPointer
 Ssl::ReadX509Certificate(const BIO_Pointer &bio)
 {
-    assert(bio);
-    return Security::CertPointer(PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr));
+    if (const auto cert = ReadOptionalX509Certificate(bio))
+        return cert;
+
+    // PEM_R_NO_START_LINE
+    throw TextException("missing required certificate in PEM format", Here());
+}
+
+Security::PrivateKeyPointer
+Ssl::ReadPrivateKey(BIO_Pointer &bio, pem_password_cb *passwd_callback)
+{
+    Assure(bio);
+    ForgetErrors();
+    if (const auto key = PEM_read_bio_PrivateKey(bio.get(), nullptr, passwd_callback, nullptr))
+        return Security::PrivateKeyPointer(key);
+    const int savedErrno = errno;
+    ThrowErrors("reading certificate key in PEM format", savedErrno, Here());
 }
 
 bool
 Ssl::ReadPrivateKey(Ssl::BIO_Pointer &bio, Security::PrivateKeyPointer &pkey, pem_password_cb *passwd_callback)
 {
-    assert(bio);
-    if (EVP_PKEY *akey = PEM_read_bio_PrivateKey(bio.get(), NULL, passwd_callback, NULL)) {
-        pkey.resetWithoutLocking(akey);
+    try {
+        pkey = ReadPrivateKey(bio, passwd_callback);
         return true;
+    } catch (...) {
+        // TODO: This and similar functions should return void, letting the
+        // exception propagate to the caller.
+        ReportCaughtException();
+        pkey.reset();
+        return false;
     }
-    return false;
 }
 
 void

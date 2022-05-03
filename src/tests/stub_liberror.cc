@@ -13,3 +13,6 @@ std::ostream &operator <<(std::ostream &os, const Error &) STUB_RETVAL(os)
 
 ErrorDetail::Pointer MakeNamedErrorDetail(const char *) STUB_RETVAL(ErrorDetail::Pointer())
 
+#include "error/SysErrorDetail.h"
+std::ostream &operator <<(std::ostream &os, ReportSysError) STUB_RETVAL(os)
+

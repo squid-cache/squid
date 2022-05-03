@@ -46,5 +46,16 @@ private:
     int errorNo; ///< errno(3) set by the last failed system call or equivalent
 };
 
+/// a stream manipulator for printing a system call error (if any)
+class ReportSysError
+{
+public:
+    explicit ReportSysError(const int anErrorNo): errorNo(anErrorNo) {}
+    int errorNo;
+};
+
+/// reports a system call error (if any) on a dedicated Debug::Extra line
+std::ostream &operator <<(std::ostream &, ReportSysError);
+
 #endif /* _SQUID_SRC_ERROR_SYSERRORDETAIL_H */
 
