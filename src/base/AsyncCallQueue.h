@@ -27,6 +27,10 @@ public:
     bool fire();
 
 private:
+    AsyncCallQueue() = default;
+    AsyncCallQueue(const AsyncCallQueue &) = delete;
+    AsyncCallQueue &operator=(const AsyncCallQueue &) = delete;
+
     AsyncCallList scheduled; ///< calls waiting to be fire()d, in FIFO order
 
     static AsyncCallQueue *TheInstance;
