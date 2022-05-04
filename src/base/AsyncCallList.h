@@ -32,7 +32,6 @@ private:
     AsyncCallPointer head; ///< the earliest still-stored call (or nil)
     AsyncCallPointer tail; ///< the latest still-stored call (or nil)
     size_t length = 0; ///< \copydoc size()
-
 };
 
 #endif /* SQUID_BASE_ASYNCCALLLIST_H */
