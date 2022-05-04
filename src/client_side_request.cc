@@ -115,26 +115,7 @@ ClientRequestContext::~ClientRequestContext()
 }
 
 ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) :
-    http(cbdataReference(anHttp)),
-    acl_checklist(NULL),
-    redirect_state(REDIRECT_NONE),
-    store_id_state(REDIRECT_NONE),
-    host_header_verify_done(false),
-    http_access_done(false),
-    adapted_http_access_done(false),
-#if USE_ADAPTATION
-    adaptation_acl_check_done(false),
-#endif
-    redirect_done(false),
-    store_id_done(false),
-    no_cache_done(false),
-    interpreted_req_hdrs(false),
-    toClientMarkingDone(false),
-#if USE_OPENSSL
-    sslBumpCheckDone(false),
-#endif
-    error(NULL),
-    readNextRequest(false)
+    http(cbdataReference(anHttp))
 {
     debugs(85, 3, "ClientRequestContext constructed, this=" << this);
 }
@@ -145,24 +126,8 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 #if USE_ADAPTATION
     AsyncJob("ClientHttpRequest"),
 #endif
-    request(NULL),
-    uri(NULL),
-    log_uri(NULL),
-    req_sz(0),
     al(new AccessLogEntry()),
-    calloutContext(NULL),
-    maxReplyBodySize_(0),
-    entry_(NULL),
-    loggingEntry_(NULL),
     conn_(cbdataReference(aConn))
-#if USE_OPENSSL
-    , sslBumpNeed_(Ssl::bumpEnd)
-#endif
-#if USE_ADAPTATION
-    , receivedWholeAdaptedReply(false)
-    , request_satisfaction_mode(false)
-    , request_satisfaction_offset(0)
-#endif
 {
     CodeContext::Reset(al);
     al->cache.start_time = current_time;
@@ -292,8 +257,7 @@ ClientHttpRequest::~ClientHttpRequest()
         stopConsumingFrom(adaptedBodySource);
 #endif
 
-    if (calloutContext)
-        delete calloutContext;
+    delete calloutContext;
 
     if (conn_)
         cbdataReferenceDone(conn_);
