@@ -82,11 +82,6 @@ public:
     /// the processing tags associated with this request transaction.
     const LogTags &loggingTags() const { return al->cache.code; }
 
-    /** Details of the client socket which produced us.
-     * Treat as read-only for the lifetime of this HTTP request.
-     */
-    Comm::ConnectionPointer clientConnection;
-
     /// Request currently being handled by ClientHttpRequest.
     /// Usually remains nil until the virgin request header is parsed or faked.
     /// Starts as a virgin request; see initRequest().

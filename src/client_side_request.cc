@@ -167,7 +167,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     CodeContext::Reset(al);
     al->cache.start_time = current_time;
     if (aConn) {
-        al->tcpClient = clientConnection = aConn->clientConnection;
+        al->tcpClient = aConn->clientConnection;
         al->cache.port = aConn->port;
         al->cache.caddr = aConn->log_addr;
         al->proxyProtocolHeader = aConn->proxyProtocolHeader();
@@ -294,8 +294,6 @@ ClientHttpRequest::~ClientHttpRequest()
 
     if (calloutContext)
         delete calloutContext;
-
-    clientConnection = NULL;
 
     if (conn_)
         cbdataReferenceDone(conn_);
