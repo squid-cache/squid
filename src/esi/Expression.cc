@@ -68,7 +68,7 @@ struct stackmember {
         char *string;
         double floating;
         int integral;
-        _value() { memset(this, 0, sizeof(*this));  }
+        value_() { memset(this, 0, sizeof(*this)); }
     } value;
     literalhint valuestored = ESI_LITERAL_INVALID;
     evaltype valuetype = ESI_EXPR_INVALID;
