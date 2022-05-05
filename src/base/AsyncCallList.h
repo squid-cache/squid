@@ -18,7 +18,7 @@ class AsyncCallList
 {
 public:
     AsyncCallList() = default;
-    // prohibit copying: no AsyncCall should not be present in two lists
+    // prohibit copying: no AsyncCall should be present in two lists
     AsyncCallList(const AsyncCallList &) = delete;
     AsyncCallList &operator=(const AsyncCallList &) = delete;
 
