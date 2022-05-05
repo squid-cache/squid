@@ -32,7 +32,7 @@
  * ) has 0
  */
 
-struct stackmember;
+typedef struct _stackmember stackmember;
 
 typedef int evaluate(stackmember * stack, int *depth, int whereAmI,
                      stackmember * candidate);
@@ -62,7 +62,7 @@ typedef enum {
     ESI_LITERAL_INVALID
 } literalhint;
 
-struct stackmember {
+struct _stackmember {
     evaluate *eval = nullptr;
     union Value {
         char *string;
