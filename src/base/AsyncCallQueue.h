@@ -28,8 +28,6 @@ public:
 
 private:
     AsyncCallQueue() = default;
-    AsyncCallQueue(const AsyncCallQueue &) = delete;
-    AsyncCallQueue &operator=(const AsyncCallQueue &) = delete;
 
     AsyncCallList scheduled; ///< calls waiting to be fire()d, in FIFO order
 

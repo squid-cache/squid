@@ -17,6 +17,11 @@
 class AsyncCallList
 {
 public:
+    AsyncCallList() = default;
+    // prohibit copying: no AsyncCall should not be present in two lists
+    AsyncCallList(const AsyncCallList &) = delete;
+    AsyncCallList &operator=(const AsyncCallList &) = delete;
+
     /// stores the given async call
     void add(const AsyncCallPointer &);
 
