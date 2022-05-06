@@ -59,10 +59,6 @@ Ssl::ServerBump::~ServerBump()
 void
 Ssl::ServerBump::attachServerSession(const Security::SessionPointer &s)
 {
-    // XXX: The session may change as Squid retries TLS connection attempts!
-    if (serverSession)
-        return;
-
     serverSession = s;
 }
 
