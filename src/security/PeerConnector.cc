@@ -158,6 +158,21 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
     debugs(83, 5, serverConnection() << ", session=" << (void*)serverSession.get());
 
 #if USE_OPENSSL
+    // If CertValidation Helper used do not lookup checklist for errors,
+    // but keep a list of errors to send it to CertValidator
+    if (!Ssl::TheConfig.ssl_crt_validator) {
+        // Create the ACL check list now, while we have access to more info.
+        // The list is used in ssl_verify_cb() and is freed in ssl_free().
+        // XXX: This info may change, especially if we fetch missing certs.
+        // TODO: Remove ACLFilledChecklist::sslErrors and other pre-computed
+        // state in favor of the ACLs accessing current/fresh info directly.
+        if (acl_access *acl = ::Config.ssl_client.cert_error) {
+            ACLFilledChecklist *check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
+            fillChecklist(*check);
+            SSL_set_ex_data(serverSession.get(), ssl_ex_index_cert_error_check, check);
+        }
+    }
+
     // Protect from cycles in the certificate dependency graph: TLS site S1 is
     // missing certificate C1 located at TLS site S2. TLS site S2 is missing
     // certificate C2 located at [...] TLS site S1.
@@ -201,35 +216,11 @@ Security::PeerConnector::negotiate()
     if (fd_table[fd].closing())
         return;
 
-#if USE_OPENSSL
-    auto &sconn = *fd_table[fd].ssl;
-
-    if (!Ssl::TheConfig.ssl_crt_validator) {
-        // (Re)create the checklist for sslproxy_cert_error in ssl_verify_cb()
-        // XXX: Do not recreate this checklist after every ioWantRead/etc.!
-        if (const auto acl = ::Config.ssl_client.cert_error) {
-            const auto idx = ssl_ex_index_cert_error_check;
-
-            // TODO: Add/use C++-friendly SSL_get_ex_data()/etc. wrapper.
-            // SSL_set_ex_data() does not free old data, so we do it ourselves
-            if (const auto old = SSL_get_ex_data(&sconn, idx)) {
-                delete static_cast<ACLFilledChecklist*>(old);
-                const auto cleared = SSL_set_ex_data(&sconn, idx, nullptr);
-                Assure(cleared);
-            }
-
-            const auto check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
-            fillChecklist(*check);
-            const auto stored = SSL_set_ex_data(&sconn, idx, check);
-            Assure(stored);
-        }
-    }
-    // else let sslcrtvalidator_program make sslproxy_cert_error-like decisions
-#endif
-
     const auto result = Security::Connect(*serverConnection());
 
 #if USE_OPENSSL
+    auto &sconn = *fd_table[fd].ssl;
+
     // log ASAP, even if the handshake has not completed (or failed)
     keyLogger.checkpoint(sconn, *this);
 
