@@ -163,6 +163,8 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
     if (!Ssl::TheConfig.ssl_crt_validator) {
         // Create the ACL check list now, while we have access to more info.
         // The list is used in ssl_verify_cb() and is freed in ssl_free().
+        // XXX: This info may change, especially if we fetch missing certs.
+        // TODO: (Re)set ssl_ex_index_cert_error_check for each validation.
         if (acl_access *acl = ::Config.ssl_client.cert_error) {
             ACLFilledChecklist *check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
             fillChecklist(*check);
