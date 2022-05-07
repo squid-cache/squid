@@ -200,12 +200,12 @@ public:
     bool requestSatisfactionMode() const { return request_satisfaction_mode; }
 
     /* AsyncJob API */
-    virtual bool doneAll() const override {
+    virtual bool doneAll() const {
         return Initiator::doneAll() &&
                BodyConsumer::doneAll() &&
                false; // TODO: Refactor into a proper AsyncJob
     }
-    virtual void callException(const std::exception &) override;
+    virtual void callException(const std::exception &);
 
 private:
     /// Handles an adaptation client request failure.
@@ -216,13 +216,13 @@ private:
     void handleAdaptationBlock(const Adaptation::Answer &);
 
     /* Adaptation::Initiator API */
-    virtual void noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer) override;
-    virtual void noteAdaptationAnswer(const Adaptation::Answer &) override;
+    virtual void noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer);
+    virtual void noteAdaptationAnswer(const Adaptation::Answer &);
 
     /* BodyConsumer API */
-    virtual void noteMoreBodyDataAvailable(BodyPipe::Pointer) override;
-    virtual void noteBodyProductionEnded(BodyPipe::Pointer) override;
-    virtual void noteBodyProducerAborted(BodyPipe::Pointer) override;
+    virtual void noteMoreBodyDataAvailable(BodyPipe::Pointer);
+    virtual void noteBodyProductionEnded(BodyPipe::Pointer);
+    virtual void noteBodyProducerAborted(BodyPipe::Pointer);
 
     void endRequestSatisfaction();
     /// called by StoreEntry when it has more buffer space available
