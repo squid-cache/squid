@@ -203,7 +203,7 @@ public:
     virtual bool doneAll() const override {
         return Initiator::doneAll() &&
                BodyConsumer::doneAll() &&
-               false; // XXX: why?
+               false; // TODO: Refactor into a proper AsyncJob
     }
     virtual void callException(const std::exception &) override;
 
