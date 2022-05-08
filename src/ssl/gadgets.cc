@@ -735,7 +735,12 @@ Ssl::ReadOptionalX509Certificate(const BIO_Pointer &bio)
         return Security::CertPointer(cert);
     const auto savedErrno = errno;
 
-    if (ERR_GET_REASON(ERR_peek_last_error()) == PEM_R_NO_START_LINE) { // EOF
+    // PEM_R_NO_START_LINE means OpenSSL could not find a BEGIN CERTIFICATE
+    // marker after successfully reading input. That includes such use cases as
+    // empty input, valid input exhausted by previous extractions, malformed
+    // input, and valid key-only input without the certificate. We cannot
+    // distinguish all these outcomes and treat this error as an EOF condition.
+    if (ERR_GET_REASON(ERR_peek_last_error()) == PEM_R_NO_START_LINE) {
         // consume PEM_R_NO_START_LINE to clean global error queue (if that was
         // the only error) and/or to let us check for other errors (otherwise)
         (void)ERR_get_error();
