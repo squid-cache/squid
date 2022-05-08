@@ -13,6 +13,34 @@
 #include "sbuf/Stream.h"
 #include "ssl/gadgets.h"
 
+void
+Ssl::ForgetErrors()
+{
+    if (ERR_peek_last_error()) {
+        debugs(83, 5, "forgetting stale OpenSSL errors:" << ReportAndForgetErrors);
+        // forget errors if section/level-specific debugging above was disabled
+        while (ERR_get_error()) {}
+    }
+}
+
+std::ostream &
+Ssl::ReportAndForgetErrors(std::ostream &os)
+{
+    unsigned int reported = 0; // efficiently marks ForgetErrors() call boundary
+    while (const auto errorToForget = ERR_get_error())
+        os << Debug::Extra << "OpenSSL-saved error #" << (++reported) << ": " << asHex(errorToForget);
+    return os;
+}
+
+[[ noreturn ]] static void
+ThrowErrors(const char * const action, const int savedErrno, const SourceLocation &where)
+{
+    throw TextException(ToSBuf("failure while ", action, ": ",
+                               Ssl::ReportAndForgetErrors,
+                               ReportSysError(savedErrno)), // XXX: May be stale/irrelevant
+                        where);
+}
+
 EVP_PKEY * Ssl::createSslPrivateKey()
 {
     Security::PrivateKeyPointer pkey(EVP_PKEY_new());
@@ -696,34 +724,6 @@ Ssl::OpenCertsFileForReading(Ssl::BIO_Pointer &bio, const char *filename)
     if (!BIO_read_filename(bio.get(), filename))
         return false;
     return true;
-}
-
-void
-Ssl::ForgetErrors()
-{
-    if (ERR_peek_last_error()) {
-        debugs(83, 5, "forgetting stale OpenSSL errors:" << ReportAndForgetErrors);
-        // forget errors if section/level-specific debugging above was disabled
-        while (ERR_get_error()) {}
-    }
-}
-
-std::ostream &
-Ssl::ReportAndForgetErrors(std::ostream &os)
-{
-    unsigned int reported = 0; // efficiently marks ForgetErrors() call boundary
-    while (const auto errorToForget = ERR_get_error())
-        os << Debug::Extra << "OpenSSL-saved error #" << (++reported) << ": " << asHex(errorToForget);
-    return os;
-}
-
-[[ noreturn ]] static void
-ThrowErrors(const char * const action, const int savedErrno, const SourceLocation &where)
-{
-    throw TextException(ToSBuf("failure while ", action, ": ",
-                               Ssl::ReportAndForgetErrors,
-                               ReportSysError(savedErrno)), // XXX: May be stale/irrelevant
-                        where);
 }
 
 Security::CertPointer
