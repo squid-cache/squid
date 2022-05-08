@@ -126,16 +126,22 @@ bool Ssl::readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, Security
 {
     Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
     BIO_puts(bio.get(), bufferToRead);
+
     try {
         cert = ReadX509Certificate(bio);
-        pkey = ReadPrivateKey(bio, nullptr); // XXX: no password callback?
-        return true;
     } catch (...) {
         ReportCaughtException();
         cert.reset();
         pkey.reset();
         return false;
-     }
+    }
+
+    EVP_PKEY * pkeyPtr = NULL;
+    pkey.resetWithoutLocking(PEM_read_bio_PrivateKey(bio.get(), &pkeyPtr, 0, 0));
+    if (!pkey)
+        return false;
+
+    return true;
 }
 
 bool Ssl::readCertFromMemory(Security::CertPointer & cert, char const * bufferToRead)
@@ -758,30 +764,15 @@ Ssl::ReadX509Certificate(const BIO_Pointer &bio)
     throw TextException("missing required certificate in PEM format", Here());
 }
 
-Security::PrivateKeyPointer
-Ssl::ReadPrivateKey(BIO_Pointer &bio, pem_password_cb *passwd_callback)
-{
-    Assure(bio);
-    ForgetErrors();
-    if (const auto key = PEM_read_bio_PrivateKey(bio.get(), nullptr, passwd_callback, nullptr))
-        return Security::PrivateKeyPointer(key);
-    const int savedErrno = errno;
-    ThrowErrors("reading certificate key in PEM format", savedErrno, Here());
-}
-
 bool
 Ssl::ReadPrivateKey(Ssl::BIO_Pointer &bio, Security::PrivateKeyPointer &pkey, pem_password_cb *passwd_callback)
 {
-    try {
-        pkey = ReadPrivateKey(bio, passwd_callback);
+    assert(bio);
+    if (EVP_PKEY *akey = PEM_read_bio_PrivateKey(bio.get(), NULL, passwd_callback, NULL)) {
+        pkey.resetWithoutLocking(akey);
         return true;
-    } catch (...) {
-        // TODO: This and similar functions should return void, letting the
-        // exception propagate to the caller.
-        ReportCaughtException();
-        pkey.reset();
-        return false;
     }
+    return false;
 }
 
 void

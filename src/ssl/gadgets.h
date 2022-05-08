@@ -132,11 +132,10 @@ Security::CertPointer ReadX509Certificate(const BIO_Pointer &);
 /// \returns a nil pointer if the given BIO is empty or exhausted
 Security::CertPointer ReadOptionalX509Certificate(const BIO_Pointer &);
 
-/// Reads and returns a required private certificate key from the given BIO.
-/// Supports an optional password-obtaining callback. Never returns nil.
-Security::PrivateKeyPointer ReadPrivateKey(BIO_Pointer &, pem_password_cb *);
-
-/// Deprecated. Use ReadPrivateKey(BIO_Pointer&, pem_password_cb*) instead.
+/**
+ \ingroup SslCrtdSslAPI
+ * Read a private key from bio
+ */
 bool ReadPrivateKey(BIO_Pointer &bio, Security::PrivateKeyPointer &pkey, pem_password_cb *passwd_callback);
 
 /**
