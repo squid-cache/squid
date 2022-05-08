@@ -13,14 +13,6 @@
 #include "sbuf/Stream.h"
 #include "ssl/gadgets.h"
 
-/// Report the exception caught by our caller -- a catch {} statement. A helper
-/// for legacy API implementations that convert exceptions to false results.
-static void
-ReportCaughtException()
-{
-    debugs(83, DBG_CRITICAL, CurrentException);
-}
-
 EVP_PKEY * Ssl::createSslPrivateKey()
 {
     Security::PrivateKeyPointer pkey(EVP_PKEY_new());
@@ -130,7 +122,7 @@ bool Ssl::readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, Security
     try {
         cert = ReadX509Certificate(bio);
     } catch (...) {
-        ReportCaughtException();
+        debugs(83, DBG_CRITICAL, CurrentException);
         cert.reset();
         pkey.reset();
         return false;
