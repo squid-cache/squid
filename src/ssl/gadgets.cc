@@ -136,15 +136,15 @@ bool Ssl::readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, Security
     return true;
 }
 
-bool Ssl::readCertFromMemory(Security::CertPointer & cert, char const * bufferToRead)
+// TODO: Convert matching BIO_s_mem() callers.
+Ssl::BIO_Pointer
+Ssl::ReadOnlyBioTiedTo(const char * const bufferToRead)
 {
-    Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
-    BIO_puts(bio.get(), bufferToRead);
-
-    if (!(cert = Ssl::ReadX509Certificate(bio)))
-        return false;
-
-    return true;
+    ForgetErrors();
+    if (const auto bio = BIO_new_mem_buf(bufferToRead, -1)) // no memcpy()
+        return BIO_Pointer(bio);
+    const auto savedErrno = errno;
+    ThrowErrors("allocating OpenSSL BIO structure", savedErrno, Here());
 }
 
 // According to RFC 5280 (Section A.1), the common name length in a certificate

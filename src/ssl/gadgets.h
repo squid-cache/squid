@@ -106,11 +106,9 @@ bool appendCertToMemory(Security::CertPointer const & cert, std::string & buffer
  */
 bool readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, Security::PrivateKeyPointer & pkey, char const * bufferToRead);
 
-/**
- \ingroup SslCrtdSslAPI
- * Read SSL certificate from memory.
- */
-bool readCertFromMemory(Security::CertPointer & cert, char const * bufferToRead);
+/// Creates and returns a BIO for reading from the given c-string.
+/// The returned BIO lifetime must not exceed that of the given c-string!
+BIO_Pointer ReadOnlyBioTiedTo(const char *);
 
 /**
  \ingroup SslCrtdSslAPI
