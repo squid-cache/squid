@@ -177,7 +177,10 @@ Ssl::BIO_Pointer
 Ssl::ReadOnlyBioTiedTo(const char * const bufferToRead)
 {
     ForgetErrors();
-    if (const auto bio = BIO_new_mem_buf(bufferToRead, -1)) // no memcpy()
+    // OpenSSL BIO API is not const-correct, but OpenSSL does not free or modify
+    // BIO_new_mem_buf() data because it is marked with BIO_FLAGS_MEM_RDONLY.
+    const auto castedBuffer = const_cast<char*>(bufferToRead);
+    if (const auto bio = BIO_new_mem_buf(castedBuffer, -1)) // no memcpy()
         return BIO_Pointer(bio);
     const auto savedErrno = errno;
     ThrowErrors("cannot allocate OpenSSL BIO structure", savedErrno, Here());
