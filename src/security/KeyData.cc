@@ -36,7 +36,8 @@ Security::KeyData::loadX509CertFromFile()
     }
     catch (...) {
         // TODO: Convert the rest of this method to throw on errors instead.
-        debugs(83, DBG_IMPORTANT, "ERROR: unable to load certificate file '" << certFile << "': " << CurrentException);
+        debugs(83, DBG_IMPORTANT, "ERROR: unable to load certificate file '" << certFile << "':" <<
+               Debug::Extra << "problem: " << CurrentException);
         return false;
     }
 
@@ -204,7 +205,8 @@ Security::KeyData::loadFromFiles(const AnyP::PortCfg &port, const char *portType
     }
     catch (...) {
         // XXX: Reject malformed configurations by letting exceptions propagate.
-        debugs(83, DBG_CRITICAL, "ERROR: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' bad certificate chain in '" << certFile << "': " << CurrentException);
+        debugs(83, DBG_CRITICAL, "ERROR: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' cannot load intermediate certificates from '" << certFile << "':" <<
+               Debug::Extra << "problem: " << CurrentException);
     }
 
     // pkey is mandatory, not having it makes cert and chain pointless.

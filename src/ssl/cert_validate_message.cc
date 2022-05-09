@@ -97,7 +97,8 @@ Ssl::CertValidationMsg::parseResponse(CertValidationResponse &resp)
         return true;
     }
     catch (...) {
-        debugs(83, DBG_IMPORTANT, "ERROR: Cannot parse sslcrtvalidator_program response: " << CurrentException);
+        debugs(83, DBG_IMPORTANT, "ERROR: Cannot parse sslcrtvalidator_program response:" <<
+               Debug::Extra << "problem: " << CurrentException);
         return false;
     }
 }

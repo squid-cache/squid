@@ -40,9 +40,9 @@ Ssl::ReportAndForgetErrors(std::ostream &os)
 }
 
 [[ noreturn ]] static void
-ThrowErrors(const char * const action, const int savedErrno, const SourceLocation &where)
+ThrowErrors(const char * const problem, const int savedErrno, const SourceLocation &where)
 {
-    throw TextException(ToSBuf("failure while ", action, ": ",
+    throw TextException(ToSBuf(problem, ": ",
                                Ssl::ReportAndForgetErrors,
                                ReportSysError(savedErrno)),
                         where);
@@ -157,7 +157,8 @@ bool Ssl::readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, Security
     try {
         cert = ReadCertificate(bio);
     } catch (...) {
-        debugs(83, DBG_CRITICAL, CurrentException);
+        debugs(83, DBG_IMPORTANT, "ERROR: Cannot deserialize a signing certificate:" <<
+               Debug::Extra << "problem: " << CurrentException);
         cert.reset();
         pkey.reset();
         return false;
@@ -179,7 +180,7 @@ Ssl::ReadOnlyBioTiedTo(const char * const bufferToRead)
     if (const auto bio = BIO_new_mem_buf(bufferToRead, -1)) // no memcpy()
         return BIO_Pointer(bio);
     const auto savedErrno = errno;
-    ThrowErrors("allocating OpenSSL BIO structure", savedErrno, Here());
+    ThrowErrors("cannot allocate OpenSSL BIO structure", savedErrno, Here());
 }
 
 // According to RFC 5280 (Section A.1), the common name length in a certificate
@@ -755,7 +756,7 @@ Ssl::ReadOptionalCertificate(const BIO_Pointer &bio)
             return nullptr; // EOF without any other errors
     }
 
-    ThrowErrors("reading certificate in PEM format", savedErrno, Here());
+    ThrowErrors("cannot read PEM-encoded certificate", savedErrno, Here());
 }
 
 Security::CertPointer
