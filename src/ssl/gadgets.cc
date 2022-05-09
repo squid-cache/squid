@@ -21,6 +21,13 @@ Ssl::ForgetErrors()
         // forget errors if section/level-specific debugging above was disabled
         while (ERR_get_error()) {}
     }
+
+    // Technically, the caller should just ignore (potentially stale) errno when
+    // no system calls have failed. However, due to OpenSSL error-reporting API
+    // deficiencies, many callers cannot detect when a TLS error was caused by a
+    // system call failure. We forget the stale errno (just like we forget stale
+    // OpenSSL errors above) so that the caller only uses fresh errno values.
+    errno = 0;
 }
 
 std::ostream &
@@ -37,7 +44,7 @@ ThrowErrors(const char * const action, const int savedErrno, const SourceLocatio
 {
     throw TextException(ToSBuf("failure while ", action, ": ",
                                Ssl::ReportAndForgetErrors,
-                               ReportSysError(savedErrno)), // XXX: May be stale/irrelevant
+                               ReportSysError(savedErrno)),
                         where);
 }
 
