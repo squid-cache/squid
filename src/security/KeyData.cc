@@ -14,7 +14,7 @@
 #include "ssl/bio.h"
 #include "ssl/gadgets.h"
 
-/// load the signing/leaf certificate from certFile
+/// load a signing certificate from certFile
 bool
 Security::KeyData::loadX509CertFromFile()
 {
@@ -83,7 +83,7 @@ Security::KeyData::loadX509CertFromFile()
     return bool(cert);
 }
 
-/// load intermediate certs that form the chain with the loaded signing cert
+/// load any intermediate certs that form the chain with the loaded signing cert
 void
 Security::KeyData::loadX509ChainFromFile()
 {

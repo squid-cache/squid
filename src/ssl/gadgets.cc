@@ -756,7 +756,7 @@ Ssl::ReadOptionalCertificate(const BIO_Pointer &bio)
             return nullptr; // EOF without any other errors
     }
 
-    ThrowErrors("cannot read PEM-encoded certificate", savedErrno, Here());
+    ThrowErrors("cannot read a PEM-encoded certificate", savedErrno, Here());
 }
 
 Security::CertPointer
@@ -766,7 +766,7 @@ Ssl::ReadCertificate(const BIO_Pointer &bio)
         return cert;
 
     // PEM_R_NO_START_LINE
-    throw TextException("missing required certificate in PEM format", Here());
+    throw TextException("missing a required PEM-encoded certificate", Here());
 }
 
 bool
