@@ -11,7 +11,6 @@
 #include "squid.h"
 #include "debug/Stream.h"
 #include "error/Error.h"
-#include "error/SysErrorDetail.h"
 
 void
 Error::update(const Error &recent)
@@ -35,14 +34,6 @@ operator <<(std::ostream &os, const Error &error)
     os << errorTypeName(error.category);
     if (error.detail)
         os << '/' << *error.detail;
-    return os;
-}
-
-std::ostream &
-operator <<(std::ostream &os, const ReportSysError rse)
-{
-    if (const auto errorNo = rse.errorNo)
-        os << Debug::Extra << "system call error: " << xstrerr(errorNo);
     return os;
 }
 
