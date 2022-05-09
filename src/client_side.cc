@@ -1713,7 +1713,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
             assert (repContext);
             conn->quitAfterError(request.getRaw());
             repContext->setReplyToError(ERR_TOO_BIG,
-                                        Http::scPayloadTooLarge, nullptr,
+                                        Http::scContentTooLarge, nullptr,
                                         conn, http->request, nullptr, nullptr);
             assert(context->http->out.offset == 0);
             context->pullData();
@@ -2098,7 +2098,7 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
         clientReplyContext *repContext = dynamic_cast<clientReplyContext*>(node->data.getRaw());
         assert(repContext);
         const Http::StatusCode scode = (error == ERR_TOO_BIG) ?
-                                       Http::scPayloadTooLarge : HTTP_BAD_REQUEST;
+                                       Http::scContentTooLarge : HTTP_BAD_REQUEST;
         repContext->setReplyToError(error, scode,
                                     repContext->http->uri,
                                     CachePeer,
