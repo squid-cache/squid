@@ -76,16 +76,9 @@ static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeader
 
 HttpStateData::HttpStateData(FwdState *theFwdState) :
     AsyncJob("HttpStateData"),
-    Client(theFwdState),
-    lastChunk(0),
-    httpChunkDecoder(NULL),
-    payloadSeen(0),
-    payloadTruncated(0),
-    sawDateGoBack(false)
+    Client(theFwdState)
 {
     debugs(11,5, "HttpStateData " << this << " created");
-    ignoreCacheControl = false;
-    surrogateNoStore = false;
     serverConnection = fwd->serverConnection();
 
     if (fwd->serverConnection() != NULL)

@@ -69,7 +69,7 @@ public:
     void composeBody(BodyParams const & map, std::string const & other_part);
 
     /// orchestrates entire request parsing
-    bool parseRequest(Ssl::CertificateProperties &, std::string &error);
+    void parseRequest(CertificateProperties &);
     void composeRequest(Ssl::CertificateProperties const &); // throws
 
     /// String code for "new_certificate" messages

@@ -7,6 +7,8 @@
  */
 
 #include "squid.h"
+#include "base/TextException.h"
+#include "sbuf/Stream.h"
 #include "ssl/crtd_message.h"
 #include "ssl/gadgets.h"
 
@@ -175,15 +177,15 @@ void Ssl::CrtdMessage::composeBody(CrtdMessage::BodyParams const & map, std::str
         body += '\n' + other_part;
 }
 
-bool Ssl::CrtdMessage::parseRequest(Ssl::CertificateProperties &certProperties, std::string &error)
+void
+Ssl::CrtdMessage::parseRequest(CertificateProperties &certProperties)
 {
     Ssl::CrtdMessage::BodyParams map;
     std::string certs_part;
     parseBody(map, certs_part);
     Ssl::CrtdMessage::BodyParams::iterator i = map.find(Ssl::CrtdMessage::param_host);
     if (i == map.end()) {
-        error = "Cannot find \"host\" parameter in request message";
-        return false;
+        throw TextException("Cannot find \"host\" parameter in request message", Here());
     }
     certProperties.commonName = i->second;
 
@@ -206,9 +208,7 @@ bool Ssl::CrtdMessage::parseRequest(Ssl::CertificateProperties &certProperties, 
     i = map.find(Ssl::CrtdMessage::param_Sign);
     if (i != map.end()) {
         if ((certProperties.signAlgorithm = Ssl::certSignAlgorithmId(i->second.c_str())) == Ssl::algSignEnd) {
-            error = "Wrong signing algorithm: ";
-            error += i->second;
-            return false;
+            throw TextException(ToSBuf("Wrong signing algorithm: ", i->second), Here());
         }
     } else
         certProperties.signAlgorithm = Ssl::algSignTrusted;
@@ -216,14 +216,11 @@ bool Ssl::CrtdMessage::parseRequest(Ssl::CertificateProperties &certProperties, 
     i = map.find(Ssl::CrtdMessage::param_SignHash);
     const char *signHashName = i != map.end() ? i->second.c_str() : SQUID_SSL_SIGN_HASH_IF_NONE;
     if (!(certProperties.signHash = EVP_get_digestbyname(signHashName))) {
-        error = "Wrong signing hash: ";
-        error += signHashName;
-        return false;
+        throw TextException(ToSBuf("Wrong signing hash: ", signHashName), Here());
     }
 
     if (!Ssl::readCertAndPrivateKeyFromMemory(certProperties.signWithX509, certProperties.signWithPkey, certs_part.c_str())) {
-        error = "Broken signing certificate!";
-        return false;
+        throw TextException("Broken signing certificate!", Here());
     }
 
     static const std::string CERT_BEGIN_STR("-----BEGIN CERTIFICATE");
@@ -233,7 +230,6 @@ bool Ssl::CrtdMessage::parseRequest(Ssl::CertificateProperties &certProperties, 
         if ((pos= certs_part.find(CERT_BEGIN_STR, pos)) != std::string::npos)
             Ssl::readCertFromMemory(certProperties.mimicCert, certs_part.c_str() + pos);
     }
-    return true;
 }
 
 void Ssl::CrtdMessage::composeRequest(Ssl::CertificateProperties const &certProperties)
@@ -253,10 +249,10 @@ void Ssl::CrtdMessage::composeRequest(Ssl::CertificateProperties const &certProp
 
     std::string certsPart;
     if (!Ssl::writeCertAndPrivateKeyToMemory(certProperties.signWithX509, certProperties.signWithPkey, certsPart))
-        throw std::runtime_error("Ssl::writeCertAndPrivateKeyToMemory()");
+        throw TextException("Ssl::writeCertAndPrivateKeyToMemory()", Here());
     if (certProperties.mimicCert.get()) {
         if (!Ssl::appendCertToMemory(certProperties.mimicCert, certsPart))
-            throw std::runtime_error("Ssl::appendCertToMemory()");
+            throw TextException("Ssl::appendCertToMemory()", Here());
     }
     body += "\n" + certsPart;
 }

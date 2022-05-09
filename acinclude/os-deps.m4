@@ -86,7 +86,7 @@ dnl check that we have functional libcap2 headers
 dnl sets squid_cv_sys_capability_works to "yes" or "no"
 
 AC_DEFUN([SQUID_CHECK_FUNCTIONAL_LIBCAP2],[
-  AC_CACHE_CHECK([for operational libcap2 headers], 
+  AC_CACHE_CHECK([for operational libcap2 headers],
                  squid_cv_sys_capability_works,
     AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <stdlib.h>
@@ -218,7 +218,7 @@ int main(int argc, char **argv) {
         i = j = 1<<14;
         while (j) {
                 j >>= 1;
-                if (dup2(0, i) < 0) { 
+                if (dup2(0, i) < 0) {
                         i -= j;
                 } else {
                         close(i);
@@ -272,7 +272,7 @@ AC_CACHE_CHECK([for sin6_len field in struct sockaddr_in6],
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-              ]], [[ struct sockaddr_in6 s; s.sin6_len = 1; ]])],[ ac_cv_have_sin6_len_in_struct_sai="yes" ],[ ac_cv_have_sin6_len_in_struct_sai="no" 
+              ]], [[ struct sockaddr_in6 s; s.sin6_len = 1; ]])],[ ac_cv_have_sin6_len_in_struct_sai="yes" ],[ ac_cv_have_sin6_len_in_struct_sai="no"
       ])
 ])
 SQUID_DEFINE_BOOL(HAVE_SIN6_LEN_IN_SAI,$ac_cv_have_sin6_len_in_struct_sai,
@@ -291,7 +291,7 @@ AC_CACHE_CHECK([for ss_len field in struct sockaddr_storage],
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-		]], [[ struct sockaddr_storage s; s.ss_len = 1; ]])],[ ac_cv_have_ss_len_in_struct_ss="yes" ],[ ac_cv_have_ss_len_in_struct_ss="no" 
+		]], [[ struct sockaddr_storage s; s.ss_len = 1; ]])],[ ac_cv_have_ss_len_in_struct_ss="yes" ],[ ac_cv_have_ss_len_in_struct_ss="no"
 	])
 ])
 SQUID_DEFINE_BOOL(HAVE_SS_LEN_IN_SS,$ac_cv_have_ss_len_in_struct_ss,
@@ -310,7 +310,7 @@ AC_CACHE_CHECK([for sin_len field in struct sockaddr_in],
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-                ]], [[ struct sockaddr_in s; s.sin_len = 1; ]])],[ ac_cv_have_sin_len_in_struct_sai="yes" ],[ ac_cv_have_sin_len_in_struct_sai="no" 
+                ]], [[ struct sockaddr_in s; s.sin_len = 1; ]])],[ ac_cv_have_sin_len_in_struct_sai="yes" ],[ ac_cv_have_sin_len_in_struct_sai="no"
         ])
 ])
 SQUID_DEFINE_BOOL(HAVE_SIN_LEN_IN_SAI,$ac_cv_have_sin_len_in_struct_sai,[Define if sockaddr_in has field sin_len])
@@ -407,7 +407,7 @@ int main(int argc, char **argv)
         if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) return 1;
 #endif
 	if (val <= 0) return 1;
-	fp = fopen("conftestval", "w"); 
+	fp = fopen("conftestval", "w");
 	fprintf (fp, "%d\n", val);
 	return 0;
 }
@@ -457,7 +457,7 @@ int main(int argc, char **argv)
         if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) return 1;
 #endif
 	if (val <= 0) return 1;
-	fp = fopen("conftestval", "w"); 
+	fp = fopen("conftestval", "w");
 	fprintf (fp, "%d\n", val);
 	return 0;
 }
@@ -511,7 +511,7 @@ int main(int argc, char **argv)
         if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) return 1;
 #endif
 	if (val <= 0) return 1;
-	fp = fopen("conftestval", "w"); 
+	fp = fopen("conftestval", "w");
 	fprintf (fp, "%d\n", val);
 	return 0;
 }
@@ -563,7 +563,7 @@ AC_CACHE_CHECK(for working statvfs() interface,ac_cv_func_statvfs,[
 #include <sys/statvfs.h>
 ]], [[
 struct statvfs sfs;
-sfs.f_blocks = sfs.f_bfree = sfs.f_frsize = 
+sfs.f_blocks = sfs.f_bfree = sfs.f_frsize =
 sfs.f_files = sfs.f_ffree = 0;
 statvfs("/tmp", &sfs);
 ]])],[ac_cv_func_statvfs=yes],[ac_cv_func_statvfs=no])
@@ -586,7 +586,7 @@ AC_CACHE_CHECK([for f_frsize field in struct statfs],
 #if HAVE_SYS_VFS_H
 #include <sts/vfs.h>
 #endif
-                ]], [[ struct statfs s; s.f_frsize = 0; ]])],[ ac_cv_have_f_frsize_in_struct_statfs="yes" ],[ ac_cv_have_f_frsize_in_struct_statfs="no" 
+                ]], [[ struct statfs s; s.f_frsize = 0; ]])],[ ac_cv_have_f_frsize_in_struct_statfs="yes" ],[ ac_cv_have_f_frsize_in_struct_statfs="no"
         ])
 ])
 SQUID_DEFINE_BOOL(HAVE_F_FRSIZE_IN_STATFS,$ac_cv_have_f_frsize_in_struct_statfs,[Define if struct statfs has field f_frsize (Linux 2.6 or later)])
@@ -629,7 +629,7 @@ AC_DEFUN([SQUID_CHECK_RESOLVER_FIELDS],[
 #if HAVE_RESOLV_H
 #include <resolv.h>
 #endif
-    ]], 
+    ]],
     [[_res_ext.nsaddr_list[[0]].s_addr;]])],[
       ac_cv_have_res_ext_nsaddr_list="yes" ],[
       ac_cv_have_res_ext_nsaddr_list="no"]))
@@ -708,7 +708,7 @@ AC_CACHE_CHECK(for _res.nsaddr_list, ac_cv_have_res_nsaddr_list,
 #if HAVE_RESOLV_H
 #include <resolv.h>
 #endif
-  ]], 
+  ]],
   [[_res.ns_list[[0]].addr;]])],
   [ac_cv_have_res_ns_list="yes"],[ac_cv_have_res_ns_list="no"]))
   if test $ac_cv_have_res_ns_list = "yes" ; then
