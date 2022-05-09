@@ -14,10 +14,7 @@
 #include "ssl/bio.h"
 #include "ssl/gadgets.h"
 
-/**
- * Read certificate from file.
- * See also: Ssl::ReadX509Certificate function, gadgets.cc file
- */
+/// load the signing/leaf certificate from certFile
 bool
 Security::KeyData::loadX509CertFromFile()
 {
@@ -33,7 +30,15 @@ Security::KeyData::loadX509CertFromFile()
         return false;
     }
 
-    cert = Ssl::ReadX509Certificate(bio); // error detected/reported below
+    try {
+        cert = Ssl::ReadCertificate(bio);
+        return true;
+    }
+    catch (...) {
+        // TODO: Convert the rest of this method to throw on errors instead.
+        debugs(83, DBG_IMPORTANT, "ERROR: unable to load certificate file '" << certFile << "': " << CurrentException);
+        return false;
+    }
 
 #elif USE_GNUTLS
     const char *certFilename = certFile.c_str();
@@ -77,10 +82,7 @@ Security::KeyData::loadX509CertFromFile()
     return bool(cert);
 }
 
-/**
- * Read certificate from file.
- * See also: Ssl::ReadX509Certificate function, gadgets.cc file
- */
+/// load intermediate certs that form the chain with the loaded signing cert
 void
 Security::KeyData::loadX509ChainFromFile()
 {
@@ -105,7 +107,7 @@ Security::KeyData::loadX509ChainFromFile()
         // and add to the chain any other certificate exist in the file
         CertPointer latestCert = cert;
 
-        while (const auto ca = Ssl::ReadX509Certificate(bio)) {
+        while (const auto ca = Ssl::ReadOptionalCertificate(bio)) {
             // get Issuer name of the cert for debug display
             char *nameStr = X509_NAME_oneline(X509_get_subject_name(ca.get()), nullptr, 0);
 
@@ -197,7 +199,13 @@ Security::KeyData::loadFromFiles(const AnyP::PortCfg &port, const char *portType
     }
 
     // certificate chain in the PEM file is optional
-    loadX509ChainFromFile();
+    try {
+        loadX509ChainFromFile();
+    }
+    catch (...) {
+        // XXX: Reject malformed configurations by letting exceptions propagate.
+        debugs(83, DBG_CRITICAL, "ERROR: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' bad certificate chain in '" << certFile << "': " << CurrentException);
+    }
 
     // pkey is mandatory, not having it makes cert and chain pointless.
     if (!loadX509PrivateKeyFromFile()) {

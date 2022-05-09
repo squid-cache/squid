@@ -148,7 +148,7 @@ bool Ssl::readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, Security
     BIO_puts(bio.get(), bufferToRead);
 
     try {
-        cert = ReadX509Certificate(bio);
+        cert = ReadCertificate(bio);
     } catch (...) {
         debugs(83, DBG_CRITICAL, CurrentException);
         cert.reset();
@@ -727,7 +727,7 @@ Ssl::OpenCertsFileForReading(Ssl::BIO_Pointer &bio, const char *filename)
 }
 
 Security::CertPointer
-Ssl::ReadOptionalX509Certificate(const BIO_Pointer &bio)
+Ssl::ReadOptionalCertificate(const BIO_Pointer &bio)
 {
     Assure(bio);
     ForgetErrors();
@@ -752,9 +752,9 @@ Ssl::ReadOptionalX509Certificate(const BIO_Pointer &bio)
 }
 
 Security::CertPointer
-Ssl::ReadX509Certificate(const BIO_Pointer &bio)
+Ssl::ReadCertificate(const BIO_Pointer &bio)
 {
-    if (const auto cert = ReadOptionalX509Certificate(bio))
+    if (const auto cert = ReadOptionalCertificate(bio))
         return cert;
 
     // PEM_R_NO_START_LINE

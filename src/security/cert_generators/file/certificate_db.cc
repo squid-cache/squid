@@ -649,11 +649,14 @@ Ssl::CertificateDb::ReadEntry(std::string filename, Security::CertPointer &cert,
     Ssl::BIO_Pointer bio;
     if (!Ssl::OpenCertsFileForReading(bio, filename.c_str()))
         return false;
-    if (!(cert = Ssl::ReadX509Certificate(bio)))
-        return false;
+
+    cert = Ssl::ReadCertificate(bio);
+
     if (!Ssl::ReadPrivateKey(bio, pkey, NULL))
         return false;
-    orig = Ssl::ReadX509Certificate(bio); // optional; may be nil
+
+    orig = Ssl::ReadOptionalCertificate(bio);
+
     return true;
 }
 

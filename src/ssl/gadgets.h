@@ -124,11 +124,11 @@ bool OpenCertsFileForReading(BIO_Pointer &bio, const char *filename);
 
 /// Reads and returns a certificate using the given OpenSSL BIO.
 /// Never returns a nil pointer.
-Security::CertPointer ReadX509Certificate(const BIO_Pointer &);
+Security::CertPointer ReadCertificate(const BIO_Pointer &);
 
 /// Reads and returns a certificate using the given OpenSSL BIO.
 /// \returns a nil pointer if the given BIO is empty or exhausted
-Security::CertPointer ReadOptionalX509Certificate(const BIO_Pointer &);
+Security::CertPointer ReadOptionalCertificate(const BIO_Pointer &);
 
 /**
  \ingroup SslCrtdSslAPI

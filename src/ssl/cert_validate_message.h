@@ -123,6 +123,9 @@ public:
     static const std::string param_proto_version;
     /// Parameter name for SSL cipher
     static const std::string param_cipher;
+
+private:
+    void tryParsingResponse(CertValidationResponse &);
 };
 
 }//namespace Ssl
