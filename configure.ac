@@ -441,7 +441,7 @@ AS_IF([test "x$ac_cv_search_shm_open" != "xno"],[
   AC_DEFINE(HAVE_SHM,1,[Support shared memory features])
 ])
 
-squid_disk_module_candidates=""
+squid_disk_module_candidates=
 AC_ARG_ENABLE(disk-io,
   AS_HELP_STRING([--enable-disk-io="list of modules"],
     [Build support for the list of disk I/O modules.
@@ -450,18 +450,19 @@ AC_ARG_ENABLE(disk-io,
      Programmers Guide section on DiskIO
      for details on how to build your custom disk module]),
   AS_CASE(["$enableval"],
-    [yes],[
-      SQUID_LOOK_FOR_MODULES([$srcdir/src/DiskIO],[squid_disk_module_candidates])
-      AS_IF([test "x$ac_cv_search_shm_open" = "xno"],[
-        squid_disk_module_candidates=`echo "$squid_disk_module_candidates" | sed 's/IpcIo//g'`
-      ])
-    ],
+    [yes],[],
     [no|none],[enable_disk_io="no"],
     [
       enable_disk_io="yes"
       squid_disk_module_candidates="$enableval"
   ])
 )
+AS_IF([test "x${enable_disk_io:-yes}" = "xyes"],[
+  SQUID_LOOK_FOR_MODULES([$srcdir/src/DiskIO],[squid_disk_module_candidates])
+  AS_IF([test "x$ac_cv_search_shm_open" = "xno"],[
+    squid_disk_module_candidates=`echo "$squid_disk_module_candidates" | sed 's/IpcIo//g'`
+  ])
+])
 SQUID_CLEANUP_MODULES_LIST([squid_disk_module_candidates])
 SQUID_CHECK_EXISTING_MODULES([$srcdir/src/DiskIO],[squid_disk_module_candidates])
 AC_MSG_NOTICE([DiskIO modules built: ${squid_disk_module_candidates:-none}])
@@ -487,7 +488,7 @@ AH_TEMPLATE(HAVE_DISKIO_MODULE_MMAPPED, [Whether Mmapped Disk I/O module is buil
 for module in $squid_disk_module_candidates none; do
   # maybe not needed
   AS_IF([test "x$module" = "xnone"],[continue])
-  AS_IF([!test -d "$srcdir/src/DiskIO/$module"],[AC_MSG_ERROR([disk-io $module does not exist])])
+  AS_IF([! test -d "$srcdir/src/DiskIO/$module"],[AC_MSG_ERROR([disk-io $module does not exist])])
   AS_CASE(["$module"],
     [AIO],[
       dnl Check for POSIX AIO availability
@@ -686,16 +687,17 @@ AC_ARG_ENABLE([storeio],
                   Programmers Guide section <not yet written>
                   for details on how to build your custom store module]), [
   AS_CASE(["$enableval"],
-    [yes],[
-      SQUID_LOOK_FOR_MODULES([$srcdir/src/fs],[squid_storeio_module_candidates])
-    ],
-    [no|none],[enable_storeio=no],
+    [yes],[],
+    [no|none],[enable_storeio="no"],
     [
-      enable_storeio=yes
+      enable_storeio="yes"
       # ufs is really always needed as it has low-level routines
       # if it is a dupe it will be cleaned-up later
       squid_storeio_module_candidates="$enableval ufs"
   ])
+])
+AS_IF([test "x${enable_disk_io:-yes}" = "xyes"],[
+  SQUID_LOOK_FOR_MODULES([$srcdir/src/fs],[squid_storeio_module_candidates])
 ])
 SQUID_CLEANUP_MODULES_LIST([squid_storeio_module_candidates])
 SQUID_CHECK_EXISTING_MODULES([$srcdir/src/fs],[squid_storeio_module_candidates])
@@ -727,7 +729,8 @@ for fs in ${squid_storeio_module_candidates:-none}; do
         AC_MSG_ERROR([Storage module ufs requires DiskIO module: Blocking])
       ])
       squid_do_build_ufs=true
-    ])
+    ]
+  )
 done
 
 AM_CONDITIONAL(ENABLE_FS_UFS, test "x$squid_do_build_ufs" = "xtrue")
