@@ -42,7 +42,7 @@ std::ostream &
 operator <<(std::ostream &os, const ReportSysError rse)
 {
     if (const auto errorNo = rse.errorNo)
-        os << Debug::Extra << "system call error: " << strerror(errorNo);
+        os << Debug::Extra << "system call error: " << xstrerr(errorNo);
     return os;
 }
 
