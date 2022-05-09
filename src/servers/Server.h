@@ -94,6 +94,9 @@ public:
     /// grows the available read buffer space (if possible)
     void maybeMakeSpaceAvailable();
 
+    /// state for the transport/transfer protocol
+    MasterXactionPointer xaction;
+
     // Client TCP connection details from comm layer.
     Comm::ConnectionPointer clientConnection;
 

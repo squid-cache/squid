@@ -12,10 +12,18 @@
 #include "anyp/forward.h"
 #include "anyp/PortCfg.h"
 #include "base/InstanceId.h"
-#include "base/Lock.h"
-#include "base/RefCount.h"
 #include "comm/forward.h"
 #include "XactionInitiator.h"
+
+class MasterXaction;
+
+class MxId : public RefCountable, public InstanceId<MasterXaction, uint64_t>
+{
+public:
+    typedef RefCount<MxId> Pointer;
+
+    static const Pointer Nil;
+};
 
 /** Master transaction details.
  *
@@ -38,28 +46,63 @@
  */
 class MasterXaction : public RefCountable
 {
+    /// Master Transaction ID.
+    /// The one master transaction may contain historic snapshots of state
+    /// for different protocols referenced by txParent and txChild.
+    /// As such we need to share the ID value without permitting changes
+    /// after construction.
+    const MxId::Pointer xid;
+
 public:
     typedef RefCount<MasterXaction> Pointer;
 
-    explicit MasterXaction(const XactionInitiator anInitiator) : initiator(anInitiator) {};
+    explicit MasterXaction(const XactionInitiator anInitiator, const char *name = nullptr, const MxId::Pointer &anId = MxId::Nil) :
+        xid(anId), layerName(name), initiator(anInitiator)
+    {}
 
-    /// transaction ID.
-    InstanceId<MasterXaction, uint64_t> id;
+    /// Create a new transaction context/sandbox for a nested
+    /// sub-protocol which inherits all state information of
+    /// the current transaction but leaves the original as read-only.
+    Pointer spawnChildLayer(const char *name) const;
+
+public: // Squid internal Metadata - not from any particular protocol.
+
+    /// display unique transaction ID string
+    const SBuf printId() const;
+
+    /// the master transaction ID.
+    const MxId &id() const { return *xid; }
+
+    /// protocol transaction ID
+    InstanceId<MasterXaction, uint64_t> pxid;
+
+    /// label to represent this transaction layer when displaying
+    /// nested layers of protocol transactions
+    const char *layerName = nullptr;
+
+    /// the transport/transfer protocol layer which initiated this transaction (read-only)
+    RefCount<MasterXaction> txParent;
+
+    /// A nested transport/transfer protocol layer which has
+    /// 'ownership' of our connection until it finishes.
+    mutable Pointer txChild;
 
     /// the listening port which originated this transaction
     AnyP::PortCfgPointer squidPort;
 
-    /// the client TCP connection which originated this transaction
-    Comm::ConnectionPointer tcpClient;
-
     /// the initiator of this transaction
     XactionInitiator initiator;
 
-    /// whether we are currently creating a CONNECT header (to be sent to peer)
-    bool generatingConnect = false;
+public: // TCP protocol state
 
-    // TODO: add state from other Jobs in the transaction
+    /// the client TCP connection which originated this transaction
+    Comm::ConnectionPointer tcpClient;
+
+public: // HTTP protocol state
+
+    // FIXME: misplaced Server flag
+    /// whether HTTP is currently creating a CONNECT header (to be sent to peer)
+    bool generatingConnect = false;
 };
 
 #endif /* SQUID_SRC_MASTERXACTION_H */
-

@@ -933,7 +933,7 @@ htcpSpecifier::codeContextGist() const
 
     if (request) {
         if (const auto &mx = request->masterXaction)
-            return mx->id.detach();
+            return mx->id().detach();
     }
 
     return ScopedId("HTCP w/o master");
@@ -947,7 +947,7 @@ htcpSpecifier::detailCodeContext(std::ostream &os) const
 
     if (request) {
         if (const auto &mx = request->masterXaction)
-            return os << Debug::Extra << "current master transaction: " << mx->id;
+            return os << Debug::Extra << "current master transaction: " << mx->id();
     }
 
     // TODO: Report method, uri, and version if they have been set

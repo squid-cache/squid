@@ -1809,6 +1809,7 @@ ConnStateData::proxyProtocolValidateClient()
 
     ACLFilledChecklist ch(Config.accessList.proxyProtocol, nullptr);
     fillChecklist(ch);
+
     if (!ch.fastCheck().allowed())
         return proxyProtocolError("PROXY client not permitted by ACLs");
 
@@ -1828,9 +1829,9 @@ ConnStateData::proxyProtocolError(const char *msg)
 #if QUIET_PROXY_PROTOCOL
         // display the first of every 32 occurrences at level 1, the others at level 2.
         static uint8_t hide = 0;
-        debugs(33, (hide++ % 32 == 0 ? DBG_IMPORTANT : 2), msg << " from " << clientConnection);
+        debugs(33, (hide++ % 32 == 0 ? DBG_IMPORTANT : 2), msg << " from " << xaction->tcpClient);
 #else
-        debugs(33, DBG_IMPORTANT, msg << " from " << clientConnection);
+        debugs(33, DBG_IMPORTANT, msg << " from " << xaction->tcpClient);
 #endif
         mustStop(msg);
     }
@@ -1851,11 +1852,18 @@ ConnStateData::parseProxyProtocolHeader()
         inBuf.consume(parsed.size);
         needProxyProtocolHeader_ = false;
         if (proxyProtocolHeader_->hasForwardedAddresses()) {
-            clientConnection->local = proxyProtocolHeader_->destinationAddress;
-            clientConnection->remote = proxyProtocolHeader_->sourceAddress;
-            if ((clientConnection->flags & COMM_TRANSPARENT))
-                clientConnection->flags ^= COMM_TRANSPARENT; // prevent TPROXY spoofing of this new IP.
-            debugs(33, 5, "PROXY/" << proxyProtocolHeader_->version() << " upgrade: " << clientConnection);
+
+            // switch from TCP to PROXY details
+            xaction = xaction->spawnChildLayer("PROXY");
+            auto oldConn = xaction->tcpClient->cloneIdentDetails();
+            xaction->txParent->tcpClient = oldConn;
+            assert(clientConnection == xaction->tcpClient);
+
+            xaction->tcpClient->local = proxyProtocolHeader_->destinationAddress;
+            xaction->tcpClient->remote = proxyProtocolHeader_->sourceAddress;
+            if ((xaction->tcpClient->flags & COMM_TRANSPARENT))
+                xaction->tcpClient->flags ^= COMM_TRANSPARENT; // prevent TPROXY spoofing of this new IP.
+            debugs(33, 5, "PROXY/" << proxyProtocolHeader_->version() << " upgrade: " << xaction->tcpClient);
         }
     } catch (const Parser::BinaryTokenizer::InsufficientInput &) {
         debugs(33, 3, "PROXY protocol: waiting for more than " << inBuf.length() << " bytes");
@@ -2514,7 +2522,8 @@ httpsAccept(const CommAcceptCbParams &params)
     fd_note(params.conn->fd, "client https connect");
 
     // Socket is ready, setup the connection manager to start using it
-    auto *srv = Https::NewServer(xact);
+    auto tlsXact = xact->spawnChildLayer("TLS");
+    auto *srv = Https::NewServer(tlsXact);
     AsyncJob::Start(srv); // usually async-calls postHttpsAccept()
 }
 
@@ -2530,13 +2539,11 @@ ConnStateData::postHttpsAccept()
             return;
         }
 
-        MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
-        mx->tcpClient = clientConnection;
         // Create a fake HTTP request and ALE for the ssl_bump ACL check,
         // using tproxy/intercept provided destination IP and port.
         // XXX: Merge with subsequent fakeAConnectRequest(), buildFakeRequest().
         // XXX: Do this earlier (e.g., in Http[s]::One::Server constructor).
-        HttpRequest *request = new HttpRequest(mx);
+        HttpRequest *request = new HttpRequest(xaction);
         static char ip[MAX_IPSTRLEN];
         assert(clientConnection->flags & (COMM_TRANSPARENT | COMM_INTERCEPTION));
         request->url.host(clientConnection->local.toStr(ip, sizeof(ip)));
@@ -3574,11 +3581,12 @@ void
 ConnStateData::fillConnectionLevelDetails(ACLFilledChecklist &checklist) const
 {
     assert(checklist.conn() == this);
-    assert(clientConnection);
+    assert(xaction);
+    assert(xaction->tcpClient);
 
     if (!checklist.request) { // preserve (better) addresses supplied by setRequest()
-        checklist.src_addr = clientConnection->remote;
-        checklist.my_addr = clientConnection->local; // TODO: or port->s?
+        checklist.src_addr = xaction->tcpClient->remote;
+        checklist.my_addr = xaction->tcpClient->local; // TODO: or port->s?
     }
 
 #if USE_OPENSSL
@@ -3587,8 +3595,7 @@ ConnStateData::fillConnectionLevelDetails(ACLFilledChecklist &checklist) const
 #endif
 
     if (!checklist.rfc931[0]) // checklist creator may have supplied it already
-        checklist.setIdent(clientConnection->rfc931);
-
+        checklist.setIdent(xaction->tcpClient->rfc931);
 }
 
 bool
