@@ -20,14 +20,14 @@ class TestRandomUuid: public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST_SUITE( TestRandomUuid );
     CPPUNIT_TEST( testUniqueness );
     CPPUNIT_TEST( testSerialization );
-    CPPUNIT_TEST( testStringRepresentation );
+    CPPUNIT_TEST( testTextRepresentation );
     CPPUNIT_TEST( testInvalidIds );
     CPPUNIT_TEST_SUITE_END();
 
 protected:
     void testUniqueness();
     void testSerialization();
-    void testStringRepresentation();
+    void testTextRepresentation();
     void testInvalidIds();
 };
 
@@ -52,7 +52,7 @@ void
 TestRandomUuid::testUniqueness()
 {
     for (int i = 0; i < 1000; ++i) {
-        CPPUNIT_ASSERT_MESSAGE("UUID are unique", RandomUuid() != RandomUuid());
+        CPPUNIT_ASSERT_MESSAGE("UUIDs are unique", RandomUuid() != RandomUuid());
     }
 }
 
@@ -64,10 +64,10 @@ TestRandomUuid::testSerialization()
 }
 
 void
-TestRandomUuid::testStringRepresentation()
+TestRandomUuid::testTextRepresentation()
 {
     for (const auto &id: ExternalIds) {
-        CPPUNIT_ASSERT_MESSAGE("Original and generated UUID string representations are the same", id.first == ToSBuf(id.second));
+        CPPUNIT_ASSERT_MESSAGE("UUID text representation matches the expected one", ToSBuf(id.second) == id.first);
     }
 }
 
