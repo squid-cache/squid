@@ -88,7 +88,8 @@ RandomUuid::print(std::ostream &os) const
 {
     const auto savedFlags = os.flags();
     const auto savedFill = os.fill('0');
-    os << std::hex << std::setw(8) << timeLow  << '-' <<
+    os << std::hex <<
+        std::setw(8) << timeLow  << '-' <<
         std::setw(4) << timeMid << '-' <<
         std::setw(4) << timeHiAndVersion << '-' <<
         std::setw(2) << +clockSeqHiAndReserved << std::setw(2) << +clockSeqLow << '-';
