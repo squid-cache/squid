@@ -74,22 +74,26 @@ RandomUuid::sane() const
 RandomUuid::Serialized
 RandomUuid::serialize() const
 {
-    auto serialized = *reinterpret_cast<Serialized *>(const_cast<char *>(raw()));
-    *reinterpret_cast<uint32_t *>(&serialized[0]) = htonl(timeLow);
-    *reinterpret_cast<uint16_t *>(&serialized[0] + 4) = htons(timeMid);
-    *reinterpret_cast<uint16_t *>(&serialized[0] + 6) = htons(timeHiAndVersion);
-    return serialized;
+    auto serialized = clone();
+    serialized.timeLow = htonl(timeLow);
+    serialized.timeMid = htons(timeMid);
+    serialized.timeHiAndVersion = htons(timeHiAndVersion);
+    return *reinterpret_cast<Serialized *>(const_cast<char *>(serialized.raw()));
 }
 
 void
 RandomUuid::print(std::ostream &os) const
 {
-    os << std::setfill('0') << std::hex << std::setw(8) << timeLow  << '-' <<
+    const auto oldFill = os.fill('0');
+    const auto oldFlags = os.flags();
+    os << std::hex << std::setw(8) << timeLow  << '-' <<
         std::setw(4) << timeMid << '-' <<
         std::setw(4) << timeHiAndVersion << '-' <<
         std::setw(2) << +clockSeqHiAndReserved << std::setw(2) << +clockSeqLow << '-';
     for (size_t i = 0; i < sizeof(node); ++i)
         os << std::setw(2) << +node[i];
+    os.flags(oldFlags);
+    os.fill(oldFill);
 }
 
 bool
