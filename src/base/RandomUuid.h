@@ -24,7 +24,7 @@ public:
     RandomUuid();
 
     /// imports a UUID value that was exported using the serialize() API
-    RandomUuid(const Serialized &);
+    explicit RandomUuid(const Serialized &);
 
     RandomUuid(RandomUuid &&) = default;
     RandomUuid &operator=(RandomUuid &&) = default;

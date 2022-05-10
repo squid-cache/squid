@@ -70,7 +70,7 @@ void
 TestRandomUuid::testTextRepresentation()
 {
     for (const auto &id: ExternalIds) {
-        CPPUNIT_ASSERT_MESSAGE("UUID text representation matches the expected one", ToSBuf(id.second) == id.first);
+        CPPUNIT_ASSERT_MESSAGE("UUID text representation matches the expected one", ToSBuf(RandomUuid(id.second)) == id.first);
     }
 }
 
