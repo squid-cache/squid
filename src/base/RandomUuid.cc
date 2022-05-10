@@ -80,7 +80,7 @@ RandomUuid::serialize() const
     toNetwork.timeLow = htonl(timeLow);
     toNetwork.timeMid = htons(timeMid);
     toNetwork.timeHiAndVersion = htons(timeHiAndVersion);
-    return *reinterpret_cast<Serialized *>(const_cast<char *>(toNetwork.raw()));
+    return *reinterpret_cast<const Serialized *>(toNetwork.raw());
 }
 
 void
