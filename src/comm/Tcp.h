@@ -25,6 +25,9 @@ public:
 /// apply configured TCP keep-alive settings to the given FD socket
 void ApplyTcpKeepAlive(int fd, const TcpKeepAlive &);
 
+/// apply TCP_NODELAY (if available) to the given FD socket
+void ApplyTcpNoDelay(int);
+
 } // namespace Comm
 
 #endif /* SQUID__SRC_COMM_TCP_H */

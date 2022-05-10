@@ -77,9 +77,6 @@ static void commPlanHalfClosedCheck();
 static Comm::Flag commBind(int s, struct addrinfo &);
 static void commSetReuseAddr(int);
 static void commSetNoLinger(int);
-#ifdef TCP_NODELAY
-static void commSetTcpNoDelay(int);
-#endif
 static void commSetTcpRcvbuf(int, int);
 
 bool
@@ -495,11 +492,8 @@ comm_apply_flags(int new_socket,
             return -1;
         }
 
-#ifdef TCP_NODELAY
     if (sock_type == SOCK_STREAM)
-        commSetTcpNoDelay(new_socket);
-
-#endif
+        Comm::ApplyTcpNoDelay(new_socket);
 
     if (Config.tcpRcvBufsz > 0 && sock_type == SOCK_STREAM)
         commSetTcpRcvbuf(new_socket, Config.tcpRcvBufsz);
@@ -1116,22 +1110,6 @@ commSetCloseOnExec(int fd)
 
 #endif
 }
-
-#ifdef TCP_NODELAY
-static void
-commSetTcpNoDelay(int fd)
-{
-    int on = 1;
-
-    if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &on, sizeof(on)) < 0) {
-        int xerrno = errno;
-        debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << ": " << xstrerr(xerrno));
-    }
-
-    fd_table[fd].flags.nodelay = true;
-}
-
-#endif
 
 void
 comm_init(void)
@@ -1891,11 +1869,8 @@ comm_open_uds(int sock_type,
         }
     }
 
-#ifdef TCP_NODELAY
     if (sock_type == SOCK_STREAM)
-        commSetTcpNoDelay(new_socket);
-
-#endif
+        Comm::ApplyTcpNoDelay(new_socket);
 
     if (Config.tcpRcvBufsz > 0 && sock_type == SOCK_STREAM)
         commSetTcpRcvbuf(new_socket, Config.tcpRcvBufsz);

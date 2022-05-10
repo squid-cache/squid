@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "comm/Tcp.h"
 #include "debug/Stream.h"
+#include "fde.h"
 
 #if HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
@@ -74,4 +75,12 @@ Comm::ApplyTcpKeepAlive(int fd, const TcpKeepAlive &cfg)
     }
 #endif
     (void)SetBooleanSocketOption(fd, SOL_SOCKET, SO_KEEPALIVE, true);
+}
+
+void
+Comm::ApplyTcpNoDelay(int fd)
+{
+#if defined(TCP_NODELAY)
+    fd_table[fd].flags.nodelay = SetBooleanSocketOption(fd, IPPROTO_TCP, TCP_NODELAY, true);
+#endif
 }

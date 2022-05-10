@@ -78,6 +78,7 @@ void Comm::TcpAcceptor::notify(const Comm::Flag, const Comm::ConnectionPointer &
 
 #include "comm/Tcp.h"
 void Comm::ApplyTcpKeepAlive(int, const TcpKeepAlive &) STUB
+void Comm::ApplyTcpNoDelay(int) STUB
 
 #include "comm/Write.h"
 void Comm::Write(const Comm::ConnectionPointer &, const char *, int, AsyncCall::Pointer &, FREE *) STUB
