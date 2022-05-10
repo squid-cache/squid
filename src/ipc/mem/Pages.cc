@@ -21,7 +21,7 @@
 // TODO: make pool id more unique so it does not conflict with other Squids?
 static const char *PagePoolId = "squid-page-pool";
 static Ipc::Mem::PagePool *ThePagePool = 0;
-static int TheLimits[Ipc::Mem::PageId::maxPurpose];
+static int TheLimits[Ipc::Mem::PageId::maxPurpose+1];
 
 // TODO: make configurable to avoid waste when mem-cached objects are small/big
 size_t
@@ -55,7 +55,7 @@ size_t
 Ipc::Mem::PageLimit()
 {
     size_t limit = 0;
-    for (int i = 0; i < PageId::maxPurpose; ++i)
+    for (int i = 0; i <= PageId::maxPurpose; ++i)
         limit += PageLimit(i);
     return limit;
 }

@@ -16,7 +16,6 @@
 #include "fde.h"
 #include "globals.h"
 #include "MemBuf.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #if USE_DELAY_POOLS
 #include "ClientInfo.h"

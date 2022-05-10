@@ -53,7 +53,6 @@
 #include "RefreshPattern.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "StrList.h"
@@ -77,16 +76,9 @@ static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeader
 
 HttpStateData::HttpStateData(FwdState *theFwdState) :
     AsyncJob("HttpStateData"),
-    Client(theFwdState),
-    lastChunk(0),
-    httpChunkDecoder(NULL),
-    payloadSeen(0),
-    payloadTruncated(0),
-    sawDateGoBack(false)
+    Client(theFwdState)
 {
     debugs(11,5, "HttpStateData " << this << " created");
-    ignoreCacheControl = false;
-    surrogateNoStore = false;
     serverConnection = fwd->serverConnection();
 
     if (fwd->serverConnection() != NULL)
@@ -531,7 +523,7 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
     case Http::scConflict: // TODO: is this shareable?
     case Http::scLengthRequired:
     case Http::scPreconditionFailed:
-    case Http::scPayloadTooLarge:
+    case Http::scContentTooLarge:
     case Http::scUnsupportedMediaType:
     case Http::scUnprocessableEntity:
     case Http::scLocked: // TODO: is this shareable?

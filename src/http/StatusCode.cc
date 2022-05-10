@@ -164,8 +164,8 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Precondition Failed";
         break;
 
-    case Http::scPayloadTooLarge:
-        return "Payload Too Large";
+    case Http::scContentTooLarge:
+        return "Content Too Large";
         break;
 
     case Http::scUriTooLong:

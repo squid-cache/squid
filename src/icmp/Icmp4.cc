@@ -17,7 +17,7 @@
 #include "debug/Stream.h"
 #include "Icmp4.h"
 #include "IcmpPinger.h"
-#include "SquidTime.h"
+#include "time/gadgets.h"
 
 static const char *
 IcmpPacketType(uint8_t v)
@@ -74,7 +74,7 @@ Icmp4::Open(void)
     }
 
     icmp_ident = getpid() & 0xffff;
-    debugs(42, DBG_IMPORTANT, "pinger: ICMP socket opened.");
+    debugs(42, DBG_IMPORTANT, "ICMP socket opened.");
 
     return icmp_sock;
 }

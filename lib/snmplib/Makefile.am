@@ -8,7 +8,7 @@
 ## Process this file with automake to produce Makefile.in
 ##
 ## Makefile for libsnmp.
-## 
+##
 AM_CFLAGS = $(SQUID_CFLAGS)
 AM_CXXFLAGS = $(SQUID_CXXFLAGS)
 AM_CPPFLAGS = \

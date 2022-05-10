@@ -71,13 +71,13 @@
 #include "SBufStatsAction.h"
 #include "send-announce.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "stat.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "store/Disks.h"
 #include "store_log.h"
 #include "StoreFileSystem.h"
+#include "time/Engine.h"
 #include "tools.h"
 #include "unlinkd.h"
 #include "wccp.h"
@@ -564,6 +564,7 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
             /** \li On interrupt send SIGINT. */
             opt_send_signal = SIGINT;
         else if (!strncmp(optValue, "kill", strlen(optValue)))
+            // XXX: In SMP mode, uncatchable SIGKILL only kills the master process
             /** \li On kill send SIGKILL. */
             opt_send_signal = SIGKILL;
 
@@ -1419,6 +1420,7 @@ ConfigureCurrentKid(const CommandLine &cmdLine)
         TheKidName.assign(APP_SHORTNAME);
         KidIdentifier = 0;
     }
+    Debug::NameThisKid(KidIdentifier);
 }
 
 /// Start directing debugs() messages to the configured cache.log.
@@ -1584,6 +1586,8 @@ SquidMain(int argc, char **argv)
 
         Format::Token::Init(); // XXX: temporary. Use a runners registry of pre-parse runners instead.
 
+        RunRegisteredHere(RegisteredRunner::bootstrapConfig);
+
         try {
             parse_err = parseConfigFile(ConfigFile);
         } catch (...) {
@@ -1686,7 +1690,7 @@ SquidMain(int argc, char **argv)
     mainLoop.setPrimaryEngine(&comm_engine);
 
     /* use the standard time service */
-    TimeEngine time_engine;
+    Time::Engine time_engine;
 
     mainLoop.setTimeService(&time_engine);
 

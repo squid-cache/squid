@@ -72,7 +72,7 @@ my_inet_ntoa( const struct in_addr& a, HostAddress buffer );
 const char*
 my_sock_ntoa( const struct sockaddr_in& a, SockAddress buffer );
   // purpose: thread-safely convert IPv4 socket pair into ASCII rep.
-  // paramtr: a (IN): socket_in address 
+  // paramtr: a (IN): socket_in address
   //          buffer (OUT): storage area to store representation into.
   // returns: pointer to buffer
 

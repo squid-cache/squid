@@ -26,7 +26,6 @@
 #include "sbuf/StringConvert.h"
 #include "security/CertError.h"
 #include "security/NegotiationHistory.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 #if USE_OPENSSL
@@ -507,8 +506,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_LOCAL_LISTENING_PORT:
-            if (const auto addr = FindListeningPortAddress(nullptr, al.getRaw())) {
-                outint = addr->port();
+            if (const auto port = FindListeningPortNumber(nullptr, al.getRaw())) {
+                outint = port;
                 doint = 1;
             }
             break;

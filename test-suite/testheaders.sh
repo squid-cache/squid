@@ -35,7 +35,7 @@ for f in $@; do
 #include "${f}"
 int main( int argc, char* argv[] ) { return 0; }
 EOF
-        if ${cc} -c -o $t.o $t.cc ; then 
+        if ${cc} -c -o $t.o $t.cc ; then
             echo "Ok."
         else
             echo "Fail."

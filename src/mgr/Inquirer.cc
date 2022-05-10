@@ -25,7 +25,7 @@
 #include "mgr/IntParam.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
-#include "SquidTime.h"
+
 #include <memory>
 #include <algorithm>
 

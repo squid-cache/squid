@@ -20,7 +20,7 @@
 %enum
 %global-table
 %ignore-case
-%struct-type 
+%struct-type
 class HeaderTableRecord;
 %%
 Accept, Http::HdrType::ACCEPT, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader

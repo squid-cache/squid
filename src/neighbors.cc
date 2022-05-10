@@ -40,7 +40,6 @@
 #include "RequestFlags.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
-#include "SquidTime.h"
 #include "stat.h"
 #include "Store.h"
 #include "store_key_md5.h"

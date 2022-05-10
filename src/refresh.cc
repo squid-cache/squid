@@ -22,7 +22,6 @@
 #include "refresh.h"
 #include "RefreshPattern.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "util.h"
 
@@ -294,9 +293,9 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     debugs(22, 3, "\tage:\t" << age);
 
-    debugs(22, 3, "\tcheck_time:\t" << mkrfc1123(check_time));
+    debugs(22, 3, "\tcheck_time:\t" << Time::FormatRfc1123(check_time));
 
-    debugs(22, 3, "\tentry->timestamp:\t" << mkrfc1123(entry->timestamp));
+    debugs(22, 3, "\tentry->timestamp:\t" << Time::FormatRfc1123(entry->timestamp));
 
     if (request && !request->flags.ignoreCc) {
         const HttpHdrCc *const cc = request->cache_control;
@@ -306,7 +305,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
                    minFresh << " = " << age + minFresh);
             debugs(22, 3, "\tcheck_time + min-fresh:\t" << check_time << " + "
                    << minFresh << " = " <<
-                   mkrfc1123(check_time + minFresh));
+                   Time::FormatRfc1123(check_time + minFresh));
             age += minFresh;
             check_time += minFresh;
         }
