@@ -528,11 +528,6 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
     if (conn->flags & COMM_NONBLOCKING)
         fd_table[conn->fd].flags.nonblocking = true;
 
-#ifdef TCP_NODELAY
-    if (AI->ai_socktype == SOCK_STREAM)
-        fd_table[conn->fd].flags.nodelay = true;
-#endif
-
     /* no fd_table[fd].flags. updates needed for these conditions:
      * if ((flags & COMM_REUSEADDR)) ...
      * if ((flags & COMM_DOBIND) ...) ...

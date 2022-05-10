@@ -123,7 +123,6 @@ public:
         bool nonblocking = false;
         bool ipc = false;
         bool called_connect = false;
-        bool nodelay = false;
         bool close_on_exec = false;
         /// buffering readMethod_ has data to give (regardless of socket state)
         bool read_pending = false;
