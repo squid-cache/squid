@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_BASE_RANDOM_UUID_H
-#define SQUID_SRC_BASE_RANDOM_UUID_H
+#ifndef SQUID_SRC_BASE_RANDOMUUID_H
+#define SQUID_SRC_BASE_RANDOMUUID_H
 
 #include <array>
 #include <iosfwd>
@@ -72,5 +72,5 @@ private:
 
 std::ostream &operator<<(std::ostream &os, const RandomUuid &uuid);
 
-#endif /* SQUID_SRC_BASE_RANDOM_UUID_H */
+#endif /* SQUID_SRC_BASE_RANDOMUUID_H */
 
