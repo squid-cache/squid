@@ -29,9 +29,8 @@ public:
     RandomUuid(RandomUuid &&) = default;
     RandomUuid &operator=(RandomUuid &&) = default;
 
-    // (Implicit) copying is prohibited to prevent accidental duplication of
-    // supposed-to-be-unique values. Use clone() when duplication is needed.
-    RandomUuid(const RandomUuid &) = delete;
+    // (Implicit) public copying is prohibited to prevent accidental duplication
+    // of supposed-to-be-unique values. Use clone() when duplication is needed.
     RandomUuid &operator=(const RandomUuid &) = delete;
 
     /// exports UUID value; suitable for long-term storage
@@ -41,12 +40,14 @@ public:
     bool operator !=(const RandomUuid &other) const { return !(*this == other); }
 
     /// creates a UUID object with the same value as this UUID
-    RandomUuid clone() const { return RandomUuid(serialize()); }
+    RandomUuid clone() const { return *this; }
 
     /// writes a human-readable representation
     void print(std::ostream &os) const;
 
 private:
+    RandomUuid(const RandomUuid &) = default;
+
     /// read/write access to storage bytes
     char *raw() { return reinterpret_cast<char*>(this); }
 
