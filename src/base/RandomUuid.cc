@@ -74,11 +74,13 @@ RandomUuid::sane() const
 RandomUuid::Serialized
 RandomUuid::serialize() const
 {
-    auto serialized = clone();
-    serialized.timeLow = htonl(timeLow);
-    serialized.timeMid = htons(timeMid);
-    serialized.timeHiAndVersion = htons(timeHiAndVersion);
-    return *reinterpret_cast<Serialized *>(const_cast<char *>(serialized.raw()));
+    auto toNetwork = clone();
+    // Convert all multi-byte fields to network byte order so that the recipient
+    // will consider our ID sane() and print() the same text representation.
+    toNetwork.timeLow = htonl(timeLow);
+    toNetwork.timeMid = htons(timeMid);
+    toNetwork.timeHiAndVersion = htons(timeHiAndVersion);
+    return *reinterpret_cast<Serialized *>(const_cast<char *>(toNetwork.raw()));
 }
 
 void
