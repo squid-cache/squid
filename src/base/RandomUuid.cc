@@ -73,6 +73,7 @@ RandomUuid::sane() const
 RandomUuid::Serialized
 RandomUuid::serialize() const
 {
+    assert(sane());
     auto toNetwork = clone();
     // Convert all multi-byte fields to network byte order so that the recipient
     // will consider our ID sane() and print() the same text representation.
