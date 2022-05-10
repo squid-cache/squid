@@ -55,7 +55,7 @@ TestRandomUuid::testUniqueness()
     std::set<SBuf> uniqueIds;
     while (uniqueIds.size() < 1000) {
         const auto inserted = uniqueIds.insert(ToSBuf(RandomUuid())).second;
-        CPPUNIT_ASSERT_MESSAGE("Few generated UUIDs are unique", inserted);
+        CPPUNIT_ASSERT_MESSAGE("few generated UUIDs are unique", inserted);
     }
 }
 
@@ -63,7 +63,7 @@ void
 TestRandomUuid::testSerialization()
 {
     RandomUuid uuid;
-    CPPUNIT_ASSERT_MESSAGE("Original and deserialized UUIDs are equal", uuid == RandomUuid(uuid.serialize()));
+    CPPUNIT_ASSERT_MESSAGE("original and deserialized UUIDs are equal", uuid == RandomUuid(uuid.serialize()));
 }
 
 void
