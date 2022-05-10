@@ -14,6 +14,7 @@
 #include "unitTestMain.h"
 
 #include <map>
+#include <set>
 
 class TestRandomUuid: public CPPUNIT_NS::TestFixture
 {
@@ -51,8 +52,10 @@ static const RandomIds InvalidIds {
 void
 TestRandomUuid::testUniqueness()
 {
-    for (int i = 0; i < 1000; ++i) {
-        CPPUNIT_ASSERT_MESSAGE("UUIDs are unique", RandomUuid() != RandomUuid());
+    std::set<SBuf> uniqueIds;
+    while (uniqueIds.size() < 1000) {
+        const auto inserted = uniqueIds.insert(ToSBuf(RandomUuid())).second;
+        CPPUNIT_ASSERT_MESSAGE("Few generated UUIDs are unique", inserted);
     }
 }
 
