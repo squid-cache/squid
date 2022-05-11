@@ -2311,7 +2311,7 @@ httpAccept(const CommAcceptCbParams &params)
 
     debugs(33, 4, params.conn << ": accepted");
     fd_note(params.conn->fd, "client http connect");
-    auto xact = MasterXaction::MakePortful(params.port);
+    const auto xact = MasterXaction::MakePortful(params.port);
     xact->tcpClient = params.conn;
 
     // Socket is ready, setup the connection manager to start using it
@@ -2511,7 +2511,7 @@ httpsAccept(const CommAcceptCbParams &params)
         return;
     }
 
-    auto xact = MasterXaction::MakePortful(params.port);
+    const auto xact = MasterXaction::MakePortful(params.port);
     xact->tcpClient = params.conn;
 
     debugs(33, 4, params.conn << " accepted, starting SSL negotiation.");

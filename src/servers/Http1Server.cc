@@ -392,13 +392,13 @@ Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext serve
 }
 
 ConnStateData *
-Http::NewServer(MasterXactionPointer &xact)
+Http::NewServer(const MasterXaction::Pointer &xact)
 {
     return new Http1::Server(xact, false);
 }
 
 ConnStateData *
-Https::NewServer(MasterXactionPointer &xact)
+Https::NewServer(const MasterXaction::Pointer &xact)
 {
     return new Http1::Server(xact, true);
 }

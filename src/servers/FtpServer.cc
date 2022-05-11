@@ -254,7 +254,7 @@ Ftp::Server::AcceptCtrlConnection(const CommAcceptCbParams &params)
     debugs(33, 4, params.conn << ": accepted");
     fd_note(params.conn->fd, "client ftp connect");
 
-    auto xact = MasterXaction::MakePortful(params.port);
+    const auto xact = MasterXaction::MakePortful(params.port);
     xact->tcpClient = params.conn;
 
     AsyncJob::Start(new Server(xact));
