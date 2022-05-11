@@ -2299,7 +2299,7 @@ ConnStateData::acceptTls()
 void
 httpAccept(const CommAcceptCbParams &params)
 {
-    assert(params.port);
+    Assure(params.port);
 
     // NP: it is possible the port was reconfigured when the call or accept() was queued.
 
@@ -2501,7 +2501,7 @@ httpsSslBumpAccessCheckDone(Acl::Answer answer, void *data)
 static void
 httpsAccept(const CommAcceptCbParams &params)
 {
-    assert(params.port);
+    Assure(params.port);
 
     // NP: it is possible the port was reconfigured when the call or accept() was queued.
 

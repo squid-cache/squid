@@ -41,8 +41,6 @@ class MasterXaction : public RefCountable
 public:
     typedef RefCount<MasterXaction> Pointer;
 
-    explicit MasterXaction(const XactionInitiator anInitiator) : initiator(anInitiator) {};
-
     /// Create a master transaction not associated with a AnyP::PortCfg port.
     template <XactionInitiator::Initiator anInitiator>
     static Pointer MakePortless()

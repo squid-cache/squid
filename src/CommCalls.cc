@@ -61,8 +61,8 @@ CommAcceptCbParams::print(std::ostream &os) const
 {
     CommCommonCbParams::print(os);
 
-    if (port)
-        os << ", " << port->listenConn;
+    if (port && port->listenConn)
+        os << ", " << port->listenConn->codeContextGist();
 }
 
 /* CommConnectCbParams */
