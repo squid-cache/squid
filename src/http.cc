@@ -523,7 +523,7 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
     case Http::scConflict: // TODO: is this shareable?
     case Http::scLengthRequired:
     case Http::scPreconditionFailed:
-    case Http::scPayloadTooLarge:
+    case Http::scContentTooLarge:
     case Http::scUnsupportedMediaType:
     case Http::scUnprocessableEntity:
     case Http::scLocked: // TODO: is this shareable?
