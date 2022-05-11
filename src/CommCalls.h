@@ -101,8 +101,8 @@ public:
 
     void print(std::ostream &os) const;
 
-    /// Transaction which this call is part of.
-    MasterXaction::Pointer xaction;
+    /// the configuration listening port this call relates to (may be nil)
+    AnyP::PortCfgPointer port;
 };
 
 // connect parameters
