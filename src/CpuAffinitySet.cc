@@ -38,7 +38,12 @@ CpuAffinitySet::apply()
     } else {
         cpu_set_t cpuSet;
         memcpy(&cpuSet, &theCpuSet, sizeof(cpuSet));
+// clang on Ubuntu Xenial complains about an unused return
+// value. We can't make use of it or freebsd will break
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-value"
         CPU_AND(&cpuSet, &cpuSet, &theOrigCpuSet);
+#pragma clang diagnostic pop
         if (CPU_COUNT(&cpuSet) <= 0) {
             debugs(54, DBG_IMPORTANT, "ERROR: invalid CPU affinity for process "
                    "PID " << getpid() << ", may be caused by an invalid core in "
