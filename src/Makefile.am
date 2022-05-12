@@ -804,8 +804,8 @@ nodist_tests_testRandomUuid_SOURCES = \
 	tests/stub_libmem.cc
 tests_testRandomUuid_LDADD = \
 	libsquid.la \
-	base/libbase.la \
 	sbuf/libsbuf.la \
+	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
