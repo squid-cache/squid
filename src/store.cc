@@ -327,7 +327,7 @@ StoreEntry::storeClientType() const
     /*
      * If this is the first client, let it be the mem client
      */
-    if (mem_obj->nclients == 1)
+    if (mem_obj->clients.size() == 1)
         return STORE_MEM_CLIENT;
 
     /*
@@ -1054,7 +1054,7 @@ StoreEntry::complete()
          * and there should be NO clients on this entry
          */
         assert(EBIT_TEST(flags, ENTRY_ABORTED));
-        assert(mem_obj->nclients == 0);
+        assert(mem_obj->clients.size() == 0);
         return;
     }
 

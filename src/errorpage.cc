@@ -730,7 +730,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
          * error message
          */
         assert(EBIT_TEST(entry->flags, ENTRY_ABORTED));
-        assert(entry->mem_obj->nclients == 0);
+        assert(entry->mem_obj->clients.size() == 0);
         delete err;
         return;
     }
