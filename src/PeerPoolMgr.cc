@@ -24,7 +24,6 @@
 #include "PeerPoolMgr.h"
 #include "security/BlindPeerConnector.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 
 CBDATA_CLASS_INIT(PeerPoolMgr);
 

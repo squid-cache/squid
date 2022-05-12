@@ -31,8 +31,8 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.cc \
 	LoadableModules.h
 
-SUBDIRS = mem debug base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
-DIST_SUBDIRS = mem debug base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
+SUBDIRS = mem time debug base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
+DIST_SUBDIRS = mem time debug base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -158,12 +158,9 @@ endif
 noinst_LTLIBRARIES = libsquid.la
 
 EXTRA_PROGRAMS = \
-	unlinkd \
-	ufsdump
+	unlinkd
 
 ## cfgen is used when building squid
-## ufsdump is a debug utility, it is possibly useful for end users with cache
-## corruption, but at this point we do not install it.
 noinst_PROGRAMS = \
 	cf_gen
 
@@ -458,7 +455,6 @@ squid_SOURCES = \
 	store_swapmeta.cc \
 	store_swapout.cc \
 	swap_log_op.h \
-	time.cc \
 	tools.cc \
 	tools.h \
 	tunnel.cc \
@@ -490,8 +486,7 @@ EXTRA_squid_SOURCES = \
 
 noinst_HEADERS = \
 	MemBuf.h \
-	SquidString.h \
-	SquidTime.h
+	SquidString.h
 
 BUILT_SOURCES = \
 	cf_gen_defines.cci \
@@ -551,6 +546,7 @@ squid_LDADD = \
 	$(SNMP_LIBS) \
 	mem/libmem.la \
 	store/libstore.la \
+	time/libtime.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -581,89 +577,6 @@ unlinkd_SOURCES = unlinkd_daemon.cc
 unlinkd_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-
-## What requires what..
-## many things want ACLChecklist.cc
-## ACLChecklist.cc wants AuthUserRequest.cc
-## ACLChecklist.cc wants AuthScheme.cc
-## ACLChecklist.cc wants ACLProxyAuth.cc directly
-## ACLProxyAuth.cc wants ACLUserData
-## ACLProxyAuth.cc wants ACLRegexData
-## cache_cf.cc wants $(AUTH_LIBS)
-## cache_cf.cc wants store/libstore.la
-## cache_cf.cc wants AnyP::PortCfg
-## client_side wants client_db
-## client_db wants SNMP_SOURCE
-## snmp_core wants ACLStringData
-## tools.cc wants ip/libip.la
-## client_side.cc wants ip/libip.la
-## libbase.la wants cbdata.*
-## libbase.la wants MemBuf.*
-ufsdump_SOURCES = \
-	$(WIN32_SOURCE) \
-	ClientInfo.h \
-	tests/stub_HelperChildConfig.cc \
-	MemBuf.cc \
-	MemBuf.h \
-	Parsing.h \
-	RemovalPolicy.cc \
-	tests/stub_StoreMeta.cc \
-	StoreMetaUnpacker.cc \
-	String.cc \
-	cbdata.cc \
-	cbdata.h \
-	dlink.cc \
-	dlink.h \
-	tests/stub_fd.cc \
-	fd.h \
-	helper/ChildConfig.h \
-	int.cc \
-	int.h \
-	mem/forward.h \
-	store_key_md5.cc \
-	store_key_md5.h \
-	tests/stub_time.cc \
-	ufsdump.cc
-ufsdump_LDADD = \
-	ident/libident.la \
-	acl/libacls.la \
-	eui/libeui.la \
-	acl/libstate.la \
-	acl/libapi.la \
-	base/libbase.la \
-	libsquid.la \
-	ip/libip.la \
-	fs/libfs.la \
-	ipc/libipc.la \
-	mgr/libmgr.la \
-	debug/libdebug.la \
-	$(XTRA_OBJS) \
-	$(REPL_OBJS) \
-	$(NETTLELIB) \
-	$(CRYPTLIB) \
-	$(REGEXLIB) \
-	$(SSLLIB) \
-	$(COMPAT_LIB) \
-	$(EPOLL_LIBS) \
-	$(MINGW_LIBS) \
-	$(XTRA_LIBS)
-ufsdump_DEPENDENCIES = \
-	ident/libident.la \
-	acl/libacls.la \
-	eui/libeui.la \
-	acl/libstate.la \
-	acl/libapi.la \
-	base/libbase.la \
-	libsquid.la \
-	ip/libip.la \
-	fs/libfs.la \
-	ipc/libipc.la \
-	mgr/libmgr.la \
-	DiskIO/libdiskio.la \
-	$(REPL_OBJS)
-
-nodist_ufsdump_SOURCES = \
-	globals.cc
 
 sysconf_DATA = \
 	squid.conf.default \
@@ -745,7 +658,7 @@ squid.conf.default squid.conf.documented: cf_parser.cci
 cf_parser.cci: cf.data cf_gen$(EXEEXT)
 	./cf_gen$(EXEEXT) cf.data $(srcdir)/cf.data.depend
 
-# The cf_gen_defines.cci is auto-generated and does not exist when the 
+# The cf_gen_defines.cci is auto-generated and does not exist when the
 # dependencies computed. We need to add its include files (autoconf.h) here
 cf_gen_defines.cci: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre $(top_builddir)/include/autoconf.h
 	$(AWK) -f $(srcdir)/cf_gen_defines <$(srcdir)/cf.data.pre >$@ || ($(RM) -f $@ && exit 1)
@@ -823,7 +736,7 @@ CLEANFILES += cf.data squid.conf.default squid.conf.documented \
 test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
 	cp $(top_srcdir)/test-suite/test_tools.cc .
 
-# stock tools for unit tests - library independent versions of dlink_list 
+# stock tools for unit tests - library independent versions of dlink_list
 # etc.
 # globals.cc is needed by test_tools.cc.
 # Neither of these should be disted from here.
@@ -905,7 +818,7 @@ tests_testMem_SOURCES = \
 	tests/testMem.cc \
 	tests/testMem.h
 nodist_tests_testMem_SOURCES = \
-	tests/stub_time.cc
+	tests/stub_libtime.cc
 tests_testMem_LDADD = \
 	mem/libmem.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1229,7 +1142,6 @@ tests_testRock_SOURCES = \
 	tests/stub_store_stats.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
-	time.cc \
 	tests/stub_tools.cc \
 	tools.h \
 	wordlist.cc \
@@ -1262,6 +1174,7 @@ tests_testRock_LDADD = \
 	store/libstore.la \
 	$(ADAPTATION_LIBS) \
 	sbuf/libsbuf.la \
+	time/libtime.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1407,7 +1320,6 @@ tests_testUfs_SOURCES = \
 	tests/stub_store_stats.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
-	time.cc \
 	tests/stub_tools.cc \
 	tools.h \
 	wordlist.cc \
@@ -1445,6 +1357,7 @@ tests_testUfs_LDADD = \
 	store/libstore.la \
 	$(ADAPTATION_LIBS) \
 	sbuf/libsbuf.la \
+	time/libtime.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1584,7 +1497,6 @@ tests_testStore_SOURCES = \
 	tests/CapturingStoreEntry.h \
 	tests/TestSwapDir.cc \
 	tests/TestSwapDir.h \
-	tests/stub_time.cc \
 	tests/stub_tools.cc \
 	tools.h \
 	wordlist.cc \
@@ -1593,6 +1505,7 @@ nodist_tests_testStore_SOURCES = \
 	$(TESTSOURCES) \
 	SquidMath.cc \
 	SquidMath.h \
+	tests/stub_libtime.cc \
 	swap_log_op.cc
 tests_testStore_LDADD= \
 	libsquid.la \
@@ -1758,7 +1671,6 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_store_stats.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
-	tests/stub_time.cc \
 	tests/stub_tools.cc \
 	tools.h \
 	wordlist.cc \
@@ -1768,6 +1680,7 @@ nodist_tests_testDiskIO_SOURCES = \
 	SquidMath.cc \
 	SquidMath.h \
 	hier_code.cc \
+	tests/stub_libtime.cc \
 	swap_log_op.cc
 tests_testDiskIO_LDADD = \
 	libsquid.la \
@@ -2034,7 +1947,6 @@ tests_test_http_range_SOURCES = \
 	store_swapin.h \
 	store_swapmeta.cc \
 	store_swapout.cc \
-	time.cc \
 	tools.cc \
 	tools.h \
 	tests/stub_tunnel.cc \
@@ -2048,7 +1960,8 @@ tests_test_http_range_SOURCES = \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_test_http_range_SOURCES = \
-	$(BUILT_SOURCES)
+	$(BUILT_SOURCES) \
+	tests/stub_libtime.cc
 tests_test_http_range_LDADD = \
 	libsquid.la \
 	clients/libclients.la \
@@ -2119,13 +2032,13 @@ tests_testHttp1Parser_SOURCES = \
 	tests/stub_stmem.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
-	tests/stub_time.cc \
 	tests/stub_tools.cc \
 	tools.h \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testHttp1Parser_SOURCES = \
-	$(TESTSOURCES)
+	$(TESTSOURCES) \
+	tests/stub_libtime.cc
 tests_testHttp1Parser_LDADD= \
 	http/libhttp.la \
 	parser/libparser.la \
@@ -2178,7 +2091,6 @@ tests_testHttpReply_SOURCES = \
 	Notes.cc \
 	Notes.h \
 	SquidString.h \
-	SquidTime.h \
 	StatCounters.cc \
 	StatCounters.h \
 	tests/stub_StatHist.cc \
@@ -2214,14 +2126,14 @@ tests_testHttpReply_SOURCES = \
 	repl_modules.h \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
-	tests/stub_time.cc \
 	tests/stub_tools.cc \
 	tools.h \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testHttpReply_SOURCES = \
 	$(TESTSOURCES) \
-	hier_code.cc
+	hier_code.cc \
+	tests/stub_libtime.cc
 tests_testHttpReply_LDADD=\
 	CommCalls.o \
 	http/libhttp.la \
@@ -2424,7 +2336,6 @@ tests_testHttpRequest_SOURCES = \
 	store_swapin.h \
 	store_swapmeta.cc \
 	store_swapout.cc \
-	time.cc \
 	tools.cc \
 	tools.h \
 	tests/stub_tunnel.cc \
@@ -2438,7 +2349,8 @@ tests_testHttpRequest_SOURCES = \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testHttpRequest_SOURCES = \
-	$(BUILT_SOURCES)
+	$(BUILT_SOURCES) \
+	tests/stub_libtime.cc
 tests_testHttpRequest_LDADD = \
 	libsquid.la \
 	clients/libclients.la \
@@ -2513,11 +2425,10 @@ tests_testIcmp_SOURCES = \
 	tests/testIcmp.h
 nodist_tests_testIcmp_SOURCES = \
 	tests/stub_SBuf.cc \
-	SquidTime.h \
 	tests/stub_debug.cc \
 	icmp/Icmp.h \
 	tests/stub_libmem.cc \
-	time.cc
+	tests/stub_libtime.cc
 tests_testIcmp_LDADD=\
 	icmp/libicmpcore.la \
 	ip/libip.la \
@@ -2533,10 +2444,9 @@ tests_testNetDb_SOURCES = \
 	tests/testNetDb.h
 nodist_tests_testNetDb_SOURCES = \
 	tests/stub_SBuf.cc \
-	SquidTime.h \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc \
-	time.cc
+	tests/stub_libtime.cc
 tests_testNetDb_LDADD = \
 	icmp/libicmp.la \
 	ip/libip.la \
@@ -2727,7 +2637,6 @@ tests_testCacheManager_SOURCES = \
 	store_swapin.h \
 	store_swapmeta.cc \
 	store_swapout.cc \
-	time.cc \
 	tools.cc \
 	tools.h \
 	tests/stub_tunnel.cc \
@@ -2741,7 +2650,8 @@ tests_testCacheManager_SOURCES = \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testCacheManager_SOURCES = \
-	$(BUILT_SOURCES)
+	$(BUILT_SOURCES) \
+	tests/stub_libtime.cc
 # comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
 	libsquid.la \
@@ -2815,11 +2725,11 @@ tests_testStatHist_SOURCES = \
 	tests/stub_stmem.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
-	time.cc \
 	tests/stub_tools.cc \
 	tools.h
 nodist_tests_testStatHist_SOURCES = \
-	$(TESTSOURCES)
+	$(TESTSOURCES) \
+	tests/stub_libtime.cc
 tests_testStatHist_LDADD = \
 	sbuf/libsbuf.la \
 	base/libbase.la \
@@ -2865,7 +2775,7 @@ nodist_tests_testEvent_SOURCES = \
 	tests/stub_debug.cc \
 	event.cc \
 	tests/stub_libmem.cc \
-	tests/stub_time.cc \
+	tests/stub_libtime.cc \
 	tests/stub_tools.cc
 tests_testEvent_LDADD = \
 	base/libbase.la \
@@ -2882,7 +2792,7 @@ nodist_tests_testEventLoop_SOURCES = \
 	EventLoop.cc \
 	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
-	tests/stub_time.cc
+	tests/stub_libtime.cc
 tests_testEventLoop_LDADD = \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \

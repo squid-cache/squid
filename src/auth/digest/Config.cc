@@ -33,7 +33,6 @@
 #include "rfc2617.h"
 #include "sbuf/SBuf.h"
 #include "sbuf/StringConvert.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "StrList.h"
 #include "wordlist.h"

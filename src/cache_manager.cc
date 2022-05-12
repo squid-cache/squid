@@ -33,7 +33,6 @@
 #include "sbuf/Stream.h"
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 #include "wordlist.h"

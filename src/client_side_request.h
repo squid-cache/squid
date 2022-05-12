@@ -39,11 +39,9 @@ class ClientHttpRequest
     CBDATA_CLASS(ClientHttpRequest);
 
 public:
-    ClientHttpRequest(ConnStateData *csd);
+    ClientHttpRequest(ConnStateData *);
+    ClientHttpRequest(ClientHttpRequest &&) = delete;
     ~ClientHttpRequest();
-    /* Not implemented - present to prevent synthetic operations */
-    ClientHttpRequest(ClientHttpRequest const &);
-    ClientHttpRequest& operator=(ClientHttpRequest const &);
 
     String rangeBoundaryStr() const;
     void freeResources();
@@ -62,7 +60,7 @@ public:
     StoreEntry *loggingEntry() const { return loggingEntry_; }
     void loggingEntry(StoreEntry *);
 
-    ConnStateData * getConn() const {
+    ConnStateData *getConn() const {
         return (cbdataReferenceValid(conn_) ? conn_ : nullptr);
     }
 
@@ -82,71 +80,8 @@ public:
     /// the processing tags associated with this request transaction.
     const LogTags &loggingTags() const { return al->cache.code; }
 
-    /** Details of the client socket which produced us.
-     * Treat as read-only for the lifetime of this HTTP request.
-     */
-    Comm::ConnectionPointer clientConnection;
-
-    /// Request currently being handled by ClientHttpRequest.
-    /// Usually remains nil until the virgin request header is parsed or faked.
-    /// Starts as a virgin request; see initRequest().
-    /// Adaptation and redirections replace it; see resetRequest().
-    HttpRequest * const request;
-
-    /// Usually starts as a URI received from the client, with scheme and host
-    /// added if needed. Is used to create the virgin request for initRequest().
-    /// URIs of adapted/redirected requests replace it via resetRequest().
-    char *uri;
-
-    // TODO: remove this field and store the URI directly in al->url
-    /// Cleaned up URI of the current (virgin or adapted/redirected) request,
-    /// computed URI of an internally-generated requests, or
-    /// one of the hard-coded "error:..." URIs.
-    char * const log_uri;
-
-    String store_id; /* StoreID for transactions where the request member is nil */
-
-    struct Out {
-        Out() : offset(0), size(0), headers_sz(0) {}
-
-        /// Roughly speaking, this offset points to the next body byte we want
-        /// to receive from Store. Without Ranges (and I/O errors), we should
-        /// have received (and written to the client) all the previous bytes.
-        /// XXX: The offset is updated by various receive-write steps, making
-        /// its exact meaning illusive. Its Out class placement is confusing.
-        int64_t offset;
-        /// Response header and body bytes written to the client connection.
-        uint64_t size;
-        /// Response header bytes written to the client connection.
-        /// Not to be confused with clientReplyContext::headers_sz.
-        size_t headers_sz;
-    } out;
-
-    HttpHdrRangeIter range_iter;    /* data for iterating thru range specs */
-    size_t req_sz;      /* raw request size on input, not current request size */
-
-    const AccessLogEntry::Pointer al; ///< access.log entry
-
-    struct Flags {
-        Flags() : accel(false), internal(false), done_copying(false) {}
-
-        bool accel;
-        bool internal;
-        bool done_copying;
-    } flags;
-
-    struct Redirect {
-        Redirect() : status(Http::scNone), location(NULL) {}
-
-        Http::StatusCode status;
-        char *location;
-    } redirect;
-
-    dlink_node active;
-    dlink_list client_stream;
     int64_t mRangeCLen() const;
 
-    ClientRequestContext *calloutContext;
     void doCallouts();
 
     // The three methods below prepare log_uri and friends for future logging.
@@ -154,12 +89,14 @@ public:
 
     /// sets log_uri when we know the current request
     void setLogUriToRequestUri();
+
     /// sets log_uri to a parsed request URI when Squid fails to parse or
     /// validate other request components, yielding no current request
-    void setLogUriToRawUri(const char *rawUri, const HttpRequestMethod &);
+    void setLogUriToRawUri(const char *, const HttpRequestMethod &);
+
     /// sets log_uri and uri to an internally-generated "error:..." URI when
     /// neither the current request nor the parsed request URI are known
-    void setErrorUri(const char *errorUri);
+    void setErrorUri(const char *);
 
     /// Prepares to satisfy a Range request with a generated HTTP 206 response.
     /// Initializes range_iter state to allow raw range_iter access.
@@ -167,67 +104,122 @@ public:
     int64_t prepPartialResponseGeneration();
 
     /// Build an error reply. For use with the callouts.
-    void calloutsError(const err_type error, const ErrorDetail::Pointer &errDetail);
+    void calloutsError(const err_type, const ErrorDetail::Pointer &);
 
     /// if necessary, stores new error information (if any)
-    void updateError(const Error &error);
+    void updateError(const Error &);
 
-#if USE_ADAPTATION
-    // AsyncJob virtual methods
-    virtual bool doneAll() const {
-        return Initiator::doneAll() &&
-               BodyConsumer::doneAll() && false;
-    }
-    virtual void callException(const std::exception &ex);
-#endif
+public:
+    /// Request currently being handled by ClientHttpRequest.
+    /// Usually remains nil until the virgin request header is parsed or faked.
+    /// Starts as a virgin request; see initRequest().
+    /// Adaptation and redirections replace it; see resetRequest().
+    HttpRequest * const request = nullptr;
+
+    /// Usually starts as a URI received from the client, with scheme and host
+    /// added if needed. Is used to create the virgin request for initRequest().
+    /// URIs of adapted/redirected requests replace it via resetRequest().
+    char *uri = nullptr;
+
+    // TODO: remove this field and store the URI directly in al->url
+    /// Cleaned up URI of the current (virgin or adapted/redirected) request,
+    /// computed URI of an internally-generated requests, or
+    /// one of the hard-coded "error:..." URIs.
+    char * const log_uri = nullptr;
+
+    String store_id; /* StoreID for transactions where the request member is nil */
+
+    struct Out {
+        /// Roughly speaking, this offset points to the next body byte we want
+        /// to receive from Store. Without Ranges (and I/O errors), we should
+        /// have received (and written to the client) all the previous bytes.
+        /// XXX: The offset is updated by various receive-write steps, making
+        /// its exact meaning illusive. Its Out class placement is confusing.
+        int64_t offset = 0;
+        /// Response header and body bytes written to the client connection.
+        uint64_t size = 0;
+        /// Response header bytes written to the client connection.
+        /// Not to be confused with clientReplyContext::headers_sz.
+        size_t headers_sz = 0;
+    } out;
+
+    HttpHdrRangeIter range_iter;    /* data for iterating thru range specs */
+    size_t req_sz = 0; ///< raw request size on input, not current request size
+
+    const AccessLogEntry::Pointer al; ///< access.log entry
+
+    struct Flags {
+        bool accel = false;
+        bool internal = false;
+        bool done_copying = false;
+    } flags;
+
+    struct Redirect {
+        Http::StatusCode status = Http::scNone;
+        char *location = nullptr;
+    } redirect;
+
+    dlink_node active;
+    dlink_list client_stream;
+
+    ClientRequestContext *calloutContext = nullptr;
 
 private:
     /// assigns log_uri with aUri without copying the entire C-string
-    void absorbLogUri(char *aUri);
+    void absorbLogUri(char *);
     /// resets the current request and log_uri to nil
     void clearRequest();
     /// initializes the current unassigned request to the virgin request
     /// sets the current request, asserting that it was unset
-    void assignRequest(HttpRequest *aRequest);
+    void assignRequest(HttpRequest *);
 
-    int64_t maxReplyBodySize_;
-    StoreEntry *entry_;
-    StoreEntry *loggingEntry_;
-    ConnStateData * conn_;
+    int64_t maxReplyBodySize_ = 0;
+    StoreEntry *entry_ = nullptr;
+    StoreEntry *loggingEntry_ = nullptr;
+    ConnStateData * conn_ = nullptr;
 
 #if USE_OPENSSL
-    /// whether (and how) the request needs to be bumped
-    Ssl::BumpMode sslBumpNeed_;
-
 public:
     /// returns raw sslBump mode value
     Ssl::BumpMode sslBumpNeed() const { return sslBumpNeed_; }
     /// returns true if and only if the request needs to be bumped
     bool sslBumpNeeded() const { return sslBumpNeed_ == Ssl::bumpServerFirst || sslBumpNeed_ == Ssl::bumpClientFirst || sslBumpNeed_ == Ssl::bumpBump || sslBumpNeed_ == Ssl::bumpPeek || sslBumpNeed_ == Ssl::bumpStare; }
     /// set the sslBumpNeeded state
-    void sslBumpNeed(Ssl::BumpMode mode);
+    void sslBumpNeed(Ssl::BumpMode);
     void sslBumpStart();
-    void sslBumpEstablish(Comm::Flag errflag);
+    void sslBumpEstablish(Comm::Flag);
+
+private:
+    /// whether (and how) the request needs to be bumped
+    Ssl::BumpMode sslBumpNeed_ = Ssl::bumpEnd;
 #endif
 
 #if USE_ADAPTATION
-
 public:
-    void startAdaptation(const Adaptation::ServiceGroupPointer &g);
+    void startAdaptation(const Adaptation::ServiceGroupPointer &);
     bool requestSatisfactionMode() const { return request_satisfaction_mode; }
+
+    /* AsyncJob API */
+    virtual bool doneAll() const {
+        return Initiator::doneAll() &&
+               BodyConsumer::doneAll() &&
+               false; // TODO: Refactor into a proper AsyncJob
+    }
+    virtual void callException(const std::exception &);
 
 private:
     /// Handles an adaptation client request failure.
     /// Bypasses the error if possible, or build an error reply.
-    void handleAdaptationFailure(const ErrorDetail::Pointer &errDetail, bool bypassable = false);
+    void handleAdaptationFailure(const ErrorDetail::Pointer &, bool bypassable = false);
 
-    // Adaptation::Initiator API
-    virtual void noteAdaptationAnswer(const Adaptation::Answer &answer);
-    void handleAdaptedHeader(Http::Message *msg);
-    void handleAdaptationBlock(const Adaptation::Answer &answer);
-    virtual void noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group);
+    void handleAdaptedHeader(Http::Message *);
+    void handleAdaptationBlock(const Adaptation::Answer &);
 
-    // BodyConsumer API, called by BodyPipe
+    /* Adaptation::Initiator API */
+    virtual void noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer);
+    virtual void noteAdaptationAnswer(const Adaptation::Answer &);
+
+    /* BodyConsumer API */
     virtual void noteMoreBodyDataAvailable(BodyPipe::Pointer);
     virtual void noteBodyProductionEnded(BodyPipe::Pointer);
     virtual void noteBodyProducerAborted(BodyPipe::Pointer);
@@ -241,17 +233,17 @@ private:
     BodyPipe::Pointer adaptedBodySource;
 
     /// noteBodyProductionEnded() was called
-    bool receivedWholeAdaptedReply;
+    bool receivedWholeAdaptedReply = false;
 
-    bool request_satisfaction_mode;
-    int64_t request_satisfaction_offset;
+    bool request_satisfaction_mode = false;
+    int64_t request_satisfaction_offset = 0;
 #endif
 };
 
 /* client http based routines */
 char *clientConstructTraceEcho(ClientHttpRequest *);
 
-ACLFilledChecklist *clientAclChecklistCreate(const acl_access * acl,ClientHttpRequest * http);
+ACLFilledChecklist *clientAclChecklistCreate(const acl_access *, ClientHttpRequest *);
 void clientAclChecklistFill(ACLFilledChecklist &, ClientHttpRequest *);
 void clientAccessCheck(ClientHttpRequest *);
 
@@ -259,4 +251,3 @@ void clientAccessCheck(ClientHttpRequest *);
 void tunnelStart(ClientHttpRequest *);
 
 #endif /* SQUID_CLIENTSIDEREQUEST_H */
-

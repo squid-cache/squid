@@ -11,6 +11,8 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libbase.la
 
 libbase_la_SOURCES = \
+	Assure.cc \
+	Assure.h \
 	AsyncCall.cc \
 	AsyncCall.h \
 	AsyncCallQueue.cc \

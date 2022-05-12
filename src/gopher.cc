@@ -25,7 +25,6 @@
 #include "parser/Tokenizer.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "tools.h"
@@ -103,6 +102,10 @@ public:
 
     ~GopherStateData();
 
+    /// URL for icon to display (or nil), given the Gopher item-type code.
+    /// The returned c-string is invalidated by the next call to this function.
+    const char *iconUrl(char);
+
 public:
     StoreEntry *entry;
     enum {
@@ -167,6 +170,56 @@ GopherStateData::~GopherStateData()
 
     if (buf)
         memFree(buf, MEM_4K_BUF);
+}
+
+const char *
+GopherStateData::iconUrl(const char gtype)
+{
+    switch (gtype) {
+
+    case GOPHER_DIRECTORY:
+        return mimeGetIconURL("internal-menu");
+
+    case GOPHER_HTML:
+    case GOPHER_FILE:
+        return mimeGetIconURL("internal-text");
+
+    case GOPHER_INDEX:
+    case GOPHER_CSO:
+        return mimeGetIconURL("internal-index");
+
+    case GOPHER_IMAGE:
+    case GOPHER_GIF:
+    case GOPHER_PLUS_IMAGE:
+        return mimeGetIconURL("internal-image");
+
+    case GOPHER_SOUND:
+    case GOPHER_PLUS_SOUND:
+        return mimeGetIconURL("internal-sound");
+
+    case GOPHER_PLUS_MOVIE:
+        return mimeGetIconURL("internal-movie");
+
+    case GOPHER_TELNET:
+    case GOPHER_3270:
+        return mimeGetIconURL("internal-telnet");
+
+    case GOPHER_BIN:
+
+    case GOPHER_MACBINHEX:
+    case GOPHER_DOSBIN:
+    case GOPHER_UUENCODED:
+        return mimeGetIconURL("internal-binary");
+
+    case GOPHER_INFO:
+        return nullptr;
+
+    case GOPHER_WWW:
+        return mimeGetIconURL("internal-link");
+
+    default:
+        return mimeGetIconURL("internal-unknown");
+    }
 }
 
 /**
@@ -333,7 +386,7 @@ gopherHTMLFooter(StoreEntry * e)
     storeAppendPrintf(e, "<HR noshade size=\"1px\">\n");
     storeAppendPrintf(e, "<ADDRESS>\n");
     storeAppendPrintf(e, "Generated %s by %s (%s)\n",
-                      mkrfc1123(squid_curtime),
+                      Time::FormatRfc1123(squid_curtime),
                       getMyHostname(),
                       visible_appname_string);
     storeAppendPrintf(e, "</ADDRESS></BODY></HTML>\n");
@@ -366,17 +419,14 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     char *lpos = NULL;
     char *tline = NULL;
     LOCAL_ARRAY(char, line, TEMP_BUF_SIZE);
-    LOCAL_ARRAY(char, tmpbuf, TEMP_BUF_SIZE);
     char *name = NULL;
     char *selector = NULL;
     char *host = NULL;
     char *port = NULL;
     char *escaped_selector = NULL;
-    const char *icon_url = NULL;
     char gtype;
     StoreEntry *entry = NULL;
 
-    memset(tmpbuf, '\0', TEMP_BUF_SIZE);
     memset(line, '\0', TEMP_BUF_SIZE);
 
     entry = gopherState->entry;
@@ -411,7 +461,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
         return;
     }
 
-    String outbuf;
+    SBuf outbuf;
 
     if (!gopherState->HTML_header_added) {
         if (gopherState->conversion == GopherStateData::HTML_CSO_RESULT)
@@ -518,102 +568,36 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                     /* escape a selector here */
                     escaped_selector = xstrdup(rfc1738_escape_part(selector));
 
-                    switch (gtype) {
-
-                    case GOPHER_DIRECTORY:
-                        icon_url = mimeGetIconURL("internal-menu");
-                        break;
-
-                    case GOPHER_HTML:
-
-                    case GOPHER_FILE:
-                        icon_url = mimeGetIconURL("internal-text");
-                        break;
-
-                    case GOPHER_INDEX:
-
-                    case GOPHER_CSO:
-                        icon_url = mimeGetIconURL("internal-index");
-                        break;
-
-                    case GOPHER_IMAGE:
-
-                    case GOPHER_GIF:
-
-                    case GOPHER_PLUS_IMAGE:
-                        icon_url = mimeGetIconURL("internal-image");
-                        break;
-
-                    case GOPHER_SOUND:
-
-                    case GOPHER_PLUS_SOUND:
-                        icon_url = mimeGetIconURL("internal-sound");
-                        break;
-
-                    case GOPHER_PLUS_MOVIE:
-                        icon_url = mimeGetIconURL("internal-movie");
-                        break;
-
-                    case GOPHER_TELNET:
-
-                    case GOPHER_3270:
-                        icon_url = mimeGetIconURL("internal-telnet");
-                        break;
-
-                    case GOPHER_BIN:
-
-                    case GOPHER_MACBINHEX:
-
-                    case GOPHER_DOSBIN:
-
-                    case GOPHER_UUENCODED:
-                        icon_url = mimeGetIconURL("internal-binary");
-                        break;
-
-                    case GOPHER_INFO:
-                        icon_url = NULL;
-                        break;
-
-                    case GOPHER_WWW:
-                        icon_url = mimeGetIconURL("internal-link");
-                        break;
-
-                    default:
-                        icon_url = mimeGetIconURL("internal-unknown");
-                        break;
-                    }
-
-                    memset(tmpbuf, '\0', TEMP_BUF_SIZE);
+                    const auto icon_url = gopherState->iconUrl(gtype);
 
                     if ((gtype == GOPHER_TELNET) || (gtype == GOPHER_3270)) {
                         if (strlen(escaped_selector) != 0)
-                            snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"telnet://%s@%s%s%s/\">%s</A>\n",
+                            outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"telnet://%s@%s%s%s/\">%s</A>\n",
                                      icon_url, escaped_selector, rfc1738_escape_part(host),
                                      *port ? ":" : "", port, html_quote(name));
                         else
-                            snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"telnet://%s%s%s/\">%s</A>\n",
+                            outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"telnet://%s%s%s/\">%s</A>\n",
                                      icon_url, rfc1738_escape_part(host), *port ? ":" : "",
                                      port, html_quote(name));
 
                     } else if (gtype == GOPHER_INFO) {
-                        snprintf(tmpbuf, TEMP_BUF_SIZE, "\t%s\n", html_quote(name));
+                        outbuf.appendf("\t%s\n", html_quote(name));
                     } else {
                         if (strncmp(selector, "GET /", 5) == 0) {
                             /* WWW link */
-                            snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"http://%s/%s\">%s</A>\n",
+                            outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"http://%s/%s\">%s</A>\n",
                                      icon_url, host, rfc1738_escape_unescaped(selector + 5), html_quote(name));
                         } else if (gtype == GOPHER_WWW) {
-                            snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"%s\">%s</A>\n",
+                            outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"gopher://%s/%c%s\">%s</A>\n",
                                      icon_url, rfc1738_escape_unescaped(selector), html_quote(name));
                         } else {
                             /* Standard link */
-                            snprintf(tmpbuf, TEMP_BUF_SIZE, "<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"gopher://%s/%c%s\">%s</A>\n",
+                            outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"gopher://%s/%c%s\">%s</A>\n",
                                      icon_url, host, gtype, escaped_selector, html_quote(name));
                         }
                     }
 
                     safe_free(escaped_selector);
-                    outbuf.append(tmpbuf);
                 } else {
                     memset(line, '\0', TEMP_BUF_SIZE);
                     continue;
@@ -646,13 +630,12 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                     break;
 
                 if (gopherState->cso_recno != recno) {
-                    snprintf(tmpbuf, TEMP_BUF_SIZE, "</PRE><HR noshade size=\"1px\"><H2>Record# %d<br><i>%s</i></H2>\n<PRE>", recno, html_quote(result));
+                    outbuf.appendf("</PRE><HR noshade size=\"1px\"><H2>Record# %d<br><i>%s</i></H2>\n<PRE>", recno, html_quote(result));
                     gopherState->cso_recno = recno;
                 } else {
-                    snprintf(tmpbuf, TEMP_BUF_SIZE, "%s\n", html_quote(result));
+                    outbuf.appendf("%s\n", html_quote(result));
                 }
 
-                outbuf.append(tmpbuf);
                 break;
             } else {
                 int code;
@@ -680,8 +663,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 
                 case 502: { /* Too Many Matches */
                     /* Print the message the server returns */
-                    snprintf(tmpbuf, TEMP_BUF_SIZE, "</PRE><HR noshade size=\"1px\"><H2>%s</H2>\n<PRE>", html_quote(result));
-                    outbuf.append(tmpbuf);
+                    outbuf.appendf("</PRE><HR noshade size=\"1px\"><H2>%s</H2>\n<PRE>", html_quote(result));
                     break;
                 }
 
@@ -697,13 +679,12 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 
     }               /* while loop */
 
-    if (outbuf.size() > 0) {
-        entry->append(outbuf.rawBuf(), outbuf.size());
+    if (outbuf.length() > 0) {
+        entry->append(outbuf.rawContent(), outbuf.length());
         /* now let start sending stuff to client */
         entry->flush();
     }
 
-    outbuf.clean();
     return;
 }
 

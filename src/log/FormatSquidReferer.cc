@@ -13,7 +13,6 @@
 #include "HttpRequest.h"
 #include "log/File.h"
 #include "log/Formats.h"
-#include "SquidTime.h"
 
 void
 Log::Format::SquidReferer(const AccessLogEntry::Pointer &al, Logfile *logfile)

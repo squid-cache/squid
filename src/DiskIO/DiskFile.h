@@ -10,7 +10,7 @@
 #define SQUID_DISKFILE_H
 
 #include "base/RefCount.h"
-#include "SquidTime.h"
+#include "time/gadgets.h"
 
 class IORequestor;
 
