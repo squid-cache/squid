@@ -11,6 +11,7 @@
 #include "comm/Connection.h"
 #include "comm/IoCallback.h"
 #include "comm/Loops.h"
+#include "comm/Read.h"
 #include "comm/Write.h"
 #include "fd.h"
 #include "fde.h"
@@ -22,6 +23,58 @@
 #endif
 
 #include <cerrno>
+
+/// I/O handler for the possibly half-closed connection monitoring code
+static void
+WriteOnlyMonitor(const Comm::ConnectionPointer &conn, char *, size_t size, Comm::Flag flag, int, void *)
+{
+    // there cannot be more data coming in on half-closed connections
+    assert(size == 0);
+    assert(conn);
+    assert(conn->isOpen());
+
+    // nothing to do if fd is being closed
+    if (flag == Comm::ERR_CLOSING)
+        return;
+
+    // if read failed, close the connection
+    if (flag != Comm::OK) {
+        debugs(5, 3, "closing " << conn);
+        conn->close();
+        return;
+    }
+
+    // we switched away from write-only while this Call was pending
+    if (!fd_table[conn->fd].flags.write_only)
+        return;
+
+    // continue waiting for close or error
+    Comm::SetWriteOnly(conn);
+}
+
+void
+Comm::SetWriteOnly(const Comm::ConnectionPointer &conn)
+{
+    debugs(5, 5, "FD " << conn->fd << " in write-only mode");
+    AsyncCall::Pointer call = commCbCall(5,4, "WriteOnlyMonitor",
+                                         CommIoCbPtrFun(&WriteOnlyMonitor, nullptr));
+    Comm::Read(conn, call);
+    fd_table[conn->fd].halfClosedReader = call;
+    fd_table[conn->fd].flags.write_only = true;
+}
+
+void
+Comm::StopWriteOnly(const Comm::ConnectionPointer &conn)
+{
+    debugs(5, 5, "FD " << conn->fd << " in read/write mode");
+
+    // cancel the read if one was scheduled
+    if (auto reader = fd_table[conn->fd].halfClosedReader) {
+        Comm::ReadCancel(conn->fd, reader);
+        fd_table[conn->fd].halfClosedReader = nullptr;
+    }
+    fd_table[conn->fd].flags.write_only = false;
+}
 
 void
 Comm::Write(const Comm::ConnectionPointer &conn, MemBuf *mb, AsyncCall::Pointer &callback)

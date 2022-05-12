@@ -57,7 +57,6 @@
  * New C-like simple comm code. This stuff is a mess and doesn't really buy us anything.
  */
 
-static IOCB commHalfClosedReader;
 static void comm_init_opened(const Comm::ConnectionPointer &conn, const char *note, struct addrinfo *AI);
 static int comm_apply_flags(int new_socket, Ip::Address &addr, int flags, struct addrinfo *AI);
 
@@ -68,11 +67,6 @@ static void commHandleWriteHelper(void * data);
 #endif
 
 /* STATIC */
-
-static DescriptorSet *TheHalfClosed = NULL; /// the set of half-closed FDs
-static bool WillCheckHalfClosed = false; /// true if check is scheduled
-static EVH commHalfClosedCheck;
-static void commPlanHalfClosedCheck();
 
 static Comm::Flag commBind(int s, struct addrinfo &);
 static void commSetReuseAddr(int);
@@ -851,9 +845,6 @@ _comm_close(int fd, char const *file, int line)
         ScheduleCallHere(startCall);
     }
 
-    // a half-closed fd may lack a reader, so we stop monitoring explicitly
-    if (commHasHalfClosedMonitor(fd))
-        commStopHalfClosedMonitor(fd);
     commUnsetFdTimeout(fd);
 
     // notify read/write handlers after canceling select reservations, if any
@@ -1150,8 +1141,6 @@ comm_init(void)
      * Since Squid_MaxFD can be as high as several thousand, don't waste them */
     RESERVED_FD = min(100, Squid_MaxFD / 4);
 
-    TheHalfClosed = new DescriptorSet;
-
     /* setup the select loop module */
     Comm::SelectLoopInit();
 }
@@ -1159,9 +1148,6 @@ comm_init(void)
 void
 comm_exit(void)
 {
-    delete TheHalfClosed;
-    TheHalfClosed = NULL;
-
     Comm::CallbackTableDestruct();
 }
 
@@ -1542,106 +1528,6 @@ checkTimeouts(void)
 
         CodeContext::Reset();
     }
-}
-
-/// Start waiting for a possibly half-closed connection to close
-// by scheduling a read callback to a monitoring handler that
-// will close the connection on read errors.
-void
-commStartHalfClosedMonitor(int fd)
-{
-    debugs(5, 5, "adding FD " << fd << " to " << *TheHalfClosed);
-    assert(isOpen(fd) && !commHasHalfClosedMonitor(fd));
-    (void)TheHalfClosed->add(fd); // could also assert the result
-    fd_table[fd].codeContext = CodeContext::Current();
-    commPlanHalfClosedCheck(); // may schedule check if we added the first FD
-}
-
-static
-void
-commPlanHalfClosedCheck()
-{
-    if (!WillCheckHalfClosed && !TheHalfClosed->empty()) {
-        eventAdd("commHalfClosedCheck", &commHalfClosedCheck, NULL, 1.0, 1);
-        WillCheckHalfClosed = true;
-    }
-}
-
-/// iterates over all descriptors that may need half-closed tests and
-/// calls comm_read for those that do; re-schedules the check if needed
-static
-void
-commHalfClosedCheck(void *)
-{
-    debugs(5, 5, "checking " << *TheHalfClosed);
-
-    typedef DescriptorSet::const_iterator DSCI;
-    const DSCI end = TheHalfClosed->end();
-    for (DSCI i = TheHalfClosed->begin(); i != end; ++i) {
-        Comm::ConnectionPointer c = new Comm::Connection; // XXX: temporary. make HalfClosed a list of these.
-        c->fd = *i;
-        if (!fd_table[c->fd].halfClosedReader) { // not reading already
-            CallBack(fd_table[c->fd].codeContext, [&c] {
-                AsyncCall::Pointer call = commCbCall(5,4, "commHalfClosedReader",
-                                                     CommIoCbPtrFun(&commHalfClosedReader, nullptr));
-                Comm::Read(c, call);
-                fd_table[c->fd].halfClosedReader = call;
-            });
-        } else
-            c->fd = -1; // XXX: temporary. prevent c replacement erase closing listed FD
-    }
-
-    WillCheckHalfClosed = false; // as far as we know
-    commPlanHalfClosedCheck(); // may need to check again
-}
-
-/// checks whether we are waiting for possibly half-closed connection to close
-// We are monitoring if the read handler for the fd is the monitoring handler.
-bool
-commHasHalfClosedMonitor(int fd)
-{
-    return TheHalfClosed->has(fd);
-}
-
-/// stop waiting for possibly half-closed connection to close
-void
-commStopHalfClosedMonitor(int const fd)
-{
-    debugs(5, 5, "removing FD " << fd << " from " << *TheHalfClosed);
-
-    // cancel the read if one was scheduled
-    AsyncCall::Pointer reader = fd_table[fd].halfClosedReader;
-    if (reader != NULL)
-        Comm::ReadCancel(fd, reader);
-    fd_table[fd].halfClosedReader = NULL;
-
-    TheHalfClosed->del(fd);
-}
-
-/// I/O handler for the possibly half-closed connection monitoring code
-static void
-commHalfClosedReader(const Comm::ConnectionPointer &conn, char *, size_t size, Comm::Flag flag, int, void *)
-{
-    // there cannot be more data coming in on half-closed connections
-    assert(size == 0);
-    assert(conn != NULL);
-    assert(commHasHalfClosedMonitor(conn->fd)); // or we would have canceled the read
-
-    fd_table[conn->fd].halfClosedReader = NULL; // done reading, for now
-
-    // nothing to do if fd is being closed
-    if (flag == Comm::ERR_CLOSING)
-        return;
-
-    // if read failed, close the connection
-    if (flag != Comm::OK) {
-        debugs(5, 3, "closing " << conn);
-        conn->close();
-        return;
-    }
-
-    // continue waiting for close or error
-    commPlanHalfClosedCheck(); // make sure this fd will be checked again
 }
 
 CommRead::CommRead() : conn(NULL), buf(NULL), len(0), callback(NULL) {}

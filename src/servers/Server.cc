@@ -122,7 +122,6 @@ Server::doClientRead(const CommIoCbParams &io)
      * Don't reset the timeout value here. The value should be
      * counting Config.Timeout.request and applies to the request
      * as a whole, not individual read() calls.
-     * Plus, it breaks our lame *HalfClosed() detection
      */
 
     maybeMakeSpaceAvailable();
@@ -159,8 +158,8 @@ Server::doClientRead(const CommIoCbParams &io)
 
         /* It might be half-closed, we can't tell */
         fd_table[io.conn->fd].flags.socket_eof = true;
-        commMarkHalfClosed(io.conn->fd);
-        fd_note(io.conn->fd, "half-closed");
+        Comm::SetWriteOnly(io.conn);
+        fd_note(io.conn->fd, "write-only");
 
         /* There is one more close check at the end, to detect aborted
          * (partial) requests. At this point we can't tell if the request

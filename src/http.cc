@@ -1198,7 +1198,6 @@ HttpStateData::readReply(const CommIoCbParams &io)
      * Don't reset the timeout value here. The value should be
      * counting Config.Timeout.request and applies to the request
      * as a whole, not individual read() calls.
-     * Plus, it breaks our lame *HalfClosed() detection
      */
 
     Must(maybeMakeSpaceAvailable(true));

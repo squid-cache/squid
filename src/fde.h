@@ -129,6 +129,8 @@ public:
         bool read_pending = false;
         //bool write_pending; //XXX seems not to be used
         bool transparent = false;
+        /// true if a half-closed FD monitor is supposed to be active
+        bool write_only = false;
     } flags;
 
     int64_t bytes_read = 0;

@@ -85,17 +85,6 @@ int comm_udp_recv(int fd, void *buf, size_t len, int flags);
 ssize_t comm_udp_send(int s, const void *buf, size_t len, int flags);
 bool comm_has_incomplete_write(int);
 
-/** The read channel has closed and the caller does not expect more data
- * but needs to detect connection aborts. The current detection method uses
- * 0-length reads: We read until the error occurs or the writer closes
- * the connection. If there is a read error, we close the connection.
- */
-void commStartHalfClosedMonitor(int fd);
-bool commHasHalfClosedMonitor(int fd);
-// XXX: remove these wrappers which minimize client_side.cc changes in a commit
-inline void commMarkHalfClosed(int fd) { commStartHalfClosedMonitor(fd); }
-inline bool commIsHalfClosed(int fd) { return commHasHalfClosedMonitor(fd); }
-
 /* A comm engine that calls comm_select */
 
 class CommSelectEngine : public AsyncEngine

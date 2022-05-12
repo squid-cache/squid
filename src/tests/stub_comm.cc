@@ -66,7 +66,5 @@ int comm_udp_recvfrom(int, void *, size_t, int, Ip::Address &) STUB_RETVAL(-1)
 int comm_udp_recv(int, void *, size_t, int) STUB_RETVAL(-1)
 ssize_t comm_udp_send(int, const void *, size_t, int) STUB_RETVAL(-1)
 bool comm_has_incomplete_write(int) STUB_RETVAL(false)
-void commStartHalfClosedMonitor(int) STUB
-bool commHasHalfClosedMonitor(int) STUB_RETVAL(false)
 int CommSelectEngine::checkEvents(int) STUB_RETVAL(0)
 
