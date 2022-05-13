@@ -639,7 +639,9 @@ Security::PeerConnector::startCertDownloading(SBuf &url)
                                       "Security::PeerConnector::certDownloadingDone",
                                       PeerConnectorCertDownloaderDialer(&Security::PeerConnector::certDownloadingDone, this));
 
-    const auto dl = new Downloader(url, certCallback, XactionInitiator::initCertFetcher, certDownloadNestingLevel() + 1);
+    const auto dl = new Downloader(url, certCallback,
+        MasterXaction::MakePortless<XactionInitiator::initCertFetcher>(),
+        certDownloadNestingLevel() + 1);
     certDownloadWait.start(dl, certCallback);
 }
 
