@@ -10,6 +10,8 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "base/AsyncJobCalls.h"
+#include "base/Range.h"
 #include "client_side.h"
 #include "clients/FtpClient.h"
 #include "comm/ConnOpener.h"
@@ -903,6 +905,13 @@ Ftp::Client::dataConnection() const
 }
 
 void
+Ftp::Client::noteDelayAwareReadChance()
+{
+    data.read_pending = false;
+    maybeReadVirginBody();
+}
+
+void
 Ftp::Client::maybeReadVirginBody()
 {
     // too late to read
@@ -930,9 +939,16 @@ Ftp::Client::maybeReadVirginBody()
 
     debugs(9,5,"queueing read on FD " << data.conn->fd);
 
-    typedef CommCbMemFunT<Client, CommIoCbParams> Dialer;
-    entry->delayAwareRead(data.conn, data.readBuf->space(), read_sz,
-                          JobCallback(9, 5, Dialer, this, Ftp::Client::dataRead));
+    const auto amountToRead = entry->bytesWanted(Range<size_t>(0, read_sz));
+
+    if (amountToRead <= 0) {
+        delayRead();
+        return;
+    }
+
+    using ReadDialer = CommCbMemFunT<Client, CommIoCbParams>;
+    AsyncCall::Pointer readCallback = JobCallback(9, 5, ReadDialer, this, Client::dataRead);
+    comm_read(data.conn, data.readBuf->space(), amountToRead, readCallback);
 }
 
 void

@@ -15,6 +15,8 @@ libbase_la_SOURCES = \
 	Assure.h \
 	AsyncCall.cc \
 	AsyncCall.h \
+	AsyncCallList.cc \
+	AsyncCallList.h \
 	AsyncCallQueue.cc \
 	AsyncCallQueue.h \
 	AsyncCbdataCalls.h \
@@ -30,6 +32,8 @@ libbase_la_SOURCES = \
 	ClpMap.h \
 	CodeContext.cc \
 	CodeContext.h \
+	DelayedAsyncCalls.cc \
+	DelayedAsyncCalls.h \
 	EnumIterator.h \
 	File.cc \
 	File.h \

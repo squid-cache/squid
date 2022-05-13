@@ -227,7 +227,6 @@ squid_SOURCES = \
 	CollapsedForwarding.cc \
 	CollapsedForwarding.h \
 	CollapsingHistory.h \
-	CommRead.h \
 	CommandLine.cc \
 	CommandLine.h \
 	ConfigOption.cc \
@@ -2775,7 +2774,8 @@ nodist_tests_testEventLoop_SOURCES = \
 	EventLoop.cc \
 	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
-	tests/stub_libtime.cc
+	tests/stub_libtime.cc \
+	tests/stub_SBuf.cc
 tests_testEventLoop_LDADD = \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \

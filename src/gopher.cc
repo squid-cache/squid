@@ -9,6 +9,7 @@
 /* DEBUG: section 10    Gopher */
 
 #include "squid.h"
+#include "base/AsyncCbdataCalls.h"
 #include "comm.h"
 #include "comm/Read.h"
 #include "comm/Write.h"
@@ -101,6 +102,9 @@ public:
     }
 
     ~GopherStateData();
+
+    /// queues or defers a read call
+    static void DelayAwareRead(GopherStateData *);
 
     /// URL for icon to display (or nil), given the Gopher item-type code.
     /// The returned c-string is invalidated by the next call to this function.
@@ -806,10 +810,31 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm
         } else {
             entry->append(buf, len);
         }
-        AsyncCall::Pointer call = commCbCall(5,4, "gopherReadReply",
-                                             CommIoCbPtrFun(gopherReadReply, gopherState));
-        comm_read(conn, buf, read_sz, call);
+        GopherStateData::DelayAwareRead(gopherState);
     }
+}
+
+void
+GopherStateData::DelayAwareRead(GopherStateData *gopherState)
+{
+    const auto &conn = gopherState->serverConn;
+
+    if (!Comm::IsConnOpen(conn) || fd_table[conn->fd].closing()) {
+        debugs(10, 3, "will not read from " << conn);
+        return;
+    }
+
+    const auto amountToRead = gopherState->entry->bytesWanted(Range<size_t>(0, BUFSIZ));
+
+    if (amountToRead <= 0) {
+        AsyncCall::Pointer delayCall = asyncCall(10, 3, "GopherStateData::DelayAwareRead",
+                                                 cbdataDialer(&GopherStateData::DelayAwareRead, gopherState));
+        gopherState->entry->mem().delayRead(delayCall);
+        return;
+    }
+
+    AsyncCall::Pointer readCall = commCbCall(5, 5, "gopherReadReply", CommIoCbPtrFun(gopherReadReply, gopherState));
+    comm_read(conn, gopherState->replybuf, amountToRead, readCall);
 }
 
 /**
@@ -879,10 +904,7 @@ gopherSendComplete(const Comm::ConnectionPointer &conn, char *, size_t size, Com
         entry->flush();
     }
 
-    /* Schedule read reply. */
-    AsyncCall::Pointer call =  commCbCall(5,5, "gopherReadReply",
-                                          CommIoCbPtrFun(gopherReadReply, gopherState));
-    entry->delayAwareRead(conn, gopherState->replybuf, BUFSIZ, call);
+    GopherStateData::DelayAwareRead(gopherState);
 }
 
 /**

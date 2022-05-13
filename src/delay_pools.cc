@@ -70,7 +70,7 @@ private:
         AggregateId (RefCount<Aggregate>);
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);
-        virtual void delayRead(DeferredRead const &);
+        virtual void delayRead(const AsyncCallPointer &);
 
     private:
         RefCount<Aggregate> theAggregate;
@@ -239,7 +239,7 @@ protected:
 };
 
 void
-Aggregate::AggregateId::delayRead(DeferredRead const &aRead)
+Aggregate::AggregateId::delayRead(const AsyncCall::Pointer &aRead)
 {
     theAggregate->delayRead(aRead);
 }
@@ -475,7 +475,6 @@ DelayPools::InitDelayData()
 void
 DelayPools::FreeDelayData()
 {
-    eventDelete(DelayPools::Update, NULL);
     delete[] DelayPools::delay_data;
     pools_ = 0;
 }
@@ -483,7 +482,9 @@ DelayPools::FreeDelayData()
 void
 DelayPools::Update(void *)
 {
-    if (!pools())
+    // To prevent stuck transactions, stop updates only after no new transactions can
+    // register (because the pools were disabled) and the last registered transaction is gone.
+    if (!pools() && toUpdate.empty())
         return;
 
     eventAdd("DelayPools::Update", Update, NULL, 1.0, 1);

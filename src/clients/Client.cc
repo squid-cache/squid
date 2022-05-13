@@ -1026,6 +1026,15 @@ Client::adjustBodyBytesRead(const int64_t delta)
 }
 
 void
+Client::delayRead()
+{
+    using DeferredReadDialer = NullaryMemFunT<Client>;
+    AsyncCall::Pointer call = asyncCall(11, 5, "Client::noteDelayAwareReadChance",
+            DeferredReadDialer(this, &Client::noteDelayAwareReadChance));
+    entry->mem().delayRead(call);
+}
+
+void
 Client::addVirginReplyBody(const char *data, ssize_t len)
 {
     adjustBodyBytesRead(len);

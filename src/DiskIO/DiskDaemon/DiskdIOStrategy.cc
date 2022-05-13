@@ -9,6 +9,7 @@
 /* DEBUG: section 79    Squid-side DISKD I/O functions. */
 
 #include "squid.h"
+#include "comm.h"
 #include "comm/Loops.h"
 #include "ConfigOption.h"
 #include "diomsg.h"
