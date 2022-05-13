@@ -12,7 +12,7 @@ DIST_SUBDIRS= fake SMB_LM SSPI
 SUBDIRS= $(NTLM_AUTH_HELPERS)
 EXTRA_DIST= helpers.m4
 
-noinst_LTLIBRARIES = libntlm.la
+pkglib_LTLIBRARIES = libntlm.la
 
 libntlm_la_SOURCES = \
 	Config.cc \
@@ -23,3 +23,5 @@ libntlm_la_SOURCES = \
 	User.h \
 	UserRequest.cc \
 	UserRequest.h
+
+libntlm_la_LDFLAGS = -module -Wl,-soname,libntlm.so.$(PACKAGE_VERSION)

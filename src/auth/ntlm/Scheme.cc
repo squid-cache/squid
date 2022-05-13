@@ -17,9 +17,9 @@
 class NtlmAuthRr : public RegisteredRunner
 {
 public:
-    void bootstrapConfig() {
+    void bootstrapModule() {
         const char *type = Auth::Ntlm::Scheme::GetInstance()->type();
-        debugs(29,  DBG_IMPORTANT, "Initialized Authentication Scheme '" << type << "'");
+        debugs(29, DBG_IMPORTANT, "Initialized Authentication Scheme '" << type << "'");
     }
 };
 RunnerRegistrationEntry(NtlmAuthRr);

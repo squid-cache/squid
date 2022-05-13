@@ -2485,7 +2485,10 @@ dnl This list will not be needed when each auth library has its own Makefile
 dnl this is to be placed AFTER each auth module's handler
 AUTH_LIBS_TO_BUILD=
 for module in $AUTH_MODULES; do
+  # NTLM now builds a dynamic library
+  AS_IF([! test "x$module" = "xntlm"],[
     AUTH_LIBS_TO_BUILD="$AUTH_LIBS_TO_BUILD ${module}/lib${module}.la"
+  ])
 done
 AC_SUBST(AUTH_MODULES)
 AC_SUBST(AUTH_LIBS_TO_BUILD)

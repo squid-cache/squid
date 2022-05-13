@@ -242,6 +242,7 @@ Auth::User::BuildUserKey(const char *username, const char *realm)
 void
 Auth::User::CredentialsCacheStats(StoreEntry *output)
 {
+    // XXX: dump scheme caches individually instead of merging
     auto userlist = authenticateCachedUsersList();
     storeAppendPrintf(output, "Cached Usernames: %d", static_cast<int32_t>(userlist.size()));
     storeAppendPrintf(output, "\n%-15s %-9s %-9s %-9s %s\t%s\n",

@@ -130,10 +130,6 @@ authenticateCachedUsersList()
     if (Auth::SchemeConfig::Find("negotiate"))
         u1 = Auth::Negotiate::User::Cache()->sortedUsersList();
 #endif
-#if HAVE_AUTH_MODULE_NTLM
-    if (Auth::SchemeConfig::Find("ntlm"))
-        u2 = Auth::Ntlm::User::Cache()->sortedUsersList();
-#endif
     if (u1.size() > 0 || u2.size() > 0) {
         v2.reserve(u1.size()+u2.size());
         std::merge(u1.begin(), u1.end(),u2.begin(), u2.end(),
