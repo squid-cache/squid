@@ -53,7 +53,7 @@ icap_class_type		icap_service
 icap_service_type
 icap_service_failure_limit
 icmp
-ecap_service_type
+ecap_service_type	loadable_modules
 int
 int64_t
 kb_int64_t
@@ -61,6 +61,7 @@ kb_size_t
 logformat
 YesNoNone
 memcachemode
+modules
 note			acl
 obsolete
 onoff

@@ -12,8 +12,7 @@
 // TODO: add reporting for cachemgr
 // TODO: add reconfiguration support
 
-class wordlist;
-void LoadableModulesConfigure(const wordlist *names);
+void LoadModule(const char *name);
 
 #endif /* SQUID_LOADABLE_MODULES_H */
 

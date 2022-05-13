@@ -45,6 +45,11 @@ public:
     /// Meant for initializing/preparing configuration parsing facilities.
     virtual void bootstrapConfig() {}
 
+    /// Called after parsing loadable_modules directive
+    /// Meant for initializing/preparing configuration parsing facilities
+    /// located in dynamic libraries [modules].
+    virtual void bootstrapModule() {}
+
     /// Called after parsing squid.conf.
     /// Meant for setting configuration options that depend on other
     /// configuration options and were not explicitly configured.

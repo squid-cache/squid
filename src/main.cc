@@ -956,10 +956,6 @@ mainReconfigureFinish(void *)
     errorInitialize();      /* reload error pages */
     accessLogInit();
 
-#if USE_LOADABLE_MODULES
-    LoadableModulesConfigure(Config.loadable_module_names);
-#endif
-
 #if USE_ADAPTATION
     bool enableAdaptation = false;
 #if ICAP_CLIENT
@@ -1294,10 +1290,6 @@ mainInitialize(void)
 #endif
 
     memCheckInit();
-
-#if USE_LOADABLE_MODULES
-    LoadableModulesConfigure(Config.loadable_module_names);
-#endif
 
 #if USE_ADAPTATION
     bool enableAdaptation = false;

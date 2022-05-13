@@ -437,6 +437,24 @@ DOC_START
 DOC_END
 
 COMMENT_START
+ OPTIONS FOR PROCESS MANAGEMENT
+ -----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: loadable_modules
+TYPE: modules
+IFDEF: USE_LOADABLE_MODULES
+LOC: Config.loadable_module_names
+DEFAULT: none
+DOC_START
+	Instructs Squid to load the specified dynamic module(s) or activate
+	preloaded module(s).
+
+	Example:
+	  loadable_modules @DEFAULT_PREFIX@/lib/MinimalAdapter.so
+DOC_END
+
+COMMENT_START
  OPTIONS FOR SMP
  -----------------------------------------------------------------------------
 COMMENT_END
@@ -9740,18 +9758,6 @@ DOC_START
 Example:
 ecap_service s1 reqmod_precache ecap://filters.R.us/leakDetector?on_error=block bypass=off
 ecap_service s2 respmod_precache ecap://filters.R.us/virusFilter config=/etc/vf.cfg bypass=on
-DOC_END
-
-NAME: loadable_modules
-TYPE: wordlist
-IFDEF: USE_LOADABLE_MODULES
-LOC: Config.loadable_module_names
-DEFAULT: none
-DOC_START
-	Instructs Squid to load the specified dynamic module(s) or activate
-	preloaded module(s).
-Example:
-loadable_modules @DEFAULT_PREFIX@/lib/MinimalAdapter.so
 DOC_END
 
 COMMENT_START

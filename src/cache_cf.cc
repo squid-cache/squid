@@ -47,6 +47,7 @@
 #include "ipc/Kids.h"
 #include "log/Config.h"
 #include "log/CustomLog.h"
+#include "LoadableModules.h"
 #include "MemBuf.h"
 #include "MessageDelayPools.h"
 #include "mgr/ActionPasswordList.h"
@@ -3181,6 +3182,21 @@ check_null_acl_access(acl_access * a)
 #define free_wordlist wordlistDestroy
 
 #define free_uri_whitespace free_int
+
+static void
+parse_modules(wordlist **list)
+{
+    while (auto *token = ConfigParser::NextQuotedToken()) {
+#if USE_LOADABLE_MODULES
+        LoadModule(token);
+        RunRegisteredHere(RegisteredRunner::bootstrapModule);
+#endif
+        wordlistAdd(list, token);
+    }
+}
+
+#define dump_modules dump_wordlist
+#define free_modules wordlistDestroy
 
 static void
 parse_uri_whitespace(int *var)
