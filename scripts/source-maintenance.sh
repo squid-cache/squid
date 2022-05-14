@@ -37,8 +37,8 @@ cat <<_EOF
 Usage: $0 [option...]
 options:
     --keep-going|-k                            (default: stop on error)
-    --check-and-update-copyright <yes|no>      (default no)
-    --with-astyle </path/to/astyle/executable> (default: "astyle")
+    --check-and-update-copyright <yes|no>      (default: no)
+    --with-astyle </path/to/astyle/executable> (default: astyle)
     --only-changed-since <fork|commit-id>      (default: apply to all files)
 
 This script applies Squid mandatory code style guidelines.
@@ -131,7 +131,6 @@ else
         fi
     done
 fi
-export ASTYLE
 
 ASVER=`${ASTYLE} --version 2>&1 | grep -o -E "[0-9.]+"`
 if test "${ASVER}" != "${TargetAstyleVersion}" ; then
@@ -349,8 +348,7 @@ ForkPoint=""
 FilesToOperateOn=""
 if test "x$OnlyChangedSince" = "x" ; then
     FilesToOperateOn=`git ls-files`
-fi
-if test "x$FilesToOperateOn" = "x" && test "x$OnlyChangedSince" = "xfork" ; then
+elif test "x$OnlyChangedSince" = "xfork" ; then
     ForkPoint=`git merge-base --fork-point upstream/master`
     if test "x$ForkPoint" = "x" ; then
         echo "Could not identify fork point - sometimes it happens"
@@ -557,7 +555,7 @@ if [ -f src/http/Makefile ]; then
     make -C src/http gperf-files
 else
     echo "source tree not configured; skipping regeneration of xperf sources"
-    echo "to run it, run  ./bootstrap.sh && ./configure && $0"
+    echo "to run it manually use:  make -C src/http gperf-files"
 fi
 
 run_ checkMakeNamedErrorDetails || exit 1
