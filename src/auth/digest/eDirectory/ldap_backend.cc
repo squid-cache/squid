@@ -203,8 +203,8 @@ getpassword(char *login, char *realm)
     char **value = NULL;
     char *password = NULL;
     int retry = 0;
-    char filter[8192] = {};
-    char searchbase[8192] = {};
+    char filter[8192] = "";
+    char searchbase[8192] = "";
     char *universal_password = NULL;
     size_t universal_password_len = 256;
     int nmas_res = 0;
@@ -213,8 +213,10 @@ getpassword(char *login, char *realm)
         if (usersearchfilter) {
             char escaped_login[1024];
             snprintf(searchbase, sizeof(searchbase), "%s", userbasedn);
+            searchbase[sizeof(searchbase)] = '\0';
             ldap_escape_value(escaped_login, sizeof(escaped_login), login);
             snprintf(filter, sizeof(filter), usersearchfilter, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login);
+            filter[sizeof(filter)] = '\0';
 
 retrysrch:
             debug("user filter '%s', searchbase '%s'\n", filter, searchbase);
