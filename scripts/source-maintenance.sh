@@ -551,12 +551,7 @@ printAmFile TRANSLATE_LANGUAGES "doc/manuals/" "*.po" | sed 's%\.po%\.lang%g' > 
 printAmFile STUB_SOURCE "src/" "tests/stub_*.cc" > src/tests/Stub.am
 
 # Build the GPERF generated content
-if [ -f src/http/Makefile ]; then
-    make -C src/http gperf-files
-else
-    echo "source tree not configured; skipping regeneration of xperf sources"
-    echo "to run it manually use:  make -C src/http gperf-files"
-fi
+make -C src/http gperf-files
 
 run_ checkMakeNamedErrorDetails || exit 1
 
