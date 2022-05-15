@@ -9,6 +9,8 @@
 #include "squid.h"
 #include "errorpage.h"
 #include "fatal.h"
+#include "html_quote.h"
+#include "security/CertGadgets.h"
 #include "ssl/ErrorDetail.h"
 #include "ssl/ErrorDetailManager.h"
 

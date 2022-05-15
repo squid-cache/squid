@@ -21,6 +21,7 @@
 #include "HttpRequest.h"
 #include "neighbors.h"
 #include "pconn.h"
+#include "security/CertGadgets.h"
 #include "security/Io.h"
 #include "security/NegotiationHistory.h"
 #include "security/PeerConnector.h"
@@ -664,26 +665,23 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     // be able to accept collection of certificates.
     // TODO: support collection of certificates
     const unsigned char *raw = (const unsigned char*)obj.rawContent();
-    if (X509 *cert = d2i_X509(NULL, &raw, obj.length())) {
-        char buffer[1024];
-        debugs(81, 5, "Retrieved certificate: " << X509_NAME_oneline(X509_get_subject_name(cert), buffer, 1024));
+    if (auto cert = CertPointer(d2i_X509(nullptr, &raw, obj.length()))) {
+        debugs(81, 5, "Retrieved certificate: " << *cert);
 
         if (!downloadedCerts)
             downloadedCerts.reset(sk_X509_new_null());
-        sk_X509_push(downloadedCerts.get(), cert);
+        sk_X509_push(downloadedCerts.get(), cert.get());
 
         ContextPointer ctx(getTlsContext());
         const auto certsList = SSL_get_peer_cert_chain(&sconn);
-        if (!Ssl::findIssuerCertificate(cert, certsList, ctx)) {
-            if (const auto issuerUri = Ssl::findIssuerUri(cert)) {
-                debugs(81, 5, "certificate " <<
-                       X509_NAME_oneline(X509_get_subject_name(cert), buffer, sizeof(buffer)) <<
+        if (!Ssl::findIssuerCertificate(cert.get(), certsList, ctx)) {
+            if (const auto issuerUri = Ssl::findIssuerUri(cert.get())) {
+                debugs(81, 5, "certificate " << *cert <<
                        " points to its missing issuer certificate at " << issuerUri);
                 urlsOfMissingCerts.push(SBuf(issuerUri));
             } else {
                 debugs(81, 3, "found a certificate with no IAI, " <<
-                       "signed by a missing issuer certificate:  " <<
-                       X509_NAME_oneline(X509_get_subject_name(cert), buffer, sizeof(buffer)));
+                       "signed by a missing issuer certificate:  " << *cert);
                 // We could short-circuit here, proceeding to chain validation
                 // that is likely to fail. Instead, we keep going because we
                 // hope that if we find at least one certificate to fetch, it

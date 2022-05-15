@@ -107,6 +107,7 @@
 #include "proxyp/Header.h"
 #include "proxyp/Parser.h"
 #include "sbuf/Stream.h"
+#include "security/CertGadgets.h"
 #include "security/CommunicationSecrets.h"
 #include "security/Io.h"
 #include "security/KeyLog.h"
@@ -2419,16 +2420,9 @@ clientNegotiateSSL(int fd, void *data)
     conn->clientConnection->tlsNegotiations()->retrieveNegotiatedInfo(session);
 
 #if USE_OPENSSL
-    X509 *client_cert = SSL_get_peer_certificate(session.get());
-
-    if (client_cert) {
-        debugs(83, 3, "FD " << fd << " client certificate: subject: " <<
-               X509_NAME_oneline(X509_get_subject_name(client_cert), 0, 0));
-
-        debugs(83, 3, "FD " << fd << " client certificate: issuer: " <<
-               X509_NAME_oneline(X509_get_issuer_name(client_cert), 0, 0));
-
-        X509_free(client_cert);
+    if (const auto clientCert = SSL_get_peer_certificate(session.get())) {
+        debugs(83, 3, "FD " << fd << " client certificate: subject: " << *clientCert);
+        debugs(83, 3, "FD " << fd << " client certificate: issuer: " << Security::CertIssuerName(*clientCert));
     } else {
         debugs(83, 5, "FD " << fd << " has no client certificate.");
     }
