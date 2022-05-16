@@ -10,8 +10,7 @@
 #define _SQUID_SRC_ERROR_SYSERRORDETAIL_H
 
 #include "error/Detail.h"
-#include "sbuf/SBuf.h"
-#include "sbuf/Stream.h"
+#include "sbuf/forward.h"
 
 /// system call failure detail based on standard errno(3)/strerror(3) APIs
 class SysErrorDetail: public ErrorDetail
@@ -26,18 +25,12 @@ public:
         return errorNo ? new SysErrorDetail(errorNo) : nullptr;
     }
 
-    static SBuf Brief(int errorNo) {
-        return SysErrorDetail(errorNo).brief();
-    }
+    /// \copydoc ErrorDetail::brief()
+    static SBuf Brief(int errorNo);
 
     /* ErrorDetail API */
-    virtual SBuf brief() const override {
-        return ToSBuf("errno=", errorNo);
-    }
-
-    virtual SBuf verbose(const HttpRequestPointer &) const override {
-        return SBuf(strerror(errorNo));
-    }
+    virtual SBuf brief() const override;
+    virtual SBuf verbose(const HttpRequestPointer &) const override;
 
 private:
     // hidden by NewIfAny() to avoid creating SysErrorDetail from zero errno
@@ -45,6 +38,17 @@ private:
 
     int errorNo; ///< errno(3) set by the last failed system call or equivalent
 };
+
+/// a stream manipulator for printing a system call error (if any)
+class ReportSysError
+{
+public:
+    explicit ReportSysError(const int anErrorNo): errorNo(anErrorNo) {}
+    int errorNo;
+};
+
+/// reports a system call error (if any) on a dedicated Debug::Extra line
+std::ostream &operator <<(std::ostream &, ReportSysError);
 
 #endif /* _SQUID_SRC_ERROR_SYSERRORDETAIL_H */
 

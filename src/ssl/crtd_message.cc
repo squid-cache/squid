@@ -228,7 +228,7 @@ Ssl::CrtdMessage::parseRequest(CertificateProperties &certProperties)
     if ((pos = certs_part.find(CERT_BEGIN_STR)) != std::string::npos) {
         pos += CERT_BEGIN_STR.length();
         if ((pos= certs_part.find(CERT_BEGIN_STR, pos)) != std::string::npos)
-            Ssl::readCertFromMemory(certProperties.mimicCert, certs_part.c_str() + pos);
+            certProperties.mimicCert = ReadCertificate(ReadOnlyBioTiedTo(certs_part.c_str() + pos));
     }
 }
 
