@@ -10,6 +10,7 @@
 #define SQUID_STORECLIENT_H
 
 #include "acl/ChecklistFiller.h"
+#include "base/AsyncCall.h"
 #include "base/forward.h"
 #include "dlink.h"
 #include "StoreIOBuffer.h"
@@ -59,14 +60,32 @@ class store_client
 public:
     store_client(StoreEntry *);
     ~store_client();
-    bool memReaderHasLowerOffset(int64_t) const;
+
+    /// Whether this Store client requires memory-stored response content.
+    /// \retval false does not mean the client never reads from memory, only
+    /// that it has other means of getting that content (e.g., from disk) and,
+    /// hence, will keep working even if unread content is purged from memory.
+    bool reliesOnReadingFromMemory() const;
+
+    /// The offset of the stored response that the client wants to read next.
+    /// \retval 0 means the client wants to read HTTP response headers.
+    int64_t readOffset() const { return copyInto.offset; }
+
     int getType() const;
-    void fail();
-    void callback(ssize_t len, bool error = false);
+
+    /// React to the end of reading the response from disk. There will be no
+    /// (more) readHeader() and readBody() callbacks for the current storeRead()
+    /// swapin after this notification.
+    void noteSwapInDone(bool error);
+
     void doCopy (StoreEntry *e);
     void readHeader(const char *buf, ssize_t len);
     void readBody(const char *buf, ssize_t len);
+
+    /// Request StoreIOBuffer-described response data via an asynchronous STCB
+    /// callback. At most one outstanding request is allowed per store_client.
     void copy(StoreEntry *, StoreIOBuffer, STCB *, void *);
+
     void dumpStats(MemBuf * output, int clientNumber) const;
 
     int64_t cmp_offset;
@@ -79,19 +98,27 @@ public:
     StoreIOState::Pointer swapin_sio;
 
     struct {
+        /// whether we are expecting a response to be swapped in from disk
+        /// (i.e. whether async storeRead() is currently in progress)
         bool disk_io_pending;
+
+        /// whether store_client::doCopy() is currently in progress
         bool store_copying;
-        bool copy_event_pending;
     } flags;
 
 #if USE_DELAY_POOLS
     DelayId delayId;
+
+    /// The maximum number of bytes the Store client can read/copy next without
+    /// overflowing its buffer and without violating delay pool limits. Store
+    /// I/O is not rate-limited, but we assume that the same number of bytes may
+    /// be read from the Squid-to-server connection that may be rate-limited.
+    int bytesWanted() const;
+
     void setDelayId(DelayId delay_id);
 #endif
 
     dlink_node node;
-    /* Below here is private - do no alter outside storeClient calls */
-    StoreIOBuffer copyInto;
 
 private:
     bool moreToSend() const;
@@ -103,8 +130,24 @@ private:
     bool startSwapin();
     bool unpackHeader(char const *buf, ssize_t len);
 
+    void fail();
+    void callback(ssize_t);
+    void noteCopiedBytes(size_t);
+    void noteEof();
+    void noteNews();
+    void finishCallback();
+    static void FinishCallback(store_client *);
+
     int type;
     bool object_ok;
+
+    /// Storage and metadata associated with the current copy() request. Ought
+    /// to be ignored when not answering a copy() request.
+    StoreIOBuffer copyInto;
+
+    /// The number of bytes loaded from Store into copyInto while answering the
+    /// current copy() request. Ought to be ignored when not answering.
+    size_t copiedSize;
 
     /* Until we finish stuffing code into store_client */
 
@@ -114,10 +157,18 @@ public:
         Callback ():callback_handler(NULL), callback_data(NULL) {}
 
         Callback (STCB *, void *);
+
+        /// Whether the copy() answer is needed/expected (by the client) and has
+        /// not been computed (by us). False during (asynchronous) answer
+        /// delivery to the STCB callback_handler.
         bool pending() const;
+
         STCB *callback_handler;
         void *callback_data;
         CodeContextPointer codeContext; ///< Store client context
+
+        /// a scheduled asynchronous finishCallback() call (or nil)
+        AsyncCall::Pointer notifier;
     } _callback;
 };
 
