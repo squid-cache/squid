@@ -337,7 +337,7 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
     if (Debug::Enabled(83, 5)) {
         Security::SessionPointer ssl(fd_table[serverConnection()->fd].ssl);
         SBuf *server = static_cast<SBuf *>(SSL_get_ex_data(ssl.get(), ssl_ex_index_server));
-        debugs(83, 5, RawPointer("host=", server) << " cert validation result: " << validationResponse->resultCode);
+        debugs(83, 5, "cert validation result: " << validationResponse->resultCode << RawPointer(" host: ", server));
     }
 
     if (validationResponse->resultCode == ::Helper::Error) {

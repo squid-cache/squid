@@ -14,7 +14,8 @@
 #include <iostream>
 #include <iomanip>
 
-/// debugs objects pointed by possibly nil pointers: <label><object>
+/// Safely prints an object pointed to by the given pointer: <label><object>
+/// Prints nothing at all if the pointer is nil.
 template <class Pointer>
 class RawPointerT {
 public:
@@ -22,7 +23,6 @@ public:
         label(aLabel), ptr(aPtr) {}
 
     /// Report the pointed-to-object on a dedicated Debug::Extra line.
-    /// Report nothing if the pointer is nil.
     RawPointerT<Pointer> &asExtra() { onExtraLine = true; return *this; }
 
     const char *label; /// the name or description of the being-debugged object
@@ -43,18 +43,15 @@ template <class Pointer>
 inline std::ostream &
 operator <<(std::ostream &os, const RawPointerT<Pointer> &pd)
 {
-    if (pd.onExtraLine) {
-        if (!pd.ptr)
-            return os;
+    if (!pd.ptr)
+        return os;
+
+    if (pd.onExtraLine)
         os << Debug::Extra;
-    }
 
     os << pd.label;
+    os << *pd.ptr;
 
-    if (pd.ptr)
-        os << *pd.ptr;
-    else
-        os << "[nil]";
     return os;
 }
 
