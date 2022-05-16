@@ -273,8 +273,9 @@ Security::PeerConnector::handleNegotiationResult(const Security::IoResult &resul
     }
 
     // TODO: Honor result.important when working in a reverse proxy role?
-    debugs(83, 2, "ERROR: " << result.errorDescription <<
-           " while establishing TLS connection on FD: " << serverConnection()->fd << result.errorDetail);
+    debugs(83, 2, "ERROR: Cannot establish a TLS connection to " << serverConnection() << ':' <<
+           Debug::Extra << "problem: " << result.errorDescription <<
+           Debug::Extra << "detail: " << result.errorDetail);
     recordNegotiationDetails();
     noteNegotiationError(result.errorDetail);
 }
