@@ -14,7 +14,7 @@
 #include <iostream>
 #include <iomanip>
 
-/// debugs objects pointed by possibly nil pointers: label=object
+/// debugs objects pointed by possibly nil pointers: <label><object>
 template <class Pointer>
 class RawPointerT {
 public:
@@ -46,10 +46,10 @@ operator <<(std::ostream &os, const RawPointerT<Pointer> &pd)
     if (pd.onExtraLine) {
         if (!pd.ptr)
             return os;
-        os << Debug::Extra << pd.label << ": ";
-    } else {
-        os << pd.label << '=';
+        os << Debug::Extra;
     }
+
+    os << pd.label;
 
     if (pd.ptr)
         os << *pd.ptr;
