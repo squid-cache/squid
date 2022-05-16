@@ -12,6 +12,7 @@
 #include "AccessLogEntry.h"
 #include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
+#include "comm.h"
 #include "comm/Connection.h"
 #include "CommCalls.h"
 #include "errorpage.h"
