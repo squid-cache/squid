@@ -43,7 +43,6 @@ Auth::Init()
     static const char *negotiate_type = Auth::Negotiate::Scheme::GetInstance()->type();
     debugs(29,DBG_IMPORTANT,"Startup: Initialized Authentication Scheme '" << negotiate_type << "'");
 #endif
-    debugs(29,DBG_IMPORTANT,"Startup: Initialized Authentication.");
 }
 
 #endif /* USE_AUTH */
