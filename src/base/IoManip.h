@@ -9,6 +9,8 @@
 #ifndef SQUID_SRC_BASE_IO_MANIP_H
 #define SQUID_SRC_BASE_IO_MANIP_H
 
+#include "debug/Stream.h"
+
 #include <iostream>
 #include <iomanip>
 
@@ -18,8 +20,14 @@ class RawPointerT {
 public:
     RawPointerT(const char *aLabel, const Pointer &aPtr):
         label(aLabel), ptr(aPtr) {}
+
+    /// Report the pointed-to-object on a dedicated Debug::Extra line.
+    /// Report nothing if the pointer is nil.
+    RawPointerT<Pointer> &asExtra() { onExtraLine = true; return *this; }
+
     const char *label; /// the name or description of the being-debugged object
     const Pointer &ptr; /// a possibly nil pointer to the being-debugged object
+    bool onExtraLine = false;
 };
 
 /// convenience wrapper for creating  RawPointerT<> objects
@@ -35,7 +43,14 @@ template <class Pointer>
 inline std::ostream &
 operator <<(std::ostream &os, const RawPointerT<Pointer> &pd)
 {
-    os << pd.label << '=';
+    if (pd.onExtraLine) {
+        if (!pd.ptr)
+            return os;
+        os << Debug::Extra << pd.label << ": ";
+    } else {
+        os << pd.label << '=';
+    }
+
     if (pd.ptr)
         os << *pd.ptr;
     else
