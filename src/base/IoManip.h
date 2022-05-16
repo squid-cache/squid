@@ -14,7 +14,7 @@
 #include <iostream>
 #include <iomanip>
 
-/// Safely prints an object pointed to by the given pointer: <label><object>
+/// Safely prints an object pointed to by the given pointer: [label]<object>
 /// Prints nothing at all if the pointer is nil.
 template <class Pointer>
 class RawPointerT {
@@ -49,7 +49,9 @@ operator <<(std::ostream &os, const RawPointerT<Pointer> &pd)
     if (pd.onExtraLine)
         os << Debug::Extra;
 
-    os << pd.label;
+    if (pd.label)
+        os << pd.label;
+
     os << *pd.ptr;
 
     return os;
