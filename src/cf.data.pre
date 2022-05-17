@@ -1486,6 +1486,13 @@ IF USE_OPENSSL
 	acl aclname ssl_error errorname
 	  # match against SSL certificate validation error [fast]
 	  #
+	  # When used with sslproxy_cert_error, this ACL tests a single
+	  # certificate validation error currently being evaluated by that
+	  # directive. When used with slproxy_cert_sign or sslproxy_cert_adapt,
+	  # the ACL tests all past certificate validation errors associated with
+	  # the current Squid-to-server connection (attempt). This ACL is not yet
+	  # supported for use with other directives.
+	  #
 	  # For valid error names see in @DEFAULT_ERROR_DIR@/templates/error-details.txt
 	  # template file.
 	  #
@@ -1500,9 +1507,6 @@ IF USE_OPENSSL
 	  # The ssl::certHasExpired, ssl::certNotYetValid, ssl::certDomainMismatch,
 	  # ssl::certUntrusted, and ssl::certSelfSigned can also be used as
 	  # predefined ACLs, just like the 'all' ACL.
-	  #
-	  # NOTE: The ssl_error ACL is only supported with sslproxy_cert_error,
-	  # sslproxy_cert_sign, and sslproxy_cert_adapt options.
 
 	acl aclname server_cert_fingerprint [-sha1] fingerprint
 	  # match against server SSL certificate fingerprint [fast]
