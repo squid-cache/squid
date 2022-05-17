@@ -11,6 +11,10 @@
 #include "sbuf/SBuf.h"
 #include "security/Certificate.h"
 
+#if USE_OPENSSL
+#include "ssl/gadgets.h"
+#endif
+
 #include <iostream>
 #if USE_OPENSSL
 #if HAVE_OPENSSL_X509V3_H
@@ -30,10 +34,10 @@ Security::IssuerName(Certificate &cert)
 {
     SBuf out;
 #if USE_OPENSSL
+    Ssl::ForgetErrors();
     const auto s = X509_NAME_oneline(X509_get_issuer_name(&cert), nullptr, 0);
     if (!s) {
-        const auto x = ERR_get_error();
-        debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate Issuer: " << Security::ErrorString(x));
+        debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate Issuer:" << Ssl::ReportAndForgetErrors);
         return out;
     }
     out.append(s);
@@ -70,10 +74,10 @@ Security::SubjectName(Certificate &cert)
 {
     SBuf out;
 #if USE_OPENSSL
+    Ssl::ForgetErrors();
     auto s = X509_NAME_oneline(X509_get_subject_name(&cert), nullptr, 0);
     if (!s) {
-        const auto x = ERR_get_error();
-        debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate SubjectName: " << Security::ErrorString(x));
+        debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate SubjectName" << Ssl::ReportAndForgetErrors);
         return out;
     }
     out.append(s);
@@ -109,11 +113,13 @@ bool
 Security::IsIssuedBy(Certificate &cert, Certificate &issuer)
 {
 #if USE_OPENSSL
+    Ssl::ForgetErrors();
     const auto result = X509_check_issued(&issuer, &cert);
     if (result == X509_V_OK)
         return true;
-    debugs(83, DBG_PARSE_NOTE(3), issuer << " did not sign " << cert << ": " <<
-           X509_verify_cert_error_string(result) << " (" << result << ")");
+    debugs(83, DBG_PARSE_NOTE(3), issuer << " did not sign " << cert << ":" <<
+           Debug::Extra << "X509_check_issued() result: " << X509_verify_cert_error_string(result) << " (" << result << ")" <<
+           Ssl::ReportAndForgetErrors);
 #elif USE_GNUTLS
     const auto result = gnutls_x509_crt_check_issuer(&cert, &issuer);
     if (result == 1)
