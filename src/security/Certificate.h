@@ -11,17 +11,16 @@
 
 #include "security/forward.h"
 
-namespace Security
-{
-
 // The accessing/testing functions below require a non-constant Certificate when
 // it is modified by an underlying library implementation (e.g., GnuTLS).
+
+namespace Security
+{
 
 /// The SubjectName field of the given certificate (if found) or an empty SBuf.
 SBuf SubjectName(Certificate &);
 
 /// The Issuer field of the given certificate (if found) or an empty SBuf.
-/// Some implementations modify the argument while searching (e.g., GnuTLS).
 SBuf IssuerName(Certificate &);
 
 /// \returns whether cert was (correctly) issued by the given issuer
@@ -30,7 +29,7 @@ SBuf IssuerName(Certificate &);
 /// from errors (e.g., the issuer certificate lacks the right CA extension).
 bool IsIssuedBy(Certificate &cert, Certificate &issuer);
 
-/// convenience wrapper for checking self-signed certificates
+/// convenience wrapper for detecting self-signed certificates
 inline bool IsSelfSigned(Certificate &c) { return IsIssuedBy(c, c); }
 
 } // namespace Security
