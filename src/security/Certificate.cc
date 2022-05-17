@@ -33,6 +33,7 @@ SBuf
 Security::IssuerName(Certificate &cert)
 {
     SBuf out;
+
 #if USE_OPENSSL
     Ssl::ForgetErrors();
     const auto s = X509_NAME_oneline(X509_get_issuer_name(&cert), nullptr, 0);
@@ -62,10 +63,8 @@ Security::IssuerName(Certificate &cert)
 
 #else
     debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate Issuer: " << MissingLibraryError());
-    return out;
 #endif
 
-    debugs(83, DBG_PARSE_NOTE(3), "found cert issuer=" << out);
     return out;
 }
 
@@ -73,6 +72,7 @@ SBuf
 Security::SubjectName(Certificate &cert)
 {
     SBuf out;
+
 #if USE_OPENSSL
     Ssl::ForgetErrors();
     auto s = X509_NAME_oneline(X509_get_subject_name(&cert), nullptr, 0);
@@ -102,10 +102,8 @@ Security::SubjectName(Certificate &cert)
 
 #else
     debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate SubjectName: " << MissingLibraryError());
-    return out;
 #endif
 
-    debugs(83, DBG_PARSE_NOTE(3), "found cert subject=" << out);
     return out;
 }
 
