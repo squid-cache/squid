@@ -18,20 +18,20 @@ namespace Security
 // it is modified by an underlying library implementation (e.g., GnuTLS).
 
 /// The SubjectName field of the given certificate (if found) or an empty SBuf.
-SBuf CertSubjectName(Certificate &);
+SBuf SubjectName(Certificate &);
 
 /// The Issuer field of the given certificate (if found) or an empty SBuf.
 /// Some implementations modify the argument while searching (e.g., GnuTLS).
-SBuf CertIssuerName(Certificate &);
+SBuf IssuerName(Certificate &);
 
 /// \returns whether cert was (correctly) issued by the given issuer
 /// Due to complexity of the underlying checks, it is impossible to clearly
 /// distinguish pure negative answers (e.g., two independent certificates)
 /// from errors (e.g., the issuer certificate lacks the right CA extension).
-bool CertIsIssuedBy(Certificate &cert, Certificate &issuer);
+bool IsIssuedBy(Certificate &cert, Certificate &issuer);
 
 /// convenience wrapper for checking self-signed certificates
-inline bool CertIsSelfSigned(Certificate &c) { return CertIsIssuedBy(c, c); }
+inline bool IsSelfSigned(Certificate &c) { return IsIssuedBy(c, c); }
 
 } // namespace Security
 

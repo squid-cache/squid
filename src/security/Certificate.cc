@@ -26,7 +26,7 @@ MissingLibraryError()
 }
 
 SBuf
-Security::CertIssuerName(Certificate &cert)
+Security::IssuerName(Certificate &cert)
 {
     SBuf out;
 #if USE_OPENSSL
@@ -66,7 +66,7 @@ Security::CertIssuerName(Certificate &cert)
 }
 
 SBuf
-Security::CertSubjectName(Certificate &cert)
+Security::SubjectName(Certificate &cert)
 {
     SBuf out;
 #if USE_OPENSSL
@@ -106,7 +106,7 @@ Security::CertSubjectName(Certificate &cert)
 }
 
 bool
-Security::CertIsIssuedBy(Certificate &cert, Certificate &issuer)
+Security::IsIssuedBy(Certificate &cert, Certificate &issuer)
 {
 #if USE_OPENSSL
     const auto result = X509_check_issued(&issuer, &cert);
@@ -129,7 +129,7 @@ std::ostream &
 operator <<(std::ostream &os, Security::Certificate &cert)
 {
     // TODO: Optimize by avoiding memory allocation for this written temporary
-    const auto name = Security::CertSubjectName(cert);
+    const auto name = Security::SubjectName(cert);
     if (name.isEmpty())
         os << "[no subject name]";
     else
