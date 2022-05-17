@@ -522,8 +522,8 @@ squid_LDADD = \
 	DiskIO/libdiskio.la \
 	comm/libcomm.la \
 	anyp/libanyp.la \
-	security/libsecurity.la \
 	$(SSL_LIBS) \
+	security/libsecurity.la \
 	error/liberror.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
