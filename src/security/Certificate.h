@@ -35,5 +35,10 @@ inline bool CertIsSelfSigned(Certificate &c) { return CertIsIssuedBy(c, c); }
 
 } // namespace Security
 
+// Declared outside Security because all underlying Security::Certificate types
+// are declared inside global namespace.
+/// reports a one-line gist of the Certificate Subject Name (for debugging)
+std::ostream &operator <<(std::ostream &, Security::Certificate &);
+
 #endif /* SQUID_SRC_SECURITY_CERTIFICATE_H */
 

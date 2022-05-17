@@ -208,11 +208,6 @@ void CloseLogs(); ///< closes logs opened by OpenLogs()
 
 } // namespace Security
 
-// Declared outside Security because all underlying Security::Certificate types
-// are declared inside global namespace.
-/// reports a one-line gist of the Certificate Subject Name (for debugging)
-std::ostream &operator <<(std::ostream &, Security::Certificate &);
-
 /// Squid-specific TLS handling errors (a subset of ErrorCode)
 /// These errors either distinguish high-level library calls/contexts or
 /// supplement official certificate validation errors to cover special cases.
