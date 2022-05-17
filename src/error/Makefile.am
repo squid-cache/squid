@@ -22,6 +22,7 @@ liberror_la_SOURCES = \
 	Error.cc \
 	Error.h \
 	ExceptionErrorDetail.h \
+	SysErrorDetail.cc \
 	SysErrorDetail.h \
 	forward.h
 

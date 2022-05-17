@@ -14,13 +14,14 @@
 #include "http/forward.h"
 #include "http/StatusCode.h"
 #include "sbuf/SBuf.h"
-#include "XactionInitiator.h"
 
 class ClientHttpRequest;
 class StoreIOBuffer;
 class clientStreamNode;
 class DownloaderContext;
 typedef RefCount<DownloaderContext> DownloaderContextPointer;
+class MasterXaction;
+using MasterXactionPointer = RefCount<MasterXaction>;
 
 /// The Downloader class fetches SBuf-storable things for other Squid
 /// components/transactions using internal requests. For example, it is used
@@ -46,7 +47,7 @@ public:
         Http::StatusCode status;
     };
 
-    Downloader(SBuf &url, AsyncCall::Pointer &aCallback, const XactionInitiator initiator, unsigned int level = 0);
+    Downloader(const SBuf &url, const AsyncCall::Pointer &aCallback, const MasterXactionPointer &, unsigned int level = 0);
     virtual ~Downloader();
     virtual void swanSong();
 
@@ -76,8 +77,7 @@ private:
     AsyncCall::Pointer callback_; ///< callback to call when download finishes
     SBuf object_; ///< the object body data
     const unsigned int level_; ///< holds the nested downloads level
-    /// The initiator of the download request.
-    XactionInitiator initiator_;
+    MasterXactionPointer masterXaction_; ///< download transaction context
 
     /// Pointer to an object that stores the clientStream required info
     DownloaderContextPointer context_;

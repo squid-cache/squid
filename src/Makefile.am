@@ -227,7 +227,6 @@ squid_SOURCES = \
 	CollapsedForwarding.cc \
 	CollapsedForwarding.h \
 	CollapsingHistory.h \
-	CommRead.h \
 	CommandLine.cc \
 	CommandLine.h \
 	ConfigOption.cc \
@@ -658,7 +657,7 @@ squid.conf.default squid.conf.documented: cf_parser.cci
 cf_parser.cci: cf.data cf_gen$(EXEEXT)
 	./cf_gen$(EXEEXT) cf.data $(srcdir)/cf.data.depend
 
-# The cf_gen_defines.cci is auto-generated and does not exist when the 
+# The cf_gen_defines.cci is auto-generated and does not exist when the
 # dependencies computed. We need to add its include files (autoconf.h) here
 cf_gen_defines.cci: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre $(top_builddir)/include/autoconf.h
 	$(AWK) -f $(srcdir)/cf_gen_defines <$(srcdir)/cf.data.pre >$@ || ($(RM) -f $@ && exit 1)
@@ -736,7 +735,7 @@ CLEANFILES += cf.data squid.conf.default squid.conf.documented \
 test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
 	cp $(top_srcdir)/test-suite/test_tools.cc .
 
-# stock tools for unit tests - library independent versions of dlink_list 
+# stock tools for unit tests - library independent versions of dlink_list
 # etc.
 # globals.cc is needed by test_tools.cc.
 # Neither of these should be disted from here.
@@ -793,6 +792,23 @@ tests_testMath_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testMath_LDFLAGS = $(LIBADD_DL)
+
+## Tests of RandomUuid.h
+check_PROGRAMS += tests/testRandomUuid
+tests_testRandomUuid_SOURCES = \
+	tests/testRandomUuid.cc
+nodist_tests_testRandomUuid_SOURCES = \
+	RandomUuid.h \
+	tests/stub_debug.cc \
+	tests/stub_libmem.cc
+tests_testRandomUuid_LDADD = \
+	libsquid.la \
+	sbuf/libsbuf.la \
+	base/libbase.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testRandomUuid_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of mem/*
 
@@ -2775,7 +2791,8 @@ nodist_tests_testEventLoop_SOURCES = \
 	EventLoop.cc \
 	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
-	tests/stub_libtime.cc
+	tests/stub_libtime.cc \
+	tests/stub_SBuf.cc
 tests_testEventLoop_LDADD = \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \

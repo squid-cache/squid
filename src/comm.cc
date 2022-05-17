@@ -18,7 +18,6 @@
 #include "comm/Read.h"
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
-#include "CommRead.h"
 #include "compat/cmsg.h"
 #include "DescriptorSet.h"
 #include "event.h"
@@ -808,8 +807,8 @@ comm_close_complete(const FdeCbParams &params)
  * + call read handlers with ERR_CLOSING
  * + call closing handlers
  *
- * NOTE: Comm::ERR_CLOSING will NOT be called for CommReads' sitting in a
- * DeferredReadManager.
+ * A deferred reader has no Comm read handler mentioned above. To stay in sync,
+ * such a reader must register a Comm closing handler.
  */
 void
 _comm_close(int fd, char const *file, int line)
@@ -939,6 +938,8 @@ comm_add_close_handler(int fd, AsyncCall::Pointer &call)
 //    for (c = fd_table[fd].closeHandler; c; c = c->next)
 //        assert(c->handler != handler || c->data != data);
 
+    // TODO: Consider enhancing AsyncCallList to support random-access close
+    // handlers, perhaps after upgrading the remaining legacy CLCB handlers.
     call->setNext(fd_table[fd].closeHandler);
 
     fd_table[fd].closeHandler = call;
@@ -1642,149 +1643,6 @@ commHalfClosedReader(const Comm::ConnectionPointer &conn, char *, size_t size, C
 
     // continue waiting for close or error
     commPlanHalfClosedCheck(); // make sure this fd will be checked again
-}
-
-CommRead::CommRead() : conn(NULL), buf(NULL), len(0), callback(NULL) {}
-
-CommRead::CommRead(const Comm::ConnectionPointer &c, char *buf_, int len_, AsyncCall::Pointer &callback_)
-    : conn(c), buf(buf_), len(len_), callback(callback_) {}
-
-DeferredRead::DeferredRead () : theReader(NULL), theContext(NULL), theRead(), cancelled(false) {}
-
-DeferredRead::DeferredRead (DeferrableRead *aReader, void *data, CommRead const &aRead) : theReader(aReader), theContext (data), theRead(aRead), cancelled(false) {}
-
-DeferredReadManager::~DeferredReadManager()
-{
-    flushReads();
-    assert (deferredReads.empty());
-}
-
-/* explicit instantiation required for some systems */
-
-/// \cond AUTODOCS_IGNORE
-template cbdata_type CbDataList<DeferredRead>::CBDATA_CbDataList;
-/// \endcond
-
-void
-DeferredReadManager::delayRead(DeferredRead const &aRead)
-{
-    debugs(5, 3, "Adding deferred read on " << aRead.theRead.conn);
-    CbDataList<DeferredRead> *temp = deferredReads.push_back(aRead);
-
-    // We have to use a global function as a closer and point to temp
-    // instead of "this" because DeferredReadManager is not a job and
-    // is not even cbdata protected
-    // XXX: and yet we use cbdata protection functions on it??
-    AsyncCall::Pointer closer = commCbCall(5,4,
-                                           "DeferredReadManager::CloseHandler",
-                                           CommCloseCbPtrFun(&CloseHandler, temp));
-    comm_add_close_handler(aRead.theRead.conn->fd, closer);
-    temp->element.closer = closer; // remember so that we can cancel
-}
-
-void
-DeferredReadManager::CloseHandler(const CommCloseCbParams &params)
-{
-    if (!cbdataReferenceValid(params.data))
-        return;
-
-    CbDataList<DeferredRead> *temp = (CbDataList<DeferredRead> *)params.data;
-
-    temp->element.closer = NULL;
-    if (temp->element.theRead.conn) {
-        temp->element.theRead.conn->noteClosure();
-        temp->element.theRead.conn = nullptr;
-    }
-    temp->element.markCancelled();
-}
-
-DeferredRead
-DeferredReadManager::popHead(CbDataListContainer<DeferredRead> &deferredReads)
-{
-    assert (!deferredReads.empty());
-
-    DeferredRead &read = deferredReads.head->element;
-
-    // NOTE: at this point the connection has been paused/stalled for an unknown
-    //       amount of time. We must re-validate that it is active and usable.
-
-    // If the connection has been closed already. Cancel this read.
-    if (!fd_table || !Comm::IsConnOpen(read.theRead.conn)) {
-        if (read.closer != NULL) {
-            read.closer->cancel("Connection closed before.");
-            read.closer = NULL;
-        }
-        read.markCancelled();
-    }
-
-    if (!read.cancelled) {
-        comm_remove_close_handler(read.theRead.conn->fd, read.closer);
-        read.closer = NULL;
-    }
-
-    DeferredRead result = deferredReads.pop_front();
-
-    return result;
-}
-
-void
-DeferredReadManager::kickReads(int const count)
-{
-    /* if we had CbDataList::size() we could consolidate this and flushReads */
-
-    if (count < 1) {
-        flushReads();
-        return;
-    }
-
-    size_t remaining = count;
-
-    while (!deferredReads.empty() && remaining) {
-        DeferredRead aRead = popHead(deferredReads);
-        kickARead(aRead);
-
-        if (!aRead.cancelled)
-            --remaining;
-    }
-}
-
-void
-DeferredReadManager::flushReads()
-{
-    CbDataListContainer<DeferredRead> reads;
-    reads = deferredReads;
-    deferredReads = CbDataListContainer<DeferredRead>();
-
-    // XXX: For fairness this SHOULD randomize the order
-    while (!reads.empty()) {
-        DeferredRead aRead = popHead(reads);
-        kickARead(aRead);
-    }
-}
-
-void
-DeferredReadManager::kickARead(DeferredRead const &aRead)
-{
-    if (aRead.cancelled)
-        return;
-
-    // TODO: This check still allows theReader call with a closed theRead.conn.
-    // If a delayRead() caller has a close connection handler, then such a call
-    // would be useless and dangerous. If a delayRead() caller does not have it,
-    // then the caller will get stuck when an external connection closure makes
-    // aRead.cancelled (checked above) true.
-    if (Comm::IsConnOpen(aRead.theRead.conn) && fd_table[aRead.theRead.conn->fd].closing())
-        return;
-
-    debugs(5, 3, "Kicking deferred read on " << aRead.theRead.conn);
-
-    aRead.theReader(aRead.theContext, aRead.theRead);
-}
-
-void
-DeferredRead::markCancelled()
-{
-    cancelled = true;
 }
 
 int

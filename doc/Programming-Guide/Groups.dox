@@ -40,7 +40,7 @@
 
 /**
  \defgroup libsquid         Squid Library
- * 
+ *
  \par
  *     These objects are provided publicly through lidsquid.la
  */
@@ -65,7 +65,7 @@
 
 /**
  \defgroup Callbacks         Event Callback Functions
- * 
+ *
  \par
  *      Squid uses events to process asynchronous actions.
  *      These methods are registered as callbacks to receive notice whenever a

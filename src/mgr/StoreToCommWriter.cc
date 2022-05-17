@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "base/AsyncCbdataCalls.h"
 #include "base/TextException.h"
+#include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
 #include "CommCalls.h"

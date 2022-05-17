@@ -1116,7 +1116,7 @@ Ssl::loadCerts(const char *certsFile, Ssl::CertsIndexedList &list)
         return false;
     }
 
-    while (auto aCert = ReadX509Certificate(in)) {
+    while (auto aCert = ReadOptionalCertificate(in)) {
         static char buffer[2048];
         X509_NAME_oneline(X509_get_subject_name(aCert.get()), buffer, sizeof(buffer));
         list.insert(std::pair<SBuf, X509 *>(SBuf(buffer), aCert.release()));

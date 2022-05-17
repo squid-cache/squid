@@ -72,6 +72,16 @@ typedef std::unique_ptr<GENERAL_NAME, HardFun<void, GENERAL_NAME*, &GENERAL_NAME
 typedef std::unique_ptr<X509_EXTENSION, HardFun<void, X509_EXTENSION*, &X509_EXTENSION_free>> X509_EXTENSION_Pointer;
 
 typedef std::unique_ptr<X509_STORE_CTX, HardFun<void, X509_STORE_CTX *, &X509_STORE_CTX_free>> X509_STORE_CTX_Pointer;
+
+/// Clear any errors accumulated by OpenSSL in its global storage.
+void ForgetErrors();
+
+/// Manipulator to report errors accumulated by OpenSSL in its global storage.
+/// Each error is reported on a dedicated Debug::Extra line.
+/// Nothing is reported if there are no errors.
+/// Also clears all reported errors.
+std::ostream &ReportAndForgetErrors(std::ostream &);
+
 /**
  \ingroup SslCrtdSslAPI
  * Create 1024 bits rsa key.
@@ -96,11 +106,9 @@ bool appendCertToMemory(Security::CertPointer const & cert, std::string & buffer
  */
 bool readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, Security::PrivateKeyPointer & pkey, char const * bufferToRead);
 
-/**
- \ingroup SslCrtdSslAPI
- * Read SSL certificate from memory.
- */
-bool readCertFromMemory(Security::CertPointer & cert, char const * bufferToRead);
+/// Creates and returns a BIO for reading from the given c-string.
+/// The returned BIO lifetime must not exceed that of the given c-string!
+BIO_Pointer ReadOnlyBioTiedTo(const char *);
 
 /**
  \ingroup SslCrtdSslAPI
@@ -114,9 +122,13 @@ void ReadPrivateKeyFromFile(char const * keyFilename, Security::PrivateKeyPointe
  */
 bool OpenCertsFileForReading(BIO_Pointer &bio, const char *filename);
 
-/// reads and returns a certificate using the given OpenSSL BIO
-/// \returns a nil pointer on errors (TODO: throw instead)
-Security::CertPointer ReadX509Certificate(const BIO_Pointer &);
+/// Reads and returns a certificate using the given OpenSSL BIO.
+/// Never returns a nil pointer.
+Security::CertPointer ReadCertificate(const BIO_Pointer &);
+
+/// Reads and returns a certificate using the given OpenSSL BIO.
+/// \returns a nil pointer if the given BIO is empty or exhausted
+Security::CertPointer ReadOptionalCertificate(const BIO_Pointer &);
 
 /**
  \ingroup SslCrtdSslAPI

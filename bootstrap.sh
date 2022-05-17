@@ -62,7 +62,7 @@ find_path()
   path=`which $tool`
   if test $? -gt 0 ; then
     # path for $tool not found. Not defining, and hoping for the best
-    echo 
+    echo
     return
   fi
   echo $(dirname $path)
@@ -74,7 +74,7 @@ bootstrap() {
   else
     echo "$1 failed"
     echo "Autotool bootstrapping failed. You will need to investigate and correct" ;
-    echo "before you can develop on this source tree" 
+    echo "before you can develop on this source tree"
     exit 1
   fi
 }
@@ -117,7 +117,7 @@ echo "libtool  ($ltversion) : ${LIBTOOL_BIN}${ltver}"
 echo "libtool path : $ltpath"
 
 for dir in \
-	"" 
+	""
 do
     if [ -z "$dir" ] || [ -d $dir ]; then
 	if (

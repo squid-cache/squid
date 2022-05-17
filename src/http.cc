@@ -16,6 +16,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "base/AsyncJobCalls.h"
+#include "base/DelayedAsyncCalls.h"
 #include "base/Raw.h"
 #include "base/TextException.h"
 #include "base64.h"
@@ -24,7 +25,6 @@
 #include "comm/Connection.h"
 #include "comm/Read.h"
 #include "comm/Write.h"
-#include "CommRead.h"
 #include "error/Detail.h"
 #include "errorpage.h"
 #include "fd.h"
@@ -523,7 +523,7 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
     case Http::scConflict: // TODO: is this shareable?
     case Http::scLengthRequired:
     case Http::scPreconditionFailed:
-    case Http::scPayloadTooLarge:
+    case Http::scContentTooLarge:
     case Http::scUnsupportedMediaType:
     case Http::scUnprocessableEntity:
     case Http::scLocked: // TODO: is this shareable?
@@ -1164,12 +1164,11 @@ HttpStateData::persistentConnStatus() const
     return statusIfComplete();
 }
 
-static void
-readDelayed(void *context, CommRead const &)
+void
+HttpStateData::noteDelayAwareReadChance()
 {
-    HttpStateData *state = static_cast<HttpStateData*>(context);
-    state->flags.do_next_read = true;
-    state->maybeReadVirginBody();
+    flags.do_next_read = true;
+    maybeReadVirginBody();
 }
 
 void
@@ -1207,9 +1206,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
     rd.size = entry->bytesWanted(Range<size_t>(0, inBuf.spaceSize()));
 
     if (rd.size <= 0) {
-        assert(entry->mem_obj);
-        AsyncCall::Pointer nilCall;
-        entry->mem_obj->delayRead(DeferredRead(readDelayed, this, CommRead(io.conn, NULL, 0, nilCall)));
+        delayRead();
         return;
     }
 
