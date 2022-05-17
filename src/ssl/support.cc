@@ -24,6 +24,7 @@
 #include "globals.h"
 #include "ipc/MemMap.h"
 #include "security/CertError.h"
+#include "security/Certificate.h"
 #include "security/ErrorDetail.h"
 #include "security/Session.h"
 #include "SquidConfig.h"
@@ -1140,7 +1141,7 @@ findCertIssuerFast(Ssl::CertsIndexedList &list, X509 *cert)
     const auto ret = list.equal_range(SBuf(buffer));
     for (Ssl::CertsIndexedList::iterator it = ret.first; it != ret.second; ++it) {
         X509 *issuer = it->second;
-        if (X509_check_issued(issuer, cert) == X509_V_OK) {
+        if (Security::IsIssuedBy(*cert, *issuer)) {
             return issuer;
         }
     }
@@ -1157,7 +1158,7 @@ sk_x509_findIssuer(const STACK_OF(X509) *sk, X509 *cert)
     const auto certCount = sk_X509_num(sk);
     for (int i = 0; i < certCount; ++i) {
         const auto issuer = sk_X509_value(sk, i);
-        if (X509_check_issued(issuer, cert) == X509_V_OK)
+        if (Security::IsIssuedBy(*cert, *issuer))
             return issuer;
     }
     return nullptr;
@@ -1262,7 +1263,7 @@ completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) &untrustedCerts)
     current.resetAndLock(X509_STORE_CTX_get0_cert(ctx));
     int i = 0;
     for (i = 0; current && (i < depth); ++i) {
-        if (X509_check_issued(current.get(), current.get()) == X509_V_OK) {
+        if (Security::IsSelfSigned(*current)) {
             // either ctx->cert is itself self-signed or untrustedCerts
             // already contain the self-signed current certificate
             break;
