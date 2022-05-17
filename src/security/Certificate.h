@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_SECURITY_CERTGADGETS_H
-#define SQUID_SRC_SECURITY_CERTGADGETS_H
+#ifndef SQUID_SRC_SECURITY_CERTIFICATE_H
+#define SQUID_SRC_SECURITY_CERTIFICATE_H
 
 #include "security/forward.h"
 
@@ -35,5 +35,5 @@ inline bool CertIsSelfSigned(Certificate &c) { return CertIsIssuedBy(c, c); }
 
 } // namespace Security
 
-#endif /* SQUID_SRC_SECURITY_CERTGADGETS_H */
+#endif /* SQUID_SRC_SECURITY_CERTIFICATE_H */
 

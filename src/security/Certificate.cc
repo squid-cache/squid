@@ -9,7 +9,7 @@
 #include "squid.h"
 #include "debug/Stream.h"
 #include "sbuf/SBuf.h"
-#include "security/CertGadgets.h"
+#include "security/Certificate.h"
 
 #include <iostream>
 #if USE_OPENSSL
