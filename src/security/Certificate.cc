@@ -16,11 +16,6 @@
 #endif
 
 #include <iostream>
-#if USE_OPENSSL
-#if HAVE_OPENSSL_X509V3_H
-#include <openssl/x509v3.h>
-#endif
-#endif
 
 inline
 const char *
