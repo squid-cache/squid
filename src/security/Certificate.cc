@@ -31,31 +31,31 @@ Security::IssuerName(Certificate &cert)
 
 #if USE_OPENSSL
     Ssl::ForgetErrors();
-    const auto s = X509_NAME_oneline(X509_get_issuer_name(&cert), nullptr, 0);
-    if (!s) {
+    const auto name = X509_NAME_oneline(X509_get_issuer_name(&cert), nullptr, 0);
+    if (!name) {
         debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate Issuer:" <<
                Ssl::ReportAndForgetErrors);
         return out;
     }
-    out.append(s);
-    OPENSSL_free(s);
+    out.append(name);
+    OPENSSL_free(name);
 
 #elif USE_GNUTLS
-    gnutls_x509_dn_t dn;
-    auto x = gnutls_x509_crt_get_issuer(&cert, &dn);
+    gnutls_x509_dn_t issuer;
+    auto x = gnutls_x509_crt_get_issuer(&cert, &issuer);
     if (x != GNUTLS_E_SUCCESS) {
         debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate Issuer: " << ErrorString(x));
         return out;
     }
 
-    gnutls_datum_t str;
-    x = gnutls_x509_dn_get_str(dn, &str);
+    gnutls_datum_t name;
+    x = gnutls_x509_dn_get_str(issuer, &name);
     if (x != GNUTLS_E_SUCCESS) {
         debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot describe certificate Issuer: " << ErrorString(x));
         return out;
     }
-    out.append(reinterpret_cast<const char *>(str.data), str.size);
-    gnutls_free(str.data);
+    out.append(reinterpret_cast<const char *>(name.data), name.size);
+    gnutls_free(name.data);
 
 #else
     debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate Issuer: " << MissingLibraryError());
@@ -71,31 +71,31 @@ Security::SubjectName(Certificate &cert)
 
 #if USE_OPENSSL
     Ssl::ForgetErrors();
-    const auto s = X509_NAME_oneline(X509_get_subject_name(&cert), nullptr, 0);
-    if (!s) {
+    const auto name = X509_NAME_oneline(X509_get_subject_name(&cert), nullptr, 0);
+    if (!name) {
         debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate SubjectName:" <<
                Ssl::ReportAndForgetErrors);
         return out;
     }
-    out.append(s);
-    OPENSSL_free(s);
+    out.append(name);
+    OPENSSL_free(name);
 
 #elif USE_GNUTLS
-    gnutls_x509_dn_t dn;
-    auto x = gnutls_x509_crt_get_subject(&cert, &dn);
+    gnutls_x509_dn_t subject;
+    auto x = gnutls_x509_crt_get_subject(&cert, &subject);
     if (x != GNUTLS_E_SUCCESS) {
         debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate SubjectName: " << ErrorString(x));
         return out;
     }
 
-    gnutls_datum_t str;
-    x = gnutls_x509_dn_get_str(dn, &str);
+    gnutls_datum_t name;
+    x = gnutls_x509_dn_get_str(subject, &name);
     if (x != GNUTLS_E_SUCCESS) {
         debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot describe certificate SubjectName: " << ErrorString(x));
         return out;
     }
-    out.append(reinterpret_cast<const char *>(str.data), str.size);
-    gnutls_free(str.data);
+    out.append(reinterpret_cast<const char *>(name.data), name.size);
+    gnutls_free(name.data);
 
 #else
     debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate SubjectName: " << MissingLibraryError());
