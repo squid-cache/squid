@@ -71,7 +71,7 @@ Security::SubjectName(Certificate &cert)
 
 #if USE_OPENSSL
     Ssl::ForgetErrors();
-    auto s = X509_NAME_oneline(X509_get_subject_name(&cert), nullptr, 0);
+    const auto s = X509_NAME_oneline(X509_get_subject_name(&cert), nullptr, 0);
     if (!s) {
         debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate SubjectName:" <<
                Ssl::ReportAndForgetErrors);
