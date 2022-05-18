@@ -23,13 +23,13 @@ SBuf SubjectName(Certificate &);
 /// The Issuer field of the given certificate (if found) or an empty SBuf.
 SBuf IssuerName(Certificate &);
 
-/// \returns whether cert was (correctly) issued by the given issuer
+/// Whether cert was (correctly) issued by the given issuer.
 /// Due to complexity of the underlying checks, it is impossible to clearly
 /// distinguish pure negative answers (e.g., two independent certificates)
 /// from errors (e.g., the issuer certificate lacks the right CA extension).
 bool IssuedBy(Certificate &cert, Certificate &issuer);
 
-/// convenience wrapper for detecting self-signed certificates
+/// Whether the given certificate is self-signed.
 inline bool SelfSigned(Certificate &c) { return IssuedBy(c, c); }
 
 } // namespace Security
