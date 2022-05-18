@@ -127,7 +127,6 @@ Security::IssuedBy(Certificate &cert, Certificate &issuer)
 std::ostream &
 operator <<(std::ostream &os, Security::Certificate &cert)
 {
-    // TODO: Optimize by avoiding memory allocation for this written temporary
     const auto name = Security::SubjectName(cert);
     if (name.isEmpty())
         os << "[no subject name]";
