@@ -159,6 +159,9 @@ bool WriteX509Certificate(BIO_Pointer &bio, const Security::CertPointer & cert);
  */
 bool WritePrivateKey(BIO_Pointer &bio, const Security::PrivateKeyPointer &pkey);
 
+/// a RAII wrapper for the memory-allocating flavor of X509_NAME_oneline()
+UniqueCString OneLineSummary(X509_NAME &);
+
 /**
   \ingroup SslCrtdSslAPI
  * Supported certificate signing algorithms

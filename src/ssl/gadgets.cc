@@ -825,6 +825,12 @@ Ssl::WritePrivateKey(Ssl::BIO_Pointer &bio, const Security::PrivateKeyPointer &p
     return true;
 }
 
+Ssl::UniqueCString
+Ssl::OneLineSummary(X509_NAME &name)
+{
+    return Ssl::UniqueCString(X509_NAME_oneline(&name, nullptr, 0));
+}
+
 bool Ssl::sslDateIsInTheFuture(char const * date)
 {
     ASN1_UTCTIME tm;
