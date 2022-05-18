@@ -33,7 +33,8 @@ Security::IssuerName(Certificate &cert)
     Ssl::ForgetErrors();
     const auto s = X509_NAME_oneline(X509_get_issuer_name(&cert), nullptr, 0);
     if (!s) {
-        debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate Issuer:" << Ssl::ReportAndForgetErrors);
+        debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate Issuer:" <<
+               Ssl::ReportAndForgetErrors);
         return out;
     }
     out.append(s);
@@ -72,7 +73,8 @@ Security::SubjectName(Certificate &cert)
     Ssl::ForgetErrors();
     auto s = X509_NAME_oneline(X509_get_subject_name(&cert), nullptr, 0);
     if (!s) {
-        debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate SubjectName" << Ssl::ReportAndForgetErrors);
+        debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate SubjectName:" <<
+               Ssl::ReportAndForgetErrors);
         return out;
     }
     out.append(s);
