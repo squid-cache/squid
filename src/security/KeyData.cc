@@ -98,7 +98,7 @@ Security::KeyData::loadX509ChainFromFile()
     }
 
 #if TLS_CHAIN_NO_SELFSIGNED // ignore self-signed certs in the chain
-    if (IsSelfSigned(*cert)) {
+    if (SelfSigned(*cert)) {
         debugs(83, DBG_PARSE_NOTE(2), "Certificate is self-signed, will not be chained: " << *cert);
     } else
 #endif
@@ -111,13 +111,13 @@ Security::KeyData::loadX509ChainFromFile()
 
 #if TLS_CHAIN_NO_SELFSIGNED // ignore self-signed certs in the chain
             // self-signed certificates are not valid in a sent chain
-            if (IsSelfSigned(*ca)) {
+            if (SelfSigned(*ca)) {
                 debugs(83, DBG_PARSE_NOTE(2), "CA certificate is self-signed, will not be chained: " << *ca);
                 continue;
             }
 #endif
             // checks that the chained certs are actually part of a chain for validating cert
-            if (IsIssuedBy(*latestCert, *ca)) {
+            if (IssuedBy(*latestCert, *ca)) {
                 debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << *ca);
                 // OpenSSL API requires that we order certificates such that the
                 // chain can be appended directly into the on-wire traffic.

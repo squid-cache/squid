@@ -105,7 +105,7 @@ Security::SubjectName(Certificate &cert)
 }
 
 bool
-Security::IsIssuedBy(Certificate &cert, Certificate &issuer)
+Security::IssuedBy(Certificate &cert, Certificate &issuer)
 {
 #if USE_OPENSSL
     Ssl::ForgetErrors();

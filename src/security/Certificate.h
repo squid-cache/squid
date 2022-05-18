@@ -27,10 +27,10 @@ SBuf IssuerName(Certificate &);
 /// Due to complexity of the underlying checks, it is impossible to clearly
 /// distinguish pure negative answers (e.g., two independent certificates)
 /// from errors (e.g., the issuer certificate lacks the right CA extension).
-bool IsIssuedBy(Certificate &cert, Certificate &issuer);
+bool IssuedBy(Certificate &cert, Certificate &issuer);
 
 /// convenience wrapper for detecting self-signed certificates
-inline bool IsSelfSigned(Certificate &c) { return IsIssuedBy(c, c); }
+inline bool SelfSigned(Certificate &c) { return IssuedBy(c, c); }
 
 } // namespace Security
 
