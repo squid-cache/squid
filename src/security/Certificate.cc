@@ -24,6 +24,16 @@ MissingLibraryError()
     return "[need OpenSSL or GnuTLS]";
 }
 
+#if USE_OPENSSL
+/// a helper to safely use an allocating flavor of X509_NAME_oneline()
+inline
+Ssl::UniqueCString
+OneLineSummary(X509_NAME &name)
+{
+    return Ssl::UniqueCString(X509_NAME_oneline(&name, nullptr, 0));
+}
+#endif
+
 SBuf
 Security::IssuerName(Certificate &cert)
 {
@@ -31,14 +41,13 @@ Security::IssuerName(Certificate &cert)
 
 #if USE_OPENSSL
     Ssl::ForgetErrors();
-    const auto name = X509_NAME_oneline(X509_get_issuer_name(&cert), nullptr, 0);
+    const auto name = OneLineSummary(*X509_get_issuer_name(&cert));
     if (!name) {
         debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate Issuer:" <<
                Ssl::ReportAndForgetErrors);
         return out;
     }
-    out.append(name);
-    OPENSSL_free(name);
+    out.append(name.get());
 
 #elif USE_GNUTLS
     gnutls_x509_dn_t issuer;
@@ -71,14 +80,13 @@ Security::SubjectName(Certificate &cert)
 
 #if USE_OPENSSL
     Ssl::ForgetErrors();
-    const auto name = X509_NAME_oneline(X509_get_subject_name(&cert), nullptr, 0);
+    const auto name = OneLineSummary(*X509_get_subject_name(&cert));
     if (!name) {
         debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate SubjectName:" <<
                Ssl::ReportAndForgetErrors);
         return out;
     }
-    out.append(name);
-    OPENSSL_free(name);
+    out.append(name.get());
 
 #elif USE_GNUTLS
     gnutls_x509_dn_t subject;

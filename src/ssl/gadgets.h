@@ -73,6 +73,10 @@ typedef std::unique_ptr<X509_EXTENSION, HardFun<void, X509_EXTENSION*, &X509_EXT
 
 typedef std::unique_ptr<X509_STORE_CTX, HardFun<void, X509_STORE_CTX *, &X509_STORE_CTX_free>> X509_STORE_CTX_Pointer;
 
+// not using CtoCpp1() here because OpenSSL_free() takes void* rather than char*
+inline void OPENSSL_free_for_c_strings(char * const string) { OPENSSL_free(string); }
+using UniqueCString = std::unique_ptr<char, HardFun<void, char *, &OPENSSL_free_for_c_strings> >;
+
 /// Clear any errors accumulated by OpenSSL in its global storage.
 void ForgetErrors();
 
