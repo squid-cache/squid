@@ -676,14 +676,12 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
         const auto certsList = SSL_get_peer_cert_chain(&sconn);
         if (!Ssl::findIssuerCertificate(cert, certsList, ctx)) {
             if (const auto issuerUri = Ssl::findIssuerUri(cert)) {
-                debugs(81, 5, "certificate " <<
-                       *cert <<
+                debugs(81, 5, "certificate " << *cert <<
                        " points to its missing issuer certificate at " << issuerUri);
                 urlsOfMissingCerts.push(SBuf(issuerUri));
             } else {
                 debugs(81, 3, "found a certificate with no IAI, " <<
-                       "signed by a missing issuer certificate:  " <<
-                       *cert);
+                       "signed by a missing issuer certificate: " << *cert);
                 // We could short-circuit here, proceeding to chain validation
                 // that is likely to fail. Instead, we keep going because we
                 // hope that if we find at least one certificate to fetch, it
