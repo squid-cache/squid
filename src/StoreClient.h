@@ -67,14 +67,16 @@ public:
     /// hence, will keep working even if unread content is purged from memory.
     bool reliesOnReadingFromMemory() const;
 
-    /// The offset of the stored response that the client wants to read next.
+    /// \retval +N is the offset of the stored response that the client wants to read next.
     /// \retval 0 means the client wants to read HTTP response headers.
+    // TODO: the callers do not expect negative offset. Check that it cannot be negative
+    // and convert to unsigned in this case.
     int64_t readOffset() const { return copyInto.offset; }
 
     int getType() const;
 
     /// React to the end of reading the response from disk. There will be no
-    /// (more) readHeader() and readBody() callbacks for the current storeRead()
+    /// more readHeader() and readBody() callbacks for the current storeRead()
     /// swapin after this notification.
     void noteSwapInDone(bool error);
 
@@ -100,9 +102,11 @@ public:
     struct {
         /// whether we are expecting a response to be swapped in from disk
         /// (i.e. whether async storeRead() is currently in progress)
+        // TODO: a better name reflecting the 'in' scope of the flag
         bool disk_io_pending;
 
-        /// whether store_client::doCopy() is currently in progress
+        /// whether the store_client::doCopy()-initiated STCB sequence is
+        /// currently in progress
         bool store_copying;
     } flags;
 

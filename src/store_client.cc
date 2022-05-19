@@ -338,7 +338,7 @@ static void
 storeClientCopy2(StoreEntry * e, store_client * sc)
 {
     /* reentrancy not allowed  - note this could lead to
-     * dropped events
+     * dropped notifications about response data availability
      */
 
     if (sc->flags.store_copying) {
