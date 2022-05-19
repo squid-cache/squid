@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 #include "base64.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
-#include "rfc1123.h"
+#include "time/gadgets.h"
 #include "tools/squidclient/gssapi_support.h"
 #include "tools/squidclient/Parameters.h"
 #include "tools/squidclient/Ping.h"
@@ -293,6 +293,8 @@ main(int argc, char *argv[])
             case 'p':       /* port number */
                 // rewind and let the Transport::Config parser handle
                 optind -= 2;
+                Transport::Config.parseCommandOpts(argc, argv, c, optIndex);
+                continue;
 
             case '\3': // request over a TLS connection
                 Transport::Config.parseCommandOpts(argc, argv, c, optIndex);
@@ -503,7 +505,7 @@ main(int argc, char *argv[])
             msg << "Accept: */*\r\n";
         }
         if (ims) {
-            msg << "If-Modified-Since: " << mkrfc1123(ims) << "\r\n";
+            msg << "If-Modified-Since: " << Time::FormatRfc1123(ims) << "\r\n";
         }
         if (max_forwards > -1) {
             msg << "Max-Forwards: " << max_forwards << "\r\n";

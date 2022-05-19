@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -155,10 +155,11 @@ public:
     virtual void noteBodyProductionEnded(BodyPipe::Pointer);
     virtual void noteBodyProducerAborted(BodyPipe::Pointer);
 
-    // comm handlers
-    virtual void handleCommConnected();
+    /* Xaction API */
+    virtual void startShoveling();
     virtual void handleCommWrote(size_t size);
     virtual void handleCommRead(size_t size);
+
     void handleCommWroteHeaders();
     void handleCommWroteBody();
 

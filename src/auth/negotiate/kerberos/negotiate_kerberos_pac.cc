@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -114,7 +114,7 @@ get1byt(void)
     return var;
 }
 
-char *
+static char *
 pstrcpy( char *src, const char *dst)
 {
     if (dst) {
@@ -126,7 +126,7 @@ pstrcpy( char *src, const char *dst)
         return src;
 }
 
-char *
+static char *
 pstrcat( char *src, const char *dst)
 {
     if (dst) {

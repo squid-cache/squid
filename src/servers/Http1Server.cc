@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,10 +17,10 @@
 #include "http/one/RequestParser.h"
 #include "http/Stream.h"
 #include "HttpHeaderTools.h"
-#include "profiler/Profiler.h"
 #include "servers/Http1Server.h"
 #include "SquidConfig.h"
 #include "Store.h"
+#include "tunnel.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Http1, Server);
 
@@ -72,8 +72,6 @@ Http::One::Server::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
 Http::Stream *
 Http::One::Server::parseOneRequest()
 {
-    PROF_start(HttpServer_parseOneRequest);
-
     // reset because the protocol may have changed if this is the first request
     // and because we never bypass parsing failures of N+1st same-proto request
     preservingClientData_ = shouldPreserveClientData();
@@ -87,12 +85,10 @@ Http::One::Server::parseOneRequest()
     /* Process request */
     Http::Stream *context = parseHttpRequest(parser_);
 
-    PROF_stop(HttpServer_parseOneRequest);
     return context;
 }
 
 void clientProcessRequestFinished(ConnStateData *conn, const HttpRequest::Pointer &request);
-bool clientTunnelOnError(ConnStateData *conn, Http::StreamPointer &context, HttpRequest::Pointer &request, const HttpRequestMethod& method, err_type requestError);
 
 bool
 Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
@@ -127,8 +123,8 @@ Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
         assert(http->log_uri);
 
         const char * requestErrorBytes = inBuf.c_str();
-        if (!clientTunnelOnError(this, context, request, parser_->method(), errPage)) {
-            setReplyError(context, request, parser_->method(), errPage, parser_->parseStatusCode, requestErrorBytes);
+        if (!tunnelOnError(errPage)) {
+            setReplyError(context, request, errPage, parser_->parseStatusCode, requestErrorBytes);
             // HttpRequest object not build yet, there is no reason to call
             // clientProcessRequestFinished method
         }
@@ -137,7 +133,7 @@ Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
     }
 
     // TODO: move URL parse into Http Parser and INVALID_URL into the above parse error handling
-    MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+    const auto mx = MasterXaction::MakePortful(port);
     mx->tcpClient = clientConnection;
     request = HttpRequest::FromUrlXXX(http->uri, mx, parser_->method());
     if (!request) {
@@ -146,8 +142,8 @@ Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
         http->setLogUriToRawUri(http->uri, parser_->method());
 
         const char * requestErrorBytes = inBuf.c_str();
-        if (!clientTunnelOnError(this, context, request, parser_->method(), ERR_INVALID_URL)) {
-            setReplyError(context, request, parser_->method(), ERR_INVALID_URL, Http::scBadRequest, requestErrorBytes);
+        if (!tunnelOnError(ERR_INVALID_URL)) {
+            setReplyError(context, request, ERR_INVALID_URL, Http::scBadRequest, requestErrorBytes);
             // HttpRequest object not build yet, there is no reason to call
             // clientProcessRequestFinished method
         }
@@ -165,8 +161,8 @@ Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
         http->setLogUriToRawUri(http->uri, parser_->method());
 
         const char * requestErrorBytes = NULL; //HttpParserHdrBuf(parser_);
-        if (!clientTunnelOnError(this, context, request, parser_->method(), ERR_UNSUP_HTTPVERSION)) {
-            setReplyError(context, request, parser_->method(), ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, requestErrorBytes);
+        if (!tunnelOnError(ERR_UNSUP_HTTPVERSION)) {
+            setReplyError(context, request, ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, requestErrorBytes);
             clientProcessRequestFinished(this, request);
         }
         return false;
@@ -178,8 +174,8 @@ Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
         // setReplyToError() requires log_uri
         http->setLogUriToRawUri(http->uri, parser_->method());
         const char * requestErrorBytes = NULL; //HttpParserHdrBuf(parser_);
-        if (!clientTunnelOnError(this, context, request, parser_->method(), ERR_INVALID_REQ)) {
-            setReplyError(context, request, parser_->method(), ERR_INVALID_REQ, Http::scBadRequest, requestErrorBytes);
+        if (!tunnelOnError(ERR_INVALID_REQ)) {
+            setReplyError(context, request, ERR_INVALID_REQ, Http::scBadRequest, requestErrorBytes);
             clientProcessRequestFinished(this, request);
         }
         return false;
@@ -208,7 +204,7 @@ Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
 }
 
 void
-Http::One::Server::setReplyError(Http::StreamPointer &context, HttpRequest::Pointer &request, const HttpRequestMethod& method, err_type requestError, Http::StatusCode errStatusCode, const char *requestErrorBytes)
+Http::One::Server::setReplyError(Http::StreamPointer &context, HttpRequest::Pointer &request, err_type requestError, Http::StatusCode errStatusCode, const char *requestErrorBytes)
 {
     quitAfterError(request.getRaw());
     if (!context->connRegistered()) {
@@ -220,7 +216,7 @@ Http::One::Server::setReplyError(Http::StreamPointer &context, HttpRequest::Poin
     clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
     assert (repContext);
 
-    repContext->setReplyToError(requestError, errStatusCode, method, context->http->uri, this, nullptr, requestErrorBytes, nullptr);
+    repContext->setReplyToError(requestError, errStatusCode, context->http->uri, this, nullptr, requestErrorBytes, nullptr);
 
     assert(context->http->out.offset == 0);
     context->pullData();
@@ -263,7 +259,7 @@ Http::One::Server::processParsedRequest(Http::StreamPointer &context)
             assert(http->log_uri);
             clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
             assert (repContext);
-            repContext->setReplyToError(ERR_INVALID_REQ, Http::scExpectationFailed, request->method, http->uri,
+            repContext->setReplyToError(ERR_INVALID_REQ, Http::scExpectationFailed, http->uri,
                                         this, request.getRaw(), nullptr, nullptr);
             assert(context->http->out.offset == 0);
             context->pullData();
@@ -379,8 +375,6 @@ Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &ca
     return true;
 }
 
-void switchToTunnel(HttpRequest *request, const Comm::ConnectionPointer &clientConn, const Comm::ConnectionPointer &srvConn, const SBuf &preReadServerData);
-
 void
 Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext server)
 {
@@ -398,13 +392,13 @@ Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext serve
 }
 
 ConnStateData *
-Http::NewServer(MasterXactionPointer &xact)
+Http::NewServer(const MasterXaction::Pointer &xact)
 {
     return new Http1::Server(xact, false);
 }
 
 ConnStateData *
-Https::NewServer(MasterXactionPointer &xact)
+Https::NewServer(const MasterXaction::Pointer &xact)
 {
     return new Http1::Server(xact, true);
 }

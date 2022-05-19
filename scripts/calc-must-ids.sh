@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 # Usage:
 #         calc-must-ids.sh [MustID]
 # Given an id it searches for the related Must expression in all
-# source files. If no arguments given it returns all Must expressions 
+# source files. If no arguments given it returns all Must expressions
 # with its ids and their  exact position in the source files.
 #
 # Example usage:

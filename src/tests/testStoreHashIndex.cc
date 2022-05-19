@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,6 @@
 #include "squid.h"
 #include "MemObject.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "store/Disks.h"
 #include "StoreSearch.h"
@@ -62,12 +61,11 @@ testStoreHashIndex::testMaxSize()
     Store::FreeMemory();
 }
 
-StoreEntry *
+static StoreEntry *
 addedEntry(Store::Disk *aStore,
            String name,
-           String varySpec,
-           String varyKey
-
+           String,
+           String
           )
 {
     StoreEntry *e = new StoreEntry();
@@ -95,7 +93,7 @@ addedEntry(Store::Disk *aStore,
     return e;
 }
 
-void commonInit()
+static void commonInit()
 {
     static bool inited = false;
 
@@ -116,7 +114,7 @@ void commonInit()
 static bool cbcalled;
 
 static void
-searchCallback(void *cbdata)
+searchCallback(void *)
 {
     cbcalled = true;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,10 +9,10 @@
 /* DEBUG: section 90    HTTP Cache Control Header */
 
 #include "squid.h"
+#include "HttpHdrSc.h"
 #include "HttpHdrScTarget.h"
 #include "StatHist.h"
 
-http_hdr_sc_type &operator++ (http_hdr_sc_type &aHeader);
 /* copies non-extant fields from new_sc to this sc */
 void
 HttpHdrScTarget::mergeWith(const HttpHdrScTarget * new_sc)

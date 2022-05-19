@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,54 +11,25 @@
 #include "squid.h"
 #include "base/AsyncCall.h"
 #include "base/AsyncCallQueue.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 AsyncCallQueue *AsyncCallQueue::TheInstance = 0;
-
-AsyncCallQueue::AsyncCallQueue(): theHead(NULL), theTail(NULL)
-{
-}
-
-void AsyncCallQueue::schedule(AsyncCall::Pointer &call)
-{
-    assert(call != NULL);
-    assert(!call->theNext);
-    if (theHead != NULL) { // append
-        assert(!theTail->theNext);
-        theTail->theNext = call;
-        theTail = call;
-    } else { // create queue from cratch
-        theHead = theTail = call;
-    }
-}
 
 // Fire all scheduled calls; returns true if at least one call was fired.
 // The calls may be added while the current call is in progress.
 bool
 AsyncCallQueue::fire()
 {
-    const bool made = theHead != NULL;
-    while (theHead) {
-        CodeContext::Reset(theHead->codeContext);
-        fireNext();
+    const auto made = scheduled.size() > 0;
+    while (const auto call = scheduled.extract()) {
+        CodeContext::Reset(call->codeContext);
+        debugs(call->debugSection, call->debugLevel, "entering " << *call);
+        call->make();
+        debugs(call->debugSection, call->debugLevel, "leaving " << *call);
     }
     if (made)
         CodeContext::Reset();
     return made;
-}
-
-void
-AsyncCallQueue::fireNext()
-{
-    AsyncCall::Pointer call = theHead;
-    theHead = call->theNext;
-    call->theNext = NULL;
-    if (theTail == call)
-        theTail = NULL;
-
-    debugs(call->debugSection, call->debugLevel, "entering " << *call);
-    call->make();
-    debugs(call->debugSection, call->debugLevel, "leaving " << *call);
 }
 
 AsyncCallQueue &

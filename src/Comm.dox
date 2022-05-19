@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 /**
 \defgroup Comm Comm Module
 \ingroup Components
- 
+
 
 \section Basic Basic Comm API principles
 
@@ -57,7 +57,7 @@
   with an AsyncCall object. This call guarantees that the passed Call
   will be canceled (see the AsyncCall API for call cancellation
   definitions and details). Naturally, the code has to store the
-  original read callback Call pointer to use this interface. 
+  original read callback Call pointer to use this interface.
 
   \par
   The comm_read_cancel() call does not guarantee that the read operation

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,7 +26,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION( testSBuf );
 #include "event.h"
 #include "MemObject.h"
 void
-eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata)
+eventAdd(const char *, EVH *, void *, double, int, bool)
 {}
 int64_t
 MemObject::endOffset() const

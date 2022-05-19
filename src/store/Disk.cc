@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -163,7 +163,7 @@ Store::Disk::objectSizeIsAcceptable(int64_t objsize) const
 bool
 Store::Disk::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const
 {
-    debugs(47,8, HERE << "cache_dir[" << index << "]: needs " <<
+    debugs(47,8, "cache_dir[" << index << "]: needs " <<
            diskSpaceNeeded << " <? " << max_objsize);
 
     if (EBIT_TEST(e.flags, ENTRY_SPECIAL))

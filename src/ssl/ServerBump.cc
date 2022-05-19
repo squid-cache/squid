@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -48,9 +48,9 @@ Ssl::ServerBump::ServerBump(ClientHttpRequest *http, StoreEntry *e, Ssl::BumpMod
 
 Ssl::ServerBump::~ServerBump()
 {
-    debugs(33, 4, HERE << "destroying");
+    debugs(33, 4, "destroying");
     if (entry) {
-        debugs(33, 4, HERE << *entry);
+        debugs(33, 4, *entry);
         storeUnregister(sc, entry, this);
         entry->unlock("Ssl::ServerBump");
     }
@@ -59,9 +59,6 @@ Ssl::ServerBump::~ServerBump()
 void
 Ssl::ServerBump::attachServerSession(const Security::SessionPointer &s)
 {
-    if (serverSession)
-        return;
-
     serverSession = s;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,6 +35,8 @@ public:
     HttpReply *reply; ///< HTTP response being adapted; may be nil
     AccessLogEntry::Pointer al; ///< info for the future access.log entry
 };
+
+std::ostream &operator <<(std::ostream &, const ServiceFilter &);
 
 } // namespace Adaptation
 

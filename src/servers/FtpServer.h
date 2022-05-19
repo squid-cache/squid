@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,8 +11,10 @@
 #ifndef SQUID_SERVERS_FTP_SERVER_H
 #define SQUID_SERVERS_FTP_SERVER_H
 
+#include "base/JobWait.h"
 #include "base/Lock.h"
 #include "client_side.h"
+#include "comm/forward.h"
 
 namespace Ftp
 {
@@ -188,7 +190,11 @@ private:
     size_t uploadAvailSize; ///< number of yet unused uploadBuf bytes
 
     AsyncCall::Pointer listener; ///< set when we are passively listening
-    AsyncCall::Pointer connector; ///< set when we are actively connecting
+
+    /// Waits for an FTP data connection to the client to be established/opened.
+    /// This wait only happens in FTP active mode (via PORT or EPRT).
+    JobWait<Comm::ConnOpener> dataConnWait;
+
     AsyncCall::Pointer reader; ///< set when we are reading FTP data
 
     /// whether we wait for the origin data transfer to end

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -213,7 +213,7 @@ public:
     /// noteTakeServerConnectionControl() callback parameter
     class ServerConnectionContext {
     public:
-        ServerConnectionContext(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req, const SBuf &post101Bytes): preReadServerBytes(post101Bytes), conn_(conn) { conn_->enterOrphanage(); }
+        ServerConnectionContext(const Comm::ConnectionPointer &conn, const SBuf &post101Bytes) : preReadServerBytes(post101Bytes), conn_(conn) { conn_->enterOrphanage(); }
 
         /// gives to-server connection to the new owner
         Comm::ConnectionPointer connection() { conn_->leaveOrphanage(); return conn_; }
@@ -335,17 +335,14 @@ public:
     bool fakeAConnectRequest(const char *reason, const SBuf &payload);
 
     /// generates and sends to tunnel.cc a fake request with a given payload
-    bool initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::MethodType const method, const char *reason, const SBuf &payload);
+    bool initiateTunneledRequest(HttpRequest::Pointer const &cause, const char *reason, const SBuf &payload);
 
     /// whether we should start saving inBuf client bytes in anticipation of
     /// tunneling them to the server later (on_unsupported_protocol)
     bool shouldPreserveClientData() const;
 
-    // TODO: move to the protected section when removing clientTunnelOnError()
-    bool tunnelOnError(const HttpRequestMethod &, const err_type);
-
     /// build a fake http request
-    ClientHttpRequest *buildFakeRequest(Http::MethodType const method, SBuf &useHost, unsigned short usePort, const SBuf &payload);
+    ClientHttpRequest *buildFakeRequest(SBuf &useHost, unsigned short usePort, const SBuf &payload);
 
     /// From-client handshake bytes (including bytes at the beginning of a
     /// CONNECT tunnel) which we may need to forward as-is if their syntax does
@@ -436,6 +433,8 @@ protected:
 
     /// whether preservedClientData is valid and should be kept up to date
     bool preservingClientData_ = false;
+
+    bool tunnelOnError(const err_type);
 
 private:
     /* ::Server API */
@@ -533,6 +532,7 @@ CSCB clientSocketRecipient;
 CSD clientSocketDetach;
 
 void clientProcessRequest(ConnStateData *, const Http1::RequestParserPointer &, Http::Stream *);
+void clientProcessRequestFinished(ConnStateData *, const HttpRequest::Pointer &);
 void clientPostHttpsAccept(ConnStateData *);
 
 std::ostream &operator <<(std::ostream &os, const ConnStateData::PinnedIdleContext &pic);

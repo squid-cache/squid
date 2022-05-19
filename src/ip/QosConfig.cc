@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "acl/Gadgets.h"
+#include "base/IoManip.h"
 #include "cache_cf.h"
 #include "comm/Connection.h"
 #include "compat/cmsg.h"
@@ -69,12 +70,15 @@ Ip::Qos::getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde)
             }
         } else {
             int xerrno = errno;
-            debugs(33, DBG_IMPORTANT, "QOS: error in getsockopt(IP_PKTOPTIONS) on " << server << " " << xstrerr(xerrno));
+            debugs(33, DBG_IMPORTANT, "ERROR: QOS: getsockopt(IP_PKTOPTIONS) failure on " << server << " " << xstrerr(xerrno));
         }
     } else {
         int xerrno = errno;
-        debugs(33, DBG_IMPORTANT, "QOS: error in setsockopt(IP_RECVTOS) on " << server << " " << xstrerr(xerrno));
+        debugs(33, DBG_IMPORTANT, "ERROR: QOS: setsockopt(IP_RECVTOS) failure on " << server << " " << xstrerr(xerrno));
     }
+#else
+    (void)server;
+    (void)clientFde;
 #endif
 }
 
@@ -166,6 +170,9 @@ Ip::Qos::getNfConnmark(const Comm::ConnectionPointer &conn, const Ip::Qos::Conne
     } else {
         debugs(17, 2, "QOS: Failed to allocate new conntrack for netfilter CONNMARK retrieval.");
     }
+#else
+    (void)conn;
+    (void)connDir;
 #endif
     return mark;
 }
@@ -207,7 +214,11 @@ Ip::Qos::setNfConnmark(Comm::ConnectionPointer &conn, const Ip::Qos::ConnectionD
     } else {
         debugs(17, 2, "QOS: Failed to allocate new conntrack for netfilter CONNMARK modification.");
     }
-#endif
+#else /* USE_LIBNETFILTERCONNTRACK */
+    (void)conn;
+    (void)connDir;
+    (void)cm;
+#endif /* USE_LIBNETFILTERCONNTRACK */
     return ret;
 }
 
@@ -575,9 +586,13 @@ Ip::Qos::setSockNfmark(const int fd, nfmark_t mark)
     }
     return x;
 #elif USE_LIBCAP
+    (void)mark;
+    (void)fd;
     debugs(50, DBG_IMPORTANT, "WARNING: setsockopt(SO_MARK) not supported on this platform");
     return -1;
 #else
+    (void)mark;
+    (void)fd;
     debugs(50, DBG_IMPORTANT, "WARNING: Netfilter marking disabled (netfilter marking requires build with LIBCAP)");
     return -1;
 #endif

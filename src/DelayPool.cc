@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -77,9 +77,9 @@ DelayPool::freeData()
 
 // TODO: create DelayIdComposite.cc
 void
-CompositePoolNode::delayRead(DeferredRead const &aRead)
+CompositePoolNode::delayRead(const AsyncCall::Pointer &aRead)
 {
-    deferredReads.delayRead(aRead);
+    deferredReads.delay(aRead);
 }
 
 #include "comm.h"
@@ -87,7 +87,7 @@ CompositePoolNode::delayRead(DeferredRead const &aRead)
 void
 CompositePoolNode::kickReads()
 {
-    deferredReads.kickReads(-1);
+    deferredReads.schedule();
 }
 
 #endif /* USE_DELAY_POOLS */

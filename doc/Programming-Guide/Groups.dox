@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -40,7 +40,7 @@
 
 /**
  \defgroup libsquid         Squid Library
- * 
+ *
  \par
  *     These objects are provided publicly through lidsquid.la
  */
@@ -65,7 +65,7 @@
 
 /**
  \defgroup Callbacks         Event Callback Functions
- * 
+ *
  \par
  *      Squid uses events to process asynchronous actions.
  *      These methods are registered as callbacks to receive notice whenever a

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,7 +28,7 @@ char const * esiBrowsers[]= {"MSIE",
 CBDATA_CLASS_INIT(ESIVarState);
 
 void
-ESIVarState::Variable::eval (ESIVarState &state, char const *subref, char const *found_default) const
+ESIVarState::Variable::eval(ESIVarState &state, char const *, char const *found_default) const
 {
     /* No-op. We swallow it */
 

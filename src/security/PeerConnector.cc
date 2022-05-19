@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "base/IoManip.h"
 #include "comm/Loops.h"
 #include "comm/Read.h"
 #include "Downloader.h"
@@ -107,9 +108,15 @@ Security::PeerConnector::fillChecklist(ACLFilledChecklist &checklist) const
 void
 Security::PeerConnector::commCloseHandler(const CommCloseCbParams &params)
 {
-    closeHandler = nullptr;
-
     debugs(83, 5, "FD " << params.fd << ", Security::PeerConnector=" << params.data);
+
+    closeHandler = nullptr;
+    if (serverConn) {
+        countFailingConnection();
+        serverConn->noteClosure();
+        serverConn = nullptr;
+    }
+
     const auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request.getRaw(), al);
     static const auto d = MakeNamedErrorDetail("TLS_CONNECT_CLOSE");
     err->detailError(d);
@@ -129,13 +136,15 @@ Security::PeerConnector::commTimeoutHandler(const CommTimeoutCbParams &)
 bool
 Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
 {
+    Must(Comm::IsConnOpen(serverConnection()));
+
     Security::ContextPointer ctx(getTlsContext());
     debugs(83, 5, serverConnection() << ", ctx=" << (void*)ctx.get());
 
     if (!ctx || !Security::CreateClientSession(ctx, serverConnection(), "server https start")) {
         const auto xerrno = errno;
         if (!ctx) {
-            debugs(83, DBG_IMPORTANT, "Error initializing TLS connection: No security context.");
+            debugs(83, DBG_IMPORTANT, "ERROR: initializing TLS connection: No security context.");
         } // else CreateClientSession() did the appropriate debugs() already
         const auto anErr = new ErrorState(ERR_SOCKET_FAILURE, Http::scInternalServerError, request.getRaw(), al);
         anErr->xerrno = xerrno;
@@ -154,6 +163,9 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
     if (!Ssl::TheConfig.ssl_crt_validator) {
         // Create the ACL check list now, while we have access to more info.
         // The list is used in ssl_verify_cb() and is freed in ssl_free().
+        // XXX: This info may change, especially if we fetch missing certs.
+        // TODO: Remove ACLFilledChecklist::sslErrors and other pre-computed
+        // state in favor of the ACLs accessing current/fresh info directly.
         if (acl_access *acl = ::Config.ssl_client.cert_error) {
             ACLFilledChecklist *check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
             fillChecklist(*check);
@@ -178,6 +190,8 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
 void
 Security::PeerConnector::recordNegotiationDetails()
 {
+    Must(Comm::IsConnOpen(serverConnection()));
+
     const int fd = serverConnection()->fd;
     Security::SessionPointer session(fd_table[fd].ssl);
 
@@ -196,6 +210,8 @@ Security::PeerConnector::recordNegotiationDetails()
 void
 Security::PeerConnector::negotiate()
 {
+    Must(Comm::IsConnOpen(serverConnection()));
+
     const int fd = serverConnection()->fd;
     if (fd_table[fd].closing())
         return;
@@ -229,7 +245,7 @@ Security::PeerConnector::negotiate()
                 !(result.errorDetail && result.errorDetail->errorNo() == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY))
             return handleMissingCertificates(result);
 
-        debugs(83, DBG_IMPORTANT, "BUG: Honoring unexpected SSL_connect() error: X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY");
+        debugs(83, DBG_IMPORTANT, "ERROR: Squid BUG: Honoring unexpected SSL_connect() failure: X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY");
         // fall through to regular error handling
     }
 #endif
@@ -243,7 +259,7 @@ Security::PeerConnector::handleNegotiationResult(const Security::IoResult &resul
     switch (result.category) {
     case Security::IoResult::ioSuccess:
         recordNegotiationDetails();
-        if (sslFinalized())
+        if (sslFinalized() && callback)
             sendSuccess();
         return; // we may be gone by now
 
@@ -271,6 +287,7 @@ Security::PeerConnector::sslFinalized()
 {
 #if USE_OPENSSL
     if (Ssl::TheConfig.ssl_crt_validator && useCertValidator_) {
+        Must(Comm::IsConnOpen(serverConnection()));
         const int fd = serverConnection()->fd;
         Security::SessionPointer session(fd_table[fd].ssl);
 
@@ -314,6 +331,7 @@ void
 Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointer validationResponse)
 {
     Must(validationResponse != NULL);
+    Must(Comm::IsConnOpen(serverConnection()));
 
     ErrorDetail::Pointer errDetails;
     bool validatorFailed = false;
@@ -336,7 +354,8 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
 
     if (!errDetails && !validatorFailed) {
         noteNegotiationDone(NULL);
-        sendSuccess();
+        if (callback)
+            sendSuccess();
         return;
     }
 
@@ -362,6 +381,8 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
 Security::CertErrors *
 Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &resp, ErrorDetail::Pointer &errDetails)
 {
+    Must(Comm::IsConnOpen(serverConnection()));
+
     ACLFilledChecklist *check = NULL;
     Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
 
@@ -435,8 +456,10 @@ Security::PeerConnector::negotiateSsl()
 void
 Security::PeerConnector::noteWantRead()
 {
-    const int fd = serverConnection()->fd;
     debugs(83, 5, serverConnection());
+
+    Must(Comm::IsConnOpen(serverConnection()));
+    const int fd = serverConnection()->fd;
 
     // read timeout to avoid getting stuck while reading from a silent server
     typedef CommCbMemFunT<Security::PeerConnector, CommTimeoutCbParams> TimeoutDialer;
@@ -451,8 +474,10 @@ Security::PeerConnector::noteWantRead()
 void
 Security::PeerConnector::noteWantWrite()
 {
-    const int fd = serverConnection()->fd;
     debugs(83, 5, serverConnection());
+    Must(Comm::IsConnOpen(serverConnection()));
+
+    const int fd = serverConnection()->fd;
     Comm::SetSelect(fd, COMM_SELECT_WRITE, &NegotiateSsl, new Pointer(this), 0);
     return;
 }
@@ -469,57 +494,76 @@ Security::PeerConnector::noteNegotiationError(const Security::ErrorDetailPointer
     bail(anErr);
 }
 
+Security::EncryptorAnswer &
+Security::PeerConnector::answer()
+{
+    assert(callback);
+    const auto dialer = dynamic_cast<CbDialer*>(callback->getDialer());
+    assert(dialer);
+    return dialer->answer();
+}
+
 void
 Security::PeerConnector::bail(ErrorState *error)
 {
     Must(error); // or the recipient will not know there was a problem
-    Must(callback != NULL);
-    CbDialer *dialer = dynamic_cast<CbDialer*>(callback->getDialer());
-    Must(dialer);
-    dialer->answer().error = error;
+    answer().error = error;
 
-    if (const auto p = serverConnection()->getPeer())
-        peerConnectFailed(p);
+    if (const auto failingConnection = serverConn) {
+        countFailingConnection();
+        disconnect();
+        failingConnection->close();
+    }
 
     callBack();
-    disconnect();
-
-    if (noteFwdPconnUse)
-        fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
-    serverConn->close();
-    serverConn = nullptr;
 }
 
 void
 Security::PeerConnector::sendSuccess()
 {
-    callBack();
+    assert(Comm::IsConnOpen(serverConn));
+    answer().conn = serverConn;
     disconnect();
+    callBack();
+}
+
+void
+Security::PeerConnector::countFailingConnection()
+{
+    assert(serverConn);
+    if (const auto p = serverConn->getPeer())
+        peerConnectFailed(p);
+    // TODO: Calling PconnPool::noteUses() should not be our responsibility.
+    if (noteFwdPconnUse && serverConn->isOpen())
+        fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
 }
 
 void
 Security::PeerConnector::disconnect()
 {
+    const auto stillOpen = Comm::IsConnOpen(serverConn);
+
     if (closeHandler) {
-        comm_remove_close_handler(serverConnection()->fd, closeHandler);
+        if (stillOpen)
+            comm_remove_close_handler(serverConn->fd, closeHandler);
         closeHandler = nullptr;
     }
 
-    commUnsetConnTimeout(serverConnection());
+    if (stillOpen)
+        commUnsetConnTimeout(serverConn);
+
+    serverConn = nullptr;
 }
 
 void
 Security::PeerConnector::callBack()
 {
-    debugs(83, 5, "TLS setup ended for " << serverConnection());
+    debugs(83, 5, "TLS setup ended for " << answer().conn);
 
     AsyncCall::Pointer cb = callback;
     // Do this now so that if we throw below, swanSong() assert that we _tried_
     // to call back holds.
     callback = NULL; // this should make done() true
-    CbDialer *dialer = dynamic_cast<CbDialer*>(cb->getDialer());
-    Must(dialer);
-    dialer->answer().conn = serverConnection();
     ScheduleCallHere(cb);
 }
 
@@ -528,8 +572,9 @@ Security::PeerConnector::swanSong()
 {
     // XXX: unregister fd-closure monitoring and CommSetSelect interest, if any
     AsyncJob::swanSong();
-    if (callback != NULL) { // paranoid: we have left the caller waiting
-        debugs(83, DBG_IMPORTANT, "BUG: Unexpected state while connecting to a cache_peer or origin server");
+
+    if (callback) {
+        // job-ending emergencies like handleStopRequest() or callException()
         const auto anErr = new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al);
         bail(anErr);
         assert(!callback);
@@ -550,7 +595,7 @@ Security::PeerConnector::status() const
         buf.append("Stopped, reason:", 16);
         buf.appendf("%s",stopReason);
     }
-    if (serverConn != NULL)
+    if (Comm::IsConnOpen(serverConn))
         buf.appendf(" FD %d", serverConn->fd);
     buf.appendf(" %s%u]", id.prefix(), id.value);
     buf.terminate();
@@ -570,8 +615,8 @@ public:
         peerConnector_(pc) {}
 
     /* CallDialer API */
-    virtual bool canDial(AsyncCall &call) { return peerConnector_.valid(); }
-    virtual void dial(AsyncCall &call) { ((&(*peerConnector_))->*method_)(object, status); }
+    virtual bool canDial(AsyncCall &) { return peerConnector_.valid(); }
+    virtual void dial(AsyncCall &) { ((&(*peerConnector_))->*method_)(object, status); }
     Method method_; ///< The Security::PeerConnector method to dial
     CbcPointer<Security::PeerConnector> peerConnector_; ///< The Security::PeerConnector object
 };
@@ -597,16 +642,21 @@ Security::PeerConnector::startCertDownloading(SBuf &url)
                                       "Security::PeerConnector::certDownloadingDone",
                                       PeerConnectorCertDownloaderDialer(&Security::PeerConnector::certDownloadingDone, this));
 
-    const auto dl = new Downloader(url, certCallback, XactionInitiator::initCertFetcher, certDownloadNestingLevel() + 1);
-    AsyncJob::Start(dl);
+    const auto dl = new Downloader(url, certCallback,
+        MasterXaction::MakePortless<XactionInitiator::initCertFetcher>(),
+        certDownloadNestingLevel() + 1);
+    certDownloadWait.start(dl, certCallback);
 }
 
 void
 Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
 {
+    certDownloadWait.finish();
+
     ++certsDownloads;
     debugs(81, 5, "Certificate downloading status: " << downloadStatus << " certificate size: " << obj.length());
 
+    Must(Comm::IsConnOpen(serverConnection()));
     const auto &sconn = *fd_table[serverConnection()->fd].ssl;
 
     // Parse Certificate. Assume that it is in DER format.
@@ -659,6 +709,7 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
 void
 Security::PeerConnector::handleMissingCertificates(const Security::IoResult &ioResult)
 {
+    Must(Comm::IsConnOpen(serverConnection()));
     auto &sconn = *fd_table[serverConnection()->fd].ssl;
 
     // We download the missing certificate(s) once. We would prefer to clear
@@ -670,10 +721,10 @@ Security::PeerConnector::handleMissingCertificates(const Security::IoResult &ioR
     Must(callerHandlesMissingCertificates);
     callerHandlesMissingCertificates = false;
 
-    if (!computeMissingCertificateUrls(sconn))
-        return handleNegotiationResult(ioResult);
-
     suspendNegotiation(ioResult);
+
+    if (!computeMissingCertificateUrls(sconn))
+        return resumeNegotiation();
 
     assert(!urlsOfMissingCerts.empty());
     startCertDownloading(urlsOfMissingCerts.front());

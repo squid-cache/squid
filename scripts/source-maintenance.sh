@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -277,9 +277,9 @@ collectDebugMessagesFrom ()
     # - remove quotes around "strings"
     # - remove excessive whitespace
     # - remove debugs() statement termination sugar
-    grep -o -E '\bdebugs[^,]*,\s*(Critical|Important)[(][0-9]+.*' doc/debug-messages.tmp2 | \
+    grep -o -E '\bdebugs[^,]*,[^,]*(Critical|Important)[(][0-9]+.*' doc/debug-messages.tmp2 | \
         sed -r \
-            -e 's/.*?(Critical|Important)[(]([0-9]+)[)],\s*/\2 /' \
+            -e 's/.*(Critical|Important)[(]([0-9]+)[)][^,]*,\s*/\2 /' \
             -e 's/<<\s*[(].*[)]\s*(<<|[)];)/<< ... \1/g' \
             -e 's/<<\s*[^"]*/.../g' \
             -e 's@([^\\])"@\1@g' \
@@ -521,24 +521,6 @@ done
     run_ processDebugSections || return
     run_ processDebugMessages || return
 }
-
-# Build XPROF types file from current sources
-(
-cat scripts/boilerplate.h
-echo "#ifndef _PROFILER_XPROF_TYPE_H_"
-echo "#define _PROFILER_XPROF_TYPE_H_"
-echo "/* AUTO-GENERATED FILE */"
-echo "#if USE_XPROF_STATS"
-echo "typedef enum {"
-echo "    XPROF_PROF_UNACCOUNTED,"
-grep -R -h "PROF_start.*" ./* | grep -v probename | sed -e 's/ //g; s/PROF_start(/    XPROF_/; s/);/,/;' | sort -u
-echo "    XPROF_LAST"
-echo "} xprof_type;"
-echo "#endif"
-echo "#endif"
-echo ""
-) >lib/profiler/list
-mv lib/profiler/list lib/profiler/xprof_type.h
 
 printAmFile ()
 {

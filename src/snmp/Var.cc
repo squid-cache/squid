@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "base/TextException.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "ipc/TypedMsgHdr.h"
 #include "snmp/Var.h"
 #include "tools.h"
@@ -67,7 +67,7 @@ Snmp::Var::operator += (const Var& var)
         setTimeTicks(asTimeTicks() + var.asTimeTicks());
         break;
     default:
-        debugs(49, DBG_CRITICAL, HERE << "Unsupported type: " << type);
+        debugs(49, DBG_CRITICAL, "ERROR: Unsupported type: " << type);
         throw TexcHere("Unsupported type");
         break;
     }
@@ -95,7 +95,7 @@ Snmp::Var::operator /= (int num)
         setTimeTicks(asTimeTicks() / num);
         break;
     default:
-        debugs(49, DBG_CRITICAL, HERE << "Unsupported type: " << type);
+        debugs(49, DBG_CRITICAL, "ERROR: Unsupported type: " << type);
         throw TexcHere("Unsupported type");
         break;
     }
@@ -117,7 +117,7 @@ Snmp::Var::operator < (const Var& var) const
     case SMI_TIMETICKS:
         return asTimeTicks() < var.asTimeTicks();
     default:
-        debugs(49, DBG_CRITICAL, HERE << "Unsupported type: " << type);
+        debugs(49, DBG_CRITICAL, "ERROR: Unsupported type: " << type);
         throw TexcHere("Unsupported type");
         break;
     }
@@ -139,7 +139,7 @@ Snmp::Var::operator > (const Var& var) const
     case SMI_TIMETICKS:
         return asTimeTicks() > var.asTimeTicks();
     default:
-        debugs(49, DBG_CRITICAL, HERE << "Unsupported type: " << type);
+        debugs(49, DBG_CRITICAL, "ERROR: Unsupported type: " << type);
         throw TexcHere("Unsupported type");
         break;
     }

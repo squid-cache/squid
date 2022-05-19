@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 18    Cache Manager Statistics */
 
 #include "squid.h"
+#include "AccessLogEntry.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
 #include "client_side.h"
@@ -37,15 +38,12 @@
 #include "PeerDigest.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
-#include "SquidTime.h"
 #include "stat.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "store_digest.h"
 #include "StoreClient.h"
 #include "tools.h"
-// for tvSubDsec() which should be in SquidTime.h
-#include "util.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
@@ -590,10 +588,10 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
 #endif
 
     storeAppendPrintf(sentry, "Start Time:\t%s\n",
-                      mkrfc1123(stats.squid_start.tv_sec));
+                      Time::FormatRfc1123(stats.squid_start.tv_sec));
 
     storeAppendPrintf(sentry, "Current Time:\t%s\n",
-                      mkrfc1123(stats.current_time.tv_sec));
+                      Time::FormatRfc1123(stats.current_time.tv_sec));
 
     storeAppendPrintf(sentry, "Connection information for %s:\n",APP_SHORTNAME);
 
@@ -789,6 +787,8 @@ DumpMallocStatistics(StoreEntry* sentry)
     storeAppendPrintf(sentry, "\nMemory allocation statistics\n");
     storeAppendPrintf(sentry, "%12s %15s %6s %12s\n","Alloc Size","Count","Delta","Alloc/sec");
     malloc_statistics(info_get_mallstat, sentry);
+#else
+    (void)sentry;
 #endif
 }
 
@@ -906,7 +906,7 @@ GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours)
 
         l = &CountHourHist[hours];
     } else {
-        debugs(18, DBG_IMPORTANT, "statAvgDump: Invalid args, minutes=" << minutes << ", hours=" << hours);
+        debugs(18, DBG_IMPORTANT, "ERROR: statAvgDump: Invalid args, minutes=" << minutes << ", hours=" << hours);
         return;
     }
 
@@ -1021,11 +1021,11 @@ DumpAvgStat(Mgr::IntervalActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "sample_start_time = %d.%d (%s)\n",
                       (int)stats.sample_start_time.tv_sec,
                       (int)stats.sample_start_time.tv_usec,
-                      mkrfc1123(stats.sample_start_time.tv_sec));
+                      Time::FormatRfc1123(stats.sample_start_time.tv_sec));
     storeAppendPrintf(sentry, "sample_end_time = %d.%d (%s)\n",
                       (int)stats.sample_end_time.tv_sec,
                       (int)stats.sample_end_time.tv_usec,
-                      mkrfc1123(stats.sample_end_time.tv_sec));
+                      Time::FormatRfc1123(stats.sample_end_time.tv_sec));
 
     storeAppendPrintf(sentry, "client_http.requests = %f/sec\n",
                       stats.client_http_requests);
@@ -1458,7 +1458,7 @@ DumpCountersStats(Mgr::CountersActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "sample_time = %d.%d (%s)\n",
                       (int) stats.sample_time.tv_sec,
                       (int) stats.sample_time.tv_usec,
-                      mkrfc1123(stats.sample_time.tv_sec));
+                      Time::FormatRfc1123(stats.sample_time.tv_sec));
     storeAppendPrintf(sentry, "client_http.requests = %.0f\n",
                       stats.client_http_requests);
     storeAppendPrintf(sentry, "client_http.hits = %.0f\n",
@@ -1824,7 +1824,7 @@ statClientRequests(StoreEntry * s)
         }
 
         storeAppendPrintf(s, "uri %s\n", http->uri);
-        storeAppendPrintf(s, "logType %s\n", http->logType.c_str());
+        storeAppendPrintf(s, "logType %s\n", http->loggingTags().c_str());
         storeAppendPrintf(s, "out.offset %ld, out.size %lu\n",
                           (long int) http->out.offset, (unsigned long int) http->out.size);
         storeAppendPrintf(s, "req_sz %ld\n", (long int) http->req_sz);

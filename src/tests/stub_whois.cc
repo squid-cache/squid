@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,11 +7,11 @@
  */
 
 #include "squid.h"
+#include "FwdState.h"
+#include "whois.h"
 
 #define STUB_API "whois.cc"
 #include "tests/STUB.h"
-
-class FwdState;
 
 void whoisStart(FwdState *) STUB
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -69,7 +69,7 @@ struct CacheDir {
 typedef std::vector<CacheDir> CacheDirVector;
 
 int
-readConfigFile( CacheDirVector& cachedir, 
+readConfigFile( CacheDirVector& cachedir,
 		const char* fn,
 		FILE* debug = 0 );
   // purpose: read squid.conf file and extract cache_dir entries

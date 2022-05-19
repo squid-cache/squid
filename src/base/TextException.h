@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #ifndef SQUID__TEXTEXCEPTION_H
 #define SQUID__TEXTEXCEPTION_H
 
+#include "base/Assure.h"
 #include "base/Here.h"
 
 #include <stdexcept>
@@ -57,19 +58,16 @@ std::ostream &operator <<(std::ostream &, const TextException &);
 /// legacy convenience macro; it is not difficult to type Here() now
 #define TexcHere(msg) TextException((msg), Here())
 
-/// Like assert() but throws an exception instead of aborting the process
-/// and allows the caller to customize the exception message and location.
+/// Like Must() but supports custom exception message and location.
 /// \param description string literal describing the condition; what MUST happen
+/// Deprecated: Use Assure2() for code logic checks and throw explicitly when
+/// input validation fails.
 #define Must3(condition, description, location) \
-    do { \
-        if (!(condition)) { \
-            const TextException Must_ex_(("check failed: " description), (location)); \
-            debugs(0, 3, Must_ex_.what()); \
-            throw Must_ex_; \
-        } \
-    } while (/*CONSTCOND*/ false)
+    Assure_(3, (condition), ("check failed: " description), (location))
 
-/// Like assert() but throws an exception instead of aborting the process.
+/// Like Assure() but only logs the exception if level-3 debugging is enabled
+/// and runs even when NDEBUG macro is defined. Deprecated: Use Assure() for
+/// code logic checks and throw explicitly when input validation fails.
 #define Must(condition) Must3((condition), #condition, Here())
 
 /// Reports and swallows all exceptions to prevent compiler warnings and runtime
@@ -78,7 +76,7 @@ std::ostream &operator <<(std::ostream &, const TextException &);
     try { \
         code \
     } catch (...) { \
-        debugs(0, DBG_IMPORTANT, "BUG: ignoring exception;" << \
+        debugs(0, DBG_IMPORTANT, "ERROR: Squid BUG: ignoring exception;" << \
                Debug::Extra << "bug location: " << Here() << \
                Debug::Extra << "ignored exception: " << CurrentException); \
     }

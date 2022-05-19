@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,9 +9,9 @@
 /* DEBUG: section 37    ICMP Routines */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "Icmp.h"
-#include "SquidTime.h"
+#include "time/gadgets.h"
 
 Icmp::Icmp()
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "base/AsyncCbdataCalls.h"
 #include "base/InstanceId.h"
+#include "base/TypeTraits.h"
 #include "CachePeer.h"
 #include "carp.h"
 #include "client_side.h"
@@ -33,9 +34,8 @@
 #include "peer_userhash.h"
 #include "PeerSelectState.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
-#include "util.h" // for tvSubDsec() which should be in SquidTime.h
+#include "time/gadgets.h"
 
 /**
  * A CachePeer which has been selected as a possible destination.
@@ -243,7 +243,7 @@ PeerSelector::~PeerSelector()
     }
 
     if (acl_checklist) {
-        debugs(44, DBG_IMPORTANT, "BUG: peer selector gone while waiting for a slow ACL");
+        debugs(44, DBG_IMPORTANT, "ERROR: Squid BUG: peer selector gone while waiting for a slow ACL");
         delete acl_checklist;
     }
 
@@ -940,6 +940,8 @@ PeerSelector::handleIcpParentMiss(CachePeer *p, icp_common_t *header)
             }
         }
     }
+#else
+    (void)header;
 #endif /* USE_ICMP */
 
     /* if closest-only is set, then don't allow FIRST_PARENT_MISS */
@@ -1034,6 +1036,8 @@ PeerSelector::handleHtcpParentMiss(CachePeer *p, HtcpReplyData *htcp)
             }
         }
     }
+#else
+    (void)htcp;
 #endif /* USE_ICMP */
 
     /* if closest-only is set, then don't allow FIRST_PARENT_MISS */
@@ -1153,8 +1157,7 @@ PeerSelector::interestedInitiator()
 bool
 PeerSelector::wantsMoreDestinations() const {
     const auto maxCount = Config.forward_max_tries;
-    return maxCount >= 0 && foundPaths <
-           static_cast<std::make_unsigned<decltype(maxCount)>::type>(maxCount);
+    return maxCount >= 0 && foundPaths < static_cast<size_t>(maxCount);
 }
 
 void

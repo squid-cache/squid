@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,16 +10,16 @@
 
 #include "squid.h"
 #include "MemBuf.h"
-#include "SquidTime.h"
 #include "store/Controller.h"
 #include "store_rebuild.h"
+#include "time/gadgets.h"
 
 #include <cstring>
 
 #define STUB_API "stub_store_rebuild.cc"
 #include "tests/STUB.h"
 
-void storeRebuildProgress(int sd_index, int total, int sofar) STUB
+void storeRebuildProgress(int, int, int) STUB
 bool storeRebuildParseEntry(MemBuf &, StoreEntry &, cache_key *, StoreRebuildData &, uint64_t) STUB_RETVAL(false)
 
 void StoreRebuildData::updateStartTime(const timeval &dirStartTime)
@@ -35,7 +35,7 @@ void storeRebuildComplete(StoreRebuildData *)
 }
 
 bool
-storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, StoreRebuildData &)
+storeRebuildLoadEntry(int fd, int, MemBuf &buf, StoreRebuildData &)
 {
     if (fd < 0)
         return false;

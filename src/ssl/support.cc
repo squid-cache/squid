@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,7 +27,6 @@
 #include "security/ErrorDetail.h"
 #include "security/Session.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "ssl/bio.h"
 #include "ssl/Config.h"
 #include "ssl/ErrorDetail.h"
@@ -61,7 +60,7 @@ std::vector<const char *> Ssl::BumpModeStr = {
  */
 
 int
-Ssl::AskPasswordCb(char *buf, int size, int rwflag, void *userdata)
+Ssl::AskPasswordCb(char *buf, int size, int /* rwflag */, void *userdata)
 {
     FILE *in;
     int len = 0;
@@ -96,7 +95,7 @@ ssl_ask_password(SSL_CTX * context, const char * prompt)
 
 #if HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK
 static RSA *
-ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
+ssl_temp_rsa_cb(SSL *, int, int keylen)
 {
     static RSA *rsa_512 = nullptr;
     static RSA *rsa_1024 = nullptr;
@@ -107,7 +106,7 @@ ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
     if (!e) {
         e = BN_new();
         if (!e || !BN_set_word(e, RSA_F4)) {
-            debugs(83, DBG_IMPORTANT, "ssl_temp_rsa_cb: Failed to set exponent for key " << keylen);
+            debugs(83, DBG_IMPORTANT, "ERROR: ssl_temp_rsa_cb: Failed to set exponent for key " << keylen);
             BN_free(e);
             e = nullptr;
             return nullptr;
@@ -147,12 +146,12 @@ ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
         break;
 
     default:
-        debugs(83, DBG_IMPORTANT, "ssl_temp_rsa_cb: Unexpected key length " << keylen);
+        debugs(83, DBG_IMPORTANT, "ERROR: ssl_temp_rsa_cb: Unexpected key length " << keylen);
         return NULL;
     }
 
     if (rsa == NULL) {
-        debugs(83, DBG_IMPORTANT, "ssl_temp_rsa_cb: Failed to generate key " << keylen);
+        debugs(83, DBG_IMPORTANT, "ERROR: ssl_temp_rsa_cb: Failed to generate key " << keylen);
         return NULL;
     }
 
@@ -173,6 +172,8 @@ Ssl::MaybeSetupRsaCallback(Security::ContextPointer &ctx)
 #if HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK
     debugs(83, 9, "Setting RSA key generation callback.");
     SSL_CTX_set_tmp_rsa_callback(ctx.get(), ssl_temp_rsa_cb);
+#else
+    (void)ctx;
 #endif
 }
 
@@ -344,14 +345,14 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         if (const char *err_descr = Ssl::GetErrorDescr(error_no))
             debugs(83, 5, err_descr << ": " << buffer);
         else
-            debugs(83, DBG_IMPORTANT, "SSL unknown certificate error " << error_no << " in " << buffer);
+            debugs(83, DBG_IMPORTANT, "ERROR: SSL unknown certificate error " << error_no << " in " << buffer);
 
         // Check if the certificate error can be bypassed.
         // Infinity validation loop errors can not bypassed.
         if (error_no != SQUID_X509_V_ERR_INFINITE_VALIDATION) {
             if (check) {
                 ACLFilledChecklist *filledCheck = Filled(check);
-                assert(!filledCheck->sslErrors);
+                const auto savedErrors = filledCheck->sslErrors;
                 filledCheck->sslErrors = new Security::CertErrors(Security::CertError(error_no, broken_cert));
                 filledCheck->serverCert = peer_cert;
                 if (check->fastCheck().allowed()) {
@@ -361,7 +362,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
                     debugs(83, 5, "confirming SSL error " << error_no);
                 }
                 delete filledCheck->sslErrors;
-                filledCheck->sslErrors = NULL;
+                filledCheck->sslErrors = savedErrors;
                 filledCheck->serverCert.reset();
             }
             // If the certificate validator is used then we need to allow all errors and
@@ -410,7 +411,7 @@ Ssl::ConfigurePeerVerification(Security::ContextPointer &ctx, const Security::Pa
     // assume each flag is exclusive; flags creator must check this assumption
     if (flags & SSL_FLAG_DONT_VERIFY_PEER) {
         debugs(83, DBG_IMPORTANT, "SECURITY WARNING: Peer certificates are not verified for validity!");
-        debugs(83, DBG_IMPORTANT, "UPGRADE NOTICE: The DONT_VERIFY_PEER flag is deprecated. Remove the clientca= option to disable client certificates.");
+        debugs(83, DBG_IMPORTANT, "WARNING: UPGRADE: The DONT_VERIFY_PEER flag is deprecated. Remove the clientca= option to disable client certificates.");
         mode = SSL_VERIFY_NONE;
     }
     else if (flags & SSL_FLAG_DELAYED_AUTH) {
@@ -688,7 +689,7 @@ Ssl::Initialize(void)
 }
 
 bool
-Ssl::InitServerContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
+Ssl::InitServerContext(Security::ContextPointer &ctx, AnyP::PortCfg &)
 {
     if (!ctx)
         return false;
@@ -989,7 +990,7 @@ Ssl::configureUnconfiguredSslContext(Security::ContextPointer &ctx, Ssl::CertSig
 }
 
 bool
-Ssl::configureSSL(SSL *ssl, CertificateProperties const &properties, AnyP::PortCfg &port)
+Ssl::configureSSL(SSL *ssl, CertificateProperties const &properties, AnyP::PortCfg &)
 {
     Security::CertPointer cert;
     Security::PrivateKeyPointer pkey;
@@ -1012,7 +1013,7 @@ Ssl::configureSSL(SSL *ssl, CertificateProperties const &properties, AnyP::PortC
 }
 
 bool
-Ssl::configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::PortCfg &port)
+Ssl::configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::PortCfg &)
 {
     Security::CertPointer cert;
     Security::PrivateKeyPointer pkey;
@@ -1032,7 +1033,7 @@ Ssl::configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::Po
 }
 
 bool
-Ssl::verifySslCertificate(const Security::ContextPointer &ctx, CertificateProperties const &properties)
+Ssl::verifySslCertificate(const Security::ContextPointer &ctx, CertificateProperties const &)
 {
 #if HAVE_SSL_CTX_GET0_CERTIFICATE
     X509 * cert = SSL_CTX_get0_certificate(ctx.get());
@@ -1109,20 +1110,18 @@ Ssl::findIssuerUri(X509 *cert)
 bool
 Ssl::loadCerts(const char *certsFile, Ssl::CertsIndexedList &list)
 {
-    BIO *in = BIO_new_file(certsFile, "r");
+    const BIO_Pointer in(BIO_new_file(certsFile, "r"));
     if (!in) {
-        debugs(83, DBG_IMPORTANT, "Failed to open '" << certsFile << "' to load certificates");
+        debugs(83, DBG_IMPORTANT, "ERROR: Failed to open '" << certsFile << "' to load certificates");
         return false;
     }
 
-    X509 *aCert;
-    while((aCert = PEM_read_bio_X509(in, NULL, NULL, NULL))) {
+    while (auto aCert = ReadOptionalCertificate(in)) {
         static char buffer[2048];
-        X509_NAME_oneline(X509_get_subject_name(aCert), buffer, sizeof(buffer));
-        list.insert(std::pair<SBuf, X509 *>(SBuf(buffer), aCert));
+        X509_NAME_oneline(X509_get_subject_name(aCert.get()), buffer, sizeof(buffer));
+        list.insert(std::pair<SBuf, X509 *>(SBuf(buffer), aCert.release()));
     }
     debugs(83, 4, "Loaded " << list.size() << " certificates from file: '" << certsFile << "'");
-    BIO_free(in);
     return true;
 }
 
@@ -1174,7 +1173,7 @@ findIssuerInCaDb(X509 *cert, const Security::ContextPointer &connContext)
 
     X509_STORE_CTX *storeCtx = X509_STORE_CTX_new();
     if (!storeCtx) {
-        debugs(83, DBG_IMPORTANT, "Failed to allocate STORE_CTX object");
+        debugs(83, DBG_IMPORTANT, "ERROR: Failed to allocate STORE_CTX object");
         return nullptr;
     }
 
@@ -1192,7 +1191,7 @@ findIssuerInCaDb(X509 *cert, const Security::ContextPointer &connContext)
         }
     } else {
         const auto ssl_error = ERR_get_error();
-        debugs(83, DBG_IMPORTANT, "Failed to initialize STORE_CTX object: " << Security::ErrorString(ssl_error));
+        debugs(83, DBG_IMPORTANT, "ERROR: Failed to initialize STORE_CTX object: " << Security::ErrorString(ssl_error));
     }
 
     X509_STORE_CTX_free(storeCtx);
@@ -1427,7 +1426,7 @@ bio_sbuf_destroy(BIO* bio)
     return 1;
 }
 
-int
+static int
 bio_sbuf_write(BIO* bio, const char* data, int len)
 {
     SBuf *buf = static_cast<SBuf *>(BIO_get_data(bio));
@@ -1436,8 +1435,8 @@ bio_sbuf_write(BIO* bio, const char* data, int len)
     return len;
 }
 
-int
-bio_sbuf_puts(BIO* bio, const char* data)
+static int
+bio_sbuf_puts(BIO *bio, const char *data)
 {
     // TODO: use bio_sbuf_write() instead
     SBuf *buf = static_cast<SBuf *>(BIO_get_data(bio));
@@ -1446,8 +1445,9 @@ bio_sbuf_puts(BIO* bio, const char* data)
     return buf->length() - oldLen;
 }
 
-long
-bio_sbuf_ctrl(BIO* bio, int cmd, long num, void* ptr) {
+static long
+bio_sbuf_ctrl(BIO *bio, int cmd, long /* num */, void *)
+{
     SBuf *buf = static_cast<SBuf *>(BIO_get_data(bio));
     switch (cmd) {
     case BIO_CTRL_RESET:

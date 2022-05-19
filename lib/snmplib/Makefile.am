@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -8,7 +8,7 @@
 ## Process this file with automake to produce Makefile.in
 ##
 ## Makefile for libsnmp.
-## 
+##
 AM_CFLAGS = $(SQUID_CFLAGS)
 AM_CXXFLAGS = $(SQUID_CXXFLAGS)
 AM_CPPFLAGS = \

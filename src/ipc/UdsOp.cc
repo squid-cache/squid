@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,12 +21,12 @@ Ipc::UdsOp::UdsOp(const String& pathAddr):
     address(PathToAddress(pathAddr)),
     options(COMM_NONBLOCKING)
 {
-    debugs(54, 5, HERE << '[' << this << "] pathAddr=" << pathAddr);
+    debugs(54, 5, '[' << this << "] pathAddr=" << pathAddr);
 }
 
 Ipc::UdsOp::~UdsOp()
 {
-    debugs(54, 5, HERE << '[' << this << ']');
+    debugs(54, 5, '[' << this << ']');
     if (Comm::IsConnOpen(conn_))
         conn_->close();
     conn_ = NULL;
@@ -117,7 +117,7 @@ bool Ipc::UdsSender::doneAll() const
 
 void Ipc::UdsSender::write()
 {
-    debugs(54, 5, HERE);
+    debugs(54, 5, MYNAME);
     typedef CommCbMemFunT<UdsSender, CommIoCbParams> Dialer;
     AsyncCall::Pointer writeHandler = JobCallback(54, 5,
                                       Dialer, this, UdsSender::wrote);
@@ -127,7 +127,7 @@ void Ipc::UdsSender::write()
 
 void Ipc::UdsSender::wrote(const CommIoCbParams& params)
 {
-    debugs(54, 5, HERE << params.conn << " flag " << params.flag << " retries " << retries << " [" << this << ']');
+    debugs(54, 5, params.conn << " flag " << params.flag << " retries " << retries << " [" << this << ']');
     writing = false;
     if (params.flag != Comm::OK && retries-- > 0) {
         // perhaps a fresh connection and more time will help?
@@ -172,7 +172,7 @@ void Ipc::UdsSender::DelayedRetry(void *data)
 /// make another sending attempt after a pause
 void Ipc::UdsSender::delayedRetry()
 {
-    debugs(54, 5, HERE << sleeping);
+    debugs(54, 5, sleeping);
     if (sleeping) {
         sleeping = false;
         write(); // reopens the connection if needed
@@ -181,7 +181,7 @@ void Ipc::UdsSender::delayedRetry()
 
 void Ipc::UdsSender::timedout()
 {
-    debugs(54, 5, HERE);
+    debugs(54, 5, MYNAME);
     mustStop("timedout");
 }
 

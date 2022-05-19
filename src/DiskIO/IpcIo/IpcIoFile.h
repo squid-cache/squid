@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -127,6 +127,8 @@ private:
     static void DiskerHandleRequests();
     static void DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo);
     static bool WaitBeforePop();
+
+    static void HandleMessagesAtStart();
 
 private:
     const String dbName; ///< the name of the file we are managing

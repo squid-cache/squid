@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,7 +17,6 @@
 #include "MessageBucket.h"
 #include "MessageDelayPools.h"
 #include "Parsing.h"
-#include "SquidTime.h"
 #include "Store.h"
 
 #include <algorithm>
@@ -195,7 +194,7 @@ MessageDelayConfig::freePools()
 }
 
 void
-MessageDelayConfig::dumpResponseDelayPoolParameters(StoreEntry *entry, const char *name)
+MessageDelayConfig::dumpResponseDelayPoolParameters(StoreEntry *entry)
 {
     auto &pools = MessageDelayPools::Instance()->pools;
     for (auto pool: pools)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,7 +28,6 @@ SBufFindTest::SBufFindTest():
     maxHayLength(40),
     thePos(0),
     thePlacement(placeEof),
-    theStringPos(0),
     theBareNeedlePos(0),
     theFindString(0),
     theFindSBuf(0),

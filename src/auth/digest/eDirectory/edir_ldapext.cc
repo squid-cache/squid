@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,6 +32,7 @@
 
 #include "squid.h"
 #include "auth/digest/eDirectory/digest_common.h"
+#include "mem/Sensitive.h"
 
 #if _SQUID_WINDOWS_ && !_SQUID_CYGWIN_
 
@@ -399,7 +400,7 @@ static int nmasldap_get_simple_pwd(
     }
 
     if (pwdBuf != NULL) {
-        memset(pwdBuf, 0, bufferLen);
+        Mem::ZeroSensitiveMemory(pwdBuf, bufferLen);
         free(pwdBuf);
     }
 
@@ -482,7 +483,7 @@ static int nmasldap_get_password(
     }
 
     if (pwdBuf != NULL) {
-        memset(pwdBuf, 0, bufferLen);
+        Mem::ZeroSensitiveMemory(pwdBuf, bufferLen);
         free(pwdBuf);
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -197,13 +197,16 @@ copyValue(void *dst, const DB_ENTRY *src, size_t sz)
 static int session_active(const char *details, size_t len)
 {
 #if USE_BERKLEYDB
-    DBT key = {0};
-    DBT data = {0};
+    DBT key = {};
+    DBT data = {};
     key.data = (void *)details;
     key.size = len;
 #elif USE_TRIVIALDB
     TDB_DATA key;
     TDB_DATA data;
+    (void)len;
+#else
+    (void)len;
 #endif
     if (fetchKey(key, &data)) {
         time_t timestamp;
@@ -222,8 +225,8 @@ static int session_active(const char *details, size_t len)
 static void
 session_login(/*const*/ char *details, size_t len)
 {
-    DB_ENTRY key = {0};
-    DB_ENTRY data = {0};
+    DB_ENTRY key = {};
+    DB_ENTRY data = {};
     time_t now = time(0);
 #if USE_BERKLEYDB
     key.data = static_cast<decltype(key.data)>(details);
@@ -243,7 +246,7 @@ session_login(/*const*/ char *details, size_t len)
 static void
 session_logout(/*const*/ char *details, size_t len)
 {
-    DB_ENTRY key = {0};
+    DB_ENTRY key = {};
 #if USE_BERKLEYDB
     key.data = static_cast<decltype(key.data)>(details);
     key.size = len;
@@ -274,6 +277,7 @@ int main(int argc, char **argv)
         switch (opt) {
         case 'T':
             fixed_timeout = 1;
+        /* [[fallthrough]] */
         case 't':
             session_ttl = strtol(optarg, NULL, 0);
             break;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -59,8 +59,8 @@ typedef int bool;
 // taken from Squid-2.x
 // NOTE!  We must preserve the order of this list!
 enum SquidMetaType {
-  STORE_META_VOID,		// should not come up 
-  STORE_META_KEY_URL,		// key w/ keytype 
+  STORE_META_VOID,		// should not come up
+  STORE_META_KEY_URL,		// key w/ keytype
   STORE_META_KEY_SHA,
   STORE_META_KEY_MD5,
   STORE_META_URL,		// the url , if not in the header

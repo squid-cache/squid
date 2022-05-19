@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -40,8 +40,7 @@
  */
 
 #include "squid.h"
-#include "Debug.h"
-#include "SquidTime.h"
+#include "debug/Stream.h"
 
 #if USE_ICMP
 
@@ -49,6 +48,7 @@
 #include "Icmp6.h"
 #include "IcmpPinger.h"
 #include "ip/tools.h"
+#include "time/gadgets.h"
 
 #if _SQUID_WINDOWS_
 
@@ -96,20 +96,15 @@ int icmp_pkts_sent = 0;
 /**
  \ingroup pinger
  \par This is the pinger external process.
- *
- \param argc Ignored.
- \param argv Ignored.
  */
 int
-main(int argc, char *argv[])
+main(int, char **)
 {
     fd_set R;
     int x;
     int max_fd = 0;
 
     struct timeval tv;
-    const char *debug_args = "ALL,10";
-    char *t;
     time_t last_check_time = 0;
 
     /*
@@ -120,41 +115,37 @@ main(int argc, char *argv[])
     int icmp6_worker = -1;
     int squid_link = -1;
 
-    /** start by initializing the pinger debug cache.log-pinger. */
-    if ((t = getenv("SQUID_DEBUG")))
-        debug_args = xstrdup(t);
+    Debug::NameThisHelper("pinger");
 
     getCurrentTime();
 
     // determine IPv4 or IPv6 capabilities before using sockets.
     Ip::ProbeTransport();
 
-    _db_init(NULL, debug_args);
-
-    debugs(42, DBG_CRITICAL, "pinger: Initialising ICMP pinger ...");
+    debugs(42, DBG_CRITICAL, "Initialising ICMP pinger ...");
 
     icmp4_worker = icmp4.Open();
     if (icmp4_worker < 0) {
-        debugs(42, DBG_CRITICAL, "pinger: Unable to start ICMP pinger.");
+        debugs(42, DBG_CRITICAL, "ERROR: Unable to start ICMP pinger.");
     }
     max_fd = max(max_fd, icmp4_worker);
 
 #if USE_IPV6
     icmp6_worker = icmp6.Open();
     if (icmp6_worker <0 ) {
-        debugs(42, DBG_CRITICAL, "pinger: Unable to start ICMPv6 pinger.");
+        debugs(42, DBG_CRITICAL, "ERROR: Unable to start ICMPv6 pinger.");
     }
     max_fd = max(max_fd, icmp6_worker);
 #endif
 
     /** abort if neither worker could open a socket. */
     if (icmp4_worker < 0 && icmp6_worker < 0) {
-        debugs(42, DBG_CRITICAL, "FATAL: pinger: Unable to open any ICMP sockets.");
+        debugs(42, DBG_CRITICAL, "FATAL: Unable to open any ICMP sockets.");
         exit(EXIT_FAILURE);
     }
 
     if ( (squid_link = control.Open()) < 0) {
-        debugs(42, DBG_CRITICAL, "FATAL: pinger: Unable to setup Pinger control sockets.");
+        debugs(42, DBG_CRITICAL, "FATAL: Unable to setup Pinger control sockets.");
         icmp4.Close();
         icmp6.Close();
         exit(EXIT_FAILURE); // fatal error if the control channel fails.
@@ -163,14 +154,14 @@ main(int argc, char *argv[])
 
     if (setgid(getgid()) < 0) {
         int xerrno = errno;
-        debugs(42, DBG_CRITICAL, "FATAL: pinger: setgid(" << getgid() << ") failed: " << xstrerr(xerrno));
+        debugs(42, DBG_CRITICAL, "FATAL: setgid(" << getgid() << ") failed: " << xstrerr(xerrno));
         icmp4.Close();
         icmp6.Close();
         exit(EXIT_FAILURE);
     }
     if (setuid(getuid()) < 0) {
         int xerrno = errno;
-        debugs(42, DBG_CRITICAL, "FATAL: pinger: setuid(" << getuid() << ") failed: " << xstrerr(xerrno));
+        debugs(42, DBG_CRITICAL, "FATAL: setuid(" << getuid() << ") failed: " << xstrerr(xerrno));
         icmp4.Close();
         icmp6.Close();
         exit(EXIT_FAILURE);
@@ -184,7 +175,7 @@ main(int argc, char *argv[])
     caps = cap_init();
     if (!caps) {
         int xerrno = errno;
-        debugs(42, DBG_CRITICAL, "FATAL: pinger: cap_init() failed: " << xstrerr(xerrno));
+        debugs(42, DBG_CRITICAL, "FATAL: cap_init() failed: " << xstrerr(xerrno));
         icmp4.Close();
         icmp6.Close();
         exit(EXIT_FAILURE);
@@ -192,7 +183,7 @@ main(int argc, char *argv[])
         if (cap_set_proc(caps) != 0) {
             int xerrno = errno;
             // cap_set_proc(cap_init()) is expected to never fail
-            debugs(42, DBG_CRITICAL, "FATAL: pinger: cap_set_proc(none) failed: " << xstrerr(xerrno));
+            debugs(42, DBG_CRITICAL, "FATAL: cap_set_proc(none) failed: " << xstrerr(xerrno));
             cap_free(caps);
             icmp4.Close();
             icmp6.Close();
@@ -221,7 +212,7 @@ main(int argc, char *argv[])
 
         if (x < 0) {
             int xerrno = errno;
-            debugs(42, DBG_CRITICAL, HERE << " FATAL Shutdown. select()==" << x << ", ERR: " << xstrerr(xerrno));
+            debugs(42, DBG_CRITICAL, "FATAL: select()==" << x << ", ERR: " << xstrerr(xerrno));
             control.Close();
             exit(EXIT_FAILURE);
         }
@@ -239,7 +230,7 @@ main(int argc, char *argv[])
 
         if (PINGER_TIMEOUT + last_check_time < squid_curtime) {
             if (send(LINK_TO_SQUID, &tv, 0, 0) < 0) {
-                debugs(42, DBG_CRITICAL, "pinger: Closing. No requests in last " << PINGER_TIMEOUT << " seconds.");
+                debugs(42, DBG_CRITICAL, "Closing. No requests in last " << PINGER_TIMEOUT << " seconds.");
                 control.Close();
                 exit(EXIT_FAILURE);
             }

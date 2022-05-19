@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -87,6 +87,7 @@ protected:
     void handleResponse(const bool eof);
     void bailOnResponseError(const char *error, HttpReply *);
 
+private:
     /// sends the given error to the initiator
     void bailWith(ErrorState*);
 
@@ -96,12 +97,14 @@ protected:
     /// a bailWith(), sendSuccess() helper: sends results to the initiator
     void callBack();
 
-    /// a bailWith(), sendSuccess() helper: stops monitoring the connection
+    /// stops monitoring the connection
     void disconnect();
+
+    /// updates connection usage history before the connection is closed
+    void countFailingConnection();
 
     TunnelerAnswer &answer();
 
-private:
     AsyncCall::Pointer writer; ///< called when the request has been written
     AsyncCall::Pointer reader; ///< called when the response should be read
     AsyncCall::Pointer closer; ///< called when the connection is being closed

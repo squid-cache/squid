@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,7 +21,6 @@
 #include "Parsing.h"
 #include "sbuf/MemBlob.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 
 // a single I/O buffer should be large enough to store any access.log record
 const size_t Log::TcpLogger::IoBufSize = 2*MAX_URL;
@@ -179,9 +178,8 @@ Log::TcpLogger::canFit(const size_t len) const
     }
 
     if (!drops || dieOnError) {
-        debugs(MY_DEBUG_SECTION,
-               dieOnError ? DBG_CRITICAL : DBG_IMPORTANT,
-               "tcp:" << remote << " logger " << bufferCapacity << "-byte " <<
+        debugs(MY_DEBUG_SECTION, dieOnError ? DBG_CRITICAL : DBG_IMPORTANT,
+               "ERROR: tcp:" << remote << " logger " << bufferCapacity << "-byte " <<
                "buffer overflowed; cannot fit " <<
                (bufferedSize+len-bufferCapacity) << " bytes");
     }
@@ -256,17 +254,20 @@ Log::TcpLogger::doConnect()
 
     typedef CommCbMemFunT<TcpLogger, CommConnectCbParams> Dialer;
     AsyncCall::Pointer call = JobCallback(MY_DEBUG_SECTION, 5, Dialer, this, Log::TcpLogger::connectDone);
-    AsyncJob::Start(new Comm::ConnOpener(futureConn, call, 2));
+    const auto cs = new Comm::ConnOpener(futureConn, call, 2);
+    connWait.start(cs, call);
 }
 
 /// Comm::ConnOpener callback
 void
 Log::TcpLogger::connectDone(const CommConnectCbParams &params)
 {
+    connWait.finish();
+
     if (params.flag != Comm::OK) {
         const double delay = 0.5; // seconds
         if (connectFailures++ % 100 == 0) {
-            debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "tcp:" << remote <<
+            debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "ERROR: tcp:" << remote <<
                    " logger connection attempt #" << connectFailures <<
                    " failed. Will keep trying every " << delay << " seconds.");
         }
@@ -367,7 +368,10 @@ Log::TcpLogger::handleClosure(const CommCloseCbParams &)
 {
     assert(inCall != NULL);
     closer = NULL;
-    conn = NULL;
+    if (conn) {
+        conn->noteClosure();
+        conn = nullptr;
+    }
     // in all current use cases, we should not try to reconnect
     mustStop("Log::TcpLogger::handleClosure");
 }
@@ -459,7 +463,7 @@ Log::TcpLogger::Open(Logfile * lf, const char *path, size_t bufsz, int fatalFlag
         if (lf->flags.fatal) {
             fatalf("Invalid TCP logging address '%s'\n", lf->path);
         } else {
-            debugs(50, DBG_IMPORTANT, "Invalid TCP logging address '" << lf->path << "'");
+            debugs(50, DBG_IMPORTANT, "ERROR: Invalid TCP logging address '" << lf->path << "'");
             safe_free(strAddr);
             return FALSE;
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,10 +11,9 @@
 #include "squid.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
-#include "Debug.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
+#include "debug/Stream.h"
 #include "globals.h"
-#include "profiler/Profiler.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "Store.h"
@@ -24,7 +23,6 @@
 #include "StoreFileSystem.h"
 #include "swap_log_op.h"
 #include "tools.h"
-#include "util.h" // for tvSubDsec() which should be in SquidTime.h
 
 typedef SwapDir *STDIRSELECT(const StoreEntry *e);
 
@@ -722,7 +720,7 @@ storeDirWriteCleanLogs(int reopen)
         auto &sd = SwapDirByIndex(dirn);
 
         if (sd.writeCleanStart() < 0) {
-            debugs(20, DBG_IMPORTANT, "log.clean.start() failed for dir #" << sd.index);
+            debugs(20, DBG_IMPORTANT, "ERROR: log.clean.start() failed for dir #" << sd.index);
             continue;
         }
     }

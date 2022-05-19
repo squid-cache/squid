@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,10 +11,6 @@
 #include "acl/SslErrorData.h"
 #include "security/CertError.h"
 #include "ssl/ErrorDetail.h"
-
-ACLSslErrorData::ACLSslErrorData(ACLSslErrorData const &o) :
-    values(o.values)
-{}
 
 bool
 ACLSslErrorData::match(const Security::CertErrors *toFind)
@@ -42,11 +38,5 @@ ACLSslErrorData::parse()
     while (char *t = ConfigParser::strtokFile()) {
         Ssl::ParseErrorString(t, values);
     }
-}
-
-ACLSslErrorData *
-ACLSslErrorData::clone() const
-{
-    return new ACLSslErrorData(*this);
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,14 +13,15 @@
 #endif
 
 #include "squid.h"
+#include "base/PackableStream.h"
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemObject.h"
 #include "mgr/Registration.h"
+#include "refresh.h"
 #include "RefreshPattern.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "util.h"
 
@@ -78,11 +79,10 @@ static struct RefreshCounts {
     int status[STALE_DEFAULT + 1];
 } refreshCounts[rcCount];
 
-static const RefreshPattern *refreshUncompiledPattern(const char *);
 static OBJH refreshStats;
 static int refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, const RefreshPattern * R, stale_flags * sf);
 
-static RefreshPattern DefaultRefresh("<none>", 0);
+static RefreshPattern DefaultRefresh(nullptr);
 
 /** Locate the first refresh_pattern rule that matches the given URL by regex.
  *
@@ -93,7 +93,7 @@ refreshLimits(const char *url)
 {
     for (auto R = Config.Refresh; R; R = R->next) {
         ++(R->stats.matchTests);
-        if (R->pattern.match(url)) {
+        if (R->regex().match(url)) {
             ++(R->stats.matchCount);
             return R;
         }
@@ -102,19 +102,12 @@ refreshLimits(const char *url)
     return nullptr;
 }
 
-/** Locate the first refresh_pattern rule that has the given uncompiled regex.
- *
- * \note There is only one reference to this function, below. It always passes "." as the pattern.
- * This function is only ever called if there is no URI. Because a regex match is impossible, Squid
- * forces the "." rule to apply (if it exists)
- *
- * \return A pointer to the refresh_pattern parameters to use, or nullptr if there is no match.
- */
+/// the first explicit refresh_pattern rule that uses a "." regex (or nil)
 static const RefreshPattern *
-refreshUncompiledPattern(const char *pat)
+refreshFirstDotRule()
 {
     for (auto R = Config.Refresh; R; R = R->next) {
-        if (0 == strcmp(R->pattern.c_str(), pat))
+        if (R->regex().isDot())
             return R;
     }
 
@@ -292,19 +285,17 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
      *   3. the default "." rule
      */
     // XXX: performance regression. c_str() reallocates
-    const RefreshPattern *R = (uri != nilUri) ? refreshLimits(uri.c_str()) : refreshUncompiledPattern(".");
+    const RefreshPattern *R = (uri != nilUri) ? refreshLimits(uri.c_str()) : refreshFirstDotRule();
     if (NULL == R)
         R = &DefaultRefresh;
 
-    debugs(22, 3, "Matched '" << R->pattern.c_str() << " " <<
-           (int) R->min << " " << (int) (100.0 * R->pct) << "%% " <<
-           (int) R->max << "'");
+    debugs(22, 3, "Matched '" << *R << '\'');
 
     debugs(22, 3, "\tage:\t" << age);
 
-    debugs(22, 3, "\tcheck_time:\t" << mkrfc1123(check_time));
+    debugs(22, 3, "\tcheck_time:\t" << Time::FormatRfc1123(check_time));
 
-    debugs(22, 3, "\tentry->timestamp:\t" << mkrfc1123(entry->timestamp));
+    debugs(22, 3, "\tentry->timestamp:\t" << Time::FormatRfc1123(entry->timestamp));
 
     if (request && !request->flags.ignoreCc) {
         const HttpHdrCc *const cc = request->cache_control;
@@ -314,7 +305,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
                    minFresh << " = " << age + minFresh);
             debugs(22, 3, "\tcheck_time + min-fresh:\t" << check_time << " + "
                    << minFresh << " = " <<
-                   mkrfc1123(check_time + minFresh));
+                   Time::FormatRfc1123(check_time + minFresh));
             age += minFresh;
             check_time += minFresh;
         }
@@ -692,12 +683,13 @@ refreshStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\nRefresh pattern usage:\n\n");
     storeAppendPrintf(sentry, "  Used      \tChecks    \t%% Matches\tPattern\n");
     for (const RefreshPattern *R = Config.Refresh; R; R = R->next) {
-        storeAppendPrintf(sentry, "  %10" PRIu64 "\t%10" PRIu64 "\t%6.2f\t%s%s\n",
+        storeAppendPrintf(sentry, "  %10" PRIu64 "\t%10" PRIu64 "\t%6.2f\t",
                           R->stats.matchCount,
                           R->stats.matchTests,
-                          xpercent(R->stats.matchCount, R->stats.matchTests),
-                          (R->pattern.flags&REG_ICASE ? "-i " : ""),
-                          R->pattern.c_str());
+                          xpercent(R->stats.matchCount, R->stats.matchTests));
+        PackableStream os(*sentry);
+        R->printPattern(os);
+        os << "\n";
     }
 
     int i;
@@ -724,6 +716,33 @@ refreshStats(StoreEntry * sentry)
 
     for (i = 0; i < rcCount; ++i)
         refreshCountsStats(sentry, refreshCounts[i]);
+}
+
+const RegexPattern &
+RefreshPattern::regex() const
+{
+    assert(regex_);
+    return *regex_;
+}
+
+void
+RefreshPattern::printPattern(std::ostream &os) const
+{
+    if (regex_)
+        regex_->print(os, nullptr); // refresh lines do not inherit line flags
+    else
+        os << "<none>";
+}
+
+void
+RefreshPattern::printHead(std::ostream &os) const
+{
+    printPattern(os);
+    os <<
+       // these adjustments are safe: raw values were configured using integers
+       ' ' << intmax_t(min/60) << // to minutes
+       ' ' << intmax_t(100.0 * pct + 0.5) << '%' << // to percentage points
+       ' ' << intmax_t(max/60); // to minutes
 }
 
 static void

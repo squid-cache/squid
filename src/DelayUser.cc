@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -48,12 +48,6 @@ void
 DelayUserFree(DelayUserBucket::Pointer &)
 {}
 
-void
-DelayUserStatsWalkee(DelayUserBucket::Pointer const &current, void *state)
-{
-    current->stats ((StoreEntry *)state);
-}
-
 struct DelayUserStatsVisitor {
     StoreEntry *se;
     explicit DelayUserStatsVisitor(StoreEntry *s) : se(s) {}
@@ -95,14 +89,6 @@ struct DelayUserUpdater {
     int incr;
 };
 
-void
-DelayUserUpdateWalkee(DelayUserBucket::Pointer const &current, void *state)
-{
-    DelayUserUpdater *t = (DelayUserUpdater *)state;
-    /* This doesn't change the value of the DelayUserBucket, so is safe */
-    const_cast<DelayUserBucket *>(current.getRaw())->theBucket.update(t->spec, t->incr);
-}
-
 struct DelayUserUpdateVisitor {
     DelayUserUpdater *t;
     DelayUserUpdateVisitor(DelayUserUpdater *updater) : t(updater) {}
@@ -131,7 +117,7 @@ DelayUser::id(CompositePoolNode::CompositeSelectionDetails &details)
     if (!details.user || !details.user->user() || !details.user->user()->username())
         return new NullDelayId;
 
-    debugs(77, 3, HERE << "Adding a slow-down for User '" << details.user->user()->username() << "'");
+    debugs(77, 3, "Adding a slow-down for User '" << details.user->user()->username() << "'");
     return new Id(this, details.user->user());
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -349,7 +349,7 @@ main(int argc, char *const argv[])
     char *service_principal = NULL;
     char *keytab_name = NULL;
     char *keytab_name_env = NULL;
-    char default_keytab[MAXPATHLEN];
+    char default_keytab[MAXPATHLEN] = {};
 #if HAVE_KRB5_MEMORY_KEYTAB
     char *memory_keytab_name = NULL;
     char *memory_keytab_name_env = NULL;

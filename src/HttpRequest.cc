@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -54,7 +54,7 @@ HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aP
 {
     assert(mx);
     static unsigned int id = 1;
-    debugs(93,7, HERE << "constructed, this=" << this << " id=" << ++id);
+    debugs(93,7, "constructed, this=" << this << " id=" << ++id);
     init();
     initHTTP(aMethod, aProtocol, aSchemeImg, aUrlpath);
 }
@@ -62,7 +62,7 @@ HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aP
 HttpRequest::~HttpRequest()
 {
     clean();
-    debugs(93,7, HERE << "destructed, this=" << this);
+    debugs(93,7, "destructed, this=" << this);
 }
 
 void
@@ -273,7 +273,7 @@ HttpRequest::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::S
     if (hdr_len < 2) {
         // this is only a real error if the headers apparently complete.
         if (hdr_len > 0) {
-            debugs(58, 3, HERE << "Too large request header (" << hdr_len << " bytes)");
+            debugs(58, 3, "Too large request header (" << hdr_len << " bytes)");
             *scode = Http::scInvalidHeader;
         }
         return false;
@@ -316,7 +316,7 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
         ++end;                 // back to space
 
         if (2 != sscanf(ver + 5, "%d.%d", &http_ver.major, &http_ver.minor)) {
-            debugs(73, DBG_IMPORTANT, "parseRequestLine: Invalid HTTP identifier.");
+            debugs(73, DBG_IMPORTANT, "ERROR: parseRequestLine: Invalid HTTP identifier.");
             return false;
         }
     } else {
@@ -392,7 +392,7 @@ HttpRequest::icapHistory() const
     if (!icapHistory_) {
         if (Log::TheConfig.hasIcapToken || IcapLogfileStatus == LOG_ENABLE) {
             icapHistory_ = new Adaptation::Icap::History();
-            debugs(93,4, HERE << "made " << icapHistory_ << " for " << this);
+            debugs(93,4, "made " << icapHistory_ << " for " << this);
         }
     }
 
@@ -406,7 +406,7 @@ HttpRequest::adaptHistory(bool createIfNone) const
 {
     if (!adaptHistory_ && createIfNone) {
         adaptHistory_ = new Adaptation::History();
-        debugs(93,4, HERE << "made " << adaptHistory_ << " for " << this);
+        debugs(93,4, "made " << adaptHistory_ << " for " << this);
     }
 
     return adaptHistory_;
@@ -651,6 +651,70 @@ HttpRequest::canHandle1xx() const
     return true;
 }
 
+Http::StatusCode
+HttpRequest::checkEntityFraming() const
+{
+    // RFC 7230 section 3.3.1:
+    // "
+    //  A server that receives a request message with a transfer coding it
+    //  does not understand SHOULD respond with 501 (Not Implemented).
+    // "
+    if (header.unsupportedTe())
+        return Http::scNotImplemented;
+
+    // RFC 7230 section 3.3.3 #3 paragraph 3:
+    // Transfer-Encoding overrides Content-Length
+    if (header.chunked())
+        return Http::scNone;
+
+    // RFC 7230 Section 3.3.3 #4:
+    // conflicting Content-Length(s) mean a message framing error
+    if (header.conflictingContentLength())
+        return Http::scBadRequest;
+
+    // HTTP/1.0 requirements differ from HTTP/1.1
+    if (http_ver <= Http::ProtocolVersion(1,0)) {
+        const auto m = method.id();
+
+        // RFC 1945 section 8.3:
+        // "
+        //   A valid Content-Length is required on all HTTP/1.0 POST requests.
+        // "
+        // RFC 1945 Appendix D.1.1:
+        // "
+        //   The fundamental difference between the POST and PUT requests is
+        //   reflected in the different meaning of the Request-URI.
+        // "
+        if (m == Http::METHOD_POST || m == Http::METHOD_PUT)
+            return (content_length >= 0 ? Http::scNone : Http::scLengthRequired);
+
+        // RFC 1945 section 7.2:
+        // "
+        //   An entity body is included with a request message only when the
+        //   request method calls for one.
+        // "
+        // section 8.1-2: GET and HEAD do not define ('call for') an entity
+        if (m == Http::METHOD_GET || m == Http::METHOD_HEAD)
+            return (content_length < 0 ? Http::scNone : Http::scBadRequest);
+        // appendix D1.1.2-4: DELETE, LINK, UNLINK do not define ('call for') an entity
+        if (m == Http::METHOD_DELETE || m == Http::METHOD_LINK || m == Http::METHOD_UNLINK)
+            return (content_length < 0 ? Http::scNone : Http::scBadRequest);
+
+        // other methods are not defined in RFC 1945
+        // assume they support an (optional) entity
+        return Http::scNone;
+    }
+
+    // RFC 7230 section 3.3
+    // "
+    //   The presence of a message body in a request is signaled by a
+    //   Content-Length or Transfer-Encoding header field.  Request message
+    //   framing is independent of method semantics, even if the method does
+    //   not define any use for a message body.
+    // "
+    return Http::scNone;
+}
+
 bool
 HttpRequest::parseHeader(Http1::Parser &hp)
 {
@@ -760,30 +824,25 @@ HttpRequest::canonicalCleanUrl() const
     return urlCanonicalCleanWithoutRequest(effectiveRequestUri(), method, url.getScheme());
 }
 
-/// a helper for validating FindListeningPortAddress()-found address candidates
-static const Ip::Address *
-FindListeningPortAddressInAddress(const Ip::Address *ip)
-{
-    // FindListeningPortAddress() callers do not want INADDR_ANY addresses
-    return (ip && !ip->isAnyAddr()) ? ip : nullptr;
-}
-
 /// a helper for handling PortCfg cases of FindListeningPortAddress()
+template <typename Filter>
 static const Ip::Address *
-FindListeningPortAddressInPort(const AnyP::PortCfgPointer &port)
+FindGoodListeningPortAddressInPort(const AnyP::PortCfgPointer &port, const Filter isGood)
 {
-    return port ? FindListeningPortAddressInAddress(&port->s) : nullptr;
+    return (port && isGood(port->s)) ? &port->s : nullptr;
 }
 
 /// a helper for handling Connection cases of FindListeningPortAddress()
+template <typename Filter>
 static const Ip::Address *
-FindListeningPortAddressInConn(const Comm::ConnectionPointer &conn)
+FindGoodListeningPortAddressInConn(const Comm::ConnectionPointer &conn, const Filter isGood)
 {
-    return conn ? FindListeningPortAddressInAddress(&conn->local) : nullptr;
+    return (conn && isGood(conn->local)) ? &conn->local : nullptr;
 }
 
+template <typename Filter>
 const Ip::Address *
-FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry *ale)
+FindGoodListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry *ale, const Filter filter)
 {
     // Check all sources of usable listening port information, giving
     // HttpRequest and masterXaction a preference over ALE.
@@ -794,18 +853,35 @@ FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry 
     if (!request)
         return nullptr; // not enough information
 
-    const Ip::Address *ip = FindListeningPortAddressInPort(request->masterXaction->squidPort);
+    auto ip = FindGoodListeningPortAddressInPort(request->masterXaction->squidPort, filter);
     if (!ip && ale)
-        ip = FindListeningPortAddressInPort(ale->cache.port);
+        ip = FindGoodListeningPortAddressInPort(ale->cache.port, filter);
 
     // XXX: also handle PROXY protocol here when we have a flag to identify such request
     if (ip || request->flags.interceptTproxy || request->flags.intercepted)
         return ip;
 
     /* handle non-intercepted cases that were not handled above */
-    ip = FindListeningPortAddressInConn(request->masterXaction->tcpClient);
+    ip = FindGoodListeningPortAddressInConn(request->masterXaction->tcpClient, filter);
     if (!ip && ale)
-        ip = FindListeningPortAddressInConn(ale->tcpClient);
+        ip = FindGoodListeningPortAddressInConn(ale->tcpClient, filter);
     return ip; // may still be nil
 }
 
+const Ip::Address *
+FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry *ale)
+{
+    return FindGoodListeningPortAddress(callerRequest, ale, [](const Ip::Address &address) {
+        // FindListeningPortAddress() callers do not want INADDR_ANY addresses
+        return !address.isAnyAddr();
+    });
+}
+
+unsigned short
+FindListeningPortNumber(const HttpRequest *callerRequest, const AccessLogEntry *ale)
+{
+    const auto ip = FindGoodListeningPortAddress(callerRequest, ale, [](const Ip::Address &address) {
+        return address.port() > 0;
+    });
+    return ip ? ip->port() : 0;
+}

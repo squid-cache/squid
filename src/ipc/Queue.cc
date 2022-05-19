@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "base/TextException.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "globals.h"
 #include "ipc/Queue.h"
 
@@ -44,10 +44,10 @@ ReadersId(String id)
 
 InstanceIdDefinitions(Ipc::QueueReader, "ipcQR");
 
-Ipc::QueueReader::QueueReader(): popBlocked(true), popSignal(false),
+Ipc::QueueReader::QueueReader(): popBlocked(false), popSignal(false),
     rateLimit(0), balance(0)
 {
-    debugs(54, 7, HERE << "constructed " << id);
+    debugs(54, 7, "constructed " << id);
 }
 
 /* QueueReaders */
@@ -158,15 +158,22 @@ Ipc::BaseMultiQueue::BaseMultiQueue(const int aLocalProcessId):
 void
 Ipc::BaseMultiQueue::clearReaderSignal(const int /*remoteProcessId*/)
 {
+    // Unused remoteProcessId may be useful for at least two optimizations:
+    // * TODO: After QueueReader::popSignal is moved to each OneToOneUniQueue,
+    //   we could clear just the remoteProcessId popSignal, further reducing the
+    //   number of UDS notifications writers have to send.
+    // * We could adjust theLastPopProcessId to try popping from the
+    //   remoteProcessId queue first. That does not seem to help much and might
+    //   introduce some bias, so we do not do that for now.
+    clearAllReaderSignals();
+}
+
+void
+Ipc::BaseMultiQueue::clearAllReaderSignals()
+{
     QueueReader &reader = localReader();
     debugs(54, 7, "reader: " << reader.id);
-
     reader.clearSignal();
-
-    // we got a hint; we could reposition iteration to try popping from the
-    // remoteProcessId queue first; but it does not seem to help much and might
-    // introduce some bias so we do not do that for now:
-    // theLastPopProcessId = remoteProcessId;
 }
 
 const Ipc::QueueReader::Balance &

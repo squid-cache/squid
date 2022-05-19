@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,7 @@
 #define SQUID_STRING_H
 
 #include "base/TextException.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 #include <ostream>
 
@@ -42,6 +42,7 @@ public:
     String &operator =(String const &);
     String &operator =(String && S) {
         if (this != &S) {
+            clean();
             size_ = S.size_;
             len_ = S.len_;
             buf_ = S.buf_;

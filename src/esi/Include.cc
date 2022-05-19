@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -80,7 +80,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
     assert (receivedData.length <= sizeof(esiStream->localbuffer->buf));
     assert (!esiStream->finished);
 
-    debugs (86,5, HERE << "rep " << rep << " body " << receivedData.data << " len " << receivedData.length);
+    debugs (86,5, "rep " << rep << " body " << receivedData.data << " len " << receivedData.length);
     assert (node->readBuffer.offset == receivedData.offset || receivedData.length == 0);
 
     /* trivial case */
@@ -128,7 +128,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
     /* EOF / Read error /  aborted entry */
     if (rep == NULL && receivedData.data == NULL && receivedData.length == 0) {
         /* TODO: get stream status to test the entry for aborts */
-        debugs(86, 5, HERE << "Finished reading upstream data in subrequest");
+        debugs(86, 5, "Finished reading upstream data in subrequest");
         esiStream->include->subRequestDone (esiStream, true);
         esiStream->finished = 1;
         httpRequestFree (http);
@@ -137,8 +137,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
 
     switch (clientStreamStatus (node, http)) {
 
-    case STREAM_UNPLANNED_COMPLETE: /* fallthru ok */
-
+    case STREAM_UNPLANNED_COMPLETE:
     case STREAM_COMPLETE: /* ok */
         debugs(86, 3, "ESI subrequest finished OK");
         esiStream->include->subRequestDone (esiStream, true);
@@ -147,7 +146,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
         return;
 
     case STREAM_FAILED:
-        debugs(86, DBG_IMPORTANT, "ESI subrequest failed transfer");
+        debugs(86, DBG_IMPORTANT, "ERROR: ESI subrequest failed transfer");
         esiStream->include->includeFail (esiStream);
         esiStream->finished = 1;
         httpRequestFree (http);
@@ -172,7 +171,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
         tempBuffer.data = esiStream->buffer->buf;
         /* now just read into 'buffer' */
         clientStreamRead (node, http, tempBuffer);
-        debugs(86, 5, HERE << "Requested more data for ESI subrequest");
+        debugs(86, 5, "Requested more data for ESI subrequest");
     }
 
     break;
@@ -288,9 +287,9 @@ ESIInclude::Start (ESIStreamContext::Pointer stream, char const *url, ESIVarStat
     char const *tempUrl = vars->extractChar ();
 
     debugs(86, 5, "ESIIncludeStart: Starting subrequest with url '" << tempUrl << "'");
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initEsi);
+    const auto mx = MasterXaction::MakePortless<XactionInitiator::initEsi>();
     if (clientBeginRequest(Http::METHOD_GET, tempUrl, esiBufferRecipient, esiBufferDetach, stream.getRaw(), &tempheaders, stream->localbuffer->buf, HTTP_REQBUF_SZ, mx)) {
-        debugs(86, DBG_CRITICAL, "starting new ESI subrequest failed");
+        debugs(86, DBG_CRITICAL, "ERROR: starting new ESI subrequest failed");
     }
 
     tempheaders.clean();
@@ -333,7 +332,7 @@ ESIInclude::ESIInclude(esiTreeParentPtr aParent, int attrcount, char const **att
                 flags.onerrorcontinue = 1;
             } else {
                 /* ignore mistyped attributes */
-                debugs(86, DBG_IMPORTANT, "invalid value for onerror='" << attr[i+1] << "'");
+                debugs(86, DBG_IMPORTANT, "ERROR: invalid value for onerror='" << attr[i+1] << "'");
             }
         } else {
             /* ignore mistyped attributes. TODO:? error on these for user feedback - config parameter needed
@@ -401,7 +400,7 @@ ESIInclude::render(ESISegment::Pointer output)
 }
 
 esiProcessResult_t
-ESIInclude::process (int dovars)
+ESIInclude::process(int)
 {
     /* Prevent refcount race leading to free */
     Pointer me (this);
@@ -513,15 +512,15 @@ ESIInclude::subRequestDone (ESIStreamContext::Pointer stream, bool success)
          * 'this.finish' while the subrequest is still not completed.
          */
         if (parent.getRaw() == NULL) {
-            debugs (86, 0, "ESIInclude::subRequestDone: Sub request completed "
-                    "after finish() called and parent unlinked. Unable to "
-                    "continue handling the request, and may be memory leaking. "
-                    "See http://www.squid-cache.org/bugs/show_bug.cgi?id=951 - we "
-                    "are looking for a reproducible test case. This will require "
-                    "an ESI template with includes, probably with alt-options, "
-                    "and we're likely to need traffic dumps to allow us to "
-                    "reconstruct the exact tcp handling sequences to trigger this "
-                    "rather elusive bug.");
+            debugs(86, DBG_CRITICAL, "ERROR: Squid Bug #951: ESIInclude::subRequestDone: Sub request completed "
+                   "after finish() called and parent unlinked. Unable to "
+                   "continue handling the request, and may be memory leaking. "
+                   "See http://www.squid-cache.org/bugs/show_bug.cgi?id=951 - we "
+                   "are looking for a reproducible test case. This will require "
+                   "an ESI template with includes, probably with alt-options, "
+                   "and we're likely to need traffic dumps to allow us to "
+                   "reconstruct the exact tcp handling sequences to trigger this "
+                   "rather elusive bug.");
             return;
         }
         assert (parent.getRaw());

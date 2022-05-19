@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,8 +13,8 @@
 #include "html_quote.h"
 #include "ip/Address.h"
 #include "MemBuf.h"
-#include "rfc1123.h"
 #include "rfc1738.h"
+#include "time/gadgets.h"
 #include "util.h"
 
 #include <cctype>
@@ -216,7 +216,7 @@ xstrtok(char **str, char del)
         return "";
 }
 
-bool
+static bool
 hostname_check(const char *uri)
 {
     static CharacterSet hostChars = CharacterSet("host",".:[]_") +
@@ -237,7 +237,7 @@ print_trailer(void)
     printf("<HR noshade size=\"1px\">\n");
     printf("<ADDRESS>\n");
     printf("Generated %s, by %s/%s@%s\n",
-           mkrfc1123(now), progname, VERSION, getfullhostname());
+           Time::FormatRfc1123(now), progname, VERSION, getfullhostname());
     printf("</ADDRESS></BODY></HTML>\n");
 }
 
@@ -693,7 +693,7 @@ read_reply(int s, cachemgr_request * req)
             }
 
             istate = isActions;
-        /* yes, fall through, we do not want to loose the first line */
+        /* [[fallthrough]] we do not want to lose the first line */
 
         case isActions:
             if (strncmp(buf, "action:", 7) == 0) {
@@ -709,7 +709,7 @@ read_reply(int s, cachemgr_request * req)
             }
 
             istate = isBody;
-        /* yes, fall through, we do not want to loose the first line */
+        /* [[fallthrough]] we do not want to lose the first line */
 
         case isBody:
         {

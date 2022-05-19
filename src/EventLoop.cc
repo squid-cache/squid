@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,10 +11,10 @@
 #include "squid.h"
 #include "AsyncEngine.h"
 #include "base/AsyncCallQueue.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "EventLoop.h"
 #include "fatal.h"
-#include "SquidTime.h"
+#include "time/Engine.h"
 
 EventLoop *EventLoop::Running = NULL;
 
@@ -124,7 +124,7 @@ EventLoop::runOnce()
 
     if (error) {
         ++errcount;
-        debugs(1, DBG_CRITICAL, "Select loop Error. Retry " << errcount);
+        debugs(1, DBG_CRITICAL, "ERROR: Select loop Error. Retry " << errcount);
     } else
         errcount = 0;
 
@@ -159,7 +159,7 @@ EventLoop::setPrimaryEngine(AsyncEngine * engine)
 }
 
 void
-EventLoop::setTimeService(TimeEngine *engine)
+EventLoop::setTimeService(Time::Engine *engine)
 {
     timeService = engine;
 }

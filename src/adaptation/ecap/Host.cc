@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -163,7 +163,7 @@ Adaptation::Ecap::Host::closeDebug(std::ostream *debug)
 Adaptation::Ecap::Host::MessagePtr
 Adaptation::Ecap::Host::newRequest() const
 {
-    static const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initAdaptationOrphan_);
+    static const auto mx = MasterXaction::MakePortless<XactionInitiator::initAdaptationOrphan_>();
     return MessagePtr(new Adaptation::Ecap::MessageRep(new HttpRequest(mx)));
 }
 

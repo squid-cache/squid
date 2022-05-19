@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,7 +36,6 @@
 #include "mgr/Registration.h"
 #include "NullDelayId.h"
 #include "SquidString.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"
 
@@ -71,7 +70,7 @@ private:
         AggregateId (RefCount<Aggregate>);
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);
-        virtual void delayRead(DeferredRead const &);
+        virtual void delayRead(const AsyncCallPointer &);
 
     private:
         RefCount<Aggregate> theAggregate;
@@ -240,7 +239,7 @@ protected:
 };
 
 void
-Aggregate::AggregateId::delayRead(DeferredRead const &aRead)
+Aggregate::AggregateId::delayRead(const AsyncCall::Pointer &aRead)
 {
     theAggregate->delayRead(aRead);
 }
@@ -421,7 +420,7 @@ Aggregate::parse()
 }
 
 DelayIdComposite::Pointer
-Aggregate::id(CompositeSelectionDetails &details)
+Aggregate::id(CompositeSelectionDetails &)
 {
     if (rate()->restore_bps != -1)
         return new AggregateId (this);
@@ -476,15 +475,16 @@ DelayPools::InitDelayData()
 void
 DelayPools::FreeDelayData()
 {
-    eventDelete(DelayPools::Update, NULL);
     delete[] DelayPools::delay_data;
     pools_ = 0;
 }
 
 void
-DelayPools::Update(void *unused)
+DelayPools::Update(void *)
 {
-    if (!pools())
+    // To prevent stuck transactions, stop updates only after no new transactions can
+    // register (because the pools were disabled) and the last registered transaction is gone.
+    if (!pools() && toUpdate.empty())
         return;
 
     eventAdd("DelayPools::Update", Update, NULL, 1.0, 1);

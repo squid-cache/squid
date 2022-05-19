@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -82,7 +82,8 @@ LogTime()
     return buf;
 }
 
-void usage(void)
+static void
+usage()
 {
     fprintf(stderr, "Usage: \n");
     fprintf(stderr, "negotiate_wrapper [-h] [-d] --ntlm ntlm helper + arguments --kerberos kerberos helper + arguments\n");
@@ -256,6 +257,7 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
                 return 0;
             }
         }
+        buff[sizeof(buff)-1] = '\0'; // paranoid; already terminated correctly
         fprintf(stdout,"%s",buff);
         if (debug_enabled)
             fprintf(stderr, "%s| %s: Return '%s'\n",

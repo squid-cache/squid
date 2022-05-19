@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -252,13 +252,15 @@ cbdataInternalAlloc(cbdata_type type, const char *file, int line)
     dlinkAdd(c, &c->link, &cbdataEntries);
     debugs(45, 3, "Allocating " << p << " " << file << ":" << line);
 #else
+    (void)file;
+    (void)line;
     debugs(45, 9, "Allocating " << p);
 #endif
 
     return p;
 }
 
-void
+static void
 cbdataRealFree(cbdata *c, const char *file, const int line)
 {
 #if WITH_VALGRIND
@@ -273,6 +275,8 @@ cbdataRealFree(cbdata *c, const char *file, const int line)
     dlinkDelete(&c->link, &cbdataEntries);
 #else
     debugs(45, 9, "Freeing " << p);
+    (void)file;
+    (void)line;
 #endif
 
 #if WITH_VALGRIND

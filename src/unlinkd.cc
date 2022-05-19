@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,10 +17,10 @@
 #include "globals.h"
 #include "SquidConfig.h"
 #include "SquidIpc.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "store/Disk.h"
 #include "tools.h"
+#include "unlinkd.h"
 #include "xusleep.h"
 
 /* This code gets linked to Squid */
@@ -108,7 +108,7 @@ unlinkdUnlink(const char *path)
 
     if (bytes_written < 0) {
         int xerrno = errno;
-        debugs(2, DBG_IMPORTANT, "unlinkdUnlink: write FD " << unlinkd_wfd << " failed: " << xstrerr(xerrno));
+        debugs(2, DBG_IMPORTANT, "ERROR: unlinkdUnlink: write FD " << unlinkd_wfd << " failed: " << xstrerr(xerrno));
         safeunlink(path, 0);
         return;
     } else if (bytes_written != l) {
@@ -148,7 +148,7 @@ unlinkdClose(void)
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
             getCurrentTime();
-            debugs(2, DBG_IMPORTANT, "unlinkdClose: WARNING: (unlinkd," << pid << "d) didn't exit in 5 seconds");
+            debugs(2, DBG_IMPORTANT, "WARNING: unlinkdClose: (unlinkd," << pid << "d) didn't exit in 5 seconds");
         }
 
         CloseHandle(hIpc);

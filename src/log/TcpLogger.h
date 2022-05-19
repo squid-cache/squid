@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,8 @@
 #define _SQUID_SRC_LOG_TCPLOGGER_H
 
 #include "base/AsyncJob.h"
+#include "base/JobWait.h"
+#include "comm/forward.h"
 #include "ip/Address.h"
 
 #include <list>
@@ -102,6 +104,9 @@ private:
     Comm::ConnectionPointer conn; ///< opened connection to the remote logger
     Ip::Address remote; ///< where the remote logger expects our records
     AsyncCall::Pointer closer; ///< handles unexpected/external conn closures
+
+    /// waits for a connection to the remote logger to be established/opened
+    JobWait<Comm::ConnOpener> connWait;
 
     uint64_t connectFailures; ///< number of sequential connection failures
     uint64_t drops; ///< number of records dropped during the current outage

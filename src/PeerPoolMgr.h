@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 #define SQUID_PEERPOOLMGR_H
 
 #include "base/AsyncJob.h"
+#include "base/JobWait.h"
 #include "comm/forward.h"
 #include "security/forward.h"
 
@@ -54,18 +55,19 @@ protected:
     /// Security::PeerConnector callback
     void handleSecuredPeer(Security::EncryptorAnswer &answer);
 
-    /// called when the connection we are trying to secure is closed by a 3rd party
-    void handleSecureClosure(const CommCloseCbParams &params);
-
     /// the final step in connection opening (and, optionally, securing) sequence
     void pushNewConnection(const Comm::ConnectionPointer &conn);
 
 private:
     CachePeer *peer; ///< the owner of the pool we manage
     RefCount<HttpRequest> request; ///< fake HTTP request for conn opening code
-    AsyncCall::Pointer opener; ///< whether we are opening a connection
-    AsyncCall::Pointer securer; ///< whether we are securing a connection
-    AsyncCall::Pointer closer; ///< monitors conn while we are securing it
+
+    /// waits for a transport connection to the peer to be established/opened
+    JobWait<Comm::ConnOpener> transportWait;
+
+    /// waits for the established transport connection to be secured/encrypted
+    JobWait<Security::BlindPeerConnector> encryptionWait;
+
     unsigned int addrUsed; ///< counter for cycling through peer addresses
 };
 

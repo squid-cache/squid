@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,6 +14,7 @@
 #if USE_DELAY_POOLS
 
 #include "auth/Gadgets.h"
+#include "base/forward.h"
 #include "CompositePoolNode.h"
 #include "DelayBucket.h"
 #include "DelayIdComposite.h"
@@ -64,7 +65,7 @@ private:
         ~Id();
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);
-        virtual void delayRead(DeferredRead const &);
+        virtual void delayRead(const AsyncCallPointer &);
 
     private:
         RefCount<DelayTagged> theTagged;

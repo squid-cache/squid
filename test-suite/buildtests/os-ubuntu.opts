@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -14,7 +14,7 @@ MAKETEST="check installcheck uninstallcheck"
 #
 # This is to test any release build against what the package maintainers are seeing
 #
-# NP: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the 
+# NP: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the
 #     distcheck target recursive tests beteen scripted runs.
 #     we use it to perform the same duty between our nested scripts.
 DISTCHECK_CONFIGURE_FLAGS=" \

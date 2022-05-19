@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 /* DEBUG: section 47    Store Directory Routines */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/Mmapped/MmappedFile.h"
 #include "DiskIO/ReadRequest.h"
@@ -58,7 +58,7 @@ MmappedFile::MmappedFile(char const *aPath): fd(-1),
 {
     assert(aPath);
     path_ = xstrdup(aPath);
-    debugs(79,5, HERE << this << ' ' << path_);
+    debugs(79,5, this << ' ' << path_);
 }
 
 MmappedFile::~MmappedFile()
@@ -117,7 +117,7 @@ void MmappedFile::doClose()
 void
 MmappedFile::close()
 {
-    debugs(79, 3, HERE << this << " closing for " << ioRequestor);
+    debugs(79, 3, this << " closing for " << ioRequestor);
     doClose();
     assert(ioRequestor != NULL);
     ioRequestor->closeCompleted();
@@ -144,7 +144,7 @@ MmappedFile::error() const
 void
 MmappedFile::read(ReadRequest *aRequest)
 {
-    debugs(79,3, HERE << "(FD " << fd << ", " << aRequest->len << ", " <<
+    debugs(79,3, "(FD " << fd << ", " << aRequest->len << ", " <<
            aRequest->offset << ")");
 
     assert(fd >= 0);
@@ -174,7 +174,7 @@ MmappedFile::read(ReadRequest *aRequest)
 void
 MmappedFile::write(WriteRequest *aRequest)
 {
-    debugs(79,3, HERE << "(FD " << fd << ", " << aRequest->len << ", " <<
+    debugs(79,3, "(FD " << fd << ", " << aRequest->len << ", " <<
            aRequest->offset << ")");
 
     assert(fd >= 0);
@@ -189,10 +189,10 @@ MmappedFile::write(WriteRequest *aRequest)
     const ssize_t written =
         pwrite(fd, aRequest->buf, aRequest->len, aRequest->offset);
     if (written < 0) {
-        debugs(79, DBG_IMPORTANT, HERE << "error: " << xstrerr(errno));
+        debugs(79, DBG_IMPORTANT, "ERROR: " << xstrerr(errno));
         error_ = true;
     } else if (static_cast<size_t>(written) != aRequest->len) {
-        debugs(79, DBG_IMPORTANT, HERE << "problem: " << written << " < " << aRequest->len);
+        debugs(79, DBG_IMPORTANT, "problem: " << written << " < " << aRequest->len);
         error_ = true;
     }
 
@@ -200,7 +200,7 @@ MmappedFile::write(WriteRequest *aRequest)
         (aRequest->free_func)(const_cast<char*>(aRequest->buf)); // broken API?
 
     if (!error_) {
-        debugs(79,5, HERE << "wrote " << aRequest->len << " to FD " << fd << " at " << aRequest->offset);
+        debugs(79,5, "wrote " << aRequest->len << " to FD " << fd << " at " << aRequest->offset);
     } else {
         doClose();
     }
@@ -240,7 +240,7 @@ Mmapping::map()
 
     if (buf == MAP_FAILED) {
         const int errNo = errno;
-        debugs(79,3, HERE << "error FD " << fd << "mmap(" << length << '+' <<
+        debugs(79,3, "error FD " << fd << "mmap(" << length << '+' <<
                delta << ", " << offset << '-' << delta << "): " << xstrerr(errNo));
         buf = NULL;
         return NULL;
@@ -252,7 +252,7 @@ Mmapping::map()
 bool
 Mmapping::unmap()
 {
-    debugs(79,9, HERE << "FD " << fd <<
+    debugs(79,9, "FD " << fd <<
            " munmap(" << buf << ", " << length << '+' << delta << ')');
 
     if (!buf) // forgot or failed to map
@@ -261,7 +261,7 @@ Mmapping::unmap()
     const bool error = munmap(buf, length + delta) != 0;
     if (error) {
         const int errNo = errno;
-        debugs(79,3, HERE << "error FD " << fd <<
+        debugs(79,3, "error FD " << fd <<
                " munmap(" << buf << ", " << length << '+' << delta << "): " <<
                "): " << xstrerr(errNo));
     }

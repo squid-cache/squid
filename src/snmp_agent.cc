@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,13 +18,11 @@
 #include "snmp_core.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
-#include "SquidTime.h"
 #include "stat.h"
 #include "StatCounters.h"
 #include "StatHist.h"
 #include "Store.h"
 #include "tools.h"
-// for tvSubDsec() which should be in SquidTime.h
 #include "util.h"
 
 /************************************************************************

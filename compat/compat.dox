@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,7 +14,7 @@
 
 \section sec1 Aim
 
-\par 
+\par
 Squid aims to build and run on many modern systems. To do this we have traditionally
 added small hacks and wrappers all over the code whenever one was needed.
 The final result of that is a vast amount of code duplication, dodgy licensing on

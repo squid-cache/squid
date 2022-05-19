@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,7 +25,6 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
-#include "SquidTime.h"
 
 Auth::Negotiate::UserRequest::UserRequest() :
     server_blob(nullptr),
@@ -58,11 +57,11 @@ int
 Auth::Negotiate::UserRequest::authenticated() const
 {
     if (user() != NULL && user()->credentials() == Auth::Ok) {
-        debugs(29, 9, HERE << "user authenticated.");
+        debugs(29, 9, "user authenticated.");
         return 1;
     }
 
-    debugs(29, 9, HERE << "user not fully authenticated.");
+    debugs(29, 9, "user not fully authenticated.");
     return 0;
 }
 
@@ -133,7 +132,7 @@ Auth::Negotiate::UserRequest::startHelperLookup(HttpRequest *, AccessLogEntry::P
         return;
     }
 
-    debugs(29, 8, HERE << "credentials state is '" << user()->credentials() << "'");
+    debugs(29, 8, "credentials state is '" << user()->credentials() << "'");
 
     const char *keyExtras = helperRequestKeyExtras(request, al);
     int printResult = 0;
@@ -178,7 +177,7 @@ Auth::Negotiate::UserRequest::releaseAuthServer()
         negotiateauthenticators->cancelReservation(reservationId);
         reservationId.clear();
     } else
-        debugs(29, 6, HERE << "No Negotiate auth server to release.");
+        debugs(29, 6, "No Negotiate auth server to release.");
 }
 
 void
@@ -199,7 +198,7 @@ Auth::Negotiate::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData
     }
 
     if (server_blob) {
-        debugs(29, 2, HERE << "need to challenge client '" << server_blob << "'!");
+        debugs(29, 2, "need to challenge client '" << server_blob << "'!");
         return;
     }
 
@@ -224,7 +223,7 @@ Auth::Negotiate::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData
 
     case Auth::Unchecked:
         /* we've received a negotiate request. pass to a helper */
-        debugs(29, 9, HERE << "auth state negotiate none. Received blob: '" << proxy_auth << "'");
+        debugs(29, 9, "auth state negotiate none. Received blob: '" << proxy_auth << "'");
         user()->credentials(Auth::Pending);
         safe_free(client_blob);
         client_blob=xstrdup(blob);
@@ -235,7 +234,7 @@ Auth::Negotiate::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData
         break;
 
     case Auth::Pending:
-        debugs(29, DBG_IMPORTANT, HERE << "need to ask helper");
+        debugs(29, DBG_IMPORTANT, "need to ask helper");
         break;
 
     case Auth::Handshake:
@@ -255,7 +254,7 @@ Auth::Negotiate::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData
 
     case Auth::Failed:
         /* we've failed somewhere in authentication */
-        debugs(29, 9, HERE << "auth state negotiate failed. " << proxy_auth);
+        debugs(29, 9, "auth state negotiate failed. " << proxy_auth);
         break;
     }
 }
@@ -308,7 +307,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
             lm_request->server_blob = xstrdup(tokenNote);
             auth_user_request->user()->credentials(Auth::Handshake);
             auth_user_request->setDenyMessage("Authentication in progress");
-            debugs(29, 4, HERE << "Need to challenge the client with a server token: '" << tokenNote << "'");
+            debugs(29, 4, "Need to challenge the client with a server token: '" << tokenNote << "'");
         } else {
             auth_user_request->user()->credentials(Auth::Failed);
             auth_user_request->setDenyMessage("Negotiate authentication requires a persistent connection");
@@ -333,7 +332,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
         lm_request->releaseAuthServer();
 
         /* connection is authenticated */
-        debugs(29, 4, HERE << "authenticated user " << auth_user_request->user()->username());
+        debugs(29, 4, "authenticated user " << auth_user_request->user()->username());
         auto local_auth_user = lm_request->user();
         auto cached_user = Auth::Negotiate::User::Cache()->lookup(auth_user_request->user()->userKey());
         if (!cached_user) {
@@ -352,7 +351,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
          * existing user or a new user */
         local_auth_user->expiretime = current_time.tv_sec;
         auth_user_request->user()->credentials(Auth::Ok);
-        debugs(29, 4, HERE << "Successfully validated user via Negotiate. Username '" << auth_user_request->user()->username() << "'");
+        debugs(29, 4, "Successfully validated user via Negotiate. Username '" << auth_user_request->user()->username() << "'");
     }
     break;
 
@@ -369,7 +368,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
 
     case Helper::Unknown:
         debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication Helper crashed (" << reply.reservationId << ")");
-    /* continue to the next case */
+    /* [[fallthrough]] */
 
     case Helper::TimedOut:
     case Helper::BrokenHelper:

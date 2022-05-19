@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 /* DEBUG: section 86    ESI processing */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "fatal.h"
 
 /* MS Visual Studio Projects are monolithic, so we need the following
@@ -304,7 +304,7 @@ esiSequence::process (int inheritedVarsFlag)
 }
 
 void
-esiSequence::fail (ESIElement *source, char const *anError)
+esiSequence::fail(ESIElement * /* source */, char const *anError)
 {
     failed = true;
 
