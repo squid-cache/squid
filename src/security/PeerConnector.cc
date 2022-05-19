@@ -276,8 +276,9 @@ Security::PeerConnector::handleNegotiationResult(const Security::IoResult &resul
     }
 
     // TODO: Honor result.important when working in a reverse proxy role?
-    debugs(83, 2, "ERROR: " << result.errorDescription <<
-           " while establishing TLS connection on FD: " << serverConnection()->fd << result.errorDetail);
+    debugs(83, 2, "ERROR: Cannot establish a TLS connection to " << serverConnection() << ':' <<
+           Debug::Extra << "problem: " << result.errorDescription <<
+           RawPointer("detail: ", result.errorDetail).asExtra());
     recordNegotiationDetails();
     noteNegotiationError(result.errorDetail);
 }
@@ -339,7 +340,7 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
     if (Debug::Enabled(83, 5)) {
         Security::SessionPointer ssl(fd_table[serverConnection()->fd].ssl);
         SBuf *server = static_cast<SBuf *>(SSL_get_ex_data(ssl.get(), ssl_ex_index_server));
-        debugs(83,5, RawPointer("host", server) << " cert validation result: " << validationResponse->resultCode);
+        debugs(83, 5, "cert validation result: " << validationResponse->resultCode << RawPointer(" host: ", server));
     }
 
     if (validationResponse->resultCode == ::Helper::Error) {
