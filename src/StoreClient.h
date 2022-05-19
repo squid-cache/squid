@@ -61,12 +61,6 @@ public:
     store_client(StoreEntry *);
     ~store_client();
 
-    /// Whether this Store client requires memory-stored response content.
-    /// \retval false does not mean the client never reads from memory, only
-    /// that it has other means of getting that content (e.g., from disk) and,
-    /// hence, will keep working even if unread content is purged from memory.
-    bool reliesOnReadingFromMemory() const;
-
     /// \retval +N is the offset of the stored response that the client wants to read next.
     /// \retval 0 means the client wants to read HTTP response headers.
     // TODO: the callers do not expect negative offset. Check that it cannot be negative

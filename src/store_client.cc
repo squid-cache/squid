@@ -85,12 +85,6 @@ StoreClient::startCollapsingOn(const StoreEntry &e, const bool doingRevalidation
 
 /* store_client */
 
-bool
-store_client::reliesOnReadingFromMemory() const
-{
-    return getType() == STORE_MEM_CLIENT;
-}
-
 int
 store_client::getType() const
 {
