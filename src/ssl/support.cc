@@ -352,7 +352,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         if (error_no != SQUID_X509_V_ERR_INFINITE_VALIDATION) {
             if (check) {
                 ACLFilledChecklist *filledCheck = Filled(check);
-                assert(!filledCheck->sslErrors);
+                const auto savedErrors = filledCheck->sslErrors;
                 filledCheck->sslErrors = new Security::CertErrors(Security::CertError(error_no, broken_cert));
                 filledCheck->serverCert = peer_cert;
                 if (check->fastCheck().allowed()) {
@@ -362,7 +362,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
                     debugs(83, 5, "confirming SSL error " << error_no);
                 }
                 delete filledCheck->sslErrors;
-                filledCheck->sslErrors = NULL;
+                filledCheck->sslErrors = savedErrors;
                 filledCheck->serverCert.reset();
             }
             // If the certificate validator is used then we need to allow all errors and
@@ -1116,7 +1116,7 @@ Ssl::loadCerts(const char *certsFile, Ssl::CertsIndexedList &list)
         return false;
     }
 
-    while (auto aCert = ReadX509Certificate(in)) {
+    while (auto aCert = ReadOptionalCertificate(in)) {
         static char buffer[2048];
         X509_NAME_oneline(X509_get_subject_name(aCert.get()), buffer, sizeof(buffer));
         list.insert(std::pair<SBuf, X509 *>(SBuf(buffer), aCert.release()));
