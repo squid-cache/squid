@@ -107,12 +107,16 @@ if ! git diff --quiet; then
 	exit 1
 fi
 
-for Checksum in md5sum md5 shasum sha1sum
+for Checksum in md5sum md5 shasum sha1sum none
 do
     if "$Checksum" </dev/null >/dev/null 2>/dev/null ; then
         break
     fi
 done
+if [ "$Checksum" = "none" ]; then
+    "Could not find any program to calculate a checksum such as md5sum"
+    exit 1
+fi
 echo "detected checksum program $Checksum"
 
 if [ "x$ASTYLE" != "x" ] ; then
@@ -120,6 +124,7 @@ if [ "x$ASTYLE" != "x" ] ; then
         :
     else
         echo "ERROR: cannot run user-supplied astyle ${ASTYLE}"
+        exit 1
     fi
 else
     for AttemptedBinary in astyle-${TargetAstyleVersion} astyle
@@ -130,6 +135,17 @@ else
             break
         fi
     done
+    if [ -z "${ASTYLE}" ]; then
+        echo "cannot find any installed astyle program"
+        exit 1
+    fi
+fi
+
+${ASTYLE:-false} --version >/dev/null 2>/dev/null
+result=$?
+if test $result -gt 0 ; then
+	echo "ERROR: cannot run astyle binay '${ASTYLE}'"
+    exit 1
 fi
 
 ASVER=`${ASTYLE} --version 2>&1 | grep -o -E "[0-9.]+"`
