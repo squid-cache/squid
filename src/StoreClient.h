@@ -61,10 +61,14 @@ public:
     store_client(StoreEntry *);
     ~store_client();
 
-    /// \retval +N is the offset of the stored response that the client wants to read next.
+    /// An offset into the stored response bytes, including the HTTP response
+    /// headers (if any). Note that this offset does not include Store entry
+    /// metadata, because it is not a part of the stored response.
     /// \retval 0 means the client wants to read HTTP response headers.
-    // TODO: the callers do not expect negative offset. Check that it cannot be negative
-    // and convert to unsigned in this case.
+    /// \retval +N the response byte that the client wants to read next.
+    /// \retval -N should not occur.
+    // TODO: Callers do not expect negative offset. Verify that the return
+    // value cannot be negative and convert to unsigned in this case.
     int64_t readOffset() const { return copyInto.offset; }
 
     int getType() const;
