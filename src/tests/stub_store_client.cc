@@ -24,7 +24,6 @@ void storeLogOpen(void) STUB
 void storeDigestInit(void) STUB
 void storeRebuildStart(void) STUB
 void storeReplSetup(void) STUB
-bool store_client::reliesOnReadingFromMemory() const STUB_RETVAL(false)
 void store_client::noteSwapInDone(bool) STUB
 #if USE_DELAY_POOLS
 int store_client::bytesWanted() const STUB_RETVAL(0)
