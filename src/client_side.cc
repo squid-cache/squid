@@ -107,6 +107,7 @@
 #include "proxyp/Header.h"
 #include "proxyp/Parser.h"
 #include "sbuf/Stream.h"
+#include "security/Certificate.h"
 #include "security/CommunicationSecrets.h"
 #include "security/Io.h"
 #include "security/KeyLog.h"
@@ -2423,10 +2424,10 @@ clientNegotiateSSL(int fd, void *data)
 
     if (client_cert) {
         debugs(83, 3, "FD " << fd << " client certificate: subject: " <<
-               X509_NAME_oneline(X509_get_subject_name(client_cert), 0, 0));
+               Security::SubjectName(*client_cert));
 
         debugs(83, 3, "FD " << fd << " client certificate: issuer: " <<
-               X509_NAME_oneline(X509_get_issuer_name(client_cert), 0, 0));
+               Security::IssuerName(*client_cert));
 
         X509_free(client_cert);
     } else {
