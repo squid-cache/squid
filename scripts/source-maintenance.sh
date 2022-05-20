@@ -106,13 +106,13 @@ if ! git diff --quiet; then
 	exit 1
 fi
 
-for Checksum in md5sum md5 shasum sha1sum none
+for Checksum in md5sum md5 shasum sha1sum false
 do
     if "$Checksum" </dev/null >/dev/null 2>/dev/null ; then
         break
     fi
 done
-if [ "$Checksum" = "none" ]; then
+if [ "$Checksum" = "false" ]; then
     "Could not find any program to calculate a checksum such as md5sum"
     exit 1
 fi
