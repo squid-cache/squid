@@ -164,6 +164,9 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
     if (!Ssl::TheConfig.ssl_crt_validator) {
         // Create the ACL check list now, while we have access to more info.
         // The list is used in ssl_verify_cb() and is freed in ssl_free().
+        // XXX: This info may change, especially if we fetch missing certs.
+        // TODO: Remove ACLFilledChecklist::sslErrors and other pre-computed
+        // state in favor of the ACLs accessing current/fresh info directly.
         if (acl_access *acl = ::Config.ssl_client.cert_error) {
             ACLFilledChecklist *check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
             fillChecklist(*check);
@@ -274,8 +277,9 @@ Security::PeerConnector::handleNegotiationResult(const Security::IoResult &resul
     }
 
     // TODO: Honor result.important when working in a reverse proxy role?
-    debugs(83, 2, "ERROR: " << result.errorDescription <<
-           " while establishing TLS connection on FD: " << serverConnection()->fd << result.errorDetail);
+    debugs(83, 2, "ERROR: Cannot establish a TLS connection to " << serverConnection() << ':' <<
+           Debug::Extra << "problem: " << result.errorDescription <<
+           RawPointer("detail: ", result.errorDetail).asExtra());
     recordNegotiationDetails();
     noteNegotiationError(result.errorDetail);
 }
@@ -337,7 +341,7 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
     if (Debug::Enabled(83, 5)) {
         Security::SessionPointer ssl(fd_table[serverConnection()->fd].ssl);
         SBuf *server = static_cast<SBuf *>(SSL_get_ex_data(ssl.get(), ssl_ex_index_server));
-        debugs(83,5, RawPointer("host", server) << " cert validation result: " << validationResponse->resultCode);
+        debugs(83, 5, "cert validation result: " << validationResponse->resultCode << RawPointer(" host: ", server));
     }
 
     if (validationResponse->resultCode == ::Helper::Error) {
