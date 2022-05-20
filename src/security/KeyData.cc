@@ -98,8 +98,10 @@ Security::KeyData::loadX509ChainFromFile()
         return;
     }
 
-    // TODO: Remove this diff minimization
-    {
+    if (SelfSigned(*cert)) {
+        debugs(83, DBG_PARSE_NOTE(2), "Signing certificate is self-signed: " << *cert);
+        // TODO: Warn if there are other (unusable) certificates present.
+    } else {
         debugs(83, DBG_PARSE_NOTE(3), "Using certificate chain in " << certFile);
         // and add to the chain any other certificate exist in the file
         CertPointer latestCert = cert;
@@ -108,10 +110,6 @@ Security::KeyData::loadX509ChainFromFile()
         // loop from the very first certificate in certFilename, and that
         // certificate is a copy of the already loaded _signing_ this->cert.
         while (const auto ca = Ssl::ReadOptionalCertificate(bio)) {
-
-            // XXX: When this->cert is self-signed, we chain its copy here,
-            // resulting in two copies of that signing certificate sent.
-
             // checks that the chained certs are actually part of a chain for validating cert
             if (IssuedBy(*latestCert, *ca)) {
                 debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << *ca);
