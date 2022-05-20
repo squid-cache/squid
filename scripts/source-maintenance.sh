@@ -50,11 +50,15 @@ program files. The path to the astyle binary can be specified using the
 It will try to auto-detect a checksum program (e.g. md5sum).
 
 If the --only-changed-since argument is supplied, it expects a git commit-id,
-branch name or the special keyword 'fork'. The script will only examine
-files that have changed since the specified commit. The keyword 'fork' will look for files changed
+branch name or the special keyword 'fork'.
+The script will try to only examine for formatting changes those files that
+have changed since the specified commit.
+The keyword 'fork' will look for files changed
 since the current branch was forked off 'upstream/master'. Sensible values
 for this argument may include HEAD^, master, origin/master, or the branch
-the current one was forked off
+the current one was forked off.
+This option does not disable some repository-wide file generation and
+repository-wide non-formatting checks/adjustments
 _EOF
 }
 
