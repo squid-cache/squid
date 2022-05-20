@@ -58,6 +58,7 @@ Security::IssuerName(Certificate &cert)
 
 #else
     debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate Issuer: " << MissingLibraryError());
+    (void)cert;
 #endif
 
     return out;
@@ -97,6 +98,7 @@ Security::SubjectName(Certificate &cert)
 
 #else
     debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot get certificate SubjectName: " << MissingLibraryError());
+    (void)cert;
 #endif
 
     return out;
@@ -120,6 +122,8 @@ Security::IssuedBy(Certificate &cert, Certificate &issuer)
     debugs(83, DBG_PARSE_NOTE(3), issuer << " did not sign " << cert);
 #else
     debugs(83, DBG_PARSE_NOTE(2), "WARNING: cannot determine certificates relationship: " << MissingLibraryError());
+    (void)cert;
+    (void)issuer;
 #endif
     return false;
 }
