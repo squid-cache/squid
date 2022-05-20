@@ -112,6 +112,14 @@ Security::KeyData::loadX509ChainFromFile()
         while (const auto ca = Ssl::ReadOptionalCertificate(bio)) {
             // checks that the chained certs are actually part of a chain for validating cert
             if (IssuedBy(*latestCert, *ca)) {
+
+                if (SelfSigned(*latestCert)) { // TODO: Rename to lastChained
+                    Assure(SelfSigned(*ca));
+                    Assure(!SelfSigned(*cert)); // TODO: Rename to leafCert or signingCert
+                    debugs(83, DBG_PARSE_NOTE(2), "WARNING: Ignoring repeated Root CA: " << *ca);
+                    continue;
+                }
+
                 debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << *ca);
                 // OpenSSL API requires that we order certificates such that the
                 // chain can be appended directly into the on-wire traffic.
