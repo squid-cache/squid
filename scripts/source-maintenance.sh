@@ -360,10 +360,7 @@ git grep "ifn?def .*_SQUID_" |
 # Scan for file-specific actions
 #
 ForkPoint=""
-FilesToOperateOn=""
-if test "x$OnlyChangedSince" = "x" ; then
-    FilesToOperateOn=`git ls-files`
-elif test "x$OnlyChangedSince" = "xfork" ; then
+if test "x$OnlyChangedSince" = "xfork" ; then
     ForkPoint=`git merge-base --fork-point upstream/master`
     if test "x$ForkPoint" = "x" ; then
         echo "Could not identify fork point - sometimes it happens"
@@ -372,8 +369,12 @@ elif test "x$OnlyChangedSince" = "xfork" ; then
     fi
     OnlyChangedSince="$ForkPoint"
 fi
-if test "x$FilesToOperateOn" = "x" && test "x$OnlyChangedSince" != "x" ; then
+
+FilesToOperateOn=""
+if test "x$OnlyChangedSince" != "x" ; then
     FilesToOperateOn=`git diff --name-only $OnlyChangedSince`
+else
+    FilesToOperateOn=`git ls-files`
 fi
 
 for FILENAME in $FilesToOperateOn; do
