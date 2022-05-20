@@ -227,7 +227,6 @@ squid_SOURCES = \
 	CollapsedForwarding.cc \
 	CollapsedForwarding.h \
 	CollapsingHistory.h \
-	CommRead.h \
 	CommandLine.cc \
 	CommandLine.h \
 	ConfigOption.cc \
@@ -793,6 +792,23 @@ tests_testMath_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testMath_LDFLAGS = $(LIBADD_DL)
+
+## Tests of RandomUuid.h
+check_PROGRAMS += tests/testRandomUuid
+tests_testRandomUuid_SOURCES = \
+	tests/testRandomUuid.cc
+nodist_tests_testRandomUuid_SOURCES = \
+	RandomUuid.h \
+	tests/stub_debug.cc \
+	tests/stub_libmem.cc
+tests_testRandomUuid_LDADD = \
+	libsquid.la \
+	sbuf/libsbuf.la \
+	base/libbase.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testRandomUuid_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of mem/*
 
@@ -2775,7 +2791,8 @@ nodist_tests_testEventLoop_SOURCES = \
 	EventLoop.cc \
 	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
-	tests/stub_libtime.cc
+	tests/stub_libtime.cc \
+	tests/stub_SBuf.cc
 tests_testEventLoop_LDADD = \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \

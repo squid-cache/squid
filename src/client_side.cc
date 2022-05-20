@@ -2299,22 +2299,24 @@ ConnStateData::acceptTls()
 void
 httpAccept(const CommAcceptCbParams &params)
 {
-    MasterXaction::Pointer xact = params.xaction;
-    AnyP::PortCfgPointer s = xact->squidPort;
+    Assure(params.port);
 
     // NP: it is possible the port was reconfigured when the call or accept() was queued.
 
     if (params.flag != Comm::OK) {
         // Its possible the call was still queued when the client disconnected
-        debugs(33, 2, s->listenConn << ": accept failure: " << xstrerr(params.xerrno));
+        debugs(33, 2, params.port->listenConn << ": accept failure: " << xstrerr(params.xerrno));
         return;
     }
 
     debugs(33, 4, params.conn << ": accepted");
     fd_note(params.conn->fd, "client http connect");
+    const auto xact = MasterXaction::MakePortful(params.port);
+    xact->tcpClient = params.conn;
 
     // Socket is ready, setup the connection manager to start using it
     auto *srv = Http::NewServer(xact);
+    // XXX: do not abandon the MasterXaction object
     AsyncJob::Start(srv); // usually async-calls readSomeData()
 }
 
@@ -2499,22 +2501,25 @@ httpsSslBumpAccessCheckDone(Acl::Answer answer, void *data)
 static void
 httpsAccept(const CommAcceptCbParams &params)
 {
-    MasterXaction::Pointer xact = params.xaction;
-    const AnyP::PortCfgPointer s = xact->squidPort;
+    Assure(params.port);
 
     // NP: it is possible the port was reconfigured when the call or accept() was queued.
 
     if (params.flag != Comm::OK) {
         // Its possible the call was still queued when the client disconnected
-        debugs(33, 2, "httpsAccept: " << s->listenConn << ": accept failure: " << xstrerr(params.xerrno));
+        debugs(33, 2, "httpsAccept: " << params.port->listenConn << ": accept failure: " << xstrerr(params.xerrno));
         return;
     }
+
+    const auto xact = MasterXaction::MakePortful(params.port);
+    xact->tcpClient = params.conn;
 
     debugs(33, 4, params.conn << " accepted, starting SSL negotiation.");
     fd_note(params.conn->fd, "client https connect");
 
     // Socket is ready, setup the connection manager to start using it
     auto *srv = Https::NewServer(xact);
+    // XXX: do not abandon the MasterXaction object
     AsyncJob::Start(srv); // usually async-calls postHttpsAccept()
 }
 
@@ -2530,7 +2535,7 @@ ConnStateData::postHttpsAccept()
             return;
         }
 
-        MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+        const auto mx = MasterXaction::MakePortful(port);
         mx->tcpClient = clientConnection;
         // Create a fake HTTP request and ALE for the ssl_bump ACL check,
         // using tproxy/intercept provided destination IP and port.
@@ -3236,7 +3241,7 @@ ConnStateData::buildFakeRequest(SBuf &useHost, unsigned short usePort, const SBu
     extendLifetime();
     stream->registerWithConn();
 
-    MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+    const auto mx = MasterXaction::MakePortful(port);
     mx->tcpClient = clientConnection;
     // Setup Http::Request object. Maybe should be replaced by a call to (modified)
     // clientProcessRequest

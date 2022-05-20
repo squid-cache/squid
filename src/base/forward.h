@@ -9,10 +9,12 @@
 #ifndef SQUID_SRC_BASE_FORWARD_H
 #define SQUID_SRC_BASE_FORWARD_H
 
+class AsyncCall;
 class AsyncCallQueue;
 class AsyncJob;
 class CallDialer;
 class CodeContext;
+class DelayedAsyncCalls;
 class ScopedId;
 class BadOptionalAccess;
 class Raw;
@@ -26,6 +28,7 @@ template<class Job> class JobWait;
 
 typedef CbcPointer<AsyncJob> AsyncJobPointer;
 typedef RefCount<CodeContext> CodeContextPointer;
+using AsyncCallPointer = RefCount<AsyncCall>;
 
 #endif /* SQUID_SRC_BASE_FORWARD_H */
 

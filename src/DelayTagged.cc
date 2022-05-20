@@ -165,7 +165,7 @@ DelayTagged::Id::bytesIn(int qty)
 }
 
 void
-DelayTagged::Id::delayRead(DeferredRead const &aRead)
+DelayTagged::Id::delayRead(const AsyncCall::Pointer &aRead)
 {
     theTagged->delayRead(aRead);
 }

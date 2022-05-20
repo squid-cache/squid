@@ -9,7 +9,7 @@
 #ifndef SQUID_MEMOBJECT_H
 #define SQUID_MEMOBJECT_H
 
-#include "CommRead.h"
+#include "base/DelayedAsyncCalls.h"
 #include "dlink.h"
 #include "http/RequestMethod.h"
 #include "RemovalPolicy.h"
@@ -192,7 +192,7 @@ public:
     PeerSelector *ircb_data = nullptr;
 
     /// used for notifying StoreEntry writers about 3rd-party initiated aborts
-    AsyncCall::Pointer abortCallback;
+    AsyncCallPointer abortCallback;
     RemovalPolicyNode repl;
     int id = 0;
     int64_t object_sz = -1;
@@ -203,7 +203,7 @@ public:
 
     SBuf vary_headers;
 
-    void delayRead(DeferredRead const &);
+    void delayRead(const AsyncCallPointer &);
     void kickReads();
 
 private:
@@ -213,7 +213,7 @@ private:
     mutable String storeId_; ///< StoreId for our entry (usually request URI)
     mutable String logUri_;  ///< URI used for logging (usually request URI)
 
-    DeferredReadManager deferredReads;
+    DelayedAsyncCalls deferredReads;
 };
 
 /** global current memory removal policy */
