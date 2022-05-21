@@ -1275,14 +1275,7 @@ AC_MSG_NOTICE([GnuTLS library support: ${with_gnutls:=auto} ${LIBGNUTLS_PATH} ${
 dnl User may specify OpenSSL is needed from a non-standard location
 SQUID_OPTIONAL_LIB(openssl,[OpenSSL],[LIBOPENSSL])
 AH_TEMPLATE(USE_OPENSSL,[OpenSSL support is available])
-AS_IF([test "x$with_openssl" != "xno"],[
-  SQUID_STATE_SAVE(squid_openssl3_state)
-  CPPFLAGS="$LIBOPENSSL_CFLAGS $CPPFLAGS"
-  LIBS="$LIBS $LIBOPENSSL_PATH"
-  PKG_CHECK_MODULES([LIBOPENSSL],[openssl >= 3],[with_openssl="yes"],[:])
-  SQUID_STATE_ROLLBACK(squid_openssl3_state)
-])
-## OpenSSL < 3 is default disable due to licensing issues on some OS
+## OpenSSL is default disable due to licensing issues on some OS
 if test "x$with_openssl" = "xyes"; then
   CPPFLAGS="$LIBOPENSSL_CFLAGS $CPPFLAGS"
   AC_CHECK_HEADERS( \
