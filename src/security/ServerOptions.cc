@@ -383,25 +383,25 @@ Security::ServerOptions::loadDhParams()
     const char *type = "DH";
     if (!eecdhCurve.isEmpty())
         type = "EC";
-    // XXX: use the eecdhCurve name when generating the EVP_KEY object. or at least verify it matches the loaded params.
 
-    if (auto *dctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, "PEM", nullptr, type, OSSL_KEYMGMT_SELECT_ALL, nullptr, nullptr)) {
+    if (auto *dctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, "PEM", nullptr, type, 0, nullptr, nullptr)) {
         if (auto *in = fopen(dhParamsFile.c_str(), "r")) {
             if (OSSL_DECODER_from_fp(dctx, in) == 1) {
 
                 /* pkey is created with the decoded data from the bio */
                 Must(pkey);
                 parsedDhParams.resetWithoutLocking(pkey);
+                // TODO: verify that the loaded parameters match the value in eecdhCurve
 
             } else {
-                debugs(83, DBG_IMPORTANT, "WARNING: Failed to decode DH parameters '" << dhParamsFile << "'");
+                debugs(83, DBG_IMPORTANT, "WARNING: Failed to decode " << type << " parameters '" << dhParamsFile << "'");
             }
             fclose(in);
         }
         OSSL_DECODER_CTX_free(dctx);
 
     } else {
-        debugs(83, DBG_IMPORTANT, "WARNING: no suitable potential decoders found for DH parameters");
+        debugs(83, DBG_IMPORTANT, "WARNING: no suitable potential decoders found for " << type << " parameters");
         return;
     }
 #endif
