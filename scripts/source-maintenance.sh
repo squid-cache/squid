@@ -144,13 +144,12 @@ else
     fi
 fi
 
-${ASTYLE:-false} --version >/dev/null 2>/dev/null
+${ASTYLE} --version >/dev/null 2>/dev/null
 result=$?
 if test $result -gt 0 ; then
-	echo "ERROR: cannot run astyle binay '${ASTYLE}'"
-    exit 1
+	echo "ERROR: cannot run ${ASTYLE}"
+	exit 1
 fi
-
 ASVER=`${ASTYLE} --version 2>&1 | grep -o -E "[0-9.]+"`
 if test "${ASVER}" != "${TargetAstyleVersion}" ; then
 	if test "${ASTYLE}" = "astyle" ; then
