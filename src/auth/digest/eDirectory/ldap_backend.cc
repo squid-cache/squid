@@ -203,8 +203,10 @@ getpassword(char *login, char *realm)
     char **value = NULL;
     char *password = NULL;
     int retry = 0;
-    char filter[8192] = "";
-    char searchbase[8192] = "";
+    char filter[8192];
+    *filter='\0';
+    char searchbase[8192]
+    *searchbase='\0';
     char *universal_password = NULL;
     size_t universal_password_len = 256;
     int nmas_res = 0;
