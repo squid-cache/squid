@@ -25,6 +25,7 @@
 #include "sbuf/Stream.h"
 #include "sbuf/StringConvert.h"
 #include "security/CertError.h"
+#include "security/Certificate.h"
 #include "security/NegotiationHistory.h"
 #include "Store.h"
 #include "tools.h"
@@ -1253,20 +1254,16 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_SSL_USER_CERT_SUBJECT:
-            if (X509 *cert = al->cache.sslClientCert.get()) {
-                if (X509_NAME *subject = X509_get_subject_name(cert)) {
-                    X509_NAME_oneline(subject, tmp, sizeof(tmp));
-                    out = tmp;
-                }
+            if (const auto &cert = al->cache.sslClientCert) {
+                sb = Security::SubjectName(*cert);
+                out = sb.c_str();
             }
             break;
 
         case LFT_SSL_USER_CERT_ISSUER:
-            if (X509 *cert = al->cache.sslClientCert.get()) {
-                if (X509_NAME *issuer = X509_get_issuer_name(cert)) {
-                    X509_NAME_oneline(issuer, tmp, sizeof(tmp));
-                    out = tmp;
-                }
+            if (const auto &cert = al->cache.sslClientCert) {
+                sb = Security::IssuerName(*cert);
+                out = sb.c_str();
             }
             break;
 

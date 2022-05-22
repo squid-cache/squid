@@ -292,15 +292,12 @@ Ssl::CertificateDb::addCertAndPrivateKey(std::string const &useKey, const Securi
     if(useKey.empty())
         return false;
 
-    // Functor to wrap xfree() for std::unique_ptr
-    typedef HardFun<void, const void*, &xfree> CharDeleter;
-
     Row row;
     ASN1_INTEGER * ai = X509_get_serialNumber(cert.get());
     std::string serial_string;
     Ssl::BIGNUM_Pointer serial(ASN1_INTEGER_to_BN(ai, NULL));
     {
-        std::unique_ptr<char, CharDeleter> hex_bn(BN_bn2hex(serial.get()));
+        const UniqueCString hex_bn(BN_bn2hex(serial.get()));
         serial_string = std::string(hex_bn.get());
     }
     row.setValue(cnlSerial, serial_string.c_str());
@@ -339,7 +336,7 @@ Ssl::CertificateDb::addCertAndPrivateKey(std::string const &useKey, const Securi
 
     const auto tm = X509_getm_notAfter(cert.get());
     row.setValue(cnlExp_date, std::string(reinterpret_cast<char *>(tm->data), tm->length).c_str());
-    std::unique_ptr<char, CharDeleter> subject(X509_NAME_oneline(X509_get_subject_name(cert.get()), nullptr, 0));
+    const auto subject = OneLineSummary(*X509_get_subject_name(cert.get()));
     row.setValue(cnlName, subject.get());
     row.setValue(cnlKey, useKey.c_str());
 

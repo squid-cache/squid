@@ -577,12 +577,12 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                     if ((gtype == GOPHER_TELNET) || (gtype == GOPHER_3270)) {
                         if (strlen(escaped_selector) != 0)
                             outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"telnet://%s@%s%s%s/\">%s</A>\n",
-                                     icon_url, escaped_selector, rfc1738_escape_part(host),
-                                     *port ? ":" : "", port, html_quote(name));
+                                           icon_url, escaped_selector, rfc1738_escape_part(host),
+                                           *port ? ":" : "", port, html_quote(name));
                         else
                             outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"telnet://%s%s%s/\">%s</A>\n",
-                                     icon_url, rfc1738_escape_part(host), *port ? ":" : "",
-                                     port, html_quote(name));
+                                           icon_url, rfc1738_escape_part(host), *port ? ":" : "",
+                                           port, html_quote(name));
 
                     } else if (gtype == GOPHER_INFO) {
                         outbuf.appendf("\t%s\n", html_quote(name));
@@ -590,14 +590,14 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                         if (strncmp(selector, "GET /", 5) == 0) {
                             /* WWW link */
                             outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"http://%s/%s\">%s</A>\n",
-                                     icon_url, host, rfc1738_escape_unescaped(selector + 5), html_quote(name));
+                                           icon_url, host, rfc1738_escape_unescaped(selector + 5), html_quote(name));
                         } else if (gtype == GOPHER_WWW) {
                             outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"gopher://%s/%c%s\">%s</A>\n",
-                                     icon_url, rfc1738_escape_unescaped(selector), html_quote(name));
+                                           icon_url, rfc1738_escape_unescaped(selector), html_quote(name));
                         } else {
                             /* Standard link */
                             outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"gopher://%s/%c%s\">%s</A>\n",
-                                     icon_url, host, gtype, escaped_selector, html_quote(name));
+                                           icon_url, host, gtype, escaped_selector, html_quote(name));
                         }
                     }
 
