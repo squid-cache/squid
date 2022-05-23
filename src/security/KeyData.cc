@@ -89,7 +89,6 @@ void
 Security::KeyData::loadX509ChainFromFile()
 {
 #if USE_OPENSSL
-    // XXX: loadX509CertFromFile() has already opened and read this file.
     const char *certFilename = certFile.c_str();
     Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
     if (!bio || !BIO_read_filename(bio.get(), certFilename)) {
@@ -106,9 +105,6 @@ Security::KeyData::loadX509ChainFromFile()
         // and add to the chain any other certificate exist in the file
         CertPointer latestCert = cert;
 
-        // XXX: The first ca value is usually not a CA certificate because we
-        // loop from the very first certificate in certFilename, and that
-        // certificate is a copy of the already loaded _signing_ this->cert.
         while (const auto ca = Ssl::ReadOptionalCertificate(bio)) {
             // checks that the chained certs are actually part of a chain for validating cert
             if (IssuedBy(*latestCert, *ca)) {
@@ -126,8 +122,6 @@ Security::KeyData::loadX509ChainFromFile()
                 latestCert = CertPointer(ca);
                 chain.emplace_back(latestCert);
             } else {
-                // XXX: This usually logs a misleading "ignoring CA" message for
-                // the non-CA signing certificate which is not actually ignored!
                 debugs(83, DBG_PARSE_NOTE(2), certFile << ": Ignoring non-issuer CA " << *ca);
             }
         }
