@@ -17,7 +17,8 @@
 class NtlmAuthRr : public RegisteredRunner
 {
 public:
-    void bootstrapConfig() {
+    /* RegisteredRunner API */
+    virtual void bootstrapConfig() override {
         const char *type = Auth::Ntlm::Scheme::GetInstance()->type();
         debugs(29, 2, "Initialized Authentication Scheme '" << type << "'");
     }
