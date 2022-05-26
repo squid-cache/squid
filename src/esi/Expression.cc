@@ -63,15 +63,16 @@ typedef enum {
 } literalhint;
 
 struct _stackmember {
-    evaluate *eval;
-    union {
+    evaluate *eval = nullptr;
+    union Value {
         char *string;
         double floating;
         int integral;
+        Value() { memset(this, 0, sizeof(*this)); }
     } value;
-    literalhint valuestored;
-    evaltype valuetype;
-    int precedence;
+    literalhint valuestored = ESI_LITERAL_INVALID;
+    evaltype valuetype = ESI_EXPR_INVALID;
+    int precedence = 0;
 };
 
 static void cleanmember(stackmember *);

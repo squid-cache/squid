@@ -75,6 +75,9 @@ public:
     void processSurrogateControl(HttpReply *);
 
 protected:
+    /* Client API */
+    virtual void noteDelayAwareReadChance();
+
     void processReply();
     void proceedAfter1xx();
     void handle1xx(HttpReply *msg);

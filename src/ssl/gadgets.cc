@@ -7,7 +7,46 @@
  */
 
 #include "squid.h"
+#include "base/IoManip.h"
+#include "error/SysErrorDetail.h"
+#include "security/Io.h"
+#include "sbuf/Stream.h"
 #include "ssl/gadgets.h"
+
+void
+Ssl::ForgetErrors()
+{
+    if (ERR_peek_last_error()) {
+        debugs(83, 5, "forgetting stale OpenSSL errors:" << ReportAndForgetErrors);
+        // forget errors if section/level-specific debugging above was disabled
+        while (ERR_get_error()) {}
+    }
+
+    // Technically, the caller should just ignore (potentially stale) errno when
+    // no system calls have failed. However, due to OpenSSL error-reporting API
+    // deficiencies, many callers cannot detect when a TLS error was caused by a
+    // system call failure. We forget the stale errno (just like we forget stale
+    // OpenSSL errors above) so that the caller only uses fresh errno values.
+    errno = 0;
+}
+
+std::ostream &
+Ssl::ReportAndForgetErrors(std::ostream &os)
+{
+    unsigned int reported = 0; // efficiently marks ForgetErrors() call boundary
+    while (const auto errorToForget = ERR_get_error())
+        os << Debug::Extra << "OpenSSL-saved error #" << (++reported) << ": " << asHex(errorToForget);
+    return os;
+}
+
+[[ noreturn ]] static void
+ThrowErrors(const char * const problem, const int savedErrno, const SourceLocation &where)
+{
+    throw TextException(ToSBuf(problem, ": ",
+                               Ssl::ReportAndForgetErrors,
+                               ReportSysError(savedErrno)),
+                        where);
+}
 
 EVP_PKEY * Ssl::createSslPrivateKey()
 {
@@ -115,8 +154,15 @@ bool Ssl::readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, Security
     Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
     BIO_puts(bio.get(), bufferToRead);
 
-    if (!(cert = Ssl::ReadX509Certificate(bio)))
+    try {
+        cert = ReadCertificate(bio);
+    } catch (...) {
+        debugs(83, DBG_IMPORTANT, "ERROR: Cannot deserialize a signing certificate:" <<
+               Debug::Extra << "problem: " << CurrentException);
+        cert.reset();
+        pkey.reset();
         return false;
+    }
 
     EVP_PKEY * pkeyPtr = NULL;
     pkey.resetWithoutLocking(PEM_read_bio_PrivateKey(bio.get(), &pkeyPtr, 0, 0));
@@ -126,15 +172,18 @@ bool Ssl::readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, Security
     return true;
 }
 
-bool Ssl::readCertFromMemory(Security::CertPointer & cert, char const * bufferToRead)
+// TODO: Convert matching BIO_s_mem() callers.
+Ssl::BIO_Pointer
+Ssl::ReadOnlyBioTiedTo(const char * const bufferToRead)
 {
-    Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
-    BIO_puts(bio.get(), bufferToRead);
-
-    if (!(cert = Ssl::ReadX509Certificate(bio)))
-        return false;
-
-    return true;
+    ForgetErrors();
+    // OpenSSL BIO API is not const-correct, but OpenSSL does not free or modify
+    // BIO_new_mem_buf() data because it is marked with BIO_FLAGS_MEM_RDONLY.
+    const auto castedBuffer = const_cast<char*>(bufferToRead);
+    if (const auto bio = BIO_new_mem_buf(castedBuffer, -1)) // no memcpy()
+        return BIO_Pointer(bio);
+    const auto savedErrno = errno;
+    ThrowErrors("cannot allocate OpenSSL BIO structure", savedErrno, Here());
 }
 
 // According to RFC 5280 (Section A.1), the common name length in a certificate
@@ -689,10 +738,38 @@ Ssl::OpenCertsFileForReading(Ssl::BIO_Pointer &bio, const char *filename)
 }
 
 Security::CertPointer
-Ssl::ReadX509Certificate(const BIO_Pointer &bio)
+Ssl::ReadOptionalCertificate(const BIO_Pointer &bio)
 {
-    assert(bio);
-    return Security::CertPointer(PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr));
+    Assure(bio);
+    ForgetErrors();
+    if (const auto cert = PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr))
+        return Security::CertPointer(cert);
+    const auto savedErrno = errno;
+
+    // PEM_R_NO_START_LINE means OpenSSL could not find a BEGIN CERTIFICATE
+    // marker after successfully reading input. That includes such use cases as
+    // empty input, valid input exhausted by previous extractions, malformed
+    // input, and valid key-only input without the certificate. We cannot
+    // distinguish all these outcomes and treat this error as an EOF condition.
+    if (ERR_GET_REASON(ERR_peek_last_error()) == PEM_R_NO_START_LINE) {
+        // consume PEM_R_NO_START_LINE to clean global error queue (if that was
+        // the only error) and/or to let us check for other errors (otherwise)
+        (void)ERR_get_error();
+        if (!ERR_peek_last_error())
+            return nullptr; // EOF without any other errors
+    }
+
+    ThrowErrors("cannot read a PEM-encoded certificate", savedErrno, Here());
+}
+
+Security::CertPointer
+Ssl::ReadCertificate(const BIO_Pointer &bio)
+{
+    if (const auto cert = ReadOptionalCertificate(bio))
+        return cert;
+
+    // PEM_R_NO_START_LINE
+    throw TextException("missing a required PEM-encoded certificate", Here());
 }
 
 bool
@@ -746,6 +823,12 @@ Ssl::WritePrivateKey(Ssl::BIO_Pointer &bio, const Security::PrivateKeyPointer &p
     if (!PEM_write_bio_PrivateKey(bio.get(), pkey.get(), NULL, NULL, 0, NULL, NULL))
         return false;
     return true;
+}
+
+Ssl::UniqueCString
+Ssl::OneLineSummary(X509_NAME &name)
+{
+    return Ssl::UniqueCString(X509_NAME_oneline(&name, nullptr, 0));
 }
 
 bool Ssl::sslDateIsInTheFuture(char const * date)

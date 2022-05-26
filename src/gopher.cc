@@ -9,6 +9,7 @@
 /* DEBUG: section 10    Gopher */
 
 #include "squid.h"
+#include "base/AsyncCbdataCalls.h"
 #include "comm.h"
 #include "comm/Read.h"
 #include "comm/Write.h"
@@ -102,6 +103,13 @@ public:
 
     ~GopherStateData();
 
+    /// queues or defers a read call
+    static void DelayAwareRead(GopherStateData *);
+
+    /// URL for icon to display (or nil), given the Gopher item-type code.
+    /// The returned c-string is invalidated by the next call to this function.
+    const char *iconUrl(char);
+
 public:
     StoreEntry *entry;
     enum {
@@ -166,6 +174,56 @@ GopherStateData::~GopherStateData()
 
     if (buf)
         memFree(buf, MEM_4K_BUF);
+}
+
+const char *
+GopherStateData::iconUrl(const char gtype)
+{
+    switch (gtype) {
+
+    case GOPHER_DIRECTORY:
+        return mimeGetIconURL("internal-menu");
+
+    case GOPHER_HTML:
+    case GOPHER_FILE:
+        return mimeGetIconURL("internal-text");
+
+    case GOPHER_INDEX:
+    case GOPHER_CSO:
+        return mimeGetIconURL("internal-index");
+
+    case GOPHER_IMAGE:
+    case GOPHER_GIF:
+    case GOPHER_PLUS_IMAGE:
+        return mimeGetIconURL("internal-image");
+
+    case GOPHER_SOUND:
+    case GOPHER_PLUS_SOUND:
+        return mimeGetIconURL("internal-sound");
+
+    case GOPHER_PLUS_MOVIE:
+        return mimeGetIconURL("internal-movie");
+
+    case GOPHER_TELNET:
+    case GOPHER_3270:
+        return mimeGetIconURL("internal-telnet");
+
+    case GOPHER_BIN:
+
+    case GOPHER_MACBINHEX:
+    case GOPHER_DOSBIN:
+    case GOPHER_UUENCODED:
+        return mimeGetIconURL("internal-binary");
+
+    case GOPHER_INFO:
+        return nullptr;
+
+    case GOPHER_WWW:
+        return mimeGetIconURL("internal-link");
+
+    default:
+        return mimeGetIconURL("internal-unknown");
+    }
 }
 
 /**
@@ -370,7 +428,6 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     char *host = NULL;
     char *port = NULL;
     char *escaped_selector = NULL;
-    const char *icon_url = NULL;
     char gtype;
     StoreEntry *entry = NULL;
 
@@ -515,80 +572,17 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                     /* escape a selector here */
                     escaped_selector = xstrdup(rfc1738_escape_part(selector));
 
-                    switch (gtype) {
-
-                    case GOPHER_DIRECTORY:
-                        icon_url = mimeGetIconURL("internal-menu");
-                        break;
-
-                    case GOPHER_HTML:
-
-                    case GOPHER_FILE:
-                        icon_url = mimeGetIconURL("internal-text");
-                        break;
-
-                    case GOPHER_INDEX:
-
-                    case GOPHER_CSO:
-                        icon_url = mimeGetIconURL("internal-index");
-                        break;
-
-                    case GOPHER_IMAGE:
-
-                    case GOPHER_GIF:
-
-                    case GOPHER_PLUS_IMAGE:
-                        icon_url = mimeGetIconURL("internal-image");
-                        break;
-
-                    case GOPHER_SOUND:
-
-                    case GOPHER_PLUS_SOUND:
-                        icon_url = mimeGetIconURL("internal-sound");
-                        break;
-
-                    case GOPHER_PLUS_MOVIE:
-                        icon_url = mimeGetIconURL("internal-movie");
-                        break;
-
-                    case GOPHER_TELNET:
-
-                    case GOPHER_3270:
-                        icon_url = mimeGetIconURL("internal-telnet");
-                        break;
-
-                    case GOPHER_BIN:
-
-                    case GOPHER_MACBINHEX:
-
-                    case GOPHER_DOSBIN:
-
-                    case GOPHER_UUENCODED:
-                        icon_url = mimeGetIconURL("internal-binary");
-                        break;
-
-                    case GOPHER_INFO:
-                        icon_url = NULL;
-                        break;
-
-                    case GOPHER_WWW:
-                        icon_url = mimeGetIconURL("internal-link");
-                        break;
-
-                    default:
-                        icon_url = mimeGetIconURL("internal-unknown");
-                        break;
-                    }
+                    const auto icon_url = gopherState->iconUrl(gtype);
 
                     if ((gtype == GOPHER_TELNET) || (gtype == GOPHER_3270)) {
                         if (strlen(escaped_selector) != 0)
                             outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"telnet://%s@%s%s%s/\">%s</A>\n",
-                                     icon_url, escaped_selector, rfc1738_escape_part(host),
-                                     *port ? ":" : "", port, html_quote(name));
+                                           icon_url, escaped_selector, rfc1738_escape_part(host),
+                                           *port ? ":" : "", port, html_quote(name));
                         else
                             outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"telnet://%s%s%s/\">%s</A>\n",
-                                     icon_url, rfc1738_escape_part(host), *port ? ":" : "",
-                                     port, html_quote(name));
+                                           icon_url, rfc1738_escape_part(host), *port ? ":" : "",
+                                           port, html_quote(name));
 
                     } else if (gtype == GOPHER_INFO) {
                         outbuf.appendf("\t%s\n", html_quote(name));
@@ -596,14 +590,14 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                         if (strncmp(selector, "GET /", 5) == 0) {
                             /* WWW link */
                             outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"http://%s/%s\">%s</A>\n",
-                                     icon_url, host, rfc1738_escape_unescaped(selector + 5), html_quote(name));
+                                           icon_url, host, rfc1738_escape_unescaped(selector + 5), html_quote(name));
                         } else if (gtype == GOPHER_WWW) {
                             outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"gopher://%s/%c%s\">%s</A>\n",
-                                     icon_url, rfc1738_escape_unescaped(selector), html_quote(name));
+                                           icon_url, rfc1738_escape_unescaped(selector), html_quote(name));
                         } else {
                             /* Standard link */
                             outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"gopher://%s/%c%s\">%s</A>\n",
-                                     icon_url, host, gtype, escaped_selector, html_quote(name));
+                                           icon_url, host, gtype, escaped_selector, html_quote(name));
                         }
                     }
 
@@ -816,10 +810,31 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm
         } else {
             entry->append(buf, len);
         }
-        AsyncCall::Pointer call = commCbCall(5,4, "gopherReadReply",
-                                             CommIoCbPtrFun(gopherReadReply, gopherState));
-        comm_read(conn, buf, read_sz, call);
+        GopherStateData::DelayAwareRead(gopherState);
     }
+}
+
+void
+GopherStateData::DelayAwareRead(GopherStateData *gopherState)
+{
+    const auto &conn = gopherState->serverConn;
+
+    if (!Comm::IsConnOpen(conn) || fd_table[conn->fd].closing()) {
+        debugs(10, 3, "will not read from " << conn);
+        return;
+    }
+
+    const auto amountToRead = gopherState->entry->bytesWanted(Range<size_t>(0, BUFSIZ));
+
+    if (amountToRead <= 0) {
+        AsyncCall::Pointer delayCall = asyncCall(10, 3, "GopherStateData::DelayAwareRead",
+                                                 cbdataDialer(&GopherStateData::DelayAwareRead, gopherState));
+        gopherState->entry->mem().delayRead(delayCall);
+        return;
+    }
+
+    AsyncCall::Pointer readCall = commCbCall(5, 5, "gopherReadReply", CommIoCbPtrFun(gopherReadReply, gopherState));
+    comm_read(conn, gopherState->replybuf, amountToRead, readCall);
 }
 
 /**
@@ -889,10 +904,7 @@ gopherSendComplete(const Comm::ConnectionPointer &conn, char *, size_t size, Com
         entry->flush();
     }
 
-    /* Schedule read reply. */
-    AsyncCall::Pointer call =  commCbCall(5,5, "gopherReadReply",
-                                          CommIoCbPtrFun(gopherReadReply, gopherState));
-    entry->delayAwareRead(conn, gopherState->replybuf, BUFSIZ, call);
+    GopherStateData::DelayAwareRead(gopherState);
 }
 
 /**

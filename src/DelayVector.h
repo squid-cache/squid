@@ -11,6 +11,7 @@
 
 #if USE_DELAY_POOLS
 
+#include "base/forward.h"
 #include "CompositePoolNode.h"
 
 /// \ingroup DelayPoolsAPI
@@ -42,7 +43,7 @@ private:
         ~Id();
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);
-        virtual void delayRead(DeferredRead const &);
+        virtual void delayRead(const AsyncCallPointer &);
 
     private:
         RefCount<DelayVector> theVector;

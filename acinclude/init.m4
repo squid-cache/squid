@@ -5,7 +5,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-dnl This encapsulates the nasty mess of headers we need to check when 
+dnl This encapsulates the nasty mess of headers we need to check when
 dnl checking types.
 AC_DEFUN([SQUID_DEFAULT_INCLUDES],[[
 /* What a mess.. many systems have added the (now standard) bit types
@@ -15,10 +15,10 @@ AC_DEFUN([SQUID_DEFAULT_INCLUDES],[[
  */
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#endif  
+#endif
 #if HAVE_LINUX_TYPES_H
 #include <linux/types.h>
-#endif  
+#endif
 #if HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
@@ -37,7 +37,7 @@ AC_DEFUN([SQUID_DEFAULT_INCLUDES],[[
 #if HAVE_NETINET_IN_SYSTM_H
 #include <netinet/in_systm.h>
 #endif
-]])     
+]])
 
 dnl *BSD net headers
 AC_DEFUN([SQUID_BSDNET_INCLUDES],[

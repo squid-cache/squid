@@ -10,7 +10,7 @@
 # Usage:
 #         calc-must-ids.sh [MustID]
 # Given an id it searches for the related Must expression in all
-# source files. If no arguments given it returns all Must expressions 
+# source files. If no arguments given it returns all Must expressions
 # with its ids and their  exact position in the source files.
 #
 # Example usage:

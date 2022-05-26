@@ -210,7 +210,7 @@ typedef unsigned reg_syntax_t;
    | RE_NO_BK_PARENS        | RE_NO_BK_REFS             \
    | RE_NO_BK_VBAR      | RE_UNMATCHED_RIGHT_PAREN_ORD)
 /* [[[end syntaxes]]] */
-
+
 /* Maximum number of duplicates an interval can allow.  Some systems
  * (erroneously) define this in other header files, but we want our
  * value, so remove any previous define.  */
@@ -276,7 +276,7 @@ typedef enum {
     REG_ESIZE,          /* Compiled pattern bigger than 2^16 bytes.  */
     REG_ERPAREN         /* Unmatched ) or \); not returned from regcomp.  */
 } reg_errcode_t;
-
+
 /* This data structure represents a compiled pattern.  Before calling
  * the pattern compiler, the fields `buffer', `allocated', `fastmap',
  * `translate', and `no_sub' can be set.  After the pattern has been
@@ -355,7 +355,7 @@ typedef struct re_pattern_buffer regex_t;
 /* search.c (search_buffer) in Emacs needs this one opcode value.  It is
  * defined both in `regex.c' and here.  */
 #define RE_EXACTN_VALUE 1
-
+
 /* Type for byte offsets within the string.  POSIX mandates this.  */
 typedef int regoff_t;
 
@@ -381,7 +381,7 @@ typedef struct {
     regoff_t rm_so;     /* Byte offset from string's start to substring's start.  */
     regoff_t rm_eo;     /* Byte offset from string's start to substring's end.  */
 } regmatch_t;
-
+
 /* Declarations for routines.  */
 
 /* To avoid duplicating every routine declaration -- once with a

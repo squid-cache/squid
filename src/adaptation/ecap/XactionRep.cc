@@ -187,7 +187,6 @@ Adaptation::Ecap::XactionRep::metaValue(const libecap::Name &name) const
     HttpReply *reply = dynamic_cast<HttpReply*>(theVirginRep.raw().header);
 
     if (name.known()) { // must check to avoid empty names matching unset cfg
-        typedef Notes::iterator ACAMLI;
         for (auto h: Adaptation::Config::metaHeaders) {
             if (name == h->key().toStdString()) {
                 SBuf matched;
@@ -624,14 +623,14 @@ Adaptation::Ecap::XactionRep::adaptationAborted()
 }
 
 void
-Adaptation::Ecap::XactionRep::noteMoreBodySpaceAvailable(RefCount<BodyPipe> bp)
+Adaptation::Ecap::XactionRep::noteMoreBodySpaceAvailable(RefCount<BodyPipe>)
 {
     Must(proxyingAb == opOn);
     moveAbContent();
 }
 
 void
-Adaptation::Ecap::XactionRep::noteBodyConsumerAborted(RefCount<BodyPipe> bp)
+Adaptation::Ecap::XactionRep::noteBodyConsumerAborted(RefCount<BodyPipe>)
 {
     Must(proxyingAb == opOn);
     stopProducingFor(answer().body_pipe, false);
@@ -641,7 +640,7 @@ Adaptation::Ecap::XactionRep::noteBodyConsumerAborted(RefCount<BodyPipe> bp)
 }
 
 void
-Adaptation::Ecap::XactionRep::noteMoreBodyDataAvailable(RefCount<BodyPipe> bp)
+Adaptation::Ecap::XactionRep::noteMoreBodyDataAvailable(RefCount<BodyPipe>)
 {
     Must(makingVb == opOn); // or we would not be registered as a consumer
     Must(theMaster);
@@ -649,7 +648,7 @@ Adaptation::Ecap::XactionRep::noteMoreBodyDataAvailable(RefCount<BodyPipe> bp)
 }
 
 void
-Adaptation::Ecap::XactionRep::noteBodyProductionEnded(RefCount<BodyPipe> bp)
+Adaptation::Ecap::XactionRep::noteBodyProductionEnded(RefCount<BodyPipe>)
 {
     Must(makingVb == opOn); // or we would not be registered as a consumer
     Must(theMaster);
@@ -658,7 +657,7 @@ Adaptation::Ecap::XactionRep::noteBodyProductionEnded(RefCount<BodyPipe> bp)
 }
 
 void
-Adaptation::Ecap::XactionRep::noteBodyProducerAborted(RefCount<BodyPipe> bp)
+Adaptation::Ecap::XactionRep::noteBodyProducerAborted(RefCount<BodyPipe>)
 {
     Must(makingVb == opOn); // or we would not be registered as a consumer
     Must(theMaster);

@@ -53,6 +53,14 @@
 #define SSL_FLAG_VERIFY_CRL_ALL     (1<<6)
 #define SSL_FLAG_CONDITIONAL_AUTH   (1<<7)
 
+#if !USE_OPENSSL && !USE_GNUTLS
+/// A helper type to keep all three possible underlying types of the
+/// Security::Certificate typedef below inside global namespace, so that
+/// argument-dependent lookup for operator "<<" (Certificate) works inside
+/// functions declared in Security and global namespaces.
+struct notls_x509 {};
+#endif
+
 /// Network/connection security abstraction layer
 namespace Security
 {
@@ -66,7 +74,7 @@ typedef X509 Certificate;
 #elif USE_GNUTLS
 typedef struct gnutls_x509_crt_int Certificate;
 #else
-typedef class {} Certificate;
+typedef struct notls_x509 Certificate;
 #endif
 
 #if USE_OPENSSL
