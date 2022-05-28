@@ -3062,7 +3062,7 @@ DOC_START
 	The OpenSSL engine to use. You will need to set this if you
 	would like to use hardware SSL acceleration for example.
 
-	Note: OpenSSL 3.0 and newer do not provide Engine support.
+	Not supported in builds with OpenSSL v3 or newer.
 DOC_END
 
 NAME: sslproxy_session_ttl
