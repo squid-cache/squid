@@ -3380,7 +3380,8 @@ clientStartListeningOn(AnyP::PortCfgPointer &port, const RefCount< CommCbFunPtrC
     port->listenConn->flags =
         COMM_NONBLOCKING |
         (port->flags.tproxyIntercept ? COMM_TRANSPARENT : 0) |
-        (port->flags.natIntercept ? COMM_INTERCEPTION : 0);
+        (port->flags.natIntercept ? COMM_INTERCEPTION : 0) |
+        (port->workerQueues ? COMM_REUSEPORT : 0);
 
     // route new connections to subCall
     typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
