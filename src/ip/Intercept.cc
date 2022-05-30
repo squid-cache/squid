@@ -160,6 +160,9 @@ Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn)
 bool
 Ip::Intercept::TproxyTransparent(const Comm::ConnectionPointer &newConn)
 {
+    /* --enable-linux-netfilter    */
+    /* --enable-pf-transparent     */
+    /* --enable-ipfw-transparent   */
 #if (LINUX_NETFILTER && defined(IP_TRANSPARENT)) || \
     (PF_TRANSPARENT && defined(SO_BINDANY)) || \
     (IPFW_TRANSPARENT && defined(IP_BINDANY))
@@ -169,10 +172,10 @@ Ip::Intercept::TproxyTransparent(const Comm::ConnectionPointer &newConn)
      */
     debugs(89, 5, "address TPROXY: " << newConn);
     return true;
-#else
-    (void)newConn;
-    return false;
 #endif
+    (void)newConn;
+    debugs(89, DBG_IMPORTANT, "WARNING: transparent proxying not supported");
+    return false;
 }
 
 bool
@@ -377,7 +380,7 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn)
 }
 
 bool
-Ip::Intercept::Lookup(const Comm::ConnectionPointer &newConn, const Comm::ConnectionPointer &listenConn)
+Ip::Intercept::LookupNat(const Comm::ConnectionPointer &newConn)
 {
     /* --enable-linux-netfilter    */
     /* --enable-ipfw-transparent   */
@@ -387,30 +390,33 @@ Ip::Intercept::Lookup(const Comm::ConnectionPointer &newConn, const Comm::Connec
 
     debugs(89, 5, "address BEGIN: me/client= " << newConn->local << ", destination/me= " << newConn->remote);
 
-    newConn->flags |= (listenConn->flags & (COMM_TRANSPARENT|COMM_INTERCEPTION));
-
-    /* NP: try TPROXY first, its much quieter than NAT when non-matching */
-    if (transparentActive_ && listenConn->flags&COMM_TRANSPARENT) {
-        if (TproxyTransparent(newConn)) return true;
-    }
-
-    if (interceptActive_ && listenConn->flags&COMM_INTERCEPTION) {
+    if (interceptActive_) {
         /* NAT methods that use sock-opts to return client address */
-        if (NetfilterInterception(newConn)) return true;
-        if (IpfwInterception(newConn)) return true;
+        if (NetfilterInterception(newConn))
+            return true;
+        if (IpfwInterception(newConn))
+            return true;
 
         /* NAT methods that use ioctl to return client address AND destination address */
-        if (PfInterception(newConn)) return true;
-        if (IpfInterception(newConn)) return true;
+        if (PfInterception(newConn))
+            return true;
+        if (IpfInterception(newConn))
+            return true;
     }
 
 #else /* none of the transparent options configured */
     (void)newConn;
-    (void)listenConn;
     debugs(89, DBG_IMPORTANT, "WARNING: transparent proxying not supported");
 #endif
 
     return false;
+}
+
+bool
+Ip::Intercept::LookupTproxy(const Comm::ConnectionPointer &newConn)
+{
+    debugs(89, 5, "address BEGIN: me/client= " << newConn->local << ", destination/me= " << newConn->remote);
+    return transparentActive_ && TproxyTransparent(newConn);
 }
 
 bool

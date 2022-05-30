@@ -30,8 +30,10 @@ public:
     Intercept() : transparentActive_(0), interceptActive_(0) {}
     ~Intercept() {};
 
-    /** Perform NAT lookups */
-    bool Lookup(const Comm::ConnectionPointer &newConn, const Comm::ConnectionPointer &listenConn);
+    /// perform NAT lookups
+    bool LookupNat(const Comm::ConnectionPointer &newConn);
+    /// perform Tproxy lookups
+    bool LookupTproxy(const Comm::ConnectionPointer &newConn);
 
     /**
      * Test system networking calls for TPROXY support.
