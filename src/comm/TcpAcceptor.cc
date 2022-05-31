@@ -390,13 +390,10 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     details->local = *gai;
     Ip::Address::FreeAddr(gai);
 
-    // Perform NAT or TPROXY operations to retrieve the real client/dest IP addresses
     if (conn->flags & COMM_TRANSPARENT) {
-        if (!Ip::Interceptor.LookupTproxy(details)) {
-            debugs(50, DBG_IMPORTANT, "ERROR: TPROXY lookup failed to locate original IPs on " << details);
-            return Comm::NOMESSAGE;
-        }
-    } else if (conn->flags & COMM_INTERCEPTION) {
+        // must have checked already at startup
+        assert(Ip::Interceptor.transparentActive());
+    } else if (conn->flags & COMM_INTERCEPTION) { // request the real client/dest IP addresss from NAT
         if (!Ip::Interceptor.LookupNat(details)) {
             debugs(50, DBG_IMPORTANT, "ERROR: NAT lookup failed to locate original IPs on " << details);
             return Comm::NOMESSAGE;

@@ -32,8 +32,6 @@ public:
 
     /// perform NAT lookups
     bool LookupNat(const Comm::ConnectionPointer &newConn);
-    /// perform Tproxy lookups
-    bool LookupTproxy(const Comm::ConnectionPointer &newConn);
 
     /**
      * Test system networking calls for TPROXY support.
@@ -50,7 +48,7 @@ public:
      \retval 0  Full transparency is disabled.
      \retval 1  Full transparency is enabled and active.
      */
-    inline int TransparentActive() { return transparentActive_; };
+    int transparentActive() const { return transparentActive_ && tproxyEnabled(); };
 
     /** \par
      * Turn on fully Transparent-Proxy activities.
@@ -90,14 +88,7 @@ public:
 
 private:
 
-    /**
-     * perform Lookups on fully-transparent interception targets (TPROXY).
-     * Supports Netfilter, PF and IPFW.
-     *
-     * \param newConn  Details known, to be updated where relevant.
-     * \return         Whether successfully located the new address.
-     */
-    bool TproxyTransparent(const Comm::ConnectionPointer &newConn);
+    bool tproxyEnabled() const;
 
     /**
      * perform Lookups on Netfilter interception targets (REDIRECT, DNAT).

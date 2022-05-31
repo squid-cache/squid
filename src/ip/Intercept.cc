@@ -157,8 +157,9 @@ Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn)
     return false;
 }
 
+/// whether TPROXY was enabled by configure
 bool
-Ip::Intercept::TproxyTransparent(const Comm::ConnectionPointer &newConn)
+Ip::Intercept::tproxyEnabled() const
 {
     /* --enable-linux-netfilter    */
     /* --enable-pf-transparent     */
@@ -166,14 +167,8 @@ Ip::Intercept::TproxyTransparent(const Comm::ConnectionPointer &newConn)
 #if (LINUX_NETFILTER && defined(IP_TRANSPARENT)) || \
     (PF_TRANSPARENT && defined(SO_BINDANY)) || \
     (IPFW_TRANSPARENT && defined(IP_BINDANY))
-
-    /* Trust the user configured properly. If not no harm done.
-     * We will simply attempt a bind outgoing on our own IP.
-     */
-    debugs(89, 5, "address TPROXY: " << newConn);
     return true;
 #endif
-    (void)newConn;
     debugs(89, DBG_IMPORTANT, "WARNING: transparent proxying not supported");
     return false;
 }
@@ -410,13 +405,6 @@ Ip::Intercept::LookupNat(const Comm::ConnectionPointer &newConn)
 #endif
 
     return false;
-}
-
-bool
-Ip::Intercept::LookupTproxy(const Comm::ConnectionPointer &newConn)
-{
-    debugs(89, 5, "address BEGIN: me/client= " << newConn->local << ", destination/me= " << newConn->remote);
-    return transparentActive_ && TproxyTransparent(newConn);
 }
 
 bool
