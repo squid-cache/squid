@@ -216,10 +216,8 @@ getpassword(char *login, char *realm)
         if (usersearchfilter) {
             char escaped_login[1024];
             std::snprintf(searchbase, sizeof(searchbase), "%s", userbasedn);
-            searchbase[sizeof(searchbase)-1] = '\0';
             ldap_escape_value(escaped_login, sizeof(escaped_login), login);
             std::snprintf(filter, sizeof(filter), usersearchfilter, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login);
-            filter[sizeof(filter)-1] = '\0';
 
 retrysrch:
             debug("user filter '%s', searchbase '%s'\n", filter, searchbase);
