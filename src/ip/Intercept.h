@@ -82,14 +82,6 @@ public:
      */
     bool StartInterception();
 
-    /** \par
-     * Turn off IP-Interception-Proxy activities on all new connections.
-     * Existing transactions and connections are unaffected and will run
-     * to their natural completion.
-     \param str    Reason for stopping. Will be logged to cache.log
-     */
-    inline void StopInterception(const char *str);
-
 private:
     /**
      * perform Lookups on Netfilter interception targets (REDIRECT, DNAT).
