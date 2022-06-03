@@ -30,8 +30,8 @@ public:
     Intercept() : transparentActive_(0), interceptActive_(0) {}
     ~Intercept() {};
 
-    /// perform NAT lookups
-    bool LookupNat(const Comm::ConnectionPointer &newConn);
+    /// use NAT to set the local address of the given freshly accepted connection
+    bool LookupNat(const Comm::Connection &);
 
     /**
      * Test system networking calls for TPROXY support.
@@ -48,14 +48,16 @@ public:
      \retval 0  Full transparency is disabled.
      \retval 1  Full transparency is enabled and active.
      */
-    int transparentActive() const { return transparentActive_ && tproxyEnabled(); };
+    inline int TransparentActive() { return transparentActive_; };
 
     /** \par
-     * Turn on fully Transparent-Proxy activities.
+     * Try to turn on fully Transparent-Proxy activities.
      * This function should be called during parsing of the squid.conf
      * When any option requiring full-transparency is encountered.
+     \retval true transparency was enabled
+     \retval false transparency cannot be enabled (it was disabled at ./configure time)
      */
-    inline void StartTransparency() { transparentActive_=1; };
+    bool StartTransparency();
 
     /** \par
      * Turn off fully Transparent-Proxy activities on all new connections.
@@ -72,11 +74,13 @@ public:
     inline int InterceptActive() { return interceptActive_; };
 
     /** \par
-     * Turn on IP-Interception-Proxy activities.
+     * Try to turn on IP-Interception-Proxy activities.
      * This function should be called during parsing of the squid.conf
      * When any option requiring interception / NAT handling is encountered.
+     \retval true interception was enabled
+     \retval false interception cannot be enabled (it was disabled at ./configure time)
      */
-    inline void StartInterception() { interceptActive_=1; };
+    bool StartInterception();
 
     /** \par
      * Turn off IP-Interception-Proxy activities on all new connections.
@@ -87,9 +91,6 @@ public:
     inline void StopInterception(const char *str);
 
 private:
-
-    bool tproxyEnabled() const;
-
     /**
      * perform Lookups on Netfilter interception targets (REDIRECT, DNAT).
      *

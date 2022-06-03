@@ -1144,7 +1144,7 @@ restoreCapabilities(bool keep)
         cap_value_t cap_list[10];
         cap_list[ncaps] = CAP_NET_BIND_SERVICE;
         ++ncaps;
-        if (Ip::Interceptor.transparentActive() ||
+        if (Ip::Interceptor.TransparentActive() ||
 #if USE_LIBNETFILTERCONNTRACK
                 // netfilter_conntrack requires CAP_NET_ADMIN to get client's CONNMARK
                 Ip::Interceptor.InterceptActive() ||

@@ -157,9 +157,8 @@ Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn)
     return false;
 }
 
-/// whether TPROXY was enabled by configure
 bool
-Ip::Intercept::tproxyEnabled() const
+Ip::Intercept::StartTransparency()
 {
     /* --enable-linux-netfilter    */
     /* --enable-pf-transparent     */
@@ -167,6 +166,21 @@ Ip::Intercept::tproxyEnabled() const
 #if (LINUX_NETFILTER && defined(IP_TRANSPARENT)) || \
     (PF_TRANSPARENT && defined(SO_BINDANY)) || \
     (IPFW_TRANSPARENT && defined(IP_BINDANY))
+    transparentActive_ = 1;
+    return true;
+#endif
+    return false;
+}
+
+bool
+Ip::Intercept::StartInterception()
+{
+    /* --enable-linux-netfilter    */
+    /* --enable-ipfw-transparent   */
+    /* --enable-ipf-transparent    */
+    /* --enable-pf-transparent     */
+#if IPF_TRANSPARENT || LINUX_NETFILTER || IPFW_TRANSPARENT || PF_TRANSPARENT
+    interceptActive_ = 1;
     return true;
 #endif
     return false;
@@ -374,17 +388,13 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn)
 }
 
 bool
-Ip::Intercept::LookupNat(const Comm::ConnectionPointer &newConn)
+Ip::Intercept::LookupNat(const Comm::Connection &aConn)
 {
-    /* --enable-linux-netfilter    */
-    /* --enable-ipfw-transparent   */
-    /* --enable-ipf-transparent    */
-    /* --enable-pf-transparent     */
-#if IPF_TRANSPARENT || LINUX_NETFILTER || IPFW_TRANSPARENT || PF_TRANSPARENT
+    debugs(89, 5, "address BEGIN: me/client= " << aConn.local << ", destination/me= " << aConn.remote);
+    assert(interceptActive_);
 
-    debugs(89, 5, "address BEGIN: me/client= " << newConn->local << ", destination/me= " << newConn->remote);
-
-    if (interceptActive_) {
+    {
+        Comm::ConnectionPointer newConn{&aConn};
         /* NAT methods that use sock-opts to return client address */
         if (NetfilterInterception(newConn)) return true;
         if (IpfwInterception(newConn)) return true;
@@ -393,11 +403,6 @@ Ip::Intercept::LookupNat(const Comm::ConnectionPointer &newConn)
         if (PfInterception(newConn)) return true;
         if (IpfInterception(newConn)) return true;
     }
-
-#else /* none of the transparent options configured */
-    (void)newConn;
-    debugs(89, DBG_IMPORTANT, "WARNING: transparent proxying not supported");
-#endif
 
     return false;
 }

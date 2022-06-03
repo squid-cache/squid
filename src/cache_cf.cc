@@ -3540,7 +3540,11 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
             return;
         }
         s->flags.natIntercept = true;
-        Ip::Interceptor.StartInterception();
+        if (!Ip::Interceptor.StartInterception()) {
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << " requires intercepted proxying enabled by ./configure");
+            self_destruct();
+            return;
+        }
         /* Log information regarding the port modes under interception. */
         debugs(3, DBG_IMPORTANT, "Starting Authentication on port " << s->s);
         debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (interception enabled)");
@@ -3551,7 +3555,11 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
             return;
         }
         s->flags.tproxyIntercept = true;
-        Ip::Interceptor.StartTransparency();
+        if (!Ip::Interceptor.StartTransparency()) {
+            debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << " requires transparent proxying enabled by ./configure");
+            self_destruct();
+            return;
+        }
         /* Log information regarding the port modes under transparency. */
         debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (TPROXY enabled)");
 

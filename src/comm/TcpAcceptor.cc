@@ -390,13 +390,13 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     details->local = *gai;
     Ip::Address::FreeAddr(gai);
 
-    if (conn->flags & COMM_TRANSPARENT) {
-        // must have checked already at startup
-        assert(Ip::Interceptor.transparentActive());
+    if (conn->flags & COMM_TRANSPARENT) { // the real client/dest IP address must be already available via getsockname()
+        // XXX: this check may fail after reconfiguration
+        assert(Ip::Interceptor.TransparentActive());
         details->flags |= COMM_TRANSPARENT;
     } else if (conn->flags & COMM_INTERCEPTION) { // request the real client/dest IP address from NAT
         details->flags |= COMM_INTERCEPTION;
-        if (!Ip::Interceptor.LookupNat(details)) {
+        if (!Ip::Interceptor.LookupNat(*details)) {
             debugs(50, DBG_IMPORTANT, "ERROR: NAT lookup failed to locate original IPs on " << details);
             return Comm::NOMESSAGE;
         }
