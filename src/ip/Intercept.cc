@@ -158,9 +158,8 @@ Ip::Intercept::StartTransparency()
     (PF_TRANSPARENT && defined(SO_BINDANY)) || \
     (IPFW_TRANSPARENT && defined(IP_BINDANY))
     transparentActive_ = 1;
-    return true;
 #endif
-    return false;
+    return transparentActive_;
 }
 
 bool
@@ -172,9 +171,8 @@ Ip::Intercept::StartInterception()
     /* --enable-pf-transparent     */
 #if IPF_TRANSPARENT || LINUX_NETFILTER || IPFW_TRANSPARENT || PF_TRANSPARENT
     interceptActive_ = 1;
-    return true;
 #endif
-    return false;
+    return interceptActive_;
 }
 
 bool

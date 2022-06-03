@@ -83,6 +83,7 @@ public:
     bool StartInterception();
 
 private:
+
     /**
      * perform Lookups on Netfilter interception targets (REDIRECT, DNAT).
      *
