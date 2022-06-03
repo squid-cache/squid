@@ -393,7 +393,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     if (conn->flags & COMM_TRANSPARENT) {
         // must have checked already at startup
         assert(Ip::Interceptor.transparentActive());
-    } else if (conn->flags & COMM_INTERCEPTION) { // request the real client/dest IP addresss from NAT
+    } else if (conn->flags & COMM_INTERCEPTION) { // request the real client/dest IP address from NAT
         if (!Ip::Interceptor.LookupNat(details)) {
             debugs(50, DBG_IMPORTANT, "ERROR: NAT lookup failed to locate original IPs on " << details);
             return Comm::NOMESSAGE;
