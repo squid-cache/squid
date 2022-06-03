@@ -391,7 +391,8 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     Ip::Address::FreeAddr(gai);
 
     if (conn->flags & COMM_TRANSPARENT) { // the real client/dest IP address must be already available via getsockname()
-        // XXX: this check may fail after reconfiguration
+        // XXX: a reconfiguration may 'stop' transparency in Interceptor (failing this check).
+        // We need to keep consistency between Interceptor and Comm flags.
         assert(Ip::Interceptor.TransparentActive());
         details->flags |= COMM_TRANSPARENT;
     } else if (conn->flags & COMM_INTERCEPTION) { // request the real client/dest IP address from NAT
