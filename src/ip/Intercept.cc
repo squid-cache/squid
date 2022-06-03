@@ -169,7 +169,6 @@ Ip::Intercept::tproxyEnabled() const
     (IPFW_TRANSPARENT && defined(IP_BINDANY))
     return true;
 #endif
-    debugs(89, DBG_IMPORTANT, "WARNING: transparent proxying not supported");
     return false;
 }
 
@@ -387,16 +386,12 @@ Ip::Intercept::LookupNat(const Comm::ConnectionPointer &newConn)
 
     if (interceptActive_) {
         /* NAT methods that use sock-opts to return client address */
-        if (NetfilterInterception(newConn))
-            return true;
-        if (IpfwInterception(newConn))
-            return true;
+        if (NetfilterInterception(newConn)) return true;
+        if (IpfwInterception(newConn)) return true;
 
         /* NAT methods that use ioctl to return client address AND destination address */
-        if (PfInterception(newConn))
-            return true;
-        if (IpfInterception(newConn))
-            return true;
+        if (PfInterception(newConn)) return true;
+        if (IpfInterception(newConn)) return true;
     }
 
 #else /* none of the transparent options configured */
