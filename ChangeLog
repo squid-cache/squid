@@ -1,4 +1,4 @@
-Changes in squid-5.6 (01 Jun 2022):
+Changes in squid-5.6 (06 Jun 2022):
 
 	- Bug 5208: Part 1: Restart kids killed by SIGKILL
 	- Fix SQUID-MIB smilint errors
