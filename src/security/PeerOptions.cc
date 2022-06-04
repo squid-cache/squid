@@ -293,7 +293,7 @@ Security::PeerOptions::createClientContext(bool setOptions)
 /// set of options we can parse and what they map to
 static struct ssl_option {
     const char *name;
-    long value;
+    uint64_t value;
 
 } ssl_options[] = {
 
@@ -514,7 +514,8 @@ Security::PeerOptions::parseOptions()
 
 #if defined(SSL_OP_NO_SSLv2)
     // compliance with RFC 6176: Prohibiting Secure Sockets Layer (SSL) Version 2.0
-    op = op | SSL_OP_NO_SSLv2;
+    if (SSL_OP_NO_SSLv2)
+        op |= SSL_OP_NO_SSLv2;
 #endif
     parsedOptions = op;
 
