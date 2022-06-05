@@ -54,10 +54,8 @@ public:
      * Try to turn on fully Transparent-Proxy activities.
      * This function should be called during parsing of the squid.conf
      * When any option requiring full-transparency is encountered.
-     \retval true transparency was enabled
-     \retval false transparency cannot be enabled (it was disabled at ./configure time)
      */
-    bool StartTransparency();
+    void StartTransparency();
 
     /** \par
      * Turn off fully Transparent-Proxy activities on all new connections.
@@ -77,10 +75,8 @@ public:
      * Try to turn on IP-Interception-Proxy activities.
      * This function should be called during parsing of the squid.conf
      * When any option requiring interception / NAT handling is encountered.
-     \retval true interception was enabled
-     \retval false interception cannot be enabled (it was disabled at ./configure time)
      */
-    bool StartInterception();
+    void StartInterception();
 
 private:
 

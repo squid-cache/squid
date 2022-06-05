@@ -148,7 +148,7 @@ Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn)
     return false;
 }
 
-bool
+void
 Ip::Intercept::StartTransparency()
 {
     /* --enable-linux-netfilter    */
@@ -158,11 +158,12 @@ Ip::Intercept::StartTransparency()
     (PF_TRANSPARENT && defined(SO_BINDANY)) || \
     (IPFW_TRANSPARENT && defined(IP_BINDANY))
     transparentActive_ = 1;
+#else
+    throw TextException("requires TPROXY feature to be enabled by ./configure", Here())
 #endif
-    return transparentActive_;
 }
 
-bool
+void
 Ip::Intercept::StartInterception()
 {
     /* --enable-linux-netfilter    */
@@ -171,8 +172,9 @@ Ip::Intercept::StartInterception()
     /* --enable-pf-transparent     */
 #if IPF_TRANSPARENT || LINUX_NETFILTER || IPFW_TRANSPARENT || PF_TRANSPARENT
     interceptActive_ = 1;
+#else
+    throw TextException("requires NAT Interception feature to be enabled by ./configure", Here());
 #endif
-    return interceptActive_;
 }
 
 bool
@@ -383,7 +385,7 @@ Ip::Intercept::LookupNat(const Comm::Connection &aConn)
     assert(interceptActive_);
 
     {
-        Comm::ConnectionPointer newConn{&aConn};
+        Comm::ConnectionPointer newConn = &aConn;
         /* NAT methods that use sock-opts to return client address */
         if (NetfilterInterception(newConn)) return true;
         if (IpfwInterception(newConn)) return true;
