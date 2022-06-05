@@ -202,8 +202,8 @@ static int session_active(const char *details, size_t len)
     key.data = (void *)details;
     key.size = len;
 #elif USE_TRIVIALDB
-    TDB_DATA key;
-    TDB_DATA data;
+    TDB_DATA key = {};
+    TDB_DATA data = {};
     (void)len;
 #else
     (void)len;
