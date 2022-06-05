@@ -3343,7 +3343,7 @@ clientHttpConnectionsOpen(void)
         const auto isHttps = protocol == AnyP::PROTO_HTTPS;
         using AcceptCall = CommCbFunPtrCallT<CommAcceptCbPtrFun>;
         RefCount<AcceptCall> subCall = commCbCall(5, 5, isHttps ? "httpsAccept" : "httpAccept",
-                CommAcceptCbPtrFun(isHttps ? httpsAccept : httpAccept, CommAcceptCbParams(nullptr)));
+                                       CommAcceptCbPtrFun(isHttps ? httpsAccept : httpAccept, CommAcceptCbParams(nullptr)));
         clientStartListeningOn(s, subCall, isHttps ? Ipc::fdnHttpsSocket : Ipc::fdnHttpSocket);
     }
     CodeContext::Reset(savedContext);
