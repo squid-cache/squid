@@ -62,12 +62,12 @@ private:
      * accurately represent the actual UUID version 4 structure which, the six
      * version/variant bits aside, contains just random bits.
      */
-    uint32_t timeLow;
-    uint16_t timeMid;
-    uint16_t timeHiAndVersion;
-    uint8_t clockSeqHiAndReserved;
-    uint8_t clockSeqLow;
-    uint8_t node[6];
+    uint32_t timeLow = 0;
+    uint16_t timeMid = 0;
+    uint16_t timeHiAndVersion = 0;
+    uint8_t clockSeqHiAndReserved = 0;
+    uint8_t clockSeqLow = 0;
+    uint8_t node[6] = {};
 };
 
 std::ostream &operator<<(std::ostream &os, const RandomUuid &uuid);
