@@ -9,15 +9,11 @@
 #ifndef SQUID_TYPELENGTHVALUE_H
 #define SQUID_TYPELENGTHVALUE_H
 
-class StoreEntry;
+#include "store/forward.h"
 
-// WTF?
-typedef class StoreMeta tlv;
+#include <iosfwd>
 
 /**
- \ingroup SwapStoreAPI
- * XXX: for critical lists like this we should use A=64,B=65 etc to enforce and reserve values.
- \note NOTE!  We must preserve the order of this list!
  *
  \section StoreSwapMeta Store "swap meta" Description
  \par
@@ -30,42 +26,30 @@ typedef class StoreMeta tlv;
  * The meta data is stored using a TYPE-LENGTH-VALUE format.  That is,
  * each chunk of meta information consists of a TYPE identifier, a
  * LENGTH field, and then the VALUE (which is LENGTH octets long).
+ *
+ \par
+ * The holes in enum item values below represent deprecated/reserved IDs.
+ * \sa Store::IgnoredSwapMetaType()
  */
-enum {
-    /**
-     * Just a placeholder for the zeroth value. It is never used on disk.
-     */
-    STORE_META_VOID,
-
-    /**
-     \deprecated
-     * This represents the case when we use the URL as the cache
-     * key, as Squid-1.1 does.  Currently we don't support using
-     * a URL as a cache key, so this is not used.
-     */
-    STORE_META_KEY_URL,
-
-    /**
-     \deprecated
-     * For a brief time we considered supporting SHA (secure
-     * hash algorithm) as a cache key.  Nobody liked it, and
-     * this type is not currently used.
-     */
-    STORE_META_KEY_SHA,
+enum SwapMetaType {
+    /// Store swap metadata type with an unknown meaning.
+    /// Never used by valid stored entries.
+    STORE_META_VOID = 0,
 
     /**
      * This represents the MD5 cache key that Squid currently uses.
      * When Squid opens a disk file for reading, it can check that
      * this MD5 matches the MD5 of the user's request.  If not, then
      * something went wrong and this is probably the wrong object.
+     * Also known under its deprecated STORE_META_KEY name.
      */
-    STORE_META_KEY_MD5,
+    STORE_META_KEY_MD5 = 3,
 
     /**
      * The object's URL.  This also may be matched against a user's
      *  request for cache hits to make sure we got the right object.
      */
-    STORE_META_URL,
+    STORE_META_URL = 4,
 
     /**
      * This is the "standard metadata" for an object.
@@ -80,67 +64,96 @@ enum {
         uint16_t flags;
      \endcode
      */
-    STORE_META_STD,
-
-    /**
-     * Reserved for future hit-metering (RFC 2227) stuff
-     */
-    STORE_META_HITMETERING,
-
-    // TODO: document this TLV type code
-    STORE_META_VALID,
+    STORE_META_STD = 5,
 
     /**
      * Stores Vary request headers
      */
-    STORE_META_VARY_HEADERS,
+    STORE_META_VARY_HEADERS = 8,
 
     /**
      * Updated version of STORE_META_STD, with support for  >2GB objects.
      * As STORE_META_STD except that the swap_file_sz is a 64-bit integer instead of 32-bit.
      */
-    STORE_META_STD_LFS,
+    STORE_META_STD_LFS = 9,
 
     // TODO: document this TLV type code
-    STORE_META_OBJSIZE,
+    STORE_META_OBJSIZE = 10
 
-    STORE_META_STOREURL,    /**< the Store-ID url, if different to the normal URL */
-    STORE_META_VARY_ID,     /**< Unique ID linking variants */
-    STORE_META_END
+    // When adding values, update Store::SwapMetaTypeMax.
+    // When removing values, check Store::IgnoredSwapMetaType() and friends.
 };
 
-/// \ingroup SwapStoreAPI
-class StoreMeta
+namespace Store {
+
+/// swap meta type ID written to or loaded from Store
+using RawSwapMetaType = char;
+
+/// maximum value of a recognized swap meta type
+const int SwapMetaTypeMax = 12; // Use "inline constexpr ..." with C++17.
+
+/// Store entries with longer swap metadata field values are not swapped out and
+/// are considered invalid when validating being-loaded metadata. This arbitrary
+/// limit protects code that adds individual swap metadata field sizes from
+/// overflowing and also prevents allocation of huge buffers when loading
+/// variable-length fields. Reevaluate this limit when increasing MAX_URL.
+const size_t SwapMetaFieldValueLengthMax = 64*1024;
+
+// TODO: Move to src/store/SwapMetaReading or similar, along with StoreMetaUnpacker.
+/// a swap metadata field inside the buffer given to StoreMetaUnpacker
+class SwapMetaView
 {
-protected:
-    StoreMeta() : length(-1), value(nullptr), next(nullptr) { }
-    StoreMeta(const StoreMeta &);
-    StoreMeta& operator=(const StoreMeta &);
+public:
+    /// ensures that our fixed-size field value has the given expected length
+    void checkExpectedLength(size_t) const;
 
 public:
-    static bool validType(char);
-    static int const MaximumTLVLength;
-    static int const MinimumTLVLength;
-    static StoreMeta *Factory(char type, size_t len, void const *value);
-    static StoreMeta **Add(StoreMeta **tail, StoreMeta *aNode);
-    static void FreeList(StoreMeta **head);
+    /// A serialized rawLength-byte value (i.e. V in swap meta TLV field).
+    /// The value contents may be completely malformed/bogus.
+    /// Not meaningful when type is STORE_META_VOID.
+    const void *rawValue = nullptr;
 
-    virtual char getType() const = 0;
-    virtual bool validLength(int) const;
-    virtual bool checkConsistency(StoreEntry *) const;
-    virtual ~StoreMeta() {}
+    /// The number of bytes in rawValue (i.e. L in swap meta TLV field).
+    /// This length may not match the length of valid fields of this type.
+    /// Not meaningful when type is STORE_META_VOID.
+    size_t rawLength = 0;
 
-    int length;
-    void *value;
-    tlv *next;
+    /// The serialized type (i.e. T in swap meta TLV field).
+    /// This type value may not match any named by SwapMetaType.
+    Store::RawSwapMetaType rawType = 0;
+
+    /// The sanitized TLV type that always matches one named by SwapMetaType:
+    /// rawType (if matches a value named by SwapMetaType) or STORE_META_VOID.
+    SwapMetaType type = STORE_META_VOID;
+
+private:
+    /*
+     * These construction/copying methods are private so that no outside code
+     * can create/own SwapMetaView objects but SwapMetaIterator. Others loop
+     * StoreMetaUnpacker for read-only access to the current view of metadata.
+     */
+    friend class SwapMetaIterator;
+
+    SwapMetaView() = default;
+    SwapMetaView(const SwapMetaView &) = default;
+    SwapMetaView(SwapMetaView &&) = default;
+    SwapMetaView &operator =(const SwapMetaView &) = default;
+    SwapMetaView &operator =(SwapMetaView &&) = default;
+
+    /// positions the view at the first swap meta field in the given buffer
+    /// \param begin is where the buffer and the field starts
+    /// \param end is where the buffer (but not necessarily the field) finishes
+    explicit SwapMetaView(const void *begin, const void * const end);
 };
 
-/// \ingroup SwapStoreAPI
-char *storeSwapMetaPack(tlv * tlv_list, int *length);
-/// \ingroup SwapStoreAPI
-tlv *storeSwapMetaBuild(const StoreEntry *);
-/// \ingroup SwapStoreAPI
-void storeSwapTLVFree(tlv * n);
+// TODO: Move to src/store/SwapMetaWriting or similar.
+/// STORE_META_OK prefix and all swap meta fields of the given Store entry
+const char *PackSwapHeader(const StoreEntry &, size_t &totalLength);
+
+} // namespace Store
+
+/// writes a short human-readable summary of the given SwapMetaView object
+std::ostream &operator <<(std::ostream &, const Store::SwapMetaView &);
 
 #endif /* SQUID_TYPELENGTHVALUE_H */
 

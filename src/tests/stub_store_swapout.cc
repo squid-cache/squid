@@ -12,9 +12,5 @@
 #define STUB_API "store_swapout.cc"
 #include "tests/STUB.h"
 
-#include <iostream>
-
-char *storeSwapMetaPack(tlv *, int *) STUB_RETVAL(nullptr)
-tlv *storeSwapMetaBuild(const StoreEntry *) STUB_RETVAL(nullptr)
-void storeSwapTLVFree(tlv *) STUB
+char const *Store::PackSwapHeader(const StoreEntry &, size_t &) STUB_RETVAL(nullptr)
 

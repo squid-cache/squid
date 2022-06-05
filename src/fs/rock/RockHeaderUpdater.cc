@@ -275,7 +275,6 @@ Rock::HeaderUpdater::parseReadBytes()
             exchangeBuffer.length(),
             &staleSwapHeaderSize);
         // Squid assumes that metadata always fits into a single db slot
-        aBuilder.checkBuffer(); // cannot update an entry with invalid metadata
         debugs(47, 7, "staleSwapHeaderSize=" << staleSwapHeaderSize);
         Must(staleSwapHeaderSize > 0);
         exchangeBuffer.consume(staleSwapHeaderSize);

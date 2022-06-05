@@ -251,53 +251,8 @@ Progress::print(std::ostream &os) const
 #include "fde.h"
 #include "Generic.h"
 #include "StoreMeta.h"
+#include "StoreMetaMD5.h"
 #include "StoreMetaUnpacker.h"
-
-struct InitStoreEntry : public unary_function<StoreMeta, void> {
-    InitStoreEntry(StoreEntry *anEntry, cache_key *aKey):what(anEntry),index(aKey) {}
-
-    void operator()(StoreMeta const &x) {
-        switch (x.getType()) {
-
-        case STORE_META_KEY:
-            assert(x.length == SQUID_MD5_DIGEST_LENGTH);
-            memcpy(index, x.value, SQUID_MD5_DIGEST_LENGTH);
-            break;
-
-        case STORE_META_STD:
-            struct old_metahdr {
-                time_t timestamp;
-                time_t lastref;
-                time_t expires;
-                time_t lastmod;
-                size_t swap_file_sz;
-                uint16_t refcount;
-                uint16_t flags;
-            } *tmp;
-            tmp = (struct old_metahdr *)x.value;
-            assert(x.length == STORE_HDR_METASIZE_OLD);
-            what->timestamp = tmp->timestamp;
-            what->lastref = tmp->lastref;
-            what->expires = tmp->expires;
-            what->lastModified(tmp->lastmod);
-            what->swap_file_sz = tmp->swap_file_sz;
-            what->refcount = tmp->refcount;
-            what->flags = tmp->flags;
-            break;
-
-        case STORE_META_STD_LFS:
-            assert(x.length == STORE_HDR_METASIZE);
-            memcpy(&what->timestamp, x.value, STORE_HDR_METASIZE);
-            break;
-
-        default:
-            break;
-        }
-    }
-
-    StoreEntry *what;
-    cache_key *index;
-};
 
 bool
 storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, StoreRebuildData &)
@@ -326,37 +281,81 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
                        uint64_t expectedSize)
 {
     int swap_hdr_len = 0;
-    StoreMetaUnpacker aBuilder(buf.content(), buf.contentSize(), &swap_hdr_len);
-    if (aBuilder.isBufferZero()) {
-        debugs(47,5, "skipping empty record.");
-        return false;
-    }
 
-    StoreMeta *tlv_list = nullptr;
+    tmpe.key = nullptr;
+
     try {
-        tlv_list = aBuilder.createStoreMeta();
-    } catch (const std::exception &e) {
-        debugs(47, DBG_IMPORTANT, "WARNING: Ignoring store entry because " << e.what());
+        StoreMetaUnpacker aBuilder(buf.content(), buf.contentSize(), &swap_hdr_len);
+        for (const auto &meta: aBuilder) {
+            using namespace Store;
+            switch (meta.type) {
+            case STORE_META_VOID:
+                // TODO: Skip this StoreEntry instead of ignoring its field?
+                // aBuilder already complained if needed
+                break;
+
+            case STORE_META_KEY_MD5:
+                // Optimization: We could postpone setting the caller's key
+                // until all fields are parsed, but that would require copying
+                // it. Instead, we treat key and tmpe.key as storage that can be
+                // safely altered even on parsing failures.
+                GetSwapMetaMd5(meta, key);
+                Assure(key);
+                tmpe.key = key;
+                break;
+
+            case STORE_META_STD: {
+                meta.checkExpectedLength(STORE_HDR_METASIZE_OLD);
+                struct old_metahdr {
+                    // XXX: All serialized members must have fixed-size types.
+                    time_t timestamp;
+                    time_t lastref;
+                    time_t expires;
+                    time_t lastmod;
+                    size_t swap_file_sz;
+                    uint16_t refcount;
+                    uint16_t flags;
+                };
+                // XXX: The assert below fails on many platforms due to padding.
+                //static_assert(sizeof(old_metahdr) == STORE_HDR_METASIZE_OLD, "we reproduced old swap meta basics format");
+                auto basics = static_cast<const old_metahdr*>(meta.rawValue);
+                tmpe.timestamp = basics->timestamp;
+                tmpe.lastref = basics->lastref;
+                tmpe.expires = basics->expires;
+                tmpe.lastModified(basics->lastmod);
+                tmpe.swap_file_sz = basics->swap_file_sz;
+                tmpe.refcount = basics->refcount;
+                tmpe.flags = basics->flags;
+                break;
+            }
+
+            case STORE_META_STD_LFS:
+                meta.checkExpectedLength(STORE_HDR_METASIZE);
+                memcpy(&tmpe.timestamp, meta.rawValue, STORE_HDR_METASIZE);
+                break;
+
+            case STORE_META_URL:
+            case STORE_META_VARY_HEADERS:
+            case STORE_META_OBJSIZE:
+                // We do not load this information at cache index rebuild time;
+                // store_client::unpackHeader() handles these MemObject fields.
+                break;
+            }
+        }
+    } catch (...) {
+        debugs(47, DBG_IMPORTANT, "WARNING: Ignoring store entry: " << CurrentException);
         return false;
     }
-    assert(tlv_list);
 
     // TODO: consume parsed metadata?
 
     debugs(47,7, "successful swap meta unpacking; swap_file_sz=" << tmpe.swap_file_sz);
-    memset(key, '\0', SQUID_MD5_DIGEST_LENGTH);
 
-    InitStoreEntry visitor(&tmpe, key);
-    for_each(*tlv_list, visitor);
-    storeSwapTLVFree(tlv_list);
-    tlv_list = NULL;
-
-    if (storeKeyNull(key)) {
+    if (!tmpe.key) {
         debugs(47, DBG_IMPORTANT, "WARNING: Ignoring keyless cache entry");
         return false;
     }
 
-    tmpe.key = key;
     /* check sizes */
 
     if (expectedSize > 0) {

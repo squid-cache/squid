@@ -9,28 +9,27 @@
 /* DEBUG: section 20    Storage Manager Swapfile Metadata */
 
 #include "squid.h"
-#include "MemObject.h"
+#include "sbuf/SBuf.h"
 #include "Store.h"
+#include "StoreMeta.h"
 #include "StoreMetaVary.h"
 
-bool
-StoreMetaVary::checkConsistency(StoreEntry *e) const
+SBuf
+Store::GetNewSwapMetaVaryHeaders(const SwapMetaView &meta, const StoreEntry &entry)
 {
-    assert (getType() == STORE_META_VARY_HEADERS);
+    Assure(meta.type == STORE_META_VARY_HEADERS);
+    SBuf rawVary(static_cast<const char *>(meta.rawValue), meta.rawLength);
+    // entries created before SBuf-based Vary may include string terminator
+    static const SBuf nul("\0", 1);
+    rawVary.trim(nul, false, true);
 
-    if (e->mem_obj->vary_headers.isEmpty()) {
-        /* XXX separate this mutator from the query */
-        /* Assume the object is OK.. remember the vary request headers */
-        e->mem_obj->vary_headers.assign(static_cast<const char *>(value), length);
-        /* entries created before SBuf vary handling may include string terminator */
-        static const SBuf nul("\0", 1);
-        e->mem_obj->vary_headers.trim(nul);
-        return true;
-    }
+    const auto &knownVary = entry.mem().vary_headers;
+    if (knownVary.isEmpty())
+        return rawVary; // new Vary (that we cannot validate)
 
-    if (e->mem_obj->vary_headers.cmp(static_cast<const char *>(value), length) != 0)
-        return false;
+    if (knownVary == rawVary)
+        return SBuf(); // OK: no new Vary
 
-    return true;
+    throw TextException("Vary mismatch", Here());
 }
 

@@ -24,7 +24,10 @@
 #include "store_swapin.h"
 #include "StoreClient.h"
 #include "StoreMeta.h"
+#include "StoreMetaMD5.h"
 #include "StoreMetaUnpacker.h"
+#include "StoreMetaURL.h"
+#include "StoreMetaVary.h"
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
@@ -564,27 +567,46 @@ store_client::unpackHeader(char const *buf, ssize_t len)
     assert(len >= 0);
 
     int swap_hdr_sz = 0;
-    tlv *tlv_list = nullptr;
+    SBuf varyHeaders;
     try {
+        using namespace Store;
         StoreMetaUnpacker aBuilder(buf, len, &swap_hdr_sz);
-        tlv_list = aBuilder.createStoreMeta();
-    } catch (const std::exception &e) {
-        debugs(90, DBG_IMPORTANT, "WARNING: failed to unpack metadata because " << e.what());
+        for (const auto &meta: aBuilder) {
+            switch (meta.type) {
+            case STORE_META_VOID:
+                // aBuilder already complained if needed
+                break;
+
+            case STORE_META_KEY_MD5:
+                // paranoid -- storeRebuildParseEntry() loads the key
+                CheckSwapMetaMd5(meta, *entry); // paranoid
+                break;
+
+            case STORE_META_URL:
+                CheckSwapMetaUrl(meta, *entry);
+                break;
+
+            case STORE_META_STD:
+                // Handled by storeRebuildParseEntry()
+                break;
+
+            case STORE_META_VARY_HEADERS:
+                varyHeaders = GetNewSwapMetaVaryHeaders(meta, *entry);
+                break;
+
+            case STORE_META_STD_LFS:
+                // Handled by storeRebuildParseEntry()
+                break;
+
+            case STORE_META_OBJSIZE:
+                // TODO: Should not we set entry->mem().object_sz?
+                break;
+            }
+        }
+    } catch (...) {
+        debugs(90, DBG_IMPORTANT, "ERROR: Failed to unpack Store entry metadata: " << CurrentException);
         return false;
     }
-    assert(tlv_list);
-
-    /*
-     * Check the meta data and make sure we got the right object.
-     */
-    for (tlv *t = tlv_list; t; t = t->next) {
-        if (!t->checkConsistency(entry)) {
-            storeSwapTLVFree(tlv_list);
-            return false;
-        }
-    }
-
-    storeSwapTLVFree(tlv_list);
 
     assert(swap_hdr_sz >= 0);
     entry->mem_obj->swap_hdr_sz = swap_hdr_sz;
@@ -595,6 +617,10 @@ store_client::unpackHeader(char const *buf, ssize_t len)
     debugs(90, 5, "store_client::unpackHeader: swap_file_sz=" <<
            entry->swap_file_sz << "( " << swap_hdr_sz << " + " <<
            entry->mem_obj->object_sz << ")");
+
+    if (!varyHeaders.isEmpty())
+        entry->mem().vary_headers = varyHeaders;
+
     return true;
 }
 

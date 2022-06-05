@@ -13,8 +13,6 @@
 #include "md5.h"
 #include "store_key_md5.h"
 
-static cache_key null_key[SQUID_MD5_DIGEST_LENGTH];
-
 const char *
 storeKeyText(const cache_key *key)
 {
@@ -169,18 +167,4 @@ storeKeyHashBuckets(int nbuckets)
     return n;
 }
 
-int
-storeKeyNull(const cache_key * key)
-{
-    if (memcmp(key, null_key, SQUID_MD5_DIGEST_LENGTH) == 0)
-        return 1;
-    else
-        return 0;
-}
-
-void
-storeKeyInit(void)
-{
-    memset(null_key, '\0', SQUID_MD5_DIGEST_LENGTH);
-}
 

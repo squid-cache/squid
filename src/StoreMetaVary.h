@@ -9,17 +9,15 @@
 #ifndef SQUID_STOREMETAVARY_H
 #define SQUID_STOREMETAVARY_H
 
-#include "StoreMeta.h"
+#include "sbuf/forward.h"
+#include "store/forward.h"
 
-class StoreMetaVary : public StoreMeta
-{
-    MEMPROXY_CLASS(StoreMetaVary);
+namespace Store {
 
-public:
-    char getType() const {return STORE_META_VARY_HEADERS;}
+/// Stored Vary header field(s) that are not known to the entry (or empty SBuf)
+SBuf GetNewSwapMetaVaryHeaders(const SwapMetaView &, const StoreEntry &);
 
-    bool checkConsistency(StoreEntry *) const;
-};
+}
 
 #endif /* SQUID_STOREMETAVARY_H */
 

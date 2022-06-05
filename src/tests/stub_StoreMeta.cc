@@ -11,12 +11,18 @@
 #define STUB_API "StoreMeta.cc"
 #include "tests/STUB.h"
 
+#include "sbuf/SBuf.h"
 #include "StoreMeta.h"
 
-bool StoreMeta::validType(char) STUB_RETVAL(false)
-bool StoreMeta::validLength(int) const STUB_RETVAL(false)
-StoreMeta * StoreMeta::Factory (char, size_t, void const *) STUB_RETVAL(NULL)
-void StoreMeta::FreeList(StoreMeta **) STUB
-StoreMeta ** StoreMeta::Add(StoreMeta **, StoreMeta *) STUB_RETVAL(NULL)
-bool StoreMeta::checkConsistency(StoreEntry *) const STUB_RETVAL(false)
+Store::SwapMetaView::SwapMetaView(const void *, const void *) STUB
+void Store::SwapMetaView::checkExpectedLength(size_t) const STUB
 
+#include "StoreMetaMD5.h"
+void Store::CheckSwapMetaMd5(const SwapMetaView &, const StoreEntry &) STUB
+void Store::GetSwapMetaMd5(const SwapMetaView &, cache_key *) STUB
+
+#include "StoreMetaURL.h"
+void Store::CheckSwapMetaUrl(const SwapMetaView &, const StoreEntry &) STUB
+
+#include "StoreMetaVary.h"
+SBuf Store::GetNewSwapMetaVaryHeaders(const SwapMetaView &, const StoreEntry &) STUB_RETVAL(SBuf())

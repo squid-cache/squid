@@ -15,11 +15,6 @@ STOREMETA_SOURCE = \
 	StoreMeta.h \
 	StoreMetaMD5.cc \
 	StoreMetaMD5.h \
-	StoreMetaSTD.cc \
-	StoreMetaSTD.h \
-	StoreMetaSTDLFS.cc \
-	StoreMetaSTDLFS.h \
-	StoreMetaObjSize.h \
 	StoreMetaURL.cc \
 	StoreMetaURL.h \
 	StoreMetaVary.cc \

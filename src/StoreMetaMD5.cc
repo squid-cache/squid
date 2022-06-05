@@ -15,19 +15,16 @@
 #include "Store.h"
 #include "StoreMetaMD5.h"
 
-bool
-StoreMetaMD5::validLength(int len) const
+void
+Store::CheckSwapMetaMd5(const SwapMetaView &meta, const StoreEntry &entry)
 {
-    return len == SQUID_MD5_DIGEST_LENGTH;
-}
+    Assure(meta.type == STORE_META_KEY_MD5);
+    meta.checkExpectedLength(SQUID_MD5_DIGEST_LENGTH);
 
-int StoreMetaMD5::md5_mismatches = 0;
-
-bool
-StoreMetaMD5::checkConsistency(StoreEntry *e) const
-{
-    assert (getType() == STORE_META_KEY_MD5);
-    assert(length == SQUID_MD5_DIGEST_LENGTH);
+    // TODO: Refactor this code instead of reducing the change diff.
+    static unsigned int md5_mismatches = 0;
+    const auto e = &entry;
+    const auto &value = meta.rawValue;
 
     if (!EBIT_TEST(e->flags, KEY_PRIVATE) &&
             memcmp(value, e->key, SQUID_MD5_DIGEST_LENGTH)) {
@@ -38,9 +35,18 @@ StoreMetaMD5::checkConsistency(StoreEntry *e) const
         if (isPowTen(++md5_mismatches))
             debugs(20, DBG_IMPORTANT, "WARNING: " << md5_mismatches << " swapin MD5 mismatches");
 
-        return false;
+        // TODO: Support TextException::frequent = isPowTen(++md5_mismatches)
+        // to suppress reporting, achieving the same effect as above
+        throw TextException("swap meta MD5 mismatch", Here());
     }
+}
 
-    return true;
+void
+Store::GetSwapMetaMd5(const SwapMetaView &meta, cache_key *key)
+{
+    Assure(meta.type == STORE_META_KEY_MD5);
+    meta.checkExpectedLength(SQUID_MD5_DIGEST_LENGTH);
+    Assure(key);
+    memcpy(key, meta.rawValue, SQUID_MD5_DIGEST_LENGTH);
 }
 

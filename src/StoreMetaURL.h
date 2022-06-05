@@ -9,17 +9,13 @@
 #ifndef SQUID_STOREMETAURL_H
 #define SQUID_STOREMETAURL_H
 
-#include "StoreMeta.h"
+#include "store/forward.h"
 
-class StoreMetaURL : public StoreMeta
-{
-    MEMPROXY_CLASS(StoreMetaURL);
+namespace Store {
 
-public:
-    char getType() const {return STORE_META_URL;}
+void CheckSwapMetaUrl(const SwapMetaView &, const StoreEntry &);
 
-    bool checkConsistency(StoreEntry *) const;
-};
+}
 
 #endif /* SQUID_STOREMETAURL_H */
 

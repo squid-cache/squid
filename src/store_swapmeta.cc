@@ -11,34 +11,46 @@
 #include "squid.h"
 #include "md5.h"
 #include "MemObject.h"
+#include "sbuf/Stream.h"
+#include "SquidMath.h"
 #include "Store.h"
 #include "StoreMeta.h"
-#include "StoreMetaUnpacker.h"
 
-#if HAVE_SYS_WAIT_H
-#include <sys/wait.h>
-#endif
+namespace Store {
 
+/// writes a single swap meta field to the given stream
+static
 void
-storeSwapTLVFree(tlv * n)
+PackSwapMeta(std::ostream &os, const SwapMetaType type, const size_t length, const void *value)
 {
-    tlv *t;
+    // Outside of packing/unpacking code, we correctly use SwapMetaType for
+    // valid swap meta types now, but we store these values as "char".
+    static_assert(SwapMetaTypeMax <= std::numeric_limits<char>::max(), "any named SwapMetaType value can be stored as char");
+    const auto rawType = static_cast<char>(type);
 
-    while ((t = n) != NULL) {
-        n = t->next;
-        xfree(t->value);
-        delete t;
-    }
+    if (length > SwapMetaFieldValueLengthMax)
+        throw TextException("swap meta field value too big to store", Here());
+
+    // Outside of packing/unpacking code, we correctly use size_t for value
+    // sizes now, but old code stored these values as "int" (of an unknown size)
+    // so we continue to do so to be able to load meta fields from old caches.
+    static_assert(SwapMetaFieldValueLengthMax <= uint64_t(std::numeric_limits<int>::max()), "any swap metadata value size can be stored as int");
+    const auto rawLength = static_cast<int>(length);
+
+    if (!os.write(reinterpret_cast<const char*>(&rawType), sizeof(rawType)) ||
+        !os.write(reinterpret_cast<const char*>(&rawLength), sizeof(rawLength)) ||
+        (length && !os.write(static_cast<const char*>(value), length)))
+        throw TextException("cannot store swap meta field type", Here());
 }
 
-/*
- * Build a TLV list for a StoreEntry
- */
-tlv *
-storeSwapMetaBuild(const StoreEntry *e)
+/// writes swap meta fields of the given Store entry to the given stream
+static
+void
+PackSwapMetas(const StoreEntry &entry, std::ostream &os)
 {
-    tlv *TLV = NULL;        /* we'll return this */
-    tlv **T = &TLV;
+    // TODO: Refactor this code instead of reducing the change diff.
+    const auto e = &entry;
+
     assert(e->mem_obj != NULL);
     const int64_t objsize = e->mem_obj->expectedReplySize();
 
@@ -49,93 +61,53 @@ storeSwapMetaBuild(const StoreEntry *e)
     else
         url = e->url();
 
-    debugs(20, 3, "storeSwapMetaBuild URL: " << url);
+    debugs(20, 3, entry << " URL: " << url);
 
-    tlv *t = StoreMeta::Factory (STORE_META_KEY,SQUID_MD5_DIGEST_LENGTH, e->key);
+    PackSwapMeta(os, STORE_META_KEY_MD5, SQUID_MD5_DIGEST_LENGTH, e->key);
 
-    if (!t) {
-        storeSwapTLVFree(TLV);
-        return NULL;
-    }
-
-    T = StoreMeta::Add(T, t);
-    t = StoreMeta::Factory(STORE_META_STD_LFS,STORE_HDR_METASIZE,&e->timestamp);
-
-    if (!t) {
-        storeSwapTLVFree(TLV);
-        return NULL;
-    }
+    PackSwapMeta(os, STORE_META_STD_LFS, STORE_HDR_METASIZE, &e->timestamp);
 
     // XXX: do TLV without the c_str() termination. check readers first though
-    T = StoreMeta::Add(T, t);
-    t = StoreMeta::Factory(STORE_META_URL, url.length()+1, url.c_str());
-
-    if (!t) {
-        storeSwapTLVFree(TLV);
-        return NULL;
-    }
+    PackSwapMeta(os, STORE_META_URL, url.length() + 1U, url.c_str());
 
     if (objsize >= 0) {
-        T = StoreMeta::Add(T, t);
-        t = StoreMeta::Factory(STORE_META_OBJSIZE, sizeof(objsize), &objsize);
-
-        if (!t) {
-            storeSwapTLVFree(TLV);
-            return NULL;
-        }
+        PackSwapMeta(os, STORE_META_OBJSIZE, sizeof(objsize), &objsize);
     }
 
-    T = StoreMeta::Add(T, t);
-    SBuf vary(e->mem_obj->vary_headers);
-
+    const auto &vary = e->mem_obj->vary_headers;
     if (!vary.isEmpty()) {
-        t = StoreMeta::Factory(STORE_META_VARY_HEADERS, vary.length(), vary.c_str());
-
-        if (!t) {
-            storeSwapTLVFree(TLV);
-            return NULL;
-        }
-
-        StoreMeta::Add (T, t);
+        PackSwapMeta(os, STORE_META_VARY_HEADERS, vary.length(), vary.rawContent());
     }
-
-    return TLV;
 }
 
-char *
-storeSwapMetaPack(tlv * tlv_list, int *length)
+} // namespace Store
+
+char const *
+Store::PackSwapHeader(const StoreEntry &entry, size_t &totalLength)
 {
-    int buflen = 0;
-    tlv *t;
-    int j = 0;
-    char *buf;
-    assert(length != NULL);
-    ++buflen;           /* STORE_META_OK */
-    buflen += sizeof(int);  /* size of header to follow */
+    SBufStream os;
+    PackSwapMetas(entry, os);
+    const auto metas = os.buf();
 
-    for (t = tlv_list; t; t = t->next)
-        buflen += sizeof(char) + sizeof(int) + t->length;
+    // TODO: Optimize this allocation away by returning (and swapping out) SBuf.
+    const auto bufSize = NaturalSum<size_t>(sizeof(char), sizeof(int), metas.length()).value();
+    const auto buf = static_cast<char*>(xmalloc(bufSize));
 
-    buf = (char *)xmalloc(buflen);
+    auto pos = buf; // buf writing position
 
-    buf[j] = (char) STORE_META_OK;
-    ++j;
+    *pos = static_cast<char>(STORE_META_OK);
+    pos += sizeof(char);
 
-    memcpy(&buf[j], &buflen, sizeof(int));
+    // for historical reasons, the meta size field is int, not size_t
+    const auto metaSize = NaturalSum<int>(bufSize).value();
+    memcpy(pos, &metaSize, sizeof(metaSize));
+    pos += sizeof(metaSize);
 
-    j += sizeof(int);
+    Assure(pos + metas.length() == buf + bufSize); // paranoid
+    memcpy(pos, metas.rawContent(), metas.length());
+    pos += metas.length();
 
-    for (t = tlv_list; t; t = t->next) {
-        buf[j] = t->getType();
-        ++j;
-        memcpy(&buf[j], &t->length, sizeof(int));
-        j += sizeof(int);
-        memcpy(&buf[j], t->value, t->length);
-        j += t->length;
-    }
-
-    assert((int) j == buflen);
-    *length = buflen;
+    totalLength = bufSize;
     return buf;
 }
 

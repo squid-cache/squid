@@ -9,172 +9,147 @@
 /* DEBUG: section 20    Storage Manager Swapfile Metadata */
 
 #include "squid.h"
-#include "base/Range.h"
-#include "MemObject.h"
-#include "Store.h"
+#include "sbuf/Stream.h"
 #include "StoreMeta.h"
-#include "StoreMetaMD5.h"
-#include "StoreMetaObjSize.h"
-#include "StoreMetaSTD.h"
-#include "StoreMetaSTDLFS.h"
-#include "StoreMetaURL.h"
-#include "StoreMetaVary.h"
 
+#include <limits>
+
+namespace Store {
+
+/// Whether the given raw swap meta field type represents a type that we should
+/// inform the admin about (if found in a store) but can otherwise ignore.
+inline constexpr
 bool
-StoreMeta::validType(char type)
+DeprecatedSwapMetaType(const RawSwapMetaType type)
 {
-    /* VOID is reserved, and new types have to be added as classes */
-    if (type <= STORE_META_VOID || type >= STORE_META_END + 10) {
-        debugs(20, DBG_CRITICAL, "ERROR: storeSwapMetaUnpack: bad type (" << type << ")!");
-        return false;
-    }
-
-    /* Not yet implemented */
-    if (type >= STORE_META_END ||
-            type == STORE_META_STOREURL ||
-            type == STORE_META_VARY_ID) {
-        debugs(20, 3, "storeSwapMetaUnpack: Not yet implemented (" << type << ") in disk metadata");
-        return false;
-    }
-
-    /* Unused in any current squid code */
-    if (type == STORE_META_KEY_URL ||
-            type == STORE_META_KEY_SHA ||
-            type == STORE_META_HITMETERING ||
-            type == STORE_META_VALID) {
-        debugs(20, DBG_CRITICAL, "ERROR: Obsolete and unused type (" << type << ") in disk metadata");
-        return false;
-    }
-
-    return true;
+    return
+        type == 1 || // STORE_META_KEY_URL
+        type == 2 || // STORE_META_KEY_SHA
+        type == 6 || // STORE_META_HITMETERING (RFC 2227)
+        type == 7 || // STORE_META_VALID
+        false;
 }
 
-const int StoreMeta::MinimumTLVLength = 0;
-const int StoreMeta::MaximumTLVLength = 1 << 16;
-
+/// Whether the given raw swap meta field type represents a type that we should
+/// ignore without informing the admin.
+inline constexpr
 bool
-StoreMeta::validLength(int aLength) const
+ReservedSwapMetaType(const RawSwapMetaType type)
 {
-    static const Range<int> TlvValidLengths = Range<int>(StoreMeta::MinimumTLVLength, StoreMeta::MaximumTLVLength);
-    if (!TlvValidLengths.contains(aLength)) {
-        debugs(20, DBG_CRITICAL, MYNAME << ": insane length (" << aLength << ")!");
-        return false;
-    }
-
-    return true;
+    return
+        type == 11 || // STORE_META_STOREURL (Store-ID URL)
+        type == 12 || // STORE_META_VARY_ID (linking HTTP Vary variants)
+        false;
 }
 
-StoreMeta *
-StoreMeta::Factory (char type, size_t len, void const *value)
+/// Whether the given raw swap meta field type can be safely ignored.
+/// \sa HonoredSwapMetaType()
+inline constexpr
+bool
+IgnoredSwapMetaType(const RawSwapMetaType type)
 {
-    if (!validType(type))
-        return NULL;
+    return DeprecatedSwapMetaType(type) || ReservedSwapMetaType(type);
+}
 
-    StoreMeta *result;
+/// Whether we store the given swap meta field type (and also interpret the
+/// corresponding swap meta field when the Store loads it). Matches all
+/// SwapMetaType enum values except for the never-stored/loaded STORE_META_VOID.
+inline constexpr
+bool
+HonoredSwapMetaType(const RawSwapMetaType type)
+{
+    return 0 < type && type <= SwapMetaTypeMax && !IgnoredSwapMetaType(type);
+}
 
-    switch (type) {
+static_assert(SwapMetaTypeMax <= std::numeric_limits<RawSwapMetaType>::max(),
+              "RawSwapMetaType fits all SwapMetaType values");
 
-    case STORE_META_KEY:
-        result = new StoreMetaMD5;
-        break;
-
-    case STORE_META_URL:
-        result = new StoreMetaURL;
-        break;
-
-    case STORE_META_STD:
-        result = new StoreMetaSTD;
-        break;
-
-    case STORE_META_STD_LFS:
-        result = new StoreMetaSTDLFS;
-        break;
-
-    case STORE_META_OBJSIZE:
-        result = new StoreMetaObjSize;
-        break;
-
-    case STORE_META_VARY_HEADERS:
-        result = new StoreMetaVary;
-        break;
-
-    default:
-        debugs(20, DBG_CRITICAL, "ERROR: Attempt to create unknown concrete StoreMeta");
-        return NULL;
+/// properly reports or rejects a problematic raw swap meta field type
+static
+void
+HandleBadRawType(const RawSwapMetaType type)
+{
+    if (ReservedSwapMetaType(type)) {
+        debugs(20, 3, "ignoring swap meta field with a reserved type: " << int(type));
+        return;
     }
 
-    if (!result->validLength(len)) {
-        delete result;
-        return NULL;
+    if (DeprecatedSwapMetaType(type)) {
+        debugs(20, DBG_CRITICAL, "ERROR: Ignoring swap meta field with a deprecated type: " << int(type));
+        return;
     }
 
-    result->length = len;
-    result->value = xmalloc(len);
-    memcpy(result->value, value, len);
-    return result;
+    // TODO: Instead of assuming that all future swap meta types can be ignored
+    // (and some should be reported at level-0/1), future-proof this code by
+    // using a type bit to define whether to silently ignore a swap meta field
+    // with that type (or even the whole Store entry with that field).
+
+    if (type > SwapMetaTypeMax + 10) {
+        debugs(20, DBG_CRITICAL, "ERROR: Malformed cache storage; ignoring swap meta field with an unexpected type: " << int(type));
+        return;
+    }
+
+    if (type > SwapMetaTypeMax) {
+        debugs(20, 3, "ignoring swap meta field with a presumed future type: " << int(type));
+        return;
+    }
+
+    Assure(type <= 0);
+    debugs(20, DBG_CRITICAL, "ERROR: Malformed cache storage; ignoring swap meta field with an invalid type: " << int(type));
+}
+
+/// a helper function to safely extract one item from raw bounded input
+/// and advance input to the next item
+template <typename T>
+static
+void
+Deserialize(T &item, const char * &input, const void *end)
+{
+    if (input + sizeof(item) > end)
+        throw TextException("truncated swap meta field", Here());
+    memcpy(&item, input, sizeof(item));
+    input += sizeof(item);
+}
+
+} // namespace Store
+
+Store::SwapMetaView::SwapMetaView(const void * const begin, const void * const end)
+{
+    auto input = static_cast<const char *>(begin);
+
+    Deserialize(rawType, input, end);
+    if (HonoredSwapMetaType(rawType))
+        type = static_cast<SwapMetaType>(rawType);
+    else
+        HandleBadRawType(rawType); // and leave type as STORE_META_VOID
+
+    int lengthOrGarbage = 0;
+    Deserialize(lengthOrGarbage, input, end);
+    if (lengthOrGarbage < 0)
+        throw TextException("negative swap meta field length value", Here());
+    if (uint64_t(lengthOrGarbage) > SwapMetaFieldValueLengthMax)
+        throw TextException("huge swap meta field length value", Here());
+    if (input + lengthOrGarbage > end)
+        throw TextException("truncated swap meta field value", Here());
+    rawLength = static_cast<size_t>(lengthOrGarbage);
+
+    Assure(input >= begin);
+    Assure(input <= end);
+    rawValue = input;
 }
 
 void
-StoreMeta::FreeList(StoreMeta **head)
+Store::SwapMetaView::checkExpectedLength(const size_t expectedLength) const
 {
-    StoreMeta *node;
-
-    while ((node = *head) != NULL) {
-        *head = node->next;
-        xfree(node->value);
-        delete node;
-    }
+    if (rawLength != expectedLength)
+        throw TextException(ToSBuf("Bad value length in a Store entry meta field expecting a ",
+                            expectedLength, "-byte value: ", *this), Here());
 }
 
-StoreMeta **
-StoreMeta::Add(StoreMeta **tail, StoreMeta *aNode)
+std::ostream &
+operator <<(std::ostream &os, const Store::SwapMetaView &meta)
 {
-    assert (*tail == NULL);
-    *tail = aNode;
-    return &aNode->next;        /* return new tail pointer */
-}
-
-bool
-StoreMeta::checkConsistency(StoreEntry *) const
-{
-    switch (getType()) {
-
-    case STORE_META_KEY:
-
-    case STORE_META_URL:
-
-    case STORE_META_VARY_HEADERS:
-        assert(0);
-        break;
-
-    case STORE_META_STD:
-        break;
-
-    case STORE_META_STD_LFS:
-        break;
-
-    case STORE_META_OBJSIZE:
-        break;
-
-    default:
-        debugs(20, DBG_IMPORTANT, "WARNING: got unused STORE_META type " << getType());
-        break;
-    }
-
-    return true;
-}
-
-StoreMeta::StoreMeta(const StoreMeta &s) :
-    length(s.length),
-    value(s.value),
-    next(s.next)
-{}
-
-StoreMeta& StoreMeta::operator=(const StoreMeta &s)
-{
-    length=s.length;
-    value=s.value;
-    next=s.next;
-    return *this;
+    os << "type=" << int(meta.rawType) << " length=" << meta.rawLength;
+    return os;
 }
 

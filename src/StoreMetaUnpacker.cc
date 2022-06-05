@@ -10,130 +10,80 @@
 
 #include "squid.h"
 #include "base/TextException.h"
-#include "debug/Stream.h"
 #include "defines.h"
 #include "StoreMeta.h"
 #include "StoreMetaUnpacker.h"
 
-int const StoreMetaUnpacker::MinimumBufferLength = sizeof(char) + sizeof(int);
+/* Store::SwapMetaIterator */
 
-/// useful for meta stored in pre-initialized (with zeros) db files
-bool
-StoreMetaUnpacker::isBufferZero()
+Store::SwapMetaIterator::SwapMetaIterator(const void * const start, const void * const end):
+    fieldStart_(static_cast<const char*>(start)),
+    bufEnd_(end)
 {
-    // We could memcmp the entire buffer, but it is probably safe enough
-    // to test a few bytes because if we do not detect a corrupted entry
-    // it is not a big deal. Empty entries are not isBufferSane anyway.
-    const int depth = 10;
-    if (buflen < depth)
-        return false; // cannot be sure enough
-
-    for (int i = 0; i < depth; ++i) {
-        if (buf[i])
-            return false;
-    }
-    return true;
+    sync();
 }
 
-void
-StoreMetaUnpacker::checkBuffer()
+Store::SwapMetaIterator &
+Store::SwapMetaIterator::operator++()
 {
-    assert(buf); // paranoid; already checked in the constructor
+    Assure(fieldStart_ != bufEnd_);
+    fieldStart_ += sizeof(char); // swap meta type
+    fieldStart_ += sizeof(int); // swap meta value length
+    fieldStart_ += meta_.rawLength; // swap meta value
+
+    sync();
+    return *this;
+}
+
+/// (re)set meta_
+void
+Store::SwapMetaIterator::sync()
+{
+    if (fieldStart_ == bufEnd_)
+        return; // nothing to do when we reach the end of iteration
+
+    // We cannot start beyond the end of the header: We start with valid
+    // begin/end buffer pointers, and each field checks for overreach.
+    Assure(fieldStart_ < bufEnd_);
+
+    meta_ = SwapMetaView(fieldStart_, bufEnd_);
+}
+
+/* StoreMetaUnpacker */
+
+StoreMetaUnpacker::StoreMetaUnpacker(const char * const buf, const ssize_t size, int * const swap_hdr_len)
+{
+    Assure(buf);
+    Assure(size >= 0);
+
+    // buffer = <metadata> [HTTP response byte]...
+    // metadata = <prefix> [metadata field]...
+    // prefix = <magic> <metadata size a.k.a. swap_hdr_len>
+    // We parse the prefix and then skip it, ready to iterate metadata fields.
+
+    const auto requiredPrefixSize = sizeof(char) + sizeof(int);
+    Assure2(uint64_t(size) >= requiredPrefixSize, "parsing buffer accommodates metadata prefix");
+
     if (buf[0] != static_cast<char>(STORE_META_OK))
-        throw TexcHere("store entry metadata is corrupted");
-    /*
-     * sanity check on 'buflen' value.  It should be at least big
-     * enough to hold one type and one length.
-     */
-    getBufferLength();
-    if (*hdr_len < MinimumBufferLength)
-        throw TexcHere("store entry metadata is too small");
-    if (*hdr_len > buflen)
-        throw TexcHere("store entry metadata is too big");
-}
+        throw TextException("store entry metadata prefix is corrupted", Here());
 
-void
-StoreMetaUnpacker::getBufferLength()
-{
-    memcpy(hdr_len, &buf[1], sizeof(int));
-}
+    int rawMetaSize = 0; // metadata size, including the required prefix
+    memcpy(&rawMetaSize, &buf[1], sizeof(rawMetaSize));
 
-StoreMetaUnpacker::StoreMetaUnpacker(char const *aBuffer, ssize_t aLen, int *anInt) :
-    buf(aBuffer),
-    buflen(aLen),
-    hdr_len(anInt),
-    position(1 + sizeof(int)),
-    type('\0'),
-    length(0),
-    tail(NULL)
-{
-    assert(aBuffer != NULL);
-}
+    if (rawMetaSize < 0)
+        throw TextException("store entry metadata length is corrupted", Here());
 
-void
-StoreMetaUnpacker::getType()
-{
-    type = buf[position];
-    ++position;
-}
+    if (rawMetaSize > size)
+        throw TextException("store entry metadata is too big", Here());
 
-void
-StoreMetaUnpacker::getLength()
-{
-    memcpy(&length, &buf[position], sizeof(int));
-    position += sizeof(int);
-}
+    if (size_t(rawMetaSize) < requiredPrefixSize)
+        throw TextException("store entry metadata is too small", Here());
 
-bool
-StoreMetaUnpacker::doOneEntry()
-{
-    getType();
-    getLength();
+    metas = buf + requiredPrefixSize;
+    metasSize = size_t(rawMetaSize) - requiredPrefixSize;
+    Assure(metas + metasSize <= buf + size); // paranoid
 
-    if (position + length > *hdr_len) {
-        debugs(20, DBG_CRITICAL, "storeSwapMetaUnpack: overflow!");
-        debugs(20, DBG_CRITICAL, "\ttype=" << type << ", length=" << length << ", *hdr_len=" << *hdr_len << ", offset=" << position);
-        return false;
-    }
-
-    StoreMeta *newNode = StoreMeta::Factory(type, length, &buf[position]);
-
-    if (newNode)
-        tail = StoreMeta::Add (tail, newNode);
-
-    position += length;
-
-    return true;
-}
-
-bool
-StoreMetaUnpacker::moreToProcess() const
-{
-    return *hdr_len - position - MinimumBufferLength >= 0;
-}
-
-StoreMeta *
-StoreMetaUnpacker::createStoreMeta ()
-{
-    tlv *TLV = NULL;
-    tail = &TLV;
-    assert(hdr_len != NULL);
-
-    checkBuffer();
-
-    getBufferLength();
-
-    assert (position == 1 + sizeof(int));
-
-    while (moreToProcess()) {
-        if (!doOneEntry())
-            break;
-    }
-
-    if (!TLV)
-        throw TexcHere("store entry metadata is empty");
-
-    assert(TLV);
-    return TLV;
+    Assure(swap_hdr_len);
+    *swap_hdr_len = rawMetaSize;
 }
 
