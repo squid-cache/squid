@@ -30,7 +30,7 @@ public:
     Intercept() : transparentActive_(0), interceptActive_(0) {}
     ~Intercept() {};
 
-    /// use NAT to set the local address of the given freshly accepted connection
+    /// perform NAT lookups for the local address of the given connection
     bool LookupNat(const Comm::Connection &);
 
     /**
