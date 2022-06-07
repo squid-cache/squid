@@ -386,7 +386,7 @@ Ip::Intercept::LookupNat(const Comm::Connection &aConn)
 
     Comm::ConnectionPointer newConn = &aConn;
     return NetfilterInterception(newConn) || IpfwInterception(newConn) || // use sock-opts to return client address
-        PfInterception(newConn) || IpfInterception(newConn); // use ioctl to return client address AND destination address
+           PfInterception(newConn) || IpfInterception(newConn); // use ioctl to return client address AND destination address
 }
 
 bool
