@@ -384,18 +384,9 @@ Ip::Intercept::LookupNat(const Comm::Connection &aConn)
     debugs(89, 5, "address BEGIN: me/client= " << aConn.local << ", destination/me= " << aConn.remote);
     assert(interceptActive_);
 
-    {
-        Comm::ConnectionPointer newConn = &aConn;
-        /* NAT methods that use sock-opts to return client address */
-        if (NetfilterInterception(newConn)) return true;
-        if (IpfwInterception(newConn)) return true;
-
-        /* NAT methods that use ioctl to return client address AND destination address */
-        if (PfInterception(newConn)) return true;
-        if (IpfInterception(newConn)) return true;
-    }
-
-    return false;
+    Comm::ConnectionPointer newConn = &aConn;
+    return NetfilterInterception(newConn) || IpfwInterception(newConn) || // use sock-opts to return client address
+        PfInterception(newConn) || IpfInterception(newConn); // use ioctl to return client address AND destination address
 }
 
 bool
