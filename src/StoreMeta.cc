@@ -16,36 +16,43 @@
 
 namespace Store {
 
-/// Whether the given raw swap meta field type represents a type that we should
-/// inform the admin about (if found in a store) but can otherwise ignore.
-inline constexpr
-bool
+/// A type that we should inform the admin about (if found in a store) but can otherwise ignore.
+enum class DeprecatedMetas {
+    STORE_META_KEY_URL = 1,
+    STORE_META_KEY_SHA = 2,
+    STORE_META_HITMETERING = 6, // (RFC 2227)
+    STORE_META_VALID = 7
+};
+
+/// A type that we should ignore without informing the admin.
+enum class ReservedMetas {
+    STORE_META_STOREURL = 11,
+    STORE_META_VARY_ID = 12
+};
+
+/// Whether the given raw swap meta field type is one of DeprecatedMetas.
+inline constexpr bool
 DeprecatedSwapMetaType(const RawSwapMetaType type)
 {
     return
-        type == 1 || // STORE_META_KEY_URL
-        type == 2 || // STORE_META_KEY_SHA
-        type == 6 || // STORE_META_HITMETERING (RFC 2227)
-        type == 7 || // STORE_META_VALID
-        false;
+        type == static_cast<RawSwapMetaType>(DeprecatedMetas::STORE_META_HITMETERING) ||
+        type == static_cast<RawSwapMetaType>(DeprecatedMetas::STORE_META_KEY_SHA) ||
+        type == static_cast<RawSwapMetaType>(DeprecatedMetas::STORE_META_HITMETERING) ||
+        type == static_cast<RawSwapMetaType>(DeprecatedMetas::STORE_META_VALID);
 }
 
-/// Whether the given raw swap meta field type represents a type that we should
-/// ignore without informing the admin.
-inline constexpr
-bool
+/// Whether the given raw swap meta field type is one of ReservedMetas.
+inline constexpr bool
 ReservedSwapMetaType(const RawSwapMetaType type)
 {
     return
-        type == 11 || // STORE_META_STOREURL (Store-ID URL)
-        type == 12 || // STORE_META_VARY_ID (linking HTTP Vary variants)
-        false;
+        type == static_cast<RawSwapMetaType>(ReservedMetas::STORE_META_STOREURL) ||
+        type == static_cast<RawSwapMetaType>(ReservedMetas::STORE_META_VARY_ID);
 }
 
 /// Whether the given raw swap meta field type can be safely ignored.
 /// \sa HonoredSwapMetaType()
-inline constexpr
-bool
+inline constexpr bool
 IgnoredSwapMetaType(const RawSwapMetaType type)
 {
     return DeprecatedSwapMetaType(type) || ReservedSwapMetaType(type);
@@ -54,8 +61,7 @@ IgnoredSwapMetaType(const RawSwapMetaType type)
 /// Whether we store the given swap meta field type (and also interpret the
 /// corresponding swap meta field when the Store loads it). Matches all
 /// SwapMetaType enum values except for the never-stored/loaded STORE_META_VOID.
-inline constexpr
-bool
+inline constexpr bool
 HonoredSwapMetaType(const RawSwapMetaType type)
 {
     return 0 < type && type <= SwapMetaTypeMax && !IgnoredSwapMetaType(type);
@@ -65,8 +71,7 @@ static_assert(SwapMetaTypeMax <= std::numeric_limits<RawSwapMetaType>::max(),
               "RawSwapMetaType fits all SwapMetaType values");
 
 /// properly reports or rejects a problematic raw swap meta field type
-static
-void
+static void
 HandleBadRawType(const RawSwapMetaType type)
 {
     if (ReservedSwapMetaType(type)) {
@@ -101,8 +106,7 @@ HandleBadRawType(const RawSwapMetaType type)
 /// a helper function to safely extract one item from raw bounded input
 /// and advance input to the next item
 template <typename T>
-static
-void
+static void
 Deserialize(T &item, const char * &input, const void *end)
 {
     if (input + sizeof(item) > end)
