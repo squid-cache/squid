@@ -293,7 +293,7 @@ Security::PeerOptions::createClientContext(bool setOptions)
 /// set of options we can parse and what they map to
 static struct ssl_option {
     const char *name;
-    uint64_t value;
+    Security::ParsedOptions value;
 
 } ssl_options[] = {
 
@@ -455,7 +455,7 @@ Security::PeerOptions::parseOptions()
 
 #if USE_OPENSSL
     ::Parser::Tokenizer tok(str);
-    long op = 0;
+    ParsedOptions op = 0;
 
     while (!tok.atEnd()) {
         enum {
@@ -472,7 +472,7 @@ Security::PeerOptions::parseOptions()
         static const CharacterSet optChars = CharacterSet("TLS-option", "_") + CharacterSet::ALPHA + CharacterSet::DIGIT;
         int64_t hex = 0;
         SBuf option;
-        long value = 0;
+        ParsedOptions value = 0;
 
         // Bug 4429: identify the full option name before determining text or numeric
         if (tok.prefix(option, optChars)) {

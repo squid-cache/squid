@@ -185,11 +185,11 @@ class KeyData;
 class KeyLog;
 
 #if USE_OPENSSL
-typedef long ParsedOptions;
+typedef uint64_t ParsedOptions;
 #elif USE_GNUTLS
 typedef std::shared_ptr<struct gnutls_priority_st> ParsedOptions;
 #else
-class ParsedOptions {}; // we never parse/use TLS options in this case
+typedef uint64_t ParsedOptions;
 #endif
 
 /// bitmask representing configured http(s)_port `sslflags`
