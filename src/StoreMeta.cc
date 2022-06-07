@@ -12,8 +12,6 @@
 #include "sbuf/Stream.h"
 #include "StoreMeta.h"
 
-#include <limits>
-
 namespace Store {
 
 /// A type that we should inform the admin about (if found in a store) but can otherwise ignore.
@@ -66,9 +64,6 @@ HonoredSwapMetaType(const RawSwapMetaType type)
 {
     return 0 < type && type <= SwapMetaTypeMax && !IgnoredSwapMetaType(type);
 }
-
-static_assert(SwapMetaTypeMax <= std::numeric_limits<RawSwapMetaType>::max(),
-              "RawSwapMetaType fits all SwapMetaType values");
 
 /// properly reports or rejects a problematic raw swap meta field type
 static void
