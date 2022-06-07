@@ -159,7 +159,7 @@ Ip::Intercept::StartTransparency()
     (IPFW_TRANSPARENT && defined(IP_BINDANY))
     transparentActive_ = 1;
 #else
-    throw TextException("requires TPROXY feature to be enabled by ./configure", Here())
+    throw TextException("requires TPROXY feature to be enabled by ./configure", Here());
 #endif
 }
 
