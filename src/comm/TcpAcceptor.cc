@@ -394,6 +394,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
         details->flags |= COMM_TRANSPARENT;
         if (Ip::Interceptor.TransparentActive()) {
             debugs(50, DBG_IMPORTANT, "ERROR: cannot use transparent " << details << " because TPROXY mode became inactive");
+            // TODO: consider returning Comm::COMM_ERROR instead
             return Comm::NOMESSAGE;
         }
     } else if (conn->flags & COMM_INTERCEPTION) { // request the real client/dest IP address from NAT
