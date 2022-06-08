@@ -380,9 +380,7 @@ Security::ServerOptions::loadDhParams()
 
 #else // OpenSSL 3.0+
     EVP_PKEY *pkey = nullptr;
-    const char *type = "DH";
-    if (!eecdhCurve.isEmpty())
-        type = "EC";
+    const auto type = eecdhCurve.isEmpty() ? "DH" : "EC";
 
     if (auto *dctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, "PEM", nullptr, type, 0, nullptr, nullptr)) {
         if (auto *in = fopen(dhParamsFile.c_str(), "r")) {
