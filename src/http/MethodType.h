@@ -85,7 +85,7 @@ typedef enum _method_t {
     METHOD_UNBIND,
 #endif
 
-    // RFC 7540
+    // RFC 9113
     METHOD_PRI,
 
     // Squid extension methods

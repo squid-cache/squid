@@ -57,7 +57,7 @@ enum HdrType {
     FORWARDED,                      /**< RFC 7239 */
     FROM,                           /**< RFC 7231 */
     HOST,                           /**< RFC 7230 */
-    HTTP2_SETTINGS,                 /**< RFC 7540 */
+    HTTP2_SETTINGS,                 /**< obsolete RFC 7540 header we may need to erase */
     /*IF,*/                         /* RFC 2518 */
     IF_MATCH,                       /**< RFC 7232 */
     IF_MODIFIED_SINCE,              /**< RFC 7232 */

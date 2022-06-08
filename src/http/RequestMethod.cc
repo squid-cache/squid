@@ -145,7 +145,7 @@ HttpRequestMethod::isHttpSafe() const
     // RFC 5789 - none
     // RFC 5842 - none
 
-    // RFC 7540 section 11.6
+    // RFC 9113 section 3.4
     case Http::METHOD_PRI:
 
         return true;
@@ -194,7 +194,7 @@ HttpRequestMethod::isIdempotent() const
     // RFC 5789 - TODO check
     // RFC 5842 - TODO check
 
-    // RFC 7540 section 11.6
+    // RFC 9113 section 3.4
     case Http::METHOD_PRI:
 
         return true;
