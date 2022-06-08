@@ -454,7 +454,7 @@ HappyConnOpener::status() const
 }
 
 /// Create "503 Service Unavailable" or "504 Gateway Timeout" error depending
-/// on whether this is a validation request. RFC 7234 section 5.2.2 says that
+/// on whether this is a validation request. RFC 9111 section 5.2.2 says that
 /// we MUST reply with "504 Gateway Timeout" if validation fails and cached
 /// reply has proxy-revalidate, must-revalidate or s-maxage Cache-Control
 /// directive.

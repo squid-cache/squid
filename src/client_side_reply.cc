@@ -481,8 +481,10 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
 
     // origin replied with a non-error code
     if (status > Http::scNone && status < Http::scInternalServerError) {
-        // RFC 7234 section 4: a cache MUST use the most recent response
-        // (as determined by the Date header field)
+        // RFC 9111 section 4:
+        // "When more than one suitable response is stored,
+        //  a cache MUST use the most recent one
+        // (as determined by the Date header field)."
         if (new_rep.olderThan(&old_entry->mem().freshestReply())) {
             http->al->cache.code.err.ignored = true;
             debugs(88, 3, "origin replied " << status << " but with an older date header, sending old entry (" << oldStatus << ") to client");
