@@ -44,8 +44,6 @@ Fs::Ufs::RebuildState::RebuildState(RefCount<UFSSwapDir> aSwapDir) :
     _done(false),
     cbdata(NULL)
 {
-    *fullpath = 0;
-    *fullfilename = 0;
 
     /*
      * If the swap.state file exists in the cache_dir, then
@@ -379,14 +377,14 @@ Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *)
         }
 
         if (0 == in_dir) {  /* we need to read in a new directory */
-            snprintf(fullpath, sizeof(fullpath), "%s/%02X/%02X",
-                     sd->path,
-                     curlvl1, curlvl2);
+            fullpath.Printf("%s/%02X/%02X",
+                            sd->path,
+                            curlvl1, curlvl2);
 
             if (dirs_opened)
                 return -1;
 
-            td = opendir(fullpath);
+            td = opendir(fullpath.c_str());
 
             ++dirs_opened;
 
@@ -425,10 +423,10 @@ Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *)
                 continue;
             }
 
-            snprintf(fullfilename, sizeof(fullfilename), "%s/%s",
-                     fullpath, entry->d_name);
-            debugs(47, 3, HERE << "Opening " << fullfilename);
-            fd = file_open(fullfilename, O_RDONLY | O_BINARY);
+            fullfilename.Printf(SQUIDSBUFPH "/%s",
+                                SQUIDSBUFPRINT(fullpath), entry->d_name);
+            debugs(47, 3, "Opening " << fullfilename);
+            fd = file_open(fullfilename.c_str(), O_RDONLY | O_BINARY);
 
             if (fd < 0) {
                 int xerrno = errno;
