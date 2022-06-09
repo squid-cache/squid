@@ -10,6 +10,7 @@
 #include "anyp/PortCfg.h"
 #include "base/Packable.h"
 #include "cache_cf.h"
+#include "error/SysErrorDetail.h"
 #include "fatal.h"
 #include "globals.h"
 #include "security/ServerOptions.h"
@@ -358,9 +359,14 @@ Security::ServerOptions::loadDhParams()
 #if USE_OPENSSL
 #if OPENSSL_VERSION_MAJOR < 3
     DH *dhp = nullptr;
+    errno = 0;
     if (FILE *in = fopen(dhParamsFile.c_str(), "r")) {
         dhp = PEM_read_DHparams(in, nullptr, nullptr, nullptr);
         fclose(in);
+    } else {
+        const auto xerrno = errno;
+        debugs(83, DBG_IMPORTANT, "WARNING: Failed to open '" << dhParamsFile << "'" << ReportSysError(xerrno));
+        return;
     }
 
     if (!dhp) {
@@ -383,6 +389,7 @@ Security::ServerOptions::loadDhParams()
     const auto type = eecdhCurve.isEmpty() ? "DH" : "EC";
 
     if (auto *dctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, "PEM", nullptr, type, 0, nullptr, nullptr)) {
+        errno = 0;
         if (auto *in = fopen(dhParamsFile.c_str(), "r")) {
             if (OSSL_DECODER_from_fp(dctx, in) == 1) {
 
@@ -395,6 +402,9 @@ Security::ServerOptions::loadDhParams()
                 debugs(83, DBG_IMPORTANT, "WARNING: Failed to decode " << type << " parameters '" << dhParamsFile << "'");
             }
             fclose(in);
+        } else {
+            const auto xerrno = errno;
+            debugs(83, DBG_IMPORTANT, "WARNING: Failed to open '" << dhParamsFile << "'" << ReportSysError(xerrno));
         }
         OSSL_DECODER_CTX_free(dctx);
 
