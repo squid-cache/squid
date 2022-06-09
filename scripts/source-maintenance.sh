@@ -39,11 +39,18 @@ ASTYLE='astyle'
 # whether to check and, if necessary, update boilerplate copyright years
 CheckAndUpdateCopyright=yes
 
+# How to sync CONTRIBUTORS with the current git branch commits:
+# * never: Do not update CONTRIBUTORS at all.
+# * auto: Check commits added since the last similar update.
+# * SHA1/etc: Check commits added after the specified git commit.
+UpdateContributorsSince=auto
+
 printUsage () {
     echo "Usage: $0 [option...]"
     echo "options:"
     echo "    --keep-going|-k"
     echo "    --check-and-update-copyright <yes|no>"
+    echo "    --update-contributors-since <never|auto|revision>"
     echo "    --with-astyle </path/to/astyle/executable>"
 }
 
@@ -64,6 +71,16 @@ while [ $# -ge 1 ]; do
         fi
         CheckAndUpdateCopyright=$2
         shift 2
+        ;;
+    --update-contributors-since)
+        if test "x$2" = x
+        then
+            printUsage
+            echo "Error: Option $1 expects an argument."
+            exit 1;
+        fi
+        UpdateContributorsSince="$2"
+        shift 2;
         ;;
     --help|-h)
         printUsage
@@ -496,19 +513,62 @@ run_ checkMakeNamedErrorDetails || exit 1
 # extract Author details from commit log
 collectAuthors ()
 {
-  tail -n +5 CONTRIBUTORS | sed -e 's/^[ ]*//' >AUTHORS.tmp
+    if test "x$UpdateContributorsSince" = xnever
+    then
+        return 0; # successfully did nothing, as requested
+    fi
 
-  git log |
-    grep -E "^[ ]*[aA]uthor:" |
-    sed -e 's/^[ \t]*//' -e 's/[Aa]uthor:[ ]*//' -e 's/"//g' |
-    sed -e 's/[ ]*[,+&] /\n/g' >>AUTHORS.tmp
+    vettedCommitPhrase='[Rr]eference point for automated CONTRIBUTORS updates'
 
-  (
-    head -n 4 CONTRIBUTORS
-    sort -uf AUTHORS.tmp | while read line ; do echo "    $line" ; done
-  )>CONTRIBUTORS.new
-  rm -f AUTHORS.tmp || true
-  mv CONTRIBUTORS.new CONTRIBUTORS
+    since="$UpdateContributorsSince"
+    if test "x$UpdateContributorsSince" = xauto
+    then
+        # find the last CONTRIBUTORS commit vetted by a human
+        humanSha=`git log -n1 --format='%H' --grep="$vettedCommitPhrase" CONTRIBUTORS`
+        # find the last CONTRIBUTORS commit attributed to this script
+        botSha=`git log -n1 --format='%H' --author=squidadm CONTRIBUTORS`
+        if test "x$humanSha" = x && test "x$botSha" = x
+        then
+            echo "ERROR: Unable to determine the commit to start contributors extraction from"
+            return 1;
+        fi
+
+        # find the latest commit among the above one or two commits
+        if test "x$humanSha" = x
+        then
+            since=$botSha
+        elif test "x$botSha" = x
+        then
+            since=$humanSha
+        elif git merge-base --is-ancestor $humanSha $botSha
+        then
+            since=$botSha
+        else
+            since=$humanSha
+        fi
+        echo "Collecting contributors since $since"
+    fi
+    range="$since..HEAD"
+
+    # We add four leading spaces below to mimic CONTRIBUTORS entry style.
+    # add commit authors:
+    git log --format='    %an <%ae>' $range > authors.tmp
+    # add commit co-authors:
+    git log $range | \
+        grep -Ei '^[[:space:]]*Co-authored-by:' | \
+        sed -r 's/^\s*Co-authored-by:\s*/    /i' >> authors.tmp
+    # but do not add committers (--format='    %cn <%ce>').
+
+    # add collected new (co-)authors, if any, to CONTRIBUTORS
+    if ./scripts/update-contributors.pl < authors.tmp > CONTRIBUTORS.new
+    then
+        updateIfChanged CONTRIBUTORS CONTRIBUTORS.new  \
+            "A human PR description should mention: $vettedCommitPhrase"
+    fi
+    result=$?
+
+    rm -f authors.tmp
+    return $result
 }
 
 # Update CONTRIBUTORS content
