@@ -164,13 +164,11 @@ sub parseContributor
     my $name = undef();
     my $email = undef();
 
-    if (s/\s*<(.*)>$// || # <name@example.com>
-        s/\s*[(](.*(?:@|\sat\s).*)[)]$// || # (name@example) or (name at example)
-        s/\s*<(.*)$//) { # <name@example.com -- an "open" email field
+    if (s/\s*<(.*)>$//) {
         $email = $1 if length $1;
 
         return "multiple emails" if defined($email) && $email =~ /,/;
-        return "suspicious email" if defined($email) && !&isEmail($email) && $email !~ /@|<at>|\sat\s|^unknown$/;
+        return "suspicious email" if defined($email) && !&isEmail($email);
     }
 
     # convert: name@example.com <>
