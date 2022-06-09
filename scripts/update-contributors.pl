@@ -28,6 +28,7 @@ my $SkippedBadLines = 0;
 
 my @VettedContributors = ();
 my @NewContributors = ();
+my %Problems = ();
 
 exit &main();
 
@@ -261,20 +262,20 @@ sub loadCandidates
         die() unless $c;
 
         if (!ref($c)) {
-            printf(STDERR "Skipping $c: $original");
+            &noteProblem("Skipping %s: %s", $c, $original);
             ++$SkippedBadLines;
             next;
         }
         die(ref($c)) unless ref($c) eq 'HASH';
 
         if (&isManuallyExcluded($c)) {
-            printf(STDERR "Skipping banned entry: %s\n", $c->{raw});
+            &noteProblem("Skipping banned entry: %s\n", $c->{raw});
             ++$SkippedBanned;
             next;
         }
 
         if (my ($vettedC) = grep { &similarToVetted($c, $_) } @VettedContributors) {
-            printf(STDERR "Skipping vetted:\n    %s\n    %s\n", $vettedC->{raw}, $c->{raw})
+            &noteProblem("Skipping already vetted:\n    %s\n    %s\n", $vettedC->{raw}, $c->{raw})
                 unless &contributorToString($vettedC) eq &contributorToString($c);
             ++$SkippedAlreadyVetted;
             next;
@@ -291,7 +292,7 @@ sub pruneCandidates
     while (@NewContributors) {
         my $c = pop @NewContributors;
         if (my ($otherC) = grep { &worseThan($c, $_) } (@VettedContributors, @NewContributors, @ngContributors)) {
-            printf(STDERR "Skipping duplicates:\n    %s\n    %s\n", $otherC->{raw}, $c->{raw})
+            &noteProblem("Skipping very similar:\n    %s\n    %s\n", $otherC->{raw}, $c->{raw})
                 unless &contributorToString($otherC) eq &contributorToString($c);
             ++$SkippedNewDuplicates;
             next;
@@ -305,6 +306,15 @@ sub pruneCandidates
 sub lineOut {
     print(@_);
     ++$LinesOut;
+}
+
+# report the given problem, once
+sub noteProblem {
+    my $format = shift;
+    my $problem = sprintf($format, @_);
+    return if exists $Problems{$problem};
+    $Problems{$problem} = undef();
+    print(STDERR $problem);
 }
 
 sub isEmail
