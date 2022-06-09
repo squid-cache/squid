@@ -27,7 +27,7 @@ Store::SwapMetaIterator &
 Store::SwapMetaIterator::operator++()
 {
     Assure(fieldStart_ != bufEnd_);
-    fieldStart_ += sizeof(char); // swap meta type
+    fieldStart_ += sizeof(RawSwapMetaType); // swap meta type
     fieldStart_ += sizeof(int); // swap meta value length
     fieldStart_ += meta_.rawLength; // swap meta value
 
@@ -61,7 +61,7 @@ StoreMetaUnpacker::StoreMetaUnpacker(const char * const buf, const ssize_t size,
     // prefix = <magic> <metadata size a.k.a. swap_hdr_len>
     // We parse the prefix and then skip it, ready to iterate metadata fields.
 
-    const auto requiredPrefixSize = sizeof(char) + sizeof(int);
+    const auto requiredPrefixSize = sizeof(Store::RawSwapMetaType) + sizeof(int);
     Assure2(uint64_t(size) >= requiredPrefixSize, "parsing buffer accommodates metadata prefix");
 
     if (buf[0] != static_cast<char>(STORE_META_OK))

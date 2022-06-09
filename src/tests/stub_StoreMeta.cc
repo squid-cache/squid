@@ -7,12 +7,11 @@
  */
 
 #include "squid.h"
+#include "sbuf/SBuf.h"
+#include "StoreMeta.h"
 
 #define STUB_API "StoreMeta.cc"
 #include "tests/STUB.h"
-
-#include "sbuf/SBuf.h"
-#include "StoreMeta.h"
 
 Store::SwapMetaView::SwapMetaView(const void *, const void *) STUB
 void Store::SwapMetaView::checkExpectedLength(size_t) const STUB

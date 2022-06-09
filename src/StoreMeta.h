@@ -91,10 +91,7 @@ namespace Store {
 using RawSwapMetaType = char;
 
 /// maximum value of a recognized swap meta type
-const int SwapMetaTypeMax = 12; // Use "inline constexpr ..." with C++17.
-
-static_assert(SwapMetaTypeMax <= std::numeric_limits<RawSwapMetaType>::max(),
-              "RawSwapMetaType fits all SwapMetaType values");
+const RawSwapMetaType SwapMetaTypeMax = 12; // Use "inline constexpr ..." with C++17.
 
 /// Store entries with longer swap metadata field values are not swapped out and
 /// are considered invalid when validating being-loaded metadata. This arbitrary
@@ -102,6 +99,8 @@ static_assert(SwapMetaTypeMax <= std::numeric_limits<RawSwapMetaType>::max(),
 /// overflowing and also prevents allocation of huge buffers when loading
 /// variable-length fields. Reevaluate this limit when increasing MAX_URL.
 const size_t SwapMetaFieldValueLengthMax = 64*1024;
+
+static_assert(SwapMetaFieldValueLengthMax >= MAX_URL, "MAX_URL will fit in a Swap meta field");
 
 // TODO: Move to src/store/SwapMetaReading or similar, along with StoreMetaUnpacker.
 /// a swap metadata field inside the buffer given to StoreMetaUnpacker

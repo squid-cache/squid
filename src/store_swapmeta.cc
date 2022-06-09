@@ -19,8 +19,7 @@
 namespace Store {
 
 /// writes a single swap meta field to the given stream
-static
-void
+static void
 PackSwapMeta(std::ostream &os, const SwapMetaType type, const size_t length, const void *value)
 {
     // Outside of packing/unpacking code, we correctly use SwapMetaType for
@@ -44,8 +43,7 @@ PackSwapMeta(std::ostream &os, const SwapMetaType type, const size_t length, con
 }
 
 /// writes swap meta fields of the given Store entry to the given stream
-static
-void
+static void
 PackSwapMetas(const StoreEntry &entry, std::ostream &os)
 {
     // TODO: Refactor this code instead of reducing the change diff.

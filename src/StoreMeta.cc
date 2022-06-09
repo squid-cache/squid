@@ -62,7 +62,7 @@ IgnoredSwapMetaType(const RawSwapMetaType type)
 inline constexpr bool
 HonoredSwapMetaType(const RawSwapMetaType type)
 {
-    return 0 < type && type <= SwapMetaTypeMax && !IgnoredSwapMetaType(type);
+    return STORE_META_VOID < type && type <= SwapMetaTypeMax && !IgnoredSwapMetaType(type);
 }
 
 /// properly reports or rejects a problematic raw swap meta field type
@@ -94,7 +94,7 @@ HandleBadRawType(const RawSwapMetaType type)
         return;
     }
 
-    Assure(type <= 0);
+    Assure(type <= STORE_META_VOID);
     debugs(20, DBG_CRITICAL, "ERROR: Malformed cache storage; ignoring swap meta field with an invalid type: " << int(type));
 }
 

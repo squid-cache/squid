@@ -30,13 +30,11 @@ Store::CheckSwapMetaUrl(const SwapMetaView &meta, const StoreEntry &entry)
     if (!e->mem_obj->hasUris())
         return; // cannot validate
 
+    // XXX: ensure all Squid URL inputs are properly normalized then use case-sensitive compare here
     if (strcasecmp(e->mem_obj->urlXXX(), (char *)value)) {
         debugs(20, DBG_IMPORTANT, "storeClientReadHeader: URL mismatch");
         debugs(20, DBG_IMPORTANT, "\t{" << (char *) value << "} != {" << e->mem_obj->urlXXX() << "}");
         throw TextException("URL mismatch", Here());
     }
-
-    // Getting here still does not guarantee of a match: We have not checked
-    // whether case-sensitive parts of the URI have fully matched.
 }
 
