@@ -9,6 +9,7 @@
 #ifndef SQUID_TYPELENGTHVALUE_H
 #define SQUID_TYPELENGTHVALUE_H
 
+#include "defines.h"
 #include "store/forward.h"
 
 #include <iosfwd>
