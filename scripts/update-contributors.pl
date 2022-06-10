@@ -207,12 +207,12 @@ sub loadVettedContributors
     my ($vettedFilename) = @_;
     open(IF, "<$vettedFilename") or die("Cannot open $vettedFilename: $!\n");
     while (<IF>) {
-        my $orginal = $_;
+        my $original = $_;
         ++$VettedLinesIn;
 
         if (s/^\S// || s/^\s*$//) {
             # preamble and its terminator (a more-or-less empty line)
-            &lineOut($orginal);
+            &lineOut($original);
             next;
         }
 
@@ -230,7 +230,7 @@ sub loadVettedContributors
             die("Malformed vetted entry name: ", $name) if $name =~ /[@<>]/;
         }
 
-        die("Malformed $vettedFilename entry:", $orginal) if !defined($name) && !defined($email);
+        die("Malformed $vettedFilename entry:", $original) if !defined($name) && !defined($email);
 
         push @VettedContributors, {
             name => $name,
