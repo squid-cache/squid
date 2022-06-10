@@ -14,11 +14,11 @@
 
 namespace Store {
 
-/// Whether the given raw swap meta field type is one of DeprecatedMetas.
+/// Whether the given raw swap meta field type represents a type that we should
+/// inform the admin about (if found in a store) but can otherwise ignore.
 inline bool
 DeprecatedSwapMetaType(const RawSwapMetaType type)
 {
-	/// A type that we should inform the admin about (if found in a store) but can otherwise ignore.
 	enum class DeprecatedMetas {
 	    STORE_META_KEY_URL = 1,
 	    STORE_META_KEY_SHA = 2,
@@ -32,11 +32,11 @@ DeprecatedSwapMetaType(const RawSwapMetaType type)
         type == static_cast<RawSwapMetaType>(DeprecatedMetas::STORE_META_VALID);
 }
 
-/// Whether the given raw swap meta field type is one of ReservedMetas.
+/// Whether the given raw swap meta field type represents a type that we should
+/// ignore without informing the admin.
 inline bool
 ReservedSwapMetaType(const RawSwapMetaType type)
 {
-	/// A type that we should ignore without informing the admin.
 	enum class ReservedMetas {
 	    STORE_META_STOREURL = 11,
 	    STORE_META_VARY_ID = 12
