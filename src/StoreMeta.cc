@@ -82,7 +82,7 @@ HandleBadRawType(const RawSwapMetaType type)
     // using a type bit to define whether to silently ignore a swap meta field
     // with that type (or even the whole Store entry with that field).
 
-    if (type > SwapMetaTypeMax + 10) {
+    if (type > 10 && type - 10 > SwapMetaTypeMax) {
         debugs(20, DBG_CRITICAL, "ERROR: Malformed cache storage; ignoring swap meta field with an unexpected type: " << int(type));
         return;
     }

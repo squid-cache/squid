@@ -91,7 +91,10 @@ namespace Store {
 using RawSwapMetaType = char;
 
 /// maximum value of a recognized swap meta type
-const RawSwapMetaType SwapMetaTypeMax = 12; // Use "inline constexpr ..." with C++17.
+const int SwapMetaTypeMax = 12; // Use "inline constexpr ..." with C++17.
+
+static_assert(SwapMetaTypeMax <= std::numeric_limits<RawSwapMetaType>::max(),
+              "RawSwapMetaType fits all SwapMetaType values");
 
 /// Store entries with longer swap metadata field values are not swapped out and
 /// are considered invalid when validating being-loaded metadata. This arbitrary
