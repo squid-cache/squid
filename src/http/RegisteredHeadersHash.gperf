@@ -101,6 +101,7 @@ X-Request-URI, Http::HdrType::X_REQUEST_URI, Http::HdrFieldType::ftStr, HdrKind:
 X-Squid-Error, Http::HdrType::X_SQUID_ERROR, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader
 X-Accelerator-Vary, Http::HdrType::HDR_X_ACCELERATOR_VARY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader
 X-Next-Services, Http::HdrType::X_NEXT_SERVICES, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader
+X-Alt-Host, Http::HdrType::X_ALT_HOST, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader
 Surrogate-Capability, Http::HdrType::SURROGATE_CAPABILITY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader
 Surrogate-Control, Http::HdrType::SURROGATE_CONTROL, Http::HdrFieldType::ftPSc, HdrKind::ListHeader|HdrKind::ReplyHeader
 Front-End-Https, Http::HdrType::FRONT_END_HTTPS, Http::HdrFieldType::ftStr, HdrKind::None

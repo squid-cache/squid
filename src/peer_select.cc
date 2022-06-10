@@ -421,25 +421,52 @@ PeerSelector::resolveSelected()
     // To resolve this we must use only the original client destination when going DIRECT
     // on intercepted traffic which failed Host verification
     const HttpRequest *req = request;
-    const bool isIntercepted = !req->flags.redirected &&
+    const bool isIntercepted = !req->flags.redirected_origin &&
                                (req->flags.intercepted || req->flags.interceptTproxy);
     const bool useOriginalDst = Config.onoff.client_dst_passthru || !req->flags.hostVerified;
     const bool choseDirect = fs && fs->code == HIER_DIRECT;
-    if (isIntercepted && useOriginalDst && choseDirect) {
-        // check the client is still around before using any of its details
-        if (req->clientConnectionManager.valid()) {
-            // construct a "result" adding the ORIGINAL_DST to the set instead of DIRECT
-            Comm::ConnectionPointer p = new Comm::Connection();
-            p->remote = req->clientConnectionManager->clientConnection->local;
-            fs->code = ORIGINAL_DST; // fs->code is DIRECT. This fixes the display.
-            handlePath(p, *fs);
+
+    if (choseDirect) {
+        // If this is a direct connection and an alt-host note has been recorded, use it
+	// instead of the real origin server.
+        const char * host = NULL;
+
+        if (request->hasNotes()) {
+            host = request->notes()->findFirst("alt-host");
+        }
+#if USE_ADAPTATION
+        if (! host) {
+            const Adaptation::History::Pointer ah = request->adaptLogHistory();
+            if (ah != NULL) host = ah->allMeta.getStr(Http::HdrType::X_ALT_HOST);
+        }
+#endif
+        if (host) {
+            debugs(44, 2, "Find IP destination for: " << url() << "' via " << host << " (alternative)");
+            fs->code = ALT_DIRECT;
+            Dns::nbgethostbyname(host, this);
+            return;
+	}
+
+        if (isIntercepted && useOriginalDst) {
+            // check the client is still around before using any of its details
+            if (req->clientConnectionManager.valid()) {
+                // construct a "result" adding the ORIGINAL_DST to the set instead of DIRECT
+                Comm::ConnectionPointer p = new Comm::Connection();
+                p->remote = req->clientConnectionManager->clientConnection->local;
+                fs->code = ORIGINAL_DST; // fs->code is DIRECT. This fixes the display.
+                handlePath(p, *fs);
+            }
+
+            // clear the used fs and continue
+            servers = fs->next;
+            delete fs;
+            resolveSelected();
+            return;
         }
 
-        // clear the used fs and continue
-        servers = fs->next;
-        delete fs;
-        resolveSelected();
-        return;
+        // If redirected_origin is set, the peers will be those specified by the
+        // rewritten origin, so update the display to reflect that.
+        if (req->flags.redirected_origin) fs->code = ALT_DIRECT;
     }
 
     if (fs && fs->code == PINNED) {

@@ -1223,6 +1223,10 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
 
                     // update the new request to flag the re-writing was done on it
                     new_request->flags.redirected = true;
+                    if (
+                        (old_request->url.port() != new_request->url.port())
+                        || strcasecmp(old_request->url.host(), new_request->url.host()) != 0
+                   ) new_request->flags.redirected_origin = true;
 
                     // unlink bodypipe from the old request. Not needed there any longer.
                     if (old_request->body_pipe != NULL) {
@@ -1970,8 +1974,13 @@ ClientHttpRequest::handleAdaptedHeader(Http::Message *msg)
 
     if (HttpRequest *new_req = dynamic_cast<HttpRequest*>(msg)) {
         // update the new message to flag whether URL re-writing was done on it
-        if (request->effectiveRequestUri() != new_req->effectiveRequestUri())
+        if (request->effectiveRequestUri() != new_req->effectiveRequestUri()) {
             new_req->flags.redirected = true;
+            if (
+                (request->url.port() != new_req->url.port())
+                || strcasecmp(request->url.host(), new_req->url.host())
+            ) new_req->flags.redirected_origin = true;
+        }
         resetRequest(new_req);
         assert(request->method.id());
     } else if (HttpReply *new_rep = dynamic_cast<HttpReply*>(msg)) {

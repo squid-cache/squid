@@ -40,6 +40,8 @@ public:
     bool refresh = false;
     /** request was redirected by redirectors */
     bool redirected = false;
+    /** request was redirected to a different host or port by redirectors */
+    bool redirected_origin = false;
     /** the requested object needs to be validated. See client_side_reply.cc
      * for further information.
      */

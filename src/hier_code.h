@@ -35,6 +35,7 @@ typedef enum {
     PINNED,
     ORIGINAL_DST,
     STANDBY_POOL,
+    ALT_DIRECT,
     HIER_MAX
 } hier_code;
 

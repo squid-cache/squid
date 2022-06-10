@@ -3,28 +3,28 @@
 /* Computed positions: -k'3,9,$' */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
-&& ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
-&& (')' == 41) && ('*' == 42) && ('+' == 43) && (',' == 44) \
-&& ('-' == 45) && ('.' == 46) && ('/' == 47) && ('0' == 48) \
-&& ('1' == 49) && ('2' == 50) && ('3' == 51) && ('4' == 52) \
-&& ('5' == 53) && ('6' == 54) && ('7' == 55) && ('8' == 56) \
-&& ('9' == 57) && (':' == 58) && (';' == 59) && ('<' == 60) \
-&& ('=' == 61) && ('>' == 62) && ('?' == 63) && ('A' == 65) \
-&& ('B' == 66) && ('C' == 67) && ('D' == 68) && ('E' == 69) \
-&& ('F' == 70) && ('G' == 71) && ('H' == 72) && ('I' == 73) \
-&& ('J' == 74) && ('K' == 75) && ('L' == 76) && ('M' == 77) \
-&& ('N' == 78) && ('O' == 79) && ('P' == 80) && ('Q' == 81) \
-&& ('R' == 82) && ('S' == 83) && ('T' == 84) && ('U' == 85) \
-&& ('V' == 86) && ('W' == 87) && ('X' == 88) && ('Y' == 89) \
-&& ('Z' == 90) && ('[' == 91) && ('\\' == 92) && (']' == 93) \
-&& ('^' == 94) && ('_' == 95) && ('a' == 97) && ('b' == 98) \
-&& ('c' == 99) && ('d' == 100) && ('e' == 101) && ('f' == 102) \
-&& ('g' == 103) && ('h' == 104) && ('i' == 105) && ('j' == 106) \
-&& ('k' == 107) && ('l' == 108) && ('m' == 109) && ('n' == 110) \
-&& ('o' == 111) && ('p' == 112) && ('q' == 113) && ('r' == 114) \
-&& ('s' == 115) && ('t' == 116) && ('u' == 117) && ('v' == 118) \
-&& ('w' == 119) && ('x' == 120) && ('y' == 121) && ('z' == 122) \
-&& ('{' == 123) && ('|' == 124) && ('}' == 125) && ('~' == 126))
+      && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
+      && (')' == 41) && ('*' == 42) && ('+' == 43) && (',' == 44) \
+      && ('-' == 45) && ('.' == 46) && ('/' == 47) && ('0' == 48) \
+      && ('1' == 49) && ('2' == 50) && ('3' == 51) && ('4' == 52) \
+      && ('5' == 53) && ('6' == 54) && ('7' == 55) && ('8' == 56) \
+      && ('9' == 57) && (':' == 58) && (';' == 59) && ('<' == 60) \
+      && ('=' == 61) && ('>' == 62) && ('?' == 63) && ('A' == 65) \
+      && ('B' == 66) && ('C' == 67) && ('D' == 68) && ('E' == 69) \
+      && ('F' == 70) && ('G' == 71) && ('H' == 72) && ('I' == 73) \
+      && ('J' == 74) && ('K' == 75) && ('L' == 76) && ('M' == 77) \
+      && ('N' == 78) && ('O' == 79) && ('P' == 80) && ('Q' == 81) \
+      && ('R' == 82) && ('S' == 83) && ('T' == 84) && ('U' == 85) \
+      && ('V' == 86) && ('W' == 87) && ('X' == 88) && ('Y' == 89) \
+      && ('Z' == 90) && ('[' == 91) && ('\\' == 92) && (']' == 93) \
+      && ('^' == 94) && ('_' == 95) && ('a' == 97) && ('b' == 98) \
+      && ('c' == 99) && ('d' == 100) && ('e' == 101) && ('f' == 102) \
+      && ('g' == 103) && ('h' == 104) && ('i' == 105) && ('j' == 106) \
+      && ('k' == 107) && ('l' == 108) && ('m' == 109) && ('n' == 110) \
+      && ('o' == 111) && ('p' == 112) && ('q' == 113) && ('r' == 114) \
+      && ('s' == 115) && ('t' == 116) && ('u' == 117) && ('v' == 118) \
+      && ('w' == 119) && ('x' == 120) && ('y' == 121) && ('z' == 122) \
+      && ('{' == 123) && ('|' == 124) && ('}' == 125) && ('~' == 126))
 /* The character set is not based on ISO-646.  */
 #error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gperf@gnu.org>."
 #endif
@@ -42,26 +42,26 @@
  */
 #line 24 "RegisteredHeadersHash.gperf"
 class HeaderTableRecord;
-    enum
-{
-    TOTAL_KEYWORDS = 88,
+enum
+  {
+    TOTAL_KEYWORDS = 89,
     MIN_WORD_LENGTH = 2,
     MAX_WORD_LENGTH = 25,
     MIN_HASH_VALUE = 5,
     MAX_HASH_VALUE = 109
-};
+  };
 
 /* maximum key range = 105, duplicates = 0 */
 
 #ifndef GPERF_DOWNCASE
 #define GPERF_DOWNCASE 1
 static unsigned char gperf_downcase[256] =
-{
-    0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,
-    15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,
-    30,  31,  32,  33,  34,  35,  36,  37,  38,  39,  40,  41,  42,  43,  44,
-    45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  58,  59,
-    60,  61,  62,  63,  64,  97,  98,  99, 100, 101, 102, 103, 104, 105, 106,
+  {
+      0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,
+     15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,
+     30,  31,  32,  33,  34,  35,  36,  37,  38,  39,  40,  41,  42,  43,  44,
+     45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  58,  59,
+     60,  61,  62,  63,  64,  97,  98,  99, 100, 101, 102, 103, 104, 105, 106,
     107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121,
     122,  91,  92,  93,  94,  95,  96,  97,  98,  99, 100, 101, 102, 103, 104,
     105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119,
@@ -75,7 +75,7 @@ static unsigned char gperf_downcase[256] =
     225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239,
     240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254,
     255
-};
+  };
 #endif
 
 #ifndef GPERF_CASE_MEMCMP
@@ -83,96 +83,96 @@ static unsigned char gperf_downcase[256] =
 static int
 gperf_case_memcmp (const char *s1, const char *s2, size_t n)
 {
-    for (; n > 0;)
+  for (; n > 0;)
     {
-        unsigned char c1 = gperf_downcase[(unsigned char)*s1++];
-        unsigned char c2 = gperf_downcase[(unsigned char)*s2++];
-        if (c1 == c2)
+      unsigned char c1 = gperf_downcase[(unsigned char)*s1++];
+      unsigned char c2 = gperf_downcase[(unsigned char)*s2++];
+      if (c1 == c2)
         {
-            n--;
-            continue;
+          n--;
+          continue;
         }
-        return (int)c1 - (int)c2;
+      return (int)c1 - (int)c2;
     }
-    return 0;
+  return 0;
 }
 #endif
 
 class HttpHeaderHashTable
 {
 private:
-    static inline unsigned int HttpHeaderHash (const char *str, size_t len);
+  static inline unsigned int HttpHeaderHash (const char *str, size_t len);
 public:
-    static const class HeaderTableRecord *lookup (const char *str, size_t len);
+  static const class HeaderTableRecord *lookup (const char *str, size_t len);
 };
 
 inline unsigned int
 HttpHeaderHashTable::HttpHeaderHash (const char *str, size_t len)
 {
-    static const unsigned char asso_values[] =
+  static const unsigned char asso_values[] =
     {
-        110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
-        110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
-        110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
-        110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
-        110, 110,   0, 110, 110,  13, 110, 110, 110, 110,
-        12, 110, 110,  41, 110, 110, 110, 110,  26, 110,
-        110, 110, 110, 110, 110,  16,  10,  10,  20,   4,
-        10,  47,  50,  62, 110,   0,  38,  30,   1,   2,
-        33,  30,  32,  14,   0,  21,   5,  23,  19,  36,
-        110, 110, 110, 110, 110, 110, 110,  16,  10,  10,
-        20,   4,  10,  47,  50,  62, 110,   0,  38,  30,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110,   0, 110, 110,  13, 110, 110, 110, 110,
+       12, 110, 110,  41, 110, 110, 110, 110,  26, 110,
+      110, 110, 110, 110, 110,  16,  10,  10,  20,   4,
+       10,  47,  50,  62, 110,   0,  38,  30,   1,   2,
+       33,  30,  32,  14,   0,  21,   5,  23,  19,  36,
+      110, 110, 110, 110, 110, 110, 110,  16,  10,  10,
+       20,   4,  10,  47,  50,  62, 110,   0,  38,  30,
         1,   2,  33,  30,  32,  14,   0,  21,   5,  23,
-        19,  36, 110, 110, 110, 110, 110, 110, 110, 110,
-        110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
-        110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
-        110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
-        110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
-        110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
-        110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
-        110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
-        110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
-        110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
-        110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
-        110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
-        110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
-        110, 110, 110, 110, 110, 110
+       19,  36, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110, 110, 110, 110, 110,
+      110, 110, 110, 110, 110, 110
     };
-    unsigned int hval = len;
+  unsigned int hval = len;
 
-    switch (hval)
+  switch (hval)
     {
-    default:
+      default:
         hval += asso_values[static_cast<unsigned char>(str[8])];
-    /* [[fallthrough]] */
-    case 8:
-    case 7:
-    case 6:
-    case 5:
-    case 4:
-    case 3:
+      /*FALLTHROUGH*/
+      case 8:
+      case 7:
+      case 6:
+      case 5:
+      case 4:
+      case 3:
         hval += asso_values[static_cast<unsigned char>(str[2])];
-    /*FALLTHROUGH*/
-    case 2:
+      /*FALLTHROUGH*/
+      case 2:
         break;
     }
-    return hval + asso_values[static_cast<unsigned char>(str[len - 1])];
+  return hval + asso_values[static_cast<unsigned char>(str[len - 1])];
 }
 
 static const unsigned char lengthtable[] =
-{
-    0,  0,  0,  0,  0,  4,  2,  0,  4,  5,  5,  3,  6,  0,
+  {
+     0,  0,  0,  0,  0,  4,  2,  0,  4,  5,  5,  3,  6,  0,
     10, 10,  6, 12,  4,  8, 16,  7, 19, 10, 18,  8,  6, 12,
-    14, 25, 13, 19,  0,  9, 15,  3,  4, 10,  6,  6,  0, 19,
-    8, 11,  7, 15, 10, 16, 13,  7, 13, 15, 12, 13,  7,  7,
+    14, 25, 13, 19,  0,  9, 15,  3,  4, 10,  6,  6, 10, 19,
+     8, 11,  7, 15, 10, 16, 13,  7, 13, 15, 12, 13,  7,  7,
     16, 12,  7, 16, 18, 12, 13, 13,  9, 21,  5,  4, 16,  6,
-    6,  8,  4, 15, 14,  3, 10, 15, 10, 13, 11,  9,  6, 11,
-    0, 11,  7,  0,  0,  0, 13, 17, 20, 17,  0,  0, 17,  0,
+     6,  8,  4, 15, 14,  3, 10, 15, 10, 13, 11,  9,  6, 11,
+     0, 11,  7,  0,  0,  0, 13, 17, 20, 17,  0,  0, 17,  0,
     19,  0,  0,  0, 18, 14,  0,  0, 13, 13,  0, 13
-};
+  };
 
 static const class HeaderTableRecord HttpHeaderDefinitionsTable[] =
-{
+  {
     {""}, {""}, {""}, {""}, {""},
 #line 67 "RegisteredHeadersHash.gperf"
     {"Link", Http::HdrType::LINK, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::EntityHeader},
@@ -235,24 +235,25 @@ static const class HeaderTableRecord HttpHeaderDefinitionsTable[] =
     {"Via", Http::HdrType::VIA, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader},
 #line 56 "RegisteredHeadersHash.gperf"
     {"From", Http::HdrType::FROM, Http::HdrFieldType::ftStr, HdrKind::RequestHeader},
-#line 113 "RegisteredHeadersHash.gperf"
+#line 114 "RegisteredHeadersHash.gperf"
     {"*INVALID*:", Http::HdrType::BAD_HDR, Http::HdrFieldType::ftInvalid, HdrKind::None},
 #line 73 "RegisteredHeadersHash.gperf"
     {"Pragma", Http::HdrType::PRAGMA, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader},
 #line 53 "RegisteredHeadersHash.gperf"
     {"Expect", Http::HdrType::EXPECT, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader},
-    {""},
+#line 104 "RegisteredHeadersHash.gperf"
+    {"X-Alt-Host", Http::HdrType::X_ALT_HOST, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
 #line 41 "RegisteredHeadersHash.gperf"
     {"Content-Disposition", Http::HdrType::CONTENT_DISPOSITION, Http::HdrFieldType::ftStr, HdrKind::None},
 #line 38 "RegisteredHeadersHash.gperf"
     {"CDN-Loop", Http::HdrType::CDN_LOOP, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader},
 #line 83 "RegisteredHeadersHash.gperf"
     {"Retry-After", Http::HdrType::RETRY_AFTER, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
-#line 109 "RegisteredHeadersHash.gperf"
+#line 110 "RegisteredHeadersHash.gperf"
     {"FTP-Pre", Http::HdrType::FTP_PRE, Http::HdrFieldType::ftStr, HdrKind::None},
 #line 29 "RegisteredHeadersHash.gperf"
     {"Accept-Language", Http::HdrType::ACCEPT_LANGUAGE, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader},
-#line 111 "RegisteredHeadersHash.gperf"
+#line 112 "RegisteredHeadersHash.gperf"
     {"FTP-Reason", Http::HdrType::FTP_REASON, Http::HdrFieldType::ftStr, HdrKind::None},
 #line 98 "RegisteredHeadersHash.gperf"
     {"WWW-Authenticate", Http::HdrType::WWW_AUTHENTICATE, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader},
@@ -262,7 +263,7 @@ static const class HeaderTableRecord HttpHeaderDefinitionsTable[] =
     {"Referer", Http::HdrType::REFERER, Http::HdrFieldType::ftStr, HdrKind::RequestHeader},
 #line 47 "RegisteredHeadersHash.gperf"
     {"Content-Range", Http::HdrType::CONTENT_RANGE, Http::HdrFieldType::ftPContRange, HdrKind::EntityHeader},
-#line 106 "RegisteredHeadersHash.gperf"
+#line 107 "RegisteredHeadersHash.gperf"
     {"Front-End-Https", Http::HdrType::FRONT_END_HTTPS, Http::HdrFieldType::ftStr, HdrKind::None},
 #line 37 "RegisteredHeadersHash.gperf"
     {"Cache-Status", Http::HdrType::CACHE_STATUS, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader},
@@ -316,15 +317,15 @@ static const class HeaderTableRecord HttpHeaderDefinitionsTable[] =
     {"Set-Cookie", Http::HdrType::SET_COOKIE, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
 #line 99 "RegisteredHeadersHash.gperf"
     {"X-Forwarded-For", Http::HdrType::X_FORWARDED_FOR, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader},
-#line 110 "RegisteredHeadersHash.gperf"
+#line 111 "RegisteredHeadersHash.gperf"
     {"FTP-Status", Http::HdrType::FTP_STATUS, Http::HdrFieldType::ftInt, HdrKind::None},
 #line 82 "RegisteredHeadersHash.gperf"
     {"Request-Range", Http::HdrType::REQUEST_RANGE, Http::HdrFieldType::ftPRange, HdrKind::None},
-#line 107 "RegisteredHeadersHash.gperf"
+#line 108 "RegisteredHeadersHash.gperf"
     {"FTP-Command", Http::HdrType::FTP_COMMAND, Http::HdrFieldType::ftStr, HdrKind::None},
 #line 55 "RegisteredHeadersHash.gperf"
     {"Forwarded", Http::HdrType::FORWARDED, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader},
-#line 112 "RegisteredHeadersHash.gperf"
+#line 113 "RegisteredHeadersHash.gperf"
     {"Other:", Http::HdrType::OTHER, Http::HdrFieldType::ftStr, HdrKind::EntityHeader},
 #line 46 "RegisteredHeadersHash.gperf"
     {"Content-MD5", Http::HdrType::CONTENT_MD5, Http::HdrFieldType::ftStr, HdrKind::EntityHeader},
@@ -334,11 +335,11 @@ static const class HeaderTableRecord HttpHeaderDefinitionsTable[] =
 #line 97 "RegisteredHeadersHash.gperf"
     {"Warning", Http::HdrType::WARNING, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader},
     {""}, {""}, {""},
-#line 108 "RegisteredHeadersHash.gperf"
+#line 109 "RegisteredHeadersHash.gperf"
     {"FTP-Arguments", Http::HdrType::FTP_ARGUMENTS, Http::HdrFieldType::ftStr, HdrKind::None},
-#line 105 "RegisteredHeadersHash.gperf"
+#line 106 "RegisteredHeadersHash.gperf"
     {"Surrogate-Control", Http::HdrType::SURROGATE_CONTROL, Http::HdrFieldType::ftPSc, HdrKind::ListHeader|HdrKind::ReplyHeader},
-#line 104 "RegisteredHeadersHash.gperf"
+#line 105 "RegisteredHeadersHash.gperf"
     {"Surrogate-Capability", Http::HdrType::SURROGATE_CAPABILITY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader},
 #line 90 "RegisteredHeadersHash.gperf"
     {"Transfer-Encoding", Http::HdrType::TRANSFER_ENCODING, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader|HdrKind::HopByHopHeader},
@@ -361,25 +362,25 @@ static const class HeaderTableRecord HttpHeaderDefinitionsTable[] =
     {""},
 #line 66 "RegisteredHeadersHash.gperf"
     {"Last-Modified", Http::HdrType::LAST_MODIFIED, Http::HdrFieldType::ftDate_1123, HdrKind::EntityHeader}
-};
+  };
 
 const class HeaderTableRecord *
-    HttpHeaderHashTable::lookup (const char *str, size_t len)
+HttpHeaderHashTable::lookup (const char *str, size_t len)
 {
-    if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
+  if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
     {
-        unsigned int key = HttpHeaderHash (str, len);
+      unsigned int key = HttpHeaderHash (str, len);
 
-        if (key <= MAX_HASH_VALUE)
-            if (len == lengthtable[key])
-            {
-                const char *s = HttpHeaderDefinitionsTable[key].name;
+      if (key <= MAX_HASH_VALUE)
+        if (len == lengthtable[key])
+          {
+            const char *s = HttpHeaderDefinitionsTable[key].name;
 
-                if ((((unsigned char)*str ^ (unsigned char)*s) & ~32) == 0 && !gperf_case_memcmp (str, s, len))
-                    return &HttpHeaderDefinitionsTable[key];
-            }
+            if ((((unsigned char)*str ^ (unsigned char)*s) & ~32) == 0 && !gperf_case_memcmp (str, s, len))
+              return &HttpHeaderDefinitionsTable[key];
+          }
     }
-    return 0;
+  return 0;
 }
-#line 114 "RegisteredHeadersHash.gperf"
+#line 115 "RegisteredHeadersHash.gperf"
 

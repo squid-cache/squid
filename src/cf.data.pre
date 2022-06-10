@@ -1018,6 +1018,14 @@ DOC_START
 			Please see url_rewrite_program related documentation
 			for this kv-pair.
 
+	  alt-host=	Squid will connect to the specified origin server,
+			instead of selecting one based upon the original
+			request. This is useful where services offer
+			alternative "virtual IPs" that clients can connect
+			to in order to receive a modified service, such as
+			forcing "Safe Search" functionality on on search
+			engines, etc.
+
 	Any keywords may be sent on any response whether OK, ERR or BH.
 
 	All response keyword values need to be a single token with URL
@@ -9487,6 +9495,12 @@ DOC_START
 
 	To activate a service, use the adaptation_access directive. To group
 	services, use adaptation_service_chain and adaptation_service_set.
+
+	Adaptation services may produce an X-Alt-Host response header to cause
+	Squid to connect to an alternative origin server. This is useful where
+	services offer alternative "virtual IPs" that clients can connect to in
+	order to receive a modified service, such as forcing "Safe Search"
+	functionality on on search engines, etc.
 
 	Service options are separated by white space. ICAP services support
 	the following name=value options:
