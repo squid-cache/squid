@@ -518,9 +518,9 @@ run_ checkMakeNamedErrorDetails || exit 1
 # * authored (in "git log --author" sense) by squidadm,
 # * matching (in "git log --grep" sense) $vettedCommitPhraseRegex set below.
 #
-# A human authoring an official GitHub pull request containing a CONTRIBUTORS
-# change that they want to be treated as vetted, should add a phrase matching
-# $vettedCommitPhraseRegex to the PR description.
+# A human authoring an official GitHub pull request containing a new
+# CONTRIBUTORS version (that they want to be used as a new vetting point)
+# should add a phrase matching $vettedCommitPhraseRegex to the PR description.
 #
 # [1] As defined by the --update-contributors-since script parameter.
 collectAuthors ()
