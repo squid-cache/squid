@@ -27,7 +27,7 @@ shm_portable_segment_name_is_path()
 #elif _SQUID_FREEBSD_
     int jailed = 0;
     size_t len = sizeof(jailed);
-    ::sysctlbyname("security.jail.jailed", &jailed, &len, NULL, 0);
+    ::sysctlbyname("security.jail.jailed", &jailed, &len, nullptr, 0);
     return !jailed;
 #else
     return false;

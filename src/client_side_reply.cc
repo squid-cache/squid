@@ -33,7 +33,6 @@
 #include "refresh.h"
 #include "RequestFlags.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "StrList.h"
 #include "tools.h"
@@ -2140,7 +2139,8 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
      */
 
     if (http->request == NULL) {
-        const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+        const auto connManager = http->getConn();
+        const auto mx = MasterXaction::MakePortful(connManager ? connManager->port : nullptr);
         // XXX: These fake URI parameters shadow the real (or error:...) URI.
         // TODO: Either always set the request earlier and assert here OR use
         // http->uri (converted to Anyp::Uri) to create this catch-all request.

@@ -393,7 +393,7 @@ CREATE OR REPLACE VIEW days_with_infos AS
             SELECT SUM(http_reply_size)
             FROM access_log a1
             WHERE a.date_day = a1.date_day
-        ) * 100                               
+        ) * 100
     )                                     AS most_active_client_t_pc
 
     FROM access_log a

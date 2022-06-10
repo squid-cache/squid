@@ -23,7 +23,6 @@
 #include "RebuildState.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "store_key_md5.h"
 #include "StoreSearchUFS.h"

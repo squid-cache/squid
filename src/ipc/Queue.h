@@ -10,7 +10,7 @@
 #define SQUID_IPC_QUEUE_H
 
 #include "base/InstanceId.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "ipc/mem/FlexibleArray.h"
 #include "ipc/mem/Pointer.h"
 #include "util.h"
@@ -32,6 +32,9 @@ public:
 
     /// whether the reader is waiting for a notification signal
     bool blocked() const { return popBlocked.load(); }
+
+    /// \copydoc popSignal
+    bool signaled() const { return popSignal.load(); }
 
     /// marks the reader as blocked, waiting for a notification signal
     void block() { popBlocked.store(true); }
@@ -169,6 +172,9 @@ public:
 
     /// clears the reader notification received by the local process from the remote process
     void clearReaderSignal(const int remoteProcessId);
+
+    /// clears all reader notifications received by the local process
+    void clearAllReaderSignals();
 
     /// picks a process and calls OneToOneUniQueue::pop() using its queue
     template <class Value> bool pop(int &remoteProcessId, Value &value);
@@ -590,6 +596,12 @@ BaseMultiQueue::stat(std::ostream &os) const
         const auto &queue = outQueue(processId);
         queue.statOut<Value>(os, theLocalProcessId, processId);
     }
+
+    os << "\n";
+
+    const auto &reader = localReader();
+    os << "  kid" << theLocalProcessId << " reader flags: " <<
+       "{ blocked: " << reader.blocked() << ", signaled: " << reader.signaled() << " }\n";
 }
 
 // FewToFewBiQueue

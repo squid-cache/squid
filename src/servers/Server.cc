@@ -11,7 +11,7 @@
 #include "client_side.h"
 #include "comm.h"
 #include "comm/Read.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "error/SysErrorDetail.h"
 #include "fd.h"
 #include "fde.h"

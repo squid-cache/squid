@@ -11,7 +11,7 @@
 
 #include "base/AsyncJob.h"
 #include "base/CbcPointer.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 /**
  \ingroup AsyncJobAPI

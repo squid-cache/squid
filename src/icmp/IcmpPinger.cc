@@ -14,11 +14,10 @@
 
 #if USE_ICMP
 
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "Icmp4.h"
 #include "Icmp6.h"
 #include "IcmpPinger.h"
-#include "SquidTime.h"
 
 #include <cerrno>
 
@@ -130,7 +129,7 @@ IcmpPinger::Open(void)
     }
 
     getCurrentTime();
-    debugs(42, DBG_IMPORTANT, "pinger: Squid socket opened");
+    debugs(42, DBG_IMPORTANT, "Squid socket opened");
 
     /* windows uses a socket stream as a dual-direction channel */
     socket_to_squid = icmp_sock;
@@ -222,7 +221,7 @@ IcmpPinger::SendResult(pingerReplyData &preply, int len)
 
     if (send(socket_to_squid, &preply, len, 0) < 0) {
         int xerrno = errno;
-        debugs(42, DBG_CRITICAL, "FATAL: pinger: send failure: " << xstrerr(xerrno));
+        debugs(42, DBG_CRITICAL, "FATAL: send failure: " << xstrerr(xerrno));
         Close();
         exit(EXIT_FAILURE);
     }

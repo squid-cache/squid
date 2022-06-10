@@ -11,14 +11,6 @@
 
 #include "squid.h"
 #include "dlink.h"
-#include <iostream>
-
-void
-xassert(const char *msg, const char *file, int line)
-{
-    std::cout << "Assertion failed: (" << msg << ") at " << file << ":" << line << std::endl;
-    exit (1);
-}
 
 void
 dlinkAdd(void *data, dlink_node * m, dlink_list * list)

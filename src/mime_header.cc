@@ -9,7 +9,7 @@
 /* DEBUG: section 25    MiME Header Parsing */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "mime_header.h"
 #include "sbuf/SBuf.h"
 

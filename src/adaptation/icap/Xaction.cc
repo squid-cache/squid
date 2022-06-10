@@ -31,7 +31,6 @@
 #include "pconn.h"
 #include "security/PeerConnector.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 
 /// Gives Security::PeerConnector access to Answer in the PeerPoolMgr callback dialer.
 class MyIcapAnswerDialer: public UnaryMemFunT<Adaptation::Icap::Xaction, Security::EncryptorAnswer, Security::EncryptorAnswer&>,
@@ -95,7 +94,7 @@ Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::Serv
 {
     debugs(93,3, typeName << " constructed, this=" << this <<
            " [icapx" << id << ']'); // we should not call virtual status() here
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initAdaptation);
+    const auto mx = MasterXaction::MakePortless<XactionInitiator::initAdaptation>();
     icapRequest = new HttpRequest(mx);
     HTTPMSGLOCK(icapRequest);
     icap_tr_start = current_time;

@@ -12,7 +12,7 @@
 #include "acl/Checklist.h"
 #include "acl/StringData.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 void
 ACLStringData::insert(const char *value)

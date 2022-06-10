@@ -10,7 +10,6 @@
 
 #include "squid.h"
 #include "MemObject.h"
-#include "SquidTime.h"
 #include "Store.h"
 
 /* because LruNode use explicit memory alloc()/freeOne() calls.

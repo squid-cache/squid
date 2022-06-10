@@ -12,7 +12,7 @@
 #include "acl/Checklist.h"
 #include "acl/ProtocolData.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "wordlist.h"
 
 ACLProtocolData::~ACLProtocolData()

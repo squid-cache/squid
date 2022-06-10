@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "adaptation/icap/Client.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 void Adaptation::Icap::InitModule()
 {

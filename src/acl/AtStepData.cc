@@ -12,7 +12,7 @@
 #include "base/EnumIterator.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "sbuf/Stream.h"
 #include "wordlist.h"
 

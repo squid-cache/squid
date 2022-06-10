@@ -11,7 +11,7 @@
 #include <cppunit/TestAssert.h>
 
 #include "anyp/Uri.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "tests/testURL.h"
 #include "unitTestMain.h"
 

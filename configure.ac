@@ -181,26 +181,9 @@ AC_ARG_ENABLE(strict-error-checking,
 ])
 AC_MSG_NOTICE([strict error checking enabled: ${enable_strict_error_checking:=yes}])
 
-AC_MSG_CHECKING(whether to use loadable modules)
-AC_ARG_ENABLE(loadable-modules,
-  AS_HELP_STRING([--disable-loadable-modules],[do not support loadable modules]) , [
-  SQUID_YESNO([$enableval],
-    [Unrecognized argument to --disable-loadable-modules: $enableval])
-])
-AM_CONDITIONAL(ENABLE_LOADABLE_MODULES, test "x${enable_loadable_modules:=yes}" = "xyes")
-AC_MSG_RESULT([$enable_loadable_modules])
-
-if test "x$enable_loadable_modules" = "xyes";
-then
-  AC_DEFINE(USE_LOADABLE_MODULES, 1, [Support Loadable Modules])
-  AC_ENABLE_SHARED
-else
-  AC_DISABLE_SHARED
-fi
-
 # LT_INIT requires libtool v2, might as well state it loud
 LT_PREREQ([2.2])
-LT_INIT([dlopen],[disable-shared])
+LT_INIT([dlopen])
 if ! test "${ac_top_build_prefix}" = "";
 then
 	# LTDL v3-v7 macros assume the autoconf 2.62 variable top_build_prefix is defined
@@ -218,12 +201,10 @@ LT_LIB_DLLOAD
 AC_SUBST(INCLTDL)
 AC_SUBST(LIBLTDL)
 
-if test "x$enable_loadable_modules" = "xyes";
-then
-  # Why is this needed? Should not LT_INIT (or LT_LIB_DLLOAD) from libtool do that?
-  LIBADD_DL=${lt_cv_dlopen_libs}
-  AC_SUBST([LIBADD_DL])
-fi
+AC_MSG_CHECKING(whether to use loadable modules)
+AS_IF([test "x${enable_shared:=yes}" = "xyes"],[AC_DEFINE(USE_LOADABLE_MODULES,1,[Support Loadable Modules])])
+AM_CONDITIONAL(ENABLE_LOADABLE_MODULES, test "x${enable_shared:=yes}" = "xyes")
+AC_MSG_RESULT([$enable_shared])
 
 SQUID_CC_GUESS_VARIANT
 SQUID_CC_GUESS_OPTIONS
@@ -272,7 +253,7 @@ esac
 dnl Substitutions
 AC_DEFINE_UNQUOTED(CONFIG_HOST_TYPE, "$host",[Host type from configure])
 
-AC_DEFINE_UNQUOTED(SQUID_CONFIGURE_OPTIONS, "$ac_configure_args", 
+AC_DEFINE_UNQUOTED(SQUID_CONFIGURE_OPTIONS, "$ac_configure_args",
                        [configure command line used to configure Squid])
 
 CACHE_EFFECTIVE_USER="nobody"
@@ -401,7 +382,7 @@ fi
 
 AC_ARG_ENABLE(debug-cbdata,
   AS_HELP_STRING([--enable-debug-cbdata],
-      [Provide some debug information in cbdata]), [ 
+      [Provide some debug information in cbdata]), [
 SQUID_YESNO([$enableval],
     [unrecognized argument to --enable-debug-cbdata: $enableval])
 ])
@@ -428,7 +409,7 @@ AC_MSG_NOTICE([xmalloc stats display: $enable_xmalloc_statistics])
 squid_opt_aufs_threads=""
 AC_ARG_WITH(aufs-threads,
   AS_HELP_STRING([--with-aufs-threads=N_THREADS],
-   [Tune the number of worker threads for the aufs object store.]), [ 
+   [Tune the number of worker threads for the aufs object store.]), [
 case $withval in
   [[0-9]]*)
     squid_opt_aufs_threads=$withval
@@ -499,7 +480,7 @@ AC_ARG_ENABLE(disk-io,
      Set without a value or omitted, all available modules will be built.
      See src/DiskIO for a list of available modules, or
      Programmers Guide section on DiskIO
-     for details on how to build your custom disk module]), [ 
+     for details on how to build your custom disk module]), [
 case $enableval in
   yes)
     ${TRUE}
@@ -679,7 +660,7 @@ for module in $squid_disk_module_candidates none; do
               SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT -lpthread"
               SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT -lpthread"
               AC_SEARCH_LIBS([pthread_create],[pthread thread],[
-                LIBPTHREADS="" #in LIBS 
+                LIBPTHREADS="" #in LIBS
               ],[
                 AC_MSG_NOTICE(pthread library required but cannot be found.)
                 squid_opt_use_diskthreads="no"
@@ -1026,9 +1007,9 @@ dnl Perform configuration consistency checks for eCAP
 if test "x$squid_opt_use_ecap" != "xno";
 then
   dnl eCAP support requires loadable modules, which are enabled by default
-  if test "x$enable_loadable_modules" != "xyes"
+  if test "x$enable_shared" != "xyes"
   then
-    AC_MSG_ERROR([eCAP support requires loadable modules. Please do not use --disable-loadable-modules with --enable-ecap.])
+    AC_MSG_ERROR([eCAP support requires loadable modules. Please do not use --disable-shared with --enable-ecap.])
   fi
 
   if test -n "$PKG_CONFIG"; then
@@ -1088,7 +1069,7 @@ AC_MSG_NOTICE([Web Cache Coordination Protocol enabled: $enable_wccp])
 test "x$squid_host_os" = "xmingw" && enable_wccpv2=no
 AC_ARG_ENABLE(wccpv2,
   AS_HELP_STRING([--disable-wccpv2],
-                 [Disable Web Cache Coordination V2 Protocol]), [ 
+                 [Disable Web Cache Coordination V2 Protocol]), [
 SQUID_YESNO([$enableval],
             [unrecognized argument to --disable-wccpv2: $enableval])
 ])
@@ -1097,13 +1078,13 @@ SQUID_DEFINE_BOOL(USE_WCCPv2,${enable_wccpv2:=yes},
 AC_MSG_NOTICE([Web Cache Coordination V2 Protocol enabled: $enable_wccpv2])
 
 AC_ARG_ENABLE(kill-parent-hack,
-  AS_HELP_STRING([--enable-kill-parent-hack],[Kill parent on shutdown]), [ 
+  AS_HELP_STRING([--enable-kill-parent-hack],[Kill parent on shutdown]), [
 SQUID_YESNO([$enableval],
             [unrecognized argument to --enable-kill-parent-hack: $enableval])
 ])
 SQUID_DEFINE_BOOL(KILL_PARENT_OPT,${enable_kill_parent_hack:=no},
-                   [A dangerous feature which causes Squid to kill its parent 
-                    process (presumably the RunCache script) upon receipt 
+                   [A dangerous feature which causes Squid to kill its parent
+                    process (presumably the RunCache script) upon receipt
                     of SIGTERM or SIGINT. Deprecated, Use with caution.])
 AC_MSG_NOTICE([Kill parent on shutdown hack enabled: $enable_kill_parent_hack])
 
@@ -1175,7 +1156,7 @@ include <windows.h>
   )
   AC_CHECK_HEADERS( \
     net/if_arp.h \
-    net/route.h, 
+    net/route.h,
   [], [], [[
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -1487,14 +1468,14 @@ if test "x$with_mit_krb5" != "xno" -a "x$with_solaris_krb5" != "xyes"; then
   if test "x$LIB_KRB5_LIBS" != "x"; then
     if test "x$with_apple_krb5" = "xyes" ; then
       AC_DEFINE(USE_APPLE_KRB5,1,[Apple Kerberos support is available])
-      KRB5_FLAVOUR="Apple" 
+      KRB5_FLAVOUR="Apple"
     else
       AC_DEFINE(USE_MIT_KRB5,1,[MIT Kerberos support is available])
-      KRB5_FLAVOUR="MIT" 
+      KRB5_FLAVOUR="MIT"
     fi
     KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
     KRB5INCS="$LIB_KRB5_CFLAGS"
-    
+
     # check for other specific broken implementations
     CXXFLAGS="$CXXFLAGS $KRB5INCS"
     LIBS="$LIBS $KRB5LIBS"
@@ -1572,8 +1553,8 @@ if test "x$with_solaris_krb5" = "xyes" -a "x$KRB5LIBS" = "x"; then
     KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
     KRB5INCS="$LIB_KRB5_CFLAGS"
     AC_DEFINE(USE_SOLARIS_KRB5,1,[Solaris Kerberos support is available])
-    KRB5_FLAVOUR="Solaris" 
-    
+    KRB5_FLAVOUR="Solaris"
+
     # check for other specific broken implementations
     CXXFLAGS="$CXXFLAGS $KRB5INCS"
     LIBS="$LIBS $KRB5LIBS"
@@ -1727,8 +1708,8 @@ if test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"; then
     KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
     KRB5INCS="$LIB_KRB5_CFLAGS"
     AC_DEFINE(USE_HEIMDAL_KRB5,1,[Heimdal Kerberos support is available])
-    KRB5_FLAVOUR="Heimdal" 
-    
+    KRB5_FLAVOUR="Heimdal"
+
     # check for other specific broken implementations
     CXXFLAGS="$CXXFLAGS $KRB5INCS"
     LIBS="$LIBS $KRB5LIBS"
@@ -1777,7 +1758,7 @@ if test "x$with_gnugss" != "xno" -a "x$KRB5LIBS" = "x"; then
     KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
     KRB5INCS="$LIB_KRB5_CFLAGS"
     AC_DEFINE(USE_GNUGSS,1,[GNU Kerberos support is available])
-    KRB5_FLAVOUR="GNU GSS" 
+    KRB5_FLAVOUR="GNU GSS"
 
     # check for other specific broken implementations
     CXXFLAGS="$CXXFLAGS $KRB5INCS"
@@ -1873,8 +1854,8 @@ case "$squid_host_os" in
 
                         return 0;
                     }
-		]])], 
-		[ AC_DEFINE(HAVE_LDAP, 1, [LDAP support]) 
+		]])],
+		[ AC_DEFINE(HAVE_LDAP, 1, [LDAP support])
 		  AC_MSG_RESULT(yes) ],
 		[ AC_MSG_RESULT(no) ],
 		[ AC_MSG_RESULT(cross-compiler cant tell) ])
@@ -1894,8 +1875,8 @@ case "$squid_host_os" in
                     {
                         return strcmp(LDAP_VENDOR_NAME,"OpenLDAP");
                     }
-		]])], 
-		[ AC_DEFINE(HAVE_OPENLDAP, 1, [OpenLDAP support]) 
+		]])],
+		[ AC_DEFINE(HAVE_OPENLDAP, 1, [OpenLDAP support])
 		  AC_MSG_RESULT(yes) ],
 		[ AC_MSG_RESULT(no) ],
 		[ AC_MSG_RESULT(cross-compiler cant tell) ])
@@ -1911,7 +1892,7 @@ case "$squid_host_os" in
                     {
                         return strcmp(LDAP_VENDOR_NAME,"Sun Microsystems Inc.");
                     }
-		]])], 
+		]])],
 		[ AC_DEFINE(HAVE_SUN_LDAP_SDK, 1, [Sun LDAP SDK support])
 		  AC_MSG_RESULT(yes) ],
 		[ AC_MSG_RESULT(no) ],
@@ -1930,7 +1911,7 @@ case "$squid_host_os" in
                     {
                         return strcmp(LDAP_VENDOR_NAME,"mozilla.org");
                     }
-		]])], 
+		]])],
 		[ AC_DEFINE(HAVE_MOZILLA_LDAP_SDK, 1, [Mozilla LDAP SDK support])
 		  AC_MSG_RESULT(yes) ],
 		[ AC_MSG_RESULT(no)],
@@ -2323,7 +2304,7 @@ dnl UNIX Build environment
 dnl AS_HELP_STRING is not suited here because it cannot to specify newlines
 AC_ARG_WITH(build-environment,
  AS_HELP_STRING([--with-build-environment=model],
-     [The build environment to use. Normally one of 
+     [The build environment to use. Normally one of
       POSIX_V6_ILP32_OFF32 (32 bits),
       POSIX_V6_ILP32_OFFBIG (32 bits with large file support),
       POSIX_V6_LP64_OFF64 (64 bits),
@@ -2701,6 +2682,7 @@ AC_CHECK_HEADERS( \
   netinet/tcp.h \
   paths.h \
   poll.h \
+  priv.h \
   pwd.h \
   regex.h \
   sched.h \
@@ -2718,6 +2700,7 @@ AC_CHECK_HEADERS( \
   sys/ipc.cc \
   sys/param.h \
   sys/prctl.h \
+  sys/procctl.h \
   sys/md5.h \
   sys/mman.h \
   sys/msg.h \
@@ -2799,7 +2782,7 @@ case "$squid_host_os" in
     ac_cv_func_getrusage='yes'
     AC_MSG_NOTICE([Using own rusage on Windows.])
     ;;
-  *)      
+  *)
     AC_CHECK_TYPE(struct rusage,AC_DEFINE(HAVE_STRUCT_RUSAGE,1,[The system provides struct rusage]),,[
 #if HAVE_SYS_TIME_H
 #include <sys/time.h>
@@ -2948,7 +2931,6 @@ AC_SEARCH_LIBS([res_init],[resolv])
 AC_SEARCH_LIBS([__res_search],[resolv])
 AC_SEARCH_LIBS([bind],[socket])
 AC_SEARCH_LIBS([opcom_stack_trace],[opcom_stack])
-AC_SEARCH_LIBS([strlcpy], [bsd])
 AC_SEARCH_LIBS([yp_match], [nsl nss_nis nss_nisplus])
 dnl Check for Winsock only on MinGW, on Cygwin we must use emulated BSD socket API
 if test "x$squid_host_os" = "xmingw" ; then
@@ -2998,9 +2980,8 @@ case "$squid_host_os" in
     AC_MSG_NOTICE([Use MSVCRT for math functions.])
     ;;
   *)
-    dnl rint() and log() are only used in old C code for now.
+    dnl log() are only used in old C code for now.
     AC_LANG_PUSH([C])
-    AC_SEARCH_LIBS([rint],[m])
     AC_SEARCH_LIBS([log],[m])
     AC_LANG_POP([C])
     ;;
@@ -3009,7 +2990,7 @@ esac
 dnl --with-maxfd present for compatibility with Squid-2.
 dnl undocumented in ./configure --help  to encourage using the Squid-3 directive
 AC_ARG_WITH(maxfd,,
-[ 
+[
   case ${withval} in
     [[0-9]]*)
       squid_filedescriptors_num=$withval
@@ -3024,7 +3005,7 @@ AC_ARG_WITH(maxfd,,
 AC_ARG_WITH(filedescriptors,
   AS_HELP_STRING([--with-filedescriptors=NUMBER],
                  [Force squid to support NUMBER filedescriptors]),
-[ 
+[
   case ${withval} in
     [[0-9]]*)
       squid_filedescriptors_num=$withval
@@ -3055,16 +3036,6 @@ fi
 SQUID_CHECK_SS_LEN_IN_SOCKADDR_STORAGE
 SQUID_CHECK_SIN_LEN_IN_SOCKADDR_IN
 
-
-dnl -lintl is needed on SCO version 3.2v4.2 for strftime()
-dnl Robert Side <rside@aiinc.bc.ca>
-dnl Mon, 18 Jan 1999 17:48:00 GMT
-case "$host" in
-	*-pc-sco3.2*)
-		AC_CHECK_LIB(intl, strftime)
-		;;
-esac
-
 dnl System-specific library modifications
 dnl
 AH_TEMPLATE(GETTIMEOFDAY_NO_TZP,[If gettimeofday is known to take only one argument])
@@ -3082,16 +3053,8 @@ case "$host" in
     AC_MSG_NOTICE([Removing -lnsl for IRIX...])
     LIBS=`echo $LIBS | sed -e s/-lnsl//`
     ac_cv_lib_nsl_main=no
-    AC_MSG_NOTICE([Removing -lbsd for IRIX...])
-    LIBS=`echo $LIBS | sed -e s/-lbsd//`
   ;;
-dnl From: c0032033@ws.rz.tu-bs.de (Joerg Schumacher)
-dnl Date: Thu, 17 Oct 1996 04:09:30 +0200
-dnl Please change your configure script.  AIX doesn't need -lbsd.
   *-ibm-aix*)
-    AC_MSG_NOTICE([Removing -lbsd for AIX...])
-    LIBS=`echo $LIBS | sed -e s/-lbsd//`
-
     SQUID_CC_REQUIRE_ARGUMENT([ac_cv_require_rtti],[-rtti],[[
 #include <assert.h>
 #ifndef NULL
@@ -3154,12 +3117,6 @@ if test "x$ac_cv_func_poll" = "x" ; then
       AC_MSG_NOTICE([disabling poll for $host...])
       ac_cv_func_poll='no'
       ;;
-    [*-pc-sco3.2*])
-      # Robert Side <rside@aiinc.bc.ca>
-      # Mon, 18 Jan 1999 17:48:00 GMT
-      AC_MSG_NOTICE([disabling poll for $host...])
-      ac_cv_func_poll='no'
-      ;;
   esac
 fi
 
@@ -3187,6 +3144,7 @@ AC_CHECK_FUNCS(\
 	mstats \
 	poll \
 	prctl \
+	procctl \
 	pthread_attr_setschedparam \
 	pthread_attr_setscope \
 	pthread_setschedparam \
@@ -3203,6 +3161,7 @@ AC_CHECK_FUNCS(\
 	select \
 	seteuid \
 	setgroups \
+	setpflags \
 	setpgrp \
 	setsid \
 	sigaction \
@@ -3478,10 +3437,10 @@ fi
 AC_CHECK_LIB(regex, regexec, [REGEXLIB="-lregex"],[REGEXLIB=''])
 AC_ARG_ENABLE(gnuregex,
   AS_HELP_STRING([--enable-gnuregex],
-                 [Compile GNUregex.  Unless you have reason to use 
+                 [Compile GNUregex.  Unless you have reason to use
                  this option, you should not enable it.
-                 This library file is usually only required on Windows and 
-                 very old Unix boxes which do not have their own regex 
+                 This library file is usually only required on Windows and
+                 very old Unix boxes which do not have their own regex
                  library built in.]), [
 SQUID_YESNO([$enableval],[unrecognized argument to --enable-gnuregex: $enableval])
 ])
@@ -3541,7 +3500,7 @@ fi
 dnl Squid will not usually attempt to translate templates when building
 AC_ARG_ENABLE(translation,
  AS_HELP_STRING([--enable-translation],[Generate the localized error page templates and manuals.
-		 Which can also be downloaded from http://www.squid-cache.org/Versions/langpack/.]), [ 
+		 Which can also be downloaded from http://www.squid-cache.org/Versions/langpack/.]), [
   SQUID_YESNO([$enableval],
      [unrecognized argument to --enable-translation: $enableval])
 ])
@@ -3615,7 +3574,7 @@ AC_MSG_NOTICE([BUILD EXTRA C++ FLAGS: $SQUID_CXXFLAGS])
 AC_MSG_NOTICE([BUILD Tools C++ FLAGS: $BUILDCXXFLAGS])
 
 dnl Clean up after OSF/1 core dump bug
-rm -f core 
+rm -f core
 
 AC_CONFIG_FILES([
 	Makefile
@@ -3684,6 +3643,7 @@ AC_CONFIG_FILES([
 	src/base/Makefile
 	src/clients/Makefile
 	src/comm/Makefile
+	src/debug/Makefile
 	src/dns/Makefile
 	src/DiskIO/Makefile
 	src/DiskIO/AIO/Makefile
@@ -3728,6 +3688,7 @@ AC_CONFIG_FILES([
 	src/store/Makefile
 	src/store/id_rewriters/Makefile
 	src/store/id_rewriters/file/Makefile
+	src/time/Makefile
 	test-suite/Makefile
 	tools/Makefile
 	tools/apparmor/Makefile

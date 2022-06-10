@@ -69,7 +69,7 @@ struct CacheDir {
 typedef std::vector<CacheDir> CacheDirVector;
 
 int
-readConfigFile( CacheDirVector& cachedir, 
+readConfigFile( CacheDirVector& cachedir,
 		const char* fn,
 		FILE* debug = 0 );
   // purpose: read squid.conf file and extract cache_dir entries

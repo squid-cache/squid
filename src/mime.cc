@@ -9,7 +9,7 @@
 /* DEBUG: section 25    MIME Parsing and Internal Icons */
 
 #include "squid.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "fde.h"
 #include "fs_io.h"
 #include "globals.h"
@@ -400,7 +400,7 @@ MimeIcon::load()
 
     /* fill `e` with a canned 2xx response object */
 
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initIcon);
+    const auto mx = MasterXaction::MakePortless<XactionInitiator::initIcon>();
     HttpRequestPointer r(HttpRequest::FromUrlXXX(url_, mx));
     if (!r)
         fatalf("mimeLoadIcon: cannot parse internal URL: %s", url_);

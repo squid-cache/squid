@@ -15,7 +15,7 @@ AC_DEFUN([SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H], [
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <krb5.h>
 int i;
-]])], [ squid_cv_broken_krb5_h=no ], [ 
+]])], [ squid_cv_broken_krb5_h=no ], [
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #if defined(__cplusplus)
 #define KRB5INT_BEGIN_DECLS     extern "C" {
@@ -246,7 +246,7 @@ gss_OID gss_mech_spnego = &_gss_mech_spnego;
 
  return 1;
 }
-  ]])],  
+  ]])],
   [ squid_cv_have_spnego=yes ], [ squid_cv_have_spnego=no ],[:])])
 ])
 

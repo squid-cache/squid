@@ -9,12 +9,11 @@
 /* DEBUG: section 20    Store Rebuild Routines */
 
 #include "squid.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "event.h"
 #include "globals.h"
 #include "md5.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "store/Disk.h"
@@ -22,8 +21,7 @@
 #include "store_key_md5.h"
 #include "store_rebuild.h"
 #include "StoreSearch.h"
-// for tvSubDsec() which should be in SquidTime.h
-#include "util.h"
+#include "time/gadgets.h"
 
 #include <cerrno>
 

@@ -138,7 +138,7 @@ X::saidFubar()
 
 \par	Simple functions
 	do not exactly need a detailed description of their operation.
-	The \ref PARAM and \ref RETVAL 
+	The \ref PARAM and \ref RETVAL
 	should be enough for any developer to understand the function.
 
 \par	Long or Complex Functions

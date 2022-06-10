@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 5.4 release notes</title>
+<title>Squid 5.6 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-5.4.
+<p>The Squid Team are pleased to announce the release of Squid-5.6.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v5/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -252,6 +252,12 @@ This section gives a thorough account of those changes in three categories:
 	<p>New code <em>A</em> to display Squid listening IP address the client
 	   TCP connection was connected to.
 
+	<tag>esi_parser</tag>
+	<p>Squid-4 removal of the custom parser introduced a bug which caused
+	   the default ESI parser library to be unpredictable. Squid-5.5 release
+	   restores the documented default of libxml2 as most preferred, with
+	   libexpat as alternative.
+
 	<tag>http_port</tag>
 	<p>New <em>worker-queues</em> option to have TCP stack maintain dedicated
 	   listening queue for each worker in SMP.
@@ -261,6 +267,9 @@ This section gives a thorough account of those changes in three categories:
 	   listening queue for each worker in SMP.
 	<p>New <em>CONDITIONAL_AUTH</em> flag for <em>sslflags=</em> option to
 	   request client certificate(s) but not reject clients without any.
+	<p>Squid-5.5 will no longer use <em>tls-clientca=</em> certificates
+	   as possible intermediary CA for the server CA certificate chain when
+	   OpenSSL library supports <em>SSL_MODE_NO_AUTO_CHAIN</em> mode.
 
 	<tag>logformat</tag>
 	<p>New <em>ssl::&lt;cert</em> macro code to display received server X.509

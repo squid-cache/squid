@@ -15,7 +15,7 @@
 #include "acl/Eui64.h"
 #include "acl/FilledChecklist.h"
 #include "cache_cf.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "eui/Eui64.h"
 #include "globals.h"
 #include "ip/Address.h"

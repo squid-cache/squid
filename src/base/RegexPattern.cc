@@ -9,7 +9,7 @@
 #include "squid.h"
 #include "base/RegexPattern.h"
 #include "base/TextException.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "sbuf/Stream.h"
 
 #include <iostream>

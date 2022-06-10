@@ -19,7 +19,6 @@
 #include "mgr/Command.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
-#include "SquidTime.h"
 #include "Store.h"
 
 Mgr::Action::Action(const Command::Pointer &aCmd): cmd(aCmd)

@@ -21,7 +21,7 @@
 #include "base/RegexPattern.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "sbuf/Algorithms.h"
 #include "sbuf/List.h"
 #include "sbuf/Stream.h"
@@ -209,14 +209,7 @@ compileUnoptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl, cons
         } else if (configurationLineWord == plus_i) {
             flags &= ~REG_ICASE;
         } else {
-            try {
-                compileRE(curlist, configurationLineWord, flags);
-            } catch (...) {
-                // TODO: Make these configuration failures fatal (by default).
-                debugs(28, DBG_CRITICAL, "ERROR: Skipping regular expression: '" << configurationLineWord << "'" <<
-                       Debug::Extra << "configuration: " << cfg_filename << " line " << config_lineno << ": " << config_input_line <<
-                       Debug::Extra << "regex compilation failure: " << CurrentException);
-            }
+            compileRE(curlist, configurationLineWord, flags);
         }
     }
 }
@@ -233,13 +226,8 @@ ACLRegexData::parse()
     SBufList sl;
     while (char *t = ConfigParser::RegexStrtokFile()) {
         const char *clean = removeUnnecessaryWildcards(t);
-        if (strlen(clean) > BUFSIZ-1) {
-            debugs(28, DBG_CRITICAL, cfg_filename << " line " << config_lineno << ": " << config_input_line);
-            debugs(28, DBG_CRITICAL, "ERROR: Skipping regular expression. Larger than " << BUFSIZ-1 << " characters: '" << clean << "'");
-        } else {
-            debugs(28, 3, "buffering RE '" << clean << "'");
-            sl.emplace_back(clean);
-        }
+        debugs(28, 3, "buffering RE '" << clean << "'");
+        sl.emplace_back(clean);
     }
 
     try {

@@ -44,7 +44,7 @@
 	For instance:
 
 \par	Dynamically defined pool arrangements.
-	For instance an aggregate (class 1) combined with the per-class-C-net tracking of a 
+	For instance an aggregate (class 1) combined with the per-class-C-net tracking of a
 	class 3 pool, without the individual host tracking. This differs
 	from a class 3 pool with -1/-1 in the host bucket, because no memory
 	or cpu would be used on hosts, whereas with a class 3 pool, they are

@@ -10,7 +10,7 @@
 #define SQUID_INCLUDE_UNITTESTMAIN_H
 
 #if ENABLE_DEBUG_SECTION
-#include "Debug.h"
+#include "debug/Stream.h"
 #endif /* ENABLE_DEBUG_SECTION */
 
 #include <cppunit/BriefTestProgressListener.h>

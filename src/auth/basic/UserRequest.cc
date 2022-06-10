@@ -12,14 +12,13 @@
 #include "auth/basic/UserRequest.h"
 #include "auth/QueueNode.h"
 #include "auth/State.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "format/Format.h"
 #include "helper.h"
 #include "helper/Reply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "rfc1738.h"
-#include "SquidTime.h"
 
 #if !defined(HELPER_INPUT_BUFFER)
 #define HELPER_INPUT_BUFFER  8192

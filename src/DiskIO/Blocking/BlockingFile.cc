@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "BlockingFile.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "defines.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"

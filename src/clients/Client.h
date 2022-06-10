@@ -113,6 +113,10 @@ protected:
     /// whether we may receive more virgin response body bytes
     virtual bool mayReadVirginReplyBody() const = 0;
 
+    /// Called when a previously delayed dataConnection() read may be possible.
+    /// \sa delayRead()
+    virtual void noteDelayAwareReadChance() = 0;
+
     /// Entry-dependent callbacks use this check to quit if the entry went bad
     bool abortOnBadEntry(const char *abortReason);
 
@@ -159,6 +163,10 @@ protected:
     size_t calcBufferSpaceToReserve(const size_t space, const size_t wantSpace) const;
 
     void adjustBodyBytesRead(const int64_t delta);
+
+    /// Defer reading until it is likely to become possible.
+    /// Eventually, noteDelayAwareReadChance() will be called.
+    void delayRead();
 
     // These should be private
     int64_t currentOffset = 0;  /**< Our current offset in the StoreEntry */

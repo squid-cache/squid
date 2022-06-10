@@ -19,7 +19,7 @@
 #endif
 
 #include "base64.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "peer_proxy_negotiate_auth.h"
 
 #ifdef __cplusplus

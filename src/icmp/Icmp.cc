@@ -9,9 +9,9 @@
 /* DEBUG: section 37    ICMP Routines */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "Icmp.h"
-#include "SquidTime.h"
+#include "time/gadgets.h"
 
 Icmp::Icmp()
 {

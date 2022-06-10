@@ -12,7 +12,7 @@
 #include "acl/NoteData.h"
 #include "acl/StringData.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "sbuf/StringConvert.h"
 #include "wordlist.h"
 

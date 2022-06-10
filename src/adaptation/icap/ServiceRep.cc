@@ -18,13 +18,12 @@
 #include "base/TextException.h"
 #include "comm/Connection.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "fde.h"
 #include "globals.h"
 #include "HttpReply.h"
 #include "ip/tools.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 
 #define DEFAULT_ICAP_PORT   1344
 #define DEFAULT_ICAPS_PORT 11344

@@ -16,7 +16,7 @@
 #include "CachePeer.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "event.h"
 #include "FwdState.h"
 #include "globals.h"
@@ -40,7 +40,6 @@
 #include "RequestFlags.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
-#include "SquidTime.h"
 #include "stat.h"
 #include "Store.h"
 #include "store_key_md5.h"
@@ -1419,7 +1418,7 @@ peerCountMcastPeersCreateAndSend(CachePeer * const p)
     snprintf(url, MAX_URL, "http://");
     p->in_addr.toUrl(url+7, MAX_URL -8 );
     strcat(url, "/");
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initPeerMcast);
+    const auto mx = MasterXaction::MakePortless<XactionInitiator::initPeerMcast>();
     auto *req = HttpRequest::FromUrlXXX(url, mx);
     assert(req != nullptr);
     const AccessLogEntry::Pointer ale = new AccessLogEntry;

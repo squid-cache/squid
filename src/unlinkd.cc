@@ -17,7 +17,6 @@
 #include "globals.h"
 #include "SquidConfig.h"
 #include "SquidIpc.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "store/Disk.h"
 #include "tools.h"

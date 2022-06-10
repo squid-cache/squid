@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "md5.h"
 #include "StoreSwapLogData.h"
 #include "swap_log_op.h"

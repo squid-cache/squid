@@ -143,7 +143,7 @@ inet_pton4(const char *src, u_char *dst)
     while ((ch = *src++) != '\0') {
         const char *pch;
 
-        if ((pch = strchr(digits, ch)) != NULL) {
+        if ((pch = strchr(digits, ch))) {
             u_int nw = *tp * 10 + (pch - digits);
 
             if (saw_digit && *tp == 0)
@@ -195,7 +195,7 @@ inet_pton6(const char *src, u_char *dst)
 
     memset((tp = tmp), '\0', NS_IN6ADDRSZ);
     endp = tp + NS_IN6ADDRSZ;
-    colonp = NULL;
+    colonp = nullptr;
     /* Leading :: requires some special handling. */
     if (*src == ':')
         if (*++src != ':')
@@ -206,9 +206,9 @@ inet_pton6(const char *src, u_char *dst)
     while ((ch = *src++) != '\0') {
         const char *pch;
 
-        if ((pch = strchr((xdigits = xdigits_l), ch)) == NULL)
+        if (!(pch = strchr((xdigits = xdigits_l), ch)))
             pch = strchr((xdigits = xdigits_u), ch);
-        if (pch != NULL) {
+        if (pch) {
             val <<= 4;
             val |= (pch - xdigits);
             if (++seen_xdigits > 4)
@@ -247,7 +247,7 @@ inet_pton6(const char *src, u_char *dst)
         *tp++ = (u_char) (val >> 8) & 0xff;
         *tp++ = (u_char) val & 0xff;
     }
-    if (colonp != NULL) {
+    if (colonp) {
         /*
          * Since some memmove()'s erroneously fail to handle
          * overlapping regions, we'll do the shift by hand.

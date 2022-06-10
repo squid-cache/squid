@@ -67,9 +67,7 @@ libmiscutil_la_SOURCES = \
 	Splay.cc \
 	getfullhostname.c \
 	heap.c \
-	iso3307.c \
 	radix.c \
-	rfc1123.c \
 	stub_memaccount.c \
 	util.c \
 	xusleep.c

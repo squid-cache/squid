@@ -36,6 +36,8 @@ public:
     AccessLogEntry::Pointer al; ///< info for the future access.log entry
 };
 
+std::ostream &operator <<(std::ostream &, const ServiceFilter &);
+
 } // namespace Adaptation
 
 #endif /* SQUID_ADAPTATION__SERVICE_FILTER_H */

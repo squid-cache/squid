@@ -14,13 +14,13 @@
 /* support.cc says this is needed */
 #if USE_OPENSSL
 
+#include "base/Raw.h"
 #include "comm.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "ip/Address.h"
 #include "parser/BinaryTokenizer.h"
-#include "SquidTime.h"
 #include "ssl/bio.h"
 
 #if _SQUID_WINDOWS_

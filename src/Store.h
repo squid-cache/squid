@@ -9,11 +9,11 @@
 #ifndef SQUID_STORE_H
 #define SQUID_STORE_H
 
+#include "base/DelayedAsyncCalls.h"
 #include "base/Packable.h"
 #include "base/Range.h"
 #include "base/RefCount.h"
 #include "comm/forward.h"
-#include "CommRead.h"
 #include "hash.h"
 #include "http/forward.h"
 #include "http/RequestMethod.h"
@@ -42,7 +42,6 @@ class StoreEntry : public hash_link, public Packable
 {
 
 public:
-    static DeferredRead::DeferrableRead DeferReader;
     bool checkDeferRead(int fd) const;
 
     const char *getMD5Text() const;
@@ -170,8 +169,6 @@ public:
     void unregisterAbortCallback(const char *reason);
     void destroyMemObject();
     int checkTooSmall();
-
-    void delayAwareRead(const Comm::ConnectionPointer &conn, char *buf, int len, AsyncCall::Pointer callback);
 
     void setNoDelay (bool const);
     void lastModified(const time_t when) { lastModified_ = when; }

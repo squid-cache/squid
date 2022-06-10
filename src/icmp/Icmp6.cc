@@ -14,10 +14,10 @@
 
 #if USE_ICMP
 
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "Icmp6.h"
 #include "IcmpPinger.h"
-#include "SquidTime.h"
+#include "time/gadgets.h"
 
 // Some system headers are only neeed internally here.
 // They should not be included via the header.
@@ -106,7 +106,7 @@ Icmp6::Open(void)
     }
 
     icmp_ident = getpid() & 0xffff;
-    debugs(42, DBG_IMPORTANT, "pinger: ICMPv6 socket opened");
+    debugs(42, DBG_IMPORTANT, "ICMPv6 socket opened");
 
     return icmp_sock;
 }

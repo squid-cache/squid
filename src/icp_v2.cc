@@ -35,15 +35,11 @@
 #include "refresh.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "store_key_md5.h"
 #include "tools.h"
 #include "wordlist.h"
-
-// for tvSubUsec() which should be in SquidTime.h
-#include "util.h"
 
 #include <cerrno>
 
@@ -465,7 +461,7 @@ icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from)
         return NULL;
     }
 
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initIcp);
+    const auto mx = MasterXaction::MakePortless<XactionInitiator::initIcp>();
     auto *result = HttpRequest::FromUrlXXX(url, mx);
     if (!result)
         icpCreateAndSend(ICP_ERR, 0, url, reqnum, 0, fd, from, nullptr);

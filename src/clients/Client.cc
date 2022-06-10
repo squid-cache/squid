@@ -21,7 +21,6 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "tools.h"
@@ -1024,6 +1023,15 @@ Client::adjustBodyBytesRead(const int64_t delta)
 
     // check for overflows ("infinite" response?) and underflows (a bug)
     Must(bodyBytesRead >= 0);
+}
+
+void
+Client::delayRead()
+{
+    using DeferredReadDialer = NullaryMemFunT<Client>;
+    AsyncCall::Pointer call = asyncCall(11, 5, "Client::noteDelayAwareReadChance",
+            DeferredReadDialer(this, &Client::noteDelayAwareReadChance));
+    entry->mem().delayRead(call);
 }
 
 void

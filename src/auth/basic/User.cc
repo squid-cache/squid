@@ -11,7 +11,7 @@
 #include "auth/basic/User.h"
 #include "auth/Config.h"
 #include "auth/CredentialsCache.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 Auth::Basic::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
     Auth::User(aConfig, aRequestRealm),

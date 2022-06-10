@@ -9,7 +9,7 @@
 #include "squid.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "globals.h"
 #include "helper/ChildConfig.h"
 #include "Parsing.h"

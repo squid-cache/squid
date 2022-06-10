@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "base/CharacterSet.h"
 #include "base/EnumIterator.h"
+#include "base/Raw.h"
 #include "base64.h"
 #include "globals.h"
 #include "http/ContentLengthInterpreter.h"
@@ -24,12 +25,12 @@
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "mime_header.h"
-#include "rfc1123.h"
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "StatHist.h"
 #include "Store.h"
 #include "StrList.h"
+#include "time/gadgets.h"
 #include "TimeOrTag.h"
 #include "util.h"
 
@@ -1044,7 +1045,7 @@ HttpHeader::putTime(Http::HdrType id, time_t htime)
     assert(any_registered_header(id));
     assert(Http::HeaderLookupTable.lookup(id).type == Http::HdrFieldType::ftDate_1123);    /* must be of an appropriate type */
     assert(htime >= 0);
-    addEntry(new HttpHeaderEntry(id, SBuf(), mkrfc1123(htime)));
+    addEntry(new HttpHeaderEntry(id, SBuf(), Time::FormatRfc1123(htime)));
 }
 
 void
@@ -1179,7 +1180,7 @@ HttpHeader::getTime(Http::HdrType id) const
     assert(Http::HeaderLookupTable.lookup(id).type == Http::HdrFieldType::ftDate_1123);    /* must be of an appropriate type */
 
     if ((e = findEntry(id))) {
-        value = parse_rfc1123(e->value.termedBuf());
+        value = Time::ParseRfc1123(e->value.termedBuf());
         httpHeaderNoteParsedEntry(e->id, e->value, value < 0);
     }
 
@@ -1371,7 +1372,7 @@ HttpHeader::getTimeOrTag(Http::HdrType id) const
             tot.time = -1;
         } else {
             /* or maybe it is time? */
-            tot.time = parse_rfc1123(str);
+            tot.time = Time::ParseRfc1123(str);
             tot.valid = tot.time >= 0;
             tot.tag.str = NULL;
         }

@@ -9,7 +9,7 @@
 /* DEBUG: section 21    Misc Functions */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 

@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "base/CodeContext.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 /// represents a being-forgotten CodeContext (while it may be being destroyed)
 class FadingCodeContext: public CodeContext

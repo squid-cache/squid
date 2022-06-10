@@ -15,7 +15,7 @@
 #include "comm/Read.h"
 #include "comm_internal.h"
 #include "CommCalls.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "fd.h"
 #include "fde.h"
 #include "sbuf/SBuf.h"

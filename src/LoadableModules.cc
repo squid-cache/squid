@@ -7,8 +7,8 @@
  */
 
 #include "squid.h"
-#include "Debug.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
+#include "debug/Stream.h"
 #include "LoadableModule.h"
 #include "LoadableModules.h"
 #include "wordlist.h"

@@ -11,7 +11,7 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "CpuAffinitySet.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "util.h"
 
 #include <cerrno>

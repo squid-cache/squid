@@ -11,7 +11,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/HttpStatus.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "HttpReply.h"
 
 #include <climits>

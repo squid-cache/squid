@@ -8,9 +8,9 @@
 
 #include "squid.h"
 #include "base/CharacterSet.h"
+#include "base/Raw.h"
 #include "base/RefCount.h"
-#include "Debug.h"
-#include "sbuf/DetailedStats.h"
+#include "debug/Stream.h"
 #include "sbuf/SBuf.h"
 #include "util.h"
 
@@ -69,7 +69,7 @@ SBuf::~SBuf()
 {
     debugs(24, 8, id << " destructed");
     --stats.live;
-    recordSBufSizeAtDestruct(len_);
+    SBufStats::RecordSBufSizeAtDestruct(len_);
 }
 
 MemBlob::Pointer

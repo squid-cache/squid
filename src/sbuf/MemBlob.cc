@@ -8,9 +8,9 @@
 
 #include "squid.h"
 #include "base/TextException.h"
-#include "Debug.h"
-#include "sbuf/DetailedStats.h"
+#include "debug/Stream.h"
 #include "sbuf/MemBlob.h"
+#include "sbuf/Stats.h"
 
 #include <iostream>
 
@@ -74,7 +74,7 @@ MemBlob::~MemBlob()
         memFreeString(capacity,mem);
     Stats.liveBytes -= capacity;
     --Stats.live;
-    recordMemBlobSizeAtDestruct(capacity);
+    SBufStats::RecordMemBlobSizeAtDestruct(capacity);
 
     debugs(MEMBLOB_DEBUGSECTION,9, "destructed, this="
            << static_cast<void*>(this) << " id=" << id

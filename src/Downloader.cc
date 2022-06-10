@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "base/Raw.h"
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "client_side_request.h"
@@ -63,12 +64,12 @@ Downloader::CbDialer::print(std::ostream &os) const
     os << " Http Status:" << status << Raw("body data", object.rawContent(), 64).hex();
 }
 
-Downloader::Downloader(SBuf &url, AsyncCall::Pointer &aCallback, const XactionInitiator initiator, unsigned int level):
+Downloader::Downloader(const SBuf &url, const AsyncCall::Pointer &aCallback, const MasterXactionPointer &masterXaction, unsigned int level):
     AsyncJob("Downloader"),
     url_(url),
     callback_(aCallback),
     level_(level),
-    initiator_(initiator)
+    masterXaction_(masterXaction)
 {
 }
 
@@ -132,8 +133,7 @@ Downloader::buildRequest()
 {
     const HttpRequestMethod method = Http::METHOD_GET;
 
-    const MasterXaction::Pointer mx = new MasterXaction(initiator_);
-    auto * const request = HttpRequest::FromUrl(url_, mx, method);
+    const auto request = HttpRequest::FromUrl(url_, masterXaction_, method);
     if (!request) {
         debugs(33, 5, "Invalid URI: " << url_);
         return false; //earlyError(...)

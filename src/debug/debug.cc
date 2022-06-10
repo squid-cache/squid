@@ -11,11 +11,10 @@
 #include "squid.h"
 #include "base/Optional.h"
 #include "base/TextException.h"
-#include "Debug.h"
-#include "DebugMessages.h"
+#include "debug/Stream.h"
 #include "fd.h"
 #include "ipc/Kids.h"
-#include "SquidTime.h"
+#include "time/gadgets.h"
 #include "util.h"
 
 #include <algorithm>
@@ -23,16 +22,12 @@
 #include <functional>
 #include <memory>
 
-/* for shutting_down flag in xassert() */
-#include "globals.h"
-
 char *Debug::debugOptions = NULL;
 int Debug::override_X = 0;
 bool Debug::log_syslog = false;
 int Debug::Levels[MAX_DEBUG_SECTIONS];
 char *Debug::cache_log = NULL;
 int Debug::rotateNumber = -1;
-DebugMessages TheDebugMessages;
 
 /// a counter related to the number of debugs() calls
 using DebugRecordCount = uint64_t;
@@ -58,8 +53,11 @@ static int DefaultStderrLevel = -1;
 /// early debugs() with higher level are not buffered and, hence, may be lost
 static constexpr int EarlyMessagesLevel = DBG_IMPORTANT;
 
+/// pre-formatted name of the current process for debugs() messages (or empty)
+static std::string ProcessLabel;
+
 static const char *debugLogTime(time_t t);
-static const char *debugLogKid(void);
+
 #if HAVE_SYSLOG
 #ifdef LOG_LOCAL4
 static int syslog_facility = 0;
@@ -72,6 +70,12 @@ typedef BOOL (WINAPI * PFInitializeCriticalSectionAndSpinCount) (LPCRITICAL_SECT
 #endif
 
 static void ResetSections(const int level = DBG_IMPORTANT);
+
+/// Whether ResetSections() has been called already. We need to keep track of
+/// this state because external code may trigger ResetSections() before the
+/// DebugModule constructor has a chance to ResetSections() to their defaults.
+/// TODO: Find a way to static-initialize Debug::Levels instead.
+static bool DidResetSections = false;
 
 /// a named FILE with very-early/late usage safety mechanisms
 class DebugFile
@@ -354,8 +358,58 @@ DebugStream() {
 static void
 ResetSections(const int level)
 {
+    DidResetSections = true;
     for (auto &sectionLevel: Debug::Levels)
         sectionLevel = level;
+}
+
+/// optimization: formats ProcessLabel once for frequent debugs() reuse
+static void
+LabelThisProcess(const char * const name, const Optional<int> id = Optional<int>())
+{
+    assert(name);
+    assert(strlen(name));
+    std::stringstream os;
+    os << ' ' << name;
+    if (id.has_value()) {
+        assert(id.value() >= 0);
+        os << id.value();
+    }
+    ProcessLabel = os.str();
+}
+
+void
+Debug::NameThisHelper(const char * const name)
+{
+    LabelThisProcess(name);
+
+    if (const auto parentProcessDebugOptions = getenv("SQUID_DEBUG")) {
+        assert(!debugOptions);
+        debugOptions = xstrdup(parentProcessDebugOptions);
+    }
+
+    // do not restrict helper (i.e. stderr) logging beyond debug_options
+    EnsureDefaultStderrLevel(DBG_DATA);
+
+    // helpers do not write to cache.log directly; instead, ipcCreate()
+    // diverts helper stderr output to cache.log of the parent process
+    BanCacheLogUse();
+
+    SettleStderr();
+    SettleSyslog();
+
+    debugs(84, 2, "starting " << name << " with PID " << getpid());
+}
+
+void
+Debug::NameThisKid(const int kidIdentifier)
+{
+    // to reduce noise and for backward compatibility, do not label kid messages
+    // in non-SMP mode
+    if (kidIdentifier)
+        LabelThisProcess("kid", Optional<int>(kidIdentifier));
+    else
+        ProcessLabel.clear(); // probably already empty
 }
 
 /* LoggingSectionGuard */
@@ -383,7 +437,7 @@ DebugModule::DebugModule()
 
     (void)std::atexit(&Debug::PrepareToDie);
 
-    if (!Debug::override_X)
+    if (!DidResetSections)
         ResetSections();
 }
 
@@ -558,7 +612,7 @@ DebugChannel::writeToStream(FILE &destination, const DebugMessageHeader &header,
 {
     fprintf(&destination, "%s%s| %s\n",
             debugLogTime(header.timestamp),
-            debugLogKid(),
+            ProcessLabel.c_str(),
             body.c_str());
     noteWritten(header);
 }
@@ -1192,19 +1246,6 @@ debugLogTime(const time_t t)
     return buf;
 }
 
-static const char *
-debugLogKid(void)
-{
-    if (KidIdentifier != 0) {
-        static char buf[16];
-        if (!*buf) // optimization: fill only once after KidIdentifier is set
-            snprintf(buf, sizeof(buf), " kid%d", KidIdentifier);
-        return buf;
-    }
-
-    return "";
-}
-
 /// Whether there are any xassert() calls in the call stack. Treat as private to
 /// xassert(): It is moved out only to simplify the asserting code path.
 static auto Asserting_ = false;
@@ -1221,12 +1262,8 @@ xassert(const char *msg, const char *file, int line)
 
     debugs(0, DBG_CRITICAL, "FATAL: assertion failed: " << file << ":" << line << ": \"" << msg << "\"");
 
-    if (!shutting_down) {
-        Debug::PrepareToDie();
-        abort();
-    }
-
-    Asserting_ = false;
+    Debug::PrepareToDie();
+    abort();
 }
 
 Debug::Context *Debug::Current = nullptr;
@@ -1360,51 +1397,5 @@ ForceAlert(std::ostream& s)
 {
     Debug::ForceAlert();
     return s;
-}
-
-void
-PrintHex(std::ostream &os, const char *data, const size_t n)
-{
-    if (!n)
-        return;
-    assert(data);
-
-    const auto savedFill = os.fill('0');
-    const auto savedFlags = os.flags(); // std::ios_base::fmtflags
-    os << std::hex;
-    std::for_each(data, data + n,
-    [&os](const char &c) { os << std::setw(2) << static_cast<uint8_t>(c); });
-    os.flags(savedFlags);
-    os.fill(savedFill);
-}
-
-std::ostream &
-Raw::print(std::ostream &os) const
-{
-    if (label_)
-        os << ' ' << label_ << '[' << size_ << ']';
-
-    if (!size_)
-        return os;
-
-    // finalize debugging level if no level was set explicitly via minLevel()
-    const int finalLevel = (level >= 0) ? level :
-                           (size_ > 40 ? DBG_DATA : Debug::SectionLevel());
-    if (finalLevel <= Debug::SectionLevel()) {
-        if (label_)
-            os << '=';
-        else if (useGap_)
-            os << ' ';
-        if (data_) {
-            if (useHex_)
-                PrintHex(os, data_, size_);
-            else
-                os.write(data_, size_);
-        } else {
-            os << "[null]";
-        }
-    }
-
-    return os;
 }
 

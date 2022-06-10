@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "http/StatusCode.h"
 
 const char *
@@ -164,8 +164,8 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Precondition Failed";
         break;
 
-    case Http::scPayloadTooLarge:
-        return "Payload Too Large";
+    case Http::scContentTooLarge:
+        return "Content Too Large";
         break;
 
     case Http::scUriTooLong:

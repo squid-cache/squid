@@ -9,7 +9,7 @@
 /* DEBUG: section 47    Store Directory Routines */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/Mmapped/MmappedFile.h"
 #include "DiskIO/ReadRequest.h"

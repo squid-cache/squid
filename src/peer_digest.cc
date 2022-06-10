@@ -22,7 +22,6 @@
 #include "mime_header.h"
 #include "neighbors.h"
 #include "PeerDigest.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "store_key_md5.h"
 #include "StoreClient.h"
@@ -307,7 +306,7 @@ peerDigestRequest(PeerDigest * pd)
         url = xstrdup(internalRemoteUri(p->secure.encryptTransport, p->host, p->http_port, "/squid-internal-periodic/", SBuf(StoreDigestFileName)));
     debugs(72, 2, url);
 
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initCacheDigest);
+    const auto mx = MasterXaction::MakePortless<XactionInitiator::initCacheDigest>();
     req = HttpRequest::FromUrlXXX(url, mx);
 
     assert(req);

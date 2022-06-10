@@ -8,9 +8,9 @@
 
 #include "squid.h"
 #include "adaptation/icap/History.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "globals.h"
-#include "SquidTime.h"
+#include "time/gadgets.h"
 
 Adaptation::Icap::History::History():
     req_sz(0),

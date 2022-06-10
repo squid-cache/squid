@@ -9,7 +9,7 @@
 #include "squid.h"
 #include "acl/BoolOps.h"
 #include "acl/Checklist.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "sbuf/SBuf.h"
 
 /* Acl::NotNode */

@@ -22,7 +22,6 @@
 #include "MemBuf.h"
 #include "mime_header.h"
 #include "RequestFlags.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"
 #include "tools.h"
