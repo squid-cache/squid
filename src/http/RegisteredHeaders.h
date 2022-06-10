@@ -76,6 +76,7 @@ enum HdrType {
     /*OVERWRITE,*/                  /* RFC 2518 */
     ORIGIN,                         /* CORS Draft specification (see http://www.w3.org/TR/cors/) */
     PRAGMA,                         /**< RFC 7234 */
+    PRIORITY,                       /**< RFC 9218 */
     PROXY_AUTHENTICATE,             /**< RFC 7235 */
     PROXY_AUTHENTICATION_INFO,      /**< RFC 2617 */
     PROXY_AUTHORIZATION,            /**< RFC 7235 */

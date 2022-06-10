@@ -71,6 +71,7 @@ Mime-Version, Http::HdrType::MIME_VERSION, Http::HdrFieldType::ftStr, HdrKind::G
 Negotiate, Http::HdrType::NEGOTIATE, Http::HdrFieldType::ftStr, HdrKind::None
 Origin, Http::HdrType::ORIGIN, Http::HdrFieldType::ftStr, HdrKind::RequestHeader
 Pragma, Http::HdrType::PRAGMA, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader
+Priority, Http::HdrType::PRIORITY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader
 Proxy-Authenticate, Http::HdrType::PROXY_AUTHENTICATE, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader
 Proxy-Authentication-Info, Http::HdrType::PROXY_AUTHENTICATION_INFO, Http::HdrFieldType::ftStr, HdrKind::ListHeader
 Proxy-Authorization, Http::HdrType::PROXY_AUTHORIZATION, Http::HdrFieldType::ftStr, HdrKind::RequestHeader|HdrKind::HopByHopHeader
