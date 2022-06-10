@@ -24,6 +24,7 @@
 #include "time/gadgets.h"
 
 #include <cerrno>
+#include <cstddef>
 
 static StoreRebuildData counts;
 
@@ -303,7 +304,9 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
                 Assure(key);
                 tmpe.key = key;
                 break;
-
+            // TODO: remove. Since old_metahdr's members may have different sizes on different
+            // platforms, we cannot guarantee that serialized types in an old cache
+            // are the same as run-time types.
             case STORE_META_STD: {
                 meta.checkExpectedLength(STORE_HDR_METASIZE_OLD);
                 struct old_metahdr {
@@ -316,8 +319,7 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
                     uint16_t refcount;
                     uint16_t flags;
                 };
-                // XXX: The assert below fails on many platforms due to padding.
-                //static_assert(sizeof(old_metahdr) == STORE_HDR_METASIZE_OLD, "we reproduced old swap meta basics format");
+                static_assert(offsetof(old_metahdr, flags) + sizeof(old_metahdr::flags) == STORE_HDR_METASIZE_OLD, "we reproduced old swap meta basics format");
                 auto basics = static_cast<const old_metahdr*>(meta.rawValue);
                 tmpe.timestamp = basics->timestamp;
                 tmpe.lastref = basics->lastref;
