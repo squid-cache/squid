@@ -385,31 +385,42 @@ Security::ServerOptions::loadDhParams()
     parsedDhParams.resetWithoutLocking(dhp);
 
 #else // OpenSSL 3.0+
-    EVP_PKEY *pkey = nullptr;
     const auto type = eecdhCurve.isEmpty() ? "DH" : "EC";
 
-    if (auto *dctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, "PEM", nullptr, type, 0, nullptr, nullptr)) {
+    Ssl::ForgetErrors();
+    EVP_PKEY *rawPkey = nullptr;
+    if (auto *rawCtx = OSSL_DECODER_CTX_new_for_pkey(&rawPkey, "PEM", nullptr, type, 0, nullptr, nullptr)) {
+        std::unique_ptr<OSSL_DECODER_CTX, void(*)(OSSL_DECODER_CTX*)> dctx(rawCtx, [](OSSL_DECODER_CTX* ptr){OSSL_DECODER_CTX_free(ptr);});
+
+        assert(rawPkey);
+        Security::DhePointer pkey;
+        pkey.resetWithoutLocking(rawPkey);
+
+        if (OSSL_DECODER_CTX_get_num_decoders(dctx.get()) == 0) {
+            debugs(83, DBG_IMPORTANT, "WARNING: no suitable decoders found for " << type << " parameters" << Ssl::ReportAndForgetErrors);
+            return;
+        }
+
         errno = 0;
         if (auto *in = fopen(dhParamsFile.c_str(), "r")) {
-            if (OSSL_DECODER_from_fp(dctx, in) == 1) {
+            if (OSSL_DECODER_from_fp(dctx.get(), in) == 1) {
 
                 /* pkey is created with the decoded data from the bio */
-                Must(pkey);
-                parsedDhParams.resetWithoutLocking(pkey);
+                assert(pkey);
+                parsedDhParams = pkey;
                 // TODO: verify that the loaded parameters match the value in eecdhCurve
 
             } else {
-                debugs(83, DBG_IMPORTANT, "WARNING: Failed to decode " << type << " parameters '" << dhParamsFile << "'");
+                debugs(83, DBG_IMPORTANT, "WARNING: Failed to decode " << type << " parameters '" << dhParamsFile << "'" << Ssl::ReportAndForgetErrors);
             }
             fclose(in);
         } else {
             const auto xerrno = errno;
             debugs(83, DBG_IMPORTANT, "WARNING: Failed to open '" << dhParamsFile << "'" << ReportSysError(xerrno));
         }
-        OSSL_DECODER_CTX_free(dctx);
 
     } else {
-        debugs(83, DBG_IMPORTANT, "WARNING: no suitable potential decoders found for " << type << " parameters");
+        debugs(83, DBG_IMPORTANT, "WARNING: unable to create decode context for " << type << " parameters" << Ssl::ReportAndForgetErrors);
         return;
     }
 #endif
