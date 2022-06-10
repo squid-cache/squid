@@ -510,7 +510,19 @@ make -C src/http gperf-files
 
 run_ checkMakeNamedErrorDetails || exit 1
 
-# extract Author details from commit log
+# This function updates CONTRIBUTORS based on the recent[1] branch commit log.
+# Fresh contributor entries are filtered using the latest vetted CONTRIBOTORS
+# file on the current branch. The following CONTRIBUTORS commits are
+# considered vetted:
+#
+# * authored (in "git log --author" sense) by squidadm,
+# * matching (in "git log --grep" sense) $vettedCommitPhraseRegex set below.
+#
+# A human authoring an official GitHub pull request containing a CONTRIBUTORS
+# change that they want to be treated as vetted, should add a phrase matching
+# $vettedCommitPhraseRegex to the PR description.
+#
+# [1] As defined by the --update-contributors-since script parameter.
 collectAuthors ()
 {
     if test "x$UpdateContributorsSince" = xnever
@@ -518,13 +530,13 @@ collectAuthors ()
         return 0; # successfully did nothing, as requested
     fi
 
-    vettedCommitPhrase='[Rr]eference point for automated CONTRIBUTORS updates'
+    vettedCommitPhraseRegex='[Rr]eference point for automated CONTRIBUTORS updates'
 
     since="$UpdateContributorsSince"
     if test "x$UpdateContributorsSince" = xauto
     then
         # find the last CONTRIBUTORS commit vetted by a human
-        humanSha=`git log -n1 --format='%H' --grep="$vettedCommitPhrase" CONTRIBUTORS`
+        humanSha=`git log -n1 --format='%H' --grep="$vettedCommitPhraseRegex" CONTRIBUTORS`
         # find the last CONTRIBUTORS commit attributed to this script
         botSha=`git log -n1 --format='%H' --author=squidadm CONTRIBUTORS`
         if test "x$humanSha" = x && test "x$botSha" = x
@@ -563,7 +575,7 @@ collectAuthors ()
     if ./scripts/update-contributors.pl < authors.tmp > CONTRIBUTORS.new
     then
         updateIfChanged CONTRIBUTORS CONTRIBUTORS.new  \
-            "A human PR description should mention: $vettedCommitPhrase"
+            "A human PR description should match: $vettedCommitPhraseRegex"
     fi
     result=$?
 
