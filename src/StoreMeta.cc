@@ -14,24 +14,17 @@
 
 namespace Store {
 
-/// A type that we should inform the admin about (if found in a store) but can otherwise ignore.
-enum class DeprecatedMetas {
-    STORE_META_KEY_URL = 1,
-    STORE_META_KEY_SHA = 2,
-    STORE_META_HITMETERING = 6, // (RFC 2227)
-    STORE_META_VALID = 7
-};
-
-/// A type that we should ignore without informing the admin.
-enum class ReservedMetas {
-    STORE_META_STOREURL = 11,
-    STORE_META_VARY_ID = 12
-};
-
 /// Whether the given raw swap meta field type is one of DeprecatedMetas.
-inline constexpr bool
+inline bool
 DeprecatedSwapMetaType(const RawSwapMetaType type)
 {
+	/// A type that we should inform the admin about (if found in a store) but can otherwise ignore.
+	enum class DeprecatedMetas {
+	    STORE_META_KEY_URL = 1,
+	    STORE_META_KEY_SHA = 2,
+	    STORE_META_HITMETERING = 6, // (RFC 2227)
+	    STORE_META_VALID = 7
+	};
     return
         type == static_cast<RawSwapMetaType>(DeprecatedMetas::STORE_META_HITMETERING) ||
         type == static_cast<RawSwapMetaType>(DeprecatedMetas::STORE_META_KEY_SHA) ||
@@ -40,9 +33,14 @@ DeprecatedSwapMetaType(const RawSwapMetaType type)
 }
 
 /// Whether the given raw swap meta field type is one of ReservedMetas.
-inline constexpr bool
+inline bool
 ReservedSwapMetaType(const RawSwapMetaType type)
 {
+	/// A type that we should ignore without informing the admin.
+	enum class ReservedMetas {
+	    STORE_META_STOREURL = 11,
+	    STORE_META_VARY_ID = 12
+	};
     return
         type == static_cast<RawSwapMetaType>(ReservedMetas::STORE_META_STOREURL) ||
         type == static_cast<RawSwapMetaType>(ReservedMetas::STORE_META_VARY_ID);
@@ -50,7 +48,7 @@ ReservedSwapMetaType(const RawSwapMetaType type)
 
 /// Whether the given raw swap meta field type can be safely ignored.
 /// \sa HonoredSwapMetaType()
-inline constexpr bool
+inline bool
 IgnoredSwapMetaType(const RawSwapMetaType type)
 {
     return DeprecatedSwapMetaType(type) || ReservedSwapMetaType(type);
@@ -59,7 +57,7 @@ IgnoredSwapMetaType(const RawSwapMetaType type)
 /// Whether we store the given swap meta field type (and also interpret the
 /// corresponding swap meta field when the Store loads it). Matches all
 /// SwapMetaType enum values except for the never-stored/loaded STORE_META_VOID.
-inline constexpr bool
+inline bool
 HonoredSwapMetaType(const RawSwapMetaType type)
 {
     return STORE_META_VOID < type && type <= SwapMetaTypeMax && !IgnoredSwapMetaType(type);
