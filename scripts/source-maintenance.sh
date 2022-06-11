@@ -37,14 +37,14 @@ cat <<_EOF
 Usage: $0 [option...]
 options:
     --keep-going|-k                            (default: stop on error)
-    --check-and-update-copyright <yes|no>      (default: no)
-    --with-astyle </path/to/astyle/executable> (default: astyle)
+    --check-and-update-copyright <yes|no>      (default: yes)
+    --with-astyle </path/to/astyle/executable> (default: astyle-${TargetAstyleVersion} or astyle)
     --only-changed-since <fork|commit-id>      (default: apply to all files)
 
 This script applies Squid mandatory code style guidelines.
 
-It requires astyle version $TargetAstyleVersion, or it will skip formatting
-program files. The path to the astyle binary can be specified using the
+Squid code style guidelines require astyle version $TargetAstyleVersion.
+The path to the astyle binary can be specified using the
 --with-astyle option or with the ASTYLE environment variable.
 
 It will try to auto-detect a checksum program (e.g. md5sum).
