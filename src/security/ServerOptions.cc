@@ -392,9 +392,12 @@ Security::ServerOptions::loadDhParams()
     if (auto *rawCtx = OSSL_DECODER_CTX_new_for_pkey(&rawPkey, "PEM", nullptr, type, 0, nullptr, nullptr)) {
         std::unique_ptr<OSSL_DECODER_CTX, void(*)(OSSL_DECODER_CTX*)> dctx(rawCtx, [](OSSL_DECODER_CTX* ptr){OSSL_DECODER_CTX_free(ptr);});
 
-        assert(rawPkey);
-        Security::DhePointer pkey;
-        pkey.resetWithoutLocking(rawPkey);
+        // OpenSSL documentation is vague on this, but OpenSSL code and our
+        // tests suggest that rawPkey remains nil here while rawCtx keeps
+        // rawPkey _address_ for use by the decoder (see OSSL_DECODER_from_fp()
+        // below). Thus, we must not move *rawPkey into a smart pointer until
+        // decoding is over. For cleanup code simplicity, we assert nil rawPkey.
+        assert(!rawPkey);
 
         if (OSSL_DECODER_CTX_get_num_decoders(dctx.get()) == 0) {
             debugs(83, DBG_IMPORTANT, "WARNING: no suitable decoders found for " << type << " parameters" << Ssl::ReportAndForgetErrors);
@@ -404,13 +407,11 @@ Security::ServerOptions::loadDhParams()
         errno = 0;
         if (auto *in = fopen(dhParamsFile.c_str(), "r")) {
             if (OSSL_DECODER_from_fp(dctx.get(), in) == 1) {
-
-                /* pkey is created with the decoded data from the bio */
-                assert(pkey);
-                parsedDhParams = pkey;
+                assert(rawPkey);
+                parsedDhParams.resetWithoutLocking(rawPkey);
                 // TODO: verify that the loaded parameters match the value in eecdhCurve
-
             } else {
+                EVP_PKEY_free(rawPkey); // probably still nil, but just in case
                 debugs(83, DBG_IMPORTANT, "WARNING: Failed to decode " << type << " parameters '" << dhParamsFile << "'" << Ssl::ReportAndForgetErrors);
             }
             fclose(in);
