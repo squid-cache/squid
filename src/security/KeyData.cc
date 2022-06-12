@@ -97,27 +97,25 @@ Security::KeyData::loadX509ChainFromFile()
         return;
     }
 
-#if TLS_CHAIN_NO_SELFSIGNED // ignore self-signed certs in the chain
     if (SelfSigned(*cert)) {
-        debugs(83, DBG_PARSE_NOTE(2), "Certificate is self-signed, will not be chained: " << *cert);
-    } else
-#endif
-    {
+        debugs(83, DBG_PARSE_NOTE(2), "Signing certificate is self-signed: " << *cert);
+        // TODO: Warn if there are other (unusable) certificates present.
+    } else {
         debugs(83, DBG_PARSE_NOTE(3), "Using certificate chain in " << certFile);
         // and add to the chain any other certificate exist in the file
         CertPointer latestCert = cert;
 
         while (const auto ca = Ssl::ReadOptionalCertificate(bio)) {
-
-#if TLS_CHAIN_NO_SELFSIGNED // ignore self-signed certs in the chain
-            // self-signed certificates are not valid in a sent chain
-            if (SelfSigned(*ca)) {
-                debugs(83, DBG_PARSE_NOTE(2), "CA certificate is self-signed, will not be chained: " << *ca);
-                continue;
-            }
-#endif
             // checks that the chained certs are actually part of a chain for validating cert
             if (IssuedBy(*latestCert, *ca)) {
+
+                if (SelfSigned(*latestCert)) { // TODO: Rename to lastChained
+                    Assure(SelfSigned(*ca));
+                    Assure(!SelfSigned(*cert)); // TODO: Rename to leafCert or signingCert
+                    debugs(83, DBG_PARSE_NOTE(2), "WARNING: Ignoring repeated Root CA: " << *ca);
+                    continue;
+                }
+
                 debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << *ca);
                 // OpenSSL API requires that we order certificates such that the
                 // chain can be appended directly into the on-wire traffic.
