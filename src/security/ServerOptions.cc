@@ -388,8 +388,8 @@ Security::ServerOptions::loadDhParams()
 
     Ssl::ForgetErrors();
     EVP_PKEY *rawPkey = nullptr;
-    if (auto *rawCtx = OSSL_DECODER_CTX_new_for_pkey(&rawPkey, "PEM", nullptr, type, 0, nullptr, nullptr)) {
-        std::unique_ptr<OSSL_DECODER_CTX, void(*)(OSSL_DECODER_CTX*)> dctx(rawCtx, [](OSSL_DECODER_CTX* ptr){OSSL_DECODER_CTX_free(ptr);});
+    using DecoderContext = std::unique_ptr<OSSL_DECODER_CTX, HardFun<void, OSSL_DECODER_CTX*, &OSSL_DECODER_CTX_free> >;
+    if (const DecoderContext dctx{OSSL_DECODER_CTX_new_for_pkey(&rawPkey, "PEM", nullptr, type, 0, nullptr, nullptr)}) {
 
         // OpenSSL documentation is vague on this, but OpenSSL code and our
         // tests suggest that rawPkey remains nil here while rawCtx keeps
