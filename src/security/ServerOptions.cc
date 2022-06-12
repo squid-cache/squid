@@ -356,6 +356,10 @@ Security::ServerOptions::loadDhParams()
     if (dhParamsFile.isEmpty())
         return;
 
+    // TODO: After loading and validating parameters, also validate that "the
+    // public and private components have the correct mathematical
+    // relationship". See EVP_PKEY_check().
+
 #if USE_OPENSSL
 #if OPENSSL_VERSION_MAJOR < 3
     DH *dhp = nullptr;
@@ -406,8 +410,24 @@ Security::ServerOptions::loadDhParams()
         if (auto *in = fopen(dhParamsFile.c_str(), "r")) {
             if (OSSL_DECODER_from_fp(dctx.get(), in) == 1) {
                 assert(rawPkey);
-                parsedDhParams.resetWithoutLocking(rawPkey);
-                // TODO: verify that the loaded parameters match the value in eecdhCurve
+                const Security::DhePointer pkey(rawPkey);
+
+                if (const Ssl::EVP_PKEY_CTX_Pointer pkeyCtx{EVP_PKEY_CTX_new_from_pkey(nullptr, pkey.get(), nullptr)}) {
+                    switch (EVP_PKEY_param_check(pkeyCtx.get())) {
+                    case 1: // success
+                        parsedDhParams = pkey;
+                        break;
+                    case -2:
+                        debugs(83, DBG_PARSE_NOTE(2), "WARNING: OpenSSL does not support " << type << " parameters check: " << dhParamsFile << Ssl::ReportAndForgetErrors);
+                        break;
+                    default:
+                        debugs(83, DBG_IMPORTANT, "ERROR: Failed to verify " << type << " parameters in " << dhParamsFile << Ssl::ReportAndForgetErrors);
+                        break;
+                    }
+                } else {
+                    // TODO: Reduce error reporting code duplication.
+                    debugs(83, DBG_IMPORTANT, "ERROR: Cannot check " << type << " parameters in " << dhParamsFile << Ssl::ReportAndForgetErrors);
+                }
             } else {
                 EVP_PKEY_free(rawPkey); // probably still nil, but just in case
                 debugs(83, DBG_IMPORTANT, "WARNING: Failed to decode " << type << " parameters '" << dhParamsFile << "'" << Ssl::ReportAndForgetErrors);
