@@ -385,6 +385,7 @@ Security::ServerOptions::loadDhParams()
             dhp = nullptr;
         }
     }
+
     parsedDhParams.resetWithoutLocking(dhp);
 
 #else // OpenSSL 3.0+
@@ -403,12 +404,12 @@ Security::ServerOptions::loadDhParams()
         assert(!rawPkey);
 
         if (OSSL_DECODER_CTX_get_num_decoders(dctx.get()) == 0) {
-            debugs(83, DBG_IMPORTANT, "WARNING: no suitable decoders found for " << type << " parameters" << Ssl::ReportAndForgetErrors);
+            debugs(83, DBG_IMPORTANT, "WARNING: No suitable decoders found for " << type << " parameters" << Ssl::ReportAndForgetErrors);
             return;
         }
 
-        if (auto *in = fopen(dhParamsFile.c_str(), "r")) {
-            if (OSSL_DECODER_from_fp(dctx.get(), in) == 1) {
+        if (const auto in = fopen(dhParamsFile.c_str(), "r")) {
+            if (OSSL_DECODER_from_fp(dctx.get(), in)) {
                 assert(rawPkey);
                 const Security::DhePointer pkey(rawPkey);
 
@@ -429,8 +430,8 @@ Security::ServerOptions::loadDhParams()
                     debugs(83, DBG_IMPORTANT, "ERROR: Cannot check " << type << " parameters in " << dhParamsFile << Ssl::ReportAndForgetErrors);
                 }
             } else {
-                EVP_PKEY_free(rawPkey); // probably still nil, but just in case
                 debugs(83, DBG_IMPORTANT, "WARNING: Failed to decode " << type << " parameters '" << dhParamsFile << "'" << Ssl::ReportAndForgetErrors);
+                EVP_PKEY_free(rawPkey); // probably still nil, but just in case
             }
             fclose(in);
         } else {
@@ -439,7 +440,7 @@ Security::ServerOptions::loadDhParams()
         }
 
     } else {
-        debugs(83, DBG_IMPORTANT, "WARNING: unable to create decode context for " << type << " parameters" << Ssl::ReportAndForgetErrors);
+        debugs(83, DBG_IMPORTANT, "WARNING: Unable to create decode context for " << type << " parameters" << Ssl::ReportAndForgetErrors);
         return;
     }
 #endif
