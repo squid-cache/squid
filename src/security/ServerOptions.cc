@@ -359,7 +359,6 @@ Security::ServerOptions::loadDhParams()
 #if USE_OPENSSL
 #if OPENSSL_VERSION_MAJOR < 3
     DH *dhp = nullptr;
-    errno = 0;
     if (FILE *in = fopen(dhParamsFile.c_str(), "r")) {
         dhp = PEM_read_DHparams(in, nullptr, nullptr, nullptr);
         fclose(in);
@@ -404,7 +403,6 @@ Security::ServerOptions::loadDhParams()
             return;
         }
 
-        errno = 0;
         if (auto *in = fopen(dhParamsFile.c_str(), "r")) {
             if (OSSL_DECODER_from_fp(dctx.get(), in) == 1) {
                 assert(rawPkey);
