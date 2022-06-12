@@ -524,18 +524,16 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
 
 #if USE_OPENSSL && OPENSSL_VERSION_NUMBER >= 0x0090800fL && !defined(OPENSSL_NO_ECDH)
 
-    // OpenSSL 3.0+ generates the key in loadDhParams()
-#if OPENSSL_VERSION_MAJOR < 3
+        Ssl::ForgetErrors();
+
         int nid = OBJ_sn2nid(eecdhCurve.c_str());
         if (!nid) {
             debugs(83, DBG_CRITICAL, "ERROR: Unknown EECDH curve '" << eecdhCurve << "'");
             return;
         }
 
+#if OPENSSL_VERSION_MAJOR < 3
         auto ecdh = EC_KEY_new_by_curve_name(nid);
-#else
-        auto ecdh = parsedDhParams.get();
-#endif
         if (!ecdh) {
             const auto x = ERR_get_error();
             debugs(83, DBG_CRITICAL, "ERROR: Unable to configure Ephemeral ECDH: " << Security::ErrorString(x));
@@ -546,12 +544,15 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
             const auto x = ERR_get_error();
             debugs(83, DBG_CRITICAL, "ERROR: Unable to set Ephemeral ECDH: " << Security::ErrorString(x));
         }
-#if OPENSSL_VERSION_MAJOR < 3
         EC_KEY_free(ecdh);
-#else
-        return;
-#endif
 
+#else
+        // TODO: Support multiple group names via SSL_CTX_set1_groups_list().
+        if (!SSL_CTX_set1_groups(ctx.get(), &nid, 1)) {
+            debugs(83, DBG_CRITICAL, "ERROR: Unable to set Ephemeral ECDH: " << Ssl::ReportAndForgetErrors);
+            return;
+        }
+#endif
 #else
         debugs(83, DBG_CRITICAL, "ERROR: EECDH is not available in this build." <<
                " Please link against OpenSSL>=0.9.8 and ensure OPENSSL_NO_ECDH is not set.");
@@ -559,8 +560,8 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
 #endif
     }
 
-#if USE_OPENSSL
     // set DH parameters into the server context
+#if USE_OPENSSL
     if (parsedDhParams) {
         SSL_CTX_set_tmp_dh(ctx.get(), parsedDhParams.get());
     }
