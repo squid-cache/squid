@@ -56,7 +56,7 @@ storeSwapInFileClosed(void *data, int errflag, StoreIOState::Pointer)
 
     if (sc->_callback.pending()) {
         assert (errflag <= 0);
-        sc->callback(0, errflag ? true : false);
+        sc->noteSwapInDone(errflag);
     }
 
     ++statCounter.swap.ins;
