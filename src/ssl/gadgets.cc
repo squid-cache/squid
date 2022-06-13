@@ -726,15 +726,37 @@ bool Ssl::generateSslCertificate(Security::CertPointer & certToStore, Security::
     return  generateFakeSslCertificate(certToStore, pkeyToStore, properties, serial);
 }
 
+Ssl::BIO_Pointer
+Ssl::OpenCertsFileForReading(const char *filename)
+{
+    ForgetErrors();
+
+    BIO_Pointer bio(BIO_new(BIO_s_file()));
+    if (!bio) {
+        const auto savedErrno = errno;
+        ThrowErrors("cannot allocate OpenSSL BIO structure for reading a file", savedErrno, Here());
+    }
+
+    if (!BIO_read_filename(bio.get(), filename)) {
+        const auto savedErrno = errno;
+        ThrowErrors("cannot read certificate bundle file", savedErrno, Here());
+    }
+
+    return bio;
+}
+
 bool
 Ssl::OpenCertsFileForReading(Ssl::BIO_Pointer &bio, const char *filename)
 {
-    bio.reset(BIO_new(BIO_s_file()));
-    if (!bio)
+    // TODO: Convert callers to use OpenCertsFileForReading(const char *).
+    try {
+        bio = OpenCertsFileForReading(filename);
+        Assure(bio);
+        return true;
+    } catch (...) {
+        debugs(83, 2, "ERROR: " << CurrentException);
         return false;
-    if (!BIO_read_filename(bio.get(), filename))
-        return false;
-    return true;
+    }
 }
 
 Security::CertPointer
@@ -770,6 +792,16 @@ Ssl::ReadCertificate(const BIO_Pointer &bio)
 
     // PEM_R_NO_START_LINE
     throw TextException("missing a required PEM-encoded certificate", Here());
+}
+
+Security::CertList
+Ssl::LoadCertificates(const char * const filename)
+{
+    const auto bio(OpenCertsFileForReading(filename));
+    Security::CertList bundledCerts(1, Ssl::ReadCertificate(bio));
+    while (const auto cert = Ssl::ReadOptionalCertificate(bio))
+        bundledCerts.emplace_back(cert);
+    return bundledCerts;
 }
 
 bool

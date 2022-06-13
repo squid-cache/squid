@@ -114,11 +114,19 @@ bool readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, Security::Pri
 /// The returned BIO lifetime must not exceed that of the given c-string!
 BIO_Pointer ReadOnlyBioTiedTo(const char *);
 
+/// Parses all certificates in a file with the given name.
+/// At least one certificate is required.
+/// \return all certificates in the order they were stored
+Security::CertList LoadCertificates(const char *);
+
 /**
  \ingroup SslCrtdSslAPI
  * Read private key from file.
  */
 void ReadPrivateKeyFromFile(char const * keyFilename, Security::PrivateKeyPointer &pkey, pem_password_cb *passwd_callback);
+
+/// BIO ready to read the file with the given name
+BIO_Pointer OpenCertsFileForReading(const char *);
 
 /**
  \ingroup SslCrtdSslAPI

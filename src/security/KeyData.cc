@@ -15,31 +15,51 @@
 #include "ssl/bio.h"
 #include "ssl/gadgets.h"
 
-/// load a signing certificate from certFile
+/// load the traffic-signing certificate and the chain from certFile
 bool
-Security::KeyData::loadX509CertFromFile()
+Security::KeyData::loadCertificates()
 {
     debugs(83, DBG_IMPORTANT, "Using certificate in " << certFile);
     cert.reset(); // paranoid: ensure cert is unset
 
 #if USE_OPENSSL
-    const char *certFilename = certFile.c_str();
-    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
-    if (!bio || !BIO_read_filename(bio.get(), certFilename)) {
-        const auto x = ERR_get_error();
-        debugs(83, DBG_IMPORTANT, "ERROR: unable to load certificate file '" << certFile << "': " << ErrorString(x));
-        return false;
-    }
+    const auto bundledCerts = Ssl::LoadCertificates(certFile.c_str());
 
-    try {
-        cert = Ssl::ReadCertificate(bio);
-        return true;
-    }
-    catch (...) {
-        // TODO: Convert the rest of this method to throw on errors instead.
-        debugs(83, DBG_IMPORTANT, "ERROR: unable to load certificate file '" << certFile << "':" <<
-               Debug::Extra << "problem: " << CurrentException);
-        return false;
+    // selected bundled certificates in sending order: wireCerts = cert + chain
+    CertList wireCerts;
+    for (const auto &bundledCert: bundledCerts) {
+        assert(bundledCert);
+
+        // the very first bundled certificate is the required traffic-signing cert
+        if (!cert) {
+            cert = bundledCert;
+            assert(wireCerts.empty());
+            wireCerts.emplace_back(bundledCert);
+            debugs(83, DBG_PARSE_NOTE(2), "Using traffic-signing certificate: " << *cert);
+            continue;
+        }
+
+        assert(!wireCerts.empty());
+
+        // We cannot chain any certificate after a self-signed certificate. This
+        // check also protects the IssuedBy() check below from adding duplicated
+        // (i.e. listed multiple times in the bundle) self-signed certificates.
+        if (SelfSigned(*wireCerts.back())) {
+            debugs(83, DBG_PARSE_NOTE(2), "WARNING: Ignoring certificate after a self-signed one: " << *bundledCert);
+            continue; // ... but keep going to report all ignored certificates
+        }
+
+        // add the bundled certificate if it extends the chain further
+        if (IssuedBy(*wireCerts.back(), *bundledCert)) {
+            debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << *bundledCert);
+            // OpenSSL API requires that we order certificates such that the
+            // chain can be appended directly into the on-wire traffic.
+            chain.emplace_back(bundledCert);
+            wireCerts.emplace_back(bundledCert);
+            continue;
+        }
+
+        debugs(83, DBG_PARSE_NOTE(2), "WARNING: Ignoring certificate that does not extend the chain: " << *bundledCert);
     }
 
 #elif USE_GNUTLS
@@ -47,6 +67,7 @@ Security::KeyData::loadX509CertFromFile()
     gnutls_datum_t data;
     Security::LibErrorCode x = gnutls_load_file(certFilename, &data);
     if (x != GNUTLS_E_SUCCESS) {
+        // TODO: Convert the rest of this method to throw on errors instead.
         debugs(83, DBG_IMPORTANT, "ERROR: unable to load certificate file '" << certFile << "': " << ErrorString(x));
         return false;
     }
@@ -73,6 +94,9 @@ Security::KeyData::loadX509CertFromFile()
         });
     }
 
+    // XXX: implement chain loading
+    debugs(83, 2, "Loading certificate chain from PEM files not implemented in this Squid.");
+
 #else
     // do nothing.
 #endif
@@ -82,58 +106,6 @@ Security::KeyData::loadX509CertFromFile()
     }
 
     return bool(cert);
-}
-
-/// load any intermediate certs that form the chain with the loaded signing cert
-void
-Security::KeyData::loadX509ChainFromFile()
-{
-#if USE_OPENSSL
-    const char *certFilename = certFile.c_str();
-    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
-    if (!bio || !BIO_read_filename(bio.get(), certFilename)) {
-        const auto x = ERR_get_error();
-        debugs(83, DBG_IMPORTANT, "ERROR: unable to load chain file '" << certFile << "': " << ErrorString(x));
-        return;
-    }
-
-    if (SelfSigned(*cert)) {
-        debugs(83, DBG_PARSE_NOTE(2), "Signing certificate is self-signed: " << *cert);
-        // TODO: Warn if there are other (unusable) certificates present.
-    } else {
-        debugs(83, DBG_PARSE_NOTE(3), "Using certificate chain in " << certFile);
-        // and add to the chain any other certificate exist in the file
-        CertPointer latestCert = cert;
-
-        while (const auto ca = Ssl::ReadOptionalCertificate(bio)) {
-            // checks that the chained certs are actually part of a chain for validating cert
-            if (IssuedBy(*latestCert, *ca)) {
-
-                if (SelfSigned(*latestCert)) { // TODO: Rename to lastChained
-                    Assure(SelfSigned(*ca));
-                    Assure(!SelfSigned(*cert)); // TODO: Rename to leafCert or signingCert
-                    debugs(83, DBG_PARSE_NOTE(2), "WARNING: Ignoring repeated Root CA: " << *ca);
-                    continue;
-                }
-
-                debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << *ca);
-                // OpenSSL API requires that we order certificates such that the
-                // chain can be appended directly into the on-wire traffic.
-                latestCert = CertPointer(ca);
-                chain.emplace_back(latestCert);
-            } else {
-                debugs(83, DBG_PARSE_NOTE(2), certFile << ": Ignoring non-issuer CA " << *ca);
-            }
-        }
-    }
-
-#elif USE_GNUTLS
-    // XXX: implement chain loading
-    debugs(83, 2, "Loading certificate chain from PEM files not implemented in this Squid.");
-
-#else
-    // nothing to do.
-#endif
 }
 
 /**
@@ -186,18 +158,14 @@ void
 Security::KeyData::loadFromFiles(const AnyP::PortCfg &port, const char *portType)
 {
     char buf[128];
-    if (!loadX509CertFromFile()) {
-        debugs(83, DBG_IMPORTANT, "WARNING: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' missing certificate in '" << certFile << "'");
-        return;
-    }
 
-    // certificate chain in the PEM file is optional
     try {
-        loadX509ChainFromFile();
+        if (!loadCertificates())
+            throw TextException("missing traffic-signing certificate", Here());
     }
     catch (...) {
         // XXX: Reject malformed configurations by letting exceptions propagate.
-        debugs(83, DBG_CRITICAL, "ERROR: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' cannot load intermediate certificates from '" << certFile << "':" <<
+        debugs(83, DBG_CRITICAL, "ERROR: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' cannot load certificate(s) from '" << certFile << "':" <<
                Debug::Extra << "problem: " << CurrentException);
     }
 
