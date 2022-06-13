@@ -404,7 +404,12 @@ Ip::Address::lookupHostIP(const char *s, bool nodns)
         }
         if (maybeIpv4 != NULL)
             res = maybeIpv4;
-        // else IPv6-only host, let the caller deal with first-IP anyway.
+
+        // leave this object unchanged if an IPv6 address was found
+        if (res->ai_family == AF_INET6) {
+            freeaddrinfo(resHead);
+            return false;
+        }
     }
 
     /*
