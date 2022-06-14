@@ -19,10 +19,12 @@
  *
  \section StoreSwapMeta Store "swap meta" Description
  \par
- * "swap meta" refers to a section of meta data stored at the beginning
- * of an object that is stored on disk.  This meta data includes information
- * such as the object's cache key (MD5), URL, and part of the StoreEntry
- * structure.
+ * Store "swap meta" is Store entry metadata stored at the beginning of each
+ * cache_dir entry. This entry-dependent metadata typically includes entry cache
+ * key, URL, size, and various timestamps. Copies of this information may also
+ * be present in Squid process memory, readily accessible via StoreEntry and
+ * MemObject pointers, but swap metadata is about cached entry information
+ * stored in serialized form meant to cross process and instance boundaries.
  *
  \par
  * The meta data is stored using a TYPE-LENGTH-VALUE format.  That is,
