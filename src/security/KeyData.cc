@@ -15,8 +15,8 @@
 #include "ssl/bio.h"
 #include "ssl/gadgets.h"
 
-/// load the traffic-signing certificate and the chain from certFile
-/// \return true if the traffic-signing certificate was obtained
+/// load the signing certificate and its chain, if any, from certFile
+/// \return true if the signing certificate was obtained
 bool
 Security::KeyData::loadCertificates()
 {
@@ -34,7 +34,7 @@ Security::KeyData::loadCertificates()
 
     try {
         cert = Ssl::ReadCertificate(bio);
-        debugs(83, DBG_PARSE_NOTE(2), "Loaded traffic-signing certificate: " << *cert);
+        debugs(83, DBG_PARSE_NOTE(2), "Loaded signing certificate: " << *cert);
     }
     catch (...) {
         // TODO: Convert the rest of this method to throw on errors instead.
