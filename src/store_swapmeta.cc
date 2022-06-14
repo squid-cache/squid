@@ -26,6 +26,7 @@ PackSwapMeta(std::ostream &os, const SwapMetaType type, const size_t length, con
     // valid swap meta types now, but we store these values as "char".
     static_assert(SwapMetaTypeMax <= std::numeric_limits<char>::max(), "any named SwapMetaType value can be stored as char");
     const auto rawType = static_cast<char>(type);
+    // TODO: Assure(HonoredSwapMetaType(type)) after merging this code with StoreMeta.cc
 
     if (length > SwapMetaFieldValueLengthMax)
         throw TextException("swap meta field value too big to store", Here());
