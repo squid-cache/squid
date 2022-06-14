@@ -120,8 +120,11 @@ BIO_Pointer ReadOnlyBioTiedTo(const char *);
  */
 void ReadPrivateKeyFromFile(char const * keyFilename, Security::PrivateKeyPointer &pkey, pem_password_cb *passwd_callback);
 
-/// BIO object that is ready for read the file with the given name
-BIO_Pointer OpenCertsFileForReading(const char *);
+/**
+ \ingroup SslCrtdSslAPI
+ * Initialize the bio with the file 'filename' opened for reading
+ */
+bool OpenCertsFileForReading(BIO_Pointer &bio, const char *filename);
 
 /// Reads and returns a certificate using the given OpenSSL BIO.
 /// Never returns a nil pointer.
@@ -130,8 +133,6 @@ Security::CertPointer ReadCertificate(const BIO_Pointer &);
 /// Reads and returns a certificate using the given OpenSSL BIO.
 /// \returns a nil pointer if the given BIO is empty or exhausted
 Security::CertPointer ReadOptionalCertificate(const BIO_Pointer &);
-
-// TODO: Use BIO reference for functions taking (non-const) BIO_Pointer.
 
 /**
  \ingroup SslCrtdSslAPI

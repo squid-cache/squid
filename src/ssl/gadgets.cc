@@ -726,23 +726,15 @@ bool Ssl::generateSslCertificate(Security::CertPointer & certToStore, Security::
     return  generateFakeSslCertificate(certToStore, pkeyToStore, properties, serial);
 }
 
-Ssl::BIO_Pointer
-Ssl::OpenCertsFileForReading(const char *filename)
+bool
+Ssl::OpenCertsFileForReading(Ssl::BIO_Pointer &bio, const char *filename)
 {
-    ForgetErrors();
-
-    BIO_Pointer bio(BIO_new(BIO_s_file()));
-    if (!bio) {
-        const auto savedErrno = errno;
-        ThrowErrors("cannot allocate OpenSSL BIO structure for reading a file", savedErrno, Here());
-    }
-
-    if (!BIO_read_filename(bio.get(), filename)) {
-        const auto savedErrno = errno;
-        ThrowErrors("cannot read certificate bundle file", savedErrno, Here());
-    }
-
-    return bio;
+    bio.reset(BIO_new(BIO_s_file()));
+    if (!bio)
+        return false;
+    if (!BIO_read_filename(bio.get(), filename))
+        return false;
+    return true;
 }
 
 Security::CertPointer
@@ -796,7 +788,9 @@ Ssl::ReadPrivateKeyFromFile(char const * keyFilename, Security::PrivateKeyPointe
 {
     if (!keyFilename)
         return;
-    auto bio = OpenCertsFileForReading(keyFilename);
+    Ssl::BIO_Pointer bio;
+    if (!OpenCertsFileForReading(bio, keyFilename))
+        return;
     ReadPrivateKey(bio, pkey, passwd_callback);
 }
 
