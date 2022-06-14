@@ -19,13 +19,17 @@ namespace Store {
 inline bool
 DeprecatedSwapMetaType(const RawSwapMetaType type)
 {
-	enum class DeprecatedMetas {
-	    STORE_META_KEY_URL = 1,
-	    STORE_META_KEY_SHA = 2,
-	    STORE_META_HITMETERING = 6, // (RFC 2227)
-	    STORE_META_VALID = 7
-	};
+    enum class DeprecatedMetas {
+        /// \deprecated Using URL as the cache key, as in Squid-1.1.
+        STORE_META_KEY_URL = 1,
+        /// \deprecated Using SHA (secure hash algorithm) as a cache key
+        STORE_META_KEY_SHA = 2,
+        /// \deprecated hit-metering (RFC 2227)
+        STORE_META_HITMETERING = 6,
+        STORE_META_VALID = 7
+    };
     return
+        // TODO: simplify with std::underlying_type_t when switching to C++14
         type == static_cast<RawSwapMetaType>(DeprecatedMetas::STORE_META_HITMETERING) ||
         type == static_cast<RawSwapMetaType>(DeprecatedMetas::STORE_META_KEY_SHA) ||
         type == static_cast<RawSwapMetaType>(DeprecatedMetas::STORE_META_HITMETERING) ||
@@ -37,10 +41,12 @@ DeprecatedSwapMetaType(const RawSwapMetaType type)
 inline bool
 ReservedSwapMetaType(const RawSwapMetaType type)
 {
-	enum class ReservedMetas {
-	    STORE_META_STOREURL = 11,
-	    STORE_META_VARY_ID = 12
-	};
+    enum class ReservedMetas {
+        /// the Store-ID url, if different to the normal URL
+        STORE_META_STOREURL = 11,
+        /// unique ID linking variants
+        STORE_META_VARY_ID = 12
+    };
     return
         type == static_cast<RawSwapMetaType>(ReservedMetas::STORE_META_STOREURL) ||
         type == static_cast<RawSwapMetaType>(ReservedMetas::STORE_META_VARY_ID);
