@@ -9,6 +9,7 @@
 /* DEBUG: section 20    Storage Manager Swapfile Metadata */
 
 #include "squid.h"
+#include "base/Raw.h"
 #include "sbuf/Stream.h"
 #include "StoreMeta.h"
 
@@ -152,7 +153,12 @@ Store::SwapMetaView::checkExpectedLength(const size_t expectedLength) const
 std::ostream &
 operator <<(std::ostream &os, const Store::SwapMetaView &meta)
 {
-    os << "type=" << int(meta.rawType) << " length=" << meta.rawLength;
+    os << "type=" << int(meta.rawType);
+    // XXX: Change Raw constructor to take void* data instead of casting here.
+    const auto rawValue = reinterpret_cast<const char*>(meta.rawValue);
+    // TODO: Add/use something like Raw::bestPresentationEncoding() to report
+    // binary data as hex, URLs as plain text, and Vary with \r\n escapes?
+    os << Raw("value", rawValue, meta.rawLength).minLevel(DBG_DATA).hex();
     return os;
 }
 
