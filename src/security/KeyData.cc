@@ -23,23 +23,16 @@ Security::KeyData::loadCertificates()
     cert.reset(); // paranoid: ensure cert is unset
 
 #if USE_OPENSSL
-    const auto bundledCerts = Ssl::LoadCertificates(certFile.c_str());
+    const auto bio = Ssl::OpenCertsFileForReading(certFile.c_str());
+
+    cert = Ssl::ReadCertificate(bio);
+    debugs(83, DBG_PARSE_NOTE(2), "Loaded traffic-signing certificate: " << *cert);
 
     // selected bundled certificates in sending order: wireCerts = cert + chain
-    CertList wireCerts;
-    for (const auto &bundledCert: bundledCerts) {
-        assert(bundledCert);
+    CertList wireCerts(1, cert);
 
-        // the very first bundled certificate is the required traffic-signing cert
-        if (!cert) {
-            cert = bundledCert;
-            assert(wireCerts.empty());
-            wireCerts.emplace_back(bundledCert);
-            debugs(83, DBG_PARSE_NOTE(2), "Using traffic-signing certificate: " << *cert);
-            continue;
-        }
-
-        assert(!wireCerts.empty());
+    while (const auto bundledCert = Ssl::ReadOptionalCertificate(bio)) {
+        assert(!wireCerts.empty()); // this->cert is there (at least)
 
         // We cannot chain any certificate after a self-signed certificate. This
         // check also protects the IssuedBy() check below from adding duplicated

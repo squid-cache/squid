@@ -643,9 +643,7 @@ Ssl::CertificateDb::WriteEntry(const std::string &filename, const Security::Cert
 bool
 Ssl::CertificateDb::ReadEntry(std::string filename, Security::CertPointer &cert, Security::PrivateKeyPointer &pkey, Security::CertPointer &orig)
 {
-    Ssl::BIO_Pointer bio;
-    if (!Ssl::OpenCertsFileForReading(bio, filename.c_str()))
-        return false;
+    auto bio = Ssl::OpenCertsFileForReading(filename.c_str());
 
     cert = Ssl::ReadCertificate(bio);
 

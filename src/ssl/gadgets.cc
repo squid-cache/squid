@@ -745,20 +745,6 @@ Ssl::OpenCertsFileForReading(const char *filename)
     return bio;
 }
 
-bool
-Ssl::OpenCertsFileForReading(Ssl::BIO_Pointer &bio, const char *filename)
-{
-    // TODO: Convert callers to use OpenCertsFileForReading(const char *).
-    try {
-        bio = OpenCertsFileForReading(filename);
-        Assure(bio);
-        return true;
-    } catch (...) {
-        debugs(83, 2, "ERROR: " << CurrentException);
-        return false;
-    }
-}
-
 Security::CertPointer
 Ssl::ReadOptionalCertificate(const BIO_Pointer &bio)
 {
@@ -794,16 +780,6 @@ Ssl::ReadCertificate(const BIO_Pointer &bio)
     throw TextException("missing a required PEM-encoded certificate", Here());
 }
 
-Security::CertList
-Ssl::LoadCertificates(const char * const filename)
-{
-    const auto bio(OpenCertsFileForReading(filename));
-    Security::CertList bundledCerts(1, Ssl::ReadCertificate(bio));
-    while (const auto cert = Ssl::ReadOptionalCertificate(bio))
-        bundledCerts.emplace_back(cert);
-    return bundledCerts;
-}
-
 bool
 Ssl::ReadPrivateKey(Ssl::BIO_Pointer &bio, Security::PrivateKeyPointer &pkey, pem_password_cb *passwd_callback)
 {
@@ -820,9 +796,7 @@ Ssl::ReadPrivateKeyFromFile(char const * keyFilename, Security::PrivateKeyPointe
 {
     if (!keyFilename)
         return;
-    Ssl::BIO_Pointer bio;
-    if (!OpenCertsFileForReading(bio, keyFilename))
-        return;
+    auto bio = OpenCertsFileForReading(keyFilename);
     ReadPrivateKey(bio, pkey, passwd_callback);
 }
 
