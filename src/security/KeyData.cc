@@ -24,10 +24,24 @@ Security::KeyData::loadCertificates()
     cert.reset(); // paranoid: ensure cert is unset
 
 #if USE_OPENSSL
-    const auto bio = Ssl::OpenCertsFileForReading(certFile.c_str());
+    const char *certFilename = certFile.c_str();
+    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
+    if (!bio || !BIO_read_filename(bio.get(), certFilename)) {
+        const auto x = ERR_get_error();
+        debugs(83, DBG_IMPORTANT, "ERROR: unable to load certificate file '" << certFile << "': " << ErrorString(x));
+        return false;
+    }
 
-    cert = Ssl::ReadCertificate(bio);
-    debugs(83, DBG_PARSE_NOTE(2), "Loaded traffic-signing certificate: " << *cert);
+    try {
+        cert = Ssl::ReadCertificate(bio);
+        debugs(83, DBG_PARSE_NOTE(2), "Loaded traffic-signing certificate: " << *cert);
+    }
+    catch (...) {
+        // TODO: Convert the rest of this method to throw on errors instead.
+        debugs(83, DBG_IMPORTANT, "ERROR: unable to load certificate file '" << certFile << "':" <<
+               Debug::Extra << "problem: " << CurrentException);
+        return false;
+    }
 
     try {
         // selected bundled certificates in sending order: wireCerts = cert + chain
@@ -63,7 +77,6 @@ Security::KeyData::loadCertificates()
                Debug::Extra << "problem: " << CurrentException);
     }
 
-    // TODO: Convert the rest of this method to throw on errors.
 #elif USE_GNUTLS
     const char *certFilename = certFile.c_str();
     gnutls_datum_t data;
