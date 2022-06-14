@@ -15,6 +15,29 @@
 
 namespace Store {
 
+// TODO: Use "inline constexpr ..." with C++17.
+/// maximum value of a named swap meta type
+inline
+int SwapMetaTypeMax()
+{
+    // This "constant" switch forces developers to update this function when
+    // they add new type values [-Wswitch]. It is better than an end_ enum
+    // marker because it does not force us to add that marker to every switch
+    // statement, with an assert(false) or similar "unreachable code" handler.
+    // Compilers optimize this statement away into a constant, of course.
+    switch (STORE_META_VOID) {
+    case STORE_META_VOID:
+    case STORE_META_KEY_MD5:
+    case STORE_META_URL:
+    case STORE_META_STD:
+    case STORE_META_VARY_HEADERS:
+    case STORE_META_STD_LFS:
+    case STORE_META_OBJSIZE:
+        // always return the last/maximum enum value
+        return STORE_META_OBJSIZE;
+    }
+}
+
 /// Whether the given raw swap meta field type represents a type that we should
 /// inform the admin about (if found in a store) but can otherwise ignore.
 inline bool
@@ -67,7 +90,7 @@ IgnoredSwapMetaType(const RawSwapMetaType type)
 inline bool
 HonoredSwapMetaType(const RawSwapMetaType type)
 {
-    return STORE_META_VOID < type && type <= SwapMetaTypeMax && !IgnoredSwapMetaType(type);
+    return STORE_META_VOID < type && type <= SwapMetaTypeMax() && !IgnoredSwapMetaType(type);
 }
 
 /// properly reports or rejects a problematic raw swap meta field type
@@ -89,12 +112,14 @@ HandleBadRawType(const RawSwapMetaType type)
     // using a type bit to define whether to silently ignore a swap meta field
     // with that type (or even the whole Store entry with that field).
 
-    if (type > 10 && type - 10 > SwapMetaTypeMax) {
+    const auto typeValuesWeMightAdd = 10;
+    // compute "type > SwapMetaTypeMax() + typeValuesWeMightAdd" w/o overflow
+    if (type >= typeValuesWeMightAdd && type - typeValuesWeMightAdd > SwapMetaTypeMax()) {
         debugs(20, DBG_CRITICAL, "ERROR: Malformed cache storage; ignoring swap meta field with an unexpected type: " << int(type));
         return;
     }
 
-    if (type > SwapMetaTypeMax) {
+    if (type > SwapMetaTypeMax()) {
         debugs(20, 3, "ignoring swap meta field with a presumed future type: " << int(type));
         return;
     }

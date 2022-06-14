@@ -84,7 +84,7 @@ enum SwapMetaType {
     // TODO: document this TLV type code
     STORE_META_OBJSIZE = 10
 
-    // When adding values, update Store::SwapMetaTypeMax.
+    // When adding values, update Store::SwapMetaTypeMax().
     // When removing values, check Store::IgnoredSwapMetaType() and friends.
 };
 
@@ -92,12 +92,6 @@ namespace Store {
 
 /// swap meta type ID written to or loaded from Store
 using RawSwapMetaType = char;
-
-/// maximum value of a recognized swap meta type
-const int SwapMetaTypeMax = 12; // Use "inline constexpr ..." with C++17.
-
-static_assert(SwapMetaTypeMax <= std::numeric_limits<RawSwapMetaType>::max(),
-              "RawSwapMetaType fits all SwapMetaType values");
 
 /// Store entries with longer swap metadata field values are not swapped out and
 /// are considered invalid when validating being-loaded metadata. This arbitrary

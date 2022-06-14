@@ -24,7 +24,8 @@ PackSwapMeta(std::ostream &os, const SwapMetaType type, const size_t length, con
 {
     // Outside of packing/unpacking code, we correctly use SwapMetaType for
     // valid swap meta types now, but we store these values as "char".
-    static_assert(SwapMetaTypeMax <= std::numeric_limits<char>::max(), "any named SwapMetaType value can be stored as char");
+    // TODO: Assure(SwapMetaTypeMax() <= std::numeric_limits<char>::max()) after merging this code with StoreMeta.cc
+    Assure(type <= std::numeric_limits<char>::max());
     const auto rawType = static_cast<char>(type);
     // TODO: Assure(HonoredSwapMetaType(type)) after merging this code with StoreMeta.cc
 
