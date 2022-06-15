@@ -90,13 +90,13 @@ Store::PackSwapHeader(const StoreEntry &entry, size_t &totalLength)
     const auto metas = os.buf();
 
     // TODO: Optimize this allocation away by returning (and swapping out) SBuf.
-    const auto bufSize = NaturalSum<size_t>(sizeof(char), sizeof(int), metas.length()).value();
+    const auto bufSize = NaturalSum<size_t>(sizeof(SwapMetaMagic), sizeof(int), metas.length()).value();
     const auto buf = static_cast<char*>(xmalloc(bufSize));
 
     auto pos = buf; // buf writing position
 
-    *pos = static_cast<char>(STORE_META_OK);
-    pos += sizeof(char);
+    *pos = SwapMetaMagic;
+    pos += sizeof(SwapMetaMagic);
 
     // for historical reasons, the meta size field is int, not size_t
     const auto metaSize = NaturalSum<int>(bufSize).value();

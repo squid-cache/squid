@@ -64,7 +64,7 @@ StoreMetaUnpacker::StoreMetaUnpacker(const char * const buf, const ssize_t size,
     const auto requiredPrefixSize = sizeof(Store::RawSwapMetaType) + sizeof(int);
     Assure2(uint64_t(size) >= requiredPrefixSize, "parsing buffer accommodates metadata prefix");
 
-    if (buf[0] != static_cast<char>(STORE_META_OK))
+    if (buf[0] != Store::SwapMetaMagic)
         throw TextException("store entry metadata prefix is corrupted", Here());
 
     int rawMetaSize = 0; // metadata size, including the required prefix

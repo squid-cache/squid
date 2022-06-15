@@ -149,8 +149,11 @@ private:
     explicit SwapMetaView(const void *begin, const void * const end);
 };
 
+/// the start of the swap meta section
+const char SwapMetaMagic = 0x03;
+
 // TODO: Move to src/store/SwapMetaWriting or similar.
-/// STORE_META_OK prefix and all swap meta fields of the given Store entry
+/// Swap meta prefix and all swap meta fields of the given Store entry
 const char *PackSwapHeader(const StoreEntry &, size_t &totalLength);
 
 } // namespace Store

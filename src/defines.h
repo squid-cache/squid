@@ -87,8 +87,6 @@
 
 #define CLIENT_REQ_BUF_SZ 4096
 
-#define STORE_META_OK     0x03
-
 #define IPC_NONE 0
 #define IPC_TCP_SOCKET 1
 #define IPC_UDP_SOCKET 2
