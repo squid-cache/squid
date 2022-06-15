@@ -93,6 +93,11 @@ namespace Store {
 /// swap meta type ID written to or loaded from Store
 using RawSwapMetaType = char;
 
+/// The type of a serialized length field of a swap meta field (i.e. L in TLV).
+/// Valid values of this type do not include the size of T and L components.
+/// Lowest-level serialization code aside, we use size_t for swap meta sizes.
+using RawSwapMetaLength = int;
+
 /// Store entries with longer swap metadata field values are not swapped out and
 /// are considered invalid when validating being-loaded metadata. This arbitrary
 /// limit protects code that adds individual swap metadata field sizes from
@@ -151,6 +156,12 @@ private:
 
 /// the start of the swap meta section
 const char SwapMetaMagic = 0x03;
+
+/// The type of the serialized "metadata size" field that follows SwapMetaMagic.
+/// Together, the two fields form a swap metadata "prefix". The meaning of this
+/// size field is different from RawSwapMetaLength! Valid values of this field
+/// include the prefix size itself.
+using RawSwapMetaPrefixLength = int;
 
 // TODO: Move to src/store/SwapMetaWriting or similar.
 /// Swap meta prefix and all swap meta fields of the given Store entry

@@ -23,22 +23,23 @@ static void
 PackSwapMeta(std::ostream &os, const SwapMetaType type, const size_t length, const void *value)
 {
     // Outside of packing/unpacking code, we correctly use SwapMetaType for
-    // valid swap meta types now, but we store these values as "char".
-    // TODO: Assure(SwapMetaTypeMax() <= std::numeric_limits<char>::max()) after merging this code with StoreMeta.cc
-    Assure(type <= std::numeric_limits<char>::max());
-    const auto rawType = static_cast<char>(type);
+    // valid swap meta types now, but we store these values as RawSwapMetaType.
+    // TODO: Assure(SwapMetaTypeMax() <= std::numeric_limits<RawSwapMetaType>::max()) after merging this code with StoreMeta.cc
+    Assure(type <= std::numeric_limits<RawSwapMetaType>::max());
+    const auto rawType = static_cast<RawSwapMetaType>(type);
     // TODO: Assure(HonoredSwapMetaType(type)) after merging this code with StoreMeta.cc
 
     if (length > SwapMetaFieldValueLengthMax)
         throw TextException("swap meta field value too big to store", Here());
 
     // Outside of packing/unpacking code, we correctly use size_t for value
-    // sizes now, but old code stored these values as "int" (of an unknown size)
-    // so we continue to do so to be able to load meta fields from old caches.
-    static_assert(SwapMetaFieldValueLengthMax <= uint64_t(std::numeric_limits<int>::max()), "any swap metadata value size can be stored as int");
-    const auto rawLength = static_cast<int>(length);
+    // sizes now, but old code stored these values as RawSwapMetaLength (of an
+    // unknown size), so we continue to do so to be able to load meta fields
+    // from (some) old caches.
+    static_assert(SwapMetaFieldValueLengthMax <= uint64_t(std::numeric_limits<RawSwapMetaLength>::max()), "any swap metadata value size can be stored as RawSwapMetaLength");
+    const auto rawLength = static_cast<RawSwapMetaLength>(length);
 
-    if (!os.write(reinterpret_cast<const char*>(&rawType), sizeof(rawType)) ||
+    if (!os.write(&rawType, sizeof(rawType)) ||
         !os.write(reinterpret_cast<const char*>(&rawLength), sizeof(rawLength)) ||
         (length && !os.write(static_cast<const char*>(value), length)))
         throw TextException("cannot store swap meta field type", Here());
@@ -90,7 +91,7 @@ Store::PackSwapHeader(const StoreEntry &entry, size_t &totalLength)
     const auto metas = os.buf();
 
     // TODO: Optimize this allocation away by returning (and swapping out) SBuf.
-    const auto bufSize = NaturalSum<size_t>(sizeof(SwapMetaMagic), sizeof(int), metas.length()).value();
+    const auto bufSize = NaturalSum<size_t>(sizeof(SwapMetaMagic), sizeof(RawSwapMetaPrefixLength), metas.length()).value();
     const auto buf = static_cast<char*>(xmalloc(bufSize));
 
     auto pos = buf; // buf writing position
@@ -98,8 +99,8 @@ Store::PackSwapHeader(const StoreEntry &entry, size_t &totalLength)
     *pos = SwapMetaMagic;
     pos += sizeof(SwapMetaMagic);
 
-    // for historical reasons, the meta size field is int, not size_t
-    const auto metaSize = NaturalSum<int>(bufSize).value();
+    // for historical reasons, the meta size field has RawSwapMetaLength type
+    const auto metaSize = NaturalSum<RawSwapMetaLength>(bufSize).value();
     memcpy(pos, &metaSize, sizeof(metaSize));
     pos += sizeof(metaSize);
 

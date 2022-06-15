@@ -17,8 +17,8 @@ namespace Store {
 
 // TODO: Use "inline constexpr ..." with C++17.
 /// maximum value of a named swap meta type
-inline
-int SwapMetaTypeMax()
+inline SwapMetaType
+SwapMetaTypeMax()
 {
     // This "constant" switch forces developers to update this function when
     // they add new type values [-Wswitch]. It is better than an end_ enum
@@ -186,7 +186,7 @@ Store::SwapMetaView::SwapMetaView(const void * const begin, const void * const e
     else
         HandleBadRawType(rawType); // and leave type as STORE_META_VOID
 
-    int lengthOrGarbage = 0;
+    RawSwapMetaLength lengthOrGarbage = 0;
     Deserialize(lengthOrGarbage, input, end);
     if (lengthOrGarbage < 0)
         throw TextException("negative swap meta field length value", Here());
