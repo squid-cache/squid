@@ -292,7 +292,7 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
             switch (meta.type) {
             case STORE_META_VOID:
                 // TODO: Skip this StoreEntry instead of ignoring its field?
-                // aBuilder already complained if needed
+                // this type is aBuilder's signal that it took care of the field
                 break;
 
             case STORE_META_KEY_MD5:

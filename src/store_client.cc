@@ -574,7 +574,7 @@ store_client::unpackHeader(char const *buf, ssize_t len)
         for (const auto &meta: aBuilder) {
             switch (meta.type) {
             case STORE_META_VOID:
-                // aBuilder already complained if needed
+                // this type is aBuilder's signal that it took care of the field
                 break;
 
             case STORE_META_KEY_MD5:
