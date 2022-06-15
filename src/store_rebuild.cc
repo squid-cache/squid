@@ -299,7 +299,8 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
                 // Optimization: We could postpone setting the caller's key
                 // until all fields are parsed, but that would require copying
                 // it. Instead, we treat key and tmpe.key as storage that can be
-                // safely altered even on parsing failures.
+                // safely altered even on parsing failures. This function
+                // description tells the callers that we may do that.
                 GetSwapMetaMd5(meta, key);
                 Assure(key);
                 tmpe.key = key;

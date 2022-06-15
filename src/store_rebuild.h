@@ -71,6 +71,7 @@ void storeRebuildProgress(int sd_index, int total, int sofar);
 bool storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, StoreRebuildData &counts);
 
 /// Parses the given Store entry metadata, filling e and key.
+/// Optimization: Both e and key parameters may be updated even on failures.
 /// \param buf memory containing serialized Store entry swap metadata (at least)
 /// \param e caller's temporary StoreEntry object for returning parsed metadata
 /// \param key caller's temporary Store entry key buffer; usable to set e.key
