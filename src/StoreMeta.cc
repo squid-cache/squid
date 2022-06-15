@@ -90,7 +90,21 @@ IgnoredSwapMetaType(const RawSwapMetaType type)
 inline bool
 HonoredSwapMetaType(const RawSwapMetaType type)
 {
-    return STORE_META_VOID < type && type <= SwapMetaTypeMax() && !IgnoredSwapMetaType(type);
+    switch (type) {
+    case STORE_META_VOID:
+        return false;
+
+    case STORE_META_KEY_MD5:
+    case STORE_META_URL:
+    case STORE_META_STD:
+    case STORE_META_VARY_HEADERS:
+    case STORE_META_STD_LFS:
+    case STORE_META_OBJSIZE:
+        return true;
+
+    default:
+        return false;
+    }
 }
 
 /// properly reports or rejects a problematic raw swap meta field type
@@ -139,6 +153,26 @@ Deserialize(T &item, const char * &input, const void *end)
     memcpy(&item, input, sizeof(item));
     input += sizeof(item);
 }
+
+// TODO: Refactor into a static_assert after migrating to C++17.
+/// Validates that all SwapMetaType names are classified, protecting developers
+/// from forgetting to classify a name after removing it from SwapMetaType.
+/// Also checks that honored and ignored sets are mutually exclusive.
+/// Also checks that deprecated and reserved sets are mutually exclusive.
+static bool
+CheckSwapMetaTypeEnum(bool &useMe)
+{
+    for (RawSwapMetaType i = SwapMetaTypeMax(); i != STORE_META_VOID; --i) {
+        assert(HonoredSwapMetaType(i) || IgnoredSwapMetaType(i));
+        assert(!(HonoredSwapMetaType(i) && IgnoredSwapMetaType(i)));
+        assert(!(DeprecatedSwapMetaType(i) && ReservedSwapMetaType(i)));
+    }
+    useMe = true;
+    return true;
+}
+
+/// triggers one-time SwapMetaType enum validation at startup
+static bool Checked = CheckSwapMetaTypeEnum(Checked);
 
 } // namespace Store
 
