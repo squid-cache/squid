@@ -68,7 +68,7 @@ private:
     SBuf exchangeBuffer; ///< bytes read but not yet discarded or written
     uint64_t bytesRead; ///< total entry bytes read from Store so far
 
-    uint64_t staleSwapHeaderSize; ///< stored size of the stale entry metadata
+    size_t staleSwapHeaderSize; ///< stored size of the stale entry metadata
 
     SlotId staleSplicingPointNext; ///< non-updatable old HTTP body suffix start
 };

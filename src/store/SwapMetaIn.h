@@ -18,11 +18,11 @@ namespace Store {
 
 /// deserializes entry metadata size from the given buffer
 /// \retval total swap metadata size (a.k.a. swap_hdr_len)
-uint64_t UnpackSwapMetaSize(const SBuf &);
+size_t UnpackSwapMetaSize(const SBuf &);
 
 /// deserializes entry metadata from the given buffer into the cache index entry
 /// \retval total swap metadata size (a.k.a. swap_hdr_len)
-uint64_t UnpackIndexSwapMeta(const MemBuf &, StoreEntry &, cache_key *);
+size_t UnpackIndexSwapMeta(const MemBuf &, StoreEntry &, cache_key *);
 
 /// deserializes entry metadata from the given buffer into the cache hit entry
 void UnpackHitSwapMeta(char const *, ssize_t, StoreEntry &);

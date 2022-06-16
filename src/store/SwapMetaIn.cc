@@ -53,7 +53,7 @@ private:
 class SwapMetaUnpacker
 {
 public:
-    SwapMetaUnpacker(const char *buf, ssize_t bufferLength, int *hdrlen);
+    SwapMetaUnpacker(const char *buf, ssize_t bufferLength, size_t &swap_hdr_len);
 
     // for-range loop API for iterating over serialized swap metadata fields
     using Iterator = SwapMetaIterator;
@@ -196,7 +196,7 @@ Store::SwapMetaIterator::sync()
 
 /* Store::SwapMetaUnpacker */
 
-Store::SwapMetaUnpacker::SwapMetaUnpacker(const char * const buf, const ssize_t size, int * const swap_hdr_len)
+Store::SwapMetaUnpacker::SwapMetaUnpacker(const char * const buf, const ssize_t size, size_t &swap_hdr_len)
 {
     Assure(buf);
     Assure(size >= 0);
@@ -228,26 +228,24 @@ Store::SwapMetaUnpacker::SwapMetaUnpacker(const char * const buf, const ssize_t 
     metasSize = size_t(rawMetaSize) - requiredPrefixSize;
     Assure(metas + metasSize <= buf + size); // paranoid
 
-    Assure(swap_hdr_len);
-    *swap_hdr_len = rawMetaSize;
+    swap_hdr_len = rawMetaSize;
 }
 
-uint64_t
+size_t
 Store::UnpackSwapMetaSize(const SBuf &buf)
 {
     // TODO: Move this logic from SwapMetaUnpacker into here?
-    int swap_hdr_len = 0;
-    const SwapMetaUnpacker aBuilder(buf.rawContent(), buf.length(), &swap_hdr_len);
-    Assure(swap_hdr_len >= 0); // TODO: Switch SwapMetaUnpacker to uint64_t?
-    return uint64_t(swap_hdr_len);
+    size_t swap_hdr_len = 0;
+    const SwapMetaUnpacker aBuilder(buf.rawContent(), buf.length(), swap_hdr_len);
+    return swap_hdr_len;
 }
 
-uint64_t
+size_t
 Store::UnpackIndexSwapMeta(const MemBuf &buf, StoreEntry &tmpe, cache_key * const key)
 {
-    int swap_hdr_len = 0;
+    size_t swap_hdr_len = 0;
 
-    SwapMetaUnpacker aBuilder(buf.content(), buf.contentSize(), &swap_hdr_len);
+    SwapMetaUnpacker aBuilder(buf.content(), buf.contentSize(), swap_hdr_len);
     for (const auto &meta: aBuilder) {
         switch (meta.type) {
         case STORE_META_VOID:
@@ -306,8 +304,7 @@ Store::UnpackIndexSwapMeta(const MemBuf &buf, StoreEntry &tmpe, cache_key * cons
         }
     }
 
-    Assure(swap_hdr_len >= 0);
-    return uint64_t(swap_hdr_len);
+    return swap_hdr_len;
 }
 
 void
@@ -316,10 +313,10 @@ Store::UnpackHitSwapMeta(char const * const buf, const ssize_t len, StoreEntry &
     debugs(90, 3, "store_client::unpackHeader: len " << len << "");
     assert(len >= 0); // XXX: fix the type
 
-    int swap_hdr_sz = 0;
+    size_t swap_hdr_sz = 0;
     SBuf varyHeaders;
 
-    Store::SwapMetaUnpacker aBuilder(buf, len, &swap_hdr_sz);
+    SwapMetaUnpacker aBuilder(buf, len, swap_hdr_sz);
     for (const auto &meta: aBuilder) {
         switch (meta.type) {
         case STORE_META_VOID:
@@ -355,10 +352,9 @@ Store::UnpackHitSwapMeta(char const * const buf, const ssize_t len, StoreEntry &
 
     auto &mem_obj = entry.mem();
 
-    assert(swap_hdr_sz >= 0);
     mem_obj.swap_hdr_sz = swap_hdr_sz;
     if (entry.swap_file_sz > 0) { // collapsed hits may not know swap_file_sz
-        assert(entry.swap_file_sz >= static_cast<uint64_t>(swap_hdr_sz));
+        Assure(entry.swap_file_sz >= swap_hdr_sz);
         mem_obj.object_sz = entry.swap_file_sz - swap_hdr_sz;
     }
     debugs(90, 5, "store_client::unpackHeader: swap_file_sz=" <<
