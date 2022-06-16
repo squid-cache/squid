@@ -307,8 +307,8 @@ Store::UnpackIndexSwapMeta(const MemBuf &buf, StoreEntry &tmpe, cache_key * cons
 void
 Store::UnpackHitSwapMeta(char const * const buf, const ssize_t len, StoreEntry &entry)
 {
-    debugs(90, 3, "store_client::unpackHeader: len " << len << "");
-    assert(len >= 0); // XXX: fix the type
+    debugs(90, 7, entry << " buf len: " << len);
+    assert(len >= 0);
 
     size_t swap_hdr_sz = 0;
     SBuf varyHeaders;
@@ -354,9 +354,8 @@ Store::UnpackHitSwapMeta(char const * const buf, const ssize_t len, StoreEntry &
         Assure(entry.swap_file_sz >= swap_hdr_sz);
         mem_obj.object_sz = entry.swap_file_sz - swap_hdr_sz;
     }
-    debugs(90, 5, "store_client::unpackHeader: swap_file_sz=" <<
-           entry.swap_file_sz << "( " << swap_hdr_sz << " + " <<
-           mem_obj.object_sz << ")");
+    debugs(90, 5, "swap_file_sz=" << entry.swap_file_sz <<
+           " (" << swap_hdr_sz << " + " << mem_obj.object_sz << ")");
 
     if (!varyHeaders.isEmpty())
         mem_obj.vary_headers = varyHeaders;
