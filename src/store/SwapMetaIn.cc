@@ -14,6 +14,7 @@
 #include "MemObject.h"
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
+#include "SquidMath.h"
 #include "Store.h"
 #include "store/SwapMeta.h"
 #include "store/SwapMetaIn.h"
@@ -53,7 +54,7 @@ private:
 class SwapMetaUnpacker
 {
 public:
-    SwapMetaUnpacker(const char *buf, ssize_t bufferLength, size_t &swap_hdr_len);
+    SwapMetaUnpacker(const char *buf, ssize_t bufferLength, size_t &swap_hdr_sz);
 
     // for-range loop API for iterating over serialized swap metadata fields
     using Iterator = SwapMetaIterator;
@@ -157,6 +158,32 @@ GetNewSwapMetaVaryHeaders(const SwapMetaView &meta, const StoreEntry &entry)
     throw TextException("Vary mismatch", Here());
 }
 
+/// deserializes entry metadata size from the given buffer
+/// \retval total swap metadata size (a.k.a. swap_hdr_sz)
+static size_t
+UnpackPrefix(const char *buf, const size_t size)
+{
+    Assure(buf);
+    const auto end = buf + size;
+
+    char magic = 0;
+    Deserialize(magic, buf, end);
+
+    if (magic != SwapMetaMagic)
+        throw TextException("store entry metadata prefix is corrupted", Here());
+
+    RawSwapMetaPrefixLength rawMetaSize = 0; // metadata size, including the required prefix
+    Deserialize(rawMetaSize, buf, end);
+
+    if (Less(rawMetaSize, SwapMetaPrefixSize))
+        throw TextException("store entry metadata length is corrupted", Here());
+
+    if (Less(size, rawMetaSize))
+        throw TextException("store entry metadata is too big", Here());
+
+    return rawMetaSize; // now safe to use with (buf, size)
+}
+
 } // namespace Store
 
 /* Store::SwapMetaIterator */
@@ -196,56 +223,31 @@ Store::SwapMetaIterator::sync()
 
 /* Store::SwapMetaUnpacker */
 
-Store::SwapMetaUnpacker::SwapMetaUnpacker(const char * const buf, const ssize_t size, size_t &swap_hdr_len)
+Store::SwapMetaUnpacker::SwapMetaUnpacker(const char * const buf, const ssize_t size, size_t &swap_hdr_sz)
 {
     Assure(buf);
     Assure(size >= 0);
 
-    // buffer = <metadata> [HTTP response byte]...
-    // metadata = <prefix> [metadata field]...
-    // prefix = <magic> <metadata size a.k.a. swap_hdr_len>
-    // We parse the prefix and then skip it, ready to iterate metadata fields.
-
-    const auto requiredPrefixSize = sizeof(Store::SwapMetaMagic) + sizeof(Store::RawSwapMetaPrefixLength);
-    Assure2(uint64_t(size) >= requiredPrefixSize, "parsing buffer accommodates metadata prefix");
-
-    if (buf[0] != Store::SwapMetaMagic)
-        throw TextException("store entry metadata prefix is corrupted", Here());
-
-    Store::RawSwapMetaPrefixLength rawMetaSize = 0; // metadata size, including the required prefix
-    memcpy(&rawMetaSize, &buf[1], sizeof(rawMetaSize));
-
-    if (rawMetaSize < 0)
-        throw TextException("store entry metadata length is corrupted", Here());
-
-    if (rawMetaSize > size)
-        throw TextException("store entry metadata is too big", Here());
-
-    if (size_t(rawMetaSize) < requiredPrefixSize)
-        throw TextException("store entry metadata is too small", Here());
-
-    metas = buf + requiredPrefixSize;
-    metasSize = size_t(rawMetaSize) - requiredPrefixSize;
+    const auto headerSize = UnpackPrefix(buf, size);
+    metas = buf + SwapMetaPrefixSize;
+    metasSize = headerSize - SwapMetaPrefixSize;
     Assure(metas + metasSize <= buf + size); // paranoid
 
-    swap_hdr_len = rawMetaSize;
+    swap_hdr_sz = headerSize;
 }
 
 size_t
 Store::UnpackSwapMetaSize(const SBuf &buf)
 {
-    // TODO: Move this logic from SwapMetaUnpacker into here?
-    size_t swap_hdr_len = 0;
-    const SwapMetaUnpacker aBuilder(buf.rawContent(), buf.length(), swap_hdr_len);
-    return swap_hdr_len;
+    return UnpackPrefix(buf.rawContent(), buf.length());
 }
 
 size_t
 Store::UnpackIndexSwapMeta(const MemBuf &buf, StoreEntry &tmpe, cache_key * const key)
 {
-    size_t swap_hdr_len = 0;
+    size_t swap_hdr_sz = 0;
 
-    SwapMetaUnpacker aBuilder(buf.content(), buf.contentSize(), swap_hdr_len);
+    SwapMetaUnpacker aBuilder(buf.content(), buf.contentSize(), swap_hdr_sz);
     for (const auto &meta: aBuilder) {
         switch (meta.type) {
         case STORE_META_VOID:
@@ -304,7 +306,7 @@ Store::UnpackIndexSwapMeta(const MemBuf &buf, StoreEntry &tmpe, cache_key * cons
         }
     }
 
-    return swap_hdr_len;
+    return swap_hdr_sz;
 }
 
 void

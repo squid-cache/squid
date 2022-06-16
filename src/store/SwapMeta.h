@@ -17,28 +17,38 @@
 
 namespace Store {
 
-/**
- *
- \section StoreSwapMeta Store "swap meta" Description
- \par
- * Store "swap meta" is Store entry metadata stored at the beginning of each
- * cache_dir entry. This entry-dependent metadata typically includes entry cache
- * key, URL, size, and various timestamps. Copies of this information may also
- * be present in Squid process memory, readily accessible via StoreEntry and
- * MemObject pointers, but swap metadata is about cached entry information
- * stored in serialized form meant to cross process and instance boundaries.
- *
- \par
- * The meta data is stored using a TYPE-LENGTH-VALUE format.  That is,
- * each chunk of meta information consists of a TYPE identifier, a
- * LENGTH field, and then the VALUE (which is LENGTH octets long).
- *
- */
+/// "Swap meta" (a.k.a. "swap header") is Store entry metadata stored at the
+/// beginning of each cache_dir entry. This entry-dependent metadata typically
+/// includes entry cache key, URL, size, and various timestamps. Copies of this
+/// information may also be present in Squid process memory, readily accessible
+/// via StoreEntry and MemObject pointers, but swap metadata is about cached
+/// entry information stored in serialized form meant to cross process and
+/// instance boundaries.
+///
+/// Layout of each swap entry metadata in pseudo code:
+/// struct SwapMeta {
+///     struct Prefix {
+///         char magic; // see SwapMetaMagic
+///         int swap_hdr_sz; // total SwapEntry size: prefix and all metaFields
+///     }
+///     Prefix prefix;
+///
+///     struct TLV {
+///         char type; // value meaning (and format); see SwapMetaType
+///         int length; // value length
+///         char value[length]; // type-specific storage of exactly length bytes
+///     }
+///     TLV fields[]; // as many swap meta fields as swap_hdr_sz accommodates
+///
+///     // XXX: int fields above should have been using a fixed-size type.
+/// };
+///
+/// Stored response (e.g., HTTP headers and body) follows swap metadata.
 
-// XXX: Document properly
-// TODO: Check that StoreSwapMeta reference below works
+/// Identifies the meaning (and associated format) of a single swap meta entry.
+/// This enumeration only contains identifiers used by the current code.
 /// The holes in enum item values below represent deprecated/reserved IDs.
-/// \sa StoreSwapMeta, DeprecatedSwapMetaType(), ReservedSwapMetaType()
+/// \sa DeprecatedSwapMetaType(), ReservedSwapMetaType()
 enum SwapMetaType {
     /// Store swap metadata type with an unknown meaning.
     /// Never used by valid stored entries.
@@ -121,6 +131,8 @@ const char SwapMetaMagic = 0x03;
 /// size field is different from RawSwapMetaLength! Valid values of this field
 /// include the prefix size itself.
 using RawSwapMetaPrefixLength = int;
+
+const auto SwapMetaPrefixSize = sizeof(SwapMetaMagic) + sizeof(RawSwapMetaPrefixLength);
 
 // TODO: Use "inline constexpr ..." with C++17.
 /// maximum value of a named swap meta type
