@@ -37,13 +37,13 @@ HandleBadRawType(const RawSwapMetaType type)
     // with that type (or even the whole Store entry with that field).
 
     const auto typeValuesWeMightAdd = 10;
-    // compute "type > SwapMetaTypeMax() + typeValuesWeMightAdd" w/o overflow
-    if (type >= typeValuesWeMightAdd && type - typeValuesWeMightAdd > SwapMetaTypeMax()) {
+    // compute "type > RawSwapMetaTypeMax() + typeValuesWeMightAdd" w/o overflow
+    if (type >= typeValuesWeMightAdd && type - typeValuesWeMightAdd > RawSwapMetaTypeMax()) {
         debugs(20, DBG_CRITICAL, "ERROR: Malformed cache storage; ignoring swap meta field with an unexpected type: " << int(type));
         return;
     }
 
-    if (type > SwapMetaTypeMax()) {
+    if (type > RawSwapMetaTypeMax()) {
         debugs(20, 3, "ignoring swap meta field with a presumed future type: " << int(type));
         return;
     }

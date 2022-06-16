@@ -135,9 +135,9 @@ using RawSwapMetaPrefixLength = int;
 const auto SwapMetaPrefixSize = sizeof(SwapMetaMagic) + sizeof(RawSwapMetaPrefixLength);
 
 // TODO: Use "inline constexpr ..." with C++17.
-/// maximum value of a named swap meta type
-inline SwapMetaType
-SwapMetaTypeMax()
+/// maximum serialized value of a named swap meta type
+inline RawSwapMetaType
+RawSwapMetaTypeMax()
 {
     // This "constant" switch forces developers to update this function when
     // they add new type values [-Wswitch]. It is better than an end_ enum
