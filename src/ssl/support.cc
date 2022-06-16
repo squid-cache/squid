@@ -658,7 +658,7 @@ Ssl::Initialize(void)
     SQUID_OPENSSL_init_ssl();
 
     if (::Config.SSL.ssl_engine) {
-#if !defined(OPENSSL_NO_ENGINE) && OPENSSL_VERSION_MAJOR < 3
+#if !defined(OPENSSL_NO_ENGINE)
         ENGINE_load_builtin_engines();
         ENGINE *e;
         if (!(e = ENGINE_by_id(::Config.SSL.ssl_engine)))
