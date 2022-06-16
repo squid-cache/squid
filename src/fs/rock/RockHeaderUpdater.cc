@@ -13,7 +13,7 @@
 #include "fs/rock/RockIoState.h"
 #include "mime_header.h"
 #include "Store.h"
-#include "StoreMetaUnpacker.h"
+#include "store/SwapMetaIn.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Rock, HeaderUpdater);
 
@@ -270,10 +270,7 @@ void
 Rock::HeaderUpdater::parseReadBytes()
 {
     if (!staleSwapHeaderSize) {
-        StoreMetaUnpacker aBuilder(
-            exchangeBuffer.rawContent(),
-            exchangeBuffer.length(),
-            &staleSwapHeaderSize);
+        staleSwapHeaderSize = Store::UnpackSwapMetaSize(exchangeBuffer);
         // Squid assumes that metadata always fits into a single db slot
         debugs(47, 7, "staleSwapHeaderSize=" << staleSwapHeaderSize);
         Must(staleSwapHeaderSize > 0);

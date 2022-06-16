@@ -46,8 +46,6 @@ class Disks;
 class Disk;
 class DiskConfig;
 class EntryGuard;
-class SwapMetaView;
-class SwapMetaIterator;
 
 typedef ::StoreEntry Entry;
 typedef ::MemStore Memory;

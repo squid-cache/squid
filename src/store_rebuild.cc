@@ -11,12 +11,15 @@
 #include "squid.h"
 #include "debug/Messages.h"
 #include "event.h"
+#include "fde.h"
+#include "Generic.h"
 #include "globals.h"
 #include "md5.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "store/Disk.h"
+#include "store/SwapMetaIn.h"
 #include "store_digest.h"
 #include "store_key_md5.h"
 #include "store_rebuild.h"
@@ -249,12 +252,6 @@ Progress::print(std::ostream &os) const
     }
 }
 
-#include "fde.h"
-#include "Generic.h"
-#include "StoreMeta.h"
-#include "StoreMetaMD5.h"
-#include "StoreMetaUnpacker.h"
-
 bool
 storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, StoreRebuildData &)
 {
@@ -281,70 +278,12 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
                        StoreRebuildData &stats,
                        uint64_t expectedSize)
 {
-    int swap_hdr_len = 0;
+    uint64_t swap_hdr_len = 0;
 
     tmpe.key = nullptr;
 
     try {
-        StoreMetaUnpacker aBuilder(buf.content(), buf.contentSize(), &swap_hdr_len);
-        for (const auto &meta: aBuilder) {
-            using namespace Store;
-            switch (meta.type) {
-            case STORE_META_VOID:
-                // TODO: Skip this StoreEntry instead of ignoring its field?
-                // this type is aBuilder's signal that it took care of the field
-                break;
-
-            case STORE_META_KEY_MD5:
-                // Optimization: We could postpone setting the caller's key
-                // until all fields are parsed, but that would require copying
-                // it. Instead, we treat key and tmpe.key as storage that can be
-                // safely altered even on parsing failures. This function
-                // description tells the callers that we may do that.
-                GetSwapMetaMd5(meta, key);
-                Assure(key);
-                tmpe.key = key;
-                break;
-            // TODO: remove. Since old_metahdr's members may have different sizes on different
-            // platforms, we cannot guarantee that serialized types in an old cache
-            // are the same as run-time types.
-            case STORE_META_STD: {
-                meta.checkExpectedLength(STORE_HDR_METASIZE_OLD);
-                struct old_metahdr {
-                    // XXX: All serialized members must have fixed-size types.
-                    time_t timestamp;
-                    time_t lastref;
-                    time_t expires;
-                    time_t lastmod;
-                    size_t swap_file_sz;
-                    uint16_t refcount;
-                    uint16_t flags;
-                };
-                static_assert(offsetof(old_metahdr, flags) + sizeof(old_metahdr::flags) == STORE_HDR_METASIZE_OLD, "we reproduced old swap meta basics format");
-                auto basics = static_cast<const old_metahdr*>(meta.rawValue);
-                tmpe.timestamp = basics->timestamp;
-                tmpe.lastref = basics->lastref;
-                tmpe.expires = basics->expires;
-                tmpe.lastModified(basics->lastmod);
-                tmpe.swap_file_sz = basics->swap_file_sz;
-                tmpe.refcount = basics->refcount;
-                tmpe.flags = basics->flags;
-                break;
-            }
-
-            case STORE_META_STD_LFS:
-                meta.checkExpectedLength(STORE_HDR_METASIZE);
-                memcpy(&tmpe.timestamp, meta.rawValue, STORE_HDR_METASIZE);
-                break;
-
-            case STORE_META_URL:
-            case STORE_META_VARY_HEADERS:
-            case STORE_META_OBJSIZE:
-                // We do not load this information at cache index rebuild time;
-                // store_client::unpackHeader() handles these MemObject fields.
-                break;
-            }
-        }
+        swap_hdr_len = Store::UnpackIndexSwapMeta(buf, tmpe, key);
     } catch (...) {
         debugs(47, DBG_IMPORTANT, "WARNING: Ignoring store entry: " << CurrentException);
         return false;

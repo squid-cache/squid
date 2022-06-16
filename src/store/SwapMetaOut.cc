@@ -6,28 +6,28 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 20    Storage Manager Swapfile Metadata */
-
 #include "squid.h"
 #include "md5.h"
 #include "MemObject.h"
 #include "sbuf/Stream.h"
 #include "SquidMath.h"
 #include "Store.h"
-#include "StoreMeta.h"
+#include "store/SwapMeta.h"
+#include "store/SwapMetaOut.h"
 
 namespace Store {
 
 /// writes a single swap meta field to the given stream
 static void
-PackSwapMeta(std::ostream &os, const SwapMetaType type, const size_t length, const void *value)
+PackField(std::ostream &os, const SwapMetaType type, const size_t length, const void *value)
 {
     // Outside of packing/unpacking code, we correctly use SwapMetaType for
     // valid swap meta types now, but we store these values as RawSwapMetaType.
-    // TODO: Assure(SwapMetaTypeMax() <= std::numeric_limits<RawSwapMetaType>::max()) after merging this code with StoreMeta.cc
-    Assure(type <= std::numeric_limits<RawSwapMetaType>::max());
+    // These paranoid assertions confirm static_cast preserves the type value.
+    // TODO: Do not duplicate this assertion code.
+    assert(type >= std::numeric_limits<RawSwapMetaType>::min());
+    assert(type <= std::numeric_limits<RawSwapMetaType>::max());
     const auto rawType = static_cast<RawSwapMetaType>(type);
-    // TODO: Assure(HonoredSwapMetaType(type)) after merging this code with StoreMeta.cc
 
     if (length > SwapMetaFieldValueLengthMax)
         throw TextException("swap meta field value too big to store", Here());
@@ -36,8 +36,12 @@ PackSwapMeta(std::ostream &os, const SwapMetaType type, const size_t length, con
     // sizes now, but old code stored these values as RawSwapMetaLength (of an
     // unknown size), so we continue to do so to be able to load meta fields
     // from (some) old caches.
-    static_assert(SwapMetaFieldValueLengthMax <= uint64_t(std::numeric_limits<RawSwapMetaLength>::max()), "any swap metadata value size can be stored as RawSwapMetaLength");
+    // These paranoid assertions confirm static_cast preserves the length value.
+    assert(length >= std::numeric_limits<RawSwapMetaLength>::min());
+    assert(length <= std::numeric_limits<RawSwapMetaLength>::max());
     const auto rawLength = static_cast<RawSwapMetaLength>(length);
+
+    CheckSwapMetaSerialization(rawType, rawLength, value);
 
     if (!os.write(&rawType, sizeof(rawType)) ||
         !os.write(reinterpret_cast<const char*>(&rawLength), sizeof(rawLength)) ||
@@ -47,7 +51,7 @@ PackSwapMeta(std::ostream &os, const SwapMetaType type, const size_t length, con
 
 /// writes swap meta fields of the given Store entry to the given stream
 static void
-PackSwapMetas(const StoreEntry &entry, std::ostream &os)
+PackFields(const StoreEntry &entry, std::ostream &os)
 {
     // TODO: Refactor this code instead of reducing the change diff.
     const auto e = &entry;
@@ -64,30 +68,30 @@ PackSwapMetas(const StoreEntry &entry, std::ostream &os)
 
     debugs(20, 3, entry << " URL: " << url);
 
-    PackSwapMeta(os, STORE_META_KEY_MD5, SQUID_MD5_DIGEST_LENGTH, e->key);
+    PackField(os, STORE_META_KEY_MD5, SQUID_MD5_DIGEST_LENGTH, e->key);
 
-    PackSwapMeta(os, STORE_META_STD_LFS, STORE_HDR_METASIZE, &e->timestamp);
+    PackField(os, STORE_META_STD_LFS, STORE_HDR_METASIZE, &e->timestamp);
 
     // XXX: do TLV without the c_str() termination. check readers first though
-    PackSwapMeta(os, STORE_META_URL, url.length() + 1U, url.c_str());
+    PackField(os, STORE_META_URL, url.length() + 1U, url.c_str());
 
     if (objsize >= 0) {
-        PackSwapMeta(os, STORE_META_OBJSIZE, sizeof(objsize), &objsize);
+        PackField(os, STORE_META_OBJSIZE, sizeof(objsize), &objsize);
     }
 
     const auto &vary = e->mem_obj->vary_headers;
     if (!vary.isEmpty()) {
-        PackSwapMeta(os, STORE_META_VARY_HEADERS, vary.length(), vary.rawContent());
+        PackField(os, STORE_META_VARY_HEADERS, vary.length(), vary.rawContent());
     }
 }
 
 } // namespace Store
 
 char const *
-Store::PackSwapHeader(const StoreEntry &entry, size_t &totalLength)
+Store::PackSwapMeta(const StoreEntry &entry, size_t &totalLength)
 {
     SBufStream os;
-    PackSwapMetas(entry, os);
+    PackFields(entry, os);
     const auto metas = os.buf();
 
     // TODO: Optimize this allocation away by returning (and swapping out) SBuf.

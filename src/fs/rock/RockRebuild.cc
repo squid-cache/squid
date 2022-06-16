@@ -515,9 +515,9 @@ static
 bool
 ZeroedSlot(const MemBuf &buf)
 {
-    // We could memcmp the entire buffer, but it is probably safe enough
-    // to test a few bytes because if we do not detect a corrupted entry
-    // it is not a big deal: StoreMetaUnpacker rejects all-0s metadata prefix.
+    // We could memcmp the entire buffer, but it is probably safe enough to test
+    // a few bytes because if we do not detect a corrupted entry it is not a big
+    // deal: Store::SwapMetaUnpacker rejects all-0s metadata prefix.
     static const std::array<char, 10> zeros = {};
 
     if (static_cast<size_t>(buf.contentSize()) < zeros.size())

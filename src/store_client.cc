@@ -21,13 +21,9 @@
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #include "Store.h"
+#include "store/SwapMetaIn.h"
 #include "store_swapin.h"
 #include "StoreClient.h"
-#include "StoreMeta.h"
-#include "StoreMetaMD5.h"
-#include "StoreMetaUnpacker.h"
-#include "StoreMetaURL.h"
-#include "StoreMetaVary.h"
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
@@ -560,70 +556,6 @@ storeClientReadBody(void *data, const char *buf, ssize_t len, StoreIOState::Poin
     sc->readBody(buf, len);
 }
 
-bool
-store_client::unpackHeader(char const *buf, ssize_t len)
-{
-    debugs(90, 3, "store_client::unpackHeader: len " << len << "");
-    assert(len >= 0);
-
-    int swap_hdr_sz = 0;
-    SBuf varyHeaders;
-    try {
-        using namespace Store;
-        StoreMetaUnpacker aBuilder(buf, len, &swap_hdr_sz);
-        for (const auto &meta: aBuilder) {
-            switch (meta.type) {
-            case STORE_META_VOID:
-                // this type is aBuilder's signal that it took care of the field
-                break;
-
-            case STORE_META_KEY_MD5:
-                // paranoid -- storeRebuildParseEntry() loads the key
-                CheckSwapMetaMd5(meta, *entry); // paranoid
-                break;
-
-            case STORE_META_URL:
-                CheckSwapMetaUrl(meta, *entry);
-                break;
-
-            case STORE_META_STD:
-                // Handled by storeRebuildParseEntry()
-                break;
-
-            case STORE_META_VARY_HEADERS:
-                varyHeaders = GetNewSwapMetaVaryHeaders(meta, *entry);
-                break;
-
-            case STORE_META_STD_LFS:
-                // Handled by storeRebuildParseEntry()
-                break;
-
-            case STORE_META_OBJSIZE:
-                // TODO: Should not we set entry->mem().object_sz?
-                break;
-            }
-        }
-    } catch (...) {
-        debugs(90, DBG_IMPORTANT, "ERROR: Failed to unpack Store entry metadata: " << CurrentException);
-        return false;
-    }
-
-    assert(swap_hdr_sz >= 0);
-    entry->mem_obj->swap_hdr_sz = swap_hdr_sz;
-    if (entry->swap_file_sz > 0) { // collapsed hits may not know swap_file_sz
-        assert(entry->swap_file_sz >= static_cast<uint64_t>(swap_hdr_sz));
-        entry->mem_obj->object_sz = entry->swap_file_sz - swap_hdr_sz;
-    }
-    debugs(90, 5, "store_client::unpackHeader: swap_file_sz=" <<
-           entry->swap_file_sz << "( " << swap_hdr_sz << " + " <<
-           entry->mem_obj->object_sz << ")");
-
-    if (!varyHeaders.isEmpty())
-        entry->mem().vary_headers = varyHeaders;
-
-    return true;
-}
-
 void
 store_client::readHeader(char const *buf, ssize_t len)
 {
@@ -640,7 +572,10 @@ store_client::readHeader(char const *buf, ssize_t len)
     if (len < 0)
         return fail();
 
-    if (!unpackHeader(buf, len)) {
+    try {
+        Store::UnpackHitSwapMeta(buf, len, *entry);
+    } catch (...) {
+        debugs(90, DBG_IMPORTANT, "ERROR: Failed to unpack Store entry metadata: " << CurrentException);
         fail();
         return;
     }

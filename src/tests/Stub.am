@@ -82,10 +82,8 @@ STUB_SOURCE = \
     tests/stub_store.cc \
     tests/stub_store_client.cc \
     tests/stub_store_digest.cc \
-    tests/stub_StoreMeta.cc \
     tests/stub_store_rebuild.cc \
     tests/stub_store_stats.cc \
-    tests/stub_store_swapout.cc \
     tests/stub_tools.cc \
     tests/stub_tunnel.cc \
     tests/stub_UdsOp.cc \

@@ -42,13 +42,13 @@
 #include "store/Controller.h"
 #include "store/Disk.h"
 #include "store/Disks.h"
+#include "store/SwapMetaOut.h"
 #include "store_digest.h"
 #include "store_key_md5.h"
 #include "store_log.h"
 #include "store_rebuild.h"
 #include "StoreClient.h"
 #include "StoreIOState.h"
-#include "StoreMeta.h"
 #include "StrList.h"
 #include "swap_log_op.h"
 #include "tools.h"
@@ -1728,7 +1728,7 @@ StoreEntry::startWriting()
 char const *
 StoreEntry::getSerialisedMetaData(size_t &length) const
 {
-    return Store::PackSwapHeader(*this, length);
+    return Store::PackSwapMeta(*this, length);
 }
 
 /**
