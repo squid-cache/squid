@@ -81,22 +81,17 @@ Deserialize(T &item, const char * &input, const void *end)
 }
 
 static void
-CheckSwapMetaMd5(const SwapMetaView &meta, const StoreEntry &entry)
+CheckSwapMetaKey(const SwapMetaView &meta, const StoreEntry &entry)
 {
     Assure(meta.type == STORE_META_KEY_MD5);
     meta.checkExpectedLength(SQUID_MD5_DIGEST_LENGTH);
 
-    // TODO: Refactor this code instead of reducing the change diff.
-    static unsigned int md5_mismatches = 0;
-    const auto e = &entry;
-    const auto &value = meta.rawValue;
+    if (!EBIT_TEST(entry.flags, KEY_PRIVATE) &&
+        memcmp(meta.rawValue, entry.key, SQUID_MD5_DIGEST_LENGTH) != 0) {
 
-    if (!EBIT_TEST(e->flags, KEY_PRIVATE) &&
-            memcmp(value, e->key, SQUID_MD5_DIGEST_LENGTH)) {
-        debugs(20, 2, "storeClientReadHeader: swapin MD5 mismatch");
-        // debugs(20, 2, "\t" << storeKeyText((const cache_key *)value));
-        debugs(20, 2, "\t" << e->getMD5Text());
+        debugs(20, 2, "stored key mismatches " << entry.getMD5Text());
 
+        static unsigned int md5_mismatches = 0;
         if (isPowTen(++md5_mismatches))
             debugs(20, DBG_IMPORTANT, "WARNING: " << md5_mismatches << " swapin MD5 mismatches");
 
@@ -120,21 +115,21 @@ CheckSwapMetaUrl(const SwapMetaView &meta, const StoreEntry &entry)
 {
     Assure(meta.type == STORE_META_URL);
 
-    // PackSwapMetas() terminates; strcasecmp() and reporting below rely on that
+    // PackSwapMeta() terminates; strcasecmp() and reporting below rely on that
     if (!memrchr(meta.rawValue, '\0', meta.rawLength))
         throw TextException("unterminated URI or bad URI length", Here());
+    const auto storedUrl = static_cast<const char *>(meta.rawValue);
 
-    // TODO: Refactor this code instead of reducing the change diff.
-    const auto e = &entry;
-    const auto value = meta.rawValue;
+    const auto &mem_obj = entry.mem();
 
-    if (!e->mem_obj->hasUris())
+    if (!mem_obj.hasUris())
         return; // cannot validate
 
     // XXX: ensure all Squid URL inputs are properly normalized then use case-sensitive compare here
-    if (strcasecmp(e->mem_obj->urlXXX(), (char *)value)) {
-        debugs(20, DBG_IMPORTANT, "storeClientReadHeader: URL mismatch");
-        debugs(20, DBG_IMPORTANT, "\t{" << (char *) value << "} != {" << e->mem_obj->urlXXX() << "}");
+    if (strcasecmp(mem_obj.urlXXX(), storedUrl) != 0) {
+        debugs(20, DBG_IMPORTANT, "WARNING: URL mismatch when loading a cached entry:" <<
+               Debug::Extra << "expected: " << mem_obj.urlXXX() <<
+               Debug::Extra << "found:    " << storedUrl);
         throw TextException("URL mismatch", Here());
     }
 }
@@ -327,7 +322,7 @@ Store::UnpackHitSwapMeta(char const * const buf, const ssize_t len, StoreEntry &
 
         case STORE_META_KEY_MD5:
             // paranoid -- storeRebuildParseEntry() loads the key
-            CheckSwapMetaMd5(meta, entry); // paranoid
+            CheckSwapMetaKey(meta, entry); // paranoid
             break;
 
         case STORE_META_URL:

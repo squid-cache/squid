@@ -46,36 +46,30 @@ PackField(std::ostream &os, const SwapMetaType type, const size_t length, const 
 static void
 PackFields(const StoreEntry &entry, std::ostream &os)
 {
-    // TODO: Refactor this code instead of reducing the change diff.
-    const auto e = &entry;
+    const auto &emem = entry.mem();
+    const auto objsize = emem.expectedReplySize();
 
-    assert(e->mem_obj != NULL);
-    const int64_t objsize = e->mem_obj->expectedReplySize();
-
-    // e->mem_obj->request may be nil in this context
     SBuf url;
-    if (e->mem_obj->request)
-        url = e->mem_obj->request->storeId();
+    if (emem.request)
+        url = emem.request->storeId();
     else
-        url = e->url();
+        url = entry.url();
 
     debugs(20, 3, entry << " URL: " << url);
 
-    PackField(os, STORE_META_KEY_MD5, SQUID_MD5_DIGEST_LENGTH, e->key);
+    PackField(os, STORE_META_KEY_MD5, SQUID_MD5_DIGEST_LENGTH, entry.key);
 
-    PackField(os, STORE_META_STD_LFS, STORE_HDR_METASIZE, &e->timestamp);
+    PackField(os, STORE_META_STD_LFS, STORE_HDR_METASIZE, &entry.timestamp);
 
     // XXX: do TLV without the c_str() termination. check readers first though
     PackField(os, STORE_META_URL, url.length() + 1U, url.c_str());
 
-    if (objsize >= 0) {
+    if (objsize >= 0)
         PackField(os, STORE_META_OBJSIZE, sizeof(objsize), &objsize);
-    }
 
-    const auto &vary = e->mem_obj->vary_headers;
-    if (!vary.isEmpty()) {
+    const auto &vary = emem.vary_headers;
+    if (!vary.isEmpty())
         PackField(os, STORE_META_VARY_HEADERS, vary.length(), vary.rawContent());
-    }
 }
 
 } // namespace Store
