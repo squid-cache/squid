@@ -22,7 +22,7 @@ namespace Store {
 static bool
 CheckSwapMetaTypeEnum(bool &useMe)
 {
-    for (auto i = RawSwapMetaTypeMax(); i != STORE_META_VOID; --i) {
+    for (auto i = RawSwapMetaTypeTop(); i != RawSwapMetaTypeBottom; --i) {
         assert(HonoredSwapMetaType(i) || IgnoredSwapMetaType(i));
         assert(!(HonoredSwapMetaType(i) && IgnoredSwapMetaType(i)));
         assert(!(DeprecatedSwapMetaType(i) && ReservedSwapMetaType(i)));

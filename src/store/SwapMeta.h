@@ -134,10 +134,15 @@ using RawSwapMetaPrefixLength = int;
 
 const auto SwapMetaPrefixSize = sizeof(SwapMetaMagic) + sizeof(RawSwapMetaPrefixLength);
 
+/// SwapMetaType values will never be serialized into this or smaller values
+/// This is not the RawSwapMetaType minimum possible value (usually -128).
+const RawSwapMetaType RawSwapMetaTypeBottom = 0;
+
 // TODO: Use "inline constexpr ..." with C++17.
-/// maximum serialized value of a named swap meta type
+/// maximum serialized value of a named SwapMetaType value
+/// This is not the RawSwapMetaType maximum possible value (usually +127).
 inline RawSwapMetaType
-RawSwapMetaTypeMax()
+RawSwapMetaTypeTop()
 {
     // This "constant" switch forces developers to update this function when
     // they add new type values [-Wswitch]. It is better than an end_ enum
