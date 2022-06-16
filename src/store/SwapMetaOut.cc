@@ -23,11 +23,8 @@ PackField(std::ostream &os, const SwapMetaType type, const size_t length, const 
 {
     // Outside of packing/unpacking code, we correctly use SwapMetaType for
     // valid swap meta types now, but we store these values as RawSwapMetaType.
-    // These paranoid assertions confirm static_cast preserves the type value.
-    // TODO: Do not duplicate this assertion code.
-    assert(type >= std::numeric_limits<RawSwapMetaType>::min());
-    assert(type <= std::numeric_limits<RawSwapMetaType>::max());
-    const auto rawType = static_cast<RawSwapMetaType>(type);
+    // NaturalSum trick protects from type value loss when casting.
+    const auto rawType = NaturalSum<RawSwapMetaType>(type).value();
 
     if (length > SwapMetaFieldValueLengthMax)
         throw TextException("swap meta field value too big to store", Here());
@@ -36,10 +33,8 @@ PackField(std::ostream &os, const SwapMetaType type, const size_t length, const 
     // sizes now, but old code stored these values as RawSwapMetaLength (of an
     // unknown size), so we continue to do so to be able to load meta fields
     // from (some) old caches.
-    // These paranoid assertions confirm static_cast preserves the length value.
-    assert(length >= std::numeric_limits<RawSwapMetaLength>::min());
-    assert(length <= std::numeric_limits<RawSwapMetaLength>::max());
-    const auto rawLength = static_cast<RawSwapMetaLength>(length);
+    // NaturalSum trick protects from length value loss when casting.
+    const auto rawLength = NaturalSum<RawSwapMetaLength>(length).value();
 
     CheckSwapMetaSerialization(rawType, rawLength, value);
 
