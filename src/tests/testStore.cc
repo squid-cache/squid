@@ -128,6 +128,21 @@ testStore::testMaxSize()
 
 namespace Store {
 
+/// check rawType that may be ignored
+static void
+checkIgnorableSwapMetaRawType(const RawSwapMetaType rawType)
+{
+    if (IgnoredSwapMetaType(rawType)) {
+        // an ignored raw type is either deprecated or reserved
+        CPPUNIT_ASSERT(DeprecatedSwapMetaType(rawType) || ReservedSwapMetaType(rawType));
+        CPPUNIT_ASSERT(!(DeprecatedSwapMetaType(rawType) && ReservedSwapMetaType(rawType)));
+    } else {
+        // all other raw types are neither deprecated nor reserved
+        CPPUNIT_ASSERT(!DeprecatedSwapMetaType(rawType) && !ReservedSwapMetaType(rawType));
+    }
+}
+
+/// check a raw swap meta field type below SwapMetaType range or STORE_META_VOID
 static void
 checkTooSmallSwapMetaRawType(const RawSwapMetaType rawType)
 {
@@ -139,36 +154,26 @@ checkTooSmallSwapMetaRawType(const RawSwapMetaType rawType)
     CPPUNIT_ASSERT(!ReservedSwapMetaType(rawType)); // future
 }
 
+/// check a raw swap meta field type within SwapMetaType range, excluding STORE_META_VOID
 static void
 checkKnownSwapMetaRawType(const RawSwapMetaType rawType)
 {
-    // a known raw type is either honored or ignored
+    // an in-range rawType other than STORE_META_VOID is either honored or ignored
     CPPUNIT_ASSERT(HonoredSwapMetaType(rawType) || IgnoredSwapMetaType(rawType));
     CPPUNIT_ASSERT(!(HonoredSwapMetaType(rawType) && IgnoredSwapMetaType(rawType)));
-
-    if (IgnoredSwapMetaType(rawType)) {
-        // an ignored raw type is either deprecated or reserved
-        CPPUNIT_ASSERT(DeprecatedSwapMetaType(rawType) || ReservedSwapMetaType(rawType));
-        CPPUNIT_ASSERT(!(DeprecatedSwapMetaType(rawType) && ReservedSwapMetaType(rawType)));
-    } else {
-        // an honored raw type is neither deprecated nor reserved
-        CPPUNIT_ASSERT(!DeprecatedSwapMetaType(rawType) && !ReservedSwapMetaType(rawType));
-    }
+    checkIgnorableSwapMetaRawType(rawType);
 }
 
+/// check a raw swap meta field type exceeding RawSwapMetaTypeTop()
 static void
 checkTooBigSwapMetaRawType(const RawSwapMetaType rawType)
 {
-    // values beyond RawSwapMetaTypeTop() may be reserved for future use but
-    // cannot be honored or deprecated (XXX: why not deprecated?)
-    if (ReservedSwapMetaType(rawType))
-        CPPUNIT_ASSERT(IgnoredSwapMetaType(rawType));
-    else
-        CPPUNIT_ASSERT(!IgnoredSwapMetaType(rawType));
+    // values beyond RawSwapMetaTypeTop() cannot be honored but may be ignored
     CPPUNIT_ASSERT(!HonoredSwapMetaType(rawType));
-    CPPUNIT_ASSERT(!DeprecatedSwapMetaType(rawType));
+    checkIgnorableSwapMetaRawType(rawType);
 }
 
+/// check a given raw swap meta field type
 static void
 checkSwapMetaRawType(const RawSwapMetaType rawType)
 {
