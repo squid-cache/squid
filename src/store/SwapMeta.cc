@@ -13,20 +13,30 @@
 
 namespace Store {
 
-// XXX: Move detailed check descriptions inside the function.
 // TODO: Refactor into a static_assert after migrating to C++17.
-/// Validates that all SwapMetaType names are classified, protecting developers
-/// from forgetting to classify a name after removing it from SwapMetaType.
-/// Also checks that honored and ignored sets are mutually exclusive.
-/// Also checks that deprecated and reserved sets are mutually exclusive.
+/// Upholds swap metadata invariants that cannot be checked at compile time
+/// (yet) but can be checked without swap in/out transaction specifics.
 static bool
 CheckSwapMetaTypeEnum(bool &useMe)
 {
     for (auto i = RawSwapMetaTypeTop(); i != RawSwapMetaTypeBottom; --i) {
+        // assertion descriptions below are approximate; many mistake variations
+        // are possible and one mistake may affect multiple invariants
+
+        // remembered to classify a name after removing it from SwapMetaType
         assert(HonoredSwapMetaType(i) || IgnoredSwapMetaType(i));
+
+        // did not list the same value in these two mutually exclusive sets
         assert(!(HonoredSwapMetaType(i) && IgnoredSwapMetaType(i)));
+
+        // did not list the same value in these two mutually exclusive sets
         assert(!(DeprecatedSwapMetaType(i) && ReservedSwapMetaType(i)));
     }
+
+    // upheld RawSwapMetaTypeBottom definition of being unrelated to any named
+    // SwapMetaDataType values, including past, current, and reserved
+    assert(!HonoredSwapMetaType(RawSwapMetaTypeBottom));
+    assert(!IgnoredSwapMetaType(RawSwapMetaTypeBottom));
 
     useMe = true;
     return true;
