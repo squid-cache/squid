@@ -22,7 +22,7 @@ static void
 PackField(std::ostream &os, const SwapMetaType type, const size_t length, const void *value)
 {
     // Outside of packing/unpacking code, we correctly use SwapMetaType for
-    // valid swap meta types now, but we store these values as RawSwapMetaType.
+    // valid swap meta types, but we store these values as RawSwapMetaType.
     const auto rawType = NaturalCast<RawSwapMetaType>(type);
 
     if (length > SwapMetaFieldValueLengthMax)
@@ -39,10 +39,10 @@ PackField(std::ostream &os, const SwapMetaType type, const size_t length, const 
     if (!os.write(&rawType, sizeof(rawType)) ||
             !os.write(reinterpret_cast<const char*>(&rawLength), sizeof(rawLength)) ||
             (length && !os.write(static_cast<const char*>(value), length)))
-        throw TextException("cannot store swap meta field type", Here());
+        throw TextException("cannot pack a swap meta field", Here());
 }
 
-/// writes swap meta fields of the given Store entry to the given stream
+/// writes all swap meta fields of the given Store entry to the given stream
 static void
 PackFields(const StoreEntry &entry, std::ostream &os)
 {

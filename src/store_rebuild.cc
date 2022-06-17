@@ -12,7 +12,6 @@
 #include "debug/Messages.h"
 #include "event.h"
 #include "fde.h"
-#include "Generic.h"
 #include "globals.h"
 #include "md5.h"
 #include "SquidConfig.h"
@@ -27,7 +26,6 @@
 #include "time/gadgets.h"
 
 #include <cerrno>
-#include <cstddef>
 
 static StoreRebuildData counts;
 

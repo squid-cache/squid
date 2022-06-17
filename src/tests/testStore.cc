@@ -160,7 +160,7 @@ static void
 checkTooBigSwapMetaRawType(const RawSwapMetaType rawType)
 {
     // values beyond RawSwapMetaTypeTop() may be reserved for future use but
-    // cannot be honored or deprecated
+    // cannot be honored or deprecated (XXX: why not deprecated?)
     if (ReservedSwapMetaType(rawType))
         CPPUNIT_ASSERT(IgnoredSwapMetaType(rawType));
     else

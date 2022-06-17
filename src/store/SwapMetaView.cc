@@ -52,11 +52,11 @@ HandleBadRawType(const RawSwapMetaType type)
     debugs(20, DBG_CRITICAL, "ERROR: Malformed cache storage; ignoring swap meta field with an invalid type: " << int(type));
 }
 
-/// a helper function to safely extract one item from raw bounded input
-/// and advance input to the next item
+/// a helper function to safely copy raw end-bounded serialized input into the
+/// given item and advance that input to the next item
 template <typename T>
 static void
-Deserialize(T &item, const char * &input, const void *end)
+Extract(T &item, const char * &input, const void *end)
 {
     if (input + sizeof(item) > end)
         throw TextException("truncated swap meta field", Here());
@@ -70,14 +70,14 @@ Store::SwapMetaView::SwapMetaView(const void * const begin, const void * const e
 {
     auto input = static_cast<const char *>(begin);
 
-    Deserialize(rawType, input, end);
+    Extract(rawType, input, end);
     if (HonoredSwapMetaType(rawType))
         type = static_cast<SwapMetaType>(rawType);
     else
         HandleBadRawType(rawType); // and leave type as STORE_META_VOID
 
     RawSwapMetaLength lengthOrGarbage = 0;
-    Deserialize(lengthOrGarbage, input, end);
+    Extract(lengthOrGarbage, input, end);
     if (lengthOrGarbage < 0)
         throw TextException("negative swap meta field length value", Here());
     if (uint64_t(lengthOrGarbage) > SwapMetaFieldValueLengthMax)
@@ -86,8 +86,8 @@ Store::SwapMetaView::SwapMetaView(const void * const begin, const void * const e
         throw TextException("truncated swap meta field value", Here());
     rawLength = static_cast<size_t>(lengthOrGarbage);
 
-    Assure(input >= begin);
-    Assure(input <= end);
+    Assure(input > begin);
+    Assure(input + rawLength <= end);
     rawValue = input;
 }
 

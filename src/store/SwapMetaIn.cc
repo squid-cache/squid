@@ -22,7 +22,7 @@
 
 namespace Store {
 
-/// iterates swapped out swap meta fields, loaded into a given buffer
+/// iterates serialized swap meta fields loaded into a given buffer
 class SwapMetaIterator
 {
 public:
@@ -68,18 +68,7 @@ private:
     size_t metasSize; ///< number of bytes in the metas buffer
 };
 
-/// a helper function to safely extract one item from raw bounded input
-/// and advance input to the next item
-template <typename T>
-static void
-Deserialize(T &item, const char * &input, const void *end)
-{
-    if (input + sizeof(item) > end)
-        throw TextException("truncated swap meta field", Here());
-    memcpy(&item, input, sizeof(item));
-    input += sizeof(item);
-}
-
+/// validates serialized swap meta with STORE_META_KEY_MD5 type
 static void
 CheckSwapMetaKey(const SwapMetaView &meta, const StoreEntry &entry)
 {
@@ -101,8 +90,9 @@ CheckSwapMetaKey(const SwapMetaView &meta, const StoreEntry &entry)
     }
 }
 
+/// deserializes swap meta with STORE_META_KEY_MD5 type
 static void
-GetSwapMetaMd5(const SwapMetaView &meta, cache_key *key)
+UnpackSwapMetaKey(const SwapMetaView &meta, cache_key *key)
 {
     Assure(meta.type == STORE_META_KEY_MD5);
     meta.checkExpectedLength(SQUID_MD5_DIGEST_LENGTH);
@@ -110,6 +100,7 @@ GetSwapMetaMd5(const SwapMetaView &meta, cache_key *key)
     memcpy(key, meta.rawValue, SQUID_MD5_DIGEST_LENGTH);
 }
 
+/// validates serialized swap meta with STORE_META_URL type
 static void
 CheckSwapMetaUrl(const SwapMetaView &meta, const StoreEntry &entry)
 {
@@ -134,8 +125,9 @@ CheckSwapMetaUrl(const SwapMetaView &meta, const StoreEntry &entry)
     }
 }
 
+/// deserializes swap meta with STORE_META_VARY_HEADERS type
 static SBuf
-GetNewSwapMetaVaryHeaders(const SwapMetaView &meta, const StoreEntry &entry)
+UnpackNewSwapMetaVaryHeaders(const SwapMetaView &meta, const StoreEntry &entry)
 {
     Assure(meta.type == STORE_META_VARY_HEADERS);
     SBuf rawVary(static_cast<const char *>(meta.rawValue), meta.rawLength);
@@ -153,22 +145,36 @@ GetNewSwapMetaVaryHeaders(const SwapMetaView &meta, const StoreEntry &entry)
     throw TextException("Vary mismatch", Here());
 }
 
+// TODO: Do not duplicate SwapMetaView.cc code.
+/// a helper function to safely copy raw end-bounded serialized input into the
+/// given item and advance that input to the next item
+template <typename T>
+static void
+Extract(T &item, const char * &input, const void *end)
+{
+    if (input + sizeof(item) > end)
+        throw TextException("truncated swap meta prefix", Here());
+    memcpy(&item, input, sizeof(item));
+    input += sizeof(item);
+}
+
 /// deserializes entry metadata size from the given buffer
 /// \retval total swap metadata size (a.k.a. swap_hdr_sz)
 static size_t
-UnpackPrefix(const char *buf, const size_t size)
+UnpackPrefix(const char * const buf, const size_t size)
 {
     Assure(buf);
+    auto input = buf;
     const auto end = buf + size;
 
     char magic = 0;
-    Deserialize(magic, buf, end);
+    Extract(magic, input, end);
 
     if (magic != SwapMetaMagic)
         throw TextException("store entry metadata prefix is corrupted", Here());
 
     RawSwapMetaPrefixLength rawMetaSize = 0; // metadata size, including the required prefix
-    Deserialize(rawMetaSize, buf, end);
+    Extract(rawMetaSize, input, end);
 
     if (Less(rawMetaSize, SwapMetaPrefixSize))
         throw TextException("store entry metadata length is corrupted", Here());
@@ -176,7 +182,7 @@ UnpackPrefix(const char *buf, const size_t size)
     if (Less(size, rawMetaSize))
         throw TextException("store entry metadata is too big", Here());
 
-    return rawMetaSize; // now safe to use with (buf, size)
+    return rawMetaSize; // now safe to use within (buf, buf+size)
 }
 
 } // namespace Store
@@ -242,12 +248,12 @@ Store::UnpackIndexSwapMeta(const MemBuf &buf, StoreEntry &tmpe, cache_key * cons
 {
     size_t swap_hdr_sz = 0;
 
-    SwapMetaUnpacker aBuilder(buf.content(), buf.contentSize(), swap_hdr_sz);
-    for (const auto &meta: aBuilder) {
+    const SwapMetaUnpacker metaFields(buf.content(), buf.contentSize(), swap_hdr_sz);
+    for (const auto &meta: metaFields) {
         switch (meta.type) {
         case STORE_META_VOID:
             // TODO: Skip this StoreEntry instead of ignoring its field?
-            // this type is aBuilder's signal that it took care of the field
+            // this meta.type is the unpacking code signal that it took care of this field
             break;
 
         case STORE_META_KEY_MD5:
@@ -256,7 +262,7 @@ Store::UnpackIndexSwapMeta(const MemBuf &buf, StoreEntry &tmpe, cache_key * cons
             // it. Instead, we treat key and tmpe.key as storage that can be
             // safely altered even on parsing failures. This function
             // description tells the callers that we may do that.
-            GetSwapMetaMd5(meta, key);
+            UnpackSwapMetaKey(meta, key);
             Assure(key);
             tmpe.key = key;
             break;
@@ -296,7 +302,7 @@ Store::UnpackIndexSwapMeta(const MemBuf &buf, StoreEntry &tmpe, cache_key * cons
         case STORE_META_VARY_HEADERS:
         case STORE_META_OBJSIZE:
             // We do not load this information at cache index rebuild time;
-            // store_client::unpackHeader() handles these MemObject fields.
+            // UnpackHitSwapMeta() handles these MemObject fields.
             break;
         }
     }
@@ -313,36 +319,33 @@ Store::UnpackHitSwapMeta(char const * const buf, const ssize_t len, StoreEntry &
     size_t swap_hdr_sz = 0;
     SBuf varyHeaders;
 
-    SwapMetaUnpacker aBuilder(buf, len, swap_hdr_sz);
-    for (const auto &meta: aBuilder) {
+    const SwapMetaUnpacker metaFields(buf, len, swap_hdr_sz);
+    for (const auto &meta: metaFields) {
         switch (meta.type) {
         case STORE_META_VOID:
-            // this type is aBuilder's signal that it took care of the field
-            break;
-
-        case STORE_META_KEY_MD5:
-            // paranoid -- storeRebuildParseEntry() loads the key
-            CheckSwapMetaKey(meta, entry); // paranoid
+            // this meta.type is the unpacking code signal that it took care of the field
             break;
 
         case STORE_META_URL:
             CheckSwapMetaUrl(meta, entry);
             break;
 
-        case STORE_META_STD:
-            // Handled by storeRebuildParseEntry()
-            break;
-
         case STORE_META_VARY_HEADERS:
-            varyHeaders = GetNewSwapMetaVaryHeaders(meta, entry);
-            break;
-
-        case STORE_META_STD_LFS:
-            // Handled by storeRebuildParseEntry()
+            varyHeaders = UnpackNewSwapMetaVaryHeaders(meta, entry);
             break;
 
         case STORE_META_OBJSIZE:
-            // TODO: Should not we set mem_obj.object_sz?
+            // XXX: We swap out but never use this field; set mem_obj.object_sz?
+            break;
+
+        case STORE_META_KEY_MD5:
+            // already handled by UnpackIndexSwapMeta()
+            CheckSwapMetaKey(meta, entry); // paranoid
+            break;
+
+        case STORE_META_STD:
+        case STORE_META_STD_LFS:
+            // already handled by UnpackIndexSwapMeta()
             break;
         }
     }

@@ -15,7 +15,7 @@
  \section ImplementationNotes Implementation Notes
  \par
  *      When writing an object to disk, we must first write the meta data.
- *      Store::PackSwapHeader() serializes that meta data
+ *      Store::PackSwapMeta() serializes that meta data
  *      into a character buffer that we can write.
  *
  \note  MemObject has a MemObject::swap_hdr_sz.
@@ -27,8 +27,8 @@
  \note The swap file content includes the HTTP reply headers and the HTTP reply body (if any).
  *
  \par
- *      When reading a swap file, StoreMetaUnpacker() iterates over stored swap
- *      meta data header fields.  It also tells us
+ *      When reading a swap file, Store::Unpack*SwapMeta*() functions iterate
+ *      over stored swap meta data header fields and also extract
  *      the value for MemObject->swap_hdr_sz.
  */
 
