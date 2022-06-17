@@ -8,8 +8,11 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "store/SwapMeta.h"
 #include "testStore.h"
 #include "unitTestMain.h"
+
+#include <limits>
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testStore );
 
@@ -121,5 +124,77 @@ testStore::testMaxSize()
     Store::Init(aStore);
     CPPUNIT_ASSERT_EQUAL(static_cast<uint64_t>(3), aStore->maxSize());
     Store::FreeMemory();
+}
+
+namespace Store {
+
+static void
+checkTooSmallSwapMetaRawType(const RawSwapMetaType rawType)
+{
+    // RawSwapMetaTypeBottom and smaller values are unrelated to any named
+    // SwapMetaDataType values, including past, current, and future ones
+    CPPUNIT_ASSERT(!HonoredSwapMetaType(rawType)); // current
+    CPPUNIT_ASSERT(!IgnoredSwapMetaType(rawType)); // past and future
+    CPPUNIT_ASSERT(!DeprecatedSwapMetaType(rawType)); // past
+    CPPUNIT_ASSERT(!ReservedSwapMetaType(rawType)); // future
+}
+
+static void
+checkKnownSwapMetaRawType(const RawSwapMetaType rawType)
+{
+    // a known raw type is either honored or ignored
+    CPPUNIT_ASSERT(HonoredSwapMetaType(rawType) || IgnoredSwapMetaType(rawType));
+    CPPUNIT_ASSERT(!(HonoredSwapMetaType(rawType) && IgnoredSwapMetaType(rawType)));
+
+    if (IgnoredSwapMetaType(rawType)) {
+        // an ignored raw type is either deprecated or reserved
+        CPPUNIT_ASSERT(DeprecatedSwapMetaType(rawType) || ReservedSwapMetaType(rawType));
+        CPPUNIT_ASSERT(!(DeprecatedSwapMetaType(rawType) && ReservedSwapMetaType(rawType)));
+    } else {
+        // an honored raw type is neither deprecated nor reserved
+        CPPUNIT_ASSERT(!DeprecatedSwapMetaType(rawType) && !ReservedSwapMetaType(rawType));
+    }
+}
+
+static void
+checkTooBigSwapMetaRawType(const RawSwapMetaType rawType)
+{
+    // values beyond RawSwapMetaTypeTop() may be reserved for future use but
+    // cannot be honored or deprecated
+    if (ReservedSwapMetaType(rawType))
+        CPPUNIT_ASSERT(IgnoredSwapMetaType(rawType));
+    else
+        CPPUNIT_ASSERT(!IgnoredSwapMetaType(rawType));
+    CPPUNIT_ASSERT(!HonoredSwapMetaType(rawType));
+    CPPUNIT_ASSERT(!DeprecatedSwapMetaType(rawType));
+}
+
+static void
+checkSwapMetaRawType(const RawSwapMetaType rawType)
+{
+    if (rawType <= RawSwapMetaTypeBottom)
+        checkTooSmallSwapMetaRawType(rawType);
+    else if (rawType > RawSwapMetaTypeTop())
+        checkTooBigSwapMetaRawType(rawType);
+    else
+        checkKnownSwapMetaRawType(rawType);
+}
+
+} // namespace Store
+
+void
+testStore::testSwapMetaTypeClassification()
+{
+    using limits = std::numeric_limits<Store::RawSwapMetaType>;
+    for (auto rawType = limits::min(); true; ++rawType) {
+
+        Store::checkSwapMetaRawType(rawType);
+
+        if (rawType == limits::max())
+            break;
+    }
+
+    // Store::RawSwapMetaTypeTop() is documented as an honored type value
+    CPPUNIT_ASSERT(Store::HonoredSwapMetaType(Store::RawSwapMetaTypeTop()));
 }
 
