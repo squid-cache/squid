@@ -35,7 +35,7 @@ public:
 
     /// The serialized type (i.e. T in swap meta TLV field).
     /// This type value may not match any named by SwapMetaType.
-    RawSwapMetaType rawType = 0;
+    RawSwapMetaType rawType = RawSwapMetaTypeBottom;
 
     /// The sanitized TLV type that always matches one named by SwapMetaType:
     /// rawType (if matches a value named by SwapMetaType) or STORE_META_VOID.
