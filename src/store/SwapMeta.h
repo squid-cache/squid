@@ -97,12 +97,6 @@ enum SwapMetaType {
 
     // TODO: document this TLV type code
     STORE_META_OBJSIZE = 10
-
-                         // Add new values here. The compiler or "make check" should catch mistakes,
-                         // but keep SwapMetaTypeMax(), DeprecatedSwapMetaType(), and
-                         // ReservedSwapMetaType() in sync with your changes.
-
-                         // When removing values, update DeprecatedSwapMetaType().
 };
 
 /// swap meta type ID written to or loaded from Store
