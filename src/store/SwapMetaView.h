@@ -60,6 +60,18 @@ private:
     explicit SwapMetaView(const void *begin, const void * const end);
 };
 
+/// a helper function to safely copy raw end-bounded serialized input into the
+/// given item and advance that input to the next item
+template <typename Item>
+void
+SwapMetaExtract(Item &item, const char * &input, const void *end)
+{
+    if (input + sizeof(item) > end)
+        throw TextException("truncated swap meta part", Here());
+    memcpy(&item, input, sizeof(item));
+    input += sizeof(item);
+}
+
 } // namespace Store
 
 /// writes a short human-readable summary of the given SwapMetaView object

@@ -145,19 +145,6 @@ UnpackNewSwapMetaVaryHeaders(const SwapMetaView &meta, const StoreEntry &entry)
     throw TextException("Vary mismatch", Here());
 }
 
-// TODO: Do not duplicate SwapMetaView.cc code.
-/// a helper function to safely copy raw end-bounded serialized input into the
-/// given item and advance that input to the next item
-template <typename T>
-static void
-Extract(T &item, const char * &input, const void *end)
-{
-    if (input + sizeof(item) > end)
-        throw TextException("truncated swap meta prefix", Here());
-    memcpy(&item, input, sizeof(item));
-    input += sizeof(item);
-}
-
 /// deserializes entry metadata size from the given buffer
 /// \retval total swap metadata size (a.k.a. swap_hdr_sz)
 static size_t
@@ -168,13 +155,13 @@ UnpackPrefix(const char * const buf, const size_t size)
     const auto end = buf + size;
 
     char magic = 0;
-    Extract(magic, input, end);
+    SwapMetaExtract(magic, input, end);
 
     if (magic != SwapMetaMagic)
         throw TextException("store entry metadata prefix is corrupted", Here());
 
     RawSwapMetaPrefixLength rawMetaSize = 0; // metadata size, including the required prefix
-    Extract(rawMetaSize, input, end);
+    SwapMetaExtract(rawMetaSize, input, end);
 
     if (Less(rawMetaSize, SwapMetaPrefixSize))
         throw TextException("store entry metadata length is corrupted", Here());

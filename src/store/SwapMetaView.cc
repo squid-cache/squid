@@ -52,32 +52,20 @@ HandleBadRawType(const RawSwapMetaType type)
     debugs(20, DBG_CRITICAL, "ERROR: Malformed cache storage; ignoring swap meta field with an invalid type: " << int(type));
 }
 
-/// a helper function to safely copy raw end-bounded serialized input into the
-/// given item and advance that input to the next item
-template <typename T>
-static void
-Extract(T &item, const char * &input, const void *end)
-{
-    if (input + sizeof(item) > end)
-        throw TextException("truncated swap meta field", Here());
-    memcpy(&item, input, sizeof(item));
-    input += sizeof(item);
-}
-
 } // namespace Store
 
 Store::SwapMetaView::SwapMetaView(const void * const begin, const void * const end)
 {
     auto input = static_cast<const char *>(begin);
 
-    Extract(rawType, input, end);
+    SwapMetaExtract(rawType, input, end);
     if (HonoredSwapMetaType(rawType))
         type = static_cast<SwapMetaType>(rawType);
     else
         HandleBadRawType(rawType); // and leave type as STORE_META_VOID
 
     RawSwapMetaLength lengthOrGarbage = 0;
-    Extract(lengthOrGarbage, input, end);
+    SwapMetaExtract(lengthOrGarbage, input, end);
     if (lengthOrGarbage < 0)
         throw TextException("negative swap meta field length value", Here());
     if (uint64_t(lengthOrGarbage) > SwapMetaFieldValueLengthMax)
