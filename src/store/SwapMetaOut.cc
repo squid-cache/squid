@@ -37,8 +37,8 @@ PackField(std::ostream &os, const SwapMetaType type, const size_t length, const 
     CheckSwapMetaSerialization(rawType, rawLength, value);
 
     if (!os.write(&rawType, sizeof(rawType)) ||
-        !os.write(reinterpret_cast<const char*>(&rawLength), sizeof(rawLength)) ||
-        (length && !os.write(static_cast<const char*>(value), length)))
+            !os.write(reinterpret_cast<const char*>(&rawLength), sizeof(rawLength)) ||
+            (length && !os.write(static_cast<const char*>(value), length)))
         throw TextException("cannot store swap meta field type", Here());
 }
 

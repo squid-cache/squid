@@ -511,8 +511,7 @@ Rock::Rebuild::loadOneSlot()
 
 /// whether the given slot buffer is likely to have nothing but zeros, as is
 /// common to slots in pre-initialized (with zeros) db files
-static
-bool
+static bool
 ZeroedSlot(const MemBuf &buf)
 {
     // We could memcmp the entire buffer, but it is probably safe enough to test

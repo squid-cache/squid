@@ -87,7 +87,7 @@ CheckSwapMetaKey(const SwapMetaView &meta, const StoreEntry &entry)
     meta.checkExpectedLength(SQUID_MD5_DIGEST_LENGTH);
 
     if (!EBIT_TEST(entry.flags, KEY_PRIVATE) &&
-        memcmp(meta.rawValue, entry.key, SQUID_MD5_DIGEST_LENGTH) != 0) {
+            memcmp(meta.rawValue, entry.key, SQUID_MD5_DIGEST_LENGTH) != 0) {
 
         debugs(20, 2, "stored key mismatches " << entry.getMD5Text());
 
