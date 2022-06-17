@@ -13,37 +13,76 @@
 
 namespace Store {
 
-// TODO: Refactor into a static_assert after migrating to C++17.
-/// Upholds swap metadata invariants that cannot be checked at compile time
-/// (yet) but can be checked without swap in/out transaction specifics.
-static bool
-CheckSwapMetaTypeEnum(bool &useMe)
+static void
+checkTooSmallRawType(const RawSwapMetaType rawType)
 {
-    for (auto i = RawSwapMetaTypeTop(); i != RawSwapMetaTypeBottom; --i) {
-        // assertion descriptions below are approximate; many mistake variations
-        // are possible and one mistake may affect multiple invariants
+    // RawSwapMetaTypeBottom and smaller values are unrelated to any named
+    // SwapMetaDataType values, including past, current, and future ones
+    assert(!HonoredSwapMetaType(rawType)); // current
+    assert(!IgnoredSwapMetaType(rawType)); // past and future
+    assert(!DeprecatedSwapMetaType(rawType)); // past
+    assert(!ReservedSwapMetaType(rawType)); // future
+}
 
-        // remembered to classify a name after removing it from SwapMetaType
-        assert(HonoredSwapMetaType(i) || IgnoredSwapMetaType(i));
+static void
+checkKnownRawType(const RawSwapMetaType rawType)
+{
+    // a known raw type is either honored or ignored
+    assert(HonoredSwapMetaType(rawType) || IgnoredSwapMetaType(rawType));
+    assert(!(HonoredSwapMetaType(rawType) && IgnoredSwapMetaType(rawType)));
 
-        // did not list the same value in these two mutually exclusive sets
-        assert(!(HonoredSwapMetaType(i) && IgnoredSwapMetaType(i)));
+    if (IgnoredSwapMetaType(rawType)) {
+        // an ignored raw type is either deprecated or reserved
+        assert(DeprecatedSwapMetaType(rawType) || ReservedSwapMetaType(rawType));
+        assert(!(DeprecatedSwapMetaType(rawType) && ReservedSwapMetaType(rawType)));
+    } else {
+        // an honored raw type is neither deprecated nor reserved
+        assert(!DeprecatedSwapMetaType(rawType) && !ReservedSwapMetaType(rawType));
+    }
+}
 
-        // did not list the same value in these two mutually exclusive sets
-        assert(!(DeprecatedSwapMetaType(i) && ReservedSwapMetaType(i)));
+static void
+checkTooBigRawType(const RawSwapMetaType rawType)
+{
+    // values beyond RawSwapMetaTypeTop() may be reserved for future use but
+    // cannot be honored or deprecated
+    if (ReservedSwapMetaType(rawType)) {
+        assert(IgnoredSwapMetaType(rawType));
+    } else {
+        assert(!HonoredSwapMetaType(rawType));
+        assert(!IgnoredSwapMetaType(rawType));
+        assert(!DeprecatedSwapMetaType(rawType));
+    }
+}
+
+/// Upholds swap metadata invariants that cannot be checked at compile time but
+/// can be checked without swap in/out transaction specifics.
+static bool
+CheckSwapMetaTypeClassification(bool &useMe)
+{
+    using limits = std::numeric_limits<RawSwapMetaType>;
+    for (auto rawType = limits::min(); true; ++rawType) {
+
+        if (rawType <= RawSwapMetaTypeBottom)
+            checkTooSmallRawType(rawType);
+        else if (rawType > RawSwapMetaTypeTop())
+            checkTooBigRawType(rawType);
+        else
+            checkKnownRawType(rawType);
+
+        if (rawType == limits::max())
+            break;
     }
 
-    // upheld RawSwapMetaTypeBottom definition of being unrelated to any named
-    // SwapMetaDataType values, including past, current, and reserved
-    assert(!HonoredSwapMetaType(RawSwapMetaTypeBottom));
-    assert(!IgnoredSwapMetaType(RawSwapMetaTypeBottom));
+    // RawSwapMetaTypeTop() is documented as an honored type value
+    assert(HonoredSwapMetaType(RawSwapMetaTypeTop()));
 
     useMe = true;
     return true;
 }
 
 /// triggers one-time SwapMetaType enum validation at startup
-static bool Checked = Store::CheckSwapMetaTypeEnum(Checked);
+static bool Checked = CheckSwapMetaTypeClassification(Checked);
 
 } // namespace Store
 
