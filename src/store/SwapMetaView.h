@@ -43,9 +43,8 @@ public:
 
 private:
     /*
-     * These construction/copying methods are private so that no outside code
-     * can create/own SwapMetaView objects but SwapMetaIterator. Others loop
-     * SwapMetaUnpacker for read-only access to the current view of metadata.
+     * SwapMetaView objects should always be accessed through SwapMetaIterator
+     * or SwapMetaUnpacker for read-only access to the current view of metadata.
      */
     friend class SwapMetaIterator;
 
