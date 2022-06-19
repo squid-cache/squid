@@ -55,7 +55,6 @@ Expires, Http::HdrType::EXPIRES, Http::HdrFieldType::ftDate_1123, HdrKind::Entit
 Forwarded, Http::HdrType::FORWARDED, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader
 From, Http::HdrType::FROM, Http::HdrFieldType::ftStr, HdrKind::RequestHeader
 Host, Http::HdrType::HOST, Http::HdrFieldType::ftStr, HdrKind::RequestHeader
-HTTP2-Settings, Http::HdrType::HTTP2_SETTINGS, Http::HdrFieldType::ftStr, HdrKind::RequestHeader|HdrKind::HopByHopHeader
 If-Match, Http::HdrType::IF_MATCH, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader
 If-Modified-Since, Http::HdrType::IF_MODIFIED_SINCE, Http::HdrFieldType::ftDate_1123, HdrKind::RequestHeader
 If-None-Match, Http::HdrType::IF_NONE_MATCH, Http::HdrFieldType::ftStr, HdrKind::ListHeader
