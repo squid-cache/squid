@@ -1332,7 +1332,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
         return abortRequestParsing("error:method-not-allowed");
     }
 
-    /* RFC 9113 section 3.4 defines the method PRI as HTTP/2 specific preface
+    /* HTTP/2 connection magic prefix starts with "PRI ".
      * Deny "PRI" method if used in HTTP/1.x or 0.9 versions.
      * If seen it signals a broken client or proxy has corrupted the traffic.
      */
