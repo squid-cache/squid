@@ -453,11 +453,25 @@ HappyConnOpener::status() const
     return buf.c_str();
 }
 
-/// Create "503 Service Unavailable" or "504 Gateway Timeout" error depending
-/// on whether this is a validation request. RFC 9111 section 5.2.2 says that
-/// we MUST reply with "504 Gateway Timeout" if validation fails and cached
-/// reply has proxy-revalidate, must-revalidate or s-maxage Cache-Control
-/// directive.
+/**
+ * Create "503 Service Unavailable" or "504 Gateway Timeout" error depending
+ * on whether this is a validation request.
+ *
+ * RFC 9111 section 5.2.2 Cache-Control response directives
+ *
+ * section 5.2.2.2 must-revalidate
+ * " if a cache is disconnected, the cache MUST generate an error response
+ *   rather than reuse the stale response.  The generated status code
+ *   SHOULD be 504 (Gateway Timeout) unless another error status code is
+ *   more applicable."
+ *
+ * section 5.2.2.8 proxy-revalidate
+ * " analogous to must-revalidate "
+ *
+ * section 5.2.2.10 s-maxage
+ * " incorporates the semantics of the
+ *   proxy-revalidate response directive "
+ */
 ErrorState *
 HappyConnOpener::makeError(const err_type type) const
 {
