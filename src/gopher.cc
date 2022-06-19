@@ -91,7 +91,6 @@ public:
         *request = 0;
         buf = (char *)memAllocate(MEM_4K_BUF);
         entry->lock("gopherState");
-        *replybuf = 0;
     }
 
     ~GopherStateData();
@@ -151,7 +150,7 @@ public:
 
     char *buf = nullptr; /* pts to a 4k page */
     HttpReply::Pointer reply_;
-    char replybuf[BUFSIZ];
+    SBuf inBuf;
 
 private:
     AsyncCall::Pointer closeHandler;
@@ -720,36 +719,54 @@ GopherStateData::serverTimeout(const CommTimeoutCbParams &params)
 void
 GopherStateData::readReply(const CommIoCbParams &io)
 {
-#if USE_DELAY_POOLS
-    DelayId delayId = entry->mem_obj->mostBytesAllowed();
-#endif
+    debugs(10, 5, io.conn);
 
-    /* Bail out early on Comm::ERR_CLOSING - close handlers will tidy up for us */
-    if (io.flag == Comm::ERR_CLOSING)
+    // Bail out early on Comm::ERR_CLOSING - close handlers will tidy up for us
+    if (io.flag == Comm::ERR_CLOSING) {
+        debugs(10, 3, "sever socket closing");
+        return;
+    }
+
+    Must(Comm::IsConnOpen(serverConn));
+    Must(io.conn->fd == serverConn->fd);
+    Assure(entry->isAccepting());
+    Must(maybeMakeSpaceAvailable(true));
+
+    CommIoCbParams rd(this); // will be expanded with ReadNow results
+    rd.conn = io.conn;
+    rd.size = entry->bytesWanted(Range<size_t>(0, inBuf.spaceSize()));
+
+    if (rd.size <= 0) {
+        delayRead();
+        return;
+    }
+
+    switch (Comm::ReadNow(rd, inBuf)) {
+    case Comm::INPROGRESS:
+        if (inBuf.isEmpty())
+            debugs(33, 2, io.conn << ": no data to process, " << xstrerr(rd.xerrno));
+        delayAwareRead();
         return;
 
-    assert(io.buf == replybuf);
-
-    debugs(10, 5, io.conn << " read len=" << io.size);
-
-    /* leave one space for \0 in gopherToHTML */
-
-    if (io.flag == Comm::OK && io.size > 0) {
+    case Comm::OK:
+    {
+        payloadSeen += rd.size;
 #if USE_DELAY_POOLS
-        delayId.bytesIn(io.size);
+        DelayId delayId = entry->mem_obj->mostBytesAllowed();
+        delayId.bytesIn(rd.size);
 #endif
 
-        statCounter.server.all.kbytes_in += io.size;
-        statCounter.server.other.kbytes_in += io.size;
-
-        AsyncCall::Pointer nil;
-        commSetConnTimeout(io.conn, Config.Timeout.read, nil);
-        ++IOStats.Gopher.reads;
+        statCounter.server.all.kbytes_in += rd.size;
+        statCounter.server.other.kbytes_in += rd.size;
+        ++ IOStats.Gopher.reads;
 
         int bin = 0;
-        for (auto clen = io.size - 1; clen; ++bin)
+        for (int clen = rd.size - 1; clen; ++bin)
             clen >>= 1;
+
         ++IOStats.Gopher.read_hist[bin];
+
+        request->hier.notePeerRead();
 
         auto &req = fwd->request;
         if (req->hier.bodyBytesRead < 0) {
@@ -757,55 +774,101 @@ GopherStateData::readReply(const CommIoCbParams &io)
             // first bytes read, update Reply flags:
             reply_->sources |= Http::Message::srcGopher;
         }
-
-        req->hier.bodyBytesRead += io.size;
     }
 
-    Assure(entry->isAccepting());
+        /* Continue to process previously read data */
+    break;
 
-    if (io.flag != Comm::OK) {
-        debugs(50, DBG_IMPORTANT, "ERROR: " << MYNAME << "reading: " << xstrerr(io.xerrno));
+    case Comm::ENDFILE: // close detected by 0-byte read
+        eof = 1;
 
-        if (ignoreErrno(io.xerrno)) {
-            // wait for read(2) to be possible.
-            delayAwareRead();
+        /* Continue to process previously read data */
+        break;
+
+    // case Comm::COMM_ERROR:
+    default: // no other flags should ever occur
+        debugs(10, 2, io.conn << ": read failure: " << xstrerr(rd.xerrno));
+        const auto err = new ErrorState(ERR_READ_ERROR, Http::scBadGateway, fwd->request, fwd->al);
+        err->xerrno = rd.xerrno;
+        fwd->fail(err);
+        closeServer();
+        mustStop("GopherStateData::readReply");
+        return;
+    }
+
+    /* Process next response from buffer */
+    processReply();
+}
+
+void
+GopherStateData::processReply()
+{
+    if (inBuf.isEmpty()) {
+        /* Connection closed; retrieval done. */
+        if (entry->isEmpty()) {
+            fwd->fail(new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, fwd->request, fwd->al));
 
         } else {
-            const auto err = new ErrorState(ERR_READ_ERROR, Http::scInternalServerError, fwd->request, fwd->al);
-            err->xerrno = io.xerrno;
-            fwd->fail(err);
-            io.conn->close();
+            /* flush the rest of data in temp buf if there is one. */
+            if (conversion != GopherStateData::NORMAL)
+                gopherEndHTML(this);
+
+            entry->timestampsSet();
+            entry->flush();
+
+            if (!len && !overflowed)
+                fwd->markStoredReplyAsWhole("gopher EOF after receiving/storing some bytes");
+
+            fwd->complete();
         }
-
-    } else if (io.size == 0 && entry->isEmpty()) {
-        fwd->fail(new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, fwd->request, fwd->al));
-        io.conn->close();
-
-    } else if (io.size == 0) {
-        /* Connection closed; retrieval done. */
-        /* flush the rest of data in temp buf if there is one. */
-
-        if (conversion != GopherStateData::NORMAL)
-            gopherEndHTML(this);
-
-        entry->timestampsSet();
-        entry->flush();
-
-        if (!len && !overflowed)
-            fwd->markStoredReplyAsWhole("gopher EOF after receiving/storing some bytes");
-
-        fwd->complete();
-        io.conn->close();
+        closeServer();
 
     } else {
         if (conversion != GopherStateData::NORMAL) {
-            gopherToHTML(this, io.buf, io.size);
+            gopherToHTML(this, inBuf.c_str(), inBuf.length());
         } else {
-            entry->append(io.buf, io.size);
+            entry->append(inBuf.rawContent(), inBuf.length());
+            inBuf.clear();
         }
 
         delayAwareRead();
     }
+}
+
+bool
+GopherStateData::maybeMakeSpaceAvailable(bool doGrow)
+{
+    // how much we are allowed to buffer
+    const int limitBuffer = Config.readAheadGap;
+
+    if (limitBuffer < 0 || inBuf.length() >= (SBuf::size_type)limitBuffer) {
+        // when buffer is at or over limit already
+        debugs(10, 7, "will not read up to " << limitBuffer << ". buffer has (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConn);
+        debugs(10, DBG_DATA, "buffer has {" << inBuf << "}");
+        // Process buffer
+        processReply();
+        return false;
+    }
+
+    // how much we want to read
+    const size_t read_size = calcBufferSpaceToReserve(inBuf.spaceSize(), (limitBuffer - inBuf.length()));
+
+    if (!read_size) {
+        debugs(10, 7, "will not read up to " << read_size << " into buffer (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
+        return false;
+    }
+
+    // just report whether we could grow or not, do not actually do it
+    if (doGrow)
+        return (read_size >= 2);
+
+    // we may need to grow the buffer
+    inBuf.reserveSpace(read_size);
+    debugs(10, 8, (!flags.do_next_read ? "will not" : "may") <<
+           " read up to " << read_size << " bytes info buf(" << inBuf.length() << "/" << inBuf.spaceSize() <<
+           ") from " << serverConnection);
+
+    return (inBuf.spaceSize() >= 2); // only read if there is 1+ bytes of space available
 }
 
 void
@@ -824,7 +887,7 @@ GopherStateData::delayAwareRead()
     if (amountToRead <= 0)
         entry->mem().delayRead(call);
     else
-        comm_read(serverConn, replybuf, amountToRead, call);
+        Comm::Read(serverConn, call);
 }
 
 GopherStateData::wroteLast(const CommIoCbParams &io)
