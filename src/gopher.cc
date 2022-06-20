@@ -9,13 +9,12 @@
 /* DEBUG: section 10    Gopher */
 
 #include "squid.h"
-#include "base/AsyncJob.h"
+#include "clients/Client.h"
 #include "comm.h"
 #include "comm/Read.h"
 #include "comm/Write.h"
 #include "errorpage.h"
 #include "fd.h"
-#include "FwdState.h"
 #include "globals.h"
 #include "gopher.h"
 #include "html_quote.h"
@@ -78,7 +77,7 @@
  * Gopher is somewhat complex and gross because it must convert from
  * the Gopher protocol to HTTP.
  */
-class GopherStateData : public AsyncJob
+class GopherStateData : public Client
 {
     CBDATA_CLASS(GopherStateData);
 
@@ -92,12 +91,23 @@ public:
         buf = (char *)memAllocate(MEM_4K_BUF);
         entry->lock("gopherState");
     }
-
     ~GopherStateData();
 
     /* AsyncJob API */
     static void Start(const AsyncJob::Pointer &);
     virtual void start() override;
+
+    /* Client API */
+    virtual const Comm::ConnectionPointer &dataConnection() const override { return serverConn; }
+    virtual void maybeReadVirginBody() override;
+    virtual void abortAll(const char *reason) override { mustStop(reason); }
+    virtual void handleRequestBodyProducerAborted() override { abortTransaction("request body producer aborted"); }
+    virtual void sentRequestBody(const CommIoCbParams &) override { /* not supported */}
+    virtual void doneSendingRequestBody() override { /* not supported */ }
+    virtual void closeServer() override { serverConn->close(); }
+    virtual bool doneWithServer() const override { return Comm::IsConnOpen(serverConn); }
+    virtual bool mayReadVirginReplyBody() const override { return !doneWithServer(); }
+    virtual void noteDelayAwareReadChance() override { /* not implemented */ }
 
     /// URL for icon to display (or nil), given the Gopher item-type code.
     /// The returned c-string is invalidated by the next call to this function.
@@ -108,9 +118,6 @@ public:
 
     /// called when Gopher request is completely sent
     void wroteLast(const CommIoCbParams &);
-
-    /// queues or defers a read call
-    void delayAwareRead();
 
     /// called when Gopher reply data is available
     void readReply(const CommIoCbParams &);
@@ -745,7 +752,7 @@ GopherStateData::readReply(const CommIoCbParams &io)
     case Comm::INPROGRESS:
         if (inBuf.isEmpty())
             debugs(33, 2, io.conn << ": no data to process, " << xstrerr(rd.xerrno));
-        delayAwareRead();
+        maybeReadVirginBody();
         return;
 
     case Comm::OK:
@@ -830,8 +837,7 @@ GopherStateData::processReply()
             entry->append(inBuf.rawContent(), inBuf.length());
             inBuf.clear();
         }
-
-        delayAwareRead();
+        maybeReadVirginBody();
     }
 }
 
@@ -872,38 +878,36 @@ GopherStateData::maybeMakeSpaceAvailable(bool doGrow)
 }
 
 void
-GopherStateData::delayAwareRead()
+GopherStateData::maybeReadVirginBody()
 {
-    if (!Comm::IsConnOpen(serverConn) || fd_table[serverConn->fd].closing()) {
-        debugs(10, 3, "will not read from " << serverConn);
+    // too late to read
+    if (!Comm::IsConnOpen(serverConn) || fd_table[serverConn->fd].closing())
         return;
-    }
 
-    const auto amountToRead = entry->bytesWanted(Range<size_t>(0, BUFSIZ));
+    if (!maybeMakeSpaceAvailable(false))
+        return;
 
+    // must not already be waiting for read(2) ...
+    assert(!Comm::MonitorsRead(serverConn->fd));
+
+    // wait for read(2) to be possible.
     typedef CommCbMemFunT<GopherStateData, CommIoCbParams> Dialer;
     AsyncCall::Pointer call = JobCallback(10, 5, Dialer, this, GopherStateData::readReply);
-
-    if (amountToRead <= 0)
-        entry->mem().delayRead(call);
-    else
-        Comm::Read(serverConn, call);
+    Comm::Read(serverConn, call);
 }
 
+void
 GopherStateData::wroteLast(const CommIoCbParams &io)
 {
     debugs(10, 5, io.conn << " size=" << io.size << " flag=" << io.flag);
 
     if (io.size > 0) {
-        fd_bytes(io.fd, io.size, FD_WRITE);
-        statCounter.server.all.kbytes_out += io.size;
         statCounter.server.other.kbytes_out += io.size;
+        Client::sentRequestBody(io);
     }
 
     if (io.flag == Comm::ERR_CLOSING)
         return;
-
-    fwd->request->hier.notePeerWrite();
 
     Assure(entry->isAccepting());
 
@@ -952,7 +956,7 @@ GopherStateData::wroteLast(const CommIoCbParams &io)
         entry->flush();
     }
 
-    delayAwareRead();
+    maybeReadVirginBody();
 }
 
 void
