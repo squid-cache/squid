@@ -107,8 +107,6 @@
 #define IPC_DGRAM IPC_UDP_SOCKET
 #endif
 
-#define STORE_META_KEY STORE_META_KEY_MD5
-
 #define STORE_HDR_METASIZE (4*sizeof(time_t)+2*sizeof(uint16_t)+sizeof(uint64_t))
 #define STORE_HDR_METASIZE_OLD (4*sizeof(time_t)+2*sizeof(uint16_t)+sizeof(size_t))
 

@@ -13,7 +13,7 @@
 
 #include <limits>
 
-// basic store swap metadata interfaces shared by input and output code
+// store swap metadata interfaces shared by input and output code
 
 namespace Store {
 
@@ -30,14 +30,14 @@ namespace Store {
 ///     struct Prefix {
 ///         char magic; // see SwapMetaMagic
 ///         int swap_hdr_sz; // total SwapMeta size: prefix and all fields
-///     }
+///     };
 ///     Prefix prefix;
 ///
 ///     struct TLV {
 ///         char type; // value meaning (and format); see SwapMetaType
 ///         int length; // value length in octets
 ///         char value[length]; // type-specific storage; exactly length bytes
-///     }
+///     };
 ///     TLV fields[]; // as many swap meta fields as swap_hdr_sz accommodates
 ///
 ///     // XXX: int fields above should have been using a fixed-size type.
@@ -50,15 +50,14 @@ namespace Store {
 /// The gaps in the enum item values below represent deprecated/reserved IDs.
 /// \sa DeprecatedSwapMetaType(), ReservedSwapMetaType()
 enum SwapMetaType {
-    /// Store swap metadata type with an unknown meaning.
-    /// Never used by valid stored entries.
+    /// An invalid swap metadata field or field with an unknown meaning.
+    /// Never used by swapout code.
     STORE_META_VOID = 0,
 
     /// This represents the MD5 cache key that Squid currently uses. When Squid
     /// opens a disk file for reading, it can check that this MD5 matches the
     /// MD5 of the user's request.  If not, then something went wrong and this
     /// is probably the wrong object.
-    /// Also known under its deprecated STORE_META_KEY name.
     STORE_META_KEY_MD5 = 3,
 
     /// The object's URL.  This also may be matched against a user's request for
@@ -179,7 +178,7 @@ inline bool
 ReservedSwapMetaType(const RawSwapMetaType type)
 {
     enum class ReservedMetas {
-        /// the Store-ID url, if different to the normal URL
+        /// the Store-ID url, if different from the normal URL
         STORE_META_STOREURL = 11,
         /// unique ID linking variants
         STORE_META_VARY_ID = 12
@@ -191,7 +190,7 @@ ReservedSwapMetaType(const RawSwapMetaType type)
 
 /// Whether we store the given swap meta field type (and also interpret the
 /// corresponding swap meta field when the Store loads it). Matches all
-/// SwapMetaType enum values except for the never-stored/loaded STORE_META_VOID.
+/// SwapMetaType enum values except for the never-stored STORE_META_VOID.
 inline bool
 HonoredSwapMetaType(const RawSwapMetaType type)
 {

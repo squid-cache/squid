@@ -29,9 +29,7 @@ PackField(std::ostream &os, const SwapMetaType type, const size_t length, const 
         throw TextException("swap meta field value too big to store", Here());
 
     // Outside of packing/unpacking code, we correctly use size_t for value
-    // sizes now, but old code stored these values as RawSwapMetaLength (of an
-    // unknown size), so we continue to do so to be able to load meta fields
-    // from (some) old caches.
+    // sizes, we still store these values using RawSwapMetaLength.
     const auto rawLength = NaturalCast<RawSwapMetaLength>(length);
 
     CheckSwapMetaSerialization(rawType, rawLength, value);
@@ -90,7 +88,6 @@ Store::PackSwapMeta(const StoreEntry &entry, size_t &totalLength)
     *pos = SwapMetaMagic;
     pos += sizeof(SwapMetaMagic);
 
-    // for historical reasons, the meta size field has RawSwapMetaLength type
     const auto metaSize = NaturalCast<RawSwapMetaLength>(bufSize);
     memcpy(pos, &metaSize, sizeof(metaSize));
     pos += sizeof(metaSize);

@@ -68,7 +68,7 @@ private:
     size_t metasSize; ///< number of bytes in the metas buffer
 };
 
-/// validates serialized swap meta with STORE_META_KEY_MD5 type
+/// validates serialized STORE_META_KEY_MD5 swap meta field
 static void
 CheckSwapMetaKey(const SwapMetaView &meta, const StoreEntry &entry)
 {
@@ -90,7 +90,7 @@ CheckSwapMetaKey(const SwapMetaView &meta, const StoreEntry &entry)
     }
 }
 
-/// deserializes swap meta with STORE_META_KEY_MD5 type
+/// deserializes STORE_META_KEY_MD5 swap meta field
 static void
 UnpackSwapMetaKey(const SwapMetaView &meta, cache_key *key)
 {
@@ -100,7 +100,7 @@ UnpackSwapMetaKey(const SwapMetaView &meta, cache_key *key)
     memcpy(key, meta.rawValue, SQUID_MD5_DIGEST_LENGTH);
 }
 
-/// validates serialized swap meta with STORE_META_URL type
+/// validates serialized STORE_META_URL swap meta field
 static void
 CheckSwapMetaUrl(const SwapMetaView &meta, const StoreEntry &entry)
 {
@@ -109,23 +109,23 @@ CheckSwapMetaUrl(const SwapMetaView &meta, const StoreEntry &entry)
     // PackSwapMeta() terminates; strcasecmp() and reporting below rely on that
     if (!memrchr(meta.rawValue, '\0', meta.rawLength))
         throw TextException("unterminated URI or bad URI length", Here());
-    const auto storedUrl = static_cast<const char *>(meta.rawValue);
 
-    const auto &mem_obj = entry.mem();
+    const auto &emem = entry.mem();
 
-    if (!mem_obj.hasUris())
+    if (!emem.hasUris())
         return; // cannot validate
 
+    const auto storedUrl = static_cast<const char *>(meta.rawValue);
     // XXX: ensure all Squid URL inputs are properly normalized then use case-sensitive compare here
-    if (strcasecmp(mem_obj.urlXXX(), storedUrl) != 0) {
+    if (strcasecmp(emem.urlXXX(), storedUrl) != 0) {
         debugs(20, DBG_IMPORTANT, "WARNING: URL mismatch when loading a cached entry:" <<
-               Debug::Extra << "expected: " << mem_obj.urlXXX() <<
+               Debug::Extra << "expected: " << emem.urlXXX() <<
                Debug::Extra << "found:    " << storedUrl);
         throw TextException("URL mismatch", Here());
     }
 }
 
-/// deserializes swap meta with STORE_META_VARY_HEADERS type
+/// deserializes STORE_META_VARY_HEADERS swap meta field
 static SBuf
 UnpackNewSwapMetaVaryHeaders(const SwapMetaView &meta, const StoreEntry &entry)
 {
@@ -247,7 +247,6 @@ Store::UnpackIndexSwapMeta(const MemBuf &buf, StoreEntry &tmpe, cache_key * cons
     for (const auto &meta: metaFields) {
         switch (meta.type) {
         case STORE_META_VOID:
-            // TODO: Skip this StoreEntry instead of ignoring its field?
             // this meta.type is the unpacking code signal that it took care of this field
             break;
 
@@ -261,10 +260,11 @@ Store::UnpackIndexSwapMeta(const MemBuf &buf, StoreEntry &tmpe, cache_key * cons
             Assure(key);
             tmpe.key = key;
             break;
-        // TODO: remove. Since old_metahdr's members may have different sizes on different
-        // platforms, we cannot guarantee that serialized types in an old cache
-        // are the same as run-time types.
+
         case STORE_META_STD: {
+            // TODO: Remove. Since old_metahdr's members may have different
+            // sizes on different platforms, we cannot guarantee that serialized
+            // types in the being-loaded old cache are the same as these types.
             meta.checkExpectedLength(STORE_HDR_METASIZE_OLD);
             struct old_metahdr {
                 // XXX: All serialized members must have fixed-size types.
@@ -330,7 +330,7 @@ Store::UnpackHitSwapMeta(char const * const buf, const ssize_t len, StoreEntry &
             break;
 
         case STORE_META_OBJSIZE:
-            // XXX: We swap out but never use this field; set mem_obj.object_sz?
+            // XXX: We swap out but never use this field; set emem.object_sz?
             break;
 
         case STORE_META_KEY_MD5:
@@ -345,17 +345,17 @@ Store::UnpackHitSwapMeta(char const * const buf, const ssize_t len, StoreEntry &
         }
     }
 
-    auto &mem_obj = entry.mem();
+    auto &emem = entry.mem();
 
-    mem_obj.swap_hdr_sz = swap_hdr_sz;
+    emem.swap_hdr_sz = swap_hdr_sz;
     if (entry.swap_file_sz > 0) { // collapsed hits may not know swap_file_sz
         Assure(entry.swap_file_sz >= swap_hdr_sz);
-        mem_obj.object_sz = entry.swap_file_sz - swap_hdr_sz;
+        emem.object_sz = entry.swap_file_sz - swap_hdr_sz;
     }
     debugs(90, 5, "swap_file_sz=" << entry.swap_file_sz <<
-           " (" << swap_hdr_sz << " + " << mem_obj.object_sz << ")");
+           " (" << swap_hdr_sz << " + " << emem.object_sz << ")");
 
     if (!varyHeaders.isEmpty())
-        mem_obj.vary_headers = varyHeaders;
+        emem.vary_headers = varyHeaders;
 }
 
