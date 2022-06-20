@@ -166,9 +166,6 @@ UnpackPrefix(const char * const buf, const size_t size)
     if (Less(rawMetaSize, SwapMetaPrefixSize))
         throw TextException("store entry metadata length is corrupted", Here());
 
-    if (Less(size, rawMetaSize))
-        throw TextException("store entry metadata is too big", Here());
-
     return rawMetaSize; // now safe to use within (buf, buf+size)
 }
 
@@ -217,6 +214,17 @@ Store::SwapMetaUnpacker::SwapMetaUnpacker(const char * const buf, const ssize_t 
     Assure(size >= 0);
 
     const auto headerSize = UnpackPrefix(buf, size);
+    Assure(headerSize >= SwapMetaPrefixSize);
+
+    // We assume the caller supplied a reasonable-size buffer. If our assumption
+    // is wrong, then this is a Squid bug rather than input validation failure.
+    if (Less(size, headerSize)) {
+        throw TextException(ToSBuf("store entry metadata is too big",
+                                   Debug::Extra, "buffer size: ", size,
+                                   Debug::Extra, "metadata size: ", headerSize),
+                            Here());
+    }
+
     metas = buf + SwapMetaPrefixSize;
     metasSize = headerSize - SwapMetaPrefixSize;
     Assure(metas + metasSize <= buf + size); // paranoid
