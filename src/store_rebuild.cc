@@ -283,7 +283,7 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
     try {
         swap_hdr_len = Store::UnpackIndexSwapMeta(buf, tmpe, key);
     } catch (...) {
-        debugs(47, DBG_IMPORTANT, "WARNING: Ignoring store entry: " << CurrentException);
+        debugs(47, Important(65), "WARNING: Indexer ignores a cache_dir entry: " << CurrentException);
         return false;
     }
 
