@@ -74,8 +74,8 @@ Store::SwapMetaView::SwapMetaView(const void * const begin, const void * const e
         throw TextException("truncated swap meta field value", Here());
     rawLength = static_cast<size_t>(lengthOrGarbage);
 
-    Assure(input > begin);
-    Assure(input + rawLength <= end);
+    Assure2(input > begin, "we consumed some input but stayed in the buffer range (the lower bound check)");
+    Assure2(input + rawLength <= end, "we stayed in the buffer range (the upper bound check)");
     rawValue = input;
 }
 
