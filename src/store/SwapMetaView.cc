@@ -93,8 +93,6 @@ operator <<(std::ostream &os, const Store::SwapMetaView &meta)
     os << "type=" << int(meta.rawType);
     // XXX: Change Raw constructor to take void* data instead of casting here.
     const auto rawValue = reinterpret_cast<const char*>(meta.rawValue);
-    // TODO: Add/use something like Raw::bestPresentationEncoding() to report
-    // binary data as hex, URLs as plain text, and Vary with \r\n escapes?
     os << Raw("value", rawValue, meta.rawLength).minLevel(DBG_DATA).hex();
     return os;
 }
