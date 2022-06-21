@@ -219,6 +219,16 @@ IgnoredSwapMetaType(const RawSwapMetaType type)
     return DeprecatedSwapMetaType(type) || ReservedSwapMetaType(type);
 }
 
+/// Expected size of a STORE_META_STD_LFS swap meta field. XXX: The actual size
+/// is environment-specific due to 4 parts that do not use fixed-size types.
+const auto STORE_HDR_METASIZE =
+    4*sizeof(time_t) + sizeof(uint64_t) + 2*sizeof(uint16_t);
+
+/// Expected size of a STORE_META_STD swap meta field. XXX: The actual size is
+/// environment-specific due to 5 parts that do not use fixed-size types.
+const auto STORE_HDR_METASIZE_OLD =
+    4*sizeof(time_t) + sizeof(size_t) + 2*sizeof(uint16_t);
+
 /// Ensures that the given serialized swap meta field is valid and can be
 /// subsequently de-serialized (by the same code). Also detects some failures to
 /// update one of the classification functions above when editing SwapMetaType.
