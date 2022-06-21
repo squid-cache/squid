@@ -59,6 +59,7 @@ PackFields(const StoreEntry &entry, std::ostream &os)
 
     PackField(os, STORE_META_STD_LFS, STORE_HDR_METASIZE, &entry.timestamp);
 
+    // XXX: Performance regression, c_str() may reallocate.
     // XXX: do TLV without the c_str() termination. check readers first though
     PackField(os, STORE_META_URL, url.length() + 1U, url.c_str());
 
