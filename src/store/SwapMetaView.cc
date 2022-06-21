@@ -27,7 +27,7 @@ HandleBadRawType(const RawSwapMetaType type)
     }
 
     if (DeprecatedSwapMetaType(type)) {
-        debugs(20, DBG_CRITICAL, "ERROR: Ignoring swap meta field with a deprecated type: " << int(type));
+        debugs(20, DBG_IMPORTANT, "ERROR: Ignoring swap meta field with a deprecated type: " << int(type));
         return;
     }
 
@@ -39,7 +39,7 @@ HandleBadRawType(const RawSwapMetaType type)
     const auto typeValuesWeMightAdd = 10;
     // compute "type > RawSwapMetaTypeTop() + typeValuesWeMightAdd" w/o overflow
     if (type >= typeValuesWeMightAdd && type - typeValuesWeMightAdd > RawSwapMetaTypeTop()) {
-        debugs(20, DBG_CRITICAL, "ERROR: Malformed cache storage; ignoring swap meta field with an unexpected type: " << int(type));
+        debugs(20, DBG_IMPORTANT, "ERROR: Malformed cache storage; ignoring swap meta field with an unexpected type: " << int(type));
         return;
     }
 
@@ -49,7 +49,7 @@ HandleBadRawType(const RawSwapMetaType type)
     }
 
     Assure(type <= RawSwapMetaTypeBottom);
-    debugs(20, DBG_CRITICAL, "ERROR: Malformed cache storage; ignoring swap meta field with an invalid type: " << int(type));
+    debugs(20, DBG_IMPORTANT, "ERROR: Malformed cache storage; ignoring swap meta field with an invalid type: " << int(type));
 }
 
 } // namespace Store
