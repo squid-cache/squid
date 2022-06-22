@@ -60,7 +60,7 @@ enum SwapMetaType {
     /// is probably the wrong object.
     STORE_META_KEY_MD5 = 3,
 
-    /// The object's URL.  This also may be matched against a user's request for
+    /// The object's URL. This also may be matched against a user's request for
     /// cache hits to make sure we got the right object.
     STORE_META_URL = 4,
 
