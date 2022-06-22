@@ -56,8 +56,8 @@ enum SwapMetaType {
 
     /// This represents the MD5 cache key that Squid currently uses. When Squid
     /// opens a disk file for reading, it can check that this MD5 matches the
-    /// MD5 of the user's request.  If not, then something went wrong and this
-    /// is probably the wrong object.
+    /// MD5 of the user's request. If not, then something went wrong and this is
+    /// probably the wrong object.
     STORE_META_KEY_MD5 = 3,
 
     /// The object's URL. This also may be matched against a user's request for
