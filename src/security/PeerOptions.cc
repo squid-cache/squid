@@ -473,6 +473,7 @@ Security::PeerOptions::parseOptions()
         int64_t hex = 0;
         SBuf option;
         ParsedOptions value = 0;
+        bool found = false;
 
         // Bug 4429: identify the full option name before determining text or numeric
         if (tok.prefix(option, optChars)) {
@@ -481,14 +482,16 @@ Security::PeerOptions::parseOptions()
             for (struct ssl_option *opttmp = ssl_options; opttmp->name; ++opttmp) {
                 if (option.cmp(opttmp->name) == 0) {
                     value = opttmp->value;
+                    found = true;
                     break;
                 }
             }
 
             // Special case.. hex specification
             ::Parser::Tokenizer tmp(option);
-            if (!value && tmp.int64(hex, 16, false) && tmp.atEnd()) {
+            if (!found && tmp.int64(hex, 16, false) && tmp.atEnd()) {
                 value = hex;
+                found = true;
             }
         }
 
@@ -502,7 +505,7 @@ Security::PeerOptions::parseOptions()
                 break;
             }
         } else {
-            debugs(83, DBG_PARSE_NOTE(1), "ERROR: Unknown TLS option " << option);
+            debugs(83, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: " << (found?"Unsupported":"Unknown") << " TLS option " << option);
         }
 
         static const CharacterSet delims("TLS-option-delim",":,");
