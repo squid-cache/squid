@@ -84,12 +84,10 @@ class GopherStateData : public Client
 public:
     GopherStateData(FwdState *aFwd) :
         AsyncJob("GopherStateData"),
-        entry(aFwd->entry),
-        fwd(aFwd)
+        Client(aFwd)
     {
         *request = 0;
         buf = (char *)memAllocate(MEM_4K_BUF);
-        entry->lock("gopherState");
     }
     ~GopherStateData();
 
@@ -98,14 +96,14 @@ public:
     virtual void start() override;
 
     /* Client API */
-    virtual const Comm::ConnectionPointer &dataConnection() const override { return serverConn; }
+    virtual const Comm::ConnectionPointer &dataConnection() const override { return fwd->serverConnection(); }
     virtual void maybeReadVirginBody() override;
     virtual void abortAll(const char *reason) override { mustStop(reason); }
     virtual void handleRequestBodyProducerAborted() override { abortTransaction("request body producer aborted"); }
     virtual void sentRequestBody(const CommIoCbParams &) override { /* not supported */}
     virtual void doneSendingRequestBody() override { /* not supported */ }
-    virtual void closeServer() override { serverConn->close(); }
-    virtual bool doneWithServer() const override { return Comm::IsConnOpen(serverConn); }
+    virtual void closeServer() override { dataConnection()->close(); }
+    virtual bool doneWithServer() const override { return Comm::IsConnOpen(dataConnection()); }
     virtual bool mayReadVirginReplyBody() const override { return !doneWithServer(); }
     virtual void noteDelayAwareReadChance() override { /* not implemented */ }
 
@@ -127,11 +125,6 @@ public:
 
     /// callback handler for timeouts on server/peer connection
     void serverTimeout(const CommTimeoutCbParams &);
-
-public: /* replicates ::Client API */
-    StoreEntry *entry = nullptr;
-    FwdState::Pointer fwd;
-    const char *doneWithFwd = nullptr;
 
 public:
     enum {
@@ -160,6 +153,8 @@ public:
     SBuf inBuf;
 
 private:
+    bool maybeMakeSpaceAvailable(bool);
+
     AsyncCall::Pointer closeHandler;
 };
 
@@ -178,9 +173,6 @@ static char def_gopher_text[] = "text/plain";
 
 GopherStateData::~GopherStateData()
 {
-    if (entry)
-        entry->unlock("gopherState");
-
     if (buf)
         memFree(buf, MEM_4K_BUF);
 }
@@ -734,8 +726,8 @@ GopherStateData::readReply(const CommIoCbParams &io)
         return;
     }
 
-    Must(Comm::IsConnOpen(serverConn));
-    Must(io.conn->fd == serverConn->fd);
+    Must(Comm::IsConnOpen(dataConnection()));
+    Must(io.conn->fd == dataConnection()->fd);
     Assure(entry->isAccepting());
     Must(maybeMakeSpaceAvailable(true));
 
@@ -757,7 +749,6 @@ GopherStateData::readReply(const CommIoCbParams &io)
 
     case Comm::OK:
     {
-        payloadSeen += rd.size;
 #if USE_DELAY_POOLS
         DelayId delayId = entry->mem_obj->mostBytesAllowed();
         delayId.bytesIn(rd.size);
@@ -773,11 +764,10 @@ GopherStateData::readReply(const CommIoCbParams &io)
 
         ++IOStats.Gopher.read_hist[bin];
 
-        request->hier.notePeerRead();
+        fwd->request->hier.notePeerRead();
 
-        auto &req = fwd->request;
-        if (req->hier.bodyBytesRead < 0) {
-            req->hier.bodyBytesRead = 0;
+        if (fwd->request->hier.bodyBytesRead < 0) {
+            fwd->request->hier.bodyBytesRead = 0;
             // first bytes read, update Reply flags:
             reply_->sources |= Http::Message::srcGopher;
         }
@@ -849,7 +839,7 @@ GopherStateData::maybeMakeSpaceAvailable(bool doGrow)
 
     if (limitBuffer < 0 || inBuf.length() >= (SBuf::size_type)limitBuffer) {
         // when buffer is at or over limit already
-        debugs(10, 7, "will not read up to " << limitBuffer << ". buffer has (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConn);
+        debugs(10, 7, "will not read up to " << limitBuffer << ". buffer has (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << dataConnection());
         debugs(10, DBG_DATA, "buffer has {" << inBuf << "}");
         // Process buffer
         processReply();
@@ -860,7 +850,7 @@ GopherStateData::maybeMakeSpaceAvailable(bool doGrow)
     const size_t read_size = calcBufferSpaceToReserve(inBuf.spaceSize(), (limitBuffer - inBuf.length()));
 
     if (!read_size) {
-        debugs(10, 7, "will not read up to " << read_size << " into buffer (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
+        debugs(10, 7, "will not read up to " << read_size << " into buffer (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << dataConnection());
         return false;
     }
 
@@ -870,9 +860,7 @@ GopherStateData::maybeMakeSpaceAvailable(bool doGrow)
 
     // we may need to grow the buffer
     inBuf.reserveSpace(read_size);
-    debugs(10, 8, (!flags.do_next_read ? "will not" : "may") <<
-           " read up to " << read_size << " bytes info buf(" << inBuf.length() << "/" << inBuf.spaceSize() <<
-           ") from " << serverConnection);
+    debugs(10, 8, "may read up to " << read_size << " bytes info buf(" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << dataConnection());
 
     return (inBuf.spaceSize() >= 2); // only read if there is 1+ bytes of space available
 }
@@ -881,19 +869,19 @@ void
 GopherStateData::maybeReadVirginBody()
 {
     // too late to read
-    if (!Comm::IsConnOpen(serverConn) || fd_table[serverConn->fd].closing())
+    if (!Comm::IsConnOpen(dataConnection()) || fd_table[dataConnection()->fd].closing())
         return;
 
     if (!maybeMakeSpaceAvailable(false))
         return;
 
     // must not already be waiting for read(2) ...
-    assert(!Comm::MonitorsRead(serverConn->fd));
+    assert(!Comm::MonitorsRead(dataConnection()->fd));
 
     // wait for read(2) to be possible.
     typedef CommCbMemFunT<GopherStateData, CommIoCbParams> Dialer;
     AsyncCall::Pointer call = JobCallback(10, 5, Dialer, this, GopherStateData::readReply);
-    Comm::Read(serverConn, call);
+    Comm::Read(dataConnection(), call);
 }
 
 void
@@ -983,11 +971,11 @@ GopherStateData::sendRequest()
     }
     mb.append("\r\n", 2);
 
-    debugs(10, 5, fwd->serverConnection());
+    debugs(10, 5, dataConnection());
 
     typedef CommCbMemFunT<GopherStateData, CommIoCbParams> Dialer;
     AsyncCall::Pointer call = JobCallback(10, 5, Dialer, this, GopherStateData::wroteLast);
-    Comm::Write(fwd->serverConnection(), &mb, call);
+    Comm::Write(dataConnection(), &mb, call);
 
     if (!entry->makePublic())
         entry->makePrivate(true);
@@ -1012,7 +1000,7 @@ GopherStateData::start()
 
     typedef CommCbMemFunT<GopherStateData, CommCloseCbParams> Dialer;
     closeHandler = JobCallback(10, 5, Dialer, this, GopherStateData::serverConnClosed);
-    comm_add_close_handler(fwd->serverConnection()->fd, closeHandler);
+    comm_add_close_handler(dataConnection()->fd, closeHandler);
 
     if ((type_id == GOPHER_INDEX || type_id == GOPHER_CSO) && strchr(request, '?') == nullptr) {
         /* Index URL without query word */
@@ -1041,6 +1029,6 @@ GopherStateData::start()
     typedef CommCbMemFunT<GopherStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(10, 5,
                                       TimeoutDialer, this, GopherStateData::serverTimeout);
-    commSetConnTimeout(fwd->serverConnection(), Config.Timeout.read, timeoutCall);
+    commSetConnTimeout(dataConnection(), Config.Timeout.read, timeoutCall);
 }
 
