@@ -203,10 +203,10 @@ static int session_active(const char *details, size_t len)
 
     DBT data = {};
 #elif USE_TRIVIALDB
-    TDB_DATA key = {
-        reinterpret_cast<decltype(key.dptr)>(const_cast<char*>(details)),
-        len
-        };
+    TDB_DATA key = {};
+    key.dptr = reinterpret_cast<decltype(key.dptr)>(const_cast<char*>(details));
+    key.dsize = len;
+
     TDB_DATA data = {};
 #else
     (void)len;
