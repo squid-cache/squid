@@ -189,7 +189,7 @@ typedef uint64_t ParsedOptions;
 #elif USE_GNUTLS
 typedef std::shared_ptr<struct gnutls_priority_st> ParsedOptions;
 #else
-typedef uint64_t ParsedOptions;
+class ParsedOptions {}; // we never parse/use TLS options in this case
 #endif
 
 /// bitmask representing configured http(s)_port `sslflags`
