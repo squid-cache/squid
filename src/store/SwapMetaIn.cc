@@ -214,7 +214,6 @@ Store::SwapMetaUnpacker::SwapMetaUnpacker(const char * const buf, const ssize_t 
     Assure(size >= 0);
 
     const auto headerSize = UnpackPrefix(buf, size);
-    Assure(headerSize >= SwapMetaPrefixSize);
 
     // We assume the caller supplied a reasonable-size buffer. If our assumption
     // is wrong, then this is a Squid bug rather than input validation failure.
@@ -225,8 +224,10 @@ Store::SwapMetaUnpacker::SwapMetaUnpacker(const char * const buf, const ssize_t 
                             Here());
     }
 
-    metas = buf + SwapMetaPrefixSize;
+    Assure2(headerSize >= SwapMetaPrefixSize, "UnpackPrefix() validates metadata length");
     metasSize = headerSize - SwapMetaPrefixSize;
+
+    metas = buf + SwapMetaPrefixSize; // skip prefix
     Assure(metas + metasSize <= buf + size); // paranoid
 
     swap_hdr_sz = headerSize;
