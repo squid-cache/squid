@@ -197,7 +197,10 @@ copyValue(void *dst, const DB_ENTRY *src, size_t sz)
 static int session_active(const char *details, size_t len)
 {
 #if USE_BERKLEYDB
-    DBT key = {(void *)details, len};
+    DBT key = {};
+    key.data = const_cast<char*>(details);
+    key.size = len;
+
     DBT data = {};
 #elif USE_TRIVIALDB
     TDB_DATA key = {
