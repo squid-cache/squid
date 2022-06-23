@@ -51,7 +51,7 @@ public:
     inline int TransparentActive() { return transparentActive_; };
 
     /** \par
-     * Try to turn on fully Transparent-Proxy activities.
+     * Turn on fully Transparent-Proxy activities.
      * This function should be called during parsing of the squid.conf
      * When any option requiring full-transparency is encountered.
      */
@@ -72,7 +72,7 @@ public:
     inline int InterceptActive() { return interceptActive_; };
 
     /** \par
-     * Try to turn on IP-Interception-Proxy activities.
+     * Turn on IP-Interception-Proxy activities.
      * This function should be called during parsing of the squid.conf
      * When any option requiring interception / NAT handling is encountered.
      */
