@@ -151,9 +151,9 @@ Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn)
 void
 Ip::Intercept::StartTransparency()
 {
-    /* --enable-linux-netfilter    */
-    /* --enable-pf-transparent     */
-    /* --enable-ipfw-transparent   */
+    // --enable-linux-netfilter
+    // --enable-pf-transparent
+    // --enable-ipfw-transparent
 #if (LINUX_NETFILTER && defined(IP_TRANSPARENT)) || \
     (PF_TRANSPARENT && defined(SO_BINDANY)) || \
     (IPFW_TRANSPARENT && defined(IP_BINDANY))
@@ -166,10 +166,10 @@ Ip::Intercept::StartTransparency()
 void
 Ip::Intercept::StartInterception()
 {
-    /* --enable-linux-netfilter    */
-    /* --enable-ipfw-transparent   */
-    /* --enable-ipf-transparent    */
-    /* --enable-pf-transparent     */
+    // --enable-linux-netfilter
+    // --enable-ipfw-transparent
+    // --enable-ipf-transparent
+    // --enable-pf-transparent
 #if IPF_TRANSPARENT || LINUX_NETFILTER || IPFW_TRANSPARENT || PF_TRANSPARENT
     interceptActive_ = 1;
 #else
