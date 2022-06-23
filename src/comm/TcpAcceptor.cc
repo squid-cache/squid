@@ -393,7 +393,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     if (conn->flags & COMM_TRANSPARENT) { // the real client/dest IP address must be already available via getsockname()
         details->flags |= COMM_TRANSPARENT;
         if (!Ip::Interceptor.TransparentActive()) {
-            debugs(50, DBG_IMPORTANT, "ERROR: cannot use transparent " << details << " because TPROXY mode became inactive");
+            debugs(50, DBG_IMPORTANT, "ERROR: Cannot use transparent " << details << " because TPROXY mode became inactive");
             // TODO: consider returning Comm::COMM_ERROR instead
             return Comm::NOMESSAGE;
         }
