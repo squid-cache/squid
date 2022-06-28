@@ -34,7 +34,7 @@ public:
     // rule. Otherwise, creates an implicit/default refresh_pattern rule.
     explicit RefreshPattern(RegexPointer aRegex):
         min(0), pct(0.20), max(REFRESH_DEFAULT_MAX),
-        next(NULL),
+        next(nullptr),
         max_stale(0),
         regex_(std::move(aRegex))
     {

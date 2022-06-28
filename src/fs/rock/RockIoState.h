@@ -40,7 +40,7 @@ public:
     virtual void close(int how);
 
     /// whether we are still waiting for the I/O results (i.e., not closed)
-    bool stillWaiting() const { return theFile != NULL; }
+    bool stillWaiting() const { return theFile != nullptr; }
 
     /// forwards read data (or an error) to the reader that initiated this I/O
     void handleReadCompletion(Rock::ReadRequest &request, const int rlen, const int errFlag);

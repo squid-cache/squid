@@ -110,10 +110,10 @@ public:
     static int Items2Bytes(const unsigned int maxItemSize, const int size);
 
     /// returns true iff the value was set; [un]blocks the reader as needed
-    template<class Value> bool pop(Value &value, QueueReader *const reader = NULL);
+    template<class Value> bool pop(Value &value, QueueReader *const reader = nullptr);
 
     /// returns true iff the caller must notify the reader of the pushed item
-    template<class Value> bool push(const Value &value, QueueReader *const reader = NULL);
+    template<class Value> bool push(const Value &value, QueueReader *const reader = nullptr);
 
     /// returns true iff the value was set; the value may be stale!
     template<class Value> bool peek(Value &value) const;

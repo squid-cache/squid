@@ -50,7 +50,7 @@ testACLMaxUserIP::testParseLine()
     char * line = xstrdup("test max_user_ip -s 1");
     /* seed the parser */
     ConfigParser::SetCfgLine(line);
-    ACL *anACL = NULL;
+    ACL *anACL = nullptr;
     ConfigParser LegacyParser;
     ACL::ParseAclLine(LegacyParser, &anACL);
     ACLMaxUserIP *maxUserIpACL = dynamic_cast<ACLMaxUserIP *>(anACL);

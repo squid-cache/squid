@@ -86,7 +86,7 @@ get_error_id(const char *label, size_t len)
     const char *e = label + len -1;
     while (e != label && xisdigit(*e)) --e;
     if (e != label) ++e;
-    return strtol(e, 0, 10);
+    return strtol(e, nullptr, 10);
 }
 
 bool
@@ -133,7 +133,7 @@ Ssl::CertValidationMsg::tryParsingResponse(CertValidationResponse &resp)
             certs.push_back(ci);
 
             const char *b = strstr(value, "-----END CERTIFICATE-----");
-            if (b == NULL) {
+            if (b == nullptr) {
                 throw TextException(ToSBuf("Missing END CERTIFICATE boundary: ", value), Here());
             }
             b += strlen("-----END CERTIFICATE-----");
@@ -203,7 +203,7 @@ Ssl::CertValidationMsg::getCertByName(std::vector<CertItem> const &certs, std::s
         if (ci->name.compare(name) == 0)
             return ci->cert.get();
     }
-    return NULL;
+    return nullptr;
 }
 
 uint64_t

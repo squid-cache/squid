@@ -55,7 +55,7 @@ HttpHdrRangeSpec::Create(const char *field, int flen)
     HttpHdrRangeSpec spec;
 
     if (!spec.parseInit(field, flen))
-        return NULL;
+        return nullptr;
 
     return new HttpHdrRangeSpec(spec);
 }
@@ -213,7 +213,7 @@ HttpHdrRange::ParseCreate(const String * range_spec)
 
     if (!r->parseInit(range_spec)) {
         delete r;
-        r = NULL;
+        r = nullptr;
     }
 
     return r;
@@ -224,7 +224,7 @@ bool
 HttpHdrRange::parseInit(const String * range_spec)
 {
     const char *item;
-    const char *pos = NULL;
+    const char *pos = nullptr;
     int ilen;
     assert(range_spec);
     ++ParsedCount;
@@ -534,7 +534,7 @@ HttpHdrRangeIter::currentSpec() const
     if (pos != end)
         return *pos;
 
-    return NULL;
+    return nullptr;
 }
 
 void

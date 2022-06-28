@@ -28,8 +28,8 @@ testString::testCmpDefault()
     String left, right;
     /* two default strings are equal */
     CPPUNIT_ASSERT(!left.cmp(right));
-    CPPUNIT_ASSERT(!left.cmp(NULL));
-    CPPUNIT_ASSERT(!left.cmp(NULL, 1));
+    CPPUNIT_ASSERT(!left.cmp(nullptr));
+    CPPUNIT_ASSERT(!left.cmp(nullptr, 1));
 }
 
 void
@@ -39,8 +39,8 @@ testString::testCmpEmptyString()
     String right;
     /* an empty string ("") is equal to a default string */
     CPPUNIT_ASSERT(!left.cmp(right));
-    CPPUNIT_ASSERT(!left.cmp(NULL));
-    CPPUNIT_ASSERT(!left.cmp(NULL, 1));
+    CPPUNIT_ASSERT(!left.cmp(nullptr));
+    CPPUNIT_ASSERT(!left.cmp(nullptr, 1));
     /* reverse the order to catch corners */
     CPPUNIT_ASSERT(!right.cmp(left));
     CPPUNIT_ASSERT(!right.cmp(""));
@@ -54,8 +54,8 @@ testString::testCmpNotEmptyDefault()
     String right;
     /* empty string sorts before everything */
     CPPUNIT_ASSERT(left.cmp(right) > 0);
-    CPPUNIT_ASSERT(left.cmp(NULL) > 0);
-    CPPUNIT_ASSERT(left.cmp(NULL, 1) > 0);
+    CPPUNIT_ASSERT(left.cmp(nullptr) > 0);
+    CPPUNIT_ASSERT(left.cmp(nullptr, 1) > 0);
     /* reverse for symmetry tests */
     CPPUNIT_ASSERT(right.cmp(left) < 0);
     CPPUNIT_ASSERT(right.cmp("foo") < 0);

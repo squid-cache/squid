@@ -23,7 +23,7 @@ Adaptation::Icap::Launcher::Launcher(const char *aTypeName,
                                      Adaptation::ServicePointer &aService):
     AsyncJob(aTypeName),
     Adaptation::Initiate(aTypeName),
-    theService(aService), theXaction(0), theLaunches(0)
+    theService(aService), theXaction(nullptr), theLaunches(0)
 {
 }
 

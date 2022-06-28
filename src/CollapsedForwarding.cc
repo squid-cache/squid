@@ -175,7 +175,7 @@ class CollapsedForwardingRr: public Ipc::Mem::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    CollapsedForwardingRr(): owner(NULL) {}
+    CollapsedForwardingRr(): owner(nullptr) {}
     virtual ~CollapsedForwardingRr();
 
 protected:

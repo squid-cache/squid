@@ -184,7 +184,7 @@ inline const char *certSignAlgorithm(int sg)
     if (sg >=0 && sg < Ssl::algSignEnd)
         return Ssl::CertSignAlgorithmStr[sg];
 
-    return NULL;
+    return nullptr;
 }
 
 /**
@@ -193,7 +193,7 @@ inline const char *certSignAlgorithm(int sg)
  */
 inline CertSignAlgorithm certSignAlgorithmId(const char *sg)
 {
-    for (int i = 0; i < algSignEnd && Ssl::CertSignAlgorithmStr[i] != NULL; i++)
+    for (int i = 0; i < algSignEnd && Ssl::CertSignAlgorithmStr[i] != nullptr; i++)
         if (strcmp(Ssl::CertSignAlgorithmStr[i], sg) == 0)
             return (CertSignAlgorithm)i;
 
@@ -221,7 +221,7 @@ inline const char *sslCertAdaptAlgoritm(int alg)
     if (alg >=0 && alg < Ssl::algSetEnd)
         return Ssl::CertAdaptAlgorithmStr[alg];
 
-    return NULL;
+    return nullptr;
 }
 
 /**

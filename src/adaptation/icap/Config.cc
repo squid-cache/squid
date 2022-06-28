@@ -22,7 +22,7 @@ Adaptation::Icap::Config::Config() :
     default_options_ttl(0),
     preview_enable(0), preview_size(0), allow206_enable(0),
     connect_timeout_raw(0), io_timeout_raw(0), reuse_connections(0),
-    client_username_header(NULL), client_username_encode(0), repeat(NULL),
+    client_username_header(nullptr), client_username_encode(0), repeat(nullptr),
     repeat_limit(0)
 {
 }

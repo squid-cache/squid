@@ -37,7 +37,7 @@ mcastJoinGroups(const ipcache_addrs *ia, const Dns::LookupDetails &, void *)
 #ifdef IP_MULTICAST_TTL
     struct ip_mreq mr;
 
-    if (ia == NULL) {
+    if (ia == nullptr) {
         debugs(7, DBG_CRITICAL, "ERROR: comm_join_mcast_groups: Unknown host");
         return;
     }

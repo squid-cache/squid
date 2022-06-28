@@ -104,7 +104,7 @@ struct _storerepl_entry {
     REMOVALPOLICYCREATE *create;
 };
 
-static storerepl_entry_t *storerepl_list = NULL;
+static storerepl_entry_t *storerepl_list = nullptr;
 
 /*
  * local function prototypes
@@ -117,7 +117,7 @@ static EVH storeLateRelease;
  * local variables
  */
 static std::stack<StoreEntry*> LateReleaseStack;
-MemAllocator *StoreEntry::pool = NULL;
+MemAllocator *StoreEntry::pool = nullptr;
 
 void
 Store::Stats(StoreEntry * output)
@@ -209,7 +209,7 @@ StoreEntry::getMD5Text() const
 size_t
 StoreEntry::bytesWanted (Range<size_t> const aRange, bool ignoreDelayPools) const
 {
-    if (mem_obj == NULL)
+    if (mem_obj == nullptr)
         return aRange.end;
 
 #if URL_CHECKSUM_DEBUG
@@ -309,7 +309,7 @@ StoreEntry::storeClientType() const
 }
 
 StoreEntry::StoreEntry() :
-    mem_obj(NULL),
+    mem_obj(nullptr),
     timestamp(-1),
     lastref(-1),
     expires(-1),
@@ -348,9 +348,9 @@ StoreEntry::deferProducer(const AsyncCall::Pointer &producer)
 void
 StoreEntry::kickProducer()
 {
-    if (deferredProducer != NULL) {
+    if (deferredProducer != nullptr) {
         ScheduleCallHere(deferredProducer);
-        deferredProducer = NULL;
+        deferredProducer = nullptr;
     }
 }
 #endif
@@ -368,7 +368,7 @@ StoreEntry::destroyMemObject()
 
     if (auto memObj = mem_obj) {
         setMemStatus(NOT_IN_MEMORY);
-        mem_obj = NULL;
+        mem_obj = nullptr;
         delete memObj;
     }
 }
@@ -378,7 +378,7 @@ destroyStoreEntry(void *data)
 {
     debugs(20, 3, "destroyStoreEntry: destroying " <<  data);
     StoreEntry *e = static_cast<StoreEntry *>(static_cast<hash_link *>(data));
-    assert(e != NULL);
+    assert(e != nullptr);
 
     // Store::Root() is FATALly missing during shutdown
     if (e->hasDisk() && !shutting_down)
@@ -388,7 +388,7 @@ destroyStoreEntry(void *data)
 
     e->hashDelete();
 
-    assert(e->key == NULL);
+    assert(e->key == nullptr);
 
     delete e;
 }
@@ -410,7 +410,7 @@ StoreEntry::hashDelete()
     if (key) { // some test cases do not create keys and do not hashInsert()
         hash_remove_link(store_table, this);
         storeKeyFree((const cache_key *)key);
-        key = NULL;
+        key = nullptr;
     }
 }
 
@@ -492,7 +492,7 @@ storeGetPublicByRequest(HttpRequest * req, const KeyScope keyScope)
 {
     StoreEntry *e = storeGetPublicByRequestMethod(req, req->method, keyScope);
 
-    if (e == NULL && req->method == Http::METHOD_HEAD)
+    if (e == nullptr && req->method == Http::METHOD_HEAD)
         /* We can generate a HEAD reply from a cached GET object */
         e = storeGetPublicByRequestMethod(req, Http::METHOD_GET, keyScope);
 
@@ -540,7 +540,7 @@ StoreEntry::setPrivateKey(const bool shareable, const bool permanent)
         mem_obj->id = getKeyCounter();
     const cache_key *newkey = storeKeyPrivate();
 
-    assert(hash_lookup(store_table, newkey) == NULL);
+    assert(hash_lookup(store_table, newkey) == nullptr);
     EBIT_SET(flags, KEY_PRIVATE);
     shareableWhenPrivate = shareable;
     hashInsert(newkey);
@@ -715,7 +715,7 @@ StoreEntry::adjustVary()
 StoreEntry *
 storeCreatePureEntry(const char *url, const char *log_url, const HttpRequestMethod& method)
 {
-    StoreEntry *e = NULL;
+    StoreEntry *e = nullptr;
     debugs(20, 3, "storeCreateEntry: '" << url << "'");
 
     e = new StoreEntry();
@@ -754,7 +754,7 @@ StoreEntry::expireNow()
 void
 StoreEntry::write (StoreIOBuffer writeBuffer)
 {
-    assert(mem_obj != NULL);
+    assert(mem_obj != nullptr);
     /* This assert will change when we teach the store to update */
     assert(store_status == STORE_PENDING);
 
@@ -777,7 +777,7 @@ StoreEntry::write (StoreIOBuffer writeBuffer)
 void
 StoreEntry::append(char const *buf, int len)
 {
-    assert(mem_obj != NULL);
+    assert(mem_obj != nullptr);
     assert(len >= 0);
     assert(store_status == STORE_PENDING);
 
@@ -1053,7 +1053,7 @@ StoreEntry::abort()
 {
     ++statCounter.aborted_requests;
     assert(store_status == STORE_PENDING);
-    assert(mem_obj != NULL);
+    assert(mem_obj != nullptr);
     debugs(20, 6, "storeAbort: " << getMD5Text());
 
     lock("StoreEntry::abort");         /* lock while aborting */
@@ -1110,7 +1110,7 @@ Store::Maintain(void *)
     Store::Root().maintain();
 
     /* Reregister a maintain event .. */
-    eventAdd("MaintainSwapSpace", Maintain, NULL, 1.0, 1);
+    eventAdd("MaintainSwapSpace", Maintain, nullptr, 1.0, 1);
 
 }
 
@@ -1152,7 +1152,7 @@ storeLateRelease(void *)
     static int n = 0;
 
     if (Store::Controller::store_dirs_rebuilding) {
-        eventAdd("storeLateRelease", storeLateRelease, NULL, 1.0, 1);
+        eventAdd("storeLateRelease", storeLateRelease, nullptr, 1.0, 1);
         return;
     }
 
@@ -1170,7 +1170,7 @@ storeLateRelease(void *)
         ++n;
     }
 
-    eventAdd("storeLateRelease", storeLateRelease, NULL, 0.0, 1);
+    eventAdd("storeLateRelease", storeLateRelease, nullptr, 0.0, 1);
 }
 
 /// whether the base response has all the body bytes we expect
@@ -1180,7 +1180,7 @@ bool
 StoreEntry::validLength() const
 {
     int64_t diff;
-    assert(mem_obj != NULL);
+    assert(mem_obj != nullptr);
     const auto reply = &mem_obj->baseReply();
     debugs(20, 3, "storeEntryValidLength: Checking '" << getMD5Text() << "'");
     debugs(20, 5, "storeEntryValidLength:     object_len = " <<
@@ -1236,7 +1236,7 @@ storeInit(void)
     mem_policy = createRemovalPolicy(Config.memPolicy);
     storeDigestInit();
     storeLogOpen();
-    eventAdd("storeLateRelease", storeLateRelease, NULL, 1.0, 1);
+    eventAdd("storeLateRelease", storeLateRelease, nullptr, 1.0, 1);
     Store::Root().init();
     storeRebuildStart();
 
@@ -1255,7 +1255,7 @@ StoreEntry::memoryCachable()
     if (!checkCachable())
         return 0;
 
-    if (mem_obj == NULL)
+    if (mem_obj == nullptr)
         return 0;
 
     if (mem_obj->data_hdr.size() == 0)
@@ -1315,7 +1315,7 @@ storeFreeMemory(void)
 #if USE_CACHE_DIGESTS
     delete store_digest;
 #endif
-    store_digest = NULL;
+    store_digest = nullptr;
 }
 
 int
@@ -1513,7 +1513,7 @@ StoreEntry::setMemStatus(mem_status_t new_status)
         return;
     }
 
-    assert(mem_obj != NULL);
+    assert(mem_obj != nullptr);
 
     if (new_status == IN_MEMORY) {
         assert(mem_obj->inmem_lo == 0);
@@ -1543,7 +1543,7 @@ StoreEntry::setMemStatus(mem_status_t new_status)
 const char *
 StoreEntry::url() const
 {
-    if (mem_obj == NULL)
+    if (mem_obj == nullptr)
         return "[null_mem_obj]";
     else
         return mem_obj->storeId();
@@ -1659,7 +1659,7 @@ createRemovalPolicy(RemovalPolicySettings * settings)
     debugs(20, DBG_IMPORTANT, "ERROR: Be sure to have set cache_replacement_policy");
     debugs(20, DBG_IMPORTANT, "ERROR:   and memory_replacement_policy in squid.conf!");
     fatalf("ERROR: Unknown policy %s\n", settings->type);
-    return NULL;                /* NOTREACHED */
+    return nullptr;                /* NOTREACHED */
 }
 
 void
@@ -1859,7 +1859,7 @@ StoreEntry::hasOneOfEtags(const String &reqETags, const bool allowWeakMatch) con
     }
 
     bool matched = false;
-    const char *pos = NULL;
+    const char *pos = nullptr;
     const char *item;
     int ilen;
     while (!matched && strListGetItem(&reqETags, ',', &item, &ilen, &pos)) {

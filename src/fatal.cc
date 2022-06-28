@@ -77,7 +77,7 @@ fatalf(const char *fmt,...)
 void
 fatal_dump(const char *message)
 {
-    failure_notify = NULL;
+    failure_notify = nullptr;
     releaseServerSockets();
 
     if (message)

@@ -30,7 +30,7 @@ class acl_tos
     CBDATA_CLASS(acl_tos);
 
 public:
-    acl_tos() : next(NULL), aclList(NULL), tos(0) {}
+    acl_tos() : next(nullptr), aclList(nullptr), tos(0) {}
     ~acl_tos();
 
     acl_tos *next;
@@ -44,7 +44,7 @@ class acl_nfmark
     CBDATA_CLASS(acl_nfmark);
 
 public:
-    acl_nfmark() : next(NULL), aclList(NULL) {}
+    acl_nfmark() : next(nullptr), aclList(nullptr) {}
     ~acl_nfmark();
 
     acl_nfmark *next;

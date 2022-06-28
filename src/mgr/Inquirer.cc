@@ -59,9 +59,9 @@ Mgr::Inquirer::cleanup()
 void
 Mgr::Inquirer::removeCloseHandler()
 {
-    if (closer != NULL) {
+    if (closer != nullptr) {
         comm_remove_close_handler(conn->fd, closer);
-        closer = NULL;
+        closer = nullptr;
     }
 }
 
@@ -71,7 +71,7 @@ Mgr::Inquirer::start()
     debugs(16, 5, MYNAME);
     Ipc::Inquirer::start();
     Must(Comm::IsConnOpen(conn));
-    Must(aggrAction != NULL);
+    Must(aggrAction != nullptr);
 
     std::unique_ptr<MemBuf> replyBuf;
     if (strands.empty()) {
@@ -83,7 +83,7 @@ Mgr::Inquirer::start()
         replyBuf.reset(reply->pack());
     } else {
         std::unique_ptr<HttpReply> reply(new HttpReply);
-        reply->setHeaders(Http::scOkay, NULL, "text/plain", -1, squid_curtime, squid_curtime);
+        reply->setHeaders(Http::scOkay, nullptr, "text/plain", -1, squid_curtime, squid_curtime);
         reply->header.putStr(Http::HdrType::CONNECTION, "close"); // until we chunk response
         replyBuf.reset(reply->pack());
     }
@@ -97,7 +97,7 @@ void
 Mgr::Inquirer::noteWroteHeader(const CommIoCbParams& params)
 {
     debugs(16, 5, MYNAME);
-    writer = NULL;
+    writer = nullptr;
     Must(params.flag == Comm::OK);
     Must(params.conn.getRaw() == conn.getRaw());
     Must(params.size != 0);
@@ -133,7 +133,7 @@ Mgr::Inquirer::sendResponse()
     if (!strands.empty() && aggrAction->aggregatable()) {
         removeCloseHandler();
         AsyncJob::Start(new ActionWriter(aggrAction, conn));
-        conn = NULL; // should not close because we passed it to ActionWriter
+        conn = nullptr; // should not close because we passed it to ActionWriter
     }
 }
 
@@ -151,10 +151,10 @@ Mgr::Inquirer::applyQueryParams(const Ipc::StrandCoords& aStrands, const QueryPa
     QueryParam::Pointer processesParam = aParams.get("processes");
     QueryParam::Pointer workersParam = aParams.get("workers");
 
-    if (processesParam == NULL || workersParam == NULL) {
-        if (processesParam != NULL) {
+    if (processesParam == nullptr || workersParam == nullptr) {
+        if (processesParam != nullptr) {
             IntParam* param = dynamic_cast<IntParam*>(processesParam.getRaw());
-            if (param != NULL && param->type == QueryParam::ptInt) {
+            if (param != nullptr && param->type == QueryParam::ptInt) {
                 const std::vector<int>& processes = param->value();
                 for (Ipc::StrandCoords::const_iterator iter = aStrands.begin();
                         iter != aStrands.end(); ++iter) {
@@ -162,9 +162,9 @@ Mgr::Inquirer::applyQueryParams(const Ipc::StrandCoords& aStrands, const QueryPa
                         sc.push_back(*iter);
                 }
             }
-        } else if (workersParam != NULL) {
+        } else if (workersParam != nullptr) {
             IntParam* param = dynamic_cast<IntParam*>(workersParam.getRaw());
-            if (param != NULL && param->type == QueryParam::ptInt) {
+            if (param != nullptr && param->type == QueryParam::ptInt) {
                 const std::vector<int>& workers = param->value();
                 for (int i = 0; i < (int)aStrands.size(); ++i) {
                     if (std::find(workers.begin(), workers.end(), i + 1) != workers.end())

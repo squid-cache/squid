@@ -29,16 +29,16 @@ class ESIContext : public esiTreeParent, public ESIParserClient
 public:
     typedef RefCount<ESIContext> Pointer;
     ESIContext() :
-        thisNode(NULL),
-        http(NULL),
+        thisNode(nullptr),
+        http(nullptr),
         errorpage(ERR_NONE),
         errorstatus(Http::scNone),
-        errormessage(NULL),
-        rep(NULL),
+        errormessage(nullptr),
+        rep(nullptr),
         outbound_offset(0),
         readpos(0),
         pos(0),
-        varState(NULL),
+        varState(nullptr),
         cachedASTInUse(false),
         reading_(true),
         processing(false) {
@@ -56,7 +56,7 @@ public:
 
     /* when esi processing completes */
     void provideData(ESISegment::Pointer, ESIElement *source);
-    void fail (ESIElement *source, char const*anError = NULL);
+    void fail (ESIElement *source, char const*anError = nullptr);
     void startRead();
     void finishRead();
     bool reading() const;

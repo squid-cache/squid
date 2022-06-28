@@ -24,7 +24,7 @@ storeSwapTLVFree(tlv * n)
 {
     tlv *t;
 
-    while ((t = n) != NULL) {
+    while ((t = n) != nullptr) {
         n = t->next;
         xfree(t->value);
         delete t;
@@ -37,9 +37,9 @@ storeSwapTLVFree(tlv * n)
 tlv *
 storeSwapMetaBuild(const StoreEntry *e)
 {
-    tlv *TLV = NULL;        /* we'll return this */
+    tlv *TLV = nullptr;        /* we'll return this */
     tlv **T = &TLV;
-    assert(e->mem_obj != NULL);
+    assert(e->mem_obj != nullptr);
     const int64_t objsize = e->mem_obj->expectedReplySize();
 
     // e->mem_obj->request may be nil in this context
@@ -55,7 +55,7 @@ storeSwapMetaBuild(const StoreEntry *e)
 
     if (!t) {
         storeSwapTLVFree(TLV);
-        return NULL;
+        return nullptr;
     }
 
     T = StoreMeta::Add(T, t);
@@ -63,7 +63,7 @@ storeSwapMetaBuild(const StoreEntry *e)
 
     if (!t) {
         storeSwapTLVFree(TLV);
-        return NULL;
+        return nullptr;
     }
 
     // XXX: do TLV without the c_str() termination. check readers first though
@@ -72,7 +72,7 @@ storeSwapMetaBuild(const StoreEntry *e)
 
     if (!t) {
         storeSwapTLVFree(TLV);
-        return NULL;
+        return nullptr;
     }
 
     if (objsize >= 0) {
@@ -81,7 +81,7 @@ storeSwapMetaBuild(const StoreEntry *e)
 
         if (!t) {
             storeSwapTLVFree(TLV);
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -93,7 +93,7 @@ storeSwapMetaBuild(const StoreEntry *e)
 
         if (!t) {
             storeSwapTLVFree(TLV);
-            return NULL;
+            return nullptr;
         }
 
         StoreMeta::Add (T, t);
@@ -109,7 +109,7 @@ storeSwapMetaPack(tlv * tlv_list, int *length)
     tlv *t;
     int j = 0;
     char *buf;
-    assert(length != NULL);
+    assert(length != nullptr);
     ++buflen;           /* STORE_META_OK */
     buflen += sizeof(int);  /* size of header to follow */
 

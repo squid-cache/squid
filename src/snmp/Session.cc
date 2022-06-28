@@ -46,7 +46,7 @@ void
 Snmp::Session::reset()
 {
     if (community_len > 0) {
-        Must(community != NULL);
+        Must(community != nullptr);
         xfree(community);
     }
     xfree(peername);
@@ -59,12 +59,12 @@ Snmp::Session::pack(Ipc::TypedMsgHdr& msg) const
     msg.putPod(Version);
     msg.putInt(community_len);
     if (community_len > 0) {
-        Must(community != NULL);
+        Must(community != nullptr);
         msg.putFixed(community, community_len);
     }
     msg.putPod(retries);
     msg.putPod(timeout);
-    int len = peername != NULL ? strlen(peername) : 0;
+    int len = peername != nullptr ? strlen(peername) : 0;
     msg.putInt(len);
     if (len > 0)
         msg.putFixed(peername, len);
@@ -80,7 +80,7 @@ Snmp::Session::unpack(const Ipc::TypedMsgHdr& msg)
     community_len = msg.getInt();
     if (community_len > 0) {
         community = static_cast<u_char*>(xmalloc(community_len + 1));
-        Must(community != NULL);
+        Must(community != nullptr);
         msg.getFixed(community, community_len);
         community[community_len] = 0;
     }
@@ -89,7 +89,7 @@ Snmp::Session::unpack(const Ipc::TypedMsgHdr& msg)
     int len = msg.getInt();
     if (len > 0) {
         peername = static_cast<char*>(xmalloc(len + 1));
-        Must(peername != NULL);
+        Must(peername != nullptr);
         msg.getFixed(peername, len);
         peername[len] = 0;
     }

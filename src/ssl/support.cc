@@ -41,7 +41,7 @@ static int ssl_ex_index_verify_callback_parameters = -1;
 
 static Ssl::CertsIndexedList SquidUntrustedCerts;
 
-const EVP_MD *Ssl::DefaultSignHash = NULL;
+const EVP_MD *Ssl::DefaultSignHash = nullptr;
 
 std::vector<const char *> Ssl::BumpModeStr = {
     "none",
@@ -207,7 +207,7 @@ int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_fun
     }
 
     STACK_OF(GENERAL_NAME) * altnames;
-    altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(peer_cert, NID_subject_alt_name, NULL, NULL);
+    altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(peer_cert, NID_subject_alt_name, nullptr, nullptr);
 
     if (altnames) {
         int numalts = sk_GENERAL_NAME_num(altnames);
@@ -335,7 +335,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
             if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_errors,  (void *)errs)) {
                 debugs(83, 2, "Failed to set ssl error_no in ssl_verify_cb: Certificate " << *peer_cert);
                 delete errs;
-                errs = NULL;
+                errs = nullptr;
             }
         } else // remember another error number
             errs->push_back_unique(Security::CertError(error_no, broken_cert, depth));
@@ -675,14 +675,14 @@ Ssl::Initialize(void)
     if (!Ssl::DefaultSignHash)
         fatalf("Sign hash '%s' is not supported\n", defName);
 
-    ssl_ex_index_server = SSL_get_ex_new_index(0, (void *) "server", NULL, NULL, ssl_free_SBuf);
-    ssl_ctx_ex_index_dont_verify_domain = SSL_CTX_get_ex_new_index(0, (void *) "dont_verify_domain", NULL, NULL, NULL);
-    ssl_ex_index_cert_error_check = SSL_get_ex_new_index(0, (void *) "cert_error_check", NULL, &ssl_dupAclChecklist, &ssl_freeAclChecklist);
-    ssl_ex_index_ssl_error_detail = SSL_get_ex_new_index(0, (void *) "ssl_error_detail", NULL, NULL, &ssl_free_ErrorDetail);
-    ssl_ex_index_ssl_peeked_cert  = SSL_get_ex_new_index(0, (void *) "ssl_peeked_cert", NULL, NULL, &ssl_free_X509);
-    ssl_ex_index_ssl_errors =  SSL_get_ex_new_index(0, (void *) "ssl_errors", NULL, NULL, &ssl_free_SslErrors);
-    ssl_ex_index_ssl_cert_chain = SSL_get_ex_new_index(0, (void *) "ssl_cert_chain", NULL, NULL, &ssl_free_CertChain);
-    ssl_ex_index_ssl_validation_counter = SSL_get_ex_new_index(0, (void *) "ssl_validation_counter", NULL, NULL, &ssl_free_int);
+    ssl_ex_index_server = SSL_get_ex_new_index(0, (void *) "server", nullptr, nullptr, ssl_free_SBuf);
+    ssl_ctx_ex_index_dont_verify_domain = SSL_CTX_get_ex_new_index(0, (void *) "dont_verify_domain", nullptr, nullptr, nullptr);
+    ssl_ex_index_cert_error_check = SSL_get_ex_new_index(0, (void *) "cert_error_check", nullptr, &ssl_dupAclChecklist, &ssl_freeAclChecklist);
+    ssl_ex_index_ssl_error_detail = SSL_get_ex_new_index(0, (void *) "ssl_error_detail", nullptr, nullptr, &ssl_free_ErrorDetail);
+    ssl_ex_index_ssl_peeked_cert  = SSL_get_ex_new_index(0, (void *) "ssl_peeked_cert", nullptr, nullptr, &ssl_free_X509);
+    ssl_ex_index_ssl_errors =  SSL_get_ex_new_index(0, (void *) "ssl_errors", nullptr, nullptr, &ssl_free_SslErrors);
+    ssl_ex_index_ssl_cert_chain = SSL_get_ex_new_index(0, (void *) "ssl_cert_chain", nullptr, nullptr, &ssl_free_CertChain);
+    ssl_ex_index_ssl_validation_counter = SSL_get_ex_new_index(0, (void *) "ssl_validation_counter", nullptr, nullptr, &ssl_free_int);
     ssl_ex_index_verify_callback_parameters = SSL_get_ex_new_index(0, (void *) "verify_callback_parameters", nullptr, nullptr, &ssl_free_VerifyCallbackParameters);
 }
 
@@ -781,7 +781,7 @@ Ssl::GetX509UserAttribute(X509 * cert, const char *attribute_name)
     const char *ret;
 
     if (!cert)
-        return NULL;
+        return nullptr;
 
     name = X509_get_subject_name(cert);
 
@@ -795,12 +795,12 @@ Ssl::GetX509Fingerprint(X509 * cert, const char *)
 {
     static char buf[1024];
     if (!cert)
-        return NULL;
+        return nullptr;
 
     unsigned int n;
     unsigned char md[EVP_MAX_MD_SIZE];
     if (!X509_digest(cert, EVP_sha1(), md, &n))
-        return NULL;
+        return nullptr;
 
     assert(3 * n + 1 < sizeof(buf));
 
@@ -835,7 +835,7 @@ Ssl::GetX509CAAttribute(X509 * cert, const char *attribute_name)
     const char *ret;
 
     if (!cert)
-        return NULL;
+        return nullptr;
 
     name = X509_get_issuer_name(cert);
 
@@ -847,7 +847,7 @@ Ssl::GetX509CAAttribute(X509 * cert, const char *attribute_name)
 const char *sslGetUserAttribute(SSL *ssl, const char *attribute_name)
 {
     if (!ssl)
-        return NULL;
+        return nullptr;
 
     X509 *cert = SSL_get_peer_certificate(ssl);
 
@@ -860,7 +860,7 @@ const char *sslGetUserAttribute(SSL *ssl, const char *attribute_name)
 const char *sslGetCAAttribute(SSL *ssl, const char *attribute_name)
 {
     if (!ssl)
-        return NULL;
+        return nullptr;
 
     X509 *cert = SSL_get_peer_certificate(ssl);
 
@@ -1081,7 +1081,7 @@ Ssl::findIssuerUri(X509 *cert)
     AUTHORITY_INFO_ACCESS *info;
     if (!cert)
         return nullptr;
-    info = static_cast<AUTHORITY_INFO_ACCESS *>(X509_get_ext_d2i(cert, NID_info_access, NULL, NULL));
+    info = static_cast<AUTHORITY_INFO_ACCESS *>(X509_get_ext_d2i(cert, NID_info_access, nullptr, nullptr));
     if (!info)
         return nullptr;
 
@@ -1129,7 +1129,7 @@ findCertIssuerFast(Ssl::CertsIndexedList &list, X509 *cert)
 {
     const auto name = Security::IssuerName(*cert);
     if (name.isEmpty())
-        return NULL;
+        return nullptr;
 
     const auto ret = list.equal_range(name);
     for (Ssl::CertsIndexedList::iterator it = ret.first; it != ret.second; ++it) {
@@ -1138,7 +1138,7 @@ findCertIssuerFast(Ssl::CertsIndexedList &list, X509 *cert)
             return issuer;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 /// slowly find the issuer certificate of a given cert using linear search
@@ -1333,7 +1333,7 @@ untrustedToStoreCtx_cb(X509_STORE_CTX *ctx, void *)
 void
 Ssl::useSquidUntrusted(SSL_CTX *sslContext)
 {
-    SSL_CTX_set_cert_verify_callback(sslContext, untrustedToStoreCtx_cb, NULL);
+    SSL_CTX_set_cert_verify_callback(sslContext, untrustedToStoreCtx_cb, nullptr);
 }
 
 bool
@@ -1406,7 +1406,7 @@ static int
 bio_sbuf_create(BIO* bio)
 {
     BIO_set_init(bio, 0);
-    BIO_set_data(bio, NULL);
+    BIO_set_data(bio, nullptr);
     return 1;
 }
 

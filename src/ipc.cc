@@ -64,7 +64,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     pid_t pid;
     Ip::Address ChS;
     Ip::Address PaS;
-    struct addrinfo *AI = NULL;
+    struct addrinfo *AI = nullptr;
     int crfd = -1;
     int prfd = -1;
     int cwfd = -1;
@@ -85,7 +85,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         *wfd = -1;
 
     if (hIpc)
-        *hIpc = NULL;
+        *hIpc = nullptr;
 
 // NP: no wrapping around d and c usage since we *want* code expansion
 #define IPC_CHECK_FAIL(f,d,c) \
@@ -311,7 +311,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
             struct timeval sl;
             sl.tv_sec = Config.sleep_after_fork / 1000000;
             sl.tv_usec = Config.sleep_after_fork % 1000000;
-            select(0, NULL, NULL, NULL, &sl);
+            select(0, nullptr, nullptr, nullptr, &sl);
         }
 
         return pid;
@@ -332,7 +332,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     if (type == IPC_TCP_SOCKET) {
         debugs(54, 3, "ipcCreate: calling accept on FD " << crfd);
 
-        if ((fd = accept(crfd, NULL, NULL)) < 0) {
+        if ((fd = accept(crfd, nullptr, nullptr)) < 0) {
             xerrno = errno;
             debugs(54, DBG_CRITICAL, "ipcCreate: FD " << crfd << " accept: " << xstrerr(xerrno));
             _exit(1);

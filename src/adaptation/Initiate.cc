@@ -30,7 +30,7 @@ public:
         AsyncCallT<AnswerDialer>::fire();
     }
     virtual ~AnswerCall() {
-        if (!fired && dialer.arg1.message != NULL && dialer.arg1.message->body_pipe != NULL)
+        if (!fired && dialer.arg1.message != nullptr && dialer.arg1.message->body_pipe != nullptr)
             dialer.arg1.message->body_pipe->expectNoConsumption();
     }
 

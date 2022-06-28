@@ -28,7 +28,7 @@
 #include "snmp_core.h"
 #endif
 
-static hash_table *client_table = NULL;
+static hash_table *client_table = nullptr;
 
 static ClientInfo *clientdbAdd(const Ip::Address &addr);
 static FREE clientdbFreeItem;
@@ -81,7 +81,7 @@ clientdbAdd(const Ip::Address &addr)
 
     if ((statCounter.client_http.clients > max_clients) && !cleanup_running && cleanup_scheduled < 2) {
         ++cleanup_scheduled;
-        eventAdd("client_db garbage collector", clientdbScheduledGC, NULL, 90, 0);
+        eventAdd("client_db garbage collector", clientdbScheduledGC, nullptr, 90, 0);
     }
 
     return c;
@@ -122,14 +122,14 @@ ClientInfo * clientdbGetInfo(const Ip::Address &addr)
     ClientInfo *c;
 
     if (!Config.onoff.client_db)
-        return NULL;
+        return nullptr;
 
     addr.toStr(key,MAX_IPSTRLEN);
 
     c = (ClientInfo *) hash_lookup(client_table, key);
-    if (c==NULL) {
+    if (c==nullptr) {
         debugs(77, DBG_IMPORTANT,"Client db does not contain information for given IP address "<<(const char*)key);
-        return NULL;
+        return nullptr;
     }
     return c;
 }
@@ -147,10 +147,10 @@ clientdbUpdate(const Ip::Address &addr, const LogTags &ltype, AnyP::ProtocolType
 
     c = (ClientInfo *) hash_lookup(client_table, key);
 
-    if (c == NULL)
+    if (c == nullptr)
         c = clientdbAdd(addr);
 
-    if (c == NULL)
+    if (c == nullptr)
         debug_trap("clientdbUpdate: Failed to add entry");
 
     if (p == AnyP::PROTO_HTTP) {
@@ -191,11 +191,11 @@ clientdbEstablished(const Ip::Address &addr, int delta)
 
     c = (ClientInfo *) hash_lookup(client_table, key);
 
-    if (c == NULL) {
+    if (c == nullptr) {
         c = clientdbAdd(addr);
     }
 
-    if (c == NULL)
+    if (c == nullptr)
         debug_trap("clientdbUpdate: Failed to add entry");
 
     c->n_established += delta;
@@ -221,7 +221,7 @@ clientdbCutoffDenied(const Ip::Address &addr)
 
     c = (ClientInfo *) hash_lookup(client_table, key);
 
-    if (c == NULL)
+    if (c == nullptr)
         return 0;
 
     /*
@@ -338,7 +338,7 @@ ClientInfo::~ClientInfo()
 
 #if USE_DELAY_POOLS
     if (CommQuotaQueue *q = quotaQueue) {
-        q->clientInfo = NULL;
+        q->clientInfo = nullptr;
         delete q; // invalidates cbdata, cancelling any pending kicks
     }
 #endif
@@ -351,7 +351,7 @@ clientdbFreeMemory(void)
 {
     hashFreeItems(client_table, clientdbFreeItem);
     hashFreeMemory(client_table);
-    client_table = NULL;
+    client_table = nullptr;
 }
 
 static void
@@ -369,7 +369,7 @@ clientdbGC(void *)
 
     link_next = hash_get_bucket(client_table, bucket++);
 
-    while (link_next != NULL) {
+    while (link_next != nullptr) {
         ClientInfo *c = (ClientInfo *)link_next;
         int age = squid_curtime - c->last_seen;
         link_next = link_next->next;
@@ -399,7 +399,7 @@ clientdbGC(void *)
     }
 
     if (bucket < CLIENT_DB_HASH_SIZE)
-        eventAdd("client_db garbage collector", clientdbGC, NULL, 0.15, 0);
+        eventAdd("client_db garbage collector", clientdbGC, nullptr, 0.15, 0);
     else {
         bucket = 0;
         cleanup_running = 0;
@@ -407,7 +407,7 @@ clientdbGC(void *)
 
         if (!cleanup_scheduled) {
             cleanup_scheduled = 1;
-            eventAdd("client_db garbage collector", clientdbScheduledGC, NULL, 6 * 3600, 0);
+            eventAdd("client_db garbage collector", clientdbScheduledGC, nullptr, 6 * 3600, 0);
         }
 
         debugs(49, 2, "clientdbGC: Removed " << cleanup_removed << " entries");
@@ -420,7 +420,7 @@ clientdbStartGC(void)
     max_clients = statCounter.client_http.clients;
     cleanup_running = 1;
     cleanup_removed = 0;
-    clientdbGC(NULL);
+    clientdbGC(nullptr);
 }
 
 #if SQUID_SNMP
@@ -450,7 +450,7 @@ variable_list *
 snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 {
     char key[MAX_IPSTRLEN];
-    ClientInfo *c = NULL;
+    ClientInfo *c = nullptr;
     Ip::Address keyIp;
 
     *ErrP = SNMP_ERR_NOERROR;
@@ -462,20 +462,20 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
         oid2addr(&(Var->name[12]), keyIp, 16);
     } else {
         *ErrP = SNMP_ERR_NOSUCHNAME;
-        return NULL;
+        return nullptr;
     }
 
     keyIp.toStr(key, sizeof(key));
     debugs(49, 5, "[" << key << "] requested!");
     c = (ClientInfo *) hash_lookup(client_table, key);
 
-    if (c == NULL) {
+    if (c == nullptr) {
         debugs(49, 5, "not found.");
         *ErrP = SNMP_ERR_NOSUCHNAME;
-        return NULL;
+        return nullptr;
     }
 
-    variable_list *Answer = NULL;
+    variable_list *Answer = nullptr;
     int aggr = 0;
 
     switch (Var->name[LEN_SQ_NET + 2]) {

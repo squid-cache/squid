@@ -123,7 +123,7 @@ void
 Mgr::CountersAction::dump(StoreEntry* entry)
 {
     debugs(16, 5, MYNAME);
-    Must(entry != NULL);
+    Must(entry != nullptr);
     DumpCountersStats(data, entry);
 }
 

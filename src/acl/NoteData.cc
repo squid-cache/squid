@@ -48,7 +48,7 @@ void
 ACLNoteData::parse()
 {
     char* t = ConfigParser::strtokFile();
-    assert (t != NULL);
+    assert (t != nullptr);
     name = t;
     values->parse();
 }

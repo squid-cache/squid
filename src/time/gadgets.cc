@@ -25,7 +25,7 @@ getCurrentTime()
     gettimeofday(&current_time);
 #else
 
-    gettimeofday(&current_time, NULL);
+    gettimeofday(&current_time, nullptr);
 #endif
 
     current_dtime = (double) current_time.tv_sec +

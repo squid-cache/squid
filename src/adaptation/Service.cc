@@ -15,7 +15,7 @@
 
 Adaptation::Service::Service(const ServiceConfigPointer &aConfig): theConfig(aConfig)
 {
-    Must(theConfig != NULL);
+    Must(theConfig != nullptr);
     debugs(93,3, "creating adaptation service " << cfg().key);
 }
 
@@ -72,7 +72,7 @@ Adaptation::FindService(const Service::Id& key)
         if ((*i)->cfg().key == key)
             return *i;
     }
-    return NULL;
+    return nullptr;
 }
 
 void Adaptation::DetachServices()

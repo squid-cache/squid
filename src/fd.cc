@@ -86,8 +86,8 @@ fd_close(int fd)
     assert(F->flags.open);
 
     if (F->type == FD_FILE) {
-        assert(F->read_handler == NULL);
-        assert(F->write_handler == NULL);
+        assert(F->read_handler == nullptr);
+        assert(F->write_handler == nullptr);
     }
 
     debugs(51, 3, "fd_close FD " << fd << " " << F->desc);

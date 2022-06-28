@@ -27,7 +27,7 @@ void MemStore::noteFreeMapSlice(const Ipc::StoreMapSliceId) STUB
 void MemStore::init() STUB
 void MemStore::getStats(StoreInfoStats&) const STUB
 void MemStore::stat(StoreEntry &) const STUB
-StoreEntry *MemStore::get(const cache_key *) STUB_RETVAL(NULL)
+StoreEntry *MemStore::get(const cache_key *) STUB_RETVAL(nullptr)
 uint64_t MemStore::maxSize() const STUB_RETVAL(0)
 uint64_t MemStore::minSize() const STUB_RETVAL(0)
 uint64_t MemStore::currentSize() const STUB_RETVAL(0)

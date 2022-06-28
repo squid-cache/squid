@@ -36,7 +36,7 @@ testHttpRequestMethod::testConstructCharStart()
 
     /* parse an empty string -> Http::METHOD_NONE */
     HttpRequestMethod a;
-    a.HttpRequestMethodXXX(NULL);
+    a.HttpRequestMethodXXX(nullptr);
     CPPUNIT_ASSERT(a == Http::METHOD_NONE);
 
     /* parsing a literal should work */
@@ -50,7 +50,7 @@ testHttpRequestMethod::testConstructCharStart()
     CPPUNIT_ASSERT_EQUAL(SBuf("QWERTY"), c.image());
 
     // parsing error should not leave stale results
-    b.HttpRequestMethodXXX(NULL);
+    b.HttpRequestMethodXXX(nullptr);
     CPPUNIT_ASSERT(b == Http::METHOD_NONE);
     CPPUNIT_ASSERT_EQUAL(SBuf("NONE"), b.image());
 }

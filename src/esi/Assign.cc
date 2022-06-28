@@ -26,10 +26,10 @@ ESIAssign::~ESIAssign()
         delete value;
 }
 
-ESIAssign::ESIAssign (ESIAssign const &old) : parent (NULL), varState (NULL), name (old.name), value (old.value ? new ESIVariableExpression (*old.value): NULL), variable (NULL), unevaluatedVariable(old.unevaluatedVariable)
+ESIAssign::ESIAssign (ESIAssign const &old) : parent (nullptr), varState (nullptr), name (old.name), value (old.value ? new ESIVariableExpression (*old.value): nullptr), variable (nullptr), unevaluatedVariable(old.unevaluatedVariable)
 {}
 
-ESIAssign::ESIAssign (esiTreeParentPtr aParent, int attrcount, char const **attr, ESIContext *aContext) : parent (aParent), varState (NULL), name(), value (NULL), variable (NULL), unevaluatedVariable()
+ESIAssign::ESIAssign (esiTreeParentPtr aParent, int attrcount, char const **attr, ESIContext *aContext) : parent (aParent), varState (nullptr), name(), value (nullptr), variable (nullptr), unevaluatedVariable()
 {
     /* TODO: grab content IFF no value was specified */
     assert (aContext);
@@ -62,7 +62,7 @@ ESIAssign::evaluateVariable()
     if (variable.getRaw())
         variable->process (false);
 
-    variable = NULL;
+    variable = nullptr;
 
     if (unevaluatedVariable.size()) {
         varState->feedData(unevaluatedVariable.rawBuf(), unevaluatedVariable.size());
@@ -101,7 +101,7 @@ ESIAssign::process (int)
 
     varState->addVariable (name.rawBuf(), name.size(), value);
 
-    value = NULL;
+    value = nullptr;
 
     debugs(86, 5, "ESIAssign: Processed " << this);
 
@@ -143,7 +143,7 @@ ESIAssign::finish()
         cbdataReferenceDone (varState);
 
     if (parent.getRaw())
-        parent = NULL;
+        parent = nullptr;
 }
 
 bool

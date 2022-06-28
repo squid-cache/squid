@@ -36,7 +36,7 @@ aclHostDomainCompare( char *const &a, char * const &b)
 bool
 ACLServerNameData::match(const char *host)
 {
-    if (host == NULL)
+    if (host == nullptr)
         return 0;
 
     debugs(28, 3, "checking '" << host << "'");
@@ -46,7 +46,7 @@ ACLServerNameData::match(const char *host)
 
     debugs(28, 3, "'" << host << "' " << (result ? "found" : "NOT found"));
 
-    return (result != NULL);
+    return (result != nullptr);
 
 }
 
@@ -80,7 +80,7 @@ check_cert_domain( void *check_data, ASN1_STRING *cn_data)
 int
 ACLServerNameStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
-    assert(checklist != NULL && checklist->request != NULL);
+    assert(checklist != nullptr && checklist->request != nullptr);
 
     const char *serverName = nullptr;
     SBuf clientSniKeeper; // because c_str() is not constant

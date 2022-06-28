@@ -51,7 +51,7 @@ void
 Mgr::MenuAction::dump(StoreEntry* entry)
 {
     debugs(16, 5, MYNAME);
-    Must(entry != NULL);
+    Must(entry != nullptr);
 
     typedef CacheManager::Menu::const_iterator Iterator;
     const CacheManager::Menu& menu = CacheManager::GetInstance()->menu();

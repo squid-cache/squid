@@ -135,10 +135,10 @@ rfc1035NamePack(char *buf, size_t sz, const char *name)
     /*
      * NOTE: use of strtok here makes names like foo....com valid.
      */
-    for (t = strtok(copy, "."); t; t = strtok(NULL, "."))
+    for (t = strtok(copy, "."); t; t = strtok(nullptr, "."))
         off += rfc1035LabelPack(buf + off, sz - off, t);
     xfree(copy);
-    off += rfc1035LabelPack(buf + off, sz - off, NULL);
+    off += rfc1035LabelPack(buf + off, sz - off, nullptr);
     assert(off <= sz);
     return off;
 }
@@ -376,7 +376,7 @@ rfc1035RRUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_rr * RR)
     unsigned int i;
     unsigned short rdlength;
     unsigned int rdata_off;
-    if (rfc1035NameUnpack(buf, sz, off, NULL, RR->name, RFC1035_MAXHOSTNAMESZ, 0)) {
+    if (rfc1035NameUnpack(buf, sz, off, nullptr, RR->name, RFC1035_MAXHOSTNAMESZ, 0)) {
         RFC1035_UNPACK_DEBUG;
         memset(RR, '\0', sizeof(*RR));
         return 1;
@@ -486,7 +486,7 @@ rfc1035ErrorMessage(int n)
 void
 rfc1035RRDestroy(rfc1035_rr ** rr, int n)
 {
-    if (*rr == NULL) {
+    if (*rr == nullptr) {
         return;
     }
 
@@ -495,7 +495,7 @@ rfc1035RRDestroy(rfc1035_rr ** rr, int n)
             xfree((*rr)[n].rdata);
     }
     xfree(*rr);
-    *rr = NULL;
+    *rr = nullptr;
 }
 
 /*
@@ -511,7 +511,7 @@ static int
 rfc1035QueryUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_query * query)
 {
     unsigned short s;
-    if (rfc1035NameUnpack(buf, sz, off, NULL, query->name, RFC1035_MAXHOSTNAMESZ, 0)) {
+    if (rfc1035NameUnpack(buf, sz, off, nullptr, query->name, RFC1035_MAXHOSTNAMESZ, 0)) {
         RFC1035_UNPACK_DEBUG;
         memset(query, '\0', sizeof(*query));
         return 1;
@@ -540,7 +540,7 @@ rfc1035MessageDestroy(rfc1035_message ** msg)
     if ((*msg)->answer)
         rfc1035RRDestroy(&(*msg)->answer, (*msg)->ancount);
     xfree(*msg);
-    *msg = NULL;
+    *msg = nullptr;
 }
 
 /*
@@ -592,9 +592,9 @@ rfc1035MessageUnpack(const char *buf,
     unsigned int off = 0;
     unsigned int i, j;
     unsigned int nr = 0;
-    rfc1035_message *msg = NULL;
-    rfc1035_rr *recs = NULL;
-    rfc1035_query *querys = NULL;
+    rfc1035_message *msg = nullptr;
+    rfc1035_rr *recs = nullptr;
+    rfc1035_query *querys = nullptr;
     msg = (rfc1035_message*)xcalloc(1, sizeof(*msg));
     if (rfc1035HeaderUnpack(buf + off, sz - off, &off, msg)) {
         RFC1035_UNPACK_DEBUG;
@@ -642,7 +642,7 @@ rfc1035MessageUnpack(const char *buf,
          * didn't actually get any.
          */
         rfc1035MessageDestroy(&msg);
-        *answer = NULL;
+        *answer = nullptr;
         return -rfc1035_unpack_error;
     }
     return nr;

@@ -20,7 +20,7 @@ HttpRequest::HttpRequest(const HttpRequestMethod &, AnyP::ProtocolType, const ch
 HttpRequest::~HttpRequest() STUB
 void HttpRequest::reset() STUB
 void HttpRequest::initHTTP(const HttpRequestMethod &, AnyP::ProtocolType, const char *, const char *) STUB
-HttpRequest * HttpRequest::clone() const STUB_RETVAL(NULL)
+HttpRequest * HttpRequest::clone() const STUB_RETVAL(nullptr)
 bool HttpRequest::maybeCacheable() STUB_RETVAL(false)
 bool HttpRequest::conditional() const STUB_RETVAL(false)
 bool HttpRequest::canHandle1xx() const STUB_RETVAL(false)
@@ -49,7 +49,7 @@ void HttpRequest::pack(Packable *) const STUB
 void HttpRequest::httpRequestPack(void *, Packable *) STUB
 HttpRequest * HttpRequest::FromUrl(const SBuf &, const MasterXaction::Pointer &, const HttpRequestMethod &) STUB_RETVAL(nullptr)
 HttpRequest * HttpRequest::FromUrlXXX(const char *, const MasterXaction::Pointer &, const HttpRequestMethod &) STUB_RETVAL(nullptr)
-ConnStateData *HttpRequest::pinnedConnection() STUB_RETVAL(NULL)
+ConnStateData *HttpRequest::pinnedConnection() STUB_RETVAL(nullptr)
 const SBuf HttpRequest::storeId() STUB_RETVAL(SBuf("."))
 void HttpRequest::ignoreRange(const char *) STUB
 int64_t HttpRequest::getRangeOffsetLimit() STUB_RETVAL(0)

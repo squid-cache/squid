@@ -20,7 +20,7 @@
 
 // TODO: make pool id more unique so it does not conflict with other Squids?
 static const char *PagePoolId = "squid-page-pool";
-static Ipc::Mem::PagePool *ThePagePool = 0;
+static Ipc::Mem::PagePool *ThePagePool = nullptr;
 static int TheLimits[Ipc::Mem::PageId::maxPurpose+1];
 
 // TODO: make configurable to avoid waste when mem-cached objects are small/big
@@ -93,7 +93,7 @@ class SharedMemPagesRr: public Ipc::Mem::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    SharedMemPagesRr(): owner(NULL) {}
+    SharedMemPagesRr(): owner(nullptr) {}
     virtual void useConfig();
     virtual void create();
     virtual void open();
@@ -134,7 +134,7 @@ SharedMemPagesRr::open()
 SharedMemPagesRr::~SharedMemPagesRr()
 {
     delete ThePagePool;
-    ThePagePool = NULL;
+    ThePagePool = nullptr;
     delete owner;
 }
 

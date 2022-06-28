@@ -429,7 +429,7 @@ static struct ssl_option {
         "", 0
     },
     {
-        NULL, 0
+        nullptr, 0
     }
 };
 #endif /* USE_OPENSSL */
@@ -619,7 +619,7 @@ Security::PeerOptions::loadCrlFile()
         return;
     }
 
-    while (X509_CRL *crl = PEM_read_bio_X509_CRL(in,NULL,NULL,NULL)) {
+    while (X509_CRL *crl = PEM_read_bio_X509_CRL(in,nullptr,nullptr,nullptr)) {
         parsedCrl.emplace_back(Security::CrlPointer(crl));
     }
     BIO_free(in);
