@@ -186,6 +186,16 @@ else
 	echo "Found astyle ${ASVER}"
 fi
 
+if test "x$OnlyChangedSince" = "xfork" ; then
+    ForkPoint=`git merge-base --fork-point upstream/master`
+    if test "x$ForkPoint" = "x" ; then
+        echo "Could not identify fork point - sometimes it happens"
+        echo "Please specify commit-id explicitly"
+        exit 1
+    fi
+    OnlyChangedSince="$ForkPoint"
+fi
+
 if test $CheckAndUpdateCopyright = yes
 then
     COPYRIGHT_YEARS=`date +"1996-%Y"`
@@ -400,17 +410,6 @@ git grep "ifn?def .*_SQUID_" |
 #
 # Scan for file-specific actions
 #
-
-ForkPoint=""
-if test "x$OnlyChangedSince" = "xfork" ; then
-    ForkPoint=`git merge-base --fork-point upstream/master`
-    if test "x$ForkPoint" = "x" ; then
-        echo "Could not identify fork point - sometimes it happens"
-        echo "Please specify commit-id explicitly"
-        exit 1
-    fi
-    OnlyChangedSince="$ForkPoint"
-fi
 
 FilesToOperateOn=""
 if test "x$OnlyChangedSince" != "x" ; then
