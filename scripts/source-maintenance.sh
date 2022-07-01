@@ -195,6 +195,13 @@ if test "x$OnlyChangedSince" = "xfork" ; then
     fi
     OnlyChangedSince="$ForkPoint"
 fi
+if test "x$OnlyChangedSince" != "x" ; then
+    if ! git cat-file -e "$OnlyChangedSince"; then
+        echo "ERROR: Cannot use --only-changed-since reference point: $OnlyChangedSince"
+        echo "Consider using a git commit SHA (from git log) instead."
+        exit 1
+    fi
+fi
 
 if test $CheckAndUpdateCopyright = yes
 then
