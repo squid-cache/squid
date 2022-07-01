@@ -358,7 +358,7 @@ processDebugSections ()
     destination="doc/debug-sections.txt"
 
     if test "x$OnlyChangedSince" != "x"; then
-        echo "--only-changed-since specified, Skipping update of $destination"
+        echo "WARNING: Skipping update of $destination due to --only-changed-since"
         return 0;
     fi
 
