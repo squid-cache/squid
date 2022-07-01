@@ -400,6 +400,7 @@ git grep "ifn?def .*_SQUID_" |
 #
 # Scan for file-specific actions
 #
+
 ForkPoint=""
 if test "x$OnlyChangedSince" = "xfork" ; then
     ForkPoint=`git merge-base --fork-point upstream/master`
