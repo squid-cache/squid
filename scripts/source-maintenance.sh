@@ -195,13 +195,6 @@ if test "x$OnlyChangedSince" = "xfork" ; then
     fi
     OnlyChangedSince="$ForkPoint"
 fi
-if test "x$OnlyChangedSince" != "x" ; then
-    if ! git cat-file -e "$OnlyChangedSince"; then
-        echo "ERROR: Cannot use --only-changed-since reference point: $OnlyChangedSince"
-        echo "Consider using a git commit SHA (from git log) instead."
-        exit 1
-    fi
-fi
 
 if test $CheckAndUpdateCopyright = yes
 then
@@ -418,11 +411,29 @@ git grep "ifn?def .*_SQUID_" |
 # Scan for file-specific actions
 #
 
+# The two git commands below will also list any files modified during the
+# current run (e.g., src/http/RegisteredHeadersHash.cci or icons/icon.am).
 FilesToOperateOn=""
 if test "x$OnlyChangedSince" != "x" ; then
     FilesToOperateOn=`git diff --name-only $OnlyChangedSince`
+    gitResult=$?
+    if test $gitResult -ne 0 ; then
+        echo "ERROR: Cannot use --only-changed-since reference point: $OnlyChangedSince"
+        echo "Consider using a git commit SHA (from git log) instead"
+        exit $gitResult
+    fi
 else
     FilesToOperateOn=`git ls-files`
+    gitResult=$?
+    # a bit paranoid but protects the empty $FilesToOperateOn check below
+    if test $gitResult -ne 0 ; then
+        echo "ERROR: Cannot find source code file names"
+        exit $gitResult
+    fi
+fi
+if test "x$FilesToOperateOn" = "x"; then
+    echo "WARNING: No files to scan and format"
+    return 0;
 fi
 
 for FILENAME in $FilesToOperateOn; do
