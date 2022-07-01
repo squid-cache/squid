@@ -42,11 +42,11 @@ printUsage () {
 cat <<_EOF
 Usage: $0 [option...]
 options:
-    --keep-going|-k                            (default: stop on error)
     --check-and-update-copyright <yes|no>      (default: yes)
+    --keep-going|-k                            (default: stop on error)
+    --only-changed-since <fork|commit-id>      (default: apply to all files)
     --update-contributors-since <never|auto|revision> (default: auto)
     --with-astyle </path/to/astyle/executable> (default: astyle-${TargetAstyleVersion} or astyle)
-    --only-changed-since <fork|commit-id>      (default: apply to all files)
 
 This script applies Squid mandatory code style guidelines.
 
