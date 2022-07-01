@@ -1332,7 +1332,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
         return abortRequestParsing("error:method-not-allowed");
     }
 
-    /* RFC 7540 section 11.6 registers the method PRI as HTTP/2 specific
+    /* HTTP/2 connection magic prefix starts with "PRI ".
      * Deny "PRI" method if used in HTTP/1.x or 0.9 versions.
      * If seen it signals a broken client or proxy has corrupted the traffic.
      */
@@ -3336,38 +3336,13 @@ clientHttpConnectionsOpen(void)
             continue;
         }
 
-        // Fill out a Comm::Connection which IPC will open as a listener for us
-        //  then pass back when active so we can start a TcpAcceptor subscription.
-        s->listenConn = new Comm::Connection;
-        s->listenConn->local = s->s;
-
-        s->listenConn->flags = COMM_NONBLOCKING | (s->flags.tproxyIntercept ? COMM_TRANSPARENT : 0) |
-                               (s->flags.natIntercept ? COMM_INTERCEPTION : 0) |
-                               (s->workerQueues ? COMM_REUSEPORT : 0);
-
-        typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
-        if (s->transport.protocol == AnyP::PROTO_HTTP) {
-            // setup the subscriptions such that new connections accepted by listenConn are handled by HTTP
-            RefCount<AcceptCall> subCall = commCbCall(5, 5, "httpAccept", CommAcceptCbPtrFun(httpAccept, CommAcceptCbParams(NULL)));
-            Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
-
-            AsyncCall::Pointer listenCall = asyncCall(33,2, "clientListenerConnectionOpened",
-                                            ListeningStartedDialer(&clientListenerConnectionOpened, s, Ipc::fdnHttpSocket, sub));
-            Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpSocket, listenCall);
-
-        } else if (s->transport.protocol == AnyP::PROTO_HTTPS) {
-            // setup the subscriptions such that new connections accepted by listenConn are handled by HTTPS
-            RefCount<AcceptCall> subCall = commCbCall(5, 5, "httpsAccept", CommAcceptCbPtrFun(httpsAccept, CommAcceptCbParams(NULL)));
-            Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
-
-            AsyncCall::Pointer listenCall = asyncCall(33, 2, "clientListenerConnectionOpened",
-                                            ListeningStartedDialer(&clientListenerConnectionOpened,
-                                                    s, Ipc::fdnHttpsSocket, sub));
-            Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpsSocket, listenCall);
-        }
-
-        HttpSockets[NHttpSockets] = -1; // set in clientListenerConnectionOpened
-        ++NHttpSockets;
+        const auto protocol = s->transport.protocol;
+        assert(protocol == AnyP::PROTO_HTTP || protocol == AnyP::PROTO_HTTPS);
+        const auto isHttps = protocol == AnyP::PROTO_HTTPS;
+        using AcceptCall = CommCbFunPtrCallT<CommAcceptCbPtrFun>;
+        RefCount<AcceptCall> subCall = commCbCall(5, 5, isHttps ? "httpsAccept" : "httpAccept",
+                CommAcceptCbPtrFun(isHttps ? httpsAccept : httpAccept, CommAcceptCbParams(nullptr)));
+        clientStartListeningOn(s, subCall, isHttps ? Ipc::fdnHttpsSocket : Ipc::fdnHttpSocket);
     }
 }
 
@@ -3380,7 +3355,8 @@ clientStartListeningOn(AnyP::PortCfgPointer &port, const RefCount< CommCbFunPtrC
     port->listenConn->flags =
         COMM_NONBLOCKING |
         (port->flags.tproxyIntercept ? COMM_TRANSPARENT : 0) |
-        (port->flags.natIntercept ? COMM_INTERCEPTION : 0);
+        (port->flags.natIntercept ? COMM_INTERCEPTION : 0) |
+        (port->workerQueues ? COMM_REUSEPORT : 0);
 
     // route new connections to subCall
     typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;

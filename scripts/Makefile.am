@@ -11,6 +11,7 @@ EXTRA_DIST	= AnnounceCache.pl access-log-matrix.pl cache-compare.pl \
 		find-alive.pl trace-job.pl trace-master.pl \
 		trace-context.pl \
 		icpserver.pl tcp-banger.pl udp-banger.pl upgrade-1.0-store.pl \
+		update-contributors.pl \
 		calc-must-ids.pl calc-must-ids.sh
 
 dist_noinst_SCRIPTS = remove-cfg.sh

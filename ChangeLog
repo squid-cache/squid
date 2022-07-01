@@ -1,3 +1,11 @@
+Changes in squid-5.6 (06 Jun 2022):
+
+	- Bug 5208: Part 1: Restart kids killed by SIGKILL
+	- Fix SQUID-MIB smilint errors
+	- negotiate_kerberos_auth: Initialise default_keytab
+	- Improve handling of Gopher responses
+	- ... and some semi-automated code polish
+
 Changes in squid-5.5 (12 Apr 2022):
 
 	- Regression Bug 5192: esi_parser default is incorrect

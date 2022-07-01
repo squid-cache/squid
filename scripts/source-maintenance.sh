@@ -32,12 +32,16 @@ TargetAstyleVersion="3.1"
 # whether to check and, if necessary, update boilerplate copyright years
 CheckAndUpdateCopyright=yes
 
+# --update-contributors-since mode
+UpdateContributorsSince=auto
+
 printUsage () {
 cat <<_EOF
 Usage: $0 [option...]
 options:
     --keep-going|-k                            (default: stop on error)
     --check-and-update-copyright <yes|no>      (default: yes)
+    --update-contributors-since <never|auto|revision> (default: auto)
     --with-astyle </path/to/astyle/executable> (default: astyle-${TargetAstyleVersion} or astyle)
     --only-changed-since <fork|commit-id>      (default: apply to all files)
 
@@ -59,6 +63,12 @@ for this argument may include HEAD^, master, origin/master, or the branch
 the current one was forked off.
 This option does not disable some repository-wide file generation and
 repository-wide non-formatting checks/adjustments.
+
+--update-contributors-since <never|auto|revision>
+  Configures how to sync CONTRIBUTORS with the current git branch commits:
+  * never: Do not update CONTRIBUTORS at all.
+  * auto: Check commits added since the last similar update.
+  * SHA1/etc: Check commits added after the specified git commit.
 _EOF
 }
 
@@ -80,6 +90,16 @@ while [ $# -ge 1 ]; do
         fi
         CheckAndUpdateCopyright=$2
         shift 2
+        ;;
+    --update-contributors-since)
+        if test "x$2" = x
+        then
+            printUsage
+            echo "Error: Option $1 expects an argument."
+            exit 1;
+        fi
+        UpdateContributorsSince="$2"
+        shift 2;
         ;;
     --help|-h)
         printUsage
@@ -555,6 +575,82 @@ printAmFile STUB_SOURCE "src/" "tests/stub_*.cc" > src/tests/Stub.am
 make -C src/http gperf-files
 
 run_ checkMakeNamedErrorDetails || exit 1
+
+# This function updates CONTRIBUTORS based on the recent[1] branch commit log.
+# Fresh contributor entries are filtered using the latest vetted CONTRIBOTORS
+# file on the current branch. The following CONTRIBUTORS commits are
+# considered vetted:
+#
+# * authored (in "git log --author" sense) by squidadm,
+# * matching (in "git log --grep" sense) $vettedCommitPhraseRegex set below.
+#
+# A human authoring an official GitHub pull request containing a new
+# CONTRIBUTORS version (that they want to be used as a new vetting point)
+# should add a phrase matching $vettedCommitPhraseRegex to the PR description.
+#
+# [1] As defined by the --update-contributors-since script parameter.
+collectAuthors ()
+{
+    if test "x$UpdateContributorsSince" = xnever
+    then
+        return 0; # successfully did nothing, as requested
+    fi
+
+    vettedCommitPhraseRegex='[Rr]eference point for automated CONTRIBUTORS updates'
+
+    since="$UpdateContributorsSince"
+    if test "x$UpdateContributorsSince" = xauto
+    then
+        # find the last CONTRIBUTORS commit vetted by a human
+        humanSha=`git log -n1 --format='%H' --grep="$vettedCommitPhraseRegex" CONTRIBUTORS`
+        # find the last CONTRIBUTORS commit attributed to this script
+        botSha=`git log -n1 --format='%H' --author=squidadm CONTRIBUTORS`
+        if test "x$humanSha" = x && test "x$botSha" = x
+        then
+            echo "ERROR: Unable to determine the commit to start contributors extraction from"
+            return 1;
+        fi
+
+        # find the latest commit among the above one or two commits
+        if test "x$humanSha" = x
+        then
+            since=$botSha
+        elif test "x$botSha" = x
+        then
+            since=$humanSha
+        elif git merge-base --is-ancestor $humanSha $botSha
+        then
+            since=$botSha
+        else
+            since=$humanSha
+        fi
+        echo "Collecting contributors since $since"
+    fi
+    range="$since..HEAD"
+
+    # We add four leading spaces below to mimic CONTRIBUTORS entry style.
+    # add commit authors:
+    git log --format='    %an <%ae>' $range > authors.tmp
+    # add commit co-authors:
+    git log $range | \
+        grep -Ei '^[[:space:]]*Co-authored-by:' | \
+        sed -r 's/^\s*Co-authored-by:\s*/    /i' >> authors.tmp
+    # but do not add committers (--format='    %cn <%ce>').
+
+    # add collected new (co-)authors, if any, to CONTRIBUTORS
+    if ./scripts/update-contributors.pl < authors.tmp > CONTRIBUTORS.new
+    then
+        updateIfChanged CONTRIBUTORS CONTRIBUTORS.new  \
+            "A human PR description should match: $vettedCommitPhraseRegex"
+    fi
+    result=$?
+
+    rm -f authors.tmp
+    return $result
+}
+
+# Update CONTRIBUTORS content
+run_ collectAuthors || exit 1
 
 # Run formatting
 srcFormat || exit 1

@@ -53,8 +53,8 @@ public:
 
     dirent_t *entry;
     DIR *td;
-    char fullpath[MAXPATHLEN];
-    char fullfilename[MAXPATHLEN*2];
+    SBuf fullpath;
+    SBuf fullfilename;
 
     StoreRebuildData counts;
 

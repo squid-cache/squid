@@ -35,13 +35,6 @@ public:
     /* Not implemented */
     Scheme (Scheme const &);
     Scheme &operator=(Scheme const &);
-
-private:
-    /**
-     * Main instance of this authentication Scheme.
-     * NULL when the scheme is not being used.
-     */
-    static Auth::Scheme::Pointer _instance;
 };
 
 } // namespace Ntlm
