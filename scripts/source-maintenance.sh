@@ -273,6 +273,12 @@ collectDebugMessagesFrom ()
     source="$1"
     destination="doc/debug-messages.tmp"
 
+    if test "x$OnlyChangedSince" != "x"; then
+        # Skipping collection due to --only-changed-since.
+        # processDebugMessages() will warn.
+        return 0;
+    fi
+
     # Merge multi-line debugs() into one-liners and remove '//...' comments.
     awk 'BEGIN { found=0; dbgLine=""; } {
         if ($0 ~ /[ \t]debugs[ \t]*\(/)
@@ -317,6 +323,11 @@ processDebugMessages ()
 {
     source="doc/debug-messages.tmp"
     destination="doc/debug-messages.dox"
+
+    if test "x$OnlyChangedSince" != "x"; then
+        echo "WARNING: Skipping update of $destination due to --only-changed-since"
+        return 0;
+    fi
 
     if test '!' -s "$source"; then
         echo "ERROR: Failed to find debugs() message IDs"
