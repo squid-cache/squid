@@ -357,6 +357,11 @@ processDebugSections ()
 {
     destination="doc/debug-sections.txt"
 
+    if test "x$OnlyChangedSince" != "x"; then
+        echo "--only-changed-since specified, Skipping update of $destination"
+        return 0;
+    fi
+
     sort -u < doc/debug-sections.tmp | sort -n > doc/debug-sections.tmp2
     cat scripts/boilerplate.h > $destination
     echo "" >> $destination
@@ -655,14 +660,6 @@ run_ collectAuthors || exit 1
 # Run formatting
 srcFormat || exit 1
 
-if [ -z "$OnlyChangedSince" ]; then
-    sort -u <doc/debug-sections.tmp | sort -n >doc/debug-sections.tmp2
-    cat scripts/boilerplate.h doc/debug-sections.tmp2 >doc/debug-sections.txt
-    rm doc/debug-sections.tmp2
-else
-    echo "--only-changed-since specified, Skipping update of doc/debug-sections.txt"
-fi
-rm -f doc/debug-sections.tmp
 rm -f boilerplate_fix.sed
 
 exit $SeenErrors
