@@ -39,40 +39,67 @@ UpdateContributorsSince=auto
 OnlyChangedSince=""
 
 printUsage () {
-cat <<_EOF
+cat <<USAGE_
 Usage: $0 [option...]
 options:
     --check-and-update-copyright <yes|no>      (default: yes)
+    --help|-h
     --keep-going|-k                            (default: stop on error)
-    --only-changed-since <fork|commit-id>      (default: apply to all files)
+    --only-changed-since <fork|commit>         (default: apply to all files)
     --update-contributors-since <never|auto|revision> (default: auto)
     --with-astyle </path/to/astyle/executable> (default: astyle-${TargetAstyleVersion} or astyle)
 
-This script applies Squid mandatory code style guidelines.
+USAGE_
+}
 
-Squid code style guidelines require astyle version $TargetAstyleVersion.
-The path to the astyle binary can be specified using the
---with-astyle option or with the ASTYLE environment variable.
+printHelp () {
 
-It will try to auto-detect a checksum program (e.g. md5sum).
+cat <<HELP_INTRO_
+This script applies Squid mandatory code style guidelines and generates
+various files derived from Squid sources.
 
-If the --only-changed-since argument is supplied, it expects a git commit-id,
-branch name or the special keyword 'fork'.
-The script will try to only examine for formatting changes those files that
-have changed since the specified commit.
-The keyword 'fork' will look for files changed
-since the current branch was forked off 'upstream/master'. Sensible values
-for this argument may include HEAD^, master, origin/master, or the branch
-the current one was forked off.
-This option does not disable some repository-wide file generation and
-repository-wide non-formatting checks/adjustments.
+HELP_INTRO_
+
+    printUsage
+
+cat <<HELP_MAIN_
+--help, -h
+
+    Print this information and exit.
+
+--only-changed-since <"fork"|commit>
+
+    When specifieid, the script only examines for formatting changes those
+    files that have changed since the specified git reference point. The
+    argument is either a git commit (fed to "git diff") or a special keyword
+    "fork". Common commit values include HEAD^, master, origin/master, and the
+    branch the current one was forked off. When "fork" is specified, the
+    script will look for files changed since the current branch was forked off
+    upstream/master (according to "git merge-base --fork-point").
+
+    This option does not disable some repository-wide file generation and
+    repository-wide non-formatting checks/adjustments.
 
 --update-contributors-since <never|auto|revision>
-  Configures how to sync CONTRIBUTORS with the current git branch commits:
-  * never: Do not update CONTRIBUTORS at all.
-  * auto: Check commits added since the last similar update.
-  * SHA1/etc: Check commits added after the specified git commit.
-_EOF
+
+    Configures how to sync CONTRIBUTORS with the current git branch commits:
+    * never: Do not update CONTRIBUTORS at all.
+    * auto: Check commits added since the last similar update.
+    * SHA1/etc: Check commits added after the specified git commit.
+
+--with-astyle </path/to/astyle/executable>
+
+    Squid code style guidelines require astyle version $TargetAstyleVersion.
+    The path to the astyle binary can be specified using this command line
+    option or by exporting the ASTYLE environment variable. If both are
+    specified, the command-line option wins.
+
+External dependencies:
+
+* Astyle. See the --with-astyle command line option above.
+* The script auto-detects the checksum program (e.g., md5sum).
+
+HELP_MAIN_
 }
 
 # command-line options
@@ -104,7 +131,7 @@ while [ $# -ge 1 ]; do
         shift 2;
         ;;
     --help|-h)
-        printUsage
+        printHelp
         exit 0;
         ;;
     --with-astyle)
