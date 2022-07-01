@@ -35,6 +35,9 @@ CheckAndUpdateCopyright=yes
 # --update-contributors-since mode
 UpdateContributorsSince=auto
 
+# --only-changed-since point
+OnlyChangedSince=""
+
 printUsage () {
 cat <<_EOF
 Usage: $0 [option...]
@@ -73,7 +76,6 @@ _EOF
 }
 
 # command-line options
-OnlyChangedSince=""
 while [ $# -ge 1 ]; do
     case "$1" in
     --keep-going|-k)
