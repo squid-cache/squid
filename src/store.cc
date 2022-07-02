@@ -1728,7 +1728,7 @@ StoreEntry::startWriting()
 char const *
 StoreEntry::getSerialisedMetaData(size_t &length) const
 {
-    return Store::PackSwapMeta(*this, length);
+    return static_cast<const char *>(Store::PackSwapMeta(*this, length).release());
 }
 
 /**

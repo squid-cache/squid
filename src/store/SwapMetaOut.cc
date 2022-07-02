@@ -73,7 +73,7 @@ PackFields(const StoreEntry &entry, std::ostream &os)
 
 } // namespace Store
 
-char const *
+AllocedBuf
 Store::PackSwapMeta(const StoreEntry &entry, size_t &totalLength)
 {
     SBufStream os;
@@ -82,9 +82,10 @@ Store::PackSwapMeta(const StoreEntry &entry, size_t &totalLength)
 
     // TODO: Optimize this allocation away by returning (and swapping out) SBuf.
     const auto bufSize = NaturalSum<size_t>(sizeof(SwapMetaMagic), sizeof(RawSwapMetaPrefixLength), metas.length()).value();
-    const auto buf = static_cast<char*>(xmalloc(bufSize));
+    AllocedBuf buf(xmalloc(bufSize));
+    const auto bufStart = static_cast<char*>(buf.get());
 
-    auto pos = buf; // buf writing position
+    auto pos = bufStart; // buf writing position
 
     *pos = SwapMetaMagic;
     pos += sizeof(SwapMetaMagic);
@@ -93,7 +94,7 @@ Store::PackSwapMeta(const StoreEntry &entry, size_t &totalLength)
     memcpy(pos, &metaSize, sizeof(metaSize));
     pos += sizeof(metaSize);
 
-    Assure(pos + metas.length() == buf + bufSize); // paranoid
+    Assure(pos + metas.length() == bufStart + bufSize); // paranoid
     memcpy(pos, metas.rawContent(), metas.length());
     pos += metas.length();
 

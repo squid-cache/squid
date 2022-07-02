@@ -149,5 +149,5 @@ uint64_t Store::UnpackIndexSwapMeta(const MemBuf &, StoreEntry &, cache_key *) S
 void Store::UnpackHitSwapMeta(char const *, ssize_t, StoreEntry &) STUB
 
 #include "store/SwapMetaOut.h"
-char const *Store::PackSwapMeta(const StoreEntry &, size_t &) STUB_RETVAL(nullptr)
+AllocedBuf Store::PackSwapMeta(const StoreEntry &, size_t &) STUB_RETVAL(nullptr)
 
