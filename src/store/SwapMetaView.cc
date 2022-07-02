@@ -48,7 +48,7 @@ HandleBadRawType(const RawSwapMetaType type)
         return;
     }
 
-    Assure2(type <= RawSwapMetaTypeBottom, "handled all other bad types above");
+    assert(type <= RawSwapMetaTypeBottom); // handled all other bad types above
     debugs(20, DBG_IMPORTANT, "ERROR: Malformed cache storage; ignoring swap meta field with an invalid type: " << int(type));
 }
 
