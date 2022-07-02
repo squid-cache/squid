@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -212,7 +212,7 @@ snmpInit(void)
     /* cachePeerTable - 1.3.6.1.4.1.3495.1.5.1 */
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.5", MESH_PTBL, NULL, NULL);
 
-    /* CachePeerTableEntry (version 3) - 1.3.6.1.4.1.3495.1.5.1.3 */
+    /* CachePeerEntry (version 3) - 1.3.6.1.4.1.3495.1.5.1.3 */
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1", 3, NULL, NULL);
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_INDEX, snmp_meshPtblFn, peer_Inst);
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_NAME, snmp_meshPtblFn, peer_Inst);
@@ -389,7 +389,7 @@ snmpDecodePacket(SnmpRequest * rq)
         return;
     }
 
-    debugs(49, 5, HERE << "Called.");
+    debugs(49, 5, "Called.");
     PDU = snmp_pdu_create(0);
     /* Always answer on SNMPv1 */
     rq->session.Version = SNMP_VERSION_1;
@@ -568,7 +568,7 @@ snmpTreeGet(oid * Current, snint CurrentLen)
 AggrType
 snmpAggrType(oid* Current, snint CurrentLen)
 {
-    debugs(49, 5, HERE);
+    debugs(49, 5, MYNAME);
 
     mib_tree_entry* mibTreeEntry = mib_tree_head;
     AggrType type = atNone;
@@ -781,7 +781,7 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
         else
             size = sizeof(in6_addr);
 
-        debugs(49, 6, HERE << "len" << *len << ", current-len" << current->len << ", addr=" << laddr << ", size=" << size);
+        debugs(49, 6, "len" << *len << ", current-len" << current->len << ", addr=" << laddr << ", size=" << size);
 
         instance = (oid *)xmalloc(sizeof(*name) * (*len + size ));
         memcpy(instance, name, (sizeof(*name) * (*len)));
@@ -805,7 +805,7 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
             else
                 newshift = sizeof(in6_addr);
 
-            debugs(49, 6, HERE << "len" << *len << ", current-len" << current->len << ", addr=" << laddr << ", newshift=" << newshift);
+            debugs(49, 6, "len" << *len << ", current-len" << current->len << ", addr=" << laddr << ", newshift=" << newshift);
 
             instance = (oid *)xmalloc(sizeof(*name) * (current->len +  newshift));
             memcpy(instance, name, (sizeof(*name) * (current->len)));

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,8 +11,6 @@
 #include "squid.h"
 #include "event.h"
 #include "mgr/Registration.h"
-#include "profiler/Profiler.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 
@@ -229,8 +227,6 @@ EventScheduler::checkEvents(int)
     if (result != 0)
         return result;
 
-    PROF_start(eventRun);
-
     do {
         ev_entry *event = tasks;
         assert(event);
@@ -255,7 +251,6 @@ EventScheduler::checkEvents(int)
             break; // do not dequeue events following a heavy event
     } while (result == 0);
 
-    PROF_stop(eventRun);
     return result;
 }
 
@@ -319,7 +314,7 @@ EventScheduler::schedule(const char *name, EVH * func, void *arg, double when, i
     ev_entry *event = new ev_entry(name, func, arg, timestamp, weight, cbdata);
 
     ev_entry **E;
-    debugs(41, 7, HERE << "schedule: Adding '" << name << "', in " << when << " seconds");
+    debugs(41, 7, "schedule: Adding '" << name << "', in " << when << " seconds");
     /* Insert after the last event with the same or earlier time */
 
     for (E = &tasks; *E; E = &(*E)->next) {

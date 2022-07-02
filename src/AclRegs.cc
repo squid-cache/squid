@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -162,8 +162,8 @@ Acl::Init()
     RegisterMaker("transaction_initiator", [](TypeName name)->ACL* {return new TransactionInitiator(name);});
 
 #if USE_LIBNETFILTERCONNTRACK
-    RegisterMaker("clientside_mark", [](TypeName name)->ACL* { return new Acl::ConnMark; });
-    RegisterMaker("client_connection_mark", [](TypeName name)->ACL* { return new Acl::ConnMark; });
+    RegisterMaker("clientside_mark", [](TypeName)->ACL* { return new Acl::ConnMark; }); // XXX: Add name parameter to ctor
+    RegisterMaker("client_connection_mark", [](TypeName)->ACL* { return new Acl::ConnMark; }); // XXX: Add name parameter to ctor
 #endif
 
 #if USE_OPENSSL

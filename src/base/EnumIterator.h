@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,7 +20,7 @@
  * \see EnumIterator, ReverseEnumIterator
  */
 template <typename EnumType>
-class EnumIteratorBase : public std::iterator<std::bidirectional_iterator_tag, EnumType>
+class EnumIteratorBase
 {
 protected:
 #if HAVE_STD_UNDERLYING_TYPE
@@ -30,6 +30,12 @@ protected:
 #endif
 
 public:
+    using iterator_category = std::bidirectional_iterator_tag;
+    using value_type = EnumType;
+    using difference_type = std::ptrdiff_t;
+    using pointer = EnumType *;
+    using reference = EnumType &;
+
     explicit EnumIteratorBase(EnumType e) : current(static_cast<iterator_type>(e)) {}
 
     bool operator==(const EnumIteratorBase &i) const {

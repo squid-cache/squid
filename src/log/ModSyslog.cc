@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 /* DEBUG: section 50    Log file handling */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 #if HAVE_SYSLOG
 
@@ -87,7 +87,7 @@ syslog_ntoa(const char *s)
         if (!strcmp(s, p->name) || !strcasecmp(s, p->name + 4))
             return p->value;
 
-    debugs(1, DBG_IMPORTANT, "Unknown syslog facility/priority '" << s << "'");
+    debugs(1, DBG_IMPORTANT, "ERROR: Unknown syslog facility/priority '" << s << "'");
     return 0;
 }
 

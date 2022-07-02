@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "base/AsyncCbdataCalls.h"
 #include "base/TextException.h"
+#include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
@@ -25,7 +26,7 @@ Mgr::StoreToCommWriter::StoreToCommWriter(const Comm::ConnectionPointer &conn, S
     AsyncJob("Mgr::StoreToCommWriter"),
     clientConnection(conn), entry(anEntry), sc(NULL), writeOffset(0), closer(NULL)
 {
-    debugs(16, 6, HERE << clientConnection);
+    debugs(16, 6, clientConnection);
     closer = asyncCall(16, 5, "Mgr::StoreToCommWriter::noteCommClosed",
                        CommCbMemFunT<StoreToCommWriter, CommCloseCbParams>(this, &StoreToCommWriter::noteCommClosed));
     comm_add_close_handler(clientConnection->fd, closer);
@@ -33,7 +34,7 @@ Mgr::StoreToCommWriter::StoreToCommWriter(const Comm::ConnectionPointer &conn, S
 
 Mgr::StoreToCommWriter::~StoreToCommWriter()
 {
-    debugs(16, 6, HERE);
+    debugs(16, 6, MYNAME);
     assert(!entry);
     assert(!sc);
     close();
@@ -55,7 +56,7 @@ Mgr::StoreToCommWriter::close()
 void
 Mgr::StoreToCommWriter::start()
 {
-    debugs(16, 6, HERE);
+    debugs(16, 6, MYNAME);
     Must(Comm::IsConnOpen(clientConnection));
     Must(entry != NULL);
     AsyncCall::Pointer call = asyncCall(16, 4, "StoreToCommWriter::Abort", cbdataDialer(&StoreToCommWriter::HandleStoreAbort, this));
@@ -70,7 +71,7 @@ Mgr::StoreToCommWriter::start()
 void
 Mgr::StoreToCommWriter::scheduleStoreCopy()
 {
-    debugs(16, 6, HERE);
+    debugs(16, 6, MYNAME);
     Must(entry != NULL);
     Must(sc != NULL);
     StoreIOBuffer readBuf(sizeof(buffer), writeOffset, buffer);
@@ -93,7 +94,7 @@ Mgr::StoreToCommWriter::NoteStoreCopied(void* data, StoreIOBuffer ioBuf)
 void
 Mgr::StoreToCommWriter::noteStoreCopied(StoreIOBuffer ioBuf)
 {
-    debugs(16, 6, HERE);
+    debugs(16, 6, MYNAME);
     Must(!ioBuf.flags.error);
     if (ioBuf.length > 0)
         scheduleCommWrite(ioBuf); // write received action results to client
@@ -104,7 +105,7 @@ Mgr::StoreToCommWriter::noteStoreCopied(StoreIOBuffer ioBuf)
 void
 Mgr::StoreToCommWriter::scheduleCommWrite(const StoreIOBuffer& ioBuf)
 {
-    debugs(16, 6, HERE);
+    debugs(16, 6, MYNAME);
     Must(Comm::IsConnOpen(clientConnection));
     Must(ioBuf.data != NULL);
     // write filled buffer
@@ -118,7 +119,7 @@ Mgr::StoreToCommWriter::scheduleCommWrite(const StoreIOBuffer& ioBuf)
 void
 Mgr::StoreToCommWriter::noteCommWrote(const CommIoCbParams& params)
 {
-    debugs(16, 6, HERE);
+    debugs(16, 6, MYNAME);
     Must(params.flag == Comm::OK);
     Must(clientConnection != NULL && params.fd == clientConnection->fd);
     Must(params.size != 0);
@@ -130,7 +131,7 @@ Mgr::StoreToCommWriter::noteCommWrote(const CommIoCbParams& params)
 void
 Mgr::StoreToCommWriter::noteCommClosed(const CommCloseCbParams &)
 {
-    debugs(16, 6, HERE);
+    debugs(16, 6, MYNAME);
     if (clientConnection) {
         clientConnection->noteClosure();
         clientConnection = nullptr;
@@ -142,7 +143,7 @@ Mgr::StoreToCommWriter::noteCommClosed(const CommCloseCbParams &)
 void
 Mgr::StoreToCommWriter::swanSong()
 {
-    debugs(16, 6, HERE);
+    debugs(16, 6, MYNAME);
     if (entry != NULL) {
         if (sc != NULL) {
             storeUnregister(sc, entry, this);

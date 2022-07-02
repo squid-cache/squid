@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,14 +21,10 @@
 // void comm_read(const Comm::ConnectionPointer &, char *, int, IOCB *, void *) STUB
 // void comm_read(const Comm::ConnectionPointer &, char*, int, AsyncCall::Pointer &) STUB
 
-/* should be in stub_CommRead */
-#include "CommRead.h"
-CommRead::CommRead(const Comm::ConnectionPointer &, char *, int, AsyncCall::Pointer &) STUB
-CommRead::CommRead() STUB
-DeferredReadManager::~DeferredReadManager() STUB
-DeferredRead::DeferredRead(DeferrableRead *, void *, CommRead const &) STUB
-void DeferredReadManager::delayRead(DeferredRead const &) STUB
-void DeferredReadManager::kickReads(int const) STUB
+/* should be in stub_libbase */
+#include "base/DelayedAsyncCalls.h"
+void DelayedAsyncCalls::delay(const AsyncCall::Pointer &) STUB
+void DelayedAsyncCalls::schedule() STUB
 
 #include "comm.h"
 bool comm_iocallbackpending(void) STUB_RETVAL(false)

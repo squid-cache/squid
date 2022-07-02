@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,23 +15,13 @@
 #include "acl/Eui64.h"
 #include "acl/FilledChecklist.h"
 #include "cache_cf.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "eui/Eui64.h"
 #include "globals.h"
 #include "ip/Address.h"
 
-ACL *
-ACLEui64::clone() const
-{
-    return new ACLEui64(*this);
-}
-
 ACLEui64::ACLEui64 (char const *theClass) : class_ (theClass)
 {}
-
-ACLEui64::ACLEui64 (ACLEui64 const & old) : eui64Data(old.eui64Data), class_ (old.class_)
-{
-}
 
 char const *
 ACLEui64::typeString() const
@@ -53,14 +43,14 @@ aclParseEuiData(const char *t)
     debugs(28, 5, "aclParseEuiData: " << t);
 
     if (sscanf(t, "%[0-9a-fA-F:]", buf) != 1) {
-        debugs(28, DBG_CRITICAL, "aclParseEuiData: Bad EUI-64 address: '" << t << "'");
+        debugs(28, DBG_CRITICAL, "ERROR: aclParseEuiData: Bad EUI-64 address: '" << t << "'");
         delete q;
         return NULL;
     }
 
     if (!q->decode(buf)) {
         debugs(28, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(28, DBG_CRITICAL, "aclParseEuiData: Ignoring invalid EUI-64 acl entry: can't parse '" << buf << "'");
+        debugs(28, DBG_CRITICAL, "ERROR: aclParseEuiData: Ignoring invalid EUI-64 acl entry: cannot parse '" << buf << "'");
         delete q;
         return NULL;
     }

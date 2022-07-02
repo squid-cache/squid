@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,11 +20,8 @@
 #if HAVE_AUTH_MODULE_NEGOTIATE
 #include "auth/negotiate/Scheme.h"
 #endif
-#if HAVE_AUTH_MODULE_NTLM
-#include "auth/ntlm/Scheme.h"
-#endif
 
-#include "Debug.h"
+#include "debug/Stream.h"
 
 /**
  * Initialize the authentication modules (if any)
@@ -46,11 +43,6 @@ Auth::Init()
     static const char *negotiate_type = Auth::Negotiate::Scheme::GetInstance()->type();
     debugs(29,DBG_IMPORTANT,"Startup: Initialized Authentication Scheme '" << negotiate_type << "'");
 #endif
-#if HAVE_AUTH_MODULE_NTLM
-    static const char *ntlm_type = Auth::Ntlm::Scheme::GetInstance()->type();
-    debugs(29,DBG_IMPORTANT,"Startup: Initialized Authentication Scheme '" << ntlm_type << "'");
-#endif
-    debugs(29,DBG_IMPORTANT,"Startup: Initialized Authentication.");
 }
 
 #endif /* USE_AUTH */

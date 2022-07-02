@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -17,6 +17,8 @@ DISTCLEANFILES=
 
 LDADD= \
 	$(top_builddir)/src/ip/libip.la \
+	$(top_builddir)/src/mem/libminimal.la \
+	$(top_builddir)/src/time/libtime.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(COMPAT_LIB) \
@@ -31,7 +33,7 @@ include $(top_srcdir)/doc/manuals/Substitute.am
 test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
 	cp $(top_srcdir)/test-suite/test_tools.cc $@
 
-tests/stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc
+tests/stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc | tests
 	cp $(top_srcdir)/src/tests/stub_debug.cc $@
 
 Here.cc: $(top_srcdir)/src/base/Here.cc
@@ -43,24 +45,21 @@ CharacterSet.cc: $(top_srcdir)/src/base/CharacterSet.cc
 MemBuf.cc: $(top_srcdir)/src/MemBuf.cc
 	cp $(top_srcdir)/src/MemBuf.cc $@
 
-time.cc: $(top_srcdir)/src/time.cc
-	cp $(top_srcdir)/src/time.cc $@
-
-tests/stub_cbdata.cc: $(top_srcdir)/src/tests/stub_cbdata.cc
+tests/stub_cbdata.cc: $(top_srcdir)/src/tests/stub_cbdata.cc | tests
 	cp $(top_srcdir)/src/tests/stub_cbdata.cc $@
 
-tests/stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc
-	cp $(top_srcdir)/src/tests/stub_libmem.cc $@
-
-tests/STUB.h: $(top_srcdir)/src/tests/STUB.h
+tests/STUB.h: $(top_srcdir)/src/tests/STUB.h | tests
 	cp $(top_srcdir)/src/tests/STUB.h $@
+
+tests:
+	mkdir -p $@
 
 # stock tools for unit tests - library independent versions of dlink_list
 # etc.
 # globals.cc is needed by test_tools.cc.
 # Neither of these should be disted from here.
 TESTSOURCES= test_tools.cc
-CLEANFILES += test_tools.cc Here.cc CharacterSet.cc MemBuf.cc tests/stub_debug.cc time.cc tests/stub_cbdata.cc tests/stub_libmem.cc tests/STUB.h
+CLEANFILES += test_tools.cc Here.cc CharacterSet.cc MemBuf.cc tests/stub_debug.cc tests/stub_cbdata.cc tests/STUB.h
 
 ## Test Scripts
 EXTRA_DIST += helper-ok-dying.pl helper-ok.pl
@@ -76,16 +75,16 @@ cachemgr__CGIEXT__SOURCES = \
 	Here.cc \
 	MemBuf.cc \
 	cachemgr.cc \
-	test_tools.cc \
-	time.cc
+	test_tools.cc
 
 nodist_cachemgr__CGIEXT__SOURCES = \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
-	tests/stub_libmem.cc \
 	tests/STUB.h
 
-cachemgr__CGIEXT__CXXFLAGS = -DDEFAULT_CACHEMGR_CONFIG=\"$(DEFAULT_CACHEMGR_CONFIG)\" $(AM_CXXFLAGS)
+cachemgr__CGIEXT__CXXFLAGS = \
+	$(AM_CXXFLAGS) \
+	-DDEFAULT_CACHEMGR_CONFIG=\"$(DEFAULT_CACHEMGR_CONFIG)\"
 
 EXTRA_DIST += cachemgr.conf cachemgr.cgi.8 cachemgr.cgi.8.in
 CLEANFILES += cachemgr.cgi.8

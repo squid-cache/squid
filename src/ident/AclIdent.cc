@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,34 +29,23 @@ ACLIdent::~ACLIdent()
 
 ACLIdent::ACLIdent(ACLData<char const *> *newData, char const *newType) : data (newData), type_ (newType) {}
 
-ACLIdent::ACLIdent (ACLIdent const &old) : data (old.data->clone()), type_ (old.type_)
-{}
-
-ACLIdent &
-ACLIdent::operator= (ACLIdent const &rhs)
-{
-    data = rhs.data->clone();
-    type_ = rhs.type_;
-    return *this;
-}
-
 char const *
 ACLIdent::typeString() const
 {
     return type_;
 }
 
-void
-ACLIdent::parseFlags()
+const Acl::Options &
+ACLIdent::lineOptions()
 {
-    ParseFlags(Acl::NoOptions(), data->supportedFlags());
+    return data->lineOptions();
 }
 
 void
 ACLIdent::parse()
 {
     if (!data) {
-        debugs(28, 3, HERE << "current is null. Creating");
+        debugs(28, 3, "current is null. Creating");
         data = new ACLUserData;
     }
 
@@ -78,7 +67,7 @@ ACLIdent::match(ACLChecklist *cl)
         }
         // else fall through to ACCESS_DUNNO failure below
     } else {
-        debugs(28, DBG_IMPORTANT, HERE << "Can't start ident lookup. No client connection" );
+        debugs(28, DBG_IMPORTANT, "ERROR: Cannot start ident lookup. No client connection" );
         // fall through to ACCESS_DUNNO failure below
     }
 
@@ -98,12 +87,6 @@ ACLIdent::empty () const
     return data->empty();
 }
 
-ACL *
-ACLIdent::clone() const
-{
-    return new ACLIdent(*this);
-}
-
 IdentLookup IdentLookup::instance_;
 
 IdentLookup *
@@ -119,7 +102,7 @@ IdentLookup::checkForAsync(ACLChecklist *cl)const
     const ConnStateData *conn = checklist->conn();
     // check that ACLIdent::match() tested this lookup precondition
     assert(conn && Comm::IsConnOpen(conn->clientConnection));
-    debugs(28, 3, HERE << "Doing ident lookup" );
+    debugs(28, 3, "Doing ident lookup" );
     Ident::Start(checklist->conn()->clientConnection, LookupDone, checklist);
 }
 

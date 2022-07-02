@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -54,7 +54,7 @@ typedef enum {
     scGone = 410,
     scLengthRequired = 411,
     scPreconditionFailed = 412,
-    scPayloadTooLarge = 413,
+    scContentTooLarge = 413,
     scUriTooLong = 414,
     scUnsupportedMediaType = 415,
     scRequestedRangeNotSatisfied = 416,

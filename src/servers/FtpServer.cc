@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "base/CharacterSet.h"
+#include "base/Raw.h"
 #include "base/RefCount.h"
 #include "base/Subscription.h"
 #include "client_side_reply.h"
@@ -240,21 +241,24 @@ Ftp::Server::noteBodyConsumerAborted(BodyPipe::Pointer ptr)
 void
 Ftp::Server::AcceptCtrlConnection(const CommAcceptCbParams &params)
 {
-    MasterXaction::Pointer xact = params.xaction;
-    AnyP::PortCfgPointer s = xact->squidPort;
+    Assure(params.port);
 
     // NP: it is possible the port was reconfigured when the call or accept() was queued.
 
     if (params.flag != Comm::OK) {
         // Its possible the call was still queued when the client disconnected
-        debugs(33, 2, s->listenConn << ": FTP accept failure: " << xstrerr(params.xerrno));
+        debugs(33, 2, params.port->listenConn << ": FTP accept failure: " << xstrerr(params.xerrno));
         return;
     }
 
     debugs(33, 4, params.conn << ": accepted");
     fd_note(params.conn->fd, "client ftp connect");
 
+    const auto xact = MasterXaction::MakePortful(params.port);
+    xact->tcpClient = params.conn;
+
     AsyncJob::Start(new Server(xact));
+    // XXX: do not abandon the MasterXaction object
 }
 
 void
@@ -368,7 +372,7 @@ Ftp::Server::listenForDataConnection()
     const char *const note = uri.c_str();
     comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn, note);
     if (!Comm::IsConnOpen(conn)) {
-        debugs(5, DBG_CRITICAL, "comm_open_listener failed for FTP data: " <<
+        debugs(5, DBG_CRITICAL, "ERROR: comm_open_listener failed for FTP data: " <<
                conn->local << " error: " << errno);
         writeCustomReply(451, "Internal error");
         return 0;
@@ -719,7 +723,7 @@ Ftp::Server::parseOneRequest()
     const SBuf *path = (params.length() && CommandHasPathParameter(cmd)) ?
                        &params : NULL;
     calcUri(path);
-    MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+    const auto mx = MasterXaction::MakePortful(port);
     mx->tcpClient = clientConnection;
     auto * const request = HttpRequest::FromUrl(uri, mx, method);
     if (!request) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,7 +14,7 @@
 #include "adaptation/ServiceFilter.h"
 #include "adaptation/ServiceGroups.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "StrList.h"
 #include "wordlist.h"
 
@@ -93,7 +93,7 @@ Adaptation::ServiceGroup::finalize()
             finalizeMsg("ERROR: Unknown adaptation name", serviceId, true);
         }
     }
-    debugs(93,7, HERE << "finalized " << kind << ": " << id);
+    debugs(93,7, "finalized " << kind << ": " << id);
 }
 
 /// checks that the service name or URI is not repeated later in the group
@@ -141,7 +141,7 @@ bool
 Adaptation::ServiceGroup::findService(const ServiceFilter &filter, Pos &pos) const
 {
     if (method != filter.method || point != filter.point) {
-        debugs(93,5,HERE << id << " serves another location");
+        debugs(93,5, id << " serves another location");
         return false; // assume other services have the same wrong location
     }
 
@@ -149,7 +149,7 @@ Adaptation::ServiceGroup::findService(const ServiceFilter &filter, Pos &pos) con
     bool foundEssential = false;
     Pos essPos = 0;
     for (; has(pos); ++pos) {
-        debugs(93,9,HERE << id << " checks service at " << pos);
+        debugs(93,9, id << " checks service at " << pos);
         ServicePointer service = at(pos);
 
         if (!service)
@@ -159,34 +159,34 @@ Adaptation::ServiceGroup::findService(const ServiceFilter &filter, Pos &pos) con
             continue; // the service is not interested
 
         if (service->up() || !service->probed()) {
-            debugs(93,9,HERE << id << " has matching service at " << pos);
+            debugs(93,9, id << " has matching service at " << pos);
             return true;
         }
 
         if (service->cfg().bypass) { // we can safely ignore bypassable downers
-            debugs(93,9,HERE << id << " has bypassable service at " << pos);
+            debugs(93,9, id << " has bypassable service at " << pos);
             continue;
         }
 
         if (!allServicesSame) { // cannot skip (i.e., find best) service
-            debugs(93,9,HERE << id << " has essential service at " << pos);
+            debugs(93,9, id << " has essential service at " << pos);
             return true;
         }
 
         if (!foundEssential) {
-            debugs(93,9,HERE << id << " searches for best essential service from " << pos);
+            debugs(93,9, id << " searches for best essential service from " << pos);
             foundEssential = true;
             essPos = pos;
         }
     }
 
     if (foundEssential) {
-        debugs(93,9,HERE << id << " has best essential service at " << essPos);
+        debugs(93,9, id << " has best essential service at " << essPos);
         pos = essPos;
         return true;
     }
 
-    debugs(93,5,HERE << id << " has no matching services");
+    debugs(93,5, id << " has no matching services");
     return false;
 }
 

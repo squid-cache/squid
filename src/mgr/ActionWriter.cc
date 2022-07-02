@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,13 +20,13 @@ Mgr::ActionWriter::ActionWriter(const Action::Pointer &anAction, const Comm::Con
     StoreToCommWriter(conn, anAction->createStoreEntry()),
     action(anAction)
 {
-    debugs(16, 5, HERE << conn << " action: " << action);
+    debugs(16, 5, conn << " action: " << action);
 }
 
 void
 Mgr::ActionWriter::start()
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     Must(action != NULL);
 
     StoreToCommWriter::start();

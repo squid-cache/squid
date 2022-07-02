@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,7 +22,6 @@
 #include "MemBuf.h"
 #include "mime_header.h"
 #include "RequestFlags.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"
 #include "tools.h"

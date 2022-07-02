@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -11,11 +11,16 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libbase.la
 
 libbase_la_SOURCES = \
+	Assure.cc \
+	Assure.h \
 	AsyncCall.cc \
 	AsyncCall.h \
+	AsyncCallList.cc \
+	AsyncCallList.h \
 	AsyncCallQueue.cc \
 	AsyncCallQueue.h \
 	AsyncCbdataCalls.h \
+	AsyncFunCalls.h \
 	AsyncJob.cc \
 	AsyncJob.h \
 	AsyncJobCalls.h \
@@ -27,6 +32,8 @@ libbase_la_SOURCES = \
 	ClpMap.h \
 	CodeContext.cc \
 	CodeContext.h \
+	DelayedAsyncCalls.cc \
+	DelayedAsyncCalls.h \
 	EnumIterator.h \
 	File.cc \
 	File.h \
@@ -35,6 +42,8 @@ libbase_la_SOURCES = \
 	Here.h \
 	InstanceId.cc \
 	InstanceId.h \
+	IoManip.cc \
+	IoManip.h \
 	JobWait.cc \
 	JobWait.h \
 	Lock.h \
@@ -42,7 +51,11 @@ libbase_la_SOURCES = \
 	Optional.h \
 	Packable.h \
 	PackableStream.h \
+	RandomUuid.cc \
+	RandomUuid.h \
 	Range.h \
+	Raw.cc \
+	Raw.h \
 	RefCount.h \
 	RegexPattern.cc \
 	RegexPattern.h \

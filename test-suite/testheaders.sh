@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -35,7 +35,7 @@ for f in $@; do
 #include "${f}"
 int main( int argc, char* argv[] ) { return 0; }
 EOF
-        if ${cc} -c -o $t.o $t.cc ; then 
+        if ${cc} -c -o $t.o $t.cc ; then
             echo "Ok."
         else
             echo "Fail."

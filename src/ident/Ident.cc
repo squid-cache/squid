@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -135,7 +135,7 @@ Ident::Close(const CommCloseCbParams &params)
 void
 Ident::Timeout(const CommTimeoutCbParams &io)
 {
-    debugs(30, 3, HERE << io.conn);
+    debugs(30, 3, io.conn);
     IdentStateData *state = (IdentStateData *)io.data;
     state->deleteThis("timeout");
 }
@@ -193,11 +193,11 @@ Ident::ConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int, 
 void
 Ident::WriteFeedback(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::Flag flag, int xerrno, void *data)
 {
-    debugs(30, 5, HERE << conn << ": Wrote IDENT request " << len << " bytes.");
+    debugs(30, 5, conn << ": Wrote IDENT request " << len << " bytes.");
 
     // TODO handle write errors better. retry or abort?
     if (flag != Comm::OK) {
-        debugs(30, 2, HERE << conn << " err-flags=" << flag << " IDENT write error: " << xstrerr(xerrno));
+        debugs(30, 2, conn << " err-flags=" << flag << " IDENT write error: " << xstrerr(xerrno));
         IdentStateData *state = (IdentStateData *)data;
         state->deleteThis("write error");
     }
@@ -231,7 +231,7 @@ Ident::ReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Com
     if ((t = strchr(buf, '\n')))
         *t = '\0';
 
-    debugs(30, 5, HERE << conn << ": Read '" << buf << "'");
+    debugs(30, 5, conn << ": Read '" << buf << "'");
 
     if (strstr(buf, "USERID")) {
         if ((ident = strrchr(buf, ':'))) {
@@ -275,7 +275,9 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
     assert(static_cast<unsigned int>(res) < sizeof(key));
 
     if (!ident_hash) {
-        Init();
+        ident_hash = hash_create((HASHCMP *) strcmp,
+                                 hashPrime(Squid_MaxFD / 8),
+                                 hash4);
     }
     if ((state = (IdentStateData *)hash_lookup(ident_hash, key)) != NULL) {
         ClientAdd(state, callback, data);
@@ -301,19 +303,6 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
     AsyncCall::Pointer call = commCbCall(30,3, "Ident::ConnectDone", CommConnectCbPtrFun(Ident::ConnectDone, state));
     const auto connOpener = new Comm::ConnOpener(identConn, call, Ident::TheConfig.timeout);
     state->connWait.start(connOpener, call);
-}
-
-void
-Ident::Init(void)
-{
-    if (ident_hash) {
-        debugs(30, DBG_CRITICAL, "WARNING: Ident already initialized.");
-        return;
-    }
-
-    ident_hash = hash_create((HASHCMP *) strcmp,
-                             hashPrime(Squid_MaxFD / 8),
-                             hash4);
 }
 
 #endif /* USE_IDENT */

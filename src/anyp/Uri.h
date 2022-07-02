@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -87,8 +87,8 @@ public:
     Ip::Address const & hostIP(void) const {return hostAddr_;}
 
     /// \returns the host subcomponent of the authority component
-    /// If the host is an IPv6 address, returns that IP address without
-    /// [brackets]! See RFC 3986 Section 3.2.2.
+    /// If the host is an IPv6 address, returns that IP address with
+    /// [brackets]. See RFC 3986 Section 3.2.2.
     SBuf hostOrIp() const;
 
     void port(unsigned short p) {port_=p; touch();}

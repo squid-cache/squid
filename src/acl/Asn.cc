@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -237,7 +237,7 @@ asnCacheStart(int as)
     debugs(53, 3, "AS " << as);
     ASState *asState = new ASState;
     asState->as_number = as;
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initAsn);
+    const auto mx = MasterXaction::MakePortless<XactionInitiator::initAsn>();
     asState->request = new HttpRequest(mx);
     asState->request->url = whoisUrl;
     asState->request->method = Http::METHOD_GET;
@@ -287,7 +287,7 @@ asHandleReply(void *data, StoreIOBuffer result)
         delete asState;
         return;
     } else if (result.flags.error) {
-        debugs(53, DBG_IMPORTANT, "asHandleReply: Called with Error set and size=" << (unsigned int) result.length);
+        debugs(53, DBG_IMPORTANT, "ERROR: asHandleReply: Called with Error set and size=" << (unsigned int) result.length);
         delete asState;
         return;
     } else if (e->mem().baseReply().sline.status() != Http::scOkay) {
@@ -568,15 +568,6 @@ ACLASN::parse()
         *(Tail) = q;
         Tail = &q->next;
     }
-}
-
-ACLData<Ip::Address> *
-ACLASN::clone() const
-{
-    if (data)
-        fatal ("cloning of ACLASN not implemented");
-
-    return new ACLASN(*this);
 }
 
 /* explicit template instantiation required for some systems */

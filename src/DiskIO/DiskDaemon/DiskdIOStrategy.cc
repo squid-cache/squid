@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 79    Squid-side DISKD I/O functions. */
 
 #include "squid.h"
+#include "comm.h"
 #include "comm/Loops.h"
 #include "ConfigOption.h"
 #include "diomsg.h"
@@ -18,7 +19,6 @@
 #include "fd.h"
 #include "SquidConfig.h"
 #include "SquidIpc.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "unlinkd.h"

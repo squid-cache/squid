@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,10 +8,10 @@
 
 #include "squid.h"
 #include "repl_modules.h"
+#include "Store.h"
 #include "store_digest.h"
 #include "store_log.h"
 #include "store_rebuild.h"
-#include "Store.h"
 #include "StoreClient.h"
 
 #define STUB_API "store_client.cc"
@@ -24,7 +24,10 @@ void storeLogOpen(void) STUB
 void storeDigestInit(void) STUB
 void storeRebuildStart(void) STUB
 void storeReplSetup(void) STUB
-bool store_client::memReaderHasLowerOffset(int64_t) const STUB_RETVAL(false)
+void store_client::noteSwapInDone(bool) STUB
+#if USE_DELAY_POOLS
+int store_client::bytesWanted() const STUB_RETVAL(0)
+#endif
 void store_client::dumpStats(MemBuf *, int) const STUB
 int store_client::getType() const STUB_RETVAL(0)
 

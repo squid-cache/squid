@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,7 +17,7 @@
 #include "neighbors.h"
 #include "security/NegotiationHistory.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
+
 #include <ostream>
 
 InstanceIdDefinitions(Comm::Connection, "conn", uint64_t);

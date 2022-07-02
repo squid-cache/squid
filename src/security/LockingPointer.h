@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_SECURITY_LOCKINGPOINTER_H
 #define SQUID_SRC_SECURITY_LOCKINGPOINTER_H
 
+#include "base/Assure.h"
 #include "base/HardFun.h"
 
 #if USE_OPENSSL
@@ -100,6 +101,7 @@ public:
     bool operator ==(const SelfType &o) const { return (o.get() == raw); }
     bool operator !=(const SelfType &o) const { return (o.get() != raw); }
 
+    T &operator *() const { Assure(raw); return *raw; }
     T *operator ->() const { return raw; }
 
     /// Returns raw and possibly nullptr pointer

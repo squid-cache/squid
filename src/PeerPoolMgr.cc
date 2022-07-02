@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,7 @@
 #include "CachePeer.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "fd.h"
 #include "FwdState.h"
 #include "globals.h"
@@ -24,7 +24,6 @@
 #include "PeerPoolMgr.h"
 #include "security/BlindPeerConnector.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 
 CBDATA_CLASS_INIT(PeerPoolMgr);
 
@@ -59,7 +58,7 @@ PeerPoolMgr::start()
 {
     AsyncJob::start();
 
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initPeerPool);
+    const auto mx = MasterXaction::MakePortless<XactionInitiator::initPeerPool>();
     // ErrorState, getOutgoingAddress(), and other APIs may require a request.
     // We fake one. TODO: Optionally send this request to peers?
     request = new HttpRequest(Http::METHOD_OPTIONS, AnyP::PROTO_HTTP, "http", "*", mx);

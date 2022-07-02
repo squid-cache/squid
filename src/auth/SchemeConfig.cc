@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,7 +15,7 @@
 #include "auth/UserRequest.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "errorpage.h"
 #include "format/Format.h"
 #include "globals.h"
@@ -33,7 +33,7 @@ Auth::UserRequest::Pointer
 Auth::SchemeConfig::CreateAuthUser(const char *proxy_auth, AccessLogEntry::Pointer &al)
 {
     assert(proxy_auth != NULL);
-    debugs(29, 9, HERE << "header = '" << proxy_auth << "'");
+    debugs(29, 9, "header = '" << proxy_auth << "'");
 
     Auth::SchemeConfig *config = Find(proxy_auth);
 
@@ -132,7 +132,7 @@ Auth::SchemeConfig::parse(Auth::SchemeConfig * scheme, int, char *param_str)
     } else if (strcmp(param_str, "utf8") == 0) {
         parse_onoff(&utf8);
     } else {
-        debugs(29, DBG_CRITICAL, "Unrecognised " << scheme->type() << " auth scheme parameter '" << param_str << "'");
+        debugs(29, DBG_CRITICAL, "ERROR: Unrecognised " << scheme->type() << " auth scheme parameter '" << param_str << "'");
     }
 }
 

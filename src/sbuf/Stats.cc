@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,23 @@
 #include "sbuf/Stats.h"
 
 #include <iostream>
+
+SBufStats::SizeRecorder SBufStats::SBufSizeAtDestructRecorder = nullptr;
+SBufStats::SizeRecorder SBufStats::MemBlobSizeAtDestructRecorder = nullptr;
+
+void
+SBufStats::RecordSBufSizeAtDestruct(const size_t sz)
+{
+    if (SBufSizeAtDestructRecorder)
+        SBufSizeAtDestructRecorder(sz);
+}
+
+void
+SBufStats::RecordMemBlobSizeAtDestruct(const size_t sz)
+{
+    if (MemBlobSizeAtDestructRecorder)
+        MemBlobSizeAtDestructRecorder(sz);
+}
 
 SBufStats&
 SBufStats::operator +=(const SBufStats& ss)

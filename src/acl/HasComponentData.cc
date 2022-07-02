@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -74,11 +74,5 @@ ACLHasComponentData::parseComponent(const char *token)
         debugs(28, DBG_CRITICAL, "FATAL: unsupported component '" << token << "' for 'has' acl");
         self_destruct();
     }
-}
-
-ACLData<ACLChecklist *> *
-ACLHasComponentData::clone() const
-{
-    return new ACLHasComponentData(*this);
 }
 

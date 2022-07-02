@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,8 +23,8 @@ SBuf AccessLogEntry::getLogMethod() const STUB_RETVAL(SBuf())
 AccessLogEntry::SslDetails::SslDetails() {STUB}
 #endif
 */
-void accessLogLogTo(CustomLog *, AccessLogEntry::Pointer &, ACLChecklist *) STUB
-void accessLogLog(AccessLogEntry::Pointer &, ACLChecklist *) STUB
+void accessLogLogTo(CustomLog *, const AccessLogEntry::Pointer &, ACLChecklist *) STUB
+void accessLogLog(const AccessLogEntry::Pointer &, ACLChecklist *) STUB
 void accessLogRotate(void) STUB
 void accessLogClose(void) STUB
 void accessLogInit(void) STUB

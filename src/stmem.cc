@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,6 @@
 #include "HttpReply.h"
 #include "mem_node.h"
 #include "MemObject.h"
-#include "profiler/Profiler.h"
 #include "stmem.h"
 
 /*
@@ -61,14 +60,14 @@ mem_hdr::freeContent()
 {
     nodes.destroy();
     inmem_hi = 0;
-    debugs(19, 9, HERE << this << " hi: " << inmem_hi);
+    debugs(19, 9, this << " hi: " << inmem_hi);
 }
 
 bool
 mem_hdr::unlink(mem_node *aNode)
 {
     if (aNode->write_pending) {
-        debugs(0, DBG_CRITICAL, "cannot unlink mem_node " << aNode << " while write_pending");
+        debugs(0, DBG_CRITICAL, "ERROR: cannot unlink mem_node " << aNode << " while write_pending");
         return false;
     }
 
@@ -122,15 +121,15 @@ mem_hdr::writeAvailable(mem_node *aNode, int64_t location, size_t amount, char c
 
     memcpy(aNode->nodeBuffer.data + aNode->nodeBuffer.length, source, copyLen);
 
-    debugs(19, 9, HERE << this << " hi: " << inmem_hi);
+    debugs(19, 9, this << " hi: " << inmem_hi);
     if (inmem_hi <= location)
         inmem_hi = location + copyLen;
 
     /* Adjust the ptr and len according to what was deposited in the page */
     aNode->nodeBuffer.length += copyLen;
 
-    debugs(19, 9, HERE << this << " hi: " << inmem_hi);
-    debugs(19, 9, HERE << this << " hi: " << endOffset());
+    debugs(19, 9, this << " hi: " << inmem_hi);
+    debugs(19, 9, this << " hi: " << endOffset());
     return copyLen;
 }
 
@@ -245,7 +244,7 @@ mem_hdr::copy(StoreIOBuffer const &target) const
     mem_node *p = getBlockContainingLocation(target.offset);
 
     if (!p) {
-        debugs(19, DBG_IMPORTANT, "memCopy: could not find start of " << target.range() <<
+        debugs(19, DBG_IMPORTANT, "ERROR: memCopy: could not find start of " << target.range() <<
                " in memory.");
         debugDump();
         fatal_dump("Squid has attempted to read data from memory that is not present. This is an indication of of (pre-3.0) code that hasn't been updated to deal with sparse objects in memory. Squid should coredump.allowing to review the cause. Immediately preceding this message is a dump of the available data in the format [start,end). The [ means from the value, the ) means up to the value. I.e. [1,5) means that there are 4 bytes of data, at offsets 1,2,3,4.\n");
@@ -341,14 +340,12 @@ mem_hdr::nodeToRecieve(int64_t offset)
 bool
 mem_hdr::write (StoreIOBuffer const &writeBuffer)
 {
-    PROF_start(mem_hdr_write);
     debugs(19, 6, "mem_hdr::write: " << this << " " << writeBuffer.range() << " object end " << endOffset());
 
     if (unionNotEmpty(writeBuffer)) {
         debugs(19, DBG_CRITICAL, "mem_hdr::write: writeBuffer: " << writeBuffer.range());
         debugDump();
         fatal_dump("Attempt to overwrite already in-memory data. Preceding this there should be a mem_hdr::write output that lists the attempted write, and the currently present data. Please get a 'backtrace full' from this error - using the generated core, and file a bug report with the squid developers including the last 10 lines of cache.log and the backtrace.\n");
-        PROF_stop(mem_hdr_write);
         return false;
     }
 
@@ -367,13 +364,12 @@ mem_hdr::write (StoreIOBuffer const &writeBuffer)
         currentSource += wrote;
     }
 
-    PROF_stop(mem_hdr_write);
     return true;
 }
 
 mem_hdr::mem_hdr() : inmem_hi(0)
 {
-    debugs(19, 9, HERE << this << " hi: " << inmem_hi);
+    debugs(19, 9, this << " hi: " << inmem_hi);
 }
 
 mem_hdr::~mem_hdr()

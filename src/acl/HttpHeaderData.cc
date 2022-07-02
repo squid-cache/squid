@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,7 +16,7 @@
 #include "base/RegexPattern.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "HttpHeaderTools.h"
 #include "sbuf/SBuf.h"
 #include "sbuf/StringConvert.h"
@@ -66,6 +66,12 @@ ACLHTTPHeaderData::dump() const
     return sl;
 }
 
+const Acl::Options &
+ACLHTTPHeaderData::lineOptions()
+{
+    return regex_rule->lineOptions();
+}
+
 void
 ACLHTTPHeaderData::parse()
 {
@@ -92,16 +98,5 @@ bool
 ACLHTTPHeaderData::empty() const
 {
     return (hdrId == Http::HdrType::BAD_HDR && hdrName.isEmpty()) || regex_rule->empty();
-}
-
-ACLData<HttpHeader*> *
-ACLHTTPHeaderData::clone() const
-{
-    /* Header's don't clone yet. */
-    ACLHTTPHeaderData * result = new ACLHTTPHeaderData;
-    result->regex_rule = regex_rule->clone();
-    result->hdrId = hdrId;
-    result->hdrName = hdrName;
-    return result;
 }
 

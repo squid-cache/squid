@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,12 +9,15 @@
 #ifndef SQUID_SSL_GADGETS_H
 #define SQUID_SSL_GADGETS_H
 
+#if USE_OPENSSL
+
 #include "base/HardFun.h"
+#include "compat/openssl.h"
 #include "security/forward.h"
 #include "ssl/crtd_message.h"
 
-#if USE_OPENSSL
-#include "compat/openssl.h"
+#include <string>
+
 #if HAVE_OPENSSL_ASN1_H
 #include <openssl/asn1.h>
 #endif
@@ -24,8 +27,6 @@
 #if HAVE_OPENSSL_X509V3_H
 #include <openssl/x509v3.h>
 #endif
-#endif
-#include <string>
 
 namespace Ssl
 {
@@ -71,6 +72,20 @@ typedef std::unique_ptr<GENERAL_NAME, HardFun<void, GENERAL_NAME*, &GENERAL_NAME
 typedef std::unique_ptr<X509_EXTENSION, HardFun<void, X509_EXTENSION*, &X509_EXTENSION_free>> X509_EXTENSION_Pointer;
 
 typedef std::unique_ptr<X509_STORE_CTX, HardFun<void, X509_STORE_CTX *, &X509_STORE_CTX_free>> X509_STORE_CTX_Pointer;
+
+// not using CtoCpp1() here because OpenSSL_free() takes void* rather than char*
+inline void OPENSSL_free_for_c_strings(char * const string) { OPENSSL_free(string); }
+using UniqueCString = std::unique_ptr<char, HardFun<void, char *, &OPENSSL_free_for_c_strings> >;
+
+/// Clear any errors accumulated by OpenSSL in its global storage.
+void ForgetErrors();
+
+/// Manipulator to report errors accumulated by OpenSSL in its global storage.
+/// Each error is reported on a dedicated Debug::Extra line.
+/// Nothing is reported if there are no errors.
+/// Also clears all reported errors.
+std::ostream &ReportAndForgetErrors(std::ostream &);
+
 /**
  \ingroup SslCrtdSslAPI
  * Create 1024 bits rsa key.
@@ -95,11 +110,9 @@ bool appendCertToMemory(Security::CertPointer const & cert, std::string & buffer
  */
 bool readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, Security::PrivateKeyPointer & pkey, char const * bufferToRead);
 
-/**
- \ingroup SslCrtdSslAPI
- * Read SSL certificate from memory.
- */
-bool readCertFromMemory(Security::CertPointer & cert, char const * bufferToRead);
+/// Creates and returns a BIO for reading from the given c-string.
+/// The returned BIO lifetime must not exceed that of the given c-string!
+BIO_Pointer ReadOnlyBioTiedTo(const char *);
 
 /**
  \ingroup SslCrtdSslAPI
@@ -113,11 +126,13 @@ void ReadPrivateKeyFromFile(char const * keyFilename, Security::PrivateKeyPointe
  */
 bool OpenCertsFileForReading(BIO_Pointer &bio, const char *filename);
 
-/**
- \ingroup SslCrtdSslAPI
- * Read a certificate from bio
- */
-bool ReadX509Certificate(BIO_Pointer &bio, Security::CertPointer & cert);
+/// Reads and returns a certificate using the given OpenSSL BIO.
+/// Never returns a nil pointer.
+Security::CertPointer ReadCertificate(const BIO_Pointer &);
+
+/// Reads and returns a certificate using the given OpenSSL BIO.
+/// \returns a nil pointer if the given BIO is empty or exhausted
+Security::CertPointer ReadOptionalCertificate(const BIO_Pointer &);
 
 /**
  \ingroup SslCrtdSslAPI
@@ -143,6 +158,9 @@ bool WriteX509Certificate(BIO_Pointer &bio, const Security::CertPointer & cert);
  * Write private key to BIO.
  */
 bool WritePrivateKey(BIO_Pointer &bio, const Security::PrivateKeyPointer &pkey);
+
+/// a RAII wrapper for the memory-allocating flavor of X509_NAME_oneline()
+UniqueCString OneLineSummary(X509_NAME &);
 
 /**
   \ingroup SslCrtdSslAPI
@@ -279,5 +297,7 @@ bool CertificatesCmp(const Security::CertPointer &cert1, const Security::CertPoi
 const ASN1_BIT_STRING *X509_get_signature(const Security::CertPointer &);
 
 } // namespace Ssl
+
+#endif // USE_OPENSSL
 #endif // SQUID_SSL_GADGETS_H
 

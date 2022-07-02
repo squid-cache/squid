@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,6 +27,12 @@ void BlindPeerConnector::noteNegotiationDone(ErrorState *) STUB
 #include "security/EncryptorAnswer.h"
 Security::EncryptorAnswer::~EncryptorAnswer() {}
 std::ostream &Security::operator <<(std::ostream &os, const Security::EncryptorAnswer &) STUB_RETVAL(os)
+
+#include "security/Certificate.h"
+SBuf Security::SubjectName(Certificate &) STUB_RETVAL(SBuf())
+SBuf Security::IssuerName(Certificate &) STUB_RETVAL(SBuf())
+bool Security::IssuedBy(Certificate &, Certificate &) STUB_RETVAL(false)
+std::ostream &operator <<(std::ostream &os, Security::Certificate &) STUB_RETVAL(os)
 
 #include "security/Handshake.h"
 Security::HandshakeParser::HandshakeParser(MessageSource) STUB

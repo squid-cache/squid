@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -64,7 +64,6 @@ bool StoreEntry::timestampsSet() STUB_RETVAL(false)
 void StoreEntry::unregisterAbortCallback(const char *) STUB
 void StoreEntry::destroyMemObject() STUB
 int StoreEntry::checkTooSmall() STUB_RETVAL(0)
-void StoreEntry::delayAwareRead(const Comm::ConnectionPointer&, char *, int, AsyncCall::Pointer) STUB
 void StoreEntry::setNoDelay (bool const) STUB
 bool StoreEntry::modifiedSince(const time_t, const int) const STUB_RETVAL(false)
 bool StoreEntry::hasIfMatchEtag(const HttpRequest &) const STUB_RETVAL(false)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,7 @@
 #include "base/TextException.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "error/ExceptionErrorDetail.h"
 #include "errorpage.h"
 #include "fde.h"
@@ -33,7 +33,6 @@
 #include "sbuf/Stream.h"
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 #include "wordlist.h"
@@ -67,9 +66,9 @@ CacheManager::registerProfile(const Mgr::ActionProfile::Pointer &profile)
     Must(profile != NULL);
     if (!CacheManager::findAction(profile->name)) {
         menu_.push_back(profile);
-        debugs(16, 3, HERE << "registered profile: " << *profile);
+        debugs(16, 3, "registered profile: " << *profile);
     } else {
-        debugs(16, 2, HERE << "skipped duplicate profile: " << *profile);
+        debugs(16, 2, "skipped duplicate profile: " << *profile);
     }
 }
 
@@ -82,7 +81,7 @@ CacheManager::registerProfile(const Mgr::ActionProfile::Pointer &profile)
 void
 CacheManager::registerProfile(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic)
 {
-    debugs(16, 3, HERE << "registering legacy " << action);
+    debugs(16, 3, "registering legacy " << action);
     const Mgr::ActionProfile::Pointer profile = new Mgr::ActionProfile(action,
             desc, pw_req_flag, atomic, new Mgr::FunActionCreator(handler));
     registerProfile(profile);
@@ -260,7 +259,7 @@ CacheManager::ParseHeaders(const HttpRequest * request, Mgr::ActionParams &param
 
     const auto colonPos = basic_cookie.find(':');
     if (colonPos == SBuf::npos) {
-        debugs(16, DBG_IMPORTANT, "CacheManager::ParseHeaders: unknown basic_cookie format '" << basic_cookie << "'");
+        debugs(16, DBG_IMPORTANT, "ERROR: CacheManager::ParseHeaders: unknown basic_cookie format '" << basic_cookie << "'");
         return;
     }
 

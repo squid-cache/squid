@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -54,10 +54,10 @@
         \c module_foo_bar() .
 
 \par
-        Note that the Squid source changes rapidly, and while we 
+        Note that the Squid source changes rapidly, and while we
         do make some effort to document code as we go some parts
         of the documentation may be left out.  If you find any
-        inconsistencies, please feel free to notify 
+        inconsistencies, please feel free to notify
         http://www.squid-cache.org/Support/contact.dyn the Squid Developers.
 
  */

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,13 +35,11 @@
  */
 
 class CallDialer;
-class AsyncCallQueue;
 
 class AsyncCall: public RefCountable
 {
 public:
     typedef RefCount <AsyncCall> Pointer;
-    friend class AsyncCallQueue;
 
     AsyncCall(int aDebugSection, int aDebugLevel, const char *aName);
     virtual ~AsyncCall();
@@ -83,7 +81,7 @@ protected:
 
     virtual void fire() = 0;
 
-    AsyncCall::Pointer theNext; // used exclusively by AsyncCallQueue
+    AsyncCall::Pointer theNext; ///< for AsyncCallList and similar lists
 
 private:
     const char *isCanceled; // set to the cancellation reason by cancel()

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,9 +9,8 @@
 /* DEBUG: section 25    MiME Header Parsing */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "mime_header.h"
-#include "profiler/Profiler.h"
 #include "sbuf/SBuf.h"
 
 size_t
@@ -20,8 +19,6 @@ headersEnd(const char *mime, size_t l, bool &containsObsFold)
     size_t e = 0;
     int state = 1;
     containsObsFold = false;
-
-    PROF_start(headersEnd);
 
     while (e < l && state < 3) {
         switch (state) {
@@ -60,7 +57,6 @@ headersEnd(const char *mime, size_t l, bool &containsObsFold)
 
         ++e;
     }
-    PROF_stop(headersEnd);
 
     if (3 == state)
         return e;

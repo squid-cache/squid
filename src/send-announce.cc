@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,7 +20,6 @@
 #include "ipcache.h"
 #include "send-announce.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "tools.h"
 
 static IPH send_announce;
@@ -53,7 +52,7 @@ send_announce(const ipcache_addrs *ia, const Dns::LookupDetails &, void *)
     int fd;
 
     if (ia == NULL) {
-        debugs(27, DBG_IMPORTANT, "send_announce: Unknown host '" << host << "'");
+        debugs(27, DBG_IMPORTANT, "ERROR: send_announce: Unknown host '" << host << "'");
         return;
     }
 

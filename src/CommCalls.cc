@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -49,7 +49,7 @@ CommCommonCbParams::print(std::ostream &os) const
 /* CommAcceptCbParams */
 
 CommAcceptCbParams::CommAcceptCbParams(void *aData):
-    CommCommonCbParams(aData), xaction()
+    CommCommonCbParams(aData)
 {
 }
 
@@ -61,8 +61,8 @@ CommAcceptCbParams::print(std::ostream &os) const
 {
     CommCommonCbParams::print(os);
 
-    if (xaction != NULL)
-        os << ", " << xaction->id;
+    if (port && port->listenConn)
+        os << ", " << port->listenConn->codeContextGist();
 }
 
 /* CommConnectCbParams */
@@ -108,7 +108,7 @@ CommIoCbParams::syncWithComm()
     // change parameters if the call was scheduled before comm_close but
     // is being fired after comm_close
     if ((conn->fd < 0 || fd_table[conn->fd].closing()) && flag != Comm::ERR_CLOSING) {
-        debugs(5, 3, HERE << "converting late call to Comm::ERR_CLOSING: " << conn);
+        debugs(5, 3, "converting late call to Comm::ERR_CLOSING: " << conn);
         flag = Comm::ERR_CLOSING;
     }
     return true; // now we are in sync and can handle the call

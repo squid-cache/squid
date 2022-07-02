@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_MEM_METER_H
 #define SQUID_SRC_MEM_METER_H
 
-#include "SquidTime.h"
+#include "time/gadgets.h"
 
 namespace Mem
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 #define SQUID_ESIELEMENT_H
 
 #include "base/RefCount.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "esi/Segment.h"
 
 #include <vector>
@@ -25,7 +25,7 @@ typedef enum {
 class ESIElement;
 
 struct esiTreeParent : public RefCountable {
-    virtual void provideData (ESISegment::Pointer /* data  */ , ESIElement * /* source */ ) {
+    virtual void provideData (ESISegment::Pointer /* data  */, ESIElement * /* source */ ) {
         /* make abstract when all functionality complete */
         assert (0);
     }

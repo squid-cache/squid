@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #ifndef SQUID_SSL_CERTIFICATE_DB_H
 #define SQUID_SSL_CERTIFICATE_DB_H
 
+#include "base/Here.h"
 #include "ssl/gadgets.h"
 
 #include <string>
@@ -39,18 +40,16 @@ class Locker
 {
 public:
     /// locks the lock if the lock was unlocked
-    Locker(Lock &lock, const char  *aFileName, int lineNo);
+    Locker(Lock &, const SourceLocation &);
     /// unlocks the lock if it was locked by us
     ~Locker();
 private:
     bool weLocked; ///<  whether we locked the lock
     Lock &lock; ///<  the lock we are operating on
-    const std::string fileName; ///<  where the lock was needed
-    const int lineNo; ///<  where the lock was needed
-};
 
-/// convenience macro to pass source code location to Locker and others
-#define Here __FILE__, __LINE__
+    /// where the lock was needed (currently not reported anywhere)
+    const SourceLocation caller;
+};
 
 /**
  * Database class for storing SSL certificates and their private keys.

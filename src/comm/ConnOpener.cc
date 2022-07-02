@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,7 +22,6 @@
 #include "ip/tools.h"
 #include "ipcache.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 
 #include <cerrno>
 
@@ -364,12 +363,12 @@ Comm::ConnOpener::doConnect()
     switch (comm_connect_addr(temporaryFd_, conn_->remote) ) {
 
     case Comm::INPROGRESS:
-        debugs(5, 5, HERE << conn_ << ": Comm::INPROGRESS");
+        debugs(5, 5, conn_ << ": Comm::INPROGRESS");
         Comm::SetSelect(temporaryFd_, COMM_SELECT_WRITE, Comm::ConnOpener::InProgressConnectRetry, new Pointer(this), 0);
         break;
 
     case Comm::OK:
-        debugs(5, 5, HERE << conn_ << ": Comm::OK - connected");
+        debugs(5, 5, conn_ << ": Comm::OK - connected");
         connected();
         break;
 
@@ -381,12 +380,12 @@ Comm::ConnOpener::doConnect()
                Config.connect_retries << ": " << xstrerr(xerrno));
 
         if (failRetries_ < Config.connect_retries) {
-            debugs(5, 5, HERE << conn_ << ": * - try again");
+            debugs(5, 5, conn_ << ": * - try again");
             retrySleep();
             return;
         } else {
             // send ERROR back to the upper layer.
-            debugs(5, 5, HERE << conn_ << ": * - ERR tried too many times already.");
+            debugs(5, 5, conn_ << ": * - ERR tried too many times already.");
             sendAnswer(Comm::ERR_CONNECT, xerrno, "Comm::ConnOpener::doConnect");
         }
     }
@@ -442,7 +441,7 @@ Comm::ConnOpener::lookupLocalAddress()
 
     conn_->local = *addr;
     Ip::Address::FreeAddr(addr);
-    debugs(5, 6, HERE << conn_);
+    debugs(5, 6, conn_);
 }
 
 /** Abort connection attempt.
@@ -451,7 +450,7 @@ Comm::ConnOpener::lookupLocalAddress()
 void
 Comm::ConnOpener::earlyAbort(const CommCloseCbParams &io)
 {
-    debugs(5, 3, HERE << io.conn);
+    debugs(5, 3, io.conn);
     calls_.earlyAbort_ = NULL;
     // NP: is closing or shutdown better?
     sendAnswer(Comm::ERR_CLOSING, io.xerrno, "Comm::ConnOpener::earlyAbort");
@@ -464,7 +463,7 @@ Comm::ConnOpener::earlyAbort(const CommCloseCbParams &io)
 void
 Comm::ConnOpener::timeout(const CommTimeoutCbParams &)
 {
-    debugs(5, 5, HERE << conn_ << ": * - ERR took too long to receive response.");
+    debugs(5, 5, conn_ << ": * - ERR took too long to receive response.");
     calls_.timeout_ = NULL;
     sendAnswer(Comm::TIMEOUT, ETIMEDOUT, "Comm::ConnOpener::timeout");
 }

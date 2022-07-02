@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,7 +15,6 @@
 #include "HttpReply.h"
 #include "MemBuf.h"
 #include "MemObject.h"
-#include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "StoreClient.h"
@@ -54,7 +53,7 @@ const char *
 MemObject::storeId() const
 {
     if (!storeId_.size()) {
-        debugs(20, DBG_IMPORTANT, "Bug: Missing MemObject::storeId value");
+        debugs(20, DBG_IMPORTANT, "ERROR: Squid BUG: Missing MemObject::storeId value");
         dump();
         storeId_ = "[unknown_URI]";
     }
@@ -138,7 +137,6 @@ MemObject::replaceBaseReply(const HttpReplyPointer &r)
 void
 MemObject::write(const StoreIOBuffer &writeBuffer)
 {
-    PROF_start(MemObject_write);
     debugs(19, 6, "memWrite: offset " << writeBuffer.offset << " len " << writeBuffer.length);
 
     /* We don't separate out mime headers yet, so ensure that the first
@@ -147,7 +145,6 @@ MemObject::write(const StoreIOBuffer &writeBuffer)
     assert (data_hdr.endOffset() || writeBuffer.offset == 0);
 
     assert (data_hdr.write (writeBuffer));
-    PROF_stop(MemObject_write);
 }
 
 void
@@ -171,8 +168,8 @@ struct LowestMemReader : public unary_function<store_client, void> {
     LowestMemReader(int64_t seed):current(seed) {}
 
     void operator() (store_client const &x) {
-        if (x.memReaderHasLowerOffset(current))
-            current = x.copyInto.offset;
+        if (x.getType() == STORE_MEM_CLIENT)
+            current = std::min(current, x.readOffset());
     }
 
     int64_t current;
@@ -441,7 +438,7 @@ MemObject::setNoDelay(bool const newValue)
 }
 
 void
-MemObject::delayRead(DeferredRead const &aRead)
+MemObject::delayRead(const AsyncCall::Pointer &aRead)
 {
 #if USE_DELAY_POOLS
     if (readAheadPolicyCanRead()) {
@@ -451,13 +448,13 @@ MemObject::delayRead(DeferredRead const &aRead)
         }
     }
 #endif
-    deferredReads.delayRead(aRead);
+    deferredReads.delay(aRead);
 }
 
 void
 MemObject::kickReads()
 {
-    deferredReads.kickReads(-1);
+    deferredReads.schedule();
 }
 
 #if USE_DELAY_POOLS
@@ -471,7 +468,7 @@ MemObject::mostBytesAllowed() const
     for (dlink_node *node = clients.head; node; node = node->next) {
         store_client *sc = (store_client *) node->data;
 
-        j = sc->delayId.bytesWanted(0, sc->copyInto.length);
+        j = sc->bytesWanted();
 
         if (j > jmax) {
             jmax = j;

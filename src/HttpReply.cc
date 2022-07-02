@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,7 +22,6 @@
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "StrList.h"
 
@@ -517,7 +516,7 @@ bool
 HttpReply::receivedBodyTooLarge(HttpRequest& request, int64_t receivedSize)
 {
     calcMaxBodySize(request);
-    debugs(58, 3, HERE << receivedSize << " >? " << bodySizeMax);
+    debugs(58, 3, receivedSize << " >? " << bodySizeMax);
     return bodySizeMax >= 0 && receivedSize > bodySizeMax;
 }
 
@@ -525,7 +524,7 @@ bool
 HttpReply::expectedBodyTooLarge(HttpRequest& request)
 {
     calcMaxBodySize(request);
-    debugs(58, 7, HERE << "bodySizeMax=" << bodySizeMax);
+    debugs(58, 7, "bodySizeMax=" << bodySizeMax);
 
     if (bodySizeMax < 0) // no body size limit
         return false;
@@ -534,7 +533,7 @@ HttpReply::expectedBodyTooLarge(HttpRequest& request)
     if (!expectingBody(request.method, expectedSize))
         return false;
 
-    debugs(58, 6, HERE << expectedSize << " >? " << bodySizeMax);
+    debugs(58, 6, expectedSize << " >? " << bodySizeMax);
 
     if (expectedSize < 0) // expecting body of an unknown length
         return false;
@@ -561,7 +560,7 @@ HttpReply::calcMaxBodySize(HttpRequest& request) const
     for (AclSizeLimit *l = Config.ReplyBodySize; l; l = l -> next) {
         /* if there is no ACL list or if the ACLs listed match use this size value */
         if (!l->aclList || ch.fastCheck(l->aclList).allowed()) {
-            debugs(58, 4, HERE << "bodySizeMax=" << bodySizeMax);
+            debugs(58, 4, "bodySizeMax=" << bodySizeMax);
             bodySizeMax = l->size; // may be -1
             break;
         }
@@ -645,7 +644,7 @@ String HttpReply::removeStaleWarningValues(const String &value)
                 // found warn-text
                 String warnDate;
                 warnDate.append(warnDateBeg, warnDateEnd - warnDateBeg);
-                const time_t time = parse_rfc1123(warnDate.termedBuf());
+                const time_t time = Time::ParseRfc1123(warnDate.termedBuf());
                 keep = (time > 0 && time == date); // keep valid and matching date
             }
         }

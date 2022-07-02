@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,12 +26,6 @@
 #endif
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testIpAddress );
-
-/* so that we don't break POD dependency just for the test */
-struct timeval current_time;
-double current_dtime;
-time_t squid_curtime = 0;
-int shutting_down = 0;
 
 void
 testIpAddress::testDefaults()

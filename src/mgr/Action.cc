@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,7 +19,6 @@
 #include "mgr/Command.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
-#include "SquidTime.h"
 #include "Store.h"
 
 Mgr::Action::Action(const Command::Pointer &aCmd): cmd(aCmd)
@@ -67,7 +66,7 @@ Mgr::Action::add(const Action &)
 void
 Mgr::Action::respond(const Request &request)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
 
     // Assume most kid classes are fully aggregatable (i.e., they do not dump
     // local info at all). Do not import the remote HTTP fd into our Comm
@@ -90,7 +89,7 @@ Mgr::Action::sendResponse(const Ipc::RequestId requestId)
 void
 Mgr::Action::run(StoreEntry* entry, bool writeHttpHeader)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     collect();
     fillEntry(entry, writeHttpHeader);
 }
@@ -98,7 +97,7 @@ Mgr::Action::run(StoreEntry* entry, bool writeHttpHeader)
 void
 Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     entry->buffer();
 
     if (writeHttpHeader) {

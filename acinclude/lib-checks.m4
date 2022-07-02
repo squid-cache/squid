@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -15,7 +15,7 @@ AC_DEFUN([SQUID_CHECK_REGEX_WORKS],[
 #include <sys/types.h>
 #endif
 #if HAVE_REGEX_H
-#include <regex.h> 
+#include <regex.h>
 #endif
 ]], [[
 regex_t t; regcomp(&t,"",0);]])],
@@ -201,7 +201,7 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
 SQUID_STATE_ROLLBACK(check_SSL_get_certificate)
 ])
 
-dnl Checks whether the  SSL_CTX_new and similar functions require 
+dnl Checks whether the  SSL_CTX_new and similar functions require
 dnl a const 'SSL_METHOD *' argument
 AC_DEFUN([SQUID_CHECK_OPENSSL_CONST_SSL_METHOD],[
   AH_TEMPLATE(SQUID_USE_CONST_SSL_METHOD, "Define to 1 if the SSL_CTX_new and similar openSSL API functions require 'const SSL_METHOD *'")
@@ -392,45 +392,3 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_TXTDB],[
 SQUID_STATE_ROLLBACK(check_TXTDB)
 ])
 
-dnl Check if we can rewrite the hello message stored in an SSL object.
-dnl The tests are very basic, just check if the required members exist in
-dnl SSL structure.
-AC_DEFUN([SQUID_CHECK_OPENSSL_HELLO_OVERWRITE_HACK],[
-  AH_TEMPLATE(SQUID_USE_OPENSSL_HELLO_OVERWRITE_HACK, "Define to 1 if hello message can be overwritten in SSL struct")
-  SQUID_STATE_SAVE(check_openSSL_overwrite_hack)
-  AC_MSG_CHECKING(whether hello message can be overwritten in SSL struct)
-
-  AC_COMPILE_IFELSE([
-  AC_LANG_PROGRAM(
-    [
-     #include <openssl/ssl.h>
-     #include <openssl/err.h>
-     #include <assert.h>
-    ],
-    [
-    SSL *ssl;
-    char *random, *msg;
-    memcpy(ssl->s3->client_random, random, SSL3_RANDOM_SIZE);
-    SSL3_BUFFER *wb=&(ssl->s3->wbuf);
-    assert(wb->len == 0);
-    memcpy(wb->buf, msg, 0);
-    assert(wb->left == 0);
-    memcpy(ssl->init_buf->data, msg, 0);
-    ssl->init_num = 0;
-    ssl->s3->wpend_ret = 0;
-    ssl->s3->wpend_tot = 0;
-    SSL_CIPHER *cipher = 0;
-    assert(SSL_CIPHER_get_id(cipher));
-    ])
-  ],
-  [
-   AC_MSG_RESULT([possibly; to try, set SQUID_USE_OPENSSL_HELLO_OVERWRITE_HACK macro value to 1])
-  ],
-  [
-   AC_MSG_RESULT([no])
-  ],
-  [])
-
-SQUID_STATE_ROLLBACK(check_openSSL_overwrite_hack)
-]
-)

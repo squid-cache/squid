@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,7 @@
 
 #include "base/InstanceId.h"
 #include "base/TextException.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "globals.h"
 #include "sbuf/forward.h"
 #include "sbuf/MemBlob.h"
@@ -45,9 +45,16 @@ class CharacterSet;
  * Please note that any operation on the underlying SBuf may invalidate
  * all iterators over it, resulting in undefined behavior by them.
  */
-class SBufIterator : public std::iterator<std::input_iterator_tag, char>
+class SBufIterator
 {
 public:
+    // iterator traits
+    using iterator_category = std::input_iterator_tag;
+    using value_type = char;
+    using difference_type = std::ptrdiff_t;
+    using pointer = char*;
+    using reference = char&;
+
     friend class SBuf;
     typedef MemBlob::size_type size_type;
     bool operator==(const SBufIterator &s) const;

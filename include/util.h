@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,18 +9,11 @@
 #ifndef SQUID_UTIL_H
 #define SQUID_UTIL_H
 
-#if HAVE_TIME_H
-#include <time.h>
-#endif
 #if HAVE_ARPA_INET_H
 #include <arpa/inet.h>
 #endif
 
-SQUIDCEXTERN int tvSubUsec(struct timeval, struct timeval);
-SQUIDCEXTERN double tvSubDsec(struct timeval, struct timeval);
 SQUIDCEXTERN void Tolower(char *);
-
-SQUIDCEXTERN time_t parse_iso3307_time(const char *buf);
 
 SQUIDCEXTERN double xpercent(double part, double whole);
 SQUIDCEXTERN int xpercentInt(double part, double whole);

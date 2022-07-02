@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,8 +11,7 @@
 #include "squid.h"
 #include "acl/Checklist.h"
 #include "acl/Tree.h"
-#include "Debug.h"
-#include "profiler/Profiler.h"
+#include "debug/Stream.h"
 
 #include <algorithm>
 
@@ -60,14 +59,14 @@ ACLChecklist::markFinished(const Acl::Answer &finalAnswer, const char *reason)
     assert (!finished() && !asyncInProgress());
     finished_ = true;
     answer_ = finalAnswer;
-    debugs(28, 3, HERE << this << " answer " << answer_ << " for " << reason);
+    debugs(28, 3, this << " answer " << answer_ << " for " << reason);
 }
 
 /// Called first (and once) by all checks to initialize their state
 void
 ACLChecklist::preCheck(const char *what)
 {
-    debugs(28, 3, HERE << this << " checking " << what);
+    debugs(28, 3, this << " checking " << what);
 
     // concurrent checks using the same Checklist are not supported
     assert(!occupied_);
@@ -307,8 +306,6 @@ ACLChecklist::matchAndFinish()
 Acl::Answer const &
 ACLChecklist::fastCheck(const Acl::Tree * list)
 {
-    PROF_start(aclCheckFast);
-
     preCheck("fast ACLs");
     asyncCaller_ = false;
 
@@ -325,7 +322,6 @@ ACLChecklist::fastCheck(const Acl::Tree * list)
 
     changeAcl(savedList);
     occupied_ = false;
-    PROF_stop(aclCheckFast);
     return currentAnswer();
 }
 
@@ -335,8 +331,6 @@ ACLChecklist::fastCheck(const Acl::Tree * list)
 Acl::Answer const &
 ACLChecklist::fastCheck()
 {
-    PROF_start(aclCheckFast);
-
     preCheck("fast rules");
     asyncCaller_ = false;
 
@@ -349,7 +343,6 @@ ACLChecklist::fastCheck()
         if (finished()) {
             cbdataReferenceDone(acl);
             occupied_ = false;
-            PROF_stop(aclCheckFast);
             return currentAnswer();
         }
 
@@ -360,7 +353,6 @@ ACLChecklist::fastCheck()
     calcImplicitAnswer();
     cbdataReferenceDone(acl);
     occupied_ = false;
-    PROF_stop(aclCheckFast);
 
     return currentAnswer();
 }
@@ -380,7 +372,7 @@ ACLChecklist::calcImplicitAnswer()
     // else we saw no rules and will respond with ACCESS_DUNNO
 
     implicitRuleAnswer.implicit = true;
-    debugs(28, 3, HERE << this << " NO match found, last action " <<
+    debugs(28, 3, this << " NO match found, last action " <<
            lastAction << " so returning " << implicitRuleAnswer);
     markFinished(implicitRuleAnswer, "implicit rule won");
 }

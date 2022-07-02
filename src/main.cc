@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,7 +29,7 @@
 #include "CommandLine.h"
 #include "ConfigParser.h"
 #include "CpuAffinity.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "DiskIO/DiskIOModule.h"
 #include "dns/forward.h"
 #include "errorpage.h"
@@ -50,7 +50,6 @@
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
 #include "ICP.h"
-#include "ident/Ident.h"
 #include "Instance.h"
 #include "ip/tools.h"
 #include "ipc/Coordinator.h"
@@ -65,7 +64,6 @@
 #include "peer_sourcehash.h"
 #include "peer_userhash.h"
 #include "PeerSelectState.h"
-#include "profiler/Profiler.h"
 #include "protos.h"
 #include "redirect.h"
 #include "refresh.h"
@@ -73,13 +71,13 @@
 #include "SBufStatsAction.h"
 #include "send-announce.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "stat.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "store/Disks.h"
 #include "store_log.h"
 #include "StoreFileSystem.h"
+#include "time/Engine.h"
 #include "tools.h"
 #include "unlinkd.h"
 #include "wccp.h"
@@ -117,9 +115,6 @@
 #endif
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
-#endif
-#if USE_SQUID_ESI
-#include "esi/Module.h"
 #endif
 #if SQUID_SNMP
 #include "snmp_core.h"
@@ -241,8 +236,6 @@ private:
 int
 SignalEngine::checkEvents(int)
 {
-    PROF_start(SignalEngine_checkEvents);
-
     if (do_reconfigure)
         mainReconfigureStart();
     else if (do_rotate)
@@ -251,7 +244,6 @@ SignalEngine::checkEvents(int)
         doShutdown(do_shutdown > 0 ? (int) Config.shutdownLifetime : 0);
     if (do_handle_stopped_child)
         handleStoppedChild();
-    PROF_stop(SignalEngine_checkEvents);
     return EVENT_IDLE;
 }
 
@@ -405,6 +397,7 @@ usage(void)
             "       -R        Do not set REUSEADDR on port.\n"
             "       -S        Double-check swap during rebuild.\n"
             "       -X        Force full debugging.\n"
+            "                 Add -d9 to also write full debugging to stderr.\n"
             "       -Y        Only return UDP_HIT or UDP_MISS_NOFETCH during fast reload.\n",
             APP_SHORTNAME, CACHE_HTTP_PORT, DEFAULT_CONFIG_FILE, CACHE_ICP_PORT);
     exit(EXIT_FAILURE);
@@ -525,8 +518,9 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
 
     case 'd':
         /** \par d
-         * Set global option Debug::log_stderr to the number given following the option */
-        Debug::log_stderr = xatoi(optValue);
+         * debugs() messages with the given debugging level (and the more
+         * important ones) should be written to stderr */
+        Debug::ResetStderrLevel(xatoi(optValue));
         break;
 
     case 'f':
@@ -570,6 +564,7 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
             /** \li On interrupt send SIGINT. */
             opt_send_signal = SIGINT;
         else if (!strncmp(optValue, "kill", strlen(optValue)))
+            // XXX: In SMP mode, uncatchable SIGKILL only kills the master process
             /** \li On kill send SIGKILL. */
             opt_send_signal = SIGKILL;
 
@@ -590,6 +585,10 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
         else
             usage();
 
+        // Cannot use cache.log: use stderr for important messages (by default)
+        // and stop expecting a Debug::UseCacheLog() call.
+        Debug::EnsureDefaultStderrLevel(DBG_IMPORTANT);
+        Debug::BanCacheLogUse();
         break;
 
     case 'm':
@@ -643,13 +642,13 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
          * then performs actions for -s option. */
         xfree(opt_syslog_facility); // ignore any previous options sent
         opt_syslog_facility = xstrdup(optValue);
-        _db_set_syslog(opt_syslog_facility);
+        Debug::ConfigureSyslog(opt_syslog_facility);
         break;
 
     case 's':
         /** \par s
          * Initialize the syslog for output */
-        _db_set_syslog(opt_syslog_facility);
+        Debug::ConfigureSyslog(opt_syslog_facility);
         break;
 
     case 'u':
@@ -688,9 +687,13 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
 
     case 'z':
         /** \par z
-         * Set global option Debug::log_stderr and opt_create_swap_dirs */
-        Debug::log_stderr = 1;
+         * Request cache_dir initialization */
         opt_create_swap_dirs = 1;
+        // We will use cache.log, but this command is often executed on the
+        // command line, so use stderr to show important messages (by default).
+        // TODO: Generalize/fix this -z-specific and sometimes faulty logic with
+        // "use stderr when it is a tty [until we GoIntoBackground()]" logic.
+        Debug::EnsureDefaultStderrLevel(DBG_IMPORTANT);
         break;
 
     case optForeground:
@@ -946,7 +949,7 @@ mainReconfigureFinish(void *)
     setUmask(Config.umask);
     Mem::Report();
     setEffectiveUser();
-    _db_init(Debug::cache_log, Debug::debugOptions);
+    Debug::UseCacheLog();
     ipcache_restart();      /* clear stuck entries */
     fqdncache_restart();    /* sigh, fqdncache too */
     parseEtcHosts();
@@ -1205,10 +1208,6 @@ mainInitialize(void)
     icapLogOpen();
 #endif
 
-#if USE_IDENT
-    Ident::Init();
-#endif
-
 #if SQUID_SNMP
 
     snmpInit();
@@ -1317,10 +1316,6 @@ mainInitialize(void)
     Adaptation::Config::Finalize(enableAdaptation);
 #endif
 
-#if USE_SQUID_ESI
-    Esi::Init();
-#endif
-
 #if USE_DELAY_POOLS
     Config.ClientDelay.finalize();
 #endif
@@ -1333,12 +1328,6 @@ mainInitialize(void)
     eventAdd("ipcache_purgelru", ipcache_purgelru, nullptr, 10.0, 1);
 
     eventAdd("fqdncache_purgelru", fqdncache_purgelru, nullptr, 15.0, 1);
-
-#if USE_XPROF_STATS
-
-    eventAdd("cpuProfiling", xprof_event, nullptr, 1.0, 1);
-
-#endif
 
     eventAdd("memPoolCleanIdlePools", Mem::CleanIdlePools, nullptr, 15.0, 1);
 
@@ -1355,6 +1344,8 @@ OnTerminate()
     terminating = true;
 
     debugs(1, DBG_CRITICAL, "FATAL: Dying from an exception handling failure; exception: " << CurrentException);
+
+    Debug::PrepareToDie();
     abort();
 }
 
@@ -1429,10 +1420,10 @@ ConfigureCurrentKid(const CommandLine &cmdLine)
         TheKidName.assign(APP_SHORTNAME);
         KidIdentifier = 0;
     }
+    Debug::NameThisKid(KidIdentifier);
 }
 
 /// Start directing debugs() messages to the configured cache.log.
-/// Until this function is called, all allowed messages go to stderr.
 static void
 ConfigureDebugging()
 {
@@ -1442,9 +1433,11 @@ ConfigureDebugging()
         fd_open(2, FD_LOG, "stderr");
     }
     // we should not create cache.log outside chroot environment, if any
-    // XXX: With Config.chroot_dir set, SMP master process never calls db_init().
+    // XXX: With Config.chroot_dir set, SMP master process calls Debug::BanCacheLogUse().
     if (!Config.chroot_dir || Chrooted)
-        _db_init(Debug::cache_log, Debug::debugOptions);
+        Debug::UseCacheLog();
+    else
+        Debug::BanCacheLogUse();
 }
 
 static void
@@ -1488,8 +1481,6 @@ SquidMain(int argc, char **argv)
     const CommandLine cmdLine(argc, argv, shortOpStr, squidOptions);
 
     ConfigureCurrentKid(cmdLine);
-
-    Debug::parseOptions(NULL);
 
 #if defined(SQUID_MAXFD_LIMIT)
 
@@ -1536,12 +1527,11 @@ SquidMain(int argc, char **argv)
 
     cmdLine.forEachOption(mainHandleCommandLineOption);
 
+    Debug::SettleStderr();
+    Debug::SettleSyslog();
+
     if (opt_foreground && opt_no_daemon) {
         debugs(1, DBG_CRITICAL, "WARNING: --foreground command-line option has no effect with -N.");
-    }
-
-    if (opt_parse_cfg_only) {
-        Debug::parseOptions("ALL,1");
     }
 
 #if USE_WIN32_SERVICE
@@ -1595,6 +1585,8 @@ SquidMain(int argc, char **argv)
         Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
 
         Format::Token::Init(); // XXX: temporary. Use a runners registry of pre-parse runners instead.
+
+        RunRegisteredHere(RegisteredRunner::bootstrapConfig);
 
         try {
             parse_err = parseConfigFile(ConfigFile);
@@ -1698,7 +1690,7 @@ SquidMain(int argc, char **argv)
     mainLoop.setPrimaryEngine(&comm_engine);
 
     /* use the standard time service */
-    TimeEngine time_engine;
+    Time::Engine time_engine;
 
     mainLoop.setTimeService(&time_engine);
 
@@ -1725,8 +1717,6 @@ SquidMain(int argc, char **argv)
 static void
 sendSignal(void)
 {
-    StopUsingDebugLog();
-
 #if USE_WIN32_SERVICE
     // WIN32_sendSignal() does not need the PID value to signal,
     // but we must exit if there is no valid PID (TODO: Why?).
@@ -1874,6 +1864,9 @@ GoIntoBackground()
         throw TexcHere(ToSBuf("failed to fork(2) the master process: ", xstrerr(xerrno)));
     } else if (pid > 0) {
         // parent
+        // The fork() effectively duped any saved debugs() messages. For
+        // simplicity sake, let the child process deal with them.
+        Debug::ForgetSaved();
         exit(EXIT_SUCCESS);
     }
     // child, running as a background daemon
@@ -1949,7 +1942,7 @@ watch_child(const CommandLine &masterCommand)
 
     dup2(nullfd, 0);
 
-    if (Debug::log_stderr < 0) {
+    if (!Debug::StderrEnabled()) {
         dup2(nullfd, 1);
         dup2(nullfd, 2);
     }
@@ -2104,10 +2097,6 @@ SquidShutdown()
     releaseServerSockets();
     commCloseAllSockets();
 
-#if USE_SQUID_ESI
-    Esi::Clean();
-#endif
-
 #if USE_DELAY_POOLS
     DelayPools::FreePools();
 #endif
@@ -2161,17 +2150,6 @@ SquidShutdown()
     memClean();
 
     debugs(1, Important(10), "Squid Cache (Version " << version_string << "): Exiting normally.");
-
-    /*
-     * DPW 2006-10-23
-     * We used to fclose(debug_log) here if it was set, but then
-     * we forgot to set it to NULL.  That caused some coredumps
-     * because exit() ends up calling a bunch of destructors and
-     * such.   So rather than forcing the debug_log to close, we'll
-     * leave it open so that those destructors can write some
-     * debugging if necessary.  The file will be closed anyway when
-     * the process truly exits.
-     */
 
     exit(shutdown_status);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,15 +35,11 @@
 #include "refresh.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "store_key_md5.h"
 #include "tools.h"
 #include "wordlist.h"
-
-// for tvSubUsec() which should be in SquidTime.h
-#include "util.h"
 
 #include <cerrno>
 
@@ -465,7 +461,7 @@ icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from)
         return NULL;
     }
 
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initIcp);
+    const auto mx = MasterXaction::MakePortless<XactionInitiator::initIcp>();
     auto *result = HttpRequest::FromUrlXXX(url, mx);
     if (!result)
         icpCreateAndSend(ICP_ERR, 0, url, reqnum, 0, fd, from, nullptr);
@@ -601,7 +597,7 @@ icpHandleIcpV2(int fd, Ip::Address &from, char *buf, int len)
         break;
 
     default:
-        debugs(12, DBG_CRITICAL, "icpHandleIcpV2: UNKNOWN OPCODE: " << header.opcode << " from " << from);
+        debugs(12, DBG_CRITICAL, "ERROR: icpHandleIcpV2: Unknown opcode: " << header.opcode << " from " << from);
 
         break;
     }

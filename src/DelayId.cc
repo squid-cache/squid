@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,8 +15,8 @@
  */
 #if USE_DELAY_POOLS
 #include "acl/FilledChecklist.h"
+#include "base/DelayedAsyncCalls.h"
 #include "client_side_request.h"
-#include "CommRead.h"
 #include "DelayId.h"
 #include "DelayPool.h"
 #include "DelayPools.h"
@@ -164,7 +164,7 @@ DelayId::bytesIn(int qty)
 }
 
 void
-DelayId::delayRead(DeferredRead const &aRead)
+DelayId::delayRead(const AsyncCall::Pointer &aRead)
 {
     assert (compositeId != NULL);
     compositeId->delayRead(aRead);

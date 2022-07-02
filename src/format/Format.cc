@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,7 +17,6 @@
 #include "format/Format.h"
 #include "format/Quoting.h"
 #include "format/Token.h"
-#include "fqdncache.h"
 #include "http/Stream.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
@@ -26,8 +25,8 @@
 #include "sbuf/Stream.h"
 #include "sbuf/StringConvert.h"
 #include "security/CertError.h"
+#include "security/Certificate.h"
 #include "security/NegotiationHistory.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 #if USE_OPENSSL
@@ -70,7 +69,7 @@ Format::Format::parse(const char *def)
     Token *new_lt, *last_lt;
     enum Quoting quote = LOG_QUOTE_NONE;
 
-    debugs(46, 2, HERE << "got definition '" << def << "'");
+    debugs(46, 2, "got definition '" << def << "'");
 
     if (format) {
         debugs(46, DBG_IMPORTANT, "WARNING: existing format for '" << name << " " << def << "'");
@@ -117,11 +116,11 @@ Format::AssembleOne(const char *token, MemBuf &mb, const AccessLogEntryPointer &
 void
 Format::Format::dump(StoreEntry * entry, const char *directiveName, bool eol) const
 {
-    debugs(46, 4, HERE);
+    debugs(46, 4, MYNAME);
 
     // loop rather than recursing to conserve stack space.
     for (const Format *fmt = this; fmt; fmt = fmt->next) {
-        debugs(46, 3, HERE << "Dumping format definition for " << fmt->name);
+        debugs(46, 3, "Dumping format definition for " << fmt->name);
         if (directiveName)
             storeAppendPrintf(entry, "%s %s ", directiveName, fmt->name);
 
@@ -410,14 +409,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_CLIENT_FQDN:
-            if (al->cache.caddr.isAnyAddr()) // e.g., ICAP OPTIONS lack client
-                out = "-";
-            else
-                out = fqdncache_gethostbyaddr(al->cache.caddr, FQDN_LOOKUP_IF_MISS);
-
-            if (!out) {
-                out = al->cache.caddr.toStr(tmp, sizeof(tmp));
-            }
+            out = al->getLogClientFqdn(tmp, sizeof(tmp));
             break;
 
         case LFT_CLIENT_PORT:
@@ -515,8 +507,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_LOCAL_LISTENING_PORT:
-            if (const auto addr = FindListeningPortAddress(nullptr, al.getRaw())) {
-                outint = addr->port();
+            if (const auto port = FindListeningPortNumber(nullptr, al.getRaw())) {
+                outint = port;
                 doint = 1;
             }
             break;
@@ -1262,20 +1254,16 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_SSL_USER_CERT_SUBJECT:
-            if (X509 *cert = al->cache.sslClientCert.get()) {
-                if (X509_NAME *subject = X509_get_subject_name(cert)) {
-                    X509_NAME_oneline(subject, tmp, sizeof(tmp));
-                    out = tmp;
-                }
+            if (const auto &cert = al->cache.sslClientCert) {
+                sb = Security::SubjectName(*cert);
+                out = sb.c_str();
             }
             break;
 
         case LFT_SSL_USER_CERT_ISSUER:
-            if (X509 *cert = al->cache.sslClientCert.get()) {
-                if (X509_NAME *issuer = X509_get_issuer_name(cert)) {
-                    X509_NAME_oneline(issuer, tmp, sizeof(tmp));
-                    out = tmp;
-                }
+            if (const auto &cert = al->cache.sslClientCert) {
+                sb = Security::IssuerName(*cert);
+                out = sb.c_str();
             }
             break;
 

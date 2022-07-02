@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -145,7 +145,7 @@ HttpRequestMethod::isHttpSafe() const
     // RFC 5789 - none
     // RFC 5842 - none
 
-    // RFC 7540 section 11.6
+    // RFC 9113 section 3.4
     case Http::METHOD_PRI:
 
         return true;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 83    SSL-Bump Server/Peer negotiation */
 
 #include "squid.h"
+#include "base/IoManip.h"
 #include "sbuf/Stream.h"
 #include "security/Handshake.h"
 #if USE_OPENSSL

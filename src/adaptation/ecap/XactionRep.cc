@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,7 +24,6 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MasterXaction.h"
-#include "SquidTime.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Ecap::XactionRep, XactionRep);
 
@@ -163,12 +162,12 @@ Adaptation::Ecap::XactionRep::usernameValue() const
 }
 
 const libecap::Area
-Adaptation::Ecap::XactionRep::masterxSharedValue(const libecap::Name &name) const
+Adaptation::Ecap::XactionRep::masterxSharedValue(const libecap::Name &sharedName) const
 {
     const HttpRequest *request = dynamic_cast<const HttpRequest*>(theCauseRep ?
                                  theCauseRep->raw().header : theVirginRep.raw().header);
     Must(request);
-    if (name.known()) { // must check to avoid empty names matching unset cfg
+    if (sharedName.known()) { // must check to avoid empty names matching unset cfg
         Adaptation::History::Pointer ah = request->adaptHistory(false);
         if (ah != NULL) {
             String name, value;
@@ -188,7 +187,6 @@ Adaptation::Ecap::XactionRep::metaValue(const libecap::Name &name) const
     HttpReply *reply = dynamic_cast<HttpReply*>(theVirginRep.raw().header);
 
     if (name.known()) { // must check to avoid empty names matching unset cfg
-        typedef Notes::iterator ACAMLI;
         for (auto h: Adaptation::Config::metaHeaders) {
             if (name == h->key().toStdString()) {
                 SBuf matched;
@@ -351,7 +349,7 @@ Adaptation::Ecap::XactionRep::doneAll() const
 void
 Adaptation::Ecap::XactionRep::sinkVb(const char *reason)
 {
-    debugs(93,4, HERE << "sink for " << reason << "; status:" << status());
+    debugs(93,4, "sink for " << reason << "; status:" << status());
 
     // we reset raw().body_pipe when we are done, so use this one for checking
     const BodyPipePointer &permPipe = theVirginRep.raw().header->body_pipe;
@@ -365,7 +363,7 @@ Adaptation::Ecap::XactionRep::sinkVb(const char *reason)
 void
 Adaptation::Ecap::XactionRep::preserveVb(const char *reason)
 {
-    debugs(93,4, HERE << "preserve for " << reason << "; status:" << status());
+    debugs(93,4, "preserve for " << reason << "; status:" << status());
 
     // we reset raw().body_pipe when we are done, so use this one for checking
     const BodyPipePointer &permPipe = theVirginRep.raw().header->body_pipe;
@@ -381,7 +379,7 @@ Adaptation::Ecap::XactionRep::preserveVb(const char *reason)
 void
 Adaptation::Ecap::XactionRep::forgetVb(const char *reason)
 {
-    debugs(93,9, HERE << "forget vb " << reason << "; status:" << status());
+    debugs(93,9, "forget vb " << reason << "; status:" << status());
 
     BodyPipePointer &p = theVirginRep.raw().body_pipe;
     if (p != NULL && p->stillConsuming(this))
@@ -396,7 +394,7 @@ Adaptation::Ecap::XactionRep::forgetVb(const char *reason)
 void
 Adaptation::Ecap::XactionRep::useVirgin()
 {
-    debugs(93,3, HERE << status());
+    debugs(93,3, status());
     Must(proxyingAb == opUndecided);
     proxyingAb = opNever;
 
@@ -414,7 +412,7 @@ Adaptation::Ecap::XactionRep::useVirgin()
 void
 Adaptation::Ecap::XactionRep::useAdapted(const libecap::shared_ptr<libecap::Message> &m)
 {
-    debugs(93,3, HERE << status());
+    debugs(93,3, status());
     Must(m);
     theAnswerRep = m;
     Must(proxyingAb == opUndecided);
@@ -436,7 +434,7 @@ Adaptation::Ecap::XactionRep::useAdapted(const libecap::shared_ptr<libecap::Mess
         updateHistory(msg);
         sendAnswer(Answer::Forward(msg));
 
-        debugs(93,4, HERE << "adapter will produce body" << status());
+        debugs(93,4, "adapter will produce body" << status());
         theMaster->abMake(); // libecap will produce
     }
 }
@@ -444,7 +442,7 @@ Adaptation::Ecap::XactionRep::useAdapted(const libecap::shared_ptr<libecap::Mess
 void
 Adaptation::Ecap::XactionRep::blockVirgin()
 {
-    debugs(93,3, HERE << status());
+    debugs(93,3, status());
     Must(proxyingAb == opUndecided);
     proxyingAb = opNever;
 
@@ -482,7 +480,6 @@ Adaptation::Ecap::XactionRep::updateHistory(Http::Message *adapted)
 
     // update the adaptation plan if needed
     if (service().cfg().routing) {
-        String services;
         if (const libecap::Area services = theMaster->option(libecap::metaNextServices)) {
             Adaptation::History::Pointer ah = request->adaptHistory(true);
             if (ah != NULL)
@@ -588,7 +585,7 @@ Adaptation::Ecap::XactionRep::noteAbContentDone(bool atEnd)
     Must(proxyingAb == opOn && !abProductionFinished);
     abProductionFinished = true;
     abProductionAtEnd = atEnd; // store until ready to stop producing ourselves
-    debugs(93,5, HERE << "adapted body production ended");
+    debugs(93,5, "adapted body production ended");
     moveAbContent();
 }
 
@@ -613,7 +610,7 @@ Adaptation::Ecap::XactionRep::setAdaptedBodySize(const libecap::BodySize &size)
 void
 Adaptation::Ecap::XactionRep::adaptationDelayed(const libecap::Delay &d)
 {
-    debugs(93,3, HERE << "adapter needs time: " <<
+    debugs(93,3, "adapter needs time: " <<
            d.state << '/' << d.progress);
     // XXX: set timeout?
 }
@@ -626,14 +623,14 @@ Adaptation::Ecap::XactionRep::adaptationAborted()
 }
 
 void
-Adaptation::Ecap::XactionRep::noteMoreBodySpaceAvailable(RefCount<BodyPipe> bp)
+Adaptation::Ecap::XactionRep::noteMoreBodySpaceAvailable(RefCount<BodyPipe>)
 {
     Must(proxyingAb == opOn);
     moveAbContent();
 }
 
 void
-Adaptation::Ecap::XactionRep::noteBodyConsumerAborted(RefCount<BodyPipe> bp)
+Adaptation::Ecap::XactionRep::noteBodyConsumerAborted(RefCount<BodyPipe>)
 {
     Must(proxyingAb == opOn);
     stopProducingFor(answer().body_pipe, false);
@@ -643,7 +640,7 @@ Adaptation::Ecap::XactionRep::noteBodyConsumerAborted(RefCount<BodyPipe> bp)
 }
 
 void
-Adaptation::Ecap::XactionRep::noteMoreBodyDataAvailable(RefCount<BodyPipe> bp)
+Adaptation::Ecap::XactionRep::noteMoreBodyDataAvailable(RefCount<BodyPipe>)
 {
     Must(makingVb == opOn); // or we would not be registered as a consumer
     Must(theMaster);
@@ -651,7 +648,7 @@ Adaptation::Ecap::XactionRep::noteMoreBodyDataAvailable(RefCount<BodyPipe> bp)
 }
 
 void
-Adaptation::Ecap::XactionRep::noteBodyProductionEnded(RefCount<BodyPipe> bp)
+Adaptation::Ecap::XactionRep::noteBodyProductionEnded(RefCount<BodyPipe>)
 {
     Must(makingVb == opOn); // or we would not be registered as a consumer
     Must(theMaster);
@@ -660,7 +657,7 @@ Adaptation::Ecap::XactionRep::noteBodyProductionEnded(RefCount<BodyPipe> bp)
 }
 
 void
-Adaptation::Ecap::XactionRep::noteBodyProducerAborted(RefCount<BodyPipe> bp)
+Adaptation::Ecap::XactionRep::noteBodyProducerAborted(RefCount<BodyPipe>)
 {
     Must(makingVb == opOn); // or we would not be registered as a consumer
     Must(theMaster);
@@ -680,11 +677,11 @@ Adaptation::Ecap::XactionRep::moveAbContent()
 {
     Must(proxyingAb == opOn);
     const libecap::Area c = theMaster->abContent(0, libecap::nsize);
-    debugs(93,5, HERE << "up to " << c.size << " bytes");
+    debugs(93,5, "up to " << c.size << " bytes");
     if (c.size == 0 && abProductionFinished) { // no ab now and in the future
         stopProducingFor(answer().body_pipe, abProductionAtEnd);
         proxyingAb = opComplete;
-        debugs(93,5, HERE << "last adapted body data retrieved");
+        debugs(93,5, "last adapted body data retrieved");
     } else if (c.size > 0) {
         if (const size_t used = answer().body_pipe->putMoreData(c.start, c.size))
             theMaster->abContentShift(used);

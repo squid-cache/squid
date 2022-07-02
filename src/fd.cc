@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,14 +10,12 @@
 
 #include "squid.h"
 #include "comm/Loops.h"
-#include "Debug.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
+#include "debug/Stream.h"
 #include "fatal.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
-#include "profiler/Profiler.h"
-#include "SquidTime.h"
 
 // Solaris and possibly others lack MSG_NOSIGNAL optimization
 // TODO: move this into compat/? Use a dedicated compat file to avoid dragging
@@ -105,79 +103,50 @@ fd_close(int fd)
 int
 socket_read_method(int fd, char *buf, int len)
 {
-    int i;
-    PROF_start(recv);
-    i = recv(fd, (void *) buf, len, 0);
-    PROF_stop(recv);
-    return i;
+    return recv(fd, (void *) buf, len, 0);
 }
 
 int
 file_read_method(int fd, char *buf, int len)
 {
-    int i;
-    PROF_start(read);
-    i = _read(fd, buf, len);
-    PROF_stop(read);
-    return i;
+    return _read(fd, buf, len);
 }
 
 int
 socket_write_method(int fd, const char *buf, int len)
 {
-    int i;
-    PROF_start(send);
-    i = send(fd, (const void *) buf, len, 0);
-    PROF_stop(send);
-    return i;
+    return send(fd, (const void *) buf, len, 0);
 }
 
 int
 file_write_method(int fd, const char *buf, int len)
 {
-    int i;
-    PROF_start(write);
-    i = (_write(fd, buf, len));
-    PROF_stop(write);
-    return i;
+    return _write(fd, buf, len);
 }
 
 #else
 int
 default_read_method(int fd, char *buf, int len)
 {
-    int i;
-    PROF_start(read);
-    i = read(fd, buf, len);
-    PROF_stop(read);
-    return i;
+    return read(fd, buf, len);
 }
 
 int
 default_write_method(int fd, const char *buf, int len)
 {
-    int i;
-    PROF_start(write);
-    i = write(fd, buf, len);
-    PROF_stop(write);
-    return i;
+    return write(fd, buf, len);
 }
 
 int
 msghdr_read_method(int fd, char *buf, int)
 {
-    PROF_start(read);
-    const int i = recvmsg(fd, reinterpret_cast<msghdr*>(buf), MSG_DONTWAIT);
-    PROF_stop(read);
-    return i;
+    return recvmsg(fd, reinterpret_cast<msghdr*>(buf), MSG_DONTWAIT);
 }
 
 int
 msghdr_write_method(int fd, const char *buf, int len)
 {
-    PROF_start(write);
     const int i = sendmsg(fd, reinterpret_cast<const msghdr*>(buf), MSG_NOSIGNAL);
-    PROF_stop(write);
     return i > 0 ? len : i; // len is imprecise but the caller expects a match
 }
 

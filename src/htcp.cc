@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,7 +18,7 @@
 #include "comm/Loops.h"
 #include "comm/UdpOpenDialer.h"
 #include "compat/xalloc.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "globals.h"
 #include "htcp.h"
 #include "http.h"
@@ -31,7 +31,6 @@
 #include "MemBuf.h"
 #include "refresh.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "store_key_md5.h"
@@ -702,7 +701,7 @@ htcpUnpackSpecifier(char *buf, int sz)
     // Parse the request
     method.HttpRequestMethodXXX(s->method);
 
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initHtcp);
+    const auto mx = MasterXaction::MakePortless<XactionInitiator::initHtcp>();
     s->request = HttpRequest::FromUrlXXX(s->uri, mx, method == Http::METHOD_NONE ? HttpRequestMethod(Http::METHOD_GET) : method);
     if (!s->request) {
         debugs(31, 3, "failed to create request. Invalid URI?");

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "base/Packable.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "http/one/ResponseParser.h"
 #include "http/StatusLine.h"
 #include "parser/forward.h"
@@ -57,7 +57,7 @@ Http::StatusLine::packInto(Packable * p) const
     if (packedStatus == Http::scNone) {
         static unsigned int reports = 0;
         if (++reports <= 100)
-            debugs(57, DBG_IMPORTANT, "BUG: the internalized response lacks status-code");
+            debugs(57, DBG_IMPORTANT, "ERROR: Squid BUG: the internalized response lacks status-code");
         packedStatus = Http::scInternalServerError;
         packedReason = Http::StatusCodeString(packedStatus); // ignore custom reason_ (if any)
     }

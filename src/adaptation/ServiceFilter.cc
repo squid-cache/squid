@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -61,5 +61,12 @@ Adaptation::ServiceFilter &Adaptation::ServiceFilter::operator =(const ServiceFi
             HTTPMSGLOCK(reply);
     }
     return *this;
+}
+
+std::ostream &
+Adaptation::operator <<(std::ostream &os, const ServiceFilter &filter)
+{
+    os << methodStr(filter.method) << ' ' << vectPointStr(filter.point);
+    return os;
 }
 

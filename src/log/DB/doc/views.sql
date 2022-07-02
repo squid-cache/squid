@@ -1,4 +1,4 @@
--- Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+-- Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 --
 -- Squid software is distributed under GPLv2+ license and includes
 -- contributions from numerous individuals and organizations.
@@ -393,7 +393,7 @@ CREATE OR REPLACE VIEW days_with_infos AS
             SELECT SUM(http_reply_size)
             FROM access_log a1
             WHERE a.date_day = a1.date_day
-        ) * 100                               
+        ) * 100
     )                                     AS most_active_client_t_pc
 
     FROM access_log a

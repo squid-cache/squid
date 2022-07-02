@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -84,12 +84,12 @@ squid_strnstr(const char *s, const char *find, size_t slen)
         do {
             do {
                 if (slen < 1 || (sc = *s) == '\0')
-                    return (NULL);
+                    return nullptr;
                 --slen;
                 ++s;
             } while (sc != c);
             if (len > slen)
-                return (NULL);
+                return nullptr;
         } while (strncmp(s, find, len) != 0);
         --s;
     }

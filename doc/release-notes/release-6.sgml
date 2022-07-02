@@ -25,6 +25,7 @@ This new release is available for download from <url url="http://www.squid-cache
 <sect1>Known issues
 <p>Although this release is deemed good enough for use in many setups, please note the existence of
 <url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=6" name="open bugs against Squid-6">.
+<p>Support for compiling on HPUX with the native HP <em>xcc</em> compiler has been removed. To build on that OS/compiler combination, it is possible to pass these environemnt variables to ./configure: <em>CC="cxx -Ae" RANLIB=":"</em>
 
 <sect1>Changes since earlier releases of Squid-6
 <p>
@@ -118,7 +119,12 @@ This section gives an account of those changes in three categories:
 <sect1>Removed options<label id="removedoptions">
 <p>
 <descrip>
-	<p>There have been no options changed.
+	<tag>--enable-cpu-profiling</tag>
+	<p>This feature has been unreliable for many years. Other tools such as
+	   oprofile provide better tracking and should be used instead.
+
+	<tag>--disable-loadable-modules</tag>
+	<p>This option was performing the same duties as <em>--disable-shared</em>.
 
 </descrip>
 
@@ -177,7 +183,7 @@ This section gives an account of those changes in three categories:
 
 <sect>Copyright
 <p>
-Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 <p>
 Squid software is distributed under GPLv2+ license and includes
 contributions from numerous individuals and organizations.

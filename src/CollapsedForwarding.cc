@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 17    Request Forwarding */
 
 #include "squid.h"
+#include "base/AsyncFunCalls.h"
 #include "CollapsedForwarding.h"
 #include "globals.h"
 #include "ipc/mem/Segment.h"
@@ -57,8 +58,12 @@ void
 CollapsedForwarding::Init()
 {
     Must(!queue.get());
-    if (UsingSmp() && IamWorkerProcess())
+    if (UsingSmp() && IamWorkerProcess()) {
         queue.reset(new Queue(ShmLabel, KidIdentifier));
+        AsyncCall::Pointer callback = asyncCall(17, 4, "CollapsedForwarding::HandleNewDataAtStart",
+                                                NullaryFunDialer(&CollapsedForwarding::HandleNewDataAtStart));
+        ScheduleCallHere(callback);
+    }
 }
 
 void
@@ -144,6 +149,16 @@ CollapsedForwarding::HandleNotification(const Ipc::TypedMsgHdr &msg)
     assert(queue.get());
     queue->clearReaderSignal(from);
     HandleNewData("after notification");
+}
+
+/// Handle queued IPC messages for the first time in this process lifetime, when
+/// the queue may be reflecting the state of our killed predecessor.
+void
+CollapsedForwarding::HandleNewDataAtStart()
+{
+    /// \sa IpcIoFile::HandleMessagesAtStart() -- duplicates this logic
+    queue->clearAllReaderSignals();
+    HandleNewData("at start");
 }
 
 void

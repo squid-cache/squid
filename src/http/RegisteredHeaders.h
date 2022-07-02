@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -57,7 +57,7 @@ enum HdrType {
     FORWARDED,                      /**< RFC 7239 */
     FROM,                           /**< RFC 7231 */
     HOST,                           /**< RFC 7230 */
-    HTTP2_SETTINGS,                 /**< RFC 7540 */
+    /*HTTP2_SETTINGS,*/             /* obsolete RFC 7540 */
     /*IF,*/                         /* RFC 2518 */
     IF_MATCH,                       /**< RFC 7232 */
     IF_MODIFIED_SINCE,              /**< RFC 7232 */
@@ -76,6 +76,7 @@ enum HdrType {
     /*OVERWRITE,*/                  /* RFC 2518 */
     ORIGIN,                         /* CORS Draft specification (see http://www.w3.org/TR/cors/) */
     PRAGMA,                         /**< RFC 7234 */
+    PRIORITY,                       /**< RFC 9218 */
     PROXY_AUTHENTICATE,             /**< RFC 7235 */
     PROXY_AUTHENTICATION_INFO,      /**< RFC 2617 */
     PROXY_AUTHORIZATION,            /**< RFC 7235 */

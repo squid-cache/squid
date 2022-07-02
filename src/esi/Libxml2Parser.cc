@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,7 +16,29 @@
 
 #if USE_SQUID_ESI && HAVE_LIBXML2
 
+#include "base/RunnersRegistry.h"
 #include "esi/Libxml2Parser.h"
+
+#include <memory>
+
+namespace Esi
+{
+
+class Libxml2Rr : public RegisteredRunner
+{
+public:
+    void finalizeConfig()
+    {
+        registration.reset(new ESIParser::Register("libxml2", &ESILibxml2Parser::NewParser));
+    }
+
+private:
+    std::unique_ptr<ESIParser::Register> registration;
+};
+
+RunnerRegistrationEntry(Libxml2Rr);
+
+}
 
 // the global document that will store the resolved entity
 // definitions
@@ -96,7 +118,6 @@ ESILibxml2Parser::ESILibxml2Parser(ESIParserClient *aClient) : theClient (aClien
 
     /* TODO: grab the document encoding from the headers */
     parser = xmlCreatePushParserCtxt(&sax, static_cast<void *>(this), NULL, 0, NULL);
-    xmlSetFeature(parser, "substitute entities", 0);
 
     if (entity_doc == NULL)
         entity_doc = htmlNewDoc(NULL, NULL);
