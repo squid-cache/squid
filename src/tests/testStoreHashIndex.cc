@@ -102,6 +102,8 @@ void commonInit()
     if (inited)
         return;
 
+    inited = true;
+
     Mem::Init();
 
     Config.Store.avgObjectSize = 1024;
@@ -109,6 +111,10 @@ void commonInit()
     Config.Store.objectsPerBucket = 20;
 
     Config.Store.maxObjectSize = 2048;
+
+    Config.memShared.defaultTo(false);
+
+    Config.store_dir_select_algorithm = xstrdup("round-robin");
 }
 
 /* TODO make this a cbdata class */
