@@ -159,38 +159,43 @@ if ! git diff --quiet; then
 	exit 1
 fi
 
-for Checksum in md5sum md5 shasum sha1sum false
-do
-    if "$Checksum" </dev/null >/dev/null 2>/dev/null ; then
-        break
-    fi
-done
-if [ "$Checksum" = "false" ]; then
-    "Could not find any program to calculate a checksum such as md5sum"
-    exit 1
-fi
-echo "detected checksum program $Checksum"
+# usage: <well-known program name> <program argument(s)> <candidate name>...
+# Finds the first working program among the given candidate program names.
+# The found program name is returned via the $FoundProgram global:
+FoundProgram=""
+findProgram() {
+    wellKnown="$1"
+    shift
+
+    options="$1"
+    shift
+
+    for candidate in $*
+    do
+        if "$candidate" $options < /dev/null > /dev/null 2> /dev/null
+        then
+            echo "Found ${wellKnown}-like program: $candidate"
+            FoundProgram="$candidate"
+            return 0;
+        fi
+    done
+
+    echo "ERROR: Failed to find a ${wellKnown}-like program; tried: $*"
+    FoundProgram=""
+    return 1;
+}
+
+findProgram md5sum "" md5sum md5 shasum sha1sum || exit $?
+Checksum=$FoundProgram
 
 if [ "x$ASTYLE" != "x" ] ; then
-    if ${ASTYLE} --version >/dev/null 2>/dev/null ; then
-        :
-    else
-        echo "ERROR: cannot run user-supplied astyle ${ASTYLE}"
+    if ! ${ASTYLE} --version > /dev/null 2> /dev/null ; then
+        echo "ERROR: Cannot run user-supplied astyle: ${ASTYLE}"
         exit 1
     fi
 else
-    for AttemptedBinary in astyle-${TargetAstyleVersion} astyle
-    do
-        if $AttemptedBinary --version >/dev/null 2>/dev/null ; then
-            ASTYLE=$AttemptedBinary
-            echo "detected astyle program ${ASTYLE}"
-            break
-        fi
-    done
-    if [ -z "${ASTYLE}" ]; then
-        echo "cannot find any installed astyle program"
-        exit 1
-    fi
+    findProgram astyle --version astyle-${TargetAstyleVersion} astyle || exit $?
+    ASTYLE=$FoundProgram
 fi
 
 ASVER=`${ASTYLE} --version 2>&1 | grep -o -E "[0-9.]+"`
@@ -204,7 +209,7 @@ if test "${ASVER}" != "${TargetAstyleVersion}" ; then
 		echo "Formatting anyway, please double check output before submitting"
 	fi
 else
-	echo "Found astyle ${ASVER}"
+	echo "Detected expected astyle version: ${ASVER}"
 fi
 
 if test "x$OnlyChangedSince" = "xfork" ; then
