@@ -101,22 +101,18 @@ int
 xgetaddrinfo (const char *nodename, const char *servname,
               const struct addrinfo *hints, struct addrinfo **res)
 {
-    struct hostent *hp;
     struct servent *servent;
     const char *socktype;
     int port;
-    struct addrinfo hint, result;
-    struct addrinfo *ai, *sai, *eai;
+    struct addrinfo hint = {} , result = {};
+    struct addrinfo *ai = nullptr, *sai = nullptr, *eai = nullptr;
     char **addrs;
 
     if (!servname && !nodename)
         return EAI_NONAME;
 
-    memset (&result, 0, sizeof result);
-
     /* default for hints */
     if (!hints) {
-        memset (&hint, 0, sizeof hint);
         hint.ai_family = PF_UNSPEC;
         hints = &hint;
     }
@@ -190,7 +186,7 @@ xgetaddrinfo (const char *nodename, const char *servname,
     h_errno = 0;
 #endif
     errno = 0;
-    hp = gethostbyname(nodename);
+    const struct hostent hp = gethostbyname(nodename);
     if (!hp) {
 #ifdef EAI_SYSTEM
         if (errno != 0) {
