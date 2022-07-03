@@ -101,12 +101,9 @@ int
 xgetaddrinfo (const char *nodename, const char *servname,
               const struct addrinfo *hints, struct addrinfo **res)
 {
-    struct servent *servent;
-    const char *socktype;
     int port;
-    struct addrinfo hint = {} , result = {};
-    struct addrinfo *ai = nullptr, *sai = nullptr, *eai = nullptr;
-    char **addrs;
+    struct addrinfo hint = {};
+    struct addrinfo result = {};
 
     if (!servname && !nodename)
         return EAI_NONAME;
@@ -120,6 +117,7 @@ xgetaddrinfo (const char *nodename, const char *servname,
     if (!servname)
         port = 0;
     else {
+        const char *socktype;
         /* check for tcp or udp sockets only */
         if (hints->ai_socktype == SOCK_STREAM)
             socktype = "tcp";
@@ -132,7 +130,7 @@ xgetaddrinfo (const char *nodename, const char *servname,
         /* Note: maintain port in host byte order to make debugging easier */
         if (isdigit (*servname))
             port = strtol (servname, nullptr, 10);
-        else if ((servent = getservbyname (servname, socktype)))
+        else if ((const struct servent = getservbyname (servname, socktype)))
             port = ntohs (servent->s_port);
         else
             return EAI_NONAME;
@@ -229,8 +227,10 @@ xgetaddrinfo (const char *nodename, const char *servname,
 
     /* For each element pointed to by hp, create an element in the
        result linked list. */
-    sai = eai = nullptr;
-    for (addrs = hp->h_addr_list; *addrs; addrs++) {
+    struct addrinfo *sai = nullptr;
+    struct addrinfo *eai = nullptr;
+    for (char **addrs = hp->h_addr_list; *addrs; addrs++)
+    {
         struct sockaddr sa;
         size_t addrlen;
 
@@ -258,7 +258,7 @@ xgetaddrinfo (const char *nodename, const char *servname,
         }
 
         result.ai_family = hp->h_addrtype;
-        ai = dup_addrinfo (&result, &sa, addrlen);
+        struct addrinfo *ai = dup_addrinfo(&result, &sa, addrlen);
         if (!ai) {
             xfreeaddrinfo (sai);
             return EAI_MEMORY;
