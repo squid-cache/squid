@@ -55,15 +55,10 @@ while($out){
 
     die("Cannot format a non-existent file: $out\n") unless -e $out;
 
-    my $in= "$out.astylebak";
-    my($new_in) = $in;
-    my($i) = 0;
-    while(-e $new_in) {
-        $new_in=$in.".".$i;
-        $i++;
-    }
-    $in=$new_in;
-    rename($out, $in);
+    my $backup = "$out.astylebak";
+    &moveAway($backup);
+    &safeRename($out, $backup);
+    my $in = $backup;
 
     local (*FROM_ASTYLE, *TO_ASTYLE);
     my $pid_style=open2(\*FROM_ASTYLE, \*TO_ASTYLE, $ASTYLE_BIN);
@@ -122,6 +117,37 @@ while($out){
     }
 
     $out = shift @ARGV;
+}
+
+# renames while ensuring the destination is not clobbered
+sub safeRename
+{
+    my ($from, $to) = @_;
+    die() if -e $to;
+    rename($from, $to) or die("Failed to rename $from to $to: $!, stopped");
+}
+
+# "numbered backup" filename at a given backup depth
+# no ".n" suffix for the freshest/latest (i.e. zero depth) backup
+sub backupFilename
+{
+    my ($basename, $depth) = @_;
+    return $basename unless $depth;
+    return $basename . '.' . $depth;
+}
+
+# Renames the given backup file, moving it out of the way for the new backup.
+# Works recursively to ensure that no backup file is overwritten.
+sub moveAway
+{
+    my ($basename, $depth) = (@_, 0);
+
+    my $filename = &backupFilename($basename, $depth);
+    return unless -e $filename; # nothing to move away
+
+    my $spot = &backupFilename($basename, $depth + 1);
+    &moveAway($basename, $depth + 1); # free the spot if needed
+    &safeRename($filename, $spot); # move into the free spot
 }
 
 sub input_filter{
