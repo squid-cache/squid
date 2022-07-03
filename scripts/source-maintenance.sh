@@ -479,15 +479,23 @@ done
     run_ processDebugMessages || return
 }
 
-printAmFile ()
+printRawAmFile ()
 {
     sed -e 's%\ \*%##%; s%/\*%##%; s%##/%##%' < scripts/boilerplate.h
     echo -n "$1 ="
-    git ls-files $2$3 | sed -e s%$2%%g | sort -u | while read f; do
+    git ls-files $2$3 | sed -e s%$2%%g | while read f; do
         echo " \\"
         echo -n "    ${f}"
     done
     echo ""
+}
+
+printAmFile ()
+{
+    # XXX: In srcFormat, we reapply the same formatting script. This first
+    # application is done to avoid misleading "NOTICE: File ... changed by
+    # scripts/format-makefile-am.pl" during that second application.
+    printRawAmFile "$@" | scripts/format-makefile-am.pl
 }
 
 # Build icons install include from current icons available
