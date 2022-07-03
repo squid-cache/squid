@@ -165,16 +165,14 @@ inet_ntop6(const u_char *src, char *dst, size_t size)
      */
     char tmp[sizeof "ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255"], *tp;
     struct { int base, len; } best, cur;
-    u_int words[NS_IN6ADDRSZ / NS_INT16SZ];
-    int i;
+    u_int words[NS_IN6ADDRSZ / NS_INT16SZ] = {};
 
     /*
      * Preprocess:
      *  Copy the input (bytewise) array into a wordwise array.
      *  Find the longest run of 0x00's in src[] for :: shorthanding.
      */
-    memset(words, '\0', sizeof words);
-    for (i = 0; i < NS_IN6ADDRSZ; i++)
+    for (int i = 0; i < NS_IN6ADDRSZ; i++)
         words[i / 2] |= (src[i] << ((1 - (i % 2)) << 3));
     best.base = -1;
     best.len = 0;
