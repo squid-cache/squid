@@ -48,7 +48,7 @@ ThrowErrors(const char * const problem, const int savedErrno, const SourceLocati
                         where);
 }
 
-static EVP_PKEY *
+static Security::PrivateKeyPointer
 CreateRsaPrivateKey()
 {
     Ssl::EVP_PKEY_CTX_Pointer rsa(EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nullptr));
@@ -67,7 +67,7 @@ CreateRsaPrivateKey()
     if (EVP_PKEY_keygen(rsa.get(), &pkey) <= 0)
         return nullptr;
 
-    return pkey;
+    return Security::PrivateKeyPointer(pkey);
 }
 
 /**
@@ -587,13 +587,8 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
 
 static bool generateFakeSslCertificate(Security::CertPointer & certToStore, Security::PrivateKeyPointer & pkeyToStore, Ssl::CertificateProperties const &properties,  Ssl::BIGNUM_Pointer const &serial)
 {
-    Security::PrivateKeyPointer pkey;
     // Use signing certificates private key as generated certificate private key
-    if (properties.signWithPkey.get())
-        pkey.resetAndLock(properties.signWithPkey.get());
-    else // if not exist generate one
-        pkey.resetWithoutLocking(CreateRsaPrivateKey());
-
+    const auto pkey = properties.signWithPkey ? properties.signWithPkey : CreateRsaPrivateKey();
     if (!pkey)
         return false;
 
