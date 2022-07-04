@@ -448,7 +448,7 @@ for FILENAME in `git ls-files`; do
         if ! grep -q -F "$GeneratedByMe" ${FILENAME}; then
             applyPluginsTo ${FILENAME} scripts/format-makefile-am.pl || return
         fi
-    ;;
+        ;;
 
     ChangeLog|CREDITS|CONTRIBUTORS|COPYING|*.png|*.po|*.pot|rfcs/|*.txt|test-suite/squidconf/empty|.bzrignore)
         # we do not enforce copyright blurbs in:
@@ -510,6 +510,7 @@ generateAmFile ()
     # format immediately/here instead of in srcFormat to avoid misleading
     # "NOTICE: File ... changed by scripts/format-makefile-am.pl" in srcFormat
     printRawAmFile "$@" | scripts/format-makefile-am.pl > $amFile.new
+
     # Distinguishing generation-only changes from formatting-only changes is
     # difficult, so we only check/report cumulative changes. Most interesting
     # changes are triggered by printRawAmFile() finding new entries.
