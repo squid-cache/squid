@@ -108,6 +108,9 @@ if ! git diff --quiet; then
 	exit 1
 fi
 
+made="generated" # a hack: prevents $GeneratedByMe searches matching this file
+GeneratedByMe="This file is $made by scripts/source-maintenance.sh."
+
 # On squid-cache.org we have to use the python scripted md5sum
 HOST=`hostname`
 if test "$HOST" = "squid-cache.org" ; then
@@ -441,8 +444,11 @@ for FILENAME in `git ls-files`; do
 	;;
 
     *.am)
-		applyPluginsTo ${FILENAME} scripts/format-makefile-am.pl || return
-	;;
+        # generated automake files are formatted during their generation
+        if ! grep -q -F "$GeneratedByMe" ${FILENAME}; then
+            applyPluginsTo ${FILENAME} scripts/format-makefile-am.pl || return
+        fi
+    ;;
 
     ChangeLog|CREDITS|CONTRIBUTORS|COPYING|*.png|*.po|*.pot|rfcs/|*.txt|test-suite/squidconf/empty|.bzrignore)
         # we do not enforce copyright blurbs in:
@@ -482,6 +488,10 @@ done
 printRawAmFile ()
 {
     sed -e 's%\ \*%##%; s%/\*%##%; s%##/%##%' < scripts/boilerplate.h
+
+    echo "## $GeneratedByMe"
+    echo
+
     echo -n "$1 ="
     git ls-files $2$3 | sed -e s%$2%%g | while read f; do
         echo " \\"
@@ -492,9 +502,8 @@ printRawAmFile ()
 
 printAmFile ()
 {
-    # XXX: In srcFormat, we reapply the same formatting script. This first
-    # application is done to avoid misleading "NOTICE: File ... changed by
-    # scripts/format-makefile-am.pl" during that second application.
+    # format immediately/here instead of in srcFormat to avoid misleading
+    # "NOTICE: File ... changed by scripts/format-makefile-am.pl" in srcFormat
     printRawAmFile "$@" | scripts/format-makefile-am.pl
 }
 
