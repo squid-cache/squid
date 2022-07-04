@@ -502,27 +502,34 @@ printRawAmFile ()
     echo ""
 }
 
-printAmFile ()
+generateAmFile ()
 {
+    amFile="$1"
+    shift
+
     # format immediately/here instead of in srcFormat to avoid misleading
     # "NOTICE: File ... changed by scripts/format-makefile-am.pl" in srcFormat
-    printRawAmFile "$@" | scripts/format-makefile-am.pl
+    printRawAmFile "$@" | scripts/format-makefile-am.pl > $amFile.new
+    # Distinguishing generation-only changes from formatting-only changes is
+    # difficult, so we only check/report cumulative changes. Most interesting
+    # changes are triggered by printRawAmFile() finding new entries.
+    updateIfChanged $amFile $amFile.new 'by generateAmFile()'
 }
 
 # Build icons install include from current icons available
-printAmFile ICONS "icons/" "silk/*" > icons/icon.am
+generateAmFile icons/icon.am ICONS "icons/" "silk/*"
 
 # Build templates install include from current templates available
-printAmFile ERROR_TEMPLATES "errors/" "templates/ERR_*" > errors/template.am
+generateAmFile errors/template.am ERROR_TEMPLATES "errors/" "templates/ERR_*"
 
 # Build errors translation install include from current .PO available
-printAmFile TRANSLATE_LANGUAGES "errors/" "*.po" > errors/language.am
+generateAmFile errors/language.am TRANSLATE_LANGUAGES "errors/" "*.po"
 
 # Build manuals translation install include from current .PO available
-printAmFile TRANSLATE_LANGUAGES "doc/manuals/" "*.po" > doc/manuals/language.am
+generateAmFile doc/manuals/language.am TRANSLATE_LANGUAGES "doc/manuals/" "*.po"
 
 # Build STUB framework include from current stub_* available
-printAmFile STUB_SOURCE "src/" "tests/stub_*.cc" > src/tests/Stub.am
+generateAmFile src/tests/Stub.am STUB_SOURCE "src/" "tests/stub_*.cc"
 
 # Build the GPERF generated content
 make -C src/http gperf-files
