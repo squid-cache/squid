@@ -493,7 +493,9 @@ printRawAmFile ()
     echo
 
     echo -n "$1 ="
-    git ls-files $2$3 | sed -e s%$2%%g | while read f; do
+    # Only some files are formed from *.po filenames, but all such files
+    # should list *.lang filenames instead.
+    git ls-files $2$3 | sed -e s%$2%%g -e 's%\.po%\.lang%g' | while read f; do
         echo " \\"
         echo -n "    ${f}"
     done
@@ -514,10 +516,10 @@ printAmFile ICONS "icons/" "silk/*" > icons/icon.am
 printAmFile ERROR_TEMPLATES "errors/" "templates/ERR_*" > errors/template.am
 
 # Build errors translation install include from current .PO available
-printAmFile TRANSLATE_LANGUAGES "errors/" "*.po" | sed 's%\.po%\.lang%g' > errors/language.am
+printAmFile TRANSLATE_LANGUAGES "errors/" "*.po" > errors/language.am
 
 # Build manuals translation install include from current .PO available
-printAmFile TRANSLATE_LANGUAGES "doc/manuals/" "*.po" | sed 's%\.po%\.lang%g' > doc/manuals/language.am
+printAmFile TRANSLATE_LANGUAGES "doc/manuals/" "*.po" > doc/manuals/language.am
 
 # Build STUB framework include from current stub_* available
 printAmFile STUB_SOURCE "src/" "tests/stub_*.cc" > src/tests/Stub.am
