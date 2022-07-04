@@ -415,7 +415,7 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
     // internally represented by EVP_PKEY pair, but GnuTLS uses distinct types.
     const Security::PrivateKeyPointer certKey(X509_get_pubkey(mimicCert.get()));
 #if OPENSSL_VERSION_MAJOR < 3
-    const auto rsaPkey = bool(EVP_PKEY_get0_RSA(certKey.get()));
+    const auto rsaPkey = EVP_PKEY_get0_RSA(certKey.get()) != nullptr;
 #else
     const auto rsaPkey = EVP_PKEY_is_a(certKey.get(), "RSA") == 1;
 #endif
