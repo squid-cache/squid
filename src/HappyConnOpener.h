@@ -106,7 +106,7 @@ public:
     typedef HappyConnOpenerAnswer Answer;
 
 public:
-    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCall::Pointer &,  HttpRequestPointer &, const time_t aFwdStart, int tries, const AccessLogEntryPointer &al);
+    HappyConnOpener(const ResolvedPeersPointer &, const HttpRequestPointer &, time_t aFwdStart, int tries, const AccessLogEntryPointer &al);
     virtual ~HappyConnOpener() override;
 
     /// configures reuse of old connections
@@ -126,6 +126,9 @@ public:
 
     /// reacts to satisfying happy_eyeballs_connect_gap and happy_eyeballs_connect_limit
     void noteSpareAllowance();
+
+    /// answer destination
+    AsyncCallback<Answer> callback;
 
     /// the start of the first connection attempt for the currentPeer
     HappyAbsoluteTime primeStart = 0;
@@ -193,8 +196,6 @@ private:
     void cancelAttempt(Attempt &, const char *reason);
 
     const time_t fwdStart; ///< requestor start time
-
-    AsyncCall::Pointer callback_; ///< handler to be called on connection completion.
 
     /// Candidate paths. Shared with the initiator. May not be finalized yet.
     ResolvedPeersPointer destinations;

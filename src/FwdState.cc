@@ -1146,12 +1146,15 @@ FwdState::connectStart()
 
     request->hier.startPeerClock();
 
-    const auto dialer = cbcCallbackDialer(this, &FwdState::noteConnection);
-    AsyncCall::Pointer callback = asyncCall(17, 5, "FwdState::noteConnection", dialer);
-
     HttpRequest::Pointer cause = request;
-    const auto cs = new HappyConnOpener(destinations, callback, cause, start_t, n_tries, al);
+    const auto cs = new HappyConnOpener(destinations, cause, start_t, n_tries, al);
+
+    const auto dialer = cbcCallbackDialer(this, &FwdState::noteConnection);
+    const auto callback = asyncCall(17, 5, "FwdState::noteConnection", dialer);
+    cs->callback.set(callback);
+
     cs->setHost(request->url.host());
+
     bool retriable = checkRetriable();
     if (!retriable && Config.accessList.serverPconnForNonretriable) {
         ACLFilledChecklist ch(Config.accessList.serverPconnForNonretriable, request, nullptr);
@@ -1160,7 +1163,9 @@ FwdState::connectStart()
         retriable = ch.fastCheck().allowed();
     }
     cs->setRetriable(retriable);
+
     cs->allowPersistent(pconnRace != raceHappened);
+
     destinations->notificationPending = true; // start() is async
     transportWait.start(cs, callback);
 }

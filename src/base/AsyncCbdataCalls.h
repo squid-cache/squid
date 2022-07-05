@@ -58,10 +58,10 @@ public:
     /* CallDialer API */
     bool canDial(AsyncCall &) { return destination_.valid(); }
     void dial(AsyncCall &) {((*destination_).*method_)(arg1_); }
-    virtual void print(std::ostream &os) const override { os << '(' << arg1_ << ')'; }
+    virtual void print(std::ostream &os) const final { os << '(' << arg1_ << ')'; }
 
-    /* WithArgument1 API */
-    virtual Argument1 &answer() { return arg1_; }
+    /* WithAnswer API */
+    virtual Argument1 &answer() final { return arg1_; }
 
 private:
     CbcPointer<Destination> destination_; ///< object to deliver the answer to

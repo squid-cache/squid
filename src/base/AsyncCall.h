@@ -126,14 +126,60 @@ public:
     virtual Answer &answer() = 0;
 };
 
+// XXX: Move WithAnswer and this to base/AsyncCallback.h.
+/// an AsyncCall for delivery of future results
+template <typename Answer>
+class AsyncCallback
+{
+public:
+    template <class Call>
+    void set(const RefCount<Call> &call)
+    {
+        assert(call);
+        call_ = call;
+        answer_ = &call->dialer.answer();
+        assert(answer_);
+    }
+
+    Answer &answer()
+    {
+        assert(answer_);
+        return *answer_;
+    }
+
+    AsyncCall::Pointer release()
+    {
+        answer_ = nullptr;
+        const auto call = call_;
+        call_ = nullptr;
+        return call;
+    }
+
+    /// whether the callback has been set but not released
+    explicit operator bool() const { return answer_; }
+
+    /// whether the call back is no longer expected
+    bool canceled() const { return call_->canceled(); }
+
+private:
+    /// Optimization: (future) answer inside this->call obtained when it was
+    /// still possible to reach it without dynamic casts and virtual methods.
+    Answer *answer_ = nullptr;
+
+    /// callback carrying the answer
+    AsyncCall::Pointer call_;
+};
+
 /**
  \ingroup AsyncCallAPI
  * This template implements an AsyncCall using a specified Dialer class
  */
-template <class Dialer>
+template <class DialerClass>
 class AsyncCallT: public AsyncCall
 {
 public:
+    using Dialer = DialerClass;
+
     AsyncCallT(int aDebugSection, int aDebugLevel, const char *aName,
                const Dialer &aDialer): AsyncCall(aDebugSection, aDebugLevel, aName),
         dialer(aDialer) {}
@@ -146,6 +192,8 @@ public:
 
     CallDialer *getDialer() { return &dialer; }
 
+    Dialer dialer;
+
 protected:
     virtual bool canFire() {
         return AsyncCall::canFire() &&
@@ -153,15 +201,12 @@ protected:
     }
     virtual void fire() { dialer.dial(*this); }
 
-    Dialer dialer;
-
 private:
     AsyncCallT & operator=(const AsyncCallT &); // not defined. call assignments not permitted.
 };
 
 template <class Dialer>
-inline
-AsyncCall *
+inline RefCount< AsyncCallT<Dialer> >
 asyncCall(int aDebugSection, int aDebugLevel, const char *aName,
           const Dialer &aDialer)
 {
@@ -169,7 +214,7 @@ asyncCall(int aDebugSection, int aDebugLevel, const char *aName,
 }
 
 /** Call scheduling helper. Use ScheduleCallHere if you can. */
-bool ScheduleCall(const char *fileName, int fileLine, AsyncCall::Pointer &call);
+bool ScheduleCall(const char *fileName, int fileLine, const AsyncCall::Pointer &);
 
 /** Call scheduling helper. */
 #define ScheduleCallHere(call) ScheduleCall(__FILE__, __LINE__, (call))

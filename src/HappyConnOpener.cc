@@ -326,10 +326,14 @@ HappyConnOpenerAnswer::~HappyConnOpenerAnswer()
 
 /* HappyConnOpener */
 
-HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const AsyncCall::Pointer &aCall, HttpRequest::Pointer &request, const time_t aFwdStart, int tries, const AccessLogEntry::Pointer &anAle):
+HappyConnOpener::HappyConnOpener(
+    const ResolvedPeers::Pointer &dests,
+    const HttpRequest::Pointer &request,
+    const time_t aFwdStart,
+    const int tries,
+    const AccessLogEntry::Pointer &anAle):
     AsyncJob("HappyConnOpener"),
     fwdStart(aFwdStart),
-    callback_(aCall),
     destinations(dests),
     prime(&HappyConnOpener::notePrimeConnectDone, "HappyConnOpener::notePrimeConnectDone"),
     spare(&HappyConnOpener::noteSpareConnectDone, "HappyConnOpener::noteSpareConnectDone"),
@@ -338,7 +342,6 @@ HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const Asyn
     n_tries(tries)
 {
     assert(destinations);
-    assert(dynamic_cast<WithAnswer<Answer>*>(callback_->getDialer()));
 }
 
 HappyConnOpener::~HappyConnOpener()
@@ -358,6 +361,7 @@ HappyConnOpener::setHost(const char *h)
 void
 HappyConnOpener::start()
 {
+    Assure(callback);
     destinations->notificationPending = false;
     checkForNewConnection();
 }
@@ -365,12 +369,12 @@ HappyConnOpener::start()
 bool
 HappyConnOpener::doneAll() const
 {
-    if (!callback_)
+    if (!callback)
         return true; // (probably found a good path and) informed the requestor
 
     // TODO: Expose AsyncCall::canFire() instead so that code like this can
     // detect gone initiators without the need to explicitly cancel callbacks.
-    if (callback_->canceled())
+    if (callback.canceled())
         return true; // the requestor is gone or has lost interest
 
     if (prime || spare)
@@ -390,7 +394,7 @@ HappyConnOpener::swanSong()
 {
     debugs(17, 5, this);
 
-    if (callback_ && !callback_->canceled())
+    if (callback && !callback.canceled())
         sendFailure();
 
     if (spareWaiting)
@@ -470,14 +474,13 @@ HappyConnOpener::makeError(const err_type type) const
 HappyConnOpener::Answer *
 HappyConnOpener::futureAnswer(const PeerConnectionPointer &conn)
 {
-    if (callback_ && !callback_->canceled()) {
-        const auto answerAccess = dynamic_cast<WithAnswer<Answer> *>(callback_->getDialer());
-        assert(answerAccess);
-        auto &answer = answerAccess->answer();
+    if (callback && !callback.canceled()) {
+        auto &answer = callback.answer();
         answer.conn = conn;
         answer.n_tries = n_tries;
         return &answer;
     }
+    (void)callback.release();
     return nullptr;
 }
 
@@ -489,9 +492,8 @@ HappyConnOpener::sendSuccess(const PeerConnectionPointer &conn, const bool reuse
     if (auto *answer = futureAnswer(conn)) {
         answer->reused = reused;
         assert(!answer->error);
-        ScheduleCallHere(callback_);
+        ScheduleCallHere(callback.release());
     }
-    callback_ = nullptr;
 }
 
 /// cancels the in-progress attempt, making its path a future candidate
@@ -514,9 +516,8 @@ HappyConnOpener::sendFailure()
         answer->error = lastError;
         assert(answer->error.valid());
         lastError = nullptr; // the answer owns it now
-        ScheduleCallHere(callback_);
+        ScheduleCallHere(callback.release());
     }
-    callback_ = nullptr;
 }
 
 void
