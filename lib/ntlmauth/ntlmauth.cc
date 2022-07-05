@@ -12,6 +12,7 @@
 #include "squid.h"
 
 #include <cstring>
+#include <ctime>
 #include <random>
 #if HAVE_STRINGS_H
 #include <strings.h>
