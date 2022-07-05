@@ -108,6 +108,9 @@ if ! git diff --quiet; then
 	exit 1
 fi
 
+made="generated" # a hack: prevents $GeneratedByMe searches matching this file
+GeneratedByMe="This file is $made by scripts/source-maintenance.sh."
+
 # On squid-cache.org we have to use the python scripted md5sum
 HOST=`hostname`
 if test "$HOST" = "squid-cache.org" ; then
@@ -441,8 +444,11 @@ for FILENAME in `git ls-files`; do
 	;;
 
     *.am)
-		applyPluginsTo ${FILENAME} scripts/format-makefile-am.pl || return
-	;;
+        # generated automake files are formatted during their generation
+        if ! grep -q -F "$GeneratedByMe" ${FILENAME}; then
+            applyPluginsTo ${FILENAME} scripts/format-makefile-am.pl || return
+        fi
+        ;;
 
     ChangeLog|CREDITS|CONTRIBUTORS|COPYING|*.png|*.po|*.pot|rfcs/|*.txt|test-suite/squidconf/empty|.bzrignore)
         # we do not enforce copyright blurbs in:
@@ -479,31 +485,52 @@ done
     run_ processDebugMessages || return
 }
 
-printAmFile ()
+printRawAmFile ()
 {
     sed -e 's%\ \*%##%; s%/\*%##%; s%##/%##%' < scripts/boilerplate.h
+
+    echo "## $GeneratedByMe"
+    echo
+
     echo -n "$1 ="
-    git ls-files $2$3 | sed -e s%$2%%g | sort -u | while read f; do
+    # Only some files are formed from *.po filenames, but all such files
+    # should list *.lang filenames instead.
+    git ls-files $2$3 | sed -e s%$2%%g -e 's%\.po%\.lang%g' | while read f; do
         echo " \\"
         echo -n "    ${f}"
     done
     echo ""
 }
 
+generateAmFile ()
+{
+    amFile="$1"
+    shift
+
+    # format immediately/here instead of in srcFormat to avoid misleading
+    # "NOTICE: File ... changed by scripts/format-makefile-am.pl" in srcFormat
+    printRawAmFile "$@" | scripts/format-makefile-am.pl > $amFile.new
+
+    # Distinguishing generation-only changes from formatting-only changes is
+    # difficult, so we only check/report cumulative changes. Most interesting
+    # changes are triggered by printRawAmFile() finding new entries.
+    updateIfChanged $amFile $amFile.new 'by generateAmFile()'
+}
+
 # Build icons install include from current icons available
-printAmFile ICONS "icons/" "silk/*" > icons/icon.am
+generateAmFile icons/icon.am ICONS "icons/" "silk/*"
 
 # Build templates install include from current templates available
-printAmFile ERROR_TEMPLATES "errors/" "templates/ERR_*" > errors/template.am
+generateAmFile errors/template.am ERROR_TEMPLATES "errors/" "templates/ERR_*"
 
 # Build errors translation install include from current .PO available
-printAmFile TRANSLATE_LANGUAGES "errors/" "*.po" | sed 's%\.po%\.lang%g' > errors/language.am
+generateAmFile errors/language.am TRANSLATE_LANGUAGES "errors/" "*.po"
 
 # Build manuals translation install include from current .PO available
-printAmFile TRANSLATE_LANGUAGES "doc/manuals/" "*.po" | sed 's%\.po%\.lang%g' > doc/manuals/language.am
+generateAmFile doc/manuals/language.am TRANSLATE_LANGUAGES "doc/manuals/" "*.po"
 
 # Build STUB framework include from current stub_* available
-printAmFile STUB_SOURCE "src/" "tests/stub_*.cc" > src/tests/Stub.am
+generateAmFile src/tests/Stub.am STUB_SOURCE "src/" "tests/stub_*.cc"
 
 # Build the GPERF generated content
 make -C src/http gperf-files
