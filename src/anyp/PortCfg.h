@@ -32,12 +32,12 @@ public:
     /// creates the same port configuration but listening on any IPv4 address
     PortCfg *ipV4clone() const;
 
+    /// identifies this port configuration using squid.conf syntax
+    void print(std::ostream &) const;
+
     /* CodeContext API */
     virtual ScopedId codeContextGist() const override;
     virtual std::ostream &detailCodeContext(std::ostream &os) const override;
-
-    /// identifies this port configuration using squid.conf syntax
-    void print(std::ostream &) const;
 
     PortCfgPointer next;
 
