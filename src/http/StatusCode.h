@@ -54,7 +54,7 @@ typedef enum {
     scGone = 410,
     scLengthRequired = 411,
     scPreconditionFailed = 412,
-    scPayloadTooLarge = 413,
+    scContentTooLarge = 413,
     scUriTooLong = 414,
     scUnsupportedMediaType = 415,
     scRequestedRangeNotSatisfied = 416,

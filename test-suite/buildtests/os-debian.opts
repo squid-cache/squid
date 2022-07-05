@@ -15,7 +15,7 @@ MAKETEST="check installcheck uninstallcheck"
 #
 # This is to test any release build against what the package maintainers are seeing
 #
-# NP: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the 
+# NP: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the
 #     distcheck target recursive tests beteen scripted runs.
 #     we use it to perform the same duty between our nested scripts.
 DISTCHECK_CONFIGURE_FLAGS=" \

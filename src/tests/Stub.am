@@ -64,6 +64,7 @@ STUB_SOURCE = \
     tests/stub_libsecurity.cc \
     tests/stub_libsslsquid.cc \
     tests/stub_libstore.cc \
+    tests/stub_libtime.cc \
     tests/stub_main_cc.cc \
     tests/stub_MemBuf.cc \
     tests/stub_mem_node.cc \
@@ -75,7 +76,6 @@ STUB_SOURCE = \
     tests/stub_Port.cc \
     tests/stub_redirect.cc \
     tests/stub_SBuf.cc \
-    tests/stub_SBufDetailedStats.cc \
     tests/stub_stat.cc \
     tests/stub_StatHist.cc \
     tests/stub_stmem.cc \
@@ -86,7 +86,6 @@ STUB_SOURCE = \
     tests/stub_store_rebuild.cc \
     tests/stub_store_stats.cc \
     tests/stub_store_swapout.cc \
-    tests/stub_time.cc \
     tests/stub_tools.cc \
     tests/stub_tunnel.cc \
     tests/stub_UdsOp.cc \

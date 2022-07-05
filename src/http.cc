@@ -16,6 +16,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "base/AsyncJobCalls.h"
+#include "base/DelayedAsyncCalls.h"
 #include "base/Raw.h"
 #include "base/TextException.h"
 #include "base64.h"
@@ -24,7 +25,6 @@
 #include "comm/Connection.h"
 #include "comm/Read.h"
 #include "comm/Write.h"
-#include "CommRead.h"
 #include "error/Detail.h"
 #include "errorpage.h"
 #include "fd.h"
@@ -53,7 +53,6 @@
 #include "RefreshPattern.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "StrList.h"
@@ -77,16 +76,9 @@ static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeader
 
 HttpStateData::HttpStateData(FwdState *theFwdState) :
     AsyncJob("HttpStateData"),
-    Client(theFwdState),
-    lastChunk(0),
-    httpChunkDecoder(NULL),
-    payloadSeen(0),
-    payloadTruncated(0),
-    sawDateGoBack(false)
+    Client(theFwdState)
 {
     debugs(11,5, "HttpStateData " << this << " created");
-    ignoreCacheControl = false;
-    surrogateNoStore = false;
     serverConnection = fwd->serverConnection();
 
     if (fwd->serverConnection() != NULL)
@@ -531,7 +523,7 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
     case Http::scConflict: // TODO: is this shareable?
     case Http::scLengthRequired:
     case Http::scPreconditionFailed:
-    case Http::scPayloadTooLarge:
+    case Http::scContentTooLarge:
     case Http::scUnsupportedMediaType:
     case Http::scUnprocessableEntity:
     case Http::scLocked: // TODO: is this shareable?
@@ -1172,12 +1164,11 @@ HttpStateData::persistentConnStatus() const
     return statusIfComplete();
 }
 
-static void
-readDelayed(void *context, CommRead const &)
+void
+HttpStateData::noteDelayAwareReadChance()
 {
-    HttpStateData *state = static_cast<HttpStateData*>(context);
-    state->flags.do_next_read = true;
-    state->maybeReadVirginBody();
+    flags.do_next_read = true;
+    maybeReadVirginBody();
 }
 
 void
@@ -1215,9 +1206,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
     rd.size = entry->bytesWanted(Range<size_t>(0, inBuf.spaceSize()));
 
     if (rd.size <= 0) {
-        assert(entry->mem_obj);
-        AsyncCall::Pointer nilCall;
-        entry->mem_obj->delayRead(DeferredRead(readDelayed, this, CommRead(io.conn, NULL, 0, nilCall)));
+        delayRead();
         return;
     }
 

@@ -25,15 +25,15 @@ password_conversation(int, const struct pam_message **, struct pam_response **, 
 static struct pam_conv conv = { &password_conversation, 0 };
 ]])], [
    squid_cv_pam_conv_signature=linux
-], [ 
+], [
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <security/pam_appl.h>
 static int
 password_conversation(int, struct pam_message **, struct pam_response **, void *) { return 0; }
 static struct pam_conv conv = { &password_conversation, 0 };
-]])], [ 
+]])], [
   squid_cv_pam_conv_signature=solaris
- ], [ 
+ ], [
   squid_cv_pam_conv_signature=unknown
   ])
     ])

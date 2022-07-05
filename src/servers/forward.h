@@ -24,7 +24,7 @@ class Server;
 } // namespace One
 
 /// create a new HTTP connection handler; never returns NULL
-ConnStateData *NewServer(MasterXactionPointer &xact);
+ConnStateData *NewServer(const MasterXaction::Pointer &xact);
 
 } // namespace Http
 
@@ -32,7 +32,7 @@ namespace Https
 {
 
 /// create a new HTTPS connection handler; never returns NULL
-ConnStateData *NewServer(MasterXactionPointer &xact);
+ConnStateData *NewServer(const MasterXaction::Pointer &xact);
 
 } // namespace Https
 

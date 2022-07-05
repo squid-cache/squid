@@ -59,8 +59,8 @@ typedef int bool;
 // taken from Squid-2.x
 // NOTE!  We must preserve the order of this list!
 enum SquidMetaType {
-  STORE_META_VOID,		// should not come up 
-  STORE_META_KEY_URL,		// key w/ keytype 
+  STORE_META_VOID,		// should not come up
+  STORE_META_KEY_URL,		// key w/ keytype
   STORE_META_KEY_SHA,
   STORE_META_KEY_MD5,
   STORE_META_URL,		// the url , if not in the header

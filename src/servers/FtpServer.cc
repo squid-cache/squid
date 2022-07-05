@@ -241,21 +241,24 @@ Ftp::Server::noteBodyConsumerAborted(BodyPipe::Pointer ptr)
 void
 Ftp::Server::AcceptCtrlConnection(const CommAcceptCbParams &params)
 {
-    MasterXaction::Pointer xact = params.xaction;
-    AnyP::PortCfgPointer s = xact->squidPort;
+    Assure(params.port);
 
     // NP: it is possible the port was reconfigured when the call or accept() was queued.
 
     if (params.flag != Comm::OK) {
         // Its possible the call was still queued when the client disconnected
-        debugs(33, 2, s->listenConn << ": FTP accept failure: " << xstrerr(params.xerrno));
+        debugs(33, 2, params.port->listenConn << ": FTP accept failure: " << xstrerr(params.xerrno));
         return;
     }
 
     debugs(33, 4, params.conn << ": accepted");
     fd_note(params.conn->fd, "client ftp connect");
 
+    const auto xact = MasterXaction::MakePortful(params.port);
+    xact->tcpClient = params.conn;
+
     AsyncJob::Start(new Server(xact));
+    // XXX: do not abandon the MasterXaction object
 }
 
 void

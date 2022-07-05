@@ -17,7 +17,6 @@
 #include "MessageBucket.h"
 #include "MessageDelayPools.h"
 #include "Parsing.h"
-#include "SquidTime.h"
 #include "Store.h"
 
 #include <algorithm>

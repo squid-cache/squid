@@ -35,15 +35,11 @@
 #include "refresh.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "store_key_md5.h"
 #include "tools.h"
 #include "wordlist.h"
-
-// for tvSubUsec() which should be in SquidTime.h
-#include "util.h"
 
 #include <cerrno>
 

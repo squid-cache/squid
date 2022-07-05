@@ -34,7 +34,6 @@
 #include "rfc1738.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "tools.h"
@@ -1580,7 +1579,7 @@ ftpReadMdtm(Ftp::Gateway * ftpState)
     debugs(9, 3, MYNAME);
 
     if (code == 213) {
-        ftpState->mdtm = parse_iso3307_time(ftpState->ctrl.last_reply);
+        ftpState->mdtm = Time::ParseIso3307(ftpState->ctrl.last_reply);
         ftpState->unhack();
     } else if (code < 0) {
         ftpFail(ftpState);

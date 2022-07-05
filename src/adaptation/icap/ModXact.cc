@@ -32,7 +32,6 @@
 #include "MasterXaction.h"
 #include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
-#include "SquidTime.h"
 
 // flow and terminology:
 //     HTTP| --> receive --> encode --> write --> |network
@@ -437,7 +436,7 @@ void Adaptation::Icap::ModXact::virginConsume()
     const bool wantToPostpone = isRepeatable || canStartBypass || protectGroupBypass;
 
     // Why > 2? HttpState does not use the last bytes in the buffer
-    // because delayAwareRead() is arguably broken. See
+    // because Client::delayRead() is arguably broken. See
     // HttpStateData::maybeReadVirginBody for more details.
     if (wantToPostpone && bp.buf().spaceSize() > 2) {
         // Postponing may increase memory footprint and slow the HTTP side
@@ -1389,7 +1388,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
     const Adaptation::ServiceConfig &s = service().cfg();
     buf.appendf("%s " SQUIDSTRINGPH " ICAP/1.0\r\n", s.methodStr(), SQUIDSTRINGPRINT(s.uri));
     buf.appendf("Host: " SQUIDSTRINGPH ":%d\r\n", SQUIDSTRINGPRINT(s.host), s.port);
-    buf.appendf("Date: %s\r\n", mkrfc1123(squid_curtime));
+    buf.appendf("Date: %s\r\n", Time::FormatRfc1123(squid_curtime));
 
     if (!TheConfig.reuse_connections)
         buf.appendf("Connection: close\r\n");

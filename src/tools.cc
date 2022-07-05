@@ -28,7 +28,6 @@
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
-#include "SquidTime.h"
 #include "store/Disks.h"
 #include "tools.h"
 #include "wordlist.h"

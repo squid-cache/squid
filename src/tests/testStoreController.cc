@@ -9,7 +9,6 @@
 #include "squid.h"
 #include "MemObject.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "store/Disks.h"
 #include "StoreSearch.h"

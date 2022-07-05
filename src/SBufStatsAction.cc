@@ -11,8 +11,46 @@
 #include "ipc/Messages.h"
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/Registration.h"
-#include "sbuf/DetailedStats.h"
+#include "sbuf/Stats.h"
 #include "SBufStatsAction.h"
+
+/// creates a new size-at-destruct-time histogram
+static StatHist *
+makeDestructTimeHist() {
+    const auto stats = new StatHist;
+    stats->logInit(100, 30.0, 128000.0);
+    return stats;
+}
+
+/// the SBuf size-at-destruct-time histogram
+static StatHist &
+collectSBufDestructTimeStats()
+{
+    static auto stats = makeDestructTimeHist();
+    return *stats;
+}
+
+/// the MemBlob size-at-destruct-time histogram
+static StatHist &
+collectMemBlobDestructTimeStats()
+{
+    static auto stats = makeDestructTimeHist();
+    return *stats;
+}
+
+/// record the size an SBuf had when it was destructed
+static void
+recordSBufSizeAtDestruct(const size_t sz)
+{
+    collectSBufDestructTimeStats().count(static_cast<double>(sz));
+}
+
+/// record the size a MemBlob had when it was destructed
+static void
+recordMemBlobSizeAtDestruct(const size_t sz)
+{
+    collectMemBlobDestructTimeStats().count(static_cast<double>(sz));
+}
 
 SBufStatsAction::SBufStatsAction(const Mgr::CommandPointer &cmd_):
     Action(cmd_)
@@ -85,6 +123,8 @@ SBufStatsAction::unpack(const Ipc::TypedMsgHdr& msg)
 void
 SBufStatsAction::RegisterWithCacheManager()
 {
+    SBufStats::MemBlobSizeAtDestructRecorder = &recordMemBlobSizeAtDestruct;
+    SBufStats::SBufSizeAtDestructRecorder = &recordSBufSizeAtDestruct;
     Mgr::RegisterAction("sbuf", "String-Buffer statistics", &SBufStatsAction::Create, 0, 1);
 }
 

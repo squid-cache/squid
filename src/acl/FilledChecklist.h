@@ -87,7 +87,10 @@ public:
     char *snmp_community;
 #endif
 
-    /// SSL [certificate validation] errors, in undefined order
+    /// TLS server [certificate validation] errors, in undefined order.
+    /// The errors are accumulated as Squid goes through validation steps
+    /// and server certificates. They are cleared on connection retries.
+    /// For sslproxy_cert_error checks, contains just the current/last error.
     const Security::CertErrors *sslErrors;
 
     /// Peer certificate being checked by ssl_verify_cb() and by

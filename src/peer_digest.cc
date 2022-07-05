@@ -22,7 +22,6 @@
 #include "mime_header.h"
 #include "neighbors.h"
 #include "PeerDigest.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "store_key_md5.h"
 #include "StoreClient.h"

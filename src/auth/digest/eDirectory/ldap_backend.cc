@@ -11,13 +11,14 @@
  */
 #include "squid.h"
 
+#include <cstdio>
+
 #define LDAP_DEPRECATED 1
 
 #include "auth/digest/eDirectory/ldap_backend.h"
 
 #if _SQUID_WINDOWS_ && !_SQUID_CYGWIN_
 
-#define snprintf _snprintf
 #include <windows.h>
 #include <winldap.h>
 #ifndef LDAPAPI
@@ -177,7 +178,7 @@ ldap_escape_value(char *escaped, int size, const char *src)
             if (size > 0) {
                 *escaped = '\\';
                 ++escaped;
-                snprintf(escaped, 3, "%02x", (int) *src);
+                std::snprintf(escaped, 3, "%02x", (int) *src);
                 ++src;
                 escaped += 2;
             }
@@ -204,7 +205,9 @@ getpassword(char *login, char *realm)
     char *password = NULL;
     int retry = 0;
     char filter[8192];
+    *filter = '\0';
     char searchbase[8192];
+    *searchbase = '\0';
     char *universal_password = NULL;
     size_t universal_password_len = 256;
     int nmas_res = 0;
@@ -212,9 +215,9 @@ getpassword(char *login, char *realm)
     if (ld) {
         if (usersearchfilter) {
             char escaped_login[1024];
-            snprintf(searchbase, sizeof(searchbase), "%s", userbasedn);
+            std::snprintf(searchbase, sizeof(searchbase), "%s", userbasedn);
             ldap_escape_value(escaped_login, sizeof(escaped_login), login);
-            snprintf(filter, sizeof(filter), usersearchfilter, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login);
+            std::snprintf(filter, sizeof(filter), usersearchfilter, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login);
 
 retrysrch:
             debug("user filter '%s', searchbase '%s'\n", filter, searchbase);
@@ -249,7 +252,7 @@ retrysrch:
                 }
             }
         } else if (userdnattr) {
-            snprintf(searchbase, 8192, "%s=%s, %s", userdnattr, login, userbasedn);
+            std::snprintf(searchbase, 8192, "%s=%s, %s", userdnattr, login, userbasedn);
 
 retrydnattr:
             debug("searchbase '%s'\n", searchbase);
@@ -462,7 +465,7 @@ LDAPArguments(int argc, char **argv)
             if (ldapServer) {
                 int len = strlen(ldapServer) + 1 + strlen(value) + 1;
                 char *newhost = static_cast<char*>(xmalloc(len));
-                snprintf(newhost, len, "%s %s", ldapServer, value);
+                std::snprintf(newhost, len, "%s %s", ldapServer, value);
                 free(ldapServer);
                 ldapServer = newhost;
             } else {
@@ -591,7 +594,7 @@ LDAPArguments(int argc, char **argv)
         if (ldapServer) {
             int len = strlen(ldapServer) + 1 + strlen(value) + 1;
             char *newhost = static_cast<char*>(xmalloc(len));
-            snprintf(newhost, len, "%s %s", ldapServer, value);
+            std::snprintf(newhost, len, "%s %s", ldapServer, value);
             free(ldapServer);
             ldapServer = newhost;
         } else {

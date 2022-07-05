@@ -12,6 +12,7 @@
 #include "AccessLogEntry.h"
 #include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
+#include "comm.h"
 #include "comm/Connection.h"
 #include "CommCalls.h"
 #include "errorpage.h"
@@ -21,7 +22,6 @@
 #include "ipc/Port.h"
 #include "mgr/Forwarder.h"
 #include "mgr/Request.h"
-#include "SquidTime.h"
 #include "Store.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Mgr, Forwarder);

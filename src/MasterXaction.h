@@ -45,7 +45,7 @@ public:
     template <XactionInitiator::Initiator anInitiator>
     static Pointer MakePortless()
     {
-        static_assert(anInitiator != XactionInitiator::initClient, "a portless MasterXaction");
+        static_assert(anInitiator != XactionInitiator::initClient, "not an HTTP or FTP client");
         return new MasterXaction(anInitiator, nullptr);
     }
 
