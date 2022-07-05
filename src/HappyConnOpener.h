@@ -105,28 +105,6 @@ class HappyConnOpener: public AsyncJob
 public:
     typedef HappyConnOpenerAnswer Answer;
 
-    /// AsyncCall dialer for our callback. Gives us access to callback Answer.
-    template <class Initiator>
-    class CbDialer: public CallDialer, public Answer {
-    public:
-        // initiator method to receive our answer
-        typedef void (Initiator::*Method)(Answer &);
-
-        CbDialer(Method method, Initiator *initiator): initiator_(initiator), method_(method) {}
-        virtual ~CbDialer() = default;
-
-        /* CallDialer API */
-        bool canDial(AsyncCall &) { return initiator_.valid(); }
-        void dial(AsyncCall &) {((*initiator_).*method_)(*this); }
-        virtual void print(std::ostream &os) const override {
-            os << '(' << static_cast<const Answer&>(*this) << ')';
-        }
-
-    private:
-        CbcPointer<Initiator> initiator_; ///< object to deliver the answer to
-        Method method_; ///< initiator_ method to call with the answer
-    };
-
 public:
     HappyConnOpener(const ResolvedPeersPointer &, const AsyncCall::Pointer &,  HttpRequestPointer &, const time_t aFwdStart, int tries, const AccessLogEntryPointer &al);
     virtual ~HappyConnOpener() override;

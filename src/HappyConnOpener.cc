@@ -338,7 +338,7 @@ HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const Asyn
     n_tries(tries)
 {
     assert(destinations);
-    assert(dynamic_cast<Answer*>(callback_->getDialer()));
+    assert(dynamic_cast<WithAnswer<Answer>*>(callback_->getDialer()));
 }
 
 HappyConnOpener::~HappyConnOpener()
@@ -471,11 +471,12 @@ HappyConnOpener::Answer *
 HappyConnOpener::futureAnswer(const PeerConnectionPointer &conn)
 {
     if (callback_ && !callback_->canceled()) {
-        const auto answer = dynamic_cast<Answer *>(callback_->getDialer());
-        assert(answer);
-        answer->conn = conn;
-        answer->n_tries = n_tries;
-        return answer;
+        const auto answerAccess = dynamic_cast<WithAnswer<Answer> *>(callback_->getDialer());
+        assert(answerAccess);
+        auto &answer = answerAccess->answer();
+        answer.conn = conn;
+        answer.n_tries = n_tries;
+        return &answer;
     }
     return nullptr;
 }

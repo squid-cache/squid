@@ -1384,7 +1384,8 @@ TunnelStateData::startConnecting()
 
     assert(!destinations->empty());
     assert(!transporting());
-    AsyncCall::Pointer callback = asyncCall(17, 5, "TunnelStateData::noteConnection", HappyConnOpener::CbDialer<TunnelStateData>(&TunnelStateData::noteConnection, this));
+    const auto dialer = cbcCallbackDialer(this, &TunnelStateData::noteConnection);
+    AsyncCall::Pointer callback = asyncCall(17, 5, "TunnelStateData::noteConnection", dialer);
     const auto cs = new HappyConnOpener(destinations, callback, request, startTime, 0, al);
     cs->setHost(request->url.host());
     cs->setRetriable(false);

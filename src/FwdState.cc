@@ -1146,7 +1146,8 @@ FwdState::connectStart()
 
     request->hier.startPeerClock();
 
-    AsyncCall::Pointer callback = asyncCall(17, 5, "FwdState::noteConnection", HappyConnOpener::CbDialer<FwdState>(&FwdState::noteConnection, this));
+    const auto dialer = cbcCallbackDialer(this, &FwdState::noteConnection);
+    AsyncCall::Pointer callback = asyncCall(17, 5, "FwdState::noteConnection", dialer);
 
     HttpRequest::Pointer cause = request;
     const auto cs = new HappyConnOpener(destinations, callback, cause, start_t, n_tries, al);

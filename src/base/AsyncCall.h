@@ -115,6 +115,17 @@ public:
     virtual void print(std::ostream &os) const = 0;
 };
 
+/// access to a callback result carried by an async CallDialer
+template <typename Answer>
+class WithAnswer
+{
+public:
+    virtual ~WithAnswer() = default;
+
+    /// callback results setter
+    virtual Answer &answer() = 0;
+};
+
 /**
  \ingroup AsyncCallAPI
  * This template implements an AsyncCall using a specified Dialer class
