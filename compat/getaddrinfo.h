@@ -49,7 +49,7 @@
 /* Structure and prototypes taken from RFC 2553 */
 
 /* These functions are provided by the OS */
-#if !HAVE_DECL_GETADDRINFO
+#if !HAVE_DECL_GETADDRINFO || 1
 
 #ifndef EAI_SYSTEM
 /* Not defined on mingw32. */
@@ -66,6 +66,7 @@
 #endif
 
 /* RFC 2553 / Posix resolver */
+// struct addrinfo;
 SQUIDCEXTERN int xgetaddrinfo (const char *nodename, const char *servname,
                                const struct addrinfo *hints, struct addrinfo **res);
 #define getaddrinfo xgetaddrinfo

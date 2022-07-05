@@ -84,7 +84,6 @@
 
 #include "compat/assert.h"
 #include "compat/compat_shared.h"
-#include "compat/getaddrinfo.h"
 #include "compat/getnameinfo.h"
 #include "compat/inet_ntop.h"
 #include "compat/inet_pton.h"

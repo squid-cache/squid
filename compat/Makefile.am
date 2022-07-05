@@ -31,8 +31,6 @@ libcompatsquid_la_SOURCES = \
 	eui64_aton.c \
 	eui64_aton.h \
 	fdsetsize.h \
-	getaddrinfo.cc \
-	getaddrinfo.h \
 	getnameinfo.cc \
 	getnameinfo.h \
 	inet_ntop.cc \

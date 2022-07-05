@@ -3181,7 +3181,8 @@ AC_REPLACE_FUNCS(\
 	tempnam \
 )
 
-AC_CHECK_DECLS([getaddrinfo,getnameinfo,inet_ntop,inet_pton,InetNtopA,InetPtonA],,,[
+# TODO: recheck all these again
+AC_CHECK_DECLS([getnameinfo,inet_ntop,inet_pton,InetNtopA,InetPtonA],,,[
 /*
  * BSD requires sys/types.h, sys/socket.h, netinet/in.h, netdb.h, arpa/inet.h
  * Linux requires sys/types.h, sys/socket.h, arpa/inet.h
