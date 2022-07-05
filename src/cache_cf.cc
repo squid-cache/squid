@@ -1002,21 +1002,20 @@ configDoConfigure(void)
     for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (!s->secure.encryptTransport)
             continue;
-        debugs(3, DBG_IMPORTANT, "Initializing " << AnyP::UriScheme(s->transport.protocol) << "_port " << s->s << " TLS contexts");
+        debugs(3, DBG_IMPORTANT, "Initializing " << *s << " TLS contexts");
         s->secure.initServerContexts(*s);
     }
 
 #if USE_OPENSSL
     for (auto s = HttpPortList; s; s = s->next) {
-        const auto &scheme = AnyP::UriScheme(s->transport.protocol).image();
         if (s->flags.tunnelSslBumping()) {
             auto &rawFlags = s->flags.rawConfig();
             if (!Config.accessList.ssl_bump) {
-                debugs(3, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << scheme << "_port " << s->s);
+                debugs(3, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << *s);
                 rawFlags.tunnelSslBumping = false;
             }
             if (!s->secure.staticContext && !s->secure.generateHostCertificates) {
-                debugs(3, DBG_IMPORTANT, "Will not bump SSL at " << scheme << "_port " << s->s << " due to TLS initialization failure.");
+                debugs(3, DBG_IMPORTANT, "Will not bump SSL at " << *s << " due to TLS initialization failure.");
                 rawFlags.tunnelSslBumping = false;
                 if (s->transport.protocol == AnyP::PROTO_HTTP)
                     s->secure.encryptTransport = false;
@@ -3448,26 +3447,24 @@ parsePortSpecification(const AnyP::PortCfgPointer &s, char *token)
     s->name = xstrdup(token);
     s->connection_auth_disabled = false;
 
-    const SBuf &portType = AnyP::UriScheme(s->transport.protocol).image();
-
     if (*token == '[') {
         /* [ipv6]:port */
         host = token + 1;
         t = strchr(host, ']');
         if (!t) {
-            debugs(3, DBG_CRITICAL, "FATAL: " << portType << "_port: missing ']' on IPv6 address: " << token);
+            debugs(3, DBG_CRITICAL, "FATAL: " << s->directiveName << ": missing ']' on IPv6 address: " << token);
             self_destruct();
             return;
         }
         *t = '\0';
         ++t;
         if (*t != ':') {
-            debugs(3, DBG_CRITICAL, "FATAL: " << portType << "_port: missing Port in: " << token);
+            debugs(3, DBG_CRITICAL, "FATAL: " << s->directiveName << ": missing Port in: " << token);
             self_destruct();
             return;
         }
         if (!Ip::EnableIpv6) {
-            debugs(3, DBG_CRITICAL, "FATAL: " << portType << "_port: IPv6 is not available.");
+            debugs(3, DBG_CRITICAL, "FATAL: " << s->directiveName << ": IPv6 is not available.");
             self_destruct();
             return;
         }
@@ -3481,15 +3478,15 @@ parsePortSpecification(const AnyP::PortCfgPointer &s, char *token)
 
     } else if (strtol(token, &junk, 10) && !*junk) {
         port = xatos(token);
-        debugs(3, 3, portType << "_port: found Listen on Port: " << port);
+        debugs(3, 3, s->directiveName << ": found Listen on Port: " << port);
     } else {
-        debugs(3, DBG_CRITICAL, "FATAL: " << portType << "_port: missing Port: " << token);
+        debugs(3, DBG_CRITICAL, "FATAL: " << s->directiveName << ": missing Port: " << token);
         self_destruct();
         return;
     }
 
     if (port == 0 && host != NULL) {
-        debugs(3, DBG_CRITICAL, "FATAL: " << portType << "_port: Port cannot be 0: " << token);
+        debugs(3, DBG_CRITICAL, "FATAL: " << s->directiveName << ": Port cannot be 0: " << token);
         self_destruct();
         return;
     }
@@ -3499,21 +3496,21 @@ parsePortSpecification(const AnyP::PortCfgPointer &s, char *token)
         s->s.port(port);
         if (!Ip::EnableIpv6)
             s->s.setIPv4();
-        debugs(3, 3, portType << "_port: found Listen on wildcard address: *:" << s->s.port());
+        debugs(3, 3, s->directiveName << ": found Listen on wildcard address: *:" << s->s.port());
     } else if ( (s->s = host) ) { /* check/parse numeric IPA */
         s->s.port(port);
         if (!Ip::EnableIpv6)
             s->s.setIPv4();
-        debugs(3, 3, portType << "_port: Listen on Host/IP: " << host << " --> " << s->s);
+        debugs(3, 3, s->directiveName << ": Listen on Host/IP: " << host << " --> " << s->s);
     } else if ( s->s.GetHostByName(host) ) { /* check/parse for FQDN */
         /* do not use ipcache */
         s->defaultsite = xstrdup(host);
         s->s.port(port);
         if (!Ip::EnableIpv6)
             s->s.setIPv4();
-        debugs(3, 3, portType << "_port: found Listen as Host " << s->defaultsite << " on IP: " << s->s);
+        debugs(3, 3, s->directiveName << ": found Listen as Host " << s->defaultsite << " on IP: " << s->s);
     } else {
-        debugs(3, DBG_CRITICAL, "FATAL: " << portType << "_port: failed to resolve Host/IP: " << host);
+        debugs(3, DBG_CRITICAL, "FATAL: " << s->directiveName << ": failed to resolve Host/IP: " << host);
         self_destruct();
     }
 }
@@ -3763,8 +3760,7 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
 void
 add_http_port(char *portspec)
 {
-    AnyP::PortCfgPointer s = new AnyP::PortCfg(AnyP::TrafficModeFlags::httpPort);
-    s->transport = parsePortProtocol(SBuf("HTTP"));
+    AnyP::PortCfgPointer s = new AnyP::PortCfg(SBuf("http_port"));
     parsePortSpecification(s, portspec);
     // we may need to merge better if the above returns a list with clones
     assert(s->next == NULL);
@@ -3775,25 +3771,9 @@ add_http_port(char *portspec)
 static void
 parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
 {
-    SBuf protoName;
-    AnyP::TrafficModeFlags::PortKind portKind;
-    if (strcmp(optionName, "http_port") == 0 ||
-            strcmp(optionName, "ascii_port") == 0) {
-        protoName = "HTTP";
-        portKind = AnyP::TrafficModeFlags::httpPort;
-    }
-    else if (strcmp(optionName, "https_port") == 0) {
-        protoName = "HTTPS";
-        portKind = AnyP::TrafficModeFlags::httpsPort;
-    } else {
-        assert(strcmp(optionName, "ftp_port") == 0);
-        protoName = "FTP";
-        portKind = AnyP::TrafficModeFlags::ftpPort;
-    }
-    if (protoName.isEmpty()) {
-        self_destruct();
-        return;
-    }
+    SBuf directive(optionName);
+    if (directive.cmp("ascii_port") == 0)
+        directive.assign("http_port");
 
     char *token = ConfigParser::NextToken();
 
@@ -3802,8 +3782,7 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
         return;
     }
 
-    AnyP::PortCfgPointer s = new AnyP::PortCfg(portKind);
-    s->transport = parsePortProtocol(protoName); // default; protocol=... overwrites
+    AnyP::PortCfgPointer s = new AnyP::PortCfg(directive);
     parsePortSpecification(s, token);
 
     /* parse options ... */
@@ -3834,7 +3813,7 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
             self_destruct();
             return;
         }
-    } else if (protoName.cmp("FTP") == 0) {
+    } else if (s->transport.protocol == AnyP::PROTO_FTP) {
         /* ftp_port does not support ssl-bump */
         if (rawFlags.tunnelSslBumping) {
             debugs(3, DBG_CRITICAL, "FATAL: ssl-bump is not supported for ftp_port.");
@@ -3856,7 +3835,7 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
 
     if (s->secure.encryptTransport) {
         if (s->secure.certs.empty()) {
-            debugs(3, DBG_CRITICAL, "FATAL: " << AnyP::UriScheme(s->transport.protocol) << "_port requires a cert= parameter");
+            debugs(3, DBG_CRITICAL, "FATAL: " << s->directiveName << " requires a cert= parameter");
             self_destruct();
             return;
         }
@@ -3875,28 +3854,18 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
 }
 
 static void
-dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
+dump_generic_port(StoreEntry * e, const AnyP::PortCfgPointer &s)
 {
-    char buf[MAX_IPSTRLEN];
+    PackableStream os(*e);
+    os << *s;
 
-    storeAppendPrintf(e, "%s %s",
-                      n,
-                      s->s.toUrl(buf,MAX_IPSTRLEN));
+    // MODES and specific sub-options.
+
+    os << s->flags;
+    os.flush();
 
     const auto &rawFlags = s->flags.rawConfig();
-    // MODES and specific sub-options.
-    if (rawFlags.natIntercept)
-        storeAppendPrintf(e, " intercept");
-
-    else if (rawFlags.tproxyIntercept)
-        storeAppendPrintf(e, " tproxy");
-
-    else if (s->flags.proxySurrogate())
-        storeAppendPrintf(e, " require-proxy-header");
-
-    else if (rawFlags.accelSurrogate) {
-        storeAppendPrintf(e, " accel");
-
+    if (rawFlags.accelSurrogate) {
         if (s->vhost)
             storeAppendPrintf(e, " vhost");
 
@@ -3957,11 +3926,6 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
         }
     }
 
-#if USE_OPENSSL
-    if (rawFlags.tunnelSslBumping)
-        storeAppendPrintf(e, " ssl-bump");
-#endif
-
     s->secure.dumpCfg(e, "tls-");
 }
 
@@ -3969,8 +3933,10 @@ static void
 dump_PortCfg(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
 {
     for (AnyP::PortCfgPointer p = s; p != NULL; p = p->next) {
-        dump_generic_port(e, n, p);
-        storeAppendPrintf(e, "\n");
+        if (p->directiveName.cmp(n) == 0) {
+            dump_generic_port(e, p);
+            storeAppendPrintf(e, "\n");
+        }
     }
 }
 

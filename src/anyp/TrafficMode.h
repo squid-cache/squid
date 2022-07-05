@@ -9,6 +9,8 @@
 #ifndef SQUID_ANYP_TRAFFIC_MODE_H
 #define SQUID_ANYP_TRAFFIC_MODE_H
 
+#include <iosfwd>
+
 namespace AnyP
 {
 
@@ -122,7 +124,11 @@ public:
 
     TrafficModeFlags &rawConfig() { return flags_; }
 
-    std::ostream &print(std::ostream &) const;
+    /// \copydoc TrafficModeFlags::portKind
+    TrafficModeFlags::PortKind portKind() const { return flags_.portKind; }
+
+    /// reports configured port flags using squid.conf names/syntax
+    void print(std::ostream &) const;
 
 private:
     /// \returns true for HTTPS ports with SSL bump receiving PROXY protocol traffic
@@ -136,29 +142,10 @@ private:
 };
 
 inline std::ostream &
-TrafficMode::print(std::ostream &os) const
-{
-    if (flags_.natIntercept)
-        os << " NAT intercepted";
-    else if (flags_.tproxyIntercept)
-        os << " TPROXY intercepted";
-    else if (flags_.accelSurrogate)
-        os << " reverse-proxy";
-    else
-        os << " forward-proxy";
-
-    if (flags_.tunnelSslBumping)
-        os << " SSL bumped";
-    if (proxySurrogate())
-        os << " (with PROXY protocol header)";
-
-    return os;
-}
-
-inline std::ostream &
 operator <<(std::ostream &os, const TrafficMode &flags)
 {
-    return flags.print(os);
+    flags.print(os);
+    return os;
 }
 
 } // namespace AnyP

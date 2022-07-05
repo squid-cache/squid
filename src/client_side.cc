@@ -157,8 +157,7 @@ public:
         handler(aHandler), portCfg(aPortCfg), portTypeNote(note), sub(aSub) {}
 
     virtual void print(std::ostream &os) const {
-        startPrint(os) <<
-                       ", " << FdNote(portTypeNote) << " port=" << (void*)&portCfg << ')';
+        startPrint(os) << ", port=" << *portCfg << ')';
     }
 
     virtual bool canDial(AsyncCall &) const { return true; }
@@ -1329,7 +1328,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
 
     /* deny CONNECT via accelerated ports */
     if (hp->method() == Http::METHOD_CONNECT && port && port->flags.accelSurrogate()) {
-        debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << transferProtocol << " Accelerator port " << port->s.port());
+        debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on accelerator " << *port);
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
         hp->parseStatusCode = Http::scMethodNotAllowed;
         return abortRequestParsing("error:method-not-allowed");
@@ -1340,7 +1339,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
      * If seen it signals a broken client or proxy has corrupted the traffic.
      */
     if (hp->method() == Http::METHOD_PRI && hp->messageProtocol() < Http::ProtocolVersion(2,0)) {
-        debugs(33, DBG_IMPORTANT, "WARNING: PRI method received on " << transferProtocol << " port " << port->s.port());
+        debugs(33, DBG_IMPORTANT, "WARNING: PRI method received on " << *port);
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
         hp->parseStatusCode = Http::scMethodNotAllowed;
         return abortRequestParsing("error:method-not-allowed");
@@ -2299,13 +2298,12 @@ void
 httpAccept(const CommAcceptCbParams &params)
 {
     MasterXaction::Pointer xact = params.xaction;
-    AnyP::PortCfgPointer s = xact->squidPort;
 
     // NP: it is possible the port was reconfigured when the call or accept() was queued.
 
     if (params.flag != Comm::OK) {
         // Its possible the call was still queued when the client disconnected
-        debugs(33, 2, s->listenConn << ": accept failure: " << xstrerr(params.xerrno));
+        debugs(33, 2, *(xact->squidPort) << ": accept failure: " << xstrerr(params.xerrno));
         return;
     }
 
@@ -2499,13 +2497,12 @@ static void
 httpsAccept(const CommAcceptCbParams &params)
 {
     MasterXaction::Pointer xact = params.xaction;
-    const AnyP::PortCfgPointer s = xact->squidPort;
 
     // NP: it is possible the port was reconfigured when the call or accept() was queued.
 
     if (params.flag != Comm::OK) {
         // Its possible the call was still queued when the client disconnected
-        debugs(33, 2, "httpsAccept: " << s->listenConn << ": accept failure: " << xstrerr(params.xerrno));
+        debugs(33, 2, *(xact->squidPort) << ": accept failure: " << xstrerr(params.xerrno));
         return;
     }
 
@@ -3296,10 +3293,9 @@ static void
 clientHttpConnectionsOpen(void)
 {
     for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
-        const SBuf &scheme = AnyP::UriScheme(s->transport.protocol).image();
 
         if (MAXTCPLISTENPORTS == NHttpSockets) {
-            debugs(1, DBG_IMPORTANT, "WARNING: You have too many '" << scheme << "_port' lines." <<
+            debugs(1, DBG_IMPORTANT, "WARNING: You have too many '" << s->directiveName << "' lines." <<
                    Debug::Extra << "The limit is " << MAXTCPLISTENPORTS << " HTTP ports.");
             continue;
         }
@@ -3312,7 +3308,7 @@ clientHttpConnectionsOpen(void)
 #endif
 
         if (s->secure.encryptTransport && !s->secure.staticContext) {
-            debugs(1, DBG_CRITICAL, "ERROR: Ignoring " << scheme << "_port " << s->s << " due to TLS context initialization failure.");
+            debugs(1, DBG_CRITICAL, "ERROR: Ignoring " << *s << " due to TLS context initialization failure.");
             continue;
         }
 
@@ -3385,9 +3381,7 @@ clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId port
     // TCP: setup a job to handle accept() with subscribed handler
     AsyncJob::Start(new Comm::TcpAcceptor(s, FdNote(portTypeNote), sub));
 
-    debugs(1, Important(13), "Accepting" << s->flags << " " <<
-           FdNote(portTypeNote) << " connections " <<
-           "at " << s->listenConn);
+    debugs(1, Important(13), "Accepting connections at " << *s << s->flags << " ...");
 
     Must(AddOpenedHttpSocket(s->listenConn)); // otherwise, we have received a fd we did not ask for
 
@@ -3421,7 +3415,7 @@ clientConnectionsClose()
 {
     for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (s->listenConn != NULL) {
-            debugs(1, Important(14), "Closing HTTP(S) port " << s->listenConn->local);
+            debugs(1, Important(14), "Closing " << *s);
             s->listenConn->close();
             s->listenConn = NULL;
         }
