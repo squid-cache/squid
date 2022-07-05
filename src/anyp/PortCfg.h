@@ -36,6 +36,7 @@ public:
     virtual ScopedId codeContextGist() const override;
     virtual std::ostream &detailCodeContext(std::ostream &os) const override;
 
+    /// identifies this port configuration using squid.conf syntax
     void print(std::ostream &) const;
 
     PortCfgPointer next;
