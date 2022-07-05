@@ -370,7 +370,6 @@ main(int argc, char *argv[])
                 } else if (strcmp(buff, "CONFIG_START") == 0) {
                     state = sCFGLINES;
                 } else {
-                    assert(buff != nullptr);
                     entries.back().doc.push_back(buff);
                 }
                 break;
@@ -379,7 +378,6 @@ main(int argc, char *argv[])
                 if (strcmp(buff, "CONFIG_END") == 0) {
                     state = sDOC;
                 } else {
-                    assert(buff != nullptr);
                     entries.back().cfgLines.push_back(buff);
                 }
                 break;

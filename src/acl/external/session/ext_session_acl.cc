@@ -198,13 +198,16 @@ static int session_active(const char *details, size_t len)
 {
 #if USE_BERKLEYDB
     DBT key = {};
-    DBT data = {};
-    key.data = (void *)details;
+    key.data = const_cast<char*>(details);
     key.size = len;
+
+    DBT data = {};
 #elif USE_TRIVIALDB
-    TDB_DATA key;
-    TDB_DATA data;
-    (void)len;
+    TDB_DATA key = {};
+    key.dptr = reinterpret_cast<decltype(key.dptr)>(const_cast<char*>(details));
+    key.dsize = len;
+
+    TDB_DATA data = {};
 #else
     (void)len;
 #endif
