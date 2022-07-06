@@ -35,21 +35,20 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Security, PeerConnector);
 
-Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, AsyncCall::Pointer &aCallback, const AccessLogEntryPointer &alp, const time_t timeout) :
+Security::PeerConnector::PeerConnector(
+    const Comm::ConnectionPointer &aServerConn,
+    const AccessLogEntryPointer &alp,
+    const time_t timeout):
     AsyncJob("Security::PeerConnector"),
     noteFwdPconnUse(false),
     serverConn(aServerConn),
     al(alp),
-    callback(aCallback),
     negotiationTimeout(timeout),
     startTime(squid_curtime),
     useCertValidator_(true),
     certsDownloads(0)
 {
     debugs(83, 5, serverConn);
-
-    // if this throws, the caller's cb dialer is not our CbDialer
-    Must(dynamic_cast<CbDialer*>(callback->getDialer()));
 
     // watch for external connection closures
     Must(Comm::IsConnOpen(serverConn));
@@ -63,7 +62,7 @@ Security::PeerConnector::~PeerConnector() = default;
 
 bool Security::PeerConnector::doneAll() const
 {
-    return (!callback || callback->canceled()) && AsyncJob::doneAll();
+    return (!callback || callback.canceled()) && AsyncJob::doneAll();
 }
 
 /// Preps connection and SSL state. Calls negotiate().
@@ -500,9 +499,7 @@ Security::EncryptorAnswer &
 Security::PeerConnector::answer()
 {
     assert(callback);
-    const auto dialer = dynamic_cast<CbDialer*>(callback->getDialer());
-    assert(dialer);
-    return dialer->answer();
+    return callback.answer();
 }
 
 void
@@ -561,12 +558,8 @@ void
 Security::PeerConnector::callBack()
 {
     debugs(83, 5, "TLS setup ended for " << answer().conn);
-
-    AsyncCall::Pointer cb = callback;
-    // Do this now so that if we throw below, swanSong() assert that we _tried_
-    // to call back holds.
-    callback = nullptr; // this should make done() true
-    ScheduleCallHere(cb);
+    ScheduleCallHere(callback.release());
+    Assure(done());
 }
 
 void

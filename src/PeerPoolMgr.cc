@@ -27,18 +27,6 @@
 
 CBDATA_CLASS_INIT(PeerPoolMgr);
 
-/// Gives Security::PeerConnector access to Answer in the PeerPoolMgr callback dialer.
-class MyAnswerDialer: public UnaryMemFunT<PeerPoolMgr, Security::EncryptorAnswer, Security::EncryptorAnswer&>,
-    public Security::PeerConnector::CbDialer
-{
-public:
-    MyAnswerDialer(const JobPointer &aJob, Method aMethod):
-        UnaryMemFunT<PeerPoolMgr, Security::EncryptorAnswer, Security::EncryptorAnswer&>(aJob, aMethod, Security::EncryptorAnswer()) {}
-
-    /* Security::PeerConnector::CbDialer API */
-    virtual Security::EncryptorAnswer &answer() { return arg1; }
-};
-
 PeerPoolMgr::PeerPoolMgr(CachePeer *aPeer): AsyncJob("PeerPoolMgr"),
     peer(cbdataReference(aPeer)),
     request(),
@@ -108,14 +96,18 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
     // Handle TLS peers.
     if (peer->secure.encryptTransport) {
         // XXX: Exceptions orphan params.conn
-        AsyncCall::Pointer callback = asyncCall(48, 4, "PeerPoolMgr::handleSecuredPeer",
-                                                MyAnswerDialer(this, &PeerPoolMgr::handleSecuredPeer));
 
         const auto peerTimeout = peer->connectTimeout();
         const int timeUsed = squid_curtime - params.conn->startTime();
         // Use positive timeout when less than one second is left for conn.
         const int timeLeft = positiveTimeout(peerTimeout - timeUsed);
-        const auto connector = new Security::BlindPeerConnector(request, params.conn, callback, nullptr, timeLeft);
+
+        const auto connector = new Security::BlindPeerConnector(request, params.conn, nullptr, timeLeft);
+
+        const auto callback = asyncCall(48, 4, "PeerPoolMgr::handleSecuredPeer",
+                                        cbcCallbackDialer(this, &PeerPoolMgr::handleSecuredPeer));
+        connector->callback.set(callback);
+
         encryptionWait.start(connector, callback);
         return;
     }

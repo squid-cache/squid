@@ -232,31 +232,6 @@ public:
     void sendError(ErrorState *finalError, const char *reason);
 
 private:
-    /// Gives Security::PeerConnector access to Answer in the TunnelStateData callback dialer.
-    class MyAnswerDialer: public CallDialer, public Security::PeerConnector::CbDialer
-    {
-    public:
-        typedef void (TunnelStateData::*Method)(Security::EncryptorAnswer &);
-
-        MyAnswerDialer(Method method, TunnelStateData *tunnel):
-            method_(method), tunnel_(tunnel), answer_() {}
-
-        /* CallDialer API */
-        virtual bool canDial(AsyncCall &) { return tunnel_.valid(); }
-        void dial(AsyncCall &) { ((&(*tunnel_))->*method_)(answer_); }
-        virtual void print(std::ostream &os) const {
-            os << '(' << tunnel_.get() << ", " << answer_ << ')';
-        }
-
-        /* Security::PeerConnector::CbDialer API */
-        virtual Security::EncryptorAnswer &answer() { return answer_; }
-
-    private:
-        Method method_;
-        CbcPointer<TunnelStateData> tunnel_;
-        Security::EncryptorAnswer answer_;
-    };
-
     void usePinned();
 
     /// callback handler for the Security::PeerConnector encryptor
@@ -1177,9 +1152,10 @@ TunnelStateData::connectToPeer(const Comm::ConnectionPointer &conn)
 void
 TunnelStateData::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 {
-    AsyncCall::Pointer callback = asyncCall(5,4, "TunnelStateData::noteSecurityPeerConnectorAnswer",
-                                            MyAnswerDialer(&TunnelStateData::noteSecurityPeerConnectorAnswer, this));
-    const auto connector = new Security::BlindPeerConnector(request, conn, callback, al);
+    const auto connector = new Security::BlindPeerConnector(request, conn, al);
+    const auto callback = asyncCall(5, 4, "TunnelStateData::noteSecurityPeerConnectorAnswer",
+                                    cbcCallbackDialer(this, &TunnelStateData::noteSecurityPeerConnectorAnswer));
+    connector->callback.set(callback);
     encryptionWait.start(connector, callback);
 }
 

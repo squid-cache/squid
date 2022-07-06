@@ -69,12 +69,56 @@ private:
     Argument1 arg1_;
 };
 
+#include "base/AsyncJobCalls.h" // XXX
+
+/// XXX:
+template <class Job, typename Argument1>
+class UnaryJobCallbackDialer:
+    public UnaryMemFunT<Job, Argument1, Argument1&>,
+    public WithAnswer<Argument1>
+{
+public:
+    using Base = UnaryMemFunT<Job, Argument1, Argument1&>;
+
+    UnaryJobCallbackDialer(const CbcPointer<Job> &aJob, typename Base::Method aMethod):
+        Base(aJob, aMethod, {}) {}
+
+    /* WithAnswer API */
+    virtual Argument1 &answer() final { return this->arg1; }
+};
+
+// XXX: Duplicates SquidMath.h!
+/// std::enable_if_t replacement until C++14
+/// simplifies declarations further below
+template <bool B, class T = void>
+using EnableIf = typename std::enable_if<B,T>::type;
+
+/// whether the given type is an AsyncJob
+/// reduces code duplication in declarations further below
+template <typename T>
+using IsAsyncJob = typename std::conditional<
+                   std::is_base_of<AsyncJob, T>::value,
+                   std::true_type,
+                   std::false_type
+                   >::type;
+
+// TODO: rename to callbackDialer()
 // helper function to simplify UnaryCbcCallbackDialer creation
-template <class Destination, typename Argument1>
+template <class Destination, typename Argument1, EnableIf<!IsAsyncJob<Destination>::value, int> = 0>
 UnaryCbcCallbackDialer<Destination, Argument1>
 cbcCallbackDialer(Destination *destination, void (Destination::*method)(Argument1 &))
 {
+    static_assert(!std::is_base_of<AsyncJob, Destination>::value, "wrong wrapper");
     return UnaryCbcCallbackDialer<Destination, Argument1>(method, destination);
+}
+
+// helper function to simplify UnaryCbcCallbackDialer creation
+template <class Destination, typename Argument1, EnableIf<IsAsyncJob<Destination>::value, int> = 0>
+UnaryJobCallbackDialer<Destination, Argument1>
+cbcCallbackDialer(Destination *destination, void (Destination::*method)(Argument1 &))
+{
+    static_assert(std::is_base_of<AsyncJob, Destination>::value, "wrong wrapper");
+    return UnaryJobCallbackDialer<Destination, Argument1>(destination, method);
 }
 
 #endif

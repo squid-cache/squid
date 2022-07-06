@@ -23,7 +23,6 @@ public:
     PeekingPeerConnector(HttpRequestPointer &aRequest,
                          const Comm::ConnectionPointer &aServerConn,
                          const Comm::ConnectionPointer &aClientConn,
-                         AsyncCall::Pointer &aCallback,
                          const AccessLogEntryPointer &alp,
                          time_t timeout = 0);
 

@@ -78,30 +78,6 @@ PconnPool *fwdPconnPool = new PconnPool("server-peers", nullptr);
 
 CBDATA_CLASS_INIT(FwdState);
 
-class FwdStatePeerAnswerDialer: public CallDialer, public Security::PeerConnector::CbDialer
-{
-public:
-    typedef void (FwdState::*Method)(Security::EncryptorAnswer &);
-
-    FwdStatePeerAnswerDialer(Method method, FwdState *fwd):
-        method_(method), fwd_(fwd), answer_() {}
-
-    /* CallDialer API */
-    virtual bool canDial(AsyncCall &) { return fwd_.valid(); }
-    void dial(AsyncCall &) { ((&(*fwd_))->*method_)(answer_); }
-    virtual void print(std::ostream &os) const {
-        os << '(' << fwd_.get() << ", " << answer_ << ')';
-    }
-
-    /* Security::PeerConnector::CbDialer API */
-    virtual Security::EncryptorAnswer &answer() { return answer_; }
-
-private:
-    Method method_;
-    CbcPointer<FwdState> fwd_;
-    Security::EncryptorAnswer answer_;
-};
-
 void
 FwdState::HandleStoreAbort(FwdState *fwd)
 {
@@ -1026,18 +1002,22 @@ void
 FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 {
     HttpRequest::Pointer requestPointer = request;
-    AsyncCall::Pointer callback = asyncCall(17,4,
-                                            "FwdState::ConnectedToPeer",
-                                            FwdStatePeerAnswerDialer(&FwdState::connectedToPeer, this));
+
     const auto sslNegotiationTimeout = connectingTimeout(conn);
     Security::PeerConnector *connector = nullptr;
 #if USE_OPENSSL
     if (request->flags.sslPeek)
-        connector = new Ssl::PeekingPeerConnector(requestPointer, conn, clientConn, callback, al, sslNegotiationTimeout);
+        connector = new Ssl::PeekingPeerConnector(requestPointer, conn, clientConn, al, sslNegotiationTimeout);
     else
 #endif
-        connector = new Security::BlindPeerConnector(requestPointer, conn, callback, al, sslNegotiationTimeout);
+        connector = new Security::BlindPeerConnector(requestPointer, conn, al, sslNegotiationTimeout);
+
+    const auto callback = asyncCall(17, 4, "FwdState::ConnectedToPeer",
+                                    cbcCallbackDialer(this, &FwdState::connectedToPeer));
+    connector->callback.set(callback);
+
     connector->noteFwdPconnUse = true;
+
     encryptionWait.start(connector, callback);
 }
 
