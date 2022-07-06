@@ -305,8 +305,11 @@ Security::PeerConnector::sslFinalized()
             validationRequest.errors = errs;
         try {
             debugs(83, 5, "Sending SSL certificate for validation to ssl_crtvd.");
-            AsyncCall::Pointer call = asyncCall(83,5, "Security::PeerConnector::sslCrtvdHandleReply", Ssl::CertValidationHelper::CbDialer(this, &Security::PeerConnector::sslCrtvdHandleReply, nullptr));
-            Ssl::CertValidationHelper::Submit(validationRequest, call);
+            // TODO: Add the corresponding constructor?
+            Ssl::CertValidationHelper::Callback vcb;
+            vcb.set(asyncCall(83, 5, "Security::PeerConnector::sslCrtvdHandleReply",
+                    cbcCallbackDialer(this, &Security::PeerConnector::sslCrtvdHandleReply)));
+            Ssl::CertValidationHelper::Submit(validationRequest, vcb);
             return false;
         } catch (const std::exception &e) {
             debugs(83, DBG_IMPORTANT, "ERROR: Failed to compose ssl_crtvd " <<
@@ -329,7 +332,7 @@ Security::PeerConnector::sslFinalized()
 
 #if USE_OPENSSL
 void
-Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointer validationResponse)
+Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointer &validationResponse)
 {
     Must(validationResponse != nullptr);
     Must(Comm::IsConnOpen(serverConnection()));

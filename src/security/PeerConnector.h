@@ -177,7 +177,7 @@ private:
     unsigned int certDownloadNestingLevel() const;
 
     /// Process response from cert validator helper
-    void sslCrtvdHandleReply(Ssl::CertValidationResponsePointer);
+    void sslCrtvdHandleReply(Ssl::CertValidationResponsePointer &);
 
     /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
     Security::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, ErrorDetailPointer &);

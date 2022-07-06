@@ -65,6 +65,7 @@ CallJob(int debugSection, int debugLevel, const char *fileName, int fileLine,
         (#Class "::" #method), \
         JobMemFun((job), &Class::method, (arg1)))
 
+// XXX: This is a call, not a callback?
 /// Convenience macro to create a Dialer-based job callback
 #define JobCallback(dbgSection, dbgLevel, Dialer, job, method) \
     asyncCall((dbgSection), (dbgLevel), #method, \

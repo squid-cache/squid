@@ -132,6 +132,9 @@ template <typename Answer>
 class AsyncCallback
 {
 public:
+    // all generated copying/moving functions are correct
+    AsyncCallback() = default;
+
     template <class Call>
     void set(const RefCount<Call> &call)
     {
