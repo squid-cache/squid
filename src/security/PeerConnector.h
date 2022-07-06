@@ -28,6 +28,7 @@
 
 class ErrorState;
 class Downloader;
+class DownloaderAnswer;
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 
@@ -117,7 +118,7 @@ protected:
     void startCertDownloading(SBuf &url);
 
     /// Called by Downloader after a certificate object downloaded.
-    void certDownloadingDone(SBuf &object, int status);
+    void certDownloadingDone(DownloaderAnswer &answer);
 #endif
 
     /// Called when the openSSL SSL_connect function needs to write data to

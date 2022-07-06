@@ -599,23 +599,6 @@ Security::PeerConnector::status() const
 }
 
 #if USE_OPENSSL
-/// CallDialer to allow use Downloader objects within PeerConnector class.
-class PeerConnectorCertDownloaderDialer: public Downloader::CbDialer
-{
-public:
-    typedef void (Security::PeerConnector::*Method)(SBuf &object, int status);
-
-    PeerConnectorCertDownloaderDialer(Method method, Security::PeerConnector *pc):
-        method_(method),
-        peerConnector_(pc) {}
-
-    /* CallDialer API */
-    virtual bool canDial(AsyncCall &) { return peerConnector_.valid(); }
-    virtual void dial(AsyncCall &) { ((&(*peerConnector_))->*method_)(object, status); }
-    Method method_; ///< The Security::PeerConnector method to dial
-    CbcPointer<Security::PeerConnector> peerConnector_; ///< The Security::PeerConnector object
-};
-
 /// the number of concurrent PeerConnector jobs waiting for us
 unsigned int
 Security::PeerConnector::certDownloadNestingLevel() const
@@ -633,20 +616,26 @@ Security::PeerConnector::certDownloadNestingLevel() const
 void
 Security::PeerConnector::startCertDownloading(SBuf &url)
 {
-    AsyncCall::Pointer certCallback = asyncCall(81, 4,
-                                      "Security::PeerConnector::certDownloadingDone",
-                                      PeerConnectorCertDownloaderDialer(&Security::PeerConnector::certDownloadingDone, this));
-
-    const auto dl = new Downloader(url, certCallback,
+    std::unique_ptr<Downloader> dl(new Downloader(
+        url,
         MasterXaction::MakePortless<XactionInitiator::initCertFetcher>(),
-        certDownloadNestingLevel() + 1);
-    certDownloadWait.start(dl, certCallback);
+        certDownloadNestingLevel() + 1));
+
+    const auto certCallback = asyncCall(81, 4, "Security::PeerConnector::certDownloadingDone",
+                                        cbcCallbackDialer(this, &Security::PeerConnector::certDownloadingDone));
+    dl->callback.set(certCallback);
+
+    certDownloadWait.start(dl.release(), certCallback);
 }
 
 void
-Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
+Security::PeerConnector::certDownloadingDone(DownloaderAnswer &answer)
 {
     certDownloadWait.finish();
+
+    // TODO: Remove diff reduction before merging
+    const auto &obj = answer.resource;
+    const auto downloadStatus = answer.outcome;
 
     ++certsDownloads;
     debugs(81, 5, "Certificate downloading status: " << downloadStatus << " certificate size: " << obj.length());
@@ -654,6 +643,7 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     Must(Comm::IsConnOpen(serverConnection()));
     const auto &sconn = *fd_table[serverConnection()->fd].ssl;
 
+    // XXX: Do not parse the response when the download has failed.
     // Parse Certificate. Assume that it is in DER format.
     // According to RFC 4325:
     //  The server must provide a DER encoded certificate or a collection

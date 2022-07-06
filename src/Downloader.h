@@ -23,6 +23,20 @@ typedef RefCount<DownloaderContext> DownloaderContextPointer;
 class MasterXaction;
 using MasterXactionPointer = RefCount<MasterXaction>;
 
+/// download result
+class DownloaderAnswer {
+public:
+    // The body of a successfully received HTTP 200 OK reply to our GET request.
+    // Unused unless outcome is Http::scOkay.
+    SBuf resource;
+
+    /// Download result summary.
+    /// May differ from the status code of the downloaded HTTP reply.
+    Http::StatusCode outcome = Http::scNone;
+};
+
+std::ostream &operator <<(std::ostream &os, const DownloaderAnswer &);
+
 /// The Downloader class fetches SBuf-storable things for other Squid
 /// components/transactions using internal requests. For example, it is used
 /// to fetch missing intermediate certificates when validating origin server
@@ -31,23 +45,9 @@ class Downloader: virtual public AsyncJob
 {
     CBDATA_CLASS(Downloader);
 public:
+    using Answer = DownloaderAnswer;
 
-    /// Callback data to use with Downloader callbacks.
-    class CbDialer: public CallDialer {
-    public:
-        CbDialer(): status(Http::scNone) {}
-        virtual ~CbDialer() {}
-
-        /* CallDialer API */
-        virtual bool canDial(AsyncCall &call) = 0;
-        virtual void dial(AsyncCall &call) = 0;
-        virtual void print(std::ostream &os) const;
-
-        SBuf object;
-        Http::StatusCode status;
-    };
-
-    Downloader(const SBuf &url, const AsyncCall::Pointer &aCallback, const MasterXactionPointer &, unsigned int level = 0);
+    Downloader(const SBuf &url, const MasterXactionPointer &, unsigned int level = 0);
     virtual ~Downloader();
     virtual void swanSong();
 
@@ -58,6 +58,9 @@ public:
     unsigned int nestedLevel() const {return level_;}
 
     void handleReply(clientStreamNode *, ClientHttpRequest *, HttpReply *, StoreIOBuffer);
+
+    /// answer destination
+    AsyncCallback<Answer> callback;
 
 protected:
 
@@ -74,7 +77,6 @@ private:
     static const size_t MaxObjectSize = 1*1024*1024;
 
     SBuf url_; ///< the url to download
-    AsyncCall::Pointer callback_; ///< callback to call when download finishes
     SBuf object_; ///< the object body data
     const unsigned int level_; ///< holds the nested downloads level
     MasterXactionPointer masterXaction_; ///< download transaction context
