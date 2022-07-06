@@ -1215,14 +1215,21 @@ TunnelStateData::connectedToPeer(const Comm::ConnectionPointer &conn)
 void
 TunnelStateData::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 {
-    AsyncCall::Pointer callback = asyncCall(5,4,
-                                            "TunnelStateData::tunnelEstablishmentDone",
-                                            Http::Tunneler::CbDialer<TunnelStateData>(&TunnelStateData::tunnelEstablishmentDone, this));
-    const auto tunneler = new Http::Tunneler(conn, request, callback, Config.Timeout.lifetime, al);
+    std::unique_ptr<Http::Tunneler> tunneler(new Http::Tunneler(
+        conn,
+        request,
+        Config.Timeout.lifetime,
+        al));
+
+    const auto callback = asyncCall(5, 4, "TunnelStateData::tunnelEstablishmentDone",
+                                    cbcCallbackDialer(this, &TunnelStateData::tunnelEstablishmentDone));
+    tunneler->callback.set(callback);
+
 #if USE_DELAY_POOLS
     tunneler->setDelayId(server.delayId);
 #endif
-    peerWait.start(tunneler, callback);
+
+    peerWait.start(tunneler.release(), callback);
 }
 
 void

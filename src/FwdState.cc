@@ -911,11 +911,12 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
 void
 FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 {
-    AsyncCall::Pointer callback = asyncCall(17,4,
-                                            "FwdState::tunnelEstablishmentDone",
-                                            Http::Tunneler::CbDialer<FwdState>(&FwdState::tunnelEstablishmentDone, this));
-    HttpRequest::Pointer requestPointer = request;
-    const auto tunneler = new Http::Tunneler(conn, requestPointer, callback, connectingTimeout(conn), al);
+    std::unique_ptr<Http::Tunneler> tunneler(new Http::Tunneler(
+        conn, request, connectingTimeout(conn), al));
+
+    const auto callback = asyncCall(17, 4, "FwdState::tunnelEstablishmentDone",
+                                    cbcCallbackDialer(this, &FwdState::tunnelEstablishmentDone));
+    tunneler->callback.set(callback);
 
     // TODO: Replace this hack with proper Comm::Connection-Pool association
     // that is not tied to fwdPconnPool and can handle disappearing pools.
@@ -927,7 +928,8 @@ FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
     if (!conn->getPeer()->options.no_delay)
         tunneler->setDelayId(entry->mem_obj->mostBytesAllowed());
 #endif
-    peerWait.start(tunneler, callback);
+
+    peerWait.start(tunneler.release(), callback);
 }
 
 /// resumes operations after the (possibly failed) HTTP CONNECT exchange

@@ -26,12 +26,15 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Http, Tunneler);
 
-Http::Tunneler::Tunneler(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req, AsyncCall::Pointer &aCallback, time_t timeout, const AccessLogEntryPointer &alp):
+Http::Tunneler::Tunneler(
+    const Comm::ConnectionPointer &conn,
+    const HttpRequest::Pointer &req,
+    const time_t timeout,
+    const AccessLogEntryPointer &alp):
     AsyncJob("Http::Tunneler"),
     noteFwdPconnUse(false),
     connection(conn),
     request(req),
-    callback(aCallback),
     lifetimeLimit(timeout),
     al(alp),
     startTime(squid_curtime),
@@ -39,11 +42,8 @@ Http::Tunneler::Tunneler(const Comm::ConnectionPointer &conn, const HttpRequest:
     tunnelEstablished(false)
 {
     debugs(83, 5, "Http::Tunneler constructed, this=" << (void*)this);
-    // detect callers supplying cb dialers that are not our CbDialer
     assert(request);
     assert(connection);
-    assert(callback);
-    assert(dynamic_cast<Http::TunnelerAnswer *>(callback->getDialer()));
     url = request->url.authority(true);
     watchForClosures();
 }
@@ -64,9 +64,7 @@ Http::TunnelerAnswer &
 Http::Tunneler::answer()
 {
     Must(callback);
-    const auto tunnelerAnswer = dynamic_cast<Http::TunnelerAnswer *>(callback->getDialer());
-    Must(tunnelerAnswer);
-    return *tunnelerAnswer;
+    return callback.answer();
 }
 
 void
@@ -424,9 +422,7 @@ Http::Tunneler::callBack()
 {
     debugs(83, 5, answer().conn << status());
     assert(!connection); // returned inside answer() or gone
-    auto cb = callback;
-    callback = nullptr;
-    ScheduleCallHere(cb);
+    ScheduleCallHere(callback.release());
 }
 
 void
