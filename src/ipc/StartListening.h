@@ -22,27 +22,24 @@
 namespace Ipc
 {
 
-/// common API for all StartListening() callbacks
-class StartListeningCb
+/// StartListening() result
+class StartListeningAnswer
 {
 public:
-    StartListeningCb();
-    virtual ~StartListeningCb();
-
-    /// starts printing arguments, return os
-    std::ostream &startPrint(std::ostream &os) const;
-
-public:
     Comm::ConnectionPointer conn; ///< opened listening socket
-    int errNo; ///< errno value from the comm_open_listener() call
+    int errNo = 0; ///< errno value from the comm_open_listener() call
 };
+
+using StartListeningCallback = AsyncCallback<StartListeningAnswer>;
 
 /// Depending on whether SMP is on, either ask Coordinator to send us
 /// the listening FD or open a listening socket directly.
 void StartListening(int sock_type, int proto, const Comm::ConnectionPointer &listenConn,
-                    FdNoteId fdNote, AsyncCall::Pointer &callback);
+                    FdNoteId, StartListeningCallback &);
 
 } // namespace Ipc;
+
+std::ostream &operator <<(std::ostream &, const Ipc::StartListeningAnswer &);
 
 #endif /* SQUID_IPC_START_LISTENING_H */
 

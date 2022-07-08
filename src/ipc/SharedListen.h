@@ -15,6 +15,7 @@
 #include "base/Subscription.h"
 #include "ipc/QuestionerId.h"
 #include "ipc/RequestId.h"
+#include "ipc/StartListening.h"
 
 namespace Ipc
 {
@@ -74,7 +75,7 @@ public:
 };
 
 /// prepare and send SharedListenRequest to Coordinator
-void JoinSharedListen(const OpenListenerParams &, AsyncCall::Pointer &);
+void JoinSharedListen(const OpenListenerParams &, StartListeningCallback &);
 
 /// process Coordinator response to SharedListenRequest
 void SharedListenJoined(const SharedListenResponse &response);

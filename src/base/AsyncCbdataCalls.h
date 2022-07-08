@@ -42,6 +42,33 @@ cbdataDialer(typename UnaryCbdataDialer<Argument1>::Handler *handler, Argument1 
     return UnaryCbdataDialer<Argument1>(handler, arg1);
 }
 
+// TODO: Misplaced. This header is about cbdata-protected calls
+/// CallDialer for single-parameter callback functions
+template <typename Argument1>
+class UnaryFunCallbackDialer:
+    public CallDialer,
+    public WithAnswer<Argument1>
+{
+public:
+    // stand-alone function that receives our answer
+    using Handler = void (Argument1 &);
+
+    explicit UnaryFunCallbackDialer(Handler * const aHandler): handler(aHandler) {}
+    virtual ~UnaryFunCallbackDialer() = default;
+
+    /* CallDialer API */
+    bool canDial(AsyncCall &) { return bool(handler); }
+    void dial(AsyncCall &) { handler(arg1); }
+    virtual void print(std::ostream &os) const final { os << '(' << arg1 << ')'; }
+
+    /* WithAnswer API */
+    virtual Argument1 &answer() final { return arg1; }
+
+private:
+    Handler *handler; ///< the function to call
+    Argument1 arg1; ///< actual call parameter
+};
+
 /// CallDialer for single-parameter callback methods of cbdata-protected classes
 template <class Destination, typename Argument1>
 class UnaryCbcCallbackDialer:
@@ -103,7 +130,7 @@ using IsAsyncJob = typename std::conditional<
                    >::type;
 
 // TODO: rename to callbackDialer()
-// helper function to simplify UnaryCbcCallbackDialer creation
+/// helper function to simplify UnaryCbcCallbackDialer creation
 template <class Destination, typename Argument1, EnableIf<!IsAsyncJob<Destination>::value, int> = 0>
 UnaryCbcCallbackDialer<Destination, Argument1>
 cbcCallbackDialer(Destination *destination, void (Destination::*method)(Argument1 &))
@@ -112,13 +139,21 @@ cbcCallbackDialer(Destination *destination, void (Destination::*method)(Argument
     return UnaryCbcCallbackDialer<Destination, Argument1>(method, destination);
 }
 
-// helper function to simplify UnaryCbcCallbackDialer creation
+/// helper function to simplify UnaryCbcCallbackDialer creation
 template <class Destination, typename Argument1, EnableIf<IsAsyncJob<Destination>::value, int> = 0>
 UnaryJobCallbackDialer<Destination, Argument1>
 cbcCallbackDialer(Destination *destination, void (Destination::*method)(Argument1 &))
 {
     static_assert(std::is_base_of<AsyncJob, Destination>::value, "wrong wrapper");
     return UnaryJobCallbackDialer<Destination, Argument1>(destination, method);
+}
+
+/// helper function to simplify UnaryCbcCallbackDialer creation
+template <typename Argument1>
+UnaryFunCallbackDialer<Argument1>
+cbcCallbackDialer(void (*destination)(Argument1 &))
+{
+    return UnaryFunCallbackDialer<Argument1>(destination);
 }
 
 #endif

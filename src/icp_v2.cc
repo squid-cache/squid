@@ -17,17 +17,18 @@
 #include "AccessLogEntry.h"
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
+#include "base/AsyncCbdataCalls.h"
 #include "client_db.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
-#include "comm/UdpOpenDialer.h"
 #include "fd.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
 #include "ICP.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
+#include "ipc/StartListening.h"
 #include "ipcache.h"
 #include "md5.h"
 #include "multicast.h"
@@ -53,7 +54,7 @@ public:
     struct timeval queue_time = {}; ///< queuing timestamp
 };
 
-static void icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);
+static void icpIncomingConnectionOpened(Ipc::StartListeningAnswer &answer);
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpLogIcp(const Ip::Address &, const LogTags_ot, int, const char *, const int, AccessLogEntryPointer &);
@@ -713,14 +714,14 @@ icpOpenPorts(void)
         icpIncomingConn->local.setIPv4();
     }
 
-    AsyncCall::Pointer call = asyncCall(12, 2,
-                                        "icpIncomingConnectionOpened",
-                                        Comm::UdpOpenDialer(&icpIncomingConnectionOpened));
-
+    const auto call = asyncCall(12, 2, "icpIncomingConnectionOpened",
+                                cbcCallbackDialer(&icpIncomingConnectionOpened));
+    AsyncCallback<Ipc::StartListeningAnswer> callback;
+    callback.set(call);
     Ipc::StartListening(SOCK_DGRAM,
                         IPPROTO_UDP,
                         icpIncomingConn,
-                        Ipc::fdnInIcpSocket, call);
+                        Ipc::fdnInIcpSocket, callback);
 
     if ( !Config.Addrs.udp_outgoing.isNoAddr() ) {
         icpOutgoingConn = new Comm::Connection;
@@ -751,8 +752,10 @@ icpOpenPorts(void)
 }
 
 static void
-icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int)
+icpIncomingConnectionOpened(Ipc::StartListeningAnswer &answer)
 {
+    const auto &conn = answer.conn;
+
     if (!Comm::IsConnOpen(conn))
         fatal("Cannot open ICP Port");
 
