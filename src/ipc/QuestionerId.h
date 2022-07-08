@@ -59,14 +59,14 @@ Mine(const Answer &answer)
     return answer;
 }
 
+} // namespace Ipc
+
 inline std::ostream &
-operator <<(std::ostream &os, const QuestionerId &qid)
+operator <<(std::ostream &os, const Ipc::QuestionerId &qid)
 {
     qid.print(os);
     return os;
 }
-
-} // namespace Ipc;
 
 #endif /* SQUID_SRC_IPC_QUESTIONERID_H */
 

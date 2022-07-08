@@ -56,9 +56,9 @@ private:
     Index index_ = 0;
 };
 
-std::ostream &operator <<(std::ostream &, const RequestId &);
-
 } // namespace Ipc;
+
+std::ostream &operator <<(std::ostream &, const Ipc::RequestId &);
 
 #endif /* SQUID_IPC_REQUESTID_H */
 

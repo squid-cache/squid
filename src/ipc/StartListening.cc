@@ -56,7 +56,7 @@ Ipc::StartListening(int sock_type, int proto, const Comm::ConnectionPointer &lis
 
     answer.errNo = Comm::IsConnOpen(answer.conn) ? 0 : savedErrno;
 
-// XXX    debugs(54, 3, "opened listen " << answer);
+    debugs(54, 3, "opened listen " << answer);
     ScheduleCallHere(callback.release());
 }
 

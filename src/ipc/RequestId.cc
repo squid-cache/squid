@@ -20,7 +20,7 @@ Ipc::RequestId::RequestId(const Index anIndex):
 }
 
 std::ostream &
-Ipc::operator <<(std::ostream &os, const RequestId &requestId)
+operator <<(std::ostream &os, const Ipc::RequestId &requestId)
 {
     os << requestId.index() << '@' << requestId.questioner();
     return os;
