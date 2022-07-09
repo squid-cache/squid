@@ -71,7 +71,7 @@ ACLIdent::match(ACLChecklist *cl)
         // fall through to ACCESS_DUNNO failure below
     }
 
-    checklist->markFinished(ACCESS_DUNNO, "cannot start ident lookup");
+    checklist->markFinished(Acl::Answer(ACCESS_DUNNO), "cannot start ident lookup");
     return -1;
 }
 

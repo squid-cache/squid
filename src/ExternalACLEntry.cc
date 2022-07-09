@@ -20,7 +20,7 @@ ExternalACLEntry::ExternalACLEntry() :
     notes()
 {
     lru.next = lru.prev = NULL;
-    result = ACCESS_DENIED;
+    result = Acl::Answer(ACCESS_DENIED);
     date = 0;
     def = NULL;
 }

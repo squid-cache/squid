@@ -121,8 +121,7 @@ namespace Acl {
 class Answer
 {
 public:
-    // not explicit: allow "aclMatchCode to Acl::Answer" conversions (for now)
-    Answer(const aclMatchCode aCode, int aKind = 0): code(aCode), kind(aKind) {}
+    explicit Answer(const aclMatchCode aCode, int aKind = 0): code(aCode), kind(aKind) {}
 
     Answer() = default;
 

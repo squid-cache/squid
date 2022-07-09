@@ -22,7 +22,7 @@ ACLChecklist::prepNonBlocking()
     assert(accessList);
 
     if (callerGone()) {
-        checkCallback(ACCESS_DUNNO); // the answer does not really matter
+        checkCallback(Acl::Answer(ACCESS_DUNNO)); // the answer does not really matter
         return false;
     }
 
@@ -34,7 +34,7 @@ ACLChecklist::prepNonBlocking()
     if (!cbdataReferenceValid(accessList)) {
         cbdataReferenceDone(accessList);
         debugs(28, 4, "ACLChecklist::check: " << this << " accessList is invalid");
-        checkCallback(ACCESS_DUNNO);
+        checkCallback(Acl::Answer(ACCESS_DUNNO));
         return false;
     }
 
@@ -246,7 +246,7 @@ ACLChecklist::nonBlockingCheck(ACLCB * callback_, void *callback_data_)
      * We cannot select a sensible default for all callers here. */
     if (accessList == NULL) {
         debugs(28, DBG_CRITICAL, "SECURITY ERROR: ACL " << this << " checked with nothing to match against!!");
-        checkCallback(ACCESS_DUNNO);
+        checkCallback(Acl::Answer(ACCESS_DUNNO));
         return;
     }
 
@@ -318,7 +318,7 @@ ACLChecklist::fastCheck(const Acl::Tree * list)
     if (accessList && cbdataReferenceValid(accessList))
         matchAndFinish(); // calls markFinished() on success
     if (!finished())
-        markFinished(ACCESS_DENIED, "ACLs failed to match");
+        markFinished(Acl::Answer(ACCESS_DENIED), "ACLs failed to match");
 
     changeAcl(savedList);
     occupied_ = false;

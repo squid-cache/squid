@@ -33,20 +33,20 @@ AuthenticateAcl(ACLChecklist *ch)
 
     if (NULL == request) {
         fatal ("requiresRequest SHOULD have been true for this ACL!!");
-        return ACCESS_DENIED;
+        return Acl::Answer(ACCESS_DENIED);
     } else if (request->flags.sslBumped) {
         debugs(28, 5, "SslBumped request: It is an encapsulated request do not authenticate");
         checklist->auth_user_request = checklist->conn() != NULL ? checklist->conn()->getAuth() : request->auth_user_request;
         if (checklist->auth_user_request != NULL)
-            return ACCESS_ALLOWED;
+            return Acl::Answer(ACCESS_ALLOWED);
         else
-            return ACCESS_DENIED;
+            return Acl::Answer(ACCESS_DENIED);
     } else if (request->flags.accelerated) {
         /* WWW authorization on accelerated requests */
         headertype = Http::HdrType::AUTHORIZATION;
     } else if (request->flags.intercepted || request->flags.interceptTproxy) {
         debugs(28, DBG_IMPORTANT, "WARNING: Authentication not applicable on intercepted requests.");
-        return ACCESS_DENIED;
+        return Acl::Answer(ACCESS_DENIED);
     } else {
         /* Proxy authorization on proxy requests */
         headertype = Http::HdrType::PROXY_AUTHORIZATION;
@@ -60,11 +60,11 @@ AuthenticateAcl(ACLChecklist *ch)
     switch (result) {
 
     case AUTH_ACL_CANNOT_AUTHENTICATE:
-        debugs(28, 4, "returning " << ACCESS_DENIED << " user authenticated but not authorised.");
-        return ACCESS_DENIED;
+        debugs(28, 4, "returning " << Acl::Answer(ACCESS_DENIED) << " user authenticated but not authorised.");
+        return Acl::Answer(ACCESS_DENIED);
 
     case AUTH_AUTHENTICATED:
-        return ACCESS_ALLOWED;
+        return Acl::Answer(ACCESS_ALLOWED);
         break;
 
     case AUTH_ACL_HELPER:
@@ -72,7 +72,7 @@ AuthenticateAcl(ACLChecklist *ch)
             debugs(28, 4, "returning " << ACCESS_DUNNO << " sending credentials to helper.");
         else
             debugs(28, 2, "cannot go async; returning " << ACCESS_DUNNO);
-        return ACCESS_DUNNO; // XXX: break this down into DUNNO, EXPIRED_OK, EXPIRED_BAD states
+        return Acl::Answer(ACCESS_DUNNO); // XXX: break this down into DUNNO, EXPIRED_OK, EXPIRED_BAD states
 
     case AUTH_ACL_CHALLENGE:
         debugs(28, 4, "returning " << ACCESS_AUTH_REQUIRED << " sending authentication challenge.");
@@ -80,11 +80,11 @@ AuthenticateAcl(ACLChecklist *ch)
          * credentials. (This may be part of a stateful auth protocol.)
          * The request is denied.
          */
-        return ACCESS_AUTH_REQUIRED;
+        return Acl::Answer(ACCESS_AUTH_REQUIRED);
 
     default:
         fatal("unexpected authenticateAuthenticate reply\n");
-        return ACCESS_DENIED;
+        return Acl::Answer(ACCESS_DENIED);
     }
 }
 

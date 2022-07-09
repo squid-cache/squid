@@ -660,7 +660,7 @@ ClientRequestContext::clientAccessCheck()
         acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
     } else {
         debugs(0, DBG_CRITICAL, "No http_access configuration found. This will block ALL traffic");
-        clientAccessCheckDone(ACCESS_DENIED);
+        clientAccessCheckDone(Acl::Answer(ACCESS_DENIED));
     }
 }
 
@@ -677,7 +677,7 @@ ClientRequestContext::clientAccessCheck2()
         acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
     } else {
         debugs(85, 2, "No adapted_http_access configuration. default: ALLOW");
-        clientAccessCheckDone(ACCESS_ALLOWED);
+        clientAccessCheckDone(Acl::Answer(ACCESS_ALLOWED));
     }
 }
 
@@ -1317,7 +1317,7 @@ ClientRequestContext::checkNoCache()
         acl_checklist->nonBlockingCheck(checkNoCacheDoneWrapper, this);
     } else {
         /* unless otherwise specified, we try to cache. */
-        checkNoCacheDone(ACCESS_ALLOWED);
+        checkNoCacheDone(Acl::Answer(ACCESS_ALLOWED));
     }
 }
 
@@ -2015,7 +2015,7 @@ ClientHttpRequest::handleAdaptationBlock(const Adaptation::Answer &answer)
     request->detailError(ERR_ACCESS_DENIED, d);
     AclMatchedName = answer.ruleId.termedBuf();
     assert(calloutContext);
-    calloutContext->clientAccessCheckDone(ACCESS_DENIED);
+    calloutContext->clientAccessCheckDone(Acl::Answer(ACCESS_DENIED));
     AclMatchedName = NULL;
 }
 

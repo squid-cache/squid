@@ -470,7 +470,7 @@ external_acl::maybeCacheable(const Acl::Answer &result) const
     if (cache_size <= 0)
         return false; // cache is disabled
 
-    if (result == ACCESS_DUNNO)
+    if (result == Acl::Answer(ACCESS_DUNNO))
         return false; // non-cacheable response
 
     if ((result.allowed() ? ttl : negative_ttl) <= 0)
@@ -607,7 +607,7 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
             /* Ours, use it.. if the key matches */
             const char *key = makeExternalAclKey(ch, acl);
             if (!key)
-                return ACCESS_DUNNO; // insufficient data to continue
+                return Acl::Answer(ACCESS_DUNNO); // insufficient data to continue
             if (strcmp(key, (char*)entry->key) != 0) {
                 debugs(82, 9, "entry key='" << (char *)entry->key << "', our key='" << key << "' do not match. Discarded.");
                 // too bad. need a new lookup.
@@ -643,7 +643,7 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
 
         if (!key) {
             /* Not sufficient data to process */
-            return ACCESS_DUNNO;
+            return Acl::Answer(ACCESS_DUNNO);
         }
 
         entry = static_cast<ExternalACLEntry *>(hash_lookup(acl->def->cache, key));
@@ -668,13 +668,13 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
                 if (!ch->goAsync(ExternalACLLookup::Instance()))
                     debugs(82, 2, "\"" << key << "\": no async support!");
                 debugs(82, 2, "\"" << key << "\": return -1.");
-                return ACCESS_DUNNO; // expired cached or simply absent entry
+                return Acl::Answer(ACCESS_DUNNO); // expired cached or simply absent entry
             } else {
                 if (!staleEntry) {
                     debugs(82, DBG_IMPORTANT, "WARNING: external ACL '" << acl->def->name <<
                            "' queue full. Request rejected '" << key << "'.");
                     external_acl_message = "SYSTEM TOO BUSY, TRY AGAIN LATER";
-                    return ACCESS_DUNNO;
+                    return Acl::Answer(ACCESS_DUNNO);
                 } else {
                     debugs(82, DBG_IMPORTANT, "WARNING: external ACL '" << acl->def->name <<
                            "' queue full. Using stale result. '" << key << "'.");
@@ -816,7 +816,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 static int
 external_acl_entry_expired(external_acl * def, const ExternalACLEntryPointer &entry)
 {
-    if (def->cache_size <= 0 || entry->result == ACCESS_DUNNO)
+    if (def->cache_size <= 0 || entry->result == Acl::Answer(ACCESS_DUNNO))
         return 1;
 
     if (entry->date + (entry->result.allowed() ? def->ttl : def->negative_ttl) < squid_curtime)
@@ -828,7 +828,7 @@ external_acl_entry_expired(external_acl * def, const ExternalACLEntryPointer &en
 static int
 external_acl_grace_expired(external_acl * def, const ExternalACLEntryPointer &entry)
 {
-    if (def->cache_size <= 0 || entry->result == ACCESS_DUNNO)
+    if (def->cache_size <= 0 || entry->result == Acl::Answer(ACCESS_DUNNO))
         return 1;
 
     int ttl;
@@ -849,7 +849,7 @@ external_acl_cache_add(external_acl * def, const char *key, ExternalACLEntryData
     if (!def->maybeCacheable(data.result)) {
         debugs(82,6, MYNAME);
 
-        if (data.result == ACCESS_DUNNO) {
+        if (data.result == Acl::Answer(ACCESS_DUNNO)) {
             if (const ExternalACLEntryPointer oldentry = static_cast<ExternalACLEntry *>(hash_lookup(def->cache, key)))
                 external_acl_cache_delete(def, oldentry);
         }
@@ -958,11 +958,11 @@ externalAclHandleReply(void *data, const Helper::Reply &reply)
     debugs(82, 2, "reply=" << reply);
 
     if (reply.result == Helper::Okay)
-        entryData.result = ACCESS_ALLOWED;
+        entryData.result = Acl::Answer(ACCESS_ALLOWED);
     else if (reply.result == Helper::Error)
-        entryData.result = ACCESS_DENIED;
+        entryData.result = Acl::Answer(ACCESS_DENIED);
     else //BrokenHelper,TimedOut or Unknown. Should not cached.
-        entryData.result = ACCESS_DUNNO;
+        entryData.result = Acl::Answer(ACCESS_DUNNO);
 
     // XXX: make entryData store a proper Helper::Reply object instead of copying.
 

@@ -2532,7 +2532,7 @@ ConnStateData::postHttpsAccept()
         debugs(33, 5, "accept transparent connection: " << clientConnection);
 
         if (!Config.accessList.ssl_bump) {
-            httpsSslBumpAccessCheckDone(ACCESS_DENIED, this);
+            httpsSslBumpAccessCheckDone(Acl::Answer(ACCESS_DENIED), this);
             return;
         }
 

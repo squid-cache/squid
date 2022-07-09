@@ -1908,7 +1908,7 @@ clientReplyContext::processReplyAccess ()
             http->loggingTags().oldType == LOG_TCP_DENIED_REPLY ||
             alwaysAllowResponse(reply->sline.status())) {
         headers_sz = reply->hdr_sz;
-        processReplyAccessResult(ACCESS_ALLOWED);
+        processReplyAccessResult(Acl::Answer(ACCESS_ALLOWED));
         return;
     }
 
@@ -1922,7 +1922,7 @@ clientReplyContext::processReplyAccess ()
 
     /** check for absent access controls (permit by default) */
     if (!Config.accessList.reply) {
-        processReplyAccessResult(ACCESS_ALLOWED);
+        processReplyAccessResult(Acl::Answer(ACCESS_ALLOWED));
         return;
     }
 

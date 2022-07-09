@@ -23,7 +23,7 @@ Acl::Answer
 Acl::Tree::lastAction() const
 {
     if (actions.empty())
-        return ACCESS_DUNNO;
+        return Acl::Answer(ACCESS_DUNNO);
     return actions.back();
 }
 
@@ -37,7 +37,7 @@ Acl::Tree::actionAt(const Nodes::size_type pos) const
         return actions[pos];
     }
     // default for matched rules in trees without actions
-    return ACCESS_ALLOWED;
+    return Acl::Answer(ACCESS_ALLOWED);
 }
 
 void
