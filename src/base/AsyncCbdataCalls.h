@@ -133,7 +133,7 @@ using IsAsyncJob = typename std::conditional<
 /// helper function to simplify UnaryCbcCallbackDialer creation
 template <class Destination, typename Argument1, EnableIf<!IsAsyncJob<Destination>::value, int> = 0>
 UnaryCbcCallbackDialer<Destination, Argument1>
-cbcCallbackDialer(Destination *destination, void (Destination::*method)(Argument1 &))
+cbcCallbackDialer(void (Destination::*method)(Argument1 &), Destination * const destination)
 {
     static_assert(!std::is_base_of<AsyncJob, Destination>::value, "wrong wrapper");
     return UnaryCbcCallbackDialer<Destination, Argument1>(method, destination);
@@ -142,7 +142,7 @@ cbcCallbackDialer(Destination *destination, void (Destination::*method)(Argument
 /// helper function to simplify UnaryCbcCallbackDialer creation
 template <class Destination, typename Argument1, EnableIf<IsAsyncJob<Destination>::value, int> = 0>
 UnaryJobCallbackDialer<Destination, Argument1>
-cbcCallbackDialer(Destination *destination, void (Destination::*method)(Argument1 &))
+cbcCallbackDialer(void (Destination::*method)(Argument1 &), Destination * const destination)
 {
     static_assert(std::is_base_of<AsyncJob, Destination>::value, "wrong wrapper");
     return UnaryJobCallbackDialer<Destination, Argument1>(destination, method);
@@ -155,6 +155,24 @@ cbcCallbackDialer(void (*destination)(Argument1 &))
 {
     return UnaryFunCallbackDialer<Argument1>(destination);
 }
+
+template <class Call>
+AsyncCallback<typename Call::Dialer::Answer>
+AsyncCallback_(const RefCount<Call> &call)
+{
+    return AsyncCallback<typename Call::Dialer::Answer>(call);
+}
+
+/// AsyncCall for calling back a class method
+#define asyncCallback(dbgSection, dbgLevel, method, object) \
+    AsyncCallback_(asyncCall((dbgSection), (dbgLevel), #method, \
+        cbcCallbackDialer(&method, (object))))
+
+// TODO: Use C++20 __VA_OPT__ to merge this with asyncCallback().
+/// AsyncCall for calling back a function
+#define asyncCallbackFun(dbgSection, dbgLevel, function) \
+    AsyncCallback_(asyncCall((dbgSection), (dbgLevel), #function, \
+        cbcCallbackDialer(&function)))
 
 #endif
 

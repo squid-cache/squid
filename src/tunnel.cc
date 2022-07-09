@@ -1153,10 +1153,9 @@ void
 TunnelStateData::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 {
     const auto connector = new Security::BlindPeerConnector(request, conn, al);
-    const auto callback = asyncCall(5, 4, "TunnelStateData::noteSecurityPeerConnectorAnswer",
-                                    cbcCallbackDialer(this, &TunnelStateData::noteSecurityPeerConnectorAnswer));
-    connector->callback.set(callback);
-    encryptionWait.start(connector, callback);
+    const auto callback = asyncCallback(5, 4, TunnelStateData::noteSecurityPeerConnectorAnswer, this);
+    connector->callback = callback;
+    encryptionWait.start(connector, callback.call());
 }
 
 /// starts a preparation step for an established connection; retries on failures
@@ -1221,15 +1220,14 @@ TunnelStateData::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
         Config.Timeout.lifetime,
         al));
 
-    const auto callback = asyncCall(5, 4, "TunnelStateData::tunnelEstablishmentDone",
-                                    cbcCallbackDialer(this, &TunnelStateData::tunnelEstablishmentDone));
-    tunneler->callback.set(callback);
+    const auto callback = asyncCallback(5, 4, TunnelStateData::tunnelEstablishmentDone, this);
+    tunneler->callback = callback;
 
 #if USE_DELAY_POOLS
     tunneler->setDelayId(server.delayId);
 #endif
 
-    peerWait.start(tunneler.release(), callback);
+    peerWait.start(tunneler.release(), callback.call());
 }
 
 void
@@ -1368,14 +1366,13 @@ TunnelStateData::startConnecting()
     assert(!destinations->empty());
     assert(!transporting());
     const auto cs = new HappyConnOpener(destinations, request, startTime, 0, al);
-    const auto dialer = cbcCallbackDialer(this, &TunnelStateData::noteConnection);
-    const auto callback = asyncCall(17, 5, "TunnelStateData::noteConnection", dialer);
-    cs->callback.set(callback);
+    const auto callback = asyncCallback(17, 5, TunnelStateData::noteConnection, this);
+    cs->callback = callback;
     cs->setHost(request->url.host());
     cs->setRetriable(false);
     cs->allowPersistent(false);
     destinations->notificationPending = true; // start() is async
-    transportWait.start(cs, callback);
+    transportWait.start(cs, callback.call());
 }
 
 /// send request on an existing connection dedicated to the requesting client

@@ -259,11 +259,10 @@ Adaptation::Icap::Xaction::useTransportConnection(const Comm::ConnectionPointer 
         // XXX: Exceptions orphan conn.
         const auto sslConnector = new Ssl::IcapPeerConnector(theService, conn, masterLogEntry(), TheConfig.connect_timeout(service().cfg().bypass));
 
-        const auto callback = asyncCall(93, 4, "Adaptation::Icap::Xaction::handleSecuredPeer",
-                                        cbcCallbackDialer(this, &Adaptation::Icap::Xaction::handleSecuredPeer));
-        sslConnector->callback.set(callback);
+        const auto callback = asyncCallback(93, 4, Adaptation::Icap::Xaction::handleSecuredPeer, this);
+        sslConnector->callback = callback;
 
-        encryptionWait.start(sslConnector, callback);
+        encryptionWait.start(sslConnector, callback.call());
         return;
     }
 

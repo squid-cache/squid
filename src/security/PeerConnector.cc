@@ -305,11 +305,8 @@ Security::PeerConnector::sslFinalized()
             validationRequest.errors = errs;
         try {
             debugs(83, 5, "Sending SSL certificate for validation to ssl_crtvd.");
-            // TODO: Add the corresponding constructor?
-            Ssl::CertValidationHelper::Callback vcb;
-            vcb.set(asyncCall(83, 5, "Security::PeerConnector::sslCrtvdHandleReply",
-                    cbcCallbackDialer(this, &Security::PeerConnector::sslCrtvdHandleReply)));
-            Ssl::CertValidationHelper::Submit(validationRequest, vcb);
+            const auto call = asyncCallback(83, 5, Security::PeerConnector::sslCrtvdHandleReply, this);
+            Ssl::CertValidationHelper::Submit(validationRequest, call);
             return false;
         } catch (const std::exception &e) {
             debugs(83, DBG_IMPORTANT, "ERROR: Failed to compose ssl_crtvd " <<
@@ -624,11 +621,10 @@ Security::PeerConnector::startCertDownloading(SBuf &url)
         MasterXaction::MakePortless<XactionInitiator::initCertFetcher>(),
         certDownloadNestingLevel() + 1));
 
-    const auto certCallback = asyncCall(81, 4, "Security::PeerConnector::certDownloadingDone",
-                                        cbcCallbackDialer(this, &Security::PeerConnector::certDownloadingDone));
-    dl->callback.set(certCallback);
+    const auto certCallback = asyncCallback(81, 4, Security::PeerConnector::certDownloadingDone, this);
+    dl->callback = certCallback;
 
-    certDownloadWait.start(dl.release(), certCallback);
+    certDownloadWait.start(dl.release(), certCallback.call());
 }
 
 void

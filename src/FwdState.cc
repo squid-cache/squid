@@ -914,9 +914,8 @@ FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
     std::unique_ptr<Http::Tunneler> tunneler(new Http::Tunneler(
         conn, request, connectingTimeout(conn), al));
 
-    const auto callback = asyncCall(17, 4, "FwdState::tunnelEstablishmentDone",
-                                    cbcCallbackDialer(this, &FwdState::tunnelEstablishmentDone));
-    tunneler->callback.set(callback);
+    const auto callback = asyncCallback(17, 4, FwdState::tunnelEstablishmentDone, this);
+    tunneler->callback = callback;
 
     // TODO: Replace this hack with proper Comm::Connection-Pool association
     // that is not tied to fwdPconnPool and can handle disappearing pools.
@@ -929,7 +928,7 @@ FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
         tunneler->setDelayId(entry->mem_obj->mostBytesAllowed());
 #endif
 
-    peerWait.start(tunneler.release(), callback);
+    peerWait.start(tunneler.release(), callback.call());
 }
 
 /// resumes operations after the (possibly failed) HTTP CONNECT exchange
@@ -1014,13 +1013,12 @@ FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 #endif
         connector = new Security::BlindPeerConnector(requestPointer, conn, al, sslNegotiationTimeout);
 
-    const auto callback = asyncCall(17, 4, "FwdState::ConnectedToPeer",
-                                    cbcCallbackDialer(this, &FwdState::connectedToPeer));
-    connector->callback.set(callback);
+    const auto callback = asyncCallback(17, 4, FwdState::connectedToPeer, this);
+    connector->callback = callback;
 
     connector->noteFwdPconnUse = true;
 
-    encryptionWait.start(connector, callback);
+    encryptionWait.start(connector, callback.call());
 }
 
 /// called when all negotiations with the TLS-speaking peer have been completed
@@ -1131,9 +1129,8 @@ FwdState::connectStart()
     HttpRequest::Pointer cause = request;
     const auto cs = new HappyConnOpener(destinations, cause, start_t, n_tries, al);
 
-    const auto dialer = cbcCallbackDialer(this, &FwdState::noteConnection);
-    const auto callback = asyncCall(17, 5, "FwdState::noteConnection", dialer);
-    cs->callback.set(callback);
+    const auto callback = asyncCallback(17, 5, FwdState::noteConnection, this);
+    cs->callback = callback;
 
     cs->setHost(request->url.host());
 
@@ -1149,7 +1146,7 @@ FwdState::connectStart()
     cs->allowPersistent(pconnRace != raceHappened);
 
     destinations->notificationPending = true; // start() is async
-    transportWait.start(cs, callback);
+    transportWait.start(cs, callback.call());
 }
 
 /// send request on an existing connection dedicated to the requesting client

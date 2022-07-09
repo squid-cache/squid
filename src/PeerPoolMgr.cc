@@ -104,11 +104,10 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
 
         const auto connector = new Security::BlindPeerConnector(request, params.conn, nullptr, timeLeft);
 
-        const auto callback = asyncCall(48, 4, "PeerPoolMgr::handleSecuredPeer",
-                                        cbcCallbackDialer(this, &PeerPoolMgr::handleSecuredPeer));
-        connector->callback.set(callback);
+        const auto callback = asyncCallback(48, 4, PeerPoolMgr::handleSecuredPeer, this);
+        connector->callback = callback;
 
-        encryptionWait.start(connector, callback);
+        encryptionWait.start(connector, callback.call());
         return;
     }
 

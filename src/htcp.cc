@@ -1460,14 +1460,11 @@ htcpOpenPorts(void)
         htcpIncomingConn->local.setIPv4();
     }
 
-    const auto call = asyncCall(31, 2, "htcpIncomingConnectionOpened",
-                                cbcCallbackDialer(&htcpIncomingConnectionOpened));
-    AsyncCallback<Ipc::StartListeningAnswer> callback;
-    callback.set(call);
+    auto call = asyncCallbackFun(31, 2, htcpIncomingConnectionOpened);
     Ipc::StartListening(SOCK_DGRAM,
                         IPPROTO_UDP,
                         htcpIncomingConn,
-                        Ipc::fdnInHtcpSocket, callback);
+                        Ipc::fdnInHtcpSocket, call);
 
     if (!Config.Addrs.udp_outgoing.isNoAddr()) {
         htcpOutgoingConn = new Comm::Connection;

@@ -51,7 +51,7 @@ public:
     static void Shutdown(); ///< Shutdown helper structure.
     static void Reconfigure(); ///< Reconfigure helper structure
     /// Submit crtd request message to external crtd server.
-    static void Submit(const Ssl::CertValidationRequest &, Callback &);
+    static void Submit(const Ssl::CertValidationRequest &, const Callback &);
 private:
     static helper * ssl_crt_validator; ///< helper for management of ssl_crtd.
 public:

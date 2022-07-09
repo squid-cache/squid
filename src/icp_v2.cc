@@ -714,14 +714,11 @@ icpOpenPorts(void)
         icpIncomingConn->local.setIPv4();
     }
 
-    const auto call = asyncCall(12, 2, "icpIncomingConnectionOpened",
-                                cbcCallbackDialer(&icpIncomingConnectionOpened));
-    AsyncCallback<Ipc::StartListeningAnswer> callback;
-    callback.set(call);
+    auto call = asyncCallbackFun(12, 2, icpIncomingConnectionOpened);
     Ipc::StartListening(SOCK_DGRAM,
                         IPPROTO_UDP,
                         icpIncomingConn,
-                        Ipc::fdnInIcpSocket, callback);
+                        Ipc::fdnInIcpSocket, call);
 
     if ( !Config.Addrs.udp_outgoing.isNoAddr() ) {
         icpOutgoingConn = new Comm::Connection;

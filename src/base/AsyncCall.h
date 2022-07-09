@@ -116,10 +116,12 @@ public:
 };
 
 /// access to a callback result carried by an async CallDialer
-template <typename Answer>
+template <typename AnswerT>
 class WithAnswer
 {
 public:
+    using Answer = AnswerT;
+
     virtual ~WithAnswer() = default;
 
     /// callback results setter
@@ -136,6 +138,12 @@ public:
     AsyncCallback() = default;
 
     template <class Call>
+    explicit AsyncCallback(const RefCount<Call> &call)
+    {
+        set(call);
+    }
+
+    template <class Call>
     void set(const RefCount<Call> &call)
     {
         assert(call);
@@ -148,6 +156,12 @@ public:
     {
         assert(answer_);
         return *answer_;
+    }
+
+    const AsyncCall::Pointer &call() const
+    {
+        assert(call_);
+        return call_;
     }
 
     AsyncCall::Pointer release()

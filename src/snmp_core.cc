@@ -274,11 +274,8 @@ snmpOpenPorts(void)
         snmpIncomingConn->local.setIPv4();
     }
 
-    const auto incomingCall = asyncCall(49, 2, "snmpIncomingConnectionOpened",
-                                        cbcCallbackDialer(&snmpPortOpened));
-    AsyncCallback<Ipc::StartListeningAnswer> incomingCallback;
-    incomingCallback.set(incomingCall);
-    Ipc::StartListening(SOCK_DGRAM, IPPROTO_UDP, snmpIncomingConn, Ipc::fdnInSnmpSocket, incomingCallback);
+    auto call = asyncCallbackFun(49, 2, snmpPortOpened);
+    Ipc::StartListening(SOCK_DGRAM, IPPROTO_UDP, snmpIncomingConn, Ipc::fdnInSnmpSocket, call);
 
     if (!Config.Addrs.snmp_outgoing.isNoAddr()) {
         snmpOutgoingConn = new Comm::Connection;
@@ -293,11 +290,9 @@ snmpOpenPorts(void)
         if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && snmpOutgoingConn->local.isAnyAddr()) {
             snmpOutgoingConn->local.setIPv4();
         }
-        const auto outgoingCall = asyncCall(49, 2, "snmpOutgoingConnectionOpened",
-                                            cbcCallbackDialer(&snmpPortOpened));
-        AsyncCallback<Ipc::StartListeningAnswer> outgoingCallback;
-        outgoingCallback.set(outgoingCall);
-        Ipc::StartListening(SOCK_DGRAM, IPPROTO_UDP, snmpOutgoingConn, Ipc::fdnOutSnmpSocket, outgoingCallback);
+        // TODO: Add/use snmpOutgoingPortOpened() instead of snmpPortOpened().
+        auto c = asyncCallbackFun(49, 2, snmpPortOpened);
+        Ipc::StartListening(SOCK_DGRAM, IPPROTO_UDP, snmpOutgoingConn, Ipc::fdnOutSnmpSocket, c);
     } else {
         snmpOutgoingConn = snmpIncomingConn;
         debugs(1, DBG_IMPORTANT, "Sending SNMP messages from " << snmpOutgoingConn->local);

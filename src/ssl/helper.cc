@@ -297,7 +297,7 @@ sslCrtvdHandleReplyWrapper(void *data, const ::Helper::Reply &reply)
 }
 
 void
-Ssl::CertValidationHelper::Submit(const Ssl::CertValidationRequest &request, Callback &callback)
+Ssl::CertValidationHelper::Submit(const Ssl::CertValidationRequest &request, const Callback &callback)
 {
     Ssl::CertValidationMsg message(Ssl::CrtdMessage::REQUEST);
     message.setCode(Ssl::CertValidationMsg::code_cert_validate);
@@ -314,8 +314,8 @@ Ssl::CertValidationHelper::Submit(const Ssl::CertValidationRequest &request, Cal
     if (CertValidationHelper::HelperCache &&
             (validationResponse = CertValidationHelper::HelperCache->get(crtdvdData->query))) {
 
-        callback.answer() = *validationResponse;
-        ScheduleCallHere(callback.release());
+        crtdvdData->callback.answer() = *validationResponse;
+        ScheduleCallHere(crtdvdData->callback.release());
         delete crtdvdData;
         return;
     }
@@ -327,8 +327,8 @@ Ssl::CertValidationHelper::Submit(const Ssl::CertValidationRequest &request, Cal
 
     Ssl::CertValidationResponse::Pointer resp = new Ssl::CertValidationResponse(crtdvdData->ssl);
     resp->resultCode = ::Helper::BrokenHelper;
-    callback.answer() = resp;
-    ScheduleCallHere(callback.release());
+    crtdvdData->callback.answer() = resp;
+    ScheduleCallHere(crtdvdData->callback.release());
     delete crtdvdData;
     return;
 }

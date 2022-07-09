@@ -176,9 +176,8 @@ Ipc::Inquirer::HandleRemoteAck(const Response& response)
     const auto inquirer = DequeueRequest(response.requestId);
     if (inquirer.valid()) {
         CallService(inquirer->codeContext, [&] {
-            using Dialer = UnaryMemFunT<Inquirer, Response::Pointer, Response::Pointer>;
             const auto call = asyncCall(54, 5, "Ipc::Inquirer::handleRemoteAck",
-                                        Dialer(inquirer, &Inquirer::handleRemoteAck, response.clone()));
+                                        JobMemFun(inquirer, &Inquirer::handleRemoteAck, response.clone()));
             ScheduleCallHere(call);
         });
     }
