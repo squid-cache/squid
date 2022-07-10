@@ -63,9 +63,9 @@ public:
     void markSourceDomainChecked();
 
     // ACLChecklist API
-    virtual bool hasRequest() const { return request != NULL; }
-    virtual bool hasReply() const { return reply != NULL; }
-    virtual bool hasAle() const { return al != NULL; }
+    virtual bool hasRequest() const { return request != nullptr; }
+    virtual bool hasReply() const { return reply != nullptr; }
+    virtual bool hasAle() const { return al != nullptr; }
     virtual void syncAle(HttpRequest *adaptedRequest, const char *logUri) const;
     virtual void verifyAle() const;
 

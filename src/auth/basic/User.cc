@@ -15,9 +15,9 @@
 
 Auth::Basic::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
     Auth::User(aConfig, aRequestRealm),
-    passwd(NULL),
-    queue(NULL),
-    currentRequest(NULL)
+    passwd(nullptr),
+    queue(nullptr),
+    currentRequest(nullptr)
 {}
 
 Auth::Basic::User::~User()
@@ -51,9 +51,9 @@ Auth::Basic::User::authenticated() const
 bool
 Auth::Basic::User::valid() const
 {
-    if (username() == NULL)
+    if (username() == nullptr)
         return false;
-    if (passwd == NULL)
+    if (passwd == nullptr)
         return false;
     return true;
 }
@@ -70,7 +70,7 @@ Auth::Basic::User::updateCached(Auth::Basic::User *from)
         credentials(Auth::Unchecked);
         xfree(passwd);
         passwd = from->passwd;
-        from->passwd = NULL;
+        from->passwd = nullptr;
     }
 
     if (credentials() == Auth::Failed) {

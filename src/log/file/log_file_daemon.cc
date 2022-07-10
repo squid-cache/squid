@@ -104,11 +104,11 @@ main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
     fp = fopen(argv[1], "a");
-    if (fp == NULL) {
+    if (fp == nullptr) {
         perror("fopen");
         exit(EXIT_FAILURE);
     }
-    setbuf(stdout, NULL);
+    setbuf(stdout, nullptr);
     /* XXX stderr should not be closed, but in order to support squid must be
      * able to collect and manage modules' stderr first.
      */
@@ -135,7 +135,7 @@ main(int argc, char *argv[])
                         fclose(fp);
                         rotate(argv[1], rotate_count);
                         fp = fopen(argv[1], "a");
-                        if (fp == NULL) {
+                        if (fp == nullptr) {
                             perror("fopen");
                             exit(EXIT_FAILURE);
                         }
@@ -153,7 +153,7 @@ main(int argc, char *argv[])
             fclose(fp);
             rotate(argv[1], rotate_count);
             fp = fopen(argv[1], "a");
-            if (fp == NULL) {
+            if (fp == nullptr) {
                 perror("fopen");
                 exit(EXIT_FAILURE);
             }
@@ -180,7 +180,7 @@ main(int argc, char *argv[])
         }
     }
     fclose(fp);
-    fp = NULL;
+    fp = nullptr;
     return EXIT_SUCCESS;
 }
 

@@ -26,7 +26,7 @@ class TheConfig
 public:
     TheConfig() :
         ioTimeout(120),
-        localHost(NULL),
+        localHost(nullptr),
         port(CACHE_HTTP_PORT),
         tlsEnabled(false),
         tlsAnonymous(false) {

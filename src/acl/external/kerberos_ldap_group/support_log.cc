@@ -44,7 +44,7 @@ LogTime()
     struct timeval now;
     static char buf[128];
 
-    gettimeofday(&now, NULL);
+    gettimeofday(&now, nullptr);
     if (now.tv_sec != last_t) {
         struct tm *tm;
         time_t tmp = now.tv_sec;

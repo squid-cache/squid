@@ -84,7 +84,7 @@ esiSequence::render(ESISegment::Pointer output)
     /* append all processed elements, and trim processed
      * and rendered elements
      */
-    assert (output->next == NULL);
+    assert (output->next == nullptr);
     debugs (86,5, "esiSequenceRender: rendering " << processedcount << " elements");
 
     for (size_t i = 0; i < processedcount; ++i) {
@@ -97,7 +97,7 @@ esiSequence::render(ESISegment::Pointer output)
     // prune completed elements
     elements.erase(elements.begin(), elements.begin() + processedcount);
     processedcount = 0;
-    assert (output->next == NULL);
+    assert (output->next == nullptr);
 }
 
 void
@@ -105,7 +105,7 @@ esiSequence::finish()
 {
     debugs(86, 5, "esiSequence::finish: " << this << " is finished");
     FinishAllElements(elements);
-    parent = NULL;
+    parent = nullptr;
 }
 
 void
@@ -271,7 +271,7 @@ esiSequence::process (int inheritedVarsFlag)
         if (processingResult == ESI_PROCESS_FAILED) {
             FinishAllElements(elements);
             failed = true;
-            parent = NULL;
+            parent = nullptr;
             processing = false;
             return processingResult;
         }
@@ -294,7 +294,7 @@ esiSequence::process (int inheritedVarsFlag)
 
     /* Depends on full parsing before processing */
     if (processedcount == elements.size())
-        parent = NULL;
+        parent = nullptr;
 
     debugs(86, 5, "esiSequence::process: " << this << " completed");
 
@@ -316,12 +316,12 @@ esiSequence::fail(ESIElement * /* source */, char const *anError)
     debugs(86, 5, "esiSequence::fail: " << this << " has failed.");
     parent->fail (this, anError);
     FinishAllElements(elements);
-    parent = NULL;
+    parent = nullptr;
 }
 
 esiSequence::esiSequence(esiSequence const &old) :
     processedcount(0),
-    parent(NULL),
+    parent(nullptr),
     mayFail_(old.mayFail_),
     failed(old.failed),
     provideIncrementalData(old.provideIncrementalData),
@@ -363,7 +363,7 @@ esiSequence::makeCacheable() const
 
     if (elements.size() == 0) {
         debugs(86, 5, "esiSequence::makeCacheable: No elements in sequence " << this << ", returning NULL");
-        return NULL;
+        return nullptr;
     }
 
     esiSequence * resultS = new esiSequence (*this);
@@ -382,7 +382,7 @@ esiSequence::makeUsable(esiTreeParentPtr newParent, ESIVarState &newVarState) co
 
     if (elements.size() == 0) {
         debugs(86, 5, "esiSequence::makeUsable: No elements in sequence " << this << ", returning NULL");
-        return NULL;
+        return nullptr;
     }
 
     esiSequence * resultS = new esiSequence (*this);

@@ -22,11 +22,11 @@
 #include <functional>
 #include <memory>
 
-char *Debug::debugOptions = NULL;
+char *Debug::debugOptions = nullptr;
 int Debug::override_X = 0;
 bool Debug::log_syslog = false;
 int Debug::Levels[MAX_DEBUG_SECTIONS];
-char *Debug::cache_log = NULL;
+char *Debug::cache_log = nullptr;
 int Debug::rotateNumber = -1;
 
 /// a counter related to the number of debugs() calls
@@ -996,7 +996,7 @@ syslog_facility_names[] = {
     },
 #endif
     {
-        NULL, 0
+        nullptr, 0
     }
 };
 
@@ -1089,8 +1089,8 @@ Debug::ConfigureSyslog(const char *facility)
 void
 Debug::parseOptions(char const *options)
 {
-    char *p = NULL;
-    char *s = NULL;
+    char *p = nullptr;
+    char *s = nullptr;
 
     if (override_X) {
         debugs(0, 9, "command-line -X overrides: " << options);
@@ -1102,7 +1102,7 @@ Debug::parseOptions(char const *options)
     if (options) {
         p = xstrdup(options);
 
-        for (s = strtok(p, w_space); s; s = strtok(NULL, w_space))
+        for (s = strtok(p, w_space); s; s = strtok(nullptr, w_space))
             debugArg(s);
 
         xfree(p);

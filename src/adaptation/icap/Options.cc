@@ -83,7 +83,7 @@ time_t Adaptation::Icap::Options::expire() const
 
 void Adaptation::Icap::Options::configure(const HttpReply *reply)
 {
-    error = NULL; // reset initial "unconfigured" value (or an old error?)
+    error = nullptr; // reset initial "unconfigured" value (or an old error?)
 
     const HttpHeader *h = &reply->header;
 
@@ -169,7 +169,7 @@ void Adaptation::Icap::Options::cfgTransferList(const HttpHeader *h, TransferLis
 
 /* Adaptation::Icap::Options::TransferList */
 
-Adaptation::Icap::Options::TransferList::TransferList(): extensions(NULL), name(NULL),
+Adaptation::Icap::Options::TransferList::TransferList(): extensions(nullptr), name(nullptr),
     kind(xferNone)
 {
 };
@@ -210,7 +210,7 @@ void Adaptation::Icap::Options::TransferList::parse(const String &buf, bool &fou
     foundStar = false;
 
     const char *item;
-    const char *pos = NULL;
+    const char *pos = nullptr;
     int ilen;
     while (strListGetItem(&buf, ',', &item, &ilen, &pos)) {
         if (ilen == 1 && *item == '*')

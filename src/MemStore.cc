@@ -158,7 +158,7 @@ ShmWriter::copyToShmSlice(Ipc::StoreMap::Slice &slice)
 
 /* MemStore */
 
-MemStore::MemStore(): map(NULL), lastWritingSlice(-1)
+MemStore::MemStore(): map(nullptr), lastWritingSlice(-1)
 {
 }
 
@@ -301,12 +301,12 @@ StoreEntry *
 MemStore::get(const cache_key *key)
 {
     if (!map)
-        return NULL;
+        return nullptr;
 
     sfileno index;
     const Ipc::StoreMapAnchor *const slot = map->openForReading(key, index);
     if (!slot)
-        return NULL;
+        return nullptr;
 
     // create a brand new store entry and initialize it with stored info
     StoreEntry *e = new StoreEntry();
@@ -326,7 +326,7 @@ MemStore::get(const cache_key *key)
     debugs(20, 3, "failed for " << *e);
     map->freeEntry(index); // do not let others into the same trap
     destroyStoreEntry(static_cast<hash_link *>(e));
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -791,8 +791,8 @@ MemStore::reserveSapForWriting(Ipc::Mem::PageId &page)
         return slotId;
     }
     assert(waitingFor.slot == &slot && waitingFor.page == &page);
-    waitingFor.slot = NULL;
-    waitingFor.page = NULL;
+    waitingFor.slot = nullptr;
+    waitingFor.page = nullptr;
 
     debugs(47, 3, "cannot get a slice; entries: " << map->entryCount());
     throw TexcHere("ran out of mem-cache slots");
@@ -814,8 +814,8 @@ MemStore::noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId)
     } else {
         *waitingFor.slot = slotId;
         *waitingFor.page = pageId;
-        waitingFor.slot = NULL;
-        waitingFor.page = NULL;
+        waitingFor.slot = nullptr;
+        waitingFor.page = nullptr;
         pageId = Ipc::Mem::PageId();
     }
 }
@@ -948,7 +948,7 @@ class MemStoreRr: public Ipc::Mem::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    MemStoreRr(): spaceOwner(NULL), mapOwner(NULL), extrasOwner(NULL) {}
+    MemStoreRr(): spaceOwner(nullptr), mapOwner(nullptr), extrasOwner(nullptr) {}
     virtual void finalizeConfig();
     virtual void claimMemoryNeeds();
     virtual void useConfig();

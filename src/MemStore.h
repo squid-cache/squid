@@ -109,7 +109,7 @@ private:
     class SlotAndPage
     {
     public:
-        SlotAndPage(): slot(NULL), page(NULL) {}
+        SlotAndPage(): slot(nullptr), page(nullptr) {}
         bool operator !() const { return !slot && !page; }
         Ipc::Mem::PageId *slot; ///< local slot variable, waiting to be filled
         Ipc::Mem::PageId *page; ///< local page variable, waiting to be filled

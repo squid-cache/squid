@@ -30,7 +30,7 @@ public:
 
     // safer than bool which would enable silent casts to int
     typedef const uint32_t PageId::*SaferBool;
-    operator SaferBool() const { return set() ? &PageId::number : NULL; }
+    operator SaferBool() const { return set() ? &PageId::number : nullptr; }
 
     /// The ID of a PagePool (and/or PageStack) this page belongs to.
     /// Positive values are (ab)used to detect in-use pages. See set().

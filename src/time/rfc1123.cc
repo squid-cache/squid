@@ -83,11 +83,11 @@ parse_date_elements(const char *day, const char *month, const char *year,
     memset(&tm, 0, sizeof(tm));
 
     if (!day || !month || !year || !aTime || (zone && strcmp(zone, "GMT")))
-        return NULL;
+        return nullptr;
     tm.tm_mday = atoi(day);
     tm.tm_mon = make_month(month);
     if (tm.tm_mon < 0)
-        return NULL;
+        return nullptr;
     tm.tm_year = atoi(year);
     if (strlen(year) == 4)
         tm.tm_year -= 1900;
@@ -98,13 +98,13 @@ parse_date_elements(const char *day, const char *month, const char *year,
     tm.tm_hour = make_num(aTime);
     t = strchr(aTime, ':');
     if (!t)
-        return NULL;
+        return nullptr;
     t++;
     tm.tm_min = atoi(t);
     t = strchr(t, ':');
     if (t)
         tm.tm_sec = atoi(t + 1);
-    return tmSaneValues(&tm) ? &tm : NULL;
+    return tmSaneValues(&tm) ? &tm : nullptr;
 }
 
 static struct tm *
@@ -112,16 +112,16 @@ parse_date(const char *str) {
     struct tm *tm;
     static char tmp[64];
     char *t;
-    char *wday = NULL;
-    char *day = NULL;
-    char *month = NULL;
-    char *year = NULL;
-    char *timestr = NULL;
-    char *zone = NULL;
+    char *wday = nullptr;
+    char *day = nullptr;
+    char *month = nullptr;
+    char *year = nullptr;
+    char *timestr = nullptr;
+    char *zone = nullptr;
 
     xstrncpy(tmp, str, 64);
 
-    for (t = strtok(tmp, ", "); t; t = strtok(NULL, ", ")) {
+    for (t = strtok(tmp, ", "); t; t = strtok(nullptr, ", ")) {
         if (xisdigit(*t)) {
             if (!day) {
                 day = t;
@@ -131,7 +131,7 @@ parse_date(const char *str) {
                     month = t;
                     t = strchr(t, '-');
                     if (!t)
-                        return NULL;
+                        return nullptr;
                     *t++ = '\0';
                     year = t;
                 }
@@ -140,7 +140,7 @@ parse_date(const char *str) {
             else if (!year)
                 year = t;
             else
-                return NULL;
+                return nullptr;
         } else if (!wday)
             wday = t;
         else if (!month)
@@ -148,7 +148,7 @@ parse_date(const char *str) {
         else if (!zone)
             zone = t;
         else
-            return NULL;
+            return nullptr;
     }
     tm = parse_date_elements(day, month, year, timestr, zone);
 
@@ -160,7 +160,7 @@ Time::ParseRfc1123(const char *str)
 {
     struct tm *tm;
     time_t t;
-    if (NULL == str)
+    if (nullptr == str)
         return -1;
     tm = parse_date(str);
     if (!tm)

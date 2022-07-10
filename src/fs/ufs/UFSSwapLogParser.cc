@@ -85,7 +85,7 @@ Fs::Ufs::UFSSwapLogParser::GetUFSSwapLogParser(FILE *fp)
     assert(fp);
 
     if (fread(&header, sizeof(StoreSwapLogHeader), 1, fp) != 1)
-        return NULL;
+        return nullptr;
 
     if (header.op != SWAP_LOG_VERSION) {
         debugs(47, DBG_IMPORTANT, "Old swap file detected...");
@@ -97,23 +97,23 @@ Fs::Ufs::UFSSwapLogParser::GetUFSSwapLogParser(FILE *fp)
 
     if (header.version == 1) {
         if (fseek(fp, header.record_size, SEEK_SET) != 0)
-            return NULL;
+            return nullptr;
 
         debugs(47, DBG_IMPORTANT, "ERROR: Rejecting swap file v1 to avoid cache " <<
                "index corruption. Forcing a full cache index rebuild. " <<
                "See Squid bug #3441.");
-        return NULL;
+        return nullptr;
     }
 
     if (header.version >= 2) {
         if (!header.sane()) {
             debugs(47, DBG_IMPORTANT, "ERROR: Corrupted v" << header.version <<
                    " swap file header.");
-            return NULL;
+            return nullptr;
         }
 
         if (fseek(fp, header.record_size, SEEK_SET) != 0)
-            return NULL;
+            return nullptr;
 
         if (header.version == 2)
             return new UFSSwapLogParser_v2(fp);
@@ -122,7 +122,7 @@ Fs::Ufs::UFSSwapLogParser::GetUFSSwapLogParser(FILE *fp)
     // TODO: v3: write to disk in network-order bytes for the larger fields?
 
     debugs(47, DBG_IMPORTANT, "ERROR: Unknown swap file version: " << header.version);
-    return NULL;
+    return nullptr;
 }
 
 int

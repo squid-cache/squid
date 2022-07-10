@@ -60,7 +60,7 @@ Ipc::Mem::Segment::Name(const SBuf &prefix, const char *suffix)
 #if HAVE_SHM
 
 Ipc::Mem::Segment::Segment(const char *const id):
-    theFD(-1), theName(GenerateName(id)), theMem(NULL),
+    theFD(-1), theName(GenerateName(id)), theMem(nullptr),
     theSize(0), theReserved(0), doUnlink(false)
 {
 }
@@ -174,7 +174,7 @@ Ipc::Mem::Segment::attach()
     assert(theSize == static_cast<off_t>(static_cast<size_t>(theSize)));
 
     void *const p =
-        mmap(NULL, theSize, PROT_READ | PROT_WRITE, MAP_SHARED, theFD, 0);
+        mmap(nullptr, theSize, PROT_READ | PROT_WRITE, MAP_SHARED, theFD, 0);
     if (p == MAP_FAILED) {
         int xerrno = errno;
         debugs(54, 5, "mmap " << theName << ": " << xstrerr(xerrno));
@@ -199,7 +199,7 @@ Ipc::Mem::Segment::detach()
         fatalf("Ipc::Mem::Segment::detach failed to munmap(%s): %s\n",
                theName.termedBuf(), xstrerr(xerrno));
     }
-    theMem = 0;
+    theMem = nullptr;
 }
 
 /// Lock the segment into RAM, ensuring that the OS has enough RAM for it [now]

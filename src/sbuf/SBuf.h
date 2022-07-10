@@ -145,7 +145,7 @@ public:
             store_ = std::move(S.store_);
             off_ = S.off_;
             len_ = S.len_;
-            S.store_ = NULL; //RefCount supports NULL, and S is about to be destructed
+            S.store_ = nullptr; //RefCount supports NULL, and S is about to be destructed
             S.off_ = 0;
             S.len_ = 0;
         }

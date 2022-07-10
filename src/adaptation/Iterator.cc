@@ -29,14 +29,14 @@ Adaptation::Iterator::Iterator(
     theMsg(aMsg),
     theCause(aCause),
     al(alp),
-    theLauncher(0),
+    theLauncher(nullptr),
     iterations(0),
     adapted(false)
 {
-    if (theCause != NULL)
+    if (theCause != nullptr)
         HTTPMSGLOCK(theCause);
 
-    if (theMsg != NULL)
+    if (theMsg != nullptr)
         HTTPMSGLOCK(theMsg);
 }
 
@@ -96,7 +96,7 @@ void Adaptation::Iterator::step()
     }
 
     ServicePointer service = thePlan.current();
-    Must(service != NULL);
+    Must(service != nullptr);
     debugs(93,5, "using adaptation service: " << service->cfg().key);
 
     if (Adaptation::Config::needHistory) {
@@ -138,7 +138,7 @@ Adaptation::Iterator::handleAdaptedHeader(Http::Message *aMsg)
             if (HttpRequest *cause = dynamic_cast<HttpRequest*>(theMsg)) {
                 // definitely sent request, now use it as the cause
                 theCause = cause; // moving the lock
-                theMsg = 0;
+                theMsg = nullptr;
                 debugs(93,3, "in request satisfaction mode");
             }
         }
@@ -187,7 +187,7 @@ void Adaptation::Iterator::handleAdaptationError(bool final)
     debugs(85,5, "flags: " << srcIntact << canIgnore << adapted);
 
     if (srcIntact) {
-        if (thePlan.replacement(filter()) != NULL) {
+        if (thePlan.replacement(filter()) != nullptr) {
             debugs(93,3, "trying a replacement service");
             step();
             return;
@@ -268,13 +268,13 @@ Adaptation::ServiceFilter Adaptation::Iterator::filter() const
     // the method may differ from theGroup->method due to request satisfaction
     Method method = methodNone;
     // temporary variables, no locking needed
-    HttpRequest *req = NULL;
-    HttpReply *rep = NULL;
+    HttpRequest *req = nullptr;
+    HttpReply *rep = nullptr;
 
     if (HttpRequest *r = dynamic_cast<HttpRequest*>(theMsg)) {
         method = methodReqmod;
         req = r;
-        rep = NULL;
+        rep = nullptr;
     } else if (HttpReply *theReply = dynamic_cast<HttpReply*>(theMsg)) {
         method = methodRespmod;
         req = theCause;

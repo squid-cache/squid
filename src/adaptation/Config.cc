@@ -25,7 +25,7 @@
 #include <algorithm>
 
 bool Adaptation::Config::Enabled = false;
-char *Adaptation::Config::masterx_shared_name = NULL;
+char *Adaptation::Config::masterx_shared_name = nullptr;
 int Adaptation::Config::service_iteration_limit = 16;
 int Adaptation::Config::send_client_ip = false;
 int Adaptation::Config::send_username = false;
@@ -96,7 +96,7 @@ Adaptation::Config::findServiceConfig(const String &service)
         if ((*cfg)->key == service)
             return *cfg;
     }
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -195,13 +195,13 @@ Adaptation::Config::finalize()
     const ServiceConfigs &configs = serviceConfigs;
     for (VISCI i = configs.begin(); i != configs.end(); ++i) {
         const ServiceConfigPointer cfg = *i;
-        if (FindService(cfg->key) != NULL) {
+        if (FindService(cfg->key) != nullptr) {
             debugs(93, DBG_CRITICAL, "ERROR: Duplicate adaptation service name: " <<
                    cfg->key);
             continue; // TODO: make fatal
         }
         ServicePointer s = createService(cfg);
-        if (s != NULL) {
+        if (s != nullptr) {
             AllServices().push_back(s);
             ++created;
         }
@@ -252,7 +252,7 @@ Adaptation::Config::ParseServiceChain()
 void
 Adaptation::Config::ParseServiceGroup(ServiceGroupPointer g)
 {
-    assert(g != NULL);
+    assert(g != nullptr);
     g->parse();
     AllGroups().push_back(g);
 }

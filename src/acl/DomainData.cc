@@ -104,7 +104,7 @@ aclDomainCompare(T const &a, T const &b)
 bool
 ACLDomainData::match(char const *host)
 {
-    if (host == NULL)
+    if (host == nullptr)
         return 0;
 
     debugs(28, 3, "aclMatchDomainList: checking '" << host << "'");
@@ -114,7 +114,7 @@ ACLDomainData::match(char const *host)
 
     debugs(28, 3, "aclMatchDomainList: '" << host << "' " << (result ? "found" : "NOT found"));
 
-    return (result != NULL);
+    return (result != nullptr);
 }
 
 struct AclDomainDataDumpVisitor {

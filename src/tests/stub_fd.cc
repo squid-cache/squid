@@ -13,7 +13,7 @@
 #define STUB_API "fd.cc"
 #include "tests/STUB.h"
 
-fde *fde::Table = NULL;
+fde *fde::Table = nullptr;
 
 int fdNFree(void) STUB_RETVAL(-1)
 void fd_open(int, unsigned int, const char *) STUB

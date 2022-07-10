@@ -20,7 +20,7 @@
 
 #include <algorithm>
 
-static CpuAffinitySet *TheCpuAffinitySet = NULL;
+static CpuAffinitySet *TheCpuAffinitySet = nullptr;
 
 void
 CpuAffinityInit()
@@ -40,7 +40,7 @@ CpuAffinityReconfigure()
     if (TheCpuAffinitySet) {
         TheCpuAffinitySet->undo();
         delete TheCpuAffinitySet;
-        TheCpuAffinitySet = NULL;
+        TheCpuAffinitySet = nullptr;
     }
     CpuAffinityInit();
 }

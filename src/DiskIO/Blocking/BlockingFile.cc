@@ -165,7 +165,7 @@ BlockingFile::readDone(int rvfd, const char *buf, int len, int errflag)
 
     ReadRequest::Pointer result = readRequest;
 
-    readRequest = NULL;
+    readRequest = nullptr;
 
     ioRequestor->readCompleted(buf, rlen, errflag, result);
 }
@@ -184,7 +184,7 @@ BlockingFile::writeDone(int rvfd, int errflag, size_t len)
     debugs(79, 3, "FD " << fd << ", len " << len);
 
     WriteRequest::Pointer result = writeRequest;
-    writeRequest = NULL;
+    writeRequest = nullptr;
 
     if (errflag) {
         debugs(79, DBG_CRITICAL, "storeUfsWriteDone: got failure (" << errflag << ")");

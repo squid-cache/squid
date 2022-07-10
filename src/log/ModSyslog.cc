@@ -79,11 +79,11 @@ syslog_ntoa(const char *s)
 #ifdef LOG_DEBUG
         {syslog_symbol(LOG_DEBUG)},
 #endif
-        {NULL, 0}
+        {nullptr, 0}
     };
     syslog_symbol_t *p;
 
-    for (p = symbols; p->name != NULL; ++p)
+    for (p = symbols; p->name != nullptr; ++p)
         if (!strcmp(s, p->name) || !strcasecmp(s, p->name + 4))
             return p->value;
 
@@ -128,7 +128,7 @@ static void
 logfile_mod_syslog_close(Logfile *lf)
 {
     xfree(lf->data);
-    lf->data = NULL;
+    lf->data = nullptr;
 }
 
 /*

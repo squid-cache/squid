@@ -44,9 +44,9 @@ struct gdstruct *
 init_gd(void) {
     struct gdstruct *gdsp;
     gdsp = (struct gdstruct *) xmalloc(sizeof(struct gdstruct));
-    gdsp->group = NULL;
-    gdsp->domain = NULL;
-    gdsp->next = NULL;
+    gdsp->group = nullptr;
+    gdsp->domain = nullptr;
+    gdsp->next = nullptr;
     return gdsp;
 }
 
@@ -74,7 +74,7 @@ utf8dup(struct main_args *margs)
 
     src = margs->glist;
     if (!src)
-        return NULL;
+        return nullptr;
     for (n = 0; n < strlen(src); ++n)
         if ((unsigned char) src[n] > 127)
             ++c;
@@ -128,7 +128,7 @@ hex_utf_char(struct main_args *margs, int flag)
 
     char *up = (flag ? margs->ulist : margs->tlist);
     if (!up)
-        return NULL;
+        return nullptr;
 
     char *upd = strrchr(up, '@');
     size_t a = (upd ? (size_t)(upd - up) : strlen(up) );
@@ -159,13 +159,13 @@ hex_utf_char(struct main_args *margs, int flag)
         else {
             debug((char *) "%s| %s: WARNING: Invalid Hex value %c\n", LogTime(), PROGRAM, ival);
             xfree(ul);
-            return NULL;
+            return nullptr;
         }
 
         if (n == a - 1) {
             debug((char *) "%s| %s: WARNING: Invalid Hex UTF-8 string %s\n", LogTime(), PROGRAM, up);
             xfree(ul);
-            return NULL;
+            return nullptr;
         }
         ++n;
         ival = up[n];
@@ -178,7 +178,7 @@ hex_utf_char(struct main_args *margs, int flag)
         else {
             debug((char *) "%s| %s: WARNING: Invalid Hex value %c\n", LogTime(), PROGRAM, ival);
             xfree(ul);
-            return NULL;
+            return nullptr;
         }
 
         if (iUTF2) {
@@ -198,7 +198,7 @@ hex_utf_char(struct main_args *margs, int flag)
                 ul[nl + 1] = '\0';
                 debug((char *) "%s| %s: WARNING: Invalid UTF-8 sequence for Unicode %s\n", LogTime(), PROGRAM, ul);
                 xfree(ul);
-                return NULL;
+                return nullptr;
             }
         } else if (iUTF3) {
             if (iUTF3 == 0xE0 && ichar > 0x9F && ichar < 0xC0) {
@@ -227,7 +227,7 @@ hex_utf_char(struct main_args *margs, int flag)
                 ul[nl + 1] = '\0';
                 debug((char *) "%s| %s: WARNING: Invalid UTF-8 sequence for Unicode %s\n", LogTime(), PROGRAM, ul);
                 xfree(ul);
-                return NULL;
+                return nullptr;
             }
         } else if (iUTF4) {
             if (iUTF4 == 0xF0 && ichar > 0x8F && ichar < 0xC0) {
@@ -255,7 +255,7 @@ hex_utf_char(struct main_args *margs, int flag)
                 ul[nl + 1] = '\0';
                 debug((char *) "%s| %s: WARNING: Invalid UTF-8 sequence for Unicode %s\n", LogTime(), PROGRAM, ul);
                 xfree(ul);
-                return NULL;
+                return nullptr;
             }
         } else if (ichar < 0x80) {
             /* UTF1 */
@@ -281,7 +281,7 @@ hex_utf_char(struct main_args *margs, int flag)
             ul[nl + 1] = '\0';
             debug((char *) "%s| %s: WARNING: Invalid UTF-8 sequence for Unicode %s\n", LogTime(), PROGRAM, ul);
             xfree(ul);
-            return NULL;
+            return nullptr;
         }
         ++n;
     }
@@ -291,7 +291,7 @@ hex_utf_char(struct main_args *margs, int flag)
         debug((char *) "%s| %s: INFO: iUTF2: %d iUTF3: %d iUTF4: %d\n", LogTime(), PROGRAM, iUTF2, iUTF3, iUTF4);
         debug((char *) "%s| %s: WARNING: Invalid UTF-8 sequence for Unicode %s\n", LogTime(), PROGRAM, ul);
         xfree(ul);
-        return NULL;
+        return nullptr;
     }
     if (flag && upd)
         ul = strcat(ul, upd);
@@ -303,7 +303,7 @@ create_gd(struct main_args *margs)
 {
     char *gp, *dp;
     char *p;
-    struct gdstruct *gdsp = NULL, *gdspn = NULL;
+    struct gdstruct *gdsp = nullptr, *gdspn = nullptr;
     /*
      *  Group list format:
      *
@@ -330,7 +330,7 @@ create_gd(struct main_args *margs)
     // NP: will point to the start of a temporary assembly buffer used by 'p' and 'gp'
     //     for catenation of the hp1, hp2, and up buffer contents from above.
     //     necessary for xfree() because both p and gp move over the assembly area
-    char *gpbuf = NULL;
+    char *gpbuf = nullptr;
 
     // release the allocated UTF decoding buffers
 #define cleanup() { \
@@ -380,7 +380,7 @@ create_gd(struct main_args *margs)
     }
     gp = p;
     debug((char *) "%s| %s: INFO: Group list %s\n", LogTime(), PROGRAM, p ? p : "NULL");
-    dp = NULL;
+    dp = nullptr;
 
     if (!p) {
         debug((char *) "%s| %s: ERROR: No groups defined.\n", LogTime(), PROGRAM);
@@ -419,7 +419,7 @@ create_gd(struct main_args *margs)
             ++p;
             if (dp) {       /* end of domain name */
                 gdsp->domain = xstrdup(dp);
-                dp = NULL;
+                dp = nullptr;
             } else {        /* end of group name and no domain name */
                 gdsp = init_gd();
                 gdsp->group = xstrdup(gp);
@@ -447,7 +447,7 @@ create_gd(struct main_args *margs)
     debug((char *) "%s| %s: INFO: Group %s  Domain %s\n", LogTime(), PROGRAM, gdsp->group, gdsp->domain ? gdsp->domain : "NULL");
 
     margs->groups = gdsp;
-    gdsp = NULL; // prevent the cleanup() deallocating it.
+    gdsp = nullptr; // prevent the cleanup() deallocating it.
     cleanup();
     return (0);
 }

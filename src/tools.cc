@@ -111,7 +111,7 @@ dead_msg(void)
 static void
 mail_warranty(void)
 {
-    FILE *fp = NULL;
+    FILE *fp = nullptr;
     static char command[256];
 
     /*
@@ -126,7 +126,7 @@ mail_warranty(void)
 #if HAVE_MKSTEMP
     char filename[] = "/tmp/squid-XXXXXX";
     int tfd = mkstemp(filename);
-    if (tfd < 0 || (fp = fdopen(tfd, "w")) == NULL) {
+    if (tfd < 0 || (fp = fdopen(tfd, "w")) == nullptr) {
         umask(prev_umask);
         return;
     }
@@ -465,10 +465,10 @@ getMyHostname(void)
 {
     LOCAL_ARRAY(char, host, SQUIDHOSTNAMELEN + 1);
     static int present = 0;
-    struct addrinfo *AI = NULL;
+    struct addrinfo *AI = nullptr;
     Ip::Address sa;
 
-    if (Config.visibleHostname != NULL)
+    if (Config.visibleHostname != nullptr)
         return Config.visibleHostname;
 
     if (present)
@@ -476,7 +476,7 @@ getMyHostname(void)
 
     host[0] = '\0';
 
-    if (HttpPortList != NULL && sa.isAnyAddr())
+    if (HttpPortList != nullptr && sa.isAnyAddr())
         sa = HttpPortList->s;
 
     /*
@@ -487,7 +487,7 @@ getMyHostname(void)
 
         sa.getAddrInfo(AI);
         /* we are looking for a name. */
-        if (getnameinfo(AI->ai_addr, AI->ai_addrlen, host, SQUIDHOSTNAMELEN, NULL, 0, NI_NAMEREQD ) == 0) {
+        if (getnameinfo(AI->ai_addr, AI->ai_addrlen, host, SQUIDHOSTNAMELEN, nullptr, 0, NI_NAMEREQD ) == 0) {
             /* DNS lookup successful */
             /* use the official name from DNS lookup */
             debugs(50, 4, "getMyHostname: resolved " << sa << " to '" << host << "'");
@@ -514,7 +514,7 @@ getMyHostname(void)
         memset(&hints, 0, sizeof(addrinfo));
         hints.ai_flags = AI_CANONNAME;
 
-        if (getaddrinfo(host, NULL, NULL, &AI) == 0) {
+        if (getaddrinfo(host, nullptr, nullptr, &AI) == 0) {
             /* DNS lookup successful */
             /* use the official name from DNS lookup */
             debugs(50, 6, "getMyHostname: '" << host << "' has DNS resolution.");
@@ -572,7 +572,7 @@ leave_suid(void)
         return;
 
     /* Started as a root, check suid option */
-    if (Config.effectiveUser == NULL)
+    if (Config.effectiveUser == nullptr)
         return;
 
     debugs(21, 3, "leave_suid: PID " << getpid() << " giving up root, becoming '" << Config.effectiveUser << "'");
@@ -876,7 +876,7 @@ squid_signal(int sig, SIGHDLR * func, int flags)
     sa.sa_flags = flags;
     sigemptyset(&sa.sa_mask);
 
-    if (sigaction(sig, &sa, NULL) < 0) {
+    if (sigaction(sig, &sa, nullptr) < 0) {
         int xerrno = errno;
         debugs(50, DBG_CRITICAL, "sigaction: sig=" << sig << " func=" << func << ": " << xstrerr(xerrno));
     }
@@ -983,7 +983,7 @@ parseEtcHosts(void)
 
         nt = strpbrk(lt, w_space);
 
-        if (nt == NULL)     /* empty line */
+        if (nt == nullptr)     /* empty line */
             continue;
 
         *nt = '\0';     /* null-terminate the address */
@@ -995,7 +995,7 @@ parseEtcHosts(void)
         SBufList hosts;
 
         while ((nt = strpbrk(lt, w_space))) {
-            char *host = NULL;
+            char *host = nullptr;
 
             if (nt == lt) { /* multiple spaces */
                 debugs(1, 5, "etc_hosts: multiple spaces, skipping");
@@ -1038,19 +1038,19 @@ int
 getMyPort(void)
 {
     AnyP::PortCfgPointer p;
-    if ((p = HttpPortList) != NULL) {
+    if ((p = HttpPortList) != nullptr) {
         // skip any special interception ports
-        while (p != NULL && p->flags.isIntercepted())
+        while (p != nullptr && p->flags.isIntercepted())
             p = p->next;
-        if (p != NULL)
+        if (p != nullptr)
             return p->s.port();
     }
 
-    if ((p = FtpPortList) != NULL) {
+    if ((p = FtpPortList) != nullptr) {
         // skip any special interception ports
-        while (p != NULL && p->flags.isIntercepted())
+        while (p != nullptr && p->flags.isIntercepted())
             p = p->next;
-        if (p != NULL)
+        if (p != nullptr)
             return p->s.port();
     }
 

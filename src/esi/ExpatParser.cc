@@ -41,7 +41,7 @@ EsiParserDefinition(ESIExpatParser);
 ESIExpatParser::ESIExpatParser(ESIParserClient *aClient) : theClient (aClient)
 {
     /* TODO: grab the document encoding from the headers */
-    p = XML_ParserCreateNS(NULL,'|');
+    p = XML_ParserCreateNS(nullptr,'|');
     XML_SetUserData (myParser(), static_cast<void *>(this));
     XML_SetElementHandler(myParser(), Start, End);
     XML_SetDefaultHandler(myParser(), Default);
@@ -52,7 +52,7 @@ ESIExpatParser::ESIExpatParser(ESIParserClient *aClient) : theClient (aClient)
 ESIExpatParser::~ESIExpatParser()
 {
     XML_ParserFree (myParser());
-    p = NULL;
+    p = nullptr;
 }
 
 void

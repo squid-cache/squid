@@ -30,11 +30,11 @@ static const char c2x[] =
 char *
 Format::QuoteUrlEncodeUsername(const char *name)
 {
-    if (NULL == name)
-        return NULL;
+    if (nullptr == name)
+        return nullptr;
 
     if (name[0] == '\0')
-        return NULL;
+        return nullptr;
 
     return QuoteMimeBlob(name);
 }
@@ -47,7 +47,7 @@ Format::QuoteMimeBlob(const char *header)
     char *buf;
     char *buf_cursor;
 
-    if (header == NULL) {
+    if (header == nullptr) {
         buf = static_cast<char *>(xcalloc(1, 1));
         *buf = '\0';
         return buf;

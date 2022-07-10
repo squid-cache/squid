@@ -37,8 +37,8 @@ int
 DelayUserCmp(DelayUserBucket::Pointer const &left, DelayUserBucket::Pointer const &right)
 {
     /* Verify for re-currance of Bug 2127. either of these missing will crash strcasecmp() */
-    assert(left->authUser->username() != NULL);
-    assert(right->authUser->username() != NULL);
+    assert(left->authUser->username() != nullptr);
+    assert(right->authUser->username() != nullptr);
 
     /* for rate limiting, case insensitive */
     return strcasecmp(left->authUser->username(), right->authUser->username());
@@ -128,7 +128,7 @@ DelayUserBucket::DelayUserBucket(Auth::User::Pointer aUser) : authUser(aUser)
 
 DelayUserBucket::~DelayUserBucket()
 {
-    authUser = NULL;
+    authUser = nullptr;
     debugs(77, 3, "DelayUserBucket::~DelayUserBucket");
 }
 

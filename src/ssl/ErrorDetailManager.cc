@@ -64,7 +64,7 @@ Ssl::ErrorDetailsList::getErrorDescr(Security::ErrorCode value)
         return it->second.descr.termedBuf();
     }
 
-    return NULL;
+    return nullptr;
 }
 
 const char *
@@ -75,10 +75,10 @@ Ssl::ErrorDetailsList::getErrorDetail(Security::ErrorCode value)
         return it->second.detail.termedBuf();
     }
 
-    return NULL;
+    return nullptr;
 }
 
-Ssl::ErrorDetailsManager *Ssl::ErrorDetailsManager::TheDetailsManager = NULL;
+Ssl::ErrorDetailsManager *Ssl::ErrorDetailsManager::TheDetailsManager = nullptr;
 
 Ssl::ErrorDetailsManager &Ssl::ErrorDetailsManager::GetInstance()
 {
@@ -92,7 +92,7 @@ Ssl::ErrorDetailsManager &Ssl::ErrorDetailsManager::GetInstance()
 void Ssl::ErrorDetailsManager::Shutdown()
 {
     delete TheDetailsManager;
-    TheDetailsManager = NULL;
+    TheDetailsManager = nullptr;
 }
 
 Ssl::ErrorDetailsManager::ErrorDetailsManager()
@@ -111,7 +111,7 @@ Ssl::ErrorDetailsList::Pointer Ssl::ErrorDetailsManager::getCachedDetails(const 
         return it->second;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 void Ssl::ErrorDetailsManager::cacheDetails(ErrorDetailsList::Pointer &errorDetails)
@@ -127,8 +127,8 @@ Ssl::ErrorDetailsManager::getErrorDetail(Security::ErrorCode value, const HttpRe
 {
 #if USE_ERR_LOCALES
     String hdr;
-    if (request != NULL && request->header.getList(Http::HdrType::ACCEPT_LANGUAGE, &hdr)) {
-        ErrorDetailsList::Pointer errDetails = NULL;
+    if (request != nullptr && request->header.getList(Http::HdrType::ACCEPT_LANGUAGE, &hdr)) {
+        ErrorDetailsList::Pointer errDetails = nullptr;
         //Try to retrieve from cache
         size_t pos = 0;
         char lang[256];
@@ -149,7 +149,7 @@ Ssl::ErrorDetailsManager::getErrorDetail(Security::ErrorCode value, const HttpRe
             }
         }
 
-        if (errDetails != NULL && errDetails->getRecord(value, entry))
+        if (errDetails != nullptr && errDetails->getRecord(value, entry))
             return true;
     }
 #else

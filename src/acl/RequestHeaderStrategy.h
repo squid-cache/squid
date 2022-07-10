@@ -29,7 +29,7 @@ ACLRequestHeaderStrategy<header>::match (ACLData<char const *> * &data, ACLFille
 {
     char const *theHeader = checklist->request->header.getStr(header);
 
-    if (NULL == theHeader)
+    if (nullptr == theHeader)
         return 0;
 
     return data->match(theHeader);

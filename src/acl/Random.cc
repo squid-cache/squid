@@ -60,7 +60,7 @@ ACLRandom::parse()
     debugs(28, 5, "aclParseRandomData: " << t);
 
     // seed random generator ...
-    srand(time(NULL));
+    srand(time(nullptr));
 
     if (sscanf(t, "%[0-9]:%[0-9]", bufa, bufb) == 2) {
         int a = xatoi(bufa);

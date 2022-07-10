@@ -150,6 +150,6 @@ void
 testEvent::testSingleton()
 {
     EventScheduler *scheduler = dynamic_cast<EventScheduler *>(EventScheduler::GetInstance());
-    CPPUNIT_ASSERT(NULL != scheduler);
+    CPPUNIT_ASSERT(nullptr != scheduler);
 }
 

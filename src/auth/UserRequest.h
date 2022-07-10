@@ -179,7 +179,7 @@ public:
      */
     void start(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB *handler, void *data);
 
-    char const * denyMessage(char const * const default_message = NULL) const;
+    char const * denyMessage(char const * const default_message = nullptr) const;
 
     /** Possibly overridable in future */
     void setDenyMessage(char const *);

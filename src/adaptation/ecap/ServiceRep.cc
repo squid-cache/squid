@@ -255,7 +255,7 @@ Adaptation::Ecap::ServiceRep::makeXactLauncher(Http::Message *virgin,
 
     // register now because (a) we need EventLoop::Running and (b) we do not
     // want to add more main loop overheads unless an async service is used.
-    static AsyncEngine *TheEngine = NULL;
+    static AsyncEngine *TheEngine = nullptr;
     if (AsyncServices.size() && !TheEngine && EventLoop::Running) {
         TheEngine = new Engine;
         EventLoop::Running->registerEngine(TheEngine);

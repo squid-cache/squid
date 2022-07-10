@@ -15,5 +15,5 @@
 #include "fs/ufs/UFSSwapDir.h"
 
 /* Unused variable: */
-Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir> *UfsInstance_foo = NULL;
+Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir> *UfsInstance_foo = nullptr;
 

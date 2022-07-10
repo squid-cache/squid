@@ -17,7 +17,7 @@
 #define STUB_API "stub_DelayId.cc"
 #include "tests/STUB.h"
 
-DelayId::DelayId(): pool_(0), compositeId(NULL), markedAsNoDelay(false) {}
+DelayId::DelayId(): pool_(0), compositeId(nullptr), markedAsNoDelay(false) {}
 DelayId::~DelayId() {}
 
 void DelayId::delayRead(const AsyncCallPointer &) STUB_NOP
