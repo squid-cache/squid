@@ -49,9 +49,7 @@ Comm::ConnOpener::ConnOpener(const Comm::ConnectionPointer &, const AsyncCall::P
     void Comm::IoCallback::selectOrQueueWrite() STUB
     void Comm::IoCallback::cancel(const char *) STUB
     void Comm::IoCallback::finish(Comm::Flag, int) STUB
-    Comm::CbEntry *Comm::iocb_table = NULL;
-void Comm::CallbackTableInit() STUB
-void Comm::CallbackTableDestruct() STUB
+//Comm::IocbTableType Comm::iocb_table;
 
 #include "comm/Loops.h"
 void Comm::SelectLoopInit(void) STUB

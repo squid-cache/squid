@@ -10,10 +10,13 @@
 #define _SQUID_COMM_IOCALLBACK_H
 
 #include "base/AsyncCall.h"
+#include "comm/Connection.h"
 #include "comm/Flag.h"
 #include "comm/forward.h"
-#include "mem/forward.h"
+#include "mem/PoolingAllocator.h"
 #include "sbuf/forward.h"
+
+#include <map>
 
 namespace Comm
 {
@@ -63,17 +66,23 @@ private:
 class CbEntry
 {
 public:
-    int fd;
-    IoCallback  readcb;
-    IoCallback  writecb;
+    CbEntry() {
+        readcb.type = IOCB_READ;
+        writecb.type = IOCB_WRITE;
+    }
+
+public:
+    int fd = -1;
+    IoCallback readcb;
+    IoCallback writecb;
 };
 
 /// Table of scheduled IO events which have yet to be processed ??
 /// Callbacks which might be scheduled in future are stored in fd_table.
-extern CbEntry *iocb_table;
+using IocbTableType = std::map<int, CbEntry, std::less<int>, PoolingAllocator<CbEntry>>;
+extern IocbTableType iocb_table;
 
-void CallbackTableInit();
-void CallbackTableDestruct();
+inline void CallbackTableDestruct() { iocb_table.clear(); }
 
 #define COMMIO_FD_READCB(fd)    (&Comm::iocb_table[(fd)].readcb)
 #define COMMIO_FD_WRITECB(fd)   (&Comm::iocb_table[(fd)].writecb)
