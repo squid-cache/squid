@@ -999,6 +999,21 @@ configDoConfigure(void)
         }
     }
 
+    // check for duplicated entries, e.g. we won't have duplicated items like this:
+    // http_port 3128
+    // http_port 3128 ssl-bump ...
+    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
+        for (AnyP::PortCfgPointer s2 = s->next; s2 != NULL; s2 = s2->next) {
+            if (s->name && s2->name && strcmp(s->name, s2->name) != 0)
+                continue;
+            if (s->transport.protocol == s2->transport.protocol) {
+                debugs(3, DBG_CRITICAL, "ERROR: multiple definitions for http_port: " << s->name << ' ' << s->transport.protocol);
+                self_destruct();
+                return;
+            }
+        }
+    }
+
     for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (!s->secure.encryptTransport)
             continue;
