@@ -77,7 +77,7 @@ class PackableStream : public std::ostream
 public:
     /* create a stream for writing text etc into theBuffer */
     // See http://www.codecomments.com/archive292-2005-2-396222.html
-    explicit PackableStream(Packable &p) : std::ostream(0), theBuffer(p) {
+    explicit PackableStream(Packable &p) : std::ostream(nullptr), theBuffer(p) {
         rdbuf(&theBuffer); // set the buffer to now-initialized theBuffer
         clear(); //clear badbit set by calling init(0)
     }

@@ -37,13 +37,13 @@ storeCreate(StoreEntry * e, StoreIOState::STFNCB * file_callback, StoreIOState::
     if (!sd) {
         debugs(20, 2, "storeCreate: no swapdirs for " << *e);
         ++store_io_stats.create.select_fail;
-        return NULL;
+        return nullptr;
     }
 
     /* Now that we have a fs to use, call its storeCreate function */
     StoreIOState::Pointer sio = sd->createStoreIO(*e, file_callback, close_callback, callback_data);
 
-    if (sio == NULL)
+    if (sio == nullptr)
         ++store_io_stats.create.create_fail;
     else
         ++store_io_stats.create.success;

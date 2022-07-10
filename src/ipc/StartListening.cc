@@ -18,7 +18,7 @@
 
 #include <cerrno>
 
-Ipc::StartListeningCb::StartListeningCb(): conn(NULL), errNo(0)
+Ipc::StartListeningCb::StartListeningCb(): conn(nullptr), errNo(0)
 {
 }
 

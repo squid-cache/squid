@@ -85,7 +85,7 @@ private:
     typedef RefCount< Object<Class> > Base;
 
 public:
-    explicit Pointer(Object<Class> *const anObject = NULL): Base(anObject) {}
+    explicit Pointer(Object<Class> *const anObject = nullptr): Base(anObject) {}
 
     Class *operator ->() const { return Base::operator ->()->theObject; }
     Class &operator *() const { return *Base::operator *().theObject; }
@@ -97,7 +97,7 @@ public:
 
 template <class Class>
 Owner<Class>::Owner(const char *const id, const off_t sharedSize):
-    theSegment(id), theObject(NULL)
+    theSegment(id), theObject(nullptr)
 {
     theSegment.create(sharedSize);
     Must(theSegment.mem());

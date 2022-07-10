@@ -116,7 +116,7 @@ hash_create(HASHCMP * cmp_func, int hash_sz, HASHHASH * hash_func)
     hid->buckets = (hash_link **)xcalloc(hid->size, sizeof(hash_link *));
     hid->cmp = cmp_func;
     hid->hash = hash_func;
-    hid->next = NULL;
+    hid->next = nullptr;
     hid->current_slot = 0;
     return hid;
 }
@@ -146,21 +146,21 @@ hash_link *
 hash_lookup(hash_table * hid, const void *k)
 {
     int b;
-    assert(k != NULL);
+    assert(k != nullptr);
     b = hid->hash(k, hid->size);
-    for (hash_link *walker = hid->buckets[b]; walker != NULL; walker = walker->next) {
+    for (hash_link *walker = hid->buckets[b]; walker != nullptr; walker = walker->next) {
         if ((hid->cmp) (k, walker->key) == 0) {
             return (walker);
         }
         assert(walker != walker->next);
     }
-    return NULL;
+    return nullptr;
 }
 
 static void
 hash_next_bucket(hash_table * hid)
 {
-    while (hid->next == NULL && ++hid->current_slot < hid->size)
+    while (hid->next == nullptr && ++hid->current_slot < hid->size)
         hid->next = hid->buckets[hid->current_slot];
 }
 
@@ -171,10 +171,10 @@ hash_next_bucket(hash_table * hid)
 void
 hash_first(hash_table * hid)
 {
-    assert(NULL == hid->next);
+    assert(nullptr == hid->next);
     hid->current_slot = 0;
     hid->next = hid->buckets[hid->current_slot];
-    if (NULL == hid->next)
+    if (nullptr == hid->next)
         hash_next_bucket(hid);
 }
 
@@ -188,10 +188,10 @@ hash_link *
 hash_next(hash_table * hid)
 {
     hash_link *p = hid->next;
-    if (NULL == p)
-        return NULL;
+    if (nullptr == p)
+        return nullptr;
     hid->next = p->next;
-    if (NULL == hid->next)
+    if (nullptr == hid->next)
         hash_next_bucket(hid);
     return p;
 }
@@ -203,8 +203,8 @@ hash_next(hash_table * hid)
 void
 hash_last(hash_table * hid)
 {
-    assert(hid != NULL);
-    hid->next = NULL;
+    assert(hid != nullptr);
+    hid->next = nullptr;
     hid->current_slot = 0;
 }
 
@@ -219,7 +219,7 @@ hash_last(hash_table * hid)
 void
 hash_remove_link(hash_table * hid, hash_link * hl)
 {
-    assert(hl != NULL);
+    assert(hl != nullptr);
     int i = hid->hash(hl->key, hid->size);
     for (hash_link **P = &hid->buckets[i]; *P; P = &(*P)->next) {
         if (*P != hl)
@@ -227,7 +227,7 @@ hash_remove_link(hash_table * hid, hash_link * hl)
         *P = hl->next;
         if (hid->next == hl) {
             hid->next = hl->next;
-            if (NULL == hid->next)
+            if (nullptr == hid->next)
                 hash_next_bucket(hid);
         }
         --hid->count;
@@ -244,7 +244,7 @@ hash_link *
 hash_get_bucket(hash_table * hid, unsigned int bucket)
 {
     if (bucket >= hid->size)
-        return NULL;
+        return nullptr;
     return (hid->buckets[bucket]);
 }
 
@@ -267,7 +267,7 @@ hashFreeItems(hash_table * hid, HASHFREE * free_func)
 void
 hashFreeMemory(hash_table * hid)
 {
-    if (hid == NULL)
+    if (hid == nullptr)
         return;
     if (hid->buckets)
         xfree(hid->buckets);

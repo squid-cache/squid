@@ -121,7 +121,7 @@ IcmpSquid::Recv()
     pingerReplyData preply;
     static Ip::Address F;
 
-    Comm::SetSelect(icmp_sock, COMM_SELECT_READ, icmpSquidRecv, NULL, 0);
+    Comm::SetSelect(icmp_sock, COMM_SELECT_READ, icmpSquidRecv, nullptr, 0);
     n = comm_udp_recv(icmp_sock,
                       (char *) &preply,
                       sizeof(pingerReplyData),
@@ -201,7 +201,7 @@ IcmpSquid::Open(void)
     }
 
     args[0] = "(pinger)";
-    args[1] = NULL;
+    args[1] = nullptr;
     localhost.setLocalhost();
 
     /*
@@ -227,7 +227,7 @@ IcmpSquid::Open(void)
 
     fd_note(icmp_sock, "pinger");
 
-    Comm::SetSelect(icmp_sock, COMM_SELECT_READ, icmpSquidRecv, NULL, 0);
+    Comm::SetSelect(icmp_sock, COMM_SELECT_READ, icmpSquidRecv, nullptr, 0);
 
     commUnsetFdTimeout(icmp_sock);
 

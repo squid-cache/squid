@@ -56,7 +56,7 @@ int acl_httpstatus_data::compare(acl_httpstatus_data* const& a, acl_httpstatus_d
     return ret;
 }
 
-ACLHTTPStatus::ACLHTTPStatus (char const *theClass) : data(NULL), class_ (theClass)
+ACLHTTPStatus::ACLHTTPStatus (char const *theClass) : data(nullptr), class_ (theClass)
 {}
 
 ACLHTTPStatus::~ACLHTTPStatus()
@@ -126,7 +126,7 @@ aclMatchHTTPStatus(Splay<acl_httpstatus_data*> **dataptr, const Http::StatusCode
     const acl_httpstatus_data * const * result = (*dataptr)->find(&X, aclHTTPStatusCompare);
 
     debugs(28, 3, "aclMatchHTTPStatus: '" << status << "' " << (result ? "found" : "NOT found"));
-    return (result != NULL);
+    return (result != nullptr);
 }
 
 static int

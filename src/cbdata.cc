@@ -82,11 +82,11 @@ public:
         locks(0),
         type(CBDATA_UNKNOWN),
 #if USE_CBDATA_DEBUG
-        file(NULL),
+        file(nullptr),
         line(0),
 #endif
         cookie(0),
-        data(NULL)
+        data(nullptr)
     {}
     ~cbdata();
 
@@ -134,7 +134,7 @@ static OBJH cbdataDumpHistory;
 struct CBDataIndex {
     MemAllocator *pool;
 }
-*cbdata_index = NULL;
+*cbdata_index = nullptr;
 
 int cbdata_types = 0;
 
@@ -317,11 +317,11 @@ cbdataInternalFree(void *p, const char *file, int line)
 
     if (c->locks) {
         debugs(45, 9, p << " has " << c->locks << " locks, not freeing");
-        return NULL;
+        return nullptr;
     }
 
     cbdataRealFree(c, file, line);
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -331,7 +331,7 @@ cbdataInternalLockDbg(const void *p, const char *file, int line)
 cbdataInternalLock(const void *p)
 #endif
 {
-    if (p == NULL)
+    if (p == nullptr)
         return;
 
     auto *c = cbdata::FromUserData(p);
@@ -357,7 +357,7 @@ cbdataInternalUnlockDbg(const void *p, const char *file, int line)
 cbdataInternalUnlock(const void *p)
 #endif
 {
-    if (p == NULL)
+    if (p == nullptr)
         return;
 
     auto *c = cbdata::FromUserData(p);
@@ -371,7 +371,7 @@ cbdataInternalUnlock(const void *p)
 
     c->check(__LINE__);
 
-    assert(c != NULL);
+    assert(c != nullptr);
 
     assert(c->locks > 0);
 
@@ -397,7 +397,7 @@ cbdataInternalUnlock(const void *p)
 int
 cbdataReferenceValid(const void *p)
 {
-    if (p == NULL)
+    if (p == nullptr)
         return 1;       /* A NULL pointer cannot become invalid */
 
     debugs(45, 9, p);
@@ -420,7 +420,7 @@ cbdataInternalReferenceDoneValid(void **pp, void **tp)
 {
     void *p = (void *) *pp;
     int valid = cbdataReferenceValid(p);
-    *pp = NULL;
+    *pp = nullptr;
 #if USE_CBDATA_DEBUG
 
     cbdataInternalUnlockDbg(p, file, line);
@@ -433,7 +433,7 @@ cbdataInternalReferenceDoneValid(void **pp, void **tp)
         *tp = p;
         return 1;
     } else {
-        *tp = NULL;
+        *tp = nullptr;
         return 0;
     }
 }

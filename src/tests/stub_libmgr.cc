@@ -30,10 +30,10 @@ void Mgr::Action::add(const Action &) STUB
 void Mgr::Action::respond(const Request &) STUB
 void Mgr::Action::sendResponse(const Ipc::RequestId) STUB
 bool Mgr::Action::atomic() const STUB_RETVAL(false)
-const char * Mgr::Action::name() const STUB_RETVAL(NULL)
+const char * Mgr::Action::name() const STUB_RETVAL(nullptr)
 static Mgr::Command static_Command;
 const Mgr::Command & Mgr::Action::command() const STUB_RETVAL(static_Command)
-StoreEntry * Mgr::Action::createStoreEntry() const STUB_RETVAL(NULL)
+StoreEntry * Mgr::Action::createStoreEntry() const STUB_RETVAL(nullptr)
 static Mgr::Action::Pointer dummyAction;
 
 #include "mgr/ActionParams.h"
@@ -179,7 +179,7 @@ void Mgr::QueryParams::unpack(const Ipc::TypedMsgHdr&) STUB
 void Mgr::QueryParams::Parse(Parser::Tokenizer &, QueryParams &) STUB
 //private:
 //Params::const_iterator Mgr::QueryParams::find(const String&) const STUB_RETVAL(new Mgr::Params::const_iterator(*this))
-Mgr::QueryParam::Pointer Mgr::QueryParams::CreateParam(QueryParam::Type) STUB_RETVAL(Mgr::QueryParam::Pointer(NULL))
+Mgr::QueryParam::Pointer Mgr::QueryParams::CreateParam(QueryParam::Type) STUB_RETVAL(Mgr::QueryParam::Pointer(nullptr))
 
 #include "mgr/Registration.h"
 //void Mgr::RegisterAction(char const *, char const *, OBJH *, int, int);
@@ -196,7 +196,7 @@ Ipc::Request::Pointer Mgr::Request::clone() const STUB_RETVAL(const_cast<Mgr::Re
 //Mgr::Response::Response(const Ipc::TypedMsgHdr&) STUB
 void Mgr::Response::pack(Ipc::TypedMsgHdr&) const STUB
 static Ipc::Response::Pointer ipr_static;
-Ipc::Response::Pointer Mgr::Response::clone() const STUB_RETVAL(Ipc::Response::Pointer(NULL))
+Ipc::Response::Pointer Mgr::Response::clone() const STUB_RETVAL(Ipc::Response::Pointer(nullptr))
 bool Mgr::Response::hasAction() const STUB_RETVAL(false)
 //static Mgr::Action mgraction_static;
 //const Mgr::Action& Mgr::Response::getAction() const STUB_RETVAL(mgraction_static)

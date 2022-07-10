@@ -26,7 +26,7 @@ class MemBuf : public Packable
 
 public:
     MemBuf():
-        buf(NULL),
+        buf(nullptr),
         size(0),
         max_capacity(0),
         capacity(0),

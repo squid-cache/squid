@@ -17,7 +17,7 @@
 void
 Log::Format::SquidUserAgent(const AccessLogEntry::Pointer &al, Logfile * logfile)
 {
-    const char *agent = NULL;
+    const char *agent = nullptr;
 
     if (al->request)
         agent = al->request->header.getStr(Http::HdrType::USER_AGENT);

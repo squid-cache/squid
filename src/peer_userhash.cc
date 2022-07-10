@@ -28,7 +28,7 @@
 #define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
 
 static int n_userhash_peers = 0;
-static CachePeer **userhash_peers = NULL;
+static CachePeer **userhash_peers = nullptr;
 static OBJH peerUserHashCachemgr;
 static void peerUserHashRegisterWithCacheManager(void);
 
@@ -152,25 +152,25 @@ peerUserHashSelectParent(PeerSelector *ps)
 {
     int k;
     const char *c;
-    CachePeer *p = NULL;
+    CachePeer *p = nullptr;
     CachePeer *tp;
     unsigned int user_hash = 0;
     unsigned int combined_hash;
     double score;
     double high_score = 0;
-    const char *key = NULL;
+    const char *key = nullptr;
 
     if (n_userhash_peers == 0)
-        return NULL;
+        return nullptr;
 
     assert(ps);
     HttpRequest *request = ps->request;
 
-    if (request->auth_user_request != NULL)
+    if (request->auth_user_request != nullptr)
         key = request->auth_user_request->username();
 
     if (!key)
-        return NULL;
+        return nullptr;
 
     /* calculate hash key */
     debugs(39, 2, "peerUserHashSelectParent: Calculating hash for " << key);

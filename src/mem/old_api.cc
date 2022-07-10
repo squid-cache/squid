@@ -201,7 +201,7 @@ memDataInit(mem_type type, const char *name, size_t size, int, bool doZero)
 {
     assert(name && size);
 
-    if (GetPool(type) != NULL)
+    if (GetPool(type) != nullptr)
         return;
 
     GetPool(type) = memPoolCreate(name, size);
@@ -382,7 +382,7 @@ memReallocBuf(void *oldbuf, size_t net_size, size_t * gross_size)
 void
 memFreeBuf(size_t size, void *buf)
 {
-    mem_type type = memFindBufSizeType(size, NULL);
+    mem_type type = memFindBufSizeType(size, nullptr);
 
     if (type != MEM_NONE)
         memFree(buf, type);
@@ -399,7 +399,7 @@ void
 Mem::CleanIdlePools(void *)
 {
     MemPools::GetInstance().clean(static_cast<time_t>(clean_interval));
-    eventAdd("memPoolCleanIdlePools", CleanIdlePools, NULL, clean_interval, 1);
+    eventAdd("memPoolCleanIdlePools", CleanIdlePools, nullptr, clean_interval, 1);
 }
 
 void
@@ -744,7 +744,7 @@ Mem::Report(std::ostream &stream)
 
     xfree(sortme);
 
-    mp_stats.pool = NULL;
+    mp_stats.pool = nullptr;
     mp_stats.label = "Total";
     mp_stats.meter = mp_total.TheMeter;
     mp_stats.obj_size = 1;

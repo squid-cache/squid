@@ -13,8 +13,8 @@
 #include "esi/Parser.h"
 #include "fatal.h"
 
-char *ESIParser::Type = NULL;
-ESIParser::Register *ESIParser::Parser = NULL;
+char *ESIParser::Type = nullptr;
+ESIParser::Register *ESIParser::Parser = nullptr;
 
 std::list<ESIParser::Register *> &
 ESIParser::GetRegistry()

@@ -44,13 +44,13 @@ void
 Snmp::Inquirer::cleanup()
 {
     if (Comm::IsConnOpen(conn)) {
-        if (closer != NULL) {
+        if (closer != nullptr) {
             comm_remove_close_handler(conn->fd, closer);
-            closer = NULL;
+            closer = nullptr;
         }
         conn->close();
     }
-    conn = NULL;
+    conn = nullptr;
 }
 
 void

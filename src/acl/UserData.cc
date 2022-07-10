@@ -25,7 +25,7 @@ ACLUserData::match(char const *user)
 {
     debugs(28, 7, "user is " << user << ", case_insensitive is " << flags.case_insensitive);
 
-    if (user == NULL || strcmp(user, "-") == 0)
+    if (user == nullptr || strcmp(user, "-") == 0)
         return 0;
 
     if (flags.required) {
@@ -93,7 +93,7 @@ ACLUserData::parse()
     debugs(28, 2, "parsing user list");
     flags.case_insensitive = bool(CaseInsensitive_);
 
-    char *t = NULL;
+    char *t = nullptr;
     if ((t = ConfigParser::strtokFile())) {
         SBuf s(t);
         debugs(28, 5, "first token is " << s);

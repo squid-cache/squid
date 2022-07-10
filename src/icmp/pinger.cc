@@ -207,7 +207,7 @@ main(int, char **)
         }
 
         FD_SET(squid_link, &R);
-        x = select(max_fd+1, &R, NULL, NULL, &tv);
+        x = select(max_fd+1, &R, nullptr, nullptr, &tv);
         getCurrentTime();
 
         if (x < 0) {

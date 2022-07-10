@@ -163,10 +163,10 @@ protected:
     class CfgFile
     {
     public:
-        CfgFile(): wordFile(NULL), parsePos(NULL), lineNo(0) { parseBuffer[0] = '\0';}
+        CfgFile(): wordFile(nullptr), parsePos(nullptr), lineNo(0) { parseBuffer[0] = '\0';}
         ~CfgFile();
         /// True if the configuration file is open
-        bool isOpen() {return wordFile != NULL;}
+        bool isOpen() {return wordFile != nullptr;}
 
         /**
          * Open the file given by 'path' and initializes the CfgFile object
@@ -202,7 +202,7 @@ protected:
      * Unquotes the token, which must be quoted.
      * \param next if it is not NULL, it is set after the end of token.
      */
-    static char *UnQuote(const char *token, const char **next = NULL);
+    static char *UnQuote(const char *token, const char **next = nullptr);
 
     /**
      * Does the real tokens parsing job: Ignore comments, unquote an

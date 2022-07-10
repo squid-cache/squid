@@ -41,7 +41,7 @@ static TokenTableEntry TokenTable1C[] = {
 
     TokenTableEntry("%", LFT_PERCENT),
 
-    TokenTableEntry(NULL, LFT_NONE)        /* this must be last */
+    TokenTableEntry(nullptr, LFT_NONE)        /* this must be last */
 };
 
 /// 2-char tokens
@@ -133,7 +133,7 @@ static TokenTableEntry TokenTable2C[] = {
     TokenTableEntry("ea", LFT_EXT_LOG),
     TokenTableEntry("sn", LFT_SEQUENCE_NUMBER),
 
-    TokenTableEntry(NULL, LFT_NONE)        /* this must be last */
+    TokenTableEntry(nullptr, LFT_NONE)        /* this must be last */
 };
 
 /// Miscellaneous >2 byte tokens
@@ -176,7 +176,7 @@ static TokenTableEntry TokenTableMisc[] = {
     TokenTableEntry("USER_CERTCHAIN", LFT_EXT_ACL_USER_CERTCHAIN_RAW),
     TokenTableEntry("USER_CERT", LFT_EXT_ACL_USER_CERT_RAW),
 #endif
-    TokenTableEntry(NULL, LFT_NONE)        /* this must be last */
+    TokenTableEntry(nullptr, LFT_NONE)        /* this must be last */
 };
 
 static TokenTableEntry TokenTableProxyProtocol[] = {
@@ -192,7 +192,7 @@ static TokenTableEntry TokenTableAdapt[] = {
     TokenTableEntry("all_trs", LFT_ADAPTATION_ALL_XACT_TIMES),
     TokenTableEntry("sum_trs", LFT_ADAPTATION_SUM_XACT_TIMES),
     TokenTableEntry("<last_h", LFT_ADAPTATION_LAST_HEADER),
-    TokenTableEntry(NULL, LFT_NONE)           /* this must be last */
+    TokenTableEntry(nullptr, LFT_NONE)           /* this must be last */
 };
 #endif
 
@@ -218,7 +218,7 @@ static TokenTableEntry TokenTableIcap[] = {
     TokenTableEntry("to",  LFT_ICAP_OUTCOME),
     TokenTableEntry("Hs",  LFT_ICAP_STATUS_CODE),
 
-    TokenTableEntry(NULL, LFT_NONE)           /* this must be last */
+    TokenTableEntry(nullptr, LFT_NONE)           /* this must be last */
 };
 #endif
 
@@ -241,7 +241,7 @@ static TokenTableEntry TokenTableSsl[] = {
     TokenTableEntry("<received_hello_version", LFT_TLS_SERVER_RECEIVED_HELLO_VERSION),
     TokenTableEntry(">received_supported_version", LFT_TLS_CLIENT_SUPPORTED_VERSION),
     TokenTableEntry("<received_supported_version", LFT_TLS_SERVER_SUPPORTED_VERSION),
-    TokenTableEntry(NULL, LFT_NONE)
+    TokenTableEntry(nullptr, LFT_NONE)
 };
 #endif
 } // namespace Format
@@ -271,7 +271,7 @@ Format::Token::Init()
 const char *
 Format::Token::scanForToken(TokenTableEntry const table[], const char *cur)
 {
-    for (TokenTableEntry const *lte = table; lte->configTag != NULL; ++lte) {
+    for (TokenTableEntry const *lte = table; lte->configTag != nullptr; ++lte) {
         debugs(46, 8, "compare tokens '" << lte->configTag << "' with '" << cur << "'");
         if (strncmp(lte->configTag, cur, strlen(lte->configTag)) == 0) {
             type = lte->tokenType;
@@ -665,7 +665,7 @@ Format::Token::parse(const char *def, Quoting *quoting)
 }
 
 Format::Token::Token() : type(LFT_NONE),
-    label(NULL),
+    label(nullptr),
     widthMin(-1),
     widthMax(-1),
     quote(LOG_QUOTE_NONE),
@@ -673,23 +673,23 @@ Format::Token::Token() : type(LFT_NONE),
     space(false),
     zero(false),
     divisor(1),
-    next(NULL)
+    next(nullptr)
 {
-    data.string = NULL;
-    data.header.header = NULL;
-    data.header.element = NULL;
+    data.string = nullptr;
+    data.header.header = nullptr;
+    data.header.element = nullptr;
     data.header.separator = ',';
     data.headerId = ProxyProtocol::Two::htUnknown;
 }
 
 Format::Token::~Token()
 {
-    label = NULL; // drop reference to global static.
+    label = nullptr; // drop reference to global static.
     safe_free(data.string);
     while (next) {
         Token *tokens = next;
         next = next->next;
-        tokens->next = NULL;
+        tokens->next = nullptr;
         delete tokens;
     }
 }

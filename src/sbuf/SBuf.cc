@@ -195,7 +195,7 @@ SBuf &
 SBuf::append(const char * S, size_type Ssize)
 {
     const Locker blobKeeper(this, S);
-    if (S == NULL)
+    if (S == nullptr)
         return *this;
     if (Ssize == SBuf::npos)
         Ssize = strlen(S);
@@ -241,7 +241,7 @@ SBuf::vappendf(const char *fmt, va_list vargs)
     // with (v)appendf() the fmt or an arg might be a dangerous char*
     const Locker blobKeeper(this, buf());
 
-    Must(fmt != NULL);
+    Must(fmt != nullptr);
     int sz = 0;
     //reserve twice the format-string size, it's a likely heuristic
     size_type requiredSpaceEstimate = strlen(fmt)*2;
@@ -553,7 +553,7 @@ SBuf::trim(const SBuf &toRemove, bool atBeginning, bool atEnd)
     ++stats.trim;
     if (atEnd) {
         const char *p = bufEnd()-1;
-        while (!isEmpty() && memchr(toRemove.buf(), *p, toRemove.length()) != NULL) {
+        while (!isEmpty() && memchr(toRemove.buf(), *p, toRemove.length()) != nullptr) {
             //current end-of-buf is in the searched set
             --len_;
             --p;
@@ -561,7 +561,7 @@ SBuf::trim(const SBuf &toRemove, bool atBeginning, bool atEnd)
     }
     if (atBeginning) {
         const char *p = buf();
-        while (!isEmpty() && memchr(toRemove.buf(), *p, toRemove.length()) != NULL) {
+        while (!isEmpty() && memchr(toRemove.buf(), *p, toRemove.length()) != nullptr) {
             --len_;
             ++off_;
             ++p;
@@ -594,7 +594,7 @@ SBuf::find(char c, size_type startPos) const
 
     const void *i = memchr(buf()+startPos, (int)c, (size_type)length()-startPos);
 
-    if (i == NULL)
+    if (i == nullptr)
         return npos;
 
     return (static_cast<const char *>(i)-buf());
@@ -637,7 +637,7 @@ SBuf::find(const SBuf &needle, size_type startPos) const
         debugs(24, 8, " begin=" << (void *) start <<
                ", lastPossible=" << (void*) lastPossible );
         tmp = static_cast<char *>(memchr(start, needleBegin, lastPossible-start));
-        if (tmp == NULL) {
+        if (tmp == nullptr) {
             debugs(24, 8, "First byte not found");
             return npos;
         }
@@ -713,7 +713,7 @@ SBuf::rfind(char c, SBuf::size_type endPos) const
 
     const void *i = memrchr(buf(), (int)c, (size_type)endPos);
 
-    if (i == NULL)
+    if (i == nullptr)
         return npos;
 
     return (static_cast<const char *>(i)-buf());

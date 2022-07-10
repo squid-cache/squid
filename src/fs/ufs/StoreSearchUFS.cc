@@ -18,15 +18,15 @@ CBDATA_NAMESPACED_CLASS_INIT(Fs::Ufs,StoreSearchUFS);
 Fs::Ufs::StoreSearchUFS::StoreSearchUFS(RefCount<UFSSwapDir> aSwapDir) :
     sd(aSwapDir),
     walker(sd->repl->WalkInit(sd->repl)),
-    cbdata(NULL),
-    current(NULL),
+    cbdata(nullptr),
+    current(nullptr),
     _done(false)
 {}
 
 Fs::Ufs::StoreSearchUFS::~StoreSearchUFS()
 {
     walker->Done(walker);
-    walker = NULL;
+    walker = nullptr;
 }
 
 void
@@ -46,10 +46,10 @@ Fs::Ufs::StoreSearchUFS::next()
     if (walker)
         current = const_cast<StoreEntry *>(walker->Next(walker));
 
-    if (current == NULL)
+    if (current == nullptr)
         _done = true;
 
-    return current != NULL;
+    return current != nullptr;
 }
 
 bool

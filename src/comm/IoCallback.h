@@ -42,7 +42,7 @@ public:
     unsigned int quotaQueueReserv; ///< reservation ID from CommQuotaQueue
 #endif
 
-    bool active() const { return callback != NULL; }
+    bool active() const { return callback != nullptr; }
     void setCallback(iocb_type type, AsyncCall::Pointer &cb, char *buf, FREE *func, int sz);
 
     /// called when fd needs to write but may need to wait in line for its quota

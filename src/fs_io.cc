@@ -78,7 +78,7 @@ file_close(int fd)
     assert(F->flags.open);
 
     if ((read_callback = F->read_handler)) {
-        F->read_handler = NULL;
+        F->read_handler = nullptr;
         read_callback(-1, F->read_data);
     }
 
@@ -102,7 +102,7 @@ file_close(int fd)
      * Assert there is no write callback.  Otherwise we might be
      * leaking write state data by closing the descriptor
      */
-    assert(F->write_handler == NULL);
+    assert(F->write_handler == nullptr);
 
     close(fd);
 
@@ -132,10 +132,10 @@ diskCombineWrites(_fde_disk *fdd)
      * XXX This currently ignores any seeks (file_offset)
      */
 
-    if (fdd->write_q != NULL && fdd->write_q->next != NULL) {
+    if (fdd->write_q != nullptr && fdd->write_q->next != nullptr) {
         int len = 0;
 
-        for (dwrite_q *q = fdd->write_q; q != NULL; q = q->next)
+        for (dwrite_q *q = fdd->write_q; q != nullptr; q = q->next)
             len += q->len - q->buf_offset;
 
         dwrite_q *wq = (dwrite_q *)memAllocate(MEM_DWRITE_Q);
@@ -146,11 +146,11 @@ diskCombineWrites(_fde_disk *fdd)
 
         wq->buf_offset = 0;
 
-        wq->next = NULL;
+        wq->next = nullptr;
 
         wq->free_func = cxx_xfree;
 
-        while (fdd->write_q != NULL) {
+        while (fdd->write_q != nullptr) {
             dwrite_q *q = fdd->write_q;
 
             len = q->len - q->buf_offset;
@@ -182,14 +182,14 @@ diskHandleWrite(int fd, void *)
     int status = DISK_OK;
     bool do_close;
 
-    if (NULL == q)
+    if (nullptr == q)
         return;
 
     debugs(6, 3, "diskHandleWrite: FD " << fd);
 
     F->flags.write_daemon = false;
 
-    assert(fdd->write_q != NULL);
+    assert(fdd->write_q != nullptr);
 
     assert(fdd->write_q->len > fdd->write_q->buf_offset);
 
@@ -234,7 +234,7 @@ diskHandleWrite(int fd, void *)
              * a fatal message.
              */
 
-            if (fdd->wrt_handle == NULL)
+            if (fdd->wrt_handle == nullptr)
                 fatal("Write failure -- check your disk space and cache.log");
 
             /*
@@ -254,7 +254,7 @@ diskHandleWrite(int fd, void *)
 
                 if (q) {
                     memFree(q, MEM_DWRITE_Q);
-                    q = NULL;
+                    q = nullptr;
                 }
             } while ((q = fdd->write_q));
         }
@@ -262,7 +262,7 @@ diskHandleWrite(int fd, void *)
         len = 0;
     }
 
-    if (q != NULL) {
+    if (q != nullptr) {
         /* q might become NULL from write failure above */
         q->buf_offset += len;
 
@@ -282,18 +282,18 @@ diskHandleWrite(int fd, void *)
 
             if (q) {
                 memFree(q, MEM_DWRITE_Q);
-                q = NULL;
+                q = nullptr;
             }
         }
     }
 
-    if (fdd->write_q == NULL) {
+    if (fdd->write_q == nullptr) {
         /* no more data */
-        fdd->write_q_tail = NULL;
+        fdd->write_q_tail = nullptr;
     } else {
         /* another block is queued */
         diskCombineWrites(fdd);
-        Comm::SetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
+        Comm::SetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, nullptr, 0);
         F->flags.write_daemon = true;
     }
 
@@ -302,7 +302,7 @@ diskHandleWrite(int fd, void *)
     if (fdd->wrt_handle) {
         DWCB *callback = fdd->wrt_handle;
         void *cbdata;
-        fdd->wrt_handle = NULL;
+        fdd->wrt_handle = nullptr;
 
         if (cbdataReferenceValidDone(fdd->wrt_handle_data, &cbdata)) {
             callback(fd, status, len, cbdata);
@@ -331,7 +331,7 @@ file_write(int fd,
            void *handle_data,
            FREE * free_func)
 {
-    dwrite_q *wq = NULL;
+    dwrite_q *wq = nullptr;
     fde *F = &fd_table[fd];
     assert(fd >= 0);
     assert(F->flags.open);
@@ -341,7 +341,7 @@ file_write(int fd,
     wq->buf = (char *)ptr_to_buf;
     wq->len = len;
     wq->buf_offset = 0;
-    wq->next = NULL;
+    wq->next = nullptr;
     wq->free_func = free_func;
 
     if (!F->disk.wrt_handle_data) {
@@ -353,7 +353,7 @@ file_write(int fd,
     }
 
     /* add to queue */
-    if (F->disk.write_q == NULL) {
+    if (F->disk.write_q == nullptr) {
         /* empty queue */
         F->disk.write_q = F->disk.write_q_tail = wq;
     } else {
@@ -362,7 +362,7 @@ file_write(int fd,
     }
 
     if (!F->flags.write_daemon) {
-        diskHandleWrite(fd, NULL);
+        diskHandleWrite(fd, nullptr);
     }
 }
 

@@ -25,7 +25,7 @@ Comm::Connection::~Connection() STUB
 Comm::ConnectionPointer Comm::Connection::cloneProfile() const STUB_RETVAL(nullptr)
 void Comm::Connection::close() STUB
 void Comm::Connection::noteClosure() STUB
-CachePeer * Comm::Connection::getPeer() const STUB_RETVAL(NULL)
+CachePeer * Comm::Connection::getPeer() const STUB_RETVAL(nullptr)
 void Comm::Connection::setPeer(CachePeer *) STUB
 ScopedId Comm::Connection::codeContextGist() const STUB_RETVAL(id.detach())
 std::ostream &Comm::Connection::detailCodeContext(std::ostream &os) const STUB_RETVAL(os)
@@ -39,7 +39,7 @@ void Comm::ConnOpener::swanSong() STUB
 Comm::ConnOpener::ConnOpener(const Comm::ConnectionPointer &, const AsyncCall::Pointer &, time_t) : AsyncJob("STUB Comm::ConnOpener") STUB
     Comm::ConnOpener::~ConnOpener() STUB
     void Comm::ConnOpener::setHost(const char *) STUB
-    const char * Comm::ConnOpener::getHost() const STUB_RETVAL(NULL)
+    const char * Comm::ConnOpener::getHost() const STUB_RETVAL(nullptr)
 
 #include "comm/forward.h"
     bool Comm::IsConnOpen(const Comm::ConnectionPointer &) STUB_RETVAL(false)
@@ -49,7 +49,7 @@ Comm::ConnOpener::ConnOpener(const Comm::ConnectionPointer &, const AsyncCall::P
     void Comm::IoCallback::selectOrQueueWrite() STUB
     void Comm::IoCallback::cancel(const char *) STUB
     void Comm::IoCallback::finish(Comm::Flag, int) STUB
-    Comm::CbEntry *Comm::iocb_table = NULL;
+    Comm::CbEntry *Comm::iocb_table = nullptr;
 void Comm::CallbackTableInit() STUB
 void Comm::CallbackTableDestruct() STUB
 

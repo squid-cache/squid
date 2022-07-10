@@ -79,8 +79,8 @@ CBDATA_NAMESPACED_CLASS_INIT(Ssl, IcapPeerConnector);
 Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::ServiceRep::Pointer &aService):
     AsyncJob(aTypeName),
     Adaptation::Initiate(aTypeName),
-    icapRequest(NULL),
-    icapReply(NULL),
+    icapRequest(nullptr),
+    icapReply(nullptr),
     attempts(0),
     theService(aService),
     commEof(false),
@@ -119,7 +119,7 @@ Adaptation::Icap::Xaction::masterLogEntry()
 Adaptation::Icap::ServiceRep &
 Adaptation::Icap::Xaction::service()
 {
-    Must(theService != NULL);
+    Must(theService != nullptr);
     return *theService;
 }
 
@@ -186,7 +186,7 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
 
     Adaptation::Icap::ServiceRep &s = service();
 
-    if (ia == NULL) {
+    if (ia == nullptr) {
         debugs(44, DBG_IMPORTANT, "ERROR: ICAP: Unknown service host: " << s.cfg().host);
 
 #if WHEN_IPCACHE_NBGETHOSTBYNAME_USES_ASYNC_CALLS
@@ -214,9 +214,9 @@ void Adaptation::Icap::Xaction::closeConnection()
 {
     if (haveConnection()) {
 
-        if (closer != NULL) {
+        if (closer != nullptr) {
             comm_remove_close_handler(connection->fd, closer);
-            closer = NULL;
+            closer = nullptr;
         }
 
         commUnsetConnTimeout(connection);
@@ -238,9 +238,9 @@ void Adaptation::Icap::Xaction::closeConnection()
         Adaptation::Icap::ServiceRep &s = service();
         s.putConnection(connection, reuseConnection, reset, status());
 
-        writer = NULL;
-        reader = NULL;
-        connection = NULL;
+        writer = nullptr;
+        reader = nullptr;
+        connection = nullptr;
     }
 }
 
@@ -326,8 +326,8 @@ void Adaptation::Icap::Xaction::scheduleWrite(MemBuf &buf)
 
 void Adaptation::Icap::Xaction::noteCommWrote(const CommIoCbParams &io)
 {
-    Must(writer != NULL);
-    writer = NULL;
+    Must(writer != nullptr);
+    writer = nullptr;
 
     if (ignoreLastWrite) {
         // a hack due to comm inability to cancel a pending write
@@ -360,7 +360,7 @@ void Adaptation::Icap::Xaction::noteCommClosed(const CommCloseCbParams &)
         connection->noteClosure();
         connection = nullptr;
     }
-    closer = NULL;
+    closer = nullptr;
 
     static const auto d = MakeNamedErrorDetail("ICAP_XACT_CLOSE");
     detailError(d);
@@ -394,7 +394,7 @@ void Adaptation::Icap::Xaction::updateTimeout()
 {
     Must(haveConnection());
 
-    if (reader != NULL || writer != NULL) {
+    if (reader != nullptr || writer != nullptr) {
         // restart the timeout before each I/O
         // XXX: why does Config.Timeout lacks a write timeout?
         // TODO: service bypass status may differ from that of a transaction
@@ -423,8 +423,8 @@ void Adaptation::Icap::Xaction::scheduleRead()
 // comm module read a portion of the ICAP response for us
 void Adaptation::Icap::Xaction::noteCommRead(const CommIoCbParams &io)
 {
-    Must(reader != NULL);
-    reader = NULL;
+    Must(reader != nullptr);
+    reader = nullptr;
 
     Must(io.flag == Comm::OK);
 
@@ -483,10 +483,10 @@ void Adaptation::Icap::Xaction::noteCommRead(const CommIoCbParams &io)
 
 void Adaptation::Icap::Xaction::cancelRead()
 {
-    if (reader != NULL) {
+    if (reader != nullptr) {
         Must(haveConnection());
         Comm::ReadCancel(connection->fd, reader);
-        reader = NULL;
+        reader = nullptr;
     }
 }
 
@@ -536,7 +536,7 @@ bool Adaptation::Icap::Xaction::doneWithIo() const
 
 bool Adaptation::Icap::Xaction::haveConnection() const
 {
-    return connection != NULL && connection->isOpen();
+    return connection != nullptr && connection->isOpen();
 }
 
 // initiator aborted
@@ -621,7 +621,7 @@ void Adaptation::Icap::Xaction::finalizeLogInfo()
 
     al.icap.request = icapRequest;
     HTTPMSGLOCK(al.icap.request);
-    if (icapReply != NULL) {
+    if (icapReply != nullptr) {
         al.icap.reply = icapReply.getRaw();
         HTTPMSGLOCK(al.icap.reply);
         al.icap.resStatus = icapReply->sline.status();
@@ -648,10 +648,10 @@ void Adaptation::Icap::Xaction::fillPendingStatus(MemBuf &buf) const
     if (haveConnection()) {
         buf.appendf("FD %d", connection->fd);
 
-        if (writer != NULL)
+        if (writer != nullptr)
             buf.append("w", 1);
 
-        if (reader != NULL)
+        if (reader != nullptr)
             buf.append("r", 1);
 
         buf.append(";", 1);
@@ -666,7 +666,7 @@ void Adaptation::Icap::Xaction::fillDoneStatus(MemBuf &buf) const
     if (haveConnection() && commEof)
         buf.appendf("Comm(%d)", connection->fd);
 
-    if (stopReason != NULL)
+    if (stopReason != nullptr)
         buf.append("Stopped", 7);
 }
 

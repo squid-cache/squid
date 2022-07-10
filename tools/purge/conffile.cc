@@ -155,7 +155,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
                                       (int)subs[offset].rm_so,
                                       (int)subs[offset].rm_eo,
                                       line+subs[offset].rm_so );
-            cd.size = strtoul( line+subs[offset].rm_so, 0, 10 );
+            cd.size = strtoul( line+subs[offset].rm_so, nullptr, 10 );
             ++offset;
 
             // extract 1st level directories
@@ -164,7 +164,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
                                       (int)subs[offset].rm_so,
                                       (int)subs[offset].rm_eo,
                                       line+subs[offset].rm_so );
-            cd.level[0] = strtoul( line+subs[offset].rm_so, 0, 10 );
+            cd.level[0] = strtoul( line+subs[offset].rm_so, nullptr, 10 );
             ++offset;
 
             // extract 2nd level directories
@@ -173,7 +173,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
                                       (int)subs[offset].rm_so,
                                       (int)subs[offset].rm_eo,
                                       line+subs[offset].rm_so );
-            cd.level[1] = strtoul( line+subs[offset].rm_so, 0, 10 );
+            cd.level[1] = strtoul( line+subs[offset].rm_so, nullptr, 10 );
             ++offset;
 
             cachedir.push_back( cd );

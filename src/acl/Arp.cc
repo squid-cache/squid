@@ -73,14 +73,14 @@ aclParseArpData(const char *t)
     if (sscanf(t, "%[0-9a-fA-F:]", buf) != 1) {
         debugs(28, DBG_CRITICAL, "ERROR: aclParseArpData: Bad ethernet address: '" << t << "'");
         delete q;
-        return NULL;
+        return nullptr;
     }
 
     if (!q->decode(buf)) {
         debugs(28, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
         debugs(28, DBG_CRITICAL, "ERROR: aclParseArpData: Ignoring invalid ARP acl entry: cannot parse '" << buf << "'");
         delete q;
-        return NULL;
+        return nullptr;
     }
 
     return q;

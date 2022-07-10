@@ -92,7 +92,7 @@ public:
         overflowed(false),
         cso_recno(0),
         len(0),
-        buf(NULL),
+        buf(nullptr),
         fwd(aFwd)
     {
         *request = 0;
@@ -233,8 +233,8 @@ static void
 gopherMimeCreate(GopherStateData * gopherState)
 {
     StoreEntry *entry = gopherState->entry;
-    const char *mime_type = NULL;
-    const char *mime_enc = NULL;
+    const char *mime_type = nullptr;
+    const char *mime_enc = nullptr;
 
     switch (gopherState->type_id) {
 
@@ -350,7 +350,7 @@ gopherCachable(const HttpRequest * req)
     /* parse to see type */
     gopher_request_parse(req,
                          &type_id,
-                         NULL);
+                         nullptr);
 
     switch (type_id) {
 
@@ -402,7 +402,7 @@ gopherEndHTML(GopherStateData * gopherState)
     StoreEntry *e = gopherState->entry;
 
     if (!gopherState->HTML_header_added) {
-        gopherHTMLHeader(e, "Server Return Nothing", NULL);
+        gopherHTMLHeader(e, "Server Return Nothing", nullptr);
         storeAppendPrintf(e, "<P>The Gopher query resulted in a blank response</P>");
     } else if (gopherState->HTML_pre) {
         storeAppendPrintf(e, "</PRE>\n");
@@ -420,16 +420,16 @@ static void
 gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 {
     char *pos = inbuf;
-    char *lpos = NULL;
-    char *tline = NULL;
+    char *lpos = nullptr;
+    char *tline = nullptr;
     LOCAL_ARRAY(char, line, TEMP_BUF_SIZE);
-    char *name = NULL;
-    char *selector = NULL;
-    char *host = NULL;
-    char *port = NULL;
-    char *escaped_selector = NULL;
+    char *name = nullptr;
+    char *selector = nullptr;
+    char *host = nullptr;
+    char *port = nullptr;
+    char *escaped_selector = nullptr;
     char gtype;
-    StoreEntry *entry = NULL;
+    StoreEntry *entry = nullptr;
 
     memset(line, '\0', TEMP_BUF_SIZE);
 
@@ -469,9 +469,9 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 
     if (!gopherState->HTML_header_added) {
         if (gopherState->conversion == GopherStateData::HTML_CSO_RESULT)
-            gopherHTMLHeader(entry, "CSO Search Result", NULL);
+            gopherHTMLHeader(entry, "CSO Search Result", nullptr);
         else
-            gopherHTMLHeader(entry, "Gopher Menu", NULL);
+            gopherHTMLHeader(entry, "Gopher Menu", nullptr);
 
         outbuf.append ("<PRE>");
 
@@ -620,8 +620,8 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                 char *s_code, *s_recno, *result;
 
                 s_code = strtok(line + 1, ":\n");
-                s_recno = strtok(NULL, ":\n");
-                result = strtok(NULL, "\n");
+                s_recno = strtok(nullptr, ":\n");
+                result = strtok(nullptr, "\n");
 
                 if (!result)
                     break;
@@ -646,7 +646,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                 char *s_code, *result;
 
                 s_code = strtok(line, ":");
-                result = strtok(NULL, "\n");
+                result = strtok(nullptr, "\n");
 
                 if (!result)
                     break;
@@ -962,7 +962,7 @@ gopherStart(FwdState * fwd)
     comm_add_close_handler(fwd->serverConnection()->fd, gopherStateFree, gopherState);
 
     if (((gopherState->type_id == GOPHER_INDEX) || (gopherState->type_id == GOPHER_CSO))
-            && (strchr(gopherState->request, '?') == NULL)) {
+            && (strchr(gopherState->request, '?') == nullptr)) {
         /* Index URL without query word */
         /* We have to generate search page back to client. No need for connection */
         gopherMimeCreate(gopherState);
@@ -977,7 +977,7 @@ gopherStart(FwdState * fwd)
             }
         }
 
-        gopherToHTML(gopherState, (char *) NULL, 0);
+        gopherToHTML(gopherState, (char *) nullptr, 0);
         fwd->markStoredReplyAsWhole("gopher instant internal request satisfaction");
         fwd->complete();
         return;

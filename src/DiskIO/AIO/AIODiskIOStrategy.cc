@@ -58,7 +58,7 @@ RefCount<DiskFile>
 AIODiskIOStrategy::newFile (char const *path)
 {
     if (shedLoad()) {
-        return NULL;
+        return nullptr;
     }
 
     return new AIODiskFile (path, this);
@@ -191,7 +191,7 @@ AIODiskIOStrategy::statfs(StoreEntry &) const
 ConfigOption *
 AIODiskIOStrategy::getOptionTree() const
 {
-    return NULL;
+    return nullptr;
 }
 
 /*

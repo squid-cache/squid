@@ -63,7 +63,7 @@ void
 esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *rep, StoreIOBuffer receivedData)
 {
     /* Test preconditions */
-    assert (node != NULL);
+    assert (node != nullptr);
     /* ESI TODO: handle thisNode rather than asserting
      * - it should only ever happen if we cause an
      * abort and the callback chain loops back to
@@ -71,11 +71,11 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
      * itself shouldn't happen, so it stays as an
      * assert for now. */
     assert (cbdataReferenceValid (node));
-    assert (node->node.next == NULL);
-    assert (http->getConn() == NULL);
+    assert (node->node.next == nullptr);
+    assert (http->getConn() == nullptr);
 
     ESIStreamContext::Pointer esiStream = dynamic_cast<ESIStreamContext *>(node->data.getRaw());
-    assert (esiStream.getRaw() != NULL);
+    assert (esiStream.getRaw() != nullptr);
     /* If segments become more flexible, ignore thisNode */
     assert (receivedData.length <= sizeof(esiStream->localbuffer->buf));
     assert (!esiStream->finished);
@@ -86,11 +86,11 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
     /* trivial case */
 
     if (http->out.offset != 0) {
-        assert(rep == NULL);
+        assert(rep == nullptr);
     } else {
         if (rep) {
             if (rep->sline.status() != Http::scOkay) {
-                rep = NULL;
+                rep = nullptr;
                 esiStream->include->includeFail (esiStream);
                 esiStream->finished = 1;
                 httpRequestFree (http);
@@ -102,7 +102,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
             headersLog(0, 0, http->request->method, rep);
 
 #endif
-            rep = NULL;
+            rep = nullptr;
         }
     }
 
@@ -120,13 +120,13 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
 
             esiStream->localbuffer->len = receivedData.length;
         } else {
-            assert (esiStream->buffer.getRaw() != NULL);
+            assert (esiStream->buffer.getRaw() != nullptr);
             esiStream->buffer->len = receivedData.length;
         }
     }
 
     /* EOF / Read error /  aborted entry */
-    if (rep == NULL && receivedData.data == NULL && receivedData.length == 0) {
+    if (rep == nullptr && receivedData.data == nullptr && receivedData.length == 0) {
         /* TODO: get stream status to test the entry for aborts */
         debugs(86, 5, "Finished reading upstream data in subrequest");
         esiStream->include->subRequestDone (esiStream, true);
@@ -192,9 +192,9 @@ void
 ESIStreamContext::freeResources()
 {
     debugs(86, 5, "Freeing stream context resources.");
-    buffer = NULL;
-    localbuffer = NULL;
-    include = NULL;
+    buffer = nullptr;
+    localbuffer = nullptr;
+    include = nullptr;
 }
 
 ESIStreamContext *
@@ -219,7 +219,7 @@ ESIInclude::~ESIInclude()
 void
 ESIInclude::finish()
 {
-    parent = NULL;
+    parent = nullptr;
 }
 
 ESIElement::Pointer
@@ -246,10 +246,10 @@ ESIInclude::makeUsable(esiTreeParentPtr newParent, ESIVarState &newVarState) con
 }
 
 ESIInclude::ESIInclude(ESIInclude const &old) :
-    varState(NULL),
-    srcurl(NULL),
-    alturl(NULL),
-    parent(NULL),
+    varState(nullptr),
+    srcurl(nullptr),
+    alturl(nullptr),
+    parent(nullptr),
     started(false),
     sent(false)
 {
@@ -296,9 +296,9 @@ ESIInclude::Start (ESIStreamContext::Pointer stream, char const *url, ESIVarStat
 }
 
 ESIInclude::ESIInclude(esiTreeParentPtr aParent, int attrcount, char const **attr, ESIContext *aContext) :
-    varState(NULL),
-    srcurl(NULL),
-    alturl(NULL),
+    varState(nullptr),
+    srcurl(nullptr),
+    alturl(nullptr),
     parent(aParent),
     started(false),
     sent(false)
@@ -312,9 +312,9 @@ ESIInclude::ESIInclude(esiTreeParentPtr aParent, int attrcount, char const **att
             debugs(86, 5, "ESIIncludeNew: Requesting source '" << attr[i+1] << "'");
 
             /* TODO: don't assert on thisNode, ignore the duplicate */
-            assert (src.getRaw() == NULL);
+            assert (src.getRaw() == nullptr);
             src = ESIStreamContextNew (this);
-            assert (src.getRaw() != NULL);
+            assert (src.getRaw() != nullptr);
             srcurl = xstrdup(attr[i+1]);
         } else if (!strcmp(attr[i],"alt")) {
             /* Start a secondary request for thisNode url */
@@ -323,9 +323,9 @@ ESIInclude::ESIInclude(esiTreeParentPtr aParent, int attrcount, char const **att
              */
             debugs(86, 5, "ESIIncludeNew: Requesting alternate '" << attr[i+1] << "'");
 
-            assert (alt.getRaw() == NULL); /* TODO: fix? */
+            assert (alt.getRaw() == nullptr); /* TODO: fix? */
             alt = ESIStreamContextNew (this);
-            assert (alt.getRaw() != NULL);
+            assert (alt.getRaw() != nullptr);
             alturl = xstrdup(attr[i+1]);
         } else if (!strcmp(attr[i],"onerror")) {
             if (!strcmp(attr[i+1], "continue")) {
@@ -358,7 +358,7 @@ ESIInclude::start()
         Start (src, srcurl, varState);
         Start (alt, alturl, varState);
     } else {
-        alt = NULL;
+        alt = nullptr;
 
         debugs(86, DBG_IMPORTANT, "ESIIncludeNew: esi:include with no src attributes");
 
@@ -385,14 +385,14 @@ ESIInclude::render(ESISegment::Pointer output)
     /* Render the content */
     if (srccontent.getRaw()) {
         myout = srccontent;
-        srccontent = NULL;
+        srccontent = nullptr;
     } else if (altcontent.getRaw()) {
         myout = altcontent;
-        altcontent = NULL;
+        altcontent = nullptr;
     } else
         fatal ("ESIIncludeRender called with no content, and no failure!\n");
 
-    assert (output->next == NULL);
+    assert (output->next == nullptr);
 
     output->next = myout;
 
@@ -466,7 +466,7 @@ ESIInclude::subRequestDone (ESIStreamContext::Pointer stream, bool success)
             }
         }
 
-        src = NULL;
+        src = nullptr;
     } else if (stream == alt) {
         debugs(86, 3, "ESIInclude::subRequestDone: " << alturl);
 
@@ -490,7 +490,7 @@ ESIInclude::subRequestDone (ESIStreamContext::Pointer stream, bool success)
             }
         }
 
-        alt = NULL;
+        alt = nullptr;
     } else {
         fatal ("ESIIncludeSubRequestDone: non-owned stream found!\n");
     }
@@ -511,7 +511,7 @@ ESIInclude::subRequestDone (ESIStreamContext::Pointer stream, bool success)
          * Its probably due to parent being set to null - by a call to
          * 'this.finish' while the subrequest is still not completed.
          */
-        if (parent.getRaw() == NULL) {
+        if (parent.getRaw() == nullptr) {
             debugs(86, DBG_CRITICAL, "ERROR: Squid Bug #951: ESIInclude::subRequestDone: Sub request completed "
                    "after finish() called and parent unlinked. Unable to "
                    "continue handling the request, and may be memory leaking. "
@@ -530,9 +530,9 @@ ESIInclude::subRequestDone (ESIStreamContext::Pointer stream, bool success)
             parent->provideData (srccontent.getRaw() ? srccontent:altcontent,this);
 
             if (srccontent.getRaw())
-                srccontent = NULL;
+                srccontent = nullptr;
             else
-                altcontent = NULL;
+                altcontent = nullptr;
         } else if (flags.onerrorcontinue) {
             /* render nothing but inform of completion */
 

@@ -29,7 +29,7 @@ public:
 bool
 InspectingStatHist::operator ==(const InspectingStatHist & src)
 {
-    assert(bins != NULL && src.bins != NULL); // TODO: remove after initializing bins at construction time
+    assert(bins != nullptr && src.bins != nullptr); // TODO: remove after initializing bins at construction time
     if (capacity_ != src.capacity_ ||
             min_!=src.min_ ||
             max_!=src.max_ ||

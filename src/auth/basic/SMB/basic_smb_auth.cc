@@ -45,8 +45,8 @@ struct SMBDOMAIN {
     struct SMBDOMAIN *next; /* linked list */
 };
 
-struct SMBDOMAIN *firstdom = NULL;
-struct SMBDOMAIN *lastdom = NULL;
+struct SMBDOMAIN *firstdom = nullptr;
+struct SMBDOMAIN *lastdom = nullptr;
 
 /*
  * escape the backslash character, since it has a special meaning
@@ -97,7 +97,7 @@ main(int argc, char *argv[])
     const char *shcmd;
 
     /* make standard output line buffered */
-    if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
+    if (setvbuf(stdout, nullptr, _IOLBF, 0) != 0)
         exit(EXIT_FAILURE);
 
     /* parse command line arguments */
@@ -119,10 +119,10 @@ main(int argc, char *argv[])
             dom->nmbcast = NMB_BROADCAST;
             dom->authshare = (char *)"NETLOGON";
             dom->authfile = "proxyauth";
-            dom->next = NULL;
+            dom->next = nullptr;
 
             /* append to linked list */
-            if (lastdom != NULL)
+            if (lastdom != nullptr)
                 lastdom->next = dom;
             else
                 firstdom = dom;
@@ -131,32 +131,32 @@ main(int argc, char *argv[])
             continue;
         }
         if (strcmp(argv[i], "-w") == 0) {
-            if (lastdom != NULL)
+            if (lastdom != nullptr)
                 lastdom->sname = argv[++i];
             continue;
         }
         if (strcmp(argv[i], "-P") == 0) {
-            if (lastdom != NULL)
+            if (lastdom != nullptr)
                 lastdom->passthrough = argv[++i];
             continue;
         }
         if (strcmp(argv[i], "-B") == 0) {
-            if (lastdom != NULL) {
+            if (lastdom != nullptr) {
                 lastdom->nmbaddr = argv[++i];
                 lastdom->nmbcast = NMB_BROADCAST;
             }
             continue;
         }
         if (strcmp(argv[i], "-U") == 0) {
-            if (lastdom != NULL) {
+            if (lastdom != nullptr) {
                 lastdom->nmbaddr = argv[++i];
                 lastdom->nmbcast = NMB_UNICAST;
             }
             continue;
         }
         if (strcmp(argv[i], "-S") == 0) {
-            if (lastdom != NULL) {
-                if ((lastdom->authshare = xstrdup(argv[++i])) == NULL)
+            if (lastdom != nullptr) {
+                if ((lastdom->authshare = xstrdup(argv[++i])) == nullptr)
                     exit(EXIT_FAILURE);
 
                 /* convert backslashes to forward slashes */
@@ -168,7 +168,7 @@ main(int argc, char *argv[])
                 if (*lastdom->authshare == '/')
                     ++lastdom->authshare;
 
-                if ((s = strchr(lastdom->authshare, '/')) != NULL) {
+                if ((s = strchr(lastdom->authshare, '/')) != nullptr) {
                     *s = '\0';
                     lastdom->authfile = s + 1;
                 }
@@ -179,13 +179,13 @@ main(int argc, char *argv[])
 
     shcmd = debug_enabled ? HELPERSCRIPT : HELPERSCRIPT " > /dev/null 2>&1";
 
-    while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != NULL) {
+    while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != nullptr) {
 
-        if ((s = strchr(buf, '\n')) == NULL)
+        if ((s = strchr(buf, '\n')) == nullptr)
             continue;
         *s = '\0';
 
-        if ((s = strchr(buf, ' ')) == NULL) {
+        if ((s = strchr(buf, ' ')) == nullptr) {
             SEND_ERR("");
             continue;
         }
@@ -193,29 +193,29 @@ main(int argc, char *argv[])
 
         user = buf;
         pass = s + 1;
-        domname = NULL;
+        domname = nullptr;
 
         rfc1738_unescape(user);
         rfc1738_unescape(pass);
 
-        if ((s = strchr(user, '\\')) != NULL) {
+        if ((s = strchr(user, '\\')) != nullptr) {
             *s = '\0';
             domname = user;
             user = s + 1;
         }
         /* match domname with linked list */
-        if (domname != NULL && strlen(domname) > 0) {
-            for (dom = firstdom; dom != NULL; dom = dom->next)
+        if (domname != nullptr && strlen(domname) > 0) {
+            for (dom = firstdom; dom != nullptr; dom = dom->next)
                 if (strcasecmp(dom->sname, domname) == 0)
                     break;
         } else
             dom = firstdom;
 
-        if (dom == NULL) {
+        if (dom == nullptr) {
             SEND_ERR("");
             continue;
         }
-        if ((p = popen(shcmd, "w")) == NULL) {
+        if ((p = popen(shcmd, "w")) == nullptr) {
             SEND_ERR("");
             continue;
         }

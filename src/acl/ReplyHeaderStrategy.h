@@ -30,7 +30,7 @@ ACLReplyHeaderStrategy<header>::match (ACLData<char const *> * &data, ACLFilledC
 {
     char const *theHeader = checklist->reply->header.getStr(header);
 
-    if (NULL == theHeader)
+    if (nullptr == theHeader)
         return 0;
 
     return data->match(theHeader);

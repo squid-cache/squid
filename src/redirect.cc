@@ -54,21 +54,21 @@ public:
 
 static HLPCB redirectHandleReply;
 static HLPCB storeIdHandleReply;
-static helper *redirectors = NULL;
-static helper *storeIds = NULL;
+static helper *redirectors = nullptr;
+static helper *storeIds = nullptr;
 static OBJH redirectStats;
 static OBJH storeIdStats;
 static int redirectorBypassed = 0;
 static int storeIdBypassed = 0;
-static Format::Format *redirectorExtrasFmt = NULL;
-static Format::Format *storeIdExtrasFmt = NULL;
+static Format::Format *redirectorExtrasFmt = nullptr;
+static Format::Format *storeIdExtrasFmt = nullptr;
 
 CBDATA_CLASS_INIT(RedirectStateData);
 
 RedirectStateData::RedirectStateData(const char *url) :
-    data(NULL),
+    data(nullptr),
     orig_url(url),
-    handler(NULL)
+    handler(nullptr)
 {
 }
 
@@ -195,7 +195,7 @@ storeIdHandleReply(void *data, const Helper::Reply &reply)
 static void
 redirectStats(StoreEntry * sentry)
 {
-    if (redirectors == NULL) {
+    if (redirectors == nullptr) {
         storeAppendPrintf(sentry, "No redirectors defined\n");
         return;
     }
@@ -210,7 +210,7 @@ redirectStats(StoreEntry * sentry)
 static void
 storeIdStats(StoreEntry * sentry)
 {
-    if (storeIds == NULL) {
+    if (storeIds == nullptr) {
         storeAppendPrintf(sentry, "No StoreId helpers defined\n");
         return;
     }
@@ -262,9 +262,9 @@ constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientH
                                     nullptr,
                                     http->getConn(),
                                     http->request,
-                                    NULL,
+                                    nullptr,
 #if USE_AUTH
-                                    http->getConn() != NULL && http->getConn()->getAuth() != NULL ?
+                                    http->getConn() != nullptr && http->getConn()->getAuth() != nullptr ?
                                     http->getConn()->getAuth() : http->request->auth_user_request);
 #else
                                     NULL);
@@ -341,7 +341,7 @@ redirectInit(void)
 
     if (Config.Program.redirect) {
 
-        if (redirectors == NULL)
+        if (redirectors == nullptr)
             redirectors = new helper("redirector");
 
         redirectors->cmdline = Config.Program.redirect;
@@ -368,7 +368,7 @@ redirectInit(void)
 
     if (Config.Program.store_id) {
 
-        if (storeIds == NULL)
+        if (storeIds == nullptr)
             storeIds = new helper("store_id");
 
         storeIds->cmdline = Config.Program.store_id;
@@ -419,16 +419,16 @@ redirectShutdown(void)
         return;
 
     delete redirectors;
-    redirectors = NULL;
+    redirectors = nullptr;
 
     delete storeIds;
-    storeIds = NULL;
+    storeIds = nullptr;
 
     delete redirectorExtrasFmt;
-    redirectorExtrasFmt = NULL;
+    redirectorExtrasFmt = nullptr;
 
     delete storeIdExtrasFmt;
-    storeIdExtrasFmt = NULL;
+    storeIdExtrasFmt = nullptr;
 }
 
 void

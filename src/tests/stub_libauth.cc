@@ -16,7 +16,7 @@
 namespace Auth
 {
 Auth::UserRequest::Pointer SchemeConfig::CreateAuthUser(const char *, AccessLogEntry::Pointer &) STUB_RETVAL(nullptr)
-Auth::SchemeConfig * SchemeConfig::Find(const char *) STUB_RETVAL(NULL)
+Auth::SchemeConfig * SchemeConfig::Find(const char *) STUB_RETVAL(nullptr)
 void SchemeConfig::registerWithCacheManager(void) STUB_NOP
 Auth::ConfigVector TheConfig;
 }
@@ -30,9 +30,9 @@ void authenticateReset(void) STUB
 
 #include "auth/Scheme.h"
 #include <vector>
-std::vector<Auth::Scheme::Pointer> *Auth::Scheme::_Schemes = NULL;
+std::vector<Auth::Scheme::Pointer> *Auth::Scheme::_Schemes = nullptr;
 void Auth::Scheme::AddScheme(Auth::Scheme::Pointer) STUB
-Auth::Scheme::Pointer Auth::Scheme::Find(const char *) STUB_RETVAL(NULL)
+Auth::Scheme::Pointer Auth::Scheme::Find(const char *) STUB_RETVAL(nullptr)
 std::vector<Auth::Scheme::Pointer> & Auth::Scheme::GetSchemes() STUB_RETVAL(*_Schemes);
 void Auth::Scheme::FreeAll() STUB
 
@@ -73,7 +73,7 @@ const char * Auth::UserRequest::connLastHeader() STUB_RETVAL("stub")
 AuthAclState Auth::UserRequest::authenticate(Auth::UserRequest::Pointer *, Http::HdrType, HttpRequest *, ConnStateData *, Ip::Address &, AccessLogEntry::Pointer &) STUB_RETVAL(AUTH_AUTHENTICATED)
 AuthAclState Auth::UserRequest::tryToAuthenticateAndSetAuthUser(Auth::UserRequest::Pointer *, Http::HdrType, HttpRequest *, ConnStateData *, Ip::Address &, AccessLogEntry::Pointer &) STUB_RETVAL(AUTH_AUTHENTICATED)
 void Auth::UserRequest::AddReplyAuthHeader(HttpReply *, Auth::UserRequest::Pointer, HttpRequest *, int, int) STUB
-Auth::Scheme::Pointer Auth::UserRequest::scheme() const STUB_RETVAL(NULL)
+Auth::Scheme::Pointer Auth::UserRequest::scheme() const STUB_RETVAL(nullptr)
 
 #include "AuthReg.h"
 void Auth::Init() STUB_NOP

@@ -48,7 +48,7 @@ CpuAffinityMap::calculateSet(const int targetProcess) const
             core = theCores[i];
         }
     }
-    CpuAffinitySet *cpuAffinitySet = NULL;
+    CpuAffinitySet *cpuAffinitySet = nullptr;
     if (core > 0) {
         cpuAffinitySet = new CpuAffinitySet;
         cpu_set_t cpuSet;

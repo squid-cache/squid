@@ -68,7 +68,7 @@ StoreMeta *
 StoreMeta::Factory (char type, size_t len, void const *value)
 {
     if (!validType(type))
-        return NULL;
+        return nullptr;
 
     StoreMeta *result;
 
@@ -100,12 +100,12 @@ StoreMeta::Factory (char type, size_t len, void const *value)
 
     default:
         debugs(20, DBG_CRITICAL, "ERROR: Attempt to create unknown concrete StoreMeta");
-        return NULL;
+        return nullptr;
     }
 
     if (!result->validLength(len)) {
         delete result;
-        return NULL;
+        return nullptr;
     }
 
     result->length = len;
@@ -119,7 +119,7 @@ StoreMeta::FreeList(StoreMeta **head)
 {
     StoreMeta *node;
 
-    while ((node = *head) != NULL) {
+    while ((node = *head) != nullptr) {
         *head = node->next;
         xfree(node->value);
         delete node;
@@ -129,7 +129,7 @@ StoreMeta::FreeList(StoreMeta **head)
 StoreMeta **
 StoreMeta::Add(StoreMeta **tail, StoreMeta *aNode)
 {
-    assert (*tail == NULL);
+    assert (*tail == nullptr);
     *tail = aNode;
     return &aNode->next;        /* return new tail pointer */
 }

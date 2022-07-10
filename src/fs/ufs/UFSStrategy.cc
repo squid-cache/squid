@@ -70,12 +70,12 @@ Fs::Ufs::UFSStrategy::open(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB *,
 
     assert (state);
 
-    char *path = ((UFSSwapDir *)SD)->fullPath(e->swap_filen, NULL);
+    char *path = ((UFSSwapDir *)SD)->fullPath(e->swap_filen, nullptr);
 
     DiskFile::Pointer myFile = newFile (path);
 
-    if (myFile.getRaw() == NULL)
-        return NULL;
+    if (myFile.getRaw() == nullptr)
+        return nullptr;
 
     state->theFile = myFile;
 
@@ -84,7 +84,7 @@ Fs::Ufs::UFSStrategy::open(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB *,
     myFile->open (sio->mode, 0644, state);
 
     if (myFile->error())
-        return NULL;
+        return nullptr;
 
     return sio;
 }
@@ -111,13 +111,13 @@ Fs::Ufs::UFSStrategy::create(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB 
 
     assert (state);
 
-    char *path = ((UFSSwapDir *)SD)->fullPath(filn, NULL);
+    char *path = ((UFSSwapDir *)SD)->fullPath(filn, nullptr);
 
     DiskFile::Pointer myFile = newFile (path);
 
-    if (myFile.getRaw() == NULL) {
+    if (myFile.getRaw() == nullptr) {
         ((UFSSwapDir *)SD)->mapBitReset (filn);
-        return NULL;
+        return nullptr;
     }
 
     state->theFile = myFile;
@@ -128,7 +128,7 @@ Fs::Ufs::UFSStrategy::create(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB 
 
     if (myFile->error()) {
         ((UFSSwapDir *)SD)->mapBitReset (filn);
-        return NULL;
+        return nullptr;
     }
 
     /* now insert into the replacement policy */

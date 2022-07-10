@@ -58,26 +58,26 @@ main(int, char *argv[])
 #endif
 
     int rc;
-    sasl_conn_t *conn = NULL;
+    sasl_conn_t *conn = nullptr;
 
     /* make standard output line buffered */
-    setvbuf(stdout, NULL, _IOLBF, 0);
+    setvbuf(stdout, nullptr, _IOLBF, 0);
 
-    rc = sasl_server_init( NULL, APP_NAME_SASL );
+    rc = sasl_server_init( nullptr, APP_NAME_SASL );
 
     if ( rc != SASL_OK ) {
-        fprintf(stderr, "FATAL: %d %s\n", rc, sasl_errstring(rc, NULL, NULL ));
+        fprintf(stderr, "FATAL: %d %s\n", rc, sasl_errstring(rc, nullptr, nullptr ));
         exit(EXIT_FAILURE);
     }
 
 #if SASL_VERSION_MAJOR < 2
     rc = sasl_server_new( APP_NAME_SASL, NULL, NULL, NULL, 0, &conn );
 #else
-    rc = sasl_server_new( APP_NAME_SASL, NULL, NULL, NULL, NULL, NULL, 0, &conn );
+    rc = sasl_server_new( APP_NAME_SASL, nullptr, nullptr, nullptr, nullptr, nullptr, 0, &conn );
 #endif
 
     if ( rc != SASL_OK ) {
-        fprintf(stderr, "FATAL: %d %s\n", rc, sasl_errstring(rc, NULL, NULL ));
+        fprintf(stderr, "FATAL: %d %s\n", rc, sasl_errstring(rc, nullptr, nullptr ));
         exit(EXIT_FAILURE);
     }
 

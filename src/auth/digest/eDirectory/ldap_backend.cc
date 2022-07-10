@@ -54,14 +54,14 @@ PFldap_start_tls_s Win32_ldap_start_tls_s;
 
 /* Globals */
 
-static LDAP *ld = NULL;
-static const char *passattr = NULL;
-static char *ldapServer = NULL;
-static const char *userbasedn = NULL;
-static const char *userdnattr = NULL;
-static const char *usersearchfilter = NULL;
-static const char *binddn = NULL;
-static const char *bindpasswd = NULL;
+static LDAP *ld = nullptr;
+static const char *passattr = nullptr;
+static char *ldapServer = nullptr;
+static const char *userbasedn = nullptr;
+static const char *userdnattr = nullptr;
+static const char *usersearchfilter = nullptr;
+static const char *binddn = nullptr;
+static const char *bindpasswd = nullptr;
 static const char *delimiter = ":";
 static int encrpass = 0;
 static int searchscope = LDAP_SCOPE_SUBTREE;
@@ -198,17 +198,17 @@ ldap_escape_value(char *escaped, int size, const char *src)
 static char *
 getpassword(char *login, char *realm)
 {
-    LDAPMessage *res = NULL;
+    LDAPMessage *res = nullptr;
     LDAPMessage *entry;
-    char **values = NULL;
-    char **value = NULL;
-    char *password = NULL;
+    char **values = nullptr;
+    char **value = nullptr;
+    char *password = nullptr;
     int retry = 0;
     char filter[8192];
     *filter = '\0';
     char searchbase[8192];
     *searchbase = '\0';
-    char *universal_password = NULL;
+    char *universal_password = nullptr;
     size_t universal_password_len = 256;
     int nmas_res = 0;
     int rc = -1;
@@ -222,7 +222,7 @@ getpassword(char *login, char *realm)
 retrysrch:
             debug("user filter '%s', searchbase '%s'\n", filter, searchbase);
 
-            rc = ldap_search_s(ld, searchbase, searchscope, filter, NULL, 0, &res);
+            rc = ldap_search_s(ld, searchbase, searchscope, filter, nullptr, 0, &res);
             if (rc != LDAP_SUCCESS) {
                 if (noreferrals && rc == LDAP_PARTIAL_RESULTS) {
                     /* Everything is fine. This is expected when referrals
@@ -243,11 +243,11 @@ retrysrch:
                     if (!retry) {
                         ++retry;
                         ldap_unbind(ld);
-                        ld = NULL;
+                        ld = nullptr;
                         ldapconnect();
                         goto retrysrch;
                     }
-                    return NULL;
+                    return nullptr;
 
                 }
             }
@@ -256,7 +256,7 @@ retrysrch:
 
 retrydnattr:
             debug("searchbase '%s'\n", searchbase);
-            rc = ldap_search_s(ld, searchbase, searchscope, NULL, NULL, 0, &res);
+            rc = ldap_search_s(ld, searchbase, searchscope, nullptr, nullptr, 0, &res);
         }
         if (rc == LDAP_SUCCESS) {
             entry = ldap_first_entry(ld, res);
@@ -281,21 +281,21 @@ retrydnattr:
                 }
             } else {
                 ldap_msgfree(res);
-                return NULL;
+                return nullptr;
             }
             if (!values) {
                 debug("No attribute value found\n");
                 if (edir_universal_passwd)
                     free(universal_password);
                 ldap_msgfree(res);
-                return NULL;
+                return nullptr;
             }
             value = values;
             while (*value) {
                 if (encrpass) {
                     const char *t = strtok(*value, delimiter);
                     if (t && strcmp(t, realm) == 0) {
-                        password = strtok(NULL, delimiter);
+                        password = strtok(nullptr, delimiter);
                         break;
                     }
                 } else {
@@ -321,14 +321,14 @@ retrydnattr:
             if (!retry) {
                 ++retry;
                 ldap_unbind(ld);
-                ld = NULL;
+                ld = nullptr;
                 ldapconnect();
                 goto retrydnattr;
             }
-            return NULL;
+            return nullptr;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 static void
@@ -352,9 +352,9 @@ ldapconnect(void)
     }
 #endif
 
-    if (ld == NULL) {
+    if (ld == nullptr) {
 #if HAS_URI_SUPPORT
-        if (strstr(ldapServer, "://") != NULL) {
+        if (strstr(ldapServer, "://") != nullptr) {
             rc = ldap_initialize(&ld, ldapServer);
             if (rc != LDAP_SUCCESS) {
                 fprintf(stderr, "\nUnable to connect to LDAPURI:%s\n", ldapServer);
@@ -377,7 +377,7 @@ ldapconnect(void)
                 }
             } else
 #endif
-                if ((ld = ldap_init(ldapServer, port)) == NULL) {
+                if ((ld = ldap_init(ldapServer, port)) == nullptr) {
                     fprintf(stderr, "\nUnable to connect to LDAP server:%s port:%d\n", ldapServer, port);
                 }
         if (connect_timeout)
@@ -392,14 +392,14 @@ ldapconnect(void)
             fprintf(stderr, "Could not set LDAP_OPT_PROTOCOL_VERSION %d\n",
                     version);
             ldap_unbind(ld);
-            ld = NULL;
+            ld = nullptr;
         }
         if (use_tls) {
 #ifdef LDAP_OPT_X_TLS
-            if ((version == LDAP_VERSION3) && (ldap_start_tls_s(ld, NULL, NULL) == LDAP_SUCCESS)) {
+            if ((version == LDAP_VERSION3) && (ldap_start_tls_s(ld, nullptr, nullptr) == LDAP_SUCCESS)) {
                 fprintf(stderr, "Could not Activate TLS connection\n");
                 ldap_unbind(ld);
-                ld = NULL;
+                ld = nullptr;
             }
 #else
             fprintf(stderr, "TLS not supported with your LDAP library\n");
@@ -416,7 +416,7 @@ ldapconnect(void)
             if (rc != LDAP_SUCCESS) {
                 fprintf(stderr, PROGRAM_NAME " WARNING, could not bind to binddn '%s'\n", ldap_err2string(rc));
                 ldap_unbind(ld);
-                ld = NULL;
+                ld = nullptr;
             }
         }
         debug("Connected OK\n");
@@ -425,7 +425,7 @@ ldapconnect(void)
 int
 LDAPArguments(int argc, char **argv)
 {
-    setbuf(stdout, NULL);
+    setbuf(stdout, nullptr);
 
     while (argc > 1 && argv[1][0] == '-') {
         const char *value = "";
@@ -607,7 +607,7 @@ LDAPArguments(int argc, char **argv)
     if (!ldapServer)
         ldapServer = (char *) "localhost";
 
-    if (!userbasedn || !((passattr != NULL) || (edir_universal_passwd && usersearchfilter && version == LDAP_VERSION3 && use_tls))) {
+    if (!userbasedn || !((passattr != nullptr) || (edir_universal_passwd && usersearchfilter && version == LDAP_VERSION3 && use_tls))) {
         fprintf(stderr, "Usage: " PROGRAM_NAME " -b basedn -f filter [options] ldap_server_name\n\n");
         fprintf(stderr, "\t-A password attribute(REQUIRED)\t\tUser attribute that contains the password\n");
         fprintf(stderr, "\t-l password realm delimiter(REQUIRED)\tCharater(s) that divides the password attribute\n\t\t\t\t\t\tin realm and password tokens, default ':' realm:password\n");
@@ -648,7 +648,7 @@ static int
 readSecret(const char *filename)
 {
     char buf[BUFSIZ];
-    char *e = 0;
+    char *e = nullptr;
     FILE *f;
 
     if (!(f = fopen(filename, "r"))) {
@@ -681,12 +681,12 @@ LDAPHHA1(RequestData * requestData)
     char *password;
     ldapconnect();
     password = getpassword(requestData->user, requestData->realm);
-    if (password != NULL) {
+    if (password != nullptr) {
         if (encrpass)
             xstrncpy(requestData->HHA1, password, sizeof(requestData->HHA1));
         else {
             HASH HA1;
-            DigestCalcHA1("md5", requestData->user, requestData->realm, password, NULL, NULL, HA1, requestData->HHA1);
+            DigestCalcHA1("md5", requestData->user, requestData->realm, password, nullptr, nullptr, HA1, requestData->HHA1);
         }
         free(password);
     } else {

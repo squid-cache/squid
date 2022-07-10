@@ -57,15 +57,15 @@ Transport::TheConfig::parseCommandOpts(int argc, char *argv[], int c, int &optIn
 
     // options for controlling squidclient transport connection
     static struct option longOptions[] = {
-        {"anonymous-tls",no_argument, 0, '\1'},
-        {"https",        no_argument, 0, '\3'},
-        {"trusted-ca",   required_argument, 0, 'A'},
-        {"cert",         required_argument, 0, 'C'},
-        {"host",         required_argument, 0, 'h'},
-        {"local",        required_argument, 0, 'l'},
-        {"port",         required_argument, 0, 'p'},
-        {"params",       required_argument, 0, 'P'},
-        {0, 0, 0, 0}
+        {"anonymous-tls",no_argument, nullptr, '\1'},
+        {"https",        no_argument, nullptr, '\3'},
+        {"trusted-ca",   required_argument, nullptr, 'A'},
+        {"cert",         required_argument, nullptr, 'C'},
+        {"host",         required_argument, nullptr, 'h'},
+        {"local",        required_argument, nullptr, 'l'},
+        {"port",         required_argument, nullptr, 'p'},
+        {"params",       required_argument, nullptr, 'P'},
+        {nullptr, 0, nullptr, 0}
     };
 
     int saved_opterr = opterr;
@@ -137,7 +137,7 @@ Transport::TheConfig::parseCommandOpts(int argc, char *argv[], int c, int &optIn
 static int
 client_comm_bind(int sock, const Ip::Address &addr)
 {
-    static struct addrinfo *AI = NULL;
+    static struct addrinfo *AI = nullptr;
     addr.getAddrInfo(AI);
     int res = bind(sock, AI->ai_addr, AI->ai_addrlen);
     Ip::Address::FreeAddr(AI);
@@ -147,7 +147,7 @@ client_comm_bind(int sock, const Ip::Address &addr)
 static void
 resolveDestination(Ip::Address &iaddr)
 {
-    struct addrinfo *AI = NULL;
+    struct addrinfo *AI = nullptr;
 
     debugVerbose(2, "Transport detected: IPv4" <<
                  ((Ip::EnableIpv6 & IPV6_SPECIAL_V4MAPPING) ? "-mapped " : "") <<
@@ -202,7 +202,7 @@ resolveDestination(Ip::Address &iaddr)
 static int
 client_comm_connect(int sock, const Ip::Address &addr)
 {
-    static struct addrinfo *AI = NULL;
+    static struct addrinfo *AI = nullptr;
     addr.getAddrInfo(AI);
     int res = connect(sock, AI->ai_addr, AI->ai_addrlen);
     Ip::Address::FreeAddr(AI);

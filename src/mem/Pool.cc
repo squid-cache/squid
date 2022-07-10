@@ -45,20 +45,20 @@ memPoolIterate(void)
 void
 memPoolIterateDone(MemPoolIterator ** iter)
 {
-    assert(iter != NULL);
-    Iterator.pool = NULL;
-    *iter = NULL;
+    assert(iter != nullptr);
+    Iterator.pool = nullptr;
+    *iter = nullptr;
 }
 
 MemImplementingAllocator *
 memPoolIterateNext(MemPoolIterator * iter)
 {
     MemImplementingAllocator *pool;
-    assert(iter != NULL);
+    assert(iter != nullptr);
 
     pool = iter->pool;
     if (!pool)
-        return NULL;
+        return nullptr;
 
     iter->pool = pool->next;
     return pool;
@@ -204,7 +204,7 @@ MemImplementingAllocator::alloc()
 void
 MemImplementingAllocator::freeOne(void *obj)
 {
-    assert(obj != NULL);
+    assert(obj != nullptr);
     (void) VALGRIND_CHECK_MEM_IS_ADDRESSABLE(obj, obj_size);
     deallocate(obj, MemPools::GetInstance().mem_idle_limit == 0);
     ++free_calls;
@@ -303,7 +303,7 @@ memPoolsTotalAllocated(void)
 }
 
 MemImplementingAllocator::MemImplementingAllocator(char const *aLabel, size_t aSize) : MemAllocator(aLabel),
-    next(NULL),
+    next(nullptr),
     alloc_calls(0),
     free_calls(0),
     saved_calls(0),
@@ -313,7 +313,7 @@ MemImplementingAllocator::MemImplementingAllocator(char const *aLabel, size_t aS
 
     MemImplementingAllocator *last_pool;
 
-    assert(aLabel != NULL && aSize);
+    assert(aLabel != nullptr && aSize);
     /* Append as Last */
     for (last_pool = MemPools::GetInstance().pools; last_pool && last_pool->next;)
         last_pool = last_pool->next;
@@ -328,14 +328,14 @@ MemImplementingAllocator::~MemImplementingAllocator()
     MemImplementingAllocator *find_pool, *prev_pool;
 
     /* Abort if the associated pool doesn't exist */
-    assert(MemPools::GetInstance().pools != NULL );
+    assert(MemPools::GetInstance().pools != nullptr );
 
     /* Pool clean, remove it from List and free */
-    for (find_pool = MemPools::GetInstance().pools, prev_pool = NULL; (find_pool && this != find_pool); find_pool = find_pool->next)
+    for (find_pool = MemPools::GetInstance().pools, prev_pool = nullptr; (find_pool && this != find_pool); find_pool = find_pool->next)
         prev_pool = find_pool;
 
     /* make sure that we found the pool to destroy */
-    assert(find_pool != NULL);
+    assert(find_pool != nullptr);
 
     if (prev_pool)
         prev_pool->next = next;

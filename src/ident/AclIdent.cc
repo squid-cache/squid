@@ -58,9 +58,9 @@ ACLIdent::match(ACLChecklist *cl)
     ACLFilledChecklist *checklist = Filled(cl);
     if (checklist->rfc931[0]) {
         return data->match(checklist->rfc931);
-    } else if (checklist->conn() != NULL && checklist->conn()->clientConnection != NULL && checklist->conn()->clientConnection->rfc931[0]) {
+    } else if (checklist->conn() != nullptr && checklist->conn()->clientConnection != nullptr && checklist->conn()->clientConnection->rfc931[0]) {
         return data->match(checklist->conn()->clientConnection->rfc931);
-    } else if (checklist->conn() != NULL && Comm::IsConnOpen(checklist->conn()->clientConnection)) {
+    } else if (checklist->conn() != nullptr && Comm::IsConnOpen(checklist->conn()->clientConnection)) {
         if (checklist->goAsync(IdentLookup::Instance())) {
             debugs(28, 3, "switching to ident lookup state");
             return -1;
@@ -121,7 +121,7 @@ IdentLookup::LookupDone(const char *ident, void *data)
      * Cache the ident result in the connection, to avoid redoing ident lookup
      * over and over on persistent connections
      */
-    if (checklist->conn() != NULL && checklist->conn()->clientConnection != NULL && !checklist->conn()->clientConnection->rfc931[0])
+    if (checklist->conn() != nullptr && checklist->conn()->clientConnection != nullptr && !checklist->conn()->clientConnection->rfc931[0])
         xstrncpy(checklist->conn()->clientConnection->rfc931, checklist->rfc931, USER_IDENT_SZ);
 
     checklist->resumeNonBlockingCheck(IdentLookup::Instance());

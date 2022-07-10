@@ -27,8 +27,8 @@ void BroadcastSignalIfAny(int &) STUB
 void sigusr2_handle(int) STUB
 void debug_trap(const char *) STUB
 void sig_child(int) STUB
-const char * getMyHostname(void) STUB_RETVAL(NULL)
-const char * uniqueHostname(void) STUB_RETVAL(NULL)
+const char * getMyHostname(void) STUB_RETVAL(nullptr)
+const char * uniqueHostname(void) STUB_RETVAL(nullptr)
 void leave_suid(void) STUB_NOP
 void enter_suid(void) STUB
 void no_suid(void) STUB

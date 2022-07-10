@@ -57,7 +57,7 @@ testURL::testDefaultConstructor()
     CPPUNIT_ASSERT_EQUAL(aScheme, aUrl.getScheme());
 
     auto *urlPointer = new AnyP::Uri;
-    CPPUNIT_ASSERT(urlPointer != NULL);
+    CPPUNIT_ASSERT(urlPointer != nullptr);
     delete urlPointer;
 }
 

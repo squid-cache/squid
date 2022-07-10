@@ -21,7 +21,7 @@ class Address
     CBDATA_CLASS(Address);
 
 public:
-    Address() : next(NULL), aclList(NULL) {}
+    Address() : next(nullptr), aclList(nullptr) {}
     ~Address();
 
     Acl::Address *next;

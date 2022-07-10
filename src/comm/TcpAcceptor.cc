@@ -66,7 +66,7 @@ void
 Comm::TcpAcceptor::unsubscribe(const char *reason)
 {
     debugs(5, 5, status() << " AsyncCall Subscription " << theCallSub << " removed: " << reason);
-    theCallSub = NULL;
+    theCallSub = nullptr;
 }
 
 void
@@ -96,7 +96,7 @@ Comm::TcpAcceptor::doneAll() const
     }
 
     // stop when handlers are gone
-    if (theCallSub == NULL) {
+    if (theCallSub == nullptr) {
         return AsyncJob::doneAll();
     }
 
@@ -110,12 +110,12 @@ Comm::TcpAcceptor::swanSong()
     debugs(5,5, MYNAME);
     unsubscribe("swanSong");
     if (IsConnOpen(conn)) {
-        if (closer_ != NULL)
+        if (closer_ != nullptr)
             comm_remove_close_handler(conn->fd, closer_);
         conn->close();
     }
 
-    conn = NULL;
+    conn = nullptr;
     AcceptLimiter::Instance().removeDead(this);
     AsyncJob::swanSong();
 }
@@ -123,7 +123,7 @@ Comm::TcpAcceptor::swanSong()
 const char *
 Comm::TcpAcceptor::status() const
 {
-    if (conn == NULL)
+    if (conn == nullptr)
         return "[nil connection]";
 
     static char ipbuf[MAX_IPSTRLEN] = {'\0'};
@@ -190,7 +190,7 @@ Comm::TcpAcceptor::setListen()
 void
 Comm::TcpAcceptor::handleClosure(const CommCloseCbParams &)
 {
-    closer_ = NULL;
+    closer_ = nullptr;
     if (conn) {
         conn->noteClosure();
         conn = nullptr;
@@ -319,7 +319,7 @@ Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &
         return;
     }
 
-    if (theCallSub != NULL) {
+    if (theCallSub != nullptr) {
         AsyncCall::Pointer call = theCallSub->callback();
         CommAcceptCbParams &params = GetCommParams<CommAcceptCbParams>(call);
         params.port = listenPort_;
@@ -345,7 +345,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
 {
     ++statCounter.syscalls.sock.accepts;
     int sock;
-    struct addrinfo *gai = NULL;
+    struct addrinfo *gai = nullptr;
     Ip::Address::InitAddr(gai);
 
     errcode = 0; // reset local errno copy.

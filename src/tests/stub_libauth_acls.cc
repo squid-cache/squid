@@ -19,7 +19,7 @@ Acl::Answer AuthenticateAcl(ACLChecklist *) STUB_RETVAL(ACCESS_DENIED)
 
 #include "auth/AclMaxUserIp.h"
 ACLMaxUserIP::ACLMaxUserIP (char const *) STUB
-char const * ACLMaxUserIP::typeString() const STUB_RETVAL(NULL)
+char const * ACLMaxUserIP::typeString() const STUB_RETVAL(nullptr)
 bool ACLMaxUserIP::empty () const STUB_RETVAL(false)
 bool ACLMaxUserIP::valid () const STUB_RETVAL(false)
 void ACLMaxUserIP::parse() STUB
@@ -31,13 +31,13 @@ const Acl::Options &ACLMaxUserIP::options() STUB_RETVAL(Acl::NoOptions())
 #include "auth/AclProxyAuth.h"
 ACLProxyAuth::~ACLProxyAuth() STUB
 ACLProxyAuth::ACLProxyAuth(ACLData<char const *> *, char const *) STUB
-char const * ACLProxyAuth::typeString() const STUB_RETVAL(NULL)
+char const * ACLProxyAuth::typeString() const STUB_RETVAL(nullptr)
 void ACLProxyAuth::parse() STUB
 int ACLProxyAuth::match(ACLChecklist *) STUB_RETVAL(0)
 SBufList ACLProxyAuth::dump() const STUB_RETVAL(SBufList())
 bool ACLProxyAuth::empty () const STUB_RETVAL(false)
 bool ACLProxyAuth::valid () const STUB_RETVAL(false)
-ProxyAuthLookup * ProxyAuthLookup::Instance() STUB_RETVAL(NULL)
+ProxyAuthLookup * ProxyAuthLookup::Instance() STUB_RETVAL(nullptr)
 void ProxyAuthLookup::checkForAsync(ACLChecklist *) const STUB
 void ProxyAuthLookup::LookupDone(void *) STUB
 int ACLProxyAuth::matchForCache(ACLChecklist *) STUB_RETVAL(0)

@@ -40,8 +40,8 @@
 const SBuf Format::Dash("-");
 
 Format::Format::Format(const char *n) :
-    format(NULL),
-    next(NULL)
+    format(nullptr),
+    next(nullptr)
 {
     name = xstrdup(n);
 }
@@ -53,7 +53,7 @@ Format::Format::~Format()
         // unlink the next entry for deletion
         Format *temp = next;
         next = temp->next;
-        temp->next = NULL;
+        temp->next = nullptr;
         delete temp;
     }
 
@@ -129,7 +129,7 @@ Format::Format::dump(StoreEntry * entry, const char *directiveName, bool eol) co
                 storeAppendPrintf(entry, "%s", t->data.string);
             else {
                 char argbuf[256];
-                char *arg = NULL;
+                char *arg = nullptr;
                 ByteCode_t type = t->type;
 
                 switch (type) {
@@ -1458,7 +1458,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                 static_assert(sizeof(quotedOut) > 0, "quotedOut has zero length");
                 quotedOut[0] = '\0';
 
-                char *newout = NULL;
+                char *newout = nullptr;
                 int newfree = 0;
 
                 switch (fmt->quote) {

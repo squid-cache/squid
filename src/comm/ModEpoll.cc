@@ -259,28 +259,28 @@ Comm::DoSelect(int msec)
         // TODO: add EPOLLPRI??
 
         if (cevents->events & (EPOLLIN|EPOLLHUP|EPOLLERR) || F->flags.read_pending) {
-            if ((hdl = F->read_handler) != NULL) {
+            if ((hdl = F->read_handler) != nullptr) {
                 debugs(5, DEBUG_EPOLL ? 0 : 8, "Calling read handler on FD " << fd);
-                F->read_handler = NULL;
+                F->read_handler = nullptr;
                 hdl(fd, F->read_data);
                 ++ statCounter.select_fds;
             } else {
                 debugs(5, DEBUG_EPOLL ? 0 : 8, "no read handler for FD " << fd);
                 // remove interest since no handler exist for this event.
-                SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
+                SetSelect(fd, COMM_SELECT_READ, nullptr, nullptr, 0);
             }
         }
 
         if (cevents->events & (EPOLLOUT|EPOLLHUP|EPOLLERR)) {
-            if ((hdl = F->write_handler) != NULL) {
+            if ((hdl = F->write_handler) != nullptr) {
                 debugs(5, DEBUG_EPOLL ? 0 : 8, "Calling write handler on FD " << fd);
-                F->write_handler = NULL;
+                F->write_handler = nullptr;
                 hdl(fd, F->write_data);
                 ++ statCounter.select_fds;
             } else {
                 debugs(5, DEBUG_EPOLL ? 0 : 8, "no write handler for FD " << fd);
                 // remove interest since no handler exist for this event.
-                SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
+                SetSelect(fd, COMM_SELECT_WRITE, nullptr, nullptr, 0);
             }
         }
     }
