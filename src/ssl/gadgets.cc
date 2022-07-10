@@ -503,6 +503,20 @@ addAltNameWithSubjectCn(Security::CertPointer &cert)
     return result;
 }
 
+/// ASN1_TIME_compare() wrapper that
+/// \returns -2 when one of the arguments is nil or ASN1_TIME_compare() is missing
+static int
+xASN1_TIME_compare(ASN1_TIME *a, ASN1_TIME *b)
+{
+    if (!a || !b)
+        return -2;
+#if HAVE_LIBCRYPTO_ASN1_TIME_COMPARE
+    return ASN1_TIME_compare(a, b); // also returns -2 on errors
+#else
+    return -2; // OpenSSL v1.0 lacks ASN1_TIME_compare()
+#endif
+}
+
 static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificateProperties const &properties)
 {
     // not an Ssl::X509_NAME_Pointer because X509_REQ_get_subject_name()
@@ -523,16 +537,26 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
         (void)replaceCommonName(cert, properties.commonName);
     }
 
-    // We should get caCert notBefore and notAfter fields and do not allow
-    // notBefore/notAfter values from certToMimic before/after notBefore/notAfter
-    // fields from caCert.
-    // Currently there is not any way in openssl tollkit to compare two ASN1_TIME
-    // objects.
+    ASN1_TIME *caNotBefore = nullptr;
+    ASN1_TIME *caNotAfter = nullptr;
+
+    // Get times from cacert
+    if (const auto caCert = properties.signWithX509.get()) {
+        caNotBefore = X509_getm_notBefore(caCert);
+        caNotAfter = X509_getm_notAfter(caCert);
+    }
+
     ASN1_TIME *aTime = NULL;
-    if (!properties.setValidBefore && properties.mimicCert.get())
+    if (!properties.setValidBefore && properties.mimicCert.get()) {
         aTime = X509_getm_notBefore(properties.mimicCert.get());
-    if (!aTime && properties.signWithX509.get())
-        aTime = X509_getm_notBefore(properties.signWithX509.get());
+
+        // If time is before cacert, fix it
+        if (xASN1_TIME_compare(aTime, caNotBefore) == -1)
+            aTime = caNotBefore;
+    }
+
+    if (!aTime)
+        aTime = caNotBefore; // may also be nil
 
     if (aTime) {
         if (!X509_set1_notBefore(cert.get(), aTime))
@@ -541,10 +565,17 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
         return false;
 
     aTime = NULL;
-    if (!properties.setValidAfter && properties.mimicCert.get())
+    if (!properties.setValidAfter && properties.mimicCert.get()) {
         aTime = X509_getm_notAfter(properties.mimicCert.get());
-    if (!aTime && properties.signWithX509.get())
-        aTime = X509_getm_notAfter(properties.signWithX509.get());
+
+        // If time is after cacert, fix it
+        if (xASN1_TIME_compare(aTime, caNotAfter) == 1)
+            aTime = caNotAfter;
+    }
+
+    if (!aTime)
+        aTime = caNotAfter;
+
     if (aTime) {
         if (!X509_set1_notAfter(cert.get(), aTime))
             return false;
