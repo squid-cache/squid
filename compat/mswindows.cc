@@ -191,9 +191,10 @@ getgrnam(char *) {
 int
 _free_osfhnd(int filehandle)
 {
-    if ((0 <= filehandle && filehandle < SQUID_MAXFD) &&
-            (_osfile(filehandle) & FOPEN) &&
-            (_osfhnd(filehandle) != INVALID_HANDLE_VALUE)) {
+    if (((unsigned)filehandle < SQUID_MAXFD) &&
+        (_osfile(filehandle) & FOPEN) &&
+        (_osfhnd(filehandle) != reinterpret_cast<intptr_t>(INVALID_HANDLE_VALUE)))
+    {
         switch (filehandle) {
         case 0:
             SetStdHandle(STD_INPUT_HANDLE, nullptr);
@@ -205,7 +206,7 @@ _free_osfhnd(int filehandle)
             SetStdHandle(STD_ERROR_HANDLE, nullptr);
             break;
         }
-        _osfhnd(filehandle) = INVALID_HANDLE_VALUE;
+        _osfhnd(filehandle) = reinterpret_cast<intptr_t>(INVALID_HANDLE_VALUE);
         return (0);
     } else {
         errno = EBADF;      /* bad handle */
