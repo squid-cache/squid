@@ -698,23 +698,26 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     PeerDigest *pd = NULL;
     const char *reason = NULL;  /* reason for completion */
     const char *no_bug = NULL;  /* successful completion if set */
-    const int pdcb_valid = cbdataReferenceValid(fetch->pd);
-    const int pcb_valid = cbdataReferenceValid(fetch->pd->peer);
+    
+    // Here, the meaning of "_valid" differs from cbdata validity:
+    // Cbdata treats nil pointers as valid. This code does not.
+    const auto pdcb_valid = fetch->pd && cbdataReferenceValid(fetch->pd);
+    const auto pcb_valid = pdcb_valid && fetch->pd->peer && cbdataReferenceValid(fetch->pd->peer);
 
     /* test possible exiting conditions (the same for most steps!)
      * cases marked with '?!' should not happen */
 
     if (!reason) {
-        if (!(pd = fetch->pd))
+        if (!(pd = fetch->pd)) // XXX: Caching of a possibly invalid pointer, dereferenced below.
             reason = "peer digest disappeared?!";
         else
-            host = pd->host;
+            host = pd->host; // XXX: Here and below: Dereference of a possibly invalid pointer.
     }
 
     debugs(72, 6, step_name << ": peer " << host << ", offset: " <<
            fetch->offset << " size: " << size << ".");
 
-    /* continue checking (with pd and host known and valid) */
+    /* continue checking (with pd and host known and valid); XXX: lying about validity */
 
     if (!reason) {
         if (!cbdataReferenceValid(pd->peer))
