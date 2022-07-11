@@ -49,7 +49,7 @@ public:
     // can be called from canFire() for debugging; always returns false
     bool cancel(const char *reason);
 
-    bool canceled() { return isCanceled != nullptr; }
+    bool canceled() const { return isCanceled != nullptr; }
 
     virtual CallDialer *getDialer() = 0;
 
@@ -129,7 +129,7 @@ public:
 };
 
 // XXX: Move WithAnswer and this to base/AsyncCallback.h.
-/// an AsyncCall for delivery of future results
+/// a smart AsyncCall pointer for delivery of future results
 template <typename Answer>
 class AsyncCallback
 {
@@ -138,18 +138,10 @@ public:
     AsyncCallback() = default;
 
     template <class Call>
-    explicit AsyncCallback(const RefCount<Call> &call)
+    explicit AsyncCallback(const RefCount<Call> &call):
+        call_(call),
+        answer_(&(*call).dialer.answer())
     {
-        set(call);
-    }
-
-    template <class Call>
-    void set(const RefCount<Call> &call)
-    {
-        assert(call);
-        call_ = call;
-        answer_ = &call->dialer.answer();
-        assert(answer_);
     }
 
     Answer &answer()
@@ -158,12 +150,8 @@ public:
         return *answer_;
     }
 
-    const AsyncCall::Pointer &call() const
-    {
-        assert(call_);
-        return call_;
-    }
-
+    /// make this smart pointer nil
+    /// \return the AsyncCall pointer we used to manage before this call
     AsyncCall::Pointer release()
     {
         answer_ = nullptr;
@@ -175,16 +163,18 @@ public:
     /// whether the callback has been set but not released
     explicit operator bool() const { return answer_; }
 
-    /// whether the call back is no longer expected
-    bool canceled() const { return call_->canceled(); }
+    /* methods for decaying into an AsyncCall pointer w/o access to answer */
+    operator const AsyncCall::Pointer &() const { return call_; }
+    const AsyncCall &operator *() const { return call_.operator*(); }
+    const AsyncCall *operator ->() const { return call_.operator->(); }
 
 private:
-    /// Optimization: (future) answer inside this->call obtained when it was
-    /// still possible to reach it without dynamic casts and virtual methods.
-    Answer *answer_ = nullptr;
-
     /// callback carrying the answer
     AsyncCall::Pointer call_;
+
+    /// (future) answer inside this->call, obtained when it was still possible
+    /// to reach it without dynamic casts and virtual methods
+    Answer *answer_ = nullptr;
 };
 
 /**

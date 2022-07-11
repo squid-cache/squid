@@ -262,7 +262,7 @@ Adaptation::Icap::Xaction::useTransportConnection(const Comm::ConnectionPointer 
         const auto callback = asyncCallback(93, 4, Adaptation::Icap::Xaction::handleSecuredPeer, this);
         sslConnector->callback = callback;
 
-        encryptionWait.start(sslConnector, callback.call());
+        encryptionWait.start(sslConnector, callback);
         return;
     }
 

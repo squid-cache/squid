@@ -62,7 +62,7 @@ Security::PeerConnector::~PeerConnector() = default;
 
 bool Security::PeerConnector::doneAll() const
 {
-    return (!callback || callback.canceled()) && AsyncJob::doneAll();
+    return (!callback || callback->canceled()) && AsyncJob::doneAll();
 }
 
 /// Preps connection and SSL state. Calls negotiate().
@@ -624,7 +624,7 @@ Security::PeerConnector::startCertDownloading(SBuf &url)
     const auto certCallback = asyncCallback(81, 4, Security::PeerConnector::certDownloadingDone, this);
     dl->callback = certCallback;
 
-    certDownloadWait.start(dl.release(), certCallback.call());
+    certDownloadWait.start(dl.release(), certCallback);
 }
 
 void

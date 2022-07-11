@@ -374,7 +374,7 @@ HappyConnOpener::doneAll() const
 
     // TODO: Expose AsyncCall::canFire() instead so that code like this can
     // detect gone initiators without the need to explicitly cancel callbacks.
-    if (callback.canceled())
+    if (callback->canceled())
         return true; // the requestor is gone or has lost interest
 
     if (prime || spare)
@@ -394,7 +394,7 @@ HappyConnOpener::swanSong()
 {
     debugs(17, 5, this);
 
-    if (callback && !callback.canceled())
+    if (callback && !callback->canceled())
         sendFailure();
 
     if (spareWaiting)
@@ -474,7 +474,7 @@ HappyConnOpener::makeError(const err_type type) const
 HappyConnOpener::Answer *
 HappyConnOpener::futureAnswer(const PeerConnectionPointer &conn)
 {
-    if (callback && !callback.canceled()) {
+    if (callback && !callback->canceled()) {
         auto &answer = callback.answer();
         answer.conn = conn;
         answer.n_tries = n_tries;

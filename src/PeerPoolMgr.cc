@@ -107,7 +107,7 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
         const auto callback = asyncCallback(48, 4, PeerPoolMgr::handleSecuredPeer, this);
         connector->callback = callback;
 
-        encryptionWait.start(connector, callback.call());
+        encryptionWait.start(connector, callback);
         return;
     }
 

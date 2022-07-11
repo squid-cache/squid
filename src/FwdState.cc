@@ -928,7 +928,7 @@ FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
         tunneler->setDelayId(entry->mem_obj->mostBytesAllowed());
 #endif
 
-    peerWait.start(tunneler.release(), callback.call());
+    peerWait.start(tunneler.release(), callback);
 }
 
 /// resumes operations after the (possibly failed) HTTP CONNECT exchange
@@ -1018,7 +1018,7 @@ FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 
     connector->noteFwdPconnUse = true;
 
-    encryptionWait.start(connector, callback.call());
+    encryptionWait.start(connector, callback);
 }
 
 /// called when all negotiations with the TLS-speaking peer have been completed
@@ -1146,7 +1146,7 @@ FwdState::connectStart()
     cs->allowPersistent(pconnRace != raceHappened);
 
     destinations->notificationPending = true; // start() is async
-    transportWait.start(cs, callback.call());
+    transportWait.start(cs, callback);
 }
 
 /// send request on an existing connection dedicated to the requesting client

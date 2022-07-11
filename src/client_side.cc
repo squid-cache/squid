@@ -145,6 +145,9 @@
 #include <systemd/sd-daemon.h>
 #endif
 
+// TODO: Remove this custom dialer and simplify by creating the TcpAcceptor
+// subscription later, inside clientListenerConnectionOpened() callback, just
+// like htcpOpenPorts(), icpOpenPorts(), and snmpPortOpened() do it.
 /// dials clientListenerConnectionOpened call
 class ListeningStartedDialer:
     public CallDialer,
@@ -3372,8 +3375,7 @@ clientStartListeningOn(AnyP::PortCfgPointer &port, const RefCount< CommCbFunPtrC
         asyncCall(33, 2, "clientListenerConnectionOpened",
                   ListeningStartedDialer(&clientListenerConnectionOpened,
                                          port, fdNote, sub));
-    AsyncCallback<Ipc::StartListeningAnswer> callback;
-    callback.set(listenCall);
+    AsyncCallback<Ipc::StartListeningAnswer> callback(listenCall);
     Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, port->listenConn, fdNote, callback);
 
     assert(NHttpSockets < MAXTCPLISTENPORTS);
