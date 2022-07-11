@@ -616,15 +616,15 @@ Security::PeerConnector::certDownloadNestingLevel() const
 void
 Security::PeerConnector::startCertDownloading(SBuf &url)
 {
-    std::unique_ptr<Downloader> dl(new Downloader(
+    auto dl = MakeUnique<Downloader>(
         url,
         MasterXaction::MakePortless<XactionInitiator::initCertFetcher>(),
-        certDownloadNestingLevel() + 1));
+        certDownloadNestingLevel() + 1);
 
     const auto certCallback = asyncCallback(81, 4, Security::PeerConnector::certDownloadingDone, this);
     dl->callback = certCallback;
 
-    certDownloadWait.start(dl.release(), certCallback);
+    certDownloadWait.start(dl, certCallback);
 }
 
 void

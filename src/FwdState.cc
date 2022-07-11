@@ -911,9 +911,7 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
 void
 FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 {
-    std::unique_ptr<Http::Tunneler> tunneler(new Http::Tunneler(
-        conn, request, connectingTimeout(conn), al));
-
+    auto tunneler = MakeUnique<Http::Tunneler>(conn, request, connectingTimeout(conn), al);
     const auto callback = asyncCallback(17, 4, FwdState::tunnelEstablishmentDone, this);
     tunneler->callback = callback;
 
@@ -928,7 +926,7 @@ FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
         tunneler->setDelayId(entry->mem_obj->mostBytesAllowed());
 #endif
 
-    peerWait.start(tunneler.release(), callback);
+    peerWait.start(tunneler, callback);
 }
 
 /// resumes operations after the (possibly failed) HTTP CONNECT exchange
@@ -1005,13 +1003,13 @@ FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
     HttpRequest::Pointer requestPointer = request;
 
     const auto sslNegotiationTimeout = connectingTimeout(conn);
-    Security::PeerConnector *connector = nullptr;
+    std::unique_ptr<Security::PeerConnector> connector;
 #if USE_OPENSSL
     if (request->flags.sslPeek)
-        connector = new Ssl::PeekingPeerConnector(requestPointer, conn, clientConn, al, sslNegotiationTimeout);
+        connector.reset(new Ssl::PeekingPeerConnector(requestPointer, conn, clientConn, al, sslNegotiationTimeout));
     else
 #endif
-        connector = new Security::BlindPeerConnector(requestPointer, conn, al, sslNegotiationTimeout);
+        connector.reset(new Security::BlindPeerConnector(requestPointer, conn, al, sslNegotiationTimeout));
 
     const auto callback = asyncCallback(17, 4, FwdState::connectedToPeer, this);
     connector->callback = callback;
@@ -1127,7 +1125,7 @@ FwdState::connectStart()
     request->hier.startPeerClock();
 
     HttpRequest::Pointer cause = request;
-    const auto cs = new HappyConnOpener(destinations, cause, start_t, n_tries, al);
+    auto cs = MakeUnique<HappyConnOpener>(destinations, cause, start_t, n_tries, al);
 
     const auto callback = asyncCallback(17, 5, FwdState::noteConnection, this);
     cs->callback = callback;

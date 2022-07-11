@@ -257,7 +257,7 @@ Adaptation::Icap::Xaction::useTransportConnection(const Comm::ConnectionPointer 
     const auto &ssl = fd_table[conn->fd].ssl;
     if (!ssl && service().cfg().secure.encryptTransport) {
         // XXX: Exceptions orphan conn.
-        const auto sslConnector = new Ssl::IcapPeerConnector(theService, conn, masterLogEntry(), TheConfig.connect_timeout(service().cfg().bypass));
+        auto sslConnector = MakeUnique<Ssl::IcapPeerConnector>(theService, conn, masterLogEntry(), TheConfig.connect_timeout(service().cfg().bypass));
 
         const auto callback = asyncCallback(93, 4, Adaptation::Icap::Xaction::handleSecuredPeer, this);
         sslConnector->callback = callback;

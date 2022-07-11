@@ -201,7 +201,7 @@ public:
     JobWait<HappyConnOpener> transportWait;
 
     /// waits for the established transport connection to be secured/encrypted
-    JobWait<Security::PeerConnector> encryptionWait;
+    JobWait<Security::BlindPeerConnector> encryptionWait;
 
     /// waits for an HTTP CONNECT tunnel through a cache_peer to be negotiated
     /// over the (encrypted, if needed) transport connection to that cache_peer
@@ -1152,7 +1152,7 @@ TunnelStateData::connectToPeer(const Comm::ConnectionPointer &conn)
 void
 TunnelStateData::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 {
-    const auto connector = new Security::BlindPeerConnector(request, conn, al);
+    auto connector = MakeUnique<Security::BlindPeerConnector>(request, conn, al);
     const auto callback = asyncCallback(5, 4, TunnelStateData::noteSecurityPeerConnectorAnswer, this);
     connector->callback = callback;
     encryptionWait.start(connector, callback);
@@ -1214,11 +1214,11 @@ TunnelStateData::connectedToPeer(const Comm::ConnectionPointer &conn)
 void
 TunnelStateData::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 {
-    std::unique_ptr<Http::Tunneler> tunneler(new Http::Tunneler(
+    auto tunneler = MakeUnique<Http::Tunneler>(
         conn,
         request,
         Config.Timeout.lifetime,
-        al));
+        al);
 
     const auto callback = asyncCallback(5, 4, TunnelStateData::tunnelEstablishmentDone, this);
     tunneler->callback = callback;
@@ -1227,7 +1227,7 @@ TunnelStateData::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
     tunneler->setDelayId(server.delayId);
 #endif
 
-    peerWait.start(tunneler.release(), callback);
+    peerWait.start(tunneler, callback);
 }
 
 void
@@ -1365,7 +1365,7 @@ TunnelStateData::startConnecting()
 
     assert(!destinations->empty());
     assert(!transporting());
-    const auto cs = new HappyConnOpener(destinations, request, startTime, 0, al);
+    auto cs = MakeUnique<HappyConnOpener>(destinations, request, startTime, 0, al);
     const auto callback = asyncCallback(17, 5, TunnelStateData::noteConnection, this);
     cs->callback = callback;
     cs->setHost(request->url.host());
