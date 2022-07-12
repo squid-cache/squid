@@ -913,9 +913,9 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
 void
 FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 {
-    auto tunneler = MakeUnique<Http::Tunneler>(conn, request, connectingTimeout(conn), al);
     const auto callback = asyncCallback(17, 4, FwdState::tunnelEstablishmentDone, this);
-    tunneler->callback = callback;
+    HttpRequest::Pointer requestPointer = request;
+    auto tunneler = MakeUnique<Http::Tunneler>(conn, requestPointer, callback, connectingTimeout(conn), al);
 
     // TODO: Replace this hack with proper Comm::Connection-Pool association
     // that is not tied to fwdPconnPool and can handle disappearing pools.
@@ -927,7 +927,6 @@ FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
     if (!conn->getPeer()->options.no_delay)
         tunneler->setDelayId(entry->mem_obj->mostBytesAllowed());
 #endif
-
     peerWait.start(tunneler, callback);
 }
 
@@ -1003,21 +1002,16 @@ void
 FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 {
     HttpRequest::Pointer requestPointer = request;
-
+    const auto callback = asyncCallback(17, 4, FwdState::connectedToPeer, this);
     const auto sslNegotiationTimeout = connectingTimeout(conn);
     std::unique_ptr<Security::PeerConnector> connector;
 #if USE_OPENSSL
     if (request->flags.sslPeek)
-        connector.reset(new Ssl::PeekingPeerConnector(requestPointer, conn, clientConn, al, sslNegotiationTimeout));
+        connector.reset(new Ssl::PeekingPeerConnector(requestPointer, conn, clientConn, callback, al, sslNegotiationTimeout));
     else
 #endif
-        connector.reset(new Security::BlindPeerConnector(requestPointer, conn, al, sslNegotiationTimeout));
-
-    const auto callback = asyncCallback(17, 4, FwdState::connectedToPeer, this);
-    connector->callback = callback;
-
+        connector.reset(new Security::BlindPeerConnector(requestPointer, conn, callback, al, sslNegotiationTimeout));
     connector->noteFwdPconnUse = true;
-
     encryptionWait.start(connector, callback);
 }
 
@@ -1126,14 +1120,11 @@ FwdState::connectStart()
 
     request->hier.startPeerClock();
 
-    HttpRequest::Pointer cause = request;
-    auto cs = MakeUnique<HappyConnOpener>(destinations, cause, start_t, n_tries, al);
-
     const auto callback = asyncCallback(17, 5, FwdState::noteConnection, this);
-    cs->callback = callback;
 
+    HttpRequest::Pointer cause = request;
+    auto cs = MakeUnique<HappyConnOpener>(destinations, callback, cause, start_t, n_tries, al);
     cs->setHost(request->url.host());
-
     bool retriable = checkRetriable();
     if (!retriable && Config.accessList.serverPconnForNonretriable) {
         ACLFilledChecklist ch(Config.accessList.serverPconnForNonretriable, request, nullptr);
@@ -1142,9 +1133,7 @@ FwdState::connectStart()
         retriable = ch.fastCheck().allowed();
     }
     cs->setRetriable(retriable);
-
     cs->allowPersistent(pconnRace != raceHappened);
-
     destinations->notificationPending = true; // start() is async
     transportWait.start(cs, callback);
 }

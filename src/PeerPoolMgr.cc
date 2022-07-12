@@ -96,17 +96,14 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
     // Handle TLS peers.
     if (peer->secure.encryptTransport) {
         // XXX: Exceptions orphan params.conn
+        const auto callback = asyncCallback(48, 4, PeerPoolMgr::handleSecuredPeer, this);
 
         const auto peerTimeout = peer->connectTimeout();
         const int timeUsed = squid_curtime - params.conn->startTime();
         // Use positive timeout when less than one second is left for conn.
         const int timeLeft = positiveTimeout(peerTimeout - timeUsed);
 
-        auto connector = MakeUnique<Security::BlindPeerConnector>(request, params.conn, nullptr, timeLeft);
-
-        const auto callback = asyncCallback(48, 4, PeerPoolMgr::handleSecuredPeer, this);
-        connector->callback = callback;
-
+        auto connector = MakeUnique<Security::BlindPeerConnector>(request, params.conn, callback, nullptr, timeLeft);
         encryptionWait.start(connector, callback);
         return;
     }

@@ -54,12 +54,10 @@ public:
     typedef CbcPointer<PeerConnector> Pointer;
 
     PeerConnector(const Comm::ConnectionPointer &aServerConn,
+                  const AsyncCallback<EncryptorAnswer> &aCallback,
                   const AccessLogEntryPointer &alp,
                   const time_t timeout = 0);
     virtual ~PeerConnector();
-
-    /// answer destination
-    AsyncCallback<EncryptorAnswer> callback;
 
     /// hack: whether the connection requires fwdPconnPool->noteUses()
     bool noteFwdPconnUse;
@@ -168,6 +166,9 @@ protected:
     HttpRequestPointer request; ///< peer connection trigger or cause
     Comm::ConnectionPointer serverConn; ///< TCP connection to the peer
     AccessLogEntryPointer al; ///< info for the future access.log entry
+
+    /// answer destination
+    AsyncCallback<EncryptorAnswer> callback;
 
 private:
     PeerConnector(const PeerConnector &); // not implemented

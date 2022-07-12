@@ -69,10 +69,12 @@ operator <<(std::ostream &os, const DownloaderAnswer &answer)
 
 Downloader::Downloader(
     const SBuf &url,
+    const AsyncCallback<Answer> &aCallback,
     const MasterXactionPointer &masterXaction,
     const unsigned int level):
     AsyncJob("Downloader"),
     url_(url),
+    callback_(aCallback),
     level_(level),
     masterXaction_(masterXaction)
 {
@@ -88,7 +90,7 @@ Downloader::swanSong()
 {
     debugs(33, 6, this);
 
-    if (callback) // job-ending emergencies like handleStopRequest() or callException()
+    if (callback_) // job-ending emergencies like handleStopRequest() or callException()
         callBack(Http::scInternalServerError);
 
     if (context_) {
@@ -100,7 +102,7 @@ Downloader::swanSong()
 bool
 Downloader::doneAll() const
 {
-    return (!callback || callback->canceled()) && AsyncJob::doneAll();
+    return (!callback_ || callback_->canceled()) && AsyncJob::doneAll();
 }
 
 static void
@@ -260,12 +262,12 @@ Downloader::downloadFinished()
 void
 Downloader::callBack(Http::StatusCode const statusCode)
 {
-    assert(callback);
-    auto &answer = callback.answer();
+    assert(callback_);
+    auto &answer = callback_.answer();
     answer.outcome = statusCode;
     if (statusCode == Http::scOkay)
         answer.resource = object_;
-    ScheduleCallHere(callback.release());
+    ScheduleCallHere(callback_.release());
 
     // We cannot deleteThis() because we may be called synchronously from
     // doCallouts() via handleReply() (XXX), and doCallouts() may crash if we

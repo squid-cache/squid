@@ -48,7 +48,7 @@ class Downloader: virtual public AsyncJob
 public:
     using Answer = DownloaderAnswer;
 
-    Downloader(const SBuf &url, const MasterXactionPointer &, unsigned int level = 0);
+    Downloader(const SBuf &url, const AsyncCallback<Answer> &, const MasterXactionPointer &, unsigned int level = 0);
     virtual ~Downloader();
     virtual void swanSong();
 
@@ -59,9 +59,6 @@ public:
     unsigned int nestedLevel() const {return level_;}
 
     void handleReply(clientStreamNode *, ClientHttpRequest *, HttpReply *, StoreIOBuffer);
-
-    /// answer destination
-    AsyncCallback<Answer> callback;
 
 protected:
 
@@ -78,6 +75,10 @@ private:
     static const size_t MaxObjectSize = 1*1024*1024;
 
     SBuf url_; ///< the url to download
+
+    /// answer destination
+    AsyncCallback<Answer> callback_;
+
     SBuf object_; ///< the object body data
     const unsigned int level_; ///< holds the nested downloads level
     MasterXactionPointer masterXaction_; ///< download transaction context

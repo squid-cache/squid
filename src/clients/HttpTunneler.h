@@ -36,7 +36,7 @@ class Tunneler: virtual public AsyncJob
 public:
     using Answer = TunnelerAnswer;
 
-    Tunneler(const Comm::ConnectionPointer &, const HttpRequestPointer &, time_t timeout, const AccessLogEntryPointer &);
+    Tunneler(const Comm::ConnectionPointer &, const HttpRequestPointer &, const AsyncCallback<Answer> &, time_t timeout, const AccessLogEntryPointer &);
     Tunneler(const Tunneler &) = delete;
     Tunneler &operator =(const Tunneler &) = delete;
     virtual ~Tunneler();
@@ -44,9 +44,6 @@ public:
 #if USE_DELAY_POOLS
     void setDelayId(DelayId delay_id) {delayId = delay_id;}
 #endif
-
-    /// answer destination
-    AsyncCallback<Answer> callback;
 
     /// hack: whether the connection requires fwdPconnPool->noteUses()
     bool noteFwdPconnUse;
@@ -93,6 +90,7 @@ private:
 
     Comm::ConnectionPointer connection; ///< TCP connection to the cache_peer
     HttpRequestPointer request; ///< peer connection trigger or cause
+    AsyncCallback<Answer> callback; ///< answer destination
     SBuf url; ///< request-target for the CONNECT request
     time_t lifetimeLimit; ///< do not run longer than this
     AccessLogEntryPointer al; ///< info for the future access.log entry

@@ -42,10 +42,11 @@ public:
     IcapPeerConnector(
         Adaptation::Icap::ServiceRep::Pointer &service,
         const Comm::ConnectionPointer &aServerConn,
+        const AsyncCallback<Security::EncryptorAnswer> &aCallback,
         AccessLogEntry::Pointer const &alp,
         const time_t timeout = 0):
         AsyncJob("Ssl::IcapPeerConnector"),
-        Security::PeerConnector(aServerConn, alp, timeout), icapService(service) {}
+        Security::PeerConnector(aServerConn, aCallback, alp, timeout), icapService(service) {}
 
     /* Security::PeerConnector API */
     virtual bool initialize(Security::SessionPointer &);
@@ -258,10 +259,8 @@ Adaptation::Icap::Xaction::useTransportConnection(const Comm::ConnectionPointer 
     const auto &ssl = fd_table[conn->fd].ssl;
     if (!ssl && service().cfg().secure.encryptTransport) {
         // XXX: Exceptions orphan conn.
-        auto sslConnector = MakeUnique<Ssl::IcapPeerConnector>(theService, conn, masterLogEntry(), TheConfig.connect_timeout(service().cfg().bypass));
-
         const auto callback = asyncCallback(93, 4, Adaptation::Icap::Xaction::handleSecuredPeer, this);
-        sslConnector->callback = callback;
+        auto sslConnector = MakeUnique<Ssl::IcapPeerConnector>(theService, conn, callback, masterLogEntry(), TheConfig.connect_timeout(service().cfg().bypass));
 
         encryptionWait.start(sslConnector, callback);
         return;

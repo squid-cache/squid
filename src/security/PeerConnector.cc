@@ -38,12 +38,14 @@ CBDATA_NAMESPACED_CLASS_INIT(Security, PeerConnector);
 
 Security::PeerConnector::PeerConnector(
     const Comm::ConnectionPointer &aServerConn,
+    const AsyncCallback<EncryptorAnswer> &aCallback,
     const AccessLogEntryPointer &alp,
     const time_t timeout):
     AsyncJob("Security::PeerConnector"),
     noteFwdPconnUse(false),
     serverConn(aServerConn),
     al(alp),
+    callback(aCallback),
     negotiationTimeout(timeout),
     startTime(squid_curtime),
     useCertValidator_(true),
@@ -617,14 +619,13 @@ Security::PeerConnector::certDownloadNestingLevel() const
 void
 Security::PeerConnector::startCertDownloading(SBuf &url)
 {
+    const auto certCallback = asyncCallback(81, 4, Security::PeerConnector::certDownloadingDone, this);
+
     auto dl = MakeUnique<Downloader>(
         url,
+        certCallback,
         MasterXaction::MakePortless<XactionInitiator::initCertFetcher>(),
         certDownloadNestingLevel() + 1);
-
-    const auto certCallback = asyncCallback(81, 4, Security::PeerConnector::certDownloadingDone, this);
-    dl->callback = certCallback;
-
     certDownloadWait.start(dl, certCallback);
 }
 

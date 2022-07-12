@@ -1153,9 +1153,8 @@ TunnelStateData::connectToPeer(const Comm::ConnectionPointer &conn)
 void
 TunnelStateData::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 {
-    auto connector = MakeUnique<Security::BlindPeerConnector>(request, conn, al);
     const auto callback = asyncCallback(5, 4, TunnelStateData::noteSecurityPeerConnectorAnswer, this);
-    connector->callback = callback;
+    auto connector = MakeUnique<Security::BlindPeerConnector>(request, conn, callback, al);
     encryptionWait.start(connector, callback);
 }
 
@@ -1215,19 +1214,11 @@ TunnelStateData::connectedToPeer(const Comm::ConnectionPointer &conn)
 void
 TunnelStateData::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 {
-    auto tunneler = MakeUnique<Http::Tunneler>(
-        conn,
-        request,
-        Config.Timeout.lifetime,
-        al);
-
     const auto callback = asyncCallback(5, 4, TunnelStateData::tunnelEstablishmentDone, this);
-    tunneler->callback = callback;
-
+    auto tunneler = MakeUnique<Http::Tunneler>(conn, request, callback, Config.Timeout.lifetime, al);
 #if USE_DELAY_POOLS
     tunneler->setDelayId(server.delayId);
 #endif
-
     peerWait.start(tunneler, callback);
 }
 
@@ -1366,9 +1357,8 @@ TunnelStateData::startConnecting()
 
     assert(!destinations->empty());
     assert(!transporting());
-    auto cs = MakeUnique<HappyConnOpener>(destinations, request, startTime, 0, al);
     const auto callback = asyncCallback(17, 5, TunnelStateData::noteConnection, this);
-    cs->callback = callback;
+    auto cs = MakeUnique<HappyConnOpener>(destinations, callback, request, startTime, 0, al);
     cs->setHost(request->url.host());
     cs->setRetriable(false);
     cs->allowPersistent(false);

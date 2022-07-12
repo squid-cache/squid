@@ -78,8 +78,9 @@ namespace Security
 {
 PeerConnector::PeerConnector(
     const Comm::ConnectionPointer &,
+    const AsyncCallback<EncryptorAnswer> &,
     const AccessLogEntryPointer &,
-    time_t):
+    const time_t):
     AsyncJob("Security::PeerConnector") {STUB}
 PeerConnector::~PeerConnector() STUB
 void PeerConnector::start() STUB
