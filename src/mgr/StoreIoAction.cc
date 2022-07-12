@@ -64,7 +64,7 @@ void
 Mgr::StoreIoAction::dump(StoreEntry* entry)
 {
     debugs(16, 5, MYNAME);
-    Must(entry != NULL);
+    Must(entry != nullptr);
     storeAppendPrintf(entry, "Store IO Interface Stats\n");
     storeAppendPrintf(entry, "create.calls %.0f\n", data.create_calls);
     storeAppendPrintf(entry, "create.select_fail %.0f\n", data.create_select_fail);

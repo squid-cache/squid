@@ -26,7 +26,7 @@
 #define ACL_ALLWEEK 0x7F
 #define ACL_WEEKDAYS    0x3E
 
-ACLTimeData::ACLTimeData () : weekbits (0), start (0), stop (0), next (NULL) {}
+ACLTimeData::ACLTimeData () : weekbits (0), start (0), stop (0), next (nullptr) {}
 
 ACLTimeData::~ACLTimeData()
 {
@@ -70,7 +70,7 @@ ACLTimeData::dump() const
     SBufList sl;
     const ACLTimeData *t = this;
 
-    while (t != NULL) {
+    while (t != nullptr) {
         SBuf s;
         s.Printf("%c%c%c%c%c%c%c %02d:%02d-%02d:%02d",
                  t->weekbits & ACL_SUNDAY ? 'S' : '-',
@@ -95,7 +95,7 @@ ACLTimeData::parse()
     long parsed_weekbits = 0;
 
     for (Tail = &next; *Tail; Tail = &((*Tail)->next));
-    ACLTimeData *q = NULL;
+    ACLTimeData *q = nullptr;
 
     int h1, m1, h2, m2;
 

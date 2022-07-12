@@ -29,8 +29,8 @@ AnyP::PortCfg::PortCfg() :
     next(),
     s(),
     transport(AnyP::PROTO_HTTP,1,1), // "Squid is an HTTP proxy", etc.
-    name(NULL),
-    defaultsite(NULL),
+    name(nullptr),
+    defaultsite(nullptr),
     flags(),
     allow_direct(false),
     vhost(false),
@@ -49,7 +49,7 @@ AnyP::PortCfg::~PortCfg()
 {
     if (Comm::IsConnOpen(listenConn)) {
         listenConn->close();
-        listenConn = NULL;
+        listenConn = nullptr;
     }
 
     safe_free(name);

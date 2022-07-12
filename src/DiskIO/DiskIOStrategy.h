@@ -50,7 +50,7 @@ public:
     virtual void statfs(StoreEntry &) const {}
 
     /** module specific options */
-    virtual ConfigOption *getOptionTree() const {return NULL;}
+    virtual ConfigOption *getOptionTree() const {return nullptr;}
 };
 
 /* Because we need the DiskFile definition for newFile. */

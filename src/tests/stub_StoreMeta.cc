@@ -15,8 +15,8 @@
 
 bool StoreMeta::validType(char) STUB_RETVAL(false)
 bool StoreMeta::validLength(int) const STUB_RETVAL(false)
-StoreMeta * StoreMeta::Factory (char, size_t, void const *) STUB_RETVAL(NULL)
+StoreMeta * StoreMeta::Factory (char, size_t, void const *) STUB_RETVAL(nullptr)
 void StoreMeta::FreeList(StoreMeta **) STUB
-StoreMeta ** StoreMeta::Add(StoreMeta **, StoreMeta *) STUB_RETVAL(NULL)
+StoreMeta ** StoreMeta::Add(StoreMeta **, StoreMeta *) STUB_RETVAL(nullptr)
 bool StoreMeta::checkConsistency(StoreEntry *) const STUB_RETVAL(false)
 

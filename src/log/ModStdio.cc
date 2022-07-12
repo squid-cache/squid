@@ -167,7 +167,7 @@ logfile_mod_stdio_close(Logfile * lf)
         xfree(ll->buf);
 
     xfree(lf->data);
-    lf->data = NULL;
+    lf->data = nullptr;
 }
 
 /*

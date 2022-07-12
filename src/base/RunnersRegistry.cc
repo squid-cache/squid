@@ -15,7 +15,7 @@
 /// a collection of unique runners, in no particular order
 typedef std::set<RegisteredRunner*> Runners;
 /// all known runners
-static Runners *TheRunners = NULL;
+static Runners *TheRunners = nullptr;
 /// used to avoid re-creating deleted TheRunners after shutdown finished.
 static bool RunnersGone = false;
 

@@ -49,7 +49,7 @@ public:
     // can be called from canFire() for debugging; always returns false
     bool cancel(const char *reason);
 
-    bool canceled() { return isCanceled != NULL; }
+    bool canceled() { return isCanceled != nullptr; }
 
     virtual CallDialer *getDialer() = 0;
 

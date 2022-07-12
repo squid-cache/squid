@@ -124,8 +124,8 @@ Fs::Ufs::UFSStoreState::close(int)
 void
 Fs::Ufs::UFSStoreState::read_(char *buf, size_t size, off_t aOffset, STRCB * aCallback, void *aCallbackData)
 {
-    assert(read.callback == NULL);
-    assert(read.callback_data == NULL);
+    assert(read.callback == nullptr);
+    assert(read.callback_data == nullptr);
     assert(!reading);
     assert(!closing);
     assert (aCallback);
@@ -242,7 +242,7 @@ Fs::Ufs::UFSStoreState::readCompleted(const char *buf, int len, int, RefCount<Re
 
     assert(callback_);
 
-    read.callback = NULL;
+    read.callback = nullptr;
 
     void *cbdata;
 
@@ -265,7 +265,7 @@ Fs::Ufs::UFSStoreState::readCompleted(const char *buf, int len, int, RefCount<Re
         callback_(cbdata, read_buf, len, this);
     }
 
-    if (flags.try_closing || (theFile != NULL && theFile->error()) )
+    if (flags.try_closing || (theFile != nullptr && theFile->error()) )
         tryClosing();
 }
 
@@ -308,7 +308,7 @@ Fs::Ufs::UFSStoreState::doCloseCallback(int errflag)
      */
     freePending();
     STIOCB *theCallback = callback;
-    callback = NULL;
+    callback = nullptr;
 
     void *cbdata;
 
@@ -320,19 +320,19 @@ Fs::Ufs::UFSStoreState::doCloseCallback(int errflag)
      * us that the file has been closed.  This must be the last line,
      * as theFile may be the only object holding us in memory.
      */
-    theFile = NULL; // refcounted
+    theFile = nullptr; // refcounted
 }
 
 /* ============= THE REAL UFS CODE ================ */
 
 Fs::Ufs::UFSStoreState::UFSStoreState(SwapDir * SD, StoreEntry * anEntry, STIOCB * cbIo, void *data) :
-    StoreIOState(NULL, cbIo, data),
+    StoreIOState(nullptr, cbIo, data),
     opening(false),
     creating(false),
     closing(false),
     reading(false),
     writing(false),
-    read_buf(NULL)
+    read_buf(nullptr)
 {
     // StoreIOState inherited members
     swap_filen = anEntry->swap_filen;

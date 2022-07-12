@@ -33,9 +33,9 @@ start_announce(void *)
     if (!Comm::IsConnOpen(icpOutgoingConn))
         return;
 
-    ipcache_nbgethostbyname(Config.Announce.host, send_announce, NULL);
+    ipcache_nbgethostbyname(Config.Announce.host, send_announce, nullptr);
 
-    eventAdd("send_announce", start_announce, NULL, (double) Config.Announce.period, 1);
+    eventAdd("send_announce", start_announce, nullptr, (double) Config.Announce.period, 1);
 }
 
 static void
@@ -45,13 +45,13 @@ send_announce(const ipcache_addrs *ia, const Dns::LookupDetails &, void *)
     LOCAL_ARRAY(char, sndbuf, BUFSIZ);
 
     char *host = Config.Announce.host;
-    char *file = NULL;
+    char *file = nullptr;
     unsigned short port = Config.Announce.port;
     int l;
     int n;
     int fd;
 
-    if (ia == NULL) {
+    if (ia == nullptr) {
         debugs(27, DBG_IMPORTANT, "ERROR: send_announce: Unknown host '" << host << "'");
         return;
     }
@@ -60,7 +60,7 @@ send_announce(const ipcache_addrs *ia, const Dns::LookupDetails &, void *)
     sndbuf[0] = '\0';
     snprintf(tbuf, 256, "cache_version SQUID/%s\n", version_string);
     strcat(sndbuf, tbuf);
-    assert(HttpPortList != NULL);
+    assert(HttpPortList != nullptr);
     snprintf(tbuf, 256, "Running on %s %d %d\n",
              getMyHostname(),
              getMyPort(),
@@ -78,7 +78,7 @@ send_announce(const ipcache_addrs *ia, const Dns::LookupDetails &, void *)
     strcat(sndbuf, tbuf);
     l = strlen(sndbuf);
 
-    if ((file = Config.Announce.file) != NULL) {
+    if ((file = Config.Announce.file) != nullptr) {
         fd = file_open(file, O_RDONLY | O_TEXT);
 
         if (fd > -1 && (n = FD_READ_METHOD(fd, sndbuf + l, BUFSIZ - l - 1)) > 0) {

@@ -23,7 +23,7 @@
 #define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
 
 static int n_sourcehash_peers = 0;
-static CachePeer **sourcehash_peers = NULL;
+static CachePeer **sourcehash_peers = nullptr;
 static OBJH peerSourceHashCachemgr;
 static void peerSourceHashRegisterWithCacheManager(void);
 
@@ -147,17 +147,17 @@ peerSourceHashSelectParent(PeerSelector *ps)
 {
     int k;
     const char *c;
-    CachePeer *p = NULL;
+    CachePeer *p = nullptr;
     CachePeer *tp;
     unsigned int user_hash = 0;
     unsigned int combined_hash;
     double score;
     double high_score = 0;
-    const char *key = NULL;
+    const char *key = nullptr;
     char ntoabuf[MAX_IPSTRLEN];
 
     if (n_sourcehash_peers == 0)
-        return NULL;
+        return nullptr;
 
     assert(ps);
     HttpRequest *request = ps->request;

@@ -695,7 +695,7 @@ storeDirCloseSwapLogs()
 int
 storeDirWriteCleanLogs(int reopen)
 {
-    const StoreEntry *e = NULL;
+    const StoreEntry *e = nullptr;
     int n = 0;
 
     struct timeval start;

@@ -137,7 +137,7 @@ extern std::vector<const char *>BumpModeStr;
  */
 inline const char *bumpMode(int bm)
 {
-    return (0 <= bm && bm < Ssl::bumpEnd) ? Ssl::BumpModeStr.at(bm) : NULL;
+    return (0 <= bm && bm < Ssl::bumpEnd) ? Ssl::BumpModeStr.at(bm) : nullptr;
 }
 
 /// certificates indexed by issuer name

@@ -65,9 +65,9 @@ StoreMetaUnpacker::StoreMetaUnpacker(char const *aBuffer, ssize_t aLen, int *anI
     position(1 + sizeof(int)),
     type('\0'),
     length(0),
-    tail(NULL)
+    tail(nullptr)
 {
-    assert(aBuffer != NULL);
+    assert(aBuffer != nullptr);
 }
 
 void
@@ -115,9 +115,9 @@ StoreMetaUnpacker::moreToProcess() const
 StoreMeta *
 StoreMetaUnpacker::createStoreMeta ()
 {
-    tlv *TLV = NULL;
+    tlv *TLV = nullptr;
     tail = &TLV;
-    assert(hdr_len != NULL);
+    assert(hdr_len != nullptr);
 
     checkBuffer();
 

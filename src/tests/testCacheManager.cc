@@ -56,15 +56,15 @@ void
 testCacheManager::testRegister()
 {
     CacheManager *manager=CacheManager::GetInstance();
-    CPPUNIT_ASSERT(manager != NULL);
+    CPPUNIT_ASSERT(manager != nullptr);
 
     manager->registerProfile("sample", "my sample", &dummy_action, false, false);
     Mgr::Action::Pointer action = manager->createNamedAction("sample");
-    CPPUNIT_ASSERT(action != NULL);
+    CPPUNIT_ASSERT(action != nullptr);
 
     const Mgr::ActionProfile::Pointer profile = action->command().profile;
-    CPPUNIT_ASSERT(profile != NULL);
-    CPPUNIT_ASSERT(profile->creator != NULL);
+    CPPUNIT_ASSERT(profile != nullptr);
+    CPPUNIT_ASSERT(profile->creator != nullptr);
     CPPUNIT_ASSERT_EQUAL(false, profile->isPwReq);
     CPPUNIT_ASSERT_EQUAL(false, profile->isAtomic);
     CPPUNIT_ASSERT_EQUAL(String("sample"), String(action->name()));

@@ -456,7 +456,7 @@ struct wccp2_service_list_t {
     uint32_t wccp2_security_type;
 };
 
-static struct wccp2_service_list_t *wccp2_service_list_head = NULL;
+static struct wccp2_service_list_t *wccp2_service_list_head = nullptr;
 
 int empty_portlist[WCCP2_NUMPORTS] = {0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -534,7 +534,7 @@ wccp2_get_service_by_id(int service, int service_id) {
 
     p = wccp2_service_list_head;
 
-    while (p != NULL) {
+    while (p != nullptr) {
         if (p->info.service == service && p->info.service_id == service_id) {
             return p;
         }
@@ -542,7 +542,7 @@ wccp2_get_service_by_id(int service, int service_id) {
         p = p->next;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -690,7 +690,7 @@ wccp2Init(void)
 
     service_list_ptr = wccp2_service_list_head;
 
-    while (service_list_ptr != NULL) {
+    while (service_list_ptr != nullptr) {
         /* Set up our list pointers */
         router_list_ptr = &service_list_ptr->router_list_head;
 
@@ -851,7 +851,7 @@ wccp2Init(void)
 
                 /* update the pointer */
                 router_list_ptr = router_list_ptr->next;
-                router_list_ptr->next = NULL;
+                router_list_ptr->next = nullptr;
 
                 /* no need to copy memory - we've just set the values directly in the packet above */
 
@@ -938,8 +938,8 @@ wccp2Init(void)
         /* Add the event if everything initialised correctly */
         debugs(80,3,"wccp2Init: scheduled 'HERE_I_AM' message to " << wccp2_numrouters << "routers.");
         if (wccp2_numrouters) {
-            if (!eventFind(wccp2HereIam, NULL)) {
-                eventAdd("wccp2HereIam", wccp2HereIam, NULL, 1, 1);
+            if (!eventFind(wccp2HereIam, nullptr)) {
+                eventAdd("wccp2HereIam", wccp2HereIam, nullptr, 1, 1);
             } else
                 debugs(80,3,"wccp2Init: skip duplicate 'HERE_I_AM'.");
         }
@@ -990,7 +990,7 @@ wccp2ConnectionOpen(void)
     }
 
 #endif
-    Comm::SetSelect(theWccp2Connection, COMM_SELECT_READ, wccp2HandleUdp, NULL, 0);
+    Comm::SetSelect(theWccp2Connection, COMM_SELECT_READ, wccp2HandleUdp, nullptr, 0);
 
     debugs(80, DBG_IMPORTANT, "Accepting WCCPv2 messages on port " << WCCP_PORT << ", FD " << theWccp2Connection << ".");
     debugs(80, DBG_IMPORTANT, "Initialising all WCCPv2 lists");
@@ -1002,8 +1002,8 @@ wccp2ConnectionOpen(void)
 
     service_list_ptr = wccp2_service_list_head;
 
-    while (service_list_ptr != NULL) {
-        for (router_list_ptr = &service_list_ptr->router_list_head; router_list_ptr->next != NULL; router_list_ptr = router_list_ptr->next) {
+    while (service_list_ptr != nullptr) {
+        for (router_list_ptr = &service_list_ptr->router_list_head; router_list_ptr->next != nullptr; router_list_ptr = router_list_ptr->next) {
             router_len = sizeof(router);
             memset(&router, '\0', router_len);
             router.sin_family = AF_INET;
@@ -1070,8 +1070,8 @@ wccp2ConnectionClose(void)
     /* free all stored router state */
     service_list_ptr = wccp2_service_list_head;
 
-    while (service_list_ptr != NULL) {
-        for (router_list_ptr = &service_list_ptr->router_list_head; router_list_ptr != NULL; router_list_ptr = router_list_next) {
+    while (service_list_ptr != nullptr) {
+        for (router_list_ptr = &service_list_ptr->router_list_head; router_list_ptr != nullptr; router_list_ptr = router_list_next) {
             for (cache_list_ptr = &router_list_ptr->cache_list_head; cache_list_ptr; cache_list_ptr = cache_list_ptr_next) {
                 cache_list_ptr_next = cache_list_ptr->next;
 
@@ -1098,10 +1098,10 @@ wccp2ConnectionClose(void)
         service_list_ptr = service_list_ptr_next;
     }
 
-    wccp2_service_list_head = NULL;
-    eventDelete(wccp2HereIam, NULL);
-    eventDelete(wccp2AssignBuckets, NULL);
-    eventDelete(wccp2HereIam, NULL);
+    wccp2_service_list_head = nullptr;
+    eventDelete(wccp2HereIam, nullptr);
+    eventDelete(wccp2AssignBuckets, nullptr);
+    eventDelete(wccp2HereIam, nullptr);
     wccp2_connected = 0;
 }
 
@@ -1178,21 +1178,21 @@ wccp2HandleUdp(int sock, void *)
 
     /* These structs form the parts of the packet */
 
-    struct wccp2_security_none_t *security_info = NULL;
+    struct wccp2_security_none_t *security_info = nullptr;
 
-    struct wccp2_service_info_t *service_info = NULL;
+    struct wccp2_service_info_t *service_info = nullptr;
 
-    struct router_identity_info_t *router_identity_info = NULL;
+    struct router_identity_info_t *router_identity_info = nullptr;
 
-    struct router_view_t *router_view_header = NULL;
+    struct router_view_t *router_view_header = nullptr;
 
-    struct wccp2_cache_mask_identity_info_t *cache_mask_identity = NULL;
+    struct wccp2_cache_mask_identity_info_t *cache_mask_identity = nullptr;
 
-    struct cache_mask_info_t *cache_mask_info = NULL;
+    struct cache_mask_info_t *cache_mask_info = nullptr;
 
-    struct wccp2_cache_identity_info_t *cache_identity = NULL;
+    struct wccp2_cache_identity_info_t *cache_identity = nullptr;
 
-    struct wccp2_capability_info_header_t *router_capability_header = NULL;
+    struct wccp2_capability_info_header_t *router_capability_header = nullptr;
     char *router_capability_data_start = nullptr;
 
     struct wccp2_capability_element_t *router_capability_element;
@@ -1206,7 +1206,7 @@ wccp2HandleUdp(int sock, void *)
 
     debugs(80, 6, "wccp2HandleUdp: Called.");
 
-    Comm::SetSelect(sock, COMM_SELECT_READ, wccp2HandleUdp, NULL, 0);
+    Comm::SetSelect(sock, COMM_SELECT_READ, wccp2HandleUdp, nullptr, 0);
 
     // TODO: drop conversion boundary
     Ip::Address from_tmp;
@@ -1310,7 +1310,7 @@ wccp2HandleUdp(int sock, void *)
         /* Check that the service in the packet is configured on this router */
         service_list_ptr = wccp2_service_list_head;
 
-        while (service_list_ptr != NULL) {
+        while (service_list_ptr != nullptr) {
             if (service_info->service_id == service_list_ptr->service_info->service_id) {
                 break;
             }
@@ -1318,7 +1318,7 @@ wccp2HandleUdp(int sock, void *)
             service_list_ptr = service_list_ptr->next;
         }
 
-        if (service_list_ptr == NULL) {
+        if (service_list_ptr == nullptr) {
             debugs(80, DBG_IMPORTANT, "ERROR: WCCPv2 Unknown service received from router (" << service_info->service_id << ")");
             return;
         }
@@ -1334,7 +1334,7 @@ wccp2HandleUdp(int sock, void *)
         }
 
         /* Check that the router address is configured on this router */
-        for (router_list_ptr = &service_list_ptr->router_list_head; router_list_ptr->next != NULL; router_list_ptr = router_list_ptr->next) {
+        for (router_list_ptr = &service_list_ptr->router_list_head; router_list_ptr->next != nullptr; router_list_ptr = router_list_ptr->next) {
             if (router_list_ptr->router_sendto_address.s_addr == from.sin_addr.s_addr)
                 break;
         }
@@ -1351,7 +1351,7 @@ wccp2HandleUdp(int sock, void *)
         }
 
         /* TODO: check return/forwarding methods */
-        if (router_capability_header == NULL) {
+        if (router_capability_header == nullptr) {
             if ((Config.Wccp2.return_method != WCCP2_PACKET_RETURN_METHOD_GRE) || (Config.Wccp2.forwarding_method != WCCP2_FORWARDING_METHOD_GRE)) {
                 debugs(80, DBG_IMPORTANT, "ERROR: wccp2HandleUdp: fatal error - A WCCP router does not support the forwarding method specified, only GRE supported");
                 wccp2ConnectionClose();
@@ -1520,7 +1520,7 @@ wccp2HandleUdp(int sock, void *)
 
                 cache_list_ptr = cache_list_ptr->next;
 
-                cache_list_ptr->next = NULL;
+                cache_list_ptr->next = nullptr;
 
                 debugs (80, 5,  "checking cache list: (" << std::hex << cache_address.s_addr << ":" <<  router_list_ptr->local_ip.s_addr << ")");
 
@@ -1539,7 +1539,7 @@ wccp2HandleUdp(int sock, void *)
 
             cache_list_ptr->next = (wccp2_cache_list_t*) xcalloc(1, sizeof(struct wccp2_cache_list_t));
             cache_list_ptr = cache_list_ptr->next;
-            cache_list_ptr->next = NULL;
+            cache_list_ptr->next = nullptr;
 
             service_list_ptr->lowest_ip = 1;
             found = true;
@@ -1554,13 +1554,13 @@ wccp2HandleUdp(int sock, void *)
             if (ntohl(router_view_header->change_number) != router_list_ptr->member_change) {
                 debugs(80, 4, "Change detected - queueing up new assignment");
                 router_list_ptr->member_change = ntohl(router_view_header->change_number);
-                eventDelete(wccp2AssignBuckets, NULL);
-                eventAdd("wccp2AssignBuckets", wccp2AssignBuckets, NULL, 15.0, 1);
+                eventDelete(wccp2AssignBuckets, nullptr);
+                eventAdd("wccp2AssignBuckets", wccp2AssignBuckets, nullptr, 15.0, 1);
             } else {
                 debugs(80, 5, "Change not detected (" << ntohl(router_view_header->change_number) << " = " << router_list_ptr->member_change << ")");
             }
         } else {
-            eventDelete(wccp2AssignBuckets, NULL);
+            eventDelete(wccp2AssignBuckets, nullptr);
             debugs(80, 5, "I am not the lowest ip cache - not assigning buckets");
         }
 
@@ -1591,7 +1591,7 @@ wccp2HereIam(void *)
 
     /* Wait if store dirs are rebuilding */
     if (StoreController::store_dirs_rebuilding && Config.Wccp2.rebuildwait) {
-        eventAdd("wccp2HereIam", wccp2HereIam, NULL, 1.0, 1);
+        eventAdd("wccp2HereIam", wccp2HereIam, nullptr, 1.0, 1);
         return;
     }
 
@@ -1600,10 +1600,10 @@ wccp2HereIam(void *)
     /* for each router on each service send a packet */
     service_list_ptr = wccp2_service_list_head;
 
-    while (service_list_ptr != NULL) {
+    while (service_list_ptr != nullptr) {
         debugs(80, 5, "wccp2HereIam: sending to service id " << service_list_ptr->info.service_id);
 
-        for (router_list_ptr = &service_list_ptr->router_list_head; router_list_ptr->next != NULL; router_list_ptr = router_list_ptr->next) {
+        for (router_list_ptr = &service_list_ptr->router_list_head; router_list_ptr->next != nullptr; router_list_ptr = router_list_ptr->next) {
             router = router_list_ptr->router_sendto_address;
 
             /* Set the cache id (ip) */
@@ -1651,7 +1651,7 @@ wccp2HereIam(void *)
         service_list_ptr = service_list_ptr->next;
     }
 
-    eventAdd("wccp2HereIam", wccp2HereIam, NULL, 10.0, 1);
+    eventAdd("wccp2HereIam", wccp2HereIam, nullptr, 10.0, 1);
 }
 
 static void
@@ -1675,12 +1675,12 @@ wccp2AssignBuckets(void *)
 
     struct wccp2_message_header_t *main_header;
 
-    struct wccp2_security_md5_t *security = NULL;
+    struct wccp2_security_md5_t *security = nullptr;
     /* service from service struct */
 
     struct wccp2_item_header_t *assignment_header;
 
-    struct wccp2_item_header_t *alt_assignment_type_header = NULL;
+    struct wccp2_item_header_t *alt_assignment_type_header = nullptr;
 
     struct assignment_key_t *assignment_key;
     /* number of routers */
@@ -1715,7 +1715,7 @@ wccp2AssignBuckets(void *)
     debugs(80, 2, "Running wccp2AssignBuckets");
     service_list_ptr = wccp2_service_list_head;
 
-    while (service_list_ptr != NULL) {
+    while (service_list_ptr != nullptr) {
         /* If we're not the lowest, we don't need to worry */
 
         if (service_list_ptr->lowest_ip == 0) {
@@ -1807,7 +1807,7 @@ wccp2AssignBuckets(void *)
 
         offset += sizeof(service_list_ptr->num_routers);
 
-        for (router_list_ptr = &service_list_ptr->router_list_head; router_list_ptr->next != NULL; router_list_ptr = router_list_ptr->next) {
+        for (router_list_ptr = &service_list_ptr->router_list_head; router_list_ptr->next != nullptr; router_list_ptr = router_list_ptr->next) {
 
             /* Add routers */
 
@@ -1821,7 +1821,7 @@ wccp2AssignBuckets(void *)
 
         saved_offset = offset;
 
-        for (router_list_ptr = &service_list_ptr->router_list_head; router_list_ptr->next != NULL; router_list_ptr = router_list_ptr->next) {
+        for (router_list_ptr = &service_list_ptr->router_list_head; router_list_ptr->next != nullptr; router_list_ptr = router_list_ptr->next) {
             unsigned long *weight = (unsigned long *)xcalloc(sizeof(*weight), ntohl(router_list_ptr->num_caches));
             unsigned long total_weight = 0;
             int num_caches = ntohl(router_list_ptr->num_caches);
@@ -2055,7 +2055,7 @@ parse_wccp2_method(int *method)
     char *t;
 
     /* Snarf the method */
-    if ((t = ConfigParser::NextToken()) == NULL) {
+    if ((t = ConfigParser::NextToken()) == nullptr) {
         debugs(80, DBG_CRITICAL, "ERROR: wccp2_*_method: missing setting.");
         self_destruct();
         return;
@@ -2103,7 +2103,7 @@ parse_wccp2_amethod(int *method)
     char *t;
 
     /* Snarf the method */
-    if ((t = ConfigParser::NextToken()) == NULL) {
+    if ((t = ConfigParser::NextToken()) == nullptr) {
         debugs(80, DBG_CRITICAL, "ERROR: wccp2_assignment_method: missing setting.");
         self_destruct();
         return;
@@ -2160,7 +2160,7 @@ parse_wccp2_service(void *)
     }
 
     /* Snarf the type */
-    if ((t = ConfigParser::NextToken()) == NULL) {
+    if ((t = ConfigParser::NextToken()) == nullptr) {
         debugs(80, DBG_CRITICAL, "ERROR: wccp2ParseServiceInfo: missing service info type (standard|dynamic)");
         self_destruct();
         return;
@@ -2188,7 +2188,7 @@ parse_wccp2_service(void *)
     memset(wccp_password, 0, sizeof(wccp_password));
     /* Handle password, if any */
 
-    if ((t = ConfigParser::NextToken()) != NULL) {
+    if ((t = ConfigParser::NextToken()) != nullptr) {
         if (strncmp(t, "password=", 9) == 0) {
             security_type = WCCP2_MD5_SECURITY;
             xstrncpy(wccp_password, t + 9, sizeof(wccp_password));
@@ -2205,7 +2205,7 @@ dump_wccp2_service(StoreEntry * e, const char *label, void *)
     struct wccp2_service_list_t *srv;
     srv = wccp2_service_list_head;
 
-    while (srv != NULL) {
+    while (srv != nullptr) {
         debugs(80, 3, "dump_wccp2_service: id " << srv->info.service_id << ", type " << srv->info.service);
         storeAppendPrintf(e, "%s %s %d", label,
                           (srv->info.service == WCCP2_SERVICE_DYNAMIC) ? "dynamic" : "standard",
@@ -2356,12 +2356,12 @@ parse_wccp2_service_info(void *)
     /* Next: find the (hopefully!) existing service */
     srv = wccp2_get_service_by_id(WCCP2_SERVICE_DYNAMIC, service_id);
 
-    if (srv == NULL) {
+    if (srv == nullptr) {
         fatalf("parse_wccp2_service_info: unknown dynamic service id %d: you need to define it using wccp2_service (and make sure you wish to configure it as a dynamic service.)\n", service_id);
     }
 
     /* Next: loop until we don't have any more tokens */
-    while ((t = ConfigParser::NextToken()) != NULL) {
+    while ((t = ConfigParser::NextToken()) != nullptr) {
         if (strncmp(t, "flags=", 6) == 0) {
             /* XXX eww, string pointer math */
             flags = parse_wccp2_service_flags(t + 6);
@@ -2412,7 +2412,7 @@ dump_wccp2_service_info(StoreEntry * e, const char *label, void *)
     int flags;
     srv = wccp2_service_list_head;
 
-    while (srv != NULL) {
+    while (srv != nullptr) {
         debugs(80, 3, "dump_wccp2_service_info: id " << srv->info.service_id << " (type " << srv->info.service << ")");
 
         /* We don't need to spit out information for standard services */

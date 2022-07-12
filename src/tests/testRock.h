@@ -23,7 +23,7 @@ class testRock : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST_SUITE_END();
 
 public:
-    testRock() : rr(NULL) {}
+    testRock() : rr(nullptr) {}
     virtual void setUp();
     virtual void tearDown();
 

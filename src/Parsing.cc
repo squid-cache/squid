@@ -24,7 +24,7 @@
 double
 xatof(const char *token)
 {
-    char *end = NULL;
+    char *end = nullptr;
     double ret = strtod(token, &end);
 
     if (ret == 0 && end == token) {
@@ -85,7 +85,7 @@ xatol(const char *token)
 int64_t
 xatoll(const char *token, int base, char eov)
 {
-    char *end = NULL;
+    char *end = nullptr;
     int64_t ret = strtoll(token, &end, base);
 
     if (end == token) {
@@ -217,7 +217,7 @@ bool
 StringToInt(const char *s, int &result, const char **p, int base)
 {
     if (s) {
-        char *ptr = 0;
+        char *ptr = nullptr;
         const int h = (int) strtol(s, &ptr, base);
 
         if (ptr != s && ptr) {
@@ -237,7 +237,7 @@ bool
 StringToInt64(const char *s, int64_t &result, const char **p, int base)
 {
     if (s) {
-        char *ptr = 0;
+        char *ptr = nullptr;
         const int64_t h = (int64_t) strtoll(s, &ptr, base);
 
         if (ptr != s && ptr) {
@@ -261,7 +261,7 @@ GetHostWithPort(char *token, Ip::Address *ipa)
     char *tmp;
     unsigned short port;
 
-    host = NULL;
+    host = nullptr;
     port = 0;
 
     if (*token == '[') {
@@ -290,7 +290,7 @@ GetHostWithPort(char *token, Ip::Address *ipa)
         port = 0;
     }
 
-    if (NULL == host)
+    if (nullptr == host)
         ipa->setAnyAddr();
     else if (ipa->GetHostByName(host)) /* do not use ipcache. Accept either FQDN or IPA. */
         (void) 0;

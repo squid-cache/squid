@@ -32,7 +32,7 @@ void PconnPool::noteUses(int) STUB
 void PconnPool::dumpHist(StoreEntry *) const STUB
 void PconnPool::dumpHash(StoreEntry *) const STUB
 void PconnPool::unlinkList(IdleConnList *) STUB
-PconnModule * PconnModule::GetInstance() STUB_RETVAL(NULL)
+PconnModule * PconnModule::GetInstance() STUB_RETVAL(nullptr)
 void PconnModule::DumpWrapper(StoreEntry *) STUB
 PconnModule::PconnModule() STUB
 void PconnModule::registerWithCacheManager(void) STUB

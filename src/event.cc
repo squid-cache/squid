@@ -20,7 +20,7 @@
 /* The list of event processes */
 
 static OBJH eventDump;
-static const char *last_event_ran = NULL;
+static const char *last_event_ran = nullptr;
 
 // This AsyncCall dialer can be configured to check that the event cbdata is
 // valid before calling the event handler
@@ -93,7 +93,7 @@ ev_entry::ev_entry(char const * aName, EVH * aFunction, void * aArgument, double
     when(evWhen),
     weight(aWeight),
     cbdata(haveArg),
-    next(NULL)
+    next(nullptr)
 {
 }
 
@@ -157,7 +157,7 @@ eventFind(EVH * func, void *arg)
 
 EventScheduler EventScheduler::_instance;
 
-EventScheduler::EventScheduler(): tasks(NULL)
+EventScheduler::EventScheduler(): tasks(nullptr)
 {}
 
 EventScheduler::~EventScheduler()
@@ -171,7 +171,7 @@ EventScheduler::cancel(EVH * func, void *arg)
     ev_entry **E;
     ev_entry *event;
 
-    for (E = &tasks; (event = *E) != NULL; E = &(*E)->next) {
+    for (E = &tasks; (event = *E) != nullptr; E = &(*E)->next) {
         if (event->func != func)
             continue;
 
@@ -193,7 +193,7 @@ EventScheduler::cancel(EVH * func, void *arg)
          * to NULL.  We need to break here or else we'll get a NULL
          * pointer dereference in the last clause of the for loop.
          */
-        if (NULL == *E)
+        if (nullptr == *E)
             break;
     }
 
@@ -262,7 +262,7 @@ EventScheduler::clean()
         delete event;
     }
 
-    tasks = NULL;
+    tasks = nullptr;
 }
 
 void
@@ -290,7 +290,7 @@ EventScheduler::find(EVH * func, void * arg)
 
     ev_entry *event;
 
-    for (event = tasks; event != NULL; event = event->next) {
+    for (event = tasks; event != nullptr; event = event->next) {
         if (event->func == func && event->arg == arg)
             return true;
     }

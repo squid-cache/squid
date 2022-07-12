@@ -380,7 +380,7 @@ HttpHeaderHashTable::lookup (const char *str, size_t len)
               return &HttpHeaderDefinitionsTable[key];
           }
     }
-  return 0;
+  return nullptr;
 }
 #line 114 "RegisteredHeadersHash.gperf"
 

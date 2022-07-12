@@ -87,7 +87,7 @@ public:
      *                Content longer than MAX_PAYLOAD will be truncated.
      \param len       Length of the payload in bytes if any is to be sent or 0.
      */
-    virtual void SendEcho(Ip::Address &to, int opcode, const char *payload=NULL, int len=0) =0;
+    virtual void SendEcho(Ip::Address &to, int opcode, const char *payload=nullptr, int len=0) =0;
 
     /// Handle ICMP responses.
     virtual void Recv(void) =0;

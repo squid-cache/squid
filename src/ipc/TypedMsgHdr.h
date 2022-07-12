@@ -23,6 +23,8 @@
 #include <sys/un.h>
 #endif
 
+#include <type_traits>
+
 class String;
 
 namespace Ipc
@@ -116,8 +118,7 @@ void
 Ipc::TypedMsgHdr::getPod(Pod &pod) const
 {
 #if HAVE_STD_IS_TRIVIALLY_COPYABLE
-    // TODO: Enable after fixing Ipc::SharedListenRequest::SharedListenRequest()
-    //static_assert(std::is_trivially_copyable<Pod>::value, "getPod() used for a POD");
+    static_assert(std::is_trivially_copyable<Pod>::value, "getPod() used for a POD");
 #endif
     getFixed(&pod, sizeof(pod));
 }
@@ -127,8 +128,7 @@ void
 Ipc::TypedMsgHdr::putPod(const Pod &pod)
 {
 #if HAVE_STD_IS_TRIVIALLY_COPYABLE
-    // TODO: Enable after fixing Ipc::SharedListenRequest::pack()
-    //static_assert(std::is_trivially_copyable<Pod>::value, "putPod() used for a POD");
+    static_assert(std::is_trivially_copyable<Pod>::value, "putPod() used for a POD");
 #endif
     putFixed(&pod, sizeof(pod));
 }

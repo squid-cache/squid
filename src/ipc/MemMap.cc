@@ -14,7 +14,7 @@
 #include "tools.h"
 
 Ipc::MemMap::MemMap(const char *const aPath) :
-    cleaner(NULL),
+    cleaner(nullptr),
     path(aPath),
     shared(shm_old(Shared)(aPath))
 {
@@ -50,7 +50,7 @@ Ipc::MemMap::openForWriting(const cache_key *const key, sfileno &fileno)
         return slot;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 Ipc::MemMap::Slot *
@@ -67,7 +67,7 @@ Ipc::MemMap::openForWritingAt(const sfileno fileno, bool overwriteExisting)
             lock.unlockExclusive();
             debugs(54, 5, "cannot open existing entry " << fileno <<
                    " for writing " << path);
-            return NULL;
+            return nullptr;
         }
 
         // free if the entry was used, keeping the entry locked
@@ -84,7 +84,7 @@ Ipc::MemMap::openForWritingAt(const sfileno fileno, bool overwriteExisting)
 
     debugs(54, 5, "failed to open slot at " << fileno <<
            " for writing in map [" << path << ']');
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -129,9 +129,9 @@ Ipc::MemMap::peekAtReader(const sfileno fileno) const
     if (s.reading())
         return &s; // immediate access by lock holder so no locking
     if (s.writing())
-        return NULL; // cannot read the slot when it is being written
+        return nullptr; // cannot read the slot when it is being written
     assert(false); // must be locked for reading or writing
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -167,7 +167,7 @@ Ipc::MemMap::openForReading(const cache_key *const key, sfileno &fileno)
     }
     debugs(54, 5, "failed to open slot for key " << storeKeyText(key)
            << " for reading in map [" << path << ']');
-    return NULL;
+    return nullptr;
 }
 
 const Ipc::MemMap::Slot *
@@ -181,21 +181,21 @@ Ipc::MemMap::openForReadingAt(const sfileno fileno)
     if (!s.lock.lockShared()) {
         debugs(54, 5, "failed to lock slot at " << fileno << " for "
                "reading in map [" << path << ']');
-        return NULL;
+        return nullptr;
     }
 
     if (s.empty()) {
         s.lock.unlockShared();
         debugs(54, 7, "empty slot at " << fileno << " for "
                "reading in map [" << path << ']');
-        return NULL;
+        return nullptr;
     }
 
     if (s.waitingToBeFreed) {
         s.lock.unlockShared();
         debugs(54, 7, "dirty slot at " << fileno << " for "
                "reading in map [" << path << ']');
-        return NULL;
+        return nullptr;
     }
 
     debugs(54, 5, "opened slot at " << fileno << " for reading in"

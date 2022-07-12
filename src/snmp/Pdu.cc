@@ -56,9 +56,9 @@ Snmp::Pdu::aggregate(const Pdu& pdu)
 {
     Must(varCount() == pdu.varCount());
     ++aggrCount;
-    for (variable_list* p_aggr = variables, *p_var = pdu.variables; p_var != NULL;
+    for (variable_list* p_aggr = variables, *p_var = pdu.variables; p_var != nullptr;
             p_aggr = p_aggr->next_variable, p_var = p_var->next_variable) {
-        Must(p_aggr != NULL);
+        Must(p_aggr != nullptr);
         Var& aggr = static_cast<Var&>(*p_aggr);
         Var& var = static_cast<Var&>(*p_var);
         if (aggr.isNull()) {
@@ -118,19 +118,19 @@ void
 Snmp::Pdu::clearVars()
 {
     variable_list* var = variables;
-    while (var != NULL) {
+    while (var != nullptr) {
         variable_list* tmp = var;
         var = var->next_variable;
         snmp_var_free(tmp);
     }
-    variables = NULL;
+    variables = nullptr;
 }
 
 void
 Snmp::Pdu::setVars(variable_list* vars)
 {
     clearVars();
-    for (variable_list** p_var = &variables; vars != NULL;
+    for (variable_list** p_var = &variables; vars != nullptr;
             vars = vars->next_variable, p_var = &(*p_var)->next_variable) {
         *p_var = new Var(static_cast<Var&>(*vars));
     }
@@ -139,9 +139,9 @@ Snmp::Pdu::setVars(variable_list* vars)
 void
 Snmp::Pdu::clearSystemOid()
 {
-    if (enterprise != NULL) {
+    if (enterprise != nullptr) {
         xfree(enterprise);
-        enterprise = NULL;
+        enterprise = nullptr;
     }
     enterprise_length = 0;
 }
@@ -175,7 +175,7 @@ Snmp::Pdu::pack(Ipc::TypedMsgHdr& msg) const
     msg.putPod(max_repetitions);
     msg.putInt(enterprise_length);
     if (enterprise_length > 0) {
-        Must(enterprise != NULL);
+        Must(enterprise != nullptr);
         msg.putFixed(enterprise, enterprise_length * sizeof(oid));
     }
     msg.putPod(agent_addr);
@@ -183,7 +183,7 @@ Snmp::Pdu::pack(Ipc::TypedMsgHdr& msg) const
     msg.putPod(specific_type);
     msg.putPod(time);
     msg.putInt(varCount());
-    for (variable_list* var = variables; var != NULL; var = var->next_variable)
+    for (variable_list* var = variables; var != nullptr; var = var->next_variable)
         static_cast<Var*>(var)->pack(msg);
 }
 
@@ -220,7 +220,7 @@ int
 Snmp::Pdu::varCount() const
 {
     int count = 0;
-    for (variable_list* var = variables; var != NULL; var = var->next_variable)
+    for (variable_list* var = variables; var != nullptr; var = var->next_variable)
         ++count;
     return count;
 }
@@ -230,7 +230,7 @@ Snmp::Pdu::fixAggregate()
 {
     if (aggrCount < 2)
         return;
-    for (variable_list* p_aggr = variables; p_aggr != NULL; p_aggr = p_aggr->next_variable) {
+    for (variable_list* p_aggr = variables; p_aggr != nullptr; p_aggr = p_aggr->next_variable) {
         Var& aggr = static_cast<Var&>(*p_aggr);
         if (snmpAggrType(aggr.name, aggr.name_length) == atAverage) {
             aggr /= aggrCount;

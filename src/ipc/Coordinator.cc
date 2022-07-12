@@ -29,7 +29,7 @@
 #include <cerrno>
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Coordinator);
-Ipc::Coordinator* Ipc::Coordinator::TheInstance = NULL;
+Ipc::Coordinator* Ipc::Coordinator::TheInstance = nullptr;
 
 Ipc::Coordinator::Coordinator():
     Port(Ipc::Port::CoordinatorAddr())
@@ -48,7 +48,7 @@ Ipc::StrandCoord* Ipc::Coordinator::findStrand(int kidId)
         if (iter->kidId == kidId)
             return &(*iter);
     }
-    return NULL;
+    return nullptr;
 }
 
 void Ipc::Coordinator::registerStrand(const StrandCoord& strand)
@@ -199,7 +199,7 @@ void
 Ipc::Coordinator::handleSearchRequest(const Ipc::StrandSearchRequest &request)
 {
     // do we know of a strand with the given search tag?
-    const StrandCoord *strand = NULL;
+    const StrandCoord *strand = nullptr;
     typedef StrandCoords::const_iterator SCCI;
     for (SCCI i = strands_.begin(); !strand && i != strands_.end(); ++i) {
         if (i->tag == request.tag)

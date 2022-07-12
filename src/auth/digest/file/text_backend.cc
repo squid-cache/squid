@@ -38,9 +38,9 @@
 #include "squid.h"
 #include "auth/digest/file/text_backend.h"
 
-static hash_table *hash = NULL;
+static hash_table *hash = nullptr;
 static HASHFREE my_free;
-static char *passwdfile = NULL;
+static char *passwdfile = nullptr;
 static int ha1mode = 0;
 static time_t change_time = 0;
 
@@ -66,15 +66,15 @@ read_passwd_file(const char *passwordFile, int isHa1Mode)
     user_data *u;
     char *user;
     char *passwd;
-    char *ha1 = NULL;
+    char *ha1 = nullptr;
     char *realm;
 
-    if (hash != NULL) {
+    if (hash != nullptr) {
         hashFreeItems(hash, my_free);
     }
     /* initial setup */
     hash = hash_create((HASHCMP *) strcmp, 7921, hash_string);
-    if (NULL == hash) {
+    if (nullptr == hash) {
         fprintf(stderr, "digest_file_auth: cannot create hash table\n");
         exit(EXIT_FAILURE);
     }
@@ -85,7 +85,7 @@ read_passwd_file(const char *passwordFile, int isHa1Mode)
         exit(EXIT_FAILURE);
     }
     unsigned int lineCount = 0;
-    while (fgets(buf, sizeof(buf), f) != NULL) {
+    while (fgets(buf, sizeof(buf), f) != nullptr) {
         ++lineCount;
         if ((buf[0] == '#') || (buf[0] == ' ') || (buf[0] == '\t') ||
                 (buf[0] == '\n'))
@@ -95,19 +95,19 @@ read_passwd_file(const char *passwordFile, int isHa1Mode)
             fprintf(stderr, "digest_file_auth: missing user name at line %u in '%s'\n", lineCount, passwordFile);
             continue;
         }
-        realm = strtok(NULL, ":\n");
-        passwd = strtok(NULL, ":\n");
+        realm = strtok(nullptr, ":\n");
+        passwd = strtok(nullptr, ":\n");
         if (!passwd) {
             passwd = realm;
-            realm = NULL;
+            realm = nullptr;
         }
         if ((strlen(user) > 0) && passwd) {
             if (strncmp(passwd, "{HHA1}", 6) == 0) {
                 ha1 = passwd + 6;
-                passwd = NULL;
+                passwd = nullptr;
             } else if (isHa1Mode) {
                 ha1 = passwd;
-                passwd = NULL;
+                passwd = nullptr;
             }
             if (ha1 && strlen(ha1) != 32) {
                 /* We cannot accept plaintext passwords when using HA1 encoding,
@@ -170,10 +170,10 @@ GetPassword(RequestData * requestData)
         }
     }
     if (!hash)
-        return NULL;
+        return nullptr;
     len = snprintf(buf, sizeof(buf), "%s:%s", requestData->user, requestData->realm);
     if (len >= static_cast<int>(sizeof(buf)))
-        return NULL;
+        return nullptr;
     u = (user_data*)hash_lookup(hash, buf);
     if (u)
         return u;
@@ -193,7 +193,7 @@ TextHHA1(RequestData * requestData)
         xstrncpy(requestData->HHA1, u->ha1, sizeof(requestData->HHA1));
     } else {
         HASH HA1;
-        DigestCalcHA1("md5", requestData->user, requestData->realm, u->passwd, NULL, NULL, HA1, requestData->HHA1);
+        DigestCalcHA1("md5", requestData->user, requestData->realm, u->passwd, nullptr, nullptr, HA1, requestData->HHA1);
     }
 }
 
