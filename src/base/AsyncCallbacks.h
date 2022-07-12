@@ -190,7 +190,9 @@ AsyncCallback_(const RefCount<Call> &call)
     return AsyncCallback<typename Call::Dialer::Answer>(call);
 }
 
-/// AsyncCall for calling back a class method
+/// AsyncCall for calling back a class method compatible with
+/// cbcCallbackDialer(). TODO: Unify with JobCallback() which requires dialers
+/// that feed the job pointer to the non-default CommCommonCbParams constructor.
 #define asyncCallback(dbgSection, dbgLevel, method, object) \
     AsyncCallback_(asyncCall((dbgSection), (dbgLevel), #method, \
         cbcCallbackDialer(&method, (object))))
