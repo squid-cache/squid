@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "base/AsyncCbdataCalls.h"
+#include "base/AsyncCallbacks.h"
 #include "base/CbcPointer.h"
 #include "CachePeer.h"
 #include "client_db.h"

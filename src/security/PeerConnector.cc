@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "base/AsyncCallbacks.h"
 #include "base/IoManip.h"
 #include "comm/Loops.h"
 #include "comm/Read.h"

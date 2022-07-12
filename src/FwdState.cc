@@ -14,6 +14,8 @@
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
+#include "base/AsyncCallbacks.h"
+#include "base/AsyncCbdataCalls.h"
 #include "CacheManager.h"
 #include "CachePeer.h"
 #include "client_side.h"

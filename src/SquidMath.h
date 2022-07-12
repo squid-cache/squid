@@ -11,9 +11,9 @@
 
 #include "base/forward.h"
 #include "base/Optional.h"
+#include "base/TypeTraits.h"
 
 #include <limits>
-#include <type_traits>
 
 // TODO: Move to src/base/Math.h and drop the Math namespace
 
@@ -31,11 +31,6 @@ double doubleAverage(const double, const double, int, const int);
 
 // If Sum() performance becomes important, consider using GCC and clang
 // built-ins like __builtin_add_overflow() instead of manual overflow checks.
-
-/// std::enable_if_t replacement until C++14
-/// simplifies declarations further below
-template <bool B, class T = void>
-using EnableIfType = typename std::enable_if<B,T>::type;
 
 /// detects a pair of unsigned types
 /// reduces code duplication in declarations further below

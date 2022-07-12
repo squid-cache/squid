@@ -9,6 +9,7 @@
 /* DEBUG: section 54    Interprocess Communication */
 
 #include "squid.h"
+#include "base/AsyncCallbacks.h"
 #include "base/TextException.h"
 #include "comm.h"
 #include "comm/Connection.h"

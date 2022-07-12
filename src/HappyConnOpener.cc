@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "base/AsyncCallbacks.h"
 #include "base/CodeContext.h"
 #include "CachePeer.h"
 #include "errorpage.h"

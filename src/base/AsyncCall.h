@@ -115,68 +115,6 @@ public:
     virtual void print(std::ostream &os) const = 0;
 };
 
-/// access to a callback result carried by an async CallDialer
-template <typename AnswerT>
-class WithAnswer
-{
-public:
-    using Answer = AnswerT;
-
-    virtual ~WithAnswer() = default;
-
-    /// callback results setter
-    virtual Answer &answer() = 0;
-};
-
-// XXX: Move WithAnswer and this to base/AsyncCallback.h.
-/// a smart AsyncCall pointer for delivery of future results
-template <typename Answer>
-class AsyncCallback
-{
-public:
-    // all generated copying/moving functions are correct
-    AsyncCallback() = default;
-
-    template <class Call>
-    explicit AsyncCallback(const RefCount<Call> &call):
-        call_(call),
-        answer_(&(*call).dialer.answer())
-    {
-    }
-
-    Answer &answer()
-    {
-        assert(answer_);
-        return *answer_;
-    }
-
-    /// make this smart pointer nil
-    /// \return the AsyncCall pointer we used to manage before this call
-    AsyncCall::Pointer release()
-    {
-        answer_ = nullptr;
-        const auto call = call_;
-        call_ = nullptr;
-        return call;
-    }
-
-    /// whether the callback has been set but not released
-    explicit operator bool() const { return answer_; }
-
-    /* methods for decaying into an AsyncCall pointer w/o access to answer */
-    operator const AsyncCall::Pointer &() const { return call_; }
-    const AsyncCall &operator *() const { return call_.operator*(); }
-    const AsyncCall *operator ->() const { return call_.operator->(); }
-
-private:
-    /// callback carrying the answer
-    AsyncCall::Pointer call_;
-
-    /// (future) answer inside this->call, obtained when it was still possible
-    /// to reach it without dynamic casts and virtual methods
-    Answer *answer_ = nullptr;
-};
-
 /**
  \ingroup AsyncCallAPI
  * This template implements an AsyncCall using a specified Dialer class

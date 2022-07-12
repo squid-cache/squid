@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "../helper.h"
 #include "anyp/PortCfg.h"
+#include "base/AsyncCallbacks.h"
 #include "cache_cf.h"
 #include "fs_io.h"
 #include "helper/Reply.h"
