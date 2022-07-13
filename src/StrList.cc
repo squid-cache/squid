@@ -45,7 +45,7 @@ strListAdd(String &str, const SBuf &item, char delimiter)
 int
 strListIsMember(const String * list, const SBuf &m, char del)
 {
-    const char *pos = NULL;
+    const char *pos = nullptr;
     const char *item;
     int ilen = 0;
 

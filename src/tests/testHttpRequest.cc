@@ -105,7 +105,7 @@ void
 testHttpRequest::testIPv6HostColonBug()
 {
     unsigned short expected_port;
-    HttpRequest *aRequest = NULL;
+    HttpRequest *aRequest = nullptr;
 
     /* valid IPv6 address without port */
     SBuf url("http://[2000:800::45]/foo");

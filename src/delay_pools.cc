@@ -301,7 +301,7 @@ CommonPool::Factory(unsigned char _class, CompositePoolNode::Pointer& compositeC
 
     default:
         fatal ("unknown delay pool class");
-        return NULL;
+        return nullptr;
     };
 
     return result;
@@ -444,7 +444,7 @@ Aggregate::AggregateId::bytesIn(int qty)
     theAggregate->kickReads();
 }
 
-DelayPool *DelayPools::delay_data = NULL;
+DelayPool *DelayPools::delay_data = nullptr;
 time_t DelayPools::LastUpdate = 0;
 unsigned short DelayPools::pools_ (0);
 
@@ -469,7 +469,7 @@ DelayPools::InitDelayData()
 
     DelayPools::delay_data = new DelayPool[pools()];
 
-    eventAdd("DelayPools::Update", DelayPools::Update, NULL, 1.0, 1);
+    eventAdd("DelayPools::Update", DelayPools::Update, nullptr, 1.0, 1);
 }
 
 void
@@ -487,7 +487,7 @@ DelayPools::Update(void *)
     if (!pools() && toUpdate.empty())
         return;
 
-    eventAdd("DelayPools::Update", Update, NULL, 1.0, 1);
+    eventAdd("DelayPools::Update", Update, nullptr, 1.0, 1);
 
     int incr = squid_curtime - LastUpdate;
 

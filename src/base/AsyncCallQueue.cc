@@ -13,7 +13,7 @@
 #include "base/AsyncCallQueue.h"
 #include "debug/Stream.h"
 
-AsyncCallQueue *AsyncCallQueue::TheInstance = 0;
+AsyncCallQueue *AsyncCallQueue::TheInstance = nullptr;
 
 // Fire all scheduled calls; returns true if at least one call was fired.
 // The calls may be added while the current call is in progress.

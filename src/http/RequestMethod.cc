@@ -36,7 +36,7 @@ HttpRequestMethod::HttpRequestMethodXXX(char const *begin)
     theMethod = Http::METHOD_NONE;
     theImage.clear();
 
-    if (begin == NULL)
+    if (begin == nullptr)
         return;
 
     char const *end = begin + strcspn(begin, w_space);

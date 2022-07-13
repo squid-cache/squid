@@ -58,19 +58,19 @@ DefaultTransport(const TrafficModeFlags::PortKind &portKind)
     }
 
     assert(false); // not reached
-    return TrafficModeFlags::httpPort;
+    return Http::ProtocolVersion(1,1);
 }
 
 }
 
 AnyP::PortCfg::PortCfg(const SBuf &directive):
     next(),
-    s(),
     directiveName(directive),
     flags(PortKind(directiveName)),
+    s(),
     transport(DefaultTransport(flags.portKind())),
-    name(NULL),
-    defaultsite(NULL),
+    name(nullptr),
+    defaultsite(nullptr),
     allow_direct(false),
     vhost(false),
     actAsOrigin(false),
@@ -88,7 +88,7 @@ AnyP::PortCfg::~PortCfg()
 {
     if (Comm::IsConnOpen(listenConn)) {
         listenConn->close();
-        listenConn = NULL;
+        listenConn = nullptr;
     }
 
     safe_free(name);

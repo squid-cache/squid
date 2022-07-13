@@ -24,13 +24,13 @@ CBDATA_CLASS_INIT(Logfile);
 
 Logfile::Logfile(const char *aPath) :
     sequence_number(0),
-    data(NULL),
-    f_linestart(NULL),
-    f_linewrite(NULL),
-    f_lineend(NULL),
-    f_flush(NULL),
-    f_rotate(NULL),
-    f_close(NULL)
+    data(nullptr),
+    f_linestart(nullptr),
+    f_linewrite(nullptr),
+    f_lineend(nullptr),
+    f_flush(nullptr),
+    f_rotate(nullptr),
+    f_close(nullptr)
 {
     xstrncpy(path, aPath, sizeof(path));
     flags.fatal = 0;
@@ -76,9 +76,9 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
             debugs(50, DBG_IMPORTANT, "ERROR: logfileOpen: " << path << ": could not open!");
         lf->f_close(lf);
         delete lf;
-        return NULL;
+        return nullptr;
     }
-    assert(lf->data != NULL);
+    assert(lf->data != nullptr);
 
     if (fatal_flag)
         lf->flags.fatal = 1;

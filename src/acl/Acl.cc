@@ -26,7 +26,7 @@
 #include <algorithm>
 #include <map>
 
-const char *AclMatchedName = NULL;
+const char *AclMatchedName = nullptr;
 
 namespace Acl {
 
@@ -100,7 +100,7 @@ ACL::FindByName(const char *name)
 
     debugs(28, 9, "ACL::FindByName found no match");
 
-    return NULL;
+    return nullptr;
 }
 
 ACL::ACL() :
@@ -165,14 +165,14 @@ void
 ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
 {
     /* we're already using strtok() to grok the line */
-    char *t = NULL;
-    ACL *A = NULL;
+    char *t = nullptr;
+    ACL *A = nullptr;
     LOCAL_ARRAY(char, aclname, ACL_NAME_SZ);
     int new_acl = 0;
 
     /* snarf the ACL name */
 
-    if ((t = ConfigParser::NextToken()) == NULL) {
+    if ((t = ConfigParser::NextToken()) == nullptr) {
         debugs(28, DBG_CRITICAL, "ERROR: aclParseAclLine: missing ACL name.");
         parser.destruct();
         return;
@@ -189,7 +189,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
     /* snarf the ACL type */
     const char *theType;
 
-    if ((theType = ConfigParser::NextToken()) == NULL) {
+    if ((theType = ConfigParser::NextToken()) == nullptr) {
         debugs(28, DBG_CRITICAL, "ERROR: aclParseAclLine: missing ACL type.");
         parser.destruct();
         return;
@@ -198,7 +198,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
     // Is this ACL going to work?
     if (strcmp(theType, "myip") == 0) {
         AnyP::PortCfgPointer p = HttpPortList;
-        while (p != NULL) {
+        while (p != nullptr) {
             // Bug 3239: not reliable when there is interception traffic coming
             if (p->flags.interceptedSomewhere())
                 debugs(28, DBG_CRITICAL, "WARNING: 'myip' ACL is not reliable for interception proxies. Please use 'myportname' instead.");
@@ -208,7 +208,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         theType = "localip";
     } else if (strcmp(theType, "myport") == 0) {
         AnyP::PortCfgPointer p = HttpPortList;
-        while (p != NULL) {
+        while (p != nullptr) {
             // Bug 3239: not reliable when there is interception traffic coming
             // Bug 3239: myport - not reliable (yet) when there is interception traffic coming
             if (p->flags.interceptedSomewhere())
@@ -226,7 +226,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         theType = "client_connection_mark";
     }
 
-    if ((A = FindByName(aclname)) == NULL) {
+    if ((A = FindByName(aclname)) == nullptr) {
         debugs(28, 3, "aclParseAclLine: Creating ACL '" << aclname << "'");
         A = Acl::Make(theType);
         A->context(aclname, config_input_line);
@@ -256,7 +256,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
     /*
      * Clear AclMatchedName from our temporary hack
      */
-    AclMatchedName = NULL;  /* ugly */
+    AclMatchedName = nullptr;  /* ugly */
 
     if (!new_acl)
         return;
@@ -405,7 +405,7 @@ ACL::~ACL()
 {
     debugs(28, 3, "freeing ACL " << name);
     safe_free(cfgline);
-    AclMatchedName = NULL; // in case it was pointing to our name
+    AclMatchedName = nullptr; // in case it was pointing to our name
 }
 
 void

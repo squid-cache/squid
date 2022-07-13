@@ -31,17 +31,17 @@ CBDATA_NAMESPACED_CLASS_INIT(Fs::Ufs,RebuildState);
 Fs::Ufs::RebuildState::RebuildState(RefCount<UFSSwapDir> aSwapDir) :
     sd(aSwapDir),
     n_read(0),
-    LogParser(NULL),
+    LogParser(nullptr),
     curlvl1(0),
     curlvl2(0),
     in_dir(0),
     done(0),
     fn(0),
-    entry(NULL),
-    td(NULL),
+    entry(nullptr),
+    td(nullptr),
     fromLog(true),
     _done(false),
-    cbdata(NULL)
+    cbdata(nullptr)
 {
 
     /*
@@ -57,10 +57,10 @@ Fs::Ufs::RebuildState::RebuildState(RefCount<UFSSwapDir> aSwapDir) :
     if (fp && !zeroLengthLog)
         LogParser = Fs::Ufs::UFSSwapLogParser::GetUFSSwapLogParser(fp);
 
-    if (LogParser == NULL ) {
+    if (LogParser == nullptr ) {
         fromLog = false;
 
-        if (fp != NULL)
+        if (fp != nullptr)
             fclose(fp);
 
     } else {
@@ -274,7 +274,7 @@ Fs::Ufs::RebuildState::rebuildFromSwapLog()
         debugs(47, DBG_IMPORTANT, "Done reading " << sd->path << " swaplog (" << n_read << " entries)");
         LogParser->Close();
         delete LogParser;
-        LogParser = NULL;
+        LogParser = nullptr;
         _done = true;
         return;
     }
@@ -395,13 +395,13 @@ Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *)
                 entry = readdir(td);    /* skip . and .. */
                 entry = readdir(td);
 
-                if (entry == NULL && errno == ENOENT)
+                if (entry == nullptr && errno == ENOENT)
                     debugs(47, DBG_IMPORTANT, "WARNING: directory does not exist!");
                 debugs(47, 3, "Directory " << fullpath);
             }
         }
 
-        if (td != NULL && (entry = readdir(td)) != NULL) {
+        if (td != nullptr && (entry = readdir(td)) != nullptr) {
             ++in_dir;
 
             if (sscanf(entry->d_name, "%x", &fn) != 1) {
@@ -437,10 +437,10 @@ Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *)
             continue;
         }
 
-        if (td != NULL)
+        if (td != nullptr)
             closedir(td);
 
-        td = NULL;
+        td = nullptr;
 
         in_dir = 0;
 

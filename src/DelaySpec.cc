@@ -56,7 +56,7 @@ DelaySpec::parse()
     }
 
     // parse the first digits into restore_bps
-    const char *p = NULL;
+    const char *p = nullptr;
     if (!StringToInt(token, restore_bps, &p, 10) || *p != '/') {
         debugs(77, DBG_CRITICAL, "ERROR: invalid delay rate '" << token << "'. Expecting restore/max or 'none'.");
         self_destruct();
@@ -64,7 +64,7 @@ DelaySpec::parse()
     p++; // increment past the '/'
 
     // parse the rest into max_bytes
-    if (!StringToInt64(p, max_bytes, NULL, 10)) {
+    if (!StringToInt64(p, max_bytes, nullptr, 10)) {
         debugs(77, DBG_CRITICAL, "ERROR: restore rate in '" << token << "' is not a number.");
         self_destruct();
     }

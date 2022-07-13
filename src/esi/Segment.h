@@ -27,7 +27,7 @@ public:
     static void ListAppend (Pointer &, char const *, size_t);
     static void ListTransfer (Pointer &from, Pointer &to);
 
-    ESISegment() : len(0), next(NULL) {*buf = 0;}
+    ESISegment() : len(0), next(nullptr) {*buf = 0;}
     ESISegment(ESISegment const &);
     ~ESISegment() {}
 

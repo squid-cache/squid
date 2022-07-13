@@ -199,7 +199,7 @@ std::ostream &operator << (std::ostream &os, const Comm::Connection &conn);
 inline std::ostream &
 operator << (std::ostream &os, const Comm::ConnectionPointer &conn)
 {
-    if (conn != NULL)
+    if (conn != nullptr)
         os << *conn;
     return os;
 }

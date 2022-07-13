@@ -58,9 +58,9 @@ Client::~Client()
     HTTPMSGUNLOCK(theVirginReply);
     HTTPMSGUNLOCK(theFinalReply);
 
-    if (responseBodyBuffer != NULL) {
+    if (responseBodyBuffer != nullptr) {
         delete responseBodyBuffer;
-        responseBodyBuffer = NULL;
+        responseBodyBuffer = nullptr;
     }
 }
 
@@ -68,7 +68,7 @@ void
 Client::swanSong()
 {
     // get rid of our piping obligations
-    if (requestBodySource != NULL)
+    if (requestBodySource != nullptr)
         stopConsumingFrom(requestBodySource);
 
 #if USE_ADAPTATION
@@ -189,10 +189,10 @@ Client::serverComplete()
     completed = true;
     originalRequest()->hier.stopPeerClock(true);
 
-    if (requestBodySource != NULL)
+    if (requestBodySource != nullptr)
         stopConsumingFrom(requestBodySource);
 
-    if (responseBodyBuffer != NULL)
+    if (responseBodyBuffer != nullptr)
         return;
 
     serverComplete2();
@@ -204,7 +204,7 @@ Client::serverComplete2()
     debugs(11,5, "serverComplete2 " << this);
 
 #if USE_ADAPTATION
-    if (virginBodyDestination != NULL)
+    if (virginBodyDestination != nullptr)
         stopProducingFor(virginBodyDestination, true);
 
     if (!doneWithAdaptation())
@@ -230,7 +230,7 @@ void
 Client::completeForwarding()
 {
     debugs(11,5, "completing forwarding for "  << fwd);
-    assert(fwd != NULL);
+    assert(fwd != nullptr);
     doneWithFwd = "completeForwarding()";
     fwd->complete();
 }
@@ -239,7 +239,7 @@ Client::completeForwarding()
 bool Client::startRequestBodyFlow()
 {
     HttpRequestPointer r(originalRequest());
-    assert(r->body_pipe != NULL);
+    assert(r->body_pipe != nullptr);
     requestBodySource = r->body_pipe;
     if (requestBodySource->setConsumerIfNotLate(this)) {
         debugs(11,3, "expecting request body from " <<
@@ -249,7 +249,7 @@ bool Client::startRequestBodyFlow()
 
     debugs(11,3, "aborting on partially consumed request body: " <<
            requestBodySource->status());
-    requestBodySource = NULL;
+    requestBodySource = nullptr;
     return false;
 }
 
@@ -340,7 +340,7 @@ void
 Client::doneSendingRequestBody()
 {
     debugs(9,3, "done sending request body");
-    assert(requestBodySource != NULL);
+    assert(requestBodySource != nullptr);
     stopConsumingFrom(requestBodySource);
 
     // kids extend this
@@ -350,7 +350,7 @@ Client::doneSendingRequestBody()
 void
 Client::handleRequestBodyProducerAborted()
 {
-    if (requestSender != NULL)
+    if (requestSender != nullptr)
         debugs(9,3, "fyi: request body aborted while we were sending");
 
     fwd->dontRetry(true); // the problem is not with the server
@@ -366,7 +366,7 @@ Client::sentRequestBody(const CommIoCbParams &io)
     debugs(11, 5, "sentRequestBody: FD " << io.fd << ": size " << io.size << ": errflag " << io.flag << ".");
     debugs(32,3, "sentRequestBody called");
 
-    requestSender = NULL;
+    requestSender = nullptr;
 
     if (io.size > 0) {
         fd_bytes(io.fd, io.size, FD_WRITE);
@@ -411,7 +411,7 @@ Client::sentRequestBody(const CommIoCbParams &io)
 void
 Client::sendMoreRequestBody()
 {
-    assert(requestBodySource != NULL);
+    assert(requestBodySource != nullptr);
     assert(!requestSender);
 
     const Comm::ConnectionPointer conn = dataConnection();
@@ -429,7 +429,7 @@ Client::sendMoreRequestBody()
         Comm::Write(conn, &buf, requestSender);
     } else {
         debugs(9,3, "will wait for more request body bytes or eof");
-        requestSender = NULL;
+        requestSender = nullptr;
     }
 }
 
@@ -438,7 +438,7 @@ bool
 Client::getMoreRequestBody(MemBuf &buf)
 {
     // default implementation does not encode request body content
-    Must(requestBodySource != NULL);
+    Must(requestBodySource != nullptr);
     return requestBodySource->getMoreData(buf);
 }
 
@@ -605,12 +605,12 @@ void Client::cleanAdaptation()
 {
     debugs(11,5, "cleaning ICAP; ACL: " << adaptationAccessCheckPending);
 
-    if (virginBodyDestination != NULL)
+    if (virginBodyDestination != nullptr)
         stopProducingFor(virginBodyDestination, false);
 
     announceInitiatorAbort(adaptedHeadSource);
 
-    if (adaptedBodySource != NULL)
+    if (adaptedBodySource != nullptr)
         stopConsumingFrom(adaptedBodySource);
 
     if (!adaptationAccessCheckPending) // we cannot cancel a pending callback
@@ -650,7 +650,7 @@ Client::adaptVirginReplyBody(const char *data, ssize_t len)
     if (responseBodyBuffer) {
         if (putSize == responseBodyBuffer->contentSize()) {
             delete responseBodyBuffer;
-            responseBodyBuffer = NULL;
+            responseBodyBuffer = nullptr;
         } else {
             responseBodyBuffer->consume(putSize);
         }
@@ -671,7 +671,7 @@ void
 Client::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
 {
     if (responseBodyBuffer) {
-        addVirginReplyBody(NULL, 0); // kick the buffered fragment alive again
+        addVirginReplyBody(nullptr, 0); // kick the buffered fragment alive again
         if (completed && !responseBodyBuffer) {
             serverComplete2();
             return;
@@ -722,7 +722,7 @@ Client::handleAdaptedHeader(Http::Message *msg)
         // return. Tell the ICAP side that it is on its own.
         HttpReply *rep = dynamic_cast<HttpReply*>(msg);
         assert(rep);
-        if (rep->body_pipe != NULL)
+        if (rep->body_pipe != nullptr)
             rep->body_pipe->expectNoConsumption();
 
         return;
@@ -734,7 +734,7 @@ Client::handleAdaptedHeader(Http::Message *msg)
     setFinalReply(rep);
 
     assert(!adaptedBodySource);
-    if (rep->body_pipe != NULL) {
+    if (rep->body_pipe != nullptr) {
         // subscribe to receive adapted body
         adaptedBodySource = rep->body_pipe;
         // assume that ICAP does not auto-consume on failures
@@ -759,7 +759,7 @@ Client::resumeBodyStorage()
 
     handleMoreAdaptedBodyAvailable();
 
-    if (adaptedBodySource != NULL && adaptedBodySource->exhausted())
+    if (adaptedBodySource != nullptr && adaptedBodySource->exhausted())
         endAdaptedBodyConsumption();
 }
 
@@ -821,7 +821,7 @@ Client::handleAdaptedBodyProductionEnded()
     receivedWholeAdaptedReply = true;
 
     // end consumption if we consumed everything
-    if (adaptedBodySource != NULL && adaptedBodySource->exhausted())
+    if (adaptedBodySource != nullptr && adaptedBodySource->exhausted())
         endAdaptedBodyConsumption();
     // else resumeBodyStorage() will eventually consume the rest
 }
@@ -1072,7 +1072,7 @@ Client::calcBufferSpaceToReserve(size_t space, const size_t wantSpace) const
         return 0;   // Stop reading if already overflowed waiting for ICAP to catch up
     }
 
-    if (virginBodyDestination != NULL) {
+    if (virginBodyDestination != nullptr) {
         /*
          * BodyPipe buffer has a finite size limit.  We
          * should not read more data from the network than will fit
@@ -1108,7 +1108,7 @@ Client::replyBodySpace(const MemBuf &readBuf, const size_t minSpace) const
         return 0;   // Stop reading if already overflowed waiting for ICAP to catch up
     }
 
-    if (virginBodyDestination != NULL) {
+    if (virginBodyDestination != nullptr) {
         /*
          * BodyPipe buffer has a finite size limit.  We
          * should not read more data from the network than will fit

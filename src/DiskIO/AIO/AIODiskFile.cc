@@ -113,7 +113,7 @@ AIODiskFile::read(ReadRequest *request)
 
     qe->aq_e_type = AQ_ENTRY_READ;
 
-    qe->aq_e_free = NULL;
+    qe->aq_e_free = nullptr;
 
     qe->aq_e_buf =  request->buf;
 
@@ -211,7 +211,7 @@ AIODiskFile::close ()
 
     fd = -1;
     closed = true;
-    assert (ioRequestor != NULL);
+    assert (ioRequestor != nullptr);
     ioRequestor->closeCompleted();
 }
 

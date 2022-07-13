@@ -355,7 +355,7 @@ Security::ServerOptions::loadDhParams()
 #if USE_OPENSSL
     DH *dhp = nullptr;
     if (FILE *in = fopen(dhParamsFile.c_str(), "r")) {
-        dhp = PEM_read_DHparams(in, NULL, NULL, NULL);
+        dhp = PEM_read_DHparams(in, nullptr, nullptr, nullptr);
         fclose(in);
     }
 

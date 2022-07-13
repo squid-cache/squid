@@ -324,7 +324,7 @@ Security::PeerConnector::sslFinalized()
     }
 #endif
 
-    noteNegotiationDone(NULL);
+    noteNegotiationDone(nullptr);
     return true;
 }
 
@@ -332,7 +332,7 @@ Security::PeerConnector::sslFinalized()
 void
 Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointer validationResponse)
 {
-    Must(validationResponse != NULL);
+    Must(validationResponse != nullptr);
     Must(Comm::IsConnOpen(serverConnection()));
 
     ErrorDetail::Pointer errDetails;
@@ -355,13 +355,13 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
         validatorFailed = true;
 
     if (!errDetails && !validatorFailed) {
-        noteNegotiationDone(NULL);
+        noteNegotiationDone(nullptr);
         if (callback)
             sendSuccess();
         return;
     }
 
-    ErrorState *anErr = NULL;
+    ErrorState *anErr = nullptr;
     if (validatorFailed) {
         anErr = new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al);
     }  else {
@@ -385,7 +385,7 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
 {
     Must(Comm::IsConnOpen(serverConnection()));
 
-    ACLFilledChecklist *check = NULL;
+    ACLFilledChecklist *check = nullptr;
     Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
 
     if (acl_access *acl = ::Config.ssl_client.cert_error) {
@@ -416,12 +416,12 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
                 debugs(83, 5, "confirming SSL error " << i->error_no);
                 const auto &brokenCert = i->cert;
                 Security::CertPointer peerCert(SSL_get_peer_certificate(session.get()));
-                const char *aReason = i->error_reason.empty() ? NULL : i->error_reason.c_str();
+                const char *aReason = i->error_reason.empty() ? nullptr : i->error_reason.c_str();
                 errDetails = new ErrorDetail(i->error_no, peerCert, brokenCert, aReason);
             }
             if (check) {
                 delete check->sslErrors;
-                check->sslErrors = NULL;
+                check->sslErrors = nullptr;
             }
         }
 
@@ -565,7 +565,7 @@ Security::PeerConnector::callBack()
     AsyncCall::Pointer cb = callback;
     // Do this now so that if we throw below, swanSong() assert that we _tried_
     // to call back holds.
-    callback = NULL; // this should make done() true
+    callback = nullptr; // this should make done() true
     ScheduleCallHere(cb);
 }
 
@@ -593,7 +593,7 @@ Security::PeerConnector::status() const
     // TODO: redesign AsyncJob::status() API to avoid this
     // id and stop reason reporting duplication.
     buf.append(" [", 2);
-    if (stopReason != NULL) {
+    if (stopReason != nullptr) {
         buf.append("Stopped, reason:", 16);
         buf.appendf("%s",stopReason);
     }
@@ -669,7 +669,7 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     // be able to accept collection of certificates.
     // TODO: support collection of certificates
     const unsigned char *raw = (const unsigned char*)obj.rawContent();
-    if (X509 *cert = d2i_X509(NULL, &raw, obj.length())) {
+    if (X509 *cert = d2i_X509(nullptr, &raw, obj.length())) {
         debugs(81, 5, "Retrieved certificate: " << *cert);
 
         if (!downloadedCerts)

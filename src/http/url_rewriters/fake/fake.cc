@@ -52,7 +52,7 @@
  * -d enable debugging.
  * -h interface help.
  */
-char *my_program_name = NULL;
+char *my_program_name = nullptr;
 
 static void
 usage(void)
@@ -97,8 +97,8 @@ main(int argc, char *argv[])
     char buf[HELPER_INPUT_BUFFER];
     int buflen = 0;
 
-    setbuf(stdout, NULL);
-    setbuf(stderr, NULL);
+    setbuf(stdout, nullptr);
+    setbuf(stderr, nullptr);
 
     my_program_name = argv[0];
 
@@ -106,10 +106,10 @@ main(int argc, char *argv[])
 
     debug("%s " VERSION " " SQUID_BUILD_INFO " starting up...\n", my_program_name);
 
-    while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != NULL) {
+    while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != nullptr) {
         char *p;
 
-        if ((p = strchr(buf, '\n')) != NULL) {
+        if ((p = strchr(buf, '\n')) != nullptr) {
             *p = '\0';      /* strip \n */
             buflen = p - buf;   /* length is known already */
         } else
@@ -117,7 +117,7 @@ main(int argc, char *argv[])
 
         debug("Got %d bytes '%s' from Squid\n", buflen, buf);
 
-        p = NULL;
+        p = nullptr;
         int64_t channelId = strtoll(buf, &p, 10);
         if (*p != ' ') {
             /* send 'no-change' result back to Squid in non-concurrent format */

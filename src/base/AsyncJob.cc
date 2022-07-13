@@ -28,7 +28,7 @@ AsyncJob::Start(const Pointer &job)
 }
 
 AsyncJob::AsyncJob(const char *aTypeName) :
-    stopReason(NULL), typeName(aTypeName), inCall(NULL)
+    stopReason(nullptr), typeName(aTypeName), inCall(nullptr)
 {
     debugs(93,5, "AsyncJob constructed, this=" << this <<
            " type=" << typeName << " [" << id << ']');
@@ -51,7 +51,7 @@ void AsyncJob::deleteThis(const char *aReason)
 {
     Must(aReason);
     stopReason = aReason;
-    if (inCall != NULL) {
+    if (inCall != nullptr) {
         // if we are in-call, then the call wrapper will delete us
         debugs(93, 4, typeName << " will NOT delete in-call job, reason: " << stopReason);
         return;
@@ -78,7 +78,7 @@ void AsyncJob::mustStop(const char *aReason)
         return;
     }
 
-    Must(inCall != NULL); // otherwise nobody will delete us if we are done()
+    Must(inCall != nullptr); // otherwise nobody will delete us if we are done()
     Must(aReason);
     if (!stopReason) {
         stopReason = aReason;
@@ -91,7 +91,7 @@ void AsyncJob::mustStop(const char *aReason)
 bool AsyncJob::done() const
 {
     // stopReason, set in mustStop(), overwrites all other conditions
-    return stopReason != NULL || doneAll();
+    return stopReason != nullptr || doneAll();
 }
 
 bool AsyncJob::doneAll() const
@@ -101,7 +101,7 @@ bool AsyncJob::doneAll() const
 
 bool AsyncJob::canBeCalled(AsyncCall &call) const
 {
-    if (inCall != NULL) {
+    if (inCall != nullptr) {
         // This may happen when we have bugs or some module is not calling
         // us asynchronously (comm used to do that).
         debugs(93, 5, inCall << " is in progress; " <<
@@ -160,7 +160,7 @@ void AsyncJob::callEnd()
 
     debugs(inCall->debugSection, inCall->debugLevel,
            typeName << " status out:" << status());
-    inCall = NULL;
+    inCall = nullptr;
 }
 
 // returns a temporary string depicting transaction status, for debugging
@@ -170,7 +170,7 @@ const char *AsyncJob::status() const
     buf.reset();
 
     buf.append(" [", 2);
-    if (stopReason != NULL) {
+    if (stopReason != nullptr) {
         buf.appendf("Stopped, reason:%s", stopReason);
     }
     buf.appendf(" %s%u]", id.prefix(), id.value);

@@ -47,7 +47,7 @@ public:
     void *operator new(size_t);
     void operator delete(void *);
 
-    ACLIP() : data(NULL) {}
+    ACLIP() : data(nullptr) {}
     ~ACLIP();
 
     typedef Splay<acl_ip_data *> IPSplay;

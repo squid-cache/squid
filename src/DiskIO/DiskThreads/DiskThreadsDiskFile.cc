@@ -185,7 +185,7 @@ DiskThreadsDiskFile::close()
 
     if (!ioInProgress()) {
         doClose();
-        assert (ioRequestor != NULL);
+        assert (ioRequestor != nullptr);
         ioRequestor->closeCompleted();
         return;
     } else {

@@ -30,15 +30,15 @@ StoreIOState::operator delete (void *)
 StoreIOState::StoreIOState(StoreIOState::STFNCB *cbFile, StoreIOState::STIOCB *cbIo, void *data) :
     swap_dirn(-1),
     swap_filen(-1),
-    e(NULL),
+    e(nullptr),
     mode(O_BINARY),
     offset_(0),
     file_callback(cbFile),
     callback(cbIo),
     callback_data(cbdataReference(data))
 {
-    read.callback = NULL;
-    read.callback_data = NULL;
+    read.callback = nullptr;
+    read.callback_data = nullptr;
     flags.closing = false;
 }
 

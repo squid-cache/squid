@@ -64,7 +64,7 @@ storeSwapOutStart(StoreEntry * e)
     generic_cbdata *c = new generic_cbdata(e);
     sio = storeCreate(e, storeSwapOutFileNotify, storeSwapOutFileClosed, c);
 
-    if (sio == NULL) {
+    if (sio == nullptr) {
         assert(!e->hasDisk());
         e->swap_status = SWAPOUT_NONE;
         e->swapOutDecision(MemObject::SwapOut::swImpossible);
@@ -187,7 +187,7 @@ StoreEntry::swapOut()
     debugs(20, 7, "storeSwapOut: mem->endOffset() = " << mem_obj->endOffset());
     debugs(20, 7, "storeSwapOut: swapout.queue_offset = " << mem_obj->swapout.queue_offset);
 
-    if (mem_obj->swapout.sio != NULL)
+    if (mem_obj->swapout.sio != nullptr)
         debugs(20, 7, "storeSwapOut: storeOffset() = " << mem_obj->swapout.sio->offset()  );
 
     int64_t const lowest_offset = mem_obj->lowestMemReaderOffset();
@@ -236,12 +236,12 @@ StoreEntry::swapOut()
 
     /* Ok, we have stuff to swap out.  Is there a swapout.sio open? */
     if (!hasDisk()) {
-        assert(mem_obj->swapout.sio == NULL);
+        assert(mem_obj->swapout.sio == nullptr);
         assert(mem_obj->inmem_lo == 0);
         storeSwapOutStart(this); // sets SwapOut::swImpossible on failures
     }
 
-    if (mem_obj->swapout.sio == NULL)
+    if (mem_obj->swapout.sio == nullptr)
         return;
 
     if (!doPages(this))
@@ -263,11 +263,11 @@ StoreEntry::swapOut()
 void
 StoreEntry::swapOutFileClose(int how)
 {
-    assert(mem_obj != NULL);
+    assert(mem_obj != nullptr);
     debugs(20, 3, "storeSwapOutFileClose: " << getMD5Text() << " how=" << how);
     debugs(20, 3, "storeSwapOutFileClose: sio = " << mem_obj->swapout.sio.getRaw());
 
-    if (mem_obj->swapout.sio == NULL)
+    if (mem_obj->swapout.sio == nullptr)
         return;
 
     storeClose(mem_obj->swapout.sio, how);
@@ -328,7 +328,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
 
     Store::Root().transientsCompleteWriting(*e);
     debugs(20, 3, "storeSwapOutFileClosed: " << __FILE__ << ":" << __LINE__);
-    mem->swapout.sio = NULL;
+    mem->swapout.sio = nullptr;
     e->unlock("storeSwapOutFileClosed");
 }
 

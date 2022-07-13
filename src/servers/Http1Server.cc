@@ -160,7 +160,7 @@ Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
         // setReplyToError() requires log_uri
         http->setLogUriToRawUri(http->uri, parser_->method());
 
-        const char * requestErrorBytes = NULL; //HttpParserHdrBuf(parser_);
+        const char * requestErrorBytes = nullptr; //HttpParserHdrBuf(parser_);
         if (!tunnelOnError(ERR_UNSUP_HTTPVERSION)) {
             setReplyError(context, request, ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, requestErrorBytes);
             clientProcessRequestFinished(this, request);
@@ -173,7 +173,7 @@ Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
         debugs(33, 5, "Failed to parse request headers:\n" << parser_->mimeHeader());
         // setReplyToError() requires log_uri
         http->setLogUriToRawUri(http->uri, parser_->method());
-        const char * requestErrorBytes = NULL; //HttpParserHdrBuf(parser_);
+        const char * requestErrorBytes = nullptr; //HttpParserHdrBuf(parser_);
         if (!tunnelOnError(ERR_INVALID_REQ)) {
             setReplyError(context, request, ERR_INVALID_REQ, Http::scBadRequest, requestErrorBytes);
             clientProcessRequestFinished(this, request);
@@ -268,7 +268,7 @@ Http::One::Server::processParsedRequest(Http::StreamPointer &context)
         }
 
         if (Config.accessList.forceRequestBodyContinuation) {
-            ACLFilledChecklist bodyContinuationCheck(Config.accessList.forceRequestBodyContinuation, request.getRaw(), NULL);
+            ACLFilledChecklist bodyContinuationCheck(Config.accessList.forceRequestBodyContinuation, request.getRaw(), nullptr);
             bodyContinuationCheck.al = http->al;
             bodyContinuationCheck.syncAle(request.getRaw(), http->log_uri);
             if (bodyContinuationCheck.fastCheck().allowed()) {
@@ -302,7 +302,7 @@ Http::One::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
     Http::StreamPointer context = pipeline.front();
     Must(context != nullptr);
     const ClientHttpRequest *http = context->http;
-    Must(http != NULL);
+    Must(http != nullptr);
 
     // After sending Transfer-Encoding: chunked (at least), always send
     // the last-chunk if there was no error, ignoring responseFinishedOrFailed.

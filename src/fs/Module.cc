@@ -27,7 +27,7 @@ static Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir> *DiskdInstance;
 
 #if HAVE_FS_ROCK
 #include "fs/rock/RockStoreFileSystem.h"
-static Rock::StoreFileSystem *RockInstance = NULL;
+static Rock::StoreFileSystem *RockInstance = nullptr;
 #endif
 
 void Fs::Init()

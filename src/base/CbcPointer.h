@@ -37,7 +37,7 @@ public:
     Cbc *operator ->() const; ///< a valid Cbc pointer or exception
 
     // no bool operator because set() != valid()
-    bool set() const { return cbc != NULL; } ///< was set but may be invalid
+    bool set() const { return cbc != nullptr; } ///< was set but may be invalid
     Cbc *valid() const { return get(); } ///< was set and is valid
     bool operator !() const { return !valid(); } ///< invalid or was not set
     bool operator ==(const CbcPointer<Cbc> &o) const { return lock == o.lock; }
@@ -47,7 +47,7 @@ public:
 
     /// support converting a child cbc pointer into a parent cbc pointer
     template <typename Other>
-    CbcPointer(const CbcPointer<Other> &o): cbc(o.raw()), lock(NULL) {
+    CbcPointer(const CbcPointer<Other> &o): cbc(o.raw()), lock(nullptr) {
         if (o.valid())
             lock = cbdataReference(o->toCbdata());
     }
@@ -83,19 +83,19 @@ std::ostream &operator <<(std::ostream &os, const CbcPointer<Cbc> &p)
 // inlined methods
 
 template<class Cbc>
-CbcPointer<Cbc>::CbcPointer(): cbc(NULL), lock(NULL)
+CbcPointer<Cbc>::CbcPointer(): cbc(nullptr), lock(nullptr)
 {
 }
 
 template<class Cbc>
-CbcPointer<Cbc>::CbcPointer(Cbc *aCbc): cbc(aCbc), lock(NULL)
+CbcPointer<Cbc>::CbcPointer(Cbc *aCbc): cbc(aCbc), lock(nullptr)
 {
     if (cbc)
         lock = cbdataReference(cbc->toCbdata());
 }
 
 template<class Cbc>
-CbcPointer<Cbc>::CbcPointer(const CbcPointer &d): cbc(d.cbc), lock(NULL)
+CbcPointer<Cbc>::CbcPointer(const CbcPointer &d): cbc(d.cbc), lock(nullptr)
 {
     if (d.lock && cbdataReferenceValid(d.lock))
         lock = cbdataReference(d.lock);
@@ -147,7 +147,7 @@ CbcPointer<Cbc>::clear()
     debugs(45, 3, "cbc=" << (void*)cbc << ", lock=" << (void*)lock);
 #endif
     cbdataReferenceDone(lock); // lock may be nil before and will be nil after
-    cbc = NULL;
+    cbc = nullptr;
 }
 
 template<class Cbc>
@@ -161,7 +161,7 @@ template<class Cbc>
 Cbc *
 CbcPointer<Cbc>::get() const
 {
-    return (lock && cbdataReferenceValid(lock)) ? cbc : NULL;
+    return (lock && cbdataReferenceValid(lock)) ? cbc : nullptr;
 }
 
 template<class Cbc>

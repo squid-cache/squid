@@ -222,22 +222,22 @@ Adaptation::ServiceConfig::grokUri(const char *value)
     int len = 0;
     if (*s == '[') {
         const char *t;
-        if ((t = strchr(s, ']')) == NULL)
+        if ((t = strchr(s, ']')) == nullptr)
             return false;
 
         ++s;
         len = t - s;
-        if ((e = strchr(t, ':')) != NULL) {
+        if ((e = strchr(t, ':')) != nullptr) {
             have_port = true;
-        } else if ((e = strchr(t, '/')) != NULL) {
+        } else if ((e = strchr(t, '/')) != nullptr) {
             have_port = false;
         } else {
             return false;
         }
     } else {
-        if ((e = strchr(s, ':')) != NULL) {
+        if ((e = strchr(s, ':')) != nullptr) {
             have_port = true;
-        } else if ((e = strchr(s, '/')) != NULL) {
+        } else if ((e = strchr(s, '/')) != nullptr) {
             have_port = false;
         } else {
             return false;
@@ -256,7 +256,7 @@ Adaptation::ServiceConfig::grokUri(const char *value)
     if (have_port) {
         ++s;
 
-        if ((e = strchr(s, '/')) != NULL) {
+        if ((e = strchr(s, '/')) != nullptr) {
             char *t;
             const unsigned long p = strtoul(s, &t, 0);
 
@@ -310,7 +310,7 @@ Adaptation::ServiceConfig::grokBool(bool &var, const char *name, const char *val
 bool
 Adaptation::ServiceConfig::grokLong(long &var, const char *name, const char *value)
 {
-    char *bad = NULL;
+    char *bad = nullptr;
     const long p = strtol(value, &bad, 0);
     if (p < 0 || bad == value) {
         debugs(3, DBG_CRITICAL, "ERROR: " << cfg_filename << ':' <<

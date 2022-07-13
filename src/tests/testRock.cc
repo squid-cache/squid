@@ -63,7 +63,7 @@ testRock::setUp()
 
     // use current directory for shared segments (on path-based OSes)
     Ipc::Mem::Segment::BasePath = getcwd(cwd,MAXPATHLEN);
-    if (Ipc::Mem::Segment::BasePath == NULL)
+    if (Ipc::Mem::Segment::BasePath == nullptr)
         Ipc::Mem::Segment::BasePath = ".";
 
     Store::Init();
@@ -101,12 +101,12 @@ testRock::tearDown()
 
     Store::FreeMemory();
 
-    store = NULL;
+    store = nullptr;
 
     free_cachedir(&Config.cacheSwap);
 
     rr->finishShutdown(); // deletes rr
-    rr = NULL;
+    rr = nullptr;
 
     // TODO: do this once, or each time.
     // safe_free(Config.replPolicy->type);
@@ -134,7 +134,7 @@ testRock::commonInit()
 
     Config.replPolicy = new RemovalPolicySettings;
     Config.replPolicy->type = xstrdup("lru");
-    Config.replPolicy->args = NULL;
+    Config.replPolicy->args = nullptr;
 
     /* garh garh */
     storeReplAdd("lru", createRemovalPolicy_lru);
@@ -325,12 +325,12 @@ testRock::testRockSwapOut()
     // try to get and release all entries
     for (int i = 0; i < 6; ++i) {
         StoreEntry *const pe = getEntry(i);
-        CPPUNIT_ASSERT(pe != NULL);
+        CPPUNIT_ASSERT(pe != nullptr);
 
         pe->release(); // destroys pe
 
         StoreEntry *const pe2 = getEntry(i);
-        CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(NULL), pe2);
+        CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(nullptr), pe2);
     }
 }
 

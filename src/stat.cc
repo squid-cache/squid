@@ -330,7 +330,7 @@ statStoreEntry(MemBuf * mb, StoreEntry * e)
     mb->appendf("\t%d locks, %d clients, %d refs\n", (int) e->locks(), storePendingNClients(e), (int) e->refcount);
     mb->appendf("\tSwap Dir %d, File %#08X\n", e->swap_dirn, e->swap_filen);
 
-    if (mem != NULL)
+    if (mem != nullptr)
         mem->stat (mb);
 
     mb->append("\n", 1);
@@ -398,7 +398,7 @@ statObjectsStart(StoreEntry * sentry, STOBJFLT * filter)
 static void
 stat_objects_get(StoreEntry * sentry)
 {
-    statObjectsStart(sentry, NULL);
+    statObjectsStart(sentry, nullptr);
 }
 
 static int
@@ -416,10 +416,10 @@ stat_vmobjects_get(StoreEntry * sentry)
 static int
 statObjectsOpenfdFilter(const StoreEntry * e)
 {
-    if (e->mem_obj == NULL)
+    if (e->mem_obj == nullptr)
         return 0;
 
-    if (e->mem_obj->swapout.sio == NULL)
+    if (e->mem_obj->swapout.sio == nullptr)
         return 0;
 
     return 1;
@@ -1276,11 +1276,11 @@ statInit(void)
 
     statCountersInit(&statCounter);
 
-    eventAdd("statAvgTick", statAvgTick, NULL, (double) COUNT_INTERVAL, 1);
+    eventAdd("statAvgTick", statAvgTick, nullptr, (double) COUNT_INTERVAL, 1);
 
-    ClientActiveRequests.head = NULL;
+    ClientActiveRequests.head = nullptr;
 
-    ClientActiveRequests.tail = NULL;
+    ClientActiveRequests.tail = nullptr;
 
     statRegisterWithCacheManager();
 }
@@ -1289,7 +1289,7 @@ static void
 statAvgTick(void *)
 {
     struct rusage rusage;
-    eventAdd("statAvgTick", statAvgTick, NULL, (double) COUNT_INTERVAL, 1);
+    eventAdd("statAvgTick", statAvgTick, nullptr, (double) COUNT_INTERVAL, 1);
     squid_getrusage(&rusage);
     statCounter.page_faults = rusage_pagefaults(&rusage);
     statCounter.cputime = rusage_cputime(&rusage);
@@ -1343,23 +1343,23 @@ static void
 statCountersHistograms(StoreEntry * sentry)
 {
     storeAppendPrintf(sentry, "client_http.allSvcTime histogram:\n");
-    statCounter.client_http.allSvcTime.dump(sentry, NULL);
+    statCounter.client_http.allSvcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "client_http.missSvcTime histogram:\n");
-    statCounter.client_http.missSvcTime.dump(sentry, NULL);
+    statCounter.client_http.missSvcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "client_http.nearMissSvcTime histogram:\n");
-    statCounter.client_http.nearMissSvcTime.dump(sentry, NULL);
+    statCounter.client_http.nearMissSvcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "client_http.nearHitSvcTime histogram:\n");
-    statCounter.client_http.nearHitSvcTime.dump(sentry, NULL);
+    statCounter.client_http.nearHitSvcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "client_http.hitSvcTime histogram:\n");
-    statCounter.client_http.hitSvcTime.dump(sentry, NULL);
+    statCounter.client_http.hitSvcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "icp.querySvcTime histogram:\n");
-    statCounter.icp.querySvcTime.dump(sentry, NULL);
+    statCounter.icp.querySvcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "icp.replySvcTime histogram:\n");
-    statCounter.icp.replySvcTime.dump(sentry, NULL);
+    statCounter.icp.replySvcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "dns.svc_time histogram:\n");
-    statCounter.dns.svcTime.dump(sentry, NULL);
+    statCounter.dns.svcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "select_fds_hist histogram:\n");
-    statCounter.select_fds_hist.dump(sentry, NULL);
+    statCounter.select_fds_hist.dump(sentry, nullptr);
 }
 
 static void
@@ -1803,13 +1803,13 @@ statClientRequests(StoreEntry * s)
     char buf[MAX_IPSTRLEN];
 
     for (i = ClientActiveRequests.head; i; i = i->next) {
-        const char *p = NULL;
+        const char *p = nullptr;
         http = static_cast<ClientHttpRequest *>(i->data);
         assert(http);
         ConnStateData * conn = http->getConn();
         storeAppendPrintf(s, "Connection: %p\n", conn);
 
-        if (conn != NULL) {
+        if (conn != nullptr) {
             const int fd = conn->clientConnection->fd;
             storeAppendPrintf(s, "\tFD %d, read %" PRId64 ", wrote %" PRId64 "\n", fd,
                               fd_table[fd].bytes_read, fd_table[fd].bytes_written);
@@ -1835,7 +1835,7 @@ statClientRequests(StoreEntry * s)
                           (int) http->al->cache.start_time.tv_usec,
                           tvSubDsec(http->al->cache.start_time, current_time));
 #if USE_AUTH
-        if (http->request->auth_user_request != NULL)
+        if (http->request->auth_user_request != nullptr)
             p = http->request->auth_user_request->username();
         else
 #endif
@@ -1843,11 +1843,11 @@ statClientRequests(StoreEntry * s)
                 p = http->request->extacl_user.termedBuf();
             }
 
-        if (!p && conn != NULL && conn->clientConnection->rfc931[0])
+        if (!p && conn != nullptr && conn->clientConnection->rfc931[0])
             p = conn->clientConnection->rfc931;
 
 #if USE_OPENSSL
-        if (!p && conn != NULL && Comm::IsConnOpen(conn->clientConnection))
+        if (!p && conn != nullptr && Comm::IsConnOpen(conn->clientConnection))
             p = sslGetUserEmail(fd_table[conn->clientConnection->fd].ssl.get());
 #endif
 

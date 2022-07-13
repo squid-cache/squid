@@ -197,7 +197,7 @@ int
 Snmp::Var::asInt() const
 {
     Must(type == SMI_INTEGER);
-    Must(val.integer != NULL && val_len == sizeof(int));
+    Must(val.integer != nullptr && val_len == sizeof(int));
     return *val.integer;
 }
 
@@ -205,7 +205,7 @@ unsigned int
 Snmp::Var::asGauge() const
 {
     Must(type == SMI_GAUGE32);
-    Must(val.integer != NULL && val_len == 4);
+    Must(val.integer != nullptr && val_len == 4);
     return *reinterpret_cast<unsigned int*>(val.integer);
 }
 
@@ -213,7 +213,7 @@ int
 Snmp::Var::asCounter() const
 {
     Must(type == SMI_COUNTER32);
-    Must(val.integer != NULL && val_len == 4);
+    Must(val.integer != nullptr && val_len == 4);
     return *reinterpret_cast<int*>(val.integer);
 }
 
@@ -221,7 +221,7 @@ long long int
 Snmp::Var::asCounter64() const
 {
     Must(type == SMI_COUNTER64);
-    Must(val.integer != NULL && val_len == 8);
+    Must(val.integer != nullptr && val_len == 8);
     return *reinterpret_cast<long long int*>(val.integer);
 }
 
@@ -229,7 +229,7 @@ unsigned int
 Snmp::Var::asTimeTicks() const
 {
     Must(type == SMI_TIMETICKS);
-    Must(val.integer != NULL && val_len == sizeof(unsigned int));
+    Must(val.integer != nullptr && val_len == sizeof(unsigned int));
     return *reinterpret_cast<unsigned int*>(val.integer);
 }
 
@@ -239,7 +239,7 @@ Snmp::Var::asObject() const
     Must(type == SMI_OBJID);
     Must(val_len % sizeof(oid) == 0);
     int length = val_len / sizeof(oid);
-    Must(val.objid != NULL && length > 0);
+    Must(val.objid != nullptr && length > 0);
     return Range<const oid*>(val.objid, val.objid + length);
 }
 
@@ -247,7 +247,7 @@ Range<const u_char*>
 Snmp::Var::asString() const
 {
     Must(type == SMI_STRING);
-    Must(val.string != NULL && val_len > 0);
+    Must(val.string != nullptr && val_len > 0);
     return Range<const u_char*>(val.string, val.string + val_len);
 }
 
@@ -303,7 +303,7 @@ void
 Snmp::Var::setValue(const void* value, int length, int aType)
 {
     clearValue();
-    if (value != NULL) {
+    if (value != nullptr) {
         Must(length > 0 && aType > 0);
         val.string = static_cast<u_char*>(xmalloc(length));
         memcpy(val.string, value, length);
@@ -325,13 +325,13 @@ Snmp::Var::pack(Ipc::TypedMsgHdr& msg) const
 {
     msg.putInt(name_length);
     if (name_length > 0) {
-        Must(name != NULL);
+        Must(name != nullptr);
         msg.putFixed(name, name_length * sizeof(oid));
     }
     msg.putPod(type);
     msg.putPod(val_len);
     if (val_len > 0) {
-        Must(val.string != NULL);
+        Must(val.string != nullptr);
         msg.putFixed(val.string, val_len);
     }
 }

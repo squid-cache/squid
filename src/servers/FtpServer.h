@@ -138,7 +138,7 @@ protected:
     void maybeReadUploadData();
 
     void setReply(const int code, const char *msg);
-    void writeCustomReply(const int code, const char *msg, const HttpReply *reply = NULL);
+    void writeCustomReply(const int code, const char *msg, const HttpReply *reply = nullptr);
     void writeEarlyReply(const int code, const char *msg);
     void writeErrorReply(const HttpReply *reply, const int status);
     void writeForwardedForeign(const HttpReply *reply);

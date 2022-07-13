@@ -195,7 +195,7 @@ static std::vector<ErrorDynamicPageInfo *> ErrorDynamicPages;
 static const int error_hard_text_count = sizeof(error_hard_text) / sizeof(*error_hard_text);
 
 /// \ingroup ErrorPageInternal
-static char **error_text = NULL;
+static char **error_text = nullptr;
 
 /// \ingroup ErrorPageInternal
 static int error_page_count = 0;
@@ -345,7 +345,7 @@ errorFindHardText(err_type type)
         if (error_hard_text[i].type == type)
             return error_hard_text[i].text;
 
-    return NULL;
+    return nullptr;
 }
 
 TemplateFile::TemplateFile(const char *name, const err_type code): silent(false), wasLoaded(false), templateName(name), templateCode(code)
@@ -718,7 +718,7 @@ ErrorState::ErrorState(HttpRequest * req, HttpReply *errorReply) :
 void
 errorAppendEntry(StoreEntry * entry, ErrorState * err)
 {
-    assert(entry->mem_obj != NULL);
+    assert(entry->mem_obj != nullptr);
     assert (entry->isEmpty());
     debugs(4, 4, "storing " << err << " in " << *entry);
 
@@ -914,7 +914,7 @@ void
 ErrorState::compileLegacyCode(Build &build)
 {
     static MemBuf mb;
-    const char *p = NULL;   /* takes priority over mb if set */
+    const char *p = nullptr;   /* takes priority over mb if set */
     int do_quote = 1;
     int no_urlescape = 0;       /* if true then item is NOT to be further URL-encoded */
     char ntoabuf[MAX_IPSTRLEN];
@@ -1105,7 +1105,7 @@ ErrorState::compileLegacyCode(Build &build)
 
     case 'R':
         if (building_deny_info_url) {
-            if (request != NULL) {
+            if (request != nullptr) {
                 const SBuf &tmp = request->url.path();
                 mb.append(tmp.rawContent(), tmp.length());
                 no_urlescape = 1;
@@ -1297,7 +1297,7 @@ ErrorState::BuildHttpReply()
                 status = Http::scTemporaryRedirect;
         }
 
-        rep->setHeaders(status, NULL, "text/html;charset=utf-8", 0, 0, -1);
+        rep->setHeaders(status, nullptr, "text/html;charset=utf-8", 0, 0, -1);
 
         if (request) {
             auto location = compile(urlTemplate, true, true);
@@ -1307,7 +1307,7 @@ ErrorState::BuildHttpReply()
         httpHeaderPutStrf(&rep->header, Http::HdrType::X_SQUID_ERROR, "%d %s", httpStatus, "Access Denied");
     } else {
         const auto body = buildBody();
-        rep->setHeaders(httpStatus, NULL, "text/html;charset=utf-8", body.length(), 0, -1);
+        rep->setHeaders(httpStatus, nullptr, "text/html;charset=utf-8", body.length(), 0, -1);
         /*
          * include some information for downstream caches. Implicit
          * replaceable content. This isn't quite sufficient. xerrno is not

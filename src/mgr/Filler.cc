@@ -32,7 +32,7 @@ Mgr::Filler::start()
 {
     debugs(16, 5, MYNAME);
     Must(requestId != 0);
-    Must(action != NULL);
+    Must(action != nullptr);
 
     StoreToCommWriter::start();
     action->run(entry, false);

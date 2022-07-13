@@ -28,7 +28,7 @@ public:
     // TODO: s/Header/Message/i ?
     typedef Http::Message Header;
 
-    InOut(): header(0), cause(0) {}
+    InOut(): header(nullptr), cause(nullptr) {}
 
     ~InOut() {
         HTTPMSGUNLOCK(cause);

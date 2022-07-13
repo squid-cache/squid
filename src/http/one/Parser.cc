@@ -27,7 +27,7 @@ void
 Http::One::Parser::clear()
 {
     parsingStage_ = HTTP_PARSE_NONE;
-    buf_ = NULL;
+    buf_ = nullptr;
     msgProtocol_ = AnyP::ProtocolVersion();
     mimeHeaderBlock_.clear();
 }
@@ -219,7 +219,7 @@ char *
 Http::One::Parser::getHostHeaderField()
 {
     if (!headerBlockSize())
-        return NULL;
+        return nullptr;
 
     LOCAL_ARRAY(char, header, GET_HDR_SZ);
     const char *name = "Host";
@@ -268,7 +268,7 @@ Http::One::Parser::getHostHeaderField()
         return header;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 int

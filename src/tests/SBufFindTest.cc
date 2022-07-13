@@ -370,7 +370,7 @@ SBufFindTest::RandomSBuf(const int length)
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "abcdefghijklomnpqrstuvwxyz";
 
-    static std::mt19937 mt(time(0));
+    static std::mt19937 mt(time(nullptr));
 
     // sizeof() counts the terminating zero at the end of characters
     // and the distribution is an 'inclusive' value range, so -2

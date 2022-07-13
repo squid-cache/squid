@@ -110,7 +110,7 @@ my_sock_fd2a( int fd, SockAddress buffer, bool peer )
 
     if ( (peer ? getpeername( fd, (SA*) &socket, &len ) :
             getsockname( fd, (SA*) &socket, &len )) == -1 )
-        return NULL;
+        return nullptr;
     else
         return my_sock_ntoa( socket, buffer );
 }
@@ -122,12 +122,12 @@ convertHostname( const char* host, in_addr& dst )
 //          dst (OUT): the internet address in network byteorder.
 // returns: -1 in case of error, see h_errno; 0 otherwise.
 {
-    if ( host == 0 ) return -1;
+    if ( host == nullptr ) return -1;
     unsigned long int h = inet_addr(host);
     if ( h == 0xFFFFFFFF && strncmp(host,"255.255.255.255",15) != 0 ) {
         // symbolic host
         struct hostent* dns = gethostbyname(host);
-        if ( dns == NULL ) return -1;
+        if ( dns == nullptr ) return -1;
         else memcpy( &dst.s_addr, dns->h_addr, dns->h_length );
     } else {
         // numeric host
@@ -143,12 +143,12 @@ convertPortname( const char* port, unsigned short& dst )
 //          dst (OUT): port number in network byteorder.
 // returns: -1 in case of error, see errno; 0 otherwise.
 {
-    int p = strtoul(port,0,0);
+    int p = strtoul(port,nullptr,0);
 
     if ( p == 0 ) {
         // symbolic port
         struct servent* proto = getservbyname( port, "tcp" );
-        if ( proto == NULL ) return -1;
+        if ( proto == nullptr ) return -1;
         else dst = proto->s_port;
     } else {
         // numeric port

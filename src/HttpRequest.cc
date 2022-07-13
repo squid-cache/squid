@@ -79,22 +79,22 @@ HttpRequest::init()
     method = Http::METHOD_NONE;
     url.clear();
 #if USE_AUTH
-    auth_user_request = NULL;
+    auth_user_request = nullptr;
 #endif
     flags = RequestFlags();
-    range = NULL;
+    range = nullptr;
     ims = -1;
     imslen = 0;
     lastmod = -1;
     client_addr.setEmpty();
     my_addr.setEmpty();
-    body_pipe = NULL;
+    body_pipe = nullptr;
     // hier
     dnsWait = -1;
     error.clear();
-    peer_login = NULL;      // not allocated/deallocated by this class
-    peer_domain = NULL;     // not allocated/deallocated by this class
-    peer_host = NULL;
+    peer_login = nullptr;      // not allocated/deallocated by this class
+    peer_domain = nullptr;     // not allocated/deallocated by this class
+    peer_host = nullptr;
     vary_headers = SBuf();
     myportname = null_string;
     tag = null_string;
@@ -109,10 +109,10 @@ HttpRequest::init()
     indirect_client_addr.setEmpty();
 #endif /* FOLLOW_X_FORWARDED_FOR */
 #if USE_ADAPTATION
-    adaptHistory_ = NULL;
+    adaptHistory_ = nullptr;
 #endif
 #if ICAP_CLIENT
-    icapHistory_ = NULL;
+    icapHistory_ = nullptr;
 #endif
     rangeOffsetLimit = -2; //a value of -2 means not checked yet
     forcedBodyContinuation = false;
@@ -123,9 +123,9 @@ HttpRequest::clean()
 {
     // we used to assert that the pipe is NULL, but now the request only
     // points to a pipe that is owned and initiated by another object.
-    body_pipe = NULL;
+    body_pipe = nullptr;
 #if USE_AUTH
-    auth_user_request = NULL;
+    auth_user_request = nullptr;
 #endif
     vary_headers.clear();
     url.clear();
@@ -134,12 +134,12 @@ HttpRequest::clean()
 
     if (cache_control) {
         delete cache_control;
-        cache_control = NULL;
+        cache_control = nullptr;
     }
 
     if (range) {
         delete range;
-        range = NULL;
+        range = nullptr;
     }
 
     myportname.clean();
@@ -158,10 +158,10 @@ HttpRequest::clean()
     etag.clean();
 
 #if USE_ADAPTATION
-    adaptHistory_ = NULL;
+    adaptHistory_ = nullptr;
 #endif
 #if ICAP_CLIENT
-    icapHistory_ = NULL;
+    icapHistory_ = nullptr;
 #endif
 }
 
@@ -440,7 +440,7 @@ HttpRequest::multipartRangeRequest() const
 bool
 HttpRequest::bodyNibbled() const
 {
-    return body_pipe != NULL && body_pipe->consumedSize() > 0;
+    return body_pipe != nullptr && body_pipe->consumedSize() > 0;
 }
 
 void
@@ -610,7 +610,7 @@ HttpRequest::getRangeOffsetLimit()
 
     rangeOffsetLimit = 0; // default value for rangeOffsetLimit
 
-    ACLFilledChecklist ch(NULL, this, NULL);
+    ACLFilledChecklist ch(nullptr, this, nullptr);
     ch.src_addr = client_addr;
     ch.my_addr =  my_addr;
 
@@ -632,7 +632,7 @@ HttpRequest::ignoreRange(const char *reason)
     if (range) {
         debugs(73, 3, static_cast<void*>(range) << " for " << reason);
         delete range;
-        range = NULL;
+        range = nullptr;
     }
     // Some callers also reset isRanged but it may not be safe for all callers:
     // isRanged is used to determine whether a weak ETag comparison is allowed,
@@ -735,7 +735,7 @@ HttpRequest::pinnedConnection()
 {
     if (clientConnectionManager.valid() && clientConnectionManager->pinning.pinned)
         return clientConnectionManager.get();
-    return NULL;
+    return nullptr;
 }
 
 const SBuf

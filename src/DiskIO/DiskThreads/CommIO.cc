@@ -30,7 +30,7 @@ CommIO::Initialize()
     fd_open(DoneFD, FD_PIPE, "async-io completion event: threads");
     commSetNonBlocking(DoneReadFD);
     commSetNonBlocking(DoneFD);
-    Comm::SetSelect(DoneReadFD, COMM_SELECT_READ, NULLFDHandler, NULL, 0);
+    Comm::SetSelect(DoneReadFD, COMM_SELECT_READ, NULLFDHandler, nullptr, 0);
     Initialized = true;
 }
 
@@ -62,7 +62,7 @@ void
 CommIO::NULLFDHandler(int fd, void *)
 {
     FlushPipe();
-    Comm::SetSelect(fd, COMM_SELECT_READ, NULLFDHandler, NULL, 0);
+    Comm::SetSelect(fd, COMM_SELECT_READ, NULLFDHandler, nullptr, 0);
 }
 
 void

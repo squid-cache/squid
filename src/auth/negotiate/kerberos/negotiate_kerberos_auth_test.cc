@@ -98,7 +98,7 @@ LogTime()
     static time_t last_t = 0;
     static char buf[128];
 
-    gettimeofday(&now, NULL);
+    gettimeofday(&now, nullptr);
     if (now.tv_sec != last_t) {
         tm = localtime((const time_t *) &now.tv_sec);
         strftime(buf, 127, "%Y/%m/%d %H:%M:%S", tm);
@@ -172,15 +172,15 @@ squid_kerb_proxy_auth(char *proxy)
     gss_buffer_desc service = GSS_C_EMPTY_BUFFER;
     gss_buffer_desc input_token = GSS_C_EMPTY_BUFFER;
     gss_buffer_desc output_token = GSS_C_EMPTY_BUFFER;
-    char *token = NULL;
+    char *token = nullptr;
 
-    setbuf(stdout, NULL);
-    setbuf(stdin, NULL);
+    setbuf(stdout, nullptr);
+    setbuf(stdin, nullptr);
 
     if (!proxy) {
         fprintf(stderr, "%s| %s: Error: No proxy server name\n", LogTime(),
                 PROGRAM);
-        return NULL;
+        return nullptr;
     }
     service.value = xmalloc(strlen("HTTP") + strlen(proxy) + 2);
     snprintf((char *) service.value, strlen("HTTP") + strlen(proxy) + 2, "%s@%s", "HTTP", proxy);
@@ -197,7 +197,7 @@ squid_kerb_proxy_auth(char *proxy)
                                             0,
                                             0,
                                             GSS_C_NO_CHANNEL_BINDINGS,
-                                            &input_token, NULL, &output_token, NULL, NULL);
+                                            &input_token, nullptr, &output_token, nullptr, nullptr);
 
         if (!check_gss_err(major_status, minor_status, "gss_init_sec_context()") && output_token.length) {
             token = (char *) xcalloc(base64_encode_len(output_token.length), 1);
@@ -208,7 +208,7 @@ squid_kerb_proxy_auth(char *proxy)
         }
     }
 
-    gss_delete_sec_context(&minor_status, &gss_context, NULL);
+    gss_delete_sec_context(&minor_status, &gss_context, nullptr);
     gss_release_buffer(&minor_status, &service);
     gss_release_buffer(&minor_status, &input_token);
     gss_release_buffer(&minor_status, &output_token);

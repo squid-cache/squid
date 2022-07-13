@@ -20,7 +20,7 @@ class RemovalPolicySettings
 {
 
 public:
-    RemovalPolicySettings() : type(NULL), args(NULL) {};
+    RemovalPolicySettings() : type(nullptr), args(nullptr) {};
 
     char *type;
     wordlist *args;
@@ -30,7 +30,7 @@ class RemovalPolicyNode
 {
 
 public:
-    RemovalPolicyNode() : data(NULL) {}
+    RemovalPolicyNode() : data(nullptr) {}
 
     void *data;
 };

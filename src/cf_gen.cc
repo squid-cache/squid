@@ -178,7 +178,7 @@ main(int argc, char *argv[])
     TypeList types;
     enum State state;
     int rc = 0;
-    char *ptr = NULL;
+    char *ptr = nullptr;
     char buff[MAX_LINE];
     std::ifstream fp;
     std::stack<std::string> IFDEFS;
@@ -206,7 +206,7 @@ main(int argc, char *argv[])
         if (!type || type[0] == '#')
             continue;
         Type t(type);
-        while ((dep = strtok(NULL, WS)) != NULL) {
+        while ((dep = strtok(nullptr, WS)) != nullptr) {
             t.depend.push_front(dep);
         }
         types.push_front(t);
@@ -237,7 +237,7 @@ main(int argc, char *argv[])
             *t = '\0';
 
         if (strncmp(buff, "IF ", 3) == 0) {
-            if ((ptr = strtok(buff + 3, WS)) == NULL) {
+            if ((ptr = strtok(buff + 3, WS)) == nullptr) {
                 errorMsg(input_filename, linenum, "Missing IF parameter");
                 exit(EXIT_FAILURE);
             }
@@ -260,14 +260,14 @@ main(int argc, char *argv[])
                 } else if (!strncmp(buff, "NAME:", 5)) {
                     char *name, *aliasname;
 
-                    if ((name = strtok(buff + 5, WS)) == NULL) {
+                    if ((name = strtok(buff + 5, WS)) == nullptr) {
                         errorMsg(input_filename, linenum, buff);
                         exit(EXIT_FAILURE);
                     }
 
                     entries.emplace_back(name);
 
-                    while ((aliasname = strtok(NULL, WS)) != NULL)
+                    while ((aliasname = strtok(nullptr, WS)) != nullptr)
                         entries.back().alias.push_front(aliasname);
 
                     state = s1;
@@ -326,14 +326,14 @@ main(int argc, char *argv[])
 
                     curr.defaults.docs.push_back(ptr);
                 } else if (!strncmp(buff, "LOC:", 4)) {
-                    if ((ptr = strtok(buff + 4, WS)) == NULL) {
+                    if ((ptr = strtok(buff + 4, WS)) == nullptr) {
                         errorMsg(input_filename, linenum, buff);
                         exit(EXIT_FAILURE);
                     }
 
                     curr.loc = ptr;
                 } else if (!strncmp(buff, "TYPE:", 5)) {
-                    if ((ptr = strtok(buff + 5, WS)) == NULL) {
+                    if ((ptr = strtok(buff + 5, WS)) == nullptr) {
                         errorMsg(input_filename, linenum, buff);
                         exit(EXIT_FAILURE);
                     }
@@ -347,7 +347,7 @@ main(int argc, char *argv[])
                     checkDepend(curr.name, ptr, types, entries);
                     curr.type = ptr;
                 } else if (!strncmp(buff, "IFDEF:", 6)) {
-                    if ((ptr = strtok(buff + 6, WS)) == NULL) {
+                    if ((ptr = strtok(buff + 6, WS)) == nullptr) {
                         errorMsg(input_filename, linenum, buff);
                         exit(EXIT_FAILURE);
                     }

@@ -29,7 +29,7 @@ Ipc::UdsOp::~UdsOp()
     debugs(54, 5, '[' << this << ']');
     if (Comm::IsConnOpen(conn_))
         conn_->close();
-    conn_ = NULL;
+    conn_ = nullptr;
 }
 
 void Ipc::UdsOp::setOptions(int newOptions)
@@ -43,7 +43,7 @@ Ipc::UdsOp::conn()
     if (!Comm::IsConnOpen(conn_)) {
         if (options & COMM_DOBIND)
             unlink(address.sun_path);
-        if (conn_ == NULL)
+        if (conn_ == nullptr)
             conn_ = new Comm::Connection;
         conn_->fd = comm_open_uds(SOCK_DGRAM, 0, &address, options);
         Must(Comm::IsConnOpen(conn_));
@@ -121,7 +121,7 @@ void Ipc::UdsSender::write()
     typedef CommCbMemFunT<UdsSender, CommIoCbParams> Dialer;
     AsyncCall::Pointer writeHandler = JobCallback(54, 5,
                                       Dialer, this, UdsSender::wrote);
-    Comm::Write(conn(), message.raw(), message.size(), writeHandler, NULL);
+    Comm::Write(conn(), message.raw(), message.size(), writeHandler, nullptr);
     writing = true;
 }
 
@@ -197,7 +197,7 @@ Ipc::ImportFdIntoComm(const Comm::ConnectionPointer &conn, int socktype, int pro
     socklen_t len = sizeof(addr);
     if (getsockname(conn->fd, reinterpret_cast<sockaddr*>(&addr), &len) == 0) {
         conn->remote = addr;
-        struct addrinfo* addr_info = NULL;
+        struct addrinfo* addr_info = nullptr;
         conn->remote.getAddrInfo(addr_info);
         addr_info->ai_socktype = socktype;
         addr_info->ai_protocol = protocol;
