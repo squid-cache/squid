@@ -56,6 +56,9 @@ DefaultTransport(const TrafficModeFlags::PortKind &portKind)
     case TrafficModeFlags::ftpPort:
         return Ftp::ProtocolVersion();
     }
+
+    assert(false); // not reached
+    return TrafficModeFlags::httpPort;
 }
 
 }
