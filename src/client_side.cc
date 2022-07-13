@@ -174,7 +174,7 @@ public:
     Handler handler;
 
 private:
-    // answer_.conn (updated by IPC code) is portCfg.listenConn (used by us)
+    // answer_.conn (set/updated by IPC code) is portCfg.listenConn (used by us)
     Ipc::StartListeningAnswer answer_; ///< StartListening() results
     AnyP::PortCfgPointer portCfg;   ///< from HttpPortList
     Ipc::FdNoteId portTypeNote;    ///< Type of IPC socket being opened

@@ -61,11 +61,11 @@ Http::Tunneler::doneAll() const
     return !callback || (requestWritten && tunnelEstablished);
 }
 
+// TODO: Remove this diff-reducer before merging this PR.
 /// convenience method to get to the answer fields
 Http::TunnelerAnswer &
 Http::Tunneler::answer()
 {
-    Must(callback);
     return callback.answer();
 }
 
