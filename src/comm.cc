@@ -780,13 +780,13 @@ old_comm_reset_close(int fd)
 }
 
 static void
-commStartTlsClose(const int &fd)
+commStartTlsClose(const int fd)
 {
     Security::SessionSendGoodbye(fd_table[fd].ssl);
 }
 
 static void
-comm_close_complete(const int &fd)
+comm_close_complete(const int fd)
 {
     auto F = &fd_table[fd];
     F->ssl.reset();

@@ -36,9 +36,9 @@ class UnaryFunDialer: public CallDialer
 {
 public:
     // stand-alone function that receives our answer
-    using Handler = void (const Argument1 &);
+    using Handler = void (Argument1);
 
-    UnaryFunDialer(Handler * const aHandler, const Argument1 &anArg1):
+    UnaryFunDialer(Handler * const aHandler, Argument1 anArg1):
         handler(aHandler),
         arg1(anArg1)
     {}
@@ -46,7 +46,7 @@ public:
 
     /* CallDialer API */
     bool canDial(AsyncCall &) { return bool(handler); }
-    void dial(AsyncCall &) { handler(arg1); }
+    void dial(AsyncCall &) { handler(std::move(arg1)); }
     virtual void print(std::ostream &os) const final { os << '(' << arg1 << ')'; }
 
 private:
@@ -57,7 +57,7 @@ private:
 /// helper function to simplify UnaryFunDialer creation
 template <typename Argument1>
 UnaryFunDialer<Argument1>
-callDialer(void (*handler)(const Argument1 &), const Argument1 &arg1)
+callDialer(void (*handler)(Argument1), Argument1 arg1)
 {
     return UnaryFunDialer<Argument1>(handler, arg1);
 }
