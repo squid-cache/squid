@@ -154,11 +154,10 @@ using IsAsyncJob = typename std::conditional<
                    std::false_type
                    >::type;
 
-// TODO: rename to callbackDialer()
 /// helper function to simplify UnaryCbcCallbackDialer creation
 template <class Destination, typename Argument1, EnableIfType<!IsAsyncJob<Destination>::value, int> = 0>
 UnaryCbcCallbackDialer<Destination, Argument1>
-cbcCallbackDialer(void (Destination::*method)(Argument1 &), Destination * const destination)
+callbackDialer(void (Destination::*method)(Argument1 &), Destination * const destination)
 {
     static_assert(!std::is_base_of<AsyncJob, Destination>::value, "wrong wrapper");
     return UnaryCbcCallbackDialer<Destination, Argument1>(method, destination);
@@ -167,7 +166,7 @@ cbcCallbackDialer(void (Destination::*method)(Argument1 &), Destination * const 
 /// helper function to simplify UnaryJobCallbackDialer creation
 template <class Destination, typename Argument1, EnableIfType<IsAsyncJob<Destination>::value, int> = 0>
 UnaryJobCallbackDialer<Destination, Argument1>
-cbcCallbackDialer(void (Destination::*method)(Argument1 &), Destination * const destination)
+callbackDialer(void (Destination::*method)(Argument1 &), Destination * const destination)
 {
     static_assert(std::is_base_of<AsyncJob, Destination>::value, "wrong wrapper");
     return UnaryJobCallbackDialer<Destination, Argument1>(destination, method);
@@ -176,7 +175,7 @@ cbcCallbackDialer(void (Destination::*method)(Argument1 &), Destination * const 
 /// helper function to simplify UnaryFunCallbackDialer creation
 template <typename Argument1>
 UnaryFunCallbackDialer<Argument1>
-cbcCallbackDialer(void (*destination)(Argument1 &))
+callbackDialer(void (*destination)(Argument1 &))
 {
     return UnaryFunCallbackDialer<Argument1>(destination);
 }
@@ -191,17 +190,17 @@ AsyncCallback_(const RefCount<Call> &call)
 }
 
 /// AsyncCall for calling back a class method compatible with
-/// cbcCallbackDialer(). TODO: Unify with JobCallback() which requires dialers
+/// callbackDialer(). TODO: Unify with JobCallback() which requires dialers
 /// that feed the job pointer to the non-default CommCommonCbParams constructor.
 #define asyncCallback(dbgSection, dbgLevel, method, object) \
     AsyncCallback_(asyncCall((dbgSection), (dbgLevel), #method, \
-        cbcCallbackDialer(&method, (object))))
+        callbackDialer(&method, (object))))
 
 // TODO: Use C++20 __VA_OPT__ to merge this with asyncCallback().
 /// AsyncCall for calling back a function
 #define asyncCallbackFun(dbgSection, dbgLevel, function) \
     AsyncCallback_(asyncCall((dbgSection), (dbgLevel), #function, \
-        cbcCallbackDialer(&function)))
+        callbackDialer(&function)))
 
 #endif // SQUID_SRC_BASE_ASYNCCALLBACKS_H
 
