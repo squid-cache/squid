@@ -10,7 +10,6 @@
 
 #include "squid.h"
 #include "ClientInfo.h"
-#include "base/AsyncFunCalls.h"
 #include "comm/AcceptLimiter.h"
 #include "comm/comm_internal.h"
 #include "comm/Connection.h"
@@ -780,19 +779,19 @@ old_comm_reset_close(int fd)
 }
 
 static void
-commStartTlsClose(const int fd)
+commStartTlsClose(const FdeCbParams &params)
 {
-    Security::SessionSendGoodbye(fd_table[fd].ssl);
+    Security::SessionSendGoodbye(fd_table[params.fd].ssl);
 }
 
 static void
-comm_close_complete(const int fd)
+comm_close_complete(const FdeCbParams &params)
 {
-    auto F = &fd_table[fd];
+    fde *F = &fd_table[params.fd];
     F->ssl.reset();
     F->dynamicTlsContext.reset();
-    fd_close(fd); /* update fdstat */
-    close(fd);
+    fd_close(params.fd);        /* update fdstat */
+    close(params.fd);
 
     ++ statCounter.syscalls.sock.closes;
 
@@ -844,8 +843,10 @@ _comm_close(int fd, char const *file, int line)
     // allowing individual advanced callbacks to overwrite it.
 
     if (F->ssl) {
-        const auto startCall = asyncCall(5, 4, "commStartTlsClose",
-                                         callDialer(commStartTlsClose, fd));
+        AsyncCall::Pointer startCall=commCbCall(5,4, "commStartTlsClose",
+                                                FdeCbPtrFun(commStartTlsClose, nullptr));
+        FdeCbParams &startParams = GetCommParams<FdeCbParams>(startCall);
+        startParams.fd = fd;
         ScheduleCallHere(startCall);
     }
 
@@ -875,10 +876,12 @@ _comm_close(int fd, char const *file, int line)
 
     comm_empty_os_read_buffers(fd);
 
+    AsyncCall::Pointer completeCall=commCbCall(5,4, "comm_close_complete",
+                                    FdeCbPtrFun(comm_close_complete, NULL));
+    FdeCbParams &completeParams = GetCommParams<FdeCbParams>(completeCall);
+    completeParams.fd = fd;
     // must use async call to wait for all callbacks
     // scheduled before comm_close() to finish
-    const auto completeCall = asyncCall(5, 4, "comm_close_complete",
-                                        callDialer(comm_close_complete, fd));
     ScheduleCallHere(completeCall);
 }
 
