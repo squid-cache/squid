@@ -45,8 +45,6 @@ section 20    Storage Manager Heap-based replacement
 section 20    Storage Manager Logging Functions
 section 20    Storage Manager MD5 Cache Keys
 section 20    Storage Manager Statistics
-section 20    Storage Manager Swapfile Metadata
-section 20    Storage Manager Swapfile Unpacker
 section 20    Storage Manager Swapin Functions
 section 20    Storage Manager Swapout Functions
 section 20    Store Controller

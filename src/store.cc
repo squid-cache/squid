@@ -42,13 +42,13 @@
 #include "store/Controller.h"
 #include "store/Disk.h"
 #include "store/Disks.h"
+#include "store/SwapMetaOut.h"
 #include "store_digest.h"
 #include "store_key_md5.h"
 #include "store_log.h"
 #include "store_rebuild.h"
 #include "StoreClient.h"
 #include "StoreIOState.h"
-#include "StoreMeta.h"
 #include "StrList.h"
 #include "swap_log_op.h"
 #include "tools.h"
@@ -1232,7 +1232,6 @@ storeRegisterWithCacheManager(void)
 void
 storeInit(void)
 {
-    storeKeyInit();
     mem_policy = createRemovalPolicy(Config.memPolicy);
     storeDigestInit();
     storeLogOpen();
@@ -1729,13 +1728,7 @@ StoreEntry::startWriting()
 char const *
 StoreEntry::getSerialisedMetaData(size_t &length) const
 {
-    StoreMeta *tlv_list = storeSwapMetaBuild(this);
-    int swap_hdr_sz;
-    char *result = storeSwapMetaPack(tlv_list, &swap_hdr_sz);
-    storeSwapTLVFree(tlv_list);
-    assert (swap_hdr_sz >= 0);
-    length = static_cast<size_t>(swap_hdr_sz);
-    return result;
+    return static_cast<const char *>(Store::PackSwapMeta(*this, length).release());
 }
 
 /**

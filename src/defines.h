@@ -87,8 +87,6 @@
 
 #define CLIENT_REQ_BUF_SZ 4096
 
-#define STORE_META_OK     0x03
-
 #define IPC_NONE 0
 #define IPC_TCP_SOCKET 1
 #define IPC_UDP_SOCKET 2
@@ -108,11 +106,6 @@
 #define IPC_STREAM IPC_TCP_SOCKET
 #define IPC_DGRAM IPC_UDP_SOCKET
 #endif
-
-#define STORE_META_KEY STORE_META_KEY_MD5
-
-#define STORE_HDR_METASIZE (4*sizeof(time_t)+2*sizeof(uint16_t)+sizeof(uint64_t))
-#define STORE_HDR_METASIZE_OLD (4*sizeof(time_t)+2*sizeof(uint16_t)+sizeof(size_t))
 
 #define COUNT_INTERVAL 60
 /*

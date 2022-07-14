@@ -15,9 +15,7 @@
  \section ImplementationNotes Implementation Notes
  \par
  *      When writing an object to disk, we must first write the meta data.
- *      This is done with a couple of functions.  First, storeSwapMetaPack()
- *      takes a StoreEntry as a parameter and returns a tlv linked
- *      list.  Second, storeSwapMetaPack() converts the tlv list
+ *      Store::PackSwapMeta() serializes that meta data
  *      into a character buffer that we can write.
  *
  \note  MemObject has a MemObject::swap_hdr_sz.
@@ -29,9 +27,8 @@
  \note The swap file content includes the HTTP reply headers and the HTTP reply body (if any).
  *
  \par
- *      When reading a swap file, there is a similar process to extract
- *      the swap meta data.  First, storeSwapMetaUnpack() converts a
- *      character buffer into a tlv linked list.  It also tells us
+ *      When reading a swap file, Store::Unpack*SwapMeta*() functions iterate
+ *      over stored swap meta data header fields and also extract
  *      the value for MemObject->swap_hdr_sz.
  */
 
