@@ -620,10 +620,7 @@ void
 Security::PeerConnector::startCertDownloading(SBuf &url)
 {
     const auto certCallback = asyncCallback(81, 4, Security::PeerConnector::certDownloadingDone, this);
-
-    auto dl = MakeUnique<Downloader>(
-        url,
-        certCallback,
+    const auto dl = new Downloader(url, certCallback,
         MasterXaction::MakePortless<XactionInitiator::initCertFetcher>(),
         certDownloadNestingLevel() + 1);
     certDownloadWait.start(dl, certCallback);

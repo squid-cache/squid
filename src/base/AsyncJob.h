@@ -84,16 +84,5 @@ protected:
     bool swanSang_ = false; ///< swanSong() was called
 };
 
-// TODO: Move to src/base/Memory.h or similar.
-#include <memory>
-/// partial std::make_unique replacement while waiting for C++14
-template< class T, class... Args >
-std::unique_ptr<T>
-MakeUnique(Args&&... args)
-{
-    static_assert(!std::is_array<T>::value, "MakeUnique() supports non-array types only");
-    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
-
 #endif /* SQUID_ASYNC_JOB_H */
 

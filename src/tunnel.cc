@@ -202,7 +202,7 @@ public:
     JobWait<HappyConnOpener> transportWait;
 
     /// waits for the established transport connection to be secured/encrypted
-    JobWait<Security::BlindPeerConnector> encryptionWait;
+    JobWait<Security::PeerConnector> encryptionWait;
 
     /// waits for an HTTP CONNECT tunnel through a cache_peer to be negotiated
     /// over the (encrypted, if needed) transport connection to that cache_peer
@@ -1154,7 +1154,7 @@ void
 TunnelStateData::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 {
     const auto callback = asyncCallback(5, 4, TunnelStateData::noteSecurityPeerConnectorAnswer, this);
-    auto connector = MakeUnique<Security::BlindPeerConnector>(request, conn, callback, al);
+    const auto connector = new Security::BlindPeerConnector(request, conn, callback, al);
     encryptionWait.start(connector, callback);
 }
 
@@ -1215,7 +1215,7 @@ void
 TunnelStateData::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 {
     const auto callback = asyncCallback(5, 4, TunnelStateData::tunnelEstablishmentDone, this);
-    auto tunneler = MakeUnique<Http::Tunneler>(conn, request, callback, Config.Timeout.lifetime, al);
+    const auto tunneler = new Http::Tunneler(conn, request, callback, Config.Timeout.lifetime, al);
 #if USE_DELAY_POOLS
     tunneler->setDelayId(server.delayId);
 #endif
@@ -1358,7 +1358,7 @@ TunnelStateData::startConnecting()
     assert(!destinations->empty());
     assert(!transporting());
     const auto callback = asyncCallback(17, 5, TunnelStateData::noteConnection, this);
-    auto cs = MakeUnique<HappyConnOpener>(destinations, callback, request, startTime, 0, al);
+    const auto cs = new HappyConnOpener(destinations, callback, request, startTime, 0, al);
     cs->setHost(request->url.host());
     cs->setRetriable(false);
     cs->allowPersistent(false);

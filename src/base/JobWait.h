@@ -65,26 +65,10 @@ class JobWait: public JobWaitBase
 public:
     typedef CbcPointer<Job> JobPointer;
 
-    // Deprecated: JobPointer leaks the job on start exceptions!
     /// starts waiting for the given job to call the given callback
     void start(const JobPointer &aJob, const AsyncCall::Pointer &aCallback) {
         start_(aJob, aCallback);
         typedJob_ = aJob;
-    }
-
-    // TODO: Remove this diff-reducer before merging this PR.
-    /// starts the given (newly created) job and
-    /// starts waiting for that job to call the given callback
-    void start(std::unique_ptr<Job> &aJob, const AsyncCall::Pointer &aCallback) {
-        start(aJob.release(), aCallback);
-    }
-
-    // TODO: Replace the diff-reducer above with this variant.
-    // Use this start(std::move(job), callback) variant in new code.
-    /// starts the given (newly created) job and
-    /// starts waiting for that job to call the given callback
-    void startTODO(std::unique_ptr<Job> aJob, const AsyncCall::Pointer &aCallback) {
-         start(aJob.release(), aCallback);
     }
 
     /// \returns a cbdata pointer to the job we are waiting for (or nil)

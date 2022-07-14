@@ -39,7 +39,6 @@ public:
     Tunneler(const Comm::ConnectionPointer &, const HttpRequestPointer &, const AsyncCallback<Answer> &, time_t timeout, const AccessLogEntryPointer &);
     Tunneler(const Tunneler &) = delete;
     Tunneler &operator =(const Tunneler &) = delete;
-    virtual ~Tunneler();
 
 #if USE_DELAY_POOLS
     void setDelayId(DelayId delay_id) {delayId = delay_id;}
@@ -50,6 +49,7 @@ public:
 
 protected:
     /* AsyncJob API */
+    virtual ~Tunneler();
     virtual void start();
     virtual bool doneAll() const;
     virtual void swanSong();
