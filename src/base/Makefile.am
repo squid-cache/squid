@@ -15,11 +15,11 @@ libbase_la_SOURCES = \
 	Assure.h \
 	AsyncCall.cc \
 	AsyncCall.h \
-	AsyncCallbacks.h \
 	AsyncCallList.cc \
 	AsyncCallList.h \
 	AsyncCallQueue.cc \
 	AsyncCallQueue.h \
+	AsyncCallbacks.h \
 	AsyncCbdataCalls.h \
 	AsyncFunCalls.h \
 	AsyncJob.cc \

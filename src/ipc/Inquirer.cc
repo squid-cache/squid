@@ -31,11 +31,11 @@ namespace Ipc {
 using InquirerPointer = CbcPointer<Inquirer>;
 using WaitingInquiriesItem = std::pair<const RequestId::Index, InquirerPointer>;
 using WaitingInquiries = std::unordered_map<
-    RequestId::Index,
-    InquirerPointer,
-    std::hash<RequestId::Index>,
-    std::equal_to<RequestId::Index>,
-    PoolingAllocator<WaitingInquiriesItem> >;
+                         RequestId::Index,
+                         InquirerPointer,
+                         std::hash<RequestId::Index>,
+                         std::equal_to<RequestId::Index>,
+                         PoolingAllocator<WaitingInquiriesItem> >;
 
 /// pending Inquirer requests for this process
 static WaitingInquiries TheWaitingInquirers;
