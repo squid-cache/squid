@@ -63,7 +63,7 @@ Ipc::Mem::PageLimit()
 size_t
 Ipc::Mem::PageLimit(const int purpose)
 {
-    Must(0 <= purpose && purpose <= PageId::maxPurpose);
+    Must(0 <= purpose && purpose < PageId::maxPurpose);
     return TheLimits[purpose];
 }
 
@@ -71,7 +71,7 @@ Ipc::Mem::PageLimit(const int purpose)
 void
 Ipc::Mem::NotePageNeed(const int purpose, const int count)
 {
-    Must(0 <= purpose && purpose <= PageId::maxPurpose);
+    Must(0 <= purpose && purpose < PageId::maxPurpose);
     Must(count >= 0);
     TheLimits[purpose] += count;
 }

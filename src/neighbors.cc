@@ -719,7 +719,7 @@ neighborsUdpPing(HttpRequest * request,
             p->stats.probe_start = squid_curtime;
     }
 
-    if ((first_ping = first_ping->next) == nullptr)
+    if (first_ping && (first_ping = first_ping->next) == nullptr)
         first_ping = Config.peers;
 
     /*

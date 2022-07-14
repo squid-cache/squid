@@ -578,10 +578,10 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                         if (strlen(escaped_selector) != 0)
                             outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"telnet://%s@%s%s%s/\">%s</A>\n",
                                            icon_url, escaped_selector, rfc1738_escape_part(host),
-                                           *port ? ":" : "", port, html_quote(name));
+                                           (port && *port) ? ":" : "", port, html_quote(name));
                         else
                             outbuf.appendf("<IMG border=\"0\" SRC=\"%s\"> <A HREF=\"telnet://%s%s%s/\">%s</A>\n",
-                                           icon_url, rfc1738_escape_part(host), *port ? ":" : "",
+                                           icon_url, rfc1738_escape_part(host), (port && *port) ? ":" : "",
                                            port, html_quote(name));
 
                     } else if (gtype == GOPHER_INFO) {

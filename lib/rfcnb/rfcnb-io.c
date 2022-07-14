@@ -309,43 +309,44 @@ RFCNB_Get_Pkt(struct RFCNB_Con *con, struct RFCNB_Pkt *pkt, int len)
     else
         this_len = frag_len - offset;
 
-    while (more > 0) {
+    if (pkt_frag) {
+        while (more > 0) {
 
-        if ((this_time = read(con->fd, (pkt_frag->data) + offset, this_len)) <= 0) {    /* Problems */
+            if ((this_time = read(con->fd, (pkt_frag->data) + offset, this_len)) <= 0) {    /* Problems */
 
-            if (errno == EINTR) {
+                if (errno == EINTR) {
 
-                RFCNB_errno = RFCNB_Timeout;
+                    RFCNB_errno = RFCNB_Timeout;
 
-            } else {
-                if (this_time < 0)
-                    RFCNB_errno = RFCNBE_BadRead;
-                else
-                    RFCNB_errno = RFCNBE_ConGone;
+                } else {
+                    if (this_time < 0)
+                        RFCNB_errno = RFCNBE_BadRead;
+                    else
+                        RFCNB_errno = RFCNBE_ConGone;
+                }
+
+                RFCNB_saved_errno = errno;
+                return (RFCNBE_Bad);
+
             }
+    #ifdef RFCNB_DEBUG
+            fprintf(stderr, "Frag_Len = %i, this_time = %i, this_len = %i, more = %i\n", frag_len,
+                    this_time, this_len, more);
+    #endif
 
-            RFCNB_saved_errno = errno;
-            return (RFCNBE_Bad);
+            read_len = read_len + this_time;        /* How much have we read ... */
 
+            /* Now set up the next part */
+
+            if (pkt_frag->next == NULL)
+                break;              /* That's it here */
+
+            pkt_frag = pkt_frag->next;
+            this_len = pkt_frag->len;
+            offset = 0;
+
+            more = more - this_time;
         }
-#ifdef RFCNB_DEBUG
-        fprintf(stderr, "Frag_Len = %i, this_time = %i, this_len = %i, more = %i\n", frag_len,
-                this_time, this_len, more);
-#endif
-
-        read_len = read_len + this_time;        /* How much have we read ... */
-
-        /* Now set up the next part */
-
-        if (pkt_frag->next == NULL)
-            break;              /* That's it here */
-
-        pkt_frag = pkt_frag->next;
-        this_len = pkt_frag->len;
-        offset = 0;
-
-        more = more - this_time;
-
     }
 
 #ifdef RFCNB_DEBUG
