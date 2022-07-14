@@ -185,5 +185,14 @@ SetToNaturalSumOrMax(S &var, const Args... args)
     return var;
 }
 
+/// converts a given non-negative integer into an integer of a given type
+/// without loss of information or undefined behavior
+template <typename Result, typename Source>
+Result
+NaturalCast(const Source s)
+{
+    return NaturalSum<Result>(s).value();
+}
+
 #endif /* _SQUID_SRC_SQUIDMATH_H */
 
