@@ -32,15 +32,15 @@
 Auth::UserRequest::Pointer
 Auth::SchemeConfig::CreateAuthUser(const char *proxy_auth, AccessLogEntry::Pointer &al)
 {
-    assert(proxy_auth != NULL);
+    assert(proxy_auth != nullptr);
     debugs(29, 9, "header = '" << proxy_auth << "'");
 
     Auth::SchemeConfig *config = Find(proxy_auth);
 
-    if (config == NULL || !config->active()) {
+    if (config == nullptr || !config->active()) {
         debugs(29, (shutting_down?3:DBG_IMPORTANT), (shutting_down?"":"WARNING: ") <<
                "Unsupported or unconfigured/inactive proxy-auth scheme, '" << proxy_auth << "'");
-        return NULL;
+        return nullptr;
     }
     static MemBuf rmb;
     rmb.reset();
@@ -63,7 +63,7 @@ Auth::SchemeConfig::Find(const char *proxy_auth)
             return scheme;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 Auth::SchemeConfig *
@@ -123,7 +123,7 @@ Auth::SchemeConfig::parse(Auth::SchemeConfig * scheme, int, char *param_str)
 
         keyExtras = nlf;
 
-        if (char *t = strtok(NULL, w_space)) {
+        if (char *t = strtok(nullptr, w_space)) {
             debugs(29, DBG_CRITICAL, "FATAL: Unexpected argument '" << t << "' after request_format specification");
             self_destruct();
         }
@@ -146,7 +146,7 @@ Auth::SchemeConfig::dump(StoreEntry *entry, const char *name, Auth::SchemeConfig
 
     wordlist *list = authenticateProgram;
     storeAppendPrintf(entry, "%s %s", name, schemeType);
-    while (list != NULL) {
+    while (list != nullptr) {
         storeAppendPrintf(entry, " %s", list->key);
         list = list->next;
     }
@@ -175,7 +175,7 @@ void
 Auth::SchemeConfig::done()
 {
     delete keyExtras;
-    keyExtras = NULL;
+    keyExtras = nullptr;
     keyExtrasLine.clean();
 }
 

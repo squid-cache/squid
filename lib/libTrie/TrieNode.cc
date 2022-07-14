@@ -13,10 +13,10 @@
 #include <unistd.h>
 #endif
 
-TrieNode::TrieNode() : _privateData(NULL)
+TrieNode::TrieNode() : _privateData(nullptr)
 {
     for (int i = 0; i < 256; ++i)
-        internal[i] = NULL;
+        internal[i] = nullptr;
 }
 
 TrieNode::~TrieNode()

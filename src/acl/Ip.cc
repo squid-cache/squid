@@ -41,8 +41,8 @@ void
 acl_ip_data::toStr(char *buf, int len) const
 {
     char *b1 = buf;
-    char *b2 = NULL;
-    char *b3 = NULL;
+    char *b2 = nullptr;
+    char *b3 = nullptr;
     int rlen = 0;
 
     addr1.toStr(b1, len - rlen );
@@ -211,8 +211,8 @@ acl_ip_data::FactoryParse(const char *t)
     LOCAL_ARRAY(char, addr1, 256);
     LOCAL_ARRAY(char, addr2, 256);
     LOCAL_ARRAY(char, mask, 256);
-    acl_ip_data *r = NULL;
-    acl_ip_data **Q = NULL;
+    acl_ip_data *r = nullptr;
+    acl_ip_data **Q = nullptr;
     Ip::Address temp;
     char c;
     unsigned int changed;
@@ -365,14 +365,14 @@ acl_ip_data::FactoryParse(const char *t)
          */
 
         debugs(28, 5, "aclIpParseIpData: Lookup Host/IP " << addr1);
-        struct addrinfo *hp = NULL, *x = NULL;
+        struct addrinfo *hp = nullptr, *x = nullptr;
         struct addrinfo hints;
-        Ip::Address *prev_addr = NULL;
+        Ip::Address *prev_addr = nullptr;
 
         memset(&hints, 0, sizeof(struct addrinfo));
 
-        int errcode = getaddrinfo(addr1,NULL,&hints,&hp);
-        if (hp == NULL) {
+        int errcode = getaddrinfo(addr1,nullptr,&hints,&hp);
+        if (hp == nullptr) {
             delete q;
             if (strcmp(addr1, "::1") == 0) {
                 debugs(28, DBG_IMPORTANT, "aclIpParseIpData: IPv6 has not been enabled in host DNS resolver.");
@@ -382,13 +382,13 @@ acl_ip_data::FactoryParse(const char *t)
                        " : (" << errcode << ") " << gai_strerror(errcode) );
                 self_destruct();
             }
-            return NULL;
+            return nullptr;
         }
 
         Q = &q;
 
-        for (x = hp; x != NULL;) {
-            if ((r = *Q) == NULL)
+        for (x = hp; x != nullptr;) {
+            if ((r = *Q) == nullptr)
                 r = *Q = new acl_ip_data;
 
             /* getaddrinfo given a host has a nasty tendency to return duplicate addr's */
@@ -398,7 +398,7 @@ acl_ip_data::FactoryParse(const char *t)
             if ( prev_addr && r->addr1 == *prev_addr) {
                 debugs(28, 3, "aclIpParseIpData: Duplicate host/IP: '" << r->addr1 << "' dropped.");
                 delete r;
-                *Q = NULL;
+                *Q = nullptr;
                 continue;
             } else
                 prev_addr = &r->addr1;
@@ -415,10 +415,10 @@ acl_ip_data::FactoryParse(const char *t)
 
         freeaddrinfo(hp);
 
-        if (*Q != NULL) {
+        if (*Q != nullptr) {
             debugs(28, DBG_CRITICAL, "ERROR: aclIpParseIpData: Bad host/IP: '" << t << "'");
             self_destruct();
-            return NULL;
+            return nullptr;
         }
 
         return q;
@@ -428,7 +428,7 @@ acl_ip_data::FactoryParse(const char *t)
     if ( iptype == AF_INET6 && !Ip::EnableIpv6) {
         debugs(28, DBG_IMPORTANT, "aclIpParseIpData: IPv6 has not been enabled.");
         delete q;
-        return NULL;
+        return nullptr;
     }
 
     /* Decode addr1 */
@@ -436,7 +436,7 @@ acl_ip_data::FactoryParse(const char *t)
         debugs(28, DBG_CRITICAL, "ERROR: aclIpParseIpData: unknown first address in '" << t << "'");
         delete q;
         self_destruct();
-        return NULL;
+        return nullptr;
     }
 
     /* Decode addr2 */
@@ -446,7 +446,7 @@ acl_ip_data::FactoryParse(const char *t)
         debugs(28, DBG_CRITICAL, "ERROR: aclIpParseIpData: unknown second address in '" << t << "'");
         delete q;
         self_destruct();
-        return NULL;
+        return nullptr;
     }
 
     /* Decode mask (NULL or empty means a exact host mask) */
@@ -454,7 +454,7 @@ acl_ip_data::FactoryParse(const char *t)
         debugs(28, DBG_CRITICAL, "ERROR: aclParseIpData: unknown netmask '" << mask << "' in '" << t << "'");
         delete q;
         self_destruct();
-        return NULL;
+        return nullptr;
     }
 
     changed = 0;
@@ -474,16 +474,16 @@ acl_ip_data::FactoryParse(const char *t)
 void
 ACLIP::parse()
 {
-    if (data == NULL)
+    if (data == nullptr)
         data = new IPSplay();
 
     while (char *t = ConfigParser::strtokFile()) {
         acl_ip_data *q = acl_ip_data::FactoryParse(t);
 
-        while (q != NULL) {
+        while (q != nullptr) {
             /* pop each result off the list and add it to the data tree individually */
             acl_ip_data *next_node = q->next;
-            q->next = NULL;
+            q->next = nullptr;
             if (!data->find(q,acl_ip_data::NetworkCompare))
                 data->insert(q, acl_ip_data::NetworkCompare);
             q = next_node;
@@ -536,10 +536,10 @@ ACLIP::match(const Ip::Address &clientip)
 
     const acl_ip_data * const * result =  data->find(&ClientAddress, aclIpAddrNetworkCompare);
     debugs(28, 3, "aclIpMatchIp: '" << clientip << "' " << (result ? "found" : "NOT found"));
-    return (result != NULL);
+    return (result != nullptr);
 }
 
-acl_ip_data::acl_ip_data() :addr1(), addr2(), mask(), next (NULL) {}
+acl_ip_data::acl_ip_data() :addr1(), addr2(), mask(), next (nullptr) {}
 
 acl_ip_data::acl_ip_data(Ip::Address const &anAddress1, Ip::Address const &anAddress2, Ip::Address const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext) {}
 

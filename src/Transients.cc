@@ -27,7 +27,7 @@
 /// shared memory segment path to use for Transients map
 static const SBuf MapLabel("transients_map");
 
-Transients::Transients(): map(NULL), locals(NULL)
+Transients::Transients(): map(nullptr), locals(nullptr)
 {
 }
 
@@ -49,7 +49,7 @@ Transients::init()
     map->cleaner = this;
     map->disableHitValidation(); // Transients lacks slices to validate
 
-    locals = new Locals(entryLimit, 0);
+    locals = new Locals(entryLimit, nullptr);
 }
 
 void
@@ -146,12 +146,12 @@ StoreEntry *
 Transients::get(const cache_key *key)
 {
     if (!map)
-        return NULL;
+        return nullptr;
 
     sfileno index;
     const Ipc::StoreMapAnchor *anchor = map->openForReading(key, index);
     if (!anchor)
-        return NULL;
+        return nullptr;
 
     // If we already have a local entry, the store_table should have found it.
     // Since it did not, the local entry key must have changed from public to
@@ -185,7 +185,7 @@ StoreEntry *
 Transients::findCollapsed(const sfileno index)
 {
     if (!map)
-        return NULL;
+        return nullptr;
 
     if (StoreEntry *oldE = locals->at(index)) {
         debugs(20, 5, "found " << *oldE << " at " << index << " in " << MapLabel);
@@ -194,7 +194,7 @@ Transients::findCollapsed(const sfileno index)
     }
 
     debugs(20, 3, "no entry at " << index << " in " << MapLabel);
-    return NULL;
+    return nullptr;
 }
 
 void

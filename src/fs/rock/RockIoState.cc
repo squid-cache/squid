@@ -28,8 +28,8 @@ Rock::IoState::IoState(Rock::SwapDir::Pointer &aDir,
                        StoreIOState::STIOCB *cbIo,
                        void *data) :
     StoreIOState(cbFile, cbIo, data),
-    readableAnchor_(NULL),
-    writeableAnchor_(NULL),
+    readableAnchor_(nullptr),
+    writeableAnchor_(nullptr),
     splicingPoint(-1),
     staleSplicingPointNext(-1),
     dir(aDir),
@@ -61,7 +61,7 @@ Rock::IoState::~IoState()
 
     if (callback_data)
         cbdataReferenceDone(callback_data);
-    theFile = NULL;
+    theFile = nullptr;
 
     e->unlock("rock I/O");
 }
@@ -70,7 +70,7 @@ void
 Rock::IoState::file(const RefCount<DiskFile> &aFile)
 {
     assert(!theFile);
-    assert(aFile != NULL);
+    assert(aFile != nullptr);
     theFile = aFile;
 }
 
@@ -100,7 +100,7 @@ Rock::IoState::read_(char *buf, size_t len, off_t coreOff, STRCB *cb, void *data
 {
     debugs(79, 7, swap_filen << " reads from " << coreOff);
 
-    assert(theFile != NULL);
+    assert(theFile != nullptr);
     assert(coreOff >= 0);
 
     // if we are dealing with the first read or
@@ -116,8 +116,8 @@ Rock::IoState::read_(char *buf, size_t len, off_t coreOff, STRCB *cb, void *data
         sidCurrent = currentReadableSlice().next;
     }
 
-    assert(read.callback == NULL);
-    assert(read.callback_data == NULL);
+    assert(read.callback == nullptr);
+    assert(read.callback_data == nullptr);
     read.callback = cb;
     read.callback_data = cbdataReference(data);
 
@@ -165,7 +165,7 @@ Rock::IoState::callReaderBack(const char *buf, int rlen)
         staleSplicingPointNext = currentReadableSlice().next;
     StoreIOState::STRCB *callb = read.callback;
     assert(callb);
-    read.callback = NULL;
+    read.callback = nullptr;
     void *cbdata;
     if (cbdataReferenceValidDone(read.callback_data, &cbdata))
         callb(cbdata, buf, rlen, this);
@@ -214,7 +214,7 @@ Rock::IoState::tryWrite(char const *buf, size_t size, off_t coreOff)
 
     // buffer incoming data in slot buffer and write overflowing or final slots
     // quit when no data left or we stopped writing on reentrant error
-    while (size > 0 && theFile != NULL) {
+    while (size > 0 && theFile != nullptr) {
         const size_t processed = writeToBuffer(buf, size);
         buf += processed;
         size -= processed;
@@ -257,7 +257,7 @@ Rock::IoState::writeToBuffer(char const *buf, size_t size)
 void
 Rock::IoState::writeToDisk()
 {
-    assert(theFile != NULL);
+    assert(theFile != nullptr);
     assert(theBuf.size >= sizeof(DbCellHeader));
 
     assert((sidFirst < 0) == (sidCurrent < 0));
@@ -404,8 +404,8 @@ class StoreIOStateCb: public CallDialer
 {
 public:
     StoreIOStateCb(StoreIOState::STIOCB *cb, void *data, int err, const Rock::IoState::Pointer &anSio):
-        callback(NULL),
-        callback_data(NULL),
+        callback(nullptr),
+        callback_data(nullptr),
         errflag(err),
         sio(anSio) {
 
@@ -414,8 +414,8 @@ public:
     }
 
     StoreIOStateCb(const StoreIOStateCb &cb):
-        callback(NULL),
-        callback_data(NULL),
+        callback(nullptr),
+        callback_data(nullptr),
         errflag(cb.errflag),
         sio(cb.sio) {
 
@@ -454,13 +454,13 @@ void
 Rock::IoState::callBack(int errflag)
 {
     debugs(79,3, "errflag=" << errflag);
-    theFile = NULL;
+    theFile = nullptr;
 
     AsyncCall::Pointer call = asyncCall(79,3, "SomeIoStateCloseCb",
                                         StoreIOStateCb(callback, callback_data, errflag, this));
     ScheduleCallHere(call);
 
-    callback = NULL;
+    callback = nullptr;
     cbdataReferenceDone(callback_data);
 }
 

@@ -121,7 +121,8 @@ namespace Acl {
 class Answer
 {
 public:
-    // not explicit: allow "aclMatchCode to Acl::Answer" conversions (for now)
+    // TODO: Find a good way to avoid implicit conversion (without explicitly
+    // casting every ACCESS_ argument in implicit constructor calls).
     Answer(const aclMatchCode aCode, int aKind = 0): code(aCode), kind(aKind) {}
 
     Answer() = default;

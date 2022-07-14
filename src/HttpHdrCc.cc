@@ -96,7 +96,7 @@ HttpHdrCc::parse(const String & str)
 {
     const char *item;
     const char *p;      /* '=' parameter */
-    const char *pos = NULL;
+    const char *pos = nullptr;
     int ilen;
     int nlen;
 

@@ -363,8 +363,8 @@ operator << (std::ostream &os, const Address &ipa)
 class Address_list
 {
 public:
-    Address_list() { next = NULL; };
-    ~Address_list() { if (next) delete next; next = NULL; };
+    Address_list() { next = nullptr; };
+    ~Address_list() { if (next) delete next; next = nullptr; };
 
     Address s;
     Address_list *next;

@@ -54,7 +54,7 @@ ACLDestinationDomainStrategy::options()
 int
 ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
-    assert(checklist != NULL && checklist->request != NULL);
+    assert(checklist != nullptr && checklist->request != nullptr);
 
     if (data->match(checklist->request->url.host())) {
         return 1;

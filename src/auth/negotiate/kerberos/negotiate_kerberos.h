@@ -125,7 +125,7 @@ LogTime()
     static time_t last_t = 0;
     static char buf[128];
 
-    gettimeofday(&now, NULL);
+    gettimeofday(&now, nullptr);
     if (now.tv_sec != last_t) {
         struct tm *tm;
         tm = localtime((time_t *) & now.tv_sec);

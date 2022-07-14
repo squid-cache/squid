@@ -30,7 +30,7 @@ Mgr::FunAction::Create(const Command::Pointer &aCmd, OBJH* aHandler)
 Mgr::FunAction::FunAction(const Command::Pointer &aCmd, OBJH* aHandler):
     Action(aCmd), handler(aHandler)
 {
-    Must(handler != NULL);
+    Must(handler != nullptr);
     debugs(16, 5, MYNAME);
 }
 
@@ -48,7 +48,7 @@ void
 Mgr::FunAction::dump(StoreEntry* entry)
 {
     debugs(16, 5, MYNAME);
-    Must(entry != NULL);
+    Must(entry != nullptr);
     if (UsingSmp())
         storeAppendPrintf(entry, "by kid%d {\n", KidIdentifier);
     handler(entry);

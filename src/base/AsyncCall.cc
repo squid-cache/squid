@@ -83,11 +83,11 @@ AsyncCall::print(std::ostream &os)
 void
 AsyncCall::dequeue(AsyncCall::Pointer &head, AsyncCall::Pointer &prev)
 {
-    if (prev != NULL)
+    if (prev != nullptr)
         prev->setNext(Next());
     else
         head = Next();
-    setNext(NULL);
+    setNext(nullptr);
 }
 
 bool

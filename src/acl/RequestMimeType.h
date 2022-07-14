@@ -21,7 +21,7 @@ ACLRequestHeaderStrategy<Http::HdrType::CONTENT_TYPE>::match (ACLData<char const
 {
     char const *theHeader = checklist->request->header.getStr(Http::HdrType::CONTENT_TYPE);
 
-    if (NULL == theHeader)
+    if (nullptr == theHeader)
         theHeader = "";
 
     return data->match(theHeader);

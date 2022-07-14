@@ -41,7 +41,7 @@ public:
 
     /// Details a server-side certificate verification failure.
     /// If `broken` is nil, then the broken certificate is the peer certificate.
-    ErrorDetail(ErrorCode err_no, const CertPointer &peer, const CertPointer &broken, const char *aReason = NULL);
+    ErrorDetail(ErrorCode err_no, const CertPointer &peer, const CertPointer &broken, const char *aReason = nullptr);
 
 #if USE_OPENSSL
     /// Details (or starts detailing) a non-validation failure.

@@ -39,11 +39,18 @@ ASTYLE='astyle'
 # whether to check and, if necessary, update boilerplate copyright years
 CheckAndUpdateCopyright=yes
 
+# How to sync CONTRIBUTORS with the current git branch commits:
+# * never: Do not update CONTRIBUTORS at all.
+# * auto: Check commits added since the last similar update.
+# * SHA1/etc: Check commits added after the specified git commit.
+UpdateContributorsSince=auto
+
 printUsage () {
     echo "Usage: $0 [option...]"
     echo "options:"
     echo "    --keep-going|-k"
     echo "    --check-and-update-copyright <yes|no>"
+    echo "    --update-contributors-since <never|auto|revision>"
     echo "    --with-astyle </path/to/astyle/executable>"
 }
 
@@ -64,6 +71,16 @@ while [ $# -ge 1 ]; do
         fi
         CheckAndUpdateCopyright=$2
         shift 2
+        ;;
+    --update-contributors-since)
+        if test "x$2" = x
+        then
+            printUsage
+            echo "Error: Option $1 expects an argument."
+            exit 1;
+        fi
+        UpdateContributorsSince="$2"
+        shift 2;
         ;;
     --help|-h)
         printUsage
@@ -90,6 +107,9 @@ if ! git diff --quiet; then
 	echo "Stage changes to avoid permanent losses when things go bad."
 	exit 1
 fi
+
+made="generated" # a hack: prevents $GeneratedByMe searches matching this file
+GeneratedByMe="This file is $made by scripts/source-maintenance.sh."
 
 # On squid-cache.org we have to use the python scripted md5sum
 HOST=`hostname`
@@ -424,8 +444,11 @@ for FILENAME in `git ls-files`; do
 	;;
 
     *.am)
-		applyPluginsTo ${FILENAME} scripts/format-makefile-am.pl || return
-	;;
+        # generated automake files are formatted during their generation
+        if ! grep -q -F "$GeneratedByMe" ${FILENAME}; then
+            applyPluginsTo ${FILENAME} scripts/format-makefile-am.pl || return
+        fi
+        ;;
 
     ChangeLog|CREDITS|CONTRIBUTORS|COPYING|*.png|*.po|*.pot|rfcs/|*.txt|test-suite/squidconf/empty|.bzrignore)
         # we do not enforce copyright blurbs in:
@@ -462,36 +485,133 @@ done
     run_ processDebugMessages || return
 }
 
-printAmFile ()
+printRawAmFile ()
 {
     sed -e 's%\ \*%##%; s%/\*%##%; s%##/%##%' < scripts/boilerplate.h
+
+    echo "## $GeneratedByMe"
+    echo
+
     echo -n "$1 ="
-    git ls-files $2$3 | sed -e s%$2%%g | sort -u | while read f; do
+    # Only some files are formed from *.po filenames, but all such files
+    # should list *.lang filenames instead.
+    git ls-files $2$3 | sed -e s%$2%%g -e 's%\.po%\.lang%g' | while read f; do
         echo " \\"
         echo -n "    ${f}"
     done
     echo ""
 }
 
+generateAmFile ()
+{
+    amFile="$1"
+    shift
+
+    # format immediately/here instead of in srcFormat to avoid misleading
+    # "NOTICE: File ... changed by scripts/format-makefile-am.pl" in srcFormat
+    printRawAmFile "$@" | scripts/format-makefile-am.pl > $amFile.new
+
+    # Distinguishing generation-only changes from formatting-only changes is
+    # difficult, so we only check/report cumulative changes. Most interesting
+    # changes are triggered by printRawAmFile() finding new entries.
+    updateIfChanged $amFile $amFile.new 'by generateAmFile()'
+}
+
 # Build icons install include from current icons available
-printAmFile ICONS "icons/" "silk/*" > icons/icon.am
+generateAmFile icons/icon.am ICONS "icons/" "silk/*"
 
 # Build templates install include from current templates available
-printAmFile ERROR_TEMPLATES "errors/" "templates/ERR_*" > errors/template.am
+generateAmFile errors/template.am ERROR_TEMPLATES "errors/" "templates/ERR_*"
 
 # Build errors translation install include from current .PO available
-printAmFile TRANSLATE_LANGUAGES "errors/" "*.po" | sed 's%\.po%\.lang%g' > errors/language.am
+generateAmFile errors/language.am TRANSLATE_LANGUAGES "errors/" "*.po"
 
 # Build manuals translation install include from current .PO available
-printAmFile TRANSLATE_LANGUAGES "doc/manuals/" "*.po" | sed 's%\.po%\.lang%g' > doc/manuals/language.am
+generateAmFile doc/manuals/language.am TRANSLATE_LANGUAGES "doc/manuals/" "*.po"
 
 # Build STUB framework include from current stub_* available
-printAmFile STUB_SOURCE "src/" "tests/stub_*.cc" > src/tests/Stub.am
+generateAmFile src/tests/Stub.am STUB_SOURCE "src/" "tests/stub_*.cc"
 
 # Build the GPERF generated content
 make -C src/http gperf-files
 
 run_ checkMakeNamedErrorDetails || exit 1
+
+# This function updates CONTRIBUTORS based on the recent[1] branch commit log.
+# Fresh contributor entries are filtered using the latest vetted CONTRIBOTORS
+# file on the current branch. The following CONTRIBUTORS commits are
+# considered vetted:
+#
+# * authored (in "git log --author" sense) by squidadm,
+# * matching (in "git log --grep" sense) $vettedCommitPhraseRegex set below.
+#
+# A human authoring an official GitHub pull request containing a new
+# CONTRIBUTORS version (that they want to be used as a new vetting point)
+# should add a phrase matching $vettedCommitPhraseRegex to the PR description.
+#
+# [1] As defined by the --update-contributors-since script parameter.
+collectAuthors ()
+{
+    if test "x$UpdateContributorsSince" = xnever
+    then
+        return 0; # successfully did nothing, as requested
+    fi
+
+    vettedCommitPhraseRegex='[Rr]eference point for automated CONTRIBUTORS updates'
+
+    since="$UpdateContributorsSince"
+    if test "x$UpdateContributorsSince" = xauto
+    then
+        # find the last CONTRIBUTORS commit vetted by a human
+        humanSha=`git log -n1 --format='%H' --grep="$vettedCommitPhraseRegex" CONTRIBUTORS`
+        # find the last CONTRIBUTORS commit attributed to this script
+        botSha=`git log -n1 --format='%H' --author=squidadm CONTRIBUTORS`
+        if test "x$humanSha" = x && test "x$botSha" = x
+        then
+            echo "ERROR: Unable to determine the commit to start contributors extraction from"
+            return 1;
+        fi
+
+        # find the latest commit among the above one or two commits
+        if test "x$humanSha" = x
+        then
+            since=$botSha
+        elif test "x$botSha" = x
+        then
+            since=$humanSha
+        elif git merge-base --is-ancestor $humanSha $botSha
+        then
+            since=$botSha
+        else
+            since=$humanSha
+        fi
+        echo "Collecting contributors since $since"
+    fi
+    range="$since..HEAD"
+
+    # We add four leading spaces below to mimic CONTRIBUTORS entry style.
+    # add commit authors:
+    git log --format='    %an <%ae>' $range > authors.tmp
+    # add commit co-authors:
+    git log $range | \
+        grep -Ei '^[[:space:]]*Co-authored-by:' | \
+        sed -r 's/^\s*Co-authored-by:\s*/    /i' >> authors.tmp
+    # but do not add committers (--format='    %cn <%ce>').
+
+    # add collected new (co-)authors, if any, to CONTRIBUTORS
+    if ./scripts/update-contributors.pl < authors.tmp > CONTRIBUTORS.new
+    then
+        updateIfChanged CONTRIBUTORS CONTRIBUTORS.new  \
+            "A human PR description should match: $vettedCommitPhraseRegex"
+    fi
+    result=$?
+
+    rm -f authors.tmp
+    return $result
+}
+
+# Update CONTRIBUTORS content
+run_ collectAuthors || exit 1
 
 # Run formatting
 srcFormat || exit 1

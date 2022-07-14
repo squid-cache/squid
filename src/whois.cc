@@ -72,7 +72,7 @@ whoisStart(FwdState * fwd)
 
     AsyncCall::Pointer writeCall = commCbCall(5,5, "whoisWriteComplete",
                                    CommIoCbPtrFun(whoisWriteComplete, p));
-    Comm::Write(fwd->serverConnection(), buf, strlen(buf), writeCall, NULL);
+    Comm::Write(fwd->serverConnection(), buf, strlen(buf), writeCall, nullptr);
     AsyncCall::Pointer readCall = commCbCall(5,4, "whoisReadReply",
                                   CommIoCbPtrFun(whoisReadReply, p));
     comm_read(fwd->serverConnection(), p->buf, BUFSIZ, readCall);

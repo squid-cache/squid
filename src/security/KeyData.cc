@@ -15,9 +15,10 @@
 #include "ssl/bio.h"
 #include "ssl/gadgets.h"
 
-/// load a signing certificate from certFile
+/// load the signing certificate and its chain, if any, from certFile
+/// \return true if the signing certificate was obtained
 bool
-Security::KeyData::loadX509CertFromFile()
+Security::KeyData::loadCertificates()
 {
     debugs(83, DBG_IMPORTANT, "Using certificate in " << certFile);
     cert.reset(); // paranoid: ensure cert is unset
@@ -33,13 +34,47 @@ Security::KeyData::loadX509CertFromFile()
 
     try {
         cert = Ssl::ReadCertificate(bio);
-        return true;
+        debugs(83, DBG_PARSE_NOTE(2), "Loaded signing certificate: " << *cert);
     }
     catch (...) {
         // TODO: Convert the rest of this method to throw on errors instead.
         debugs(83, DBG_IMPORTANT, "ERROR: unable to load certificate file '" << certFile << "':" <<
                Debug::Extra << "problem: " << CurrentException);
         return false;
+    }
+
+    try {
+        // selected bundled certificates in sending order: wireCerts = cert + chain
+        CertList wireCerts(1, cert);
+
+        while (const auto bundledCert = Ssl::ReadOptionalCertificate(bio)) {
+            assert(!wireCerts.empty()); // this->cert is there (at least)
+
+            // We cannot chain any certificate after a self-signed certificate. This
+            // check also protects the IssuedBy() check below from adding duplicated
+            // (i.e. listed multiple times in the bundle) self-signed certificates.
+            if (SelfSigned(*wireCerts.back())) {
+                debugs(83, DBG_PARSE_NOTE(2), "WARNING: Ignoring certificate after a self-signed one: " << *bundledCert);
+                continue; // ... but keep going to report all ignored certificates
+            }
+
+            // add the bundled certificate if it extends the chain further
+            if (IssuedBy(*wireCerts.back(), *bundledCert)) {
+                debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << *bundledCert);
+                // OpenSSL API requires that we order certificates such that the
+                // chain can be appended directly into the on-wire traffic.
+                chain.emplace_back(bundledCert);
+                wireCerts.emplace_back(bundledCert);
+                continue;
+            }
+
+            debugs(83, DBG_PARSE_NOTE(2), "WARNING: Ignoring certificate that does not extend the chain: " << *bundledCert);
+        }
+    }
+    catch (...) {
+        // TODO: Reject configs with malformed intermediate certs instead.
+        debugs(83, DBG_IMPORTANT, "ERROR: Failure while loading intermediate certificate(s) from '" << certFile << "':" <<
+               Debug::Extra << "problem: " << CurrentException);
     }
 
 #elif USE_GNUTLS
@@ -73,6 +108,9 @@ Security::KeyData::loadX509CertFromFile()
         });
     }
 
+    // XXX: implement chain loading
+    debugs(83, 2, "Loading certificate chain from PEM files not implemented in this Squid.");
+
 #else
     // do nothing.
 #endif
@@ -82,60 +120,6 @@ Security::KeyData::loadX509CertFromFile()
     }
 
     return bool(cert);
-}
-
-/// load any intermediate certs that form the chain with the loaded signing cert
-void
-Security::KeyData::loadX509ChainFromFile()
-{
-#if USE_OPENSSL
-    const char *certFilename = certFile.c_str();
-    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
-    if (!bio || !BIO_read_filename(bio.get(), certFilename)) {
-        const auto x = ERR_get_error();
-        debugs(83, DBG_IMPORTANT, "ERROR: unable to load chain file '" << certFile << "': " << ErrorString(x));
-        return;
-    }
-
-#if TLS_CHAIN_NO_SELFSIGNED // ignore self-signed certs in the chain
-    if (SelfSigned(*cert)) {
-        debugs(83, DBG_PARSE_NOTE(2), "Certificate is self-signed, will not be chained: " << *cert);
-    } else
-#endif
-    {
-        debugs(83, DBG_PARSE_NOTE(3), "Using certificate chain in " << certFile);
-        // and add to the chain any other certificate exist in the file
-        CertPointer latestCert = cert;
-
-        while (const auto ca = Ssl::ReadOptionalCertificate(bio)) {
-
-#if TLS_CHAIN_NO_SELFSIGNED // ignore self-signed certs in the chain
-            // self-signed certificates are not valid in a sent chain
-            if (SelfSigned(*ca)) {
-                debugs(83, DBG_PARSE_NOTE(2), "CA certificate is self-signed, will not be chained: " << *ca);
-                continue;
-            }
-#endif
-            // checks that the chained certs are actually part of a chain for validating cert
-            if (IssuedBy(*latestCert, *ca)) {
-                debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << *ca);
-                // OpenSSL API requires that we order certificates such that the
-                // chain can be appended directly into the on-wire traffic.
-                latestCert = CertPointer(ca);
-                chain.emplace_back(latestCert);
-            } else {
-                debugs(83, DBG_PARSE_NOTE(2), certFile << ": Ignoring non-issuer CA " << *ca);
-            }
-        }
-    }
-
-#elif USE_GNUTLS
-    // XXX: implement chain loading
-    debugs(83, 2, "Loading certificate chain from PEM files not implemented in this Squid.");
-
-#else
-    // nothing to do.
-#endif
 }
 
 /**
@@ -188,19 +172,9 @@ void
 Security::KeyData::loadFromFiles(const AnyP::PortCfg &port, const char *portType)
 {
     char buf[128];
-    if (!loadX509CertFromFile()) {
+    if (!loadCertificates()) {
         debugs(83, DBG_IMPORTANT, "WARNING: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' missing certificate in '" << certFile << "'");
         return;
-    }
-
-    // certificate chain in the PEM file is optional
-    try {
-        loadX509ChainFromFile();
-    }
-    catch (...) {
-        // XXX: Reject malformed configurations by letting exceptions propagate.
-        debugs(83, DBG_CRITICAL, "ERROR: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' cannot load intermediate certificates from '" << certFile << "':" <<
-               Debug::Extra << "problem: " << CurrentException);
     }
 
     // pkey is mandatory, not having it makes cert and chain pointless.

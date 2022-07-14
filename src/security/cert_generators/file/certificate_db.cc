@@ -117,7 +117,7 @@ Ssl::CertificateDb::Row::Row() : width(cnlNumber)
 {
     row = (char **)OPENSSL_malloc(sizeof(char *) * (width + 1));
     for (size_t i = 0; i < width + 1; ++i)
-        row[i] = NULL;
+        row[i] = nullptr;
 }
 
 Ssl::CertificateDb::Row::Row(char **aRow, size_t aWidth): width(aWidth)
@@ -131,13 +131,13 @@ Ssl::CertificateDb::Row::~Row()
         return;
 
     void *max;
-    if ((max = (void *)row[width]) != NULL) {
+    if ((max = (void *)row[width]) != nullptr) {
         // It is an openSSL allocated row. The TXT_DB_read function stores the
         // index and row items one one memory segment. The row[width] points
         // to the end of buffer. We have to check for items in the array which
         // are not stored in this segment. These items should released.
         for (size_t i = 0; i < width + 1; ++i) {
-            if (((row[i] < (char *)row) || (row[i] > max)) && (row[i] != NULL))
+            if (((row[i] < (char *)row) || (row[i] > max)) && (row[i] != nullptr))
                 OPENSSL_free(row[i]);
         }
     } else {
@@ -151,7 +151,7 @@ Ssl::CertificateDb::Row::~Row()
 
 void Ssl::CertificateDb::Row::reset()
 {
-    row = NULL;
+    row = nullptr;
 }
 
 void Ssl::CertificateDb::Row::setValue(size_t cell, char const * value)
@@ -164,7 +164,7 @@ void Ssl::CertificateDb::Row::setValue(size_t cell, char const * value)
         row[cell] = static_cast<char *>(OPENSSL_malloc(sizeof(char) * (strlen(value) + 1)));
         memcpy(row[cell], value, sizeof(char) * (strlen(value) + 1));
     } else
-        row[cell] = NULL;
+        row[cell] = nullptr;
 }
 
 char ** Ssl::CertificateDb::Row::getRow()
@@ -211,7 +211,7 @@ void Ssl::CertificateDb::sq_TXT_DB_delete_row(TXT_DB *db, int idx) {
 
     const Columns db_indexes[]= {cnlSerial, cnlKey};
     for (unsigned int i = 0; i < countof(db_indexes); ++i) {
-        void *data = NULL;
+        void *data = nullptr;
 #if SQUID_SSLTXTDB_PSTRINGDATA
         if (LHASH_OF(OPENSSL_STRING) *fieldIndex =  db->index[db_indexes[i]])
             data = lh_OPENSSL_STRING_delete(fieldIndex, rrow);
@@ -295,7 +295,7 @@ Ssl::CertificateDb::addCertAndPrivateKey(std::string const &useKey, const Securi
     Row row;
     ASN1_INTEGER * ai = X509_get_serialNumber(cert.get());
     std::string serial_string;
-    Ssl::BIGNUM_Pointer serial(ASN1_INTEGER_to_BN(ai, NULL));
+    Ssl::BIGNUM_Pointer serial(ASN1_INTEGER_to_BN(ai, nullptr));
     {
         const UniqueCString hex_bn(BN_bn2hex(serial.get()));
         serial_string = std::string(hex_bn.get());
@@ -304,7 +304,7 @@ Ssl::CertificateDb::addCertAndPrivateKey(std::string const &useKey, const Securi
     char ** rrow = TXT_DB_get_by_index(db.get(), cnlSerial, row.getRow());
     // We are creating certificates with unique serial numbers. If the serial
     // number is found in the database, the same certificate is already stored.
-    if (rrow != NULL) {
+    if (rrow != nullptr) {
         // TODO: check if the stored row is valid.
         return true;
     }
@@ -427,7 +427,7 @@ Ssl::CertificateDb::pure_find(std::string const &key, const Security::CertPointe
     row.setValue(cnlKey, key.c_str());
 
     char **rrow = TXT_DB_get_by_index(db.get(), cnlKey, row.getRow());
-    if (rrow == NULL)
+    if (rrow == nullptr)
         return false;
 
     if (!sslDateIsInTheFuture(rrow[cnlExp_date]))
@@ -502,10 +502,10 @@ void Ssl::CertificateDb::load() {
         corrupt = true;
 
     // Create indexes in db.
-    if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlSerial, NULL, LHASH_HASH_FN(index_serial_hash), LHASH_COMP_FN(index_serial_cmp)))
+    if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlSerial, nullptr, LHASH_HASH_FN(index_serial_hash), LHASH_COMP_FN(index_serial_cmp)))
         corrupt = true;
 
-    if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlKey, NULL, LHASH_HASH_FN(index_name_hash), LHASH_COMP_FN(index_name_cmp)))
+    if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlKey, nullptr, LHASH_HASH_FN(index_name_hash), LHASH_COMP_FN(index_name_cmp)))
         corrupt = true;
 
     if (corrupt)
@@ -649,7 +649,7 @@ Ssl::CertificateDb::ReadEntry(std::string filename, Security::CertPointer &cert,
 
     cert = Ssl::ReadCertificate(bio);
 
-    if (!Ssl::ReadPrivateKey(bio, pkey, NULL))
+    if (!Ssl::ReadPrivateKey(bio, pkey, nullptr))
         return false;
 
     orig = Ssl::ReadOptionalCertificate(bio);

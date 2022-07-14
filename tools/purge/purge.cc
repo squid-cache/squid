@@ -138,9 +138,9 @@
 #endif // DEFAULTPORT
 
 volatile sig_atomic_t term_flag = 0; // 'terminate' is a gcc 2.8.x internal...
-char*  linebuffer = 0;
+char*  linebuffer = nullptr;
 size_t buffersize = 128*1024;
-static char* copydir = 0;
+static char* copydir = nullptr;
 static uint32_t debugFlag = 0;
 static unsigned purgeMode = 0;
 static bool iamalive = false;
@@ -148,7 +148,7 @@ static bool reminder = false;
 static bool verbose  = false;
 static bool envelope = false;
 static bool no_fork  = false;
-static const char* programname = 0;
+static const char* programname = nullptr;
 
 // ----------------------------------------------------------------------
 
@@ -163,7 +163,7 @@ struct REList {
 };
 
 REList::REList( const char* what, bool doCase )
-    :next(0),data(xstrdup(what))
+    :next(nullptr),data(xstrdup(what))
 {
     int result = regcomp( &rexp, what,
                           REG_EXTENDED | REG_NOSUB | (doCase ? 0 : REG_ICASE) );
@@ -185,7 +185,7 @@ REList::~REList()
 bool
 REList::match( const char* check ) const
 {
-    int result = regexec( &rexp, check, 0, 0, 0 );
+    int result = regexec( &rexp, check, 0, nullptr, 0 );
     if ( result != 0 && result != REG_NOMATCH ) {
         char buffer[256];
         regerror( result, &rexp, buffer, 256 );
@@ -211,13 +211,13 @@ concat(const char *start, ...)
     // first run: determine size
     unsigned size = strlen(start)+1;
     va_start( ap, start );
-    while ( (s=va_arg(ap,const char*)) != NULL )
+    while ( (s=va_arg(ap,const char*)) != nullptr )
         size += strlen(s);
     va_end(ap);
 
     // allocate
     char* result = new char[size];
-    if ( result == 0 ) {
+    if ( result == nullptr ) {
         perror( "string memory allocation" );
         exit(EXIT_FAILURE);
     }
@@ -225,7 +225,7 @@ concat(const char *start, ...)
     // second run: copy content
     strcpy( result, start );
     va_start( ap, start );
-    while ( (s=va_arg(ap,const char*)) != NULL ) strcat( result, s );
+    while ( (s=va_arg(ap,const char*)) != nullptr ) strcat( result, s );
     va_end(ap);
 
     return result;
@@ -259,7 +259,7 @@ log_extended( const char* fn, int code, long size, const SquidMetaList* meta )
 {
     static const char hexdigit[] = "0123456789ABCDEF";
     char md5[34];
-    const SquidTLV* findings = 0;
+    const SquidTLV* findings = nullptr;
 
     if ( meta && (findings = meta->search( STORE_META_KEY_MD5 )) ) {
         unsigned char* s = (unsigned char*) findings->data;
@@ -366,7 +366,7 @@ action(int fd, size_t metasize,
         }
         buffer[bufsize-1] = '\0';
         close(sockfd);
-        int64_t s = strtol(buffer+8,0,10);
+        int64_t s = strtol(buffer+8,nullptr,10);
         if (s > 0 && s < 1000)
             status = s;
         else {
@@ -447,15 +447,15 @@ match(const char *fn, const REList *list)
             const SquidTLV* urlmeta = meta.search( STORE_META_URL );
             if ( urlmeta ) {
                 // found URL in meta data. Try to process the URL
-                if ( list == 0 )
+                if ( list == nullptr )
                     flag = action( fd, datastart, fn, (char*) urlmeta->data, meta );
                 else {
                     REList* head = (REList*) list; // YUCK!
-                    while ( head != 0 ) {
+                    while ( head != nullptr ) {
                         if ( head->match( (char*) urlmeta->data ) ) break;
                         head = head->next;
                     }
-                    if ( head != 0 )
+                    if ( head != nullptr )
                         flag = action( fd, datastart, fn, (char*) urlmeta->data, meta );
                     else flag = true;
                 }
@@ -466,7 +466,7 @@ match(const char *fn, const REList *list)
             // weird file, TODO: stat() it!
             struct stat st;
             long size = ( fstat(fd,&st) == -1 ? -1 : st.st_size );
-            if ( ::verbose ) flag = ( log_extended( fn, -1, size, 0 ) >= 0 );
+            if ( ::verbose ) flag = ( log_extended( fn, -1, size, nullptr ) >= 0 );
             else flag = ( log_output( fn, -1, size, "strange file" ) >= 0 );
 
             if ( (::purgeMode & 0x04) ) {
@@ -501,7 +501,7 @@ filelevel(const char *directory, const REList *list)
         fprintf( stderr, "# [2] %s\n", directory );
 
     DIR* dir = opendir( directory );
-    if ( dir == NULL ) {
+    if ( dir == nullptr ) {
         fprintf( stderr, "unable to open directory \"%s\": %s\n",
                  directory, strerror(errno) );
         return false;
@@ -544,7 +544,7 @@ dirlevel(const char *dirname, const REList *list, bool level = false)
         fprintf( stderr, "# [%d] %s\n", (level ? 1 : 0), dirname );
 
     DIR* dir = opendir( dirname );
-    if ( dir == NULL ) {
+    if ( dir == nullptr ) {
         fprintf( stderr, "unable to open directory \"%s\": %s\n",
                  dirname, strerror(errno) );
         return false;
@@ -573,10 +573,10 @@ checkForPortOnly(const char *arg)
 //          -1 if not a port
 {
     // if there is a period in there, it must be a valid hostname
-    if ( strchr( arg, '.' ) != 0 ) return -1;
+    if ( strchr( arg, '.' ) != nullptr ) return -1;
 
     // if it is just a number between 0 and 65535, it must be a port
-    char* errstr = 0;
+    char* errstr = nullptr;
     unsigned long result = strtoul( arg, &errstr, 0 );
     if ( result < 65536 && errstr != arg ) return htons(result);
 
@@ -627,14 +627,14 @@ parseCommandline(int argc, char *argv[], REList *&head,
     FILE* rfile;
 
     // program basename
-    if ( (ptr = strrchr(argv[0],'/')) == NULL )
+    if ( (ptr = strrchr(argv[0],'/')) == nullptr )
         ptr=argv[0];
     else
         ++ptr;
     ::programname = ptr;
 
     // extract commandline parameters
-    REList* tail = head = 0;
+    REList* tail = head = nullptr;
     opterr = 0;
     while ( (option = getopt( argc, argv, "ac:C:d:E:e:F:f:Hnp:P:sv" )) != -1 ) {
         switch ( option ) {
@@ -663,7 +663,7 @@ parseCommandline(int argc, char *argv[], REList *&head,
                 fprintf( stderr, "%c expects a mask parameter. Debug disabled.\n", option );
                 ::debugFlag = 0;
             } else
-                ::debugFlag = (strtoul(optarg, NULL, 0) & 0xFFFFFFFF);
+                ::debugFlag = (strtoul(optarg, nullptr, 0) & 0xFFFFFFFF);
             break;
 
         case 'E':
@@ -672,7 +672,7 @@ parseCommandline(int argc, char *argv[], REList *&head,
                 fprintf( stderr, "%c requires a regex pattern argument!\n", option );
                 exit(EXIT_FAILURE);
             }
-            if ( head == 0 )
+            if ( head == nullptr )
                 tail = head = new REList( optarg, option=='E' );
             else {
                 tail->next = new REList( optarg, option=='E' );
@@ -685,11 +685,11 @@ parseCommandline(int argc, char *argv[], REList *&head,
                 fprintf( stderr, "%c requires a filename argument!\n", option );
                 exit(EXIT_FAILURE);
             }
-            if ( (rfile = fopen( optarg, "r" )) != NULL ) {
+            if ( (rfile = fopen( optarg, "r" )) != nullptr ) {
                 unsigned long lineno = 0;
 #define LINESIZE 512
                 char line[LINESIZE];
-                while ( fgets( line, LINESIZE, rfile ) != NULL ) {
+                while ( fgets( line, LINESIZE, rfile ) != nullptr ) {
                     ++lineno;
                     int len = strlen(line)-1;
                     if ( len+2 >= LINESIZE ) {
@@ -705,7 +705,7 @@ parseCommandline(int argc, char *argv[], REList *&head,
                     }
 
                     // insert into list of expressions
-                    if ( head == 0 ) tail = head = new REList(line,option=='F');
+                    if ( head == nullptr ) tail = head = new REList(line,option=='F');
                     else {
                         tail->next = new REList(line,option=='F');
                         tail = tail->next;
@@ -728,7 +728,7 @@ parseCommandline(int argc, char *argv[], REList *&head,
                 exit(EXIT_FAILURE);
             }
             colon = strchr( optarg, ':' );
-            if ( colon == 0 ) {
+            if ( colon == nullptr ) {
                 // no colon, only look at host
 
                 // fix: see if somebody just put in there a port (no periods)
@@ -763,7 +763,7 @@ parseCommandline(int argc, char *argv[], REList *&head,
                 fprintf( stderr, "%c requires a mode argument!\n", option );
                 exit(EXIT_FAILURE);
             }
-            ::purgeMode = ( strtol( optarg, 0, 0 ) & 0x07 );
+            ::purgeMode = ( strtol( optarg, nullptr, 0 ) & 0x07 );
             break;
         case 's':
             showme=1;
@@ -780,14 +780,14 @@ parseCommandline(int argc, char *argv[], REList *&head,
 
     // adjust
     if ( ! isatty(fileno(stdout)) || (::debugFlag & 0x01) ) ::iamalive = false;
-    if ( head == 0 ) {
+    if ( head == nullptr ) {
         fputs( "There was no regular expression defined. If you intend\n", stderr );
         fputs( "to match all possible URLs, use \"-e .\" instead.\n", stderr );
         exit(EXIT_FAILURE);
     }
 
     // postcondition: head != 0
-    assert( head != 0 );
+    assert( head != nullptr );
 
     // make sure that the copy out directory is there and accessible
     if ( copyDirPath && *copyDirPath )
@@ -817,7 +817,7 @@ parseCommandline(int argc, char *argv[], REList *&head,
         printf( "# Regular expression: " );
 
         unsigned count(0);
-        for ( tail = head; tail != NULL; tail = tail->next ) {
+        for ( tail = head; tail != nullptr; tail = tail->next ) {
             if ( count++ )
                 printf( "#%22u", count );
 #if defined(LINUX) && putc==_IO_putc
@@ -861,14 +861,14 @@ extern "C" {
 
 static
 int
-makelinebuffered( FILE* fp, const char* fn = 0 )
+makelinebuffered( FILE* fp, const char* fn = nullptr )
 // purpose: make the given FILE line buffered
 // paramtr: fp (IO): file pointer which to put into line buffer mode
 //          fn (IN): name of file to print in case of error
 // returns: 0 is ok, -1 to indicate an error
 // warning: error messages will already be printed
 {
-    if ( setvbuf( fp, 0, _IOLBF, 0 ) == 0 ) {
+    if ( setvbuf( fp, nullptr, _IOLBF, 0 ) == 0 ) {
         // ok
         return 0;
     } else {
@@ -883,7 +883,7 @@ int
 main( int argc, char* argv[] )
 {
     // setup variables
-    REList* list = 0;
+    REList* list = nullptr;
     char* conffile = xstrdup(DEFAULT_CONFIG_FILE);
     serverPort = htons(DEFAULTPORT);
     if ( convertHostname(DEFAULTHOST,serverHost) == -1 ) {
@@ -893,7 +893,7 @@ main( int argc, char* argv[] )
 
     // setup line buffer
     ::linebuffer = new char[ ::buffersize ];
-    assert( ::linebuffer != 0 );
+    assert( ::linebuffer != nullptr );
 
     // parse commandline
     puts( "### Use at your own risk! No guarantees whatsoever. You were warned. ###");
@@ -911,7 +911,7 @@ main( int argc, char* argv[] )
 
     // try to read squid.conf file to determine all cache_dir locations
     CacheDirVector cdv(0);
-    if ( readConfigFile( cdv, conffile, debugFlag ? stderr : 0 ) > 0 ) {
+    if ( readConfigFile( cdv, conffile, debugFlag ? stderr : nullptr ) > 0 ) {
         // there are some valid cache_dir entries.
         // unless forking was forbidden by cmdline option,
         // for a process for each cache_dir entry to remove files.

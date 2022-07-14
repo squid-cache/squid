@@ -21,7 +21,7 @@ ESISegmentFreeList (ESISegment::Pointer &head)
     while (head.getRaw()) {
         ESISegment::Pointer temp = head;
         head = head->next;
-        temp->next = NULL;
+        temp->next = nullptr;
     }
 }
 
@@ -35,8 +35,8 @@ ESISegment::space() const
 void
 ESISegment::adsorbList (ESISegment::Pointer from)
 {
-    assert (next.getRaw() == NULL);
-    assert (from.getRaw() != NULL);
+    assert (next.getRaw() == nullptr);
+    assert (from.getRaw() != nullptr);
     /* prevent worst case */
     assert (!(len == 0 && from->len == space() ));
     Pointer copyFrom = from;
@@ -54,13 +54,13 @@ ESISegment::ListTransfer (ESISegment::Pointer &from, ESISegment::Pointer &to)
 {
     if (!to.getRaw()) {
         to = from;
-        from = NULL;
+        from = nullptr;
         return;
     }
 
     ESISegment::Pointer temp = to->tail();
     temp->adsorbList (from);
-    from = NULL;
+    from = nullptr;
 }
 
 size_t
@@ -100,14 +100,14 @@ ESISegment::listToChar() const
 void
 ESISegment::listAppend (char const *s, size_t length)
 {
-    assert (next.getRaw() == NULL);
+    assert (next.getRaw() == nullptr);
     ESISegment::Pointer output = this;
     /* copy the string to output */
     size_t pos=0;
 
     while (pos < length) {
         if (output->space() == 0) {
-            assert (output->next.getRaw() == NULL);
+            assert (output->next.getRaw() == nullptr);
             output->next = new ESISegment;
             output = output->next;
         }
@@ -130,7 +130,7 @@ ESISegment::Pointer
 ESISegment::cloneList () const
 {
     ESISegment::Pointer result = new ESISegment (*this);
-    result->next = next.getRaw() ? next->cloneList() : NULL;
+    result->next = next.getRaw() ? next->cloneList() : nullptr;
     return result;
 }
 
@@ -171,7 +171,7 @@ ESISegment::tail()
     return result.getRaw();
 }
 
-ESISegment::ESISegment(ESISegment const &old) : len (0), next(NULL)
+ESISegment::ESISegment(ESISegment const &old) : len (0), next(nullptr)
 {
     append (old.buf, old.len);
 }

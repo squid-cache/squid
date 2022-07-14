@@ -13,7 +13,7 @@
 #include "globals.h" /* for Squid_MaxFD */
 
 // pre-allocates descriptor store and index for Squid_MaxFD descriptors
-DescriptorSet::DescriptorSet(): descriptors_(NULL), index_(NULL),
+DescriptorSet::DescriptorSet(): descriptors_(nullptr), index_(nullptr),
     capacity_(0), size_(0)
 {
     // we allocate once and never realloc, at least for now

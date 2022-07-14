@@ -11,7 +11,7 @@
 #include "squid.h"
 #include "StoreFileSystem.h"
 
-std::vector<StoreFileSystem*> *StoreFileSystem::_FileSystems = NULL;
+std::vector<StoreFileSystem*> *StoreFileSystem::_FileSystems = nullptr;
 
 void
 StoreFileSystem::RegisterAllFsWithCacheManager(void)

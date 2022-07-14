@@ -21,7 +21,7 @@ extern time_t squid_curtime;
 void *
 MemPoolMalloc::allocate()
 {
-    void *obj = NULL;
+    void *obj = nullptr;
     if (!freelist.empty()) {
         obj = freelist.top();
         freelist.pop();

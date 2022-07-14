@@ -50,7 +50,7 @@ Adaptation::Ecap::XactionRep::XactionRep(
     AsyncJob("Adaptation::Ecap::XactionRep"),
     Adaptation::Initiate("Adaptation::Ecap::XactionRep"),
     theService(aService),
-    theVirginRep(virginHeader), theCauseRep(NULL),
+    theVirginRep(virginHeader), theCauseRep(nullptr),
     makingVb(opUndecided), proxyingAb(opUndecided),
     adaptHistoryId(-1),
     vbProductionFinished(false),
@@ -79,7 +79,7 @@ Adaptation::Ecap::XactionRep::master(const AdapterXaction &x)
 Adaptation::Service &
 Adaptation::Ecap::XactionRep::service()
 {
-    Must(theService != NULL);
+    Must(theService != nullptr);
     return *theService;
 }
 
@@ -150,7 +150,7 @@ Adaptation::Ecap::XactionRep::usernameValue() const
     const HttpRequest *request = dynamic_cast<const HttpRequest*>(theCauseRep ?
                                  theCauseRep->raw().header : theVirginRep.raw().header);
     Must(request);
-    if (request->auth_user_request != NULL) {
+    if (request->auth_user_request != nullptr) {
         if (char const *name = request->auth_user_request->username())
             return libecap::Area::FromTempBuffer(name, strlen(name));
         else if (request->extacl_user.size() > 0)
@@ -169,7 +169,7 @@ Adaptation::Ecap::XactionRep::masterxSharedValue(const libecap::Name &sharedName
     Must(request);
     if (sharedName.known()) { // must check to avoid empty names matching unset cfg
         Adaptation::History::Pointer ah = request->adaptHistory(false);
-        if (ah != NULL) {
+        if (ah != nullptr) {
             String name, value;
             if (ah->getXxRecord(name, value))
                 return libecap::Area::FromTempBuffer(value.rawBuf(), value.size());
@@ -234,13 +234,13 @@ Adaptation::Ecap::XactionRep::start()
     HttpReply *reply = dynamic_cast<HttpReply*>(theVirginRep.raw().header);
 
     Adaptation::History::Pointer ah = request->adaptLogHistory();
-    if (ah != NULL) {
+    if (ah != nullptr) {
         // retrying=false because ecap never retries transactions
         adaptHistoryId = ah->recordXactStart(service().cfg().key, current_time, false);
         SBuf matched;
         for (auto h: Adaptation::Config::metaHeaders) {
             if (h->match(request, reply, al, matched)) {
-                if (ah->metaHeaders == NULL)
+                if (ah->metaHeaders == nullptr)
                     ah->metaHeaders = new NotePairs();
                 if (!ah->metaHeaders->hasPair(h->key(), matched))
                     ah->metaHeaders->add(h->key(), matched);
@@ -259,14 +259,14 @@ Adaptation::Ecap::XactionRep::swanSong()
 
     if (theAnswerRep) {
         BodyPipe::Pointer body_pipe = answer().body_pipe;
-        if (body_pipe != NULL) {
+        if (body_pipe != nullptr) {
             Must(body_pipe->stillProducing(this));
             stopProducingFor(body_pipe, false);
         }
     }
 
     BodyPipe::Pointer &body_pipe = theVirginRep.raw().body_pipe;
-    if (body_pipe != NULL && body_pipe->stillConsuming(this))
+    if (body_pipe != nullptr && body_pipe->stillConsuming(this))
         stopConsumingFrom(body_pipe);
 
     terminateMaster();
@@ -275,7 +275,7 @@ Adaptation::Ecap::XactionRep::swanSong()
                                  theCauseRep->raw().header : theVirginRep.raw().header);
     Must(request);
     Adaptation::History::Pointer ah = request->adaptLogHistory();
-    if (ah != NULL && adaptHistoryId >= 0)
+    if (ah != nullptr && adaptHistoryId >= 0)
         ah->recordXactFinish(adaptHistoryId);
 
     Adaptation::Initiate::swanSong();
@@ -309,7 +309,7 @@ Adaptation::Ecap::XactionRep::virgin()
 const libecap::Message &
 Adaptation::Ecap::XactionRep::cause()
 {
-    Must(theCauseRep != NULL);
+    Must(theCauseRep != nullptr);
     return *theCauseRep;
 }
 
@@ -353,7 +353,7 @@ Adaptation::Ecap::XactionRep::sinkVb(const char *reason)
 
     // we reset raw().body_pipe when we are done, so use this one for checking
     const BodyPipePointer &permPipe = theVirginRep.raw().header->body_pipe;
-    if (permPipe != NULL)
+    if (permPipe != nullptr)
         permPipe->enableAutoConsumption();
 
     forgetVb(reason);
@@ -367,7 +367,7 @@ Adaptation::Ecap::XactionRep::preserveVb(const char *reason)
 
     // we reset raw().body_pipe when we are done, so use this one for checking
     const BodyPipePointer &permPipe = theVirginRep.raw().header->body_pipe;
-    if (permPipe != NULL) {
+    if (permPipe != nullptr) {
         // if libecap consumed, we cannot preserve
         Must(!permPipe->consumedSize());
     }
@@ -382,7 +382,7 @@ Adaptation::Ecap::XactionRep::forgetVb(const char *reason)
     debugs(93,9, "forget vb " << reason << "; status:" << status());
 
     BodyPipePointer &p = theVirginRep.raw().body_pipe;
-    if (p != NULL && p->stillConsuming(this))
+    if (p != nullptr && p->stillConsuming(this))
         stopConsumingFrom(p);
 
     if (makingVb == opUndecided)
@@ -429,7 +429,7 @@ Adaptation::Ecap::XactionRep::useAdapted(const libecap::shared_ptr<libecap::Mess
         MessageRep *rep = dynamic_cast<MessageRep*>(theAnswerRep.get());
         Must(rep);
         rep->tieBody(this); // sets us as a producer
-        Must(msg->body_pipe != NULL); // check tieBody
+        Must(msg->body_pipe != nullptr); // check tieBody
 
         updateHistory(msg);
         sendAnswer(Answer::Forward(msg));
@@ -448,7 +448,7 @@ Adaptation::Ecap::XactionRep::blockVirgin()
 
     sinkVb("blockVirgin");
 
-    updateHistory(NULL);
+    updateHistory(nullptr);
     sendAnswer(Answer::Block(service().cfg().key));
     Must(done());
 }
@@ -471,7 +471,7 @@ Adaptation::Ecap::XactionRep::updateHistory(Http::Message *adapted)
     // update the cross-transactional database if needed
     if (const char *xxNameStr = Adaptation::Config::masterx_shared_name) {
         Adaptation::History::Pointer ah = request->adaptHistory(true);
-        if (ah != NULL) {
+        if (ah != nullptr) {
             libecap::Name xxName(xxNameStr); // TODO: optimize?
             if (const libecap::Area val = theMaster->option(xxName))
                 ah->updateXxRecord(xxNameStr, val.toString().c_str());
@@ -482,7 +482,7 @@ Adaptation::Ecap::XactionRep::updateHistory(Http::Message *adapted)
     if (service().cfg().routing) {
         if (const libecap::Area services = theMaster->option(libecap::metaNextServices)) {
             Adaptation::History::Pointer ah = request->adaptHistory(true);
-            if (ah != NULL)
+            if (ah != nullptr)
                 ah->updateNextServices(services.toString().c_str());
         }
     } // TODO: else warn (occasionally!) if we got libecap::metaNextServices
@@ -491,7 +491,7 @@ Adaptation::Ecap::XactionRep::updateHistory(Http::Message *adapted)
     // If we already have stored headers from a previous adaptation transaction
     // related to the same master transction, they will be replaced.
     Adaptation::History::Pointer ah = request->adaptLogHistory();
-    if (ah != NULL) {
+    if (ah != nullptr) {
         HttpHeader meta(hoReply);
         OptionsExtractor extractor(meta);
         theMaster->visitEachOption(extractor);
@@ -517,7 +517,7 @@ Adaptation::Ecap::XactionRep::vbMake()
 {
     Must(makingVb == opUndecided);
     BodyPipePointer &p = theVirginRep.raw().body_pipe;
-    Must(p != NULL);
+    Must(p != nullptr);
     Must(p->setConsumerIfNotLate(this)); // to deliver vb, we must receive vb
     makingVb = opOn;
 }
@@ -537,7 +537,7 @@ Adaptation::Ecap::XactionRep::vbMakeMore()
     Must(makingVb == opOn); // cannot make more if done proxying
     // we cannot guarantee more vb, but we can check that there is a chance
     const BodyPipePointer &p = theVirginRep.raw().body_pipe;
-    Must(p != NULL && p->stillConsuming(this)); // we are plugged in
+    Must(p != nullptr && p->stillConsuming(this)); // we are plugged in
     Must(!p->productionEnded() && p->mayNeedMoreData()); // and may get more
 }
 
@@ -547,7 +547,7 @@ Adaptation::Ecap::XactionRep::vbContent(libecap::size_type o, libecap::size_type
     // We may not be makingVb yet. It should be OK, but see vbContentShift().
 
     const BodyPipePointer &p = theVirginRep.raw().body_pipe;
-    Must(p != NULL);
+    Must(p != nullptr);
 
     // TODO: make MemBuf use size_t?
     const size_t haveSize = static_cast<size_t>(p->buf().contentSize());
@@ -573,7 +573,7 @@ Adaptation::Ecap::XactionRep::vbContentShift(libecap::size_type n)
     // until the adapter registers as a consumer
 
     BodyPipePointer &p = theVirginRep.raw().body_pipe;
-    Must(p != NULL);
+    Must(p != nullptr);
     const size_t size = static_cast<size_t>(n); // XXX: check for overflow
     const size_t haveSize = static_cast<size_t>(p->buf().contentSize()); // TODO: make MemBuf use size_t?
     p->consume(min(size, haveSize));

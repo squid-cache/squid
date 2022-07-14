@@ -53,25 +53,25 @@ EVP_PKEY * Ssl::createSslPrivateKey()
     Security::PrivateKeyPointer pkey(EVP_PKEY_new());
 
     if (!pkey)
-        return NULL;
+        return nullptr;
 
     BIGNUM_Pointer bn(BN_new());
     if (!bn)
-        return NULL;
+        return nullptr;
 
     if (!BN_set_word(bn.get(), RSA_F4))
-        return NULL;
+        return nullptr;
 
     Ssl::RSA_Pointer rsa(RSA_new());
     if (!rsa)
-        return NULL;
+        return nullptr;
 
     int num = 2048; // Maybe use 4096 RSA keys, or better make it configurable?
-    if (!RSA_generate_key_ex(rsa.get(), num, bn.get(), NULL))
-        return NULL;
+    if (!RSA_generate_key_ex(rsa.get(), num, bn.get(), nullptr))
+        return nullptr;
 
     if (!EVP_PKEY_assign_RSA(pkey.get(), (rsa.get())))
-        return NULL;
+        return nullptr;
 
     rsa.release();
     return pkey.release();
@@ -113,10 +113,10 @@ bool Ssl::writeCertAndPrivateKeyToMemory(Security::CertPointer const & cert, Sec
     if (!PEM_write_bio_X509 (bio.get(), cert.get()))
         return false;
 
-    if (!PEM_write_bio_PrivateKey(bio.get(), pkey.get(), NULL, NULL, 0, NULL, NULL))
+    if (!PEM_write_bio_PrivateKey(bio.get(), pkey.get(), nullptr, nullptr, 0, nullptr, nullptr))
         return false;
 
-    char *ptr = NULL;
+    char *ptr = nullptr;
     long len = BIO_get_mem_data(bio.get(), &ptr);
     if (!ptr)
         return false;
@@ -137,7 +137,7 @@ bool Ssl::appendCertToMemory(Security::CertPointer const & cert, std::string & b
     if (!PEM_write_bio_X509 (bio.get(), cert.get()))
         return false;
 
-    char *ptr = NULL;
+    char *ptr = nullptr;
     long len = BIO_get_mem_data(bio.get(), &ptr);
     if (!ptr)
         return false;
@@ -164,8 +164,8 @@ bool Ssl::readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, Security
         return false;
     }
 
-    EVP_PKEY * pkeyPtr = NULL;
-    pkey.resetWithoutLocking(PEM_read_bio_PrivateKey(bio.get(), &pkeyPtr, 0, 0));
+    EVP_PKEY * pkeyPtr = nullptr;
+    pkey.resetWithoutLocking(PEM_read_bio_PrivateKey(bio.get(), &pkeyPtr, nullptr, nullptr));
     if (!pkey)
         return false;
 
@@ -238,14 +238,14 @@ const char *Ssl::CertSignAlgorithmStr[] = {
     "signTrusted",
     "signUntrusted",
     "signSelf",
-    NULL
+    nullptr
 };
 
 const char *Ssl::CertAdaptAlgorithmStr[] = {
     "setValidAfter",
     "setValidBefore",
     "setCommonName",
-    NULL
+    nullptr
 };
 
 Ssl::CertificateProperties::CertificateProperties():
@@ -253,7 +253,7 @@ Ssl::CertificateProperties::CertificateProperties():
     setValidBefore(false),
     setCommonName(false),
     signAlgorithm(Ssl::algSignEnd),
-    signHash(NULL)
+    signHash(nullptr)
 {}
 
 static void
@@ -300,7 +300,7 @@ Ssl::OnDiskCertificateDbKey(const Ssl::CertificateProperties &properties)
         certKey.append(certSignAlgorithm(properties.signAlgorithm));
     }
 
-    if (properties.signHash != NULL) {
+    if (properties.signHash != nullptr) {
         certKey.append("+SignHash=", 10);
         certKey.append(EVP_MD_name(properties.signHash));
     }
@@ -374,12 +374,12 @@ mimicAuthorityKeyId(Security::CertPointer &cert, Security::CertPointer const &mi
     if (!method)
         return false;
 
-    unsigned char *ext_der = NULL;
+    unsigned char *ext_der = nullptr;
     int ext_len = ASN1_item_i2d((ASN1_VALUE *)theAuthKeyId.get(), &ext_der, ASN1_ITEM_ptr(method->it));
     Ssl::ASN1_OCTET_STRING_Pointer extOct(ASN1_OCTET_STRING_new());
     extOct.get()->data = ext_der;
     extOct.get()->length = ext_len;
-    Ssl::X509_EXTENSION_Pointer extAuthKeyId(X509_EXTENSION_create_by_NID(NULL, NID_authority_key_identifier, 0, extOct.get()));
+    Ssl::X509_EXTENSION_Pointer extAuthKeyId(X509_EXTENSION_create_by_NID(nullptr, NID_authority_key_identifier, 0, extOct.get()));
     if (!extAuthKeyId.get())
         return false;
 
@@ -438,14 +438,14 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
                 // that the more stringent requirements are met.
 
                 const int p = X509_get_ext_by_NID(cert.get(), NID_key_usage, -1);
-                if ((ext = X509_get_ext(cert.get(), p)) != NULL) {
+                if ((ext = X509_get_ext(cert.get(), p)) != nullptr) {
                     ASN1_BIT_STRING *keyusage = (ASN1_BIT_STRING *)X509V3_EXT_d2i(ext);
                     ASN1_BIT_STRING_set_bit(keyusage, KeyEncipherment, 1);
 
                     //Build the ASN1_OCTET_STRING
                     const X509V3_EXT_METHOD *method = X509V3_EXT_get(ext);
                     assert(method && method->it);
-                    unsigned char *ext_der = NULL;
+                    unsigned char *ext_der = nullptr;
                     int ext_len = ASN1_item_i2d((ASN1_VALUE *)keyusage,
                                                 &ext_der,
                                                 (const ASN1_ITEM *)ASN1_ITEM_ptr(method->it));
@@ -493,7 +493,7 @@ addAltNameWithSubjectCn(Security::CertPointer &cert)
     if (res <= 0 || res >= static_cast<int>(sizeof(dnsName)))
         return false;
 
-    X509_EXTENSION *ext = X509V3_EXT_conf_nid(NULL, NULL, NID_subject_alt_name, dnsName);
+    X509_EXTENSION *ext = X509V3_EXT_conf_nid(nullptr, nullptr, NID_subject_alt_name, dnsName);
     if (!ext)
         return false;
 
@@ -528,7 +528,7 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
     // fields from caCert.
     // Currently there is not any way in openssl tollkit to compare two ASN1_TIME
     // objects.
-    ASN1_TIME *aTime = NULL;
+    ASN1_TIME *aTime = nullptr;
     if (!properties.setValidBefore && properties.mimicCert.get())
         aTime = X509_getm_notBefore(properties.mimicCert.get());
     if (!aTime && properties.signWithX509.get())
@@ -540,7 +540,7 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
     } else if (!X509_gmtime_adj(X509_getm_notBefore(cert.get()), (-2)*24*60*60))
         return false;
 
-    aTime = NULL;
+    aTime = nullptr;
     if (!properties.setValidAfter && properties.mimicCert.get())
         aTime = X509_getm_notAfter(properties.mimicCert.get());
     if (!aTime && properties.signWithX509.get())
@@ -644,8 +644,8 @@ static  BIGNUM *createCertSerial(unsigned char *md, unsigned int n)
 
     assert(n == 20); //for sha1 n is 20 (for md5 n is 16)
 
-    BIGNUM *serial = NULL;
-    serial = BN_bin2bn(md, n, NULL);
+    BIGNUM *serial = nullptr;
+    serial = BN_bin2bn(md, n, nullptr);
 
     // if the serial is "0" set it to '1'
     if (BN_is_zero(serial) == true)
@@ -674,7 +674,7 @@ static BIGNUM *x509Digest(Security::CertPointer const & cert)
     unsigned char md[EVP_MAX_MD_SIZE];
 
     if (!X509_digest(cert.get(),EVP_sha1(),md,&n))
-        return NULL;
+        return nullptr;
 
     return createCertSerial(md, n);
 }
@@ -685,7 +685,7 @@ static BIGNUM *x509Pubkeydigest(Security::CertPointer const & cert)
     unsigned char md[EVP_MAX_MD_SIZE];
 
     if (!X509_pubkey_digest(cert.get(),EVP_sha1(),md,&n))
-        return NULL;
+        return nullptr;
 
     return createCertSerial(md, n);
 }
@@ -776,7 +776,7 @@ bool
 Ssl::ReadPrivateKey(Ssl::BIO_Pointer &bio, Security::PrivateKeyPointer &pkey, pem_password_cb *passwd_callback)
 {
     assert(bio);
-    if (EVP_PKEY *akey = PEM_read_bio_PrivateKey(bio.get(), NULL, passwd_callback, NULL)) {
+    if (EVP_PKEY *akey = PEM_read_bio_PrivateKey(bio.get(), nullptr, passwd_callback, nullptr)) {
         pkey.resetWithoutLocking(akey);
         return true;
     }
@@ -820,7 +820,7 @@ Ssl::WritePrivateKey(Ssl::BIO_Pointer &bio, const Security::PrivateKeyPointer &p
 {
     if (!pkey || !bio)
         return false;
-    if (!PEM_write_bio_PrivateKey(bio.get(), pkey.get(), NULL, NULL, 0, NULL, NULL))
+    if (!PEM_write_bio_PrivateKey(bio.get(), pkey.get(), nullptr, nullptr, 0, nullptr, nullptr))
         return false;
     return true;
 }
@@ -937,9 +937,9 @@ bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &
 
     // Compare subjectAltName extension
     STACK_OF(GENERAL_NAME) * cert1_altnames;
-    cert1_altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(cert, NID_subject_alt_name, NULL, NULL);
+    cert1_altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(cert, NID_subject_alt_name, nullptr, nullptr);
     STACK_OF(GENERAL_NAME) * cert2_altnames;
-    cert2_altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(cert2, NID_subject_alt_name, NULL, NULL);
+    cert2_altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(cert2, NID_subject_alt_name, nullptr, nullptr);
     bool match = true;
     if (cert1_altnames) {
         int numalts = sk_GENERAL_NAME_num(cert1_altnames);
@@ -961,7 +961,7 @@ static const char *getSubjectEntry(X509 *x509, int nid)
     static char name[1024] = ""; // stores common name (CN)
 
     if (!x509)
-        return NULL;
+        return nullptr;
 
     // TODO: What if the entry is a UTF8String? See X509_NAME_get_index_by_NID(3ssl).
     const int nameLen = X509_NAME_get_text_by_NID(
@@ -971,7 +971,7 @@ static const char *getSubjectEntry(X509 *x509, int nid)
     if (nameLen > 0)
         return name;
 
-    return NULL;
+    return nullptr;
 }
 
 const char *Ssl::CommonHostName(X509 *x509)
@@ -991,11 +991,11 @@ Ssl::CertificatesCmp(const Security::CertPointer &cert1, const Security::CertPoi
         return false;
 
     int cert1Len;
-    unsigned char *cert1Asn = NULL;
+    unsigned char *cert1Asn = nullptr;
     cert1Len = ASN1_item_i2d((ASN1_VALUE *)cert1.get(), &cert1Asn, ASN1_ITEM_rptr(X509));
 
     int cert2Len;
-    unsigned char *cert2Asn = NULL;
+    unsigned char *cert2Asn = nullptr;
     cert2Len = ASN1_item_i2d((ASN1_VALUE *)cert2.get(), &cert2Asn, ASN1_ITEM_rptr(X509));
 
     if (cert1Len != cert2Len)

@@ -25,7 +25,7 @@ BuildPrefixLength()
     const char *full = __FILE__;
 
     // Disable heuristic if it does not work.
-    if (strstr(full, tail) == 0)
+    if (strstr(full, tail) == nullptr)
         return 0;
 
     return strlen(full) - strlen(tail);

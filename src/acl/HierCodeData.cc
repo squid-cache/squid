@@ -44,7 +44,7 @@ ACLHierCodeData::dump() const
 void
 ACLHierCodeData::parse()
 {
-    char *t = NULL;
+    char *t = nullptr;
 
     while ((t = ConfigParser::strtokFile())) {
         for (hier_code iter = HIER_NONE; iter <= HIER_MAX; ++iter) {

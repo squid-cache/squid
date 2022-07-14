@@ -49,7 +49,7 @@ MemBlobStats::dump(std::ostream &os) const
 /* MemBlob */
 
 MemBlob::MemBlob(const MemBlob::size_type reserveSize) :
-    mem(NULL), capacity(0), size(0) // will be set by memAlloc
+    mem(nullptr), capacity(0), size(0) // will be set by memAlloc
 {
     debugs(MEMBLOB_DEBUGSECTION,9, "constructed, this="
            << static_cast<void*>(this) << " id=" << id
@@ -58,7 +58,7 @@ MemBlob::MemBlob(const MemBlob::size_type reserveSize) :
 }
 
 MemBlob::MemBlob(const char *buffer, const MemBlob::size_type bufSize) :
-    mem(NULL), capacity(0), size(0) // will be set by memAlloc
+    mem(nullptr), capacity(0), size(0) // will be set by memAlloc
 {
     debugs(MEMBLOB_DEBUGSECTION,9, "constructed, this="
            << static_cast<void*>(this) << " id=" << id

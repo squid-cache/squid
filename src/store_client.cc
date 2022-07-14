@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "base/AsyncCbdataCalls.h"
 #include "base/CodeContext.h"
 #include "event.h"
 #include "globals.h"
@@ -39,7 +40,6 @@
 static StoreIOState::STRCB storeClientReadBody;
 static StoreIOState::STRCB storeClientReadHeader;
 static void storeClientCopy2(StoreEntry * e, store_client * sc);
-static EVH storeClientCopyEvent;
 static bool CheckQuickAbortIsReasonable(StoreEntry * entry);
 
 CBDATA_CLASS_INIT(store_client);
@@ -83,12 +83,6 @@ StoreClient::startCollapsingOn(const StoreEntry &e, const bool doingRevalidation
 }
 
 /* store_client */
-
-bool
-store_client::memReaderHasLowerOffset(int64_t anOffset) const
-{
-    return getType() == STORE_MEM_CLIENT && copyInto.offset < anOffset;
-}
 
 int
 store_client::getType() const
@@ -145,26 +139,46 @@ storeClientListAdd(StoreEntry * e, void *data)
     return sc;
 }
 
+/// schedules asynchronous STCB call to relay disk or memory read results
+/// \param outcome an error signal (if negative), an EOF signal (if zero), or the number of bytes read
 void
-store_client::callback(ssize_t sz, bool error)
+store_client::callback(const ssize_t outcome)
 {
-    size_t bSz = 0;
+    if (outcome > 0)
+        return noteCopiedBytes(outcome);
 
-    if (sz >= 0 && !error)
-        bSz = sz;
+    if (outcome < 0)
+        return fail();
 
-    StoreIOBuffer result(bSz, 0,copyInto.data);
+    noteEof();
+}
 
-    if (sz < 0 || error)
-        result.flags.error = 1;
+/// finishCallback() wrapper; TODO: Add NullaryMemFunT for non-jobs.
+void
+store_client::FinishCallback(store_client * const sc)
+{
+    sc->finishCallback();
+}
 
-    result.offset = cmp_offset;
-    assert(_callback.pending());
-    cmp_offset = copyInto.offset + bSz;
+/// finishes a copy()-STCB sequence by synchronously calling STCB
+void
+store_client::finishCallback()
+{
+    Assure(_callback.callback_handler);
+    Assure(_callback.notifier);
+
+    // callers are not ready to handle a content+error combination
+    Assure(object_ok || !copiedSize);
+
+    StoreIOBuffer result(copiedSize, copyInto.offset, copyInto.data);
+    result.flags.error = object_ok ? 0 : 1;
+    copiedSize = 0;
+
+    cmp_offset = result.offset + result.length;
     STCB *temphandler = _callback.callback_handler;
     void *cbdata = _callback.callback_data;
-    _callback = Callback(NULL, NULL);
-    copyInto.data = NULL;
+    _callback = Callback(nullptr, nullptr);
+    copyInto.data = nullptr;
 
     if (cbdataReferenceValid(cbdata))
         temphandler(cbdata, result);
@@ -172,18 +186,24 @@ store_client::callback(ssize_t sz, bool error)
     cbdataReferenceDone(cbdata);
 }
 
-static void
-storeClientCopyEvent(void *data)
+/// schedules asynchronous STCB call to relay a successful disk or memory read
+/// \param bytesCopied the number of response bytes copied into copyInto
+void
+store_client::noteCopiedBytes(const size_t bytesCopied)
 {
-    store_client *sc = (store_client *)data;
-    debugs(90, 3, "storeClientCopyEvent: Running");
-    assert (sc->flags.copy_event_pending);
-    sc->flags.copy_event_pending = false;
+    debugs(90, 5, bytesCopied);
+    Assure(bytesCopied > 0);
+    Assure(!copiedSize);
+    copiedSize = bytesCopied;
+    noteNews();
+}
 
-    if (!sc->_callback.pending())
-        return;
-
-    storeClientCopy2(sc->entry, sc);
+void
+store_client::noteEof()
+{
+    debugs(90, 5, copiedSize);
+    Assure(!copiedSize);
+    noteNews();
 }
 
 store_client::store_client(StoreEntry *e) :
@@ -193,11 +213,11 @@ store_client::store_client(StoreEntry *e) :
 #endif
     entry(e),
     type(e->storeClientType()),
-    object_ok(true)
+    object_ok(true),
+    copiedSize(0)
 {
     flags.disk_io_pending = false;
     flags.store_copying = false;
-    flags.copy_event_pending = false;
     ++ entry->refcount;
 
     if (getType() == STORE_DISK_CLIENT) {
@@ -218,7 +238,7 @@ storeClientCopy(store_client * sc,
                 STCB * callback,
                 void *data)
 {
-    assert (sc != NULL);
+    assert (sc != nullptr);
     sc->copy(e, copyInto,callback,data);
 }
 
@@ -311,17 +331,11 @@ static void
 storeClientCopy2(StoreEntry * e, store_client * sc)
 {
     /* reentrancy not allowed  - note this could lead to
-     * dropped events
+     * dropped notifications about response data availability
      */
 
-    if (sc->flags.copy_event_pending) {
-        return;
-    }
-
     if (sc->flags.store_copying) {
-        sc->flags.copy_event_pending = true;
-        debugs(90, 3, "storeClientCopy2: Queueing storeClientCopyEvent()");
-        eventAdd("storeClientCopyEvent", storeClientCopyEvent, sc, 0.0, 0);
+        debugs(90, 3, "prevented recursive copying for " << *e);
         return;
     }
 
@@ -334,21 +348,16 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
      * if the peer aborts, we want to give the client(s)
      * everything we got before the abort condition occurred.
      */
-    /* Warning: doCopy may indirectly free itself in callbacks,
-     * hence the lock to keep it active for the duration of
-     * this function
-     * XXX: Locking does not prevent calling sc destructor (it only prevents
-     * freeing sc memory) so sc may become invalid from C++ p.o.v.
-     */
-    CbcPointer<store_client> tmpLock = sc;
-    assert (!sc->flags.store_copying);
     sc->doCopy(e);
-    assert(!sc->flags.store_copying);
 }
 
 void
 store_client::doCopy(StoreEntry *anEntry)
 {
+    Assure(_callback.pending());
+    Assure(!flags.disk_io_pending);
+    Assure(!flags.store_copying);
+
     assert (anEntry == entry);
     flags.store_copying = true;
     MemObject *mem = entry->mem_obj;
@@ -360,7 +369,7 @@ store_client::doCopy(StoreEntry *anEntry)
     if (!moreToSend()) {
         /* There is no more to send! */
         debugs(33, 3, "There is no more to send!");
-        callback(0);
+        noteEof();
         flags.store_copying = false;
         return;
     }
@@ -384,7 +393,7 @@ store_client::doCopy(StoreEntry *anEntry)
      * if needed.
      */
 
-    if (STORE_DISK_CLIENT == getType() && swapin_sio == NULL) {
+    if (STORE_DISK_CLIENT == getType() && swapin_sio == nullptr) {
         if (!startSwapin())
             return; // failure
     }
@@ -407,7 +416,7 @@ store_client::startSwapin()
         /* Don't set store_io_pending here */
         storeSwapInStart(this);
 
-        if (swapin_sio == NULL) {
+        if (swapin_sio == nullptr) {
             fail();
             flags.store_copying = false;
             return false;
@@ -419,6 +428,16 @@ store_client::startSwapin()
         flags.store_copying = false;
         return false;
     }
+}
+
+void
+store_client::noteSwapInDone(const bool error)
+{
+    Assure(_callback.pending());
+    if (error)
+        fail();
+    else
+        noteEof();
 }
 
 void
@@ -438,7 +457,7 @@ store_client::scheduleDiskRead()
     /* What the client wants is not in memory. Schedule a disk read */
     if (getType() == STORE_DISK_CLIENT) {
         // we should have called startSwapin() already
-        assert(swapin_sio != NULL);
+        assert(swapin_sio != nullptr);
     } else if (!swapin_sio && !startSwapin()) {
         debugs(90, 3, "bailing after swapin start failure for " << *entry);
         assert(!flags.store_copying);
@@ -460,7 +479,7 @@ store_client::scheduleMemRead()
     /* What the client wants is in memory */
     /* Old style */
     debugs(90, 3, "store_client::doCopy: Copying normal from memory");
-    size_t sz = entry->mem_obj->data_hdr.copy(copyInto);
+    const auto sz = entry->mem_obj->data_hdr.copy(copyInto); // may be <= 0 per copy() API
     callback(sz);
     flags.store_copying = false;
 }
@@ -530,7 +549,19 @@ store_client::readBody(const char *, ssize_t len)
 void
 store_client::fail()
 {
+    debugs(90, 3, (object_ok ? "once" : "again"));
+    if (!object_ok)
+        return; // we failed earlier; nothing to do now
+
     object_ok = false;
+
+    noteNews();
+}
+
+/// if necessary and possible, informs the Store reader about copy() result
+void
+store_client::noteNews()
+{
     /* synchronous open failures callback from the store,
      * before startSwapin detects the failure.
      * TODO: fix this inconsistent behaviour - probably by
@@ -538,8 +569,20 @@ store_client::fail()
      * not synchronous
      */
 
-    if (_callback.pending())
-        callback(0, true);
+    if (!_callback.callback_handler) {
+        debugs(90, 5, "client lost interest");
+        return;
+    }
+
+    if (_callback.notifier) {
+        debugs(90, 5, "earlier news is being delivered by " << _callback.notifier);
+        return;
+    }
+
+    _callback.notifier = asyncCall(90, 4, "store_client::FinishCallback", cbdataDialer(store_client::FinishCallback, this));
+    ScheduleCallHere(_callback.notifier);
+
+    Assure(!_callback.pending());
 }
 
 static void
@@ -638,12 +681,12 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
     (void)data;
 #endif
 
-    if (mem == NULL)
+    if (mem == nullptr)
         return 0;
 
     debugs(90, 3, "storeUnregister: called for '" << e->getMD5Text() << "'");
 
-    if (sc == NULL) {
+    if (sc == nullptr) {
         debugs(90, 3, "storeUnregister: No matching client for '" << e->getMD5Text() << "'");
         return 0;
     }
@@ -660,16 +703,18 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
     if (e->store_status == STORE_OK && !swapoutFinished)
         e->swapOut();
 
-    if (sc->swapin_sio != NULL) {
+    if (sc->swapin_sio != nullptr) {
         storeClose(sc->swapin_sio, StoreIOState::readerDone);
-        sc->swapin_sio = NULL;
+        sc->swapin_sio = nullptr;
         ++statCounter.swap.ins;
     }
 
-    if (sc->_callback.pending()) {
-        /* callback with ssize = -1 to indicate unexpected termination */
-        debugs(90, 3, "store_client for " << *e << " has a callback");
-        sc->fail();
+    if (sc->_callback.callback_handler || sc->_callback.notifier) {
+        debugs(90, 3, "forgetting store_client callback for " << *e);
+        // Do not notify: Callers want to stop copying and forget about this
+        // pending copy request. Some would mishandle a notification from here.
+        if (sc->_callback.notifier)
+            sc->_callback.notifier->cancel("storeUnregister");
     }
 
 #if STORE_CLIENT_LIST_DEBUG
@@ -677,6 +722,8 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 
 #endif
 
+    // XXX: We might be inside sc store_client method somewhere up the call
+    // stack. TODO: Convert store_client to AsyncJob to make destruction async.
     delete sc;
 
     assert(e->locked());
@@ -714,7 +761,7 @@ StoreEntry::invokeHandlers()
     swapOut();
     int i = 0;
     store_client *sc;
-    dlink_node *nx = NULL;
+    dlink_node *nx = nullptr;
     dlink_node *node;
 
     debugs(90, 3, mem_obj->nclients << " clients; " << *this << ' ' << getMD5Text());
@@ -732,6 +779,16 @@ StoreEntry::invokeHandlers()
         if (sc->flags.disk_io_pending)
             continue;
 
+        if (sc->flags.store_copying)
+            continue;
+
+        // XXX: If invokeHandlers() is (indirectly) called from a store_client
+        // method, then the above three conditions may not be sufficient to
+        // prevent us from reentering the same store_client object! This
+        // probably does not happen in the current code, but no observed
+        // invariant prevents this from (accidentally) happening in the future.
+
+        // TODO: Convert store_client into AsyncJob; make this call asynchronous
         CodeContext::Reset(sc->_callback.codeContext);
         debugs(90, 3, "checking client #" << i);
         storeClientCopy2(this, sc);
@@ -744,7 +801,7 @@ int
 storePendingNClients(const StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
-    int npend = NULL == mem ? 0 : mem->nclients;
+    int npend = nullptr == mem ? 0 : mem->nclients;
     debugs(90, 3, "storePendingNClients: returning " << npend);
     return npend;
 }
@@ -866,8 +923,8 @@ store_client::dumpStats(MemBuf * output, int clientNumber) const
     if (flags.store_copying)
         output->append(" store_copying", 14);
 
-    if (flags.copy_event_pending)
-        output->append(" copy_event_pending", 19);
+    if (_callback.notifier)
+        output->append(" notifying", 10);
 
     output->append("\n",1);
 }
@@ -875,7 +932,7 @@ store_client::dumpStats(MemBuf * output, int clientNumber) const
 bool
 store_client::Callback::pending() const
 {
-    return callback_handler && callback_data;
+    return callback_handler && !notifier;
 }
 
 store_client::Callback::Callback(STCB *function, void *data):
@@ -886,6 +943,13 @@ store_client::Callback::Callback(STCB *function, void *data):
 }
 
 #if USE_DELAY_POOLS
+int
+store_client::bytesWanted() const
+{
+    // TODO: To avoid using stale copyInto, return zero if !_callback.pending()?
+    return delayId.bytesWanted(0, copyInto.length);
+}
+
 void
 store_client::setDelayId(DelayId delay_id)
 {

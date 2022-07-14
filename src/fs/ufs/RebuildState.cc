@@ -31,20 +31,18 @@ CBDATA_NAMESPACED_CLASS_INIT(Fs::Ufs,RebuildState);
 Fs::Ufs::RebuildState::RebuildState(RefCount<UFSSwapDir> aSwapDir) :
     sd(aSwapDir),
     n_read(0),
-    LogParser(NULL),
+    LogParser(nullptr),
     curlvl1(0),
     curlvl2(0),
     in_dir(0),
     done(0),
     fn(0),
-    entry(NULL),
-    td(NULL),
+    entry(nullptr),
+    td(nullptr),
     fromLog(true),
     _done(false),
-    cbdata(NULL)
+    cbdata(nullptr)
 {
-    *fullpath = 0;
-    *fullfilename = 0;
 
     /*
      * If the swap.state file exists in the cache_dir, then
@@ -59,10 +57,10 @@ Fs::Ufs::RebuildState::RebuildState(RefCount<UFSSwapDir> aSwapDir) :
     if (fp && !zeroLengthLog)
         LogParser = Fs::Ufs::UFSSwapLogParser::GetUFSSwapLogParser(fp);
 
-    if (LogParser == NULL ) {
+    if (LogParser == nullptr ) {
         fromLog = false;
 
-        if (fp != NULL)
+        if (fp != nullptr)
             fclose(fp);
 
     } else {
@@ -276,7 +274,7 @@ Fs::Ufs::RebuildState::rebuildFromSwapLog()
         debugs(47, DBG_IMPORTANT, "Done reading " << sd->path << " swaplog (" << n_read << " entries)");
         LogParser->Close();
         delete LogParser;
-        LogParser = NULL;
+        LogParser = nullptr;
         _done = true;
         return;
     }
@@ -379,14 +377,14 @@ Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *)
         }
 
         if (0 == in_dir) {  /* we need to read in a new directory */
-            snprintf(fullpath, sizeof(fullpath), "%s/%02X/%02X",
+            fullpath.Printf("%s/%02X/%02X",
                      sd->path,
                      curlvl1, curlvl2);
 
             if (dirs_opened)
                 return -1;
 
-            td = opendir(fullpath);
+            td = opendir(fullpath.c_str());
 
             ++dirs_opened;
 
@@ -397,13 +395,13 @@ Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *)
                 entry = readdir(td);    /* skip . and .. */
                 entry = readdir(td);
 
-                if (entry == NULL && errno == ENOENT)
+                if (entry == nullptr && errno == ENOENT)
                     debugs(47, DBG_IMPORTANT, "WARNING: directory does not exist!");
                 debugs(47, 3, "Directory " << fullpath);
             }
         }
 
-        if (td != NULL && (entry = readdir(td)) != NULL) {
+        if (td != nullptr && (entry = readdir(td)) != nullptr) {
             ++in_dir;
 
             if (sscanf(entry->d_name, "%x", &fn) != 1) {
@@ -425,10 +423,10 @@ Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *)
                 continue;
             }
 
-            snprintf(fullfilename, sizeof(fullfilename), "%s/%s",
-                     fullpath, entry->d_name);
+            fullfilename.Printf(SQUIDSBUFPH "/%s",
+                         SQUIDSBUFPRINT(fullpath), entry->d_name);
             debugs(47, 3, "Opening " << fullfilename);
-            fd = file_open(fullfilename, O_RDONLY | O_BINARY);
+            fd = file_open(fullfilename.c_str(), O_RDONLY | O_BINARY);
 
             if (fd < 0) {
                 int xerrno = errno;
@@ -439,10 +437,10 @@ Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *)
             continue;
         }
 
-        if (td != NULL)
+        if (td != nullptr)
             closedir(td);
 
-        td = NULL;
+        td = nullptr;
 
         in_dir = 0;
 

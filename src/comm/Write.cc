@@ -59,7 +59,7 @@ Comm::HandleWrite(int fd, void *data)
     int len = 0;
     int nleft;
 
-    assert(state->conn != NULL);
+    assert(state->conn != nullptr);
     assert(state->conn->fd == fd);
 
     debugs(5, 5, state->conn << ": off " <<

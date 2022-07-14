@@ -25,7 +25,7 @@ TestStore::callback()
 StoreEntry*
 TestStore::get(const cache_key*)
 {
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -80,7 +80,7 @@ TestStore::stat(StoreEntry &) const
 StoreSearch *
 TestStore::search()
 {
-    return NULL;
+    return nullptr;
 }
 
 void

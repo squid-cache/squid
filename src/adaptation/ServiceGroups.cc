@@ -33,7 +33,7 @@ Adaptation::ServiceGroup::parse()
 {
     id = ConfigParser::NextToken();
 
-    wordlist *names = NULL;
+    wordlist *names = nullptr;
     ConfigParser::ParseWordList(&names);
     for (wordlist *i = names; i; i = i->next)
         services.push_back(i->key);
@@ -65,7 +65,7 @@ Adaptation::ServiceGroup::finalize()
         // TODO: quit on all errors
         const String &serviceId = services[pos];
         ServicePointer service = at(pos);
-        if (service != NULL) {
+        if (service != nullptr) {
             if (method == methodNone) {
                 // optimization: cache values that should be the same
                 method = service->cfg().method;
@@ -106,9 +106,9 @@ Adaptation::ServiceGroup::checkUniqueness(const Pos checkedPos) const
 
     for (Pos p = checkedPos + 1; has(p); ++p) {
         ServicePointer s = at(p);
-        if (s != NULL && s->cfg().key == checkedService->cfg().key)
+        if (s != nullptr && s->cfg().key == checkedService->cfg().key)
             finalizeMsg("duplicate service name", s->cfg().key, false);
-        else if (s != NULL && s->cfg().uri == checkedService->cfg().uri)
+        else if (s != nullptr && s->cfg().uri == checkedService->cfg().uri)
             finalizeMsg("duplicate service URI", s->cfg().uri, false);
     }
 }
@@ -247,9 +247,9 @@ Adaptation::DynamicServiceChain::Split(const ServiceFilter &filter,
     // walk the list of services and split it into two parts:
     // services that are applicable now and future services
     bool doingCurrent = true;
-    const char *item = NULL;
+    const char *item = nullptr;
     int ilen = 0;
-    const char *pos = NULL;
+    const char *pos = nullptr;
     while (strListGetItem(&ids, ',', &item, &ilen, &pos)) {
         String id;
         id.assign(item, ilen);
@@ -336,6 +336,6 @@ Adaptation::FindGroup(const ServiceGroup::Id &id)
             return *i;
     }
 
-    return NULL;
+    return nullptr;
 }
 

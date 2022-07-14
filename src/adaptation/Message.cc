@@ -14,11 +14,11 @@
 #include "BodyPipe.h"
 #include "http/Message.h"
 
-Adaptation::Message::Message(): header(NULL)
+Adaptation::Message::Message(): header(nullptr)
 {
 }
 
-Adaptation::Message::Message(Header *aHeader): header(NULL)
+Adaptation::Message::Message(Header *aHeader): header(nullptr)
 {
     set(aHeader);
 }
@@ -32,7 +32,7 @@ void
 Adaptation::Message::clear()
 {
     HTTPMSGUNLOCK(header);
-    body_pipe = NULL;
+    body_pipe = nullptr;
 }
 
 void
@@ -53,7 +53,7 @@ Adaptation::Message::ShortCircuit(Message &src, Message &dest)
     Must(!dest.body_pipe); // can relax if needed, but need !body_pipe->used()
     Must(src.header); // or there is nothing to shortcircuit
 
-    if (src.header->body_pipe != NULL) {
+    if (src.header->body_pipe != nullptr) {
         // check that it would not be too late to shortcircuit the pipe
         Must(!src.header->body_pipe->consumedSize());
         src.header->body_pipe->clearConsumer(); // if any

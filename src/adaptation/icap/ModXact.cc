@@ -56,7 +56,7 @@ Adaptation::Icap::ModXact::ModXact(Http::Message *virginHeader,
     AsyncJob("Adaptation::Icap::ModXact"),
     Adaptation::Icap::Xaction("Adaptation::Icap::ModXact", aService),
     virginConsumed(0),
-    bodyParser(NULL),
+    bodyParser(nullptr),
     canStartBypass(false), // too early
     protectGroupBypass(true),
     replyHttpHeaderSize(-1),
@@ -91,7 +91,7 @@ void Adaptation::Icap::ModXact::start()
 
     // reserve an adaptation history slot (attempts are known at this time)
     Adaptation::History::Pointer ah = virginRequest().adaptLogHistory();
-    if (ah != NULL)
+    if (ah != nullptr)
         adaptHistoryId = ah->recordXactStart(service().cfg().key, icap_tr_start, attempts > 1);
 
     estimateVirginBody(); // before virgin disappears!
@@ -239,7 +239,7 @@ void Adaptation::Icap::ModXact::writeMore()
 {
     debugs(93, 5, "checking whether to write more" << status());
 
-    if (writer != NULL) // already writing something
+    if (writer != nullptr) // already writing something
         return;
 
     switch (state.writing) {
@@ -276,7 +276,7 @@ void Adaptation::Icap::ModXact::writePreviewBody()
     debugs(93, 8, "will write Preview body from " <<
            virgin.body_pipe << status());
     Must(state.writing == State::writingPreview);
-    Must(virgin.body_pipe != NULL);
+    Must(virgin.body_pipe != nullptr);
 
     const size_t sizeMax = (size_t)virgin.body_pipe->buf().contentSize();
     const size_t size = min(preview.debt(), sizeMax);
@@ -319,7 +319,7 @@ void Adaptation::Icap::ModXact::writePrimeBody()
 void Adaptation::Icap::ModXact::writeSomeBody(const char *label, size_t size)
 {
     Must(!writer && state.writing < state.writingAlmostDone);
-    Must(virgin.body_pipe != NULL);
+    Must(virgin.body_pipe != nullptr);
     debugs(93, 8, "will write up to " << size << " bytes of " <<
            label);
 
@@ -488,7 +488,7 @@ void Adaptation::Icap::ModXact::stopWriting(bool nicely)
     if (state.writing == State::writingReallyDone)
         return;
 
-    if (writer != NULL) {
+    if (writer != nullptr) {
         if (nicely) {
             debugs(93, 7, "will wait for the last write" << status());
             state.writing = State::writingAlmostDone; // may already be set
@@ -545,13 +545,13 @@ void Adaptation::Icap::ModXact::startReading()
 
 void Adaptation::Icap::ModXact::readMore()
 {
-    if (reader != NULL || doneReading()) {
+    if (reader != nullptr || doneReading()) {
         debugs(93,3, "returning from readMore because reader or doneReading()");
         return;
     }
 
     // do not fill readBuf if we have no space to store the result
-    if (adapted.body_pipe != NULL &&
+    if (adapted.body_pipe != nullptr &&
             !adapted.body_pipe->buf().hasPotentialSpace()) {
         debugs(93,3, "not reading because ICAP reply pipe is full");
         return;
@@ -575,7 +575,7 @@ void Adaptation::Icap::ModXact::handleCommRead(size_t)
 void Adaptation::Icap::ModXact::echoMore()
 {
     Must(state.sending == State::sendingVirgin);
-    Must(adapted.body_pipe != NULL);
+    Must(adapted.body_pipe != nullptr);
     Must(virginBodySending.active());
 
     const size_t sizeMax = virginContentSize(virginBodySending);
@@ -620,7 +620,7 @@ void Adaptation::Icap::ModXact::stopSending(bool nicely)
 
     if (state.sending != State::sendingUndecided) {
         debugs(93, 7, "will no longer send" << status());
-        if (adapted.body_pipe != NULL) {
+        if (adapted.body_pipe != nullptr) {
             virginBodySending.disable();
             // we may leave debts if we were echoing and the virgin
             // body_pipe got exhausted before we echoed all planned bytes
@@ -842,7 +842,7 @@ void Adaptation::Icap::ModXact::parseIcapHead()
     // update the cross-transactional database if needed (all status codes!)
     if (const char *xxName = Adaptation::Config::masterx_shared_name) {
         Adaptation::History::Pointer ah = request->adaptHistory(true);
-        if (ah != NULL) { // TODO: reorder checks to avoid creating history
+        if (ah != nullptr) { // TODO: reorder checks to avoid creating history
             const String val = icapReply->header.getByName(xxName);
             if (val.size() > 0) // XXX: HttpHeader lacks empty value detection
                 ah->updateXxRecord(xxName, val);
@@ -854,7 +854,7 @@ void Adaptation::Icap::ModXact::parseIcapHead()
         String services;
         if (icapReply->header.getList(Http::HdrType::X_NEXT_SERVICES, &services)) {
             Adaptation::History::Pointer ah = request->adaptHistory(true);
-            if (ah != NULL)
+            if (ah != nullptr)
                 ah->updateNextServices(services);
         }
     } // TODO: else warn (occasionally!) if we got Http::HdrType::X_NEXT_SERVICES
@@ -864,7 +864,7 @@ void Adaptation::Icap::ModXact::parseIcapHead()
     // request, old headers will be replaced with the new one.
 
     Adaptation::History::Pointer ah = request->adaptLogHistory();
-    if (ah != NULL)
+    if (ah != nullptr)
         ah->recordMeta(&icapReply->header);
 
     // handle100Continue() manages state.writing on its own.
@@ -996,7 +996,7 @@ void Adaptation::Icap::ModXact::prepEchoing()
            adapted.header);
 
     // setup adapted body pipe if needed
-    if (oldHead->body_pipe != NULL) {
+    if (oldHead->body_pipe != nullptr) {
         debugs(93, 7, "will echo virgin body from " <<
                oldHead->body_pipe);
         if (!virginBodySending.active())
@@ -1022,7 +1022,7 @@ void Adaptation::Icap::ModXact::prepEchoing()
 void Adaptation::Icap::ModXact::prepPartialBodyEchoing(uint64_t pos)
 {
     Must(virginBodySending.active());
-    Must(virgin.header->body_pipe != NULL);
+    Must(virgin.header->body_pipe != nullptr);
 
     setOutcome(xoPartEcho);
 
@@ -1304,7 +1304,7 @@ void Adaptation::Icap::ModXact::swanSong()
 
     // update adaptation history if start was called and we reserved a slot
     Adaptation::History::Pointer ah = virginRequest().adaptLogHistory();
-    if (ah != NULL && adaptHistoryId >= 0)
+    if (ah != nullptr && adaptHistoryId >= 0)
         ah->recordXactFinish(adaptHistoryId);
 
     Adaptation::Icap::Xaction::swanSong();
@@ -1325,7 +1325,7 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
     }
 
     Adaptation::Icap::History::Pointer h = virgin_request_->icapHistory();
-    Must(h != NULL); // ICAPXaction::maybeLog calls only if there is a log
+    Must(h != nullptr); // ICAPXaction::maybeLog calls only if there is a log
     al.icp.opcode = ICP_INVALID;
     al.url = h->log_uri.termedBuf();
     const Adaptation::Icap::ServiceRep  &s = service();
@@ -1355,7 +1355,7 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
         virgin_msg = virgin_request_;
     assert(virgin_msg != virgin.cause);
     al.http.clientRequestSz.header = virgin_msg->hdr_sz;
-    if (virgin_msg->body_pipe != NULL)
+    if (virgin_msg->body_pipe != nullptr)
         al.http.clientRequestSz.payloadData = virgin_msg->body_pipe->producedSize();
 
     // leave al.icap.bodyBytesRead negative if no body
@@ -1419,7 +1419,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
     // share the cross-transactional database records if needed
     if (Adaptation::Config::masterx_shared_name) {
         Adaptation::History::Pointer ah = request->adaptHistory(false);
-        if (ah != NULL) {
+        if (ah != nullptr) {
             String name, value;
             if (ah->getXxRecord(name, value)) {
                 buf.appendf(SQUIDSTRINGPH ": " SQUIDSTRINGPH "\r\n", SQUIDSTRINGPRINT(name), SQUIDSTRINGPRINT(value));
@@ -1496,8 +1496,8 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
             buf.append(matched.rawContent(), matched.length());
             buf.append("\r\n", 2);
             Adaptation::History::Pointer ah = request->adaptHistory(false);
-            if (ah != NULL) {
-                if (ah->metaHeaders == NULL)
+            if (ah != nullptr) {
+                if (ah->metaHeaders == nullptr)
                     ah->metaHeaders = new NotePairs;
                 if (!ah->metaHeaders->hasPair(h->key(), matched))
                     ah->metaHeaders->add(h->key(), matched);
@@ -1558,8 +1558,8 @@ void Adaptation::Icap::ModXact::makeUsernameHeader(const HttpRequest *request, M
     struct base64_encode_ctx ctx;
     base64_encode_init(&ctx);
 
-    const char *value = NULL;
-    if (request->auth_user_request != NULL) {
+    const char *value = nullptr;
+    if (request->auth_user_request != nullptr) {
         value = request->auth_user_request->username();
     } else if (request->extacl_user.size() > 0) {
         value = request->extacl_user.termedBuf();
@@ -1752,7 +1752,7 @@ void Adaptation::Icap::ModXact::fillPendingStatus(MemBuf &buf) const
     if (state.serviceWaiting)
         buf.append("U", 1);
 
-    if (virgin.body_pipe != NULL)
+    if (virgin.body_pipe != nullptr)
         buf.append("R", 1);
 
     if (haveConnection() && !doneReading())
@@ -1846,7 +1846,7 @@ void Adaptation::Icap::ModXact::estimateVirginBody()
         virginBodyWriting.plan();
 
         // sign up as a body consumer
-        Must(msg->body_pipe != NULL);
+        Must(msg->body_pipe != nullptr);
         Must(msg->body_pipe == virgin.body_pipe);
         Must(virgin.body_pipe->setConsumerIfNotLate(this));
 
@@ -1854,7 +1854,7 @@ void Adaptation::Icap::ModXact::estimateVirginBody()
         Must(TheBackupLimit <= static_cast<size_t>(msg->body_pipe->buf().max_capacity));
     } else {
         debugs(93, 6, "does not expect virgin body");
-        Must(msg->body_pipe == NULL);
+        Must(msg->body_pipe == nullptr);
         checkConsuming();
     }
 }
@@ -1984,7 +1984,7 @@ void Adaptation::Icap::Preview::wrote(size_t size, bool wroteEof)
 
 bool Adaptation::Icap::ModXact::fillVirginHttpHeader(MemBuf &mb) const
 {
-    if (virgin.header == NULL)
+    if (virgin.header == nullptr)
         return false;
 
     virgin.header->firstLineBuf(mb);
@@ -2037,7 +2037,7 @@ Adaptation::Icap::Xaction *Adaptation::Icap::ModXactLauncher::createXaction()
 {
     Adaptation::Icap::ServiceRep::Pointer s =
         dynamic_cast<Adaptation::Icap::ServiceRep*>(theService.getRaw());
-    Must(s != NULL);
+    Must(s != nullptr);
     return new Adaptation::Icap::ModXact(virgin.header, virgin.cause, al, s);
 }
 
@@ -2056,7 +2056,7 @@ void Adaptation::Icap::ModXactLauncher::updateHistory(bool doStart)
     // r should never be NULL but we play safe; TODO: add Should()
     if (r) {
         Adaptation::Icap::History::Pointer h = r->icapHistory();
-        if (h != NULL) {
+        if (h != nullptr) {
             if (doStart)
                 h->start("ICAPModXactLauncher");
             else

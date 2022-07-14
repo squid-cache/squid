@@ -40,7 +40,7 @@ typedef struct {
     int scanned;
 } store_rebuild_progress;
 
-static store_rebuild_progress *RebuildProgress = NULL;
+static store_rebuild_progress *RebuildProgress = nullptr;
 
 void
 StoreRebuildData::updateStartTime(const timeval &dirStartTime)
@@ -56,7 +56,7 @@ storeCleanup(void *)
     static int validated = 0;
     static int seen = 0;
 
-    if (currentSearch == NULL || currentSearch->isDone())
+    if (currentSearch == nullptr || currentSearch->isDone())
         currentSearch = Store::Root().search();
 
     size_t statCount = 500;
@@ -113,9 +113,9 @@ storeCleanup(void *)
         if (store_digest)
             storeDigestNoteStoreReady();
 
-        currentSearch = NULL;
+        currentSearch = nullptr;
     } else
-        eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
+        eventAdd("storeCleanup", storeCleanup, nullptr, 0.0, 1);
 }
 
 /* meta data recreated from disk image in swap directory */
@@ -166,11 +166,11 @@ storeRebuildComplete(StoreRebuildData *dc)
            ((double) counts.objcount / (dt > 0.0 ? dt : 1.0)) << " objects/sec).");
     debugs(20, Important(56), "Beginning Validation Procedure");
 
-    eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
+    eventAdd("storeCleanup", storeCleanup, nullptr, 0.0, 1);
 
     xfree(RebuildProgress);
 
-    RebuildProgress = NULL;
+    RebuildProgress = nullptr;
 }
 
 /*
@@ -215,7 +215,7 @@ storeRebuildProgress(int sd_index, int total, int sofar)
     if (sd_index >= Config.cacheSwap.n_configured)
         return;
 
-    if (NULL == RebuildProgress)
+    if (nullptr == RebuildProgress)
         return;
 
     RebuildProgress[sd_index].total = total;

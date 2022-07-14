@@ -32,11 +32,11 @@
 
 static AUTHSSTATS authenticateNegotiateStats;
 
-statefulhelper *negotiateauthenticators = NULL;
+statefulhelper *negotiateauthenticators = nullptr;
 
 static int authnegotiate_initialised = 0;
 
-static hash_table *proxy_auth_cache = NULL;
+static hash_table *proxy_auth_cache = nullptr;
 
 void
 Auth::Negotiate::Config::rotateHelpers()
@@ -64,7 +64,7 @@ Auth::Negotiate::Config::done()
         return;
 
     delete negotiateauthenticators;
-    negotiateauthenticators = NULL;
+    negotiateauthenticators = nullptr;
 
     if (authenticateProgram)
         wordlistDestroy(&authenticateProgram);
@@ -89,7 +89,7 @@ Auth::Negotiate::Config::init(Auth::SchemeConfig *)
 
         authnegotiate_initialised = 1;
 
-        if (negotiateauthenticators == NULL)
+        if (negotiateauthenticators == nullptr)
             negotiateauthenticators = new statefulhelper("negotiateauthenticator");
 
         if (!proxy_auth_cache)
@@ -144,7 +144,7 @@ Auth::Negotiate::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request,
         return;
 
     /* New request, no user details */
-    if (auth_user_request == NULL) {
+    if (auth_user_request == nullptr) {
         debugs(29, 9, "Sending type:" << reqType << " header: 'Negotiate'");
         httpHeaderPutStrf(&rep->header, reqType, "Negotiate");
 
@@ -155,7 +155,7 @@ Auth::Negotiate::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request,
         }
     } else {
         Auth::Negotiate::UserRequest *negotiate_request = dynamic_cast<Auth::Negotiate::UserRequest *>(auth_user_request.getRaw());
-        assert(negotiate_request != NULL);
+        assert(negotiate_request != nullptr);
 
         switch (negotiate_request->user()->credentials()) {
 
@@ -217,7 +217,7 @@ Auth::Negotiate::Config::decode(char const *proxy_auth, const HttpRequest *, con
 {
     Auth::Negotiate::User *newUser = new Auth::Negotiate::User(Auth::SchemeConfig::Find("negotiate"), aRequestRealm);
     Auth::UserRequest *auth_user_request = new Auth::Negotiate::UserRequest();
-    assert(auth_user_request->user() == NULL);
+    assert(auth_user_request->user() == nullptr);
 
     auth_user_request->user(newUser);
     auth_user_request->user()->auth_type = Auth::AUTH_NEGOTIATE;

@@ -120,9 +120,9 @@ public:
     bool getByIdIfPresent(Http::HdrType id, String *result) const;
     /// returns true iff a [possibly empty] named field is there
     /// when returning true, also sets the `value` parameter (if it is not nil)
-    bool hasNamed(const SBuf &s, String *value = 0) const;
+    bool hasNamed(const SBuf &s, String *value = nullptr) const;
     /// \deprecated use SBuf method instead.
-    bool hasNamed(const char *name, unsigned int namelen, String *value = 0) const;
+    bool hasNamed(const char *name, unsigned int namelen, String *value = nullptr) const;
     /// searches for the first matching key=value pair within the name-identified field
     /// \returns the value of the found pair or an empty string
     SBuf getByNameListMember(const char *name, const char *member, const char separator) const;
@@ -132,7 +132,7 @@ public:
     int has(Http::HdrType id) const;
     /// Appends "this cache" information to VIA header field.
     /// Takes the initial VIA value from "from" parameter, if provided.
-    void addVia(const AnyP::ProtocolVersion &ver, const HttpHeader *from = 0);
+    void addVia(const AnyP::ProtocolVersion &ver, const HttpHeader *from = nullptr);
     void putInt(Http::HdrType id, int number);
     void putInt64(Http::HdrType id, int64_t number);
     void putTime(Http::HdrType id, time_t htime);
