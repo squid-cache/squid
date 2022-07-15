@@ -627,13 +627,13 @@ Security::PeerConnector::startCertDownloading(SBuf &url)
 }
 
 void
-Security::PeerConnector::certDownloadingDone(DownloaderAnswer &answer)
+Security::PeerConnector::certDownloadingDone(DownloaderAnswer &downloaderAnswer)
 {
     certDownloadWait.finish();
 
     // TODO: Remove diff reduction before merging
-    const auto &obj = answer.resource;
-    const auto downloadStatus = answer.outcome;
+    const auto &obj = downloaderAnswer.resource;
+    const auto downloadStatus = downloaderAnswer.outcome;
 
     ++certsDownloads;
     debugs(81, 5, "Certificate downloading status: " << downloadStatus << " certificate size: " << obj.length());
