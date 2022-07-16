@@ -9,36 +9,26 @@
 #include "squid.h"
 #include "ssl/gadgets.h"
 
-EVP_PKEY * Ssl::createSslPrivateKey()
+static Security::PrivateKeyPointer
+CreateRsaPrivateKey()
 {
-    Security::PrivateKeyPointer pkey(EVP_PKEY_new());
-
-    if (!pkey)
-        return NULL;
-
-    BIGNUM_Pointer bn(BN_new());
-    if (!bn)
-        return NULL;
-
-    if (!BN_set_word(bn.get(), RSA_F4))
-        return NULL;
-
-    Ssl::RSA_Pointer rsa(RSA_new());
+    Ssl::EVP_PKEY_CTX_Pointer rsa(EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nullptr));
     if (!rsa)
-        return NULL;
+        return nullptr;
+
+    if (EVP_PKEY_keygen_init(rsa.get()) <= 0)
+        return nullptr;
 
     int num = 2048; // Maybe use 4096 RSA keys, or better make it configurable?
-    if (!RSA_generate_key_ex(rsa.get(), num, bn.get(), NULL))
-        return NULL;
+    if (EVP_PKEY_CTX_set_rsa_keygen_bits(rsa.get(), num) <= 0)
+        return nullptr;
 
-    if (!rsa)
-        return NULL;
+    /* Generate key */
+    EVP_PKEY *pkey = nullptr;
+    if (EVP_PKEY_keygen(rsa.get(), &pkey) <= 0)
+        return nullptr;
 
-    if (!EVP_PKEY_assign_RSA(pkey.get(), (rsa.get())))
-        return NULL;
-
-    rsa.release();
-    return pkey.release();
+    return Security::PrivateKeyPointer(pkey);
 }
 
 /**
@@ -56,7 +46,7 @@ static bool setSerialNumber(ASN1_INTEGER *ai, BIGNUM const* serial)
         if (!bn)
             return false;
 
-        if (!BN_pseudo_rand(bn.get(), 64, 0, 0))
+        if (!BN_rand(bn.get(), 64, 0, 0))
             return false;
     }
 
@@ -375,7 +365,11 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
     // XXX: Add PublicKeyPointer. In OpenSSL, public and private keys are
     // internally represented by EVP_PKEY pair, but GnuTLS uses distinct types.
     const Security::PrivateKeyPointer certKey(X509_get_pubkey(mimicCert.get()));
+#if OPENSSL_VERSION_MAJOR < 3
     const auto rsaPkey = EVP_PKEY_get0_RSA(certKey.get()) != nullptr;
+#else
+    const auto rsaPkey = EVP_PKEY_is_a(certKey.get(), "RSA") == 1;
+#endif
 
     int added = 0;
     int nid;
@@ -544,13 +538,8 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
 
 static bool generateFakeSslCertificate(Security::CertPointer & certToStore, Security::PrivateKeyPointer & pkeyToStore, Ssl::CertificateProperties const &properties,  Ssl::BIGNUM_Pointer const &serial)
 {
-    Security::PrivateKeyPointer pkey;
     // Use signing certificates private key as generated certificate private key
-    if (properties.signWithPkey.get())
-        pkey.resetAndLock(properties.signWithPkey.get());
-    else // if not exist generate one
-        pkey.resetWithoutLocking(Ssl::createSslPrivateKey());
-
+    const auto pkey = properties.signWithPkey ? properties.signWithPkey : CreateRsaPrivateKey();
     if (!pkey)
         return false;
 
