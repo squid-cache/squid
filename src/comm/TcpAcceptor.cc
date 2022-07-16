@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
+#include "base/CodeContext.h"
 #include "base/TextException.h"
 #include "client_db.h"
 #include "comm/AcceptLimiter.h"
@@ -72,8 +73,6 @@ Comm::TcpAcceptor::unsubscribe(const char *reason)
 void
 Comm::TcpAcceptor::start()
 {
-    if (listenPort_)
-        CodeContext::Reset(listenPort_);
     debugs(5, 5, status() << " AsyncCall Subscription: " << theCallSub);
 
     Must(IsConnOpen(conn));
@@ -249,17 +248,16 @@ void
 Comm::TcpAcceptor::logAcceptError(const ConnectionPointer &tcpClient) const
 {
     AccessLogEntry::Pointer al = new AccessLogEntry;
-    CodeContext::Reset(al);
-    al->tcpClient = tcpClient;
-    al->url = "error:accept-client-connection";
-    al->setVirginUrlForMissingRequest(al->url);
-    ACLFilledChecklist ch(nullptr, nullptr, nullptr);
-    ch.src_addr = tcpClient->remote;
-    ch.my_addr = tcpClient->local;
-    ch.al = al;
-    accessLogLog(al, &ch);
-
-    CodeContext::Reset(listenPort_);
+    CallBack(al, [&] {
+        al->tcpClient = tcpClient;
+        al->url = "error:accept-client-connection";
+        al->setVirginUrlForMissingRequest(al->url);
+        ACLFilledChecklist ch(nullptr, nullptr, nullptr);
+        ch.src_addr = tcpClient->remote;
+        ch.my_addr = tcpClient->local;
+        ch.al = al;
+        accessLogLog(al, &ch);
+    });
 }
 
 void
@@ -291,12 +289,12 @@ Comm::TcpAcceptor::acceptOne()
         debugs(5, 5, "try later: " << conn << " handler Subscription: " << theCallSub);
     } else {
         // TODO: When ALE, MasterXaction merge, use them or ClientConn instead.
-        CodeContext::Reset(newConnDetails);
-        debugs(5, 5, "Listener: " << conn <<
-               " accepted new connection " << newConnDetails <<
-               " handler Subscription: " << theCallSub);
-        notify(flag, newConnDetails);
-        CodeContext::Reset(listenPort_);
+        CallBack(newConnDetails, [&] {
+            debugs(5, 5, "Listener: " << conn <<
+                   " accepted new connection " << newConnDetails <<
+                   " handler Subscription: " << theCallSub);
+            notify(flag, newConnDetails);
+        });
     }
 
     SetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
