@@ -102,11 +102,11 @@ typedef std::list<Security::CrlPointer> CertRevokeList;
 
 #if USE_OPENSSL
 CtoCpp1(EVP_PKEY_free, EVP_PKEY *)
-typedef Security::LockingPointer<EVP_PKEY, EVP_PKEY_free_cpp, HardFun<int, EVP_PKEY *, EVP_PKEY_up_ref> > PrivateKeyPointer;
+using PrivateKeyPointer = Security::LockingPointer<EVP_PKEY, EVP_PKEY_free_cpp, HardFun<int, EVP_PKEY *, EVP_PKEY_up_ref>>;
 #elif USE_GNUTLS
-typedef std::shared_ptr<struct gnutls_x509_privkey_int> PrivateKeyPointer;
+using PrivateKeyPointer = std::shared_ptr<struct gnutls_x509_privkey_int>;
 #else
-typedef std::shared_ptr<void> PrivateKeyPointer;
+using PrivateKeyPointer = std::shared_ptr<void>;
 #endif
 
 #if USE_OPENSSL
@@ -114,12 +114,12 @@ typedef std::shared_ptr<void> PrivateKeyPointer;
 CtoCpp1(DH_free, DH *);
 typedef Security::LockingPointer<DH, DH_free_cpp, HardFun<int, DH *, DH_up_ref> > DhePointer;
 #else
-typedef PrivateKeyPointer DhePointer;
+using DhePointer = PrivateKeyPointer;
 #endif
 #elif USE_GNUTLS
-typedef void *DhePointer;
+using DhePointer = void *;
 #else
-typedef void *DhePointer;
+using DhePointer = void *;
 #endif
 
 class EncryptorAnswer;
@@ -185,7 +185,7 @@ class KeyData;
 class KeyLog;
 
 #if USE_OPENSSL
-typedef uint64_t ParsedOptions;
+using ParsedOptions = uint64_t;
 #elif USE_GNUTLS
 typedef std::shared_ptr<struct gnutls_priority_st> ParsedOptions;
 #else
