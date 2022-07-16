@@ -1283,6 +1283,7 @@ if test "x$with_openssl" = "xyes"; then
     openssl/bio.h \
     openssl/bn.h \
     openssl/crypto.h \
+    openssl/decoder.h \
     openssl/dh.h \
     openssl/err.h \
     openssl/evp.h \
