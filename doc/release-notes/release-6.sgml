@@ -113,9 +113,7 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<tag>--with-openssl</tag>
-	<p>OpenSSL features are now auto-enabled when OpenSSL 3.0.0
-	   or later is detected during build.
+	<p>There have been no options changed.
 
 </descrip>
 </p>
