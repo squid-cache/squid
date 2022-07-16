@@ -10,8 +10,10 @@
 #include "anyp/PortCfg.h"
 #include "base/Packable.h"
 #include "cache_cf.h"
+#include "error/SysErrorDetail.h"
 #include "fatal.h"
 #include "globals.h"
+#include "security/Io.h"
 #include "security/ServerOptions.h"
 #include "security/Session.h"
 #include "SquidConfig.h"
@@ -19,6 +21,9 @@
 #include "compat/openssl.h"
 #include "ssl/support.h"
 
+#if HAVE_OPENSSL_DECODER_H
+#include <openssl/decoder.h>
+#endif
 #if HAVE_OPENSSL_ERR_H
 #include <openssl/err.h>
 #endif
@@ -352,11 +357,20 @@ Security::ServerOptions::loadDhParams()
     if (dhParamsFile.isEmpty())
         return;
 
+    // TODO: After loading and validating parameters, also validate that "the
+    // public and private components have the correct mathematical
+    // relationship". See EVP_PKEY_check().
+
 #if USE_OPENSSL
+#if OPENSSL_VERSION_MAJOR < 3
     DH *dhp = nullptr;
     if (FILE *in = fopen(dhParamsFile.c_str(), "r")) {
         dhp = PEM_read_DHparams(in, NULL, NULL, NULL);
         fclose(in);
+    } else {
+        const auto xerrno = errno;
+        debugs(83, DBG_IMPORTANT, "WARNING: Failed to open '" << dhParamsFile << "'" << xstrerr(xerrno));
+        return;
     }
 
     if (!dhp) {
@@ -374,7 +388,71 @@ Security::ServerOptions::loadDhParams()
     }
 
     parsedDhParams.resetWithoutLocking(dhp);
+
+#else // OpenSSL 3.0+
+    const auto type = eecdhCurve.isEmpty() ? "DH" : "EC";
+
+    Security::ForgetErrors();
+    EVP_PKEY *rawPkey = nullptr;
+    using DecoderContext = std::unique_ptr<OSSL_DECODER_CTX, HardFun<void, OSSL_DECODER_CTX*, &OSSL_DECODER_CTX_free> >;
+    if (const DecoderContext dctx{OSSL_DECODER_CTX_new_for_pkey(&rawPkey, "PEM", nullptr, type, 0, nullptr, nullptr)}) {
+
+        // OpenSSL documentation is vague on this, but OpenSSL code and our
+        // tests suggest that rawPkey remains nil here while rawCtx keeps
+        // rawPkey _address_ for use by the decoder (see OSSL_DECODER_from_fp()
+        // below). Thus, we must not move *rawPkey into a smart pointer until
+        // decoding is over. For cleanup code simplicity, we assert nil rawPkey.
+        assert(!rawPkey);
+
+        if (OSSL_DECODER_CTX_get_num_decoders(dctx.get()) == 0) {
+            auto ssl_error = ERR_get_error();
+            debugs(83, DBG_IMPORTANT, "WARNING: No suitable decoders found for " << type << " parameters. " << Security::ErrorString(ssl_error));
+            return;
+        }
+
+        if (const auto in = fopen(dhParamsFile.c_str(), "r")) {
+            if (OSSL_DECODER_from_fp(dctx.get(), in)) {
+                assert(rawPkey);
+                const Security::DhePointer pkey(rawPkey);
+                // TODO: verify that the loaded parameters match the curve named in eecdhCurve
+
+                if (const Ssl::EVP_PKEY_CTX_Pointer pkeyCtx{EVP_PKEY_CTX_new_from_pkey(nullptr, pkey.get(), nullptr)}) {
+                    switch (EVP_PKEY_param_check(pkeyCtx.get())) {
+                    case 1: // success
+                        parsedDhParams = pkey;
+                        break;
+                    case -2: {
+                        auto ssl_error = ERR_get_error();
+                        debugs(83, DBG_PARSE_NOTE(2), "WARNING: OpenSSL does not support " << type << " parameters check: " << dhParamsFile << ". " << Security::ErrorString(ssl_error));
+                        } break;
+                    default: {
+                        auto ssl_error = ERR_get_error();
+                        debugs(83, DBG_IMPORTANT, "ERROR: Failed to verify " << type << " parameters in " << dhParamsFile << ". " << Security::ErrorString(ssl_error));
+                        } break;
+                    }
+                } else {
+                    // TODO: Reduce error reporting code duplication.
+                    auto ssl_error = ERR_get_error();
+                    debugs(83, DBG_IMPORTANT, "ERROR: Cannot check " << type << " parameters in " << dhParamsFile << ". " << Security::ErrorString(ssl_error));
+                }
+            } else {
+                auto ssl_error = ERR_get_error();
+                debugs(83, DBG_IMPORTANT, "WARNING: Failed to decode " << type << " parameters '" << dhParamsFile << "'. " << Security::ErrorString(ssl_error));
+                EVP_PKEY_free(rawPkey); // probably still nil, but just in case
+            }
+            fclose(in);
+        } else {
+            const auto xerrno = errno;
+            debugs(83, DBG_IMPORTANT, "WARNING: Failed to open '" << dhParamsFile << "'" << xstrerr(xerrno));
+        }
+
+    } else {
+        auto ssl_error = ERR_get_error();
+        debugs(83, DBG_IMPORTANT, "WARNING: Unable to create decode context for " << type << " parameters. " << Security::ErrorString(ssl_error));
+        return;
+    }
 #endif
+#endif // USE_OPENSSL
 }
 
 bool
@@ -452,12 +530,16 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
         debugs(83, 9, "Setting Ephemeral ECDH curve to " << eecdhCurve << ".");
 
 #if USE_OPENSSL && OPENSSL_VERSION_NUMBER >= 0x0090800fL && !defined(OPENSSL_NO_ECDH)
+
+        Security::ForgetErrors();
+
         int nid = OBJ_sn2nid(eecdhCurve.c_str());
         if (!nid) {
             debugs(83, DBG_CRITICAL, "ERROR: Unknown EECDH curve '" << eecdhCurve << "'");
             return;
         }
 
+#if OPENSSL_VERSION_MAJOR < 3
         auto ecdh = EC_KEY_new_by_curve_name(nid);
         if (!ecdh) {
             const auto x = ERR_get_error();
@@ -471,6 +553,14 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
         }
         EC_KEY_free(ecdh);
 
+#else
+        // TODO: Support multiple group names via SSL_CTX_set1_groups_list().
+        if (!SSL_CTX_set1_groups(ctx.get(), &nid, 1)) {
+            auto ssl_error = ERR_get_error();
+            debugs(83, DBG_CRITICAL, "ERROR: Unable to set Ephemeral ECDH: " << Security::ErrorString(ssl_error));
+            return;
+        }
+#endif
 #else
         debugs(83, DBG_CRITICAL, "ERROR: EECDH is not available in this build." <<
                " Please link against OpenSSL>=0.9.8 and ensure OPENSSL_NO_ECDH is not set.");
