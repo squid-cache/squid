@@ -33,7 +33,7 @@ AsyncCall::Pointer
 AsyncCallList::extract()
 {
     if (!head)
-	    return AsyncCallPointer();
+        return AsyncCallPointer();
 
     Assure(tail);
     Assure(length);

@@ -9,8 +9,8 @@
 #include "squid.h"
 #include "base/IoManip.h"
 #include "error/SysErrorDetail.h"
-#include "security/Io.h"
 #include "sbuf/Stream.h"
+#include "security/Io.h"
 #include "ssl/gadgets.h"
 
 void
