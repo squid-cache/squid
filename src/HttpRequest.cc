@@ -19,7 +19,6 @@
 #include "Downloader.h"
 #include "error/Detail.h"
 #include "globals.h"
-#include "gopher.h"
 #include "http.h"
 #include "http/ContentLengthInterpreter.h"
 #include "http/one/RequestParser.h"
@@ -557,11 +556,6 @@ HttpRequest::maybeCacheable()
         // NP: refresh_pattern ignore-no-store only applies to response messages
         //     this test is handling request message CC header.
         if (!flags.ignoreCc && cache_control && cache_control->hasNoStore())
-            return false;
-        break;
-
-    case AnyP::PROTO_GOPHER:
-        if (!gopherCachable(this))
             return false;
         break;
 

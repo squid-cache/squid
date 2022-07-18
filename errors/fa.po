@@ -822,7 +822,7 @@ msgstr ""
 #: templates/ERR_UNSUP_REQ+html.body.div.p:27-1
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
-"example, you can not POST a Gopher request."
+"example, you can not POST a WHOIS request."
 msgstr ""
 
 #: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1

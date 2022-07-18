@@ -369,8 +369,6 @@ squid_SOURCES = \
 	fs_io.cc \
 	fs_io.h \
 	globals.h \
-	gopher.cc \
-	gopher.h \
 	helper.cc \
 	helper.h \
 	hier_code.h \
@@ -1850,8 +1848,6 @@ tests_test_http_range_SOURCES = \
 	fqdncache.h \
 	fs_io.cc \
 	fs_io.h \
-	tests/stub_gopher.cc \
-	gopher.h \
 	helper.cc \
 	hier_code.h \
 	http.cc \
@@ -2235,8 +2231,6 @@ tests_testHttpRequest_SOURCES = \
 	fqdncache.h \
 	fs_io.cc \
 	fs_io.h \
-	tests/stub_gopher.cc \
-	gopher.h \
 	helper.cc \
 	hier_code.h \
 	http.cc \
@@ -2535,8 +2529,6 @@ tests_testCacheManager_SOURCES = \
 	fqdncache.h \
 	fs_io.cc \
 	fs_io.h \
-	tests/stub_gopher.cc \
-	gopher.h \
 	helper.cc \
 	hier_code.h \
 	http.cc \

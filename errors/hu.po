@@ -833,10 +833,10 @@ msgstr "A proxyszerver üres választ kapott a kérésre."
 #: templates/ERR_UNSUP_REQ+html.body.div.p:27-1
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
-"example, you can not POST a Gopher request."
+"example, you can not POST a WHOIS request."
 msgstr ""
 "A proxyszerver nem támogat minden létező kéréstípus és protokoll "
-"kombinációt, így pl. nem lehet POST kéréstípust használni egy Gopher "
+"kombinációt, így pl. nem lehet POST kéréstípust használni egy WHOIS "
 "kérésben."
 
 #: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1
@@ -846,7 +846,7 @@ msgid ""
 "is currently not supported."
 msgstr ""
 "A proxyszerver nem támogat minden létező kéréstípus és protokoll "
-"kombinációt, így pl. nem lehet POST kéréstípust használni egy Gopher "
+"kombinációt, így pl. nem lehet POST kéréstípust használni egy WHOIS "
 "kérésben."
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:27-1

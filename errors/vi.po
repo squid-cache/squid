@@ -820,10 +820,10 @@ msgstr "Squid chưa nhận dữ liệu cho yêu cầu này."
 #: templates/ERR_UNSUP_REQ+html.body.div.p:27-1
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
-"example, you can not POST a Gopher request."
+"example, you can not POST a WHOIS request."
 msgstr ""
 "Squid không hỗ trợ tất cả các phương pháp yêu cầu cho mỗi giao thức truy "
-"cập. Chẳng hạn, bạn không có khả năng POST một yêu cầu Gopher."
+"cập. Chẳng hạn, bạn không có khả năng POST một yêu cầu WHOIS."
 
 #: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1
 #, fuzzy
@@ -832,7 +832,7 @@ msgid ""
 "is currently not supported."
 msgstr ""
 "Squid không hỗ trợ tất cả các phương pháp yêu cầu cho mỗi giao thức truy "
-"cập. Chẳng hạn, bạn không có khả năng POST một yêu cầu Gopher."
+"cập. Chẳng hạn, bạn không có khả năng POST một yêu cầu WHOIS."
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:27-1
 msgid ""

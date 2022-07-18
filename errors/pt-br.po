@@ -839,11 +839,11 @@ msgstr "Squid não recebeu nenhum dado para essa requisição."
 #: templates/ERR_UNSUP_REQ+html.body.div.p:27-1
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
-"example, you can not POST a Gopher request."
+"example, you can not POST a WHOIS request."
 msgstr ""
 "Squid não suporta todos os métodos de requisição para todos os protocolos de "
 "acesso. Por exemplo, você não pode emitir uma requisição POST ao protocolo "
-"Gopher."
+"WHOIS."
 
 #: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1
 #, fuzzy
@@ -853,7 +853,7 @@ msgid ""
 msgstr ""
 "Squid não suporta todos os métodos de requisição para todos os protocolos de "
 "acesso. Por exemplo, você não pode emitir uma requisição POST ao protocolo "
-"Gopher."
+"WHOIS."
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:27-1
 msgid ""

@@ -821,10 +821,10 @@ msgstr "Haku ei tuonut Squidille mitään tietoa."
 #: templates/ERR_UNSUP_REQ+html.body.div.p:27-1
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
-"example, you can not POST a Gopher request."
+"example, you can not POST a WHOIS request."
 msgstr ""
 "Squid ei tue kaikkia hakupyynnon tyyppejä kaikilla protokollilla. Et voi "
-"esimerkiksi käyttää POST-pyyntöä gopherilla."
+"esimerkiksi käyttää POST-pyyntöä WHOIS protokolla."
 
 #: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1
 #, fuzzy
@@ -832,8 +832,8 @@ msgid ""
 "Squid does not support some access protocols. For example, the SSH protocol "
 "is currently not supported."
 msgstr ""
-"Squid ei tue kaikkia hakupyynnon tyyppejä kaikilla protokollilla. Et voi "
-"esimerkiksi käyttää POST-pyyntöä gopherilla."
+"Squid ei tue kaikkia pääsyprotokollia. Esimerkiksi SSH-protokolla "
+"ei ole tällä hetkellä tuettu."
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:27-1
 msgid ""

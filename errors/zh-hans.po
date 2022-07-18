@@ -812,10 +812,10 @@ msgstr "本缓存服务器从被连接的服务器上没有收到任何数据。
 #: templates/ERR_UNSUP_REQ+html.body.div.p:27-1
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
-"example, you can not POST a Gopher request."
+"example, you can not POST a WHOIS request."
 msgstr ""
 "Squid （缓存服务器）不能对所有的存取协议支持所有的请求方式。比如说，你不能对 "
-"GOPHER 进行一个 POST 请求。"
+"WHOIS 进行一个 POST 请求。"
 
 #: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1
 #, fuzzy
@@ -824,7 +824,7 @@ msgid ""
 "is currently not supported."
 msgstr ""
 "Squid （缓存服务器）不能对所有的存取协议支持所有的请求方式。比如说，你不能对 "
-"GOPHER 进行一个 POST 请求。"
+"WHOIS 进行一个 POST 请求。"
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:27-1
 msgid ""

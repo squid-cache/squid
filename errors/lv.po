@@ -838,10 +838,10 @@ msgstr "Squid nav saņēmis nekādus datus šim pieprasījumam."
 #: templates/ERR_UNSUP_REQ+html.body.div.p:27-1
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
-"example, you can not POST a Gopher request."
+"example, you can not POST a WHOIS request."
 msgstr ""
 "Squid neatbalsta visas pieprasījuma metodes visiem protokoliem. Piemēram, "
-"Jūs nevarat veikt POST pieprasījumu izmantojot Gopher protokolu."
+"Jūs nevarat veikt POST pieprasījumu izmantojot WHOIS protokolu."
 
 #: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1
 #, fuzzy
@@ -850,7 +850,7 @@ msgid ""
 "is currently not supported."
 msgstr ""
 "Squid neatbalsta visas pieprasījuma metodes visiem protokoliem. Piemēram, "
-"Jūs nevarat veikt POST pieprasījumu izmantojot Gopher protokolu."
+"Jūs nevarat veikt POST pieprasījumu izmantojot WHOIS protokolu."
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:27-1
 msgid ""

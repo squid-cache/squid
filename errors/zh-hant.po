@@ -820,10 +820,10 @@ msgstr ""
 #: templates/ERR_UNSUP_REQ+html.body.div.p:27-1
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
-"example, you can not POST a Gopher request."
+"example, you can not POST a WHOIS request."
 msgstr ""
 "因為 Squid （網路快取程式）並未支援所有的連結要求方式在各式通訊協定上。比如"
-"說，你不能要求一個 GOPHER 的 POST 連結要求。"
+"說，你不能要求一個 WHOIS 的 POST 結要求。"
 
 #: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1
 #, fuzzy
@@ -831,8 +831,8 @@ msgid ""
 "Squid does not support some access protocols. For example, the SSH protocol "
 "is currently not supported."
 msgstr ""
-"因為 Squid （網路快取程式）並未支援所有的連結要求方式在各式通訊協定上。比如"
-"說，你不能要求一個 GOPHER 的 POST 連結要求。"
+"Squid 不支持某些訪問協議。例如 SSH 協議 "
+"目前不支持。"
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:27-1
 msgid ""
