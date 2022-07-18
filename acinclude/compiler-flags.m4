@@ -126,7 +126,7 @@ AC_DEFUN([SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED_],[
       # unsupported _negative_ options, so we test with -Werror=foobar instead
       # (where "foobar" is a name of a warning that may be given to us in
       # positive -Wfoobar or negative -Wno-foobar form).
-      SQUID_CC_CHECK_ARGUMENT([$2],m4_bpatsubst([$1],[^-W], [-Werror=]))
+      SQUID_CC_CHECK_ARGUMENT([$2],m4_bpatsubst([$1],[^-W],[-Werror=]))
     ],
     [clang],[
       # Testing with -Werror=foobar (as we do for GCC above) is useless
@@ -150,7 +150,7 @@ dnl The argument is a compiler warning option (e.g. -Wall). If linking a
 dnl warning-free program while using the given warning succeeds, then the
 dnl option is added to SQUID_CXXFLAGS in the same order as calls to the macro.
 AC_DEFUN([SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED],[
-  SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED_($1,m4_bpatsubst(m4_tolower([squid_cv_cc_arg$1]),[[^a-zA-Z0-9_]], [_]))
+  SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED_($1,m4_bpatsubst(m4_tolower([squid_cv_cc_arg$1]),[[^a-zA-Z0-9_]],[_]))
 ])
 
 # define the flag to use to have the compiler treat warnings as errors
