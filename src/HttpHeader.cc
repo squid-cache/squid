@@ -75,7 +75,7 @@ static HttpHeaderMask ReplyHeadersMask;     /* set run-time using ReplyHeaders *
 
 /* header accounting */
 // NP: keep in sync with enum http_hdr_owner_type
-static std::array<HttpHeaderStat, hoEnd> HttpHeaderStats = {
+static std::array<HttpHeaderStat, hoEnd> HttpHeaderStats = {{
     HttpHeaderStat(/*hoNone*/ "all", nullptr),
 #if USE_HTCP
     HttpHeaderStat(/*hoHtcpReply*/ "HTCP reply", &ReplyHeadersMask),
@@ -86,7 +86,7 @@ static std::array<HttpHeaderStat, hoEnd> HttpHeaderStats = {
     , HttpHeaderStat(/*hoErrorDetail*/ "error detail templates", nullptr)
 #endif
     /* hoEnd */
-};
+}};
 
 static int HeaderEntryParsedCount = 0;
 
