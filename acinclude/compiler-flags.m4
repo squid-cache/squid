@@ -120,28 +120,28 @@ AC_DEFUN([SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED_],[
   AC_REQUIRE([SQUID_CC_GUESS_VARIANT])
   SQUID_STATE_SAVE([CXXARGTEST])
   CXXFLAGS="$CXXFLAGS $SQUID_CXXFLAGS"
-  case "$squid_cv_compiler" in
-    gcc)
+  AS_CASE([$squid_cv_compiler],
+    [gcc],[
       # Testing with -Werror -Wfoobar does not work well because GCC ignores
       # unsupported _negative_ options, so we test with -Werror=foobar instead
       # (where "foobar" is a name of a warning that may be given to us in
       # positive -Wfoobar or negative -Wno-foobar form).
       SQUID_CC_CHECK_ARGUMENT([$2],m4_bpatsubst([$1],[^-W], [-Werror=]))
-      ;;
-    clang)
+    ],
+    [clang],[
       # Testing with -Werror=foobar (as we do for GCC above) is useless
       # because clang does not recognize that pattern as a -Werror
       # specialization, so we test with -Werror -Wfoobar instead.
       SQUID_CC_CHECK_ARGUMENT([$2],[-Werror $1])
-      ;;
-    *)
+    ],
+    [
       # We lack code to reliably test whether this compiler supports a given
       # warning. Some compilers (e.g, icc) succeed with bogus warning names.
       # If $squid_cv_cxx_option_werror is set, we add that option because it
       # helps in some (but not all) known cases.
       SQUID_CC_CHECK_ARGUMENT([$2],[$squid_cv_cxx_option_werror $1])
-      ;;
-  esac
+    ]
+  )
   SQUID_STATE_ROLLBACK([CXXARGTEST])
   AS_IF([test "x${$2}" = "xyes"],[SQUID_CXXFLAGS="$SQUID_CXXFLAGS $1"])
 ])
