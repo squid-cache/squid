@@ -849,7 +849,7 @@ msgstr "Squid n'a pas reçu toutes les données pour cette requête."
 #: templates/ERR_UNSUP_REQ+html.body.div.p:27-1
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
-"example, you can not POST a WHOIS request."
+"example, you can not POST a Gopher request."
 msgstr ""
 "Squid ne prend pas en charge tous les types de requêtes par rapport à tous "
 "les protocoles d'accès. Vous ne pouvez pas par exemple utiliser une requête "

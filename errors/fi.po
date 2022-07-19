@@ -821,7 +821,7 @@ msgstr "Haku ei tuonut Squidille mitään tietoa."
 #: templates/ERR_UNSUP_REQ+html.body.div.p:27-1
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
-"example, you can not POST a WHOIS request."
+"example, you can not POST a Gopher request."
 msgstr ""
 "Squid ei tue kaikkia hakupyynnon tyyppejä kaikilla protokollilla. Et voi "
 "esimerkiksi käyttää POST-pyyntöä WHOIS protokolla."

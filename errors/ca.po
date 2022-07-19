@@ -831,7 +831,7 @@ msgstr "La <i>cache</i> ha rebut una resposta sense dades, un document buit."
 #, fuzzy
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
-"example, you can not POST a WHOIS request."
+"example, you can not POST a Gopher request."
 msgstr ""
 "La <i>cache</i> no admet tots els tipus de petici&oacute; per a tots els "
 "protocols. Per exemple, no es pot fer una petici&oacute; tipus POST en el "

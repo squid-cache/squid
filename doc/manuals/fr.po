@@ -1490,7 +1490,7 @@ msgstr "ligne de commande"
 #: src/squid.8.in:32
 msgid ""
 "B<squid> is a high-performance proxy caching server for web clients, "
-"supporting FTP, ICAP, ICP, HTCP and HTTP data objects.  Unlike "
+"supporting FTP, gopher, ICAP, ICP, HTCP and HTTP data objects.  Unlike "
 "traditional caching software, Squid handles all requests in a single, "
 "non-blocking process."
 msgstr ""
