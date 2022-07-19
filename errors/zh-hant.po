@@ -822,8 +822,7 @@ msgid ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
 msgstr ""
-"因為 Squid （網路快取程式）並未支援所有的連結要求方式在各式通訊協定上。比如"
-"說，你不能要求一個 WHOIS 的 POST 結要求。"
+"因為 Squid （網路快取程式）並未支援所有的連結要求方式在各式通訊協定上。"
 
 #: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1
 #, fuzzy

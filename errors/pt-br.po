@@ -842,8 +842,7 @@ msgid ""
 "example, you can not POST a Gopher request."
 msgstr ""
 "Squid não suporta todos os métodos de requisição para todos os protocolos de "
-"acesso. Por exemplo, você não pode emitir uma requisição POST ao protocolo "
-"WHOIS."
+"acesso."
 
 #: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1
 #, fuzzy
@@ -852,8 +851,7 @@ msgid ""
 "is currently not supported."
 msgstr ""
 "Squid não suporta todos os métodos de requisição para todos os protocolos de "
-"acesso. Por exemplo, você não pode emitir uma requisição POST ao protocolo "
-"WHOIS."
+"acesso."
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:27-1
 msgid ""

@@ -838,8 +838,7 @@ msgid ""
 "example, you can not POST a Gopher request."
 msgstr ""
 "Squid ei toeta k&otilde;iki p&auml;ringu meetodeid k&otilde;ikide "
-"protokollidega. N&auml;iteks, te ei saa teha POST operatsiooni WHOIS p&auml;"
-"ringus."
+"protokollidega."
 
 #: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1
 #, fuzzy
@@ -848,8 +847,7 @@ msgid ""
 "is currently not supported."
 msgstr ""
 "Squid ei toeta k&otilde;iki p&auml;ringu meetodeid k&otilde;ikide "
-"protokollidega. N&auml;iteks, te ei saa teha POST operatsiooni WHOIS p&auml;"
-"ringus."
+"protokollidega."
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:27-1
 msgid ""

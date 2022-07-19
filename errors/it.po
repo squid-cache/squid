@@ -853,7 +853,7 @@ msgid ""
 "example, you can not POST a Gopher request."
 msgstr ""
 "Squid non consente di utilizzare qualsiasi tipo di richiesta per qualsiasi "
-"protocollo (a esempio non consente una richiesta POST su protocollo WHOIS)."
+"protocollo."
 
 #: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1
 #, fuzzy
@@ -862,7 +862,7 @@ msgid ""
 "is currently not supported."
 msgstr ""
 "Squid non consente di utilizzare qualsiasi tipo di richiesta per qualsiasi "
-"protocollo (a esempio non consente una richiesta POST su protocollo WHOIS)."
+"protocollo."
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:27-1
 msgid ""

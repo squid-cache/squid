@@ -823,7 +823,7 @@ msgid ""
 "example, you can not POST a Gopher request."
 msgstr ""
 "Squid không hỗ trợ tất cả các phương pháp yêu cầu cho mỗi giao thức truy "
-"cập. Chẳng hạn, bạn không có khả năng POST một yêu cầu WHOIS."
+"cập."
 
 #: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1
 #, fuzzy
@@ -832,7 +832,7 @@ msgid ""
 "is currently not supported."
 msgstr ""
 "Squid không hỗ trợ tất cả các phương pháp yêu cầu cho mỗi giao thức truy "
-"cập. Chẳng hạn, bạn không có khả năng POST một yêu cầu WHOIS."
+"cập."
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:27-1
 msgid ""

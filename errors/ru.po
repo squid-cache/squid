@@ -825,8 +825,7 @@ msgid ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
 msgstr ""
-"Squid не поддерживает все методы запросов для всех протоколов. К примеру, "
-"для протокола WHOIS Вы не можете выполнить запрос POST."
+"Squid не поддерживает все методы запросов для всех протоколов."
 
 #: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1
 #, fuzzy
@@ -834,8 +833,7 @@ msgid ""
 "Squid does not support some access protocols. For example, the SSH protocol "
 "is currently not supported."
 msgstr ""
-"Squid не поддерживает все методы запросов для всех протоколов. К примеру, "
-"для протокола WHOIS Вы не можете выполнить запрос POST."
+"Squid не поддерживает все методы запросов для всех протоколов."
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:27-1
 msgid ""
