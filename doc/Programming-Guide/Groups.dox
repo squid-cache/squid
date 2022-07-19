@@ -31,11 +31,6 @@
  *   caches.
  *   All requests to other proxies are sent as HTTP requests.
  *   All requests to origin-server are sent in that servers protocol.
- *
- \par
- *   Wais and Whois don't receive much
- *   attention because they comprise a relatively insignificant
- *   portion of Internet traffic.
  */
 
 /**
