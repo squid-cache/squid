@@ -37,7 +37,7 @@ public:
     template <class Call>
     explicit AsyncCallback(const RefCount<Call> &call):
         call_(call),
-        answer_(&(*call).dialer.answer())
+        answer_(&(call->dialer.answer()))
     {
     }
 
