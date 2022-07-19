@@ -63,7 +63,7 @@ operator <<(std::ostream &os, const DownloaderAnswer &answer)
 {
     os << "outcome=" << answer.outcome;
     if (answer.outcome == Http::scOkay)
-        os << ", resource.size" << answer.resource.length();
+        os << ", resource.size=" << answer.resource.length();
     return os;
 }
 
