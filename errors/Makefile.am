@@ -24,6 +24,12 @@ EXTRA_DIST = \
 	template.am \
 	aliases alias-link.sh alias-upgrade errorpage.css TRANSLATORS COPYRIGHT
 
+if ENABLE_TRANSLATION
+ALIAS_LINKER=$(SHELL) $(srcdir)/alias-link.sh "$(LN)" "$(RM)" "$(DESTDIR)$(DEFAULT_ERROR_DIR)"
+else !ENABLE_TRANSLATION
+ALIAS_LINKER=true
+endif
+
 all: all-am
 
 translate: translate-warn $(TRANSLATE_LANGUAGES)
@@ -88,7 +94,7 @@ install-data-local: translate
 	$(INSTALL_DATA) $(srcdir)/TRANSLATORS $(DESTDIR)$(DEFAULT_ERROR_DIR)/TRANSLATORS; \
 	$(INSTALL_DATA) $(srcdir)/COPYRIGHT $(DESTDIR)$(DEFAULT_ERROR_DIR)/COPYRIGHT; \
 	$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET).default; \
-	$(SHELL) $(srcdir)/alias-link.sh "$(LN)" "$(RM)" "$(DESTDIR)$(DEFAULT_ERROR_DIR)" "$(srcdir)/aliases" || exit 1 ;
+	$(ALIAS_LINKER) "$(srcdir)/aliases" || exit 1 ;
 
 uninstall-local:
 	for l in $(TRANSLATE_LANGUAGES) templates; do \
@@ -116,7 +122,7 @@ uninstall-local:
 
 ## Upgrade requires the new files to be pre-installed
 upgrade: install
-	$(SHELL) $(srcdir)/alias-link.sh "$(LN)" "$(RM)" "$(DESTDIR)$(DEFAULT_ERROR_DIR)" "$(srcdir)/alias-upgrade" || exit 1 ;
+	$(ALIAS_LINKER) "$(srcdir)/alias-upgrade" || exit 1 ;
 
 dist-hook: translate
 	for lang in $(TRANSLATE_LANGUAGES); do \
