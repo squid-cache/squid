@@ -40,6 +40,12 @@
 
 #if USE_GNUREGEX /* only if squid needs it. Usually not */
 
+/* recent GCC 12.1 does not like array magic done here */
+#if __GNUC__ >= 12 && __GNUC_MINOR__ >= 1
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#pragma GCC diagnostic ignored "-Wuse-after-free"
+#endif
+
 #if !HAVE_ALLOCA
 #define REGEX_MALLOC 1
 #endif
