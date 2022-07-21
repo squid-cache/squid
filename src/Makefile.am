@@ -2741,10 +2741,10 @@ tests_testEventLoop_SOURCES = \
 	tests/testEventLoop.h
 nodist_tests_testEventLoop_SOURCES = \
 	EventLoop.cc \
+	tests/stub_SBuf.cc \
 	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
-	tests/stub_libtime.cc \
-	tests/stub_SBuf.cc
+	tests/stub_libtime.cc
 tests_testEventLoop_LDADD = \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \

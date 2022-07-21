@@ -659,9 +659,9 @@ Ssl::Initialize(void)
 
     if (::Config.SSL.ssl_engine) {
 #if OPENSSL_VERSION_MAJOR < 3
-    debugs(83, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Support for ssl_engine is deprecated " <<
-           "in Squids built with OpenSSL v1 (like this Squid). " <<
-           "It is removed in Squids built with OpenSSL v3+.");
+        debugs(83, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Support for ssl_engine is deprecated " <<
+               "in Squids built with OpenSSL v1 (like this Squid). " <<
+               "It is removed in Squids built with OpenSSL v3+.");
 #if !defined(OPENSSL_NO_ENGINE)
         ENGINE_load_builtin_engines();
         ENGINE *e;
