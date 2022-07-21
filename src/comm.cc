@@ -877,7 +877,7 @@ _comm_close(int fd, char const *file, int line)
     comm_empty_os_read_buffers(fd);
 
     AsyncCall::Pointer completeCall=commCbCall(5,4, "comm_close_complete",
-                                    FdeCbPtrFun(comm_close_complete, NULL));
+                                    FdeCbPtrFun(comm_close_complete, nullptr));
     FdeCbParams &completeParams = GetCommParams<FdeCbParams>(completeCall);
     completeParams.fd = fd;
     // must use async call to wait for all callbacks
