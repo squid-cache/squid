@@ -30,8 +30,7 @@ operator <<(std::ostream &os, const Ipc::StartListeningAnswer &answer)
 
 void
 Ipc::StartListening(int sock_type, int proto, const Comm::ConnectionPointer &listenConn,
-                    FdNoteId fdNote,
-                    StartListeningCallback &callback)
+                    const FdNoteId fdNote, StartListeningCallback &callback)
 {
     auto &answer = callback.answer();
     answer.conn = listenConn;

@@ -76,11 +76,7 @@ class TlsNegotiationDetails: public RefCountable {};
 CBDATA_NAMESPACED_CLASS_INIT(Security, PeerConnector);
 namespace Security
 {
-PeerConnector::PeerConnector(
-    const Comm::ConnectionPointer &,
-    const AsyncCallback<EncryptorAnswer> &,
-    const AccessLogEntryPointer &,
-    const time_t):
+PeerConnector::PeerConnector(const Comm::ConnectionPointer &, const AsyncCallback<EncryptorAnswer> &, const AccessLogEntryPointer &, const time_t):
     AsyncJob("Security::PeerConnector") {STUB}
 PeerConnector::~PeerConnector() STUB
 void PeerConnector::start() STUB

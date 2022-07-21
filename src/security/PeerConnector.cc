@@ -36,11 +36,7 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Security, PeerConnector);
 
-Security::PeerConnector::PeerConnector(
-    const Comm::ConnectionPointer &aServerConn,
-    const AsyncCallback<EncryptorAnswer> &aCallback,
-    const AccessLogEntryPointer &alp,
-    const time_t timeout):
+Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, const AsyncCallback<EncryptorAnswer> &aCallback, const AccessLogEntryPointer &alp, const time_t timeout):
     AsyncJob("Security::PeerConnector"),
     noteFwdPconnUse(false),
     serverConn(aServerConn),

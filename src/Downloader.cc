@@ -67,16 +67,12 @@ operator <<(std::ostream &os, const DownloaderAnswer &answer)
     return os;
 }
 
-Downloader::Downloader(
-    const SBuf &url,
-    const AsyncCallback<Answer> &aCallback,
-    const MasterXactionPointer &masterXaction,
-    const unsigned int level):
+Downloader::Downloader(const SBuf &url, const AsyncCallback<Answer> &cb, const MasterXactionPointer &mx, const unsigned int level):
     AsyncJob("Downloader"),
     url_(url),
-    callback_(aCallback),
+    callback_(cb),
     level_(level),
-    masterXaction_(masterXaction)
+    masterXaction_(mx)
 {
 }
 

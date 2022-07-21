@@ -327,13 +327,7 @@ HappyConnOpenerAnswer::~HappyConnOpenerAnswer()
 
 /* HappyConnOpener */
 
-HappyConnOpener::HappyConnOpener(
-    const ResolvedPeers::Pointer &dests,
-    const AsyncCallback<Answer> &callback,
-    const HttpRequest::Pointer &request,
-    const time_t aFwdStart,
-    const int tries,
-    const AccessLogEntry::Pointer &anAle):
+HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const AsyncCallback<Answer> &callback, const HttpRequest::Pointer &request, const time_t aFwdStart, const int tries, const AccessLogEntry::Pointer &anAle):
     AsyncJob("HappyConnOpener"),
     fwdStart(aFwdStart),
     callback_(callback),

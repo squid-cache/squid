@@ -26,12 +26,7 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Http, Tunneler);
 
-Http::Tunneler::Tunneler(
-    const Comm::ConnectionPointer &conn,
-    const HttpRequest::Pointer &req,
-    const AsyncCallback<Answer> &aCallback,
-    const time_t timeout,
-    const AccessLogEntryPointer &alp):
+Http::Tunneler::Tunneler(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req, const AsyncCallback<Answer> &aCallback, const time_t timeout, const AccessLogEntryPointer &alp):
     AsyncJob("Http::Tunneler"),
     noteFwdPconnUse(false),
     connection(conn),
