@@ -27,7 +27,7 @@ EXTRA_DIST = \
 if ENABLE_TRANSLATION
 ALIAS_LINKER=$(SHELL) $(srcdir)/alias-link.sh "$(LN)" "$(RM)" "$(DESTDIR)$(DEFAULT_ERROR_DIR)"
 else !ENABLE_TRANSLATION
-ALIAS_LINKER=true
+ALIAS_LINKER=$(TRUE)
 endif
 
 all: all-am
