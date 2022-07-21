@@ -20,7 +20,7 @@ while (<>) {
     # accumulate files and prep for sorting
     my %files = ();
     # TODO: Handle or rename /\S+SOURCE=/ and /\S*[^_]SOURCES=/
-    my $groupNameRx = qr/\S+_SOURCES|ICONS|\S+_TEMPLATES|\S+_LANGUAGES|STUB_SOURCE/;
+    my $groupNameRx = qr/\S+_SOURCES|ICONS|\S+_TEMPLATES|\S+_FILES|STUB_SOURCE/;
     if (/^($groupNameRx)\s*(\+?=)\s*(.*[^\\])$/ ) {
         my @parts = split(/\s+/, $3);
         if ($#parts == 0) { # one file only specified on same line as SOURCES

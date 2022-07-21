@@ -16,6 +16,12 @@ DEFAULT_STYLESHEET	= $(sysconfdir)/errorpage.css
 include $(srcdir)/template.am
 include $(srcdir)/language.am
 
+if ENABLE_TRANSLATION
+TRANSLATE_LANGUAGES = $(LANGUAGE_FILES)
+else !ENABLE_TRANSLATION
+TRANSLATE_LANGUAGES =
+endif
+
 CLEANFILES = $(TRANSLATE_LANGUAGES) translate-warn
 EXTRA_DIST = \
 	$(ERROR_TEMPLATES) \
