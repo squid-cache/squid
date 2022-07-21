@@ -3514,6 +3514,7 @@ else
 fi
 AC_SUBST(PO2HTML)
 AC_SUBST(PO2TEXT)
+AM_CONDITIONAL(ENABLE_TRANSLATION, test "x${enable_translation:=no}" = "xyes")
 
 dnl Squid now has limited locale handling ...
 dnl on error pages
