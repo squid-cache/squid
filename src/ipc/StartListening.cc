@@ -20,7 +20,7 @@
 #include <cerrno>
 
 std::ostream &
-operator <<(std::ostream &os, const Ipc::StartListeningAnswer &answer)
+Ipc::operator <<(std::ostream &os, const StartListeningAnswer &answer)
 {
     os << answer.conn;
     if (answer.errNo)

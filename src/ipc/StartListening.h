@@ -38,9 +38,9 @@ using StartListeningCallback = AsyncCallback<StartListeningAnswer>;
 void StartListening(int sock_type, int proto, const Comm::ConnectionPointer &listenConn,
                     FdNoteId, StartListeningCallback &);
 
-} // namespace Ipc;
+std::ostream &operator <<(std::ostream &, const StartListeningAnswer &);
 
-std::ostream &operator <<(std::ostream &, const Ipc::StartListeningAnswer &);
+} // namespace Ipc;
 
 #endif /* SQUID_IPC_START_LISTENING_H */
 
