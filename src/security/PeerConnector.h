@@ -116,7 +116,7 @@ protected:
     void startCertDownloading(SBuf &url);
 
     /// Called by Downloader after a certificate object downloaded.
-    void certDownloadingDone(DownloaderAnswer &answer);
+    void certDownloadingDone(DownloaderAnswer &);
 #endif
 
     /// Called when the openSSL SSL_connect function needs to write data to
