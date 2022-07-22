@@ -1283,6 +1283,7 @@ if test "x$with_openssl" = "xyes"; then
     openssl/bio.h \
     openssl/bn.h \
     openssl/crypto.h \
+    openssl/decoder.h \
     openssl/dh.h \
     openssl/err.h \
     openssl/evp.h \
@@ -3513,6 +3514,7 @@ else
 fi
 AC_SUBST(PO2HTML)
 AC_SUBST(PO2TEXT)
+AM_CONDITIONAL(ENABLE_TRANSLATION, test "x${enable_translation:=no}" = "xyes")
 
 dnl Squid now has limited locale handling ...
 dnl on error pages

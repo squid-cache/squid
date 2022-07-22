@@ -378,8 +378,8 @@ Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *)
 
         if (0 == in_dir) {  /* we need to read in a new directory */
             fullpath.Printf("%s/%02X/%02X",
-                     sd->path,
-                     curlvl1, curlvl2);
+                            sd->path,
+                            curlvl1, curlvl2);
 
             if (dirs_opened)
                 return -1;
@@ -424,7 +424,7 @@ Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *)
             }
 
             fullfilename.Printf(SQUIDSBUFPH "/%s",
-                         SQUIDSBUFPRINT(fullpath), entry->d_name);
+                                SQUIDSBUFPRINT(fullpath), entry->d_name);
             debugs(47, 3, "Opening " << fullfilename);
             fd = file_open(fullfilename.c_str(), O_RDONLY | O_BINARY);
 

@@ -828,7 +828,7 @@ GopherStateData::DelayAwareRead(GopherStateData *gopherState)
 
     if (amountToRead <= 0) {
         AsyncCall::Pointer delayCall = asyncCall(10, 3, "GopherStateData::DelayAwareRead",
-                                                 cbdataDialer(&GopherStateData::DelayAwareRead, gopherState));
+                                       cbdataDialer(&GopherStateData::DelayAwareRead, gopherState));
         gopherState->entry->mem().delayRead(delayCall);
         return;
     }

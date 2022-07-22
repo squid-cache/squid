@@ -3061,6 +3061,8 @@ DEFAULT: none
 DOC_START
 	The OpenSSL engine to use. You will need to set this if you
 	would like to use hardware SSL acceleration for example.
+
+	Not supported in builds with OpenSSL v3 or newer.
 DOC_END
 
 NAME: sslproxy_session_ttl
@@ -4031,8 +4033,10 @@ DOC_START
 	For the purpose of this limit, Squid counts all high-level request
 	forwarding attempts, including any same-destination retries after
 	certain persistent connection failures and any attempts to use a
-	different peer. However, low-level connection reopening attempts
-	(enabled using connect_retries) are not counted.
+	different peer. However, these low-level attempts are not counted:
+	* connection reopening attempts (enabled using connect_retries)
+	* unfinished Happy Eyeballs connection attempts (prevented by setting
+	  happy_eyeballs_connect_limit to 0)
 
 	See also: forward_timeout and connect_retries.
 DOC_END

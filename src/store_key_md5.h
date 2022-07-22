@@ -30,8 +30,6 @@ const cache_key *storeKeyPublicByRequest(HttpRequest *, const KeyScope keyScope 
 const cache_key *storeKeyPublicByRequestMethod(HttpRequest *, const HttpRequestMethod&, const KeyScope keyScope = ksDefault);
 const cache_key *storeKeyPrivate();
 int storeKeyHashBuckets(int);
-int storeKeyNull(const cache_key *);
-void storeKeyInit(void);
 
 extern HASHHASH storeKeyHashHash;
 extern HASHCMP storeKeyHashCmp;

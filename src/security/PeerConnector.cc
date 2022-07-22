@@ -21,8 +21,8 @@
 #include "HttpRequest.h"
 #include "neighbors.h"
 #include "pconn.h"
-#include "security/Io.h"
 #include "security/Certificate.h"
+#include "security/Io.h"
 #include "security/NegotiationHistory.h"
 #include "security/PeerConnector.h"
 #include "SquidConfig.h"
@@ -645,8 +645,8 @@ Security::PeerConnector::startCertDownloading(SBuf &url)
                                       PeerConnectorCertDownloaderDialer(&Security::PeerConnector::certDownloadingDone, this));
 
     const auto dl = new Downloader(url, certCallback,
-        MasterXaction::MakePortless<XactionInitiator::initCertFetcher>(),
-        certDownloadNestingLevel() + 1);
+                                   MasterXaction::MakePortless<XactionInitiator::initCertFetcher>(),
+                                   certDownloadNestingLevel() + 1);
     certDownloadWait.start(dl, certCallback);
 }
 
