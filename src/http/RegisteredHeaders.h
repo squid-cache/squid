@@ -150,7 +150,8 @@ enum HdrKind {
 };
 
 /* POD for HeaderTable */
-struct HeaderTableRecord {
+class HeaderTableRecord {
+public:
     HeaderTableRecord() = default;
     HeaderTableRecord(const char *n);
     HeaderTableRecord(const char *, Http::HdrType, Http::HdrFieldType, int /* HdrKind */);
