@@ -248,13 +248,6 @@ HttpHeader::append(const HttpHeader * src)
 bool
 HttpHeader::needUpdate(HttpHeader const *fresh) const
 {
-    // our 1xx Warnings must be removed
-    for (const auto e: entries) {
-        // TODO: Move into HttpHeaderEntry::is1xxWarning() before official commit.
-        if (e && e->id == Http::HdrType::WARNING && (e->getInt()/100 == 1))
-            return true;
-    }
-
     for (const auto e: fresh->entries) {
         if (!e || skipUpdateHeader(e->id))
             continue;
