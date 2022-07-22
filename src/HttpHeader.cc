@@ -274,8 +274,9 @@ HttpHeader::update(HttpHeader const *fresh)
     assert(fresh);
     assert(this != fresh);
 
+    const HttpHeaderEntry *e;
     HttpHeaderPos pos = HttpHeaderInitPos;
-    while (const auto *e = fresh->getEntry(&pos)) {
+    while ((e = fresh->getEntry(&pos))) {
         /* deny bad guys (ok to check for Http::HdrType::OTHER) here */
 
         if (skipUpdateHeader(e->id))
@@ -288,7 +289,7 @@ HttpHeader::update(HttpHeader const *fresh)
     }
 
     pos = HttpHeaderInitPos;
-    while (const auto *e = fresh->getEntry(&pos)) {
+    while ((e = fresh->getEntry(&pos))) {
         /* deny bad guys (ok to check for Http::HdrType::OTHER) here */
 
         if (skipUpdateHeader(e->id))
