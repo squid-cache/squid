@@ -54,7 +54,7 @@ public:
     struct timeval queue_time = {}; ///< queuing timestamp
 };
 
-static void icpIncomingConnectionOpened(Ipc::StartListeningAnswer &answer);
+static void icpIncomingConnectionOpened(Ipc::StartListeningAnswer &);
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpLogIcp(const Ip::Address &, const LogTags_ot, int, const char *, const int, AccessLogEntryPointer &);

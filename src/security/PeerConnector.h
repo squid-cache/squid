@@ -54,7 +54,7 @@ public:
     typedef CbcPointer<PeerConnector> Pointer;
 
     PeerConnector(const Comm::ConnectionPointer &aServerConn,
-                  const AsyncCallback<EncryptorAnswer> &aCallback,
+                  const AsyncCallback<EncryptorAnswer> &,
                   const AccessLogEntryPointer &alp,
                   const time_t timeout = 0);
     virtual ~PeerConnector();

@@ -27,7 +27,7 @@ using MasterXactionPointer = RefCount<MasterXaction>;
 /// download result
 class DownloaderAnswer {
 public:
-    // The body of a successfully received HTTP 200 OK reply to our GET request.
+    // The content of a successfully received HTTP 200 OK reply to our GET request.
     // Unused unless outcome is Http::scOkay.
     SBuf resource;
 
@@ -36,7 +36,7 @@ public:
     Http::StatusCode outcome = Http::scNone;
 };
 
-std::ostream &operator <<(std::ostream &os, const DownloaderAnswer &);
+std::ostream &operator <<(std::ostream &, const DownloaderAnswer &);
 
 /// The Downloader class fetches SBuf-storable things for other Squid
 /// components/transactions using internal requests. For example, it is used

@@ -106,7 +106,7 @@ public:
     typedef HappyConnOpenerAnswer Answer;
 
 public:
-    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCallback<Answer> &, const HttpRequestPointer &, time_t aFwdStart, int tries, const AccessLogEntryPointer &al);
+    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCallback<Answer> &, const HttpRequestPointer &, time_t aFwdStart, int tries, const AccessLogEntryPointer &);
     virtual ~HappyConnOpener() override;
 
     /// configures reuse of old connections
