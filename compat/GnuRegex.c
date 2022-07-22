@@ -40,8 +40,9 @@
 
 #if USE_GNUREGEX /* only if squid needs it. Usually not */
 
-/* recent GCC 12.1 does not like array magic done here */
-#if __GNUC__ >= 12 && __GNUC_MINOR__ >= 1
+/* Starting with v12.1, GCC warns of various problems with this ancient code. */
+/* GCC versions prior to v12.1 do not support these pragmas. */
+#if (__GNUC__ == 12 && __GNUC_MINOR__ >= 1) || (__GNUC__ > 12)
 #pragma GCC diagnostic ignored "-Warray-bounds"
 #pragma GCC diagnostic ignored "-Wuse-after-free"
 #endif
