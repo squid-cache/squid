@@ -276,6 +276,7 @@ HttpHeader::update(HttpHeader const *fresh)
 
     const HttpHeaderEntry *e;
     HttpHeaderPos pos = HttpHeaderInitPos;
+
     while ((e = fresh->getEntry(&pos))) {
         /* deny bad guys (ok to check for Http::HdrType::OTHER) here */
 
