@@ -404,7 +404,7 @@ typedef char * caddr_t;
 
 /* internal to Microsoft CRTLIB */
 typedef struct {
-    long osfhnd;    /* underlying OS file HANDLE */
+    HANDLE osfhnd;    /* underlying OS file HANDLE */
     char osfile;    /* attributes of file (e.g., open in text mode?) */
     char pipech;    /* one char buffer for handles opened on pipes */
 #ifdef _MT
