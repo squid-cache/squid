@@ -263,8 +263,6 @@ bool
 HttpHeader::skipUpdateHeader(const Http::HdrType id) const
 {
     return
-        // RFC 7234, section 4.3.4: use header fields other than Warning
-        (id == Http::HdrType::WARNING) ||
         // TODO: Consider updating Vary headers after comparing the magnitude of
         // the required changes (and/or cache losses) with compliance gains.
         (id == Http::HdrType::VARY);
@@ -277,15 +275,6 @@ HttpHeader::update(HttpHeader const *fresh)
     assert(this != fresh);
 
     HttpHeaderPos pos = HttpHeaderInitPos;
-
-    // RFC 7234, section 4.3.4: delete 1xx warnings and retain 2xx warnings
-    int count = 0;
-    while (const auto *e = getEntry(&pos)) {
-        if (e->id == Http::HdrType::WARNING && (e->getInt()/100 == 1) )
-            delAt(pos, count);
-    }
-
-    pos = HttpHeaderInitPos;
     while (const auto *e = fresh->getEntry(&pos)) {
         /* deny bad guys (ok to check for Http::HdrType::OTHER) here */
 

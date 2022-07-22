@@ -83,8 +83,7 @@ public:
     void clean();
     void append(const HttpHeader * src);
     /// replaces fields with matching names and adds fresh fields with new names
-    /// also updates Http::HdrType::WARNINGs, assuming `fresh` is a 304 reply
-    /// TODO: Refactor most callers to avoid special handling of WARNINGs.
+    /// assuming `fresh` is a 304 reply
     void update(const HttpHeader *fresh);
     /// \returns whether calling update(fresh) would change our set of fields
     bool needUpdate(const HttpHeader *fresh) const;
