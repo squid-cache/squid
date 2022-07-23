@@ -189,7 +189,7 @@ getgrnam(char *unused) {
 int
 _free_osfhnd(int filehandle)
 {
-    if (filehandle >= 0 && (static_cast<unsigned int>(filehandle) < SQUID_MAXFD) &&
+    if (0 <= filehandle && filehandle < SQUID_MAXFD &&
             (_osfile(filehandle) & FOPEN) &&
             (_osfhnd(filehandle) != INVALID_HANDLE_VALUE))
     {
