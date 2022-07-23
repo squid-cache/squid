@@ -388,10 +388,19 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     details->local = *gai;
     Ip::Address::FreeAddr(gai);
 
-    // Perform NAT or TPROXY operations to retrieve the real client/dest IP addresses
-    if (conn->flags&(COMM_TRANSPARENT|COMM_INTERCEPTION) && !Ip::Interceptor.Lookup(details, conn)) {
-        debugs(50, DBG_IMPORTANT, "ERROR: NAT/TPROXY lookup failed to locate original IPs on " << details);
-        return Comm::NOMESSAGE;
+    if (conn->flags & COMM_TRANSPARENT) { // the real client/dest IP address must be already available via getsockname()
+        details->flags |= COMM_TRANSPARENT;
+        if (!Ip::Interceptor.TransparentActive()) {
+            debugs(50, DBG_IMPORTANT, "ERROR: Cannot use transparent " << details << " because TPROXY mode became inactive");
+            // TODO: consider returning Comm::COMM_ERROR instead
+            return Comm::NOMESSAGE;
+        }
+    } else if (conn->flags & COMM_INTERCEPTION) { // request the real client/dest IP address from NAT
+        details->flags |= COMM_INTERCEPTION;
+        if (!Ip::Interceptor.LookupNat(*details)) {
+            debugs(50, DBG_IMPORTANT, "ERROR: NAT lookup failed to locate original IPs on " << details);
+            return Comm::NOMESSAGE;
+        }
     }
 
 #if USE_SQUID_EUI
