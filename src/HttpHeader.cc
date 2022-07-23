@@ -248,13 +248,6 @@ HttpHeader::append(const HttpHeader * src)
 bool
 HttpHeader::needUpdate(HttpHeader const *fresh) const
 {
-    // our 1xx Warnings must be removed
-    for (const auto e: entries) {
-        // TODO: Move into HttpHeaderEntry::is1xxWarning() before official commit.
-        if (e && e->id == Http::HdrType::WARNING && (e->getInt()/100 == 1))
-            return true;
-    }
-
     for (const auto e: fresh->entries) {
         if (!e || skipUpdateHeader(e->id))
             continue;
@@ -266,25 +259,10 @@ HttpHeader::needUpdate(HttpHeader const *fresh) const
     return false;
 }
 
-void
-HttpHeader::updateWarnings()
-{
-    int count = 0;
-    HttpHeaderPos pos = HttpHeaderInitPos;
-
-    // RFC 7234, section 4.3.4: delete 1xx warnings and retain 2xx warnings
-    while (HttpHeaderEntry *e = getEntry(&pos)) {
-        if (e->id == Http::HdrType::WARNING && (e->getInt()/100 == 1) )
-            delAt(pos, count);
-    }
-}
-
 bool
 HttpHeader::skipUpdateHeader(const Http::HdrType id) const
 {
     return
-        // RFC 7234, section 4.3.4: use header fields other than Warning
-        (id == Http::HdrType::WARNING) ||
         // TODO: Consider updating Vary headers after comparing the magnitude of
         // the required changes (and/or cache losses) with compliance gains.
         (id == Http::HdrType::VARY);
@@ -295,8 +273,6 @@ HttpHeader::update(HttpHeader const *fresh)
 {
     assert(fresh);
     assert(this != fresh);
-
-    updateWarnings();
 
     const HttpHeaderEntry *e;
     HttpHeaderPos pos = HttpHeaderInitPos;
@@ -1126,14 +1102,6 @@ HttpHeader::putSc(HttpHdrSc *sc)
     addEntry(new HttpHeaderEntry(Http::HdrType::SURROGATE_CONTROL, SBuf(), mb.buf));
     /* cleanup */
     mb.clean();
-}
-
-void
-HttpHeader::putWarning(const int code, const char *const text)
-{
-    char buf[512];
-    snprintf(buf, sizeof(buf), "%i %s \"%s\"", code, visible_appname_string, text);
-    putStr(Http::HdrType::WARNING, buf);
 }
 
 /* add extension header (these fields are not parsed/analyzed/joined, etc.) */
