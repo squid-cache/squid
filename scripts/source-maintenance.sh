@@ -524,10 +524,10 @@ generateAmFile icons/icon.am ICONS "icons/" "silk/*"
 generateAmFile errors/template.am ERROR_TEMPLATES "errors/" "templates/ERR_*"
 
 # Build errors translation install include from current .PO available
-generateAmFile errors/language.am TRANSLATE_LANGUAGES "errors/" "*.po"
+generateAmFile errors/language.am LANGUAGE_FILES "errors/" "*.po"
 
 # Build manuals translation install include from current .PO available
-generateAmFile doc/manuals/language.am TRANSLATE_LANGUAGES "doc/manuals/" "*.po"
+generateAmFile doc/manuals/language.am LANGUAGE_FILES "doc/manuals/" "*.po"
 
 # Build STUB framework include from current stub_* available
 generateAmFile src/tests/Stub.am STUB_SOURCE "src/" "tests/stub_*.cc"
