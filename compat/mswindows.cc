@@ -193,8 +193,7 @@ _free_osfhnd(int filehandle)
 {
     if ((0 <= filehandle && filehandle < SQUID_MAXFD) &&
             (_osfile(filehandle) & FOPEN) &&
-            (_osfhnd(filehandle) != INVALID_HANDLE_VALUE))
-    {
+            (_osfhnd(filehandle) != INVALID_HANDLE_VALUE)) {
         switch (filehandle) {
         case 0:
             SetStdHandle(STD_INPUT_HANDLE, nullptr);
