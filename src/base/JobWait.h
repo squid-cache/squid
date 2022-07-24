@@ -16,14 +16,11 @@
 
 /// Manages waiting for an AsyncJob callback. Use type-safe JobWait instead.
 /// This base class does not contain code specific to the actual Job type.
-class JobWaitBase
+class JobWaitBase : NonCopyable /* each waiting context needs a dedicated AsyncCall */
 {
 public:
     JobWaitBase();
     ~JobWaitBase();
-
-    /// no copying of any kind: each waiting context needs a dedicated AsyncCall
-    JobWaitBase(JobWaitBase &&) = delete;
 
     explicit operator bool() const { return waiting(); }
 

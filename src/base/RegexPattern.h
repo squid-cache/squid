@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_BASE_REGEXPATTERN_H
 #define SQUID_SRC_BASE_REGEXPATTERN_H
 
+#include "base/TypeTraits.h"
 #include "compat/GnuRegex.h"
 #include "mem/forward.h"
 #include "sbuf/SBuf.h"
@@ -17,7 +18,7 @@
  * A regular expression,
  * plain text and compiled representations
  */
-class RegexPattern
+class RegexPattern : NonCopyable
 {
     MEMPROXY_CLASS(RegexPattern);
 
@@ -25,8 +26,6 @@ public:
     RegexPattern() = delete;
     RegexPattern(const SBuf &aPattern, int aFlags);
     ~RegexPattern();
-
-    RegexPattern(RegexPattern &&) = delete; // no copying of any kind
 
     /// whether the regex differentiates letter case
     bool caseSensitive() const { return !(flags & REG_ICASE); }

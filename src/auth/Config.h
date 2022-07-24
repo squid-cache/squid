@@ -18,13 +18,9 @@
 namespace Auth
 {
 
-class Config
+class Config : NonCopyable
 {
 public:
-    Config() = default;
-    Config(Config &&) = delete; // no support for copying of any kind
-    ~Config() = default;
-
     /// set of auth_params directives
     Auth::ConfigVector schemes;
 

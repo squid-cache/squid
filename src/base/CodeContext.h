@@ -11,6 +11,7 @@
 
 #include "base/InstanceId.h"
 #include "base/RefCount.h"
+#include "base/TypeTraits.h"
 
 #include <iosfwd>
 
@@ -90,14 +91,11 @@ std::ostream &CurrentCodeContextDetail(std::ostream &os);
 
 /// Convenience class that automatically restores the current/outer CodeContext
 /// when leaving the scope of the new-context following/inner code. \see Run().
-class CodeContextGuard
+class CodeContextGuard : NonCopyable
 {
 public:
     CodeContextGuard(const CodeContext::Pointer &newContext): savedCodeContext(CodeContext::Current()) { CodeContext::Reset(newContext); }
     ~CodeContextGuard() { CodeContext::Reset(savedCodeContext); }
-
-    // no copying of any kind (for simplicity and to prevent accidental copies)
-    CodeContextGuard(CodeContextGuard &&) = delete;
 
     CodeContext::Pointer savedCodeContext;
 };

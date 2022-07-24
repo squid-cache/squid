@@ -21,13 +21,11 @@ class ConfigParser;
 /// A single-destination, single-record-format log.
 /// The customizable destination is based on Logfile "logging modules" API.
 /// Some logs allow the admin to select or specify the record format.
-class FormattedLog
+class FormattedLog : NonCopyable
 {
 public:
     FormattedLog() = default;
     ~FormattedLog();
-
-    FormattedLog(FormattedLog &&) = delete; // no need to support copying of any kind
 
     /// \returns whether the daemon module is used for this log
     bool usesDaemon() const;

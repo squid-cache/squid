@@ -158,7 +158,7 @@ private:
 
 /// information about store entries being loaded from disk (and their slots)
 /// used for identifying partially stored/loaded entries
-class LoadingParts
+class LoadingParts : NonCopyable
 {
 public:
     using Sizes = Ipc::StoreMapItems<uint64_t>;
@@ -168,9 +168,6 @@ public:
 
     LoadingParts(const SwapDir &dir, const bool resuming);
     ~LoadingParts();
-
-    // lacking copying/moving code and often too huge to copy
-    LoadingParts(LoadingParts&&) = delete;
 
     Sizes &sizes() const { return *sizesOwner->object(); }
     Versions &versions() const { return *versionsOwner->object(); }

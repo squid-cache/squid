@@ -10,6 +10,7 @@
 #define SQUID_HTTP_UPGRADE_H
 
 #include "acl/forward.h"
+#include "base/TypeTraits.h"
 #include "sbuf/SBuf.h"
 
 #include <map>
@@ -41,12 +42,11 @@ vAinB(const ProtocolView &a, const ProtocolView &b)
 }
 
 /// Allows or blocks HTTP Upgrade protocols (see http_upgrade_request_protocols)
-class HttpUpgradeProtocolAccess
+class HttpUpgradeProtocolAccess : NonCopyable
 {
 public:
     HttpUpgradeProtocolAccess() = default;
     ~HttpUpgradeProtocolAccess();
-    HttpUpgradeProtocolAccess(HttpUpgradeProtocolAccess &&) = delete; // no copying of any kind
 
     /// \returns the ACLs matching the given "name[/version]" protocol (or nil)
     const acl_access *findGuard(const SBuf &proto) const;
@@ -63,11 +63,10 @@ public:
 
 private:
     /// a single configured access rule for an explicitly named protocol
-    class NamedGuard
+    class NamedGuard : NonCopyable
     {
     public:
         NamedGuard(const char *rawProtocol, acl_access*);
-        NamedGuard(const NamedGuard &&) = delete; // no copying of any kind
         ~NamedGuard();
 
         const SBuf protocol; ///< configured protocol name (and version)

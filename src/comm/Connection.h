@@ -67,7 +67,7 @@ namespace Comm
  * These objects should not be passed around directly,
  * but a Comm::ConnectionPointer should be passed instead.
  */
-class Connection: public CodeContext
+class Connection: public CodeContext, NonCopyable /* use cloneProfile instead */
 {
     MEMPROXY_CLASS(Comm::Connection);
 
@@ -76,10 +76,6 @@ public:
 
     /** Clear the connection properties and close any open socket. */
     virtual ~Connection();
-
-    /// To prevent accidental copying of Connection objects that we started to
-    /// open or that are open, use cloneProfile() instead.
-    Connection(const Connection &&) = delete;
 
     /// Create a new closed Connection with the same configuration as this one.
     ConnectionPointer cloneProfile() const;

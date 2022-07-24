@@ -30,9 +30,9 @@ class MemObject;
 /* client_side_request.c - client side request related routines (pure logic) */
 int clientBeginRequest(const HttpRequestMethod&, char const *, CSCB *, CSD *, ClientStreamData, HttpHeader const *, char *, size_t, const MasterXactionPointer &);
 
-class ClientHttpRequest
+class ClientHttpRequest : NonCopyable
 #if USE_ADAPTATION
-    : public Adaptation::Initiator, // to start adaptation transactions
+    , public Adaptation::Initiator, // to start adaptation transactions
       public BodyConsumer     // to receive reply bodies in request satisf. mode
 #endif
 {
@@ -40,7 +40,6 @@ class ClientHttpRequest
 
 public:
     ClientHttpRequest(ConnStateData *);
-    ClientHttpRequest(ClientHttpRequest &&) = delete;
     ~ClientHttpRequest();
 
     String rangeBoundaryStr() const;

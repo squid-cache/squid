@@ -348,7 +348,8 @@ namespace Store {
 
 /// a smart pointer similar to std::unique_ptr<> that automatically
 /// release()s and unlock()s the guarded Entry on stack-unwinding failures
-class EntryGuard {
+class EntryGuard : NonCopyable /* for now */
+{
 public:
     /// \param entry either nil or a locked Entry to manage
     /// \param context default unlock() message
@@ -363,8 +364,6 @@ public:
             onException();
         }
     }
-
-    EntryGuard(EntryGuard &&) = delete; // no copying or moving (for now)
 
     /// like std::unique_ptr::get()
     /// \returns nil or the guarded (locked) entry

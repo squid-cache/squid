@@ -21,12 +21,10 @@
 namespace AnyP
 {
 
-class PortCfg : public CodeContext
+class PortCfg : public CodeContext, NonCopyable
 {
 public:
     PortCfg();
-    // no public copying/moving but see ipV4clone()
-    PortCfg(PortCfg &&) = delete;
     ~PortCfg();
 
     /// creates the same port configuration but listening on any IPv4 address
