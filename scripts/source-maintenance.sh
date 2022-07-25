@@ -519,7 +519,7 @@ generateRawGperfFile ()
     echo "/* $GeneratedByMe */"
     echo
 
-    gperf -m 100000 $gperfFile
+    (cd `dirname $gperfFile` && gperf -m 100000 `basename $gperfFile`)
 }
 
 generateGperfFile ()
