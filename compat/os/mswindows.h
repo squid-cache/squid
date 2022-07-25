@@ -554,30 +554,33 @@ connect(int s, const struct sockaddr * n, socklen_t l)
 }
 #define connect(s,n,l) Squid::connect(s,n,l)
 
+// documented at https://docs.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-gethostbyname
 inline struct hostent *
 gethostbyname(const char *n) {
-    HOSTENT FAR * result;
-    if ((result = ::gethostbyname(n)) == NULL)
+    hostent * result;
+    if ((result = ::gethostbyname(n)) == nullptr)
         errno = WSAGetLastError();
     return result;
 }
 #define gethostbyname(n) Squid::gethostbyname(n)
 
-inline SERVENT FAR *
-getservbyname(const char * n, const char * p)
+// documnented at https://docs.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-getservbyname
+inline servent *
+getservbyname(const char *n, const char *p)
 {
-    SERVENT FAR * result;
-    if ((result = ::getservbyname(n, p)) == NULL)
+    servent *result;
+    if ((result = ::getservbyname(n, p)) == nullptr)
         errno = WSAGetLastError();
     return result;
 }
 #define getservbyname(n,p) Squid::getservbyname(n,p)
 
-inline HOSTENT FAR *
+// documented at https://docs.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-gethostbyaddr
+inline hostent *
 gethostbyaddr(const void * a, size_t l, int t)
 {
-    HOSTENT FAR * result;
-    if ((result = ::gethostbyaddr((const char*)a, l, t)) == NULL)
+    hostent * result;
+    if ((result = ::gethostbyaddr((const char*)a, l, t)) == nullptr)
         errno = WSAGetLastError();
     return result;
 }
@@ -837,12 +840,6 @@ WSASocket(int a, int t, int p, LPWSAPROTOCOL_INFO i, GROUP g, DWORD f)
 #define connect(s,n,l) \
     (SOCKET_ERROR == connect(_get_osfhandle(s),n,l) ? \
     (WSAEMFILE == (errno = WSAGetLastError()) ? errno = EMFILE : -1, -1) : 0)
-#define gethostbyname(n) \
-    (NULL == ((HOSTENT FAR*)(ws32_result = (int)gethostbyname(n))) ? \
-    (errno = WSAGetLastError()), (HOSTENT FAR*)NULL : (HOSTENT FAR*)ws32_result)
-#define gethostname(n,l) \
-    (SOCKET_ERROR == gethostname(n,l) ? \
-    (errno = WSAGetLastError()), -1 : 0)
 #define recv(s,b,l,f) \
     (SOCKET_ERROR == (ws32_result = recv(_get_osfhandle(s),b,l,f)) ? \
     (errno = WSAGetLastError()), -1 : ws32_result)
