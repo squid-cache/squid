@@ -30,7 +30,7 @@ if (@ARGV <= 0) {
 } elsif (@ARGV == 1) {
     &main(shift @ARGV);
     exit 0;
-} elsif (@ARGV >= 1) {
+} else {
     usage($0);
     die("ERROR: Too many filename parameters.\n");
 }
