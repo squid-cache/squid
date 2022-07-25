@@ -107,7 +107,9 @@ AS_IF([test "$squid_cv_cc_simplified" = "gcc-4"],[
     AC_MSG_NOTICE([skipping -Wextra on $squid_cv_cc_simplified])
 ],[
     # -Werror must be first
-    SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Werror])
+    if test "x$enable_strict_error_checking" = "xyes" ; then
+        SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Werror])
+    fi
     SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wextra])
     # -Wunused-private-field causes a huge number of false positives
     #    in unit tests. Disable that
