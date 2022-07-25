@@ -9,6 +9,7 @@
 /* DEBUG: section 41    Event Processing */
 
 #include "squid.h"
+#include "base/Random.h"
 #include "event.h"
 #include "mgr/Registration.h"
 #include "Store.h"
@@ -116,7 +117,7 @@ eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int weigh
     if (delta_ish >= 3.0) {
         // Default seed is fine. We just need values random enough
         // relative to each other to prevent waves of synchronised activity.
-        static std::mt19937 rng;
+        static std::mt19937 rng(Seed32());
         auto third = (delta_ish/3.0);
         xuniform_real_distribution<> thirdIsh(delta_ish - third, delta_ish + third);
         delta_ish = thirdIsh(rng);

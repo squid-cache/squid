@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "base/CodeContext.h"
 #include "base/InstanceId.h"
+#include "base/Random.h"
 #include "base/RunnersRegistry.h"
 #include "comm.h"
 #include "comm/Connection.h"
@@ -1047,7 +1048,7 @@ static unsigned short
 idnsQueryID()
 {
     // NP: apparently ranlux are faster, but not quite as "proven"
-    static std::mt19937 mt(static_cast<uint32_t>(getCurrentTime() & 0xFFFFFFFF));
+    static std::mt19937 mt(Seed32());
     unsigned short id = mt() & 0xFFFF;
     unsigned short first_id = id;
 

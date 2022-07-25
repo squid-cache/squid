@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "base/IoManip.h"
+#include "base/Random.h"
 #include "base/RandomUuid.h"
 #include "base/TextException.h"
 #include "defines.h"
@@ -20,9 +21,7 @@ static_assert(sizeof(RandomUuid) == 128/8, "RandomUuid has RFC 4122-prescribed 1
 RandomUuid::RandomUuid()
 {
     // Generate random bits for populating our UUID.
-    // STL implementation bugs notwithstanding (e.g., MinGW bug #338), this is
-    // our best chance of getting a non-deterministic seed value for the r.n.g.
-    static std::mt19937_64 rng(std::random_device {}()); // produces 64-bit sized values
+    static std::mt19937_64 rng(Seed64()); // produces 64-bit sized values
     const auto rnd1 = rng();
     const auto rnd2 = rng();
 

@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Random.h"
+#include "base/Random.h"
 #include "debug/Stream.h"
 #include "Parsing.h"
 #include "wordlist.h"
@@ -96,7 +97,7 @@ ACLRandom::match(ACLChecklist *)
     // The fixed-value default seed is fine because we are
     // actually matching whether the random value is above
     // or below the configured threshold ratio.
-    static std::mt19937 mt;
+    static std::mt19937 mt(Seed32());
     static xuniform_real_distribution<> dist(0, 1);
 
     const double random = dist(mt);

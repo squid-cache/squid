@@ -22,6 +22,7 @@
 #include "auth/State.h"
 #include "auth/toUtf.h"
 #include "base/LookupTable.h"
+#include "base/Random.h"
 #include "cache_cf.h"
 #include "event.h"
 #include "helper.h"
@@ -160,7 +161,7 @@ authenticateDigestNonceNew(void)
      */
     // NP: this will likely produce the same randomness sequences for each worker
     // since they should all start within the 1-second resolution of seed value.
-    static std::mt19937 mt(static_cast<uint32_t>(getCurrentTime() & 0xFFFFFFFF));
+    static std::mt19937 mt(Seed32());
     static xuniform_int_distribution<uint32_t> newRandomData;
 
     /* create a new nonce */

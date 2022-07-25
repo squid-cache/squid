@@ -11,6 +11,7 @@
 #define CLEAN_BUF_SZ 16384
 
 #include "squid.h"
+#include "base/Random.h"
 #include "cache_cf.h"
 #include "ConfigOption.h"
 #include "DiskIO/DiskIOModule.h"
@@ -1078,7 +1079,7 @@ Fs::Ufs::UFSSwapDir::HandleCleanEvent()
          * value.  j equals the total number of UFS level 2
          * swap directories
          */
-        std::mt19937 mt(static_cast<uint32_t>(getCurrentTime() & 0xFFFFFFFF));
+        std::mt19937 mt(Seed32());
         xuniform_int_distribution<> dist(0, j);
         swap_index = dist(mt);
     }
