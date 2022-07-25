@@ -330,6 +330,11 @@ for FILENAME in `git ls-files`; do
     # skip subdirectories, git ls-files is recursive
     test -d $FILENAME && continue
 
+    # generated files are formatted during their generation
+    if grep -q -F "$GeneratedByMe" ${FILENAME}; then
+        continue
+    fi
+
     case ${FILENAME} in
 
     *.h|*.c|*.cc|*.cci)
@@ -422,10 +427,7 @@ for FILENAME in `git ls-files`; do
 	;;
 
     *.am)
-        # generated automake files are formatted during their generation
-        if ! grep -q -F "$GeneratedByMe" ${FILENAME}; then
-            applyPluginsTo ${FILENAME} scripts/format-makefile-am.pl || return
-        fi
+        applyPluginsTo ${FILENAME} scripts/format-makefile-am.pl || return
         ;;
 
     ChangeLog|CREDITS|CONTRIBUTORS|COPYING|*.png|*.po|*.pot|rfcs/|*.txt|test-suite/squidconf/empty|.bzrignore)
