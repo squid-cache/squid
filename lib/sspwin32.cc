@@ -34,7 +34,7 @@ static DWORD cbMaxToken = 0;
 static uint8_t * pClientBuf = NULL;
 static uint8_t * pServerBuf = NULL;
 
-static AUTH_SEQ NTLM_asServer = {0};
+static AUTH_SEQ NTLM_asServer = {};
 
 BOOL Use_Unicode = FALSE;
 BOOL NTLM_LocalCall = FALSE;
@@ -382,8 +382,8 @@ BOOL GenServerContext(PAUTH_SEQ pAS, PVOID pIn, DWORD cbIn, PVOID pOut,
 
 BOOL WINAPI SSP_LogonUser(PTSTR szUser, PTSTR szPassword, PTSTR szDomain)
 {
-    AUTH_SEQ    asServer   = {0};
-    AUTH_SEQ    asClient   = {0};
+    AUTH_SEQ    asServer   = {};
+    AUTH_SEQ    asClient   = {};
     BOOL        fDone      = FALSE;
     BOOL        fResult    = FALSE;
     DWORD       cbOut      = 0;
