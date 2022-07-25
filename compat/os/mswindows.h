@@ -540,7 +540,7 @@ bind(int s, const struct sockaddr * n, socklen_t l)
     } else
         return 0;
 }
-// problem. This clobbers std::bind
+// XXX: This clobbers std::bind().
 #define bind(s,n,l) Squid::bind(s,n,l)
 
 inline int
