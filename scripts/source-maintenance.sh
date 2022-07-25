@@ -517,7 +517,7 @@ generateRawGperfFile ()
     echo "/* $GeneratedByMe */"
     echo
 
-    gperf -m 100000 $gperfFile | sed 's/register //g'
+    gperf -m 100000 $gperfFile
 }
 
 generateGperfFile ()
@@ -544,7 +544,7 @@ generateGperfFile ()
     updateIfChanged $cciFile $cciFile.new 'by generateGperfFile()'
 }
 
-generateGperfFile src/http/RegisteredHeadersHash.gperf
+run_ generateGperfFile src/http/RegisteredHeadersHash.gperf || exit 1
 
 run_ checkMakeNamedErrorDetails || exit 1
 
