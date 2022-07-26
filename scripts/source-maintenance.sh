@@ -312,7 +312,7 @@ processDebugSections ()
 {
     destination="doc/debug-sections.txt"
 
-    sort -u < doc/debug-sections.tmp | sort -n > doc/debug-sections.tmp2
+    LC_ALL=C sort -u < doc/debug-sections.tmp > doc/debug-sections.tmp2
     cat scripts/boilerplate.h > $destination
     echo "" >> $destination
     cat doc/debug-sections.tmp2 >> $destination
@@ -428,7 +428,7 @@ for FILENAME in `git ls-files`; do
 	#
 	# DEBUG Section list maintenance
 	#
-	grep " DEBUG: section" <${FILENAME} | sed -e 's/ \* DEBUG: //' -e 's%/\* DEBUG: %%' -e 's% \*/%%' | sort -u >>doc/debug-sections.tmp
+	grep " DEBUG: section" <${FILENAME} | sed -e 's/ \* DEBUG: //' -e 's%/\* DEBUG: %%' -e 's% \*/%%' >> doc/debug-sections.tmp
 
 	#
 	# File permissions maintenance.
