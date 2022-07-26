@@ -73,8 +73,6 @@
 #include "ssl/support.h"
 #endif
 
-static const char *const crlf = "\r\n";
-
 #if FOLLOW_X_FORWARDED_FOR
 static void clientFollowXForwardedForCheck(Acl::Answer answer, void *data);
 #endif /* FOLLOW_X_FORWARDED_FOR */

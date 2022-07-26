@@ -550,8 +550,9 @@ HttpRequest::maybeCacheable()
         if (!method.respMaybeCacheable())
             return false;
 
-        // RFC 7234 section 5.2.1.5:
-        // "cache MUST NOT store any part of either this request or any response to it"
+        // RFC 9111 section 5.2.1.5:
+        // "The no-store request directive indicates that a cache MUST NOT
+        //  store any part of either this request or any response to it."
         //
         // NP: refresh_pattern ignore-no-store only applies to response messages
         //     this test is handling request message CC header.
