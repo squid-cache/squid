@@ -11,8 +11,12 @@
 std::mt19937::result_type
 Seed32()
 {
-    static_assert(sizeof(std::random_device::result_type) == 4, "std::random_device generates a 4-byte number");
-    static std::random_device dev;
+    // By default, std::random_device may be blocking or non-blocking, which is
+    // implementation-defined, so we need "/dev/urandom" to guarantee the non-blocking
+    // behavior. Theoretically, this file may be missing in some exotic
+    // configurations, causing std::runtime_error. For simplicity, we assume that
+    // such configurations do not exist until the opposite is confirmed.
+    static std::random_device dev("/dev/urandom");
     return dev();
 }
 

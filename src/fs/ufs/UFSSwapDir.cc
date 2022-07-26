@@ -1079,7 +1079,7 @@ Fs::Ufs::UFSSwapDir::HandleCleanEvent()
          * value.  j equals the total number of UFS level 2
          * swap directories
          */
-        std::mt19937 mt(Seed32());
+        static std::mt19937 mt(Seed32());
         xuniform_int_distribution<> dist(0, j);
         swap_index = dist(mt);
     }

@@ -159,8 +159,6 @@ authenticateDigestNonceNew(void)
      * - the timestamp also guarantees local uniqueness in the input to
      * the hash function.
      */
-    // NP: this will likely produce the same randomness sequences for each worker
-    // since they should all start within the 1-second resolution of seed value.
     static std::mt19937 mt(Seed32());
     static xuniform_int_distribution<uint32_t> newRandomData;
 
