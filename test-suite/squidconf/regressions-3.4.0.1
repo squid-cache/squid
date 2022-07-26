@@ -44,6 +44,5 @@ refresh_pattern -i \.(gif|png|jpg|jpeg|ico)$ 40320 75% 86400
 refresh_pattern -i \.(iso|avi|wav|mp3|mpeg|swf|flv|x-flv)$ 1440 40% 40320
 
 refresh_pattern ^ftp:           1440    20%     10080
-refresh_pattern ^gopher:        1440    0%      1440
 refresh_pattern -i (/cgi-bin/|\?)       0       0%      0
 refresh_pattern .       0       20%     4320
