@@ -29,7 +29,6 @@
 #include "fde.h"
 #include "FwdState.h"
 #include "globals.h"
-#include "gopher.h"
 #include "HappyConnOpener.h"
 #include "hier_code.h"
 #include "http.h"
@@ -1282,10 +1281,6 @@ FwdState::dispatch()
 
         case AnyP::PROTO_HTTP:
             httpStart(this);
-            break;
-
-        case AnyP::PROTO_GOPHER:
-            gopherStart(this);
             break;
 
         case AnyP::PROTO_FTP:

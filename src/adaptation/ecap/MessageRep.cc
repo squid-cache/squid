@@ -140,8 +140,6 @@ Adaptation::Ecap::FirstLineRep::protocol() const
         return libecap::protocolHttps;
     case AnyP::PROTO_FTP:
         return libecap::protocolFtp;
-    case AnyP::PROTO_GOPHER:
-        return libecap::protocolGopher;
     case AnyP::PROTO_WAIS:
         return libecap::protocolWais;
     case AnyP::PROTO_WHOIS:

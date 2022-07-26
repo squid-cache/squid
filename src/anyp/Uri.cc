@@ -869,7 +869,6 @@ urlCheckRequest(const HttpRequest * r)
             return true;
         return false;
 
-    case AnyP::PROTO_GOPHER:
     case AnyP::PROTO_WAIS:
     case AnyP::PROTO_WHOIS:
         if (r->method == Http::METHOD_GET ||
