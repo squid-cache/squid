@@ -28,7 +28,6 @@ public:
     ~Descriptor();
 
     /// A copy of the descriptor for use in system calls and such.
-    /// Future versions of this method may assert on closed descriptors (TODO).
     operator int() const { return fd_; }
 
     /// Forgets the descriptor and prevents its automatic closure (by us).
