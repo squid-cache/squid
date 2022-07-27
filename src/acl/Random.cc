@@ -93,7 +93,11 @@ ACLRandom::parse()
 int
 ACLRandom::match(ACLChecklist *)
 {
-    static std::mt19937 mt(Seed32());
+    // make up the random value.
+    // The fixed-value default seed is fine because we are
+    // actually matching whether the random value is above
+    // or below the configured threshold ratio.
+    static std::mt19937 mt;
     static xuniform_real_distribution<> dist(0, 1);
 
     const double random = dist(mt);
