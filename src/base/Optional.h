@@ -28,13 +28,35 @@ template <typename Value>
 class Optional
 {
 public:
-    // std::optional supports non-trivial types as well, but we
-    // do not want to fiddle with unions to disable default Value constructor
-    // until that work becomes necessary
-    static_assert(std::is_trivial<Value>::value, "Value is trivial");
-
-    constexpr Optional() noexcept {}
+    constexpr Optional() noexcept: dummy_(0) {}
     constexpr explicit Optional(const Value &v): value_(v), hasValue_(true) {}
+
+    ~Optional()
+    {
+        // XXX: This simplified implementation does not keep the destructor
+        // trivial for trivial Value types, but optimizing compilers still
+        // optimize such destruction away, and that is sufficient for our
+        // current needs.
+        reset();
+    }
+
+    constexpr Optional(const Optional &other) = default;
+    Optional &operator =(const Optional &other) = default;
+
+    Optional(Optional<Value> &&other) { *this = std::move(other); }
+
+    Optional &operator =(Optional<Value> &&other)
+    {
+        if (this != &other) {
+            if (other.has_value()) {
+                *this = std::move(other.value_);
+                other.reset();
+            } else {
+                reset();
+            }
+        }
+        return *this;
+    }
 
     constexpr explicit operator bool() const noexcept { return hasValue_; }
     constexpr bool has_value() const noexcept { return hasValue_; }
@@ -60,8 +82,23 @@ public:
         return *this;
     }
 
+    void reset() {
+        if (hasValue_) {
+            hasValue_ = false;
+            value_.~Value();
+            dummy_ = 0;
+        }
+    }
+
 private:
-    Value value_; // stored value; inaccessible/uninitialized unless hasValue_
+    union {
+        /// unused member that helps satisfy various C++ union requirements
+        unsigned char dummy_;
+
+        /// stored value; inaccessible/uninitialized unless hasValue_
+        Value value_;
+    };
+
     bool hasValue_ = false;
 };
 
