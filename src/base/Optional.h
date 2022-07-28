@@ -40,7 +40,7 @@ public:
         reset();
     }
 
-    constexpr Optional(const Optional &other): Optional()
+    Optional(const Optional &other): Optional()
     {
         if (other.hasValue_)
             *this = other.value_;
