@@ -366,8 +366,10 @@ Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &ca
 
     MemBuf *mb = rep->pack();
 
-    debugs(11, 2, "HTTP Client " << clientConnection);
-    debugs(11, 2, "HTTP Client CONTROL MSG:\n---------\n" << mb->buf << "\n----------");
+    debugs(11, DBG_PROTOCOL, "HTTP Client RESPONSE: " << clientConnection <<
+           "\n----------\n" <<
+           mb->buf <<
+           "\n----------");
 
     Comm::Write(clientConnection, mb, call);
 

@@ -436,6 +436,12 @@ Ftp::Server::acceptDataConnection(const CommAcceptCbParams &params)
             MemBuf mb;
             mb.init();
             mb.appendf("150 Data connection opened.\r\n");
+
+            debugs(9, DBG_PROTOCOL, "FTP Client RESPONSE: " << clientConnection <<
+                   "\n----------\n" <<
+                   mb.buf <<
+                   "\n----------");
+
             Comm::Write(clientConnection, &mb, call);
         }
     }
@@ -494,8 +500,9 @@ Ftp::Server::writeEarlyReply(const int code, const char *msg)
 void
 Ftp::Server::writeReply(MemBuf &mb)
 {
-    debugs(9, 2, "FTP Client " << clientConnection);
-    debugs(9, 2, "FTP Client REPLY:\n---------\n" << mb.buf <<
+    debugs(9, DBG_PROTOCOL, "FTP Client RESPONSE: " << clientConnection <<
+           "\n----------\n" <<
+           mb.buf <<
            "\n----------");
 
     typedef CommCbMemFunT<Server, CommIoCbParams> Dialer;
@@ -700,9 +707,12 @@ Ftp::Server::parseOneRequest()
     Must(parsed && cmd.length());
     consumeInput(tok.parsedSize()); // TODO: Would delaying optimize copying?
 
-    debugs(33, 2, ">>ftp " << cmd << (params.isEmpty() ? "" : " ") << params);
-
     cmd.toUpper(); // this should speed up and simplify future comparisons
+
+    debugs(9, DBG_PROTOCOL, "FTP Client REQUEST: " << clientConnection <<
+           "\n----------\n" <<
+           cmd << (params.isEmpty() ? "" : " ") << params <<
+           "\n----------");
 
     // interception cases do not need USER to calculate the uri
     if (!transparent()) {
@@ -1203,8 +1213,9 @@ Ftp::Server::writeForwardedReplyAndCall(const HttpReply *reply, AsyncCall::Point
     mb.init();
     Ftp::PrintReply(mb, reply);
 
-    debugs(9, 2, "FTP Client " << clientConnection);
-    debugs(9, 2, "FTP Client REPLY:\n---------\n" << mb.buf <<
+    debugs(9, DBG_PROTOCOL, "FTP Client RESPONSE: " << clientConnection <<
+           "\n----------\n" <<
+           mb.buf <<
            "\n----------");
 
     Comm::Write(clientConnection, &mb, call);
@@ -1313,8 +1324,9 @@ Ftp::Server::handleRequest(HttpRequest *request)
         mb.init();
         request->pack(&mb);
 
-        debugs(9, 2, "FTP Client " << clientConnection);
-        debugs(9, 2, "FTP Client REQUEST:\n---------\n" << mb.buf <<
+        debugs(9, DBG_PROTOCOL, "FTP Client REQUEST: " << clientConnection <<
+               "\n----------\n" <<
+               mb.buf <<
                "\n----------");
     }
 

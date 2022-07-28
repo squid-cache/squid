@@ -822,10 +822,12 @@ Ftp::Client::dataClosed(const CommCloseCbParams &)
 void
 Ftp::Client::writeCommand(const char *buf)
 {
-    char *ebuf;
-    /* trace FTP protocol communications at level 2 */
-    debugs(9, 2, "ftp<< " << buf);
+    debugs(9, DBG_PROTOCOL, "FTP Server REQUEST: " << ctrl.conn <<
+           "\n----------\n" <<
+           buf <<
+           "\n----------");
 
+    char *ebuf;
     if (Config.Ftp.telnet)
         ebuf = escapeIAC(buf);
     else
@@ -1156,8 +1158,11 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
 
         xstrncpy(list->key, s, linelen);
 
-        /* trace the FTP communication chat at level 2 */
-        debugs(9, 2, "ftp>> " << list->key);
+        // TODO do not dump until full response is known (ie complete is true)
+        debugs(9, DBG_PROTOCOL, "FTP Server RESPONSE: " << ctrl.conn <<
+               "\n----------\n" <<
+               list->key <<
+               "\n----------");
 
         if (complete) {
             // use list->key for last_reply because s contains the new line

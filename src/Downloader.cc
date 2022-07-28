@@ -127,6 +127,15 @@ downloaderDetach(clientStreamNode * node, ClientHttpRequest * http)
     clientStreamDetach(node, http);
 }
 
+static const char *
+debugPrintHeaders(const HttpHeader &h)
+{
+    static MemBuf tmp;
+    tmp.init();
+    h.packInto(&tmp, true);
+    return tmp.buf;
+}
+
 /// Initializes and starts the HTTP GET request to the remote server
 bool
 Downloader::buildRequest()
@@ -149,9 +158,10 @@ Downloader::buildRequest()
     request->my_addr.port(0);
     request->downloader = this;
 
-    debugs(11, 2, "HTTP Client Downloader " << this << "/" << id);
-    debugs(11, 2, "HTTP Client REQUEST:\n---------\n" <<
+    debugs(11, DBG_PROTOCOL, "HTTP Server REQUEST: Downloader " << this << "/" << id <<
+           "\n----------\n" <<
            request->method << " " << url_ << " " << request->http_ver << "\n" <<
+           debugPrintHeaders(request->header) <<
            "\n----------");
 
     ClientHttpRequest *const http = new ClientHttpRequest(nullptr);
