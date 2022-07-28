@@ -34,7 +34,6 @@
 #include "fde.h"
 #include "format/Token.h"
 #include "FwdState.h"
-#include "gopher.h"
 #include "helper.h"
 #include "helper/Reply.h"
 #include "http.h"
@@ -73,8 +72,6 @@
 #include "ssl/ServerBump.h"
 #include "ssl/support.h"
 #endif
-
-static const char *const crlf = "\r\n";
 
 #if FOLLOW_X_FORWARDED_FOR
 static void clientFollowXForwardedForCheck(Acl::Answer answer, void *data);
@@ -909,9 +906,6 @@ clientHierarchical(ClientHttpRequest * http)
 
     if (request->url.getScheme() == AnyP::PROTO_HTTP)
         return method.respMaybeCacheable();
-
-    if (request->url.getScheme() == AnyP::PROTO_GOPHER)
-        return gopherCachable(request);
 
     if (request->url.getScheme() == AnyP::PROTO_CACHE_OBJECT)
         return 0;

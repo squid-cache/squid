@@ -49,7 +49,6 @@ Adaptation::Ecap::Host::Host()
     libecap::protocolHttp.assignHostId(AnyP::PROTO_HTTP);
     libecap::protocolHttps.assignHostId(AnyP::PROTO_HTTPS);
     libecap::protocolFtp.assignHostId(AnyP::PROTO_FTP);
-    libecap::protocolGopher.assignHostId(AnyP::PROTO_GOPHER);
     libecap::protocolWais.assignHostId(AnyP::PROTO_WAIS);
     libecap::protocolUrn.assignHostId(AnyP::PROTO_URN);
     libecap::protocolWhois.assignHostId(AnyP::PROTO_WHOIS);

@@ -83,8 +83,7 @@ public:
     void clean();
     void append(const HttpHeader * src);
     /// replaces fields with matching names and adds fresh fields with new names
-    /// also updates Http::HdrType::WARNINGs, assuming `fresh` is a 304 reply
-    /// TODO: Refactor most callers to avoid special handling of WARNINGs.
+    /// assuming `fresh` is a 304 reply
     void update(const HttpHeader *fresh);
     /// \returns whether calling update(fresh) would change our set of fields
     bool needUpdate(const HttpHeader *fresh) const;
@@ -142,7 +141,6 @@ public:
     void putContRange(const HttpHdrContRange * cr);
     void putRange(const HttpHdrRange * range);
     void putSc(HttpHdrSc *sc);
-    void putWarning(const int code, const char *const text); ///< add a Warning header
     void putExt(const char *name, const char *value);
     int getInt(Http::HdrType id) const;
     int64_t getInt64(Http::HdrType id) const;
@@ -184,7 +182,6 @@ protected:
     /// If block starts where it ends, then there are no fields in the header.
     static bool Isolate(const char **parse_start, size_t l, const char **blk_start, const char **blk_end);
     bool skipUpdateHeader(const Http::HdrType id) const;
-    void updateWarnings();
 
 private:
     HttpHeaderEntry *findLastEntry(Http::HdrType id) const;

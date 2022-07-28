@@ -30,10 +30,8 @@ public:
     Intercept() : transparentActive_(0), interceptActive_(0) {}
     ~Intercept() {};
 
-    /// perform NAT lookups
-    bool LookupNat(const Comm::ConnectionPointer &newConn);
-    /// perform Tproxy lookups
-    bool LookupTproxy(const Comm::ConnectionPointer &newConn);
+    /// perform NAT lookups for the local address of the given connection
+    bool LookupNat(const Comm::Connection &);
 
     /**
      * Test system networking calls for TPROXY support.
@@ -57,7 +55,7 @@ public:
      * This function should be called during parsing of the squid.conf
      * When any option requiring full-transparency is encountered.
      */
-    inline void StartTransparency() { transparentActive_=1; };
+    void StartTransparency();
 
     /** \par
      * Turn off fully Transparent-Proxy activities on all new connections.
@@ -78,26 +76,9 @@ public:
      * This function should be called during parsing of the squid.conf
      * When any option requiring interception / NAT handling is encountered.
      */
-    inline void StartInterception() { interceptActive_=1; };
-
-    /** \par
-     * Turn off IP-Interception-Proxy activities on all new connections.
-     * Existing transactions and connections are unaffected and will run
-     * to their natural completion.
-     \param str    Reason for stopping. Will be logged to cache.log
-     */
-    inline void StopInterception(const char *str);
+    void StartInterception();
 
 private:
-
-    /**
-     * perform Lookups on fully-transparent interception targets (TPROXY).
-     * Supports Netfilter, PF and IPFW.
-     *
-     * \param newConn  Details known, to be updated where relevant.
-     * \return         Whether successfully located the new address.
-     */
-    bool TproxyTransparent(const Comm::ConnectionPointer &newConn);
 
     /**
      * perform Lookups on Netfilter interception targets (REDIRECT, DNAT).

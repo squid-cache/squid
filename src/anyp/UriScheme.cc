@@ -87,9 +87,6 @@ AnyP::UriScheme::defaultPort() const
         // Assuming IANA policy of allocating same port for base and TLS protocol versions will occur.
         return 5683;
 
-    case AnyP::PROTO_GOPHER:
-        return 70;
-
     case AnyP::PROTO_WAIS:
         return 210;
 

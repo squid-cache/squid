@@ -40,7 +40,6 @@ public:
         srcFtp = 1 << (16 + 1), ///< ftp_port or FTP server
         srcIcap = 1 << (16 + 2), ///< traditional ICAP service without encryption
         srcEcap = 1 << (16 + 3), ///< eCAP service that uses insecure libraries/daemons
-        srcGopher = 1 << (16 + 14), ///< Gopher server
         srcWhois = 1 << (16 + 15), ///< Whois server
         srcUnsafe = 0xFFFF0000,  ///< Unsafe sources mask
         srcSafe = 0x0000FFFF ///< Safe sources mask

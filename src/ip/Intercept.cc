@@ -119,15 +119,6 @@ Ip::Intercept::StopTransparency(const char *str)
     }
 }
 
-void
-Ip::Intercept::StopInterception(const char *str)
-{
-    if (interceptActive_) {
-        debugs(89, DBG_IMPORTANT, "Stopping IP interception: " << str);
-        interceptActive_ = 0;
-    }
-}
-
 bool
 Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn)
 {
@@ -157,25 +148,33 @@ Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn)
     return false;
 }
 
-bool
-Ip::Intercept::TproxyTransparent(const Comm::ConnectionPointer &newConn)
+void
+Ip::Intercept::StartTransparency()
 {
-    /* --enable-linux-netfilter    */
-    /* --enable-ipfw-transparent   */
-    /* --enable-ipf-transparent    */
-    /* --enable-pf-transparent     */
+    // --enable-linux-netfilter
+    // --enable-pf-transparent
+    // --enable-ipfw-transparent
 #if (LINUX_NETFILTER && defined(IP_TRANSPARENT)) || \
     (PF_TRANSPARENT && defined(SO_BINDANY)) || \
     (IPFW_TRANSPARENT && defined(IP_BINDANY))
-
-    /* Trust the user configured properly. If not no harm done.
-     * We will simply attempt a bind outgoing on our own IP.
-     */
-    debugs(89, 5, "address TPROXY: " << newConn);
-    return true;
+    transparentActive_ = 1;
+#else
+    throw TextException("requires TPROXY feature to be enabled by ./configure", Here());
 #endif
-    debugs(89, DBG_IMPORTANT, "WARNING: transparent proxying not supported");
-    return false;
+}
+
+void
+Ip::Intercept::StartInterception()
+{
+    // --enable-linux-netfilter
+    // --enable-ipfw-transparent
+    // --enable-ipf-transparent
+    // --enable-pf-transparent
+#if IPF_TRANSPARENT || LINUX_NETFILTER || IPFW_TRANSPARENT || PF_TRANSPARENT
+    interceptActive_ = 1;
+#else
+    throw TextException("requires NAT Interception feature to be enabled by ./configure", Here());
+#endif
 }
 
 bool
@@ -380,43 +379,14 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn)
 }
 
 bool
-Ip::Intercept::LookupNat(const Comm::ConnectionPointer &newConn)
+Ip::Intercept::LookupNat(const Comm::Connection &aConn)
 {
-    /* --enable-linux-netfilter    */
-    /* --enable-ipfw-transparent   */
-    /* --enable-ipf-transparent    */
-    /* --enable-pf-transparent     */
-#if IPF_TRANSPARENT || LINUX_NETFILTER || IPFW_TRANSPARENT || PF_TRANSPARENT
+    debugs(89, 5, "address BEGIN: me/client= " << aConn.local << ", destination/me= " << aConn.remote);
+    assert(interceptActive_);
 
-    debugs(89, 5, "address BEGIN: me/client= " << newConn->local << ", destination/me= " << newConn->remote);
-
-    if (interceptActive_) {
-        /* NAT methods that use sock-opts to return client address */
-        if (NetfilterInterception(newConn))
-            return true;
-        if (IpfwInterception(newConn))
-            return true;
-
-        /* NAT methods that use ioctl to return client address AND destination address */
-        if (PfInterception(newConn))
-            return true;
-        if (IpfInterception(newConn))
-            return true;
-    }
-
-#else /* none of the transparent options configured */
-    (void)newConn;
-    debugs(89, DBG_IMPORTANT, "WARNING: transparent proxying not supported");
-#endif
-
-    return false;
-}
-
-bool
-Ip::Intercept::LookupTproxy(const Comm::ConnectionPointer &newConn)
-{
-    debugs(89, 5, "address BEGIN: me/client= " << newConn->local << ", destination/me= " << newConn->remote);
-    return transparentActive_ && TproxyTransparent(newConn);
+    Comm::ConnectionPointer newConn = &aConn;
+    return NetfilterInterception(newConn) || IpfwInterception(newConn) || // use sock-opts to return client address
+           PfInterception(newConn) || IpfInterception(newConn); // use ioctl to return client address AND destination address
 }
 
 bool

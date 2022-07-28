@@ -69,7 +69,19 @@ void storeRebuildProgress(int sd_index, int total, int sofar);
 
 /// loads entry from disk; fills supplied memory buffer on success
 bool storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, StoreRebuildData &counts);
-/// parses entry buffer and validates entry metadata; fills e on success
+
+/**
+ * Parses the given Store entry metadata, filling e and key.
+ * Optimization: Both e and key parameters may be updated even on failures.
+ *
+ * \param buf memory containing serialized Store entry swap metadata (at least)
+ * \param e caller's temporary StoreEntry object for returning parsed metadata
+ * \param key caller's temporary Store entry key buffer; usable to set e.key
+ * \param expectedSize either total entry size (including swap metadata) or 0
+ *
+ * \retval true success; e/key filled with parsed metadata
+ * \retval false failure; e/key ought to be ignored (may be filled/dirty)
+ */
 bool storeRebuildParseEntry(MemBuf &buf, StoreEntry &e, cache_key *key, StoreRebuildData &counts, uint64_t expectedSize);
 
 #endif /* SQUID_STORE_REBUILD_H_ */

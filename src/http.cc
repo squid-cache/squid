@@ -315,8 +315,10 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
     if (EBIT_TEST(entry->flags, RELEASE_REQUEST))
         return decision.make(ReuseDecision::doNotCacheButShare, "the entry has been released");
 
-    // RFC 7234 section 4: a cache MUST use the most recent response
-    // (as determined by the Date header field)
+    // RFC 9111 section 4:
+    // "When more than one suitable response is stored,
+    //  a cache MUST use the most recent one
+    //  (as determined by the Date header field)."
     // TODO: whether such responses could be shareable?
     if (sawDateGoBack)
         return decision.make(ReuseDecision::reuseNot, "the response has an older date header");
@@ -714,8 +716,6 @@ HttpStateData::processReplyHeader()
     hp = nullptr;
 
     newrep->sources |= request->url.getScheme() == AnyP::PROTO_HTTPS ? Http::Message::srcHttps : Http::Message::srcHttp;
-
-    newrep->removeStaleWarnings();
 
     if (newrep->sline.version.protocol == AnyP::PROTO_HTTP && Http::Is1xx(newrep->sline.status())) {
         handle1xx(newrep);
