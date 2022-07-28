@@ -175,10 +175,7 @@ Http::Tunneler::writeRequest()
         throw;
     }
 
-    debugs(11, DBG_PROTOCOL, "HTTP Server REQUEST: " << connection <<
-           "\n----------\n" <<
-           mb.buf <<
-           "\n----------");
+    protocolTrace(11, "HTTP Server REQUEST", connection, mb.buf);
     fd_note(connection->fd, "Tunnel Server CONNECT");
 
     typedef CommCbMemFunT<Http::Tunneler, CommIoCbParams> Dialer;
@@ -328,10 +325,8 @@ Http::Tunneler::handleResponse(const bool eof)
     futureAnswer.peerResponseStatus = rep->sline.status();
     request->hier.peer_reply_status = rep->sline.status();
 
-    debugs(11, DBG_PROTOCOL, "HTTP Server RESPONSE: " << connection <<
-           "\n----------\n" <<
-           Raw(nullptr, readBuf.rawContent(), rep->hdr_sz).minLevel(2).gap(false) <<
-           "\n----------");
+    protocolTrace(11, "HTTP Server RESPONSE", connection,
+                  Raw(nullptr, readBuf.rawContent(), rep->hdr_sz).minLevel(2).gap(false));
 
     // bail if we did not get an HTTP 200 (Connection Established) response
     if (rep->sline.status() != Http::scOkay) {
@@ -343,6 +338,7 @@ Http::Tunneler::handleResponse(const bool eof)
     // preserve any bytes sent by the server after the CONNECT response
     futureAnswer.leftovers = readBuf;
 
+    debugs(11, DBG_PROTOCOL, "switch to TCP on:" << connection);
     tunnelEstablished = true;
     debugs(83, 5, status());
 }

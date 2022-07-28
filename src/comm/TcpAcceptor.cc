@@ -419,10 +419,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
         }
     }
 
-    debugs(5, DBG_PROTOCOL, "TCP Client REQUEST: " << conn <<
-           "\n----------\n" <<
-           details <<
-           "\n----------");
+    protocolTrace(5, "TCP Client REQUEST", conn, details);
 
     fde *F = &fd_table[sock];
     details->remote.toStr(F->ipaddr,MAX_IPSTRLEN);

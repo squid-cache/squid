@@ -158,11 +158,9 @@ Downloader::buildRequest()
     request->my_addr.port(0);
     request->downloader = this;
 
-    debugs(11, DBG_PROTOCOL, "HTTP Server REQUEST: Downloader " << this << "/" << id <<
-           "\n----------\n" <<
-           request->method << " " << url_ << " " << request->http_ver << "\n" <<
-           debugPrintHeaders(request->header) <<
-           "\n----------");
+    protocolTrace(11, "HTTP Server REQUEST", "Downloader " << this << "/" << id,
+                  request->method << " " << url_ << " " << request->http_ver << "\n" <<
+                  debugPrintHeaders(request->header));
 
     ClientHttpRequest *const http = new ClientHttpRequest(nullptr);
     http->initRequest(request);

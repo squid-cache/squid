@@ -1318,11 +1318,9 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
     }
 
     /* We know the whole request is in parser now */
-    debugs(11, DBG_PROTOCOL, "HTTP Client REQUEST: " << clientConnection <<
-           "\n----------\n" <<
-           hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol() << "\n" <<
-           hp->mimeHeader() <<
-           "\n----------");
+    protocolTrace(11, "HTTP Client REQUEST", clientConnection,
+                  hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol() << "\n" <<
+                  hp->mimeHeader());
 
     /* deny CONNECT via accelerated ports */
     if (hp->method() == Http::METHOD_CONNECT && port != nullptr && port->flags.accelSurrogate) {

@@ -437,11 +437,7 @@ Ftp::Server::acceptDataConnection(const CommAcceptCbParams &params)
             mb.init();
             mb.appendf("150 Data connection opened.\r\n");
 
-            debugs(9, DBG_PROTOCOL, "FTP Client RESPONSE: " << clientConnection <<
-                   "\n----------\n" <<
-                   mb.buf <<
-                   "\n----------");
-
+            protocolTrace(9, "FTP Client RESPONSE", clientConnection, mb.buf);
             Comm::Write(clientConnection, &mb, call);
         }
     }
@@ -500,10 +496,7 @@ Ftp::Server::writeEarlyReply(const int code, const char *msg)
 void
 Ftp::Server::writeReply(MemBuf &mb)
 {
-    debugs(9, DBG_PROTOCOL, "FTP Client RESPONSE: " << clientConnection <<
-           "\n----------\n" <<
-           mb.buf <<
-           "\n----------");
+    protocolTrace(9, "FTP Client RESPONSE", clientConnection, mb.buf);
 
     typedef CommCbMemFunT<Server, CommIoCbParams> Dialer;
     AsyncCall::Pointer call = JobCallback(33, 5, Dialer, this, Ftp::Server::wroteReply);
@@ -709,10 +702,8 @@ Ftp::Server::parseOneRequest()
 
     cmd.toUpper(); // this should speed up and simplify future comparisons
 
-    debugs(9, DBG_PROTOCOL, "FTP Client REQUEST: " << clientConnection <<
-           "\n----------\n" <<
-           cmd << (params.isEmpty() ? "" : " ") << params <<
-           "\n----------");
+    protocolTrace(9, "FTP Client REQUEST", clientConnection,
+                  cmd << (params.isEmpty() ? "" : " ") << params);
 
     // interception cases do not need USER to calculate the uri
     if (!transparent()) {
@@ -1213,11 +1204,7 @@ Ftp::Server::writeForwardedReplyAndCall(const HttpReply *reply, AsyncCall::Point
     mb.init();
     Ftp::PrintReply(mb, reply);
 
-    debugs(9, DBG_PROTOCOL, "FTP Client RESPONSE: " << clientConnection <<
-           "\n----------\n" <<
-           mb.buf <<
-           "\n----------");
-
+    protocolTrace(9, "FTP Client RESPONSE", clientConnection, mb.buf);
     Comm::Write(clientConnection, &mb, call);
 }
 
@@ -1324,10 +1311,7 @@ Ftp::Server::handleRequest(HttpRequest *request)
         mb.init();
         request->pack(&mb);
 
-        debugs(9, DBG_PROTOCOL, "FTP Client REQUEST: " << clientConnection <<
-               "\n----------\n" <<
-               mb.buf <<
-               "\n----------");
+        protocolTrace(9, "FTP Client REQUEST", clientConnection, mb.buf);
     }
 
     // TODO: When HttpHeader uses SBuf, change keys to SBuf

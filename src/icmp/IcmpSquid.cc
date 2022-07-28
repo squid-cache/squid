@@ -86,12 +86,10 @@ IcmpSquid::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
 
     slen = sizeof(pingerEchoData) - PINGER_PAYLOAD_SZ + pecho.psize;
 
-    debugs(37, DBG_PROTOCOL, "ICMP Server REQUEST: " << pecho.to <<
-           "\n----------\n" <<
-           " opcode=" << opcode <<
-           " len=" << pecho.psize <<
-           Raw("payload", pecho.payload, pecho.psize).gap(false).hex().minLevel(DBG_DATA) <<
-           "\n----------");
+    protocolTrace(37, "ICMP Server REQUEST", pecho.to,
+                  " opcode=" << opcode <<
+                  " len=" << pecho.psize <<
+                  Raw("payload", pecho.payload, pecho.psize).gap(false).hex().minLevel(DBG_DATA));
 
     x = comm_udp_send(icmp_sock, (char *)&pecho, slen, 0);
 
@@ -160,12 +158,10 @@ IcmpSquid::Recv()
 
     F.port(0);
 
-    debugs(37, DBG_PROTOCOL, "ICMP Server RESPONSE: " << preply.from <<
-           "\n----------\n" <<
-           " opcode=" << preply.opcode <<
-           " hops=" << preply.hops <<
-           " rtt=" << preply.rtt <<
-           "\n----------");
+    protocolTrace(37, "ICMP Server RESPONSE", preply.from,
+                  " opcode=" << preply.opcode <<
+                  " hops=" << preply.hops <<
+                  " rtt=" << preply.rtt);
 
     switch (preply.opcode) {
 
