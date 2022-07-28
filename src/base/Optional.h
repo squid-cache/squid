@@ -43,7 +43,7 @@ public:
     constexpr Optional(const Optional &other): Optional()
     {
         if (other.hasValue_)
-            *this = other;
+            *this = other.value_;
     }
 
     Optional &operator =(const Optional &other)
@@ -60,8 +60,9 @@ public:
 
     Optional(Optional<Value> &&other): Optional()
     {
+        // no other.reset() per std::optional move semantics
         if (other.hasValue_)
-            *this = std::move(other);
+            *this = std::move(other.value_);
     }
 
     Optional &operator =(Optional<Value> &&other)
