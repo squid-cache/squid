@@ -40,8 +40,23 @@ public:
         reset();
     }
 
-    constexpr Optional(const Optional &other) = default;
-    Optional &operator =(const Optional &other) = default;
+    constexpr Optional(const Optional &other): Optional()
+    {
+        if (other.hasValue_)
+            *this = other;
+    }
+
+    Optional &operator =(const Optional &other)
+    {
+        if (this != &other) {
+            if (other.has_value()) {
+                *this = other.value_;
+            } else {
+                reset();
+            }
+        }
+        return *this;
+    }
 
     Optional(Optional<Value> &&other) { *this = std::move(other); }
 
