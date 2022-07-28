@@ -49,7 +49,7 @@ public:
     Optional &operator =(const Optional &other)
     {
         if (this != &other) {
-            if (other.has_value()) {
+            if (other.hasValue_) {
                 *this = other.value_;
             } else {
                 reset();
@@ -68,7 +68,7 @@ public:
     Optional &operator =(Optional<Value> &&other)
     {
         if (this != &other) {
-            if (other.has_value()) {
+            if (other.hasValue_) {
                 *this = std::move(other.value_);
                 // no other.reset() per std::optional move semantics
             } else {
