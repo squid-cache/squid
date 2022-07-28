@@ -28,7 +28,7 @@ template <typename Value>
 class Optional
 {
 public:
-    constexpr Optional() noexcept: dummy_(0) {}
+    constexpr Optional() noexcept: dummy_() {}
     constexpr explicit Optional(const Value &v): value_(v), hasValue_(true) {}
 
     ~Optional()
@@ -92,7 +92,7 @@ public:
 private:
     union {
         /// unused member that helps satisfy various C++ union requirements
-        unsigned char dummy_;
+        struct {} dummy_;
 
         /// stored value; inaccessible/uninitialized unless hasValue_
         Value value_;
