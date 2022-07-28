@@ -39,7 +39,7 @@
 /* defined names for Debug Levels */
 #define DBG_CRITICAL   0 /**< critical messages always shown when they occur */
 #define DBG_IMPORTANT  1 /**< important messages always shown when their section is being checked */
-#define DBG_PROTOCOL   2 /**< show flow of protocol messages. Excluding message content/payload which is in DBG_DATA. */
+#define DBG_PROTOCOL   2 /**< protocol messages excluding content/payload which is DBG_DATA */
 /* levels 3-8 are still being discussed amongst the developers */
 #define DBG_DATA       9 /**< output is a large data dump only necessary for advanced debugging */
 
