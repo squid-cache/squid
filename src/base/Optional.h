@@ -86,7 +86,6 @@ public:
         if (hasValue_) {
             hasValue_ = false;
             value_.~Value();
-            dummy_ = 0;
         }
     }
 
