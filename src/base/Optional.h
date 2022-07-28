@@ -58,7 +58,11 @@ public:
         return *this;
     }
 
-    Optional(Optional<Value> &&other) { *this = std::move(other); }
+    Optional(Optional<Value> &&other): Optional()
+    {
+        if (other.hasValue_)
+            *this = std::move(other);
+    }
 
     Optional &operator =(Optional<Value> &&other)
     {
