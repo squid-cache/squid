@@ -50,7 +50,7 @@ public:
         if (this != &other) {
             if (other.has_value()) {
                 *this = std::move(other.value_);
-                other.reset();
+                // no other.reset() per std::optional move semantics
             } else {
                 reset();
             }
