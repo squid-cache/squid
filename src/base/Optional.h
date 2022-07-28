@@ -49,20 +49,20 @@ public:
     Optional &operator =(const Optional &other)
     {
         if (this != &other) {
-            if (other.hasValue_) {
+            if (other.hasValue_)
                 *this = other.value_;
-            } else {
+            else
                 reset();
-            }
         }
         return *this;
     }
 
     Optional(Optional<Value> &&other): Optional()
     {
-        // no other.reset() per std::optional move semantics
-        if (other.hasValue_)
+        if (other.hasValue_) {
             *this = std::move(other.value_);
+            // no other.reset() per std::optional move semantics
+        }
     }
 
     Optional &operator =(Optional<Value> &&other)
