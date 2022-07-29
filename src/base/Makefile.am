@@ -48,7 +48,6 @@ libbase_la_SOURCES = \
 	JobWait.h \
 	Lock.h \
 	LookupTable.h \
-	Optional.h \
 	Packable.h \
 	PackableStream.h \
 	RandomUuid.cc \

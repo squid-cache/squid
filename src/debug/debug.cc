@@ -9,7 +9,6 @@
 /* DEBUG: section 00    Debug Routines */
 
 #include "squid.h"
-#include "base/Optional.h"
 #include "base/TextException.h"
 #include "debug/Stream.h"
 #include "fd.h"

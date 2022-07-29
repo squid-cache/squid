@@ -10,7 +10,6 @@
 #define SQUID_LOG_FORMATTEDLOG_H_
 
 #include "acl/forward.h"
-#include "base/Optional.h"
 #include "log/Formats.h"
 #include "log/forward.h"
 

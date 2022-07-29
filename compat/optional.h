@@ -6,8 +6,16 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID__SRC_BASE_OPTIONAL_H
-#define SQUID__SRC_BASE_OPTIONAL_H
+#ifndef SQUID__COMPAT_OPTIONAL_H
+#define SQUID__COMPAT_OPTIONAL_H
+
+#if __cplusplus
+#if __has_include(<optional>)
+
+#include <optional>
+template<class T> using Optional = std::optional<T>;
+
+#else
 
 #include <exception>
 #include <type_traits>
@@ -120,6 +128,6 @@ private:
 
     bool hasValue_ = false;
 };
-
-#endif /* SQUID__SRC_BASE_OPTIONAL_H */
-
+#endif
+#endif /* __cplusplus */
+#endif /* SQUID__COMPAT_OPTIONAL_H */

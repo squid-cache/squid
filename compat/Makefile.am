@@ -44,6 +44,7 @@ libcompatsquid_la_SOURCES = \
 	memrchr.h \
 	mswindows.cc \
 	openssl.h \
+	optional.h \
 	os/aix.h \
 	os/android.h \
 	os/dragonfly.h \

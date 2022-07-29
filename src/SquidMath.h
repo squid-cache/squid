@@ -10,7 +10,6 @@
 #define _SQUID_SRC_SQUIDMATH_H
 
 #include "base/forward.h"
-#include "base/Optional.h"
 
 #include <limits>
 #include <type_traits>

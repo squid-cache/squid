@@ -55,6 +55,7 @@
 #define __STDC_FORMAT_MACROS
 
 #include "compat/types.h"
+#include "compat/optional.h"
 
 /*****************************************************/
 /* per-OS hacks. One file per OS.                    */
