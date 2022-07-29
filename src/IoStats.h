@@ -22,7 +22,7 @@ public:
         int writes;
         int write_hist[histSize];
     }
-    Http, Ftp, Gopher;
+    Http, Ftp;
 };
 
 #endif /* SQUID_IOSTATS_H_ */

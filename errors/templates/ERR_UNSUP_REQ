@@ -24,7 +24,7 @@ body
 <p><b>Unsupported Request Method and Protocol</b></p>
 </blockquote>
 
-<p>Squid does not support all request methods for all access protocols. For example, you can not POST a Gopher request.</p>
+<p>Squid does not support all request methods for all access protocols.</p>
 
 <p>Your cache administrator is <a href="mailto:%w%W">%w</a>.</p>
 <br>

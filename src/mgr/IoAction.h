@@ -27,10 +27,8 @@ public:
 public:
     double http_reads;
     double ftp_reads;
-    double gopher_reads;
     double http_read_hist[IoStats::histSize];
     double ftp_read_hist[IoStats::histSize];
-    double gopher_read_hist[IoStats::histSize];
 };
 
 /// implement aggregated 'io' action
