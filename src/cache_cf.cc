@@ -720,7 +720,7 @@ configDoConfigure(void)
      * the extra space is for loop detection in client_side.c -- we search
      * for substrings in the Via header.
      */
-    snprintf(ThisCache2, sizeof(ThisCache), " %s (%s)",
+    snprintf(ThisCache2, sizeof(ThisCache2), " %s (%s)",
              uniqueHostname(),
              visible_appname_string);
 
