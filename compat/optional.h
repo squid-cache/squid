@@ -9,13 +9,12 @@
 #ifndef SQUID__COMPAT_OPTIONAL_H
 #define SQUID__COMPAT_OPTIONAL_H
 
-#if __cplusplus
-#if __has_include(<optional>)
+#if __cplusplus > 201701L
 
 #include <optional>
 template<class T> using Optional = std::optional<T>;
 
-#else
+#elif __cplusplus
 
 #include <exception>
 #include <type_traits>
@@ -129,5 +128,4 @@ private:
     bool hasValue_ = false;
 };
 #endif
-#endif /* __cplusplus */
 #endif /* SQUID__COMPAT_OPTIONAL_H */
