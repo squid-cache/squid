@@ -145,7 +145,7 @@ StoreSearch *NewLocalSearch() STUB_RETVAL(nullptr)
 
 #include "store/SwapMetaIn.h"
 size_t Store::UnpackSwapMetaSize(const SBuf &) STUB_RETVAL(0)
-uint64_t Store::UnpackIndexSwapMeta(const MemBuf &, StoreEntry &, cache_key *) STUB_RETVAL(0)
+size_t Store::UnpackIndexSwapMeta(const MemBuf &, StoreEntry &, cache_key *) STUB_RETVAL(0)
 void Store::UnpackHitSwapMeta(char const *, ssize_t, StoreEntry &) STUB
 
 #include "store/SwapMetaOut.h"
