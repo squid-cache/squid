@@ -33,7 +33,7 @@ Seed32()
 std::mt19937_64::result_type
 Seed64()
 {
-    std::mt19937_64::result_type value = Seed32();
-    return (value << 32) | Seed32();
+    std::mt19937_64::result_type left = Seed32();
+    return (left << 32) | Seed32();
 }
 
