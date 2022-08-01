@@ -12,8 +12,8 @@
 #include <random>
 
 /// A 32-bit random value suitable for seeding a 32-bit random number generator.
-/// Computing this value may require device I/O but does not block to accumulate
-/// entropy. Thus, this function:
+/// Computing this value may require blocking device I/O but does not require
+/// waiting to accumulate entropy. Thus, this function:
 /// * may be called at runtime (e.g., the first time a given r.n.g. is needed)
 /// * should not be called frequently (e.g., once per transaction is too often)
 /// * should not be used as a source of randomness (use a r.n.g. instead)

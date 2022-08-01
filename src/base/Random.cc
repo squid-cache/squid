@@ -11,12 +11,25 @@
 std::mt19937::result_type
 Seed32()
 {
-    // By default, std::random_device may be blocking or non-blocking, which is
-    // implementation-defined, so we need "/dev/urandom" to guarantee the non-blocking
-    // behavior. Theoretically, this file may be missing in some exotic
-    // configurations, causing std::runtime_error. For simplicity, we assume that
-    // such configurations do not exist until the opposite is confirmed.
-    static std::random_device dev("/dev/urandom");
+    // We promise entropy collection without waiting, but there is no standard
+    // way to get that in all environments:
+    // * GCC and clang use "/dev/urandom" device name by default.
+    // * GCC throws if the requested "/dev/urandom" is not supported.
+    // * clang implementations that use getentropy(3) throw if given any device
+    //   name other than "/dev/urandom".
+    // * clang implementations that use (non-waiting entropy collection provided
+    //   by) arc4random(3) ignore the device name.
+    // * Microsoft STL ignores the device name and is silent regarding entropy
+    //   collection wait but talks about being "slower" than pseudo r.n.g. and
+    //   doing blocking I/O, implying entropy source similar to "/dev/urandom".
+    //
+    // Since popular STL implementations gravitate towards non-blocking entropy
+    // collection, we assume that all other implementations (that Squid may
+    // encounter) will mimic that popular default. We could insist on
+    // "/dev/urandom" (and fall back to default on exceptions) instead, but that
+    // might prevent an implementation from selecting a "better" entropy source
+    // (than "/dev/urandom") and increase cache.log notification noise.
+    static std::random_device dev;
     return dev();
 }
 
