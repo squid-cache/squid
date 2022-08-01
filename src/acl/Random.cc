@@ -11,7 +11,6 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Random.h"
-#include "base/Random.h"
 #include "debug/Stream.h"
 #include "Parsing.h"
 #include "wordlist.h"
