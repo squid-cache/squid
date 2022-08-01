@@ -7,8 +7,8 @@
  */
 
 #include "squid.h"
-#include "base/Random.h"
 #include "base/CharacterSet.h"
+#include "base/Random.h"
 #include "tests/SBufFindTest.h"
 
 #include <cppunit/extensions/HelperMacros.h>
