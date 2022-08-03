@@ -43,8 +43,6 @@
  */
 #include "mem/Pool.h"
 
-#include <random>
-
 static AUTHSSTATS authenticateDigestStats;
 
 helper *digestauthenticators = nullptr;

@@ -44,7 +44,6 @@
 #include <arpa/nameser.h>
 #endif
 #include <cerrno>
-#include <random>
 #if HAVE_RESOLV_H
 #include <resolv.h>
 #endif

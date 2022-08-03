@@ -14,7 +14,6 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Message.h>
 #include <limits>
-#include <random>
 
 /* TODO: The whole SBufFindTest class is currently implemented as a single
    CppUnit test case (because we do not want to register and report every one

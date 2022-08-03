@@ -16,7 +16,6 @@
 #include "tools.h"
 
 #include <cmath>
-#include <random>
 
 /* The list of event processes */
 
