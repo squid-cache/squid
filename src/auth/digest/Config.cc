@@ -159,7 +159,7 @@ authenticateDigestNonceNew(void)
      * - the timestamp also guarantees local uniqueness in the input to
      * the hash function.
      */
-    static std::mt19937 mt(Seed32());
+    static std::mt19937 mt(RandomSeed32());
     static xuniform_int_distribution<uint32_t> newRandomData;
 
     /* create a new nonce */

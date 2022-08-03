@@ -207,7 +207,7 @@ result_recv(char *buffer, int length)
 static void
 random_vector(char *aVector)
 {
-    static std::mt19937 mt(Seed32());
+    static std::mt19937 mt(RandomSeed32());
     static xuniform_int_distribution<uint8_t> dist;
 
     for (int i = 0; i < AUTH_VECTOR_LEN; ++i)

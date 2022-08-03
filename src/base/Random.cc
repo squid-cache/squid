@@ -9,7 +9,7 @@
 #include "base/Random.h"
 
 std::mt19937::result_type
-Seed32()
+RandomSeed32()
 {
     // We promise entropy collection without waiting, but there is no standard
     // way to get that in all environments. We considered these device names:
@@ -31,9 +31,9 @@ Seed32()
 }
 
 std::mt19937_64::result_type
-Seed64()
+RandomSeed64()
 {
-    std::mt19937_64::result_type left = Seed32();
-    return (left << 32) | Seed32();
+    std::mt19937_64::result_type left = RandomSeed32();
+    return (left << 32) | RandomSeed32();
 }
 

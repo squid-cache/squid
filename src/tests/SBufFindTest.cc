@@ -371,7 +371,7 @@ SBufFindTest::RandomSBuf(const int length)
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "abcdefghijklomnpqrstuvwxyz";
 
-    static std::mt19937 mt(Seed32());
+    static std::mt19937 mt(RandomSeed32());
 
     // sizeof() counts the terminating zero at the end of characters
     // and the distribution is an 'inclusive' value range, so -2

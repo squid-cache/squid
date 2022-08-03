@@ -17,10 +17,10 @@
 /// * may be called at runtime (e.g., the first time a given r.n.g. is needed)
 /// * should not be called frequently (e.g., once per transaction is too often)
 /// * should not be used as a source of randomness (use a r.n.g. instead)
-std::mt19937::result_type Seed32();
+std::mt19937::result_type RandomSeed32();
 
-/// a 64-bit version of Seed32()
-std::mt19937_64::result_type Seed64();
+/// a 64-bit version of RandomSeed32()
+std::mt19937_64::result_type RandomSeed64();
 
 #endif /* SQUID_SRC_BASE_RANDOM_H */
 

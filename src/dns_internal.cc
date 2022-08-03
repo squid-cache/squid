@@ -1048,7 +1048,7 @@ static unsigned short
 idnsQueryID()
 {
     // NP: apparently ranlux are faster, but not quite as "proven"
-    static std::mt19937 mt(Seed32());
+    static std::mt19937 mt(RandomSeed32());
     unsigned short id = mt() & 0xFFFF;
     unsigned short first_id = id;
 
