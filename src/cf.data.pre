@@ -182,6 +182,30 @@ DOC_START
 DOC_END
 
 # Options removed in 6.x
+NAME: announce_file
+TYPE: obsolete
+DOC_START
+	Remove this line. Squid no longer supports this feature.
+DOC_END
+
+NAME: announce_host
+TYPE: obsolete
+DOC_START
+	Remove this line. Squid no longer supports this feature.
+DOC_END
+
+NAME: announce_period
+TYPE: obsolete
+DOC_START
+	Remove this line. Squid no longer supports this feature.
+DOC_END
+
+NAME: announce_port
+TYPE: obsolete
+DOC_START
+	Remove this line. Squid no longer supports this feature.
+DOC_END
+
 NAME: request_entities
 TYPE: obsolete
 DOC_START
@@ -7491,73 +7515,6 @@ DOC_START
 
 	For a traditional octal representation of umasks, start
         your value with 0.
-DOC_END
-
-COMMENT_START
- OPTIONS FOR THE CACHE REGISTRATION SERVICE
- -----------------------------------------------------------------------------
-
-	This section contains parameters for the (optional) cache
-	announcement service.  This service is provided to help
-	cache administrators locate one another in order to join or
-	create cache hierarchies.
-
-	An 'announcement' message is sent (via UDP) to the registration
-	service by Squid.  By default, the announcement message is NOT
-	SENT unless you enable it with 'announce_period' below.
-
-	The announcement message includes your hostname, plus the
-	following information from this configuration file:
-
-		http_port
-		icp_port
-		cache_mgr
-
-	All current information is processed regularly and made
-	available on the Web at http://www.ircache.net/Cache/Tracker/.
-COMMENT_END
-
-NAME: announce_period
-TYPE: time_t
-LOC: Config.Announce.period
-DEFAULT: 0
-DEFAULT_DOC: Announcement messages disabled.
-DOC_START
-	This is how frequently to send cache announcements.
-
-	To enable announcing your cache, just set an announce period.
-
-	Example:
-		announce_period 1 day
-DOC_END
-
-NAME: announce_host
-TYPE: string
-DEFAULT: tracker.ircache.net
-LOC: Config.Announce.host
-DOC_START
-	Set the hostname where announce registration messages will be sent.
-
-	See also announce_port and announce_file
-DOC_END
-
-NAME: announce_file
-TYPE: string
-DEFAULT: none
-LOC: Config.Announce.file
-DOC_START
-	The contents of this file will be included in the announce
-	registration messages.
-DOC_END
-
-NAME: announce_port
-TYPE: u_short
-DEFAULT: 3131
-LOC: Config.Announce.port
-DOC_START
-	Set the port where announce registration messages will be sent.
-
-	See also announce_host and announce_file
 DOC_END
 
 COMMENT_START
