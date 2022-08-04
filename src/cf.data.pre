@@ -4862,7 +4862,7 @@ DOC_START
 		[http::]<bs	Number of HTTP-equivalent message body bytes
 				received from the next hop, excluding chunked
 				transfer encoding and control messages.
-				Generated FTP/Gopher listings are treated as
+				Generated FTP listings are treated as
 				received bodies.
 
 	    TIMING
@@ -6476,7 +6476,6 @@ CONFIG_START
 # Add any of your own refresh_pattern entries above these.
 #
 refresh_pattern ^ftp:		1440	20%	10080
-refresh_pattern ^gopher:	1440	0%	1440
 refresh_pattern -i (/cgi-bin/|\?) 0	0%	0
 refresh_pattern .		0	20%	4320
 CONFIG_END
@@ -9215,7 +9214,7 @@ DOC_START
 	client IP can use. Any more than this and Squid will begin to drop
 	new connections from the client until it closes some links.
 
-	Note that this is a global limit. It affects all HTTP, HTCP, Gopher and FTP
+	Note that this is a global limit. It affects all HTTP, HTCP, and FTP
 	connections from the client. For finer control use the ACL access controls.
 
 	Requires client_db to be enabled (the default).

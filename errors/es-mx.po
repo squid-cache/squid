@@ -843,8 +843,7 @@ msgid ""
 "example, you can not POST a Gopher request."
 msgstr ""
 "Squid no soporta todos los métodos de solicitud para algunos protocolos de "
-"acceso. Por ejemplo, no es posible hacer una solcitud POST a un servidor "
-"Gopher."
+"acceso."
 
 #: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1
 msgid ""

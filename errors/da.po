@@ -829,8 +829,7 @@ msgid ""
 "example, you can not POST a Gopher request."
 msgstr ""
 "Proxy'en Squid underst&oslash;tter ikke alle foresp&oslash;rgselsmetoder for "
-"alle adgangs protokoller. For eksempel kan du ikke POST en Gopher "
-"foresp&oslash;rgsel."
+"alle adgangs protokoller."
 
 #: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1
 #, fuzzy
@@ -839,8 +838,7 @@ msgid ""
 "is currently not supported."
 msgstr ""
 "Proxy'en Squid underst&oslash;tter ikke alle foresp&oslash;rgselsmetoder for "
-"alle adgangs protokoller. For eksempel kan du ikke POST en Gopher "
-"foresp&oslash;rgsel."
+"alle adgangs protokoller."
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:27-1
 msgid ""

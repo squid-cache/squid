@@ -334,7 +334,7 @@ static struct ssl_option {
 #endif
 #if defined(SSL_OP_ALL)
     {
-        "ALL", (long)SSL_OP_ALL
+        "ALL", SSL_OP_ALL
     },
 #endif
 #if defined(SSL_OP_SINGLE_DH_USE)

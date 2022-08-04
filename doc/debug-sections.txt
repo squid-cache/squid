@@ -30,7 +30,6 @@ section 06    Disk I/O Routines
 section 07    Multicast
 section 08    Swap File Bitmap
 section 09    File Transfer Protocol (FTP)
-section 10    Gopher
 section 11    Hypertext Transfer Protocol (HTTP)
 section 12    Internet Cache Protocol (ICP)
 section 13    High Level Memory Pool Management
