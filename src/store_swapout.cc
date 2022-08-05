@@ -352,19 +352,18 @@ StoreEntry::mayStartSwapOut()
         return false;
     }
 
+    // If we have started swapping out, do not start over. Most likely, we have
+    // finished swapping out by now because we are not currently swappingOut().
+    if (decision == MemObject::SwapOut::swStarted) {
+        debugs(20, 3, "already started");
+        return false;
+    }
+
     // TODO: Store::Root() is FATALly missing during shutdown
-    // TODO: Move lower to avoid checking multiple times.
     // if there is a usable disk entry already, do not start over
     if (hasDisk() || Store::Root().hasReadableDiskEntry(*this)) {
         debugs(20, 3, "already did"); // we or somebody else created that entry
         swapOutDecision(MemObject::SwapOut::swImpossible);
-        return false;
-    }
-
-    // if we have just stared swapping out (attachToDisk() has not been
-    // called), do not start over
-    if (decision == MemObject::SwapOut::swStarted) {
-        debugs(20, 3, "already started");
         return false;
     }
 
