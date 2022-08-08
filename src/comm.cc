@@ -74,6 +74,7 @@ static EVH commHalfClosedCheck;
 static void commPlanHalfClosedCheck();
 
 static Comm::Flag commBind(int s, struct addrinfo &);
+static inline void CommSetBindNoPort(int s);
 static void commSetReuseAddr(int);
 static void commSetNoLinger(int);
 #ifdef TCP_NODELAY
@@ -200,10 +201,29 @@ comm_local_port(int fd)
     return F->local_addr.port();
 }
 
+/* Sets the IP_BIND_ADDRESS_NO_PORT sock option to enable reuse of Linux ephemeral ports */
+static inline void CommSetBindNoPort(int s)
+{
+    int bind_noport_flag = 1;
+#if _SQUID_LINUX_
+    if (setsockopt(s, IPPROTO_IP, IP_BIND_ADDRESS_NO_PORT, (char *) &bind_noport_flag, sizeof(int)) < 0) {
+        int xerrno = errno;
+        debugs(50, DBG_IMPORTANT, MYNAME << "setsockopt(IP_BIND_ADDRESS_NO_PORT) " << (bind_noport_flag?"ON":"OFF") << " for FD " << s << ": " << xstrerr(xerrno));
+    }
+#else
+    debugs(50, DBG_CRITICAL, MYNAME << "WARNING: setsockopt(IP_BIND_ADDRESS_NO_PORT) not supported on this platform");
+#endif
+}
+
 static Comm::Flag
 commBind(int s, struct addrinfo &inaddr)
 {
     ++ statCounter.syscalls.sock.binds;
+
+    sockaddr_in* addr = (sockaddr_in*)inaddr.ai_addr;
+    if (inaddr.ai_socktype == SOCK_STREAM && addr->sin_family == AF_INET && addr->sin_port == 0) {
+        CommSetBindNoPort(s);
+    }
 
     if (bind(s, inaddr.ai_addr, inaddr.ai_addrlen) == 0) {
         debugs(50, 6, "bind socket FD " << s << " to " << fd_table[s].local_addr);
