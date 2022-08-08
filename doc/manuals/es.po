@@ -2562,7 +2562,7 @@ msgid ""
 "blocking process."
 msgstr ""
 "B<squid> es servidor proxy-caché de alto rendimiento para clientes web que "
-"soporta FTP, gopher, ICAP, ICP, HTCP y objetos de datos HTTP. A diferencia "
+"soporta FTP, ICAP, ICP, HTCP y objetos de datos HTTP. A diferencia "
 "del software de caché tradicional, Squid maneja todas las solicitudes en un "
 "único proceso asíncrono"
 

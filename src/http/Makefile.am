@@ -43,9 +43,4 @@ MethodType.cc: MethodType.h $(top_srcdir)/src/mk-string-arrays.awk
 
 CLEANFILES += MethodType.cc
 
-gperf-files: RegisteredHeadersHash.gperf
-	if test $(srcdir)/RegisteredHeadersHash.gperf -nt $(srcdir)/RegisteredHeadersHash.cci; then gperf -m 100000 $(srcdir)/RegisteredHeadersHash.gperf | sed 's/register //g' > $(srcdir)/RegisteredHeadersHash.cci; fi
-
 EXTRA_DIST = RegisteredHeadersHash.gperf
-
-.PHONY: gperf-files

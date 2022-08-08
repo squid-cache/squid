@@ -67,7 +67,7 @@ typedef enum {
     ERR_GATEWAY_FAILURE,
 
     /* Special Cases */
-    ERR_DIR_LISTING,            /* Display of remote directory (FTP, Gopher) */
+    ERR_DIR_LISTING,            /* Display of remote directory (FTP) */
     ERR_SQUID_SIGNATURE,        /* not really an error */
     ERR_SHUTTING_DOWN,
     ERR_PROTOCOL_UNKNOWN,

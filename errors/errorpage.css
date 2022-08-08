@@ -73,7 +73,7 @@ p {
 pre {
 }
 
-/* special event: FTP / Gopher directory listing */
+/* special event: FTP directory listing */
 #dirmsg {
     font-family: courier, monospace;
     color: black;

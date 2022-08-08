@@ -35,9 +35,6 @@ Mgr::IoActionData::operator += (const IoActionData& stats)
     ftp_reads += stats.ftp_reads;
     for (int i = 0; i < IoStats::histSize; ++i)
         ftp_read_hist[i] += stats.ftp_read_hist[i];
-    gopher_reads += stats.gopher_reads;
-    for (int i = 0; i < IoStats::histSize; ++i)
-        gopher_read_hist[i] += stats.gopher_read_hist[i];
 
     return *this;
 }
