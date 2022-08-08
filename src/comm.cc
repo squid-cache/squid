@@ -202,7 +202,8 @@ comm_local_port(int fd)
 }
 
 /* Sets the IP_BIND_ADDRESS_NO_PORT sock option to enable reuse of Linux ephemeral ports */
-static inline void CommSetBindNoPort(int s)
+static inline void
+CommSetBindNoPort(int s)
 {
     int bind_noport_flag = 1;
 #if _SQUID_LINUX_
@@ -220,6 +221,7 @@ commBind(int s, struct addrinfo &inaddr)
 {
     ++ statCounter.syscalls.sock.binds;
 
+    /* If this is a socket for an outbound TCP session, set the flag for ephemeral source port reuse */
     sockaddr_in* addr = (sockaddr_in*)inaddr.ai_addr;
     if (inaddr.ai_socktype == SOCK_STREAM && addr->sin_family == AF_INET && addr->sin_port == 0) {
         CommSetBindNoPort(s);
