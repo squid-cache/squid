@@ -160,6 +160,10 @@ doPages(StoreEntry *anEntry)
 void
 StoreEntry::swapOut()
 {
+    // Store::Root() in many swapout checks is FATALly missing during shutdown
+    if (shutting_down)
+        return;
+
     if (!mem_obj)
         return;
 
@@ -359,7 +363,6 @@ StoreEntry::mayStartSwapOut()
         return false;
     }
 
-    // TODO: Store::Root() is FATALly missing during shutdown
     // if there is a usable disk entry already, do not start over
     if (hasDisk() || Store::Root().hasReadableDiskEntry(*this)) {
         debugs(20, 3, "already did"); // we or somebody else created that entry
