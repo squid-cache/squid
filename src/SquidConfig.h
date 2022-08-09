@@ -229,13 +229,6 @@ public:
     char *errHtmlText;
 
     struct {
-        char *host;
-        char *file;
-        time_t period;
-        unsigned short port;
-    } Announce;
-
-    struct {
 
         Ip::Address udp_incoming;
         Ip::Address udp_outgoing;
@@ -289,7 +282,6 @@ public:
         int buffered_logs;
         int common_log;
         int log_mime_hdrs;
-        int announce;
         int mem_pools;
         int test_reachability;
         int half_closed_clients;
