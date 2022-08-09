@@ -251,7 +251,7 @@ comm_open_listener(int sock_type,
 {
     /* All listener sockets require bind(). Skip the IP_BIND_ADDRESS_NO_PORT
      * sockopt as we need to know the port number right after bind(). */
-    conn->flags |= COMM_DOBIND & COMM_BIND_NOW;
+    conn->flags |= COMM_DOBIND | COMM_BIND_NOW;
 
     /* attempt native enabled port. */
     conn->fd = comm_openex(sock_type, proto, conn->local, conn->flags, note);
