@@ -107,10 +107,19 @@ ntlm_fetch_string(const ntlmhdr *packet, const int32_t packet_size, const strhdr
     int32_t o = le32toh(str->offset);
     // debug("ntlm_fetch_string(plength=%d,l=%d,o=%d)\n",packet_size,l,o);
 
-    if (l < 0 || l > NTLM_MAX_FIELD_LENGTH || o + l > packet_size || o == 0) {
-        debug("ntlm_fetch_string: insane data (pkt-sz: %d, fetch len: %d, offset: %d)\n", packet_size,l,o);
+    if (l < 0 || l > NTLM_MAX_FIELD_LENGTH) {
+        debug("ntlm_fetch_string: insane string length (pkt-sz: %d, fetch len: %d, offset: %d)\n", packet_size,l,o);
         return rv;
     }
+    else if (o <= 0 || o > packet_size) {
+        debug("ntlm_fetch_string: insane string offset (pkt-sz: %d, fetch len: %d, offset: %d)\n", packet_size,l,o);
+        return rv;
+    }
+    else if (l > packet_size - o) {
+        debug("ntlm_fetch_string: truncated string data (pkt-sz: %d, fetch len: %d, offset: %d)\n", packet_size,l,o);
+        return rv;
+    }
+
     rv.str = (char *)packet + o;
     rv.l = 0;
     if ((flags & NTLM_NEGOTIATE_ASCII) == 0) {
