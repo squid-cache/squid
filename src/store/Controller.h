@@ -108,9 +108,6 @@ public:
     /// whether the entry is in "writing to Transients" I/O state
     bool transientsWriter(const StoreEntry &) const;
 
-    /// marks the entry completed for collapsed requests
-    void transientsCompleteWriting(StoreEntry &);
-
     /// Update local intransit entry after changes made by appending worker.
     void syncCollapsed(const sfileno);
 
