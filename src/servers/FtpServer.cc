@@ -376,7 +376,7 @@ Ftp::Server::listenForDataConnection()
     conn->local = transparent() ? port->s : clientConnection->local;
     conn->local.port(0);
     const char *const note = uri.c_str();
-    comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn, note);
+    OpenBoundedListener(SOCK_STREAM, IPPROTO_TCP, conn, note);
     if (!Comm::IsConnOpen(conn)) {
         debugs(5, DBG_CRITICAL, "ERROR: comm_open_listener failed for FTP data: " <<
                conn->local << " error: " << errno);

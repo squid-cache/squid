@@ -201,18 +201,16 @@ comm_local_port(int fd)
     return F->local_addr.port();
 }
 
-/* Sets the IP_BIND_ADDRESS_NO_PORT sock option to enable reuse of Linux ephemeral ports */
+/* Sets the IP_BIND_ADDRESS_NO_PORT sock option to enable reuse of Linux ephemeral ports (4.2+ kernel) */
 static inline void
 CommSetBindNoPort(int s)
 {
+#if defined(IP_BIND_ADDRESS_NO_PORT)
     int bind_noport_flag = 1;
-#if _SQUID_LINUX_
     if (setsockopt(s, IPPROTO_IP, IP_BIND_ADDRESS_NO_PORT, (char *) &bind_noport_flag, sizeof(int)) < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << "setsockopt(IP_BIND_ADDRESS_NO_PORT) " << (bind_noport_flag?"ON":"OFF") << " for FD " << s << ": " << xstrerr(xerrno));
     }
-#else
-    debugs(50, DBG_CRITICAL, MYNAME << "WARNING: setsockopt(IP_BIND_ADDRESS_NO_PORT) not supported on this platform");
 #endif
 }
 
@@ -220,12 +218,6 @@ static Comm::Flag
 commBind(int s, struct addrinfo &inaddr)
 {
     ++ statCounter.syscalls.sock.binds;
-
-    /* If this is a socket for an outbound TCP session, set the flag for ephemeral source port reuse */
-    sockaddr_in* addr = (sockaddr_in*)inaddr.ai_addr;
-    if (inaddr.ai_socktype == SOCK_STREAM && addr->sin_family == AF_INET && addr->sin_port == 0) {
-        CommSetBindNoPort(s);
-    }
 
     if (bind(s, inaddr.ai_addr, inaddr.ai_addrlen) == 0) {
         debugs(50, 6, "bind socket FD " << s << " to " << fd_table[s].local_addr);
@@ -249,6 +241,18 @@ comm_open(int sock_type,
           const char *note)
 {
     return comm_openex(sock_type, proto, addr, flags, note);
+}
+
+void
+OpenBoundedListener(int sock_type,
+                    int proto,
+                    Comm::ConnectionPointer &conn,
+                    const char *note)
+{
+    /* Bind now flag to skip IP_BIND_ADDRESS_NO_PORT sockopt on listener sockets */
+    conn->flags |= COMM_BIND_NOW;
+
+    comm_open_listener(sock_type, proto, conn, note);
 }
 
 void
@@ -504,6 +508,10 @@ comm_apply_flags(int new_socket,
             }
         }
 #endif
+        /* If this is a socket for an outbound TCP session, apply the flag for Linux ephemeral source port reuse */
+        if (!(flags & COMM_BIND_NOW) && sock_type == SOCK_STREAM && AI->ai_family == AF_INET && addr.port() == 0) {
+            CommSetBindNoPort(new_socket);
+        }
         if (commBind(new_socket, *AI) != Comm::OK) {
             comm_close(new_socket);
             return -1;
