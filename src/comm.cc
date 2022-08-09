@@ -244,25 +244,14 @@ comm_open(int sock_type,
 }
 
 void
-OpenBoundedListener(int sock_type,
-                    int proto,
-                    Comm::ConnectionPointer &conn,
-                    const char *note)
-{
-    /* Bind now flag to skip IP_BIND_ADDRESS_NO_PORT sockopt on listener sockets */
-    conn->flags |= COMM_BIND_NOW;
-
-    comm_open_listener(sock_type, proto, conn, note);
-}
-
-void
 comm_open_listener(int sock_type,
                    int proto,
                    Comm::ConnectionPointer &conn,
                    const char *note)
 {
-    /* all listener sockets require bind() */
-    conn->flags |= COMM_DOBIND;
+    /* All listener sockets require bind(). Skip the IP_BIND_ADDRESS_NO_PORT
+     * sockopt as we need to know the port number right after bind(). */
+    conn->flags |= COMM_DOBIND & COMM_BIND_NOW;
 
     /* attempt native enabled port. */
     conn->fd = comm_openex(sock_type, proto, conn->local, conn->flags, note);
