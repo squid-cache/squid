@@ -57,6 +57,7 @@
  */
 
 static IOCB commHalfClosedReader;
+static int comm_openex(int sock_type, int proto, Ip::Address &, int flags, const char *note);
 static void comm_init_opened(const Comm::ConnectionPointer &conn, const char *note, struct addrinfo *AI);
 static int comm_apply_flags(int new_socket, Ip::Address &addr, int flags, struct addrinfo *AI);
 
@@ -242,6 +243,10 @@ comm_open(int sock_type,
           int flags,
           const char *note)
 {
+    // assume zero-port callers do not need to know the assigned port right away
+    if ((flags & COMM_BIND) && sock_type == SOCK_STREAM && addr.port() == 0)
+        flags |= COMM_DOBIND_PORT_LATER;
+
     return comm_openex(sock_type, proto, addr, flags, note);
 }
 
@@ -268,11 +273,6 @@ comm_open_listener(int sock_type,
 
     /* all listener sockets require bind() */
     flags |= COMM_DOBIND;
-
-    // Delayed binding optimization is unnecessary for any _listening_ socket
-    // and breaks those callers that let the OS pick the port number (by using
-    // port 0) and then query for that address upon this function return.
-    flags |= COMM_BIND_NOW;
 
     sock = comm_openex(sock_type, proto, addr, flags, note);
 
@@ -346,7 +346,7 @@ comm_set_transparent(int fd)
  * Create a socket. Default is blocking, stream (TCP) socket.  IO_TYPE
  * is OR of flags specified in defines.h:COMM_*
  */
-int
+static int
 comm_openex(int sock_type,
             int proto,
             Ip::Address &addr,
@@ -502,7 +502,7 @@ comm_apply_flags(int new_socket,
         }
 #endif
 
-        if (!(flags & COMM_BIND_NOW) && sock_type == SOCK_STREAM && addr.port() == 0)
+        if ((flags & COMM_DOBIND_PORT_LATER))
             commSetBindAddressNoPort(new_socket);
 
         if (commBind(new_socket, *AI) != Comm::OK) {
