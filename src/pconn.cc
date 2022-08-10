@@ -167,7 +167,7 @@ IdleConnList::clearHandlers(const Comm::ConnectionPointer &conn)
 void
 IdleConnList::push(const Comm::ConnectionPointer &conn)
 {
-    if (size_ == capacity_) {
+    if ((unsigned int) size_ == capacity_) {
         debugs(48, 3, "growing idle Connection array");
         capacity_ <<= 1;
         const Comm::ConnectionPointer *oldList = theList_;

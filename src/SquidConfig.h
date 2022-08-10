@@ -64,7 +64,7 @@ public:
     ~DiskConfig() { delete[] swapDirs; }
 
     RefCount<SwapDir> *swapDirs = nullptr;
-    int n_allocated = 0;
+    unsigned int n_allocated = 0;
     int n_configured = 0;
     /// number of disk processes required to support all cache_dirs
     int n_strands = 0;

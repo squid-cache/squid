@@ -787,7 +787,7 @@ allocate_new_swapdir(Store::DiskConfig &swap)
         swap.swapDirs = new SwapDir::Pointer[swap.n_allocated];
     }
 
-    if (swap.n_allocated == swap.n_configured) {
+    if (swap.n_allocated == (unsigned int) swap.n_configured) {
         swap.n_allocated <<= 1;
         const auto tmp = new SwapDir::Pointer[swap.n_allocated];
         for (int i = 0; i < swap.n_configured; ++i) {
