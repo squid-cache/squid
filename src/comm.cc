@@ -74,7 +74,7 @@ static EVH commHalfClosedCheck;
 static void commPlanHalfClosedCheck();
 
 static Comm::Flag commBind(int s, struct addrinfo &);
-static inline void CommSetBindNoPort(int s);
+static void commSetBindAddressNoPort(int);
 static void commSetReuseAddr(int);
 static void commSetNoLinger(int);
 #ifdef TCP_NODELAY
@@ -201,16 +201,18 @@ comm_local_port(int fd)
     return F->local_addr.port();
 }
 
-/* Sets the IP_BIND_ADDRESS_NO_PORT sock option to enable reuse of Linux ephemeral ports (4.2+ kernel) */
-static inline void
-CommSetBindNoPort(int s)
+/// sets the IP_BIND_ADDRESS_NO_PORT sock option to enable reuse of Linux ephemeral ports (4.2+ kernel)
+static void
+commSetBindAddressNoPort(const int fd)
 {
 #if defined(IP_BIND_ADDRESS_NO_PORT)
-    int bind_noport_flag = 1;
-    if (setsockopt(s, IPPROTO_IP, IP_BIND_ADDRESS_NO_PORT, (char *) &bind_noport_flag, sizeof(int)) < 0) {
-        int xerrno = errno;
-        debugs(50, DBG_IMPORTANT, MYNAME << "setsockopt(IP_BIND_ADDRESS_NO_PORT) " << (bind_noport_flag?"ON":"OFF") << " for FD " << s << ": " << xstrerr(xerrno));
+    int flag = 1;
+    if (setsockopt(fd, IPPROTO_IP, IP_BIND_ADDRESS_NO_PORT, reinterpret_cast<char*>(&flag), sizeof(flag)) < 0) {
+        const auto savedErrno = errno;
+        debugs(50, DBG_IMPORTANT, "ERROR: setsockopt(IP_BIND_ADDRESS_NO_PORT) " << (flag?"ON":"OFF") << " for FD " << fd << ": " << xstrerr(savedErrno));
     }
+#else
+    (void)fd;
 #endif
 }
 
@@ -249,8 +251,8 @@ comm_open_listener(int sock_type,
                    Comm::ConnectionPointer &conn,
                    const char *note)
 {
-    /* All listener sockets require bind(). Skip the IP_BIND_ADDRESS_NO_PORT
-     * sockopt as we need to know the port number right after bind(). */
+    // All listener sockets require bind(). Skip the IP_BIND_ADDRESS_NO_PORT
+    // sockopt as we need to know the port number right after bind().
     conn->flags |= COMM_DOBIND | COMM_BIND_NOW;
 
     /* attempt native enabled port. */
@@ -497,10 +499,11 @@ comm_apply_flags(int new_socket,
             }
         }
 #endif
-        /* If this is a socket for an outbound TCP session, apply the flag for Linux ephemeral source port reuse */
-        if (!(flags & COMM_BIND_NOW) && sock_type == SOCK_STREAM && AI->ai_family == AF_INET && addr.port() == 0) {
-            CommSetBindNoPort(new_socket);
-        }
+
+        // if this is a socket for an outbound TCP session, apply the flag for Linux ephemeral source port reuse
+        if (!(flags & COMM_BIND_NOW) && sock_type == SOCK_STREAM && AI->ai_family == AF_INET && addr.port() == 0)
+            commSetBindAddressNoPort(new_socket);
+
         if (commBind(new_socket, *AI) != Comm::OK) {
             comm_close(new_socket);
             return -1;
