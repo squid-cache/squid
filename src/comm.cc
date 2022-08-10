@@ -257,10 +257,11 @@ comm_open_listener(int sock_type,
                    Comm::ConnectionPointer &conn,
                    const char *note)
 {
-    // TODO: Remove this Connection::flag adjustment if no caller needs it.
+    /* all listener sockets require bind() */
     conn->flags |= COMM_DOBIND;
 
-    conn->fd = comm_open_listener(sock_type, proto, conn->local, conn->flags, note);
+    /* attempt native enabled port. */
+    conn->fd = comm_openex(sock_type, proto, conn->local, conn->flags, note);
 }
 
 int
@@ -275,6 +276,7 @@ comm_open_listener(int sock_type,
     /* all listener sockets require bind() */
     flags |= COMM_DOBIND;
 
+    /* attempt native enabled port. */
     sock = comm_openex(sock_type, proto, addr, flags, note);
 
     return sock;
