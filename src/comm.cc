@@ -211,7 +211,7 @@ commSetBindAddressNoPort(const int fd)
     int flag = 1;
     if (setsockopt(fd, IPPROTO_IP, IP_BIND_ADDRESS_NO_PORT, reinterpret_cast<char*>(&flag), sizeof(flag)) < 0) {
         const auto savedErrno = errno;
-        debugs(50, DBG_IMPORTANT, "ERROR: setsockopt(IP_BIND_ADDRESS_NO_PORT) " << (flag?"ON":"OFF") << " for FD " << fd << ": " << xstrerr(savedErrno));
+        debugs(50, DBG_IMPORTANT, "ERROR: setsockopt(IP_BIND_ADDRESS_NO_PORT) failure for FD " << fd << ": " << xstrerr(savedErrno));
     }
 #else
     (void)fd;
