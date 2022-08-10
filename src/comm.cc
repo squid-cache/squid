@@ -502,7 +502,7 @@ comm_apply_flags(int new_socket,
         }
 #endif
 
-        if (!(flags & COMM_BIND_NOW) && sock_type == SOCK_STREAM && AI->ai_family == AF_INET && addr.port() == 0)
+        if (!(flags & COMM_BIND_NOW) && sock_type == SOCK_STREAM && addr.port() == 0)
             commSetBindAddressNoPort(new_socket);
 
         if (commBind(new_socket, *AI) != Comm::OK) {
