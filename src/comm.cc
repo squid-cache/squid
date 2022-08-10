@@ -251,7 +251,9 @@ comm_open_listener(int sock_type,
                    Comm::ConnectionPointer &conn,
                    const char *note)
 {
-    conn->flags |= COMM_DOBIND; // TODO: Remove this line if no caller needs it.
+    // TODO: Remove this Connection::flag adjustment if no caller needs it.
+    conn->flags |= COMM_DOBIND;
+
     conn->fd = comm_open_listener(sock_type, proto, conn->local, conn->flags, note);
 }
 
@@ -262,11 +264,19 @@ comm_open_listener(int sock_type,
                    int flags,
                    const char *note)
 {
-    // All listener sockets require bind(). Skip the IP_BIND_ADDRESS_NO_PORT
-    // sockopt as we need to know the port number right after bind().
-    flags |= COMM_DOBIND | COMM_BIND_NOW;
+    int sock = -1;
 
-    return comm_openex(sock_type, proto, addr, flags, note);
+    /* all listener sockets require bind() */
+    flags |= COMM_DOBIND;
+
+    // Delayed binding optimization is unnecessary for any _listening_ socket
+    // and breaks those callers that let the OS pick the port number (by using
+    // port 0) and then query for that address upon this function return.
+    flags |= COMM_BIND_NOW;
+
+    sock = comm_openex(sock_type, proto, addr, flags, note);
+
+    return sock;
 }
 
 static bool
