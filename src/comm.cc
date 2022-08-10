@@ -202,7 +202,8 @@ comm_local_port(int fd)
     return F->local_addr.port();
 }
 
-/// sets the IP_BIND_ADDRESS_NO_PORT sock option to enable reuse of Linux ephemeral ports (4.2+ kernel)
+/// sets the IP_BIND_ADDRESS_NO_PORT socket option to optimize ephemeral port
+/// reuse by outgoing TCP connections that must bind(2) to a source IP address
 static void
 commSetBindAddressNoPort(const int fd)
 {
@@ -244,7 +245,7 @@ comm_open(int sock_type,
           const char *note)
 {
     // assume zero-port callers do not need to know the assigned port right away
-    if ((flags & COMM_BIND) && sock_type == SOCK_STREAM && addr.port() == 0)
+    if ((flags & COMM_DOBIND) && sock_type == SOCK_STREAM && addr.port() == 0)
         flags |= COMM_DOBIND_PORT_LATER;
 
     return comm_openex(sock_type, proto, addr, flags, note);
