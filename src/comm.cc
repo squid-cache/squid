@@ -251,12 +251,8 @@ comm_open_listener(int sock_type,
                    Comm::ConnectionPointer &conn,
                    const char *note)
 {
-    // All listener sockets require bind(). Skip the IP_BIND_ADDRESS_NO_PORT
-    // sockopt as we need to know the port number right after bind().
-    conn->flags |= COMM_DOBIND | COMM_BIND_NOW;
-
-    /* attempt native enabled port. */
-    conn->fd = comm_openex(sock_type, proto, conn->local, conn->flags, note);
+    conn->flags |= COMM_DOBIND; // TODO: Remove this line if no caller needs it.
+    conn->fd = comm_open_listener(sock_type, proto, conn->local, conn->flags, note);
 }
 
 int
@@ -266,15 +262,11 @@ comm_open_listener(int sock_type,
                    int flags,
                    const char *note)
 {
-    int sock = -1;
+    // All listener sockets require bind(). Skip the IP_BIND_ADDRESS_NO_PORT
+    // sockopt as we need to know the port number right after bind().
+    flags |= COMM_DOBIND | COMM_BIND_NOW;
 
-    /* all listener sockets require bind() */
-    flags |= COMM_DOBIND;
-
-    /* attempt native enabled port. */
-    sock = comm_openex(sock_type, proto, addr, flags, note);
-
-    return sock;
+    return comm_openex(sock_type, proto, addr, flags, note);
 }
 
 static bool
