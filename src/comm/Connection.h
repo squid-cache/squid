@@ -52,7 +52,7 @@ namespace Comm
 #define COMM_REUSEPORT          0x40 //< needs SO_REUSEPORT
 /// not registered with Comm and not owned by any connection-closing code
 #define COMM_ORPHANED           0x40
-#define COMM_BIND_NOW           0x80 // Skips IP_BIND_ADDRESS_NO_PORT sockopt to ensure local port is assigned
+#define COMM_BIND_NOW           0x100 // Skips IP_BIND_ADDRESS_NO_PORT sockopt to ensure local port is assigned
 
 /**
  * Store data about the physical and logical attributes of a connection.
