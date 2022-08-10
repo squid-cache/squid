@@ -502,7 +502,6 @@ comm_apply_flags(int new_socket,
         }
 #endif
 
-        // if this is a socket for an outbound TCP session, apply the flag for Linux ephemeral source port reuse
         if (!(flags & COMM_BIND_NOW) && sock_type == SOCK_STREAM && AI->ai_family == AF_INET && addr.port() == 0)
             commSetBindAddressNoPort(new_socket);
 
