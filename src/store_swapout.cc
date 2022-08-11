@@ -383,7 +383,7 @@ StoreEntry::mayStartSwapOut()
     }
 
     // To avoid SMP workers releasing each other caching attempts, restrict disk
-    // caching to StoreEntry publisher . This check goes before checkCachable()
+    // caching to StoreEntry publisher. This check goes before checkCachable()
     // that may incorrectly release() publisher's entry.
     if (Store::Root().transientsReader(*this)) {
         debugs(20, 5, "yield to entry publisher");

@@ -1752,7 +1752,7 @@ StoreEntry::storeWritingCheckpoint()
         return;
     }
 
-    const bool doneWithDiskCache =
+    const auto doneWithDiskCache =
         // will not start
         (mem_obj->swapout.decision == MemObject::SwapOut::swImpossible) ||
         // or has started but finished already
