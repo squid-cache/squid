@@ -83,6 +83,9 @@ ACLRegexData::dump() const
 static const char *
 removeUnnecessaryWildcards(char * t)
 {
+    if (strcmp(t, ".*") == 0) // we cannot simplify that further
+        return t; // avoid "WARNING: ... Using '.*' instead" below
+
     char * orig = t;
 
     if (strncmp(t, "^.*", 3) == 0)
