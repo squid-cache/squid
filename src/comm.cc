@@ -245,7 +245,7 @@ comm_open(int sock_type,
           const char *note)
 {
     // assume zero-port callers do not need to know the assigned port right away
-    if ((flags & COMM_DOBIND) && sock_type == SOCK_STREAM && addr.port() == 0)
+    if (sock_type == SOCK_STREAM && addr.port() == 0 && ((flags & COMM_DOBIND) || !addr.isAnyAddr()))
         flags |= COMM_DOBIND_PORT_LATER;
 
     return comm_openex(sock_type, proto, addr, flags, note);
