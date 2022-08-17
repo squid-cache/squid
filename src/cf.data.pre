@@ -7470,7 +7470,10 @@ TYPE: onoff
 DEFAULT: off
 LOC: Config.onoff.httpd_suppress_version_string
 DOC_START
-	Suppress Squid version string info in HTTP headers and HTML error pages.
+	Do not send Squid version string in HTTP metadata and generated content
+	such as HTML error pages. Squid version string is still present in certain
+	SNMP responses, cachemgr.cgi output, squidclient User-Agent request header
+	field, various console output, and cache.log.
 DOC_END
 
 NAME: visible_hostname
