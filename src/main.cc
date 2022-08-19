@@ -69,7 +69,6 @@
 #include "refresh.h"
 #include "sbuf/Stream.h"
 #include "SBufStatsAction.h"
-#include "send-announce.h"
 #include "SquidConfig.h"
 #include "stat.h"
 #include "StatCounters.h"
@@ -1020,14 +1019,6 @@ mainReconfigureFinish(void *)
     Config.ClientDelay.finalize();
 #endif
 
-    if (Config.onoff.announce) {
-        if (!eventFind(start_announce, nullptr))
-            eventAdd("start_announce", start_announce, nullptr, 3600.0, 1);
-    } else {
-        if (eventFind(start_announce, nullptr))
-            eventDelete(start_announce, nullptr);
-    }
-
     reconfiguring = 0;
 }
 
@@ -1323,9 +1314,6 @@ mainInitialize(void)
 #endif
 
     eventAdd("storeMaintain", Store::Maintain, nullptr, 1.0, 1);
-
-    if (Config.onoff.announce)
-        eventAdd("start_announce", start_announce, nullptr, 3600.0, 1);
 
     eventAdd("ipcache_purgelru", ipcache_purgelru, nullptr, 10.0, 1);
 
