@@ -204,7 +204,7 @@ HttpReply::redirect(Http::StatusCode status, const char *loc)
     HttpHeader *hdr;
     sline.set(Http::ProtocolVersion(), status, nullptr);
     hdr = &header;
-    hdr->putStr(Http::HdrType::SERVER, APP_FULLNAME);
+    hdr->putStr(Http::HdrType::SERVER, visible_appname_string);
     hdr->putTime(Http::HdrType::DATE, squid_curtime);
     hdr->putInt64(Http::HdrType::CONTENT_LENGTH, 0);
     hdr->putStr(Http::HdrType::LOCATION, loc);
