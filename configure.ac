@@ -2388,8 +2388,8 @@ else
 fi
 
 AC_ARG_ENABLE(follow-x-forwarded-for,
-  AS_HELP_STRING([--enable-follow-x-forwarded-for],
-                 [Enable support for following the X-Forwarded-For
+  AS_HELP_STRING([--disable-follow-x-forwarded-for],
+                 [Do not follow the X-Forwarded-For
                  HTTP header to try to find the IP address of the
                  original or indirect client when a request has
                  been forwarded through other proxies.]), [
@@ -2428,8 +2428,8 @@ AC_SUBST(DEFAULT_HOSTS)
 
 # Select auth schemes modules to build
 AC_ARG_ENABLE(auth,
-  AS_HELP_STRING([--enable-auth],
-                 [Build global support for authentication. The list of schemes
+  AS_HELP_STRING([--disable-auth],
+                 [Do not support authentication. When supported, the list of schemes
                   and helpers to be enabled is defined elsewhere]), [
 SQUID_YESNO([$enableval],
             [unrecognized argument to --enable-auth: $enableval])
@@ -3429,7 +3429,7 @@ AC_MSG_NOTICE([Linux Netfilter Conntrack support enabled: ${with_netfilter_connt
 
 
 AC_ARG_ENABLE(zph-qos,
-  AS_HELP_STRING([--enable-zph-qos],[Enable ZPH QOS support]), [
+  AS_HELP_STRING([--disable-zph-qos],[Disable ZPH QOS support]), [
 SQUID_YESNO([$enableval],
             [unrecognized argument to --enable-zph-qos: $enableval])
 ])
