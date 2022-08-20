@@ -437,7 +437,7 @@ Ftp::Server::acceptDataConnection(const CommAcceptCbParams &params)
             mb.init();
             mb.appendf("150 Data connection opened.\r\n");
 
-            protocolTrace(9, "FTP Client RESPONSE", clientConnection, mb.buf);
+            traceProtocol(9, "FTP Client RESPONSE", clientConnection, mb.buf);
             Comm::Write(clientConnection, &mb, call);
         }
     }
@@ -496,7 +496,7 @@ Ftp::Server::writeEarlyReply(const int code, const char *msg)
 void
 Ftp::Server::writeReply(MemBuf &mb)
 {
-    protocolTrace(9, "FTP Client RESPONSE", clientConnection, mb.buf);
+    traceProtocol(9, "FTP Client RESPONSE", clientConnection, mb.buf);
 
     typedef CommCbMemFunT<Server, CommIoCbParams> Dialer;
     AsyncCall::Pointer call = JobCallback(33, 5, Dialer, this, Ftp::Server::wroteReply);
@@ -702,7 +702,7 @@ Ftp::Server::parseOneRequest()
 
     cmd.toUpper(); // this should speed up and simplify future comparisons
 
-    protocolTrace(9, "FTP Client REQUEST", clientConnection,
+    traceProtocol(9, "FTP Client REQUEST", clientConnection,
                   cmd << (params.isEmpty() ? "" : " ") << params);
 
     // interception cases do not need USER to calculate the uri
@@ -1204,7 +1204,7 @@ Ftp::Server::writeForwardedReplyAndCall(const HttpReply *reply, AsyncCall::Point
     mb.init();
     Ftp::PrintReply(mb, reply);
 
-    protocolTrace(9, "FTP Client RESPONSE", clientConnection, mb.buf);
+    traceProtocol(9, "FTP Client RESPONSE", clientConnection, mb.buf);
     Comm::Write(clientConnection, &mb, call);
 }
 
@@ -1311,7 +1311,7 @@ Ftp::Server::handleRequest(HttpRequest *request)
         mb.init();
         request->pack(&mb);
 
-        protocolTrace(9, "FTP Client REQUEST", clientConnection, mb.buf);
+        traceProtocol(9, "FTP Client REQUEST", clientConnection, mb.buf);
     }
 
     // TODO: When HttpHeader uses SBuf, change keys to SBuf

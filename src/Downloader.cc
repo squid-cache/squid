@@ -158,7 +158,7 @@ Downloader::buildRequest()
     request->my_addr.port(0);
     request->downloader = this;
 
-    protocolTrace(11, "HTTP Server REQUEST", "Downloader " << this << "/" << id,
+    traceProtocol(11, "HTTP Server REQUEST", "Downloader " << this << "/" << id,
                   request->method << " " << url_ << " " << request->http_ver << "\n" <<
                   debugPrintHeaders(request->header));
 

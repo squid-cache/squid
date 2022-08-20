@@ -1318,7 +1318,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
     }
 
     /* We know the whole request is in parser now */
-    protocolTrace(11, "HTTP Client REQUEST", clientConnection,
+    traceProtocol(11, "HTTP Client REQUEST", clientConnection,
                   hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol() << "\n" <<
                   hp->mimeHeader());
 

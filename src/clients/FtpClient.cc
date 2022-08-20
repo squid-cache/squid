@@ -822,7 +822,7 @@ Ftp::Client::dataClosed(const CommCloseCbParams &)
 void
 Ftp::Client::writeCommand(const char *buf)
 {
-    protocolTrace(9, "FTP Server REQUEST", ctrl.conn, buf);
+    traceProtocol(9, "FTP Server REQUEST", ctrl.conn, buf);
 
     char *ebuf;
     if (Config.Ftp.telnet)
@@ -1156,7 +1156,7 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
         xstrncpy(list->key, s, linelen);
 
         // TODO do not dump until full response is known (ie complete is true)
-        protocolTrace(9, "FTP Server RESPONSE", ctrl.conn, list->key);
+        traceProtocol(9, "FTP Server RESPONSE", ctrl.conn, list->key);
 
         if (complete) {
             // use list->key for last_reply because s contains the new line

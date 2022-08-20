@@ -1183,7 +1183,7 @@ htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, Ip::Address &from
         return;
     }
 
-    protocolTrace(31, "HTCP Client REQUEST", from,
+    traceProtocol(31, "HTCP Client REQUEST", from,
                   " opcode=" << dhdr->opcode << " " << htcpOpcodeStr[dhdr->opcode] <<
                   " response=" << dhdr->response <<
                   " F1=" << dhdr->F1 <<
@@ -1247,7 +1247,7 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
         return;
     }
 
-    protocolTrace(31, "HTCP Client REQUEST", from,
+    traceProtocol(31, "HTCP Client REQUEST", from,
                   " opcode=" << hdr->opcode << " " << htcpOpcodeStr[hdr->opcode] <<
                   " response=" << hdr->response <<
                   " F1=" << hdr->F1 <<

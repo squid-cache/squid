@@ -208,7 +208,7 @@ void ResyncDebugLog(FILE *newDestination);
    } while (/*CONSTCOND*/ 0)
 
 /// Convenience wrapper for displaying protocol message flow in cache.log
-#define protocolTrace(SECTION, LABEL, ID, MESSAGE) \
+#define traceProtocol(SECTION, LABEL, ID, MESSAGE) \
     debugs(SECTION, 2, LABEL << ": " << ID << \
            "\n----------\n" << MESSAGE << "\n----------")
 

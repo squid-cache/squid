@@ -86,7 +86,7 @@ IcmpSquid::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
 
     slen = sizeof(pingerEchoData) - PINGER_PAYLOAD_SZ + pecho.psize;
 
-    protocolTrace(37, "ICMP Server REQUEST", pecho.to,
+    traceProtocol(37, "ICMP Server REQUEST", pecho.to,
                   " opcode=" << opcode <<
                   " len=" << pecho.psize <<
                   Raw("payload", pecho.payload, pecho.psize).gap(false).hex().minLevel(DBG_DATA));
@@ -158,7 +158,7 @@ IcmpSquid::Recv()
 
     F.port(0);
 
-    protocolTrace(37, "ICMP Server RESPONSE", preply.from,
+    traceProtocol(37, "ICMP Server RESPONSE", preply.from,
                   " opcode=" << preply.opcode <<
                   " hops=" << preply.hops <<
                   " rtt=" << preply.rtt);

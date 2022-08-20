@@ -366,7 +366,7 @@ Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &ca
 
     MemBuf *mb = rep->pack();
 
-    protocolTrace(11, "HTTP Client RESPONSE", clientConnection, mb->buf);
+    traceProtocol(11, "HTTP Client RESPONSE", clientConnection, mb->buf);
     Comm::Write(clientConnection, mb, call);
 
     delete mb;

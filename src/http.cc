@@ -691,7 +691,7 @@ HttpStateData::processReplyHeader()
     }
 
     /* We know the whole response is in parser now */
-    protocolTrace(11, "HTTP Server RESPONSE", serverConnection,
+    traceProtocol(11, "HTTP Server RESPONSE", serverConnection,
                   hp->messageProtocol() << " " << hp->messageStatus() << " " << hp->reasonPhrase() << "\n" <<
                   hp->mimeHeader());
 
@@ -2402,7 +2402,7 @@ HttpStateData::sendRequest()
     request->peer_host=_peer?_peer->host:nullptr;
     buildRequestPrefix(&mb);
 
-    protocolTrace(11, "HTTP Server REQUEST", serverConnection, mb.buf);
+    traceProtocol(11, "HTTP Server REQUEST", serverConnection, mb.buf);
     Comm::Write(serverConnection, &mb, requestSender);
     return true;
 }
