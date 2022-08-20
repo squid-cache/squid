@@ -338,7 +338,7 @@ Http::Tunneler::handleResponse(const bool eof)
     // preserve any bytes sent by the server after the CONNECT response
     futureAnswer.leftovers = readBuf;
 
-    debugs(11, DBG_PROTOCOL, "switch to TCP on:" << connection);
+    debugs(11, 2, "switch to TCP on:" << connection);
     tunnelEstablished = true;
     debugs(83, 5, status());
 }

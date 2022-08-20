@@ -392,14 +392,14 @@ Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext serve
 ConnStateData *
 Http::NewServer(const MasterXaction::Pointer &xact)
 {
-    debugs(11, DBG_PROTOCOL, "switch to HTTP on: " << xact->tcpClient);
+    debugs(11, 2, "switch to HTTP on: " << xact->tcpClient);
     return new Http1::Server(xact, false);
 }
 
 ConnStateData *
 Https::NewServer(const MasterXaction::Pointer &xact)
 {
-    debugs(11, DBG_PROTOCOL, "switch to HTTP on: " << xact->tcpClient);
+    debugs(11, 2, "switch to HTTP on: " << xact->tcpClient);
     return new Http1::Server(xact, true);
 }
 

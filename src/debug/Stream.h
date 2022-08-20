@@ -37,11 +37,10 @@
 #define MAX_DEBUG_SECTIONS 100
 
 /* defined names for Debug Levels */
-#define DBG_CRITICAL   0 /**< critical messages always shown when they occur */
-#define DBG_IMPORTANT  1 /**< important messages always shown when their section is being checked */
-#define DBG_PROTOCOL   2 /**< protocol messages excluding content/payload which is DBG_DATA */
-/* levels 3-8 are still being discussed amongst the developers */
-#define DBG_DATA       9 /**< output is a large data dump only necessary for advanced debugging */
+#define DBG_CRITICAL    0   /**< critical messages always shown when they occur */
+#define DBG_IMPORTANT   1   /**< important messages always shown when their section is being checked */
+/* levels 2-8 are still being discussed amongst the developers */
+#define DBG_DATA    9   /**< output is a large data dump only necessary for advanced debugging */
 
 #define DBG_PARSE_NOTE(x) (opt_parse_cfg_only?0:(x)) /**< output is always to be displayed on '-k parse' but at level-x normally. */
 
@@ -210,11 +209,8 @@ void ResyncDebugLog(FILE *newDestination);
 
 /// Convenience wrapper for displaying protocol message flow in cache.log
 #define protocolTrace(SECTION, LABEL, ID, MESSAGE) \
-    debugs(SECTION, DBG_PROTOCOL, \
-           LABEL << ": " << ID << \
-           "\n----------\n" << \
-           MESSAGE << \
-           "\n----------")
+    debugs(SECTION, 2, LABEL << ": " << ID << \
+           "\n----------\n" << MESSAGE << "\n----------")
 
 /// Does not change the stream being manipulated. Exists for its side effect:
 /// In a debugs() context, forces the message to become a syslog ALERT.
