@@ -2162,15 +2162,15 @@ ConnStateData::lifetimeTimeout(const CommTimeoutCbParams &io)
     terminateAll(ERR_LIFETIME_EXP, lte);
 }
 
-ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
+ConnStateData::ConnStateData(const AnyP::PortCfgPointer &listener, const Comm::ConnectionPointer &client) :
     AsyncJob("ConnStateData"), // kids overwrite
-    Server(xact)
+    Server(listener, client)
 #if USE_OPENSSL
     , tlsParser(Security::HandshakeParser::fromClient)
 #endif
 {
     // store the details required for creating more MasterXaction objects as new requests come in
-    log_addr = xact->tcpClient->remote;
+    log_addr = client->remote;
     log_addr.applyClientMask(Config.Addrs.client_netmask);
 
     // register to receive notice of Squid signal events
@@ -2312,11 +2312,9 @@ httpAccept(const CommAcceptCbParams &params)
 
     debugs(33, 4, params.conn << ": accepted");
     fd_note(params.conn->fd, "client http connect");
-    const auto xact = MasterXaction::MakePortful(params.port);
-    xact->tcpClient = params.conn;
 
     // Socket is ready, setup the connection manager to start using it
-    auto *srv = Http::NewServer(xact);
+    auto *srv = Http::NewServer(params.port, params.conn);
     // XXX: do not abandon the MasterXaction object
     AsyncJob::Start(srv); // usually async-calls readSomeData()
 }
@@ -2512,14 +2510,11 @@ httpsAccept(const CommAcceptCbParams &params)
         return;
     }
 
-    const auto xact = MasterXaction::MakePortful(params.port);
-    xact->tcpClient = params.conn;
-
     debugs(33, 4, params.conn << " accepted, starting SSL negotiation.");
     fd_note(params.conn->fd, "client https connect");
 
     // Socket is ready, setup the connection manager to start using it
-    auto *srv = Https::NewServer(xact);
+    auto *srv = Https::NewServer(params.port, params.conn);
     // XXX: do not abandon the MasterXaction object
     AsyncJob::Start(srv); // usually async-calls postHttpsAccept()
 }

@@ -24,9 +24,9 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Http1, Server);
 
-Http::One::Server::Server(const MasterXaction::Pointer &xact, bool beHttpsServer):
+Http::One::Server::Server(const AnyP::PortCfgPointer &listener, const Comm::ConnectionPointer &client, bool beHttpsServer):
     AsyncJob("Http1::Server"),
-    ConnStateData(xact),
+    ConnStateData(listener, client),
     isHttpsServer(beHttpsServer)
 {
 }
@@ -392,14 +392,14 @@ Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext serve
 }
 
 ConnStateData *
-Http::NewServer(const MasterXaction::Pointer &xact)
+Http::NewServer(const AnyP::PortCfgPointer &listener, const Comm::ConnectionPointer &client)
 {
-    return new Http1::Server(xact, false);
+    return new Http1::Server(listener, client, false);
 }
 
 ConnStateData *
-Https::NewServer(const MasterXaction::Pointer &xact)
+Https::NewServer(const AnyP::PortCfgPointer &listener, const Comm::ConnectionPointer &client)
 {
-    return new Http1::Server(xact, true);
+    return new Http1::Server(listener, client, true);
 }
 

@@ -29,7 +29,7 @@
 class Server : virtual public AsyncJob, public BodyProducer
 {
 public:
-    Server(const MasterXactionPointer &xact);
+    Server(const AnyP::PortCfgPointer &, const Comm::ConnectionPointer &);
     virtual ~Server() {}
 
     /* AsyncJob API */

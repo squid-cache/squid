@@ -23,11 +23,11 @@
 #include "StatCounters.h"
 #include "tools.h"
 
-Server::Server(const MasterXaction::Pointer &xact) :
+Server::Server(const AnyP::PortCfgPointer &listener, const Comm::ConnectionPointer &client) :
     AsyncJob("::Server"), // kids overwrite
-    clientConnection(xact->tcpClient),
-    transferProtocol(xact->squidPort->transport),
-    port(xact->squidPort),
+    clientConnection(client),
+    transferProtocol(listener->transport),
+    port(listener),
     receivedFirstByte_(false)
 {
     clientConnection->leaveOrphanage();

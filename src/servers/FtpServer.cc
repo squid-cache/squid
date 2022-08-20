@@ -50,9 +50,9 @@ static bool SupportedCommand(const SBuf &name);
 static bool CommandHasPathParameter(const SBuf &cmd);
 };
 
-Ftp::Server::Server(const MasterXaction::Pointer &xact):
+Ftp::Server::Server(const AnyP::PortCfgPointer &listenPort, const Comm::ConnectionPointer &client):
     AsyncJob("Ftp::Server"),
-    ConnStateData(xact),
+    ConnStateData(listenPort, client),
     master(new MasterState),
     uri(),
     host(),
@@ -254,11 +254,7 @@ Ftp::Server::AcceptCtrlConnection(const CommAcceptCbParams &params)
     debugs(33, 4, params.conn << ": accepted");
     fd_note(params.conn->fd, "client ftp connect");
 
-    const auto xact = MasterXaction::MakePortful(params.port);
-    xact->tcpClient = params.conn;
-
-    AsyncJob::Start(new Server(xact));
-    // XXX: do not abandon the MasterXaction object
+    AsyncJob::Start(new Server(params.port, params.conn));
 }
 
 void

@@ -27,7 +27,6 @@
 #include "ip/Intercept.h"
 #include "ip/QosConfig.h"
 #include "log/access_log.h"
-#include "MasterXaction.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 
@@ -288,7 +287,6 @@ Comm::TcpAcceptor::acceptOne()
         /* register interest again */
         debugs(5, 5, "try later: " << conn << " handler Subscription: " << theCallSub);
     } else {
-        // TODO: When ALE, MasterXaction merge, use them or ClientConn instead.
         CallBack(newConnDetails, [&] {
             debugs(5, 5, "Listener: " << conn <<
                    " accepted new connection " << newConnDetails <<
