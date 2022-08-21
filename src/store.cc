@@ -1732,37 +1732,62 @@ StoreEntry::getSerialisedMetaData(size_t &length) const
 }
 
 /**
- * Abandon the transient entry our worker has created if neither the shared
- * memory cache nor the disk cache wants to store it. Collapsed requests, if
- * any, should notice and use Plan B instead of getting stuck waiting for us
- * to start swapping the entry out.
+ * If needed, signal transient entry readers that no more cache changes are
+ * expected and, hence, they should switch to Plan B instead of getting stuck
+ * waiting for us to start or finish storing the entry.
  */
 void
-StoreEntry::transientsAbandonmentCheck()
+StoreEntry::storeWritingCheckpoint()
 {
-    if (mem_obj && !Store::Root().transientsReader(*this) && // this worker is responsible
-            hasTransients() && // other workers may be interested
-            !hasMemStore() && // rejected by the shared memory cache
-            mem_obj->swapout.decision == MemObject::SwapOut::swImpossible) {
-        debugs(20, 7, "cannot be shared: " << *this);
-        if (!shutting_down) // Store::Root() is FATALly missing during shutdown
-            Store::Root().stopSharing(*this);
+    if (!hasTransients())
+        return; // no SMP complications
+
+    // writers become readers but only after completeWriting() which we trigger
+    if (Store::Root().transientsReader(*this))
+        return; // readers do not need to inform
+
+    assert(mem_obj);
+    if (mem_obj->memCache.io != Store::ioDone) {
+        debugs(20, 7, "not done with mem-caching " << *this);
+        return;
     }
+
+    const auto doneWithDiskCache =
+        // will not start
+        (mem_obj->swapout.decision == MemObject::SwapOut::swImpossible) ||
+        // or has started but finished already
+        (mem_obj->swapout.decision == MemObject::SwapOut::swStarted && !swappingOut());
+    if (!doneWithDiskCache) {
+        debugs(20, 7, "not done with disk-caching " << *this);
+        return;
+    }
+
+    debugs(20, 7, "done with writing " << *this);
+    if (!shutting_down) // Store::Root() is FATALly missing during shutdown
+        Store::Root().noteStoppedSharedWriting(*this);
 }
 
 void
-StoreEntry::memOutDecision(const bool)
+StoreEntry::memOutDecision(const bool willCacheInRam)
 {
-    transientsAbandonmentCheck();
+    if (!willCacheInRam)
+        return storeWritingCheckpoint();
+    assert(mem_obj->memCache.io != Store::ioDone);
+    // and wait for storeWriterDone()
 }
 
 void
 StoreEntry::swapOutDecision(const MemObject::SwapOut::Decision &decision)
 {
-    // Abandon our transient entry if neither shared memory nor disk wants it.
     assert(mem_obj);
     mem_obj->swapout.decision = decision;
-    transientsAbandonmentCheck();
+    storeWritingCheckpoint();
+}
+
+void
+StoreEntry::storeWriterDone()
+{
+    storeWritingCheckpoint();
 }
 
 void

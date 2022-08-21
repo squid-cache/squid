@@ -108,14 +108,11 @@ public:
     /// whether the entry is in "writing to Transients" I/O state
     bool transientsWriter(const StoreEntry &) const;
 
-    /// marks the entry completed for collapsed requests
-    void transientsCompleteWriting(StoreEntry &);
-
     /// Update local intransit entry after changes made by appending worker.
     void syncCollapsed(const sfileno);
 
-    /// stop any current (and prevent any future) SMP sharing of the given entry
-    void stopSharing(StoreEntry &);
+    /// adjust shared state after this worker stopped changing the entry
+    void noteStoppedSharedWriting(StoreEntry &);
 
     /// number of the transient entry readers some time ago
     int transientReaders(const StoreEntry &) const;

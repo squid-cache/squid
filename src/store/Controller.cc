@@ -627,23 +627,9 @@ Store::Controller::memoryDisconnect(StoreEntry &e)
 }
 
 void
-Store::Controller::stopSharing(StoreEntry &e)
+Store::Controller::noteStoppedSharedWriting(StoreEntry &e)
 {
-    // Marking the transients entry is sufficient to prevent new readers from
-    // starting to wait for `e` updates and to inform the current readers (and,
-    // hence, Broadcast() recipients) about the underlying Store problems.
-    if (transients && e.hasTransients())
-        transients->evictCached(e);
-}
-
-void
-Store::Controller::transientsCompleteWriting(StoreEntry &e)
-{
-    // transients->isWriter(e) is false if `e` is writing to its second store
-    // after finishing writing to its first store: At the end of the first swap
-    // out, the transients writer becomes a reader and (XXX) we never switch
-    // back to writing, even if we start swapping out again (to another store).
-    if (transients && e.hasTransients() && transients->isWriter(e))
+    if (transients && e.hasTransients()) // paranoid: the caller should check
         transients->completeWriting(e);
 }
 
@@ -760,6 +746,7 @@ Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
     if (e->makePublic(keyScope)) { // this is needed for both local and SMP collapsing
         debugs(20, 3, "may " << (transients && e->hasTransients() ?
                                  "SMP-" : "locally-") << "collapse " << *e);
+        assert(e->hittingRequiresCollapsing());
         return true;
     }
     // paranoid cleanup; the flag is meaningless for private entries
@@ -831,12 +818,6 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
 
     assert(transients->isReader(*collapsed));
 
-    if (entryStatus.abortedByWriter) {
-        debugs(20, 3, "aborting " << *collapsed << " because its writer has aborted");
-        collapsed->abort();
-        return;
-    }
-
     if (entryStatus.collapsed && !collapsed->hittingRequiresCollapsing()) {
         debugs(20, 3, "aborting " << *collapsed << " due to writer/reader collapsing state mismatch");
         collapsed->abort();
@@ -879,13 +860,20 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
         return;
     }
 
+    if (!entryStatus.hasWriter) {
+        debugs(20, 3, "aborting abandoned-by-writer " << *collapsed);
+        collapsed->abort();
+        return;
+    }
+
     // the entry is still not in one of the caches
     debugs(20, 7, "waiting " << *collapsed);
 }
 
 /// Called for Transients entries that are not yet anchored to a cache.
-/// For cached entries, return true after synchronizing them with their cache
-/// (making inSync true on success). For not-yet-cached entries, return false.
+/// \returns false for not-yet-cached entries that we may attach later
+/// \returns true for other entries after synchronizing them with their store
+/// and setting inSync to reflect that synchronization outcome.
 bool
 Store::Controller::anchorToCache(StoreEntry &entry, bool &inSync)
 {
@@ -893,6 +881,9 @@ Store::Controller::anchorToCache(StoreEntry &entry, bool &inSync)
     assert(transientsReader(entry));
 
     debugs(20, 7, "anchoring " << entry);
+
+    Transients::EntryStatus entryStatus;
+    transients->status(entry, entryStatus);
 
     bool found = false;
     if (sharedMemStore)
@@ -905,11 +896,23 @@ Store::Controller::anchorToCache(StoreEntry &entry, bool &inSync)
             debugs(20, 7, "anchored " << entry);
         else
             debugs(20, 5, "failed to anchor " << entry);
-    } else {
-        debugs(20, 7, "skipping not yet cached " << entry);
+        return true;
     }
 
-    return found;
+    if (entryStatus.waitingToBeFreed) {
+        debugs(20, 5, "failed on marked unattached " << entry);
+        inSync = false;
+        return true;
+    }
+
+    if (!entryStatus.hasWriter) {
+        debugs(20, 5, "failed on abandoned-by-writer " << entry);
+        inSync = false;
+        return true;
+    }
+
+    debugs(20, 7, "skipping not yet cached " << entry);
+    return false;
 }
 
 bool

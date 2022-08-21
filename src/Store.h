@@ -93,6 +93,8 @@ public:
     void memOutDecision(const bool willCacheInRam);
     // called when a decision to cache on disk has been made
     void swapOutDecision(const MemObject::SwapOut::Decision &decision);
+    /// called when a store writer ends its work (successfully or not)
+    void storeWriterDone();
 
     void abort();
     bool makePublic(const KeyScope keyScope = ksDefault);
@@ -303,7 +305,7 @@ public:
 protected:
     typedef Store::EntryGuard EntryGuard;
 
-    void transientsAbandonmentCheck();
+    void storeWritingCheckpoint();
     /// does nothing except throwing if disk-associated data members are inconsistent
     void checkDisk() const;
 
