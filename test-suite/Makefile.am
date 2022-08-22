@@ -22,6 +22,7 @@ EXTRA_PROGRAMS = mem_node_test splay tcp-banger2
 
 EXTRA_DIST = \
 	$(srcdir)/squidconf/* \
+	test-squid-conf.sh \
 	testheaders.sh
 
 ESI_ALL_TESTS = \
@@ -133,10 +134,10 @@ VirtualDeleteOperator_SOURCES = \
 	VirtualDeleteOperator.cc \
 	stub_libmem.cc
 
-squid-conf-tests: $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
+squid-conf-tests: $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*.conf
 	@failed=0; cfglist="$?"; rm -f $@ || $(TRUE); \
 	for cfg in $$cfglist ; do \
-		$(top_builddir)/src/squid -k parse -f $$cfg || \
+		$(srcdir)/test-squid-conf.sh $(top_builddir) $$cfg || \
 			{ echo "FAIL: squid.conf test: $$cfg" | \
 				sed s%$(top_builddir)/src/%% | \
 				sed s%$(srcdir)/squidconf/%% ; \
