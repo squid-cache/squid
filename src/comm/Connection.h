@@ -52,6 +52,8 @@ namespace Comm
 #define COMM_REUSEPORT          0x40 //< needs SO_REUSEPORT
 /// not registered with Comm and not owned by any connection-closing code
 #define COMM_ORPHANED           0x80
+/// Internal Comm optimization: Keep the source port unassigned until connect(2)
+#define COMM_DOBIND_PORT_LATER 0x100
 
 /**
  * Store data about the physical and logical attributes of a connection.
