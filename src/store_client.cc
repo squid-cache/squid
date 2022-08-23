@@ -509,8 +509,6 @@ store_client::fileRead()
 void
 store_client::readBody(const char *, ssize_t len)
 {
-    int parsed_header = 0;
-
     // Don't assert disk_io_pending here.. may be called by read_header
     flags.disk_io_pending = false;
     assert(_callback.pending());
@@ -524,8 +522,6 @@ store_client::readBody(const char *, ssize_t len)
         /* Our structure ! */
         if (!entry->mem_obj->adjustableBaseReply().parseCharBuf(copyInto.data, headersEnd(copyInto.data, len))) {
             debugs(90, DBG_CRITICAL, "ERROR: Could not parse headers from on disk object");
-        } else {
-            parsed_header = 1;
         }
     }
 
@@ -536,8 +532,7 @@ store_client::readBody(const char *, ssize_t len)
             /* Copy read data back into memory.
              * copyInto.offset includes headers, which is what mem cache needs
              */
-            int64_t mem_offset = entry->mem_obj->endOffset();
-            if ((copyInto.offset == mem_offset) || (parsed_header && mem_offset == rep->hdr_sz)) {
+            if (copyInto.offset == entry->mem_obj->endOffset()) {
                 entry->mem_obj->write(StoreIOBuffer(len, copyInto.offset, copyInto.data));
             }
         }
