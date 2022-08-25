@@ -1716,7 +1716,7 @@ StoreEntry::startWriting()
 
     // Same-worker collapsing risks end with the receipt of the headers.
     // SMP collapsing risks remain until the headers are actually cached, but
-    // that event is announced via CF-agnostic disk I/O broadcasts.
+    // that event is announced via CF-agnostic Store writing broadcasts.
     setCollapsingRequirement(false);
 
     rep->body.packInto(this);
