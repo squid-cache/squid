@@ -1569,17 +1569,6 @@ DumpCountersStats(Mgr::CountersActionData& stats, StoreEntry* sentry)
                       stats.hitValidationFailures);
 }
 
-void
-statFreeMemory(void)
-{
-    // TODO: replace with delete[]
-    for (int i = 0; i < N_COUNT_HIST; ++i)
-        CountHist[i] = StatCounters();
-
-    for (int i = 0; i < N_COUNT_HOUR_HIST; ++i)
-        CountHourHist[i] = StatCounters();
-}
-
 static void
 statPeerSelect(StoreEntry * sentry)
 {

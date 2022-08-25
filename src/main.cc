@@ -2114,21 +2114,6 @@ SquidShutdown()
     Store::Root().sync();       /* Flush log close */
     StoreFileSystem::FreeAllFs();
     DiskIOModule::FreeAllModules();
-#if LEAK_CHECK_MODE && 0 /* doesn't work at the moment */
-
-    configFreeMemory();
-    storeFreeMemory();
-    /*stmemFreeMemory(); */
-    netdbFreeMemory();
-    ipcacheFreeMemory();
-    fqdncacheFreeMemory();
-    asnFreeMemory();
-    clientdbFreeMemory();
-    statFreeMemory();
-    eventFreeMemory();
-    mimeFreeMemory();
-    errorClean();
-#endif
     Store::FreeMemory();
 
     fdDumpOpen();

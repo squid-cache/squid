@@ -15,7 +15,6 @@
 void clientdbUpdate(const Ip::Address &, const LogTags &, AnyP::ProtocolType, size_t) STUB
 int clientdbCutoffDenied(const Ip::Address &) STUB_RETVAL(-1)
 void clientdbDump(StoreEntry *) STUB
-void clientdbFreeMemory(void) STUB
 int clientdbEstablished(const Ip::Address &, int) STUB_RETVAL(-1)
 #if USE_DELAY_POOLS
 void clientdbSetWriteLimiter(ClientInfo *, const int,const double,const double) STUB
