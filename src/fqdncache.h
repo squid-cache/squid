@@ -27,7 +27,6 @@ typedef void FQDNH(const char *, const Dns::LookupDetails &details, void *);
 
 void fqdncache_init(void);
 void fqdnStats(StoreEntry *);
-void fqdncacheFreeMemory(void);
 void fqdncache_restart(void);
 void fqdncache_purgelru(void *);
 void fqdncacheAddEntryFromHosts(char *addr, SBufList &hostnames);

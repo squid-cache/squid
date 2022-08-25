@@ -16,7 +16,6 @@ void eventAdd(const char *, EVH *, void *, double, int, bool) STUB_NOP
 void eventAddIsh(const char *, EVH *, void *, double, int) STUB
 void eventDelete(EVH *, void *) STUB
 void eventInit(void) STUB
-void eventFreeMemory(void) STUB
 int eventFind(EVH *, void *) STUB_RETVAL(-1)
 
 // ev_entry::ev_entry(char const * name, EVH * func, void *arg, double when, int weight, bool cbdata) STUB

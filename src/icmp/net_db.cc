@@ -106,8 +106,6 @@ static net_db_peer *netdbPeerByName(const netdbEntry * n, const char *);
 static net_db_peer *netdbPeerAdd(netdbEntry * n, CachePeer * e);
 static const char *netdbPeerName(const char *name);
 static IPH netdbSendPing;
-static FREE netdbFreeNameEntry;
-static FREE netdbFreeNetdbEntry;
 static STCB netdbExchangeHandleReply;
 
 /* We have to keep a local list of CachePeer names.  The Peers structure
@@ -667,21 +665,6 @@ netdbPeerName(const char *name)
 }
 
 static void
-netdbFreeNetdbEntry(void *data)
-{
-    netdbEntry *n = (netdbEntry *)data;
-    safe_free(n->peers);
-    delete n;
-}
-
-static void
-netdbFreeNameEntry(void *data)
-{
-    net_db_name *x = (net_db_name *)data;
-    delete x;
-}
-
-static void
 netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 {
     Ip::Address addr;
@@ -950,21 +933,6 @@ netdbHandlePingReply(const Ip::Address &from, int hops, int rtt)
     (void)from;
     (void)hops;
     (void)rtt;
-#endif
-}
-
-void
-netdbFreeMemory(void)
-{
-#if USE_ICMP
-    hashFreeItems(addr_table, netdbFreeNetdbEntry);
-    hashFreeMemory(addr_table);
-    addr_table = nullptr;
-    hashFreeItems(host_table, netdbFreeNameEntry);
-    hashFreeMemory(host_table);
-    host_table = nullptr;
-    wordlistDestroy(&peer_names);
-    peer_names = nullptr;
 #endif
 }
 
