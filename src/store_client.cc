@@ -818,7 +818,7 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
         return false;
     }
 
-    if (!shutting_down && Store::Root().transientReaders(*entry)) {
+    if (Store::Root().transientReaders(*entry)) {
         debugs(90, 3, "quick-abort? NO still have one or more transient readers");
         return false;
     }
@@ -831,6 +831,11 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
     if (EBIT_TEST(entry->flags, ENTRY_SPECIAL)) {
         debugs(90, 3, "quick-abort? NO ENTRY_SPECIAL");
         return false;
+    }
+
+    if (shutting_down) {
+        debugs(90, 3, "quick-abort? YES avoid heavy optional work during shutdown");
+        return true;
     }
 
     MemObject * const mem = entry->mem_obj;

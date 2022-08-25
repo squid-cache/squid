@@ -2109,7 +2109,6 @@ SquidShutdown()
     accessLogClose();
     Store::Root().sync();       /* Flush log close */
     DiskIOModule::FreeAllModules();
-    Store::FreeMemory();
 
     fdDumpOpen();
 
