@@ -40,5 +40,8 @@ ErrorDetail::Pointer MakeNamedErrorDetail(const char *name);
 /// dump the given ErrorDetail (for debugging)
 std::ostream &operator <<(std::ostream &os, const ErrorDetail &);
 
+/// dump the given ErrorDetail pointer which may be nil (for debugging)
+std::ostream &operator <<(std::ostream &os, const ErrorDetail::Pointer &);
+
 #endif /* _SQUID_SRC_ERROR_DETAIL_H */
 

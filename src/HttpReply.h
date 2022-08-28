@@ -157,8 +157,5 @@ protected:
     virtual bool parseFirstLine(const char *start, const char *end);
 };
 
-/// identifies the given reply (or does nothing if the given pointer is nil)
-extern std::ostream &operator <<(std::ostream &, const HttpReply::Pointer &);
-
 #endif /* SQUID_HTTPREPLY_H */
 

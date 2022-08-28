@@ -32,8 +32,6 @@ public:
      * is not NULL.
      */
     virtual AsyncCall::Pointer callback() const = 0;
-
-    virtual void identifySelf(std::ostream &os) const = 0;
 };
 
 /** Implements Subscription API using Call's copy constructor.
@@ -52,14 +50,6 @@ class CallSubscription: public Subscription
 public:
     /// Must be passed an object. nil pointers are not permitted.
     explicit CallSubscription(const RefCount<Call_> &aCall) : call(aCall) { assert(aCall != nullptr); }
-
-    /* Subscription API */
-
-    virtual void identifySelf(std::ostream &os) const
-    {
-        os << "subscription_" << call;
-    }
-
     virtual AsyncCall::Pointer callback() const
     {
         const AsyncCall::Pointer cb = new Call_(*call);
@@ -71,10 +61,6 @@ public:
 private:
     const RefCount<Call_> call; ///< gets copied to create callback calls
 };
-
-/// identifies the given subscription (or does nothing if the given pointer is nil)
-extern std::ostream &operator <<(std::ostream &, const Subscription::Pointer &);
-
 
 #endif /* _SQUID_BASE_SUBSCRIPTION_H */
 

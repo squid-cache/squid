@@ -197,8 +197,6 @@ private:
 
 std::ostream &operator << (std::ostream &os, const Comm::Connection &conn);
 
-// TODO: Provide an AsId() stream manipulator to print Connection::id that many
-// callers should be printing instead of dumping all these low-level details.
 inline std::ostream &
 operator << (std::ostream &os, const Comm::ConnectionPointer &conn)
 {

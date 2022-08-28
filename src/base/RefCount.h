@@ -14,8 +14,6 @@
 // reference counting requires the Lock API on base classes
 #include "base/Lock.h"
 
-#include "base/TypeTraits.h"
-
 #include <iostream>
 
 /**
@@ -112,7 +110,13 @@ private:
 };
 
 template <class C>
-std::ostream &operator <<(std::ostream &, const RefCount<C> &) = delete;
+inline std::ostream &operator <<(std::ostream &os, const RefCount<C> &p)
+{
+    if (p != nullptr)
+        return os << p.getRaw() << '*' << p->LockCount();
+    else
+        return os << "NULL";
+}
 
 #endif /* SQUID_REFCOUNT_H_ */
 

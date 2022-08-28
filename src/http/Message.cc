@@ -9,7 +9,6 @@
 /* DEBUG: section 74    HTTP Message */
 
 #include "squid.h"
-#include "base/IoManip.h"
 #include "debug/Stream.h"
 #include "http/ContentLengthInterpreter.h"
 #include "http/Message.h"
@@ -282,12 +281,5 @@ void
 Http::Message::firstLineBuf(MemBuf &mb)
 {
     packFirstLineInto(&mb, true);
-}
-
-std::ostream &
-operator << (std::ostream &os, const RefCount<Http::Message> &msg)
-{
-    os << AsRefCount(msg);
-    return os;
 }
 
