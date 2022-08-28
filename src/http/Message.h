@@ -163,5 +163,8 @@ HTTPMSGLOCK(Http::Message *a)
         a->lock();
 }
 
+/// identifies the given message (or does nothing if the given pointer is nil)
+extern std::ostream &operator <<(std::ostream &, const RefCount<Http::Message> &);
+
 #endif /* SQUID_HTTPMSG_H */
 

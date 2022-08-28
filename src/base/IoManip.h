@@ -17,6 +17,50 @@
 /// Safely prints an object pointed to by the given pointer: [label]<object>
 /// Prints nothing at all if the pointer is nil.
 template <class Pointer>
+class RefCountingPointerT {
+public:
+    RefCountingPointerT(const char *aLabel, const Pointer &aPtr):
+        label(aLabel), ptr(aPtr) {}
+
+    /// Report the pointed-to-object on a dedicated Debug::Extra line.
+    RefCountingPointerT<Pointer> &asExtra() { onExtraLine = true; return *this; }
+
+    const char *label; /// the name or description of the being-debugged object
+    const Pointer &ptr; /// a possibly nil pointer to the being-debugged object
+    bool onExtraLine = false;
+};
+
+/// convenience wrapper for creating  RefCountingPointerT<> objects
+template <class Pointer>
+inline RefCountingPointerT<Pointer>
+AsRefCount(const char *label, const Pointer &ptr)
+{
+    return RefCountingPointerT<Pointer>(label, ptr);
+}
+
+/// prints RefCountingPointerT<>
+template <class Pointer>
+inline std::ostream &
+operator <<(std::ostream &os, const RefCountingPointerT<Pointer> &pd)
+{
+    if (!pd.ptr)
+        return os;
+
+    if (pd.onExtraLine)
+        os << Debug::Extra;
+
+    if (pd.label)
+        os << pd.label;
+
+    if (const auto *raw = pd.ptr.getRaw())
+        os << static_cast<const void*>(raw) << '*' << raw->LockCount();
+
+    return os;
+}
+
+/// Safely prints an object pointed to by the given pointer: [label]<object>
+/// Prints nothing at all if the pointer is nil.
+template <class Pointer>
 class RawPointerT {
 public:
     RawPointerT(const char *aLabel, const Pointer &aPtr):

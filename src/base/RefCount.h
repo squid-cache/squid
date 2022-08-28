@@ -111,36 +111,8 @@ private:
 
 };
 
-/// by default, types do not support "printing" with <<
-template <class, class = void>
-struct ShiftPrintable: std::false_type {};
-
-/// ShiftPrintable specialization for types that support "printing" with <<
-template <class T>
-struct ShiftPrintable<T,
-    VoidT<decltype( std::declval<std::ostream>() << std::declval<T>() )>
-    >: std::true_type {};
-
-/// print using overloaded operator "<<" for C
-template <typename C, EnableIfType<ShiftPrintable<C>::value, int> = 0>
-inline std::ostream &operator <<(std::ostream &os, const RefCount<C> &p)
-{
-    if (const auto *obj = p.getRaw())
-        os << *obj;
-    else
-        os << "[nil]";
-    return os;
-}
-
-/// print just the raw pointer information (because operator "<<" is not overloaded for C)
-template <typename C, EnableIfType<!ShiftPrintable<C>::value, int> = 0>
-inline std::ostream &operator <<(std::ostream &os, const RefCount<C> &p)
-{
-    if (p != nullptr)
-        return os << p.getRaw() << '*' << p->LockCount();
-    else
-        return os << "NULL";
-}
+template <class C>
+std::ostream &operator <<(std::ostream &, const RefCount<C> &) = delete;
 
 #endif /* SQUID_REFCOUNT_H_ */
 

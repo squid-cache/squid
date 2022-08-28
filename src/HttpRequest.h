@@ -275,6 +275,9 @@ protected:
     virtual bool inheritProperties(const Http::Message *);
 };
 
+/// identifies the given reply (or does nothing if the given pointer is nil)
+extern std::ostream &operator <<(std::ostream &, const HttpRequest::Pointer &);
+
 class ConnStateData;
 /**
  * Updates ConnStateData ids and HttpRequest notes from helpers received notes.

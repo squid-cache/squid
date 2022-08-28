@@ -90,6 +90,14 @@ AsyncCall::dequeue(AsyncCall::Pointer &head, AsyncCall::Pointer &prev)
     setNext(nullptr);
 }
 
+std::ostream &
+operator <<(std::ostream &os, const AsyncCall::Pointer &call)
+{
+    if (call)
+        os << call->id;
+    return os;
+}
+
 bool
 ScheduleCall(const char *fileName, int fileLine, AsyncCall::Pointer &call)
 {

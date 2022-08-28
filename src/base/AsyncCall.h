@@ -98,6 +98,9 @@ std::ostream &operator <<(std::ostream &os, AsyncCall &call)
     return os;
 }
 
+/// prints the given call ID (or nothing if the given call pointer is nil)
+extern std::ostream &operator <<(std::ostream &, const AsyncCall::Pointer &);
+
 /**
  \ingroup AsyncCallAPI
  * Interface for all async call dialers
