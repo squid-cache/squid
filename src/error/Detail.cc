@@ -38,16 +38,6 @@ operator <<(std::ostream &os, const ErrorDetail &detail)
     return os;
 }
 
-std::ostream &
-operator <<(std::ostream &os, const ErrorDetail::Pointer &detail)
-{
-    if (detail)
-        os << *detail;
-    else
-        os << "[no details]";
-    return os;
-}
-
 /* NamedErrorDetail */
 
 ErrorDetail::Pointer
