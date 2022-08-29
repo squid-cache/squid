@@ -132,7 +132,6 @@ const char *ErrorNameFromCode(ErrorCode err, bool prefixRawCode = false);
 /// debugging). Unfortunately, without this, compilers pick generic RefCount<T>
 /// operator "<<" overload (with T=Security::ErrorDetail) instead of the
 /// overload provided by the parent ErrorDetail class (that we call here).
-template <>
 inline std::ostream &
 operator <<(std::ostream &os, const Security::ErrorDetail::Pointer &p)
 {
