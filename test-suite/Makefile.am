@@ -134,8 +134,8 @@ VirtualDeleteOperator_SOURCES = \
 	VirtualDeleteOperator.cc \
 	stub_libmem.cc
 
-squid-conf-tests: $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*.conf
-	@failed=0; cfglist="$?"; rm -f $@ || $(TRUE); \
+squid-conf-tests: $(srcdir)/test-squid-conf.sh $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
+	@failed=0; cfglist="$(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*.conf"; rm -f $@ || $(TRUE); \
 	for cfg in $$cfglist ; do \
 		$(srcdir)/test-squid-conf.sh $(top_builddir) $$cfg || \
 			{ echo "FAIL: squid.conf test: $$cfg" | \
