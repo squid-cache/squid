@@ -40,7 +40,7 @@ The Squid-5 change history can be <url url="http://www.squid-cache.org/Versions/
 	<item>TrivialDB Support
 	<item>RFC 8586: Loop Detection in Content Delivery Networks
 	<item>Peering support for SSL-Bump
-	<item>OpenSSL v3 Support
+	<item>OpenSSL 3.0 Support
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -152,20 +152,20 @@ Most user-facing changes are reflected in squid.conf (see below).
    yet do TLS-in-TLS.
 
 
-<sect1>OpenSSL v3 Support
-<p>Squid-5.7 and later now support build with OpenSSL version 3.
+<sect1>OpenSSL 3.0 Support
+<p>Squid-5.7 and later now support build with OpenSSL 3.0.
 
 <p>This version of Squid does not add any of the new features provided by
-   OpenSSL 3. It only contains support for features already supported by prior
-   versions of Squid using new APIs provided by OpenSSL 3.
+   OpenSSL 3.0. It only contains support for features already supported by prior
+   versions of Squid using new APIs provided by OpenSSL 3.0.
 
-<p>Notably the libssl custom Engine feature has been deprecated by OpenSSL 3
+<p>Notably the libssl custom Engine feature has been deprecated by OpenSSL 3.0
    and new Providers replacement is not supported by this Squid.
 
-<p>OpenSSL license changes also mean a change in compatibility with GPLv2+ Squid
+<p>OpenSSL 3.0 license changes also mean a change in compatibility with GPLv2+ Squid
    is distributed under. The previous restrictions on distribution are no longer
    applicable, if and only if, Squid is built to use both libssl and libcrypto
-   from OpenSSL 3 or later. Care should still be taken to ensure distributed
+   from OpenSSL 3.0 or later. Care should still be taken to ensure distributed
    binariues meet the appropriate licenses per their build.
 
 
@@ -306,7 +306,7 @@ This section gives a thorough account of those changes in three categories:
 	   instead of the made-up method NONE.
 
 	<tag>ssl_engine</tag>
-	<p>OpenSSL 3.0.0 deprecates the Engine feature. This directive is
+	<p>OpenSSL 3.0 deprecates the Engine feature. This directive is
 	   only supported when Squid is built for older OpenSSL versions.
 
 </descrip>
