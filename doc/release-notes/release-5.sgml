@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 5.6 release notes</title>
+<title>Squid 5.7 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-5.6.
+<p>The Squid Team are pleased to announce the release of Squid-5.7.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v5/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -40,6 +40,7 @@ The Squid-5 change history can be <url url="http://www.squid-cache.org/Versions/
 	<item>TrivialDB Support
 	<item>RFC 8586: Loop Detection in Content Delivery Networks
 	<item>Peering support for SSL-Bump
+	<item>OpenSSL v3 Support
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -149,6 +150,23 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <p>HTTPS cache_peers are not yet supported primarily because Squid cannot
    yet do TLS-in-TLS.
+
+
+<sect1>OpenSSL v3 Support
+<p>Squid-5.7 and later now support build with OpenSSL version 3.
+
+<p>This version of Squid does not add any of the new features provided by
+   OpenSSL 3. It only contains support for features already supported by prior
+   versions of Squid using new APIs provided by OpenSSL 3.
+
+<p>Notably the libssl custom Engine feature has been deprecated by OpenSSL 3
+   and new Providers replacement is not supported by this Squid.
+
+<p>OpenSSL license changes also mean a change in compatibility with GPLv2+ Squid
+   is distributed under. The previous restrictions on distribution are no longer
+   applicable, if and only if, Squid is built to use both libssl and libcrypto
+   from OpenSSL 3 or later. Care should still be taken to ensure distributed
+   binariues meet the appropriate licenses per their build.
 
 
 <sect>Changes to squid.conf since Squid-4
@@ -286,6 +304,10 @@ This section gives a thorough account of those changes in three categories:
 	    code to indicate the response was received from server using TLS/1.3.
 	<p>Codes <em>rm</em>, <em>&lt;rm</em> and <em>&gt;rm</em> display "-"
 	   instead of the made-up method NONE.
+
+	<tag>ssl_engine</tag>
+	<p>OpenSSL 3.0.0 deprecates the Engine feature. This directive is
+	   only supported when Squid is built for older OpenSSL versions.
 
 </descrip>
 
