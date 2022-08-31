@@ -27,7 +27,6 @@ void netdbInit(void) STUB
 void netdbHandlePingReply(const Ip::Address &, int, int) STUB
 void netdbPingSite(const char *) STUB
 void netdbDump(StoreEntry *) STUB
-void netdbFreeMemory(void) STUB
 int netdbHostHops(const char *) STUB_RETVAL(-1)
 int netdbHostRtt(const char *) STUB_RETVAL(-1)
 void netdbUpdatePeer(const AnyP::Uri &, CachePeer *, int, int) STUB

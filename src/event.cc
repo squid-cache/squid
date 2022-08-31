@@ -141,12 +141,6 @@ eventDump(StoreEntry * sentry)
     EventScheduler::GetInstance()->dump(sentry);
 }
 
-void
-eventFreeMemory(void)
-{
-    EventScheduler::GetInstance()->clean();
-}
-
 int
 eventFind(EVH * func, void *arg)
 {
