@@ -55,13 +55,6 @@
 #define SQUID_UDP_SO_RCVBUF SQUID_DETECT_UDP_SO_RCVBUF
 #endif
 
-/*
- * Determine if this is a leak check build or standard
- */
-#if PURIFY || WITH_VALGRIND
-#define LEAK_CHECK_MODE 1
-#endif
-
 /* temp hack: needs to be pre-defined for now. */
 #define SQUID_MAXPATHLEN 256
 

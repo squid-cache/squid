@@ -127,7 +127,6 @@ static fqdncache_entry *fqdncache_get(const char *);
 static int fqdncacheExpiredEntry(const fqdncache_entry *);
 static void fqdncacheLockEntry(fqdncache_entry * f);
 static void fqdncacheUnlockEntry(fqdncache_entry * f);
-static FREE fqdncacheFreeEntry;
 static void fqdncacheAddEntry(fqdncache_entry * f);
 
 /// \ingroup FQDNCacheInternal
@@ -601,14 +600,6 @@ fqdncacheUnlockEntry(fqdncache_entry * f)
         fqdncacheRelease(f);
 }
 
-/// \ingroup FQDNCacheInternal
-static void
-fqdncacheFreeEntry(void *data)
-{
-    fqdncache_entry *f = (fqdncache_entry *)data;
-    delete f;
-}
-
 fqdncache_entry::~fqdncache_entry()
 {
     for (int k = 0; k < (int)name_count; ++k)
@@ -616,15 +607,6 @@ fqdncache_entry::~fqdncache_entry()
 
     xfree(hash.key);
     xfree(error_message);
-}
-
-/// \ingroup FQDNCacheAPI
-void
-fqdncacheFreeMemory(void)
-{
-    hashFreeItems(fqdn_table, fqdncacheFreeEntry);
-    hashFreeMemory(fqdn_table);
-    fqdn_table = nullptr;
 }
 
 /**

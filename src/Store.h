@@ -428,9 +428,6 @@ void storeInit(void);
 void storeConfigure(void);
 
 /// \ingroup StoreAPI
-void storeFreeMemory(void);
-
-/// \ingroup StoreAPI
 int expiresMoreThan(time_t, time_t);
 
 /// \ingroup StoreAPI
