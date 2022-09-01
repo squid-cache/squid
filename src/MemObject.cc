@@ -110,11 +110,9 @@ MemObject::~MemObject()
     checkUrlChecksum();
 #endif
 
-    if (!shutting_down) { // Store::Root() is FATALly missing during shutdown
-        assert(xitTable.index < 0);
-        assert(memCache.index < 0);
-        assert(swapout.sio == nullptr);
-    }
+    assert(xitTable.index < 0);
+    assert(memCache.index < 0);
+    assert(swapout.sio == nullptr);
 
     data_hdr.freeContent();
 }

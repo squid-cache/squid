@@ -360,10 +360,9 @@ StoreEntry::destroyMemObject()
 {
     debugs(20, 3, mem_obj << " in " << *this);
 
-    // Store::Root() is FATALly missing during shutdown
-    if (hasTransients() && !shutting_down)
+    if (hasTransients())
         Store::Root().transientsDisconnect(*this);
-    if (hasMemStore() && !shutting_down)
+    if (hasMemStore())
         Store::Root().memoryDisconnect(*this);
 
     if (auto memObj = mem_obj) {
@@ -380,8 +379,7 @@ destroyStoreEntry(void *data)
     StoreEntry *e = static_cast<StoreEntry *>(static_cast<hash_link *>(data));
     assert(e != nullptr);
 
-    // Store::Root() is FATALly missing during shutdown
-    if (e->hasDisk() && !shutting_down)
+    if (e->hasDisk())
         e->disk().disconnect(*e);
 
     e->destroyMemObject();
@@ -1095,8 +1093,7 @@ StoreEntry::abort()
 void
 storeGetMemSpace(int size)
 {
-    if (!shutting_down) // Store::Root() is FATALly missing during shutdown
-        Store::Root().freeMemorySpace(size);
+    Store::Root().freeMemorySpace(size);
 }
 
 /* thunk through to Store::Root().maintain(). Note that this would be better still
@@ -1253,6 +1250,9 @@ StoreEntry::memoryCachable()
 {
     if (!checkCachable())
         return 0;
+
+    if (shutting_down)
+        return 0; // avoid heavy optional work during shutdown
 
     if (mem_obj == nullptr)
         return 0;
@@ -1753,8 +1753,7 @@ StoreEntry::storeWritingCheckpoint()
     }
 
     debugs(20, 7, "done with writing " << *this);
-    if (!shutting_down) // Store::Root() is FATALly missing during shutdown
-        Store::Root().noteStoppedSharedWriting(*this);
+    Store::Root().noteStoppedSharedWriting(*this);
 }
 
 void

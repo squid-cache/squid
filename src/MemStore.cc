@@ -587,9 +587,8 @@ MemStore::shouldCache(StoreEntry &e) const
         return false;
     }
 
-    // Store::Root() in the next check below is FATALly missing during shutdown
     if (shutting_down) {
-        debugs(20, 5, "yield to shutdown: " << e);
+        debugs(20, 5, "avoid heavy optional work during shutdown: " << e);
         return false;
     }
 
