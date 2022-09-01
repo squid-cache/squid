@@ -153,7 +153,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 
 <sect1>OpenSSL 3.0 Support
-<p>Squid-5.7 and later now support build with OpenSSL 3.0.
+<p>Squid-5.7 adds OpenSSL 3.0 support.
 
 <p>This version of Squid does not add any of the new features provided by
    OpenSSL 3.0. It only contains support for features already supported by prior
@@ -162,11 +162,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 <p>Notably the libssl custom Engine feature has been deprecated by OpenSSL 3.0
    and new Providers replacement is not supported by this Squid.
 
-<p>OpenSSL 3.0 license changes also mean a change in compatibility with GPLv2+ Squid
-   is distributed under. The previous restrictions on distribution are no longer
-   applicable, if and only if, Squid is built to use both libssl and libcrypto
-   from OpenSSL 3.0 or later. Care should still be taken to ensure distributed
-   binariues meet the appropriate licenses per their build.
+<p>OpenSSL 3.0 uses new licensing terms.
 
 
 <sect>Changes to squid.conf since Squid-4
