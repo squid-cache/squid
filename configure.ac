@@ -93,32 +93,6 @@ if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
 	AC_USE_SYSTEM_EXTENSIONS
 fi
 
-AC_MSG_CHECKING([compiler name-version])
-squid_cv_cc_name=`$CC --version | head -1 | cut -f1 -d" "`
-AS_CASE([$squid_cv_cc_name],
-  [gcc|clang],[squid_cv_cc_majversion=`$CC -dumpversion | cut -f1 -d.`],
-  [squid_cv_cc_majversion="unknown"]
-)
-squid_cv_cc_simplified="$squid_cv_cc_name-$squid_cv_cc_majversion"
-AC_MSG_RESULT($squid_cv_cc_simplified)
-
-# warning flags
-AS_IF([test "$squid_cv_cc_simplified" = "gcc-4"],[
-    AC_MSG_NOTICE([skipping -Wextra on $squid_cv_cc_simplified])
-],[
-    # -Werror must be first
-    SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Werror])
-    SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wextra])
-    # -Wunused-private-field causes a huge number of false positives
-    #    in unit tests. Disable that
-    SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wno-unused-private-field])
-    # ...=2: This flexibility level allows GCC to "understand" our fallthrough
-    # comments. TODO: Switch to [[fallthrough]] attributes with C++17.
-    SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wimplicit-fallthrough=2])
-    AS_IF([test "x$squid_cv_cc_implicit_fallthrough2" = "xno"], [
-        SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wno-implicit-fallthrough])
-    ])
-])
 # If the user did not specify a C++ version.
 user_cxx=`echo "$PRESET_CXXFLAGS" | grep -o -E "\-std="`
 if test "x$user_cxx" = "x"; then
@@ -339,13 +313,47 @@ if test "x$PRESET_CFLAGS" = "x"; then
   fi
 fi
 
+AC_MSG_CHECKING([compiler name-version])
+squid_cv_cc_name=`$CC --version | head -1 | cut -f1 -d" "`
+AS_CASE([$squid_cv_cc_name],
+  [gcc|clang],[squid_cv_cc_majversion=`$CC -dumpversion | cut -f1 -d.`],
+  [squid_cv_cc_majversion="unknown"]
+)
+squid_cv_cc_simplified="$squid_cv_cc_name-$squid_cv_cc_majversion"
+AC_MSG_RESULT($squid_cv_cc_simplified)
+
+# warning flags
+
+# -Wall
+SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([$squid_cv_cc_option_wall])
+
+# -Wextra
+AS_IF([test "$squid_cv_cc_simplified" = "gcc-4"],[
+    AC_MSG_NOTICE([skipping -Wextra on $squid_cv_cc_simplified])
+],[
+    SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wextra])
+
+    # Now disable or configure certain warnings enabled by -Wextra
+
+    # -Wunused-private-field causes a huge number of false positives
+    #    in unit tests. Disable that
+    SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wno-unused-private-field])
+
+    # ...=2: This flexibility level allows GCC to "understand" our fallthrough
+    # comments. TODO: Switch to [[fallthrough]] attributes with C++17.
+    SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wimplicit-fallthrough=2])
+    AS_IF([test "x$squid_cv_cc_arg_wimplicit_fallthrough_2" != "xyes"], [
+        SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wno-implicit-fallthrough])
+    ])
+])
+
 # useful warnings that may not be included in -Wall -Wextra
-SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wpointer-arith])
-SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wwrite-strings])
-SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wcomments])
-SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wshadow])
-SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Wmissing-declarations])
-SQUID_CC_ADD_CXXFLAG_IF_SUPPORTED([-Woverloaded-virtual])
+SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wpointer-arith])
+SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wwrite-strings])
+SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wcomments])
+SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wshadow])
+SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wmissing-declarations])
+SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Woverloaded-virtual])
 
 dnl CentOS (and RHEL) still define ntohs() using deprecated C++ features
 SQUID_CC_REQUIRE_ARGUMENT([ac_cv_require_wno_deprecated_register],[-Werror -Wno-deprecated-register],[[#include <arpa/inet.h>]],[[int fox=ntohs(1);]])
@@ -1283,6 +1291,7 @@ if test "x$with_openssl" = "xyes"; then
     openssl/bio.h \
     openssl/bn.h \
     openssl/crypto.h \
+    openssl/decoder.h \
     openssl/dh.h \
     openssl/err.h \
     openssl/evp.h \
@@ -2379,8 +2388,8 @@ else
 fi
 
 AC_ARG_ENABLE(follow-x-forwarded-for,
-  AS_HELP_STRING([--enable-follow-x-forwarded-for],
-                 [Enable support for following the X-Forwarded-For
+  AS_HELP_STRING([--disable-follow-x-forwarded-for],
+                 [Do not follow the X-Forwarded-For
                  HTTP header to try to find the IP address of the
                  original or indirect client when a request has
                  been forwarded through other proxies.]), [
@@ -2419,8 +2428,8 @@ AC_SUBST(DEFAULT_HOSTS)
 
 # Select auth schemes modules to build
 AC_ARG_ENABLE(auth,
-  AS_HELP_STRING([--enable-auth],
-                 [Build global support for authentication. The list of schemes
+  AS_HELP_STRING([--disable-auth],
+                 [Do not support authentication. When supported, the list of schemes
                   and helpers to be enabled is defined elsewhere]), [
 SQUID_YESNO([$enableval],
             [unrecognized argument to --enable-auth: $enableval])
@@ -3419,7 +3428,7 @@ AC_MSG_NOTICE([Linux Netfilter Conntrack support enabled: ${with_netfilter_connt
 
 
 AC_ARG_ENABLE(zph-qos,
-  AS_HELP_STRING([--enable-zph-qos],[Enable ZPH QOS support]), [
+  AS_HELP_STRING([--disable-zph-qos],[Disable ZPH QOS support]), [
 SQUID_YESNO([$enableval],
             [unrecognized argument to --enable-zph-qos: $enableval])
 ])
@@ -3513,6 +3522,7 @@ else
 fi
 AC_SUBST(PO2HTML)
 AC_SUBST(PO2TEXT)
+AM_CONDITIONAL(ENABLE_TRANSLATION, test "x${enable_translation:=no}" = "xyes")
 
 dnl Squid now has limited locale handling ...
 dnl on error pages

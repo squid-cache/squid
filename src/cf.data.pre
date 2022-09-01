@@ -182,6 +182,30 @@ DOC_START
 DOC_END
 
 # Options removed in 6.x
+NAME: announce_file
+TYPE: obsolete
+DOC_START
+	Remove this line. Squid no longer supports this feature.
+DOC_END
+
+NAME: announce_host
+TYPE: obsolete
+DOC_START
+	Remove this line. Squid no longer supports this feature.
+DOC_END
+
+NAME: announce_period
+TYPE: obsolete
+DOC_START
+	Remove this line. Squid no longer supports this feature.
+DOC_END
+
+NAME: announce_port
+TYPE: obsolete
+DOC_START
+	Remove this line. Squid no longer supports this feature.
+DOC_END
+
 NAME: request_entities
 TYPE: obsolete
 DOC_START
@@ -1044,7 +1068,7 @@ DEFAULT: ssl::certUntrusted ssl_error X509_V_ERR_INVALID_CA X509_V_ERR_SELF_SIGN
 DEFAULT: ssl::certSelfSigned ssl_error X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT
 ENDIF
 DEFAULT: all src all
-DEFAULT: manager url_regex -i ^cache_object:// +i ^https?://[^/]+/squid-internal-mgr/
+DEFAULT: manager url_regex -i ^cache_object:// +i ^[^:]+://[^/]+/squid-internal-mgr/
 DEFAULT: localhost src 127.0.0.1/32 ::1
 DEFAULT: to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1/128 ::/128
 DEFAULT: CONNECT method CONNECT
@@ -3061,6 +3085,8 @@ DEFAULT: none
 DOC_START
 	The OpenSSL engine to use. You will need to set this if you
 	would like to use hardware SSL acceleration for example.
+
+	Not supported in builds with OpenSSL v3 or newer.
 DOC_END
 
 NAME: sslproxy_session_ttl
@@ -4031,8 +4057,10 @@ DOC_START
 	For the purpose of this limit, Squid counts all high-level request
 	forwarding attempts, including any same-destination retries after
 	certain persistent connection failures and any attempts to use a
-	different peer. However, low-level connection reopening attempts
-	(enabled using connect_retries) are not counted.
+	different peer. However, these low-level attempts are not counted:
+	* connection reopening attempts (enabled using connect_retries)
+	* unfinished Happy Eyeballs connection attempts (prevented by setting
+	  happy_eyeballs_connect_limit to 0)
 
 	See also: forward_timeout and connect_retries.
 DOC_END
@@ -4858,7 +4886,7 @@ DOC_START
 		[http::]<bs	Number of HTTP-equivalent message body bytes
 				received from the next hop, excluding chunked
 				transfer encoding and control messages.
-				Generated FTP/Gopher listings are treated as
+				Generated FTP listings are treated as
 				received bodies.
 
 	    TIMING
@@ -6472,7 +6500,6 @@ CONFIG_START
 # Add any of your own refresh_pattern entries above these.
 #
 refresh_pattern ^ftp:		1440	20%	10080
-refresh_pattern ^gopher:	1440	0%	1440
 refresh_pattern -i (/cgi-bin/|\?) 0	0%	0
 refresh_pattern .		0	20%	4320
 CONFIG_END
@@ -7443,7 +7470,10 @@ TYPE: onoff
 DEFAULT: off
 LOC: Config.onoff.httpd_suppress_version_string
 DOC_START
-	Suppress Squid version string info in HTTP headers and HTML error pages.
+	Do not send Squid version string in HTTP metadata and generated content
+	such as HTML error pages. Squid version string is still present in certain
+	SNMP responses, cachemgr.cgi output, squidclient User-Agent request header
+	field, various console output, and cache.log.
 DOC_END
 
 NAME: visible_hostname
@@ -7488,73 +7518,6 @@ DOC_START
 
 	For a traditional octal representation of umasks, start
         your value with 0.
-DOC_END
-
-COMMENT_START
- OPTIONS FOR THE CACHE REGISTRATION SERVICE
- -----------------------------------------------------------------------------
-
-	This section contains parameters for the (optional) cache
-	announcement service.  This service is provided to help
-	cache administrators locate one another in order to join or
-	create cache hierarchies.
-
-	An 'announcement' message is sent (via UDP) to the registration
-	service by Squid.  By default, the announcement message is NOT
-	SENT unless you enable it with 'announce_period' below.
-
-	The announcement message includes your hostname, plus the
-	following information from this configuration file:
-
-		http_port
-		icp_port
-		cache_mgr
-
-	All current information is processed regularly and made
-	available on the Web at http://www.ircache.net/Cache/Tracker/.
-COMMENT_END
-
-NAME: announce_period
-TYPE: time_t
-LOC: Config.Announce.period
-DEFAULT: 0
-DEFAULT_DOC: Announcement messages disabled.
-DOC_START
-	This is how frequently to send cache announcements.
-
-	To enable announcing your cache, just set an announce period.
-
-	Example:
-		announce_period 1 day
-DOC_END
-
-NAME: announce_host
-TYPE: string
-DEFAULT: tracker.ircache.net
-LOC: Config.Announce.host
-DOC_START
-	Set the hostname where announce registration messages will be sent.
-
-	See also announce_port and announce_file
-DOC_END
-
-NAME: announce_file
-TYPE: string
-DEFAULT: none
-LOC: Config.Announce.file
-DOC_START
-	The contents of this file will be included in the announce
-	registration messages.
-DOC_END
-
-NAME: announce_port
-TYPE: u_short
-DEFAULT: 3131
-LOC: Config.Announce.port
-DOC_START
-	Set the port where announce registration messages will be sent.
-
-	See also announce_host and announce_file
 DOC_END
 
 COMMENT_START
@@ -9211,7 +9174,7 @@ DOC_START
 	client IP can use. Any more than this and Squid will begin to drop
 	new connections from the client until it closes some links.
 
-	Note that this is a global limit. It affects all HTTP, HTCP, Gopher and FTP
+	Note that this is a global limit. It affects all HTTP, HTCP, and FTP
 	connections from the client. For finer control use the ACL access controls.
 
 	Requires client_db to be enabled (the default).

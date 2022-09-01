@@ -12,7 +12,6 @@
 #define SQUID_STAT_H_
 
 void statInit(void);
-void statFreeMemory(void);
 double median_svc_get(int, int);
 void pconnHistCount(int, int);
 int stat5minClientRequests(void);

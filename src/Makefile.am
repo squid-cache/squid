@@ -369,8 +369,6 @@ squid_SOURCES = \
 	fs_io.cc \
 	fs_io.h \
 	globals.h \
-	gopher.cc \
-	gopher.h \
 	helper.cc \
 	helper.h \
 	hier_code.h \
@@ -414,8 +412,6 @@ squid_SOURCES = \
 	refresh.h \
 	repl_modules.h \
 	sbuf/StringConvert.h \
-	send-announce.cc \
-	send-announce.h \
 	stat.cc \
 	stat.h \
 	stmem.cc \
@@ -1850,8 +1846,6 @@ tests_test_http_range_SOURCES = \
 	fqdncache.h \
 	fs_io.cc \
 	fs_io.h \
-	tests/stub_gopher.cc \
-	gopher.h \
 	helper.cc \
 	hier_code.h \
 	http.cc \
@@ -2235,8 +2229,6 @@ tests_testHttpRequest_SOURCES = \
 	fqdncache.h \
 	fs_io.cc \
 	fs_io.h \
-	tests/stub_gopher.cc \
-	gopher.h \
 	helper.cc \
 	hier_code.h \
 	http.cc \
@@ -2535,8 +2527,6 @@ tests_testCacheManager_SOURCES = \
 	fqdncache.h \
 	fs_io.cc \
 	fs_io.h \
-	tests/stub_gopher.cc \
-	gopher.h \
 	helper.cc \
 	hier_code.h \
 	http.cc \
@@ -2749,10 +2739,10 @@ tests_testEventLoop_SOURCES = \
 	tests/testEventLoop.h
 nodist_tests_testEventLoop_SOURCES = \
 	EventLoop.cc \
+	tests/stub_SBuf.cc \
 	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
-	tests/stub_libtime.cc \
-	tests/stub_SBuf.cc
+	tests/stub_libtime.cc
 tests_testEventLoop_LDADD = \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \

@@ -43,7 +43,6 @@ int comm_open_uds(int, int, struct sockaddr_un*, int) STUB_RETVAL(-1)
 void comm_import_opened(const Comm::ConnectionPointer &, const char *, struct addrinfo *) STUB
 int comm_open_listener(int, int, Ip::Address &, int, const char *) STUB_RETVAL(-1)
 void comm_open_listener(int, int, Comm::ConnectionPointer &, const char *) STUB
-// int comm_openex(int, int, Ip::Address &, int, tos_t, nfmark_t, const char *) STUB_RETVAL(-1)
 unsigned short comm_local_port(int) STUB_RETVAL(0)
 int comm_udp_sendto(int, const Ip::Address &, const void *, int) STUB_RETVAL(-1)
 void commCallCloseHandlers(int) STUB

@@ -15,6 +15,7 @@
 #include "adaptation/icap/Xaction.h"
 #include "base/AsyncCallbacks.h"
 #include "base/JobWait.h"
+#include "base/Optional.h"
 #include "base/TextException.h"
 #include "comm.h"
 #include "comm/Connection.h"
@@ -135,9 +136,8 @@ static void
 icapLookupDnsResults(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data)
 {
     Adaptation::Icap::Xaction *xa = static_cast<Adaptation::Icap::Xaction *>(data);
-    /// TODO: refactor with CallJobHere1, passing either std::optional (after upgrading to C++17)
-    /// or Optional<Ip::Address> (when it can take non-trivial types)
-    xa->dnsLookupDone(ia);
+    const auto &addr = ia ? Optional<Ip::Address>(ia->current()) : Optional<Ip::Address>();
+    CallJobHere1(93, 5, CbcPointer<Adaptation::Icap::Xaction>(xa), Adaptation::Icap::Xaction, dnsLookupDone, addr);
 }
 
 // TODO: obey service-specific, OPTIONS-reported connection limit
@@ -168,14 +168,14 @@ Adaptation::Icap::Xaction::openConnection()
 }
 
 void
-Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
+Adaptation::Icap::Xaction::dnsLookupDone(Optional<Ip::Address> addr)
 {
     assert(waitingForDns);
     waitingForDns = false;
 
     Adaptation::Icap::ServiceRep &s = service();
 
-    if (ia == nullptr) {
+    if (!addr.has_value()) {
         debugs(44, DBG_IMPORTANT, "ERROR: ICAP: Unknown service host: " << s.cfg().host);
 
 #if WHEN_IPCACHE_NBGETHOSTBYNAME_USES_ASYNC_CALLS
@@ -187,7 +187,7 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
     }
 
     const Comm::ConnectionPointer conn = new Comm::Connection();
-    conn->remote = ia->current();
+    conn->remote = addr.value();
     conn->remote.port(s.cfg().port);
     getOutgoingAddress(nullptr, conn);
 

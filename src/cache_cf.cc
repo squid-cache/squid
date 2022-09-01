@@ -731,13 +731,6 @@ configDoConfigure(void)
     }
 #endif
 
-    if (Config.Announce.period > 0) {
-        Config.onoff.announce = 1;
-    } else {
-        Config.Announce.period = 86400 * 365;   /* one year */
-        Config.onoff.announce = 0;
-    }
-
     if (Config.onoff.httpd_suppress_version_string)
         visible_appname_string = (char *)appname_string;
     else
@@ -784,7 +777,7 @@ configDoConfigure(void)
      * the extra space is for loop detection in client_side.c -- we search
      * for substrings in the Via header.
      */
-    snprintf(ThisCache2, sizeof(ThisCache), " %s (%s)",
+    snprintf(ThisCache2, sizeof(ThisCache2), " %s (%s)",
              uniqueHostname(),
              visible_appname_string);
 

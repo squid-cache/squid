@@ -69,7 +69,6 @@
 #include "refresh.h"
 #include "sbuf/Stream.h"
 #include "SBufStatsAction.h"
-#include "send-announce.h"
 #include "SquidConfig.h"
 #include "stat.h"
 #include "StatCounters.h"
@@ -671,7 +670,9 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
             printf("%s\n",SQUID_BUILD_INFO);
 #if USE_OPENSSL
         printf("\nThis binary uses %s. ", OpenSSL_version(OPENSSL_VERSION));
+#if OPENSSL_VERSION_MAJOR < 3
         printf("For legal restrictions on distribution see https://www.openssl.org/source/license.html\n\n");
+#endif
 #endif
         printf( "configure options: %s\n", SQUID_CONFIGURE_OPTIONS);
 
@@ -1018,14 +1019,6 @@ mainReconfigureFinish(void *)
     Config.ClientDelay.finalize();
 #endif
 
-    if (Config.onoff.announce) {
-        if (!eventFind(start_announce, nullptr))
-            eventAdd("start_announce", start_announce, nullptr, 3600.0, 1);
-    } else {
-        if (eventFind(start_announce, nullptr))
-            eventDelete(start_announce, nullptr);
-    }
-
     reconfiguring = 0;
 }
 
@@ -1321,9 +1314,6 @@ mainInitialize(void)
 #endif
 
     eventAdd("storeMaintain", Store::Maintain, nullptr, 1.0, 1);
-
-    if (Config.onoff.announce)
-        eventAdd("start_announce", start_announce, nullptr, 3600.0, 1);
 
     eventAdd("ipcache_purgelru", ipcache_purgelru, nullptr, 10.0, 1);
 
@@ -2124,21 +2114,6 @@ SquidShutdown()
     Store::Root().sync();       /* Flush log close */
     StoreFileSystem::FreeAllFs();
     DiskIOModule::FreeAllModules();
-#if LEAK_CHECK_MODE && 0 /* doesn't work at the moment */
-
-    configFreeMemory();
-    storeFreeMemory();
-    /*stmemFreeMemory(); */
-    netdbFreeMemory();
-    ipcacheFreeMemory();
-    fqdncacheFreeMemory();
-    asnFreeMemory();
-    clientdbFreeMemory();
-    statFreeMemory();
-    eventFreeMemory();
-    mimeFreeMemory();
-    errorClean();
-#endif
     Store::FreeMemory();
 
     fdDumpOpen();

@@ -52,6 +52,8 @@ libbase_la_SOURCES = \
 	Optional.h \
 	Packable.h \
 	PackableStream.h \
+	Random.cc \
+	Random.h \
 	RandomUuid.cc \
 	RandomUuid.h \
 	Range.h \

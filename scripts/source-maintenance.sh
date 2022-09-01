@@ -12,15 +12,6 @@
 # on Squid
 #
 
-## Source Code Format Enforcement
-#
-# A checker to recursively reformat all source files: .h .c .cc .cci
-# using a custom astyle formatter and to use MD5 to validate that
-# the formatter has not altered the code syntax.
-#
-# If code alteration takes place the process is halted for manual intervention.
-#
-
 # whether to continue execution after a failure
 # TODO: Expand the subset of failures covered by this feature; see run_().
 KeepGoing="no"
@@ -111,14 +102,6 @@ fi
 made="generated" # a hack: prevents $GeneratedByMe searches matching this file
 GeneratedByMe="This file is $made by scripts/source-maintenance.sh."
 
-# On squid-cache.org we have to use the python scripted md5sum
-HOST=`hostname`
-if test "$HOST" = "squid-cache.org" ; then
-	MD5="md5"
-else
-	MD5="md5sum"
-fi
-
 ${ASTYLE} --version >/dev/null 2>/dev/null
 result=$?
 if test $result -gt 0 ; then
@@ -137,6 +120,10 @@ if test "${ASVER}" != "${TargetAstyleVersion}" ; then
 	fi
 else
 	echo "Found astyle ${ASVER}. Formatting..."
+fi
+CppFormatter=''
+if test "${ASVER}"; then
+    CppFormatter="./scripts/format-cpp.pl --with-astyle ${ASTYLE}"
 fi
 
 if test $CheckAndUpdateCopyright = yes
@@ -312,7 +299,7 @@ processDebugSections ()
 {
     destination="doc/debug-sections.txt"
 
-    sort -u < doc/debug-sections.tmp | sort -n > doc/debug-sections.tmp2
+    LC_ALL=C sort -u < doc/debug-sections.tmp > doc/debug-sections.tmp2
     cat scripts/boilerplate.h > $destination
     echo "" >> $destination
     cat doc/debug-sections.tmp2 >> $destination
@@ -343,6 +330,11 @@ for FILENAME in `git ls-files`; do
     # skip subdirectories, git ls-files is recursive
     test -d $FILENAME && continue
 
+    # generated files are formatted during their generation
+    if grep -q -F "$GeneratedByMe" ${FILENAME}; then
+        continue
+    fi
+
     case ${FILENAME} in
 
     *.h|*.c|*.cc|*.cci)
@@ -351,21 +343,12 @@ for FILENAME in `git ls-files`; do
 	# Code Style formatting maintenance
 	#
 	applyPluginsTo ${FILENAME} scripts/maintenance/ || return
-	if test "${ASVER}"; then
-		./scripts/formater.pl --with-astyle ${ASTYLE} ${FILENAME}
-		if test -e $FILENAME -a -e "$FILENAME.astylebak"; then
-			md51=`cat  $FILENAME| tr -d "\n \t\r" | $MD5`;
-			md52=`cat  $FILENAME.astylebak| tr -d "\n \t\r" | $MD5`;
-
-			if test "$md51" != "$md52"; then
-				echo "ERROR: File $FILENAME not formatting well";
-				mv $FILENAME $FILENAME.astylebad
-				mv $FILENAME.astylebak $FILENAME
-				git checkout -- ${FILENAME}
-			else
-				rm -f $FILENAME.astylebak
-			fi
-        	fi
+	if test "$CppFormatter"; then
+		if $CppFormatter $FILENAME > $FILENAME.new; then
+			updateIfChanged $FILENAME $FILENAME.new 'by astyle'
+		else
+			rm $FILENAME.new
+		fi
 	fi
 
 	#
@@ -428,7 +411,7 @@ for FILENAME in `git ls-files`; do
 	#
 	# DEBUG Section list maintenance
 	#
-	grep " DEBUG: section" <${FILENAME} | sed -e 's/ \* DEBUG: //' -e 's%/\* DEBUG: %%' -e 's% \*/%%' | sort -u >>doc/debug-sections.tmp
+	grep " DEBUG: section" <${FILENAME} | sed -e 's/ \* DEBUG: //' -e 's%/\* DEBUG: %%' -e 's% \*/%%' >> doc/debug-sections.tmp
 
 	#
 	# File permissions maintenance.
@@ -444,10 +427,7 @@ for FILENAME in `git ls-files`; do
 	;;
 
     *.am)
-        # generated automake files are formatted during their generation
-        if ! grep -q -F "$GeneratedByMe" ${FILENAME}; then
-            applyPluginsTo ${FILENAME} scripts/format-makefile-am.pl || return
-        fi
+        applyPluginsTo ${FILENAME} scripts/format-makefile-am.pl || return
         ;;
 
     ChangeLog|CREDITS|CONTRIBUTORS|COPYING|*.png|*.po|*.pot|rfcs/|*.txt|test-suite/squidconf/empty|.bzrignore)
@@ -524,16 +504,49 @@ generateAmFile icons/icon.am ICONS "icons/" "silk/*"
 generateAmFile errors/template.am ERROR_TEMPLATES "errors/" "templates/ERR_*"
 
 # Build errors translation install include from current .PO available
-generateAmFile errors/language.am TRANSLATE_LANGUAGES "errors/" "*.po"
+generateAmFile errors/language.am LANGUAGE_FILES "errors/" "*.po"
 
 # Build manuals translation install include from current .PO available
-generateAmFile doc/manuals/language.am TRANSLATE_LANGUAGES "doc/manuals/" "*.po"
+generateAmFile doc/manuals/language.am LANGUAGE_FILES "doc/manuals/" "*.po"
 
 # Build STUB framework include from current stub_* available
 generateAmFile src/tests/Stub.am STUB_SOURCE "src/" "tests/stub_*.cc"
 
-# Build the GPERF generated content
-make -C src/http gperf-files
+generateRawGperfFile ()
+{
+    gperfFile="$1"
+
+    echo "/* $GeneratedByMe */"
+    echo
+
+    (cd `dirname $gperfFile` && gperf -m 100000 `basename $gperfFile`)
+}
+
+generateGperfFile ()
+{
+    gperfFile="$1"
+    cciFile=`echo $gperfFile | sed 's/[.]gperf$/.cci/'`
+
+    if test $gperfFile -ot $cciFile; then
+        return 0;
+    fi
+
+    generateRawGperfFile $gperfFile > $cciFile.unformatted || return
+
+    if test "$CppFormatter"; then
+        # generateAmFile() explains why we format immediately/here
+        $CppFormatter $cciFile.unformatted > $cciFile.new || return
+        rm $cciFile.unformatted
+    else
+        echo "ERROR: Source code formatting disabled, but regenerated $cciFile needs formatting"
+        mv $cciFile.unformatted $cciFile.new || return
+    fi
+
+    # generateAmFile() explains why we only check/report cumulative changes
+    updateIfChanged $cciFile $cciFile.new 'by generateGperfFile()'
+}
+
+run_ generateGperfFile src/http/RegisteredHeadersHash.gperf || exit 1
 
 run_ checkMakeNamedErrorDetails || exit 1
 

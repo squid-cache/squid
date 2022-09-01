@@ -57,6 +57,7 @@
  */
 
 static IOCB commHalfClosedReader;
+static int comm_openex(int sock_type, int proto, Ip::Address &, int flags, const char *note);
 static void comm_init_opened(const Comm::ConnectionPointer &conn, const char *note, struct addrinfo *AI);
 static int comm_apply_flags(int new_socket, Ip::Address &addr, int flags, struct addrinfo *AI);
 
@@ -74,6 +75,7 @@ static EVH commHalfClosedCheck;
 static void commPlanHalfClosedCheck();
 
 static Comm::Flag commBind(int s, struct addrinfo &);
+static void commSetBindAddressNoPort(int);
 static void commSetReuseAddr(int);
 static void commSetNoLinger(int);
 #ifdef TCP_NODELAY
@@ -200,6 +202,22 @@ comm_local_port(int fd)
     return F->local_addr.port();
 }
 
+/// sets the IP_BIND_ADDRESS_NO_PORT socket option to optimize ephemeral port
+/// reuse by outgoing TCP connections that must bind(2) to a source IP address
+static void
+commSetBindAddressNoPort(const int fd)
+{
+#if defined(IP_BIND_ADDRESS_NO_PORT)
+    int flag = 1;
+    if (setsockopt(fd, IPPROTO_IP, IP_BIND_ADDRESS_NO_PORT, reinterpret_cast<char*>(&flag), sizeof(flag)) < 0) {
+        const auto savedErrno = errno;
+        debugs(50, DBG_IMPORTANT, "ERROR: setsockopt(IP_BIND_ADDRESS_NO_PORT) failure: " << xstrerr(savedErrno));
+    }
+#else
+    (void)fd;
+#endif
+}
+
 static Comm::Flag
 commBind(int s, struct addrinfo &inaddr)
 {
@@ -226,6 +244,10 @@ comm_open(int sock_type,
           int flags,
           const char *note)
 {
+    // assume zero-port callers do not need to know the assigned port right away
+    if (sock_type == SOCK_STREAM && addr.port() == 0 && ((flags & COMM_DOBIND) || !addr.isAnyAddr()))
+        flags |= COMM_DOBIND_PORT_LATER;
+
     return comm_openex(sock_type, proto, addr, flags, note);
 }
 
@@ -327,7 +349,7 @@ comm_set_transparent(int fd)
  * Create a socket. Default is blocking, stream (TCP) socket.  IO_TYPE
  * is OR of flags specified in defines.h:COMM_*
  */
-int
+static int
 comm_openex(int sock_type,
             int proto,
             Ip::Address &addr,
@@ -482,6 +504,10 @@ comm_apply_flags(int new_socket,
             }
         }
 #endif
+
+        if ((flags & COMM_DOBIND_PORT_LATER))
+            commSetBindAddressNoPort(new_socket);
+
         if (commBind(new_socket, *AI) != Comm::OK) {
             comm_close(new_socket);
             return -1;
