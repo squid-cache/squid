@@ -160,10 +160,6 @@ doPages(StoreEntry *anEntry)
 void
 StoreEntry::swapOut()
 {
-    // Store::Root() in many swapout checks is FATALly missing during shutdown
-    if (shutting_down)
-        return;
-
     if (!mem_obj)
         return;
 
@@ -360,6 +356,12 @@ StoreEntry::mayStartSwapOut()
     // finished swapping out by now because we are not currently swappingOut().
     if (decision == MemObject::SwapOut::swStarted) {
         debugs(20, 3, "already started");
+        return false;
+    }
+
+    if (shutting_down) {
+        debugs(20, 3, "avoid heavy optional work during shutdown");
+        swapOutDecision(MemObject::SwapOut::swImpossible);
         return false;
     }
 

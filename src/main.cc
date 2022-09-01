@@ -1559,14 +1559,10 @@ SquidMain(int argc, char **argv)
 
         storeFsInit();      /* required for config parsing */
 
-        /* TODO: call the FS::Clean() in shutdown to do Fs cleanups */
         Fs::Init();
 
         /* May not be needed for parsing, have not audited for such */
         DiskIOModule::SetupAllModules();
-
-        /* Shouldn't be needed for config parsing, but have not audited for such */
-        StoreFileSystem::SetupAllFs();
 
         /* we may want the parsing process to set this up in the future */
         Store::Init();
@@ -2112,9 +2108,7 @@ SquidShutdown()
     storeLogClose();
     accessLogClose();
     Store::Root().sync();       /* Flush log close */
-    StoreFileSystem::FreeAllFs();
     DiskIOModule::FreeAllModules();
-    Store::FreeMemory();
 
     fdDumpOpen();
 

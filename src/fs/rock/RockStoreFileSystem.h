@@ -25,11 +25,9 @@ public:
     StoreFileSystem();
     virtual ~StoreFileSystem();
 
-    virtual char const *type() const;
-    virtual SwapDir *createSwapDir();
-    virtual void done();
-    virtual void registerWithCacheManager();
-    virtual void setup();
+    /* StoreFileSystem API */
+    virtual char const *type() const override;
+    virtual SwapDir *createSwapDir() override;
 
 private:
     //static Stats Stats_;

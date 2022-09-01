@@ -124,8 +124,6 @@ testRock::commonInit()
     if (inited)
         return;
 
-    StoreFileSystem::SetupAllFs();
-
     Config.Store.avgObjectSize = 1024;
     Config.Store.objectsPerBucket = 20;
     Config.Store.maxObjectSize = 2048;
