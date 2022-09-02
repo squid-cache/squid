@@ -424,11 +424,13 @@ Security::ServerOptions::loadDhParams()
                     case -2: {
                         auto ssl_error = ERR_get_error();
                         debugs(83, DBG_PARSE_NOTE(2), "WARNING: OpenSSL does not support " << type << " parameters check: " << dhParamsFile << ". " << Security::ErrorString(ssl_error));
-                        } break;
+                    }
+                    break;
                     default: {
                         auto ssl_error = ERR_get_error();
                         debugs(83, DBG_IMPORTANT, "ERROR: Failed to verify " << type << " parameters in " << dhParamsFile << ". " << Security::ErrorString(ssl_error));
-                        } break;
+                    }
+                    break;
                     }
                 } else {
                     // TODO: Reduce error reporting code duplication.
