@@ -120,9 +120,6 @@ public:
     /// disassociates the entry from the intransit table
     void transientsDisconnect(StoreEntry &);
 
-    /// removes collapsing requirement (for future hits)
-    void transientsClearCollapsingRequirement(StoreEntry &e);
-
     /// disassociates the entry from the memory cache, preserving cached data
     void memoryDisconnect(StoreEntry &);
 

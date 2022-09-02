@@ -51,7 +51,6 @@ void Controller::syncCollapsed(const sfileno) STUB
 void Controller::noteStoppedSharedWriting(StoreEntry &) STUB
 int Controller::transientReaders(const StoreEntry &) const STUB_RETVAL(0)
 void Controller::transientsDisconnect(StoreEntry &) STUB
-void Controller::transientsClearCollapsingRequirement(StoreEntry &) STUB
 void Controller::memoryDisconnect(StoreEntry &) STUB
 StoreSearch *Controller::search() STUB_RETVAL(nullptr)
 bool Controller::SmpAware() STUB_RETVAL(false)
