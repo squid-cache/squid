@@ -660,8 +660,8 @@ Ssl::Initialize(void)
     if (::Config.SSL.ssl_engine) {
 #if OPENSSL_VERSION_MAJOR < 3
         debugs(83, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Support for ssl_engine is deprecated " <<
-               "in Squids built with OpenSSL v1 (like this Squid). " <<
-               "It is removed in Squids built with OpenSSL v3+.");
+               "in Squids built with OpenSSL 1.x (like this Squid). " <<
+               "It is removed in Squids built with OpenSSL 3.0 or newer.");
 #if !defined(OPENSSL_NO_ENGINE)
         ENGINE_load_builtin_engines();
         ENGINE *e;
@@ -677,7 +677,7 @@ Ssl::Initialize(void)
 #endif
 
 #else /* OPENSSL_VERSION_MAJOR */
-        throw TextException("Cannot use ssl_engine in Squid built with OpenSSL v3+", Here());
+        throw TextException("Cannot use ssl_engine in Squid built with OpenSSL 3.0 or newer", Here());
 #endif
     }
 

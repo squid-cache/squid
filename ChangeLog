@@ -1,3 +1,14 @@
+Changes in squid-5.7 (05 Sep 2022):
+
+	- Regression Fix: Typo in manager ACL
+	- Bug 5186: noteDestinationsEnd check failed: transportWait
+	- Bug 5160: Test suite fails with -flto=auto
+	- Bug 3193 pt2: NTLM decoder truncating strings
+	- Bug 5133: OpenSSL 3.0 support
+	- ext_session_acl: fix TDB key lookup
+	- forward_max_tries: Do not count discarded connections
+	- ... and many compile and debugging fixes
+
 Changes in squid-5.6 (06 Jun 2022):
 
 	- Bug 5208: Part 1: Restart kids killed by SIGKILL

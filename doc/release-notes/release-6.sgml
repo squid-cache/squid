@@ -63,10 +63,7 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing directives<label id="modifieddirectives">
 <p>
 <descrip>
-	<tag>ssl_engine</tag>
-	<p>OpenSSL 3.0.0 deprecates the Engine feature. This directive is
-	   only supported when Squid is built for older OpenSSL versions.
-
+	<p>There have been no directives changed.
 </descrip>
 
 <sect1>Removed directives<label id="removeddirectives">
