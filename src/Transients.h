@@ -33,7 +33,6 @@ public:
     public:
         bool hasWriter = false; ///< whether some worker is storing the entry
         bool waitingToBeFreed = false; ///< whether the entry was marked for deletion
-        bool collapsed = false; ///< whether the entry allows collapsing
     };
 
     Transients();
@@ -41,9 +40,6 @@ public:
 
     /// return a local, previously collapsed entry
     StoreEntry *findCollapsed(const sfileno xitIndex);
-
-    /// removes collapsing requirement (for future hits)
-    void clearCollapsingRequirement(const StoreEntry &e);
 
     /// start listening for remote DELETE requests targeting either a complete
     /// StoreEntry (ioReading) or a being-formed miss StoreEntry (ioWriting)
