@@ -806,7 +806,7 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
     if (sharedMemStore && collapsed->mem_obj->memCache.io == MemObject::ioDone) {
         found = true;
         inSync = true;
-        debugs(20, 7, "fully mem-loaded " << *collapsed);
+        debugs(20, 7, "already handled by memory store: " << *collapsed);
     } else if (sharedMemStore && collapsed->hasMemStore()) {
         found = true;
         inSync = sharedMemStore->updateAnchored(*collapsed);
