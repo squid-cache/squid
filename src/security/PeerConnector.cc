@@ -627,12 +627,8 @@ Security::PeerConnector::certDownloadingDone(DownloaderAnswer &downloaderAnswer)
 {
     certDownloadWait.finish();
 
-    // TODO: Remove diff reduction before merging
-    const auto &obj = downloaderAnswer.resource;
-    const auto downloadStatus = downloaderAnswer.outcome;
-
     ++certsDownloads;
-    debugs(81, 5, "Certificate downloading status: " << downloadStatus << " certificate size: " << obj.length());
+    debugs(81, 5, "outcome: " << downloaderAnswer.outcome << "; certificate size: " << downloaderAnswer.resource.length());
 
     Must(Comm::IsConnOpen(serverConnection()));
     const auto &sconn = *fd_table[serverConnection()->fd].ssl;
@@ -645,8 +641,8 @@ Security::PeerConnector::certDownloadingDone(DownloaderAnswer &downloaderAnswer)
     //  The applications MUST accept DER encoded certificates and SHOULD
     // be able to accept collection of certificates.
     // TODO: support collection of certificates
-    const unsigned char *raw = (const unsigned char*)obj.rawContent();
-    if (X509 *cert = d2i_X509(nullptr, &raw, obj.length())) {
+    auto raw = reinterpret_cast<const unsigned char*>(downloaderAnswer.resource.rawContent());
+    if (auto cert = d2i_X509(nullptr, &raw, downloaderAnswer.resource.length())) {
         debugs(81, 5, "Retrieved certificate: " << *cert);
 
         if (!downloadedCerts)
