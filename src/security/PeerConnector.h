@@ -11,7 +11,7 @@
 
 #include "acl/Acl.h"
 #include "acl/ChecklistFiller.h"
-#include "base/AsyncCbdataCalls.h"
+#include "base/AsyncCallbacks.h"
 #include "base/AsyncJob.h"
 #include "base/JobWait.h"
 #include "CommCalls.h"
@@ -28,6 +28,7 @@
 
 class ErrorState;
 class Downloader;
+class DownloaderAnswer;
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 
@@ -52,18 +53,8 @@ class PeerConnector: virtual public AsyncJob, public Acl::ChecklistFiller
 public:
     typedef CbcPointer<PeerConnector> Pointer;
 
-    /// Callback dialer API to allow PeerConnector to set the answer.
-    class CbDialer
-    {
-    public:
-        virtual ~CbDialer() {}
-        /// gives PeerConnector access to the in-dialer answer
-        virtual Security::EncryptorAnswer &answer() = 0;
-    };
-
-public:
     PeerConnector(const Comm::ConnectionPointer &aServerConn,
-                  AsyncCall::Pointer &aCallback,
+                  const AsyncCallback<EncryptorAnswer> &,
                   const AccessLogEntryPointer &alp,
                   const time_t timeout = 0);
     virtual ~PeerConnector();
@@ -125,7 +116,7 @@ protected:
     void startCertDownloading(SBuf &url);
 
     /// Called by Downloader after a certificate object downloaded.
-    void certDownloadingDone(SBuf &object, int status);
+    void certDownloadingDone(DownloaderAnswer &);
 #endif
 
     /// Called when the openSSL SSL_connect function needs to write data to
@@ -175,7 +166,10 @@ protected:
     HttpRequestPointer request; ///< peer connection trigger or cause
     Comm::ConnectionPointer serverConn; ///< TCP connection to the peer
     AccessLogEntryPointer al; ///< info for the future access.log entry
-    AsyncCall::Pointer callback; ///< we call this with the results
+
+    /// answer destination
+    AsyncCallback<EncryptorAnswer> callback;
+
 private:
     PeerConnector(const PeerConnector &); // not implemented
     PeerConnector &operator =(const PeerConnector &); // not implemented
@@ -184,7 +178,7 @@ private:
     unsigned int certDownloadNestingLevel() const;
 
     /// Process response from cert validator helper
-    void sslCrtvdHandleReply(Ssl::CertValidationResponsePointer);
+    void sslCrtvdHandleReply(Ssl::CertValidationResponsePointer &);
 
     /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
     Security::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, ErrorDetailPointer &);

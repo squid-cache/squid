@@ -13,6 +13,7 @@
 #include "adaptation/icap/Config.h"
 #include "adaptation/icap/Launcher.h"
 #include "adaptation/icap/Xaction.h"
+#include "base/AsyncCallbacks.h"
 #include "base/JobWait.h"
 #include "base/Optional.h"
 #include "base/TextException.h"
@@ -33,18 +34,6 @@
 #include "security/PeerConnector.h"
 #include "SquidConfig.h"
 
-/// Gives Security::PeerConnector access to Answer in the PeerPoolMgr callback dialer.
-class MyIcapAnswerDialer: public UnaryMemFunT<Adaptation::Icap::Xaction, Security::EncryptorAnswer, Security::EncryptorAnswer&>,
-    public Security::PeerConnector::CbDialer
-{
-public:
-    MyIcapAnswerDialer(const JobPointer &aJob, Method aMethod):
-        UnaryMemFunT<Adaptation::Icap::Xaction, Security::EncryptorAnswer, Security::EncryptorAnswer&>(aJob, aMethod, Security::EncryptorAnswer()) {}
-
-    /* Security::PeerConnector::CbDialer API */
-    virtual Security::EncryptorAnswer &answer() { return arg1; }
-};
-
 namespace Ssl
 {
 /// A simple PeerConnector for Secure ICAP services. No SslBump capabilities.
@@ -54,7 +43,7 @@ public:
     IcapPeerConnector(
         Adaptation::Icap::ServiceRep::Pointer &service,
         const Comm::ConnectionPointer &aServerConn,
-        AsyncCall::Pointer &aCallback,
+        const AsyncCallback<Security::EncryptorAnswer> &aCallback,
         AccessLogEntry::Pointer const &alp,
         const time_t timeout = 0):
         AsyncJob("Ssl::IcapPeerConnector"),
@@ -270,10 +259,7 @@ Adaptation::Icap::Xaction::useTransportConnection(const Comm::ConnectionPointer 
     const auto &ssl = fd_table[conn->fd].ssl;
     if (!ssl && service().cfg().secure.encryptTransport) {
         // XXX: Exceptions orphan conn.
-        CbcPointer<Adaptation::Icap::Xaction> me(this);
-        AsyncCall::Pointer callback = asyncCall(93, 4, "Adaptation::Icap::Xaction::handleSecuredPeer",
-                                                MyIcapAnswerDialer(me, &Adaptation::Icap::Xaction::handleSecuredPeer));
-
+        const auto callback = asyncCallback(93, 4, Adaptation::Icap::Xaction::handleSecuredPeer, this);
         const auto sslConnector = new Ssl::IcapPeerConnector(theService, conn, callback, masterLogEntry(), TheConfig.connect_timeout(service().cfg().bypass));
 
         encryptionWait.start(sslConnector, callback);

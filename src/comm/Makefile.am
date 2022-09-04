@@ -36,7 +36,6 @@ libcomm_la_SOURCES = \
 	Tcp.h \
 	TcpAcceptor.cc \
 	TcpAcceptor.h \
-	UdpOpenDialer.h \
 	Write.cc \
 	Write.h \
 	comm_internal.h \

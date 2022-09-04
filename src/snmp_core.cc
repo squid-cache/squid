@@ -10,16 +10,17 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "base/AsyncCallbacks.h"
 #include "base/CbcPointer.h"
 #include "CachePeer.h"
 #include "client_db.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
-#include "comm/UdpOpenDialer.h"
 #include "fatal.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
+#include "ipc/StartListening.h"
 #include "snmp/Forwarder.h"
 #include "snmp_agent.h"
 #include "snmp_core.h"
@@ -27,7 +28,7 @@
 #include "SquidConfig.h"
 #include "tools.h"
 
-static void snmpPortOpened(const Comm::ConnectionPointer &conn, int errNo);
+static void snmpPortOpened(Ipc::StartListeningAnswer&);
 
 mib_tree_entry *mib_tree_head;
 mib_tree_entry *mib_tree_last;
@@ -273,8 +274,7 @@ snmpOpenPorts(void)
         snmpIncomingConn->local.setIPv4();
     }
 
-    AsyncCall::Pointer call = asyncCall(49, 2, "snmpIncomingConnectionOpened",
-                                        Comm::UdpOpenDialer(&snmpPortOpened));
+    auto call = asyncCallbackFun(49, 2, snmpPortOpened);
     Ipc::StartListening(SOCK_DGRAM, IPPROTO_UDP, snmpIncomingConn, Ipc::fdnInSnmpSocket, call);
 
     if (!Config.Addrs.snmp_outgoing.isNoAddr()) {
@@ -290,8 +290,8 @@ snmpOpenPorts(void)
         if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && snmpOutgoingConn->local.isAnyAddr()) {
             snmpOutgoingConn->local.setIPv4();
         }
-        AsyncCall::Pointer c = asyncCall(49, 2, "snmpOutgoingConnectionOpened",
-                                         Comm::UdpOpenDialer(&snmpPortOpened));
+        // TODO: Add/use snmpOutgoingPortOpened() instead of snmpPortOpened().
+        auto c = asyncCallbackFun(49, 2, snmpPortOpened);
         Ipc::StartListening(SOCK_DGRAM, IPPROTO_UDP, snmpOutgoingConn, Ipc::fdnOutSnmpSocket, c);
     } else {
         snmpOutgoingConn = snmpIncomingConn;
@@ -300,8 +300,10 @@ snmpOpenPorts(void)
 }
 
 static void
-snmpPortOpened(const Comm::ConnectionPointer &conn, int)
+snmpPortOpened(Ipc::StartListeningAnswer &answer)
 {
+    const auto &conn = answer.conn;
+
     if (!Comm::IsConnOpen(conn))
         fatalf("Cannot open SNMP %s Port",(conn->fd == snmpIncomingConn->fd?"receiving":"sending"));
 

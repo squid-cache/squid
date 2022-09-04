@@ -449,7 +449,7 @@ Ftp::Gateway::listenForDataChannel(const Comm::ConnectionPointer &conn)
 
     typedef CommCbMemFunT<Gateway, CommAcceptCbParams> AcceptDialer;
     typedef AsyncCallT<AcceptDialer> AcceptCall;
-    RefCount<AcceptCall> call = static_cast<AcceptCall*>(JobCallback(11, 5, AcceptDialer, this, Ftp::Gateway::ftpAcceptDataConnection));
+    const auto call = JobCallback(11, 5, AcceptDialer, this, Ftp::Gateway::ftpAcceptDataConnection);
     Subscription::Pointer sub = new CallSubscription<AcceptCall>(call);
     const char *note = entry->url();
 

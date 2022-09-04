@@ -28,7 +28,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeekingPeerConnector);
 Ssl::PeekingPeerConnector::PeekingPeerConnector(HttpRequestPointer &aRequest,
         const Comm::ConnectionPointer &aServerConn,
         const Comm::ConnectionPointer &aClientConn,
-        AsyncCall::Pointer &aCallback,
+        const AsyncCallback<Security::EncryptorAnswer> &aCallback,
         const AccessLogEntryPointer &alp,
         const time_t timeout):
     AsyncJob("Ssl::PeekingPeerConnector"),

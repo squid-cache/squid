@@ -386,7 +386,7 @@ Ftp::Server::listenForDataConnection()
 
     typedef CommCbMemFunT<Server, CommAcceptCbParams> AcceptDialer;
     typedef AsyncCallT<AcceptDialer> AcceptCall;
-    RefCount<AcceptCall> call = static_cast<AcceptCall*>(JobCallback(5, 5, AcceptDialer, this, Ftp::Server::acceptDataConnection));
+    const auto call = JobCallback(5, 5, AcceptDialer, this, Ftp::Server::acceptDataConnection);
     Subscription::Pointer sub = new CallSubscription<AcceptCall>(call);
     listener = call.getRaw();
     dataListenConn = conn;

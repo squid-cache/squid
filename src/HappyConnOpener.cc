@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "base/AsyncCallbacks.h"
 #include "base/CodeContext.h"
 #include "CachePeer.h"
 #include "errorpage.h"
@@ -326,10 +327,10 @@ HappyConnOpenerAnswer::~HappyConnOpenerAnswer()
 
 /* HappyConnOpener */
 
-HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const AsyncCall::Pointer &aCall, HttpRequest::Pointer &request, const time_t aFwdStart, int tries, const AccessLogEntry::Pointer &anAle):
+HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const AsyncCallback<Answer> &callback, const HttpRequest::Pointer &request, const time_t aFwdStart, const int tries, const AccessLogEntry::Pointer &anAle):
     AsyncJob("HappyConnOpener"),
     fwdStart(aFwdStart),
-    callback_(aCall),
+    callback_(callback),
     destinations(dests),
     prime(&HappyConnOpener::notePrimeConnectDone, "HappyConnOpener::notePrimeConnectDone"),
     spare(&HappyConnOpener::noteSpareConnectDone, "HappyConnOpener::noteSpareConnectDone"),
@@ -338,7 +339,6 @@ HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const Asyn
     n_tries(tries)
 {
     assert(destinations);
-    assert(dynamic_cast<Answer*>(callback_->getDialer()));
 }
 
 HappyConnOpener::~HappyConnOpener()
@@ -485,12 +485,12 @@ HappyConnOpener::Answer *
 HappyConnOpener::futureAnswer(const PeerConnectionPointer &conn)
 {
     if (callback_ && !callback_->canceled()) {
-        const auto answer = dynamic_cast<Answer *>(callback_->getDialer());
-        assert(answer);
-        answer->conn = conn;
-        answer->n_tries = n_tries;
-        return answer;
+        auto &answer = callback_.answer();
+        answer.conn = conn;
+        answer.n_tries = n_tries;
+        return &answer;
     }
+    (void)callback_.release();
     return nullptr;
 }
 
@@ -502,9 +502,8 @@ HappyConnOpener::sendSuccess(const PeerConnectionPointer &conn, const bool reuse
     if (auto *answer = futureAnswer(conn)) {
         answer->reused = reused;
         assert(!answer->error);
-        ScheduleCallHere(callback_);
+        ScheduleCallHere(callback_.release());
     }
-    callback_ = nullptr;
 }
 
 /// cancels the in-progress attempt, making its path a future candidate
@@ -527,9 +526,8 @@ HappyConnOpener::sendFailure()
         answer->error = lastError;
         assert(answer->error.valid());
         lastError = nullptr; // the answer owns it now
-        ScheduleCallHere(callback_);
+        ScheduleCallHere(callback_.release());
     }
-    callback_ = nullptr;
 }
 
 void
