@@ -49,7 +49,7 @@ public:
     // can be called from canFire() for debugging; always returns false
     bool cancel(const char *reason);
 
-    bool canceled() { return isCanceled != nullptr; }
+    bool canceled() const { return isCanceled != nullptr; }
 
     virtual CallDialer *getDialer() = 0;
 
@@ -119,10 +119,12 @@ public:
  \ingroup AsyncCallAPI
  * This template implements an AsyncCall using a specified Dialer class
  */
-template <class Dialer>
+template <class DialerClass>
 class AsyncCallT: public AsyncCall
 {
 public:
+    using Dialer = DialerClass;
+
     AsyncCallT(int aDebugSection, int aDebugLevel, const char *aName,
                const Dialer &aDialer): AsyncCall(aDebugSection, aDebugLevel, aName),
         dialer(aDialer) {}
@@ -135,6 +137,8 @@ public:
 
     CallDialer *getDialer() { return &dialer; }
 
+    Dialer dialer;
+
 protected:
     virtual bool canFire() {
         return AsyncCall::canFire() &&
@@ -142,15 +146,12 @@ protected:
     }
     virtual void fire() { dialer.dial(*this); }
 
-    Dialer dialer;
-
 private:
     AsyncCallT & operator=(const AsyncCallT &); // not defined. call assignments not permitted.
 };
 
 template <class Dialer>
-inline
-AsyncCall *
+inline RefCount< AsyncCallT<Dialer> >
 asyncCall(int aDebugSection, int aDebugLevel, const char *aName,
           const Dialer &aDialer)
 {
@@ -158,7 +159,7 @@ asyncCall(int aDebugSection, int aDebugLevel, const char *aName,
 }
 
 /** Call scheduling helper. Use ScheduleCallHere if you can. */
-bool ScheduleCall(const char *fileName, int fileLine, AsyncCall::Pointer &call);
+bool ScheduleCall(const char *fileName, int fileLine, const AsyncCall::Pointer &);
 
 /** Call scheduling helper. */
 #define ScheduleCallHere(call) ScheduleCall(__FILE__, __LINE__, (call))

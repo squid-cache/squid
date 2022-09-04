@@ -18,7 +18,6 @@
 #include "ipc/Request.h"
 #include "ipc/Response.h"
 #include "ipc/StrandCoords.h"
-#include <map>
 
 namespace Ipc
 {
@@ -60,11 +59,7 @@ protected:
     virtual bool aggregate(Response::Pointer aResponse) = 0;
 
 private:
-    typedef UnaryMemFunT<Inquirer, Response::Pointer, Response::Pointer> HandleAckDialer;
-
     void handleRemoteAck(Response::Pointer response);
-
-    static AsyncCall::Pointer DequeueRequest(RequestId::Index);
 
     static void RequestTimedOut(void* param);
     void requestTimedOut();
@@ -77,10 +72,6 @@ protected:
     Ipc::StrandCoords::const_iterator pos; ///< strand we should query now
 
     const double timeout; ///< number of seconds to wait for strand response
-
-    /// maps request->id to Inquirer::handleRemoteAck callback
-    typedef std::map<RequestId::Index, AsyncCall::Pointer> RequestsMap;
-    static RequestsMap TheRequestsMap; ///< pending strand requests
 
     static RequestId::Index LastRequestId; ///< last requestId used
 };

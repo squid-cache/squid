@@ -14,6 +14,8 @@
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
+#include "base/AsyncCallbacks.h"
+#include "base/AsyncCbdataCalls.h"
 #include "CacheManager.h"
 #include "CachePeer.h"
 #include "client_side.h"
@@ -76,30 +78,6 @@ static int FwdReplyCodes[MAX_FWD_STATS_IDX + 1][Http::scInvalidHeader + 1];
 PconnPool *fwdPconnPool = new PconnPool("server-peers", nullptr);
 
 CBDATA_CLASS_INIT(FwdState);
-
-class FwdStatePeerAnswerDialer: public CallDialer, public Security::PeerConnector::CbDialer
-{
-public:
-    typedef void (FwdState::*Method)(Security::EncryptorAnswer &);
-
-    FwdStatePeerAnswerDialer(Method method, FwdState *fwd):
-        method_(method), fwd_(fwd), answer_() {}
-
-    /* CallDialer API */
-    virtual bool canDial(AsyncCall &) { return fwd_.valid(); }
-    void dial(AsyncCall &) { ((&(*fwd_))->*method_)(answer_); }
-    virtual void print(std::ostream &os) const {
-        os << '(' << fwd_.get() << ", " << answer_ << ')';
-    }
-
-    /* Security::PeerConnector::CbDialer API */
-    virtual Security::EncryptorAnswer &answer() { return answer_; }
-
-private:
-    Method method_;
-    CbcPointer<FwdState> fwd_;
-    Security::EncryptorAnswer answer_;
-};
 
 void
 FwdState::HandleStoreAbort(FwdState *fwd)
@@ -934,9 +912,7 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
 void
 FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 {
-    AsyncCall::Pointer callback = asyncCall(17,4,
-                                            "FwdState::tunnelEstablishmentDone",
-                                            Http::Tunneler::CbDialer<FwdState>(&FwdState::tunnelEstablishmentDone, this));
+    const auto callback = asyncCallback(17, 4, FwdState::tunnelEstablishmentDone, this);
     HttpRequest::Pointer requestPointer = request;
     const auto tunneler = new Http::Tunneler(conn, requestPointer, callback, connectingTimeout(conn), al);
 
@@ -1025,9 +1001,7 @@ void
 FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 {
     HttpRequest::Pointer requestPointer = request;
-    AsyncCall::Pointer callback = asyncCall(17,4,
-                                            "FwdState::ConnectedToPeer",
-                                            FwdStatePeerAnswerDialer(&FwdState::connectedToPeer, this));
+    const auto callback = asyncCallback(17, 4, FwdState::connectedToPeer, this);
     const auto sslNegotiationTimeout = connectingTimeout(conn);
     Security::PeerConnector *connector = nullptr;
 #if USE_OPENSSL
@@ -1145,8 +1119,7 @@ FwdState::connectStart()
 
     request->hier.startPeerClock();
 
-    AsyncCall::Pointer callback = asyncCall(17, 5, "FwdState::noteConnection", HappyConnOpener::CbDialer<FwdState>(&FwdState::noteConnection, this));
-
+    const auto callback = asyncCallback(17, 5, FwdState::noteConnection, this);
     HttpRequest::Pointer cause = request;
     const auto cs = new HappyConnOpener(destinations, callback, cause, start_t, n_tries, al);
     cs->setHost(request->url.host());

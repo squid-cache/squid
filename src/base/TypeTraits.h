@@ -9,6 +9,8 @@
 #ifndef SQUID_SRC_BASE_TYPETRAITS_H
 #define SQUID_SRC_BASE_TYPETRAITS_H
 
+#include <type_traits>
+
 namespace TypeTraits_ { // a hack to prevent "unintended ADL"
 
 // TODO: Extract reusable paradigms into other mixins (e.g., NonCopyable).
@@ -36,6 +38,10 @@ protected: // prevents accidental creation of Interface instances
 } // namespace TypeTraits_
 
 using Interface = TypeTraits_::Interface;
+
+/// std::enable_if_t replacement until C++14
+template <bool B, class T = void>
+using EnableIfType = typename std::enable_if<B,T>::type;
 
 #endif /* SQUID_SRC_BASE_TYPETRAITS_H */
 
