@@ -59,7 +59,7 @@ public:
     virtual bool dereference(StoreEntry &e) override;
     virtual void updateHeaders(StoreEntry *e) override;
     virtual void maintain() override;
-    virtual bool anchorToCache(StoreEntry &e, bool &inSync) override;
+    virtual bool anchorToCache(StoreEntry &) override;
     virtual bool updateAnchored(StoreEntry &) override;
     virtual void evictCached(StoreEntry &) override;
     virtual void evictIfFound(const cache_key *) override;

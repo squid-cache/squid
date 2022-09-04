@@ -609,8 +609,11 @@ Store::Disks::evictIfFound(const cache_key *key)
 }
 
 bool
-Store::Disks::anchorToCache(StoreEntry &entry, bool &inSync)
+Store::Disks::anchorToCache(StoreEntry &entry)
 {
+    if (entry.hasDisk())
+        return true; // already anchored
+
     if (const int cacheDirs = Config.cacheSwap.n_configured) {
         // ask each cache_dir until the entry is found; use static starting
         // point to avoid asking the same subset of disks more often
@@ -622,7 +625,7 @@ Store::Disks::anchorToCache(StoreEntry &entry, bool &inSync)
             if (!sd.active())
                 continue;
 
-            if (sd.anchorToCache(entry, inSync)) {
+            if (sd.anchorToCache(entry)) {
                 debugs(20, 3, "cache_dir " << idx << " anchors " << entry);
                 return true;
             }

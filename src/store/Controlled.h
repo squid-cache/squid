@@ -34,10 +34,9 @@ public:
     /// make stored metadata and HTTP headers the same as in the given entry
     virtual void updateHeaders(StoreEntry *) {}
 
-    /// If Transients entry cannot be attached to this storage, return false.
-    /// If the entry is not found, return false. Otherwise, return true after
-    /// tying the entry to this cache and setting inSync to updateAnchored().
-    virtual bool anchorToCache(StoreEntry &, bool &/*inSync*/) { return false; }
+    /// tie StoreEntry to this storage if this storage has a matching entry
+    /// \retval true if this storage has a matching entry
+    virtual bool anchorToCache(StoreEntry &) { return false; }
 
     /// Update a local Transients entry with fresh info from this cache (if any).
     /// Return true iff the cache supports Transients entries and
