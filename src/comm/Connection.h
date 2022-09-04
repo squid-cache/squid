@@ -47,8 +47,7 @@ namespace Comm
 #define COMM_NOCLOEXEC          0x02
 #define COMM_REUSEADDR          0x04  // shared FD may be both accept()ing and read()ing
 #define COMM_DOBIND             0x08  // requires a bind()
-#define COMM_TRANSPARENT        0x10  // arrived via TPROXY
-#define COMM_INTERCEPTION       0x20  // arrived via NAT
+#define COMM_TRANSPARENT        0x10  ///< whether TPROXY spoofing should be applied
 #define COMM_REUSEPORT          0x40 //< needs SO_REUSEPORT
 /// not registered with Comm and not owned by any connection-closing code
 #define COMM_ORPHANED           0x80
@@ -142,7 +141,9 @@ public:
     virtual std::ostream &detailCodeContext(std::ostream &os) const override;
 
 public:
-    /** Address/Port for the Squid end of a TCP link. */
+    /// Address/Port for the Squid end of a TCP link or
+    /// the remote server Address/Port in a case of interception (for client connections)
+    /// \see TrafficMode::interceptedSomewhere()
     Ip::Address local;
 
     /** Address for the Remote end of a TCP link. */

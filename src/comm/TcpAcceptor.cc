@@ -385,15 +385,15 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     details->local = *gai;
     Ip::Address::FreeAddr(gai);
 
-    if (conn->flags & COMM_TRANSPARENT) { // the real client/dest IP address must be already available via getsockname()
-        details->flags |= COMM_TRANSPARENT;
+    // Handle interceptedLocally() traffic here. The PROXY protocol supplies original
+    // client and destination IP addresses later, after parsing the PROXY protocol prefix.
+    if (listenPort_->flags.tproxyInterceptLocally()) { // the real client/dest IP address must be already available via getsockname()
         if (!Ip::Interceptor.TransparentActive()) {
             debugs(50, DBG_IMPORTANT, "ERROR: Cannot use transparent " << details << " because TPROXY mode became inactive");
             // TODO: consider returning Comm::COMM_ERROR instead
             return Comm::NOMESSAGE;
         }
-    } else if (conn->flags & COMM_INTERCEPTION) { // request the real client/dest IP address from NAT
-        details->flags |= COMM_INTERCEPTION;
+    } else if (listenPort_->flags.natInterceptLocally()) {
         if (!Ip::Interceptor.LookupNat(*details)) {
             debugs(50, DBG_IMPORTANT, "ERROR: NAT lookup failed to locate original IPs on " << details);
             return Comm::NOMESSAGE;

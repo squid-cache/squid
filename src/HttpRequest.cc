@@ -541,7 +541,8 @@ HttpRequest::maybeCacheable()
     // Because it failed verification, or someone bypassed the security tests
     // we cannot cache the response for sharing between clients.
     // TODO: update cache to store for particular clients only (going to same Host: and destination IP)
-    if (!flags.hostVerified && (flags.intercepted || flags.interceptTproxy))
+    // XXX: add missing checks, see HttpRequest::mustGoToOriginalDestination()
+    if (!flags.hostVerified && masterXaction->hasListeningInterceptedPort())
         return false;
 
     switch (url.getScheme()) {
@@ -796,10 +797,7 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
 #endif /* FOLLOW_X_FORWARDED_FOR */
         my_addr = clientConnection->local;
 
-        flags.intercepted = ((clientConnection->flags & COMM_INTERCEPTION) != 0);
-        flags.interceptTproxy = ((clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
-        const bool proxyProtocolPort = port ? port->flags.proxySurrogate : false;
-        if (flags.interceptTproxy && !proxyProtocolPort) {
+        if (port && port->flags.tproxyInterceptLocally()) {
             if (Config.accessList.spoof_client_ip) {
                 ACLFilledChecklist *checklist = new ACLFilledChecklist(Config.accessList.spoof_client_ip, this, clientConnection->rfc931);
                 checklist->al = al;
@@ -811,6 +809,16 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
         } else
             flags.spoofClientIp = false;
     }
+}
+
+bool
+HttpRequest::mustGoToOriginalDestination() const
+{
+    // TODO: exclude flags.internal requests
+    // TODO: REQMOD/redirection occur after host header verification
+    const auto isIntercepted = !flags.redirected && masterXaction->hasListeningInterceptedPort();
+    const auto useOriginalDst = Config.onoff.client_dst_passthru || !flags.hostVerified;
+    return isIntercepted && useOriginalDst;
 }
 
 char *
@@ -852,8 +860,11 @@ FindGoodListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEn
     if (!ip && ale)
         ip = FindGoodListeningPortAddressInPort(ale->cache.port, filter);
 
-    // XXX: also handle PROXY protocol here when we have a flag to identify such request
-    if (ip || request->flags.interceptTproxy || request->flags.intercepted)
+    // if (request->masterXaction->squidPort->flags.proxySurrogate()) {
+    //     XXX: handle PROXY protocol here when we have a flag to identify such request
+    // }
+
+    if (ip || request->masterXaction->hasListeningInterceptedPort())
         return ip;
 
     /* handle non-intercepted cases that were not handled above */

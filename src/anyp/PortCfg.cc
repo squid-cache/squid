@@ -9,8 +9,11 @@
 #include "squid.h"
 #include "anyp/PortCfg.h"
 #include "anyp/UriScheme.h"
+#include "base/TextException.h"
 #include "comm.h"
 #include "fatal.h"
+#include "ftp/Elements.h"
+#include "http/ProtocolVersion.h"
 #include "security/PeerOptions.h"
 #if USE_OPENSSL
 #include "ssl/support.h"
@@ -25,13 +28,49 @@ AnyP::PortCfgPointer FtpPortList;
 int NHttpSockets = 0;
 int HttpSockets[MAXTCPLISTENPORTS];
 
-AnyP::PortCfg::PortCfg() :
+namespace AnyP
+{
+
+static TrafficModeFlags::PortKind
+PortKind(const SBuf &directive)
+{
+    if (directive.cmp("http_port") == 0)
+        return TrafficModeFlags::httpPort;
+    else if (directive.cmp("https_port") == 0)
+        return TrafficModeFlags::httpsPort;
+    else {
+        assert(directive.cmp("ftp_port") == 0);
+        return TrafficModeFlags::ftpPort;
+    }
+}
+
+static ProtocolVersion
+DefaultTransport(const TrafficModeFlags::PortKind &portKind)
+{
+    switch(portKind)
+    {
+    case TrafficModeFlags::httpPort:
+        return Http::ProtocolVersion(1,1);
+    case TrafficModeFlags::httpsPort:
+        return ProtocolVersion(PROTO_HTTPS, 1,1);
+    case TrafficModeFlags::ftpPort:
+        return Ftp::ProtocolVersion();
+    }
+
+    assert(false); // not reached
+    return Http::ProtocolVersion(1,1);
+}
+
+}
+
+AnyP::PortCfg::PortCfg(const SBuf &directive):
     next(),
+    directiveName(directive),
+    flags(PortKind(directiveName)),
     s(),
-    transport(AnyP::PROTO_HTTP,1,1), // "Squid is an HTTP proxy", etc.
+    transport(DefaultTransport(flags.portKind())),
     name(nullptr),
     defaultsite(nullptr),
-    flags(),
     allow_direct(false),
     vhost(false),
     actAsOrigin(false),
@@ -58,11 +97,12 @@ AnyP::PortCfg::~PortCfg()
 
 AnyP::PortCfg::PortCfg(const PortCfg &other):
     next(), // special case; see assert() below
+    directiveName(other.directiveName),
+    flags(other.flags),
     s(other.s),
     transport(other.transport),
     name(other.name ? xstrdup(other.name) : nullptr),
     defaultsite(other.defaultsite ? xstrdup(other.defaultsite) : nullptr),
-    flags(other.flags),
     allow_direct(other.allow_direct),
     vhost(other.vhost),
     actAsOrigin(other.actAsOrigin),
@@ -86,8 +126,7 @@ AnyP::PortCfg::ipV4clone() const
 {
     const auto clone = new PortCfg(*this);
     clone->s.setIPv4();
-    debugs(3, 3, AnyP::UriScheme(transport.protocol).image() << "_port: " <<
-           "cloned wildcard address for split-stack: " << s << " and " << clone->s);
+    debugs(3, 3, *this << ": cloned wildcard address for split-stack: " << s << " and " << clone->s);
     return clone;
 }
 
@@ -102,12 +141,19 @@ AnyP::PortCfg::codeContextGist() const
 std::ostream &
 AnyP::PortCfg::detailCodeContext(std::ostream &os) const
 {
+    os << Debug::Extra << "listening port: " << *this;
+    return os;
+}
+
+void
+AnyP::PortCfg::print(std::ostream &os) const
+{
+    os << directiveName << ' ';
     // parsePortSpecification() defaults optional port name to the required
     // listening address so we cannot easily distinguish one from the other.
     if (name)
-        os << Debug::Extra << "listening port: " << name;
-    else if (s.port())
-        os << Debug::Extra << "listening port address: " << s;
-    return os;
+        os << name;
+    else
+        os << s;
 }
 

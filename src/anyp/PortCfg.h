@@ -24,7 +24,7 @@ namespace AnyP
 class PortCfg : public CodeContext
 {
 public:
-    PortCfg();
+    explicit PortCfg(const SBuf &directive);
     // no public copying/moving but see ipV4clone()
     PortCfg(PortCfg &&) = delete;
     ~PortCfg();
@@ -32,19 +32,25 @@ public:
     /// creates the same port configuration but listening on any IPv4 address
     PortCfg *ipV4clone() const;
 
+    /// identifies this port configuration using squid.conf syntax
+    void print(std::ostream &) const;
+
     /* CodeContext API */
     virtual ScopedId codeContextGist() const override;
     virtual std::ostream &detailCodeContext(std::ostream &os) const override;
 
     PortCfgPointer next;
 
+    /// actual or implied (by squid -a) squid.conf directive name
+    SBuf directiveName;
+
+    /// the kind of traffic this port expects
+    TrafficMode flags;
+
     Ip::Address s;
     AnyP::ProtocolVersion transport; ///< transport protocol and version received by this port
     char *name;                /* visible name */
     char *defaultsite;         /* default web site */
-
-    TrafficMode flags;  ///< flags indicating what type of traffic to expect via this port.
-
     bool allow_direct;       ///< Allow direct forwarding in accelerator mode
     bool vhost;              ///< uses host header
     bool actAsOrigin;        ///< update replies to conform with RFC 2616
@@ -75,6 +81,13 @@ private:
 };
 
 } // namespace AnyP
+
+inline std::ostream &
+operator <<(std::ostream &os, const AnyP::PortCfg &p)
+{
+    p.print(os);
+    return os;
+}
 
 /// list of Squid http(s)_port configured
 extern AnyP::PortCfgPointer HttpPortList;

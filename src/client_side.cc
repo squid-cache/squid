@@ -154,8 +154,7 @@ public:
         handler(aHandler), portCfg(aPortCfg), portTypeNote(note), sub(aSub) {}
 
     virtual void print(std::ostream &os) const {
-        startPrint(os) <<
-                       ", " << FdNote(portTypeNote) << " port=" << (void*)&portCfg << ')';
+        startPrint(os) << ", port=" << *portCfg << ')';
     }
 
     virtual bool canDial(AsyncCall &) const { return true; }
@@ -1325,8 +1324,8 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
            "\n----------");
 
     /* deny CONNECT via accelerated ports */
-    if (hp->method() == Http::METHOD_CONNECT && port != nullptr && port->flags.accelSurrogate) {
-        debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << transferProtocol << " Accelerator port " << port->s.port());
+    if (hp->method() == Http::METHOD_CONNECT && port && port->flags.accelSurrogate()) {
+        debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on accelerator " << *port);
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
         hp->parseStatusCode = Http::scMethodNotAllowed;
         return abortRequestParsing("error:method-not-allowed");
@@ -1337,7 +1336,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
      * If seen it signals a broken client or proxy has corrupted the traffic.
      */
     if (hp->method() == Http::METHOD_PRI && hp->messageProtocol() < Http::ProtocolVersion(2,0)) {
-        debugs(33, DBG_IMPORTANT, "WARNING: PRI method received on " << transferProtocol << " port " << port->s.port());
+        debugs(33, DBG_IMPORTANT, "WARNING: PRI method received on " << *port);
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
         hp->parseStatusCode = Http::scMethodNotAllowed;
         return abortRequestParsing("error:method-not-allowed");
@@ -1372,9 +1371,6 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
                      clientReplyStatus, newServer, clientSocketRecipient,
                      clientSocketDetach, newClient, tempBuffer);
 
-    /* set url */
-    debugs(33,5, "Prepare absolute URL from " <<
-           (transparent()?"intercept":(port->flags.accelSurrogate ? "accel":"")));
     /* Rewrite the URL in transparent or accelerator mode */
     /* NP: there are several cases to traverse here:
      *  - standard mode (forward proxy)
@@ -1402,7 +1398,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
         //  But have not parsed there yet!! flag for local-only handling.
         http->flags.internal = true;
 
-    } else if (port->flags.accelSurrogate) {
+    } else if (port->flags.accelSurrogate()) {
         /* accelerator mode */
         http->uri = prepareAcceleratedURL(this, hp);
         http->flags.accel = true;
@@ -1854,8 +1850,6 @@ ConnStateData::parseProxyProtocolHeader()
         if (proxyProtocolHeader_->hasForwardedAddresses()) {
             clientConnection->local = proxyProtocolHeader_->destinationAddress;
             clientConnection->remote = proxyProtocolHeader_->sourceAddress;
-            if ((clientConnection->flags & COMM_TRANSPARENT))
-                clientConnection->flags ^= COMM_TRANSPARENT; // prevent TPROXY spoofing of this new IP.
             debugs(33, 5, "PROXY/" << proxyProtocolHeader_->version() << " upgrade: " << clientConnection);
         }
     } catch (const Parser::BinaryTokenizer::InsufficientInput &) {
@@ -2206,7 +2200,7 @@ ConnStateData::start()
     AsyncCall::Pointer call = JobCallback(33, 5, Dialer, this, ConnStateData::connStateClosed);
     comm_add_close_handler(clientConnection->fd, call);
 
-    needProxyProtocolHeader_ = port->flags.proxySurrogate;
+    needProxyProtocolHeader_ = port->flags.proxySurrogate();
     if (needProxyProtocolHeader_) {
         if (!proxyProtocolValidateClient()) // will close the connection on failure
             return;
@@ -2527,7 +2521,7 @@ httpsAccept(const CommAcceptCbParams &params)
 void
 ConnStateData::postHttpsAccept()
 {
-    if (port->flags.tunnelSslBumping) {
+    if (port->flags.tunnelSslBumping()) {
 #if USE_OPENSSL
         debugs(33, 5, "accept transparent connection: " << clientConnection);
 
@@ -2544,7 +2538,6 @@ ConnStateData::postHttpsAccept()
         // XXX: Do this earlier (e.g., in Http[s]::One::Server constructor).
         HttpRequest *request = new HttpRequest(mx);
         static char ip[MAX_IPSTRLEN];
-        assert(clientConnection->flags & (COMM_TRANSPARENT | COMM_INTERCEPTION));
         request->url.host(clientConnection->local.toStr(ip, sizeof(ip)));
         request->url.port(clientConnection->local.port());
         request->myportname = port->name;
@@ -3306,35 +3299,22 @@ clientHttpConnectionsOpen(void)
     const auto savedContext = CodeContext::Current();
     for (AnyP::PortCfgPointer s = HttpPortList; s != nullptr; s = s->next) {
         CodeContext::Reset(s);
-        const SBuf &scheme = AnyP::UriScheme(s->transport.protocol).image();
 
         if (MAXTCPLISTENPORTS == NHttpSockets) {
-            debugs(1, DBG_IMPORTANT, "WARNING: You have too many '" << scheme << "_port' lines." <<
+            debugs(1, DBG_IMPORTANT, "WARNING: You have too many '" << s->directiveName << "' lines." <<
                    Debug::Extra << "The limit is " << MAXTCPLISTENPORTS << " HTTP ports.");
             continue;
         }
 
 #if USE_OPENSSL
-        if (s->flags.tunnelSslBumping) {
-            if (!Config.accessList.ssl_bump) {
-                debugs(33, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << scheme << "_port " << s->s);
-                s->flags.tunnelSslBumping = false;
-            }
-            if (!s->secure.staticContext && !s->secure.generateHostCertificates) {
-                debugs(1, DBG_IMPORTANT, "Will not bump SSL at " << scheme << "_port " << s->s << " due to TLS initialization failure.");
-                s->flags.tunnelSslBumping = false;
-                if (s->transport.protocol == AnyP::PROTO_HTTP)
-                    s->secure.encryptTransport = false;
-            }
-            if (s->flags.tunnelSslBumping) {
-                // Create ssl_ctx cache for this port.
-                Ssl::TheGlobalContextStorage.addLocalStorage(s->s, s->secure.dynamicCertMemCacheSize);
-            }
+        if (s->flags.tunnelSslBumping()) {
+            // Create ssl_ctx cache for this port.
+            Ssl::TheGlobalContextStorage.addLocalStorage(s->s, s->secure.dynamicCertMemCacheSize);
         }
 #endif
 
         if (s->secure.encryptTransport && !s->secure.staticContext) {
-            debugs(1, DBG_CRITICAL, "ERROR: Ignoring " << scheme << "_port " << s->s << " due to TLS context initialization failure.");
+            debugs(1, DBG_CRITICAL, "ERROR: Ignoring " << *s << " due to TLS context initialization failure.");
             continue;
         }
 
@@ -3355,11 +3335,7 @@ clientStartListeningOn(AnyP::PortCfgPointer &port, const RefCount< CommCbFunPtrC
     // Fill out a Comm::Connection which IPC will open as a listener for us
     port->listenConn = new Comm::Connection;
     port->listenConn->local = port->s;
-    port->listenConn->flags =
-        COMM_NONBLOCKING |
-        (port->flags.tproxyIntercept ? COMM_TRANSPARENT : 0) |
-        (port->flags.natIntercept ? COMM_INTERCEPTION : 0) |
-        (port->workerQueues ? COMM_REUSEPORT : 0);
+    port->listenConn->flags = COMM_NONBLOCKING | (port->workerQueues ? COMM_REUSEPORT : 0);
 
     // route new connections to subCall
     typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
@@ -3389,13 +3365,7 @@ clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId port
     // TCP: setup a job to handle accept() with subscribed handler
     AsyncJob::Start(new Comm::TcpAcceptor(s, FdNote(portTypeNote), sub));
 
-    debugs(1, Important(13), "Accepting " <<
-           (s->flags.natIntercept ? "NAT intercepted " : "") <<
-           (s->flags.tproxyIntercept ? "TPROXY intercepted " : "") <<
-           (s->flags.tunnelSslBumping ? "SSL bumped " : "") <<
-           (s->flags.accelSurrogate ? "reverse-proxy " : "")
-           << FdNote(portTypeNote) << " connections at "
-           << s->listenConn);
+    debugs(1, Important(13), "Accepting connections at " << *s << s->flags << " ...");
 
     Must(AddOpenedHttpSocket(s->listenConn)); // otherwise, we have received a fd we did not ask for
 
@@ -3431,7 +3401,7 @@ clientConnectionsClose()
     for (AnyP::PortCfgPointer s = HttpPortList; s != nullptr; s = s->next) {
         CodeContext::Reset(s);
         if (s->listenConn != nullptr) {
-            debugs(1, Important(14), "Closing HTTP(S) port " << s->listenConn->local);
+            debugs(1, Important(14), "Closing " << *s);
             s->listenConn->close();
             s->listenConn = nullptr;
         }
@@ -3582,7 +3552,7 @@ ConnStateData::fillConnectionLevelDetails(ACLFilledChecklist &checklist) const
 bool
 ConnStateData::transparent() const
 {
-    return clientConnection != nullptr && (clientConnection->flags & (COMM_TRANSPARENT|COMM_INTERCEPTION));
+    return port->flags.interceptedSomewhere();
 }
 
 BodyPipe::Pointer

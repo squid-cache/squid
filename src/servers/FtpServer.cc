@@ -1449,7 +1449,25 @@ Ftp::Server::createDataConnection(Ip::Address cltAddr)
     Comm::ConnectionPointer conn = new Comm::Connection();
     conn->flags |= COMM_DOBIND;
 
-    if (clientConnection->flags & COMM_INTERCEPTION) {
+    if (port->flags.tproxyInterceptLocally() || port->flags.explicitProxy()) {
+       // In the case of explicit-proxy the local IP of the control connection
+       // is the Squid IP the client is knowingly talking to.
+       //
+       // In the case of TPROXY the IP address of the control connection is
+       // server IP the client is connecting to, it can be spoofed by Squid.
+       //
+       // In both cases some clients may refuse to accept data connections if
+       // these control connectin local-IP's are not used.
+       conn->setAddrs(clientConnection->local, cltAddr);
+
+       // Using non-local addresses in TPROXY mode requires appropriate socket option.
+       if (port->flags.tproxyInterceptLocally())
+           conn->flags |= COMM_TRANSPARENT;
+    } else {
+        assert(!port->flags.accelSurrogate());
+        // replace with interceptedSomewhere() when ftp_port supports PROXY protocol
+        Must(port->flags.natInterceptLocally());
+
         // In the case of NAT interception conn->local value is not set
         // because the TCP stack will automatically pick correct source
         // address for the data connection. We must only ensure that IP
@@ -1460,20 +1478,6 @@ Ftp::Server::createDataConnection(Ip::Address cltAddr)
             conn->local.setIPv4();
 
         conn->remote = cltAddr;
-    } else {
-        // In the case of explicit-proxy the local IP of the control connection
-        // is the Squid IP the client is knowingly talking to.
-        //
-        // In the case of TPROXY the IP address of the control connection is
-        // server IP the client is connecting to, it can be spoofed by Squid.
-        //
-        // In both cases some clients may refuse to accept data connections if
-        // these control connectin local-IP's are not used.
-        conn->setAddrs(clientConnection->local, cltAddr);
-
-        // Using non-local addresses in TPROXY mode requires appropriate socket option.
-        if (clientConnection->flags & COMM_TRANSPARENT)
-            conn->flags |= COMM_TRANSPARENT;
     }
 
     // RFC 959 requires active FTP connections to originate from port 20

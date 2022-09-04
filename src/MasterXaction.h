@@ -56,6 +56,10 @@ public:
         return new MasterXaction(XactionInitiator::initClient, aPort);
     }
 
+    /// a convenience method returning TrafficMode::interceptedSomewhere() for the port accepted this transaction
+    /// \see TrafficMode::interceptedSomewhere() for details
+    bool hasListeningInterceptedPort() const { return squidPort && squidPort->flags.interceptedSomewhere(); }
+
     /// transaction ID.
     InstanceId<MasterXaction, uint64_t> id;
 

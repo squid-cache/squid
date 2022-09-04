@@ -1139,6 +1139,7 @@ tests_testRock_LDADD = \
 	acl/libapi.la \
 	acl/libstate.la \
 	anyp/libanyp.la \
+	ftp/libftp.la \
 	eui/libeui.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
@@ -1317,6 +1318,7 @@ tests_testUfs_LDADD = \
 	DiskIO/libdiskio.la \
 	acl/libapi.la \
 	anyp/libanyp.la \
+	ftp/libftp.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
 	comm/libcomm.la \
@@ -1488,6 +1490,7 @@ tests_testStore_LDADD= \
 	fs/libfs.la \
 	mgr/libmgr.la \
 	anyp/libanyp.la \
+	ftp/libftp.la \
 	mem/libmem.la \
 	store/libstore.la \
 	sbuf/libsbuf.la \
@@ -1664,6 +1667,7 @@ tests_testDiskIO_LDADD = \
 	DiskIO/libdiskio.la \
 	acl/libapi.la \
 	anyp/libanyp.la \
+	ftp/libftp.la \
 	mgr/libmgr.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
@@ -2101,6 +2105,7 @@ tests_testHttpReply_LDADD=\
 	acl/libapi.la \
 	acl/libstate.la \
 	anyp/libanyp.la \
+	ftp/libftp.la \
 	ip/libip.la \
 	base/libbase.la \
 	ipc/libipc.la \
@@ -2310,7 +2315,6 @@ tests_testHttpRequest_LDADD = \
 	clients/libclients.la \
 	servers/libservers.la \
 	helper/libhelper.la \
-	ftp/libftp.la \
 	http/libhttp.la \
 	ident/libident.la \
 	acl/libacls.la \
@@ -2327,6 +2331,7 @@ tests_testHttpRequest_LDADD = \
 	base/libbase.la \
 	mgr/libmgr.la \
 	anyp/libanyp.la \
+	ftp/libftp.la \
 	$(SNMP_LIBS) \
 	icmp/libicmp.la \
 	comm/libcomm.la \
@@ -2606,7 +2611,6 @@ tests_testCacheManager_LDADD = \
 	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \
-	ftp/libftp.la \
 	helper/libhelper.la \
 	http/libhttp.la \
 	proxyp/libproxyp.la \
@@ -2629,6 +2633,7 @@ tests_testCacheManager_LDADD = \
 	$(ESI_LIBS) \
 	$(SSL_LIBS) \
 	anyp/libanyp.la \
+	ftp/libftp.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	$(SNMP_LIBS) \

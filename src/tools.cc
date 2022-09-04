@@ -1040,7 +1040,7 @@ getMyPort(void)
     AnyP::PortCfgPointer p;
     if ((p = HttpPortList) != nullptr) {
         // skip any special interception ports
-        while (p != nullptr && p->flags.isIntercepted())
+        while (p && p->flags.interceptedSomewhere())
             p = p->next;
         if (p != nullptr)
             return p->s.port();
@@ -1048,7 +1048,7 @@ getMyPort(void)
 
     if ((p = FtpPortList) != nullptr) {
         // skip any special interception ports
-        while (p != nullptr && p->flags.isIntercepted())
+        while (p && p->flags.interceptedSomewhere())
             p = p->next;
         if (p != nullptr)
             return p->s.port();

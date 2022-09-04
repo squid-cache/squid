@@ -9,18 +9,20 @@
 #ifndef SQUID_ANYP_TRAFFIC_MODE_H
 #define SQUID_ANYP_TRAFFIC_MODE_H
 
+#include <iosfwd>
+
 namespace AnyP
 {
 
-/**
- * Set of 'mode' flags defining types of traffic which can be received.
- *
- * Use to determine the processing steps which need to be applied
- * to this traffic under any special circumstances which may apply.
- */
-class TrafficMode
+/// POD representation of TrafficMode flags
+class TrafficModeFlags
 {
 public:
+    /// a parsed port type (http_port, https_port or ftp_port)
+    typedef enum { httpPort, httpsPort, ftpPort } PortKind;
+
+    explicit TrafficModeFlags(const PortKind aPortKind): portKind(aPortKind) {}
+
     /** marks HTTP accelerator (reverse/surrogate proxy) traffic
      *
      * Indicating the following are required:
@@ -73,11 +75,78 @@ public:
      */
     bool tunnelSslBumping = false;
 
-    /** true if the traffic is in any way intercepted
-     *
-     */
-    bool isIntercepted() { return natIntercept||tproxyIntercept ;}
+    PortKind portKind; ///< the parsed port type value
 };
+
+/**
+ * Set of 'mode' flags defining types of traffic which can be received.
+ *
+ * Use to determine the processing steps which need to be applied
+ * to this traffic under any special circumstances which may apply.
+ */
+class TrafficMode
+{
+public:
+    explicit TrafficMode(const TrafficModeFlags::PortKind aPortKind) : flags_(aPortKind) {}
+
+    /// This is a gateway (a.k.a. reverse proxy) port. TODO: Rename.
+    bool accelSurrogate() const { return flags_.accelSurrogate; }
+
+    /// This port handles intercepted traffic. Traffic may be intercepted many
+    /// times (at various locations) before reaching this port, including:
+    /// * between the user agent and the connecting TCP client and/or
+    /// * between the connecting TCP client and this Squid port.
+    /// This port mode alone does not imply that the client of the accepted TCP
+    /// connection was not connecting directly to this port (since commit
+    /// 151ba0d). In other words, we may not be an interception proxy ourselves.
+    bool interceptedSomewhere() const { return flags_.natIntercept || flags_.tproxyIntercept || proxySurrogateHttpsSslBump(); }
+
+    /// The user agent was explicitly configured to use a proxy at this port. We
+    /// are configured to assume that no interception has happened on the way.
+    /// This port configuration is also known as a forward proxy.
+    bool explicitProxy() const { return !interceptedSomewhere() && !accelSurrogate(); }
+
+    /// whether the PROXY protocol header is required
+    bool proxySurrogate() const { return flags_.proxySurrogate; }
+
+    /// The client of the accepted connection was not connecting to this port,
+    /// but Squid used NAT interception to accept the client connection.
+    /// The accepted traffic may have been intercepted earlier as well!
+    bool natInterceptLocally() const { return flags_.natIntercept && !proxySurrogate(); }
+
+    /// The client of the accepted connection was not connecting to this port,
+    /// but Squid used TPROXY interception to accept the connection.
+    /// The accepted traffic may have been intercepted earlier as well!
+    bool tproxyInterceptLocally() const { return flags_.tproxyIntercept && !proxySurrogate(); }
+
+    /// this port was configured with SSL bump
+    bool tunnelSslBumping() const { return flags_.tunnelSslBumping; }
+
+    TrafficModeFlags &rawConfig() { return flags_; }
+
+    /// \copydoc TrafficModeFlags::portKind
+    TrafficModeFlags::PortKind portKind() const { return flags_.portKind; }
+
+    /// reports configured port flags using squid.conf names/syntax
+    void print(std::ostream &) const;
+
+private:
+    /// \returns true for HTTPS ports with SSL bump receiving PROXY protocol traffic
+    bool proxySurrogateHttpsSslBump() const
+    {
+        return flags_.proxySurrogate && flags_.tunnelSslBumping &&
+               flags_.portKind == TrafficModeFlags::httpsPort;
+    }
+
+    TrafficModeFlags flags_;
+};
+
+inline std::ostream &
+operator <<(std::ostream &os, const TrafficMode &flags)
+{
+    flags.print(os);
+    return os;
+}
 
 } // namespace AnyP
 
