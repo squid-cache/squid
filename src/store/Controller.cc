@@ -820,9 +820,9 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
             inSync = found;
         } catch (...) {
             // TODO: Write an exception handler for the entire method.
-            debugs(20, 3, "failed to anchor XXX or to sync?" << *collapsed << ": " << CurrentException);
-            inSync = false;
-            found = true; // syncing failure implies there was something to sync with
+            debugs(20, 3, "anchorToCache() failed for " << *collapsed << ": " << CurrentException);
+            collapsed->abort();
+            return;
         }
     }
 
