@@ -144,7 +144,7 @@ private:
     void memoryEvictCached(StoreEntry &);
     void transientsUnlinkByKeyIfFound(const cache_key *);
     bool keepForLocalMemoryCache(StoreEntry &e) const;
-    bool anchorToCache(StoreEntry &e);
+    bool anchorToCache(StoreEntry &);
     void checkTransients(const StoreEntry &) const;
     void checkFoundCandidate(const StoreEntry &) const;
 
