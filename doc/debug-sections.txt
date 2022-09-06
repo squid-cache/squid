@@ -62,7 +62,6 @@ section 24    SBuf
 section 25    MIME Parsing and Internal Icons
 section 25    MiME Header Parsing
 section 26    Secure Sockets Layer Proxy
-section 27    Cache Announcer
 section 28    Access Control
 section 29    Authenticator
 section 29    NTLM Authenticator
