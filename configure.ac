@@ -457,7 +457,7 @@ AC_ARG_ENABLE(disk-io,
       squid_disk_module_candidates="$enableval"
   ])
 )
-AS_IF([test "x${enable_disk_io:-yes}" = "xyes"],[
+AS_IF([test "x${enable_disk_io:=yes}" = "xyes"],[
   SQUID_LOOK_FOR_MODULES([$srcdir/src/DiskIO],[squid_disk_module_candidates])
   AS_IF([test "x$ac_cv_search_shm_open" = "xno"],[
     squid_disk_module_candidates=`echo "$squid_disk_module_candidates" | sed 's/IpcIo//g'`
@@ -696,7 +696,7 @@ AC_ARG_ENABLE([storeio],
       squid_storeio_module_candidates="$enableval ufs"
   ])
 ])
-AS_IF([test "x${enable_disk_io:-yes}" = "xyes"],[
+AS_IF([test "x${enable_storeio:=yes}" = "xyes"],[
   SQUID_LOOK_FOR_MODULES([$srcdir/src/fs],[squid_storeio_module_candidates])
 ])
 SQUID_CLEANUP_MODULES_LIST([squid_storeio_module_candidates])
