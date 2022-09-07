@@ -17,8 +17,7 @@ AC_DEFUN([SQUID_CC_CHECK_ARGUMENT],[
     SQUID_STATE_SAVE([ARGCHECK])
     CFLAGS="$CFLAGS $2"
     CXXFLAGS="$CXXFLAGS $2"
-    AC_TRY_LINK([],[],
-      [$1=yes],[$1=no])
+    AC_LINK_IFELSE([],[$1=yes],[$1=no])
     SQUID_STATE_ROLLBACK([ARGCHECK])
   ])
 ])
@@ -38,11 +37,11 @@ AC_DEFUN([SQUID_CC_REQUIRE_ARGUMENT],[
     AC_REQUIRE([AC_PROG_CC])
     SQUID_STATE_SAVE([ARGREQ])
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM($3,$4)],[$1=no],[],[$1=no])
-    if test "x$$1" != "xno" ; then
+    AS_IF([test "x$$1" != "xno"],[
       CFLAGS="$CFLAGS $2"
       CXXFLAGS="$CXXFLAGS $2"
       AC_COMPILE_IFELSE([AC_LANG_PROGRAM($3,$4)],[$1=yes],[$1=no],[$1=no])
-    fi
+    ])
     SQUID_STATE_ROLLBACK([ARGREQ])
   }])
 ])
@@ -62,54 +61,52 @@ AC_DEFUN([SQUID_CC_GUESS_VARIANT], [
   dnl preprocessor definition so that it depends on platform-specific
   dnl predefined macros
   dnl SunPro CC
-  if test -z "$squid_cv_compiler" ; then
+  AS_IF([test -z "$squid_cv_compiler"],[
    AC_COMPILE_IFELSE([
     AC_LANG_PROGRAM([[
 #if !defined(__SUNPRO_C) && !defined(__SUNPRO_CC)
 #error "not sunpro c"
 #endif
     ]])],[squid_cv_compiler="sunstudio"],[])
-  fi
+  ])
   dnl Intel CC
-  if test -z "$squid_cv_compiler" ; then
+  AS_IF([test -z "$squid_cv_compiler"],[
    AC_COMPILE_IFELSE([
     AC_LANG_PROGRAM([[
 #if !defined(__ICC)
 #error "not Intel(R) C++ Compiler"
 #endif
     ]])],[squid_cv_compiler="icc"],[])
-  fi
+  ])
   dnl clang
-  if test -z "$squid_cv_compiler" ; then
+  AS_IF([test -z "$squid_cv_compiler"],[
    AC_COMPILE_IFELSE([
     AC_LANG_PROGRAM([[
 #if !defined(__clang__)
 #error "not clang"
 #endif
     ]])],[squid_cv_compiler="clang"],[])
-  fi
+  ])
   dnl microsoft visual c++
-  if test -z "$squid_cv_compiler" ; then
+  AS_IF([test -z "$squid_cv_compiler"],[
    AC_COMPILE_IFELSE([
     AC_LANG_PROGRAM([[
 #if !defined(_MSC_VER)
 #error "not Microsoft VC++"
 #endif
     ]])],[squid_cv_compiler="msvc"],[])
-  fi
+  ])
   dnl gcc. MUST BE LAST as many other compilers also define it for compatibility
-  if test -z "$squid_cv_compiler" ; then
+  AS_IF([test -z "$squid_cv_compiler"],[
    AC_COMPILE_IFELSE([
     AC_LANG_PROGRAM([[
 #if !defined(__GNUC__)
 #error "not gcc"
 #endif
     ]])],[squid_cv_compiler="gcc"],[])
-  fi
+  ])
   dnl end of block to be repeated
-  if test -z "$squid_cv_compiler" ; then
-   squid_cv_compiler="none"
-  fi
+  AS_IF([test -z "$squid_cv_compiler"],[squid_cv_compiler="none"])
   ]) dnl AC_CACHE_CHECK
  ]) dnl AC_DEFUN
 
@@ -165,44 +162,44 @@ AC_DEFUN([SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED],[
 # squid_cv_cc_option_optimize (-O3)
 #
 AC_DEFUN([SQUID_CC_GUESS_OPTIONS], [
- AC_REQUIRE([SQUID_CC_GUESS_VARIANT])
- AC_MSG_CHECKING([for compiler variant])
- case "$squid_cv_compiler" in
-  gcc)
-   squid_cv_cc_option_werror="-Werror"
-   squid_cv_cxx_option_werror="-Werror"
-   squid_cv_cc_option_wall="-Wall"
-   squid_cv_cc_option_optimize="-O3"
-   squid_cv_cc_arg_pipe="-pipe"
-   ;;
-  sunstudio)
-   squid_cv_cc_option_werror="-errwarn=%all -errtags"
-   squid_cv_cxx_option_werror="-errwarn=%all,no%badargtype2w,no%wbadinit,no%wbadasg -errtags"
-   squid_cv_cc_option_wall="+w"
-   squid_cv_cc_option_optimize="-fast"
-   squid_cv_cc_arg_pipe=""
-   ;;
-  clang)
-   squid_cv_cxx_option_werror="-Werror"
-   squid_cv_cc_option_werror="$squid_cv_cxx_option_werror"
-   squid_cv_cc_option_wall="-Wall"
-   squid_cv_cc_option_optimize="-O2"
-   squid_cv_cc_arg_pipe=""
-   ;;
-  icc)
-   squid_cv_cxx_option_werror="-Werror"
-   squid_cv_cc_option_werror="$squid_cv_cxx_option_werror"
-   squid_cv_cc_option_wall="-Wall"
-   squid_cv_cc_option_optimize="-O2"
-   squid_cv_cc_arg_pipe=""
-   ;;
-  *)
-   squid_cv_cxx_option_werror=""
-   squid_cv_cc_option_werror=""
-   squid_cv_cc_option_wall=""
-   squid_cv_cc_option_optimize="-O"
-   squid_cv_cc_arg_pipe=""
-   ;;
- esac
- AC_MSG_RESULT([$squid_cv_compiler])
+  AC_REQUIRE([SQUID_CC_GUESS_VARIANT])
+  AC_MSG_CHECKING([for compiler variant])
+  AS_CASE([$squid_cv_compiler],
+    [gcc],[
+      squid_cv_cc_option_werror="-Werror"
+      squid_cv_cxx_option_werror="-Werror"
+      squid_cv_cc_option_wall="-Wall"
+      squid_cv_cc_option_optimize="-O3"
+      squid_cv_cc_arg_pipe="-pipe"
+    ],
+    [sunstudio],[
+      squid_cv_cc_option_werror="-errwarn=%all -errtags"
+      squid_cv_cxx_option_werror="-errwarn=%all,no%badargtype2w,no%wbadinit,no%wbadasg -errtags"
+      squid_cv_cc_option_wall="+w"
+      squid_cv_cc_option_optimize="-fast"
+      squid_cv_cc_arg_pipe=""
+    ],
+    [clang],[
+      squid_cv_cxx_option_werror="-Werror"
+      squid_cv_cc_option_werror="$squid_cv_cxx_option_werror"
+      squid_cv_cc_option_wall="-Wall"
+      squid_cv_cc_option_optimize="-O2"
+      squid_cv_cc_arg_pipe=""
+    ],
+    [icc],[
+      squid_cv_cxx_option_werror="-Werror"
+      squid_cv_cc_option_werror="$squid_cv_cxx_option_werror"
+      squid_cv_cc_option_wall="-Wall"
+      squid_cv_cc_option_optimize="-O2"
+      squid_cv_cc_arg_pipe=""
+    ],
+    [
+      squid_cv_cxx_option_werror=""
+      squid_cv_cc_option_werror=""
+      squid_cv_cc_option_wall=""
+      squid_cv_cc_option_optimize="-O"
+      squid_cv_cc_arg_pipe=""
+    ]
+  )
+  AC_MSG_RESULT([$squid_cv_compiler])
 ])

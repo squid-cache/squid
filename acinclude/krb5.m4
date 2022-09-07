@@ -192,9 +192,9 @@ main(void)
         return 0;
 }
   ]])],  [ squid_cv_working_gssapi=yes ], [ squid_cv_working_gssapi=no ], [:])])
-if test "x$squid_cv_working_gssapi" = "xno" -a `echo $LIBS | grep -i -c "\-L"` -gt 0; then
-  AC_MSG_NOTICE([Check Runtime library path !])
-fi
+  AS_IF([test "x$squid_cv_working_gssapi" = "xno" -a `echo $LIBS | grep -i -c "\-L"` -gt 0],[
+    AC_MSG_NOTICE([Check Runtime library path !])
+  ])
 ])
 
 dnl check for a working spnego, and set squid_cv_have_spnego
@@ -284,9 +284,9 @@ main(void)
         return 0;
 }
   ]])], [ squid_cv_working_krb5=yes ], [ squid_cv_working_krb5=no ],[:])])
-if test "x$squid_cv_working_krb5" = "xno" -a `echo $LIBS | grep -i -c "\-L"` -gt 0; then
-  AC_MSG_NOTICE([Check Runtime library path !])
-fi
+  AS_IF([test "x$squid_cv_working_krb5" = "xno" -a `echo $LIBS | grep -i -c "\-L"` -gt 0],[
+    AC_MSG_NOTICE([Check Runtime library path !])
+  ])
 ])
 
 
@@ -294,21 +294,19 @@ dnl checks for existence of krb5 functions
 AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
 
   ac_com_error_message=no
-  if test "x$ac_cv_header_com_err_h" = "xyes" ; then
-    AC_EGREP_HEADER(error_message,com_err.h,ac_com_error_message=yes)
-  elif test "x$ac_cv_header_et_com_err_h" = "xyes" ; then
+  AS_IF([test "x$ac_cv_header_com_err_h" = "xyes"],[
+    AC_EGREP_HEADER(error_message,com_err.h,ac_com_error_message=yes)],
+  [test "x$ac_cv_header_et_com_err_h" = "xyes"],[
     AC_EGREP_HEADER(error_message,et/com_err.h,ac_com_error_message=yes)
-  fi
+  ])
 
-  if test `echo $KRB5LIBS | grep -c com_err` -ne 0 -a "x$ac_com_error_message" = "xyes" ; then
+  AS_IF([test `echo $KRB5LIBS | grep -c com_err` -ne 0 -a "x$ac_com_error_message" = "xyes"],[
     AC_CHECK_LIB(com_err,error_message,
-      AC_DEFINE(HAVE_ERROR_MESSAGE,1,
-        [Define to 1 if you have error_message]),)
-  elif test  "x$ac_com_error_message" = "xyes" ; then
+      AC_DEFINE(HAVE_ERROR_MESSAGE,1,[Define to 1 if you have error_message]),)
+  ],[test  "x$ac_com_error_message" = "xyes"],[
     AC_CHECK_LIB(krb5,error_message,
-      AC_DEFINE(HAVE_ERROR_MESSAGE,1,
-        [Define to 1 if you have error_message]),)
-  fi
+      AC_DEFINE(HAVE_ERROR_MESSAGE,1,[Define to 1 if you have error_message]),)
+  ])
 
   AC_CHECK_LIB(krb5,krb5_get_err_text,
     AC_DEFINE(HAVE_KRB5_GET_ERR_TEXT,1,

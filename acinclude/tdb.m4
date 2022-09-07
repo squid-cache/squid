@@ -9,19 +9,17 @@ dnl check for --with-tdb option
 AC_DEFUN([SQUID_CHECK_LIBTDB],[
 AC_ARG_WITH(tdb,
   AS_HELP_STRING([--without-tdb],
-                 [Do not use Samba TrivialDB. Default: auto-detect]), [
-case "$with_tdb" in
-  yes|no|auto)
-    : # Nothing special to do here
-    ;;
-  *)
-    AS_IF([test ! -d "$withval"],
-      AC_MSG_ERROR([--with-tdb path ($with_tdb) does not point to a directory])
-    )
-    LIBTDB_PATH="-L$withval/lib"
-    CPPFLAGS="-I$withval/include $CPPFLAGS"
-  ;;
-esac
+                 [Do not use Samba TrivialDB. Default: auto-detect]),[
+  AS_CASE(["$with_tdb"],
+    [yes|no|auto],[:],
+    [
+      AS_IF([test ! -d "$withval"],
+        AC_MSG_ERROR([--with-tdb path ($with_tdb) does not point to a directory])
+      )
+      LIBTDB_PATH="-L$withval/lib"
+      CPPFLAGS="-I$withval/include $CPPFLAGS"
+    ]
+  )
 ])
 AH_TEMPLATE(USE_TRIVIALDB,[Samba TrivialDB support is available])
 AS_IF([test "x$with_tdb" != "xno"],[
