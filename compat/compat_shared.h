@@ -40,36 +40,18 @@ extern void (*failure_notify) (const char *);
 #include <sys/resource.h>       /* needs sys/time.h above it */
 #endif
 
-/*
- * DIRENT functionality can apparently come from many places.
- * With various complaints by different compilers
- */
-#if HAVE_DIRENT_H
-#include <dirent.h>
-#define NAMLEN(dirent) strlen((dirent)->d_name)
-#else /* if not HAVE_DIRENT_H */
-#define dirent direct
-#define NAMLEN(dirent) (dirent)->d_namlen
-#if HAVE_SYS_NDIR_H
-#include <sys/ndir.h>
-#endif /* HAVE_SYS_NDIR_H */
-#if HAVE_SYS_DIR_H
-#include <sys/dir.h>
-#endif /* HAVE_SYS_DIR_H */
-#if HAVE_NDIR_H
-#include <ndir.h>
-#endif /* HAVE_NDIR_H */
-#endif /* HAVE_DIRENT_H */
-
 /* The structure dirent also varies between 64-bit and 32-bit environments.
  * Define our own dirent_t type for consistent simple internal use.
  * NP: GCC seems not to care about the type naming differences.
  */
+#if HAVE_DIRENT_H
+#include <dirent.h>
 #if defined(__USE_FILE_OFFSET64) && !defined(__GNUC__)
 #define dirent_t struct dirent64
 #else
 #define dirent_t struct dirent
 #endif
+#endif /* HAVE_DIRENT_H */
 
 /*
  * Filedescriptor limits in the different select loops
