@@ -35,7 +35,7 @@ template <typename Argument1>
 class UnaryFunDialer: public CallDialer
 {
 public:
-    // stand-alone function that receives our answer
+    /// a stand-alone function that receives the parameter given to us
     using Handler = void (Argument1);
 
     UnaryFunDialer(Handler * const aHandler, Argument1 anArg1):
