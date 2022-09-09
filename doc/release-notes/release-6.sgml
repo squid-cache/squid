@@ -103,7 +103,8 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
-	<p>There have been no options added.
+	<tag>--with-xml2</tag>
+	<p>Replacement for <em>--with-libxml2</em>.
 
 </descrip>
 
@@ -124,6 +125,9 @@ This section gives an account of those changes in three categories:
 
 	<tag>--disable-loadable-modules</tag>
 	<p>This option was performing the same duties as <em>--disable-shared</em>.
+
+	<tag>--with-libxml2</tag>
+	<p>Replaced by <em>--with-xml2</em>.
 
 </descrip>
 
