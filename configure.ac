@@ -814,7 +814,7 @@ squid_opt_use_esi=auto
 AH_TEMPLATE([USE_SQUID_ESI],[Define to enable the ESI processor])
 AC_ARG_ENABLE(esi,
   AS_HELP_STRING([--disable-esi],
-                 [Disable ESI for accelerators. ESI requires expat or libxml2.
+                 [Disable ESI for accelerators. ESI requires expat or xml2 library.
                   Enabling ESI will cause squid reverse proxies to be capable
                   of the Edge Acceleration Specification (www.esi.org).]),
                  [squid_opt_use_esi=$enableval],[])
@@ -824,7 +824,7 @@ HAVE_LIBXML2=0
 XMLLIB=
 
 # ESI support libraries: expat
-SQUID_AUTO_LIB(expat,[ESI expat],[LIBEXPAT])
+SQUID_AUTO_LIB(expat,[ESI expat library],[LIBEXPAT])
 AS_IF([test "x$squid_opt_use_esi" != "xno" -a "x$with_expat" != "xno"],[
   AC_CHECK_LIB([expat], [main], [EXPATLIB="-lexpat"; HAVE_LIBEXPAT=1])
   AC_CHECK_HEADERS([expat.h])
@@ -840,9 +840,8 @@ AS_IF([test "x$squid_opt_use_esi" != "xno" -a "x$with_expat" != "xno"],[
   ])
 ])
 
-# TODO: remove this 'lib' prefix to match coding standard
-SQUID_AUTO_LIB(libxml2,[ESI libxml2],[LIBXML2])
-AS_IF([test "x$squid_opt_use_esi" != "xno" -a "x$with_libxml2" != "xno"],[
+SQUID_AUTO_LIB(xml2,[ESI xml2 library],[LIBXML2])
+AS_IF([test "x$squid_opt_use_esi" != "xno" -a "x$with_xml2" != "xno"],[
   SQUID_STATE_SAVE([squid_libxml2_save])
   PKG_CHECK_MODULES([LIBXML2],[libxml-2.0],[],[
     AC_CHECK_LIB([xml2], [main], [LIBXML2_LIBS="$LIBXML2_LIBS -lxml2"])
@@ -876,11 +875,11 @@ AS_IF([test "x$squid_opt_use_esi" != "xno" -a "x$with_libxml2" != "xno"],[
     SQUID_CXXFLAGS="$SQUID_CXXFLAGS $LIBXML2_CFLAGS"
     CPPFLAGS="$CPPFLAGS $LIBXML2_CFLAGS"
     XMLLIB="$LIBXML2_LIBS"
-    AC_DEFINE_UNQUOTED(HAVE_LIBXML2, $HAVE_LIBXML2, [Define to 1 if you have the libxml2 library])
-  ],[test "x$with_libxml2" = "xyes"],[
-    AC_MSG_ERROR([Required library libxml2 not found])
+    AC_DEFINE_UNQUOTED(HAVE_LIBXML2, $HAVE_LIBXML2, [Define to 1 if you have the xml2 library])
+  ],[test "x$with_xml2" = "xyes"],[
+    AC_MSG_ERROR([Required library xml2 not found])
   ],[
-    AC_MSG_NOTICE([Library libxml2 not found.])
+    AC_MSG_NOTICE([Library xml2 not found.])
   ])
 ])
 
