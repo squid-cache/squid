@@ -51,8 +51,7 @@ AC_ARG_ENABLE(arch-native,
                  optimizations with the -march=native parameter.
                  This flag disables the optimization. The default is to
                  auto-detect compiler support and use where available.]), [
-  SQUID_YESNO([$enableval],
-    [Unrecognized argument to --disable-arch-native: $enableval])
+  SQUID_YESNO([$enableval],[--enable-arch-native])
 ])
 AC_MSG_NOTICE([CPU arch native optimization enabled: ${enable_arch_native:=auto}])
 AS_IF([test "x${enable_arch_native}" != "xno"],[
@@ -141,8 +140,7 @@ AC_ARG_ENABLE(strict-error-checking,
   AS_HELP_STRING([--disable-strict-error-checking],[By default squid is compiled
                  with all possible static compiler error-checks enabled.
                  This flag disables the behavior]), [
-  SQUID_YESNO([$enableval],
-    [Unrecognized argument to --disable-strict-error-checking: $enableval])
+  SQUID_YESNO([$enableval],[--enable-strict-error-checking])
 ])
 AC_MSG_NOTICE([strict error checking enabled: ${enable_strict_error_checking:=yes}])
 
@@ -357,8 +355,7 @@ AC_ARG_ENABLE(optimizations,
 AC_ARG_ENABLE(debug-cbdata,
   AS_HELP_STRING([--enable-debug-cbdata],
       [Provide some debug information in cbdata]), [
-SQUID_YESNO([$enableval],
-    [unrecognized argument to --enable-debug-cbdata: $enableval])
+  SQUID_YESNO([$enableval],[--enable-debug-cbdata])
 ])
 SQUID_DEFINE_BOOL(USE_CBDATA_DEBUG,${enable_debug_cbdata:=no},
     [Enable support for cbdata debug information])
@@ -373,8 +370,7 @@ AH_TEMPLATE(XMALLOC_STATISTICS,[Define to have malloc statistics])
 AC_ARG_ENABLE(xmalloc-statistics,
   AS_HELP_STRING([--enable-xmalloc-statistics],
                  [Show malloc statistics in status page]), [
-SQUID_YESNO([$enableval],
-    [unrecognized argument to --enable-xmalloc-statistics: $enableval])
+  SQUID_YESNO([$enableval],[--enable-xmalloc-statistics])
 ])
 SQUID_DEFINE_BOOL(XMALLOC_STATISTICS,${enable_xmalloc_statistics:=no},
     [Show malloc statistics in status page])
@@ -905,7 +901,7 @@ AC_SUBST(XMLLIB)
 
 AC_ARG_ENABLE(icap-client,
   AS_HELP_STRING([--disable-icap-client],[Disable the ICAP client.]),[
-  SQUID_YESNO([$enableval],[Unrecognized argument to --disable-icap-client: $enableval])
+  SQUID_YESNO([$enableval],[--enable-icap-client])
 ])
 SQUID_DEFINE_BOOL(ICAP_CLIENT,${enable_icap_client:=yes}, [Enable ICAP client features in Squid])
 AS_IF(test "x$enable_icap_client" != "xno", squid_opt_use_adaptation="yes")
@@ -913,7 +909,7 @@ AM_CONDITIONAL(ENABLE_ICAP_CLIENT, test "x$enable_icap_client" != "xno")
 
 AC_ARG_ENABLE(ecap,
   AS_HELP_STRING([--enable-ecap],[support loadable content adaptation modules]),[
-  SQUID_YESNO([$enableval],[bad value $enableval for --enable-ecap])],[
+  SQUID_YESNO([$enableval],[--enable-ecap])],[
   enable_ecap="no"
 ])
 dnl Perform configuration consistency checks for eCAP
@@ -968,8 +964,8 @@ AC_SUBST(ADAPTATION_LIBS)
 
 AS_IF([test "x$squid_host_os" = "xmingw"],[enable_wccp=no])
 AC_ARG_ENABLE(wccp,
-  AS_HELP_STRING([--disable-wccp],[Disable Web Cache Coordination Protocol]), [
-SQUID_YESNO([$enableval],[unrecognized argument to --disable-wccp: $enableval])
+  AS_HELP_STRING([--disable-wccp],[Disable Web Cache Coordination Protocol]),[
+  SQUID_YESNO([$enableval],[--enable-wccp])
 ])
 SQUID_DEFINE_BOOL(USE_WCCP, ${enable_wccp:=yes}, [Define to enable WCCP])
 AC_MSG_NOTICE([Web Cache Coordination Protocol enabled: $enable_wccp])
@@ -978,8 +974,7 @@ AS_IF([test "x$squid_host_os" = "xmingw"],[enable_wccpv2=no])
 AC_ARG_ENABLE(wccpv2,
   AS_HELP_STRING([--disable-wccpv2],
                  [Disable Web Cache Coordination V2 Protocol]), [
-SQUID_YESNO([$enableval],
-            [unrecognized argument to --disable-wccpv2: $enableval])
+  SQUID_YESNO([$enableval],[--enable-wccpv2])
 ])
 SQUID_DEFINE_BOOL(USE_WCCPv2,${enable_wccpv2:=yes},
             [Define to enable WCCP V2])
@@ -987,8 +982,7 @@ AC_MSG_NOTICE([Web Cache Coordination V2 Protocol enabled: $enable_wccpv2])
 
 AC_ARG_ENABLE(kill-parent-hack,
   AS_HELP_STRING([--enable-kill-parent-hack],[Kill parent on shutdown]), [
-SQUID_YESNO([$enableval],
-            [unrecognized argument to --enable-kill-parent-hack: $enableval])
+  SQUID_YESNO([$enableval],[--enable-kill-parent-hack])
 ])
 SQUID_DEFINE_BOOL(KILL_PARENT_OPT,${enable_kill_parent_hack:=no},
                    [A dangerous feature which causes Squid to kill its parent
@@ -998,8 +992,7 @@ AC_MSG_NOTICE([Kill parent on shutdown hack enabled: $enable_kill_parent_hack])
 
 AC_ARG_ENABLE(snmp,
   AS_HELP_STRING([--disable-snmp],[Disable SNMP monitoring support]), [
-  SQUID_YESNO([$enableval],
-              [unrecognized argument to --disable-snmp: $enableval])
+  SQUID_YESNO([$enableval],[--enable-snmp])
 ])
 SQUID_DEFINE_BOOL(SQUID_SNMP,${enable_snmp:=yes},
    [Define to enable SNMP monitoring of Squid])
@@ -1028,7 +1021,7 @@ AC_ARG_ENABLE(cachemgr-hostname,
 AC_ARG_ENABLE(eui,
   AS_HELP_STRING([--disable-eui],
                  [Disable use of ARP / MAC/ EUI (ether address)]), [
-SQUID_YESNO([$enableval],[--disable-eui expects no arguments])
+  SQUID_YESNO([$enableval],[--enable-eui])
 ])
 AS_IF([test "x${enable_eui:=yes}" = "xyes"],[
   SQUID_STATE_SAVE(LIBEUI)
@@ -1079,8 +1072,7 @@ AM_CONDITIONAL(ENABLE_EUI, [test "x$enable_eui" = "xyes" ])
 
 AC_ARG_ENABLE(htcp,
   AS_HELP_STRING([--disable-htcp],[Disable HTCP protocol support]), [
-SQUID_YESNO([$enableval],
-            [unrecognized argument to --disable-htcp: $enableval])
+  SQUID_YESNO([$enableval],[--enable-htcp])
 ])
 SQUID_DEFINE_BOOL(USE_HTCP,${enable_htcp:=yes},
    [Define this to include code for the Hypertext Cache Protocol (HTCP)])
@@ -1915,7 +1907,7 @@ AC_MSG_NOTICE([systemd library support: ${with_systemd:=auto} ${SYSTEMD_PATH} ${
 
 AC_ARG_ENABLE(forw-via-db,
   AS_HELP_STRING([--enable-forw-via-db],[Enable Forw/Via database]), [
-  SQUID_YESNO([$enableval],[unrecognized argument to --enable-forw-via-db: $enableval])
+  SQUID_YESNO([$enableval],[--enable-forw-via-db])
 ])
 SQUID_DEFINE_BOOL(USE_FORW_VIA_DB,${enable_forw_via_db:=no},
                       [Enable Forw/Via database])
@@ -1923,10 +1915,8 @@ AC_MSG_NOTICE([Forw/Via database enabled: $enable_forw_via_db])
 
 AC_ARG_ENABLE(cache-digests,
   AS_HELP_STRING([--enable-cache-digests],
-   [Use Cache Digests. See http://wiki.squid-cache.org/SquidFaq/CacheDigests]),
-[
- SQUID_YESNO($enableval,
-   [unrecognized argument to --enable-cache-digests: $enableval])
+   [Use Cache Digests. See http://wiki.squid-cache.org/SquidFaq/CacheDigests]),[
+  SQUID_YESNO([$enableval],[--enable-cache-digests])
 ])
 SQUID_DEFINE_BOOL(USE_CACHE_DIGESTS,${enable_cache_digests:=no},
   [Use Cache Digests for locating objects in neighbor caches.])
@@ -1941,7 +1931,7 @@ dnl supplies more than one --enable option. Options handled later
 dnl override those handled earlier for io loop method manual override
 AC_ARG_ENABLE(select,
   AS_HELP_STRING([--disable-select],[Disable select(2) support.]),[
-  SQUID_YESNO($enableval,[--disable-select takes no extra argument])
+  SQUID_YESNO([$enableval],[--enable-select])
   AS_IF([test "x$enableval" = "xyes"],[
     squid_opt_io_loop_engine="select"
     AS_IF([test "x$squid_host_os" = "xmingw"],[squid_opt_io_loop_engine="select_win32"])
@@ -1951,7 +1941,7 @@ AC_MSG_NOTICE([enabling select syscall for net I/O: ${enable_select:=auto}])
 
 AC_ARG_ENABLE(poll,
   AS_HELP_STRING([--disable-poll],[Disable poll(2) support.]),[
-  SQUID_YESNO($enableval,[--disable-poll takes no extra argument])
+  SQUID_YESNO([$enableval],[--enable-poll])
   AS_IF(["x$enableval" = "xyes"],[squid_opt_io_loop_engine="poll"])
 ])
 AC_MSG_NOTICE([enabling poll syscall for net I/O: ${enable_poll:=auto}])
@@ -1959,7 +1949,7 @@ AC_MSG_NOTICE([enabling poll syscall for net I/O: ${enable_poll:=auto}])
 AC_ARG_ENABLE(kqueue,
   AS_HELP_STRING([--disable-kqueue],
                  [Disable kqueue(2) support.]), [
-SQUID_YESNO($enableval,[--enable-kqueue takes no extra argument])
+  SQUID_YESNO([$enableval],[--enable-kqueue])
 ])
 AS_IF([test "x${enable_kqueue:=auto}" != "xno"],[
   AC_CHECK_HEADERS([sys/event.h],[],[
@@ -1984,7 +1974,7 @@ dnl Enable epoll()
 AC_ARG_ENABLE(epoll,
   AS_HELP_STRING([--disable-epoll],[Disable Linux epoll(2) support.]),
 [
-SQUID_YESNO($enableval,[--disable-epoll takes no extra argument])
+  SQUID_YESNO([$enableval],[--enable-epoll])
 AS_IF([test "x$enableval" = "xyes"],[squid_opt_io_loop_engine="epoll"])
 ])
 AC_MSG_NOTICE([enabling epoll syscall for net I/O: ${enable_epoll:=auto}])
@@ -2016,7 +2006,7 @@ AS_IF([test "x$enable_epoll" != "xno"],[
 dnl Enable /dev/poll
 AC_ARG_ENABLE(devpoll,
   AS_HELP_STRING([--disable-devpoll],[Disable Solaris /dev/poll support.]),[
-  SQUID_YESNO($enableval,[--disable-devpoll takes no extra argument])
+  SQUID_YESNO([$enableval],[--enable-devpoll])
   AS_IF([test "x$enableval" = "xyes"],[squid_opt_io_loop_engine="devpoll"])
 ])
 AC_MSG_NOTICE([enabling /dev/poll for net I/O: ${enable_devpoll:=auto}])
@@ -2047,8 +2037,7 @@ AC_ARG_ENABLE(http-violations,
   AS_HELP_STRING([--disable-http-violations],
                  [This allows you to remove code which is known to
                   violate the HTTP protocol specification.]), [
-  SQUID_YESNO([$enableval],
-         [unrecognized argument to --disable-http-violations: $enableval])
+  SQUID_YESNO([$enableval],[--enable-http-violations])
 ])
 SQUID_DEFINE_BOOL(USE_HTTP_VIOLATIONS, ${enable_http_violations:=yes},
   [Define to enable code which volates the HTTP standard specification])
@@ -2059,8 +2048,7 @@ AC_ARG_ENABLE(ipfw-transparent,
   AS_HELP_STRING([--enable-ipfw-transparent],
                  [Enable Transparent Proxy support for systems
                   using FreeBSD IPFW-style firewalling.]), [
-  SQUID_YESNO([$enableval],
-      [unrecognized argument to --enable-ipfw-transparent: $enableval])
+  SQUID_YESNO([$enableval],[--enable-ipfw-transparent])
 ])
 SQUID_DEFINE_BOOL(IPFW_TRANSPARENT,${enable_ipfw_transparent:=no},
   [Enable support for Transparent Proxy on systems using FreeBSD IPFW-style firewalling.])
@@ -2070,8 +2058,7 @@ AC_MSG_NOTICE([FreeBSD IPFW-based transparent proxying enabled: $enable_ipfw_tra
 AC_ARG_ENABLE(ipf-transparent,
   AS_HELP_STRING([--enable-ipf-transparent],
      [Enable Transparent Proxy support using IPFilter-style firewalling]), [
-  SQUID_YESNO([$enableval],
-      [unrecognized argument to --enable-ipf-transparent: $enableval])
+  SQUID_YESNO([$enableval],[--enable-ipf-transparent])
 ])
 #will be AC_DEFINEd later, after checking for appropriate infrastructure
 #IPF currently broken. Default-disabled for now.
@@ -2081,8 +2068,7 @@ dnl Enable PF Transparent Proxy
 AC_ARG_ENABLE(pf-transparent,
   AS_HELP_STRING([--enable-pf-transparent],
     [Enable Transparent Proxy support for systems using PF network address redirection.]), [
-  SQUID_YESNO([$enableval],
-              [unrecognized argument to --enable-pf-transparent: $enableval])
+  SQUID_YESNO([$enableval],[--enable-pf-transparent])
 ])
 #will be AC_DEFINEd later, after checking for appropriate infrastructure
 AC_MSG_NOTICE([PF-based transparent proxying requested: ${enable_pf_transparent:=no}])
@@ -2091,8 +2077,7 @@ dnl Enable /dev/pf support for older PF Transparent Proxy systems (OpenBSD 4.x a
 AC_ARG_WITH(nat-devpf,
   AS_HELP_STRING([--with-nat-devpf],
     [Enable /dev/pf support for NAT on older OpenBSD and FreeBSD kernels.]), [
-  SQUID_YESNO([$enableval],
-              [unrecognized argument to --with-nat-devpf: $enableval])
+  SQUID_YESNO([$withval],[--with-nat-devpf])
 ])
 #will be AC_DEFINEd later, after checking for appropriate infrastructure
 AC_MSG_NOTICE([NAT lookups via /dev/pf: ${with_nat_devpf:=no}])
@@ -2101,8 +2086,7 @@ AC_MSG_NOTICE([NAT lookups via /dev/pf: ${with_nat_devpf:=no}])
 AC_ARG_ENABLE(linux-netfilter,
   AS_HELP_STRING([--enable-linux-netfilter],
                  [Enable Transparent Proxy support for Linux (Netfilter)]), [
-  SQUID_YESNO([$enableval],
-              [unrecognized argument to --enable-linux-netfilter: $enableval])
+  SQUID_YESNO([$enableval],[--enable-linux-netfilter])
 ])
 AC_MSG_NOTICE([Linux Netfilter support requested: ${enable_linux_netfilter:=auto}])
 #will be AC_DEFINEd later, after checking for appropriate infrastructure
@@ -2137,7 +2121,7 @@ buildmodel=""
 
 AC_ARG_WITH(large-files,
   AS_HELP_STRING([--with-large-files],[Enable support for large files (logs etc).]), [
-  SQUID_YESNO($withval,[--with-large-files does not take a parameter])
+  SQUID_YESNO([$withval],[--with-large-files])
   squid_opt_enable_large_files=$withval
 ])
 
@@ -2219,8 +2203,7 @@ AC_ARG_ENABLE(follow-x-forwarded-for,
                  HTTP header to try to find the IP address of the
                  original or indirect client when a request has
                  been forwarded through other proxies.]), [
-  SQUID_YESNO([$enableval],
-    [unrecognized argument to --enable-follow-x-forwarded-for: $enableval])
+  SQUID_YESNO([$enableval],[--enable-follow-x-forwarded-for])
 ])
 AC_MSG_NOTICE([Support for X-Forwarded-For enabled: ${enable_follow_x_forwarded_for:=yes}])
 SQUID_DEFINE_BOOL(FOLLOW_X_FORWARDED_FOR,$enable_follow_x_forwarded_for,
@@ -2229,7 +2212,7 @@ SQUID_DEFINE_BOOL(FOLLOW_X_FORWARDED_FOR,$enable_follow_x_forwarded_for,
 AC_ARG_ENABLE(ident-lookups,
   AS_HELP_STRING([--disable-ident-lookups],
                  [Remove code that supports performing Ident (RFC 931) lookups.]), [
-  SQUID_YESNO([$enableval],[unrecognized argument to --disable-ident-lookups: $enableval])
+  SQUID_YESNO([$enableval],[--enable-ident-lookups])
 ])
 AC_MSG_NOTICE([Support for Ident lookups enabled: ${enable_ident_lookups:=yes}])
 SQUID_DEFINE_BOOL(USE_IDENT,$enable_ident_lookups,[Support for Ident (RFC 931) lookups])
@@ -2258,8 +2241,7 @@ AC_ARG_ENABLE(auth,
   AS_HELP_STRING([--disable-auth],
                  [Do not support authentication. When supported, the list of schemes
                   and helpers to be enabled is defined elsewhere]), [
-SQUID_YESNO([$enableval],
-            [unrecognized argument to --enable-auth: $enableval])
+  SQUID_YESNO([$enableval],[--enable-auth])
 ])
 AC_MSG_NOTICE([Authentication support enabled: ${enable_auth:=yes}])
 SQUID_DEFINE_BOOL(USE_AUTH,$enable_auth,[Enable support for authentication])
@@ -2401,7 +2383,7 @@ AC_ARG_WITH(valgrind-debug,
   AS_HELP_STRING([--with-valgrind-debug],
                  [Include debug instrumentation for use with valgrind]),
 [
-  SQUID_YESNO([$withval],[unrecognized argument to --with-valgrind-debug: $withval])
+  SQUID_YESNO([$withval],[--with-valgrind-debug])
   AS_IF([test "x$withval" != "xno"],[
     AC_CHECK_HEADERS(valgrind/memcheck.h,[],[
       AC_MSG_ERROR([Valgrind support requested, needed headers not found.])
@@ -2417,8 +2399,7 @@ AC_ARG_ENABLE(win32-service,
   AS_HELP_STRING([--enable-win32-service],
                  [Compile Squid as a WIN32 Service.
                   Works only on MS-Windows platforms]), [
-SQUID_YESNO([$enableval],
-            [unrecognized argument to --enable-win32-service: $enableval])
+  SQUID_YESNO([$enableval],[--enable-win32-service])
 ])
 SQUID_DEFINE_BOOL(USE_WIN32_SERVICE,${enable_win32_service:=no},
    [Enable code supporting MS Windows service mode])
@@ -2428,8 +2409,7 @@ AC_MSG_NOTICE([MS Windows service mode enabled: $enable_win32_service])
 # Disable "unlinkd" code
 AC_ARG_ENABLE(unlinkd,
   AS_HELP_STRING([--disable-unlinkd],[Do not use unlinkd]), [
-SQUID_YESNO([$enableval],
-            [unrecognized argument to --disable-unlinkd: $enableval])
+  SQUID_YESNO([$enableval],[--enable-unlinkd])
 ])
 SQUID_DEFINE_BOOL(USE_UNLINKD,${enable_unlinkd:=yes},
                       [Enable useage of unlinkd])
@@ -2440,8 +2420,7 @@ AC_MSG_NOTICE([unlinkd enabled: $enable_unlinkd])
 AC_ARG_ENABLE(stacktraces,
   AS_HELP_STRING([--enable-stacktraces],
                  [Enable automatic call backtrace on fatal errors]), [
-SQUID_YESNO([$enableval],
-            [unrecognized argument to --enable-stacktraces: $enableval])
+  SQUID_YESNO([$enableval],[--enable-stacktraces])
 ])
 SQUID_DEFINE_BOOL(PRINT_STACK_TRACE,${enable_stacktraces:=no},
                       [Print stack traces on fatal errors])
@@ -2455,8 +2434,7 @@ AC_ARG_ENABLE(x-accelerator-vary,
                   variance within an accelerator setup.
                   Typically used together with other code
                   that adds custom HTTP headers to the requests.]), [
-SQUID_YESNO([$enableval],
-            [unrecognized argument to --enable-x-accelerator-vary: $enableval])
+  SQUID_YESNO([$enableval],[--enable-x-accelerator-vary])
 ])
 SQUID_DEFINE_BOOL(X_ACCELERATOR_VARY,${enable_x_accelerator_vary:=no},
                       [Enable support for the X-Accelerator-Vary HTTP header])
@@ -2831,7 +2809,7 @@ dnl Enable IPv6 support
 AC_MSG_CHECKING([whether to enable IPv6])
 AC_ARG_ENABLE(ipv6,
   AS_HELP_STRING([--disable-ipv6],[Disable IPv6 support. The default is to probe system capabilities on startup.]), [
-SQUID_YESNO([$enableval],[unrecognized argument to --disable-ipv6: $enableval])
+  SQUID_YESNO([$enableval],[--enable-ipv6])
 ])
 AC_MSG_RESULT(${enable_ipv6:=yes})
 SQUID_DEFINE_BOOL(USE_IPV6,$enable_ipv6,[Enable support for IPv6 ])
@@ -3226,8 +3204,7 @@ AC_MSG_NOTICE([Linux Netfilter Conntrack support enabled: ${with_netfilter_connt
 
 AC_ARG_ENABLE(zph-qos,
   AS_HELP_STRING([--disable-zph-qos],[Disable ZPH QOS support]), [
-SQUID_YESNO([$enableval],
-            [unrecognized argument to --enable-zph-qos: $enableval])
+  SQUID_YESNO([$enableval],[--enable-zph-qos])
 ])
 SQUID_DEFINE_BOOL(USE_QOS_TOS,${enable_zph_qos:=yes},
           [Enable Zero Penalty Hit QOS. When set, Squid will alter the
@@ -3247,7 +3224,7 @@ AC_ARG_ENABLE(gnuregex,
                  This library file is usually only required on Windows and
                  very old Unix boxes which do not have their own regex
                  library built in.]), [
-SQUID_YESNO([$enableval],[unrecognized argument to --enable-gnuregex: $enableval])
+  SQUID_YESNO([$enableval],[--enable-gnuregex])
 ])
 # force-enable on old solaris
 AS_IF([test "x${enable_gnuregex:=auto}" = "xauto"],[
@@ -3296,8 +3273,7 @@ dnl Squid will not usually attempt to translate templates when building
 AC_ARG_ENABLE(translation,
  AS_HELP_STRING([--enable-translation],[Generate the localized error page templates and manuals.
 		 Which can also be downloaded from http://www.squid-cache.org/Versions/langpack/.]), [
-  SQUID_YESNO([$enableval],
-     [unrecognized argument to --enable-translation: $enableval])
+  SQUID_YESNO([$enableval],[--enable-translation])
 ])
 AS_IF([test "x${enable_translation:=no}" = "xyes"],[
   AX_WITH_PROG([PO2HTML],[po2html])
@@ -3316,8 +3292,7 @@ AC_ARG_ENABLE(auto-locale,
  AS_HELP_STRING([--disable-auto-locale],[This prevents Squid providing localized error pages based on the
 		 clients request headers.
 		 When disabled Squid requires explicit language configuration.]), [
-SQUID_YESNO([$enableval],
-    [unrecognized argument to --disable-auto-locale: $enableval])
+  SQUID_YESNO([$enableval],[--enable-auto-locale])
 ])
 AC_MSG_NOTICE([Multi-Language support enabled: ${enable_auto_locale:=yes}])
 SQUID_DEFINE_BOOL(USE_ERR_LOCALES,$enable_auto_locale,

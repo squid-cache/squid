@@ -211,7 +211,7 @@ unset squid_tmp_define
 dnl aborts with an error specified as the second argument if the first argument doesn't
 dnl contain either "yes" or "no"
 AC_DEFUN([SQUID_YESNO],[
-  AS_IF([test "$1" != "yes" -a "$1" != "no"],[AC_MSG_ERROR([$2])])
+  AS_IF([test "$1" != "yes" -a "$1" != "no"],[AC_MSG_ERROR([Bad argument for $2, which does not accept a value.])])
 ])
 
 dnl check the build parameters for a library to auto-enable
