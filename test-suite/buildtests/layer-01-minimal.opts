@@ -97,6 +97,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
  \
 	--without-pthreads \
 	--without-aio \
+	--without-cap \
 	--without-dl \
 	--without-large-files \
 	--without-nettle \
