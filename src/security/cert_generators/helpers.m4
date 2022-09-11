@@ -19,7 +19,7 @@ AC_ARG_ENABLE(ssl-crtd,
                  [Prevent Squid from directly generating TLS/SSL private key
                   and certificate. Instead enables the certificate generator
                   processes.]), [
-  SQUID_YESNO([$enableval],[unrecogized argument to --enable-ssl-crtd: $enableval])
+  SQUID_YESNO([$enableval],[--enable-ssl-crtd])
 ])
 AS_IF([test "x$enable_ssl_crtd" = "xyes" -a "x$with_openssl" = "xno"],[
   AC_MSG_ERROR([You need TLS gatewaying support to enable ssl-crtd feature. Try to use --with-openssl.])
