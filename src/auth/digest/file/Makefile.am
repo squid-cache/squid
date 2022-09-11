@@ -20,7 +20,7 @@ digest_file_auth_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
-	$(NETTLELIB) \
+	$(LIBNETTLE_LIBS) \
 	$(CRYPTLIB) \
 	$(SSLLIB) \
 	$(XTRA_LIBS)

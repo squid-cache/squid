@@ -1089,9 +1089,10 @@ AC_MSG_NOTICE([HTCP support enabled: $enable_htcp])
 # Cryptograhic libraries
 SQUID_AUTO_LIB(nettle,[Nettle crypto],[LIBNETTLE])
 AS_IF(test "x$with_nettle" != "xno"],[
+  SQUID_STATE_SAVE(nettle)
   CPPFLAGS="$LIBNETTLE_CFLAGS $CPPFLAGS"
   AC_CHECK_LIB(nettle, nettle_md5_init,[
-    NETTLELIB="$LIBNETTLE_PATH -lnettle"
+    LIBNETTLE_LIBS="$LIBNETTLE_PATH -lnettle"
     AC_CHECK_HEADERS(nettle/md5.h)
   ],[with_nettle=no])
   AS_IF([test "x$with_nettle" != "xno"],[
@@ -1118,9 +1119,10 @@ AS_IF(test "x$with_nettle" != "xno"],[
       AC_DEFINE(HAVE_NETTLE34_BASE64,1,[set to 1 if Nettle 3.4 API will link])
     ],[AC_MSG_RESULT(no)])
   ])
+  SQUID_STATE_ROLLBACK(nettle)
 ])
 AC_MSG_NOTICE([Using Nettle cryptographic library: ${with_nettle:=yes}])
-AC_SUBST(NETTLELIB)
+AC_SUBST(LIBNETTLE_LIBS)
 
 dnl Check for libcrypt
 CRYPTLIB=

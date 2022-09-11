@@ -22,7 +22,7 @@ digest_edirectory_auth_LDADD = \
 	$(COMPAT_LIB) \
 	$(LDAPLIB) \
 	$(LBERLIB) \
-	$(NETTLELIB) \
+	$(LIBNETTLE_LIBS) \
 	$(CRYPTLIB) \
 	$(SSLLIB) \
 	$(XTRA_LIBS)

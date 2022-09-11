@@ -21,7 +21,7 @@ LDADD = \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(COMPAT_LIB) \
 	$(LIBGNUTLS_LIBS) \
-	$(NETTLELIB) \
+	$(LIBNETTLE_LIBS) \
 	$(KRB5LIBS) \
 	$(XTRA_LIBS)
 
