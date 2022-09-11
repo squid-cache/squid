@@ -48,7 +48,6 @@ AS_IF([test -n "$squid_host_os_version"],[
 AC_MSG_RESULT($squid_host_os (version $squid_host_os_version))
 # on windows squid_host_os is either mingw or cygwin, version is 32
 
-# Find available compilers
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_CXX
