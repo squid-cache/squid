@@ -138,13 +138,6 @@ CommTimeoutCbParams::CommTimeoutCbParams(void *aData):
 {
 }
 
-/* FdeCbParams */
-
-FdeCbParams::FdeCbParams(void *aData):
-    CommCommonCbParams(aData)
-{
-}
-
 /* CommAcceptCbPtrFun */
 
 CommAcceptCbPtrFun::CommAcceptCbPtrFun(IOACB *aHandler,
@@ -259,28 +252,6 @@ CommTimeoutCbPtrFun::dial()
 
 void
 CommTimeoutCbPtrFun::print(std::ostream &os) const
-{
-    os << '(';
-    params.print(os);
-    os << ')';
-}
-
-/* FdeCbPtrFun */
-
-FdeCbPtrFun::FdeCbPtrFun(FDECB *aHandler, const FdeCbParams &aParams) :
-    CommDialerParamsT<FdeCbParams>(aParams),
-    handler(aHandler)
-{
-}
-
-void
-FdeCbPtrFun::dial()
-{
-    handler(params);
-}
-
-void
-FdeCbPtrFun::print(std::ostream &os) const
 {
     os << '(';
     params.print(os);
