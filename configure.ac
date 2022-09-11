@@ -51,13 +51,14 @@ AC_MSG_RESULT($squid_host_os (version $squid_host_os_version))
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_CXX
-AC_LANG([C++])
 
 # this needs to be before any test is run, to have more standard
 # functions available on some Unix sysems (e.g. Solaris)
-AS_IF([test "x$squid_host_os" = "solaris" -a "x$ac_cv_c_compiler_gnu" = "xyes"],[
+AS_IF([test "x$squid_host_os" = "solaris" -a "x$GCC" = "xyes"],[
   AC_USE_SYSTEM_EXTENSIONS
 ])
+
+AC_LANG([C++])
 
 # Clang 3.2 on some CPUs requires -march-native to detect correctly.
 # GCC 4.3+ can also produce faster executables when its used.
@@ -573,7 +574,7 @@ for module in $squid_disk_module_candidates none; do
             ],[
               SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
               SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
-              AS_IF([test "x$ac_cv_c_compiler_gnu" = "xyes" -a "x$PRESET_LDFLAGS" = "x"],[LDFLAGS="$LDFLAGS -pthread"])
+              AS_IF([test "x$GCC" = "xyes" -a "x$PRESET_LDFLAGS" = "x"],[LDFLAGS="$LDFLAGS -pthread"])
             ])
           ],
 
@@ -589,7 +590,7 @@ for module in $squid_disk_module_candidates none; do
           ],
 
           [solaris],[
-            AS_IF([test "x$ac_cv_c_compiler_gnu" = "xyes"],[
+            AS_IF([test "x$GCC" = "xyes"],[
               SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT -pthreads"
               SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT -pthreads"
               AC_CHECK_LIB(pthread, pthread_create ,[LIBPTHREADS="-lpthread"], [
@@ -2198,7 +2199,7 @@ AS_IF([test "x$buildmodel" = "xdefault" -o "x$buildmodel" = "x"],[
 #   "-Xa" is supported only by Sun cc, so we need to remove it when using gcc
 #   For gcc "-xarch=generic64" must be replaced with "-m64"
 #   The 'sun' define is needed by ipfilter includes, so we must remove "-Usun"
-    AS_IF([test "x$ac_cv_c_compiler_gnu" = "xyes"],[
+    AS_IF([test "x$GCC" = "xyes"],[
       AC_MSG_NOTICE([Removing -Xa for gcc/g++ on $host])
       CFLAGS="`echo $CFLAGS | sed -e 's/-Xa//'`"
       CXXFLAGS="`echo $CXXFLAGS | sed -e 's/-Xa//'`"
@@ -2851,7 +2852,7 @@ AS_CASE(["$host"],
   ],
 
   [i386-*-solaris2.*],[
-    AS_IF([test "x$ac_cv_c_compiler_gnu" = "xyes"],[
+    AS_IF([test "x$GCC" = "xyes"],[
       AC_MSG_NOTICE([Removing -O for gcc on $host])
       CFLAGS="`echo $CFLAGS | sed -e 's/-O[[0-9g]]*//'`"
     ])
