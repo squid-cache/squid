@@ -2466,7 +2466,7 @@ SQUID_AUTO_LIB(cppunit,[cppunit test framework],[LIBCPPUNIT])
 AS_IF([test "x$with_cppunit" != "xno"],[
   LIBCPPUNIT_LIBS="$LIBCPPUNIT_PATH -lcppunit"
   PKG_CHECK_MODULES([LIBCPPUNIT],[cppunit],[
-    squid_cv_cppunit_version="`pkg-config cppunit --version`"
+    squid_cv_cppunit_version="`pkg-config --modversion cppunit`"
     AC_MSG_NOTICE([using system installed cppunit version $squid_cv_cppunit_version])
     AS_UNSET(squid_cv_cppunit_version)
 
