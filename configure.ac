@@ -2820,7 +2820,7 @@ AC_ARG_WITH([cppunit], AS_HELP_STRING([--without-cppunit],[Do not use cppunit te
 ])
 AS_IF([test "x$with_cppunit" != "xno"],[
   PKG_CHECK_MODULES([LIBCPPUNIT],[cppunit],[
-    squid_cv_cppunit_version="`pkg-config cppunit --version`"
+    squid_cv_cppunit_version="`pkg-config --modversion cppunit`"
     AC_MSG_NOTICE([using system installed cppunit version $squid_cv_cppunit_version])
     AS_UNSET(squid_cv_cppunit_version)
 
