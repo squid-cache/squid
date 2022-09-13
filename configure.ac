@@ -35,12 +35,29 @@ PRESET_LDFLAGS="$LDFLAGS"
 dnl Set default LDFLAGS
 AS_IF([test "x$LDFLAGS" = "x"],[LDFLAGS="-g"])
 
-# Check for GNU cc
+# check for host OS detail
+AC_CANONICAL_HOST
+AC_MSG_CHECKING([simplified host os])
+simple_host_os=`echo $host_os|sed 's/[0-9].*//g;s/-.*//g'`
+squid_host_os_version=`echo $host_os|tr -d "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-"`
+AS_IF([test -n "$squid_host_os_version"],[
+  squid_host_os="`echo $simple_host_os| sed s/$squid_host_os_version//g`"
+],[
+  squid_host_os="$simple_host_os"
+])
+AC_MSG_RESULT($squid_host_os (version $squid_host_os_version))
+# on windows squid_host_os is either mingw or cygwin, version is 32
+
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_CXX
+
+# AC_USE_SYSTEM_EXTENSIONS should be called before any macros that run the C compiler.
+AS_IF([test "x$squid_host_os" = "solaris" -a "x$GCC" = "xyes"],[
+  AC_USE_SYSTEM_EXTENSIONS
+])
+
 AC_LANG([C++])
-AC_CANONICAL_HOST
 
 # Clang 3.2 on some CPUs requires -march-native to detect correctly.
 # GCC 4.3+ can also produce faster executables when its used.
@@ -72,23 +89,6 @@ AS_IF([test "x$BUILDCXX" = "x"],[
   ])
 ])
 AC_SUBST(BUILDCXX)
-
-AC_MSG_CHECKING([simplified host os])
-simple_host_os=`echo $host_os|sed 's/[0-9].*//g;s/-.*//g'`
-squid_host_os_version=`echo $host_os|tr -d "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-"`
-AS_IF([test -n "$squid_host_os_version"],[
-  squid_host_os="`echo $simple_host_os| sed s/$squid_host_os_version//g`"
-],[
-  squid_host_os="$simple_host_os"
-])
-AC_MSG_RESULT($squid_host_os (version $squid_host_os_version))
-# on windows squid_host_os is either mingw or cygwin, version is 32
-
-# this needs to be before any test is run, to have more standard
-# functions available on some Unix sysems (e.g. Solaris)
-AS_IF([test "x$squid_host_os" = "solaris" -a "x$GCC" != "x"],[
-  AC_USE_SYSTEM_EXTENSIONS
-])
 
 # If the user did not specify a C++ version.
 user_cxx=`echo "$PRESET_CXXFLAGS" | grep -o -E "\-std="`
