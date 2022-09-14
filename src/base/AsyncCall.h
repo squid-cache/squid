@@ -151,7 +151,7 @@ private:
 };
 
 template <class Dialer>
-inline RefCount< AsyncCallT<Dialer> >
+RefCount< AsyncCallT<Dialer> >
 asyncCall(int aDebugSection, int aDebugLevel, const char *aName,
           const Dialer &aDialer)
 {
