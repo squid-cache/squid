@@ -53,7 +53,7 @@ translate-warn:
 
 $(TRANSLATE_LANGUAGES): $(ERROR_TEMPLATES)
 
-NOTIDY=`$(PO2HTML) --help | grep -o "\--notidy"`
+NOTIDY=`$(PO2HTML) --help | grep -o "[-]-notidy"`
 
 .po.lang:
 	if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
