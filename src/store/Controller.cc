@@ -369,18 +369,13 @@ Store::Controller::find(const cache_key *key)
 void
 Store::Controller::allowSharing(StoreEntry &entry, const cache_key *key)
 {
-    // TODO: refactor to throw on anchorToCache() inSync errors!
-
     // anchorToCache() below and many find() callers expect a registered entry
     addReading(&entry, key);
 
     if (entry.hasTransients()) {
         // store hadWriter before computing `found`; \see Transients::get()
         const auto hadWriter = transients->hasWriter(entry);
-        bool inSync = false;
-        const bool found = anchorToCache(entry, inSync);
-        if (found && !inSync)
-            throw TexcHere("cannot sync");
+        const auto found = anchorToCache(entry);
         if (!found) {
             // !found should imply hittingRequiresCollapsing() regardless of writer presence
             if (!entry.hittingRequiresCollapsing()) {
@@ -811,7 +806,7 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
     if (sharedMemStore && collapsed->mem_obj->memCache.io == MemObject::ioDone) {
         found = true;
         inSync = true;
-        debugs(20, 7, "fully mem-loaded " << *collapsed);
+        debugs(20, 7, "already handled by memory store: " << *collapsed);
     } else if (sharedMemStore && collapsed->hasMemStore()) {
         found = true;
         inSync = sharedMemStore->updateAnchored(*collapsed);
@@ -820,7 +815,15 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
         found = true;
         inSync = swapDir->updateAnchored(*collapsed);
     } else {
-        found = anchorToCache(*collapsed, inSync);
+        try {
+            found = anchorToCache(*collapsed);
+            inSync = found;
+        } catch (...) {
+            // TODO: Write an exception handler for the entire method.
+            debugs(20, 3, "anchorToCache() failed for " << *collapsed << ": " << CurrentException);
+            collapsed->abort();
+            return;
+        }
     }
 
     if (entryStatus.waitingToBeFreed && !found) {
@@ -855,49 +858,51 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
     collapsed->setCollapsingRequirement(true);
 }
 
-/// Called for Transients entries that are not yet anchored to a cache.
+/// If possible and has not been done, associates the entry with its store(s).
 /// \returns false for not-yet-cached entries that we may attach later
 /// \returns true for other entries after synchronizing them with their store
-/// and setting inSync to reflect that synchronization outcome.
 bool
-Store::Controller::anchorToCache(StoreEntry &entry, bool &inSync)
+Store::Controller::anchorToCache(StoreEntry &entry)
 {
     assert(entry.hasTransients());
     assert(transientsReader(entry));
+
+    // TODO: Attach entries to both memory and disk
+
+    // TODO: Reduce code duplication with syncCollapsed()
+    if (sharedMemStore && entry.mem().memCache.io == MemObject::ioDone) {
+        debugs(20, 5, "already handled by memory store: " << entry);
+        return true;
+    } else if (sharedMemStore && entry.hasMemStore()) {
+        debugs(20, 5, "already anchored to memory store: " << entry);
+        return true;
+    } else if (swapDir && entry.hasDisk()) {
+        debugs(20, 5, "already anchored to disk: " << entry);
+        return true;
+    }
 
     debugs(20, 7, "anchoring " << entry);
 
     Transients::EntryStatus entryStatus;
     transients->status(entry, entryStatus);
 
-    inSync = false;
     bool found = false;
     if (sharedMemStore)
-        found = sharedMemStore->anchorToCache(entry, inSync);
+        found = sharedMemStore->anchorToCache(entry);
     if (!found && swapDir)
-        found = swapDir->anchorToCache(entry, inSync);
+        found = swapDir->anchorToCache(entry);
 
-    if (inSync) {
+    if (found) {
         debugs(20, 7, "anchored " << entry);
-        assert(found);
         entry.setCollapsingRequirement(false);
         return true;
     }
 
-    if (found) {
-        debugs(20, 5, "failed to anchor " << entry);
-        return true;
-    }
+    if (entryStatus.waitingToBeFreed)
+        throw TextException("will never be able to anchor to an already marked entry", Here());
 
-    if (entryStatus.waitingToBeFreed) {
-        debugs(20, 5, "failed on marked unattached " << entry);
-        return true;
-    }
-
-    if (!entryStatus.hasWriter) {
-        debugs(20, 5, "failed on abandoned-by-writer " << entry);
-        return true;
-    }
+    if (!entryStatus.hasWriter)
+        throw TextException("will never be able to anchor to an abandoned-by-writer entry", Here());
 
     debugs(20, 7, "skipping not yet cached " << entry);
     entry.setCollapsingRequirement(true);

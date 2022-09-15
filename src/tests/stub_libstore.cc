@@ -115,7 +115,7 @@ void Disks::reference(StoreEntry &) STUB
 bool Disks::dereference(StoreEntry &) STUB_RETVAL(false)
 void Disks::updateHeaders(StoreEntry *) STUB
 void Disks::maintain() STUB
-bool Disks::anchorToCache(StoreEntry &, bool &) STUB_RETVAL(false)
+bool Disks::anchorToCache(StoreEntry &) STUB_RETVAL(false)
 bool Disks::updateAnchored(StoreEntry &) STUB_RETVAL(false)
 void Disks::evictCached(StoreEntry &) STUB
 void Disks::evictIfFound(const cache_key *) STUB
