@@ -390,8 +390,11 @@ MemStore::updateHeadersOrThrow(Ipc::StoreMapUpdate &update)
 }
 
 bool
-MemStore::anchorToCache(StoreEntry &entry, bool &inSync)
+MemStore::anchorToCache(StoreEntry &entry)
 {
+    Assure(!entry.hasMemStore());
+    Assure(entry.mem().memCache.io != MemObject::ioDone);
+
     if (!map)
         return false;
 
@@ -402,8 +405,9 @@ MemStore::anchorToCache(StoreEntry &entry, bool &inSync)
         return false;
 
     anchorEntry(entry, index, *slot);
-    inSync = updateAnchoredWith(entry, index, *slot);
-    return true; // even if inSync is false
+    if (!updateAnchoredWith(entry, index, *slot))
+        throw TextException("updateAnchoredWith() failure", Here());
+    return true;
 }
 
 bool
