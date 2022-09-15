@@ -446,6 +446,9 @@ TunnelStateData::retryOrBail(const char *context)
     // sendNewError() and sendSavedErrorOr(), used in "error detected" cases.
     if (!savedError)
         saveError(new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError, request.getRaw(), al));
+
+    al->updateError(Error(savedError->type, savedError->detail));
+
     const auto canSendError = Comm::IsConnOpen(client.conn) && !client.dirty &&
                               clientExpectsConnectResponse();
     if (canSendError)

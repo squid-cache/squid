@@ -1350,8 +1350,8 @@ ErrorState::BuildHttpReply()
     if (request) {
         if (detail)
             request->detailError(type, detail);
-        else
-            request->detailError(type, SysErrorDetail::NewIfAny(xerrno));
+        if (const auto errNoDetail = SysErrorDetail::NewIfAny(xerrno))
+            request->detailError(type, errNoDetail);
     }
 
     return rep;
