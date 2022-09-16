@@ -816,8 +816,6 @@ AC_ARG_ENABLE(esi,
                  [squid_opt_use_esi=$enableval],[])
 HAVE_LIBEXPAT=0
 EXPATLIB=
-HAVE_LIBXML2=0
-XMLLIB=
 
 # ESI support libraries: expat
 SQUID_AUTO_LIB(expat,[ESI expat library],[LIBEXPAT])
@@ -836,54 +834,37 @@ AS_IF([test "x$squid_opt_use_esi" != "xno" -a "x$with_expat" != "xno"],[
   ])
 ])
 
+# ESI support libraries: xml2
+AH_TEMPLATE(HAVE_LIBXML2,[Define to 1 if you have the xml2 library])
 SQUID_AUTO_LIB(xml2,[ESI xml2 library],[LIBXML2])
 AS_IF([test "x$squid_opt_use_esi" != "xno" -a "x$with_xml2" != "xno"],[
   SQUID_STATE_SAVE([squid_libxml2_save])
   PKG_CHECK_MODULES([LIBXML2],[libxml-2.0],[],[
-    AC_CHECK_LIB([xml2], [main], [LIBXML2_LIBS="$LIBXML2_LIBS -lxml2"])
-    dnl Find the main header and include path...
-    AC_CACHE_CHECK([location of libxml2 include files], [ac_cv_libxml2_include], [
-      AC_CHECK_HEADERS([libxml/parser.h], [], [
-        AC_MSG_NOTICE([Testing in /usr/include/libxml2])
-        SAVED_CPPFLAGS="$CPPFLAGS"
-        CPPFLAGS="-I/usr/include/libxml2 $CPPFLAGS"
-        unset ac_cv_header_libxml_parser_h
-        AC_CHECK_HEADERS([libxml/parser.h], [LIBXML2_CFLAGS="$LIBXML2_CFLAGS -I/usr/include/libxml2"], [
-          AC_MSG_NOTICE([Testing in /usr/local/include/libxml2])
-          CPPFLAGS="-I/usr/local/include/libxml2 $SAVED_CPPFLAGS"
-          unset ac_cv_header_libxml_parser_h
-          AC_CHECK_HEADERS([libxml/parser.h], [LIBXML2_CFLAGS="$LIBXML2_CFLAGS -I/usr/local/include/libxml2"], [
-            AC_MSG_NOTICE([Failed to find libxml2 header file libxml/parser.h])
-          ])
-        ])
-        CPPFLAGS="$SAVED_CPPFLAGS"
-      ])
-    ])
+    AC_CHECK_LIB([xml2],[main],[LIBXML2_LIBS="$LIBXML2_PATH -lxml2"])
   ])
-  CPPFLAGS="$CPPFLAGS $LIBXML2_CFLAGS"
-  dnl Now that we know where to look find the headers...
+  CXXFLAGS="$LIBXML2_CFLAGS $CXXFLAGS"
   AC_CHECK_HEADERS(libxml/parser.h libxml/HTMLparser.h libxml/HTMLtree.h)
   SQUID_STATE_ROLLBACK([squid_libxml2_save])
 
   AS_IF([test "x$LIBXML2_LIBS" != "x"],[
-    HAVE_LIBXML2=1
     squid_opt_use_esi=yes
-    SQUID_CXXFLAGS="$SQUID_CXXFLAGS $LIBXML2_CFLAGS"
-    CPPFLAGS="$CPPFLAGS $LIBXML2_CFLAGS"
-    XMLLIB="$LIBXML2_LIBS"
-    AC_DEFINE_UNQUOTED(HAVE_LIBXML2, $HAVE_LIBXML2, [Define to 1 if you have the xml2 library])
+    CXXFLAGS="$LIBXML2_CFLAGS $CXXFLAGS"
+    LIBXML2_LIBS="$LIBXML2_PATH $LIBXML2_LIBS"
+    AC_DEFINE(HAVE_LIBXML2,1,[Define to 1 if you have the xml2 library])
   ],[test "x$with_xml2" = "xyes"],[
     AC_MSG_ERROR([Required library xml2 not found])
   ],[
     AC_MSG_NOTICE([Library xml2 not found.])
   ])
 ])
+AM_CONDITIONAL(ENABLE_LIBXML2,[test "x$LIBXML2_LIBS" != "x"])
+AC_SUBST(LIBXML2_LIBS)
 
 AS_IF([test "x$squid_opt_use_esi" = "xyes"],[
-  AS_IF(test "x$HAVE_LIBXML2" = "x0" -a "x$HAVE_LIBEXPAT" = "x0",[
+  AS_IF(test "x$LIBXML2_LIBS" = "x" -a "x$HAVE_LIBEXPAT" = "x0",[
     AC_MSG_ERROR([ESI processor requires libxml2 or libexpat])
   ])
-  AC_MSG_NOTICE([Enabling ESI processor: $EXPATLIB $XMLLIB])
+  AC_MSG_NOTICE([Enabling ESI processor: $EXPATLIB $LIBXML2_LIBS])
   AC_DEFINE(USE_SQUID_ESI,1,[Compile the ESI processor])
 ],[
   AS_IF(test "x$squid_opt_use_esi" = "xno",[
@@ -895,8 +876,6 @@ AS_IF([test "x$squid_opt_use_esi" = "xyes"],[
 AM_CONDITIONAL(ENABLE_ESI, test "x$squid_opt_use_esi" = "xyes")
 AM_CONDITIONAL(ENABLE_LIBEXPAT, test "x$HAVE_LIBEXPAT" = "x1")
 AC_SUBST(EXPATLIB)
-AM_CONDITIONAL(ENABLE_LIBXML2, test "x$HAVE_LIBXML2" = "x1")
-AC_SUBST(XMLLIB)
 
 AC_ARG_ENABLE(icap-client,
   AS_HELP_STRING([--disable-icap-client],[Disable the ICAP client.]),[
