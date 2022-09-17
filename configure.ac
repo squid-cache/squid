@@ -21,6 +21,7 @@ m4_include([acinclude/squid-util.m4])
 m4_include([acinclude/compiler-flags.m4])
 m4_include([acinclude/os-deps.m4])
 m4_include([acinclude/krb5.m4])
+m4_include([acinclude/nettle.m4])
 m4_include([acinclude/pam.m4])
 m4_include([acinclude/pkg.m4])
 m4_include([acinclude/tdb.m4])
@@ -1081,38 +1082,25 @@ AC_MSG_NOTICE([HTCP support enabled: $enable_htcp])
 # Cryptograhic libraries
 SQUID_AUTO_LIB(nettle,[Nettle crypto],[LIBNETTLE])
 AS_IF(test "x$with_nettle" != "xno"],[
-  CPPFLAGS="$LIBNETTLE_CFLAGS $CPPFLAGS"
-  AC_CHECK_LIB(nettle, nettle_md5_init,[
-    NETTLELIB="$LIBNETTLE_PATH -lnettle"
-    AC_CHECK_HEADERS(nettle/md5.h)
-  ],[with_nettle=no])
-  AS_IF([test "x$with_nettle" != "xno"],[
-    # Base64 uses the nettle 3.4 API
-    # which matters on 64-bit systems
-    AC_CHECK_HEADERS(nettle/base64.h)
-    AC_MSG_CHECKING([for Nettle 3.4 API compatibility])
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#     include <cstddef>
-#     include <cstdint>
-#     include <nettle/base64.h>
-    ]],[[
-      char inData[10]; inData[0] = '\0';
-      size_t srcLen = 0;
-      struct base64_decode_ctx ctx;
-      base64_decode_init(&ctx);
-      uint8_t outData[10];
-      size_t dstLen = 0;
-      if (!base64_decode_update(&ctx, &dstLen, outData, srcLen, inData) ||
-              !base64_decode_final(&ctx)) {
-          return 1;
-      }
-    ]])],[AC_MSG_RESULT(yes)
-      AC_DEFINE(HAVE_NETTLE34_BASE64,1,[set to 1 if Nettle 3.4 API will link])
-    ],[AC_MSG_RESULT(no)])
+  SQUID_STATE_SAVE(squid_nettle_state)
+  PKG_CHECK_MODULES([LIBNETTLE],[nettle >= 3.4],[],[
+    CPPFLAGS="$LIBNETTLE_CFLAGS $CPPFLAGS"
+    AC_CHECK_LIB(nettle,[nettle_md5_init],[LIBNETTLE_LIBS="-lnettle"])
+  ])
+  AC_CHECK_HEADERS(nettle/base64.h nettle/md5.h)
+  SQUID_CHECK_NETTLE_BASE64
+  SQUID_STATE_ROLLBACK(squid_nettle_state)
+  AS_IF([test "x$LIBNETTLE_LIBS" != "x"],[
+    CXXFLAGS="$LIBNETTLE_CFLAGS $CXXFLAGS"
+    LIBNETTLE_LIBS="$LIBNETTLE_PATH $LIBNETTLE_LIBS"
+  ],[test "x$with_nettle" = "xyes"],[
+    AC_MSG_ERROR([Required library nettle not found])
+  ],[
+    AC_MSG_NOTICE([Library nettle not found.])
   ])
 ])
 AC_MSG_NOTICE([Using Nettle cryptographic library: ${with_nettle:=yes}])
-AC_SUBST(NETTLELIB)
+AC_SUBST(LIBNETTLE_LIBS)
 
 dnl Check for libcrypt
 CRYPTLIB=
