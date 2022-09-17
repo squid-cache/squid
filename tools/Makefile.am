@@ -22,7 +22,7 @@ LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(COMPAT_LIB) \
-	$(NETTLELIB) \
+	$(LIBNETTLE_LIBS) \
 	$(KRB5LIBS) \
 	$(XTRA_LIBS)
 
