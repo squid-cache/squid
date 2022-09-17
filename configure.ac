@@ -1873,36 +1873,29 @@ AS_IF([test "$squid_host_os" = "mingw"],[
 AC_SUBST(LDAPLIB)
 AC_SUBST(LBERLIB)
 
-SQUID_AUTO_LIB(systemd,[systemd API for start-up notification],[SYSTEMD])
+SQUID_AUTO_LIB(systemd,[systemd API for start-up notification],[LIBSYSTEMD])
 AH_TEMPLATE(USE_SYSTEMD,[systemd support is available])
-AS_IF([test "x$with_systemd" != "xno" -a "x$squid_host_os" = "xlinux"],[
+AS_IF([test "x$with_systemd" != "xno"],[
   SQUID_STATE_SAVE(squid_systemd_state)
-
-  # User may have provided a custom location for systemd. Otherwise...
-  LIBS="$LIBS $SYSTEMD_PATH"
-
-  # auto-detect using pkg-config
-  PKG_CHECK_MODULES(SYSTEMD,[libsystemd],,[
+  LIBS="$LIBS $LIBSYSTEMD_PATH"
+  PKG_CHECK_MODULES(LIBSYSTEMD,[libsystemd],,[
     # systemd < 209
-    PKG_CHECK_MODULES(SYSTEMD,[libsystemd-daemon],,[:])
+    PKG_CHECK_MODULES(LIBSYSTEMD,[libsystemd-daemon],,[:])
   ])
-
   AC_CHECK_HEADERS(systemd/sd-daemon.h)
+  SQUID_STATE_ROLLBACK(squid_systemd_state)
 
-  SQUID_STATE_ROLLBACK(squid_systemd_state) #de-pollute LIBS
-
-  AS_IF([test "x$with_systemd" = "xyes" -a "x$SYSTEMD_LIBS" = "x"],[
-    AC_MSG_ERROR([Required systemd library not found])
-  ])
-  AS_IF([test "x$SYSTEMD_LIBS" != "x"],[
-    CXXFLAGS="$SYSTEMD_CFLAGS $CXXFLAGS"
-    LDFLAGS="$SYSTEMD_PATH $SYSTEMD_LIBS $LDFLAGS"
+  AS_IF([test "x$LIBSYSTEMD_LIBS" != "x"],[
+    CXXFLAGS="$LIBSYSTEMD_CFLAGS $CXXFLAGS"
+    LIBSYSTEMD_LIBS="$LIBSYSTEMD_PATH $LIBSYSTEMD_LIBS"
     AC_DEFINE(USE_SYSTEMD,1,[systemd support is available])
+  ],[test "x$with_systemd" = "xyes"],[
+    AC_MSG_ERROR([Required systemd library not found])
   ],[
-    with_systemd=no
+    AC_MSG_NOTICE([Library for systemd support not found])
   ])
 ])
-AC_MSG_NOTICE([systemd library support: ${with_systemd:=auto} ${SYSTEMD_PATH} ${SYSTEMD_LIBS}])
+AC_MSG_NOTICE([systemd library support: $with_systemd $LIBSYSTEMD_LIBS])
 
 AC_ARG_ENABLE(forw-via-db,
   AS_HELP_STRING([--enable-forw-via-db],[Enable Forw/Via database]), [
