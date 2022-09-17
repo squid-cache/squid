@@ -820,12 +820,18 @@ AC_ARG_ENABLE(esi,
 AH_TEMPLATE(HAVE_LIBEXPAT,[Define to 1 if you have the expat library])
 SQUID_AUTO_LIB(expat,[ESI expat library],[LIBEXPAT])
 AS_IF([test "x$squid_opt_use_esi" != "xno" -a "x$with_expat" != "xno"],[
-  AC_CHECK_LIB([expat],[main],[
-    LIBEXPAT_LIBS="-lexpat"
-    AC_CHECK_HEADERS([expat.h])
-    AC_DEFINE(HAVE_LIBEXPAT,1,[Define to 1 if you have the expat library])
+  SQUID_STATE_SAVE(squid_expat_state)
+  PKG_CHECK_MODULES([LIBEXPAT],[expat],[],[
+    AC_CHECK_LIB([expat],[main],[LIBEXPAT_LIBS="-lexpat"])
   ])
-  AS_IF([test "x$LIBEXPAT_LIBS" != "x"],[squid_opt_use_esi=yes],
+  CPPFLAGS="$LIBEXPAT_CFLAGS $CPPFLAGS"
+  AC_CHECK_HEADERS(expat.h)
+  SQUID_STATE_ROLLBACK(squid_expat_state)
+  AS_IF([test "x$LIBEXPAT_LIBS" != "x"],[
+      squid_opt_use_esi=yes
+      LIBEXPAT_LIBS="$LIBEXPAT_PATH $LIBEXPAT_LIBS"
+      AC_DEFINE(HAVE_LIBEXPAT,1,[Define to 1 if you have the expat library])
+    ],
     [test "x$with_expat" = "xyes"],[AC_MSG_ERROR([Required library expat not found.])],
     [AC_MSG_NOTICE([Library expat not found.])]
   )
