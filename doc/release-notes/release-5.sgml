@@ -342,6 +342,12 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
+	<tag>--without-ldap</tag>
+	<p>New option to determine whether LDAP support is used, and
+	   build against local custom installs.
+	<p>This will prevent all helper binaries depending on LDAP
+	   from being auto-built.
+
 	<tag>--without-tdb</tag>
 	<p>New option to determine whether TrivialDB support is used, and
 	   build against local custom installs.

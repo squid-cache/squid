@@ -1628,65 +1628,45 @@ AC_MSG_NOTICE([$KRB5_FLAVOUR Kerberos library support: ${with_krb5:=no} ${LIB_KR
 AC_SUBST(KRB5INCS)
 AC_SUBST(KRB5LIBS)
 
-dnl On MinGW OpenLDAP is not available, so LDAP helpers can be linked
-dnl only with Windows LDAP libraries using -lwldap32
-AS_IF([test "$squid_host_os" = "mingw"],[
-  LDAPLIB="-lwldap32"
-  LBERLIB=""
-],[
-  AC_CHECK_LIB(ldap, ldap_init, [LDAPLIB="-lldap"])
-  AC_CHECK_LIB(lber, ber_init, [LBERLIB="-llber"])
-  dnl if no ldap lib found check for mozilla version
-  AS_IF([test "x$ac_cv_lib_ldap_ldap_init" != "xyes"],[
-    SQUID_STATE_SAVE(squid_ldap_mozilla)
-    LIBS="$LIBPTHREADS"
-    AC_CHECK_LIB(ldap60, ldap_init, [LDAPLIB="-lldap60"])
-    LIBS="$LDAPLIB $LIBPTHREADS"
-    AC_CHECK_LIB(prldap60, prldap_init, [LDAPLIB="-lprldap60 $LDAPLIB"])
-    LIBS="$LDAPLIB $LIBPTHREADS"
-    AC_CHECK_LIB(ssldap60, ldapssl_init, [LDAPLIB="-lssldap60 $LDAPLIB"])
-    SQUID_STATE_ROLLBACK(squid_ldap_mozilla)
+SQUID_AUTO_LIB(ldap,[LDAP],[LIBLDAP])
+AS_IF([test "x$with_ldap" != "xno"],[
+  dnl On MinGW OpenLDAP is not available, so LDAP helpers can be linked
+  dnl only with Windows LDAP libraries using -lwldap32
+  AS_IF([test "$squid_host_os" = "mingw"],[
+    LIBLDAP_LIBS="-lwldap32"
+  ],[
+    SQUID_STATE_SAVE(squid_ldap_state)
+    LIBS="$LIBLDAP_PATH $LIBPTHREADS $LIBS"
+    PKG_CHECK_MODULES([LIBLDAP],[ldap],[],[
+      AC_CHECK_LIB(lber, ber_init, [LIBLBER="-llber"])
+      AC_CHECK_LIB(ldap, ldap_init, [LIBLDAP_LIBS="-lldap $LIBLBER"])
+      dnl if no ldap lib found check for mozilla version
+      AS_IF([test "x$ac_cv_lib_ldap_ldap_init" != "xyes"],[
+        SQUID_STATE_SAVE(squid_ldap_mozilla)
+        LIBS="$LIBLDAP_PATH $LIBPTHREADS"
+        AC_CHECK_LIB(ldap60, ldap_init, [LIBLDAP_LIBS="-lldap60 $LIBLBER"])
+        LIBS="$LIBLDAP_PATH $LIBLDAP_LIBS $LIBPTHREADS"
+        AC_CHECK_LIB(prldap60, prldap_init, [LIBLDAP_LIBS="-lprldap60 $LIBLDAP_LIBS"])
+        LIBS="$LIBLDAP_PATH $LIBLDAP_LIBS $LIBPTHREADS"
+        AC_CHECK_LIB(ssldap60, ldapssl_init, [LIBLDAP_LIBS="-lssldap60 $LIBLDAP_LIBS"])
+        SQUID_STATE_ROLLBACK(squid_ldap_mozilla)
+      ])
+    ])
+    AC_CHECK_HEADERS(ldap.h lber.h)
+    AC_CHECK_HEADERS(mozldap/ldap.h)
+    SQUID_CHECK_LDAP_API
   ])
 
-  AC_CHECK_HEADERS(ldap.h lber.h)
-  AC_CHECK_HEADERS(mozldap/ldap.h)
-
-  SQUID_LDAP_TEST([LDAP],[
-    char host[]="";
-    int port;
-    ldap_init((const char *)&host, port);
-  ])
-
-  SQUID_LDAP_CHECK_VENDOR
-
-  SQUID_LDAP_TEST([LDAP_OPT_DEBUG_LEVEL],[auto i=LDAP_OPT_DEBUG_LEVEL])
-  SQUID_LDAP_TEST([LDAP_SCOPE_DEFAULT],[auto i=LDAP_SCOPE_DEFAULT;])
-
-  SQUID_LDAP_TEST([LDAP_REBIND_PROC],[LDAP_REBIND_PROC ldap_rebind;])
-  SQUID_LDAP_TEST([LDAP_REBINDPROC_CALLBACK],[LDAP_REBINDPROC_CALLBACK ldap_rebind;])
-  SQUID_LDAP_TEST([LDAP_REBIND_FUNCTION],[LDAP_REBIND_FUNCTION ldap_rebind;])
-
-  SQUID_LDAP_TEST([LDAP_URL_LUD_SCHEME],[struct ldap_url_desc.lud_scheme v;])
-
-  AC_CHECK_LIB(ldap,ldapssl_client_init,[
-    AC_DEFINE(HAVE_LDAPSSL_CLIENT_INIT,1,[Define to 1 if you have ldapssl_client_init])
-  ])
-
-  AC_CHECK_LIB(ldap,ldap_url_desc2str,[
-    AC_DEFINE(HAVE_LDAP_URL_DESC2STR,1,[Define to 1 if you have ldap_url_desc2str])
-  ])
-
-  AC_CHECK_LIB(ldap,ldap_url_parse,[
-    AC_DEFINE(HAVE_LDAP_URL_PARSE,1,[Define to 1 if you have ldap_url_parse])
-  ])
-
-  AC_CHECK_LIB(ldap,ldap_start_tls_s,[
-    AC_DEFINE(HAVE_LDAP_START_TLS_S,1,[Define to 1 if you have ldap_start_tls_s])
+  AS_IF([test "x$LIBLDAP_LIBS" != "x"],[
+    CPPFLAGS="$LIBLDAP_CFLAGS $CPPFLAGS"
+    LIBLDAP_LIBS="$LIBLDAP_PATH $LIBLDAP_LIBS"
+  ],[test "x$with_ldap" = "xyes"],[
+    AC_MSG_ERROR([Required library ldap not found])
+  ],[
+    AC_MSG_NOTICE([Library ldap not found.])
   ])
 ])
-
-AC_SUBST(LDAPLIB)
-AC_SUBST(LBERLIB)
+AC_SUBST(LIBLDAP_LIBS)
 
 SQUID_AUTO_LIB(systemd,[systemd API for start-up notification],[LIBSYSTEMD])
 AH_TEMPLATE(USE_SYSTEMD,[systemd support is available])
@@ -2284,8 +2264,6 @@ AC_CHECK_HEADERS( \
   gnumalloc.h \
   grp.h \
   ipl.h \
-  lber.h \
-  ldap.h \
   libc.h \
   limits.h \
   linux/posix_types.h \
