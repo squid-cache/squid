@@ -2669,7 +2669,7 @@ AS_IF([test "x$with_cap" != "xno"],[
 
   AS_IF([test "x$LIBCAP_LIBS" != "x"],[
     with_cap=yes
-    CXXFLAGS="$LIBCAP_CFLAGS $CXXFLAGS"
+    CPPFLAGS="$LIBCAP_CFLAGS $CPPFLAGS"
     LDFLAGS="$LIBCAP_PATH $LDFLAGS"
   ],[test "x$with_cap" = "xyes"],[
     AC_MSG_ERROR([Required library libcap not found])
