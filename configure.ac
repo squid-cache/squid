@@ -94,7 +94,7 @@ if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
 fi
 
 # If the user did not specify a C++ version.
-user_cxx=`echo "$PRESET_CXXFLAGS" | grep -o -E "\-std="`
+user_cxx=`echo "$PRESET_CXXFLAGS" | grep -o -E "(-)std="`
 if test "x$user_cxx" = "x"; then
   # Check for C++11 compiler support
   AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
