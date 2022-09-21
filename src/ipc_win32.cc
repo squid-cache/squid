@@ -127,7 +127,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     }
 
     if (type == IPC_TCP_SOCKET) {
-        crfd = cwfd = comm_open(SOCK_STREAM,
+        crfd = cwfd = comm_open_listener(SOCK_STREAM,
                                 IPPROTO_TCP,
                                 local_addr,
                                 COMM_NOCLOEXEC,
