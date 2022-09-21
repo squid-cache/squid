@@ -292,7 +292,7 @@ for ac_lib in '' $2; do
     ac_res=-l$ac_lib
     LIBS="-l$ac_lib $5 $ac_func_search_save_LIBS"
   ])
-  AC_LINK_IFELSE([], [AS_VAR_SET([ac_Search], [$ac_res])])
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([],[])], [AS_VAR_SET([ac_Search], [$ac_res])])
   AS_VAR_SET_IF([ac_Search], [break])
 done
 AS_VAR_SET_IF([ac_Search], , [AS_VAR_SET([ac_Search], [no])])
