@@ -847,13 +847,13 @@ AS_IF([test "x$squid_opt_use_esi" != "xno" -a "x$with_xml2" != "xno"],[
   PKG_CHECK_MODULES([LIBXML2],[libxml-2.0],[],[
     AC_CHECK_LIB([xml2],[main],[LIBXML2_LIBS="$LIBXML2_PATH -lxml2"])
   ])
-  CXXFLAGS="$LIBXML2_CFLAGS $CXXFLAGS"
+  CPPFLAGS="$LIBXML2_CFLAGS $CPPFLAGS"
   AC_CHECK_HEADERS(libxml/parser.h libxml/HTMLparser.h libxml/HTMLtree.h)
   SQUID_STATE_ROLLBACK([squid_libxml2_save])
 
   AS_IF([test "x$LIBXML2_LIBS" != "x"],[
     squid_opt_use_esi=yes
-    CXXFLAGS="$LIBXML2_CFLAGS $CXXFLAGS"
+    CPPFLAGS="$LIBXML2_CFLAGS $CPPFLAGS"
     LIBXML2_LIBS="$LIBXML2_PATH $LIBXML2_LIBS"
     AC_DEFINE(HAVE_LIBXML2,1,[Define to 1 if you have the xml2 library])
   ],[test "x$with_xml2" = "xyes"],[
