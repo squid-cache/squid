@@ -81,8 +81,8 @@ int main(int argc, char **argv)
 
 dnl check that we have functional libcap2 headers
 dnl sets squid_cv_sys_capability_works to "yes" or "no"
-
 AC_DEFUN([SQUID_CHECK_FUNCTIONAL_LIBCAP2],[
+  AC_CHECK_HEADERS([sys/capability.h])
   AC_CACHE_CHECK([for operational libcap2 headers],
                  squid_cv_sys_capability_works,
     AC_LINK_IFELSE([AC_LANG_PROGRAM([[
