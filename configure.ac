@@ -2653,39 +2653,33 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 dnl Check for special functions
 AC_FUNC_ALLOCA
 
-
-# TODO: remove this 'lib' prefix to match coding standard
-SQUID_AUTO_LIB(libcap,[Linux capabilities],[LIBCAP])
-AS_IF([test "x$with_libcap" != "xno"],[
+SQUID_AUTO_LIB(cap,[Linux capabilities],[LIBCAP])
+AS_IF([test "x$with_cap" != "xno"],[
+  SQUID_STATE_SAVE(squid_libcap_state)
   CXXFLAGS="$LIBCAP_CFLAGS $CXXFLAGS"
   LDFLAGS="$LIBCAP_PATH $LDFLAGS"
-  # cap_clear_flag is the most recent libcap function we require
-  AC_CHECK_HEADERS(sys/capability.h)
-  AC_CHECK_LIB(cap, cap_clear_flag)
+  PKG_CHECK_MODULES([LIBCAP],[libcap >= 2.09],[],[
+    # cap_clear_flag is the most recent libcap function we require
+    AC_CHECK_LIB([cap],[cap_clear_flag],[LIBCAP_LIBS="$LIBCAP_LIBS -lcap"])
+  ])
   SQUID_CHECK_FUNCTIONAL_LIBCAP2
+  AC_MSG_NOTICE([libcap headers are ok: $squid_cv_sys_capability_works])
+  AS_IF([test "x$squid_cv_sys_capability_works" = "xno"],[LIBCAP_LIBS=""])
+  SQUID_STATE_ROLLBACK(squid_libcap_state)
 
-  # if it can't be supported..
-  AS_IF([test "x$ac_cv_header_sys_capability_h" = "xno" -o \
-     "x$ac_cv_lib_cap_cap_clear_flag" = "xno"],[
-    # and it was forced on: error
-    AS_IF([test "x$with_libcap" = "xyes"],[
-      AC_MSG_ERROR([libcap forced enabled but not available or not usable, requires libcap-2.09 or later])
-    ],[
-      # or it can't be supported: disable
-      with_libcap=no
-    ])
+  AS_IF([test "x$LIBCAP_LIBS" != "x"],[
+    with_cap=yes
+    CPPFLAGS="$LIBCAP_CFLAGS $CPPFLAGS"
+    LIBCAP_LIBS="$LIBCAP_PATH $LIBCAP_LIBS"
+    AC_DEFINE(USE_LIBCAP,1,[Linux capabilities library support])
+  ],[test "x$with_cap" = "xyes"],[
+    AC_MSG_ERROR([Required library libcap not found])
   ],[
-    with_libcap=yes
+    AC_MSG_NOTICE([Library libcap not found])
+    with_cap=no
   ])
 ])
-
-SQUID_DEFINE_BOOL(USE_LIBCAP,$with_libcap,
-   [use libcap to set capabilities required for TPROXY])
-AC_MSG_NOTICE([libcap support enabled: $with_libcap])
-SQUID_DEFINE_BOOL(LIBCAP_BROKEN,${squid_cv_sys_capability_works:=no},
-   [libcap2 headers are broken and clashing with glibc])
-AC_MSG_NOTICE([libcap2 headers are ok: $squid_cv_sys_capability_works])
-
+AC_MSG_NOTICE([Linux capabilities support enabled: ${with_cap} ${LIBCAP_LIBS}])
 
 dnl Check for needed libraries
 AC_SEARCH_LIBS([gethostbyname],[nsl resolv bind])
@@ -3149,13 +3143,13 @@ SQUID_DEFINE_BOOL(LINUX_NETFILTER,$enable_linux_netfilter,
 
 dnl Netfilter TPROXY depends on libcap but the NAT parts can still work.
 AC_MSG_NOTICE([Support for Netfilter-based interception proxy requested: $enable_linux_netfilter])
-AS_IF([test "x$enable_linux_netfilter" = "xyes" -a "x$with_libcap" != "xyes"],[
+AS_IF([test "x$enable_linux_netfilter" = "xyes" -a "x$with_cap" != "xyes"],[
   AC_MSG_WARN([Missing needed capabilities (libcap 2.09+) for TPROXY])
   AC_MSG_WARN([Linux Transparent Proxy (version 4+) support WILL NOT be enabled])
   AC_MSG_WARN([Reduced support to NAT Interception Proxy])
   # AC_DEFINEd later
 ])
-AS_IF([test "x$with_netfilter_conntrack" = "xyes" -a "x$with_libcap" != "xyes"],[
+AS_IF([test "x$with_netfilter_conntrack" = "xyes" -a "x$with_cap" != "xyes"],[
   AC_MSG_WARN([Missing needed capabilities (libcap 2.09+) for netfilter mark support])
   AC_MSG_WARN([Linux netfilter marking support WILL NOT be enabled])
   with_netfilter_conntrack=no

@@ -50,6 +50,10 @@
 #include "ip/tools.h"
 #include "time/gadgets.h"
 
+#if HAVE_SYS_CAPABILITY_H
+#include <sys/capability.h>
+#endif
+
 #if _SQUID_WINDOWS_
 
 #if HAVE_WINSOCK2_H
@@ -58,6 +62,7 @@
 #include <winsock.h>
 #endif
 #include <process.h>
+
 #include "fde.h"
 
 #define PINGER_TIMEOUT 5

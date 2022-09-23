@@ -44,6 +44,7 @@ MAKETEST="distcheck"
 #   --with-valgrind-debug \
 #   --with-gnutls \
 #   --with-tdb \
+#   --with-cap \
 #
 #   --enable-cpu-profiling \  Requires CPU support.
 #
