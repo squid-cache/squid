@@ -2675,12 +2675,11 @@ AS_IF([test "x$with_cap" != "xno"],[
     AC_MSG_ERROR([Required library libcap not found])
   ],[
     AC_MSG_NOTICE([Library libcap not found])
+    with_cap=no
   ])
 ])
 SQUID_DEFINE_BOOL(USE_LIBCAP,${with_cap:=yes},[Linux capabilities support])
 AC_MSG_NOTICE([Linux capabilities support enabled: ${with_cap} ${LIBCAP_PATH} ${LIBCAP_LIBS}])
-SQUID_DEFINE_BOOL(LIBCAP_BROKEN,${squid_cv_sys_capability_works:=no},
-   [libcap2 headers are broken and clashing with glibc])
 
 dnl Check for needed libraries
 AC_SEARCH_LIBS([gethostbyname],[nsl resolv bind])
