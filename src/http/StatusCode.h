@@ -93,6 +93,8 @@ inline bool Is1xx(const int sc) { return scContinue <= sc && sc < scOkay; }
 /// whether this response status code prohibits sending Content-Length
 inline bool ProhibitsContentLength(const StatusCode sc) { return sc == scNoContent || Is1xx(sc); }
 
+bool IsReforwardableStatus(const Http::StatusCode);
+
 } // namespace Http
 
 #endif /* _SQUID_SRC_HTTP_STATUSCODE_H */

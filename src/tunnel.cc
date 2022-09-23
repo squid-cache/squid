@@ -31,6 +31,7 @@
 #include "globals.h"
 #include "HappyConnOpener.h"
 #include "http.h"
+#include "http/StatusCode.h"
 #include "http/Stream.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
@@ -187,6 +188,7 @@ public:
     SBuf preReadServerData;
     time_t startTime; ///< object creation time, before any peer selection/connection attempts
     ResolvedPeersPointer destinations; ///< paths for forwarding the request
+    int n_tries; ///< the number of forwarding attempts so far
     bool destinationsFound; ///< At least one candidate path found
     /// whether another destination may be still attempted if the TCP connection
     /// was unexpectedly closed
@@ -231,6 +233,7 @@ public:
 
     void saveError(ErrorState *finalError);
     void sendError(ErrorState *finalError, const char *reason);
+    void forgetError();
 
 private:
     void usePinned();
@@ -259,6 +262,9 @@ private:
     void deleteThis();
 
     void cancelStep(const char *reason);
+
+    /// whether we have used up all permitted forwarding attempts
+    bool exhaustedTries() const;
 
 public:
     bool keepGoingAfterRead(size_t len, Comm::Flag errcode, int xerrno, Connection &from, Connection &to);
@@ -391,12 +397,18 @@ TunnelStateData::checkRetry()
 {
     if (shutting_down)
         return "shutting down";
+    if (exhaustedTries())
+        return "exhausted tries";
     if (!FwdState::EnoughTimeToReForward(startTime))
         return "forwarding timeout";
     if (!retriable)
         return "not retriable";
     if (noConnections())
         return "no connections";
+    if (destinations->empty() && !PeerSelectionInitiator::subscribed)
+        return "no alternative forwarding paths left";
+    if (!Http::IsReforwardableStatus(Http::StatusCode(al->http.code)))
+        return "status code is not reforwardable";
     return nullptr;
 }
 
@@ -407,15 +419,14 @@ TunnelStateData::retryOrBail(const char *context)
 
     const auto *bailDescription = checkRetry();
     if (!bailDescription) {
-        if (!destinations->empty())
-            return startConnecting(); // try connecting to another destination
-
-        if (subscribed) {
+        if (destinations->empty()) {
+            Assure(subscribed);
             debugs(26, 4, "wait for more destinations to try");
-            return; // expect a noteDestination*() call
+            // expect a noteDestination*() call
+        } else {
+            startConnecting(); // try connecting to another destination
         }
-
-        // fall through to bail
+        return;
     }
 
     /* bail */
@@ -1034,6 +1045,9 @@ TunnelStateData::noteConnection(HappyConnOpener::Answer &answer)
 {
     transportWait.finish();
 
+    Must(n_tries <= answer.n_tries); // n_tries cannot decrease
+    n_tries = answer.n_tries;
+
     ErrorState *error = nullptr;
     if ((error = answer.error.get())) {
         Must(!Comm::IsConnOpen(answer.conn));
@@ -1088,6 +1102,12 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
     else {
         notePeerReadyToShovel(conn);
     }
+}
+
+bool
+TunnelStateData::exhaustedTries() const
+{
+    return n_tries >= Config.forward_max_tries;
 }
 
 void
@@ -1310,6 +1330,13 @@ TunnelStateData::saveError(ErrorState *error)
     savedError = error;
 }
 
+void
+TunnelStateData::forgetError()
+{
+    delete savedError; // may be nil
+    savedError = nullptr;
+}
+
 /// Starts sending the given error message to the client, leading to the
 /// eventual transaction termination. Call with savedError to send savedError.
 void
@@ -1357,8 +1384,10 @@ TunnelStateData::startConnecting()
 
     assert(!destinations->empty());
     assert(!transporting());
+    forgetError();
+    al->http.code = Http::scNone;
     const auto callback = asyncCallback(17, 5, TunnelStateData::noteConnection, this);
-    const auto cs = new HappyConnOpener(destinations, callback, request, startTime, 0, al);
+    const auto cs = new HappyConnOpener(destinations, callback, request, startTime, n_tries, al);
     cs->setHost(request->url.host());
     cs->setRetriable(false);
     cs->allowPersistent(false);
@@ -1392,7 +1421,7 @@ TunnelStateData::usePinned()
         sendError(error, "pinned path failure");
         return;
     }
-
+    ++n_tries;
 }
 
 CBDATA_CLASS_INIT(TunnelStateData);
