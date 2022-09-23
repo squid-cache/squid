@@ -2670,7 +2670,8 @@ AS_IF([test "x$with_cap" != "xno"],[
   AS_IF([test "x$LIBCAP_LIBS" != "x"],[
     with_cap=yes
     CPPFLAGS="$LIBCAP_CFLAGS $CPPFLAGS"
-    LDFLAGS="$LIBCAP_PATH $LDFLAGS"
+    LIBCAP_LIBS="$LIBCAP_PATH $LIBCAP_LIBS"
+    AC_DEFINE(USE_LIBCAP,1,[Linux capabilities library support])
   ],[test "x$with_cap" = "xyes"],[
     AC_MSG_ERROR([Required library libcap not found])
   ],[
@@ -2678,8 +2679,7 @@ AS_IF([test "x$with_cap" != "xno"],[
     with_cap=no
   ])
 ])
-SQUID_DEFINE_BOOL(USE_LIBCAP,${with_cap:=yes},[Linux capabilities support])
-AC_MSG_NOTICE([Linux capabilities support enabled: ${with_cap} ${LIBCAP_PATH} ${LIBCAP_LIBS}])
+AC_MSG_NOTICE([Linux capabilities support enabled: ${with_cap} ${LIBCAP_LIBS}])
 
 dnl Check for needed libraries
 AC_SEARCH_LIBS([gethostbyname],[nsl resolv bind])
