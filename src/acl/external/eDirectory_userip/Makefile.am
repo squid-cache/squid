@@ -14,8 +14,7 @@ ext_edirectory_userip_acl_SOURCES = \
 
 ext_edirectory_userip_acl_LDADD = \
 	$(COMPAT_LIB) \
-	$(LDAPLIB) \
-	$(LBERLIB) \
+	$(LIBLDAP_LIBS) \
 	$(XTRA_LIBS)
 
 man_MANS = ext_edirectory_userip_acl.8
