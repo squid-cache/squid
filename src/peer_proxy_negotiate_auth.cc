@@ -14,31 +14,18 @@
 
 #if HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI
 #if USE_APPLE_KRB5
-#define KERBEROS_APPLE_DEPRECATED(x)
 #define GSSKRB_APPLE_DEPRECATED(x)
 #endif
 
 #include "base64.h"
+#include "compat/krb5.h"
 #include "debug/Stream.h"
 #include "peer_proxy_negotiate_auth.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #if HAVE_PROFILE_H
 #include <profile.h>
 #endif              /* HAVE_PROFILE_H */
-#if HAVE_KRB5_H
-#if HAVE_BROKEN_SOLARIS_KRB5_H
-#if defined(__cplusplus)
-#define KRB5INT_BEGIN_DECLS     extern "C" {
-#define KRB5INT_END_DECLS
-KRB5INT_BEGIN_DECLS
-#endif
-#endif
-#include <krb5.h>
-#elif HAVE_ET_COM_ERR_H
+#if HAVE_ET_COM_ERR_H && !HAVE_KRB5_H
 #include <et/com_err.h>
 #endif                          /* HAVE_COM_ERR_H */
 #if HAVE_COM_ERR_H
@@ -579,8 +566,5 @@ cleanup:
     return token;
 }
 
-#ifdef __cplusplus
-}
-#endif
 #endif /* HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI */
 
