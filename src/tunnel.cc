@@ -233,7 +233,6 @@ public:
 
     void saveError(ErrorState *finalError);
     void sendError(ErrorState *finalError, const char *reason);
-    void forgetError();
 
 private:
     void usePinned();
@@ -253,6 +252,7 @@ private:
 
     bool transporting() const;
 
+    // TODO: convert to unique_ptr
     /// details of the "last tunneling attempt" failure (if it failed)
     ErrorState *savedError = nullptr;
 
@@ -409,6 +409,7 @@ TunnelStateData::checkRetry()
         return "no alternative forwarding paths left";
     if (!Http::IsReforwardableStatus(Http::StatusCode(al->http.code)))
         return "status code is not reforwardable";
+    // TODO: check whether a pinned connection can be retried
     return nullptr;
 }
 
@@ -420,7 +421,7 @@ TunnelStateData::retryOrBail(const char *context)
     const auto *bailDescription = checkRetry();
     if (!bailDescription) {
         if (destinations->empty()) {
-            Assure(subscribed);
+            Assure(PeerSelectionInitiator::subscribed);
             debugs(26, 4, "wait for more destinations to try");
             // expect a noteDestination*() call
         } else {
@@ -1076,6 +1077,8 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
         ResetMarkingsToServer(request.getRaw(), *conn);
     // else Comm::ConnOpener already applied proper/current markings
 
+    // TODO: add pconn race state tracking
+
     syncHierNote(conn, origin);
 
 #if USE_DELAY_POOLS
@@ -1330,13 +1333,6 @@ TunnelStateData::saveError(ErrorState *error)
     savedError = error;
 }
 
-void
-TunnelStateData::forgetError()
-{
-    delete savedError; // may be nil
-    savedError = nullptr;
-}
-
 /// Starts sending the given error message to the client, leading to the
 /// eventual transaction termination. Call with savedError to send savedError.
 void
@@ -1384,7 +1380,8 @@ TunnelStateData::startConnecting()
 
     assert(!destinations->empty());
     assert(!transporting());
-    forgetError();
+    delete savedError; // may be nil
+    savedError = nullptr;
     al->http.code = Http::scNone;
     const auto callback = asyncCallback(17, 5, TunnelStateData::noteConnection, this);
     const auto cs = new HappyConnOpener(destinations, callback, request, startTime, n_tries, al);

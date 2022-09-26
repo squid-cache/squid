@@ -92,8 +92,8 @@ const char *StatusCodeString(const Http::StatusCode status);
 inline bool Is1xx(const int sc) { return scContinue <= sc && sc < scOkay; }
 /// whether this response status code prohibits sending Content-Length
 inline bool ProhibitsContentLength(const StatusCode sc) { return sc == scNoContent || Is1xx(sc); }
-
-bool IsReforwardableStatus(const Http::StatusCode);
+/// whether the response with this status can be retried
+bool IsReforwardableStatus(Http::StatusCode);
 
 } // namespace Http
 
