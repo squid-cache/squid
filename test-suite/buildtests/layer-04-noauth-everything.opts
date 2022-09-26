@@ -34,6 +34,9 @@ MAKETEST="distcheck"
 #   --with-po2html=PATH \
 #   --with-tags=TAGS \
 #   --with-cap \
+#   --with-gnugss \
+#   --with-heimdal-krb5 \
+#   --with-mit-krb5 \
 #
 #	Following features require special support from other optional packages.
 #	We can't test them automatically everywhere without detecting those
