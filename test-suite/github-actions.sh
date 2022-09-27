@@ -118,7 +118,7 @@ check_diff() {
         fi
 
         authorEmail=`git show --format="%ae" refs/pull/${PULL_REQUEST_NUMBER}/merge`;
-        if test "$authorEmail" == 'squidadm@users.noreply.github.com'
+        if test "$authorEmail" = 'squidadm@users.noreply.github.com'
         then
             echo "Ignoring 'git diff --check' failure for an automated commit";
             return 0;
