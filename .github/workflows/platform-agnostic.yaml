@@ -8,7 +8,13 @@ on:
     branches: [ "master" ]
 
 env:
+  # empty except for pull_request events
   PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+
+  # We cannot use shallow clones because tests sometimes check for past
+  # commits (e.g., to skip a particular test until the known bug is fixed) or
+  # generate diffs against them (e.g., for `git diff --check`).
+  CHECKOUT_FETCH_DEPTH: 1001
 
 jobs:
 
@@ -18,20 +24,19 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 2
+          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
 
       - uses: actions/setup-node@v3
         with:
           node-version: 16
 
-      - run: echo $PULL_REQUEST_NUMBER and ${{ env.PULL_REQUEST_NUMBER }} and ${{ github.event.pull_request.number }}
       - run: echo ./boostrap.sh
       - run: echo ./configure
       - run: echo make
       - run: sudo echo make install
+      - run: sudo echo chown -R nobody:nogroup /usr/local/squid
       - run: ./test-suite/github-actions.sh check_basic_functionality
       - run: ./test-suite/github-actions.sh check_client_certificate_handling
-
 
   source-maintenance-tests:
     runs-on: ubuntu-22.04
@@ -39,15 +44,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 2
+          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
 
-      - run: echo $PULL_REQUEST_NUMBER and ${{ env.PULL_REQUEST_NUMBER }} and ${{ github.event.pull_request.number }}
       - run: ./test-suite/github-actions.sh check_diff
+        if: success() || failure()
+
       - run: ./test-suite/github-actions.sh check_spelling
+        if: success() || failure()
+
       - run: ./test-suite/github-actions.sh check_source_maintenance
-
-
-
+        if: success() || failure()
+        # TODO: Insist on developers running source-maintenance.sh instead.
+        continue-on-error: true
 
 
 

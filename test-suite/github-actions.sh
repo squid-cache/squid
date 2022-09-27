@@ -3,16 +3,13 @@
 # XXX: https://dev.to/scienta/get-changed-files-in-github-actions-1p36
 # ${{ github.event.pull_request.base.sha }} ${{ github.sha }}
 
-# Empty for commits not triggered by opening of a pull request
-echo "PULL_REQUEST_NUMBER=${PULL_REQUEST_NUMBER}"
-
 if test -z "$@"
 then
     echo "usage: $0 <test-name-to-run> [test-parameters]"
     exit 1
 fi
 
-# XXX: Trailing whitespace on this line      
+# This script requires $PULL_REQUEST_NUMBER for testing PR commits
 
 run_() {
     echo "running: $@"
@@ -21,7 +18,7 @@ run_() {
 
 install_package_() {
     pkg="$1"
-    run_ install-package $pkg > /dev/null
+    run_ sudo apt install -y $pkg > /dev/null
     apt list --installed $pkg
 }
 
@@ -65,18 +62,6 @@ has_commit_by_message_() {
     echo "    regex: " "$@"
     echo "    This code lacks commit $commit or equivalent."
     return 1;
-}
-
-# meant to be executed in the "Setup" job
-setup() {
-    # Semaphore CI is running Ubuntu 14.04 which has a problem with Let's Encrypt
-    # that manifests in bogus "Issued certificate has expired" errors. Based on
-    # https://askubuntu.com/questions/1366704/how-to-install-latest-ca-certificates-on-ubuntu-14#comment2352285_1366719
-    sudo sed -i 's|mozilla/DST_Root_CA_X3.crt|!mozilla//DST_Root_CA_X3.crt|g' /etc/ca-certificates.conf
-    sudo dpkg-reconfigure -fnoninteractive ca-certificates
-
-    install_package_ ed
-    install_package_ libcppunit-dev
 }
 
 build_and_install_for_functionality_checks() {
@@ -124,7 +109,7 @@ check_diff() {
             return 0;
         fi
 
-        echo "PR contains bad whitespace changes."
+        echo "PR may contain bad whitespace changes."
         echo "Please see 'git diff --check' output above for details."
         return 1;
     fi
@@ -298,14 +283,14 @@ check_source_maintenance() {
 
     run_ $checker $copyrightOption no
 
-    if ! run_ git diff --exit-code
+    if run_ git diff --exit-code
     then
-        echo "Squid $checker modified sources as shown in the diff above."
-        echo "Please consider (carefully) applying $checker before merging."
-        # TODO: Insist on developers formatting their sources by returning 1.
-        return 0;
+        return 1; # XXX 0!
     fi
-    return 0;
+
+    echo "Squid $checker modified sources as shown in the diff above."
+    echo "Please consider (carefully) applying $checker before merging."
+    return 1;
 }
 
 show_artifacts() {
