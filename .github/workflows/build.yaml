@@ -2,10 +2,10 @@
 
 on:
   push:
-    branches: [ "master", "v5" ]
+    branches: [ "XXX", "v5" ]
 
   pull_request:
-    branches: [ "master", "v5" ]
+    branches: [ "XXX", "v5" ]
 
 jobs:
   test-builds:
@@ -18,6 +18,14 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v3
-    - run: ./bootstrap.sh # XXX: Remove
-    - run: echo ./test-builds.sh
+
+      - name: Install dependencies on macOS
+        run: |
+           brew install automake
+        if: runner.os == 'macOS'
+
+      - name: Checkout sources
+        uses: actions/checkout@v3
+
+      - run: ./bootstrap.sh # XXX: Remove
+      - run: echo ./test-builds.sh
