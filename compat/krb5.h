@@ -18,7 +18,7 @@
  *
  * - Heimdal may lack the extern "C" syntax for building in C++
  *
- * - Solaris incorrectly implements its own the extern "C" replacment
+ * - Solaris incorrectly implements its own the extern "C" replacement
  *   macros and as a result krb5.h contains a trailing '}'.
  *   see http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512
  *
