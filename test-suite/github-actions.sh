@@ -1,8 +1,10 @@
-set -e
+#!/bin/sh
 
-stamped_echo() {
-    echo "`date --iso-8601=seconds`| $@"
-}
+# XXX: https://dev.to/scienta/get-changed-files-in-github-actions-1p36
+# ${{ github.event.pull_request.base.sha }} ${{ github.sha }}
+
+# Empty for commits not triggered by opening of a pull request
+PULL_REQUEST_NUMBER="$1"
 
 run_() {
     echo "running: $@"
@@ -28,16 +30,6 @@ show_log() {
 # TODO: Remove when unused
 showLog() {
     show_log "$@"
-}
-
-ssh_and_save_result() {
-    if ssh "$@"
-    then
-        last_ssh_result=0
-    else
-        last_ssh_result=$?
-    fi
-    return $last_ssh_result;
 }
 
 fetch_pr_refs_() {
@@ -231,32 +223,48 @@ check_basic_functionality() {
     local url=https://github.com/measurement-factory/squid-overlord/raw/stable2/overlord.pl
     curl -sSL $url | sudo -n --background -u nobody perl - > ~/squid-overlord.log 2>&1
 
-    local attempts=0
-    while ! ssh_and_save_result -F ~/ssh-daft.config daft
+    echo "Test plan: $DAFT_TESTS"
+
+    testIds=`echo "$DAFT_TESTS" | sed 's/[^-a-zA-Z0-9 ]//g'`
+    if test "$testIds" != "$DAFT_TESTS"
+    then
+        echo "Bad test plan."
+        return 1;
+    fi
+
+    result=0
+    runner=/opt/daft/stable/src/cli/daft.js # XXX: Fetch Daft and squid-dafts!
+    for testId in $testIds
     do
-        local result=$last_ssh_result
+        testScript=/opt/daft/stable/tests/$testId.js
 
-        attempts=$(( $attempts + 1))
-
-        if test "$result" -eq 255
+        if ! test -e $testScript
         then
-            if test $attempts -gt 50
-            then
-                stamped_echo "all $attempts attempts exhausted"
-                return $result;
-            fi
-
-            local wait=$(( 30 + $RANDOM % 30 ))
-            stamped_echo "waiting ${wait}s for the Daft service to become available..."
-            sleep $wait
+            echo "Skipping unknown planned test: $testId"
+            result=1
             continue;
         fi
 
-        # all other failures
-        return $result
+        if $runner run $testScript > $testId.log 2>&1
+        then
+            echo "Test $testId: OK"
+        else
+            result=$?
+            echo
+            echo "Test $testId: Failed with exit code $result:"
+            cat $testId.log
+            echo "Test $testId failed. See the test log above for failure details."
+            return $result
+        fi
     done
 
-    return 0
+    if test $result = 0
+    then
+        echo "All tests passed."
+    else
+        echo "Some tests were skipped."
+    fi
+    return $result;
 }
 
 check_source_maintenance() {
