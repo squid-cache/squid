@@ -38,6 +38,7 @@ libcompatsquid_la_SOURCES = \
 	inet_pton.cc \
 	inet_pton.h \
 	initgroups.h \
+	krb5.h \
 	memrchr.cc \
 	memrchr.h \
 	mswindows.cc \

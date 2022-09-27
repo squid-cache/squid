@@ -32,35 +32,12 @@
 
 #define KERBEROS_LDAP_GROUP_VERSION "1.4.0sq"
 
+#include "compat/krb5.h"
+
 #include <cstring>
-
-#if USE_APPLE_KRB5
-#define KERBEROS_APPLE_DEPRECATED(x)
-#endif
-
-#if HAVE_KRB5_H
-#if HAVE_BROKEN_SOLARIS_KRB5_H
-#warn "Warning! You have a broken Solaris <krb5.h> system header"
-#warn "http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512"
-#if defined(__cplusplus)
-#define KRB5INT_BEGIN_DECLS     extern "C" {
-#define KRB5INT_END_DECLS
-KRB5INT_BEGIN_DECLS
-#endif
-#endif /* HAVE_BROKEN_SOLARIS_KRB5_H */
-#if HAVE_BROKEN_HEIMDAL_KRB5_H
-extern "C" {
-#include <krb5.h>
-}
-#else
-#include <krb5.h>
-#endif
-#endif /* HAVE_KRB5_H */
-
 #if HAVE_COM_ERR_H
 #include <com_err.h>
 #endif /* HAVE_COM_ERR_H */
-
 #define LDAP_DEPRECATED 1
 #if HAVE_LDAP_REBIND_FUNCTION
 #define LDAP_REFERRALS
