@@ -16,12 +16,6 @@ run_() {
     "$@"
 }
 
-install_package_() {
-    pkg="$1"
-    run_ sudo apt install -y $pkg > /dev/null
-    apt list --installed $pkg
-}
-
 show_log() {
     log=$1
     if test -e $log;
@@ -185,31 +179,25 @@ check_spelling() {
     return 1;
 }
 
-setup_draft_tests_() {
-    local doneMarker=~/setup_draft_tests_.done
-    if test -e $doneMarker
+start_overlord_() {
+    # TODO: Test whether overlord is running instead.
+    if test -e squid-overlord.log
     then
         return 0;
     fi
 
-     # XXX: Fetch Daft and squid-dafts!
-
     local url=https://github.com/measurement-factory/squid-overlord/raw/stable2/overlord.pl
-    curl -sSL $url | sudo -n --background -u nobody perl - > ~/squid-overlord.log 2>&1
-
-    touch $doneMarker
+    # XXX: Github actions runners prohibit ulimit -c unlimited.
+    curl -sSL $url | sed 's/-c unlimited/-n 10240/' | sudo -n --background -u nobody perl - > squid-overlord.log 2>&1
 }
 
 run_daft_test_() {
     testId="$1"
 
-    setup_draft_tests_ || return
+    start_overlord_ || return
 
-    echo "Test plan: $test"
-
-    result=0
-    runner=/opt/daft/stable/src/cli/daft.js
-    testScript=/opt/daft/stable/tests/$testId.js
+    local runner=extras/daft/src/cli/daft.js
+    local testScript=extras/squid-dafts/tests/$testId.js
 
     if ! test -e $testScript
     then
@@ -217,17 +205,21 @@ run_daft_test_() {
         return 1;
     fi
 
+    echo "Running test: $testId"
+    local result=undefined
     if $runner run $testScript > $testId.log 2>&1
     then
         echo "Test $testId: OK"
         return 0;
+    else
+        result=$?
     fi
-    result=$?
 
     echo
     echo "Test $testId: Failed with exit code $result:"
-    cat $testId.log
-    echo "Test $testId failed. See the test log above for failure details."
+    tail -n 100 $testId.log
+    # TODO: Link to the artifact
+    echo "Test $testId failed. See $testId.log for failure details."
     return $result
 }
 
@@ -280,9 +272,8 @@ check_source_maintenance() {
     # run with whatever astyle is provided, abusing the fact that $checker
     # skips formatting iff it can execute a binary called astyle but does not
     # like astyle's version.
-    install_package_ astyle
 
-    # TODO: Require successful gperf generation, install gperf, and then
+    # TODO: Require successful gperf generation;
     # bootstrap/configure sources to test: make -C src/http gperf-files
 
     touch boilerplate_fix.sed
