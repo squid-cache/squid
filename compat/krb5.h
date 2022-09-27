@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID__COMPAT_KRB5_H_
-#define _SQUID__COMPAT_KRB5_H_
+#ifndef SQUID_COMPAT_KRB5_H
+#define SQUID_COMPAT_KRB5_H
 
 /*
  * The Kerberos library krb5.h header file has various major
