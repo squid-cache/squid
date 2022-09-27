@@ -24,7 +24,7 @@
  *
  * This file exists to fix those issues the best we can and to
  * ensure the logic is identical in Squid code, Squid helpers,
- * and autoconf tests. see acinclude/krb5.h for the later.
+ * and autoconf tests. See acinclude/krb5.h for the latter.
  */
 
 #if HAVE_KRB5_H
