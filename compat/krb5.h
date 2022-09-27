@@ -22,7 +22,7 @@
  *   macros and as a result krb5.h contains a trailing '}'.
  *   see http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512
  *
- * This file exists to fix those issues as best we can and to
+ * This file exists to fix those issues the best we can and to
  * ensure the logic is identical in Squid code, Squid helpers,
  * and autoconf tests. see acinclude/krb5.h for the later.
  */
