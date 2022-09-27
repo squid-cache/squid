@@ -38,49 +38,53 @@ jobs:
       - run: echo make
       - run: sudo echo make install
       - run: sudo echo chown -R nobody:nogroup /usr/local/squid
-      - run: ./test-suite/github-actions.sh check_basic_functionality
-      - run: ./test-suite/github-actions.sh check_client_certificate_handling
+      - run: ./test-suite/github-actions.sh check_pconn
+      - run: ./test-suite/github-actions.sh check_busy_restart
+      - run: ./test-suite/github-actions.sh check_proxy_collapsed_forwarding
+      - run: ./test-suite/github-actions.sh check_proxy_update_headers_after_304
+      - run: ./test-suite/github-actions.sh check_upgrade_protocols
 
-  source-maintenance-tests:
-    runs-on: ubuntu-22.04
+# XXX: uncomment!
+  # source-maintenance-tests:
+  #   runs-on: ubuntu-22.04
 
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
 
-      - run: ./test-suite/github-actions.sh check_diff
-        if: success() || failure()
+  #     - run: ./test-suite/github-actions.sh check_diff
+  #       if: success() || failure()
 
-      - run: ./test-suite/github-actions.sh check_spelling
-        if: success() || failure()
+  #     - run: ./test-suite/github-actions.sh check_spelling
+  #       if: success() || failure()
 
-      - run: ./test-suite/github-actions.sh check_source_maintenance
-        if: success() || failure()
-        # TODO: Insist on developers running source-maintenance.sh instead.
-        continue-on-error: true
+  #     - run: ./test-suite/github-actions.sh check_source_maintenance
+  #       if: success() || failure()
+  #       # TODO: Insist on developers running source-maintenance.sh instead.
+  #       continue-on-error: true
 
-  build-tests:
+  # build-tests:
 
-    strategy:
-      fail-fast: true
-      matrix:
-        os: [ ubuntu-22.04, macos-11 ]
+  #   strategy:
+  #     fail-fast: true
+  #     matrix:
+  #       os: [ ubuntu-22.04, macos-11 ]
 
-    runs-on: ${{ matrix.os }}
+  #   runs-on: ${{ matrix.os }}
 
-    steps:
+  #   steps:
 
-      - name: Install dependencies on macOS
-        run: |
-           brew install automake
-        if: runner.os == 'macOS'
+  #     - name: Install dependencies on macOS
+  #       run: |
+  #          brew install automake
+  #       if: runner.os == 'macOS'
 
-      - name: Checkout sources
-        uses: actions/checkout@v3
+  #     - name: Checkout sources
+  #       uses: actions/checkout@v3
 
-      - run: ./bootstrap.sh # XXX: Remove
-      - run: echo ./test-builds.sh
+  #     - run: ./bootstrap.sh # XXX: Remove
+  #     - run: echo ./test-builds.sh
 
 
 

@@ -72,7 +72,7 @@ build_and_install_for_functionality_checks() {
     sudo chown -R nobody:nogroup /usr/local/squid
 }
 
-check_client_certificate_handling() {
+check_functionality_client_certificate_handling() {
     if ! fgrep -q master_xaction src/cf.data.pre
     then
         echo "No client certificate handling tests for Squid v4 and older";
@@ -185,79 +185,85 @@ check_spelling() {
     return 1;
 }
 
-check_basic_functionality() {
-    # decide which tests to run
-    tests="pconn"
-    tests="$tests busy-restart";
-
-    if has_commit_by_message_ 1af789e 'Do not stall if xactions overwrite a recently active'
+setup_draft_tests_() {
+    local doneMarker=~/setup_draft_tests_.done
+    if test -e $doneMarker
     then
-        tests="$tests proxy-collapsed-forwarding";
-    else
-        echo "No proxy-collapsed-forwarding due to stalling transactions"
+        return 0;
     fi
 
-    if egrep 'AC_INIT.*Proxy.,.[1234][.]' configure.ac
-    then
-        echo "No proxy-update-headers-after-304 until v5";
-    else
-        tests="$tests proxy-update-headers-after-304";
-    fi
-
-    if fgrep -q http_upgrade_request_protocols src/cf.data.pre
-    then
-        tests="$tests upgrade-protocols";
-    else
-        echo "No upgrade-protocols without http_upgrade_request_protocols support";
-    fi
-
-    export DAFT_TESTS="$tests"
+     # XXX: Fetch Daft and squid-dafts!
 
     local url=https://github.com/measurement-factory/squid-overlord/raw/stable2/overlord.pl
     curl -sSL $url | sudo -n --background -u nobody perl - > ~/squid-overlord.log 2>&1
 
-    echo "Test plan: $DAFT_TESTS"
+    touch $doneMarker
+}
 
-    testIds=`echo "$DAFT_TESTS" | sed 's/[^-a-zA-Z0-9 ]//g'`
-    if test "$testIds" != "$DAFT_TESTS"
+run_daft_test_() {
+    testId="$1"
+
+    setup_draft_tests_ || return
+
+    echo "Test plan: $test"
+
+    result=0
+    runner=/opt/daft/stable/src/cli/daft.js
+    testScript=/opt/daft/stable/tests/$testId.js
+
+    if ! test -e $testScript
     then
-        echo "Bad test plan."
+        echo "Unknown test requested: $testId"
         return 1;
     fi
 
-    result=0
-    runner=/opt/daft/stable/src/cli/daft.js # XXX: Fetch Daft and squid-dafts!
-    for testId in $testIds
-    do
-        testScript=/opt/daft/stable/tests/$testId.js
-
-        if ! test -e $testScript
-        then
-            echo "Skipping unknown planned test: $testId"
-            result=1
-            continue;
-        fi
-
-        if $runner run $testScript > $testId.log 2>&1
-        then
-            echo "Test $testId: OK"
-        else
-            result=$?
-            echo
-            echo "Test $testId: Failed with exit code $result:"
-            cat $testId.log
-            echo "Test $testId failed. See the test log above for failure details."
-            return $result
-        fi
-    done
-
-    if test $result = 0
+    if $runner run $testScript > $testId.log 2>&1
     then
-        echo "All tests passed."
-    else
-        echo "Some tests were skipped."
+        echo "Test $testId: OK"
+        return 0;
     fi
-    return $result;
+    result=$?
+
+    echo
+    echo "Test $testId: Failed with exit code $result:"
+    cat $testId.log
+    echo "Test $testId failed. See the test log above for failure details."
+    return $result
+}
+
+check_pconn() {
+    run_daft_test_ pconn
+}
+
+check_busy_restart() {
+    run_daft_test_ busy-restart
+}
+
+check_proxy_collapsed_forwarding() {
+    if ! has_commit_by_message_ 1af789e 'Do not stall if xactions overwrite a recently active'
+    then
+        echo "No proxy-collapsed-forwarding due to stalling transactions"
+        return 0;
+    fi
+    run_daft_test_ proxy-collapsed-forwarding
+}
+
+check_proxy_update_headers_after_304() {
+    if egrep 'AC_INIT.*Proxy.,.[1234][.]' configure.ac
+    then
+        echo "No proxy-update-headers-after-304 until v5";
+        return 0;
+    fi
+    run_daft_test_ proxy-update-headers-after-304
+}
+
+check_upgrade_protocols() {
+    if ! fgrep -q http_upgrade_request_protocols src/cf.data.pre
+    then
+        echo "No upgrade-protocols without http_upgrade_request_protocols support";
+        return 0;
+    fi
+    run_daft_test_ upgrade-protocols
 }
 
 check_source_maintenance() {
