@@ -1,11 +1,12 @@
-# These tests are unlikely to detect more problems if ran on more platforms.
+# Test the default branch, supported releases, and their PRs
+name: GitHub CI tests
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "v5" ]
 
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "v5" ]
 
 env:
   # empty except for pull_request events
@@ -22,16 +23,18 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout sources
+        uses: actions/checkout@v3
         with:
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
 
-      - uses: actions/setup-node@v3
+      - name: Setup a nodejs environment
+        uses: actions/setup-node@v3
         with:
           node-version: 16
 
       - run: echo ./boostrap.sh
-      - run: echo ./configure
+      - run: echo ./configure --with-openssl
       - run: echo make
       - run: sudo echo make install
       - run: sudo echo chown -R nobody:nogroup /usr/local/squid
@@ -56,6 +59,28 @@ jobs:
         if: success() || failure()
         # TODO: Insist on developers running source-maintenance.sh instead.
         continue-on-error: true
+
+  build-tests:
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ ubuntu-22.04, macos-11 ]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+      - name: Install dependencies on macOS
+        run: |
+           brew install automake
+        if: runner.os == 'macOS'
+
+      - name: Checkout sources
+        uses: actions/checkout@v3
+
+      - run: ./bootstrap.sh # XXX: Remove
+      - run: echo ./test-builds.sh
 
 
 
