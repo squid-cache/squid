@@ -1,0 +1,50 @@
+# These tests are unlikely to detect more problems if ran on more platforms.
+
+on:
+  push:
+    branches: [ "master" ]
+
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  functionality-tests:
+    runs-on: ubuntu-22.04
+
+    env:
+      PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 2
+
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 16
+
+    - run: echo ./boostrap.sh
+    - run: echo ./configure
+    - run: echo make
+    - run: sudo echo make install
+    - run: ./test-suite/github-actions.sh check_basic_functionality
+    - run: ./test-suite/github-actions.sh check_client_certificate_handling
+
+
+  source-maintenance-tests:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 2
+
+    - run: ./test-suite/github-actions.sh check_diff
+    - run: ./test-suite/github-actions.sh check_spelling
+    - run: ./test-suite/github-actions.sh check_source_maintenance
+
+
+
+
+
+

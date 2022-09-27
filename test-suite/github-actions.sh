@@ -4,7 +4,15 @@
 # ${{ github.event.pull_request.base.sha }} ${{ github.sha }}
 
 # Empty for commits not triggered by opening of a pull request
-PULL_REQUEST_NUMBER="$1"
+echo "PULL_REQUEST_NUMBER=${PULL_REQUEST_NUMBER}"
+
+if test -z "$@"
+then
+    echo "usage: $0 <test-name-to-run> [test-parameters]"
+    exit 1
+fi
+
+# XXX: Trailing whitespace on this line      
 
 run_() {
     echo "running: $@"
@@ -309,3 +317,7 @@ show_artifacts() {
 after_job() {
     show_artifacts
 }
+
+# run the command specified by the parameter
+"$@"
+

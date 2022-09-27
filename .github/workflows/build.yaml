@@ -1,0 +1,23 @@
+# Test build on various platforms
+
+on:
+  push:
+    branches: [ "master", "v5" ]
+
+  pull_request:
+    branches: [ "master", "v5" ]
+
+jobs:
+  test-builds:
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ ubuntu-22.04, macos-11 ]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v3
+    - run: ./bootstrap.sh # XXX: Remove
+    - run: echo ./test-builds.sh
