@@ -113,7 +113,7 @@ buildtest() {
     # with the right parameters. TODO: Make less noisy.
     grep -E "BUILD" ${log}
 
-    errors="^ERROR|\ error:|\ Error\ |No\ such|assertion\ failed|FAIL:|:\ undefined"
+    errors="^ERROR|[ ]error:|[ ]Error[ ]|No[ ]such|assertion[ ]failed|FAIL:|:[ ]undefined"
     grep -E "${errors}" ${log}
 
     if test $result -eq 0; then
