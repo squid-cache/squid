@@ -67,7 +67,7 @@ jobs:
       - run: ./configure --with-openssl
         working-directory: sources
 
-      - run: make
+      - run: make -j2
         working-directory: sources
 
       - run: |
@@ -92,65 +92,63 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: test-logs.zip
+          name: test-logs
           path: |
             ./*.log
             /usr/local/squid/var/logs/overlord/
 
-# XXX: uncomment!
-  # source-maintenance-tests:
-  #   runs-on: ubuntu-22.04
+  source-maintenance-tests:
+    runs-on: ubuntu-22.04
 
-  #   steps:
-      # - name: Install prerequisite packages
-      # - run: |
-      #     sudo apt-get update
-      #     sudo apt-get install astyle
-      #     sudo apt-get install gperf
-  #       if: runner.os == 'Linux'
+    steps:
+      - name: Install prerequisite packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install astyle
+          sudo apt-get install gperf
+        if: runner.os == 'Linux'
 
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
 
-  #     - run: ./test-suite/github-actions.sh check_diff
-  #       if: success() || failure()
+      - run: ./test-suite/github-actions.sh check_diff
+        if: success() || failure()
 
-  #     - run: ./test-suite/github-actions.sh check_spelling
-  #       if: success() || failure()
+      - run: ./test-suite/github-actions.sh check_spelling
+        if: success() || failure()
 
-  #     - run: ./test-suite/github-actions.sh check_source_maintenance
-  #       if: success() || failure()
-  #       # TODO: Insist on developers running source-maintenance.sh instead.
-  #       continue-on-error: true
+      - run: ./test-suite/github-actions.sh check_source_maintenance
+        if: success() || failure()
+        # TODO: Insist on developers running source-maintenance.sh instead.
+        continue-on-error: true
 
-  # build-tests:
+  build-tests:
 
-  #   strategy:
-  #     fail-fast: true
-  #     matrix:
-  #       os: [ ubuntu-22.04, macos-11 ]
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ ubuntu-22.04, macos-11 ]
 
-  #   runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
 
-  #   steps:
+    steps:
 
-      # - name: Install prerequisite Linux packages
-      # - run: |
-      #     sudo apt-get update
-      #     sudo apt-get install libtool-bin
-  #       if: runner.os == 'Linux'
+      - name: Install prerequisite Linux packages
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libtool-bin
+          sudo apt-get install libcppunit-dev
 
-  #     - name: Install prerequisite macOS packages
-  #       run: |
-  #          brew install automake
-  #       if: runner.os == 'macOS'
+      - name: Install prerequisite macOS packages
+        if: runner.os == 'macOS'
+        run: |
+           brew install automake
+           brew install cppunit
 
-  #     - name: Checkout sources
-  #       uses: actions/checkout@v3
+      - name: Checkout sources
+        uses: actions/checkout@v3
 
-  #     - run: ./bootstrap.sh # XXX: Remove
-  #     - run: echo ./test-builds.sh
-
-
+      - run: ./test-builds.sh
 

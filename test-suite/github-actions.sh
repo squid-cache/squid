@@ -16,21 +16,6 @@ run_() {
     "$@"
 }
 
-show_log() {
-    log=$1
-    if test -e $log;
-    then
-        echo "Log: $log";
-        ls -l $log
-        cat $log;
-    fi
-}
-
-# TODO: Remove when unused
-showLog() {
-    show_log "$@"
-}
-
 fetch_pr_refs_() {
     # quiet "adding host key" warnings
     export GIT_SSH_COMMAND="ssh -o LogLevel=ERROR"
@@ -288,16 +273,6 @@ check_source_maintenance() {
     echo "Squid $checker modified sources as shown in the diff above."
     echo "Please consider (carefully) applying $checker before merging."
     return 1;
-}
-
-show_artifacts() {
-    show_log /usr/local/squid/var/logs/overlord/squid.out
-    show_log ~/squid-overlord.log
-}
-
-# meant to be executed in the "After job" job
-after_job() {
-    show_artifacts
 }
 
 # run the command specified by the parameter
