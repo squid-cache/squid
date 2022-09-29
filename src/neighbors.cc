@@ -1275,30 +1275,33 @@ peerRefreshDNS(void *data)
     eventAddIsh("peerRefreshDNS", peerRefreshDNS, nullptr, 3600.0, 1);
 }
 
-static void
-peerConnectFailedSilent(CachePeer * p)
+// TODO: Move to CachePeer::noteFailure() or similar.
+// TODO: Require callers to detail failures instead of using one (and often
+// misleading!) "TCP" label for all of them.
+void
+peerConnectFailed(CachePeer * const p)
 {
     p->stats.last_connect_failure = squid_curtime;
+    if (p->tcp_up > 0)
+        --p->tcp_up;
 
-    if (!p->tcp_up) {
-        debugs(15, 2, "TCP connection to " << p->host << "/" << p->http_port <<
-               " dead");
-        return;
+    // TODO: Report peer name. Same-addresses peers often have different names.
+
+    const auto consideredAliveByAdmin = p->stats.logged_state == PEER_ALIVE;
+    const auto level = consideredAliveByAdmin ? DBG_IMPORTANT : 2;
+    debugs(15, level, "ERROR: TCP connection to " << p->host << "/" << p->http_port << " failed");
+
+    if (consideredAliveByAdmin) {
+        if (!p->tcp_up) {
+            debugs(15, DBG_IMPORTANT, "Detected DEAD " << neighborTypeStr(p) << ": " << p->name);
+            p->stats.logged_state = PEER_DEAD;
+        } else {
+            debugs(15, 2, "additional failures needed to mark this cache_peer DEAD: " << p->tcp_up);
+        }
+    } else {
+        assert(!p->tcp_up);
+        debugs(15, 2, "cache_peer " << p->host << "/" << p->http_port << " is still DEAD");
     }
-
-    -- p->tcp_up;
-
-    if (!p->tcp_up) {
-        debugs(15, DBG_IMPORTANT, "Detected DEAD " << neighborTypeStr(p) << ": " << p->name);
-        p->stats.logged_state = PEER_DEAD;
-    }
-}
-
-void
-peerConnectFailed(CachePeer *p)
-{
-    debugs(15, DBG_IMPORTANT, "ERROR: TCP connection to " << p->host << "/" << p->http_port << " failed");
-    peerConnectFailedSilent(p);
 }
 
 void
@@ -1368,7 +1371,7 @@ peerProbeConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int
     if (status == Comm::OK) {
         peerConnectSucceded(p);
     } else {
-        peerConnectFailedSilent(p);
+        peerConnectFailed(p);
     }
 
     -- p->testing_now;
