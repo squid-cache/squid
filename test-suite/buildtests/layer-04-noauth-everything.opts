@@ -37,6 +37,7 @@ MAKETEST="distcheck"
 #   --with-gnugss \
 #   --with-heimdal-krb5 \
 #   --with-mit-krb5 \
+#   --with-ldap \
 #
 #	Following features require special support from other optional packages.
 #	We can't test them automatically everywhere without detecting those
@@ -113,7 +114,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--with-gnu-ld \
 	--with-ipv6-split-stack \
 	--with-large-files \
-	--with-ldap \
 	--with-pic \
 	--with-pthreads \
 	--enable-build-info=squid\ test\ build \
