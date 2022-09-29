@@ -94,52 +94,45 @@ krb5_context kc; kc->max_skew = 1;
   ])
 ])
 
-dnl check whether the kerberos context has a memory cache. Sets
-dnl squid_cv_memory_cache if that's the case.
+dnl check whether the kerberos context has a memory cache.
 AC_DEFUN([SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE],[
-  AC_CACHE_CHECK([for memory cache], squid_cv_memory_cache, [
+  AC_CACHE_CHECK([for memory cache],squid_cv_memory_cache,[
     SQUID_STATE_SAVE(squid_krb5_test)
     CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
     AC_RUN_IFELSE([
-      AC_LANG_SOURCE([[
-#include "compat/krb5.h"
-int main(int argc, char *argv[])
-{
-    krb5_context context;
-    krb5_ccache cc;
-
-    krb5_init_context(&context);
-    return krb5_cc_resolve(context, "MEMORY:test_cache", &cc);
-}
+      AC_LANG_PROGRAM([[#include "compat/krb5.h"]],[[
+        krb5_context context;
+        krb5_ccache cc;
+        krb5_init_context(&context);
+        return krb5_cc_resolve(context, "MEMORY:test_cache", &cc);
       ]])
-    ], [ squid_cv_memory_cache=yes ], [ squid_cv_memory_cache=no ], [:])
+    ],[squid_cv_memory_cache=yes],[squid_cv_memory_cache=no],[:])
     SQUID_STATE_ROLLBACK(squid_krb5_test)
+  ])
+  AS_IF([test "x$squid_cv_memory_cache" = "xyes"],[
+    AC_DEFINE(HAVE_KRB5_MEMORY_CACHE,1,[Define to 1 if kerberos has MEMORY: cache support])
   ])
 ])
 
-dnl check whether the kerberos context has a memory keytab. Sets
-dnl squid_cv_memory_keytab if that's the case.
+dnl check whether the kerberos context has a memory keytab.
 AC_DEFUN([SQUID_CHECK_KRB5_CONTEXT_MEMORY_KEYTAB],[
-  AC_CACHE_CHECK([for memory keytab], squid_cv_memory_keytab, [
+  AC_CACHE_CHECK([for memory keytab],squid_cv_memory_keytab,[
     SQUID_STATE_SAVE(squid_krb5_test)
     CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
     AC_RUN_IFELSE([
-      AC_LANG_SOURCE([[
-#include "compat/krb5.h"
-int main(int argc, char *argv[])
-{
-    krb5_context context;
-    krb5_keytab kt;
-
-    krb5_init_context(&context);
-    return krb5_kt_resolve(context, "MEMORY:test_keytab", &kt);
-}
+      AC_LANG_PROGRAM([[#include "compat/krb5.h"]],[[
+        krb5_context context;
+        krb5_keytab kt;
+        krb5_init_context(&context);
+        return krb5_kt_resolve(context, "MEMORY:test_keytab", &kt);
       ]])
-    ], [ squid_cv_memory_keytab=yes ], [ squid_cv_memory_keytab=no ], [:])
+    ],[squid_cv_memory_keytab=yes],[squid_cv_memory_keytab=no],[:])
     SQUID_STATE_ROLLBACK(squid_krb5_test)
   ])
+  AS_IF([test "x$squid_cv_memory_keytab" = "xyes"],[
+    AC_DEFINE(HAVE_KRB5_MEMORY_KEYTAB,1,[Define to 1 if kerberos has MEMORY: keytab support])
+  ])
 ])
-
 
 dnl checks that gssapi is ok, and sets squid_cv_working_gssapi accordingly
 AC_DEFUN([SQUID_CHECK_WORKING_GSSAPI], [
@@ -324,12 +317,7 @@ AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
       [Define to 1 if you have gsskrb5_extract_authz_data_from_sec_context]),)
 
   SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE
-  SQUID_DEFINE_BOOL(HAVE_KRB5_MEMORY_CACHE,$squid_cv_memory_cache,
-       [Define if kerberos has MEMORY: cache support])
-
   SQUID_CHECK_KRB5_CONTEXT_MEMORY_KEYTAB
-  SQUID_DEFINE_BOOL(HAVE_KRB5_MEMORY_KEYTAB,$squid_cv_memory_keytab,
-       [Define if kerberos has MEMORY: keytab support])
 
   SQUID_CHECK_WORKING_GSSAPI
   SQUID_DEFINE_BOOL(HAVE_GSSAPI,$squid_cv_working_gssapi,[GSSAPI support])
