@@ -165,8 +165,7 @@ check_spelling() {
 }
 
 start_overlord_() {
-    # TODO: Test whether overlord is running instead.
-    if test -e squid-overlord.log
+    if test -e squid-overlord.log && curl -H 'Pop-Version: 4' --no-progress-meter http://localhost:13128/check > /dev/null
     then
         return 0;
     fi
