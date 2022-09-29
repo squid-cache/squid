@@ -324,10 +324,11 @@ SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Woverloaded-virtual])
 dnl CentOS (and RHEL) still define ntohs() using deprecated C++ features
 SQUID_CC_REQUIRE_ARGUMENT([ac_cv_require_wno_deprecated_register],[-Werror -Wno-deprecated-register],[[#include <arpa/inet.h>]],[[int fox=ntohs(1);]])
 
-AS_IF([test "x$enable_strict_error_checking" != "xno"],[
-  SQUID_CFLAGS="$SQUID_CFLAGS $squid_cv_cc_option_werror"
-  SQUID_CXXFLAGS="$SQUID_CXXFLAGS $squid_cv_cxx_option_werror"
-])
+dnl XXX: Restore
+dnl AS_IF([test "x$enable_strict_error_checking" != "xno"],[
+dnl   SQUID_CFLAGS="$SQUID_CFLAGS $squid_cv_cc_option_werror"
+dnl   SQUID_CXXFLAGS="$SQUID_CXXFLAGS $squid_cv_cxx_option_werror"
+dnl ])
 
 AS_IF([test "x$ac_cv_require_wno_deprecated_register" = "xyes"],[
   SQUID_CXXFLAGS="$SQUID_CXXFLAGS -Wno-deprecated-register"
