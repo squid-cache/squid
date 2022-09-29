@@ -1275,32 +1275,6 @@ peerRefreshDNS(void *data)
     eventAddIsh("peerRefreshDNS", peerRefreshDNS, nullptr, 3600.0, 1);
 }
 
-static void
-peerConnectFailedSilent(CachePeer * p)
-{
-    p->stats.last_connect_failure = squid_curtime;
-
-    if (!p->tcp_up) {
-        debugs(15, 2, "TCP connection to " << p->host << "/" << p->http_port <<
-               " dead");
-        return;
-    }
-
-    -- p->tcp_up;
-
-    if (!p->tcp_up) {
-        debugs(15, DBG_IMPORTANT, "Detected DEAD " << neighborTypeStr(p) << ": " << p->name);
-        p->stats.logged_state = PEER_DEAD;
-    }
-}
-
-void
-peerConnectFailed(CachePeer *p)
-{
-    debugs(15, DBG_IMPORTANT, "ERROR: TCP connection to " << p->host << "/" << p->http_port << " failed");
-    peerConnectFailedSilent(p);
-}
-
 void
 peerConnectSucceded(CachePeer * p)
 {
@@ -1368,7 +1342,7 @@ peerProbeConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int
     if (status == Comm::OK) {
         peerConnectSucceded(p);
     } else {
-        peerConnectFailedSilent(p);
+        p->peerConnectFailedSilent();
     }
 
     -- p->testing_now;

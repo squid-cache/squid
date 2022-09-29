@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "acl/FilledChecklist.h"
 #include "CachePeer.h"
 #include "comm/Connection.h"
 #include "errorpage.h"
@@ -75,8 +76,12 @@ Security::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
         // It is not clear whether we should call peerConnectSucceeded/Failed()
         // based on TCP results, SSL results, or both. And the code is probably not
         // consistent in this aspect across tunnelling and forwarding modules.
-        if (peer && peer->secure.encryptTransport)
-            peerConnectFailed(peer);
+        if (peer && peer->secure.encryptTransport) {
+            ACLFilledChecklist ch(Config.accessList.cachePeerFault, request.getRaw(), nullptr);
+            ch.al = al;
+            ch.syncAle(request.getRaw(), nullptr);
+            peer->peerConnectFailed(ch);
+        }
         return;
     }
 

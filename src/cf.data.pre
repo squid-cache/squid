@@ -4005,6 +4005,22 @@ DOC_START
 
 DOC_END
 
+NAME: cache_peer_fault
+TYPE: acl_access
+DEFAULT: none
+DEFAULT_DOC: Blame cache peer for certain errors
+LOC: Config.accessList.cachePeerFault
+DEFAULT: none
+DOC_START
+
+		cache_peer_fault allow|deny [!]aclname ...
+
+	Use this directive to control whether an error response from a cache_peer
+	should be counted as a peer failure or a problem unrelated to the peer
+	health.
+
+DOC_END
+
 NAME: neighbor_type_domain
 TYPE: hostdomaintype
 DEFAULT: none

@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "acl/FilledChecklist.h"
 #include "base/AsyncCallbacks.h"
 #include "base/RunnersRegistry.h"
 #include "CachePeer.h"
@@ -86,7 +87,10 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
     }
 
     if (params.flag != Comm::OK) {
-        peerConnectFailed(peer);
+        ACLFilledChecklist ch;
+        ch.src_addr = params.conn->remote;
+        ch.my_addr = params.conn->local;
+        peer->peerConnectFailed(ch);
         checkpoint("conn opening failure"); // may retry
         return;
     }

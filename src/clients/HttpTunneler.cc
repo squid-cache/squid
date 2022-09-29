@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "acl/FilledChecklist.h"
 #include "base/Raw.h"
 #include "CachePeer.h"
 #include "clients/HttpTunneler.h"
@@ -90,7 +91,7 @@ Http::Tunneler::handleConnectionClosure(const CommCloseCbParams &)
 {
     closer = nullptr;
     if (connection) {
-        countFailingConnection();
+        countFailingConnection(nullptr);
         connection->noteClosure();
         connection = nullptr;
     }
@@ -355,7 +356,7 @@ Http::Tunneler::bailWith(ErrorState *error)
 
     if (const auto failingConnection = connection) {
         // TODO: Reuse to-peer connections after a CONNECT error response.
-        countFailingConnection();
+        countFailingConnection(error);
         disconnect();
         failingConnection->close();
     }
@@ -374,11 +375,19 @@ Http::Tunneler::sendSuccess()
 }
 
 void
-Http::Tunneler::countFailingConnection()
+Http::Tunneler::countFailingConnection(ErrorState *error)
 {
     assert(connection);
-    if (const auto p = connection->getPeer())
-        peerConnectFailed(p);
+    if (const auto p = connection->getPeer()) {
+        ACLFilledChecklist ch(Config.accessList.cachePeerFault, request.getRaw(), nullptr);
+        ch.al = al;
+        ch.syncAle(request.getRaw(), nullptr);
+        if (error) {
+            ch.reply = error->response_.getRaw();
+            HTTPMSGLOCK(ch.reply);
+        }
+        p->peerConnectFailed(ch);
+    }
     if (noteFwdPconnUse && connection->isOpen())
         fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);
 }

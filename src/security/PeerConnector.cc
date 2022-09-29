@@ -12,6 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "base/AsyncCallbacks.h"
 #include "base/IoManip.h"
+#include "CachePeer.h"
 #include "comm/Loops.h"
 #include "comm/Read.h"
 #include "Downloader.h"
@@ -529,8 +530,11 @@ void
 Security::PeerConnector::countFailingConnection()
 {
     assert(serverConn);
-    if (const auto p = serverConn->getPeer())
-        peerConnectFailed(p);
+    if (const auto p = serverConn->getPeer()) {
+        ACLFilledChecklist ch(Config.accessList.cachePeerFault, request.getRaw(), nullptr);
+        fillChecklist(ch);
+        p->peerConnectFailed(ch);
+    }
     // TODO: Calling PconnPool::noteUses() should not be our responsibility.
     if (noteFwdPconnUse && serverConn->isOpen())
         fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);

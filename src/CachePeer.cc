@@ -7,9 +7,11 @@
  */
 
 #include "squid.h"
+#include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "CachePeer.h"
 #include "defines.h"
+#include "neighbors.h"
 #include "NeighborTypeDomainList.h"
 #include "pconn.h"
 #include "PeerPoolMgr.h"
@@ -55,3 +57,35 @@ CachePeer::connectTimeout() const
     return Config.Timeout.peer_connect;
 }
 
+void
+CachePeer::peerConnectFailed(ACLFilledChecklist &checklist)
+{
+    debugs(15, DBG_IMPORTANT, "ERROR: TCP connection to " << host << "/" << http_port << " failed");
+
+    if (!Config.accessList.cachePeerFault)
+        return;
+
+    if (!checklist.fastCheck().allowed())
+        return;
+
+    peerConnectFailedSilent();
+}
+
+void
+CachePeer::peerConnectFailedSilent()
+{
+    stats.last_connect_failure = squid_curtime;
+
+    if (!tcp_up) {
+        debugs(15, 2, "TCP connection to " << host << "/" << http_port <<
+               " dead");
+        return;
+    }
+
+    --tcp_up;
+
+    if (!tcp_up) {
+        debugs(15, DBG_IMPORTANT, "Detected DEAD " << neighborTypeStr(this) << ": " << name);
+        stats.logged_state = PEER_DEAD;
+    }
+}

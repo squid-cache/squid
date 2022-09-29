@@ -35,6 +35,10 @@ public:
     /// \returns the effective connect timeout for the given peer
     time_t connectTimeout() const;
 
+    void peerConnectFailed(ACLFilledChecklist &);
+
+    void peerConnectFailedSilent();
+
     u_int index = 0;
     char *name = nullptr;
     char *host = nullptr;
