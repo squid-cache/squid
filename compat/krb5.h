@@ -46,4 +46,8 @@
 #  endif
 #endif /* HAVE_KRB5_H */
 
+#if HAVE_MAX_SKEW_IN_KRB5_CONTEXT
+#define krb5_get_max_time_skew(x) (x)->max_skew
+#endif
+
 #endif /* _SQUID__COMPAT_KRB5_H */

@@ -77,20 +77,44 @@ AC_DEFUN([SQUID_CHECK_WORKING_KRB5],[
   ])
 ])
 
-dnl check the max skew in the krb5 context, and sets squid_cv_max_skew_context
-AC_DEFUN([SQUID_CHECK_MAX_SKEW_IN_KRB5_CONTEXT],[
-  AC_CACHE_CHECK([for max_skew in struct krb5_context],
-                  squid_cv_max_skew_context, [
+dnl check how to access the max skew in the krb5 context
+AC_DEFUN([SQUID_CHECK_KRB5_GET_MAX_TIME_SKEW],[
+  AC_CACHE_CHECK([for max_skew in struct krb5_context],squid_cv_max_skew_context,[
     SQUID_STATE_SAVE(squid_krb5_test)
     CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
-    AC_COMPILE_IFELSE([
-      AC_LANG_PROGRAM([[
-#include "compat/krb5.h"
-krb5_context kc; kc->max_skew = 1;
-      ]])
-    ],[ squid_cv_max_skew_context=yes ],
-    [ squid_cv_max_skew_context=no ])
+    AC_CHECK_LIB(krb5,[krb5_get_max_time_skew],[
+      squid_cv_max_skew_context="yes"],[
+      AC_COMPILE_IFELSE([
+        AC_LANG_PROGRAM([[#include "compat/krb5.h"]],[[krb5_context kc; kc->max_skew = 1;]])
+      ],[squid_cv_max_skew_context=replace],[squid_cv_max_skew_context=no],[squid_cv_max_skew_context=no])
+    ])
     SQUID_STATE_ROLLBACK(squid_krb5_test)
+  ])
+  AS_IF([test "x$squid_cv_max_skew_context" = "xreplace"],[
+    AC_DEFINE(HAVE_MAX_SKEW_IN_KRB5_CONTEXT,1,[Define to 1 if krb5_get_max_time_skew() needs replacing])
+  ])
+  AS_IF([test "x$squid_cv_max_skew_context" != "xno"],[
+    AC_DEFINE(HAVE_KRB5_GET_MAX_TIME_SKEW,1,[Define to 1 if you have krb5_get_max_time_skew])
+  ])
+])
+
+dnl check whether krb5_get_init_creds_opt_free() requires a context
+AC_DEFUN([SQUID_CHECK_KRB5_GET_INIT_CREDS_FREE_CONTEXT],[
+  AC_CACHE_CHECK([for krb5_get_init_creds_free requires krb5_context],
+    squid_cv_krb5_get_init_creds_free_context,[
+    SQUID_STATE_SAVE(squid_krb5_test)
+    CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include "compat/krb5.h"
+      ]],[[krb5_context context;
+        krb5_get_init_creds_opt *options = nullptr;
+        krb5_get_init_creds_opt_free(context, options)]])],
+    [squid_cv_krb5_get_init_creds_free_context=yes],
+    [squid_cv_krb5_get_init_creds_free_context=no],[:])
+    SQUID_STATE_ROLLBACK(squid_krb5_test)
+  ])
+  AS_IF([test "x$squid_cv_krb5_get_init_creds_free_context" = "xyes"],[
+    AC_DEFINE(HAVE_KRB5_GET_INIT_CREDS_FREE_CONTEXT,1,[Define to 1 if you krb5_get_init_creds_free requires krb5_context])
   ])
 ])
 
@@ -274,9 +298,6 @@ AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
   AC_CHECK_LIB(krb5,krb5_get_init_creds_keytab,
     AC_DEFINE(HAVE_GET_INIT_CREDS_KEYTAB,1,
       [Define to 1 if you have krb5_get_init_creds_keytab]),)
-  AC_CHECK_LIB(krb5,krb5_get_max_time_skew,
-    AC_DEFINE(HAVE_KRB5_GET_MAX_TIME_SKEW,1,
-      [Define to 1 if you have krb5_get_max_time_skew]),)
   AC_CHECK_LIB(krb5,krb5_get_profile,
     AC_DEFINE(HAVE_KRB5_GET_PROFILE,1,
       [Define to 1 if you have krb5_get_profile]),)
@@ -295,19 +316,6 @@ AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
   AC_CHECK_LIB(krb5, krb5_get_init_creds_opt_alloc,
     AC_DEFINE(HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC,1,
       [Define to 1 if you have krb5_get_init_creds_opt_alloc]),)
-  AC_MSG_CHECKING([for krb5_get_init_creds_free requires krb5_context])
-  SQUID_STATE_SAVE(squid_krb5_test)
-  CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include "compat/krb5.h"
-    ]],[[krb5_context context;
-	 krb5_get_init_creds_opt *options;
-	 krb5_get_init_creds_opt_free(context, options)]])],[
-	AC_DEFINE(HAVE_KRB5_GET_INIT_CREDS_FREE_CONTEXT,1,
-		  [Define to 1 if you krb5_get_init_creds_free requires krb5_context])
-	AC_MSG_RESULT(yes)
-    ],[AC_MSG_RESULT(no)],[AC_MSG_RESULT(no)])
-  SQUID_STATE_ROLLBACK(squid_krb5_test)
 
   AC_CHECK_FUNCS(gss_map_name_to_any,
     AC_DEFINE(HAVE_GSS_MAP_ANY_TO_ANY,1,
@@ -316,6 +324,8 @@ AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
     AC_DEFINE(HAVE_GSSKRB5_EXTRACT_AUTHZ_DATA_FROM_SEC_CONTEXT,1,
       [Define to 1 if you have gsskrb5_extract_authz_data_from_sec_context]),)
 
+  SQUID_CHECK_KRB5_GET_MAX_TIME_SKEW
+  SQUID_CHECK_KRB5_GET_INIT_CREDS_FREE_CONTEXT
   SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE
   SQUID_CHECK_KRB5_CONTEXT_MEMORY_KEYTAB
 
