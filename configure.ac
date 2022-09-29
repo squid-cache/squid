@@ -1331,6 +1331,7 @@ AS_IF([test "x$with_mit_krb5" != "xno" -a "x$with_solaris_krb5" != "xyes"],[
     AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
     AC_CHECK_HEADERS(profile.h)
 
+    SQUID_CHECK_WORKING_KRB5($KRB5_FLAVOUR)
     SQUID_CHECK_KRB5_FUNCS
   ])
   AS_IF([test "x$with_mit_krb5" = "xyes" -a "x$KRB5LIBS" = "x"],[
@@ -1404,14 +1405,7 @@ AS_IF([test "x$with_solaris_krb5" = "xyes" -a "x$KRB5LIBS" = "x"],[
     AC_CHECK_HEADERS(gssapi/gssapi.h gssapi/gssapi_ext.h)
     AC_CHECK_HEADERS(krb5.h com_err.h)
 
-    SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H
-    AS_IF([test "x$squid_cv_broken_krb5_h" = "xyes"],[
-      AC_DEFINE(HAVE_BROKEN_SOLARIS_KRB5_H, 1, [Define to 1 if Solaris krb5.h is broken for C++])
-      AC_MSG_WARN([You have a broken Solaris <krb5.h> system include.])
-      AC_MSG_WARN([Please see http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512])
-      AC_MSG_WARN([If you need Kerberos support you will have to patch])
-      AC_MSG_WARN([your system. See contrib/solaris/solaris-krb5-include.patch])
-    ])
+    SQUID_CHECK_WORKING_KRB5($KRB5_FLAVOUR)
     SQUID_CHECK_KRB5_FUNCS
   ])
   AS_IF([test "x$with_mit_krb5" = "xyes" -a "x$KRB5LIBS" = "x"],[
@@ -1555,10 +1549,7 @@ AS_IF([test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"],[
     AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
     AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
 
-    SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
-    AS_IF([test "x$squid_cv_broken_heimdal_krb5_h" = "xyes"],[
-      AC_DEFINE(HAVE_BROKEN_HEIMDAL_KRB5_H, 1, [Define to 1 if Heimdal krb5.h is broken for C++])
-    ])
+    SQUID_CHECK_WORKING_KRB5($KRB5_FLAVOUR)
     SQUID_CHECK_KRB5_FUNCS
   ])
   AS_IF([test "x$KRB5LIBS" = "x"],[
@@ -1610,7 +1601,7 @@ AS_IF([test "x$with_gnugss" != "xno" -a "x$KRB5LIBS" = "x"],[
     SQUID_CHECK_SPNEGO_SUPPORT
     SQUID_DEFINE_BOOL(HAVE_SPNEGO,$squid_cv_have_spnego,[SPNEGO support])
 
-    SQUID_CHECK_WORKING_KRB5
+    SQUID_CHECK_WORKING_KRB5($KRB5_FLAVOUR)
     SQUID_DEFINE_BOOL(HAVE_KRB5,$squid_cv_working_krb5,[KRB5 support])
   ])
   AS_IF([test "x$KRB5LIBS" = "x"],[
