@@ -75,11 +75,11 @@ jobs:
           sudo chown -R nobody:nogroup /usr/local/squid
         working-directory: sources
 
-      - run: ./sources/test-suite/github-actions.sh check_pconn
-      - run: ./sources/test-suite/github-actions.sh check_proxy_update_headers_after_304
-      - run: ./sources/test-suite/github-actions.sh check_upgrade_protocols
-      - run: ./sources/test-suite/github-actions.sh check_proxy_collapsed_forwarding
-      - run: ./sources/test-suite/github-actions.sh check_busy_restart
+      - run: ./sources/test-suite/test-functionality.sh check_pconn
+      - run: ./sources/test-suite/test-functionality.sh check_proxy_update_headers_after_304
+      - run: ./sources/test-suite/test-functionality.sh check_upgrade_protocols
+      - run: ./sources/test-suite/test-functionality.sh check_proxy_collapsed_forwarding
+      - run: ./sources/test-suite/test-functionality.sh check_busy_restart
         # XXX: Make reliable instead.
         continue-on-error: true
 
@@ -112,13 +112,13 @@ jobs:
         with:
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
 
-      - run: ./test-suite/github-actions.sh check_diff
+      - run: ./test-suite/test-sources.sh check_diff
         if: success() || failure()
 
-      - run: ./test-suite/github-actions.sh check_spelling
+      - run: ./test-suite/test-sources.sh check_spelling
         if: success() || failure()
 
-      - run: ./test-suite/github-actions.sh check_source_maintenance
+      - run: ./test-suite/test-sources.sh check_source_maintenance
         if: success() || failure()
         # TODO: Insist on developers running source-maintenance.sh instead.
         continue-on-error: true
