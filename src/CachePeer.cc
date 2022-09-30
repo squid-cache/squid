@@ -58,14 +58,11 @@ CachePeer::connectTimeout() const
 }
 
 void
-CachePeer::peerConnectFailed(ACLFilledChecklist &checklist)
+CachePeer::peerConnectFailed(ACLFilledChecklist *checklist)
 {
     debugs(15, DBG_IMPORTANT, "ERROR: TCP connection to " << host << "/" << http_port << " failed");
 
-    if (!Config.accessList.cachePeerFault)
-        return;
-
-    if (!checklist.fastCheck().allowed())
+    if (checklist && !checklist->fastCheck().allowed())
         return;
 
     peerConnectFailedSilent();

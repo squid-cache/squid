@@ -531,9 +531,13 @@ Security::PeerConnector::countFailingConnection()
 {
     assert(serverConn);
     if (const auto p = serverConn->getPeer()) {
-        ACLFilledChecklist ch(Config.accessList.cachePeerFault, request.getRaw(), nullptr);
-        fillChecklist(ch);
+        ACLFilledChecklist *ch = nullptr;
+        if (Config.accessList.cachePeerFault) {
+            ch = new ACLFilledChecklist(Config.accessList.cachePeerFault, request.getRaw(), nullptr);
+            fillChecklist(*ch);
+        }
         p->peerConnectFailed(ch);
+        delete ch;
     }
     // TODO: Calling PconnPool::noteUses() should not be our responsibility.
     if (noteFwdPconnUse && serverConn->isOpen())

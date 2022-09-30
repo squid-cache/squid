@@ -379,14 +379,18 @@ Http::Tunneler::countFailingConnection(ErrorState *error)
 {
     assert(connection);
     if (const auto p = connection->getPeer()) {
-        ACLFilledChecklist ch(Config.accessList.cachePeerFault, request.getRaw(), nullptr);
-        ch.al = al;
-        ch.syncAle(request.getRaw(), nullptr);
-        if (error) {
-            ch.reply = error->response_.getRaw();
-            HTTPMSGLOCK(ch.reply);
+        ACLFilledChecklist *ch = nullptr;
+        if (Config.accessList.cachePeerFault) {
+            ch = new ACLFilledChecklist(Config.accessList.cachePeerFault, request.getRaw(), nullptr);
+            ch->al = al;
+            ch->syncAle(request.getRaw(), nullptr);
+            if (error) {
+                ch->reply = error->response_.getRaw();
+                HTTPMSGLOCK(ch->reply);
+            }
         }
         p->peerConnectFailed(ch);
+        delete ch;
     }
     if (noteFwdPconnUse && connection->isOpen())
         fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);

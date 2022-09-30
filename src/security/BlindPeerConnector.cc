@@ -77,10 +77,13 @@ Security::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
         // based on TCP results, SSL results, or both. And the code is probably not
         // consistent in this aspect across tunnelling and forwarding modules.
         if (peer && peer->secure.encryptTransport) {
-            ACLFilledChecklist ch(Config.accessList.cachePeerFault, request.getRaw(), nullptr);
-            ch.al = al;
-            ch.syncAle(request.getRaw(), nullptr);
+            ACLFilledChecklist *ch = nullptr;
+            if (Config.accessList.cachePeerFault) {
+                ch = new ACLFilledChecklist(Config.accessList.cachePeerFault, request.getRaw(), nullptr);
+                fillChecklist(*ch);
+            }
             peer->peerConnectFailed(ch);
+            delete ch;
         }
         return;
     }
