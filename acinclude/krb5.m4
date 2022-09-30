@@ -79,22 +79,21 @@ AC_DEFUN([SQUID_CHECK_WORKING_KRB5],[
 
 dnl check how to access the max skew in the krb5 context
 AC_DEFUN([SQUID_CHECK_KRB5_GET_MAX_TIME_SKEW],[
-  AC_CACHE_CHECK([for max_skew in struct krb5_context],squid_cv_max_skew_context,[
+  AC_CACHE_CHECK([how to access max_skew in struct krb5_context],squid_cv_krb5_get_max_time_skew,[
     SQUID_STATE_SAVE(squid_krb5_test)
     CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
-    AC_CHECK_LIB(krb5,[krb5_get_max_time_skew],[
-      squid_cv_max_skew_context="yes"],[
+    AC_CHECK_LIB(krb5,[krb5_get_max_time_skew],
+      [squid_cv_krb5_get_max_time_skew="function"],[
       AC_COMPILE_IFELSE([
         AC_LANG_PROGRAM([[#include "compat/krb5.h"]],[[krb5_context kc; kc->max_skew = 1;]])
-      ],[squid_cv_max_skew_context=replace],[squid_cv_max_skew_context=no],[squid_cv_max_skew_context=no])
+      ],[squid_cv_krb5_get_max_time_skew=member],[squid_cv_krb5_get_max_time_skew=no])
     ])
     SQUID_STATE_ROLLBACK(squid_krb5_test)
   ])
-  AS_IF([test "x$squid_cv_max_skew_context" = "xreplace"],[
-    AC_DEFINE(HAVE_MAX_SKEW_IN_KRB5_CONTEXT,1,[Define to 1 if krb5_get_max_time_skew() needs replacing])
-  ])
-  AS_IF([test "x$squid_cv_max_skew_context" != "xno"],[
-    AC_DEFINE(HAVE_KRB5_GET_MAX_TIME_SKEW,1,[Define to 1 if you have krb5_get_max_time_skew])
+  AS_IF([test "x$squid_cv_krb5_get_max_time_skew" = "xfunction"],[
+    AC_DEFINE(HAVE_KRB5_GET_MAX_TIME_SKEW,1,[Define to 1 if you have krb5_get_max_time_skew])],
+  [test "x$squid_cv_krb5_get_max_time_skew" = "xmember"],[
+    AC_DEFINE(HAVE_MAX_SKEW_IN_KRB5_CONTEXT,1,[Define to 1 if max_skew is available in struct krb5_context])
   ])
 ])
 
@@ -110,7 +109,7 @@ AC_DEFUN([SQUID_CHECK_KRB5_GET_INIT_CREDS_FREE_CONTEXT],[
         krb5_get_init_creds_opt *options = nullptr;
         krb5_get_init_creds_opt_free(context, options)]])],
     [squid_cv_krb5_get_init_creds_free_context=yes],
-    [squid_cv_krb5_get_init_creds_free_context=no],[:])
+    [squid_cv_krb5_get_init_creds_free_context=no])
     SQUID_STATE_ROLLBACK(squid_krb5_test)
   ])
   AS_IF([test "x$squid_cv_krb5_get_init_creds_free_context" = "xyes"],[
