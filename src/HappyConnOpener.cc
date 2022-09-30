@@ -632,14 +632,13 @@ HappyConnOpener::handleConnOpenerAnswer(Attempt &attempt, const CommConnectCbPar
 
     debugs(17, 8, what << " failed: " << params.conn);
     if (const auto peer = params.conn->getPeer()) {
-        ACLFilledChecklist *ch = nullptr;
+        std::unique_ptr<ACLFilledChecklist> ch;
         if (Config.accessList.cachePeerFault) {
-            ch = new ACLFilledChecklist(Config.accessList.cachePeerFault, cause.getRaw(), nullptr);
+            ch.reset(new ACLFilledChecklist(Config.accessList.cachePeerFault, cause.getRaw(), nullptr));
             ch->al = ale;
             ch->syncAle(cause.getRaw(), nullptr);
         }
-        peer->peerConnectFailed(ch);
-        delete ch;
+        peer->peerConnectFailed(ch.get());
     }
 
     // remember the last failure (we forward it if we cannot connect anywhere)
