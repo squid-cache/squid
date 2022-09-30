@@ -146,5 +146,5 @@ jobs:
 
       - run: ./test-builds.sh
         # XXX: Fix distclean cleanup on macOS instead
-        continue-on-error: runner.os == 'macOS'
+        continue-on-error: ${{ runner.os == 'macOS' }}
 

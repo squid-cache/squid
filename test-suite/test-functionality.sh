@@ -1,12 +1,20 @@
 #!/bin/sh
 
-# This script requires $PULL_REQUEST_NUMBER for testing PR commits
+# print an error message (with special markers recognized by Github)
+echo_error() {
+    echo "::error ::" "$@"
+}
+
+# print a warning message (with special markers recognized by Github)
+echo_error() {
+    echo "::warning ::" "$@"
+}
 
 # Whether the branch has a commit with a message matching the given regex.
 # The first argument is the SHA of the primary commit with the desired change.
 # We want to find up/backported commits that will have different SHAs and that
 # may have minor commit message variations, so that SHA is for reference only.
-has_commit_by_message_() {
+has_commit_by_message() {
     commit="$1"
     shift
 
@@ -21,7 +29,7 @@ has_commit_by_message_() {
     return 1;
 }
 
-start_overlord_() {
+start_overlord() {
     if test -e squid-overlord.log && curl -H 'Pop-Version: 4' --no-progress-meter http://localhost:13128/check > /dev/null
     then
         return 0;
@@ -32,15 +40,15 @@ start_overlord_() {
     curl -sSL $url | sed 's/-c unlimited/-n 10240/' | sudo -n --background -u nobody perl - > squid-overlord.log 2>&1
 }
 
-run_daft_test_() {
+run_daft_test() {
     testId="$1"
 
-    start_overlord_ || return
+    start_overlord || return
 
     local runner=${DAFT_MAIN:=extras/daft/src/cli/daft.js}
     if ! test -e $runner
     then
-        echo "::error ::Missing Daft tool"
+        echo_error "Missing Daft tool"
         echo "Expected to find it in $runner"
         exit 1;
     fi
@@ -48,7 +56,7 @@ run_daft_test_() {
     local testsDir=${SQUID_DAFT_TESTS_DIR:=extras/squid-dafts/tests/}
     if ! test -d $testsDir
     then
-        echo "::error ::Missing collection of Squid-specific Daft tests"
+        echo_error "Missing collection of Squid-specific Daft tests"
         echo "Expected to find them in $testsDir"
         exit 1;
     fi
@@ -56,7 +64,7 @@ run_daft_test_() {
     local testScript=$testsDir/$testId.js
     if ! test -e $testScript
     then
-        echo "::error ::Unknown test requested: $testId"
+        echo_error "Unknown test requested: $testId"
         echo "Expected to find it as $testScript"
         return 1;
     fi
@@ -72,7 +80,7 @@ run_daft_test_() {
     fi
 
     echo
-    echo "::error ::Test $testId: Failed with exit code $result:"
+    echo_error "Test $testId: Failed with exit code $result:"
     echo "::group::$testId.log tail"
     tail -n 100 $testId.log
     echo "::endgroup::"
@@ -83,25 +91,25 @@ run_daft_test_() {
 }
 
 check_pconn() {
-    run_daft_test_ pconn
+    run_daft_test pconn
 }
 
 check_busy_restart() {
-    if ! run_daft_test_ busy-restart
+    if ! run_daft_test busy-restart
     then
         # XXX: Make the test stable instead!
-        echo "::warning ::Ignoring unstable test failure: busy-restart"
+        echo_warning "Ignoring unstable test failure: busy-restart"
     fi
     return 0
 }
 
 check_proxy_collapsed_forwarding() {
-    if ! has_commit_by_message_ 1af789e 'Do not stall if xactions overwrite a recently active'
+    if ! has_commit_by_message 1af789e 'Do not stall if xactions overwrite a recently active'
     then
         echo "No proxy-collapsed-forwarding due to stalling transactions"
         return 0;
     fi
-    run_daft_test_ proxy-collapsed-forwarding
+    run_daft_test proxy-collapsed-forwarding
 }
 
 check_proxy_update_headers_after_304() {
@@ -110,7 +118,7 @@ check_proxy_update_headers_after_304() {
         echo "No proxy-update-headers-after-304 until v5";
         return 0;
     fi
-    run_daft_test_ proxy-update-headers-after-304
+    run_daft_test proxy-update-headers-after-304
 }
 
 check_upgrade_protocols() {
@@ -119,10 +127,10 @@ check_upgrade_protocols() {
         echo "No upgrade-protocols without http_upgrade_request_protocols support";
         return 0;
     fi
-    run_daft_test_ upgrade-protocols
+    run_daft_test upgrade-protocols
 }
 
-run_one_test_() {
+run_one_test() {
     testName=$1
 
     # convert a test name foo into a check_foo() function name
@@ -132,12 +140,12 @@ run_one_test_() {
     check_$check
 }
 
-run_tests_() {
+run_tests() {
     result=0
     failed_tests=""
     for testName in "$@"
     do
-        if run_one_test_ $testName
+        if run_one_test $testName
         then
             continue;
         else
@@ -148,25 +156,29 @@ run_tests_() {
 
     if test -n "$failed_tests"
     then
-        echo "::error ::Failed check(s):$failed_tests"
+        echo_error "Failed check(s):$failed_tests"
     fi
     return $result
 }
 
+# Run all named tests if multiple tests were named on the command line.
+# This check must precede the next one for the next check to work correctly.
 if test -n "$2"
 then
-    run_tests_ "$@"
+    run_tests "$@"
     exit $?
 fi
 
+# Run one test if a single test was named on the command line. This special
+# (but common in triage) use case simplifies failure diagnostics/output.
+# The case of multiple tests was excluded in the previous check.
 if test -n "$1"
 then
-    # run a single test specified by the lonely command line argument
-    # this simplifies diagnostics/output in case of failures
-    run_one_test_ "$1"
+    run_one_test "$1"
     exit $?
 fi
 
+# Run default tests if no tests were named on the command line.
 default_tests="
     pconn
     proxy-update-headers-after-304
@@ -174,4 +186,4 @@ default_tests="
     proxy-collapsed-forwarding
     busy-restart
 "
-run_tests_ $default_tests
+run_tests $default_tests
