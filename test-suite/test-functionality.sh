@@ -21,25 +21,6 @@ has_commit_by_message_() {
     return 1;
 }
 
-check_functionality_client_certificate_handling() {
-    if ! fgrep -q master_xaction src/cf.data.pre
-    then
-        echo "No client certificate handling tests for Squid v4 and older";
-        return 0;
-    fi
-
-    if git grep -q SSL_MODE_NO_AUTO_CHAIN src/
-    then
-        echo "No client certificate handling tests with SSL_MODE_NO_AUTO_CHAIN (yet)";
-        return 0;
-    fi
-
-    wget https://www.measurement-factory.com/extras/fc128.tgz
-    tar -xvzf fc128.tgz
-    sudo ./fc128-sending-clientca-to-clients/test-client-cert-handling.pl
-    return 0;
-}
-
 start_overlord_() {
     if test -e squid-overlord.log && curl -H 'Pop-Version: 4' --no-progress-meter http://localhost:13128/check > /dev/null
     then
