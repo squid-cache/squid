@@ -1,8 +1,5 @@
 #!/bin/sh
 
-# XXX: https://dev.to/scienta/get-changed-files-in-github-actions-1p36
-# ${{ github.event.pull_request.base.sha }} ${{ github.sha }}
-
 if test -z "$1"
 then
     echo "usage: $0 [test-name-to-run [test-parameter]...]"
@@ -17,6 +14,9 @@ run_() {
 }
 
 fetch_pr_refs_() {
+    # TODO: There may be a simpler way to get the necessary commits via GitHub
+    # Actions contexts: github.event.pull_request.base.sha and github.sha.
+
     # quiet "adding host key" warnings
     export GIT_SSH_COMMAND="ssh -o LogLevel=ERROR"
     run_ git fetch --force --quiet origin \
@@ -28,7 +28,7 @@ fetch_pr_refs_() {
 # The first argument is the SHA of the primary commit with the desired change.
 # We want to find up/backported commits that will have different SHAs and that
 # may have minor commit message variations, so that SHA is for reference only.
-# XXX: Duplicated.
+# XXX: Duplicated in test-functionality.sh.
 has_commit_by_message_() {
     commit="$1"
     shift

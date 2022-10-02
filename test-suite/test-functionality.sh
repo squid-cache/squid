@@ -2,20 +2,20 @@
 
 # Default-set and report used environment variables:
 # * the root directory for storing test tools and test artifacts.
-echo "WORKSPACE_DIR=${WORKSPACE_DIR:=${GITHUB_WORKSPACE:-`pwd`}}"
+echo "TMPDIR=${TMPDIR:=${RUNNER_TEMP:-/tmp}}"
 # * directory for cloning git repositories containing various test tools
-echo "CLONES_DIR=${CLONES_DIR:=$WORKSPACE_DIR/clones}"
+echo "CLONES_DIR=${CLONES_DIR:=$TMPDIR/clones}"
 # * directories of cloned repositories
 echo "DAFT_DIR=${DAFT_DIR:=$CLONES_DIR/daft}"
 echo "SQUID_DAFTS_DIR=${SQUID_DAFTS_DIR:=$CLONES_DIR/squid-dafts}"
 echo "SQUID_OVERLORD_DIR=${SQUID_OVERLORD_DIR:=$CLONES_DIR/squid-overlord}"
 
-# print an error message (with special markers recognized by Github)
+# print an error message (with special markers recognized by Github Actions)
 echo_error() {
     echo "::error ::" "$@"
 }
 
-# print a warning message (with special markers recognized by Github)
+# print a warning message (with special markers recognized by Github Actions)
 echo_warning() {
     echo "::warning ::" "$@"
 }
@@ -69,7 +69,7 @@ start_overlord() {
     local url=http://localhost:13128/
     if test -e squid-overlord.log && curl -H 'Pop-Version: 4' --no-progress-meter $url/check > /dev/null
     then
-        echo "Will use squid-overlord service running at $url"
+        echo "Will reuse squid-overlord service running at $url"
         return 0;
     fi
 
@@ -98,11 +98,11 @@ setup_test_tools() {
 run_daft_test() {
     testId="$1"
 
-    local runner="$DAFT_DIR/src/cli/daft.js"
-    if ! test -e $runner
+    local testRunner="$DAFT_DIR/src/cli/daft.js"
+    if ! test -e $testRunner
     then
-        echo_error "Missing Daft tool"
-        echo "Expected to find it in $runner"
+        echo_error "Missing Daft test execution script"
+        echo "Expected to find it in $testRunner"
         exit 1;
     fi
 
@@ -124,7 +124,7 @@ run_daft_test() {
 
     echo "Running test: $testId"
     local result=undefined
-    if $runner run $testScript > $testId.log 2>&1
+    if $testRunner run $testScript > $testId.log 2>&1
     then
         echo "Test $testId: OK"
         return 0;
@@ -216,20 +216,18 @@ run_tests() {
 
 setup_test_tools || exit $?
 
-# Run all named tests if multiple tests were named on the command line.
-# This check must precede the next one for the next check to work correctly.
-if test -n "$2"
+# Run one test if a single test was named on the command line. This special
+# (but common in triage) use case simplifies failure diagnostics/output.
+if test $# -eq 1
 then
-    run_tests "$@"
+    run_one_test "$1"
     exit $?
 fi
 
-# Run one test if a single test was named on the command line. This special
-# (but common in triage) use case simplifies failure diagnostics/output.
-# The case of multiple tests was excluded in the previous check.
-if test -n "$1"
+# Run all named tests if multiple tests were named on the command line.
+if test $# -gt 1
 then
-    run_one_test "$1"
+    run_tests "$@"
     exit $?
 fi
 

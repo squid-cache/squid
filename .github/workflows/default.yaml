@@ -3,7 +3,7 @@ name: GitHub CI tests
 
 on:
   push:
-    branches: [ "master", "v5" ]
+    branches: [ "master", "v5", "SQUID-489-github-actions" ] # XXX
 
   pull_request:
     branches: [ "master", "v5" ]
@@ -12,9 +12,11 @@ env:
   # empty except for pull_request events
   PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
 
-  # Shallow clones of Squid repository break tests that check for past commits
+  # Full clones of Squid repository branches (depth=19000+) waste resources,
+  # while excessively shallow clones break tests that check for past commits
   # (e.g., to skip a particular test until the known bug is fixed) or generate
-  # diffs against them (e.g., for `git diff --check`).
+  # diffs against them (e.g., for `git diff --check`). This arbitrary limit
+  # tries to balance the two concerns.
   CHECKOUT_FETCH_DEPTH: 1001
 
 jobs:
@@ -23,39 +25,31 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
+      - name: Install prerequisite packages
+        run: |
+          sudo apt-get --quiet=2 update
+          sudo apt-get --quiet=2 install libtool-bin
+
       - name: Setup a nodejs environment
         uses: actions/setup-node@v3
         with:
           node-version: 16
 
-      - name: Install prerequisite packages
-        run: |
-          sudo apt-get update
-          sudo apt-get install libtool-bin
-
       - name: Checkout Squid sources
         uses: actions/checkout@v3
         with:
-          path: sources
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
 
       - run: ./bootstrap.sh
-        working-directory: sources
-
       - run: ./configure --with-openssl
-        working-directory: sources
-
       - run: make -j2
-        working-directory: sources
-
       - run: |
           sudo make install
           sudo chown -R nobody:nogroup /usr/local/squid
-        working-directory: sources
 
-      - run: ./sources/test-suite/test-functionality.sh
+      - run: ./test-suite/test-functionality.sh
 
-      # Squid logs are not readable to actions/upload-artifact
+      # Squid logs are not readable to actions/upload-artifact below
       - name: Prep test logs
         if: success() || failure()
         run: sudo chmod -R a+rX /usr/local/squid
@@ -75,9 +69,9 @@ jobs:
     steps:
       - name: Install prerequisite packages
         run: |
-          sudo apt-get update
-          sudo apt-get install astyle
-          sudo apt-get install gperf
+          sudo apt-get --quiet=2 update
+          sudo apt-get --quiet=2 install astyle
+          sudo apt-get --quiet=2 install gperf
         if: runner.os == 'Linux'
 
       - uses: actions/checkout@v3
@@ -109,10 +103,10 @@ jobs:
       - name: Install prerequisite Linux packages
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get update
-          sudo apt-get install libtool-bin
-          sudo apt-get install libcppunit-dev
-          sudo apt-get install libldap2-dev
+          sudo apt-get --quiet=2 update
+          sudo apt-get --quiet=2 install libtool-bin
+          sudo apt-get --quiet=2 install libcppunit-dev
+          sudo apt-get --quiet=2 install libldap2-dev
 
       - name: Install prerequisite macOS packages
         if: runner.os == 'macOS'
