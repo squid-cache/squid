@@ -33,33 +33,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install libtool-bin
 
-      - name: Checkout Daft test framework
-        uses: actions/checkout@v3
-        with:
-          repository: measurement-factory/daft
-          path: extras/daft
-          ref: 425e6704a19b0c7df1ed69e95a335e8bc402af84
-          fetch-depth: 1
-
-      - name: Checkout Squid tests that use the Daft framework
-        uses: actions/checkout@v3
-        with:
-          repository: measurement-factory/squid-dafts
-          path: extras/squid-dafts
-          ref: 47151d3659e2f72f247c6af3a9680b007482843a
-          fetch-depth: 1
-
       - name: Checkout Squid sources
         uses: actions/checkout@v3
         with:
           path: sources
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
-
-      - name: Setup Daft tests
-        run: |
-          ln -s ../daft/src extras/squid-dafts/src
-          ln -s ../daft/node_modules extras/squid-dafts/node_modules
-          cd extras/daft/ && npm install --no-save
 
       - run: ./bootstrap.sh
         working-directory: sources
@@ -134,12 +112,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install libtool-bin
           sudo apt-get install libcppunit-dev
+          sudo apt-get install libldap2-dev
 
       - name: Install prerequisite macOS packages
         if: runner.os == 'macOS'
         run: |
            brew install automake
            brew install cppunit
+           brew install openldap
 
       - name: Checkout sources
         uses: actions/checkout@v3

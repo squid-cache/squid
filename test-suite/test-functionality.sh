@@ -1,13 +1,28 @@
 #!/bin/sh
 
+# Default-set and report used environment variables:
+# * the root directory for storing test tools and test artifacts.
+echo "WORKSPACE_DIR=${WORKSPACE_DIR:=${GITHUB_WORKSPACE:-`pwd`}}"
+# * directory for cloning git repositories containing various test tools
+echo "CLONES_DIR=${CLONES_DIR:=$WORKSPACE_DIR/clones}"
+# * directories of cloned repositories
+echo "DAFT_DIR=${DAFT_DIR:=$CLONES_DIR/daft}"
+echo "SQUID_DAFTS_DIR=${SQUID_DAFTS_DIR:=$CLONES_DIR/squid-dafts}"
+echo "SQUID_OVERLORD_DIR=${SQUID_OVERLORD_DIR:=$CLONES_DIR/squid-overlord}"
+
 # print an error message (with special markers recognized by Github)
 echo_error() {
     echo "::error ::" "$@"
 }
 
 # print a warning message (with special markers recognized by Github)
-echo_error() {
+echo_warning() {
     echo "::warning ::" "$@"
+}
+
+run() {
+    echo "running: $@"
+    "$@"
 }
 
 # Whether the branch has a commit with a message matching the given regex.
@@ -29,23 +44,61 @@ has_commit_by_message() {
     return 1;
 }
 
-start_overlord() {
-    if test -e squid-overlord.log && curl -H 'Pop-Version: 4' --no-progress-meter http://localhost:13128/check > /dev/null
+clone_repo() {
+    local repo_url="$1"
+    local destination_dir="$2"
+
+    if test -e $destination_dir
     then
+        echo "Skipping already fetched $destination_dir"
+    elif run git clone --no-tags --quiet --depth=1 --branch production -- "$repo_url" "$destination_dir"
+    then
+        if test -e "$destination_dir/package.json"
+        then
+            ( cd $destination_dir && run npm install --no-audit --no-save ) || return
+        fi
+    else
+        echo_error "Failed to fetch $repo_url into $destination_dir"
+        return 1
+    fi
+
+    (cd $destination_dir && echo "Using commit `git rev-parse HEAD`")
+}
+
+start_overlord() {
+    local url=http://localhost:13128/
+    if test -e squid-overlord.log && curl -H 'Pop-Version: 4' --no-progress-meter $url/check > /dev/null
+    then
+        echo "Will use squid-overlord service running at $url"
         return 0;
     fi
 
-    local url=https://github.com/measurement-factory/squid-overlord/raw/stable2/overlord.pl
     # XXX: Github actions runners prohibit ulimit -c unlimited.
-    curl -sSL $url | sed 's/-c unlimited/-n 10240/' | sudo -n --background -u nobody perl - > squid-overlord.log 2>&1
+    sed 's/-c unlimited/-n 10240/' $SQUID_OVERLORD_DIR/overlord.pl | sudo -n --background -u nobody perl - > squid-overlord.log 2>&1 || return
+    echo "Started squid-overlord service at $url"
+}
+
+setup_test_tools() {
+    clone_repo https://github.com/measurement-factory/daft $DAFT_DIR || return
+    clone_repo https://github.com/measurement-factory/squid-dafts $SQUID_DAFTS_DIR || return
+    clone_repo https://github.com/measurement-factory/squid-overlord $SQUID_OVERLORD_DIR || return
+
+    if ! test -e $SQUID_DAFTS_DIR/src
+    then
+        run ln -s `realpath $DAFT_DIR/src` $SQUID_DAFTS_DIR/src || return
+    fi
+    if ! test -e $SQUID_DAFTS_DIR/node_modules
+    then
+        run ln -s `realpath $DAFT_DIR/node_modules` $SQUID_DAFTS_DIR/node_modules || return
+    fi
+
+    start_overlord || return
 }
 
 run_daft_test() {
     testId="$1"
 
-    start_overlord || return
-
-    local runner=${DAFT_MAIN:=extras/daft/src/cli/daft.js}
+    local runner="$DAFT_DIR/src/cli/daft.js"
     if ! test -e $runner
     then
         echo_error "Missing Daft tool"
@@ -53,7 +106,7 @@ run_daft_test() {
         exit 1;
     fi
 
-    local testsDir=${SQUID_DAFT_TESTS_DIR:=extras/squid-dafts/tests/}
+    local testsDir="$SQUID_DAFTS_DIR/tests/"
     if ! test -d $testsDir
     then
         echo_error "Missing collection of Squid-specific Daft tests"
@@ -160,6 +213,8 @@ run_tests() {
     fi
     return $result
 }
+
+setup_test_tools || exit $?
 
 # Run all named tests if multiple tests were named on the command line.
 # This check must precede the next one for the next check to work correctly.
