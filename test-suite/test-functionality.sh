@@ -175,7 +175,7 @@ check_proxy_update_headers_after_304() {
 }
 
 check_upgrade_protocols() {
-    if ! fgrep -q http_upgrade_request_protocols src/cf.data.pre
+    if ! grep -q http_upgrade_request_protocols src/cf.data.pre
     then
         echo "No upgrade-protocols without http_upgrade_request_protocols support";
         return 0;

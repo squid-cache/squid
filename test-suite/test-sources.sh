@@ -15,7 +15,10 @@ then
     STARTING_POINT="${FORK_POINT}"
 fi
 
-# XXX: A few of these helper functions are duplicated in test-functionality.sh
+# Customizable check outcome description logged by run_one_check()
+CHECK_OUTCOME_PHRASE=""
+
+# XXX: echo_*() and run() functions are duplicated in test-functionality.sh.
 
 # print an error message (with special markers recognized by Github Actions)
 echo_error() {
@@ -30,25 +33,6 @@ echo_warning() {
 run() {
     echo "running: $@"
     "$@"
-}
-
-# Whether the branch has a commit with a message matching the given regex.
-# The first argument is the SHA of the primary commit with the desired change.
-# We want to find up/backported commits that will have different SHAs and that
-# may have minor commit message variations, so that SHA is for reference only.
-has_commit_by_message() {
-    commit="$1"
-    shift
-
-    if git log --grep "$@" | grep -q ^commit
-    then
-        return 0;
-    fi
-
-    echo "Was looking for branch commit with a message matching the following"
-    echo "    regex: " "$@"
-    echo "    This code lacks commit $commit or equivalent."
-    return 1;
 }
 
 # Get key pull request commits to be able to diff against them, avoiding:
@@ -70,7 +54,7 @@ check_diff() {
         return 0;
     fi
 
-    local authorEmail=`git show --format="%ae" HEAD`;
+    local authorEmail="`git show --format="%ae" HEAD`";
     if test "$authorEmail" = 'squidadm@users.noreply.github.com'
     then
         echo "Ignoring 'git diff --check' failure for an automated commit";
@@ -86,6 +70,12 @@ check_spelling() {
     if ! test -e ./scripts/spell-check.sh
     then
         echo "This Squid version does not support automated spelling checks."
+        return 0;
+    fi
+
+    if ! git diff --quiet
+    then
+        CHECK_OUTCOME_PHRASE="Skipped due to a dirty working directory"
         return 0;
     fi
 
@@ -133,24 +123,22 @@ check_spelling() {
     echo "The log above ends with a word diff showing suggested fixes."
     echo "Please adjust scripts/codespell-whitelist.txt or fix spelling."
 
-    # Detect code that does not contain the second out-of-band spelling fix.
-    # TODO: Remove this workaround check after 2022-03-02 or so.
-    if ! has_commit_by_message 7c25db3 'Maintenance: Fix two misspellings'
-    then
-        echo "The diff might include old misspellings in the official code"
-        echo "that were fixed by the above commit. Ignore those misspellings."
-        return 0;
-    fi
-
     return 1;
 }
 
 check_source_maintenance() {
     checker=./scripts/source-maintenance.sh
     copyrightOption='--check-and-update-copyright'
-    if ! fgrep -q -e $copyrightOption $checker
+    if ! grep -q -e $copyrightOption $checker
     then
         echo_warning "Skipping $checker checks because $checker does not support $copyrightOption"
+        CHECK_OUTCOME_PHRASE="Skipped due to missing $copyrightOption support"
+        return 0;
+    fi
+
+    if ! git diff --quiet
+    then
+        CHECK_OUTCOME_PHRASE="Skipped due to a dirty working directory"
         return 0;
     fi
 
@@ -163,7 +151,7 @@ check_source_maintenance() {
     # TODO: Require successful gperf generation;
     # bootstrap/configure sources to test: make -C src/http gperf-files
 
-    # TODO: Check whether this workaround is no longer necessary.
+    # Avoid distracting $checker warnings; TODO: Fix $checker instead.
     touch boilerplate_fix.sed
 
     run $checker $copyrightOption no
@@ -177,6 +165,7 @@ check_source_maintenance() {
     echo "Please consider (carefully) applying $checker before merging."
     # TODO: Require running source-maintenance.sh instead of ignoring this error.
     # TODO: Provide a downloadable patch that developers can apply.
+    CHECK_OUTCOME_PHRASE='Ignored failure'
     return 0
 }
 
@@ -187,17 +176,31 @@ run_one_check() {
     # e.g. busy-restart becomes check_busy_restart
     check=`echo $checkName | sed s/-/_/g`
 
+    CHECK_OUTCOME_PHRASE=""
+
     echo "::group::Check $checkName"
     local result=undefined
     check_$check
     result=$?
-    echo "::endgroup::"
 
     if test "$result" -eq 0
     then
-        echo "Check $checkName: OK"
+        if test -n "$CHECK_OUTCOME_PHRASE"
+        then
+            echo "::endgroup::"
+            # place this custom outcome outside of the check group so that it
+            # remains visible in the default/unexpanded Actions job log
+            echo_warning "Check $checkName: $CHECK_OUTCOME_PHRASE"
+        else
+            echo "Check $checkName: OK"
+            echo "::endgroup::"
+        fi
     else
-        echo_error "Check $checkName: Failed with exit code $result:"
+        echo "Check exit code: $result"
+        echo "::endgroup::"
+        # place this error message outside of the check group so that it
+        # remains visible in the default/unexpanded Actions job log
+        echo_error "Check $checkName: ${CHECK_OUTCOME_PHRASE:-Failure}"
     fi
 
     return $result
