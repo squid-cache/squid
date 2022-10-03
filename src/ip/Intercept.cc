@@ -476,7 +476,7 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
     }
 
 #else
-    debugs(3, 3, "TPROXY setsockopt() not supported on this platform. Disabling TPROXY on port " << test);
+    debugs(3, 3, "TPROXY setsockopt() not supported on this platform. Disabling TPROXY.");
 
 #endif
     if (doneSuid)

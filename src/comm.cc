@@ -330,7 +330,6 @@ comm_set_transparent(int fd)
 
 #else
     debugs(50, DBG_CRITICAL, "WARNING: comm_open: setsockopt(TPROXY) not supported on this platform");
-    (void)fd;
 #endif /* sockopt */
 
 #if defined(soLevel) && defined(soFlag)
