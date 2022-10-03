@@ -131,6 +131,8 @@ run_daft_test() {
         result=$?
     fi
 
+    # TODO: Report skipped tests and ignored failures more prominently. See
+    # test-sources.sh for CHECK_OUTCOME_PHRASE tricks (but avoid duplication).
     echo
     echo_error "Test $testId: Failed with exit code $result:"
     echo "::group::$testId.log tail"

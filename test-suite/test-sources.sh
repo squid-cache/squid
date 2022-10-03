@@ -161,11 +161,11 @@ check_source_maintenance() {
         return 0
     fi
 
-    echo_error "Squid $checker modified sources as shown in the diff above."
-    echo "Please consider (carefully) applying $checker before merging."
+    echo_error "Squid $checker modified sources"
+    echo "The diff above details these modifications. Consider running $checker."
     # TODO: Require running source-maintenance.sh instead of ignoring this error.
     # TODO: Provide a downloadable patch that developers can apply.
-    CHECK_OUTCOME_PHRASE='Ignored failure'
+    CHECK_OUTCOME_PHRASE="Ignored the need to run $checker"
     return 0
 }
 
