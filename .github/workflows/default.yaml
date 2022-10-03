@@ -72,6 +72,13 @@ jobs:
           sudo apt-get --quiet=2 update
           sudo apt-get --quiet=2 install astyle
           sudo apt-get --quiet=2 install gperf
+          pip install \
+              --user \
+              --no-cache-dir \
+              --disable-pip-version-check \
+              --quiet \
+              --progress-bar off \
+              codespell==1.16 # TODO: Upgrade to codespell v2
 
       - uses: actions/checkout@v3
         with:

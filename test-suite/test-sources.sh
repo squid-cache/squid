@@ -111,15 +111,6 @@ check_spelling() {
     fi
     echo "changed files: $changed_files"
 
-    # TODO: Upgrade to codespell v2
-    run sudo pip install \
-        --ignore-installed \
-        --no-cache-dir \
-        --disable-pip-version-check \
-        --quiet \
-        --progress-bar off \
-        codespell==1.16
-
     run ./scripts/spell-check.sh $changed_files
 
     if run git diff --word-diff --exit-code
@@ -170,7 +161,7 @@ check_source_maintenance() {
         return 0
     fi
 
-    echo_error "Squid $checker modified sources"
+    echo_error "Running $checker modifies sources"
     echo "The diff above details these modifications. Consider running $checker."
     # TODO: Require running source-maintenance.sh instead of ignoring this error.
     # TODO: Provide a downloadable patch that developers can apply.
