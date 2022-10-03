@@ -148,9 +148,6 @@ check_source_maintenance() {
     # formatting iff it can execute a binary called astyle but does not like
     # astyle's version.
 
-    # TODO: Require successful gperf generation;
-    # bootstrap/configure sources to test: make -C src/http gperf-files
-
     # Avoid distracting $checker warnings; TODO: Fix $checker instead.
     touch boilerplate_fix.sed
 
