@@ -73,8 +73,7 @@ start_overlord() {
         return 0;
     fi
 
-    # XXX: Github actions runners prohibit ulimit -c unlimited.
-    sed 's/-c unlimited/-n 10240/' $SQUID_OVERLORD_DIR/overlord.pl | sudo -n --background -u nobody perl - > squid-overlord.log 2>&1 || return
+    sudo -n --background -u nobody $SQUID_OVERLORD_DIR/overlord.pl > squid-overlord.log 2>&1 || return
     echo "Started squid-overlord service at $url"
 }
 
