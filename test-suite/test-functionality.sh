@@ -77,13 +77,16 @@ clone_repo() {
 
 start_overlord() {
     local url=http://localhost:13128/
-    if test -e squid-overlord.log && curl -H 'Pop-Version: 4' --no-progress-meter $url/check > /dev/null
+    local log=$TMPDIR/squid-overlord.log
+    if test -e $log && curl -H 'Pop-Version: 4' --no-progress-meter $url/check > /dev/null
     then
         echo "Will reuse squid-overlord service running at $url"
         return 0;
     fi
 
-    sudo -n --background -u nobody $SQUID_OVERLORD_DIR/overlord.pl > squid-overlord.log 2>&1 || return
+    # Do not be tempted to simply run `sudo ... overlord.pl`: User nobody will
+    # lack read permissions, and sudo will ask for a password.
+    sudo -n --background -u nobody perl < $SQUID_OVERLORD_DIR/overlord.pl > $log 2>&1 || return
     echo "Started squid-overlord service at $url"
 }
 
@@ -131,9 +134,11 @@ run_daft_test() {
         return 1;
     fi
 
+    local log="$TMPDIR/$testId.log"
+
     echo "Running test: $testId"
     local result=undefined
-    if $testRunner run $testScript > $testId.log 2>&1
+    if $testRunner run $testScript > $log 2>&1
     then
         echo "Test $testId: OK"
         return 0;
@@ -144,13 +149,13 @@ run_daft_test() {
     # TODO: Report skipped tests and ignored failures more prominently. See
     # test-sources.sh for CHECK_OUTCOME_PHRASE tricks (but avoid duplication).
     echo
-    echo_error "Test $testId: Failed with exit code $result:"
-    echo "::group::$testId.log tail"
-    tail -n 100 $testId.log
+    echo_error "Test $testId: Failed with exit code $result"
+    echo "::group::Test log tail:"
+    tail -n 100 $log
     echo "::endgroup::"
 
     # TODO: Link to the artifact
-    echo "See $testId.log (tailed above) for failure details"
+    echo "See the test log (tailed above) for failure details: $log"
     return $result
 }
 

@@ -3,7 +3,7 @@ name: GitHub CI tests
 
 on:
   push:
-    branches: [ "master", "v5", "SQUID-489-github-actions" ] # XXX
+    branches: [ "master", "v5" ]
 
   pull_request:
     branches: [ "master", "v5" ]
@@ -60,8 +60,8 @@ jobs:
         with:
           name: test-logs
           path: |
-            ./*.log
-            /usr/local/squid/var/logs/overlord/
+            ${{ runner.temp }}/*.log
+            /usr/local/squid/var/logs/overlord/*.log
 
   source-maintenance-tests:
     runs-on: ubuntu-22.04
@@ -111,3 +111,9 @@ jobs:
         # XXX: Fix distclean cleanup on macOS instead
         continue-on-error: ${{ runner.os == 'macOS' }}
 
+      - name: Publish build logs
+        if: success() || failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-logs
+          path: btlayer-*.log
