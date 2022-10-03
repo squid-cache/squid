@@ -1,7 +1,14 @@
 #!/bin/sh
+#
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
 
-# This script checks source code compliance with selected Squid Project
-# policies and recommendations. Some of the checks are applied to a subset of
+# This script checks source code compliance with a few Squid Project policies
+# and recommendations. Some of the checks are applied to a subset of
 # repository files, depending on the environment variables (first match wins):
 # * If $PULL_REQUEST_NUMBER is set, checks sources modified by that Github PR;
 # * If $FORK_POINT is set, checks sources modified since that commit;
@@ -57,7 +64,7 @@ check_diff() {
     local authorEmail="`git show --format="%ae" HEAD`";
     if test "$authorEmail" = 'squidadm@users.noreply.github.com'
     then
-        echo "Ignoring 'git diff --check' failure for an automated commit";
+        CHECK_OUTCOME_PHRASE="Ignored 'git diff --check' failure for an automated commit";
         return 0;
     fi
 
@@ -69,7 +76,7 @@ check_diff() {
 check_spelling() {
     if ! test -e ./scripts/spell-check.sh
     then
-        echo "This Squid version does not support automated spelling checks."
+        CHECK_OUTCOME_PHRASE="Skipped because this Squid version is missing support for spelling checks."
         return 0;
     fi
 
@@ -79,6 +86,7 @@ check_spelling() {
         return 0;
     fi
 
+    # TODO: Remove this year 2020 workaround? Fresh master PRs should have Bug 5021 fix.
     if test -n "${PULL_REQUEST_NUMBER}"
     then
         # Detect stale PR branches that were forked before the first codespell
@@ -93,15 +101,15 @@ check_spelling() {
         fi
     fi
 
-    # To reduce test timeouts due to slow codespell runs, we only check
-    # modified files.
+    # To avoid flagging out-of-scope misspellings, only check modified files.
+    # This also speeds up tests and helps avoid slow-codespell timeouts.
     local changed_files="`git diff --name-only ${STARTING_POINT}`"
-    echo "changed files: $changed_files"
     if test -z "$changed_files"
     then
         echo "ERROR: Unable to determine which files have changed."
         return 1; # be conservative until we learn why that is a bad idea
     fi
+    echo "changed files: $changed_files"
 
     # TODO: Upgrade to codespell v2
     run sudo pip install \
@@ -127,18 +135,19 @@ check_spelling() {
 }
 
 check_source_maintenance() {
-    checker=./scripts/source-maintenance.sh
-    copyrightOption='--check-and-update-copyright'
+    if ! git diff --quiet
+    then
+        CHECK_OUTCOME_PHRASE="Skipped due to a dirty working directory"
+        return 0;
+    fi
+
+    local checker=./scripts/source-maintenance.sh
+
+    local copyrightOption='--check-and-update-copyright'
     if ! grep -q -e $copyrightOption $checker
     then
         echo_warning "Skipping $checker checks because $checker does not support $copyrightOption"
         CHECK_OUTCOME_PHRASE="Skipped due to missing $copyrightOption support"
-        return 0;
-    fi
-
-    if ! git diff --quiet
-    then
-        CHECK_OUTCOME_PHRASE="Skipped due to a dirty working directory"
         return 0;
     fi
 
@@ -170,11 +179,11 @@ check_source_maintenance() {
 }
 
 run_one_check() {
-    checkName=$1
+    local checkName=$1
 
     # convert a check name foo into a check_foo() function name
     # e.g. busy-restart becomes check_busy_restart
-    check=`echo $checkName | sed s/-/_/g`
+    local check=`echo $checkName | sed s/-/_/g`
 
     CHECK_OUTCOME_PHRASE=""
 
@@ -207,8 +216,8 @@ run_one_check() {
 }
 
 run_checks() {
-    result=0
-    failed_checks=""
+    local result=0
+    local failed_checks=""
     for checkName in "$@"
     do
         if run_one_check $checkName

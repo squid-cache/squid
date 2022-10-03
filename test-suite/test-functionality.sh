@@ -1,4 +1,14 @@
 #!/bin/sh
+#
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+
+# This script tests a few Squid functionality requirements.
+# It is suitable for automated CI and manual testing.
 
 # Default-set and report used environment variables:
 # * the root directory for storing test tools and test artifacts.
@@ -30,7 +40,7 @@ run() {
 # We want to find up/backported commits that will have different SHAs and that
 # may have minor commit message variations, so that SHA is for reference only.
 has_commit_by_message() {
-    commit="$1"
+    local commit="$1"
     shift
 
     if git log --grep "$@" | grep -q ^commit
@@ -95,21 +105,21 @@ setup_test_tools() {
 }
 
 run_daft_test() {
-    testId="$1"
+    local testId="$1"
 
     local testRunner="$DAFT_DIR/src/cli/daft.js"
     if ! test -e $testRunner
     then
         echo_error "Missing Daft test execution script"
-        echo "Expected to find it in $testRunner"
+        echo "Expected to find it at $testRunner"
         exit 1;
     fi
 
-    local testsDir="$SQUID_DAFTS_DIR/tests/"
+    local testsDir="$SQUID_DAFTS_DIR/tests"
     if ! test -d $testsDir
     then
         echo_error "Missing collection of Squid-specific Daft tests"
-        echo "Expected to find them in $testsDir"
+        echo "Expected to find them in $testsDir/"
         exit 1;
     fi
 
@@ -117,7 +127,7 @@ run_daft_test() {
     if ! test -e $testScript
     then
         echo_error "Unknown test requested: $testId"
-        echo "Expected to find it as $testScript"
+        echo "Expected to find it at $testScript"
         return 1;
     fi
 
@@ -167,7 +177,7 @@ check_proxy_collapsed_forwarding() {
 }
 
 check_proxy_update_headers_after_304() {
-    if egrep 'AC_INIT.*Proxy.,.[1234][.]' configure.ac
+    if grep 'AC_INIT.*Proxy.,.[1234][.]' configure.ac
     then
         echo "No proxy-update-headers-after-304 until v5";
         return 0;
@@ -185,7 +195,7 @@ check_upgrade_protocols() {
 }
 
 run_one_test() {
-    testName=$1
+    local testName=$1
 
     # convert a test name foo into a check_foo() function name
     # e.g. busy-restart becomes check_busy_restart
@@ -195,8 +205,8 @@ run_one_test() {
 }
 
 run_tests() {
-    result=0
-    failed_tests=""
+    local result=0
+    local failed_tests=""
     for testName in "$@"
     do
         if run_one_test $testName
@@ -210,34 +220,25 @@ run_tests() {
 
     if test -n "$failed_tests"
     then
-        echo_error "Failed check(s):$failed_tests"
+        echo_error "Failed test(s):$failed_tests"
     fi
     return $result
 }
 
 setup_test_tools || exit $?
 
-# Run one test if a single test was named on the command line. This special
-# (but common in triage) use case simplifies failure diagnostics/output.
-if test $# -eq 1
+# run the tests named on the command line (if any) or default tests (otherwise)
+tests="$@"
+if test -z "$tests"
 then
-    run_one_test "$1"
-    exit $?
+    default_tests="
+        pconn
+        proxy-update-headers-after-304
+        upgrade-protocols
+        proxy-collapsed-forwarding
+        busy-restart
+    "
+    tests="$default_tests"
 fi
 
-# Run all named tests if multiple tests were named on the command line.
-if test $# -gt 1
-then
-    run_tests "$@"
-    exit $?
-fi
-
-# Run default tests if no tests were named on the command line.
-default_tests="
-    pconn
-    proxy-update-headers-after-304
-    upgrade-protocols
-    proxy-collapsed-forwarding
-    busy-restart
-"
-run_tests $default_tests
+run_tests $tests

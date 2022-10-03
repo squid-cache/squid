@@ -21,47 +21,47 @@ env:
 
 jobs:
 
-  # functionality-tests:
-  #   runs-on: ubuntu-22.04
+  functionality-tests:
+    runs-on: ubuntu-22.04
 
-  #   steps:
-  #     - name: Install prerequisite packages
-  #       run: |
-  #         sudo apt-get --quiet=2 update
-  #         sudo apt-get --quiet=2 install libtool-bin
+    steps:
+      - name: Install prerequisite packages
+        run: |
+          sudo apt-get --quiet=2 update
+          sudo apt-get --quiet=2 install libtool-bin
 
-  #     - name: Setup a nodejs environment
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: 16
+      - name: Setup a nodejs environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
 
-  #     - name: Checkout Squid sources
-  #       uses: actions/checkout@v3
-  #       with:
-  #         fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+      - name: Checkout Squid sources
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
 
-  #     - run: ./bootstrap.sh
-  #     - run: ./configure --with-openssl
-  #     - run: make -j2
-  #     - run: |
-  #         sudo make install
-  #         sudo chown -R nobody:nogroup /usr/local/squid
+      - run: ./bootstrap.sh
+      - run: ./configure --with-openssl
+      - run: make -j2
+      - run: |
+          sudo make install
+          sudo chown -R nobody:nogroup /usr/local/squid
 
-  #     - run: ./test-suite/test-functionality.sh
+      - run: ./test-suite/test-functionality.sh
 
-  #     # Squid logs are not readable to actions/upload-artifact below
-  #     - name: Prep test logs
-  #       if: success() || failure()
-  #       run: sudo chmod -R a+rX /usr/local/squid
+      # Squid logs are not readable to actions/upload-artifact below
+      - name: Prep test logs
+        if: success() || failure()
+        run: sudo chmod -R a+rX /usr/local/squid
 
-  #     - name: Publish test logs
-  #       if: success() || failure()
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: test-logs
-  #         path: |
-  #           ./*.log
-  #           /usr/local/squid/var/logs/overlord/
+      - name: Publish test logs
+        if: success() || failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-logs
+          path: |
+            ./*.log
+            /usr/local/squid/var/logs/overlord/
 
   source-maintenance-tests:
     runs-on: ubuntu-22.04
@@ -72,7 +72,6 @@ jobs:
           sudo apt-get --quiet=2 update
           sudo apt-get --quiet=2 install astyle
           sudo apt-get --quiet=2 install gperf
-        if: runner.os == 'Linux'
 
       - uses: actions/checkout@v3
         with:
@@ -80,35 +79,35 @@ jobs:
 
       - run: ./test-suite/test-sources.sh
 
-  # build-tests:
+  build-tests:
 
-  #   strategy:
-  #     fail-fast: true
-  #     matrix:
-  #       os: [ ubuntu-22.04, macos-11 ]
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ ubuntu-22.04, macos-11 ]
 
-  #   runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
 
-  #   steps:
+    steps:
 
-  #     - name: Install prerequisite Linux packages
-  #       if: runner.os == 'Linux'
-  #       run: |
-  #         sudo apt-get --quiet=2 update
-  #         sudo apt-get --quiet=2 install libtool-bin
-  #         sudo apt-get --quiet=2 install libcppunit-dev
-  #         sudo apt-get --quiet=2 install libldap2-dev
+      - name: Install prerequisite Linux packages
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get --quiet=2 update
+          sudo apt-get --quiet=2 install libtool-bin
+          sudo apt-get --quiet=2 install libcppunit-dev
+          sudo apt-get --quiet=2 install libldap2-dev
 
-  #     - name: Install prerequisite macOS packages
-  #       if: runner.os == 'macOS'
-  #       run: |
-  #          brew install automake
-  #          brew install cppunit
+      - name: Install prerequisite macOS packages
+        if: runner.os == 'macOS'
+        run: |
+           brew install automake
+           brew install cppunit
 
-  #     - name: Checkout sources
-  #       uses: actions/checkout@v3
+      - name: Checkout sources
+        uses: actions/checkout@v3
 
-  #     - run: ./test-builds.sh
-  #       # XXX: Fix distclean cleanup on macOS instead
-  #       continue-on-error: ${{ runner.os == 'macOS' }}
+      - run: ./test-builds.sh
+        # XXX: Fix distclean cleanup on macOS instead
+        continue-on-error: ${{ runner.os == 'macOS' }}
 
