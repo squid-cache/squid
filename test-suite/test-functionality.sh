@@ -91,6 +91,8 @@ start_overlord() {
 }
 
 setup_test_tools() {
+    echo "::group::Setup test tools"
+
     clone_repo https://github.com/measurement-factory/daft $DAFT_DIR || return
     clone_repo https://github.com/measurement-factory/squid-dafts $SQUID_DAFTS_DIR || return
     clone_repo https://github.com/measurement-factory/squid-overlord $SQUID_OVERLORD_DIR || return
@@ -105,6 +107,9 @@ setup_test_tools() {
     fi
 
     start_overlord || return
+
+    # TODO: Find a good way to end group on (currently fatal) errors as well.
+    echo "::endgroup::"
 }
 
 run_daft_test() {
