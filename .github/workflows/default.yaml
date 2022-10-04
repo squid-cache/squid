@@ -122,5 +122,5 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: build-logs
+          name: build-logs-${{ runner.os }}
           path: btlayer-*.log
