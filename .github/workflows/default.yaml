@@ -1,5 +1,5 @@
-# Test the default branch, supported releases, and their PRs
-name: GitHub CI tests
+# Test the default branch, supported release branches, and their PRs
+name: GitHub CI
 
 on:
   push:
