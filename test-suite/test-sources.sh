@@ -37,6 +37,7 @@ echo_warning() {
     echo "::warning ::" "$@"
 }
 
+# print and execute the given command
 run() {
     echo "running: $@"
     "$@"
@@ -55,6 +56,7 @@ fetch_pr_refs() {
         "refs/pull/${PULL_REQUEST_NUMBER}/head:refs/pull/${PULL_REQUEST_NUMBER}/head";
 }
 
+# check changed lines for conflict markers or whitespace errors
 check_diff() {
     if run git -c core.whitespace=-blank-at-eof diff --check ${STARTING_POINT}
     then
@@ -73,6 +75,7 @@ check_diff() {
     return 1;
 }
 
+# check changed files for certain misspelled words
 check_spelling() {
     if ! test -e ./scripts/spell-check.sh
     then
@@ -86,7 +89,7 @@ check_spelling() {
         return 0;
     fi
 
-    # TODO: Remove this year 2020 workaround? Fresh master PRs should have Bug 5021 fix.
+    # TODO: Remove this year-2020 workaround? Fresh master PRs should have Bug 5021 fix.
     if test -n "${PULL_REQUEST_NUMBER}"
     then
         # Detect stale PR branches that were forked before the first codespell
@@ -125,6 +128,7 @@ check_spelling() {
     return 1;
 }
 
+# check for certain problems fixed by a ./scripts/source-maintenance.sh
 check_source_maintenance() {
     if ! git diff --quiet
     then
@@ -151,18 +155,23 @@ check_source_maintenance() {
     # Avoid distracting $checker warnings; TODO: Fix $checker instead.
     touch boilerplate_fix.sed
 
-    run $checker $copyrightOption no
+    if ! run $checker $copyrightOption no
+    then
+        echo_error "Running $checker modified sources"
+        CHECK_OUTCOME_PHRASE="Ignored $checker failure" # maybe overwritten below
+        # TODO: Require source-maintenance.sh application instead of ignoring this error.
+    fi
 
     if run git diff --exit-code
     then
         return 0
     fi
 
-    echo_error "Running $checker modifies sources"
+    echo_error "Running $checker modified sources"
     echo "The diff above details these modifications. Consider running $checker."
-    # TODO: Require running source-maintenance.sh instead of ignoring this error.
     # TODO: Provide a downloadable patch that developers can apply.
     CHECK_OUTCOME_PHRASE="Ignored the need to run $checker"
+    # TODO: Require source-maintenance.sh application instead of ignoring these changes.
     return 0
 }
 
@@ -203,9 +212,11 @@ run_one_check() {
     return $result
 }
 
+# executes all of the given checks, providing a summary of their failures
 run_checks() {
     local result=0
     local failed_checks=""
+
     for checkName in "$@"
     do
         if run_one_check $checkName
@@ -224,21 +235,28 @@ run_checks() {
     return $result
 }
 
-if test -n "${PULL_REQUEST_NUMBER}"
-then
-    fetch_pr_refs || exit $?
-fi
-echo "Starting point: $STARTING_POINT (`git rev-parse $STARTING_POINT`)"
+# run the checks named on the command line (if any) or the default checks (otherwise)
+main() {
 
-checks="$@"
-if test -z "$checks"
-then
-    default_checks="
-        diff
-        spelling
-        source-maintenance
-    "
-    checks="$default_checks"
-fi
+    if test -n "${PULL_REQUEST_NUMBER}"
+    then
+        fetch_pr_refs || return
+    fi
+    echo "Starting point: $STARTING_POINT (`git rev-parse $STARTING_POINT`)"
 
-run_checks $checks
+    checks="$@"
+    if test -z "$checks"
+    then
+        local default_checks="
+            diff
+            spelling
+            source-maintenance
+        "
+        checks="$default_checks"
+    fi
+
+    run_checks $checks
+}
+
+main
+exit $?

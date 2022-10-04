@@ -112,7 +112,8 @@ setup_test_tools() {
     echo "::endgroup::"
 }
 
-run_daft_test() {
+# executes a single test after the caller confirms that the test is applicable
+run_confirmed_test() {
     local testId="$1"
 
     local testRunner="$DAFT_DIR/src/cli/daft.js"
@@ -165,11 +166,11 @@ run_daft_test() {
 }
 
 check_pconn() {
-    run_daft_test pconn
+    run_confirmed_test pconn
 }
 
 check_busy_restart() {
-    if ! run_daft_test busy-restart
+    if ! run_confirmed_test busy-restart
     then
         # XXX: Make the test stable instead!
         echo_warning "Ignoring unstable test failure: busy-restart"
@@ -183,7 +184,7 @@ check_proxy_collapsed_forwarding() {
         echo "No proxy-collapsed-forwarding due to stalling transactions"
         return 0;
     fi
-    run_daft_test proxy-collapsed-forwarding
+    run_confirmed_test proxy-collapsed-forwarding
 }
 
 check_proxy_update_headers_after_304() {
@@ -192,7 +193,7 @@ check_proxy_update_headers_after_304() {
         echo "No proxy-update-headers-after-304 until v5";
         return 0;
     fi
-    run_daft_test proxy-update-headers-after-304
+    run_confirmed_test proxy-update-headers-after-304
 }
 
 check_upgrade_protocols() {
@@ -201,19 +202,21 @@ check_upgrade_protocols() {
         echo "No upgrade-protocols without http_upgrade_request_protocols support";
         return 0;
     fi
-    run_daft_test upgrade-protocols
+    run_confirmed_test upgrade-protocols
 }
 
+# executes a single check_name test named by the parameter
 run_one_test() {
     local testName=$1
 
-    # convert a test name foo into a check_foo() function name
-    # e.g. busy-restart becomes check_busy_restart
+    # convert a test name foo into a check_foo() function name suffix; e.g.
+    # busy-restart becomes busy_restart (to be called below as check_busy_restart)
     check=`echo $testName | sed s/-/_/g`
 
     check_$check
 }
 
+# executes all of the given tests, providing a summary of their failures
 run_tests() {
     local result=0
     local failed_tests=""
@@ -235,20 +238,27 @@ run_tests() {
     return $result
 }
 
-setup_test_tools || exit $?
+# run the tests named on the command line (if any) or the default tests (otherwise)
+main() {
 
-# run the tests named on the command line (if any) or default tests (otherwise)
-tests="$@"
-if test -z "$tests"
-then
-    default_tests="
-        pconn
-        proxy-update-headers-after-304
-        upgrade-protocols
-        proxy-collapsed-forwarding
-        busy-restart
-    "
-    tests="$default_tests"
-fi
+    setup_test_tools || return
 
-run_tests $tests
+    local tests="$@"
+
+    if test -z "$tests"
+    then
+        local default_tests="
+            pconn
+            proxy-update-headers-after-304
+            upgrade-protocols
+            proxy-collapsed-forwarding
+            busy-restart
+        "
+        tests="$default_tests"
+    fi
+
+    run_tests $tests
+}
+
+main
+exit $?

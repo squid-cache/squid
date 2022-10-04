@@ -14,7 +14,7 @@ env:
 
   # Full clones of Squid repository branches (depth=19000+) waste resources,
   # while excessively shallow clones break tests that check for past commits
-  # (e.g., to skip a particular test until the known bug is fixed) or generate
+  # (e.g., to skip a particular test until a known bug is fixed) or generate
   # diffs against them (e.g., for `git diff --check`). This arbitrary limit
   # tries to balance the two concerns.
   CHECKOUT_FETCH_DEPTH: 1001
@@ -22,6 +22,7 @@ env:
 jobs:
 
   functionality-tests:
+
     runs-on: ubuntu-22.04
 
     steps:
@@ -64,6 +65,7 @@ jobs:
             /usr/local/squid/var/logs/overlord/*.log
 
   source-maintenance-tests:
+
     runs-on: ubuntu-22.04
 
     steps:
