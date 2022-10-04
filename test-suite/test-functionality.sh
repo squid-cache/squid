@@ -20,12 +20,12 @@ echo "DAFT_DIR=${DAFT_DIR:=$CLONES_DIR/daft}"
 echo "SQUID_DAFTS_DIR=${SQUID_DAFTS_DIR:=$CLONES_DIR/squid-dafts}"
 echo "SQUID_OVERLORD_DIR=${SQUID_OVERLORD_DIR:=$CLONES_DIR/squid-overlord}"
 
-# print an error message (with special markers recognized by Github Actions)
+# print an error message (with special markers recognized by GitHub Actions)
 echo_error() {
     echo "::error ::" "$@"
 }
 
-# print a warning message (with special markers recognized by Github Actions)
+# print a warning message (with special markers recognized by GitHub Actions)
 echo_warning() {
     echo "::warning ::" "$@"
 }

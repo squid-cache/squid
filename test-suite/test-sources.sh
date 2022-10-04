@@ -10,7 +10,7 @@
 # This script checks source code compliance with a few Squid Project policies
 # and recommendations. Some of the checks are applied to a subset of
 # repository files, depending on the environment variables (first match wins):
-# * If $PULL_REQUEST_NUMBER is set, checks sources modified by that Github PR;
+# * If $PULL_REQUEST_NUMBER is set, checks sources modified by that GitHub PR;
 # * If $FORK_POINT is set, checks sources modified since that commit;
 # * Otherwise, checks sources modified since the parent commit (HEAD^).
 STARTING_POINT="HEAD^"
@@ -27,12 +27,12 @@ CHECK_OUTCOME_PHRASE=""
 
 # XXX: echo_*() and run() functions are duplicated in test-functionality.sh.
 
-# print an error message (with special markers recognized by Github Actions)
+# print an error message (with special markers recognized by GitHub Actions)
 echo_error() {
     echo "::error ::" "$@"
 }
 
-# print a warning message (with special markers recognized by Github Actions)
+# print a warning message (with special markers recognized by GitHub Actions)
 echo_warning() {
     echo "::warning ::" "$@"
 }
