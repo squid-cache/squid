@@ -103,9 +103,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get --quiet=2 update
-          sudo apt-get --quiet=2 install libtool-bin
-          sudo apt-get --quiet=2 install libcppunit-dev
-          sudo apt-get --quiet=2 install libldap2-dev
+          sudo apt-get build-dep squid
 
       - name: Install prerequisite macOS packages
         if: runner.os == 'macOS'
