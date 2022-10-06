@@ -220,10 +220,6 @@ CachePeer::noteFailure(Filler filler)
             return; // this failure is not our fault
     }
 
-    // else take the blame for all failures
-
-    debugs(15, DBG_IMPORTANT, "ERROR: TCP connection to " << host << "/" << http_port << " failed");
-
     countFailure();
 }
 

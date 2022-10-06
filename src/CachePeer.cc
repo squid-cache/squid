@@ -57,22 +57,30 @@ CachePeer::connectTimeout() const
     return Config.Timeout.peer_connect;
 }
 
-/// updates failure statistics
+// TODO: Require callers to detail failures instead of using one (and often
+// misleading!) "TCP" label for all of them.
 void
 CachePeer::countFailure()
 {
     stats.last_connect_failure = squid_curtime;
+    if (tcp_up > 0)
+        --tcp_up;
 
-    if (!tcp_up) {
-        debugs(15, 2, "TCP connection to " << host << "/" << http_port <<
-               " dead");
-        return;
-    }
+    // TODO: Report peer name. Same-addresses peers often have different names.
 
-    --tcp_up;
+    const auto consideredAliveByAdmin = stats.logged_state == PEER_ALIVE;
+    const auto level = consideredAliveByAdmin ? DBG_IMPORTANT : 2;
+    debugs(15, level, "ERROR: TCP connection to " << host << "/" << http_port << " failed");
 
-    if (!tcp_up) {
-        debugs(15, DBG_IMPORTANT, "Detected DEAD " << neighborTypeStr(this) << ": " << name);
-        stats.logged_state = PEER_DEAD;
+    if (consideredAliveByAdmin) {
+        if (!tcp_up) {
+            debugs(15, DBG_IMPORTANT, "Detected DEAD " << neighborTypeStr(this) << ": " << name);
+            stats.logged_state = PEER_DEAD;
+        } else {
+            debugs(15, 2, "additional failures needed to mark this cache_peer DEAD: " << tcp_up);
+        }
+    } else {
+        assert(!tcp_up);
+        debugs(15, 2, "cache_peer " << host << "/" << http_port << " is still DEAD");
     }
 }

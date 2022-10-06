@@ -138,7 +138,7 @@ PeerPoolMgr::handleSecuredPeer(Security::EncryptorAnswer &answer)
     assert(!answer.tunneled);
     if (answer.error.get()) {
         assert(!answer.conn);
-        // PeerConnector calls peerConnectFailed() for us;
+        // PeerConnector calls NoteOutgoingConnectionFailure() for us;
         checkpoint("conn securing failure"); // may retry
         return;
     }

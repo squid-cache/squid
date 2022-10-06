@@ -42,7 +42,7 @@ public:
     /// Return the configured TLS context object
     virtual Security::ContextPointer getTlsContext();
 
-    /// On error calls peerConnectFailed().
+    /// On error calls NoteOutgoingConnectionFailure().
     /// On success store the used TLS session for later use.
     virtual void noteNegotiationDone(ErrorState *);
 };
