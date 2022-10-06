@@ -44,6 +44,10 @@ MAKETEST="distcheck"
 #   --with-valgrind-debug \
 #   --with-gnutls \
 #   --with-tdb \
+#   --with-cap \
+#   --with-gnugss \
+#   --with-heimdal-krb5 \
+#   --with-mit-krb5 \
 #
 #   --enable-cpu-profiling \  Requires CPU support.
 #
@@ -107,6 +111,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--with-gnu-ld \
 	--with-ipv6-split-stack \
 	--with-large-files \
+	--with-ldap \
 	--with-pic \
 	--with-pthreads \
 	--enable-build-info=squid\ test\ build \

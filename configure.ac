@@ -21,6 +21,7 @@ m4_include([acinclude/squid-util.m4])
 m4_include([acinclude/compiler-flags.m4])
 m4_include([acinclude/os-deps.m4])
 m4_include([acinclude/krb5.m4])
+m4_include([acinclude/ldap.m4])
 m4_include([acinclude/nettle.m4])
 m4_include([acinclude/pam.m4])
 m4_include([acinclude/pkg.m4])
@@ -1627,220 +1628,45 @@ AC_MSG_NOTICE([$KRB5_FLAVOUR Kerberos library support: ${with_krb5:=no} ${LIB_KR
 AC_SUBST(KRB5INCS)
 AC_SUBST(KRB5LIBS)
 
-dnl On MinGW OpenLDAP is not available, so LDAP helpers can be linked
-dnl only with Windows LDAP libraries using -lwldap32
-AS_IF([test "$squid_host_os" = "mingw"],[
-  LDAPLIB="-lwldap32"
-  LBERLIB=""
-],[
-  AC_CHECK_LIB(ldap, ldap_init, [LDAPLIB="-lldap"])
-  AC_CHECK_LIB(lber, ber_init, [LBERLIB="-llber"])
-  dnl if no ldap lib found check for mozilla version
-  AS_IF([test "x$ac_cv_lib_ldap_ldap_init" != "xyes"],[
-    oLIBS=$LIBS
-    LIBS="$LIBPTHREADS"
-    AC_CHECK_LIB(ldap60, ldap_init, [LDAPLIB="-lldap60"])
-    LIBS="$LDAPLIB $LIBPTHREADS"
-    AC_CHECK_LIB(prldap60, prldap_init, [LDAPLIB="-lprldap60 $LDAPLIB"])
-    LIBS="$LDAPLIB $LIBPTHREADS"
-    AC_CHECK_LIB(ssldap60, ldapssl_init, [LDAPLIB="-lssldap60 $LDAPLIB"])
-    LIBS=$oLIBS
+SQUID_AUTO_LIB(ldap,[LDAP],[LIBLDAP])
+AS_IF([test "x$with_ldap" != "xno"],[
+  dnl On MinGW OpenLDAP is not available, so LDAP helpers can be linked
+  dnl only with Windows LDAP libraries using -lwldap32
+  AS_IF([test "$squid_host_os" = "mingw"],[
+    LIBLDAP_LIBS="-lwldap32"
+  ],[
+    SQUID_STATE_SAVE(squid_ldap_state)
+    LIBS="$LIBLDAP_PATH $LIBPTHREADS $LIBS"
+    PKG_CHECK_MODULES([LIBLDAP],[ldap],[],[
+      AC_CHECK_LIB(lber, ber_init, [LIBLBER="-llber"])
+      AC_CHECK_LIB(ldap, ldap_init, [LIBLDAP_LIBS="-lldap $LIBLBER"])
+      dnl if no ldap lib found check for mozilla version
+      AS_IF([test "x$ac_cv_lib_ldap_ldap_init" != "xyes"],[
+        SQUID_STATE_SAVE(squid_ldap_mozilla)
+        LIBS="$LIBLDAP_PATH $LIBPTHREADS"
+        AC_CHECK_LIB(ldap60, ldap_init, [LIBLDAP_LIBS="-lldap60 $LIBLBER"])
+        LIBS="$LIBLDAP_PATH $LIBLDAP_LIBS $LIBPTHREADS"
+        AC_CHECK_LIB(prldap60, prldap_init, [LIBLDAP_LIBS="-lprldap60 $LIBLDAP_LIBS"])
+        LIBS="$LIBLDAP_PATH $LIBLDAP_LIBS $LIBPTHREADS"
+        AC_CHECK_LIB(ssldap60, ldapssl_init, [LIBLDAP_LIBS="-lssldap60 $LIBLDAP_LIBS"])
+        SQUID_STATE_ROLLBACK(squid_ldap_mozilla)
+      ])
+    ])
+    AC_CHECK_HEADERS(ldap.h lber.h)
+    AC_CHECK_HEADERS(mozldap/ldap.h)
+    SQUID_CHECK_LDAP_API
   ])
 
-  AC_CHECK_HEADERS(ldap.h lber.h)
-  AC_CHECK_HEADERS(mozldap/ldap.h)
-
-  AC_MSG_CHECKING([for LDAP_OPT_DEBUG_LEVEL])
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include <ldap.h>
-  ]],[[
-    int i=LDAP_OPT_DEBUG_LEVEL
-  ]])],[
-    AC_MSG_RESULT(yes)
+  AS_IF([test "x$LIBLDAP_LIBS" != "x"],[
+    CPPFLAGS="$LIBLDAP_CFLAGS $CPPFLAGS"
+    LIBLDAP_LIBS="$LIBLDAP_PATH $LIBLDAP_LIBS"
+  ],[test "x$with_ldap" = "xyes"],[
+    AC_MSG_ERROR([Required library ldap not found])
   ],[
-    AC_MSG_RESULT(no)
+    AC_MSG_NOTICE([Library ldap not found.])
   ])
-
-  AC_MSG_CHECKING([for working ldap])
-  oLIBS=$LIBS
-  LIBS="$LDAPLIB $LBERLIB $LIBPTHREADS"
-  AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#   define  LDAP_DEPRECATED 1
-#   if HAVE_LDAP_H
-#   include <ldap.h>
-#   elif HAVE_MOZLDAP_LDAP_H
-#   include <mozldap/ldap.h>
-#   endif
-    int
-    main(void)
-    {
-        char host[]="";
-        int port;
-        ldap_init((const char *)&host, port);
-        return 0;
-    }
-  ]])],[
-    AC_DEFINE(HAVE_LDAP, 1, [LDAP support])
-    AC_MSG_RESULT(yes)
-  ],[
-    AC_MSG_RESULT(no)
-  ],[
-     AC_MSG_RESULT(cross-compiler cant tell)
-  ])
-  LIBS=$oLIBS
-
-  AC_MSG_CHECKING([for OpenLDAP])
-  AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#   if HAVE_LDAP_H
-#   include <ldap.h>
-#   endif
-#   include <string.h>
-    int
-    main(void)
-    {
-        return strcmp(LDAP_VENDOR_NAME,"OpenLDAP");
-    }
-  ]])],[
-    AC_DEFINE(HAVE_OPENLDAP, 1, [OpenLDAP support])
-    AC_MSG_RESULT(yes)
-  ],[
-    AC_MSG_RESULT(no)
-  ],[
-    AC_MSG_RESULT(cross-compiler cant tell)
-  ])
-
-  AC_MSG_CHECKING([for Sun LDAP SDK])
-  AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#   if HAVE_LDAP_H
-#   include <ldap.h>
-#   endif
-#   include <string.h>
-    int
-    main(void)
-    {
-        return strcmp(LDAP_VENDOR_NAME,"Sun Microsystems Inc.");
-    }
-  ]])],[
-    AC_DEFINE(HAVE_SUN_LDAP_SDK, 1, [Sun LDAP SDK support])
-    AC_MSG_RESULT(yes)
-  ],[
-    AC_MSG_RESULT(no)
-  ],[
-    AC_MSG_RESULT(cross-compiler cant tell)
-  ])
-
-  AC_MSG_CHECKING([for Mozilla LDAP SDK])
-  AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#   if HAVE_LDAP_H
-#   include <ldap.h>
-#   elif HAVE_MOZLDAP_LDAP_H
-#   include <mozldap/ldap.h>
-#   endif
-#   include <string.h>
-    int
-    main(void)
-    {
-        return strcmp(LDAP_VENDOR_NAME,"mozilla.org");
-    }
-  ]])],[
-    AC_DEFINE(HAVE_MOZILLA_LDAP_SDK, 1, [Mozilla LDAP SDK support])
-    AC_MSG_RESULT(yes)
-  ],[
-    AC_MSG_RESULT(no)
-  ],[
-    AC_MSG_RESULT(cross-compiler cant tell)
-  ])
-
-  AC_MSG_CHECKING([for LDAP_REBINDPROC_CALLBACK])
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#   if HAVE_LDAP_H
-#   include <ldap.h>
-#   elif HAVE_MOZLDAP_LDAP_H
-#   include <mozldap/ldap.h>
-#   endif
-  ]],[[
-    LDAP_REBINDPROC_CALLBACK ldap_rebind;
-  ]])],[
-    AC_DEFINE(HAVE_LDAP_REBINDPROC_CALLBACK,1,[Define to 1 if you have LDAP_REBINDPROC_CALLBACK])
-    AC_MSG_RESULT(yes)
-  ],[
-     AC_MSG_RESULT(no)
-  ])
-
-  AC_MSG_CHECKING([for LDAP_REBIND_PROC])
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#   if HAVE_LDAP_H
-#   include <ldap.h>
-#   elif HAVE_MOZLDAP_LDAP_H
-#   include <mozldap/ldap.h>
-#   endif
-  ]],[[
-    LDAP_REBIND_PROC ldap_rebind;
-  ]])],[
-    AC_DEFINE(HAVE_LDAP_REBIND_PROC,1,[Define to 1 if you have LDAP_REBIND_PROC])
-    AC_MSG_RESULT(yes)
-  ],[
-    AC_MSG_RESULT(no)
-  ])
-
-  AC_MSG_CHECKING([for LDAP_REBIND_FUNCTION])
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#   define LDAP_REFERRALS
-#   if HAVE_LDAP_H
-#   include <ldap.h>
-#   elif HAVE_MOZLDAP_LDAP_H
-#   include <mozldap/ldap.h>
-#   endif
-  ]],[[
-    LDAP_REBIND_FUNCTION ldap_rebind;
-  ]])],[
-    AC_DEFINE(HAVE_LDAP_REBIND_FUNCTION,1,[Define to 1 if you have LDAP_REBIND_FUNCTION])
-    AC_MSG_RESULT(yes)
-  ],[
-    AC_MSG_RESULT(no)
-  ])
-
-  AC_MSG_CHECKING([for LDAP_SCOPE_DEFAULT])
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#   if HAVE_LDAP_H
-#   include <ldap.h>
-#   elif HAVE_MOZLDAP_LDAP_H
-#   include <mozldap/ldap.h>
-#   endif
-  ]],[[
-    int i=LDAP_SCOPE_DEFAULT;
-  ]])],[
-    AC_DEFINE(HAVE_LDAP_SCOPE_DEFAULT,1,[Define to 1 if you have LDAP_SCOPE_DEFAULT])
-    AC_MSG_RESULT(yes)
-  ],[
-    AC_MSG_RESULT(no)
-  ])
-
-  AC_CHECK_MEMBER([struct ldap_url_desc.lud_scheme],[
-    AC_DEFINE(HAVE_LDAP_URL_LUD_SCHEME,1,[Define to 1 if you have LDAPURLDesc.lud_scheme])
-  ],,[
-#include <ldap.h>
-  ])
-
-  AC_CHECK_LIB(ldap,ldapssl_client_init,[
-    AC_DEFINE(HAVE_LDAPSSL_CLIENT_INIT,1,[Define to 1 if you have ldapssl_client_init])
-  ],)
-
-  AC_CHECK_LIB(ldap,ldap_url_desc2str,[
-    AC_DEFINE(HAVE_LDAP_URL_DESC2STR,1,[Define to 1 if you have ldap_url_desc2str])
-  ],)
-
-  AC_CHECK_LIB(ldap,ldap_url_parse,[
-    AC_DEFINE(HAVE_LDAP_URL_PARSE,1,[Define to 1 if you have ldap_url_parse])
-  ],)
-
-  AC_CHECK_LIB(ldap,ldap_start_tls_s,[
-    AC_DEFINE(HAVE_LDAP_START_TLS_S,1,[Define to 1 if you have ldap_start_tls_s])
-  ],)
 ])
-
-AC_SUBST(LDAPLIB)
-AC_SUBST(LBERLIB)
+AC_SUBST(LIBLDAP_LIBS)
 
 SQUID_AUTO_LIB(systemd,[systemd API for start-up notification],[LIBSYSTEMD])
 AH_TEMPLATE(USE_SYSTEMD,[systemd support is available])
@@ -2438,8 +2264,6 @@ AC_CHECK_HEADERS( \
   gnumalloc.h \
   grp.h \
   ipl.h \
-  lber.h \
-  ldap.h \
   libc.h \
   limits.h \
   linux/posix_types.h \
@@ -2653,39 +2477,33 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 dnl Check for special functions
 AC_FUNC_ALLOCA
 
-
-# TODO: remove this 'lib' prefix to match coding standard
-SQUID_AUTO_LIB(libcap,[Linux capabilities],[LIBCAP])
-AS_IF([test "x$with_libcap" != "xno"],[
+SQUID_AUTO_LIB(cap,[Linux capabilities],[LIBCAP])
+AS_IF([test "x$with_cap" != "xno"],[
+  SQUID_STATE_SAVE(squid_libcap_state)
   CXXFLAGS="$LIBCAP_CFLAGS $CXXFLAGS"
   LDFLAGS="$LIBCAP_PATH $LDFLAGS"
-  # cap_clear_flag is the most recent libcap function we require
-  AC_CHECK_HEADERS(sys/capability.h)
-  AC_CHECK_LIB(cap, cap_clear_flag)
+  PKG_CHECK_MODULES([LIBCAP],[libcap >= 2.09],[],[
+    # cap_clear_flag is the most recent libcap function we require
+    AC_CHECK_LIB([cap],[cap_clear_flag],[LIBCAP_LIBS="$LIBCAP_LIBS -lcap"])
+  ])
   SQUID_CHECK_FUNCTIONAL_LIBCAP2
+  AC_MSG_NOTICE([libcap headers are ok: $squid_cv_sys_capability_works])
+  AS_IF([test "x$squid_cv_sys_capability_works" = "xno"],[LIBCAP_LIBS=""])
+  SQUID_STATE_ROLLBACK(squid_libcap_state)
 
-  # if it can't be supported..
-  AS_IF([test "x$ac_cv_header_sys_capability_h" = "xno" -o \
-     "x$ac_cv_lib_cap_cap_clear_flag" = "xno"],[
-    # and it was forced on: error
-    AS_IF([test "x$with_libcap" = "xyes"],[
-      AC_MSG_ERROR([libcap forced enabled but not available or not usable, requires libcap-2.09 or later])
-    ],[
-      # or it can't be supported: disable
-      with_libcap=no
-    ])
+  AS_IF([test "x$LIBCAP_LIBS" != "x"],[
+    with_cap=yes
+    CPPFLAGS="$LIBCAP_CFLAGS $CPPFLAGS"
+    LIBCAP_LIBS="$LIBCAP_PATH $LIBCAP_LIBS"
+    AC_DEFINE(USE_LIBCAP,1,[Linux capabilities library support])
+  ],[test "x$with_cap" = "xyes"],[
+    AC_MSG_ERROR([Required library libcap not found])
   ],[
-    with_libcap=yes
+    AC_MSG_NOTICE([Library libcap not found])
+    with_cap=no
   ])
 ])
-
-SQUID_DEFINE_BOOL(USE_LIBCAP,$with_libcap,
-   [use libcap to set capabilities required for TPROXY])
-AC_MSG_NOTICE([libcap support enabled: $with_libcap])
-SQUID_DEFINE_BOOL(LIBCAP_BROKEN,${squid_cv_sys_capability_works:=no},
-   [libcap2 headers are broken and clashing with glibc])
-AC_MSG_NOTICE([libcap2 headers are ok: $squid_cv_sys_capability_works])
-
+AC_MSG_NOTICE([Linux capabilities support enabled: ${with_cap} ${LIBCAP_LIBS}])
 
 dnl Check for needed libraries
 AC_SEARCH_LIBS([gethostbyname],[nsl resolv bind])
@@ -3149,13 +2967,13 @@ SQUID_DEFINE_BOOL(LINUX_NETFILTER,$enable_linux_netfilter,
 
 dnl Netfilter TPROXY depends on libcap but the NAT parts can still work.
 AC_MSG_NOTICE([Support for Netfilter-based interception proxy requested: $enable_linux_netfilter])
-AS_IF([test "x$enable_linux_netfilter" = "xyes" -a "x$with_libcap" != "xyes"],[
+AS_IF([test "x$enable_linux_netfilter" = "xyes" -a "x$with_cap" != "xyes"],[
   AC_MSG_WARN([Missing needed capabilities (libcap 2.09+) for TPROXY])
   AC_MSG_WARN([Linux Transparent Proxy (version 4+) support WILL NOT be enabled])
   AC_MSG_WARN([Reduced support to NAT Interception Proxy])
   # AC_DEFINEd later
 ])
-AS_IF([test "x$with_netfilter_conntrack" = "xyes" -a "x$with_libcap" != "xyes"],[
+AS_IF([test "x$with_netfilter_conntrack" = "xyes" -a "x$with_cap" != "xyes"],[
   AC_MSG_WARN([Missing needed capabilities (libcap 2.09+) for netfilter mark support])
   AC_MSG_WARN([Linux netfilter marking support WILL NOT be enabled])
   with_netfilter_conntrack=no

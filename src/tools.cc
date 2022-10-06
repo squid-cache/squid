@@ -33,6 +33,9 @@
 #include "wordlist.h"
 
 #include <cerrno>
+#if HAVE_SYS_CAPABILITY_H
+#include <sys/capability.h>
+#endif
 #if HAVE_SYS_PRCTL_H
 #include <sys/prctl.h>
 #endif

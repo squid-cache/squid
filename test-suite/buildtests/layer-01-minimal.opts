@@ -97,8 +97,13 @@ DISTCHECK_CONFIGURE_FLAGS=" \
  \
 	--without-pthreads \
 	--without-aio \
+	--without-cap \
 	--without-dl \
+	--without-gnugss \
+	--without-heimdal-krb5 \
 	--without-large-files \
+	--without-ldap \
+	--without-mit-krb5 \
 	--without-nettle \
 	--without-valgrind-debug \
 	--without-ipv6-split-stack \
