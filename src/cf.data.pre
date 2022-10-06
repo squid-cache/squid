@@ -4008,7 +4008,7 @@ DOC_END
 NAME: cache_peer_fault
 TYPE: acl_access
 DEFAULT: none
-DEFAULT_DOC: Blame cache peer for certain errors
+DEFAULT_DOC: Blame cache peer for cache_peer-related errors
 LOC: Config.accessList.cachePeerFault
 DEFAULT: none
 DOC_START
@@ -4018,6 +4018,8 @@ DOC_START
 	Use this directive to control whether an error response from a cache_peer
 	should be counted as a peer failure or a problem unrelated to the peer
 	health.
+
+	Only fast ACLs are supported.
 
 DOC_END
 

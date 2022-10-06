@@ -631,15 +631,13 @@ HappyConnOpener::handleConnOpenerAnswer(Attempt &attempt, const CommConnectCbPar
     }
 
     debugs(17, 8, what << " failed: " << params.conn);
-    if (const auto peer = params.conn->getPeer()) {
-        std::unique_ptr<ACLFilledChecklist> ch;
-        if (Config.accessList.cachePeerFault) {
-            ch.reset(new ACLFilledChecklist(Config.accessList.cachePeerFault, cause.getRaw(), nullptr));
-            ch->al = ale;
-            ch->syncAle(cause.getRaw(), nullptr);
-        }
-        peer->peerConnectFailed(ch.get());
-    }
+    // TODO: Use auto as the lambda parameter type after upgrading to C++14
+    NoteOutgoingConnectionFailure(params.conn->getPeer(), [&](ACLFilledChecklist &checklist) {
+        checklist.setRequest(cause.getRaw());
+        checklist.setOutgoingConnection(params.conn);
+        checklist.al = ale;
+        checklist.syncAle(cause.getRaw(), nullptr);
+    });
 
     // remember the last failure (we forward it if we cannot connect anywhere)
     lastFailedConnection = handledPath;

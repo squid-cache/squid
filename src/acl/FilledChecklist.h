@@ -42,6 +42,7 @@ public:
     void setRequest(HttpRequest *);
     /// configure rfc931 user identity for the first time
     void setIdent(const char *userIdentity);
+    void setOutgoingConnection(const Comm::ConnectionPointer &);
 
 public:
     /// The client connection manager

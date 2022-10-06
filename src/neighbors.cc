@@ -1342,7 +1342,7 @@ peerProbeConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int
     if (status == Comm::OK) {
         peerConnectSucceded(p);
     } else {
-        p->peerConnectFailedSilent();
+        p->countFailure();
     }
 
     -- p->testing_now;

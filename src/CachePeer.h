@@ -10,11 +10,13 @@
 #define SQUID_CACHEPEER_H_
 
 #include "acl/forward.h"
+#include "acl/FilledChecklist.h"
 #include "base/CbcPointer.h"
 #include "enums.h"
 #include "icp_opcode.h"
 #include "ip/Address.h"
 #include "security/PeerOptions.h"
+#include "SquidConfig.h"
 
 //TODO: remove, it is unconditionally defined and always used.
 #define PEER_MULTICAST_SIBLINGS 1
@@ -35,9 +37,13 @@ public:
     /// \returns the effective connect timeout for the given peer
     time_t connectTimeout() const;
 
-    void peerConnectFailed(ACLFilledChecklist *);
+    /// reacts to a cache_peer-related failure
+    /// \param filler a function to configure an ACLFilledChecklist if that becomes necessary
+    template <typename Filler>
+    void noteFailure(Filler filler);
 
-    void peerConnectFailedSilent();
+    /// updates failure statistics
+    void countFailure();
 
     u_int index = 0;
     char *name = nullptr;
@@ -198,6 +204,33 @@ public:
     int front_end_https = 0; ///< 0 - off, 1 - on, 2 - auto
     int connection_auth = 2; ///< 0 - off, 1 - on, 2 - auto
 };
+
+template <typename Filler>
+void
+CachePeer::noteFailure(Filler filler)
+{
+    if (const auto acls = Config.accessList.cachePeerFault) {
+        ACLFilledChecklist checklist(acls, nullptr, nullptr);
+        filler(checklist);
+        if (!checklist.fastCheck().allowed())
+            return; // this failure is not our fault
+    }
+
+    // else take the blame for all failures
+
+    debugs(15, DBG_IMPORTANT, "ERROR: TCP connection to " << host << "/" << http_port << " failed");
+
+    countFailure();
+}
+
+/// reacts to a Squid-to-origin or a Squid-to-cache_peer connection error
+/// \param filler a function to configure an ACLFilledChecklist if that becomes necessary
+template <typename Filler>
+void NoteOutgoingConnectionFailure(CachePeer *peer, Filler filler)
+{
+    if (peer)
+        peer->noteFailure(filler);
+}
 
 #endif /* SQUID_CACHEPEER_H_ */
 

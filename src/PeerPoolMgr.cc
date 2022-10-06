@@ -87,13 +87,10 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
     }
 
     if (params.flag != Comm::OK) {
-        std::unique_ptr<ACLFilledChecklist> ch;
-        if (Config.accessList.cachePeerFault) {
-            ch.reset(new ACLFilledChecklist(Config.accessList.cachePeerFault, request.getRaw(), nullptr));
-            ch->dst_addr = params.conn->remote;
-            ch->my_addr = params.conn->local;
-        }
-        peer->peerConnectFailed(ch.get());
+        NoteOutgoingConnectionFailure(peer, [&](ACLFilledChecklist &checklist) {
+            checklist.setRequest(request.getRaw());
+            checklist.setOutgoingConnection(params.conn);
+        });
         checkpoint("conn opening failure"); // may retry
         return;
     }

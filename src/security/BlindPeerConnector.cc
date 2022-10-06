@@ -77,12 +77,11 @@ Security::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
         // based on TCP results, SSL results, or both. And the code is probably not
         // consistent in this aspect across tunnelling and forwarding modules.
         if (peer && peer->secure.encryptTransport) {
-            std::unique_ptr<ACLFilledChecklist> ch;
-            if (Config.accessList.cachePeerFault) {
-                ch.reset(new ACLFilledChecklist(Config.accessList.cachePeerFault, request.getRaw(), nullptr));
-                fillChecklist(*ch);
-            }
-            peer->peerConnectFailed(ch.get());
+            NoteOutgoingConnectionFailure(peer, [&](ACLFilledChecklist &checklist) {
+                checklist.setRequest(request.getRaw());
+                checklist.setOutgoingConnection(serverConn);
+                fillChecklist(checklist);
+            });
         }
         return;
     }

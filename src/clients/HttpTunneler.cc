@@ -375,22 +375,19 @@ Http::Tunneler::sendSuccess()
 }
 
 void
-Http::Tunneler::countFailingConnection(ErrorState *error)
+Http::Tunneler::countFailingConnection(const ErrorState * const error)
 {
     assert(connection);
-    if (const auto p = connection->getPeer()) {
-        std::unique_ptr<ACLFilledChecklist> ch;
-        if (Config.accessList.cachePeerFault) {
-            ch.reset(new ACLFilledChecklist(Config.accessList.cachePeerFault, request.getRaw(), nullptr));
-            ch->al = al;
-            ch->syncAle(request.getRaw(), nullptr);
-            if (error) {
-                ch->reply = error->response_.getRaw();
-                HTTPMSGLOCK(ch->reply);
-            }
+    NoteOutgoingConnectionFailure(connection->getPeer(), [&](ACLFilledChecklist &checklist) {
+        checklist.setRequest(request.getRaw());
+        checklist.setOutgoingConnection(connection);
+        checklist.al = al;
+        checklist.syncAle(request.getRaw(), nullptr);
+        if (error) {
+            checklist.reply = error->response_.getRaw();
+            HTTPMSGLOCK(checklist.reply);
         }
-        p->peerConnectFailed(ch.get());
-    }
+    });
     if (noteFwdPconnUse && connection->isOpen())
         fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);
 }

@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "client_side.h"
+#include "CachePeer.h"
 #include "comm/Connection.h"
 #include "comm/forward.h"
 #include "debug/Messages.h"
@@ -245,6 +246,16 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
     changeAcl(A);
     setRequest(http_request);
     setIdent(ident);
+}
+
+void
+ACLFilledChecklist::setOutgoingConnection(const Comm::ConnectionPointer &conn)
+{
+    if (conn && conn->isOpen()) {
+        dst_addr = conn->remote;
+        my_addr = conn->local;
+        dst_peer_name = conn->getPeer() ? conn->getPeer()->name : nullptr;
+    }
 }
 
 void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)

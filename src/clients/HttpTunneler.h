@@ -80,7 +80,7 @@ private:
     void disconnect();
 
     /// updates connection usage history before the connection is closed
-    void countFailingConnection(ErrorState *);
+    void countFailingConnection(const ErrorState * const);
 
     AsyncCall::Pointer writer; ///< called when the request has been written
     AsyncCall::Pointer reader; ///< called when the response should be read

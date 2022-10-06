@@ -57,19 +57,9 @@ CachePeer::connectTimeout() const
     return Config.Timeout.peer_connect;
 }
 
+/// updates failure statistics
 void
-CachePeer::peerConnectFailed(ACLFilledChecklist *checklist)
-{
-    debugs(15, DBG_IMPORTANT, "ERROR: TCP connection to " << host << "/" << http_port << " failed");
-
-    if (checklist && !checklist->fastCheck().allowed())
-        return;
-
-    peerConnectFailedSilent();
-}
-
-void
-CachePeer::peerConnectFailedSilent()
+CachePeer::countFailure()
 {
     stats.last_connect_failure = squid_curtime;
 

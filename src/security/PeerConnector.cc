@@ -530,14 +530,11 @@ void
 Security::PeerConnector::countFailingConnection()
 {
     assert(serverConn);
-    if (const auto p = serverConn->getPeer()) {
-        std::unique_ptr<ACLFilledChecklist> ch;
-        if (Config.accessList.cachePeerFault) {
-            ch.reset(new ACLFilledChecklist(Config.accessList.cachePeerFault, request.getRaw(), nullptr));
-            fillChecklist(*ch);
-        }
-        p->peerConnectFailed(ch.get());
-    }
+    NoteOutgoingConnectionFailure(serverConn->getPeer(), [&](ACLFilledChecklist &checklist) {
+        checklist.setRequest(request.getRaw());
+        checklist.setOutgoingConnection(serverConn);
+        fillChecklist(checklist);
+    });
     // TODO: Calling PconnPool::noteUses() should not be our responsibility.
     if (noteFwdPconnUse && serverConn->isOpen())
         fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
