@@ -89,21 +89,6 @@ check_spelling() {
         return 0;
     fi
 
-    # TODO: Remove this year-2020 workaround? Fresh master PRs should have Bug 5021 fix.
-    if test -n "${PULL_REQUEST_NUMBER}"
-    then
-        # Detect stale PR branches that were forked before the first codespell
-        # application and, hence, cannot be spellchecked without stepping on
-        # misspellings in base code. Any PR-specific misspellings of stale
-        # branches should be caught later, when testing the staged commit.
-        required_title='Bug 5021: Spelling errors fixed by running scripts/spell-check.sh'
-        if ! git log --grep "$required_title" "HEAD^1" | grep -q ^commit
-        then
-            echo "The base code of this PR does not support automated spelling checks."
-            return 0;
-        fi
-    fi
-
     # To avoid flagging out-of-scope misspellings, only check modified files.
     # This also speeds up tests and helps avoid slow-codespell timeouts.
     local changed_files="`git diff --name-only ${STARTING_POINT}`"
