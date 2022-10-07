@@ -24,11 +24,9 @@ jobs:
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
 
-    - name: Autobuild
-      run: |
-       ./bootstrap.sh
-       ./configure
-       make
+    - run: ./bootstrap.sh
+    - run: ./configure
+    - run: make
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
