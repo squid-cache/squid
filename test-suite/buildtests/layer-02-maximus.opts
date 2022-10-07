@@ -45,6 +45,9 @@ MAKETEST="distcheck"
 #   --with-gnutls \
 #   --with-tdb \
 #   --with-cap \
+#   --with-gnugss \
+#   --with-heimdal-krb5 \
+#   --with-mit-krb5 \
 #
 #   --enable-cpu-profiling \  Requires CPU support.
 #
