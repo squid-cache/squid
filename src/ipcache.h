@@ -226,7 +226,6 @@ void ipcacheInvalidateNegative(const char *);
 void ipcache_init(void);
 void ipcacheMarkBadAddr(const char *name, const Ip::Address &);
 void ipcacheMarkGoodAddr(const char *name, const Ip::Address &);
-void ipcacheFreeMemory(void);
 void ipcache_restart(void);
 int ipcacheAddEntryFromHosts(const char *name, const char *ipaddr);
 

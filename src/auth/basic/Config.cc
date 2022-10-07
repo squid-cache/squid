@@ -29,7 +29,6 @@
 #include "mgr/Registration.h"
 #include "rfc1738.h"
 #include "sbuf/SBuf.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "util.h"
 #include "wordlist.h"
@@ -37,7 +36,7 @@
 /* Basic Scheme */
 static AUTHSSTATS authenticateBasicStats;
 
-helper *basicauthenticators = NULL;
+helper *basicauthenticators = nullptr;
 
 static int authbasic_initialised = 0;
 
@@ -58,7 +57,7 @@ Auth::Basic::Config::active() const
 bool
 Auth::Basic::Config::configured() const
 {
-    if ((authenticateProgram != NULL) && (authenticateChildren.n_max != 0) && !realm.isEmpty()) {
+    if ((authenticateProgram != nullptr) && (authenticateChildren.n_max != 0) && !realm.isEmpty()) {
         debugs(29, 9, "returning configured");
         return true;
     }
@@ -111,7 +110,7 @@ Auth::Basic::Config::done()
     }
 
     delete basicauthenticators;
-    basicauthenticators = NULL;
+    basicauthenticators = nullptr;
 
     if (authenticateProgram)
         wordlistDestroy(&authenticateProgram);
@@ -230,7 +229,7 @@ Auth::Basic::Config::decode(char const *proxy_auth, const HttpRequest *request, 
 
     Auth::User::Pointer lb;
     /* permitted because local_basic is purely local function scope. */
-    Auth::Basic::User *local_basic = NULL;
+    Auth::Basic::User *local_basic = nullptr;
 
     char *separator = strchr(cleartext, ':');
 
@@ -246,7 +245,7 @@ Auth::Basic::Config::decode(char const *proxy_auth, const HttpRequest *request, 
         Tolower(cleartext);
     local_basic->username(cleartext);
 
-    if (local_basic->passwd == NULL) {
+    if (local_basic->passwd == nullptr) {
         debugs(29, 4, "no password in proxy authorization header '" << proxy_auth << "'");
         auth_user_request->setDenyMessage("no password was present in the HTTP [proxy-]authorization header. This is most likely a browser bug");
     } else {
@@ -283,7 +282,7 @@ Auth::Basic::Config::decode(char const *proxy_auth, const HttpRequest *request, 
         lb->addToNameCache();
 
         auth_user = lb;
-        assert(auth_user != NULL);
+        assert(auth_user != nullptr);
     } else {
         /* replace the current cached password with the new one */
         Auth::Basic::User *basic_auth = dynamic_cast<Auth::Basic::User *>(auth_user.getRaw());
@@ -305,7 +304,7 @@ Auth::Basic::Config::init(Auth::SchemeConfig *)
     if (authenticateProgram) {
         authbasic_initialised = 1;
 
-        if (basicauthenticators == NULL)
+        if (basicauthenticators == nullptr)
             basicauthenticators = new helper("basicauthenticator");
 
         basicauthenticators->cmdline = authenticateProgram;

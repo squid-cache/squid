@@ -27,17 +27,16 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
 
 /* NTLM Scheme */
 static AUTHSSTATS authenticateNTLMStats;
 
-statefulhelper *ntlmauthenticators = NULL;
+statefulhelper *ntlmauthenticators = nullptr;
 static int authntlm_initialised = 0;
 
-static hash_table *proxy_auth_cache = NULL;
+static hash_table *proxy_auth_cache = nullptr;
 
 void
 Auth::Ntlm::Config::rotateHelpers()
@@ -66,7 +65,7 @@ Auth::Ntlm::Config::done()
         return;
 
     delete ntlmauthenticators;
-    ntlmauthenticators = NULL;
+    ntlmauthenticators = nullptr;
 
     if (authenticateProgram)
         wordlistDestroy(&authenticateProgram);
@@ -89,7 +88,7 @@ Auth::Ntlm::Config::init(Auth::SchemeConfig *)
 
         authntlm_initialised = 1;
 
-        if (ntlmauthenticators == NULL)
+        if (ntlmauthenticators == nullptr)
             ntlmauthenticators = new statefulhelper("ntlmauthenticator");
 
         if (!proxy_auth_cache)
@@ -124,7 +123,7 @@ Auth::Ntlm::Config::active() const
 bool
 Auth::Ntlm::Config::configured() const
 {
-    if ((authenticateProgram != NULL) && (authenticateChildren.n_max != 0)) {
+    if ((authenticateProgram != nullptr) && (authenticateChildren.n_max != 0)) {
         debugs(29, 9, "returning configured");
         return true;
     }
@@ -146,7 +145,7 @@ Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Http
         return;
 
     /* New request, no user details */
-    if (auth_user_request == NULL) {
+    if (auth_user_request == nullptr) {
         debugs(29, 9, "Sending type:" << hdrType << " header: 'NTLM'");
         httpHeaderPutStrf(&rep->header, hdrType, "NTLM");
 
@@ -156,7 +155,7 @@ Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Http
         }
     } else {
         Auth::Ntlm::UserRequest *ntlm_request = dynamic_cast<Auth::Ntlm::UserRequest *>(auth_user_request.getRaw());
-        assert(ntlm_request != NULL);
+        assert(ntlm_request != nullptr);
 
         switch (ntlm_request->user()->credentials()) {
 
@@ -209,7 +208,7 @@ Auth::Ntlm::Config::decode(char const *proxy_auth, const HttpRequest *, const ch
 {
     Auth::Ntlm::User *newUser = new Auth::Ntlm::User(Auth::SchemeConfig::Find("ntlm"), aRequestRealm);
     Auth::UserRequest::Pointer auth_user_request = new Auth::Ntlm::UserRequest();
-    assert(auth_user_request->user() == NULL);
+    assert(auth_user_request->user() == nullptr);
 
     auth_user_request->user(newUser);
     auth_user_request->user()->auth_type = Auth::AUTH_NTLM;

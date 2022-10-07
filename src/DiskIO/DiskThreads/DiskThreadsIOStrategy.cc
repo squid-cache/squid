@@ -68,7 +68,7 @@ DiskThreadsIOStrategy::callback()
     ++squidaio_counts.check_callback;
 
     for (;;) {
-        if ((resultp = squidaio_poll_done()) == NULL)
+        if ((resultp = squidaio_poll_done()) == nullptr)
             break;
 
         ctrlp = (squidaio_ctrl_t *) resultp->data;
@@ -105,7 +105,7 @@ DiskThreadsIOStrategy::callback()
             break;
         }
 
-        if (ctrlp == NULL)
+        if (ctrlp == nullptr)
             continue;       /* XXX Should not happen */
 
         dlinkDelete(&ctrlp->node, &used_list);
@@ -113,7 +113,7 @@ DiskThreadsIOStrategy::callback()
         if (ctrlp->done_handler) {
             AIOCB *done_callback = ctrlp->done_handler;
             void *cbdata;
-            ctrlp->done_handler = NULL;
+            ctrlp->done_handler = nullptr;
 
             if (cbdataReferenceValidDone(ctrlp->done_handler_data, &cbdata)) {
                 retval = 1; /* Return that we've actually done some work */
@@ -222,7 +222,7 @@ DiskFile::Pointer
 DiskThreadsIOStrategy::newFile (char const *path)
 {
     if (shedLoad()) {
-        return NULL;
+        return nullptr;
     }
 
     return new DiskThreadsDiskFile(path);
@@ -238,6 +238,6 @@ void
 DiskThreadsIOStrategy::unlinkFile(char const *path)
 {
     ++statCounter.syscalls.disk.unlinks;
-    aioUnlink(path, NULL, NULL);
+    aioUnlink(path, nullptr, nullptr);
 }
 

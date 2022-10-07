@@ -13,8 +13,6 @@
 #include "md5.h"
 #include "store_key_md5.h"
 
-static cache_key null_key[SQUID_MD5_DIGEST_LENGTH];
-
 const char *
 storeKeyText(const cache_key *key)
 {
@@ -42,7 +40,7 @@ storeKeyScan(const char *buf)
         t[0] = *(buf + (j++));
         t[1] = *(buf + (j++));
         t[2] = '\0';
-        *(digest + i) = (unsigned char) strtol(t, NULL, 16);
+        *(digest + i) = (unsigned char) strtol(t, nullptr, 16);
     }
 
     return digest;
@@ -167,20 +165,5 @@ storeKeyHashBuckets(int nbuckets)
         n <<= 1;
 
     return n;
-}
-
-int
-storeKeyNull(const cache_key * key)
-{
-    if (memcmp(key, null_key, SQUID_MD5_DIGEST_LENGTH) == 0)
-        return 1;
-    else
-        return 0;
-}
-
-void
-storeKeyInit(void)
-{
-    memset(null_key, '\0', SQUID_MD5_DIGEST_LENGTH);
 }
 

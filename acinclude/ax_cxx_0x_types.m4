@@ -12,7 +12,8 @@ AC_DEFUN([AX_CXX_TYPE_UNIFORM_DISTRIBUTIONS],[
   AC_CHECK_HEADERS(tr1/random)
   AC_CACHE_CHECK([whether std::uniform_int_distribution<T> is supported],
                  [squid_cv_std_uniform_int_distribution_works],[
-    AC_TRY_COMPILE([#include <random>],[std::uniform_int_distribution<int> c;],
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <random>]],
+      [[std::uniform_int_distribution<int> c;]])],
       [squid_cv_std_uniform_int_distribution_works=yes],
       [squid_cv_std_uniform_int_distribution_works=no])
     ])
@@ -24,7 +25,8 @@ AC_DEFUN([AX_CXX_TYPE_UNIFORM_DISTRIBUTIONS],[
                  [squid_cv_std_uniform_real_distribution_works],[
     AC_REQUIRE([AC_PROG_CXX])
     AC_LANG_PUSH([C++])
-    AC_TRY_COMPILE([#include <random>],[std::uniform_real_distribution<double> c;],
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <random>]],
+      [[std::uniform_real_distribution<double> c;]])],
       [squid_cv_std_uniform_real_distribution_works=yes],
       [squid_cv_std_uniform_real_distribution_works=no])
     ])
@@ -66,8 +68,8 @@ AC_DEFUN([SQUID_CXX_STD_IS_TRIVIALLY_COPYABLE],[
     [squid_cv_have_std_is_trivially_copyable],[
       AC_REQUIRE([AC_PROG_CXX])
       AC_LANG_PUSH([C++])
-      AC_TRY_COMPILE([#include <type_traits>],
-        [return std::is_trivially_copyable<int>::value ? 1 : 0;],
+      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <type_traits>]],
+        [[return std::is_trivially_copyable<int>::value ? 1 : 0;]])],
         [squid_cv_have_std_is_trivially_copyable=yes],
         [squid_cv_have_std_is_trivially_copyable=no])
       AC_LANG_POP

@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "ExternalACLEntry.h"
-#include "SquidTime.h"
+#include "time/gadgets.h"
 
 /******************************************************************
  * external_acl cache
@@ -19,10 +19,10 @@
 ExternalACLEntry::ExternalACLEntry() :
     notes()
 {
-    lru.next = lru.prev = NULL;
+    lru.next = lru.prev = nullptr;
     result = ACCESS_DENIED;
     date = 0;
-    def = NULL;
+    def = nullptr;
 }
 
 ExternalACLEntry::~ExternalACLEntry()

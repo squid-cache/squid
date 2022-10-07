@@ -30,7 +30,7 @@ public:
     void provideData (ESISegment::Pointer, ESIElement*);
     bool mayFail () const;
     void wontFail();
-    void fail(ESIElement *, char const *anError = NULL);
+    void fail(ESIElement *, char const *anError = nullptr);
     void makeCachableElements(esiSequence const &old);
     Pointer makeCacheable() const;
     void makeUsableElements(esiSequence const &old, ESIVarState &);

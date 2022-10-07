@@ -67,7 +67,7 @@ testSBuf::testSBufConstructDestruct()
 
     // TEST: copy-construct NULL string (implicit destructor non-crash test)
     {
-        SBuf s1(NULL);
+        SBuf s1(nullptr);
         CPPUNIT_ASSERT_EQUAL(0U,s1.length());
         CPPUNIT_ASSERT_EQUAL(SBuf(""),s1);
         CPPUNIT_ASSERT_EQUAL(empty_sbuf,s1);

@@ -17,7 +17,7 @@
 #define STUB_API "MemObject.cc"
 #include "tests/STUB.h"
 
-RemovalPolicy * mem_policy = NULL;
+RemovalPolicy * mem_policy = nullptr;
 
 int64_t
 MemObject::endOffset() const
@@ -34,11 +34,11 @@ MemObject::MemObject() {
     memset(&start_ping, 0, sizeof(start_ping));
 } // NOP instead of elided due to Store
 
-const char *MemObject::storeId() const STUB_RETVAL(NULL)
-const char *MemObject::logUri() const STUB_RETVAL(NULL)
+const char *MemObject::storeId() const STUB_RETVAL(nullptr)
+const char *MemObject::logUri() const STUB_RETVAL(nullptr)
 void MemObject::setUris(char const *, char const *, const HttpRequestMethod &) STUB
 void MemObject::reset() STUB
-void MemObject::delayRead(DeferredRead const &) STUB
+void MemObject::delayRead(const AsyncCallPointer &) STUB
 bool MemObject::readAheadPolicyCanRead() const STUB_RETVAL(false)
 void MemObject::setNoDelay(bool const) STUB
 MemObject::~MemObject() STUB

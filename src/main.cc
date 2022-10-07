@@ -50,7 +50,6 @@
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
 #include "ICP.h"
-#include "ident/Ident.h"
 #include "Instance.h"
 #include "ip/tools.h"
 #include "ipc/Coordinator.h"
@@ -70,15 +69,14 @@
 #include "refresh.h"
 #include "sbuf/Stream.h"
 #include "SBufStatsAction.h"
-#include "send-announce.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "stat.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "store/Disks.h"
 #include "store_log.h"
 #include "StoreFileSystem.h"
+#include "time/Engine.h"
 #include "tools.h"
 #include "unlinkd.h"
 #include "wccp.h"
@@ -143,7 +141,7 @@ void WINAPI WIN32_svcHandler(DWORD);
 #endif
 
 static int opt_signal_service = FALSE;
-static char *opt_syslog_facility = NULL;
+static char *opt_syslog_facility = nullptr;
 static int icpPortNumOverride = 1;  /* Want to detect "-u 0" */
 static int configured_once = 0;
 #if MALLOC_DBG
@@ -222,7 +220,7 @@ private:
         Auth::Scheme::FreeAll();
 #endif
 
-        eventAdd("SquidTerminate", &StopEventLoop, NULL, 0, 1, false);
+        eventAdd("SquidTerminate", &StopEventLoop, nullptr, 0, 1, false);
     }
 
     void doShutdown(time_t wait);
@@ -424,11 +422,11 @@ static const char *shortOpStr =
 
 // long options
 static struct option squidOptions[] = {
-    {"foreground", no_argument, 0,  optForeground},
-    {"kid",        required_argument, 0, optKid},
-    {"help",       no_argument, 0, 'h'},
-    {"version",    no_argument, 0, 'v'},
-    {0, 0, 0, 0}
+    {"foreground", no_argument, nullptr,  optForeground},
+    {"kid",        required_argument, nullptr, optKid},
+    {"help",       no_argument, nullptr, 'h'},
+    {"version",    no_argument, nullptr, 'v'},
+    {nullptr, 0, nullptr, 0}
 };
 
 // handle a command line parameter
@@ -565,6 +563,7 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
             /** \li On interrupt send SIGINT. */
             opt_send_signal = SIGINT;
         else if (!strncmp(optValue, "kill", strlen(optValue)))
+            // XXX: In SMP mode, uncatchable SIGKILL only kills the master process
             /** \li On kill send SIGKILL. */
             opt_send_signal = SIGKILL;
 
@@ -671,7 +670,9 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
             printf("%s\n",SQUID_BUILD_INFO);
 #if USE_OPENSSL
         printf("\nThis binary uses %s. ", OpenSSL_version(OPENSSL_VERSION));
+#if OPENSSL_VERSION_MAJOR < 3
         printf("For legal restrictions on distribution see https://www.openssl.org/source/license.html\n\n");
+#endif
 #endif
         printf( "configure options: %s\n", SQUID_CONFIGURE_OPTIONS);
 
@@ -903,7 +904,7 @@ mainReconfigureStart(void)
 #endif
     Security::CloseLogs();
 
-    eventAdd("mainReconfigureFinish", &mainReconfigureFinish, NULL, 0, 1,
+    eventAdd("mainReconfigureFinish", &mainReconfigureFinish, nullptr, 0, 1,
              false);
 }
 
@@ -1017,14 +1018,6 @@ mainReconfigureFinish(void *)
 #if USE_DELAY_POOLS
     Config.ClientDelay.finalize();
 #endif
-
-    if (Config.onoff.announce) {
-        if (!eventFind(start_announce, NULL))
-            eventAdd("start_announce", start_announce, NULL, 3600.0, 1);
-    } else {
-        if (eventFind(start_announce, NULL))
-            eventDelete(start_announce, NULL);
-    }
 
     reconfiguring = 0;
 }
@@ -1208,10 +1201,6 @@ mainInitialize(void)
     icapLogOpen();
 #endif
 
-#if USE_IDENT
-    Ident::Init();
-#endif
-
 #if SQUID_SNMP
 
     snmpInit();
@@ -1326,9 +1315,6 @@ mainInitialize(void)
 
     eventAdd("storeMaintain", Store::Maintain, nullptr, 1.0, 1);
 
-    if (Config.onoff.announce)
-        eventAdd("start_announce", start_announce, nullptr, 3600.0, 1);
-
     eventAdd("ipcache_purgelru", ipcache_purgelru, nullptr, 10.0, 1);
 
     eventAdd("fqdncache_purgelru", fqdncache_purgelru, nullptr, 15.0, 1);
@@ -1424,6 +1410,7 @@ ConfigureCurrentKid(const CommandLine &cmdLine)
         TheKidName.assign(APP_SHORTNAME);
         KidIdentifier = 0;
     }
+    Debug::NameThisKid(KidIdentifier);
 }
 
 /// Start directing debugs() messages to the configured cache.log.
@@ -1572,14 +1559,10 @@ SquidMain(int argc, char **argv)
 
         storeFsInit();      /* required for config parsing */
 
-        /* TODO: call the FS::Clean() in shutdown to do Fs cleanups */
         Fs::Init();
 
         /* May not be needed for parsing, have not audited for such */
         DiskIOModule::SetupAllModules();
-
-        /* Shouldn't be needed for config parsing, but have not audited for such */
-        StoreFileSystem::SetupAllFs();
 
         /* we may want the parsing process to set this up in the future */
         Store::Init();
@@ -1588,6 +1571,8 @@ SquidMain(int argc, char **argv)
         Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
 
         Format::Token::Init(); // XXX: temporary. Use a runners registry of pre-parse runners instead.
+
+        RunRegisteredHere(RegisteredRunner::bootstrapConfig);
 
         try {
             parse_err = parseConfigFile(ConfigFile);
@@ -1691,7 +1676,7 @@ SquidMain(int argc, char **argv)
     mainLoop.setPrimaryEngine(&comm_engine);
 
     /* use the standard time service */
-    TimeEngine time_engine;
+    Time::Engine time_engine;
 
     mainLoop.setTimeService(&time_engine);
 
@@ -1764,7 +1749,7 @@ mainStartScript(const char *prog)
 
     if ((cpid = fork()) == 0) {
         /* child */
-        execl(script, squid_start_script, (char *)NULL);
+        execl(script, squid_start_script, (char *)nullptr);
         _exit(-1);
     } else {
         do {
@@ -2123,24 +2108,7 @@ SquidShutdown()
     storeLogClose();
     accessLogClose();
     Store::Root().sync();       /* Flush log close */
-    StoreFileSystem::FreeAllFs();
     DiskIOModule::FreeAllModules();
-#if LEAK_CHECK_MODE && 0 /* doesn't work at the moment */
-
-    configFreeMemory();
-    storeFreeMemory();
-    /*stmemFreeMemory(); */
-    netdbFreeMemory();
-    ipcacheFreeMemory();
-    fqdncacheFreeMemory();
-    asnFreeMemory();
-    clientdbFreeMemory();
-    statFreeMemory();
-    eventFreeMemory();
-    mimeFreeMemory();
-    errorClean();
-#endif
-    Store::FreeMemory();
 
     fdDumpOpen();
 

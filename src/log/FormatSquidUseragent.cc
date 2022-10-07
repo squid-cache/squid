@@ -13,12 +13,11 @@
 #include "HttpRequest.h"
 #include "log/File.h"
 #include "log/Formats.h"
-#include "SquidTime.h"
 
 void
 Log::Format::SquidUserAgent(const AccessLogEntry::Pointer &al, Logfile * logfile)
 {
-    const char *agent = NULL;
+    const char *agent = nullptr;
 
     if (al->request)
         agent = al->request->header.getStr(Http::HdrType::USER_AGENT);

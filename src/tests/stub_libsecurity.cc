@@ -9,7 +9,6 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "comm/Connection.h"
-#include "Downloader.h"
 #include "HttpRequest.h"
 
 #define STUB_API "security/libsecurity.la"
@@ -27,6 +26,12 @@ void BlindPeerConnector::noteNegotiationDone(ErrorState *) STUB
 #include "security/EncryptorAnswer.h"
 Security::EncryptorAnswer::~EncryptorAnswer() {}
 std::ostream &Security::operator <<(std::ostream &os, const Security::EncryptorAnswer &) STUB_RETVAL(os)
+
+#include "security/Certificate.h"
+SBuf Security::SubjectName(Certificate &) STUB_RETVAL(SBuf())
+SBuf Security::IssuerName(Certificate &) STUB_RETVAL(SBuf())
+bool Security::IssuedBy(Certificate &, Certificate &) STUB_RETVAL(false)
+std::ostream &operator <<(std::ostream &os, Security::Certificate &) STUB_RETVAL(os)
 
 #include "security/Handshake.h"
 Security::HandshakeParser::HandshakeParser(MessageSource) STUB
@@ -71,7 +76,7 @@ class TlsNegotiationDetails: public RefCountable {};
 CBDATA_NAMESPACED_CLASS_INIT(Security, PeerConnector);
 namespace Security
 {
-PeerConnector::PeerConnector(const Comm::ConnectionPointer &, AsyncCall::Pointer &, const AccessLogEntryPointer &, const time_t) :
+PeerConnector::PeerConnector(const Comm::ConnectionPointer &, const AsyncCallback<EncryptorAnswer> &, const AccessLogEntryPointer &, const time_t):
     AsyncJob("Security::PeerConnector") {STUB}
 PeerConnector::~PeerConnector() STUB
 void PeerConnector::start() STUB

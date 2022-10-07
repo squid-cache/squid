@@ -45,31 +45,12 @@
 #endif
 
 #include "base64.h"
+#include "compat/krb5.h"
 #include "util.h"
 
 #if USE_APPLE_KRB5
-#define KERBEROS_APPLE_DEPRECATED(x)
 #define GSSKRB_APPLE_DEPRECATED(x)
 #endif
-
-#if HAVE_KRB5_H
-#if HAVE_BROKEN_SOLARIS_KRB5_H
-#warn "Warning! You have a broken Solaris <krb5.h> system header"
-#warn "http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512"
-#if defined(__cplusplus)
-#define KRB5INT_BEGIN_DECLS     extern "C" {
-#define KRB5INT_END_DECLS
-KRB5INT_BEGIN_DECLS
-#endif
-#endif /* HAVE_BROKEN_SOLARIS_KRB5_H */
-#if HAVE_BROKEN_HEIMDAL_KRB5_H
-extern "C" {
-#include <krb5.h>
-}
-#else
-#include <krb5.h>
-#endif
-#endif /* HAVE_KRB5_H */
 
 #if USE_HEIMDAL_KRB5
 #if HAVE_GSSAPI_GSSAPI_H
@@ -125,7 +106,7 @@ LogTime()
     static time_t last_t = 0;
     static char buf[128];
 
-    gettimeofday(&now, NULL);
+    gettimeofday(&now, nullptr);
     if (now.tv_sec != last_t) {
         struct tm *tm;
         tm = localtime((time_t *) & now.tv_sec);

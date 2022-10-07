@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "SquidTime.h"
+#include "time/gadgets.h"
 #include "tools/squidclient/Parameters.h"
 #include "tools/squidclient/Ping.h"
 
@@ -56,11 +56,11 @@ Ping::Init()
     if (Ping::Config.enable) {
 #if HAVE_SIGACTION
         struct sigaction sa, osa;
-        if (sigaction(SIGINT, NULL, &osa) == 0 && osa.sa_handler == SIG_DFL) {
+        if (sigaction(SIGINT, nullptr, &osa) == 0 && osa.sa_handler == SIG_DFL) {
             sa.sa_handler = catchSignal;
             sa.sa_flags = 0;
             sigemptyset(&sa.sa_mask);
-            (void) sigaction(SIGINT, &sa, NULL);
+            (void) sigaction(SIGINT, &sa, nullptr);
         }
 #else
         void (*osig) (int);
@@ -84,7 +84,7 @@ Ping::TimerStart()
 #if GETTIMEOFDAY_NO_TZP
     (void)gettimeofday(&tv1);
 #else
-    (void)gettimeofday(&tv1, NULL);
+    (void)gettimeofday(&tv1, nullptr);
 #endif
 }
 
@@ -101,7 +101,7 @@ Ping::TimerStop(size_t fsize)
 #if GETTIMEOFDAY_NO_TZP
     (void)gettimeofday(&tv2);
 #else
-    (void)gettimeofday(&tv2, NULL);
+    (void)gettimeofday(&tv2, nullptr);
 #endif
 
     elapsed_msec = tvSubMsec(tv1, tv2);
@@ -133,7 +133,7 @@ Ping::TimerStop(size_t fsize)
 
         tvs.tv_sec = msec_left / 1000;
         tvs.tv_usec = (msec_left % 1000) * 1000;
-        select(0, NULL, NULL, NULL, &tvs);
+        select(0, nullptr, nullptr, nullptr, &tvs);
     }
 }
 
@@ -175,9 +175,9 @@ Ping::TheConfig::parseCommandOpts(int argc, char *argv[], int c, int &optIndex)
 
     // options for controlling squidclient ping mode
     static struct option pingOptions[] = {
-        {"count",    no_argument, 0, 'g'},
-        {"interval", no_argument, 0, 'I'},
-        {0, 0, 0, 0}
+        {"count",    no_argument, nullptr, 'g'},
+        {"interval", no_argument, nullptr, 'I'},
+        {nullptr, 0, nullptr, 0}
     };
 
     int saved_opterr = opterr;

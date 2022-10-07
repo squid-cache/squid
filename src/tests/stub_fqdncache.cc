@@ -16,7 +16,6 @@ bool Dns::ResolveClientAddressesAsap = false;
 
 void fqdncache_init(void) STUB
 void fqdnStats(StoreEntry *) STUB
-void fqdncacheFreeMemory(void) STUB
 void fqdncache_restart(void) STUB
 void fqdncache_purgelru(void *) STUB
 void fqdncacheAddEntryFromHosts(char *, SBufList &) STUB

@@ -73,7 +73,7 @@ static IOCB WriteFeedback;
 static CLCB Close;
 static CTCB Timeout;
 static CNCB ConnectDone;
-static hash_table *ident_hash = NULL;
+static hash_table *ident_hash = nullptr;
 static void ClientAdd(IdentStateData * state, IDCB * callback, void *callback_data);
 
 } // namespace Ident
@@ -91,8 +91,8 @@ Ident::IdentStateData::deleteThis(const char *reason)
 void
 Ident::IdentStateData::swanSong()
 {
-    if (clients != NULL)
-        notify(NULL);
+    if (clients != nullptr)
+        notify(nullptr);
 }
 
 Ident::IdentStateData::~IdentStateData() {
@@ -171,7 +171,7 @@ Ident::ConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int, 
             break;
     }
 
-    if (c == NULL) {
+    if (c == nullptr) {
         state->deleteThis("client(s) aborted");
         return;
     }
@@ -207,8 +207,8 @@ void
 Ident::ReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
-    char *ident = NULL;
-    char *t = NULL;
+    char *ident = nullptr;
+    char *t = nullptr;
 
     assert(buf == state->buf);
     assert(conn->fd == state->conn->fd);
@@ -237,7 +237,7 @@ Ident::ReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Com
         if ((ident = strrchr(buf, ':'))) {
             while (xisspace(*++ident));
             if (ident && *ident == '\0')
-                ident = NULL;
+                ident = nullptr;
             state->notify(ident);
         }
     }
@@ -275,9 +275,11 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
     assert(static_cast<unsigned int>(res) < sizeof(key));
 
     if (!ident_hash) {
-        Init();
+        ident_hash = hash_create((HASHCMP *) strcmp,
+                                 hashPrime(Squid_MaxFD / 8),
+                                 hash4);
     }
-    if ((state = (IdentStateData *)hash_lookup(ident_hash, key)) != NULL) {
+    if ((state = (IdentStateData *)hash_lookup(ident_hash, key)) != nullptr) {
         ClientAdd(state, callback, data);
         return;
     }
@@ -301,19 +303,6 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
     AsyncCall::Pointer call = commCbCall(30,3, "Ident::ConnectDone", CommConnectCbPtrFun(Ident::ConnectDone, state));
     const auto connOpener = new Comm::ConnOpener(identConn, call, Ident::TheConfig.timeout);
     state->connWait.start(connOpener, call);
-}
-
-void
-Ident::Init(void)
-{
-    if (ident_hash) {
-        debugs(30, DBG_CRITICAL, "WARNING: Ident already initialized.");
-        return;
-    }
-
-    ident_hash = hash_create((HASHCMP *) strcmp,
-                             hashPrime(Squid_MaxFD / 8),
-                             hash4);
 }
 
 #endif /* USE_IDENT */

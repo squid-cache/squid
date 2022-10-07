@@ -19,10 +19,11 @@
 
 typedef Ipc::StoreMap TransientsMap;
 
-/// Keeps track of store entries being delivered to clients that arrived before
-/// those entries were [fully] cached. This SMP-shared table is necessary to
-/// * sync an entry-writing worker with entry-reading worker(s); and
-/// * sync an entry-deleting worker with both entry-reading/writing workers.
+/// A Transients entry allows workers to Broadcast() DELETE requests and swapout
+/// progress updates. In a collapsed forwarding context, it also represents a CF
+/// initiating worker promise to either cache the response or inform the waiting
+/// slaves (via false EntryStatus::hasWriter) that caching will not happen. A
+/// Transients entry itself does not carry response- or Store-specific metadata.
 class Transients: public Store::Controlled, public Ipc::StoreMapCleaner
 {
 public:
@@ -30,9 +31,8 @@ public:
     class EntryStatus
     {
     public:
-        bool abortedByWriter = false; ///< whether the entry was aborted
+        bool hasWriter = false; ///< whether some worker is storing the entry
         bool waitingToBeFreed = false; ///< whether the entry was marked for deletion
-        bool collapsed = false; ///< whether the entry allows collapsing
     };
 
     Transients();
@@ -40,9 +40,6 @@ public:
 
     /// return a local, previously collapsed entry
     StoreEntry *findCollapsed(const sfileno xitIndex);
-
-    /// removes collapsing requirement (for future hits)
-    void clearCollapsingRequirement(const StoreEntry &e);
 
     /// start listening for remote DELETE requests targeting either a complete
     /// StoreEntry (ioReading) or a being-formed miss StoreEntry (ioWriting)

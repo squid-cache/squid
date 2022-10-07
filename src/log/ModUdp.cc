@@ -123,7 +123,7 @@ logfile_mod_udp_close(Logfile * lf)
         xfree(ll->buf);
 
     xfree(lf->data);
-    lf->data = NULL;
+    lf->data = nullptr;
 }
 
 /*

@@ -67,7 +67,7 @@ public:
 private:
     /// Case-insensitive std::string "less than" comparison functor.
     /// Fast version recommended by Meyers' "Effective STL" for ASCII c-strings.
-    class NoCaseLessThan: public std::binary_function<std::string, std::string, bool>
+    class NoCaseLessThan
     {
     public:
         bool operator()(const std::string &lhs, const std::string &rhs) const {
@@ -96,7 +96,7 @@ private:
 class HeaderWithAcl
 {
 public:
-    HeaderWithAcl() : aclList(NULL), valueFormat(NULL), fieldId(Http::HdrType::BAD_HDR), quoted(false) {}
+    HeaderWithAcl() : aclList(nullptr), valueFormat(nullptr), fieldId(Http::HdrType::BAD_HDR), quoted(false) {}
 
     /// HTTP header field name
     std::string fieldName;

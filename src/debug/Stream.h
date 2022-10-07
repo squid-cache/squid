@@ -22,15 +22,12 @@
 #if defined(assert)
 #undef assert
 #endif
-
 #if PURIFY
 #define assert(EX) ((void)0)
 #elif defined(NODEBUG)
 #define assert(EX) ((void)0)
-#elif STDC_HEADERS
-#define assert(EX)  ((EX)?((void)0):xassert( # EX , __FILE__, __LINE__))
 #else
-#define assert(EX)  ((EX)?((void)0):xassert("EX", __FILE__, __LINE__))
+#define assert(EX)  ((EX)?((void)0):xassert( # EX , __FILE__, __LINE__))
 #endif
 
 /* defined debug section limits */
@@ -87,6 +84,16 @@ public:
     static int Levels[MAX_DEBUG_SECTIONS];
     static int override_X;
     static bool log_syslog;
+
+    // TODO: Convert all helpers to use debugs() and NameThisHelper() APIs.
+    /// Use the given name for debugs() messages from this helper process.
+    /// Side effect: Commits to using helper-appropriate debug levels/channels.
+    /// \sa NameThisKid()
+    static void NameThisHelper(const char *name);
+
+    /// Use the given ID for debugs() messages from this SMP kid process.
+    /// \sa NameThisHelper()
+    static void NameThisKid(int kidIdentifier);
 
     static void parseOptions(char const *);
 

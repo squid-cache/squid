@@ -23,7 +23,6 @@
 #include "http/Stream.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
-#include "SquidTime.h"
 
 Auth::Ntlm::UserRequest::UserRequest() :
     server_blob(nullptr),
@@ -42,20 +41,20 @@ Auth::Ntlm::UserRequest::~UserRequest()
 
     if (request) {
         HTTPMSGUNLOCK(request);
-        request = NULL;
+        request = nullptr;
     }
 }
 
 const char *
 Auth::Ntlm::UserRequest::connLastHeader()
 {
-    return NULL;
+    return nullptr;
 }
 
 int
 Auth::Ntlm::UserRequest::authenticated() const
 {
-    if (user() != NULL && user()->credentials() == Auth::Ok) {
+    if (user() != nullptr && user()->credentials() == Auth::Ok) {
         debugs(29, 9, "user authenticated.");
         return 1;
     }
@@ -122,7 +121,7 @@ Auth::Ntlm::UserRequest::startHelperLookup(HttpRequest *, AccessLogEntry::Pointe
     assert(data);
     assert(handler);
 
-    if (static_cast<Auth::Ntlm::Config*>(Auth::SchemeConfig::Find("ntlm"))->authenticateProgram == NULL) {
+    if (static_cast<Auth::Ntlm::Config*>(Auth::SchemeConfig::Find("ntlm"))->authenticateProgram == nullptr) {
         debugs(29, DBG_CRITICAL, "ERROR: NTLM Start: no NTLM program configured.");
         handler(data);
         return;
@@ -180,7 +179,7 @@ Auth::Ntlm::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * co
     /* Check that we are in the client side, where we can generate
      * auth challenges */
 
-    if (conn == NULL || !cbdataReferenceValid(conn)) {
+    if (conn == nullptr || !cbdataReferenceValid(conn)) {
         user()->credentials(Auth::Failed);
         debugs(29, DBG_IMPORTANT, "WARNING: NTLM Authentication attempt to perform authentication without a connection!");
         return;
@@ -222,7 +221,7 @@ Auth::Ntlm::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * co
         user()->credentials(Auth::Pending);
         safe_free(client_blob);
         client_blob=xstrdup(blob);
-        assert(conn->getAuth() == NULL);
+        assert(conn->getAuth() == nullptr);
         conn->setAuth(this, "new NTLM handshake request");
         request = aRequest;
         HTTPMSGLOCK(request);
@@ -268,7 +267,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
     }
 
     Auth::UserRequest::Pointer auth_user_request = r->auth_user_request;
-    assert(auth_user_request != NULL);
+    assert(auth_user_request != nullptr);
 
     // add new helper kv-pair notes to the credentials object
     // so that any transaction using those credentials can access them
@@ -278,13 +277,13 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
     auth_user_request->user()->notes.remove("token");
 
     Auth::Ntlm::UserRequest *lm_request = dynamic_cast<Auth::Ntlm::UserRequest *>(auth_user_request.getRaw());
-    assert(lm_request != NULL);
+    assert(lm_request != nullptr);
     assert(lm_request->waiting);
 
     lm_request->waiting = 0;
     safe_free(lm_request->client_blob);
 
-    assert(auth_user_request->user() != NULL);
+    assert(auth_user_request->user() != nullptr);
     assert(auth_user_request->user()->auth_type == Auth::AUTH_NTLM);
 
     if (!lm_request->reservationId)
@@ -383,7 +382,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 
     if (lm_request->request) {
         HTTPMSGUNLOCK(lm_request->request);
-        lm_request->request = NULL;
+        lm_request->request = nullptr;
     }
     r->handler(r->data);
     delete r;

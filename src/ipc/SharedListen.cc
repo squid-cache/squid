@@ -9,6 +9,7 @@
 /* DEBUG: section 54    Interprocess Communication */
 
 #include "squid.h"
+#include "base/AsyncCallbacks.h"
 #include "base/TextException.h"
 #include "comm.h"
 #include "comm/Connection.h"
@@ -29,7 +30,7 @@ class PendingOpenRequest
 {
 public:
     Ipc::OpenListenerParams params; ///< actual comm_open_sharedListen() parameters
-    AsyncCall::Pointer callback; // who to notify
+    Ipc::StartListeningCallback callback; // who to notify
 };
 
 /// maps ID assigned at request time to the response callback
@@ -80,14 +81,12 @@ Ipc::SharedListenRequest::SharedListenRequest(const OpenListenerParams &aParams,
 Ipc::SharedListenRequest::SharedListenRequest(const TypedMsgHdr &hdrMsg)
 {
     hdrMsg.checkType(mtSharedListenRequest);
-    // XXX: our handlerSubscription is not a POD!
     hdrMsg.getPod(*this);
 }
 
 void Ipc::SharedListenRequest::pack(TypedMsgHdr &hdrMsg) const
 {
     hdrMsg.setType(mtSharedListenRequest);
-    // XXX: our handlerSubscription is not a POD!
     hdrMsg.putPod(*this);
 }
 
@@ -141,7 +140,7 @@ kickDelayedRequest()
 }
 
 void
-Ipc::JoinSharedListen(const OpenListenerParams &params, AsyncCall::Pointer &cb)
+Ipc::JoinSharedListen(const OpenListenerParams &params, StartListeningCallback &cb)
 {
     PendingOpenRequest por;
     por.params = params;
@@ -172,27 +171,26 @@ void Ipc::SharedListenJoined(const SharedListenResponse &response)
     Must(por.callback);
     TheSharedListenRequestMap.erase(pori);
 
-    StartListeningCb *cbd = dynamic_cast<StartListeningCb*>(por.callback->getDialer());
-    assert(cbd && cbd->conn != NULL);
-    Must(cbd && cbd->conn != NULL);
-    cbd->conn->fd = response.fd;
+    auto &answer = por.callback.answer();
+    Assure(answer.conn);
+    auto &conn = answer.conn;
+    conn->fd = response.fd;
 
-    if (Comm::IsConnOpen(cbd->conn)) {
+    if (Comm::IsConnOpen(conn)) {
         OpenListenerParams &p = por.params;
-        cbd->conn->local = p.addr;
-        cbd->conn->flags = p.flags;
+        conn->local = p.addr;
+        conn->flags = p.flags;
         // XXX: leave the comm AI stuff to comm_import_opened()?
-        struct addrinfo *AI = NULL;
+        struct addrinfo *AI = nullptr;
         p.addr.getAddrInfo(AI);
         AI->ai_socktype = p.sock_type;
         AI->ai_protocol = p.proto;
-        comm_import_opened(cbd->conn, FdNote(p.fdNote), AI);
+        comm_import_opened(conn, FdNote(p.fdNote), AI);
         Ip::Address::FreeAddr(AI);
     }
 
-    cbd->errNo = response.errNo;
-    cbd->handlerSubscription = por.params.handlerSubscription;
-    ScheduleCallHere(por.callback);
+    answer.errNo = response.errNo;
+    ScheduleCallHere(por.callback.release());
 
     kickDelayedRequest();
 }

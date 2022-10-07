@@ -107,9 +107,9 @@ BodyConsumerDialer::canDial(AsyncCall &call)
 void BodyProducer::stopProducingFor(RefCount<BodyPipe> &p, bool atEof)
 {
     debugs(91,7, this << " will not produce for " << p << "; atEof: " << atEof);
-    assert(p != NULL); // be strict: the caller state may depend on this
+    assert(p != nullptr); // be strict: the caller state may depend on this
     p->clearProducer(atEof);
-    p = NULL;
+    p = nullptr;
 }
 
 /* BodyConsumer */
@@ -118,15 +118,15 @@ void BodyProducer::stopProducingFor(RefCount<BodyPipe> &p, bool atEof)
 void BodyConsumer::stopConsumingFrom(RefCount<BodyPipe> &p)
 {
     debugs(91,7, this << " will not consume from " << p);
-    assert(p != NULL); // be strict: the caller state may depend on this
+    assert(p != nullptr); // be strict: the caller state may depend on this
     p->clearConsumer();
-    p = NULL;
+    p = nullptr;
 }
 
 /* BodyPipe */
 
 BodyPipe::BodyPipe(Producer *aProducer): theBodySize(-1),
-    theProducer(aProducer), theConsumer(0),
+    theProducer(aProducer), theConsumer(nullptr),
     thePutSize(0), theGetSize(0),
     mustAutoConsume(false), abortedConsumption(false), isCheckedOut(false)
 {

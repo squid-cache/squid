@@ -14,31 +14,18 @@
 
 #if HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI
 #if USE_APPLE_KRB5
-#define KERBEROS_APPLE_DEPRECATED(x)
 #define GSSKRB_APPLE_DEPRECATED(x)
 #endif
 
 #include "base64.h"
+#include "compat/krb5.h"
 #include "debug/Stream.h"
 #include "peer_proxy_negotiate_auth.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #if HAVE_PROFILE_H
 #include <profile.h>
 #endif              /* HAVE_PROFILE_H */
-#if HAVE_KRB5_H
-#if HAVE_BROKEN_SOLARIS_KRB5_H
-#if defined(__cplusplus)
-#define KRB5INT_BEGIN_DECLS     extern "C" {
-#define KRB5INT_END_DECLS
-KRB5INT_BEGIN_DECLS
-#endif
-#endif
-#include <krb5.h>
-#elif HAVE_ET_COM_ERR_H
+#if HAVE_ET_COM_ERR_H && !HAVE_KRB5_H
 #include <et/com_err.h>
 #endif                          /* HAVE_COM_ERR_H */
 #if HAVE_COM_ERR_H
@@ -103,7 +90,7 @@ static struct kstruct {
     krb5_context context;
     krb5_ccache cc;
 } kparam = {
-    NULL, NULL
+    nullptr, nullptr
 };
 
 /*
@@ -185,9 +172,9 @@ void krb5_cleanup() {
     if (kparam.context) {
         if (kparam.cc)
             krb5_cc_destroy(kparam.context, kparam.cc);
-        kparam.cc = NULL;
+        kparam.cc = nullptr;
         krb5_free_context(kparam.context);
-        kparam.context = NULL;
+        kparam.context = nullptr;
     }
 }
 
@@ -197,15 +184,15 @@ int krb5_create_cache(char *kf, char *pn) {
 #define MAX_RENEW_TIME "365d"
 #define DEFAULT_SKEW (krb5_deltat) 600
 
-    static char *keytab_filename = NULL, *principal_name = NULL;
-    static krb5_keytab keytab = 0;
+    static char *keytab_filename = nullptr, *principal_name = nullptr;
+    static krb5_keytab keytab = nullptr;
     static krb5_keytab_entry entry;
     static krb5_kt_cursor cursor;
-    static krb5_creds *creds = NULL;
+    static krb5_creds *creds = nullptr;
 #if USE_HEIMDAL_KRB5 && !HAVE_KRB5_GET_RENEWED_CREDS
     static krb5_creds creds2;
 #endif
-    static krb5_principal principal = NULL;
+    static krb5_principal principal = nullptr;
     static krb5_deltat skew;
 
 #if HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC
@@ -233,14 +220,14 @@ restart:
      * Check if credentials need to be renewed
      */
     if (creds &&
-            (creds->times.endtime - time(0) > skew) &&
-            (creds->times.renew_till - time(0) > 2 * skew)) {
-        if (creds->times.endtime - time(0) < 2 * skew) {
+            (creds->times.endtime - time(nullptr) > skew) &&
+            (creds->times.renew_till - time(nullptr) > 2 * skew)) {
+        if (creds->times.endtime - time(nullptr) < 2 * skew) {
 #if HAVE_KRB5_GET_RENEWED_CREDS
             /* renew ticket */
             code =
                 krb5_get_renewed_creds(kparam.context, creds, principal,
-                                       kparam.cc, NULL);
+                                       kparam.cc, nullptr);
 #else
             /* renew ticket */
             flags.i = 0;
@@ -279,7 +266,7 @@ restart:
             if (code) {
                 if (code == KRB5KRB_AP_ERR_TKT_EXPIRED) {
                     krb5_free_creds(kparam.context, creds);
-                    creds = NULL;
+                    creds = nullptr;
                     /* this can happen because of clock skew */
                     goto restart;
                 }
@@ -311,7 +298,7 @@ restart:
             return (1);
         }
         code =
-            profile_get_integer(profile, "libdefaults", "clockskew", 0,
+            profile_get_integer(profile, "libdefaults", "clockskew", nullptr,
                                 5 * 60, &skew);
         if (profile)
             profile_release(profile);
@@ -421,7 +408,7 @@ restart:
         krb5_get_init_creds_opt_set_renew_life(options, rlife);
         code =
             krb5_get_init_creds_keytab(kparam.context, creds, principal,
-                                       keytab, 0, NULL, options);
+                                       keytab, 0, nullptr, options);
 #if HAVE_KRB5_GET_INIT_CREDS_FREE_CONTEXT
         krb5_get_init_creds_opt_free(kparam.context, options);
 #else
@@ -507,14 +494,14 @@ char *peer_proxy_negotiate_auth(char *principal_name, char *proxy, int flags) {
     gss_buffer_desc service = GSS_C_EMPTY_BUFFER;
     gss_buffer_desc input_token = GSS_C_EMPTY_BUFFER;
     gss_buffer_desc output_token = GSS_C_EMPTY_BUFFER;
-    char *token = NULL;
+    char *token = nullptr;
 
-    setbuf(stdout, NULL);
-    setbuf(stdin, NULL);
+    setbuf(stdout, nullptr);
+    setbuf(stdin, nullptr);
 
     if (!proxy) {
         debugs(11, 5, "Error : No proxy server name");
-        return NULL;
+        return nullptr;
     }
 
     if (!(flags & PEER_PROXY_NEGOTIATE_NOKEYTAB)) {
@@ -523,11 +510,11 @@ char *peer_proxy_negotiate_auth(char *principal_name, char *proxy, int flags) {
                    "Creating credential cache for " << principal_name);
         else
             debugs(11, 5, "Creating credential cache");
-        rc = krb5_create_cache(NULL, principal_name);
+        rc = krb5_create_cache(nullptr, principal_name);
         if (rc) {
             debugs(11, 5, "Error : Failed to create Kerberos cache");
             krb5_cleanup();
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -552,7 +539,7 @@ char *peer_proxy_negotiate_auth(char *principal_name, char *proxy, int flags) {
                                         0,
                                         0,
                                         GSS_C_NO_CHANNEL_BINDINGS,
-                                        &input_token, NULL, &output_token, NULL, NULL);
+                                        &input_token, nullptr, &output_token, nullptr, nullptr);
 
     if (check_gss_err(major_status, minor_status, "gss_init_sec_context()"))
         goto cleanup;
@@ -570,7 +557,7 @@ char *peer_proxy_negotiate_auth(char *principal_name, char *proxy, int flags) {
     }
 
 cleanup:
-    gss_delete_sec_context(&minor_status, &gss_context, NULL);
+    gss_delete_sec_context(&minor_status, &gss_context, nullptr);
     gss_release_buffer(&minor_status, &service);
     gss_release_buffer(&minor_status, &input_token);
     gss_release_buffer(&minor_status, &output_token);
@@ -579,8 +566,5 @@ cleanup:
     return token;
 }
 
-#ifdef __cplusplus
-}
-#endif
 #endif /* HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI */
 

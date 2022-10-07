@@ -21,7 +21,6 @@
 #include "Parsing.h"
 #include "sbuf/MemBlob.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 
 // a single I/O buffer should be large enough to store any access.log record
 const size_t Log::TcpLogger::IoBufSize = 2*MAX_URL;
@@ -43,7 +42,7 @@ Log::TcpLogger::TcpLogger(size_t bufCap, bool dieOnErr, Ip::Address them):
     quitOnEmpty(false),
     reconnectScheduled(false),
     writeScheduled(false),
-    conn(NULL),
+    conn(nullptr),
     remote(them),
     connectFailures(0),
     drops(0)
@@ -103,7 +102,7 @@ void
 Log::TcpLogger::endGracefully()
 {
     // job call protection must end our job if we are done logging current bufs
-    assert(inCall != NULL);
+    assert(inCall != nullptr);
     quitOnEmpty = true;
     flush();
 }
@@ -136,20 +135,20 @@ Log::TcpLogger::writeIfNeeded()
 void Log::TcpLogger::writeIfPossible()
 {
     debugs(MY_DEBUG_SECTION, 7, "guards: " << (!writeScheduled) <<
-           (bufferedSize > 0) << (conn != NULL) <<
-           (conn != NULL && !fd_table[conn->fd].closing()) << " buffered: " <<
+           (bufferedSize > 0) << (conn != nullptr) <<
+           (conn != nullptr && !fd_table[conn->fd].closing()) << " buffered: " <<
            bufferedSize << '/' << buffers.size());
 
     // XXX: Squid shutdown sequence starts closing our connection before
     // calling LogfileClose, leading to loss of log records during shutdown.
-    if (!writeScheduled && bufferedSize > 0 && conn != NULL &&
+    if (!writeScheduled && bufferedSize > 0 && conn != nullptr &&
             !fd_table[conn->fd].closing()) {
         debugs(MY_DEBUG_SECTION, 5, "writing first buffer");
 
         typedef CommCbMemFunT<TcpLogger, CommIoCbParams> WriteDialer;
         AsyncCall::Pointer callback = JobCallback(MY_DEBUG_SECTION, 5, WriteDialer, this, Log::TcpLogger::writeDone);
         const MemBlob::Pointer &buffer = buffers.front();
-        Comm::Write(conn, buffer->mem, buffer->size, callback, NULL);
+        Comm::Write(conn, buffer->mem, buffer->size, callback, nullptr);
         writeScheduled = true;
     }
 }
@@ -367,8 +366,8 @@ Log::TcpLogger::writeDone(const CommIoCbParams &io)
 void
 Log::TcpLogger::handleClosure(const CommCloseCbParams &)
 {
-    assert(inCall != NULL);
-    closer = NULL;
+    assert(inCall != nullptr);
+    closer = nullptr;
     if (conn) {
         conn->noteClosure();
         conn = nullptr;
@@ -381,13 +380,13 @@ Log::TcpLogger::handleClosure(const CommCloseCbParams &)
 void
 Log::TcpLogger::disconnect()
 {
-    if (conn != NULL) {
-        if (closer != NULL) {
+    if (conn != nullptr) {
+        if (closer != nullptr) {
             comm_remove_close_handler(conn->fd, closer);
-            closer = NULL;
+            closer = nullptr;
         }
         conn->close();
-        conn = NULL;
+        conn = nullptr;
     }
 }
 
@@ -398,7 +397,7 @@ Log::TcpLogger::StillLogging(Logfile *lf)
 {
     if (Pointer *pptr = static_cast<Pointer*>(lf->data))
         return pptr->get(); // may be nil
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -443,7 +442,7 @@ Log::TcpLogger::Close(Logfile * lf)
         ScheduleCallHere(call);
     }
     delete static_cast<Pointer*>(lf->data);
-    lf->data = NULL;
+    lf->data = nullptr;
 }
 
 /*

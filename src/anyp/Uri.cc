@@ -258,8 +258,8 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
         LOCAL_ARRAY(char, login, MAX_URL);
         LOCAL_ARRAY(char, foundHost, MAX_URL);
         LOCAL_ARRAY(char, urlpath, MAX_URL);
-        char *t = NULL;
-        char *q = NULL;
+        char *t = nullptr;
+        char *q = nullptr;
         int foundPort;
         int l;
         int i;
@@ -366,7 +366,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
 
             /* Is there any login information? (we should eventually parse it above) */
             t = strrchr(foundHost, '@');
-            if (t != NULL) {
+            if (t != nullptr) {
                 strncpy((char *) login, (char *) foundHost, sizeof(login)-1);
                 login[sizeof(login)-1] = '\0';
                 t = strrchr(login, '@');
@@ -405,7 +405,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
                     /* RFC 2732 states IPv6 "SHOULD" be bracketed. allowing for times when its not. */
                     /* RFC 3986 'update' simply modifies this to an "is" with no emphasis at all! */
                     /* therefore we MUST accept the case where they are not bracketed at all. */
-                    t = NULL;
+                    t = nullptr;
                 }
             }
 
@@ -869,7 +869,6 @@ urlCheckRequest(const HttpRequest * r)
             return true;
         return false;
 
-    case AnyP::PROTO_GOPHER:
     case AnyP::PROTO_WAIS:
     case AnyP::PROTO_WHOIS:
         if (r->method == Http::METHOD_GET ||

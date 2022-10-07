@@ -9,8 +9,8 @@
 # We can install anyway, but warn if smbclient not found already
 #
 AC_PATH_PROG(SMBCLIENT, smbclient)
-if test "x$SMBCLIENT" = "x"; then
+AS_IF([test "x$SMBCLIENT" = "x"],[
   AC_MSG_WARN([Samba smbclient not found in default location. basic_smb_auth may not work on this machine])
-fi
+])
 # allow script install anyway.
 BUILD_HELPER="SMB"

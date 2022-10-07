@@ -18,7 +18,6 @@
 #include "auth/UserRequest.h"
 #include "event.h"
 #include "globals.h"
-#include "SquidTime.h"
 #include "Store.h"
 
 Auth::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
@@ -30,8 +29,8 @@ Auth::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
     username_(nullptr),
     requestRealm_(aRequestRealm)
 {
-    proxy_match_cache.head = proxy_match_cache.tail = NULL;
-    ip_list.head = ip_list.tail = NULL;
+    proxy_match_cache.head = proxy_match_cache.tail = nullptr;
+    ip_list.head = ip_list.tail = nullptr;
     debugs(29, 5, "Initialised auth_user '" << this << "'.");
 }
 
@@ -71,7 +70,7 @@ Auth::User::absorb(Auth::User::Pointer from)
 
     /* absorb the list of IP address sources (for max_user_ip controls) */
     AuthUserIP *new_ipdata;
-    while (from->ip_list.head != NULL) {
+    while (from->ip_list.head != nullptr) {
         new_ipdata = static_cast<AuthUserIP *>(from->ip_list.head->data);
 
         /* If this IP has expired - ignore the expensive merge actions. */
@@ -271,7 +270,7 @@ Auth::User::username(char const *aString)
         assert(!username_);
         username_ = xstrdup(aString);
         // NP: param #2 is working around a c_str() data-copy performance regression
-        userKey_ = BuildUserKey(username_, (!requestRealm_.isEmpty() ? requestRealm_.c_str() : NULL));
+        userKey_ = BuildUserKey(username_, (!requestRealm_.isEmpty() ? requestRealm_.c_str() : nullptr));
     } else {
         safe_free(username_);
         userKey_.clear();

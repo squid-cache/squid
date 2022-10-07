@@ -38,9 +38,9 @@ void
 Snmp::Forwarder::swanSong()
 {
     if (fd >= 0) {
-        if (closer != NULL) {
+        if (closer != nullptr) {
             comm_remove_close_handler(fd, closer);
-            closer = NULL;
+            closer = nullptr;
         }
         fd = -1;
     }
@@ -98,10 +98,10 @@ Snmp::SendResponse(const Ipc::RequestId requestId, const Pdu &pdu)
     // snmpAgentResponse() can modify arg
     Pdu tmp = pdu;
     Snmp::Response response(requestId);
-    snmp_pdu* response_pdu = NULL;
+    snmp_pdu* response_pdu = nullptr;
     try {
         response_pdu = snmpAgentResponse(&tmp);
-        Must(response_pdu != NULL);
+        Must(response_pdu != nullptr);
         response.pdu = static_cast<Pdu&>(*response_pdu);
         snmp_free_pdu(response_pdu);
     } catch (const std::exception& e) {

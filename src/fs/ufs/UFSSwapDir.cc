@@ -11,6 +11,7 @@
 #define CLEAN_BUF_SZ 16384
 
 #include "squid.h"
+#include "base/Random.h"
 #include "cache_cf.h"
 #include "ConfigOption.h"
 #include "DiskIO/DiskIOModule.h"
@@ -23,7 +24,6 @@
 #include "RebuildState.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "store_key_md5.h"
 #include "StoreSearchUFS.h"
@@ -33,13 +33,12 @@
 
 #include <cerrno>
 #include <cmath>
-#include <random>
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
 
 int Fs::Ufs::UFSSwapDir::NumberOfUFSDirs = 0;
-int *Fs::Ufs::UFSSwapDir::UFSDirToGlobalDirMapping = NULL;
+int *Fs::Ufs::UFSSwapDir::UFSDirToGlobalDirMapping = nullptr;
 
 class UFSCleanLog : public SwapDir::CleanLog
 {
@@ -66,7 +65,7 @@ public:
 const StoreEntry *
 UFSCleanLog::nextEntry()
 {
-    const StoreEntry *entry = NULL;
+    const StoreEntry *entry = nullptr;
 
     if (walker)
         entry = walker->Next(walker);
@@ -103,7 +102,7 @@ UFSCleanLog::write(StoreEntry const &e)
             file_close(fd);
             fd = -1;
             unlink(newLog.c_str());
-            sd->cleanLog = NULL;
+            sd->cleanLog = nullptr;
             delete this;
             return;
         }
@@ -252,7 +251,7 @@ Fs::Ufs::UFSSwapDir::getOptionTree() const
 {
     ConfigOption *parentResult = SwapDir::getOptionTree();
 
-    if (currentIOOptions == NULL)
+    if (currentIOOptions == nullptr)
         currentIOOptions = new ConfigOptionVector();
 
     currentIOOptions->options.push_back(parentResult);
@@ -264,7 +263,7 @@ Fs::Ufs::UFSSwapDir::getOptionTree() const
 
     ConfigOption* result = currentIOOptions;
 
-    currentIOOptions = NULL;
+    currentIOOptions = nullptr;
 
     return result;
 }
@@ -274,7 +273,7 @@ Fs::Ufs::UFSSwapDir::init()
 {
     debugs(47, 3, "Initialising UFS SwapDir engine.");
     /* Parsing must be finished by now - force to NULL, don't delete */
-    currentIOOptions = NULL;
+    currentIOOptions = nullptr;
     static int started_clean_event = 0;
     static const char *errmsg =
         "\tFailed to verify one of the swap directories, Check cache.log\n"
@@ -290,7 +289,7 @@ Fs::Ufs::UFSSwapDir::init()
     rebuild();
 
     if (!started_clean_event) {
-        eventAdd("UFS storeDirClean", CleanEvent, NULL, 15.0, 1);
+        eventAdd("UFS storeDirClean", CleanEvent, nullptr, 15.0, 1);
         started_clean_event = 1;
     }
 
@@ -307,8 +306,8 @@ Fs::Ufs::UFSSwapDir::create()
 
 Fs::Ufs::UFSSwapDir::UFSSwapDir(char const *aType, const char *anIOType) :
     SwapDir(aType),
-    IO(NULL),
-    fsdata(NULL),
+    IO(nullptr),
+    fsdata(nullptr),
     map(new FileMap()),
     suggest(0),
     l1(16),
@@ -342,7 +341,7 @@ void
 Fs::Ufs::UFSSwapDir::dumpEntry(StoreEntry &e) const
 {
     debugs(47, DBG_CRITICAL, "FILENO "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << e.swap_filen);
-    debugs(47, DBG_CRITICAL, "PATH " << fullPath(e.swap_filen, NULL)   );
+    debugs(47, DBG_CRITICAL, "PATH " << fullPath(e.swap_filen, nullptr)   );
     e.dump(0);
 }
 
@@ -352,7 +351,7 @@ Fs::Ufs::UFSSwapDir::doubleCheck(StoreEntry & e)
 
     struct stat sb;
 
-    if (::stat(fullPath(e.swap_filen, NULL), &sb) < 0) {
+    if (::stat(fullPath(e.swap_filen, nullptr), &sb) < 0) {
         debugs(47, DBG_CRITICAL, "WARNING: Missing swap file");
         dumpEntry(e);
         return true;
@@ -797,7 +796,7 @@ Fs::Ufs::UFSSwapDir::addDiskRestore(const cache_key * key,
                                     uint16_t newFlags,
                                     int)
 {
-    StoreEntry *e = NULL;
+    StoreEntry *e = nullptr;
     debugs(47, 5, storeKeyText(key)  <<
            ", fileno="<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << file_number);
     /* if you call this you'd better be sure file_number is not
@@ -871,7 +870,7 @@ Fs::Ufs::UFSSwapDir::openTmpSwapLog(int *clean_flag, int *zero_flag)
 
     if (::stat(swaplog_path.c_str(), &log_sb) < 0) {
         debugs(47, DBG_IMPORTANT, "Cache Dir #" << index << ": No log file");
-        return NULL;
+        return nullptr;
     }
 
     *zero_flag = log_sb.st_size == 0 ? 1 : 0;
@@ -900,7 +899,7 @@ Fs::Ufs::UFSSwapDir::openTmpSwapLog(int *clean_flag, int *zero_flag)
         memset(buf.space(), 0, header.gapSize());
         buf.appended(header.gapSize());
         file_write(swaplog_fd, -1, buf.content(), buf.contentSize(),
-                   NULL, NULL, buf.freeFunc());
+                   nullptr, nullptr, buf.freeFunc());
     }
 
     /* open a read-only stream of the old log */
@@ -940,7 +939,7 @@ Fs::Ufs::UFSSwapDir::writeCleanStart()
     struct stat sb;
 #endif
 
-    cleanLog = NULL;
+    cleanLog = nullptr;
     state->cur = logFile();
     state->newLog = logFile(".clean");
     state->fd = file_open(state->newLog.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_BINARY);
@@ -980,7 +979,7 @@ Fs::Ufs::UFSSwapDir::writeCleanDone()
     UFSCleanLog *state = (UFSCleanLog *)cleanLog;
     int fd;
 
-    if (NULL == state)
+    if (nullptr == state)
         return;
 
     if (state->fd < 0)
@@ -1033,7 +1032,7 @@ Fs::Ufs::UFSSwapDir::writeCleanDone()
 
     delete state;
 
-    cleanLog = NULL;
+    cleanLog = nullptr;
 }
 
 /// safely cleans a few unused files if possible
@@ -1048,7 +1047,7 @@ Fs::Ufs::UFSSwapDir::HandleCleanEvent()
     if (!NumberOfUFSDirs)
         return 0; // probably in the middle of reconfiguration
 
-    if (NULL == UFSDirToGlobalDirMapping) {
+    if (nullptr == UFSDirToGlobalDirMapping) {
         SwapDir *sd;
         /*
          * Initialize the little array that translates UFS cache_dir
@@ -1079,7 +1078,7 @@ Fs::Ufs::UFSSwapDir::HandleCleanEvent()
          * value.  j equals the total number of UFS level 2
          * swap directories
          */
-        std::mt19937 mt(static_cast<uint32_t>(getCurrentTime() & 0xFFFFFFFF));
+        static std::mt19937 mt(RandomSeed32());
         xuniform_int_distribution<> dist(0, j);
         swap_index = dist(mt);
     }
@@ -1097,7 +1096,7 @@ void
 Fs::Ufs::UFSSwapDir::CleanEvent(void *)
 {
     const int n = HandleCleanEvent();
-    eventAdd("storeDirClean", CleanEvent, NULL,
+    eventAdd("storeDirClean", CleanEvent, nullptr,
              15.0 * exp(-0.25 * n), 1);
 }
 
@@ -1105,7 +1104,7 @@ bool
 Fs::Ufs::UFSSwapDir::IsUFSDir(SwapDir * sd)
 {
     UFSSwapDir *mySD = dynamic_cast<UFSSwapDir *>(sd);
-    return (mySD != 0) ;
+    return (mySD != nullptr) ;
 }
 
 /*
@@ -1165,9 +1164,9 @@ Fs::Ufs::UFSSwapDir::unlinkFile(sfileno f)
 {
     debugs(79, 3, "unlinking fileno " <<  std::setfill('0') <<
            std::hex << std::uppercase << std::setw(8) << f << " '" <<
-           fullPath(f,NULL) << "'");
+           fullPath(f,nullptr) << "'");
     /* commonUfsDirMapBitReset(this, f); */
-    IO->unlinkFile(fullPath(f,NULL));
+    IO->unlinkFile(fullPath(f,nullptr));
 }
 
 bool
@@ -1306,15 +1305,15 @@ Fs::Ufs::UFSSwapDir::logEntry(const StoreEntry & e, int op) const
                -1,
                s,
                sizeof(StoreSwapLogData),
-               NULL,
-               NULL,
+               nullptr,
+               nullptr,
                FreeObject);
 }
 
 int
 Fs::Ufs::UFSSwapDir::DirClean(int swap_index)
 {
-    DIR *dir_pointer = NULL;
+    DIR *dir_pointer = nullptr;
     int files[20];
     int swapfileno;
     int fn;         /* same as swapfileno, but with dirn bits set */
@@ -1351,7 +1350,7 @@ Fs::Ufs::UFSSwapDir::DirClean(int swap_index)
     }
 
     dirent_t *de;
-    while ((de = readdir(dir_pointer)) != NULL && k < 20) {
+    while ((de = readdir(dir_pointer)) != nullptr && k < 20) {
         if (sscanf(de->d_name, "%X", &swapfileno) != 1)
             continue;
 

@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_MEM_METER_H
 #define SQUID_SRC_MEM_METER_H
 
-#include "SquidTime.h"
+#include "time/gadgets.h"
 
 namespace Mem
 {
@@ -41,7 +41,7 @@ private:
     void checkHighWater() {
         if (hwater_level < level) {
             hwater_level = level;
-            hwater_stamp = squid_curtime ? squid_curtime : time(NULL);
+            hwater_stamp = squid_curtime ? squid_curtime : time(nullptr);
         }
     }
 

@@ -51,7 +51,7 @@ Ipc::StoreMap::Init(const SBuf &path, const int sliceLimit)
     return owner;
 }
 
-Ipc::StoreMap::StoreMap(const SBuf &aPath): cleaner(NULL), path(aPath),
+Ipc::StoreMap::StoreMap(const SBuf &aPath): cleaner(nullptr), path(aPath),
     fileNos(shm_old(FileNos)(StoreMapFileNosId(path).c_str())),
     anchors(shm_old(Anchors)(StoreMapAnchorsId(path).c_str())),
     slices(shm_old(Slices)(StoreMapSlicesId(path).c_str())),
@@ -148,7 +148,7 @@ Ipc::StoreMap::openForWriting(const cache_key *const key, sfileno &fileno)
         return anchor;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 Ipc::StoreMap::Anchor *
@@ -165,7 +165,7 @@ Ipc::StoreMap::openForWritingAt(const sfileno fileno, bool overwriteExisting)
             lock.unlockExclusive();
             debugs(54, 5, "cannot open existing entry " << fileno <<
                    " for writing " << path);
-            return NULL;
+            return nullptr;
         }
 
         // free if the entry was used, keeping the entry locked
@@ -184,7 +184,7 @@ Ipc::StoreMap::openForWritingAt(const sfileno fileno, bool overwriteExisting)
 
     debugs(54, 5, "cannot open busy entry " << fileno <<
            " for writing " << path);
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -446,7 +446,7 @@ Ipc::StoreMap::openForReading(const cache_key *const key, sfileno &fileno)
         fileno = idx;
         return anchor; // locked for reading
     }
-    return NULL;
+    return nullptr;
 }
 
 const Ipc::StoreMap::Anchor *
@@ -458,21 +458,21 @@ Ipc::StoreMap::openForReadingAt(const sfileno fileno, const cache_key *const key
     if (!s.lock.lockShared()) {
         debugs(54, 5, "cannot open busy entry " << fileno <<
                " for reading " << path);
-        return NULL;
+        return nullptr;
     }
 
     if (s.empty()) {
         s.lock.unlockShared();
         debugs(54, 7, "cannot open empty entry " << fileno <<
                " for reading " << path);
-        return NULL;
+        return nullptr;
     }
 
     if (s.waitingToBeFreed) {
         s.lock.unlockShared();
         debugs(54, 7, "cannot open marked entry " << fileno <<
                " for reading " << path);
-        return NULL;
+        return nullptr;
     }
 
     if (!s.sameKey(key)) {
@@ -985,12 +985,18 @@ Ipc::StoreMapAnchor::exportInto(StoreEntry &into) const
     into.lastModified(basics.lastmod);
     into.swap_file_sz = basics.swap_file_sz;
     into.refcount = basics.refcount;
+
+    // Some basics.flags are not meaningful and should not be overwritten here.
+    // ENTRY_REQUIRES_COLLAPSING is one of them. TODO: check other flags.
     const bool collapsingRequired = into.hittingRequiresCollapsing();
     into.flags = basics.flags;
-    // There are possibly several flags we do not need to overwrite,
-    // and ENTRY_REQUIRES_COLLAPSING is one of them.
-    // TODO: check for other flags.
-    into.setCollapsingRequirement(collapsingRequired);
+    // Avoid into.setCollapsingRequirement() here: We only restore the bit we
+    // just cleared in the assignment above, while that method debugging will
+    // falsely imply that the collapsing requirements have changed.
+    if (collapsingRequired)
+        EBIT_SET(into.flags, ENTRY_REQUIRES_COLLAPSING);
+    else
+        EBIT_CLR(into.flags, ENTRY_REQUIRES_COLLAPSING);
 }
 
 void

@@ -21,14 +21,10 @@
 // void comm_read(const Comm::ConnectionPointer &, char *, int, IOCB *, void *) STUB
 // void comm_read(const Comm::ConnectionPointer &, char*, int, AsyncCall::Pointer &) STUB
 
-/* should be in stub_CommRead */
-#include "CommRead.h"
-CommRead::CommRead(const Comm::ConnectionPointer &, char *, int, AsyncCall::Pointer &) STUB
-CommRead::CommRead() STUB
-DeferredReadManager::~DeferredReadManager() STUB
-DeferredRead::DeferredRead(DeferrableRead *, void *, CommRead const &) STUB
-void DeferredReadManager::delayRead(DeferredRead const &) STUB
-void DeferredReadManager::kickReads(int const) STUB
+/* should be in stub_libbase */
+#include "base/DelayedAsyncCalls.h"
+void DelayedAsyncCalls::delay(const AsyncCall::Pointer &) STUB
+void DelayedAsyncCalls::schedule() STUB
 
 #include "comm.h"
 bool comm_iocallbackpending(void) STUB_RETVAL(false)
@@ -47,7 +43,6 @@ int comm_open_uds(int, int, struct sockaddr_un*, int) STUB_RETVAL(-1)
 void comm_import_opened(const Comm::ConnectionPointer &, const char *, struct addrinfo *) STUB
 int comm_open_listener(int, int, Ip::Address &, int, const char *) STUB_RETVAL(-1)
 void comm_open_listener(int, int, Comm::ConnectionPointer &, const char *) STUB
-// int comm_openex(int, int, Ip::Address &, int, tos_t, nfmark_t, const char *) STUB_RETVAL(-1)
 unsigned short comm_local_port(int) STUB_RETVAL(0)
 int comm_udp_sendto(int, const Ip::Address &, const void *, int) STUB_RETVAL(-1)
 void commCallCloseHandlers(int) STUB

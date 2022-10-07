@@ -18,7 +18,7 @@
 \par
 	Here new client connections are accepted, parsed, and
 	reply data sent. Per-connection state information is held
-	in a data structure called ConnStateData.  Per-request 
+	in a data structure called ConnStateData.  Per-request
 	state information is stored in the clientSocketContext
 	structure. With HTTP/1.1 we may have multiple requests from
 	a single TCP connection.
@@ -29,14 +29,14 @@ TODO: find out what has replaced clientSocketContext since it seems to not exist
 	This is where requests are processed. We determine if the
 	request is to be redirected, if it passes access lists,
 	and setup the initial client stream for internal requests.
-	Temporary state for this processing is held in a 
+	Temporary state for this processing is held in a
 	clientRequestContext.
 TODO: find out what has replaced clientRequestContext since it seems not to exist now.
 
-\section ClientSideReply Client Side Reply	
+\section ClientSideReply Client Side Reply
 \par
-	This is where we determine if the request is cache HIT, 
-	REFRESH, MISS, etc. This involves querying the store 
+	This is where we determine if the request is cache HIT,
+	REFRESH, MISS, etc. This involves querying the store
 	(possibly multiple times) to work through Vary lists and
 	the list. Per-request state information is stored
 	in the clientReplyContext.
@@ -218,7 +218,7 @@ TODO: get callback_data (object?) linking or replacement named.
 	Manual reference counting such as cbdata uses is error prone,
 	and time consuming for the programmer. C++'s operator overloading
 	allows us to create automatic reference counting pointers, that will
-	free objects when they are no longer needed. With some care these 
+	free objects when they are no longer needed. With some care these
 	objects can be passed to functions needed Callback Data pointers.
 TODO: get cbdata documenting and linking.
 
@@ -331,7 +331,7 @@ TODO: get RFCs linked from ietf
 	These routines decide whether a cached object is stale or fresh,
 	based on the \em refresh_pattern configuration options.
 	If an object is fresh, it can be returned as a cache hit.
-	If it is stale, then it must be revalidated with an	
+	If it is stale, then it must be revalidated with an
 	If-Modified-Since request.
 
 \section SNMPSupport SNMP Support
@@ -352,7 +352,7 @@ TODO: get RFCs linked from ietf
 \section ESI ESI
 \par
 	ESI is an implementation of Edge Side Includes (http://www.esi.org).
-	ESI is implemented as a client side stream and a small 
+	ESI is implemented as a client side stream and a small
 	modification to client_side_reply.c to check whether
 	ESI should be inserted into the reply stream or not.
 

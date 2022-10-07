@@ -9,6 +9,7 @@
 /* DEBUG: section 47    Store Directory Routines */
 
 #include "squid.h"
+#include "base/AsyncFunCalls.h"
 #include "base/CodeContext.h"
 #include "base/RunnersRegistry.h"
 #include "base/TextException.h"
@@ -28,7 +29,6 @@
 #include "ipc/UdsOp.h"
 #include "sbuf/SBuf.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "tools.h"
 
@@ -129,8 +129,12 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
     ioRequestor = callback;
     Must(diskId < 0); // we do not know our disker yet
 
-    if (!queue.get())
+    if (!queue.get()) {
         queue.reset(new Queue(ShmLabel, IamWorkerProcess() ? Queue::groupA : Queue::groupB, KidIdentifier));
+        AsyncCall::Pointer call = asyncCall(79, 4, "IpcIoFile::HandleMessagesAtStart",
+                                            NullaryFunDialer(&IpcIoFile::HandleMessagesAtStart));
+        ScheduleCallHere(call);
+    }
 
     if (IamDiskProcess()) {
         error_ = !DiskerOpen(SBuf(dbName.termedBuf()), flags, mode);
@@ -201,7 +205,7 @@ IpcIoFile::create(int flags, mode_t mode, RefCount<IORequestor> callback)
 void
 IpcIoFile::close()
 {
-    assert(ioRequestor != NULL);
+    assert(ioRequestor != nullptr);
 
     if (IamDiskProcess())
         DiskerClose(SBuf(dbName.termedBuf()));
@@ -234,7 +238,7 @@ IpcIoFile::read(ReadRequest *readRequest)
     debugs(79,3, "(disker" << diskId << ", " << readRequest->len << ", " <<
            readRequest->offset << ")");
 
-    assert(ioRequestor != NULL);
+    assert(ioRequestor != nullptr);
     assert(readRequest->offset >= 0);
     Must(!error_);
 
@@ -282,7 +286,7 @@ IpcIoFile::write(WriteRequest *writeRequest)
     debugs(79,3, "(disker" << diskId << ", " << writeRequest->len << ", " <<
            writeRequest->offset << ")");
 
-    assert(ioRequestor != NULL);
+    assert(ioRequestor != nullptr);
     assert(writeRequest->len > 0); // TODO: work around mmap failures on zero-len?
     assert(writeRequest->offset >= 0);
     Must(!error_);
@@ -403,11 +407,11 @@ IpcIoFile::push(IpcIoPendingRequest *const pending)
         if (ipcIo.page)
             Ipc::Mem::PutPage(ipcIo.page);
 
-        pending->completeIo(NULL);
+        pending->completeIo(nullptr);
         delete pending;
     } catch (const TextException &e) {
         debugs(47, DBG_IMPORTANT, "ERROR: " << dbName << " exception: " << e.what());
-        pending->completeIo(NULL);
+        pending->completeIo(nullptr);
         delete pending;
     }
 }
@@ -475,7 +479,10 @@ IpcIoFile::HandleResponses(const char *const when)
     int diskId;
     while (queue->pop(diskId, ipcIo)) {
         const IpcIoFilesMap::const_iterator i = IpcIoFiles.find(diskId);
-        Must(i != IpcIoFiles.end()); // TODO: warn but continue
+        if (i == IpcIoFiles.end()) {
+            debugs(47, 5, "ignoring disk response " << SipcIo(KidIdentifier, ipcIo, diskId) << ": the file is not open");
+            continue;
+        }
         i->second->handleResponse(ipcIo);
     }
 }
@@ -525,6 +532,18 @@ IpcIoFile::HandleNotification(const Ipc::TypedMsgHdr &msg)
         HandleResponses("after notification");
 }
 
+/// \copydoc CollapsedForwarding::HandleNewDataAtStart()
+void
+IpcIoFile::HandleMessagesAtStart()
+{
+    /// \sa CollapsedForwarding::HandleNewDataAtStart() -- duplicates this logic
+    queue->clearAllReaderSignals();
+    if (IamDiskProcess())
+        DiskerHandleRequests();
+    else
+        HandleResponses("at start");
+}
+
 void
 IpcIoFile::StatQueue(std::ostream &os)
 {
@@ -545,7 +564,7 @@ IpcIoFile::OpenTimeout(void *const param)
     for (IpcIoFileList::iterator i = WaitingForOpen.begin();
             i != WaitingForOpen.end(); ++i) {
         if (*i == ipcIoFile) {
-            (*i)->openCompleted(NULL);
+            (*i)->openCompleted(nullptr);
             WaitingForOpen.erase(i);
             break;
         }
@@ -626,7 +645,7 @@ IpcIoFile::dequeueRequest(const unsigned int requestId)
 {
     Must(requestId != 0);
 
-    RequestMap *map = NULL;
+    RequestMap *map = nullptr;
     RequestMap::iterator i = requestMap1.find(requestId);
 
     if (i != requestMap1.end())
@@ -638,7 +657,7 @@ IpcIoFile::dequeueRequest(const unsigned int requestId)
     }
 
     if (!map) // not found in both maps
-        return NULL;
+        return nullptr;
 
     IpcIoPendingRequest *pending = i->second;
     map->erase(i);
@@ -701,7 +720,7 @@ IpcIoPendingRequest::completeIo(IpcIoMsg *const response)
         file->writeCompleted(writeRequest, response);
     else {
         Must(!response); // only timeouts are handled here
-        file->openCompleted(NULL);
+        file->openCompleted(nullptr);
     }
 }
 
@@ -995,7 +1014,7 @@ class IpcIoRr: public Ipc::Mem::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    IpcIoRr(): owner(NULL) {}
+    IpcIoRr(): owner(nullptr) {}
     virtual ~IpcIoRr();
     virtual void claimMemoryNeeds();
 

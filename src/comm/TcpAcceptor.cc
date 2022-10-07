@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
+#include "base/CodeContext.h"
 #include "base/TextException.h"
 #include "client_db.h"
 #include "comm/AcceptLimiter.h"
@@ -28,7 +29,6 @@
 #include "log/access_log.h"
 #include "MasterXaction.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 
 #include <cerrno>
@@ -67,14 +67,12 @@ void
 Comm::TcpAcceptor::unsubscribe(const char *reason)
 {
     debugs(5, 5, status() << " AsyncCall Subscription " << theCallSub << " removed: " << reason);
-    theCallSub = NULL;
+    theCallSub = nullptr;
 }
 
 void
 Comm::TcpAcceptor::start()
 {
-    if (listenPort_)
-        CodeContext::Reset(listenPort_);
     debugs(5, 5, status() << " AsyncCall Subscription: " << theCallSub);
 
     Must(IsConnOpen(conn));
@@ -97,7 +95,7 @@ Comm::TcpAcceptor::doneAll() const
     }
 
     // stop when handlers are gone
-    if (theCallSub == NULL) {
+    if (theCallSub == nullptr) {
         return AsyncJob::doneAll();
     }
 
@@ -111,12 +109,12 @@ Comm::TcpAcceptor::swanSong()
     debugs(5,5, MYNAME);
     unsubscribe("swanSong");
     if (IsConnOpen(conn)) {
-        if (closer_ != NULL)
+        if (closer_ != nullptr)
             comm_remove_close_handler(conn->fd, closer_);
         conn->close();
     }
 
-    conn = NULL;
+    conn = nullptr;
     AcceptLimiter::Instance().removeDead(this);
     AsyncJob::swanSong();
 }
@@ -124,7 +122,7 @@ Comm::TcpAcceptor::swanSong()
 const char *
 Comm::TcpAcceptor::status() const
 {
-    if (conn == NULL)
+    if (conn == nullptr)
         return "[nil connection]";
 
     static char ipbuf[MAX_IPSTRLEN] = {'\0'};
@@ -191,7 +189,7 @@ Comm::TcpAcceptor::setListen()
 void
 Comm::TcpAcceptor::handleClosure(const CommCloseCbParams &)
 {
-    closer_ = NULL;
+    closer_ = nullptr;
     if (conn) {
         conn->noteClosure();
         conn = nullptr;
@@ -250,17 +248,16 @@ void
 Comm::TcpAcceptor::logAcceptError(const ConnectionPointer &tcpClient) const
 {
     AccessLogEntry::Pointer al = new AccessLogEntry;
-    CodeContext::Reset(al);
-    al->tcpClient = tcpClient;
-    al->url = "error:accept-client-connection";
-    al->setVirginUrlForMissingRequest(al->url);
-    ACLFilledChecklist ch(nullptr, nullptr, nullptr);
-    ch.src_addr = tcpClient->remote;
-    ch.my_addr = tcpClient->local;
-    ch.al = al;
-    accessLogLog(al, &ch);
-
-    CodeContext::Reset(listenPort_);
+    CallBack(al, [&] {
+        al->tcpClient = tcpClient;
+        al->url = "error:accept-client-connection";
+        al->setVirginUrlForMissingRequest(al->url);
+        ACLFilledChecklist ch(nullptr, nullptr, nullptr);
+        ch.src_addr = tcpClient->remote;
+        ch.my_addr = tcpClient->local;
+        ch.al = al;
+        accessLogLog(al, &ch);
+    });
 }
 
 void
@@ -292,12 +289,12 @@ Comm::TcpAcceptor::acceptOne()
         debugs(5, 5, "try later: " << conn << " handler Subscription: " << theCallSub);
     } else {
         // TODO: When ALE, MasterXaction merge, use them or ClientConn instead.
-        CodeContext::Reset(newConnDetails);
-        debugs(5, 5, "Listener: " << conn <<
-               " accepted new connection " << newConnDetails <<
-               " handler Subscription: " << theCallSub);
-        notify(flag, newConnDetails);
-        CodeContext::Reset(listenPort_);
+        CallBack(newConnDetails, [&] {
+            debugs(5, 5, "Listener: " << conn <<
+                   " accepted new connection " << newConnDetails <<
+                   " handler Subscription: " << theCallSub);
+            notify(flag, newConnDetails);
+        });
     }
 
     SetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
@@ -320,13 +317,12 @@ Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &
         return;
     }
 
-    if (theCallSub != NULL) {
+    if (theCallSub != nullptr) {
         AsyncCall::Pointer call = theCallSub->callback();
         CommAcceptCbParams &params = GetCommParams<CommAcceptCbParams>(call);
-        params.xaction = new MasterXaction(XactionInitiator::initClient);
-        params.xaction->squidPort = listenPort_;
+        params.port = listenPort_;
         params.fd = conn->fd;
-        params.conn = params.xaction->tcpClient = newConnDetails;
+        params.conn = newConnDetails;
         params.flag = flag;
         params.xerrno = errcode;
         ScheduleCallHere(call);
@@ -346,12 +342,12 @@ Comm::Flag
 Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
 {
     ++statCounter.syscalls.sock.accepts;
-    int sock;
-    struct addrinfo *gai = NULL;
+    struct addrinfo *gai = nullptr;
     Ip::Address::InitAddr(gai);
 
     errcode = 0; // reset local errno copy.
-    if ((sock = accept(conn->fd, gai->ai_addr, &gai->ai_addrlen)) < 0) {
+    const auto rawSock = accept(conn->fd, gai->ai_addr, &gai->ai_addrlen);
+    if (rawSock < 0) {
         errcode = errno; // store last accept errno locally.
 
         Ip::Address::FreeAddr(gai);
@@ -368,15 +364,12 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
         }
     }
 
-    Must(sock >= 0);
     ++incoming_sockets_accepted;
 
     // Sync with Comm ASAP so that abandoned details can properly close().
     // XXX : these are not all HTTP requests. use a note about type and ip:port details->
     // so we end up with a uniform "(HTTP|FTP-data|HTTPS|...) remote-ip:remote-port"
-    fd_open(sock, FD_SOCKET, "HTTP Request");
-    details->fd = sock;
-    details->enterOrphanage();
+    Descriptor sock(rawSock, FD_SOCKET, "HTTP Request");
 
     details->remote = *gai;
 
@@ -392,10 +385,19 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     details->local = *gai;
     Ip::Address::FreeAddr(gai);
 
-    // Perform NAT or TPROXY operations to retrieve the real client/dest IP addresses
-    if (conn->flags&(COMM_TRANSPARENT|COMM_INTERCEPTION) && !Ip::Interceptor.Lookup(details, conn)) {
-        debugs(50, DBG_IMPORTANT, "ERROR: NAT/TPROXY lookup failed to locate original IPs on " << details);
-        return Comm::NOMESSAGE;
+    if (conn->flags & COMM_TRANSPARENT) { // the real client/dest IP address must be already available via getsockname()
+        details->flags |= COMM_TRANSPARENT;
+        if (!Ip::Interceptor.TransparentActive()) {
+            debugs(50, DBG_IMPORTANT, "ERROR: Cannot use transparent " << details << " because TPROXY mode became inactive");
+            // TODO: consider returning Comm::COMM_ERROR instead
+            return Comm::NOMESSAGE;
+        }
+    } else if (conn->flags & COMM_INTERCEPTION) { // request the real client/dest IP address from NAT
+        details->flags |= COMM_INTERCEPTION;
+        if (!Ip::Interceptor.LookupNat(*details)) {
+            debugs(50, DBG_IMPORTANT, "ERROR: NAT lookup failed to locate original IPs on " << details);
+            return Comm::NOMESSAGE;
+        }
     }
 
 #if USE_SQUID_EUI
@@ -426,11 +428,14 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     // set socket flags
     commSetCloseOnExec(sock);
     commSetNonBlocking(sock);
-    Comm::ApplyTcpKeepAlive(sock, listenPort_->tcp_keepalive);
+    if (listenPort_)
+        Comm::ApplyTcpKeepAlive(sock, listenPort_->tcp_keepalive);
 
     /* IFF the socket is (tproxy) transparent, pass the flag down to allow spoofing */
     F->flags.transparent = fd_table[conn->fd].flags.transparent; // XXX: can we remove this line yet?
 
+    details->fd = sock.release();
+    details->enterOrphanage();
     return Comm::OK;
 }
 

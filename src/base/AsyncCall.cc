@@ -83,15 +83,15 @@ AsyncCall::print(std::ostream &os)
 void
 AsyncCall::dequeue(AsyncCall::Pointer &head, AsyncCall::Pointer &prev)
 {
-    if (prev != NULL)
+    if (prev != nullptr)
         prev->setNext(Next());
     else
         head = Next();
-    setNext(NULL);
+    setNext(nullptr);
 }
 
 bool
-ScheduleCall(const char *fileName, int fileLine, AsyncCall::Pointer &call)
+ScheduleCall(const char *fileName, int fileLine, const AsyncCall::Pointer &call)
 {
     debugs(call->debugSection, call->debugLevel, fileName << "(" << fileLine <<
            ") will call " << *call << " [" << call->id << ']' );

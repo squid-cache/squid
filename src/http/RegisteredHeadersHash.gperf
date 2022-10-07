@@ -1,6 +1,4 @@
 %{
-/* AUTO GENERATED FROM RegisteredHeadersHash.gperf. DO NOT EDIT */
-
 /*
  * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
@@ -20,7 +18,7 @@
 %enum
 %global-table
 %ignore-case
-%struct-type 
+%struct-type
 class HeaderTableRecord;
 %%
 Accept, Http::HdrType::ACCEPT, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader
@@ -55,7 +53,6 @@ Expires, Http::HdrType::EXPIRES, Http::HdrFieldType::ftDate_1123, HdrKind::Entit
 Forwarded, Http::HdrType::FORWARDED, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader
 From, Http::HdrType::FROM, Http::HdrFieldType::ftStr, HdrKind::RequestHeader
 Host, Http::HdrType::HOST, Http::HdrFieldType::ftStr, HdrKind::RequestHeader
-HTTP2-Settings, Http::HdrType::HTTP2_SETTINGS, Http::HdrFieldType::ftStr, HdrKind::RequestHeader|HdrKind::HopByHopHeader
 If-Match, Http::HdrType::IF_MATCH, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader
 If-Modified-Since, Http::HdrType::IF_MODIFIED_SINCE, Http::HdrFieldType::ftDate_1123, HdrKind::RequestHeader
 If-None-Match, Http::HdrType::IF_NONE_MATCH, Http::HdrFieldType::ftStr, HdrKind::ListHeader
@@ -71,6 +68,7 @@ Mime-Version, Http::HdrType::MIME_VERSION, Http::HdrFieldType::ftStr, HdrKind::G
 Negotiate, Http::HdrType::NEGOTIATE, Http::HdrFieldType::ftStr, HdrKind::None
 Origin, Http::HdrType::ORIGIN, Http::HdrFieldType::ftStr, HdrKind::RequestHeader
 Pragma, Http::HdrType::PRAGMA, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader
+Priority, Http::HdrType::PRIORITY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader
 Proxy-Authenticate, Http::HdrType::PROXY_AUTHENTICATE, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader
 Proxy-Authentication-Info, Http::HdrType::PROXY_AUTHENTICATION_INFO, Http::HdrFieldType::ftStr, HdrKind::ListHeader
 Proxy-Authorization, Http::HdrType::PROXY_AUTHORIZATION, Http::HdrFieldType::ftStr, HdrKind::RequestHeader|HdrKind::HopByHopHeader
@@ -94,7 +92,6 @@ Upgrade, Http::HdrType::UPGRADE, Http::HdrFieldType::ftStr, HdrKind::ListHeader|
 User-Agent, Http::HdrType::USER_AGENT, Http::HdrFieldType::ftStr, HdrKind::RequestHeader
 Vary, Http::HdrType::VARY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader
 Via, Http::HdrType::VIA, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader
-Warning, Http::HdrType::WARNING, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader
 WWW-Authenticate, Http::HdrType::WWW_AUTHENTICATE, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader
 X-Forwarded-For, Http::HdrType::X_FORWARDED_FOR, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader
 X-Request-URI, Http::HdrType::X_REQUEST_URI, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader

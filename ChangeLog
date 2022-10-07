@@ -1,4 +1,32 @@
-Changes in squid-5.4.1 (12 Feb 2021):
+Changes in squid-5.7 (05 Sep 2022):
+
+	- Regression Fix: Typo in manager ACL
+	- Bug 5186: noteDestinationsEnd check failed: transportWait
+	- Bug 5160: Test suite fails with -flto=auto
+	- Bug 3193 pt2: NTLM decoder truncating strings
+	- Bug 5133: OpenSSL 3.0 support
+	- ext_session_acl: fix TDB key lookup
+	- forward_max_tries: Do not count discarded connections
+	- ... and many compile and debugging fixes
+
+Changes in squid-5.6 (06 Jun 2022):
+
+	- Bug 5208: Part 1: Restart kids killed by SIGKILL
+	- Fix SQUID-MIB smilint errors
+	- negotiate_kerberos_auth: Initialise default_keytab
+	- Improve handling of Gopher responses
+	- ... and some semi-automated code polish
+
+Changes in squid-5.5 (12 Apr 2022):
+
+	- Regression Bug 5192: esi_parser default is incorrect
+	- Bug 5177: clientca certificates sent to https_port clients
+	- Bug 5090: Must(!request->pinnedConnection()) violation
+	- Kid restart leads to persistent queue overflows, delays/timeouts
+	- Fix build on Illumos
+	- ESI: Drop incorrect and unnecessary xmlSetFeature() call
+
+Changes in squid-5.4.1 (12 Feb 2022):
 
 	- Bug 5055: FATAL FwdState::noteDestinationsEnd exception: opening
 	- Fix FATAL ServiceRep::putConnection exception: theBusyConns > 0
@@ -21,7 +49,7 @@ Changes in squid-5.4.1 (12 Feb 2021):
 	- Polished AsyncJob::Start() API
 	- ... and update code documentation
 
-Changes in squid-5.4 (07 Feb 2021):
+Changes in squid-5.4 (07 Feb 2022):
 
 	- Bug 5190: Preserve configured order of intermediate CA certificate chain
 	- Bug 5188: Fix reconfiguration leaking tls-cert=... memory

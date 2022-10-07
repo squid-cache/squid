@@ -18,11 +18,12 @@
 #include "globals.h"
 #include "md5.h"
 #include "sbuf/Stream.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 
+#include <array>
 #include <cerrno>
+#include <cstring>
 
 CBDATA_NAMESPACED_CLASS_INIT(Rock, Rebuild);
 
@@ -508,6 +509,22 @@ Rock::Rebuild::loadOneSlot()
     useNewSlot(slotId, header);
 }
 
+/// whether the given slot buffer is likely to have nothing but zeros, as is
+/// common to slots in pre-initialized (with zeros) db files
+static bool
+ZeroedSlot(const MemBuf &buf)
+{
+    // We could memcmp the entire buffer, but it is probably safe enough to test
+    // a few bytes because even if we do not detect a corrupted entry, it is not
+    // a big deal: Store::UnpackPrefix() rejects all-0s metadata prefix.
+    static const std::array<char, 10> zeros = {};
+
+    if (static_cast<size_t>(buf.contentSize()) < zeros.size())
+        return false; // cannot be sure enough
+
+    return memcmp(buf.content(), zeros.data(), zeros.size()) == 0;
+}
+
 /// parse StoreEntry basics and add them to the map, returning true on success
 bool
 Rock::Rebuild::importEntry(Ipc::StoreMapAnchor &anchor, const sfileno fileno, const DbCellHeader &header)
@@ -516,6 +533,10 @@ Rock::Rebuild::importEntry(Ipc::StoreMapAnchor &anchor, const sfileno fileno, co
     StoreEntry loadedE;
     const uint64_t knownSize = header.entrySize > 0 ?
                                header.entrySize : anchor.basics.swap_file_sz.load();
+
+    if (ZeroedSlot(buf))
+        return false;
+
     if (!storeRebuildParseEntry(buf, loadedE, key, counts, knownSize))
         return false;
 

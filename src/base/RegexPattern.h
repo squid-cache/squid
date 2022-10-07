@@ -34,7 +34,7 @@ public:
     /// whether this is an "any single character" regex (".")
     bool isDot() const { return pattern.length() == 1 && pattern[0] == '.'; }
 
-    bool match(const char *str) const {return regexec(&regex,str,0,NULL,0)==0;}
+    bool match(const char *str) const {return regexec(&regex,str,0,nullptr,0)==0;}
 
     /// Attempts to reproduce this regex (context-sensitive) configuration.
     /// If the previous regex is nil, may not report default flags.

@@ -33,6 +33,9 @@ public:
     /// whether the reader is waiting for a notification signal
     bool blocked() const { return popBlocked.load(); }
 
+    /// \copydoc popSignal
+    bool signaled() const { return popSignal.load(); }
+
     /// marks the reader as blocked, waiting for a notification signal
     void block() { popBlocked.store(true); }
 
@@ -107,10 +110,10 @@ public:
     static int Items2Bytes(const unsigned int maxItemSize, const int size);
 
     /// returns true iff the value was set; [un]blocks the reader as needed
-    template<class Value> bool pop(Value &value, QueueReader *const reader = NULL);
+    template<class Value> bool pop(Value &value, QueueReader *const reader = nullptr);
 
     /// returns true iff the caller must notify the reader of the pushed item
-    template<class Value> bool push(const Value &value, QueueReader *const reader = NULL);
+    template<class Value> bool push(const Value &value, QueueReader *const reader = nullptr);
 
     /// returns true iff the value was set; the value may be stale!
     template<class Value> bool peek(Value &value) const;
@@ -169,6 +172,9 @@ public:
 
     /// clears the reader notification received by the local process from the remote process
     void clearReaderSignal(const int remoteProcessId);
+
+    /// clears all reader notifications received by the local process
+    void clearAllReaderSignals();
 
     /// picks a process and calls OneToOneUniQueue::pop() using its queue
     template <class Value> bool pop(int &remoteProcessId, Value &value);
@@ -590,6 +596,12 @@ BaseMultiQueue::stat(std::ostream &os) const
         const auto &queue = outQueue(processId);
         queue.statOut<Value>(os, theLocalProcessId, processId);
     }
+
+    os << "\n";
+
+    const auto &reader = localReader();
+    os << "  kid" << theLocalProcessId << " reader flags: " <<
+       "{ blocked: " << reader.blocked() << ", signaled: " << reader.signaled() << " }\n";
 }
 
 // FewToFewBiQueue

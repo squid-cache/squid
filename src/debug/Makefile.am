@@ -11,7 +11,7 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libdebug.la
 
 libdebug_la_SOURCES = \
-	debug.cc \
 	Messages.h \
-	Stream.h
+	Stream.h \
+	debug.cc
 

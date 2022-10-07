@@ -11,22 +11,7 @@
 #include "squid.h"
 #include "StoreFileSystem.h"
 
-std::vector<StoreFileSystem*> *StoreFileSystem::_FileSystems = NULL;
-
-void
-StoreFileSystem::RegisterAllFsWithCacheManager(void)
-{
-    for (iterator i = GetFileSystems().begin(); i != GetFileSystems().end(); ++i)
-        (*i)->registerWithCacheManager();
-}
-
-void
-StoreFileSystem::SetupAllFs()
-{
-    for (iterator i = GetFileSystems().begin(); i != GetFileSystems().end(); ++i)
-        /* Call the FS to set up capabilities and initialize the FS driver */
-        (*i)->setup();
-}
+std::vector<StoreFileSystem*> *StoreFileSystem::_FileSystems = nullptr;
 
 void
 StoreFileSystem::FsAdd(StoreFileSystem &instance)
@@ -56,20 +41,6 @@ StoreFileSystem::GetFileSystems()
     return *_FileSystems;
 }
 
-/*
- * called when a graceful shutdown is to occur
- * of each fs module.
- */
-void
-StoreFileSystem::FreeAllFs()
-{
-    while (!GetFileSystems().empty()) {
-        StoreFileSystem *fs = GetFileSystems().back();
-        GetFileSystems().pop_back();
-        fs->done();
-    }
-}
-
 StoreFileSystem *
 StoreFileSystem::FindByType(const char *type)
 {
@@ -79,9 +50,4 @@ StoreFileSystem::FindByType(const char *type)
     }
     return nullptr;
 }
-
-/* no filesystem is required to export statistics */
-void
-StoreFileSystem::registerWithCacheManager(void)
-{}
 

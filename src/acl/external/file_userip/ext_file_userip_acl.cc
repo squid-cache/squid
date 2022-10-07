@@ -72,7 +72,7 @@ struct ip_user_dict *
 load_dict(FILE * FH) {
     struct ip_user_dict *current_entry; /* the structure used to
                        store data */
-    struct ip_user_dict *first_entry = NULL;    /* the head of the
+    struct ip_user_dict *first_entry = nullptr;    /* the head of the
                            linked list */
     char line[DICT_BUFFER_SIZE]; /* the buffer for the lines read
                    from the dict file */
@@ -84,33 +84,33 @@ load_dict(FILE * FH) {
     current_entry = first_entry;
 
     unsigned int lineCount = 0;
-    while (fgets(line, sizeof(line), FH) != NULL) {
+    while (fgets(line, sizeof(line), FH) != nullptr) {
         ++lineCount;
         if (line[0] == '#') {
             continue;
         }
 
         char *cp; // a char pointer used to parse each line.
-        if ((cp = strchr (line, '\n')) != NULL) {
+        if ((cp = strchr (line, '\n')) != nullptr) {
             /* chop \n characters */
             *cp = '\0';
         }
-        if (strtok(line, "\t ") != NULL) {
+        if (strtok(line, "\t ") != nullptr) {
             // NP: line begins with IP/mask. Skipped to the end of it with this strtok()
 
             /* get the username */
             char *username;
-            if ((username = strtok(NULL, "\t ")) == NULL) {
+            if ((username = strtok(nullptr, "\t ")) == nullptr) {
                 debug("Missing username on line %u of dictionary file\n", lineCount);
                 continue;
             }
 
             /* look for a netmask */
-            if ((cp = strtok (line, "/")) != NULL) {
+            if ((cp = strtok (line, "/")) != nullptr) {
                 /* store the ip address in a temporary buffer */
                 tmpbuf = cp;
-                cp = strtok (NULL, "/");
-                if (cp != NULL) {
+                cp = strtok (nullptr, "/");
+                if (cp != nullptr) {
                     /* if we have a slash in the lhs, we have a netmask */
                     current_entry->netmask = (inet_addr(cp));
                     current_entry->address =
@@ -149,7 +149,7 @@ dict_lookup(struct ip_user_dict *first_entry, char *username,
     /* Move the pointer to the first entry of the linked list. */
     struct ip_user_dict *current_entry = first_entry;
 
-    while (current_entry->username != NULL) {
+    while (current_entry->username != nullptr) {
         debug("user: %s\naddr: %lu\nmask: %lu\n\n",
               current_entry->username, current_entry->address,
               current_entry->netmask);
@@ -158,7 +158,7 @@ dict_lookup(struct ip_user_dict *first_entry, char *username,
                 netmask) == current_entry->address) {
             /* If the username contains an @ we assume it?s a group and
                call the corresponding function */
-            if ((strchr (current_entry->username, '@')) == NULL) {
+            if ((strchr (current_entry->username, '@')) == nullptr) {
                 if ((match_user (current_entry->username, username)) == 1)
                     return 1;
             } else {
@@ -194,11 +194,11 @@ match_group(char *dict_group, char *username)
                    so we rip it off by incrementing
                    * the pointer by one */
 
-    if ((g = getgrnam(dict_group)) == NULL) {
+    if ((g = getgrnam(dict_group)) == nullptr) {
         debug("Group does not exist '%s'\n", dict_group);
         return 0;
     } else {
-        while (*(g->gr_mem) != NULL) {
+        while (*(g->gr_mem) != nullptr) {
             if (strcmp(*((g->gr_mem)++), username) == 0) {
                 return 1;
             }
@@ -218,7 +218,7 @@ usage(const char *program_name)
 int
 main (int argc, char *argv[])
 {
-    char *filename = NULL;
+    char *filename = nullptr;
     char *program_name = argv[0];
     char *cp;
     char *username, *address;
@@ -226,7 +226,7 @@ main (int argc, char *argv[])
     struct ip_user_dict *current_entry;
     int ch;
 
-    setvbuf (stdout, NULL, _IOLBF, 0);
+    setvbuf (stdout, nullptr, _IOLBF, 0);
     while ((ch = getopt(argc, argv, "df:h")) != -1) {
         switch (ch) {
         case 'f':
@@ -244,7 +244,7 @@ main (int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
     }
-    if (filename == NULL) {
+    if (filename == nullptr) {
         fprintf(stderr, "%s: FATAL: No Filename configured.", program_name);
         usage(program_name);
         exit(EXIT_FAILURE);
@@ -258,12 +258,12 @@ main (int argc, char *argv[])
     current_entry = load_dict(FH);
 
     while (fgets(line, HELPER_INPUT_BUFFER, stdin)) {
-        if ((cp = strchr (line, '\n')) == NULL) {
+        if ((cp = strchr (line, '\n')) == nullptr) {
             /* too large message received.. skip and deny */
             fprintf(stderr, "%s: ERROR: Input Too Large: %s\n", program_name, line);
             while (fgets(line, sizeof(line), stdin)) {
                 fprintf(stderr, "%s: ERROR: Input Too Large..: %s\n", program_name, line);
-                if (strchr(line, '\n') != NULL)
+                if (strchr(line, '\n') != nullptr)
                     break;
             }
             SEND_BH(HLP_MSG("Input Too Large."));
@@ -271,7 +271,7 @@ main (int argc, char *argv[])
         }
         *cp = '\0';
         address = strtok(line, " \t");
-        username = strtok(NULL, " \t");
+        username = strtok(nullptr, " \t");
         if (!address || !username) {
             debug("%s: unable to read tokens\n", program_name);
             SEND_BH(HLP_MSG("Invalid Input."));

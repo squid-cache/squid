@@ -105,30 +105,8 @@ class HappyConnOpener: public AsyncJob
 public:
     typedef HappyConnOpenerAnswer Answer;
 
-    /// AsyncCall dialer for our callback. Gives us access to callback Answer.
-    template <class Initiator>
-    class CbDialer: public CallDialer, public Answer {
-    public:
-        // initiator method to receive our answer
-        typedef void (Initiator::*Method)(Answer &);
-
-        CbDialer(Method method, Initiator *initiator): initiator_(initiator), method_(method) {}
-        virtual ~CbDialer() = default;
-
-        /* CallDialer API */
-        bool canDial(AsyncCall &) { return initiator_.valid(); }
-        void dial(AsyncCall &) {((*initiator_).*method_)(*this); }
-        virtual void print(std::ostream &os) const override {
-            os << '(' << static_cast<const Answer&>(*this) << ')';
-        }
-
-    private:
-        CbcPointer<Initiator> initiator_; ///< object to deliver the answer to
-        Method method_; ///< initiator_ method to call with the answer
-    };
-
 public:
-    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCall::Pointer &,  HttpRequestPointer &, const time_t aFwdStart, int tries, const AccessLogEntryPointer &al);
+    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCallback<Answer> &, const HttpRequestPointer &, time_t aFwdStart, int tries, const AccessLogEntryPointer &);
     virtual ~HappyConnOpener() override;
 
     /// configures reuse of old connections
@@ -216,7 +194,8 @@ private:
 
     const time_t fwdStart; ///< requestor start time
 
-    AsyncCall::Pointer callback_; ///< handler to be called on connection completion.
+    /// answer destination
+    AsyncCallback<Answer> callback_;
 
     /// Candidate paths. Shared with the initiator. May not be finalized yet.
     ResolvedPeersPointer destinations;
@@ -258,7 +237,8 @@ private:
     /// the request that needs a to-server connection
     HttpRequestPointer cause;
 
-    /// number of connection opening attempts, including those in the requestor
+    /// number of our finished connection opening attempts (including pconn
+    /// reuses) plus previously finished attempts supplied by the requestor
     int n_tries;
 
     /// Reason to ran out of time or attempts

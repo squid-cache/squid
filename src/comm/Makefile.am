@@ -8,7 +8,9 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
-noinst_LTLIBRARIES = libcomm.la
+noinst_LTLIBRARIES = \
+	libcomm.la \
+	libminimal.la
 
 ## Library holding comm socket handlers
 libcomm_la_SOURCES = \
@@ -34,8 +36,11 @@ libcomm_la_SOURCES = \
 	Tcp.h \
 	TcpAcceptor.cc \
 	TcpAcceptor.h \
-	UdpOpenDialer.h \
 	Write.cc \
 	Write.h \
 	comm_internal.h \
 	forward.h
+
+# a bare-bones implementation of few Comm APIs sufficient for helpers use
+libminimal_la_SOURCES = \
+	minimal.cc

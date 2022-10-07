@@ -25,7 +25,6 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
-#include "SquidTime.h"
 
 Auth::Negotiate::UserRequest::UserRequest() :
     server_blob(nullptr),
@@ -44,20 +43,20 @@ Auth::Negotiate::UserRequest::~UserRequest()
 
     if (request) {
         HTTPMSGUNLOCK(request);
-        request = NULL;
+        request = nullptr;
     }
 }
 
 const char *
 Auth::Negotiate::UserRequest::connLastHeader()
 {
-    return NULL;
+    return nullptr;
 }
 
 int
 Auth::Negotiate::UserRequest::authenticated() const
 {
-    if (user() != NULL && user()->credentials() == Auth::Ok) {
+    if (user() != nullptr && user()->credentials() == Auth::Ok) {
         debugs(29, 9, "user authenticated.");
         return 1;
     }
@@ -124,10 +123,10 @@ Auth::Negotiate::UserRequest::startHelperLookup(HttpRequest *, AccessLogEntry::P
     assert(data);
     assert(handler);
 
-    assert(user() != NULL);
+    assert(user() != nullptr);
     assert(user()->auth_type == Auth::AUTH_NEGOTIATE);
 
-    if (static_cast<Auth::Negotiate::Config*>(Auth::SchemeConfig::Find("negotiate"))->authenticateProgram == NULL) {
+    if (static_cast<Auth::Negotiate::Config*>(Auth::SchemeConfig::Find("negotiate"))->authenticateProgram == nullptr) {
         debugs(29, DBG_CRITICAL, "ERROR: No Negotiate authentication program configured.");
         handler(data);
         return;
@@ -187,7 +186,7 @@ Auth::Negotiate::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData
     /* Check that we are in the client side, where we can generate
      * auth challenges */
 
-    if (conn == NULL || !cbdataReferenceValid(conn)) {
+    if (conn == nullptr || !cbdataReferenceValid(conn)) {
         user()->credentials(Auth::Failed);
         debugs(29, DBG_IMPORTANT, "WARNING: Negotiate Authentication attempt to perform authentication without a connection!");
         return;
@@ -228,7 +227,7 @@ Auth::Negotiate::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData
         user()->credentials(Auth::Pending);
         safe_free(client_blob);
         client_blob=xstrdup(blob);
-        assert(conn->getAuth() == NULL);
+        assert(conn->getAuth() == nullptr);
         conn->setAuth(this, "new Negotiate handshake request");
         request = aRequest;
         HTTPMSGLOCK(request);
@@ -274,7 +273,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
     }
 
     Auth::UserRequest::Pointer auth_user_request = r->auth_user_request;
-    assert(auth_user_request != NULL);
+    assert(auth_user_request != nullptr);
 
     // add new helper kv-pair notes to the credentials object
     // so that any transaction using those credentials can access them
@@ -284,13 +283,13 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
     auth_user_request->user()->notes.remove("token");
 
     Auth::Negotiate::UserRequest *lm_request = dynamic_cast<Auth::Negotiate::UserRequest *>(auth_user_request.getRaw());
-    assert(lm_request != NULL);
+    assert(lm_request != nullptr);
     assert(lm_request->waiting);
 
     lm_request->waiting = 0;
     safe_free(lm_request->client_blob);
 
-    assert(auth_user_request->user() != NULL);
+    assert(auth_user_request->user() != nullptr);
     assert(auth_user_request->user()->auth_type == Auth::AUTH_NEGOTIATE);
 
     if (!lm_request->reservationId)
@@ -318,7 +317,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
     case Helper::Okay: {
         const char *userNote = reply.notes.findFirst("user");
         const char *tokenNote = reply.notes.findFirst("token");
-        if (userNote == NULL || tokenNote == NULL) {
+        if (userNote == nullptr || tokenNote == nullptr) {
             // XXX: handle a success with no username better
             /* protocol error */
             fatalf("authenticateNegotiateHandleReply: *** Unsupported helper response ***, '%s'\n", reply.other().content());
@@ -391,7 +390,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
 
     if (lm_request->request) {
         HTTPMSGUNLOCK(lm_request->request);
-        lm_request->request = NULL;
+        lm_request->request = nullptr;
     }
     r->handler(r->data);
     delete r;

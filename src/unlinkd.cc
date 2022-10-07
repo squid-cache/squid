@@ -17,7 +17,6 @@
 #include "globals.h"
 #include "SquidConfig.h"
 #include "SquidIpc.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "store/Disk.h"
 #include "tools.h"
@@ -198,7 +197,7 @@ unlinkdInit(void)
     Ip::Address localhost;
 
     args[0] = "(unlinkd)";
-    args[1] = NULL;
+    args[1] = nullptr;
     localhost.setLocalhost();
 
     pid = ipcCreate(

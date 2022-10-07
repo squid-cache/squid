@@ -14,12 +14,12 @@
 #include "debug/Stream.h"
 #include "EventLoop.h"
 #include "fatal.h"
-#include "SquidTime.h"
+#include "time/Engine.h"
 
-EventLoop *EventLoop::Running = NULL;
+EventLoop *EventLoop::Running = nullptr;
 
-EventLoop::EventLoop() : errcount(0), last_loop(false), timeService(NULL),
-    primaryEngine(NULL),
+EventLoop::EventLoop() : errcount(0), last_loop(false), timeService(nullptr),
+    primaryEngine(nullptr),
     loop_delay(EVENT_LOOP_TIMEOUT),
     error(false),
     runOnceResult(false)
@@ -82,7 +82,7 @@ EventLoop::run()
 
     while (!runOnce());
 
-    Running = NULL;
+    Running = nullptr;
 }
 
 bool
@@ -111,10 +111,10 @@ EventLoop::runOnce()
             runOnceResult = false;
     } while (sawActivity);
 
-    if (waitingEngine != NULL)
+    if (waitingEngine != nullptr)
         checkEngine(waitingEngine, true);
 
-    if (timeService != NULL)
+    if (timeService != nullptr)
         timeService->tick();
 
     // dispatch calls scheduled by waitingEngine and timeService
@@ -159,7 +159,7 @@ EventLoop::setPrimaryEngine(AsyncEngine * engine)
 }
 
 void
-EventLoop::setTimeService(TimeEngine *engine)
+EventLoop::setTimeService(Time::Engine *engine)
 {
     timeService = engine;
 }

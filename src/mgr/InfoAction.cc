@@ -21,7 +21,6 @@
 #include "mgr/InfoAction.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 
@@ -141,7 +140,7 @@ void
 Mgr::InfoAction::dump(StoreEntry* entry)
 {
     debugs(16, 5, MYNAME);
-    Must(entry != NULL);
+    Must(entry != nullptr);
 
 #if XMALLOC_STATISTICS
     if (UsingSmp())

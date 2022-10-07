@@ -53,8 +53,8 @@ aioClose(int fd)
     aioCancel(fd);
     ctrlp = new squidaio_ctrl_t;
     ctrlp->fd = fd;
-    ctrlp->done_handler = NULL;
-    ctrlp->done_handler_data = NULL;
+    ctrlp->done_handler = nullptr;
+    ctrlp->done_handler_data = nullptr;
     ctrlp->operation = _AIO_CLOSE;
     ctrlp->result.data = ctrlp;
     squidaio_close(fd, &ctrlp->result);
@@ -83,11 +83,11 @@ aioCancel(int fd)
         if (ctrlp->done_handler) {
             AIOCB *callback = ctrlp->done_handler;
             void *cbdata;
-            ctrlp->done_handler = NULL;
+            ctrlp->done_handler = nullptr;
             debugs(32, DBG_IMPORTANT, "this be aioCancel. Danger ahead!");
 
             if (cbdataReferenceValidDone(ctrlp->done_handler_data, &cbdata))
-                callback(fd, cbdata, NULL, -2, -2);
+                callback(fd, cbdata, nullptr, -2, -2);
 
             /* free data if requested to aioWrite() */
             if (ctrlp->free_func)

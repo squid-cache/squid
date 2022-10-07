@@ -20,9 +20,8 @@ digest_edirectory_auth_SOURCES = \
 digest_edirectory_auth_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
-	$(LDAPLIB) \
-	$(LBERLIB) \
-	$(NETTLELIB) \
+	$(LIBLDAP_LIBS) \
+	$(LIBNETTLE_LIBS) \
 	$(CRYPTLIB) \
 	$(SSLLIB) \
 	$(XTRA_LIBS)

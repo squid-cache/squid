@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "base/CodeContext.h"
 #include "base/InstanceId.h"
+#include "base/Random.h"
 #include "base/RunnersRegistry.h"
 #include "comm.h"
 #include "comm/Connection.h"
@@ -30,7 +31,6 @@
 #include "mgr/Registration.h"
 #include "snmp_agent.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 #include "util.h"
@@ -44,7 +44,6 @@
 #include <arpa/nameser.h>
 #endif
 #include <cerrno>
-#include <random>
 #if HAVE_RESOLV_H
 #include <resolv.h>
 #endif
@@ -221,14 +220,14 @@ struct _sp {
 };
 
 static std::vector<ns> nameservers;
-static sp *searchpath = NULL;
+static sp *searchpath = nullptr;
 static int nns_mdns_count = 0;
 static int npc = 0;
 static int npc_alloc = 0;
 static int ndots = 1;
 static dlink_list lru_list;
 static int event_queued = 0;
-static hash_table *idns_lookup_hash = NULL;
+static hash_table *idns_lookup_hash = nullptr;
 
 /*
  * Notes on EDNS:
@@ -418,16 +417,16 @@ idnsParseResolvConf(void)
     }
 
     char buf[RESOLV_BUFSZ];
-    const char *t = NULL;
+    const char *t = nullptr;
     while (fgets(buf, RESOLV_BUFSZ, fp)) {
         t = strtok(buf, w_space);
 
-        if (NULL == t) {
+        if (nullptr == t) {
             continue;
         } else if (strcmp(t, "nameserver") == 0) {
-            t = strtok(NULL, w_space);
+            t = strtok(nullptr, w_space);
 
-            if (NULL == t)
+            if (nullptr == t)
                 continue;
 
             debugs(78, DBG_IMPORTANT, "Adding nameserver " << t << " from " << _PATH_RESCONF);
@@ -436,9 +435,9 @@ idnsParseResolvConf(void)
             result = true;
         } else if (strcmp(t, "domain") == 0) {
             idnsFreeSearchpath();
-            t = strtok(NULL, w_space);
+            t = strtok(nullptr, w_space);
 
-            if (NULL == t)
+            if (nullptr == t)
                 continue;
 
             debugs(78, DBG_IMPORTANT, "Adding domain " << t << " from " << _PATH_RESCONF);
@@ -446,10 +445,10 @@ idnsParseResolvConf(void)
             idnsAddPathComponent(t);
         } else if (strcmp(t, "search") == 0) {
             idnsFreeSearchpath();
-            while (NULL != t) {
-                t = strtok(NULL, w_space);
+            while (nullptr != t) {
+                t = strtok(nullptr, w_space);
 
-                if (NULL == t)
+                if (nullptr == t)
                     continue;
 
                 debugs(78, DBG_IMPORTANT, "Adding domain " << t << " from " << _PATH_RESCONF);
@@ -457,10 +456,10 @@ idnsParseResolvConf(void)
                 idnsAddPathComponent(t);
             }
         } else if (strcmp(t, "options") == 0) {
-            while (NULL != t) {
-                t = strtok(NULL, w_space);
+            while (nullptr != t) {
+                t = strtok(nullptr, w_space);
 
-                if (NULL == t)
+                if (nullptr == t)
                     continue;
 
                 if (strncmp(t, "ndots:", 6) == 0) {
@@ -783,12 +782,12 @@ idnsTickleQueue(void)
     if (event_queued)
         return;
 
-    if (NULL == lru_list.tail)
+    if (nullptr == lru_list.tail)
         return;
 
     const double when = min(Config.Timeout.idns_query, Config.Timeout.idns_retransmit)/1000.0;
 
-    eventAdd("idnsCheckQueue", idnsCheckQueue, NULL, when, 1);
+    eventAdd("idnsCheckQueue", idnsCheckQueue, nullptr, when, 1);
 
     event_queued = 1;
 }
@@ -886,7 +885,7 @@ nsvc::~nsvc()
     delete queue;
     delete msg;
     if (ns < nameservers.size()) // XXX: idnsShutdownAndFreeState may have freed nameservers[]
-        nameservers[ns].vc = NULL;
+        nameservers[ns].vc = nullptr;
 }
 
 static void
@@ -894,7 +893,7 @@ idnsInitVC(size_t nsv)
 {
     assert(nsv < nameservers.size());
     nsvc *vc = new nsvc(nsv);
-    assert(vc->conn == NULL); // MUST be NULL from the construction process!
+    assert(vc->conn == nullptr); // MUST be NULL from the construction process!
     nameservers[nsv].vc = vc;
 
     Comm::ConnectionPointer conn = new Comm::Connection();
@@ -918,7 +917,7 @@ static void
 idnsSendQueryVC(idns_query * q, size_t nsn)
 {
     assert(nsn < nameservers.size());
-    if (nameservers[nsn].vc == NULL)
+    if (nameservers[nsn].vc == nullptr)
         idnsInitVC(nsn);
 
     nsvc *vc = nameservers[nsn].vc;
@@ -961,9 +960,9 @@ idnsSendQuery(idns_query * q)
         return;
     }
 
-    assert(q->lru.next == NULL);
+    assert(q->lru.next == nullptr);
 
-    assert(q->lru.prev == NULL);
+    assert(q->lru.prev == nullptr);
 
     int x = -1, y = -1;
     size_t nsn;
@@ -1041,14 +1040,14 @@ idnsFindQuery(unsigned short id)
             return q;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 static unsigned short
 idnsQueryID()
 {
     // NP: apparently ranlux are faster, but not quite as "proven"
-    static std::mt19937 mt(static_cast<uint32_t>(getCurrentTime() & 0xFFFFFFFF));
+    static std::mt19937 mt(RandomSeed32());
     unsigned short id = mt() & 0xFFFF;
     unsigned short first_id = id;
 
@@ -1161,11 +1160,11 @@ idnsCallback(idns_query *q, const char *error)
 static void
 idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
 {
-    rfc1035_message *message = NULL;
+    rfc1035_message *message = nullptr;
 
     int n = rfc1035MessageUnpack(buf, sz, &message);
 
-    if (message == NULL) {
+    if (message == nullptr) {
         debugs(78, DBG_IMPORTANT, "ERROR: idnsGrokReply: Malformed DNS response");
         return;
     }
@@ -1174,7 +1173,7 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
 
     idns_query *q = idnsFindQuery(message->id);
 
-    if (q == NULL) {
+    if (q == nullptr) {
         debugs(78, 3, "idnsGrokReply: Late response");
         rfc1035MessageDestroy(&message);
         return;
@@ -1253,7 +1252,7 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
         // things simple. NXDOMAIN is authoritative for the label, not
         // the record type.
         if (q->rcode == 3 && !q->master && q->do_searchpath && q->attempt < MAX_ATTEMPT) {
-            assert(NULL == message->answer);
+            assert(nullptr == message->answer);
             strcpy(q->name, q->orig);
 
             debugs(78, 3, "idnsGrokReply: Query result: NXDOMAIN - " << q->name );
@@ -1273,7 +1272,7 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
             while (idns_query *slave = q->slave) {
                 dlinkDelete(&slave->lru, &lru_list);
                 q->slave = slave->slave;
-                slave->slave = NULL;
+                slave->slave = nullptr;
                 delete slave;
             }
 
@@ -1302,7 +1301,7 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
     q->ancount = n;
 
     if (n >= 0)
-        idnsCallback(q, NULL);
+        idnsCallback(q, nullptr);
     else
         idnsCallback(q, rfc1035ErrorMessage(q->rcode));
 
@@ -1321,7 +1320,7 @@ idnsRead(int fd, void *)
 
     // Always keep reading. This stops (or at least makes harder) several
     // attacks on the DNS client.
-    Comm::SetSelect(fd, COMM_SELECT_READ, idnsRead, NULL, 0);
+    Comm::SetSelect(fd, COMM_SELECT_READ, idnsRead, nullptr, 0);
 
     /* BUG (UNRESOLVED)
      *  two code lines after returning from comm_udprecvfrom()
@@ -1397,7 +1396,7 @@ static void
 idnsCheckQueue(void *)
 {
     dlink_node *n;
-    dlink_node *p = NULL;
+    dlink_node *p = nullptr;
     idns_query *q;
     event_queued = 0;
 
@@ -1581,12 +1580,12 @@ Dns::Init(void)
         if (DnsSocketB >= 0) {
             comm_local_port(DnsSocketB);
             debugs(78, Important(16), "DNS IPv6 socket created at " << addrV6 << ", FD " << DnsSocketB);
-            Comm::SetSelect(DnsSocketB, COMM_SELECT_READ, idnsRead, NULL, 0);
+            Comm::SetSelect(DnsSocketB, COMM_SELECT_READ, idnsRead, nullptr, 0);
         }
         if (DnsSocketA >= 0) {
             comm_local_port(DnsSocketA);
             debugs(78, Important(64), "DNS IPv4 socket created at " << addrV4 << ", FD " << DnsSocketA);
-            Comm::SetSelect(DnsSocketA, COMM_SELECT_READ, idnsRead, NULL, 0);
+            Comm::SetSelect(DnsSocketA, COMM_SELECT_READ, idnsRead, nullptr, 0);
         }
     }
 
@@ -1849,7 +1848,7 @@ variable_list *
 snmp_netDnsFn(variable_list * Var, snint * ErrP)
 {
     int n = 0;
-    variable_list *Answer = NULL;
+    variable_list *Answer = nullptr;
     MemBuf tmp;
     debugs(49, 5, "snmp_netDnsFn: Processing request: " << snmpDebugOid(Var->name, Var->name_length, tmp));
     *ErrP = SNMP_ERR_NOERROR;

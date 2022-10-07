@@ -19,19 +19,18 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
-#include "SquidTime.h"
 
 Auth::Digest::UserRequest::UserRequest() :
-    noncehex(NULL),
-    cnonce(NULL),
-    realm(NULL),
-    pszPass(NULL),
-    algorithm(NULL),
-    pszMethod(NULL),
-    qop(NULL),
-    uri(NULL),
-    response(NULL),
-    nonce(NULL)
+    noncehex(nullptr),
+    cnonce(nullptr),
+    realm(nullptr),
+    pszPass(nullptr),
+    algorithm(nullptr),
+    pszMethod(nullptr),
+    qop(nullptr),
+    uri(nullptr),
+    response(nullptr),
+    nonce(nullptr)
 {
     memset(nc, 0, sizeof(nc));
     memset(&flags, 0, sizeof(flags));
@@ -62,7 +61,7 @@ Auth::Digest::UserRequest::~UserRequest()
 int
 Auth::Digest::UserRequest::authenticated() const
 {
-    if (user() != NULL && user()->credentials() == Auth::Ok)
+    if (user() != nullptr && user()->credentials() == Auth::Ok)
         return 1;
 
     return 0;
@@ -84,14 +83,14 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
     HASHHEX Response;
 
     /* if the check has corrupted the user, just return */
-    if (user() == NULL || user()->credentials() == Auth::Failed) {
+    if (user() == nullptr || user()->credentials() == Auth::Failed) {
         return;
     }
 
     Auth::User::Pointer auth_user = user();
 
     Auth::Digest::User *digest_user = dynamic_cast<Auth::Digest::User*>(auth_user.getRaw());
-    assert(digest_user != NULL);
+    assert(digest_user != nullptr);
 
     Auth::Digest::UserRequest *digest_request = this;
 
@@ -101,13 +100,13 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
         return;
     }
 
-    if (digest_request->nonce == NULL) {
+    if (digest_request->nonce == nullptr) {
         /* this isn't a nonce we issued */
         auth_user->credentials(Auth::Failed);
         return;
     }
 
-    DigestCalcHA1(digest_request->algorithm, NULL, NULL, NULL,
+    DigestCalcHA1(digest_request->algorithm, nullptr, nullptr, nullptr,
                   authenticateDigestNonceNonceHex(digest_request->nonce),
                   digest_request->cnonce,
                   digest_user->HA1, SESSIONKEY);
@@ -287,10 +286,10 @@ Auth::Digest::UserRequest::startHelperLookup(HttpRequest *request, AccessLogEntr
 {
     char buf[8192];
 
-    assert(user() != NULL && user()->auth_type == Auth::AUTH_DIGEST);
+    assert(user() != nullptr && user()->auth_type == Auth::AUTH_DIGEST);
     debugs(29, 9, "'\"" << user()->username() << "\":\"" << realm << "\"'");
 
-    if (static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->authenticateProgram == NULL) {
+    if (static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->authenticateProgram == nullptr) {
         debugs(29, DBG_CRITICAL, "ERROR: No Digest authentication program configured.");
         handler(data);
         return;
@@ -312,7 +311,7 @@ Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
     Auth::StateData *replyData = static_cast<Auth::StateData *>(data);
     debugs(29, 9, "reply=" << reply);
 
-    assert(replyData->auth_user_request != NULL);
+    assert(replyData->auth_user_request != nullptr);
     Auth::UserRequest::Pointer auth_user_request = replyData->auth_user_request;
 
     // add new helper kv-pair notes to the credentials object
@@ -334,7 +333,7 @@ Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 
         /* allow this because the digest_request pointer is purely local */
         Auth::Digest::User *digest_user = dynamic_cast<Auth::Digest::User *>(auth_user_request->user().getRaw());
-        assert(digest_user != NULL);
+        assert(digest_user != nullptr);
 
         CvtBin(reply.other().content(), digest_user->HA1);
         digest_user->HA1created = 1;
@@ -344,7 +343,7 @@ Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
     case Helper::Okay: {
         /* allow this because the digest_request pointer is purely local */
         Auth::Digest::User *digest_user = dynamic_cast<Auth::Digest::User *>(auth_user_request->user().getRaw());
-        assert(digest_user != NULL);
+        assert(digest_user != nullptr);
 
         if (const char *ha1Note = reply.notes.findFirst("ha1")) {
             CvtBin(ha1Note, digest_user->HA1);
@@ -387,7 +386,7 @@ Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
     break;
     }
 
-    void *cbdata = NULL;
+    void *cbdata = nullptr;
     if (cbdataReferenceValidDone(replyData->data, &cbdata))
         replyData->handler(cbdata);
 

@@ -129,19 +129,19 @@ copy_out( size_t filesize, size_t metasize, unsigned debug,
 
     // find hostname part after the scheme (okok, not counting port, etc.)
     const char* ptr = strstr( url, "://" );
-    if ( ptr == 0 || strlen(ptr) < 4 ) return false;
+    if ( ptr == nullptr || strlen(ptr) < 4 ) return false;
 
     // create filename to store contents into
     // NP: magic extra 5 bytes for the component delimiter and termination octets
     char *filename = new char[ strlen(ptr) + strlen(copydir) + strlen(index) +5 ];
-    assert( filename != 0 );
+    assert( filename != nullptr );
     strcpy( filename, copydir );
     strcat( filename, "/" );
     char* here = filename + strlen(filename);
     strcat( filename, ptr+3 );
 
     // handle server root (e.g. "http://www.focus.de" )
-    if ( strchr( ptr+3, '/' ) == 0 ) strcat( filename, "/" );
+    if ( strchr( ptr+3, '/' ) == nullptr ) strcat( filename, "/" );
 
     // handle directories (e.g. "http://www.focus.de/A/" )
     if ( filename[strlen(filename)-1] == '/' ) strcat( filename, index );
@@ -252,7 +252,7 @@ copy_out( size_t filesize, size_t metasize, unsigned debug,
     }
 
     // create source mmap to copy from (mmap complete file)
-    caddr_t src = (caddr_t) mmap( 0, filesize, PROT_READ,
+    caddr_t src = (caddr_t) mmap( nullptr, filesize, PROT_READ,
                                   MAP_FILE | MAP_SHARED, input, 0 );
     if ( src == (caddr_t) -1 ) {
         perror( "mmap input" );
@@ -260,7 +260,7 @@ copy_out( size_t filesize, size_t metasize, unsigned debug,
     }
 
     // create destination mmap to copy into (mmap data portion)
-    caddr_t dst = (caddr_t) mmap( 0, filesize-metasize, PROT_READ | PROT_WRITE,
+    caddr_t dst = (caddr_t) mmap( nullptr, filesize-metasize, PROT_READ | PROT_WRITE,
                                   MAP_FILE | MAP_SHARED, out, 0 );
     if ( dst == (caddr_t) -1 ) {
         perror( "mmap output" );

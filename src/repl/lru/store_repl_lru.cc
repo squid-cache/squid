@@ -10,7 +10,6 @@
 
 #include "squid.h"
 #include "MemObject.h"
-#include "SquidTime.h"
 #include "Store.h"
 
 /* because LruNode use explicit memory alloc()/freeOne() calls.
@@ -75,7 +74,7 @@ struct _LruNode {
     dlink_node node;
 };
 
-static MemAllocator *lru_node_pool = NULL;
+static MemAllocator *lru_node_pool = nullptr;
 static int nr_lru_policies = 0;
 
 static void
@@ -106,12 +105,12 @@ lru_remove(RemovalPolicy * policy, StoreEntry * entry, RemovalPolicyNode * node)
      * but not be in the LRU list, so check for that case rather
      * than suffer a NULL pointer access.
      */
-    if (NULL == lru_node->node.data)
+    if (nullptr == lru_node->node.data)
         return;
 
     assert(lru_node->node.data == entry);
 
-    node->data = NULL;
+    node->data = nullptr;
 
     dlinkDelete(&lru_node->node, &lru->list);
 
@@ -150,7 +149,7 @@ lru_walkNext(RemovalPolicyWalker * walker)
     LruNode *lru_node = lru_walk->current;
 
     if (!lru_node)
-        return NULL;
+        return nullptr;
 
     lru_walk->current = (LruNode *) lru_node->node.next;
 
@@ -208,7 +207,7 @@ try_again:
     lru_node = lru_walker->current;
 
     if (!lru_node || walker->scanned >= walker->max_scan)
-        return NULL;
+        return nullptr;
 
     walker->scanned += 1;
 
@@ -216,7 +215,7 @@ try_again:
 
     if (lru_walker->current == lru_walker->start) {
         /* Last node found */
-        lru_walker->current = NULL;
+        lru_walker->current = nullptr;
     }
 
     entry = (StoreEntry *) lru_node->node.data;
@@ -231,7 +230,7 @@ try_again:
 
     lru_node_pool->freeOne(lru_node);
     lru->count -= 1;
-    lru->setPolicyNode(entry, NULL);
+    lru->setPolicyNode(entry, nullptr);
     return entry;
 }
 

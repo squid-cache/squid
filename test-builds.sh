@@ -122,7 +122,7 @@ buildtest() {
     # with the right parameters. TODO: Make less noisy.
     grep -E "BUILD" ${log}
 
-    errors="^ERROR|\ error:|\ Error\ |No\ such|assertion\ failed|FAIL:|:\ undefined"
+    errors="^ERROR|[ ]error:|[ ]Error[ ]|No[ ]such|assertion[ ]failed|FAIL:|:[ ]undefined"
     grep -E "${errors}" ${log}
 
     if test $result -eq 0; then
@@ -170,7 +170,7 @@ else
 fi
 
 for t in $tests; do
-    if test -e "$t"; then 
+    if test -e "$t"; then
 	# A configuration file
         cfg="$t"
     elif test -e "$top/test-suite/buildtests/${t}.opts"; then

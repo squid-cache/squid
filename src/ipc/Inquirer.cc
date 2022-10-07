@@ -15,13 +15,47 @@
 #include "ipc/Inquirer.h"
 #include "ipc/Port.h"
 #include "ipc/TypedMsgHdr.h"
+#include "mem/PoolingAllocator.h"
 #include "MemBuf.h"
+
 #include <algorithm>
+#include <unordered_map>
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Inquirer);
 
-Ipc::Inquirer::RequestsMap Ipc::Inquirer::TheRequestsMap;
 Ipc::RequestId::Index Ipc::Inquirer::LastRequestId = 0;
+
+namespace Ipc {
+
+/// maps request->id to the Inquirer waiting for the response to that request
+using InquirerPointer = CbcPointer<Inquirer>;
+using WaitingInquiriesItem = std::pair<const RequestId::Index, InquirerPointer>;
+using WaitingInquiries = std::unordered_map<
+                         RequestId::Index,
+                         InquirerPointer,
+                         std::hash<RequestId::Index>,
+                         std::equal_to<RequestId::Index>,
+                         PoolingAllocator<WaitingInquiriesItem> >;
+
+/// pending Inquirer requests for this process
+static WaitingInquiries TheWaitingInquirers;
+
+/// returns and forgets the Inquirer waiting for the given requests
+static InquirerPointer
+DequeueRequest(const RequestId::Index requestId)
+{
+    debugs(54, 3, "requestId " << requestId);
+    Assure(requestId != 0);
+    const auto request = TheWaitingInquirers.find(requestId);
+    if (request != TheWaitingInquirers.end()) {
+        const auto inquirer = request->second;
+        TheWaitingInquirers.erase(request);
+        return inquirer; // may already be gone by now
+    }
+    return nullptr;
+}
+
+} // namespace Ipc
 
 /// compare Ipc::StrandCoord using kidId, for std::sort() below
 static bool
@@ -68,14 +102,12 @@ Ipc::Inquirer::inquire()
     }
 
     Must(request->requestId == 0);
-    AsyncCall::Pointer callback = asyncCall(54, 5, "Mgr::Inquirer::handleRemoteAck",
-                                            HandleAckDialer(this, &Inquirer::handleRemoteAck, NULL));
     if (++LastRequestId == 0) // don't use zero value as request->requestId
         ++LastRequestId;
     request->requestId = LastRequestId;
     const int kidId = pos->kidId;
     debugs(54, 4, "inquire kid: " << kidId << status());
-    TheRequestsMap[request->requestId] = callback;
+    TheWaitingInquirers[request->requestId] = this;
     TypedMsgHdr message;
     request->pack(message);
     SendMessage(Port::MakeAddr(strandAddrLabel, kidId), message);
@@ -137,32 +169,17 @@ Ipc::Inquirer::callException(const std::exception& e)
     AsyncJob::callException(e);
 }
 
-/// returns and forgets the right Inquirer callback for strand request
-AsyncCall::Pointer
-Ipc::Inquirer::DequeueRequest(const RequestId::Index requestId)
-{
-    debugs(54, 3, " requestId " << requestId);
-    Must(requestId != 0);
-    AsyncCall::Pointer call;
-    RequestsMap::iterator request = TheRequestsMap.find(requestId);
-    if (request != TheRequestsMap.end()) {
-        call = request->second;
-        Must(call != NULL);
-        TheRequestsMap.erase(request);
-    }
-    return call;
-}
-
 void
 Ipc::Inquirer::HandleRemoteAck(const Response& response)
 {
     Must(response.requestId != 0);
-    AsyncCall::Pointer call = DequeueRequest(response.requestId);
-    if (call != NULL) {
-        HandleAckDialer* dialer = dynamic_cast<HandleAckDialer*>(call->getDialer());
-        Must(dialer);
-        dialer->arg1 = response.clone();
-        ScheduleCallHere(call);
+    const auto inquirer = DequeueRequest(response.requestId);
+    if (inquirer.valid()) {
+        CallService(inquirer->codeContext, [&] {
+            const auto call = asyncCall(54, 5, "Ipc::Inquirer::handleRemoteAck",
+                                        JobMemFun(inquirer, &Inquirer::handleRemoteAck, response.clone()));
+            ScheduleCallHere(call);
+        });
     }
 }
 
@@ -179,7 +196,7 @@ void
 Ipc::Inquirer::RequestTimedOut(void* param)
 {
     debugs(54, 3, MYNAME);
-    Must(param != NULL);
+    Must(param != nullptr);
     Inquirer* cmi = static_cast<Inquirer*>(param);
     // use async call to enable job call protection that time events lack
     CallBack(cmi->codeContext, [&cmi] {

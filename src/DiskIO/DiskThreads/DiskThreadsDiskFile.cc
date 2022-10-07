@@ -9,6 +9,7 @@
 /* DEBUG: section 79    Disk IO Routines */
 
 #include "squid.h"
+#include "comm.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
@@ -184,7 +185,7 @@ DiskThreadsDiskFile::close()
 
     if (!ioInProgress()) {
         doClose();
-        assert (ioRequestor != NULL);
+        assert (ioRequestor != nullptr);
         ioRequestor->closeCompleted();
         return;
     } else {

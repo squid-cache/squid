@@ -22,7 +22,6 @@
 #include "mgr/Registration.h"
 #include "snmp_agent.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "util.h"
@@ -204,7 +203,7 @@ static const Dns::CachedIps *ipcacheCheckNumeric(const char *name);
 static void ipcache_nbgethostbyname_(const char *name, IpCacheLookupForwarder handler);
 
 /// \ingroup IPCacheInternal
-static hash_table *ip_table = NULL;
+static hash_table *ip_table = nullptr;
 
 /// \ingroup IPCacheInternal
 static long ipcache_low = 180;
@@ -321,10 +320,10 @@ ipcacheRelease(ipcache_entry * i, bool dofree)
 static ipcache_entry *
 ipcache_get(const char *name)
 {
-    if (ip_table != NULL)
+    if (ip_table != nullptr)
         return (ipcache_entry *) hash_lookup(ip_table, name);
     else
-        return NULL;
+        return nullptr;
 }
 
 /// \ingroup IPCacheInternal
@@ -351,10 +350,10 @@ void
 ipcache_purgelru(void *)
 {
     dlink_node *m;
-    dlink_node *prev = NULL;
+    dlink_node *prev = nullptr;
     ipcache_entry *i;
     int removed = 0;
-    eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10.0, 1);
+    eventAdd("ipcache_purgelru", ipcache_purgelru, nullptr, 10.0, 1);
 
     for (m = lru_list.tail; m; m = prev) {
         if (ipcacheCount() < ipcache_low)
@@ -384,12 +383,12 @@ static void
 purge_entries_fromhosts(void)
 {
     dlink_node *m = lru_list.head;
-    ipcache_entry *i = NULL, *t;
+    ipcache_entry *i = nullptr, *t;
 
     while (m) {
-        if (i != NULL) {    /* need to delay deletion */
+        if (i != nullptr) {    /* need to delay deletion */
             ipcacheRelease(i);  /* we just override locks */
-            i = NULL;
+            i = nullptr;
         }
 
         t = (ipcache_entry*)m->data;
@@ -400,7 +399,7 @@ purge_entries_fromhosts(void)
         m = m->next;
     }
 
-    if (i != NULL)
+    if (i != nullptr)
         ipcacheRelease(i);
 }
 
@@ -421,7 +420,7 @@ ipcacheAddEntry(ipcache_entry * i)
 {
     hash_link *e = (hash_link *)hash_lookup(ip_table, i->hash.key);
 
-    if (NULL != e) {
+    if (nullptr != e) {
         /* avoid collision */
         ipcache_entry *q = (ipcache_entry *) e;
         ipcacheRelease(q);
@@ -614,11 +613,11 @@ Dns::nbgethostbyname(const char *name, const CbcPointer<IpReceiver> &receiver)
 static void
 ipcache_nbgethostbyname_(const char *name, IpCacheLookupForwarder handler)
 {
-    ipcache_entry *i = NULL;
-    const ipcache_addrs *addrs = NULL;
+    ipcache_entry *i = nullptr;
+    const ipcache_addrs *addrs = nullptr;
     ++IpcacheStats.requests;
 
-    if (name == NULL || name[0] == '\0') {
+    if (name == nullptr || name[0] == '\0') {
         debugs(14, 4, "ipcache_nbgethostbyname: Invalid name!");
         ++IpcacheStats.invalid;
         const Dns::LookupDetails details("Invalid hostname", -1); // error, no lookup
@@ -637,13 +636,13 @@ ipcache_nbgethostbyname_(const char *name, IpCacheLookupForwarder handler)
 
     i = ipcache_get(name);
 
-    if (NULL == i) {
+    if (nullptr == i) {
         /* miss */
         (void) 0;
     } else if (ipcacheExpiredEntry(i)) {
         /* hit, but expired -- bummer */
         ipcacheRelease(i);
-        i = NULL;
+        i = nullptr;
     } else {
         /* hit */
         debugs(14, 4, "ipcache_nbgethostbyname: HIT for '" << name << "'");
@@ -719,21 +718,21 @@ ipcache_init(void)
 const ipcache_addrs *
 ipcache_gethostbyname(const char *name, int flags)
 {
-    ipcache_entry *i = NULL;
+    ipcache_entry *i = nullptr;
     assert(name);
     debugs(14, 3, "ipcache_gethostbyname: '" << name  << "', flags=" << std::hex << flags);
     ++IpcacheStats.requests;
     i = ipcache_get(name);
 
-    if (NULL == i) {
+    if (nullptr == i) {
         (void) 0;
     } else if (ipcacheExpiredEntry(i)) {
         ipcacheRelease(i);
-        i = NULL;
+        i = nullptr;
     } else if (i->flags.negcached) {
         ++IpcacheStats.negative_hits;
         // ignore i->error_message: the caller just checks IP cache presence
-        return NULL;
+        return nullptr;
     } else {
         ++IpcacheStats.hits;
         i->lastref = squid_curtime;
@@ -751,9 +750,9 @@ ipcache_gethostbyname(const char *name, int flags)
     ++IpcacheStats.misses;
 
     if (flags & IP_LOOKUP_IF_MISS)
-        ipcache_nbgethostbyname(name, NULL, NULL);
+        ipcache_nbgethostbyname(name, nullptr, nullptr);
 
-    return NULL;
+    return nullptr;
 }
 
 /// \ingroup IPCacheInternal
@@ -812,7 +811,7 @@ void
 stat_ipcache_get(StoreEntry * sentry)
 {
     dlink_node *m;
-    assert(ip_table != NULL);
+    assert(ip_table != nullptr);
     storeAppendPrintf(sentry, "IP Cache Statistics:\n");
     storeAppendPrintf(sentry, "IPcache Entries Cached:  %d\n",
                       ipcacheCount());
@@ -857,7 +856,7 @@ ipcacheInvalidate(const char *name)
 {
     ipcache_entry *i;
 
-    if ((i = ipcache_get(name)) == NULL)
+    if ((i = ipcache_get(name)) == nullptr)
         return;
 
     i->expires = squid_curtime;
@@ -874,7 +873,7 @@ ipcacheInvalidateNegative(const char *name)
 {
     ipcache_entry *i;
 
-    if ((i = ipcache_get(name)) == NULL)
+    if ((i = ipcache_get(name)) == nullptr)
         return;
 
     if (i->flags.negcached)
@@ -1083,15 +1082,6 @@ ipcache_entry::~ipcache_entry()
     xfree(hash.key);
 }
 
-/// \ingroup IPCacheAPI
-void
-ipcacheFreeMemory(void)
-{
-    hashFreeItems(ip_table, ipcacheFreeEntry);
-    hashFreeMemory(ip_table);
-    ip_table = NULL;
-}
-
 /**
  \ingroup IPCacheAPI
  *
@@ -1170,7 +1160,7 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
 variable_list *
 snmp_netIpFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer = NULL;
+    variable_list *Answer = nullptr;
     MemBuf tmp;
     debugs(49, 5, "snmp_netIpFn: Processing request:" << snmpDebugOid(Var->name, Var->name_length, tmp));
     *ErrP = SNMP_ERR_NOERROR;
@@ -1227,8 +1217,7 @@ snmp_netIpFn(variable_list * Var, snint * ErrP)
 
     default:
         *ErrP = SNMP_ERR_NOSUCHNAME;
-        snmp_var_free(Answer);
-        return (NULL);
+        assert(!Answer);
     }
 
     return Answer;

@@ -17,17 +17,16 @@
 #include "log/File.h"
 #include "log/Formats.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 
 void
 Log::Format::SquidNative(const AccessLogEntry::Pointer &al, Logfile * logfile)
 {
     char hierHost[MAX_IPSTRLEN];
 
-    const char *user = NULL;
+    const char *user = nullptr;
 
 #if USE_AUTH
-    if (al->request && al->request->auth_user_request != NULL)
+    if (al->request && al->request->auth_user_request != nullptr)
         user = ::Format::QuoteUrlEncodeUsername(al->request->auth_user_request->username());
 #endif
 
@@ -63,7 +62,7 @@ Log::Format::SquidNative(const AccessLogEntry::Pointer &al, Logfile * logfile)
                   user ? user : dash_str,
                   al->hier.ping.timedout ? "TIMEOUT_" : "",
                   hier_code_str[al->hier.code],
-                  al->hier.tcpServer != NULL ? al->hier.tcpServer->remote.toStr(hierHost, sizeof(hierHost)) : "-",
+                  al->hier.tcpServer != nullptr ? al->hier.tcpServer->remote.toStr(hierHost, sizeof(hierHost)) : "-",
                   al->http.content_type,
                   (Config.onoff.log_mime_hdrs?"":"\n"));
 

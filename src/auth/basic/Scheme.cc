@@ -13,12 +13,12 @@
 #include "debug/Stream.h"
 #include "helper.h"
 
-Auth::Scheme::Pointer Auth::Basic::Scheme::_instance = NULL;
+Auth::Scheme::Pointer Auth::Basic::Scheme::_instance = nullptr;
 
 Auth::Scheme::Pointer
 Auth::Basic::Scheme::GetInstance()
 {
-    if (_instance == NULL) {
+    if (_instance == nullptr) {
         _instance = new Auth::Basic::Scheme();
         AddScheme(_instance);
     }
@@ -34,10 +34,10 @@ Auth::Basic::Scheme::type() const
 void
 Auth::Basic::Scheme::shutdownCleanup()
 {
-    if (_instance == NULL)
+    if (_instance == nullptr)
         return;
 
-    _instance = NULL;
+    _instance = nullptr;
     debugs(29, Critical(12), "Shutdown: Basic authentication.");
 }
 

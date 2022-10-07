@@ -9,11 +9,11 @@
 #ifndef SQUID_STORE_H
 #define SQUID_STORE_H
 
+#include "base/DelayedAsyncCalls.h"
 #include "base/Packable.h"
 #include "base/Range.h"
 #include "base/RefCount.h"
 #include "comm/forward.h"
-#include "CommRead.h"
 #include "hash.h"
 #include "http/forward.h"
 #include "http/RequestMethod.h"
@@ -42,7 +42,6 @@ class StoreEntry : public hash_link, public Packable
 {
 
 public:
-    static DeferredRead::DeferrableRead DeferReader;
     bool checkDeferRead(int fd) const;
 
     const char *getMD5Text() const;
@@ -94,6 +93,8 @@ public:
     void memOutDecision(const bool willCacheInRam);
     // called when a decision to cache on disk has been made
     void swapOutDecision(const MemObject::SwapOut::Decision &decision);
+    /// called when a store writer ends its work (successfully or not)
+    void storeWriterDone();
 
     void abort();
     bool makePublic(const KeyScope keyScope = ksDefault);
@@ -170,8 +171,6 @@ public:
     void unregisterAbortCallback(const char *reason);
     void destroyMemObject();
     int checkTooSmall();
-
-    void delayAwareRead(const Comm::ConnectionPointer &conn, char *buf, int len, AsyncCall::Pointer callback);
 
     void setNoDelay (bool const);
     void lastModified(const time_t when) { lastModified_ = when; }
@@ -306,7 +305,7 @@ public:
 protected:
     typedef Store::EntryGuard EntryGuard;
 
-    void transientsAbandonmentCheck();
+    void storeWritingCheckpoint();
     /// does nothing except throwing if disk-associated data members are inconsistent
     void checkDisk() const;
 
@@ -427,9 +426,6 @@ void storeInit(void);
 
 /// \ingroup StoreAPI
 void storeConfigure(void);
-
-/// \ingroup StoreAPI
-void storeFreeMemory(void);
 
 /// \ingroup StoreAPI
 int expiresMoreThan(time_t, time_t);

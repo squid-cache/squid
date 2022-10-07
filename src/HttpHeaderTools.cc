@@ -287,7 +287,7 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, HeaderManglers *hms, c
         return 1;
     }
 
-    ACLFilledChecklist checklist(hm->access_list, request, NULL);
+    ACLFilledChecklist checklist(hm->access_list, request, nullptr);
 
     checklist.al = al;
     if (al && al->reply) {
@@ -303,7 +303,7 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, HeaderManglers *hms, c
         /* aclCheckFast returns true for allow. */
         debugs(66, 7, "checklist for mangler is positive. Mangle");
         retval = 1;
-    } else if (NULL == hm->replacement) {
+    } else if (nullptr == hm->replacement) {
         /* It was denied, and we don't have any replacement */
         debugs(66, 7, "checklist denied, we have no replacement. Pass");
         // XXX: We said "Pass", but the caller will delete on zero retval.
@@ -370,7 +370,7 @@ static
 void header_mangler_dump_access(StoreEntry * entry, const char *option,
                                 const headerMangler &m, const char *name)
 {
-    if (m.access_list != NULL) {
+    if (m.access_list != nullptr) {
         storeAppendPrintf(entry, "%s ", option);
         dump_acl_access(entry, name, m.access_list);
     }
@@ -481,13 +481,13 @@ HeaderManglers::find(const HttpHeaderEntry &e) const
     if (all.access_list)
         return &all;
 
-    return NULL;
+    return nullptr;
 }
 
 void
 httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headersAdd)
 {
-    ACLFilledChecklist checklist(NULL, request, NULL);
+    ACLFilledChecklist checklist(nullptr, request, nullptr);
 
     checklist.al = al;
     if (al && al->reply) {
@@ -497,10 +497,10 @@ httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer 
 
     for (HeaderWithAclList::const_iterator hwa = headersAdd.begin(); hwa != headersAdd.end(); ++hwa) {
         if (!hwa->aclList || checklist.fastCheck(hwa->aclList).allowed()) {
-            const char *fieldValue = NULL;
+            const char *fieldValue = nullptr;
             MemBuf mb;
             if (hwa->quoted) {
-                if (al != NULL) {
+                if (al != nullptr) {
                     mb.init();
                     hwa->valueFormat->assemble(mb, al, 0);
                     fieldValue = mb.content();

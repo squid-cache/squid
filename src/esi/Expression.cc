@@ -63,15 +63,16 @@ typedef enum {
 } literalhint;
 
 struct _stackmember {
-    evaluate *eval;
-    union {
+    evaluate *eval = nullptr;
+    union Value {
         char *string;
         double floating;
         int integral;
+        Value() { memset(this, 0, sizeof(*this)); }
     } value;
-    literalhint valuestored;
-    evaltype valuetype;
-    int precedence;
+    literalhint valuestored = ESI_LITERAL_INVALID;
+    evaltype valuetype = ESI_EXPR_INVALID;
+    int precedence = 0;
 };
 
 static void cleanmember(stackmember *);
@@ -83,7 +84,7 @@ cleanmember(stackmember * s)
     if (s->valuetype == ESI_EXPR_LITERAL
             && s->valuestored == ESI_LITERAL_STRING) {
         safe_free(s->value.string);
-        s->value.string = NULL;
+        s->value.string = nullptr;
     }
 
 }
@@ -686,7 +687,7 @@ getsymbol(const char *s, char const **endptr)
     char const *origs = s;
     /* trim whitespace */
     s = trim(s);
-    rv.eval = NULL;     /* A literal */
+    rv.eval = nullptr;     /* A literal */
     rv.valuetype = ESI_EXPR_INVALID;
     rv.valuestored = ESI_LITERAL_INVALID;
     rv.precedence = 1; /* A literal */

@@ -19,7 +19,6 @@
 #include "mgr/Registration.h"
 #include "snmp_agent.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "util.h"
@@ -128,11 +127,10 @@ static fqdncache_entry *fqdncache_get(const char *);
 static int fqdncacheExpiredEntry(const fqdncache_entry *);
 static void fqdncacheLockEntry(fqdncache_entry * f);
 static void fqdncacheUnlockEntry(fqdncache_entry * f);
-static FREE fqdncacheFreeEntry;
 static void fqdncacheAddEntry(fqdncache_entry * f);
 
 /// \ingroup FQDNCacheInternal
-static hash_table *fqdn_table = NULL;
+static hash_table *fqdn_table = nullptr;
 
 /// \ingroup FQDNCacheInternal
 static long fqdncache_low = 180;
@@ -172,10 +170,10 @@ fqdncache_get(const char *name)
 {
     hash_link *e;
     static fqdncache_entry *f;
-    f = NULL;
+    f = nullptr;
 
     if (fqdn_table) {
-        if ((e = (hash_link *)hash_lookup(fqdn_table, name)) != NULL)
+        if ((e = (hash_link *)hash_lookup(fqdn_table, name)) != nullptr)
             f = (fqdncache_entry *) e;
     }
 
@@ -202,10 +200,10 @@ void
 fqdncache_purgelru(void *)
 {
     dlink_node *m;
-    dlink_node *prev = NULL;
+    dlink_node *prev = nullptr;
     fqdncache_entry *f;
     int removed = 0;
-    eventAdd("fqdncache_purgelru", fqdncache_purgelru, NULL, 10.0, 1);
+    eventAdd("fqdncache_purgelru", fqdncache_purgelru, nullptr, 10.0, 1);
 
     for (m = lru_list.tail; m; m = prev) {
         if (fqdncacheCount() < fqdncache_low)
@@ -231,13 +229,13 @@ static void
 purge_entries_fromhosts(void)
 {
     dlink_node *m = lru_list.head;
-    fqdncache_entry *i = NULL;
+    fqdncache_entry *i = nullptr;
     fqdncache_entry *t;
 
     while (m) {
-        if (i != NULL) {    /* need to delay deletion */
+        if (i != nullptr) {    /* need to delay deletion */
             fqdncacheRelease(i);    /* we just override locks */
-            i = NULL;
+            i = nullptr;
         }
 
         t = (fqdncache_entry *)m->data;
@@ -248,7 +246,7 @@ purge_entries_fromhosts(void)
         m = m->next;
     }
 
-    if (i != NULL)
+    if (i != nullptr)
         fqdncacheRelease(i);
 }
 
@@ -273,7 +271,7 @@ fqdncacheAddEntry(fqdncache_entry * f)
 {
     hash_link *e = (hash_link *)hash_lookup(fqdn_table, f->hash.key);
 
-    if (NULL != e) {
+    if (nullptr != e) {
         /* avoid collision */
         fqdncache_entry *q = (fqdncache_entry *) e;
         fqdncacheRelease(q);
@@ -303,11 +301,11 @@ fqdncacheCallback(fqdncache_entry * f, int wait)
 
     callback = f->handler;
 
-    f->handler = NULL;
+    f->handler = nullptr;
 
     if (cbdataReferenceValidDone(f->handlerData, &cbdata)) {
         const Dns::LookupDetails details(f->error_message, wait);
-        callback(f->name_count ? f->names[0] : NULL, details, cbdata);
+        callback(f->name_count ? f->names[0] : nullptr, details, cbdata);
     }
 
     fqdncacheUnlockEntry(f);
@@ -415,7 +413,7 @@ fqdncacheHandleReply(void *data, const rfc1035_rr * answers, int na, const char 
 void
 fqdncache_nbgethostbyaddr(const Ip::Address &addr, FQDNH * handler, void *handlerData)
 {
-    fqdncache_entry *f = NULL;
+    fqdncache_entry *f = nullptr;
     char name[MAX_IPSTRLEN];
     generic_cbdata *c;
     addr.toStr(name,MAX_IPSTRLEN);
@@ -426,19 +424,19 @@ fqdncache_nbgethostbyaddr(const Ip::Address &addr, FQDNH * handler, void *handle
         debugs(35, 4, "fqdncache_nbgethostbyaddr: Invalid name!");
         const Dns::LookupDetails details("Invalid hostname", -1); // error, no lookup
         if (handler)
-            handler(NULL, details, handlerData);
+            handler(nullptr, details, handlerData);
         return;
     }
 
     f = fqdncache_get(name);
 
-    if (NULL == f) {
+    if (nullptr == f) {
         /* miss */
         (void) 0;
     } else if (fqdncacheExpiredEntry(f)) {
         /* hit, but expired -- bummer */
         fqdncacheRelease(f);
-        f = NULL;
+        f = nullptr;
     } else {
         /* hit */
         debugs(35, 4, "fqdncache_nbgethostbyaddr: HIT for '" << name << "'");
@@ -483,27 +481,27 @@ const char *
 fqdncache_gethostbyaddr(const Ip::Address &addr, int flags)
 {
     char name[MAX_IPSTRLEN];
-    fqdncache_entry *f = NULL;
+    fqdncache_entry *f = nullptr;
 
     if (addr.isAnyAddr() || addr.isNoAddr()) {
         debugs(35, 7, "nothing to lookup: " << addr);
-        return NULL;
+        return nullptr;
     }
 
     addr.toStr(name,MAX_IPSTRLEN);
     ++ FqdncacheStats.requests;
     f = fqdncache_get(name);
 
-    if (NULL == f) {
+    if (nullptr == f) {
         (void) 0;
     } else if (fqdncacheExpiredEntry(f)) {
         fqdncacheRelease(f);
-        f = NULL;
+        f = nullptr;
     } else if (f->flags.negcached) {
         debugs(35, 5, "negative HIT: " << addr);
         ++ FqdncacheStats.negative_hits;
         // ignore f->error_message: the caller just checks FQDN cache presence
-        return NULL;
+        return nullptr;
     } else {
         debugs(35, 5, "HIT: " << addr);
         ++ FqdncacheStats.hits;
@@ -517,10 +515,10 @@ fqdncache_gethostbyaddr(const Ip::Address &addr, int flags)
     ++ FqdncacheStats.misses;
 
     if (flags & FQDN_LOOKUP_IF_MISS) {
-        fqdncache_nbgethostbyaddr(addr, NULL, NULL);
+        fqdncache_nbgethostbyaddr(addr, nullptr, nullptr);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /**
@@ -531,11 +529,11 @@ fqdncache_gethostbyaddr(const Ip::Address &addr, int flags)
 void
 fqdnStats(StoreEntry * sentry)
 {
-    fqdncache_entry *f = NULL;
+    fqdncache_entry *f = nullptr;
     int k;
     int ttl;
 
-    if (fqdn_table == NULL)
+    if (fqdn_table == nullptr)
         return;
 
     storeAppendPrintf(sentry, "FQDN Cache Statistics:\n");
@@ -602,14 +600,6 @@ fqdncacheUnlockEntry(fqdncache_entry * f)
         fqdncacheRelease(f);
 }
 
-/// \ingroup FQDNCacheInternal
-static void
-fqdncacheFreeEntry(void *data)
-{
-    fqdncache_entry *f = (fqdncache_entry *)data;
-    delete f;
-}
-
 fqdncache_entry::~fqdncache_entry()
 {
     for (int k = 0; k < (int)name_count; ++k)
@@ -617,15 +607,6 @@ fqdncache_entry::~fqdncache_entry()
 
     xfree(hash.key);
     xfree(error_message);
-}
-
-/// \ingroup FQDNCacheAPI
-void
-fqdncacheFreeMemory(void)
-{
-    hashFreeItems(fqdn_table, fqdncacheFreeEntry);
-    hashFreeMemory(fqdn_table);
-    fqdn_table = NULL;
 }
 
 /**
@@ -679,7 +660,7 @@ fqdncacheAddEntryFromHosts(char *addr, SBufList &hostnames)
     }
 
     fce->name_count = j;
-    fce->names[j] = NULL;   /* it's safe */
+    fce->names[j] = nullptr;   /* it's safe */
     fce->flags.fromhosts = true;
     fqdncacheAddEntry(fce);
     fqdncacheLockEntry(fce);
@@ -734,7 +715,7 @@ fqdncache_init(void)
 variable_list *
 snmp_netFqdnFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer = NULL;
+    variable_list *Answer = nullptr;
     MemBuf tmp;
     debugs(49, 5, "snmp_netFqdnFn: Processing request:" << snmpDebugOid(Var->name, Var->name_length, tmp));
     *ErrP = SNMP_ERR_NOERROR;

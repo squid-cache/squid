@@ -83,7 +83,7 @@ Ssl::LocalContextStorage *Ssl::GlobalContextStorage::getLocalStorage(Ip::Address
     std::map<Ip::Address, LocalContextStorage *>::iterator i = storage.find(address);
 
     if (i == storage.end())
-        return NULL;
+        return nullptr;
     else
         return i->second;
 }

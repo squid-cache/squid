@@ -22,7 +22,6 @@
 #include "ip/tools.h"
 #include "ipcache.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 
 #include <cerrno>
 
@@ -32,7 +31,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Comm, ConnOpener);
 
 Comm::ConnOpener::ConnOpener(const Comm::ConnectionPointer &c, const AsyncCall::Pointer &handler, time_t ctimeout) :
     AsyncJob("Comm::ConnOpener"),
-    host_(NULL),
+    host_(nullptr),
     temporaryFd_(-1),
     conn_(c),
     callback_(handler),
@@ -60,12 +59,12 @@ bool
 Comm::ConnOpener::doneAll() const
 {
     // is the conn_ to be opened still waiting?
-    if (conn_ == NULL) {
+    if (conn_ == nullptr) {
         return AsyncJob::doneAll();
     }
 
     // is the callback still to be called?
-    if (callback_ == NULL || callback_->canceled()) {
+    if (callback_ == nullptr || callback_->canceled()) {
         return AsyncJob::doneAll();
     }
 
@@ -77,7 +76,7 @@ Comm::ConnOpener::doneAll() const
 void
 Comm::ConnOpener::swanSong()
 {
-    if (callback_ != NULL) {
+    if (callback_ != nullptr) {
         // inform the still-waiting caller we are dying
         sendAnswer(Comm::ERR_CONNECT, 0, "Comm::ConnOpener::swanSong");
     }
@@ -101,11 +100,11 @@ void
 Comm::ConnOpener::setHost(const char * new_host)
 {
     // unset and erase if already set.
-    if (host_ != NULL)
+    if (host_ != nullptr)
         safe_free(host_);
 
     // set the new one if given.
-    if (new_host != NULL)
+    if (new_host != nullptr)
         host_ = xstrdup(new_host);
 }
 
@@ -123,7 +122,7 @@ void
 Comm::ConnOpener::sendAnswer(Comm::Flag errFlag, int xerrno, const char *why)
 {
     // only mark the address good/bad AFTER connect is finished.
-    if (host_ != NULL) {
+    if (host_ != nullptr) {
         if (xerrno == 0) // XXX: should not we use errFlag instead?
             ipcacheMarkGoodAddr(host_, conn_->remote);
         else {
@@ -135,7 +134,7 @@ Comm::ConnOpener::sendAnswer(Comm::Flag errFlag, int xerrno, const char *why)
         }
     }
 
-    if (callback_ != NULL) {
+    if (callback_ != nullptr) {
         // avoid scheduling cancelled callbacks, assuming they are common
         // enough to make this extra check an optimization
         if (callback_->canceled()) {
@@ -159,7 +158,7 @@ Comm::ConnOpener::sendAnswer(Comm::Flag errFlag, int xerrno, const char *why)
             params.xerrno = xerrno;
             ScheduleCallHere(callback_);
         }
-        callback_ = NULL;
+        callback_ = nullptr;
     }
 
     // The job will stop without this call because nil callback_ makes
@@ -191,27 +190,27 @@ Comm::ConnOpener::cleanFd()
          */
 
         delete static_cast<Pointer*>(f.write_data);
-        f.write_data = NULL;
-        f.write_handler = NULL;
+        f.write_data = nullptr;
+        f.write_handler = nullptr;
     }
     // Comm::DoSelect does not do this when calling and resetting write_handler
     // (because it expects more writes to come?). We could mimic that
     // optimization by resetting Comm "Select" state only when the FD is
     // actually closed.
-    Comm::SetSelect(temporaryFd_, COMM_SELECT_WRITE, NULL, NULL, 0);
+    Comm::SetSelect(temporaryFd_, COMM_SELECT_WRITE, nullptr, nullptr, 0);
 
-    if (calls_.timeout_ != NULL) {
+    if (calls_.timeout_ != nullptr) {
         calls_.timeout_->cancel("Comm::ConnOpener::cleanFd");
-        calls_.timeout_ = NULL;
+        calls_.timeout_ = nullptr;
     }
     // Comm checkTimeouts() and commCloseAllSockets() do not clear .timeout
     // when calling timeoutHandler (XXX fix them), so we clear unconditionally.
-    f.timeoutHandler = NULL;
+    f.timeoutHandler = nullptr;
     f.timeout = 0;
 
-    if (calls_.earlyAbort_ != NULL) {
+    if (calls_.earlyAbort_ != nullptr) {
         comm_remove_close_handler(temporaryFd_, calls_.earlyAbort_);
-        calls_.earlyAbort_ = NULL;
+        calls_.earlyAbort_ = nullptr;
     }
 }
 
@@ -238,7 +237,7 @@ Comm::ConnOpener::closeFd()
 void
 Comm::ConnOpener::keepFd()
 {
-    Must(conn_ != NULL);
+    Must(conn_ != nullptr);
     Must(temporaryFd_ >= 0);
 
     cleanFd();
@@ -250,7 +249,7 @@ Comm::ConnOpener::keepFd()
 void
 Comm::ConnOpener::start()
 {
-    Must(conn_ != NULL);
+    Must(conn_ != nullptr);
 
     /* outbound sockets have no need to be protocol agnostic. */
     if (!(Ip::EnableIpv6&IPV6_SPECIAL_V4MAPPING) && conn_->remote.isIPv4()) {
@@ -282,10 +281,10 @@ Comm::ConnOpener::createFd()
     assert(conn_);
 
     // our initiators signal abort by cancelling their callbacks
-    if (callback_ == NULL || callback_->canceled())
+    if (callback_ == nullptr || callback_->canceled())
         return false;
 
-    temporaryFd_ = comm_openex(SOCK_STREAM, IPPROTO_TCP, conn_->local, conn_->flags, host_);
+    temporaryFd_ = comm_open(SOCK_STREAM, IPPROTO_TCP, conn_->local, conn_->flags, host_);
     if (temporaryFd_ < 0) {
         sendAnswer(Comm::ERR_CONNECT, 0, "Comm::ConnOpener::createFd");
         return false;
@@ -356,7 +355,7 @@ Comm::ConnOpener::connected()
 void
 Comm::ConnOpener::doConnect()
 {
-    Must(conn_ != NULL);
+    Must(conn_ != nullptr);
     Must(temporaryFd_ >= 0);
 
     ++ totalTries_;
@@ -430,7 +429,7 @@ Comm::ConnOpener::cancelSleep()
 void
 Comm::ConnOpener::lookupLocalAddress()
 {
-    struct addrinfo *addr = NULL;
+    struct addrinfo *addr = nullptr;
     Ip::Address::InitAddr(addr);
 
     if (getsockname(conn_->fd, addr->ai_addr, &(addr->ai_addrlen)) != 0) {
@@ -452,7 +451,7 @@ void
 Comm::ConnOpener::earlyAbort(const CommCloseCbParams &io)
 {
     debugs(5, 3, io.conn);
-    calls_.earlyAbort_ = NULL;
+    calls_.earlyAbort_ = nullptr;
     // NP: is closing or shutdown better?
     sendAnswer(Comm::ERR_CLOSING, io.xerrno, "Comm::ConnOpener::earlyAbort");
 }
@@ -465,7 +464,7 @@ void
 Comm::ConnOpener::timeout(const CommTimeoutCbParams &)
 {
     debugs(5, 5, conn_ << ": * - ERR took too long to receive response.");
-    calls_.timeout_ = NULL;
+    calls_.timeout_ = nullptr;
     sendAnswer(Comm::TIMEOUT, ETIMEDOUT, "Comm::ConnOpener::timeout");
 }
 

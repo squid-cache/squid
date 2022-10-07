@@ -119,7 +119,7 @@ MmappedFile::close()
 {
     debugs(79, 3, this << " closing for " << ioRequestor);
     doClose();
-    assert(ioRequestor != NULL);
+    assert(ioRequestor != nullptr);
     ioRequestor->closeCompleted();
 }
 
@@ -148,7 +148,7 @@ MmappedFile::read(ReadRequest *aRequest)
            aRequest->offset << ")");
 
     assert(fd >= 0);
-    assert(ioRequestor != NULL);
+    assert(ioRequestor != nullptr);
     assert(aRequest->len > 0); // TODO: work around mmap failures on zero-len?
     assert(aRequest->offset >= 0);
     assert(!error_); // TODO: propagate instead?
@@ -178,7 +178,7 @@ MmappedFile::write(WriteRequest *aRequest)
            aRequest->offset << ")");
 
     assert(fd >= 0);
-    assert(ioRequestor != NULL);
+    assert(ioRequestor != nullptr);
     assert(aRequest->len > 0); // TODO: work around mmap failures on zero-len?
     assert(aRequest->offset >= 0);
     assert(!error_); // TODO: propagate instead?
@@ -219,7 +219,7 @@ MmappedFile::ioInProgress() const
 
 Mmapping::Mmapping(int aFd, size_t aLength, int aProt, int aFlags, off_t anOffset):
     fd(aFd), length(aLength), prot(aProt), flags(aFlags), offset(anOffset),
-    delta(-1), buf(NULL)
+    delta(-1), buf(nullptr)
 {
 }
 
@@ -236,14 +236,14 @@ Mmapping::map()
     static const int pageSize = getpagesize();
     delta = offset % pageSize;
 
-    buf = mmap(NULL, length + delta, prot, flags, fd, offset - delta);
+    buf = mmap(nullptr, length + delta, prot, flags, fd, offset - delta);
 
     if (buf == MAP_FAILED) {
         const int errNo = errno;
         debugs(79,3, "error FD " << fd << "mmap(" << length << '+' <<
                delta << ", " << offset << '-' << delta << "): " << xstrerr(errNo));
-        buf = NULL;
-        return NULL;
+        buf = nullptr;
+        return nullptr;
     }
 
     return static_cast<char*>(buf) + delta;
@@ -265,7 +265,7 @@ Mmapping::unmap()
                " munmap(" << buf << ", " << length << '+' << delta << "): " <<
                "): " << xstrerr(errNo));
     }
-    buf = NULL;
+    buf = nullptr;
     return !error;
 }
 

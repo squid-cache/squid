@@ -8,12 +8,12 @@
 
 #include "squid.h"
 #include "base/CharacterSet.h"
+#include "base/Random.h"
 #include "tests/SBufFindTest.h"
 
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Message.h>
 #include <limits>
-#include <random>
 
 /* TODO: The whole SBufFindTest class is currently implemented as a single
    CppUnit test case (because we do not want to register and report every one
@@ -370,7 +370,7 @@ SBufFindTest::RandomSBuf(const int length)
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "abcdefghijklomnpqrstuvwxyz";
 
-    static std::mt19937 mt(time(0));
+    static std::mt19937 mt(RandomSeed32());
 
     // sizeof() counts the terminating zero at the end of characters
     // and the distribution is an 'inclusive' value range, so -2

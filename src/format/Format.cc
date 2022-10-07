@@ -25,8 +25,8 @@
 #include "sbuf/Stream.h"
 #include "sbuf/StringConvert.h"
 #include "security/CertError.h"
+#include "security/Certificate.h"
 #include "security/NegotiationHistory.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 #if USE_OPENSSL
@@ -40,8 +40,8 @@
 const SBuf Format::Dash("-");
 
 Format::Format::Format(const char *n) :
-    format(NULL),
-    next(NULL)
+    format(nullptr),
+    next(nullptr)
 {
     name = xstrdup(n);
 }
@@ -53,7 +53,7 @@ Format::Format::~Format()
         // unlink the next entry for deletion
         Format *temp = next;
         next = temp->next;
-        temp->next = NULL;
+        temp->next = nullptr;
         delete temp;
     }
 
@@ -129,7 +129,7 @@ Format::Format::dump(StoreEntry * entry, const char *directiveName, bool eol) co
                 storeAppendPrintf(entry, "%s", t->data.string);
             else {
                 char argbuf[256];
-                char *arg = NULL;
+                char *arg = nullptr;
                 ByteCode_t type = t->type;
 
                 switch (type) {
@@ -507,8 +507,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_LOCAL_LISTENING_PORT:
-            if (const auto addr = FindListeningPortAddress(nullptr, al.getRaw())) {
-                outint = addr->port();
+            if (const auto port = FindListeningPortNumber(nullptr, al.getRaw())) {
+                outint = port;
                 doint = 1;
             }
             break;
@@ -1254,20 +1254,16 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_SSL_USER_CERT_SUBJECT:
-            if (X509 *cert = al->cache.sslClientCert.get()) {
-                if (X509_NAME *subject = X509_get_subject_name(cert)) {
-                    X509_NAME_oneline(subject, tmp, sizeof(tmp));
-                    out = tmp;
-                }
+            if (const auto &cert = al->cache.sslClientCert) {
+                sb = Security::SubjectName(*cert);
+                out = sb.c_str();
             }
             break;
 
         case LFT_SSL_USER_CERT_ISSUER:
-            if (X509 *cert = al->cache.sslClientCert.get()) {
-                if (X509_NAME *issuer = X509_get_issuer_name(cert)) {
-                    X509_NAME_oneline(issuer, tmp, sizeof(tmp));
-                    out = tmp;
-                }
+            if (const auto &cert = al->cache.sslClientCert) {
+                sb = Security::IssuerName(*cert);
+                out = sb.c_str();
             }
             break;
 
@@ -1462,7 +1458,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                 static_assert(sizeof(quotedOut) > 0, "quotedOut has zero length");
                 quotedOut[0] = '\0';
 
-                char *newout = NULL;
+                char *newout = nullptr;
                 int newfree = 0;
 
                 switch (fmt->quote) {

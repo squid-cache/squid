@@ -21,7 +21,6 @@
 #include "globals.h"
 #include "ip/Address.h"
 #include "parser/BinaryTokenizer.h"
-#include "SquidTime.h"
 #include "ssl/bio.h"
 
 #if _SQUID_WINDOWS_
@@ -68,7 +67,7 @@ Ssl::Bio::Create(const int fd, Security::Io::Type type)
         BIO_meth_set_write(SquidMethods, squid_bio_write);
         BIO_meth_set_read(SquidMethods, squid_bio_read);
         BIO_meth_set_puts(SquidMethods, squid_bio_puts);
-        BIO_meth_set_gets(SquidMethods, NULL);
+        BIO_meth_set_gets(SquidMethods, nullptr);
         BIO_meth_set_ctrl(SquidMethods, squid_bio_ctrl);
         BIO_meth_set_create(SquidMethods, squid_bio_create);
         BIO_meth_set_destroy(SquidMethods, squid_bio_destroy);
@@ -82,7 +81,7 @@ Ssl::Bio::Create(const int fd, Security::Io::Type type)
         BIO_int_ctrl(bio, BIO_C_SET_FD, type, fd);
         return bio;
     }
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -454,7 +453,7 @@ squid_bio_create(BIO *bi)
     // No need to set more, openSSL initialize BIO memory to zero.
 #endif
 
-    BIO_set_data(bi, NULL);
+    BIO_set_data(bi, nullptr);
     return 1;
 }
 
@@ -463,7 +462,7 @@ static int
 squid_bio_destroy(BIO *table)
 {
     delete static_cast<Ssl::Bio*>(BIO_get_data(table));
-    BIO_set_data(table, NULL);
+    BIO_set_data(table, nullptr);
     return 1;
 }
 

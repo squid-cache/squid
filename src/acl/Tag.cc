@@ -15,7 +15,7 @@
 int
 ACLTagStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
-    if (checklist->request != NULL)
+    if (checklist->request != nullptr)
         return data->match (checklist->request->tag.termedBuf());
     return 0;
 }

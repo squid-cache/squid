@@ -95,10 +95,10 @@ GSSAPI_token(const char *server)
     gss_buffer_desc service = GSS_C_EMPTY_BUFFER;
     gss_buffer_desc input_token = GSS_C_EMPTY_BUFFER;
     gss_buffer_desc output_token = GSS_C_EMPTY_BUFFER;
-    char *token = NULL;
+    char *token = nullptr;
 
-    setbuf(stdout, NULL);
-    setbuf(stdin, NULL);
+    setbuf(stdout, nullptr);
+    setbuf(stdin, nullptr);
 
     if (!server) {
         std::cerr << "ERROR: GSSAPI: No server name" << std::endl;
@@ -125,10 +125,10 @@ GSSAPI_token(const char *server)
                                             0,
                                             GSS_C_NO_CHANNEL_BINDINGS,
                                             &input_token,
-                                            NULL,
+                                            nullptr,
                                             &output_token,
-                                            NULL,
-                                            NULL);
+                                            nullptr,
+                                            nullptr);
 
         if (!check_gss_err(major_status, minor_status, "gss_init_sec_context()") && output_token.length) {
             token = new char[base64_encode_len(output_token.length)];
@@ -146,7 +146,7 @@ GSSAPI_token(const char *server)
         token[5] = '\0';
     }
 
-    gss_delete_sec_context(&minor_status, &gss_context, NULL);
+    gss_delete_sec_context(&minor_status, &gss_context, nullptr);
     gss_release_buffer(&minor_status, &service);
     gss_release_buffer(&minor_status, &input_token);
     gss_release_buffer(&minor_status, &output_token);

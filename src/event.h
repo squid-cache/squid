@@ -21,7 +21,6 @@ void eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cb
 void eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int);
 void eventDelete(EVH * func, void *arg);
 void eventInit(void);
-void eventFreeMemory(void);
 int eventFind(EVH *, void *);
 
 class ev_entry

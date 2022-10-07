@@ -115,7 +115,7 @@ void
 DiskdAction::dump(StoreEntry* entry)
 {
     debugs(79, 5, MYNAME);
-    Must(entry != NULL);
+    Must(entry != nullptr);
     storeAppendPrintf(entry, "sent_count: %.0f\n", data.sent_count);
     storeAppendPrintf(entry, "recv_count: %.0f\n", data.recv_count);
     storeAppendPrintf(entry, "max_away: %.0f\n", data.max_away);

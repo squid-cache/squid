@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_CLIENTS_HTTP_TUNNELER_H
 #define SQUID_SRC_CLIENTS_HTTP_TUNNELER_H
 
-#include "base/AsyncCbdataCalls.h"
+#include "base/AsyncCallbacks.h"
 #include "base/AsyncJob.h"
 #include "clients/forward.h"
 #include "clients/HttpTunnelerAnswer.h"
@@ -34,30 +34,9 @@ class Tunneler: virtual public AsyncJob
     CBDATA_CLASS(Tunneler);
 
 public:
-    /// Callback dialer API to allow Tunneler to set the answer.
-    template <class Initiator>
-    class CbDialer: public CallDialer, public Http::TunnelerAnswer
-    {
-    public:
-        // initiator method to receive our answer
-        typedef void (Initiator::*Method)(Http::TunnelerAnswer &);
+    using Answer = TunnelerAnswer;
 
-        CbDialer(Method method, Initiator *initiator): initiator_(initiator), method_(method) {}
-        virtual ~CbDialer() = default;
-
-        /* CallDialer API */
-        bool canDial(AsyncCall &) { return initiator_.valid(); }
-        void dial(AsyncCall &) {((*initiator_).*method_)(*this); }
-        virtual void print(std::ostream &os) const override {
-            os << '(' << static_cast<const Http::TunnelerAnswer&>(*this) << ')';
-        }
-    private:
-        CbcPointer<Initiator> initiator_; ///< object to deliver the answer to
-        Method method_; ///< initiator_ method to call with the answer
-    };
-
-public:
-    Tunneler(const Comm::ConnectionPointer &conn, const HttpRequestPointer &req, AsyncCall::Pointer &aCallback, time_t timeout, const AccessLogEntryPointer &alp);
+    Tunneler(const Comm::ConnectionPointer &, const HttpRequestPointer &, const AsyncCallback<Answer> &, time_t timeout, const AccessLogEntryPointer &);
     Tunneler(const Tunneler &) = delete;
     Tunneler &operator =(const Tunneler &) = delete;
 
@@ -103,15 +82,13 @@ private:
     /// updates connection usage history before the connection is closed
     void countFailingConnection();
 
-    TunnelerAnswer &answer();
-
     AsyncCall::Pointer writer; ///< called when the request has been written
     AsyncCall::Pointer reader; ///< called when the response should be read
     AsyncCall::Pointer closer; ///< called when the connection is being closed
 
     Comm::ConnectionPointer connection; ///< TCP connection to the cache_peer
     HttpRequestPointer request; ///< peer connection trigger or cause
-    AsyncCall::Pointer callback; ///< we call this with the results
+    AsyncCallback<Answer> callback; ///< answer destination
     SBuf url; ///< request-target for the CONNECT request
     time_t lifetimeLimit; ///< do not run longer than this
     AccessLogEntryPointer al; ///< info for the future access.log entry

@@ -172,29 +172,29 @@ testUfs::testUfsSearch()
 
     CPPUNIT_ASSERT_EQUAL(false, search->error());
     CPPUNIT_ASSERT_EQUAL(false, search->isDone());
-    CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(NULL), search->currentItem());
+    CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(nullptr), search->currentItem());
 
     /* trigger a callback */
     cbcalled = false;
-    search->next(searchCallback, NULL);
+    search->next(searchCallback, nullptr);
     CPPUNIT_ASSERT_EQUAL(true, cbcalled);
 
     /* we should have access to a entry now, that matches the entry we had before */
     //CPPUNIT_ASSERT_EQUAL(false, search->next());
     CPPUNIT_ASSERT_EQUAL(false, search->error());
     CPPUNIT_ASSERT_EQUAL(false, search->isDone());
-    CPPUNIT_ASSERT(search->currentItem() != NULL);
+    CPPUNIT_ASSERT(search->currentItem() != nullptr);
 
     /* trigger another callback */
     cbcalled = false;
-    search->next(searchCallback, NULL);
+    search->next(searchCallback, nullptr);
     CPPUNIT_ASSERT_EQUAL(true, cbcalled);
 
     /* now we should have no error, we should have finished and have no current item */
     //CPPUNIT_ASSERT_EQUAL(false, search->next());
     CPPUNIT_ASSERT_EQUAL(false, search->error());
     CPPUNIT_ASSERT_EQUAL(true, search->isDone());
-    CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(NULL), search->currentItem());
+    CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(nullptr), search->currentItem());
 
     Store::FreeMemory();
 
@@ -238,7 +238,7 @@ testUfs::testUfsDefaultEngine()
     aStore->parse(0, path);
     safe_free(path);
     safe_free(config_line);
-    CPPUNIT_ASSERT(aStore->IO->io != NULL);
+    CPPUNIT_ASSERT(aStore->IO->io != nullptr);
 
     Store::FreeMemory();
     free_cachedir(&Config.cacheSwap);

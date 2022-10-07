@@ -22,7 +22,6 @@
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "StrList.h"
 
@@ -73,7 +72,7 @@ HttpReply::clean()
 {
     // we used to assert that the pipe is NULL, but now the message only
     // points to a pipe that is owned and initiated by another object.
-    body_pipe = NULL;
+    body_pipe = nullptr;
 
     body.clear();
     hdrCacheClean();
@@ -140,7 +139,7 @@ HttpReply::make304() const
     rv->content_type = content_type;
     /* rv->content_range */
     /* rv->keep_alive */
-    rv->sline.set(Http::ProtocolVersion(), Http::scNotModified, NULL);
+    rv->sline.set(Http::ProtocolVersion(), Http::scNotModified, nullptr);
 
     for (t = 0; ImsEntries[t] != Http::HdrType::OTHER; ++t) {
         if ((e = header.findEntry(ImsEntries[t])))
@@ -203,9 +202,9 @@ void
 HttpReply::redirect(Http::StatusCode status, const char *loc)
 {
     HttpHeader *hdr;
-    sline.set(Http::ProtocolVersion(), status, NULL);
+    sline.set(Http::ProtocolVersion(), status, nullptr);
     hdr = &header;
-    hdr->putStr(Http::HdrType::SERVER, APP_FULLNAME);
+    hdr->putStr(Http::HdrType::SERVER, visible_appname_string);
     hdr->putTime(Http::HdrType::DATE, squid_curtime);
     hdr->putInt64(Http::HdrType::CONTENT_LENGTH, 0);
     hdr->putStr(Http::HdrType::LOCATION, loc);
@@ -354,17 +353,17 @@ HttpReply::hdrCacheClean()
 
     if (cache_control) {
         delete cache_control;
-        cache_control = NULL;
+        cache_control = nullptr;
     }
 
     if (surrogate_control) {
         delete surrogate_control;
-        surrogate_control = NULL;
+        surrogate_control = nullptr;
     }
 
     if (content_range) {
         delete content_range;
-        content_range = NULL;
+        content_range = nullptr;
     }
 }
 
@@ -554,7 +553,7 @@ HttpReply::calcMaxBodySize(HttpRequest& request) const
     if (!Config.ReplyBodySize)
         return;
 
-    ACLFilledChecklist ch(NULL, &request, NULL);
+    ACLFilledChecklist ch(nullptr, &request, nullptr);
     // XXX: cont-cast becomes irrelevant when checklist is HttpReply::Pointer
     ch.reply = const_cast<HttpReply *>(this);
     HTTPMSGLOCK(ch.reply);
@@ -594,70 +593,6 @@ HttpReply::inheritProperties(const Http::Message *aMsg)
     keep_alive = aRep->keep_alive;
     sources = aRep->sources;
     return true;
-}
-
-void HttpReply::removeStaleWarnings()
-{
-    String warning;
-    if (header.getList(Http::HdrType::WARNING, &warning)) {
-        const String newWarning = removeStaleWarningValues(warning);
-        if (warning.size() && warning.size() == newWarning.size())
-            return; // some warnings are there and none changed
-        header.delById(Http::HdrType::WARNING);
-        if (newWarning.size()) { // some warnings left
-            HttpHeaderEntry *const e =
-                new HttpHeaderEntry(Http::HdrType::WARNING, SBuf(), newWarning.termedBuf());
-            header.addEntry(e);
-        }
-    }
-}
-
-/**
- * Remove warning-values with warn-date different from Date value from
- * a single header entry. Returns a string with all valid warning-values.
- */
-String HttpReply::removeStaleWarningValues(const String &value)
-{
-    String newValue;
-    const char *item = 0;
-    int len = 0;
-    const char *pos = 0;
-    while (strListGetItem(&value, ',', &item, &len, &pos)) {
-        bool keep = true;
-        // Does warning-value have warn-date (which contains quoted date)?
-        // We scan backwards, looking for two quoted strings.
-        // warning-value = warn-code SP warn-agent SP warn-text [SP warn-date]
-        const char *p = item + len - 1;
-
-        while (p >= item && xisspace(*p)) --p; // skip whitespace
-
-        // warning-value MUST end with quote
-        if (p >= item && *p == '"') {
-            const char *const warnDateEnd = p;
-            --p;
-            while (p >= item && *p != '"') --p; // find the next quote
-
-            const char *warnDateBeg = p + 1;
-            --p;
-            while (p >= item && xisspace(*p)) --p; // skip whitespace
-
-            if (p >= item && *p == '"' && warnDateBeg - p > 2) {
-                // found warn-text
-                String warnDate;
-                warnDate.append(warnDateBeg, warnDateEnd - warnDateBeg);
-                const time_t time = parse_rfc1123(warnDate.termedBuf());
-                keep = (time > 0 && time == date); // keep valid and matching date
-            }
-        }
-
-        if (keep) {
-            if (newValue.size())
-                newValue.append(", ");
-            newValue.append(item, len);
-        }
-    }
-
-    return newValue;
 }
 
 bool

@@ -27,7 +27,7 @@ class RefCount
 {
 
 public:
-    RefCount () : p_ (NULL) {}
+    RefCount () : p_ (nullptr) {}
 
     RefCount (C const *p) : p_(p) { reference (*this); }
 
@@ -40,7 +40,7 @@ public:
     }
 
     RefCount (RefCount &&p) : p_(std::move(p.p_)) {
-        p.p_=NULL;
+        p.p_=nullptr;
     }
 
     /// Base::Pointer = Derived::Pointer
@@ -61,7 +61,7 @@ public:
     RefCount& operator = (RefCount&& p) {
         if (this != &p) {
             dereference(p.p_);
-            p.p_ = NULL;
+            p.p_ = nullptr;
         }
         return *this;
     }
@@ -88,7 +88,7 @@ public:
     }
 
 private:
-    void dereference(C const *newP = NULL) {
+    void dereference(C const *newP = nullptr) {
         /* Setting p_ first is important:
         * we may be freed ourselves as a result of
         * delete p_;
@@ -112,7 +112,7 @@ private:
 template <class C>
 inline std::ostream &operator <<(std::ostream &os, const RefCount<C> &p)
 {
-    if (p != NULL)
+    if (p != nullptr)
         return os << p.getRaw() << '*' << p->LockCount();
     else
         return os << "NULL";

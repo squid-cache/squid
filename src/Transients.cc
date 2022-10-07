@@ -27,7 +27,7 @@
 /// shared memory segment path to use for Transients map
 static const SBuf MapLabel("transients_map");
 
-Transients::Transients(): map(NULL), locals(NULL)
+Transients::Transients(): map(nullptr), locals(nullptr)
 {
 }
 
@@ -49,7 +49,7 @@ Transients::init()
     map->cleaner = this;
     map->disableHitValidation(); // Transients lacks slices to validate
 
-    locals = new Locals(entryLimit, 0);
+    locals = new Locals(entryLimit, nullptr);
 }
 
 void
@@ -146,12 +146,12 @@ StoreEntry *
 Transients::get(const cache_key *key)
 {
     if (!map)
-        return NULL;
+        return nullptr;
 
     sfileno index;
     const Ipc::StoreMapAnchor *anchor = map->openForReading(key, index);
     if (!anchor)
-        return NULL;
+        return nullptr;
 
     // If we already have a local entry, the store_table should have found it.
     // Since it did not, the local entry key must have changed from public to
@@ -160,15 +160,6 @@ Transients::get(const cache_key *key)
     if (StoreEntry *oldE = locals->at(index)) {
         debugs(20, 3, "not joining private " << *oldE);
         assert(EBIT_TEST(oldE->flags, KEY_PRIVATE));
-        map->closeForReadingAndFreeIdle(index);
-        return nullptr;
-    }
-
-    // store hadWriter before checking ENTRY_REQUIRES_COLLAPSING to avoid racing
-    // the writer that clears that flag and then leaves
-    const auto hadWriter = map->peekAtWriter(index);
-    if (!hadWriter && EBIT_TEST(anchor->basics.flags, ENTRY_REQUIRES_COLLAPSING)) {
-        debugs(20, 3, "not joining abandoned entry " << index);
         map->closeForReadingAndFreeIdle(index);
         return nullptr;
     }
@@ -185,7 +176,7 @@ StoreEntry *
 Transients::findCollapsed(const sfileno index)
 {
     if (!map)
-        return NULL;
+        return nullptr;
 
     if (StoreEntry *oldE = locals->at(index)) {
         debugs(20, 5, "found " << *oldE << " at " << index << " in " << MapLabel);
@@ -194,21 +185,7 @@ Transients::findCollapsed(const sfileno index)
     }
 
     debugs(20, 3, "no entry at " << index << " in " << MapLabel);
-    return NULL;
-}
-
-void
-Transients::clearCollapsingRequirement(const StoreEntry &e)
-{
-    assert(map);
-    assert(e.hasTransients());
-    assert(isWriter(e));
-    const auto idx = e.mem_obj->xitTable.index;
-    auto &anchor = map->writeableEntry(idx);
-    if (EBIT_TEST(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING)) {
-        EBIT_CLR(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING);
-        CollapsedForwarding::Broadcast(e);
-    }
+    return nullptr;
 }
 
 void
@@ -291,11 +268,7 @@ Transients::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapA
     xitTable.index = index;
     xitTable.io = Store::ioReading;
 
-    const auto hadWriter = hasWriter(e); // before computing collapsingRequired
     anchor.exportInto(e);
-    const bool collapsingRequired = EBIT_TEST(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING);
-    assert(!collapsingRequired || hadWriter);
-    e.setCollapsingRequirement(collapsingRequired);
 }
 
 bool
@@ -320,18 +293,19 @@ Transients::status(const StoreEntry &entry, Transients::EntryStatus &entryStatus
     const auto idx = entry.mem_obj->xitTable.index;
     const auto &anchor = isWriter(entry) ?
                          map->writeableEntry(idx) : map->readableEntry(idx);
-    entryStatus.abortedByWriter = anchor.writerHalted;
+    entryStatus.hasWriter = anchor.writing();
     entryStatus.waitingToBeFreed = anchor.waitingToBeFreed;
-    entryStatus.collapsed = EBIT_TEST(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING);
 }
 
 void
 Transients::completeWriting(const StoreEntry &e)
 {
+    debugs(20, 5, e);
     assert(e.hasTransients());
     assert(isWriter(e));
     map->switchWritingToReading(e.mem_obj->xitTable.index);
     e.mem_obj->xitTable.io = Store::ioReading;
+    CollapsedForwarding::Broadcast(e);
 }
 
 int
@@ -377,7 +351,12 @@ Transients::disconnect(StoreEntry &entry)
         auto &xitTable = entry.mem_obj->xitTable;
         assert(map);
         if (isWriter(entry)) {
-            map->abortWriting(xitTable.index);
+            // completeWriting() was not called, so there could be an active
+            // Store writer out there, but we should not abortWriting() here
+            // because another writer may have succeeded, making readers happy.
+            // If none succeeded, the readers will notice the lack of writers.
+            map->closeForWriting(xitTable.index);
+            CollapsedForwarding::Broadcast(entry);
         } else {
             assert(isReader(entry));
             map->closeForReadingAndFreeIdle(xitTable.index);

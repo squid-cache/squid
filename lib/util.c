@@ -35,20 +35,6 @@ Tolower(char *q)
     }
 }
 
-int
-tvSubUsec(struct timeval t1, struct timeval t2)
-{
-    return (t2.tv_sec - t1.tv_sec) * 1000000 +
-           (t2.tv_usec - t1.tv_usec);
-}
-
-double
-tvSubDsec(struct timeval t1, struct timeval t2)
-{
-    return (double) (t2.tv_sec - t1.tv_sec) +
-           (double) (t2.tv_usec - t1.tv_usec) / 1000000.0;
-}
-
 /* somewhat safer calculation of %s */
 double
 xpercent(double part, double whole)
@@ -59,12 +45,7 @@ xpercent(double part, double whole)
 int
 xpercentInt(double part, double whole)
 {
-#if HAVE_RINT
     return (int) rint(xpercent(part, whole));
-#else
-    /* SCO 3.2v4.2 doesn't have rint() -- mauri@mbp.ee */
-    return (int) floor(xpercent(part, whole) + 0.5);
-#endif
 }
 
 /* somewhat safer division */

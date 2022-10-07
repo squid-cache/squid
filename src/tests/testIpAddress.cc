@@ -27,12 +27,6 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testIpAddress );
 
-/* so that we don't break POD dependency just for the test */
-struct timeval current_time;
-double current_dtime;
-time_t squid_curtime = 0;
-int shutting_down = 0;
-
 void
 testIpAddress::testDefaults()
 {
@@ -187,14 +181,14 @@ testIpAddress::testCopyConstructor()
 void
 testIpAddress::testHostentConstructor()
 {
-    struct hostent *hp = NULL;
+    struct hostent *hp = nullptr;
     struct in_addr outval;
     struct in_addr expectval;
 
     expectval.s_addr = htonl(0xC0A8640C);
 
     hp = gethostbyname("192.168.100.12");
-    CPPUNIT_ASSERT( hp != NULL /* gethostbyname failure.*/ );
+    CPPUNIT_ASSERT( hp != nullptr /* gethostbyname failure.*/ );
 
     Ip::Address anIPA(*hp);
 
@@ -569,7 +563,7 @@ testIpAddress::testMasking()
     CPPUNIT_ASSERT_EQUAL( 80, anIPA.cidr() );
 
     /* BUG Check: test values by display. */
-    CPPUNIT_ASSERT( anIPA.toStr(buf,MAX_IPSTRLEN) != NULL );
+    CPPUNIT_ASSERT( anIPA.toStr(buf,MAX_IPSTRLEN) != nullptr );
     CPPUNIT_ASSERT( memcmp("ffff:ffff:ffff:ffff:ffff::", buf, 26) == 0 );
 
     /* Test Network Bitmask from Ip::Address */
@@ -622,7 +616,7 @@ void
 testIpAddress::testAddrInfo()
 {
     struct addrinfo *expect;
-    struct addrinfo *ipval = NULL;
+    struct addrinfo *ipval = nullptr;
     struct addrinfo hints;
 
     memset(&hints, 0, sizeof(struct addrinfo));
@@ -632,7 +626,7 @@ testIpAddress::testAddrInfo()
     Ip::Address anIP = "127.0.0.1";
 
     /* assert this just to check that getaddrinfo is working properly */
-    CPPUNIT_ASSERT( getaddrinfo("127.0.0.1", NULL, &hints, &expect ) == 0 );
+    CPPUNIT_ASSERT( getaddrinfo("127.0.0.1", nullptr, &hints, &expect ) == 0 );
 
     anIP.getAddrInfo(ipval);
 

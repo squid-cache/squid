@@ -27,7 +27,7 @@ static Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir> *DiskdInstance;
 
 #if HAVE_FS_ROCK
 #include "fs/rock/RockStoreFileSystem.h"
-static Rock::StoreFileSystem *RockInstance = NULL;
+static Rock::StoreFileSystem *RockInstance = nullptr;
 #endif
 
 void Fs::Init()
@@ -47,26 +47,6 @@ void Fs::Init()
 
 #if HAVE_FS_ROCK
     RockInstance = new Rock::StoreFileSystem();
-#endif
-
-}
-
-void Fs::Clean()
-{
-#if HAVE_FS_UFS
-    delete UfsInstance;
-#endif
-
-#if HAVE_FS_AUFS
-    delete AufsInstance;
-#endif
-
-#if HAVE_FS_DISKD
-    delete DiskdInstance;
-#endif
-
-#if HAVE_FS_ROCK
-    delete RockInstance;
 #endif
 
 }

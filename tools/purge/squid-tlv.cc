@@ -44,7 +44,7 @@
 #include "squid-tlv.hh"
 
 SquidTLV::SquidTLV( SquidMetaType _type, size_t _size, void* _data )
-    :next(0),size(_size)
+    :next(nullptr),size(_size)
 {
     type = _type;
     data = (char*) _data;
@@ -52,7 +52,7 @@ SquidTLV::SquidTLV( SquidMetaType _type, size_t _size, void* _data )
 
 SquidMetaList::SquidMetaList()
 {
-    head = tail = 0;
+    head = tail = nullptr;
 }
 
 SquidMetaList::~SquidMetaList()
@@ -67,7 +67,7 @@ void
 SquidMetaList::append( SquidMetaType type, size_t size, void* data )
 {
     SquidTLV* temp = new SquidTLV( type, size, data );
-    if ( head == 0 ) head = tail = temp;
+    if ( head == nullptr ) head = tail = temp;
     else {
         tail->next = temp;
         tail = temp;

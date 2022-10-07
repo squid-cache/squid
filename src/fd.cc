@@ -12,11 +12,11 @@
 #include "comm/Loops.h"
 #include "debug/Messages.h"
 #include "debug/Stream.h"
+#include "error/SysErrorDetail.h"
 #include "fatal.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
-#include "SquidTime.h"
 
 // Solaris and possibly others lack MSG_NOSIGNAL optimization
 // TODO: move this into compat/? Use a dedicated compat file to avoid dragging
@@ -87,8 +87,8 @@ fd_close(int fd)
     assert(F->flags.open);
 
     if (F->type == FD_FILE) {
-        assert(F->read_handler == NULL);
-        assert(F->write_handler == NULL);
+        assert(F->read_handler == nullptr);
+        assert(F->write_handler == nullptr);
     }
 
     debugs(51, 3, "fd_close FD " << fd << " " << F->desc);
@@ -318,5 +318,23 @@ fdAdjustReserved(void)
     debugs(51, DBG_CRITICAL, "Reserved FD adjusted from " << RESERVED_FD << " to " << newReserve <<
            " due to failures (" << (Squid_MaxFD - newReserve) << "/" << Squid_MaxFD << " file descriptors available)");
     RESERVED_FD = newReserve;
+}
+
+/* Comm::Descriptor */
+
+Comm::Descriptor::Descriptor(const int fd, const unsigned int type, const char * const description): fd_(fd)
+{
+    fd_open(fd_, type, description);
+}
+
+Comm::Descriptor::~Descriptor()
+{
+    if (fd_ >= 0) {
+        fd_close(fd_);
+        if (close(fd_) != 0) {
+            const auto savedErrno = errno;
+            debugs(51, 7, "failed to close FD " << fd_ << ReportSysError(savedErrno));
+        }
+    }
 }
 

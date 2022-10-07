@@ -26,7 +26,7 @@ int HttpReply::httpMsgParseError() STUB_RETVAL(0)
 bool HttpReply::expectingBody(const HttpRequestMethod&, int64_t&) const STUB_RETVAL(false)
 bool HttpReply::parseFirstLine(const char *, const char *) STUB_RETVAL(false)
 void HttpReply::hdrCacheInit() STUB
-HttpReply * HttpReply::clone() const STUB_RETVAL(NULL)
+HttpReply * HttpReply::clone() const STUB_RETVAL(nullptr)
 bool HttpReply::inheritProperties(const Http::Message *) STUB_RETVAL(false)
 HttpReply::Pointer HttpReply::recreateOnNotModified(const HttpReply &) const STUB_RETVAL(nullptr)
 int64_t HttpReply::bodySize(const HttpRequestMethod&) const STUB_RETVAL(0)

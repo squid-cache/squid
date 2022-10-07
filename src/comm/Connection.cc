@@ -17,7 +17,7 @@
 #include "neighbors.h"
 #include "security/NegotiationHistory.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
+
 #include <ostream>
 
 InstanceIdDefinitions(Comm::Connection, "conn", uint64_t);
@@ -26,7 +26,7 @@ class CachePeer;
 bool
 Comm::IsConnOpen(const Comm::ConnectionPointer &conn)
 {
-    return conn != NULL && conn->isOpen();
+    return conn != nullptr && conn->isOpen();
 }
 
 Comm::Connection::Connection() :
@@ -126,7 +126,7 @@ Comm::Connection::getPeer() const
     if (cbdataReferenceValid(peer_))
         return peer_;
 
-    return NULL;
+    return nullptr;
 }
 
 void

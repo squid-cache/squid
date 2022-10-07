@@ -13,7 +13,6 @@
 #include "ipc/Messages.h"
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/CountersAction.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 
@@ -124,7 +123,7 @@ void
 Mgr::CountersAction::dump(StoreEntry* entry)
 {
     debugs(16, 5, MYNAME);
-    Must(entry != NULL);
+    Must(entry != nullptr);
     DumpCountersStats(data, entry);
 }
 

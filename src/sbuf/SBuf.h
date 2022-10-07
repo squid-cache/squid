@@ -45,9 +45,16 @@ class CharacterSet;
  * Please note that any operation on the underlying SBuf may invalidate
  * all iterators over it, resulting in undefined behavior by them.
  */
-class SBufIterator : public std::iterator<std::input_iterator_tag, char>
+class SBufIterator
 {
 public:
+    // iterator traits
+    using iterator_category = std::input_iterator_tag;
+    using value_type = char;
+    using difference_type = std::ptrdiff_t;
+    using pointer = char*;
+    using reference = char&;
+
     friend class SBuf;
     typedef MemBlob::size_type size_type;
     bool operator==(const SBufIterator &s) const;
@@ -138,7 +145,7 @@ public:
             store_ = std::move(S.store_);
             off_ = S.off_;
             len_ = S.len_;
-            S.store_ = NULL; //RefCount supports NULL, and S is about to be destructed
+            S.store_ = nullptr; //RefCount supports NULL, and S is about to be destructed
             S.off_ = 0;
             S.len_ = 0;
         }

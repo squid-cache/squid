@@ -47,7 +47,6 @@ storeSwapOutStart(StoreEntry * e)
     debugs(20, 5, "storeSwapOutStart: Begin SwapOut '" << e->url() << "' to dirno " <<
            e->swap_dirn << ", fileno " << std::hex << std::setw(8) << std::setfill('0') <<
            std::uppercase << e->swap_filen);
-    e->swapOutDecision(MemObject::SwapOut::swStarted);
     /* If we start swapping out objects with OutOfBand Metadata,
      * then this code needs changing
      */
@@ -64,7 +63,7 @@ storeSwapOutStart(StoreEntry * e)
     generic_cbdata *c = new generic_cbdata(e);
     sio = storeCreate(e, storeSwapOutFileNotify, storeSwapOutFileClosed, c);
 
-    if (sio == NULL) {
+    if (sio == nullptr) {
         assert(!e->hasDisk());
         e->swap_status = SWAPOUT_NONE;
         e->swapOutDecision(MemObject::SwapOut::swImpossible);
@@ -81,6 +80,8 @@ storeSwapOutStart(StoreEntry * e)
     e->lock("storeSwapOutStart");
     /* Pick up the file number if it was assigned immediately */
     e->attachToDisk(mem->swapout.sio->swap_dirn, mem->swapout.sio->swap_filen, SWAPOUT_WRITING);
+
+    e->swapOutDecision(MemObject::SwapOut::swStarted); // after SWAPOUT_WRITING
 
     /* write out the swap metadata */
     storeIOWrite(mem->swapout.sio, buf, mem->swap_hdr_sz, 0, xfree_cppwrapper);
@@ -187,7 +188,7 @@ StoreEntry::swapOut()
     debugs(20, 7, "storeSwapOut: mem->endOffset() = " << mem_obj->endOffset());
     debugs(20, 7, "storeSwapOut: swapout.queue_offset = " << mem_obj->swapout.queue_offset);
 
-    if (mem_obj->swapout.sio != NULL)
+    if (mem_obj->swapout.sio != nullptr)
         debugs(20, 7, "storeSwapOut: storeOffset() = " << mem_obj->swapout.sio->offset()  );
 
     int64_t const lowest_offset = mem_obj->lowestMemReaderOffset();
@@ -236,12 +237,12 @@ StoreEntry::swapOut()
 
     /* Ok, we have stuff to swap out.  Is there a swapout.sio open? */
     if (!hasDisk()) {
-        assert(mem_obj->swapout.sio == NULL);
+        assert(mem_obj->swapout.sio == nullptr);
         assert(mem_obj->inmem_lo == 0);
         storeSwapOutStart(this); // sets SwapOut::swImpossible on failures
     }
 
-    if (mem_obj->swapout.sio == NULL)
+    if (mem_obj->swapout.sio == nullptr)
         return;
 
     if (!doPages(this))
@@ -263,11 +264,11 @@ StoreEntry::swapOut()
 void
 StoreEntry::swapOutFileClose(int how)
 {
-    assert(mem_obj != NULL);
+    assert(mem_obj != nullptr);
     debugs(20, 3, "storeSwapOutFileClose: " << getMD5Text() << " how=" << how);
     debugs(20, 3, "storeSwapOutFileClose: sio = " << mem_obj->swapout.sio.getRaw());
 
-    if (mem_obj->swapout.sio == NULL)
+    if (mem_obj->swapout.sio == nullptr)
         return;
 
     storeClose(mem_obj->swapout.sio, how);
@@ -326,9 +327,9 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
         ++statCounter.swap.outs;
     }
 
-    Store::Root().transientsCompleteWriting(*e);
     debugs(20, 3, "storeSwapOutFileClosed: " << __FILE__ << ":" << __LINE__);
-    mem->swapout.sio = NULL;
+    mem->swapout.sio = nullptr;
+    e->storeWriterDone(); // after updating swap_status
     e->unlock("storeSwapOutFileClosed");
 }
 
@@ -351,17 +352,22 @@ StoreEntry::mayStartSwapOut()
         return false;
     }
 
-    // if we are swapping out or swapped out already, do not start over
-    if (hasDisk() || Store::Root().hasReadableDiskEntry(*this)) {
-        debugs(20, 3, "already did");
+    // If we have started swapping out, do not start over. Most likely, we have
+    // finished swapping out by now because we are not currently swappingOut().
+    if (decision == MemObject::SwapOut::swStarted) {
+        debugs(20, 3, "already started");
+        return false;
+    }
+
+    if (shutting_down) {
+        debugs(20, 3, "avoid heavy optional work during shutdown");
         swapOutDecision(MemObject::SwapOut::swImpossible);
         return false;
     }
 
-    // if we have just stared swapping out (attachToDisk() has not been
-    // called), do not start over
-    if (decision == MemObject::SwapOut::swStarted) {
-        debugs(20, 3, "already started");
+    // if there is a usable disk entry already, do not start over
+    if (hasDisk() || Store::Root().hasReadableDiskEntry(*this)) {
+        debugs(20, 3, "already did"); // we or somebody else created that entry
         swapOutDecision(MemObject::SwapOut::swImpossible);
         return false;
     }
@@ -376,6 +382,15 @@ StoreEntry::mayStartSwapOut()
     if (decision == MemObject::SwapOut::swPossible) {
         debugs(20, 3, "already allowed");
         return true;
+    }
+
+    // To avoid SMP workers releasing each other caching attempts, restrict disk
+    // caching to StoreEntry publisher. This check goes before checkCachable()
+    // that may incorrectly release() publisher's entry.
+    if (Store::Root().transientsReader(*this)) {
+        debugs(20, 5, "yield to entry publisher");
+        swapOutDecision(MemObject::SwapOut::swImpossible);
+        return false;
     }
 
     if (!checkCachable()) {

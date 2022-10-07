@@ -31,7 +31,8 @@
  */
 
 #include "squid.h"
-#include "util.h"
+
+#include <ctime>
 
 #if HAVE_LDAP && HAVE_KRB5
 
@@ -98,15 +99,15 @@ int
 krb5_create_cache(char *domain, char *service_principal_name)
 {
 
-    krb5_keytab keytab = NULL;
+    krb5_keytab keytab = nullptr;
     krb5_keytab_entry entry;
     krb5_kt_cursor cursor;
     krb5_cc_cursor ccursor;
-    krb5_creds *creds = NULL;
-    krb5_principal *principal_list = NULL;
-    krb5_principal principal = NULL;
+    krb5_creds *creds = nullptr;
+    krb5_principal *principal_list = nullptr;
+    krb5_principal principal = nullptr;
     char *service;
-    char *keytab_name = NULL, *principal_name = NULL, *mem_cache = NULL;
+    char *keytab_name = nullptr, *principal_name = nullptr, *mem_cache = nullptr;
     char buf[KT_PATH_MAX], *p;
     size_t j,nprinc = 0;
     int retval = 0;
@@ -159,7 +160,7 @@ krb5_create_cache(char *domain, char *service_principal_name)
     if (code) {
         if (principal)
             krb5_free_principal(kparam.context, principal);
-        principal = NULL;
+        principal = nullptr;
         k5_debug("No default principal found in ccache", code);
     } else {
         /*
@@ -189,9 +190,9 @@ krb5_create_cache(char *domain, char *service_principal_name)
                     if (code) {
                         k5_error("Error while destroying ccache", code);
                     }
-                    assert(creds != NULL);
+                    assert(creds != nullptr);
                     krb5_free_creds(kparam.context, creds);
-                    creds = NULL;
+                    creds = nullptr;
                     safe_free(principal_name);
                     debug((char *) "%s| %s: DEBUG: Reset credential cache to %s\n", LogTime(), PROGRAM, mem_cache);
                     code = krb5_cc_resolve(kparam.context, mem_cache, &kparam.cc[ccindex]);
@@ -217,14 +218,14 @@ krb5_create_cache(char *domain, char *service_principal_name)
                         debug((char *) "%s| %s: DEBUG: credential will soon expire %d\n", LogTime(), PROGRAM, (int)(creds->times.endtime - now));
                         if (principal)
                             krb5_free_principal(kparam.context, principal);
-                        principal = NULL;
+                        principal = nullptr;
                         code = krb5_cc_destroy(kparam.context, kparam.cc[ccindex]);
                         if (code) {
                             k5_error("Error  while destroying ccache", code);
                         }
-                        assert(creds != NULL);
+                        assert(creds != nullptr);
                         krb5_free_creds(kparam.context, creds);
-                        creds = NULL;
+                        creds = nullptr;
                         safe_free(principal_name);
                         debug((char *) "%s| %s: DEBUG: Reset credential cache to %s\n", LogTime(), PROGRAM, mem_cache);
                         code = krb5_cc_resolve(kparam.context, mem_cache, &kparam.cc[ccindex]);
@@ -239,14 +240,14 @@ krb5_create_cache(char *domain, char *service_principal_name)
                     }
                     break;
                 }
-                assert(creds != NULL);
+                assert(creds != nullptr);
                 krb5_free_creds(kparam.context, creds);
                 creds = static_cast<krb5_creds *>(xcalloc(1, sizeof(*creds)));
                 safe_free(principal_name);
             }
             if (creds)
                 krb5_free_creds(kparam.context, creds);
-            creds = NULL;
+            creds = nullptr;
             code2 = krb5_cc_end_seq_get(kparam.context, kparam.cc[ccindex], &ccursor);
             if (code2) {
                 k5_error("Error while ending ccache scan", code2);
@@ -342,7 +343,7 @@ krb5_create_cache(char *domain, char *service_principal_name)
                  * get credentials
                  */
 #if HAVE_GET_INIT_CREDS_KEYTAB
-                code = krb5_get_init_creds_keytab(kparam.context, creds, principal, keytab, 0, NULL, NULL);
+                code = krb5_get_init_creds_keytab(kparam.context, creds, principal, keytab, 0, nullptr, nullptr);
 #else
                 service = (char *) xmalloc(strlen("krbtgt") + 2 * strlen(domain) + 3);
                 snprintf(service, strlen("krbtgt") + 2 * strlen(domain) + 3, "krbtgt/%s@%s", domain, domain);
@@ -359,7 +360,7 @@ krb5_create_cache(char *domain, char *service_principal_name)
                         krb5_free_principal(kparam.context, principal);
                     if (creds)
                         krb5_free_creds(kparam.context, creds);
-                    creds = NULL;
+                    creds = nullptr;
                     found = 0;
                     continue;
                 }
@@ -371,7 +372,7 @@ krb5_create_cache(char *domain, char *service_principal_name)
                         krb5_free_principal(kparam.context, principal);
                     if (creds)
                         krb5_free_creds(kparam.context, creds);
-                    creds = NULL;
+                    creds = nullptr;
                     found = 0;
                     continue;
                 }
@@ -383,7 +384,7 @@ krb5_create_cache(char *domain, char *service_principal_name)
                     safe_free(principal_name);
                     if (creds)
                         krb5_free_creds(kparam.context, creds);
-                    creds = NULL;
+                    creds = nullptr;
                     found = 0;
                     continue;
                 }
@@ -413,7 +414,7 @@ krb5_create_cache(char *domain, char *service_principal_name)
             debug((char *) "%s| %s: DEBUG: Try to get principal of trusted domain.\n", LogTime(), PROGRAM);
 
             for (i = 0; i < nprinc; ++i) {
-                krb5_creds *tgt_creds = NULL;
+                krb5_creds *tgt_creds = nullptr;
                 creds = (krb5_creds *) xmalloc(sizeof(*creds));
                 memset(creds, 0, sizeof(*creds));
                 /*
@@ -427,7 +428,7 @@ krb5_create_cache(char *domain, char *service_principal_name)
                 debug((char *) "%s| %s: DEBUG: Keytab entry has principal: %s\n", LogTime(), PROGRAM, principal_name);
 
 #if HAVE_GET_INIT_CREDS_KEYTAB
-                code = krb5_get_init_creds_keytab(kparam.context, creds, principal_list[i], keytab, 0, NULL, NULL);
+                code = krb5_get_init_creds_keytab(kparam.context, creds, principal_list[i], keytab, 0, nullptr, nullptr);
 #else
                 service = (char *) xmalloc(strlen("krbtgt") + 2 * strlen(domain) + 3);
                 snprintf(service, strlen("krbtgt") + 2 * strlen(domain) + 3, "krbtgt/%s@%s", domain, domain);
@@ -484,7 +485,7 @@ krb5_create_cache(char *domain, char *service_principal_name)
                     debug((char *) "%s| %s: DEBUG: Found trusted principal name: %s\n", LogTime(), PROGRAM, principal_name);
                     if (tgt_creds)
                         krb5_free_creds(kparam.context, tgt_creds);
-                    tgt_creds = NULL;
+                    tgt_creds = nullptr;
                     break;
                 }
 
@@ -492,16 +493,16 @@ loop_end:
                 safe_free(principal_name);
                 if (tgt_creds)
                     krb5_free_creds(kparam.context, tgt_creds);
-                tgt_creds = NULL;
+                tgt_creds = nullptr;
                 if (creds)
                     krb5_free_creds(kparam.context, creds);
-                creds = NULL;
+                creds = nullptr;
 
             }
 
             if (creds)
                 krb5_free_creds(kparam.context, creds);
-            creds = NULL;
+            creds = nullptr;
         }
     } else {
         debug((char *) "%s| %s: DEBUG: Got principal from ccache\n", LogTime(), PROGRAM);

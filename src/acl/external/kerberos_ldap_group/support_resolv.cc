@@ -154,7 +154,7 @@ compare_hosts(struct hstruct *host1, struct hstruct *host2)
 size_t
 free_hostname_list(struct hstruct **hlist, size_t nhosts)
 {
-    struct hstruct *hp = NULL;
+    struct hstruct *hp = nullptr;
     size_t i;
 
     hp = *hlist;
@@ -170,15 +170,15 @@ free_hostname_list(struct hstruct **hlist, size_t nhosts)
 size_t
 get_hostname_list(struct hstruct **hlist, size_t nhosts, char *name)
 {
-    struct addrinfo *hres = NULL, *hres_list;
+    struct addrinfo *hres = nullptr, *hres_list;
     int rc, count;
-    struct hstruct *hp = NULL;
+    struct hstruct *hp = nullptr;
 
     if (!name)
         return (nhosts);
 
     hp = *hlist;
-    rc = getaddrinfo((const char *) name, NULL, NULL, &hres);
+    rc = getaddrinfo((const char *) name, nullptr, nullptr, &hres);
     if (rc != 0) {
         error((char *) "%s| %s: ERROR: Error while resolving hostname with getaddrinfo: %s\n", LogTime(), PROGRAM, gai_strerror(rc));
         return (nhosts);
@@ -196,7 +196,7 @@ get_hostname_list(struct hstruct **hlist, size_t nhosts, char *name)
          * char host[sysconf(_SC_HOST_NAME_MAX)];
          */
         char host[1024];
-        rc = getnameinfo(hres_list->ai_addr, hres_list->ai_addrlen, host, sizeof(host), NULL, 0, 0);
+        rc = getnameinfo(hres_list->ai_addr, hres_list->ai_addrlen, host, sizeof(host), nullptr, 0, 0);
         if (rc != 0) {
             error((char *) "%s| %s: ERROR: Error while resolving ip address with getnameinfo: %s\n", LogTime(), PROGRAM, gai_strerror(rc));
             freeaddrinfo(hres);
@@ -229,14 +229,14 @@ get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, size_t n
      * char name[sysconf(_SC_HOST_NAME_MAX)];
      */
     char name[1024];
-    char *service = NULL;
-    struct hstruct *hp = NULL;
-    struct lsstruct *ls = NULL;
+    char *service = nullptr;
+    struct hstruct *hp = nullptr;
+    struct lsstruct *ls = nullptr;
     size_t nhosts = 0;
     int size;
     int len, olen;
     size_t i, j, k;
-    u_char *buffer = NULL;
+    u_char *buffer = nullptr;
     u_char *p;
 
     ls = margs->lservs;

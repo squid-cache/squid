@@ -16,7 +16,6 @@
 #include "MemObject.h"
 #include "mgr/Registration.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "store_log.h"
 
@@ -31,7 +30,7 @@ static const char *storeLogTags[] = {
 static int storeLogTagsCounts[STORE_LOG_SWAPOUTFAIL+1];
 static OBJH storeLogTagsHist;
 
-static Logfile *storelog = NULL;
+static Logfile *storelog = nullptr;
 
 static String str_unknown;
 
@@ -44,11 +43,11 @@ storeLog(int tag, const StoreEntry * e)
     if (str_unknown.size()==0)
         str_unknown="unknown"; //hack. Delay initialization as string doesn't support global variables..
 
-    if (NULL == storelog)
+    if (nullptr == storelog)
         return;
 
     ++storeLogTagsCounts[tag];
-    if (mem != NULL) {
+    if (mem != nullptr) {
         reply = &mem->freshestReply();
         /*
          * XXX Ok, where should we print the dir number here?
@@ -96,7 +95,7 @@ storeLog(int tag, const StoreEntry * e)
 void
 storeLogRotate(void)
 {
-    if (NULL == storelog)
+    if (nullptr == storelog)
         return;
 
     logfileRotate(storelog, Config.Log.rotateNumber);
@@ -105,12 +104,12 @@ storeLogRotate(void)
 void
 storeLogClose(void)
 {
-    if (NULL == storelog)
+    if (nullptr == storelog)
         return;
 
     logfileClose(storelog);
 
-    storelog = NULL;
+    storelog = nullptr;
 }
 
 static void
@@ -125,7 +124,7 @@ storeLogOpen(void)
 {
     storeLogRegisterWithCacheManager();
 
-    if (Config.Log.store == NULL || strcmp(Config.Log.store, "none") == 0) {
+    if (Config.Log.store == nullptr || strcmp(Config.Log.store, "none") == 0) {
         debugs(20, Important(42), "Store logging disabled");
         return;
     }

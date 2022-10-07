@@ -63,9 +63,9 @@ public:
     void markSourceDomainChecked();
 
     // ACLChecklist API
-    virtual bool hasRequest() const { return request != NULL; }
-    virtual bool hasReply() const { return reply != NULL; }
-    virtual bool hasAle() const { return al != NULL; }
+    virtual bool hasRequest() const { return request != nullptr; }
+    virtual bool hasReply() const { return reply != nullptr; }
+    virtual bool hasAle() const { return al != nullptr; }
     virtual void syncAle(HttpRequest *adaptedRequest, const char *logUri) const;
     virtual void verifyAle() const;
 
@@ -87,7 +87,10 @@ public:
     char *snmp_community;
 #endif
 
-    /// SSL [certificate validation] errors, in undefined order
+    /// TLS server [certificate validation] errors, in undefined order.
+    /// The errors are accumulated as Squid goes through validation steps
+    /// and server certificates. They are cleared on connection retries.
+    /// For sslproxy_cert_error checks, contains just the current/last error.
     const Security::CertErrors *sslErrors;
 
     /// Peer certificate being checked by ssl_verify_cb() and by

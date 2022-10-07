@@ -63,3 +63,10 @@ Adaptation::ServiceFilter &Adaptation::ServiceFilter::operator =(const ServiceFi
     return *this;
 }
 
+std::ostream &
+Adaptation::operator <<(std::ostream &os, const ServiceFilter &filter)
+{
+    os << methodStr(filter.method) << ' ' << vectPointStr(filter.point);
+    return os;
+}
+
