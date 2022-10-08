@@ -93,7 +93,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ ubuntu-22.04, macos-11 ]
+        os: [ ubuntu-22.04 ]
 
     runs-on: ${{ matrix.os }}
 
@@ -110,18 +110,10 @@ jobs:
           # instead of the above installs?
           # sudo apt-get --quiet=2 build-dep squid
 
-      - name: Install prerequisite macOS packages
-        if: runner.os == 'macOS'
-        run: |
-           brew install automake
-           brew install cppunit
-
       - name: Checkout sources
         uses: actions/checkout@v3
 
       - run: ./test-builds.sh
-        # XXX: Fix distclean cleanup on macOS instead
-        continue-on-error: ${{ runner.os == 'macOS' }}
 
       - name: Publish build logs
         if: success() || failure()
