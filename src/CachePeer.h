@@ -211,7 +211,7 @@ public:
 
 template <typename Filler>
 void
-CachePeer::noteFailure(Filler filler)
+CachePeer::noteFailure(const Filler filler)
 {
     if (const auto acls = Config.accessList.cachePeerFault) {
         ACLFilledChecklist checklist(acls, nullptr, nullptr);
@@ -226,7 +226,7 @@ CachePeer::noteFailure(Filler filler)
 /// reacts to a Squid-to-origin or a Squid-to-cache_peer connection error
 /// \param filler a function to configure an ACLFilledChecklist if that becomes necessary
 template <typename Filler>
-void NoteOutgoingConnectionFailure(CachePeer *peer, Filler filler)
+void NoteOutgoingConnectionFailure(CachePeer *peer, const Filler filler)
 {
     if (peer)
         peer->noteFailure(filler);
