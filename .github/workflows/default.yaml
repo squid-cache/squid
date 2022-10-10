@@ -3,7 +3,7 @@ name: GitHub CI
 
 on:
   push:
-    branches: [ "master", "v5" ]
+    branches: [ "master", "v5", "auto" ]
 
   pull_request:
     branches: [ "master", "v5" ]
