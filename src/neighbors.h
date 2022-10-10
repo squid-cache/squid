@@ -56,9 +56,9 @@ void peerNoteDigestGone(CachePeer * p);
 int neighborUp(const CachePeer * e);
 const char *neighborTypeStr(const CachePeer * e);
 peer_t neighborType(const CachePeer *, const AnyP::Uri &);
-void peerConnectSucceded(CachePeer *);
 void dump_peer_options(StoreEntry *, CachePeer *);
 int peerHTTPOkay(const CachePeer *, PeerSelector *);
+void lookupPeer(CachePeer *);
 
 /// \returns max(1, timeout)
 time_t positiveTimeout(const time_t timeout);

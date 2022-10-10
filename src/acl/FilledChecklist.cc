@@ -8,8 +8,8 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "client_side.h"
 #include "CachePeer.h"
+#include "client_side.h"
 #include "comm/Connection.h"
 #include "comm/forward.h"
 #include "debug/Messages.h"

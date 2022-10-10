@@ -42,8 +42,14 @@ public:
     template <typename Filler>
     void noteFailure(Filler filler);
 
+    /// reacts to a successful peer connection attempt
+    void noteSuccess();
+
     /// updates failure statistics
     void countFailure();
+
+    /// performs all actions when a CachePeer is detected revived
+    void setAlive();
 
     u_int index = 0;
     char *name = nullptr;
@@ -226,11 +232,14 @@ CachePeer::noteFailure(const Filler filler)
 /// reacts to a Squid-to-origin or a Squid-to-cache_peer connection error
 /// \param filler a function to configure an ACLFilledChecklist if that becomes necessary
 template <typename Filler>
-void NoteOutgoingConnectionFailure(CachePeer *peer, const Filler filler)
+void
+NoteOutgoingConnectionFailure(CachePeer *peer, const Filler filler)
 {
     if (peer)
         peer->noteFailure(filler);
 }
+
+void NoteOutgoingConnectionSuccess(CachePeer *);
 
 #endif /* SQUID_CACHEPEER_H_ */
 

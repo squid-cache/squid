@@ -452,24 +452,6 @@ peerClearRR()
     }
 }
 
-/**
- * Perform all actions when a CachePeer is detected revived.
- */
-static void
-peerAlive(CachePeer *p)
-{
-    if (p->stats.logged_state == PEER_DEAD && p->tcp_up) {
-        debugs(15, DBG_IMPORTANT, "Detected REVIVED " << neighborTypeStr(p) << ": " << p->name);
-        p->stats.logged_state = PEER_ALIVE;
-        peerClearRR();
-        if (p->standby.mgr.valid())
-            PeerPoolMgr::Checkpoint(p->standby.mgr, "revived peer");
-    }
-
-    p->stats.last_reply = squid_curtime;
-    p->stats.probe_start = 0;
-}
-
 CachePeer *
 getDefaultParent(PeerSelector *ps)
 {
@@ -889,7 +871,7 @@ peerNoteDigestLookup(HttpRequest * request, CachePeer * p, lookup_t lookup)
 static void
 neighborAlive(CachePeer * p, const MemObject *, const icp_common_t * header)
 {
-    peerAlive(p);
+    p->setAlive();
     ++ p->stats.pings_acked;
 
     if ((icp_opcode) header->opcode <= ICP_END)
@@ -926,7 +908,7 @@ neighborUpdateRtt(CachePeer * p, MemObject * mem)
 static void
 neighborAliveHtcp(CachePeer * p, const MemObject *, const HtcpReplyData * htcp)
 {
-    peerAlive(p);
+    p->setAlive();
     ++ p->stats.pings_acked;
     ++ p->htcp.counts[htcp->hit ? 1 : 0];
     p->htcp.version = htcp->version;
@@ -1254,6 +1236,12 @@ peerDNSConfigure(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data
         PeerPoolMgr::Checkpoint(p->standby.mgr, "resolved peer");
 }
 
+void
+lookupPeer(CachePeer *p)
+{
+    ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
+}
+
 static void
 peerRefreshDNS(void *data)
 {
@@ -1269,23 +1257,10 @@ peerRefreshDNS(void *data)
     }
 
     for (p = Config.peers; p; p = p->next)
-        ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
+        lookupPeer(p);
 
     /* Reconfigure the peers every hour */
     eventAddIsh("peerRefreshDNS", peerRefreshDNS, nullptr, 3600.0, 1);
-}
-
-void
-peerConnectSucceded(CachePeer * p)
-{
-    if (!p->tcp_up) {
-        debugs(15, 2, "TCP connection to " << p->host << "/" << p->http_port << " succeeded");
-        p->tcp_up = p->connect_fail_limit; // NP: so peerAlive(p) works properly.
-        peerAlive(p);
-        if (!p->n_addresses)
-            ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
-    } else
-        p->tcp_up = p->connect_fail_limit;
 }
 
 /// whether new TCP probes are currently banned
@@ -1340,7 +1315,7 @@ peerProbeConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int
     CachePeer *p = (CachePeer*)data;
 
     if (status == Comm::OK) {
-        peerConnectSucceded(p);
+        p->noteSuccess();
     } else {
         p->countFailure();
     }
