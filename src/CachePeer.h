@@ -230,7 +230,7 @@ CachePeer::noteFailure(const Filler filler)
 /// \param filler a function to configure an ACLFilledChecklist if that becomes necessary
 template <typename Filler>
 void
-NoteOutgoingConnectionFailure(CachePeer *peer, const Filler filler)
+NoteOutgoingConnectionFailure(CachePeer * const peer, const Filler filler)
 {
     if (peer)
         peer->noteFailure(filler);

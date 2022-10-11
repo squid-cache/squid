@@ -97,7 +97,7 @@ CachePeer::noteSuccess()
 }
 
 void
-NoteOutgoingConnectionSuccess(CachePeer *peer)
+NoteOutgoingConnectionSuccess(CachePeer * const peer)
 {
     if (peer)
         peer->noteSuccess();
