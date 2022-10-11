@@ -143,7 +143,11 @@ public:
     char *digest_url = nullptr;
 #endif
 
-    int tcp_up = 0;         /* 0 if a connect() fails */
+    /// The number of failures sufficient to stop selecting this cache_peer. All
+    /// cache_peer selection algorithms skip cache_peers with 0 tcp_up values.
+    /// The initial 0 value prevents unprobed cache_peers from being selected.
+    int tcp_up = 0;
+
     /// whether to do another TCP probe after current TCP probes
     bool reprobe = false;
 

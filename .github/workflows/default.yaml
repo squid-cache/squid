@@ -1,0 +1,123 @@
+# Test the default branch, supported release branches, and their PRs
+name: GitHub CI
+
+on:
+  push:
+    branches: [ "master", "v5", "auto" ]
+
+  pull_request:
+    branches: [ "master", "v5" ]
+
+env:
+  # empty except for pull_request events
+  PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+
+  # Full clones of Squid repository branches (depth=19000+) waste resources,
+  # while excessively shallow clones break tests that check for past commits
+  # (e.g., to skip a particular test until a known bug is fixed) or generate
+  # diffs against them (e.g., for `git diff --check`). This arbitrary limit
+  # tries to balance the two concerns.
+  CHECKOUT_FETCH_DEPTH: 1001
+
+jobs:
+
+  functionality-tests:
+
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Install prerequisite packages
+        run: |
+          sudo apt-get --quiet=2 update
+          sudo apt-get --quiet=2 install libtool-bin
+
+      - name: Setup a nodejs environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Checkout Squid sources
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+
+      - run: ./bootstrap.sh
+      - run: ./configure --with-openssl
+      - run: make -j2
+      - run: |
+          sudo make install
+          sudo chown -R nobody:nogroup /usr/local/squid
+
+      - run: ./test-suite/test-functionality.sh
+
+      # Squid logs are not readable to actions/upload-artifact below
+      - name: Prep test logs
+        if: success() || failure()
+        run: sudo chmod -R a+rX /usr/local/squid
+
+      - name: Publish test logs
+        if: success() || failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-logs
+          path: |
+            ${{ runner.temp }}/*.log
+            /usr/local/squid/var/logs/overlord/*.log
+
+  source-maintenance-tests:
+
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Install prerequisite packages
+        run: |
+          sudo apt-get --quiet=2 update
+          sudo apt-get --quiet=2 install astyle
+          sudo apt-get --quiet=2 install gperf
+          pip install \
+              --user \
+              --no-cache-dir \
+              --disable-pip-version-check \
+              --quiet \
+              --progress-bar off \
+              codespell==1.16 # TODO: Upgrade to codespell v2
+
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+
+      - run: ./test-suite/test-sources.sh
+
+  build-tests:
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ ubuntu-22.04 ]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+      - name: Install prerequisite Linux packages
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get --quiet=2 update
+          sudo apt-get --quiet=2 install libtool-bin
+          sudo apt-get --quiet=2 install libcppunit-dev
+          sudo apt-get --quiet=2 install libldap2-dev
+          # TODO: Add some deb-src URI to sources.list and do build-dep
+          # instead of the above installs?
+          # sudo apt-get --quiet=2 build-dep squid
+
+      - name: Checkout sources
+        uses: actions/checkout@v3
+
+      - run: ./test-builds.sh
+
+      - name: Publish build logs
+        if: success() || failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-logs-${{ runner.os }}
+          path: btlayer-*.log
