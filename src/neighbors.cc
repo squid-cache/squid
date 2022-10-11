@@ -466,12 +466,12 @@ peerAlive(CachePeer *p)
             PeerPoolMgr::Checkpoint(p->standby.mgr, "revived peer");
     }
 
+    p->stats.last_reply = squid_curtime;
+    p->stats.probe_start = 0;
+
     // TODO: Remove or explain how we could detect an alive peer without IP addresses
     if (!p->n_addresses)
         ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
-
-    p->stats.last_reply = squid_curtime;
-    p->stats.probe_start = 0;
 }
 
 CachePeer *
