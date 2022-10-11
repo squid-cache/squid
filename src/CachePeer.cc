@@ -86,29 +86,12 @@ CachePeer::countFailure()
 }
 
 void
-CachePeer::setAlive()
-{
-    if (stats.logged_state == PEER_DEAD && tcp_up) {
-        debugs(15, DBG_IMPORTANT, "Detected REVIVED " << neighborTypeStr(this) << ": " << name);
-        stats.logged_state = PEER_ALIVE;
-        peerClearRR();
-        if (standby.mgr.valid())
-            PeerPoolMgr::Checkpoint(standby.mgr, "revived peer");
-    }
-
-    stats.last_reply = squid_curtime;
-    stats.probe_start = 0;
-}
-
-void
 CachePeer::noteSuccess()
 {
     if (!tcp_up) {
         debugs(15, 2, "TCP connection to " << host << "/" << http_port << " succeeded");
-        tcp_up = connect_fail_limit; // NP: so setAlive() works properly.
-        setAlive();
-        if (!n_addresses)
-            lookupPeer(this);
+        tcp_up = connect_fail_limit; // NP: so peerAlive() works properly.
+        peerAlive(this);
     } else
         tcp_up = connect_fail_limit;
 }

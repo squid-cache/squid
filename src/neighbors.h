@@ -49,6 +49,7 @@ CachePeer *getRoundRobinParent(PeerSelector*);
 CachePeer *getWeightedRoundRobinParent(PeerSelector*);
 void peerClearRRStart(void);
 void peerClearRR(void);
+void peerAlive(CachePeer *);
 lookup_t peerDigestLookup(CachePeer * p, PeerSelector *);
 CachePeer *neighborsDigestSelect(PeerSelector *);
 void peerNoteDigestLookup(HttpRequest * request, CachePeer * p, lookup_t lookup);
@@ -58,7 +59,6 @@ const char *neighborTypeStr(const CachePeer * e);
 peer_t neighborType(const CachePeer *, const AnyP::Uri &);
 void dump_peer_options(StoreEntry *, CachePeer *);
 int peerHTTPOkay(const CachePeer *, PeerSelector *);
-void lookupPeer(CachePeer *);
 
 /// \returns max(1, timeout)
 time_t positiveTimeout(const time_t timeout);

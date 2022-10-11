@@ -452,6 +452,28 @@ peerClearRR()
     }
 }
 
+/**
+ * Perform all actions when a CachePeer is detected revived.
+ */
+void
+peerAlive(CachePeer *p)
+{
+    if (p->stats.logged_state == PEER_DEAD && p->tcp_up) {
+        debugs(15, DBG_IMPORTANT, "Detected REVIVED " << neighborTypeStr(p) << ": " << p->name);
+        p->stats.logged_state = PEER_ALIVE;
+        peerClearRR();
+        if (p->standby.mgr.valid())
+            PeerPoolMgr::Checkpoint(p->standby.mgr, "revived peer");
+    }
+
+    // TODO: Remove or explain how we could detect an alive peer without IP addresses
+    if (!p->n_addresses)
+        ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
+
+    p->stats.last_reply = squid_curtime;
+    p->stats.probe_start = 0;
+}
+
 CachePeer *
 getDefaultParent(PeerSelector *ps)
 {
@@ -871,7 +893,7 @@ peerNoteDigestLookup(HttpRequest * request, CachePeer * p, lookup_t lookup)
 static void
 neighborAlive(CachePeer * p, const MemObject *, const icp_common_t * header)
 {
-    p->setAlive();
+    peerAlive(p);
     ++ p->stats.pings_acked;
 
     if ((icp_opcode) header->opcode <= ICP_END)
@@ -908,7 +930,7 @@ neighborUpdateRtt(CachePeer * p, MemObject * mem)
 static void
 neighborAliveHtcp(CachePeer * p, const MemObject *, const HtcpReplyData * htcp)
 {
-    p->setAlive();
+    peerAlive(p);
     ++ p->stats.pings_acked;
     ++ p->htcp.counts[htcp->hit ? 1 : 0];
     p->htcp.version = htcp->version;
@@ -1236,12 +1258,6 @@ peerDNSConfigure(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data
         PeerPoolMgr::Checkpoint(p->standby.mgr, "resolved peer");
 }
 
-void
-lookupPeer(CachePeer *p)
-{
-    ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
-}
-
 static void
 peerRefreshDNS(void *data)
 {
@@ -1257,7 +1273,7 @@ peerRefreshDNS(void *data)
     }
 
     for (p = Config.peers; p; p = p->next)
-        lookupPeer(p);
+        ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
 
     /* Reconfigure the peers every hour */
     eventAddIsh("peerRefreshDNS", peerRefreshDNS, nullptr, 3600.0, 1);

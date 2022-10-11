@@ -48,9 +48,6 @@ public:
     /// updates failure statistics
     void countFailure();
 
-    /// performs all actions when a CachePeer is detected revived
-    void setAlive();
-
     u_int index = 0;
     char *name = nullptr;
     char *host = nullptr;
