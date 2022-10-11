@@ -85,13 +85,16 @@ AC_DEFUN([SQUID_CHECK_LDAP_API],[
   AC_CHECK_LIB(ldap,[ldapssl_client_init],[
     AC_DEFINE(HAVE_LDAPSSL_CLIENT_INIT,1,[Define to 1 if you have ldapssl_client_init])
   ])
-  AC_CHECK_LIB(ldap,[ldap_url_desc2str],[
+  dnl If a AC_SEARCH_LIBS() finds a required library X then subsequent calls
+  dnl may produce a misleading "none required" result for the same library X
+  dnl because the first successful search adds -lX to LIBS.
+  AC_SEARCH_LIBS([ldap_url_desc2str],[$LIBLBER_NAME ldap],[
     AC_DEFINE(HAVE_LDAP_URL_DESC2STR,1,[Define to 1 if you have ldap_url_desc2str])
   ])
-  AC_CHECK_LIB(ldap,[ldap_url_parse],[
+  AC_SEARCH_LIBS([ldap_url_parse],[$LIBLBER_NAME ldap],[
     AC_DEFINE(HAVE_LDAP_URL_PARSE,1,[Define to 1 if you have ldap_url_parse])
   ])
-  AC_CHECK_LIB(ldap,[ldap_start_tls_s],[
+  AC_SEARCH_LIBS([ldap_start_tls_s],[$LIBLBER_NAME ldap],[
     AC_DEFINE(HAVE_LDAP_START_TLS_S,1,[Define to 1 if you have ldap_start_tls_s])
   ])
   SQUID_STATE_ROLLBACK(squid_ldap_state)

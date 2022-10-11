@@ -1638,13 +1638,13 @@ AS_IF([test "x$with_ldap" != "xno"],[
     SQUID_STATE_SAVE(squid_ldap_state)
     LIBS="$LIBLDAP_PATH $LIBPTHREADS $LIBS"
     PKG_CHECK_MODULES([LIBLDAP],[ldap],[],[
-      AC_CHECK_LIB(lber, ber_init, [LIBLBER="-llber"])
-      AC_CHECK_LIB(ldap, ldap_init, [LIBLDAP_LIBS="-lldap $LIBLBER"])
+      AC_CHECK_LIB(lber, ber_init, [LIBLBER_NAME="lber"; LIBLBER_LIBS="-l$LIBLBER_NAME"])
+      AC_CHECK_LIB(ldap, ldap_init, [LIBLDAP_LIBS="-lldap $LIBLBER_LIBS"])
       dnl if no ldap lib found check for mozilla version
       AS_IF([test "x$ac_cv_lib_ldap_ldap_init" != "xyes"],[
         SQUID_STATE_SAVE(squid_ldap_mozilla)
         LIBS="$LIBLDAP_PATH $LIBPTHREADS"
-        AC_CHECK_LIB(ldap60, ldap_init, [LIBLDAP_LIBS="-lldap60 $LIBLBER"])
+        AC_CHECK_LIB(ldap60, ldap_init, [LIBLDAP_LIBS="-lldap60 $LIBLBER_LIBS"])
         LIBS="$LIBLDAP_PATH $LIBLDAP_LIBS $LIBPTHREADS"
         AC_CHECK_LIB(prldap60, prldap_init, [LIBLDAP_LIBS="-lprldap60 $LIBLDAP_LIBS"])
         LIBS="$LIBLDAP_PATH $LIBLDAP_LIBS $LIBPTHREADS"
