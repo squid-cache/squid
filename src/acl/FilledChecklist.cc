@@ -249,12 +249,12 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
 }
 
 void
-ACLFilledChecklist::setOutgoingConnection(const Comm::ConnectionPointer &conn)
+ACLFilledChecklist::setOutgoingConnection(const Comm::ConnectionPointer &outgoingConn)
 {
-    if (conn && conn->isOpen()) {
-        dst_addr = conn->remote;
-        my_addr = conn->local;
-        dst_peer_name = conn->getPeer() ? conn->getPeer()->name : nullptr;
+    if (outgoingConn && outgoingConn->isOpen()) {
+        dst_addr = outgoingConn->remote;
+        my_addr = outgoingConn->local;
+        dst_peer_name = outgoingConn->getPeer() ? outgoingConn->getPeer()->name : nullptr;
     }
 }
 
