@@ -85,6 +85,8 @@ AC_DEFUN([SQUID_CHECK_LDAP_API],[
   AC_CHECK_LIB(ldap,[ldapssl_client_init],[
     AC_DEFINE(HAVE_LDAPSSL_CLIENT_INIT,1,[Define to 1 if you have ldapssl_client_init])
   ])
+  dnl Extract library names for AC_SEARCH_LIBS() to iterate.
+  LIBLDAP_NAMES="`echo "$LIBLDAP_LIBS" | sed -e 's/-l//g'`"
   dnl If a AC_SEARCH_LIBS() finds a required library X then subsequent calls
   dnl may produce a misleading "none required" result for the same library X
   dnl because the first successful search adds -lX to LIBS.
