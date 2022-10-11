@@ -105,7 +105,6 @@ jobs:
           sudo apt-get --quiet=2 update
           sudo apt-get --quiet=2 install libtool-bin
           sudo apt-get --quiet=2 install libcppunit-dev
-          sudo apt-get --quiet=2 install libldap2-dev
           # TODO: Add some deb-src URI to sources.list and do build-dep
           # instead of the above installs?
           # sudo apt-get --quiet=2 build-dep squid
