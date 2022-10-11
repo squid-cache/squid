@@ -47,6 +47,7 @@ MAKETEST="distcheck"
 #   --enable-kqueue \
 #   --enable-win32-service \
 #   --with-valgrind-debug \
+#   --with-ldap \
 #
 #   --enable-cpu-profiling \  Requires CPU support.
 #
@@ -113,7 +114,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--with-gnu-ld \
 	--with-ipv6-split-stack \
 	--with-large-files \
-	--with-ldap \
 	--with-pic \
 	--with-pthreads \
 	--enable-build-info=squid\ test\ build \
