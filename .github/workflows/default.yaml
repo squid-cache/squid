@@ -121,3 +121,33 @@ jobs:
         with:
           name: build-logs-${{ runner.os }}
           path: btlayer-*.log
+
+  static-analysis:
+
+    strategy:
+      fail-fast: true
+
+    runs-on: [ ubuntu-22.04 ]
+
+    steps:
+
+      - name: Install Squid prerequisite Linux packages
+        if: runner.os == 'Linux'
+        run: |
+          # required for "apt-get build-dep" to work
+          sudo sed --in-place -E 's/# (deb-src.*updates main)/  \1/g' /etc/apt/sources.list
+          sudo apt-get --quiet=2 update
+          sudo apt-get --quiet=2 build-dep squid
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+
+      - run: |
+          ./bootstrap.sh
+          ./test-suite/buildtest.sh check ./test-suite/buildtests/layer-02-maximus.opts
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
