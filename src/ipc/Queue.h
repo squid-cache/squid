@@ -108,7 +108,7 @@ public:
     bool empty() const { return !theSize; }
     bool full() const { return theSize == theCapacity; }
 
-    static int Items2Bytes(const unsigned int maxItemSize, const int size);
+    static size_t Items2Bytes(const size_t maxItemSize, const size_t size);
 
     /// returns true iff the value was set; [un]blocks the reader as needed
     template<class Value> bool pop(Value &value, QueueReader *const reader = nullptr);
