@@ -60,8 +60,8 @@ Ipc::QueueReaders::SharedMemorySize(const size_t capacity)
 
 // OneToOneUniQueue
 
-Ipc::OneToOneUniQueue::OneToOneUniQueue(const unsigned int aMaxItemSize, const int aCapacity):
-    theIn(0), theOut(0), theSize(0), theMaxItemSize(aMaxItemSize),
+Ipc::OneToOneUniQueue::OneToOneUniQueue(const size_t aMaxItemSize, const size_t aCapacity):
+    theSize(0), theMaxItemSize(aMaxItemSize),
     theCapacity(aCapacity)
 {
     Must(theMaxItemSize > 0);

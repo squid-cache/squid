@@ -98,17 +98,17 @@ public:
     class Full {};
     class ItemTooLarge {};
 
-    OneToOneUniQueue(const unsigned int aMaxItemSize, const int aCapacity);
+    OneToOneUniQueue(const size_t aMaxItemSize, const size_t aCapacity);
 
-    unsigned int maxItemSize() const { return theMaxItemSize; }
-    int size() const { return theSize; }
-    int capacity() const { return theCapacity; }
-    int sharedMemorySize() const { return Items2Bytes(theMaxItemSize, theCapacity); }
+    static size_t Items2Bytes(const size_t maxItemSize, const size_t size);
+
+    size_t maxItemSize() const { return theMaxItemSize; }
+    uint32_t size() const { return theSize; }
+    uint32_t capacity() const { return theCapacity; }
+    size_t sharedMemorySize() const { return Items2Bytes(theMaxItemSize, theCapacity); }
 
     bool empty() const { return !theSize; }
     bool full() const { return theSize == theCapacity; }
-
-    static size_t Items2Bytes(const size_t maxItemSize, const size_t size);
 
     /// returns true iff the value was set; [un]blocks the reader as needed
     template<class Value> bool pop(Value &value, QueueReader *const reader = nullptr);
@@ -132,11 +132,11 @@ private:
 
     // optimization: these non-std::atomic data members are in shared memory,
     // but each is used only by one process (aside from obscured reporting)
-    unsigned int theIn; ///< current push() position; reporting aside, used only in push()
-    unsigned int theOut; ///< current pop() position; reporting aside, used only in pop()/peek()
+    unsigned int theIn = 0; ///< current push() position; reporting aside, used only in push()
+    unsigned int theOut = 0; ///< current pop() position; reporting aside, used only in pop()/peek()
 
     std::atomic<uint32_t> theSize; ///< number of items in the queue
-    const unsigned int theMaxItemSize; ///< maximum item size
+    const size_t theMaxItemSize; ///< maximum item size
     const uint32_t theCapacity; ///< maximum number of items, i.e. theBuffer size
 
     char theBuffer[];
