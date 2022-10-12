@@ -52,20 +52,8 @@ Ipc::QueueReader::QueueReader(): popBlocked(false), popSignal(false),
 
 /* QueueReaders */
 
-Ipc::QueueReaders::QueueReaders(const int aCapacity): theCapacity(aCapacity),
-    theReaders(theCapacity)
-{
-    Must(theCapacity > 0);
-}
-
 size_t
-Ipc::QueueReaders::sharedMemorySize() const
-{
-    return SharedMemorySize(theCapacity);
-}
-
-size_t
-Ipc::QueueReaders::SharedMemorySize(const int capacity)
+Ipc::QueueReaders::SharedMemorySize(const size_t capacity)
 {
     return sizeof(QueueReaders) + sizeof(QueueReader) * capacity;
 }
@@ -238,7 +226,7 @@ Ipc::FewToFewBiQueue::FewToFewBiQueue(const String &id, const Group aLocalGroup,
     theLocalGroup(aLocalGroup)
 {
     Must(queues->theCapacity == metadata->theGroupASize * metadata->theGroupBSize * 2);
-    Must(readers->theCapacity == metadata->theGroupASize + metadata->theGroupBSize);
+    Must(readers->theCapacity == size_t(metadata->theGroupASize) + size_t(metadata->theGroupBSize));
 
     debugs(54, 7, "queue " << id << " reader: " << localReader().id);
 }
@@ -377,7 +365,7 @@ Ipc::MultiQueue::MultiQueue(const String &id, const int localProcessId):
     readers(shm_old(QueueReaders)(ReadersId(id).termedBuf()))
 {
     Must(queues->theCapacity == metadata->theProcessCount * metadata->theProcessCount);
-    Must(readers->theCapacity == metadata->theProcessCount);
+    Must(readers->theCapacity == size_t(metadata->theProcessCount));
 
     debugs(54, 7, "queue " << id << " reader: " << localReader().id);
 }

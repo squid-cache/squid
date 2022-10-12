@@ -71,11 +71,13 @@ public:
 class QueueReaders
 {
 public:
-    QueueReaders(const int aCapacity);
-    size_t sharedMemorySize() const;
-    static size_t SharedMemorySize(const int capacity);
+    QueueReaders(const size_t n) : theCapacity(n), theReaders(n) {}
 
-    const int theCapacity; /// number of readers
+    static size_t SharedMemorySize(const size_t capacity);
+    size_t sharedMemorySize() const { return SharedMemorySize(theCapacity); }
+
+public:
+    const size_t theCapacity; /// number of readers
     Ipc::Mem::FlexibleArray<QueueReader> theReaders; /// readers
 };
 
