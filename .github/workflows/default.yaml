@@ -145,7 +145,8 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
 
-      - run: |
+      - name: Build Squid
+        run: |
           ./bootstrap.sh
           ./test-suite/buildtest.sh check ./test-suite/buildtests/layer-02-maximus.opts
 
