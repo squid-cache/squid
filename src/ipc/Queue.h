@@ -108,7 +108,6 @@ public:
     bool empty() const { return !theSize; }
     bool full() const { return theSize == theCapacity; }
 
-    static int Bytes2Items(const unsigned int maxItemSize, int size);
     static int Items2Bytes(const unsigned int maxItemSize, const int size);
 
     /// returns true iff the value was set; [un]blocks the reader as needed

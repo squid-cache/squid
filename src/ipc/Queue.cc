@@ -69,14 +69,6 @@ Ipc::OneToOneUniQueue::OneToOneUniQueue(const unsigned int aMaxItemSize, const i
 }
 
 int
-Ipc::OneToOneUniQueue::Bytes2Items(const unsigned int maxItemSize, int size)
-{
-    assert(maxItemSize > 0);
-    size -= sizeof(OneToOneUniQueue);
-    return size >= 0 ? size / maxItemSize : 0;
-}
-
-int
 Ipc::OneToOneUniQueue::Items2Bytes(const unsigned int maxItemSize, const int size)
 {
     assert(size >= 0);
