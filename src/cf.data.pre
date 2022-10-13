@@ -1914,6 +1914,10 @@ http_access deny to_linklocal
 # INSERT YOUR OWN RULE(S) HERE TO ALLOW ACCESS FROM YOUR CLIENTS
 #
 
+# For example, to allow access from your local networks, you may uncomment the
+# following rule (and/or add rules that match your definition of "local"):
+# http_access allow localnet
+
 # And finally deny all other access to this proxy
 http_access deny all
 CONFIG_END
