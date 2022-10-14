@@ -236,7 +236,13 @@ NoteOutgoingConnectionFailure(CachePeer * const peer, const Filler filler)
         peer->noteFailure(filler);
 }
 
-void NoteOutgoingConnectionSuccess(CachePeer *);
+/// reacts to a Squid-to-origin or a Squid-to-cache_peer connection establishment success
+inline void
+NoteOutgoingConnectionSuccess(CachePeer * const peer)
+{
+    if (peer)
+        peer->noteSuccess();
+}
 
 #endif /* SQUID_CACHEPEER_H_ */
 

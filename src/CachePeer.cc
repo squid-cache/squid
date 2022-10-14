@@ -95,10 +95,3 @@ CachePeer::noteSuccess()
         tcp_up = connect_fail_limit;
 }
 
-void
-NoteOutgoingConnectionSuccess(CachePeer * const peer)
-{
-    if (peer)
-        peer->noteSuccess();
-}
-
