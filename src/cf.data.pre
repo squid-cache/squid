@@ -4026,15 +4026,21 @@ DOC_START
 	resolve a cache_peer domain name is not associated with that cache_peer,
 	but that should change.
 
+	Squid probes configured cache_peers using TCP connections that are not
+	associated with any HTTP request. Some connections fail before Squid
+	receives an HTTP response. Thus, cache_peer_fault rules should not assume
+	request and response availability.
+
 	If certain forwarding problems should not count towards the cache_peer
 	connect-fail-limit, add the corresponding deny rule. For example:
 
 		# Do not blame any cache_peer for blocking our CONNECT requests. No
-		# change for other failures, including GET failures and those
-		# failures that happen before Squid gets a response.
+		# change for all other failures, including probing connections, GET
+		# failures, and failures that happen before Squid gets a response.
+		acl hasRequest has request
 		acl hasResponse has response
 		acl forbiddenResponse http_status 403
-		cache_peer_fault deny CONNECT hasResponse forbiddenResponse
+		cache_peer_fault deny hasRequest CONNECT hasResponse forbiddenResponse
 
 	This clause only supports fast acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.

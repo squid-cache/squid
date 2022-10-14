@@ -58,6 +58,7 @@ CachePeer::connectTimeout() const
 
 // TODO: Require callers to detail failures instead of using one (and often
 // misleading!) "TCP" label for all of them.
+/// noteFailure() helper for handling failures attributed to this peer
 void
 CachePeer::countFailure()
 {

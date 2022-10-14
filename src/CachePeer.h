@@ -42,9 +42,6 @@ public:
     template <typename Filler>
     void noteFailure(Filler filler);
 
-    /// updates failure statistics
-    void countFailure();
-
     /// \returns the effective connect timeout for the given peer
     time_t connectTimeout() const;
 
@@ -210,6 +207,9 @@ public:
 
     int front_end_https = 0; ///< 0 - off, 1 - on, 2 - auto
     int connection_auth = 2; ///< 0 - off, 1 - on, 2 - auto
+
+private:
+    void countFailure();
 };
 
 template <typename Filler>

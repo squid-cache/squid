@@ -1333,7 +1333,9 @@ peerProbeConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int
     if (status == Comm::OK) {
         p->noteSuccess();
     } else {
-        p->countFailure();
+        p->noteFailure([&](ACLFilledChecklist &checklist) {
+            checklist.setOutgoingConnection(conn);
+        });
     }
 
     -- p->testing_now;
