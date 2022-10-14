@@ -34,10 +34,10 @@ public:
     CachePeer() = default;
     ~CachePeer();
 
-    /// reacts to a successful peer connection attempt
+    /// reacts to a successful establishment of a TCP connection to this cache_peer
     void noteSuccess();
 
-    /// reacts to a cache_peer-related failure
+    /// reacts to a failure on a TCP connection to this cache_peer
     /// \param filler a function to configure an ACLFilledChecklist if that becomes necessary
     template <typename Filler>
     void noteFailure(Filler filler);
@@ -226,7 +226,8 @@ CachePeer::noteFailure(const Filler filler)
     countFailure();
 }
 
-/// reacts to a Squid-to-origin or a Squid-to-cache_peer connection establishment success
+/// reacts to a successful establishment of a TCP connection to an origin server or cache_peer
+/// \param peer nil if Squid established a connection to an origin server
 inline void
 NoteOutgoingConnectionSuccess(CachePeer * const peer)
 {
@@ -234,7 +235,8 @@ NoteOutgoingConnectionSuccess(CachePeer * const peer)
         peer->noteSuccess();
 }
 
-/// reacts to a Squid-to-origin or a Squid-to-cache_peer connection error
+/// reacts to a failure on a TCP connection to an origin server or cache_peer
+/// \param peer nil if the connection is to an origin server
 /// \param filler a function to configure an ACLFilledChecklist if that becomes necessary
 template <typename Filler>
 void
