@@ -452,9 +452,6 @@ peerClearRR()
     }
 }
 
-/**
- * Perform all actions when a CachePeer is detected revived.
- */
 void
 peerAlive(CachePeer *p)
 {

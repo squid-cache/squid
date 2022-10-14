@@ -49,7 +49,12 @@ CachePeer *getRoundRobinParent(PeerSelector*);
 CachePeer *getWeightedRoundRobinParent(PeerSelector*);
 void peerClearRRStart(void);
 void peerClearRR(void);
+
+// TODO: Move, together with its many dependencies and callers, into CachePeer.
+/// Updates protocol-agnostic CachePeer state after an indication of a
+/// successful contact with the given cache_peer.
 void peerAlive(CachePeer *);
+
 lookup_t peerDigestLookup(CachePeer * p, PeerSelector *);
 CachePeer *neighborsDigestSelect(PeerSelector *);
 void peerNoteDigestLookup(HttpRequest * request, CachePeer * p, lookup_t lookup);
