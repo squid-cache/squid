@@ -7,7 +7,6 @@
  */
 
 #include "squid.h"
-#include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "CachePeer.h"
 #include "defines.h"
