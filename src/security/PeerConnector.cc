@@ -90,10 +90,14 @@ Security::PeerConnector::start()
 void
 Security::PeerConnector::fillChecklist(ACLFilledChecklist &checklist) const
 {
+    checklist.setRequest(request.getRaw());
+
     if (!checklist.al)
         checklist.al = al;
     checklist.syncAle(request.getRaw(), nullptr);
     // checklist.fd(fd); XXX: need client FD here
+
+    checklist.setOutgoingConnection(serverConn);
 
 #if USE_OPENSSL
     if (!checklist.serverCert) {
@@ -111,15 +115,17 @@ Security::PeerConnector::commCloseHandler(const CommCloseCbParams &params)
     debugs(83, 5, "FD " << params.fd << ", Security::PeerConnector=" << params.data);
 
     closeHandler = nullptr;
-    if (serverConn) {
-        countFailingConnection();
-        serverConn->noteClosure();
-        serverConn = nullptr;
-    }
 
     const auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request.getRaw(), al);
     static const auto d = MakeNamedErrorDetail("TLS_CONNECT_CLOSE");
     err->detailError(d);
+
+    if (serverConn) {
+        countFailingConnection(err);
+        serverConn->noteClosure();
+        serverConn = nullptr;
+    }
+
     bail(err);
 }
 
@@ -509,7 +515,7 @@ Security::PeerConnector::bail(ErrorState *error)
     answer().error = error;
 
     if (const auto failingConnection = serverConn) {
-        countFailingConnection();
+        countFailingConnection(error);
         disconnect();
         failingConnection->close();
     }
@@ -527,13 +533,12 @@ Security::PeerConnector::sendSuccess()
 }
 
 void
-Security::PeerConnector::countFailingConnection()
+Security::PeerConnector::countFailingConnection(const ErrorState * const error)
 {
     assert(serverConn);
     NoteOutgoingConnectionFailure(serverConn->getPeer(), [&](ACLFilledChecklist &checklist) {
-        checklist.setRequest(request.getRaw());
-        checklist.setOutgoingConnection(serverConn);
         fillChecklist(checklist);
+        checklist.setError(error);
     });
     // TODO: Calling PconnPool::noteUses() should not be our responsibility.
     if (noteFwdPconnUse && serverConn->isOpen())

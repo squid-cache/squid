@@ -218,6 +218,7 @@ CachePeer::noteFailure(const Filler filler)
 {
     if (const auto acls = Config.accessList.cachePeerFault) {
         ACLFilledChecklist checklist(acls, nullptr, nullptr);
+        checklist.setPeer(this);
         filler(checklist);
         if (!checklist.fastCheck().allowed())
             return; // this failure is not our fault

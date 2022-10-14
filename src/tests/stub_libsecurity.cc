@@ -98,7 +98,7 @@ void PeerConnector::bail(ErrorState *) STUB
 void PeerConnector::sendSuccess() STUB
 void PeerConnector::callBack() STUB
 void PeerConnector::disconnect() STUB
-void PeerConnector::countFailingConnection() STUB
+void PeerConnector::countFailingConnection(const ErrorState *) STUB
 void PeerConnector::recordNegotiationDetails() STUB
 EncryptorAnswer &PeerConnector::answer() STUB_RETREF(EncryptorAnswer)
 }

@@ -13,6 +13,7 @@
 #include "comm/Connection.h"
 #include "comm/forward.h"
 #include "debug/Messages.h"
+#include "errorpage.h"
 #include "ExternalACLEntry.h"
 #include "http/Stream.h"
 #include "HttpReply.h"
@@ -249,12 +250,20 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
 }
 
 void
+ACLFilledChecklist::setPeer(const CachePeer * const peer)
+{
+    // TODO: Replace code that still does this manually with setPeer().
+    if (dst_peer_name.isEmpty() && peer)
+        dst_peer_name = peer->name;
+}
+
+void
 ACLFilledChecklist::setOutgoingConnection(const Comm::ConnectionPointer &outgoingConn)
 {
     if (outgoingConn && outgoingConn->isOpen()) {
         dst_addr = outgoingConn->remote;
         my_addr = outgoingConn->local;
-        dst_peer_name = outgoingConn->getPeer() ? outgoingConn->getPeer()->name : nullptr;
+        setPeer(outgoingConn->getPeer());
     }
 }
 
@@ -275,6 +284,23 @@ void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
         if (const auto cmgr = request->clientConnectionManager.get())
             setConn(cmgr);
     }
+}
+
+void
+ACLFilledChecklist::setReply(const HttpReply::Pointer &response)
+{
+    // TODO: Replace code that still does this manually with setReply().
+    if (!reply) {
+        reply = response.getRaw(); // may be nil
+        HTTPMSGLOCK(reply);
+    }
+}
+
+void
+ACLFilledChecklist::setError(const ErrorState * const error)
+{
+    if (error)
+        setReply(error->response_);
 }
 
 void

@@ -383,10 +383,7 @@ Http::Tunneler::countFailingConnection(const ErrorState * const error)
         checklist.setOutgoingConnection(connection);
         checklist.al = al;
         checklist.syncAle(request.getRaw(), nullptr);
-        if (error) {
-            checklist.reply = error->response_.getRaw();
-            HTTPMSGLOCK(checklist.reply);
-        }
+        checklist.setError(error);
     });
     if (noteFwdPconnUse && connection->isOpen())
         fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);

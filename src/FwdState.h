@@ -31,7 +31,6 @@
 
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
-class ErrorState;
 class HttpRequest;
 class PconnPool;
 class ResolvedPeers;
