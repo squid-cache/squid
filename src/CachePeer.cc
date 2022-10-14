@@ -48,12 +48,15 @@ CachePeer::~CachePeer()
     xfree(domain);
 }
 
-time_t
-CachePeer::connectTimeout() const
+void
+CachePeer::noteSuccess()
 {
-    if (connect_timeout_raw > 0)
-        return connect_timeout_raw;
-    return Config.Timeout.peer_connect;
+    if (!tcp_up) {
+        debugs(15, 2, "TCP connection to " << host << "/" << http_port << " succeeded");
+        tcp_up = connect_fail_limit; // NP: so peerAlive() works properly.
+        peerAlive(this);
+    } else
+        tcp_up = connect_fail_limit;
 }
 
 // TODO: Require callers to detail failures instead of using one (and often
@@ -85,14 +88,11 @@ CachePeer::countFailure()
     }
 }
 
-void
-CachePeer::noteSuccess()
+time_t
+CachePeer::connectTimeout() const
 {
-    if (!tcp_up) {
-        debugs(15, 2, "TCP connection to " << host << "/" << http_port << " succeeded");
-        tcp_up = connect_fail_limit; // NP: so peerAlive() works properly.
-        peerAlive(this);
-    } else
-        tcp_up = connect_fail_limit;
+    if (connect_timeout_raw > 0)
+        return connect_timeout_raw;
+    return Config.Timeout.peer_connect;
 }
 
