@@ -34,19 +34,19 @@ public:
     CachePeer() = default;
     ~CachePeer();
 
-    /// \returns the effective connect timeout for the given peer
-    time_t connectTimeout() const;
+    /// reacts to a successful peer connection attempt
+    void noteSuccess();
 
     /// reacts to a cache_peer-related failure
     /// \param filler a function to configure an ACLFilledChecklist if that becomes necessary
     template <typename Filler>
     void noteFailure(Filler filler);
 
-    /// reacts to a successful peer connection attempt
-    void noteSuccess();
-
     /// updates failure statistics
     void countFailure();
+
+    /// \returns the effective connect timeout for the given peer
+    time_t connectTimeout() const;
 
     u_int index = 0;
     char *name = nullptr;
@@ -226,6 +226,14 @@ CachePeer::noteFailure(const Filler filler)
     countFailure();
 }
 
+/// reacts to a Squid-to-origin or a Squid-to-cache_peer connection establishment success
+inline void
+NoteOutgoingConnectionSuccess(CachePeer * const peer)
+{
+    if (peer)
+        peer->noteSuccess();
+}
+
 /// reacts to a Squid-to-origin or a Squid-to-cache_peer connection error
 /// \param filler a function to configure an ACLFilledChecklist if that becomes necessary
 template <typename Filler>
@@ -234,14 +242,6 @@ NoteOutgoingConnectionFailure(CachePeer * const peer, const Filler filler)
 {
     if (peer)
         peer->noteFailure(filler);
-}
-
-/// reacts to a Squid-to-origin or a Squid-to-cache_peer connection establishment success
-inline void
-NoteOutgoingConnectionSuccess(CachePeer * const peer)
-{
-    if (peer)
-        peer->noteSuccess();
 }
 
 #endif /* SQUID_CACHEPEER_H_ */
