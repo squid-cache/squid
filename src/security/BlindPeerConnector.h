@@ -42,8 +42,8 @@ public:
     /// Return the configured TLS context object
     virtual Security::ContextPointer getTlsContext();
 
-    /// On error calls NoteOutgoingConnectionFailure().
-    /// On success store the used TLS session for later use.
+    /// On success, stores the used TLS session for later use.
+    /// On error, informs the peer.
     virtual void noteNegotiationDone(ErrorState *);
 };
 
