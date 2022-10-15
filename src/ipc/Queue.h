@@ -103,7 +103,7 @@ public:
     static size_t Items2Bytes(const size_t maxItemSize, const size_t size);
 
     size_t maxItemSize() const { return theMaxItemSize; }
-    uint32_t size() const { return theSize; }
+    size_t size() const { return theSize; }
     uint32_t capacity() const { return theCapacity; }
     size_t sharedMemorySize() const { return Items2Bytes(theMaxItemSize, theCapacity); }
 
@@ -135,7 +135,7 @@ private:
     unsigned int theIn = 0; ///< current push() position; reporting aside, used only in push()
     unsigned int theOut = 0; ///< current pop() position; reporting aside, used only in pop()/peek()
 
-    std::atomic<uint32_t> theSize; ///< number of items in the queue
+    std::atomic<size_t> theSize; ///< number of items in the queue
     const size_t theMaxItemSize; ///< maximum item size
     const uint32_t theCapacity; ///< maximum number of items, i.e. theBuffer size
 
