@@ -147,19 +147,25 @@ private:
 class OneToOneUniQueues
 {
 public:
-    OneToOneUniQueues(const int aCapacity, const unsigned int maxItemSize, const int queueCapacity);
+    OneToOneUniQueues(const size_t aCapacity, const size_t maxItemSize, const size_t queueCapacity);
+
+    const OneToOneUniQueue &operator [](const size_t index) const;
+    OneToOneUniQueue &operator [](const size_t index) {
+        return const_cast<OneToOneUniQueue &>((*const_cast<const OneToOneUniQueues *>(this))[index]);
+    }
+
+    static size_t SharedMemorySize(const size_t capacity, const size_t maxItemSize, const size_t queueCapacity);
 
     size_t sharedMemorySize() const;
-    static size_t SharedMemorySize(const int capacity, const unsigned int maxItemSize, const int queueCapacity);
-
-    const OneToOneUniQueue &operator [](const int index) const;
-    inline OneToOneUniQueue &operator [](const int index);
-
 private:
-    inline const OneToOneUniQueue &front() const;
+    const OneToOneUniQueue &front() const {
+        // XXX: use Ipc::Mem::FlexibleArray instead of pointer magic
+        const auto queue = reinterpret_cast<const char *>(this) + sizeof(*this);
+        return *reinterpret_cast<const OneToOneUniQueue *>(queue);
+    }
 
 public:
-    const int theCapacity; /// number of OneToOneUniQueues
+    const size_t theCapacity; /// number of OneToOneUniQueues
 };
 
 /**
@@ -517,22 +523,6 @@ OneToOneUniQueue::statRange(std::ostream &os, const size_t start, const size_t n
         value.stat(os);
         os << " },\n";
     }
-}
-
-// OneToOneUniQueues
-
-inline OneToOneUniQueue &
-OneToOneUniQueues::operator [](const int index)
-{
-    return const_cast<OneToOneUniQueue &>((*const_cast<const OneToOneUniQueues *>(this))[index]);
-}
-
-inline const OneToOneUniQueue &
-OneToOneUniQueues::front() const
-{
-    const char *const queue =
-        reinterpret_cast<const char *>(this) + sizeof(*this);
-    return *reinterpret_cast<const OneToOneUniQueue *>(queue);
 }
 
 // BaseMultiQueue

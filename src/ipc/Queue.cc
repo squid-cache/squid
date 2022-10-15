@@ -96,21 +96,23 @@ Ipc::OneToOneUniQueue::statClose(std::ostream &os) const
 
 /* OneToOneUniQueues */
 
-Ipc::OneToOneUniQueues::OneToOneUniQueues(const int aCapacity, const unsigned int maxItemSize, const int queueCapacity): theCapacity(aCapacity)
+Ipc::OneToOneUniQueues::OneToOneUniQueues(const size_t aCapacity, const size_t maxItemSize, const size_t queueCapacity) :
+    theCapacity(aCapacity)
 {
     Must(theCapacity > 0);
-    for (int i = 0; i < theCapacity; ++i)
+    for (size_t i = 0; i < theCapacity; ++i)
         new (&(*this)[i]) OneToOneUniQueue(maxItemSize, queueCapacity);
 }
 
 size_t
 Ipc::OneToOneUniQueues::sharedMemorySize() const
 {
+    // XXX: wrong when front() queue size != constructor maxItemSize
     return sizeof(*this) + theCapacity * front().sharedMemorySize();
 }
 
 size_t
-Ipc::OneToOneUniQueues::SharedMemorySize(const int capacity, const unsigned int maxItemSize, const int queueCapacity)
+Ipc::OneToOneUniQueues::SharedMemorySize(const size_t capacity, const size_t maxItemSize, const size_t queueCapacity)
 {
     const auto queueSize =
         OneToOneUniQueue::Items2Bytes(maxItemSize, queueCapacity);
@@ -118,12 +120,11 @@ Ipc::OneToOneUniQueues::SharedMemorySize(const int capacity, const unsigned int 
 }
 
 const Ipc::OneToOneUniQueue &
-Ipc::OneToOneUniQueues::operator [](const int index) const
+Ipc::OneToOneUniQueues::operator [](const size_t index) const
 {
-    Must(0 <= index && index < theCapacity);
+    Must(index < theCapacity);
     const size_t queueSize = index ? front().sharedMemorySize() : 0;
-    const char *const queue =
-        reinterpret_cast<const char *>(this) + sizeof(*this) + index * queueSize;
+    const auto queue = reinterpret_cast<const char *>(this) + sizeof(*this) + index * queueSize;
     return *reinterpret_cast<const OneToOneUniQueue *>(queue);
 }
 
@@ -217,7 +218,7 @@ Ipc::FewToFewBiQueue::FewToFewBiQueue(const String &id, const Group aLocalGroup,
     readers(shm_old(QueueReaders)(ReadersId(id).termedBuf())),
     theLocalGroup(aLocalGroup)
 {
-    Must(queues->theCapacity == metadata->theGroupASize * metadata->theGroupBSize * 2);
+    Must(queues->theCapacity == size_t(metadata->theGroupASize) * size_t(metadata->theGroupBSize) * 2);
     Must(readers->theCapacity == size_t(metadata->theGroupASize) + size_t(metadata->theGroupBSize));
 
     debugs(54, 7, "queue " << id << " reader: " << localReader().id);
@@ -356,7 +357,7 @@ Ipc::MultiQueue::MultiQueue(const String &id, const int localProcessId):
     queues(shm_old(OneToOneUniQueues)(QueuesId(id).termedBuf())),
     readers(shm_old(QueueReaders)(ReadersId(id).termedBuf()))
 {
-    Must(queues->theCapacity == metadata->theProcessCount * metadata->theProcessCount);
+    Must(queues->theCapacity == size_t(metadata->theProcessCount) * size_t(metadata->theProcessCount));
     Must(readers->theCapacity == size_t(metadata->theProcessCount));
 
     debugs(54, 7, "queue " << id << " reader: " << localReader().id);
