@@ -104,40 +104,41 @@ public:
 
     size_t maxItemSize() const { return theMaxItemSize; }
     size_t size() const { return theSize; }
-    uint32_t capacity() const { return theCapacity; }
+    size_t capacity() const { return theCapacity; }
     size_t sharedMemorySize() const { return Items2Bytes(theMaxItemSize, theCapacity); }
 
     bool empty() const { return !theSize; }
     bool full() const { return theSize == theCapacity; }
 
     /// returns true iff the value was set; [un]blocks the reader as needed
-    template<class Value> bool pop(Value &value, QueueReader *const reader = nullptr);
+    template<class Value> bool pop(Value &, QueueReader * const = nullptr);
 
     /// returns true iff the caller must notify the reader of the pushed item
-    template<class Value> bool push(const Value &value, QueueReader *const reader = nullptr);
+    template<class Value> bool push(const Value &, QueueReader * const = nullptr);
 
     /// returns true iff the value was set; the value may be stale!
-    template<class Value> bool peek(Value &value) const;
+    template<class Value> bool peek(Value &) const;
 
     /// prints incoming queue state; suitable for cache manager reports
     template<class Value> void statIn(std::ostream &, int localProcessId, int remoteProcessId) const;
+
     /// prints outgoing queue state; suitable for cache manager reports
     template<class Value> void statOut(std::ostream &, int localProcessId, int remoteProcessId) const;
 
 private:
-    void statOpen(std::ostream &, const char *inLabel, const char *outLabel, uint32_t count) const;
+    void statOpen(std::ostream &, const char *inLabel, const char *outLabel, size_t count) const;
     void statClose(std::ostream &) const;
-    template<class Value> void statSamples(std::ostream &, unsigned int start, uint32_t size) const;
-    template<class Value> void statRange(std::ostream &, unsigned int start, uint32_t n) const;
+    template<class Value> void statSamples(std::ostream &, size_t start, size_t size) const;
+    template<class Value> void statRange(std::ostream &, size_t start, size_t n) const;
 
     // optimization: these non-std::atomic data members are in shared memory,
     // but each is used only by one process (aside from obscured reporting)
-    unsigned int theIn = 0; ///< current push() position; reporting aside, used only in push()
-    unsigned int theOut = 0; ///< current pop() position; reporting aside, used only in pop()/peek()
+    size_t theIn = 0; ///< current push() position; reporting aside, used only in push()
+    size_t theOut = 0; ///< current pop() position; reporting aside, used only in pop()/peek()
 
     std::atomic<size_t> theSize; ///< number of items in the queue
     const size_t theMaxItemSize; ///< maximum item size
-    const uint32_t theCapacity; ///< maximum number of items, i.e. theBuffer size
+    const size_t theCapacity; ///< maximum number of items, i.e. theBuffer size
 
     char theBuffer[];
 };
@@ -392,7 +393,7 @@ OneToOneUniQueue::pop(Value &value, QueueReader *const reader)
     if (reader)
         reader->unblock();
 
-    const unsigned int pos = (theOut++ % theCapacity) * theMaxItemSize;
+    const auto pos = (theOut++ % theCapacity) * theMaxItemSize;
     memcpy(&value, theBuffer + pos, sizeof(value));
     --theSize;
 
@@ -466,7 +467,7 @@ OneToOneUniQueue::statOut(std::ostream &os, const int localProcessId, const int 
 /// report a sample of [start, start + size) items
 template <class Value>
 void
-OneToOneUniQueue::statSamples(std::ostream &os, const unsigned int start, const uint32_t count) const
+OneToOneUniQueue::statSamples(std::ostream &os, const size_t start, const size_t count) const
 {
     if (!count) {
         os << " ";
@@ -475,7 +476,7 @@ OneToOneUniQueue::statSamples(std::ostream &os, const unsigned int start, const 
 
     os << ", items: [\n";
     // report a few leading and trailing items, without repetitions
-    const auto sampleSize = std::min(3U, count); // leading (and max) sample
+    const auto sampleSize = std::min(size_t(3), count); // leading (and max) sample
     statRange<Value>(os, start, sampleSize);
     if (sampleSize < count) { // the first sample did not show some items
         // The `start` offset aside, the first sample reported all items
@@ -501,11 +502,11 @@ OneToOneUniQueue::statSamples(std::ostream &os, const unsigned int start, const 
 /// statSamples() helper that reports n items from start
 template <class Value>
 void
-OneToOneUniQueue::statRange(std::ostream &os, const unsigned int start, const uint32_t n) const
+OneToOneUniQueue::statRange(std::ostream &os, const size_t start, const size_t n) const
 {
     assert(sizeof(Value) <= theMaxItemSize);
     auto offset = start;
-    for (uint32_t i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         // XXX: Throughout this C++ header, these overflow wrapping tricks work
         // only because theCapacity currently happens to be a power of 2 (e.g.,
         // the highest offset (0xF...FFF) % 3 is 0 and so is the next offset).

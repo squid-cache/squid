@@ -61,11 +61,12 @@ Ipc::QueueReaders::SharedMemorySize(const size_t capacity)
 // OneToOneUniQueue
 
 Ipc::OneToOneUniQueue::OneToOneUniQueue(const size_t aMaxItemSize, const size_t aCapacity):
-    theSize(0), theMaxItemSize(aMaxItemSize),
+    theSize(0),
+    theMaxItemSize(aMaxItemSize),
     theCapacity(aCapacity)
 {
-    Must(theMaxItemSize > 0);
-    Must(theCapacity > 0);
+    assert(theMaxItemSize > 0);
+    assert(theCapacity > 0);
 }
 
 size_t
@@ -78,7 +79,7 @@ Ipc::OneToOneUniQueue::Items2Bytes(const size_t maxItemSize, const size_t size)
 /// The labels reflect whether the caller owns theIn or theOut data member and,
 /// hence, cannot report the other value reliably.
 void
-Ipc::OneToOneUniQueue::statOpen(std::ostream &os, const char *inLabel, const char *outLabel, const uint32_t count) const
+Ipc::OneToOneUniQueue::statOpen(std::ostream &os, const char *inLabel, const char *outLabel, const size_t count) const
 {
     os << "{ size: " << count <<
        ", capacity: " << theCapacity <<
