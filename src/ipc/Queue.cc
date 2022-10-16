@@ -369,7 +369,7 @@ bool
 Ipc::MultiQueue::validProcessId(const int processId) const
 {
     return metadata->theProcessIdOffset <= processId &&
-           processId < metadata->theProcessIdOffset + metadata->theProcessCount;
+           size_t(processId) < metadata->theProcessIdOffset + metadata->theProcessCount;
 }
 
 const Ipc::OneToOneUniQueue &
@@ -427,8 +427,9 @@ Ipc::MultiQueue::remotesIdOffset() const
     return metadata->theProcessIdOffset;
 }
 
-Ipc::MultiQueue::Metadata::Metadata(const int aProcessCount, const int aProcessIdOffset):
-    theProcessCount(aProcessCount), theProcessIdOffset(aProcessIdOffset)
+Ipc::MultiQueue::Metadata::Metadata(const size_t aProcessCount, const int aProcessIdOffset):
+    theProcessCount(aProcessCount),
+    theProcessIdOffset(aProcessIdOffset)
 {
     Must(theProcessCount > 0);
 }

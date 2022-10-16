@@ -330,11 +330,11 @@ public:
 private:
     /// Shared metadata for MultiQueue
     struct Metadata {
-        Metadata(const int aProcessCount, const int aProcessIdOffset);
+        Metadata(const size_t aProcessCount, const int aProcessIdOffset);
         size_t sharedMemorySize() const { return sizeof(*this); }
-        static size_t SharedMemorySize(const int, const int) { return sizeof(Metadata); }
+        static size_t SharedMemorySize(const size_t, const int) { return sizeof(Metadata); }
 
-        const int theProcessCount;
+        const size_t theProcessCount;
         const int theProcessIdOffset;
     };
 
