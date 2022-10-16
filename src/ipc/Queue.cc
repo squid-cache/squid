@@ -206,7 +206,7 @@ Ipc::BaseMultiQueue::remoteReader(const int remoteProcessId)
 // FewToFewBiQueue
 
 Ipc::FewToFewBiQueue::Owner *
-Ipc::FewToFewBiQueue::Init(const String &id, const int groupASize, const int groupAIdOffset, const int groupBSize, const int groupBIdOffset, const unsigned int maxItemSize, const int capacity)
+Ipc::FewToFewBiQueue::Init(const String &id, const size_t groupASize, const int groupAIdOffset, const size_t groupBSize, const int groupBIdOffset, const size_t maxItemSize, const size_t capacity)
 {
     return new Owner(id, groupASize, groupAIdOffset, groupBSize, groupBIdOffset, maxItemSize, capacity);
 }
@@ -331,7 +331,7 @@ Ipc::FewToFewBiQueue::Metadata::Metadata(const size_t aGroupASize, const int aGr
     Must(theGroupBSize > 0);
 }
 
-Ipc::FewToFewBiQueue::Owner::Owner(const String &id, const int groupASize, const int groupAIdOffset, const int groupBSize, const int groupBIdOffset, const unsigned int maxItemSize, const int capacity):
+Ipc::FewToFewBiQueue::Owner::Owner(const String &id, const size_t groupASize, const int groupAIdOffset, const size_t groupBSize, const int groupBIdOffset, const size_t maxItemSize, const size_t capacity):
     metadataOwner(shm_new(Metadata)(MetadataId(id).termedBuf(), groupASize, groupAIdOffset, groupBSize, groupBIdOffset)),
     queuesOwner(shm_new(OneToOneUniQueues)(QueuesId(id).termedBuf(), groupASize*groupBSize*2, maxItemSize, capacity)),
     readersOwner(shm_new(QueueReaders)(ReadersId(id).termedBuf(), groupASize+groupBSize))

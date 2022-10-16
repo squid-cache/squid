@@ -270,7 +270,7 @@ public:
     class Owner
     {
     public:
-        Owner(const String &id, const int groupASize, const int groupAIdOffset, const int groupBSize, const int groupBIdOffset, const unsigned int maxItemSize, const int capacity);
+        Owner(const String &id, const size_t groupASize, const int groupAIdOffset, const size_t groupBSize, const int groupBIdOffset, const size_t maxItemSize, const size_t capacity);
         ~Owner();
 
     private:
@@ -279,7 +279,7 @@ public:
         Mem::Owner<QueueReaders> *const readersOwner;
     };
 
-    static Owner *Init(const String &id, const int groupASize, const int groupAIdOffset, const int groupBSize, const int groupBIdOffset, const unsigned int maxItemSize, const int capacity);
+    static Owner *Init(const String &id, const size_t groupASize, const int groupAIdOffset, const size_t groupBSize, const int groupBIdOffset, const size_t maxItemSize, const size_t capacity);
 
     enum Group { groupA = 0, groupB = 1 };
     FewToFewBiQueue(const String &id, const Group aLocalGroup, const int aLocalProcessId);
