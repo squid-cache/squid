@@ -256,13 +256,13 @@ public:
 private:
     /// Shared metadata for FewToFewBiQueue
     struct Metadata {
-        Metadata(const int aGroupASize, const int aGroupAIdOffset, const int aGroupBSize, const int aGroupBIdOffset);
+        Metadata(const size_t aGroupASize, const int aGroupAIdOffset, const size_t aGroupBSize, const int aGroupBIdOffset);
         size_t sharedMemorySize() const { return sizeof(*this); }
-        static size_t SharedMemorySize(const int, const int, const int, const int) { return sizeof(Metadata); }
+        static size_t SharedMemorySize(const size_t, const int, const size_t, const int) { return sizeof(Metadata); }
 
-        const int theGroupASize;
+        const size_t theGroupASize;
         const int theGroupAIdOffset;
-        const int theGroupBSize;
+        const size_t theGroupBSize;
         const int theGroupBIdOffset;
     };
 

@@ -236,10 +236,10 @@ Ipc::FewToFewBiQueue::validProcessId(const Group group, const int processId) con
     switch (group) {
     case groupA:
         return metadata->theGroupAIdOffset <= processId &&
-               processId < metadata->theGroupAIdOffset + metadata->theGroupASize;
+               size_t(processId) < metadata->theGroupAIdOffset + metadata->theGroupASize;
     case groupB:
         return metadata->theGroupBIdOffset <= processId &&
-               processId < metadata->theGroupBIdOffset + metadata->theGroupBSize;
+               size_t(processId) < metadata->theGroupBIdOffset + metadata->theGroupBSize;
     }
     return false;
 }
@@ -321,9 +321,11 @@ Ipc::FewToFewBiQueue::remotesIdOffset() const
            metadata->theGroupAIdOffset;
 }
 
-Ipc::FewToFewBiQueue::Metadata::Metadata(const int aGroupASize, const int aGroupAIdOffset, const int aGroupBSize, const int aGroupBIdOffset):
-    theGroupASize(aGroupASize), theGroupAIdOffset(aGroupAIdOffset),
-    theGroupBSize(aGroupBSize), theGroupBIdOffset(aGroupBIdOffset)
+Ipc::FewToFewBiQueue::Metadata::Metadata(const size_t aGroupASize, const int aGroupAIdOffset, const size_t aGroupBSize, const int aGroupBIdOffset):
+    theGroupASize(aGroupASize),
+    theGroupAIdOffset(aGroupAIdOffset),
+    theGroupBSize(aGroupBSize),
+    theGroupBIdOffset(aGroupBIdOffset)
 {
     Must(theGroupASize > 0);
     Must(theGroupBSize > 0);
