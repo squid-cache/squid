@@ -90,18 +90,6 @@ MemPools::setDefaultPoolChunking(bool const &aBool)
     defaultIsChunked = aBool;
 }
 
-char const *
-MemAllocator::objectType() const
-{
-    return label;
-}
-
-int
-MemAllocator::inUseCount()
-{
-    return getInUseCount();
-}
-
 void
 MemImplementingAllocator::flushMeters()
 {
@@ -216,7 +204,6 @@ int
 memPoolGetGlobalStats(MemPoolGlobalStats * stats)
 {
     int pools_inuse = 0;
-    MemAllocator *pool;
     MemPoolIterator *iter;
 
     memset(stats, 0, sizeof(MemPoolGlobalStats));
@@ -226,7 +213,7 @@ memPoolGetGlobalStats(MemPoolGlobalStats * stats)
 
     /* gather all stats for Totals */
     iter = memPoolIterate();
-    while ((pool = memPoolIterateNext(iter))) {
+    while (const auto pool = memPoolIterateNext(iter)) {
         if (pool->getStats(&pp_stats, 1) > 0)
             ++pools_inuse;
     }
@@ -246,19 +233,10 @@ memPoolGetGlobalStats(MemPoolGlobalStats * stats)
     stats->tot_items_inuse = pp_stats.items_inuse;
     stats->tot_items_idle = pp_stats.items_idle;
 
-    stats->tot_overhead += pp_stats.overhead + MemPools::GetInstance().poolCount * sizeof(MemAllocator *);
+    stats->tot_overhead += pp_stats.overhead + MemPools::GetInstance().poolCount * sizeof(Mem::Allocator *);
     stats->mem_idle_limit = MemPools::GetInstance().idleLimit();
 
     return pools_inuse;
-}
-
-MemAllocator::MemAllocator(char const *aLabel) : doZero(true), label(aLabel)
-{
-}
-
-size_t MemAllocator::RoundedSize(size_t s)
-{
-    return ((s + sizeof(void*) - 1) / sizeof(void*)) * sizeof(void*);
 }
 
 int
@@ -269,7 +247,8 @@ memPoolsTotalAllocated(void)
     return stats.TheMeter->alloc.currentLevel();
 }
 
-MemImplementingAllocator::MemImplementingAllocator(char const *aLabel, size_t aSize) : MemAllocator(aLabel),
+MemImplementingAllocator::MemImplementingAllocator(char const *aLabel, size_t aSize) :
+    Mem::Allocator(aLabel),
     next(nullptr),
     alloc_calls(0),
     free_calls(0),

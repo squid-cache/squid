@@ -132,7 +132,7 @@ static OBJH cbdataDumpHistory;
 #endif
 
 struct CBDataIndex {
-    MemAllocator *pool;
+    Mem::Allocator *pool;
 }
 *cbdata_index = nullptr;
 
@@ -476,9 +476,7 @@ cbdataDump(StoreEntry * sentry)
     storeAppendPrintf(sentry, "types\tsize\tallocated\ttotal\n");
 
     for (int i = 1; i < cbdata_types; ++i) {
-        MemAllocator *pool = cbdata_index[i].pool;
-
-        if (pool) {
+        if (auto *pool = cbdata_index[i].pool) {
 #if WITH_VALGRIND
             int obj_size = pool->objectSize();
 #else

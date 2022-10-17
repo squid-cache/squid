@@ -26,7 +26,7 @@ Mem::AllocatorProxy::freeOne(void *address)
      */
 }
 
-MemAllocator *
+Mem::Allocator *
 Mem::AllocatorProxy::getAllocator() const
 {
     if (!theAllocator) {
