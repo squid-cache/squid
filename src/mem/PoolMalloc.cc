@@ -11,6 +11,7 @@
  */
 
 #include "squid.h"
+#include "mem/Pool.h"
 #include "mem/PoolMalloc.h"
 
 #include <cassert>
@@ -88,7 +89,8 @@ MemPoolMalloc::getInUseCount()
     return meter.inuse.currentLevel();
 }
 
-MemPoolMalloc::MemPoolMalloc(char const *aLabel, size_t aSize) : MemImplementingAllocator(aLabel, aSize)
+MemPoolMalloc::MemPoolMalloc(char const *aLabel, size_t aSize) :
+    Mem::AllocatorMetrics(aLabel, aSize)
 {
 }
 

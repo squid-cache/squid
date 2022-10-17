@@ -11,14 +11,27 @@
 #define STUB_API "mem/libmem.la"
 #include "tests/STUB.h"
 
-#include "mem/AllocatorProxy.h"
-#include "mem/forward.h"
+#include "mem/AllocatorBase.h"
+size_t Mem::AllocatorBase::RoundedSize(size_t minSize) STUB_RETVAL(minSize)
 
+#include "mem/AllocatorMetrics.h"
+namespace Mem
+{
+void PoolMeter::flush() STUB
+//AllocatorMetrics::AllocatorMetrics(char const *, size_t) STUB_NOP
+//AllocatorMetrics::~AllocatorMetrics();
+void AllocatorMetrics::flushMetersFull() STUB
+void AllocatorMetrics::flushMeters() STUB
+void *AllocatorMetrics::alloc() STUB_RETVAL(nullptr)
+void AllocatorMetrics::freeOne(void *) STUB
+}
+
+#include "mem/AllocatorProxy.h"
 void *Mem::AllocatorProxy::alloc() {return xmalloc(64*1024);}
 void Mem::AllocatorProxy::freeOne(void *address) {xfree(address);}
 int Mem::AllocatorProxy::inUseCount() const {return 0;}
-//static MemPoolMeter tmpMemPoolMeter;
-//MemPoolMeter const &Mem::AllocatorProxy::getMeter() const STUB_RETVAL(tmpMemPoolMeter)
+//static Mem::PoolMeter tmpMemPoolMeter;
+//Mem::PoolMeter const &Mem::AllocatorProxy::getMeter() const STUB_RETVAL(tmpMemPoolMeter)
 int Mem::AllocatorProxy::getStats(MemPoolStats *) STUB_RETVAL(0)
 
 #include "mem/forward.h"
@@ -27,7 +40,7 @@ void Mem::Report() STUB_NOP
 void Mem::Stats(StoreEntry *) STUB_NOP
 void Mem::CleanIdlePools(void *) STUB_NOP
 void Mem::Report(std::ostream &) STUB_NOP
-void Mem::PoolReport(const MemPoolStats *, const MemPoolMeter *, std::ostream &) STUB_NOP
+void Mem::PoolReport(const MemPoolStats *, const PoolMeter *, std::ostream &) STUB_NOP
 //const size_t squidSystemPageSize = 4096;
 void memClean(void) STUB
 void memInitModule(void) STUB
@@ -78,40 +91,16 @@ void memDataInit(mem_type, const char *, size_t, int, bool) STUB_NOP
 void memCheckInit(void) STUB_NOP
 
 #include "mem/Pool.h"
-MemPoolMeter::MemPoolMeter() STUB_NOP
-void MemPoolMeter::flush() STUB
-static MemPools tmpMemPools;
-MemPools &MemPools::GetInstance() {return tmpMemPools;}
-MemPools::MemPools() :
-    pools(nullptr),
-    mem_idle_limit(0),
-    poolCount(0),
-    defaultIsChunked(false)
-{}
-void MemPools::flushMeters() STUB
-MemImplementingAllocator * MemPools::create(const char *, size_t) STUB_RETVAL(nullptr);
-void MemPools::setIdleLimit(ssize_t) STUB
-ssize_t MemPools::idleLimit() const STUB_RETVAL(0)
-void MemPools::clean(time_t) STUB
-void MemPools::setDefaultPoolChunking(bool const &) STUB
-
-//MemAllocator::MemAllocator(char const *aLabel);
-char const *MemAllocator::objectType() const STUB_RETVAL(nullptr)
-int MemAllocator::inUseCount() STUB_RETVAL(0)
-size_t MemAllocator::RoundedSize(size_t minSize) STUB_RETVAL(minSize)
-
-//MemImplementingAllocator::MemImplementingAllocator(char const *, size_t) STUB_NOP
-//MemImplementingAllocator::~MemImplementingAllocator();
-MemPoolMeter const &MemImplementingAllocator::getMeter() const STUB_RETSTATREF(MemPoolMeter)
-MemPoolMeter &MemImplementingAllocator::getMeter() STUB_RETSTATREF(MemPoolMeter)
-void MemImplementingAllocator::flushMetersFull() STUB
-void MemImplementingAllocator::flushMeters() STUB
-void *MemImplementingAllocator::alloc() STUB_RETVAL(nullptr)
-void MemImplementingAllocator::freeOne(void *) STUB
-
-MemPoolIterator * memPoolIterate(void) STUB_RETVAL(nullptr)
-MemImplementingAllocator * memPoolIterateNext(MemPoolIterator *) STUB_RETVAL(nullptr)
-void memPoolIterateDone(MemPoolIterator **) STUB
 int memPoolGetGlobalStats(MemPoolGlobalStats *) STUB_RETVAL(0)
 int memPoolsTotalAllocated(void) STUB_RETVAL(0)
 
+#include "mem/PoolsManager.h"
+namespace Mem
+{
+PoolsManager::PoolsManager() STUB_NOP
+static PoolsManager tmpMemPools;
+PoolsManager &PoolsManager::GetInstance() {return tmpMemPools;}
+AllocatorMetrics * PoolsManager::create(const char *, size_t) STUB_RETVAL(nullptr);
+void PoolsManager::clean(time_t) STUB
+void PoolsManager::flushMeters() STUB
+}

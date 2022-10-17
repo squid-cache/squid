@@ -59,7 +59,9 @@
 /** StoreEntry uses explicit new/delete operators, which set pool chunk size to 2MB
  * XXX: convert to MEMPROXY_CLASS() API
  */
+#include "mem/AllocatorMetrics.h"
 #include "mem/Pool.h"
+#include "mem/PoolsManager.h"
 
 #include <climits>
 #include <stack>
@@ -117,7 +119,7 @@ static EVH storeLateRelease;
  * local variables
  */
 static std::stack<StoreEntry*> LateReleaseStack;
-MemAllocator *StoreEntry::pool = nullptr;
+Mem::AllocatorBase *StoreEntry::pool = nullptr;
 
 void
 Store::Stats(StoreEntry * output)

@@ -28,12 +28,12 @@
  *     might be the way to go.
  */
 
-#include "mem/Pool.h"
+#include "mem/AllocatorMetrics.h"
 
 #include <stack>
 
 /// \ingroup MemPoolsAPI
-class MemPoolMalloc : public MemImplementingAllocator
+class MemPoolMalloc : public Mem::AllocatorMetrics
 {
 public:
     MemPoolMalloc(char const *label, size_t aSize);

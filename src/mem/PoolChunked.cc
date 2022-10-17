@@ -11,6 +11,7 @@
  */
 
 #include "squid.h"
+#include "mem/Pool.h"
 #include "mem/PoolChunked.h"
 
 #include <cassert>
@@ -135,7 +136,7 @@ MemChunk::MemChunk(MemPoolChunked *aPool)
 }
 
 MemPoolChunked::MemPoolChunked(const char *aLabel, size_t aSize) :
-    MemImplementingAllocator(aLabel, aSize), chunk_size(0),
+    Mem::AllocatorMetrics(aLabel, aSize), chunk_size(0),
     chunk_capacity(0), chunkCount(0), freeCache(nullptr), nextFreeChunk(nullptr),
     Chunks(nullptr), allChunks(Splay<MemChunk *>())
 {

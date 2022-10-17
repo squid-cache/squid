@@ -319,7 +319,7 @@ private:
     /// flags [truncated or too big] entry with ENTRY_BAD_LENGTH and releases it
     void lengthWentBad(const char *reason);
 
-    static MemAllocator *pool;
+    static Mem::AllocatorBase *pool;
 
     unsigned short lock_count;      /* Assume < 65536! */
 

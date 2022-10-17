@@ -8,7 +8,9 @@
 
 #include "squid.h"
 #include "mem/forward.h"
+#include "mem/AllocatorMetrics.h"
 #include "mem/Pool.h"
+#include "mem/PoolsManager.h"
 #include "tests/testMem.h"
 #include "unitTestMain.h"
 
@@ -31,10 +33,12 @@ public:
     int aValue = 0;
 };
 
+// TODO: test each AllocatorFoo, not just the old C-style API
+
 void
 testMem::testMemPool()
 {
-    MemAllocator *Pool = memPoolCreate("Test Pool", sizeof(SomethingToAlloc));
+    auto *Pool = memPoolCreate("Test Pool", sizeof(SomethingToAlloc));
     CPPUNIT_ASSERT(Pool);
 
     auto *something = static_cast<SomethingToAlloc *>(Pool->alloc());

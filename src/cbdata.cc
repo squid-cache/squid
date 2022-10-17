@@ -11,7 +11,9 @@
 #include "squid.h"
 #include "cbdata.h"
 #include "Generic.h"
+#include "mem/AllocatorMetrics.h"
 #include "mem/Pool.h"
+#include "mem/PoolsManager.h"
 #include "mgr/Registration.h"
 #include "Store.h"
 
@@ -132,7 +134,7 @@ static OBJH cbdataDumpHistory;
 #endif
 
 struct CBDataIndex {
-    MemAllocator *pool;
+    Mem::AllocatorBase *pool;
 }
 *cbdata_index = nullptr;
 
@@ -476,7 +478,7 @@ cbdataDump(StoreEntry * sentry)
     storeAppendPrintf(sentry, "types\tsize\tallocated\ttotal\n");
 
     for (int i = 1; i < cbdata_types; ++i) {
-        MemAllocator *pool = cbdata_index[i].pool;
+        Mem::AllocatorBase *pool = cbdata_index[i].pool;
 
         if (pool) {
 #if WITH_VALGRIND

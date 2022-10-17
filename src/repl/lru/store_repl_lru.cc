@@ -15,7 +15,9 @@
 /* because LruNode use explicit memory alloc()/freeOne() calls.
  * XXX: convert to MEMPROXY_CLASS() API
  */
+#include "mem/AllocatorMetrics.h"
 #include "mem/Pool.h"
+#include "mem/PoolsManager.h"
 
 REMOVALPOLICYCREATE createRemovalPolicy_lru;
 
@@ -74,7 +76,7 @@ struct _LruNode {
     dlink_node node;
 };
 
-static MemAllocator *lru_node_pool = nullptr;
+static Mem::AllocatorBase *lru_node_pool = nullptr;
 static int nr_lru_policies = 0;
 
 static void

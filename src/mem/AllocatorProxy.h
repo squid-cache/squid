@@ -9,9 +9,13 @@
 #ifndef _SQUID_SRC_MEM_ALLOCATORPROXY_H
 #define _SQUID_SRC_MEM_ALLOCATORPROXY_H
 
+// XXX: remove AllocatorProxy.h include from mem/forward.h
+namespace Mem {
+class AllocatorBase;
+class PoolMeter;
+}
 class MemAllocator;
 class MemPoolStats;
-class MemPoolMeter;
 
 /**
  * \hideinitializer
@@ -68,7 +72,7 @@ public:
     size_t objectSize() const {return size;}
     char const * objectType() const {return label;}
 
-    MemPoolMeter const &getMeter() const;
+    Mem::PoolMeter const &getMeter() const;
 
     /**
      * \param stats Object to be filled with statistical data about pool.
@@ -79,11 +83,11 @@ public:
     void zeroBlocks(bool doIt);
 
 private:
-    MemAllocator *getAllocator() const;
+    AllocatorBase *getAllocator() const;
 
     const char *label;
     size_t size;
-    mutable MemAllocator *theAllocator;
+    mutable AllocatorBase *theAllocator;
     bool doZero;
 };
 

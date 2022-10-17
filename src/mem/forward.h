@@ -17,19 +17,24 @@
 
 class StoreEntry;
 class MemPoolStats;
-class MemPoolMeter;
 
 /// Memory Management
 namespace Mem
 {
+class AllocatorBase;
+class AllocatorMetrics;
+class PoolMeter;
+
 void Init();
 void Report();
 void Stats(StoreEntry *);
 void CleanIdlePools(void *unused);
 void Report(std::ostream &);
-void PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::ostream &);
+void PoolReport(const MemPoolStats *, const Mem::PoolMeter *, std::ostream &);
 };
 
+extern Mem::PoolMeter TheMeter;
+extern int Pool_id_counter;
 extern const size_t squidSystemPageSize;
 
 /// \deprecated use MEMPROXY_CLASS instead.
