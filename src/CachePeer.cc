@@ -55,8 +55,9 @@ CachePeer::noteSuccess()
         debugs(15, 2, "TCP connection to " << host << "/" << http_port << " succeeded");
         tcp_up = connect_fail_limit; // NP: so peerAlive() works properly.
         peerAlive(this);
-    } else
+    } else {
         tcp_up = connect_fail_limit;
+    }
 }
 
 // TODO: Require callers to detail failures instead of using one (and often

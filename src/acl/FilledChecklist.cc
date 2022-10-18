@@ -268,9 +268,8 @@ ACLFilledChecklist::setOutgoingConnection(const Comm::ConnectionPointer &outgoin
 
     // TODO: ACLIP::match(ip) does not check whether ip has been set. Should it?
     static const Ip::Address Empty; // constructed with setEmpty()
-
     if (dst_addr == Empty)
-        dst_addr = outgoingConn->remote;
+        dst_addr = outgoingConn->remote; // may be empty
 
     // no ACLs check outgoingConn->local
 }

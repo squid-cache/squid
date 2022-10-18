@@ -630,7 +630,7 @@ HappyConnOpener::handleConnOpenerAnswer(Attempt &attempt, const CommConnectCbPar
     }
 
     debugs(17, 8, what << " failed: " << params.conn);
-    // TODO: Use auto as the lambda parameter type after upgrading to C++14
+    // TODO: Use auto as the lambda parameter type (in all callers) after upgrading to C++14
     NoteOutgoingConnectionFailure(params.conn->getPeer(), [&](ACLFilledChecklist &checklist) {
         checklist.setRequest(cause.getRaw());
         checklist.setOutgoingConnection(params.conn);
