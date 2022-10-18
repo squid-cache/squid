@@ -8,7 +8,6 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
-#include "acl/FilledChecklist.h"
 #include "base/AsyncCallbacks.h"
 #include "base/RunnersRegistry.h"
 #include "CachePeer.h"

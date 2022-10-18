@@ -7,7 +7,6 @@
  */
 
 #include "squid.h"
-#include "acl/FilledChecklist.h"
 #include "base/Raw.h"
 #include "CachePeer.h"
 #include "clients/HttpTunneler.h"
