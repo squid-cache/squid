@@ -22,6 +22,8 @@ EXTRA_PROGRAMS = mem_node_test splay tcp-banger2
 
 EXTRA_DIST = \
 	$(srcdir)/squidconf/* \
+	test-functionality.sh \
+	test-sources.sh \
 	test-squid-conf.sh \
 	testheaders.sh
 
