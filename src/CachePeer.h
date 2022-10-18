@@ -9,8 +9,8 @@
 #ifndef SQUID_CACHEPEER_H_
 #define SQUID_CACHEPEER_H_
 
-#include "acl/forward.h"
 #include "acl/FilledChecklist.h"
+#include "acl/forward.h"
 #include "base/CbcPointer.h"
 #include "enums.h"
 #include "icp_opcode.h"
