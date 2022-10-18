@@ -3537,8 +3537,7 @@ clientAclChecklistFill(ACLFilledChecklist &checklist, ClientHttpRequest *http)
 {
     assert(http);
 
-    if (!checklist.request && http->request)
-        checklist.setRequest(http->request);
+    checklist.setRequest(http->request);
 
     if (!checklist.al && http->al) {
         checklist.al = http->al;

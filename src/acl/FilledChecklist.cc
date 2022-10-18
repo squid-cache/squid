@@ -276,7 +276,9 @@ ACLFilledChecklist::setOutgoingConnection(const Comm::ConnectionPointer &outgoin
 
 void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
 {
-    assert(!request);
+    if (request)
+        return;
+
     if (httpRequest) {
         request = httpRequest;
         HTTPMSGLOCK(request);
