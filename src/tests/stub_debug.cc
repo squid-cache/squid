@@ -49,7 +49,7 @@ Debug::LogMessage(const Context &context)
         return;
 
     fprintf(stderr, "%s| %s\n",
-            "stub time", // debugLogTime(squid_curtime),
+            "stub time", // debugLogTime(current_time),
             context.buf.str().c_str());
 }
 
