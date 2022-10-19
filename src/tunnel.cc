@@ -404,8 +404,6 @@ TunnelStateData::checkRetry()
         return "not retriable";
     if (noConnections())
         return "no connections";
-    if (destinations->empty() && !PeerSelectionInitiator::subscribed)
-        return "no alternative forwarding paths left";
     if (!Http::IsReforwardableStatus(Http::StatusCode(al->http.code)))
         return "status code is not reforwardable";
     // TODO: check pinned connections; see FwdState::pinnedCanRetry()
@@ -419,14 +417,15 @@ TunnelStateData::retryOrBail(const char *context)
 
     const auto *bailDescription = checkRetry();
     if (!bailDescription) {
-        if (destinations->empty()) {
-            Assure(PeerSelectionInitiator::subscribed);
+        if (!destinations->empty())
+            return startConnecting(); // try connecting to another destination
+
+        if (subscribed) {
             debugs(26, 4, "wait for more destinations to try");
-            // expect a noteDestination*() call
-        } else {
-            startConnecting(); // try connecting to another destination
+            return; // expect a noteDestination*() call
         }
-        return;
+
+        // fall through to bail
     }
 
     /* bail */
