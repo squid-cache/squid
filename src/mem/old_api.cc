@@ -714,13 +714,10 @@ Mem::Report(std::ostream &stream)
 
     /* main table */
     for (auto *pool : PoolsManager::GetInstance().pools) {
+        memset(&mp_stats, 0, sizeof(mp_stats));
         pool->getStats(&mp_stats);
 
-        if (!mp_stats.pool) /* pool destroyed */
-            continue;
-
         if (mp_stats.pool->getMeter().gb_allocated.count > 0) {
-            /* this pool has been used */
             sortme[npools] = mp_stats;
             ++npools;
         } else {

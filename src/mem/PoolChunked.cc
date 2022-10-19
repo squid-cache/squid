@@ -424,14 +424,11 @@ MemPoolChunked::idleTrigger(int shift) const
  * Update MemPoolStats struct for single pool
  */
 int
-MemPoolChunked::getStats(MemPoolStats * stats, int accumulate)
+MemPoolChunked::getStats(MemPoolStats * stats)
 {
     MemChunk *chunk;
     int chunks_free = 0;
     int chunks_partial = 0;
-
-    if (!accumulate)    /* need skip memset for GlobalStats accumulation */
-        memset(stats, 0, sizeof(MemPoolStats));
 
     clean((time_t) 555555); /* don't want to get chunks released before reporting */
 

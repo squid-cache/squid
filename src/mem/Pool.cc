@@ -41,7 +41,7 @@ memPoolGetGlobalStats(MemPoolGlobalStats * stats)
     /* gather all stats for Totals */
     int pools_inuse = 0;
     for (auto *pool : Mem::PoolsManager::GetInstance().pools) {
-        if (pool->getStats(&pp_stats, 1) > 0)
+        if (pool->getStats(&pp_stats) > 0)
             ++pools_inuse;
     }
 

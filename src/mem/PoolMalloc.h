@@ -38,19 +38,18 @@ class MemPoolMalloc : public Mem::AllocatorMetrics
 public:
     MemPoolMalloc(char const *label, size_t aSize);
     ~MemPoolMalloc();
-    virtual bool idleTrigger(int shift) const;
-    virtual void clean(time_t maxage);
 
-    /**
-     \param stats   Object to be filled with statistical data about pool.
-     \retval        Number of objects in use, ie. allocated.
-     */
-    virtual int getStats(MemPoolStats * stats, int accumulate);
+    /* Mem::AllocatorBase API */
+    virtual int getStats(MemPoolStats *) override;
+    virtual int getInUseCount() override;
 
-    virtual int getInUseCount();
+    /* Mem::AllocatorMetrics API */
+    virtual bool idleTrigger(int) const override;
+    virtual void clean(time_t) override;
 protected:
-    virtual void *allocate();
-    virtual void deallocate(void *, bool aggressive);
+    virtual void *allocate() override;
+    virtual void deallocate(void *, bool) override;
+
 private:
     std::stack<void *> freelist;
 };
