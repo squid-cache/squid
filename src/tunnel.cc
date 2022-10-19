@@ -1044,7 +1044,7 @@ TunnelStateData::noteConnection(HappyConnOpener::Answer &answer)
 {
     transportWait.finish();
 
-    Must(n_tries <= answer.n_tries); // n_tries cannot decrease
+    Assure(n_tries <= answer.n_tries); // n_tries cannot decrease
     n_tries = answer.n_tries;
 
     ErrorState *error = nullptr;
