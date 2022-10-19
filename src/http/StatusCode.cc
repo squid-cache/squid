@@ -278,22 +278,18 @@ Http::StatusCodeString(const Http::StatusCode status)
 }
 
 bool
-Http::IsReforwardableStatus(const Http::StatusCode s)
+Http::IsReforwardableStatus(const StatusCode s)
 {
     switch (s) {
 
-    case Http::scBadGateway:
-
-    case Http::scGatewayTimeout:
+    case scBadGateway:
+    case scGatewayTimeout:
         return true;
 
-    case Http::scForbidden:
-
-    case Http::scInternalServerError:
-
-    case Http::scNotImplemented:
-
-    case Http::scServiceUnavailable:
+    case scForbidden:
+    case scInternalServerError:
+    case scNotImplemented:
+    case scServiceUnavailable:
         return Config.retry.onerror;
 
     default:
@@ -302,3 +298,4 @@ Http::IsReforwardableStatus(const Http::StatusCode s)
 
     /* NOTREACHED */
 }
+
