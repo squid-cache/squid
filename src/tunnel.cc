@@ -188,14 +188,15 @@ public:
     SBuf preReadServerData;
     time_t startTime; ///< object creation time, before any peer selection/connection attempts
     ResolvedPeersPointer destinations; ///< paths for forwarding the request
-    int n_tries; ///< the number of forwarding attempts so far
     bool destinationsFound; ///< At least one candidate path found
-
-    /// a reason to ban reforwarding attempts (or nil)
-    const char *banRetries;
 
     /// whether the decision to tunnel to a particular destination was final
     bool committedToServer;
+
+    int n_tries; ///< the number of forwarding attempts so far
+
+    /// a reason to ban reforwarding attempts (or nil)
+    const char *banRetries;
 
     // TODO: remove after fixing deferred reads in TunnelStateData::copyRead()
     CodeContext::Pointer codeContext; ///< our creator context
@@ -349,8 +350,9 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     startTime(squid_curtime),
     destinations(new ResolvedPeers()),
     destinationsFound(false),
-    banRetries(nullptr),
     committedToServer(false),
+    n_tries(0),
+    banRetries(nullptr),
     codeContext(CodeContext::Current())
 {
     debugs(26, 3, "TunnelStateData constructed this=" << this);
