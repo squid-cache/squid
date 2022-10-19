@@ -407,9 +407,9 @@ TunnelStateData::checkRetry()
     if (noConnections())
         return "no connections";
 
-    // TODO: Use Optional for http.code to avoid treating zero code specially.
-    if (al->http.code && !Http::IsReforwardableStatus(Http::StatusCode(al->http.code)))
-        return "status code is not reforwardable";
+    // TODO: Use Optional for peer_reply_status to avoid treating zero value specially.
+    if (request->hier.peer_reply_status != Http::scNone && !Http::IsReforwardableStatus(request->hier.peer_reply_status))
+        return "received HTTP status code is not reforwardable";
 
     // TODO: check pinned connections; see FwdState::pinnedCanRetry()
     return nullptr;
@@ -966,6 +966,9 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 
     al->cache.code.update(LOG_TCP_TUNNEL);
 
+    // XXX: al->hier.peer_reply_status (i.e. *status_ptr) should not be (re)set
+    // until we actually start responding to the client. Right here/now, we only
+    // know how this cache_peer has responded to us.
     if (answer.peerResponseStatus != Http::scNone)
         *status_ptr = answer.peerResponseStatus;
 
@@ -1385,9 +1388,11 @@ TunnelStateData::startConnecting()
 
     assert(!destinations->empty());
     assert(!transporting());
+
     delete savedError; // may still be nil
     savedError = nullptr;
-    al->http.code = Http::scNone;
+    request->hier.peer_reply_status = Http::scNone; // TODO: Move to startPeerClock()?
+
     const auto callback = asyncCallback(17, 5, TunnelStateData::noteConnection, this);
     const auto cs = new HappyConnOpener(destinations, callback, request, startTime, n_tries, al);
     cs->setHost(request->url.host());
