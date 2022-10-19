@@ -406,8 +406,11 @@ TunnelStateData::checkRetry()
         return banRetries;
     if (noConnections())
         return "no connections";
-    if (!Http::IsReforwardableStatus(Http::StatusCode(al->http.code)))
+
+    // TODO: Use Optional for http.code to avoid treating zero code specially.
+    if (al->http.code && !Http::IsReforwardableStatus(Http::StatusCode(al->http.code)))
         return "status code is not reforwardable";
+
     // TODO: check pinned connections; see FwdState::pinnedCanRetry()
     return nullptr;
 }
