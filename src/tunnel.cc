@@ -1407,6 +1407,8 @@ TunnelStateData::usePinned()
         const auto serverConn = ConnStateData::BorrowPinnedConnection(request.getRaw(), al);
         debugs(26, 7, "pinned peer connection: " << serverConn);
 
+        ++n_tries;
+
         // Set HttpRequest pinned related flags for consistency even if
         // they are not really used by tunnel.cc code.
         request->flags.pinned = true;
@@ -1423,7 +1425,7 @@ TunnelStateData::usePinned()
         sendError(error, "pinned path failure");
         return;
     }
-    ++n_tries;
+
 }
 
 CBDATA_CLASS_INIT(TunnelStateData);
