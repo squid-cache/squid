@@ -263,7 +263,6 @@ private:
 
     void cancelStep(const char *reason);
 
-    /// whether we have used up all permitted forwarding attempts
     bool exhaustedTries() const;
 
 public:
@@ -409,7 +408,7 @@ TunnelStateData::checkRetry()
         return "no alternative forwarding paths left";
     if (!Http::IsReforwardableStatus(Http::StatusCode(al->http.code)))
         return "status code is not reforwardable";
-    // TODO: check whether a pinned connection can be retried
+    // TODO: check pinned connections; see FwdState::pinnedCanRetry()
     return nullptr;
 }
 
@@ -1107,6 +1106,7 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
     }
 }
 
+/// whether we have used up all permitted forwarding attempts
 bool
 TunnelStateData::exhaustedTries() const
 {
@@ -1380,7 +1380,7 @@ TunnelStateData::startConnecting()
 
     assert(!destinations->empty());
     assert(!transporting());
-    delete savedError; // may be nil
+    delete savedError; // may still be nil
     savedError = nullptr;
     al->http.code = Http::scNone;
     const auto callback = asyncCallback(17, 5, TunnelStateData::noteConnection, this);
