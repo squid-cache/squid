@@ -190,9 +190,9 @@ public:
     ResolvedPeersPointer destinations; ///< paths for forwarding the request
     int n_tries; ///< the number of forwarding attempts so far
     bool destinationsFound; ///< At least one candidate path found
-    /// whether another destination may be still attempted if the TCP connection
-    /// was unexpectedly closed
-    bool retriable;
+
+    /// a reason to ban reforwarding attempts (or nil)
+    const char *banRetries;
 
     /// whether the decision to tunnel to a particular destination was final
     bool committedToServer;
@@ -349,7 +349,7 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     startTime(squid_curtime),
     destinations(new ResolvedPeers()),
     destinationsFound(false),
-    retriable(true),
+    banRetries(nullptr),
     committedToServer(false),
     codeContext(CodeContext::Current())
 {
@@ -400,8 +400,8 @@ TunnelStateData::checkRetry()
         return "exhausted tries";
     if (!FwdState::EnoughTimeToReForward(startTime))
         return "forwarding timeout";
-    if (!retriable)
-        return "not retriable";
+    if (banRetries)
+        return banRetries;
     if (noConnections())
         return "no connections";
     if (!Http::IsReforwardableStatus(Http::StatusCode(al->http.code)))
@@ -1018,7 +1018,7 @@ void
 TunnelStateData::commitToServer(const Comm::ConnectionPointer &conn)
 {
     committedToServer = true;
-    retriable = false; // may already be false
+    banRetries = "committed to server";
     PeerSelectionInitiator::subscribed = false; // may already be false
     server.initConnection(conn, tunnelServerClosed, "tunnelServerClosed", this);
 }
@@ -1049,6 +1049,7 @@ TunnelStateData::noteConnection(HappyConnOpener::Answer &answer)
 
     ErrorState *error = nullptr;
     if ((error = answer.error.get())) {
+        banRetries = "HappyConnOpener gave up";
         Must(!Comm::IsConnOpen(answer.conn));
         syncHierNote(answer.conn, request->url.host());
         answer.error.clear();
