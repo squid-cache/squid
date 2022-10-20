@@ -966,7 +966,7 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 
     al->cache.code.update(LOG_TCP_TUNNEL);
 
-    // XXX: al->hier.peer_reply_status (i.e. *status_ptr) should not be (re)set
+    // XXX: al->http.code (i.e. *status_ptr) should not be (re)set
     // until we actually start responding to the client. Right here/now, we only
     // know how this cache_peer has responded to us.
     if (answer.peerResponseStatus != Http::scNone)
