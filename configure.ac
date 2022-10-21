@@ -55,9 +55,7 @@ AM_PROG_CC_C_O
 AC_PROG_CXX
 
 # AC_USE_SYSTEM_EXTENSIONS should be called before any macros that run the C compiler.
-AS_IF([test "x$squid_host_os" = "solaris" -a "x$GCC" = "xyes"],[
-  AC_USE_SYSTEM_EXTENSIONS
-])
+AC_USE_SYSTEM_EXTENSIONS
 
 AC_LANG([C++])
 
