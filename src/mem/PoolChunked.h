@@ -6,31 +6,46 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _MEM_POOL_CHUNKED_H_
-#define _MEM_POOL_CHUNKED_H_
+#ifndef SQUID__SRC_MEM_POOLCHUNKED_H
+#define SQUID__SRC_MEM_POOLCHUNKED_H
 
 #include "mem/AllocatorMetrics.h"
 #include "splay.h"
 
-#define MEM_CHUNK_SIZE        4 * 4096  /* 16KB ... 4 * VM_PAGE_SZ */
-#define MEM_CHUNK_MAX_SIZE  256 * 1024  /* 2MB */
+namespace Mem
+{
 
-class MemChunk;
-
-/// \ingroup MemPoolsAPI
-class MemPoolChunked : public Mem::AllocatorMetrics
+/// details about one chunk of memory
+class Chunk
 {
 public:
-    friend class MemChunk;
-    MemPoolChunked(const char *label, size_t obj_size);
-    ~MemPoolChunked();
+    static const size_t MinSize = 4 * 4096; ///< 16KB ... 4 * VM_PAGE_SZ
+    static const size_t MaxSize = 256 * 1024; ///< 256KB
+
+    Chunk(PoolChunked *);
+    ~Chunk();
+
+    void *freeList = nullptr;
+    void *objCache = nullptr;
+    int inuse_count = 0;
+    Chunk *nextFreeChunk = nullptr;
+    Chunk *next = nullptr;
+    time_t lastref = 0;
+    PoolChunked *pool = nullptr;
+};
+
+class PoolChunked : public AllocatorMetrics
+{
+public:
+    friend class Chunk;
+    PoolChunked(const char *label, size_t obj_size);
+    ~PoolChunked();
 
     void convertFreeCacheToChunkFreeCache();
-    virtual void clean(time_t maxage);
 
     void createChunk();
     void *get();
-    void push(void *obj);
+    void push(void *);
 
     /* Mem::AllocatorBase API */
     virtual int getStats(MemPoolStats *);
@@ -39,34 +54,21 @@ public:
 
     /* MemImplementingAllocator API */
     virtual bool idleTrigger(int) const;
+    virtual void clean(time_t);
 protected:
     virtual void *allocate();
     virtual void deallocate(void *, bool);
 
 public:
-    size_t chunk_size;
-    int chunk_capacity;
-    int chunkCount;
-    void *freeCache;
-    MemChunk *nextFreeChunk;
-    MemChunk *Chunks;
-    Splay<MemChunk *> allChunks;
+    size_t chunk_size = Chunk::MinSize;
+    int chunk_capacity = 0;
+    int chunkCount = 0;
+    void *freeCache = nullptr;
+    Chunk *nextFreeChunk = nullptr;
+    Chunk *Chunks = nullptr;
+    Splay<Mem::Chunk *> allChunks; // XXX: move away from splay
 };
 
-/// \ingroup MemPoolsAPI
-class MemChunk
-{
-public:
-    MemChunk(MemPoolChunked *pool);
-    ~MemChunk();
-    void *freeList;
-    void *objCache;
-    int inuse_count;
-    MemChunk *nextFreeChunk;
-    MemChunk *next;
-    time_t lastref;
-    MemPoolChunked *pool;
-};
+} // namespace Mem
 
-#endif /* _MEM_POOL_CHUNKED_H_ */
-
+#endif /* SQUID__SRC_MEM_POOLCHUNKED_H */

@@ -28,9 +28,9 @@
  *
  * Chunking:
  *   xmalloc Chunk that fits at least MEM_MIN_FREE (32) items in an array, but
- *   limit Chunk size to MEM_CHUNK_MAX_SIZE (256K). Chunk size is rounded up to
+ *   limit Chunk size to Mem::Chunk::MaxSize. Chunk size is rounded up to
  *   MEM_PAGE_SIZE (4K), trying to have chunks in multiples of VM_PAGE size.
- *   Minimum Chunk size is MEM_CHUNK_SIZE (16K).
+ *   Minimum Chunk size is Mem::Chunk::MinSize.
  *   A number of items fits into a single chunk, depending on item size.
  *   Maximum number of items per chunk is limited to MEM_MAX_FREE (65535).
  *
@@ -69,12 +69,12 @@
 extern time_t squid_curtime;
 
 /* local prototypes */
-static int memCompChunks(MemChunk * const &, MemChunk * const &);
-static int memCompObjChunks(void * const &, MemChunk * const &);
+static int memCompChunks(Mem::Chunk * const &, Mem::Chunk * const &);
+static int memCompObjChunks(void * const &, Mem::Chunk * const &);
 
 /* Compare chunks */
 static int
-memCompChunks(MemChunk * const &chunkA, MemChunk * const &chunkB)
+memCompChunks(Mem::Chunk * const &chunkA, Mem::Chunk * const &chunkB)
 {
     if (chunkA->objCache > chunkB->objCache)
         return 1;
@@ -86,7 +86,7 @@ memCompChunks(MemChunk * const &chunkA, MemChunk * const &chunkB)
 
 /* Compare object to chunk */
 static int
-memCompObjChunks(void *const &obj, MemChunk * const &chunk)
+memCompObjChunks(void *const &obj, Mem::Chunk * const &chunk)
 {
     /* object is lower in memory than the chunks arena */
     if (obj < chunk->objCache)
@@ -98,7 +98,7 @@ memCompObjChunks(void *const &obj, MemChunk * const &chunk)
     return 1;
 }
 
-MemChunk::MemChunk(MemPoolChunked *aPool)
+Mem::Chunk::Chunk(Mem::PoolChunked *aPool)
 {
     /* should have a pool for this too -
      * note that this requires:
@@ -107,8 +107,6 @@ MemChunk::MemChunk(MemPoolChunked *aPool)
      * move the contents of one chunk into the other
      * free the first chunk.
      */
-    inuse_count = 0;
-    next = nullptr;
     pool = aPool;
 
     if (pool->doZero)
@@ -135,19 +133,7 @@ MemChunk::MemChunk(MemPoolChunked *aPool)
     pool->allChunks.insert(this, memCompChunks);
 }
 
-MemPoolChunked::MemPoolChunked(const char *aLabel, size_t aSize) :
-    Mem::AllocatorMetrics(aLabel, aSize), chunk_size(0),
-    chunk_capacity(0), chunkCount(0), freeCache(nullptr), nextFreeChunk(nullptr),
-    Chunks(nullptr), allChunks(Splay<MemChunk *>())
-{
-    setChunkSize(MEM_CHUNK_SIZE);
-
-#if HAVE_MALLOPT && M_MMAP_MAX
-    mallopt(M_MMAP_MAX, MEM_MAX_MMAP_CHUNKS);
-#endif
-}
-
-MemChunk::~MemChunk()
+Mem::Chunk::~Chunk()
 {
     pool->getMeter().alloc -= pool->chunk_capacity;
     pool->getMeter().idle -= pool->chunk_capacity;
@@ -156,8 +142,35 @@ MemChunk::~MemChunk()
     xfree(objCache);
 }
 
+Mem::PoolChunked::PoolChunked(const char *aLabel, size_t aSize) :
+    Mem::AllocatorMetrics(aLabel, aSize),
+    allChunks(Splay<Mem::Chunk *>())
+{
+    setChunkSize(Mem::Chunk::MinSize);
+
+#if HAVE_MALLOPT && M_MMAP_MAX
+    mallopt(M_MMAP_MAX, MEM_MAX_MMAP_CHUNKS);
+#endif
+}
+
+/*
+ * warning: we do not clean this entry from Pools assuming destruction
+ * is used at the end of the program only
+ */
+Mem::PoolChunked::~PoolChunked()
+{
+    flushMetersFull();
+    clean(0);
+    assert(meter.inuse.currentLevel() == 0);
+
+    while (auto *fchunk = Chunks) {
+        Chunks = Chunks->next;
+        delete fchunk;
+    }
+}
+
 void
-MemPoolChunked::push(void *obj)
+Mem::PoolChunked::push(void *obj)
 {
     void **Free;
     /* XXX We should figure out a sane way of avoiding having to clear
@@ -180,15 +193,13 @@ MemPoolChunked::push(void *obj)
  * and resulting slow compaction towards lowest ram area.
  */
 void *
-MemPoolChunked::get()
+Mem::PoolChunked::get()
 {
-    void **Free;
-
     ++saved_calls;
 
     /* first, try cache */
     if (freeCache) {
-        Free = (void **)freeCache;
+        void **Free = (void **)freeCache;
         (void) VALGRIND_MAKE_MEM_DEFINED(Free, obj_size);
         freeCache = *Free;
         *Free = nullptr;
@@ -201,9 +212,9 @@ MemPoolChunked::get()
         createChunk();
     }
     /* now we have some in perchunk freelist chain */
-    MemChunk *chunk = nextFreeChunk;
+    Chunk *chunk = nextFreeChunk;
 
-    Free = (void **)chunk->freeList;
+    void **Free = (void **)chunk->freeList;
     chunk->freeList = *Free;
     *Free = nullptr;
     ++chunk->inuse_count;
@@ -219,11 +230,11 @@ MemPoolChunked::get()
 
 /* just create a new chunk and place it into a good spot in the chunk chain */
 void
-MemPoolChunked::createChunk()
+Mem::PoolChunked::createChunk()
 {
-    MemChunk *chunk, *newChunk;
+    Chunk *chunk, *newChunk;
 
-    newChunk = new MemChunk(this);
+    newChunk = new Chunk(this);
 
     chunk = Chunks;
     if (chunk == nullptr) {    /* first chunk in pool */
@@ -250,7 +261,7 @@ MemPoolChunked::createChunk()
 }
 
 void
-MemPoolChunked::setChunkSize(size_t chunksize)
+Mem::PoolChunked::setChunkSize(size_t chunksize)
 {
     int cap;
     size_t csize = chunksize;
@@ -263,8 +274,8 @@ MemPoolChunked::setChunkSize(size_t chunksize)
 
     if (cap < MEM_MIN_FREE)
         cap = MEM_MIN_FREE;
-    if (cap * obj_size > MEM_CHUNK_MAX_SIZE)
-        cap = MEM_CHUNK_MAX_SIZE / obj_size;
+    if (cap * obj_size > Mem::Chunk::MaxSize)
+        cap = Mem::Chunk::MaxSize / obj_size;
     if (cap > MEM_MAX_FREE)
         cap = MEM_MAX_FREE;
     if (cap < 1)
@@ -278,35 +289,14 @@ MemPoolChunked::setChunkSize(size_t chunksize)
     chunk_size = csize;
 }
 
-/*
- * warning: we do not clean this entry from Pools assuming destruction
- * is used at the end of the program only
- */
-MemPoolChunked::~MemPoolChunked()
-{
-    MemChunk *chunk, *fchunk;
-
-    flushMetersFull();
-    clean(0);
-    assert(meter.inuse.currentLevel() == 0);
-
-    chunk = Chunks;
-    while ( (fchunk = chunk) != nullptr) {
-        chunk = chunk->next;
-        delete fchunk;
-    }
-    /* TODO we should be doing something about the original Chunks pointer here. */
-
-}
-
 int
-MemPoolChunked::getInUseCount()
+Mem::PoolChunked::getInUseCount()
 {
     return meter.inuse.currentLevel();
 }
 
 void *
-MemPoolChunked::allocate()
+Mem::PoolChunked::allocate()
 {
     void *p = get();
     assert(meter.idle.currentLevel() > 0);
@@ -316,7 +306,7 @@ MemPoolChunked::allocate()
 }
 
 void
-MemPoolChunked::deallocate(void *obj, bool)
+Mem::PoolChunked::deallocate(void *obj, bool)
 {
     push(obj);
     assert(meter.inuse.currentLevel() > 0);
@@ -325,7 +315,7 @@ MemPoolChunked::deallocate(void *obj, bool)
 }
 
 void
-MemPoolChunked::convertFreeCacheToChunkFreeCache()
+Mem::PoolChunked::convertFreeCacheToChunkFreeCache()
 {
     void *Free;
     /*
@@ -334,8 +324,8 @@ MemPoolChunked::convertFreeCacheToChunkFreeCache()
      */
 
     while ((Free = freeCache) != nullptr) {
-        MemChunk *chunk = nullptr;
-        chunk = const_cast<MemChunk *>(*allChunks.find(Free, memCompObjChunks));
+        Chunk *chunk = nullptr;
+        chunk = const_cast<Chunk *>(*allChunks.find(Free, memCompObjChunks));
         assert(splayLastResult == 0);
         assert(chunk->inuse_count > 0);
         -- chunk->inuse_count;
@@ -351,9 +341,9 @@ MemPoolChunked::convertFreeCacheToChunkFreeCache()
 
 /* removes empty Chunks from pool */
 void
-MemPoolChunked::clean(time_t maxage)
+Mem::PoolChunked::clean(time_t maxage)
 {
-    MemChunk *chunk, *freechunk, *listTail;
+    Chunk *chunk, *freechunk, *listTail;
     time_t age;
 
     if (!Chunks)
@@ -415,7 +405,7 @@ MemPoolChunked::clean(time_t maxage)
 }
 
 bool
-MemPoolChunked::idleTrigger(int shift) const
+Mem::PoolChunked::idleTrigger(int shift) const
 {
     return meter.idle.currentLevel() > (chunk_capacity << shift);
 }
@@ -424,9 +414,9 @@ MemPoolChunked::idleTrigger(int shift) const
  * Update MemPoolStats struct for single pool
  */
 int
-MemPoolChunked::getStats(MemPoolStats * stats)
+Mem::PoolChunked::getStats(MemPoolStats * stats)
 {
-    MemChunk *chunk;
+    Chunk *chunk;
     int chunks_free = 0;
     int chunks_partial = 0;
 
@@ -457,7 +447,7 @@ MemPoolChunked::getStats(MemPoolStats * stats)
     stats->items_inuse += meter.inuse.currentLevel();
     stats->items_idle += meter.idle.currentLevel();
 
-    stats->overhead += sizeof(MemPoolChunked) + chunkCount * sizeof(MemChunk) + strlen(objectType()) + 1;
+    stats->overhead += sizeof(Mem::PoolChunked) + chunkCount * sizeof(Chunk) + strlen(objectType()) + 1;
 
     return meter.inuse.currentLevel();
 }

@@ -24,7 +24,7 @@ Mem::PoolsManager::GetInstance()
     // We must initialize on first use (which may happen during static
     // initialization) and preserve until the last user is gone (which
     // may happen long after main() exit). We currently preserve forever.
-    static auto *Instance = new Mem::PoolsManager;
+    static auto *Instance = new PoolsManager;
     return *Instance;
 }
 
@@ -32,9 +32,9 @@ Mem::AllocatorMetrics *
 Mem::PoolsManager::create(const char *label, size_t objectSize)
 {
     if (defaultIsChunked)
-        return new MemPoolChunked(label, objectSize);
+        return new PoolChunked(label, objectSize);
     else
-        return new MemPoolMalloc(label, objectSize);
+        return new PoolMalloc(label, objectSize);
 }
 
 /*

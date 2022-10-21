@@ -20,7 +20,7 @@
 extern time_t squid_curtime;
 
 void *
-MemPoolMalloc::allocate()
+Mem::PoolMalloc::allocate()
 {
     void *obj = nullptr;
     if (!freelist.empty()) {
@@ -42,7 +42,7 @@ MemPoolMalloc::allocate()
 }
 
 void
-MemPoolMalloc::deallocate(void *obj, bool aggressive)
+Mem::PoolMalloc::deallocate(void *obj, bool aggressive)
 {
     --meter.inuse;
     if (aggressive) {
@@ -58,7 +58,7 @@ MemPoolMalloc::deallocate(void *obj, bool aggressive)
 
 /* TODO extract common logic to MemAllocate */
 int
-MemPoolMalloc::getStats(MemPoolStats * stats)
+Mem::PoolMalloc::getStats(MemPoolStats * stats)
 {
     stats->pool = this;
     stats->label = objectType();
@@ -75,36 +75,36 @@ MemPoolMalloc::getStats(MemPoolStats * stats)
     stats->items_inuse += meter.inuse.currentLevel();
     stats->items_idle += meter.idle.currentLevel();
 
-    stats->overhead += sizeof(MemPoolMalloc) + strlen(objectType()) + 1;
+    stats->overhead += sizeof(PoolMalloc) + strlen(objectType()) + 1;
 
     return meter.inuse.currentLevel();
 }
 
 int
-MemPoolMalloc::getInUseCount()
+Mem::PoolMalloc::getInUseCount()
 {
     return meter.inuse.currentLevel();
 }
 
-MemPoolMalloc::MemPoolMalloc(char const *aLabel, size_t aSize) :
+Mem::PoolMalloc::PoolMalloc(char const *aLabel, size_t aSize) :
     Mem::AllocatorMetrics(aLabel, aSize)
 {
 }
 
-MemPoolMalloc::~MemPoolMalloc()
+Mem::PoolMalloc::~PoolMalloc()
 {
     assert(meter.inuse.currentLevel() == 0);
     clean(0);
 }
 
 bool
-MemPoolMalloc::idleTrigger(int shift) const
+Mem::PoolMalloc::idleTrigger(int shift) const
 {
     return freelist.size() >> (shift ? 8 : 0);
 }
 
 void
-MemPoolMalloc::clean(time_t)
+Mem::PoolMalloc::clean(time_t)
 {
     while (!freelist.empty()) {
         void *obj = freelist.top();

@@ -8,8 +8,21 @@
 
 /* DEBUG: section 13    High Level Memory Pool Management */
 
-#ifndef _SQUID_SRC_MEM_FORWARD_H
-#define _SQUID_SRC_MEM_FORWARD_H
+#ifndef SQUID__SRC_MEM_FORWARD_H
+#define SQUID__SRC_MEM_FORWARD_H
+
+/**
+ * \defgroup MemPoolsAPI  Memory Management (Memory Pool Allocator)
+ *
+ * \par
+ *  MemPools are a pooled memory allocator running on top of malloc(). It's
+ *  purpose is to reduce memory fragmentation and provide detailed statistics
+ *  on memory consumption.
+ *
+ * \par
+ *  Preferably all memory allocations in Squid should be done using
+ *  one of the types inheriting from Mem::AllocatorBase.
+ */
 
 #include "mem/AllocatorProxy.h"
 
@@ -24,6 +37,8 @@ namespace Mem
 class AllocatorBase;
 class AllocatorMetrics;
 class PoolMeter;
+class PoolChunked;
+class PoolMalloc;
 
 void Init();
 void Report();
@@ -77,5 +92,4 @@ void memDataInit(mem_type, const char *, size_t, int, bool doZero = true);
 void memCheckInit(void);
 size_t memStringCount();
 
-#endif /* _SQUID_SRC_MEM_FORWARD_H */
-
+#endif /* SQUID__SRC_MEM_FORWARD_H */
