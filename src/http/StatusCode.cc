@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "debug/Stream.h"
 #include "http/StatusCode.h"
+#include "SquidConfig.h"
 
 const char *
 Http::StatusCodeString(const Http::StatusCode status)
@@ -274,5 +275,27 @@ Http::StatusCodeString(const Http::StatusCode status)
         debugs(57, 3, "Unassigned HTTP status code: " << status);
     }
     return "Unassigned";
+}
+
+bool
+Http::IsReforwardableStatus(const StatusCode s)
+{
+    switch (s) {
+
+    case scBadGateway:
+    case scGatewayTimeout:
+        return true;
+
+    case scForbidden:
+    case scInternalServerError:
+    case scNotImplemented:
+    case scServiceUnavailable:
+        return Config.retry.onerror;
+
+    default:
+        return false;
+    }
+
+    /* NOTREACHED */
 }
 

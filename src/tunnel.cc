@@ -31,6 +31,7 @@
 #include "globals.h"
 #include "HappyConnOpener.h"
 #include "http.h"
+#include "http/StatusCode.h"
 #include "http/Stream.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
@@ -188,12 +189,14 @@ public:
     time_t startTime; ///< object creation time, before any peer selection/connection attempts
     ResolvedPeersPointer destinations; ///< paths for forwarding the request
     bool destinationsFound; ///< At least one candidate path found
-    /// whether another destination may be still attempted if the TCP connection
-    /// was unexpectedly closed
-    bool retriable;
 
     /// whether the decision to tunnel to a particular destination was final
     bool committedToServer;
+
+    int n_tries; ///< the number of forwarding attempts so far
+
+    /// a reason to ban reforwarding attempts (or nil)
+    const char *banRetries;
 
     // TODO: remove after fixing deferred reads in TunnelStateData::copyRead()
     CodeContext::Pointer codeContext; ///< our creator context
@@ -250,6 +253,7 @@ private:
 
     bool transporting() const;
 
+    // TODO: convert to unique_ptr
     /// details of the "last tunneling attempt" failure (if it failed)
     ErrorState *savedError = nullptr;
 
@@ -259,6 +263,8 @@ private:
     void deleteThis();
 
     void cancelStep(const char *reason);
+
+    bool exhaustedTries() const;
 
 public:
     bool keepGoingAfterRead(size_t len, Comm::Flag errcode, int xerrno, Connection &from, Connection &to);
@@ -344,8 +350,9 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     startTime(squid_curtime),
     destinations(new ResolvedPeers()),
     destinationsFound(false),
-    retriable(true),
     committedToServer(false),
+    n_tries(0),
+    banRetries(nullptr),
     codeContext(CodeContext::Current())
 {
     debugs(26, 3, "TunnelStateData constructed this=" << this);
@@ -391,12 +398,20 @@ TunnelStateData::checkRetry()
 {
     if (shutting_down)
         return "shutting down";
+    if (exhaustedTries())
+        return "exhausted tries";
     if (!FwdState::EnoughTimeToReForward(startTime))
         return "forwarding timeout";
-    if (!retriable)
-        return "not retriable";
+    if (banRetries)
+        return banRetries;
     if (noConnections())
         return "no connections";
+
+    // TODO: Use Optional for peer_reply_status to avoid treating zero value specially.
+    if (request->hier.peer_reply_status != Http::scNone && !Http::IsReforwardableStatus(request->hier.peer_reply_status))
+        return "received HTTP status code is not reforwardable";
+
+    // TODO: check pinned connections; see FwdState::pinnedCanRetry()
     return nullptr;
 }
 
@@ -951,6 +966,9 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 
     al->cache.code.update(LOG_TCP_TUNNEL);
 
+    // XXX: al->http.code (i.e. *status_ptr) should not be (re)set
+    // until we actually start responding to the client. Right here/now, we only
+    // know how this cache_peer has responded to us.
     if (answer.peerResponseStatus != Http::scNone)
         *status_ptr = answer.peerResponseStatus;
 
@@ -1008,7 +1026,7 @@ void
 TunnelStateData::commitToServer(const Comm::ConnectionPointer &conn)
 {
     committedToServer = true;
-    retriable = false; // may already be false
+    banRetries = "committed to server";
     PeerSelectionInitiator::subscribed = false; // may already be false
     server.initConnection(conn, tunnelServerClosed, "tunnelServerClosed", this);
 }
@@ -1034,8 +1052,12 @@ TunnelStateData::noteConnection(HappyConnOpener::Answer &answer)
 {
     transportWait.finish();
 
+    Assure(n_tries <= answer.n_tries); // n_tries cannot decrease
+    n_tries = answer.n_tries;
+
     ErrorState *error = nullptr;
     if ((error = answer.error.get())) {
+        banRetries = "HappyConnOpener gave up";
         Must(!Comm::IsConnOpen(answer.conn));
         syncHierNote(answer.conn, request->url.host());
         answer.error.clear();
@@ -1061,6 +1083,8 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
     if (reused)
         ResetMarkingsToServer(request.getRaw(), *conn);
     // else Comm::ConnOpener already applied proper/current markings
+
+    // TODO: add pconn race state tracking
 
     syncHierNote(conn, origin);
 
@@ -1088,6 +1112,13 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
     else {
         notePeerReadyToShovel(conn);
     }
+}
+
+/// whether we have used up all permitted forwarding attempts
+bool
+TunnelStateData::exhaustedTries() const
+{
+    return n_tries >= Config.forward_max_tries;
 }
 
 void
@@ -1357,8 +1388,13 @@ TunnelStateData::startConnecting()
 
     assert(!destinations->empty());
     assert(!transporting());
+
+    delete savedError; // may still be nil
+    savedError = nullptr;
+    request->hier.peer_reply_status = Http::scNone; // TODO: Move to startPeerClock()?
+
     const auto callback = asyncCallback(17, 5, TunnelStateData::noteConnection, this);
-    const auto cs = new HappyConnOpener(destinations, callback, request, startTime, 0, al);
+    const auto cs = new HappyConnOpener(destinations, callback, request, startTime, n_tries, al);
     cs->setHost(request->url.host());
     cs->setRetriable(false);
     cs->allowPersistent(false);
@@ -1375,6 +1411,8 @@ TunnelStateData::usePinned()
     try {
         const auto serverConn = ConnStateData::BorrowPinnedConnection(request.getRaw(), al);
         debugs(26, 7, "pinned peer connection: " << serverConn);
+
+        ++n_tries;
 
         // Set HttpRequest pinned related flags for consistency even if
         // they are not really used by tunnel.cc code.
