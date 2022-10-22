@@ -29,23 +29,29 @@
 #include <iosfwd>
 
 class StoreEntry;
-class MemPoolStats;
 
 /// Memory Management
 namespace Mem
 {
+
+// Allocator interfaces
 class AllocatorBase;
 class AllocatorMetrics;
-class PoolMeter;
+
+// Pools implement the allocation logic
 class PoolChunked;
 class PoolMalloc;
+
+// Memory accounting helpers
+class PoolMeter;
+class PoolStats;
 
 void Init();
 void Report();
 void Stats(StoreEntry *);
 void CleanIdlePools(void *unused);
 void Report(std::ostream &);
-void PoolReport(const MemPoolStats *, const Mem::PoolMeter *, std::ostream &);
+void PoolReport(const PoolStats *, const PoolMeter *, std::ostream &);
 };
 
 extern Mem::PoolMeter TheMeter;

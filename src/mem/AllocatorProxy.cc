@@ -58,7 +58,7 @@ Mem::AllocatorProxy::getMeter() const
 }
 
 int
-Mem::AllocatorProxy::getStats(MemPoolStats * stats)
+Mem::AllocatorProxy::getStats(PoolStats *stats)
 {
     return getAllocator()->getStats(stats);
 }

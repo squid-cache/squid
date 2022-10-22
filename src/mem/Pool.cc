@@ -24,9 +24,6 @@ extern time_t squid_curtime;
 Mem::PoolMeter TheMeter;
 int Pool_id_counter = 0;
 
-/* Persistent Pool stats. for GlobalStats accumulation */
-static MemPoolStats pp_stats;
-
 /*
  * Totals statistics is returned
  */
@@ -34,12 +31,12 @@ int
 memPoolGetGlobalStats(MemPoolGlobalStats * stats)
 {
     memset(stats, 0, sizeof(MemPoolGlobalStats));
-    memset(&pp_stats, 0, sizeof(MemPoolStats));
 
     Mem::PoolsManager::GetInstance().flushMeters(); /* recreate TheMeter */
 
     /* gather all stats for Totals */
     int pools_inuse = 0;
+    Mem::PoolStats pp_stats;
     for (auto *pool : Mem::PoolsManager::GetInstance().pools) {
         if (pool->getStats(&pp_stats) > 0)
             ++pools_inuse;
@@ -51,13 +48,13 @@ memPoolGetGlobalStats(MemPoolGlobalStats * stats)
     stats->tot_pools_inuse = pools_inuse;
     stats->tot_pools_mempid = Pool_id_counter;
 
-    stats->tot_chunks_alloc = pp_stats.chunks_alloc;
-    stats->tot_chunks_inuse = pp_stats.chunks_inuse;
-    stats->tot_chunks_partial = pp_stats.chunks_partial;
-    stats->tot_chunks_free = pp_stats.chunks_free;
-    stats->tot_items_alloc = pp_stats.items_alloc;
-    stats->tot_items_inuse = pp_stats.items_inuse;
-    stats->tot_items_idle = pp_stats.items_idle;
+    stats->tot_chunks_alloc = pp_stats.chunks.alloc;
+    stats->tot_chunks_inuse = pp_stats.chunks.inuse;
+    stats->tot_chunks_partial = pp_stats.chunks.partial;
+    stats->tot_chunks_free = pp_stats.chunks.free;
+    stats->tot_items_alloc = pp_stats.items.alloc;
+    stats->tot_items_inuse = pp_stats.items.inuse;
+    stats->tot_items_idle = pp_stats.items.idle;
 
     stats->tot_overhead += pp_stats.overhead + Mem::PoolsManager::GetInstance().pools.size() * sizeof(Mem::AllocatorBase *);
     stats->mem_idle_limit = Mem::PoolsManager::GetInstance().mem_idle_limit;

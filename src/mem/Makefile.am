@@ -34,6 +34,7 @@ libmem_la_SOURCES = \
 	PoolsManager.cc \
 	PoolsManager.h \
 	PoolingAllocator.h \
+	Stats.h \
 	old_api.cc
 
 # a bare-bones implementation of few libmem.la APIs sufficient for helpers use

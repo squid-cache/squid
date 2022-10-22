@@ -23,7 +23,7 @@ public:
     virtual ~PoolMalloc();
 
     /* Mem::AllocatorBase API */
-    virtual int getStats(MemPoolStats *) override;
+    virtual int getStats(PoolStats *) override;
     virtual int getInUseCount() override;
 
     /* Mem::AllocatorMetrics API */

@@ -410,11 +410,8 @@ Mem::PoolChunked::idleTrigger(int shift) const
     return meter.idle.currentLevel() > (chunk_capacity << shift);
 }
 
-/*
- * Update MemPoolStats struct for single pool
- */
 int
-Mem::PoolChunked::getStats(MemPoolStats * stats)
+Mem::PoolChunked::getStats(PoolStats *stats)
 {
     Chunk *chunk;
     int chunks_free = 0;
@@ -438,14 +435,14 @@ Mem::PoolChunked::getStats(MemPoolStats * stats)
         chunk = chunk->next;
     }
 
-    stats->chunks_alloc += chunkCount;
-    stats->chunks_inuse += chunkCount - chunks_free;
-    stats->chunks_partial += chunks_partial;
-    stats->chunks_free += chunks_free;
+    stats->chunks.alloc += chunkCount;
+    stats->chunks.inuse += chunkCount - chunks_free;
+    stats->chunks.partial += chunks_partial;
+    stats->chunks.free += chunks_free;
 
-    stats->items_alloc += meter.alloc.currentLevel();
-    stats->items_inuse += meter.inuse.currentLevel();
-    stats->items_idle += meter.idle.currentLevel();
+    stats->items.alloc += meter.alloc.currentLevel();
+    stats->items.inuse += meter.inuse.currentLevel();
+    stats->items.idle += meter.idle.currentLevel();
 
     stats->overhead += sizeof(Mem::PoolChunked) + chunkCount * sizeof(Chunk) + strlen(objectType()) + 1;
 

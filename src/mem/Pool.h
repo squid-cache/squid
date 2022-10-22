@@ -58,34 +58,11 @@
 /// \ingroup MemPoolsAPI
 #define MEM_MAX_FREE  65535 /* unsigned short is max number of items per chunk */
 
-class MemPoolStats;
-
 /// \ingroup MemPoolsAPI
 /// TODO: Kill this typedef for C++
 typedef struct _MemPoolGlobalStats MemPoolGlobalStats;
 
-/// \ingroup MemPoolsAPI
-class MemPoolStats
-{
-public:
-    Mem::AllocatorBase *pool;
-    const char *label;
-    Mem::PoolMeter *meter;
-    int obj_size;
-    int chunk_capacity;
-    int chunk_size;
-
-    int chunks_alloc;
-    int chunks_inuse;
-    int chunks_partial;
-    int chunks_free;
-
-    int items_alloc;
-    int items_inuse;
-    int items_idle;
-
-    int overhead;
-};
+#include "mem/Stats.h"
 
 /// \ingroup MemPoolsAPI
 /// TODO: Classify and add constructor/destructor to initialize properly.

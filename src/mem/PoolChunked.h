@@ -48,7 +48,7 @@ public:
     void push(void *);
 
     /* Mem::AllocatorBase API */
-    virtual int getStats(MemPoolStats *);
+    virtual int getStats(PoolStats *);
     virtual int getInUseCount();
     virtual void setChunkSize(size_t);
 

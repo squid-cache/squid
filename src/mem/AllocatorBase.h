@@ -29,7 +29,7 @@ public:
      * updates the given object with statistical data about pool
      * \returns Number of objects in use, ie. allocated.
      */
-    virtual int getStats(MemPoolStats *) = 0;
+    virtual int getStats(PoolStats *) = 0;
 
     virtual PoolMeter const &getMeter() const = 0;
 

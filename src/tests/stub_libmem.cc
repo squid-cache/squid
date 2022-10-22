@@ -32,7 +32,7 @@ void Mem::AllocatorProxy::freeOne(void *address) {xfree(address);}
 int Mem::AllocatorProxy::inUseCount() const {return 0;}
 //static Mem::PoolMeter tmpMemPoolMeter;
 //Mem::PoolMeter const &Mem::AllocatorProxy::getMeter() const STUB_RETVAL(tmpMemPoolMeter)
-int Mem::AllocatorProxy::getStats(MemPoolStats *) STUB_RETVAL(0)
+int Mem::AllocatorProxy::getStats(PoolStats *) STUB_RETVAL(0)
 
 #include "mem/forward.h"
 void Mem::Init() STUB_NOP
@@ -40,7 +40,7 @@ void Mem::Report() STUB_NOP
 void Mem::Stats(StoreEntry *) STUB_NOP
 void Mem::CleanIdlePools(void *) STUB_NOP
 void Mem::Report(std::ostream &) STUB_NOP
-void Mem::PoolReport(const MemPoolStats *, const PoolMeter *, std::ostream &) STUB_NOP
+void Mem::PoolReport(const PoolStats *, const PoolMeter *, std::ostream &) STUB_NOP
 //const size_t squidSystemPageSize = 4096;
 void memClean(void) STUB
 void memInitModule(void) STUB
@@ -90,10 +90,12 @@ int memInUse(mem_type) STUB_RETVAL(0)
 void memDataInit(mem_type, const char *, size_t, int, bool) STUB_NOP
 void memCheckInit(void) STUB_NOP
 
+//#include "mem/Meter.h"
 #include "mem/Pool.h"
 int memPoolGetGlobalStats(MemPoolGlobalStats *) STUB_RETVAL(0)
 int memPoolsTotalAllocated(void) STUB_RETVAL(0)
 
+//#include "mem/Stats.h"
 #include "mem/PoolsManager.h"
 namespace Mem
 {
