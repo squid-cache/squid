@@ -266,7 +266,7 @@ memStringCount()
     size_t result = 0;
 
     for (int counter = 0; counter < mem_str_pool_count; ++counter)
-        result += GetStrPool(counter).inUseCount();
+        result += GetStrPool(counter).getInUseCount();
 
     return result;
 }
@@ -508,7 +508,7 @@ memClean(void)
 int
 memInUse(mem_type type)
 {
-    return GetPool(type)->inUseCount();
+    return GetPool(type)->getInUseCount();
 }
 
 /* ick */

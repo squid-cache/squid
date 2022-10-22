@@ -29,7 +29,7 @@ void AllocatorMetrics::freeOne(void *) STUB
 #include "mem/AllocatorProxy.h"
 void *Mem::AllocatorProxy::alloc() {return xmalloc(64*1024);}
 void Mem::AllocatorProxy::freeOne(void *address) {xfree(address);}
-int Mem::AllocatorProxy::inUseCount() const {return 0;}
+int Mem::AllocatorProxy::getInUseCount() const {return 0;}
 //static Mem::PoolMeter tmpMemPoolMeter;
 //Mem::PoolMeter const &Mem::AllocatorProxy::getMeter() const STUB_RETVAL(tmpMemPoolMeter)
 int Mem::AllocatorProxy::getStats(PoolStats *) STUB_RETVAL(0)

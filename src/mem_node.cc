@@ -54,7 +54,7 @@ mem_node::~mem_node()
 size_t
 mem_node::InUseCount()
 {
-    return Pool().inUseCount();
+    return Pool().getInUseCount();
 }
 
 size_t

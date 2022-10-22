@@ -37,12 +37,12 @@ Mem::AllocatorProxy::getAllocator() const
 }
 
 int
-Mem::AllocatorProxy::inUseCount() const
+Mem::AllocatorProxy::getInUseCount() const
 {
     if (!theAllocator)
         return 0;
     else
-        return theAllocator->inUseCount();
+        return theAllocator->getInUseCount();
 }
 
 void

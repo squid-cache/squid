@@ -46,7 +46,7 @@ RemovalPolicy * mem_policy = nullptr;
 size_t
 MemObject::inUseCount()
 {
-    return Pool().inUseCount();
+    return Pool().getInUseCount();
 }
 
 const char *

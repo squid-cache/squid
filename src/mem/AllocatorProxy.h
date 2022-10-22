@@ -43,7 +43,7 @@ class MemAllocator;
         if (address) \
             Pool().freeOne(address); \
     } \
-    static int UseCount() { return Pool().inUseCount(); } \
+    static int UseCount() { return Pool().getInUseCount(); } \
     private:
 
 namespace Mem
@@ -56,39 +56,29 @@ class AllocatorProxy
 {
 public:
     AllocatorProxy(char const *aLabel, size_t const &aSize, bool doZeroBlocks = true):
+        doZero(doZeroBlocks),
         label(aLabel),
-        size(aSize),
-        theAllocator(nullptr),
-        doZero(doZeroBlocks)
+        size(aSize)
     {}
 
-    /// Allocate one element from the pool
-    void *alloc();
-
-    /// Free a element allocated by Mem::AllocatorProxy::alloc()
-    void freeOne(void *);
-
-    int inUseCount() const;
-    size_t objectSize() const {return size;}
-    char const * objectType() const {return label;}
-
+    /* (emulate) Mem::AllocatorBase API */
+    int getStats(PoolStats *);
     Mem::PoolMeter const &getMeter() const;
-
-    /**
-     * \param stats Object to be filled with statistical data about pool.
-     * \retval      Number of objects in use, ie. allocated.
-     */
-    int getStats(PoolStats *stats);
-
+    void *alloc();
+    void freeOne(void *);
+    char const * objectType() const {return label;}
+    size_t objectSize() const {return size;}
+    int getInUseCount() const;
     void zeroBlocks(bool doIt);
+private:
+    bool doZero = true;
+    const char *label = nullptr;
 
 private:
     AllocatorBase *getAllocator() const;
 
-    const char *label;
-    size_t size;
-    mutable AllocatorBase *theAllocator;
-    bool doZero;
+    size_t size = 0;
+    mutable AllocatorBase *theAllocator = nullptr;
 };
 
 } // namespace Mem

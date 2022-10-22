@@ -31,7 +31,7 @@ Mem::AllocatorProxy::freeOne(void *memory) {
 }
 
 int
-Mem::AllocatorProxy::inUseCount() const
+Mem::AllocatorProxy::getInUseCount() const
 {
     return Alive;
 }

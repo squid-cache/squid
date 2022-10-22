@@ -51,8 +51,6 @@ public:
     /// \see doZero
     void zeroBlocks(bool doIt) {doZero = doIt;}
 
-    int inUseCount() { return getInUseCount(); } // XXX: drop redundant?
-
     /**
      * Allows you tune chunk size of pooling. Objects are allocated in chunks
      * instead of individually. This conserves memory, reduces fragmentation.
