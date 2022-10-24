@@ -260,5 +260,5 @@ main() {
     run_tests $tests
 }
 
-main
+main "$@"
 exit $?
