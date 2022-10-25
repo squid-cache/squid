@@ -25,7 +25,13 @@ public:
     /// Report the pointed-to-object on a dedicated Debug::Extra line.
     RawPointerT<Pointer> &asExtra() { onExtraLine = true; return *this; }
 
+    RawPointerT<Pointer> &orNil(const char *nilTextToUse = "nil") { nilText = nilTextToUse; return *this; }
+
     const char *label; /// the name or description of the being-debugged object
+
+    /// whether and how to report a nil pointer; use orNil() to enable
+    const char *nilText = nullptr;
+
     const Pointer &ptr; /// a possibly nil pointer to the being-debugged object
     bool onExtraLine = false;
 };
@@ -43,8 +49,11 @@ template <class Pointer>
 inline std::ostream &
 operator <<(std::ostream &os, const RawPointerT<Pointer> &pd)
 {
-    if (!pd.ptr)
+    if (!pd.ptr) {
+        if (pd.nilText)
+            os << pd.nilText;
         return os;
+    }
 
     if (pd.onExtraLine)
         os << Debug::Extra;
