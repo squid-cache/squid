@@ -113,7 +113,7 @@ class PconnPool
 {
 
 public:
-    PconnPool(const char *aDescription, const CbcPointer<PeerPoolMgr> &aMgr);
+    PconnPool(const SBuf &aDescription, const CbcPointer<PeerPoolMgr> &aMgr);
     ~PconnPool();
 
     void moduleInit();
@@ -154,7 +154,7 @@ private:
 
     int hist[PCONN_HIST_SZ];
     hash_table *table;
-    const char *descr;
+    const SBuf description; ///< a unique human-friendly pool name or label
     CbcPointer<PeerPoolMgr> mgr; ///< optional pool manager (for notifications)
     int theCount; ///< the number of pooled connections
 };

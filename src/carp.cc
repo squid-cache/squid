@@ -49,7 +49,6 @@ carpInit(void)
     double P_last, X_last, Xn;
     CachePeer *p;
     CachePeer **P;
-    char *t;
     /* Clean up */
 
     for (k = 0; k < n_carp_peers; ++k) {
@@ -94,8 +93,8 @@ carpInit(void)
         /* calculate this peers hash */
         p->carp.hash = 0;
 
-        for (t = p->name; *t != 0; ++t)
-            p->carp.hash += ROTATE_LEFT(p->carp.hash, 19) + (unsigned int) *t;
+        for (const auto ch: p->id())
+            p->carp.hash += ROTATE_LEFT(p->carp.hash, 19) + static_cast<unsigned int>(ch);
 
         p->carp.hash += p->carp.hash * 0x62531965;
 
@@ -205,7 +204,7 @@ carpSelectParent(PeerSelector *ps)
         combined_hash += combined_hash * 0x62531965;
         combined_hash = ROTATE_LEFT(combined_hash, 21);
         score = combined_hash * tp->carp.load_multiplier;
-        debugs(39, 3, "carpSelectParent: key=" << key << " name=" << tp->name << " combined_hash=" << combined_hash  <<
+        debugs(39, 3, *tp << " key=" << key << " combined_hash=" << combined_hash  <<
                " score=" << std::setprecision(0) << score);
 
         if ((score > high_score) && peerHTTPOkay(tp, ps)) {
@@ -215,7 +214,7 @@ carpSelectParent(PeerSelector *ps)
     }
 
     if (p)
-        debugs(39, 2, "carpSelectParent: selected " << p->name);
+        debugs(39, 2, "selected " << *p);
 
     return p;
 }
@@ -236,8 +235,11 @@ carpCachemgr(StoreEntry * sentry)
         sumfetches += p->stats.fetches;
 
     for (p = Config.peers; p; p = p->next) {
+        // TODO: Unify CachePeer::*hash structures and use stream-based printing
+        auto peerId = p->id();
         storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",
-                          p->name, p->carp.hash,
+                          peerId.c_str(),
+                          p->carp.hash,
                           p->carp.load_multiplier,
                           p->carp.load_factor,
                           sumfetches ? (double) p->stats.fetches / sumfetches : -1.0);

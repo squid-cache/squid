@@ -13,5 +13,8 @@
 
 #include "CachePeer.h"
 
+void CachePeer::rename(const SBuf &) STUB
+void CachePeer::forgetName() STUB
+void CachePeer::finalizeName() STUB
 time_t CachePeer::connectTimeout() const STUB_RETVAL(0)
-
+std::ostream &operator <<(std::ostream &os, const CachePeer &) STUB_RETVAL(os)

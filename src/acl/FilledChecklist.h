@@ -52,6 +52,8 @@ public:
     void setPeer(const CachePeer *);
 
     /// configure Squid-to-origin/cache_peer connection-related fields
+    void setOutgoingConnection(const Comm::Connection &);
+    /// \copydoc setOutgoingConnection(const Comm::Connection &)
     void setOutgoingConnection(const Comm::ConnectionPointer &);
 
     /// configure server response-related fields

@@ -11,10 +11,14 @@
 
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
+#include "base/Optional.h"
 #include "enums.h"
 #include "icp_opcode.h"
 #include "ip/Address.h"
+#include "sbuf/forward.h"
 #include "security/PeerOptions.h"
+
+#include <iosfwd>
 
 //TODO: remove, it is unconditionally defined and always used.
 #define PEER_MULTICAST_SIBLINGS 1
@@ -29,14 +33,34 @@ class CachePeer
     CBDATA_CLASS(CachePeer);
 
 public:
-    CachePeer() = default;
+    explicit CachePeer(const SBuf &hostAsConfigured);
     ~CachePeer();
+
+    /// This ID changes until it is finalized at the end of cache_peer configuration:
+    /// cache_peer name (if explicitly configured) or hostname[:http_port] (otherwise).
+    /// This ID is unique across already configured cache_peers in the current configuration.
+    /// This ID is unique across discovered non-peers (see mgr:non_peers).
+    const SBuf &id() const { return id_; }
+
+    /// \copydoc id()
+    /// This method is for legacy code that needs cache_peer ID as a c-string.
+    const char *idXXX() const { return idAsCstring_; }
 
     /// \returns the effective connect timeout for the given peer
     time_t connectTimeout() const;
 
+    bool named() const { return name_.has_value(); }
+
+    /// reconfigure cache_peer name=value
+    void rename(const SBuf &);
+
+    /// undo the effect of past rename() calls (if any)
+    void forgetName();
+
+    /// stop expecting more rename() and forgetName() calls
+    void finalizeName();
+
     u_int index = 0;
-    char *name = nullptr;
     char *host = nullptr;
     peer_t type = PEER_NONE;
 
@@ -197,7 +221,21 @@ public:
 
     int front_end_https = 0; ///< 0 - off, 1 - on, 2 - auto
     int connection_auth = 2; ///< 0 - off, 1 - on, 2 - auto
+
+private:
+    /// change ID to the given one
+    void identifyAs(const SBuf &);
+    /// change ID to configured hostname:port combination
+    void identifyAsHostPort();
+
+    SBuf id_; ///< \copydoc id()
+    const char *idAsCstring_ = nullptr; ///< cached id_.c_str()
+
+    Optional<SBuf> name_; ///< configured cache_peer name=value
 };
+
+/// identify the given cache peer in cache.log messages and such
+std::ostream &operator <<(std::ostream &, const CachePeer &);
 
 #endif /* SQUID_CACHEPEER_H_ */
 

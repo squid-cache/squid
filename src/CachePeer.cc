@@ -13,13 +13,23 @@
 #include "NeighborTypeDomainList.h"
 #include "pconn.h"
 #include "PeerPoolMgr.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
+#include "util.h"
 
 CBDATA_CLASS_INIT(CachePeer);
 
+CachePeer::CachePeer(const SBuf &hostAsConfigured):
+    host(SBufToCstring(hostAsConfigured))
+{
+    Tolower(host);
+    identifyAs(hostAsConfigured);
+}
+
 CachePeer::~CachePeer()
 {
-    xfree(name);
+    // idAsCstring_ memory is managed by id_
+
     xfree(host);
 
     while (NeighborTypeDomainList *l = typelist) {
@@ -47,6 +57,40 @@ CachePeer::~CachePeer()
     xfree(domain);
 }
 
+void
+CachePeer::rename(const SBuf &newName)
+{
+    name_ = newName;
+    identifyAs(name_.value());
+}
+
+void
+CachePeer::forgetName()
+{
+    name_.reset();
+    identifyAsHostPort();
+}
+
+void
+CachePeer::finalizeName()
+{
+    if (!name_.has_value())
+        identifyAsHostPort();
+}
+
+void
+CachePeer::identifyAs(const SBuf &newId)
+{
+    id_ = newId;
+    idAsCstring_ = id_.c_str();
+}
+
+void
+CachePeer::identifyAsHostPort()
+{
+    identifyAs(ToSBuf(host, ':', http_port));
+}
+
 time_t
 CachePeer::connectTimeout() const
 {
@@ -55,3 +99,8 @@ CachePeer::connectTimeout() const
     return Config.Timeout.peer_connect;
 }
 
+std::ostream &
+operator <<(std::ostream &os, const CachePeer &p)
+{
+    return os << p.id();
+}

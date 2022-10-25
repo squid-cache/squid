@@ -259,8 +259,12 @@ HierarchyLogEntry::resetPeerNotes(const Comm::ConnectionPointer &server, const c
         code = tcpServer->peerType;
 
         if (tcpServer->getPeer()) {
-            // went to peer, log peer host name
-            xstrncpy(host, tcpServer->getPeer()->name, sizeof(host));
+            // TODO: Convert HierarchyLogEntry::host to SBuf instead.
+            const auto &peerId = tcpServer->getPeer()->id();
+            if (peerId.length() < sizeof(sizeof(host)))
+                SBufToCstring(host, peerId);
+            else
+                xstrncpy(host, "[long peer name]", sizeof(host));
         } else {
             xstrncpy(host, requestedHost, sizeof(host));
         }

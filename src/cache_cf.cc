@@ -982,10 +982,10 @@ configDoConfigure(void)
             p->secure.sslDomain = p->host;
 
         if (p->secure.encryptTransport) {
-            debugs(3, DBG_IMPORTANT, "Initializing cache_peer " << p->name << " TLS context");
+            debugs(3, DBG_IMPORTANT, "Initializing TLS context for cache_peer " << *p);
             p->sslContext = p->secure.createClientContext(true);
             if (!p->sslContext) {
-                debugs(3, DBG_CRITICAL, "ERROR: Could not initialize cache_peer " << p->name << " TLS context");
+                debugs(3, DBG_CRITICAL, "ERROR: Could not initialize TLS context for cache_peer " << *p);
                 self_destruct();
                 return;
             }
@@ -2071,21 +2071,20 @@ static void
 dump_peer(StoreEntry * entry, const char *name, CachePeer * p)
 {
     NeighborTypeDomainList *t;
-    LOCAL_ARRAY(char, xname, 128);
 
     while (p != nullptr) {
-        storeAppendPrintf(entry, "%s %s %s %d %d name=%s",
+        storeAppendPrintf(entry, "%s %s %s %d %d",
                           name,
                           p->host,
                           neighborTypeStr(p),
                           p->http_port,
-                          p->icp.port,
-                          p->name);
+                          p->icp.port);
         dump_peer_options(entry, p);
 
         if (p->access) {
-            snprintf(xname, 128, "cache_peer_access %s", p->name);
-            dump_acl_access(entry, xname, p->access);
+            // TODO: Upgrade dump_acl_access() to use SBuf instead.
+            auto aclContext = ToSBuf("cache_peer_access ", p->id());
+            dump_acl_access(entry, aclContext.c_str(), p->access);
         }
 
         for (t = p->typelist; t; t = t->next) {
@@ -2162,11 +2161,7 @@ GetUdpService(void)
 static void
 parse_peer(CachePeer ** head)
 {
-    char *host_str = ConfigParser::NextToken();
-    if (!host_str) {
-        self_destruct();
-        return;
-    }
+    const auto hostname = LegacyParser.token("cache_peer hostname");
 
     char *token = ConfigParser::NextToken();
     if (!token) {
@@ -2174,10 +2169,8 @@ parse_peer(CachePeer ** head)
         return;
     }
 
-    CachePeer *p = new CachePeer;
-    p->host = xstrdup(host_str);
-    Tolower(p->host);
-    p->name = xstrdup(host_str);
+    const auto p = new CachePeer(hostname); // TODO: std::unique_ptr and move up
+
     p->type = parseNeighborType(token);
 
     if (p->type == PEER_MULTICAST) {
@@ -2340,10 +2333,10 @@ parse_peer(CachePeer ** head)
         } else if (!strcmp(token, "originserver")) {
             p->options.originserver = true;
         } else if (!strncmp(token, "name=", 5)) {
-            safe_free(p->name);
-
             if (token[5])
-                p->name = xstrdup(token + 5);
+                p->rename(SBuf(token + 5));
+            else
+                p->forgetName();
         } else if (!strncmp(token, "forceddomain=", 13)) {
             safe_free(p->domain);
             if (token[13])
@@ -2381,11 +2374,13 @@ parse_peer(CachePeer ** head)
         }
     }
 
-    if (peerFindByName(p->name))
-        fatalf("ERROR: cache_peer %s specified twice\n", p->name);
+    p->finalizeName();
+    if (findCachePeerById(p->id()))
+        throw TextException(ToSBuf("cache_peer ", *p, " specified twice"), Here());
 
     if (p->max_conn > 0 && p->max_conn < p->standby.limit)
-        fatalf("ERROR: cache_peer %s max-conn=%d is lower than its standby=%d\n", p->host, p->max_conn, p->standby.limit);
+        throw TextException(ToSBuf("cache_peer ", *p, " max-conn=", p->max_conn,
+            " is lower than its standby=", p->standby.limit), Here());
 
     if (p->weight < 1)
         p->weight = 1;
@@ -2509,29 +2504,24 @@ free_denyinfo(AclDenyInfoList ** list)
 static void
 parse_peer_access(void)
 {
-    char *host = ConfigParser::NextToken();
-    if (!host) {
-        self_destruct();
-        return;
-    }
-
-    CachePeer *p = peerFindByName(host);
+    const auto host = LegacyParser.token("cache_peer_access peer-name");
+    CachePeer *p = findCachePeerById(host);
     if (!p) {
         debugs(15, DBG_CRITICAL, "ERROR: " << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
         return;
     }
 
-    std::string directive = "peer_access ";
-    directive += host;
+    auto directive = ToSBuf("peer_access ", host);
     aclParseAccessLine(directive.c_str(), LegacyParser, &p->access);
 }
 
 static void
 parse_hostdomaintype(void)
 {
-    char *host = ConfigParser::NextToken();
-    if (!host) {
-        self_destruct();
+    const auto host = LegacyParser.token("neighbor_type_domain neighbor");
+    CachePeer *p = findCachePeerById(host);
+    if (!p) {
+        debugs(15, DBG_CRITICAL, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
         return;
     }
 
@@ -2543,12 +2533,6 @@ parse_hostdomaintype(void)
 
     char *domain = nullptr;
     while ((domain = ConfigParser::NextToken())) {
-        CachePeer *p = peerFindByName(host);
-        if (!p) {
-            debugs(15, DBG_CRITICAL, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
-            return;
-        }
-
         auto *l = static_cast<NeighborTypeDomainList *>(xcalloc(1, sizeof(NeighborTypeDomainList)));
         l->type = parseNeighborType(type);
         l->domain = xstrdup(domain);

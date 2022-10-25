@@ -350,12 +350,12 @@ PconnPool::key(const Comm::ConnectionPointer &destLink, const char *domain)
 void
 PconnPool::dumpHist(StoreEntry * e) const
 {
+    e->append(description.rawContent(), description.length());
     storeAppendPrintf(e,
-                      "%s persistent connection counts:\n"
+                      "persistent connection counts:\n"
                       "\n"
                       "\t Requests\t Connection Count\n"
-                      "\t --------\t ----------------\n",
-                      descr);
+                      "\t --------\t ----------------\n");
 
     for (int i = 0; i < PCONN_HIST_SZ; ++i) {
         if (hist[i] == 0)
@@ -380,8 +380,8 @@ PconnPool::dumpHash(StoreEntry *e) const
 
 /* ========== PconnPool PUBLIC FUNCTIONS ============================================ */
 
-PconnPool::PconnPool(const char *aDescr, const CbcPointer<PeerPoolMgr> &aMgr):
-    table(nullptr), descr(aDescr),
+PconnPool::PconnPool(const SBuf &aDescription, const CbcPointer<PeerPoolMgr> &aMgr):
+    table(nullptr), description(aDescription),
     mgr(aMgr),
     theCount(0)
 {
@@ -405,7 +405,6 @@ PconnPool::~PconnPool()
     PconnModule::GetInstance()->remove(this);
     hashFreeItems(table, &DeleteIdleConnList);
     hashFreeMemory(table);
-    descr = nullptr;
 }
 
 void

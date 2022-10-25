@@ -1303,7 +1303,6 @@ netdbClosestParent(PeerSelector *ps)
     assert(ps);
     HttpRequest *request = ps->request;
 
-    CachePeer *p = nullptr;
     netdbEntry *n;
     const ipcache_addrs *ia;
     net_db_peer *h;
@@ -1338,7 +1337,7 @@ netdbClosestParent(PeerSelector *ps)
             if (n->rtt < h->rtt)
                 break;
 
-        p = peerFindByName(h->peername);
+        const auto p = findCachePeerByHostname(h->peername);
 
         if (nullptr == p)      /* not found */
             continue;

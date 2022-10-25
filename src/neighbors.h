@@ -16,6 +16,7 @@
 #include "ICP.h"
 #include "lookup_t.h"
 #include "typedefs.h" //for IRCB
+#include "sbuf/forward.h"
 
 class HttpRequest;
 class HttpRequestMethod;
@@ -42,8 +43,13 @@ void neighbors_init(void);
 #if USE_HTCP
 void neighborsHtcpClear(StoreEntry *, HttpRequest *, const HttpRequestMethod &, htcp_clr_reason);
 #endif
-CachePeer *peerFindByName(const char *);
-CachePeer *peerFindByNameAndPort(const char *, unsigned short);
+
+/// cache_peer with a given ID (or nil)
+CachePeer *findCachePeerById(const SBuf &);
+
+/// cache_peer configured with a given hostname (or nil)
+CachePeer *findCachePeerByHostname(const char *);
+
 CachePeer *getDefaultParent(PeerSelector*);
 CachePeer *getRoundRobinParent(PeerSelector*);
 CachePeer *getWeightedRoundRobinParent(PeerSelector*);

@@ -49,7 +49,6 @@ peerUserHashInit(void)
     double P_last, X_last, Xn;
     CachePeer *p;
     CachePeer **P;
-    char *t;
     /* Clean up */
 
     for (k = 0; k < n_userhash_peers; ++k) {
@@ -92,8 +91,8 @@ peerUserHashInit(void)
         /* calculate this peers hash */
         p->userhash.hash = 0;
 
-        for (t = p->name; *t != 0; ++t)
-            p->userhash.hash += ROTATE_LEFT(p->userhash.hash, 19) + (unsigned int) *t;
+        for (const auto ch: p->id())
+            p->userhash.hash += ROTATE_LEFT(p->userhash.hash, 19) + static_cast<unsigned int>(ch);
 
         p->userhash.hash += p->userhash.hash * 0x62531965;
 
@@ -185,7 +184,7 @@ peerUserHashSelectParent(PeerSelector *ps)
         combined_hash += combined_hash * 0x62531965;
         combined_hash = ROTATE_LEFT(combined_hash, 21);
         score = combined_hash * tp->userhash.load_multiplier;
-        debugs(39, 3, "peerUserHashSelectParent: " << tp->name << " combined_hash " << combined_hash  <<
+        debugs(39, 3, *tp << " combined_hash " << combined_hash  <<
                " score " << std::setprecision(0) << score);
 
         if ((score > high_score) && peerHTTPOkay(tp, ps)) {
@@ -195,7 +194,7 @@ peerUserHashSelectParent(PeerSelector *ps)
     }
 
     if (p)
-        debugs(39, 2, "peerUserHashSelectParent: selected " << p->name);
+        debugs(39, 2, "selected " << *p);
 
     return p;
 }
@@ -216,8 +215,10 @@ peerUserHashCachemgr(StoreEntry * sentry)
         sumfetches += p->stats.fetches;
 
     for (p = Config.peers; p; p = p->next) {
+        auto peerId = p->id();
         storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",
-                          p->name, p->userhash.hash,
+                          peerId.c_str(),
+                          p->userhash.hash,
                           p->userhash.load_multiplier,
                           p->userhash.load_factor,
                           sumfetches ? (double) p->stats.fetches / sumfetches : -1.0);

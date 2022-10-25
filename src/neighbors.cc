@@ -145,7 +145,7 @@ peerAllowedToUse(const CachePeer * p, PeerSelector * ps)
 #if PEER_MULTICAST_SIBLINGS
         if (p->type == PEER_MULTICAST && p->options.mcast_siblings &&
                 (request->flags.noCache || request->flags.refresh || request->flags.loopDetected || request->flags.needValidation))
-            debugs(15, 2, "peerAllowedToUse(" << p->name << ", " << request->url.authority() << ") : multicast-siblings optimization match");
+            debugs(15, 2, "peerAllowedToUse(" << *p << ", " << request->url.authority() << ") : multicast-siblings optimization match");
 #endif
         if (request->flags.noCache)
             return false;
@@ -459,7 +459,7 @@ static void
 peerAlive(CachePeer *p)
 {
     if (p->stats.logged_state == PEER_DEAD && p->tcp_up) {
-        debugs(15, DBG_IMPORTANT, "Detected REVIVED " << neighborTypeStr(p) << ": " << p->name);
+        debugs(15, DBG_IMPORTANT, "Detected REVIVED " << neighborTypeStr(p) << ": " << *p);
         p->stats.logged_state = PEER_ALIVE;
         peerClearRR();
         if (p->standby.mgr.valid())
@@ -703,7 +703,7 @@ neighborsUdpPing(HttpRequest * request,
             /* log it once at the threshold */
 
             if (p->stats.logged_state == PEER_ALIVE) {
-                debugs(15, DBG_IMPORTANT, "Detected DEAD " << neighborTypeStr(p) << ": " << p->name);
+                debugs(15, DBG_IMPORTANT, "Detected DEAD " << neighborTypeStr(p) << ": " << *p);
                 p->stats.logged_state = PEER_DEAD;
             }
         }
@@ -963,12 +963,12 @@ neighborIgnoreNonPeer(const Ip::Address &from, icp_opcode opcode)
     }
 
     if (np == nullptr) {
-        np = new CachePeer;
+        char host[MAX_IPSTRLEN];
+        from.toStr(host, sizeof(host));
+        np = new CachePeer(SBuf(host));
         np->in_addr = from;
         np->icp.port = from.port();
         np->type = PEER_NONE;
-        np->host = new char[MAX_IPSTRLEN];
-        from.toStr(np->host,MAX_IPSTRLEN);
         np->next = non_peers;
         non_peers = np;
     }
@@ -1129,12 +1129,12 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
 }
 
 CachePeer *
-peerFindByName(const char *name)
+findCachePeerById(const SBuf &name)
 {
     CachePeer *p = nullptr;
 
     for (p = Config.peers; p; p = p->next) {
-        if (!strcasecmp(name, p->name))
+        if (p->id() == name)
             break;
     }
 
@@ -1142,18 +1142,13 @@ peerFindByName(const char *name)
 }
 
 CachePeer *
-peerFindByNameAndPort(const char *name, unsigned short port)
+findCachePeerByHostname(const char *hostname)
 {
     CachePeer *p = nullptr;
 
     for (p = Config.peers; p; p = p->next) {
-        if (strcasecmp(name, p->name))
-            continue;
-
-        if (port != p->http_port)
-            continue;
-
-        break;
+        if (strcmp(p->host, hostname) == 0)
+            break;
     }
 
     return p;
@@ -1293,14 +1288,14 @@ peerConnectFailed(CachePeer * const p)
 
     if (consideredAliveByAdmin) {
         if (!p->tcp_up) {
-            debugs(15, DBG_IMPORTANT, "Detected DEAD " << neighborTypeStr(p) << ": " << p->name);
+            debugs(15, DBG_IMPORTANT, "Detected DEAD " << neighborTypeStr(p) << ": " << *p);
             p->stats.logged_state = PEER_DEAD;
         } else {
             debugs(15, 2, "additional failures needed to mark this cache_peer DEAD: " << p->tcp_up);
         }
     } else {
         assert(!p->tcp_up);
-        debugs(15, 2, "cache_peer " << p->host << "/" << p->http_port << " is still DEAD");
+        debugs(15, 2, "cache_peer is still DEAD");
     }
 }
 
@@ -1643,6 +1638,9 @@ dump_peer_options(StoreEntry * sentry, CachePeer * p)
     else if (p->connection_auth == 2)
         storeAppendPrintf(sentry, " connection-auth=auto");
 
+    if (p->named())
+        storeAppendPrintf(sentry, " name=" SQUIDSBUFPH, SQUIDSBUFPRINT(p->id()));
+
     p->secure.dumpCfg(sentry,"tls-");
     storeAppendPrintf(sentry, "\n");
 }
@@ -1658,9 +1656,9 @@ dump_peers(StoreEntry * sentry, CachePeer * peers)
 
     for (CachePeer *e = peers; e; e = e->next) {
         assert(e->host != nullptr);
-        storeAppendPrintf(sentry, "\n%-11.11s: %s\n",
+        storeAppendPrintf(sentry, "\n%-11.11s: " SQUIDSBUFPH "\n",
                           neighborTypeStr(e),
-                          e->name);
+                          SQUIDSBUFPRINT(e->id()));
         storeAppendPrintf(sentry, "Host       : %s/%d/%d\n",
                           e->host,
                           e->http_port,

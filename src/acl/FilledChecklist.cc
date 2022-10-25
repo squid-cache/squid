@@ -254,24 +254,28 @@ ACLFilledChecklist::setPeer(const CachePeer * const peer)
 {
     // TODO: Replace code that still does this manually with setPeer().
     if (dst_peer_name.isEmpty() && peer)
-        dst_peer_name = peer->name;
+        dst_peer_name = peer->id();
 }
 
 void
-ACLFilledChecklist::setOutgoingConnection(const Comm::ConnectionPointer &outgoingConn)
+ACLFilledChecklist::setOutgoingConnection(const Comm::Connection &outgoingConn)
 {
     // TODO: Replace code that still does this manually with setOutgoingConnection().
-    if (!outgoingConn)
-        return;
-
-    setPeer(outgoingConn->getPeer());
+    setPeer(outgoingConn.getPeer());
 
     // TODO: ACLIP::match(ip) does not check whether ip has been set. Should it?
     static const Ip::Address Empty; // constructed with setEmpty()
     if (dst_addr == Empty)
-        dst_addr = outgoingConn->remote; // may be empty
+        dst_addr = outgoingConn.remote; // may be empty
 
     // no ACLs check outgoingConn->local
+}
+
+void
+ACLFilledChecklist::setOutgoingConnection(const Comm::ConnectionPointer &outgoingConnPtr)
+{
+    if (outgoingConnPtr)
+        setOutgoingConnection(*outgoingConnPtr);
 }
 
 void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
