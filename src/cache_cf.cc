@@ -2169,7 +2169,7 @@ parse_peer(CachePeer ** head)
         return;
     }
 
-    const auto p = new CachePeer(hostname); // TODO: std::unique_ptr and move up
+    const auto p = new CachePeer(hostname);
 
     p->type = parseNeighborType(token);
 
