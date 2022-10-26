@@ -12,6 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
 #include "base/EnumIterator.h"
+#include "base/IoManip.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
 #include "comm/Connection.h"
@@ -305,7 +306,7 @@ getFirstUpParent(PeerSelector *ps)
         break;
     }
 
-    debugs(15, 3, "getFirstUpParent: returning " << (p ? p->host : "NULL"));
+    debugs(15, 3, "returning " << RawPointer(p).orNil());
     return p;
 }
 
@@ -346,7 +347,7 @@ getRoundRobinParent(PeerSelector *ps)
     if (q)
         ++ q->rr_count;
 
-    debugs(15, 3, "returning " << (q ? q->host : "NULL"));
+    debugs(15, 3, "returning " << RawPointer(q).orNil());
 
     return q;
 }
@@ -399,7 +400,7 @@ getWeightedRoundRobinParent(PeerSelector *ps)
         debugs(15, 3, "getWeightedRoundRobinParent: weighted_rtt " << weighted_rtt);
     }
 
-    debugs(15, 3, "getWeightedRoundRobinParent: returning " << (q ? q->host : "NULL"));
+    debugs(15, 3, "returning " << RawPointer(q).orNil());
     return q;
 }
 
@@ -488,12 +489,13 @@ getDefaultParent(PeerSelector *ps)
         if (!peerHTTPOkay(p, ps))
             continue;
 
-        debugs(15, 3, "getDefaultParent: returning " << p->host);
+        debugs(15, 3, "returning " << *p);
 
         return p;
     }
 
-    debugs(15, 3, "getDefaultParent: returning NULL");
+    // TODO: Refactor similar get*() functions to use our return/reporting style
+    debugs(15, 3, "none found");
     return nullptr;
 }
 
@@ -573,10 +575,7 @@ neighbors_init(void)
                     continue;
 
                 debugs(15, DBG_IMPORTANT, "WARNING: Peer looks like this host." <<
-                       Debug::Extra << "Ignoring " <<
-                       neighborTypeStr(thisPeer) << " " << thisPeer->host <<
-                       "/" << thisPeer->http_port << "/" <<
-                       thisPeer->icp.port);
+                       Debug::Extra << "Ignoring cache_peer " << *thisPeer);
 
                 neighborRemove(thisPeer);
             }
@@ -628,14 +627,14 @@ neighborsUdpPing(HttpRequest * request,
         if (p == nullptr)
             p = Config.peers;
 
-        debugs(15, 5, "neighborsUdpPing: Peer " << p->host);
+        debugs(15, 5, "candidate: " << *p);
 
         if (!peerWouldBePinged(p, ps))
             continue;       /* next CachePeer */
 
         ++peers_pinged;
 
-        debugs(15, 4, "neighborsUdpPing: pinging peer " << p->host << " for '" << url << "'");
+        debugs(15, 4, "pinging peer " << *p << " for '" << url << "'");
 
         debugs(15, 3, "neighborsUdpPing: key = '" << entry->getMD5Text() << "'");
 
@@ -764,7 +763,7 @@ peerDigestLookup(CachePeer * p, PeerSelector * ps)
     const cache_key *key = request ? storeKeyPublicByRequest(request) : nullptr;
     assert(p);
     assert(request);
-    debugs(15, 5, "peerDigestLookup: peer " << p->host);
+    debugs(15, 5, "peerDigestLookup: peer " << *p);
     /* does the peeer have a valid digest? */
 
     if (!p->digest) {
@@ -782,14 +781,14 @@ peerDigestLookup(CachePeer * p, PeerSelector * ps)
         return LOOKUP_NONE;
     }
 
-    debugs(15, 5, "peerDigestLookup: OK to lookup peer " << p->host);
+    debugs(15, 5, "peerDigestLookup: OK to lookup peer " << *p);
     assert(p->digest->cd);
     /* does digest predict a hit? */
 
     if (!p->digest->cd->contains(key))
         return LOOKUP_MISS;
 
-    debugs(15, 5, "peerDigestLookup: peer " << p->host << " says HIT!");
+    debugs(15, 5, "peerDigestLookup: peer " << *p << " says HIT!");
 
     return LOOKUP_HIT;
 #else
@@ -842,7 +841,7 @@ neighborsDigestSelect(PeerSelector *ps)
 
         p_rtt = netdbHostRtt(p->host);
 
-        debugs(15, 5, "neighborsDigestSelect: peer " << p->host << " rtt: " << p_rtt);
+        debugs(15, 5, "neighborsDigestSelect: peer " << *p << " rtt: " << p_rtt);
 
         /* is this CachePeer better than others in terms of rtt ? */
         if (!best_p || (p_rtt && p_rtt < best_rtt)) {
@@ -852,7 +851,7 @@ neighborsDigestSelect(PeerSelector *ps)
             if (p_rtt)      /* informative choice (aka educated guess) */
                 ++ichoice_count;
 
-            debugs(15, 4, "neighborsDigestSelect: peer " << p->host << " leads with rtt " << best_rtt);
+            debugs(15, 4, "neighborsDigestSelect: peer " << *p << " leads with rtt " << best_rtt);
         }
     }
 
@@ -878,7 +877,7 @@ peerNoteDigestLookup(HttpRequest * request, CachePeer * p, lookup_t lookup)
         *request->hier.cd_host = '\0';
 
     request->hier.cd_lookup = lookup;
-    debugs(15, 4, "peerNoteDigestLookup: peer " << (p? p->host : "<none>") << ", lookup: " << lookup_t_str[lookup]  );
+    debugs(15, 4, "peer " << RawPointer(p).orNil() << ", lookup: " << lookup_t_str[lookup]);
 #else
     (void)request;
     (void)p;
@@ -976,7 +975,7 @@ neighborIgnoreNonPeer(const Ip::Address &from, icp_opcode opcode)
     ++ np->icp.counts[opcode];
 
     if (isPowTen(++np->stats.ignored_replies))
-        debugs(15, DBG_IMPORTANT, "WARNING: Ignored " << np->stats.ignored_replies << " replies from non-peer " << np->host);
+        debugs(15, DBG_IMPORTANT, "WARNING: Ignored " << np->stats.ignored_replies << " replies from non-peer " << *np);
 }
 
 /* ignoreMulticastReply
@@ -1071,7 +1070,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
         return;
     }
 
-    debugs(15, 3, "neighborsUdpAck: " << opcode_d << " for '" << storeKeyText(key) << "' from " << (p ? p->host : "source") << " ");
+    debugs(15, 3, opcode_d << " for '" << storeKeyText(key) << "' from " << RawPointer(p).orNil("source"));
 
     if (p) {
         ntype = neighborType(p, mem->request->url);
@@ -1103,7 +1102,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
         }
     } else if (opcode == ICP_SECHO) {
         if (p) {
-            debugs(15, DBG_IMPORTANT, "Ignoring SECHO from neighbor " << p->host);
+            debugs(15, DBG_IMPORTANT, "Ignoring SECHO from neighbor " << *p);
             neighborCountIgnored(p);
         } else {
             debugs(15, DBG_IMPORTANT, "Unsolicited SECHO from " << from);
@@ -1113,8 +1112,8 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
             neighborIgnoreNonPeer(from, opcode);
         } else if (p->stats.pings_acked > 100) {
             if (100 * p->icp.counts[ICP_DENIED] / p->stats.pings_acked > 95) {
-                debugs(15, DBG_CRITICAL, "95%% of replies from '" << p->host << "' are UDP_DENIED");
-                debugs(15, DBG_CRITICAL, "Disabling '" << p->host << "', please check your configuration.");
+                debugs(15, DBG_CRITICAL, "95% of replies from " << *p << " are UDP_DENIED");
+                debugs(15, DBG_CRITICAL, "Disabling " << *p << ", please check your configuration.");
                 neighborRemove(p);
                 p = nullptr;
             } else {
@@ -1167,22 +1166,22 @@ neighborUp(const CachePeer * p)
      * for it.
      */
     if (0 == p->n_addresses) {
-        debugs(15, 8, "neighborUp: DOWN (no-ip): " << p->host << " (" << p->in_addr << ")");
+        debugs(15, 8, "DOWN (no-ip): " << *p);
         return 0;
     }
 
     if (p->options.no_query) {
-        debugs(15, 8, "neighborUp: UP (no-query): " << p->host << " (" << p->in_addr << ")");
+        debugs(15, 8, "UP (no-query): " << *p);
         return 1;
     }
 
     if (p->stats.probe_start != 0 &&
             squid_curtime - p->stats.probe_start > Config.Timeout.deadPeer) {
-        debugs(15, 8, "neighborUp: DOWN (dead): " << p->host << " (" << p->in_addr << ")");
+        debugs(15, 8, "DOWN (dead): " << *p);
         return 0;
     }
 
-    debugs(15, 8, "neighborUp: UP: " << p->host << " (" << p->in_addr << ")");
+    debugs(15, 8, "UP: " << *p);
     return 1;
 }
 
@@ -1201,7 +1200,7 @@ peerDNSConfigure(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data
     CachePeer *p = (CachePeer *)data;
 
     if (p->n_addresses == 0) {
-        debugs(15, Important(29), "Configuring " << neighborTypeStr(p) << " " << p->host << "/" << p->http_port << "/" << p->icp.port);
+        debugs(15, Important(29), "Configuring " << neighborTypeStr(p) << " " << *p);
 
         if (p->type == PEER_MULTICAST)
             debugs(15, DBG_IMPORTANT, "    Multicast TTL = " << p->mcast.ttl);
@@ -1210,12 +1209,12 @@ peerDNSConfigure(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data
     p->n_addresses = 0;
 
     if (ia == nullptr) {
-        debugs(0, DBG_CRITICAL, "WARNING: DNS lookup for '" << p->host << "' failed!");
+        debugs(0, DBG_CRITICAL, "WARNING: DNS lookup for '" << *p << "' failed!");
         return;
     }
 
     if (ia->empty()) {
-        debugs(0, DBG_CRITICAL, "WARNING: No IP address found for '" << p->host << "'!");
+        debugs(0, DBG_CRITICAL, "WARNING: No IP address found for '" << *p << "'!");
         return;
     }
 
@@ -1284,7 +1283,7 @@ peerConnectFailed(CachePeer * const p)
 
     const auto consideredAliveByAdmin = p->stats.logged_state == PEER_ALIVE;
     const auto level = consideredAliveByAdmin ? DBG_IMPORTANT : 2;
-    debugs(15, level, "ERROR: TCP connection to " << p->host << "/" << p->http_port << " failed");
+    debugs(15, level, "ERROR: TCP connection to " << *p << " failed");
 
     if (consideredAliveByAdmin) {
         if (!p->tcp_up) {
@@ -1303,7 +1302,7 @@ void
 peerConnectSucceded(CachePeer * p)
 {
     if (!p->tcp_up) {
-        debugs(15, 2, "TCP connection to " << p->host << "/" << p->http_port << " succeeded");
+        debugs(15, 2, "TCP connection to " << *p << " succeeded");
         p->tcp_up = p->connect_fail_limit; // NP: so peerAlive(p) works properly.
         peerAlive(p);
         if (!p->n_addresses)
@@ -1469,7 +1468,7 @@ peerCountMcastPeersAbort(PeerSelector * const psstate)
         CachePeer *p = (CachePeer *)psstate->peerCountMcastPeerXXX;
         p->mcast.flags.counting = false;
         p->mcast.avg_n_members = Math::doubleAverage(p->mcast.avg_n_members, (double) psstate->ping.n_recv, ++p->mcast.n_times_counted, 10);
-        debugs(15, DBG_IMPORTANT, "Group " << p->host  << ": " << psstate->ping.n_recv  <<
+        debugs(15, DBG_IMPORTANT, "Group " << *p  << ": " << psstate->ping.n_recv  <<
                " replies, "<< std::setw(4)<< std::setprecision(2) <<
                p->mcast.avg_n_members <<" average, RTT " << p->stats.rtt);
         p->mcast.n_replies_expected = (int) p->mcast.avg_n_members;

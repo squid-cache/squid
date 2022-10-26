@@ -695,7 +695,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         return;
     }
 
-    debugs(38, 3, "netdbExchangeHandleReply: for '" << ex->p->host << ":" << ex->p->http_port << "'");
+    debugs(38, 3, "netdbExchangeHandleReply: for " << *ex->p);
 
     if (receivedData.length == 0 && !receivedData.flags.error) {
         debugs(38, 3, "netdbExchangeHandleReply: Done");

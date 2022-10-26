@@ -44,6 +44,14 @@ RawPointer(const char *label, const Pointer &ptr)
     return RawPointerT<Pointer>(label, ptr);
 }
 
+/// convenience wrapper for creating  RawPointerT<> objects without a label
+template <class Pointer>
+inline RawPointerT<Pointer>
+RawPointer(const Pointer &ptr)
+{
+    return RawPointerT<Pointer>(nullptr, ptr);
+}
+
 /// prints RawPointerT<>, dereferencing the io_manip pointer if possible
 template <class Pointer>
 inline std::ostream &
