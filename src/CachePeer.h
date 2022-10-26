@@ -40,6 +40,7 @@ public:
     /// cache_peer name (if explicitly configured) or hostname[:http_port] (otherwise).
     /// This ID is unique across already configured cache_peers in the current configuration.
     /// This ID is unique across discovered non-peers (see mgr:non_peers).
+    /// This ID affects various peer selection hashes (e.g., carp.hash).
     const SBuf &id() const { return id_; }
 
     /// \copydoc id()

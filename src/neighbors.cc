@@ -627,14 +627,14 @@ neighborsUdpPing(HttpRequest * request,
         if (p == nullptr)
             p = Config.peers;
 
-        debugs(15, 5, "candidate: " << *p);
+        debugs(15, 5, "neighborsUdpPing: candidate: " << *p);
 
         if (!peerWouldBePinged(p, ps))
             continue;       /* next CachePeer */
 
         ++peers_pinged;
 
-        debugs(15, 4, "pinging peer " << *p << " for '" << url << "'");
+        debugs(15, 4, "neighborsUdpPing: pinging peer " << *p << " for '" << url << "'");
 
         debugs(15, 3, "neighborsUdpPing: key = '" << entry->getMD5Text() << "'");
 
@@ -1128,12 +1128,12 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
 }
 
 CachePeer *
-findCachePeerById(const SBuf &name)
+findCachePeerById(const SBuf &id)
 {
     CachePeer *p = nullptr;
 
     for (p = Config.peers; p; p = p->next) {
-        if (p->id() == name)
+        if (p->id() == id)
             break;
     }
 

@@ -352,7 +352,7 @@ PconnPool::dumpHist(StoreEntry * e) const
 {
     e->append(description.rawContent(), description.length());
     storeAppendPrintf(e,
-                      "persistent connection counts:\n"
+                      " persistent connection counts:\n"
                       "\n"
                       "\t Requests\t Connection Count\n"
                       "\t --------\t ----------------\n");
@@ -381,7 +381,8 @@ PconnPool::dumpHash(StoreEntry *e) const
 /* ========== PconnPool PUBLIC FUNCTIONS ============================================ */
 
 PconnPool::PconnPool(const SBuf &aDescription, const CbcPointer<PeerPoolMgr> &aMgr):
-    table(nullptr), description(aDescription),
+    table(nullptr),
+    description(aDescription),
     mgr(aMgr),
     theCount(0)
 {

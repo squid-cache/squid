@@ -25,7 +25,7 @@ public:
     /// Report the pointed-to-object on a dedicated Debug::Extra line.
     RawPointerT<Pointer> &asExtra() { onExtraLine = true; return *this; }
 
-    RawPointerT<Pointer> &orNil(const char *nilTextToUse = "nil") { nilText = nilTextToUse; return *this; }
+    RawPointerT<Pointer> &orNil(const char *nilTextToUse = "[nil]") { nilText = nilTextToUse; return *this; }
 
     const char *label; /// the name or description of the being-debugged object
 

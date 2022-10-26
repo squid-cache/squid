@@ -2505,7 +2505,7 @@ static void
 parse_peer_access(void)
 {
     const auto host = LegacyParser.token("cache_peer_access peer-name");
-    CachePeer *p = findCachePeerById(host);
+    const auto p = findCachePeerById(host);
     if (!p) {
         debugs(15, DBG_CRITICAL, "ERROR: " << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
         return;
@@ -2519,7 +2519,7 @@ static void
 parse_hostdomaintype(void)
 {
     const auto host = LegacyParser.token("neighbor_type_domain neighbor");
-    CachePeer *p = findCachePeerById(host);
+    const auto p = findCachePeerById(host);
     if (!p) {
         debugs(15, DBG_CRITICAL, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
         return;

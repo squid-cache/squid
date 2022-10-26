@@ -113,7 +113,7 @@ class PconnPool
 {
 
 public:
-    PconnPool(const SBuf &aDescription, const CbcPointer<PeerPoolMgr> &aMgr);
+    PconnPool(const SBuf &aDescription, const CbcPointer<PeerPoolMgr> &);
     ~PconnPool();
 
     void moduleInit();
