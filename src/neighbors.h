@@ -15,8 +15,8 @@
 #include "enums.h"
 #include "ICP.h"
 #include "lookup_t.h"
-#include "typedefs.h" //for IRCB
 #include "sbuf/forward.h"
+#include "typedefs.h" //for IRCB
 
 class HttpRequest;
 class HttpRequestMethod;

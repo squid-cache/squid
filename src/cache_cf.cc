@@ -2380,7 +2380,7 @@ parse_peer(CachePeer ** head)
 
     if (p->max_conn > 0 && p->max_conn < p->standby.limit)
         throw TextException(ToSBuf("cache_peer ", *p, " max-conn=", p->max_conn,
-            " is lower than its standby=", p->standby.limit), Here());
+                                   " is lower than its standby=", p->standby.limit), Here());
 
     if (p->weight < 1)
         p->weight = 1;
