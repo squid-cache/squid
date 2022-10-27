@@ -148,13 +148,20 @@ static void ValidateStaticError(const int page_id, const SBuf &inputLocation);
  \note  hard coded error messages are not appended with %S
  *      automagically to give you more control on the format
  */
-static const struct {
+struct DefaultMessages {
     int type;           /* and page_id */
     const char *text;
-}
+};
 
-error_hard_text[] = {
+static std::array<err_type, 5> HardCodedErrors = {
+    TCP_RESET,
+    ERR_CLIENT_GONE,
+    ERR_SECURE_ACCEPT_FAIL,
+    ERR_REQUEST_START_TIMEOUT,
+    ERR_REQUEST_PARSE_TIMEOUT
+};
 
+static std::array<DefaultMessages, 2> TemplateDefaults = {{
     {
         ERR_SQUID_SIGNATURE,
         "\n<br>\n"
@@ -165,34 +172,15 @@ error_hard_text[] = {
         "</body></html>\n"
     },
     {
-        TCP_RESET,
-        "reset"
-    },
-    {
-        ERR_CLIENT_GONE,
-        "unexpected client disconnect"
-    },
-    {
-        ERR_SECURE_ACCEPT_FAIL,
-        "secure accept fail"
-    },
-    {
-        ERR_REQUEST_START_TIMEOUT,
-        "request start timedout"
-    },
-    {
         MGR_INDEX,
         "mgr_index"
     }
-};
+}};
 
 /// \ingroup ErrorPageInternal
 static std::vector<ErrorDynamicPageInfo *> ErrorDynamicPages;
 
 /* local prototypes */
-
-/// \ingroup ErrorPageInternal
-static const int error_hard_text_count = sizeof(error_hard_text) / sizeof(*error_hard_text);
 
 /// \ingroup ErrorPageInternal
 static char **error_text = nullptr;
@@ -203,7 +191,6 @@ static int error_page_count = 0;
 /// \ingroup ErrorPageInternal
 static MemBuf error_stylesheet;
 
-static const char *errorFindHardText(err_type type);
 static IOCB errorSendComplete;
 
 /// \ingroup ErrorPageInternal
@@ -255,21 +242,13 @@ errorInitialize(void)
     using ErrorPage::ImportStaticErrorText;
 
     err_type i;
-    const char *text;
     error_page_count = ERR_MAX + ErrorDynamicPages.size();
     error_text = static_cast<char **>(xcalloc(error_page_count, sizeof(char *)));
 
     for (i = ERR_NONE, ++i; i < error_page_count; ++i) {
         safe_free(error_text[i]);
 
-        if ((text = errorFindHardText(i))) {
-            /**\par
-             * Index any hard-coded error text into defaults.
-             */
-            static const SBuf builtIn("built-in");
-            ImportStaticErrorText(i, text, builtIn);
-
-        } else if (i < ERR_MAX) {
+        if (i < ERR_MAX) {
             /**\par
              * Index precompiled fixed template files from one of two sources:
              *  (a) default language translation directory (error_default_language)
@@ -336,16 +315,18 @@ errorClean(void)
 }
 
 /// \ingroup ErrorPageInternal
-static const char *
-errorFindHardText(err_type type)
+static bool
+IsHardCodedError(const err_type type)
 {
-    int i;
+    return std::find(begin(HardCodedErrors), end(HardCodedErrors), type) != end(HardCodedErrors);
+}
 
-    for (i = 0; i < error_hard_text_count; ++i)
-        if (error_hard_text[i].type == type)
-            return error_hard_text[i].text;
-
-    return nullptr;
+/// \ingroup ErrorPageInternal
+static bool
+IsTemplateDefault(const err_type type)
+{
+    return std::find_if(begin(TemplateDefaults), end(TemplateDefaults), [&](const DefaultMessages &m) {
+            return m.type == type; }) != end(TemplateDefaults);
 }
 
 TemplateFile::TemplateFile(const char *name, const err_type code): silent(false), wasLoaded(false), templateName(name), templateCode(code)
@@ -380,12 +361,26 @@ TemplateFile::loadDefault()
         tryLoadTemplate("templates");
     }
 
+    if (!loaded())
+        applyTemplateDefaults();
+
     /* giving up if failed */
     if (!loaded()) {
         debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "WARNING: failed to find or read error text file " << templateName);
         template_.clear();
         setDefault();
         wasLoaded = true;
+    }
+}
+
+void
+TemplateFile::applyTemplateDefaults()
+{
+    for (const auto &m : TemplateDefaults) {
+        if (m.type == templateCode) {
+            template_ =  m.text;
+            wasLoaded = true;
+        }
     }
 }
 
@@ -428,7 +423,7 @@ TemplateFile::loadFromFile(const char *path)
 
     if (fd < 0) {
         /* with dynamic locale negotiation we may see some failures before a success. */
-        if (!silent && templateCode < TCP_RESET) {
+        if (!silent && templateCode < TCP_RESET && !IsTemplateDefault(templateCode)) {
             int xerrno = errno;
             debugs(4, DBG_CRITICAL, "ERROR: loading file '" << path << "': " << xstrerr(xerrno));
         }
@@ -437,6 +432,14 @@ TemplateFile::loadFromFile(const char *path)
     }
 
     template_.clear();
+
+    if (IsHardCodedError(templateCode)) {
+        debugs(4, DBG_IMPORTANT, "WARNING: ignoring '" << path << "' because the template " << templateName << " is not configurable");
+        file_close(fd);
+        wasLoaded = false;
+        return false;
+    }
+
     while ((len = FD_READ_METHOD(fd, buf, sizeof(buf))) > 0) {
         template_.append(buf, len);
     }

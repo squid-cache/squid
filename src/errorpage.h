@@ -322,6 +322,9 @@ protected:
     /// recover from loadDefault() failure to load or parse() a template
     virtual void setDefault() {}
 
+    /// sets default text for optional and missing error pages
+    void applyTemplateDefaults();
+
     /**
      * Try to load the "page_name" template for a given language "lang"
      * from squid errors directory
