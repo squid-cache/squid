@@ -970,8 +970,15 @@ void
 Ssl::chainCertificatesToSSLContext(Security::ContextPointer &ctx, Security::ServerOptions &options)
 {
     assert(ctx);
+
+    const auto signingCert = options.signingCa.cert.get();
+
+    if (Security::SelfSigned(*signingCert)) {
+        debugs(33, 3, "do not send self-signed certificates via SSL_CTX_add_extra_chain_cert(): " << *signingCert);
+        return;
+    }
+
     // Add signing certificate to the certificates chain
-    X509 *signingCert = options.signingCa.cert.get();
     if (SSL_CTX_add_extra_chain_cert(ctx.get(), signingCert)) {
         // increase the certificate lock
         X509_up_ref(signingCert);

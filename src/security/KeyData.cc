@@ -50,11 +50,13 @@ Security::KeyData::loadCertificates()
         while (const auto bundledCert = Ssl::ReadOptionalCertificate(bio)) {
             assert(!wireCerts.empty()); // this->cert is there (at least)
 
-            // We cannot chain any certificate after a self-signed certificate. This
-            // check also protects the IssuedBy() check below from adding duplicated
-            // (i.e. listed multiple times in the bundle) self-signed certificates.
-            if (SelfSigned(*wireCerts.back())) {
-                debugs(83, DBG_PARSE_NOTE(2), "WARNING: Ignoring certificate after a self-signed one: " << *bundledCert);
+            // We ignore a self-signed certificate because it should not be
+            // sent: The recipients that do not already have it should not trust
+            // it. This check also protects the IssuedBy() check below from
+            // adding duplicated (i.e. listed multiple times in the bundle)
+            // self-signed signing certificates.
+            if (SelfSigned(*bundledCert)) {
+                debugs(83, DBG_PARSE_NOTE(2), "WARNING: Ignoring self-signed certificate: " << *bundledCert);
                 continue; // ... but keep going to report all ignored certificates
             }
 
