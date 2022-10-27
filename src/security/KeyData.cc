@@ -44,32 +44,42 @@ Security::KeyData::loadCertificates()
     }
 
     try {
-        // selected bundled certificates in sending order: wireCerts = cert + chain
-        CertList wireCerts(1, cert);
+        // Squid sends `cert` (loaded above) followed by certificates in `chain`
+        // (formed below by loading and sorting the remaining certificates).
 
-        while (const auto bundledCert = Ssl::ReadOptionalCertificate(bio)) {
-            assert(!wireCerts.empty()); // this->cert is there (at least)
-
-            // We cannot chain any certificate after a self-signed certificate. This
-            // check also protects the IssuedBy() check below from adding duplicated
-            // (i.e. listed multiple times in the bundle) self-signed certificates.
-            if (SelfSigned(*wireCerts.back())) {
-                debugs(83, DBG_PARSE_NOTE(2), "WARNING: Ignoring certificate after a self-signed one: " << *bundledCert);
-                continue; // ... but keep going to report all ignored certificates
-            }
-
-            // add the bundled certificate if it extends the chain further
-            if (IssuedBy(*wireCerts.back(), *bundledCert)) {
-                debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << *bundledCert);
-                // OpenSSL API requires that we order certificates such that the
-                // chain can be appended directly into the on-wire traffic.
-                chain.emplace_back(bundledCert);
-                wireCerts.emplace_back(bundledCert);
+        // scan all the remaining configured certificates and keep intermediates
+        CertList intermediates;
+        while (const auto ca = Ssl::ReadOptionalCertificate(bio)) {
+            // We ignore a self-signed certificate because it should not be sent:
+            // The recipients that do not already have it should not trust it.
+            // Ignoring self-signed also simplifies the intermediates loop below.
+            if (SelfSigned(*ca)) {
+                debugs(83, DBG_IMPORTANT, "WARNING: Ignoring a self-signed CA " << *ca);
                 continue;
             }
 
-            debugs(83, DBG_PARSE_NOTE(2), "WARNING: Ignoring certificate that does not extend the chain: " << *bundledCert);
+            intermediates.emplace_back(ca);
         }
+
+        // Push certificates into `chain` in on-the-wire order, as defined by
+        // RFC 8446 Section 4.4.2: "Each following certificate SHOULD directly
+        // certify the one immediately preceding it."
+        while (!intermediates.empty()) {
+            const auto precedingCert = chain.empty() ? cert : chain.back();
+            const auto issuerPos = std::find_if(intermediates.begin(), intermediates.end(), [&](const CertPointer &i) {
+                return IssuedBy(*precedingCert, *i);
+            });
+            if (issuerPos == intermediates.end())
+                break;
+
+            const auto &issuer = *issuerPos;
+            debugs(83, DBG_PARSE_NOTE(3), "Adding intermediate CA: " << *issuer);
+            chain.emplace_back(issuer);
+            intermediates.erase(issuerPos);
+        }
+
+        for (const auto &i: intermediates)
+            debugs(83, DBG_IMPORTANT, "WARNING: Ignoring certificate that does not extend the chain: " << *i);
     }
     catch (...) {
         // TODO: Reject configs with malformed intermediate certs instead.
