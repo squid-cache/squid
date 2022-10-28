@@ -37,7 +37,7 @@ public:
     ~CachePeer();
 
     /// This ID changes until it is finalized at the end of CachePeer configuration:
-    /// cache_peer name (if explicitly configured) or hostname[:http-port] (otherwise).
+    /// cache_peer name (if explicitly configured) or hostname (otherwise).
     /// This ID is unique across already configured cache_peers in the current configuration.
     /// This ID is unique across discovered non-peers (see mgr:non_peers).
     /// This ID affects various peer selection hashes (e.g., carp.hash).
@@ -48,7 +48,7 @@ public:
 
     bool named() const { return name_.has_value(); }
 
-    /// reconfigure cache_peer name=value
+    /// (re)configure cache_peer name=value
     void rename(const SBuf &);
 
     /// undo the effect of past rename() calls (if any)
@@ -226,8 +226,8 @@ public:
 private:
     /// change ID to the given one
     void identifyAs(const SBuf &);
-    /// change ID to configured hostname:port combination
-    void identifyAsHostPort();
+    /// change ID to the configured hostname
+    void identifyAsHostname();
 
     SBuf id_; ///< \copydoc id()
     const char *idAsCstring_ = nullptr; ///< cached id_.c_str()

@@ -68,14 +68,14 @@ void
 CachePeer::forgetName()
 {
     name_.reset();
-    identifyAsHostPort();
+    identifyAsHostname();
 }
 
 void
 CachePeer::finalizeName()
 {
     if (!name_.has_value())
-        identifyAsHostPort();
+        identifyAsHostname();
 }
 
 void
@@ -86,9 +86,9 @@ CachePeer::identifyAs(const SBuf &newId)
 }
 
 void
-CachePeer::identifyAsHostPort()
+CachePeer::identifyAsHostname()
 {
-    identifyAs(ToSBuf(host, ':', http_port));
+    identifyAs(SBuf(host));
 }
 
 time_t
