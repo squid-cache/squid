@@ -2264,12 +2264,12 @@ parse_peer(CachePeer ** head)
 
         } else if (!strcmp(token, "carp")) {
             if (p->type != PEER_PARENT)
-                fatalf("parse_peer: non-parent carp peer %s/%d\n", p->host, p->http_port);
+                throw TextException(ToSBuf("non-parent carp cache_peer ", *p), Here());
 
             p->options.carp = true;
         } else if (!strncmp(token, "carp-key=", 9)) {
             if (p->options.carp != true)
-                fatalf("parse_peer: carp-key specified on non-carp peer %s/%d\n", p->host, p->http_port);
+                throw TextException(ToSBuf("carp-key specified on non-carp cache_peer ", *p), Here());
             p->options.carp_key.set = true;
             char *nextkey=token+strlen("carp-key="), *key=nextkey;
             for (; key; key = nextkey) {
@@ -2292,15 +2292,15 @@ parse_peer(CachePeer ** head)
         } else if (!strcmp(token, "userhash")) {
 #if USE_AUTH
             if (p->type != PEER_PARENT)
-                fatalf("parse_peer: non-parent userhash peer %s/%d\n", p->host, p->http_port);
+                throw TextException(ToSBuf("non-parent userhash cache_peer ", *p), Here());
 
             p->options.userhash = true;
 #else
-            fatalf("parse_peer: userhash requires authentication. peer %s/%d\n", p->host, p->http_port);
+            throw TextException(ToSBuf("missing authentication support; required for userhash cache_peer ", *p), Here());
 #endif
         } else if (!strcmp(token, "sourcehash")) {
             if (p->type != PEER_PARENT)
-                fatalf("parse_peer: non-parent sourcehash peer %s/%d\n", p->host, p->http_port);
+                throw TextException(ToSBuf("non-parent sourcehash cache_peer ", *p), Here());
 
             p->options.sourcehash = true;
 
