@@ -33,19 +33,15 @@ class CachePeer
     CBDATA_CLASS(CachePeer);
 
 public:
-    explicit CachePeer(const SBuf &hostAsConfigured);
+    explicit CachePeer(const SBuf &hostname);
     ~CachePeer();
 
-    /// This ID changes until it is finalized at the end of cache_peer configuration:
-    /// cache_peer name (if explicitly configured) or hostname[:http_port] (otherwise).
+    /// This ID changes until it is finalized at the end of CachePeer configuration:
+    /// cache_peer name (if explicitly configured) or hostname[:http-port] (otherwise).
     /// This ID is unique across already configured cache_peers in the current configuration.
     /// This ID is unique across discovered non-peers (see mgr:non_peers).
     /// This ID affects various peer selection hashes (e.g., carp.hash).
     const SBuf &id() const { return id_; }
-
-    /// \copydoc id()
-    /// This method is for legacy code that needs cache_peer ID as a c-string.
-    const char *idXXX() const { return idAsCstring_; }
 
     /// \returns the effective connect timeout for the given peer
     time_t connectTimeout() const;
@@ -60,6 +56,10 @@ public:
 
     /// stop expecting more rename() and forgetName() calls
     void finalizeName();
+
+    /// \copydoc id()
+    /// This method is for legacy code that needs cache_peer ID as a c-string.
+    const char *idXXX() const { return idAsCstring_; }
 
     u_int index = 0;
     char *host = nullptr;
