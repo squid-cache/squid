@@ -4026,7 +4026,11 @@ DOC_START
 	about specific domains to the peer.
 
 	Usage:
-		 neighbor_type_domain neighbor parent|sibling domain domain ...
+		neighbor_type_domain peer-name parent|sibling domain...
+
+	For the required peer-name parameter, use either the value of the
+	cache_peer name=value parameter or, if name=value is missing, the
+	cache_peer hostname parameter.
 
 	For example:
 		cache_peer foo.example.com parent 3128 3130
