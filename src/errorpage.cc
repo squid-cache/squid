@@ -212,7 +212,8 @@ static const char *
 FindDefaultTemplate(const err_type type)
 {
     const auto foundDefault = std::find_if(begin(TemplateDefaults), end(TemplateDefaults), [&](const DefaultMessages &m) {
-            return m.type == type; });
+        return m.type == type;
+    });
     return foundDefault == end(TemplateDefaults) ? nullptr : foundDefault->text;
 }
 
@@ -354,7 +355,8 @@ static const char *
 errorFindHardText(err_type type)
 {
     const auto foundError = std::find_if(begin(HardCodedErrors), end(HardCodedErrors), [&](const DefaultMessages &m) {
-            return m.type == type; });
+        return m.type == type;
+    });
     return foundError == end(HardCodedErrors) ? nullptr : foundError->text;
 }
 
