@@ -1327,11 +1327,10 @@ peerProbeConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int
 {
     CachePeer *p = (CachePeer*)data;
 
-    if (status == Comm::OK) {
+    if (status == Comm::OK)
         p->noteSuccess();
-    } else {
+    else
         p->noteFailure(Http::scNone);
-    }
 
     -- p->testing_now;
     conn->close();

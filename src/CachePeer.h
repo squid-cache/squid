@@ -16,7 +16,6 @@
 #include "icp_opcode.h"
 #include "ip/Address.h"
 #include "security/PeerOptions.h"
-#include "SquidConfig.h"
 
 //TODO: remove, it is unconditionally defined and always used.
 #define PEER_MULTICAST_SIBLINGS 1

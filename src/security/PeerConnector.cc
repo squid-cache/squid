@@ -90,14 +90,10 @@ Security::PeerConnector::start()
 void
 Security::PeerConnector::fillChecklist(ACLFilledChecklist &checklist) const
 {
-    checklist.setRequest(request.getRaw());
-
     if (!checklist.al)
         checklist.al = al;
     checklist.syncAle(request.getRaw(), nullptr);
     // checklist.fd(fd); XXX: need client FD here
-
-    checklist.setOutgoingConnection(serverConn);
 
 #if USE_OPENSSL
     if (!checklist.serverCert) {
