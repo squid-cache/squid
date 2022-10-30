@@ -9,10 +9,10 @@
 #ifndef SQUID_CACHEPEER_H_
 #define SQUID_CACHEPEER_H_
 
-#include "acl/FilledChecklist.h"
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
 #include "enums.h"
+#include "http/StatusCode.h"
 #include "icp_opcode.h"
 #include "ip/Address.h"
 #include "security/PeerOptions.h"
@@ -38,9 +38,8 @@ public:
     void noteSuccess();
 
     /// reacts to a failure on a TCP connection to this cache_peer
-    /// \param filler a function to configure an ACLFilledChecklist if that becomes necessary
-    template <typename Filler>
-    void noteFailure(Filler filler);
+    /// \param code a received response status code, if any
+    void noteFailure(Http::StatusCode code);
 
     /// \returns the effective connect timeout for the given peer
     time_t connectTimeout() const;
@@ -212,21 +211,6 @@ private:
     void countFailure();
 };
 
-template <typename Filler>
-void
-CachePeer::noteFailure(const Filler filler)
-{
-    if (const auto acls = Config.accessList.cachePeerFault) {
-        ACLFilledChecklist checklist(acls, nullptr, nullptr);
-        checklist.setPeer(this);
-        filler(checklist);
-        if (!checklist.fastCheck().allowed())
-            return; // this failure is not our fault
-    }
-
-    countFailure();
-}
-
 /// reacts to a successful establishment of a TCP connection to an origin server or cache_peer
 /// \param peer nil if Squid established a connection to an origin server
 inline void
@@ -238,13 +222,12 @@ NoteOutgoingConnectionSuccess(CachePeer * const peer)
 
 /// reacts to a failure on a TCP connection to an origin server or cache_peer
 /// \param peer nil if the connection is to an origin server
-/// \param filler a function to configure an ACLFilledChecklist if that becomes necessary
-template <typename Filler>
-void
-NoteOutgoingConnectionFailure(CachePeer * const peer, const Filler filler)
+/// \param code a received response status code, if any
+inline void
+NoteOutgoingConnectionFailure(CachePeer * const peer, const Http::StatusCode code)
 {
     if (peer)
-        peer->noteFailure(filler);
+        peer->noteFailure(code);
 }
 
 #endif /* SQUID_CACHEPEER_H_ */

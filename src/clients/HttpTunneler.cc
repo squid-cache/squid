@@ -377,13 +377,7 @@ void
 Http::Tunneler::countFailingConnection(const ErrorState * const error)
 {
     assert(connection);
-    NoteOutgoingConnectionFailure(connection->getPeer(), [&](ACLFilledChecklist &checklist) {
-        checklist.setRequest(request.getRaw());
-        checklist.setOutgoingConnection(connection);
-        checklist.al = al;
-        checklist.syncAle(request.getRaw(), nullptr);
-        checklist.setError(error);
-    });
+    NoteOutgoingConnectionFailure(connection->getPeer(), error ? error->httpStatus : Http::scNone);
     if (noteFwdPconnUse && connection->isOpen())
         fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);
 }

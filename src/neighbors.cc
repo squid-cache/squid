@@ -1330,9 +1330,7 @@ peerProbeConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int
     if (status == Comm::OK) {
         p->noteSuccess();
     } else {
-        p->noteFailure([&](ACLFilledChecklist &checklist) {
-            checklist.setOutgoingConnection(conn);
-        });
+        p->noteFailure(Http::scNone);
     }
 
     -- p->testing_now;

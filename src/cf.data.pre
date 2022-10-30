@@ -4016,47 +4016,6 @@ DOC_START
 
 DOC_END
 
-NAME: cache_peer_fault
-TYPE: acl_access
-DEFAULT: none
-DEFAULT_DOC: Blame the selected cache_peer for all forwarding errors
-LOC: Config.accessList.cachePeerFault
-DEFAULT: none
-DOC_START
-	When Squid encounters a problem associated with a cache_peer connection,
-	this directive decides whether the corresponding cache_peer should be
-	blamed for that problem. A cache_peer blamed for connect-fail-limit
-	sequential problems is marked as "dead". Squid does not forward requests
-	to dead cache_peers.
-
-		cache_peer_fault allow|deny [!]aclname ...
-
-	Connection-cache_peer association starts when Squid attempts to open a TCP
-	connection to the cache_peer and ends when that connection establishment
-	attempt fails or the open connection is closed. Currently, a failure to
-	resolve a cache_peer domain name is not associated with that cache_peer,
-	but that should change.
-
-	Squid probes configured cache_peers using TCP connections that are not
-	associated with any HTTP request. Some connections fail before Squid
-	receives an HTTP response. Thus, cache_peer_fault rules should not assume
-	request and response availability.
-
-	If certain forwarding problems should not count towards the cache_peer
-	connect-fail-limit, add the corresponding deny rule. For example:
-
-		# Do not blame any cache_peer for blocking our CONNECT requests. No
-		# change for all other failures, including probing connections, GET
-		# failures, and failures that happen before Squid gets a response.
-		acl hasRequest has request
-		acl hasResponse has response
-		acl forbiddenResponse http_status 403
-		cache_peer_fault deny hasRequest CONNECT hasResponse forbiddenResponse
-
-	This clause only supports fast acl types.
-	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
-DOC_END
-
 NAME: neighbor_type_domain
 TYPE: hostdomaintype
 DEFAULT: none

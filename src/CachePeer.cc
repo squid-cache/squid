@@ -60,6 +60,15 @@ CachePeer::noteSuccess()
     }
 }
 
+void
+CachePeer::noteFailure(const Http::StatusCode code)
+{
+    if (Http::Is4xx(code))
+        return; // this failure is not our fault
+
+    countFailure();
+}
+
 // TODO: Require callers to detail failures instead of using one (and often
 // misleading!) "TCP" label for all of them.
 /// noteFailure() helper for handling failures attributed to this peer

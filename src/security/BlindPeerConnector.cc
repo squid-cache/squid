@@ -75,12 +75,8 @@ Security::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
         // It is not clear whether we should call noteSuccess()/noteFailure()/etc.
         // based on TCP results, SSL results, or both. And the code is probably not
         // consistent in this aspect across tunnelling and forwarding modules.
-        if (peer && peer->secure.encryptTransport) {
-            peer->noteFailure([&](ACLFilledChecklist &checklist) {
-                fillChecklist(checklist);
-                checklist.setError(error);
-            });
-        }
+        if (peer && peer->secure.encryptTransport)
+            peer->noteFailure(Http::scNone);
         return;
     }
 

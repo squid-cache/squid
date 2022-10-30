@@ -630,13 +630,8 @@ HappyConnOpener::handleConnOpenerAnswer(Attempt &attempt, const CommConnectCbPar
     }
 
     debugs(17, 8, what << " failed: " << params.conn);
-    // TODO: Use auto as the lambda parameter type (in all callers) after upgrading to C++14
-    NoteOutgoingConnectionFailure(params.conn->getPeer(), [&](ACLFilledChecklist &checklist) {
-        checklist.setRequest(cause.getRaw());
-        checklist.setOutgoingConnection(params.conn);
-        checklist.al = ale;
-        checklist.syncAle(cause.getRaw(), nullptr);
-    });
+
+    NoteOutgoingConnectionFailure(params.conn->getPeer(), Http::scNone);
 
     // remember the last failure (we forward it if we cannot connect anywhere)
     lastFailedConnection = handledPath;

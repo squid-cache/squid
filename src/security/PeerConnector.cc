@@ -536,10 +536,7 @@ void
 Security::PeerConnector::countFailingConnection(const ErrorState * const error)
 {
     assert(serverConn);
-    NoteOutgoingConnectionFailure(serverConn->getPeer(), [&](ACLFilledChecklist &checklist) {
-        fillChecklist(checklist);
-        checklist.setError(error);
-    });
+    NoteOutgoingConnectionFailure(serverConn->getPeer(), error ? error->httpStatus : Http::scNone);
     // TODO: Calling PconnPool::noteUses() should not be our responsibility.
     if (noteFwdPconnUse && serverConn->isOpen())
         fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
