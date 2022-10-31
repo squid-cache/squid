@@ -962,9 +962,9 @@ neighborIgnoreNonPeer(const Ip::Address &from, icp_opcode opcode)
     }
 
     if (np == nullptr) {
-        char host[MAX_IPSTRLEN];
-        from.toStr(host, sizeof(host));
-        np = new CachePeer(host);
+        char fromStr[MAX_IPSTRLEN];
+        from.toStr(fromStr, sizeof(fromStr));
+        np = new CachePeer(fromStr);
         np->in_addr = from;
         np->icp.port = from.port();
         np->type = PEER_NONE;
@@ -1141,16 +1141,14 @@ findCachePeerByName(const char * const name)
 }
 
 CachePeer *
-findCachePeerByHostname(const char *hostname)
+findCachePeerByHostname(const char * const hostname)
 {
-    CachePeer *p = nullptr;
-
-    for (p = Config.peers; p; p = p->next) {
-        if (strcmp(p->host, hostname) == 0)
-            break;
+    for (auto p = Config.peers; p; p = p->next) {
+        if (strcasecmp(p->host, hostname) == 0)
+            return p;
     }
 
-    return p;
+    return nullptr;
 }
 
 int
@@ -1636,9 +1634,6 @@ dump_peer_options(StoreEntry * sentry, CachePeer * p)
         storeAppendPrintf(sentry, " connection-auth=on");
     else if (p->connection_auth == 2)
         storeAppendPrintf(sentry, " connection-auth=auto");
-
-    if (p->explicitlyNamed())
-        storeAppendPrintf(sentry, " name=%s", p->name);
 
     p->secure.dumpCfg(sentry,"tls-");
     storeAppendPrintf(sentry, "\n");

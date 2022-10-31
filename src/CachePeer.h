@@ -39,9 +39,6 @@ public:
     /// (re)configure cache_peer name=value
     void rename(const char *);
 
-    /// whether rename() has been called
-    bool explicitlyNamed() const { return name != host; }
-
     /// \returns the effective connect timeout for the given peer
     time_t connectTimeout() const;
 
@@ -52,12 +49,14 @@ public:
     /// Not necessarily unique across discovered non-peers (see mgr:non_peers).
     /// The value may change during CachePeer configuration.
     /// The value affects various peer selection hashes (e.g., carp.hash).
-    /// Never nil but points to the same memory as CachePeer::host unless explicitlyNamed().
+    /// Preserves configured spelling (i.e. does not lower letters case).
+    /// Never nil.
     char *name = nullptr;
 
-    /// cache_peer hostname or the IP address of a non-peer (see mgr:non_peers).
+    /// The lowercase version of the configured cache_peer hostname or
+    /// the IP address of a non-peer (see mgr:non_peers).
     /// May not be unique among cache_peers and non-peers.
-    /// Never nil but points to the same memory as CachePeer::name unless explicitlyNamed().
+    /// Never nil.
     char *host = nullptr;
 
     peer_t type = PEER_NONE;

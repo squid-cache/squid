@@ -20,16 +20,14 @@ CBDATA_CLASS_INIT(CachePeer);
 
 CachePeer::CachePeer(const char * const hostname):
     name(xstrdup(hostname)),
-    host(name)
+    host(xstrdup(hostname))
 {
-    Tolower(host);
+    Tolower(host); // but .name preserves original spelling
 }
 
 CachePeer::~CachePeer()
 {
-    if (explicitlyNamed())
-        xfree(name);
-
+    xfree(name);
     xfree(host);
 
     while (NeighborTypeDomainList *l = typelist) {
@@ -63,9 +61,7 @@ CachePeer::rename(const char * const newName)
     if (!newName || !*newName)
         throw TextException("cache_peer name=value cannot be empty", Here());
 
-    if (explicitlyNamed())
-        xfree(name);
-
+    xfree(name);
     name = xstrdup(newName);
 }
 

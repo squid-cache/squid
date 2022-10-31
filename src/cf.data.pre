@@ -3972,6 +3972,9 @@ DOC_START
 			Can be used by outgoing access controls through the
 			peername ACL type.
 
+			The name value preserves configured spelling, but name uniqueness
+			checks and name-based search are case-insensitive.
+
 	no-tproxy	Do not use the client-spoof TPROXY support when forwarding
 			requests to this peer. Use normal address selection instead.
 			This overrides the spoof_client_ip ACL.

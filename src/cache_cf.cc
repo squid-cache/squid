@@ -2074,12 +2074,13 @@ dump_peer(StoreEntry * entry, const char *name, CachePeer * p)
     LOCAL_ARRAY(char, xname, 128);
 
     while (p != nullptr) {
-        storeAppendPrintf(entry, "%s %s %s %d %d",
+        storeAppendPrintf(entry, "%s %s %s %d %d name=%s",
                           name,
                           p->host,
                           neighborTypeStr(p),
                           p->http_port,
-                          p->icp.port);
+                          p->icp.port,
+                          p->name);
         dump_peer_options(entry, p);
 
         if (p->access) {
