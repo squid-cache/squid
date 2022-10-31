@@ -1140,17 +1140,6 @@ findCachePeerByName(const char * const name)
     return p;
 }
 
-CachePeer *
-findCachePeerByHostname(const char * const hostname)
-{
-    for (auto p = Config.peers; p; p = p->next) {
-        if (strcasecmp(p->host, hostname) == 0)
-            return p;
-    }
-
-    return nullptr;
-}
-
 int
 neighborUp(const CachePeer * p)
 {

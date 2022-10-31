@@ -37,7 +37,9 @@ public:
 class net_db_peer
 {
 public:
+    /// associated CachePeer::host (i.e. cache_peer hostname, not name=value!)
     const char *peername;
+
     double hops;
     double rtt;
     time_t expires;
