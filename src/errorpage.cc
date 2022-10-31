@@ -148,12 +148,13 @@ static void ValidateStaticError(const int page_id, const SBuf &inputLocation);
  \note  hard coded error messages are not appended with %S
  *      automagically to give you more control on the format
  */
-struct DefaultMessages {
+struct HardCodedMessage {
     int type;           /* and page_id */
     const char *text;
 };
 
-static std::array<DefaultMessages, 6> HardCodedErrors = {{
+/// error messages that cannot be configured/customized externally
+static std::array<HardCodedMessage, 7> HardCodedErrors = {{
     {
         ERR_SQUID_SIGNATURE,
         "\n<br>\n"
@@ -178,12 +179,20 @@ static std::array<DefaultMessages, 6> HardCodedErrors = {{
     {
         ERR_REQUEST_START_TIMEOUT,
         "request start timedout"
+    },
+    {
+        ERR_REQUEST_PARSE_TIMEOUT,
+        "request parse timedout"
+    },
+    {
+        ERR_RELAY_REMOTE,
+        "relay server response"
     }
 }};
 
-/// \ingroup ErrorPageInternal
-/// default messages for missing error pages
-static std::array<DefaultMessages, 1> TemplateDefaults = {{
+/// error messages that may be configured/customized by the admin,
+/// like the regular ones, but that also have a hard-coded last-resort default
+static std::array<HardCodedMessage, 1> TemplateDefaults = {{
     {
         MGR_INDEX,
         "mgr_index"
@@ -204,17 +213,16 @@ static int error_page_count = 0;
 /// \ingroup ErrorPageInternal
 static MemBuf error_stylesheet;
 
-static const char *errorFindHardText(err_type type);
 static IOCB errorSendComplete;
 
-/// \ingroup ErrorPageInternal
+template <class Messages>
 static const char *
-FindDefaultTemplate(const err_type type)
+FindHardCodedTemplate(const err_type type, const Messages &messages)
 {
-    const auto foundDefault = std::find_if(begin(TemplateDefaults), end(TemplateDefaults), [&](const DefaultMessages &m) {
+    const auto foundDefault = std::find_if(messages.cbegin(), messages.cend(), [&](const HardCodedMessage &m) {
         return m.type == type;
     });
-    return foundDefault == end(TemplateDefaults) ? nullptr : foundDefault->text;
+    return foundDefault == messages.cend() ? nullptr : foundDefault->text;
 }
 
 /// \ingroup ErrorPageInternal
@@ -229,12 +237,8 @@ public:
 
 protected:
     virtual void setDefault() override {
-        if (const auto defaultTemplate = FindDefaultTemplate(templateCode)) {
-            template_ = defaultTemplate;
-        } else {
-            template_ = "Internal Error: Missing Template ";
-            template_.append(templateName.termedBuf());
-        }
+        template_ = "Internal Error: Missing Template ";
+        template_.append(templateName.termedBuf());
     }
 };
 
@@ -277,7 +281,7 @@ errorInitialize(void)
     for (i = ERR_NONE, ++i; i < error_page_count; ++i) {
         safe_free(error_text[i]);
 
-        if ((text = errorFindHardText(i))) {
+        if ((text = FindHardCodedTemplate(i, HardCodedErrors))) {
             /**\par
              * Index any hard-coded error text into defaults.
              */
@@ -350,16 +354,6 @@ errorClean(void)
 #endif
 }
 
-/// \ingroup ErrorPageInternal
-static const char *
-errorFindHardText(err_type type)
-{
-    const auto foundError = std::find_if(begin(HardCodedErrors), end(HardCodedErrors), [&](const DefaultMessages &m) {
-        return m.type == type;
-    });
-    return foundError == end(HardCodedErrors) ? nullptr : foundError->text;
-}
-
 TemplateFile::TemplateFile(const char *name, const err_type code): silent(false), wasLoaded(false), templateName(name), templateCode(code)
 {
     assert(name);
@@ -390,6 +384,13 @@ TemplateFile::loadDefault()
     /* test default location if failed (templates == English translation base templates) */
     if (!loaded()) {
         tryLoadTemplate("templates");
+    }
+
+    if (!loaded()) {
+        if (const auto defaultTemplate = FindHardCodedTemplate(templateCode, TemplateDefaults)) {
+            template_ = defaultTemplate;
+            wasLoaded = true;
+        }
     }
 
     /* giving up if failed */
@@ -440,7 +441,7 @@ TemplateFile::loadFromFile(const char *path)
 
     if (fd < 0) {
         /* with dynamic locale negotiation we may see some failures before a success. */
-        if (!silent && templateCode < TCP_RESET && !FindDefaultTemplate(templateCode)) {
+        if (!silent && templateCode < TCP_RESET && !FindHardCodedTemplate(templateCode, TemplateDefaults)) {
             int xerrno = errno;
             debugs(4, DBG_CRITICAL, "ERROR: loading file '" << path << "': " << xstrerr(xerrno));
         }
