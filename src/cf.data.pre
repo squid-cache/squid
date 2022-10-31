@@ -3959,10 +3959,16 @@ DOC_START
 			configuration.
 
 	name=xxx	Unique name for the peer.
-			Required if you have multiple peers on the same host
-			but different ports.
-			This name can be used in cache_peer_access and similar
-			directives to identify the peer.
+			Required if you have multiple cache_peers with the same hostname.
+			Defaults to cache_peer hostname when not explicitly specified.
+
+			Other directives (e.g., cache_peer_access), cache manager reports,
+			and cache.log messages referring to a specific cache_peer use this
+			name to uniquely identify a cache_peer.
+
+			The cache_peer name value affects hashing-based peer selection
+			methods (e.g., carp and sourcehash).
+
 			Can be used by outgoing access controls through the
 			peername ACL type.
 

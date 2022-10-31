@@ -46,8 +46,20 @@ public:
     time_t connectTimeout() const;
 
     u_int index = 0;
+
+    /// cache_peer name (if explicitly configured) or hostname (otherwise).
+    /// Unique across already configured cache_peers in the current configuration.
+    /// Not necessarily unique across discovered non-peers (see mgr:non_peers).
+    /// The value may change during CachePeer configuration.
+    /// The value affects various peer selection hashes (e.g., carp.hash).
+    /// Never nil but points to the same memory as CachePeer::host unless explicitlyNamed().
     char *name = nullptr;
+
+    /// cache_peer hostname or the IP address of a non-peer (see mgr:non_peers).
+    /// May not be unique among cache_peers and non-peers.
+    /// Never nil but points to the same memory as CachePeer::name unless explicitlyNamed().
     char *host = nullptr;
+
     peer_t type = PEER_NONE;
 
     Ip::Address in_addr;
