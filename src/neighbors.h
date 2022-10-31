@@ -15,7 +15,6 @@
 #include "enums.h"
 #include "ICP.h"
 #include "lookup_t.h"
-#include "sbuf/forward.h"
 #include "typedefs.h" //for IRCB
 
 class HttpRequest;
@@ -44,8 +43,8 @@ void neighbors_init(void);
 void neighborsHtcpClear(StoreEntry *, HttpRequest *, const HttpRequestMethod &, htcp_clr_reason);
 #endif
 
-/// cache_peer with a given ID (or nil)
-CachePeer *findCachePeerById(const SBuf &);
+/// cache_peer with a given name (or nil)
+CachePeer *findCachePeerByName(const char *);
 
 /// cache_peer configured with a given hostname (or nil)
 CachePeer *findCachePeerByHostname(const char *);

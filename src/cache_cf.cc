@@ -2071,6 +2071,7 @@ static void
 dump_peer(StoreEntry * entry, const char *name, CachePeer * p)
 {
     NeighborTypeDomainList *t;
+    LOCAL_ARRAY(char, xname, 128);
 
     while (p != nullptr) {
         storeAppendPrintf(entry, "%s %s %s %d %d",
@@ -2082,9 +2083,8 @@ dump_peer(StoreEntry * entry, const char *name, CachePeer * p)
         dump_peer_options(entry, p);
 
         if (p->access) {
-            // TODO: Upgrade dump_acl_access() to use SBuf instead.
-            auto aclContext = ToSBuf("cache_peer_access ", p->id());
-            dump_acl_access(entry, aclContext.c_str(), p->access);
+            snprintf(xname, 128, "cache_peer_access %s", p->name);
+            dump_acl_access(entry, xname, p->access);
         }
 
         for (t = p->typelist; t; t = t->next) {
@@ -2161,7 +2161,11 @@ GetUdpService(void)
 static void
 parse_peer(CachePeer ** head)
 {
-    const auto hostname = LegacyParser.token("cache_peer hostname");
+    char *host_str = ConfigParser::NextToken();
+    if (!host_str) {
+        self_destruct();
+        return;
+    }
 
     char *token = ConfigParser::NextToken();
     if (!token) {
@@ -2169,7 +2173,7 @@ parse_peer(CachePeer ** head)
         return;
     }
 
-    const auto p = new CachePeer(hostname);
+    const auto p = new CachePeer(host_str);
 
     p->type = parseNeighborType(token);
 
@@ -2333,10 +2337,7 @@ parse_peer(CachePeer ** head)
         } else if (!strcmp(token, "originserver")) {
             p->options.originserver = true;
         } else if (!strncmp(token, "name=", 5)) {
-            if (token[5])
-                p->rename(SBuf(token + 5));
-            else
-                p->forgetName();
+            p->rename(token + 5);
         } else if (!strncmp(token, "forceddomain=", 13)) {
             safe_free(p->domain);
             if (token[13])
@@ -2374,8 +2375,7 @@ parse_peer(CachePeer ** head)
         }
     }
 
-    p->finalizeName();
-    if (findCachePeerById(p->id()))
+    if (findCachePeerByName(p->name))
         throw TextException(ToSBuf("cache_peer ", *p, " specified twice"), Here());
 
     if (p->max_conn > 0 && p->max_conn < p->standby.limit)
@@ -2504,24 +2504,29 @@ free_denyinfo(AclDenyInfoList ** list)
 static void
 parse_peer_access(void)
 {
-    const auto host = LegacyParser.token("cache_peer_access peer-name");
-    const auto p = findCachePeerById(host);
+    char *host = ConfigParser::NextToken();
+    if (!host) {
+        self_destruct();
+        return;
+    }
+
+    const auto p = findCachePeerByName(host);
     if (!p) {
         debugs(15, DBG_CRITICAL, "ERROR: " << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
         return;
     }
 
-    auto directive = ToSBuf("peer_access ", host);
+    std::string directive = "peer_access ";
+    directive += host;
     aclParseAccessLine(directive.c_str(), LegacyParser, &p->access);
 }
 
 static void
 parse_hostdomaintype(void)
 {
-    const auto host = LegacyParser.token("neighbor_type_domain neighbor");
-    const auto p = findCachePeerById(host);
-    if (!p) {
-        debugs(15, DBG_CRITICAL, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
+    char *host = ConfigParser::NextToken();
+    if (!host) {
+        self_destruct();
         return;
     }
 
@@ -2533,6 +2538,12 @@ parse_hostdomaintype(void)
 
     char *domain = nullptr;
     while ((domain = ConfigParser::NextToken())) {
+        const auto p = findCachePeerByName(host);
+        if (!p) {
+            debugs(15, DBG_CRITICAL, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
+            return;
+        }
+
         auto *l = static_cast<NeighborTypeDomainList *>(xcalloc(1, sizeof(NeighborTypeDomainList)));
         l->type = parseNeighborType(type);
         l->domain = xstrdup(domain);

@@ -8,12 +8,10 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "CachePeer.h"
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "comm/forward.h"
 #include "debug/Messages.h"
-#include "errorpage.h"
 #include "ExternalACLEntry.h"
 #include "http/Stream.h"
 #include "HttpReply.h"
@@ -249,40 +247,9 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
     setIdent(ident);
 }
 
-void
-ACLFilledChecklist::setPeer(const CachePeer * const peer)
-{
-    // TODO: Replace code that still does this manually with setPeer().
-    if (dst_peer_name.isEmpty() && peer)
-        dst_peer_name = peer->id();
-}
-
-void
-ACLFilledChecklist::setOutgoingConnection(const Comm::Connection &outgoingConn)
-{
-    // TODO: Replace code that still does this manually with setOutgoingConnection().
-    setPeer(outgoingConn.getPeer());
-
-    // TODO: ACLIP::match(ip) does not check whether ip has been set. Should it?
-    static const Ip::Address Empty; // constructed with setEmpty()
-    if (dst_addr == Empty)
-        dst_addr = outgoingConn.remote; // may be empty
-
-    // no ACLs check outgoingConn->local
-}
-
-void
-ACLFilledChecklist::setOutgoingConnection(const Comm::ConnectionPointer &outgoingConnPtr)
-{
-    if (outgoingConnPtr)
-        setOutgoingConnection(*outgoingConnPtr);
-}
-
 void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
 {
-    if (request)
-        return;
-
+    assert(!request);
     if (httpRequest) {
         request = httpRequest;
         HTTPMSGLOCK(request);
@@ -297,23 +264,6 @@ void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
         if (const auto cmgr = request->clientConnectionManager.get())
             setConn(cmgr);
     }
-}
-
-void
-ACLFilledChecklist::setReply(const HttpReply::Pointer &response)
-{
-    // TODO: Replace code that still does this manually with setReply().
-    if (!reply) {
-        reply = response.getRaw(); // may be nil
-        HTTPMSGLOCK(reply);
-    }
-}
-
-void
-ACLFilledChecklist::setError(const ErrorState * const error)
-{
-    if (error)
-        setReply(error->response_);
 }
 
 void

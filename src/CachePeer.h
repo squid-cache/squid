@@ -33,35 +33,20 @@ class CachePeer
     CBDATA_CLASS(CachePeer);
 
 public:
-    explicit CachePeer(const SBuf &hostname);
+    explicit CachePeer(const char *hostname);
     ~CachePeer();
 
-    /// This ID changes until it is finalized at the end of CachePeer configuration:
-    /// cache_peer name (if explicitly configured) or hostname (otherwise).
-    /// This ID is unique across already configured cache_peers in the current configuration.
-    /// This ID is unique across discovered non-peers (see mgr:non_peers).
-    /// This ID affects various peer selection hashes (e.g., carp.hash).
-    const SBuf &id() const { return id_; }
+    /// (re)configure cache_peer name=value
+    void rename(const char *);
+
+    /// whether rename() has been called
+    bool explicitlyNamed() const { return name != host; }
 
     /// \returns the effective connect timeout for the given peer
     time_t connectTimeout() const;
 
-    bool named() const { return name_.has_value(); }
-
-    /// (re)configure cache_peer name=value
-    void rename(const SBuf &);
-
-    /// undo the effect of past rename() calls (if any)
-    void forgetName();
-
-    /// stop expecting more rename() and forgetName() calls
-    void finalizeName();
-
-    /// \copydoc id()
-    /// This method is for legacy code that needs cache_peer ID as a c-string.
-    const char *idXXX() const { return idAsCstring_; }
-
     u_int index = 0;
+    char *name = nullptr;
     char *host = nullptr;
     peer_t type = PEER_NONE;
 
@@ -222,17 +207,6 @@ public:
 
     int front_end_https = 0; ///< 0 - off, 1 - on, 2 - auto
     int connection_auth = 2; ///< 0 - off, 1 - on, 2 - auto
-
-private:
-    /// change ID to the given one
-    void identifyAs(const SBuf &);
-    /// change ID to the configured hostname
-    void identifyAsHostname();
-
-    SBuf id_; ///< \copydoc id()
-    const char *idAsCstring_ = nullptr; ///< cached id_.c_str()
-
-    Optional<SBuf> name_; ///< configured cache_peer name=value
 };
 
 /// identify the given cache peer in cache.log messages and such

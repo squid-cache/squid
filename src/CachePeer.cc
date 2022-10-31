@@ -13,22 +13,22 @@
 #include "NeighborTypeDomainList.h"
 #include "pconn.h"
 #include "PeerPoolMgr.h"
-#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "util.h"
 
 CBDATA_CLASS_INIT(CachePeer);
 
-CachePeer::CachePeer(const SBuf &hostAsConfigured):
-    host(SBufToCstring(hostAsConfigured))
+CachePeer::CachePeer(const char * const hostname):
+    name(xstrdup(hostname)),
+    host(name)
 {
     Tolower(host);
-    identifyAs(hostAsConfigured);
 }
 
 CachePeer::~CachePeer()
 {
-    // idAsCstring_ memory is managed by id_
+    if (explicitlyNamed())
+        xfree(name);
 
     xfree(host);
 
@@ -58,37 +58,15 @@ CachePeer::~CachePeer()
 }
 
 void
-CachePeer::rename(const SBuf &newName)
+CachePeer::rename(const char * const newName)
 {
-    name_ = newName;
-    identifyAs(name_.value());
-}
+    if (!newName || !*newName)
+        throw TextException("cache_peer name=value cannot be empty", Here());
 
-void
-CachePeer::forgetName()
-{
-    name_.reset();
-    identifyAsHostname();
-}
+    if (explicitlyNamed())
+        xfree(name);
 
-void
-CachePeer::finalizeName()
-{
-    if (!name_.has_value())
-        identifyAsHostname();
-}
-
-void
-CachePeer::identifyAs(const SBuf &newId)
-{
-    id_ = newId;
-    idAsCstring_ = id_.c_str();
-}
-
-void
-CachePeer::identifyAsHostname()
-{
-    identifyAs(SBuf(host));
+    name = xstrdup(newName);
 }
 
 time_t
@@ -102,5 +80,6 @@ CachePeer::connectTimeout() const
 std::ostream &
 operator <<(std::ostream &os, const CachePeer &p)
 {
-    return os << p.id();
+    return os << p.name;
 }
+

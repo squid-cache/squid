@@ -49,6 +49,7 @@ carpInit(void)
     double P_last, X_last, Xn;
     CachePeer *p;
     CachePeer **P;
+    char *t;
     /* Clean up */
 
     for (k = 0; k < n_carp_peers; ++k) {
@@ -93,8 +94,8 @@ carpInit(void)
         /* calculate this peers hash */
         p->carp.hash = 0;
 
-        for (const auto ch: p->id())
-            p->carp.hash += ROTATE_LEFT(p->carp.hash, 19) + static_cast<unsigned int>(ch);
+        for (t = p->name; *t != 0; ++t)
+            p->carp.hash += ROTATE_LEFT(p->carp.hash, 19) + (unsigned int) *t;
 
         p->carp.hash += p->carp.hash * 0x62531965;
 
@@ -235,11 +236,8 @@ carpCachemgr(StoreEntry * sentry)
         sumfetches += p->stats.fetches;
 
     for (p = Config.peers; p; p = p->next) {
-        // TODO: Unify CachePeer::*hash structures and use stream-based printing
-        auto peerId = p->id();
         storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",
-                          peerId.c_str(),
-                          p->carp.hash,
+                          p->name, p->carp.hash,
                           p->carp.load_multiplier,
                           p->carp.load_factor,
                           sumfetches ? (double) p->stats.fetches / sumfetches : -1.0);

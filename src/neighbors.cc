@@ -964,7 +964,7 @@ neighborIgnoreNonPeer(const Ip::Address &from, icp_opcode opcode)
     if (np == nullptr) {
         char host[MAX_IPSTRLEN];
         from.toStr(host, sizeof(host));
-        np = new CachePeer(SBuf(host));
+        np = new CachePeer(host);
         np->in_addr = from;
         np->icp.port = from.port();
         np->type = PEER_NONE;
@@ -1128,12 +1128,12 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
 }
 
 CachePeer *
-findCachePeerById(const SBuf &id)
+findCachePeerByName(const char * const name)
 {
     CachePeer *p = nullptr;
 
     for (p = Config.peers; p; p = p->next) {
-        if (p->id() == id)
+        if (!strcasecmp(name, p->name))
             break;
     }
 
@@ -1637,8 +1637,8 @@ dump_peer_options(StoreEntry * sentry, CachePeer * p)
     else if (p->connection_auth == 2)
         storeAppendPrintf(sentry, " connection-auth=auto");
 
-    if (p->named())
-        storeAppendPrintf(sentry, " name=" SQUIDSBUFPH, SQUIDSBUFPRINT(p->id()));
+    if (p->explicitlyNamed())
+        storeAppendPrintf(sentry, " name=%s", p->name);
 
     p->secure.dumpCfg(sentry,"tls-");
     storeAppendPrintf(sentry, "\n");
@@ -1655,9 +1655,9 @@ dump_peers(StoreEntry * sentry, CachePeer * peers)
 
     for (CachePeer *e = peers; e; e = e->next) {
         assert(e->host != nullptr);
-        storeAppendPrintf(sentry, "\n%-11.11s: " SQUIDSBUFPH "\n",
+        storeAppendPrintf(sentry, "\n%-11.11s: %s\n",
                           neighborTypeStr(e),
-                          SQUIDSBUFPRINT(e->id()));
+                          e->name);
         storeAppendPrintf(sentry, "Host       : %s/%d/%d\n",
                           e->host,
                           e->http_port,

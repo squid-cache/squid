@@ -49,6 +49,7 @@ peerUserHashInit(void)
     double P_last, X_last, Xn;
     CachePeer *p;
     CachePeer **P;
+    char *t;
     /* Clean up */
 
     for (k = 0; k < n_userhash_peers; ++k) {
@@ -91,8 +92,8 @@ peerUserHashInit(void)
         /* calculate this peers hash */
         p->userhash.hash = 0;
 
-        for (const auto ch: p->id())
-            p->userhash.hash += ROTATE_LEFT(p->userhash.hash, 19) + static_cast<unsigned int>(ch);
+        for (t = p->name; *t != 0; ++t)
+            p->userhash.hash += ROTATE_LEFT(p->userhash.hash, 19) + (unsigned int) *t;
 
         p->userhash.hash += p->userhash.hash * 0x62531965;
 
@@ -215,10 +216,8 @@ peerUserHashCachemgr(StoreEntry * sentry)
         sumfetches += p->stats.fetches;
 
     for (p = Config.peers; p; p = p->next) {
-        auto peerId = p->id();
         storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",
-                          peerId.c_str(),
-                          p->userhash.hash,
+                          p->name, p->userhash.hash,
                           p->userhash.load_multiplier,
                           p->userhash.load_factor,
                           sumfetches ? (double) p->stats.fetches / sumfetches : -1.0);

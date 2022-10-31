@@ -22,7 +22,7 @@ void IdleConnList::push(const Comm::ConnectionPointer &) STUB
 Comm::ConnectionPointer IdleConnList::findUseable(const Comm::ConnectionPointer &) STUB_RETVAL(Comm::ConnectionPointer())
 void IdleConnList::clearHandlers(const Comm::ConnectionPointer &) STUB
 void IdleConnList::endingShutdown() STUB
-PconnPool::PconnPool(const SBuf &, const CbcPointer<PeerPoolMgr>&) STUB
+PconnPool::PconnPool(const char *, const CbcPointer<PeerPoolMgr>&) STUB
 PconnPool::~PconnPool() STUB
 void PconnPool::moduleInit() STUB
 void PconnPool::push(const Comm::ConnectionPointer &, const char *) STUB

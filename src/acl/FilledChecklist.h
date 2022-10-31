@@ -14,7 +14,6 @@
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
 #include "error/forward.h"
-#include "http/forward.h"
 #include "ip/Address.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -23,6 +22,8 @@
 
 class CachePeer;
 class ConnStateData;
+class HttpRequest;
+class HttpReply;
 
 /** \ingroup ACLAPI
     ACLChecklist filled with specific data, representing Squid and transaction
@@ -37,30 +38,10 @@ public:
     ACLFilledChecklist(const acl_access *, HttpRequest *, const char *ident = nullptr);
     ~ACLFilledChecklist();
 
-    // The following checklist configuration functions may be called in any
-    // order, repeatedly, and/or with nil arguments. They all extract new (as in
-    // "previously not set") information but do not update changed (as in
-    // "previously set to a different value") info.
-
-    /// configure client request-related fields
+    /// configure client request-related fields for the first time
     void setRequest(HttpRequest *);
-
-    /// configure rfc931 user identity
+    /// configure rfc931 user identity for the first time
     void setIdent(const char *userIdentity);
-
-    /// configure cache_peer-related fields
-    void setPeer(const CachePeer *);
-
-    /// configure Squid-to-origin/cache_peer connection-related fields
-    void setOutgoingConnection(const Comm::Connection &);
-    /// \copydoc setOutgoingConnection(const Comm::Connection &)
-    void setOutgoingConnection(const Comm::ConnectionPointer &);
-
-    /// configure server response-related fields
-    void setReply(const HttpReplyPointer &);
-
-    /// configure Squid-generated error-related fields
-    void setError(const ErrorState *);
 
 public:
     /// The client connection manager

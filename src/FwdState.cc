@@ -75,7 +75,7 @@ static OBJH fwdStats;
 #define MAX_FWD_STATS_IDX 9
 static int FwdReplyCodes[MAX_FWD_STATS_IDX + 1][Http::scInvalidHeader + 1];
 
-PconnPool *fwdPconnPool = new PconnPool(SBuf("server-peers"), nullptr);
+PconnPool *fwdPconnPool = new PconnPool("server-peers", nullptr);
 
 CBDATA_CLASS_INIT(FwdState);
 
@@ -1495,7 +1495,8 @@ getOutgoingAddress(HttpRequest * request, const Comm::ConnectionPointer &conn)
     }
 
     ACLFilledChecklist ch(nullptr, request, nullptr);
-    ch.setOutgoingConnection(conn);
+    ch.dst_peer_name = conn->getPeer() ? conn->getPeer()->name : nullptr;
+    ch.dst_addr = conn->remote;
 
     // TODO use the connection details in ACL.
     // needs a bit of rework in ACLFilledChecklist to use Comm::Connection instead of ConnStateData
@@ -1521,7 +1522,8 @@ GetTosToServer(HttpRequest * request, Comm::Connection &conn)
         return 0;
 
     ACLFilledChecklist ch(nullptr, request, nullptr);
-    ch.setOutgoingConnection(conn);
+    ch.dst_peer_name = conn.getPeer() ? conn.getPeer()->name : nullptr;
+    ch.dst_addr = conn.remote;
     return aclMapTOS(Ip::Qos::TheConfig.tosToServer, &ch);
 }
 
@@ -1533,7 +1535,8 @@ GetNfmarkToServer(HttpRequest * request, Comm::Connection &conn)
         return 0;
 
     ACLFilledChecklist ch(nullptr, request, nullptr);
-    ch.setOutgoingConnection(conn);
+    ch.dst_peer_name = conn.getPeer() ? conn.getPeer()->name : nullptr;
+    ch.dst_addr = conn.remote;
     const auto mc = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfmarkToServer, &ch);
     return mc.mark;
 }
