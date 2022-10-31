@@ -46,9 +46,6 @@ void neighborsHtcpClear(StoreEntry *, HttpRequest *, const HttpRequestMethod &, 
 /// cache_peer with a given name (or nil)
 CachePeer *findCachePeerByName(const char *);
 
-/// cache_peer configured with a given hostname (or nil)
-CachePeer *findCachePeerByHostname(const char *);
-
 CachePeer *getDefaultParent(PeerSelector*);
 CachePeer *getRoundRobinParent(PeerSelector*);
 CachePeer *getWeightedRoundRobinParent(PeerSelector*);

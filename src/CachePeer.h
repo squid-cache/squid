@@ -11,11 +11,9 @@
 
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
-#include "base/Optional.h"
 #include "enums.h"
 #include "icp_opcode.h"
 #include "ip/Address.h"
-#include "sbuf/forward.h"
 #include "security/PeerOptions.h"
 
 #include <iosfwd>

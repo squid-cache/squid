@@ -1070,7 +1070,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
         return;
     }
 
-    debugs(15, 3, opcode_d << " for '" << storeKeyText(key) << "' from " << RawPointer(p).orNil("source"));
+    debugs(15, 3, opcode_d << " for " << storeKeyText(key) << " from " << RawPointer(p).orNil("source"));
 
     if (p) {
         ntype = neighborType(p, mem->request->url);
