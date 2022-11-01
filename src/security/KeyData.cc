@@ -47,25 +47,23 @@ Security::KeyData::loadCertificates()
         // Squid sends `cert` (loaded above) followed by certificates in `chain`
         // (formed below by loading and sorting the remaining certificates).
 
-        // scan all the remaining configured certificates and keep intermediates
+        // load all the remaining configured certificates
         CertList intermediates;
-        while (const auto ca = Ssl::ReadOptionalCertificate(bio)) {
-            // We ignore a self-signed certificate because it should not be sent:
-            // The recipients that do not already have it should not trust it.
-            // Ignoring self-signed also simplifies the intermediates loop below.
-            if (SelfSigned(*ca)) {
-                debugs(83, DBG_IMPORTANT, "WARNING: Ignoring a self-signed CA " << *ca);
-                continue;
-            }
-
+        while (const auto ca = Ssl::ReadOptionalCertificate(bio))
             intermediates.emplace_back(ca);
-        }
 
         // Push certificates into `chain` in on-the-wire order, as defined by
         // RFC 8446 Section 4.4.2: "Each following certificate SHOULD directly
         // certify the one immediately preceding it."
         while (!intermediates.empty()) {
             const auto precedingCert = chain.empty() ? cert : chain.back();
+
+            // We cannot chain any certificate after a self-signed certificate.
+            // This check also protects the IssuedBy() search below from adding
+            // duplicated (i.e. listed multiple times) self-signed certificates.
+            if (SelfSigned(*precedingCert))
+                break;
+
             const auto issuerPos = std::find_if(intermediates.begin(), intermediates.end(), [&](const CertPointer &i) {
                 return IssuedBy(*precedingCert, *i);
             });

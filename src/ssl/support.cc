@@ -971,11 +971,6 @@ Ssl::chainCertificatesToSSLContext(Security::ContextPointer &ctx, Security::Serv
 {
     assert(ctx);
 
-    if (Security::SelfSigned(*options.signingCa.cert)) {
-        debugs(33, 3, "do not send self-signed certificates via SSL_CTX_add_extra_chain_cert()");
-        return;
-    }
-
     // Add signing certificate to the certificates chain
     X509 *signingCert = options.signingCa.cert.get();
     if (SSL_CTX_add_extra_chain_cert(ctx.get(), signingCert)) {
