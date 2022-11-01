@@ -1281,7 +1281,7 @@ peerConnectFailed(CachePeer * const p)
         }
     } else {
         assert(!p->tcp_up);
-        debugs(15, 2, "cache_peer is still DEAD");
+        debugs(15, 2, "cache_peer " << *p << " is still DEAD");
     }
 }
 
