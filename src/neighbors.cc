@@ -1112,8 +1112,8 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
             neighborIgnoreNonPeer(from, opcode);
         } else if (p->stats.pings_acked > 100) {
             if (100 * p->icp.counts[ICP_DENIED] / p->stats.pings_acked > 95) {
-                debugs(15, DBG_CRITICAL, "95% of replies from " << *p << " are UDP_DENIED");
-                debugs(15, DBG_CRITICAL, "Disabling " << *p << ", please check your configuration.");
+                debugs(15, DBG_CRITICAL, "Disabling cache_peer " << *p <<
+                       " because over 95% of its replies are UDP_DENIED");
                 neighborRemove(p);
                 p = nullptr;
             } else {
