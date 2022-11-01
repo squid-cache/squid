@@ -1692,8 +1692,8 @@ tests_testACLMaxUserIP_SOURCES = \
 	tests/testACLMaxUserIP.cc \
 	tests/testACLMaxUserIP.h
 nodist_tests_testACLMaxUserIP_SOURCES = \
-	tests/stub_CachePeer.cc \
 	ConfigParser.cc \
+	tests/stub_CachePeer.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_HttpHeader.cc \
 	tests/stub_HttpRequest.cc \
@@ -2020,8 +2020,8 @@ tests_testHttp1Parser_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttpReply
 tests_testHttpReply_SOURCES = \
-	tests/stub_CachePeer.cc \
 	ConfigParser.cc \
+	tests/stub_CachePeer.cc \
 	tests/stub_ETag.cc \
 	tests/stub_HelperChildConfig.cc \
 	HttpBody.cc \
