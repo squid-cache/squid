@@ -48,14 +48,14 @@ Security::KeyData::loadCertificates()
         // (formed below by loading and sorting the remaining certificates).
 
         // load all the remaining configured certificates
-        CertList intermediates;
-        while (const auto ca = Ssl::ReadOptionalCertificate(bio))
-            intermediates.emplace_back(ca);
+        CertList candidates;
+        while (const auto c = Ssl::ReadOptionalCertificate(bio))
+            candidates.emplace_back(c);
 
         // Push certificates into `chain` in on-the-wire order, as defined by
         // RFC 8446 Section 4.4.2: "Each following certificate SHOULD directly
         // certify the one immediately preceding it."
-        while (!intermediates.empty()) {
+        while (!candidates.empty()) {
             const auto precedingCert = chain.empty() ? cert : chain.back();
 
             // We cannot chain any certificate after a self-signed certificate.
@@ -64,20 +64,20 @@ Security::KeyData::loadCertificates()
             if (SelfSigned(*precedingCert))
                 break;
 
-            const auto issuerPos = std::find_if(intermediates.begin(), intermediates.end(), [&](const CertPointer &i) {
+            const auto issuerPos = std::find_if(candidates.begin(), candidates.end(), [&](const CertPointer &i) {
                 return IssuedBy(*precedingCert, *i);
             });
-            if (issuerPos == intermediates.end())
+            if (issuerPos == candidates.end())
                 break;
 
             const auto &issuer = *issuerPos;
-            debugs(83, DBG_PARSE_NOTE(3), "Adding intermediate CA: " << *issuer);
+            debugs(83, DBG_PARSE_NOTE(3), "Adding CA certificate: " << *issuer);
             chain.emplace_back(issuer);
-            intermediates.erase(issuerPos);
+            candidates.erase(issuerPos);
         }
 
-        for (const auto &i: intermediates)
-            debugs(83, DBG_IMPORTANT, "WARNING: Ignoring certificate that does not extend the chain: " << *i);
+        for (const auto &c: candidates)
+            debugs(83, DBG_IMPORTANT, "WARNING: Ignoring certificate that does not extend the chain: " << *c);
     }
     catch (...) {
         // TODO: Reject configs with malformed intermediate certs instead.
