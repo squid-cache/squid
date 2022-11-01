@@ -2505,31 +2505,16 @@ free_denyinfo(AclDenyInfoList ** list)
 static void
 parse_peer_access(void)
 {
-    char *host = ConfigParser::NextToken();
-    if (!host) {
-        self_destruct();
-        return;
-    }
-
-    const auto p = findCachePeerByName(host);
-    if (!p) {
-        debugs(15, DBG_CRITICAL, "ERROR: " << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
-        return;
-    }
-
+    auto &p = LegacyParser.cachePeer("cache_peer_access peer-name");
     std::string directive = "peer_access ";
-    directive += host;
-    aclParseAccessLine(directive.c_str(), LegacyParser, &p->access);
+    directive += p.name;
+    aclParseAccessLine(directive.c_str(), LegacyParser, &p.access);
 }
 
 static void
 parse_hostdomaintype(void)
 {
-    char *host = ConfigParser::NextToken();
-    if (!host) {
-        self_destruct();
-        return;
-    }
+    auto &p = LegacyParser.cachePeer("neighbor_type_domain peer-name");
 
     char *type = ConfigParser::NextToken();
     if (!type) {
@@ -2539,18 +2524,12 @@ parse_hostdomaintype(void)
 
     char *domain = nullptr;
     while ((domain = ConfigParser::NextToken())) {
-        const auto p = findCachePeerByName(host);
-        if (!p) {
-            debugs(15, DBG_CRITICAL, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
-            return;
-        }
-
         auto *l = static_cast<NeighborTypeDomainList *>(xcalloc(1, sizeof(NeighborTypeDomainList)));
         l->type = parseNeighborType(type);
         l->domain = xstrdup(domain);
 
         NeighborTypeDomainList **L = nullptr;
-        for (L = &(p->typelist); *L; L = &((*L)->next));
+        for (L = &p.typelist; *L; L = &((*L)->next));
         *L = l;
     }
 }

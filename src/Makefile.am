@@ -1445,6 +1445,7 @@ tests_testStore_SOURCES = \
 	tests/stub_libformat.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libsslsquid.cc \
+	tests/stub_neighbors.cc \
 	log/access_log.h \
 	mem_node.cc \
 	tests/stub_mime.cc \
@@ -1714,7 +1715,8 @@ nodist_tests_testACLMaxUserIP_SOURCES = \
 	tests/stub_libcomm.cc \
 	tests/stub_libhttp.cc \
 	tests/stub_libmem.cc \
-	tests/stub_libsecurity.cc
+	tests/stub_libsecurity.cc \
+	tests/stub_neighbors.cc
 tests_testACLMaxUserIP_LDADD = \
 	$(AUTH_ACL_LIBS) \
 	acl/libapi.la \
@@ -2085,6 +2087,7 @@ tests_testHttpReply_SOURCES = \
 	tests/stub_libmgr.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libsslsquid.cc \
+	tests/stub_neighbors.cc \
 	log/access_log.h \
 	mime_header.cc \
 	mime_header.h \
@@ -2710,7 +2713,8 @@ nodist_tests_testConfigParser_SOURCES = \
 	tests/stub_cache_cf.cc \
 	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
-	tests/stub_libmem.cc
+	tests/stub_libmem.cc \
+	tests/stub_neighbors.cc
 tests_testConfigParser_LDADD = \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
