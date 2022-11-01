@@ -3963,8 +3963,7 @@ DOC_START
 			Defaults to cache_peer hostname when not explicitly specified.
 
 			Other directives (e.g., cache_peer_access), cache manager reports,
-			and cache.log messages referring to a specific cache_peer use this
-			name to uniquely identify a cache_peer.
+			and cache.log messages use this name to refer to this cache_peer.
 
 			The cache_peer name value affects hashing-based peer selection
 			methods (e.g., carp and sourcehash).
