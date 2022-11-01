@@ -219,10 +219,11 @@ template <class Messages>
 static const char *
 FindHardCodedTemplate(const err_type type, const Messages &messages)
 {
-    const auto foundDefault = std::find_if(messages.cbegin(), messages.cend(), [&](const HardCodedMessage &m) {
-        return m.type == type;
-    });
-    return foundDefault == messages.cend() ? nullptr : foundDefault->text;
+    for (const auto &m : messages) {
+        if (m.type == type)
+            return m.text;
+    }
+    return nullptr;
 }
 
 /// \ingroup ErrorPageInternal
