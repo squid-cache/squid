@@ -76,7 +76,7 @@ Security::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
         // based on TCP results, SSL results, or both. And the code is probably not
         // consistent in this aspect across tunnelling and forwarding modules.
         if (peer && peer->secure.encryptTransport)
-            peer->noteFailure(Http::scNone);
+            peer->noteFailure(error->httpStatus);
         return;
     }
 
