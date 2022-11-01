@@ -192,7 +192,7 @@ static std::array<HardCodedMessage, 7> HardCodedErrors = {{
 
 /// error messages that may be configured/customized by the admin,
 /// like the regular ones, but that also have a hard-coded last-resort default
-static std::array<HardCodedMessage, 1> TemplateDefaults = {{
+static std::array<HardCodedMessage, 1> ErrorsWithDefaultTemplates = {{
     {
         MGR_INDEX,
         "mgr_index"
@@ -387,7 +387,7 @@ TemplateFile::loadDefault()
     }
 
     if (!loaded()) {
-        if (const auto defaultTemplate = FindHardCodedTemplate(templateCode, TemplateDefaults)) {
+        if (const auto defaultTemplate = FindHardCodedTemplate(templateCode, ErrorsWithDefaultTemplates)) {
             template_ = defaultTemplate;
             wasLoaded = true;
         }
@@ -441,7 +441,7 @@ TemplateFile::loadFromFile(const char *path)
 
     if (fd < 0) {
         /* with dynamic locale negotiation we may see some failures before a success. */
-        if (!silent && templateCode < TCP_RESET && !FindHardCodedTemplate(templateCode, TemplateDefaults)) {
+        if (!silent && templateCode < TCP_RESET) {
             int xerrno = errno;
             debugs(4, DBG_CRITICAL, "ERROR: loading file '" << path << "': " << xstrerr(xerrno));
         }
