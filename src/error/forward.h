@@ -90,7 +90,6 @@ typedef enum {
 
 class Error;
 class ErrorDetail;
-class ErrorState;
 
 typedef RefCount<ErrorDetail> ErrorDetailPointer;
 
