@@ -219,7 +219,7 @@ template <class Messages>
 static const char *
 FindHardCodedTemplate(const err_type type, const Messages &messages)
 {
-    for (const auto &m : messages) {
+    for (const auto &m: messages) {
         if (m.type == type)
             return m.text;
     }
