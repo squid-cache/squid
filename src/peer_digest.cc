@@ -249,7 +249,7 @@ peerDigestCheck(void *data)
         return;
     }
 
-    debugs(72, 3, "peerDigestCheck: peer " << *pd->peer);
+    debugs(72, 3, "cache_peer " << *pd->peer);
     debugs(72, 3, "peerDigestCheck: time: " << squid_curtime <<
            ", last received: " << (long int) pd->times.received << "  (" <<
            std::showpos << (int) (squid_curtime - pd->times.received) << ")");

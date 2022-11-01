@@ -146,7 +146,7 @@ peerAllowedToUse(const CachePeer * p, PeerSelector * ps)
 #if PEER_MULTICAST_SIBLINGS
         if (p->type == PEER_MULTICAST && p->options.mcast_siblings &&
                 (request->flags.noCache || request->flags.refresh || request->flags.loopDetected || request->flags.needValidation))
-            debugs(15, 2, "peerAllowedToUse(" << *p << ", " << request->url.authority() << ") : multicast-siblings optimization match");
+            debugs(15, 2, "multicast-siblings optimization match for " << *p << ", " << request->url.authority());
 #endif
         if (request->flags.noCache)
             return false;
@@ -627,14 +627,14 @@ neighborsUdpPing(HttpRequest * request,
         if (p == nullptr)
             p = Config.peers;
 
-        debugs(15, 5, "neighborsUdpPing: candidate: " << *p);
+        debugs(15, 5, "candidate: " << *p);
 
         if (!peerWouldBePinged(p, ps))
             continue;       /* next CachePeer */
 
         ++peers_pinged;
 
-        debugs(15, 4, "neighborsUdpPing: pinging peer " << *p << " for '" << url << "'");
+        debugs(15, 4, "pinging cache_peer " << *p << " for '" << url << "'");
 
         debugs(15, 3, "neighborsUdpPing: key = '" << entry->getMD5Text() << "'");
 
@@ -763,7 +763,7 @@ peerDigestLookup(CachePeer * p, PeerSelector * ps)
     const cache_key *key = request ? storeKeyPublicByRequest(request) : nullptr;
     assert(p);
     assert(request);
-    debugs(15, 5, "peerDigestLookup: peer " << *p);
+    debugs(15, 5, "cache_peer " << *p);
     /* does the peeer have a valid digest? */
 
     if (!p->digest) {
@@ -781,14 +781,14 @@ peerDigestLookup(CachePeer * p, PeerSelector * ps)
         return LOOKUP_NONE;
     }
 
-    debugs(15, 5, "peerDigestLookup: OK to lookup peer " << *p);
+    debugs(15, 5, "OK to lookup cache_peer " << *p);
     assert(p->digest->cd);
     /* does digest predict a hit? */
 
     if (!p->digest->cd->contains(key))
         return LOOKUP_MISS;
 
-    debugs(15, 5, "peerDigestLookup: peer " << *p << " says HIT!");
+    debugs(15, 5, "HIT for cache_peer " << *p);
 
     return LOOKUP_HIT;
 #else
@@ -841,7 +841,7 @@ neighborsDigestSelect(PeerSelector *ps)
 
         p_rtt = netdbHostRtt(p->host);
 
-        debugs(15, 5, "neighborsDigestSelect: peer " << *p << " rtt: " << p_rtt);
+        debugs(15, 5, "cache_peer " << *p << " rtt: " << p_rtt);
 
         /* is this CachePeer better than others in terms of rtt ? */
         if (!best_p || (p_rtt && p_rtt < best_rtt)) {
@@ -851,7 +851,7 @@ neighborsDigestSelect(PeerSelector *ps)
             if (p_rtt)      /* informative choice (aka educated guess) */
                 ++ichoice_count;
 
-            debugs(15, 4, "neighborsDigestSelect: peer " << *p << " leads with rtt " << best_rtt);
+            debugs(15, 4, "cache_peer " << *p << " leads with rtt " << best_rtt);
         }
     }
 
@@ -877,7 +877,7 @@ peerNoteDigestLookup(HttpRequest * request, CachePeer * p, lookup_t lookup)
         *request->hier.cd_host = '\0';
 
     request->hier.cd_lookup = lookup;
-    debugs(15, 4, "peer " << RawPointer(p).orNil() << ", lookup: " << lookup_t_str[lookup]);
+    debugs(15, 4, "cache_peer " << RawPointer(p).orNil() << ", lookup: " << lookup_t_str[lookup]);
 #else
     (void)request;
     (void)p;
