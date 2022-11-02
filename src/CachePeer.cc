@@ -52,7 +52,7 @@ void
 CachePeer::noteSuccess()
 {
     if (!tcp_up) {
-        debugs(15, 2, "TCP connection to " << host << "/" << http_port << " succeeded");
+        debugs(15, 2, "connection to " << host << "/" << http_port << " succeeded");
         tcp_up = connect_fail_limit; // NP: so peerAlive() works properly.
         peerAlive(this);
     } else {
@@ -70,7 +70,7 @@ CachePeer::noteFailure(const Http::StatusCode code)
 }
 
 // TODO: Require callers to detail failures instead of using one (and often
-// misleading!) "TCP" label for all of them.
+// misleading!) "connection failed" phrase for all of them.
 /// noteFailure() helper for handling failures attributed to this peer
 void
 CachePeer::countFailure()
@@ -83,7 +83,7 @@ CachePeer::countFailure()
 
     const auto consideredAliveByAdmin = (stats.logged_state == PEER_ALIVE);
     const auto level = consideredAliveByAdmin ? DBG_IMPORTANT : 2;
-    debugs(15, level, "ERROR: TCP connection to " << host << "/" << http_port << " failed");
+    debugs(15, level, "ERROR: Connection to " << host << "/" << http_port << " failed");
 
     if (consideredAliveByAdmin) {
         if (!tcp_up) {
