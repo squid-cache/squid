@@ -960,16 +960,6 @@ SQUID_DEFINE_BOOL(USE_WCCPv2,${enable_wccpv2:=yes},
             [Define to enable WCCP V2])
 AC_MSG_NOTICE([Web Cache Coordination V2 Protocol enabled: $enable_wccpv2])
 
-AC_ARG_ENABLE(kill-parent-hack,
-  AS_HELP_STRING([--enable-kill-parent-hack],[Kill parent on shutdown]), [
-  SQUID_YESNO([$enableval],[--enable-kill-parent-hack])
-])
-SQUID_DEFINE_BOOL(KILL_PARENT_OPT,${enable_kill_parent_hack:=no},
-                   [A dangerous feature which causes Squid to kill its parent
-                    process (presumably the RunCache script) upon receipt
-                    of SIGTERM or SIGINT. Deprecated, Use with caution.])
-AC_MSG_NOTICE([Kill parent on shutdown hack enabled: $enable_kill_parent_hack])
-
 AC_ARG_ENABLE(snmp,
   AS_HELP_STRING([--disable-snmp],[Disable SNMP monitoring support]), [
   SQUID_YESNO([$enableval],[--enable-snmp])
