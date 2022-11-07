@@ -160,8 +160,6 @@ static int ShutdownSignal = -1;
 static int ReviveKidsSignal = -1;
 
 static void mainRotate(void);
-static void mainReconfigureStart(void);
-static void mainReconfigureFinish(void*);
 static void mainInitialize(void);
 static void usage(void);
 static void mainHandleCommandLineOption(const int optId, const char *optValue);
@@ -207,16 +205,10 @@ private:
 
     static void FinalShutdownRunners(void *) {
         RunRegisteredHere(RegisteredRunner::endingShutdown);
-
-        // XXX: this should be a Runner.
-#if USE_AUTH
-        /* detach the auth components (only do this on full shutdown) */
-        Auth::Scheme::FreeAll();
-#endif
-
         eventAdd("SquidTerminate", &StopEventLoop, nullptr, 0, 1, false);
     }
 
+    void doReconfigure();
     void doShutdown(time_t wait);
     void handleStoppedChild();
 };
@@ -225,7 +217,7 @@ int
 SignalEngine::checkEvents(int)
 {
     if (do_reconfigure)
-        mainReconfigureStart();
+        doReconfigure();
     else if (do_rotate)
         mainRotate();
     else if (do_shutdown)
@@ -281,10 +273,6 @@ SignalEngine::doShutdown(time_t wait)
         wait = 0;
     } else {
         shutting_down = 1;
-
-        /* run the closure code which can be shared with reconfigure */
-        serverConnectionsClose();
-
         RunRegisteredHere(RegisteredRunner::startShutdown);
     }
 
@@ -849,42 +837,6 @@ serverConnectionsClose(void)
 }
 
 static void
-mainReconfigureStart(void)
-{
-    if (AvoidSignalAction("reconfiguration", do_reconfigure))
-        return;
-
-    debugs(1, DBG_IMPORTANT, "Reconfiguring Squid Cache (version " << version_string << ")...");
-    reconfiguring = 1;
-
-    RunRegisteredHere(RegisteredRunner::startReconfigure);
-
-    // Initiate asynchronous closing sequence
-    serverConnectionsClose();
-    icpClosePorts();
-#if USE_HTCP
-    htcpClosePorts();
-#endif
-#if USE_OPENSSL
-    Ssl::TheGlobalContextStorage.reconfigureStart();
-#endif
-#if USE_AUTH
-    authenticateReset();
-#endif
-    externalAclShutdown();
-    storeDirCloseSwapLogs();
-    storeLogClose();
-    accessLogClose();
-#if ICAP_CLIENT
-    icapLogClose();
-#endif
-    Security::CloseLogs();
-
-    eventAdd("mainReconfigureFinish", &mainReconfigureFinish, nullptr, 0, 1,
-             false);
-}
-
-static void
 mainReconfigureFinish(void *)
 {
     debugs(1, 3, "finishing reconfiguring");
@@ -916,86 +868,23 @@ mainReconfigureFinish(void *)
                ") requires a full restart. It has been ignored by reconfigure.");
         Config.workers = oldWorkers;
     }
+    leave_suid();
 
     RunRegisteredHere(RegisteredRunner::syncConfig);
-
-    if (IamPrimaryProcess())
-        CpuAffinityCheck();
-    CpuAffinityReconfigure();
-
-    setUmask(Config.umask);
-    Mem::Report();
-    setEffectiveUser();
-    Debug::UseCacheLog();
-    ipcache_restart();      /* clear stuck entries */
-    fqdncache_restart();    /* sigh, fqdncache too */
-    parseEtcHosts();
-    errorInitialize();      /* reload error pages */
-    accessLogInit();
-
-#if USE_LOADABLE_MODULES
-    LoadableModulesConfigure(Config.loadable_module_names);
-#endif
-
-#if USE_ADAPTATION
-    bool enableAdaptation = false;
-#if ICAP_CLIENT
-    Adaptation::Icap::TheConfig.finalize();
-    enableAdaptation = Adaptation::Icap::TheConfig.onoff || enableAdaptation;
-#endif
-#if USE_ECAP
-    Adaptation::Ecap::TheConfig.finalize(); // must be after we load modules
-    enableAdaptation = Adaptation::Ecap::TheConfig.onoff || enableAdaptation;
-#endif
-    Adaptation::Config::Finalize(enableAdaptation);
-#endif
-
-    Security::OpenLogs();
-#if ICAP_CLIENT
-    icapLogOpen();
-#endif
-    storeLogOpen();
-    Dns::Init();
-#if USE_SSL_CRTD
-    Ssl::Helper::Reconfigure();
-#endif
-#if USE_OPENSSL
-    Ssl::CertValidationHelper::Reconfigure();
-#endif
-
-    redirectReconfigure();
-#if USE_AUTH
-    authenticateInit(&Auth::TheConfig.schemes);
-#endif
-    externalAclInit();
-
-    if (IamPrimaryProcess()) {
-#if USE_WCCP
-
-        wccpInit();
-#endif
-#if USE_WCCPv2
-
-        wccp2Init();
-#endif
-    }
-
-    serverConnectionsOpen();
-
-    neighbors_init();
-
-    storeDirOpenSwapLogs();
-
-    mimeInit(Config.mimeTablePathname);
-
-    if (unlinkdNeeded())
-        unlinkdInit();
-
-#if USE_DELAY_POOLS
-    Config.ClientDelay.finalize();
-#endif
-
     reconfiguring = 0;
+}
+
+void
+SignalEngine::doReconfigure()
+{
+    if (AvoidSignalAction("reconfiguration", do_reconfigure))
+        return;
+
+    debugs(1, DBG_IMPORTANT, "Reconfiguring Squid Cache (version " << version_string << ")...");
+    reconfiguring = 1;
+    RunRegisteredHere(RegisteredRunner::startReconfigure);
+    eventAdd("mainReconfigureFinish", &mainReconfigureFinish, nullptr, 0, 1,
+             false);
 }
 
 static void
@@ -1026,6 +915,119 @@ mainRotate(void)
 #endif
     externalAclInit();
 }
+
+/// perform legacy actions for process signal handling
+/// TODO: move actions into module runners
+class LegacySignalRr : public RegisteredRunner
+{
+public:
+    virtual void startReconfigure() {
+        serverConnectionsClose();
+        icpClosePorts();
+#if USE_HTCP
+        htcpClosePorts();
+#endif
+#if USE_OPENSSL
+        Ssl::TheGlobalContextStorage.reconfigureStart();
+#endif
+#if USE_AUTH
+        authenticateReset();
+#endif
+        externalAclShutdown();
+        storeDirCloseSwapLogs();
+        storeLogClose();
+        accessLogClose();
+#if ICAP_CLIENT
+        icapLogClose();
+#endif
+        Security::CloseLogs();
+    }
+
+    virtual void syncConfig() {
+        enter_suid();
+        if (IamPrimaryProcess())
+            CpuAffinityCheck();
+        CpuAffinityReconfigure();
+
+        setUmask(Config.umask);
+        Mem::Report();
+        setEffectiveUser(); // calls leave_suid()
+
+        Debug::UseCacheLog();
+        ipcache_restart();      /* clear stuck entries */
+        fqdncache_restart();    /* sigh, fqdncache too */
+        parseEtcHosts();
+        errorInitialize();      /* reload error pages */
+        accessLogInit();
+
+#if USE_LOADABLE_MODULES
+        LoadableModulesConfigure(Config.loadable_module_names);
+#endif
+
+#if USE_ADAPTATION
+        bool enableAdaptation = false;
+#if ICAP_CLIENT
+        Adaptation::Icap::TheConfig.finalize();
+        enableAdaptation = Adaptation::Icap::TheConfig.onoff || enableAdaptation;
+#endif
+#if USE_ECAP
+        Adaptation::Ecap::TheConfig.finalize(); // must be after we load modules
+        enableAdaptation = Adaptation::Ecap::TheConfig.onoff || enableAdaptation;
+#endif
+        Adaptation::Config::Finalize(enableAdaptation);
+#endif
+        Security::OpenLogs();
+#if ICAP_CLIENT
+        icapLogOpen();
+#endif
+        storeLogOpen();
+        Dns::Init();
+#if USE_SSL_CRTD
+        Ssl::Helper::Reconfigure();
+#endif
+#if USE_OPENSSL
+        Ssl::CertValidationHelper::Reconfigure();
+#endif
+        redirectReconfigure();
+#if USE_AUTH
+        authenticateInit(&Auth::TheConfig.schemes);
+#endif
+        externalAclInit();
+
+        if (IamPrimaryProcess()) {
+#if USE_WCCP
+            wccpInit();
+#endif
+#if USE_WCCPv2
+            wccp2Init();
+#endif
+        }
+
+        serverConnectionsOpen();
+        neighbors_init();
+        storeDirOpenSwapLogs();
+        mimeInit(Config.mimeTablePathname);
+
+        if (unlinkdNeeded())
+            unlinkdInit();
+
+#if USE_DELAY_POOLS
+        Config.ClientDelay.finalize();
+#endif
+    }
+
+    virtual void startShutdown() {
+        serverConnectionsClose();
+    }
+
+    virtual void endingShutdown() {
+#if USE_AUTH
+        /* detach the auth components (only do this on full shutdown) */
+        Auth::Scheme::FreeAll();
+#endif
+    }
+};
+RunnerRegistrationEntry(LegacySignalRr);
 
 static void
 setEffectiveUser(void)
