@@ -42,8 +42,10 @@ void neighbors_init(void);
 #if USE_HTCP
 void neighborsHtcpClear(StoreEntry *, HttpRequest *, const HttpRequestMethod &, htcp_clr_reason);
 #endif
-CachePeer *peerFindByName(const char *);
-CachePeer *peerFindByNameAndPort(const char *, unsigned short);
+
+/// cache_peer with a given name (or nil)
+CachePeer *findCachePeerByName(const char *);
+
 CachePeer *getDefaultParent(PeerSelector*);
 CachePeer *getRoundRobinParent(PeerSelector*);
 CachePeer *getWeightedRoundRobinParent(PeerSelector*);

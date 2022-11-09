@@ -94,7 +94,7 @@ operator <<(std::ostream &os, const PeerSelectionDumper &fsd)
     os << hier_code_str[fsd.code];
 
     if (fsd.peer)
-        os << '/' << fsd.peer->host;
+        os << '/' << *fsd.peer;
     else if (fsd.selector) // useful for DIRECT and gone PINNED destinations
         os << '#' << fsd.selector->request->url.host();
 

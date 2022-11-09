@@ -3959,12 +3959,20 @@ DOC_START
 			configuration.
 
 	name=xxx	Unique name for the peer.
-			Required if you have multiple peers on the same host
-			but different ports.
-			This name can be used in cache_peer_access and similar
-			directives to identify the peer.
+			Required if you have multiple cache_peers with the same hostname.
+			Defaults to cache_peer hostname when not explicitly specified.
+
+			Other directives (e.g., cache_peer_access), cache manager reports,
+			and cache.log messages use this name to refer to this cache_peer.
+
+			The cache_peer name value affects hashing-based peer selection
+			methods (e.g., carp and sourcehash).
+
 			Can be used by outgoing access controls through the
 			peername ACL type.
+
+			The name value preserves configured spelling, but name uniqueness
+			checks and name-based search are case-insensitive.
 
 	no-tproxy	Do not use the client-spoof TPROXY support when forwarding
 			requests to this peer. Use normal address selection instead.
@@ -4026,7 +4034,11 @@ DOC_START
 	about specific domains to the peer.
 
 	Usage:
-		 neighbor_type_domain neighbor parent|sibling domain domain ...
+		neighbor_type_domain peer-name parent|sibling domain...
+
+	For the required peer-name parameter, use either the value of the
+	cache_peer name=value parameter or, if name=value is missing, the
+	cache_peer hostname parameter.
 
 	For example:
 		cache_peer foo.example.com parent 3128 3130

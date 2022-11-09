@@ -14,8 +14,16 @@
 #include "pconn.h"
 #include "PeerPoolMgr.h"
 #include "SquidConfig.h"
+#include "util.h"
 
 CBDATA_CLASS_INIT(CachePeer);
+
+CachePeer::CachePeer(const char * const hostname):
+    name(xstrdup(hostname)),
+    host(xstrdup(hostname))
+{
+    Tolower(host); // but .name preserves original spelling
+}
 
 CachePeer::~CachePeer()
 {
@@ -47,11 +55,27 @@ CachePeer::~CachePeer()
     xfree(domain);
 }
 
+void
+CachePeer::rename(const char * const newName)
+{
+    if (!newName || !*newName)
+        throw TextException("cache_peer name=value cannot be empty", Here());
+
+    xfree(name);
+    name = xstrdup(newName);
+}
+
 time_t
 CachePeer::connectTimeout() const
 {
     if (connect_timeout_raw > 0)
         return connect_timeout_raw;
     return Config.Timeout.peer_connect;
+}
+
+std::ostream &
+operator <<(std::ostream &os, const CachePeer &p)
+{
+    return os << p.name;
 }
 

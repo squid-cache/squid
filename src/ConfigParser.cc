@@ -15,6 +15,7 @@
 #include "debug/Stream.h"
 #include "fatal.h"
 #include "globals.h"
+#include "neighbors.h"
 #include "sbuf/Stream.h"
 
 bool ConfigParser::RecognizeQuotedValues = true;
@@ -501,6 +502,22 @@ ConfigParser::regex(const char *expectedRegexDescription)
     ConfigParser::RecognizeQuotedPair_ = false;
 
     return std::unique_ptr<RegexPattern>(new RegexPattern(pattern, flags));
+}
+
+CachePeer &
+ConfigParser::cachePeer(const char *peerNameTokenDescription)
+{
+    if (const auto name = NextToken()) {
+        debugs(3, 5, CurrentLocation() << ' ' << peerNameTokenDescription << ": " << name);
+
+        if (const auto p = findCachePeerByName(name))
+            return *p;
+
+        throw TextException(ToSBuf("Cannot find a previously declared cache_peer referred to by ",
+            peerNameTokenDescription, " as ", name), Here());
+    }
+
+    throw TextException(ToSBuf("Missing ", peerNameTokenDescription), Here());
 }
 
 char *
