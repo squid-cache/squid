@@ -1354,6 +1354,7 @@ tests_testStore_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	tests/stub_CacheDigest.cc \
 	CacheDigest.h \
+	tests/stub_CachePeer.cc \
 	ClientInfo.h \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
@@ -1444,6 +1445,7 @@ tests_testStore_SOURCES = \
 	tests/stub_libformat.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libsslsquid.cc \
+	tests/stub_neighbors.cc \
 	log/access_log.h \
 	mem_node.cc \
 	tests/stub_mime.cc \
@@ -1692,6 +1694,7 @@ tests_testACLMaxUserIP_SOURCES = \
 	tests/testACLMaxUserIP.h
 nodist_tests_testACLMaxUserIP_SOURCES = \
 	ConfigParser.cc \
+	tests/stub_CachePeer.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_HttpHeader.cc \
 	tests/stub_HttpRequest.cc \
@@ -1709,9 +1712,11 @@ nodist_tests_testACLMaxUserIP_SOURCES = \
 	tests/stub_fatal.cc \
 	globals.cc \
 	tests/stub_libauth.cc \
+	tests/stub_libcomm.cc \
 	tests/stub_libhttp.cc \
 	tests/stub_libmem.cc \
-	tests/stub_libsecurity.cc
+	tests/stub_libsecurity.cc \
+	tests/stub_neighbors.cc
 tests_testACLMaxUserIP_LDADD = \
 	$(AUTH_ACL_LIBS) \
 	acl/libapi.la \
@@ -2018,6 +2023,7 @@ tests_testHttp1Parser_LDFLAGS = $(LIBADD_DL)
 check_PROGRAMS += tests/testHttpReply
 tests_testHttpReply_SOURCES = \
 	ConfigParser.cc \
+	tests/stub_CachePeer.cc \
 	tests/stub_ETag.cc \
 	tests/stub_HelperChildConfig.cc \
 	HttpBody.cc \
@@ -2081,6 +2087,7 @@ tests_testHttpReply_SOURCES = \
 	tests/stub_libmgr.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libsslsquid.cc \
+	tests/stub_neighbors.cc \
 	log/access_log.h \
 	mime_header.cc \
 	mime_header.h \
@@ -2706,7 +2713,8 @@ nodist_tests_testConfigParser_SOURCES = \
 	tests/stub_cache_cf.cc \
 	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
-	tests/stub_libmem.cc
+	tests/stub_libmem.cc \
+	tests/stub_neighbors.cc
 tests_testConfigParser_LDADD = \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
