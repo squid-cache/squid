@@ -73,7 +73,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-referer-log \
 	--enable-wccp \
 	--enable-wccpv2 \
-	--enable-kill-parent-hack \
 	--enable-snmp \
 	--enable-cachemgr-hostname \
 	--enable-eui \

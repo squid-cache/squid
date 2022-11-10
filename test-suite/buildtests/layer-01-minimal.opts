@@ -55,7 +55,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-referer-log \
 	--disable-wccp \
 	--disable-wccpv2 \
-	--disable-kill-parent-hack \
 	--disable-snmp \
 	--disable-cachemgr-hostname \
 	--disable-eui \
