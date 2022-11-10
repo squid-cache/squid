@@ -126,6 +126,10 @@ This section gives an account of those changes in three categories:
 	<p>This feature has been unreliable for many years. Other tools such as
 	   oprofile provide better tracking and should be used instead.
 
+	<tag>--enable-kill-parent-hack</tag>
+	<p>This feature has been deprecated for years. Other features such as
+	   <em>--foreground</em> command line argument should be used instead.
+
 	<tag>--disable-loadable-modules</tag>
 	<p>This option was performing the same duties as <em>--disable-shared</em>.
 
