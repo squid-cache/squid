@@ -992,6 +992,7 @@ ConnStateData::kick()
     } else {
         // XXX: Can this happen? CONNECT tunnels have deferredRequest set.
         debugs(33, DBG_IMPORTANT, MYNAME << "abandoning " << clientConnection);
+        clientConnection->close();
     }
 }
 
