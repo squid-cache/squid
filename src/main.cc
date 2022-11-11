@@ -921,6 +921,13 @@ mainRotate(void)
 class LegacySignalRr : public RegisteredRunner
 {
 public:
+    virtual ~LegacySignalRr() {
+#if USE_AUTH
+        /* detach the auth components (only do this on full shutdown) */
+        Auth::Scheme::FreeAll();
+#endif
+    }
+
     virtual void startReconfigure() {
         serverConnectionsClose();
         icpClosePorts();
@@ -1018,13 +1025,6 @@ public:
 
     virtual void startShutdown() {
         serverConnectionsClose();
-    }
-
-    virtual void endingShutdown() {
-#if USE_AUTH
-        /* detach the auth components (only do this on full shutdown) */
-        Auth::Scheme::FreeAll();
-#endif
     }
 };
 RunnerRegistrationEntry(LegacySignalRr);
