@@ -56,7 +56,7 @@ static constexpr int EarlyMessagesLevel = DBG_IMPORTANT;
 /// pre-formatted name of the current process for debugs() messages (or empty)
 static std::string ProcessLabel;
 
-static const char *debugLogTime(time_t t);
+static const char *debugLogTime(const timeval &);
 
 #if HAVE_SYSLOG
 #ifdef LOG_LOCAL4
@@ -109,7 +109,7 @@ public:
     DebugMessageHeader(const DebugRecordCount aRecordNumber, const Debug::Context &);
 
     DebugRecordCount recordNumber; ///< LogMessage() calls before this message
-    time_t timestamp; ///< approximate debugs() call time
+    struct timeval timestamp; ///< approximate debugs() call time
     int section; ///< debugs() section
     int level; ///< debugs() level
     bool forceAlert; ///< debugs() forceAlert flag
@@ -731,11 +731,12 @@ Debug::StderrEnabled()
 
 DebugMessageHeader::DebugMessageHeader(const DebugRecordCount aRecordNumber, const Debug::Context &context):
     recordNumber(aRecordNumber),
-    timestamp(getCurrentTime()),
     section(context.section),
     level(context.level),
     forceAlert(context.forceAlert)
 {
+    (void)getCurrentTime(); // update current_time
+    timestamp = current_time;
 }
 
 /* CompiledDebugMessage */
@@ -1219,9 +1220,8 @@ _db_rotate_log(void)
 }
 
 static const char *
-debugLogTime(const time_t t)
+debugLogTime(const timeval &t)
 {
-    struct tm *tm;
     static char buf[128]; // arbitrary size, big enough for the below timestamp strings.
     static time_t last_t = 0;
 
@@ -1229,17 +1229,18 @@ debugLogTime(const time_t t)
         // 4 bytes smaller than buf to ensure .NNN catenation by snprintf()
         // is safe and works even if strftime() fills its buffer.
         char buf2[sizeof(buf)-4];
-        tm = localtime(&t);
+        const auto tm = localtime(&t.tv_sec);
         strftime(buf2, sizeof(buf2), "%Y/%m/%d %H:%M:%S", tm);
         buf2[sizeof(buf2)-1] = '\0';
-        const int sz = snprintf(buf, sizeof(buf), "%s.%03d", buf2, static_cast<int>(current_time.tv_usec / 1000));
+        const auto sz = snprintf(buf, sizeof(buf), "%s.%03d", buf2, static_cast<int>(t.tv_usec / 1000));
         assert(0 < sz && sz < static_cast<int>(sizeof(buf)));
-        last_t = t;
-    } else if (t != last_t) {
-        tm = localtime(&t);
+        // force buf reset for subsequent level-0/1 messages that should have no milliseconds
+        last_t = 0;
+    } else if (t.tv_sec != last_t) {
+        const auto tm = localtime(&t.tv_sec);
         const int sz = strftime(buf, sizeof(buf), "%Y/%m/%d %H:%M:%S", tm);
         assert(0 < sz && sz <= static_cast<int>(sizeof(buf)));
-        last_t = t;
+        last_t = t.tv_sec;
     }
 
     buf[sizeof(buf)-1] = '\0';

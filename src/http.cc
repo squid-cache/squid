@@ -33,6 +33,7 @@
 #include "http.h"
 #include "http/one/ResponseParser.h"
 #include "http/one/TeChunkedParser.h"
+#include "http/StatusCode.h"
 #include "http/Stream.h"
 #include "HttpControlMsg.h"
 #include "HttpHdrCc.h"
@@ -967,7 +968,7 @@ HttpStateData::haveParsedReplyHeaders()
             // TODO: check whether such responses are shareable.
             // Do not share for now.
             entry->makePrivate(false);
-            if (fwd->reforwardableStatus(rep->sline.status()))
+            if (Http::IsReforwardableStatus(rep->sline.status()))
                 EBIT_SET(entry->flags, ENTRY_FWD_HDR_WAIT);
             varyFailure = true;
         } else {
@@ -986,7 +987,7 @@ HttpStateData::haveParsedReplyHeaders()
          * If its not a reply that we will re-forward, then
          * allow the client to get it.
          */
-        if (fwd->reforwardableStatus(rep->sline.status()))
+        if (Http::IsReforwardableStatus(rep->sline.status()))
             EBIT_SET(entry->flags, ENTRY_FWD_HDR_WAIT);
 
         ReuseDecision decision(entry, statusCode);

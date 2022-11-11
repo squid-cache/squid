@@ -170,12 +170,7 @@ check_pconn() {
 }
 
 check_busy_restart() {
-    if ! run_confirmed_test busy-restart
-    then
-        # XXX: Make the test stable instead!
-        echo_warning "Ignoring unstable test failure: busy-restart"
-    fi
-    return 0
+    run_confirmed_test busy-restart
 }
 
 check_proxy_collapsed_forwarding() {
@@ -260,5 +255,5 @@ main() {
     run_tests $tests
 }
 
-main
+main "$@"
 exit $?

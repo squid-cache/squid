@@ -12,6 +12,7 @@
 #include "tests/STUB.h"
 
 #include "CachePeer.h"
-
+void CachePeer::rename(const char *) STUB
 time_t CachePeer::connectTimeout() const STUB_RETVAL(0)
+std::ostream &operator <<(std::ostream &os, const CachePeer &) STUB_RETVAL(os)
 

@@ -15,8 +15,16 @@
 #include "pconn.h"
 #include "PeerPoolMgr.h"
 #include "SquidConfig.h"
+#include "util.h"
 
 CBDATA_CLASS_INIT(CachePeer);
+
+CachePeer::CachePeer(const char * const hostname):
+    name(xstrdup(hostname)),
+    host(xstrdup(hostname))
+{
+    Tolower(host); // but .name preserves original spelling
+}
 
 CachePeer::~CachePeer()
 {
@@ -52,7 +60,7 @@ void
 CachePeer::noteSuccess()
 {
     if (!tcp_up) {
-        debugs(15, 2, "connection to " << host << "/" << http_port << " succeeded");
+        debugs(15, 2, "TCP connection to " << *this << " succeeded");
         tcp_up = connect_fail_limit; // NP: so peerAlive() works properly.
         peerAlive(this);
     } else {
@@ -83,7 +91,7 @@ CachePeer::countFailure()
 
     const auto consideredAliveByAdmin = (stats.logged_state == PEER_ALIVE);
     const auto level = consideredAliveByAdmin ? DBG_IMPORTANT : 2;
-    debugs(15, level, "ERROR: Connection to " << host << "/" << http_port << " failed");
+    debugs(15, level, "ERROR: TCP connection to " << *this << " failed");
 
     if (consideredAliveByAdmin) {
         if (!tcp_up) {
@@ -94,8 +102,18 @@ CachePeer::countFailure()
         }
     } else {
         assert(!tcp_up);
-        debugs(15, 2, "cache_peer " << host << "/" << http_port << " is still DEAD");
+        debugs(15, 2, "cache_peer " << *this << " is still DEAD");
     }
+}
+
+void    
+CachePeer::rename(const char * const newName)
+{
+    if (!newName || !*newName)
+        throw TextException("cache_peer name=value cannot be empty", Here());
+
+    xfree(name);
+    name = xstrdup(newName);
 }
 
 time_t
@@ -104,5 +122,11 @@ CachePeer::connectTimeout() const
     if (connect_timeout_raw > 0)
         return connect_timeout_raw;
     return Config.Timeout.peer_connect;
+}
+
+std::ostream &
+operator <<(std::ostream &os, const CachePeer &p)
+{
+    return os << p.name;
 }
 
