@@ -106,7 +106,7 @@ CachePeer::countFailure()
     }
 }
 
-void    
+void
 CachePeer::rename(const char * const newName)
 {
     if (!newName || !*newName)
