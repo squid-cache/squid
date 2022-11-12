@@ -30,6 +30,7 @@
 #include "CpuAffinityMap.h"
 #include "debug/Messages.h"
 #include "DiskIO/DiskIOModule.h"
+#include "dns/ResolvConf.h"
 #include "eui/Config.h"
 #include "ExternalACL.h"
 #include "format/Format.h"
@@ -186,6 +187,7 @@ static size_t parseBytesUnits(const char *unit);
 static void free_all(void);
 void requirePathnameExists(const char *name, const char *path);
 static OBJH dump_config;
+static OBJH dump_config_full;
 #if USE_HTTP_VIOLATIONS
 static void free_HeaderManglers(HeaderManglers **pm);
 static void dump_http_header_access(StoreEntry * entry, const char *name, const HeaderManglers *manglers);
@@ -622,12 +624,25 @@ parseConfigFileOrThrow(const char *file_name)
     if (opt_send_signal == -1) {
         Mgr::RegisterAction("config",
                             "Current Squid Configuration",
-                            dump_config,
+                            dump_config_full,
                             1, 1);
     }
 
     return err_count;
 }
+
+/// dump Squid configuration including settings
+/// pulled from the operating system instead of squid.conf
+static void
+dump_config_full(StoreEntry *e)
+{
+    if (Config.dns.nameservers.empty())
+        Dns::ResolvConf::Current().dump(e);
+
+    // dump values from squid.conf
+    dump_config(e);
+}
+
 
 // TODO: Refactor main.cc to centrally handle (and report) all exceptions.
 int

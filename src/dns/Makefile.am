@@ -14,6 +14,8 @@ libdns_la_SOURCES = \
 	LookupDetails.cc \
 	LookupDetails.h \
 	forward.h \
+	ResolvConf.cc \
+	ResolvConf.h \
 	rfc1035.cc \
 	rfc1035.h \
 	rfc2671.cc \

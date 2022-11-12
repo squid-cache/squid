@@ -22,6 +22,7 @@
 #include "debug/Messages.h"
 #include "dlink.h"
 #include "dns/forward.h"
+#include "dns/ResolvConf.h"
 #include "dns/rfc3596.h"
 #include "event.h"
 #include "fd.h"
@@ -52,9 +53,6 @@
 #define REG_TCPIP_PARA_INTERFACES "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces"
 #define REG_TCPIP_PARA "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"
 #define REG_VXD_MSTCP "SYSTEM\\CurrentControlSet\\Services\\VxD\\MSTCP"
-#endif
-#ifndef _PATH_RESCONF
-#define _PATH_RESCONF "/etc/resolv.conf"
 #endif
 #ifndef NS_DEFAULTPORT
 #define NS_DEFAULTPORT 53
@@ -206,6 +204,9 @@ class ConfigRr : public RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
+    virtual void bootstrapConfig() override {
+        Dns::ResolvConf::Current().load();
+    }
     virtual void startReconfigure() override;
     virtual void endingShutdown() override;
 };
@@ -263,7 +264,6 @@ static void idnsAddMDNSNameservers();
 static void idnsAddPathComponent(const char *buf);
 static void idnsFreeSearchpath(void);
 static bool idnsParseNameservers(void);
-static bool idnsParseResolvConf(void);
 #if _SQUID_WINDOWS_
 static bool idnsParseWIN32Registry(void);
 static void idnsParseWIN32SearchList(const char *);
@@ -400,87 +400,6 @@ idnsParseNameservers(void)
         idnsAddNameserver(i.c_str());
         result = true;
     }
-    return result;
-}
-
-static bool
-idnsParseResolvConf(void)
-{
-    bool result = false;
-#if !_SQUID_WINDOWS_
-    FILE *fp = fopen(_PATH_RESCONF, "r");
-
-    if (!fp) {
-        int xerrno = errno;
-        debugs(78, DBG_IMPORTANT, "" << _PATH_RESCONF << ": " << xstrerr(xerrno));
-        return false;
-    }
-
-    char buf[RESOLV_BUFSZ];
-    const char *t = nullptr;
-    while (fgets(buf, RESOLV_BUFSZ, fp)) {
-        t = strtok(buf, w_space);
-
-        if (nullptr == t) {
-            continue;
-        } else if (strcmp(t, "nameserver") == 0) {
-            t = strtok(nullptr, w_space);
-
-            if (nullptr == t)
-                continue;
-
-            debugs(78, DBG_IMPORTANT, "Adding nameserver " << t << " from " << _PATH_RESCONF);
-
-            idnsAddNameserver(t);
-            result = true;
-        } else if (strcmp(t, "domain") == 0) {
-            idnsFreeSearchpath();
-            t = strtok(nullptr, w_space);
-
-            if (nullptr == t)
-                continue;
-
-            debugs(78, DBG_IMPORTANT, "Adding domain " << t << " from " << _PATH_RESCONF);
-
-            idnsAddPathComponent(t);
-        } else if (strcmp(t, "search") == 0) {
-            idnsFreeSearchpath();
-            while (nullptr != t) {
-                t = strtok(nullptr, w_space);
-
-                if (nullptr == t)
-                    continue;
-
-                debugs(78, DBG_IMPORTANT, "Adding domain " << t << " from " << _PATH_RESCONF);
-
-                idnsAddPathComponent(t);
-            }
-        } else if (strcmp(t, "options") == 0) {
-            while (nullptr != t) {
-                t = strtok(nullptr, w_space);
-
-                if (nullptr == t)
-                    continue;
-
-                if (strncmp(t, "ndots:", 6) == 0) {
-                    ndots = atoi(t + 6);
-
-                    if (ndots < 1)
-                        ndots = 1;
-
-                    debugs(78, DBG_IMPORTANT, "Adding ndots " << ndots << " from " << _PATH_RESCONF);
-                }
-            }
-        }
-    }
-    if (npc == 0 && (t = getMyHostname())) {
-        t = strchr(t, '.');
-        if (t)
-            idnsAddPathComponent(t+1);
-    }
-
-    fclose(fp);
-#endif
     return result;
 }
 
@@ -1593,8 +1512,19 @@ Dns::Init(void)
     idnsAddMDNSNameservers();
     bool nsFound = idnsParseNameservers();
 
-    if (!nsFound)
-        nsFound = idnsParseResolvConf();
+    if (!nsFound) {
+        auto &cfg = Dns::ResolvConf::Current(); // non-const for SBuf::c_str() below
+        for (auto &tld : cfg.search) {
+            debugs(78, DBG_IMPORTANT, "Adding domain " << tld << " from " << _PATH_RESCONF);
+            idnsAddPathComponent(tld.c_str());
+        }
+        for (auto &ns : cfg.nameservers) {
+            debugs(78, DBG_IMPORTANT, "Adding nameserver " << ns << " from " << _PATH_RESCONF);
+            idnsAddNameserver(ns.c_str());
+            nsFound = true;
+        }
+        ndots = cfg.options.ndots;
+    }
 
 #if _SQUID_WINDOWS_
     if (!nsFound)

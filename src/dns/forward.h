@@ -20,6 +20,7 @@ namespace Dns
 {
 
 class LookupDetails;
+class ResolvConf;
 
 void Init(void);
 
