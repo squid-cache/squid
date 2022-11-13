@@ -1060,8 +1060,7 @@ FwdState::successfullyConnectedToPeer(const Comm::ConnectionPointer &conn)
     CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
                  ConnStateData::notePeerConnection, serverConnection());
 
-    if (serverConnection()->getPeer())
-        peerConnectSucceded(serverConnection()->getPeer());
+    NoteOutgoingConnectionSuccess(serverConnection()->getPeer());
 
     dispatch();
 }
