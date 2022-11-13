@@ -453,10 +453,7 @@ peerClearRR()
     }
 }
 
-/**
- * Perform all actions when a CachePeer is detected revived.
- */
-static void
+void
 peerAlive(CachePeer *p)
 {
     if (p->stats.logged_state == PEER_DEAD && p->tcp_up) {
@@ -469,6 +466,10 @@ peerAlive(CachePeer *p)
 
     p->stats.last_reply = squid_curtime;
     p->stats.probe_start = 0;
+
+    // TODO: Remove or explain how we could detect an alive peer without IP addresses
+    if (!p->n_addresses)
+        ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
 }
 
 CachePeer *
@@ -1256,48 +1257,6 @@ peerRefreshDNS(void *data)
     eventAddIsh("peerRefreshDNS", peerRefreshDNS, nullptr, 3600.0, 1);
 }
 
-// TODO: Move to CachePeer::noteFailure() or similar.
-// TODO: Require callers to detail failures instead of using one (and often
-// misleading!) "TCP" label for all of them.
-void
-peerConnectFailed(CachePeer * const p)
-{
-    p->stats.last_connect_failure = squid_curtime;
-    if (p->tcp_up > 0)
-        --p->tcp_up;
-
-    // TODO: Report peer name. Same-addresses peers often have different names.
-
-    const auto consideredAliveByAdmin = p->stats.logged_state == PEER_ALIVE;
-    const auto level = consideredAliveByAdmin ? DBG_IMPORTANT : 2;
-    debugs(15, level, "ERROR: TCP connection to " << *p << " failed");
-
-    if (consideredAliveByAdmin) {
-        if (!p->tcp_up) {
-            debugs(15, DBG_IMPORTANT, "Detected DEAD " << neighborTypeStr(p) << ": " << *p);
-            p->stats.logged_state = PEER_DEAD;
-        } else {
-            debugs(15, 2, "additional failures needed to mark this cache_peer DEAD: " << p->tcp_up);
-        }
-    } else {
-        assert(!p->tcp_up);
-        debugs(15, 2, "cache_peer " << *p << " is still DEAD");
-    }
-}
-
-void
-peerConnectSucceded(CachePeer * p)
-{
-    if (!p->tcp_up) {
-        debugs(15, 2, "TCP connection to " << *p << " succeeded");
-        p->tcp_up = p->connect_fail_limit; // NP: so peerAlive(p) works properly.
-        peerAlive(p);
-        if (!p->n_addresses)
-            ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
-    } else
-        p->tcp_up = p->connect_fail_limit;
-}
-
 /// whether new TCP probes are currently banned
 static bool
 peerProbeIsBusy(const CachePeer *p)
@@ -1349,11 +1308,10 @@ peerProbeConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int
 {
     CachePeer *p = (CachePeer*)data;
 
-    if (status == Comm::OK) {
-        peerConnectSucceded(p);
-    } else {
-        peerConnectFailed(p);
-    }
+    if (status == Comm::OK)
+        p->noteSuccess();
+    else
+        p->noteFailure(Http::scNone);
 
     -- p->testing_now;
     conn->close();

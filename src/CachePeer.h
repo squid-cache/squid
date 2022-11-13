@@ -12,6 +12,7 @@
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
 #include "enums.h"
+#include "http/StatusCode.h"
 #include "icp_opcode.h"
 #include "ip/Address.h"
 #include "security/PeerOptions.h"
@@ -33,6 +34,13 @@ class CachePeer
 public:
     explicit CachePeer(const char *hostname);
     ~CachePeer();
+
+    /// reacts to a successful establishment of a connection to this cache_peer
+    void noteSuccess();
+
+    /// reacts to a failure on a connection to this cache_peer
+    /// \param code a received response status code, if any
+    void noteFailure(Http::StatusCode code);
 
     /// (re)configure cache_peer name=value
     void rename(const char *);
@@ -216,7 +224,29 @@ public:
 
     int front_end_https = 0; ///< 0 - off, 1 - on, 2 - auto
     int connection_auth = 2; ///< 0 - off, 1 - on, 2 - auto
+
+private:
+    void countFailure();
 };
+
+/// reacts to a successful establishment of a connection to an origin server or cache_peer
+/// \param peer nil if Squid established a connection to an origin server
+inline void
+NoteOutgoingConnectionSuccess(CachePeer * const peer)
+{
+    if (peer)
+        peer->noteSuccess();
+}
+
+/// reacts to a failure on a connection to an origin server or cache_peer
+/// \param peer nil if the connection is to an origin server
+/// \param code a received response status code, if any
+inline void
+NoteOutgoingConnectionFailure(CachePeer * const peer, const Http::StatusCode code)
+{
+    if (peer)
+        peer->noteFailure(code);
+}
 
 /// identify the given cache peer in cache.log messages and such
 std::ostream &operator <<(std::ostream &, const CachePeer &);

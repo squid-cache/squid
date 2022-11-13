@@ -90,7 +90,7 @@ Http::Tunneler::handleConnectionClosure(const CommCloseCbParams &)
 {
     closer = nullptr;
     if (connection) {
-        countFailingConnection();
+        countFailingConnection(nullptr);
         connection->noteClosure();
         connection = nullptr;
     }
@@ -355,7 +355,7 @@ Http::Tunneler::bailWith(ErrorState *error)
 
     if (const auto failingConnection = connection) {
         // TODO: Reuse to-peer connections after a CONNECT error response.
-        countFailingConnection();
+        countFailingConnection(error);
         disconnect();
         failingConnection->close();
     }
@@ -374,11 +374,10 @@ Http::Tunneler::sendSuccess()
 }
 
 void
-Http::Tunneler::countFailingConnection()
+Http::Tunneler::countFailingConnection(const ErrorState * const error)
 {
     assert(connection);
-    if (const auto p = connection->getPeer())
-        peerConnectFailed(p);
+    NoteOutgoingConnectionFailure(connection->getPeer(), error ? error->httpStatus : Http::scNone);
     if (noteFwdPconnUse && connection->isOpen())
         fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);
 }
