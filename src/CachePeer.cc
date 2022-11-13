@@ -87,8 +87,6 @@ CachePeer::countFailure()
     if (tcp_up > 0)
         --tcp_up;
 
-    // TODO: Report peer name. Same-addresses peers often have different names.
-
     const auto consideredAliveByAdmin = (stats.logged_state == PEER_ALIVE);
     const auto level = consideredAliveByAdmin ? DBG_IMPORTANT : 2;
     debugs(15, level, "ERROR: Connection to " << *this << " failed");
