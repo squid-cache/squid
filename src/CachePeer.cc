@@ -60,7 +60,7 @@ void
 CachePeer::noteSuccess()
 {
     if (!tcp_up) {
-        debugs(15, 2, "TCP connection to " << *this << " succeeded");
+        debugs(15, 2, "connection to " << *this << " succeeded");
         tcp_up = connect_fail_limit; // NP: so peerAlive() works properly.
         peerAlive(this);
     } else {
@@ -91,7 +91,7 @@ CachePeer::countFailure()
 
     const auto consideredAliveByAdmin = (stats.logged_state == PEER_ALIVE);
     const auto level = consideredAliveByAdmin ? DBG_IMPORTANT : 2;
-    debugs(15, level, "ERROR: TCP connection to " << *this << " failed");
+    debugs(15, level, "ERROR: Connection to " << *this << " failed");
 
     if (consideredAliveByAdmin) {
         if (!tcp_up) {
