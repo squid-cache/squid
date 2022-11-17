@@ -20,7 +20,10 @@ namespace Mem
 class Allocator : public Interface
 {
 public:
-    explicit Allocator(const char * const aLabel): label(aLabel) {}
+    explicit Allocator(char const *aLabel, bool doZeroBlocks = true) :
+        doZero(doZeroBlocks),
+        label(aLabel)
+    {}
 
     // TODO make this method const
     /**

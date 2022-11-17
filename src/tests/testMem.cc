@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "mem/forward.h"
+#include "mem/AllocatorProxy.h"
 #include "mem/Pool.h"
 #include "tests/testMem.h"
 #include "unitTestMain.h"
