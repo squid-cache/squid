@@ -14,12 +14,14 @@
 #include "mem/Allocator.h"
 
 #include "mem/AllocatorProxy.h"
-#include "mem/forward.h"
-
-void *Mem::AllocatorProxy::alloc() {return xmalloc(64*1024);}
-void Mem::AllocatorProxy::freeOne(void *address) {xfree(address);}
-int Mem::AllocatorProxy::inUseCount() const {return 0;}
-size_t Mem::AllocatorProxy::getStats(PoolStats &) STUB_RETVAL(0)
+namespace Mem {
+size_t AllocatorProxy::getStats(PoolStats &) STUB_RETVAL(0)
+PoolMeter const &AllocatorProxy::getMeter() const STUB_RETSTATREF(PoolMeter)
+void *AllocatorProxy::alloc() {return xmalloc(64*1024);}
+void AllocatorProxy::freeOne(void *address) {xfree(address);}
+int AllocatorProxy::getInUseCount() {return 0;}
+void AllocatorProxy::zeroBlocks(bool) STUB
+}
 
 #include "mem/forward.h"
 void Mem::Init() STUB_NOP

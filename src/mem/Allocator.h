@@ -21,17 +21,10 @@ namespace Mem
 class Allocator : public Interface
 {
 public:
-    /// Flush counters to 'meter' after flush limit allocations
-    static const size_t FlushLimit = 1000;
-
-    Allocator(const char * const aLabel, const size_t sz):
-        label(aLabel),
-        objectSize(RoundedSize(sz))
+    explicit Allocator(char const *aLabel, bool doZeroBlocks = true) :
+        doZero(doZeroBlocks),
+        label(aLabel)
     {}
-
-    /// change the allocator description if we were only able to provide an
-    /// approximate description at object construction time
-    void relabel(const char * const aLabel) { label = aLabel; }
 
     // TODO make this method const
     /**

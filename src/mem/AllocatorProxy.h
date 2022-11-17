@@ -9,11 +9,7 @@
 #ifndef SQUID_SRC_MEM_ALLOCATORPROXY_H
 #define SQUID_SRC_MEM_ALLOCATORPROXY_H
 
-// XXX: remove AllocatorProxy.h include from mem/forward.h
-namespace Mem {
-class Allocator;
-class PoolStats;
-}
+#include "mem/Allocator.h"
 
 /**
  * \hideinitializer
@@ -41,46 +37,31 @@ class PoolStats;
         if (address) \
             Pool().freeOne(address); \
     } \
-    static int UseCount() { return Pool().inUseCount(); } \
+    static int UseCount() { return Pool().getInUseCount(); } \
     private:
 
 namespace Mem
 {
 
-class PoolMeter;
-
 /**
  * Support late binding of pool type for allocator agnostic classes
  */
-class AllocatorProxy
+class AllocatorProxy : public Allocator
 {
 public:
-    AllocatorProxy(char const *aLabel, size_t const &aSize, bool doZeroBlocks = true):
-        label(aLabel),
-        size(aSize),
-        theAllocator(nullptr),
-        doZero(doZeroBlocks)
+    AllocatorProxy(char const *aLabel, size_t const &aSize, bool doZeroBlocks):
+        Allocator(aLabel, doZeroBlocks),
+        size(aSize)
     {}
 
-    /// Allocate one element from the pool
-    void *alloc();
-
-    /// Free a element allocated by Mem::AllocatorProxy::alloc()
-    void freeOne(void *);
-
-    int inUseCount() const;
-    size_t objectSize() const {return size;}
-    char const * objectType() const {return label;}
-
-    PoolMeter const &getMeter() const;
-
-    /**
-     * \param stats Object to be filled with statistical data about pool.
-     * \retval      Number of objects in use, ie. allocated.
-     */
-    size_t getStats(PoolStats &stats);
-
-    void zeroBlocks(bool doIt);
+    /* Mem::Allocator API */
+    virtual size_t getStats(PoolStats &);
+    virtual PoolMeter const &getMeter() const;
+    virtual void *alloc();
+    virtual void freeOne(void *);
+    virtual size_t objectSize() const {return size;}
+    virtual int getInUseCount();
+    virtual void zeroBlocks(bool);
 
     /// \copydoc Mem::Allocator::relabel()
     void relabel(const char * const aLabel);
@@ -88,10 +69,8 @@ public:
 private:
     Allocator *getAllocator() const;
 
-    const char *label;
-    size_t size;
-    mutable Allocator *theAllocator;
-    bool doZero;
+    size_t size = 0;
+    mutable Allocator *theAllocator = nullptr;
 };
 
 } // namespace Mem

@@ -10,6 +10,7 @@
 #define SQUID_SRC_ERROR_SYSERRORDETAIL_H
 
 #include "error/Detail.h"
+#include "mem/AllocatorProxy.h"
 #include "sbuf/forward.h"
 
 /// system call failure detail based on standard errno(3)/strerror(3) APIs

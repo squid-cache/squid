@@ -12,7 +12,6 @@ noinst_LTLIBRARIES = \
 	libminimal.la
 
 noinst_HEADERS = \
-	AllocatorProxy.h \
 	Sensitive.h \
 	forward.h
 
@@ -20,6 +19,7 @@ noinst_HEADERS = \
 libmem_la_SOURCES = \
 	Allocator.h \
 	AllocatorProxy.cc \
+	AllocatorProxy.h \
 	Meter.h \
 	Pool.cc \
 	Pool.h \
@@ -34,4 +34,6 @@ libmem_la_SOURCES = \
 
 # a bare-bones implementation of few libmem.la APIs sufficient for helpers use
 libminimal_la_SOURCES = \
+	Allocator.h \
+	AllocatorProxy.h \
 	minimal.cc

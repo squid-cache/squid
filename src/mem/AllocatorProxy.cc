@@ -38,7 +38,7 @@ Mem::AllocatorProxy::getAllocator() const
 }
 
 int
-Mem::AllocatorProxy::inUseCount() const
+Mem::AllocatorProxy::getInUseCount()
 {
     if (!theAllocator)
         return 0;
@@ -49,6 +49,7 @@ Mem::AllocatorProxy::inUseCount() const
 void
 Mem::AllocatorProxy::zeroBlocks(bool doIt)
 {
+    doZero = doIt; // stay in sync with theAllocator settings
     getAllocator()->zeroBlocks(doIt);
 }
 

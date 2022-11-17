@@ -11,8 +11,6 @@
 #ifndef SQUID_SRC_MEM_FORWARD_H
 #define SQUID_SRC_MEM_FORWARD_H
 
-#include "mem/AllocatorProxy.h"
-
 #include <iosfwd>
 
 class StoreEntry;
@@ -20,6 +18,8 @@ class StoreEntry;
 /// Memory Management
 namespace Mem
 {
+class Allocator;
+class AllocatorProxy;
 class Meter;
 class PoolMeter;
 class PoolStats;
