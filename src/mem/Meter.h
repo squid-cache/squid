@@ -20,8 +20,6 @@ namespace Mem
 class Meter
 {
 public:
-    Meter() : level(0), hwater_level(0), hwater_stamp(0) {}
-
     /// flush the meter level back to 0, but leave peak records
     void flush() {level=0;}
 
@@ -45,9 +43,9 @@ private:
         }
     }
 
-    ssize_t level;          ///< current level (count or volume)
-    ssize_t hwater_level;   ///< high water mark
-    time_t hwater_stamp;    ///< timestamp of last high water mark change
+    ssize_t level = 0; ///< current level (count or volume)
+    ssize_t hwater_level = 0; ///< high water mark
+    time_t hwater_stamp = 0; ///< timestamp of last high water mark change
 };
 
 } // namespace Mem
