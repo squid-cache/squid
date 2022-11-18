@@ -576,14 +576,12 @@ memFreeBufFunc(size_t size)
     }
 }
 
-/* MemPoolMeter */
-
 void
-Mem::PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::ostream &stream)
+Mem::PoolReport(const MemPoolStats * mp_st, const Mem::PoolMeter * AllMeter, std::ostream &stream)
 {
     int excess = 0;
     int needed = 0;
-    MemPoolMeter *pm = mp_st->meter;
+    Mem::PoolMeter *pm = mp_st->meter;
     const char *delim = "\t ";
 
     stream.setf(std::ios_base::fixed);

@@ -48,6 +48,44 @@ private:
     time_t hwater_stamp = 0; ///< timestamp of last high water mark change
 };
 
+/**
+ * Object to track per-pool memory usage (alloc = inuse+idle)
+ */
+class PoolMeter
+{
+public:
+    /// Object to track per-pool cumulative counters
+    struct mgb_t {
+        double count = 0.0;
+        double bytes = 0.0;
+    };
+
+    /// flush counters back to 0, but leave historic peak records
+    void flush() {
+        alloc.flush();
+        inuse.flush();
+        idle.flush();
+        gb_allocated = mgb_t();
+        gb_oallocated = mgb_t();
+        gb_saved = mgb_t();
+        gb_freed = mgb_t();
+    }
+
+    Mem::Meter alloc;
+    Mem::Meter inuse;
+    Mem::Meter idle;
+
+    /** history Allocations */
+    mgb_t gb_allocated;
+    mgb_t gb_oallocated;
+
+    /** account Saved Allocations */
+    mgb_t gb_saved;
+
+    /** account Free calls */
+    mgb_t gb_freed;
+};
+
 } // namespace Mem
 
 #endif /* SQUID_SRC_MEM_METER_H */

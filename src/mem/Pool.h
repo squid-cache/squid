@@ -73,43 +73,6 @@ public:
     MemPoolIterator * next;
 };
 
-/**
- \ingroup MemPoolsAPI
- * Object to track per-pool cumulative counters
- */
-class mgb_t
-{
-public:
-    mgb_t() : count(0), bytes(0) {}
-    double count;
-    double bytes;
-};
-
-/**
- \ingroup MemPoolsAPI
- * Object to track per-pool memory usage (alloc = inuse+idle)
- */
-class MemPoolMeter
-{
-public:
-    MemPoolMeter();
-    void flush();
-
-    Mem::Meter alloc;
-    Mem::Meter inuse;
-    Mem::Meter idle;
-
-    /** history Allocations */
-    mgb_t gb_allocated;
-    mgb_t gb_oallocated;
-
-    /** account Saved Allocations */
-    mgb_t gb_saved;
-
-    /** account Free calls */
-    mgb_t gb_freed;
-};
-
 class MemImplementingAllocator;
 
 /// \ingroup MemPoolsAPI
@@ -192,7 +155,7 @@ public:
      */
     virtual int getStats(MemPoolStats * stats, int accumulate = 0) = 0;
 
-    virtual MemPoolMeter const &getMeter() const = 0;
+    virtual Mem::PoolMeter const &getMeter() const = 0;
 
     /**
      * Allocate one element from the pool
@@ -247,8 +210,8 @@ class MemImplementingAllocator : public MemAllocator
 public:
     MemImplementingAllocator(char const *aLabel, size_t aSize);
     virtual ~MemImplementingAllocator();
-    virtual MemPoolMeter const &getMeter() const;
-    virtual MemPoolMeter &getMeter();
+    virtual Mem::PoolMeter const &getMeter() const;
+    virtual Mem::PoolMeter &getMeter();
     virtual void flushMetersFull();
     virtual void flushMeters();
 
@@ -269,7 +232,7 @@ public:
 protected:
     virtual void *allocate() = 0;
     virtual void deallocate(void *, bool aggressive) = 0;
-    MemPoolMeter meter;
+    Mem::PoolMeter meter;
     int memPID;
 public:
     MemImplementingAllocator *next;
@@ -286,7 +249,7 @@ class MemPoolStats
 public:
     MemAllocator *pool;
     const char *label;
-    MemPoolMeter *meter;
+    Mem::PoolMeter *meter;
     int obj_size;
     int chunk_capacity;
     int chunk_size;
@@ -306,7 +269,7 @@ public:
 /// \ingroup MemPoolsAPI
 /// TODO: Classify and add constructor/destructor to initialize properly.
 struct _MemPoolGlobalStats {
-    MemPoolMeter *TheMeter;
+    Mem::PoolMeter *TheMeter;
 
     int tot_pools_alloc;
     int tot_pools_inuse;

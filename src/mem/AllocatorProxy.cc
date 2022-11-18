@@ -50,7 +50,7 @@ Mem::AllocatorProxy::zeroBlocks(bool doIt)
     getAllocator()->zeroBlocks(doIt);
 }
 
-MemPoolMeter const &
+Mem::PoolMeter const &
 Mem::AllocatorProxy::getMeter() const
 {
     return getAllocator()->getMeter();

@@ -9,9 +9,10 @@
 #ifndef _SQUID_SRC_MEM_ALLOCATORPROXY_H
 #define _SQUID_SRC_MEM_ALLOCATORPROXY_H
 
+#include "mem/Meter.h"
+
 class MemAllocator;
 class MemPoolStats;
-class MemPoolMeter;
 
 /**
  * \hideinitializer
@@ -68,7 +69,7 @@ public:
     size_t objectSize() const {return size;}
     char const * objectType() const {return label;}
 
-    MemPoolMeter const &getMeter() const;
+    PoolMeter const &getMeter() const;
 
     /**
      * \param stats Object to be filled with statistical data about pool.
