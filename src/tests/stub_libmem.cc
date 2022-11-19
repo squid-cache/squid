@@ -25,7 +25,7 @@ void Mem::Init() STUB_NOP
 void Mem::Stats(StoreEntry *) STUB_NOP
 void Mem::CleanIdlePools(void *) STUB_NOP
 void Mem::Report(std::ostream &) STUB_NOP
-void Mem::PoolReport(const MemPoolStats *, const Mem::PoolMeter *, std::ostream &) STUB_NOP
+void Mem::PoolReport(const MemPoolStats *, const PoolMeter *, std::ostream &) STUB_NOP
 //const size_t squidSystemPageSize = 4096;
 void memClean(void) STUB
 void memInitModule(void) STUB
