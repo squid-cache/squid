@@ -71,9 +71,9 @@ public:
         gb_freed = mgb_t();
     }
 
-    Mem::Meter alloc;
-    Mem::Meter inuse;
-    Mem::Meter idle;
+    Meter alloc;
+    Meter inuse;
+    Meter idle;
 
     /** history Allocations */
     mgb_t gb_allocated;
