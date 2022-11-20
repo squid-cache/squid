@@ -60,7 +60,7 @@ int
 MemPoolMalloc::getStats(MemPoolStats * stats, int accumulate)
 {
     if (!accumulate)    /* need skip memset for GlobalStats accumulation */
-        memset(stats, 0, sizeof(MemPoolStats));
+        *stats = MemPoolStats();
 
     stats->pool = this;
     stats->label = objectType();

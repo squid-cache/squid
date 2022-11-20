@@ -440,7 +440,7 @@ MemPoolChunked::getStats(MemPoolStats * stats, int accumulate)
     int chunks_partial = 0;
 
     if (!accumulate)    /* need skip memset for GlobalStats accumulation */
-        memset(stats, 0, sizeof(MemPoolStats));
+        *stats = MemPoolStats();
 
     clean((time_t) 555555); /* don't want to get chunks released before reporting */
 

@@ -63,10 +63,6 @@ class MemImplementingAllocator;
 class MemPoolStats;
 
 /// \ingroup MemPoolsAPI
-/// TODO: Kill this typedef for C++
-typedef struct _MemPoolGlobalStats MemPoolGlobalStats;
-
-/// \ingroup MemPoolsAPI
 class MemPoolIterator
 {
 public:
@@ -183,47 +179,48 @@ public:
     typedef Mem::PoolMeter PoolMeter; // TODO remove
     typedef Mem::Allocator Allocator; // TODO remove
 
-    Allocator *pool;
-    const char *label;
-    PoolMeter *meter;
-    int obj_size;
-    int chunk_capacity;
-    int chunk_size;
+    Allocator *pool = nullptr;
+    const char *label = nullptr;
+    PoolMeter *meter = nullptr;
+    int obj_size = 0;
+    int chunk_capacity = 0;
+    int chunk_size = 0;
 
-    int chunks_alloc;
-    int chunks_inuse;
-    int chunks_partial;
-    int chunks_free;
+    int chunks_alloc = 0;
+    int chunks_inuse = 0;
+    int chunks_partial = 0;
+    int chunks_free = 0;
 
-    int items_alloc;
-    int items_inuse;
-    int items_idle;
+    int items_alloc = 0;
+    int items_inuse = 0;
+    int items_idle = 0;
 
-    int overhead;
+    int overhead = 0;
 };
 
 /// \ingroup MemPoolsAPI
-/// TODO: Classify and add constructor/destructor to initialize properly.
-struct _MemPoolGlobalStats {
+class MemPoolGlobalStats
+{
+public:
     typedef Mem::PoolMeter PoolMeter; // TODO remove
 
-    PoolMeter *TheMeter;
+    PoolMeter *TheMeter = nullptr;
 
-    int tot_pools_alloc;
-    int tot_pools_inuse;
-    int tot_pools_mempid;
+    int tot_pools_alloc = 0;
+    int tot_pools_inuse = 0;
+    int tot_pools_mempid = 0;
 
-    int tot_chunks_alloc;
-    int tot_chunks_inuse;
-    int tot_chunks_partial;
-    int tot_chunks_free;
+    int tot_chunks_alloc = 0;
+    int tot_chunks_inuse = 0;
+    int tot_chunks_partial = 0;
+    int tot_chunks_free = 0;
 
-    int tot_items_alloc;
-    int tot_items_inuse;
-    int tot_items_idle;
+    int tot_items_alloc = 0;
+    int tot_items_inuse = 0;
+    int tot_items_idle = 0;
 
-    int tot_overhead;
-    ssize_t mem_idle_limit;
+    int tot_overhead = 0;
+    ssize_t mem_idle_limit = 0;
 };
 
 /// \ingroup MemPoolsAPI

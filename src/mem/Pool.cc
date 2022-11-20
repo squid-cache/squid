@@ -206,8 +206,8 @@ memPoolGetGlobalStats(MemPoolGlobalStats * stats)
     int pools_inuse = 0;
     MemPoolIterator *iter;
 
-    memset(stats, 0, sizeof(MemPoolGlobalStats));
-    memset(&pp_stats, 0, sizeof(MemPoolStats));
+    *stats = MemPoolGlobalStats();
+    pp_stats = MemPoolStats();
 
     MemPools::GetInstance().flushMeters(); /* recreate TheMeter */
 
