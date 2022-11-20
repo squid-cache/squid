@@ -332,7 +332,7 @@ peerDigestRequest(PeerDigest * pd)
     /* update timestamps */
     pd->times.requested = squid_curtime;
     pd_last_req_time = squid_curtime;
-    req->flags.cachable = true;
+    req->flags.missCachingDecision = true;
 
     /* the rest is based on clientReplyContext::processExpired() */
     req->flags.refresh = true;

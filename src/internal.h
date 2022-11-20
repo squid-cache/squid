@@ -29,5 +29,9 @@ char *internalRemoteUri(bool, const char *, unsigned short, const char *, const 
 const char *internalHostname(void);
 int internalHostnameIs(const char *);
 
+/// whether the given request URL path points to a cache manager (not
+/// necessarily running on this Squid instance)
+bool ForSomeCacheManager(const SBuf &);
+
 #endif /* SQUID_INTERNAL_H_ */
 

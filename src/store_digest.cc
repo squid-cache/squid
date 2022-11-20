@@ -421,7 +421,7 @@ storeDigestRewriteStart(void *)
     auto req = HttpRequest::FromUrlXXX(url, mx);
 
     RequestFlags flags;
-    flags.cachable = true;
+    flags.missCachingDecision = true;
 
     StoreEntry *e = storeCreateEntry(url, url, flags, Http::METHOD_GET);
     assert(e);

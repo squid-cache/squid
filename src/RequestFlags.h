@@ -11,6 +11,8 @@
 #ifndef SQUID_REQUESTFLAGS_H_
 #define SQUID_REQUESTFLAGS_H_
 
+#include "base/Optional.h"
+
 /** request-related flags
  *
  * Contains both flags marking a request's current state,
@@ -28,8 +30,10 @@ public:
     bool auth = false;
     /** do not use keytabs for peer Kerberos authentication */
     bool auth_no_keytab = false;
-    /** he response to the request may be stored in the cache */
-    bool cachable = false;
+
+    /// explicit decision to allow storing the response in the cache
+    Optional<bool> missCachingDecision;
+
     /** the request can be forwarded through the hierarchy */
     bool hierarchical = false;
     /** a loop was detected on this request */
@@ -68,8 +72,14 @@ public:
     /// This applies to TPROXY traffic that has not had spoofing disabled through
     /// the spoof_client_ip squid.conf ACL.
     bool spoofClientIp = false;
-    /** set if the request is internal (\see ClientHttpRequest::flags.internal)*/
+
+    /// whether the request targets a /squid-internal- resource (e.g., a MIME
+    /// icon or a cache manager page) served by this Squid instance
+    /// \sa ClientHttpRequest::flags.internal
+    /// TODO: Rename to avoid a false implication that this flag is true for
+    /// requests for /squid-internal- resources served by other Squid instances.
     bool internal = false;
+
     /** if set, request to try very hard to keep the connection alive */
     bool mustKeepalive = false;
     /** set if the request wants connection oriented auth */
@@ -115,6 +125,11 @@ public:
      */
     RequestFlags cloneAdaptationImmune() const;
 
+    /// Convenience wrapper for checking whether the response may be cached. By
+    /// default (i.e. unless we explicitly allow caching), the response is not
+    /// cachable. \sa noCache
+    bool cachable() const { return missCachingDecision.value_or(false); }
+
     // if FOLLOW_X_FORWARDED_FOR is not set, we always return "done".
     bool doneFollowXff() const {
         return done_follow_x_forwarded_for || !FOLLOW_X_FORWARDED_FOR;
@@ -124,6 +139,11 @@ public:
     bool noCacheHack() const {
         return USE_HTTP_VIOLATIONS && nocacheHack;
     }
+
+    /// ban satisfying the request from the cache and ban storing the response
+    /// in the cache
+    /// \param reason summarizes the marking decision context (for debugging)
+    void disableCacheUse(const char *reason);
 };
 
 #endif /* SQUID_REQUESTFLAGS_H_ */

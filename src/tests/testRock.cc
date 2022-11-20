@@ -187,7 +187,7 @@ StoreEntry *
 testRock::createEntry(const int i)
 {
     RequestFlags flags;
-    flags.cachable = true;
+    flags.missCachingDecision = true;
     StoreEntry *const pe =
         storeCreateEntry(storeId(i), "dummy log url", flags, Http::METHOD_GET);
     auto &rep = pe->mem().adjustableBaseReply();

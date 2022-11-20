@@ -10,6 +10,9 @@
 
 #include "squid.h"
 #include "RequestFlags.h"
+#include "debug/Stream.h"
+
+#include <iostream>
 
 // When adding new flags, please update cloneAdaptationImmune() as needed.
 // returns a partial copy of the flags that includes only those flags
@@ -21,5 +24,13 @@ RequestFlags::cloneAdaptationImmune() const
     // adaptation or were not set at the time of the adaptation. If there
     // are flags that are different, they should be cleared in the clone.
     return *this;
+}
+
+void
+RequestFlags::disableCacheUse(const char * const reason)
+{
+    debugs(16, 3, "for " << reason);
+    missCachingDecision = false; // may already be set to false
+    noCache = true; // may already be true
 }
 

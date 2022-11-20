@@ -1528,6 +1528,9 @@ clientReplyContext::identifyStoreObject()
 
     // client sent CC:no-cache or some other condition has been
     // encountered which prevents delivering a public/cached object.
+    // XXX: The above text does not match the condition below. It might describe
+    // the opposite condition, but the condition itself should be adjusted
+    // (e.g., to honor flags.noCache in cache manager requests).
     if (!r->flags.noCache || r->flags.internal) {
         const auto e = storeGetPublicByRequest(r);
         identifyFoundObject(e, storeLookupString(bool(e)));
@@ -2137,7 +2140,7 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
     // Make entry collapsible ASAP, to increase collapsing chances for others,
     // TODO: every must-revalidate and similar request MUST reach the origin,
     // but do we have to prohibit others from collapsing on that request?
-    if (reqFlags.cachable &&
+    if (reqFlags.cachable() &&
             !reqFlags.needValidation &&
             (m == Http::METHOD_GET || m == Http::METHOD_HEAD) &&
             mayInitiateCollapsing()) {

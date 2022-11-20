@@ -743,8 +743,7 @@ Ftp::Server::parseOneRequest()
     request->http_ver = Http::ProtocolVersion(Ftp::ProtocolVersion().major, Ftp::ProtocolVersion().minor);
 
     // Our fake Request-URIs are not distinctive enough for caching to work
-    request->flags.cachable = false; // XXX: reset later by maybeCacheable()
-    request->flags.noCache = true;
+    request->flags.disableCacheUse("FTP command wrapper");
 
     request->header.putStr(Http::HdrType::FTP_COMMAND, cmd.c_str());
     request->header.putStr(Http::HdrType::FTP_ARGUMENTS, params.c_str()); // may be ""
@@ -1742,8 +1741,7 @@ Ftp::Server::setReply(const int code, const char *msg)
     assert(repContext != nullptr);
 
     RequestFlags reqFlags;
-    reqFlags.cachable = false; // force releaseRequest() in storeCreateEntry()
-    reqFlags.noCache = true;
+    reqFlags.disableCacheUse("FTP response wrapper");
     repContext->createStoreEntry(http->request->method, reqFlags);
     http->storeEntry()->replaceHttpReply(reply);
 }

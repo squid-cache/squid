@@ -1655,9 +1655,15 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
             http->setLogUriToRequestUri();
         } else
             debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (not this proxy)");
+
+        if (ForSomeCacheManager(request->url.path()))
+            request->flags.disableCacheUse("cache manager URL");
     }
 
     request->flags.internal = http->flags.internal;
+
+    if (request->url.getScheme() == AnyP::PROTO_CACHE_OBJECT)
+        request->flags.disableCacheUse("cache_object URL scheme");
 
     if (!isFtp) {
         // XXX: for non-HTTP messages instantiate a different Http::Message child type
