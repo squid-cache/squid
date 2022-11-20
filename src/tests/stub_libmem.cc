@@ -23,7 +23,6 @@ int Mem::AllocatorProxy::getStats(MemPoolStats *) STUB_RETVAL(0)
 
 #include "mem/forward.h"
 void Mem::Init() STUB_NOP
-void Mem::Report() STUB_NOP
 void Mem::Stats(StoreEntry *) STUB_NOP
 void Mem::CleanIdlePools(void *) STUB_NOP
 void Mem::Report(std::ostream &) STUB_NOP
