@@ -11,6 +11,8 @@
 #ifndef SQUID_REQUESTFLAGS_H_
 #define SQUID_REQUESTFLAGS_H_
 
+#include "base/Optional.h"
+
 /** request-related flags
  *
  * Contains both flags marking a request's current state,
@@ -28,8 +30,10 @@ public:
     bool auth = false;
     /** do not use keytabs for peer Kerberos authentication */
     bool auth_no_keytab = false;
-    /** he response to the request may be stored in the cache */
-    bool cachable = false;
+
+    /// explicit decision to allow storing the response in the cache
+    Optional<bool> missCachingDecision;
+
     /** the request can be forwarded through the hierarchy */
     bool hierarchical = false;
     /** a loop was detected on this request */
@@ -115,6 +119,11 @@ public:
      */
     RequestFlags cloneAdaptationImmune() const;
 
+    /// Convenience wrapper for checking whether the response may be cached. By
+    /// default (i.e. unless we explicitly allow caching), the response is not
+    /// cachable. \sa noCache
+    bool cachable() const { return missCachingDecision.value_or(false); }
+
     // if FOLLOW_X_FORWARDED_FOR is not set, we always return "done".
     bool doneFollowXff() const {
         return done_follow_x_forwarded_for || !FOLLOW_X_FORWARDED_FOR;
@@ -124,6 +133,11 @@ public:
     bool noCacheHack() const {
         return USE_HTTP_VIOLATIONS && nocacheHack;
     }
+
+    /// ban satisfying the request from the cache and ban storing the response
+    /// in the cache
+    /// \param reason summarizes the marking decision context (for debugging)
+    void disableCacheUse(const char *reason);
 };
 
 #endif /* SQUID_REQUESTFLAGS_H_ */
