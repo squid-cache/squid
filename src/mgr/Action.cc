@@ -9,6 +9,7 @@
 /* DEBUG: section 16    Cache Manager API */
 
 #include "squid.h"
+#include "CacheManager.h"
 #include "comm/Connection.h"
 #include "HttpReply.h"
 #include "ipc/Port.h"
@@ -103,15 +104,11 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
     if (writeHttpHeader) {
         HttpReply *rep = new HttpReply;
         rep->setHeaders(Http::scOkay, nullptr, contentType(), -1, squid_curtime, squid_curtime);
-        // Allow cachemgr and other XHR scripts access to our version string
-        const ActionParams &params = command().params;
-        if (params.httpOrigin.size() > 0) {
-            rep->header.putExt("Access-Control-Allow-Origin", params.httpOrigin.termedBuf());
-#if HAVE_AUTH_MODULE_BASIC
-            rep->header.putExt("Access-Control-Allow-Credentials","true");
-#endif
-            rep->header.putExt("Access-Control-Expose-Headers","Server");
-        }
+
+        const auto &origin = command().params.httpOrigin;
+        const auto originOrNil = origin.size() ? origin.termedBuf() : nullptr;
+        CacheManager::PutCommonResponseHeaders(*rep, originOrNil);
+
         entry->replaceHttpReply(rep);
     }
 
