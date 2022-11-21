@@ -218,7 +218,6 @@ public:
     int tot_items_idle = 0;
 
     int tot_overhead = 0;
-    ssize_t mem_idle_limit = 0;
 };
 
 /// \ingroup MemPoolsAPI

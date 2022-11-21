@@ -232,7 +232,6 @@ memPoolGetGlobalStats(MemPoolGlobalStats * stats)
     stats->tot_items_idle = pp_stats.items_idle;
 
     stats->tot_overhead += pp_stats.overhead + MemPools::GetInstance().poolCount * sizeof(Mem::Allocator *);
-    stats->mem_idle_limit = MemPools::GetInstance().idleLimit();
 
     return pools_inuse;
 }

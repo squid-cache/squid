@@ -755,8 +755,8 @@ Mem::Report(std::ostream &stream)
     stream << "Current overhead: " << mp_total.tot_overhead << " bytes (" <<
            std::setprecision(3) << xpercent(mp_total.tot_overhead, mp_total.TheMeter->inuse.currentLevel()) << "%)\n";
     /* limits */
-    if (mp_total.mem_idle_limit >= 0)
-        stream << "Idle pool limit: " << std::setprecision(2) << toMB(mp_total.mem_idle_limit) << " MB\n";
+    if (MemPools::GetInstance().idleLimit() >= 0)
+        stream << "Idle pool limit: " << std::setprecision(2) << toMB(MemPools::GetInstance().idleLimit()) << " MB\n";
     /* limits */
     stream << "Total Pools created: " << mp_total.tot_pools_alloc << "\n";
     stream << "Pools ever used:     " << mp_total.tot_pools_alloc - not_used << " (shown above)\n";
