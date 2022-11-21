@@ -23,7 +23,6 @@ class MemPoolMeter;
 namespace Mem
 {
 void Init();
-void Report();
 void Stats(StoreEntry *);
 void CleanIdlePools(void *unused);
 void Report(std::ostream &);
