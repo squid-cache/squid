@@ -129,11 +129,11 @@ public:
     /**
      * Sets upper limit in bytes to amount of free ram kept in pools. This is
      * not strict upper limit, but a hint. When MemPools are over this limit,
-     * totally free chunks are immediately considered for release. Otherwise
-     * only chunks that have not been referenced for a long time are checked.
+     * deallocate attempts to release memory to the system instead of pooling.
      */
-    void setIdleLimit(ssize_t new_idle_limit);
-    ssize_t idleLimit() const;
+    void setIdleLimit(ssize_t newLimit) {poolIdleLimit = newLimit;}
+    /// \see void setIdleLimit(ssize_t)
+    ssize_t idleLimit() const {return poolIdleLimit;}
 
     /**
      \par
@@ -166,9 +166,14 @@ public:
     void setDefaultPoolChunking(bool const &);
 
     MemImplementingAllocator *pools = nullptr;
-    ssize_t mem_idle_limit = (2 << 20) /* 2MB */;
     int poolCount = 0;
     bool defaultIsChunked = false;
+
+private:
+    /// Limit for allocated (but unused) memory in memory pools.
+    /// Initial value is 2MB until first configuration,
+    /// \see squid.conf memory_pools_limit directive.
+    ssize_t poolIdleLimit = (2 << 20);
 };
 
 /**

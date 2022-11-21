@@ -10,7 +10,6 @@
 
 #include "squid.h"
 #include "base/PackableStream.h"
-#include "base/RunnersRegistry.h"
 #include "ClientInfo.h"
 #include "dlink.h"
 #include "event.h"
@@ -456,29 +455,6 @@ Mem::Init(void)
     // finally register with the cache manager
     Mgr::RegisterAction("mem", "Memory Utilization", Mem::Stats, 0, 1);
 }
-
-namespace Mem
-{
-
-static void
-LogPoolSummary()
-{
-    debugs(13, 3, "Memory pools are '" <<
-           (Config.onoff.mem_pools ? "on" : "off")  << "'; limit: " <<
-           std::setprecision(3) << toMB(MemPools::GetInstance().idleLimit()) <<
-           " MB");
-}
-
-class ConfigRr : public RegisteredRunner
-{
-public:
-    /* RegisteredRunner API */
-    virtual void finalizeConfig() override {LogPoolSummary();}
-    virtual void syncConfig() override {LogPoolSummary();}
-};
-RunnerRegistrationEntry(ConfigRr);
-
-} // namespace Mem
 
 static mem_type &
 operator++(mem_type &aMem)
