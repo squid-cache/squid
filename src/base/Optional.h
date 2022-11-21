@@ -169,7 +169,6 @@ private:
     bool hasValue_ = false;
 };
 
-
 template <typename Value>
 inline
 std::ostream &operator <<(std::ostream &os, const Optional<Value> &opt)

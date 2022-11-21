@@ -9,8 +9,8 @@
 /* DEBUG: section 73    HTTP Request */
 
 #include "squid.h"
-#include "RequestFlags.h"
 #include "debug/Stream.h"
+#include "RequestFlags.h"
 
 #include <iostream>
 

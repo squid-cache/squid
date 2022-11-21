@@ -9,8 +9,8 @@
 /* DEBUG: section 76    Internal Squid Object handling */
 
 #include "squid.h"
-#include "base/Assure.h"
 #include "AccessLogEntry.h"
+#include "base/Assure.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
 #include "errorpage.h"
