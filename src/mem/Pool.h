@@ -205,7 +205,6 @@ public:
 
     PoolMeter *TheMeter = nullptr;
 
-    int tot_pools_alloc = 0;
     int tot_pools_inuse = 0;
 
     int tot_chunks_alloc = 0;

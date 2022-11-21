@@ -220,7 +220,6 @@ memPoolGetGlobalStats(MemPoolGlobalStats * stats)
 
     stats->TheMeter = &TheMeter;
 
-    stats->tot_pools_alloc = MemPools::GetInstance().poolCount;
     stats->tot_pools_inuse = pools_inuse;
 
     stats->tot_chunks_alloc = pp_stats.chunks_alloc;

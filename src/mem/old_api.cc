@@ -701,7 +701,7 @@ Mem::Report(std::ostream &stream)
     /* Get stats for Totals report line */
     memPoolGetGlobalStats(&mp_total);
 
-    MemPoolStats *sortme = (MemPoolStats *) xcalloc(mp_total.tot_pools_alloc,sizeof(*sortme));
+    auto *sortme = static_cast<MemPoolStats *>(xcalloc(MemPools::GetInstance().poolCount, sizeof(MemPoolStats)));
     int npools = 0;
 
     /* main table */
@@ -758,8 +758,8 @@ Mem::Report(std::ostream &stream)
     if (MemPools::GetInstance().idleLimit() >= 0)
         stream << "Idle pool limit: " << std::setprecision(2) << toMB(MemPools::GetInstance().idleLimit()) << " MB\n";
     /* limits */
-    stream << "Total Pools created: " << mp_total.tot_pools_alloc << "\n";
-    stream << "Pools ever used:     " << mp_total.tot_pools_alloc - not_used << " (shown above)\n";
+    stream << "Total Pools created: " << MemPools::GetInstance().poolCount << "\n";
+    stream << "Pools ever used:     " << MemPools::GetInstance().poolCount - not_used << " (shown above)\n";
     stream << "Currently in use:    " << mp_total.tot_pools_inuse << "\n";
 }
 
