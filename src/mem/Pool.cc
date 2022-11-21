@@ -23,7 +23,6 @@ extern time_t squid_curtime;
 
 static Mem::PoolMeter TheMeter;
 static MemPoolIterator Iterator;
-static int Pool_id_counter = 0;
 
 MemPools &
 MemPools::GetInstance()
@@ -223,7 +222,6 @@ memPoolGetGlobalStats(MemPoolGlobalStats * stats)
 
     stats->tot_pools_alloc = MemPools::GetInstance().poolCount;
     stats->tot_pools_inuse = pools_inuse;
-    stats->tot_pools_mempid = Pool_id_counter;
 
     stats->tot_chunks_alloc = pp_stats.chunks_alloc;
     stats->tot_chunks_inuse = pp_stats.chunks_inuse;
@@ -255,8 +253,6 @@ MemImplementingAllocator::MemImplementingAllocator(char const * const aLabel, co
     saved_calls(0),
     obj_size(RoundedSize(aSize))
 {
-    memPID = ++Pool_id_counter;
-
     MemImplementingAllocator *last_pool;
 
     assert(aLabel != nullptr && aSize);

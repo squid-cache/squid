@@ -162,7 +162,6 @@ protected:
     virtual void *allocate() = 0;
     virtual void deallocate(void *, bool aggressive) = 0;
     PoolMeter meter;
-    int memPID;
 public:
     MemImplementingAllocator *next;
 public:
@@ -208,7 +207,6 @@ public:
 
     int tot_pools_alloc = 0;
     int tot_pools_inuse = 0;
-    int tot_pools_mempid = 0;
 
     int tot_chunks_alloc = 0;
     int tot_chunks_inuse = 0;
