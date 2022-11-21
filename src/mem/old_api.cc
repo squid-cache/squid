@@ -484,16 +484,17 @@ memCheckInit(void)
 void
 memClean(void)
 {
-    MemPoolGlobalStats stats;
     if (Config.MemPools.limit > 0) // do not reset if disabled or same
         MemPools::GetInstance().setIdleLimit(0);
     MemPools::GetInstance().clean(0);
-    const auto poolsInUse = memPoolGetGlobalStats(&stats);
 
-    if (stats.tot_items_inuse)
-        debugs(13, 2, "memCleanModule: " << stats.tot_items_inuse <<
-               " items in " << stats.tot_chunks_inuse << " chunks and " <<
+    MemPoolStats stats;
+    const auto poolsInUse = memPoolGetGlobalStats(stats);
+    if (stats.items_inuse) {
+        debugs(13, 2, stats.items_inuse <<
+               " items in " << stats.chunks_inuse << " chunks and " <<
                poolsInUse << " pools are left dirty");
+    }
 }
 
 int
@@ -670,8 +671,6 @@ void
 Mem::Report(std::ostream &stream)
 {
     static char buf[64];
-    static MemPoolStats mp_stats;
-    static MemPoolGlobalStats mp_total;
     int not_used = 0;
     MemPoolIterator *iter;
 
@@ -699,7 +698,8 @@ Mem::Report(std::ostream &stream)
     xm_time = current_dtime;
 
     /* Get stats for Totals report line */
-    const auto poolsInUse = memPoolGetGlobalStats(&mp_total);
+    MemPoolStats mp_total;
+    const auto poolsInUse = memPoolGetGlobalStats(mp_total);
 
     auto *sortme = static_cast<MemPoolStats *>(xcalloc(MemPools::GetInstance().poolCount, sizeof(MemPoolStats)));
     int npools = 0;
@@ -708,6 +708,7 @@ Mem::Report(std::ostream &stream)
     iter = memPoolIterate();
 
     while (const auto pool = memPoolIterateNext(iter)) {
+        MemPoolStats mp_stats;
         pool->getStats(&mp_stats);
 
         if (!mp_stats.pool) /* pool destroyed */
@@ -727,33 +728,18 @@ Mem::Report(std::ostream &stream)
     qsort(sortme, npools, sizeof(*sortme), MemPoolReportSorter);
 
     for (int i = 0; i< npools; ++i) {
-        PoolReport(&sortme[i], mp_total.TheMeter, stream);
+        PoolReport(&sortme[i], mp_total.meter, stream);
     }
 
     xfree(sortme);
 
-    mp_stats.pool = nullptr;
-    mp_stats.label = "Total";
-    mp_stats.meter = mp_total.TheMeter;
-    mp_stats.obj_size = 1;
-    mp_stats.chunk_capacity = 0;
-    mp_stats.chunk_size = 0;
-    mp_stats.chunks_alloc = mp_total.tot_chunks_alloc;
-    mp_stats.chunks_inuse = mp_total.tot_chunks_inuse;
-    mp_stats.chunks_partial = mp_total.tot_chunks_partial;
-    mp_stats.chunks_free = mp_total.tot_chunks_free;
-    mp_stats.items_alloc = mp_total.tot_items_alloc;
-    mp_stats.items_inuse = mp_total.tot_items_inuse;
-    mp_stats.items_idle = mp_total.tot_items_idle;
-    mp_stats.overhead = mp_total.tot_overhead;
-
-    PoolReport(&mp_stats, mp_total.TheMeter, stream);
+    PoolReport(&mp_total, mp_total.meter, stream);
 
     /* Cumulative */
-    stream << "Cumulative allocated volume: "<< double_to_str(buf, 64, mp_total.TheMeter->gb_allocated.bytes) << "\n";
+    stream << "Cumulative allocated volume: "<< double_to_str(buf, 64, mp_total.meter->gb_allocated.bytes) << "\n";
     /* overhead */
-    stream << "Current overhead: " << mp_total.tot_overhead << " bytes (" <<
-           std::setprecision(3) << xpercent(mp_total.tot_overhead, mp_total.TheMeter->inuse.currentLevel()) << "%)\n";
+    stream << "Current overhead: " << mp_total.overhead << " bytes (" <<
+           std::setprecision(3) << xpercent(mp_total.overhead, mp_total.meter->inuse.currentLevel()) << "%)\n";
     /* limits */
     if (MemPools::GetInstance().idleLimit() >= 0)
         stream << "Idle pool limit: " << std::setprecision(2) << toMB(MemPools::GetInstance().idleLimit()) << " MB\n";

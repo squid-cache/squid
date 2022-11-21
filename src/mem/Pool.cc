@@ -196,16 +196,16 @@ MemPools::clean(time_t maxage)
 /* Persistent Pool stats. for GlobalStats accumulation */
 static MemPoolStats pp_stats;
 
-/*
- * Totals statistics is returned
- */
 size_t
-memPoolGetGlobalStats(MemPoolGlobalStats * stats)
+memPoolGetGlobalStats(MemPoolStats &stats)
 {
     size_t pools_inuse = 0;
     MemPoolIterator *iter;
 
-    *stats = MemPoolGlobalStats();
+    stats.meter = &TheMeter;
+    stats.label = "Total";
+    stats.obj_size = 1;
+
     pp_stats = MemPoolStats();
 
     MemPools::GetInstance().flushMeters(); /* recreate TheMeter */
@@ -218,17 +218,15 @@ memPoolGetGlobalStats(MemPoolGlobalStats * stats)
     }
     memPoolIterateDone(&iter);
 
-    stats->TheMeter = &TheMeter;
+    stats.chunks_alloc = pp_stats.chunks_alloc;
+    stats.chunks_inuse = pp_stats.chunks_inuse;
+    stats.chunks_partial = pp_stats.chunks_partial;
+    stats.chunks_free = pp_stats.chunks_free;
+    stats.items_alloc = pp_stats.items_alloc;
+    stats.items_inuse = pp_stats.items_inuse;
+    stats.items_idle = pp_stats.items_idle;
 
-    stats->tot_chunks_alloc = pp_stats.chunks_alloc;
-    stats->tot_chunks_inuse = pp_stats.chunks_inuse;
-    stats->tot_chunks_partial = pp_stats.chunks_partial;
-    stats->tot_chunks_free = pp_stats.chunks_free;
-    stats->tot_items_alloc = pp_stats.items_alloc;
-    stats->tot_items_inuse = pp_stats.items_inuse;
-    stats->tot_items_idle = pp_stats.items_idle;
-
-    stats->tot_overhead += pp_stats.overhead + MemPools::GetInstance().poolCount * sizeof(Mem::Allocator *);
+    stats.overhead += pp_stats.overhead + MemPools::GetInstance().poolCount * sizeof(Mem::Allocator *);
 
     return pools_inuse;
 }
@@ -236,9 +234,9 @@ memPoolGetGlobalStats(MemPoolGlobalStats * stats)
 int
 memPoolsTotalAllocated(void)
 {
-    MemPoolGlobalStats stats;
-    memPoolGetGlobalStats(&stats);
-    return stats.TheMeter->alloc.currentLevel();
+    MemPoolStats stats;
+    memPoolGetGlobalStats(stats);
+    return stats.meter->alloc.currentLevel();
 }
 
 MemImplementingAllocator::MemImplementingAllocator(char const * const aLabel, const size_t aSize):

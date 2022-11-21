@@ -197,27 +197,6 @@ public:
     int overhead = 0;
 };
 
-/// \ingroup MemPoolsAPI
-class MemPoolGlobalStats
-{
-public:
-    typedef Mem::PoolMeter PoolMeter; // TODO remove
-
-    PoolMeter *TheMeter = nullptr;
-
-    int tot_chunks_alloc = 0;
-    int tot_chunks_inuse = 0;
-    int tot_chunks_partial = 0;
-    int tot_chunks_free = 0;
-
-    int tot_items_alloc = 0;
-    int tot_items_inuse = 0;
-    int tot_items_idle = 0;
-
-    int tot_overhead = 0;
-};
-
-/// \ingroup MemPoolsAPI
 /// Creates a named MemPool of elements with the given size
 #define memPoolCreate MemPools::GetInstance().create
 
@@ -244,15 +223,13 @@ extern void memPoolIterateDone(MemPoolIterator ** iter);
 /**
  \ingroup MemPoolsAPI
  *
- * Fills a MemPoolGlobalStats with statistical data about overall
+ * Fills a MemPoolStats with statistical data about overall
  * usage for all pools.
- *
- * \param stats   Object to be filled with statistical data.
  *
  * \return Number of pools that have at least one object in use.
  *        Ie. number of dirty pools.
  */
-extern size_t memPoolGetGlobalStats(MemPoolGlobalStats * stats);
+extern size_t memPoolGetGlobalStats(MemPoolStats &);
 
 /// \ingroup MemPoolsAPI
 extern int memPoolsTotalAllocated(void);
