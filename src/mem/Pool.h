@@ -131,9 +131,9 @@ public:
      * not strict upper limit, but a hint. When MemPools are over this limit,
      * deallocate attempts to release memory to the system instead of pooling.
      */
-    void setIdleLimit(ssize_t newLimit) {poolIdleLimit = newLimit;}
-    /// \see void setIdleLimit(ssize_t)
-    ssize_t idleLimit() const {return poolIdleLimit;}
+    void setIdleLimit(const ssize_t newLimit) { idleLimit_ = newLimit; }
+    /// \copydoc idleLimit_
+    ssize_t idleLimit() const { return idleLimit_; }
 
     /**
      \par
@@ -170,10 +170,10 @@ public:
     bool defaultIsChunked = false;
 
 private:
-    /// Limit for allocated (but unused) memory in memory pools.
+    /// Limits the cumulative size of allocated (but unused) memory in all pools.
     /// Initial value is 2MB until first configuration,
-    /// \see squid.conf memory_pools_limit directive.
-    ssize_t poolIdleLimit = (2 << 20);
+    /// See squid.conf memory_pools_limit directive.
+    ssize_t idleLimit_ = (2 << 20);
 };
 
 /**
