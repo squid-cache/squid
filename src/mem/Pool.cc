@@ -64,18 +64,6 @@ memPoolIterateNext(MemPoolIterator * iter)
     return pool;
 }
 
-void
-MemPools::setIdleLimit(ssize_t new_idle_limit)
-{
-    mem_idle_limit = new_idle_limit;
-}
-
-ssize_t
-MemPools::idleLimit() const
-{
-    return mem_idle_limit;
-}
-
 /* Change the default value of defaultIsChunked to override
  * all pools - including those used before main() starts where
  * MemPools::GetInstance().setDefaultPoolChunking() can be called.
@@ -206,7 +194,7 @@ MemImplementingAllocator::freeOne(void *obj)
 {
     assert(obj != nullptr);
     (void) VALGRIND_CHECK_MEM_IS_ADDRESSABLE(obj, obj_size);
-    deallocate(obj, MemPools::GetInstance().mem_idle_limit == 0);
+    deallocate(obj, MemPools::GetInstance().idleLimit() == 0);
     ++free_calls;
 }
 
@@ -223,11 +211,11 @@ void
 MemPools::clean(time_t maxage)
 {
     flushMeters();
-    if (mem_idle_limit < 0) // no limit to enforce
+    if (idleLimit() < 0) // no limit to enforce
         return;
 
     int shift = 1;
-    if (TheMeter.idle.currentLevel() > mem_idle_limit)
+    if (TheMeter.idle.currentLevel() > idleLimit())
         maxage = shift = 0;
 
     MemImplementingAllocator *pool;
@@ -280,7 +268,7 @@ memPoolGetGlobalStats(MemPoolGlobalStats * stats)
     stats->tot_items_idle = pp_stats.items_idle;
 
     stats->tot_overhead += pp_stats.overhead + MemPools::GetInstance().poolCount * sizeof(MemAllocator *);
-    stats->mem_idle_limit = MemPools::GetInstance().mem_idle_limit;
+    stats->mem_idle_limit = MemPools::GetInstance().idleLimit();
 
     return pools_inuse;
 }

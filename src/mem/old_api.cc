@@ -456,15 +456,6 @@ Mem::Init(void)
     Mgr::RegisterAction("mem", "Memory Utilization", Mem::Stats, 0, 1);
 }
 
-void
-Mem::Report()
-{
-    debugs(13, 3, "Memory pools are '" <<
-           (Config.onoff.mem_pools ? "on" : "off")  << "'; limit: " <<
-           std::setprecision(3) << toMB(MemPools::GetInstance().idleLimit()) <<
-           " MB");
-}
-
 static mem_type &
 operator++(mem_type &aMem)
 {

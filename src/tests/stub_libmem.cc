@@ -23,7 +23,6 @@ int Mem::AllocatorProxy::getStats(MemPoolStats *) STUB_RETVAL(0)
 
 #include "mem/forward.h"
 void Mem::Init() STUB_NOP
-void Mem::Report() STUB_NOP
 void Mem::Stats(StoreEntry *) STUB_NOP
 void Mem::CleanIdlePools(void *) STUB_NOP
 void Mem::Report(std::ostream &) STUB_NOP
@@ -82,16 +81,9 @@ MemPoolMeter::MemPoolMeter() STUB_NOP
 void MemPoolMeter::flush() STUB
 static MemPools tmpMemPools;
 MemPools &MemPools::GetInstance() {return tmpMemPools;}
-MemPools::MemPools() :
-    pools(nullptr),
-    mem_idle_limit(0),
-    poolCount(0),
-    defaultIsChunked(false)
-{}
+MemPools::MemPools() STUB_NOP
 void MemPools::flushMeters() STUB
 MemImplementingAllocator * MemPools::create(const char *, size_t) STUB_RETVAL(nullptr);
-void MemPools::setIdleLimit(ssize_t) STUB
-ssize_t MemPools::idleLimit() const STUB_RETVAL(0)
 void MemPools::clean(time_t) STUB
 void MemPools::setDefaultPoolChunking(bool const &) STUB
 

@@ -924,7 +924,6 @@ mainReconfigureFinish(void *)
     CpuAffinityReconfigure();
 
     setUmask(Config.umask);
-    Mem::Report();
     setEffectiveUser();
     Debug::UseCacheLog();
     ipcache_restart();      /* clear stuck entries */
@@ -1558,8 +1557,6 @@ SquidMain(int argc, char **argv)
                    (opt_parse_cfg_only ? " Run squid -k parse and check for errors." : ""));
             parse_err = 1;
         }
-
-        Mem::Report();
 
         if (opt_parse_cfg_only || parse_err > 0)
             return parse_err;
