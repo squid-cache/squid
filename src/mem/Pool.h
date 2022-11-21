@@ -205,8 +205,6 @@ public:
 
     PoolMeter *TheMeter = nullptr;
 
-    int tot_pools_inuse = 0;
-
     int tot_chunks_alloc = 0;
     int tot_chunks_inuse = 0;
     int tot_chunks_partial = 0;
@@ -254,7 +252,7 @@ extern void memPoolIterateDone(MemPoolIterator ** iter);
  * \return Number of pools that have at least one object in use.
  *        Ie. number of dirty pools.
  */
-extern int memPoolGetGlobalStats(MemPoolGlobalStats * stats);
+extern size_t memPoolGetGlobalStats(MemPoolGlobalStats * stats);
 
 /// \ingroup MemPoolsAPI
 extern int memPoolsTotalAllocated(void);

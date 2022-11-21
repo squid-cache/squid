@@ -488,12 +488,12 @@ memClean(void)
     if (Config.MemPools.limit > 0) // do not reset if disabled or same
         MemPools::GetInstance().setIdleLimit(0);
     MemPools::GetInstance().clean(0);
-    memPoolGetGlobalStats(&stats);
+    const auto poolsInUse = memPoolGetGlobalStats(&stats);
 
     if (stats.tot_items_inuse)
         debugs(13, 2, "memCleanModule: " << stats.tot_items_inuse <<
                " items in " << stats.tot_chunks_inuse << " chunks and " <<
-               stats.tot_pools_inuse << " pools are left dirty");
+               poolsInUse << " pools are left dirty");
 }
 
 int
@@ -699,7 +699,7 @@ Mem::Report(std::ostream &stream)
     xm_time = current_dtime;
 
     /* Get stats for Totals report line */
-    memPoolGetGlobalStats(&mp_total);
+    const auto poolsInUse = memPoolGetGlobalStats(&mp_total);
 
     auto *sortme = static_cast<MemPoolStats *>(xcalloc(MemPools::GetInstance().poolCount, sizeof(MemPoolStats)));
     int npools = 0;
@@ -760,6 +760,6 @@ Mem::Report(std::ostream &stream)
     /* limits */
     stream << "Total Pools created: " << MemPools::GetInstance().poolCount << "\n";
     stream << "Pools ever used:     " << MemPools::GetInstance().poolCount - not_used << " (shown above)\n";
-    stream << "Currently in use:    " << mp_total.tot_pools_inuse << "\n";
+    stream << "Currently in use:    " << poolsInUse << "\n";
 }
 

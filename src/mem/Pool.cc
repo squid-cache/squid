@@ -199,10 +199,10 @@ static MemPoolStats pp_stats;
 /*
  * Totals statistics is returned
  */
-int
+size_t
 memPoolGetGlobalStats(MemPoolGlobalStats * stats)
 {
-    int pools_inuse = 0;
+    size_t pools_inuse = 0;
     MemPoolIterator *iter;
 
     *stats = MemPoolGlobalStats();
@@ -219,8 +219,6 @@ memPoolGetGlobalStats(MemPoolGlobalStats * stats)
     memPoolIterateDone(&iter);
 
     stats->TheMeter = &TheMeter;
-
-    stats->tot_pools_inuse = pools_inuse;
 
     stats->tot_chunks_alloc = pp_stats.chunks_alloc;
     stats->tot_chunks_inuse = pp_stats.chunks_inuse;
