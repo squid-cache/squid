@@ -42,7 +42,7 @@ public:
     virtual void clean(time_t maxage);
 
     /* Mem::Allocator API */
-    virtual int getStats(MemPoolStats *, int);
+    virtual int getStats(MemPoolStats *);
     virtual int getInUseCount();
 
 protected:

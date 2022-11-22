@@ -26,13 +26,12 @@ public:
     ~MemPoolChunked();
     void convertFreeCacheToChunkFreeCache();
     virtual void clean(time_t maxage);
-
     void createChunk();
     void *get();
     void push(void *obj);
 
     /* Mem::Allocator API */
-    virtual int getStats(MemPoolStats *, int);
+    virtual int getStats(MemPoolStats *);
     virtual int getInUseCount();
     virtual void setChunkSize(size_t);
 
