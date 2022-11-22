@@ -193,40 +193,25 @@ MemPools::clean(time_t maxage)
     memPoolIterateDone(&iter);
 }
 
-/* Persistent Pool stats. for GlobalStats accumulation */
-static MemPoolStats pp_stats;
-
 size_t
 memPoolGetGlobalStats(MemPoolStats &stats)
 {
     size_t pools_inuse = 0;
-    MemPoolIterator *iter;
+
+    MemPools::GetInstance().flushMeters(); /* recreate TheMeter */
 
     stats.meter = &TheMeter;
     stats.label = "Total";
     stats.obj_size = 1;
-
-    pp_stats = MemPoolStats();
-
-    MemPools::GetInstance().flushMeters(); /* recreate TheMeter */
+    stats.overhead += MemPools::GetInstance().poolCount * sizeof(Mem::Allocator *);
 
     /* gather all stats for Totals */
-    iter = memPoolIterate();
+    auto *iter = memPoolIterate();
     while (const auto pool = memPoolIterateNext(iter)) {
-        if (pool->getStats(&pp_stats, 1) > 0)
+        if (pool->getStats(&stats) > 0)
             ++pools_inuse;
     }
     memPoolIterateDone(&iter);
-
-    stats.chunks_alloc = pp_stats.chunks_alloc;
-    stats.chunks_inuse = pp_stats.chunks_inuse;
-    stats.chunks_partial = pp_stats.chunks_partial;
-    stats.chunks_free = pp_stats.chunks_free;
-    stats.items_alloc = pp_stats.items_alloc;
-    stats.items_inuse = pp_stats.items_inuse;
-    stats.items_idle = pp_stats.items_idle;
-
-    stats.overhead += pp_stats.overhead + MemPools::GetInstance().poolCount * sizeof(Mem::Allocator *);
 
     return pools_inuse;
 }
