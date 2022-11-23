@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "mem/AllocatorProxy.h"
+#include "mem/Meter.h"
 #include "mem/Pool.h"
 
 void *

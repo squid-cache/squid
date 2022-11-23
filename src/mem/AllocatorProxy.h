@@ -9,8 +9,6 @@
 #ifndef _SQUID_SRC_MEM_ALLOCATORPROXY_H
 #define _SQUID_SRC_MEM_ALLOCATORPROXY_H
 
-#include "mem/Meter.h"
-
 class MemAllocator;
 class MemPoolStats;
 
@@ -45,6 +43,8 @@ class MemPoolStats;
 
 namespace Mem
 {
+
+class PoolMeter;
 
 /**
  * Support late binding of pool type for allocator agnostic classes
