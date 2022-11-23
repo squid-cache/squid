@@ -17,7 +17,7 @@
 void *Mem::AllocatorProxy::alloc() {return xmalloc(64*1024);}
 void Mem::AllocatorProxy::freeOne(void *address) {xfree(address);}
 int Mem::AllocatorProxy::inUseCount() const {return 0;}
-//Mem::PoolMeter const &Mem::AllocatorProxy::getMeter() const STUB_RETSTATREF(Mem::PoolMeter)
+//Mem::PoolMeter const &Mem::AllocatorProxy::getMeter() const STUB_RETSTATREF(PoolMeter)
 int Mem::AllocatorProxy::getStats(MemPoolStats *) STUB_RETVAL(0)
 
 #include "mem/forward.h"
@@ -91,8 +91,8 @@ size_t MemAllocator::RoundedSize(size_t minSize) STUB_RETVAL(minSize)
 
 //MemImplementingAllocator::MemImplementingAllocator(char const *, size_t) STUB_NOP
 //MemImplementingAllocator::~MemImplementingAllocator();
-Mem::PoolMeter const &MemImplementingAllocator::getMeter() const STUB_RETSTATREF(Mem::PoolMeter)
-Mem::PoolMeter &MemImplementingAllocator::getMeter() STUB_RETSTATREF(Mem::PoolMeter)
+Mem::PoolMeter const &MemImplementingAllocator::getMeter() const STUB_RETSTATREF(PoolMeter)
+Mem::PoolMeter &MemImplementingAllocator::getMeter() STUB_RETSTATREF(PoolMeter)
 void MemImplementingAllocator::flushMetersFull() STUB
 void MemImplementingAllocator::flushMeters() STUB
 void *MemImplementingAllocator::alloc() STUB_RETVAL(nullptr)

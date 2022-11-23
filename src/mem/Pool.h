@@ -146,6 +146,8 @@ private:
 class MemAllocator
 {
 public:
+    typedef Mem::PoolMeter PoolMeter; // TODO remove
+
     MemAllocator (char const *aLabel);
     virtual ~MemAllocator() {}
 
@@ -155,7 +157,7 @@ public:
      */
     virtual int getStats(MemPoolStats * stats, int accumulate = 0) = 0;
 
-    virtual Mem::PoolMeter const &getMeter() const = 0;
+    virtual PoolMeter const &getMeter() const = 0;
 
     /**
      * Allocate one element from the pool
@@ -208,10 +210,12 @@ private:
 class MemImplementingAllocator : public MemAllocator
 {
 public:
+    typedef Mem::PoolMeter PoolMeter; // TODO remove
+
     MemImplementingAllocator(char const *aLabel, size_t aSize);
     virtual ~MemImplementingAllocator();
-    virtual Mem::PoolMeter const &getMeter() const;
-    virtual Mem::PoolMeter &getMeter();
+    virtual PoolMeter const &getMeter() const;
+    virtual PoolMeter &getMeter();
     virtual void flushMetersFull();
     virtual void flushMeters();
 
@@ -232,7 +236,7 @@ public:
 protected:
     virtual void *allocate() = 0;
     virtual void deallocate(void *, bool aggressive) = 0;
-    Mem::PoolMeter meter;
+    PoolMeter meter;
     int memPID;
 public:
     MemImplementingAllocator *next;
@@ -247,9 +251,11 @@ public:
 class MemPoolStats
 {
 public:
+    typedef Mem::PoolMeter PoolMeter; // TODO remove
+
     MemAllocator *pool;
     const char *label;
-    Mem::PoolMeter *meter;
+    PoolMeter *meter;
     int obj_size;
     int chunk_capacity;
     int chunk_size;
@@ -269,7 +275,9 @@ public:
 /// \ingroup MemPoolsAPI
 /// TODO: Classify and add constructor/destructor to initialize properly.
 struct _MemPoolGlobalStats {
-    Mem::PoolMeter *TheMeter;
+    typedef Mem::PoolMeter PoolMeter; // TODO remove
+
+    PoolMeter *TheMeter;
 
     int tot_pools_alloc;
     int tot_pools_inuse;
