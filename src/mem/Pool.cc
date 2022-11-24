@@ -21,7 +21,7 @@
 
 extern time_t squid_curtime;
 
-static MemPoolMeter TheMeter;
+static Mem::PoolMeter TheMeter;
 static MemPoolIterator Iterator;
 static int Pool_id_counter = 0;
 
@@ -131,27 +131,6 @@ MemImplementingAllocator::flushMetersFull()
     getMeter().gb_allocated.bytes = getMeter().gb_allocated.count * obj_size;
     getMeter().gb_saved.bytes = getMeter().gb_saved.count * obj_size;
     getMeter().gb_freed.bytes = getMeter().gb_freed.count * obj_size;
-}
-
-void
-MemPoolMeter::flush()
-{
-    alloc.flush();
-    inuse.flush();
-    idle.flush();
-    gb_allocated.count = 0;
-    gb_allocated.bytes = 0;
-    gb_oallocated.count = 0;
-    gb_oallocated.bytes = 0;
-    gb_saved.count = 0;
-    gb_saved.bytes = 0;
-    gb_freed.count = 0;
-    gb_freed.bytes = 0;
-}
-
-MemPoolMeter::MemPoolMeter()
-{
-    flush();
 }
 
 /*
@@ -332,13 +311,13 @@ MemImplementingAllocator::~MemImplementingAllocator()
     --MemPools::GetInstance().poolCount;
 }
 
-MemPoolMeter const &
+Mem::PoolMeter const &
 MemImplementingAllocator::getMeter() const
 {
     return meter;
 }
 
-MemPoolMeter &
+Mem::PoolMeter &
 MemImplementingAllocator::getMeter()
 {
     return meter;
