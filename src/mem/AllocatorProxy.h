@@ -11,7 +11,6 @@
 
 class MemAllocator;
 class MemPoolStats;
-class MemPoolMeter;
 
 /**
  * \hideinitializer
@@ -45,6 +44,8 @@ class MemPoolMeter;
 namespace Mem
 {
 
+class PoolMeter;
+
 /**
  * Support late binding of pool type for allocator agnostic classes
  */
@@ -68,7 +69,7 @@ public:
     size_t objectSize() const {return size;}
     char const * objectType() const {return label;}
 
-    MemPoolMeter const &getMeter() const;
+    PoolMeter const &getMeter() const;
 
     /**
      * \param stats Object to be filled with statistical data about pool.

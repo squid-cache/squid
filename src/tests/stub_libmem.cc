@@ -17,8 +17,7 @@
 void *Mem::AllocatorProxy::alloc() {return xmalloc(64*1024);}
 void Mem::AllocatorProxy::freeOne(void *address) {xfree(address);}
 int Mem::AllocatorProxy::inUseCount() const {return 0;}
-//static MemPoolMeter tmpMemPoolMeter;
-//MemPoolMeter const &Mem::AllocatorProxy::getMeter() const STUB_RETVAL(tmpMemPoolMeter)
+//Mem::PoolMeter const &Mem::AllocatorProxy::getMeter() const STUB_RETSTATREF(PoolMeter)
 int Mem::AllocatorProxy::getStats(MemPoolStats *) STUB_RETVAL(0)
 
 #include "mem/forward.h"
@@ -26,7 +25,7 @@ void Mem::Init() STUB_NOP
 void Mem::Stats(StoreEntry *) STUB_NOP
 void Mem::CleanIdlePools(void *) STUB_NOP
 void Mem::Report(std::ostream &) STUB_NOP
-void Mem::PoolReport(const MemPoolStats *, const MemPoolMeter *, std::ostream &) STUB_NOP
+void Mem::PoolReport(const MemPoolStats *, const PoolMeter *, std::ostream &) STUB_NOP
 //const size_t squidSystemPageSize = 4096;
 void memClean(void) STUB
 void memInitModule(void) STUB
@@ -77,8 +76,6 @@ void memDataInit(mem_type, const char *, size_t, int, bool) STUB_NOP
 void memCheckInit(void) STUB_NOP
 
 #include "mem/Pool.h"
-MemPoolMeter::MemPoolMeter() STUB_NOP
-void MemPoolMeter::flush() STUB
 static MemPools tmpMemPools;
 MemPools &MemPools::GetInstance() {return tmpMemPools;}
 MemPools::MemPools() STUB_NOP
@@ -94,8 +91,8 @@ size_t MemAllocator::RoundedSize(size_t minSize) STUB_RETVAL(minSize)
 
 //MemImplementingAllocator::MemImplementingAllocator(char const *, size_t) STUB_NOP
 //MemImplementingAllocator::~MemImplementingAllocator();
-MemPoolMeter const &MemImplementingAllocator::getMeter() const STUB_RETSTATREF(MemPoolMeter)
-MemPoolMeter &MemImplementingAllocator::getMeter() STUB_RETSTATREF(MemPoolMeter)
+Mem::PoolMeter const &MemImplementingAllocator::getMeter() const STUB_RETSTATREF(PoolMeter)
+Mem::PoolMeter &MemImplementingAllocator::getMeter() STUB_RETSTATREF(PoolMeter)
 void MemImplementingAllocator::flushMetersFull() STUB
 void MemImplementingAllocator::flushMeters() STUB
 void *MemImplementingAllocator::alloc() STUB_RETVAL(nullptr)
