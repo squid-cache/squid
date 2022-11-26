@@ -20,7 +20,10 @@ namespace Mem
 class Allocator : public Interface
 {
 public:
-    explicit Allocator(const char * const aLabel): label(aLabel) {}
+    explicit Allocator(const char * const aLabel, const size_t sz):
+        label(aLabel),
+        objectSize_(RoundedSize(sz))
+    {}
 
     // TODO make this method const
     /**
@@ -41,7 +44,7 @@ public:
     virtual char const *objectType() const { return label; }
 
     /// the size (in bytes) of objects managed by this allocator
-    virtual size_t objectSize() const = 0;
+    size_t objectSize() const { return objectSize_; }
 
     /// the difference between the number of alloc() and freeOne() calls
     virtual int getInUseCount() = 0;
@@ -72,6 +75,7 @@ protected:
 
 private:
     const char *label = nullptr;
+    const size_t objectSize_ = 0;
 };
 
 } // namespace Mem

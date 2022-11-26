@@ -146,7 +146,6 @@ public:
     PoolMeter const &getMeter() const override;
     void *alloc() override;
     void freeOne(void *) override;
-    size_t objectSize() const override;
     int getInUseCount() override = 0;
 
 protected:
@@ -157,7 +156,6 @@ public:
     size_t alloc_calls;
     size_t free_calls;
     size_t saved_calls;
-    size_t obj_size;
 };
 
 /// Creates a named MemPool of elements with the given size

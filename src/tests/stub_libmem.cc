@@ -93,7 +93,6 @@ void MemImplementingAllocator::flushMetersFull() STUB
 void MemImplementingAllocator::flushMeters() STUB
 void *MemImplementingAllocator::alloc() STUB_RETVAL(nullptr)
 void MemImplementingAllocator::freeOne(void *) STUB
-size_t MemImplementingAllocator::objectSize() const { return obj_size; }
 
 #include "mem/Stats.h"
 size_t Mem::GlobalStats(PoolStats &) STUB_RETVAL(0)

@@ -32,9 +32,9 @@ MemPoolMalloc::allocate()
         ++saved_calls;
     } else {
         if (doZero)
-            obj = xcalloc(1, obj_size);
+            obj = xcalloc(1, objectSize());
         else
-            obj = xmalloc(obj_size);
+            obj = xmalloc(objectSize());
         ++meter.alloc;
     }
     ++meter.inuse;
@@ -50,7 +50,7 @@ MemPoolMalloc::deallocate(void *obj, bool aggressive)
         --meter.alloc;
     } else {
         if (doZero)
-            memset(obj, 0, obj_size);
+            memset(obj, 0, objectSize());
         ++meter.idle;
         freelist.push(obj);
     }
@@ -63,13 +63,8 @@ MemPoolMalloc::getStats(Mem::PoolStats &stats)
     stats.pool = this;
     stats.label = objectType();
     stats.meter = &meter;
-    stats.obj_size = obj_size;
+    stats.obj_size = objectSize();
     stats.chunk_capacity = 0;
-
-    stats.chunks_alloc += 0;
-    stats.chunks_inuse += 0;
-    stats.chunks_partial += 0;
-    stats.chunks_free += 0;
 
     stats.items_alloc += meter.alloc.currentLevel();
     stats.items_inuse += meter.inuse.currentLevel();

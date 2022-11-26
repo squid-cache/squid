@@ -92,9 +92,9 @@ void
 MemImplementingAllocator::flushMetersFull()
 {
     flushMeters();
-    getMeter().gb_allocated.bytes = getMeter().gb_allocated.count * obj_size;
-    getMeter().gb_saved.bytes = getMeter().gb_saved.count * obj_size;
-    getMeter().gb_freed.bytes = getMeter().gb_freed.count * obj_size;
+    getMeter().gb_allocated.bytes = getMeter().gb_allocated.count * objectSize();
+    getMeter().gb_saved.bytes = getMeter().gb_saved.count * objectSize();
+    getMeter().gb_freed.bytes = getMeter().gb_freed.count * objectSize();
 }
 
 /*
@@ -108,9 +108,9 @@ MemPools::flushMeters()
     for (const auto pool: pools) {
         pool->flushMetersFull();
         // are these TheMeter grow() operations or accumulated volumes ?
-        TheMeter.alloc += pool->getMeter().alloc.currentLevel() * pool->obj_size;
-        TheMeter.inuse += pool->getMeter().inuse.currentLevel() * pool->obj_size;
-        TheMeter.idle += pool->getMeter().idle.currentLevel() * pool->obj_size;
+        TheMeter.alloc += pool->getMeter().alloc.currentLevel() * pool->objectSize();
+        TheMeter.inuse += pool->getMeter().inuse.currentLevel() * pool->objectSize();
+        TheMeter.idle += pool->getMeter().idle.currentLevel() * pool->objectSize();
 
         TheMeter.gb_allocated.count += pool->getMeter().gb_allocated.count;
         TheMeter.gb_saved.count += pool->getMeter().gb_saved.count;
@@ -134,7 +134,7 @@ void
 MemImplementingAllocator::freeOne(void *obj)
 {
     assert(obj != nullptr);
-    (void) VALGRIND_CHECK_MEM_IS_ADDRESSABLE(obj, obj_size);
+    (void) VALGRIND_CHECK_MEM_IS_ADDRESSABLE(obj, objectSize());
     deallocate(obj, MemPools::GetInstance().idleLimit() == 0);
     ++free_calls;
 }
@@ -166,11 +166,10 @@ MemPools::clean(time_t maxage)
 }
 
 MemImplementingAllocator::MemImplementingAllocator(char const * const aLabel, const size_t aSize):
-    Mem::Allocator(aLabel),
+    Mem::Allocator(aLabel, aSize),
     alloc_calls(0),
     free_calls(0),
-    saved_calls(0),
-    obj_size(RoundedSize(aSize))
+    saved_calls(0)
 {
     assert(aLabel != nullptr && aSize);
 }
@@ -185,11 +184,5 @@ Mem::PoolMeter &
 MemImplementingAllocator::getMeter()
 {
     return meter;
-}
-
-size_t
-MemImplementingAllocator::objectSize() const
-{
-    return obj_size;
 }
 
