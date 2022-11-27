@@ -184,7 +184,7 @@ MemPoolChunked::get()
 {
     void **Free;
 
-    ++saved_calls;
+    ++count.saved_allocs;
 
     /* first, try cache */
     if (freeCache) {
@@ -197,7 +197,7 @@ MemPoolChunked::get()
     /* then try perchunk freelist chain */
     if (nextFreeChunk == nullptr) {
         /* no chunk with frees, so create new one */
-        -- saved_calls; // compensate for the ++ above
+        --count.saved_allocs; // compensate for the ++ above
         createChunk();
     }
     /* now we have some in perchunk freelist chain */
@@ -296,7 +296,7 @@ MemPoolChunked::~MemPoolChunked()
 {
     MemChunk *chunk, *fchunk;
 
-    flushMeters();
+    flushCounters();
     clean(0);
     assert(getMeter().inuse.currentLevel() == 0);
 
@@ -369,7 +369,7 @@ MemPoolChunked::clean(time_t maxage)
     if (!Chunks)
         return;
 
-    flushMeters();
+    flushCounters();
     convertFreeCacheToChunkFreeCache();
     /* Now we have all chunks in this pool cleared up, all free items returned to their home */
     /* We start now checking all chunks to see if we can release any */

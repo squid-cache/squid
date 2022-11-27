@@ -66,38 +66,27 @@ MemPools::setDefaultPoolChunking(bool const &aBool)
     defaultIsChunked = aBool;
 }
 
-void
-MemImplementingAllocator::flushMeters()
-{
-    if (free_calls) {
-        getMeter().gb_freed.update(free_calls, objectSize());
-        free_calls = 0;
-    }
-    if (alloc_calls) {
-        getMeter().gb_allocated.update(alloc_calls, objectSize());
-        alloc_calls = 0;
-    }
-    if (saved_calls) {
-        getMeter().gb_saved.update(saved_calls, objectSize());
-        saved_calls = 0;
-    }
-}
-
 /*
  * Updates all pool counters, and recreates TheMeter totals from all pools
  */
 void
 MemPools::flushMeters()
 {
+    // Does reset of the historic gb_* counters in TheMeter.
+    // This is okay as they get regenerated from pool historic counters.
     TheMeter.flush();
 
     for (const auto pool: pools) {
-        pool->flushMeters();
-        // are these TheMeter grow() operations or accumulated volumes ?
+        // ensure the pool's meter contains latest high-performance counter values
+        pool->flushCounters();
+
+        // Accumulate current volumes (in bytes) across all pools.
         TheMeter.alloc += pool->getMeter().alloc.currentLevel() * pool->objectSize();
         TheMeter.inuse += pool->getMeter().inuse.currentLevel() * pool->objectSize();
         TheMeter.idle += pool->getMeter().idle.currentLevel() * pool->objectSize();
+        // Do not accumulate peak details as timing for those vary between pools.
 
+        // regenerate gb_* values from original pool stats
         TheMeter.gb_allocated.count += pool->getMeter().gb_allocated.count;
         TheMeter.gb_saved.count += pool->getMeter().gb_saved.count;
         TheMeter.gb_freed.count += pool->getMeter().gb_freed.count;
@@ -110,8 +99,8 @@ MemPools::flushMeters()
 void *
 MemImplementingAllocator::alloc()
 {
-    if (++alloc_calls == FLUSH_LIMIT)
-        flushMeters();
+    if (++count.allocs == FLUSH_LIMIT)
+        flushCounters();
 
     return allocate();
 }
@@ -122,7 +111,7 @@ MemImplementingAllocator::freeOne(void *obj)
     assert(obj != nullptr);
     (void) VALGRIND_CHECK_MEM_IS_ADDRESSABLE(obj, objectSize());
     deallocate(obj, MemPools::GetInstance().idleLimit() == 0);
-    ++free_calls;
+    ++count.freed;
 }
 
 /*
@@ -152,10 +141,7 @@ MemPools::clean(time_t maxage)
 }
 
 MemImplementingAllocator::MemImplementingAllocator(char const * const aLabel, const size_t aSize):
-    Mem::Allocator(aLabel, aSize),
-    alloc_calls(0),
-    free_calls(0),
-    saved_calls(0)
+    Mem::Allocator(aLabel, aSize)
 {
     assert(aLabel != nullptr && aSize);
 }

@@ -86,7 +86,6 @@ void MemPools::clean(time_t) STUB
 void MemPools::setDefaultPoolChunking(bool const &) STUB
 
 //MemImplementingAllocator::MemImplementingAllocator(char const *, size_t) STUB_NOP
-void MemImplementingAllocator::flushMeters() STUB
 void *MemImplementingAllocator::alloc() STUB_RETVAL(nullptr)
 void MemImplementingAllocator::freeOne(void *) STUB
 

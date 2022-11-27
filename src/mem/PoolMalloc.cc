@@ -29,7 +29,7 @@ MemPoolMalloc::allocate()
     }
     if (obj) {
         --(getMeter().idle);
-        ++saved_calls;
+        ++count.saved_allocs;
     } else {
         if (doZero)
             obj = xcalloc(1, objectSize());

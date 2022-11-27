@@ -61,10 +61,50 @@ public:
     virtual void setChunkSize(size_t) {}
 
     /**
+     * Flush temporary counter values into the statistics held in 'meter'.
+     * Performs some CPU intensive calculations which have been deferred for performance.
+     */
+    void flushCounters() {
+        if (count.freed) {
+            getMeter().gb_freed.update(count.freed, objectSize());
+            count.freed = 0;
+        }
+        if (count.allocs) {
+            getMeter().gb_allocated.update(count.allocs, objectSize());
+            count.allocs = 0;
+        }
+        if (count.saved_allocs) {
+            getMeter().gb_saved.update(count.saved_allocs, objectSize());
+            count.saved_allocs = 0;
+        }
+    }
+
+    /**
      * \param minSize Minimum size needed to be allocated.
      * \retval n Smallest size divisible by sizeof(void*)
      */
     static size_t RoundedSize(const size_t minSize) { return ((minSize + sizeof(void*) - 1) / sizeof(void*)) * sizeof(void*); }
+
+public:
+
+    /** Temporary counters for performance optimization.
+     *
+     * Counts allocator activity until a flushCounters() gets
+     * triggered to move the values into the 'meter' statistics.
+     *
+     * Specific Optimizations:
+     * \li Objects have fixed-size,
+     *     so all calculations about bytes can be deferred.
+     * \li Objects pooled (if any) can be inferred,
+     *     so saved_free counting is unnecessary.
+     * \li Objects actively in use (if any) can be inferred,
+     *     so no inuse_count management on alloc() or freeOne().
+     */
+    struct FastCounter {
+       size_t allocs = 0; ///< accumulated calls to alloc()
+       size_t saved_allocs = 0; ///< alloc() calls which re-used an idle object
+       size_t freed = 0; ///< accumulated calls to freeOne()
+    } count;
 
 protected:
     /**
