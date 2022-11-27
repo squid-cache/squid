@@ -19,7 +19,6 @@
 void *Mem::AllocatorProxy::alloc() {return xmalloc(64*1024);}
 void Mem::AllocatorProxy::freeOne(void *address) {xfree(address);}
 int Mem::AllocatorProxy::inUseCount() const {return 0;}
-//Mem::PoolMeter const &Mem::AllocatorProxy::getMeter() const STUB_RETSTATREF(PoolMeter)
 size_t Mem::AllocatorProxy::getStats(PoolStats &) STUB_RETVAL(0)
 
 #include "mem/forward.h"
@@ -87,9 +86,6 @@ void MemPools::clean(time_t) STUB
 void MemPools::setDefaultPoolChunking(bool const &) STUB
 
 //MemImplementingAllocator::MemImplementingAllocator(char const *, size_t) STUB_NOP
-Mem::PoolMeter const &MemImplementingAllocator::getMeter() const STUB_RETSTATREF(PoolMeter)
-Mem::PoolMeter &MemImplementingAllocator::getMeter() STUB_RETSTATREF(PoolMeter)
-void MemImplementingAllocator::flushMetersFull() STUB
 void MemImplementingAllocator::flushMeters() STUB
 void *MemImplementingAllocator::alloc() STUB_RETVAL(nullptr)
 void MemImplementingAllocator::freeOne(void *) STUB

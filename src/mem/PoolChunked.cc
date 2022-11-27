@@ -296,9 +296,9 @@ MemPoolChunked::~MemPoolChunked()
 {
     MemChunk *chunk, *fchunk;
 
-    flushMetersFull();
+    flushMeters();
     clean(0);
-    assert(meter.inuse.currentLevel() == 0);
+    assert(getMeter().inuse.currentLevel() == 0);
 
     chunk = Chunks;
     while ( (fchunk = chunk) != nullptr) {
@@ -312,16 +312,16 @@ MemPoolChunked::~MemPoolChunked()
 int
 MemPoolChunked::getInUseCount()
 {
-    return meter.inuse.currentLevel();
+    return getMeter().inuse.currentLevel();
 }
 
 void *
 MemPoolChunked::allocate()
 {
     void *p = get();
-    assert(meter.idle.currentLevel() > 0);
-    --meter.idle;
-    ++meter.inuse;
+    assert(getMeter().idle.currentLevel() > 0);
+    --(getMeter().idle);
+    ++(getMeter().inuse);
     return p;
 }
 
@@ -329,9 +329,9 @@ void
 MemPoolChunked::deallocate(void *obj, bool)
 {
     push(obj);
-    assert(meter.inuse.currentLevel() > 0);
-    --meter.inuse;
-    ++meter.idle;
+    assert(getMeter().inuse.currentLevel() > 0);
+    --(getMeter().inuse);
+    ++(getMeter().idle);
 }
 
 void
@@ -369,7 +369,7 @@ MemPoolChunked::clean(time_t maxage)
     if (!Chunks)
         return;
 
-    flushMetersFull();
+    flushMeters();
     convertFreeCacheToChunkFreeCache();
     /* Now we have all chunks in this pool cleared up, all free items returned to their home */
     /* We start now checking all chunks to see if we can release any */
@@ -427,7 +427,7 @@ MemPoolChunked::clean(time_t maxage)
 bool
 MemPoolChunked::idleTrigger(int shift) const
 {
-    return meter.idle.currentLevel() > (chunk_capacity << shift);
+    return getMeter().idle.currentLevel() > (chunk_capacity << shift);
 }
 
 size_t
@@ -441,7 +441,7 @@ MemPoolChunked::getStats(Mem::PoolStats &stats)
 
     stats.pool = this;
     stats.label = objectType();
-    stats.meter = &meter;
+    stats.meter = &getMeter();
     stats.obj_size = objectSize();
     stats.chunk_capacity = chunk_capacity;
 
@@ -460,12 +460,12 @@ MemPoolChunked::getStats(Mem::PoolStats &stats)
     stats.chunks_partial += chunks_partial;
     stats.chunks_free += chunks_free;
 
-    stats.items_alloc += meter.alloc.currentLevel();
-    stats.items_inuse += meter.inuse.currentLevel();
-    stats.items_idle += meter.idle.currentLevel();
+    stats.items_alloc += getMeter().alloc.currentLevel();
+    stats.items_inuse += getMeter().inuse.currentLevel();
+    stats.items_idle += getMeter().idle.currentLevel();
 
     stats.overhead += sizeof(MemPoolChunked) + chunkCount * sizeof(MemChunk) + strlen(objectType()) + 1;
 
-    return meter.inuse.currentLevel();
+    return getMeter().inuse.currentLevel();
 }
 

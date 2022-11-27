@@ -69,32 +69,18 @@ MemPools::setDefaultPoolChunking(bool const &aBool)
 void
 MemImplementingAllocator::flushMeters()
 {
-    size_t calls;
-
-    calls = free_calls;
-    if (calls) {
-        meter.gb_freed.count += calls;
+    if (free_calls) {
+        getMeter().gb_freed.update(free_calls, objectSize());
         free_calls = 0;
     }
-    calls = alloc_calls;
-    if (calls) {
-        meter.gb_allocated.count += calls;
+    if (alloc_calls) {
+        getMeter().gb_allocated.update(alloc_calls, objectSize());
         alloc_calls = 0;
     }
-    calls = saved_calls;
-    if (calls) {
-        meter.gb_saved.count += calls;
+    if (saved_calls) {
+        getMeter().gb_saved.update(saved_calls, objectSize());
         saved_calls = 0;
     }
-}
-
-void
-MemImplementingAllocator::flushMetersFull()
-{
-    flushMeters();
-    getMeter().gb_allocated.bytes = getMeter().gb_allocated.count * objectSize();
-    getMeter().gb_saved.bytes = getMeter().gb_saved.count * objectSize();
-    getMeter().gb_freed.bytes = getMeter().gb_freed.count * objectSize();
 }
 
 /*
@@ -106,7 +92,7 @@ MemPools::flushMeters()
     TheMeter.flush();
 
     for (const auto pool: pools) {
-        pool->flushMetersFull();
+        pool->flushMeters();
         // are these TheMeter grow() operations or accumulated volumes ?
         TheMeter.alloc += pool->getMeter().alloc.currentLevel() * pool->objectSize();
         TheMeter.inuse += pool->getMeter().inuse.currentLevel() * pool->objectSize();
@@ -173,16 +159,3 @@ MemImplementingAllocator::MemImplementingAllocator(char const * const aLabel, co
 {
     assert(aLabel != nullptr && aSize);
 }
-
-Mem::PoolMeter const &
-MemImplementingAllocator::getMeter() const
-{
-    return meter;
-}
-
-Mem::PoolMeter &
-MemImplementingAllocator::getMeter()
-{
-    return meter;
-}
-

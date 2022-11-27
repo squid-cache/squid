@@ -11,6 +11,7 @@
 
 #include "base/TypeTraits.h"
 #include "mem/forward.h"
+#include "mem/Meter.h"
 
 namespace Mem
 {
@@ -32,7 +33,9 @@ public:
      */
     virtual size_t getStats(PoolStats &) = 0;
 
-    virtual PoolMeter const &getMeter() const = 0;
+    /// get current statistics tracked for this allocator
+    virtual PoolMeter const &getMeter() const { return meter; }
+    virtual PoolMeter &getMeter() { return meter; }
 
     /// provide (and reserve) memory suitable for storing one object
     virtual void *alloc() = 0;
@@ -76,6 +79,7 @@ protected:
 private:
     const char *label = nullptr;
     const size_t objectSize_ = 0;
+    PoolMeter meter;
 };
 
 } // namespace Mem

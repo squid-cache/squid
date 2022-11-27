@@ -56,6 +56,12 @@ class PoolMeter
 public:
     /// Object to track per-pool cumulative counters
     struct mgb_t {
+        /// account for memory actions taking place
+        void update(size_t items, size_t itemSize) {
+            count += items;
+            bytes += (items * itemSize);
+        }
+
         double count = 0.0;
         double bytes = 0.0;
     };

@@ -28,30 +28,30 @@ MemPoolMalloc::allocate()
         freelist.pop();
     }
     if (obj) {
-        --meter.idle;
+        --(getMeter().idle);
         ++saved_calls;
     } else {
         if (doZero)
             obj = xcalloc(1, objectSize());
         else
             obj = xmalloc(objectSize());
-        ++meter.alloc;
+        ++(getMeter().alloc);
     }
-    ++meter.inuse;
+    ++(getMeter().inuse);
     return obj;
 }
 
 void
 MemPoolMalloc::deallocate(void *obj, bool aggressive)
 {
-    --meter.inuse;
+    --(getMeter().inuse);
     if (aggressive) {
         xfree(obj);
-        --meter.alloc;
+        --(getMeter().alloc);
     } else {
         if (doZero)
             memset(obj, 0, objectSize());
-        ++meter.idle;
+        ++(getMeter().idle);
         freelist.push(obj);
     }
 }
@@ -62,23 +62,23 @@ MemPoolMalloc::getStats(Mem::PoolStats &stats)
 {
     stats.pool = this;
     stats.label = objectType();
-    stats.meter = &meter;
+    stats.meter = &getMeter();
     stats.obj_size = objectSize();
     stats.chunk_capacity = 0;
 
-    stats.items_alloc += meter.alloc.currentLevel();
-    stats.items_inuse += meter.inuse.currentLevel();
-    stats.items_idle += meter.idle.currentLevel();
+    stats.items_alloc += getMeter().alloc.currentLevel();
+    stats.items_inuse += getMeter().inuse.currentLevel();
+    stats.items_idle += getMeter().idle.currentLevel();
 
     stats.overhead += sizeof(MemPoolMalloc) + strlen(objectType()) + 1;
 
-    return meter.inuse.currentLevel();
+    return getMeter().inuse.currentLevel();
 }
 
 int
 MemPoolMalloc::getInUseCount()
 {
-    return meter.inuse.currentLevel();
+    return getMeter().inuse.currentLevel();
 }
 
 MemPoolMalloc::MemPoolMalloc(char const *aLabel, size_t aSize) : MemImplementingAllocator(aLabel, aSize)
@@ -87,7 +87,7 @@ MemPoolMalloc::MemPoolMalloc(char const *aLabel, size_t aSize) : MemImplementing
 
 MemPoolMalloc::~MemPoolMalloc()
 {
-    assert(meter.inuse.currentLevel() == 0);
+    assert(getMeter().inuse.currentLevel() == 0);
     clean(0);
 }
 
@@ -103,8 +103,8 @@ MemPoolMalloc::clean(time_t)
     while (!freelist.empty()) {
         void *obj = freelist.top();
         freelist.pop();
-        --meter.idle;
-        --meter.alloc;
+        --(getMeter().idle);
+        --(getMeter().alloc);
         xfree(obj);
     }
 }

@@ -136,14 +136,11 @@ public:
 
     MemImplementingAllocator(char const *aLabel, size_t aSize);
 
-    virtual PoolMeter &getMeter();
-    virtual void flushMetersFull();
     virtual void flushMeters();
     virtual bool idleTrigger(int shift) const = 0;
     virtual void clean(time_t maxage) = 0;
 
     /* Mem::Allocator API */
-    PoolMeter const &getMeter() const override;
     void *alloc() override;
     void freeOne(void *) override;
     int getInUseCount() override = 0;
@@ -151,7 +148,6 @@ public:
 protected:
     virtual void *allocate() = 0;
     virtual void deallocate(void *, bool aggressive) = 0;
-    PoolMeter meter;
 public:
     size_t alloc_calls;
     size_t free_calls;
