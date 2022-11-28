@@ -183,10 +183,6 @@ error_hard_text[] = {
     }
 };
 
-/// Error messages that may be configured/customized by the admin,
-/// but do not cause level 0/1 warnings if the files are missing.
-static std::array<err_type, 1> ErrorsWithOptionaltTemplates = { MGR_INDEX };
-
 /// \ingroup ErrorPageInternal
 static std::vector<ErrorDynamicPageInfo *> ErrorDynamicPages;
 
@@ -206,12 +202,6 @@ static MemBuf error_stylesheet;
 
 static const char *errorFindHardText(err_type type);
 static IOCB errorSendComplete;
-
-static bool
-IsErrorWithOptionalTemplate(const err_type aCode) {
-    return std::find(ErrorsWithOptionaltTemplates.cbegin(), ErrorsWithOptionaltTemplates.cend(), aCode) !=
-        ErrorsWithOptionaltTemplates.cend();
-}
 
 /// \ingroup ErrorPageInternal
 /// manages an error page template
@@ -389,8 +379,7 @@ TemplateFile::loadDefault()
 
     /* giving up if failed */
     if (!loaded()) {
-        if (!IsErrorWithOptionalTemplate(templateCode))
-            debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "WARNING: failed to find or read error text file " << templateName);
+        debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "WARNING: failed to find or read error text file " << templateName);
         template_.clear();
         setDefault();
         wasLoaded = true;
