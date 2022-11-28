@@ -837,8 +837,8 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
     assert(mem);
     debugs(90, 3, "mem=" << mem);
 
-    if (mem->request && !mem->request->flags.cachable()) {
-        debugs(90, 3, "quick-abort? YES !mem->request->flags.cachable()");
+    if (mem->request && !mem->request->flags.cachable) {
+        debugs(90, 3, "quick-abort? YES !mem->request->flags.cachable");
         return true;
     }
 

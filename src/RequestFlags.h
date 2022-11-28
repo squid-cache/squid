@@ -11,7 +11,7 @@
 #ifndef SQUID_REQUESTFLAGS_H_
 #define SQUID_REQUESTFLAGS_H_
 
-#include "base/Optional.h"
+#include "base/SupportOrVeto.h"
 
 /** request-related flags
  *
@@ -31,8 +31,8 @@ public:
     /** do not use keytabs for peer Kerberos authentication */
     bool auth_no_keytab = false;
 
-    /// explicit decision to allow storing the response in the cache
-    Optional<bool> missCachingDecision;
+    /// whether the response may be stored in the cache
+    SupportOrVeto cachable;
 
     /** the request can be forwarded through the hierarchy */
     bool hierarchical = false;
@@ -118,11 +118,6 @@ public:
      *  a related (e.g. ICAP-adapted) request.
      */
     RequestFlags cloneAdaptationImmune() const;
-
-    /// Convenience wrapper for checking whether the response may be cached. By
-    /// default (i.e. unless we explicitly allow caching), the response is not
-    /// cachable. \sa noCache
-    bool cachable() const { return missCachingDecision.value_or(false); }
 
     // if FOLLOW_X_FORWARDED_FOR is not set, we always return "done".
     bool doneFollowXff() const {

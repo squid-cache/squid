@@ -178,7 +178,7 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
     // If the new/incoming response cannot be stored, then it does not
     // compete with the old stored response for the public key, and the
     // old stored response should be left as is.
-    if (e->mem_obj->request && !e->mem_obj->request->flags.cachable())
+    if (e->mem_obj->request && !e->mem_obj->request->flags.cachable)
         return;
 
     switch (status) {
@@ -1861,7 +1861,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
      */
     if (!we_do_ranges && request->multipartRangeRequest()) {
         /* don't cache the result */
-        request->flags.missCachingDecision = false; // may overwrite an earlier decision
+        request->flags.cachable.veto();
         /* pretend it's not a range request */
         request->ignoreRange("want to request the whole object");
         request->flags.isRanged = false;
@@ -2161,7 +2161,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
         // XXX: need to check and cleanup the auth case so cacheable auth requests get cached.
         if (hdr_out->has(Http::HdrType::IF_MODIFIED_SINCE))
             break;
-        else if (Config.onoff.cache_miss_revalidate || !request->flags.cachable() || request->flags.auth)
+        else if (Config.onoff.cache_miss_revalidate || !request->flags.cachable || request->flags.auth)
             hdr_out->addEntry(e->clone());
         break;
 
@@ -2174,7 +2174,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
          * \note this header lists a set of responses for the server to elide sending. Squid added values are extending that set.
          */
         // XXX: need to check and cleanup the auth case so cacheable auth requests get cached.
-        if (hdr_out->hasListMember(Http::HdrType::IF_MATCH, "*", ',') || Config.onoff.cache_miss_revalidate || !request->flags.cachable() || request->flags.auth)
+        if (hdr_out->hasListMember(Http::HdrType::IF_MATCH, "*", ',') || Config.onoff.cache_miss_revalidate || !request->flags.cachable || request->flags.auth)
             hdr_out->addEntry(e->clone());
         break;
 
@@ -2268,13 +2268,13 @@ HttpStateData::decideIfWeDoRanges (HttpRequest * request)
 
     int64_t roffLimit = request->getRangeOffsetLimit();
 
-    if (!request->range || !request->flags.cachable()
+    if (nullptr == request->range || !request->flags.cachable
             || request->range->offsetLimitExceeded(roffLimit) || request->flags.connectionAuth)
         result = false;
 
     debugs(11, 8, "decideIfWeDoRanges: range specs: " <<
            request->range << ", cachable: " <<
-           request->flags.cachable() << "; we_do_ranges: " << result);
+           request->flags.cachable << "; we_do_ranges: " << result);
 
     return result;
 }

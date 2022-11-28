@@ -30,7 +30,7 @@ void
 RequestFlags::disableCacheUse(const char * const reason)
 {
     debugs(16, 3, "for " << reason);
-    missCachingDecision = false; // may already be set to false
+    cachable.veto();
     noCache = true; // may already be true
 }
 
