@@ -11,6 +11,8 @@
 #define STUB_API "mem/libmem.la"
 #include "tests/STUB.h"
 
+#include "mem/Allocator.h"
+
 #include "mem/AllocatorProxy.h"
 #include "mem/forward.h"
 
@@ -83,11 +85,6 @@ void MemPools::flushMeters() STUB
 MemImplementingAllocator * MemPools::create(const char *, size_t) STUB_RETVAL(nullptr);
 void MemPools::clean(time_t) STUB
 void MemPools::setDefaultPoolChunking(bool const &) STUB
-
-//MemAllocator::MemAllocator(char const *aLabel);
-char const *MemAllocator::objectType() const STUB_RETVAL(nullptr)
-int MemAllocator::inUseCount() STUB_RETVAL(0)
-size_t MemAllocator::RoundedSize(size_t minSize) STUB_RETVAL(minSize)
 
 //MemImplementingAllocator::MemImplementingAllocator(char const *, size_t) STUB_NOP
 //MemImplementingAllocator::~MemImplementingAllocator();

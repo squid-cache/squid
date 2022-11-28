@@ -74,7 +74,7 @@ struct _LruNode {
     dlink_node node;
 };
 
-static MemAllocator *lru_node_pool = nullptr;
+static Mem::Allocator *lru_node_pool = nullptr;
 static int nr_lru_policies = 0;
 
 static void
