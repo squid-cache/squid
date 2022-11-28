@@ -476,7 +476,7 @@ cbdataDump(StoreEntry * sentry)
     storeAppendPrintf(sentry, "types\tsize\tallocated\ttotal\n");
 
     for (int i = 1; i < cbdata_types; ++i) {
-        if (auto *pool = cbdata_index[i].pool) {
+        if (const auto pool = cbdata_index[i].pool) {
 #if WITH_VALGRIND
             int obj_size = pool->objectSize();
 #else

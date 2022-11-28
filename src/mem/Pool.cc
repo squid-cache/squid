@@ -247,7 +247,7 @@ memPoolsTotalAllocated(void)
     return stats.TheMeter->alloc.currentLevel();
 }
 
-MemImplementingAllocator::MemImplementingAllocator(char const *aLabel, size_t aSize) :
+MemImplementingAllocator::MemImplementingAllocator(char const * const aLabel, const size_t aSize):
     Mem::Allocator(aLabel),
     next(nullptr),
     alloc_calls(0),
