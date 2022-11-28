@@ -58,7 +58,7 @@ public:
      * \param minSize Minimum size needed to be allocated.
      * \retval n Smallest size divisible by sizeof(void*)
      */
-    static size_t RoundedSize(size_t minSize) {return ((minSize + sizeof(void*) - 1) / sizeof(void*)) * sizeof(void*);}
+    static size_t RoundedSize(const size_t minSize) { return ((minSize + sizeof(void*) - 1) / sizeof(void*)) * sizeof(void*); }
 
 protected:
     /**
