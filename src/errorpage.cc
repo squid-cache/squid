@@ -153,6 +153,7 @@ static const struct {
     const char *text;
 }
 
+/// error messages that cannot be configured/customized externally
 error_hard_text[] = {
 
     {
@@ -179,12 +180,12 @@ error_hard_text[] = {
     {
         ERR_REQUEST_START_TIMEOUT,
         "request start timedout"
-    },
-    {
-        MGR_INDEX,
-        "mgr_index"
     }
 };
+
+/// Error messages that may be configured/customized by the admin,
+/// but do not cause level 0/1 warnings if the files are missing.
+static std::array<err_type, 1> ErrorsWithOptionaltTemplates = { MGR_INDEX };
 
 /// \ingroup ErrorPageInternal
 static std::vector<ErrorDynamicPageInfo *> ErrorDynamicPages;
@@ -205,6 +206,12 @@ static MemBuf error_stylesheet;
 
 static const char *errorFindHardText(err_type type);
 static IOCB errorSendComplete;
+
+static bool
+IsErrorWithOptionalTemplate(const err_type aCode) {
+    return std::find(ErrorsWithOptionaltTemplates.cbegin(), ErrorsWithOptionaltTemplates.cend(), aCode) !=
+        ErrorsWithOptionaltTemplates.cend();
+}
 
 /// \ingroup ErrorPageInternal
 /// manages an error page template
@@ -382,7 +389,8 @@ TemplateFile::loadDefault()
 
     /* giving up if failed */
     if (!loaded()) {
-        debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "WARNING: failed to find or read error text file " << templateName);
+        if (!IsErrorWithOptionalTemplate(templateCode))
+            debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "WARNING: failed to find or read error text file " << templateName);
         template_.clear();
         setDefault();
         wasLoaded = true;
