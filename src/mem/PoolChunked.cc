@@ -430,10 +430,7 @@ MemPoolChunked::idleTrigger(int shift) const
     return meter.idle.currentLevel() > (chunk_capacity << shift);
 }
 
-/*
- * Update Mem::PoolStats struct for single pool
- */
-int
+size_t
 MemPoolChunked::getStats(Mem::PoolStats &stats)
 {
     MemChunk *chunk;

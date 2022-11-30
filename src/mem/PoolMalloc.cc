@@ -57,7 +57,7 @@ MemPoolMalloc::deallocate(void *obj, bool aggressive)
 }
 
 /* TODO extract common logic to MemAllocate */
-int
+size_t
 MemPoolMalloc::getStats(Mem::PoolStats &stats)
 {
     stats.pool = this;

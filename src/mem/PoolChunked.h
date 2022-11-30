@@ -31,7 +31,7 @@ public:
     void push(void *obj);
 
     /* Mem::Allocator API */
-    virtual int getStats(Mem::PoolStats &);
+    virtual size_t getStats(Mem::PoolStats &);
     virtual int getInUseCount();
     virtual void setChunkSize(size_t);
 
