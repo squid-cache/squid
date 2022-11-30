@@ -24,7 +24,7 @@ Mem::GlobalStats(PoolStats &stats)
     size_t pools_inuse = 0;
     auto *iter = memPoolIterate();
     while (const auto pool = memPoolIterateNext(iter)) {
-        if (pool->getStats(&stats) > 0)
+        if (pool->getStats(stats) > 0)
             ++pools_inuse;
     }
     memPoolIterateDone(&iter);

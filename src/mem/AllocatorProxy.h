@@ -78,7 +78,7 @@ public:
      * \param stats Object to be filled with statistical data about pool.
      * \retval      Number of objects in use, ie. allocated.
      */
-    int getStats(PoolStats * stats);
+    int getStats(PoolStats &stats);
 
     void zeroBlocks(bool doIt);
 

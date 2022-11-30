@@ -690,7 +690,7 @@ Mem::Report(std::ostream &stream)
 
     while (const auto pool = memPoolIterateNext(iter)) {
         PoolStats mp_stats;
-        pool->getStats(&mp_stats);
+        pool->getStats(mp_stats);
 
         if (mp_stats.pool->getMeter().gb_allocated.count > 0)
             usedPools.emplace_back(mp_stats);

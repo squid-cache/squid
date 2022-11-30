@@ -58,24 +58,24 @@ MemPoolMalloc::deallocate(void *obj, bool aggressive)
 
 /* TODO extract common logic to MemAllocate */
 int
-MemPoolMalloc::getStats(Mem::PoolStats *stats)
+MemPoolMalloc::getStats(Mem::PoolStats &stats)
 {
-    stats->pool = this;
-    stats->label = objectType();
-    stats->meter = &meter;
-    stats->obj_size = obj_size;
-    stats->chunk_capacity = 0;
+    stats.pool = this;
+    stats.label = objectType();
+    stats.meter = &meter;
+    stats.obj_size = obj_size;
+    stats.chunk_capacity = 0;
 
-    stats->chunks_alloc += 0;
-    stats->chunks_inuse += 0;
-    stats->chunks_partial += 0;
-    stats->chunks_free += 0;
+    stats.chunks_alloc += 0;
+    stats.chunks_inuse += 0;
+    stats.chunks_partial += 0;
+    stats.chunks_free += 0;
 
-    stats->items_alloc += meter.alloc.currentLevel();
-    stats->items_inuse += meter.inuse.currentLevel();
-    stats->items_idle += meter.idle.currentLevel();
+    stats.items_alloc += meter.alloc.currentLevel();
+    stats.items_inuse += meter.inuse.currentLevel();
+    stats.items_idle += meter.idle.currentLevel();
 
-    stats->overhead += sizeof(MemPoolMalloc) + strlen(objectType()) + 1;
+    stats.overhead += sizeof(MemPoolMalloc) + strlen(objectType()) + 1;
 
     return meter.inuse.currentLevel();
 }
