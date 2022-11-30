@@ -489,7 +489,7 @@ strup(char *s)
 #else
 #include <cstdlib>
 int
-main(int argc, char *const argv[])
+main(int , char *const [])
 {
     setbuf(stdout, nullptr);
     setbuf(stdin, nullptr);
