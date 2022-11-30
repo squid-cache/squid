@@ -22,7 +22,7 @@
 
 extern time_t squid_curtime;
 
-static Mem::PoolMeter TheMeter;
+Mem::PoolMeter TheMeter;
 static MemPoolIterator Iterator;
 
 MemPools &
@@ -192,29 +192,6 @@ MemPools::clean(time_t maxage)
         if (pool->idleTrigger(shift))
             pool->clean(maxage);
     memPoolIterateDone(&iter);
-}
-
-size_t
-memPoolGetGlobalStats(Mem::PoolStats &stats)
-{
-    size_t pools_inuse = 0;
-
-    MemPools::GetInstance().flushMeters(); /* recreate TheMeter */
-
-    stats.meter = &TheMeter;
-    stats.label = "Total";
-    stats.obj_size = 1;
-    stats.overhead += MemPools::GetInstance().poolCount * sizeof(Mem::Allocator *);
-
-    /* gather all stats for Totals */
-    auto *iter = memPoolIterate();
-    while (const auto pool = memPoolIterateNext(iter)) {
-        if (pool->getStats(&stats) > 0)
-            ++pools_inuse;
-    }
-    memPoolIterateDone(&iter);
-
-    return pools_inuse;
 }
 
 MemImplementingAllocator::MemImplementingAllocator(char const * const aLabel, const size_t aSize):

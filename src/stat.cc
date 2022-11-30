@@ -535,7 +535,7 @@ GetInfo(Mgr::InfoActionData& stats)
 
     {
         Mem::PoolStats mp_stats;
-        memPoolGetGlobalStats(mp_stats);
+        Mem::GlobalStats(mp_stats);
         stats.gb_saved_count = mp_stats.meter->gb_saved.count;
         stats.gb_freed_count = mp_stats.meter->gb_freed.count;
         stats.total_accounted = mp_stats.meter->alloc.currentLevel();
@@ -725,7 +725,7 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
                       stats.total_accounted / 1024);
     {
         Mem::PoolStats mp_stats;
-        memPoolGetGlobalStats(mp_stats);
+        Mem::GlobalStats(mp_stats); // XXX: pointless lookup ?
         storeAppendPrintf(sentry, "\tmemPoolAlloc calls: %9.0f\n",
                           stats.gb_saved_count);
         storeAppendPrintf(sentry, "\tmemPoolFree calls:  %9.0f\n",

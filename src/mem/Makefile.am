@@ -29,6 +29,7 @@ libmem_la_SOURCES = \
 	PoolMalloc.cc \
 	PoolMalloc.h \
 	PoolingAllocator.h \
+	Stats.cc \
 	Stats.h \
 	old_api.cc
 

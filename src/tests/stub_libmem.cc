@@ -98,6 +98,6 @@ void MemImplementingAllocator::freeOne(void *) STUB
 MemPoolIterator * memPoolIterate(void) STUB_RETVAL(nullptr)
 MemImplementingAllocator * memPoolIterateNext(MemPoolIterator *) STUB_RETVAL(nullptr)
 void memPoolIterateDone(MemPoolIterator **) STUB
-size_t memPoolGetGlobalStats(Mem::PoolStats &) STUB_RETVAL(0)
 
 #include "mem/Stats.h"
+size_t Mem::GlobalStats(PoolStats &) STUB_RETVAL(0)

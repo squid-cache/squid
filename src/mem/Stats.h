@@ -36,6 +36,15 @@ public:
     int overhead = 0;
 };
 
+/**
+ * Fills a Mem::PoolStats with statistical data about overall
+ * usage for all pools.
+ *
+ * \return Number of pools that have at least one object in use.
+ *        Ie. number of dirty pools.
+ */
+extern size_t GlobalStats(PoolStats &);
+
 } // namespace Mem
 
 #endif /* SQUID__SRC_MEM_STATS_H */

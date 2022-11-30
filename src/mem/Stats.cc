@@ -1,0 +1,33 @@
+/*
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+#include "squid.h"
+#include "mem/Pool.h"
+#include "mem/Stats.h"
+
+size_t
+Mem::GlobalStats(PoolStats &stats)
+{
+    MemPools::GetInstance().flushMeters(); /* recreate TheMeter */
+
+    stats.meter = &TheMeter;
+    stats.label = "Total";
+    stats.obj_size = 1;
+    stats.overhead += MemPools::GetInstance().poolCount * sizeof(Allocator *);
+
+    /* gather all stats for Totals */
+    size_t pools_inuse = 0;
+    auto *iter = memPoolIterate();
+    while (const auto pool = memPoolIterateNext(iter)) {
+        if (pool->getStats(&stats) > 0)
+            ++pools_inuse;
+    }
+    memPoolIterateDone(&iter);
+
+    return pools_inuse;
+}

@@ -490,7 +490,7 @@ memClean(void)
     MemPools::GetInstance().clean(0);
 
     Mem::PoolStats stats;
-    const auto poolsInUse = memPoolGetGlobalStats(stats);
+    const auto poolsInUse = Mem::GlobalStats(stats);
     if (stats.items_inuse) {
         debugs(13, 2, stats.items_inuse <<
                " items in " << stats.chunks_inuse << " chunks and " <<
@@ -680,7 +680,7 @@ Mem::Report(std::ostream &stream)
 
     /* Get stats for Totals report line */
     PoolStats mp_total;
-    const auto poolsInUse = memPoolGetGlobalStats(mp_total);
+    const auto poolsInUse = GlobalStats(mp_total);
 
     std::vector<PoolStats> usedPools;
     usedPools.reserve(poolsInUse);

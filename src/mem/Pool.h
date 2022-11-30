@@ -71,6 +71,9 @@ public:
 
 class MemImplementingAllocator;
 
+/// memory usage totals as of latest MemPools::flushMeters() event
+extern Mem::PoolMeter TheMeter;
+
 /// \ingroup MemPoolsAPI
 class MemPools
 {
@@ -192,17 +195,6 @@ extern MemImplementingAllocator * memPoolIterateNext(MemPoolIterator * iter);
  * Should be called after finished with iterating through all pools.
  */
 extern void memPoolIterateDone(MemPoolIterator ** iter);
-
-/**
- \ingroup MemPoolsAPI
- *
- * Fills a Mem::PoolStats with statistical data about overall
- * usage for all pools.
- *
- * \return Number of pools that have at least one object in use.
- *        Ie. number of dirty pools.
- */
-extern size_t memPoolGetGlobalStats(Mem::PoolStats &);
 
 #endif /* _MEM_POOL_H_ */
 
