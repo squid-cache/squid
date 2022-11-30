@@ -533,13 +533,13 @@ GetInfo(Mgr::InfoActionData& stats)
 
 #endif
 
-    stats.total_accounted = statMemoryAccounted();
-
     {
         Mem::PoolStats mp_stats;
         memPoolGetGlobalStats(mp_stats);
         stats.gb_saved_count = mp_stats.meter->gb_saved.count;
         stats.gb_freed_count = mp_stats.meter->gb_freed.count;
+
+        stats.total_accounted = memPoolsTotalAllocated();
     }
 
     stats.max_fd = Squid_MaxFD;
@@ -1918,10 +1918,3 @@ statGraphDump(StoreEntry * e)
 }
 
 #endif /* STAT_GRAPHS */
-
-int
-statMemoryAccounted(void)
-{
-    return memPoolsTotalAllocated();
-}
-

@@ -13,6 +13,7 @@
 #include "CachePeer.h"
 #include "globals.h"
 #include "mem_node.h"
+#include "mem/Pool.h"
 #include "neighbors.h"
 #include "snmp_agent.h"
 #include "snmp_core.h"
@@ -341,7 +342,7 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
 
     case PERF_SYS_MEMUSAGE:
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) statMemoryAccounted() >> 10,
+                                      (snint) memPoolsTotalAllocated() >> 10,
                                       ASN_INTEGER);
         break;
 
