@@ -204,8 +204,5 @@ extern void memPoolIterateDone(MemPoolIterator ** iter);
  */
 extern size_t memPoolGetGlobalStats(Mem::PoolStats &);
 
-/// \ingroup MemPoolsAPI
-extern int memPoolsTotalAllocated(void);
-
 #endif /* _MEM_POOL_H_ */
 

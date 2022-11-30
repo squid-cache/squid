@@ -217,14 +217,6 @@ memPoolGetGlobalStats(Mem::PoolStats &stats)
     return pools_inuse;
 }
 
-int
-memPoolsTotalAllocated(void)
-{
-    Mem::PoolStats stats;
-    memPoolGetGlobalStats(stats);
-    return stats.meter->alloc.currentLevel();
-}
-
 MemImplementingAllocator::MemImplementingAllocator(char const * const aLabel, const size_t aSize):
     Mem::Allocator(aLabel),
     next(nullptr),

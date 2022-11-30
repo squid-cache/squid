@@ -538,8 +538,7 @@ GetInfo(Mgr::InfoActionData& stats)
         memPoolGetGlobalStats(mp_stats);
         stats.gb_saved_count = mp_stats.meter->gb_saved.count;
         stats.gb_freed_count = mp_stats.meter->gb_freed.count;
-
-        stats.total_accounted = memPoolsTotalAllocated();
+        stats.total_accounted = mp_stats.meter->alloc.currentLevel();
     }
 
     stats.max_fd = Squid_MaxFD;

@@ -14,6 +14,7 @@
 #include "globals.h"
 #include "mem_node.h"
 #include "mem/Pool.h"
+#include "mem/Stats.h"
 #include "neighbors.h"
 #include "snmp_agent.h"
 #include "snmp_core.h"
@@ -340,10 +341,13 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
                                       SMI_COUNTER32);
         break;
 
-    case PERF_SYS_MEMUSAGE:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) memPoolsTotalAllocated() >> 10,
-                                      ASN_INTEGER);
+    case PERF_SYS_MEMUSAGE: {
+            Mem::PoolStats stats;
+            memPoolGetGlobalStats(stats);
+            Answer = snmp_var_new_integer(Var->name, Var->name_length,
+                                          (snint) stats.meter->alloc.currentLevel() >> 10,
+                                          ASN_INTEGER);
+        }
         break;
 
     case PERF_SYS_CPUTIME:
