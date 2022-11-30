@@ -87,17 +87,13 @@ void MemPools::clean(time_t) STUB
 void MemPools::setDefaultPoolChunking(bool const &) STUB
 
 //MemImplementingAllocator::MemImplementingAllocator(char const *, size_t) STUB_NOP
-//MemImplementingAllocator::~MemImplementingAllocator();
 Mem::PoolMeter const &MemImplementingAllocator::getMeter() const STUB_RETSTATREF(PoolMeter)
 Mem::PoolMeter &MemImplementingAllocator::getMeter() STUB_RETSTATREF(PoolMeter)
 void MemImplementingAllocator::flushMetersFull() STUB
 void MemImplementingAllocator::flushMeters() STUB
 void *MemImplementingAllocator::alloc() STUB_RETVAL(nullptr)
 void MemImplementingAllocator::freeOne(void *) STUB
-
-MemPoolIterator * memPoolIterate(void) STUB_RETVAL(nullptr)
-MemImplementingAllocator * memPoolIterateNext(MemPoolIterator *) STUB_RETVAL(nullptr)
-void memPoolIterateDone(MemPoolIterator **) STUB
+size_t MemImplementingAllocator::objectSize() const { return obj_size; }
 
 #include "mem/Stats.h"
 size_t Mem::GlobalStats(PoolStats &) STUB_RETVAL(0)

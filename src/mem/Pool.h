@@ -32,6 +32,7 @@
 #include "mem/Meter.h"
 #include "util.h"
 
+#include <list>
 #if HAVE_GNUMALLOC_H
 #include <gnumalloc.h>
 #elif HAVE_MALLOC_H
@@ -61,16 +62,6 @@
 
 class MemImplementingAllocator;
 
-/// \ingroup MemPoolsAPI
-class MemPoolIterator
-{
-public:
-    MemImplementingAllocator *pool;
-    MemPoolIterator * next;
-};
-
-class MemImplementingAllocator;
-
 /// memory usage totals as of latest MemPools::flushMeters() event
 extern Mem::PoolMeter TheMeter;
 
@@ -83,10 +74,10 @@ public:
     void flushMeters();
 
     /**
-     \param label   Name for the pool. Displayed in stats.
-     \param obj_size    Size of elements in MemPool.
+     * Create an allocator with given name to allocate objects
+     * of the specified fixed-size.
      */
-    MemImplementingAllocator * create(const char *label, size_t obj_size);
+    MemImplementingAllocator *create(const char *, size_t);
 
     /**
      * Sets upper limit in bytes to amount of free ram kept in pools. This is
@@ -127,8 +118,7 @@ public:
 
     void setDefaultPoolChunking(bool const &);
 
-    MemImplementingAllocator *pools = nullptr;
-    int poolCount = 0;
+    std::list<MemImplementingAllocator *> pools;
     bool defaultIsChunked = false;
 
 private:
@@ -145,7 +135,6 @@ public:
     typedef Mem::PoolMeter PoolMeter; // TODO remove
 
     MemImplementingAllocator(char const *aLabel, size_t aSize);
-    virtual ~MemImplementingAllocator();
 
     virtual PoolMeter &getMeter();
     virtual void flushMetersFull();
@@ -165,8 +154,6 @@ protected:
     virtual void deallocate(void *, bool aggressive) = 0;
     PoolMeter meter;
 public:
-    MemImplementingAllocator *next;
-public:
     size_t alloc_calls;
     size_t free_calls;
     size_t saved_calls;
@@ -175,26 +162,6 @@ public:
 
 /// Creates a named MemPool of elements with the given size
 #define memPoolCreate MemPools::GetInstance().create
-
-/* Allocator API */
-/**
- \ingroup MemPoolsAPI
- * Initialise iteration through all of the pools.
- * \returns Iterator for use by memPoolIterateNext() and memPoolIterateDone()
- */
-extern MemPoolIterator * memPoolIterate(void);
-
-/**
- \ingroup MemPoolsAPI
- * Get next pool pointer, until getting NULL pointer.
- */
-extern MemImplementingAllocator * memPoolIterateNext(MemPoolIterator * iter);
-
-/**
- \ingroup MemPoolsAPI
- * Should be called after finished with iterating through all pools.
- */
-extern void memPoolIterateDone(MemPoolIterator ** iter);
 
 #endif /* _MEM_POOL_H_ */
 

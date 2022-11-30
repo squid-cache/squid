@@ -653,7 +653,6 @@ Mem::Report(std::ostream &stream)
 {
     static char buf[64];
     int not_used = 0;
-    MemPoolIterator *iter;
 
     /* caption */
     stream << "Current memory usage:\n";
@@ -686,9 +685,7 @@ Mem::Report(std::ostream &stream)
     usedPools.reserve(poolsInUse);
 
     /* main table */
-    iter = memPoolIterate();
-
-    while (const auto pool = memPoolIterateNext(iter)) {
+    for (const auto pool : MemPools::GetInstance().pools) {
         PoolStats mp_stats;
         pool->getStats(mp_stats);
 
@@ -697,8 +694,6 @@ Mem::Report(std::ostream &stream)
         else
             ++not_used;
     }
-
-    memPoolIterateDone(&iter);
 
     // sort on %Total Allocated (largest first)
     std::sort(usedPools.begin(), usedPools.end(), [](const PoolStats &a, const PoolStats &b) {
@@ -720,8 +715,9 @@ Mem::Report(std::ostream &stream)
     if (MemPools::GetInstance().idleLimit() >= 0)
         stream << "Idle pool limit: " << std::setprecision(2) << toMB(MemPools::GetInstance().idleLimit()) << " MB\n";
     /* limits */
-    stream << "Total Pools created: " << MemPools::GetInstance().poolCount << "\n";
-    stream << "Pools ever used:     " << MemPools::GetInstance().poolCount - not_used << " (shown above)\n";
+    auto poolCount = MemPools::GetInstance().pools.size();
+    stream << "Total Pools created: " << poolCount << "\n";
+    stream << "Pools ever used:     " << poolCount - not_used << " (shown above)\n";
     stream << "Currently in use:    " << poolsInUse << "\n";
 }
 

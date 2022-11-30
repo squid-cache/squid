@@ -23,7 +23,6 @@
 extern time_t squid_curtime;
 
 Mem::PoolMeter TheMeter;
-static MemPoolIterator Iterator;
 
 MemPools &
 MemPools::GetInstance()
@@ -33,35 +32,6 @@ MemPools::GetInstance()
     // may happen long after main() exit). We currently preserve forever.
     static MemPools *Instance = new MemPools;
     return *Instance;
-}
-
-MemPoolIterator *
-memPoolIterate(void)
-{
-    Iterator.pool = MemPools::GetInstance().pools;
-    return &Iterator;
-}
-
-void
-memPoolIterateDone(MemPoolIterator ** iter)
-{
-    assert(iter != nullptr);
-    Iterator.pool = nullptr;
-    *iter = nullptr;
-}
-
-MemImplementingAllocator *
-memPoolIterateNext(MemPoolIterator * iter)
-{
-    MemImplementingAllocator *pool;
-    assert(iter != nullptr);
-
-    pool = iter->pool;
-    if (!pool)
-        return nullptr;
-
-    iter->pool = pool->next;
-    return pool;
 }
 
 /* Change the default value of defaultIsChunked to override
@@ -77,11 +47,17 @@ MemPools::MemPools()
 MemImplementingAllocator *
 MemPools::create(const char *label, size_t obj_size)
 {
-    ++poolCount;
+    // TODO Use ref-counted Pointer for pool lifecycle management
+    // that is complicated by all the global static pool pointers.
+    // For now leak these Allocator descendants on shutdown.
+
+    MemImplementingAllocator *newPool;
     if (defaultIsChunked)
-        return new MemPoolChunked (label, obj_size);
+        newPool = new MemPoolChunked(label, obj_size);
     else
-        return new MemPoolMalloc (label, obj_size);
+        newPool = new MemPoolMalloc(label, obj_size);
+    pools.emplace_back(newPool);
+    return pools.back();
 }
 
 void
@@ -129,8 +105,7 @@ MemPools::flushMeters()
 {
     TheMeter.flush();
 
-    MemPoolIterator *iter = memPoolIterate();
-    while (MemImplementingAllocator *pool = memPoolIterateNext(iter)) {
+    for (const auto pool: pools) {
         pool->flushMetersFull();
         // are these TheMeter grow() operations or accumulated volumes ?
         TheMeter.alloc += pool->getMeter().alloc.currentLevel() * pool->obj_size;
@@ -144,7 +119,6 @@ MemPools::flushMeters()
         TheMeter.gb_saved.bytes += pool->getMeter().gb_saved.bytes;
         TheMeter.gb_freed.bytes += pool->getMeter().gb_freed.bytes;
     }
-    memPoolIterateDone(&iter);
 }
 
 void *
@@ -185,54 +159,20 @@ MemPools::clean(time_t maxage)
     if (TheMeter.idle.currentLevel() > idleLimit())
         maxage = shift = 0;
 
-    MemImplementingAllocator *pool;
-    MemPoolIterator *iter;
-    iter = memPoolIterate();
-    while ((pool = memPoolIterateNext(iter)))
+    for (const auto pool: pools) {
         if (pool->idleTrigger(shift))
             pool->clean(maxage);
-    memPoolIterateDone(&iter);
+    }
 }
 
 MemImplementingAllocator::MemImplementingAllocator(char const * const aLabel, const size_t aSize):
     Mem::Allocator(aLabel),
-    next(nullptr),
     alloc_calls(0),
     free_calls(0),
     saved_calls(0),
     obj_size(RoundedSize(aSize))
 {
-    MemImplementingAllocator *last_pool;
-
     assert(aLabel != nullptr && aSize);
-    /* Append as Last */
-    for (last_pool = MemPools::GetInstance().pools; last_pool && last_pool->next;)
-        last_pool = last_pool->next;
-    if (last_pool)
-        last_pool->next = this;
-    else
-        MemPools::GetInstance().pools = this;
-}
-
-MemImplementingAllocator::~MemImplementingAllocator()
-{
-    MemImplementingAllocator *find_pool, *prev_pool;
-
-    /* Abort if the associated pool doesn't exist */
-    assert(MemPools::GetInstance().pools != nullptr );
-
-    /* Pool clean, remove it from List and free */
-    for (find_pool = MemPools::GetInstance().pools, prev_pool = nullptr; (find_pool && this != find_pool); find_pool = find_pool->next)
-        prev_pool = find_pool;
-
-    /* make sure that we found the pool to destroy */
-    assert(find_pool != nullptr);
-
-    if (prev_pool)
-        prev_pool->next = next;
-    else
-        MemPools::GetInstance().pools = next;
-    --MemPools::GetInstance().poolCount;
 }
 
 Mem::PoolMeter const &

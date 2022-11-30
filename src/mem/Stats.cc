@@ -18,16 +18,15 @@ Mem::GlobalStats(PoolStats &stats)
     stats.meter = &TheMeter;
     stats.label = "Total";
     stats.obj_size = 1;
-    stats.overhead += MemPools::GetInstance().poolCount * sizeof(Allocator *);
+    stats.overhead += sizeof(MemPools);
 
     /* gather all stats for Totals */
     size_t pools_inuse = 0;
-    auto *iter = memPoolIterate();
-    while (const auto pool = memPoolIterateNext(iter)) {
+    for (const auto pool: MemPools::GetInstance().pools) {
         if (pool->getStats(stats) > 0)
             ++pools_inuse;
+        stats.overhead += sizeof(Allocator *);
     }
-    memPoolIterateDone(&iter);
 
     return pools_inuse;
 }
