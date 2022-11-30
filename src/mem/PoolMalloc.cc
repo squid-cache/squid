@@ -12,6 +12,7 @@
 
 #include "squid.h"
 #include "mem/PoolMalloc.h"
+#include "mem/Stats.h"
 
 #include <cassert>
 #include <cstring>
@@ -57,7 +58,7 @@ MemPoolMalloc::deallocate(void *obj, bool aggressive)
 
 /* TODO extract common logic to MemAllocate */
 int
-MemPoolMalloc::getStats(MemPoolStats * stats)
+MemPoolMalloc::getStats(Mem::PoolStats *stats)
 {
     stats->pool = this;
     stats->label = objectType();

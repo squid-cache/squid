@@ -10,6 +10,7 @@
 #include "mem/AllocatorProxy.h"
 #include "mem/Meter.h"
 #include "mem/Pool.h"
+#include "mem/Stats.h"
 
 void *
 Mem::AllocatorProxy::alloc()
@@ -58,7 +59,7 @@ Mem::AllocatorProxy::getMeter() const
 }
 
 int
-Mem::AllocatorProxy::getStats(MemPoolStats * stats)
+Mem::AllocatorProxy::getStats(PoolStats *stats)
 {
     return getAllocator()->getStats(stats);
 }

@@ -12,6 +12,7 @@
 
 #include "squid.h"
 #include "mem/PoolChunked.h"
+#include "mem/Stats.h"
 
 #include <cassert>
 #include <cstring>
@@ -430,10 +431,10 @@ MemPoolChunked::idleTrigger(int shift) const
 }
 
 /*
- * Update MemPoolStats struct for single pool
+ * Update Mem::PoolStats struct for single pool
  */
 int
-MemPoolChunked::getStats(MemPoolStats * stats)
+MemPoolChunked::getStats(Mem::PoolStats *stats)
 {
     MemChunk *chunk;
     int chunks_free = 0;

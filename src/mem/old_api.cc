@@ -19,6 +19,7 @@
 #include "mem/forward.h"
 #include "mem/Meter.h"
 #include "mem/Pool.h"
+#include "mem/Stats.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "SquidConfig.h"
@@ -488,7 +489,7 @@ memClean(void)
         MemPools::GetInstance().setIdleLimit(0);
     MemPools::GetInstance().clean(0);
 
-    MemPoolStats stats;
+    Mem::PoolStats stats;
     const auto poolsInUse = memPoolGetGlobalStats(stats);
     if (stats.items_inuse) {
         debugs(13, 2, stats.items_inuse <<
@@ -578,7 +579,7 @@ memFreeBufFunc(size_t size)
 }
 
 void
-Mem::PoolReport(const MemPoolStats * mp_st, const PoolMeter * AllMeter, std::ostream &stream)
+Mem::PoolReport(const PoolStats *mp_st, const PoolMeter *AllMeter, std::ostream &stream)
 {
     int excess = 0;
     int needed = 0;
@@ -678,17 +679,17 @@ Mem::Report(std::ostream &stream)
     xm_time = current_dtime;
 
     /* Get stats for Totals report line */
-    MemPoolStats mp_total;
+    PoolStats mp_total;
     const auto poolsInUse = memPoolGetGlobalStats(mp_total);
 
-    std::vector<MemPoolStats> usedPools;
+    std::vector<PoolStats> usedPools;
     usedPools.reserve(poolsInUse);
 
     /* main table */
     iter = memPoolIterate();
 
     while (const auto pool = memPoolIterateNext(iter)) {
-        MemPoolStats mp_stats;
+        PoolStats mp_stats;
         pool->getStats(&mp_stats);
 
         if (mp_stats.pool->getMeter().gb_allocated.count > 0)
@@ -700,7 +701,7 @@ Mem::Report(std::ostream &stream)
     memPoolIterateDone(&iter);
 
     // sort on %Total Allocated (largest first)
-    std::sort(usedPools.begin(), usedPools.end(), [](const MemPoolStats &a, const MemPoolStats &b) {
+    std::sort(usedPools.begin(), usedPools.end(), [](const PoolStats &a, const PoolStats &b) {
         return (double(a.obj_size) * a.meter->alloc.currentLevel()) > (double(b.obj_size) * b.meter->alloc.currentLevel());
     });
 

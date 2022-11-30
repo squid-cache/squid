@@ -60,7 +60,6 @@
 #define MEM_MAX_FREE  65535 /* unsigned short is max number of items per chunk */
 
 class MemImplementingAllocator;
-class MemPoolStats;
 
 /// \ingroup MemPoolsAPI
 class MemPoolIterator
@@ -171,32 +170,6 @@ public:
     size_t obj_size;
 };
 
-/// \ingroup MemPoolsAPI
-class MemPoolStats
-{
-public:
-    typedef Mem::PoolMeter PoolMeter; // TODO remove
-    typedef Mem::Allocator Allocator; // TODO remove
-
-    Allocator *pool = nullptr;
-    const char *label = nullptr;
-    PoolMeter *meter = nullptr;
-    int obj_size = 0;
-    int chunk_capacity = 0;
-    int chunk_size = 0;
-
-    int chunks_alloc = 0;
-    int chunks_inuse = 0;
-    int chunks_partial = 0;
-    int chunks_free = 0;
-
-    int items_alloc = 0;
-    int items_inuse = 0;
-    int items_idle = 0;
-
-    int overhead = 0;
-};
-
 /// Creates a named MemPool of elements with the given size
 #define memPoolCreate MemPools::GetInstance().create
 
@@ -223,13 +196,13 @@ extern void memPoolIterateDone(MemPoolIterator ** iter);
 /**
  \ingroup MemPoolsAPI
  *
- * Fills a MemPoolStats with statistical data about overall
+ * Fills a Mem::PoolStats with statistical data about overall
  * usage for all pools.
  *
  * \return Number of pools that have at least one object in use.
  *        Ie. number of dirty pools.
  */
-extern size_t memPoolGetGlobalStats(MemPoolStats &);
+extern size_t memPoolGetGlobalStats(Mem::PoolStats &);
 
 /// \ingroup MemPoolsAPI
 extern int memPoolsTotalAllocated(void);

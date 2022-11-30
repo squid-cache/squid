@@ -13,6 +13,7 @@
 #include "squid.h"
 #include "mem/PoolChunked.h"
 #include "mem/PoolMalloc.h"
+#include "mem/Stats.h"
 
 #include <cassert>
 #include <cstring>
@@ -194,7 +195,7 @@ MemPools::clean(time_t maxage)
 }
 
 size_t
-memPoolGetGlobalStats(MemPoolStats &stats)
+memPoolGetGlobalStats(Mem::PoolStats &stats)
 {
     size_t pools_inuse = 0;
 
@@ -219,7 +220,7 @@ memPoolGetGlobalStats(MemPoolStats &stats)
 int
 memPoolsTotalAllocated(void)
 {
-    MemPoolStats stats;
+    Mem::PoolStats stats;
     memPoolGetGlobalStats(stats);
     return stats.meter->alloc.currentLevel();
 }

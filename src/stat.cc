@@ -24,6 +24,7 @@
 #include "HttpRequest.h"
 #include "IoStats.h"
 #include "mem/Pool.h"
+#include "mem/Stats.h"
 #include "mem_node.h"
 #include "MemBuf.h"
 #include "MemObject.h"
@@ -535,7 +536,7 @@ GetInfo(Mgr::InfoActionData& stats)
     stats.total_accounted = statMemoryAccounted();
 
     {
-        MemPoolStats mp_stats;
+        Mem::PoolStats mp_stats;
         memPoolGetGlobalStats(mp_stats);
         stats.gb_saved_count = mp_stats.meter->gb_saved.count;
         stats.gb_freed_count = mp_stats.meter->gb_freed.count;
@@ -724,7 +725,7 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "\tTotal accounted:       %6.0f KB\n",
                       stats.total_accounted / 1024);
     {
-        MemPoolStats mp_stats;
+        Mem::PoolStats mp_stats;
         memPoolGetGlobalStats(mp_stats);
         storeAppendPrintf(sentry, "\tmemPoolAlloc calls: %9.0f\n",
                           stats.gb_saved_count);
