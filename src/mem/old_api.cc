@@ -647,26 +647,6 @@ Mem::PoolReport(const MemPoolStats * mp_st, const PoolMeter * AllMeter, std::ost
     pm->gb_oallocated.count = pm->gb_allocated.count;
 }
 
-static int
-MemPoolReportSorter(const void *a, const void *b)
-{
-    const MemPoolStats *A =  (MemPoolStats *) a;
-    const MemPoolStats *B =  (MemPoolStats *) b;
-
-    // use this to sort on %Total Allocated
-    //
-    double pa = (double) A->obj_size * A->meter->alloc.currentLevel();
-    double pb = (double) B->obj_size * B->meter->alloc.currentLevel();
-
-    if (pa > pb)
-        return -1;
-
-    if (pb > pa)
-        return 1;
-
-    return 0;
-}
-
 void
 Mem::Report(std::ostream &stream)
 {
@@ -701,8 +681,8 @@ Mem::Report(std::ostream &stream)
     MemPoolStats mp_total;
     const auto poolsInUse = memPoolGetGlobalStats(mp_total);
 
-    auto *sortme = static_cast<MemPoolStats *>(xcalloc(MemPools::GetInstance().poolCount, sizeof(MemPoolStats)));
-    int npools = 0;
+    std::vector<MemPoolStats> usedPools;
+    usedPools.reserve(poolsInUse);
 
     /* main table */
     iter = memPoolIterate();
@@ -711,27 +691,22 @@ Mem::Report(std::ostream &stream)
         MemPoolStats mp_stats;
         pool->getStats(&mp_stats);
 
-        if (!mp_stats.pool) /* pool destroyed */
-            continue;
-
-        if (mp_stats.pool->getMeter().gb_allocated.count > 0) {
-            /* this pool has been used */
-            sortme[npools] = mp_stats;
-            ++npools;
-        } else {
+        if (mp_stats.pool->getMeter().gb_allocated.count > 0)
+            usedPools.emplace_back(mp_stats);
+        else
             ++not_used;
-        }
     }
 
     memPoolIterateDone(&iter);
 
-    qsort(sortme, npools, sizeof(*sortme), MemPoolReportSorter);
+    // sort on %Total Allocated (largest first)
+    std::sort(usedPools.begin(), usedPools.end(), [](const MemPoolStats &a, const MemPoolStats &b) {
+        return (double(a.obj_size) * a.meter->alloc.currentLevel()) > (double(b.obj_size) * b.meter->alloc.currentLevel());
+    });
 
-    for (int i = 0; i< npools; ++i) {
-        PoolReport(&sortme[i], mp_total.meter, stream);
+    for (const auto &pool: usedPools) {
+        PoolReport(&pool, mp_total.meter, stream);
     }
-
-    xfree(sortme);
 
     PoolReport(&mp_total, mp_total.meter, stream);
 
