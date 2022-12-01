@@ -111,15 +111,15 @@ static int squidaio_initialised = 0;
 #define AIO_TINY_BUFS   AIO_LARGE_BUFS >> 3
 #define AIO_MICRO_BUFS  128
 
-static MemAllocator *squidaio_large_bufs = nullptr;    /* 16K */
-static MemAllocator *squidaio_medium_bufs = nullptr;   /* 8K */
-static MemAllocator *squidaio_small_bufs = nullptr;    /* 4K */
-static MemAllocator *squidaio_tiny_bufs = nullptr; /* 2K */
-static MemAllocator *squidaio_micro_bufs = nullptr;    /* 128K */
+static Mem::Allocator *squidaio_large_bufs = nullptr; /* 16K */
+static Mem::Allocator *squidaio_medium_bufs = nullptr; /* 8K */
+static Mem::Allocator *squidaio_small_bufs = nullptr; /* 4K */
+static Mem::Allocator *squidaio_tiny_bufs = nullptr; /* 2K */
+static Mem::Allocator *squidaio_micro_bufs = nullptr; /* 128K */
 
 static int request_queue_len = 0;
-static MemAllocator *squidaio_request_pool = nullptr;
-static MemAllocator *squidaio_thread_pool = nullptr;
+static Mem::Allocator *squidaio_request_pool = nullptr;
+static Mem::Allocator *squidaio_thread_pool = nullptr;
 static squidaio_request_queue_t request_queue;
 
 static struct {
@@ -147,7 +147,7 @@ static struct sched_param globsched;
 #endif
 static pthread_t main_thread;
 
-static MemAllocator *
+static Mem::Allocator *
 squidaio_get_pool(int size)
 {
     if (size <= AIO_LARGE_BUFS) {
@@ -170,9 +170,8 @@ void *
 squidaio_xmalloc(int size)
 {
     void *p;
-    MemAllocator *pool;
 
-    if ((pool = squidaio_get_pool(size)) != nullptr) {
+    if (const auto pool = squidaio_get_pool(size)) {
         p = pool->alloc();
     } else
         p = xmalloc(size);
@@ -195,9 +194,7 @@ squidaio_xstrdup(const char *str)
 void
 squidaio_xfree(void *p, int size)
 {
-    MemAllocator *pool;
-
-    if ((pool = squidaio_get_pool(size)) != nullptr) {
+    if (const auto pool = squidaio_get_pool(size)) {
         pool->freeOne(p);
     } else
         xfree(p);
@@ -206,10 +203,9 @@ squidaio_xfree(void *p, int size)
 static void
 squidaio_xstrfree(char *str)
 {
-    MemAllocator *pool;
     int len = strlen(str) + 1;
 
-    if ((pool = squidaio_get_pool(len)) != nullptr) {
+    if (const auto pool = squidaio_get_pool(len)) {
         pool->freeOne(str);
     } else
         xfree(str);

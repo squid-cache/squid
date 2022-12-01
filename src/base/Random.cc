@@ -6,6 +6,7 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
+#include "squid.h"
 #include "base/Random.h"
 
 std::mt19937::result_type

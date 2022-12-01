@@ -200,6 +200,10 @@ check_upgrade_protocols() {
     run_confirmed_test upgrade-protocols
 }
 
+check_truncated_responses() {
+    run_confirmed_test truncated-responses
+}
+
 # executes a single check_name test named by the parameter
 run_one_test() {
     local testName=$1
@@ -248,6 +252,7 @@ main() {
             upgrade-protocols
             proxy-collapsed-forwarding
             busy-restart
+            truncated-responses
         "
         tests="$default_tests"
     fi

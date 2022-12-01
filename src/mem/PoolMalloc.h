@@ -41,13 +41,10 @@ public:
     virtual bool idleTrigger(int shift) const;
     virtual void clean(time_t maxage);
 
-    /**
-     \param stats   Object to be filled with statistical data about pool.
-     \retval        Number of objects in use, ie. allocated.
-     */
-    virtual int getStats(MemPoolStats * stats, int accumulate);
-
+    /* Mem::Allocator API */
+    virtual int getStats(MemPoolStats *, int);
     virtual int getInUseCount();
+
 protected:
     virtual void *allocate();
     virtual void deallocate(void *, bool aggressive);

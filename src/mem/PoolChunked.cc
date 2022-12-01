@@ -248,6 +248,16 @@ MemPoolChunked::createChunk()
     chunk->next = newChunk;
 }
 
+/**
+ * Allows you tune chunk size of pooling. Objects are allocated in chunks
+ * instead of individually. This conserves memory, reduces fragmentation.
+ * Because of that memory can be freed also only in chunks. Therefore
+ * there is tradeoff between memory conservation due to chunking and free
+ * memory fragmentation.
+ *
+ * \note  As a general guideline, increase chunk size only for pools that keep
+ *        very many items for relatively long time.
+ */
 void
 MemPoolChunked::setChunkSize(size_t chunksize)
 {
