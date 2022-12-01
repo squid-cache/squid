@@ -74,8 +74,8 @@ public:
     void flushMeters();
 
     /**
-     * Create an allocator with given name to allocate objects
-     * of the specified fixed-size.
+     * Create an allocator with given name to allocate fixed-size objects
+     * of the specified size.
      */
     MemImplementingAllocator *create(const char *, size_t);
 

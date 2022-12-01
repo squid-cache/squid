@@ -13,7 +13,7 @@
 size_t
 Mem::GlobalStats(PoolStats &stats)
 {
-    MemPools::GetInstance().flushMeters(); /* recreate TheMeter */
+    MemPools::GetInstance().flushMeters();
 
     stats.meter = &TheMeter;
     stats.label = "Total";
