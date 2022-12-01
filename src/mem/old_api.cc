@@ -59,10 +59,10 @@ static Mem::Meter HugeBufVolumeMeter;
 
 // XXX: refactor objects using these pools to use MEMPROXY classes instead
 // then remove this function entirely
-static MemAllocator *&
+static Mem::Allocator *&
 GetPool(size_t type)
 {
-    static MemAllocator *pools[MEM_MAX];
+    static Mem::Allocator *pools[MEM_MAX];
     static bool initialized = false;
 
     if (!initialized) {
@@ -76,19 +76,19 @@ GetPool(size_t type)
     return pools[type];
 }
 
-static MemAllocator &
+static Mem::Allocator &
 GetStrPool(size_t type)
 {
-    static MemAllocator *strPools[mem_str_pool_count];
+    static Mem::Allocator *strPools[mem_str_pool_count];
     static bool initialized = false;
 
     static const PoolMeta PoolAttrs[mem_str_pool_count] = {
-        {"Short Strings", MemAllocator::RoundedSize(36)},      /* to fit rfc1123 and similar */
-        {"Medium Strings", MemAllocator::RoundedSize(128)},    /* to fit most urls */
-        {"Long Strings", MemAllocator::RoundedSize(512)},
-        {"1KB Strings", MemAllocator::RoundedSize(1024)},
-        {"4KB Strings", MemAllocator::RoundedSize(4*1024)},
-        {"16KB Strings", MemAllocator::RoundedSize(16*1024)}
+        {"Short Strings", Mem::Allocator::RoundedSize(36)}, /* to fit rfc1123 and similar */
+        {"Medium Strings", Mem::Allocator::RoundedSize(128)}, /* to fit most urls */
+        {"Long Strings", Mem::Allocator::RoundedSize(512)},
+        {"1KB Strings", Mem::Allocator::RoundedSize(1024)},
+        {"4KB Strings", Mem::Allocator::RoundedSize(4*1024)},
+        {"16KB Strings", Mem::Allocator::RoundedSize(16*1024)}
     };
 
     if (!initialized) {
@@ -113,7 +113,7 @@ GetStrPool(size_t type)
 }
 
 /// \returns the best-fit string pool or nil
-static MemAllocator *
+static Mem::Allocator *
 memFindStringPool(size_t net_size, bool fuzzy)
 {
     for (unsigned int i = 0; i < mem_str_pool_count; ++i) {
@@ -674,7 +674,6 @@ Mem::Report(std::ostream &stream)
     static MemPoolGlobalStats mp_total;
     int not_used = 0;
     MemPoolIterator *iter;
-    MemAllocator *pool;
 
     /* caption */
     stream << "Current memory usage:\n";
@@ -708,7 +707,7 @@ Mem::Report(std::ostream &stream)
     /* main table */
     iter = memPoolIterate();
 
-    while ((pool = memPoolIterateNext(iter))) {
+    while (const auto pool = memPoolIterateNext(iter)) {
         pool->getStats(&mp_stats);
 
         if (!mp_stats.pool) /* pool destroyed */

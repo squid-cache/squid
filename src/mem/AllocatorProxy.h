@@ -9,7 +9,10 @@
 #ifndef _SQUID_SRC_MEM_ALLOCATORPROXY_H
 #define _SQUID_SRC_MEM_ALLOCATORPROXY_H
 
-class MemAllocator;
+// XXX: remove AllocatorProxy.h include from mem/forward.h
+namespace Mem {
+class Allocator;
+}
 class MemPoolStats;
 
 /**
@@ -80,11 +83,11 @@ public:
     void zeroBlocks(bool doIt);
 
 private:
-    MemAllocator *getAllocator() const;
+    Allocator *getAllocator() const;
 
     const char *label;
     size_t size;
-    mutable MemAllocator *theAllocator;
+    mutable Allocator *theAllocator;
     bool doZero;
 };
 
