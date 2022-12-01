@@ -154,6 +154,7 @@ static const struct {
     const char *text;
 }
 
+/// error messages that cannot be configured/customized externally
 error_hard_text[] = {
 
     {
@@ -180,10 +181,6 @@ error_hard_text[] = {
     {
         ERR_REQUEST_START_TIMEOUT,
         "request start timedout"
-    },
-    {
-        MGR_INDEX,
-        "mgr_index"
     }
 };
 
