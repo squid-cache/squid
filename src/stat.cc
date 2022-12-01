@@ -725,7 +725,7 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
                       stats.total_accounted / 1024);
     {
         Mem::PoolStats mp_stats;
-        Mem::GlobalStats(mp_stats); // XXX: pointless lookup ?
+        Mem::GlobalStats(mp_stats); // XXX: called just for its side effects
         storeAppendPrintf(sentry, "\tmemPoolAlloc calls: %9.0f\n",
                           stats.gb_saved_count);
         storeAppendPrintf(sentry, "\tmemPoolFree calls:  %9.0f\n",
