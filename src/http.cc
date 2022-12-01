@@ -395,7 +395,7 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
             mayStore = true;
 
             // HTTPbis pt6 section 3.2: a response CC:must-revalidate is present
-        } else if (rep->cache_control->hasMustRevalidate()) {
+        } else if (rep->cache_control->hasMustRevalidate() && !REFRESH_OVERRIDE(ignore_must_revalidate)) {
             debugs(22, 3, "Authenticated but server reply Cache-Control:must-revalidate");
             mayStore = true;
 
@@ -404,7 +404,7 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
             // HTTPbis WG verdict on this is that it is omitted from the spec due to being 'unexpected' by
             // some. The caching+revalidate is not exactly unsafe though with Squids interpretation of no-cache
             // (without parameters) as equivalent to must-revalidate in the reply.
-        } else if (rep->cache_control->hasNoCacheWithoutParameters()) {
+        } else if (rep->cache_control->hasNoCacheWithoutParameters() && !REFRESH_OVERRIDE(ignore_must_revalidate)) {
             debugs(22, 3, "Authenticated but server reply Cache-Control:no-cache (equivalent to must-revalidate)");
             mayStore = true;
 #endif

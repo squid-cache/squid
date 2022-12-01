@@ -877,6 +877,13 @@ configDoConfigure(void)
         }
 
         for (R = Config.Refresh; R; R = R->next) {
+            if (!R->flags.ignore_must_revalidate)
+                continue;
+            debugs(22, DBG_IMPORTANT, "WARNING: use of 'ignore-must-revalidate' in 'refresh_pattern' violates HTTP");
+            break;
+        }
+
+        for (R = Config.Refresh; R; R = R->next) {
             if (!R->flags.ignore_private)
                 continue;
 
@@ -2711,6 +2718,9 @@ dump_refreshpattern(StoreEntry * entry, const char *name, RefreshPattern * head)
         if (head->flags.ignore_no_store)
             storeAppendPrintf(entry, " ignore-no-store");
 
+        if (head->flags.ignore_must_revalidate)
+            storeAppendPrintf(entry, " ignore-must-revalidate");
+
         if (head->flags.ignore_private)
             storeAppendPrintf(entry, " ignore-private");
 #endif
@@ -2739,6 +2749,7 @@ parse_refreshpattern(RefreshPattern ** head)
     int reload_into_ims = 0;
     int ignore_reload = 0;
     int ignore_no_store = 0;
+    int ignore_must_revalidate = 0;
     int ignore_private = 0;
 #endif
 
@@ -2785,7 +2796,6 @@ parse_refreshpattern(RefreshPattern ** head)
             store_stale = 1;
         } else if (!strncmp(token, "max-stale=", 10)) {
             max_stale = xatoi(token + 10);
-
 #if USE_HTTP_VIOLATIONS
 
         } else if (!strcmp(token, "override-expire"))
@@ -2794,6 +2804,8 @@ parse_refreshpattern(RefreshPattern ** head)
             override_lastmod = 1;
         else if (!strcmp(token, "ignore-no-store"))
             ignore_no_store = 1;
+        else if (!strcmp(token, "ignore-must-revalidate"))
+            ignore_must_revalidate = 1;
         else if (!strcmp(token, "ignore-private"))
             ignore_private = 1;
         else if (!strcmp(token, "reload-into-ims")) {
@@ -2846,6 +2858,9 @@ parse_refreshpattern(RefreshPattern ** head)
 
     if (ignore_no_store)
         t->flags.ignore_no_store = true;
+
+    if (ignore_must_revalidate)
+        t->flags.ignore_must_revalidate = true;
 
     if (ignore_private)
         t->flags.ignore_private = true;

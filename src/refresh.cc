@@ -336,6 +336,9 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
      */
     const bool revalidateAlways = EBIT_TEST(entry->flags, ENTRY_REVALIDATE_ALWAYS);
     if (revalidateAlways || (staleness > -1 &&
+#if USE_HTTP_VIOLATIONS
+                             !R->flags.ignore_must_revalidate &&
+#endif
                              EBIT_TEST(entry->flags, ENTRY_REVALIDATE_STALE))) {
         debugs(22, 3, "YES: Must revalidate stale object (origin set " <<
                (revalidateAlways ? "no-cache or private" :
