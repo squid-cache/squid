@@ -56,7 +56,7 @@ MemPools::create(const char *label, size_t obj_size)
         newPool = new MemPoolChunked(label, obj_size);
     else
         newPool = new MemPoolMalloc(label, obj_size);
-    pools.emplace_back(newPool);
+    pools.push_back(newPool);
     return pools.back();
 }
 
