@@ -12,8 +12,8 @@
 // XXX: remove AllocatorProxy.h include from mem/forward.h
 namespace Mem {
 class Allocator;
+class PoolStats;
 }
-class MemPoolStats;
 
 /**
  * \hideinitializer
@@ -78,7 +78,7 @@ public:
      * \param stats Object to be filled with statistical data about pool.
      * \retval      Number of objects in use, ie. allocated.
      */
-    int getStats(MemPoolStats * stats);
+    size_t getStats(PoolStats &stats);
 
     void zeroBlocks(bool doIt);
 

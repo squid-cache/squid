@@ -19,6 +19,7 @@
 #include "mem/forward.h"
 #include "mem/Meter.h"
 #include "mem/Pool.h"
+#include "mem/Stats.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "SquidConfig.h"
@@ -484,16 +485,17 @@ memCheckInit(void)
 void
 memClean(void)
 {
-    MemPoolGlobalStats stats;
     if (Config.MemPools.limit > 0) // do not reset if disabled or same
         MemPools::GetInstance().setIdleLimit(0);
     MemPools::GetInstance().clean(0);
-    memPoolGetGlobalStats(&stats);
 
-    if (stats.tot_items_inuse)
-        debugs(13, 2, "memCleanModule: " << stats.tot_items_inuse <<
-               " items in " << stats.tot_chunks_inuse << " chunks and " <<
-               stats.tot_pools_inuse << " pools are left dirty");
+    Mem::PoolStats stats;
+    const auto poolsInUse = Mem::GlobalStats(stats);
+    if (stats.items_inuse) {
+        debugs(13, 2, stats.items_inuse <<
+               " items in " << stats.chunks_inuse << " chunks and " <<
+               poolsInUse << " pools are left dirty");
+    }
 }
 
 int
@@ -577,7 +579,7 @@ memFreeBufFunc(size_t size)
 }
 
 void
-Mem::PoolReport(const MemPoolStats * mp_st, const PoolMeter * AllMeter, std::ostream &stream)
+Mem::PoolReport(const PoolStats *mp_st, const PoolMeter *AllMeter, std::ostream &stream)
 {
     int excess = 0;
     int needed = 0;
@@ -646,34 +648,11 @@ Mem::PoolReport(const MemPoolStats * mp_st, const PoolMeter * AllMeter, std::ost
     pm->gb_oallocated.count = pm->gb_allocated.count;
 }
 
-static int
-MemPoolReportSorter(const void *a, const void *b)
-{
-    const MemPoolStats *A =  (MemPoolStats *) a;
-    const MemPoolStats *B =  (MemPoolStats *) b;
-
-    // use this to sort on %Total Allocated
-    //
-    double pa = (double) A->obj_size * A->meter->alloc.currentLevel();
-    double pb = (double) B->obj_size * B->meter->alloc.currentLevel();
-
-    if (pa > pb)
-        return -1;
-
-    if (pb > pa)
-        return 1;
-
-    return 0;
-}
-
 void
 Mem::Report(std::ostream &stream)
 {
     static char buf[64];
-    static MemPoolStats mp_stats;
-    static MemPoolGlobalStats mp_total;
     int not_used = 0;
-    MemPoolIterator *iter;
 
     /* caption */
     stream << "Current memory usage:\n";
@@ -699,67 +678,46 @@ Mem::Report(std::ostream &stream)
     xm_time = current_dtime;
 
     /* Get stats for Totals report line */
-    memPoolGetGlobalStats(&mp_total);
+    PoolStats mp_total;
+    const auto poolsInUse = GlobalStats(mp_total);
 
-    MemPoolStats *sortme = (MemPoolStats *) xcalloc(mp_total.tot_pools_alloc,sizeof(*sortme));
-    int npools = 0;
+    std::vector<PoolStats> usedPools;
+    usedPools.reserve(poolsInUse);
 
     /* main table */
-    iter = memPoolIterate();
+    for (const auto pool : MemPools::GetInstance().pools) {
+        PoolStats mp_stats;
+        pool->getStats(mp_stats);
 
-    while (const auto pool = memPoolIterateNext(iter)) {
-        pool->getStats(&mp_stats);
-
-        if (!mp_stats.pool) /* pool destroyed */
-            continue;
-
-        if (mp_stats.pool->getMeter().gb_allocated.count > 0) {
-            /* this pool has been used */
-            sortme[npools] = mp_stats;
-            ++npools;
-        } else {
+        if (mp_stats.pool->getMeter().gb_allocated.count > 0)
+            usedPools.emplace_back(mp_stats);
+        else
             ++not_used;
-        }
     }
 
-    memPoolIterateDone(&iter);
+    // sort on %Total Allocated (largest first)
+    std::sort(usedPools.begin(), usedPools.end(), [](const PoolStats &a, const PoolStats &b) {
+        return (double(a.obj_size) * a.meter->alloc.currentLevel()) > (double(b.obj_size) * b.meter->alloc.currentLevel());
+    });
 
-    qsort(sortme, npools, sizeof(*sortme), MemPoolReportSorter);
-
-    for (int i = 0; i< npools; ++i) {
-        PoolReport(&sortme[i], mp_total.TheMeter, stream);
+    for (const auto &pool: usedPools) {
+        PoolReport(&pool, mp_total.meter, stream);
     }
 
-    xfree(sortme);
-
-    mp_stats.pool = nullptr;
-    mp_stats.label = "Total";
-    mp_stats.meter = mp_total.TheMeter;
-    mp_stats.obj_size = 1;
-    mp_stats.chunk_capacity = 0;
-    mp_stats.chunk_size = 0;
-    mp_stats.chunks_alloc = mp_total.tot_chunks_alloc;
-    mp_stats.chunks_inuse = mp_total.tot_chunks_inuse;
-    mp_stats.chunks_partial = mp_total.tot_chunks_partial;
-    mp_stats.chunks_free = mp_total.tot_chunks_free;
-    mp_stats.items_alloc = mp_total.tot_items_alloc;
-    mp_stats.items_inuse = mp_total.tot_items_inuse;
-    mp_stats.items_idle = mp_total.tot_items_idle;
-    mp_stats.overhead = mp_total.tot_overhead;
-
-    PoolReport(&mp_stats, mp_total.TheMeter, stream);
+    PoolReport(&mp_total, mp_total.meter, stream);
 
     /* Cumulative */
-    stream << "Cumulative allocated volume: "<< double_to_str(buf, 64, mp_total.TheMeter->gb_allocated.bytes) << "\n";
+    stream << "Cumulative allocated volume: "<< double_to_str(buf, 64, mp_total.meter->gb_allocated.bytes) << "\n";
     /* overhead */
-    stream << "Current overhead: " << mp_total.tot_overhead << " bytes (" <<
-           std::setprecision(3) << xpercent(mp_total.tot_overhead, mp_total.TheMeter->inuse.currentLevel()) << "%)\n";
+    stream << "Current overhead: " << mp_total.overhead << " bytes (" <<
+           std::setprecision(3) << xpercent(mp_total.overhead, mp_total.meter->inuse.currentLevel()) << "%)\n";
     /* limits */
-    if (mp_total.mem_idle_limit >= 0)
-        stream << "Idle pool limit: " << std::setprecision(2) << toMB(mp_total.mem_idle_limit) << " MB\n";
+    if (MemPools::GetInstance().idleLimit() >= 0)
+        stream << "Idle pool limit: " << std::setprecision(2) << toMB(MemPools::GetInstance().idleLimit()) << " MB\n";
     /* limits */
-    stream << "Total Pools created: " << mp_total.tot_pools_alloc << "\n";
-    stream << "Pools ever used:     " << mp_total.tot_pools_alloc - not_used << " (shown above)\n";
-    stream << "Currently in use:    " << mp_total.tot_pools_inuse << "\n";
+    auto poolCount = MemPools::GetInstance().pools.size();
+    stream << "Total Pools created: " << poolCount << "\n";
+    stream << "Pools ever used:     " << poolCount - not_used << " (shown above)\n";
+    stream << "Currently in use:    " << poolsInUse << "\n";
 }
 

@@ -12,6 +12,7 @@
 
 #include "squid.h"
 #include "mem/PoolChunked.h"
+#include "mem/Stats.h"
 
 #include <cassert>
 #include <cstring>
@@ -429,26 +430,20 @@ MemPoolChunked::idleTrigger(int shift) const
     return meter.idle.currentLevel() > (chunk_capacity << shift);
 }
 
-/*
- * Update MemPoolStats struct for single pool
- */
-int
-MemPoolChunked::getStats(MemPoolStats * stats, int accumulate)
+size_t
+MemPoolChunked::getStats(Mem::PoolStats &stats)
 {
     MemChunk *chunk;
     int chunks_free = 0;
     int chunks_partial = 0;
 
-    if (!accumulate)    /* need skip memset for GlobalStats accumulation */
-        memset(stats, 0, sizeof(MemPoolStats));
-
     clean((time_t) 555555); /* don't want to get chunks released before reporting */
 
-    stats->pool = this;
-    stats->label = objectType();
-    stats->meter = &meter;
-    stats->obj_size = obj_size;
-    stats->chunk_capacity = chunk_capacity;
+    stats.pool = this;
+    stats.label = objectType();
+    stats.meter = &meter;
+    stats.obj_size = obj_size;
+    stats.chunk_capacity = chunk_capacity;
 
     /* gather stats for each Chunk */
     chunk = Chunks;
@@ -460,16 +455,16 @@ MemPoolChunked::getStats(MemPoolStats * stats, int accumulate)
         chunk = chunk->next;
     }
 
-    stats->chunks_alloc += chunkCount;
-    stats->chunks_inuse += chunkCount - chunks_free;
-    stats->chunks_partial += chunks_partial;
-    stats->chunks_free += chunks_free;
+    stats.chunks_alloc += chunkCount;
+    stats.chunks_inuse += chunkCount - chunks_free;
+    stats.chunks_partial += chunks_partial;
+    stats.chunks_free += chunks_free;
 
-    stats->items_alloc += meter.alloc.currentLevel();
-    stats->items_inuse += meter.inuse.currentLevel();
-    stats->items_idle += meter.idle.currentLevel();
+    stats.items_alloc += meter.alloc.currentLevel();
+    stats.items_inuse += meter.inuse.currentLevel();
+    stats.items_idle += meter.idle.currentLevel();
 
-    stats->overhead += sizeof(MemPoolChunked) + chunkCount * sizeof(MemChunk) + strlen(objectType()) + 1;
+    stats.overhead += sizeof(MemPoolChunked) + chunkCount * sizeof(MemChunk) + strlen(objectType()) + 1;
 
     return meter.inuse.currentLevel();
 }
