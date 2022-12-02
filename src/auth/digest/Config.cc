@@ -239,29 +239,21 @@ authenticateDigestNonceCacheCleanup(void *)
         eventAdd("Digest nonce cache maintenance", authenticateDigestNonceCacheCleanup, nullptr, static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->nonceGCInterval, 1);
 }
 
+// XXX: replace raw-pointers using this with Pointer
 static void
 authDigestNonceLink(digest_nonce_h * nonce)
 {
     assert(nonce != nullptr);
-    ++nonce->references;
-    assert(nonce->references != 0); // no overflows
-    debugs(29, 9, "nonce '" << nonce << "' now at '" << nonce->references << "'.");
+    nonce->lock();
 }
 
+// XXX: replace raw-pointers using this with Pointer
 void
 authDigestNonceUnlink(digest_nonce_h * nonce)
 {
     assert(nonce != nullptr);
-
-    if (nonce->references > 0) {
-        -- nonce->references;
-    } else {
-        debugs(29, DBG_IMPORTANT, "Attempt to lower nonce " << nonce << " refcount below 0!");
-    }
-
-    debugs(29, 9, "nonce '" << nonce << "' now at '" << nonce->references << "'.");
-
-    if (nonce->references == 0)
+    nonce->unlock();
+    if (nonce->LockCount() == 0)
         delete nonce;
 }
 

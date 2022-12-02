@@ -14,6 +14,7 @@
 #include "auth/Gadgets.h"
 #include "auth/SchemeConfig.h"
 #include "auth/UserRequest.h"
+#include "base/RefCount.h"
 #include "helper/forward.h"
 #include "rfc2617.h"
 
@@ -26,7 +27,7 @@ class User;
 }
 
 /* the nonce structure we'll pass around */
-class digest_nonce_h : public hash_link
+class digest_nonce_h : public hash_link, public RefCountable
 {
     MEMPROXY_CLASS(digest_nonce_h);
 
@@ -43,9 +44,6 @@ public:
 
     /* number of uses we've seen of this nonce */
     unsigned long nc = 0;
-
-    /* reference count */
-    uint64_t references = 0;
 
     /* the auth_user this nonce has been tied to */
     Auth::Digest::User *user = nullptr;
