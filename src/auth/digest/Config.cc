@@ -342,28 +342,21 @@ digest_nonce_h::stale()
     return false;
 }
 
-/**
- * \retval  0    the digest is not stale yet
- * \retval -1    the digest will be stale on the next request
- */
-int
-authDigestNonceLastRequest(digest_nonce_h * nonce)
+bool
+digest_nonce_h::lastRequest() const
 {
-    if (!nonce)
-        return -1;
-
-    if (nonce->nc == 99999997) {
+    if (nc == 99999997) {
         debugs(29, 4, "Nonce count about to overflow");
-        return -1;
+        return true;
     }
 
-    if (nonce->nc >= static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->noncemaxuses - 1) {
+    if (nc >= static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->noncemaxuses - 1) {
         debugs(29, 4, "Nonce count about to hit user limit");
-        return -1;
+        return true;
     }
 
     /* and other tests are possible. */
-    return 0;
+    return false;
 }
 
 void

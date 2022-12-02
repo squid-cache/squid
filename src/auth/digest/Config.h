@@ -47,6 +47,15 @@ public:
     /// \retval true if the nonce is stale.
     bool stale();
 
+    /**
+     * Try to predict what the nonce validity will be if used on the
+     * next HTTP Request.
+     *
+     * \retval false when the nonce is not stale yet
+     * \retval true if the nonce will be stale on the next request
+     */
+    bool lastRequest() const;
+
 public:
     /* data to be encoded into the nonce's hex representation */
     struct _digest_nonce_data {
@@ -68,7 +77,6 @@ public:
 };
 
 void authDigestNonceUnlink(digest_nonce_h * nonce);
-int authDigestNonceLastRequest(digest_nonce_h * nonce);
 void authenticateDigestNonceShutdown(void);
 void authDigestNoncePurge(digest_nonce_h * nonce);
 void authDigestUserLinkNonce(Auth::Digest::User * user, digest_nonce_h * nonce);

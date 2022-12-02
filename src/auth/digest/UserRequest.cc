@@ -230,14 +230,14 @@ Auth::Digest::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int acce
         return;
 #endif
 
-    if ((static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->authenticateProgram) && authDigestNonceLastRequest(nonce)) {
+    if ((static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->authenticateProgram) && nonce->lastRequest()) {
         flags.authinfo_sent = true;
         Auth::Digest::User *digest_user = dynamic_cast<Auth::Digest::User *>(user().getRaw());
         if (!digest_user)
             return;
 
         digest_nonce_h *nextnonce = digest_user->currentNonce();
-        if (!nextnonce || authDigestNonceLastRequest(nonce)) {
+        if (!nextnonce || nonce->lastRequest()) {
             nextnonce = authenticateDigestNonceNew();
             authDigestUserLinkNonce(digest_user, nextnonce);
         }
@@ -266,7 +266,7 @@ Auth::Digest::UserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int acc
 
     type = accel ? Http::HdrType::AUTHENTICATION_INFO : Http::HdrType::PROXY_AUTHENTICATION_INFO;
 
-    if ((static_cast<Auth::Digest::Config*>(digestScheme::GetInstance()->getConfig())->authenticate) && authDigestNonceLastRequest(nonce)) {
+    if ((static_cast<Auth::Digest::Config*>(digestScheme::GetInstance()->getConfig())->authenticate) && nonce->lastRequest()) {
         Auth::Digest::User *digest_user = dynamic_cast<Auth::Digest::User *>(auth_user_request->user().getRaw());
         nonce = digest_user->currentNonce();
         if (!nonce) {
