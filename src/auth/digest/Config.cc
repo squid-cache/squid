@@ -222,7 +222,7 @@ authenticateDigestNonceCacheCleanup(void *)
         debugs(29, 3, "nonce entry  : " << nonce << " '" << (char *) nonce->key << "'");
         debugs(29, 4, "Creation time: " << nonce->noncedata.creationtime);
 
-        if (authDigestNonceIsStale(nonce)) {
+        if (nonce->stale()) {
             debugs(29, 4, "Removing nonce " << (char *) nonce->key << " from cache due to timeout.");
             assert(nonce->flags.incache);
             /* invalidate nonce so future requests fail */
@@ -277,81 +277,69 @@ authenticateDigestNonceFindNonce(const char *noncehex)
     return nonce;
 }
 
-int
-authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9])
+bool
+digest_nonce_h::valid(char aCount[9])
 {
-    unsigned long intnc;
-    /* do we have a nonce ? */
-
-    if (!nonce)
-        return 0;
-
-    intnc = strtol(nc, nullptr, 16);
+    unsigned long intnc = strtol(aCount, nullptr, 16);
 
     /* has it already been invalidated ? */
-    if (!nonce->flags.valid) {
+    if (!flags.valid) {
         debugs(29, 4, "Nonce already invalidated");
-        return 0;
+        return false;
     }
+
+    const auto cfg = static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"));
 
     /* is the nonce-count ok ? */
-    if (!static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->CheckNonceCount) {
+    if (!cfg->CheckNonceCount) {
         /* Ignore client supplied NC */
-        intnc = nonce->nc + 1;
+        intnc = nc + 1;
     }
 
-    if ((static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->NonceStrictness && intnc != nonce->nc + 1) ||
-            intnc < nonce->nc + 1) {
+    if ((cfg->NonceStrictness && intnc != nc + 1) || intnc < nc + 1) {
         debugs(29, 4, "Nonce count doesn't match");
-        nonce->flags.valid = false;
-        return 0;
+        flags.valid = false;
+        return false;
     }
 
     /* increment the nonce count - we've already checked that intnc is a
      *  valid representation for us, so we don't need the test here.
      */
-    nonce->nc = intnc;
+    nc = intnc;
 
-    return !authDigestNonceIsStale(nonce);
+    return !stale();
 }
 
-int
-authDigestNonceIsStale(digest_nonce_h * nonce)
+bool
+digest_nonce_h::stale()
 {
-    /* do we have a nonce ? */
-
-    if (!nonce)
-        return -1;
-
     /* Is it already invalidated? */
-    if (!nonce->flags.valid)
-        return -1;
+    if (!flags.valid)
+        return true;
+
+    const auto cfg = static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"));
 
     /* has it's max duration expired? */
-    if (nonce->noncedata.creationtime + static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->noncemaxduration < current_time.tv_sec) {
-        debugs(29, 4, "Nonce is too old. " <<
-               nonce->noncedata.creationtime << " " <<
-               static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->noncemaxduration << " " <<
-               current_time.tv_sec);
-
-        nonce->flags.valid = false;
-        return -1;
+    if (noncedata.creationtime + cfg->noncemaxduration < current_time.tv_sec) {
+        debugs(29, 4, "Nonce is too old. " << noncedata.creationtime << " " << cfg->noncemaxduration << " " << current_time.tv_sec);
+        flags.valid = false;
+        return true;
     }
 
-    if (nonce->nc > 99999998) {
+    if (nc > 99999998) {
         debugs(29, 4, "Nonce count overflow");
-        nonce->flags.valid = false;
-        return -1;
+        flags.valid = false;
+        return true;
     }
 
-    if (nonce->nc > static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->noncemaxuses) {
+    if (nc > cfg->noncemaxuses) {
         debugs(29, 4, "Nonce count over user limit");
-        nonce->flags.valid = false;
-        return -1;
+        flags.valid = false;
+        return true;
     }
 
     /* seems ok */
-    return 0;
+    return false;
 }
 
 /**

@@ -66,7 +66,7 @@ Auth::Digest::User::currentNonce()
     dlink_node *link = nonces.tail;
     if (link) {
         nonce = static_cast<digest_nonce_h *>(link->data);
-        if (authDigestNonceIsStale(nonce))
+        if (nonce->stale())
             nonce = nullptr;
     }
     return nonce;

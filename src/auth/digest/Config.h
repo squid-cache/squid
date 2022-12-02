@@ -39,6 +39,14 @@ public:
     /// The HEX encoded unique identifier for this nonce
     const char *hex() const { return static_cast<const char *>(key); }
 
+    /// Check the nonce and invalidate if any tests fail.
+    /// \retval true if the nonce is valid.
+    bool valid(char clientCount[9]);
+
+    /// Check the freshness of this nonce and invalidate if stale.
+    /// \retval true if the nonce is stale.
+    bool stale();
+
 public:
     /* data to be encoded into the nonce's hex representation */
     struct _digest_nonce_data {
@@ -60,8 +68,6 @@ public:
 };
 
 void authDigestNonceUnlink(digest_nonce_h * nonce);
-int authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9]);
-int authDigestNonceIsStale(digest_nonce_h * nonce);
 int authDigestNonceLastRequest(digest_nonce_h * nonce);
 void authenticateDigestNonceShutdown(void);
 void authDigestNoncePurge(digest_nonce_h * nonce);
