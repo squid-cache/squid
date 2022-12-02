@@ -87,7 +87,6 @@ static digest_nonce_h *authenticateDigestNonceFindNonce(const char *noncehex);
 static void authenticateDigestNonceSetup(void);
 static void authDigestNonceEncode(digest_nonce_h * nonce);
 static void authDigestNonceLink(digest_nonce_h * nonce);
-static void authDigestNonceUserUnlink(digest_nonce_h * nonce);
 
 static void
 authDigestNonceEncode(digest_nonce_h * nonce)
@@ -228,7 +227,8 @@ authenticateDigestNonceCacheCleanup(void *)
             /* invalidate nonce so future requests fail */
             nonce->flags.valid = false;
             /* if it is tied to a auth_user, remove the tie */
-            authDigestNonceUserUnlink(nonce);
+            if (nonce->user)
+                nonce->user->unlink(nonce);
             authDigestNoncePurge(nonce);
         }
     }
@@ -425,7 +425,7 @@ Auth::Digest::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Ht
         return;
 
     bool stale = false;
-    digest_nonce_h *nonce = nullptr;
+    digest_nonce_h::Pointer nonce;
 
     /* on a 407 or 401 we always use a new nonce */
     if (auth_user_request != nullptr) {
@@ -542,79 +542,6 @@ authenticateDigestStats(StoreEntry * sentry)
 {
     if (digestauthenticators)
         digestauthenticators->packStatsInto(sentry, "Digest Authenticator Statistics");
-}
-
-/* NonceUserUnlink: remove the reference to auth_user and unlink the node from the list */
-
-static void
-authDigestNonceUserUnlink(digest_nonce_h * nonce)
-{
-    Auth::Digest::User *digest_user;
-    dlink_node *link, *tmplink;
-
-    if (!nonce)
-        return;
-
-    if (!nonce->user)
-        return;
-
-    digest_user = nonce->user;
-
-    /* unlink from the user list. Yes we're crossing structures but this is the only
-     * time this code is needed
-     */
-    link = digest_user->nonces.head;
-
-    while (link) {
-        tmplink = link;
-        link = link->next;
-
-        if (tmplink->data == nonce) {
-            dlinkDelete(tmplink, &digest_user->nonces);
-            authDigestNonceUnlink(static_cast < digest_nonce_h * >(tmplink->data));
-            delete tmplink;
-            link = nullptr;
-        }
-    }
-
-    /* this reference to user was not locked because freeeing the user frees
-     * the nonce too.
-     */
-    nonce->user = nullptr;
-}
-
-/* authDigesteserLinkNonce: add a nonce to a given user's struct */
-void
-authDigestUserLinkNonce(Auth::Digest::User * user, digest_nonce_h * nonce)
-{
-    dlink_node *node;
-
-    if (!user || !nonce || !nonce->user)
-        return;
-
-    Auth::Digest::User *digest_user = user;
-
-    node = digest_user->nonces.head;
-
-    while (node && (node->data != nonce))
-        node = node->next;
-
-    if (node)
-        return;
-
-    node = new dlink_node;
-
-    dlinkAddTail(nonce, node, &digest_user->nonces);
-
-    authDigestNonceLink(nonce);
-
-    /* ping this nonce to this auth user */
-    assert((nonce->user == nullptr) || (nonce->user == user));
-
-    /* we don't lock this reference because removing the user removes the
-     * hash too. Of course if that changes we're stuffed so read the code huh?
-     */
-    nonce->user = user;
 }
 
 /* setup the necessary info to log the username */
@@ -967,7 +894,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
          * or spoofing attack is taking place. We do this by assuming
          * the user agent won't change user name without warning.
          */
-        authDigestUserLinkNonce(digest_user, nonce);
+        digest_user->link(nonce);
 
         /* auth_user is now linked, we reset these values
          * after external auth occurs anyway */

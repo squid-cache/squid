@@ -232,10 +232,10 @@ Auth::Digest::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int acce
         if (!digest_user)
             return;
 
-        digest_nonce_h *nextnonce = digest_user->currentNonce();
+        digest_nonce_h::Pointer nextnonce = digest_user->currentNonce();
         if (!nextnonce || nonce->lastRequest()) {
             nextnonce = authenticateDigestNonceNew();
-            authDigestUserLinkNonce(digest_user, nextnonce);
+            digest_user->link(nextnonce);
         }
         debugs(29, 9, "Sending type:" << type << " header: 'nextnonce=\"" << nextnonce->hex() << "\"");
         httpHeaderPutStrf(&rep->header, type, "nextnonce=\"%s\"", nextnonce->hex());
@@ -267,7 +267,7 @@ Auth::Digest::UserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int acc
         nonce = digest_user->currentNonce();
         if (!nonce) {
             nonce = authenticateDigestNonceNew();
-            authDigestUserLinkNonce(digest_user, nonce);
+            digest_user->link(nonce);
         }
         debugs(29, 9, "Sending type:" << type << " header: 'nextnonce=\"" << nonce->hex() << "\"");
         httpTrailerPutStrf(&rep->header, type, "nextnonce=\"%s\"", nonce->hex());

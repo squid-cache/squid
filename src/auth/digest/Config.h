@@ -81,7 +81,6 @@ public:
 void authDigestNonceUnlink(digest_nonce_h * nonce);
 void authenticateDigestNonceShutdown(void);
 void authDigestNoncePurge(digest_nonce_h * nonce);
-void authDigestUserLinkNonce(Auth::Digest::User * user, digest_nonce_h * nonce);
 digest_nonce_h *authenticateDigestNonceNew(void);
 
 namespace Auth

@@ -31,17 +31,21 @@ public:
     int authenticated() const;
     virtual int32_t ttl() const override;
 
+    void link(const digest_nonce_h::Pointer &);
+    void unlink(const digest_nonce_h::Pointer &);
+
+    digest_nonce_h::Pointer currentNonce();
+
     /* Auth::User API */
     static CbcPointer<Auth::CredentialsCache> Cache();
     virtual void addToNameCache() override;
 
+public:
     HASH HA1;
     int HA1created;
 
     /* what nonces have been allocated to this user */
-    dlink_list nonces;
-
-    digest_nonce_h * currentNonce();
+    std::list<digest_nonce_h::Pointer> nonces;
 };
 
 } // namespace Digest
