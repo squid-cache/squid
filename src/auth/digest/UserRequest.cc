@@ -107,11 +107,11 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
     }
 
     DigestCalcHA1(digest_request->algorithm, nullptr, nullptr, nullptr,
-                  authenticateDigestNonceNonceHex(digest_request->nonce),
+                  digest_request->nonce->hex(),
                   digest_request->cnonce,
                   digest_user->HA1, SESSIONKEY);
     SBuf sTmp = request->method.image();
-    DigestCalcResponse(SESSIONKEY, authenticateDigestNonceNonceHex(digest_request->nonce),
+    DigestCalcResponse(SESSIONKEY, digest_request->nonce->hex(),
                        digest_request->nc, digest_request->cnonce, digest_request->qop,
                        sTmp.c_str(), digest_request->uri, HA2, Response);
 
@@ -133,7 +133,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
              * used.
              */
             sTmp = HttpRequestMethod(Http::METHOD_GET).image();
-            DigestCalcResponse(SESSIONKEY, authenticateDigestNonceNonceHex(digest_request->nonce),
+            DigestCalcResponse(SESSIONKEY, digest_request->nonce->hex(),
                                digest_request->nc, digest_request->cnonce, digest_request->qop,
                                sTmp.c_str(), digest_request->uri, HA2, Response);
 
@@ -242,8 +242,8 @@ Auth::Digest::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int acce
             nextnonce = authenticateDigestNonceNew();
             authDigestUserLinkNonce(digest_user, nextnonce);
         }
-        debugs(29, 9, "Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceHex(nextnonce) << "\"");
-        httpHeaderPutStrf(&rep->header, type, "nextnonce=\"%s\"", authenticateDigestNonceNonceHex(nextnonce));
+        debugs(29, 9, "Sending type:" << type << " header: 'nextnonce=\"" << nextnonce->hex() << "\"");
+        httpHeaderPutStrf(&rep->header, type, "nextnonce=\"%s\"", nextnonce->hex());
     }
 }
 
@@ -274,8 +274,8 @@ Auth::Digest::UserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int acc
             nonce = authenticateDigestNonceNew();
             authDigestUserLinkNonce(digest_user, nonce);
         }
-        debugs(29, 9, "Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceHex(nonce) << "\"");
-        httpTrailerPutStrf(&rep->header, type, "nextnonce=\"%s\"", authenticateDigestNonceNonceHex(nonce));
+        debugs(29, 9, "Sending type:" << type << " header: 'nextnonce=\"" << nonce->hex() << "\"");
+        httpTrailerPutStrf(&rep->header, type, "nextnonce=\"%s\"", nonce->hex());
     }
 }
 #endif

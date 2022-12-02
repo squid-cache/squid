@@ -257,15 +257,6 @@ authDigestNonceUnlink(digest_nonce_h * nonce)
         delete nonce;
 }
 
-const char *
-authenticateDigestNonceNonceHex(const digest_nonce_h * nonce)
-{
-    if (!nonce)
-        return nullptr;
-
-    return (char const *) nonce->key;
-}
-
 static digest_nonce_h *
 authenticateDigestNonceFindNonce(const char *noncehex)
 {
@@ -278,7 +269,7 @@ authenticateDigestNonceFindNonce(const char *noncehex)
 
     nonce = static_cast < digest_nonce_h * >(hash_lookup(digest_nonce_cache, noncehex));
 
-    if ((nonce == nullptr) || (strcmp(authenticateDigestNonceNonceHex(nonce), noncehex)))
+    if (!nonce || strcmp(nonce->hex(), noncehex) != 0)
         return nullptr;
 
     debugs(29, 9, "Found nonce '" << nonce << "'");
@@ -472,12 +463,12 @@ Auth::Digest::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Ht
 
     debugs(29, 9, "Sending type:" << hdrType <<
            " header: 'Digest realm=\"" << realm << "\", nonce=\"" <<
-           authenticateDigestNonceNonceHex(nonce) << "\", qop=\"" << QOP_AUTH <<
+           nonce->hex() << "\", qop=\"" << QOP_AUTH <<
            "\", stale=" << (stale ? "true" : "false"));
 
     /* in the future, for WWW auth we may want to support the domain entry */
     httpHeaderPutStrf(&rep->header, hdrType, "Digest realm=\"" SQUIDSBUFPH "\", nonce=\"%s\", qop=\"%s\", stale=%s",
-                      SQUIDSBUFPRINT(realm), authenticateDigestNonceNonceHex(nonce), QOP_AUTH, stale ? "true" : "false");
+                      SQUIDSBUFPRINT(realm), nonce->hex(), QOP_AUTH, stale ? "true" : "false");
 }
 
 /* Initialize helpers and the like for this auth scheme. Called AFTER parsing the

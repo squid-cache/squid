@@ -36,6 +36,10 @@ public:
     digest_nonce_h(const digest_nonce_h &) = delete; // non-copyable
     ~digest_nonce_h() { xfree(key); }
 
+    /// The HEX encoded unique identifier for this nonce
+    const char *hex() const { return static_cast<const char *>(key); }
+
+public:
     /* data to be encoded into the nonce's hex representation */
     struct _digest_nonce_data {
         time_t creationtime = 0;
@@ -58,7 +62,6 @@ public:
 void authDigestNonceUnlink(digest_nonce_h * nonce);
 int authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9]);
 int authDigestNonceIsStale(digest_nonce_h * nonce);
-const char *authenticateDigestNonceNonceHex(const digest_nonce_h * nonce);
 int authDigestNonceLastRequest(digest_nonce_h * nonce);
 void authenticateDigestNonceShutdown(void);
 void authDigestNoncePurge(digest_nonce_h * nonce);
