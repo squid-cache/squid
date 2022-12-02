@@ -29,8 +29,7 @@ Auth::Digest::UserRequest::UserRequest() :
     pszMethod(nullptr),
     qop(nullptr),
     uri(nullptr),
-    response(nullptr),
-    nonce(nullptr)
+    response(nullptr)
 {
     memset(nc, 0, sizeof(nc));
     memset(&flags, 0, sizeof(flags));
@@ -53,9 +52,6 @@ Auth::Digest::UserRequest::~UserRequest()
     safe_free(qop);
     safe_free(uri);
     safe_free(response);
-
-    if (nonce)
-        authDigestNonceUnlink(nonce);
 }
 
 int
@@ -100,7 +96,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
         return;
     }
 
-    if (digest_request->nonce == nullptr) {
+    if (!digest_request->nonce) {
         /* this isn't a nonce we issued */
         auth_user->credentials(Auth::Failed);
         return;
@@ -177,7 +173,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
         debugs(29, 3, auth_user->username() << "' validated OK but nonce stale: " << digest_request->noncehex);
         /* Pending prevent banner and makes a ldap control */
         auth_user->credentials(Auth::Pending);
-        authDigestNoncePurge(nonce);
+        authDigestNoncePurge(nonce.getRaw());
         return;
     }
 

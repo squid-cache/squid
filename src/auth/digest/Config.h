@@ -32,6 +32,8 @@ class digest_nonce_h : public hash_link, public RefCountable
     MEMPROXY_CLASS(digest_nonce_h);
 
 public:
+    typedef RefCount<digest_nonce_h> Pointer;
+
     digest_nonce_h() = default;
     digest_nonce_h(const digest_nonce_h &) = delete; // non-copyable
     ~digest_nonce_h() { xfree(key); }

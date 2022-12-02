@@ -928,7 +928,6 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
     }
 
     digest_request->nonce = nonce;
-    authDigestNonceLink(nonce);
 
     /* check that we're not being hacked / the username hasn't changed */
     if (nonce->user && strcmp(username, nonce->user->username())) {
