@@ -25,31 +25,35 @@ class User;
 }
 }
 
-/* Generic */
-typedef struct _digest_nonce_data digest_nonce_data;
-typedef struct _digest_nonce_h digest_nonce_h;
-
-/* data to be encoded into the nonce's hex representation */
-struct _digest_nonce_data {
-    time_t creationtime;
-    uint32_t randomdata;
-};
-
 /* the nonce structure we'll pass around */
+class digest_nonce_h : public hash_link
+{
+    MEMPROXY_CLASS(digest_nonce_h);
 
-struct _digest_nonce_h : public hash_link {
-    digest_nonce_data noncedata;
+public:
+    digest_nonce_h() = default;
+    digest_nonce_h(const digest_nonce_h &) = delete; // non-copyable
+    ~digest_nonce_h() { xfree(key); }
+
+    /* data to be encoded into the nonce's hex representation */
+    struct _digest_nonce_data {
+        time_t creationtime = 0;
+        uint32_t randomdata = 0;
+    } noncedata;
+
     /* number of uses we've seen of this nonce */
-    unsigned long nc;
-    /* reference count */
-    uint64_t references;
-    /* the auth_user this nonce has been tied to */
-    Auth::Digest::User *user;
-    /* has this nonce been invalidated ? */
+    unsigned long nc = 0;
 
+    /* reference count */
+    uint64_t references = 0;
+
+    /* the auth_user this nonce has been tied to */
+    Auth::Digest::User *user = nullptr;
+
+    /* has this nonce been invalidated ? */
     struct {
-        bool valid;
-        bool incache;
+        bool valid = true;
+        bool incache = false;
     } flags;
 };
 

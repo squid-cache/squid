@@ -38,11 +38,6 @@
 #include "StrList.h"
 #include "wordlist.h"
 
-/* digest_nonce_h still uses explicit alloc()/freeOne() MemPool calls.
- * XXX: convert to MEMPROXY_CLASS() API
- */
-#include "mem/Pool.h"
-
 static AUTHSSTATS authenticateDigestStats;
 
 helper *digestauthenticators = nullptr;
@@ -50,7 +45,6 @@ helper *digestauthenticators = nullptr;
 static hash_table *digest_nonce_cache;
 
 static int authdigest_initialised = 0;
-static Mem::Allocator *digest_nonce_pool = nullptr;
 
 enum http_digest_attr_type {
     DIGEST_USERNAME,
@@ -90,7 +84,6 @@ DigestFieldsLookupTable(DIGEST_INVALID_ATTR, DigestAttrs);
 
 static void authenticateDigestNonceCacheCleanup(void *data);
 static digest_nonce_h *authenticateDigestNonceFindNonce(const char *noncehex);
-static void authenticateDigestNonceDelete(digest_nonce_h * nonce);
 static void authenticateDigestNonceSetup(void);
 static void authDigestNonceEncode(digest_nonce_h * nonce);
 static void authDigestNonceLink(digest_nonce_h * nonce);
@@ -118,8 +111,6 @@ authDigestNonceEncode(digest_nonce_h * nonce)
 digest_nonce_h *
 authenticateDigestNonceNew(void)
 {
-    digest_nonce_h *newnonce = static_cast < digest_nonce_h * >(digest_nonce_pool->alloc());
-
     /* NONCE CREATION - NOTES AND REASONING. RBC 20010108
      * === EXCERPT FROM RFC 2617 ===
      * The contents of the nonce are implementation dependent. The quality
@@ -161,8 +152,7 @@ authenticateDigestNonceNew(void)
     static xuniform_int_distribution<uint32_t> newRandomData;
 
     /* create a new nonce */
-    newnonce->nc = 0;
-    newnonce->flags.valid = true;
+    digest_nonce_h *newnonce = new digest_nonce_h;
     newnonce->noncedata.creationtime = current_time.tv_sec;
     newnonce->noncedata.randomdata = newRandomData(mt);
 
@@ -184,24 +174,8 @@ authenticateDigestNonceNew(void)
 }
 
 static void
-authenticateDigestNonceDelete(digest_nonce_h * nonce)
-{
-    if (nonce) {
-        assert(nonce->references == 0);
-        assert(!nonce->flags.incache);
-
-        safe_free(nonce->key);
-
-        digest_nonce_pool->freeOne(nonce);
-    }
-}
-
-static void
 authenticateDigestNonceSetup(void)
 {
-    if (!digest_nonce_pool)
-        digest_nonce_pool = memPoolCreate("Digest Scheme nonce's", sizeof(digest_nonce_h));
-
     if (!digest_nonce_cache) {
         digest_nonce_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
         assert(digest_nonce_cache);
@@ -288,7 +262,7 @@ authDigestNonceUnlink(digest_nonce_h * nonce)
     debugs(29, 9, "nonce '" << nonce << "' now at '" << nonce->references << "'.");
 
     if (nonce->references == 0)
-        authenticateDigestNonceDelete(nonce);
+        delete nonce;
 }
 
 const char *
