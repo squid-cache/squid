@@ -189,10 +189,13 @@ Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
     // some code still uses Host directly so normalize it using the previously
     // sanitized URL authority value.
     // For now preserve the case where Host is completely absent. That matters.
-    if (const auto x = request->header.delById(Http::HOST)) {
-        debugs(33, 5, "normalize " << x << " Host header using " << request->url.authority());
-        SBuf tmp(request->url.authority());
-        request->header.putStr(Http::HOST, tmp.c_str());
+    if(request->header.findEntry(Http::HOST)){
+        SBuf domain(request->url.authority());
+        HttpHeaderEntry* host = new HttpHeaderEntry(Http::HOST, NULL, domain.c_str());
+        if(int x = request->header.delById(Http::HOST)){
+            debugs(33, 5, "normalize " << x << " Host header using " << request->url.authority());
+            request->header.insertEntry(host);
+        }
     }
 
     // TODO: We fill request notes here until we find a way to verify whether
