@@ -35,7 +35,7 @@ public:
     typedef RefCount<digest_nonce_h> Pointer;
 
     digest_nonce_h() = default;
-    digest_nonce_h(const digest_nonce_h &) = delete; // non-copyable
+    digest_nonce_h(digest_nonce_h &&) = delete; // no copying or moving of any kind
     ~digest_nonce_h() { xfree(key); }
 
     /// The HEX encoded unique identifier for this nonce

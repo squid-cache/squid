@@ -53,7 +53,7 @@ Auth::Digest::User::link(const digest_nonce_h::Pointer &nonce)
     if (!nonce)
         return;
 
-    if (std::find_if(nonces.begin(), nonces.end(), [&nonce](const digest_nonce_h::Pointer &n){ return n == nonce; }) != nonces.end())
+    if (std::find_if(nonces.begin(), nonces.end(), [&](const digest_nonce_h::Pointer &n) { return n == nonce; }) != nonces.end())
         return;
 
     nonces.push_back(nonce);
@@ -72,6 +72,7 @@ Auth::Digest::User::unlink(const digest_nonce_h::Pointer &nonce)
 
     if (!nonce->user)
         return;
+    assert(nonce->user == this);
 
     nonces.remove(nonce);
 
