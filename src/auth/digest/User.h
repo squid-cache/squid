@@ -44,7 +44,7 @@ public:
     HASH HA1;
     int HA1created;
 
-    /* what nonces have been allocated to this user */
+    /// nonces which have been allocated to this user, oldest first
     std::list<digest_nonce_h::Pointer> nonces;
 };
 
