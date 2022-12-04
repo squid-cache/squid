@@ -102,15 +102,15 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
         return;
     }
 
+    auto nonceId = digest_request->nonce->hex();
     DigestCalcHA1(digest_request->algorithm, nullptr, nullptr, nullptr,
-                  digest_request->nonce->hex(),
+                  nonceId.c_str(),
                   digest_request->cnonce,
                   digest_user->HA1, SESSIONKEY);
     SBuf sTmp = request->method.image();
-    DigestCalcResponse(SESSIONKEY, digest_request->nonce->hex(),
+    DigestCalcResponse(SESSIONKEY, nonceId.c_str(),
                        digest_request->nc, digest_request->cnonce, digest_request->qop,
                        sTmp.c_str(), digest_request->uri, HA2, Response);
-
     debugs(29, 9, "\nResponse = '" << digest_request->response << "'\nsquid is = '" << Response << "'");
 
     if (strcasecmp(digest_request->response, Response) != 0) {
@@ -129,7 +129,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
              * used.
              */
             sTmp = HttpRequestMethod(Http::METHOD_GET).image();
-            DigestCalcResponse(SESSIONKEY, digest_request->nonce->hex(),
+            DigestCalcResponse(SESSIONKEY, nonceId.c_str(),
                                digest_request->nc, digest_request->cnonce, digest_request->qop,
                                sTmp.c_str(), digest_request->uri, HA2, Response);
 
@@ -238,7 +238,7 @@ Auth::Digest::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int acce
             digest_user->link(nextnonce);
         }
         debugs(29, 9, "Sending type:" << type << " header: 'nextnonce=\"" << nextnonce->hex() << "\"");
-        httpHeaderPutStrf(&rep->header, type, "nextnonce=\"%s\"", nextnonce->hex());
+        httpHeaderPutStrf(&rep->header, type, "nextnonce=\"" SQUIDSBUFPH "\"", SQUIDSBUFPRINT(nextnonce->hex()));
     }
 }
 

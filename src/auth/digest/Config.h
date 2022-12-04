@@ -27,7 +27,7 @@ class User;
 }
 
 /* the nonce structure we'll pass around */
-class digest_nonce_h : public hash_link, public RefCountable
+class digest_nonce_h : public RefCountable
 {
     MEMPROXY_CLASS(digest_nonce_h);
 
@@ -36,13 +36,13 @@ public:
 
     digest_nonce_h() = default;
     digest_nonce_h(digest_nonce_h &&) = delete; // no copying or moving of any kind
-    ~digest_nonce_h() { xfree(key); }
+    ~digest_nonce_h() = default;
 
     /// set nonce random data and (re)encode the HEX identifier
     void encode(uint32_t);
 
     /// The HEX encoded unique identifier for this nonce
-    const char *hex() const { return static_cast<const char *>(key); }
+    const SBuf &hex() const { return hexKey; }
 
     /// Update nonce counter from client and validate
     /// \return whether the nonce is valid after update
@@ -61,6 +61,9 @@ public:
      */
     bool lastRequest() const;
 
+    /// add to the nonce cache if not already there
+    void cache();
+
     /// Forget this nonce permanently. Drop from the nonce cache and
     /// reject future client requests attempting to use it.
     /// Only client requests which have already been validated and
@@ -68,6 +71,9 @@ public:
     void purge();
 
 public:
+    /// HEX encoded representation of this nonce
+    SBuf hexKey;
+
     /* data to be encoded into the nonce's hex representation */
     struct _digest_nonce_data {
         time_t creationtime = 0;

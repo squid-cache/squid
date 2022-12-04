@@ -42,7 +42,14 @@ static AUTHSSTATS authenticateDigestStats;
 
 helper *digestauthenticators = nullptr;
 
-static hash_table *digest_nonce_cache;
+using CacheType = std::unordered_map<SBuf, digest_nonce_h::Pointer, std::hash<SBuf>, std::equal_to<SBuf>,
+                                     PoolingAllocator<std::pair<const SBuf, digest_nonce_h::Pointer>>>;
+static CacheType &
+NonceCache()
+{
+    static CacheType instance;
+    return instance;
+}
 
 static int authdigest_initialised = 0;
 
@@ -83,9 +90,7 @@ DigestFieldsLookupTable(DIGEST_INVALID_ATTR, DigestAttrs);
  */
 
 static void authenticateDigestNonceCacheCleanup(void *data);
-static digest_nonce_h *authenticateDigestNonceFindNonce(const char *noncehex);
 static void authenticateDigestNonceSetup(void);
-static void authDigestNonceLink(digest_nonce_h * nonce);
 
 void
 digest_nonce_h::encode(uint32_t data)
@@ -100,9 +105,11 @@ digest_nonce_h::encode(uint32_t data)
     SquidMD5Update(&Md5Ctx, reinterpret_cast<const uint8_t *>(&noncedata), sizeof(noncedata));
     SquidMD5Final(reinterpret_cast<uint8_t *>(H), &Md5Ctx);
 
-    xfree(key);
-    key = xcalloc(sizeof(HASHHEX), 1);
-    CvtHex(H, static_cast<char *>(key));
+    hexKey.clear();
+
+    char *buf = hexKey.rawAppendStart(sizeof(HASHHEX));
+    CvtHex(H, buf);
+    hexKey.rawAppendFinish(buf, strlen(buf));
 }
 
 digest_nonce_h *
@@ -153,15 +160,12 @@ authenticateDigestNonceNew(void)
     newnonce->encode(newRandomData(mt));
 
     // ensure temporal uniqueness by checking for existing nonce
-    while (authenticateDigestNonceFindNonce((char const *) (newnonce->key))) {
+    while (NonceCache().find(newnonce->hexKey) != NonceCache().end()) {
         /* create a new nonce */
         newnonce->encode(newRandomData(mt));
     }
 
-    hash_join(digest_nonce_cache, newnonce);
-    /* the cache's link */
-    authDigestNonceLink(newnonce);
-    newnonce->flags.incache = true;
+    newnonce->cache();
     debugs(29, 5, "created nonce " << newnonce << " at " << newnonce->noncedata.creationtime);
     return newnonce;
 }
@@ -169,30 +173,16 @@ authenticateDigestNonceNew(void)
 static void
 authenticateDigestNonceSetup(void)
 {
-    if (!digest_nonce_cache) {
-        digest_nonce_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
-        assert(digest_nonce_cache);
-        eventAdd("Digest nonce cache maintenance", authenticateDigestNonceCacheCleanup, nullptr, static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->nonceGCInterval, 1);
-    }
+    eventAdd("Digest nonce cache maintenance", authenticateDigestNonceCacheCleanup, nullptr, static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->nonceGCInterval, 1);
 }
 
 void
 authenticateDigestNonceShutdown(void)
 {
-    /*
-     * We empty the cache of any nonces left in there.
-     */
-    digest_nonce_h *nonce;
-
-    if (digest_nonce_cache) {
-        debugs(29, 2, "Shutting down nonce cache");
-        hash_first(digest_nonce_cache);
-
-        while ((nonce = ((digest_nonce_h *) hash_next(digest_nonce_cache)))) {
-            nonce->purge();
-        }
+    // empty the cache of any nonces left in there
+    for (const auto &entry: NonceCache()) {
+        entry.second->purge();
     }
-
     debugs(29, 2, "Nonce cache shutdown");
 }
 
@@ -200,22 +190,23 @@ static void
 authenticateDigestNonceCacheCleanup(void *)
 {
     /*
-     * We walk the hash by noncehex as that is the unique key we
-     * use.  For big hash tables we could consider stepping through
+     * For big hash tables we could consider stepping through
      * the cache, 100/200 entries at a time. Lets see how it flies
      * first.
      */
-    digest_nonce_h *nonce;
     debugs(29, 3, "Cleaning the nonce cache now");
     debugs(29, 3, "Current time: " << current_time.tv_sec);
-    hash_first(digest_nonce_cache);
 
-    while ((nonce = ((digest_nonce_h *) hash_next(digest_nonce_cache)))) {
-        debugs(29, 3, "nonce entry  : " << nonce << " '" << (char *) nonce->key << "'");
+    for (const auto &entry: NonceCache()) {
+        auto nonce = entry.second;
+        if (!nonce)
+            continue;
+
+        debugs(29, 3, "nonce entry  : " << nonce << " '" << nonce->hex() << "'");
         debugs(29, 4, "Creation time: " << nonce->noncedata.creationtime);
 
         if (!nonce->validate()) {
-            debugs(29, 4, "Removing nonce " << (char *) nonce->key << " from cache due to timeout.");
+            debugs(29, 4, "Removing nonce " << nonce->hex() << " from cache due to timeout.");
             /* if it is tied to a auth_user, remove the tie */
             if (nonce->user)
                 nonce->user->unlink(nonce);
@@ -227,44 +218,6 @@ authenticateDigestNonceCacheCleanup(void *)
 
     if (static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->active())
         eventAdd("Digest nonce cache maintenance", authenticateDigestNonceCacheCleanup, nullptr, static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->nonceGCInterval, 1);
-}
-
-// XXX: replace raw-pointers using this with Pointer
-static void
-authDigestNonceLink(digest_nonce_h * nonce)
-{
-    assert(nonce != nullptr);
-    nonce->lock();
-}
-
-// XXX: replace raw-pointers using this with Pointer
-void
-authDigestNonceUnlink(digest_nonce_h * nonce)
-{
-    assert(nonce != nullptr);
-    nonce->unlock();
-    if (nonce->LockCount() == 0)
-        delete nonce;
-}
-
-static digest_nonce_h *
-authenticateDigestNonceFindNonce(const char *noncehex)
-{
-    digest_nonce_h *nonce = nullptr;
-
-    if (noncehex == nullptr)
-        return nullptr;
-
-    debugs(29, 9, "looking for noncehex '" << noncehex << "' in the nonce cache.");
-
-    nonce = static_cast < digest_nonce_h * >(hash_lookup(digest_nonce_cache, noncehex));
-
-    if (!nonce || strcmp(nonce->hex(), noncehex) != 0)
-        return nullptr;
-
-    debugs(29, 9, "Found nonce '" << nonce << "'");
-
-    return nonce;
 }
 
 bool
@@ -344,14 +297,20 @@ digest_nonce_h::lastRequest() const
 }
 
 void
+digest_nonce_h::cache()
+{
+    if (!flags.incache) {
+        NonceCache().insert({hexKey, Pointer(this)});
+        flags.incache = true;
+    }
+}
+
+void
 digest_nonce_h::purge()
 {
     if (flags.incache) {
         flags.incache = false;
-
-        hash_remove_link(digest_nonce_cache, this);
-        /* the cache's link */
-        authDigestNonceUnlink(this);
+        NonceCache().erase(hexKey);
     }
 }
 
@@ -427,8 +386,8 @@ Auth::Digest::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Ht
            "\", stale=" << (stale ? "true" : "false"));
 
     /* in the future, for WWW auth we may want to support the domain entry */
-    httpHeaderPutStrf(&rep->header, hdrType, "Digest realm=\"" SQUIDSBUFPH "\", nonce=\"%s\", qop=\"%s\", stale=%s",
-                      SQUIDSBUFPRINT(realm), nonce->hex(), QOP_AUTH, stale ? "true" : "false");
+    httpHeaderPutStrf(&rep->header, hdrType, "Digest realm=\"" SQUIDSBUFPH "\", nonce=\"" SQUIDSBUFPH "\", qop=\"%s\", stale=%s",
+                      SQUIDSBUFPRINT(realm), SQUIDSBUFPRINT(nonce->hex()), QOP_AUTH, stale ? "true" : "false");
 }
 
 /* Initialize helpers and the like for this auth scheme. Called AFTER parsing the
@@ -552,7 +511,6 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
     const char *p;
     const char *pos = nullptr;
     char *username = nullptr;
-    digest_nonce_h *nonce;
     int ilen;
 
     debugs(29, 9, "beginning");
@@ -817,7 +775,11 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
     /** below nonce state dependent **/
 
     /* now the nonce */
-    nonce = authenticateDigestNonceFindNonce(digest_request->noncehex);
+    digest_nonce_h::Pointer nonce;
+    const auto entry = NonceCache().find(SBuf(digest_request->noncehex));
+    if (entry != NonceCache().end())
+        nonce = entry->second;
+
     /* check that we're not being hacked / the username hasn't changed */
     if (nonce && nonce->user && strcmp(username, nonce->user->username())) {
         debugs(29, 2, "Username for the nonce does not equal the username for the request");
