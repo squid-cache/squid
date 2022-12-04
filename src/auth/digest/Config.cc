@@ -278,9 +278,9 @@ authenticateDigestNonceFindNonce(const char *noncehex)
 }
 
 bool
-digest_nonce_h::valid(char aCount[9])
+digest_nonce_h::valid(char clientCount[9])
 {
-    unsigned long intnc = strtol(aCount, nullptr, 16);
+    unsigned long intnc = strtol(clientCount, nullptr, 16);
 
     /* has it already been invalidated ? */
     if (!flags.valid) {
