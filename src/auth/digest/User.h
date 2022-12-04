@@ -45,7 +45,7 @@ public:
     int HA1created;
 
     /// nonces which have been allocated to this user, oldest first
-    std::list<digest_nonce_h::Pointer> nonces;
+    std::list<digest_nonce_h::Pointer, PoolingAllocator<digest_nonce_h::Pointer>> nonces;
 };
 
 } // namespace Digest
