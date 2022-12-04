@@ -142,19 +142,15 @@ static void ValidateStaticError(const int page_id, const SBuf &inputLocation);
 
 /* local constant and vars */
 
-/**
- \ingroup ErrorPageInternal
- *
- \note  hard coded error messages are not appended with %S
- *      automagically to give you more control on the format
- */
-struct HardCodedMessage {
-    int type;           /* and page_id */
-    const char *text;
+/// an error page (or a part of an error page) with hard-coded template text
+class HardCodedError {
+public:
+    err_type type; ///< identifies the error (or a special error template part)
+    const char *text; ///< a string literal containing the error template
 };
 
 /// error messages that cannot be configured/customized externally
-static const std::array<HardCodedMessage, 7> HardCodedErrors = {{
+static const std::array<HardCodedError, 7> HardCodedErrors = {{
     {
         ERR_SQUID_SIGNATURE,
         "\n<br>\n"
