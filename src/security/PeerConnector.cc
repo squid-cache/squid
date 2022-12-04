@@ -12,6 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "base/AsyncCallbacks.h"
 #include "base/IoManip.h"
+#include "CachePeer.h"
 #include "comm/Loops.h"
 #include "comm/Read.h"
 #include "Downloader.h"
@@ -110,15 +111,17 @@ Security::PeerConnector::commCloseHandler(const CommCloseCbParams &params)
     debugs(83, 5, "FD " << params.fd << ", Security::PeerConnector=" << params.data);
 
     closeHandler = nullptr;
-    if (serverConn) {
-        countFailingConnection();
-        serverConn->noteClosure();
-        serverConn = nullptr;
-    }
 
     const auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request.getRaw(), al);
     static const auto d = MakeNamedErrorDetail("TLS_CONNECT_CLOSE");
     err->detailError(d);
+
+    if (serverConn) {
+        countFailingConnection(err);
+        serverConn->noteClosure();
+        serverConn = nullptr;
+    }
+
     bail(err);
 }
 
@@ -508,7 +511,7 @@ Security::PeerConnector::bail(ErrorState *error)
     answer().error = error;
 
     if (const auto failingConnection = serverConn) {
-        countFailingConnection();
+        countFailingConnection(error);
         disconnect();
         failingConnection->close();
     }
@@ -526,11 +529,10 @@ Security::PeerConnector::sendSuccess()
 }
 
 void
-Security::PeerConnector::countFailingConnection()
+Security::PeerConnector::countFailingConnection(const ErrorState * const error)
 {
     assert(serverConn);
-    if (const auto p = serverConn->getPeer())
-        peerConnectFailed(p);
+    NoteOutgoingConnectionFailure(serverConn->getPeer(), error ? error->httpStatus : Http::scNone);
     // TODO: Calling PconnPool::noteUses() should not be our responsibility.
     if (noteFwdPconnUse && serverConn->isOpen())
         fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);

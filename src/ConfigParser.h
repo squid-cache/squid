@@ -19,6 +19,7 @@
 #include <stack>
 #include <string>
 
+class CachePeer;
 class wordlist;
 
 /**
@@ -75,6 +76,9 @@ public:
 
     /// extracts and returns a regex (including any optional flags)
     std::unique_ptr<RegexPattern> regex(const char *expectedRegexDescription);
+
+    /// extracts a cache_peer name token and returns the corresponding CachePeer
+    CachePeer &cachePeer(const char *peerNameTokenDescription);
 
     static void ParseUShort(unsigned short *var);
     static void ParseBool(bool *var);

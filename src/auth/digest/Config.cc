@@ -50,7 +50,7 @@ helper *digestauthenticators = nullptr;
 static hash_table *digest_nonce_cache;
 
 static int authdigest_initialised = 0;
-static MemAllocator *digest_nonce_pool = nullptr;
+static Mem::Allocator *digest_nonce_pool = nullptr;
 
 enum http_digest_attr_type {
     DIGEST_USERNAME,

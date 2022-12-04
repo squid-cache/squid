@@ -12,6 +12,8 @@
 #include "cache_snmp.h"
 #include "CachePeer.h"
 #include "globals.h"
+#include "mem/Meter.h"
+#include "mem/Stats.h"
 #include "mem_node.h"
 #include "neighbors.h"
 #include "snmp_agent.h"
@@ -339,11 +341,14 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
                                       SMI_COUNTER32);
         break;
 
-    case PERF_SYS_MEMUSAGE:
+    case PERF_SYS_MEMUSAGE: {
+        Mem::PoolStats stats;
+        Mem::GlobalStats(stats);
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) statMemoryAccounted() >> 10,
+                                      (snint) stats.meter->alloc.currentLevel() >> 10,
                                       ASN_INTEGER);
-        break;
+    }
+    break;
 
     case PERF_SYS_CPUTIME:
         squid_getrusage(&rusage);

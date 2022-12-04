@@ -229,7 +229,8 @@ main() {
     fi
     echo "Starting point: $STARTING_POINT (`git rev-parse $STARTING_POINT`)"
 
-    checks="$@"
+    local checks="$@"
+
     if test -z "$checks"
     then
         local default_checks="
@@ -243,5 +244,5 @@ main() {
     run_checks $checks
 }
 
-main
+main "$@"
 exit $?

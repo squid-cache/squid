@@ -42,13 +42,21 @@ void neighbors_init(void);
 #if USE_HTCP
 void neighborsHtcpClear(StoreEntry *, HttpRequest *, const HttpRequestMethod &, htcp_clr_reason);
 #endif
-CachePeer *peerFindByName(const char *);
-CachePeer *peerFindByNameAndPort(const char *, unsigned short);
+
+/// cache_peer with a given name (or nil)
+CachePeer *findCachePeerByName(const char *);
+
 CachePeer *getDefaultParent(PeerSelector*);
 CachePeer *getRoundRobinParent(PeerSelector*);
 CachePeer *getWeightedRoundRobinParent(PeerSelector*);
 void peerClearRRStart(void);
 void peerClearRR(void);
+
+// TODO: Move, together with its many dependencies and callers, into CachePeer.
+/// Updates protocol-agnostic CachePeer state after an indication of a
+/// successful contact with the given cache_peer.
+void peerAlive(CachePeer *);
+
 lookup_t peerDigestLookup(CachePeer * p, PeerSelector *);
 CachePeer *neighborsDigestSelect(PeerSelector *);
 void peerNoteDigestLookup(HttpRequest * request, CachePeer * p, lookup_t lookup);
@@ -56,8 +64,6 @@ void peerNoteDigestGone(CachePeer * p);
 int neighborUp(const CachePeer * e);
 const char *neighborTypeStr(const CachePeer * e);
 peer_t neighborType(const CachePeer *, const AnyP::Uri &);
-void peerConnectFailed(CachePeer *);
-void peerConnectSucceded(CachePeer *);
 void dump_peer_options(StoreEntry *, CachePeer *);
 int peerHTTPOkay(const CachePeer *, PeerSelector *);
 

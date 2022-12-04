@@ -16,6 +16,7 @@
 
 void
 peerConnClosed(CachePeer *) STUB
+CachePeer *findCachePeerByName(const char *) STUB_RETVAL(nullptr)
 
 time_t
 FwdState::ForwardTimeout(const time_t) STUB_RETVAL(0)

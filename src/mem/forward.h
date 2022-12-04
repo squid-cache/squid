@@ -16,18 +16,19 @@
 #include <iosfwd>
 
 class StoreEntry;
-class MemPoolStats;
-class MemPoolMeter;
 
 /// Memory Management
 namespace Mem
 {
+class Meter;
+class PoolMeter;
+class PoolStats;
+
 void Init();
-void Report();
 void Stats(StoreEntry *);
 void CleanIdlePools(void *unused);
 void Report(std::ostream &);
-void PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::ostream &);
+void PoolReport(const PoolStats *, const PoolMeter *, std::ostream &);
 };
 
 extern const size_t squidSystemPageSize;

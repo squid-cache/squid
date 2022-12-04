@@ -20,8 +20,6 @@ namespace Mem
 class Meter
 {
 public:
-    Meter() : level(0), hwater_level(0), hwater_stamp(0) {}
-
     /// flush the meter level back to 0, but leave peak records
     void flush() {level=0;}
 
@@ -45,9 +43,47 @@ private:
         }
     }
 
-    ssize_t level;          ///< current level (count or volume)
-    ssize_t hwater_level;   ///< high water mark
-    time_t hwater_stamp;    ///< timestamp of last high water mark change
+    ssize_t level = 0; ///< current level (count or volume)
+    ssize_t hwater_level = 0; ///< high water mark
+    time_t hwater_stamp = 0; ///< timestamp of last high water mark change
+};
+
+/**
+ * Object to track per-pool memory usage (alloc = inuse+idle)
+ */
+class PoolMeter
+{
+public:
+    /// Object to track per-pool cumulative counters
+    struct mgb_t {
+        double count = 0.0;
+        double bytes = 0.0;
+    };
+
+    /// flush counters back to 0, but leave historic peak records
+    void flush() {
+        alloc.flush();
+        inuse.flush();
+        idle.flush();
+        gb_allocated = mgb_t();
+        gb_oallocated = mgb_t();
+        gb_saved = mgb_t();
+        gb_freed = mgb_t();
+    }
+
+    Meter alloc;
+    Meter inuse;
+    Meter idle;
+
+    /** history Allocations */
+    mgb_t gb_allocated;
+    mgb_t gb_oallocated;
+
+    /** account Saved Allocations */
+    mgb_t gb_saved;
+
+    /** account Free calls */
+    mgb_t gb_freed;
 };
 
 } // namespace Mem

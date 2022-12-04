@@ -197,12 +197,6 @@ class SignalEngine: public AsyncEngine
 {
 
 public:
-#if KILL_PARENT_OPT
-    SignalEngine(): parentKillNotified(false) {
-        parentPid = getppid();
-    }
-#endif
-
     virtual int checkEvents(int timeout);
 
 private:
@@ -225,11 +219,6 @@ private:
 
     void doShutdown(time_t wait);
     void handleStoppedChild();
-
-#if KILL_PARENT_OPT
-    bool parentKillNotified;
-    pid_t parentPid;
-#endif
 };
 
 int
@@ -286,23 +275,10 @@ SignalEngine::doShutdown(time_t wait)
     debugs(1, Important(2), "Preparing for shutdown after " << statCounter.client_http.requests << " requests");
     debugs(1, Important(3), "Waiting " << wait << " seconds for active connections to finish");
 
-#if KILL_PARENT_OPT
-    if (!IamMasterProcess() && !parentKillNotified && ShutdownSignal > 0 && parentPid > 1) {
-        debugs(1, DBG_IMPORTANT, "Killing master process, pid " << parentPid);
-        if (kill(parentPid, ShutdownSignal) < 0) {
-            int xerrno = errno;
-            debugs(1, DBG_IMPORTANT, "kill " << parentPid << ": " << xstrerr(xerrno));
-        }
-        parentKillNotified = true;
-    }
-#endif
-
     if (shutting_down) {
-#if !KILL_PARENT_OPT
         // Already a shutdown signal has received and shutdown is in progress.
         // Shutdown as soon as possible.
         wait = 0;
-#endif
     } else {
         shutting_down = 1;
 
@@ -948,7 +924,6 @@ mainReconfigureFinish(void *)
     CpuAffinityReconfigure();
 
     setUmask(Config.umask);
-    Mem::Report();
     setEffectiveUser();
     Debug::UseCacheLog();
     ipcache_restart();      /* clear stuck entries */
@@ -1582,8 +1557,6 @@ SquidMain(int argc, char **argv)
                    (opt_parse_cfg_only ? " Run squid -k parse and check for errors." : ""));
             parse_err = 1;
         }
-
-        Mem::Report();
 
         if (opt_parse_cfg_only || parse_err > 0)
             return parse_err;

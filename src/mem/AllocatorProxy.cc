@@ -8,7 +8,9 @@
 
 #include "squid.h"
 #include "mem/AllocatorProxy.h"
+#include "mem/Meter.h"
 #include "mem/Pool.h"
+#include "mem/Stats.h"
 
 void *
 Mem::AllocatorProxy::alloc()
@@ -25,7 +27,7 @@ Mem::AllocatorProxy::freeOne(void *address)
      */
 }
 
-MemAllocator *
+Mem::Allocator *
 Mem::AllocatorProxy::getAllocator() const
 {
     if (!theAllocator) {
@@ -50,14 +52,14 @@ Mem::AllocatorProxy::zeroBlocks(bool doIt)
     getAllocator()->zeroBlocks(doIt);
 }
 
-MemPoolMeter const &
+Mem::PoolMeter const &
 Mem::AllocatorProxy::getMeter() const
 {
     return getAllocator()->getMeter();
 }
 
-int
-Mem::AllocatorProxy::getStats(MemPoolStats * stats)
+size_t
+Mem::AllocatorProxy::getStats(PoolStats &stats)
 {
     return getAllocator()->getStats(stats);
 }
