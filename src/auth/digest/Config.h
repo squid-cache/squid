@@ -41,13 +41,13 @@ public:
     /// The HEX encoded unique identifier for this nonce
     const char *hex() const { return static_cast<const char *>(key); }
 
-    /// Check the nonce and invalidate if any tests fail.
-    /// \retval true if the nonce is valid.
-    bool valid(char clientCount[9]);
+    /// Update nonce counter from client and validate
+    /// \return whether the nonce is valid after update
+    bool validate(char clientCount[9]);
 
-    /// Check the freshness of this nonce and invalidate if stale.
-    /// \retval true if the nonce is stale.
-    bool stale();
+    /// Update nonce validity given its curent values.
+    /// \return whether the nonce is valid after update
+    bool validate();
 
     /**
      * Try to predict what the nonce validity will be if used on the
@@ -73,7 +73,7 @@ public:
 
     /* has this nonce been invalidated ? */
     struct {
-        bool valid = true;
+        mutable bool valid = true;
         bool incache = false;
     } flags;
 };

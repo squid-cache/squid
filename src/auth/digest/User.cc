@@ -87,7 +87,7 @@ Auth::Digest::User::currentNonce()
 {
     if (!nonces.empty()) {
         if (const auto nonce = nonces.back()) {
-            if (!nonce->stale())
+            if (nonce->validate())
                 return nonce;
         }
     }

@@ -221,11 +221,9 @@ authenticateDigestNonceCacheCleanup(void *)
         debugs(29, 3, "nonce entry  : " << nonce << " '" << (char *) nonce->key << "'");
         debugs(29, 4, "Creation time: " << nonce->noncedata.creationtime);
 
-        if (nonce->stale()) {
+        if (!nonce->validate()) {
             debugs(29, 4, "Removing nonce " << (char *) nonce->key << " from cache due to timeout.");
             assert(nonce->flags.incache);
-            /* invalidate nonce so future requests fail */
-            nonce->flags.valid = false;
             /* if it is tied to a auth_user, remove the tie */
             if (nonce->user)
                 nonce->user->unlink(nonce);
@@ -278,7 +276,7 @@ authenticateDigestNonceFindNonce(const char *noncehex)
 }
 
 bool
-digest_nonce_h::valid(char clientCount[9])
+digest_nonce_h::validate(char clientCount[9])
 {
     unsigned long intnc = strtol(clientCount, nullptr, 16);
 
@@ -307,15 +305,15 @@ digest_nonce_h::valid(char clientCount[9])
      */
     nc = intnc;
 
-    return !stale();
+    return validate();
 }
 
 bool
-digest_nonce_h::stale()
+digest_nonce_h::validate()
 {
     /* Is it already invalidated? */
     if (!flags.valid)
-        return true;
+        return false;
 
     const auto cfg = static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"));
 
@@ -323,23 +321,17 @@ digest_nonce_h::stale()
     if (noncedata.creationtime + cfg->noncemaxduration < current_time.tv_sec) {
         debugs(29, 4, "Nonce is too old. " << noncedata.creationtime << " " << cfg->noncemaxduration << " " << current_time.tv_sec);
         flags.valid = false;
-        return true;
-    }
 
-    if (nc > 99999998) {
+    } else if (nc > 99999998) {
         debugs(29, 4, "Nonce count overflow");
         flags.valid = false;
-        return true;
-    }
 
-    if (nc > cfg->noncemaxuses) {
+    } else if (nc > cfg->noncemaxuses) {
         debugs(29, 4, "Nonce count over user limit");
         flags.valid = false;
-        return true;
     }
 
-    /* seems ok */
-    return false;
+    return flags.valid;
 }
 
 bool
