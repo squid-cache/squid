@@ -93,7 +93,6 @@ public:
     } flags;
 };
 
-void authDigestNonceUnlink(digest_nonce_h * nonce);
 void authenticateDigestNonceShutdown(void);
 digest_nonce_h *authenticateDigestNonceNew(void);
 
