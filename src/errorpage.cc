@@ -190,15 +190,6 @@ static std::array<HardCodedMessage, 7> HardCodedErrors = {{
     }
 }};
 
-/// error messages that may be configured/customized by the admin,
-/// like the regular ones, but that also have a hard-coded last-resort default
-static std::array<HardCodedMessage, 1> ErrorsWithDefaultTemplates = {{
-    {
-        MGR_INDEX,
-        "mgr_index"
-    }
-}};
-
 /// \ingroup ErrorPageInternal
 static std::vector<ErrorDynamicPageInfo *> ErrorDynamicPages;
 
@@ -213,18 +204,8 @@ static int error_page_count = 0;
 /// \ingroup ErrorPageInternal
 static MemBuf error_stylesheet;
 
+static const char *errorFindHardText(err_type type);
 static IOCB errorSendComplete;
-
-template <class Messages>
-static const char *
-FindHardCodedTemplate(const err_type type, const Messages &messages)
-{
-    for (const auto &m: messages) {
-        if (m.type == type)
-            return m.text;
-    }
-    return nullptr;
-}
 
 /// \ingroup ErrorPageInternal
 /// manages an error page template
@@ -282,7 +263,7 @@ errorInitialize(void)
     for (i = ERR_NONE, ++i; i < error_page_count; ++i) {
         safe_free(error_text[i]);
 
-        if ((text = FindHardCodedTemplate(i, HardCodedErrors))) {
+        if ((text = errorFindHardText(i))) {
             /**\par
              * Index any hard-coded error text into defaults.
              */
@@ -355,6 +336,17 @@ errorClean(void)
 #endif
 }
 
+/// \ingroup ErrorPageInternal
+static const char *
+errorFindHardText(err_type type)
+{
+    for (const auto &m: HardCodedErrors) {
+        if (m.type == type)
+            return m.text;
+    }
+    return nullptr;
+}
+
 TemplateFile::TemplateFile(const char *name, const err_type code): silent(false), wasLoaded(false), templateName(name), templateCode(code)
 {
     assert(name);
@@ -385,13 +377,6 @@ TemplateFile::loadDefault()
     /* test default location if failed (templates == English translation base templates) */
     if (!loaded()) {
         tryLoadTemplate("templates");
-    }
-
-    if (!loaded()) {
-        if (const auto defaultTemplate = FindHardCodedTemplate(templateCode, ErrorsWithDefaultTemplates)) {
-            template_ = defaultTemplate;
-            wasLoaded = true;
-        }
     }
 
     /* giving up if failed */
