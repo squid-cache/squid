@@ -234,7 +234,7 @@ Auth::Digest::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int acce
 
         digest_nonce_h::Pointer nextnonce = digest_user->currentNonce();
         if (!nextnonce || nonce->lastRequest()) {
-            nextnonce = authenticateDigestNonceNew();
+            nextnonce = digest_nonce_h::Create();
             digest_user->link(nextnonce);
         }
         debugs(29, 9, "Sending type:" << type << " header: 'nextnonce=\"" << nextnonce->hex() << "\"");
@@ -266,7 +266,7 @@ Auth::Digest::UserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int acc
         Auth::Digest::User *digest_user = dynamic_cast<Auth::Digest::User *>(auth_user_request->user().getRaw());
         nonce = digest_user->currentNonce();
         if (!nonce) {
-            nonce = authenticateDigestNonceNew();
+            nonce = digest_nonce_h::Create();
             digest_user->link(nonce);
         }
         debugs(29, 9, "Sending type:" << type << " header: 'nextnonce=\"" << nonce->hex() << "\"");

@@ -38,6 +38,9 @@ public:
     digest_nonce_h(digest_nonce_h &&) = delete; // no copying or moving of any kind
     ~digest_nonce_h() = default;
 
+    /// Create a new unique nonce
+    static Pointer Create();
+
     /// set nonce random data and (re)encode the HEX identifier
     void encode(uint32_t);
 
@@ -94,7 +97,6 @@ public:
 };
 
 void authenticateDigestNonceShutdown(void);
-digest_nonce_h *authenticateDigestNonceNew(void);
 
 namespace Auth
 {

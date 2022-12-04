@@ -112,8 +112,8 @@ digest_nonce_h::encode(uint32_t data)
     hexKey.rawAppendFinish(buf, strlen(buf));
 }
 
-digest_nonce_h *
-authenticateDigestNonceNew(void)
+digest_nonce_h::Pointer
+digest_nonce_h::Create()
 {
     /* NONCE CREATION - NOTES AND REASONING. RBC 20010108
      * === EXCERPT FROM RFC 2617 ===
@@ -156,7 +156,7 @@ authenticateDigestNonceNew(void)
     static xuniform_int_distribution<uint32_t> newRandomData;
 
     /* create a new nonce */
-    digest_nonce_h *newnonce = new digest_nonce_h;
+    digest_nonce_h::Pointer newnonce = new digest_nonce_h;
     newnonce->encode(newRandomData(mt));
 
     // ensure temporal uniqueness by checking for existing nonce
@@ -376,9 +376,8 @@ Auth::Digest::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Ht
             }
         }
     }
-    if (!nonce) {
-        nonce = authenticateDigestNonceNew();
-    }
+    if (!nonce)
+        nonce = digest_nonce_h::Create();
 
     debugs(29, 9, "Sending type:" << hdrType <<
            " header: 'Digest realm=\"" << realm << "\", nonce=\"" <<
