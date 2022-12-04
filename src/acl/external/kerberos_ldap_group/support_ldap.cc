@@ -644,6 +644,7 @@ ldap_set_ssl_defaults(struct main_args *margs)
         return rc;
     }
 #else
+    (void)margs;
     error((char *) "%s| %s: ERROR: SSL not supported by ldap library\n",
           LogTime(), PROGRAM);
 #endif

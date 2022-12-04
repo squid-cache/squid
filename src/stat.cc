@@ -24,6 +24,7 @@
 #include "HttpRequest.h"
 #include "IoStats.h"
 #include "mem/Pool.h"
+#include "mem/Stats.h"
 #include "mem_node.h"
 #include "MemBuf.h"
 #include "MemObject.h"
@@ -532,13 +533,12 @@ GetInfo(Mgr::InfoActionData& stats)
 
 #endif
 
-    stats.total_accounted = statMemoryAccounted();
-
     {
-        MemPoolGlobalStats mp_stats;
-        memPoolGetGlobalStats(&mp_stats);
-        stats.gb_saved_count = mp_stats.TheMeter->gb_saved.count;
-        stats.gb_freed_count = mp_stats.TheMeter->gb_freed.count;
+        Mem::PoolStats mp_stats;
+        Mem::GlobalStats(mp_stats);
+        stats.gb_saved_count = mp_stats.meter->gb_saved.count;
+        stats.gb_freed_count = mp_stats.meter->gb_freed.count;
+        stats.total_accounted = mp_stats.meter->alloc.currentLevel();
     }
 
     stats.max_fd = Squid_MaxFD;
@@ -724,8 +724,8 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "\tTotal accounted:       %6.0f KB\n",
                       stats.total_accounted / 1024);
     {
-        MemPoolGlobalStats mp_stats;
-        memPoolGetGlobalStats(&mp_stats);
+        Mem::PoolStats mp_stats;
+        Mem::GlobalStats(mp_stats); // XXX: called just for its side effects
         storeAppendPrintf(sentry, "\tmemPoolAlloc calls: %9.0f\n",
                           stats.gb_saved_count);
         storeAppendPrintf(sentry, "\tmemPoolFree calls:  %9.0f\n",
@@ -1917,10 +1917,4 @@ statGraphDump(StoreEntry * e)
 }
 
 #endif /* STAT_GRAPHS */
-
-int
-statMemoryAccounted(void)
-{
-    return memPoolsTotalAllocated();
-}
 

@@ -36,8 +36,8 @@ Mem::AllocatorProxy::inUseCount() const
     return Alive;
 }
 
-int
-Mem::AllocatorProxy::getStats(MemPoolStats *)
+size_t
+Mem::AllocatorProxy::getStats(PoolStats &)
 {
     return Alive;
 }

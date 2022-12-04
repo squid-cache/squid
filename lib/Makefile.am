@@ -68,7 +68,6 @@ libmiscutil_la_SOURCES = \
 	getfullhostname.c \
 	heap.c \
 	radix.c \
-	stub_memaccount.c \
 	util.c \
 	xusleep.c
 
