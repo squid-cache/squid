@@ -150,41 +150,43 @@ public:
 };
 
 /// error messages that cannot be configured/customized externally
-static const std::array<HardCodedError, 7> HardCodedErrors = {{
+static const std::array<HardCodedError, 7> HardCodedErrors = {
     {
-        ERR_SQUID_SIGNATURE,
-        "\n<br>\n"
-        "<hr>\n"
-        "<div id=\"footer\">\n"
-        "Generated %T by %h (%s)\n"
-        "</div>\n"
-        "</body></html>\n"
-    },
-    {
-        TCP_RESET,
-        "reset"
-    },
-    {
-        ERR_CLIENT_GONE,
-        "unexpected client disconnect"
-    },
-    {
-        ERR_SECURE_ACCEPT_FAIL,
-        "secure accept fail"
-    },
-    {
-        ERR_REQUEST_START_TIMEOUT,
-        "request start timedout"
-    },
-    {
-        ERR_REQUEST_PARSE_TIMEOUT,
-        "request parse timedout"
-    },
-    {
-        ERR_RELAY_REMOTE,
-        "relay server response"
+        {
+            ERR_SQUID_SIGNATURE,
+            "\n<br>\n"
+            "<hr>\n"
+            "<div id=\"footer\">\n"
+            "Generated %T by %h (%s)\n"
+            "</div>\n"
+            "</body></html>\n"
+        },
+        {
+            TCP_RESET,
+            "reset"
+        },
+        {
+            ERR_CLIENT_GONE,
+            "unexpected client disconnect"
+        },
+        {
+            ERR_SECURE_ACCEPT_FAIL,
+            "secure accept fail"
+        },
+        {
+            ERR_REQUEST_START_TIMEOUT,
+            "request start timedout"
+        },
+        {
+            ERR_REQUEST_PARSE_TIMEOUT,
+            "request parse timedout"
+        },
+        {
+            ERR_RELAY_REMOTE,
+            "relay server response"
+        }
     }
-}};
+};
 
 /// \ingroup ErrorPageInternal
 static std::vector<ErrorDynamicPageInfo *> ErrorDynamicPages;
