@@ -85,26 +85,24 @@ DigestFieldsLookupTable(DIGEST_INVALID_ATTR, DigestAttrs);
 static void authenticateDigestNonceCacheCleanup(void *data);
 static digest_nonce_h *authenticateDigestNonceFindNonce(const char *noncehex);
 static void authenticateDigestNonceSetup(void);
-static void authDigestNonceEncode(digest_nonce_h * nonce);
 static void authDigestNonceLink(digest_nonce_h * nonce);
 
-static void
-authDigestNonceEncode(digest_nonce_h * nonce)
+void
+digest_nonce_h::encode(uint32_t data)
 {
-    if (!nonce)
-        return;
-
-    if (nonce->key)
-        xfree(nonce->key);
+    if (!noncedata.creationtime)
+        noncedata.creationtime = current_time.tv_sec;
+    noncedata.randomdata = data;
 
     SquidMD5_CTX Md5Ctx;
     HASH H;
     SquidMD5Init(&Md5Ctx);
-    SquidMD5Update(&Md5Ctx, reinterpret_cast<const uint8_t *>(&nonce->noncedata), sizeof(nonce->noncedata));
+    SquidMD5Update(&Md5Ctx, reinterpret_cast<const uint8_t *>(&noncedata), sizeof(noncedata));
     SquidMD5Final(reinterpret_cast<uint8_t *>(H), &Md5Ctx);
 
-    nonce->key = xcalloc(sizeof(HASHHEX), 1);
-    CvtHex(H, static_cast<char *>(nonce->key));
+    xfree(key);
+    key = xcalloc(sizeof(HASHHEX), 1);
+    CvtHex(H, static_cast<char *>(key));
 }
 
 digest_nonce_h *
@@ -152,16 +150,12 @@ authenticateDigestNonceNew(void)
 
     /* create a new nonce */
     digest_nonce_h *newnonce = new digest_nonce_h;
-    newnonce->noncedata.creationtime = current_time.tv_sec;
-    newnonce->noncedata.randomdata = newRandomData(mt);
-
-    authDigestNonceEncode(newnonce);
+    newnonce->encode(newRandomData(mt));
 
     // ensure temporal uniqueness by checking for existing nonce
     while (authenticateDigestNonceFindNonce((char const *) (newnonce->key))) {
         /* create a new nonce */
-        newnonce->noncedata.randomdata = newRandomData(mt);
-        authDigestNonceEncode(newnonce);
+        newnonce->encode(newRandomData(mt));
     }
 
     hash_join(digest_nonce_cache, newnonce);

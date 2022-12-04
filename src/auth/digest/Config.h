@@ -38,6 +38,9 @@ public:
     digest_nonce_h(digest_nonce_h &&) = delete; // no copying or moving of any kind
     ~digest_nonce_h() { xfree(key); }
 
+    /// set nonce random data and (re)encode the HEX identifier
+    void encode(uint32_t);
+
     /// The HEX encoded unique identifier for this nonce
     const char *hex() const { return static_cast<const char *>(key); }
 
