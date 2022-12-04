@@ -173,7 +173,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
         debugs(29, 3, auth_user->username() << "' validated OK but nonce stale: " << digest_request->noncehex);
         /* Pending prevent banner and makes a ldap control */
         auth_user->credentials(Auth::Pending);
-        authDigestNoncePurge(nonce.getRaw());
+        nonce->purge();
         return;
     }
 

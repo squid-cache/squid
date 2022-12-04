@@ -189,8 +189,7 @@ authenticateDigestNonceShutdown(void)
         hash_first(digest_nonce_cache);
 
         while ((nonce = ((digest_nonce_h *) hash_next(digest_nonce_cache)))) {
-            assert(nonce->flags.incache);
-            authDigestNoncePurge(nonce);
+            nonce->purge();
         }
     }
 
@@ -217,11 +216,10 @@ authenticateDigestNonceCacheCleanup(void *)
 
         if (!nonce->validate()) {
             debugs(29, 4, "Removing nonce " << (char *) nonce->key << " from cache due to timeout.");
-            assert(nonce->flags.incache);
             /* if it is tied to a auth_user, remove the tie */
             if (nonce->user)
                 nonce->user->unlink(nonce);
-            authDigestNoncePurge(nonce);
+            nonce->purge();
         }
     }
 
@@ -346,20 +344,15 @@ digest_nonce_h::lastRequest() const
 }
 
 void
-authDigestNoncePurge(digest_nonce_h * nonce)
+digest_nonce_h::purge()
 {
-    if (!nonce)
-        return;
+    if (flags.incache) {
+        flags.incache = false;
 
-    if (!nonce->flags.incache)
-        return;
-
-    hash_remove_link(digest_nonce_cache, nonce);
-
-    nonce->flags.incache = false;
-
-    /* the cache's link */
-    authDigestNonceUnlink(nonce);
+        hash_remove_link(digest_nonce_cache, this);
+        /* the cache's link */
+        authDigestNonceUnlink(this);
+    }
 }
 
 void

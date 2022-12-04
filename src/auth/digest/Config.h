@@ -61,6 +61,12 @@ public:
      */
     bool lastRequest() const;
 
+    /// Forget this nonce permanently. Drop from the nonce cache and
+    /// reject future client requests attempting to use it.
+    /// Only client requests which have already been validated and
+    /// currently tied to this nonce will have any reference to it.
+    void purge();
+
 public:
     /* data to be encoded into the nonce's hex representation */
     struct _digest_nonce_data {
@@ -83,7 +89,6 @@ public:
 
 void authDigestNonceUnlink(digest_nonce_h * nonce);
 void authenticateDigestNonceShutdown(void);
-void authDigestNoncePurge(digest_nonce_h * nonce);
 digest_nonce_h *authenticateDigestNonceNew(void);
 
 namespace Auth

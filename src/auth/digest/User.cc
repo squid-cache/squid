@@ -23,7 +23,7 @@ Auth::Digest::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm)
 Auth::Digest::User::~User()
 {
     for (const auto &nonce: nonces) {
-        authDigestNoncePurge(nonce.getRaw());
+        nonce->purge();
     }
 }
 
