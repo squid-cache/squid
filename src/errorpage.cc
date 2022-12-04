@@ -154,7 +154,7 @@ struct HardCodedMessage {
 };
 
 /// error messages that cannot be configured/customized externally
-static std::array<HardCodedMessage, 7> HardCodedErrors = {{
+static const std::array<HardCodedMessage, 7> HardCodedErrors = {{
     {
         ERR_SQUID_SIGNATURE,
         "\n<br>\n"
