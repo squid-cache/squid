@@ -87,6 +87,14 @@ public:
         return p.p_ != p_;
     }
 
+    bool operator == (C const * p) const {
+        return p == p_;
+    }
+
+    bool operator != (C const * p) const {
+        return p!= p_;
+    }
+
 private:
     void dereference(C const *newP = nullptr) {
         /* Setting p_ first is important:
