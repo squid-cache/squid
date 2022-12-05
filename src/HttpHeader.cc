@@ -1160,6 +1160,40 @@ HttpHeader::putExt(const char *name, const char *value)
     addEntry(new HttpHeaderEntry(Http::HdrType::OTHER, SBuf(name), value));
 }
 
+void
+HttpHeader::updateOrAddStr(const Http::HdrType id, const SBuf &newValue)
+{
+    assert(any_registered_header(id));
+    assert(Http::HeaderLookupTable.lookup(id).type == Http::HdrFieldType::ftStr);
+
+    if (!CBIT_TEST(mask, id)) {
+        auto newValueCopy = newValue; // until HttpHeaderEntry::value becomes SBuf
+        addEntry(new HttpHeaderEntry(id, SBuf(), newValueCopy.c_str()));
+        return;
+    }
+
+    auto foundSameName = false;
+    for (auto &e: entries) {
+        if (!e || e->id != id)
+            continue;
+
+        if (foundSameName) {
+            // get rid of this repeated same-name entry
+            delete e;
+            e = nullptr;
+            continue;
+        }
+
+        if (newValue.cmp(e->value.termedBuf()) != 0)
+            e->value.assign(newValue.rawContent(), newValue.plength());
+
+        foundSameName = true;
+        // continue to delete any repeated same-name entries
+    }
+    assert(foundSameName);
+    debugs(55, 5, "synced: " << Http::HeaderLookupTable.lookup(id).name << ": " << newValue);
+}
+
 int
 HttpHeader::getInt(Http::HdrType id) const
 {
