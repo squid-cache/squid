@@ -196,12 +196,6 @@ typedef int cbdata_type;
 static const cbdata_type CBDATA_UNKNOWN = 0;
 
 /**
- * Create a run-time registration of CBDATA component with
- * the Squid cachemgr
- */
-void cbdataRegisterWithCacheManager(void);
-
-/**
  * Allocates a new entry of a registered CBDATA type.
  *
  * \note For internal CBDATA use only.
@@ -221,19 +215,8 @@ void *cbdataInternalAlloc(cbdata_type type, const char *, int);
  *
  * \note For internal CBDATA use only.
  */
-void *cbdataInternalFree(void *p, const char *, int);
+void *cbdataInternalFree(void *p);
 
-#if USE_CBDATA_DEBUG
-void cbdataInternalLockDbg(const void *p, const char *, int);
-#define cbdataInternalLock(a) cbdataInternalLockDbg(a,__FILE__,__LINE__)
-
-void cbdataInternalUnlockDbg(const void *p, const char *, int);
-#define cbdataInternalUnlock(a) cbdataInternalUnlockDbg(a,__FILE__,__LINE__)
-
-int cbdataInternalReferenceDoneValidDbg(void **p, void **tp, const char *, int);
-#define cbdataReferenceValidDone(var, ptr) cbdataInternalReferenceDoneValidDbg((void **)&(var), (ptr), __FILE__,__LINE__)
-
-#else
 void cbdataInternalLock(const void *p);
 void cbdataInternalUnlock(const void *p);
 
@@ -254,8 +237,6 @@ void cbdataInternalUnlock(const void *p);
  */
 int cbdataInternalReferenceDoneValid(void **p, void **tp);
 #define cbdataReferenceValidDone(var, ptr) cbdataInternalReferenceDoneValid((void **)&(var), (ptr))
-
-#endif /* !CBDATA_DEBUG */
 
 /**
  * \param p A cbdata entry reference pointer.
@@ -281,7 +262,7 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size)
           return (type *)cbdataInternalAlloc(CBDATA_##type,__FILE__,__LINE__); \
         } \
         void operator delete (void *address) { \
-          if (address) cbdataInternalFree(address,__FILE__,__LINE__); \
+          if (address) cbdataInternalFree(address); \
         } \
         void *toCbdata() methodSpecifiers { return this; } \
     private: \
