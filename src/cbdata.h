@@ -200,7 +200,7 @@ static const cbdata_type CBDATA_UNKNOWN = 0;
  *
  * \note For internal CBDATA use only.
  */
-void *cbdataInternalAlloc(cbdata_type type, const char *, int);
+void *cbdataInternalAlloc(cbdata_type type);
 
 /**
  * Frees a entry allocated by cbdataInternalAlloc().
@@ -259,7 +259,7 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size)
         void *operator new(size_t size) { \
           assert(size == sizeof(type)); \
           if (!CBDATA_##type) CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type)); \
-          return (type *)cbdataInternalAlloc(CBDATA_##type,__FILE__,__LINE__); \
+          return (type *)cbdataInternalAlloc(CBDATA_##type); \
         } \
         void operator delete (void *address) { \
           if (address) cbdataInternalFree(address); \

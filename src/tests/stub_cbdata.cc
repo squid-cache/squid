@@ -7,18 +7,13 @@
  */
 
 #include "squid.h"
-#include "cbdata.h"
 
 #define STUB_API "cbdata.cc"
 #include "tests/STUB.h"
 
-void *cbdataInternalAlloc(cbdata_type, const char *, int sz) {
-    return xcalloc(1, sz);
-}
-void *cbdataInternalFree(void *p) {
-    xfree(p);
-    return nullptr;
-}
+#include "cbdata.h"
+void *cbdataInternalAlloc(cbdata_type) STUB_RETVAL(nullptr)
+void *cbdataInternalFree(void *) STUB_RETVAL(nullptr)
 void cbdataInternalLock(const void *) STUB
 void cbdataInternalUnlock(const void *) STUB
 int cbdataInternalReferenceDoneValid(void **, void **) STUB_RETVAL(0)

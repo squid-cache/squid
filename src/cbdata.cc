@@ -141,7 +141,7 @@ cbdataInternalAddType(cbdata_type type, const char *name, int size)
 }
 
 void *
-cbdataInternalAlloc(cbdata_type type, const char *file, int line)
+cbdataInternalAlloc(cbdata_type type)
 {
     cbdata *c;
     void *p;
@@ -164,8 +164,6 @@ cbdataInternalAlloc(cbdata_type type, const char *file, int line)
     c->locks = 0;
     c->cookie = (long) c ^ cbdata::Cookie;
     ++cbdataCount;
-    (void)file;
-    (void)line;
     debugs(45, 9, "Allocating " << p);
     return p;
 }
