@@ -87,12 +87,16 @@ public:
         return p.p_ != p_;
     }
 
-    bool operator == (C const * p) const {
+    template <class Other>
+    bool operator ==(const Other * const p) const
+    {
         return p == p_;
     }
 
-    bool operator != (C const * p) const {
-        return p!= p_;
+    template <class Other>
+    bool operator !=(const Other * const p) const
+    {
+        return p != p_;
     }
 
 private:
