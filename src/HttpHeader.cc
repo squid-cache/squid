@@ -1029,10 +1029,7 @@ HttpHeader::addVia(const AnyP::ProtocolVersion &ver, const HttpHeader *from)
         if (!strVia.isEmpty())
             strVia.append(", ", 2);
         strVia.append(buf);
-        // XXX: putStr() still suffers from String size limits
-        Must(strVia.length() < String::SizeMaxXXX());
-        delById(Http::HdrType::VIA);
-        putStr(Http::HdrType::VIA, strVia.c_str());
+        updateOrAddStr(Http::HdrType::VIA, strVia);
     }
 }
 
@@ -1165,6 +1162,9 @@ HttpHeader::updateOrAddStr(const Http::HdrType id, const SBuf &newValue)
 {
     assert(any_registered_header(id));
     assert(Http::HeaderLookupTable.lookup(id).type == Http::HdrFieldType::ftStr);
+
+    // XXX: HttpHeaderEntry::value suffers from String size limits
+    Must(newValue.length() < String::SizeMaxXXX()); // TODO: Assure() in master/v6
 
     if (!CBIT_TEST(mask, id)) {
         auto newValueCopy = newValue; // until HttpHeaderEntry::value becomes SBuf
