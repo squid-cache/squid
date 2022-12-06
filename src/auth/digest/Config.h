@@ -51,7 +51,7 @@ public:
     /// \return whether the nonce is valid after update
     bool validate(char clientCount[9]);
 
-    /// Update nonce validity given its curent values.
+    /// Update nonce validity given its current values.
     /// \return whether the nonce is valid after update
     bool validate();
 
