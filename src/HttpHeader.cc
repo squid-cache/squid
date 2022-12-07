@@ -9,6 +9,7 @@
 /* DEBUG: section 55    HTTP Header */
 
 #include "squid.h"
+#include "base/Assure.h"
 #include "base/CharacterSet.h"
 #include "base/EnumIterator.h"
 #include "base/Raw.h"
@@ -1118,7 +1119,7 @@ HttpHeader::updateOrAddStr(const Http::HdrType id, const SBuf &newValue)
     assert(Http::HeaderLookupTable.lookup(id).type == Http::HdrFieldType::ftStr);
 
     // XXX: HttpHeaderEntry::value suffers from String size limits
-    Must(newValue.length() < String::SizeMaxXXX()); // TODO: Assure() in master/v6
+    Assure(newValue.length() < String::SizeMaxXXX());
 
     if (!CBIT_TEST(mask, id)) {
         auto newValueCopy = newValue; // until HttpHeaderEntry::value becomes SBuf
