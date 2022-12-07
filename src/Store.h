@@ -41,6 +41,26 @@ extern StoreIoStats store_io_stats;
 class StoreEntry : public hash_link, public Packable
 {
 
+    // XXX: new/delete operators need to be replaced with MEMPROXY_CLASS
+    // definitions but doing so exposes bug 4370, and maybe 4354 and 4355
+    // for now emulate MEMPROXY_CLASS(StoreEntry), but leave pool zero'ing memory
+    private:
+    static inline Mem::AllocatorProxy &Pool() {
+        static Mem::AllocatorProxy thePool("StoreEntry", sizeof(StoreEntry) /*, false*/);
+        return thePool;
+    }
+    public:
+    void *operator new(size_t byteCount) {
+        /* derived classes with different sizes must implement their own new */
+        assert(byteCount == sizeof(StoreEntry));
+        return Pool().alloc();
+    }
+    void operator delete(void *address) {
+        if (address)
+            Pool().freeOne(address);
+    }
+    static size_t UseCount() { return Pool().inUseCount(); }
+
 public:
     bool checkDeferRead(int fd) const;
 
@@ -246,10 +266,6 @@ public:
     swap_status_t swap_status:3;
 
 public:
-    static size_t inUseCount();
-
-    void *operator new(size_t byteCount);
-    void operator delete(void *address);
 #if USE_SQUID_ESI
 
     ESIElement::Pointer cachedESITree;

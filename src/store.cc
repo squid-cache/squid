@@ -56,11 +56,6 @@
 #include "DelayPools.h"
 #endif
 
-/** StoreEntry uses explicit new/delete operators, which set pool chunk size to 2MB
- * XXX: convert to MEMPROXY_CLASS() API
- */
-#include "mem/Pool.h"
-
 #include <climits>
 #include <stack>
 
@@ -117,7 +112,6 @@ static EVH storeLateRelease;
  * local variables
  */
 static std::stack<StoreEntry*> LateReleaseStack;
-Mem::Allocator *StoreEntry::pool = nullptr;
 
 void
 Store::Stats(StoreEntry * output)
@@ -138,26 +132,6 @@ StatQueues(StoreEntry *e)
     IpcIoFile::StatQueue(stream);
 #endif
     stream.flush();
-}
-
-// XXX: new/delete operators need to be replaced with MEMPROXY_CLASS
-// definitions but doing so exposes bug 4370, and maybe 4354 and 4355
-void *
-StoreEntry::operator new (size_t bytecount)
-{
-    assert(bytecount == sizeof (StoreEntry));
-
-    if (!pool) {
-        pool = memPoolCreate ("StoreEntry", bytecount);
-    }
-
-    return pool->alloc();
-}
-
-void
-StoreEntry::operator delete (void *address)
-{
-    pool->freeOne(address);
 }
 
 bool
@@ -190,14 +164,6 @@ StoreEntry::cacheNegatively()
         return true;
     }
     return false;
-}
-
-size_t
-StoreEntry::inUseCount()
-{
-    if (!pool)
-        return 0;
-    return pool->getInUseCount();
 }
 
 const char *

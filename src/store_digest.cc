@@ -91,7 +91,7 @@ storeDigestCalcCap()
      */
     const uint64_t hi_cap = Store::Root().maxSize() / Config.Store.avgObjectSize;
     const uint64_t lo_cap = 1 + Store::Root().currentSize() / Config.Store.avgObjectSize;
-    const uint64_t e_count = StoreEntry::inUseCount();
+    const uint64_t e_count = StoreEntry::UseCount();
     uint64_t cap = e_count ? e_count : hi_cap;
     debugs(71, 2, "have: " << e_count << ", want " << cap <<
            " entries; limits: [" << lo_cap << ", " << hi_cap << "]");

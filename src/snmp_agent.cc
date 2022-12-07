@@ -410,7 +410,7 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
 
     case PERF_SYS_NUMOBJCNT:
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) StoreEntry::inUseCount(),
+                                      (snint) StoreEntry::UseCount(),
                                       SMI_GAUGE32);
         break;
 

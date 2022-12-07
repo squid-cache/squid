@@ -69,13 +69,6 @@ bool StoreEntry::modifiedSince(const time_t, const int) const STUB_RETVAL(false)
 bool StoreEntry::hasIfMatchEtag(const HttpRequest &) const STUB_RETVAL(false)
 bool StoreEntry::hasIfNoneMatchEtag(const HttpRequest &) const STUB_RETVAL(false)
 Store::Disk &StoreEntry::disk() const STUB_RETREF(Store::Disk)
-size_t StoreEntry::inUseCount() STUB_RETVAL(0)
-void *StoreEntry::operator new(size_t)
-{
-    STUB
-    return new StoreEntry();
-}
-void StoreEntry::operator delete(void *) STUB
 //#if USE_SQUID_ESI
 //ESIElement::Pointer StoreEntry::cachedESITree STUB_RETVAL(nullptr)
 //#endif
