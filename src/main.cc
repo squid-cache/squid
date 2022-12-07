@@ -1201,9 +1201,6 @@ mainInitialize(void)
 #endif
 
     FwdState::initModule();
-    /* register the modules in the cache manager menus */
-
-    cbdataRegisterWithCacheManager();
     SBufStatsAction::RegisterWithCacheManager();
 
     /* These use separate calls so that the comm loops can eventually
