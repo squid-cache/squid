@@ -65,6 +65,7 @@ void HttpHeader::putRange(const HttpHdrRange *) STUB
 void HttpHeader::putSc(HttpHdrSc *) STUB
 void HttpHeader::putWarning(const int, const char *const) STUB
 void HttpHeader::putExt(const char *, const char *) STUB
+void HttpHeader::updateOrAddStr(const Http::HdrType, const SBuf &) STUB
 int HttpHeader::getInt(Http::HdrType) const STUB_RETVAL(0)
 int64_t HttpHeader::getInt64(Http::HdrType) const STUB_RETVAL(0)
 time_t HttpHeader::getTime(Http::HdrType) const STUB_RETVAL(0)

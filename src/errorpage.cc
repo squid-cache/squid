@@ -1320,8 +1320,8 @@ ErrorState::BuildHttpReply()
          */
         if (!Config.errorDirectory) {
             /* We 'negotiated' this ONLY from the Accept-Language. */
-            rep->header.delById(Http::HdrType::VARY);
-            rep->header.putStr(Http::HdrType::VARY, "Accept-Language");
+            static const SBuf acceptLanguage("Accept-Language");
+            rep->header.updateOrAddStr(Http::HdrType::VARY, acceptLanguage);
         }
 
         /* add the Content-Language header according to RFC section 14.12 */
