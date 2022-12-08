@@ -55,13 +55,13 @@ public:
     {}
 
     /* Mem::Allocator API */
-    virtual size_t getStats(PoolStats &);
-    virtual PoolMeter const &getMeter() const;
-    virtual void *alloc();
-    virtual void freeOne(void *);
-    virtual size_t objectSize() const {return size;}
-    virtual int getInUseCount();
-    virtual void zeroBlocks(bool);
+    virtual size_t getStats(PoolStats &) final override;
+    virtual PoolMeter const &getMeter() const final override;
+    virtual void *alloc() final override;
+    virtual void freeOne(void *) final override;
+    virtual size_t objectSize() const final override {return size;}
+    virtual int getInUseCount() final override;
+    virtual void zeroBlocks(bool) final override;
 
     /// \copydoc Mem::Allocator::relabel()
     void relabel(const char * const aLabel);
