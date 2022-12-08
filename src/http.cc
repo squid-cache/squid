@@ -1861,7 +1861,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
      */
     if (!we_do_ranges && request->multipartRangeRequest()) {
         /* don't cache the result */
-        request->flags.cachable = false;
+        request->flags.cachable.veto();
         /* pretend it's not a range request */
         request->ignoreRange("want to request the whole object");
         request->flags.isRanged = false;
