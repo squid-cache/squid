@@ -142,47 +142,49 @@ static void ValidateStaticError(const int page_id, const SBuf &inputLocation);
 
 /* local constant and vars */
 
-/**
- \ingroup ErrorPageInternal
- *
- \note  hard coded error messages are not appended with %S
- *      automagically to give you more control on the format
- */
-static const struct {
-    int type;           /* and page_id */
-    const char *text;
-}
+/// an error page (or a part of an error page) with hard-coded template text
+class HardCodedError {
+public:
+    err_type type; ///< identifies the error (or a special error template part)
+    const char *text; ///< a string literal containing the error template
+};
 
-error_hard_text[] = {
-
+/// error messages that cannot be configured/customized externally
+static const std::array<HardCodedError, 7> HardCodedErrors = {
     {
-        ERR_SQUID_SIGNATURE,
-        "\n<br>\n"
-        "<hr>\n"
-        "<div id=\"footer\">\n"
-        "Generated %T by %h (%s)\n"
-        "</div>\n"
-        "</body></html>\n"
-    },
-    {
-        TCP_RESET,
-        "reset"
-    },
-    {
-        ERR_CLIENT_GONE,
-        "unexpected client disconnect"
-    },
-    {
-        ERR_SECURE_ACCEPT_FAIL,
-        "secure accept fail"
-    },
-    {
-        ERR_REQUEST_START_TIMEOUT,
-        "request start timedout"
-    },
-    {
-        MGR_INDEX,
-        "mgr_index"
+        {
+            ERR_SQUID_SIGNATURE,
+            "\n<br>\n"
+            "<hr>\n"
+            "<div id=\"footer\">\n"
+            "Generated %T by %h (%s)\n"
+            "</div>\n"
+            "</body></html>\n"
+        },
+        {
+            TCP_RESET,
+            "reset"
+        },
+        {
+            ERR_CLIENT_GONE,
+            "unexpected client disconnect"
+        },
+        {
+            ERR_SECURE_ACCEPT_FAIL,
+            "secure accept fail"
+        },
+        {
+            ERR_REQUEST_START_TIMEOUT,
+            "request start timedout"
+        },
+        {
+            ERR_REQUEST_PARSE_TIMEOUT,
+            "request parse timedout"
+        },
+        {
+            ERR_RELAY_REMOTE,
+            "relay server response"
+        }
     }
 };
 
@@ -190,9 +192,6 @@ error_hard_text[] = {
 static std::vector<ErrorDynamicPageInfo *> ErrorDynamicPages;
 
 /* local prototypes */
-
-/// \ingroup ErrorPageInternal
-static const int error_hard_text_count = sizeof(error_hard_text) / sizeof(*error_hard_text);
 
 /// \ingroup ErrorPageInternal
 static char **error_text = nullptr;
@@ -339,12 +338,10 @@ errorClean(void)
 static const char *
 errorFindHardText(err_type type)
 {
-    int i;
-
-    for (i = 0; i < error_hard_text_count; ++i)
-        if (error_hard_text[i].type == type)
-            return error_hard_text[i].text;
-
+    for (const auto &m: HardCodedErrors) {
+        if (m.type == type)
+            return m.text;
+    }
     return nullptr;
 }
 

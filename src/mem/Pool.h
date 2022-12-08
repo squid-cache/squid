@@ -32,6 +32,7 @@
 #include "mem/Meter.h"
 #include "util.h"
 
+#include <list>
 #if HAVE_GNUMALLOC_H
 #include <gnumalloc.h>
 #elif HAVE_MALLOC_H
@@ -60,21 +61,9 @@
 #define MEM_MAX_FREE  65535 /* unsigned short is max number of items per chunk */
 
 class MemImplementingAllocator;
-class MemPoolStats;
 
-/// \ingroup MemPoolsAPI
-/// TODO: Kill this typedef for C++
-typedef struct _MemPoolGlobalStats MemPoolGlobalStats;
-
-/// \ingroup MemPoolsAPI
-class MemPoolIterator
-{
-public:
-    MemImplementingAllocator *pool;
-    MemPoolIterator * next;
-};
-
-class MemImplementingAllocator;
+/// memory usage totals as of latest MemPools::flushMeters() event
+extern Mem::PoolMeter TheMeter;
 
 /// \ingroup MemPoolsAPI
 class MemPools
@@ -85,10 +74,10 @@ public:
     void flushMeters();
 
     /**
-     \param label   Name for the pool. Displayed in stats.
-     \param obj_size    Size of elements in MemPool.
+     * Create an allocator with given name to allocate fixed-size objects
+     * of the specified size.
      */
-    MemImplementingAllocator * create(const char *label, size_t obj_size);
+    MemImplementingAllocator *create(const char *, size_t);
 
     /**
      * Sets upper limit in bytes to amount of free ram kept in pools. This is
@@ -129,8 +118,7 @@ public:
 
     void setDefaultPoolChunking(bool const &);
 
-    MemImplementingAllocator *pools = nullptr;
-    int poolCount = 0;
+    std::list<MemImplementingAllocator *> pools;
     bool defaultIsChunked = false;
 
 private:
@@ -147,7 +135,6 @@ public:
     typedef Mem::PoolMeter PoolMeter; // TODO remove
 
     MemImplementingAllocator(char const *aLabel, size_t aSize);
-    virtual ~MemImplementingAllocator();
 
     virtual PoolMeter &getMeter();
     virtual void flushMetersFull();
@@ -166,9 +153,6 @@ protected:
     virtual void *allocate() = 0;
     virtual void deallocate(void *, bool aggressive) = 0;
     PoolMeter meter;
-    int memPID;
-public:
-    MemImplementingAllocator *next;
 public:
     size_t alloc_calls;
     size_t free_calls;
@@ -176,95 +160,8 @@ public:
     size_t obj_size;
 };
 
-/// \ingroup MemPoolsAPI
-class MemPoolStats
-{
-public:
-    typedef Mem::PoolMeter PoolMeter; // TODO remove
-    typedef Mem::Allocator Allocator; // TODO remove
-
-    Allocator *pool;
-    const char *label;
-    PoolMeter *meter;
-    int obj_size;
-    int chunk_capacity;
-    int chunk_size;
-
-    int chunks_alloc;
-    int chunks_inuse;
-    int chunks_partial;
-    int chunks_free;
-
-    int items_alloc;
-    int items_inuse;
-    int items_idle;
-
-    int overhead;
-};
-
-/// \ingroup MemPoolsAPI
-/// TODO: Classify and add constructor/destructor to initialize properly.
-struct _MemPoolGlobalStats {
-    typedef Mem::PoolMeter PoolMeter; // TODO remove
-
-    PoolMeter *TheMeter;
-
-    int tot_pools_alloc;
-    int tot_pools_inuse;
-    int tot_pools_mempid;
-
-    int tot_chunks_alloc;
-    int tot_chunks_inuse;
-    int tot_chunks_partial;
-    int tot_chunks_free;
-
-    int tot_items_alloc;
-    int tot_items_inuse;
-    int tot_items_idle;
-
-    int tot_overhead;
-    ssize_t mem_idle_limit;
-};
-
-/// \ingroup MemPoolsAPI
 /// Creates a named MemPool of elements with the given size
 #define memPoolCreate MemPools::GetInstance().create
-
-/* Allocator API */
-/**
- \ingroup MemPoolsAPI
- * Initialise iteration through all of the pools.
- * \returns Iterator for use by memPoolIterateNext() and memPoolIterateDone()
- */
-extern MemPoolIterator * memPoolIterate(void);
-
-/**
- \ingroup MemPoolsAPI
- * Get next pool pointer, until getting NULL pointer.
- */
-extern MemImplementingAllocator * memPoolIterateNext(MemPoolIterator * iter);
-
-/**
- \ingroup MemPoolsAPI
- * Should be called after finished with iterating through all pools.
- */
-extern void memPoolIterateDone(MemPoolIterator ** iter);
-
-/**
- \ingroup MemPoolsAPI
- *
- * Fills a MemPoolGlobalStats with statistical data about overall
- * usage for all pools.
- *
- * \param stats   Object to be filled with statistical data.
- *
- * \return Number of pools that have at least one object in use.
- *        Ie. number of dirty pools.
- */
-extern int memPoolGetGlobalStats(MemPoolGlobalStats * stats);
-
-/// \ingroup MemPoolsAPI
-extern int memPoolsTotalAllocated(void);
 
 #endif /* _MEM_POOL_H_ */
 

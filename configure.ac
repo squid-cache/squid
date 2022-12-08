@@ -352,16 +352,6 @@ AC_ARG_ENABLE(optimizations,
   ])
 ])
 
-AC_ARG_ENABLE(debug-cbdata,
-  AS_HELP_STRING([--enable-debug-cbdata],
-      [Provide some debug information in cbdata]), [
-  SQUID_YESNO([$enableval],[--enable-debug-cbdata])
-])
-SQUID_DEFINE_BOOL(USE_CBDATA_DEBUG,${enable_debug_cbdata:=no},
-    [Enable support for cbdata debug information])
-AC_MSG_NOTICE([cbdata debugging enabled: $enable_debug_cbdata])
-
-
 dnl Nasty hack to get autoconf 2.64 on Linux to run.
 dnl all other uses of RUN_IFELSE are wrapped inside CACHE_CHECK which breaks on 2.64
 AC_RUN_IFELSE([AC_LANG_SOURCE([[ int main(int argc, char **argv) { return 0; } ]])],[],[],[:])

@@ -1445,11 +1445,11 @@ tests_testStore_SOURCES = \
 	tests/stub_libformat.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libsslsquid.cc \
-	tests/stub_neighbors.cc \
 	log/access_log.h \
 	mem_node.cc \
 	tests/stub_mime.cc \
 	mime.h \
+	tests/stub_neighbors.cc \
 	refresh.cc \
 	refresh.h \
 	repl_modules.h \
@@ -1693,8 +1693,8 @@ tests_testACLMaxUserIP_SOURCES = \
 	tests/testACLMaxUserIP.cc \
 	tests/testACLMaxUserIP.h
 nodist_tests_testACLMaxUserIP_SOURCES = \
-	ConfigParser.cc \
 	tests/stub_CachePeer.cc \
+	ConfigParser.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_HttpHeader.cc \
 	tests/stub_HttpRequest.cc \
@@ -2022,8 +2022,8 @@ tests_testHttp1Parser_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttpReply
 tests_testHttpReply_SOURCES = \
-	ConfigParser.cc \
 	tests/stub_CachePeer.cc \
+	ConfigParser.cc \
 	tests/stub_ETag.cc \
 	tests/stub_HelperChildConfig.cc \
 	HttpBody.cc \
@@ -2088,10 +2088,10 @@ tests_testHttpReply_SOURCES = \
 	tests/stub_libmgr.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libsslsquid.cc \
-	tests/stub_neighbors.cc \
 	log/access_log.h \
 	mime_header.cc \
 	mime_header.h \
+	tests/stub_neighbors.cc \
 	repl_modules.h \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
