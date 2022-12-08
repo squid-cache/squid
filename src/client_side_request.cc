@@ -500,9 +500,12 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
         debugs(85, 3, "SECURITY ALERT: Host header forgery detected on " << http->getConn()->clientConnection <<
                " (" << A << " does not match " << B << ") on URL: " << http->request->effectiveRequestUri());
 
-        // NP: it is tempting to use 'flags.noCache' but that is all about READing cache data.
-        // The problems here are about WRITE for new cache content, which means flags.cachable
-        http->request->flags.cachable = false; // MUST NOT cache (for now)
+        // MUST NOT cache (for now). It is tempting to set flags.noCache, but
+        // that flag is about satisfying _this_ request. We are actually OK with
+        // satisfying this request from the cache, but want to prevent _other_
+        // requests from being satisfied using this response.
+        http->request->flags.cachable.veto();
+
         // XXX: when we have updated the cache key to base on raw-IP + URI this cacheable limit can go.
         http->request->flags.hierarchical = false; // MUST NOT pass to peers (for now)
         // XXX: when we have sorted out the best way to relay requests properly to peers this hierarchical limit can go.
@@ -1095,7 +1098,10 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
 #endif
 
-    request->flags.cachable = http->request->maybeCacheable();
+    if (http->request->maybeCacheable())
+        request->flags.cachable.support();
+    else
+        request->flags.cachable.veto();
 
     if (clientHierarchical(http))
         request->flags.hierarchical = true;
@@ -1300,9 +1306,7 @@ ClientRequestContext::clientStoreIdDone(const Helper::Reply &reply)
     http->doCallouts();
 }
 
-/** Test cache allow/deny configuration
- *  Sets flags.cachable=1 if caching is not denied.
- */
+/// applies "cache allow/deny" rules, asynchronously if needed
 void
 ClientRequestContext::checkNoCache()
 {
@@ -1331,8 +1335,7 @@ ClientRequestContext::checkNoCacheDone(const Acl::Answer &answer)
 {
     acl_checklist = nullptr;
     if (answer.denied()) {
-        http->request->flags.noCache = true; // do not read reply from cache
-        http->request->flags.cachable = false; // do not store reply into cache
+        http->request->flags.disableCacheUse("a cache deny rule matched");
     }
     http->doCallouts();
 }
