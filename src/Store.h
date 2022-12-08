@@ -59,7 +59,7 @@ class StoreEntry : public hash_link, public Packable
         if (address)
             Pool().freeOne(address);
     }
-    static size_t UseCount() { return Pool().inUseCount(); }
+    static int UseCount() { return Pool().inUseCount(); }
 
 public:
     bool checkDeferRead(int fd) const;

@@ -137,7 +137,7 @@ void
 Store::Controller::stat(StoreEntry &output) const
 {
     storeAppendPrintf(&output, "Store Directory Statistics:\n");
-    storeAppendPrintf(&output, "Store Entries          : %" PRIuSIZE "\n",
+    storeAppendPrintf(&output, "Store Entries          : %d\n",
                       StoreEntry::UseCount());
     storeAppendPrintf(&output, "Maximum Swap Size      : %" PRIu64 " KB\n",
                       maxSize() >> 10);
