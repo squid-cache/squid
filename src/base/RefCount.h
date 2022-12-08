@@ -87,6 +87,18 @@ public:
         return p.p_ != p_;
     }
 
+    template <class Other>
+    bool operator ==(const Other * const p) const
+    {
+        return p == p_;
+    }
+
+    template <class Other>
+    bool operator !=(const Other * const p) const
+    {
+        return p != p_;
+    }
+
 private:
     void dereference(C const *newP = nullptr) {
         /* Setting p_ first is important:
