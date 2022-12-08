@@ -32,15 +32,15 @@
 #    define KERBEROS_APPLE_DEPRECATED(x)
 #  endif
 #  if HAVE_BROKEN_HEIMDAL_KRB5_H && defined(__cplusplus)
-     extern "C" {
+extern "C" {
 #      include <krb5.h>
-     }
+}
 #  elif HAVE_BROKEN_SOLARIS_KRB5_H && defined(__cplusplus)
 #    define KRB5INT_BEGIN_DECLS extern "C" {
 #    define KRB5INT_END_DECLS
-     extern "C" {
+extern "C" {
 #      include <krb5.h>
-     /* broken Solaris krb5.h contains the closing } */
+    /* broken Solaris krb5.h contains the closing } */
 #  else
 #    include <krb5.h>
 #  endif
