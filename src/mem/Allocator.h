@@ -50,7 +50,7 @@ public:
     virtual int getInUseCount() = 0;
 
     /// \see doZero
-    void zeroBlocks(const bool doIt) { doZero = doIt; }
+    virtual void zeroBlocks(const bool doIt) { doZero = doIt; }
 
     int inUseCount() { return getInUseCount(); } // XXX: drop redundant?
 
