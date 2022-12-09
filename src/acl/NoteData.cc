@@ -57,7 +57,7 @@ ACLNoteData::parse()
                Debug::Extra << "configuration location: " << ConfigParser::CurrentLocation() <<
                Debug::Extra << "advice: To match annotations with different names, " <<
                "use note ACLs with different names " <<
-               "(that may be ORed using an 'any-of' ACL.");
+               "(that may be ORed using an 'any-of' ACL).");
         return;
     }
 
