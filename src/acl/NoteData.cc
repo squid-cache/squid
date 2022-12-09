@@ -49,6 +49,18 @@ ACLNoteData::parse()
 {
     char* t = ConfigParser::strtokFile();
     assert (t != nullptr);
+
+    if (!name.isEmpty() && name.cmp(t) != 0) {
+        debugs(28, DBG_CRITICAL, "ERROR: Ignoring conflicting 'note' ACL configuration:" <<
+               Debug::Extra << "honored annotation name: " << name <<
+               Debug::Extra << "ignored annotation name: " << t <<
+               Debug::Extra << "configuration location: " << ConfigParser::CurrentLocation() <<
+               Debug::Extra << "advice: To match annotations with different names, " <<
+               "use note ACLs with different names " <<
+               "(that may be ORed using an 'any-of' ACL.");
+        return;
+    }
+
     name = t;
     values->parse();
 }
