@@ -65,6 +65,7 @@ libbase_la_SOURCES = \
 	RunnersRegistry.cc \
 	RunnersRegistry.h \
 	Subscription.h \
+	SupportOrVeto.h \
 	TextException.cc \
 	TextException.h \
 	TypeTraits.h \

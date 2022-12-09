@@ -568,9 +568,7 @@ HttpRequest::maybeCacheable()
         break;
     }
 
-    // We should not be called if caching was explicitly banned already, but if
-    // we are, then do not overwrite that decision.
-    return flags.missCachingDecision.value_or(true);
+    return true;
 }
 
 bool

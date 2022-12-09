@@ -96,10 +96,10 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     if (type == IPC_TCP_SOCKET) {
         crfd = cwfd = comm_open_listener(SOCK_STREAM,
-                                0,
-                                local_addr,
-                                COMM_NOCLOEXEC,
-                                name);
+                                         0,
+                                         local_addr,
+                                         COMM_NOCLOEXEC,
+                                         name);
         prfd = pwfd = comm_open(SOCK_STREAM,
                                 0,          /* protocol */
                                 local_addr,

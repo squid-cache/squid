@@ -504,7 +504,7 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
         // that flag is about satisfying _this_ request. We are actually OK with
         // satisfying this request from the cache, but want to prevent _other_
         // requests from being satisfied using this response.
-        http->request->flags.missCachingDecision = false; // may overwrite an earlier decision
+        http->request->flags.cachable.veto();
 
         // XXX: when we have updated the cache key to base on raw-IP + URI this cacheable limit can go.
         http->request->flags.hierarchical = false; // MUST NOT pass to peers (for now)
@@ -1098,11 +1098,10 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
 #endif
 
-    // Make (or update a previously made positive) flags.missCachingDecision.
-    // TODO: Integrate this and most of this function logic with request parsing
-    // code, to avoid direct manipulation of low-level flags in high-level code.
-    if (request->flags.missCachingDecision.value_or(true))
-        request->flags.missCachingDecision = http->request->maybeCacheable();
+    if (http->request->maybeCacheable())
+        request->flags.cachable.support();
+    else
+        request->flags.cachable.veto();
 
     if (clientHierarchical(http))
         request->flags.hierarchical = true;

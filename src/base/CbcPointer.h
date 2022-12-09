@@ -143,9 +143,6 @@ template<class Cbc>
 void
 CbcPointer<Cbc>::clear()
 {
-#if USE_CBDATA_DEBUG
-    debugs(45, 3, "cbc=" << (void*)cbc << ", lock=" << (void*)lock);
-#endif
     cbdataReferenceDone(lock); // lock may be nil before and will be nil after
     cbc = nullptr;
 }

@@ -133,11 +133,11 @@ dnl Or, a shell script (config.test) which returns 0 exit status if
 dnl the helper is to be built.
 AC_DEFUN([SQUID_CHECK_HELPER],[
   AS_IF([test "x$helper" = "x$1"],[
-    AS_IF([test -d "$ac_top_srcdir/src/$2/$1"],[
+    AS_IF([test -d "$srcdir/src/$2/$1"],[
       dnl find helpers providing autoconf M4 requirement checks
       m4_include(m4_echo([src/$2/$1/required.m4]))
       dnl find helpers not yet converted to autoconf (or third party drop-in's)
-      AS_IF([test -f "$ac_top_srcdir/src/$2/$1/config.test" && sh "$ac_top_srcdir/src/$2/$1/config.test" "$squid_host_os"],[
+      AS_IF([test -f "$srcdir/src/$2/$1/config.test" && sh "$srcdir/src/$2/$1/config.test" "$squid_host_os"],[
         BUILD_HELPER="$1"
       ])
       AS_IF(
@@ -164,13 +164,13 @@ AC_DEFUN([SQUID_HELPER_FEATURE_CHECK],[
   AS_IF([test "x$enable_$1" = "x"],[enable_$1=$2],
     [test "x$enable_$1" = "xnone"],[enable_$1=""])
   AS_IF([test "x$enable_$1" = "xyes"],[
-    SQUID_LOOK_FOR_MODULES([$$ac_top_srcdir/src/$3], enable_$1)
+    SQUID_LOOK_FOR_MODULES([$srcdir/src/$3], enable_$1)
     auto_helpers=yes
   ])
   SQUID_CLEANUP_MODULES_LIST([enable_$1])
   AC_MSG_NOTICE([checking $3 helpers: $enable_$1])
   AS_IF([test "x$enable_$1" != "xno" -a "x$enable_$1" != "x"],[
-    SQUID_CHECK_EXISTING_MODULES([$$ac_top_srcdir/src/$3],[enable_$1])
+    SQUID_CHECK_EXISTING_MODULES([$srcdir/src/$3],[enable_$1])
     for helper in $enable_$1 ; do
       $4
     done

@@ -421,7 +421,7 @@ storeDigestRewriteStart(void *)
     auto req = HttpRequest::FromUrlXXX(url, mx);
 
     RequestFlags flags;
-    flags.missCachingDecision = true;
+    flags.cachable.support(); // prevent RELEASE_REQUEST in storeCreateEntry()
 
     StoreEntry *e = storeCreateEntry(url, url, flags, Http::METHOD_GET);
     assert(e);

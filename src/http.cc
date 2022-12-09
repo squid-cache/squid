@@ -1861,7 +1861,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
      */
     if (!we_do_ranges && request->multipartRangeRequest()) {
         /* don't cache the result */
-        request->flags.missCachingDecision = false; // may overwrite an earlier decision
+        request->flags.cachable.veto();
         /* pretend it's not a range request */
         request->ignoreRange("want to request the whole object");
         request->flags.isRanged = false;
@@ -2268,7 +2268,7 @@ HttpStateData::decideIfWeDoRanges (HttpRequest * request)
 
     int64_t roffLimit = request->getRangeOffsetLimit();
 
-    if (!request->range || !request->flags.cachable
+    if (nullptr == request->range || !request->flags.cachable
             || request->range->offsetLimitExceeded(roffLimit) || request->flags.connectionAuth)
         result = false;
 

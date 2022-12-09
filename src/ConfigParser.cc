@@ -514,7 +514,7 @@ ConfigParser::cachePeer(const char *peerNameTokenDescription)
             return *p;
 
         throw TextException(ToSBuf("Cannot find a previously declared cache_peer referred to by ",
-            peerNameTokenDescription, " as ", name), Here());
+                                   peerNameTokenDescription, " as ", name), Here());
     }
 
     throw TextException(ToSBuf("Missing ", peerNameTokenDescription), Here());

@@ -11,6 +11,8 @@
 #ifndef SQUID_REQUESTFLAGS_H_
 #define SQUID_REQUESTFLAGS_H_
 
+#include "base/SupportOrVeto.h"
+
 /** request-related flags
  *
  * Contains both flags marking a request's current state,
@@ -28,8 +30,10 @@ public:
     bool auth = false;
     /** do not use keytabs for peer Kerberos authentication */
     bool auth_no_keytab = false;
-    /** he response to the request may be stored in the cache */
-    bool cachable = false;
+
+    /// whether the response may be stored in the cache
+    SupportOrVeto cachable;
+
     /** the request can be forwarded through the hierarchy */
     bool hierarchical = false;
     /** a loop was detected on this request */
@@ -130,6 +134,11 @@ public:
     bool noCacheHack() const {
         return USE_HTTP_VIOLATIONS && nocacheHack;
     }
+
+    /// ban satisfying the request from the cache and ban storing the response
+    /// in the cache
+    /// \param reason summarizes the marking decision context (for debugging)
+    void disableCacheUse(const char *reason);
 };
 
 #endif /* SQUID_REQUESTFLAGS_H_ */

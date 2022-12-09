@@ -60,7 +60,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-gnuregex \
 	--enable-optimizations \
 	--enable-inline \
-	--enable-debug-cbdata \
 	--enable-xmalloc-statistics \
 	--enable-async-io \
 	--enable-storeio \
