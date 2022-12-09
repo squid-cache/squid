@@ -9,10 +9,11 @@
 
 # Orchestrates a "squid -k parse ..." test of a single Squid configuration
 # file (with an optional .instructions file containing testing directions).
-# Usage: test-squid-conf.sh <top_builddir> <squid.conf>
+# Usage: test-squid-conf.sh <top_builddir> <sbindir> <squid.conf>
 
 top_builddir=$1
-configFile=$2
+sbindir=$2
+configFile=$3
 
 instructionsFile="$configFile.instructions"
 if test -e $instructionsFile
@@ -71,4 +72,4 @@ then
     # TODO: Add support for the "require-failure" instruction.
 fi
 
-exec $top_builddir/src/squid -k parse -f $configFile
+exec $sbindir/squid -k parse -f $configFile

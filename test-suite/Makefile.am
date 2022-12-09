@@ -43,8 +43,7 @@ TESTS += \
 	splay\
 	mem_node_test\
 	mem_hdr_test\
-	$(ESI_TESTS) \
-	squid-conf-tests
+	$(ESI_TESTS)
 
 ## Sort by alpha - any build failures are significant.
 check_PROGRAMS += \
@@ -136,10 +135,12 @@ VirtualDeleteOperator_SOURCES = \
 	VirtualDeleteOperator.cc \
 	stub_libmem.cc
 
+installcheck-local: squid-conf-tests
+
 squid-conf-tests: $(srcdir)/test-squid-conf.sh $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
 	@failed=0; cfglist="$(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*.conf"; rm -f $@ || $(TRUE); \
 	for cfg in $$cfglist ; do \
-		$(srcdir)/test-squid-conf.sh $(top_builddir) $$cfg || \
+		$(srcdir)/test-squid-conf.sh $(top_builddir) $(sbindir) $$cfg || \
 			{ echo "FAIL: squid.conf test: $$cfg" | \
 				sed s%$(top_builddir)/src/%% | \
 				sed s%$(srcdir)/squidconf/%% ; \
