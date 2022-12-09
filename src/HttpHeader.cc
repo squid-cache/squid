@@ -9,6 +9,7 @@
 /* DEBUG: section 55    HTTP Header */
 
 #include "squid.h"
+#include "base/Assure.h"
 #include "base/CharacterSet.h"
 #include "base/EnumIterator.h"
 #include "base/Raw.h"
@@ -991,10 +992,7 @@ HttpHeader::addVia(const AnyP::ProtocolVersion &ver, const HttpHeader *from)
         if (!strVia.isEmpty())
             strVia.append(", ", 2);
         strVia.append(buf);
-        // XXX: putStr() still suffers from String size limits
-        Must(strVia.length() < String::SizeMaxXXX());
-        delById(Http::HdrType::VIA);
-        putStr(Http::HdrType::VIA, strVia.c_str());
+        updateOrAddStr(Http::HdrType::VIA, strVia);
     }
 }
 
@@ -1112,6 +1110,43 @@ HttpHeader::putExt(const char *name, const char *value)
     assert(name && value);
     debugs(55, 8, this << " adds ext entry " << name << " : " << value);
     addEntry(new HttpHeaderEntry(Http::HdrType::OTHER, SBuf(name), value));
+}
+
+void
+HttpHeader::updateOrAddStr(const Http::HdrType id, const SBuf &newValue)
+{
+    assert(any_registered_header(id));
+    assert(Http::HeaderLookupTable.lookup(id).type == Http::HdrFieldType::ftStr);
+
+    // XXX: HttpHeaderEntry::value suffers from String size limits
+    Assure(newValue.length() < String::SizeMaxXXX());
+
+    if (!CBIT_TEST(mask, id)) {
+        auto newValueCopy = newValue; // until HttpHeaderEntry::value becomes SBuf
+        addEntry(new HttpHeaderEntry(id, SBuf(), newValueCopy.c_str()));
+        return;
+    }
+
+    auto foundSameName = false;
+    for (auto &e: entries) {
+        if (!e || e->id != id)
+            continue;
+
+        if (foundSameName) {
+            // get rid of this repeated same-name entry
+            delete e;
+            e = nullptr;
+            continue;
+        }
+
+        if (newValue.cmp(e->value.termedBuf()) != 0)
+            e->value.assign(newValue.rawContent(), newValue.plength());
+
+        foundSameName = true;
+        // continue to delete any repeated same-name entries
+    }
+    assert(foundSameName);
+    debugs(55, 5, "synced: " << Http::HeaderLookupTable.lookup(id).name << ": " << newValue);
 }
 
 int

@@ -1648,10 +1648,10 @@ Ftp::Server::setDataCommand()
     HttpRequest *const request = http->request;
     assert(request != nullptr);
     HttpHeader &header = request->header;
-    header.delById(Http::HdrType::FTP_COMMAND);
-    header.putStr(Http::HdrType::FTP_COMMAND, "PASV");
-    header.delById(Http::HdrType::FTP_ARGUMENTS);
-    header.putStr(Http::HdrType::FTP_ARGUMENTS, "");
+    static const SBuf pasvValue("PASV");
+    header.updateOrAddStr(Http::HdrType::FTP_COMMAND, pasvValue);
+    static const SBuf emptyValue("");
+    header.updateOrAddStr(Http::HdrType::FTP_ARGUMENTS, emptyValue);
     debugs(9, 5, "client data command converted to fake PASV");
 }
 
