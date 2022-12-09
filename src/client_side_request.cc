@@ -1110,7 +1110,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     debugs(85, 5, "clientInterpretRequestHeaders: REQ_NOCACHE = " <<
            (request->flags.noCache ? "SET" : "NOT SET"));
     debugs(85, 5, "clientInterpretRequestHeaders: REQ_CACHABLE = " <<
-           (request->flags.cachable() ? "SET" : "NOT SET"));
+           (request->flags.cachable ? "SET" : "NOT SET"));
     debugs(85, 5, "clientInterpretRequestHeaders: REQ_HIERARCHICAL = " <<
            (request->flags.hierarchical ? "SET" : "NOT SET"));
 
@@ -1754,7 +1754,7 @@ ClientHttpRequest::doCallouts()
         if (!calloutContext->no_cache_done) {
             calloutContext->no_cache_done = true;
 
-            if (Config.accessList.noCache && request->flags.cachable()) {
+            if (Config.accessList.noCache && request->flags.cachable) {
                 debugs(83, 3, "Doing calloutContext->checkNoCache()");
                 calloutContext->checkNoCache();
                 return;

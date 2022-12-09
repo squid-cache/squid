@@ -734,10 +734,10 @@ storeCreateEntry(const char *url, const char *logUrl, const RequestFlags &flags,
     StoreEntry *e = storeCreatePureEntry(url, logUrl, method);
     e->lock("storeCreateEntry");
 
-    if (!neighbors_do_private_keys && flags.hierarchical && flags.cachable() && e->setPublicKey())
+    if (!neighbors_do_private_keys && flags.hierarchical && flags.cachable && e->setPublicKey())
         return e;
 
-    e->setPrivateKey(false, !flags.cachable());
+    e->setPrivateKey(false, !flags.cachable);
     return e;
 }
 

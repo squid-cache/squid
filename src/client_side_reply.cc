@@ -2140,7 +2140,7 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
     // Make entry collapsible ASAP, to increase collapsing chances for others,
     // TODO: every must-revalidate and similar request MUST reach the origin,
     // but do we have to prohibit others from collapsing on that request?
-    if (reqFlags.cachable() &&
+    if (reqFlags.cachable &&
             !reqFlags.needValidation &&
             (m == Http::METHOD_GET || m == Http::METHOD_HEAD) &&
             mayInitiateCollapsing()) {
