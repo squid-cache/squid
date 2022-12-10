@@ -43,10 +43,10 @@ class StoreEntry : public hash_link, public Packable
 
     // XXX: new/delete operators need to be replaced with MEMPROXY_CLASS
     // definitions but doing so exposes bug 4370, and maybe 4354 and 4355
-    // for now emulate MEMPROXY_CLASS(StoreEntry), but leave pool zero'ing memory
+    // for now, emulate MEMPROXY_CLASS(StoreEntry), but do zero allocated memory
     private:
     static inline Mem::AllocatorProxy &Pool() {
-        static Mem::AllocatorProxy thePool("StoreEntry", sizeof(StoreEntry) /*, false*/);
+        static Mem::AllocatorProxy thePool("StoreEntry", sizeof(StoreEntry), true /* for now; see XXX above */);
         return thePool;
     }
     public:
