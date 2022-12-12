@@ -41,7 +41,6 @@ public:
 
     /* Mem::Allocator API */
     size_t getStats(Mem::PoolStats &) override;
-    int getInUseCount() override;
     bool idleTrigger(int) const override;
     void clean(time_t) override;
 

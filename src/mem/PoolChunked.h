@@ -31,7 +31,6 @@ public:
 
     /* Mem::Allocator API */
     size_t getStats(Mem::PoolStats &) override;
-    int getInUseCount() override;
     void setChunkSize(size_t) override;
     bool idleTrigger(int) const override;
     void clean(time_t) override;

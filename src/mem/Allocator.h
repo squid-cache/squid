@@ -52,7 +52,7 @@ public:
     }
 
     /// the difference between the number of alloc() and freeOne() calls
-    virtual int getInUseCount() = 0;
+    virtual int getInUseCount() const { return meter.inuse.currentLevel(); }
 
     /// \see doZero
     void zeroBlocks(const bool doIt) { doZero = doIt; }
