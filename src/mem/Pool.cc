@@ -11,14 +11,13 @@
  */
 
 #include "squid.h"
+#include "mem/Pool.h"
 #include "mem/PoolChunked.h"
 #include "mem/PoolMalloc.h"
 #include "mem/Stats.h"
 
 #include <cassert>
 #include <cstring>
-
-#define FLUSH_LIMIT 1000    /* Flush memPool counters to memMeters after flush limit calls */
 
 extern time_t squid_curtime;
 
@@ -44,14 +43,14 @@ MemPools::MemPools()
         defaultIsChunked = atoi(cfg);
 }
 
-MemImplementingAllocator *
+Mem::Allocator *
 MemPools::create(const char *label, size_t obj_size)
 {
     // TODO Use ref-counted Pointer for pool lifecycle management
     // that is complicated by all the global static pool pointers.
     // For now leak these Allocator descendants on shutdown.
 
-    MemImplementingAllocator *newPool;
+    Mem::Allocator *newPool;
     if (defaultIsChunked)
         newPool = new MemPoolChunked(label, obj_size);
     else
@@ -96,24 +95,6 @@ MemPools::flushMeters()
     }
 }
 
-void *
-MemImplementingAllocator::alloc()
-{
-    if (++count.allocs == FLUSH_LIMIT)
-        flushCounters();
-
-    return allocate();
-}
-
-void
-MemImplementingAllocator::freeOne(void *obj)
-{
-    assert(obj != nullptr);
-    (void) VALGRIND_CHECK_MEM_IS_ADDRESSABLE(obj, objectSize());
-    deallocate(obj);
-    ++count.freed;
-}
-
 /*
  * Returns all cached frees to their home chunks
  * If chunks unreferenced age is over, destroys Idle chunk
@@ -138,10 +119,4 @@ MemPools::clean(time_t maxage)
         if (pool->idleTrigger(shift))
             pool->clean(maxage);
     }
-}
-
-MemImplementingAllocator::MemImplementingAllocator(char const * const aLabel, const size_t aSize):
-    Mem::Allocator(aLabel, aSize)
-{
-    assert(aLabel != nullptr && aSize);
 }

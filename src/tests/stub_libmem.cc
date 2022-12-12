@@ -81,13 +81,9 @@ static MemPools tmpMemPools;
 MemPools &MemPools::GetInstance() {return tmpMemPools;}
 MemPools::MemPools() STUB_NOP
 void MemPools::flushMeters() STUB
-MemImplementingAllocator * MemPools::create(const char *, size_t) STUB_RETVAL(nullptr);
+Mem::Allocator * MemPools::create(const char *, size_t) STUB_RETVAL(nullptr);
 void MemPools::clean(time_t) STUB
 void MemPools::setDefaultPoolChunking(bool const &) STUB
-
-//MemImplementingAllocator::MemImplementingAllocator(char const *, size_t) STUB_NOP
-void *MemImplementingAllocator::alloc() STUB_RETVAL(nullptr)
-void MemImplementingAllocator::freeOne(void *) STUB
 
 #include "mem/Stats.h"
 size_t Mem::GlobalStats(PoolStats &) STUB_RETVAL(0)

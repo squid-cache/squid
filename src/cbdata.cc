@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "cbdata.h"
 #include "Generic.h"
+#include "mem/Allocator.h"
 #include "mem/Pool.h"
 #include "mgr/Registration.h"
 #include "Store.h"

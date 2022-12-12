@@ -41,6 +41,7 @@
 /* digest_nonce_h still uses explicit alloc()/freeOne() MemPool calls.
  * XXX: convert to MEMPROXY_CLASS() API
  */
+#include "mem/Allocator.h"
 #include "mem/Pool.h"
 
 static AUTHSSTATS authenticateDigestStats;

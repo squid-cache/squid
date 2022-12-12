@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "mem/Allocator.h"
 #include "mem/Pool.h"
 #include "mem/Stats.h"
 

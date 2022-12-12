@@ -21,6 +21,9 @@ namespace Mem
 class Allocator : public Interface
 {
 public:
+    /// Flush counters to 'meter' after flush limit allocations
+    static const size_t FlushLimit = 1000;
+
     explicit Allocator(const char * const aLabel, const size_t sz):
         label(aLabel),
         objectSize_(RoundedSize(sz))
@@ -38,10 +41,19 @@ public:
     virtual PoolMeter &getMeter() { return meter; }
 
     /// provide (and reserve) memory suitable for storing one object
-    virtual void *alloc() = 0;
+    void *alloc() {
+        if (++count.allocs == FlushLimit)
+            flushCounters();
+        return allocate();
+    }
 
     /// return memory reserved by alloc()
-    virtual void freeOne(void *) = 0;
+    void freeOne(void *obj) {
+        assert(obj != nullptr);
+        (void) VALGRIND_CHECK_MEM_IS_ADDRESSABLE(obj, objectSize());
+        deallocate(obj);
+        ++count.freed;
+    }
 
     /// brief description of objects returned by alloc()
     virtual char const *objectType() const { return label; }
@@ -59,6 +71,10 @@ public:
 
     /// XXX: Misplaced -- not all allocators have a notion of a "chunk". See MemPoolChunked.
     virtual void setChunkSize(size_t) {}
+
+    virtual bool idleTrigger(int shift) const = 0;
+
+    virtual void clean(time_t maxage) = 0;
 
     /**
      * Flush temporary counter values into the statistics held in 'meter'.
@@ -107,6 +123,11 @@ public:
     } count;
 
 protected:
+    /// \copydoc void *alloc()
+    virtual void *allocate() = 0;
+    /// \copydoc void freeOne(void *)
+    virtual void deallocate(void *) = 0;
+
     /**
      * Whether to zero memory on initial allocation and on return to the pool.
      *
