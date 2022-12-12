@@ -507,9 +507,6 @@ ConfigParser::regex(const char *expectedRegexDescription)
 void
 ConfigParser::SetAclKey(SBuf &keyStorage, const char *keyParameterName)
 {
-    // TODO: Refactor (distant) callers to store ACL name as CodeContext
-    // information, so that high-level parsing code can then report that context
-    // when reporting configuration parsing exceptions.
     extern const char *AclMatchedName;
 
     const auto newKey = strtokFile();
