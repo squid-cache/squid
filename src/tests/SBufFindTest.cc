@@ -375,7 +375,7 @@ SBufFindTest::RandomSBuf(const int length)
     // sizeof() counts the terminating zero at the end of characters
     // and the distribution is an 'inclusive' value range, so -2
     // TODO: add \0 character (needs reporting adjustments to print it as \0)
-    static xuniform_int_distribution<uint8_t> dist(0, sizeof(characters)-2);
+    static std::uniform_int_distribution<uint8_t> dist(0, sizeof(characters)-2);
 
     SBuf buf;
     buf.reserveCapacity(length);

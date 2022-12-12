@@ -28,7 +28,6 @@ m4_include([acinclude/pkg.m4])
 m4_include([acinclude/tdb.m4])
 m4_include([acinclude/lib-checks.m4])
 m4_include([acinclude/ax_cxx_compile_stdcxx_11.m4])
-m4_include([acinclude/ax_cxx_0x_types.m4])
 
 PRESET_CFLAGS="$CFLAGS"
 PRESET_CXXFLAGS="$CXXFLAGS"
@@ -2402,11 +2401,6 @@ AC_CHECK_SIZEOF(size_t)
 #need the define for overflow checks
 AC_CHECK_SIZEOF(off_t)
 AC_CHECK_SIZEOF(size_t)
-
-dnl Some C++11 types we try to use
-AX_CXX_TYPE_UNIFORM_DISTRIBUTIONS
-SQUID_CXX_STD_UNDERLYING_TYPE
-SQUID_CXX_STD_IS_TRIVIALLY_COPYABLE
 
 dnl On Solaris 9 x86, gcc may includes a "fixed" set of old system include files
 dnl that is incompatible with the updated Solaris header files.

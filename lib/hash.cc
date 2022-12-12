@@ -340,7 +340,7 @@ main(void)
     printf("done creating hash table: %d\n", hid);
 
     std::mt19937 mt;
-    xuniform_int_distribution<> dist(0,16);
+    std::uniform_int_distribution<> dist(0,16);
 
     while (fgets(buf, BUFSIZ, stdin)) {
         buf[strlen(buf) - 1] = '\0';

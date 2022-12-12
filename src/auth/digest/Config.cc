@@ -158,7 +158,7 @@ authenticateDigestNonceNew(void)
      * the hash function.
      */
     static std::mt19937 mt(RandomSeed32());
-    static xuniform_int_distribution<uint32_t> newRandomData;
+    static std::uniform_int_distribution<uint32_t> newRandomData;
 
     /* create a new nonce */
     newnonce->nc = 0;
