@@ -37,7 +37,7 @@ public:
 
 protected:
     void *allocate() override;
-    void deallocate(void *, bool aggressive) override;
+    void deallocate(void *) override;
 public:
     bool idleTrigger(int shift) const override;
 

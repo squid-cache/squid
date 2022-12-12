@@ -42,10 +42,10 @@ MemPoolMalloc::allocate()
 }
 
 void
-MemPoolMalloc::deallocate(void *obj, bool aggressive)
+MemPoolMalloc::deallocate(void *obj)
 {
     --(getMeter().inuse);
-    if (aggressive) {
+    if (MemPools::GetInstance().idleLimit() == 0) {
         xfree(obj);
         --(getMeter().alloc);
     } else {

@@ -326,7 +326,7 @@ MemPoolChunked::allocate()
 }
 
 void
-MemPoolChunked::deallocate(void *obj, bool)
+MemPoolChunked::deallocate(void *obj)
 {
     push(obj);
     assert(getMeter().inuse.currentLevel() > 0);

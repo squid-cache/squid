@@ -110,7 +110,7 @@ MemImplementingAllocator::freeOne(void *obj)
 {
     assert(obj != nullptr);
     (void) VALGRIND_CHECK_MEM_IS_ADDRESSABLE(obj, objectSize());
-    deallocate(obj, MemPools::GetInstance().idleLimit() == 0);
+    deallocate(obj);
     ++count.freed;
 }
 

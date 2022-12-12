@@ -144,7 +144,7 @@ public:
 
 protected:
     virtual void *allocate() = 0;
-    virtual void deallocate(void *, bool aggressive) = 0;
+    virtual void deallocate(void *) = 0;
 };
 
 /// Creates a named MemPool of elements with the given size
