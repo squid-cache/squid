@@ -53,13 +53,6 @@
 /// \ingroup MemPoolsAPI
 #define toKB(size) ( (size + 1024 - 1) / 1024 )
 
-/// \ingroup MemPoolsAPI
-#define MEM_PAGE_SIZE 4096
-/// \ingroup MemPoolsAPI
-#define MEM_MIN_FREE  32
-/// \ingroup MemPoolsAPI
-#define MEM_MAX_FREE  65535 /* unsigned short is max number of items per chunk */
-
 class MemImplementingAllocator;
 
 /// memory usage totals as of latest MemPools::flushMeters() event

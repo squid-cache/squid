@@ -18,6 +18,9 @@
 #include <cstring>
 
 #define MEM_MAX_MMAP_CHUNKS 2048
+#define MEM_PAGE_SIZE 4096
+#define MEM_MIN_FREE  32
+#define MEM_MAX_FREE  65535 /* unsigned short is max number of items per chunk */
 
 /*
  * Old way:
