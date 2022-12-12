@@ -27,7 +27,6 @@ m4_include([acinclude/pam.m4])
 m4_include([acinclude/pkg.m4])
 m4_include([acinclude/tdb.m4])
 m4_include([acinclude/lib-checks.m4])
-m4_include([acinclude/ax_cxx_compile_stdcxx_11.m4])
 
 PRESET_CFLAGS="$CFLAGS"
 PRESET_CXXFLAGS="$CXXFLAGS"
@@ -92,8 +91,8 @@ AC_SUBST(BUILDCXX)
 # If the user did not specify a C++ version.
 user_cxx=`echo "$PRESET_CXXFLAGS" | grep -o -E "(-)std="`
 AS_IF([test "x$user_cxx" = "x"],[
-  # Check for C++11 compiler support
-  AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
+  # Check for C++17 compiler support
+  AX_CXX_COMPILE_STDCXX_17([noext],[mandatory])
 ])
 
 # test for programs
