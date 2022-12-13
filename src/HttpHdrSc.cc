@@ -126,8 +126,7 @@ HttpHdrSc::parse(const String * str)
         if (!sct) {
             // XXX: if parse is left-to-right over field-value this should be emplace_back()
             // currently placing on the front reverses the order of headers passed on downstream.
-            targets.emplace_front(target);
-            sct = &targets.front();
+            sct = &targets.emplace_front(target);
         }
 
         safe_free (temp);
@@ -240,8 +239,7 @@ HttpHdrSc::setMaxAge(char const *target, int max_age)
     HttpHdrScTarget *sct = findTarget(target);
 
     if (!sct) {
-        targets.emplace_back(target);
-        sct = &targets.back();
+        sct = &targets.emplace_back(target);
     }
 
     sct->maxAge(max_age);

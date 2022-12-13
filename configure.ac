@@ -73,8 +73,16 @@ AS_IF([test "x${enable_arch_native}" != "xno"],[
   SQUID_CC_CHECK_ARGUMENT([squid_cv_check_marchnative],[-march=native])
 ])
 
-# might be cross-compiling.
-# NP: BUILDCXXFLAGS defined at the end of configure after CXXFLAGS fully known.
+# If the user did not specify a C++ version.
+user_cxx=`echo "$PRESET_CXXFLAGS" | grep -o -E "(-)std="`
+AS_IF([test "x$user_cxx" = "x"],[
+  # Check for C++17 compiler support
+  # May change CXX.
+  AX_CXX_COMPILE_STDCXX_17([noext],[mandatory])
+])
+
+# Prerequisite: CXX has been finalized.
+# BUILDCXXFLAGS are defined later, after CXXFLAGS have been finalized.
 AC_ARG_VAR([BUILDCXX],[path to compiler for building compile-time tools. e.g. cf_gen])
 AS_IF([test "x$HOSTCXX" != "x" -a "x$BUILDCXX" = "x"],[
   AC_MSG_WARN([Cross-compiling with HOSTCXX is deprecated. Use BUILDCXX instead.])
@@ -87,13 +95,6 @@ AS_IF([test "x$BUILDCXX" = "x"],[
   ])
 ])
 AC_SUBST(BUILDCXX)
-
-# If the user did not specify a C++ version.
-user_cxx=`echo "$PRESET_CXXFLAGS" | grep -o -E "(-)std="`
-AS_IF([test "x$user_cxx" = "x"],[
-  # Check for C++17 compiler support
-  AX_CXX_COMPILE_STDCXX_17([noext],[mandatory])
-])
 
 # test for programs
 AC_PROG_RANLIB
@@ -3067,6 +3068,7 @@ AC_SUBST(XTRA_LIBS)
 AC_SUBST(SQUID_CFLAGS)
 AC_SUBST(SQUID_CXXFLAGS)
 
+# Prerequisite: CXXFLAGS have been finalized.
 AC_ARG_VAR([BUILDCXXFLAGS],[C++ compiler flags for building compile-time tools. e.g. cf_gen])
 AS_IF([test "x$BUILDCXXFLAGS" = "x"],[
   # if we are NOT cross-compiling, use the default build flags for cf_gen and friends

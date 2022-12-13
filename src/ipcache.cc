@@ -991,8 +991,8 @@ void
 Dns::CachedIps::pushUnique(const Ip::Address &ip)
 {
     assert(!have(ip));
-    ips.emplace_back(ip);
-    assert(!raw().back().bad());
+    [[maybe_unused]] auto &cachedIp = ips.emplace_back(ip);
+    assert(!cachedIp.bad());
 }
 
 void

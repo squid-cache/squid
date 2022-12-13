@@ -224,10 +224,10 @@ ClpMap<Key, Value, MemoryUsedBy>::add(const Key &key, const Value &v, const Ttl 
         return false; // will never fit
     trim(wantSpace);
 
-    entries_.emplace_front(key, v, ttl); // TODO: After C++17 migration, use the return value
+    auto &addedEntry = entries_.emplace_front(key, v, ttl);
     index_.emplace(key, entries_.begin());
 
-    entries_.begin()->memCounted = wantSpace;
+    addedEntry.memCounted = wantSpace;
     memUsed_ += wantSpace;
     assert(memUsed_ >= wantSpace); // no overflows
     return true;
