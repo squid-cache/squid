@@ -125,10 +125,9 @@ const auto SwapMetaPrefixSize = sizeof(SwapMetaMagic) + sizeof(RawSwapMetaPrefix
 /// This is not the smallest RawSwapMetaType value (that is usually -128).
 const RawSwapMetaType RawSwapMetaTypeBottom = 0;
 
-// TODO: Use "inline constexpr ..." with C++17.
 /// Maximum value of a serialized SwapMetaType ID.
 /// This is not the largest RawSwapMetaType value (that is usually +127).
-inline RawSwapMetaType
+inline constexpr RawSwapMetaType
 RawSwapMetaTypeTop()
 {
     // This "constant" switch forces developers to update this function when
@@ -155,7 +154,7 @@ RawSwapMetaTypeTop()
 
 /// Whether the given raw swap meta field type represents a type that we should
 /// inform the admin about (if found in a store) but can otherwise ignore.
-inline bool
+inline constexpr bool
 DeprecatedSwapMetaType(const RawSwapMetaType type)
 {
     enum class DeprecatedMetas {
@@ -178,7 +177,7 @@ DeprecatedSwapMetaType(const RawSwapMetaType type)
 
 /// Whether the given raw swap meta field type represents a type that we should
 /// ignore without informing the admin.
-inline bool
+inline constexpr bool
 ReservedSwapMetaType(const RawSwapMetaType type)
 {
     enum class ReservedMetas {
@@ -195,7 +194,7 @@ ReservedSwapMetaType(const RawSwapMetaType type)
 /// Whether we store the given swap meta field type (and also interpret the
 /// corresponding swap meta field when the Store loads it). Matches all
 /// SwapMetaType enum values except for the never-stored STORE_META_VOID.
-inline bool
+inline constexpr bool
 HonoredSwapMetaType(const RawSwapMetaType type)
 {
     switch (type) {
@@ -217,7 +216,7 @@ HonoredSwapMetaType(const RawSwapMetaType type)
 
 /// Whether the given raw swap meta field type can be safely ignored.
 /// \sa HonoredSwapMetaType()
-inline bool
+inline constexpr bool
 IgnoredSwapMetaType(const RawSwapMetaType type)
 {
     return DeprecatedSwapMetaType(type) || ReservedSwapMetaType(type);
