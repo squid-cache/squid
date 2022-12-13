@@ -58,13 +58,12 @@ Less(const A a, const B b) {
 
 /// ensure that T is supported by NaturalSum() and friends
 template<typename T>
-constexpr bool
+constexpr void
 AssertNaturalType()
 {
     static_assert(std::numeric_limits<T>::is_bounded, "std::numeric_limits<T>::max() is meaningful");
     static_assert(std::numeric_limits<T>::is_exact, "no silent loss of precision");
     static_assert(!std::is_enum<T>::value, "no silent creation of non-enumerated values");
-    return true; // for static_assert convenience in C++11 constexpr callers
 }
 
 // TODO: Investigate whether this optimization can be expanded to [signed] types
@@ -79,10 +78,9 @@ IncreaseSumInternal(const A a, const B b) {
     static_assert(std::is_unsigned<A>::value, "AllUnsigned dispatch worked for A");
     static_assert(std::is_unsigned<B>::value, "AllUnsigned dispatch worked for B");
 
-    // TODO: Just call AssertNaturalType() after upgrading to C++14.
-    static_assert(AssertNaturalType<S>(), "S is a supported type");
-    static_assert(AssertNaturalType<A>(), "A is a supported type");
-    static_assert(AssertNaturalType<B>(), "B is a supported type");
+    AssertNaturalType<S>();
+    AssertNaturalType<A>();
+    AssertNaturalType<B>();
 
     // we should only be called by IncreaseSum(); it forces integer promotion
     static_assert(std::is_same<A, decltype(+a)>::value, "a will not be promoted");
@@ -112,9 +110,9 @@ IncreaseSumInternal(const A a, const B b) {
 template <typename S, typename A, typename B, std::enable_if_t<!AllUnsigned<A,B>::value, int> = 0>
 std::optional<S> constexpr
 IncreaseSumInternal(const A a, const B b) {
-    static_assert(AssertNaturalType<S>(), "S is a supported type");
-    static_assert(AssertNaturalType<A>(), "A is a supported type");
-    static_assert(AssertNaturalType<B>(), "B is a supported type");
+    AssertNaturalType<S>();
+    AssertNaturalType<A>();
+    AssertNaturalType<B>();
 
     // we should only be called by IncreaseSum() that does integer promotion
     static_assert(std::is_same<A, decltype(+a)>::value, "a will not be promoted");
