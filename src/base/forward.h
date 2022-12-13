@@ -16,11 +16,8 @@ class CallDialer;
 class CodeContext;
 class DelayedAsyncCalls;
 class ScopedId;
-class BadOptionalAccess;
 class Raw;
 class RegexPattern;
-
-template <typename Value> class Optional;
 
 template<class Cbc> class CbcPointer;
 template<class RefCountableKid> class RefCount;

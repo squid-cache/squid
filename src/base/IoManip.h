@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <optional>
 
 /// Safely prints an object pointed to by the given pointer: [label]<object>
 /// Prints nothing at all if the pointer is nil.
@@ -100,6 +101,18 @@ inline AsHex<Integer> asHex(const Integer n) { return AsHex<Integer>(n); }
 
 /// Prints the first n data bytes using hex notation. Does nothing if n is 0.
 void PrintHex(std::ostream &, const char *data, size_t n);
+
+/// prints the value stored inside std::optional (if any)
+template <typename Value>
+inline std::ostream &
+operator <<(std::ostream &os, const std::optional<Value> &optional)
+{
+    if (optional.has_value())
+        os << optional.value();
+    else
+        os << "[no value]";
+    return os;
+}
 
 #endif /* SQUID_SRC_BASE_IO_MANIP_H */
 

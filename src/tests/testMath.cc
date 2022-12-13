@@ -7,7 +7,6 @@
  */
 
 #include "squid.h"
-#include "base/Optional.h"
 #include "compat/cppunit.h"
 #include "SquidMath.h"
 #include "unitTestMain.h"

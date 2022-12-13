@@ -58,7 +58,7 @@ FormattedLog::parseOptions(ConfigParser &parser, const char *defaultFormatName)
         }
 
         if (strcmp(key, "rotate") == 0) {
-            rotationsToKeep = Optional<unsigned int>(xatoui(value));
+            rotationsToKeep = std::optional<unsigned int>(xatoui(value));
             continue;
         }
 
@@ -86,7 +86,7 @@ FormattedLog::dumpOptions(std::ostream &os) const
 
     // TODO: Here and elsewhere, report both explicitly configured settings and
     // various defaults. Properly excluding defaults requires wrapping most
-    // non-pointer members in Optional _and_ adding methods to compute the final
+    // non-pointer members in std::optional and adding methods to compute the final
     // option value after accounting for defaults (and those may change with
     // reconfiguration!). And all that effort may still not result in a faithful
     // reproduction of the original squid.conf because of size unit changes,
