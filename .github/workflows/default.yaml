@@ -30,7 +30,6 @@ jobs:
         run: |
           sudo apt-get --quiet=2 update
           sudo apt-get --quiet=2 install libtool-bin
-          sudo apt-get --quiet=2 install autoconf-archive
 
       - name: Setup a nodejs environment
         uses: actions/setup-node@v3
@@ -106,7 +105,6 @@ jobs:
           # required for "apt-get build-dep" to work
           sudo sed --in-place -E 's/# (deb-src.*updates main)/  \1/g' /etc/apt/sources.list
           sudo apt-get --quiet=2 update
-          sudo apt-get --quiet=2 install autoconf-archive
           sudo apt-get --quiet=2 build-dep squid
 
       - name: Checkout sources

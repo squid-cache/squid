@@ -171,10 +171,4 @@ w
 EOS
 fi
 
-if grep 'AX_CXX_COMPILE_STDCXX.*noext.*mandatory' configure; then
-  echo "ERROR: Autoconf-archive macro(s) listed above were not expanded."
-  echo "    Make sure you have installed autoconf-archive."
-  exit 1;
-fi
-
 echo "Autotool bootstrapping complete."

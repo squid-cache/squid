@@ -27,6 +27,7 @@ m4_include([acinclude/pam.m4])
 m4_include([acinclude/pkg.m4])
 m4_include([acinclude/tdb.m4])
 m4_include([acinclude/lib-checks.m4])
+m4_include([acinclude/ax_cxx_compile_stdcxx.m4])
 
 PRESET_CFLAGS="$CFLAGS"
 PRESET_CXXFLAGS="$CXXFLAGS"
@@ -78,7 +79,7 @@ user_cxx=`echo "$PRESET_CXXFLAGS" | grep -o -E "(-)std="`
 AS_IF([test "x$user_cxx" = "x"],[
   # Check for C++17 compiler support
   # May change CXX.
-  AX_CXX_COMPILE_STDCXX_17([noext],[mandatory])
+  AX_CXX_COMPILE_STDCXX([17],[noext],[mandatory])
 ])
 
 # Prerequisite: CXX has been finalized.
