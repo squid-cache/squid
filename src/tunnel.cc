@@ -407,7 +407,7 @@ TunnelStateData::checkRetry()
     if (noConnections())
         return "no connections";
 
-    // TODO: Use Optional for peer_reply_status to avoid treating zero value specially.
+    // TODO: Use std::optional for peer_reply_status to avoid treating zero value specially.
     if (request->hier.peer_reply_status != Http::scNone && !Http::IsReforwardableStatus(request->hier.peer_reply_status))
         return "received HTTP status code is not reforwardable";
 

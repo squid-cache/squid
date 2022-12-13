@@ -10,10 +10,10 @@
 #define _SQUID_SRC_SQUIDMATH_H
 
 #include "base/forward.h"
-#include "base/Optional.h"
 #include "base/TypeTraits.h"
 
 #include <limits>
+#include <optional>
 
 // TODO: Move to src/base/Math.h and drop the Math namespace
 
@@ -58,13 +58,12 @@ Less(const A a, const B b) {
 
 /// ensure that T is supported by NaturalSum() and friends
 template<typename T>
-constexpr bool
+constexpr void
 AssertNaturalType()
 {
     static_assert(std::numeric_limits<T>::is_bounded, "std::numeric_limits<T>::max() is meaningful");
     static_assert(std::numeric_limits<T>::is_exact, "no silent loss of precision");
     static_assert(!std::is_enum<T>::value, "no silent creation of non-enumerated values");
-    return true; // for static_assert convenience in C++11 constexpr callers
 }
 
 // TODO: Investigate whether this optimization can be expanded to [signed] types
@@ -72,17 +71,16 @@ AssertNaturalType()
 /// This IncreaseSumInternal() overload is optimized for speed.
 /// \returns a non-overflowing sum of the two unsigned arguments (or nothing)
 /// \prec both argument types are unsigned
-template <typename S, typename A, typename B, EnableIfType<AllUnsigned<A,B>::value, int> = 0>
-Optional<S>
+template <typename S, typename A, typename B, std::enable_if_t<AllUnsigned<A,B>::value, int> = 0>
+std::optional<S>
 IncreaseSumInternal(const A a, const B b) {
     // paranoid: AllUnsigned<A,B> precondition established that already
     static_assert(std::is_unsigned<A>::value, "AllUnsigned dispatch worked for A");
     static_assert(std::is_unsigned<B>::value, "AllUnsigned dispatch worked for B");
 
-    // TODO: Just call AssertNaturalType() after upgrading to C++14.
-    static_assert(AssertNaturalType<S>(), "S is a supported type");
-    static_assert(AssertNaturalType<A>(), "A is a supported type");
-    static_assert(AssertNaturalType<B>(), "B is a supported type");
+    AssertNaturalType<S>();
+    AssertNaturalType<A>();
+    AssertNaturalType<B>();
 
     // we should only be called by IncreaseSum(); it forces integer promotion
     static_assert(std::is_same<A, decltype(+a)>::value, "a will not be promoted");
@@ -102,19 +100,19 @@ IncreaseSumInternal(const A a, const B b) {
     // 2. the sum may overflow S (i.e. the return base type)
     // We do not need Less() here because we compare promoted unsigned types.
     return (sum >= a && sum <= std::numeric_limits<S>::max()) ?
-           Optional<S>(sum) : Optional<S>();
+           std::optional<S>(sum) : std::optional<S>();
 }
 
 /// This IncreaseSumInternal() overload supports a larger variety of types.
 /// \returns a non-overflowing sum of the two arguments (or nothing)
 /// \returns nothing if at least one of the arguments is negative
 /// \prec at least one of the argument types is signed
-template <typename S, typename A, typename B, EnableIfType<!AllUnsigned<A,B>::value, int> = 0>
-Optional<S> constexpr
+template <typename S, typename A, typename B, std::enable_if_t<!AllUnsigned<A,B>::value, int> = 0>
+std::optional<S> constexpr
 IncreaseSumInternal(const A a, const B b) {
-    static_assert(AssertNaturalType<S>(), "S is a supported type");
-    static_assert(AssertNaturalType<A>(), "A is a supported type");
-    static_assert(AssertNaturalType<B>(), "B is a supported type");
+    AssertNaturalType<S>();
+    AssertNaturalType<A>();
+    AssertNaturalType<B>();
 
     // we should only be called by IncreaseSum() that does integer promotion
     static_assert(std::is_same<A, decltype(+a)>::value, "a will not be promoted");
@@ -124,7 +122,7 @@ IncreaseSumInternal(const A a, const B b) {
         // We could support a non-under/overflowing sum of negative numbers, but
         // our callers use negative values specially (e.g., for do-not-use or
         // do-not-limit settings) and are not supposed to do math with them.
-        (a < 0 || b < 0) ? Optional<S>() :
+        (a < 0 || b < 0) ? std::optional<S>() :
         // To avoid undefined behavior of signed overflow, we must not compute
         // the raw a+b sum if it may overflow. When A is not B, a or b undergoes
         // (safe for non-negatives) integer conversion in these expressions, so
@@ -136,16 +134,16 @@ IncreaseSumInternal(const A a, const B b) {
         // which is the same as the overflow-safe condition here: maxS - a < b.
         // Finally, (maxS - a) cannot overflow because a is not negative and
         // cannot underflow because a is a promotion of s: 0 <= a <= maxS.
-        Less(std::numeric_limits<S>::max() - a, b) ? Optional<S>() :
-        Optional<S>(a + b);
+        Less(std::numeric_limits<S>::max() - a, b) ? std::optional<S>() :
+        std::optional<S>(a + b);
 }
 
 /// argument pack expansion termination for IncreaseSum<S, T, Args...>()
 template <typename S, typename T>
-Optional<S>
+std::optional<S>
 IncreaseSum(const S s, const T t)
 {
-    // Force (always safe) integer promotions now, to give EnableIfType<>
+    // Force (always safe) integer promotions now, to give std::enable_if_t<>
     // promoted types instead of entering IncreaseSumInternal<AllUnsigned>(s,t)
     // but getting a _signed_ promoted value of s or t in s + t.
     return IncreaseSumInternal<S>(+s, +t);
@@ -153,18 +151,19 @@ IncreaseSum(const S s, const T t)
 
 /// \returns a non-overflowing sum of the arguments (or nothing)
 template <typename S, typename T, typename... Args>
-Optional<S>
+std::optional<S>
 IncreaseSum(const S sum, const T t, const Args... args) {
     if (const auto head = IncreaseSum(sum, t)) {
         return IncreaseSum(head.value(), args...);
     } else {
-        return Optional<S>();
+        // std::optional<S>() triggers bogus -Wmaybe-uninitialized warnings in GCC v10.3
+        return std::nullopt;
     }
 }
 
 /// \returns an exact, non-overflowing sum of the arguments (or nothing)
 template <typename SummationType, typename... Args>
-Optional<SummationType>
+std::optional<SummationType>
 NaturalSum(const Args... args) {
     return IncreaseSum<SummationType>(0, args...);
 }

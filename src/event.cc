@@ -116,7 +116,7 @@ eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int weigh
     if (delta_ish >= 3.0) {
         static std::mt19937 rng(RandomSeed32());
         auto third = (delta_ish/3.0);
-        xuniform_real_distribution<> thirdIsh(delta_ish - third, delta_ish + third);
+        std::uniform_real_distribution<> thirdIsh(delta_ish - third, delta_ish + third);
         delta_ish = thirdIsh(rng);
     }
 

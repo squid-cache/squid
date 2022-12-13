@@ -62,10 +62,8 @@ template <typename... Args>
 inline
 SBuf ToSBuf(Args&&... args)
 {
-    // TODO: Make this code readable after requiring C++17.
     SBufStream out;
-    using expander = int[];
-    (void)expander {0, (void(out << std::forward<Args>(args)),0)...};
+    (out << ... << args);
     return out.buf();
 }
 

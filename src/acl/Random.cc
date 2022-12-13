@@ -97,7 +97,7 @@ ACLRandom::match(ACLChecklist *)
     // actually matching whether the random value is above
     // or below the configured threshold ratio.
     static std::mt19937 mt;
-    static xuniform_real_distribution<> dist(0, 1);
+    static std::uniform_real_distribution<> dist(0, 1);
 
     const double random = dist(mt);
 

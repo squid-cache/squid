@@ -14,8 +14,8 @@
 #include "adaptation/icap/Launcher.h"
 #include "adaptation/icap/Xaction.h"
 #include "base/AsyncCallbacks.h"
+#include "base/IoManip.h"
 #include "base/JobWait.h"
-#include "base/Optional.h"
 #include "base/TextException.h"
 #include "comm.h"
 #include "comm/Connection.h"
@@ -33,6 +33,8 @@
 #include "pconn.h"
 #include "security/PeerConnector.h"
 #include "SquidConfig.h"
+
+#include <optional>
 
 namespace Ssl
 {
@@ -136,7 +138,7 @@ static void
 icapLookupDnsResults(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data)
 {
     Adaptation::Icap::Xaction *xa = static_cast<Adaptation::Icap::Xaction *>(data);
-    const auto &addr = ia ? Optional<Ip::Address>(ia->current()) : Optional<Ip::Address>();
+    const auto &addr = ia ? std::optional<Ip::Address>(ia->current()) : std::optional<Ip::Address>();
     CallJobHere1(93, 5, CbcPointer<Adaptation::Icap::Xaction>(xa), Adaptation::Icap::Xaction, dnsLookupDone, addr);
 }
 
@@ -168,7 +170,7 @@ Adaptation::Icap::Xaction::openConnection()
 }
 
 void
-Adaptation::Icap::Xaction::dnsLookupDone(Optional<Ip::Address> addr)
+Adaptation::Icap::Xaction::dnsLookupDone(std::optional<Ip::Address> addr)
 {
     assert(waitingForDns);
     waitingForDns = false;

@@ -1076,7 +1076,7 @@ ErrorState::compileLegacyCode(Build &build)
     case 'O':
         if (!building_deny_info_url)
             do_quote = 0;
-    /* [[fallthrough]] */
+        [[fallthrough]];
     case 'o':
         p = request ? request->extacl_message.termedBuf() : external_acl_message;
         if (!p && !building_deny_info_url)

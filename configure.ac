@@ -27,8 +27,7 @@ m4_include([acinclude/pam.m4])
 m4_include([acinclude/pkg.m4])
 m4_include([acinclude/tdb.m4])
 m4_include([acinclude/lib-checks.m4])
-m4_include([acinclude/ax_cxx_compile_stdcxx_11.m4])
-m4_include([acinclude/ax_cxx_0x_types.m4])
+m4_include([acinclude/ax_cxx_compile_stdcxx.m4])
 
 PRESET_CFLAGS="$CFLAGS"
 PRESET_CXXFLAGS="$CXXFLAGS"
@@ -75,8 +74,16 @@ AS_IF([test "x${enable_arch_native}" != "xno"],[
   SQUID_CC_CHECK_ARGUMENT([squid_cv_check_marchnative],[-march=native])
 ])
 
-# might be cross-compiling.
-# NP: BUILDCXXFLAGS defined at the end of configure after CXXFLAGS fully known.
+# If the user did not specify a C++ version.
+user_cxx=`echo "$PRESET_CXXFLAGS" | grep -o -E "(-)std="`
+AS_IF([test "x$user_cxx" = "x"],[
+  # Check for C++17 compiler support
+  # May change CXX.
+  AX_CXX_COMPILE_STDCXX([17],[noext],[mandatory])
+])
+
+# Prerequisite: CXX has been finalized.
+# BUILDCXXFLAGS are defined later, after CXXFLAGS have been finalized.
 AC_ARG_VAR([BUILDCXX],[path to compiler for building compile-time tools. e.g. cf_gen])
 AS_IF([test "x$HOSTCXX" != "x" -a "x$BUILDCXX" = "x"],[
   AC_MSG_WARN([Cross-compiling with HOSTCXX is deprecated. Use BUILDCXX instead.])
@@ -89,13 +96,6 @@ AS_IF([test "x$BUILDCXX" = "x"],[
   ])
 ])
 AC_SUBST(BUILDCXX)
-
-# If the user did not specify a C++ version.
-user_cxx=`echo "$PRESET_CXXFLAGS" | grep -o -E "(-)std="`
-AS_IF([test "x$user_cxx" = "x"],[
-  # Check for C++11 compiler support
-  AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
-])
 
 # test for programs
 AC_PROG_RANLIB
@@ -303,10 +303,9 @@ AS_IF([test "$squid_cv_cc_simplified" = "gcc-4"],[
     #    in unit tests. Disable that
     SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wno-unused-private-field])
 
-    # ...=2: This flexibility level allows GCC to "understand" our fallthrough
-    # comments. TODO: Switch to [[fallthrough]] attributes with C++17.
-    SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wimplicit-fallthrough=2])
-    AS_IF([test "x$squid_cv_cc_arg_wimplicit_fallthrough_2" != "xyes"], [
+    # ...=5: Do not trust comments about fallthrough cases (GCC).
+    SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wimplicit-fallthrough=5])
+    AS_IF([test "x$squid_cv_cc_arg_wimplicit_fallthrough_5" != "xyes"], [
         SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wno-implicit-fallthrough])
     ])
 ])
@@ -2403,11 +2402,6 @@ AC_CHECK_SIZEOF(size_t)
 AC_CHECK_SIZEOF(off_t)
 AC_CHECK_SIZEOF(size_t)
 
-dnl Some C++11 types we try to use
-AX_CXX_TYPE_UNIFORM_DISTRIBUTIONS
-SQUID_CXX_STD_UNDERLYING_TYPE
-SQUID_CXX_STD_IS_TRIVIALLY_COPYABLE
-
 dnl On Solaris 9 x86, gcc may includes a "fixed" set of old system include files
 dnl that is incompatible with the updated Solaris header files.
 dnl For this reason, we must check if pad128_t and upad128_t are defined.
@@ -3075,6 +3069,7 @@ AC_SUBST(XTRA_LIBS)
 AC_SUBST(SQUID_CFLAGS)
 AC_SUBST(SQUID_CXXFLAGS)
 
+# Prerequisite: CXXFLAGS have been finalized.
 AC_ARG_VAR([BUILDCXXFLAGS],[C++ compiler flags for building compile-time tools. e.g. cf_gen])
 AS_IF([test "x$BUILDCXXFLAGS" = "x"],[
   # if we are NOT cross-compiling, use the default build flags for cf_gen and friends

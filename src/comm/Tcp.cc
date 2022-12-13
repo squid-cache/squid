@@ -28,9 +28,7 @@ template <typename Option>
 static bool
 SetSocketOption(const int fd, const int level, const int optName, const Option &optValue)
 {
-#if HAVE_STD_IS_TRIVIALLY_COPYABLE
     static_assert(std::is_trivially_copyable<Option>::value, "setsockopt() expects POD-like options");
-#endif
     static_assert(!std::is_same<Option, bool>::value, "setsockopt() uses int to represent boolean options");
     if (setsockopt(fd, level, optName, &optValue, sizeof(optValue)) < 0) {
         const auto xerrno = errno;

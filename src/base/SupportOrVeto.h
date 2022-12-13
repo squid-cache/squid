@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_BASE_SUPPORTORVETO_H
 #define SQUID_SRC_BASE_SUPPORTORVETO_H
 
-#include "base/Optional.h"
+#include <optional>
 
 /// a boolean flag that is false by default and becomes permanently false if vetoed
 class SupportOrVeto
@@ -30,7 +30,7 @@ public:
 
 private:
     /// current decision (if any)
-    Optional<bool> decision_;
+    std::optional<bool> decision_;
 };
 
 #endif /* SQUID_SRC_BASE_SUPPORTORVETO_H */
