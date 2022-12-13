@@ -851,7 +851,7 @@ gen_quote_escape(const std::string &var)
         case '"':
         case '\\':
             esc += '\\';
-        /* [[fallthrough]] */
+            [[fallthrough]];
         default:
             esc += c;
         }

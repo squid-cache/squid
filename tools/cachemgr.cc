@@ -693,7 +693,7 @@ read_reply(int s, cachemgr_request * req)
             }
 
             istate = isActions;
-        /* [[fallthrough]] we do not want to lose the first line */
+            [[fallthrough]]; // we do not want to lose the first line
 
         case isActions:
             if (strncmp(buf, "action:", 7) == 0) {
@@ -709,7 +709,7 @@ read_reply(int s, cachemgr_request * req)
             }
 
             istate = isBody;
-        /* [[fallthrough]] we do not want to lose the first line */
+            [[fallthrough]]; // we do not want to lose the first line
 
         case isBody:
         {

@@ -302,10 +302,9 @@ AS_IF([test "$squid_cv_cc_simplified" = "gcc-4"],[
     #    in unit tests. Disable that
     SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wno-unused-private-field])
 
-    # ...=2: This flexibility level allows GCC to "understand" our fallthrough
-    # comments. TODO: Switch to [[fallthrough]] attributes with C++17.
-    SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wimplicit-fallthrough=2])
-    AS_IF([test "x$squid_cv_cc_arg_wimplicit_fallthrough_2" != "xyes"], [
+    # ...=5: Do not trust comments about fallthrough cases (GCC).
+    SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wimplicit-fallthrough=5])
+    AS_IF([test "x$squid_cv_cc_arg_wimplicit_fallthrough_5" != "xyes"], [
         SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wno-implicit-fallthrough])
     ])
 ])
