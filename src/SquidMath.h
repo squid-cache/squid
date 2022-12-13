@@ -72,7 +72,7 @@ AssertNaturalType()
 /// This IncreaseSumInternal() overload is optimized for speed.
 /// \returns a non-overflowing sum of the two unsigned arguments (or nothing)
 /// \prec both argument types are unsigned
-template <typename S, typename A, typename B, EnableIfType<AllUnsigned<A,B>::value, int> = 0>
+template <typename S, typename A, typename B, std::enable_if_t<AllUnsigned<A,B>::value, int> = 0>
 std::optional<S>
 IncreaseSumInternal(const A a, const B b) {
     // paranoid: AllUnsigned<A,B> precondition established that already
@@ -109,7 +109,7 @@ IncreaseSumInternal(const A a, const B b) {
 /// \returns a non-overflowing sum of the two arguments (or nothing)
 /// \returns nothing if at least one of the arguments is negative
 /// \prec at least one of the argument types is signed
-template <typename S, typename A, typename B, EnableIfType<!AllUnsigned<A,B>::value, int> = 0>
+template <typename S, typename A, typename B, std::enable_if_t<!AllUnsigned<A,B>::value, int> = 0>
 std::optional<S> constexpr
 IncreaseSumInternal(const A a, const B b) {
     static_assert(AssertNaturalType<S>(), "S is a supported type");
@@ -145,7 +145,7 @@ template <typename S, typename T>
 std::optional<S>
 IncreaseSum(const S s, const T t)
 {
-    // Force (always safe) integer promotions now, to give EnableIfType<>
+    // Force (always safe) integer promotions now, to give std::enable_if_t<>
     // promoted types instead of entering IncreaseSumInternal<AllUnsigned>(s,t)
     // but getting a _signed_ promoted value of s or t in s + t.
     return IncreaseSumInternal<S>(+s, +t);

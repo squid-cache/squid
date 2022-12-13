@@ -155,7 +155,7 @@ using IsAsyncJob = typename std::conditional<
                    >::type;
 
 /// helper function to simplify UnaryCbcCallbackDialer creation
-template <class Destination, typename Argument1, EnableIfType<!IsAsyncJob<Destination>::value, int> = 0>
+template <class Destination, typename Argument1, std::enable_if_t<!IsAsyncJob<Destination>::value, int> = 0>
 UnaryCbcCallbackDialer<Destination, Argument1>
 callbackDialer(void (Destination::*method)(Argument1 &), Destination * const destination)
 {
@@ -164,7 +164,7 @@ callbackDialer(void (Destination::*method)(Argument1 &), Destination * const des
 }
 
 /// helper function to simplify UnaryJobCallbackDialer creation
-template <class Destination, typename Argument1, EnableIfType<IsAsyncJob<Destination>::value, int> = 0>
+template <class Destination, typename Argument1, std::enable_if_t<IsAsyncJob<Destination>::value, int> = 0>
 UnaryJobCallbackDialer<Destination, Argument1>
 callbackDialer(void (Destination::*method)(Argument1 &), Destination * const destination)
 {
