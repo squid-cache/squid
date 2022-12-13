@@ -168,7 +168,6 @@ DeprecatedSwapMetaType(const RawSwapMetaType type)
         STORE_META_VALID = 7
     };
     return
-        // TODO: simplify with std::underlying_type_t when switching to C++14
         type == static_cast<RawSwapMetaType>(DeprecatedMetas::STORE_META_KEY_URL) ||
         type == static_cast<RawSwapMetaType>(DeprecatedMetas::STORE_META_KEY_SHA) ||
         type == static_cast<RawSwapMetaType>(DeprecatedMetas::STORE_META_HITMETERING) ||
