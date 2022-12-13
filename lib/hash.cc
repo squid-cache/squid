@@ -66,22 +66,22 @@ hash4(const void *data, unsigned int size)
         break;
     case 7:
         HASH4;
-    /* [[fallthrough]] */
+        [[fallthrough]];
     case 6:
         HASH4;
-    /* [[fallthrough]] */
+        [[fallthrough]];
     case 5:
         HASH4;
-    /* [[fallthrough]] */
+        [[fallthrough]];
     case 4:
         HASH4;
-    /* [[fallthrough]] */
+        [[fallthrough]];
     case 3:
         HASH4;
-    /* [[fallthrough]] */
+        [[fallthrough]];
     case 2:
         HASH4;
-    /* [[fallthrough]] */
+        [[fallthrough]];
     case 1:
         HASH4;
     }
@@ -340,7 +340,7 @@ main(void)
     printf("done creating hash table: %d\n", hid);
 
     std::mt19937 mt;
-    xuniform_int_distribution<> dist(0,16);
+    std::uniform_int_distribution<> dist(0,16);
 
     while (fgets(buf, BUFSIZ, stdin)) {
         buf[strlen(buf) - 1] = '\0';

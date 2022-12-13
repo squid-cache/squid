@@ -519,7 +519,8 @@ generateRawGperfFile ()
     echo "/* $GeneratedByMe */"
     echo
 
-    (cd `dirname $gperfFile` && gperf -m 100000 `basename $gperfFile`)
+    (cd `dirname $gperfFile` && gperf -m 100000 `basename $gperfFile`) | \
+        sed 's@/[*]FALLTHROUGH[*]/@[[fallthrough]];@g'
 }
 
 generateGperfFile ()

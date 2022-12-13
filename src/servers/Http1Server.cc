@@ -101,7 +101,6 @@ Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
         err_type errPage = ERR_INVALID_REQ;
         switch (parser_->parseStatusCode) {
         case Http::scRequestHeaderFieldsTooLarge:
-        // fall through to next case
         case Http::scUriTooLong:
             errPage = ERR_TOO_BIG;
             break;

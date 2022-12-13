@@ -280,7 +280,7 @@ int main(int argc, char **argv)
         switch (opt) {
         case 'T':
             fixed_timeout = 1;
-        /* [[fallthrough]] */
+            [[fallthrough]];
         case 't':
             session_ttl = strtol(optarg, nullptr, 0);
             break;

@@ -39,9 +39,5 @@ protected: // prevents accidental creation of Interface instances
 
 using Interface = TypeTraits_::Interface;
 
-/// std::enable_if_t replacement until C++14
-template <bool B, class T = void>
-using EnableIfType = typename std::enable_if<B,T>::type;
-
 #endif /* SQUID_SRC_BASE_TYPETRAITS_H */
 

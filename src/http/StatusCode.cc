@@ -269,7 +269,7 @@ Http::StatusCodeString(const Http::StatusCode status)
     // 600+
     case Http::scInvalidHeader:
     case Http::scHeaderTooLarge:
-    // fall through to default.
+        [[fallthrough]];
 
     default:
         debugs(57, 3, "Unassigned HTTP status code: " << status);

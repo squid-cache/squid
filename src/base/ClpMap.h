@@ -9,7 +9,6 @@
 #ifndef SQUID__SRC_BASE_CLPMAP_H
 #define SQUID__SRC_BASE_CLPMAP_H
 
-#include "base/Optional.h"
 #include "mem/PoolingAllocator.h"
 #include "SquidMath.h"
 #include "time/gadgets.h"
@@ -17,6 +16,7 @@
 #include <functional>
 #include <limits>
 #include <list>
+#include <optional>
 #include <unordered_map>
 
 template<class Value>
@@ -110,7 +110,7 @@ private:
     using Index = std::unordered_map<Key, EntriesIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<IndexItem> >;
     using IndexIterator = typename Index::iterator;
 
-    static Optional<uint64_t> MemoryCountedFor(const Key &, const Value &);
+    static std::optional<uint64_t> MemoryCountedFor(const Key &, const Value &);
 
     void trim(uint64_t wantSpace);
     void erase(const IndexIterator &);
@@ -183,7 +183,7 @@ ClpMap<Key, Value, MemoryUsedBy>::get(const Key &key)
 }
 
 template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
-Optional<uint64_t>
+std::optional<uint64_t>
 ClpMap<Key, Value, MemoryUsedBy>::MemoryCountedFor(const Key &k, const Value &v)
 {
     // Both storage and index store keys, but we count keySz once, assuming that
@@ -224,10 +224,10 @@ ClpMap<Key, Value, MemoryUsedBy>::add(const Key &key, const Value &v, const Ttl 
         return false; // will never fit
     trim(wantSpace);
 
-    entries_.emplace_front(key, v, ttl); // TODO: After C++17 migration, use the return value
+    auto &addedEntry = entries_.emplace_front(key, v, ttl);
     index_.emplace(key, entries_.begin());
 
-    entries_.begin()->memCounted = wantSpace;
+    addedEntry.memCounted = wantSpace;
     memUsed_ += wantSpace;
     assert(memUsed_ >= wantSpace); // no overflows
     return true;

@@ -265,17 +265,17 @@ main(int argc, char *argv[])
                         exit(EXIT_FAILURE);
                     }
 
-                    entries.emplace_back(name);
+                    auto &newEntry = entries.emplace_back(name);
 
                     while ((aliasname = strtok(nullptr, WS)) != nullptr)
-                        entries.back().alias.push_front(aliasname);
+                        newEntry.alias.push_front(aliasname);
 
                     state = s1;
                 } else if (!strcmp(buff, "EOF")) {
                     state = sEXIT;
                 } else if (!strcmp(buff, "COMMENT_START")) {
-                    entries.emplace_back("comment");
-                    entries.back().loc = "none";
+                    auto &newEntry = entries.emplace_back("comment");
+                    newEntry.loc = "none";
                     state = sDOC;
                 } else {
                     errorMsg(input_filename, linenum, buff);
@@ -851,7 +851,7 @@ gen_quote_escape(const std::string &var)
         case '"':
         case '\\':
             esc += '\\';
-        /* [[fallthrough]] */
+            [[fallthrough]];
         default:
             esc += c;
         }

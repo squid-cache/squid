@@ -164,7 +164,7 @@ Auth::Negotiate::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request,
              * tied to it, even if MAYBE the client could handle it - Kinkie */
             rep->header.delByName("keep-alive");
             request->flags.proxyKeepalive = false;
-        /* [[fallthrough]] */
+            [[fallthrough]];
 
         case Auth::Ok:
             /* Special case: authentication finished OK but disallowed by ACL.

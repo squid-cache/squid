@@ -131,7 +131,7 @@ int
 main(int, char *[])
 {
     std::mt19937 generator;
-    xuniform_int_distribution<int> distribution;
+    std::uniform_int_distribution<int> distribution;
     auto nextRandom = std::bind (distribution, generator);
 
     {

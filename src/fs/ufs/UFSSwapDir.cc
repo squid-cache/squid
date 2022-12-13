@@ -1079,7 +1079,7 @@ Fs::Ufs::UFSSwapDir::HandleCleanEvent()
          * swap directories
          */
         static std::mt19937 mt(RandomSeed32());
-        xuniform_int_distribution<> dist(0, j);
+        std::uniform_int_distribution<> dist(0, j);
         swap_index = dist(mt);
     }
 

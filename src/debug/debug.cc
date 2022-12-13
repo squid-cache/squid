@@ -9,7 +9,6 @@
 /* DEBUG: section 00    Debug Routines */
 
 #include "squid.h"
-#include "base/Optional.h"
 #include "base/TextException.h"
 #include "debug/Stream.h"
 #include "fd.h"
@@ -21,6 +20,7 @@
 #include <deque>
 #include <functional>
 #include <memory>
+#include <optional>
 
 char *Debug::debugOptions = nullptr;
 int Debug::override_X = 0;
@@ -40,7 +40,7 @@ static DebugModule *Module_ = nullptr;
 /// Explicitly configured maximum level for debugs() messages written to stderr.
 /// debugs() messages with this (or lower) level will be written to stderr (and
 /// possibly other channels).
-static Optional<int> ExplicitStderrLevel;
+static std::optional<int> ExplicitStderrLevel;
 
 /// ExplicitStderrLevel preference or default: Just like with
 /// ExplicitStderrLevel, debugs() messages with this (or lower) level will be
@@ -365,7 +365,7 @@ ResetSections(const int level)
 
 /// optimization: formats ProcessLabel once for frequent debugs() reuse
 static void
-LabelThisProcess(const char * const name, const Optional<int> id = Optional<int>())
+LabelThisProcess(const char * const name, const std::optional<int> id = std::optional<int>())
 {
     assert(name);
     assert(strlen(name));
@@ -407,7 +407,7 @@ Debug::NameThisKid(const int kidIdentifier)
     // to reduce noise and for backward compatibility, do not label kid messages
     // in non-SMP mode
     if (kidIdentifier)
-        LabelThisProcess("kid", Optional<int>(kidIdentifier));
+        LabelThisProcess("kid", std::optional<int>(kidIdentifier));
     else
         ProcessLabel.clear(); // probably already empty
 }

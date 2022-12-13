@@ -345,11 +345,11 @@ idnsAddNameserver(const char *buf)
         return;
     }
 
-    nameservers.emplace_back(ns());
+    auto &nameserver = nameservers.emplace_back(ns());
     A.port(NS_DEFAULTPORT);
-    nameservers.back().S = A;
+    nameserver.S = A;
 #if WHEN_EDNS_RESPONSES_ARE_PARSED
-    nameservers.back().last_seen_edns = RFC1035_DEFAULT_PACKET_SZ;
+    nameserver.last_seen_edns = RFC1035_DEFAULT_PACKET_SZ;
     // TODO generate a test packet to probe this NS from EDNS size and ability.
 #endif
     debugs(78, 3, "Added nameserver #" << nameservers.size()-1 << " (" << A << ")");
