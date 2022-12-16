@@ -33,9 +33,9 @@ MemPoolMalloc::allocate()
         ++count.saved_allocs;
     } else {
         if (doZero)
-            obj = xcalloc(1, objectSize());
+            obj = xcalloc(1, objectSize);
         else
-            obj = xmalloc(objectSize());
+            obj = xmalloc(objectSize);
         ++(getMeter().alloc);
     }
     ++(getMeter().inuse);
@@ -51,7 +51,7 @@ MemPoolMalloc::deallocate(void *obj)
         --(getMeter().alloc);
     } else {
         if (doZero)
-            memset(obj, 0, objectSize());
+            memset(obj, 0, objectSize);
         ++(getMeter().idle);
         freelist.push(obj);
     }
@@ -64,7 +64,7 @@ MemPoolMalloc::getStats(Mem::PoolStats &stats)
     stats.pool = this;
     stats.label = objectType();
     stats.meter = &getMeter();
-    stats.obj_size = objectSize();
+    stats.obj_size = objectSize;
     stats.chunk_capacity = 0;
 
     stats.items_alloc += getMeter().alloc.currentLevel();

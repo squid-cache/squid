@@ -123,9 +123,9 @@ MemChunk::MemChunk(MemPoolChunked *aPool)
     void **Free = (void **)freeList;
 
     for (int i = 1; i < pool->chunk_capacity; ++i) {
-        *Free = (void *) ((char *) Free + pool->objectSize());
+        *Free = (void *) ((char *) Free + pool->objectSize);
         void **nextFree = (void **)*Free;
-        (void) VALGRIND_MAKE_MEM_NOACCESS(Free, pool->objectSize());
+        (void) VALGRIND_MAKE_MEM_NOACCESS(Free, pool->objectSize);
         Free = nextFree;
     }
     nextFreeChunk = pool->nextFreeChunk;
@@ -170,11 +170,11 @@ MemPoolChunked::push(void *obj)
      * the object size here, but such condition is not safe.
      */
     if (doZero)
-        memset(obj, 0, objectSize());
+        memset(obj, 0, objectSize);
     Free = (void **)obj;
     *Free = freeCache;
     freeCache = obj;
-    (void) VALGRIND_MAKE_MEM_NOACCESS(obj, objectSize());
+    (void) VALGRIND_MAKE_MEM_NOACCESS(obj, objectSize);
 }
 
 /*
@@ -193,7 +193,7 @@ MemPoolChunked::get()
     /* first, try cache */
     if (freeCache) {
         Free = (void **)freeCache;
-        (void) VALGRIND_MAKE_MEM_DEFINED(Free, objectSize());
+        (void) VALGRIND_MAKE_MEM_DEFINED(Free, objectSize);
         freeCache = *Free;
         *Free = nullptr;
         return Free;
@@ -217,7 +217,7 @@ MemPoolChunked::get()
         /* last free in this chunk, so remove us from perchunk freelist chain */
         nextFreeChunk = chunk->nextFreeChunk;
     }
-    (void) VALGRIND_MAKE_MEM_DEFINED(Free, objectSize());
+    (void) VALGRIND_MAKE_MEM_DEFINED(Free, objectSize);
     return Free;
 }
 
@@ -273,20 +273,20 @@ MemPoolChunked::setChunkSize(size_t chunksize)
         return;
 
     csize = ((csize + MEM_PAGE_SIZE - 1) / MEM_PAGE_SIZE) * MEM_PAGE_SIZE;  /* round up to page size */
-    cap = csize / objectSize();
+    cap = csize / objectSize;
 
     if (cap < MEM_MIN_FREE)
         cap = MEM_MIN_FREE;
-    if (cap * objectSize() > MEM_CHUNK_MAX_SIZE)
-        cap = MEM_CHUNK_MAX_SIZE / objectSize();
+    if (cap * objectSize > MEM_CHUNK_MAX_SIZE)
+        cap = MEM_CHUNK_MAX_SIZE / objectSize;
     if (cap > MEM_MAX_FREE)
         cap = MEM_MAX_FREE;
     if (cap < 1)
         cap = 1;
 
-    csize = cap * objectSize();
+    csize = cap * objectSize;
     csize = ((csize + MEM_PAGE_SIZE - 1) / MEM_PAGE_SIZE) * MEM_PAGE_SIZE;  /* round up to page size */
-    cap = csize / objectSize();
+    cap = csize / objectSize;
 
     chunk_capacity = cap;
     chunk_size = csize;
@@ -446,7 +446,7 @@ MemPoolChunked::getStats(Mem::PoolStats &stats)
     stats.pool = this;
     stats.label = objectType();
     stats.meter = &getMeter();
-    stats.obj_size = objectSize();
+    stats.obj_size = objectSize;
     stats.chunk_capacity = chunk_capacity;
 
     /* gather stats for each Chunk */

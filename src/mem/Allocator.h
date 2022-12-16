@@ -26,7 +26,7 @@ public:
 
     explicit Allocator(const char * const aLabel, const size_t sz):
         label(aLabel),
-        objectSize_(RoundedSize(sz))
+        objectSize(RoundedSize(sz))
     {}
 
     // TODO make this method const
@@ -36,8 +36,9 @@ public:
      */
     virtual size_t getStats(PoolStats &) = 0;
 
-    /// get current statistics tracked for this allocator
+    // XXX: \deprecated use meter directly
     virtual PoolMeter const &getMeter() const { return meter; }
+    // XXX: \deprecated use meter directly
     virtual PoolMeter &getMeter() { return meter; }
 
     /// provide (and reserve) memory suitable for storing one object
@@ -50,16 +51,13 @@ public:
     /// return memory reserved by alloc()
     void freeOne(void *obj) {
         assert(obj != nullptr);
-        (void) VALGRIND_CHECK_MEM_IS_ADDRESSABLE(obj, objectSize());
+        (void) VALGRIND_CHECK_MEM_IS_ADDRESSABLE(obj, objectSize);
         deallocate(obj);
         ++count.freed;
     }
 
-    /// brief description of objects returned by alloc()
+    // XXX: \deprecated use label directly
     virtual char const *objectType() const { return label; }
-
-    /// the size (in bytes) of objects managed by this allocator
-    size_t objectSize() const { return objectSize_; }
 
     /// the difference between the number of alloc() and freeOne() calls
     virtual int getInUseCount() = 0;
@@ -67,7 +65,8 @@ public:
     /// \see doZero
     void zeroBlocks(const bool doIt) { doZero = doIt; }
 
-    int inUseCount() { return getInUseCount(); } // XXX: drop redundant?
+    // XXX: \deprecated use getInUseCount()
+    int inUseCount() { return getInUseCount(); }
 
     /// XXX: Misplaced -- not all allocators have a notion of a "chunk". See MemPoolChunked.
     virtual void setChunkSize(size_t) {}
@@ -82,15 +81,15 @@ public:
      */
     void flushCounters() {
         if (count.freed) {
-            getMeter().gb_freed.update(count.freed, objectSize());
+            getMeter().gb_freed.update(count.freed, objectSize);
             count.freed = 0;
         }
         if (count.allocs) {
-            getMeter().gb_allocated.update(count.allocs, objectSize());
+            getMeter().gb_allocated.update(count.allocs, objectSize);
             count.allocs = 0;
         }
         if (count.saved_allocs) {
-            getMeter().gb_saved.update(count.saved_allocs, objectSize());
+            getMeter().gb_saved.update(count.saved_allocs, objectSize);
             count.saved_allocs = 0;
         }
     }
@@ -122,6 +121,15 @@ public:
        size_t freed = 0; ///< accumulated calls to freeOne()
     } count;
 
+    /// brief description of objects returned by alloc()
+    const char *label;
+
+    /// the size (in bytes) of objects managed by this allocator
+    const size_t objectSize;
+
+    /// statistics tracked for this allocator
+    PoolMeter meter;
+
 protected:
     /// \copydoc void *alloc()
     virtual void *allocate() = 0;
@@ -136,11 +144,6 @@ protected:
      * When possible, set this to false to avoid zeroing overheads.
      */
     bool doZero = true;
-
-private:
-    const char *label = nullptr;
-    const size_t objectSize_ = 0;
-    PoolMeter meter;
 };
 
 } // namespace Mem

@@ -80,9 +80,9 @@ MemPools::flushMeters()
         pool->flushCounters();
 
         // Accumulate current volumes (in bytes) across all pools.
-        TheMeter.alloc += pool->getMeter().alloc.currentLevel() * pool->objectSize();
-        TheMeter.inuse += pool->getMeter().inuse.currentLevel() * pool->objectSize();
-        TheMeter.idle += pool->getMeter().idle.currentLevel() * pool->objectSize();
+        TheMeter.alloc += pool->getMeter().alloc.currentLevel() * pool->objectSize;
+        TheMeter.inuse += pool->getMeter().inuse.currentLevel() * pool->objectSize;
+        TheMeter.idle += pool->getMeter().idle.currentLevel() * pool->objectSize;
         // Do not accumulate peak details as timing for those vary between pools.
 
         // regenerate gb_* values from original pool stats
