@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_BASE_PACKABLESTREAM_H
 #define SQUID_SRC_BASE_PACKABLESTREAM_H
 
+#include "base/IoManip.h"
 #include "base/Packable.h"
 
 #include <ostream>

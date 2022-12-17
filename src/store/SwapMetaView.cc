@@ -84,7 +84,7 @@ Store::SwapMetaView::checkExpectedLength(const size_t expectedLength) const
 {
     if (rawLength != expectedLength)
         throw TextException(ToSBuf("Bad value length in a Store entry meta field expecting a ",
-                                   expectedLength, "-byte value: ", *this), Here());
+                                   expectedLength, "-byte value: ", this), Here());
 }
 
 std::ostream &
