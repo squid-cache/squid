@@ -51,9 +51,6 @@ public:
         ++count.freed;
     }
 
-    // XXX: \deprecated use label directly
-    virtual char const *objectType() const { return label; }
-
     /// the difference between the number of alloc() and freeOne() calls
     virtual int getInUseCount() = 0;
 

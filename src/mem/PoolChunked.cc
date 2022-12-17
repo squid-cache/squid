@@ -444,7 +444,7 @@ MemPoolChunked::getStats(Mem::PoolStats &stats)
     clean((time_t) 555555); /* don't want to get chunks released before reporting */
 
     stats.pool = this;
-    stats.label = objectType();
+    stats.label = label;
     stats.meter = &meter;
     stats.obj_size = objectSize;
     stats.chunk_capacity = chunk_capacity;
@@ -468,7 +468,7 @@ MemPoolChunked::getStats(Mem::PoolStats &stats)
     stats.items_inuse += meter.inuse.currentLevel();
     stats.items_idle += meter.idle.currentLevel();
 
-    stats.overhead += sizeof(MemPoolChunked) + chunkCount * sizeof(MemChunk) + strlen(objectType()) + 1;
+    stats.overhead += sizeof(MemPoolChunked) + chunkCount * sizeof(MemChunk) + strlen(label) + 1;
 
     return meter.inuse.currentLevel();
 }

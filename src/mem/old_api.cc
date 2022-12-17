@@ -139,7 +139,7 @@ memStringStats(std::ostream &stream)
     for (i = 0; i < mem_str_pool_count; ++i) {
         const auto &pool = GetStrPool(i);
         const auto plevel = pool.meter.inuse.currentLevel();
-        stream << std::setw(20) << std::left << pool.objectType();
+        stream << std::setw(20) << std::left << pool.label;
         stream << std::right << "\t " << xpercentInt(plevel, StrCountMeter.currentLevel());
         stream << "\t " << xpercentInt(plevel * pool.objectSize, StrVolumeMeter.currentLevel()) << "\n";
         pooled_count += plevel;

@@ -62,7 +62,7 @@ size_t
 MemPoolMalloc::getStats(Mem::PoolStats &stats)
 {
     stats.pool = this;
-    stats.label = objectType();
+    stats.label = label;
     stats.meter = &meter;
     stats.obj_size = objectSize;
     stats.chunk_capacity = 0;
@@ -71,7 +71,7 @@ MemPoolMalloc::getStats(Mem::PoolStats &stats)
     stats.items_inuse += meter.inuse.currentLevel();
     stats.items_idle += meter.idle.currentLevel();
 
-    stats.overhead += sizeof(MemPoolMalloc) + strlen(objectType()) + 1;
+    stats.overhead += sizeof(MemPoolMalloc) + strlen(label) + 1;
 
     return meter.inuse.currentLevel();
 }
