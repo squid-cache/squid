@@ -138,7 +138,7 @@ memStringStats(std::ostream &stream)
 
     for (i = 0; i < mem_str_pool_count; ++i) {
         const auto &pool = GetStrPool(i);
-        const auto plevel = pool.getMeter().inuse.currentLevel();
+        const auto plevel = pool.meter.inuse.currentLevel();
         stream << std::setw(20) << std::left << pool.objectType();
         stream << std::right << "\t " << xpercentInt(plevel, StrCountMeter.currentLevel());
         stream << "\t " << xpercentInt(plevel * pool.objectSize, StrVolumeMeter.currentLevel()) << "\n";
@@ -688,7 +688,7 @@ Mem::Report(std::ostream &stream)
         PoolStats mp_stats;
         pool->getStats(mp_stats);
 
-        if (mp_stats.pool->getMeter().gb_allocated.count > 0)
+        if (mp_stats.pool->meter.gb_allocated.count > 0)
             usedPools.emplace_back(mp_stats);
         else
             ++not_used;

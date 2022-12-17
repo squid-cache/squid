@@ -55,7 +55,7 @@ Mem::AllocatorProxy::zeroBlocks(bool doIt)
 Mem::PoolMeter const &
 Mem::AllocatorProxy::getMeter() const
 {
-    return getAllocator()->getMeter();
+    return getAllocator()->meter;
 }
 
 size_t

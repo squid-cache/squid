@@ -36,11 +36,6 @@ public:
      */
     virtual size_t getStats(PoolStats &) = 0;
 
-    // XXX: \deprecated use meter directly
-    virtual PoolMeter const &getMeter() const { return meter; }
-    // XXX: \deprecated use meter directly
-    virtual PoolMeter &getMeter() { return meter; }
-
     /// provide (and reserve) memory suitable for storing one object
     void *alloc() {
         if (++count.allocs == FlushLimit)
@@ -81,15 +76,15 @@ public:
      */
     void flushCounters() {
         if (count.freed) {
-            getMeter().gb_freed.update(count.freed, objectSize);
+            meter.gb_freed.update(count.freed, objectSize);
             count.freed = 0;
         }
         if (count.allocs) {
-            getMeter().gb_allocated.update(count.allocs, objectSize);
+            meter.gb_allocated.update(count.allocs, objectSize);
             count.allocs = 0;
         }
         if (count.saved_allocs) {
-            getMeter().gb_saved.update(count.saved_allocs, objectSize);
+            meter.gb_saved.update(count.saved_allocs, objectSize);
             count.saved_allocs = 0;
         }
     }

@@ -29,30 +29,30 @@ MemPoolMalloc::allocate()
         freelist.pop();
     }
     if (obj) {
-        --(getMeter().idle);
+        --meter.idle;
         ++count.saved_allocs;
     } else {
         if (doZero)
             obj = xcalloc(1, objectSize);
         else
             obj = xmalloc(objectSize);
-        ++(getMeter().alloc);
+        ++meter.alloc;
     }
-    ++(getMeter().inuse);
+    ++meter.inuse;
     return obj;
 }
 
 void
 MemPoolMalloc::deallocate(void *obj)
 {
-    --(getMeter().inuse);
+    --meter.inuse;
     if (MemPools::GetInstance().idleLimit() == 0) {
         xfree(obj);
-        --(getMeter().alloc);
+        --meter.alloc;
     } else {
         if (doZero)
             memset(obj, 0, objectSize);
-        ++(getMeter().idle);
+        ++meter.idle;
         freelist.push(obj);
     }
 }
@@ -63,23 +63,23 @@ MemPoolMalloc::getStats(Mem::PoolStats &stats)
 {
     stats.pool = this;
     stats.label = objectType();
-    stats.meter = &getMeter();
+    stats.meter = &meter;
     stats.obj_size = objectSize;
     stats.chunk_capacity = 0;
 
-    stats.items_alloc += getMeter().alloc.currentLevel();
-    stats.items_inuse += getMeter().inuse.currentLevel();
-    stats.items_idle += getMeter().idle.currentLevel();
+    stats.items_alloc += meter.alloc.currentLevel();
+    stats.items_inuse += meter.inuse.currentLevel();
+    stats.items_idle += meter.idle.currentLevel();
 
     stats.overhead += sizeof(MemPoolMalloc) + strlen(objectType()) + 1;
 
-    return getMeter().inuse.currentLevel();
+    return meter.inuse.currentLevel();
 }
 
 int
 MemPoolMalloc::getInUseCount()
 {
-    return getMeter().inuse.currentLevel();
+    return meter.inuse.currentLevel();
 }
 
 MemPoolMalloc::MemPoolMalloc(char const *aLabel, size_t aSize) :
@@ -89,7 +89,7 @@ MemPoolMalloc::MemPoolMalloc(char const *aLabel, size_t aSize) :
 
 MemPoolMalloc::~MemPoolMalloc()
 {
-    assert(getMeter().inuse.currentLevel() == 0);
+    assert(getInUseCount() == 0);
     clean(0);
 }
 
@@ -105,8 +105,8 @@ MemPoolMalloc::clean(time_t)
     while (!freelist.empty()) {
         void *obj = freelist.top();
         freelist.pop();
-        --(getMeter().idle);
-        --(getMeter().alloc);
+        --meter.idle;
+        --meter.alloc;
         xfree(obj);
     }
 }

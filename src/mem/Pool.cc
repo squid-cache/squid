@@ -80,18 +80,18 @@ MemPools::flushMeters()
         pool->flushCounters();
 
         // Accumulate current volumes (in bytes) across all pools.
-        TheMeter.alloc += pool->getMeter().alloc.currentLevel() * pool->objectSize;
-        TheMeter.inuse += pool->getMeter().inuse.currentLevel() * pool->objectSize;
-        TheMeter.idle += pool->getMeter().idle.currentLevel() * pool->objectSize;
+        TheMeter.alloc += pool->meter.alloc.currentLevel() * pool->objectSize;
+        TheMeter.inuse += pool->meter.inuse.currentLevel() * pool->objectSize;
+        TheMeter.idle += pool->meter.idle.currentLevel() * pool->objectSize;
         // Do not accumulate peak details as timing for those vary between pools.
 
         // regenerate gb_* values from original pool stats
-        TheMeter.gb_allocated.count += pool->getMeter().gb_allocated.count;
-        TheMeter.gb_saved.count += pool->getMeter().gb_saved.count;
-        TheMeter.gb_freed.count += pool->getMeter().gb_freed.count;
-        TheMeter.gb_allocated.bytes += pool->getMeter().gb_allocated.bytes;
-        TheMeter.gb_saved.bytes += pool->getMeter().gb_saved.bytes;
-        TheMeter.gb_freed.bytes += pool->getMeter().gb_freed.bytes;
+        TheMeter.gb_allocated.count += pool->meter.gb_allocated.count;
+        TheMeter.gb_saved.count += pool->meter.gb_saved.count;
+        TheMeter.gb_freed.count += pool->meter.gb_freed.count;
+        TheMeter.gb_allocated.bytes += pool->meter.gb_allocated.bytes;
+        TheMeter.gb_saved.bytes += pool->meter.gb_saved.bytes;
+        TheMeter.gb_freed.bytes += pool->meter.gb_freed.bytes;
     }
 }
 
