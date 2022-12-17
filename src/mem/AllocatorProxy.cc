@@ -43,7 +43,7 @@ Mem::AllocatorProxy::inUseCount() const
     if (!theAllocator)
         return 0;
     else
-        return theAllocator->inUseCount();
+        return theAllocator->getInUseCount();
 }
 
 void

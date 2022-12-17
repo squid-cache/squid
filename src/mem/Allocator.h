@@ -57,9 +57,6 @@ public:
     /// \see doZero
     void zeroBlocks(const bool doIt) { doZero = doIt; }
 
-    // XXX: \deprecated use getInUseCount()
-    int inUseCount() { return getInUseCount(); }
-
     /// XXX: Misplaced -- not all allocators have a notion of a "chunk". See MemPoolChunked.
     virtual void setChunkSize(size_t) {}
 
