@@ -15,6 +15,9 @@ top_builddir=$1
 sbindir=$2
 configFile=$3
 
+# If set, expect non-zero Squid exit code, with a matching stderr message
+failureRegex=""
+
 instructionsFile="$configFile.instructions"
 if test -e $instructionsFile
 then
@@ -32,6 +35,25 @@ then
         if test "$instructionName" = "#"
         then
             continue; # skip comment lines
+        fi
+
+        if test "$instructionName" = "expect-failure"
+        then
+            if test -n "$failureRegex"
+            then
+                echo "$here: ERROR: Repeated $instructionName instruction";
+                exit 1;
+            fi
+
+            failureRegex="$p1"
+
+            if test -n "$p2"
+            then
+                echo "$here: ERROR: Bad $instructionName instruction: Unexpected second parameter: $p2";
+                exit 1;
+            fi
+
+            continue;
         fi
 
         if test "$instructionName" = "skip-unless-autoconf-defines"
@@ -68,8 +90,34 @@ then
             exit 1;
         fi
     done < $instructionsFile
-
-    # TODO: Add support for the "require-failure" instruction.
 fi
 
-exec $sbindir/squid -k parse -f $configFile
+errorLog="$top_builddir/squid-stderr.log"
+
+$sbindir/squid -k parse -f $configFile 2> $errorLog
+result=$?
+
+if test -z "$failureRegex"
+then
+    # a positive test does not require special $result interpretation
+    exit $?
+fi
+
+if test "$result" -eq 0
+then
+    echo "ERROR: Squid successfully parsed malformed $configFile instead of rejecting it"
+    exit 1;
+fi
+
+if ! grep -q -E "$failureRegex" $errorLog
+then
+    echo "ERROR: Squid rejected malformed $configFile but did not emit an expected message to stderr"
+    echo "    expected error message regex: $failureRegex"
+    echo "Squid stderr output:"
+    cat $errorLog
+    exit 1;
+fi
+
+echo "Squid rejected malformed $configFile as expected; Squid exit code: $result"
+exit 0
+
