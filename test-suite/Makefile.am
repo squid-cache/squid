@@ -154,4 +154,4 @@ squid-conf-tests: $(srcdir)/test-squid-conf.sh $(top_builddir)/src/squid.conf.de
 	done; \
 	if test "$$failed" -eq 0; then cp $(TRUE) $@ ; fi
 
-CLEANFILES += squid-conf-tests
+CLEANFILES += squid-conf-tests squid-stderr.log

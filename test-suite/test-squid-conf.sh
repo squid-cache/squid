@@ -92,7 +92,7 @@ then
     done < $instructionsFile
 fi
 
-errorLog="$top_builddir/squid-stderr.log"
+errorLog="squid-stderr.log"
 
 $sbindir/squid -k parse -f $configFile 2> $errorLog
 result=$?
