@@ -134,6 +134,22 @@ void Adaptation::Icap::Xaction::start()
     Adaptation::Initiate::start();
 }
 
+// TODO: Make reusable by moving this (and the printing operator from
+// ip/Address.h that this code is calling) into ip/print.h or similar.
+namespace Ip {
+
+inline std::ostream &
+operator <<(std::ostream &os, const std::optional<Address> &optional)
+{
+    if (optional.has_value())
+        os << optional.value();
+    else
+        os << "[no IP]";
+    return os;
+}
+
+}
+
 static void
 icapLookupDnsResults(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data)
 {
