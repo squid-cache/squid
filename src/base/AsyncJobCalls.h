@@ -11,7 +11,6 @@
 
 #include "base/AsyncJob.h"
 #include "base/CbcPointer.h"
-#include "base/IoManip.h"
 #include "debug/Stream.h"
 
 /**
