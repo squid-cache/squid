@@ -222,11 +222,10 @@ any_registered_header (const Http::HdrType id)
     return (id >= Http::HdrType::ACCEPT && id < Http::HdrType::OTHER);
 }
 
+std::ostream &operator <<(std::ostream &, HdrType);
+
 }; /* namespace Http */
 
-/* ostream output for Http::HdrType */
-std::ostream &
-operator<< (std::ostream&, Http::HdrType);
 
 #endif /* SQUID_HTTP_REGISTEREDHEADERS_H */
 

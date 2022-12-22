@@ -30,13 +30,13 @@ public:
     int wait; ///< msecs spent waiting for the lookup (if any) or -1 (if none)
 };
 
-} // namespace Dns
-
 inline std::ostream &
-operator <<(std::ostream &os, const Dns::LookupDetails &dns)
+operator <<(std::ostream &os, const LookupDetails &dns)
 {
     return dns.print(os);
 }
+
+} // namespace Dns
 
 #endif /* SQUID_DNS_LOOKUPDETAILS_H */
 

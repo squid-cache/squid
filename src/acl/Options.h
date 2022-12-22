@@ -225,10 +225,10 @@ const Options &NoOptions(); ///< \returns an empty Options container
 /// A disabled (+i) and default states are "case sensitive".
 const BooleanOption &CaseSensitivityOption();
 
-} // namespace Acl
+std::ostream &operator <<(std::ostream &, const Option &);
+std::ostream &operator <<(std::ostream &, const Options &);
 
-std::ostream &operator <<(std::ostream &os, const Acl::Option &option);
-std::ostream &operator <<(std::ostream &os, const Acl::Options &options);
+} // namespace Acl
 
 #endif /* SQUID_ACL_OPTIONS_H */
 

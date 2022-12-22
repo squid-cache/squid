@@ -36,13 +36,13 @@ private:
     uint64_t id = 0; ///< uniquely identifies this reservation
 };
 
-}; // namespace Helper
-
 inline std::ostream &
-operator <<(std::ostream &os, const Helper::ReservationId &id)
+operator <<(std::ostream &os, const ReservationId &id)
 {
     return id.print(os);
 }
+
+}; // namespace Helper
 
 namespace std {
 /// default hash functor to support std::unordered_map<HelperReservationId, *>

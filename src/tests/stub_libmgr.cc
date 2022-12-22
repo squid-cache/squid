@@ -19,7 +19,7 @@
 
 // NP: used by Action.h instantiations
 #include "mgr/Command.h"
-std::ostream &operator <<(std::ostream &os, const Mgr::Command &) STUB_RETVAL(os)
+std::ostream &Mgr::operator <<(std::ostream &os, const Command &) STUB_RETVAL(os)
 
 #include "mgr/Action.h"
 Mgr::Action::Action(const CommandPointer &) STUB
@@ -40,7 +40,6 @@ static Mgr::Action::Pointer dummyAction;
 Mgr::ActionParams::ActionParams() STUB_NOP
 Mgr::ActionParams::ActionParams(const Ipc::TypedMsgHdr &) STUB_NOP
 void Mgr::ActionParams::pack(Ipc::TypedMsgHdr &) const STUB
-std::ostream &operator <<(std::ostream &os, const Mgr::ActionParams &) STUB_RETVAL(os)
 
 #include "mgr/ActionWriter.h"
 //Mgr::ActionWriter::ActionWriter(const Action::Pointer &, int) STUB

@@ -74,16 +74,16 @@ operator <<(std::ostream &os, const SipcIo &sio)
 /* IpcIo::Command */
 
 std::ostream &
-operator <<(std::ostream &os, const IpcIo::Command command)
+IpcIo::operator <<(std::ostream &os, const Command command)
 {
     switch (command) {
-    case IpcIo::cmdNone:
+    case cmdNone:
         return os << '-';
-    case IpcIo::cmdOpen:
+    case cmdOpen:
         return os << 'o';
-    case IpcIo::cmdRead:
+    case cmdRead:
         return os << 'r';
-    case IpcIo::cmdWrite:
+    case cmdWrite:
         return os << 'w';
     }
     // unreachable code

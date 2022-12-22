@@ -59,7 +59,7 @@ private:
 };
 
 /// dumps approximate lock state (for debugging)
-std::ostream &operator <<(std::ostream &os, const Ipc::ReadWriteLock &);
+std::ostream &operator <<(std::ostream &, const ReadWriteLock &);
 
 /// approximate stats of a set of ReadWriteLocks
 class ReadWriteLockStats

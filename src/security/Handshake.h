@@ -50,8 +50,8 @@ public:
     Ciphers ciphers;
 };
 
-inline
-std::ostream &operator <<(std::ostream &os, Security::TlsDetails const &details)
+inline std::ostream &
+operator <<(std::ostream &os, const TlsDetails &details)
 {
     return details.print(os);
 }

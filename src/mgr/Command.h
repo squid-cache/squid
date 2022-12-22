@@ -28,9 +28,9 @@ public:
     ActionParams params; ///< user-supplied action arguments
 };
 
-} // namespace Mgr
+std::ostream &operator <<(std::ostream &, const Command &);
 
-std::ostream &operator <<(std::ostream &os, const Mgr::Command &cmd);
+} // namespace Mgr
 
 #endif /* SQUID_MGR_COMMAND_H */
 

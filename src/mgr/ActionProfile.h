@@ -38,13 +38,13 @@ public:
     ActionCreatorPointer creator; ///< creates Action objects with this profile
 };
 
-} // namespace Mgr
-
 inline std::ostream &
-operator <<(std::ostream &os, const Mgr::ActionProfile &profile)
+operator <<(std::ostream &os, const ActionProfile &profile)
 {
     return os << profile.name;
 }
+
+} // namespace Mgr
 
 #endif /* SQUID_MGR_ACTION_PROFILE_H */
 

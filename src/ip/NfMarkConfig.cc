@@ -49,7 +49,7 @@ Ip::NfMarkConfig::applyToMark(nfmark_t m) const
 }
 
 std::ostream &
-operator <<(std::ostream &os, const Ip::NfMarkConfig c)
+Ip::operator <<(std::ostream &os, const NfMarkConfig c)
 {
     os << asHex(c.mark);
 

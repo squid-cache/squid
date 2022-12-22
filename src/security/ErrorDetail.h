@@ -126,17 +126,17 @@ ErrorCode ErrorCodeFromName(const char *name);
 /// \param prefixRawCode whether to prefix raw codes with "SSL_ERR="
 const char *ErrorNameFromCode(ErrorCode err, bool prefixRawCode = false);
 
-} // namespace Security
-
 /// Dump the given Security::ErrorDetail via a possibly nil pointer (for
 /// debugging). Unfortunately, without this, compilers pick generic RefCount<T>
 /// operator "<<" overload (with T=Security::ErrorDetail) instead of the
 /// overload provided by the parent ErrorDetail class (that we call here).
 inline std::ostream &
-operator <<(std::ostream &os, const Security::ErrorDetail::Pointer &p)
+operator <<(std::ostream &os, const ErrorDetail::Pointer &p)
 {
     return operator <<(os, ::ErrorDetail::Pointer(p));
 }
+
+} // namespace Security
 
 #endif
 
