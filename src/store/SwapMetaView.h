@@ -72,10 +72,10 @@ SwapMetaExtract(Item &item, const char * &input, const void *end)
     input += sizeof(item);
 }
 
-} // namespace Store
-
 /// writes a short human-readable summary of the given SwapMetaView object
-std::ostream &operator <<(std::ostream &, const Store::SwapMetaView &);
+std::ostream &operator <<(std::ostream &, const SwapMetaView &);
+
+} // namespace Store
 
 #endif /* SQUID_SRC_STORE_SWAPMETAVIEW_H */
 
