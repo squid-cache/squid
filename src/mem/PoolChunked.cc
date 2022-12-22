@@ -188,7 +188,7 @@ MemPoolChunked::get()
 {
     void **Free;
 
-    ++count.saved_allocs;
+    ++countSavedAllocs;
 
     /* first, try cache */
     if (freeCache) {
@@ -201,7 +201,7 @@ MemPoolChunked::get()
     /* then try perchunk freelist chain */
     if (nextFreeChunk == nullptr) {
         /* no chunk with frees, so create new one */
-        --count.saved_allocs; // compensate for the ++ above
+        --countSavedAllocs; // compensate for the ++ above
         createChunk();
     }
     /* now we have some in perchunk freelist chain */

@@ -30,7 +30,7 @@ MemPoolMalloc::allocate()
     }
     if (obj) {
         --meter.idle;
-        ++count.saved_allocs;
+        ++countSavedAllocs;
     } else {
         if (doZero)
             obj = xcalloc(1, objectSize);

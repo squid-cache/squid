@@ -38,7 +38,7 @@ public:
 
     /// provide (and reserve) memory suitable for storing one object
     void *alloc() {
-        if (++count.allocs == FlushLimit)
+        if (++countAlloc == FlushLimit)
             flushCounters();
         return allocate();
     }
@@ -48,7 +48,7 @@ public:
         assert(obj != nullptr);
         (void) VALGRIND_CHECK_MEM_IS_ADDRESSABLE(obj, objectSize);
         deallocate(obj);
-        ++count.freed;
+        ++countFreeOne;
     }
 
     /// the difference between the number of alloc() and freeOne() calls
@@ -69,17 +69,17 @@ public:
      * Performs some CPU intensive calculations which have been deferred for performance.
      */
     void flushCounters() {
-        if (count.freed) {
-            meter.gb_freed.update(count.freed, objectSize);
-            count.freed = 0;
+        if (countFreeOne) {
+            meter.gb_freed.update(countFreeOne, objectSize);
+            countFreeOne = 0;
         }
-        if (count.allocs) {
-            meter.gb_allocated.update(count.allocs, objectSize);
-            count.allocs = 0;
+        if (countAlloc) {
+            meter.gb_allocated.update(countAlloc, objectSize);
+            countAlloc = 0;
         }
-        if (count.saved_allocs) {
-            meter.gb_saved.update(count.saved_allocs, objectSize);
-            count.saved_allocs = 0;
+        if (countSavedAllocs) {
+            meter.gb_saved.update(countSavedAllocs, objectSize);
+            countSavedAllocs = 0;
         }
     }
 
@@ -91,24 +91,16 @@ public:
 
 public:
 
-    /** Temporary counters for performance optimization.
-     *
-     * Counts allocator activity until a flushCounters() gets
-     * triggered to move the values into the 'meter' statistics.
-     *
-     * Specific Optimizations:
-     * \li Objects have fixed-size,
-     *     so all calculations about bytes can be deferred.
-     * \li Objects pooled (if any) can be inferred,
-     *     so saved_free counting is unnecessary.
-     * \li Objects actively in use (if any) can be inferred,
-     *     so no inuse_count management on alloc() or freeOne().
-     */
-    struct FastCounter {
-       size_t allocs = 0; ///< accumulated calls to alloc()
-       size_t saved_allocs = 0; ///< alloc() calls which re-used an idle object
-       size_t freed = 0; ///< accumulated calls to freeOne()
-    } count;
+    /// the number of calls to Mem::Allocator::alloc() since last flush
+    size_t countAlloc = 0;
+
+    /// the number of malloc()/calloc() calls avoided since last flush
+    size_t countSavedAllocs = 0;
+
+    /// the number of calls to Mem::Allocator::freeOne() since last flush
+    size_t countFreeOne = 0;
+
+    // XXX: no counter for the number of free() calls avoided
 
     /// brief description of objects returned by alloc()
     const char *label;
