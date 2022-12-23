@@ -66,7 +66,6 @@ public:
 
     /**
      * Flush temporary counter values into the statistics held in 'meter'.
-     * Performs some CPU intensive calculations which have been deferred for performance.
      */
     void flushCounters() {
         if (countFreeOne) {
