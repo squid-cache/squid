@@ -86,12 +86,9 @@ MemPools::flushMeters()
         // We cannot calculate the global peak because individual pools peak at different times.
 
         // regenerate gb_* values from original pool stats
-        TheMeter.gb_allocated.count += pool->meter.gb_allocated.count;
-        TheMeter.gb_saved.count += pool->meter.gb_saved.count;
-        TheMeter.gb_freed.count += pool->meter.gb_freed.count;
-        TheMeter.gb_allocated.bytes += pool->meter.gb_allocated.bytes;
-        TheMeter.gb_saved.bytes += pool->meter.gb_saved.bytes;
-        TheMeter.gb_freed.bytes += pool->meter.gb_freed.bytes;
+        TheMeter.gb_allocated += pool->meter.gb_allocated;
+        TheMeter.gb_saved += pool->meter.gb_saved;
+        TheMeter.gb_freed += pool->meter.gb_freed;
     }
 }
 
