@@ -71,7 +71,7 @@ MemPoolMalloc::getStats(Mem::PoolStats &stats)
     stats.items_inuse += meter.inuse.currentLevel();
     stats.items_idle += meter.idle.currentLevel();
 
-    stats.overhead += sizeof(MemPoolMalloc) + strlen(label) + 1;
+    stats.overhead += sizeof(*this) + strlen(label) + 1;
 
     return getInUseCount();
 }

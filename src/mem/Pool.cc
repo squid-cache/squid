@@ -76,14 +76,14 @@ MemPools::flushMeters()
     TheMeter.flush();
 
     for (const auto pool: pools) {
-        // ensure the pool's meter contains latest high-performance counter values
+        // ensure the pool's meter reflect the latest calls
         pool->flushCounters();
 
         // Accumulate current volumes (in bytes) across all pools.
         TheMeter.alloc += pool->meter.alloc.currentLevel() * pool->objectSize;
         TheMeter.inuse += pool->meter.inuse.currentLevel() * pool->objectSize;
         TheMeter.idle += pool->meter.idle.currentLevel() * pool->objectSize;
-        // Do not accumulate peak details as timing for those vary between pools.
+        // We cannot calculate the global peak because individual pools peak at different times.
 
         // regenerate gb_* values from original pool stats
         TheMeter.gb_allocated.count += pool->meter.gb_allocated.count;

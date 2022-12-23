@@ -24,7 +24,7 @@ public:
     /// Flush counters to 'meter' after flush limit allocations
     static const size_t FlushLimit = 1000;
 
-    explicit Allocator(const char * const aLabel, const size_t sz):
+    Allocator(const char * const aLabel, const size_t sz):
         label(aLabel),
         objectSize(RoundedSize(sz))
     {}
@@ -52,7 +52,7 @@ public:
     }
 
     /// the difference between the number of alloc() and freeOne() calls
-    virtual int getInUseCount() const { return meter.inuse.currentLevel(); }
+    int getInUseCount() const { return meter.inuse.currentLevel(); }
 
     /// \see doZero
     void zeroBlocks(const bool doIt) { doZero = doIt; }
@@ -102,7 +102,7 @@ public:
     // XXX: no counter for the number of free() calls avoided
 
     /// brief description of objects returned by alloc()
-    const char *label;
+    const char *const label;
 
     /// the size (in bytes) of objects managed by this allocator
     const size_t objectSize;
