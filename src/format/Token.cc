@@ -67,6 +67,7 @@ static TokenTableEntry TokenTable2C[] = {
     TokenTableEntry("<pt", LFT_PEER_RESPONSE_TIME),
     TokenTableEntry("<tt", LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME),
     TokenTableEntry("dt", LFT_DNS_WAIT_TIME),
+    TokenTableEntry("busy_time", LFT_BUSY_TIME),
 
     TokenTableEntry(">ha", LFT_ADAPTED_REQUEST_HEADER),
     TokenTableEntry(">ha", LFT_ADAPTED_REQUEST_ALL_HEADERS),

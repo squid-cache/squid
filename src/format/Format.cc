@@ -603,6 +603,18 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             doSec = 1;
             break;
 
+        case LFT_BUSY_TIME: {
+            const auto &stopwatch = al->busyTime;
+            if (stopwatch.ran()) {
+                // make sure total() returns nanoseconds compatible with outoff
+                using nanos = std::chrono::duration<decltype(outoff), std::nano>;
+                const nanos n = stopwatch.total();
+                outoff = n.count();
+                dooff = true;
+            }
+        }
+        break;
+
         case LFT_TIME_TO_HANDLE_REQUEST:
             outtv = al->cache.trTime;
             doMsec = 1;

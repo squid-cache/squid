@@ -166,6 +166,7 @@ typedef enum {
     LFT_PEER_RESPONSE_TIME,
     LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME,
     LFT_DNS_WAIT_TIME,
+    LFT_BUSY_TIME,
 
     /* Squid internal processing details */
     LFT_SQUID_STATUS,
