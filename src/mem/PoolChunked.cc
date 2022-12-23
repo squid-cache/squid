@@ -301,8 +301,8 @@ MemPoolChunked::~MemPoolChunked()
     MemChunk *chunk, *fchunk;
 
     flushCounters();
-    assert(getInUseCount() == 0);
     clean(0);
+    assert(getInUseCount() == 0);
 
     chunk = Chunks;
     while ( (fchunk = chunk) != nullptr) {

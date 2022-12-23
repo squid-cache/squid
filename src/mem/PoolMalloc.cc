@@ -83,8 +83,8 @@ MemPoolMalloc::MemPoolMalloc(char const *aLabel, size_t aSize) :
 
 MemPoolMalloc::~MemPoolMalloc()
 {
-    assert(getInUseCount() == 0);
     clean(0);
+    assert(getInUseCount() == 0);
 }
 
 bool
