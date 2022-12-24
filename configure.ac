@@ -370,7 +370,7 @@ AC_ARG_WITH(aufs-threads,
   AS_HELP_STRING([--with-aufs-threads=N_THREADS],
     [Tune the number of worker threads for the aufs object store.]), [
   AS_CASE([$withval],
-    [[[0-9]]*],[squid_opt_aufs_threads=$withval],
+    [@<:@0-9@:>@*],[squid_opt_aufs_threads=$withval],
     AC_MSG_ERROR(--with-aufs-threads expects a numeric argument)
   )
 ])
@@ -2533,7 +2533,7 @@ dnl --with-maxfd present for compatibility with Squid-2.
 dnl undocumented in ./configure --help  to encourage using the Squid-3 directive
 AC_ARG_WITH(maxfd,,[
   AS_CASE([$withval],
-    [[[0-9]]*],[
+    [@<:@0-9@:>@*],[
       squid_filedescriptors_num=$withval
       AC_MSG_NOTICE([forcing default of $squid_filedescriptors_num filedescriptors (user-forced)])
     ],
@@ -2543,14 +2543,14 @@ AC_ARG_WITH(maxfd,,[
 
 AC_ARG_WITH(filedescriptors,
   AS_HELP_STRING([--with-filedescriptors=NUMBER],
-    [Force squid to support NUMBER filedescriptors]),
+    [Force squid to support NUMBER filedescriptors]),[
   AS_CASE([$withval],
-    [[[0-9]]*],[
+    [@<:@0-9@:>@*],[
       squid_filedescriptors_num=$withval
       AC_MSG_NOTICE([forcing default of $squid_filedescriptors_num filedescriptors (user-forced)])],
     [AC_MSG_ERROR([--with-filedescriptors expects a numeric argument])]
   )
-)
+])
 
 SQUID_CHECK_DEFAULT_FD_SETSIZE
 SQUID_CHECK_MAXFD
