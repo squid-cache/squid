@@ -1409,12 +1409,11 @@ TunnelStateData::usePinned()
         const auto serverConn = ConnStateData::BorrowPinnedConnection(request.getRaw(), al);
         debugs(26, 7, "pinned peer connection: " << serverConn);
 
+        al->requestAttempts++;
+
         // Set HttpRequest pinned related flags for consistency even if
         // they are not really used by tunnel.cc code.
         request->flags.pinned = true;
-
-        al->requestAttempts++;
-
         if (connManager->pinnedAuth())
             request->flags.auth = true;
 
