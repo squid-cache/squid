@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,12 +10,7 @@
 #define SQUID_CONFIG_H
 
 #include "autoconf.h"       /* For GNU autoconf variables */
-
-#if !defined(HAVE_SQUID)
-/* sub-packages define their own version details */
 #include "version.h"
-
-#endif
 
 /* default values for listen ports. Usually specified in squid.conf really */
 #define CACHE_HTTP_PORT 3128
@@ -60,13 +55,6 @@
 #define SQUID_UDP_SO_RCVBUF SQUID_DETECT_UDP_SO_RCVBUF
 #endif
 
-/*
- * Determine if this is a leak check build or standard
- */
-#if PURIFY || WITH_VALGRIND
-#define LEAK_CHECK_MODE 1
-#endif
-
 /* temp hack: needs to be pre-defined for now. */
 #define SQUID_MAXPATHLEN 256
 
@@ -77,8 +65,7 @@ using namespace Squid;
 /** \endcond */
 #endif
 
-// temporary for the definition of LOCAL_ARRAY
-#include "leakcheck.h"
+#define LOCAL_ARRAY(type, name, size) static type name[size]
 
 #endif /* SQUID_CONFIG_H */
 

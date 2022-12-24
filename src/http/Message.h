@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -40,7 +40,6 @@ public:
         srcFtp = 1 << (16 + 1), ///< ftp_port or FTP server
         srcIcap = 1 << (16 + 2), ///< traditional ICAP service without encryption
         srcEcap = 1 << (16 + 3), ///< eCAP service that uses insecure libraries/daemons
-        srcGopher = 1 << (16 + 14), ///< Gopher server
         srcWhois = 1 << (16 + 15), ///< Whois server
         srcUnsafe = 0xFFFF0000,  ///< Unsafe sources mask
         srcSafe = 0x0000FFFF ///< Safe sources mask
@@ -123,6 +122,7 @@ protected:
     /**
      * Validate the message start line is syntactically correct.
      * Set HTTP error status according to problems found.
+     * Zero hdr_len is treated as a serious problem.
      *
      * \retval true   Status line has no serious problems.
      * \retval false  Status line has a serious problem. Correct response is indicated by error.

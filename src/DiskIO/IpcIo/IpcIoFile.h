@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,11 +34,16 @@ typedef enum { cmdNone, cmdOpen, cmdRead, cmdWrite } Command;
 
 } // namespace IpcIo
 
+std::ostream &operator <<(std::ostream &, IpcIo::Command);
+
 /// converts DiskIO requests to IPC queue messages
 class IpcIoMsg
 {
 public:
     IpcIoMsg();
+
+    /// prints message parameters; suitable for cache manager reports
+    void stat(std::ostream &);
 
 public:
     unsigned int requestId; ///< unique for requestor; matches request w/ response
@@ -46,6 +51,7 @@ public:
     off_t offset;
     size_t len;
     Ipc::Mem::PageId page;
+    pid_t workerPid; ///< the process ID of the I/O requestor
 
     IpcIo::Command command; ///< what disker is supposed to do or did
     struct timeval start; ///< when the I/O request was converted to IpcIoMsg
@@ -81,16 +87,19 @@ public:
     virtual bool ioInProgress() const;
 
     /// handle open response from coordinator
-    static void HandleOpenResponse(const Ipc::StrandSearchResponse &response);
+    static void HandleOpenResponse(const Ipc::StrandMessage &);
 
     /// handle queue push notifications from worker or disker
     static void HandleNotification(const Ipc::TypedMsgHdr &msg);
+
+    /// prints IPC message queue state; suitable for cache manager reports
+    static void StatQueue(std::ostream &);
 
     DiskFile::Config config; ///< supported configuration options
 
 protected:
     friend class IpcIoPendingRequest;
-    void openCompleted(const Ipc::StrandSearchResponse *const response);
+    void openCompleted(const Ipc::StrandMessage *);
     void readCompleted(ReadRequest *readRequest, IpcIoMsg *const response);
     void writeCompleted(WriteRequest *writeRequest, const IpcIoMsg *const response);
     bool canWait() const;
@@ -119,9 +128,12 @@ private:
     static void DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo);
     static bool WaitBeforePop();
 
+    static void HandleMessagesAtStart();
+
 private:
     const String dbName; ///< the name of the file we are managing
-    int diskId; ///< the process ID of the disker we talk to
+    const pid_t myPid; ///< optimization: cached process ID of our process
+    int diskId; ///< the kid ID of the disker we talk to
     RefCount<IORequestor> ioRequestor;
 
     bool error_; ///< whether we have seen at least one I/O error (XXX)

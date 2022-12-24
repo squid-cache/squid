@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "base/JobWait.h"
 #include "CachePeer.h"
 #include "cbdata.h"
 #include "comm.h"
@@ -16,16 +17,16 @@
 #include "neighbors.h"
 #include "security/NegotiationHistory.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
+
 #include <ostream>
 
-InstanceIdDefinitions(Comm::Connection, "conn");
+InstanceIdDefinitions(Comm::Connection, "conn", uint64_t);
 
 class CachePeer;
 bool
 Comm::IsConnOpen(const Comm::ConnectionPointer &conn)
 {
-    return conn != NULL && conn->isOpen();
+    return conn != nullptr && conn->isOpen();
 }
 
 Comm::Connection::Connection() :
@@ -41,12 +42,16 @@ Comm::Connection::Connection() :
     *rfc931 = 0; // quick init the head. the rest does not matter.
 }
 
-static int64_t lost_conn = 0;
 Comm::Connection::~Connection()
 {
     if (fd >= 0) {
-        debugs(5, 4, "BUG #3329: Orphan Comm::Connection: " << *this);
-        debugs(5, 4, "NOTE: " << ++lost_conn << " Orphans since last started.");
+        if (flags & COMM_ORPHANED) {
+            debugs(5, 5, "closing orphan: " << *this);
+        } else {
+            static uint64_t losses = 0;
+            ++losses;
+            debugs(5, 4, "BUG #3329: Lost orphan #" << losses << ": " << *this);
+        }
         close();
     }
 
@@ -56,25 +61,44 @@ Comm::Connection::~Connection()
 }
 
 Comm::ConnectionPointer
-Comm::Connection::copyDetails() const
+Comm::Connection::cloneProfile() const
 {
-    ConnectionPointer c = new Comm::Connection;
+    const ConnectionPointer clone = new Comm::Connection;
+    auto &c = *clone; // optimization
 
-    c->setAddrs(local, remote);
-    c->peerType = peerType;
-    c->tos = tos;
-    c->nfmark = nfmark;
-    c->nfConnmark = nfConnmark;
-    c->flags = flags;
-    c->startTime_ = startTime_;
+    /*
+     * Copy or excuse each data member. Excused members do not belong to a
+     * Connection configuration profile because their values cannot be reused
+     * across (co-existing) Connection objects and/or are tied to their own
+     * object lifetime.
+     */
 
-    // ensure FD is not open in the new copy.
-    c->fd = -1;
+    c.setAddrs(local, remote);
+    c.peerType = peerType;
+    // fd excused
+    c.tos = tos;
+    c.nfmark = nfmark;
+    c.nfConnmark = nfConnmark;
+    // COMM_ORPHANED is not a part of connection opening instructions
+    c.flags = flags & ~COMM_ORPHANED;
+    // rfc931 is excused
 
-    // ensure we have a cbdata reference to peer_ not a straight ptr copy.
-    c->peer_ = cbdataReference(getPeer());
+#if USE_SQUID_EUI
+    // These are currently only set when accepting connections and never used
+    // for establishing new ones, so this copying is currently in vain, but,
+    // technically, they can be a part of connection opening instructions.
+    c.remoteEui48 = remoteEui48;
+    c.remoteEui64 = remoteEui64;
+#endif
 
-    return c;
+    // id excused
+    c.peer_ = cbdataReference(getPeer());
+    // startTime_ excused
+    // tlsHistory excused
+
+    debugs(5, 5, this << " made " << c);
+    assert(!c.isOpen());
+    return clone;
 }
 
 void
@@ -102,7 +126,7 @@ Comm::Connection::getPeer() const
     if (cbdataReferenceValid(peer_))
         return peer_;
 
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -141,7 +165,7 @@ Comm::Connection::connectTimeout(const time_t fwdStart) const
 {
     // a connection opening timeout (ignoring forwarding time limits for now)
     const CachePeer *peer = getPeer();
-    const time_t ctimeout = peer ? peerConnectTimeout(peer) : Config.Timeout.connect;
+    const auto ctimeout = peer ? peer->connectTimeout() : Config.Timeout.connect;
 
     // time we have left to finish the whole forwarding process
     const time_t fwdTimeLeft = FwdState::ForwardTimeout(fwdStart);

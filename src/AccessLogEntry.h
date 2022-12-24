@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,7 @@
 #include "anyp/PortCfg.h"
 #include "base/CodeContext.h"
 #include "comm/Connection.h"
+#include "error/Error.h"
 #include "HierarchyLogEntry.h"
 #include "http/ProtocolVersion.h"
 #include "http/RequestMethod.h"
@@ -54,6 +55,11 @@ public:
     /// including indirect forwarded-for IP if configured to log that
     void getLogClientIp(char *buf, size_t bufsz) const;
 
+    /// %>A: Compute client FQDN if possible, using the supplied buf if needed.
+    /// \returns result for immediate logging (not necessarily pointing to buf)
+    /// Side effect: Enables reverse DNS lookups of future client addresses.
+    const char *getLogClientFqdn(char *buf, size_t bufSize) const;
+
     /// Fetch the client IDENT string, or nil if none is available.
     const char *getClientIdent() const;
 
@@ -79,8 +85,8 @@ public:
     // are stored in hier.tcpServer
 
     /** \brief This subclass holds log info for HTTP protocol
-     * \todo Inner class declarations should be moved outside
-     * \todo details of HTTP held in the parent class need moving into here.
+     * TODO: Inner class declarations should be moved outside
+     * TODO: details of HTTP held in the parent class need moving into here.
      */
     class HttpDetails
     {
@@ -104,7 +110,7 @@ public:
     } http;
 
     /** \brief This subclass holds log info for ICP protocol
-     * \todo Inner class declarations should be moved outside
+     * TODO: Inner class declarations should be moved outside
      */
     class IcpDetails
     {
@@ -113,7 +119,7 @@ public:
     } icp;
 
     /** \brief This subclass holds log info for HTCP protocol
-     * \todo Inner class declarations should be moved outside
+     * TODO: Inner class declarations should be moved outside
      */
     class HtcpDetails
     {
@@ -132,9 +138,9 @@ public:
 #endif
 
     /** \brief This subclass holds log info for Squid internal stats
-     * \todo Inner class declarations should be moved outside
-     * \todo some details relevant to particular protocols need shuffling to other sub-classes
-     * \todo this object field need renaming to 'squid' or something.
+     * TODO: Inner class declarations should be moved outside
+     * TODO: some details relevant to particular protocols need shuffling to other sub-classes
+     * TODO: this object field need renaming to 'squid' or something.
      */
     class CacheDetails
     {
@@ -161,7 +167,7 @@ public:
     } cache;
 
     /** \brief This subclass holds log info for various headers in raw format
-     * \todo shuffle this to the relevant protocol section.
+     * TODO: shuffle this to the relevant protocol section.
      */
     class Headers
     {
@@ -172,7 +178,7 @@ public:
 
 #if USE_ADAPTATION
     /** \brief This subclass holds general adaptation log info.
-     * \todo Inner class declarations should be moved outside.
+     * TODO: Inner class declarations should be moved outside.
      */
     class AdaptationDetails
     {
@@ -194,16 +200,17 @@ public:
     /// key=value pairs returned from URL rewrite/redirect helper
     NotePairs::Pointer notes;
 
-    /// The total number of attempts to establish a connection. Includes any
-    /// failed attempts and [always successful] persistent connection reuse.
-    /// See %request_attempts.
+    /// The total number of finished attempts to establish a connection.
+    /// Excludes discarded HappyConnOpener attempts. Includes failed
+    /// HappyConnOpener attempts and [always successful] persistent connection
+    /// reuse. See %request_attempts.
     int requestAttempts = 0;
     /// see ConnStateData::proxyProtocolHeader_
     ProxyProtocol::HeaderPointer proxyProtocolHeader;
 
 #if ICAP_CLIENT
     /** \brief This subclass holds log info for ICAP part of request
-     *  \todo Inner class declarations should be moved outside
+     *  TODO: Inner class declarations should be moved outside
      */
     class IcapLogEntry
     {
@@ -260,7 +267,17 @@ public:
             virginUrlForMissingRequest_ = vu;
     }
 
+    /// \returns stored transaction error information (or nil)
+    const Error *error() const;
+
+    /// sets (or updates the already stored) transaction error as needed
+    void updateError(const Error &);
+
 private:
+    /// transaction problem
+    /// if set, overrides (and should eventually replace) request->error
+    Error error_;
+
     /// Client URI (or equivalent) for effectiveVirginUrl() when HttpRequest is
     /// missing. This member is ignored unless the request member is nil.
     SBuf virginUrlForMissingRequest_;
@@ -270,8 +287,8 @@ class ACLChecklist;
 class StoreEntry;
 
 /* Should be in 'AccessLog.h' as the driver */
-void accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist* checklist = NULL);
-void accessLogLog(AccessLogEntry::Pointer &, ACLChecklist * checklist);
+void accessLogLogTo(CustomLog *, const AccessLogEntryPointer &, ACLChecklist *checklist = nullptr);
+void accessLogLog(const AccessLogEntryPointer &, ACLChecklist *);
 void accessLogRotate(void);
 void accessLogClose(void);
 void accessLogInit(void);

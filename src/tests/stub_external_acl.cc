@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,7 +26,7 @@ void ACLExternal::ExternalAclLookup(ACLChecklist *, ACLExternal *) STUB
 void ExternalACLLookup::Start(ACLChecklist *, external_acl_data *, bool) STUB
 void externalAclInit(void) STUB_NOP
 void externalAclShutdown(void) STUB_NOP
-ExternalACLLookup * ExternalACLLookup::Instance() STUB_RETVAL(NULL)
+ExternalACLLookup * ExternalACLLookup::Instance() STUB_RETVAL(nullptr)
 void ExternalACLLookup::checkForAsync(ACLChecklist *) const STUB
 void ExternalACLLookup::LookupDone(void *, const ExternalACLEntryPointer &) STUB
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -135,10 +135,10 @@ rfc1035NamePack(char *buf, size_t sz, const char *name)
     /*
      * NOTE: use of strtok here makes names like foo....com valid.
      */
-    for (t = strtok(copy, "."); t; t = strtok(NULL, "."))
+    for (t = strtok(copy, "."); t; t = strtok(nullptr, "."))
         off += rfc1035LabelPack(buf + off, sz - off, t);
     xfree(copy);
-    off += rfc1035LabelPack(buf + off, sz - off, NULL);
+    off += rfc1035LabelPack(buf + off, sz - off, nullptr);
     assert(off <= sz);
     return off;
 }
@@ -209,7 +209,7 @@ rfc1035HeaderUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_messa
      * all zero as per RFC 1035.  If not the message should be
      * rejected.
      * NO! RFCs say ignore inbound reserved, they may be used in future.
-     *  NEW messages need to be set 0, thats all.
+     *  NEW messages need to be set 0, that's all.
      */
     h->rcode = t & 0x0F;
     memcpy(&s, buf + (*off), sizeof(s));
@@ -376,7 +376,7 @@ rfc1035RRUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_rr * RR)
     unsigned int i;
     unsigned short rdlength;
     unsigned int rdata_off;
-    if (rfc1035NameUnpack(buf, sz, off, NULL, RR->name, RFC1035_MAXHOSTNAMESZ, 0)) {
+    if (rfc1035NameUnpack(buf, sz, off, nullptr, RR->name, RFC1035_MAXHOSTNAMESZ, 0)) {
         RFC1035_UNPACK_DEBUG;
         memset(RR, '\0', sizeof(*RR));
         return 1;
@@ -413,9 +413,6 @@ rfc1035RRUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_rr * RR)
     }
     RR->rdlength = rdlength;
     switch (RR->type) {
-#if DNS_CNAME
-    case RFC1035_TYPE_CNAME:
-#endif
     case RFC1035_TYPE_PTR:
         RR->rdata = (char*)xmalloc(RFC1035_MAXHOSTNAMESZ);
         rdata_off = *off;
@@ -489,7 +486,7 @@ rfc1035ErrorMessage(int n)
 void
 rfc1035RRDestroy(rfc1035_rr ** rr, int n)
 {
-    if (*rr == NULL) {
+    if (*rr == nullptr) {
         return;
     }
 
@@ -498,7 +495,7 @@ rfc1035RRDestroy(rfc1035_rr ** rr, int n)
             xfree((*rr)[n].rdata);
     }
     xfree(*rr);
-    *rr = NULL;
+    *rr = nullptr;
 }
 
 /*
@@ -514,7 +511,7 @@ static int
 rfc1035QueryUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_query * query)
 {
     unsigned short s;
-    if (rfc1035NameUnpack(buf, sz, off, NULL, query->name, RFC1035_MAXHOSTNAMESZ, 0)) {
+    if (rfc1035NameUnpack(buf, sz, off, nullptr, query->name, RFC1035_MAXHOSTNAMESZ, 0)) {
         RFC1035_UNPACK_DEBUG;
         memset(query, '\0', sizeof(*query));
         return 1;
@@ -543,7 +540,7 @@ rfc1035MessageDestroy(rfc1035_message ** msg)
     if ((*msg)->answer)
         rfc1035RRDestroy(&(*msg)->answer, (*msg)->ancount);
     xfree(*msg);
-    *msg = NULL;
+    *msg = nullptr;
 }
 
 /*
@@ -595,9 +592,9 @@ rfc1035MessageUnpack(const char *buf,
     unsigned int off = 0;
     unsigned int i, j;
     unsigned int nr = 0;
-    rfc1035_message *msg = NULL;
-    rfc1035_rr *recs = NULL;
-    rfc1035_query *querys = NULL;
+    rfc1035_message *msg = nullptr;
+    rfc1035_rr *recs = nullptr;
+    rfc1035_query *querys = nullptr;
     msg = (rfc1035_message*)xcalloc(1, sizeof(*msg));
     if (rfc1035HeaderUnpack(buf + off, sz - off, &off, msg)) {
         RFC1035_UNPACK_DEBUG;
@@ -645,7 +642,7 @@ rfc1035MessageUnpack(const char *buf,
          * didn't actually get any.
          */
         rfc1035MessageDestroy(&msg);
-        *answer = NULL;
+        *answer = nullptr;
         return -rfc1035_unpack_error;
     }
     return nr;
@@ -748,95 +745,4 @@ rfc1035SetQueryID(char *buf, unsigned short qid)
     unsigned short s = htons(qid);
     memcpy(buf, &s, sizeof(s));
 }
-
-#if DRIVER
-#include <sys/socket.h>
-int
-main(int argc, char *argv[])
-{
-    char input[SQUID_DNS_BUFSZ];
-    char buf[SQUID_DNS_BUFSZ];
-    char rbuf[SQUID_DNS_BUFSZ];
-    size_t sz = SQUID_DNS_BUFSZ;
-    unsigned short sid;
-    int s;
-    int rl;
-    struct sockaddr_in S;
-    if (3 != argc) {
-        fprintf(stderr, "usage: %s ip port\n", argv[0]);
-        exit(EXIT_FAILURE);
-    }
-    setbuf(stdout, NULL);
-    setbuf(stderr, NULL);
-    s = socket(PF_INET, SOCK_DGRAM, 0);
-    if (s < 0) {
-        perror("socket");
-        exit(EXIT_FAILURE);
-    }
-    memset(&S, '\0', sizeof(S));
-    S.sin_family = AF_INET;
-    S.sin_port = htons(atoi(argv[2]));
-    S.sin_addr.s_addr = inet_addr(argv[1]);
-    while (fgets(input, RFC1035_DEFAULT_PACKET_SZ, stdin)) {
-        struct in_addr junk;
-        strtok(input, "\r\n");
-        memset(buf, '\0', RFC1035_DEFAULT_PACKET_SZ);
-        sz = RFC1035_DEFAULT_PACKET_SZ;
-        if (inet_pton(AF_INET, input, &junk)) {
-            sid = rfc1035BuildPTRQuery(junk, buf, &sz);
-        } else {
-            sid = rfc1035BuildAQuery(input, buf, &sz);
-        }
-        sendto(s, buf, sz, 0, (struct sockaddr *) &S, sizeof(S));
-        do {
-            fd_set R;
-            struct timeval to;
-            FD_ZERO(&R);
-            FD_SET(s, &R);
-            to.tv_sec = 10;
-            to.tv_usec = 0;
-            rl = select(s + 1, &R, NULL, NULL, &to);
-        } while (0);
-        if (rl < 1) {
-            printf("TIMEOUT\n");
-            continue;
-        }
-        memset(rbuf, '\0', RFC1035_DEFAULT_PACKET_SZ);
-        rl = recv(s, rbuf, RFC1035_DEFAULT_PACKET_SZ, 0);
-        {
-            unsigned short rid = 0;
-            int i;
-            int n;
-            rfc1035_rr *answers = NULL;
-            n = rfc1035AnswersUnpack(rbuf,
-                                     rl,
-                                     &answers,
-                                     &rid);
-            if (n < 0) {
-                printf("ERROR %d\n", -n);
-            } else if (rid != sid) {
-                printf("ERROR, ID mismatch (%#hx, %#hx)\n", sid, rid);
-            } else {
-                printf("%d answers\n", n);
-                for (i = 0; i < n; i++) {
-                    if (answers[i].type == RFC1035_TYPE_A) {
-                        struct in_addr a;
-                        char ipa_str[sizeof(a)];
-                        memcpy(&a, answers[i].rdata, 4);
-                        printf("A\t%d\t%s\n", answers[i].ttl, inet_ntop(AF_INET,&a,tmp,sizeof(a)));
-                    } else if (answers[i].type == RFC1035_TYPE_PTR) {
-                        char ptr[128];
-                        strncpy(ptr, answers[i].rdata, answers[i].rdlength);
-                        printf("PTR\t%d\t%s\n", answers[i].ttl, ptr);
-                    } else {
-                        fprintf(stderr, "can't print answer type %d\n",
-                                (int) answers[i].type);
-                    }
-                }
-            }
-        }
-    }
-    return EXIT_SUCCESS;
-}
-#endif
 

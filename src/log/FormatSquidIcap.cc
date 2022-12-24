@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,31 +14,21 @@
 
 #include "AccessLogEntry.h"
 #include "format/Quoting.h"
-#include "fqdncache.h"
 #include "HttpRequest.h"
 #include "log/File.h"
 #include "log/Formats.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 
 void
 Log::Format::SquidIcap(const AccessLogEntry::Pointer &al, Logfile * logfile)
 {
-    const char *client = NULL;
-    const char *user = NULL;
+    const char *user = nullptr;
     char tmp[MAX_IPSTRLEN], clientbuf[MAX_IPSTRLEN];
 
-    if (al->cache.caddr.isAnyAddr()) { // ICAP OPTIONS xactions lack client
-        client = "-";
-    } else {
-        if (Config.onoff.log_fqdn)
-            client = fqdncache_gethostbyaddr(al->cache.caddr, FQDN_LOOKUP_IF_MISS);
-        if (!client)
-            client = al->cache.caddr.toStr(clientbuf, MAX_IPSTRLEN);
-    }
+    const auto client = al->getLogClientFqdn(clientbuf, sizeof(clientbuf));
 
 #if USE_AUTH
-    if (al->request != NULL && al->request->auth_user_request != NULL)
+    if (al->request != nullptr && al->request->auth_user_request != nullptr)
         user = ::Format::QuoteUrlEncodeUsername(al->request->auth_user_request->username());
 #endif
 

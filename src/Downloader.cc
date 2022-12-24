@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "base/Raw.h"
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "client_side_request.h"
@@ -57,18 +58,21 @@ DownloaderContext::finished()
     http = nullptr;
 }
 
-void
-Downloader::CbDialer::print(std::ostream &os) const
+std::ostream &
+operator <<(std::ostream &os, const DownloaderAnswer &answer)
 {
-    os << " Http Status:" << status << Raw("body data", object.rawContent(), 64).hex();
+    os << "outcome=" << answer.outcome;
+    if (answer.outcome == Http::scOkay)
+        os << ", resource.size=" << answer.resource.length();
+    return os;
 }
 
-Downloader::Downloader(SBuf &url, AsyncCall::Pointer &aCallback, const XactionInitiator initiator, unsigned int level):
+Downloader::Downloader(const SBuf &url, const AsyncCallback<Answer> &cb, const MasterXactionPointer &mx, const unsigned int level):
     AsyncJob("Downloader"),
     url_(url),
-    callback_(aCallback),
+    callback_(cb),
     level_(level),
-    initiator_(initiator)
+    masterXaction_(mx)
 {
 }
 
@@ -81,6 +85,10 @@ void
 Downloader::swanSong()
 {
     debugs(33, 6, this);
+
+    if (callback_) // job-ending emergencies like handleStopRequest() or callException()
+        callBack(Http::scInternalServerError);
+
     if (context_) {
         context_->finished();
         context_ = nullptr;
@@ -128,8 +136,7 @@ Downloader::buildRequest()
 {
     const HttpRequestMethod method = Http::METHOD_GET;
 
-    const MasterXaction::Pointer mx = new MasterXaction(initiator_);
-    auto * const request = HttpRequest::FromUrl(url_, mx, method);
+    const auto request = HttpRequest::FromUrl(url_, masterXaction_, method);
     if (!request) {
         debugs(33, 5, "Invalid URI: " << url_);
         return false; //earlyError(...)
@@ -251,13 +258,12 @@ Downloader::downloadFinished()
 void
 Downloader::callBack(Http::StatusCode const statusCode)
 {
-    CbDialer *dialer = dynamic_cast<CbDialer*>(callback_->getDialer());
-    Must(dialer);
-    dialer->status = statusCode;
+    assert(callback_);
+    auto &answer = callback_.answer();
+    answer.outcome = statusCode;
     if (statusCode == Http::scOkay)
-        dialer->object = object_;
-    ScheduleCallHere(callback_);
-    callback_ = nullptr;
+        answer.resource = object_;
+    ScheduleCallHere(callback_.release());
 
     // We cannot deleteThis() because we may be called synchronously from
     // doCallouts() via handleReply() (XXX), and doCallouts() may crash if we

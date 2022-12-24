@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,7 +15,7 @@
 #include <unistd.h>
 #endif
 
-Trie::Trie(TrieCharTransform *aTransform) : head(0), transform(aTransform)
+Trie::Trie(TrieCharTransform *aTransform) : head(nullptr), transform(aTransform)
 {}
 
 Trie::~Trie()

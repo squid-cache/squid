@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -88,13 +88,10 @@
 
 #include "asn1.h"
 #include "snmp.h"
-#include "snmp_vars.h"
-#if 0
-#include "mibii.h"
-#endif
 #include "snmp_api_error.h"
 #include "snmp_msg.h"
 #include "snmp_pdu.h"
+#include "snmp_vars.h"
 
 #include "util.h"
 

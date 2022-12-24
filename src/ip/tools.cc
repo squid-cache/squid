@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 /* DEBUG: section 21    Misc Functions */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 

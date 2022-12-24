@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,8 +34,9 @@ public:
     virtual bool empty() const;
     virtual SBufList dump() const;
 
-    /// parses one "acl name type acl1 acl2..." line, appending to nodes
-    void lineParse();
+    /// parses a [ [!]acl1 [!]acl2... ] sequence, appending to nodes
+    /// \returns the number of parsed ACL names
+    size_t lineParse();
 
     /// appends the node to the collection and takes control over it
     void add(ACL *node);

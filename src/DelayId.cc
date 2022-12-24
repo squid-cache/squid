@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,8 +15,8 @@
  */
 #if USE_DELAY_POOLS
 #include "acl/FilledChecklist.h"
+#include "base/DelayedAsyncCalls.h"
 #include "client_side_request.h"
-#include "CommRead.h"
 #include "DelayId.h"
 #include "DelayPool.h"
 #include "DelayPools.h"
@@ -24,11 +24,11 @@
 #include "HttpRequest.h"
 #include "SquidConfig.h"
 
-DelayId::DelayId () : pool_ (0), compositeId(NULL), markedAsNoDelay(false)
+DelayId::DelayId () : pool_ (0), compositeId(nullptr), markedAsNoDelay(false)
 {}
 
 DelayId::DelayId (unsigned short aPool) :
-    pool_ (aPool), compositeId (NULL), markedAsNoDelay (false)
+    pool_ (aPool), compositeId (nullptr), markedAsNoDelay (false)
 {
     debugs(77, 3, "DelayId::DelayId: Pool " << aPool << "u");
 }
@@ -85,21 +85,19 @@ DelayId::DelayClient(ClientHttpRequest * http, HttpReply *reply)
             continue;
         }
 
-        ACLFilledChecklist ch(DelayPools::delay_data[pool].access, r, NULL);
-        if (reply) {
+        ACLFilledChecklist ch(DelayPools::delay_data[pool].access, r, nullptr);
+        clientAclChecklistFill(ch, http);
+        if (!ch.reply && reply) {
             ch.reply = reply;
             HTTPMSGLOCK(reply);
         }
+        // overwrite ACLFilledChecklist acl_uses_indirect_client-based decision
 #if FOLLOW_X_FORWARDED_FOR
         if (Config.onoff.delay_pool_uses_indirect_client)
             ch.src_addr = r->indirect_client_addr;
         else
 #endif /* FOLLOW_X_FORWARDED_FOR */
             ch.src_addr = r->client_addr;
-        ch.my_addr = r->my_addr;
-
-        if (http->getConn() != NULL)
-            ch.conn(http->getConn());
 
         if (DelayPools::delay_data[pool].theComposite().getRaw() && ch.fastCheck().allowed()) {
 
@@ -139,7 +137,7 @@ DelayId::bytesWanted(int minimum, int maximum) const
     /* limited */
     int nbytes = max(minimum, maximum);
 
-    if (compositeId != NULL)
+    if (compositeId != nullptr)
         nbytes = compositeId->bytesWanted(minimum, nbytes);
 
     return nbytes;
@@ -161,14 +159,14 @@ DelayId::bytesIn(int qty)
 
     assert ((unsigned short)(pool() - 1) != 0xFFFF);
 
-    if (compositeId != NULL)
+    if (compositeId != nullptr)
         compositeId->bytesIn(qty);
 }
 
 void
-DelayId::delayRead(DeferredRead const &aRead)
+DelayId::delayRead(const AsyncCall::Pointer &aRead)
 {
-    assert (compositeId != NULL);
+    assert (compositeId != nullptr);
     compositeId->delayRead(aRead);
 
 }

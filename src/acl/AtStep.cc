@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -43,7 +43,7 @@ ACLAtStepStrategy::match(ACLData<XactionStep> * &data, ACLFilledChecklist *check
             return 0; // we have warned about the missing request earlier
 
         if (!checklist->request->masterXaction) {
-            debugs(28, DBG_IMPORTANT, "BUG: at_step GeneratingCONNECT ACL is missing master transaction info. Assuming mismatch.");
+            debugs(28, DBG_IMPORTANT, "ERROR: Squid BUG: at_step GeneratingCONNECT ACL is missing master transaction info. Assuming mismatch.");
             return 0;
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,7 @@
  * Update/Maintenance History:
  *
  *    16-Aug-2007 : Copied from fetchmail 6.3.8
- *                      - added protection around libray headers
+ *                      - added protection around library headers
  *                      - added use of alternative name xgetnameinfo
  *                        to split from any OS-provided.
  *
@@ -162,7 +162,7 @@ xgetnameinfo(const struct sockaddr *sa, socklen_t salen, char *host, size_t host
     uint32_t v4a;
     char numserv[512];
 
-    if (sa == NULL)
+    if (!sa)
         return EAI_FAIL;
 
 #if HAVE_SA_LEN /*XXX*/
@@ -186,16 +186,16 @@ found:
     memcpy(&port, (const char *)sa + afd->a_portoff, sizeof(port));
     addr = (const char *)sa + afd->a_off;
 
-    if (serv == NULL || servlen == 0) {
+    if (!serv || servlen == 0) {
         /*
          * do nothing in this case.
          * in case you are wondering if "&&" is more correct than
-         * "||" here: RFC3493 says that serv == NULL OR servlen == 0
+         * "||" here: RFC3493 says that !serv OR servlen == 0
          * means that the caller does not want the result.
          */
     } else {
         if (flags & NI_NUMERICSERV)
-            sp = NULL;
+            sp = nullptr;
         else {
             sp = getservbyport(port,
                                (flags & NI_DGRAM) ? "udp" : "tcp");
@@ -246,11 +246,11 @@ found:
     break;
 #endif
     }
-    if (host == NULL || hostlen == 0) {
+    if (!host || hostlen == 0) {
         /*
          * do nothing in this case.
          * in case you are wondering if "&&" is more correct than
-         * "||" here: RFC3493 says that host == NULL or hostlen == 0
+         * "||" here: RFC3493 says that !host or hostlen == 0
          * means that the caller does not want the result.
          */
     } else if (flags & NI_NUMERICHOST) {
@@ -265,36 +265,9 @@ found:
         hp = getipnodebyaddr(addr, afd->a_addrlen, afd->a_af, &h_error);
 #else
         hp = gethostbyaddr(addr, afd->a_addrlen, afd->a_af);
-#if 0 // getnameinfo.c:161:9: error: variable 'h_error' set but not used
-#if HAVE_H_ERRNO
-        h_error = h_errno;
-#else
-        h_error = EINVAL;
-#endif
-#endif /* 0 */
 #endif
 
         if (hp) {
-#if 0
-            if (flags & NI_NOFQDN) {
-                /*
-                 * According to RFC3493 section 6.2, NI_NOFQDN
-                 * means "node name portion of the FQDN shall
-                 * be returned for local hosts."  The following
-                 * code tries to implement it by returning the
-                 * first label (the part before the first
-                 * period) of the FQDN.  However, it is not
-                 * clear if this always makes sense, since the
-                 * given address may be outside of "local
-                 * hosts."  Due to the unclear description, we
-                 * disable the code in this implementation.
-                 */
-                char *p;
-                p = strchr(hp->h_name, '.');
-                if (p)
-                    *p = '\0';
-            }
-#endif
             if (strlen(hp->h_name) + 1 > hostlen) {
 #if USE_GETIPNODEBY
                 freehostent(hp);
@@ -323,8 +296,7 @@ numeric:
             }
 #endif
             default:
-                if (inet_ntop(afd->a_af, addr, host,
-                              hostlen) == NULL)
+                if (!inet_ntop(afd->a_af, addr, host, hostlen))
                     return EAI_SYSTEM;
                 break;
             }
@@ -345,7 +317,7 @@ int flags;
     int numaddrlen;
     char numaddr[512];
 
-    if (inet_ntop(AF_INET6, addr, numaddr, sizeof(numaddr)) == NULL)
+    if (!inet_ntop(AF_INET6, addr, numaddr, sizeof(numaddr)))
         return EAI_SYSTEM;
 
     numaddrlen = strlen(numaddr);

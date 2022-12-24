@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 #ifndef SQUID_MEMOBJECT_H
 #define SQUID_MEMOBJECT_H
 
-#include "CommRead.h"
+#include "base/DelayedAsyncCalls.h"
 #include "dlink.h"
 #include "http/RequestMethod.h"
 #include "RemovalPolicy.h"
@@ -25,7 +25,6 @@
 #endif
 
 typedef void STMCB (void *data, StoreIOBuffer wroteBuffer);
-typedef void STABH(void *);
 
 class store_client;
 class PeerSelector;
@@ -192,11 +191,8 @@ public:
     IRCB *ping_reply_callback;
     PeerSelector *ircb_data = nullptr;
 
-    struct abort_ {
-        abort_() { callback = nullptr; }
-        STABH *callback;
-        void *data = nullptr;
-    } abort;
+    /// used for notifying StoreEntry writers about 3rd-party initiated aborts
+    AsyncCallPointer abortCallback;
     RemovalPolicyNode repl;
     int id = 0;
     int64_t object_sz = -1;
@@ -207,7 +203,7 @@ public:
 
     SBuf vary_headers;
 
-    void delayRead(DeferredRead const &);
+    void delayRead(const AsyncCallPointer &);
     void kickReads();
 
 private:
@@ -217,7 +213,7 @@ private:
     mutable String storeId_; ///< StoreId for our entry (usually request URI)
     mutable String logUri_;  ///< URI used for logging (usually request URI)
 
-    DeferredReadManager deferredReads;
+    DelayedAsyncCalls deferredReads;
 };
 
 /** global current memory removal policy */

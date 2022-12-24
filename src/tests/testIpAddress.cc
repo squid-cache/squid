@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,12 +26,6 @@
 #endif
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testIpAddress );
-
-/* so that we don't break POD dependency just for the test */
-struct timeval current_time;
-double current_dtime;
-time_t squid_curtime = 0;
-int shutting_down = 0;
 
 void
 testIpAddress::testDefaults()
@@ -187,14 +181,14 @@ testIpAddress::testCopyConstructor()
 void
 testIpAddress::testHostentConstructor()
 {
-    struct hostent *hp = NULL;
+    struct hostent *hp = nullptr;
     struct in_addr outval;
     struct in_addr expectval;
 
     expectval.s_addr = htonl(0xC0A8640C);
 
     hp = gethostbyname("192.168.100.12");
-    CPPUNIT_ASSERT( hp != NULL /* gethostbyname failure.*/ );
+    CPPUNIT_ASSERT( hp != nullptr /* gethostbyname failure.*/ );
 
     Ip::Address anIPA(*hp);
 
@@ -569,7 +563,7 @@ testIpAddress::testMasking()
     CPPUNIT_ASSERT_EQUAL( 80, anIPA.cidr() );
 
     /* BUG Check: test values by display. */
-    CPPUNIT_ASSERT( anIPA.toStr(buf,MAX_IPSTRLEN) != NULL );
+    CPPUNIT_ASSERT( anIPA.toStr(buf,MAX_IPSTRLEN) != nullptr );
     CPPUNIT_ASSERT( memcmp("ffff:ffff:ffff:ffff:ffff::", buf, 26) == 0 );
 
     /* Test Network Bitmask from Ip::Address */
@@ -622,7 +616,7 @@ void
 testIpAddress::testAddrInfo()
 {
     struct addrinfo *expect;
-    struct addrinfo *ipval = NULL;
+    struct addrinfo *ipval = nullptr;
     struct addrinfo hints;
 
     memset(&hints, 0, sizeof(struct addrinfo));
@@ -632,22 +626,9 @@ testIpAddress::testAddrInfo()
     Ip::Address anIP = "127.0.0.1";
 
     /* assert this just to check that getaddrinfo is working properly */
-    CPPUNIT_ASSERT( getaddrinfo("127.0.0.1", NULL, &hints, &expect ) == 0 );
+    CPPUNIT_ASSERT( getaddrinfo("127.0.0.1", nullptr, &hints, &expect ) == 0 );
 
     anIP.getAddrInfo(ipval);
-
-#if 0
-    /* display a byte-by-byte hex comparison of the addr cores */
-    unsigned int *p;
-    p = (unsigned int*)expect;
-    printf("\nSYS-ADDRINFO: %2x %2x %2x %2x %2x %2x",
-           p[0],p[1],p[2],p[3],p[4],p[5]);
-
-    p = (unsigned int*)ipval;
-    printf("\nSQD-ADDRINFO: %2x %2x %2x %2x %2x %2x",
-           p[0],p[1],p[2],p[3],p[4],p[5] );
-    printf("\n");
-#endif /*0*/
 
     // check the addrinfo object core. (BUT not the two ptrs at the tail)
     // details
@@ -655,26 +636,6 @@ testIpAddress::testAddrInfo()
     CPPUNIT_ASSERT_EQUAL( expect->ai_family, ipval->ai_family );
     // check the sockaddr it points to.
     CPPUNIT_ASSERT_EQUAL( expect->ai_addrlen, ipval->ai_addrlen );
-
-#if 0
-    printf("sizeof IN(%d), IN6(%d), STORAGE(%d), \n",
-           sizeof(struct sockaddr_in), sizeof(struct sockaddr_in6), sizeof(struct sockaddr_storage));
-
-    p = (unsigned int*)(expect->ai_addr);
-    printf("\nSYS-ADDR: (%d) {%d} %x %x %x %x %x %x %x %x ...",
-           expect->ai_addrlen, sizeof(*p),
-           p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7] );
-
-    p = (unsigned int*)(ipval->ai_addr);
-    printf("\nSQD-ADDR: (%d) {%d} %x %x %x %x %x %x %x %x ...",
-           ipval->ai_addrlen, sizeof(*p),
-           p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7] );
-    printf("\n");
-#if HAVE_SS_LEN_IN_SS
-    printf("\nSYS SS_LEN=%d\nSQD SS_LEN=%d\n",((struct sockaddr_storage*)expect->ai_addr)->ss_len,
-           ((struct sockaddr_storage*)ipval->ai_addr)->ss_len );
-#endif
-#endif /*0*/
 
 #if HAVE_SS_LEN_IN_SS
     CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_storage*)expect->ai_addr)->ss_len,

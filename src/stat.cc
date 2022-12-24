@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 18    Cache Manager Statistics */
 
 #include "squid.h"
+#include "AccessLogEntry.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
 #include "client_side.h"
@@ -23,6 +24,7 @@
 #include "HttpRequest.h"
 #include "IoStats.h"
 #include "mem/Pool.h"
+#include "mem/Stats.h"
 #include "mem_node.h"
 #include "MemBuf.h"
 #include "MemObject.h"
@@ -37,15 +39,12 @@
 #include "PeerDigest.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
-#include "SquidTime.h"
 #include "stat.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "store_digest.h"
 #include "StoreClient.h"
 #include "tools.h"
-// for tvSubDsec() which should be in SquidTime.h
-#include "util.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
@@ -62,8 +61,6 @@
  */
 #include "comm.h"
 #include "StoreSearch.h"
-
-#define DEBUG_OPENFD 1
 
 typedef int STOBJFLT(const StoreEntry *);
 
@@ -89,9 +86,7 @@ static void statStoreEntry(MemBuf * mb, StoreEntry * e);
 static double statCPUUsage(int minutes);
 static OBJH stat_objects_get;
 static OBJH stat_vmobjects_get;
-#if DEBUG_OPENFD
 static OBJH statOpenfdObj;
-#endif
 static EVH statObjects;
 static OBJH statCountersDump;
 static OBJH statPeerSelect;
@@ -206,12 +201,6 @@ GetIoStats(Mgr::IoActionData& stats)
     for (i = 0; i < IoStats::histSize; ++i) {
         stats.ftp_read_hist[i] = IOStats.Ftp.read_hist[i];
     }
-
-    stats.gopher_reads = IOStats.Gopher.reads;
-
-    for (i = 0; i < IoStats::histSize; ++i) {
-        stats.gopher_read_hist[i] = IOStats.Gopher.read_hist[i];
-    }
 }
 
 void
@@ -242,19 +231,6 @@ DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry)
                           1 << i,
                           stats.ftp_read_hist[i],
                           Math::doublePercent(stats.ftp_read_hist[i], stats.ftp_reads));
-    }
-
-    storeAppendPrintf(sentry, "\n");
-    storeAppendPrintf(sentry, "Gopher I/O\n");
-    storeAppendPrintf(sentry, "number of reads: %.0f\n", stats.gopher_reads);
-    storeAppendPrintf(sentry, "Read Histogram:\n");
-
-    for (i = 0; i < IoStats::histSize; ++i) {
-        storeAppendPrintf(sentry, "%5d-%5d: %9.0f %2.0f%%\n",
-                          i ? (1 << (i - 1)) + 1 : 1,
-                          1 << i,
-                          stats.gopher_read_hist[i],
-                          Math::doublePercent(stats.gopher_read_hist[i], stats.gopher_reads));
     }
 
     storeAppendPrintf(sentry, "\n");
@@ -336,7 +312,7 @@ statStoreEntry(MemBuf * mb, StoreEntry * e)
     mb->appendf("\t%d locks, %d clients, %d refs\n", (int) e->locks(), storePendingNClients(e), (int) e->refcount);
     mb->appendf("\tSwap Dir %d, File %#08X\n", e->swap_dirn, e->swap_filen);
 
-    if (mem != NULL)
+    if (mem != nullptr)
         mem->stat (mb);
 
     mb->append("\n", 1);
@@ -404,7 +380,7 @@ statObjectsStart(StoreEntry * sentry, STOBJFLT * filter)
 static void
 stat_objects_get(StoreEntry * sentry)
 {
-    statObjectsStart(sentry, NULL);
+    statObjectsStart(sentry, nullptr);
 }
 
 static int
@@ -419,14 +395,13 @@ stat_vmobjects_get(StoreEntry * sentry)
     statObjectsStart(sentry, statObjectsVmFilter);
 }
 
-#if DEBUG_OPENFD
 static int
 statObjectsOpenfdFilter(const StoreEntry * e)
 {
-    if (e->mem_obj == NULL)
+    if (e->mem_obj == nullptr)
         return 0;
 
-    if (e->mem_obj->swapout.sio == NULL)
+    if (e->mem_obj->swapout.sio == nullptr)
         return 0;
 
     return 1;
@@ -437,8 +412,6 @@ statOpenfdObj(StoreEntry * sentry)
 {
     statObjectsStart(sentry, statObjectsOpenfdFilter);
 }
-
-#endif
 
 #if XMALLOC_STATISTICS
 static void
@@ -560,13 +533,12 @@ GetInfo(Mgr::InfoActionData& stats)
 
 #endif
 
-    stats.total_accounted = statMemoryAccounted();
-
     {
-        MemPoolGlobalStats mp_stats;
-        memPoolGetGlobalStats(&mp_stats);
-        stats.gb_saved_count = mp_stats.TheMeter->gb_saved.count;
-        stats.gb_freed_count = mp_stats.TheMeter->gb_freed.count;
+        Mem::PoolStats mp_stats;
+        Mem::GlobalStats(mp_stats);
+        stats.gb_saved_count = mp_stats.meter->gb_saved.count;
+        stats.gb_freed_count = mp_stats.meter->gb_freed.count;
+        stats.total_accounted = mp_stats.meter->alloc.currentLevel();
     }
 
     stats.max_fd = Squid_MaxFD;
@@ -597,10 +569,10 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
 #endif
 
     storeAppendPrintf(sentry, "Start Time:\t%s\n",
-                      mkrfc1123(stats.squid_start.tv_sec));
+                      Time::FormatRfc1123(stats.squid_start.tv_sec));
 
     storeAppendPrintf(sentry, "Current Time:\t%s\n",
-                      mkrfc1123(stats.current_time.tv_sec));
+                      Time::FormatRfc1123(stats.current_time.tv_sec));
 
     storeAppendPrintf(sentry, "Connection information for %s:\n",APP_SHORTNAME);
 
@@ -752,8 +724,8 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "\tTotal accounted:       %6.0f KB\n",
                       stats.total_accounted / 1024);
     {
-        MemPoolGlobalStats mp_stats;
-        memPoolGetGlobalStats(&mp_stats);
+        Mem::PoolStats mp_stats;
+        Mem::GlobalStats(mp_stats); // XXX: called just for its side effects
         storeAppendPrintf(sentry, "\tmemPoolAlloc calls: %9.0f\n",
                           stats.gb_saved_count);
         storeAppendPrintf(sentry, "\tmemPoolFree calls:  %9.0f\n",
@@ -796,6 +768,8 @@ DumpMallocStatistics(StoreEntry* sentry)
     storeAppendPrintf(sentry, "\nMemory allocation statistics\n");
     storeAppendPrintf(sentry, "%12s %15s %6s %12s\n","Alloc Size","Count","Delta","Alloc/sec");
     malloc_statistics(info_get_mallstat, sentry);
+#else
+    (void)sentry;
 #endif
 }
 
@@ -913,7 +887,7 @@ GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours)
 
         l = &CountHourHist[hours];
     } else {
-        debugs(18, DBG_IMPORTANT, "statAvgDump: Invalid args, minutes=" << minutes << ", hours=" << hours);
+        debugs(18, DBG_IMPORTANT, "ERROR: statAvgDump: Invalid args, minutes=" << minutes << ", hours=" << hours);
         return;
     }
 
@@ -995,6 +969,12 @@ GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours)
     stats.swap_files_cleaned = XAVG(swap.files_cleaned);
     stats.aborted_requests = XAVG(aborted_requests);
 
+    stats.hitValidationAttempts = XAVG(hitValidation.attempts);
+    stats.hitValidationRefusalsDueToLocking = XAVG(hitValidation.refusalsDueToLocking);
+    stats.hitValidationRefusalsDueToZeroSize = XAVG(hitValidation.refusalsDueToZeroSize);
+    stats.hitValidationRefusalsDueToTimeLimit = XAVG(hitValidation.refusalsDueToTimeLimit);
+    stats.hitValidationFailures = XAVG(hitValidation.failures);
+
     stats.syscalls_disk_opens = XAVG(syscalls.disk.opens);
     stats.syscalls_disk_closes = XAVG(syscalls.disk.closes);
     stats.syscalls_disk_reads = XAVG(syscalls.disk.reads);
@@ -1022,11 +1002,11 @@ DumpAvgStat(Mgr::IntervalActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "sample_start_time = %d.%d (%s)\n",
                       (int)stats.sample_start_time.tv_sec,
                       (int)stats.sample_start_time.tv_usec,
-                      mkrfc1123(stats.sample_start_time.tv_sec));
+                      Time::FormatRfc1123(stats.sample_start_time.tv_sec));
     storeAppendPrintf(sentry, "sample_end_time = %d.%d (%s)\n",
                       (int)stats.sample_end_time.tv_sec,
                       (int)stats.sample_end_time.tv_usec,
-                      mkrfc1123(stats.sample_end_time.tv_sec));
+                      Time::FormatRfc1123(stats.sample_end_time.tv_sec));
 
     storeAppendPrintf(sentry, "client_http.requests = %f/sec\n",
                       stats.client_http_requests);
@@ -1142,6 +1122,17 @@ DumpAvgStat(Mgr::IntervalActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "aborted_requests = %f/sec\n",
                       stats.aborted_requests);
 
+    storeAppendPrintf(sentry, "hit_validation.attempts = %f/sec\n",
+                      stats.hitValidationAttempts);
+    storeAppendPrintf(sentry, "hit_validation.refusals.due_to_locking = %f/sec\n",
+                      stats.hitValidationRefusalsDueToLocking);
+    storeAppendPrintf(sentry, "hit_validation.refusals.due_to_zeroSize = %f/sec\n",
+                      stats.hitValidationRefusalsDueToZeroSize);
+    storeAppendPrintf(sentry, "hit_validation.refusals.due_to_timeLimit = %f/sec\n",
+                      stats.hitValidationRefusalsDueToTimeLimit);
+    storeAppendPrintf(sentry, "hit_validation.failures = %f/sec\n",
+                      stats.hitValidationFailures);
+
 #if USE_POLL
     storeAppendPrintf(sentry, "syscalls.polls = %f/sec\n", stats.syscalls_selects);
 #elif defined(USE_SELECT) || defined(USE_SELECT_WIN32)
@@ -1205,10 +1196,8 @@ statRegisterWithCacheManager(void)
                         "Active Cached Usernames",
                         Auth::User::CredentialsCacheStats, 0, 1);
 #endif
-#if DEBUG_OPENFD
     Mgr::RegisterAction("openfd_objects", "Objects with Swapout files open",
                         statOpenfdObj, 0, 0);
-#endif
 #if STAT_GRAPHS
     Mgr::RegisterAction("graph_variables", "Display cache metrics graphically",
                         statGraphDump, 0, 1);
@@ -1268,11 +1257,11 @@ statInit(void)
 
     statCountersInit(&statCounter);
 
-    eventAdd("statAvgTick", statAvgTick, NULL, (double) COUNT_INTERVAL, 1);
+    eventAdd("statAvgTick", statAvgTick, nullptr, (double) COUNT_INTERVAL, 1);
 
-    ClientActiveRequests.head = NULL;
+    ClientActiveRequests.head = nullptr;
 
-    ClientActiveRequests.tail = NULL;
+    ClientActiveRequests.tail = nullptr;
 
     statRegisterWithCacheManager();
 }
@@ -1281,7 +1270,7 @@ static void
 statAvgTick(void *)
 {
     struct rusage rusage;
-    eventAdd("statAvgTick", statAvgTick, NULL, (double) COUNT_INTERVAL, 1);
+    eventAdd("statAvgTick", statAvgTick, nullptr, (double) COUNT_INTERVAL, 1);
     squid_getrusage(&rusage);
     statCounter.page_faults = rusage_pagefaults(&rusage);
     statCounter.cputime = rusage_cputime(&rusage);
@@ -1335,23 +1324,23 @@ static void
 statCountersHistograms(StoreEntry * sentry)
 {
     storeAppendPrintf(sentry, "client_http.allSvcTime histogram:\n");
-    statCounter.client_http.allSvcTime.dump(sentry, NULL);
+    statCounter.client_http.allSvcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "client_http.missSvcTime histogram:\n");
-    statCounter.client_http.missSvcTime.dump(sentry, NULL);
+    statCounter.client_http.missSvcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "client_http.nearMissSvcTime histogram:\n");
-    statCounter.client_http.nearMissSvcTime.dump(sentry, NULL);
+    statCounter.client_http.nearMissSvcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "client_http.nearHitSvcTime histogram:\n");
-    statCounter.client_http.nearHitSvcTime.dump(sentry, NULL);
+    statCounter.client_http.nearHitSvcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "client_http.hitSvcTime histogram:\n");
-    statCounter.client_http.hitSvcTime.dump(sentry, NULL);
+    statCounter.client_http.hitSvcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "icp.querySvcTime histogram:\n");
-    statCounter.icp.querySvcTime.dump(sentry, NULL);
+    statCounter.icp.querySvcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "icp.replySvcTime histogram:\n");
-    statCounter.icp.replySvcTime.dump(sentry, NULL);
+    statCounter.icp.replySvcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "dns.svc_time histogram:\n");
-    statCounter.dns.svcTime.dump(sentry, NULL);
+    statCounter.dns.svcTime.dump(sentry, nullptr);
     storeAppendPrintf(sentry, "select_fds_hist histogram:\n");
-    statCounter.select_fds_hist.dump(sentry, NULL);
+    statCounter.select_fds_hist.dump(sentry, nullptr);
 }
 
 static void
@@ -1436,6 +1425,12 @@ GetCountersStats(Mgr::CountersActionData& stats)
     stats.swap_ins = f->swap.ins;
     stats.swap_files_cleaned = f->swap.files_cleaned;
     stats.aborted_requests = f->aborted_requests;
+
+    stats.hitValidationAttempts = f->hitValidation.attempts;
+    stats.hitValidationRefusalsDueToLocking = f->hitValidation.refusalsDueToLocking;
+    stats.hitValidationRefusalsDueToZeroSize = f->hitValidation.refusalsDueToZeroSize;
+    stats.hitValidationRefusalsDueToTimeLimit = f->hitValidation.refusalsDueToTimeLimit;
+    stats.hitValidationFailures = f->hitValidation.failures;
 }
 
 void
@@ -1444,7 +1439,7 @@ DumpCountersStats(Mgr::CountersActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "sample_time = %d.%d (%s)\n",
                       (int) stats.sample_time.tv_sec,
                       (int) stats.sample_time.tv_usec,
-                      mkrfc1123(stats.sample_time.tv_sec));
+                      Time::FormatRfc1123(stats.sample_time.tv_sec));
     storeAppendPrintf(sentry, "client_http.requests = %.0f\n",
                       stats.client_http_requests);
     storeAppendPrintf(sentry, "client_http.hits = %.0f\n",
@@ -1561,17 +1556,17 @@ DumpCountersStats(Mgr::CountersActionData& stats, StoreEntry* sentry)
                       stats.swap_files_cleaned);
     storeAppendPrintf(sentry, "aborted_requests = %.0f\n",
                       stats.aborted_requests);
-}
 
-void
-statFreeMemory(void)
-{
-    // TODO: replace with delete[]
-    for (int i = 0; i < N_COUNT_HIST; ++i)
-        CountHist[i] = StatCounters();
-
-    for (int i = 0; i < N_COUNT_HOUR_HIST; ++i)
-        CountHourHist[i] = StatCounters();
+    storeAppendPrintf(sentry, "hit_validation.attempts = %.0f\n",
+                      stats.hitValidationAttempts);
+    storeAppendPrintf(sentry, "hit_validation.refusals.due_to_locking = %.0f\n",
+                      stats.hitValidationRefusalsDueToLocking);
+    storeAppendPrintf(sentry, "hit_validation.refusals.due_to_zeroSize = %.0f\n",
+                      stats.hitValidationRefusalsDueToZeroSize);
+    storeAppendPrintf(sentry, "hit_validation.refusals.due_to_timeLimit = %.0f\n",
+                      stats.hitValidationRefusalsDueToTimeLimit);
+    storeAppendPrintf(sentry, "hit_validation.failures = %.0f\n",
+                      stats.hitValidationFailures);
 }
 
 static void
@@ -1778,13 +1773,13 @@ statClientRequests(StoreEntry * s)
     char buf[MAX_IPSTRLEN];
 
     for (i = ClientActiveRequests.head; i; i = i->next) {
-        const char *p = NULL;
+        const char *p = nullptr;
         http = static_cast<ClientHttpRequest *>(i->data);
         assert(http);
         ConnStateData * conn = http->getConn();
         storeAppendPrintf(s, "Connection: %p\n", conn);
 
-        if (conn != NULL) {
+        if (conn != nullptr) {
             const int fd = conn->clientConnection->fd;
             storeAppendPrintf(s, "\tFD %d, read %" PRId64 ", wrote %" PRId64 "\n", fd,
                               fd_table[fd].bytes_read, fd_table[fd].bytes_written);
@@ -1799,7 +1794,7 @@ statClientRequests(StoreEntry * s)
         }
 
         storeAppendPrintf(s, "uri %s\n", http->uri);
-        storeAppendPrintf(s, "logType %s\n", http->logType.c_str());
+        storeAppendPrintf(s, "logType %s\n", http->loggingTags().c_str());
         storeAppendPrintf(s, "out.offset %ld, out.size %lu\n",
                           (long int) http->out.offset, (unsigned long int) http->out.size);
         storeAppendPrintf(s, "req_sz %ld\n", (long int) http->req_sz);
@@ -1810,7 +1805,7 @@ statClientRequests(StoreEntry * s)
                           (int) http->al->cache.start_time.tv_usec,
                           tvSubDsec(http->al->cache.start_time, current_time));
 #if USE_AUTH
-        if (http->request->auth_user_request != NULL)
+        if (http->request->auth_user_request != nullptr)
             p = http->request->auth_user_request->username();
         else
 #endif
@@ -1818,11 +1813,11 @@ statClientRequests(StoreEntry * s)
                 p = http->request->extacl_user.termedBuf();
             }
 
-        if (!p && conn != NULL && conn->clientConnection->rfc931[0])
+        if (!p && conn != nullptr && conn->clientConnection->rfc931[0])
             p = conn->clientConnection->rfc931;
 
 #if USE_OPENSSL
-        if (!p && conn != NULL && Comm::IsConnOpen(conn->clientConnection))
+        if (!p && conn != nullptr && Comm::IsConnOpen(conn->clientConnection))
             p = sslGetUserEmail(fd_table[conn->clientConnection->fd].ssl.get());
 #endif
 
@@ -1885,7 +1880,7 @@ statGraphDump(StoreEntry * e)
     GENGRAPH(client_http.kbytes_in.kb, "client_http.kbytes_in", "Client HTTP kbytes_in/sec");
     GENGRAPH(client_http.kbytes_out.kb, "client_http.kbytes_out", "Client HTTP kbytes_out/sec");
 
-    /* XXX todo: http median service times */
+    // TODO: http median service times
 
     GENGRAPH(server.all.requests, "server.all.requests", "Server requests/sec");
     GENGRAPH(server.all.errors, "server.all.errors", "Server errors/sec");
@@ -1912,8 +1907,8 @@ statGraphDump(StoreEntry * e)
     GENGRAPH(icp.kbytes_sent.kb, "icp.kbytes_sent", "ICP kbytes_sent/sec");
     GENGRAPH(icp.kbytes_recv.kb, "icp.kbytes_recv", "ICP kbytes_received/sec");
 
-    /* XXX todo: icp median service times */
-    /* XXX todo: dns median service times */
+    // TODO: icp median service times
+    // TODO: dns median service times
 
     GENGRAPH(unlink.requests, "unlink.requests", "Cache File unlink requests/sec");
     GENGRAPH(page_faults, "page_faults", "System Page Faults/sec");
@@ -1922,10 +1917,4 @@ statGraphDump(StoreEntry * e)
 }
 
 #endif /* STAT_GRAPHS */
-
-int
-statMemoryAccounted(void)
-{
-    return memPoolsTotalAllocated();
-}
 

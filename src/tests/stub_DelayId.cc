@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,10 +17,10 @@
 #define STUB_API "stub_DelayId.cc"
 #include "tests/STUB.h"
 
-DelayId::DelayId(): pool_(0), compositeId(NULL), markedAsNoDelay(false) {}
+DelayId::DelayId(): pool_(0), compositeId(nullptr), markedAsNoDelay(false) {}
 DelayId::~DelayId() {}
 
-void DelayId::delayRead(DeferredRead const&) STUB_NOP
+void DelayId::delayRead(const AsyncCallPointer &) STUB_NOP
 void BandwidthBucket::refillBucket() STUB
 bool BandwidthBucket::applyQuota(int &, Comm::IoCallback *) STUB_RETVAL(false)
 BandwidthBucket *BandwidthBucket::SelectBucket(fde *) STUB_RETVAL(nullptr)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -226,7 +226,6 @@ void ipcacheInvalidateNegative(const char *);
 void ipcache_init(void);
 void ipcacheMarkBadAddr(const char *name, const Ip::Address &);
 void ipcacheMarkGoodAddr(const char *name, const Ip::Address &);
-void ipcacheFreeMemory(void);
 void ipcache_restart(void);
 int ipcacheAddEntryFromHosts(const char *name, const char *ipaddr);
 

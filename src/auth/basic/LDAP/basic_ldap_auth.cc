@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -134,17 +134,21 @@ PFldap_start_tls_s Win32_ldap_start_tls_s;
 #include <lber.h>
 #include <ldap.h>
 
+#ifndef LDAP_SECURITY_ERROR
+#define LDAP_SECURITY_ERROR(err) (0x2f <= (err) && (err) <= 0x32) // [47, 50]
+#endif
+
 #endif
 
 #define PROGRAM_NAME "basic_ldap_auth"
 
 /* Global options */
 static const char *basedn;
-static const char *searchfilter = NULL;
-static const char *binddn = NULL;
-static const char *bindpasswd = NULL;
+static const char *searchfilter = nullptr;
+static const char *binddn = nullptr;
+static const char *bindpasswd = nullptr;
 static const char *userattr = "uid";
-static const char *passwdattr = NULL;
+static const char *passwdattr = nullptr;
 static int searchscope = LDAP_SCOPE_SUBTREE;
 static int persistent = 0;
 static int bind_once = 0;
@@ -259,9 +263,9 @@ squid_ldap_memfree(char *p)
 static LDAP *
 open_ldap_connection(const char *ldapServer, int port)
 {
-    LDAP *ld = NULL;
+    LDAP *ld = nullptr;
 #if HAS_URI_SUPPORT
-    if (strstr(ldapServer, "://") != NULL) {
+    if (strstr(ldapServer, "://") != nullptr) {
         int rc = ldap_initialize(&ld, ldapServer);
         if (rc != LDAP_SUCCESS) {
             fprintf(stderr, "\nUnable to connect to LDAPURI:%s\n", ldapServer);
@@ -285,7 +289,7 @@ open_ldap_connection(const char *ldapServer, int port)
             }
         } else
 #endif
-            if ((ld = ldap_init(ldapServer, port)) == NULL) {
+            if ((ld = ldap_init(ldapServer, port)) == nullptr) {
                 fprintf(stderr, "\nUnable to connect to LDAP server:%s port:%d\n",
                         ldapServer, port);
                 exit(EXIT_FAILURE);
@@ -307,7 +311,7 @@ open_ldap_connection(const char *ldapServer, int port)
         if (version != LDAP_VERSION3) {
             fprintf(stderr, "TLS requires LDAP version 3\n");
             exit(EXIT_FAILURE);
-        } else if (ldap_start_tls_s(ld, NULL, NULL) != LDAP_SUCCESS) {
+        } else if (ldap_start_tls_s(ld, nullptr, nullptr) != LDAP_SUCCESS) {
             fprintf(stderr, "Could not Activate TLS connection\n");
             exit(EXIT_FAILURE);
         }
@@ -354,12 +358,12 @@ main(int argc, char **argv)
 {
     char buf[1024];
     char *user, *passwd;
-    char *ldapServer = NULL;
-    LDAP *ld = NULL;
+    char *ldapServer = nullptr;
+    LDAP *ld = nullptr;
     int tryagain;
     int port = LDAP_PORT;
 
-    setbuf(stdout, NULL);
+    setbuf(stdout, nullptr);
 
     while (argc > 1 && argv[1][0] == '-') {
         const char *value = "";
@@ -576,9 +580,9 @@ main(int argc, char **argv)
     }
 #endif
 
-    while (fgets(buf, sizeof(buf), stdin) != NULL) {
+    while (fgets(buf, sizeof(buf), stdin) != nullptr) {
         user = strtok(buf, " \r\n");
-        passwd = strtok(NULL, "\r\n");
+        passwd = strtok(nullptr, "\r\n");
 
         if (!user) {
             SEND_ERR(HLP_MSG("Missing username"));
@@ -594,16 +598,16 @@ main(int argc, char **argv)
             SEND_ERR(HLP_MSG("Invalid username"));
             continue;
         }
-        tryagain = (ld != NULL);
+        tryagain = (ld != nullptr);
 recover:
-        if (ld == NULL && persistent)
+        if (ld == nullptr && persistent)
             ld = open_ldap_connection(ldapServer, port);
         if (checkLDAP(ld, user, passwd, ldapServer, port) != 0) {
             const auto e = squid_ldap_errno(ld);
             if (tryagain && e != LDAP_INVALID_CREDENTIALS) {
                 tryagain = 0;
                 ldap_unbind(ld);
-                ld = NULL;
+                ld = nullptr;
                 goto recover;
             }
             if (LDAP_SECURITY_ERROR(e))
@@ -615,7 +619,7 @@ recover:
         }
         if (ld && (squid_ldap_errno(ld) != LDAP_SUCCESS && squid_ldap_errno(ld) != LDAP_INVALID_CREDENTIALS)) {
             ldap_unbind(ld);
-            ld = NULL;
+            ld = nullptr;
         }
     }
     if (ld)
@@ -663,7 +667,7 @@ checkLDAP(LDAP * persistent_ld, const char *userid, const char *password, const 
 {
     char dn[1024];
     int ret = 0;
-    LDAP *bind_ld = NULL;
+    LDAP *bind_ld = nullptr;
 
     if (!*password) {
         /* LDAP can't bind with a blank password. Seen as "anonymous"
@@ -675,9 +679,9 @@ checkLDAP(LDAP * persistent_ld, const char *userid, const char *password, const 
     if (searchfilter) {
         char filter[16384];
         char escaped_login[1024];
-        LDAPMessage *res = NULL;
+        LDAPMessage *res = nullptr;
         LDAPMessage *entry;
-        char *searchattr[] = {(char *)LDAP_NO_ATTRS, NULL};
+        char *searchattr[] = {(char *)LDAP_NO_ATTRS, nullptr};
         char *userdn;
         int rc;
         LDAP *search_ld = persistent_ld;
@@ -733,16 +737,16 @@ checkLDAP(LDAP * persistent_ld, const char *userid, const char *password, const 
         if (ret == 0 && (!binddn || !bind_once || passwdattr)) {
             /* Reuse the search connection for comparing the user password attribute */
             bind_ld = search_ld;
-            search_ld = NULL;
+            search_ld = nullptr;
         }
 search_done:
         if (res) {
             ldap_msgfree(res);
-            res = NULL;
+            res = nullptr;
         }
         if (search_ld && search_ld != persistent_ld) {
             ldap_unbind(search_ld);
-            search_ld = NULL;
+            search_ld = nullptr;
         }
         if (ret != 0)
             return ret;
@@ -763,7 +767,7 @@ search_done:
         ret = 1;
     if (bind_ld != persistent_ld) {
         ldap_unbind(bind_ld);
-        bind_ld = NULL;
+        bind_ld = nullptr;
     }
     return ret;
 }
@@ -772,9 +776,9 @@ int
 readSecret(const char *filename)
 {
     char buf[BUFSIZ];
-    char *e = NULL;
+    char *e = nullptr;
     FILE *f;
-    char *passwd = NULL;
+    char *passwd = nullptr;
 
     if (!(f = fopen(filename, "r"))) {
         fprintf(stderr, PROGRAM_NAME " ERROR: Can not read secret file %s\n", filename);

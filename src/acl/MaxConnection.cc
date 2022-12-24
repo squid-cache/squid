@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,19 +12,10 @@
 #include "acl/FilledChecklist.h"
 #include "acl/MaxConnection.h"
 #include "client_db.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "SquidConfig.h"
 
-ACL *
-ACLMaxConnection::clone() const
-{
-    return new ACLMaxConnection(*this);
-}
-
 ACLMaxConnection::ACLMaxConnection (char const *theClass) : class_ (theClass), limit(-1)
-{}
-
-ACLMaxConnection::ACLMaxConnection (ACLMaxConnection const & old) :class_ (old.class_), limit (old.limit)
 {}
 
 ACLMaxConnection::~ACLMaxConnection()

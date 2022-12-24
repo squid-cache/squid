@@ -1,6 +1,6 @@
-#!/usr/bin/awk -f 
+#!/usr/bin/awk -f
 
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 BEGIN {
 	print "/* Generated automatically from cf.data.pre DO NOT EDIT */"
 	print "/*"
-	print " * Copyright (C) 1996-2020 The Squid Software Foundation and contributors"
+	print " * Copyright (C) 1996-2022 The Squid Software Foundation and contributors"
 	print " *"
 	print " * Squid software is distributed under GPLv2+ license and includes"
 	print " * contributions from numerous individuals and organizations."
@@ -39,7 +39,7 @@ BEGIN {
 	define["USE_HTTP_VIOLATIONS"]="--enable-http-violations"
 	define["USE_ICMP"]="--enable-icmp"
 	define["USE_IDENT"]="--enable-ident-lookups"
-	define["USE_LOADABLE_MODULES"]="--enable-loadable-modules"
+	define["USE_LOADABLE_MODULES"]="--enable-shared"
 	define["USE_OPENSSL"]="--with-openssl"
 	define["USE_QOS_TOS"]="--enable-zph-qos"
 	define["USE_SQUID_ESI"]="--enable-esi"

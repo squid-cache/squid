@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 /* DEBUG: section 74    HTTP Message */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "http/ContentLengthInterpreter.h"
 #include "http/Message.h"
 #include "http/one/Parser.h"
@@ -17,7 +17,6 @@
 #include "HttpHeaderTools.h"
 #include "MemBuf.h"
 #include "mime_header.h"
-#include "profiler/Profiler.h"
 #include "SquidConfig.h"
 
 Http::Message::Message(http_hdr_owner_type owner):
@@ -85,6 +84,12 @@ Http::Message::parse(const char *buf, const size_t sz, bool eof, Http::StatusCod
     // find the end of headers
     const size_t hdr_len = headersEnd(buf, sz);
 
+    if (hdr_len > Config.maxReplyHeaderSize || (hdr_len == 0 && sz > Config.maxReplyHeaderSize)) {
+        debugs(58, 3, "input too large: " << hdr_len << " or " << sz << " > " << Config.maxReplyHeaderSize);
+        *error = Http::scHeaderTooLarge;
+        return false;
+    }
+
     // sanity check the start line to see if this is in fact an HTTP message
     if (!sanityCheckStartLine(buf, hdr_len, error)) {
         // NP: sanityCheck sets *error and sends debug warnings on syntax errors.
@@ -95,20 +100,7 @@ Http::Message::parse(const char *buf, const size_t sz, bool eof, Http::StatusCod
         return false;
     }
 
-    if (hdr_len > Config.maxReplyHeaderSize || (hdr_len <= 0 && sz > Config.maxReplyHeaderSize)) {
-        debugs(58, DBG_IMPORTANT, "Too large reply header (" << hdr_len << " > " << Config.maxReplyHeaderSize);
-        *error = Http::scHeaderTooLarge;
-        return false;
-    }
-
-    if (hdr_len <= 0) {
-        debugs(58, 3, "failed to find end of headers (eof: " << eof << ") in '" << buf << "'");
-
-        if (eof) // iff we have seen the end, this is an error
-            *error = Http::scInvalidHeader;
-
-        return false;
-    }
+    assert(hdr_len > 0); // sanityCheckStartLine() rejects buffers that cannot be parsed
 
     const int res = httpMsgParseStep(buf, sz, eof);
 
@@ -128,7 +120,7 @@ Http::Message::parse(const char *buf, const size_t sz, bool eof, Http::StatusCod
     debugs(58, 9, "success (" << hdr_len << " bytes) near '" << buf << "'");
 
     if (hdr_sz != (int)hdr_len) {
-        debugs(58, DBG_IMPORTANT, "internal Http::Message::parse vs. headersEnd error: " <<
+        debugs(58, DBG_IMPORTANT, "ERROR: internal Http::Message::parse vs. headersEnd failure: " <<
                hdr_sz << " != " << hdr_len);
         hdr_sz = (int)hdr_len; // because old http.cc code used hdr_len
     }
@@ -178,16 +170,12 @@ Http::Message::httpMsgParseStep(const char *buf, int len, int atEnd)
 
     *parse_end_ptr = parse_start;
 
-    PROF_start(HttpMsg_httpMsgParseStep);
-
     if (pstate == Http::Message::psReadyToParseStartLine) {
         if (!httpMsgIsolateStart(&parse_start, &blk_start, &blk_end)) {
-            PROF_stop(HttpMsg_httpMsgParseStep);
             return 0;
         }
 
         if (!parseFirstLine(blk_start, blk_end)) {
-            PROF_stop(HttpMsg_httpMsgParseStep);
             return httpMsgParseError();
         }
 
@@ -210,7 +198,6 @@ Http::Message::httpMsgParseStep(const char *buf, int len, int atEnd)
         configureContentLengthInterpreter(interpreter);
         const int parsed = header.parse(parse_start, parse_len, atEnd, hsize, interpreter);
         if (parsed <= 0) {
-            PROF_stop(HttpMsg_httpMsgParseStep);
             return !parsed ? 0 : httpMsgParseError();
         }
         hdr_sz += hsize;
@@ -218,7 +205,6 @@ Http::Message::httpMsgParseStep(const char *buf, int len, int atEnd)
         pstate = Http::Message::psParsed;
     }
 
-    PROF_stop(HttpMsg_httpMsgParseStep);
     return 1;
 }
 
@@ -286,7 +272,7 @@ void
 Http::Message::hdrCacheInit()
 {
     content_length = header.getInt64(Http::HdrType::CONTENT_LENGTH);
-    assert(NULL == cache_control);
+    assert(nullptr == cache_control);
     cache_control = header.getCc();
 }
 

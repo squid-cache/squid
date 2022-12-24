@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_TEST_TESTROCK_H
 #define SQUID_SRC_TEST_TESTROCK_H
 
-#include <cppunit/extensions/HelperMacros.h>
+#include "compat/cppunit.h"
 
 /*
  * test the store framework
@@ -23,7 +23,7 @@ class testRock : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST_SUITE_END();
 
 public:
-    testRock() : rr(NULL) {}
+    testRock() : rr(nullptr) {}
     virtual void setUp();
     virtual void tearDown();
 

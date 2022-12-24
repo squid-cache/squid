@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 5.0.0 release notes</title>
+<title>Squid 5.7 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,12 +12,10 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-5.0.0 for testing.
+<p>The Squid Team are pleased to announce the release of Squid-5.7.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v5/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
-
-<p>While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.
 
 <p>We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/BugReporting">
    for how to submit a report with a stack trace.
@@ -40,6 +38,9 @@ The Squid-5 change history can be <url url="http://www.squid-cache.org/Versions/
 	<item>Happy Eyeballs Update
 	<item>Kerberos Group Helper
 	<item>TrivialDB Support
+	<item>RFC 8586: Loop Detection in Content Delivery Networks
+	<item>Peering support for SSL-Bump
+	<item>OpenSSL 3.0 Support
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -122,6 +123,48 @@ Most user-facing changes are reflected in squid.conf (see below).
    the helpers functionality to rebuild it as needed.
 
 
+<sect1>Loop Detection in Content Delivery Networks
+<p>Details in <url url="https://tools.ietf.org/html/rfc8586" name="RFC 8586">
+
+<p>Squid now uses the CDN-Loop header as a source for loop detection.
+
+<p>This header is only relevant to CDN installations. For which the
+   <em>surrogate_id</em> configuration directive specifies the authoritative
+   ID.
+
+<p>Squid does not add this header by default, preferring to use the
+   Via mechanism instead. Administrators may add it to requests
+   with the <em>request_header_add</em> directive or remove with
+   <em>request_header_remove</em>.
+
+
+<sect1>Peering support for SSL-Bump
+<p>Squid now supports forwarding of bumped, re-encrypted HTTPS requests through
+   a <em>cache_peer</em> using a standard HTTP CONNECT tunnel.
+
+<p>No support for triggering client authentication when a <em>cache_peer</em>
+   configuration instructs the bumping Squid to relay authentication info
+   contained in client CONNECT request. The bumping Squid still responds
+   with HTTP 200 (Connection Established) to the client CONNECT request (to
+   see TLS client handshake) <em>before</em> selecting the cache_peer.
+
+<p>HTTPS cache_peers are not yet supported primarily because Squid cannot
+   yet do TLS-in-TLS.
+
+
+<sect1>OpenSSL 3.0 Support
+<p>Squid-5.7 adds OpenSSL 3.0 support.
+
+<p>This version of Squid does not add any of the new features provided by
+   OpenSSL 3.0. It only contains support for features already supported by prior
+   versions of Squid using new APIs provided by OpenSSL 3.0.
+
+<p>Notably the libssl custom Engine feature has been deprecated by OpenSSL 3.0
+   and new Providers replacement is not supported by this Squid.
+
+<p>OpenSSL 3.0 uses new licensing terms.
+
+
 <sect>Changes to squid.conf since Squid-4
 <p>
 There have been changes to Squid's configuration file since Squid-4.
@@ -147,6 +190,24 @@ This section gives a thorough account of those changes in three categories:
 	<p>New access control to restrict collapsed forwarding to a subset of
 	   eligible HTTP, ICP and HTCP requests.
 
+	<tag>happy_eyeballs_connect_gap</tag>
+	<p>New directive to specify the minimum delay between opening spare
+	   connections to any server.
+
+	<tag>happy_eyeballs_connect_limit</tag>
+	<p>New directive to specify the maximum number of spare connections
+	   to any server.
+
+	<tag>happy_eyeballs_connect_timeout</tag>
+	<p>New directive to specify the minimum delay between opening a
+	   primary to-server connection and opening a spare to-server
+	   connection for the same transaction.
+
+	<tag>http_upgrade_request_protocols</tag>
+	<p>New directive to control client-initiated and server-confirmed
+	   switching from HTTP to another protocol using HTTP/1.1 Upgrade
+	   mechanism.
+
 	<tag>mark_client_connection</tag>
 	<p>New access control to apply a Netfilter CONNMARK value to a TCP client
 	   connection.
@@ -164,6 +225,9 @@ This section gives a thorough account of those changes in three categories:
 	<p>New access control to determines whether a specific named response
 	   delay pool is used for the HTTP transaction.
 
+	<tag>shared_transient_entries_limit</tag>
+	<p>Replacement for <em>collapsed_forwarding_shared_entries_limit</em>.
+
 </descrip>
 
 <sect1>Changes to existing directives<label id="modifieddirectives">
@@ -177,18 +241,69 @@ This section gives a thorough account of those changes in three categories:
 	<p>New <em>annotate_transaction</em> type to annotate an HTTP transaction.
 	   Annotations can be used by other ACLs or helpers and persist until
 	   logging of the HTTP transaction is completed.
+	<p>New value <em>GeneratingCONNECT</em> for the <em>at_step</em> type to
+	   match when Squid is about to send a CONNECT request to a cache peer.
 	<p>Replaced <em>clientside_mark</em> with <em>client_connection_mark</em>
 	   type to match Netfilter CONNMARK of the client TCP connection.
 
+	<tag>auth_param</tag>
+	<p>New <em>reservation-timeout=</em> option to allow NTLM and Negotiate
+	   helpers to forget about clients with outstanding authentication
+	   requests.
+	<p>Added support for CP1251 charset conversion when <em>utf8</em> option
+	   is configured.
+
+	<tag>authenticate_cache_garbage_interval</tag>
+	<p>Now disabled when <em>--disable-auth</em> build parameter is used.
+
+	<tag>authenticate_ttl</tag>
+	<p>Now disabled when <em>--disable-auth</em> build parameter is used.
+
+	<tag>authenticate_ip_ttl</tag>
+	<p>Now disabled when <em>--disable-auth</em> build parameter is used.
+
 	<tag>deny_info</tag>
-	<p>New code <em>%A</em> to display Squid listening IP address the client
+	<p>New code <em>A</em> to display Squid listening IP address the client
 	   TCP connection was connected to.
+
+	<tag>esi_parser</tag>
+	<p>Squid-4 removal of the custom parser introduced a bug which caused
+	   the default ESI parser library to be unpredictable. Squid-5.5 release
+	   restores the documented default of libxml2 as most preferred, with
+	   libexpat as alternative.
+
+	<tag>http_port</tag>
+	<p>New <em>worker-queues</em> option to have TCP stack maintain dedicated
+	   listening queue for each worker in SMP.
+
+	<tag>https_port</tag>
+	<p>New <em>worker-queues</em> option to have TCP stack maintain dedicated
+	   listening queue for each worker in SMP.
+	<p>New <em>CONDITIONAL_AUTH</em> flag for <em>sslflags=</em> option to
+	   request client certificate(s) but not reject clients without any.
+	<p>Squid-5.5 will no longer use <em>tls-clientca=</em> certificates
+	   as possible intermediary CA for the server CA certificate chain when
+	   OpenSSL library supports <em>SSL_MODE_NO_AUTO_CHAIN</em> mode.
 
 	<tag>logformat</tag>
 	<p>New <em>ssl::&lt;cert</em> macro code to display received server X.509
 	   certificate in PEM format.
-	<p>New <em>CF</em> value for <em>%Ss</em> code to indicate the response
+	<p>New <em>proxy_protocol::&gt;h</em> code to display received PROXY
+           protocol version 2 TLV values.
+	<p>New <em>master_xaction</em> code to display Squids internal
+	   transaction ID.
+	<p>New <em>CF</em> value for <em>Ss</em> code to indicate the response
 	   was handled by Collapsed Forwarding.
+	<p>New <em>TLS/1.3</em> value for <em>ssl::&lt;negotiated_version</em>
+	    code to indicate the request was received from client using TLS/1.3.
+	<p>New <em>TLS/1.3</em> value for <em>ssl::&gt;negotiated_version</em>
+	    code to indicate the response was received from server using TLS/1.3.
+	<p>Codes <em>rm</em>, <em>&lt;rm</em> and <em>&gt;rm</em> display "-"
+	   instead of the made-up method NONE.
+
+	<tag>ssl_engine</tag>
+	<p>OpenSSL 3.0 deprecates the Engine feature. This directive is
+	   only supported when Squid is built for older OpenSSL versions.
 
 </descrip>
 
@@ -197,6 +312,9 @@ This section gives a thorough account of those changes in three categories:
 <descrip>
 	<tag>clientside_mark</tag>
 	<p>Replaced by <em>mark_client_packet</em>.
+
+	<tag>collapsed_forwarding_shared_entries_limit</tag>
+	<p>Replaced by <em>shared_transient_entries_limit</em>.
 
 	<tag>dns_v4_first</tag>
 	<p>Removed. The new "Happy Eyeballs" algorithm uses received IP
@@ -224,6 +342,12 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
+	<tag>--without-ldap</tag>
+	<p>New option to determine whether LDAP support is used, and
+	   build against local custom installs.
+	<p>This will prevent all helper binaries depending on LDAP
+	   from being auto-built.
+
 	<tag>--without-tdb</tag>
 	<p>New option to determine whether TrivialDB support is used, and
 	   build against local custom installs.
@@ -238,6 +362,10 @@ This section gives an account of those changes in three categories:
 <descrip>
 	<tag>--disable-optimizations</tag>
 	<p>No longer implies <em>--disable-inline</em> option (which is removed).
+
+	<tag>--enable-external-acl-helpers</tag>
+	<p>New helper type <em>kerberos_sid_group</em> to match <em>group=</em>
+	   annotations AD Domain group SID.
 
 </descrip>
 </p>
@@ -309,7 +437,7 @@ This section gives an account of those changes in three categories:
 
 <sect>Copyright
 <p>
-Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 <p>
 Squid software is distributed under GPLv2+ license and includes
 contributions from numerous individuals and organizations.

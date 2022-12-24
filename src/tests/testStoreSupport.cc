@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,13 +9,12 @@
 #include "squid.h"
 #include "event.h"
 #include "EventLoop.h"
-#include "SquidTime.h"
 #include "testStoreSupport.h"
 
 /* construct a stock loop with event dispatching, a time service that advances
  * 1 second a tick
  */
-StockEventLoop::StockEventLoop() : default_time_engine(TimeEngine())
+StockEventLoop::StockEventLoop() : default_time_engine(Time::Engine())
 {
     registerEngine(EventScheduler::GetInstance());
     setTimeService(&default_time_engine);

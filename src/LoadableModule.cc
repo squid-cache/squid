@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,7 +14,7 @@
 // Note: We must use preprocessor instead of C ifs because if dlopen()
 // is seen by the static linker, the linker will complain.
 
-LoadableModule::LoadableModule(const String &aName): theName(aName), theHandle(0)
+LoadableModule::LoadableModule(const String &aName): theName(aName), theHandle(nullptr)
 {
     // Initialise preloaded symbol lookup table.
     LTDL_SET_PRELOADED_SYMBOLS();
@@ -32,16 +32,16 @@ LoadableModule::~LoadableModule()
 bool
 LoadableModule::loaded() const
 {
-    return theHandle != 0;
+    return theHandle != nullptr;
 }
 
 void
-LoadableModule::load(int mode)
+LoadableModule::load()
 {
     if (loaded())
         throw TexcHere("internal error: reusing LoadableModule object");
 
-    theHandle = openModule(mode);
+    theHandle = openModule();
 
     if (!loaded())
         throw TexcHere(errorMsg());
@@ -56,11 +56,11 @@ LoadableModule::unload()
     if (!closeModule())
         throw TexcHere(errorMsg());
 
-    theHandle = 0;
+    theHandle = nullptr;
 }
 
 void *
-LoadableModule::openModule(int mode)
+LoadableModule::openModule()
 {
     return lt_dlopen(theName.termedBuf());
 }

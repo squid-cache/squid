@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,7 @@
  * Update/Maintenance History:
  *
  *    15-Aug-2007 : Copied from fetchmail 6.3.8
- *          - added protection around libray headers
+ *          - added protection around library headers
  *
  *    16-Aug-2007 : Altered configure checks
  *                  Un-hacked slightly to use system gethostbyname()
@@ -84,13 +84,13 @@ dup_addrinfo (struct addrinfo *info, void *addr, size_t addrlen) {
     struct addrinfo *ret;
 
     ret = (struct addrinfo *)malloc(sizeof (struct addrinfo));
-    if (ret == NULL)
-        return NULL;
+    if (!ret)
+        return nullptr;
     memcpy (ret, info, sizeof (struct addrinfo));
     ret->ai_addr = (struct sockaddr*)malloc(addrlen);
-    if (ret->ai_addr == NULL) {
+    if (!ret->ai_addr) {
         free (ret);
-        return NULL;
+        return nullptr;
     }
     memcpy (ret->ai_addr, addr, addrlen);
     ret->ai_addrlen = addrlen;
@@ -109,19 +109,19 @@ xgetaddrinfo (const char *nodename, const char *servname,
     struct addrinfo *ai, *sai, *eai;
     char **addrs;
 
-    if (servname == NULL && nodename == NULL)
+    if (!servname && !nodename)
         return EAI_NONAME;
 
     memset (&result, 0, sizeof result);
 
     /* default for hints */
-    if (hints == NULL) {
+    if (!hints) {
         memset (&hint, 0, sizeof hint);
         hint.ai_family = PF_UNSPEC;
         hints = &hint;
     }
 
-    if (servname == NULL)
+    if (!servname)
         port = 0;
     else {
         /* check for tcp or udp sockets only */
@@ -135,16 +135,16 @@ xgetaddrinfo (const char *nodename, const char *servname,
 
         /* Note: maintain port in host byte order to make debugging easier */
         if (isdigit (*servname))
-            port = strtol (servname, NULL, 10);
-        else if ((servent = getservbyname (servname, socktype)) != NULL)
+            port = strtol (servname, nullptr, 10);
+        else if ((servent = getservbyname (servname, socktype)))
             port = ntohs (servent->s_port);
         else
             return EAI_NONAME;
     }
 
-    /* if nodename == NULL refer to the local host for a client or any
+    /* if !nodename, refer to the local host for a client or any
        for a server */
-    if (nodename == NULL) {
+    if (!nodename) {
         struct sockaddr_in sin;
 
         /* check protocol family is PF_UNSPEC or PF_INET - could try harder
@@ -162,7 +162,7 @@ xgetaddrinfo (const char *nodename, const char *servname,
             sin.sin_addr.s_addr = htonl (INADDR_LOOPBACK);
         /* Duplicate result and addr and return */
         *res = dup_addrinfo (&result, &sin, sizeof sin);
-        return (*res == NULL) ? EAI_MEMORY : 0;
+        return (!*res) ? EAI_MEMORY : 0;
     }
 
     /* If AI_NUMERIC is specified, use inet_pton to translate numbers and
@@ -183,7 +183,7 @@ xgetaddrinfo (const char *nodename, const char *servname,
         sin.sin_addr.s_addr = inet_addr (nodename);
         /* Duplicate result and addr and return */
         *res = dup_addrinfo (&result, &sin, sizeof sin);
-        return (*res == NULL) ? EAI_MEMORY : 0;
+        return (!*res) ? EAI_MEMORY : 0;
     }
 
 #if HAVE_H_ERRNO
@@ -191,7 +191,7 @@ xgetaddrinfo (const char *nodename, const char *servname,
 #endif
     errno = 0;
     hp = gethostbyname(nodename);
-    if (hp == NULL) {
+    if (!hp) {
 #ifdef EAI_SYSTEM
         if (errno != 0) {
             return EAI_SYSTEM;
@@ -233,8 +233,8 @@ xgetaddrinfo (const char *nodename, const char *servname,
 
     /* For each element pointed to by hp, create an element in the
        result linked list. */
-    sai = eai = NULL;
-    for (addrs = hp->h_addr_list; *addrs != NULL; addrs++) {
+    sai = eai = nullptr;
+    for (addrs = hp->h_addr_list; *addrs; addrs++) {
         struct sockaddr sa;
         size_t addrlen;
 
@@ -263,24 +263,24 @@ xgetaddrinfo (const char *nodename, const char *servname,
 
         result.ai_family = hp->h_addrtype;
         ai = dup_addrinfo (&result, &sa, addrlen);
-        if (ai == NULL) {
+        if (!ai) {
             xfreeaddrinfo (sai);
             return EAI_MEMORY;
         }
-        if (sai == NULL)
+        if (!sai)
             sai = ai;
         else
             eai->ai_next = ai;
         eai = ai;
     }
 
-    if (sai == NULL) {
+    if (!sai) {
         return EAI_NODATA;
     }
 
     if (hints->ai_flags & AI_CANONNAME) {
         sai->ai_canonname = (char *)malloc(strlen(hp->h_name) + 1);
-        if (sai->ai_canonname == NULL) {
+        if (!sai->ai_canonname) {
             xfreeaddrinfo (sai);
             return EAI_MEMORY;
         }
@@ -296,11 +296,11 @@ xfreeaddrinfo (struct addrinfo *ai)
 {
     struct addrinfo *next;
 
-    while (ai != NULL) {
+    while (ai) {
         next = ai->ai_next;
-        if (ai->ai_canonname != NULL)
+        if (ai->ai_canonname)
             free (ai->ai_canonname);
-        if (ai->ai_addr != NULL)
+        if (ai->ai_addr)
             free (ai->ai_addr);
         free (ai);
         ai = next;

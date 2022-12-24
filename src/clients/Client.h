@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -81,6 +81,10 @@ public:
 public: // should be protected
     void serverComplete();     /**< call when no server communication is expected */
 
+    /// remember that the received virgin reply was parsed in its entirety,
+    /// including its body (if any)
+    void markParsedVirginReplyAsWhole(const char *reasonWeAreSure);
+
 private:
     void serverComplete2();    /**< Continuation of serverComplete */
     bool completed = false;            /**< serverComplete() has been called */
@@ -108,6 +112,10 @@ protected:
     virtual bool doneWithServer() const = 0;   /**< did we end communication? */
     /// whether we may receive more virgin response body bytes
     virtual bool mayReadVirginReplyBody() const = 0;
+
+    /// Called when a previously delayed dataConnection() read may be possible.
+    /// \sa delayRead()
+    virtual void noteDelayAwareReadChance() = 0;
 
     /// Entry-dependent callbacks use this check to quit if the entry went bad
     bool abortOnBadEntry(const char *abortReason);
@@ -156,6 +164,10 @@ protected:
 
     void adjustBodyBytesRead(const int64_t delta);
 
+    /// Defer reading until it is likely to become possible.
+    /// Eventually, noteDelayAwareReadChance() will be called.
+    void delayRead();
+
     // These should be private
     int64_t currentOffset = 0;  /**< Our current offset in the StoreEntry */
     MemBuf *responseBodyBuffer = nullptr; /**< Data temporarily buffered for ICAP */
@@ -176,6 +188,9 @@ protected:
 
     bool adaptationAccessCheckPending = false;
     bool startedAdaptation = false;
+
+    /// handleAdaptedBodyProductionEnded() was called
+    bool receivedWholeAdaptedReply = false;
 #endif
     bool receivedWholeRequestBody = false; ///< handleRequestBodyProductionEnded called
 

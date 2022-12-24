@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,6 +17,7 @@
 #include "event.h"
 #include "fatal.h"
 #include "SquidConfig.h"
+#include "wccp.h"
 
 #define WCCP_PORT 2048
 #define WCCP_REVISION 0
@@ -100,8 +101,8 @@ wccpInit(void)
     number_caches = 0;
 
     if (!Config.Wccp.router.isAnyAddr())
-        if (!eventFind(wccpHereIam, NULL))
-            eventAdd("wccpHereIam", wccpHereIam, NULL, 5.0, 1);
+        if (!eventFind(wccpHereIam, nullptr))
+            eventAdd("wccpHereIam", wccpHereIam, nullptr, 5.0, 1);
 }
 
 void
@@ -136,7 +137,7 @@ wccpConnectionOpen(void)
     if (theWccpConnection < 0)
         fatal("Cannot open WCCP Port");
 
-    Comm::SetSelect(theWccpConnection, COMM_SELECT_READ, wccpHandleUdp, NULL, 0);
+    Comm::SetSelect(theWccpConnection, COMM_SELECT_READ, wccpHandleUdp, nullptr, 0);
 
     debugs(80, DBG_IMPORTANT, "Accepting WCCPv1 messages on " << Config.Wccp.address << ", FD " << theWccpConnection << ".");
 
@@ -181,7 +182,7 @@ wccpHandleUdp(int sock, void *)
 
     debugs(80, 6, "wccpHandleUdp: Called.");
 
-    Comm::SetSelect(sock, COMM_SELECT_READ, wccpHandleUdp, NULL, 0);
+    Comm::SetSelect(sock, COMM_SELECT_READ, wccpHandleUdp, nullptr, 0);
 
     memset(&wccp_i_see_you, '\0', sizeof(wccp_i_see_you));
 
@@ -286,8 +287,8 @@ wccpHereIam(void *)
         interval = 2.0;
     }
 
-    if (!eventFind(wccpHereIam, NULL))
-        eventAdd("wccpHereIam", wccpHereIam, NULL, interval, 1);
+    if (!eventFind(wccpHereIam, nullptr))
+        eventAdd("wccpHereIam", wccpHereIam, nullptr, interval, 1);
 }
 
 static void

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,7 +14,7 @@
 #include "acl/InnerNode.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "globals.h"
 #include <algorithm>
 
@@ -34,22 +34,22 @@ Acl::InnerNode::empty() const
 void
 Acl::InnerNode::add(ACL *node)
 {
-    assert(node != NULL);
+    assert(node != nullptr);
     nodes.push_back(node);
     aclRegister(node);
 }
 
-// one call parses one "acl name acltype name1 name2 ..." line
 // kids use this method to handle [multiple] parse() calls correctly
-void
+size_t
 Acl::InnerNode::lineParse()
 {
     // XXX: not precise, may change when looping or parsing multiple lines
     if (!cfgline)
         cfgline = xstrdup(config_input_line);
 
-    // expect a list of ACL names, each possibly preceeded by '!' for negation
+    // expect a list of ACL names, each possibly preceded by '!' for negation
 
+    size_t count = 0;
     while (const char *t = ConfigParser::strtokFile()) {
         const bool negated = (*t == '!');
         if (negated)
@@ -58,10 +58,10 @@ Acl::InnerNode::lineParse()
         debugs(28, 3, "looking for ACL " << t);
         ACL *a = ACL::FindByName(t);
 
-        if (a == NULL) {
-            debugs(28, DBG_CRITICAL, "ACL not found: " << t);
+        if (a == nullptr) {
+            debugs(28, DBG_CRITICAL, "ERROR: ACL not found: " << t);
             self_destruct();
-            return;
+            return count; // not reached
         }
 
         // append(negated ? new NotNode(a) : a);
@@ -69,9 +69,11 @@ Acl::InnerNode::lineParse()
             add(new NotNode(a));
         else
             add(a);
+
+        ++count;
     }
 
-    return;
+    return count;
 }
 
 SBufList

@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -11,8 +11,8 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libident.la
 
 libident_la_SOURCES = \
-	AclIdent.h \
 	AclIdent.cc \
+	AclIdent.h \
 	Config.h \
 	Ident.cc \
 	Ident.h

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,17 +17,18 @@
 #include "AccessLogEntry.h"
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
+#include "base/AsyncCallbacks.h"
 #include "client_db.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
-#include "comm/UdpOpenDialer.h"
 #include "fd.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
 #include "ICP.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
+#include "ipc/StartListening.h"
 #include "ipcache.h"
 #include "md5.h"
 #include "multicast.h"
@@ -35,15 +36,11 @@
 #include "refresh.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "store_key_md5.h"
 #include "tools.h"
 #include "wordlist.h"
-
-// for tvSubUsec() which should be in SquidTime.h
-#include "util.h"
 
 #include <cerrno>
 
@@ -54,10 +51,10 @@ public:
     icp_common_t *msg = nullptr; ///< ICP message with network byte order fields
     DelayedUdpSend *next = nullptr; ///< invasive FIFO queue of delayed ICP messages
     AccessLogEntryPointer ale; ///< sender's master transaction summary
-    struct timeval queue_time = {0, 0}; ///< queuing timestamp
+    struct timeval queue_time = {}; ///< queuing timestamp
 };
 
-static void icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);
+static void icpIncomingConnectionOpened(Ipc::StartListeningAnswer &);
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpLogIcp(const Ip::Address &, const LogTags_ot, int, const char *, const int, AccessLogEntryPointer &);
@@ -94,14 +91,14 @@ icpSyncAle(AccessLogEntryPointer &al, const Ip::Address &caddr, const char *url,
  * IcpQueueHead is global so comm_incoming() knows whether or not
  * to call icpUdpSendQueue.
  */
-static DelayedUdpSend *IcpQueueHead = NULL;
+static DelayedUdpSend *IcpQueueHead = nullptr;
 /// \ingroup ServerProtocolICPInternal2
-static DelayedUdpSend *IcpQueueTail = NULL;
+static DelayedUdpSend *IcpQueueTail = nullptr;
 
 /// \ingroup ServerProtocolICPInternal2
-Comm::ConnectionPointer icpIncomingConn = NULL;
+Comm::ConnectionPointer icpIncomingConn = nullptr;
 /// \ingroup ServerProtocolICPInternal2
-Comm::ConnectionPointer icpOutgoingConn = NULL;
+Comm::ConnectionPointer icpOutgoingConn = nullptr;
 
 /* icp_common_t */
 icp_common_t::icp_common_t() :
@@ -143,7 +140,7 @@ ICPState::ICPState(icp_common_t &aHeader, HttpRequest *aRequest):
     header(aHeader),
     request(aRequest),
     fd(-1),
-    url(NULL)
+    url(nullptr)
 {
     HTTPMSGLOCK(request);
 }
@@ -155,7 +152,20 @@ ICPState::~ICPState()
 }
 
 bool
-ICPState::confirmAndPrepHit(const StoreEntry &e)
+ICPState::isHit() const
+{
+    const auto e = storeGetPublic(url, Http::METHOD_GET);
+
+    const auto hit = e && confirmAndPrepHit(*e);
+
+    if (e)
+        e->abandon(__FUNCTION__);
+
+    return hit;
+}
+
+bool
+ICPState::confirmAndPrepHit(const StoreEntry &e) const
 {
     if (!e.validToSend())
         return false;
@@ -170,7 +180,7 @@ ICPState::confirmAndPrepHit(const StoreEntry &e)
 }
 
 LogTags *
-ICPState::loggingTags()
+ICPState::loggingTags() const
 {
     // calling icpSyncAle(LOG_TAG_NONE) here would not change cache.code
     if (!al)
@@ -199,7 +209,6 @@ public:
         ICPState(aHeader, aRequest),rtt(0),src_rtt(0),flags(0) {}
 
     ~ICP2State();
-    virtual void created(StoreEntry * newEntry) override;
 
     int rtt;
     int src_rtt;
@@ -208,39 +217,6 @@ public:
 
 ICP2State::~ICP2State()
 {}
-
-void
-ICP2State::created(StoreEntry *e)
-{
-    debugs(12, 5, "icpHandleIcpV2: OPCODE " << icp_opcode_str[header.opcode]);
-    icp_opcode codeToSend;
-
-    if (e && confirmAndPrepHit(*e)) {
-        codeToSend = ICP_HIT;
-    } else {
-#if USE_ICMP
-        if (Config.onoff.test_reachability && rtt == 0) {
-            if ((rtt = netdbHostRtt(request->url.host())) == 0)
-                netdbPingSite(request->url.host());
-        }
-#endif /* USE_ICMP */
-
-        if (icpGetCommonOpcode() != ICP_ERR)
-            codeToSend = icpGetCommonOpcode();
-        else if (Config.onoff.test_reachability && rtt == 0)
-            codeToSend = ICP_MISS_NOFETCH;
-        else
-            codeToSend = ICP_MISS;
-    }
-
-    icpCreateAndSend(codeToSend, flags, url, header.reqnum, src_rtt, fd, from, al);
-
-    // TODO: StoreClients must either store/lock or abandon found entries.
-    //if (e)
-    //    e->abandon();
-
-    delete this;
-}
 
 /* End ICP2State */
 
@@ -270,16 +246,16 @@ icpLogIcp(const Ip::Address &caddr, const LogTags_ot logcode, const int len, con
         al->cache.code.update(logcode);
     }
     clientdbUpdate(caddr, al->cache.code, AnyP::PROTO_ICP, len);
-    accessLogLog(al, NULL);
+    accessLogLog(al, nullptr);
 }
 
 /// \ingroup ServerProtocolICPInternal2
-void
+static void
 icpUdpSendQueue(int fd, void *)
 {
     DelayedUdpSend *q;
 
-    while ((q = IcpQueueHead) != NULL) {
+    while ((q = IcpQueueHead) != nullptr) {
         int delay = tvSubUsec(q->queue_time, current_time);
         /* increment delay to prevent looping */
         const int x = icpUdpSend(fd, q->address, q->msg, ++delay, q->ale);
@@ -299,9 +275,9 @@ icp_common_t::CreateMessage(
     int reqnum,
     int pad)
 {
-    char *buf = NULL;
-    icp_common_t *headerp = NULL;
-    char *urloffset = NULL;
+    char *buf = nullptr;
+    icp_common_t *headerp = nullptr;
+    char *urloffset = nullptr;
     int buf_len;
     buf_len = sizeof(icp_common_t) + strlen(url) + 1;
 
@@ -368,7 +344,7 @@ icpUdpSend(int fd,
         queue->queue_time = current_time;
         queue->ale = al;
 
-        if (IcpQueueHead == NULL) {
+        if (IcpQueueHead == nullptr) {
             IcpQueueHead = queue;
             IcpQueueTail = queue;
         } else if (IcpQueueTail == IcpQueueHead) {
@@ -379,7 +355,7 @@ icpUdpSend(int fd,
             IcpQueueTail = queue;
         }
 
-        Comm::SetSelect(fd, COMM_SELECT_WRITE, icpUdpSendQueue, NULL, 0);
+        Comm::SetSelect(fd, COMM_SELECT_WRITE, icpUdpSendQueue, nullptr, 0);
         ++statCounter.icp.replies_queued;
     } else {
         /* don't queue it */
@@ -471,19 +447,10 @@ icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
     if (!Config.accessList.icp)
         return false;
 
-    ACLFilledChecklist checklist(Config.accessList.icp, icp_request, NULL);
+    ACLFilledChecklist checklist(Config.accessList.icp, icp_request, nullptr);
     checklist.src_addr = from;
     checklist.my_addr.setNoAddr();
     return checklist.fastCheck().allowed();
-}
-
-char const *
-icpGetUrlToSend(char *url)
-{
-    if (strpbrk(url, w_space))
-        return rfc1738_escape(url);
-    else
-        return url;
 }
 
 HttpRequest *
@@ -492,10 +459,10 @@ icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from)
     if (strpbrk(url, w_space)) {
         url = rfc1738_escape(url);
         icpCreateAndSend(ICP_ERR, 0, rfc1738_escape(url), reqnum, 0, fd, from, nullptr);
-        return NULL;
+        return nullptr;
     }
 
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initIcp);
+    const auto mx = MasterXaction::MakePortless<XactionInitiator::initIcp>();
     auto *result = HttpRequest::FromUrlXXX(url, mx);
     if (!result)
         icpCreateAndSend(ICP_ERR, 0, url, reqnum, 0, fd, from, nullptr);
@@ -536,15 +503,35 @@ doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
 #endif /* USE_ICMP */
 
     /* The peer is allowed to use this cache */
-    ICP2State *state = new ICP2State(header, icp_request);
-    state->fd = fd;
-    state->from = from;
-    state->url = xstrdup(url);
-    state->flags = flags;
-    state->rtt = rtt;
-    state->src_rtt = src_rtt;
+    ICP2State state(header, icp_request);
+    state.fd = fd;
+    state.from = from;
+    state.url = xstrdup(url);
+    state.flags = flags;
+    state.rtt = rtt;
+    state.src_rtt = src_rtt;
 
-    StoreEntry::getPublic(state, url, Http::METHOD_GET);
+    icp_opcode codeToSend;
+
+    if (state.isHit()) {
+        codeToSend = ICP_HIT;
+    } else {
+#if USE_ICMP
+        if (Config.onoff.test_reachability && state.rtt == 0) {
+            if ((state.rtt = netdbHostRtt(state.request->url.host())) == 0)
+                netdbPingSite(state.request->url.host());
+        }
+#endif /* USE_ICMP */
+
+        if (icpGetCommonOpcode() != ICP_ERR)
+            codeToSend = icpGetCommonOpcode();
+        else if (Config.onoff.test_reachability && rtt == 0)
+            codeToSend = ICP_MISS_NOFETCH;
+        else
+            codeToSend = ICP_MISS;
+    }
+
+    icpCreateAndSend(codeToSend, flags, url, header.reqnum, src_rtt, fd, from, state.al);
 
     HTTPMSGUNLOCK(icp_request);
 }
@@ -584,6 +571,8 @@ icpHandleIcpV2(int fd, Ip::Address &from, char *buf, int len)
         return;
     }
 
+    debugs(12, 5, "OPCODE " << icp_opcode_str[header.getOpCode()] << '=' << uint8_t(header.opcode));
+
     switch (header.opcode) {
 
     case ICP_QUERY:
@@ -609,7 +598,7 @@ icpHandleIcpV2(int fd, Ip::Address &from, char *buf, int len)
         break;
 
     default:
-        debugs(12, DBG_CRITICAL, "icpHandleIcpV2: UNKNOWN OPCODE: " << header.opcode << " from " << from);
+        debugs(12, DBG_CRITICAL, "ERROR: icpHandleIcpV2: Unknown opcode: " << header.opcode << " from " << from);
 
         break;
     }
@@ -643,7 +632,7 @@ icpHandleUdp(int sock, void *)
     int len;
     int icp_version;
     int max = INCOMING_UDP_MAX;
-    Comm::SetSelect(sock, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
+    Comm::SetSelect(sock, COMM_SELECT_READ, icpHandleUdp, nullptr, 0);
 
     while (max) {
         --max;
@@ -725,10 +714,7 @@ icpOpenPorts(void)
         icpIncomingConn->local.setIPv4();
     }
 
-    AsyncCall::Pointer call = asyncCall(12, 2,
-                                        "icpIncomingConnectionOpened",
-                                        Comm::UdpOpenDialer(&icpIncomingConnectionOpened));
-
+    auto call = asyncCallbackFun(12, 2, icpIncomingConnectionOpened);
     Ipc::StartListening(SOCK_DGRAM,
                         IPPROTO_UDP,
                         icpIncomingConn,
@@ -757,21 +743,23 @@ icpOpenPorts(void)
 
         debugs(12, DBG_CRITICAL, "Sending ICP messages from " << icpOutgoingConn->local);
 
-        Comm::SetSelect(icpOutgoingConn->fd, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
+        Comm::SetSelect(icpOutgoingConn->fd, COMM_SELECT_READ, icpHandleUdp, nullptr, 0);
         fd_note(icpOutgoingConn->fd, "Outgoing ICP socket");
     }
 }
 
 static void
-icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int)
+icpIncomingConnectionOpened(Ipc::StartListeningAnswer &answer)
 {
+    const auto &conn = answer.conn;
+
     if (!Comm::IsConnOpen(conn))
         fatal("Cannot open ICP Port");
 
-    Comm::SetSelect(conn->fd, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
+    Comm::SetSelect(conn->fd, COMM_SELECT_READ, icpHandleUdp, nullptr, 0);
 
     for (const wordlist *s = Config.mcast_group_list; s; s = s->next)
-        ipcache_nbgethostbyname(s->key, mcastJoinGroups, NULL); // XXX: pass the conn for mcastJoinGroups usage.
+        ipcache_nbgethostbyname(s->key, mcastJoinGroups, nullptr); // XXX: pass the conn for mcastJoinGroups usage.
 
     debugs(12, DBG_IMPORTANT, "Accepting ICP messages on " << conn->local);
 
@@ -799,7 +787,7 @@ icpConnectionShutdown(void)
      * in and out sockets may be sharing one same FD.
      * This prevents this function from executing repeatedly.
      */
-    icpIncomingConn = NULL;
+    icpIncomingConn = nullptr;
 
     /**
      * Normally we only write to the outgoing ICP socket, but
@@ -809,7 +797,7 @@ icpConnectionShutdown(void)
      */
     assert(Comm::IsConnOpen(icpOutgoingConn));
 
-    Comm::SetSelect(icpOutgoingConn->fd, COMM_SELECT_READ, NULL, NULL, 0);
+    Comm::SetSelect(icpOutgoingConn->fd, COMM_SELECT_READ, nullptr, nullptr, 0);
 }
 
 void
@@ -817,9 +805,9 @@ icpClosePorts(void)
 {
     icpConnectionShutdown();
 
-    if (icpOutgoingConn != NULL) {
+    if (icpOutgoingConn != nullptr) {
         debugs(12, DBG_IMPORTANT, "Stop sending ICP from " << icpOutgoingConn->local);
-        icpOutgoingConn = NULL;
+        icpOutgoingConn = nullptr;
     }
 }
 

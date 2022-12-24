@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,16 +24,13 @@ namespace Snmp
 class Request: public Ipc::Request
 {
 public:
-    Request(int aRequestorId, unsigned int aRequestId, const Pdu& aPdu,
+    Request(int aRequestorId, Ipc::RequestId aRequestId, const Pdu& aPdu,
             const Session& aSession, int aFd, const Ip::Address& anAddress);
 
     explicit Request(const Ipc::TypedMsgHdr& msg); ///< from recvmsg()
     /* Ipc::Request API */
     virtual void pack(Ipc::TypedMsgHdr& msg) const;
     virtual Pointer clone() const;
-
-private:
-    Request(const Request& request);
 
 public:
     Pdu pdu; ///< SNMP protocol data unit

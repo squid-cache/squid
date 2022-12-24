@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -248,7 +248,7 @@ char * GetDomainName(void)
                 debug("LsaQueryInformationPolicy Error: %ld\n", status);
             } else  {
 
-                /* Get name in useable format */
+                /* Get name in usable format */
                 DomainName = AllocStrFromLSAStr(ppdiDomainInfo->Name);
 
                 /*
@@ -402,7 +402,7 @@ process_options(int argc, char *argv[])
             exit(EXIT_SUCCESS);
         case '?':
             opt = optopt;
-        /* fall thru to default */
+            [[fallthrough]];
         default:
             fprintf(stderr, "unknown option: -%c. Exiting\n", opt);
             usage();
@@ -460,7 +460,7 @@ manage_request()
         char *c = static_cast<char*>(memchr(buf, '\n', sizeof(buf)));
         if (c) {
             if (oversized) {
-                helperfail("messge=\"illegal request received\"");
+                helperfail("message=\"illegal request received\"");
                 fprintf(stderr, "Illegal request received: '%s'\n", buf);
                 return 1;
             }

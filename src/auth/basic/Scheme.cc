@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,15 +9,16 @@
 #include "squid.h"
 #include "auth/basic/Config.h"
 #include "auth/basic/Scheme.h"
-#include "Debug.h"
+#include "debug/Messages.h"
+#include "debug/Stream.h"
 #include "helper.h"
 
-Auth::Scheme::Pointer Auth::Basic::Scheme::_instance = NULL;
+Auth::Scheme::Pointer Auth::Basic::Scheme::_instance = nullptr;
 
 Auth::Scheme::Pointer
 Auth::Basic::Scheme::GetInstance()
 {
-    if (_instance == NULL) {
+    if (_instance == nullptr) {
         _instance = new Auth::Basic::Scheme();
         AddScheme(_instance);
     }
@@ -33,11 +34,11 @@ Auth::Basic::Scheme::type() const
 void
 Auth::Basic::Scheme::shutdownCleanup()
 {
-    if (_instance == NULL)
+    if (_instance == nullptr)
         return;
 
-    _instance = NULL;
-    debugs(29, DBG_CRITICAL, "Shutdown: Basic authentication.");
+    _instance = nullptr;
+    debugs(29, Critical(12), "Shutdown: Basic authentication.");
 }
 
 Auth::SchemeConfig *

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,11 +18,8 @@ class ACLMaxConnection : public ACL
 
 public:
     ACLMaxConnection(char const *);
-    ACLMaxConnection(ACLMaxConnection const &);
     ~ACLMaxConnection();
-    ACLMaxConnection&operator=(ACLMaxConnection const &);
 
-    virtual ACL *clone()const;
     virtual char const *typeString() const;
     virtual void parse();
     virtual int match(ACLChecklist *checklist);

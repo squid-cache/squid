@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -93,7 +93,7 @@ protected:
     OfflineToggleAction(const CommandPointer &cmd);
 };
 
-/// Registeres profiles for the actions above; \todo move elsewhere?
+/// Registers profiles for the actions above; TODO: move elsewhere?
 void RegisterBasics();
 
 } // namespace Mgr

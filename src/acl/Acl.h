@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -48,6 +48,7 @@ public:
     static ACL *FindByName(const char *name);
 
     ACL();
+    ACL(ACL &&) = delete; // no copying of any kind
     virtual ~ACL();
 
     /// sets user-specified ACL name and squid.conf context
@@ -59,13 +60,10 @@ public:
     /// Updates the checklist state on match, async, and failure.
     bool matches(ACLChecklist *checklist) const;
 
-    /// \returns (linked) Options supported by this ACL
-    virtual const Acl::Options &options() { return Acl::NoOptions(); }
-
     /// configures ACL options, throwing on configuration errors
-    virtual void parseFlags();
+    void parseFlags();
 
-    /// parses node represenation in squid.conf; dies on failures
+    /// parses node representation in squid.conf; dies on failures
     virtual void parse() = 0;
     virtual char const *typeString() const = 0;
     virtual bool isProxyAuth() const;
@@ -95,6 +93,14 @@ private:
     virtual bool requiresRequest() const;
     /// whether our (i.e. shallow) match() requires checklist to have a reply
     virtual bool requiresReply() const;
+
+    // TODO: Rename to globalOptions(); these are not the only supported options
+    /// \returns (linked) 'global' Options supported by this ACL
+    virtual const Acl::Options &options() { return Acl::NoOptions(); }
+
+    /// \returns (linked) "line" Options supported by this ACL
+    /// \see ACL::options()
+    virtual const Acl::Options &lineOptions() { return Acl::NoOptions(); }
 };
 
 /// \ingroup ACLAPI
@@ -115,10 +121,11 @@ namespace Acl {
 class Answer
 {
 public:
-    // not explicit: allow "aclMatchCode to Acl::Answer" conversions (for now)
+    // TODO: Find a good way to avoid implicit conversion (without explicitly
+    // casting every ACCESS_ argument in implicit constructor calls).
     Answer(const aclMatchCode aCode, int aKind = 0): code(aCode), kind(aKind) {}
 
-    Answer(): code(ACCESS_DUNNO), kind(0) {}
+    Answer() = default;
 
     bool operator ==(const aclMatchCode aCode) const {
         return code == aCode;
@@ -151,8 +158,13 @@ public:
     /// whether Squid is uncertain about the allowed() or denied() answer
     bool conflicted() const { return !allowed() && !denied(); }
 
-    aclMatchCode code; ///< ACCESS_* code
-    int kind; ///< which custom access list verb matched
+    aclMatchCode code = ACCESS_DUNNO; ///< ACCESS_* code
+
+    /// the matched custom access list verb (or zero)
+    int kind = 0;
+
+    /// whether we were computed by the "negate the last explicit action" rule
+    bool implicit = false;
 };
 
 } // namespace Acl

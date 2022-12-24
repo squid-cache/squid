@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,29 +14,38 @@
 #include "SquidString.h"
 #include "StrList.h"
 
-/** appends an item to the list */
 void
-strListAdd(String * str, const char *item, char del)
+strListAdd(String &str, const char *item, const size_t itemSize, const char delimiter)
 {
-    assert(str && item);
-    const auto itemSize = strlen(item);
-    if (str->size()) {
-        char buf[3];
-        buf[0] = del;
-        buf[1] = ' ';
-        buf[2] = '\0';
-        Must(str->canGrowBy(2));
-        str->append(buf, 2);
+    if (str.size()) {
+        const char buf[] = { delimiter, ' ' };
+        const auto bufSize = sizeof(buf);
+        Must(str.canGrowBy(bufSize));
+        str.append(buf, bufSize);
     }
-    Must(str->canGrowBy(itemSize));
-    str->append(item, itemSize);
+    Must(str.canGrowBy(itemSize));
+    str.append(item, itemSize);
+}
+
+void
+strListAdd(String *str, const char *item, const char delimiter)
+{
+    assert(str);
+    assert(item);
+    strListAdd(*str, item, strlen(item), delimiter);
+}
+
+void
+strListAdd(String &str, const SBuf &item, char delimiter)
+{
+    strListAdd(str, item.rawContent(), item.length(), delimiter);
 }
 
 /** returns true iff "m" is a member of the list */
 int
 strListIsMember(const String * list, const SBuf &m, char del)
 {
-    const char *pos = NULL;
+    const char *pos = nullptr;
     const char *item;
     int ilen = 0;
 
@@ -60,7 +69,7 @@ strListIsSubstr(const String * list, const char *s, char del)
      * Note: the original code with a loop is broken because it uses strstr()
      * instead of strnstr(). If 's' contains a 'del', strListIsSubstr() may
      * return true when it should not. If 's' does not contain a 'del', the
-     * implementaion is equavalent to strstr()! Thus, we replace the loop with
+     * implementation is equavalent to strstr()! Thus, we replace the loop with
      * strstr() above until strnstr() is available.
      */
 }

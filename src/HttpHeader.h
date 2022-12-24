@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -83,8 +83,7 @@ public:
     void clean();
     void append(const HttpHeader * src);
     /// replaces fields with matching names and adds fresh fields with new names
-    /// also updates Http::HdrType::WARNINGs, assuming `fresh` is a 304 reply
-    /// TODO: Refactor most callers to avoid special handling of WARNINGs.
+    /// assuming `fresh` is a 304 reply
     void update(const HttpHeader *fresh);
     /// \returns whether calling update(fresh) would change our set of fields
     bool needUpdate(const HttpHeader *fresh) const;
@@ -120,9 +119,9 @@ public:
     bool getByIdIfPresent(Http::HdrType id, String *result) const;
     /// returns true iff a [possibly empty] named field is there
     /// when returning true, also sets the `value` parameter (if it is not nil)
-    bool hasNamed(const SBuf &s, String *value = 0) const;
+    bool hasNamed(const SBuf &s, String *value = nullptr) const;
     /// \deprecated use SBuf method instead.
-    bool hasNamed(const char *name, unsigned int namelen, String *value = 0) const;
+    bool hasNamed(const char *name, unsigned int namelen, String *value = nullptr) const;
     /// searches for the first matching key=value pair within the name-identified field
     /// \returns the value of the found pair or an empty string
     SBuf getByNameListMember(const char *name, const char *member, const char separator) const;
@@ -132,7 +131,7 @@ public:
     int has(Http::HdrType id) const;
     /// Appends "this cache" information to VIA header field.
     /// Takes the initial VIA value from "from" parameter, if provided.
-    void addVia(const AnyP::ProtocolVersion &ver, const HttpHeader *from = 0);
+    void addVia(const AnyP::ProtocolVersion &ver, const HttpHeader *from = nullptr);
     void putInt(Http::HdrType id, int number);
     void putInt64(Http::HdrType id, int64_t number);
     void putTime(Http::HdrType id, time_t htime);
@@ -142,8 +141,12 @@ public:
     void putContRange(const HttpHdrContRange * cr);
     void putRange(const HttpHdrRange * range);
     void putSc(HttpHdrSc *sc);
-    void putWarning(const int code, const char *const text); ///< add a Warning header
     void putExt(const char *name, const char *value);
+
+    /// Ensures that the header has the given field, removing or replacing any
+    /// same-name fields with conflicting values as needed.
+    void updateOrAddStr(Http::HdrType, const SBuf &);
+
     int getInt(Http::HdrType id) const;
     int64_t getInt64(Http::HdrType id) const;
     time_t getTime(Http::HdrType id) const;
@@ -159,7 +162,13 @@ public:
     int hasListMember(Http::HdrType id, const char *member, const char separator) const;
     int hasByNameListMember(const char *name, const char *member, const char separator) const;
     void removeHopByHopEntries();
-    inline bool chunked() const; ///< whether message uses chunked Transfer-Encoding
+
+    /// whether the message uses chunked Transfer-Encoding
+    /// optimized implementation relies on us rejecting/removing other codings
+    bool chunked() const { return has(Http::HdrType::TRANSFER_ENCODING); }
+
+    /// whether message used an unsupported and/or invalid Transfer-Encoding
+    bool unsupportedTe() const { return teUnsupported_; }
 
     /* protected, do not use these, use interface functions instead */
     std::vector<HttpHeaderEntry*, PoolingAllocator<HttpHeaderEntry*> > entries; /**< parsed fields in raw format */
@@ -178,11 +187,13 @@ protected:
     /// If block starts where it ends, then there are no fields in the header.
     static bool Isolate(const char **parse_start, size_t l, const char **blk_start, const char **blk_end);
     bool skipUpdateHeader(const Http::HdrType id) const;
-    void updateWarnings();
 
 private:
     HttpHeaderEntry *findLastEntry(Http::HdrType id) const;
     bool conflictingContentLength_; ///< found different Content-Length fields
+    /// unsupported encoding, unnecessary syntax characters, and/or
+    /// invalid field-value found in Transfer-Encoding header
+    bool teUnsupported_ = false;
 };
 
 int httpHeaderParseQuotedString(const char *start, const int len, String *val);
@@ -191,13 +202,6 @@ int httpHeaderParseQuotedString(const char *start, const int len, String *val);
 SBuf httpHeaderQuoteString(const char *raw);
 
 void httpHeaderCalcMask(HttpHeaderMask * mask, Http::HdrType http_hdr_type_enums[], size_t count);
-
-inline bool
-HttpHeader::chunked() const
-{
-    return has(Http::HdrType::TRANSFER_ENCODING) &&
-           hasListMember(Http::HdrType::TRANSFER_ENCODING, "chunked", ',');
-}
 
 void httpHeaderInitModule(void);
 

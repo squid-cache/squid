@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,20 +9,18 @@
 /* DEBUG: section 41    Event Processing */
 
 #include "squid.h"
+#include "base/Random.h"
 #include "event.h"
 #include "mgr/Registration.h"
-#include "profiler/Profiler.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 
 #include <cmath>
-#include <random>
 
 /* The list of event processes */
 
 static OBJH eventDump;
-static const char *last_event_ran = NULL;
+static const char *last_event_ran = nullptr;
 
 // This AsyncCall dialer can be configured to check that the event cbdata is
 // valid before calling the event handler
@@ -95,7 +93,7 @@ ev_entry::ev_entry(char const * aName, EVH * aFunction, void * aArgument, double
     when(evWhen),
     weight(aWeight),
     cbdata(haveArg),
-    next(NULL)
+    next(nullptr)
 {
 }
 
@@ -116,11 +114,9 @@ void
 eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int weight)
 {
     if (delta_ish >= 3.0) {
-        // Default seed is fine. We just need values random enough
-        // relative to each other to prevent waves of synchronised activity.
-        static std::mt19937 rng;
+        static std::mt19937 rng(RandomSeed32());
         auto third = (delta_ish/3.0);
-        xuniform_real_distribution<> thirdIsh(delta_ish - third, delta_ish + third);
+        std::uniform_real_distribution<> thirdIsh(delta_ish - third, delta_ish + third);
         delta_ish = thirdIsh(rng);
     }
 
@@ -145,12 +141,6 @@ eventDump(StoreEntry * sentry)
     EventScheduler::GetInstance()->dump(sentry);
 }
 
-void
-eventFreeMemory(void)
-{
-    EventScheduler::GetInstance()->clean();
-}
-
 int
 eventFind(EVH * func, void *arg)
 {
@@ -159,7 +149,7 @@ eventFind(EVH * func, void *arg)
 
 EventScheduler EventScheduler::_instance;
 
-EventScheduler::EventScheduler(): tasks(NULL)
+EventScheduler::EventScheduler(): tasks(nullptr)
 {}
 
 EventScheduler::~EventScheduler()
@@ -173,7 +163,7 @@ EventScheduler::cancel(EVH * func, void *arg)
     ev_entry **E;
     ev_entry *event;
 
-    for (E = &tasks; (event = *E) != NULL; E = &(*E)->next) {
+    for (E = &tasks; (event = *E) != nullptr; E = &(*E)->next) {
         if (event->func != func)
             continue;
 
@@ -195,7 +185,7 @@ EventScheduler::cancel(EVH * func, void *arg)
          * to NULL.  We need to break here or else we'll get a NULL
          * pointer dereference in the last clause of the for loop.
          */
-        if (NULL == *E)
+        if (nullptr == *E)
             break;
     }
 
@@ -229,8 +219,6 @@ EventScheduler::checkEvents(int)
     if (result != 0)
         return result;
 
-    PROF_start(eventRun);
-
     do {
         ev_entry *event = tasks;
         assert(event);
@@ -255,7 +243,6 @@ EventScheduler::checkEvents(int)
             break; // do not dequeue events following a heavy event
     } while (result == 0);
 
-    PROF_stop(eventRun);
     return result;
 }
 
@@ -267,29 +254,25 @@ EventScheduler::clean()
         delete event;
     }
 
-    tasks = NULL;
+    tasks = nullptr;
 }
 
 void
-EventScheduler::dump(StoreEntry * sentry)
+EventScheduler::dump(Packable *out)
 {
-
-    ev_entry *e = tasks;
-
     if (last_event_ran)
-        storeAppendPrintf(sentry, "Last event to run: %s\n\n", last_event_ran);
+        out->appendf("Last event to run: %s\n\n", last_event_ran);
 
-    storeAppendPrintf(sentry, "%-25s\t%-15s\t%s\t%s\n",
-                      "Operation",
-                      "Next Execution",
-                      "Weight",
-                      "Callback Valid?");
+    out->appendf("%-25s\t%-15s\t%s\t%s\n",
+                 "Operation",
+                 "Next Execution",
+                 "Weight",
+                 "Callback Valid?");
 
-    while (e != NULL) {
-        storeAppendPrintf(sentry, "%-25s\t%0.3f sec\t%5d\t %s\n",
-                          e->name, e->when ? e->when - current_dtime : 0, e->weight,
-                          (e->arg && e->cbdata) ? cbdataReferenceValid(e->arg) ? "yes" : "no" : "N/A");
-        e = e->next;
+    for (auto *e = tasks; e; e = e->next) {
+        out->appendf("%-25s\t%0.3f sec\t%5d\t %s\n",
+                     e->name, (e->when ? e->when - current_dtime : 0), e->weight,
+                     (e->arg && e->cbdata) ? cbdataReferenceValid(e->arg) ? "yes" : "no" : "N/A");
     }
 }
 
@@ -299,7 +282,7 @@ EventScheduler::find(EVH * func, void * arg)
 
     ev_entry *event;
 
-    for (event = tasks; event != NULL; event = event->next) {
+    for (event = tasks; event != nullptr; event = event->next) {
         if (event->func == func && event->arg == arg)
             return true;
     }
@@ -323,7 +306,7 @@ EventScheduler::schedule(const char *name, EVH * func, void *arg, double when, i
     ev_entry *event = new ev_entry(name, func, arg, timestamp, weight, cbdata);
 
     ev_entry **E;
-    debugs(41, 7, HERE << "schedule: Adding '" << name << "', in " << when << " seconds");
+    debugs(41, 7, "schedule: Adding '" << name << "', in " << when << " seconds");
     /* Insert after the last event with the same or earlier time */
 
     for (E = &tasks; *E; E = &(*E)->next) {

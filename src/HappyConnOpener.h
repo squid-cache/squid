@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,13 +14,13 @@
 #include "comm/ConnOpener.h"
 #include "http/forward.h"
 #include "log/forward.h"
+#include "ResolvedPeers.h"
 
 #include <iosfwd>
 
 class HappyConnOpener;
 class HappyOrderEnforcer;
 class JobGapEnforcer;
-class ResolvedPeers;
 typedef RefCount<ResolvedPeers> ResolvedPeersPointer;
 
 /// A FIFO queue of HappyConnOpener jobs waiting to open a spare connection.
@@ -79,7 +79,7 @@ public:
 
     /// on success: an open, ready-to-use Squid-to-peer connection
     /// on failure: either a closed failed Squid-to-peer connection or nil
-    Comm::ConnectionPointer conn;
+    PeerConnectionPointer conn;
 
     // answer recipients must clear the error member in order to keep its info
     // XXX: We should refcount ErrorState instead of cbdata-protecting it.
@@ -101,30 +101,8 @@ class HappyConnOpener: public AsyncJob
 public:
     typedef HappyConnOpenerAnswer Answer;
 
-    /// AsyncCall dialer for our callback. Gives us access to callback Answer.
-    template <class Initiator>
-    class CbDialer: public CallDialer, public Answer {
-    public:
-        // initiator method to receive our answer
-        typedef void (Initiator::*Method)(Answer &);
-
-        CbDialer(Method method, Initiator *initiator): initiator_(initiator), method_(method) {}
-        virtual ~CbDialer() = default;
-
-        /* CallDialer API */
-        bool canDial(AsyncCall &) { return initiator_.valid(); }
-        void dial(AsyncCall &) {((*initiator_).*method_)(*this); }
-        virtual void print(std::ostream &os) const override {
-            os << '(' << static_cast<const Answer&>(*this) << ')';
-        }
-
-    private:
-        CbcPointer<Initiator> initiator_; ///< object to deliver the answer to
-        Method method_; ///< initiator_ method to call with the answer
-    };
-
 public:
-    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCall::Pointer &,  HttpRequestPointer &, const time_t aFwdStart, const AccessLogEntryPointer &al);
+    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCallback<Answer> &, const HttpRequestPointer &, time_t aFwdStart, const AccessLogEntryPointer &);
     virtual ~HappyConnOpener() override;
 
     /// configures reuse of old connections
@@ -152,12 +130,28 @@ private:
     /// a connection opening attempt in progress (or falsy)
     class Attempt {
     public:
-        explicit operator bool() const { return static_cast<bool>(path); }
-        void clear() { path = nullptr; connector = nullptr; }
+        /// HappyConnOpener method implementing a ConnOpener callback
+        using CallbackMethod = void (HappyConnOpener::*)(const CommConnectCbParams &);
 
-        Comm::ConnectionPointer path; ///< the destination we are connecting to
-        AsyncCall::Pointer connector; ///< our Comm::ConnOpener callback
+        Attempt(const CallbackMethod method, const char *methodName);
+
+        explicit operator bool() const { return static_cast<bool>(path); }
+
+        /// reacts to a natural attempt completion (successful or otherwise)
+        void finish();
+
+        /// aborts an in-progress attempt
+        void cancel(const char *reason);
+
+        PeerConnectionPointer path; ///< the destination we are connecting to
+
+        /// waits for a connection to the peer to be established/opened
+        JobWait<Comm::ConnOpener> connWait;
+
+        const CallbackMethod callbackMethod; ///< ConnOpener calls this method
+        const char * const callbackMethodName; ///< for callbackMethod debugging
     };
+    friend std::ostream &operator <<(std::ostream &, const Attempt &);
 
     /* AsyncJob API */
     virtual void start() override;
@@ -165,18 +159,20 @@ private:
     virtual void swanSong() override;
     virtual const char *status() const override;
 
-    void maybeOpenAnotherPrimeConnection();
+    void maybeOpenPrimeConnection();
+    void maybeOpenSpareConnection();
 
     void maybeGivePrimeItsChance();
     void stopGivingPrimeItsChance();
     void stopWaitingForSpareAllowance();
-    void maybeOpenSpareConnection();
 
-    void startConnecting(Attempt &, Comm::ConnectionPointer &);
-    void openFreshConnection(Attempt &, Comm::ConnectionPointer &);
-    bool reuseOldConnection(const Comm::ConnectionPointer &);
+    void startConnecting(Attempt &, PeerConnectionPointer &);
+    void openFreshConnection(Attempt &, PeerConnectionPointer &);
+    bool reuseOldConnection(PeerConnectionPointer &);
 
-    void connectDone(const CommConnectCbParams &);
+    void notePrimeConnectDone(const CommConnectCbParams &);
+    void noteSpareConnectDone(const CommConnectCbParams &);
+    void handleConnOpenerAnswer(Attempt &, const CommConnectCbParams &, const char *connDescription);
 
     void checkForNewConnection();
 
@@ -187,9 +183,10 @@ private:
     bool ranOutOfTimeOrAttempts() const;
 
     ErrorState *makeError(const err_type type) const;
-    Answer *futureAnswer(const Comm::ConnectionPointer &);
-    void sendSuccess(const Comm::ConnectionPointer &conn, bool reused, const char *connKind);
+    Answer *futureAnswer(const PeerConnectionPointer &);
+    void sendSuccess(const PeerConnectionPointer &conn, bool reused, const char *connKind);
     void sendFailure();
+    void cancelAttempt(Attempt &, const char *reason);
 
     /// the total number of connection opening attempts
     int tries() const { return ale ? ale->requestAttempts : 0; }
@@ -198,7 +195,8 @@ private:
 
     const time_t fwdStart; ///< requestor start time
 
-    AsyncCall::Pointer callback_; ///< handler to be called on connection completion.
+    /// answer destination
+    AsyncCallback<Answer> callback_;
 
     /// Candidate paths. Shared with the initiator. May not be finalized yet.
     ResolvedPeersPointer destinations;
@@ -220,7 +218,7 @@ private:
     AccessLogEntryPointer ale; ///< transaction details
 
     ErrorState *lastError = nullptr; ///< last problem details (or nil)
-    Comm::ConnectionPointer lastFailedConnection; ///< nil if none has failed
+    PeerConnectionPointer lastFailedConnection; ///< nil if none has failed
 
     /// whether spare connection attempts disregard happy_eyeballs_* settings
     bool ignoreSpareRestrictions = false;

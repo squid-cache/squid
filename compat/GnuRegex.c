@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -39,6 +39,13 @@
 #include "squid.h"
 
 #if USE_GNUREGEX /* only if squid needs it. Usually not */
+
+/* Starting with v12.1, GCC warns of various problems with this ancient code. */
+/* GCC versions prior to v12.1 do not support these pragmas. */
+#if (__GNUC__ == 12 && __GNUC_MINOR__ >= 1) || (__GNUC__ > 12)
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#pragma GCC diagnostic ignored "-Wuse-after-free"
+#endif
 
 #if !HAVE_ALLOCA
 #define REGEX_MALLOC 1
@@ -166,7 +173,7 @@ static int re_match_2(struct re_pattern_buffer * buffer, const char *string1,
 /* As in Harbison and Steele.  */
 #define SIGN_EXTEND_CHAR(c) ((((unsigned char) (c)) ^ 128) - 128)
 #endif
-
+
 /* Should we use malloc or alloca?  If REGEX_MALLOC is not defined, we
  * use `alloca' instead of `malloc'.  This is because using malloc in
  * re_search* or re_match* could cause memory leaks when C-g is used in
@@ -232,7 +239,7 @@ typedef char boolean;
 #endif
 #define false 0
 #define true 1
-
+
 /* These are the command codes that appear in compiled regular
  * expressions.  Some opcodes are followed by argument bytes.  A
  * command code can specify any interpretation whatsoever for its
@@ -358,7 +365,7 @@ typedef enum {
     notwordbound        /* Succeeds if not at a word boundary.  */
 
 } re_opcode_t;
-
+
 /* Common operations on the compiled pattern.  */
 
 /* Store NUMBER in two contiguous bytes starting at DESTINATION.  */
@@ -432,7 +439,7 @@ unsigned char **source;
 #endif /* not EXTRACT_MACROS */
 
 #endif /* DEBUG */
-
+
 /* If DEBUG is defined, Regex prints many voluminous messages about what
  * it is doing (if the variable `debug' is nonzero).  If linked with the
  * main program in `iregex.c', you can enter patterns and strings
@@ -719,7 +726,7 @@ int size2;
 #define DEBUG_PRINT_DOUBLE_STRING(w, s1, sz1, s2, sz2)
 
 #endif /* not DEBUG */
-
+
 /* This table gives an error message for each of the error codes listed
  * in regex.h.  Obviously the order here has to be same as there.  */
 
@@ -741,7 +748,7 @@ static const char *re_error_msg[] = {NULL,              /* REG_NOERROR */
                                      "Regular expression too big",  /* REG_ESIZE */
                                      "Unmatched ) or \\)",  /* REG_ERPAREN */
                                     };
-
+
 /* Subroutine declarations and macros for regex_compile.  */
 
 /* Fetch the next character in the uncompiled pattern---translating it
@@ -929,7 +936,7 @@ static reg_errcode_t compile_range(const char **p_ptr, const char *pend, char *t
     || STREQ (string, "space") || STREQ (string, "print")       \
     || STREQ (string, "punct") || STREQ (string, "graph")       \
     || STREQ (string, "cntrl") || STREQ (string, "blank"))
-
+
 /* `regex_compile' compiles PATTERN (of length SIZE) according to SYNTAX.
  * Returns one of error codes defined in `regex.h', or zero for success.
  *
@@ -956,7 +963,7 @@ regex_compile(const char *pattern, int size, reg_syntax_t syntax, struct re_patt
      * they can be reliably used as array indices.  */
     register unsigned char c, c1;
 
-    /* A random tempory spot in PATTERN.  */
+    /* A random temporary spot in PATTERN.  */
     const char *p1;
 
     /* Points to the end of the buffer, where we should append.  */
@@ -1857,7 +1864,7 @@ normal_char:
 
     return REG_NOERROR;
 }               /* regex_compile */
-
+
 /* Subroutines for `regex_compile'.  */
 
 /* Store OP at LOC followed by two-byte integer parameter ARG.  */
@@ -2010,7 +2017,7 @@ compile_range(const char **p_ptr, const char *pend, char *translate, reg_syntax_
 
     return REG_NOERROR;
 }
-
+
 /* Failure stack declarations and macros; both re_compile_fastmap and
  * re_match_2 use a failure stack.  These have to be macros because of
  * REGEX_ALLOCATE.  */
@@ -2277,7 +2284,7 @@ typedef struct {
                                     \
   DEBUG_STATEMENT (nfailure_points_popped++);               \
 }               /* POP_FAILURE_POINT */
-
+
 /* re_compile_fastmap computes a ``fastmap'' for the compiled pattern in
  * BUFP.  A fastmap records which of the (1 << BYTEWIDTH) possible
  * characters can start a string that matches the pattern.  This fastmap
@@ -2517,7 +2524,7 @@ handle_on_failure_jump:
     bufp->can_be_null |= path_can_be_null;
     return 0;
 }               /* re_compile_fastmap */
-
+
 /* Searching routines.  */
 
 /* Like re_search_2, below, but only one string is specified, and
@@ -2659,7 +2666,7 @@ advance:
     }
     return -1;
 }               /* re_search_2 */
-
+
 /* Declarations and macros for re_match_2.  */
 
 /* Structure for per-register (a.k.a. per-group) information.
@@ -2757,7 +2764,7 @@ static int
 wordchar_p(const char *d, const char *end1, const char *string2)
 {
     return re_syntax_table[(d) == end1 ? *string2
-                           : (d) == string2 - 1 ? *(end1 - 1) : *(d)]
+                               : (d) == string2 - 1 ? *(end1 - 1) : *(d)]
            == Sword;
 }
 
@@ -2797,7 +2804,7 @@ wordchar_p(const char *d, const char *end1, const char *string2)
  * to actually save any registers when none are active.  */
 #define NO_HIGHEST_ACTIVE_REG (1 << BYTEWIDTH)
 #define NO_LOWEST_ACTIVE_REG (NO_HIGHEST_ACTIVE_REG + 1)
-
+
 /* Matching routines.  */
 
 /* re_match_2 matches the compiled pattern in BUFP against the
@@ -3846,7 +3853,7 @@ fail:
 
     return -1;          /* Failure to match.  */
 }               /* re_match_2 */
-
+
 /* Subroutine definitions for re_match_2.  */
 
 /* We are passed P pointing to a register number after a start_memory.
@@ -4077,7 +4084,7 @@ bcmp_translate(unsigned char const *s1, unsigned char const*s2, register int len
     }
     return 0;
 }
-
+
 /* Entry points for GNU code.  */
 
 /* POSIX.2 functions */

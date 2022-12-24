@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "base/File.h"
+#include "debug/Messages.h"
 #include "fs_io.h"
 #include "Instance.h"
 #include "parser/Tokenizer.h"
@@ -80,7 +81,7 @@ GetOtherPid(File &pidFile)
 
     debugs(50, 7, "found PID " << rawPid << " in " << TheFile);
 
-    if (rawPid <= 1)
+    if (rawPid < 1)
         throw TexcHere(ToSBuf("Bad ", TheFile, " contains unreasonably small PID value: ", rawPid));
     const auto finalPid = static_cast<pid_t>(rawPid);
     if (static_cast<int64_t>(finalPid) != rawPid)
@@ -163,7 +164,15 @@ RemoveInstance()
     if (ThePidFileToRemove.isEmpty()) // not the PidFilename()!
         return; // nothing to do
 
-    debugs(50, DBG_IMPORTANT, "Removing " << PidFileDescription(ThePidFileToRemove));
+    debugs(50, Important(22), "Removing " << PidFileDescription(ThePidFileToRemove));
+
+    // Do not write to cache_log after our PID file is removed because another
+    // instance may already be logging there. Stop logging now because, if we
+    // wait until safeunlink(), some debugs() may slip through into the now
+    // "unlocked" cache_log, especially if we avoid the sensitive suid() area.
+    // Use stderr to capture late debugs() that did not make it into cache_log.
+    Debug::StopCacheLogUse();
+
     const char *filename = ThePidFileToRemove.c_str(); // avoid complex operations inside enter_suid()
     enter_suid();
     safeunlink(filename, 0);
@@ -210,6 +219,6 @@ Instance::WriteOurPid()
     // our written PID (and decide that they are dealing with a corrupted PID file).
     pidFile.synchronize();
 
-    debugs(50, DBG_IMPORTANT, "Created " << TheFile);
+    debugs(50, Important(23), "Created " << TheFile);
 }
 

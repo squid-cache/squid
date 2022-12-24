@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,8 +16,6 @@
 #include "fde.h"
 #include "globals.h"
 #include "MemBuf.h"
-#include "profiler/Profiler.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #if USE_DELAY_POOLS
 #include "ClientInfo.h"
@@ -34,7 +32,7 @@ Comm::Write(const Comm::ConnectionPointer &conn, MemBuf *mb, AsyncCall::Pointer 
 void
 Comm::Write(const Comm::ConnectionPointer &conn, const char *buf, int size, AsyncCall::Pointer &callback, FREE * free_func)
 {
-    debugs(5, 5, HERE << conn << ": sz " << size << ": asynCall " << callback);
+    debugs(5, 5, conn << ": sz " << size << ": asynCall " << callback);
 
     /* Make sure we are open, not closing, and not writing */
     assert(fd_table[conn->fd].flags.open);
@@ -61,11 +59,10 @@ Comm::HandleWrite(int fd, void *data)
     int len = 0;
     int nleft;
 
-    assert(state->conn != NULL);
+    assert(state->conn != nullptr);
     assert(state->conn->fd == fd);
 
-    PROF_start(commHandleWrite);
-    debugs(5, 5, HERE << state->conn << ": off " <<
+    debugs(5, 5, state->conn << ": off " <<
            (long int) state->offset << ", sz " << (long int) state->size << ".");
 
     nleft = state->size - state->offset;
@@ -76,7 +73,6 @@ Comm::HandleWrite(int fd, void *data)
         assert(bucket->selectWaiting);
         bucket->selectWaiting = false;
         if (nleft > 0 && !bucket->applyQuota(nleft, state)) {
-            PROF_stop(commHandleWrite);
             return;
         }
     }
@@ -86,7 +82,7 @@ Comm::HandleWrite(int fd, void *data)
     int xerrno = errno = 0;
     len = FD_WRITE_METHOD(fd, state->buf + state->offset, nleft);
     xerrno = errno;
-    debugs(5, 5, HERE << "write() returns " << len);
+    debugs(5, 5, "write() returns " << len);
 
 #if USE_DELAY_POOLS
     if (bucket) {
@@ -131,7 +127,5 @@ Comm::HandleWrite(int fd, void *data)
             state->finish(nleft ? Comm::OK : Comm::COMM_ERROR, 0);
         }
     }
-
-    PROF_stop(commHandleWrite);
 }
 

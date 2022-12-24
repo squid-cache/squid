@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "ConfigParser.h"
 #include "DiskIO/DiskIOModule.h"
+#include "fde.h"
 #include "fs/rock/RockSwapDir.h"
 #include "globals.h"
 #include "HttpHeader.h"
@@ -44,7 +45,7 @@ static char cwd[MAXPATHLEN];
 static void
 addSwapDir(testRock::SwapDirPointer aStore)
 {
-    allocate_new_swapdir(&Config.cacheSwap);
+    allocate_new_swapdir(Config.cacheSwap);
     Config.cacheSwap.swapDirs[Config.cacheSwap.n_configured] = aStore.getRaw();
     ++Config.cacheSwap.n_configured;
 }
@@ -62,7 +63,7 @@ testRock::setUp()
 
     // use current directory for shared segments (on path-based OSes)
     Ipc::Mem::Segment::BasePath = getcwd(cwd,MAXPATHLEN);
-    if (Ipc::Mem::Segment::BasePath == NULL)
+    if (Ipc::Mem::Segment::BasePath == nullptr)
         Ipc::Mem::Segment::BasePath = ".";
 
     Store::Init();
@@ -100,12 +101,12 @@ testRock::tearDown()
 
     Store::FreeMemory();
 
-    store = NULL;
+    store = nullptr;
 
     free_cachedir(&Config.cacheSwap);
 
     rr->finishShutdown(); // deletes rr
-    rr = NULL;
+    rr = nullptr;
 
     // TODO: do this once, or each time.
     // safe_free(Config.replPolicy->type);
@@ -123,8 +124,6 @@ testRock::commonInit()
     if (inited)
         return;
 
-    StoreFileSystem::SetupAllFs();
-
     Config.Store.avgObjectSize = 1024;
     Config.Store.objectsPerBucket = 20;
     Config.Store.maxObjectSize = 2048;
@@ -133,7 +132,7 @@ testRock::commonInit()
 
     Config.replPolicy = new RemovalPolicySettings;
     Config.replPolicy->type = xstrdup("lru");
-    Config.replPolicy->args = NULL;
+    Config.replPolicy->args = nullptr;
 
     /* garh garh */
     storeReplAdd("lru", createRemovalPolicy_lru);
@@ -141,6 +140,8 @@ testRock::commonInit()
     visible_appname_string = xstrdup(APP_FULLNAME);
 
     Mem::Init();
+
+    fde::Init();
 
     comm_init();
 
@@ -186,7 +187,7 @@ StoreEntry *
 testRock::createEntry(const int i)
 {
     RequestFlags flags;
-    flags.cachable = true;
+    flags.cachable.support();
     StoreEntry *const pe =
         storeCreateEntry(storeId(i), "dummy log url", flags, Http::METHOD_GET);
     auto &rep = pe->mem().adjustableBaseReply();
@@ -322,12 +323,12 @@ testRock::testRockSwapOut()
     // try to get and release all entries
     for (int i = 0; i < 6; ++i) {
         StoreEntry *const pe = getEntry(i);
-        CPPUNIT_ASSERT(pe != NULL);
+        CPPUNIT_ASSERT(pe != nullptr);
 
         pe->release(); // destroys pe
 
         StoreEntry *const pe2 = getEntry(i);
-        CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(NULL), pe2);
+        CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(nullptr), pe2);
     }
 }
 

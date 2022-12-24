@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,9 +9,9 @@
 /* DEBUG: section 86    ESI processing */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
+#include "esi/Esi.h"
 #include "esi/Expression.h"
-#include "profiler/Profiler.h"
 
 #include <cerrno>
 #include <cmath>
@@ -63,15 +63,16 @@ typedef enum {
 } literalhint;
 
 struct _stackmember {
-    evaluate *eval;
-    union {
+    evaluate *eval = nullptr;
+    union Value {
         char *string;
         double floating;
         int integral;
+        Value() { memset(this, 0, sizeof(*this)); }
     } value;
-    literalhint valuestored;
-    evaltype valuetype;
-    int precedence;
+    literalhint valuestored = ESI_LITERAL_INVALID;
+    evaltype valuetype = ESI_EXPR_INVALID;
+    int precedence = 0;
 };
 
 static void cleanmember(stackmember *);
@@ -83,7 +84,7 @@ cleanmember(stackmember * s)
     if (s->valuetype == ESI_EXPR_LITERAL
             && s->valuestored == ESI_LITERAL_STRING) {
         safe_free(s->value.string);
-        s->value.string = NULL;
+        s->value.string = nullptr;
     }
 
 }
@@ -95,6 +96,17 @@ stackpop(stackmember * s, int *depth)
         return;
 
     cleanmember(&s[*depth]);
+}
+
+static void
+stackpush(stackmember *stack, stackmember &item, int *depth)
+{
+    if (*depth < 0)
+        throw Esi::Error("ESIExpression stack has negative size");
+    if (*depth >= ESI_STACK_DEPTH_LIMIT)
+        throw Esi::Error("ESIExpression stack is full, cannot push");
+
+    stack[(*depth)++] = item;
 }
 
 static evaluate evalnegate;
@@ -208,6 +220,11 @@ evalnegate(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
         /* invalid stack */
         return 1;
 
+    if (whereAmI < 0)
+        throw Esi::Error("negate expression location too small");
+    if (*depth >= ESI_STACK_DEPTH_LIMIT)
+        throw Esi::Error("negate expression too complex");
+
     if (stack[whereAmI + 1].valuetype != ESI_EXPR_EXPR)
         /* invalid operand */
         return 1;
@@ -228,7 +245,7 @@ evalnegate(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
 }
 
 int
-evalliteral(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
+evalliteral(stackmember * /* stack */, int * /* depth */, int /* whereAmI */, stackmember * /* candidate */)
 {
     debugs(86, DBG_IMPORTANT, "attempt to evaluate a literal");
     /* literals can't be evaluated */
@@ -236,7 +253,7 @@ evalliteral(stackmember * stack, int *depth, int whereAmI, stackmember * candida
 }
 
 int
-evalexpr(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
+evalexpr(stackmember * /* stack */, int * /* depth */, int /* whereAmI */, stackmember * /* candidate */)
 {
     debugs(86, DBG_IMPORTANT, "attempt to evaluate a sub-expression result");
     /* sub-scpr's can't be evaluated */
@@ -280,7 +297,7 @@ evalor(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
 
     srv.precedence = 1;
 
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -327,7 +344,7 @@ evaland(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
 
     srv.precedence = 1;
 
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -373,7 +390,7 @@ evallesseq(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
 
     srv.precedence = 1;
 
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -421,7 +438,7 @@ evallessthan(stackmember * stack, int *depth, int whereAmI, stackmember * candid
 
     srv.precedence = 1;
 
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -469,7 +486,7 @@ evalmoreeq(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
 
     srv.precedence = 1;
 
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -517,7 +534,7 @@ evalmorethan(stackmember * stack, int *depth, int whereAmI, stackmember * candid
 
     srv.precedence = 1;
 
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -566,7 +583,7 @@ evalequals(stackmember * stack, int *depth, int whereAmI,
 
     srv.precedence = 1;
 
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -613,7 +630,7 @@ evalnotequals(stackmember * stack, int *depth, int whereAmI, stackmember * candi
 
     srv.precedence = 1;
 
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -647,7 +664,7 @@ evalstartexpr(stackmember * stack, int *depth, int whereAmI, stackmember * candi
 }
 
 int
-evalendexpr(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
+evalendexpr(stackmember * /* stack */, int * /* depth */, int /* whereAmI */, stackmember * /* candidate */)
 {
     /* Can't evaluate ) brackets */
     return 1;
@@ -670,7 +687,7 @@ getsymbol(const char *s, char const **endptr)
     char const *origs = s;
     /* trim whitespace */
     s = trim(s);
-    rv.eval = NULL;     /* A literal */
+    rv.eval = nullptr;     /* A literal */
     rv.valuetype = ESI_EXPR_INVALID;
     rv.valuestored = ESI_LITERAL_INVALID;
     rv.precedence = 1; /* A literal */
@@ -686,7 +703,7 @@ getsymbol(const char *s, char const **endptr)
 
             if (s == end || errno) {
                 /* Couldn't convert to float */
-                debugs(86, DBG_IMPORTANT, "failed to convert '" << s << "' to float ");
+                debugs(86, DBG_IMPORTANT, "ERROR: failed to convert '" << s << "' to float ");
                 *endptr = origs;
             } else {
                 debugs(86,6, "found " << rv.value.floating << " of length " << end - s);
@@ -703,7 +720,7 @@ getsymbol(const char *s, char const **endptr)
 
             if (s == end || errno) {
                 /* Couldn't convert to int */
-                debugs(86, DBG_IMPORTANT, "failed to convert '" << s << "' to int ");
+                debugs(86, DBG_IMPORTANT, "ERROR: failed to convert '" << s << "' to int ");
                 *endptr = origs;
             } else {
                 debugs(86,6, "found " << rv.value.integral << " of length " << end - s);
@@ -736,7 +753,7 @@ getsymbol(const char *s, char const **endptr)
             ++t;
 
         if (!*t) {
-            debugs(86, DBG_IMPORTANT, "missing end \' in '" << s << "'");
+            debugs(86, DBG_IMPORTANT, "ERROR: missing end \' in '" << s << "'");
             *endptr = origs;
         } else {
             *endptr = t + 1;
@@ -789,7 +806,7 @@ getsymbol(const char *s, char const **endptr)
             rv.precedence = 5;
             rv.eval = evalequals;
         } else {
-            debugs(86, DBG_IMPORTANT, "invalid expr '" << s << "'");
+            debugs(86, DBG_IMPORTANT, "ERROR: invalid expr '" << s << "'");
             *endptr = origs;
         }
     } else if ('<' == *s) {
@@ -837,7 +854,7 @@ getsymbol(const char *s, char const **endptr)
         rv.precedence = 1;
         rv.eval = evalexpr;
     } else {
-        debugs(86, DBG_IMPORTANT, "invalid expr '" << s << "'");
+        debugs(86, DBG_IMPORTANT, "ERROR: invalid expr '" << s << "'");
         *endptr = origs;
     }
 
@@ -950,8 +967,11 @@ int
 addmember(stackmember * stack, int *stackdepth, stackmember * candidate)
 {
     if (candidate->valuetype != ESI_EXPR_LITERAL && *stackdepth > 1) {
-        /* !(!(a==b))) is why thats safe */
+        /* !(!(a==b))) is why that's safe */
         /* strictly less than until we unwind */
+
+        if (*stackdepth >= ESI_STACK_DEPTH_LIMIT)
+            throw Esi::Error("ESI expression too complex to add member");
 
         if (candidate->precedence < stack[*stackdepth - 1].precedence ||
                 candidate->precedence < stack[*stackdepth - 2].precedence) {
@@ -964,14 +984,14 @@ addmember(stackmember * stack, int *stackdepth, stackmember * candidate)
                 /* cleanup candidate and stack */
                 dumpstack(stack, *stackdepth);
                 cleanmember(candidate);
-                debugs(86, DBG_IMPORTANT, "invalid expression");
+                debugs(86, DBG_IMPORTANT, "ERROR: invalid expression");
                 return 0;
             }
         } else {
-            stack[(*stackdepth)++] = *candidate;
+            stackpush(stack, *candidate, stackdepth);
         }
     } else if (candidate->valuetype != ESI_EXPR_INVALID)
-        stack[(*stackdepth)++] = *candidate;
+        stackpush(stack, *candidate, stackdepth);
 
     return 1;
 }
@@ -979,10 +999,9 @@ addmember(stackmember * stack, int *stackdepth, stackmember * candidate)
 int
 ESIExpression::Evaluate(char const *s)
 {
-    stackmember stack[20];
+    stackmember stack[ESI_STACK_DEPTH_LIMIT];
     int stackdepth = 0;
     char const *end;
-    PROF_start(esiExpressionEval);
 
     while (*s) {
         stackmember candidate = getsymbol(s, &end);
@@ -991,15 +1010,13 @@ ESIExpression::Evaluate(char const *s)
             assert(s != end);
 
             if (!addmember(stack, &stackdepth, &candidate)) {
-                PROF_stop(esiExpressionEval);
                 return 0;
             }
 
             s = end;
         } else {
             assert (s == end);
-            debugs(86, DBG_IMPORTANT, "failed parsing expression");
-            PROF_stop(esiExpressionEval);
+            debugs(86, DBG_IMPORTANT, "ERROR: failed parsing expression");
             return 0;
         }
     }
@@ -1012,15 +1029,13 @@ ESIExpression::Evaluate(char const *s)
         if (stack[stackdepth - 2].
                 eval(stack, &stackdepth, stackdepth - 2, &rv)) {
             /* special case - leading operator failed */
-            debugs(86, DBG_IMPORTANT, "invalid expression");
-            PROF_stop(esiExpressionEval);
+            debugs(86, DBG_IMPORTANT, "ERROR: invalid expression");
             return 0;
         }
     }
 
     if (stackdepth == 0) {
         /* Empty expression - evaluate to false */
-        PROF_stop(esiExpressionEval);
         return 0;
     }
 
@@ -1028,8 +1043,6 @@ ESIExpression::Evaluate(char const *s)
     assert(stackdepth == 1);
 
     assert(stack[0].valuetype == ESI_EXPR_EXPR);
-
-    PROF_stop(esiExpressionEval);
 
     return stack[0].value.integral ? 1 : 0;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -44,6 +44,7 @@ logfile_mod_udp_write(Logfile * lf, const char *buf, size_t len)
     s = write(ll->fd, (char const *) buf, len);
     fd_bytes(ll->fd, s, FD_WRITE);
 #if 0
+    // TODO: Enable after polishing to properly log these errors.
     if (s < 0) {
         int xerrno = errno;
         debugs(1, DBG_IMPORTANT, "logfile (udp): got errno (" << errno << "):" << xstrerr(xerrno));
@@ -122,7 +123,7 @@ logfile_mod_udp_close(Logfile * lf)
         xfree(ll->buf);
 
     xfree(lf->data);
-    lf->data = NULL;
+    lf->data = nullptr;
 }
 
 /*
@@ -152,7 +153,7 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
         if (lf->flags.fatal) {
             fatalf("Invalid UDP logging address '%s'\n", lf->path);
         } else {
-            debugs(50, DBG_IMPORTANT, "Invalid UDP logging address '" << lf->path << "'");
+            debugs(50, DBG_IMPORTANT, "ERROR: Invalid UDP logging address '" << lf->path << "'");
             safe_free(strAddr);
             return FALSE;
         }
@@ -172,7 +173,7 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
         if (lf->flags.fatal) {
             fatalf("Unable to open UDP socket for logging\n");
         } else {
-            debugs(50, DBG_IMPORTANT, "Unable to open UDP socket for logging");
+            debugs(50, DBG_IMPORTANT, "ERROR: Unable to open UDP socket for logging");
             return FALSE;
         }
     } else if (!comm_connect_addr(ll->fd, addr)) {
@@ -180,7 +181,7 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
         if (lf->flags.fatal) {
             fatalf("Unable to connect to %s for UDP log: %s\n", lf->path, xstrerr(xerrno));
         } else {
-            debugs(50, DBG_IMPORTANT, "Unable to connect to " << lf->path << " for UDP log: " << xstrerr(xerrno));
+            debugs(50, DBG_IMPORTANT, "ERROR: Unable to connect to " << lf->path << " for UDP log: " << xstrerr(xerrno));
             return FALSE;
         }
     }

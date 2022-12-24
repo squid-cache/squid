@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -16,14 +16,13 @@ noinst_LTLIBRARIES = libhttp.la
 libhttp_la_SOURCES = \
 	ContentLengthInterpreter.cc \
 	ContentLengthInterpreter.h \
-	forward.h \
 	Message.cc \
 	Message.h \
 	MethodType.cc \
 	MethodType.h \
 	ProtocolVersion.h \
-	RegisteredHeaders.h \
 	RegisteredHeaders.cc \
+	RegisteredHeaders.h \
 	RegisteredHeadersHash.cci \
 	RequestMethod.cc \
 	RequestMethod.h \
@@ -33,7 +32,8 @@ libhttp_la_SOURCES = \
 	StatusLine.cc \
 	StatusLine.h \
 	Stream.cc \
-	Stream.h
+	Stream.h \
+	forward.h
 
 libhttp_la_LIBADD= one/libhttp1.la
 
@@ -43,9 +43,4 @@ MethodType.cc: MethodType.h $(top_srcdir)/src/mk-string-arrays.awk
 
 CLEANFILES += MethodType.cc
 
-gperf-files: RegisteredHeadersHash.gperf
-	if test $(srcdir)/RegisteredHeadersHash.gperf -nt $(srcdir)/RegisteredHeadersHash.cci; then gperf -m 100000 $(srcdir)/RegisteredHeadersHash.gperf | sed 's/register //g' > $(srcdir)/RegisteredHeadersHash.cci; fi
-
 EXTRA_DIST = RegisteredHeadersHash.gperf
-
-.PHONY: gperf-files

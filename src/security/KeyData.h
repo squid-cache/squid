@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,8 +35,7 @@ public:
     Security::CertList chain;
 
 private:
-    bool loadX509CertFromFile();
-    void loadX509ChainFromFile();
+    bool loadCertificates();
     bool loadX509PrivateKeyFromFile();
 };
 

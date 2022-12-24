@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,7 @@
 
 #if USE_SQUID_EUI
 
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "eui/Eui48.h"
 #include "globals.h"
 #include "ip/Address.h"
@@ -79,7 +79,7 @@ struct arpreq {
  * Working on setting up a proper firewall for a network containing some
  * Win'95 computers at our Univ, I've discovered that some smart students
  * avoid the restrictions easily just changing their IP addresses in Win'95
- * Contol Panel... It has been getting boring, so I took Squid-1.1.18
+ * Control Panel... It has been getting boring, so I took Squid-1.1.18
  * sources and added a new acl type for hard-wired access control:
  *
  * acl <name> arp <Ethernet address> ...
@@ -99,7 +99,7 @@ Eui::Eui48::decode(const char *asc)
     int a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, a6 = 0;
 
     if (sscanf(asc, "%x:%x:%x:%x:%x:%x", &a1, &a2, &a3, &a4, &a5, &a6) != 6) {
-        debugs(28, DBG_CRITICAL, "Decode EUI-48: Invalid ethernet address '" << asc << "'");
+        debugs(28, DBG_CRITICAL, "ERROR: Decode EUI-48: Invalid ethernet address '" << asc << "'");
         clear();
         return false;       /* This is not valid address */
     }
@@ -149,7 +149,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
     int tmpSocket = socket(AF_INET,SOCK_STREAM,0);
     if (tmpSocket < 0) {
         int xerrno = errno;
-        debugs(28, DBG_IMPORTANT, "Attempt to open socket for EUI retrieval failed: " << xstrerr(xerrno));
+        debugs(28, DBG_IMPORTANT, "ERROR: Attempt to open socket for EUI retrieval failed: " << xstrerr(xerrno));
         clear();
         return false;
     }
@@ -206,7 +206,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
 
     if (ioctl(tmpSocket, SIOCGIFCONF, &ifc) < 0) {
         int xerrno = errno;
-        debugs(28, DBG_IMPORTANT, "Attempt to retrieve interface list failed: " << xstrerr(xerrno));
+        debugs(28, DBG_IMPORTANT, "ERROR: Attempt to retrieve interface list failed: " << xstrerr(xerrno));
         clear();
         close(tmpSocket);
         return false;
@@ -254,7 +254,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
             int xerrno = errno;
             //  Query failed.  Do not log failed lookups or "device not supported"
             if (ENXIO != xerrno && ENODEV != xerrno)
-                debugs(28, DBG_IMPORTANT, "ARP query " << ipAddr << " failed: " << ifr->ifr_name << ": " << xstrerr(xerrno));
+                debugs(28, DBG_IMPORTANT, "ERROR: ARP query " << ipAddr << " failed: " << ifr->ifr_name << ": " << xstrerr(xerrno));
 
             continue;
         }
@@ -294,7 +294,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
     int tmpSocket = socket(AF_INET,SOCK_STREAM,0);
     if (tmpSocket < 0) {
         int xerrno = errno;
-        debugs(28, DBG_IMPORTANT, "Attempt to open socket for EUI retrieval failed: " << xstrerr(xerrno));
+        debugs(28, DBG_IMPORTANT, "ERROR: Attempt to open socket for EUI retrieval failed: " << xstrerr(xerrno));
         clear();
         return false;
     }
@@ -378,19 +378,19 @@ Eui::Eui48::lookup(const Ip::Address &c)
 #endif
 
     if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0) {
-        debugs(28, DBG_CRITICAL, "Can't estimate ARP table size!");
+        debugs(28, DBG_CRITICAL, "ERROR: Cannot estimate ARP table size!");
         clear();
         return false;
     }
 
     if ((buf = (char *)xmalloc(needed)) == NULL) {
-        debugs(28, DBG_CRITICAL, "Can't allocate temporary ARP table!");
+        debugs(28, DBG_CRITICAL, "ERROR: Cannot allocate temporary ARP table!");
         clear();
         return false;
     }
 
     if (sysctl(mib, 6, buf, &needed, NULL, 0) < 0) {
-        debugs(28, DBG_CRITICAL, "Can't retrieve ARP table!");
+        debugs(28, DBG_CRITICAL, "ERROR: Cannot retrieve ARP table!");
         xfree(buf);
         clear();
         return false;
@@ -455,21 +455,21 @@ Eui::Eui48::lookup(const Ip::Address &c)
 
     /* Get size of Windows ARP table */
     if (GetIpNetTable(NetTable, &ipNetTableLen, FALSE) != ERROR_INSUFFICIENT_BUFFER) {
-        debugs(28, DBG_CRITICAL, "Can't estimate ARP table size!");
+        debugs(28, DBG_CRITICAL, "ERROR: Cannot estimate ARP table size!");
         clear();
         return false;
     }
 
     /* Allocate space for ARP table and assign pointers */
     if ((NetTable = (PMIB_IPNETTABLE)xmalloc(ipNetTableLen)) == NULL) {
-        debugs(28, DBG_CRITICAL, "Can't allocate temporary ARP table!");
+        debugs(28, DBG_CRITICAL, "ERROR: Cannot allocate temporary ARP table!");
         clear();
         return false;
     }
 
     /* Get actual ARP table */
     if ((dwNetTable = GetIpNetTable(NetTable, &ipNetTableLen, FALSE)) != NO_ERROR) {
-        debugs(28, DBG_CRITICAL, "Can't retrieve ARP table!");
+        debugs(28, DBG_CRITICAL, "ERROR: Cannot retrieve ARP table!");
         xfree(NetTable);
         clear();
         return false;

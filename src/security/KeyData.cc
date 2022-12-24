@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,16 +9,16 @@
 #include "squid.h"
 #include "anyp/PortCfg.h"
 #include "fatal.h"
+#include "security/Certificate.h"
 #include "security/KeyData.h"
 #include "SquidConfig.h"
 #include "ssl/bio.h"
+#include "ssl/gadgets.h"
 
-/**
- * Read certificate from file.
- * See also: Ssl::ReadX509Certificate function, gadgets.cc file
- */
+/// load the signing certificate and its chain, if any, from certFile
+/// \return true if the signing certificate was obtained
 bool
-Security::KeyData::loadX509CertFromFile()
+Security::KeyData::loadCertificates()
 {
     debugs(83, DBG_IMPORTANT, "Using certificate in " << certFile);
     cert.reset(); // paranoid: ensure cert is unset
@@ -32,14 +32,63 @@ Security::KeyData::loadX509CertFromFile()
         return false;
     }
 
-    if (X509 *certificate = PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr)) {
-        cert.resetWithoutLocking(certificate);
+    try {
+        cert = Ssl::ReadCertificate(bio);
+        debugs(83, DBG_PARSE_NOTE(2), "Loaded signing certificate: " << *cert);
+    }
+    catch (...) {
+        // TODO: Convert the rest of this method to throw on errors instead.
+        debugs(83, DBG_IMPORTANT, "ERROR: unable to load certificate file '" << certFile << "':" <<
+               Debug::Extra << "problem: " << CurrentException);
+        return false;
+    }
+
+    try {
+        // Squid sends `cert` (loaded above) followed by certificates in `chain`
+        // (formed below by loading and sorting the remaining certificates).
+
+        // load all the remaining configured certificates
+        CertList candidates;
+        while (const auto c = Ssl::ReadOptionalCertificate(bio))
+            candidates.emplace_back(c);
+
+        // Push certificates into `chain` in on-the-wire order, as defined by
+        // RFC 8446 Section 4.4.2: "Each following certificate SHOULD directly
+        // certify the one immediately preceding it."
+        while (!candidates.empty()) {
+            const auto precedingCert = chain.empty() ? cert : chain.back();
+
+            // We cannot chain any certificate after a self-signed certificate.
+            // This check also protects the IssuedBy() search below from adding
+            // duplicated (i.e. listed multiple times) self-signed certificates.
+            if (SelfSigned(*precedingCert))
+                break;
+
+            const auto issuerPos = std::find_if(candidates.begin(), candidates.end(), [&](const CertPointer &i) {
+                return IssuedBy(*precedingCert, *i);
+            });
+            if (issuerPos == candidates.end())
+                break;
+
+            const auto &issuer = *issuerPos;
+            debugs(83, DBG_PARSE_NOTE(3), "Adding CA certificate: " << *issuer);
+            chain.emplace_back(issuer);
+            candidates.erase(issuerPos);
+        }
+
+        for (const auto &c: candidates)
+            debugs(83, DBG_IMPORTANT, "WARNING: Ignoring certificate that does not extend the chain: " << *c);
+    }
+    catch (...) {
+        // TODO: Reject configs with malformed intermediate certs instead.
+        debugs(83, DBG_IMPORTANT, "ERROR: Failure while loading intermediate certificate(s) from '" << certFile << "':" <<
+               Debug::Extra << "problem: " << CurrentException);
     }
 
 #elif USE_GNUTLS
     const char *certFilename = certFile.c_str();
     gnutls_datum_t data;
-    Security::ErrorCode x = gnutls_load_file(certFilename, &data);
+    Security::LibErrorCode x = gnutls_load_file(certFilename, &data);
     if (x != GNUTLS_E_SUCCESS) {
         debugs(83, DBG_IMPORTANT, "ERROR: unable to load certificate file '" << certFile << "': " << ErrorString(x));
         return false;
@@ -67,6 +116,9 @@ Security::KeyData::loadX509CertFromFile()
         });
     }
 
+    // XXX: implement chain loading
+    debugs(83, 2, "Loading certificate chain from PEM files not implemented in this Squid.");
+
 #else
     // do nothing.
 #endif
@@ -76,70 +128,6 @@ Security::KeyData::loadX509CertFromFile()
     }
 
     return bool(cert);
-}
-
-/**
- * Read certificate from file.
- * See also: Ssl::ReadX509Certificate function, gadgets.cc file
- */
-void
-Security::KeyData::loadX509ChainFromFile()
-{
-#if USE_OPENSSL
-    const char *certFilename = certFile.c_str();
-    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
-    if (!bio || !BIO_read_filename(bio.get(), certFilename)) {
-        const auto x = ERR_get_error();
-        debugs(83, DBG_IMPORTANT, "ERROR: unable to load chain file '" << certFile << "': " << ErrorString(x));
-        return;
-    }
-
-#if TLS_CHAIN_NO_SELFSIGNED // ignore self-signed certs in the chain
-    if (X509_check_issued(cert.get(), cert.get()) == X509_V_OK) {
-        char *nameStr = X509_NAME_oneline(X509_get_subject_name(cert.get()), nullptr, 0);
-        debugs(83, DBG_PARSE_NOTE(2), "Certificate is self-signed, will not be chained: " << nameStr);
-        OPENSSL_free(nameStr);
-    } else
-#endif
-    {
-        debugs(83, DBG_PARSE_NOTE(3), "Using certificate chain in " << certFile);
-        // and add to the chain any other certificate exist in the file
-        CertPointer latestCert = cert;
-
-        while (auto ca = PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr)) {
-            // get Issuer name of the cert for debug display
-            char *nameStr = X509_NAME_oneline(X509_get_subject_name(ca), nullptr, 0);
-
-#if TLS_CHAIN_NO_SELFSIGNED // ignore self-signed certs in the chain
-            // self-signed certificates are not valid in a sent chain
-            if (X509_check_issued(ca, ca) == X509_V_OK) {
-                debugs(83, DBG_PARSE_NOTE(2), "CA " << nameStr << " is self-signed, will not be chained: " << nameStr);
-                OPENSSL_free(nameStr);
-                continue;
-            }
-#endif
-            // checks that the chained certs are actually part of a chain for validating cert
-            const auto checkCode = X509_check_issued(ca, latestCert.get());
-            if (checkCode == X509_V_OK) {
-                debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << nameStr);
-                // OpenSSL API requires that we order certificates such that the
-                // chain can be appended directly into the on-wire traffic.
-                latestCert = CertPointer(ca);
-                chain.emplace_front(latestCert);
-            } else {
-                debugs(83, DBG_PARSE_NOTE(2), certFile << ": Ignoring non-issuer CA " << nameStr << ": " << X509_verify_cert_error_string(checkCode) << " (" << checkCode << ")");
-            }
-            OPENSSL_free(nameStr);
-        }
-    }
-
-#elif USE_GNUTLS
-    // XXX: implement chain loading
-    debugs(83, 2, "Loading certificate chain from PEM files not implemented in this Squid.");
-
-#else
-    // nothing to do.
-#endif
 }
 
 /**
@@ -192,13 +180,10 @@ void
 Security::KeyData::loadFromFiles(const AnyP::PortCfg &port, const char *portType)
 {
     char buf[128];
-    if (!loadX509CertFromFile()) {
+    if (!loadCertificates()) {
         debugs(83, DBG_IMPORTANT, "WARNING: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' missing certificate in '" << certFile << "'");
         return;
     }
-
-    // certificate chain in the PEM file is optional
-    loadX509ChainFromFile();
 
     // pkey is mandatory, not having it makes cert and chain pointless.
     if (!loadX509PrivateKeyFromFile()) {

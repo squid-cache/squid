@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,9 @@
 /* DEBUG: section 16    Cache Manager API */
 
 #include "squid.h"
+#include "base/AsyncCbdataCalls.h"
 #include "base/TextException.h"
+#include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
@@ -22,9 +24,9 @@ CBDATA_NAMESPACED_CLASS_INIT(Mgr, StoreToCommWriter);
 
 Mgr::StoreToCommWriter::StoreToCommWriter(const Comm::ConnectionPointer &conn, StoreEntry* anEntry):
     AsyncJob("Mgr::StoreToCommWriter"),
-    clientConnection(conn), entry(anEntry), sc(NULL), writeOffset(0), closer(NULL)
+    clientConnection(conn), entry(anEntry), sc(nullptr), writeOffset(0), closer(nullptr)
 {
-    debugs(16, 6, HERE << clientConnection);
+    debugs(16, 6, clientConnection);
     closer = asyncCall(16, 5, "Mgr::StoreToCommWriter::noteCommClosed",
                        CommCbMemFunT<StoreToCommWriter, CommCloseCbParams>(this, &StoreToCommWriter::noteCommClosed));
     comm_add_close_handler(clientConnection->fd, closer);
@@ -32,7 +34,7 @@ Mgr::StoreToCommWriter::StoreToCommWriter(const Comm::ConnectionPointer &conn, S
 
 Mgr::StoreToCommWriter::~StoreToCommWriter()
 {
-    debugs(16, 6, HERE);
+    debugs(16, 6, MYNAME);
     assert(!entry);
     assert(!sc);
     close();
@@ -43,9 +45,9 @@ void
 Mgr::StoreToCommWriter::close()
 {
     if (Comm::IsConnOpen(clientConnection)) {
-        if (closer != NULL) {
+        if (closer != nullptr) {
             comm_remove_close_handler(clientConnection->fd, closer);
-            closer = NULL;
+            closer = nullptr;
         }
         clientConnection->close();
     }
@@ -54,12 +56,13 @@ Mgr::StoreToCommWriter::close()
 void
 Mgr::StoreToCommWriter::start()
 {
-    debugs(16, 6, HERE);
+    debugs(16, 6, MYNAME);
     Must(Comm::IsConnOpen(clientConnection));
-    Must(entry != NULL);
-    entry->registerAbort(&StoreToCommWriter::Abort, this);
+    Must(entry != nullptr);
+    AsyncCall::Pointer call = asyncCall(16, 4, "StoreToCommWriter::Abort", cbdataDialer(&StoreToCommWriter::HandleStoreAbort, this));
+    entry->registerAbortCallback(call);
     sc = storeClientListAdd(entry, this);
-    Must(sc != NULL);
+    Must(sc != nullptr);
 
     // initiate the receive-from-store, write-to-comm sequence
     scheduleStoreCopy();
@@ -68,9 +71,9 @@ Mgr::StoreToCommWriter::start()
 void
 Mgr::StoreToCommWriter::scheduleStoreCopy()
 {
-    debugs(16, 6, HERE);
-    Must(entry != NULL);
-    Must(sc != NULL);
+    debugs(16, 6, MYNAME);
+    Must(entry != nullptr);
+    Must(sc != nullptr);
     StoreIOBuffer readBuf(sizeof(buffer), writeOffset, buffer);
     storeClientCopy(sc, entry, readBuf, &NoteStoreCopied, this);
 }
@@ -78,7 +81,7 @@ Mgr::StoreToCommWriter::scheduleStoreCopy()
 void
 Mgr::StoreToCommWriter::NoteStoreCopied(void* data, StoreIOBuffer ioBuf)
 {
-    Must(data != NULL);
+    Must(data != nullptr);
     // make sync Store call async to get async call protections and features
     StoreToCommWriter* writer = static_cast<StoreToCommWriter*>(data);
     typedef UnaryMemFunT<StoreToCommWriter, StoreIOBuffer> MyDialer;
@@ -91,7 +94,7 @@ Mgr::StoreToCommWriter::NoteStoreCopied(void* data, StoreIOBuffer ioBuf)
 void
 Mgr::StoreToCommWriter::noteStoreCopied(StoreIOBuffer ioBuf)
 {
-    debugs(16, 6, HERE);
+    debugs(16, 6, MYNAME);
     Must(!ioBuf.flags.error);
     if (ioBuf.length > 0)
         scheduleCommWrite(ioBuf); // write received action results to client
@@ -102,23 +105,23 @@ Mgr::StoreToCommWriter::noteStoreCopied(StoreIOBuffer ioBuf)
 void
 Mgr::StoreToCommWriter::scheduleCommWrite(const StoreIOBuffer& ioBuf)
 {
-    debugs(16, 6, HERE);
+    debugs(16, 6, MYNAME);
     Must(Comm::IsConnOpen(clientConnection));
-    Must(ioBuf.data != NULL);
+    Must(ioBuf.data != nullptr);
     // write filled buffer
     typedef CommCbMemFunT<StoreToCommWriter, CommIoCbParams> MyDialer;
     AsyncCall::Pointer writer =
         asyncCall(16, 5, "Mgr::StoreToCommWriter::noteCommWrote",
                   MyDialer(this, &StoreToCommWriter::noteCommWrote));
-    Comm::Write(clientConnection, ioBuf.data, ioBuf.length, writer, NULL);
+    Comm::Write(clientConnection, ioBuf.data, ioBuf.length, writer, nullptr);
 }
 
 void
 Mgr::StoreToCommWriter::noteCommWrote(const CommIoCbParams& params)
 {
-    debugs(16, 6, HERE);
+    debugs(16, 6, MYNAME);
     Must(params.flag == Comm::OK);
-    Must(clientConnection != NULL && params.fd == clientConnection->fd);
+    Must(clientConnection != nullptr && params.fd == clientConnection->fd);
     Must(params.size != 0);
     writeOffset += params.size;
     if (!doneAll())
@@ -128,23 +131,27 @@ Mgr::StoreToCommWriter::noteCommWrote(const CommIoCbParams& params)
 void
 Mgr::StoreToCommWriter::noteCommClosed(const CommCloseCbParams &)
 {
-    debugs(16, 6, HERE);
-    Must(!Comm::IsConnOpen(clientConnection));
+    debugs(16, 6, MYNAME);
+    if (clientConnection) {
+        clientConnection->noteClosure();
+        clientConnection = nullptr;
+    }
+    closer = nullptr;
     mustStop("commClosed");
 }
 
 void
 Mgr::StoreToCommWriter::swanSong()
 {
-    debugs(16, 6, HERE);
-    if (entry != NULL) {
-        if (sc != NULL) {
+    debugs(16, 6, MYNAME);
+    if (entry != nullptr) {
+        if (sc != nullptr) {
             storeUnregister(sc, entry, this);
-            sc = NULL;
+            sc = nullptr;
         }
-        entry->unregisterAbort();
+        entry->unregisterAbortCallback("StoreToCommWriter done");
         entry->unlock("Mgr::StoreToCommWriter::swanSong");
-        entry = NULL;
+        entry = nullptr;
     }
     close();
 }
@@ -158,9 +165,8 @@ Mgr::StoreToCommWriter::doneAll() const
 }
 
 void
-Mgr::StoreToCommWriter::Abort(void* param)
+Mgr::StoreToCommWriter::HandleStoreAbort(StoreToCommWriter *mgrWriter)
 {
-    StoreToCommWriter* mgrWriter = static_cast<StoreToCommWriter*>(param);
     if (Comm::IsConnOpen(mgrWriter->clientConnection))
         mgrWriter->clientConnection->close();
 }

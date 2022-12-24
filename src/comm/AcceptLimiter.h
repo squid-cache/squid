@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -49,7 +49,7 @@ private:
     std::deque<TcpAcceptor::Pointer> deferred_;
 };
 
-}; // namepace Comm
+}; // namespace Comm
 
 #endif /* _SQUID_SRC_COMM_ACCEPT_LIMITER_H */
 

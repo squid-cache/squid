@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 #include <cppunit/TestAssert.h>
 
 #include "anyp/Uri.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "tests/testURL.h"
 #include "unitTestMain.h"
 
@@ -57,7 +57,7 @@ testURL::testDefaultConstructor()
     CPPUNIT_ASSERT_EQUAL(aScheme, aUrl.getScheme());
 
     auto *urlPointer = new AnyP::Uri;
-    CPPUNIT_ASSERT(urlPointer != NULL);
+    CPPUNIT_ASSERT(urlPointer != nullptr);
     delete urlPointer;
 }
 

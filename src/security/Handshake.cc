@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,8 @@
 /* DEBUG: section 83    SSL-Bump Server/Peer negotiation */
 
 #include "squid.h"
+#include "base/IoManip.h"
+#include "sbuf/Stream.h"
 #include "security/Handshake.h"
 #if USE_OPENSSL
 #include "ssl/support.h"
@@ -104,24 +106,51 @@ public:
 typedef std::unordered_set<Extension::Type> Extensions;
 static Extensions SupportedExtensions();
 
-} // namespace Security
-
-/// Convenience helper: We parse ProtocolVersion but store "int".
+/// parse TLS ProtocolVersion (uint16) and convert it to AnyP::ProtocolVersion
+/// \retval PROTO_NONE for unsupported values (in relaxed mode)
 static AnyP::ProtocolVersion
-ParseProtocolVersion(Parser::BinaryTokenizer &tk)
+ParseProtocolVersionBase(Parser::BinaryTokenizer &tk, const char *contextLabel, const bool beStrict)
 {
-    Parser::BinaryTokenizerContext context(tk, ".version");
+    Parser::BinaryTokenizerContext context(tk, contextLabel);
     uint8_t vMajor = tk.uint8(".major");
     uint8_t vMinor = tk.uint8(".minor");
+
     if (vMajor == 0 && vMinor == 2)
         return AnyP::ProtocolVersion(AnyP::PROTO_SSL, 2, 0);
 
-    Must(vMajor == 3);
-    if (vMinor == 0)
-        return AnyP::ProtocolVersion(AnyP::PROTO_SSL, 3, 0);
+    if (vMajor == 3) {
+        if (vMinor == 0)
+            return AnyP::ProtocolVersion(AnyP::PROTO_SSL, 3, 0);
+        return AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, (vMinor - 1));
+    }
 
-    return AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, (vMinor - 1));
+    /* handle unsupported versions */
+
+    const uint16_t vRaw = (vMajor << 8) | vMinor;
+    debugs(83, 7, "unsupported: " << asHex(vRaw));
+    if (beStrict)
+        throw TextException(ToSBuf("unsupported TLS version: ", asHex(vRaw)), Here());
+    // else hide unsupported version details from the caller behind PROTO_NONE
+    return AnyP::ProtocolVersion();
 }
+
+/// parse a framing-related TLS ProtocolVersion
+/// \returns a supported SSL or TLS Anyp::ProtocolVersion, never PROTO_NONE
+static AnyP::ProtocolVersion
+ParseProtocolVersion(Parser::BinaryTokenizer &tk)
+{
+    return ParseProtocolVersionBase(tk, ".version", true);
+}
+
+/// parse a framing-unrelated TLS ProtocolVersion
+/// \retval PROTO_NONE for unsupported values
+static AnyP::ProtocolVersion
+ParseOptionalProtocolVersion(Parser::BinaryTokenizer &tk, const char *contextLabel)
+{
+    return ParseProtocolVersionBase(tk, contextLabel, false);
+}
+
+} // namespace Security
 
 Security::TLSPlaintext::TLSPlaintext(Parser::BinaryTokenizer &tk)
 {
@@ -187,10 +216,11 @@ Security::TlsDetails::TlsDetails():
 
 /* Security::HandshakeParser */
 
-Security::HandshakeParser::HandshakeParser():
+Security::HandshakeParser::HandshakeParser(const MessageSource source):
     details(new TlsDetails),
     state(atHelloNone),
     resumingSession(false),
+    messageSource(source),
     currentContentType(0),
     done(nullptr),
     expectingModernRecords(false)
@@ -285,12 +315,19 @@ Security::HandshakeParser::parseChangeCipherCpecMessage()
 {
     Must(currentContentType == ContentType::ctChangeCipherSpec);
     // We are currently ignoring Change Cipher Spec Protocol messages.
-    skipMessage("ChangeCipherCpec msg [fragment]");
+    skipMessage("ChangeCipherSpec msg [fragment]");
 
-    // Everything after the ChangeCipherCpec message may be encrypted.
-    // Continuing parsing is pointless. Stop here.
+    // In TLS v1.2 and earlier, ChangeCipherSpec is sent after Hello (when
+    // tlsSupportedVersion is already known) and indicates session resumption.
+    // In later TLS versions, ChangeCipherSpec may be sent before and after
+    // Hello, but it is unused for session resumption and should be ignored.
+    if (!details->tlsSupportedVersion || Tls1p3orLater(details->tlsSupportedVersion))
+        return;
+
     resumingSession = true;
-    done = "ChangeCipherCpec";
+
+    // Everything after the ChangeCipherSpec message may be encrypted. Stop.
+    done = "ChangeCipherSpec in v1.2-";
 }
 
 void
@@ -316,19 +353,19 @@ Security::HandshakeParser::parseHandshakeMessage()
     switch (message.msg_type) {
     case HandshakeType::hskClientHello:
         Must(state < atHelloReceived);
+        Must(messageSource == fromClient);
         Security::HandshakeParser::parseClientHelloHandshakeMessage(message.msg_body);
         state = atHelloReceived;
         done = "ClientHello";
         return;
     case HandshakeType::hskServerHello:
         Must(state < atHelloReceived);
+        Must(messageSource == fromServer);
         parseServerHelloHandshakeMessage(message.msg_body);
         state = atHelloReceived;
-        return;
-    case HandshakeType::hskCertificate:
-        Must(state < atCertificatesReceived);
-        parseServerCertificates(message.msg_body);
-        state = atCertificatesReceived;
+        // for TLSv1.3 and later, anything after the server Hello is encrypted
+        if (Tls1p3orLater(details->tlsSupportedVersion))
+            done = "ServerHello in v1.3+";
         return;
     case HandshakeType::hskServerHelloDone:
         Must(state < atHelloDoneReceived);
@@ -418,14 +455,21 @@ Security::HandshakeParser::parseExtensions(const SBuf &raw)
             break;
         case 16: { // Application-Layer Protocol Negotiation Extension, RFC 7301
             Parser::BinaryTokenizer tkAPN(extension.data);
+            // Store the entire protocol list, including unsupported-by-Squid
+            // values (if any). We have to use all when peeking at the server.
             details->tlsAppLayerProtoNeg = tkAPN.pstring16("APN");
             break;
         }
         case 35: // SessionTicket TLS Extension; RFC 5077
             details->tlsTicketsExtension = true;
             details->hasTlsTicket = !extension.data.isEmpty();
-        case 13172: // Next Protocol Negotiation Extension (expired draft?)
+            break;
+        case 43: // supported_versions extension; RFC 8446
+            parseSupportedVersionsExtension(extension.data);
+            break;
         default:
+            // other extensions, including those that Squid does not support, do
+            // not require special handling here, but see unsupportedExtensions
             break;
         }
     }
@@ -438,7 +482,7 @@ Security::HandshakeParser::parseCiphers(const SBuf &raw)
     Parser::BinaryTokenizer tk(raw);
     while (!tk.atEnd()) {
         const uint16_t cipher = tk.uint16("cipher");
-        details->ciphers.insert(cipher);
+        details->ciphers.insert(cipher); // including Squid-unsupported ones
     }
 }
 
@@ -456,7 +500,7 @@ Security::HandshakeParser::parseV23Ciphers(const SBuf &raw)
         const uint8_t prefix = tk.uint8("prefix");
         const uint16_t cipher = tk.uint16("cipher");
         if (prefix == 0)
-            details->ciphers.insert(cipher);
+            details->ciphers.insert(cipher); // including Squid-unsupported ones
     }
 }
 
@@ -469,6 +513,7 @@ Security::HandshakeParser::parseServerHelloHandshakeMessage(const SBuf &raw)
     details->tlsSupportedVersion = ParseProtocolVersion(tk);
     tk.skip(HelloRandomSize, ".random");
     details->sessionId = tk.pstring8(".session_id");
+    // cipherSuite may be unsupported by a peeking Squid
     details->ciphers.insert(tk.uint16(".cipher_suite"));
     details->compressionSupported = tk.uint8(".compression_method") != 0; // not null
     if (!tk.atEnd()) // extensions present
@@ -504,6 +549,85 @@ Security::HandshakeParser::parseSniExtension(const SBuf &extensionData) const
     return SBuf(); // SNI extension lacks host_name
 }
 
+/// RFC 8446 Section 4.2.1: SupportedVersions extension
+void
+Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extensionData) const
+{
+    // Upon detecting a quoted RFC MUST violation, this parser immediately
+    // returns, ignoring the entire extension and resulting in Squid relying on
+    // the legacy_version field value or another (valid) supported_versions
+    // extension. The alternative would be to reject the whole handshake as
+    // invalid. Deployment experience will show which alternative is the best.
+
+    // Please note that several of these MUSTs also imply certain likely
+    // handling of a hypothetical next TLS version (e.g., v1.4).
+
+    // RFC 8446 Section 4.1.2:
+    // In TLS 1.3, the client indicates its version preferences in the
+    // "supported_versions" extension (Section 4.2.1) and the legacy_version
+    // field MUST be set to 0x0303, which is the version number for TLS 1.2.
+    //
+    // RFC 8446 Section 4.2.1:
+    // A server which negotiates TLS 1.3 MUST respond by sending a
+    // "supported_versions" extension containing the selected version value
+    // (0x0304).  It MUST set the ServerHello.legacy_version field to 0x0303
+    // (TLS 1.2).
+    //
+    // Ignore supported_versions senders violating legacy_version MUSTs above:
+    if (details->tlsSupportedVersion != AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 2))
+        return;
+
+    AnyP::ProtocolVersion supportedVersionMax;
+    if (messageSource == fromClient) {
+        Parser::BinaryTokenizer tkList(extensionData);
+        Parser::BinaryTokenizer tkVersions(tkList.pstring8("SupportedVersions"));
+        while (!tkVersions.atEnd()) {
+            const auto version = ParseOptionalProtocolVersion(tkVersions, "supported_version");
+            // ignore values unsupported by Squid,represented by a falsy version
+            if (!version)
+                continue;
+            if (!supportedVersionMax || TlsVersionEarlierThan(supportedVersionMax, version))
+                supportedVersionMax = version;
+        }
+
+        // ignore empty and ignored-values-only supported_versions
+        if (!supportedVersionMax)
+            return;
+
+        // supportedVersionMax here may be "earlier" than tlsSupportedVersion: A
+        // TLS v1.3 client may try to negotiate a _legacy_ version X with a TLS
+        // v1.3 server by sending supported_versions containing just X.
+    } else {
+        assert(messageSource == fromServer);
+        Parser::BinaryTokenizer tkVersion(extensionData);
+        const auto version = ParseOptionalProtocolVersion(tkVersion, "selected_version");
+        // Ignore values unsupported by Squid. There should not be any until we
+        // start seeing TLS v2+, but they do not affect TLS framing anyway.
+        if (!version)
+            return;
+        // RFC 8446 Section 4.2.1:
+        // A server which negotiates a version of TLS prior to TLS 1.3 [...]
+        // MUST NOT send the "supported_versions" extension.
+        if (Tls1p2orEarlier(version))
+            return;
+        supportedVersionMax = version;
+    }
+
+    // We overwrite Hello-derived legacy_version because the following MUSTs
+    // indicate that it is ignored in the presence of valid supported_versions
+    // as far as the negotiated version is concerned. For simplicity sake, we
+    // may also overwrite previous valid supported_versions extensions (if any).
+    //
+    // RFC 8446 Section 4.2.1:
+    // If this extension is present in the ClientHello, servers MUST NOT use the
+    // ClientHello.legacy_version value for version negotiation and MUST use
+    // only the "supported_versions" extension to determine client preferences.
+    // Servers MUST only select a version of TLS present in that extension
+    debugs(83, 7, "found " << supportedVersionMax);
+    assert(supportedVersionMax);
+    details->tlsSupportedVersion = supportedVersionMax;
+}
+
 void
 Security::HandshakeParser::skipMessage(const char *description)
 {
@@ -534,47 +658,6 @@ Security::HandshakeParser::parseHello(const SBuf &data)
         return false;
     }
     return false; // unreached
-}
-
-/// Creates and returns a certificate by parsing a DER-encoded X509 structure.
-/// Throws on failures.
-Security::CertPointer
-Security::HandshakeParser::ParseCertificate(const SBuf &raw)
-{
-    Security::CertPointer pCert;
-#if USE_OPENSSL
-    auto x509Start = reinterpret_cast<const unsigned char *>(raw.rawContent());
-    auto x509Pos = x509Start;
-    X509 *x509 = d2i_X509(nullptr, &x509Pos, raw.length());
-    pCert.resetWithoutLocking(x509);
-    Must(x509); // successfully parsed
-    Must(x509Pos == x509Start + raw.length()); // no leftovers
-#else
-    assert(false);  // this code should never be reached
-    pCert = Security::CertPointer(nullptr); // avoid warnings about uninitialized pCert; XXX: Fix CertPoint declaration.
-    (void)raw; // avoid warnings about unused method parameter; TODO: Add a SimulateUse() macro.
-#endif
-    assert(pCert);
-    return pCert;
-}
-
-void
-Security::HandshakeParser::parseServerCertificates(const SBuf &raw)
-{
-#if USE_OPENSSL
-    Parser::BinaryTokenizer tkList(raw);
-    const SBuf clist = tkList.pstring24("CertificateList");
-    Must(tkList.atEnd()); // no leftovers after all certificates
-
-    Parser::BinaryTokenizer tkItems(clist);
-    while (!tkItems.atEnd()) {
-        if (Security::CertPointer cert = ParseCertificate(tkItems.pstring24("Certificate")))
-            serverCertificates.push_back(cert);
-        debugs(83, 7, "parsed " << serverCertificates.size() << " certificates so far");
-    }
-#else
-    debugs(83, 7, "no support for CertificateList parsing; ignoring " << raw.length() << " bytes");
-#endif
 }
 
 /// A helper function to create a set of all supported TLS extensions
@@ -646,6 +729,9 @@ Security::SupportedExtensions()
 #endif
 #if defined(TLSEXT_TYPE_next_proto_neg) // 13172
     extensions.insert(TLSEXT_TYPE_next_proto_neg);
+#endif
+#if defined(TLSEXT_TYPE_supported_versions) // 43
+    extensions.insert(TLSEXT_TYPE_supported_versions);
 #endif
 
     /*

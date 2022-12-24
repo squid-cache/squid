@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,7 +23,7 @@
 #include "ip/Address.h"
 #include "ip/forward.h"
 #include "mem/forward.h"
-#include "SquidTime.h"
+#include "time/gadgets.h"
 
 #include <iosfwd>
 #include <ostream>
@@ -49,11 +49,16 @@ namespace Comm
 #define COMM_DOBIND             0x08  // requires a bind()
 #define COMM_TRANSPARENT        0x10  // arrived via TPROXY
 #define COMM_INTERCEPTION       0x20  // arrived via NAT
+#define COMM_REUSEPORT          0x40 //< needs SO_REUSEPORT
+/// not registered with Comm and not owned by any connection-closing code
+#define COMM_ORPHANED           0x80
+/// Internal Comm optimization: Keep the source port unassigned until connect(2)
+#define COMM_DOBIND_PORT_LATER 0x100
 
 /**
  * Store data about the physical and logical attributes of a connection.
  *
- * Some link state can be infered from the data, however this is not an
+ * Some link state can be inferred from the data, however this is not an
  * object for state data. But a semantic equivalent for FD with easily
  * accessible cached properties not requiring repeated complex lookups.
  *
@@ -74,10 +79,17 @@ public:
     /** Clear the connection properties and close any open socket. */
     virtual ~Connection();
 
-    /** Copy an existing connections IP and properties.
-     * This excludes the FD. The new copy will be a closed connection.
-     */
-    ConnectionPointer copyDetails() const;
+    /// To prevent accidental copying of Connection objects that we started to
+    /// open or that are open, use cloneProfile() instead.
+    Connection(const Connection &&) = delete;
+
+    /// Create a new closed Connection with the same configuration as this one.
+    ConnectionPointer cloneProfile() const;
+
+    /// close the still-open connection when its last reference is gone
+    void enterOrphanage() { flags |= COMM_ORPHANED; }
+    /// resume relying on owner(s) to initiate an explicit connection closure
+    void leaveOrphanage() { flags &= ~COMM_ORPHANED; }
 
     /** Close any open socket. */
     void close();
@@ -129,13 +141,6 @@ public:
     virtual ScopedId codeContextGist() const override;
     virtual std::ostream &detailCodeContext(std::ostream &os) const override;
 
-private:
-    /** These objects may not be exactly duplicated. Use copyDetails() instead. */
-    Connection(const Connection &c);
-
-    /** These objects may not be exactly duplicated. Use copyDetails() instead. */
-    Connection & operator =(const Connection &c);
-
 public:
     /** Address/Port for the Squid end of a TCP link. */
     Ip::Address local;
@@ -175,7 +180,7 @@ public:
     Eui::Eui64 remoteEui64;
 #endif
 
-    InstanceId<Connection> id;
+    InstanceId<Connection, uint64_t> id;
 
 private:
     /** cache_peer data object (if any) */
@@ -195,7 +200,7 @@ std::ostream &operator << (std::ostream &os, const Comm::Connection &conn);
 inline std::ostream &
 operator << (std::ostream &os, const Comm::ConnectionPointer &conn)
 {
-    if (conn != NULL)
+    if (conn != nullptr)
         os << *conn;
     return os;
 }

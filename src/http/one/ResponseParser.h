@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -45,9 +45,14 @@ public:
     Http::StatusCode messageStatus() const { return statusCode_;}
     SBuf reasonPhrase() const { return reasonPhrase_;}
 
+    /// extracts response status-code and the following delimiter; validates status-code
+    /// \param[out] code syntactically valid status-code (unchanged on syntax errors)
+    /// \throws InsuffientInput and other exceptions on syntax and validation errors
+    static void ParseResponseStatus(Tokenizer &, StatusCode &code);
+
 private:
     int parseResponseFirstLine();
-    int parseResponseStatusAndReason(Tokenizer&, const CharacterSet &);
+    int parseResponseStatusAndReason(Tokenizer &);
 
     /// magic prefix for identifying ICY response messages
     static const SBuf IcyMagic;

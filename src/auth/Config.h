@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,13 +20,10 @@ namespace Auth
 
 class Config
 {
-    explicit Config(const Config &) = delete;
-    explicit Config(const Config *) = delete;
-
 public:
     Config() = default;
-    explicit Config(Config &&) = default;
-    ~Config() { assert(!schemeAccess); }
+    Config(Config &&) = delete; // no support for copying of any kind
+    ~Config() = default;
 
     /// set of auth_params directives
     Auth::ConfigVector schemes;

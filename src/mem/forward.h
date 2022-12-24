@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,18 +16,19 @@
 #include <iosfwd>
 
 class StoreEntry;
-class MemPoolStats;
-class MemPoolMeter;
 
 /// Memory Management
 namespace Mem
 {
+class Meter;
+class PoolMeter;
+class PoolStats;
+
 void Init();
-void Report();
 void Stats(StoreEntry *);
 void CleanIdlePools(void *unused);
 void Report(std::ostream &);
-void PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::ostream &);
+void PoolReport(const PoolStats *, const PoolMeter *, std::ostream &);
 };
 
 extern const size_t squidSystemPageSize;
@@ -70,6 +71,7 @@ FREE *memFreeBufFunc(size_t size);
 int memInUse(mem_type);
 void memDataInit(mem_type, const char *, size_t, int, bool doZero = true);
 void memCheckInit(void);
+size_t memStringCount();
 
 #endif /* _SQUID_SRC_MEM_FORWARD_H */
 

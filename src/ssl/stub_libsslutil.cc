@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,6 +35,7 @@ X509 * Ssl::signRequest(X509_REQ_Pointer const &, Security::CertPointer const &,
 bool Ssl::generateSslCertificateAndPrivateKey(char const *, Security::CertPointer const &, Security::PrivateKeyPointer const &, Security::CertPointer &, Security::PrivateKeyPointer &, BIGNUM const *) STUB_RETVAL(false)
 void Ssl::readCertAndPrivateKeyFromFiles(Security::CertPointer &, Security::PrivateKeyPointer &, char const *, char const *) STUB
 bool Ssl::sslDateIsInTheFuture(char const *) STUB_RETVAL(false)
+UniqueCString Ssl::OneLineSummary(X509_NAME &) STUB_RETVAL({})
 
 #include "ssl/helper.h"
 void Ssl::Helper::Init() STUB

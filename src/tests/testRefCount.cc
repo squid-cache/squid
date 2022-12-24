@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -55,7 +55,7 @@ testRefCount::testCountability()
         ToRefCount anObject(new _ToRefCount);
         CPPUNIT_ASSERT_EQUAL(1, _ToRefCount::Instances);
         CPPUNIT_ASSERT_EQUAL(1, anObject->someMethod());
-        anObject = anObject;
+        anObject = *&anObject;  // test self-assign without -Wself-assign-overloaded warnings
         CPPUNIT_ASSERT_EQUAL(1, _ToRefCount::Instances);
         ToRefCount objectTwo (anObject);
         anObject = objectTwo;

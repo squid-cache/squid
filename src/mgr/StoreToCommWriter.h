@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,6 +13,7 @@
 
 #include "base/AsyncJob.h"
 #include "comm/forward.h"
+#include "http/forward.h"
 #include "mgr/Action.h"
 #include "StoreIOBuffer.h"
 
@@ -45,7 +46,7 @@ protected:
     void noteStoreCopied(StoreIOBuffer ioBuf);
     static void NoteStoreCopied(void* data, StoreIOBuffer ioBuf);
     /// called by Store if the entry is no longer usable
-    static void Abort(void* param);
+    static void HandleStoreAbort(StoreToCommWriter *param);
 
     /// tell Comm to write action results
     void scheduleCommWrite(const StoreIOBuffer& ioBuf);

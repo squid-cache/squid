@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,7 +36,6 @@
 #include "mgr/Registration.h"
 #include "NullDelayId.h"
 #include "SquidString.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"
 
@@ -71,7 +70,7 @@ private:
         AggregateId (RefCount<Aggregate>);
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);
-        virtual void delayRead(DeferredRead const &);
+        virtual void delayRead(const AsyncCallPointer &);
 
     private:
         RefCount<Aggregate> theAggregate;
@@ -240,7 +239,7 @@ protected:
 };
 
 void
-Aggregate::AggregateId::delayRead(DeferredRead const &aRead)
+Aggregate::AggregateId::delayRead(const AsyncCall::Pointer &aRead)
 {
     theAggregate->delayRead(aRead);
 }
@@ -302,7 +301,7 @@ CommonPool::Factory(unsigned char _class, CompositePoolNode::Pointer& compositeC
 
     default:
         fatal ("unknown delay pool class");
-        return NULL;
+        return nullptr;
     };
 
     return result;
@@ -421,7 +420,7 @@ Aggregate::parse()
 }
 
 DelayIdComposite::Pointer
-Aggregate::id(CompositeSelectionDetails &details)
+Aggregate::id(CompositeSelectionDetails &)
 {
     if (rate()->restore_bps != -1)
         return new AggregateId (this);
@@ -445,7 +444,7 @@ Aggregate::AggregateId::bytesIn(int qty)
     theAggregate->kickReads();
 }
 
-DelayPool *DelayPools::delay_data = NULL;
+DelayPool *DelayPools::delay_data = nullptr;
 time_t DelayPools::LastUpdate = 0;
 unsigned short DelayPools::pools_ (0);
 
@@ -470,24 +469,25 @@ DelayPools::InitDelayData()
 
     DelayPools::delay_data = new DelayPool[pools()];
 
-    eventAdd("DelayPools::Update", DelayPools::Update, NULL, 1.0, 1);
+    eventAdd("DelayPools::Update", DelayPools::Update, nullptr, 1.0, 1);
 }
 
 void
 DelayPools::FreeDelayData()
 {
-    eventDelete(DelayPools::Update, NULL);
     delete[] DelayPools::delay_data;
     pools_ = 0;
 }
 
 void
-DelayPools::Update(void *unused)
+DelayPools::Update(void *)
 {
-    if (!pools())
+    // To prevent stuck transactions, stop updates only after no new transactions can
+    // register (because the pools were disabled) and the last registered transaction is gone.
+    if (!pools() && toUpdate.empty())
         return;
 
-    eventAdd("DelayPools::Update", Update, NULL, 1.0, 1);
+    eventAdd("DelayPools::Update", Update, nullptr, 1.0, 1);
 
     int incr = squid_curtime - LastUpdate;
 

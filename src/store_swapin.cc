@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,21 +29,21 @@ storeSwapInStart(store_client * sc)
     }
 
     if (e->mem_status != NOT_IN_MEMORY)
-        debugs(20, 3, HERE << "already IN_MEMORY");
+        debugs(20, 3, "already IN_MEMORY");
 
     debugs(20, 3, *e << " " <<  e->getMD5Text());
 
     if (!e->hasDisk()) {
-        debugs(20, DBG_IMPORTANT, "BUG: Attempt to swap in a not-stored entry " << *e << ". Salvaged.");
+        debugs(20, DBG_IMPORTANT, "ERROR: Squid BUG: Attempt to swap in a not-stored entry " << *e << ". Salvaged.");
         return;
     }
 
     if (e->swapoutFailed()) {
-        debugs(20, DBG_IMPORTANT, "BUG: Attempt to swap in a failed-to-store entry " << *e << ". Salvaged.");
+        debugs(20, DBG_IMPORTANT, "ERROR: Squid BUG: Attempt to swap in a failed-to-store entry " << *e << ". Salvaged.");
         return;
     }
 
-    assert(e->mem_obj != NULL);
+    assert(e->mem_obj != nullptr);
     sc->swapin_sio = storeOpen(e, storeSwapInFileNotify, storeSwapInFileClosed, sc);
 }
 
@@ -52,11 +52,11 @@ storeSwapInFileClosed(void *data, int errflag, StoreIOState::Pointer)
 {
     store_client *sc = (store_client *)data;
     debugs(20, 3, "storeSwapInFileClosed: sio=" << sc->swapin_sio.getRaw() << ", errflag=" << errflag);
-    sc->swapin_sio = NULL;
+    sc->swapin_sio = nullptr;
 
     if (sc->_callback.pending()) {
         assert (errflag <= 0);
-        sc->callback(0, errflag ? true : false);
+        sc->noteSwapInDone(errflag);
     }
 
     ++statCounter.swap.ins;

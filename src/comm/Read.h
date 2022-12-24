@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -58,7 +58,7 @@ time_t MortalReadTimeout(const time_t startTime, const time_t lifetimeLimit);
 void comm_read_base(const Comm::ConnectionPointer &conn, char *buf, int len, AsyncCall::Pointer &callback);
 inline void comm_read(const Comm::ConnectionPointer &conn, char *buf, int len, AsyncCall::Pointer &callback)
 {
-    assert(buf != NULL);
+    assert(buf != nullptr);
     comm_read_base(conn, buf, len, callback);
 }
 void comm_read_cancel(int fd, IOCB *callback, void *data);

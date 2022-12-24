@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,7 +29,6 @@ public:
 private:
     /* ACL API */
     virtual char const *typeString() const;
-    virtual ACL *clone() const;
     virtual void parse();
     virtual SBufList dump() const;
 
@@ -37,7 +36,7 @@ private:
     virtual int doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const;
 };
 
-/// An inner ACL expression tree node representing a boolean conjuction (AND)
+/// An inner ACL expression tree node representing a boolean conjunction (AND)
 /// operator applied to a list of child tree nodes.
 /// For example, conditions expressed on a single http_access line are ANDed.
 class AndNode: public InnerNode
@@ -47,7 +46,6 @@ class AndNode: public InnerNode
 public:
     /* ACL API */
     virtual char const *typeString() const;
-    virtual ACL *clone() const;
     virtual void parse();
 
 private:
@@ -68,7 +66,6 @@ public:
 
     /* ACL API */
     virtual char const *typeString() const;
-    virtual ACL *clone() const;
     virtual void parse();
 
 protected:

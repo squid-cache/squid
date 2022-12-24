@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,7 +36,7 @@
  */
 
 /*
- * util.c   Miscellanous generic functions.
+ * util.c   Miscellaneous generic functions.
  *
  */
 
@@ -146,7 +146,7 @@ uint32_t get_ipaddr(char *host)
 
     if (good_ipaddr(host) == 0) {
         return(ipstr2long(host));
-    } else if ((hp = gethostbyname(host)) == (struct hostent *)NULL) {
+    } else if ((hp = gethostbyname(host)) == (struct hostent *)nullptr) {
         return((uint32_t)0);
     }
     return(ntohl(*(uint32_t *)hp->h_addr));

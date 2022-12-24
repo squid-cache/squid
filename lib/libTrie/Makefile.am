@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -15,8 +15,9 @@ noinst_LIBRARIES = libTrie.a
 
 noinst_HEADERS = Trie.h TrieNode.h TrieCharTransform.h
 
-libTrie_a_SOURCES = Trie.cc \
+libTrie_a_SOURCES = \
+	Trie.cc \
 	Trie.h \
+	TrieCharTransform.h \
 	TrieNode.cc \
-	TrieNode.h \
-	TrieCharTransform.h
+	TrieNode.h

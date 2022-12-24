@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -100,7 +100,6 @@ bool Kid::shouldRestart() const
              exitedHappy() ||
              hopeless() ||
              shutting_down ||
-             signaled(SIGKILL) || // squid -k kill
              signaled(SIGINT) || // unexpected forced shutdown
              signaled(SIGTERM)); // unexpected forced shutdown
 }

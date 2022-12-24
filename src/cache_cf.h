@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,6 +26,12 @@ void requirePathnameExists(const char *name, const char *path);
 void parse_time_t(time_t * var);
 /// Parse bytes number from a string
 void parseBytesOptionValue(size_t * bptr, const char *units, char const * value);
+
+/// During parsing, the name of the current squid.conf directive being parsed.
+extern const char *cfg_directive;
+extern const char *cfg_filename;
+extern int config_lineno;
+extern char config_input_line[BUFSIZ];
 
 #endif /* SQUID_CACHE_CF_H_ */
 

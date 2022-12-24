@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,7 @@
 
 #if USE_DELAY_POOLS
 #include "auth/UserRequest.h"
-#include "CommRead.h"
+#include "base/DelayedAsyncCalls.h"
 #include "DelayIdComposite.h"
 #include "DelayPools.h"
 #include "ip/Address.h"
@@ -37,7 +37,7 @@ public:
 
     class CompositeSelectionDetails;
     virtual DelayIdComposite::Pointer id(CompositeSelectionDetails &) = 0;
-    void delayRead(DeferredRead const &);
+    void delayRead(const AsyncCallPointer &);
 
     /// \ingroup DelayPoolsAPI
     class CompositeSelectionDetails
@@ -55,7 +55,7 @@ public:
 
 protected:
     void kickReads();
-    DeferredReadManager deferredReads;
+    DelayedAsyncCalls deferredReads;
 };
 
 #endif /* USE_DELAY_POOLS */

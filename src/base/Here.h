@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -63,7 +63,7 @@ static SourceLocationId
 UnitFileNameHashCacher(const char *fileName, FileNameHasher hasher)
 {
     static SourceLocationId cachedHash = 0;
-    static const char *hashedFilename = 0;
+    static const char *hashedFilename = nullptr;
     // Each file #included in a translation unit has its own __FILE__ value.
     // Keep the cache fresh (and the result correct).
     if (hashedFilename != fileName) { // cheap pointer comparison

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,7 +26,6 @@ public:
     virtual SBufList dump() const;
     virtual void parse();
     virtual bool empty() const { return notes->empty(); }
-    virtual ACLData<NotePairs::Entry *> *clone() const;
 
     /// Stores annotations into pairs.
     void annotate(NotePairs::Pointer pairs, const CharacterSet *delimiters, const AccessLogEntry::Pointer &al);

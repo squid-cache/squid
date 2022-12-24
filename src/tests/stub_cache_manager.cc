@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,13 +8,13 @@
 
 #include "squid.h"
 #include "CacheManager.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "mgr/Registration.h"
 
 #define STUB_API "cache_manager.cc"
 #include "tests/STUB.h"
 
-Mgr::Action::Pointer CacheManager::createNamedAction(char const* action) STUB_RETVAL(NULL)
+Mgr::Action::Pointer CacheManager::createNamedAction(char const*) STUB_RETVAL(nullptr)
 void CacheManager::start(const Comm::ConnectionPointer &, HttpRequest *, StoreEntry *, const AccessLogEntryPointer &)
 {
     std::cerr << HERE << "\n";
@@ -25,5 +25,5 @@ CacheManager* CacheManager::GetInstance() STUB_RETVAL(instance)
 void Mgr::RegisterAction(char const*, char const*, OBJH, int, int) {}
 void Mgr::RegisterAction(char const *, char const *, Mgr::ClassActionCreationHandler *, int, int) {}
 
-Mgr::Action::Pointer CacheManager::createRequestedAction(const Mgr::ActionParams &) STUB_RETVAL(NULL)
+Mgr::Action::Pointer CacheManager::createRequestedAction(const Mgr::ActionParams &) STUB_RETVAL(nullptr)
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,15 +37,6 @@
  \ingroup ServerProtocol
  */
 
-// Custom SSL errors; assumes all official errors are positive
-#define SQUID_X509_V_ERR_INFINITE_VALIDATION -4
-#define SQUID_X509_V_ERR_CERT_CHANGE -3
-#define SQUID_ERR_SSL_HANDSHAKE -2
-#define SQUID_X509_V_ERR_DOMAIN_MISMATCH -1
-// All SSL errors range: from smallest (negative) custom to largest SSL error
-#define SQUID_SSL_ERROR_MIN SQUID_X509_V_ERR_CERT_CHANGE
-#define SQUID_SSL_ERROR_MAX INT_MAX
-
 // Maximum certificate validation callbacks. OpenSSL versions exceeding this
 // limit are deemed stuck in an infinite validation loop (OpenSSL bug #3090)
 // and will trigger the SQUID_X509_V_ERR_INFINITE_VALIDATION error.
@@ -75,7 +66,6 @@ int AskPasswordCb(char *buf, int size, int rwflag, void *userdata);
 /// call before generating any SSL context
 void Initialize();
 
-class ErrorDetail;
 class CertValidationResponse;
 typedef RefCount<CertValidationResponse> CertValidationResponsePointer;
 
@@ -83,10 +73,11 @@ typedef RefCount<CertValidationResponse> CertValidationResponsePointer;
 bool InitServerContext(Security::ContextPointer &, AnyP::PortCfg &);
 
 /// initialize a TLS client context with OpenSSL specific settings
-bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, long flags);
+bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, Security::ParsedPortFlags);
 
 /// set the certificate verify callback for a context
-void SetupVerifyCallback(Security::ContextPointer &);
+void ConfigurePeerVerification(Security::ContextPointer &, const Security::ParsedPortFlags);
+void DisablePeerVerification(Security::ContextPointer &);
 
 /// if required, setup callback for generating ephemeral RSA keys
 void MaybeSetupRsaCallback(Security::ContextPointer &);
@@ -146,7 +137,7 @@ extern std::vector<const char *>BumpModeStr;
  */
 inline const char *bumpMode(int bm)
 {
-    return (0 <= bm && bm < Ssl::bumpEnd) ? Ssl::BumpModeStr.at(bm) : NULL;
+    return (0 <= bm && bm < Ssl::bumpEnd) ? Ssl::BumpModeStr.at(bm) : nullptr;
 }
 
 /// certificates indexed by issuer name
@@ -177,17 +168,20 @@ void unloadSquidUntrusted();
  */
 void SSL_add_untrusted_cert(SSL *ssl, X509 *cert);
 
-/**
- * Searches in serverCertificates list for the cert issuer and if not found
- * and Authority Info Access of cert provides a URI return it.
- */
-const char *uriOfIssuerIfMissing(X509 *cert,  Security::CertList const &serverCertificates, const Security::ContextPointer &context);
+/// finds certificate issuer URI in the Authority Info Access extension
+const char *findIssuerUri(X509 *cert);
+
+/// Searches serverCertificates and local databases for the cert issuer.
+/// \param context where to retrieve the configured CA's db; may be nil
+/// \returns the found issuer certificate or nil
+Security::CertPointer findIssuerCertificate(X509 *cert, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context);
 
 /**
  * Fill URIs queue with the uris of missing certificates from serverCertificate chain
  * if this information provided by Authority Info Access.
+ \return whether at least one URI is known, including previously known ones
  */
-void missingChainCertificatesUrls(std::queue<SBuf> &URIs, Security::CertList const &serverCertificates, const Security::ContextPointer &context);
+bool missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) &serverCertificates, const Security::ContextPointer &context);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -231,7 +225,7 @@ Security::ContextPointer GenerateSslContext(CertificateProperties const &, Secur
   \param properties Check if the context certificate matches the given properties
   \return true if the contexts certificate is valid, false otherwise
  */
-bool verifySslCertificate(Security::ContextPointer &, CertificateProperties const &);
+bool verifySslCertificate(const Security::ContextPointer &, CertificateProperties const &);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -260,7 +254,7 @@ void configureUnconfiguredSslContext(Security::ContextPointer &, Ssl::CertSignAl
 
 /**
   \ingroup ServerProtocolSSLAPI
-  * Generates a certificate and a private key using provided properies and set it
+  * Generates a certificate and a private key using provided properties and set it
   * to SSL object.
  */
 bool configureSSL(SSL *ssl, CertificateProperties const &properties, AnyP::PortCfg &port);
@@ -328,6 +322,48 @@ void InRamCertificateDbKey(const Ssl::CertificateProperties &certProperties, SBu
   TODO: Add support for reading from `buf`.
  */
 BIO *BIO_new_SBuf(SBuf *buf);
+
+/// Validates the given TLS connection server certificate chain in conjunction
+/// with a (possibly empty) set of "extra" intermediate certs. Also consults
+/// sslproxy_foreign_intermediate_certs. This is a C++/Squid-friendly wrapper of
+/// OpenSSL "verification callback function" (\ref OpenSSL_vcb_disambiguation).
+/// OpenSSL has a similar wrapper, ssl_verify_cert_chain(), but that wrapper is
+/// not a part of the public OpenSSL API.
+bool VerifyConnCertificates(Security::Connection &, const Ssl::X509_STACK_Pointer &extraCerts);
+
+// TODO: Move other ssl_ex_index_* validation-related information here.
+/// OpenSSL "verify_callback function" input/output parameters. This information
+/// cannot be passed through the verification API directly, so it is aggregated
+/// in this class and exchanged via ssl_ex_index_verify_callback_parameters. For
+/// OpenSSL validation callback details, see \ref OpenSSL_vcb_disambiguation.
+class VerifyCallbackParameters {
+public:
+    /// creates a VerifyCallbackParameters object and adds it to the given TLS connection
+    /// \returns the successfully created and added object
+    static VerifyCallbackParameters *New(Security::Connection &);
+
+    /// \returns the VerifyCallbackParameters object previously attached via New()
+    static VerifyCallbackParameters &At(Security::Connection &);
+
+    /// \returns the VerifyCallbackParameters object previously attached via New() or nil
+    static VerifyCallbackParameters *Find(Security::Connection &);
+
+    /* input parameters */
+
+    /// whether X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY should be cleared
+    /// (after setting hidMissingIssuer) because the validation initiator wants
+    /// to get the missing certificates and redo the validation with them
+    bool callerHandlesMissingCertificates = false;
+
+    /* output parameters */
+
+    /// whether certificate validation has failed due to missing certificate(s)
+    /// (i.e. X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY), but the failure was
+    /// cleared/hidden due to true callerHandlesMissingCertificates setting; the
+    /// certificate chain has to be deemed untrusted until revalidation (if any)
+    bool hidMissingIssuer = false;
+};
+
 } //namespace Ssl
 
 #if _SQUID_WINDOWS_

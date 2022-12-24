@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -7,7 +7,7 @@
 
 include $(top_srcdir)/src/Common.am
 
-DIST_SUBDIRS = ntlmauth profiler rfcnb smblib libTrie snmplib
+DIST_SUBDIRS = ntlmauth rfcnb smblib libTrie snmplib
 SUBDIRS=
 EXTRA_DIST=
 
@@ -16,9 +16,6 @@ SUBDIRS += libTrie
 endif
 if ENABLE_SNMP
 SUBDIRS += snmplib
-endif
-if ENABLE_XPROF_STATS
-SUBDIRS += profiler
 endif
 
 install: all
@@ -66,14 +63,11 @@ libmisccontainers_la_SOURCES = \
 	hash.cc
 
 libmiscutil_la_SOURCES = \
-	getfullhostname.c \
-	heap.c \
-	iso3307.c \
-	radix.c \
-	rfc1123.c \
 	$(SNPRINTFSOURCE) \
 	Splay.cc \
-	stub_memaccount.c \
+	getfullhostname.c \
+	heap.c \
+	radix.c \
 	util.c \
 	xusleep.c
 
@@ -81,9 +75,9 @@ TESTS += tests/testRFC1738
 
 check_PROGRAMS += tests/testRFC1738
 
-tests_testRFC1738_SOURCES= \
-	tests/testRFC1738.h \
-	tests/testRFC1738.cc
+tests_testRFC1738_SOURCES = \
+	tests/testRFC1738.cc \
+	tests/testRFC1738.h
 
 tests_testRFC1738_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \

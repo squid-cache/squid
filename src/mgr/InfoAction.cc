@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,13 +14,13 @@
 #include "globals.h"
 #include "HttpReply.h"
 #include "ipc/Messages.h"
+#include "ipc/RequestId.h"
 #include "ipc/TypedMsgHdr.h"
 #include "ipc/UdsOp.h"
 #include "mgr/Filler.h"
 #include "mgr/InfoAction.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 
@@ -110,20 +110,20 @@ Mgr::InfoAction::Create(const CommandPointer &cmd)
 Mgr::InfoAction::InfoAction(const CommandPointer &aCmd):
     Action(aCmd), data()
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
 }
 
 void
 Mgr::InfoAction::add(const Action& action)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     data += dynamic_cast<const InfoAction&>(action).data;
 }
 
 void
 Mgr::InfoAction::respond(const Request& request)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     Ipc::ImportFdIntoComm(request.conn, SOCK_STREAM, IPPROTO_TCP, Ipc::fdnHttpSocket);
     Must(Comm::IsConnOpen(request.conn));
     Must(request.requestId != 0);
@@ -139,8 +139,8 @@ Mgr::InfoAction::collect()
 void
 Mgr::InfoAction::dump(StoreEntry* entry)
 {
-    debugs(16, 5, HERE);
-    Must(entry != NULL);
+    debugs(16, 5, MYNAME);
+    Must(entry != nullptr);
 
 #if XMALLOC_STATISTICS
     if (UsingSmp())

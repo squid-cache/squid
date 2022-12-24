@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,7 +23,8 @@ namespace Mgr
 class Response: public Ipc::Response
 {
 public:
-    Response(unsigned int aRequestId, Action::Pointer anAction = NULL);
+    /// sender's constructor
+    Response(Ipc::RequestId, Action::Pointer anAction = nullptr);
 
     explicit Response(const Ipc::TypedMsgHdr& msg); ///< from recvmsg()
 
@@ -33,9 +34,6 @@ public:
 
     bool hasAction() const; ///< whether response contain action object
     const Action& getAction() const; ///< returns action object
-
-private:
-    Response(const Response& response);
 
 public:
     Action::Pointer action; ///< action relating to response

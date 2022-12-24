@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -100,7 +100,7 @@ protected:
     };
     std::queue<Ufs::UFSStoreState::_queued_write> pending_writes;
 
-    /** \todo These should be in the IO strategy */
+    // TODO: These should be in the IO strategy
 
     struct {
         /**

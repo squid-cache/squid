@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -47,7 +47,7 @@ private:
     AsyncCall::Pointer closer; ///< comm_close handler for the connection
 };
 
-void SendResponse(unsigned int requestId, const Pdu& pdu);
+void SendResponse(Ipc::RequestId, const Pdu &);
 
 } // namespace Snmp
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -51,7 +51,7 @@
 char Default_NTDomain[DNLEN+1] = NTV_DEFAULT_DOMAIN;
 const char * errormsg;
 
-const char NTV_SERVER_ERROR_MSG[] = "Internal server errror";
+const char NTV_SERVER_ERROR_MSG[] = "Internal server error";
 const char NTV_GROUP_ERROR_MSG[] = "User not allowed to use this cache";
 const char NTV_LOGON_ERROR_MSG[] = "No such user or wrong password";
 const char NTV_VALID_DOMAIN_SEPARATOR[] = "\\/";

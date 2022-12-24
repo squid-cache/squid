@@ -1,12 +1,10 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
-
-/* DEBUG: section 59    auto-growing Memory Buffer with printf */
 
 /**
  \verbatim
@@ -39,8 +37,8 @@
  * ----------
  *
  * MemBuffer is a memory-resident buffer with printf()-like interface. It
- * hides all offest handling and overflow checking. Moreover, it has a
- * build-in control that no partial data has been written.
+ * hides all offset handling and overflow checking. Moreover, it has a
+ * built-in control that no partial data has been written.
  *
  * MemBuffer is designed to handle relatively small data. It starts with a
  * small buffer of configurable size to avoid allocating huge buffers all the
@@ -74,7 +72,6 @@
 #include "squid.h"
 #include "mem/forward.h"
 #include "MemBuf.h"
-#include "profiler/Profiler.h"
 
 /* local constants */
 
@@ -96,7 +93,7 @@ void
 MemBuf::init(mb_size_t szInit, mb_size_t szMax)
 {
     assert(szInit > 0 && szMax > 0);
-    buf = NULL;
+    buf = nullptr;
     size = 0;
     max_capacity = szMax;
     capacity = 0;
@@ -119,7 +116,7 @@ MemBuf::clean()
         assert(!stolen);    /* not frozen */
 
         memFreeBuf(capacity, buf);
-        buf = NULL;
+        buf = nullptr;
         size = capacity = max_capacity = 0;
     }
 }
@@ -174,7 +171,6 @@ void MemBuf::consume(mb_size_t shiftSize)
     assert(0 <= shiftSize && shiftSize <= cSize);
     assert(!stolen); /* not frozen */
 
-    PROF_start(MemBuf_consume);
     if (shiftSize > 0) {
         if (shiftSize < cSize)
             memmove(buf, buf + shiftSize, cSize - shiftSize);
@@ -183,13 +179,11 @@ void MemBuf::consume(mb_size_t shiftSize)
 
         terminate();
     }
-    PROF_stop(MemBuf_consume);
 }
 
 /// removes all whitespace prefix bytes and "packs" by moving content left
 void MemBuf::consumeWhitespacePrefix()
 {
-    PROF_start(MemBuf_consumeWhitespace);
     if (contentSize() > 0) {
         const char *end = buf + contentSize();
         const char *p = buf;
@@ -197,7 +191,6 @@ void MemBuf::consumeWhitespacePrefix()
         if (p-buf > 0)
             consume(p-buf);
     }
-    PROF_stop(MemBuf_consumeWhitespace);
 }
 
 // removes last tailSize bytes
@@ -219,7 +212,6 @@ void MemBuf::append(const char *newContent, int sz)
     assert(buf || (0==capacity && 0==size));
     assert(!stolen); /* not frozen */
 
-    PROF_start(MemBuf_append);
     if (sz > 0) {
         if (size + sz + 1 > capacity)
             grow(size + sz + 1);
@@ -228,7 +220,6 @@ void MemBuf::append(const char *newContent, int sz)
         memcpy(space(), newContent, sz);
         appended(sz);
     }
-    PROF_stop(MemBuf_append);
 }
 
 /// updates content size after external append
@@ -271,7 +262,7 @@ MemBuf::vappendf(const char *fmt, va_list vargs)
 
         /* Fix of bug 753r. The value of vargs is undefined
          * after vsnprintf() returns. Make a copy of vargs
-         * incase we loop around and call vsnprintf() again.
+         * in case we loop around and call vsnprintf() again.
          */
         va_list ap;
         va_copy(ap,vargs);
@@ -332,8 +323,6 @@ MemBuf::grow(mb_size_t min_cap)
     assert(!stolen);
     assert(capacity < min_cap);
 
-    PROF_start(MemBuf_grow);
-
     /* determine next capacity */
 
     if (min_cap > 64 * 1024) {
@@ -359,7 +348,6 @@ MemBuf::grow(mb_size_t min_cap)
 
     /* done */
     capacity = (mb_size_t) buf_cap;
-    PROF_stop(MemBuf_grow);
 }
 
 /* Reports */

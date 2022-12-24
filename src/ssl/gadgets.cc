@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,38 +7,67 @@
  */
 
 #include "squid.h"
+#include "base/IoManip.h"
+#include "error/SysErrorDetail.h"
+#include "sbuf/Stream.h"
+#include "security/Io.h"
 #include "ssl/gadgets.h"
 
-EVP_PKEY * Ssl::createSslPrivateKey()
+void
+Ssl::ForgetErrors()
 {
-    Security::PrivateKeyPointer pkey(EVP_PKEY_new());
+    if (ERR_peek_last_error()) {
+        debugs(83, 5, "forgetting stale OpenSSL errors:" << ReportAndForgetErrors);
+        // forget errors if section/level-specific debugging above was disabled
+        while (ERR_get_error()) {}
+    }
 
-    if (!pkey)
-        return NULL;
+    // Technically, the caller should just ignore (potentially stale) errno when
+    // no system calls have failed. However, due to OpenSSL error-reporting API
+    // deficiencies, many callers cannot detect when a TLS error was caused by a
+    // system call failure. We forget the stale errno (just like we forget stale
+    // OpenSSL errors above) so that the caller only uses fresh errno values.
+    errno = 0;
+}
 
-    BIGNUM_Pointer bn(BN_new());
-    if (!bn)
-        return NULL;
+std::ostream &
+Ssl::ReportAndForgetErrors(std::ostream &os)
+{
+    unsigned int reported = 0; // efficiently marks ForgetErrors() call boundary
+    while (const auto errorToForget = ERR_get_error())
+        os << Debug::Extra << "OpenSSL-saved error #" << (++reported) << ": " << asHex(errorToForget);
+    return os;
+}
 
-    if (!BN_set_word(bn.get(), RSA_F4))
-        return NULL;
+[[ noreturn ]] static void
+ThrowErrors(const char * const problem, const int savedErrno, const SourceLocation &where)
+{
+    throw TextException(ToSBuf(problem, ": ",
+                               Ssl::ReportAndForgetErrors,
+                               ReportSysError(savedErrno)),
+                        where);
+}
 
-    Ssl::RSA_Pointer rsa(RSA_new());
+static Security::PrivateKeyPointer
+CreateRsaPrivateKey()
+{
+    Ssl::EVP_PKEY_CTX_Pointer rsa(EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nullptr));
     if (!rsa)
-        return NULL;
+        return nullptr;
+
+    if (EVP_PKEY_keygen_init(rsa.get()) <= 0)
+        return nullptr;
 
     int num = 2048; // Maybe use 4096 RSA keys, or better make it configurable?
-    if (!RSA_generate_key_ex(rsa.get(), num, bn.get(), NULL))
-        return NULL;
+    if (EVP_PKEY_CTX_set_rsa_keygen_bits(rsa.get(), num) <= 0)
+        return nullptr;
 
-    if (!rsa)
-        return NULL;
+    /* Generate key */
+    EVP_PKEY *pkey = nullptr;
+    if (EVP_PKEY_keygen(rsa.get(), &pkey) <= 0)
+        return nullptr;
 
-    if (!EVP_PKEY_assign_RSA(pkey.get(), (rsa.get())))
-        return NULL;
-
-    rsa.release();
-    return pkey.release();
+    return Security::PrivateKeyPointer(pkey);
 }
 
 /**
@@ -56,7 +85,7 @@ static bool setSerialNumber(ASN1_INTEGER *ai, BIGNUM const* serial)
         if (!bn)
             return false;
 
-        if (!BN_pseudo_rand(bn.get(), 64, 0, 0))
+        if (!BN_rand(bn.get(), 64, 0, 0))
             return false;
     }
 
@@ -77,10 +106,10 @@ bool Ssl::writeCertAndPrivateKeyToMemory(Security::CertPointer const & cert, Sec
     if (!PEM_write_bio_X509 (bio.get(), cert.get()))
         return false;
 
-    if (!PEM_write_bio_PrivateKey(bio.get(), pkey.get(), NULL, NULL, 0, NULL, NULL))
+    if (!PEM_write_bio_PrivateKey(bio.get(), pkey.get(), nullptr, nullptr, 0, nullptr, nullptr))
         return false;
 
-    char *ptr = NULL;
+    char *ptr = nullptr;
     long len = BIO_get_mem_data(bio.get(), &ptr);
     if (!ptr)
         return false;
@@ -101,7 +130,7 @@ bool Ssl::appendCertToMemory(Security::CertPointer const & cert, std::string & b
     if (!PEM_write_bio_X509 (bio.get(), cert.get()))
         return false;
 
-    char *ptr = NULL;
+    char *ptr = nullptr;
     long len = BIO_get_mem_data(bio.get(), &ptr);
     if (!ptr)
         return false;
@@ -118,30 +147,36 @@ bool Ssl::readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, Security
     Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
     BIO_puts(bio.get(), bufferToRead);
 
-    X509 * certPtr = NULL;
-    cert.resetWithoutLocking(PEM_read_bio_X509(bio.get(), &certPtr, 0, 0));
-    if (!cert)
+    try {
+        cert = ReadCertificate(bio);
+    } catch (...) {
+        debugs(83, DBG_IMPORTANT, "ERROR: Cannot deserialize a signing certificate:" <<
+               Debug::Extra << "problem: " << CurrentException);
+        cert.reset();
+        pkey.reset();
         return false;
+    }
 
-    EVP_PKEY * pkeyPtr = NULL;
-    pkey.resetWithoutLocking(PEM_read_bio_PrivateKey(bio.get(), &pkeyPtr, 0, 0));
+    EVP_PKEY * pkeyPtr = nullptr;
+    pkey.resetWithoutLocking(PEM_read_bio_PrivateKey(bio.get(), &pkeyPtr, nullptr, nullptr));
     if (!pkey)
         return false;
 
     return true;
 }
 
-bool Ssl::readCertFromMemory(Security::CertPointer & cert, char const * bufferToRead)
+// TODO: Convert matching BIO_s_mem() callers.
+Ssl::BIO_Pointer
+Ssl::ReadOnlyBioTiedTo(const char * const bufferToRead)
 {
-    Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
-    BIO_puts(bio.get(), bufferToRead);
-
-    X509 * certPtr = NULL;
-    cert.resetWithoutLocking(PEM_read_bio_X509(bio.get(), &certPtr, 0, 0));
-    if (!cert)
-        return false;
-
-    return true;
+    ForgetErrors();
+    // OpenSSL BIO API is not const-correct, but OpenSSL does not free or modify
+    // BIO_new_mem_buf() data because it is marked with BIO_FLAGS_MEM_RDONLY.
+    const auto castedBuffer = const_cast<char*>(bufferToRead);
+    if (const auto bio = BIO_new_mem_buf(castedBuffer, -1)) // no memcpy()
+        return BIO_Pointer(bio);
+    const auto savedErrno = errno;
+    ThrowErrors("cannot allocate OpenSSL BIO structure", savedErrno, Here());
 }
 
 // According to RFC 5280 (Section A.1), the common name length in a certificate
@@ -154,7 +189,7 @@ static bool replaceCommonName(Security::CertPointer & cert, std::string const &r
     std::string cn = rawCn;
 
     if (cn.length() > MaxCnLen) {
-        // In the case the length od CN is more than the maximum supported size
+        // In the case the length of CN is more than the maximum supported size
         // try to use the first upper level domain.
         size_t pos = 0;
         do {
@@ -196,14 +231,14 @@ const char *Ssl::CertSignAlgorithmStr[] = {
     "signTrusted",
     "signUntrusted",
     "signSelf",
-    NULL
+    nullptr
 };
 
 const char *Ssl::CertAdaptAlgorithmStr[] = {
     "setValidAfter",
     "setValidBefore",
     "setCommonName",
-    NULL
+    nullptr
 };
 
 Ssl::CertificateProperties::CertificateProperties():
@@ -211,7 +246,7 @@ Ssl::CertificateProperties::CertificateProperties():
     setValidBefore(false),
     setCommonName(false),
     signAlgorithm(Ssl::algSignEnd),
-    signHash(NULL)
+    signHash(nullptr)
 {}
 
 static void
@@ -258,7 +293,7 @@ Ssl::OnDiskCertificateDbKey(const Ssl::CertificateProperties &properties)
         certKey.append(certSignAlgorithm(properties.signAlgorithm));
     }
 
-    if (properties.signHash != NULL) {
+    if (properties.signHash != nullptr) {
         certKey.append("+SignHash=", 10);
         certKey.append(EVP_MD_name(properties.signHash));
     }
@@ -332,12 +367,12 @@ mimicAuthorityKeyId(Security::CertPointer &cert, Security::CertPointer const &mi
     if (!method)
         return false;
 
-    unsigned char *ext_der = NULL;
+    unsigned char *ext_der = nullptr;
     int ext_len = ASN1_item_i2d((ASN1_VALUE *)theAuthKeyId.get(), &ext_der, ASN1_ITEM_ptr(method->it));
     Ssl::ASN1_OCTET_STRING_Pointer extOct(ASN1_OCTET_STRING_new());
     extOct.get()->data = ext_der;
     extOct.get()->length = ext_len;
-    Ssl::X509_EXTENSION_Pointer extAuthKeyId(X509_EXTENSION_create_by_NID(NULL, NID_authority_key_identifier, 0, extOct.get()));
+    Ssl::X509_EXTENSION_Pointer extAuthKeyId(X509_EXTENSION_create_by_NID(nullptr, NID_authority_key_identifier, 0, extOct.get()));
     if (!extAuthKeyId.get())
         return false;
 
@@ -376,8 +411,14 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
         DecipherOnly
     };
 
-    EVP_PKEY *certKey = X509_get_pubkey(mimicCert.get());
-    const bool rsaPkey = (EVP_PKEY_get0_RSA(certKey) != nullptr);
+    // XXX: Add PublicKeyPointer. In OpenSSL, public and private keys are
+    // internally represented by EVP_PKEY pair, but GnuTLS uses distinct types.
+    const Security::PrivateKeyPointer certKey(X509_get_pubkey(mimicCert.get()));
+#if OPENSSL_VERSION_MAJOR < 3
+    const auto rsaPkey = EVP_PKEY_get0_RSA(certKey.get()) != nullptr;
+#else
+    const auto rsaPkey = EVP_PKEY_is_a(certKey.get(), "RSA") == 1;
+#endif
 
     int added = 0;
     int nid;
@@ -388,20 +429,20 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
             if (X509_add_ext(cert.get(), ext, -1))
                 ++added;
             if (nid == NID_key_usage && !rsaPkey) {
-                // NSS does not requre the KeyEncipherment flag on EC keys
+                // NSS does not require the KeyEncipherment flag on EC keys
                 // but it does require it for RSA keys.  Since ssl-bump
                 // substitutes RSA keys for EC ones, we need to ensure that
                 // that the more stringent requirements are met.
 
                 const int p = X509_get_ext_by_NID(cert.get(), NID_key_usage, -1);
-                if ((ext = X509_get_ext(cert.get(), p)) != NULL) {
+                if ((ext = X509_get_ext(cert.get(), p)) != nullptr) {
                     ASN1_BIT_STRING *keyusage = (ASN1_BIT_STRING *)X509V3_EXT_d2i(ext);
                     ASN1_BIT_STRING_set_bit(keyusage, KeyEncipherment, 1);
 
                     //Build the ASN1_OCTET_STRING
                     const X509V3_EXT_METHOD *method = X509V3_EXT_get(ext);
                     assert(method && method->it);
-                    unsigned char *ext_der = NULL;
+                    unsigned char *ext_der = nullptr;
                     int ext_len = ASN1_item_i2d((ASN1_VALUE *)keyusage,
                                                 &ext_der,
                                                 (const ASN1_ITEM *)ASN1_ITEM_ptr(method->it));
@@ -449,7 +490,7 @@ addAltNameWithSubjectCn(Security::CertPointer &cert)
     if (res <= 0 || res >= static_cast<int>(sizeof(dnsName)))
         return false;
 
-    X509_EXTENSION *ext = X509V3_EXT_conf_nid(NULL, NULL, NID_subject_alt_name, dnsName);
+    X509_EXTENSION *ext = X509V3_EXT_conf_nid(nullptr, nullptr, NID_subject_alt_name, dnsName);
     if (!ext)
         return false;
 
@@ -484,7 +525,7 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
     // fields from caCert.
     // Currently there is not any way in openssl tollkit to compare two ASN1_TIME
     // objects.
-    ASN1_TIME *aTime = NULL;
+    ASN1_TIME *aTime = nullptr;
     if (!properties.setValidBefore && properties.mimicCert.get())
         aTime = X509_getm_notBefore(properties.mimicCert.get());
     if (!aTime && properties.signWithX509.get())
@@ -496,7 +537,7 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
     } else if (!X509_gmtime_adj(X509_getm_notBefore(cert.get()), (-2)*24*60*60))
         return false;
 
-    aTime = NULL;
+    aTime = nullptr;
     if (!properties.setValidAfter && properties.mimicCert.get())
         aTime = X509_getm_notAfter(properties.mimicCert.get());
     if (!aTime && properties.signWithX509.get())
@@ -546,13 +587,8 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
 
 static bool generateFakeSslCertificate(Security::CertPointer & certToStore, Security::PrivateKeyPointer & pkeyToStore, Ssl::CertificateProperties const &properties,  Ssl::BIGNUM_Pointer const &serial)
 {
-    Security::PrivateKeyPointer pkey;
     // Use signing certificates private key as generated certificate private key
-    if (properties.signWithPkey.get())
-        pkey.resetAndLock(properties.signWithPkey.get());
-    else // if not exist generate one
-        pkey.resetWithoutLocking(Ssl::createSslPrivateKey());
-
+    const auto pkey = properties.signWithPkey ? properties.signWithPkey : CreateRsaPrivateKey();
     if (!pkey)
         return false;
 
@@ -600,8 +636,8 @@ static  BIGNUM *createCertSerial(unsigned char *md, unsigned int n)
 
     assert(n == 20); //for sha1 n is 20 (for md5 n is 16)
 
-    BIGNUM *serial = NULL;
-    serial = BN_bin2bn(md, n, NULL);
+    BIGNUM *serial = nullptr;
+    serial = BN_bin2bn(md, n, nullptr);
 
     // if the serial is "0" set it to '1'
     if (BN_is_zero(serial) == true)
@@ -630,7 +666,7 @@ static BIGNUM *x509Digest(Security::CertPointer const & cert)
     unsigned char md[EVP_MAX_MD_SIZE];
 
     if (!X509_digest(cert.get(),EVP_sha1(),md,&n))
-        return NULL;
+        return nullptr;
 
     return createCertSerial(md, n);
 }
@@ -641,7 +677,7 @@ static BIGNUM *x509Pubkeydigest(Security::CertPointer const & cert)
     unsigned char md[EVP_MAX_MD_SIZE];
 
     if (!X509_pubkey_digest(cert.get(),EVP_sha1(),md,&n))
-        return NULL;
+        return nullptr;
 
     return createCertSerial(md, n);
 }
@@ -693,22 +729,46 @@ Ssl::OpenCertsFileForReading(Ssl::BIO_Pointer &bio, const char *filename)
     return true;
 }
 
-bool
-Ssl::ReadX509Certificate(Ssl::BIO_Pointer &bio, Security::CertPointer & cert)
+Security::CertPointer
+Ssl::ReadOptionalCertificate(const BIO_Pointer &bio)
 {
-    assert(bio);
-    if (X509 *certificate = PEM_read_bio_X509(bio.get(), NULL, NULL, NULL)) {
-        cert.resetWithoutLocking(certificate);
-        return true;
+    Assure(bio);
+    ForgetErrors();
+    if (const auto cert = PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr))
+        return Security::CertPointer(cert);
+    const auto savedErrno = errno;
+
+    // PEM_R_NO_START_LINE means OpenSSL could not find a BEGIN CERTIFICATE
+    // marker after successfully reading input. That includes such use cases as
+    // empty input, valid input exhausted by previous extractions, malformed
+    // input, and valid key-only input without the certificate. We cannot
+    // distinguish all these outcomes and treat this error as an EOF condition.
+    if (ERR_GET_REASON(ERR_peek_last_error()) == PEM_R_NO_START_LINE) {
+        // consume PEM_R_NO_START_LINE to clean global error queue (if that was
+        // the only error) and/or to let us check for other errors (otherwise)
+        (void)ERR_get_error();
+        if (!ERR_peek_last_error())
+            return nullptr; // EOF without any other errors
     }
-    return false;
+
+    ThrowErrors("cannot read a PEM-encoded certificate", savedErrno, Here());
+}
+
+Security::CertPointer
+Ssl::ReadCertificate(const BIO_Pointer &bio)
+{
+    if (const auto cert = ReadOptionalCertificate(bio))
+        return cert;
+
+    // PEM_R_NO_START_LINE
+    throw TextException("missing a required PEM-encoded certificate", Here());
 }
 
 bool
 Ssl::ReadPrivateKey(Ssl::BIO_Pointer &bio, Security::PrivateKeyPointer &pkey, pem_password_cb *passwd_callback)
 {
     assert(bio);
-    if (EVP_PKEY *akey = PEM_read_bio_PrivateKey(bio.get(), NULL, passwd_callback, NULL)) {
+    if (EVP_PKEY *akey = PEM_read_bio_PrivateKey(bio.get(), nullptr, passwd_callback, nullptr)) {
         pkey.resetWithoutLocking(akey);
         return true;
     }
@@ -752,9 +812,15 @@ Ssl::WritePrivateKey(Ssl::BIO_Pointer &bio, const Security::PrivateKeyPointer &p
 {
     if (!pkey || !bio)
         return false;
-    if (!PEM_write_bio_PrivateKey(bio.get(), pkey.get(), NULL, NULL, 0, NULL, NULL))
+    if (!PEM_write_bio_PrivateKey(bio.get(), pkey.get(), nullptr, nullptr, 0, nullptr, nullptr))
         return false;
     return true;
+}
+
+Ssl::UniqueCString
+Ssl::OneLineSummary(X509_NAME &name)
+{
+    return Ssl::UniqueCString(X509_NAME_oneline(&name, nullptr, 0));
 }
 
 bool Ssl::sslDateIsInTheFuture(char const * date)
@@ -863,9 +929,9 @@ bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &
 
     // Compare subjectAltName extension
     STACK_OF(GENERAL_NAME) * cert1_altnames;
-    cert1_altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(cert, NID_subject_alt_name, NULL, NULL);
+    cert1_altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(cert, NID_subject_alt_name, nullptr, nullptr);
     STACK_OF(GENERAL_NAME) * cert2_altnames;
-    cert2_altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(cert2, NID_subject_alt_name, NULL, NULL);
+    cert2_altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(cert2, NID_subject_alt_name, nullptr, nullptr);
     bool match = true;
     if (cert1_altnames) {
         int numalts = sk_GENERAL_NAME_num(cert1_altnames);
@@ -887,7 +953,7 @@ static const char *getSubjectEntry(X509 *x509, int nid)
     static char name[1024] = ""; // stores common name (CN)
 
     if (!x509)
-        return NULL;
+        return nullptr;
 
     // TODO: What if the entry is a UTF8String? See X509_NAME_get_index_by_NID(3ssl).
     const int nameLen = X509_NAME_get_text_by_NID(
@@ -897,7 +963,7 @@ static const char *getSubjectEntry(X509 *x509, int nid)
     if (nameLen > 0)
         return name;
 
-    return NULL;
+    return nullptr;
 }
 
 const char *Ssl::CommonHostName(X509 *x509)
@@ -917,11 +983,11 @@ Ssl::CertificatesCmp(const Security::CertPointer &cert1, const Security::CertPoi
         return false;
 
     int cert1Len;
-    unsigned char *cert1Asn = NULL;
+    unsigned char *cert1Asn = nullptr;
     cert1Len = ASN1_item_i2d((ASN1_VALUE *)cert1.get(), &cert1Asn, ASN1_ITEM_rptr(X509));
 
     int cert2Len;
-    unsigned char *cert2Asn = NULL;
+    unsigned char *cert2Asn = nullptr;
     cert2Len = ASN1_item_i2d((ASN1_VALUE *)cert2.get(), &cert2Asn, ASN1_ITEM_rptr(X509));
 
     if (cert1Len != cert2Len)

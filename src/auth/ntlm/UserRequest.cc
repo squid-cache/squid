@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,7 +23,6 @@
 #include "http/Stream.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
-#include "SquidTime.h"
 
 Auth::Ntlm::UserRequest::UserRequest() :
     server_blob(nullptr),
@@ -42,25 +41,25 @@ Auth::Ntlm::UserRequest::~UserRequest()
 
     if (request) {
         HTTPMSGUNLOCK(request);
-        request = NULL;
+        request = nullptr;
     }
 }
 
 const char *
 Auth::Ntlm::UserRequest::connLastHeader()
 {
-    return NULL;
+    return nullptr;
 }
 
 int
 Auth::Ntlm::UserRequest::authenticated() const
 {
-    if (user() != NULL && user()->credentials() == Auth::Ok) {
-        debugs(29, 9, HERE << "user authenticated.");
+    if (user() != nullptr && user()->credentials() == Auth::Ok) {
+        debugs(29, 9, "user authenticated.");
         return 1;
     }
 
-    debugs(29, 9, HERE << "user not fully authenticated.");
+    debugs(29, 9, "user not fully authenticated.");
     return 0;
 }
 
@@ -122,13 +121,13 @@ Auth::Ntlm::UserRequest::startHelperLookup(HttpRequest *, AccessLogEntry::Pointe
     assert(data);
     assert(handler);
 
-    if (static_cast<Auth::Ntlm::Config*>(Auth::SchemeConfig::Find("ntlm"))->authenticateProgram == NULL) {
+    if (static_cast<Auth::Ntlm::Config*>(Auth::SchemeConfig::Find("ntlm"))->authenticateProgram == nullptr) {
         debugs(29, DBG_CRITICAL, "ERROR: NTLM Start: no NTLM program configured.");
         handler(data);
         return;
     }
 
-    debugs(29, 8, HERE << "credentials state is '" << user()->credentials() << "'");
+    debugs(29, 8, "credentials state is '" << user()->credentials() << "'");
 
     const char *keyExtras = helperRequestKeyExtras(request, al);
     int printResult = 0;
@@ -171,7 +170,7 @@ Auth::Ntlm::UserRequest::releaseAuthServer()
         ntlmauthenticators->cancelReservation(reservationId);
         reservationId.clear();
     } else
-        debugs(29, 6, HERE << "No NTLM auth server to release.");
+        debugs(29, 6, "No NTLM auth server to release.");
 }
 
 void
@@ -180,7 +179,7 @@ Auth::Ntlm::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * co
     /* Check that we are in the client side, where we can generate
      * auth challenges */
 
-    if (conn == NULL || !cbdataReferenceValid(conn)) {
+    if (conn == nullptr || !cbdataReferenceValid(conn)) {
         user()->credentials(Auth::Failed);
         debugs(29, DBG_IMPORTANT, "WARNING: NTLM Authentication attempt to perform authentication without a connection!");
         return;
@@ -192,7 +191,7 @@ Auth::Ntlm::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * co
     }
 
     if (server_blob) {
-        debugs(29, 2, HERE << "need to challenge client '" << server_blob << "'!");
+        debugs(29, 2, "need to challenge client '" << server_blob << "'!");
         return;
     }
 
@@ -218,18 +217,18 @@ Auth::Ntlm::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * co
 
     case Auth::Unchecked:
         /* we've received a ntlm request. pass to a helper */
-        debugs(29, 9, HERE << "auth state ntlm none. Received blob: '" << proxy_auth << "'");
+        debugs(29, 9, "auth state ntlm none. Received blob: '" << proxy_auth << "'");
         user()->credentials(Auth::Pending);
         safe_free(client_blob);
         client_blob=xstrdup(blob);
-        assert(conn->getAuth() == NULL);
+        assert(conn->getAuth() == nullptr);
         conn->setAuth(this, "new NTLM handshake request");
         request = aRequest;
         HTTPMSGLOCK(request);
         break;
 
     case Auth::Pending:
-        debugs(29, DBG_IMPORTANT, HERE << "need to ask helper");
+        debugs(29, DBG_IMPORTANT, "need to ask helper");
         break;
 
     case Auth::Handshake:
@@ -244,12 +243,12 @@ Auth::Ntlm::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * co
         break;
 
     case Auth::Ok:
-        fatal("Auth::Ntlm::UserRequest::authenticate: unexpect auth state DONE! Report a bug to the squid developers.\n");
+        fatal("Auth::Ntlm::UserRequest::authenticate: unexpected auth state DONE! Report a bug to the squid developers.\n");
         break;
 
     case Auth::Failed:
         /* we've failed somewhere in authentication */
-        debugs(29, 9, HERE << "auth state ntlm failed. " << proxy_auth);
+        debugs(29, 9, "auth state ntlm failed. " << proxy_auth);
         break;
     }
 }
@@ -268,7 +267,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
     }
 
     Auth::UserRequest::Pointer auth_user_request = r->auth_user_request;
-    assert(auth_user_request != NULL);
+    assert(auth_user_request != nullptr);
 
     // add new helper kv-pair notes to the credentials object
     // so that any transaction using those credentials can access them
@@ -278,13 +277,13 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
     auth_user_request->user()->notes.remove("token");
 
     Auth::Ntlm::UserRequest *lm_request = dynamic_cast<Auth::Ntlm::UserRequest *>(auth_user_request.getRaw());
-    assert(lm_request != NULL);
+    assert(lm_request != nullptr);
     assert(lm_request->waiting);
 
     lm_request->waiting = 0;
     safe_free(lm_request->client_blob);
 
-    assert(auth_user_request->user() != NULL);
+    assert(auth_user_request->user() != nullptr);
     assert(auth_user_request->user()->auth_type == Auth::AUTH_NTLM);
 
     if (!lm_request->reservationId)
@@ -302,7 +301,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
             lm_request->server_blob = xstrdup(serverBlob);
             auth_user_request->user()->credentials(Auth::Handshake);
             auth_user_request->setDenyMessage("Authentication in progress");
-            debugs(29, 4, HERE << "Need to challenge the client with a server token: '" << serverBlob << "'");
+            debugs(29, 4, "Need to challenge the client with a server token: '" << serverBlob << "'");
         } else {
             auth_user_request->user()->credentials(Auth::Failed);
             auth_user_request->setDenyMessage("NTLM authentication requires a persistent connection");
@@ -324,9 +323,9 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
         safe_free(lm_request->server_blob);
         lm_request->releaseAuthServer();
 
-        debugs(29, 4, HERE << "Successfully validated user via NTLM. Username '" << userLabel << "'");
+        debugs(29, 4, "Successfully validated user via NTLM. Username '" << userLabel << "'");
         /* connection is authenticated */
-        debugs(29, 4, HERE << "authenticated user " << auth_user_request->user()->username());
+        debugs(29, 4, "authenticated user " << auth_user_request->user()->username());
         /* see if this is an existing user */
         auto local_auth_user = lm_request->user();
         auto cached_user = Auth::Ntlm::User::Cache()->lookup(auth_user_request->user()->userKey());
@@ -346,7 +345,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
          * existing user or a new user */
         local_auth_user->expiretime = current_time.tv_sec;
         auth_user_request->user()->credentials(Auth::Ok);
-        debugs(29, 4, HERE << "Successfully validated user via NTLM. Username '" << auth_user_request->user()->username() << "'");
+        debugs(29, 4, "Successfully validated user via NTLM. Username '" << auth_user_request->user()->username() << "'");
     }
     break;
 
@@ -361,7 +360,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 
     case Helper::Unknown:
         debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication Helper crashed (" << reply.reservationId << ")");
-    /* continue to the next case */
+        [[fallthrough]];
 
     case Helper::TimedOut:
     case Helper::BrokenHelper:
@@ -383,7 +382,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 
     if (lm_request->request) {
         HTTPMSGUNLOCK(lm_request->request);
-        lm_request->request = NULL;
+        lm_request->request = nullptr;
     }
     r->handler(r->data);
     delete r;

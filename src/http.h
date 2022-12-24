@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,6 +17,7 @@
 
 class FwdState;
 class HttpHeader;
+class String;
 
 class HttpStateData : public Client
 {
@@ -60,21 +61,27 @@ public:
     // Checks whether the response is cacheable/shareable.
     ReuseDecision::Answers reusableReply(ReuseDecision &decision);
 
-    CachePeer *_peer;       /* CachePeer request made to */
-    int eof;            /* reached end-of-object? */
-    int lastChunk;      /* reached last chunk of a chunk-encoded reply */
+    CachePeer *_peer = nullptr;       /* CachePeer request made to */
+    int eof = 0;            /* reached end-of-object? */
+    int lastChunk = 0;      /* reached last chunk of a chunk-encoded reply */
     Http::StateFlags flags;
-    size_t read_sz;
     SBuf inBuf;                ///< I/O buffer for receiving server responses
-    bool ignoreCacheControl;
-    bool surrogateNoStore;
+    bool ignoreCacheControl = false;
+    bool surrogateNoStore = false;
+
+    /// Upgrade header value sent to the origin server or cache peer.
+    String *upgradeHeaderOut = nullptr;
 
     void processSurrogateControl(HttpReply *);
 
 protected:
+    /* Client API */
+    virtual void noteDelayAwareReadChance();
+
     void processReply();
     void proceedAfter1xx();
     void handle1xx(HttpReply *msg);
+    void drop1xx(const char *reason);
 
 private:
     /**
@@ -135,21 +142,23 @@ private:
     void httpTimeout(const CommTimeoutCbParams &params);
 
     mb_size_t buildRequestPrefix(MemBuf * mb);
+    void forwardUpgrade(HttpHeader&);
     static bool decideIfWeDoRanges (HttpRequest * orig_request);
     bool peerSupportsConnectionPinning() const;
+    const char *blockSwitchingProtocols(const HttpReply&) const;
 
     /// Parser being used at present to parse the HTTP/ICY server response.
     Http1::ResponseParserPointer hp;
-    Http1::TeChunkedParser *httpChunkDecoder;
+    Http1::TeChunkedParser *httpChunkDecoder = nullptr;
 
     /// amount of message payload/body received so far.
-    int64_t payloadSeen;
+    int64_t payloadSeen = 0;
     /// positive when we read more than we wanted
-    int64_t payloadTruncated;
+    int64_t payloadTruncated = 0;
 
     /// Whether we received a Date header older than that of a matching
     /// cached response.
-    bool sawDateGoBack;
+    bool sawDateGoBack = false;
 };
 
 std::ostream &operator <<(std::ostream &os, const HttpStateData::ReuseDecision &d);

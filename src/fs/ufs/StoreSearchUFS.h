@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,7 +25,7 @@ public:
     StoreSearchUFS(RefCount<UFSSwapDir> sd);
     virtual ~StoreSearchUFS();
 
-    /** \todo Iterator API - garh, wrong place */
+    // TODO: misplaced Iterator API
     /**
      * callback the client when a new StoreEntry is available
      * or an error occurs

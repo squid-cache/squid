@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,7 +14,7 @@
 namespace Acl
 {
 
-/// Configurable all-of ACL. Each ACL line is a conjuction of ACLs.
+/// Configurable all-of ACL. Each ACL line is a conjunction of ACLs.
 /// Uses AndNode and OrNode to handle squid.conf configuration where multiple
 /// acl all-of lines are always ORed together.
 class AllOf: public Acl::InnerNode
@@ -24,7 +24,6 @@ class AllOf: public Acl::InnerNode
 public:
     /* ACL API */
     virtual char const *typeString() const;
-    virtual ACL *clone() const;
     virtual void parse();
     virtual SBufList dump() const;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -44,7 +44,7 @@ LogTime()
     struct timeval now;
     static char buf[128];
 
-    gettimeofday(&now, NULL);
+    gettimeofday(&now, nullptr);
     if (now.tv_sec != last_t) {
         struct tm *tm;
         time_t tmp = now.tv_sec;

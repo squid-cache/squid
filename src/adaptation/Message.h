@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -42,7 +42,7 @@ public:
     Header *header;   // parsed HTTP status/request line and headers
 
     /// Copy of header->body_pipe, in case somebody moves the original.
-    /// \todo Find and fix the code that moves (if any) and remove this.
+    /// TODO: Find and fix the code that moves (if any) and remove this.
     BodyPipePointer body_pipe;
 
 private:

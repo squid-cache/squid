@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,8 +18,8 @@
 void DiskIOModule::SetupAllModules() STUB
 void DiskIOModule::ModuleAdd(DiskIOModule &) STUB
 void DiskIOModule::FreeAllModules() STUB
-DiskIOModule *DiskIOModule::Find(char const *) STUB_RETVAL(NULL)
-DiskIOModule *DiskIOModule::FindDefault() STUB_RETVAL(NULL)
+DiskIOModule *DiskIOModule::Find(char const *) STUB_RETVAL(nullptr)
+DiskIOModule *DiskIOModule::FindDefault() STUB_RETVAL(nullptr)
 std::vector<DiskIOModule*> const &DiskIOModule::Modules() STUB_RETSTATREF(std::vector<DiskIOModule*>)
 DiskIOModule::DiskIOModule() {STUB}
 DiskIOModule::DiskIOModule(DiskIOModule const &) {STUB}

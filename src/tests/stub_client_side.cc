@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -41,6 +41,7 @@ void ConnStateData::requestTimeout(const CommTimeoutCbParams &) STUB
 void ConnStateData::swanSong() STUB
 void ConnStateData::quitAfterError(HttpRequest *) STUB
 NotePairs::Pointer ConnStateData::notes() STUB_RETVAL(NotePairs::Pointer())
+void ConnStateData::fillConnectionLevelDetails(ACLFilledChecklist &) const STUB
 #if USE_OPENSSL
 void ConnStateData::httpsPeeked(PinnedIdleContext) STUB
 void ConnStateData::getSslContextStart() STUB
@@ -52,11 +53,11 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &) S
 bool ConnStateData::serveDelayedError(Http::Stream *) STUB_RETVAL(false)
 #endif
 
-const char *findTrailingHTTPVersion(const char *, const char *) STUB_RETVAL(NULL)
+const char *findTrailingHTTPVersion(const char *, const char *) STUB_RETVAL(nullptr)
 int varyEvaluateMatch(StoreEntry *, HttpRequest *) STUB_RETVAL(0)
 void clientOpenListenSockets(void) STUB
-void clientHttpConnectionsClose(void) STUB
 void httpRequestFree(void *) STUB
 void clientPackRangeHdr(const HttpReplyPointer &, const HttpHdrRangeSpec *, String, MemBuf *) STUB
 void clientPackTermBound(String, MemBuf *) STUB
+void clientAclChecklistFill(ACLFilledChecklist &, ClientHttpRequest *) STUB
 

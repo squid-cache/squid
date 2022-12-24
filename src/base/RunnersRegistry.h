@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -40,6 +40,10 @@ public:
     /* Related methods below are declared in their calling order */
 
     /* Configuration events */
+
+    /// Called right before parsing squid.conf.
+    /// Meant for initializing/preparing configuration parsing facilities.
+    virtual void bootstrapConfig() {}
 
     /// Called after parsing squid.conf.
     /// Meant for setting configuration options that depend on other

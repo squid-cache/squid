@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,7 +22,7 @@ class BlindPeerConnector: public Security::PeerConnector {
 public:
     BlindPeerConnector(HttpRequestPointer &aRequest,
                        const Comm::ConnectionPointer &aServerConn,
-                       AsyncCall::Pointer &aCallback,
+                       const AsyncCallback<EncryptorAnswer> &aCallback,
                        const AccessLogEntryPointer &alp,
                        const time_t timeout = 0) :
         AsyncJob("Security::BlindPeerConnector"),
@@ -42,8 +42,8 @@ public:
     /// Return the configured TLS context object
     virtual Security::ContextPointer getTlsContext();
 
-    /// On error calls peerConnectFailed().
-    /// On success store the used TLS session for later use.
+    /// On success, stores the used TLS session for later use.
+    /// On error, informs the peer.
     virtual void noteNegotiationDone(ErrorState *);
 };
 

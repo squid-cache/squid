@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,11 +15,6 @@
 #include "http/RequestMethod.h"
 
 int ACLMethodData::ThePurgeCount = 0;
-
-ACLMethodData::ACLMethodData(ACLMethodData const &old)
-{
-    assert(old.values.empty());
-}
 
 ACLMethodData::~ACLMethodData()
 {
@@ -61,12 +56,5 @@ ACLMethodData::parse()
         if (values.back() == Http::METHOD_PURGE)
             ++ThePurgeCount; // configuration code wants to know
     }
-}
-
-ACLData<HttpRequestMethod> *
-ACLMethodData::clone() const
-{
-    assert(values.empty());
-    return new ACLMethodData(*this);
 }
 

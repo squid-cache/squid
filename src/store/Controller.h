@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -74,8 +74,8 @@ public:
     /// reduce the risk of selecting the wrong disk cache for the growing entry.
     int64_t accumulateMore(StoreEntry &) const;
 
-    /// slowly calculate (and cache) hi/lo watermarks and similar limits
-    void updateLimits();
+    /// update configuration, including limits (re)calculation
+    void configure();
 
     /// called when the entry is no longer needed by any transaction
     void handleIdleEntry(StoreEntry &);
@@ -108,23 +108,17 @@ public:
     /// whether the entry is in "writing to Transients" I/O state
     bool transientsWriter(const StoreEntry &) const;
 
-    /// marks the entry completed for collapsed requests
-    void transientsCompleteWriting(StoreEntry &);
-
     /// Update local intransit entry after changes made by appending worker.
     void syncCollapsed(const sfileno);
 
-    /// stop any current (and prevent any future) SMP sharing of the given entry
-    void stopSharing(StoreEntry &);
+    /// adjust shared state after this worker stopped changing the entry
+    void noteStoppedSharedWriting(StoreEntry &);
 
     /// number of the transient entry readers some time ago
     int transientReaders(const StoreEntry &) const;
 
     /// disassociates the entry from the intransit table
     void transientsDisconnect(StoreEntry &);
-
-    /// removes collapsing requirement (for future hits)
-    void transientsClearCollapsingRequirement(StoreEntry &e);
 
     /// disassociates the entry from the memory cache, preserving cached data
     void memoryDisconnect(StoreEntry &);
@@ -150,8 +144,9 @@ private:
     void memoryEvictCached(StoreEntry &);
     void transientsUnlinkByKeyIfFound(const cache_key *);
     bool keepForLocalMemoryCache(StoreEntry &e) const;
-    bool anchorToCache(StoreEntry &e, bool &inSync);
+    bool anchorToCache(StoreEntry &);
     void checkTransients(const StoreEntry &) const;
+    void checkFoundCandidate(const StoreEntry &) const;
 
     Disks *swapDir; ///< summary view of all disk caches
     Memory *sharedMemStore; ///< memory cache that multiple workers can use

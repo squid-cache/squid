@@ -1,17 +1,14 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 67    String */
-
 #include "squid.h"
 #include "base/TextException.h"
 #include "mgr/Registration.h"
-#include "profiler/Profiler.h"
 #include "Store.h"
 
 #include <climits>
@@ -21,11 +18,9 @@
 void
 String::allocBuffer(String::size_type sz)
 {
-    PROF_start(StringInitBuf);
     assert (undefined());
     char *newBuffer = (char*)memAllocString(sz, &sz);
     setBuffer(newBuffer, sz);
-    PROF_stop(StringInitBuf);
 }
 
 // low-level buffer assignment
@@ -102,16 +97,14 @@ String::assign(const char *str, int len)
 void
 String::allocAndFill(const char *str, int len)
 {
-    PROF_start(StringAllocAndFill);
     assert(str);
     allocBuffer(len + 1);
     len_ = len;
     memcpy(buf_, str, len);
     buf_[len] = '\0';
-    PROF_stop(StringAllocAndFill);
 }
 
-String::String(String const &old) : size_(0), len_(0), buf_(NULL)
+String::String(String const &old) : size_(0), len_(0), buf_(nullptr)
 {
     if (old.size() > 0)
         allocAndFill(old.rawBuf(), old.size());
@@ -124,8 +117,6 @@ String::String(String const &old) : size_(0), len_(0), buf_(NULL)
 void
 String::clean()
 {
-    PROF_start(StringClean);
-
     /* TODO if mempools has already closed this will FAIL!! */
     if (defined())
         memFreeString(size_, buf_);
@@ -134,8 +125,7 @@ String::clean()
 
     size_ = 0;
 
-    buf_ = NULL;
-    PROF_stop(StringClean);
+    buf_ = nullptr;
 }
 
 String::~String()
@@ -150,11 +140,9 @@ String::~String()
 void
 String::reset(char const *str)
 {
-    PROF_start(StringReset);
     clean(); // TODO: optimize to avoid cleaning the buffer if we can reuse it
     if (str)
         allocAndFill(str, strlen(str));
-    PROF_stop(StringReset);
 }
 
 void
@@ -162,7 +150,6 @@ String::append( char const *str, int len)
 {
     assert(str && len >= 0);
 
-    PROF_start(StringAppend);
     if (len_ + len + 1 /*'\0'*/ < size_) {
         xstrncpy(buf_+len_, str, len+1);
         len_ += len;
@@ -183,7 +170,6 @@ String::append( char const *str, int len)
 
         absorb(snew);
     }
-    PROF_stop(StringAppend);
 }
 
 void
@@ -215,7 +201,7 @@ String::absorb(String &old)
     setBuffer(old.buf_, old.size_);
     len_ = old.len_;
     old.size_ = 0;
-    old.buf_ = NULL;
+    old.buf_ = nullptr;
     old.len_ = 0;
 }
 
@@ -379,7 +365,7 @@ StringRegistry::Stater(String const * const & nodedata, void *state)
 int
 stringHasWhitespace(const char *s)
 {
-    return strpbrk(s, w_space) != NULL;
+    return strpbrk(s, w_space) != nullptr;
 }
 
 /* TODO: move onto String */
@@ -406,7 +392,7 @@ stringHasCntl(const char *s)
 char *
 strwordtok(char *buf, char **t)
 {
-    unsigned char *word = NULL;
+    unsigned char *word = nullptr;
     unsigned char *p = (unsigned char *) buf;
     unsigned char *d;
     unsigned char ch;
@@ -498,7 +484,7 @@ const char *
 String::pos(char const *aString) const
 {
     if (undefined())
-        return NULL;
+        return nullptr;
     return strstr(termedBuf(), aString);
 }
 
@@ -506,7 +492,7 @@ const char *
 String::pos(char const ch) const
 {
     if (undefined())
-        return NULL;
+        return nullptr;
     return strchr(termedBuf(), ch);
 }
 
@@ -514,7 +500,7 @@ const char *
 String::rpos(char const ch) const
 {
     if (undefined())
-        return NULL;
+        return nullptr;
     return strrchr(termedBuf(), (ch));
 }
 
@@ -523,7 +509,7 @@ String::find(char const ch) const
 {
     const char *c;
     c=pos(ch);
-    if (c==NULL)
+    if (c==nullptr)
         return npos;
     return c-rawBuf();
 }
@@ -533,7 +519,7 @@ String::find(char const *aString) const
 {
     const char *c;
     c=pos(aString);
-    if (c==NULL)
+    if (c==nullptr)
         return npos;
     return c-rawBuf();
 }
@@ -543,7 +529,7 @@ String::rfind(char const ch) const
 {
     const char *c;
     c=rpos(ch);
-    if (c==NULL)
+    if (c==nullptr)
         return npos;
     return c-rawBuf();
 }

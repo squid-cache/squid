@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@ include $(top_srcdir)/src/Common.am
 man_MANS= digest_file_auth.8
 libexec_PROGRAMS= digest_file_auth
 
-digest_file_auth_SOURCES= \
+digest_file_auth_SOURCES = \
 	digest_common.h \
 	digest_file_auth.cc \
 	text_backend.cc \
@@ -20,7 +20,7 @@ digest_file_auth_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
-	$(NETTLELIB) \
+	$(LIBNETTLE_LIBS) \
 	$(CRYPTLIB) \
 	$(SSLLIB) \
 	$(XTRA_LIBS)

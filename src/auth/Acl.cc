@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,13 +31,13 @@ AuthenticateAcl(ACLChecklist *ch)
     HttpRequest *request = checklist->request;
     Http::HdrType headertype;
 
-    if (NULL == request) {
+    if (nullptr == request) {
         fatal ("requiresRequest SHOULD have been true for this ACL!!");
         return ACCESS_DENIED;
     } else if (request->flags.sslBumped) {
         debugs(28, 5, "SslBumped request: It is an encapsulated request do not authenticate");
-        checklist->auth_user_request = checklist->conn() != NULL ? checklist->conn()->getAuth() : request->auth_user_request;
-        if (checklist->auth_user_request != NULL)
+        checklist->auth_user_request = checklist->conn() != nullptr ? checklist->conn()->getAuth() : request->auth_user_request;
+        if (checklist->auth_user_request != nullptr)
             return ACCESS_ALLOWED;
         else
             return ACCESS_DENIED;
@@ -45,7 +45,7 @@ AuthenticateAcl(ACLChecklist *ch)
         /* WWW authorization on accelerated requests */
         headertype = Http::HdrType::AUTHORIZATION;
     } else if (request->flags.intercepted || request->flags.interceptTproxy) {
-        debugs(28, DBG_IMPORTANT, "NOTICE: Authentication not applicable on intercepted requests.");
+        debugs(28, DBG_IMPORTANT, "WARNING: Authentication not applicable on intercepted requests.");
         return ACCESS_DENIED;
     } else {
         /* Proxy authorization on proxy requests */
@@ -60,7 +60,7 @@ AuthenticateAcl(ACLChecklist *ch)
     switch (result) {
 
     case AUTH_ACL_CANNOT_AUTHENTICATE:
-        debugs(28, 4, HERE << "returning " << ACCESS_DENIED << " user authenticated but not authorised.");
+        debugs(28, 4, "returning " << ACCESS_DENIED << " user authenticated but not authorised.");
         return ACCESS_DENIED;
 
     case AUTH_AUTHENTICATED:
@@ -75,7 +75,7 @@ AuthenticateAcl(ACLChecklist *ch)
         return ACCESS_DUNNO; // XXX: break this down into DUNNO, EXPIRED_OK, EXPIRED_BAD states
 
     case AUTH_ACL_CHALLENGE:
-        debugs(28, 4, HERE << "returning " << ACCESS_AUTH_REQUIRED << " sending authentication challenge.");
+        debugs(28, 4, "returning " << ACCESS_AUTH_REQUIRED << " sending authentication challenge.");
         /* Client is required to resend the request with correct authentication
          * credentials. (This may be part of a stateful auth protocol.)
          * The request is denied.

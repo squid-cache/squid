@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,11 +13,11 @@
 #include "adaptation/Service.h"
 #include "adaptation/ServiceGroups.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 int Adaptation::AccessRule::LastId = 0;
 
-Adaptation::AccessRule::AccessRule(const String &aGroupId): id(++LastId), groupId(aGroupId), acl(NULL)
+Adaptation::AccessRule::AccessRule(const String &aGroupId): id(++LastId), groupId(aGroupId), acl(nullptr)
 {
 }
 
@@ -36,9 +36,9 @@ void
 Adaptation::AccessRule::finalize()
 {
     if (!group()) { // no explicit group
-        debugs(93,7, HERE << "no service group: " << groupId);
+        debugs(93,7, "no service group: " << groupId);
         // try to add a one-service group
-        if (FindService(groupId) != NULL) {
+        if (FindService(groupId) != nullptr) {
             ServiceGroupPointer g = new SingleService(groupId);
             g->finalize(); // explicit groups were finalized before rules
             AllGroups().push_back(g);
@@ -74,7 +74,7 @@ Adaptation::FindRule(const AccessRule::Id &id)
             return *i;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 Adaptation::AccessRule *
@@ -86,6 +86,6 @@ Adaptation::FindRuleByGroupId(const String &groupId)
             return *i;
     }
 
-    return NULL;
+    return nullptr;
 }
 

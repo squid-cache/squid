@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,12 +24,14 @@
 #endif
 #include "Notes.h"
 #include "security/forward.h"
-#include "SquidTime.h"
 #if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 #include "store/Disk.h"
 #include "store/forward.h"
+#include "time/gadgets.h"
+
+#include <chrono>
 
 #if USE_OPENSSL
 class sslproxy_cert_sign;
@@ -43,10 +45,12 @@ class ActionPasswordList;
 class CachePeer;
 class CustomLog;
 class CpuAffinityMap;
+class DebugMessages;
 class external_acl;
 class HeaderManglers;
 class RefreshPattern;
 class RemovalPolicySettings;
+class HttpUpgradeProtocolAccess;
 
 namespace AnyP
 {
@@ -181,6 +185,7 @@ public:
 #if ICAP_CLIENT
         CustomLog *icaplogs;
 #endif
+        Security::KeyLog *tlsKeys; ///< one optional tls_key_log
         int rotateNumber;
     } Log;
     char *adminEmail;
@@ -224,13 +229,6 @@ public:
     char *errHtmlText;
 
     struct {
-        char *host;
-        char *file;
-        time_t period;
-        unsigned short port;
-    } Announce;
-
-    struct {
 
         Ip::Address udp_incoming;
         Ip::Address udp_outgoing;
@@ -238,7 +236,7 @@ public:
         Ip::Address snmp_incoming;
         Ip::Address snmp_outgoing;
 #endif
-        /* FIXME INET6 : this should really be a CIDR value */
+        // TODO: this should really be a CIDR value
         Ip::Address client_netmask;
     } Addrs;
     size_t tcpRcvBufsz;
@@ -284,8 +282,6 @@ public:
         int buffered_logs;
         int common_log;
         int log_mime_hdrs;
-        int log_fqdn;
-        int announce;
         int mem_pools;
         int test_reachability;
         int half_closed_clients;
@@ -313,7 +309,6 @@ public:
 
         int vary_ignore_expire;
         int surrogate_is_remote;
-        int request_entities;
         int detect_broken_server_pconns;
         int relaxed_header_parser;
         int check_hostnames;
@@ -349,8 +344,12 @@ public:
 
     int pipeline_max_prefetch;
 
+    // these values are actually unsigned
+    // TODO: extend the parser to support more nuanced types
     int forward_max_tries;
     int connect_retries;
+
+    std::chrono::nanoseconds paranoid_hit_validation;
 
     class ACL *aclList;
 
@@ -390,7 +389,7 @@ public:
         acl_access *followXFF;
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
-        /// acceptible PROXY protocol clients
+        /// acceptable PROXY protocol clients
         acl_access *proxyProtocol;
 
         /// spoof_client_ip squid.conf acl.
@@ -474,6 +473,8 @@ public:
     HeaderWithAclList *request_header_add;
     ///reply_header_add access list
     HeaderWithAclList *reply_header_add;
+    /// http_upgrade_request_protocols
+    HttpUpgradeProtocolAccess *http_upgrade_request_protocols;
     ///note
     Notes notes;
     char *coredump_dir;
@@ -551,6 +552,8 @@ public:
         int connect_gap;
         int connect_timeout;
     } happyEyeballs;
+
+    DebugMessages *debugMessages; ///< cache_log_message
 };
 
 extern SquidConfig Config;

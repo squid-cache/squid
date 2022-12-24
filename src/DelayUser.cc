@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,8 +37,8 @@ int
 DelayUserCmp(DelayUserBucket::Pointer const &left, DelayUserBucket::Pointer const &right)
 {
     /* Verify for re-currance of Bug 2127. either of these missing will crash strcasecmp() */
-    assert(left->authUser->username() != NULL);
-    assert(right->authUser->username() != NULL);
+    assert(left->authUser->username() != nullptr);
+    assert(right->authUser->username() != nullptr);
 
     /* for rate limiting, case insensitive */
     return strcasecmp(left->authUser->username(), right->authUser->username());
@@ -47,12 +47,6 @@ DelayUserCmp(DelayUserBucket::Pointer const &left, DelayUserBucket::Pointer cons
 void
 DelayUserFree(DelayUserBucket::Pointer &)
 {}
-
-void
-DelayUserStatsWalkee(DelayUserBucket::Pointer const &current, void *state)
-{
-    current->stats ((StoreEntry *)state);
-}
 
 struct DelayUserStatsVisitor {
     StoreEntry *se;
@@ -95,14 +89,6 @@ struct DelayUserUpdater {
     int incr;
 };
 
-void
-DelayUserUpdateWalkee(DelayUserBucket::Pointer const &current, void *state)
-{
-    DelayUserUpdater *t = (DelayUserUpdater *)state;
-    /* This doesn't change the value of the DelayUserBucket, so is safe */
-    const_cast<DelayUserBucket *>(current.getRaw())->theBucket.update(t->spec, t->incr);
-}
-
 struct DelayUserUpdateVisitor {
     DelayUserUpdater *t;
     DelayUserUpdateVisitor(DelayUserUpdater *updater) : t(updater) {}
@@ -131,7 +117,7 @@ DelayUser::id(CompositePoolNode::CompositeSelectionDetails &details)
     if (!details.user || !details.user->user() || !details.user->user()->username())
         return new NullDelayId;
 
-    debugs(77, 3, HERE << "Adding a slow-down for User '" << details.user->user()->username() << "'");
+    debugs(77, 3, "Adding a slow-down for User '" << details.user->user()->username() << "'");
     return new Id(this, details.user->user());
 }
 
@@ -142,7 +128,7 @@ DelayUserBucket::DelayUserBucket(Auth::User::Pointer aUser) : authUser(aUser)
 
 DelayUserBucket::~DelayUserBucket()
 {
-    authUser = NULL;
+    authUser = nullptr;
     debugs(77, 3, "DelayUserBucket::~DelayUserBucket");
 }
 

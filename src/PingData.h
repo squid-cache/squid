@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,11 +9,28 @@
 #ifndef SQUID_PINGDATA_H
 #define SQUID_PINGDATA_H
 
+#include "mem/PoolingAllocator.h"
+
+#include <map>
+
+class PeerSelector;
+class PeerSelectorPingMonitor;
+
+typedef std::pair<const timeval, PeerSelector *> WaitingPeerSelector;
+/// waiting PeerSelector objects, ordered by their absolute deadlines
+typedef std::multimap<timeval, PeerSelector *, std::less<timeval>, PoolingAllocator<WaitingPeerSelector> > WaitingPeerSelectors;
+typedef WaitingPeerSelectors::iterator WaitingPeerSelectorPosition;
+
+/// ICP probing of cache_peers during peer selection
 class ping_data
 {
 
 public:
     ping_data();
+
+    /// no ICP responses are expected beyond the returned absolute time
+    /// \returns start + timeout
+    timeval deadline() const;
 
     struct timeval start;
 
@@ -25,6 +42,11 @@ public:
     int timedout;
     int w_rtt;
     int p_rtt;
+
+private:
+    friend PeerSelectorPingMonitor;
+    /// maintained by PeerSelectorPingMonitor
+    WaitingPeerSelectorPosition monitorRegistration;
 };
 
 #endif /* SQUID_PINGDATA_H */

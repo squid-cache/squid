@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,11 +9,11 @@
 #ifndef SQUID_STORE_H
 #define SQUID_STORE_H
 
+#include "base/DelayedAsyncCalls.h"
 #include "base/Packable.h"
 #include "base/Range.h"
 #include "base/RefCount.h"
 #include "comm/forward.h"
-#include "CommRead.h"
 #include "hash.h"
 #include "http/forward.h"
 #include "http/RequestMethod.h"
@@ -42,7 +42,6 @@ class StoreEntry : public hash_link, public Packable
 {
 
 public:
-    static DeferredRead::DeferrableRead DeferReader;
     bool checkDeferRead(int fd) const;
 
     const char *getMD5Text() const;
@@ -67,9 +66,18 @@ public:
     bool isEmpty() const { return mem().endOffset() == 0; }
     bool isAccepting() const;
     size_t bytesWanted(Range<size_t> const aRange, bool ignoreDelayPool = false) const;
-    /// flags [truncated or too big] entry with ENTRY_BAD_LENGTH and releases it
-    void lengthWentBad(const char *reason);
+
+    /// Signals that the entire response has been stored and no more append()
+    /// calls should be expected; cf. completeTruncated().
+    void completeSuccessfully(const char *whyWeAreSureWeStoredTheWholeReply);
+
+    /// Signals that a partial response (if any) has been stored but no more
+    /// append() calls should be expected; cf. completeSuccessfully().
+    void completeTruncated(const char *whyWeConsiderTheReplyTruncated);
+
+    /// \deprecated use either completeSuccessfully() or completeTruncated() instead
     void complete();
+
     store_client_t storeClientType() const;
     /// \returns a malloc()ed buffer containing a length-long packed swap header
     const char *getSerialisedMetaData(size_t &length) const;
@@ -85,6 +93,8 @@ public:
     void memOutDecision(const bool willCacheInRam);
     // called when a decision to cache on disk has been made
     void swapOutDecision(const MemObject::SwapOut::Decision &decision);
+    /// called when a store writer ends its work (successfully or not)
+    void storeWriterDone();
 
     void abort();
     bool makePublic(const KeyScope keyScope = ksDefault);
@@ -116,7 +126,7 @@ public:
     /// for eventual removal from the Store.
     void releaseRequest(const bool shareable = false);
     void negativeCache();
-    bool cacheNegatively();     /** \todo argh, why both? */
+    bool cacheNegatively();     // TODO: why both negativeCache() and cacheNegatively() ?
     void invokeHandlers();
     void cacheInMemory(); ///< start or continue storing in memory cache
     void swapOut();
@@ -150,15 +160,17 @@ public:
     void dump(int debug_lvl) const;
     void hashDelete();
     void hashInsert(const cache_key *);
-    void registerAbort(STABH * cb, void *);
+    /// notify the StoreEntry writer of a 3rd-party initiated StoreEntry abort
+    void registerAbortCallback(const AsyncCall::Pointer &);
     void reset();
     void setMemStatus(mem_status_t);
     bool timestampsSet();
-    void unregisterAbort();
+    /// Avoid notifying anybody about a 3rd-party initiated StoreEntry abort.
+    /// Calling this method does not cancel the already queued notification.
+    /// TODO: Refactor to represent the end of (shared) ownership by our writer.
+    void unregisterAbortCallback(const char *reason);
     void destroyMemObject();
     int checkTooSmall();
-
-    void delayAwareRead(const Comm::ConnectionPointer &conn, char *buf, int len, AsyncCall::Pointer callback);
 
     void setNoDelay (bool const);
     void lastModified(const time_t when) { lastModified_ = when; }
@@ -235,9 +247,6 @@ public:
 
 public:
     static size_t inUseCount();
-    static void getPublicByRequestMethod(StoreClient * aClient, HttpRequest * request, const HttpRequestMethod& method);
-    static void getPublicByRequest(StoreClient * aClient, HttpRequest * request);
-    static void getPublic(StoreClient * aClient, const char *uri, const HttpRequestMethod& method);
 
     void *operator new(size_t byteCount);
     void operator delete(void *address);
@@ -253,7 +262,7 @@ public:
     void lock(const char *context);
 
     /// disclaim shared ownership; may remove entry from store and delete it
-    /// returns remaning lock level (zero for unlocked and possibly gone entry)
+    /// returns remaining lock level (zero for unlocked and possibly gone entry)
     int unlock(const char *context);
 
     /// returns a local concurrent use counter, for debugging
@@ -296,7 +305,7 @@ public:
 protected:
     typedef Store::EntryGuard EntryGuard;
 
-    void transientsAbandonmentCheck();
+    void storeWritingCheckpoint();
     /// does nothing except throwing if disk-associated data members are inconsistent
     void checkDisk() const;
 
@@ -307,7 +316,10 @@ private:
     StoreEntry *adjustVary();
     const cache_key *calcPublicKey(const KeyScope keyScope);
 
-    static MemAllocator *pool;
+    /// flags [truncated or too big] entry with ENTRY_BAD_LENGTH and releases it
+    void lengthWentBad(const char *reason);
+
+    static Mem::Allocator *pool;
 
     unsigned short lock_count;      /* Assume < 65536! */
 
@@ -414,9 +426,6 @@ void storeInit(void);
 
 /// \ingroup StoreAPI
 void storeConfigure(void);
-
-/// \ingroup StoreAPI
-void storeFreeMemory(void);
 
 /// \ingroup StoreAPI
 int expiresMoreThan(time_t, time_t);

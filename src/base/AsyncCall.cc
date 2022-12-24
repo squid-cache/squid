@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 #include "base/AsyncCallQueue.h"
 #include "base/CodeContext.h"
 #include "cbdata.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include <ostream>
 
 InstanceIdDefinitions(AsyncCall, "call");
@@ -38,7 +38,7 @@ AsyncCall::~AsyncCall()
 void
 AsyncCall::make()
 {
-    debugs(debugSection, debugLevel, HERE << "make call " << name <<
+    debugs(debugSection, debugLevel, "make call " << name <<
            " [" << id << ']');
     if (canFire()) {
         fire();
@@ -48,14 +48,14 @@ AsyncCall::make()
     if (!isCanceled) // we did not cancel() when returning false from canFire()
         isCanceled = "unknown reason";
 
-    debugs(debugSection, debugLevel, HERE << "will not call " << name <<
+    debugs(debugSection, debugLevel, "will not call " << name <<
            " [" << id << ']' << " because of " << isCanceled);
 }
 
 bool
 AsyncCall::cancel(const char *reason)
 {
-    debugs(debugSection, debugLevel, HERE << "will not call " << name <<
+    debugs(debugSection, debugLevel, "will not call " << name <<
            " [" << id << "] " << (isCanceled ? "also " : "") <<
            "because " << reason);
 
@@ -69,7 +69,7 @@ AsyncCall::canFire()
     return !isCanceled;
 }
 
-/// \todo make this method const by providing a const getDialer()
+// TODO: make this method const by providing a const getDialer()
 void
 AsyncCall::print(std::ostream &os)
 {
@@ -83,15 +83,15 @@ AsyncCall::print(std::ostream &os)
 void
 AsyncCall::dequeue(AsyncCall::Pointer &head, AsyncCall::Pointer &prev)
 {
-    if (prev != NULL)
+    if (prev != nullptr)
         prev->setNext(Next());
     else
         head = Next();
-    setNext(NULL);
+    setNext(nullptr);
 }
 
 bool
-ScheduleCall(const char *fileName, int fileLine, AsyncCall::Pointer &call)
+ScheduleCall(const char *fileName, int fileLine, const AsyncCall::Pointer &call)
 {
     debugs(call->debugSection, call->debugLevel, fileName << "(" << fileLine <<
            ") will call " << *call << " [" << call->id << ']' );

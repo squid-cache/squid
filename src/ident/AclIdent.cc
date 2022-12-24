@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,34 +29,23 @@ ACLIdent::~ACLIdent()
 
 ACLIdent::ACLIdent(ACLData<char const *> *newData, char const *newType) : data (newData), type_ (newType) {}
 
-ACLIdent::ACLIdent (ACLIdent const &old) : data (old.data->clone()), type_ (old.type_)
-{}
-
-ACLIdent &
-ACLIdent::operator= (ACLIdent const &rhs)
-{
-    data = rhs.data->clone();
-    type_ = rhs.type_;
-    return *this;
-}
-
 char const *
 ACLIdent::typeString() const
 {
     return type_;
 }
 
-void
-ACLIdent::parseFlags()
+const Acl::Options &
+ACLIdent::lineOptions()
 {
-    ParseFlags(Acl::NoOptions(), data->supportedFlags());
+    return data->lineOptions();
 }
 
 void
 ACLIdent::parse()
 {
     if (!data) {
-        debugs(28, 3, HERE << "current is null. Creating");
+        debugs(28, 3, "current is null. Creating");
         data = new ACLUserData;
     }
 
@@ -69,16 +58,16 @@ ACLIdent::match(ACLChecklist *cl)
     ACLFilledChecklist *checklist = Filled(cl);
     if (checklist->rfc931[0]) {
         return data->match(checklist->rfc931);
-    } else if (checklist->conn() != NULL && checklist->conn()->clientConnection != NULL && checklist->conn()->clientConnection->rfc931[0]) {
+    } else if (checklist->conn() != nullptr && checklist->conn()->clientConnection != nullptr && checklist->conn()->clientConnection->rfc931[0]) {
         return data->match(checklist->conn()->clientConnection->rfc931);
-    } else if (checklist->conn() != NULL && Comm::IsConnOpen(checklist->conn()->clientConnection)) {
+    } else if (checklist->conn() != nullptr && Comm::IsConnOpen(checklist->conn()->clientConnection)) {
         if (checklist->goAsync(IdentLookup::Instance())) {
             debugs(28, 3, "switching to ident lookup state");
             return -1;
         }
         // else fall through to ACCESS_DUNNO failure below
     } else {
-        debugs(28, DBG_IMPORTANT, HERE << "Can't start ident lookup. No client connection" );
+        debugs(28, DBG_IMPORTANT, "ERROR: Cannot start ident lookup. No client connection" );
         // fall through to ACCESS_DUNNO failure below
     }
 
@@ -98,12 +87,6 @@ ACLIdent::empty () const
     return data->empty();
 }
 
-ACL *
-ACLIdent::clone() const
-{
-    return new ACLIdent(*this);
-}
-
 IdentLookup IdentLookup::instance_;
 
 IdentLookup *
@@ -119,7 +102,7 @@ IdentLookup::checkForAsync(ACLChecklist *cl)const
     const ConnStateData *conn = checklist->conn();
     // check that ACLIdent::match() tested this lookup precondition
     assert(conn && Comm::IsConnOpen(conn->clientConnection));
-    debugs(28, 3, HERE << "Doing ident lookup" );
+    debugs(28, 3, "Doing ident lookup" );
     Ident::Start(checklist->conn()->clientConnection, LookupDone, checklist);
 }
 
@@ -138,7 +121,7 @@ IdentLookup::LookupDone(const char *ident, void *data)
      * Cache the ident result in the connection, to avoid redoing ident lookup
      * over and over on persistent connections
      */
-    if (checklist->conn() != NULL && checklist->conn()->clientConnection != NULL && !checklist->conn()->clientConnection->rfc931[0])
+    if (checklist->conn() != nullptr && checklist->conn()->clientConnection != nullptr && !checklist->conn()->clientConnection->rfc931[0])
         xstrncpy(checklist->conn()->clientConnection->rfc931, checklist->rfc931, USER_IDENT_SZ);
 
     checklist->resumeNonBlockingCheck(IdentLookup::Instance());

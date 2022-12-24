@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,7 +18,12 @@
 Ipc::Mem::PagePool::Owner *
 Ipc::Mem::PagePool::Init(const char *const shmId, const Ipc::Mem::PoolId stackId, const unsigned int capacity, const size_t pageSize)
 {
-    return shm_new(PageStack)(shmId, stackId, capacity, pageSize);
+    PageStack::Config config;
+    config.poolId = stackId;
+    config.pageSize = pageSize; // the pages are stored in Ipc::Mem::Pages
+    config.capacity = capacity;
+    config.createFull = true; // all pages are initially available
+    return shm_new(PageStack)(shmId, config);
 }
 
 Ipc::Mem::PagePool::PagePool(const char *const id):

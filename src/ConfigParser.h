@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,13 +9,17 @@
 #ifndef SQUID_CONFIGPARSER_H
 #define SQUID_CONFIGPARSER_H
 
+#include "acl/forward.h"
+#include "base/forward.h"
 #include "sbuf/forward.h"
 #include "SquidString.h"
 
+#include <memory>
 #include <queue>
 #include <stack>
 #include <string>
 
+class CachePeer;
 class wordlist;
 
 /**
@@ -49,6 +53,33 @@ public:
     enum TokenType {SimpleToken, QuotedToken, FunctionParameters};
 
     void destruct();
+
+    /// stops parsing the current configuration directive
+    void closeDirective();
+
+    /// rejects configuration due to a repeated directive
+    void rejectDuplicateDirective();
+
+    /// extracts and returns a required token
+    SBuf token(const char *expectedTokenDescription);
+
+    /// extracts an optional key=value token or returns false
+    /// rejects configurations with empty keys or empty values
+    /// key and value have lifetime of the current line/directive
+    bool optionalKvPair(char * &key, char * &value);
+
+    /// either extracts the given (optional) token or returns false
+    bool skipOptional(const char *keyword);
+
+    /// parses an [if [!]<acl>...] construct
+    Acl::Tree *optionalAclList();
+
+    /// extracts and returns a regex (including any optional flags)
+    std::unique_ptr<RegexPattern> regex(const char *expectedRegexDescription);
+
+    /// extracts a cache_peer name token and returns the corresponding CachePeer
+    CachePeer &cachePeer(const char *peerNameTokenDescription);
+
     static void ParseUShort(unsigned short *var);
     static void ParseBool(bool *var);
     static const char *QuoteString(const String &var);
@@ -77,12 +108,6 @@ public:
     static char *RegexStrtokFile();
 
     /**
-     * Parse the next token as a regex patern. The regex patterns are non quoted
-     * tokens.
-     */
-    static char *RegexPattern();
-
-    /**
      * Parse the next token with support for quoted values enabled even if
      * the configuration_includes_quoted_values is set to off
      */
@@ -104,6 +129,13 @@ public:
      */
     static bool NextKvPair(char * &key, char * &value);
 
+    // TODO: Convert into a non-static method after exposing the current parser.
+    /// Extract, validate, and store the ACL key parameter for ACL types
+    /// declared using "acl aclname type key argument..." declaration that
+    /// require unique key values for each aclname+type combination.
+    /// Key comparison is case-insensitive.
+    static void SetAclKey(SBuf &keyStorage, const char *keyParameterName);
+
     /**
      * Preview the next token. The next NextToken() and strtokFile() call
      * will return the same token.
@@ -111,12 +143,6 @@ public:
      * error message as token.
      */
     static char *PeekAtToken();
-
-    /**
-     * The next NextToken call will return the token as next element
-     * It can be used repeatedly to add more than one tokens in a FIFO list.
-     */
-    static void TokenPutBack(const char *token);
 
     /// Set the configuration file line to parse.
     static void SetCfgLine(char *line);
@@ -134,7 +160,7 @@ public:
 
     /**
      * Strict syntax mode. Does not allow not alphanumeric characters in unquoted tokens.
-     * Controled by the  configuration_includes_quoted_values in squid.conf but remains
+     * Controlled by the  configuration_includes_quoted_values in squid.conf but remains
      * false when the the legacy ConfigParser::NextQuotedToken() call forces
      * RecognizeQuotedValues to be temporary true.
      */
@@ -148,10 +174,10 @@ protected:
     class CfgFile
     {
     public:
-        CfgFile(): wordFile(NULL), parsePos(NULL), lineNo(0) { parseBuffer[0] = '\0';}
+        CfgFile(): wordFile(nullptr), parsePos(nullptr), lineNo(0) { parseBuffer[0] = '\0';}
         ~CfgFile();
         /// True if the configuration file is open
-        bool isOpen() {return wordFile != NULL;}
+        bool isOpen() {return wordFile != nullptr;}
 
         /**
          * Open the file given by 'path' and initializes the CfgFile object
@@ -183,14 +209,11 @@ protected:
         int lineNo; ///< Current line number
     };
 
-    /// Return the last TokenPutBack() queued element or NULL if none exist
-    static char *Undo();
-
     /**
      * Unquotes the token, which must be quoted.
      * \param next if it is not NULL, it is set after the end of token.
      */
-    static char *UnQuote(const char *token, const char **next = NULL);
+    static char *UnQuote(const char *token, const char **next = nullptr);
 
     /**
      * Does the real tokens parsing job: Ignore comments, unquote an
@@ -208,11 +231,10 @@ protected:
     static const char *CfgLine; ///< The current line to parse
     static const char *CfgPos; ///< Pointer to the next element in cfgLine string
     static std::queue<char *> CfgLineTokens_; ///< Store the list of tokens for current configuration line
-    static std::queue<std::string> Undo_; ///< The list with TokenPutBack() queued elements
     static bool AllowMacros_;
     static bool ParseQuotedOrToEol_; ///< The next tokens will be handled as quoted or to_eol token
     static bool RecognizeQuotedPair_; ///< The next tokens may contain quoted-pair (\-escaped) characters
-    static bool PreviewMode_; ///< The next token will not poped from cfg files, will just previewd.
+    static bool PreviewMode_; ///< The next token will not popped from cfg files, will just previewd.
     static bool ParseKvPair_; ///<The next token will be handled as kv-pair token
     static enum ParsingStates {atParseKey, atParseValue} KvPairState_; ///< Parsing state while parsing kv-pair tokens
 };

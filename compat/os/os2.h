@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,7 +18,7 @@
  ****************************************************************************/
 
 /*
-*  FIXME: the os2 port of bash seems to have problems checking
+*  XXX: the os2 port of bash seems to have problems checking
 *  the return codes of programs in if statements.  These options
 *  need to be overridden.
 */

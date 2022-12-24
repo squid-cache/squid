@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,29 +15,51 @@
 #include "fde.h"
 #include "http/Stream.h"
 #include "HttpRequest.h"
+#include "security/ErrorDetail.h"
 #include "security/NegotiationHistory.h"
 #include "SquidConfig.h"
 #include "ssl/bio.h"
 #include "ssl/PeekingPeerConnector.h"
 #include "ssl/ServerBump.h"
+#include "tunnel.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeekingPeerConnector);
 
-void switchToTunnel(HttpRequest *request, Comm::ConnectionPointer & clientConn, Comm::ConnectionPointer &srvConn);
-
-void
-Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone(Acl::Answer answer, void *data)
+Ssl::PeekingPeerConnector::PeekingPeerConnector(HttpRequestPointer &aRequest,
+        const Comm::ConnectionPointer &aServerConn,
+        const Comm::ConnectionPointer &aClientConn,
+        const AsyncCallback<Security::EncryptorAnswer> &aCallback,
+        const AccessLogEntryPointer &alp,
+        const time_t timeout):
+    AsyncJob("Ssl::PeekingPeerConnector"),
+    Security::PeerConnector(aServerConn, aCallback, alp, timeout),
+    clientConn(aClientConn),
+    splice(false),
+    serverCertificateHandled(false)
 {
-    Ssl::PeekingPeerConnector *peerConnect = (Ssl::PeekingPeerConnector *) data;
-    // Use job calls to add done() checks and other job logic/protections.
-    CallJobHere1(83, 7, CbcPointer<PeekingPeerConnector>(peerConnect), Ssl::PeekingPeerConnector, checkForPeekAndSpliceDone, answer);
+    request = aRequest;
+
+    if (const auto csd = request->clientConnectionManager.valid()) {
+        const auto serverBump = csd->serverBump();
+        Must(serverBump);
+        Must(serverBump->at(XactionStep::tlsBump3));
+    }
+    // else the client is gone, and we cannot check the step, but must carry on
 }
 
 void
-Ssl::PeekingPeerConnector::checkForPeekAndSpliceDone(Acl::Answer answer)
+Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone(const Acl::Answer aclAnswer, void *data)
 {
-    const Ssl::BumpMode finalAction = answer.allowed() ?
-                                      static_cast<Ssl::BumpMode>(answer.kind):
+    Ssl::PeekingPeerConnector *peerConnect = (Ssl::PeekingPeerConnector *) data;
+    // Use job calls to add done() checks and other job logic/protections.
+    CallJobHere1(83, 7, CbcPointer<PeekingPeerConnector>(peerConnect), Ssl::PeekingPeerConnector, checkForPeekAndSpliceDone, aclAnswer);
+}
+
+void
+Ssl::PeekingPeerConnector::checkForPeekAndSpliceDone(const Acl::Answer aclAnswer)
+{
+    const Ssl::BumpMode finalAction = aclAnswer.allowed() ?
+                                      static_cast<Ssl::BumpMode>(aclAnswer.kind):
                                       checkForPeekAndSpliceGuess();
     checkForPeekAndSpliceMatched(finalAction);
 }
@@ -45,18 +67,11 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceDone(Acl::Answer answer)
 void
 Ssl::PeekingPeerConnector::checkForPeekAndSplice()
 {
-    // Mark Step3 of bumping
-    if (request->clientConnectionManager.valid()) {
-        if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
-            serverBump->step = XactionStep::tlsBump3;
-        }
-    }
-
     handleServerCertificate();
 
     ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(
         ::Config.accessList.ssl_bump,
-        request.getRaw(), NULL);
+        request.getRaw(), nullptr);
     acl_checklist->al = al;
     acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpNone));
     acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpPeek));
@@ -92,8 +107,9 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceMatched(const Ssl::BumpMode acti
     al->ssl.bumpMode = finalAction;
 
     if (finalAction == Ssl::bumpTerminate) {
-        serverConn->close();
+        bail(new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scForbidden, request.getRaw(), al));
         clientConn->close();
+        clientConn = nullptr;
     } else if (finalAction != Ssl::bumpSplice) {
         //Allow write, proceed with the connection
         srvBio->holdWrite(false);
@@ -104,10 +120,8 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceMatched(const Ssl::BumpMode acti
         splice = true;
         // Ssl Negotiation stops here. Last SSL checks for valid certificates
         // and if done, switch to tunnel mode
-        if (sslFinalized()) {
-            debugs(83,5, "Abort NegotiateSSL on FD " << serverConn->fd << " and splice the connection");
+        if (sslFinalized() && callback)
             callBack();
-        }
     }
 }
 
@@ -140,12 +154,14 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
     if (!Security::PeerConnector::initialize(serverSession))
         return false;
 
+    // client connection supplies TLS client details and is also used if we
+    // need to splice or terminate the client and server connections
+    if (!Comm::IsConnOpen(clientConn))
+        return false;
+
     if (ConnStateData *csd = request->clientConnectionManager.valid()) {
 
-        // client connection is required in the case we need to splice
-        // or terminate client and server connections
-        assert(clientConn != NULL);
-        SBuf *hostName = NULL;
+        SBuf *hostName = nullptr;
 
         //Enable Status_request TLS extension, required to bump some clients
         SSL_set_tlsext_status_type(serverSession.get(), TLSEXT_STATUSTYPE_ocsp);
@@ -166,7 +182,6 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
         if (hostName)
             SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, (void*)hostName);
 
-        Must(!csd->serverBump() || csd->serverBump()->at(XactionStep::tlsBump1, XactionStep::tlsBump2));
         if (csd->sslBumpMode == Ssl::bumpPeek || csd->sslBumpMode == Ssl::bumpStare) {
             auto clientSession = fd_table[clientConn->fd].ssl.get();
             Must(clientSession);
@@ -219,8 +234,9 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
     if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
         if (!serverBump->serverCert.get()) {
             // remember the server certificate from the ErrorDetail object
-            if (error && error->detail && error->detail->peerCert())
-                serverBump->serverCert.resetAndLock(error->detail->peerCert());
+            const auto errDetail = dynamic_cast<Security::ErrorDetail *>(error ? error->detail.getRaw() : nullptr);
+            if (errDetail && errDetail->peerCert())
+                serverBump->serverCert.resetAndLock(errDetail->peerCert());
             else {
                 handleServerCertificate();
             }
@@ -245,10 +261,33 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
     if (!error) {
         serverCertificateVerified();
         if (splice) {
-            switchToTunnel(request.getRaw(), clientConn, serverConn);
-            tunnelInsteadOfNegotiating();
+            if (!Comm::IsConnOpen(clientConn)) {
+                bail(new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al));
+                throw TextException("from-client connection gone", Here());
+            }
+            startTunneling();
         }
     }
+}
+
+void
+Ssl::PeekingPeerConnector::startTunneling()
+{
+    // switchToTunnel() drains any already buffered from-server data (rBufData)
+    fd_table[serverConn->fd].useDefaultIo();
+    // tunnelStartShoveling() drains any buffered from-client data (inBuf)
+    fd_table[clientConn->fd].useDefaultIo();
+
+    // TODO: Encapsulate this frequently repeated logic into a method.
+    const auto session = fd_table[serverConn->fd].ssl;
+    auto b = SSL_get_rbio(session.get());
+    auto srvBio = static_cast<Ssl::ServerBio*>(BIO_get_data(b));
+
+    debugs(83, 5, "will tunnel instead of negotiating TLS");
+    switchToTunnel(request.getRaw(), clientConn, serverConn, srvBio->rBufData());
+    answer().tunneled = true;
+    disconnect();
+    callBack();
 }
 
 void
@@ -269,25 +308,39 @@ Ssl::PeekingPeerConnector::noteWantWrite()
 }
 
 void
-Ssl::PeekingPeerConnector::noteNegotiationError(const int result, const int ssl_error, const int ssl_lib_error)
+Ssl::PeekingPeerConnector::noteNegotiationError(const Security::ErrorDetailPointer &errorDetail)
 {
     const int fd = serverConnection()->fd;
     Security::SessionPointer session(fd_table[fd].ssl);
     BIO *b = SSL_get_rbio(session.get());
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
 
-    // In Peek mode, the ClientHello message sent to the server. If the
-    // server resuming a previous (spliced) SSL session with the client,
-    // then probably we are here because local SSL object does not know
-    // anything about the session being resumed.
-    //
-    if (srvBio->bumpMode() == Ssl::bumpPeek && (resumingSession = srvBio->resumingSession())) {
-        // we currently splice all resumed sessions unconditionally
-        // if (const bool spliceResumed = true) {
-        bypassCertValidator();
-        checkForPeekAndSpliceMatched(Ssl::bumpSplice);
-        return;
-        // } // else fall through to find a matching ssl_bump action (with limited info)
+    if (srvBio->bumpMode() == Ssl::bumpPeek) {
+        auto bypassValidator = false;
+        if (srvBio->encryptedCertificates()) {
+            // it is pointless to peek at encrypted certificates
+            //
+            // we currently splice all sessions with encrypted certificates
+            // if (const auto spliceEncryptedCertificates = true) {
+            bypassValidator = true;
+            // } // else fall through to find a matching ssl_bump action (with limited info)
+        } else if (srvBio->resumingSession()) {
+            // In peek mode, the ClientHello message is forwarded to the server.
+            // If the server is resuming a previous (spliced) SSL session with
+            // the client, then probably we are here because our local SSL
+            // object does not know anything about the session being resumed.
+            //
+            // we currently splice all resumed sessions
+            // if (const auto spliceResumed = true) {
+            bypassValidator = true;
+            // } // else fall through to find a matching ssl_bump action (with limited info)
+        }
+
+        if (bypassValidator) {
+            bypassCertValidator();
+            checkForPeekAndSpliceMatched(Ssl::bumpSplice);
+            return;
+        }
     }
 
     // If we are in peek-and-splice mode and still we did not write to
@@ -299,18 +352,21 @@ Ssl::PeekingPeerConnector::noteNegotiationError(const int result, const int ssl_
     // thus hiding them.
     // Abort if no certificate found probably because of malformed or
     // unsupported server Hello message (TODO: make configurable).
+    // TODO: Add/use a positive "successfully validated server cert" signal
+    // instead of relying on the "![presumably_]validation_error && serverCert"
+    // signal combo.
     if (!SSL_get_ex_data(session.get(), ssl_ex_index_ssl_error_detail) &&
             (srvBio->bumpMode() == Ssl::bumpPeek  || srvBio->bumpMode() == Ssl::bumpStare) && srvBio->holdWrite()) {
         Security::CertPointer serverCert(SSL_get_peer_certificate(session.get()));
         if (serverCert) {
-            debugs(81, 3, "Error ("  << Security::ErrorString(ssl_lib_error) <<  ") but, hold write on SSL connection on FD " << fd);
+            debugs(81, 3, "hold TLS write on FD " << fd << " despite " << errorDetail);
             checkForPeekAndSplice();
             return;
         }
     }
 
     // else call parent noteNegotiationError to produce an error page
-    Security::PeerConnector::noteNegotiationError(result, ssl_error, ssl_lib_error);
+    Security::PeerConnector::noteNegotiationError(errorDetail);
 }
 
 void
@@ -353,15 +409,5 @@ Ssl::PeekingPeerConnector::serverCertificateVerified()
                    " bumped: " << *serverConnection());
         }
     }
-}
-
-void
-Ssl::PeekingPeerConnector::tunnelInsteadOfNegotiating()
-{
-    Must(callback != NULL);
-    CbDialer *dialer = dynamic_cast<CbDialer*>(callback->getDialer());
-    Must(dialer);
-    dialer->answer().tunneled = true;
-    debugs(83, 5, "The SSL negotiation with server aborted");
 }
 

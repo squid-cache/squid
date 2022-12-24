@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,8 +16,8 @@
 #define PINGER_PAYLOAD_SZ   8192
 
 #define MAX_PAYLOAD 256 // WAS: SQUIDHOSTNAMELEN
-#define MAX_PKT4_SZ (MAX_PAYLOAD + sizeof(struct timeval) + sizeof (char) + sizeof(struct icmphdr) + 1)
-#define MAX_PKT6_SZ (MAX_PAYLOAD + sizeof(struct timeval) + sizeof (char) + sizeof(struct icmp6_hdr) + 1)
+#define MAX_PKT4_SZ (sizeof(struct icmphdr) + sizeof(struct icmpEchoData) + 1)
+#define MAX_PKT6_SZ (sizeof(struct icmp6_hdr) + sizeof(struct icmpEchoData) + 1)
 
 #if USE_ICMP
 
@@ -87,7 +87,7 @@ public:
      *                Content longer than MAX_PAYLOAD will be truncated.
      \param len       Length of the payload in bytes if any is to be sent or 0.
      */
-    virtual void SendEcho(Ip::Address &to, int opcode, const char *payload=NULL, int len=0) =0;
+    virtual void SendEcho(Ip::Address &to, int opcode, const char *payload=nullptr, int len=0) =0;
 
     /// Handle ICMP responses.
     virtual void Recv(void) =0;

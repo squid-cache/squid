@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,14 +21,11 @@ class ACLProtocolData : public ACLData<AnyP::ProtocolType>
 
 public:
     ACLProtocolData() {}
-    ACLProtocolData(ACLProtocolData const &);
-    ACLProtocolData &operator= (ACLProtocolData const &);
     virtual ~ACLProtocolData();
     bool match(AnyP::ProtocolType);
     virtual SBufList dump() const;
     void parse();
     bool empty() const {return values.empty();}
-    virtual ACLData<AnyP::ProtocolType> *clone() const;
 
     std::list<AnyP::ProtocolType> values;
 };

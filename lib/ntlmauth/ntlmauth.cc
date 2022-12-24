@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,7 @@
 #include "squid.h"
 
 #include <cstring>
+#include <ctime>
 #include <random>
 #if HAVE_STRINGS_H
 #include <strings.h>
@@ -100,17 +101,26 @@ ntlm_fetch_string(const ntlmhdr *packet, const int32_t packet_size, const strhdr
     lstring rv;
     char *d;
 
-    rv.str = NULL;
+    rv.str = nullptr;
     rv.l = -1;
 
     int16_t l = le16toh(str->len);
     int32_t o = le32toh(str->offset);
     // debug("ntlm_fetch_string(plength=%d,l=%d,o=%d)\n",packet_size,l,o);
 
-    if (l < 0 || l > NTLM_MAX_FIELD_LENGTH || o + l > packet_size || o == 0) {
-        debug("ntlm_fetch_string: insane data (pkt-sz: %d, fetch len: %d, offset: %d)\n", packet_size,l,o);
+    if (l < 0 || l > NTLM_MAX_FIELD_LENGTH) {
+        debug("ntlm_fetch_string: insane string length (pkt-sz: %d, fetch len: %d, offset: %d)\n", packet_size,l,o);
         return rv;
     }
+    else if (o <= 0 || o > packet_size) {
+        debug("ntlm_fetch_string: insane string offset (pkt-sz: %d, fetch len: %d, offset: %d)\n", packet_size,l,o);
+        return rv;
+    }
+    else if (l > packet_size - o) {
+        debug("ntlm_fetch_string: truncated string data (pkt-sz: %d, fetch len: %d, offset: %d)\n", packet_size,l,o);
+        return rv;
+    }
+
     rv.str = (char *)packet + o;
     rv.l = 0;
     if ((flags & NTLM_NEGOTIATE_ASCII) == 0) {
@@ -145,7 +155,7 @@ ntlm_fetch_string(const ntlmhdr *packet, const int32_t packet_size, const strhdr
 }
 
 /**
- * Adds something to the payload. The caller must guarrantee that
+ * Adds something to the payload. The caller must guarantee that
  * there is enough space in the payload string to accommodate the
  * added value.
  * payload_length and hdr will be modified as a side-effect.
@@ -184,8 +194,8 @@ ntlm_add_to_payload(const ntlmhdr *packet_hdr,
 void
 ntlm_make_nonce(char *nonce)
 {
-    static std::mt19937 mt(time(0));
-    static xuniform_int_distribution<uint8_t> dist;
+    static std::mt19937 mt(time(nullptr));
+    static std::uniform_int_distribution<uint8_t> dist;
 
     for (int i = 0; i < NTLM_NONCE_LEN; ++i)
         nonce[i] = static_cast<char>(dist(mt) & 0xFF);
@@ -205,7 +215,7 @@ ntlm_make_challenge(ntlm_challenge *ch,
     memset(ch, 0, sizeof(ntlm_challenge));  /* reset */
     memcpy(ch->hdr.signature, "NTLMSSP", 8);        /* set the signature */
     ch->hdr.type = htole32(NTLM_CHALLENGE); /* this is a challenge */
-    if (domain != NULL) {
+    if (domain != nullptr) {
         // silently truncate the domain if it exceeds 2^16-1 bytes.
         // NTLM packets normally expect 2^8 bytes of domain.
         const uint16_t dlen = strlen(domain) & 0xFFFF;

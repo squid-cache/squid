@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,11 +33,7 @@ public:
 
     virtual void reset();
 
-    /**
-     \retval true on success
-     \retval false and sets *error to zero when needs more data
-     \retval false and sets *error to a positive Http::StatusCode on error
-     */
+    /* Http::Message API */
     virtual bool sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *error);
 
     /** \par public, readable; never update these or their .hdr equivalents directly */
@@ -112,12 +108,9 @@ public:
     void packHeadersUsingSlowPacker(Packable &p) const;
 
     /** Clone this reply.
-     *  Could be done as a copy-contructor but we do not want to accidently copy a HttpReply..
+     *  Could be done as a copy-contructor but we do not want to accidentally copy a HttpReply..
      */
     HttpReply *clone() const;
-
-    /// Remove Warnings with warn-date different from Date value
-    void removeStaleWarnings();
 
     virtual void hdrCacheInit();
 
@@ -153,8 +146,6 @@ private:
      * Used by receivedBodyTooLarge() and expectedBodyTooLarge().
      */
     void calcMaxBodySize(HttpRequest& request) const;
-
-    String removeStaleWarningValues(const String &value);
 
     mutable int64_t bodySizeMax; /**< cached result of calcMaxBodySize */
 

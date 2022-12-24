@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,6 +13,7 @@
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
 #include "neighbors.h"
+#include "peer_sourcehash.h"
 #include "PeerSelectState.h"
 #include "SquidConfig.h"
 #include "Store.h"
@@ -22,7 +23,7 @@
 #define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
 
 static int n_sourcehash_peers = 0;
-static CachePeer **sourcehash_peers = NULL;
+static CachePeer **sourcehash_peers = nullptr;
 static OBJH peerSourceHashCachemgr;
 static void peerSourceHashRegisterWithCacheManager(void);
 
@@ -146,17 +147,17 @@ peerSourceHashSelectParent(PeerSelector *ps)
 {
     int k;
     const char *c;
-    CachePeer *p = NULL;
+    CachePeer *p = nullptr;
     CachePeer *tp;
     unsigned int user_hash = 0;
     unsigned int combined_hash;
     double score;
     double high_score = 0;
-    const char *key = NULL;
+    const char *key = nullptr;
     char ntoabuf[MAX_IPSTRLEN];
 
     if (n_sourcehash_peers == 0)
-        return NULL;
+        return nullptr;
 
     assert(ps);
     HttpRequest *request = ps->request;
@@ -176,7 +177,7 @@ peerSourceHashSelectParent(PeerSelector *ps)
         combined_hash += combined_hash * 0x62531965;
         combined_hash = ROTATE_LEFT(combined_hash, 21);
         score = combined_hash * tp->sourcehash.load_multiplier;
-        debugs(39, 3, "peerSourceHashSelectParent: " << tp->name << " combined_hash " << combined_hash  <<
+        debugs(39, 3, *tp << " combined_hash " << combined_hash  <<
                " score " << std::setprecision(0) << score);
 
         if ((score > high_score) && peerHTTPOkay(tp, ps)) {
@@ -186,7 +187,7 @@ peerSourceHashSelectParent(PeerSelector *ps)
     }
 
     if (p)
-        debugs(39, 2, "peerSourceHashSelectParent: selected " << p->name);
+        debugs(39, 2, "selected " << *p);
 
     return p;
 }

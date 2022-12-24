@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -38,7 +38,7 @@ public:
 
     /**
      * Notify this disk that it is full.
-     \todo XXX move into a protected api call between store files and their stores, rather than a top level api call
+     * XXX move into a protected api call between store files and their stores, rather than a top level api call
      */
     virtual void diskFull();
 

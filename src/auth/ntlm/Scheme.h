@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,13 +35,6 @@ public:
     /* Not implemented */
     Scheme (Scheme const &);
     Scheme &operator=(Scheme const &);
-
-private:
-    /**
-     * Main instance of this authentication Scheme.
-     * NULL when the scheme is not being used.
-     */
-    static Auth::Scheme::Pointer _instance;
 };
 
 } // namespace Ntlm

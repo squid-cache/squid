@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,8 @@
 #include "squid.h"
 #include "auth/toUtf.h"
 #include "sbuf/SBuf.h"
+
+#include <limits>
 
 SBuf
 Latin1ToUtf8(const char *in)
@@ -56,9 +58,11 @@ Cp1251ToUtf8(const char *in)
         size_t bytesToWrite = 0;
         char sequence[4] = {0, 0, 0, 0};
 
+        static_assert(std::numeric_limits<unsigned char>::max() == 0xFFu,
+                      "we require char to be exactly 8 bits");
         if (ch < 0x80)
             u = ch;
-        else if (ch >= 0xC0 && ch <= 0xFF) // 0x0410..0x044F
+        else if (ch >= 0xC0) // 0x0410..0x044F
             u = 0x0350 + ch;
         else
             u = unicodevalues[ch - 0x80];
@@ -74,14 +78,13 @@ Cp1251ToUtf8(const char *in)
         case 3:
             sequence[2] = static_cast<char>(u & 0x3f) | 0x80;
             u >>= 6;
-        // fall through
+            [[fallthrough]];
         case 2:
             sequence[1] = static_cast<char>(u & 0x3f) | 0x80;
             u >>= 6;
-        // fall through
+            [[fallthrough]];
         case 1:
             sequence[0] = static_cast<char>(u)        | firstByteMark[bytesToWrite];
-            // fall through
         }
         result.append(sequence, bytesToWrite);
     }
@@ -127,8 +130,10 @@ isValidUtf8CodePoint(const unsigned char* source, const size_t length)
     // Everything else falls through when "true"...
     case 4:
         if ((a = (*--srcptr)) < 0x80 || a > 0xBF) return false;
+        [[fallthrough]];
     case 3:
         if ((a = (*--srcptr)) < 0x80 || a > 0xBF) return false;
+        [[fallthrough]];
     case 2:
         if ((a = (*--srcptr)) > 0xBF) return false;
 
@@ -150,6 +155,7 @@ isValidUtf8CodePoint(const unsigned char* source, const size_t length)
             if (a < 0x80) return false;
             break;
         }
+        [[fallthrough]];
 
     case 1:
         if (*source >= 0x80 && *source < 0xC2) return false;

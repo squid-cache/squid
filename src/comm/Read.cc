@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,7 +15,7 @@
 #include "comm/Read.h"
 #include "comm_internal.h"
 #include "CommCalls.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "fd.h"
 #include "fde.h"
 #include "sbuf/SBuf.h"
@@ -28,7 +28,7 @@
 bool
 Comm::MonitorsRead(int fd)
 {
-    assert(isOpen(fd) && COMMIO_FD_READCB(fd) != NULL);
+    assert(isOpen(fd) && COMMIO_FD_READCB(fd) != nullptr);
     // Being active is usually the same as monitoring because we always
     // start monitoring the FD when we configure Comm::IoCallback for I/O
     // and we usually configure Comm::IoCallback for I/O when we starting
@@ -41,7 +41,7 @@ Comm::Read(const Comm::ConnectionPointer &conn, AsyncCall::Pointer &callback)
 {
     // TODO: move comm_read_base() internals into here
     // when comm_read() char* API is no longer needed
-    comm_read_base(conn, NULL, 0, callback);
+    comm_read_base(conn, nullptr, 0, callback);
 }
 
 /**
@@ -66,14 +66,14 @@ comm_read_base(const Comm::ConnectionPointer &conn, char *buf, int size, AsyncCa
     // Active/passive conflicts are OK and simply cancel passive monitoring.
     if (ccb->active()) {
         // if the assertion below fails, we have an active comm_read conflict
-        assert(fd_table[conn->fd].halfClosedReader != NULL);
+        assert(fd_table[conn->fd].halfClosedReader != nullptr);
         commStopHalfClosedMonitor(conn->fd);
         assert(!ccb->active());
     }
     ccb->conn = conn;
 
     /* Queue the read */
-    ccb->setCallback(Comm::IOCB_READ, callback, (char *)buf, NULL, size);
+    ccb->setCallback(Comm::IOCB_READ, callback, (char *)buf, nullptr, size);
     Comm::SetSelect(conn->fd, COMM_SELECT_READ, Comm::HandleRead, ccb, 0);
 }
 
@@ -101,6 +101,7 @@ Comm::ReadNow(CommIoCbParams &params, SBuf &buf)
     } else if (retval == 0) { // remote closure (somewhat less) common
         // Note - read 0 == socket EOF, which is a valid read.
         params.flag = Comm::ENDFILE;
+        params.size = 0;
 
     } else if (retval < 0) { // connection errors are worst-case
         debugs(5, 3, params.conn << " Comm::COMM_ERROR: " << xstrerr(params.xerrno));
@@ -108,6 +109,7 @@ Comm::ReadNow(CommIoCbParams &params, SBuf &buf)
             params.flag =  Comm::INPROGRESS;
         else
             params.flag =  Comm::COMM_ERROR;
+        params.size = 0;
     }
 
     return params.flag;
@@ -210,7 +212,7 @@ comm_read_cancel(int fd, IOCB *callback, void *data)
     cb->cancel("old comm_read_cancel");
 
     /* And the IO event */
-    Comm::SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
+    Comm::SetSelect(fd, COMM_SELECT_READ, nullptr, nullptr, 0);
 }
 
 void
@@ -239,7 +241,7 @@ Comm::ReadCancel(int fd, AsyncCall::Pointer &callback)
     cb->cancel("comm_read_cancel");
 
     /* And the IO event */
-    Comm::SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
+    Comm::SetSelect(fd, COMM_SELECT_READ, nullptr, nullptr, 0);
 }
 
 time_t

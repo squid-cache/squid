@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,10 +26,10 @@ testIcmp::testChecksum()
         buf[tmpval]=htons(1+tmpval);
 
     // NULL data
-    CPPUNIT_ASSERT_EQUAL((int)htons(0xffff), icmp.testChecksum(NULL,0));
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xffff), icmp.testChecksum(nullptr,0));
 
     // NULL data with length!!
-    CPPUNIT_ASSERT_EQUAL((int)htons(0xffff), icmp.testChecksum(NULL,1));
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xffff), icmp.testChecksum(nullptr,1));
 
     // data with 0 length
     CPPUNIT_ASSERT_EQUAL((int)htons(0xffff), icmp.testChecksum(buf,0));

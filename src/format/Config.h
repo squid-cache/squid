@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,7 +23,7 @@ class TokenTableEntry;
 
 /// A namespace or 'set' of tokens
 /// components register their namespace prefix and an array of tokens
-/// which can then be embeded in any format.
+/// which can then be embedded in any format.
 class TokenNamespace
 {
 public:

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,7 +32,7 @@ public:
 
     Ip::Address addr2;
 
-    Ip::Address mask; /**< \todo This should perhapse be stored as a CIDR range now instead of a full IP mask. */
+    Ip::Address mask; // TODO: should use a CIDR range
 
     acl_ip_data *next;      /**< used for parsing, not for storing */
 
@@ -47,7 +47,7 @@ public:
     void *operator new(size_t);
     void operator delete(void *);
 
-    ACLIP() : data(NULL) {}
+    ACLIP() : data(nullptr) {}
     ~ACLIP();
 
     typedef Splay<acl_ip_data *> IPSplay;

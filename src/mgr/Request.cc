@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,7 +16,9 @@
 #include "mgr/ActionParams.h"
 #include "mgr/Request.h"
 
-Mgr::Request::Request(int aRequestorId, unsigned int aRequestId, const Comm::ConnectionPointer &aConn,
+Mgr::Request::Request(const int aRequestorId,
+                      const Ipc::RequestId aRequestId,
+                      const Comm::ConnectionPointer &aConn,
                       const ActionParams &aParams):
     Ipc::Request(aRequestorId, aRequestId),
     conn(aConn),
@@ -25,14 +27,7 @@ Mgr::Request::Request(int aRequestorId, unsigned int aRequestId, const Comm::Con
     Must(requestorId > 0);
 }
 
-Mgr::Request::Request(const Request& request):
-    Ipc::Request(request.requestorId, request.requestId),
-    conn(request.conn), params(request.params)
-{
-}
-
-Mgr::Request::Request(const Ipc::TypedMsgHdr& msg):
-    Ipc::Request(0, 0)
+Mgr::Request::Request(const Ipc::TypedMsgHdr &msg)
 {
     msg.checkType(Ipc::mtCacheMgrRequest);
     msg.getPod(requestorId);

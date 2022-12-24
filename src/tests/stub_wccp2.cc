@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "wccp2.h"
 
 #if USE_WCCPv2
 
@@ -15,7 +16,6 @@
 
 class StoreEntry;
 
-void wccp2_add_service_list(int, int, int, int, int, int[], int, char *) STUB
 void wccp2Init(void) STUB
 void wccp2ConnectionOpen(void) STUB
 void wccp2ConnectionClose(void) STUB

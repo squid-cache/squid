@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,7 +14,7 @@
 #include "auth/AclMaxUserIp.h"
 #include "auth/UserRequest.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "Parsing.h"
 #include "wordlist.h"
 
@@ -22,12 +22,6 @@ ACLMaxUserIP::ACLMaxUserIP(char const *theClass) :
     class_(theClass),
     maximum(0)
 {}
-
-ACL *
-ACLMaxUserIP::clone() const
-{
-    return new ACLMaxUserIP(*this);
-}
 
 char const *
 ACLMaxUserIP::typeString() const
@@ -50,8 +44,8 @@ ACLMaxUserIP::valid() const
 const Acl::Options &
 ACLMaxUserIP::options()
 {
-    static const Acl::BooleanOption BeStrict;
-    static const Acl::Options MyOptions = { { "-s", &BeStrict } };
+    static const Acl::BooleanOption BeStrict("-s");
+    static const Acl::Options MyOptions = { &BeStrict };
     BeStrict.linkWith(&beStrict);
     return MyOptions;
 }
@@ -130,7 +124,7 @@ ACLMaxUserIP::match(ACLChecklist *cl)
     case ACCESS_ALLOWED:
         // check for a match
         ti = match(checklist->auth_user_request, checklist->src_addr);
-        checklist->auth_user_request = NULL;
+        checklist->auth_user_request = nullptr;
         return ti;
 
     case ACCESS_DENIED:

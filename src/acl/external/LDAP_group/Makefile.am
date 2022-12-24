@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -10,13 +10,12 @@ include $(top_srcdir)/src/Common.am
 libexec_PROGRAMS= ext_ldap_group_acl
 man_MANS= ext_ldap_group_acl.8
 
-ext_ldap_group_acl_SOURCES= \
+ext_ldap_group_acl_SOURCES = \
 	ext_ldap_group_acl.cc
 ext_ldap_group_acl_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
-	$(LDAPLIB) \
-	$(LBERLIB) \
+	$(LIBLDAP_LIBS) \
 	$(XTRA_LIBS)
 
 EXTRA_DIST= \

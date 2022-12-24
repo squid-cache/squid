@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -17,10 +17,10 @@ MAKETEST="distcheck"
 #
 #
 # The options for this level can be easily generated semi-automatically from configure.ac by:
-#	grep -E "^AC_ARG_ENABLE" ./configure.ac | grep -o -E "[0-9a-z\-]+[,]" | grep -o -E "[^,]+" >disable.opts
+#	grep -E "^AC_ARG_ENABLE" ./configure.ac | grep -o -E "[0-9a-z-]+[,]" | grep -o -E "[^,]+" >disable.opts
 # followed by insertion of '	--enable-' and '\' strings
 #
-# 	grep -E "^AC_ARG_WITH" ./configure.ac | grep -o -E "[0-9a-z\-]+[,]" | grep -o -E "[^,]+" >without.opts
+# 	grep -E "^AC_ARG_WITH" ./configure.ac | grep -o -E "[0-9a-z-]+[,]" | grep -o -E "[^,]+" >without.opts
 # followed by insertion of '	--with-' and ' \' strings
 #
 # sometimes it's just too automatic..
@@ -44,18 +44,22 @@ MAKETEST="distcheck"
 #   --with-valgrind-debug \
 #   --with-gnutls \
 #   --with-tdb \
+#   --with-cap \
+#   --with-gnugss \
+#   --with-heimdal-krb5 \
+#   --with-mit-krb5 \
+#   --with-ldap \
 #
 #   --enable-cpu-profiling \  Requires CPU support.
 #
 #
-# NP: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the 
+# NP: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the
 #     distcheck target recursive tests beteen scripted runs.
 #     we use it to perform the same duty between our nested scripts.
 DISTCHECK_CONFIGURE_FLAGS=" \
-	--enable-loadable-modules \
+	--enable-shared \
 	--enable-gnuregex \
 	--enable-optimizations \
-	--enable-debug-cbdata \
 	--enable-xmalloc-statistics \
 	--enable-async-io \
 	--enable-storeio \
@@ -68,7 +72,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-referer-log \
 	--enable-wccp \
 	--enable-wccpv2 \
-	--enable-kill-parent-hack \
 	--enable-snmp \
 	--enable-cachemgr-hostname \
 	--enable-eui \
@@ -79,7 +82,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-select \
 	--enable-http-violations \
 	--enable-ipfw-transparent \
-	--enable-leakfinder \
 	--enable-follow-x-forwarded-for \
 	--enable-ident-lookups \
 	--enable-default-hostsfile=/etc/hosts \

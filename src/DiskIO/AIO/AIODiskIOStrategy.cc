@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -58,7 +58,7 @@ RefCount<DiskFile>
 AIODiskIOStrategy::newFile (char const *path)
 {
     if (shedLoad()) {
-        return NULL;
+        return nullptr;
     }
 
     return new AIODiskFile (path, this);
@@ -191,7 +191,7 @@ AIODiskIOStrategy::statfs(StoreEntry &) const
 ConfigOption *
 AIODiskIOStrategy::getOptionTree() const
 {
-    return NULL;
+    return nullptr;
 }
 
 /*

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,7 +25,7 @@ public:
     ~EncryptorAnswer(); ///< deletes error if it is still set
     Comm::ConnectionPointer conn; ///< peer connection (secured on success)
 
-    /// answer recepients must clear the error member in order to keep its info
+    /// answer recipients must clear the error member in order to keep its info
     /// XXX: We should refcount ErrorState instead of cbdata-protecting it.
     CbcPointer<ErrorState> error; ///< problem details (nil on success)
 
@@ -35,7 +35,7 @@ public:
 
 std::ostream &operator <<(std::ostream &, const Security::EncryptorAnswer &);
 
-} // namepace Security
+} // namespace Security
 
 #endif /* SQUID_SECURITY_ENCRYPTORANSWER_H */
 

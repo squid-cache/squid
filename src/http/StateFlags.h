@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,9 +16,24 @@ class StateFlags
 {
 public:
     unsigned int front_end_https = 0; ///< send "Front-End-Https: On" header (off/on/auto=2)
-    bool keepalive = false; ///< whether to keep the connection persistent
+
+    /// whether the Squid-sent request offers to keep the connection persistent
+    bool keepalive = false;
+
+    /// whether Squid should not keep the connection persistent despite offering
+    /// to do so previously (and setting the keepalive flag)
+    bool forceClose = false;
+
     bool only_if_cached = false;
-    bool handling1xx = false;       ///< we are ignoring or forwarding 1xx response
+
+    /// Whether we are processing an HTTP 1xx control message.
+    bool handling1xx = false;
+
+    /// Whether we received an HTTP 101 (Switching Protocols) control message.
+    /// Implies true handling1xx, but the serverSwitchedProtocols state is
+    /// permanent/final while handling of other control messages usually stops.
+    bool serverSwitchedProtocols = false;
+
     bool headers_parsed = false;
 
     /// Whether the next TCP hop is a cache_peer, including originserver

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -9,8 +9,8 @@
 #
 # Author: Tsantilas Christos
 # (C) 2010 The Measurement Factory
-# 
-# Usage: 
+#
+# Usage:
 #     calc-must-ids.pl file1 file2 ...
 # Compute the ids of Must expressions of the given files.
 # It returns one line per Must expression in the form:
@@ -40,7 +40,7 @@ sub FileNameHash
     my($n) = 0;
     my(@na) = split(//, $name);
     for($j=0; $j < @na; $j++) {
-        $n = $n ^ (271 * ord($na[$j])); 
+        $n = $n ^ (271 * ord($na[$j]));
     }
     return $n ^ ($j *271);
 }
@@ -66,7 +66,7 @@ sub ComputeMustIds
         $line =~ s@/[*].*?[*]/@@; # strip simple single-line /* comments */
 
         my($id);
-        if ($line =~ /\bMust2?\s*\(/ || # Must(...) and Must2(...)
+        if ($line =~ /\bMust\s*\(/ || # Must(...)
             $line =~ /\bTexcHere\s*\(/ || # TexcHere(...)
             $line =~ /\bHere\s*\(\s*\)/) { # Here()
             $line =~ s/^\s*//;
@@ -74,7 +74,7 @@ sub ComputeMustIds
             $id += ERR_DETAIL_EXCEPTION_START;
 #            print "$file:$.: $id $line";
             printf "%s:%d: 0x%X %s", $file, $., $id, $line;
-        }            
-    }    
+        }
+    }
     close(IN);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -134,12 +134,12 @@ asnMatchIp(CbDataList<int> *data, Ip::Address &addr)
     struct squid_radix_node *rn;
     as_info *e;
     m_ADDR m_addr;
-    CbDataList<int> *a = NULL;
-    CbDataList<int> *b = NULL;
+    CbDataList<int> *a = nullptr;
+    CbDataList<int> *b = nullptr;
 
     debugs(53, 3, "asnMatchIp: Called for " << addr );
 
-    if (AS_tree_head == NULL)
+    if (AS_tree_head == nullptr)
         return 0;
 
     if (addr.isNoAddr())
@@ -152,7 +152,7 @@ asnMatchIp(CbDataList<int> *data, Ip::Address &addr)
 
     rn = squid_rn_match(&m_addr, AS_tree_head);
 
-    if (rn == NULL) {
+    if (rn == nullptr) {
         debugs(53, 3, "asnMatchIp: Address not in as db.");
         return 0;
     }
@@ -211,7 +211,7 @@ asnFreeMemory(void)
 {
     squid_rn_walktree(AS_tree_head, destroyRadixNode, AS_tree_head);
 
-    destroyRadixNode((struct squid_radix_node *) 0, (void *) AS_tree_head);
+    destroyRadixNode((struct squid_radix_node *) nullptr, (void *) AS_tree_head);
 }
 
 static void
@@ -237,7 +237,7 @@ asnCacheStart(int as)
     debugs(53, 3, "AS " << as);
     ASState *asState = new ASState;
     asState->as_number = as;
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initAsn);
+    const auto mx = MasterXaction::MakePortless<XactionInitiator::initAsn>();
     asState->request = new HttpRequest(mx);
     asState->request->url = whoisUrl;
     asState->request->method = Http::METHOD_GET;
@@ -287,7 +287,7 @@ asHandleReply(void *data, StoreIOBuffer result)
         delete asState;
         return;
     } else if (result.flags.error) {
-        debugs(53, DBG_IMPORTANT, "asHandleReply: Called with Error set and size=" << (unsigned int) result.length);
+        debugs(53, DBG_IMPORTANT, "ERROR: asHandleReply: Called with Error set and size=" << (unsigned int) result.length);
         delete asState;
         return;
     } else if (e->mem().baseReply().sline.status() != Http::scOkay) {
@@ -378,9 +378,9 @@ static int
 asnAddNet(char *as_string, int as_number)
 {
     struct squid_radix_node *rn;
-    CbDataList<int> **Tail = NULL;
-    CbDataList<int> *q = NULL;
-    as_info *asinfo = NULL;
+    CbDataList<int> **Tail = nullptr;
+    CbDataList<int> *q = nullptr;
+    as_info *asinfo = nullptr;
 
     Ip::Address mask;
     Ip::Address addr;
@@ -389,7 +389,7 @@ asnAddNet(char *as_string, int as_number)
 
     t = strchr(as_string, '/');
 
-    if (t == NULL) {
+    if (t == nullptr) {
         debugs(53, 3, "asnAddNet: failed, invalid response from whois server.");
         return 0;
     }
@@ -406,7 +406,7 @@ asnAddNet(char *as_string, int as_number)
 
     // generate Netbits Format Mask
     mask.setNoAddr();
-    mask.applyMask(bitl, (t!=NULL?AF_INET:AF_INET6) );
+    mask.applyMask(bitl, (t!=nullptr?AF_INET:AF_INET6) );
 
     debugs(53, 3, "asnAddNet: called for " << addr << "/" << mask );
 
@@ -418,7 +418,7 @@ asnAddNet(char *as_string, int as_number)
 
     rn = squid_rn_lookup(&e->e_addr, &e->e_mask, AS_tree_head);
 
-    if (rn != NULL) {
+    if (rn != nullptr) {
         asinfo = ((rtentry_t *) rn)->e_info;
 
         if (asinfo->as_number->find(as_number)) {
@@ -439,11 +439,11 @@ asnAddNet(char *as_string, int as_number)
         asinfo->as_number = q;
         squid_rn_addroute(&e->e_addr, &e->e_mask, AS_tree_head, e->e_nodes);
         rn = squid_rn_match(&e->e_addr, AS_tree_head);
-        assert(rn != NULL);
+        assert(rn != nullptr);
         e->e_info = asinfo;
     }
 
-    if (rn == 0) {      /* assert might expand to nothing */
+    if (rn == nullptr) {      /* assert might expand to nothing */
         xfree(asinfo);
         delete q;
         xfree(e);
@@ -465,7 +465,7 @@ destroyRadixNode(struct squid_radix_node *rn, void *w)
         rtentry_t *e = (rtentry_t *) rn;
         rn = squid_rn_delete(rn->rn_key, rn->rn_mask, rnh);
 
-        if (rn == 0)
+        if (rn == nullptr)
             debugs(53, 3, "destroyRadixNode: internal screwup");
 
         destroyRadixNodeInfo(e->e_info);
@@ -479,7 +479,7 @@ destroyRadixNode(struct squid_radix_node *rn, void *w)
 static void
 destroyRadixNodeInfo(as_info * e_info)
 {
-    CbDataList<int> *prev = NULL;
+    CbDataList<int> *prev = nullptr;
     CbDataList<int> *data = e_info->as_number;
 
     while (data) {
@@ -538,7 +538,7 @@ ACLASN::dump() const
 
     CbDataList<int> *ldata = data;
 
-    while (ldata != NULL) {
+    while (ldata != nullptr) {
         SBuf s;
         s.Printf("%d", ldata->element);
         sl.push_back(s);
@@ -551,7 +551,7 @@ ACLASN::dump() const
 bool
 ACLASN::empty () const
 {
-    return data == NULL;
+    return data == nullptr;
 }
 
 void
@@ -559,8 +559,8 @@ ACLASN::parse()
 {
     CbDataList<int> **curlist = &data;
     CbDataList<int> **Tail;
-    CbDataList<int> *q = NULL;
-    char *t = NULL;
+    CbDataList<int> *q = nullptr;
+    char *t = nullptr;
 
     for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = ConfigParser::strtokFile())) {
@@ -568,15 +568,6 @@ ACLASN::parse()
         *(Tail) = q;
         Tail = &q->next;
     }
-}
-
-ACLData<Ip::Address> *
-ACLASN::clone() const
-{
-    if (data)
-        fatal ("cloning of ACLASN not implemented");
-
-    return new ACLASN(*this);
 }
 
 /* explicit template instantiation required for some systems */
@@ -595,7 +586,7 @@ ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist
     const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->url.host(), IP_LOOKUP_IF_MISS);
 
     if (ia) {
-        for (const auto ip: ia->goodAndBad()) {
+        for (const auto &ip: ia->goodAndBad()) {
             if (data->match(ip))
                 return 1;
         }

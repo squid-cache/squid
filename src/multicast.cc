@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "comm/Connection.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 // XXX: for icpIncomingConn - need to pass it as a generic parameter.
 #include "ICP.h"
 #include "ipcache.h"
@@ -37,12 +37,12 @@ mcastJoinGroups(const ipcache_addrs *ia, const Dns::LookupDetails &, void *)
 #ifdef IP_MULTICAST_TTL
     struct ip_mreq mr;
 
-    if (ia == NULL) {
-        debugs(7, DBG_CRITICAL, "comm_join_mcast_groups: Unknown host");
+    if (ia == nullptr) {
+        debugs(7, DBG_CRITICAL, "ERROR: comm_join_mcast_groups: Unknown host");
         return;
     }
 
-    for (const auto ip: ia->goodAndBad()) { // TODO: Consider using just good().
+    for (const auto &ip: ia->goodAndBad()) { // TODO: Consider using just good().
         debugs(7, 9, "Listening for ICP requests on " << ip);
 
         if (!ip.isIPv4()) {

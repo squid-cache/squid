@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -52,7 +52,7 @@ int SMB_Types[] = {SMB_P_Core,
                    SMB_P_NT1,
                    SMB_P_NT1,
                    -1
-                  };
+                   };
 
 #if UNDEFINED
 char *SMB_DOSTimToStr(int DOS_time);
@@ -234,7 +234,7 @@ int SMB_Figure_Protocol(const char *dialects[], int prot_index)
 
 /* Negotiate the protocol we will use from the list passed in Prots       */
 /* we return the index of the accepted protocol in NegProt, -1 indicates  */
-/* none acceptible, and our return value is 0 if ok, <0 if problems       */
+/* none acceptable, and our return value is 0 if ok, <0 if problems       */
 
 int SMB_Negotiate(SMB_Handle_Type Con_Handle, const char *Prots[])
 

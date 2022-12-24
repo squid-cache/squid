@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,7 +33,7 @@ public:
     void DomainPing(Ip::Address &to, const char *domain);
 
 #if USE_ICMP
-    virtual void SendEcho(Ip::Address &to, int opcode, const char* payload=NULL, int len=0);
+    virtual void SendEcho(Ip::Address &to, int opcode, const char* payload=nullptr, int len=0);
     virtual void Recv(void);
 #endif
 };

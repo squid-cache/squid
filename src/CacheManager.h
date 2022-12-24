@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #ifndef SQUID_CACHEMANAGER_H
 #define SQUID_CACHEMANAGER_H
 
+#include "anyp/forward.h"
 #include "comm/forward.h"
 #include "log/forward.h"
 #include "mgr/Action.h"
@@ -51,7 +52,7 @@ public:
 protected:
     CacheManager() {} ///< use Instance() instead
 
-    Mgr::CommandPointer ParseUrl(const char *url);
+    Mgr::CommandPointer ParseUrl(const AnyP::Uri &);
     void ParseHeaders(const HttpRequest * request, Mgr::ActionParams &params);
     int CheckPassword(const Mgr::Command &cmd);
     char *PasswdGet(Mgr::ActionPasswordList *, const char *);

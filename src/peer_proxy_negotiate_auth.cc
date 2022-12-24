@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,33 +12,20 @@
 
 #include "squid.h"
 
-#if HAVE_KRB5 && HAVE_GSSAPI
+#if HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI
 #if USE_APPLE_KRB5
-#define KERBEROS_APPLE_DEPRECATED(x)
 #define GSSKRB_APPLE_DEPRECATED(x)
 #endif
 
 #include "base64.h"
-#include "Debug.h"
+#include "compat/krb5.h"
+#include "debug/Stream.h"
 #include "peer_proxy_negotiate_auth.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #if HAVE_PROFILE_H
 #include <profile.h>
 #endif              /* HAVE_PROFILE_H */
-#if HAVE_KRB5_H
-#if HAVE_BROKEN_SOLARIS_KRB5_H
-#if defined(__cplusplus)
-#define KRB5INT_BEGIN_DECLS     extern "C" {
-#define KRB5INT_END_DECLS
-KRB5INT_BEGIN_DECLS
-#endif
-#endif
-#include <krb5.h>
-#elif HAVE_ET_COM_ERR_H
+#if HAVE_ET_COM_ERR_H && !HAVE_KRB5_H
 #include <et/com_err.h>
 #endif                          /* HAVE_COM_ERR_H */
 #if HAVE_COM_ERR_H
@@ -103,7 +90,7 @@ static struct kstruct {
     krb5_context context;
     krb5_ccache cc;
 } kparam = {
-    NULL, NULL
+    nullptr, nullptr
 };
 
 /*
@@ -174,20 +161,20 @@ int check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
             }
             gss_release_buffer(&min_stat, &status_string);
         }
-        debugs(11, 5, HERE << function << "failed: " << buf);
+        debugs(11, 5, function << "failed: " << buf);
         return (1);
     }
     return (0);
 }
 
 void krb5_cleanup() {
-    debugs(11, 5, HERE << "Cleanup kerberos context");
+    debugs(11, 5, "Cleanup kerberos context");
     if (kparam.context) {
         if (kparam.cc)
             krb5_cc_destroy(kparam.context, kparam.cc);
-        kparam.cc = NULL;
+        kparam.cc = nullptr;
         krb5_free_context(kparam.context);
-        kparam.context = NULL;
+        kparam.context = nullptr;
     }
 }
 
@@ -197,15 +184,15 @@ int krb5_create_cache(char *kf, char *pn) {
 #define MAX_RENEW_TIME "365d"
 #define DEFAULT_SKEW (krb5_deltat) 600
 
-    static char *keytab_filename = NULL, *principal_name = NULL;
-    static krb5_keytab keytab = 0;
+    static char *keytab_filename = nullptr, *principal_name = nullptr;
+    static krb5_keytab keytab = nullptr;
     static krb5_keytab_entry entry;
     static krb5_kt_cursor cursor;
-    static krb5_creds *creds = NULL;
+    static krb5_creds *creds = nullptr;
 #if USE_HEIMDAL_KRB5 && !HAVE_KRB5_GET_RENEWED_CREDS
     static krb5_creds creds2;
 #endif
-    static krb5_principal principal = NULL;
+    static krb5_principal principal = nullptr;
     static krb5_deltat skew;
 
 #if HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC
@@ -233,14 +220,14 @@ restart:
      * Check if credentials need to be renewed
      */
     if (creds &&
-            (creds->times.endtime - time(0) > skew) &&
-            (creds->times.renew_till - time(0) > 2 * skew)) {
-        if (creds->times.endtime - time(0) < 2 * skew) {
+            (creds->times.endtime - time(nullptr) > skew) &&
+            (creds->times.renew_till - time(nullptr) > 2 * skew)) {
+        if (creds->times.endtime - time(nullptr) < 2 * skew) {
 #if HAVE_KRB5_GET_RENEWED_CREDS
             /* renew ticket */
             code =
                 krb5_get_renewed_creds(kparam.context, creds, principal,
-                                       kparam.cc, NULL);
+                                       kparam.cc, nullptr);
 #else
             /* renew ticket */
             flags.i = 0;
@@ -251,7 +238,7 @@ restart:
                                       &creds2.client);
             if (code) {
                 debugs(11, 5,
-                       HERE <<
+
                        "Error while getting principal from credential cache : "
                        << error_message(code));
                 return (1);
@@ -267,7 +254,7 @@ restart:
                                     (krb5_const_realm)&client_realm, NULL);
             if (code) {
                 debugs(11, 5,
-                       HERE << "Error while getting krbtgt principal : " <<
+                       "Error while getting krbtgt principal : " <<
                        error_message(code));
                 return (1);
             }
@@ -279,12 +266,12 @@ restart:
             if (code) {
                 if (code == KRB5KRB_AP_ERR_TKT_EXPIRED) {
                     krb5_free_creds(kparam.context, creds);
-                    creds = NULL;
+                    creds = nullptr;
                     /* this can happen because of clock skew */
                     goto restart;
                 }
                 debugs(11, 5,
-                       HERE << "Error while get credentials : " <<
+                       "Error while get credentials : " <<
                        error_message(code));
                 return (1);
             }
@@ -295,7 +282,7 @@ restart:
             code = krb5_init_context(&kparam.context);
             if (code) {
                 debugs(11, 5,
-                       HERE << "Error while initialising Kerberos library : "
+                       "Error while initialising Kerberos library : "
                        << error_message(code));
                 return (1);
             }
@@ -306,18 +293,18 @@ restart:
             if (profile)
                 profile_release(profile);
             debugs(11, 5,
-                   HERE << "Error while getting profile : " <<
+                   "Error while getting profile : " <<
                    error_message(code));
             return (1);
         }
         code =
-            profile_get_integer(profile, "libdefaults", "clockskew", 0,
+            profile_get_integer(profile, "libdefaults", "clockskew", nullptr,
                                 5 * 60, &skew);
         if (profile)
             profile_release(profile);
         if (code) {
             debugs(11, 5,
-                   HERE << "Error while getting clockskew : " <<
+                   "Error while getting clockskew : " <<
                    error_message(code));
             return (1);
         }
@@ -345,7 +332,7 @@ restart:
         code = krb5_kt_resolve(kparam.context, keytab_filename, &keytab);
         if (code) {
             debugs(11, 5,
-                   HERE << "Error while resolving keytab filename " <<
+                   "Error while resolving keytab filename " <<
                    keytab_filename << " : " << error_message(code));
             return (1);
         }
@@ -354,7 +341,7 @@ restart:
             code = krb5_kt_start_seq_get(kparam.context, keytab, &cursor);
             if (code) {
                 debugs(11, 5,
-                       HERE << "Error while starting keytab scan : " <<
+                       "Error while starting keytab scan : " <<
                        error_message(code));
                 return (1);
             }
@@ -364,7 +351,7 @@ restart:
                                 &principal);
             if (code && code != KRB5_KT_END) {
                 debugs(11, 5,
-                       HERE << "Error while scanning keytab : " <<
+                       "Error while scanning keytab : " <<
                        error_message(code));
                 return (1);
             }
@@ -372,7 +359,7 @@ restart:
             code = krb5_kt_end_seq_get(kparam.context, keytab, &cursor);
             if (code) {
                 debugs(11, 5,
-                       HERE << "Error while ending keytab scan : " <<
+                       "Error while ending keytab scan : " <<
                        error_message(code));
                 return (1);
             }
@@ -383,7 +370,7 @@ restart:
 #endif
             if (code) {
                 debugs(11, 5,
-                       HERE << "Error while freeing keytab entry : " <<
+                       "Error while freeing keytab entry : " <<
                        error_message(code));
                 return (1);
             }
@@ -397,7 +384,7 @@ restart:
                 krb5_parse_name(kparam.context, principal_name, &principal);
             if (code) {
                 debugs(11, 5,
-                       HERE << "Error while parsing principal name " <<
+                       "Error while parsing principal name " <<
                        principal_name << " : " << error_message(code));
                 return (1);
             }
@@ -413,7 +400,7 @@ restart:
         code = krb5_string_to_deltat((char *) MAX_RENEW_TIME, &rlife);
         if (code != 0 || rlife == 0) {
             debugs(11, 5,
-                   HERE << "Error bad lifetime value " << MAX_RENEW_TIME <<
+                   "Error bad lifetime value " << MAX_RENEW_TIME <<
                    " : " << error_message(code));
             return (1);
         }
@@ -421,7 +408,7 @@ restart:
         krb5_get_init_creds_opt_set_renew_life(options, rlife);
         code =
             krb5_get_init_creds_keytab(kparam.context, creds, principal,
-                                       keytab, 0, NULL, options);
+                                       keytab, 0, nullptr, options);
 #if HAVE_KRB5_GET_INIT_CREDS_FREE_CONTEXT
         krb5_get_init_creds_opt_free(kparam.context, options);
 #else
@@ -435,7 +422,7 @@ restart:
 #endif
         if (code) {
             debugs(11, 5,
-                   HERE <<
+
                    "Error while initializing credentials from keytab : " <<
                    error_message(code));
             return (1);
@@ -469,14 +456,14 @@ restart:
         xfree(mem_cache);
         if (code) {
             debugs(11, 5,
-                   HERE << "Error while resolving memory credential cache : "
+                   "Error while resolving memory credential cache : "
                    << error_message(code));
             return (1);
         }
         code = krb5_cc_initialize(kparam.context, kparam.cc, principal);
         if (code) {
             debugs(11, 5,
-                   HERE <<
+
                    "Error while initializing memory credential cache : " <<
                    error_message(code));
             return (1);
@@ -484,7 +471,7 @@ restart:
         code = krb5_cc_store_cred(kparam.context, kparam.cc, creds);
         if (code) {
             debugs(11, 5,
-                   HERE << "Error while storing credentials : " <<
+                   "Error while storing credentials : " <<
                    error_message(code));
             return (1);
         }
@@ -507,27 +494,27 @@ char *peer_proxy_negotiate_auth(char *principal_name, char *proxy, int flags) {
     gss_buffer_desc service = GSS_C_EMPTY_BUFFER;
     gss_buffer_desc input_token = GSS_C_EMPTY_BUFFER;
     gss_buffer_desc output_token = GSS_C_EMPTY_BUFFER;
-    char *token = NULL;
+    char *token = nullptr;
 
-    setbuf(stdout, NULL);
-    setbuf(stdin, NULL);
+    setbuf(stdout, nullptr);
+    setbuf(stdin, nullptr);
 
     if (!proxy) {
-        debugs(11, 5, HERE << "Error : No proxy server name");
-        return NULL;
+        debugs(11, 5, "Error : No proxy server name");
+        return nullptr;
     }
 
     if (!(flags & PEER_PROXY_NEGOTIATE_NOKEYTAB)) {
         if (principal_name)
             debugs(11, 5,
-                   HERE << "Creating credential cache for " << principal_name);
+                   "Creating credential cache for " << principal_name);
         else
-            debugs(11, 5, HERE << "Creating credential cache");
-        rc = krb5_create_cache(NULL, principal_name);
+            debugs(11, 5, "Creating credential cache");
+        rc = krb5_create_cache(nullptr, principal_name);
         if (rc) {
-            debugs(11, 5, HERE << "Error : Failed to create Kerberos cache");
+            debugs(11, 5, "Error : Failed to create Kerberos cache");
             krb5_cleanup();
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -536,14 +523,14 @@ char *peer_proxy_negotiate_auth(char *principal_name, char *proxy, int flags) {
              "%s@%s", "HTTP", proxy);
     service.length = strlen((char *) service.value);
 
-    debugs(11, 5, HERE << "Import gss name");
+    debugs(11, 5, "Import gss name");
     major_status = gss_import_name(&minor_status, &service,
                                    gss_nt_service_name, &server_name);
 
     if (check_gss_err(major_status, minor_status, "gss_import_name()"))
         goto cleanup;
 
-    debugs(11, 5, HERE << "Initialize gss security context");
+    debugs(11, 5, "Initialize gss security context");
     major_status = gss_init_sec_context(&minor_status,
                                         GSS_C_NO_CREDENTIAL,
                                         &gss_context,
@@ -552,12 +539,12 @@ char *peer_proxy_negotiate_auth(char *principal_name, char *proxy, int flags) {
                                         0,
                                         0,
                                         GSS_C_NO_CHANNEL_BINDINGS,
-                                        &input_token, NULL, &output_token, NULL, NULL);
+                                        &input_token, nullptr, &output_token, nullptr, nullptr);
 
     if (check_gss_err(major_status, minor_status, "gss_init_sec_context()"))
         goto cleanup;
 
-    debugs(11, 5, HERE << "Got token with length " << output_token.length);
+    debugs(11, 5, "Got token with length " << output_token.length);
     if (output_token.length) {
         static char b64buf[8192]; // XXX: 8KB only because base64_encode_bin() used to.
         struct base64_encode_ctx ctx;
@@ -570,7 +557,7 @@ char *peer_proxy_negotiate_auth(char *principal_name, char *proxy, int flags) {
     }
 
 cleanup:
-    gss_delete_sec_context(&minor_status, &gss_context, NULL);
+    gss_delete_sec_context(&minor_status, &gss_context, nullptr);
     gss_release_buffer(&minor_status, &service);
     gss_release_buffer(&minor_status, &input_token);
     gss_release_buffer(&minor_status, &output_token);
@@ -579,8 +566,5 @@ cleanup:
     return token;
 }
 
-#ifdef __cplusplus
-}
-#endif
-#endif /* HAVE_KRB5 && HAVE_GSSAPI */
+#endif /* HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI */
 

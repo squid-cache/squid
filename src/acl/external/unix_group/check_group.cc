@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -89,13 +89,13 @@ validate_user_pw(char *username, char *groupname)
     struct passwd *p;
     struct group *g;
 
-    if ((p = getpwnam(username)) == NULL) {
+    if ((p = getpwnam(username)) == nullptr) {
         /* Returns an error if user does not exist in the /etc/passwd */
         fprintf(stderr, "ERROR: User does not exist '%s'\n", username);
         return 0;
     } else {
         /* Verify if the this is the primary user group */
-        if ((g = getgrgid(p->pw_gid)) != NULL) {
+        if ((g = getgrgid(p->pw_gid)) != nullptr) {
             if ((strcmp(groupname, g->gr_name)) == 0)
                 return 1;
         }
@@ -113,11 +113,11 @@ validate_user_gr(char *username, char *groupname)
      */
     struct group *g;
 
-    if ((g = getgrnam(groupname)) == NULL) {
+    if ((g = getgrnam(groupname)) == nullptr) {
         fprintf(stderr, "ERROR: Group does not exist '%s'\n", groupname);
         return 0;
     } else {
-        while (*(g->gr_mem) != NULL) {
+        while (*(g->gr_mem) != nullptr) {
             if (strcmp(*((g->gr_mem)++), username) == 0) {
                 return 1;
             }
@@ -149,11 +149,11 @@ main(int argc, char *argv[])
 {
     char *user, *suser, *p;
     char buf[HELPER_INPUT_BUFFER];
-    char **grents = NULL;
+    char **grents = nullptr;
     int check_pw = 0, ch, ngroups = 0, i, j = 0, strip_dm = 0, strip_rm = 0;
 
     /* make standard output line buffered */
-    setvbuf(stdout, NULL, _IOLBF, 0);
+    setvbuf(stdout, nullptr, _IOLBF, 0);
 
     /* get user options */
     while ((ch = getopt(argc, argv, "dsrpg:")) != -1) {
@@ -181,8 +181,7 @@ main(int argc, char *argv[])
             } else {
                 fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
             }
-        // fall through to display help texts.
-
+            [[fallthrough]];
         default:
             usage(argv[0]);
             exit(EXIT_FAILURE);
@@ -195,19 +194,19 @@ main(int argc, char *argv[])
     }
     while (fgets(buf, HELPER_INPUT_BUFFER, stdin)) {
         j = 0;
-        if ((p = strchr(buf, '\n')) == NULL) {
+        if ((p = strchr(buf, '\n')) == nullptr) {
             /* too large message received.. skip and deny */
             fprintf(stderr, "ERROR: %s: Too large: %s\n", argv[0], buf);
             while (fgets(buf, sizeof(buf), stdin)) {
                 fprintf(stderr, "ERROR: %s: Too large..: %s\n", argv[0], buf);
-                if (strchr(buf, '\n') != NULL)
+                if (strchr(buf, '\n') != nullptr)
                     break;
             }
             SEND_BH(HLP_MSG("Username Input too large."));
             continue;
         }
         *p = '\0';
-        if ((p = strtok(buf, " ")) == NULL) {
+        if ((p = strtok(buf, " ")) == nullptr) {
             SEND_BH(HLP_MSG("No username given."));
             continue;
         } else {
@@ -223,7 +222,7 @@ main(int argc, char *argv[])
                 if (suser) *suser = '\0';
             }
             /* check groups supplied by Squid */
-            while ((p = strtok(NULL, " ")) != NULL) {
+            while ((p = strtok(nullptr, " ")) != nullptr) {
                 rfc1738_unescape(p);
                 if (check_pw == 1)
                     j += validate_user_pw(user, p);

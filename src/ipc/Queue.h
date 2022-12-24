@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,11 +10,12 @@
 #define SQUID_IPC_QUEUE_H
 
 #include "base/InstanceId.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "ipc/mem/FlexibleArray.h"
 #include "ipc/mem/Pointer.h"
 #include "util.h"
 
+#include <algorithm>
 #include <atomic>
 
 class String;
@@ -31,6 +32,9 @@ public:
 
     /// whether the reader is waiting for a notification signal
     bool blocked() const { return popBlocked.load(); }
+
+    /// \copydoc popSignal
+    bool signaled() const { return popSignal.load(); }
 
     /// marks the reader as blocked, waiting for a notification signal
     void block() { popBlocked.store(true); }
@@ -106,18 +110,29 @@ public:
     static int Items2Bytes(const unsigned int maxItemSize, const int size);
 
     /// returns true iff the value was set; [un]blocks the reader as needed
-    template<class Value> bool pop(Value &value, QueueReader *const reader = NULL);
+    template<class Value> bool pop(Value &value, QueueReader *const reader = nullptr);
 
     /// returns true iff the caller must notify the reader of the pushed item
-    template<class Value> bool push(const Value &value, QueueReader *const reader = NULL);
+    template<class Value> bool push(const Value &value, QueueReader *const reader = nullptr);
 
     /// returns true iff the value was set; the value may be stale!
     template<class Value> bool peek(Value &value) const;
 
-private:
+    /// prints incoming queue state; suitable for cache manager reports
+    template<class Value> void statIn(std::ostream &, int localProcessId, int remoteProcessId) const;
+    /// prints outgoing queue state; suitable for cache manager reports
+    template<class Value> void statOut(std::ostream &, int localProcessId, int remoteProcessId) const;
 
-    unsigned int theIn; ///< input index, used only in push()
-    unsigned int theOut; ///< output index, used only in pop()
+private:
+    void statOpen(std::ostream &, const char *inLabel, const char *outLabel, uint32_t count) const;
+    void statClose(std::ostream &) const;
+    template<class Value> void statSamples(std::ostream &, unsigned int start, uint32_t size) const;
+    template<class Value> void statRange(std::ostream &, unsigned int start, uint32_t n) const;
+
+    // optimization: these non-std::atomic data members are in shared memory,
+    // but each is used only by one process (aside from obscured reporting)
+    unsigned int theIn; ///< current push() position; reporting aside, used only in push()
+    unsigned int theOut; ///< current pop() position; reporting aside, used only in pop()/peek()
 
     std::atomic<uint32_t> theSize; ///< number of items in the queue
     const unsigned int theMaxItemSize; ///< maximum item size
@@ -158,6 +173,9 @@ public:
     /// clears the reader notification received by the local process from the remote process
     void clearReaderSignal(const int remoteProcessId);
 
+    /// clears all reader notifications received by the local process
+    void clearAllReaderSignals();
+
     /// picks a process and calls OneToOneUniQueue::pop() using its queue
     template <class Value> bool pop(int &remoteProcessId, Value &value);
 
@@ -166,6 +184,9 @@ public:
 
     /// peeks at the item likely to be pop()ed next
     template<class Value> bool peek(int &remoteProcessId, Value &value) const;
+
+    /// prints current state; suitable for cache manager reports
+    template<class Value> void stat(std::ostream &) const;
 
     /// returns local reader's balance
     QueueReader::Balance &localBalance() { return localReader().balance; }
@@ -410,6 +431,92 @@ OneToOneUniQueue::push(const Value &value, QueueReader *const reader)
     return wasEmpty && (!reader || reader->raiseSignal());
 }
 
+template <class Value>
+void
+OneToOneUniQueue::statIn(std::ostream &os, const int localProcessId, const int remoteProcessId) const
+{
+    os << "  kid" << localProcessId << " receiving from kid" << remoteProcessId << ": ";
+    // Nobody can modify our theOut so, after capturing some valid theSize value
+    // in count, we can reliably report all [theOut, theOut+count) items that
+    // were queued at theSize capturing time. We will miss new items push()ed by
+    // the other side, but it is OK -- we report state at the capturing time.
+    const auto count = theSize.load();
+    statOpen(os, "other", "popIndex", count);
+    statSamples<Value>(os, theOut, count);
+    statClose(os);
+}
+
+template <class Value>
+void
+OneToOneUniQueue::statOut(std::ostream &os, const int localProcessId, const int remoteProcessId) const
+{
+    os << "  kid" << localProcessId << " sending to kid" << remoteProcessId << ": ";
+    // Nobody can modify our theIn so, after capturing some valid theSize value
+    // in count, we can reliably report all [theIn-count, theIn) items that were
+    // queued at theSize capturing time. We may report items already pop()ed by
+    // the other side, but that is OK because pop() does not modify items -- it
+    // only increments theOut.
+    const auto count = theSize.load();
+    statOpen(os, "pushIndex", "other", count);
+    statSamples<Value>(os, theIn - count, count); // unsigned offset underflow OK
+    statClose(os);
+}
+
+/// report a sample of [start, start + size) items
+template <class Value>
+void
+OneToOneUniQueue::statSamples(std::ostream &os, const unsigned int start, const uint32_t count) const
+{
+    if (!count) {
+        os << " ";
+        return;
+    }
+
+    os << ", items: [\n";
+    // report a few leading and trailing items, without repetitions
+    const auto sampleSize = std::min(3U, count); // leading (and max) sample
+    statRange<Value>(os, start, sampleSize);
+    if (sampleSize < count) { // the first sample did not show some items
+        // The `start` offset aside, the first sample reported all items
+        // below the sampleSize offset. The second sample needs to report
+        // the last sampleSize items (i.e. starting at count-sampleSize
+        // offset) except those already reported by the first sample.
+        const auto secondSampleOffset = std::max(sampleSize, count - sampleSize);
+        const auto secondSampleSize = std::min(sampleSize, count - sampleSize);
+
+        // but first we print a sample separator, unless there are no items
+        // between the samples or the separator hides the only unsampled item
+        const auto bothSamples = sampleSize + secondSampleSize;
+        if (bothSamples + 1U == count)
+            statRange<Value>(os, start + sampleSize, 1);
+        else if (count > bothSamples)
+            os << "    # ... " << (count - bothSamples) << " items not shown ...\n";
+
+        statRange<Value>(os, start + secondSampleOffset, secondSampleSize);
+    }
+    os << "  ]";
+}
+
+/// statSamples() helper that reports n items from start
+template <class Value>
+void
+OneToOneUniQueue::statRange(std::ostream &os, const unsigned int start, const uint32_t n) const
+{
+    assert(sizeof(Value) <= theMaxItemSize);
+    auto offset = start;
+    for (uint32_t i = 0; i < n; ++i) {
+        // XXX: Throughout this C++ header, these overflow wrapping tricks work
+        // only because theCapacity currently happens to be a power of 2 (e.g.,
+        // the highest offset (0xF...FFF) % 3 is 0 and so is the next offset).
+        const auto pos = (offset++ % theCapacity) * theMaxItemSize;
+        Value value;
+        memcpy(&value, theBuffer + pos, sizeof(value));
+        os << "    { ";
+        value.stat(os);
+        os << " },\n";
+    }
+}
+
 // OneToOneUniQueues
 
 inline OneToOneUniQueue &
@@ -439,7 +546,7 @@ BaseMultiQueue::pop(int &remoteProcessId, Value &value)
         OneToOneUniQueue &queue = inQueue(theLastPopProcessId);
         if (queue.pop(value, &localReader())) {
             remoteProcessId = theLastPopProcessId;
-            debugs(54, 7, HERE << "popped from " << remoteProcessId << " to " << theLocalProcessId << " at " << queue.size());
+            debugs(54, 7, "popped from " << remoteProcessId << " to " << theLocalProcessId << " at " << queue.size());
             return true;
         }
     }
@@ -452,7 +559,7 @@ BaseMultiQueue::push(const int remoteProcessId, const Value &value)
 {
     OneToOneUniQueue &remoteQueue = outQueue(remoteProcessId);
     QueueReader &reader = remoteReader(remoteProcessId);
-    debugs(54, 7, HERE << "pushing from " << theLocalProcessId << " to " << remoteProcessId << " at " << remoteQueue.size());
+    debugs(54, 7, "pushing from " << theLocalProcessId << " to " << remoteProcessId << " at " << remoteQueue.size());
     return remoteQueue.push(value, &reader);
 }
 
@@ -474,6 +581,29 @@ BaseMultiQueue::peek(int &remoteProcessId, Value &value) const
     return false; // most likely, no process had anything to pop
 }
 
+template <class Value>
+void
+BaseMultiQueue::stat(std::ostream &os) const
+{
+    for (int processId = remotesIdOffset(); processId < remotesIdOffset() + remotesCount(); ++processId) {
+        const auto &queue = inQueue(processId);
+        queue.statIn<Value>(os, theLocalProcessId, processId);
+    }
+
+    os << "\n";
+
+    for (int processId = remotesIdOffset(); processId < remotesIdOffset() + remotesCount(); ++processId) {
+        const auto &queue = outQueue(processId);
+        queue.statOut<Value>(os, theLocalProcessId, processId);
+    }
+
+    os << "\n";
+
+    const auto &reader = localReader();
+    os << "  kid" << theLocalProcessId << " reader flags: " <<
+       "{ blocked: " << reader.blocked() << ", signaled: " << reader.signaled() << " }\n";
+}
+
 // FewToFewBiQueue
 
 template <class Value>
@@ -486,14 +616,14 @@ FewToFewBiQueue::findOldest(const int remoteProcessId, Value &value) const
 
     // we need the oldest value, so start with the incoming, them-to-us queue:
     const OneToOneUniQueue &in = inQueue(remoteProcessId);
-    debugs(54, 2, HERE << "peeking from " << remoteProcessId << " to " <<
+    debugs(54, 2, "peeking from " << remoteProcessId << " to " <<
            theLocalProcessId << " at " << in.size());
     if (in.peek(value))
         return true;
 
     // if the incoming queue is empty, check the outgoing, us-to-them queue:
     const OneToOneUniQueue &out = outQueue(remoteProcessId);
-    debugs(54, 2, HERE << "peeking from " << theLocalProcessId << " to " <<
+    debugs(54, 2, "peeking from " << theLocalProcessId << " to " <<
            remoteProcessId << " at " << out.size());
     return out.peek(value);
 }

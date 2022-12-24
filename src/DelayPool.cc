@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,7 +17,7 @@
 #include "DelayPool.h"
 #include "Store.h"
 
-DelayPool::DelayPool() : pool (NULL), access (NULL)
+DelayPool::DelayPool() : pool (nullptr), access (nullptr)
 {
     pool = CommonPool::Factory(0, theComposite_);
 }
@@ -34,14 +34,14 @@ DelayPool::~DelayPool()
 void
 DelayPool::parse()
 {
-    assert(theComposite() != NULL);
+    assert(theComposite() != nullptr);
     theComposite()->parse();
 }
 
 void
 DelayPool::dump(StoreEntry *entry, unsigned int i) const
 {
-    if (theComposite() == NULL)
+    if (theComposite() == nullptr)
         return;
 
     storeAppendPrintf(entry, "delay_class %d %s\n", i + 1, pool->theClassTypeLabel());
@@ -72,14 +72,14 @@ void
 DelayPool::freeData()
 {
     delete pool;
-    pool = NULL;
+    pool = nullptr;
 }
 
-/** \todo XXX create DelayIdComposite.cc */
+// TODO: create DelayIdComposite.cc
 void
-CompositePoolNode::delayRead(DeferredRead const &aRead)
+CompositePoolNode::delayRead(const AsyncCall::Pointer &aRead)
 {
-    deferredReads.delayRead(aRead);
+    deferredReads.delay(aRead);
 }
 
 #include "comm.h"
@@ -87,7 +87,7 @@ CompositePoolNode::delayRead(DeferredRead const &aRead)
 void
 CompositePoolNode::kickReads()
 {
-    deferredReads.kickReads(-1);
+    deferredReads.schedule();
 }
 
 #endif /* USE_DELAY_POOLS */

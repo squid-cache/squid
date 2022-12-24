@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -13,24 +13,24 @@ noinst_LTLIBRARIES = libicap.la
 libicap_la_SOURCES = \
 	Client.cc \
 	Client.h \
-	InOut.h \
 	Config.cc \
 	Config.h \
 	Elements.cc \
 	Elements.h \
+	History.cc \
+	History.h \
+	InOut.h \
+	Launcher.cc \
+	Launcher.h \
+	ModXact.cc \
+	ModXact.h \
+	OptXact.cc \
+	OptXact.h \
 	Options.cc \
 	Options.h \
 	ServiceRep.cc \
 	ServiceRep.h \
-	Launcher.cc \
-	Launcher.h \
-	OptXact.cc \
-	OptXact.h \
 	Xaction.cc \
 	Xaction.h \
-	ModXact.cc \
-	ModXact.h \
 	icap_log.cc \
-	icap_log.h \
-	History.cc \
-	History.h
+	icap_log.h

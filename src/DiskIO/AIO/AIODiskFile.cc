@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,7 +21,7 @@
  */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "DiskIO/AIO/AIODiskFile.h"
 #include "DiskIO/AIO/AIODiskIOStrategy.h"
 #include "DiskIO/IORequestor.h"
@@ -64,12 +64,12 @@ AIODiskFile::open(int flags, mode_t, RefCount<IORequestor> callback)
     ioRequestor = callback;
 
     if (fd < 0) {
-        debugs(79, 3, HERE << ": got failure (" << errno << ")");
+        debugs(79, 3, "got failure (" << errno << ")");
         error(true);
     } else {
         closed = false;
         ++store_open_disk_fd;
-        debugs(79, 3, HERE << ": opened FD " << fd);
+        debugs(79, 3, "opened FD " << fd);
     }
 
     callback->ioCompletedNotification();
@@ -95,7 +95,7 @@ AIODiskFile::read(ReadRequest *request)
 
     if (slot < 0) {
         /* No free slot? Callback error, and return */
-        fatal("Aiee! out of aiocb slots! - FIXME and wrap file_read\n");
+        fatal("Aiee! out of aiocb slots! - TODO fix and wrap file_read\n");
         debugs(79, DBG_IMPORTANT, "WARNING: out of aiocb slots!");
         /* fall back to blocking method */
         //        file_read(fd, request->buf, request->len, request->offset, callback, data);
@@ -113,7 +113,7 @@ AIODiskFile::read(ReadRequest *request)
 
     qe->aq_e_type = AQ_ENTRY_READ;
 
-    qe->aq_e_free = NULL;
+    qe->aq_e_free = nullptr;
 
     qe->aq_e_buf =  request->buf;
 
@@ -133,7 +133,7 @@ AIODiskFile::read(ReadRequest *request)
     /* Initiate aio */
     if (aio_read(&qe->aq_e_aiocb) < 0) {
         int xerrno = errno;
-        fatalf("Aiee! aio_read() returned error (%d)  FIXME and wrap file_read !\n", xerrno);
+        fatalf("Aiee! aio_read() returned error (%d) TODO fix and wrap file_read !\n", xerrno);
         debugs(79, DBG_IMPORTANT, "WARNING: aio_read() returned error: " << xstrerr(xerrno));
         /* fall back to blocking method */
         //        file_read(fd, request->buf, request->len, request->offset, callback, data);
@@ -154,7 +154,7 @@ AIODiskFile::write(WriteRequest *request)
 
     if (slot < 0) {
         /* No free slot? Callback error, and return */
-        fatal("Aiee! out of aiocb slots FIXME and wrap file_write !\n");
+        fatal("Aiee! out of aiocb slots TODO fix and wrap file_write !\n");
         debugs(79, DBG_IMPORTANT, "WARNING: out of aiocb slots!");
         /* fall back to blocking method */
         //        file_write(fd, offset, buf, len, callback, data, freefunc);
@@ -192,7 +192,7 @@ AIODiskFile::write(WriteRequest *request)
     /* Initiate aio */
     if (aio_write(&qe->aq_e_aiocb) < 0) {
         int xerrno = errno;
-        fatalf("Aiee! aio_write() returned error (%d) FIXME and wrap file_write !\n", xerrno);
+        fatalf("Aiee! aio_write() returned error (%d) TODO fix and wrap file_write !\n", xerrno);
         debugs(79, DBG_IMPORTANT, "WARNING: aio_write() returned error: " << xstrerr(xerrno));
         /* fall back to blocking method */
         //       file_write(fd, offset, buf, len, callback, data, freefunc);
@@ -211,7 +211,7 @@ AIODiskFile::close ()
 
     fd = -1;
     closed = true;
-    assert (ioRequestor != NULL);
+    assert (ioRequestor != nullptr);
     ioRequestor->closeCompleted();
 }
 

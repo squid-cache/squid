@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -49,7 +49,6 @@
  \li             satisfies the read request, or
  \li             inserts a new node above it and calls clientStreamRead(), or
  \li             calls clientStreamRead()
- \todo DOCS: make the above list nested.
  *
  \par
  *    There is no requirement for the Read parameters from different
@@ -58,7 +57,7 @@
  *
  \section WhatsInANode Whats in a node
  *
- \todo ClientStreams: These details should really be codified as a class which all ClientStream nodes inherit from.
+ * TODO: ClientStreams: These details should really be codified as a class which all ClientStream nodes inherit from.
  *
  \par   Each node must have:
  \li    read method - to allow loose coupling in the pipeline. (The reader may
@@ -144,7 +143,7 @@ void clientStreamDetach(clientStreamNode *thisObject, ClientHttpRequest *http);
 /**
  \ingroup ClientStreamAPI
  *
- * Detachs the tail of the stream. CURRENTLY DOES NOT clean up the tail node data -
+ * Detaches the tail of the stream. CURRENTLY DOES NOT clean up the tail node data -
  * this must be done separately. Thus Abort may ONLY be called by the tail node.
  *
  \param thisObject  'this' reference for the client stream

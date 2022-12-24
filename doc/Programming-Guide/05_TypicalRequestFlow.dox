@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,12 +19,12 @@
 	for notification when access control checking is completed.
 
 \li	After the access controls have been verified, the request
-	may be redirected. 
+	may be redirected.
 
 \li	The client-side-request is forwarded up the client stream
-	to GetMoreData() which looks for the requested object in the 
-	cache, and or Vary: versions of the same. If is a cache hit, 
-	then the client-side registers its interest in the 
+	to GetMoreData() which looks for the requested object in the
+	cache, and or Vary: versions of the same. If is a cache hit,
+	then the client-side registers its interest in the
 	StoreEntry. Otherwise, Squid needs to forward the request,
 	perhaps with an If-Modified-Since header.
 

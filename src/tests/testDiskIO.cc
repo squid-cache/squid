@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,7 +34,7 @@ testDiskIO::testFindDefault()
     DiskIOModule * module = DiskIOModule::FindDefault();
 #if USE_DISKIO
     /* enabled. we expect at least ONE */
-    CPPUNIT_ASSERT(module != NULL);
+    CPPUNIT_ASSERT(module != nullptr);
 #else
     /* disabled. we don't expect ANY */
     CPPUNIT_ASSERT(module == NULL);

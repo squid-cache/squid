@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -70,7 +70,7 @@ class squidaio_ctrl_t
 {
     MEMPROXY_CLASS(squidaio_ctrl_t);
 public:
-    squidaio_ctrl_t() : done_handler(NULL), free_func(NULL) {}
+    squidaio_ctrl_t() : done_handler(nullptr), free_func(nullptr) {}
 
     squidaio_ctrl_t *next = nullptr;
     int fd = 0;

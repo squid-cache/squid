@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -11,15 +11,16 @@ libexec_PROGRAMS 	= basic_radius_auth
 man_MANS 		= basic_radius_auth.8
 EXTRA_DIST		= basic_radius_auth.8 required.m4
 
-basic_radius_auth_SOURCES= \
+basic_radius_auth_SOURCES = \
 	basic_radius_auth.cc \
-	radius.h \
 	radius-util.cc \
-	radius-util.h
+	radius-util.h \
+	radius.h
 
 basic_radius_auth_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \
+	$(top_builddir)/src/base/libbase.la \
 	$(COMPAT_LIB) \
-	$(NETTLELIB) \
+	$(LIBNETTLE_LIBS) \
 	$(SSLLIB) \
 	$(XTRA_LIBS)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,7 +23,7 @@ static ptrdiff_t _mem_node_data_offset = makeMemNodeDataOffset();
 static ptrdiff_t
 makeMemNodeDataOffset()
 {
-    mem_node *p = 0L;
+    mem_node *p = nullptr;
     return ptrdiff_t(&p->data);
 }
 

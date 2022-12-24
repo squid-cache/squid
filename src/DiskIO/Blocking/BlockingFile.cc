@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "BlockingFile.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "defines.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
@@ -110,7 +110,7 @@ BlockingFile::read(ReadRequest *aRequest)
     assert (fd > -1);
     assert (ioRequestor.getRaw());
     readRequest = aRequest;
-    debugs(79, 3, HERE << aRequest->len << " for FD " << fd << " at " << aRequest->offset);
+    debugs(79, 3, aRequest->len << " for FD " << fd << " at " << aRequest->offset);
     file_read(fd, aRequest->buf, aRequest->len, aRequest->offset, ReadDone, this);
 }
 
@@ -125,7 +125,7 @@ BlockingFile::ReadDone(int fd, const char *buf, int len, int errflag, void *my_d
 void
 BlockingFile::write(WriteRequest *aRequest)
 {
-    debugs(79, 3, HERE << aRequest->len << " for FD " << fd << " at " << aRequest->offset);
+    debugs(79, 3, aRequest->len << " for FD " << fd << " at " << aRequest->offset);
     writeRequest = aRequest;
     file_write(fd,
                aRequest->offset,
@@ -165,7 +165,7 @@ BlockingFile::readDone(int rvfd, const char *buf, int len, int errflag)
 
     ReadRequest::Pointer result = readRequest;
 
-    readRequest = NULL;
+    readRequest = nullptr;
 
     ioRequestor->readCompleted(buf, rlen, errflag, result);
 }
@@ -181,10 +181,10 @@ void
 BlockingFile::writeDone(int rvfd, int errflag, size_t len)
 {
     assert (rvfd == fd);
-    debugs(79, 3, HERE << "FD " << fd << ", len " << len);
+    debugs(79, 3, "FD " << fd << ", len " << len);
 
     WriteRequest::Pointer result = writeRequest;
-    writeRequest = NULL;
+    writeRequest = nullptr;
 
     if (errflag) {
         debugs(79, DBG_CRITICAL, "storeUfsWriteDone: got failure (" << errflag << ")");

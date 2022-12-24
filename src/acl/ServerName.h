@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,7 +18,6 @@ class ACLServerNameData : public ACLDomainData {
 public:
     ACLServerNameData() : ACLDomainData() {}
     virtual bool match(const char *);
-    virtual ACLData<char const *> *clone() const;
 };
 
 class ACLServerNameStrategy : public ACLStrategy<char const *>

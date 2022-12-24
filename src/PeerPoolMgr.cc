@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,12 +8,12 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
-#include "base/AsyncJobCalls.h"
+#include "base/AsyncCallbacks.h"
 #include "base/RunnersRegistry.h"
 #include "CachePeer.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "fd.h"
 #include "FwdState.h"
 #include "globals.h"
@@ -24,28 +24,14 @@
 #include "PeerPoolMgr.h"
 #include "security/BlindPeerConnector.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 
 CBDATA_CLASS_INIT(PeerPoolMgr);
-
-/// Gives Security::PeerConnector access to Answer in the PeerPoolMgr callback dialer.
-class MyAnswerDialer: public UnaryMemFunT<PeerPoolMgr, Security::EncryptorAnswer, Security::EncryptorAnswer&>,
-    public Security::PeerConnector::CbDialer
-{
-public:
-    MyAnswerDialer(const JobPointer &aJob, Method aMethod):
-        UnaryMemFunT<PeerPoolMgr, Security::EncryptorAnswer, Security::EncryptorAnswer&>(aJob, aMethod, Security::EncryptorAnswer()) {}
-
-    /* Security::PeerConnector::CbDialer API */
-    virtual Security::EncryptorAnswer &answer() { return arg1; }
-};
 
 PeerPoolMgr::PeerPoolMgr(CachePeer *aPeer): AsyncJob("PeerPoolMgr"),
     peer(cbdataReference(aPeer)),
     request(),
-    opener(),
-    securer(),
-    closer(),
+    transportWait(),
+    encryptionWait(),
     addrUsed(0)
 {
 }
@@ -60,7 +46,7 @@ PeerPoolMgr::start()
 {
     AsyncJob::start();
 
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initPeerPool);
+    const auto mx = MasterXaction::MakePortless<XactionInitiator::initPeerPool>();
     // ErrorState, getOutgoingAddress(), and other APIs may require a request.
     // We fake one. TODO: Optionally send this request to peers?
     request = new HttpRequest(Http::METHOD_OPTIONS, AnyP::PROTO_HTTP, "http", "*", mx);
@@ -90,42 +76,34 @@ PeerPoolMgr::doneAll() const
 void
 PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
 {
-    opener = NULL;
+    transportWait.finish();
 
     if (!validPeer()) {
         debugs(48, 3, "peer gone");
-        if (params.conn != NULL)
+        if (params.conn != nullptr)
             params.conn->close();
         return;
     }
 
     if (params.flag != Comm::OK) {
-        /* it might have been a timeout with a partially open link */
-        if (params.conn != NULL)
-            params.conn->close();
-        peerConnectFailed(peer);
+        NoteOutgoingConnectionFailure(peer, Http::scNone);
         checkpoint("conn opening failure"); // may retry
         return;
     }
 
-    Must(params.conn != NULL);
+    Must(params.conn != nullptr);
 
     // Handle TLS peers.
     if (peer->secure.encryptTransport) {
-        typedef CommCbMemFunT<PeerPoolMgr, CommCloseCbParams> CloserDialer;
-        closer = JobCallback(48, 3, CloserDialer, this,
-                             PeerPoolMgr::handleSecureClosure);
-        comm_add_close_handler(params.conn->fd, closer);
+        // XXX: Exceptions orphan params.conn
+        const auto callback = asyncCallback(48, 4, PeerPoolMgr::handleSecuredPeer, this);
 
-        securer = asyncCall(48, 4, "PeerPoolMgr::handleSecuredPeer",
-                            MyAnswerDialer(this, &PeerPoolMgr::handleSecuredPeer));
-
-        const int peerTimeout = peerConnectTimeout(peer);
+        const auto peerTimeout = peer->connectTimeout();
         const int timeUsed = squid_curtime - params.conn->startTime();
         // Use positive timeout when less than one second is left for conn.
         const int timeLeft = positiveTimeout(peerTimeout - timeUsed);
-        auto *connector = new Security::BlindPeerConnector(request, params.conn, securer, nullptr, timeLeft);
-        AsyncJob::Start(connector); // will call our callback
+        const auto connector = new Security::BlindPeerConnector(request, params.conn, callback, nullptr, timeLeft);
+        encryptionWait.start(connector, callback);
         return;
     }
 
@@ -137,36 +115,37 @@ PeerPoolMgr::pushNewConnection(const Comm::ConnectionPointer &conn)
 {
     Must(validPeer());
     Must(Comm::IsConnOpen(conn));
-    peer->standby.pool->push(conn, NULL /* domain */);
+    peer->standby.pool->push(conn, nullptr /* domain */);
     // push() will trigger a checkpoint()
 }
 
 void
 PeerPoolMgr::handleSecuredPeer(Security::EncryptorAnswer &answer)
 {
-    Must(securer != NULL);
-    securer = NULL;
-
-    if (closer != NULL) {
-        if (answer.conn != NULL)
-            comm_remove_close_handler(answer.conn->fd, closer);
-        else
-            closer->cancel("securing completed");
-        closer = NULL;
-    }
+    encryptionWait.finish();
 
     if (!validPeer()) {
         debugs(48, 3, "peer gone");
-        if (answer.conn != NULL)
+        if (answer.conn != nullptr)
             answer.conn->close();
         return;
     }
 
+    assert(!answer.tunneled);
     if (answer.error.get()) {
-        if (answer.conn != NULL)
-            answer.conn->close();
-        // PeerConnector calls peerConnectFailed() for us;
+        assert(!answer.conn);
+        // PeerConnector calls NoteOutgoingConnectionFailure() for us
         checkpoint("conn securing failure"); // may retry
+        return;
+    }
+
+    assert(answer.conn);
+
+    // The socket could get closed while our callback was queued. Sync
+    // Connection. XXX: Connection::fd may already be stale/invalid here.
+    if (answer.conn->isOpen() && fd_table[answer.conn->fd].closing()) {
+        answer.conn->noteClosure();
+        checkpoint("external connection closure"); // may retry
         return;
     }
 
@@ -174,23 +153,11 @@ PeerPoolMgr::handleSecuredPeer(Security::EncryptorAnswer &answer)
 }
 
 void
-PeerPoolMgr::handleSecureClosure(const CommCloseCbParams &params)
-{
-    Must(closer != NULL);
-    Must(securer != NULL);
-    securer->cancel("conn closed by a 3rd party");
-    securer = NULL;
-    closer = NULL;
-    // allow the closing connection to fully close before we check again
-    Checkpoint(this, "conn closure while securing");
-}
-
-void
 PeerPoolMgr::openNewConnection()
 {
     // KISS: Do nothing else when we are already doing something.
-    if (opener != NULL || securer != NULL || shutting_down) {
-        debugs(48, 7, "busy: " << opener << '|' << securer << '|' << shutting_down);
+    if (transportWait || encryptionWait || shutting_down) {
+        debugs(48, 7, "busy: " << transportWait << '|' << encryptionWait << '|' << shutting_down);
         return; // there will be another checkpoint when we are done opening/securing
     }
 
@@ -225,11 +192,11 @@ PeerPoolMgr::openNewConnection()
     getOutgoingAddress(request.getRaw(), conn);
     GetMarkingsToServer(request.getRaw(), *conn);
 
-    const int ctimeout = peerConnectTimeout(peer);
+    const auto ctimeout = peer->connectTimeout();
     typedef CommCbMemFunT<PeerPoolMgr, CommConnectCbParams> Dialer;
-    opener = JobCallback(48, 5, Dialer, this, PeerPoolMgr::handleOpenedConnection);
-    Comm::ConnOpener *cs = new Comm::ConnOpener(conn, opener, ctimeout);
-    AsyncJob::Start(cs);
+    AsyncCall::Pointer callback = JobCallback(48, 5, Dialer, this, PeerPoolMgr::handleOpenedConnection);
+    const auto cs = new Comm::ConnOpener(conn, callback, ctimeout);
+    transportWait.start(cs, callback);
 }
 
 void

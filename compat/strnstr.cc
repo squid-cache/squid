@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,7 +16,7 @@
  * Update/Maintenance History:
  *
  *    26-Apr-2008 : Copied from FreeBSD via OpenGrok
- *          - added protection around libray headers
+ *          - added protection around library headers
  *          - added squid_ prefix for uniqueness
  *            so we can use it where OS copy is broken.
  *
@@ -84,12 +84,12 @@ squid_strnstr(const char *s, const char *find, size_t slen)
         do {
             do {
                 if (slen < 1 || (sc = *s) == '\0')
-                    return (NULL);
+                    return nullptr;
                 --slen;
                 ++s;
             } while (sc != c);
             if (len > slen)
-                return (NULL);
+                return nullptr;
         } while (strncmp(s, find, len) != 0);
         --s;
     }

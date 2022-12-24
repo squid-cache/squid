@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,7 @@
 #include "acl/Checklist.h"
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
-#include "err_type.h"
+#include "error/forward.h"
 #include "ip/Address.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -51,7 +51,7 @@ public:
     int fd() const;
 
     /// set either conn
-    void conn(ConnStateData *);
+    void setConn(ConnStateData *);
     /// set the client side FD
     void fd(int aDescriptor);
 
@@ -63,9 +63,9 @@ public:
     void markSourceDomainChecked();
 
     // ACLChecklist API
-    virtual bool hasRequest() const { return request != NULL; }
-    virtual bool hasReply() const { return reply != NULL; }
-    virtual bool hasAle() const { return al != NULL; }
+    virtual bool hasRequest() const { return request != nullptr; }
+    virtual bool hasReply() const { return reply != nullptr; }
+    virtual bool hasAle() const { return al != nullptr; }
     virtual void syncAle(HttpRequest *adaptedRequest, const char *logUri) const;
     virtual void verifyAle() const;
 
@@ -87,7 +87,10 @@ public:
     char *snmp_community;
 #endif
 
-    /// SSL [certificate validation] errors, in undefined order
+    /// TLS server [certificate validation] errors, in undefined order.
+    /// The errors are accumulated as Squid goes through validation steps
+    /// and server certificates. They are cleared on connection retries.
+    /// For sslproxy_cert_error checks, contains just the current/last error.
     const Security::CertErrors *sslErrors;
 
     /// Peer certificate being checked by ssl_verify_cb() and by

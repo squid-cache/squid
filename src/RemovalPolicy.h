@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,7 +20,7 @@ class RemovalPolicySettings
 {
 
 public:
-    RemovalPolicySettings() : type(NULL), args(NULL) {};
+    RemovalPolicySettings() : type(nullptr), args(nullptr) {};
 
     char *type;
     wordlist *args;
@@ -30,7 +30,7 @@ class RemovalPolicyNode
 {
 
 public:
-    RemovalPolicyNode() : data(NULL) {}
+    RemovalPolicyNode() : data(nullptr) {}
 
     void *data;
 };

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 #define SQUID_ACLSQUIDERROR_H
 
 #include "acl/Strategy.h"
-#include "err_type.h"
+#include "error/forward.h"
 
 class ACLSquidErrorStrategy : public ACLStrategy<err_type>
 {

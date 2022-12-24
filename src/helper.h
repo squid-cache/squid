@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -65,8 +65,9 @@ class helper
     CBDATA_CLASS(helper);
 
 public:
+    /// \param name admin-visible helper category (with this process lifetime)
     inline helper(const char *name) :
-        cmdline(NULL),
+        cmdline(nullptr),
         id_name(name),
         ipc_type(0),
         droppedRequests(0),
@@ -92,7 +93,7 @@ public:
     void submitRequest(Helper::Xaction *r);
 
     /// Dump some stats about the helper state to a Packable object
-    void packStatsInto(Packable *p, const char *label = NULL) const;
+    void packStatsInto(Packable *p, const char *label = nullptr) const;
     /// whether the helper will be in "overloaded" state after one more request
     /// already overloaded helpers return true
     bool willOverload() const;

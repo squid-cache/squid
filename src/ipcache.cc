@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "CacheManager.h"
 #include "cbdata.h"
+#include "debug/Messages.h"
 #include "dlink.h"
 #include "dns/LookupDetails.h"
 #include "dns/rfc3596.h"
@@ -19,8 +20,8 @@
 #include "ip/tools.h"
 #include "ipcache.h"
 #include "mgr/Registration.h"
+#include "snmp_agent.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "util.h"
@@ -41,14 +42,12 @@
  *  mechanisms that allow non-blocking access to these mappings.
  *  The IP cache usually doesn't block on a request except for
  *  special cases where this is desired (see below).
- *
- \todo IP Cache should have its own API *.h header file.
  */
 
 /**
  \defgroup IPCacheInternal IP Cache Internals
  \ingroup IPCacheAPI
- \todo  when IP cache is provided as a class. These sub-groups will be obsolete
+ \note  when IP cache is provided as a class. These sub-groups will be obsolete
  *  for now they are used to separate the public and private functions.
  *  with the private ones all being in IPCachInternal and public in IPCacheAPI
  *
@@ -204,7 +203,7 @@ static const Dns::CachedIps *ipcacheCheckNumeric(const char *name);
 static void ipcache_nbgethostbyname_(const char *name, IpCacheLookupForwarder handler);
 
 /// \ingroup IPCacheInternal
-static hash_table *ip_table = NULL;
+static hash_table *ip_table = nullptr;
 
 /// \ingroup IPCacheInternal
 static long ipcache_low = 180;
@@ -321,10 +320,10 @@ ipcacheRelease(ipcache_entry * i, bool dofree)
 static ipcache_entry *
 ipcache_get(const char *name)
 {
-    if (ip_table != NULL)
+    if (ip_table != nullptr)
         return (ipcache_entry *) hash_lookup(ip_table, name);
     else
-        return NULL;
+        return nullptr;
 }
 
 /// \ingroup IPCacheInternal
@@ -351,10 +350,10 @@ void
 ipcache_purgelru(void *)
 {
     dlink_node *m;
-    dlink_node *prev = NULL;
+    dlink_node *prev = nullptr;
     ipcache_entry *i;
     int removed = 0;
-    eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10.0, 1);
+    eventAdd("ipcache_purgelru", ipcache_purgelru, nullptr, 10.0, 1);
 
     for (m = lru_list.tail; m; m = prev) {
         if (ipcacheCount() < ipcache_low)
@@ -384,12 +383,12 @@ static void
 purge_entries_fromhosts(void)
 {
     dlink_node *m = lru_list.head;
-    ipcache_entry *i = NULL, *t;
+    ipcache_entry *i = nullptr, *t;
 
     while (m) {
-        if (i != NULL) {    /* need to delay deletion */
+        if (i != nullptr) {    /* need to delay deletion */
             ipcacheRelease(i);  /* we just override locks */
-            i = NULL;
+            i = nullptr;
         }
 
         t = (ipcache_entry*)m->data;
@@ -400,7 +399,7 @@ purge_entries_fromhosts(void)
         m = m->next;
     }
 
-    if (i != NULL)
+    if (i != nullptr)
         ipcacheRelease(i);
 }
 
@@ -421,8 +420,8 @@ ipcacheAddEntry(ipcache_entry * i)
 {
     hash_link *e = (hash_link *)hash_lookup(ip_table, i->hash.key);
 
-    if (NULL != e) {
-        /* avoid colission */
+    if (nullptr != e) {
+        /* avoid collision */
         ipcache_entry *q = (ipcache_entry *) e;
         ipcacheRelease(q);
     }
@@ -455,7 +454,7 @@ ipcacheCallback(ipcache_entry *i, const bool hit, const int wait)
 void
 ipcache_entry::latestError(const char *text, const int debugLevel)
 {
-    debugs(14, debugLevel, "DNS error while resolving " << name() << ": " << text);
+    debugs(14, debugLevel, "ERROR: DNS failure while resolving " << name() << ": " << text);
     safe_free(error_message);
     error_message = xstrdup(text);
 }
@@ -614,11 +613,11 @@ Dns::nbgethostbyname(const char *name, const CbcPointer<IpReceiver> &receiver)
 static void
 ipcache_nbgethostbyname_(const char *name, IpCacheLookupForwarder handler)
 {
-    ipcache_entry *i = NULL;
-    const ipcache_addrs *addrs = NULL;
+    ipcache_entry *i = nullptr;
+    const ipcache_addrs *addrs = nullptr;
     ++IpcacheStats.requests;
 
-    if (name == NULL || name[0] == '\0') {
+    if (name == nullptr || name[0] == '\0') {
         debugs(14, 4, "ipcache_nbgethostbyname: Invalid name!");
         ++IpcacheStats.invalid;
         const Dns::LookupDetails details("Invalid hostname", -1); // error, no lookup
@@ -637,13 +636,13 @@ ipcache_nbgethostbyname_(const char *name, IpCacheLookupForwarder handler)
 
     i = ipcache_get(name);
 
-    if (NULL == i) {
+    if (nullptr == i) {
         /* miss */
         (void) 0;
     } else if (ipcacheExpiredEntry(i)) {
         /* hit, but expired -- bummer */
         ipcacheRelease(i);
-        i = NULL;
+        i = nullptr;
     } else {
         /* hit */
         debugs(14, 4, "ipcache_nbgethostbyname: HIT for '" << name << "'");
@@ -687,7 +686,7 @@ void
 ipcache_init(void)
 {
     int n;
-    debugs(14, DBG_IMPORTANT, "Initializing IP Cache...");
+    debugs(14, Important(24), "Initializing IP Cache...");
     memset(&IpcacheStats, '\0', sizeof(IpcacheStats));
     lru_list = dlink_list();
 
@@ -719,21 +718,21 @@ ipcache_init(void)
 const ipcache_addrs *
 ipcache_gethostbyname(const char *name, int flags)
 {
-    ipcache_entry *i = NULL;
+    ipcache_entry *i = nullptr;
     assert(name);
     debugs(14, 3, "ipcache_gethostbyname: '" << name  << "', flags=" << std::hex << flags);
     ++IpcacheStats.requests;
     i = ipcache_get(name);
 
-    if (NULL == i) {
+    if (nullptr == i) {
         (void) 0;
     } else if (ipcacheExpiredEntry(i)) {
         ipcacheRelease(i);
-        i = NULL;
+        i = nullptr;
     } else if (i->flags.negcached) {
         ++IpcacheStats.negative_hits;
         // ignore i->error_message: the caller just checks IP cache presence
-        return NULL;
+        return nullptr;
     } else {
         ++IpcacheStats.hits;
         i->lastref = squid_curtime;
@@ -751,9 +750,9 @@ ipcache_gethostbyname(const char *name, int flags)
     ++IpcacheStats.misses;
 
     if (flags & IP_LOOKUP_IF_MISS)
-        ipcache_nbgethostbyname(name, NULL, NULL);
+        ipcache_nbgethostbyname(name, nullptr, nullptr);
 
-    return NULL;
+    return nullptr;
 }
 
 /// \ingroup IPCacheInternal
@@ -763,12 +762,12 @@ ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
     char buf[MAX_IPSTRLEN];
 
     if (!sentry) {
-        debugs(14, DBG_CRITICAL, HERE << "CRITICAL: sentry is NULL!");
+        debugs(14, DBG_CRITICAL, "ERROR: sentry is NULL!");
         return;
     }
 
     if (!i) {
-        debugs(14, DBG_CRITICAL, HERE << "CRITICAL: ipcache_entry is NULL!");
+        debugs(14, DBG_CRITICAL, "ERROR: ipcache_entry is NULL!");
         storeAppendPrintf(sentry, "CRITICAL ERROR\n");
         return;
     }
@@ -812,7 +811,7 @@ void
 stat_ipcache_get(StoreEntry * sentry)
 {
     dlink_node *m;
-    assert(ip_table != NULL);
+    assert(ip_table != nullptr);
     storeAppendPrintf(sentry, "IP Cache Statistics:\n");
     storeAppendPrintf(sentry, "IPcache Entries Cached:  %d\n",
                       ipcacheCount());
@@ -857,7 +856,7 @@ ipcacheInvalidate(const char *name)
 {
     ipcache_entry *i;
 
-    if ((i = ipcache_get(name)) == NULL)
+    if ((i = ipcache_get(name)) == nullptr)
         return;
 
     i->expires = squid_curtime;
@@ -874,7 +873,7 @@ ipcacheInvalidateNegative(const char *name)
 {
     ipcache_entry *i;
 
-    if ((i = ipcache_get(name)) == NULL)
+    if ((i = ipcache_get(name)) == nullptr)
         return;
 
     if (i->flags.negcached)
@@ -992,8 +991,8 @@ void
 Dns::CachedIps::pushUnique(const Ip::Address &ip)
 {
     assert(!have(ip));
-    ips.emplace_back(ip);
-    assert(!raw().back().bad());
+    [[maybe_unused]] auto &cachedIp = ips.emplace_back(ip);
+    assert(!cachedIp.bad());
 }
 
 void
@@ -1052,7 +1051,7 @@ Dns::CachedIps::forgetMarking(const char *name, const Ip::Address &ip)
  * Does nothing if the domain name does not exist.
  *
  \param name    domain name to have an IP marked bad
- \param addr    specific addres to be marked bad
+ \param addr    specific address to be marked bad
  */
 void
 ipcacheMarkBadAddr(const char *name, const Ip::Address &addr)
@@ -1081,15 +1080,6 @@ ipcache_entry::~ipcache_entry()
 {
     xfree(error_message);
     xfree(hash.key);
-}
-
-/// \ingroup IPCacheAPI
-void
-ipcacheFreeMemory(void)
-{
-    hashFreeItems(ip_table, ipcacheFreeEntry);
-    hashFreeMemory(ip_table);
-    ip_table = NULL;
 }
 
 /**
@@ -1131,7 +1121,7 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
         if (strchr(ipaddr, ':') && strspn(ipaddr, "0123456789abcdefABCDEF:") == strlen(ipaddr)) {
             debugs(14, 3, "ipcacheAddEntryFromHosts: Skipping IPv6 address '" << ipaddr << "'");
         } else {
-            debugs(14, DBG_IMPORTANT, "ipcacheAddEntryFromHosts: Bad IP address '" << ipaddr << "'");
+            debugs(14, DBG_IMPORTANT, "ERROR: ipcacheAddEntryFromHosts: Bad IP address '" << ipaddr << "'");
         }
 
         return 1;
@@ -1146,7 +1136,7 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
         if (1 == i->flags.fromhosts) {
             ipcacheUnlockEntry(i);
         } else if (i->locks > 0) {
-            debugs(14, DBG_IMPORTANT, "ipcacheAddEntryFromHosts: can't add static entry for locked name '" << name << "'");
+            debugs(14, DBG_IMPORTANT, "ERROR: ipcacheAddEntryFromHosts: cannot add static entry for locked name '" << name << "'");
             return 1;
         } else {
             ipcacheRelease(i);
@@ -1170,7 +1160,7 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
 variable_list *
 snmp_netIpFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer = NULL;
+    variable_list *Answer = nullptr;
     MemBuf tmp;
     debugs(49, 5, "snmp_netIpFn: Processing request:" << snmpDebugOid(Var->name, Var->name_length, tmp));
     *ErrP = SNMP_ERR_NOERROR;
@@ -1227,8 +1217,7 @@ snmp_netIpFn(variable_list * Var, snint * ErrP)
 
     default:
         *ErrP = SNMP_ERR_NOSUCHNAME;
-        snmp_var_free(Answer);
-        return (NULL);
+        assert(!Answer);
     }
 
     return Answer;

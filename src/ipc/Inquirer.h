@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,11 +13,11 @@
 
 #include "base/AsyncJob.h"
 #include "base/AsyncJobCalls.h"
+#include "base/forward.h"
 #include "ipc/forward.h"
 #include "ipc/Request.h"
 #include "ipc/Response.h"
 #include "ipc/StrandCoords.h"
-#include <map>
 
 namespace Ipc
 {
@@ -38,6 +38,8 @@ public:
     /* has-to-be-public AsyncJob API */
     virtual void callException(const std::exception& e);
 
+    CodeContextPointer codeContext;
+
 protected:
     /* AsyncJob API */
     virtual void start();
@@ -57,11 +59,7 @@ protected:
     virtual bool aggregate(Response::Pointer aResponse) = 0;
 
 private:
-    typedef UnaryMemFunT<Inquirer, Response::Pointer, Response::Pointer> HandleAckDialer;
-
     void handleRemoteAck(Response::Pointer response);
-
-    static AsyncCall::Pointer DequeueRequest(unsigned int requestId);
 
     static void RequestTimedOut(void* param);
     void requestTimedOut();
@@ -75,11 +73,7 @@ protected:
 
     const double timeout; ///< number of seconds to wait for strand response
 
-    /// maps request->id to Inquirer::handleRemoteAck callback
-    typedef std::map<unsigned int, AsyncCall::Pointer> RequestsMap;
-    static RequestsMap TheRequestsMap; ///< pending strand requests
-
-    static unsigned int LastRequestId; ///< last requestId used
+    static RequestId::Index LastRequestId; ///< last requestId used
 };
 
 } // namespace Ipc

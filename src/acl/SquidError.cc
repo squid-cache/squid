@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,7 +17,7 @@ ACLSquidErrorStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *ch
     if (checklist->requestErrorType != ERR_MAX)
         return data->match(checklist->requestErrorType);
     else if (checklist->request)
-        return data->match(checklist->request->errType);
+        return data->match(checklist->request->error.category);
     return 0;
 }
 

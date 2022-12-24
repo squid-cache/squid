@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,6 +13,9 @@
 
 #include "base/AsyncCall.h"
 #include "base/Subscription.h"
+#include "ipc/QuestionerId.h"
+#include "ipc/RequestId.h"
+#include "ipc/StartListening.h"
 
 namespace Ipc
 {
@@ -34,9 +37,6 @@ public:
     // bits to re-create the listener Comm::Connection descriptor
     Ip::Address addr; ///< will be memset and memcopied
     int flags = 0;
-
-    /// handler to subscribe to Comm::ConnAcceptor when we get the response
-    Subscription::Pointer handlerSubscription;
 };
 
 class TypedMsgHdr;
@@ -45,7 +45,7 @@ class TypedMsgHdr;
 class SharedListenRequest
 {
 public:
-    SharedListenRequest(); ///< from OpenSharedListen() which then sets public data
+    SharedListenRequest(const OpenListenerParams &, RequestId aMapId); ///< sender's constructor
     explicit SharedListenRequest(const TypedMsgHdr &hdrMsg); ///< from recvmsg()
     void pack(TypedMsgHdr &hdrMsg) const; ///< prepare for sendmsg()
 
@@ -54,25 +54,28 @@ public:
 
     OpenListenerParams params; ///< actual comm_open_sharedListen() parameters
 
-    int mapId; ///< to map future response to the requestor's callback
+    RequestId mapId; ///< to map future response to the requestor's callback
 };
 
 /// a response to SharedListenRequest
 class SharedListenResponse
 {
 public:
-    SharedListenResponse(int fd, int errNo, int mapId);
+    SharedListenResponse(int fd, int errNo, RequestId aMapId); ///< sender's constructor
     explicit SharedListenResponse(const TypedMsgHdr &hdrMsg); ///< from recvmsg()
     void pack(TypedMsgHdr &hdrMsg) const; ///< prepare for sendmsg()
+
+    /// for Mine() tests
+    QuestionerId intendedRecepient() const { return mapId.questioner(); }
 
 public:
     int fd; ///< opened listening socket or -1
     int errNo; ///< errno value from comm_open_sharedListen() call
-    int mapId; ///< to map future response to the requestor's callback
+    RequestId mapId; ///< to map future response to the requestor's callback
 };
 
 /// prepare and send SharedListenRequest to Coordinator
-void JoinSharedListen(const OpenListenerParams &, AsyncCall::Pointer &);
+void JoinSharedListen(const OpenListenerParams &, StartListeningCallback &);
 
 /// process Coordinator response to SharedListenRequest
 void SharedListenJoined(const SharedListenResponse &response);

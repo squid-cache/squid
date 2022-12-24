@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,6 +18,7 @@ bool AnyP::Uri::parse(const HttpRequestMethod&, const SBuf &) STUB_RETVAL(true)
 void AnyP::Uri::host(const char *) STUB
 static SBuf nil;
 const SBuf &AnyP::Uri::path() const STUB_RETVAL(nil)
+void AnyP::Uri::addRelativePath(const char *) STUB
 const SBuf &AnyP::Uri::SlashPath()
 {
     static SBuf slash("/");
@@ -33,11 +34,9 @@ SBuf &AnyP::Uri::absolute() const STUB_RETVAL(nil)
 void urlInitialize() STUB
 const char *urlCanonicalFakeHttps(const HttpRequest *) STUB_RETVAL(nullptr)
 bool urlIsRelative(const char *) STUB_RETVAL(false)
-char *urlMakeAbsolute(const HttpRequest *, const char *)STUB_RETVAL(nullptr)
 char *urlRInternal(const char *, unsigned short, const char *, const char *) STUB_RETVAL(nullptr)
 char *urlInternal(const char *, const char *) STUB_RETVAL(nullptr)
 int matchDomainName(const char *, const char *, enum MatchDomainNameFlags) STUB_RETVAL(0)
-int urlCheckRequest(const HttpRequest *) STUB_RETVAL(0)
-char *urlHostname(const char *) STUB_RETVAL(nullptr)
+bool urlCheckRequest(const HttpRequest *) STUB_RETVAL(false)
 void urlExtMethodConfigure() STUB
 

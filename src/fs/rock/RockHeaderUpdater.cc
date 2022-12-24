@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,12 +8,12 @@
 
 #include "squid.h"
 #include "base/AsyncJobCalls.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "fs/rock/RockHeaderUpdater.h"
 #include "fs/rock/RockIoState.h"
 #include "mime_header.h"
 #include "Store.h"
-#include "StoreMetaUnpacker.h"
+#include "store/SwapMetaIn.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Rock, HeaderUpdater);
 
@@ -270,12 +270,8 @@ void
 Rock::HeaderUpdater::parseReadBytes()
 {
     if (!staleSwapHeaderSize) {
-        StoreMetaUnpacker aBuilder(
-            exchangeBuffer.rawContent(),
-            exchangeBuffer.length(),
-            &staleSwapHeaderSize);
+        staleSwapHeaderSize = Store::UnpackSwapMetaSize(exchangeBuffer);
         // Squid assumes that metadata always fits into a single db slot
-        aBuilder.checkBuffer(); // cannot update an entry with invalid metadata
         debugs(47, 7, "staleSwapHeaderSize=" << staleSwapHeaderSize);
         Must(staleSwapHeaderSize > 0);
         exchangeBuffer.consume(staleSwapHeaderSize);

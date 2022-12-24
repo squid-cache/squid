@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,16 +12,10 @@
 #include "acl/FilledChecklist.h"
 #include "acl/TransactionInitiator.h"
 #include "cache_cf.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "HttpRequest.h"
 #include "MasterXaction.h"
 #include "SquidConfig.h"
-
-ACL *
-Acl::TransactionInitiator::clone() const
-{
-    return new Acl::TransactionInitiator(*this);
-}
 
 Acl::TransactionInitiator::TransactionInitiator (const char *aClass) : class_ (aClass), initiators_(0)
 {}

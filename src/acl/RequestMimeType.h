@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,7 +21,7 @@ ACLRequestHeaderStrategy<Http::HdrType::CONTENT_TYPE>::match (ACLData<char const
 {
     char const *theHeader = checklist->request->header.getStr(Http::HdrType::CONTENT_TYPE);
 
-    if (NULL == theHeader)
+    if (nullptr == theHeader)
         theHeader = "";
 
     return data->match(theHeader);

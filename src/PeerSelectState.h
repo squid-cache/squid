@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -85,6 +85,15 @@ public:
     /// a single selection loop iteration: attempts to add more destinations
     void selectMore();
 
+    /// switches into the PING_WAITING state (and associated timeout monitoring)
+    void startPingWaiting();
+
+    /// terminates ICP ping timeout monitoring
+    void cancelPingTimeoutMonitoring();
+
+    /// called when the given selector should stop expecting ICP ping responses
+    static void HandlePingTimeout(PeerSelector *);
+
     HttpRequest *request;
     AccessLogEntry::Pointer al; ///< info for the future access.log entry
     StoreEntry *entry;
@@ -122,7 +131,6 @@ protected:
     static IRCB HandlePingReply;
     static ACLCB CheckAlwaysDirectDone;
     static ACLCB CheckNeverDirectDone;
-    static EVH HandlePingTimeout;
 
 private:
     Acl::Answer always_direct;

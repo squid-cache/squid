@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,7 +22,6 @@
 #include "mime_header.h"
 #include "neighbors.h"
 #include "PeerDigest.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "store_key_md5.h"
 #include "StoreClient.h"
@@ -88,10 +87,10 @@ CBDATA_CLASS_INIT(DigestFetchState);
 
 DigestFetchState::DigestFetchState(PeerDigest *aPd, HttpRequest *req) :
     pd(cbdataReference(aPd)),
-    entry(NULL),
-    old_entry(NULL),
-    sc(NULL),
-    old_sc(NULL),
+    entry(nullptr),
+    old_entry(nullptr),
+    sc(nullptr),
+    old_sc(nullptr),
     request(req),
     offset(0),
     mask_offset(0),
@@ -118,11 +117,11 @@ DigestFetchState::~DigestFetchState()
     storeUnregister(sc, entry, this);
 
     entry->unlock("DigestFetchState destructed");
-    entry = NULL;
+    entry = nullptr;
 
     HTTPMSGUNLOCK(request);
 
-    assert(pd == NULL);
+    assert(pd == nullptr);
 }
 
 /* allocate new peer digest, call Init, and lock everything */
@@ -184,25 +183,6 @@ peerDigestNeeded(PeerDigest * pd)
     pd->times.needed = squid_curtime;
     peerDigestSetCheck(pd, 0);  /* check asap */
 }
-
-/* currently we do not have a reason to disable without destroying */
-#if FUTURE_CODE
-/* disables peer for good */
-static void
-peerDigestDisable(PeerDigest * pd)
-{
-    debugs(72, 2, "peerDigestDisable: peer " << pd->host.buf() << " disabled for good");
-    pd->times.disabled = squid_curtime;
-    pd->times.next_check = -1;  /* never */
-    pd->flags.usable = 0;
-
-    delete pd->cd
-    pd->cd = nullptr;
-
-    /* we do not destroy the pd itself to preserve its "history" and stats */
-}
-
-#endif
 
 /* increment retry delay [after an unsuccessful attempt] */
 static time_t
@@ -269,7 +249,7 @@ peerDigestCheck(void *data)
         return;
     }
 
-    debugs(72, 3, "peerDigestCheck: peer " <<  pd->peer->host << ":" << pd->peer->http_port);
+    debugs(72, 3, "cache_peer " << *pd->peer);
     debugs(72, 3, "peerDigestCheck: time: " << squid_curtime <<
            ", last received: " << (long int) pd->times.received << "  (" <<
            std::showpos << (int) (squid_curtime - pd->times.received) << ")");
@@ -311,11 +291,11 @@ peerDigestRequest(PeerDigest * pd)
 {
     CachePeer *p = pd->peer;
     StoreEntry *e, *old_e;
-    char *url = NULL;
+    char *url = nullptr;
     HttpRequest *req;
     StoreIOBuffer tempBuffer;
 
-    pd->req_result = NULL;
+    pd->req_result = nullptr;
     pd->flags.requested = true;
 
     /* compute future request components */
@@ -326,7 +306,7 @@ peerDigestRequest(PeerDigest * pd)
         url = xstrdup(internalRemoteUri(p->secure.encryptTransport, p->host, p->http_port, "/squid-internal-periodic/", SBuf(StoreDigestFileName)));
     debugs(72, 2, url);
 
-    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initCacheDigest);
+    const auto mx = MasterXaction::MakePortless<XactionInitiator::initCacheDigest>();
     req = HttpRequest::FromUrlXXX(url, mx);
 
     assert(req);
@@ -352,7 +332,7 @@ peerDigestRequest(PeerDigest * pd)
     /* update timestamps */
     pd->times.requested = squid_curtime;
     pd_last_req_time = squid_curtime;
-    req->flags.cachable = true;
+    req->flags.cachable.support(); // prevent RELEASE_REQUEST in storeCreateEntry()
 
     /* the rest is based on clientReplyContext::processExpired() */
     req->flags.refresh = true;
@@ -484,6 +464,15 @@ peerDigestHandleReply(void *data, StoreIOBuffer receivedData)
 
     } while (cbdataReferenceValid(fetch) && prevstate != fetch->state && fetch->bufofs > 0);
 
+    // Check for EOF here, thus giving the parser one extra run. We could avoid this overhead by
+    // checking at the beginning of this function. However, in this case, we would have to require
+    // that the parser does not regard EOF as a special condition (it is true now but may change
+    // in the future).
+    if (!receivedData.length) { // EOF
+        peerDigestFetchAbort(fetch, fetch->buf, "premature end of digest reply");
+        return;
+    }
+
     /* Update the copy offset */
     fetch->offset += receivedData.length;
 
@@ -547,7 +536,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 
             fetch->entry = fetch->old_entry;
 
-            fetch->old_entry = NULL;
+            fetch->old_entry = nullptr;
 
             /* preserve request -- we need its size to update counters */
             /* requestUnlink(r); */
@@ -560,7 +549,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
                 storeUnregister(fetch->old_sc, fetch->old_entry, fetch);
                 fetch->old_entry->releaseRequest();
                 fetch->old_entry->unlock("peerDigestFetchReply 200");
-                fetch->old_entry = NULL;
+                fetch->old_entry = nullptr;
             }
         } else {
             /* some kind of a bug */
@@ -647,7 +636,7 @@ peerDigestSwapInCBlock(void *data, char *buf, ssize_t size)
         if (peerDigestSetCBlock(pd, buf)) {
             /* XXX: soon we will have variable header size */
             /* switch to CD buffer and fetch digest guts */
-            buf = NULL;
+            buf = nullptr;
             assert(pd->cd->mask);
             fetch->state = DIGEST_READ_MASK;
             return StoreDigestCBlockSize;
@@ -683,7 +672,7 @@ peerDigestSwapInMask(void *data, char *buf, ssize_t size)
 
     /* NOTE! buf points to the middle of pd->cd->mask! */
 
-    if (peerDigestFetchedEnough(fetch, NULL, size, "peerDigestSwapInMask"))
+    if (peerDigestFetchedEnough(fetch, nullptr, size, "peerDigestSwapInMask"))
         return -1;
 
     fetch->mask_offset += size;
@@ -692,7 +681,7 @@ peerDigestSwapInMask(void *data, char *buf, ssize_t size)
         debugs(72, 2, "peerDigestSwapInMask: Done! Got " <<
                fetch->mask_offset << ", expected " << pd->cd->mask_size);
         assert(fetch->mask_offset == pd->cd->mask_size);
-        assert(peerDigestFetchedEnough(fetch, NULL, 0, "peerDigestSwapInMask"));
+        assert(peerDigestFetchedEnough(fetch, nullptr, 0, "peerDigestSwapInMask"));
         return -1;      /* XXX! */
     }
 
@@ -706,9 +695,9 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     static const SBuf hostUnknown("<unknown>"); // peer host (if any)
     SBuf host = hostUnknown;
 
-    PeerDigest *pd = NULL;
-    const char *reason = NULL;  /* reason for completion */
-    const char *no_bug = NULL;  /* successful completion if set */
+    PeerDigest *pd = nullptr;
+    const char *reason = nullptr;  /* reason for completion */
+    const char *no_bug = nullptr;  /* successful completion if set */
     const int pdcb_valid = cbdataReferenceValid(fetch->pd);
     const int pcb_valid = cbdataReferenceValid(fetch->pd->peer);
 
@@ -718,14 +707,6 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     if (!reason) {
         if (!(pd = fetch->pd))
             reason = "peer digest disappeared?!";
-
-#if DONT            /* WHY NOT? /HNO */
-
-        else if (!cbdataReferenceValid(pd))
-            reason = "invalidated peer digest?!";
-
-#endif
-
         else
             host = pd->host;
     }
@@ -769,7 +750,7 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
         assert(pdcb_valid && pcb_valid);
     }
 
-    return reason != NULL;
+    return reason != nullptr;
 }
 
 /* call this when all callback data is valid and fetch must be stopped but
@@ -793,7 +774,7 @@ peerDigestFetchAbort(DigestFetchState * fetch, char *buf, const char *reason)
 
 /* complete the digest transfer, update stats, unlock/release everything */
 static void
-peerDigestReqFinish(DigestFetchState * fetch, char *buf,
+peerDigestReqFinish(DigestFetchState * fetch, char * /* buf */,
                     int fcb_valid, int pdcb_valid, int pcb_valid,
                     const char *reason, int err)
 {
@@ -873,7 +854,7 @@ peerDigestPDFinish(DigestFetchState * fetch, int pcb_valid, int err)
 /* free fetch state structures
  * must be called only when fetch cbdata is valid */
 static void
-peerDigestFetchFinish(DigestFetchState * fetch, int err)
+peerDigestFetchFinish(DigestFetchState * fetch, int /* err */)
 {
     assert(fetch->entry && fetch->request);
 
@@ -882,7 +863,7 @@ peerDigestFetchFinish(DigestFetchState * fetch, int err)
         storeUnregister(fetch->old_sc, fetch->old_entry, fetch);
         fetch->old_entry->releaseRequest();
         fetch->old_entry->unlock("peerDigestFetchFinish old");
-        fetch->old_entry = NULL;
+        fetch->old_entry = nullptr;
     }
 
     /* update global stats */
@@ -986,7 +967,7 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
 
     /* there are some things we cannot do yet */
     if (cblock.hash_func_count != CacheDigestHashFuncCount) {
-        debugs(72, DBG_CRITICAL, "" << host << " digest: unsupported #hash functions: " <<
+        debugs(72, DBG_CRITICAL, "ERROR: " << host << " digest: unsupported #hash functions: " <<
                cblock.hash_func_count << " ? " << CacheDigestHashFuncCount << ".");
         return 0;
     }
@@ -1026,7 +1007,7 @@ peerDigestUseful(const PeerDigest * pd)
     const auto bit_util = pd->cd->usedMaskPercent();
 
     if (bit_util > 65.0) {
-        debugs(72, DBG_CRITICAL, "Warning: " << pd->host <<
+        debugs(72, DBG_CRITICAL, "WARNING: " << pd->host <<
                " peer digest has too many bits on (" << bit_util << "%).");
         return 0;
     }

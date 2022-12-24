@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,7 +28,7 @@ char const * esiBrowsers[]= {"MSIE",
 CBDATA_CLASS_INIT(ESIVarState);
 
 void
-ESIVarState::Variable::eval (ESIVarState &state, char const *subref, char const *found_default) const
+ESIVarState::Variable::eval(ESIVarState &state, char const *, char const *found_default) const
 {
     /* No-op. We swallow it */
 
@@ -108,7 +108,7 @@ ESIVarState::extractList()
 {
     doIt();
     ESISegment::Pointer rv = output;
-    output = NULL;
+    output = nullptr;
     debugs(86, 6, "ESIVarStateExtractList: Extracted list");
     return rv;
 }
@@ -133,7 +133,7 @@ ESIVarState::extractChar ()
 ESIVarState::~ESIVarState()
 {
     // freeResources
-    input = NULL;
+    input = nullptr;
     ESISegmentFreeList(output);
     hdr.clean();
 
@@ -150,7 +150,7 @@ ESIVariableUserAgent::getProductVersion (char const *s)
 {
     char const *t;
     int len;
-    t = index(s,'/');
+    t = strchr(s, '/');
 
     if (!t || !*(++t))
         return xstrdup("");
@@ -160,7 +160,7 @@ ESIVariableUserAgent::getProductVersion (char const *s)
     return xstrndup(t, len + 1);
 }
 
-ESIVariableQuery::ESIVariableQuery(char const *uri) : query (NULL), query_sz (0), query_elements (0), query_string (NULL)
+ESIVariableQuery::ESIVariableQuery(char const *uri) : query (nullptr), query_sz (0), query_elements (0), query_string (nullptr)
 {
     /* Count off the query elements */
     char const *query_start = strchr (uri, '?');
@@ -240,7 +240,7 @@ ESIVariableQuery::~ESIVariableQuery()
 }
 
 ESIVarState::ESIVarState(HttpHeader const *aHeader, char const *uri) :
-    output(NULL),
+    output(nullptr),
     hdr(hoReply)
 {
     memset(&flags, 0, sizeof(flags));
@@ -302,7 +302,7 @@ ESIVariableUserAgent::ESIVariableUserAgent(ESIVarState &state)
      * Product - Mozilla version 4.0
      * in comments - compatible; .... 3705
      *
-     * Useing the RFC a more appropriate header would be
+     * Using the RFC a more appropriate header would be
      *    User-Agent: MSIE/6.0 Mozilla/4.0 Windows-NT/5.1 .NET-CLR/1.0.3705
      *    or something similar.
      *
@@ -328,12 +328,12 @@ ESIVariableUserAgent::ESIVariableUserAgent(ESIVarState &state)
 
         if ((t = strstr (s, "MSIE"))) {
             browser = ESI_BROWSER_MSIE;
-            t = index (t, ' ');
+            t = strchr(t, ' ');
 
             if (!t)
                 browserversion = xstrdup("");
             else {
-                t1 = index(t, ';');
+                t1 = strchr(t, ';');
 
                 if (!t1)
                     browserversion = xstrdup(t + 1);
@@ -373,7 +373,7 @@ ESIVariableUserAgent::identifyOs(char const *s) const
 void
 ESIVariableCookie::eval (ESIVarState &state, char const *subref, char const *found_default) const
 {
-    const char *s = NULL;
+    const char *s = nullptr;
     state.cookieUsed();
 
     if (state.header().has(Http::HdrType::COOKIE)) {
@@ -397,7 +397,7 @@ ESIVariableCookie::eval (ESIVarState &state, char const *subref, char const *fou
 void
 ESIVariableHost::eval (ESIVarState &state, char const *subref, char const *found_default) const
 {
-    const char *s = NULL;
+    const char *s = nullptr;
     state.hostUsed();
 
     if (!subref && state.header().has(Http::HdrType::HOST)) {
@@ -411,7 +411,7 @@ ESIVariableHost::eval (ESIVarState &state, char const *subref, char const *found
 void
 ESIVariableLanguage::eval (ESIVarState &state, char const *subref, char const *found_default) const
 {
-    char const *s = NULL;
+    char const *s = nullptr;
     state.languageUsed();
 
     if (state.header().has(Http::HdrType::ACCEPT_LANGUAGE)) {
@@ -436,7 +436,7 @@ ESIVariableLanguage::eval (ESIVarState &state, char const *subref, char const *f
 void
 ESIVariableQuery::eval (ESIVarState &state, char const *subref, char const *found_default) const
 {
-    char const *s = NULL;
+    char const *s = nullptr;
 
     if (!subref)
         s = queryString();
@@ -460,7 +460,7 @@ ESIVariableQuery::eval (ESIVarState &state, char const *subref, char const *foun
 void
 ESIVariableReferer::eval (ESIVarState &state, char const *subref, char const *found_default) const
 {
-    const char *s = NULL;
+    const char *s = nullptr;
     state.refererUsed();
 
     if (!subref && state.header().has(Http::HdrType::REFERER))
@@ -474,7 +474,7 @@ ESIVariableReferer::eval (ESIVarState &state, char const *subref, char const *fo
 void
 ESIVariableUserAgent::eval (ESIVarState &state, char const *subref, char const *found_default) const
 {
-    char const *s = NULL;
+    char const *s = nullptr;
     state.useragentUsed();
 
     if (state.header().has(Http::HdrType::USER_AGENT)) {
@@ -528,7 +528,7 @@ ESIFunction::GetFunction(char const *symbol, ESIVariableProcessor &aProcessor)
     if (*symbol == '(')
         return new ESIFunction(aProcessor);
 
-    return NULL;
+    return nullptr;
 }
 
 class ESIVariableProcessor
@@ -607,8 +607,8 @@ ESIVarState::doIt ()
 #define LOOKFORSTART 0
 ESIVariableProcessor::ESIVariableProcessor(char *aString, ESISegment::Pointer &aSegment, Trie &aTrie, ESIVarState *aState) :
     string(aString), output (aSegment), variables(aTrie), varState (aState),
-    state(LOOKFORSTART), pos(0), var_pos(0), done_pos(0), found_subref (NULL),
-    found_default (NULL), currentFunction(NULL)
+    state(LOOKFORSTART), pos(0), var_pos(0), done_pos(0), found_subref (nullptr),
+    found_default (nullptr), currentFunction(nullptr)
 {
     len = strlen (string);
     vartype = varState->GetVar("",0);
@@ -769,7 +769,7 @@ ESIVariableProcessor::identifyFunction()
 void
 ESIVariableProcessor::doIt()
 {
-    assert (output == NULL);
+    assert (output == nullptr);
 
     while (pos < len) {
         /* skipping pre-variables */
@@ -805,7 +805,7 @@ ESIVariableProcessor::~ESIVariableProcessor()
     delete currentFunction;
 }
 
-/* XXX FIXME: this should be comma delimited, no? */
+/* XXX: this should be comma delimited, no? */
 void
 ESIVarState::buildVary (HttpReply *rep)
 {

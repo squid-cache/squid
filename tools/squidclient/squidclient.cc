@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 #include "base64.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
-#include "rfc1123.h"
+#include "time/gadgets.h"
 #include "tools/squidclient/gssapi_support.h"
 #include "tools/squidclient/Parameters.h"
 #include "tools/squidclient/Ping.h"
@@ -66,7 +66,7 @@ static void set_our_signal(void);
 Parameters scParams;
 
 static int put_fd;
-static char *put_file = NULL;
+static char *put_file = nullptr;
 
 static struct stat sb;
 int total_bytes = 0;
@@ -246,9 +246,9 @@ main(int argc, char *argv[])
     time_t ims = 0;
     int max_forwards = -1;
 
-    const char *host = NULL;
+    const char *host = nullptr;
     const char *version = "1.0";
-    const char *useragent = NULL;
+    const char *useragent = nullptr;
 
     /* set the defaults */
     to_stdout = true;
@@ -267,15 +267,15 @@ main(int argc, char *argv[])
         // options for controlling squidclient
         static struct option basicOptions[] = {
             /* These are the generic options for squidclient itself */
-            {"help",    no_argument, 0, '?'},
-            {"verbose", no_argument, 0, 'v'},
-            {"quiet",   no_argument, 0, 's'},
-            {"host",    required_argument, 0, 'h'},
-            {"local",   required_argument, 0, 'l'},
-            {"port",    required_argument, 0, 'p'},
-            {"ping",    no_argument, 0, '\1'},
-            {"https",   no_argument, 0, '\3'},
-            {0, 0, 0, 0}
+            {"help",    no_argument, nullptr, '?'},
+            {"verbose", no_argument, nullptr, 'v'},
+            {"quiet",   no_argument, nullptr, 's'},
+            {"host",    required_argument, nullptr, 'h'},
+            {"local",   required_argument, nullptr, 'l'},
+            {"port",    required_argument, nullptr, 'p'},
+            {"ping",    no_argument, nullptr, '\1'},
+            {"https",   no_argument, nullptr, '\3'},
+            {nullptr, 0, nullptr, 0}
         };
 
         int c;
@@ -293,6 +293,8 @@ main(int argc, char *argv[])
             case 'p':       /* port number */
                 // rewind and let the Transport::Config parser handle
                 optind -= 2;
+                Transport::Config.parseCommandOpts(argc, argv, c, optIndex);
+                continue;
 
             case '\3': // request over a TLS connection
                 Transport::Config.parseCommandOpts(argc, argv, c, optIndex);
@@ -425,7 +427,7 @@ main(int argc, char *argv[])
     /* Build the HTTP request */
     if (strncmp(url, "mgr:", 4) == 0) {
         char *t = xstrdup(url + 4);
-        const char *at = NULL;
+        const char *at = nullptr;
         if (!strrchr(t, '@')) { // ignore any -w password if @ is explicit already.
             at = ProxyAuthorization.password;
         }
@@ -503,7 +505,7 @@ main(int argc, char *argv[])
             msg << "Accept: */*\r\n";
         }
         if (ims) {
-            msg << "If-Modified-Since: " << mkrfc1123(ims) << "\r\n";
+            msg << "If-Modified-Since: " << Time::FormatRfc1123(ims) << "\r\n";
         }
         if (max_forwards > -1) {
             msg << "Max-Forwards: " << max_forwards << "\r\n";
@@ -653,7 +655,7 @@ set_our_signal(void)
     sa.sa_flags = SA_RESTART;
     sigemptyset(&sa.sa_mask);
 
-    if (sigaction(SIGPIPE, &sa, NULL) < 0) {
+    if (sigaction(SIGPIPE, &sa, nullptr) < 0) {
         std::cerr << "ERROR: Cannot set PIPE signal." << std::endl;
         exit(EXIT_FAILURE);
     }

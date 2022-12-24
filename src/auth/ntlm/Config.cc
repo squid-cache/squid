@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,17 +27,16 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
 
 /* NTLM Scheme */
 static AUTHSSTATS authenticateNTLMStats;
 
-statefulhelper *ntlmauthenticators = NULL;
+statefulhelper *ntlmauthenticators = nullptr;
 static int authntlm_initialised = 0;
 
-static hash_table *proxy_auth_cache = NULL;
+static hash_table *proxy_auth_cache = nullptr;
 
 void
 Auth::Ntlm::Config::rotateHelpers()
@@ -66,7 +65,7 @@ Auth::Ntlm::Config::done()
         return;
 
     delete ntlmauthenticators;
-    ntlmauthenticators = NULL;
+    ntlmauthenticators = nullptr;
 
     if (authenticateProgram)
         wordlistDestroy(&authenticateProgram);
@@ -89,7 +88,7 @@ Auth::Ntlm::Config::init(Auth::SchemeConfig *)
 
         authntlm_initialised = 1;
 
-        if (ntlmauthenticators == NULL)
+        if (ntlmauthenticators == nullptr)
             ntlmauthenticators = new statefulhelper("ntlmauthenticator");
 
         if (!proxy_auth_cache)
@@ -124,12 +123,12 @@ Auth::Ntlm::Config::active() const
 bool
 Auth::Ntlm::Config::configured() const
 {
-    if ((authenticateProgram != NULL) && (authenticateChildren.n_max != 0)) {
-        debugs(29, 9, HERE << "returning configured");
+    if ((authenticateProgram != nullptr) && (authenticateChildren.n_max != 0)) {
+        debugs(29, 9, "returning configured");
         return true;
     }
 
-    debugs(29, 9, HERE << "returning unconfigured");
+    debugs(29, 9, "returning unconfigured");
     return false;
 }
 
@@ -146,8 +145,8 @@ Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Http
         return;
 
     /* New request, no user details */
-    if (auth_user_request == NULL) {
-        debugs(29, 9, HERE << "Sending type:" << hdrType << " header: 'NTLM'");
+    if (auth_user_request == nullptr) {
+        debugs(29, 9, "Sending type:" << hdrType << " header: 'NTLM'");
         httpHeaderPutStrf(&rep->header, hdrType, "NTLM");
 
         if (!keep_alive) {
@@ -156,7 +155,7 @@ Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Http
         }
     } else {
         Auth::Ntlm::UserRequest *ntlm_request = dynamic_cast<Auth::Ntlm::UserRequest *>(auth_user_request.getRaw());
-        assert(ntlm_request != NULL);
+        assert(ntlm_request != nullptr);
 
         switch (ntlm_request->user()->credentials()) {
 
@@ -164,24 +163,24 @@ Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Http
             /* here it makes sense to drop the connection, as auth is
              * tied to it, even if MAYBE the client could handle it - Kinkie */
             request->flags.proxyKeepalive = false;
-        /* fall through */
+            [[fallthrough]];
 
         case Auth::Ok:
-        /* Special case: authentication finished OK but disallowed by ACL.
-         * Need to start over to give the client another chance.
-         */
-        /* fall through */
+            /* Special case: authentication finished OK but disallowed by ACL.
+             * Need to start over to give the client another chance.
+             */
+            [[fallthrough]];
 
         case Auth::Unchecked:
             /* semantic change: do not drop the connection.
              * 2.5 implementation used to keep it open - Kinkie */
-            debugs(29, 9, HERE << "Sending type:" << hdrType << " header: 'NTLM'");
+            debugs(29, 9, "Sending type:" << hdrType << " header: 'NTLM'");
             httpHeaderPutStrf(&rep->header, hdrType, "NTLM");
             break;
 
         case Auth::Handshake:
             /* we're waiting for a response from the client. Pass it the blob */
-            debugs(29, 9, HERE << "Sending type:" << hdrType << " header: 'NTLM " << ntlm_request->server_blob << "'");
+            debugs(29, 9, "Sending type:" << hdrType << " header: 'NTLM " << ntlm_request->server_blob << "'");
             httpHeaderPutStrf(&rep->header, hdrType, "NTLM %s", ntlm_request->server_blob);
             safe_free(ntlm_request->server_blob);
             break;
@@ -209,7 +208,7 @@ Auth::Ntlm::Config::decode(char const *proxy_auth, const HttpRequest *, const ch
 {
     Auth::Ntlm::User *newUser = new Auth::Ntlm::User(Auth::SchemeConfig::Find("ntlm"), aRequestRealm);
     Auth::UserRequest::Pointer auth_user_request = new Auth::Ntlm::UserRequest();
-    assert(auth_user_request->user() == NULL);
+    assert(auth_user_request->user() == nullptr);
 
     auth_user_request->user(newUser);
     auth_user_request->user()->auth_type = Auth::AUTH_NTLM;
@@ -217,7 +216,7 @@ Auth::Ntlm::Config::decode(char const *proxy_auth, const HttpRequest *, const ch
     auth_user_request->user()->BuildUserKey(proxy_auth, aRequestRealm);
 
     /* all we have to do is identify that it's NTLM - the helper does the rest */
-    debugs(29, 9, HERE << "decode: NTLM authentication");
+    debugs(29, 9, "decode: NTLM authentication");
     return auth_user_request;
 }
 

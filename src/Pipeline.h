@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -54,9 +54,6 @@ public:
 
     /// whether there are none or any requests currently pipelined
     bool empty() const {return requests.empty();}
-
-    /// tell everybody about the err, and abort all waiting requests
-    void terminateAll(const int xerrno);
 
     /// deregister the front request from the pipeline
     void popMe(const Http::StreamPointer &);

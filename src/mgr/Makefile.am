@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -12,12 +12,12 @@ noinst_LTLIBRARIES = libmgr.la
 
 libmgr_la_SOURCES = \
 	Action.cc \
-	ActionCreator.h \
 	Action.h \
+	ActionCreator.h \
 	ActionParams.cc \
 	ActionParams.h \
-	ActionPasswordList.h \
 	ActionPasswordList.cc \
+	ActionPasswordList.h \
 	ActionProfile.h \
 	ActionWriter.cc \
 	ActionWriter.h \
@@ -31,17 +31,21 @@ libmgr_la_SOURCES = \
 	Filler.h \
 	Forwarder.cc \
 	Forwarder.h \
-	forward.h \
 	FunAction.cc \
 	FunAction.h \
 	InfoAction.cc \
 	InfoAction.h \
 	Inquirer.cc \
 	Inquirer.h \
+	IntParam.cc \
+	IntParam.h \
 	IntervalAction.cc \
 	IntervalAction.h \
 	IoAction.cc \
 	IoAction.h \
+	QueryParam.h \
+	QueryParams.cc \
+	QueryParams.h \
 	Registration.cc \
 	Registration.h \
 	Request.cc \
@@ -54,10 +58,6 @@ libmgr_la_SOURCES = \
 	StoreIoAction.h \
 	StoreToCommWriter.cc \
 	StoreToCommWriter.h \
-	QueryParam.h \
-	QueryParams.cc \
-	QueryParams.h \
-	IntParam.cc \
-	IntParam.h \
 	StringParam.cc \
-	StringParam.h
+	StringParam.h \
+	forward.h

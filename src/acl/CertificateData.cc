@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,10 +13,10 @@
 #include "acl/Checklist.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "wordlist.h"
 
-ACLCertificateData::ACLCertificateData(Ssl::GETX509ATTRIBUTE *sslStrategy, const char *attrs, bool optionalAttr) : validAttributesStr(attrs), attributeIsOptional(optionalAttr), attribute (NULL), values (), sslAttributeCall (sslStrategy)
+ACLCertificateData::ACLCertificateData(Ssl::GETX509ATTRIBUTE *sslStrategy, const char *attrs, bool optionalAttr) : validAttributesStr(attrs), attributeIsOptional(optionalAttr), attribute (nullptr), values (), sslAttributeCall (sslStrategy)
 {
     if (attrs) {
         size_t current = 0;
@@ -28,15 +28,6 @@ ACLCertificateData::ACLCertificateData(Ssl::GETX509ATTRIBUTE *sslStrategy, const
             current = next + 1;
         } while (next != std::string::npos);
     }
-}
-
-ACLCertificateData::ACLCertificateData(ACLCertificateData const &old) : attribute (NULL), values (old.values), sslAttributeCall (old.sslAttributeCall)
-{
-    validAttributesStr = old.validAttributesStr;
-    validAttributes.assign (old.validAttributes.begin(), old.validAttributes.end());
-    attributeIsOptional = old.attributeIsOptional;
-    if (old.attribute)
-        attribute = xstrdup(old.attribute);
 }
 
 template<class T>
@@ -66,7 +57,7 @@ ACLCertificateData::match(X509 *cert)
 
     char const *value = sslAttributeCall(cert, attribute);
     debugs(28, 6, (attribute ? attribute : "value") << "=" << value);
-    if (value == NULL)
+    if (value == nullptr)
         return 0;
 
     return values.match(value);
@@ -157,12 +148,5 @@ bool
 ACLCertificateData::empty() const
 {
     return values.empty();
-}
-
-ACLData<X509 *> *
-ACLCertificateData::clone() const
-{
-    /* Splay trees don't clone yet. */
-    return new ACLCertificateData(*this);
 }
 

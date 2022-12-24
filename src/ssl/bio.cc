@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,13 +14,13 @@
 /* support.cc says this is needed */
 #if USE_OPENSSL
 
+#include "base/Raw.h"
 #include "comm.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "ip/Address.h"
 #include "parser/BinaryTokenizer.h"
-#include "SquidTime.h"
 #include "ssl/bio.h"
 
 #if _SQUID_WINDOWS_
@@ -67,7 +67,7 @@ Ssl::Bio::Create(const int fd, Security::Io::Type type)
         BIO_meth_set_write(SquidMethods, squid_bio_write);
         BIO_meth_set_read(SquidMethods, squid_bio_read);
         BIO_meth_set_puts(SquidMethods, squid_bio_puts);
-        BIO_meth_set_gets(SquidMethods, NULL);
+        BIO_meth_set_gets(SquidMethods, nullptr);
         BIO_meth_set_ctrl(SquidMethods, squid_bio_ctrl);
         BIO_meth_set_create(SquidMethods, squid_bio_create);
         BIO_meth_set_destroy(SquidMethods, squid_bio_destroy);
@@ -81,7 +81,7 @@ Ssl::Bio::Create(const int fd, Security::Io::Type type)
         BIO_int_ctrl(bio, BIO_C_SET_FD, type, fd);
         return bio;
     }
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -149,7 +149,7 @@ Ssl::Bio::read(char *buf, int size, BIO *table)
 /// Called whenever the SSL connection state changes, an alert appears, or an
 /// error occurs. See SSL_set_info_callback().
 void
-Ssl::Bio::stateChanged(const SSL *ssl, int where, int ret)
+Ssl::Bio::stateChanged(const SSL *ssl, int where, int)
 {
     // Here we can use (where & STATE) to check the current state.
     // Many STATE values are possible, including: SSL_CB_CONNECT_LOOP,
@@ -168,7 +168,6 @@ Ssl::ClientBio::ClientBio(const int anFd):
     Bio(anFd),
     holdRead_(false),
     holdWrite_(false),
-    helloSize(0),
     abortReason(nullptr)
 {
     renegotiations.configure(10*1000);
@@ -245,12 +244,12 @@ Ssl::ServerBio::ServerBio(const int anFd):
     allowSplice(false),
     allowBump(false),
     holdWrite_(false),
-    holdRead_(true),
     record_(false),
     parsedHandshake(false),
     parseError(false),
     bumpMode_(bumpNone),
-    rbufConsumePos(0)
+    rbufConsumePos(0),
+    parser_(Security::HandshakeParser::fromServer)
 {
 }
 
@@ -318,12 +317,6 @@ Ssl::ServerBio::readAndParse(char *buf, const int size, BIO *table)
         parseError = true;
     }
 
-    if (holdRead_) {
-        debugs(83, 7, "Hold flag is set, retry latter. (Hold " << size << "bytes)");
-        BIO_set_retry_read(table);
-        return -1;
-    }
-
     return giveBuffered(buf, size);
 }
 
@@ -357,112 +350,6 @@ Ssl::ServerBio::giveBuffered(char *buf, const int size)
     return bytes;
 }
 
-// This function makes the required checks to examine if the client hello
-// message is compatible with the features provided by OpenSSL toolkit.
-// If the features are compatible and can be supported it tries to rewrite SSL
-// structure members, to replace the hello message created by openSSL, with the
-// web client SSL hello message.
-// This is mostly possible in the cases where the web client uses openSSL
-// library similar with this one used by squid.
-static bool
-adjustSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, SBuf &helloMessage)
-{
-#if SQUID_USE_OPENSSL_HELLO_OVERWRITE_HACK
-    if (!details)
-        return false;
-
-    if (!ssl->s3) {
-        debugs(83, 5, "No SSLv3 data found!");
-        return false;
-    }
-
-    // If the client supports compression but our context does not support
-    // we can not adjust.
-#if !defined(OPENSSL_NO_COMP)
-    const bool requireCompression = (details->compressionSupported && ssl->ctx->comp_methods == nullptr);
-#else
-    const bool requireCompression = details->compressionSupported;
-#endif
-    if (requireCompression) {
-        debugs(83, 5, "Client Hello Data supports compression, but we do not!");
-        return false;
-    }
-
-#if !defined(SSL_TLSEXT_HB_ENABLED)
-    if (details->doHeartBeats) {
-        debugs(83, 5, "Client Hello Data supports HeartBeats but we do not support!");
-        return false;
-    }
-#endif
-
-    if (details->unsupportedExtensions) {
-        debugs(83, 5, "Client Hello contains extensions that we do not support!");
-        return false;
-    }
-
-    SSL3_BUFFER *wb=&(ssl->s3->wbuf);
-    if (wb->len < (size_t)helloMessage.length()) {
-        debugs(83, 5, "Client Hello exceeds OpenSSL buffer: " << helloMessage.length() << " >= " << wb->len);
-        return false;
-    }
-
-    /* Check whether all on-the-wire ciphers are supported by OpenSSL. */
-
-    const auto &wireCiphers = details->ciphers;
-    Security::TlsDetails::Ciphers::size_type ciphersToFind = wireCiphers.size();
-
-    // RFC 5746: "TLS_EMPTY_RENEGOTIATION_INFO_SCSV is not a true cipher suite".
-    // It is commonly seen on the wire, including in from-OpenSSL traffic, but
-    // SSL_get_ciphers() does not return this _pseudo_ cipher suite in my tests.
-    // If OpenSSL supports scsvCipher, we count it (at most once) further below.
-#if defined(TLSEXT_TYPE_renegotiate)
-    // the 0x00FFFF mask converts 3-byte OpenSSL cipher to our 2-byte cipher
-    const uint16_t scsvCipher = SSL3_CK_SCSV & 0x00FFFF;
-#else
-    const uint16_t scsvCipher = 0;
-#endif
-
-    STACK_OF(SSL_CIPHER) *cipher_stack = SSL_get_ciphers(ssl);
-    const int supportedCipherCount = sk_SSL_CIPHER_num(cipher_stack);
-    for (int idx = 0; idx < supportedCipherCount && ciphersToFind > 0; ++idx) {
-        const SSL_CIPHER *cipher = sk_SSL_CIPHER_value(cipher_stack, idx);
-        const auto id = SSL_CIPHER_get_id(cipher) & 0x00FFFF;
-        if (wireCiphers.find(id) != wireCiphers.end() && (!scsvCipher || id != scsvCipher))
-            --ciphersToFind;
-    }
-
-    if (ciphersToFind > 0 && scsvCipher && wireCiphers.find(scsvCipher) != wireCiphers.end())
-        --ciphersToFind;
-
-    if (ciphersToFind > 0) {
-        // TODO: Add slowlyReportUnsupportedCiphers() to slowly find and report each of them
-        debugs(83, 5, "Client Hello Data has " << ciphersToFind << " ciphers that we do not support!");
-        return false;
-    }
-
-    debugs(83, 5, "OpenSSL SSL struct will be adjusted to mimic client hello data!");
-
-    //Adjust ssl structure data.
-    // We need to fix the random in SSL struct:
-    if (details->clientRandom.length() == SSL3_RANDOM_SIZE)
-        memcpy(ssl->s3->client_random, details->clientRandom.c_str(), SSL3_RANDOM_SIZE);
-    memcpy(wb->buf, helloMessage.rawContent(), helloMessage.length());
-    wb->left = helloMessage.length();
-
-    size_t mainHelloSize = helloMessage.length() - 5;
-    const char *mainHello = helloMessage.rawContent() + 5;
-    assert((size_t)ssl->init_buf->max > mainHelloSize);
-    memcpy(ssl->init_buf->data, mainHello, mainHelloSize);
-    debugs(83, 5, "Hello Data init and adjustd sizes :" << ssl->init_num << " = "<< mainHelloSize);
-    ssl->init_num = mainHelloSize;
-    ssl->s3->wpend_ret = mainHelloSize;
-    ssl->s3->wpend_tot = mainHelloSize;
-    return true;
-#else
-    return false;
-#endif
-}
-
 int
 Ssl::ServerBio::write(const char *buf, int size, BIO *table)
 {
@@ -474,43 +361,36 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
     }
 
     if (!helloBuild && (bumpMode_ == Ssl::bumpPeek || bumpMode_ == Ssl::bumpStare)) {
-        // buf contains OpenSSL-generated ClientHello. We assume it has a
-        // complete ClientHello and nothing else, but cannot fully verify
-        // that quickly. We only verify that buf starts with a v3+ record
-        // containing ClientHello.
+        // We have not seen any bytes, so the buffer must start with an
+        // OpenSSL-generated TLSPlaintext record containing, for example, a
+        // ClientHello or an alert message. We check these assumptions before we
+        // substitute that record/message with clientSentHello.
+        // TODO: Move these checks to where we actually rely on them.
+        debugs(83, 7, "to-server" << Raw("TLSPlaintext", buf, size).hex());
         Must(size >= 2); // enough for version and content_type checks below
         Must(buf[1] >= 3); // record's version.major; determines buf[0] meaning
-        Must(buf[0] == 22); // TLSPlaintext.content_type == handshake in v3+
+        Must(20 <= buf[0] && buf[0] <= 23); // valid TLSPlaintext.content_type
 
         //Hello message is the first message we write to server
         assert(helloMsg.isEmpty());
 
-        if (auto ssl = fd_table[fd_].ssl.get()) {
-            if (bumpMode_ == Ssl::bumpPeek) {
-                // we should not be here if we failed to parse the client-sent ClientHello
-                Must(!clientSentHello.isEmpty());
-                if (adjustSSL(ssl, clientTlsDetails, clientSentHello))
-                    allowBump = true;
-                allowSplice = true;
-                // Replace OpenSSL-generated ClientHello with client-sent one.
-                helloMsg.append(clientSentHello);
-                debugs(83, 7,  "FD " << fd_ << ": Using client-sent ClientHello for peek mode");
-            } else { /*Ssl::bumpStare*/
-                allowBump = true;
-                if (!clientSentHello.isEmpty() && adjustSSL(ssl, clientTlsDetails, clientSentHello)) {
-                    allowSplice = true;
-                    helloMsg.append(clientSentHello);
-                    debugs(83, 7,  "FD " << fd_ << ": Using client-sent ClientHello for stare mode");
-                }
-            }
+        if (bumpMode_ == Ssl::bumpPeek) {
+            // we should not be here if we failed to parse the client-sent ClientHello
+            Must(!clientSentHello.isEmpty());
+            allowSplice = true;
+            // Replace OpenSSL-generated ClientHello with client-sent one.
+            helloMsg.append(clientSentHello);
+            debugs(83, 7,  "FD " << fd_ << ": Using client-sent ClientHello for peek mode");
+        } else { /*Ssl::bumpStare*/
+            allowBump = true;
         }
+
         // if we did not use the client-sent ClientHello, then use the OpenSSL-generated one
         if (helloMsg.isEmpty())
             helloMsg.append(buf, size);
 
         helloBuild = true;
         helloMsgSize = helloMsg.length();
-        //allowBump = true;
 
         if (allowSplice) {
             // Do not write yet.....
@@ -554,6 +434,13 @@ Ssl::ServerBio::resumingSession()
     return parser_.resumingSession;
 }
 
+bool
+Ssl::ServerBio::encryptedCertificates() const
+{
+    return parser_.details->tlsSupportedVersion &&
+           Security::Tls1p3orLater(parser_.details->tlsSupportedVersion);
+}
+
 /// initializes BIO table after allocation
 static int
 squid_bio_create(BIO *bi)
@@ -566,7 +453,7 @@ squid_bio_create(BIO *bi)
     // No need to set more, openSSL initialize BIO memory to zero.
 #endif
 
-    BIO_set_data(bi, NULL);
+    BIO_set_data(bi, nullptr);
     return 1;
 }
 
@@ -575,7 +462,7 @@ static int
 squid_bio_destroy(BIO *table)
 {
     delete static_cast<Ssl::Bio*>(BIO_get_data(table));
-    BIO_set_data(table, NULL);
+    BIO_set_data(table, nullptr);
     return 1;
 }
 
@@ -715,6 +602,12 @@ applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl
 #if defined(SSL_OP_NO_COMPRESSION) /* XXX: OpenSSL 0.9.8k lacks SSL_OP_NO_COMPRESSION */
     if (!details->compressionSupported)
         SSL_set_options(ssl, SSL_OP_NO_COMPRESSION);
+#endif
+
+#if defined(SSL_OP_NO_TLSv1_3)
+    // avoid "inappropriate fallback" OpenSSL error messages
+    if (details->tlsSupportedVersion && Security::Tls1p2orEarlier(details->tlsSupportedVersion))
+        SSL_set_options(ssl, SSL_OP_NO_TLSv1_3);
 #endif
 
 #if defined(TLSEXT_STATUSTYPE_ocsp)

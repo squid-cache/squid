@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,17 +9,22 @@
 #include "squid.h"
 #include "../helper.h"
 #include "anyp/PortCfg.h"
+#include "base/AsyncCallbacks.h"
+#include "cache_cf.h"
 #include "fs_io.h"
 #include "helper/Reply.h"
+#include "Parsing.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
-#include "SquidTime.h"
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
 #include "wordlist.h"
 
-Ssl::CertValidationHelper::LruCache *Ssl::CertValidationHelper::HelperCache = nullptr;
+#include <limits>
+
+Ssl::CertValidationHelper::CacheType *Ssl::CertValidationHelper::HelperCache = nullptr;
 
 #if USE_SSL_CRTD
 
@@ -71,28 +76,28 @@ helper *Ssl::Helper::ssl_crtd = nullptr;
 
 void Ssl::Helper::Init()
 {
-    assert(ssl_crtd == NULL);
+    assert(ssl_crtd == nullptr);
 
     // we need to start ssl_crtd only if some port(s) need to bump SSL *and* generate certificates
     // TODO: generate host certificates for SNI enabled accel ports
     bool found = false;
-    for (AnyP::PortCfgPointer s = HttpPortList; !found && s != NULL; s = s->next)
+    for (AnyP::PortCfgPointer s = HttpPortList; !found && s != nullptr; s = s->next)
         found = s->flags.tunnelSslBumping && s->secure.generateHostCertificates;
     if (!found)
         return;
 
-    ssl_crtd = new helper(Ssl::TheConfig.ssl_crtd);
+    ssl_crtd = new helper("sslcrtd_program");
     ssl_crtd->childs.updateLimits(Ssl::TheConfig.ssl_crtdChildren);
     ssl_crtd->ipc_type = IPC_STREAM;
     // The crtd messages may contain the eol ('\n') character. We are
     // going to use the '\1' char as the end-of-message mark.
     ssl_crtd->eom = '\1';
-    assert(ssl_crtd->cmdline == NULL);
+    assert(ssl_crtd->cmdline == nullptr);
     {
         char *tmp = xstrdup(Ssl::TheConfig.ssl_crtd);
         char *tmp_begin = tmp;
-        char *token = NULL;
-        while ((token = strwordtok(NULL, &tmp))) {
+        char *token = nullptr;
+        while ((token = strwordtok(nullptr, &tmp))) {
             wordlistAdd(&ssl_crtd->cmdline, token);
         }
         safe_free(tmp_begin);
@@ -107,7 +112,7 @@ void Ssl::Helper::Shutdown()
     helperShutdown(ssl_crtd);
     wordlistDestroy(&ssl_crtd->cmdline);
     delete ssl_crtd;
-    ssl_crtd = NULL;
+    ssl_crtd = nullptr;
 }
 
 void
@@ -169,11 +174,11 @@ void Ssl::CertValidationHelper::Init()
     if (!Ssl::TheConfig.ssl_crt_validator)
         return;
 
-    assert(ssl_crt_validator == NULL);
+    assert(ssl_crt_validator == nullptr);
 
     // we need to start ssl_crtd only if some port(s) need to bump SSL
     bool found = false;
-    for (AnyP::PortCfgPointer s = HttpPortList; !found && s != NULL; s = s->next)
+    for (AnyP::PortCfgPointer s = HttpPortList; !found && s != nullptr; s = s->next)
         found = s->flags.tunnelSslBumping;
     if (!found)
         return;
@@ -184,22 +189,32 @@ void Ssl::CertValidationHelper::Init()
     // The crtd messages may contain the eol ('\n') character. We are
     // going to use the '\1' char as the end-of-message mark.
     ssl_crt_validator->eom = '\1';
-    assert(ssl_crt_validator->cmdline == NULL);
+    assert(ssl_crt_validator->cmdline == nullptr);
 
-    int ttl = 60;
-    size_t cache = 2048;
+    /* defaults */
+    int ttl = 3600; // 1 hour
+    size_t cache = 64*1024*1024; // 64 MB
     {
+        // TODO: Do this during parseConfigFile() for proper parsing, error handling
         char *tmp = xstrdup(Ssl::TheConfig.ssl_crt_validator);
         char *tmp_begin = tmp;
-        char * token = NULL;
+        char * token = nullptr;
         bool parseParams = true;
-        while ((token = strwordtok(NULL, &tmp))) {
+        while ((token = strwordtok(nullptr, &tmp))) {
             if (parseParams) {
-                if (strncmp(token, "ttl=", 4) == 0) {
-                    ttl = atoi(token + 4);
+                if (strcmp(token, "ttl=infinity") == 0) {
+                    ttl = std::numeric_limits<CacheType::Ttl>::max();
+                    continue;
+                } else if (strncmp(token, "ttl=", 4) == 0) {
+                    ttl = xatoi(token + 4);
+                    if (ttl < 0) {
+                        throw TextException(ToSBuf("Negative TTL in sslcrtvalidator_program ", Ssl::TheConfig.ssl_crt_validator,
+                                                   Debug::Extra, "For unlimited TTL, use ttl=infinity"),
+                                            Here());
+                    }
                     continue;
                 } else if (strncmp(token, "cache=", 6) == 0) {
-                    cache = atoi(token + 6);
+                    cache = xatoi(token + 6);
                     continue;
                 } else
                     parseParams = false;
@@ -211,8 +226,8 @@ void Ssl::CertValidationHelper::Init()
     helperOpenServers(ssl_crt_validator);
 
     //WARNING: initializing static member in an object initialization method
-    assert(HelperCache == NULL);
-    HelperCache = new Ssl::CertValidationHelper::LruCache(ttl, cache);
+    assert(HelperCache == nullptr);
+    HelperCache = new CacheType(cache, ttl);
 }
 
 void Ssl::CertValidationHelper::Shutdown()
@@ -222,13 +237,13 @@ void Ssl::CertValidationHelper::Shutdown()
     helperShutdown(ssl_crt_validator);
     wordlistDestroy(&ssl_crt_validator->cmdline);
     delete ssl_crt_validator;
-    ssl_crt_validator = NULL;
+    ssl_crt_validator = nullptr;
 
     // CertValidationHelper::HelperCache is a static member, it is not good policy to
     // reset it here. Will work because the current Ssl::CertValidationHelper is
     // always the same static object.
     delete HelperCache;
-    HelperCache = NULL;
+    HelperCache = nullptr;
 }
 
 void
@@ -244,7 +259,7 @@ class submitData
 
 public:
     SBuf query;
-    AsyncCall::Pointer callback;
+    Ssl::CertValidationHelper::Callback callback;
     Security::SessionPointer ssl;
 };
 CBDATA_CLASS_INIT(submitData);
@@ -253,41 +268,37 @@ static void
 sslCrtvdHandleReplyWrapper(void *data, const ::Helper::Reply &reply)
 {
     Ssl::CertValidationMsg replyMsg(Ssl::CrtdMessage::REPLY);
-    std::string error;
 
     submitData *crtdvdData = static_cast<submitData *>(data);
     assert(crtdvdData->ssl.get());
     Ssl::CertValidationResponse::Pointer validationResponse = new Ssl::CertValidationResponse(crtdvdData->ssl);
     if (reply.result == ::Helper::BrokenHelper) {
-        debugs(83, DBG_IMPORTANT, "\"ssl_crtvd\" helper error response: " << reply.other().content());
+        debugs(83, DBG_IMPORTANT, "ERROR: \"ssl_crtvd\" helper error response: " << reply.other().content());
         validationResponse->resultCode = ::Helper::BrokenHelper;
     } else if (!reply.other().hasContent()) {
         debugs(83, DBG_IMPORTANT, "\"ssl_crtvd\" helper returned NULL response");
         validationResponse->resultCode = ::Helper::BrokenHelper;
     } else if (replyMsg.parse(reply.other().content(), reply.other().contentSize()) != Ssl::CrtdMessage::OK ||
-               !replyMsg.parseResponse(*validationResponse, error) ) {
+               !replyMsg.parseResponse(*validationResponse) ) {
         debugs(83, DBG_IMPORTANT, "WARNING: Reply from ssl_crtvd for " << " is incorrect");
-        debugs(83, DBG_IMPORTANT, "Certificate cannot be validated. ssl_crtvd response: " << replyMsg.getBody());
+        debugs(83, DBG_IMPORTANT, "ERROR: Certificate cannot be validated. ssl_crtvd response: " << replyMsg.getBody());
         validationResponse->resultCode = ::Helper::BrokenHelper;
     } else
         validationResponse->resultCode = reply.result;
 
-    Ssl::CertValidationHelper::CbDialer *dialer = dynamic_cast<Ssl::CertValidationHelper::CbDialer*>(crtdvdData->callback->getDialer());
-    Must(dialer);
-    dialer->arg1 = validationResponse;
-    ScheduleCallHere(crtdvdData->callback);
+    crtdvdData->callback.answer() = validationResponse;
+    ScheduleCallHere(crtdvdData->callback.release());
 
     if (Ssl::CertValidationHelper::HelperCache &&
             (validationResponse->resultCode == ::Helper::Okay || validationResponse->resultCode == ::Helper::Error)) {
-        Ssl::CertValidationResponse::Pointer *item = new Ssl::CertValidationResponse::Pointer(validationResponse);
-        if (!Ssl::CertValidationHelper::HelperCache->add(crtdvdData->query, item))
-            delete item;
+        (void)Ssl::CertValidationHelper::HelperCache->add(crtdvdData->query, validationResponse);
     }
 
     delete crtdvdData;
 }
 
-void Ssl::CertValidationHelper::Submit(Ssl::CertValidationRequest const &request, AsyncCall::Pointer &callback)
+void
+Ssl::CertValidationHelper::Submit(const Ssl::CertValidationRequest &request, const Callback &callback)
 {
     Ssl::CertValidationMsg message(Ssl::CrtdMessage::REQUEST);
     message.setCode(Ssl::CertValidationMsg::code_cert_validate);
@@ -304,10 +315,8 @@ void Ssl::CertValidationHelper::Submit(Ssl::CertValidationRequest const &request
     if (CertValidationHelper::HelperCache &&
             (validationResponse = CertValidationHelper::HelperCache->get(crtdvdData->query))) {
 
-        CertValidationHelper::CbDialer *dialer = dynamic_cast<CertValidationHelper::CbDialer*>(callback->getDialer());
-        Must(dialer);
-        dialer->arg1 = *validationResponse;
-        ScheduleCallHere(callback);
+        crtdvdData->callback.answer() = *validationResponse;
+        ScheduleCallHere(crtdvdData->callback.release());
         delete crtdvdData;
         return;
     }
@@ -319,10 +328,8 @@ void Ssl::CertValidationHelper::Submit(Ssl::CertValidationRequest const &request
 
     Ssl::CertValidationResponse::Pointer resp = new Ssl::CertValidationResponse(crtdvdData->ssl);
     resp->resultCode = ::Helper::BrokenHelper;
-    Ssl::CertValidationHelper::CbDialer *dialer = dynamic_cast<Ssl::CertValidationHelper::CbDialer*>(callback->getDialer());
-    Must(dialer);
-    dialer->arg1 = resp;
-    ScheduleCallHere(callback);
+    crtdvdData->callback.answer() = resp;
+    ScheduleCallHere(crtdvdData->callback.release());
     delete crtdvdData;
     return;
 }

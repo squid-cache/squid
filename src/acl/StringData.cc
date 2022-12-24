@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,11 +12,7 @@
 #include "acl/Checklist.h"
 #include "acl/StringData.h"
 #include "ConfigParser.h"
-#include "Debug.h"
-
-ACLStringData::ACLStringData(ACLStringData const &old) : stringValues(old.stringValues)
-{
-}
+#include "debug/Stream.h"
 
 void
 ACLStringData::insert(const char *value)
@@ -64,12 +60,5 @@ bool
 ACLStringData::empty() const
 {
     return stringValues.empty();
-}
-
-ACLData<char const *> *
-ACLStringData::clone() const
-{
-    /* Splay trees don't clone yet. */
-    return new ACLStringData(*this);
 }
 

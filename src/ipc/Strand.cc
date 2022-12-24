@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,6 +18,7 @@
 #include "globals.h"
 #include "ipc/Kids.h"
 #include "ipc/Messages.h"
+#include "ipc/QuestionerId.h"
 #include "ipc/SharedListen.h"
 #include "ipc/Strand.h"
 #include "ipc/StrandCoord.h"
@@ -50,32 +51,28 @@ void Ipc::Strand::start()
 
 void Ipc::Strand::registerSelf()
 {
-    debugs(54, 6, HERE);
+    debugs(54, 6, MYNAME);
     Must(!isRegistered);
 
-    HereIamMessage ann(StrandCoord(KidIdentifier, getpid()));
-    TypedMsgHdr message;
-    ann.pack(message);
-    SendMessage(Port::CoordinatorAddr(), message);
+    StrandMessage::NotifyCoordinator(mtRegisterStrand, nullptr);
     setTimeout(6, "Ipc::Strand::timeoutHandler"); // TODO: make 6 configurable?
 }
 
 void Ipc::Strand::receive(const TypedMsgHdr &message)
 {
-    debugs(54, 6, HERE << message.type());
-    switch (message.type()) {
+    switch (message.rawType()) {
 
-    case mtRegistration:
-        handleRegistrationResponse(HereIamMessage(message));
+    case mtStrandRegistered:
+        handleRegistrationResponse(Mine(StrandMessage(message)));
         break;
 
     case mtSharedListenResponse:
-        SharedListenJoined(SharedListenResponse(message));
+        SharedListenJoined(Mine(SharedListenResponse(message)));
         break;
 
 #if HAVE_DISKIO_MODULE_IPCIO
-    case mtStrandSearchResponse:
-        IpcIoFile::HandleOpenResponse(StrandSearchResponse(message));
+    case mtStrandReady:
+        IpcIoFile::HandleOpenResponse(Mine(StrandMessage(message)));
         break;
 
     case mtIpcIoNotification:
@@ -91,7 +88,7 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
 
     case mtCacheMgrResponse: {
         const Mgr::Response resp(message);
-        handleCacheMgrResponse(resp);
+        handleCacheMgrResponse(Mine(resp));
     }
     break;
 
@@ -108,18 +105,19 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
 
     case mtSnmpResponse: {
         const Snmp::Response resp(message);
-        handleSnmpResponse(resp);
+        handleSnmpResponse(Mine(resp));
     }
     break;
 #endif
 
     default:
-        debugs(54, DBG_IMPORTANT, HERE << "Unhandled message type: " << message.type());
+        Port::receive(message);
         break;
     }
 }
 
-void Ipc::Strand::handleRegistrationResponse(const HereIamMessage &msg)
+void
+Ipc::Strand::handleRegistrationResponse(const StrandMessage &msg)
 {
     // handle registration response from the coordinator; it could be stale
     if (msg.strand.kidId == KidIdentifier && msg.strand.pid == getpid()) {
@@ -147,20 +145,20 @@ void Ipc::Strand::handleCacheMgrResponse(const Mgr::Response& response)
 #if SQUID_SNMP
 void Ipc::Strand::handleSnmpRequest(const Snmp::Request& request)
 {
-    debugs(54, 6, HERE);
+    debugs(54, 6, MYNAME);
     Snmp::SendResponse(request.requestId, request.pdu);
 }
 
 void Ipc::Strand::handleSnmpResponse(const Snmp::Response& response)
 {
-    debugs(54, 6, HERE);
+    debugs(54, 6, MYNAME);
     Snmp::Forwarder::HandleRemoteAck(response.requestId);
 }
 #endif
 
 void Ipc::Strand::timedout()
 {
-    debugs(54, 6, HERE << isRegistered);
+    debugs(54, 6, isRegistered);
     if (!isRegistered)
         fatalf("kid%d registration timed out", KidIdentifier);
 }

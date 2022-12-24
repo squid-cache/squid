@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 
 #include "base/AsyncJob.h"
 #include "base/CbcPointer.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 /**
  \ingroup AsyncJobAPI
@@ -175,7 +175,7 @@ JobDialer<Job>::dial(AsyncCall &call)
         doDial();
     } catch (const std::exception &e) {
         debugs(call.debugSection, 3,
-               HERE << call.name << " threw exception: " << e.what());
+               call.name << " threw exception: " << e.what());
         job->callException(e);
     }
 

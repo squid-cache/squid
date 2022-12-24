@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 
 $|=1;
 while (<>) {
-	sleep 10;
-	print "OK\n";
+    sleep 10;
+    print "OK\n";
 }
 print STDERR "stdin closed, exit\n";

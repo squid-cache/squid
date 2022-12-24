@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 /* DEBUG: section 08    Swap File Bitmap */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "FileMap.h"
 
 /* Number of bits in a long */
@@ -36,7 +36,7 @@ FileMap::FileMap() :
     capacity_(FM_INITIAL_NUMBER), usedSlots_(0),
     nwords(capacity_ >> LONG_BIT_SHIFT)
 {
-    debugs(8, 3, HERE << "creating space for " << capacity_ << " files");
+    debugs(8, 3, "creating space for " << capacity_ << " files");
     debugs(8, 5, "--> " << nwords << " words of " << sizeof(*bitmap) << " bytes each");
     bitmap = (unsigned long *)xcalloc(nwords, sizeof(*bitmap));
 }
@@ -49,7 +49,7 @@ FileMap::grow()
     capacity_ <<= 1;
     assert(capacity_ <= (1 << 24)); /* swap_filen is 25 bits, signed */
     nwords = capacity_ >> LONG_BIT_SHIFT;
-    debugs(8, 3, HERE << " creating space for " << capacity_ << " files");
+    debugs(8, 3, " creating space for " << capacity_ << " files");
     debugs(8, 5, "--> " << nwords << " words of " << sizeof(*bitmap) << " bytes each");
     bitmap = (unsigned long *)xcalloc(nwords, sizeof(*bitmap));
     debugs(8, 3, "copying " << old_sz << " old bytes");

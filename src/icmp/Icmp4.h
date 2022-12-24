@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -128,7 +128,7 @@ typedef struct icmphdr {
 
 /**
  * Class partially implementing RFC 792 - ICMP for IP version 4.
- * Provides ECHO-REQUEST, ECHO-REPLY (secion 4.1)
+ * Provides ECHO-REQUEST, ECHO-REPLY (section 4.1)
  */
 class Icmp4 : public Icmp
 {

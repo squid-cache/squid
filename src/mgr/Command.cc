@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,7 +15,7 @@
 std::ostream &
 operator <<(std::ostream &os, const Mgr::Command &cmd)
 {
-    if (cmd.profile != NULL)
+    if (cmd.profile != nullptr)
         return os << *cmd.profile;
     return os << "undef";
 }

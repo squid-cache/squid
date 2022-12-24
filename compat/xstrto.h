@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,7 +20,7 @@
  * \param min   minimum accepted value
  * \param max   maximum accepted value
  *
- * If @end is NULL, we assume the caller wants a "strict strtoul", and hence
+ * If @end is nullptr, we assume the caller wants a "strict strtoul", and hence
  * "15a" is rejected.
  * In either case, the value obtained is compared for min-max compliance.
  * Base is always 0, i.e. autodetect depending on @s.

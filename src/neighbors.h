@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -40,15 +40,23 @@ void neighborsUdpAck(const cache_key *, icp_common_t *, const Ip::Address &);
 void neighborAdd(const char *, const char *, int, int, int, int, int);
 void neighbors_init(void);
 #if USE_HTCP
-void neighborsHtcpClear(StoreEntry *, const char *, HttpRequest *, const HttpRequestMethod &, htcp_clr_reason);
+void neighborsHtcpClear(StoreEntry *, HttpRequest *, const HttpRequestMethod &, htcp_clr_reason);
 #endif
-CachePeer *peerFindByName(const char *);
-CachePeer *peerFindByNameAndPort(const char *, unsigned short);
+
+/// cache_peer with a given name (or nil)
+CachePeer *findCachePeerByName(const char *);
+
 CachePeer *getDefaultParent(PeerSelector*);
 CachePeer *getRoundRobinParent(PeerSelector*);
 CachePeer *getWeightedRoundRobinParent(PeerSelector*);
 void peerClearRRStart(void);
 void peerClearRR(void);
+
+// TODO: Move, together with its many dependencies and callers, into CachePeer.
+/// Updates protocol-agnostic CachePeer state after an indication of a
+/// successful contact with the given cache_peer.
+void peerAlive(CachePeer *);
+
 lookup_t peerDigestLookup(CachePeer * p, PeerSelector *);
 CachePeer *neighborsDigestSelect(PeerSelector *);
 void peerNoteDigestLookup(HttpRequest * request, CachePeer * p, lookup_t lookup);
@@ -56,14 +64,8 @@ void peerNoteDigestGone(CachePeer * p);
 int neighborUp(const CachePeer * e);
 const char *neighborTypeStr(const CachePeer * e);
 peer_t neighborType(const CachePeer *, const AnyP::Uri &);
-void peerConnectFailed(CachePeer *);
-void peerConnectSucceded(CachePeer *);
 void dump_peer_options(StoreEntry *, CachePeer *);
 int peerHTTPOkay(const CachePeer *, PeerSelector *);
-
-// TODO: Consider moving this method to CachePeer class.
-/// \returns the effective connect timeout for the given peer
-time_t peerConnectTimeout(const CachePeer *peer);
 
 /// \returns max(1, timeout)
 time_t positiveTimeout(const time_t timeout);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,9 +8,9 @@
 
 #include "squid.h"
 #include "base/TextException.h"
-#include "Debug.h"
-#include "sbuf/DetailedStats.h"
+#include "debug/Stream.h"
 #include "sbuf/MemBlob.h"
+#include "sbuf/Stats.h"
 
 #include <iostream>
 
@@ -49,18 +49,18 @@ MemBlobStats::dump(std::ostream &os) const
 /* MemBlob */
 
 MemBlob::MemBlob(const MemBlob::size_type reserveSize) :
-    mem(NULL), capacity(0), size(0) // will be set by memAlloc
+    mem(nullptr), capacity(0), size(0) // will be set by memAlloc
 {
-    debugs(MEMBLOB_DEBUGSECTION,9, HERE << "constructed, this="
+    debugs(MEMBLOB_DEBUGSECTION,9, "constructed, this="
            << static_cast<void*>(this) << " id=" << id
            << " reserveSize=" << reserveSize);
     memAlloc(reserveSize);
 }
 
 MemBlob::MemBlob(const char *buffer, const MemBlob::size_type bufSize) :
-    mem(NULL), capacity(0), size(0) // will be set by memAlloc
+    mem(nullptr), capacity(0), size(0) // will be set by memAlloc
 {
-    debugs(MEMBLOB_DEBUGSECTION,9, HERE << "constructed, this="
+    debugs(MEMBLOB_DEBUGSECTION,9, "constructed, this="
            << static_cast<void*>(this) << " id=" << id
            << " buffer=" << static_cast<const void*>(buffer)
            << " bufSize=" << bufSize);
@@ -74,9 +74,9 @@ MemBlob::~MemBlob()
         memFreeString(capacity,mem);
     Stats.liveBytes -= capacity;
     --Stats.live;
-    recordMemBlobSizeAtDestruct(capacity);
+    SBufStats::RecordMemBlobSizeAtDestruct(capacity);
 
-    debugs(MEMBLOB_DEBUGSECTION,9, HERE << "destructed, this="
+    debugs(MEMBLOB_DEBUGSECTION,9, "destructed, this="
            << static_cast<void*>(this) << " id=" << id
            << " capacity=" << capacity
            << " size=" << size);
@@ -122,6 +122,27 @@ MemBlob::append(const char *source, const size_type n)
         size += n;
     }
     ++Stats.append;
+}
+
+void
+MemBlob::syncSize(const size_type n)
+{
+    debugs(MEMBLOB_DEBUGSECTION, 7, n << " was: " << size);
+    Must(LockCount() <= 1);
+    Must(n <= size);
+    size = n;
+}
+
+void
+MemBlob::consume(const size_type rawN)
+{
+    if (rawN && size) {
+        Must(LockCount() <= 1);
+        const auto n = std::min(rawN, size);
+        size -= n;
+        if (size)
+            memmove(mem, mem + n, size);
+    }
 }
 
 const MemBlobStats&
