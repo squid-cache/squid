@@ -1413,8 +1413,7 @@ TunnelStateData::usePinned()
         // they are not really used by tunnel.cc code.
         request->flags.pinned = true;
 
-        if (al)
-            al->requestAttempts++;
+        al->requestAttempts++;
 
         if (connManager->pinnedAuth())
             request->flags.auth = true;
