@@ -2953,6 +2953,15 @@ DOC_START
 
 DOC_END
 
+NAME: transparent_outgoing_ip
+TYPE: onoff
+LOC: Config.onoff.transparent_outgoing_ip
+DEFAULT: off
+DOC_START
+	If this is enabled, the outgoing IP address will match the
+	local IP address that the request came in through.
+DOC_END
+
 NAME: client_dst_passthru
 TYPE: onoff
 DEFAULT: on

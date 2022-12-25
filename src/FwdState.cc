@@ -1489,6 +1489,12 @@ getOutgoingAddress(HttpRequest * request, const Comm::ConnectionPointer &conn)
         // else no tproxy today ...
     }
 
+    if(Config.onoff.transparent_outgoing_ip) {
+        conn->local = request->clientConnectionManager->clientConnection->local;
+        conn->local.port(0);
+        return;
+    }
+
     if (!Config.accessList.outgoing_address) {
         return; // anything will do.
     }
