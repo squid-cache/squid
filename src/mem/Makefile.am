@@ -18,7 +18,6 @@ noinst_HEADERS = \
 # a full-featured memory management library for sbin/squid use
 libmem_la_SOURCES = \
 	Allocator.h \
-	AllocatorProxy.cc \
 	AllocatorProxy.h \
 	Meter.h \
 	Pool.cc \

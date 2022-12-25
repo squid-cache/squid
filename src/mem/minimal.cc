@@ -10,52 +10,6 @@
 #include "mem/AllocatorProxy.h"
 #include "mem/Meter.h"
 
-/// The number of currently alive objects (poor man's meter.alloc=meter.inuse).
-/// Technically, this is supposed to be a per-allocator statistics, but
-/// AllocatorProxy is not a Mem::Allocator so we maintain a global counter
-/// instead. We probably do not have to maintain this statistics at all.
-static int Alive = 0;
-
-void *
-Mem::AllocatorProxy::alloc()
-{
-    const auto memory = doZero ? xcalloc(1, size) : xmalloc(size);
-    ++Alive;
-    return memory;
-}
-
-void
-Mem::AllocatorProxy::freeOne(void *memory)
-{
-    xfree(memory);
-    --Alive;
-}
-
-int
-Mem::AllocatorProxy::getInUseCount()
-{
-    return Alive;
-}
-
-size_t
-Mem::AllocatorProxy::getStats(PoolStats &)
-{
-    return Alive;
-}
-
-void
-Mem::AllocatorProxy::zeroBlocks(bool doIt)
-{
-    this->Allocator::zeroBlocks(doIt);
-}
-
-Mem::PoolMeter const &
-Mem::AllocatorProxy::getMeter() const
-{
-    static PoolMeter nil;
-    return nil;
-}
-
 void *
 memAllocBuf(const size_t netSize, size_t * const grossSize)
 {

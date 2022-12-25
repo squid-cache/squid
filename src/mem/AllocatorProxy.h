@@ -10,6 +10,7 @@
 #define SQUID_SRC_MEM_ALLOCATORPROXY_H
 
 #include "mem/Allocator.h"
+#include "mem/Pool.h"
 
 /**
  * \hideinitializer
@@ -23,9 +24,10 @@
  */
 #define MEMPROXY_CLASS(CLASS) \
     private: \
-    static inline Mem::AllocatorProxy &Pool() { \
-        static Mem::AllocatorProxy thePool(#CLASS, sizeof(CLASS), false); \
-        return thePool; \
+    static inline Mem::Allocator &Pool() { \
+        static Mem::Allocator *thePool = memPoolCreate(#CLASS, sizeof(CLASS)); \
+        thePool->zeroBlocks(false); \
+        return *thePool; \
     } \
     public: \
     void *operator new(size_t byteCount) { \
@@ -40,40 +42,4 @@
     static int UseCount() { return Pool().getInUseCount(); } \
     private:
 
-namespace Mem
-{
-
-/**
- * Support late binding of pool type for allocator agnostic classes
- */
-class AllocatorProxy : public Allocator
-{
-public:
-    AllocatorProxy(char const *aLabel, size_t const &aSize, bool doZeroBlocks):
-        Allocator(aLabel, doZeroBlocks),
-        size(aSize)
-    {}
-
-    /* Mem::Allocator API */
-    virtual size_t getStats(PoolStats &) final override;
-    virtual PoolMeter const &getMeter() const final override;
-    virtual void *alloc() final override;
-    virtual void freeOne(void *) final override;
-    virtual size_t objectSize() const final override {return size;}
-    virtual int getInUseCount() final override;
-    virtual void zeroBlocks(bool) final override;
-
-    /// \copydoc Mem::Allocator::relabel()
-    void relabel(const char * const aLabel);
-
-private:
-    Allocator *getAllocator() const;
-
-    size_t size = 0;
-    mutable Allocator *theAllocator = nullptr;
-};
-
-} // namespace Mem
-
 #endif /* SQUID_SRC_MEM_ALLOCATORPROXY_H */
-
