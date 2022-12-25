@@ -218,7 +218,6 @@ static TokenTableEntry TokenTableIcap[] = {
     TokenTableEntry("tio", LFT_ICAP_IO_TIME),
     TokenTableEntry("to",  LFT_ICAP_OUTCOME),
     TokenTableEntry("Hs",  LFT_ICAP_STATUS_CODE),
-    TokenTableEntry("request_attempts",  LFT_ICAP_REQUEST_ATTEMPTS),
 
     TokenTableEntry(nullptr, LFT_NONE)           /* this must be last */
 };

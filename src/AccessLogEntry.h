@@ -227,7 +227,6 @@ public:
         Adaptation::Icap::ICAP::Method reqMethod = Adaptation::methodNone; ///< ICAP request method
         int64_t bytesSent = 0;       ///< number of bytes sent to ICAP server so far
         int64_t bytesRead = 0;       ///< number of bytes read from ICAP server so far
-        int requestAttempts = 0; ///< the number of ICAP request sending attempts so far
         /**
          * number of ICAP body bytes read from ICAP server or -1 for no encapsulated
          * message data in ICAP reply (eg 204 responses)

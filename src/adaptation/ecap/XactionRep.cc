@@ -248,7 +248,6 @@ Adaptation::Ecap::XactionRep::start()
         }
     }
 
-    al->icap.requestAttempts++;
     theMaster->start();
 }
 

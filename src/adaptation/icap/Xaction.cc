@@ -170,7 +170,6 @@ Adaptation::Icap::Xaction::openConnection()
         disableRetries(); // this will also safely drain pconn pool
 
     if (const auto pconn = s.getIdleConnection(isRetriable)) {
-        al.icap.requestAttempts++;
         useTransportConnection(pconn);
         return;
     }
@@ -210,7 +209,6 @@ Adaptation::Icap::Xaction::dnsLookupDone(std::optional<Ip::Address> addr)
     conn->remote.port(s.cfg().port);
     getOutgoingAddress(nullptr, conn);
 
-    al.icap.requestAttempts++;
     // TODO: service bypass status may differ from that of a transaction
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommConnectCbParams> ConnectDialer;
     AsyncCall::Pointer callback = JobCallback(93, 3, ConnectDialer, this, Adaptation::Icap::Xaction::noteCommConnected);

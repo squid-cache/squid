@@ -827,12 +827,6 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             outtv = al->icap.processingTime;
             doMsec = 1;
             break;
-
-        case LFT_ICAP_REQUEST_ATTEMPTS:
-            outint = al->icap.requestAttempts;
-            doint = 1;
-            break;
-
 #endif
         case LFT_REQUEST_HEADER_ELEM:
             if (const Http::Message *msg = actualRequestHeader(al)) {

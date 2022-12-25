@@ -5340,10 +5340,6 @@ DOC_START
 
 		icap::<h	ICAP response header(s). Similar to <h.
 
-		icap::request_attempts	The number of ICAP request sending attempts.
-			Squid makes multiple ICAP request sending attempts if XXX.
-			See also: %http::request_attempts.
-
 	The default ICAP log format, which can be used without an explicit
 	definition, is called icap_squid:
 
