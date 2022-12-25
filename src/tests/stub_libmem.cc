@@ -13,16 +13,6 @@
 
 #include "mem/Allocator.h"
 
-#include "mem/AllocatorProxy.h"
-namespace Mem {
-size_t AllocatorProxy::getStats(PoolStats &) STUB_RETVAL(0)
-PoolMeter const &AllocatorProxy::getMeter() const STUB_RETSTATREF(PoolMeter)
-void *AllocatorProxy::alloc() {return xmalloc(64*1024);}
-void AllocatorProxy::freeOne(void *address) {xfree(address);}
-int AllocatorProxy::getInUseCount() {return 0;}
-void AllocatorProxy::zeroBlocks(bool) STUB
-}
-
 #include "mem/forward.h"
 void Mem::Init() STUB_NOP
 void Mem::Stats(StoreEntry *) STUB_NOP

@@ -19,7 +19,6 @@ class StoreEntry;
 namespace Mem
 {
 class Allocator;
-class AllocatorProxy;
 class Meter;
 class PoolMeter;
 class PoolStats;
