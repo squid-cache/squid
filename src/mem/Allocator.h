@@ -21,10 +21,7 @@ namespace Mem
 class Allocator : public Interface
 {
 public:
-    explicit Allocator(char const *aLabel, bool doZeroBlocks = true) :
-        doZero(doZeroBlocks),
-        label(aLabel)
-    {}
+    explicit Allocator(const char * const aLabel): label(aLabel) {}
 
     // TODO make this method const
     /**
@@ -52,7 +49,7 @@ public:
     int getInUseCount() const { return meter.inuse.currentLevel(); }
 
     /// \see doZero
-    virtual void zeroBlocks(const bool doIt) { doZero = doIt; }
+    void zeroBlocks(const bool doIt) { doZero = doIt; }
 
     /// XXX: Misplaced -- not all allocators have a notion of a "chunk". See MemPoolChunked.
     virtual void setChunkSize(size_t) {}
