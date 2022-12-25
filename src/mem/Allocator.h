@@ -20,10 +20,7 @@ namespace Mem
 class Allocator : public Interface
 {
 public:
-    explicit Allocator(char const *aLabel, bool doZeroBlocks = true) :
-        doZero(doZeroBlocks),
-        label(aLabel)
-    {}
+    explicit Allocator(const char * const aLabel): label(aLabel) {}
 
     // TODO make this method const
     /**
@@ -50,7 +47,7 @@ public:
     virtual int getInUseCount() = 0;
 
     /// \see doZero
-    virtual void zeroBlocks(const bool doIt) { doZero = doIt; }
+    void zeroBlocks(const bool doIt) { doZero = doIt; }
 
     int inUseCount() { return getInUseCount(); } // XXX: drop redundant?
 
