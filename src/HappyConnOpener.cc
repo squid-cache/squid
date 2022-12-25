@@ -89,6 +89,8 @@ std::ostream &operator <<(std::ostream &os, const HappyConnOpenerAnswer &answer)
         os << "bad ";
     if (answer.conn)
         os << (answer.reused ? "reused " : "new ") << answer.conn;
+    if (answer.n_tries != 1)
+        os << " after " << answer.n_tries;
     return os;
 }
 
@@ -325,7 +327,7 @@ HappyConnOpenerAnswer::~HappyConnOpenerAnswer()
 
 /* HappyConnOpener */
 
-HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const AsyncCallback<Answer> &callback, const HttpRequest::Pointer &request, const time_t aFwdStart, const AccessLogEntry::Pointer &anAle):
+HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const AsyncCallback<Answer> &callback, const HttpRequest::Pointer &request, const time_t aFwdStart, const int tries, const AccessLogEntry::Pointer &anAle):
     AsyncJob("HappyConnOpener"),
     fwdStart(aFwdStart),
     callback_(callback),
@@ -333,7 +335,8 @@ HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const Asyn
     prime(&HappyConnOpener::notePrimeConnectDone, "HappyConnOpener::notePrimeConnectDone"),
     spare(&HappyConnOpener::noteSpareConnectDone, "HappyConnOpener::noteSpareConnectDone"),
     ale(anAle),
-    cause(request)
+    cause(request),
+    n_tries(tries)
 {
     assert(destinations);
 }
@@ -441,8 +444,8 @@ HappyConnOpener::status() const
         os << "prime:" << prime;
     if (spare)
         os << "spare:" << spare;
-    if (const auto n = tries())
-        os << " tries:" << n;
+    if (n_tries)
+        os << " tries:" << n_tries;
     os << " dst:" << *destinations;
     os << ' ' << id << ']';
 
@@ -484,6 +487,7 @@ HappyConnOpener::futureAnswer(const PeerConnectionPointer &conn)
     if (callback_ && !callback_->canceled()) {
         auto &answer = callback_.answer();
         answer.conn = conn;
+        answer.n_tries = n_tries;
         return &answer;
     }
     (void)callback_.release();
@@ -509,22 +513,6 @@ HappyConnOpener::cancelAttempt(Attempt &attempt, const char *reason)
     Must(attempt);
     destinations->reinstatePath(attempt.path); // before attempt.cancel() clears path
     attempt.cancel(reason);
-}
-
-/// the total number of connection opening attempts
-int
-HappyConnOpener::tries() const
-{
-    // XXX: If we do not count requestAttempts w/o ALE, how do we limit them?
-    return ale ? ale->requestAttempts : 0;
-}
-
-/// increments the connection opening attempts
-void
-HappyConnOpener::countForwardingAttempt()
-{
-    if (ale)
-        ++ale->requestAttempts;
 }
 
 /// inform the initiator about our failure to connect (if needed)
@@ -572,7 +560,7 @@ HappyConnOpener::reuseOldConnection(PeerConnectionPointer &dest)
     assert(allowPconn_);
 
     if (const auto pconn = fwdPconnPool->pop(dest, host_, retriable_)) {
-        countForwardingAttempt();
+        ++n_tries;
         dest.finalize(pconn);
         sendSuccess(dest, true, "reused connection");
         return true;
@@ -634,7 +622,7 @@ HappyConnOpener::handleConnOpenerAnswer(Attempt &attempt, const CommConnectCbPar
     handledPath.finalize(params.conn); // closed on errors
     attempt.finish();
 
-    countForwardingAttempt();
+    ++n_tries;
 
     if (params.flag == Comm::OK) {
         sendSuccess(handledPath, false, what);
@@ -899,7 +887,7 @@ HappyConnOpener::ranOutOfTimeOrAttempts() const
     if (ranOutOfTimeOrAttemptsEarlier_)
         return true;
 
-    if (tries() >= Config.forward_max_tries) {
+    if (n_tries >= Config.forward_max_tries) {
         debugs(17, 5, "maximum allowed tries exhausted");
         ranOutOfTimeOrAttemptsEarlier_ = "maximum tries";
         return true;

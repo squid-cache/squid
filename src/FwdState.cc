@@ -124,6 +124,7 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     err(nullptr),
     clientConn(client),
     start_t(squid_curtime),
+    n_tries(0),
     waitingForDispatched(false),
     destinations(new ResolvedPeers()),
     pconnRace(raceImpossible),
@@ -539,7 +540,7 @@ FwdState::complete()
     entry->mem_obj->checkUrlChecksum();
 #endif
 
-    logReplyStatus(tries(), replyStatus);
+    logReplyStatus(n_tries, replyStatus);
 
     // will already be false if complete() was called before/without dispatch()
     waitingForDispatched = false;
@@ -774,7 +775,7 @@ void
 FwdState::retryOrBail()
 {
     if (checkRetry()) {
-        debugs(17, 3, "re-forwarding (" << tries() << " tries, " << (squid_curtime - start_t) << " secs)");
+        debugs(17, 3, "re-forwarding (" << n_tries << " tries, " << (squid_curtime - start_t) << " secs)");
         useDestinations();
         return;
     }
@@ -845,6 +846,8 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
     assert(!destinationReceipt);
 
     transportWait.finish();
+
+    updateAttempts(answer.n_tries);
 
     ErrorState *error = nullptr;
     if ((error = answer.error.get())) {
@@ -1091,6 +1094,22 @@ FwdState::syncHierNote(const Comm::ConnectionPointer &server, const char *host)
         al->hier.resetPeerNotes(server, host);
 }
 
+/// sets n_tries to the given value (while keeping ALE, if any, in sync)
+void
+FwdState::updateAttempts(const int newValue)
+{
+    Assure(n_tries <= newValue); // n_tries cannot decrease
+
+    // Squid probably creates at most one FwdState/TunnelStateData object per
+    // ALE, but, unlike an assignment would, this increment logic works even if
+    // Squid uses multiple such objects for a given ALE in some esoteric cases.
+    if (al)
+        al->requestAttempts += (newValue - n_tries);
+
+    n_tries = newValue;
+    debugs(17, n_tries);
+}
+
 /**
  * Called after forwarding path selection (via peer select) has taken place
  * and whenever forwarding needs to attempt a new connection (routing failover).
@@ -1116,7 +1135,7 @@ FwdState::connectStart()
 
     const auto callback = asyncCallback(17, 5, FwdState::noteConnection, this);
     HttpRequest::Pointer cause = request;
-    const auto cs = new HappyConnOpener(destinations, callback, cause, start_t, al);
+    const auto cs = new HappyConnOpener(destinations, callback, cause, start_t, n_tries, al);
     cs->setHost(request->url.host());
     bool retriable = checkRetriable();
     if (!retriable && Config.accessList.serverPconnForNonretriable) {
@@ -1154,8 +1173,7 @@ FwdState::usePinned()
         return;
     }
 
-    if (al)
-        al->requestAttempts++;
+    updateAttempts(n_tries + 1);
 
     request->flags.pinned = true;
 
@@ -1394,18 +1412,10 @@ FwdState::logReplyStatus(int tries, const Http::StatusCode status)
     ++ FwdReplyCodes[tries][status];
 }
 
-/// the number of forwarding attempts so far
-int
-FwdState::tries() const
-{
-    // XXX: If we do not count requestAttempts w/o ALE, how do we limit them?
-    return al ? al->requestAttempts : 0;
-}
-
 bool
 FwdState::exhaustedTries() const
 {
-    return tries() >= Config.forward_max_tries;
+    return n_tries >= Config.forward_max_tries;
 }
 
 bool

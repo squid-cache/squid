@@ -193,6 +193,8 @@ public:
     /// whether the decision to tunnel to a particular destination was final
     bool committedToServer;
 
+    int n_tries; ///< the number of forwarding attempts so far
+
     /// a reason to ban reforwarding attempts (or nil)
     const char *banRetries;
 
@@ -263,6 +265,7 @@ private:
     void cancelStep(const char *reason);
 
     bool exhaustedTries() const;
+    void updateAttempts(int);
 
 public:
     bool keepGoingAfterRead(size_t len, Comm::Flag errcode, int xerrno, Connection &from, Connection &to);
@@ -349,6 +352,7 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     destinations(new ResolvedPeers()),
     destinationsFound(false),
     committedToServer(false),
+    n_tries(0),
     banRetries(nullptr),
     codeContext(CodeContext::Current())
 {
@@ -485,6 +489,21 @@ TunnelStateData::syncHierNote(const Comm::ConnectionPointer &conn, const char *o
 {
     request->hier.resetPeerNotes(conn, origin);
     al->hier.resetPeerNotes(conn, origin);
+}
+
+/// sets n_tries to the given value (while keeping ALE in sync)
+void
+TunnelStateData::updateAttempts(const int newValue)
+{
+    Assure(n_tries <= newValue); // n_tries cannot decrease
+
+    // Squid probably creates at most one FwdState/TunnelStateData object per
+    // ALE, but, unlike an assignment would, this increment logic works even if
+    // Squid uses multiple such objects for a given ALE in some esoteric cases.
+    al->requestAttempts += (newValue - n_tries);
+
+    n_tries = newValue;
+    debugs(17, n_tries);
 }
 
 int
@@ -1049,6 +1068,8 @@ TunnelStateData::noteConnection(HappyConnOpener::Answer &answer)
 {
     transportWait.finish();
 
+    updateAttempts(answer.n_tries);
+
     ErrorState *error = nullptr;
     if ((error = answer.error.get())) {
         banRetries = "HappyConnOpener gave up";
@@ -1112,7 +1133,7 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
 bool
 TunnelStateData::exhaustedTries() const
 {
-    return al->requestAttempts >= Config.forward_max_tries;
+    return n_tries >= Config.forward_max_tries;
 }
 
 void
@@ -1388,7 +1409,7 @@ TunnelStateData::startConnecting()
     request->hier.peer_reply_status = Http::scNone; // TODO: Move to startPeerClock()?
 
     const auto callback = asyncCallback(17, 5, TunnelStateData::noteConnection, this);
-    const auto cs = new HappyConnOpener(destinations, callback, request, startTime, al);
+    const auto cs = new HappyConnOpener(destinations, callback, request, startTime, n_tries, al);
     cs->setHost(request->url.host());
     cs->setRetriable(false);
     cs->allowPersistent(false);
@@ -1406,7 +1427,7 @@ TunnelStateData::usePinned()
         const auto serverConn = ConnStateData::BorrowPinnedConnection(request.getRaw(), al);
         debugs(26, 7, "pinned peer connection: " << serverConn);
 
-        ++al->requestAttempts;
+        updateAttempts(n_tries + 1);
 
         // Set HttpRequest pinned related flags for consistency even if
         // they are not really used by tunnel.cc code.

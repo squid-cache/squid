@@ -152,7 +152,7 @@ private:
 
     /// whether we have used up all permitted forwarding attempts
     bool exhaustedTries() const;
-    int tries() const;
+    void updateAttempts(int);
 
     /// \returns the time left for this connection to become connected or 1 second if it is less than one second left
     time_t connectingTimeout(const Comm::ConnectionPointer &conn) const;
@@ -177,6 +177,7 @@ private:
     ErrorState *err;
     Comm::ConnectionPointer clientConn;        ///< a possibly open connection to the client.
     time_t start_t;
+    int n_tries; ///< the number of forwarding attempts so far
 
     struct {
         bool connected_okay; ///< TCP link ever opened properly. This affects retry of POST,PUT,CONNECT,etc
