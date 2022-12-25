@@ -150,10 +150,9 @@ private:
     void syncWithServerConn(const Comm::ConnectionPointer &server, const char *host, const bool reused);
     void syncHierNote(const Comm::ConnectionPointer &server, const char *host);
 
-    /// the number of forwarding attempts so far
-    int tries() const { return al ? al->requestAttempts : 0; }
     /// whether we have used up all permitted forwarding attempts
     bool exhaustedTries() const;
+    int tries() const;
 
     /// \returns the time left for this connection to become connected or 1 second if it is less than one second left
     time_t connectingTimeout(const Comm::ConnectionPointer &conn) const;

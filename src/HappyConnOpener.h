@@ -187,11 +187,8 @@ private:
     void sendSuccess(const PeerConnectionPointer &conn, bool reused, const char *connKind);
     void sendFailure();
     void cancelAttempt(Attempt &, const char *reason);
-
-    /// the total number of connection opening attempts
-    int tries() const { return ale ? ale->requestAttempts : 0; }
-    /// increments the connection opening attempts
-    void incTries() { if (ale) ale->requestAttempts++; }
+    int tries() const;
+    void countForwardingAttempt();
 
     const time_t fwdStart; ///< requestor start time
 

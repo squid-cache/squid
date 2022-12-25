@@ -205,6 +205,7 @@ public:
     /// HappyConnOpener attempts and [always successful] persistent connection
     /// reuse. See %request_attempts.
     int requestAttempts = 0;
+
     /// see ConnStateData::proxyProtocolHeader_
     ProxyProtocol::HeaderPointer proxyProtocolHeader;
 

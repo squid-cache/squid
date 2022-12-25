@@ -1394,6 +1394,14 @@ FwdState::logReplyStatus(int tries, const Http::StatusCode status)
     ++ FwdReplyCodes[tries][status];
 }
 
+/// the number of forwarding attempts so far
+int
+FwdState::tries() const
+{
+    // XXX: If we do not count requestAttempts w/o ALE, how do we limit them?
+    return al ? al->requestAttempts : 0;
+}
+
 bool
 FwdState::exhaustedTries() const
 {

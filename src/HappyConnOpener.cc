@@ -511,6 +511,22 @@ HappyConnOpener::cancelAttempt(Attempt &attempt, const char *reason)
     attempt.cancel(reason);
 }
 
+/// the total number of connection opening attempts
+int
+HappyConnOpener::tries() const
+{
+    // XXX: If we do not count requestAttempts w/o ALE, how do we limit them?
+    return ale ? ale->requestAttempts : 0;
+}
+
+/// increments the connection opening attempts
+void
+HappyConnOpener::countForwardingAttempt()
+{
+    if (ale)
+        ++ale->requestAttempts;
+}
+
 /// inform the initiator about our failure to connect (if needed)
 void
 HappyConnOpener::sendFailure()
@@ -556,7 +572,7 @@ HappyConnOpener::reuseOldConnection(PeerConnectionPointer &dest)
     assert(allowPconn_);
 
     if (const auto pconn = fwdPconnPool->pop(dest, host_, retriable_)) {
-        incTries();
+        countForwardingAttempt();
         dest.finalize(pconn);
         sendSuccess(dest, true, "reused connection");
         return true;
@@ -618,7 +634,7 @@ HappyConnOpener::handleConnOpenerAnswer(Attempt &attempt, const CommConnectCbPar
     handledPath.finalize(params.conn); // closed on errors
     attempt.finish();
 
-    incTries();
+    countForwardingAttempt();
 
     if (params.flag == Comm::OK) {
         sendSuccess(handledPath, false, what);

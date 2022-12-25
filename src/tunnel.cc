@@ -262,9 +262,6 @@ private:
 
     void cancelStep(const char *reason);
 
-    /// the number of forwarding attempts so far
-    int tries() const { return al ? al->requestAttempts : 0; }
-
     bool exhaustedTries() const;
 
 public:
@@ -1115,7 +1112,7 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
 bool
 TunnelStateData::exhaustedTries() const
 {
-    return tries() >= Config.forward_max_tries;
+    return al->requestAttempts >= Config.forward_max_tries;
 }
 
 void
@@ -1409,7 +1406,7 @@ TunnelStateData::usePinned()
         const auto serverConn = ConnStateData::BorrowPinnedConnection(request.getRaw(), al);
         debugs(26, 7, "pinned peer connection: " << serverConn);
 
-        al->requestAttempts++;
+        ++al->requestAttempts;
 
         // Set HttpRequest pinned related flags for consistency even if
         // they are not really used by tunnel.cc code.
