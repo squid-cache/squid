@@ -146,9 +146,9 @@ static TokenTableEntry TokenTableMisc[] = {
     TokenTableEntry(">handshake", LFT_CLIENT_HANDSHAKE),
     TokenTableEntry("err_code", LFT_SQUID_ERROR ),
     TokenTableEntry("err_detail", LFT_SQUID_ERROR_DETAIL ),
+    TokenTableEntry("request_attempts", LFT_SQUID_REQUEST_ATTEMPTS),
     TokenTableEntry("note", LFT_NOTE ),
     TokenTableEntry("credentials", LFT_CREDENTIALS),
-    TokenTableEntry("request_attempts", LFT_SQUID_REQUEST_ATTEMPTS),
     TokenTableEntry("master_xaction", LFT_MASTER_XACTION),
     /*
      * Legacy external_acl_type format tokens
