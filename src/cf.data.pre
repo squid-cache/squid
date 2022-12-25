@@ -4085,7 +4085,7 @@ DOC_START
 	* unfinished Happy Eyeballs connection attempts (prevented by setting
 	  happy_eyeballs_connect_limit to 0)
 
-	See also: forward_timeout and connect_retries.
+	See also: forward_timeout, connect_retries, and %request_attempts.
 DOC_END
 
 COMMENT_START
@@ -4927,18 +4927,15 @@ DOC_START
 		Ss	Squid request status (TCP_MISS etc)
 		Sh	Squid hierarchy status (DEFAULT_PARENT etc)
 
-		request_attempts	The number of request sending attempts
+		[http::]request_attempts	Number of request forwarding attempts
 
-		An attempt is counted when Squid either opens a new to-server
-		connection or writes the first request byte to a reused
-		to-server connection. Failed connection open and write attempts
-		are counted. Pure cache hits should have a zero count, but HTTP
-		cache revalidation requests are counted. DNS, ICMP, ICP, HTCP,
-		ESI, ICAP, eCAP, certificate fetching, helper and other
-		secondary requests sent by Squid as a part of a master
-		transaction are not counted.
-
-		See also: forward_max_tries.
+			See forward_max_tries documentation that details what Squid counts
+			as a forwarding attempt. Pure cache hits log zero, but cache hits
+			that triggered HTTP cache revalidation log the number of attempts
+			made when sending an internal revalidation request. DNS, ICMP,
+			ICP, HTCP, ESI, ICAP, eCAP, certificate fetching, helper, and
+			other secondary requests sent by Squid as a part of a master
+			transaction do not increment the logged counter.
 
 	SSL-related format codes:
 
@@ -5343,8 +5340,9 @@ DOC_START
 
 		icap::<h	ICAP response header(s). Similar to <h.
 
-		icap::request_attempts	The number of ICAP request sending
-					attempts. Similar to request_attempts.
+		icap::request_attempts	The number of ICAP request sending attempts.
+			Squid makes multiple ICAP request sending attempts if XXX.
+			See also: %http::request_attempts.
 
 	The default ICAP log format, which can be used without an explicit
 	definition, is called icap_squid:
