@@ -4933,9 +4933,9 @@ DOC_START
 			as a forwarding attempt. Pure cache hits log zero, but cache hits
 			that triggered HTTP cache revalidation log the number of attempts
 			made when sending an internal revalidation request. DNS, ICMP,
-			ICP, HTCP, ESI, ICAP, eCAP, certificate fetching, helper, and
-			other secondary requests sent by Squid as a part of a master
-			transaction do not increment the logged counter.
+			ICP, HTCP, ESI, ICAP, eCAP, helper, and other secondary requests
+			sent by Squid as a part of a master transaction do not increment
+			the counter logged for the received request.
 
 	SSL-related format codes:
 
