@@ -503,7 +503,7 @@ TunnelStateData::updateAttempts(const int newValue)
     al->requestAttempts += (newValue - n_tries);
 
     n_tries = newValue;
-    debugs(17, 5, n_tries);
+    debugs(26, 5, n_tries);
 }
 
 int
