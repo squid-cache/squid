@@ -158,9 +158,11 @@ Helper::Reply::CheckReceivedKey(const SBuf &key, const SBuf &value)
     // Squid recognizes these keys (by name) in some helper responses
     static const std::vector<SBuf> recognized = {
         SBuf("clt_conn_tag"),
+        SBuf("group"),
         SBuf("ha1"),
         SBuf("log"),
         SBuf("message"),
+        SBuf("nonce"),
         SBuf("password"),
         SBuf("rewrite-url"),
         SBuf("status"),
@@ -171,9 +173,9 @@ Helper::Reply::CheckReceivedKey(const SBuf &key, const SBuf &value)
         SBuf("user")
     };
 
-    // TODO: Merge with Notes::ReservedKeys(). That list has entries that Squid
-    // sources do _not_ recognize today ("group" and "ttl"), and it is missing
-    // entries from our list ("clt_conn_tag", "store-id", and "token").
+    // TODO: Merge with Notes::ReservedKeys(). That list has an entry that Squid
+    // sources do _not_ recognize today ("ttl"), and it is missing some
+    // recognized entries ("clt_conn_tag", "nonce", store-id", and "token").
 
     // TODO: Skip empty keys (with a dedicated error message).
 
