@@ -145,7 +145,7 @@ void Ssl::Helper::Submit(CrtdMessage const & message, HLPCB * callback, void * d
         return;
 
     ::Helper::Reply failReply(::Helper::BrokenHelper);
-    failReply.notes.addChecked("message", "error 45 Temporary network problem, please retry later");
+    failReply.notes.add("message", "error 45 Temporary network problem, please retry later");
     HandleGeneratorReply(request, failReply);
 }
 

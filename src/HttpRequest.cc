@@ -767,7 +767,7 @@ UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs const &he
     if (const char *connTag = helperNotes.findFirst(cltTag)) {
         if (csd) {
             csd->notes()->remove(cltTag);
-            csd->notes()->addChecked(cltTag, connTag);
+            csd->notes()->add(cltTag, connTag);
         }
     }
     request.notes()->replaceOrAdd(&helperNotes);

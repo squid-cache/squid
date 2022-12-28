@@ -78,11 +78,11 @@ Helper::Reply::finalize()
             char *w1 = strwordtok(nullptr, &p);
             if (w1 != nullptr) {
                 const char *authToken = w1;
-                notes.addChecked("token",authToken);
+                notes.add("token",authToken);
             } else {
                 // token field is mandatory on this response code
                 result = Helper::BrokenHelper;
-                notes.addChecked("message","Missing 'token' data");
+                notes.add("message","Missing 'token' data");
             }
 
         } else if (!strncmp(p,"AF ",3)) {
@@ -97,15 +97,15 @@ Helper::Reply::finalize()
             if (w2 != nullptr) {
                 // Negotiate "token user"
                 const char *authToken = w1;
-                notes.addChecked("token",authToken);
+                notes.add("token",authToken);
 
                 const char *user = w2;
-                notes.addChecked("user",user);
+                notes.add("user",user);
 
             } else if (w1 != nullptr) {
                 // NTLM "user"
                 const char *user = w1;
-                notes.addChecked("user",user);
+                notes.add("user",user);
             }
         } else if (!strncmp(p,"NA ",3)) {
             // NTLM fail-closed ERR response
@@ -126,7 +126,7 @@ Helper::Reply::finalize()
 
     // Hack for backward-compatibility: BH and NA used to be a text message...
     if (other_.hasContent() && (sawNA || result == Helper::BrokenHelper)) {
-        notes.addChecked("message", other_.content());
+        notes.add("message", other_.content());
         other_.clean();
     }
 }
@@ -149,6 +149,46 @@ isKeyNameChar(char c)
 
     // prevent other characters matching the key=value
     return false;
+}
+
+/// warns admin about problematic key=value pairs
+void
+Helper::Reply::CheckReceivedKey(const SBuf &key, const SBuf &value)
+{
+    // Squid recognizes these keys (by name) in some helper responses
+    static const std::vector<SBuf> recognized = {
+        SBuf("clt_conn_tag"),
+        SBuf("ha1"),
+        SBuf("log"),
+        SBuf("message"),
+        SBuf("password"),
+        SBuf("rewrite-url"),
+        SBuf("status"),
+        SBuf("store-id"),
+        SBuf("tag"),
+        SBuf("token"),
+        SBuf("url"),
+        SBuf("user")
+    };
+
+    // TODO: Merge with Notes::ReservedKeys(). That list has entries that Squid
+    // sources do _not_ recognize today ("group" and "ttl"), and it is missing
+    // entries from our list ("clt_conn_tag", "store-id", and "token").
+
+    // TODO: Skip empty keys (with a dedicated error message).
+
+    if (!key.isEmpty() && *key.rbegin() == '_')
+        return; // a custom key
+
+    // To simplify, we allow all recognized keys, even though some of them are
+    // only expected from certain helpers or even only in certain reply types.
+    if (std::find(recognized.begin(), recognized.end(), key) != recognized.end())
+        return; // a Squid-recognized key
+
+    debugs(84, DBG_IMPORTANT, "WARNING: Unsupported or unexpected from-helper annotation with a name reserved for Squid use: " <<
+           key << '=' << value <<
+           Debug::Extra << "advice: If this is a custom annotation, rename it to add a trailing underscore: " <<
+           key << '_');
 }
 
 void
@@ -179,7 +219,8 @@ Helper::Reply::parseResponseKeys()
         // TODO: Convert the above code to use Tokenizer and SBuf
         const SBuf parsedKey(key);
         const SBuf parsedValue(v ? v : ""); // allow empty values
-        notes.importOne(parsedKey, parsedValue);
+        CheckReceivedKey(parsedKey, parsedValue);
+        notes.add(parsedKey, parsedValue);
 
         other_.consume(p - other_.content());
         other_.consumeWhitespacePrefix();

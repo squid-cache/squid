@@ -100,7 +100,7 @@ Note::updateNotePairs(NotePairs::Pointer pairs, const CharacterSet *delimiters, 
         if (delimiters)
             pairs->addStrList(key(), formatted, *delimiters);
         else
-            pairs->add3(key(), formatted);
+            pairs->add(key(), formatted);
     }
 }
 
@@ -268,40 +268,6 @@ Notes::toString(const char *sep) const
     return result.isEmpty() ? nullptr : result.c_str();
 }
 
-/// warns admin about problematic key=value pairs
-void
-NotePairs::CheckImportedAnnotation(const SBuf &key, const SBuf &value)
-{
-    // Squid recognizes these keys (by name) in some helper responses
-    static const std::vector<SBuf> recognized = {
-        SBuf("clt_conn_tag"),
-        SBuf("ha1"),
-        SBuf("log"),
-        SBuf("message"),
-        SBuf("password"),
-        SBuf("rewrite-url"),
-        SBuf("status"),
-        SBuf("store-id"),
-        SBuf("tag"),
-        SBuf("token"),
-        SBuf("url"),
-        SBuf("user")
-    };
-
-    // TODO: Ban empty keys
-
-    if (!key.isEmpty() && *key.rbegin() == '_')
-        return; // a custom key
-
-    if (std::find(recognized.begin(), recognized.end(), key) != recognized.end())
-        return; // a Squid-recognized key
-
-    debugs(84, DBG_IMPORTANT, "WARNING: Unsupported or unexpected annotation with a name reserved for Squid use: " <<
-           key << '=' << value <<
-           Debug::Extra << "advice: If this is a custom annotation, rename it to add a trailing underscore: " <<
-           key << '_');
-}
-
 bool
 NotePairs::find(SBuf &resultNote, const char *noteKey, const char *sep) const
 {
@@ -337,15 +303,14 @@ NotePairs::findFirst(const char *noteKey) const
 }
 
 void
-NotePairs::addChecked(const char *key, const char *note)
+NotePairs::add(const char *key, const char *note)
 {
     entries.push_back(new NotePairs::Entry(key, note));
 }
 
 void
-NotePairs::importOne(const SBuf &key, const SBuf &note)
+NotePairs::add(const SBuf &key, const SBuf &note)
 {
-    CheckImportedAnnotation(key, note);
     entries.push_back(new NotePairs::Entry(key, note));
 }
 
