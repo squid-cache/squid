@@ -13,10 +13,12 @@
 #
 
 # whether to continue execution after a failure
+
 # TODO: Expand the subset of failures covered by this feature; see run_().
 KeepGoing="no"
 # the actual name of the directive that enabled keep-going mode
 KeepGoingDirective=""
+
 #
 # The script checks that the version of astyle is TargetAstyleVersion.
 # if it isn't, the default behaviour is to not perform the formatting stage
@@ -36,13 +38,81 @@ CheckAndUpdateCopyright=yes
 # * SHA1/etc: Check commits added after the specified git commit.
 UpdateContributorsSince=auto
 
+# --only-changed-since point
+OnlyChangedSince=""
+
 printUsage () {
-    echo "Usage: $0 [option...]"
-    echo "options:"
-    echo "    --keep-going|-k"
-    echo "    --check-and-update-copyright <yes|no>"
-    echo "    --update-contributors-since <never|auto|revision>"
-    echo "    --with-astyle </path/to/astyle/executable>"
+cat <<USAGE_
+Usage: $0 [option...]
+options:
+--check-and-update-copyright <yes|no>      (default: yes)
+--help|-h
+--keep-going|-k                            (default: stop on error)
+--only-changed-since <fork|commit>         (default: apply to all files)
+--update-contributors-since <never|auto|revision> (default: auto)
+--with-astyle </path/to/astyle/executable> (default: astyle-${TargetAstyleVersion} or astyle)
+
+USAGE_
+}
+
+printHelp () {
+
+cat <<HELP_INTRO_
+This script applies Squid mandatory code style guidelines and generates
+various files derived from Squid sources.
+
+If the --only-changed-since argument is supplied, it expects a git commit-id,
+branch name or the special keyword 'fork'.
+The script will try to only examine for formatting changes those files that
+have changed since the specified commit.
+The keyword 'fork' will look for files changed
+since the current branch was forked off 'upstream/master'. Sensible values
+for this argument may include HEAD^, master, origin/master, or the branch
+the current one was forked off.
+This option does not disable some repository-wide file generation and
+repository-wide non-formatting checks/adjustments.
+HELP_INTRO_
+
+printUsage
+
+cat <<HELP_MAIN_
+--help, -h
+
+Print this information and exit.
+
+--only-changed-since <"fork"|commit>
+
+When specifieid, the script only examines for formatting changes those
+files that have changed since the specified git reference point. The
+argument is either a git commit (fed to "git diff") or a special keyword
+"fork". Common commit values include HEAD^, master, origin/master, and the
+branch the current one was forked off. When "fork" is specified, the
+script will look for files changed since the current branch was forked off
+upstream/master (according to "git merge-base --fork-point").
+
+This option does not disable some repository-wide file generation and
+repository-wide non-formatting checks/adjustments.
+
+--update-contributors-since <never|auto|revision>
+
+Configures how to sync CONTRIBUTORS with the current git branch commits:
+* never: Do not update CONTRIBUTORS at all.
+* auto: Check commits added since the last similar update.
+* SHA1/etc: Check commits added after the specified git commit.
+
+--with-astyle </path/to/astyle/executable>
+
+Squid code style guidelines require astyle version $TargetAstyleVersion.
+The path to the astyle binary can be specified using this command line
+option or by exporting the ASTYLE environment variable. If both are
+specified, the command-line option wins.
+
+External dependencies:
+
+* Astyle. See the --with-astyle command line option above.
+* The script auto-detects the checksum program (e.g., md5sum).
+
+HELP_MAIN_
 }
 
 # command-line options
@@ -74,11 +144,15 @@ while [ $# -ge 1 ]; do
         shift 2;
         ;;
     --help|-h)
-        printUsage
+        printHelp
         exit 0;
         ;;
     --with-astyle)
         ASTYLE=$2
+        shift 2
+        ;;
+    --only-changed-since)
+        OnlyChangedSince="$2"
         shift 2
         ;;
     *)
@@ -92,7 +166,6 @@ done
 # an error code seen by a KeepGoing-aware command (or zero)
 SeenErrors=0
 
-
 if ! git diff --quiet; then
 	echo "There are unstaged changes. This script may modify sources."
 	echo "Stage changes to avoid permanent losses when things go bad."
@@ -102,12 +175,28 @@ fi
 made="generated" # a hack: prevents $GeneratedByMe searches matching this file
 GeneratedByMe="This file is $made by scripts/source-maintenance.sh."
 
-${ASTYLE} --version >/dev/null 2>/dev/null
-result=$?
-if test $result -gt 0 ; then
-	echo "ERROR: cannot run ${ASTYLE}"
-	exit 1
+for Checksum in md5sum md5 shasum sha1sum false
+do
+    if "$Checksum" </dev/null >/dev/null 2>/dev/null ; then
+        break
+    fi
+done
+if [ "$Checksum" = "false" ]; then
+    "Could not find any program to calculate a checksum such as md5sum"
+    exit 1
 fi
+echo "detected checksum program $Checksum"
+
+if [ "x$ASTYLE" != "x" ] ; then
+    if ! ${ASTYLE} --version > /dev/null 2> /dev/null ; then
+        echo "ERROR: Cannot run user-supplied astyle: ${ASTYLE}"
+        exit 1
+    fi
+else
+    findProgram astyle --version astyle-${TargetAstyleVersion} astyle || exit $?
+    ASTYLE=$FoundProgram
+fi
+
 ASVER=`${ASTYLE} --version 2>&1 | grep -o -E "[0-9.]+"`
 if test "${ASVER}" != "${TargetAstyleVersion}" ; then
 	if test "${ASTYLE}" = "astyle" ; then
@@ -119,11 +208,21 @@ if test "${ASVER}" != "${TargetAstyleVersion}" ; then
 		echo "Formatting anyway, please double check output before submitting"
 	fi
 else
-	echo "Found astyle ${ASVER}. Formatting..."
+	echo "Detected expected astyle version: ${ASVER}"
 fi
 CppFormatter=''
-if test "${ASVER}"; then
+if test "${AstyleVersion}"; then
     CppFormatter="./scripts/format-cpp.pl --with-astyle ${ASTYLE}"
+fi
+
+if test "x$OnlyChangedSince" = "xfork" ; then
+    ForkPoint=`git merge-base --fork-point upstream/master`
+    if test "x$ForkPoint" = "x" ; then
+        echo "Could not identify fork point - sometimes it happens"
+        echo "Please specify commit-id explicitly"
+        exit 1
+    fi
+    OnlyChangedSince="$ForkPoint"
 fi
 
 if test $CheckAndUpdateCopyright = yes
@@ -215,6 +314,12 @@ collectDebugMessagesFrom ()
     source="$1"
     destination="doc/debug-messages.tmp"
 
+    if test "x$OnlyChangedSince" != "x"; then
+        # Skipping collection due to --only-changed-since.
+        # processDebugMessages() will warn.
+        return 0;
+    fi
+
     # Merge multi-line debugs() into one-liners and remove '//...' comments.
     awk 'BEGIN { found=0; dbgLine=""; } {
         if ($0 ~ /[ \t]debugs[ \t]*\(/)
@@ -260,6 +365,11 @@ processDebugMessages ()
     source="doc/debug-messages.tmp"
     destination="doc/debug-messages.dox"
 
+    if test "x$OnlyChangedSince" != "x"; then
+        echo "WARNING: Skipping update of $destination due to --only-changed-since"
+        return 0;
+    fi
+
     if test '!' -s "$source"; then
         echo "ERROR: Failed to find debugs() message IDs"
         return 1;
@@ -300,6 +410,11 @@ processDebugSections ()
     destination="doc/debug-sections.txt"
 
     LC_ALL=C sort -u < doc/debug-sections.tmp > doc/debug-sections.tmp2
+    if test "x$OnlyChangedSince" != "x"; then
+        echo "WARNING: Skipping update of $destination due to --only-changed-since"
+        return 0;
+    fi
+
     cat scripts/boilerplate.h > $destination
     echo "" >> $destination
     cat doc/debug-sections.tmp2 >> $destination
@@ -324,7 +439,33 @@ git grep "ifn?def .*_SQUID_" |
 #
 # Scan for file-specific actions
 #
-for FILENAME in `git ls-files`; do
+
+# The two git commands below will also list any files modified during the
+# current run (e.g., src/http/RegisteredHeadersHash.cci or icons/icon.am).
+FilesToOperateOn=""
+if test "x$OnlyChangedSince" != "x" ; then
+    FilesToOperateOn=`git diff --name-only $OnlyChangedSince`
+    gitResult=$?
+    if test $gitResult -ne 0 ; then
+        echo "ERROR: Cannot use --only-changed-since reference point: $OnlyChangedSince"
+        echo "Consider using a git commit SHA (from git log) instead"
+        exit $gitResult
+    fi
+else
+    FilesToOperateOn=`git ls-files`
+    gitResult=$?
+    # a bit paranoid but protects the empty $FilesToOperateOn check below
+    if test $gitResult -ne 0 ; then
+        echo "ERROR: Cannot find source code file names"
+        exit $gitResult
+    fi
+fi
+if test "x$FilesToOperateOn" = "x"; then
+    echo "WARNING: No files to scan and format"
+    return 0;
+fi
+
+for FILENAME in $FilesToOperateOn; do
     skip_copyright_check=""
 
     # skip subdirectories, git ls-files is recursive
@@ -411,7 +552,7 @@ for FILENAME in `git ls-files`; do
 	#
 	# DEBUG Section list maintenance
 	#
-	grep " DEBUG: section" <${FILENAME} | sed -e 's/ \* DEBUG: //' -e 's%/\* DEBUG: %%' -e 's% \*/%%' >> doc/debug-sections.tmp
+	grep " DEBUG: section" <${FILENAME} | sed -e 's/ \* DEBUG: //' -e 's%/\* DEBUG: %%' -e 's% \*/%%' >>doc/debug-sections.tmp
 
 	#
 	# File permissions maintenance.
@@ -630,6 +771,13 @@ run_ collectAuthors || exit 1
 # Run formatting
 srcFormat || exit 1
 
-rm -f boilerplate_fix.sed
+if [ -z "$OnlyChangedSince" ]; then
+    sort -u <doc/debug-sections.tmp | sort -n >doc/debug-sections.tmp2
+    cat scripts/boilerplate.h doc/debug-sections.tmp2 >doc/debug-sections.txt
+    rm doc/debug-sections.tmp doc/debug-sections.tmp2
+else
+    echo "--only-changed-since specified, Skipping update of doc/debug-sections.txt"
+fi
+test -e boilerplate_fix.sed && rm -f boilerplate_fix.sed
 
 exit $SeenErrors
