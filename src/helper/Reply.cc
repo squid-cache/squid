@@ -179,11 +179,15 @@ Helper::Reply::CheckReceivedKey(const SBuf &key, const SBuf &value)
 
     // TODO: Skip empty keys (with a dedicated error message).
 
+    // We do not check custom keys for repetitions because Squid supports them:
+    // The "note" ACL checks all of them and %note prints all of them.
     if (!key.isEmpty() && *key.rbegin() == '_')
         return; // a custom key
 
     // To simplify, we allow all recognized keys, even though some of them are
     // only expected from certain helpers or even only in certain reply types.
+    // To simplify and optimize, we do not check recognized keys for repetitions
+    // because _some_ of them (e.g., "message") do support repetitions.
     if (std::find(recognized.begin(), recognized.end(), key) != recognized.end())
         return; // a Squid-recognized key
 
