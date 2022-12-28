@@ -128,7 +128,7 @@ redirectHandleReply(void *data, const Helper::Reply &reply)
                         debugs(85, DBG_IMPORTANT, "WARNING: UPGRADE: URL rewriter using obsolete Squid-2 urlgroup feature needs updating.");
                     if (char *t = strchr(result+1, '!')) {
                         *t = '\0';
-                        newReply.notes.add("urlgroup", result+1);
+                        newReply.notes.addChecked("urlgroup", result+1);
                         result = t + 1;
                     }
                 }
@@ -144,10 +144,10 @@ redirectHandleReply(void *data, const Helper::Reply &reply)
                     if (const char *t = strchr(result, ':')) {
                         char statusBuf[4];
                         snprintf(statusBuf, sizeof(statusBuf),"%3u",status);
-                        newReply.notes.add("status", statusBuf);
+                        newReply.notes.addChecked("status", statusBuf);
                         ++t;
                         // TODO: validate the URL produced here is RFC 2616 compliant URI
-                        newReply.notes.add("url", t);
+                        newReply.notes.addChecked("url", t);
                     } else {
                         debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid " << status << " redirect Location: " << result);
                     }
@@ -156,7 +156,7 @@ redirectHandleReply(void *data, const Helper::Reply &reply)
                     // treat as a re-write URL request
                     // TODO: validate the URL produced here is RFC 2616 compliant URI
                     if (*result)
-                        newReply.notes.add("rewrite-url", result);
+                        newReply.notes.addChecked("rewrite-url", result);
                 }
 
                 void *cbdata;
@@ -295,7 +295,7 @@ redirectStart(ClientHttpRequest * http, HLPCB * handler, void *data)
         ++redirectorBypassed;
         Helper::Reply bypassReply;
         bypassReply.result = Helper::Okay;
-        bypassReply.notes.add("message","URL rewrite/redirect queue too long. Bypassed.");
+        bypassReply.notes.addChecked("message","URL rewrite/redirect queue too long. Bypassed.");
         handler(data, bypassReply);
         return;
     }
@@ -321,7 +321,7 @@ storeIdStart(ClientHttpRequest * http, HLPCB * handler, void *data)
 
         bypassReply.result = Helper::Okay;
 
-        bypassReply.notes.add("message","StoreId helper queue too long. Bypassed.");
+        bypassReply.notes.addChecked("message","StoreId helper queue too long. Bypassed.");
         handler(data, bypassReply);
         return;
     }

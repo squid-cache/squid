@@ -78,11 +78,11 @@ Helper::Reply::finalize()
             char *w1 = strwordtok(nullptr, &p);
             if (w1 != nullptr) {
                 const char *authToken = w1;
-                notes.add("token",authToken);
+                notes.addChecked("token",authToken);
             } else {
                 // token field is mandatory on this response code
                 result = Helper::BrokenHelper;
-                notes.add("message","Missing 'token' data");
+                notes.addChecked("message","Missing 'token' data");
             }
 
         } else if (!strncmp(p,"AF ",3)) {
@@ -97,15 +97,15 @@ Helper::Reply::finalize()
             if (w2 != nullptr) {
                 // Negotiate "token user"
                 const char *authToken = w1;
-                notes.add("token",authToken);
+                notes.addChecked("token",authToken);
 
                 const char *user = w2;
-                notes.add("user",user);
+                notes.addChecked("user",user);
 
             } else if (w1 != nullptr) {
                 // NTLM "user"
                 const char *user = w1;
-                notes.add("user",user);
+                notes.addChecked("user",user);
             }
         } else if (!strncmp(p,"NA ",3)) {
             // NTLM fail-closed ERR response
@@ -126,7 +126,7 @@ Helper::Reply::finalize()
 
     // Hack for backward-compatibility: BH and NA used to be a text message...
     if (other_.hasContent() && (sawNA || result == Helper::BrokenHelper)) {
-        notes.add("message", other_.content());
+        notes.addChecked("message", other_.content());
         other_.clean();
     }
 }
@@ -176,7 +176,10 @@ Helper::Reply::parseResponseKeys()
         if (v != nullptr && urlDecode && (p-v) > 2) // 1-octet %-escaped requires 3 bytes
             rfc1738_unescape(v);
 
-        notes.add(key, v ? v : ""); // value can be empty, but must not be NULL
+        // TODO: Convert the above code to use Tokenizer and SBuf
+        const SBuf parsedKey(key);
+        const SBuf parsedValue(v ? v : ""); // allow empty values
+        notes.importOne(parsedKey, parsedValue);
 
         other_.consume(p - other_.content());
         other_.consumeWhitespacePrefix();

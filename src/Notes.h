@@ -229,8 +229,8 @@ public:
     /// Adds a note key and value to the notes list.
     /// If the key name already exists in the list, add the given value to its set
     /// of values.
-    void add(const SBuf &key, const SBuf &value);
-    void add(const char *key, const char *value);
+    void add3(const SBuf &key, const SBuf &value);
+    void addChecked(const char *key, const char *value);
 
     /// Remove all notes with a given key. If keyLen is not
     /// provided, the key is assumed null-terminated.
@@ -259,6 +259,8 @@ public:
     const Entries &expandListEntries(const CharacterSet *delimiters) const;
 
 private:
+    static void CheckImportedAnnotation(const SBuf &key, const SBuf &value);
+
     Entries entries; ///< The key/value pair entries
 };
 

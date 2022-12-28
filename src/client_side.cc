@@ -440,7 +440,7 @@ ClientHttpRequest::logRequest()
         SBuf matched;
         for (auto h: Config.notes) {
             if (h->match(request, al->reply.getRaw(), al, matched)) {
-                request->notes()->add(h->key(), matched);
+                request->notes()->add3(h->key(), matched); // TODO: Do we actually check Config.notes
                 debugs(33, 3, h->key() << " " << matched);
             }
         }

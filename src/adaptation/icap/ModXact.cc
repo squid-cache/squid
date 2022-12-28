@@ -1500,7 +1500,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
                 if (ah->metaHeaders == nullptr)
                     ah->metaHeaders = new NotePairs;
                 if (!ah->metaHeaders->hasPair(h->key(), matched))
-                    ah->metaHeaders->add(h->key(), matched);
+                    ah->metaHeaders->add3(h->key(), matched); // TODO: Do we actually check Adaptation::Config::metaHeaders?
             }
         }
     }
