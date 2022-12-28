@@ -179,7 +179,7 @@ inet_ntop6(const u_char *src, char *dst, size_t size)
      */
     for (int i = 0; i < NS_IN6ADDRSZ; ++i)
         words[i / 2] |= (src[i] << ((1 - (i % 2)) << 3));
-    for (i = 0; i < (NS_IN6ADDRSZ / NS_INT16SZ); i++) {
+    for (int i = 0; i < (NS_IN6ADDRSZ / NS_INT16SZ); ++i) {
         if (words[i] == 0) {
             if (cur.base == -1)
                 cur.base = i, cur.len = 1;
@@ -204,7 +204,7 @@ inet_ntop6(const u_char *src, char *dst, size_t size)
      * Format the result.
      */
     char *tp = tmp;
-    for (i = 0; i < (NS_IN6ADDRSZ / NS_INT16SZ); i++) {
+    for (int i = 0; i < (NS_IN6ADDRSZ / NS_INT16SZ); ++i) {
         /* Are we inside the best run of 0x00's? */
         if (best.base != -1 && i >= best.base &&
                 i < (best.base + best.len)) {
