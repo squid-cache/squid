@@ -39,6 +39,8 @@
 #include "ssl/ErrorDetailManager.h"
 #endif
 
+#include <array>
+
 /**
  \defgroup ErrorPageInternal Error Page Internals
  \ingroup ErrorPageAPI
