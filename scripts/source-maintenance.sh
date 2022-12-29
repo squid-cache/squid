@@ -13,7 +13,6 @@
 #
 
 # whether to continue execution after a failure
-
 # TODO: Expand the subset of failures covered by this feature; see run_().
 KeepGoing="no"
 # the actual name of the directive that enabled keep-going mode
@@ -60,17 +59,6 @@ printHelp () {
 cat <<HELP_INTRO_
 This script applies Squid mandatory code style guidelines and generates
 various files derived from Squid sources.
-
-If the --only-changed-since argument is supplied, it expects a git commit-id,
-branch name or the special keyword 'fork'.
-The script will try to only examine for formatting changes those files that
-have changed since the specified commit.
-The keyword 'fork' will look for files changed
-since the current branch was forked off 'upstream/master'. Sensible values
-for this argument may include HEAD^, master, origin/master, or the branch
-the current one was forked off.
-This option does not disable some repository-wide file generation and
-repository-wide non-formatting checks/adjustments.
 HELP_INTRO_
 
 printUsage
@@ -110,7 +98,7 @@ specified, the command-line option wins.
 External dependencies:
 
 * Astyle. See the --with-astyle command line option above.
-* The script auto-detects the checksum program (e.g., md5sum).
+* gperf (if you modify certain source files)
 
 HELP_MAIN_
 }
@@ -211,7 +199,7 @@ else
 	echo "Detected expected astyle version: ${ASVER}"
 fi
 CppFormatter=''
-if test "${AstyleVersion}"; then
+if test "${ASVER}"; then
     CppFormatter="./scripts/format-cpp.pl --with-astyle ${ASTYLE}"
 fi
 
@@ -449,7 +437,7 @@ if test "x$OnlyChangedSince" != "x" ; then
     if test $gitResult -ne 0 ; then
         echo "ERROR: Cannot use --only-changed-since reference point: $OnlyChangedSince"
         echo "Consider using a git commit SHA (from git log) instead"
-        exit $gitResult
+        return $gitResult
     fi
 else
     FilesToOperateOn=`git ls-files`
@@ -457,7 +445,7 @@ else
     # a bit paranoid but protects the empty $FilesToOperateOn check below
     if test $gitResult -ne 0 ; then
         echo "ERROR: Cannot find source code file names"
-        exit $gitResult
+        return $gitResult
     fi
 fi
 if test "x$FilesToOperateOn" = "x"; then
@@ -552,7 +540,7 @@ for FILENAME in $FilesToOperateOn; do
 	#
 	# DEBUG Section list maintenance
 	#
-	grep " DEBUG: section" <${FILENAME} | sed -e 's/ \* DEBUG: //' -e 's%/\* DEBUG: %%' -e 's% \*/%%' >>doc/debug-sections.tmp
+	grep " DEBUG: section" <${FILENAME} | sed -e 's/ \* DEBUG: //' -e 's%/\* DEBUG: %%' -e 's% \*/%%' >> doc/debug-sections.tmp
 
 	#
 	# File permissions maintenance.
@@ -771,13 +759,6 @@ run_ collectAuthors || exit 1
 # Run formatting
 srcFormat || exit 1
 
-if [ -z "$OnlyChangedSince" ]; then
-    sort -u <doc/debug-sections.tmp | sort -n >doc/debug-sections.tmp2
-    cat scripts/boilerplate.h doc/debug-sections.tmp2 >doc/debug-sections.txt
-    rm doc/debug-sections.tmp doc/debug-sections.tmp2
-else
-    echo "--only-changed-since specified, Skipping update of doc/debug-sections.txt"
-fi
 test -e boilerplate_fix.sed && rm -f boilerplate_fix.sed
 
 exit $SeenErrors
