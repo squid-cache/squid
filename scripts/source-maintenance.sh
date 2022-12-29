@@ -441,30 +441,30 @@ git grep "ifn?def .*_SQUID_" |
 # Scan for file-specific actions
 #
 
-# The two git commands below will also list any files modified during the
-# current run (e.g., src/http/RegisteredHeadersHash.cci or icons/icon.am).
-FilesToOperateOn=""
-if test "x$OnlyChangedSince" != "x" ; then
-    FilesToOperateOn=`git diff --name-only $OnlyChangedSince`
-    gitResult=$?
-    if test $gitResult -ne 0 ; then
-        echo "ERROR: Cannot use --only-changed-since reference point: $OnlyChangedSince"
-        echo "Consider using a git commit SHA (from git log) instead"
-        return $gitResult
+    # The two git commands below will also list any files modified during the
+    # current run (e.g., src/http/RegisteredHeadersHash.cci or icons/icon.am).
+    FilesToOperateOn=""
+    if test "x$OnlyChangedSince" != "x" ; then
+        FilesToOperateOn=`git diff --name-only $OnlyChangedSince`
+        gitResult=$?
+        if test $gitResult -ne 0 ; then
+            echo "ERROR: Cannot use --only-changed-since reference point: $OnlyChangedSince"
+            echo "Consider using a git commit SHA (from git log) instead"
+            return $gitResult
+        fi
+    else
+        FilesToOperateOn=`git ls-files`
+        gitResult=$?
+        # a bit paranoid but protects the empty $FilesToOperateOn check below
+        if test $gitResult -ne 0 ; then
+            echo "ERROR: Cannot find source code file names"
+            return $gitResult
+        fi
     fi
-else
-    FilesToOperateOn=`git ls-files`
-    gitResult=$?
-    # a bit paranoid but protects the empty $FilesToOperateOn check below
-    if test $gitResult -ne 0 ; then
-        echo "ERROR: Cannot find source code file names"
-        return $gitResult
+    if test "x$FilesToOperateOn" = "x"; then
+        echo "WARNING: No files to scan and format"
+        return 0
     fi
-fi
-if test "x$FilesToOperateOn" = "x"; then
-    echo "WARNING: No files to scan and format"
-    return 0
-fi
 
 for FILENAME in $FilesToOperateOn; do
     skip_copyright_check=""
