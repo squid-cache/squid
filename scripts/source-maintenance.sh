@@ -236,7 +236,7 @@ fi
 # in KeepGoing mode, remembers errors and hides them from callers
 run_ ()
 {
-        "$@" && return; # return on success
+        "$@" && return 0 # return on success
         error=$?
 
         if test $KeepGoing = no; then
@@ -318,7 +318,7 @@ collectDebugMessagesFrom ()
     if test "x$OnlyChangedSince" != "x"; then
         # Skipping collection due to --only-changed-since.
         # processDebugMessages() will warn.
-        return 0;
+        return 0
     fi
 
     # Merge multi-line debugs() into one-liners and remove '//...' comments.
@@ -368,12 +368,12 @@ processDebugMessages ()
 
     if test "x$OnlyChangedSince" != "x"; then
         echo "WARNING: Skipping update of $destination due to --only-changed-since"
-        return 0;
+        return 0
     fi
 
     if test '!' -s "$source"; then
         echo "ERROR: Failed to find debugs() message IDs"
-        return 1;
+        return 1
     fi
 
     repeatedIds=`awk '{print $1}' $source | sort -n | uniq -d`
@@ -381,7 +381,7 @@ processDebugMessages ()
         echo "ERROR: Repeated debugs() message IDs:"
         echo "$repeatedIds"
         echo ""
-        return 1;
+        return 1
     fi
 
     repeatedGists=`awk '{$1=""; print substr($0,2)}' $source | sort | uniq -d`
@@ -389,7 +389,7 @@ processDebugMessages ()
         echo "ERROR: Repeated debugs() message gists:"
         echo "$repeatedGists"
         echo ""
-        return 1;
+        return 1
     fi
 
     cat scripts/boilerplate.h > $destination
@@ -413,7 +413,7 @@ processDebugSections ()
     LC_ALL=C sort -u < doc/debug-sections.tmp > doc/debug-sections.tmp2
     if test "x$OnlyChangedSince" != "x"; then
         echo "WARNING: Skipping update of $destination due to --only-changed-since"
-        return 0;
+        return 0
     fi
 
     cat scripts/boilerplate.h > $destination
@@ -463,7 +463,7 @@ else
 fi
 if test "x$FilesToOperateOn" = "x"; then
     echo "WARNING: No files to scan and format"
-    return 0;
+    return 0
 fi
 
 for FILENAME in $FilesToOperateOn; do
@@ -671,7 +671,7 @@ generateGperfFile ()
     cciFile=`echo $gperfFile | sed 's/[.]gperf$/.cci/'`
 
     if test $gperfFile -ot $cciFile; then
-        return 0;
+        return 0
     fi
 
     generateRawGperfFile $gperfFile > $cciFile.unformatted || return
@@ -710,7 +710,7 @@ collectAuthors ()
 {
     if test "x$UpdateContributorsSince" = xnever
     then
-        return 0; # successfully did nothing, as requested
+        return 0 # successfully did nothing, as requested
     fi
 
     vettedCommitPhraseRegex='[Rr]eference point for automated CONTRIBUTORS updates'
@@ -725,7 +725,7 @@ collectAuthors ()
         if test "x$humanSha" = x && test "x$botSha" = x
         then
             echo "ERROR: Unable to determine the commit to start contributors extraction from"
-            return 1;
+            return 1
         fi
 
         # find the latest commit among the above one or two commits
