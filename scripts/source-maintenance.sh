@@ -189,7 +189,7 @@ made="generated" # a hack: prevents $GeneratedByMe searches matching this file
 GeneratedByMe="This file is $made by scripts/source-maintenance.sh."
 
 if [ "x$ASTYLE" != "x" ] ; then
-    if ! ${ASTYLE} --version > /dev/null 2> /dev/null ; then
+    if ! "${ASTYLE}" --version > /dev/null 2> /dev/null ; then
         echo "ERROR: Cannot run user-supplied astyle: ${ASTYLE}"
         exit 1
     fi
@@ -198,7 +198,7 @@ else
     ASTYLE=$FoundProgram
 fi
 
-ASVER=`${ASTYLE} --version 2>&1 | grep -o -E "[0-9.]+"`
+ASVER=`"${ASTYLE}" --version 2>&1 | grep -o -E "[0-9.]+"`
 if test "${ASVER}" != "${TargetAstyleVersion}" ; then
 	if test "${ASTYLE}" = "astyle" ; then
 		echo "Astyle version problem. You have ${ASVER} instead of ${TargetAstyleVersion}"
