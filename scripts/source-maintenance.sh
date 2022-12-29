@@ -164,10 +164,11 @@ fi
 # Finds the first working program among the given candidate program names.
 # The found program name is returned via the $FoundProgram global:
 FoundProgram=""
-findProgram() {
+findProgram ()
+{
     wellKnown="$1"
     shift
-        options="$1"
+    options="$1"
     shift
 
     for candidate in $*
