@@ -163,18 +163,6 @@ fi
 made="generated" # a hack: prevents $GeneratedByMe searches matching this file
 GeneratedByMe="This file is $made by scripts/source-maintenance.sh."
 
-for Checksum in md5sum md5 shasum sha1sum false
-do
-    if "$Checksum" </dev/null >/dev/null 2>/dev/null ; then
-        break
-    fi
-done
-if [ "$Checksum" = "false" ]; then
-    "Could not find any program to calculate a checksum such as md5sum"
-    exit 1
-fi
-echo "detected checksum program $Checksum"
-
 if [ "x$ASTYLE" != "x" ] ; then
     if ! ${ASTYLE} --version > /dev/null 2> /dev/null ; then
         echo "ERROR: Cannot run user-supplied astyle: ${ASTYLE}"
