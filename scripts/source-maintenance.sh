@@ -410,11 +410,12 @@ processDebugSections ()
 {
     destination="doc/debug-sections.txt"
 
-    LC_ALL=C sort -u < doc/debug-sections.tmp > doc/debug-sections.tmp2
     if test "x$OnlyChangedSince" != "x"; then
         echo "WARNING: Skipping update of $destination due to --only-changed-since"
         return 0
     fi
+
+    LC_ALL=C sort -u < doc/debug-sections.tmp > doc/debug-sections.tmp2
 
     cat scripts/boilerplate.h > $destination
     echo "" >> $destination
