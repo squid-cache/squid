@@ -177,11 +177,17 @@ Helper::Reply::CheckReceivedKey(const SBuf &key, const SBuf &value)
     // sources do _not_ recognize today ("ttl"), and it is missing some
     // recognized entries ("clt_conn_tag", "nonce", store-id", and "token").
 
-    // TODO: Skip empty keys (with a dedicated error message).
+    if (key.isEmpty()) {
+        debugs(84, DBG_IMPORTANT, "WARNING: Deprecated from-helper annotation without a name: " <<
+               key << '=' << value <<
+               Debug::Extra << "advice: Name or remove this annotation");
+        // TODO: Skip/ignore these annotations.
+        return;
+    }
 
     // We do not check custom keys for repetitions because Squid supports them:
     // The "note" ACL checks all of them and %note prints all of them.
-    if (!key.isEmpty() && *key.rbegin() == '_')
+    if (*key.rbegin() == '_')
         return; // a custom key
 
     // To simplify, we allow all recognized keys, even though some of them are
