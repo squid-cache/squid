@@ -116,7 +116,7 @@ while [ $# -ge 1 ]; do
         then
             printUsage
             echo "Error: Option $1 expects a yes or no argument but got $2"
-            exit 1;
+            exit 1
         fi
         CheckAndUpdateCopyright=$2
         shift 2
@@ -126,14 +126,14 @@ while [ $# -ge 1 ]; do
         then
             printUsage
             echo "Error: Option $1 expects an argument."
-            exit 1;
+            exit 1
         fi
         UpdateContributorsSince="$2"
-        shift 2;
+        shift 2
         ;;
     --help|-h)
         printHelp
-        exit 0;
+        exit 0
         ;;
     --with-astyle)
         ASTYLE=$2
@@ -146,7 +146,7 @@ while [ $# -ge 1 ]; do
     *)
         printUsage
         echo "Unsupported command-line option: $1"
-        exit 1;
+        exit 1
         ;;
     esac
 done
