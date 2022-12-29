@@ -160,6 +160,31 @@ if ! git diff --quiet; then
 	exit 1
 fi
 
+# usage: <well-known program name> <program argument(s)> <candidate name>...
+# Finds the first working program among the given candidate program names.
+# The found program name is returned via the $FoundProgram global:
+FoundProgram=""
+findProgram() {
+    wellKnown="$1"
+    shift
+        options="$1"
+    shift
+
+    for candidate in $*
+    do
+        if "$candidate" $options < /dev/null > /dev/null 2> /dev/null
+        then
+            echo "Found ${wellKnown}-like program: $candidate"
+            FoundProgram="$candidate"
+            return 0
+        fi
+    done
+
+    echo "ERROR: Failed to find a ${wellKnown}-like program; tried: $*"
+    FoundProgram=""
+    return 1
+}
+
 made="generated" # a hack: prevents $GeneratedByMe searches matching this file
 GeneratedByMe="This file is $made by scripts/source-maintenance.sh."
 
