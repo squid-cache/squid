@@ -230,7 +230,7 @@ Helper::Reply::parseResponseKeys()
 
         // TODO: Convert the above code to use Tokenizer and SBuf
         const SBuf parsedKey(key);
-        const SBuf parsedValue(v ? v : ""); // allow empty values
+        const SBuf parsedValue(v); // allow empty values (!v or !*v)
         CheckReceivedKey(parsedKey, parsedValue);
         notes.add(parsedKey, parsedValue);
 
