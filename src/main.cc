@@ -1959,7 +1959,6 @@ watch_child(const CommandLine &masterCommand)
 
             if ((pid = fork()) == 0) {
                 /* child */
-                Debug::StopCacheLogUse(); // do not leak our log descriptor to the kid launched below
                 openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
                 (void)execvp(masterCommand.arg0(), kidCommand.argv());
                 int xerrno = errno;
