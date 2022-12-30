@@ -200,9 +200,9 @@ inet_ntop6(const u_char *src, char *dst, size_t size)
     /*
      * Format the result.
      */
-    constexpr int maxbuflen =
+    const auto bufSize =
         sizeof("ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255");
-    char buf[maxbuflen];
+    char buf[bufSize];
     char *tp = buf;
     for (int i = 0; i < (NS_IN6ADDRSZ / NS_INT16SZ); ++i) {
         /* Are we inside the best run of 0x00's? */
@@ -224,7 +224,7 @@ inet_ntop6(const u_char *src, char *dst, size_t size)
             tp += strlen(tp);
             break;
         }
-        tp += snprintf(tp, (buf + maxbuflen - tp), "%x", words[i]);
+        tp += snprintf(tp, (buf + bufSize - tp), "%x", words[i]);
     }
     /* Was it a trailing run of 0x00's? */
     if (best.base != -1 && (best.base + best.len) ==
