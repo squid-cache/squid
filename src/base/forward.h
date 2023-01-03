@@ -15,9 +15,10 @@ class AsyncJob;
 class CallDialer;
 class CodeContext;
 class DelayedAsyncCalls;
-class ScopedId;
 class Raw;
 class RegexPattern;
+class ScopedId;
+class Stopwatch;
 
 template<class Cbc> class CbcPointer;
 template<class RefCountableKid> class RefCount;

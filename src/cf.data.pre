@@ -4796,6 +4796,20 @@ DOC_START
 			similar to the default access.log "current time" field
 			(%ts.%03tu).
 
+		busy_time	Time spent in transaction-related code (nanoseconds)
+			This cumulative measurement excludes periods of time when the
+			transaction was waiting (e.g., for a server or helper response)
+			while Squid worked on other transactions or was engaged in
+			transaction-unrelated activities (e.g., generating a cache index).
+			In other words, this measurement represents the total amount of
+			physical time when Squid was busy working on this transaction.
+
+			WARNING: This measurement relies on Squid transaction context
+			tracking features that currently have known context leak bugs and
+			coverage gaps. Until those features are fully implemented, logged
+			values may significantly understate or exaggerate actual times.
+			Do not use this measurement unless you know it works in your case.
+
 	Access Control related format codes:
 
 		et	Tag returned by external acl

@@ -11,6 +11,7 @@
 
 #include "base/InstanceId.h"
 #include "base/RefCount.h"
+#include "base/Stopwatch.h"
 
 #include <iosfwd>
 
@@ -70,6 +71,9 @@ public:
 
     /// appends human-friendly context description line(s) to a cache.log record
     virtual std::ostream &detailCodeContext(std::ostream &os) const = 0;
+
+    /// time spent in this context (see also: %busy_time)
+    Stopwatch busyTime;
 
 private:
     static void ForgetCurrent();

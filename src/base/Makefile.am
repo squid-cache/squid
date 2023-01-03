@@ -63,6 +63,8 @@ libbase_la_SOURCES = \
 	RegexPattern.h \
 	RunnersRegistry.cc \
 	RunnersRegistry.h \
+	Stopwatch.cc \
+	Stopwatch.h \
 	Subscription.h \
 	SupportOrVeto.h \
 	TextException.cc \

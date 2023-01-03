@@ -44,6 +44,7 @@ CodeContext::ForgetCurrent()
     static const RefCount<FadingCodeContext> fadingCodeContext = new FadingCodeContext();
     auto &current = Instance();
     assert(current);
+    current->busyTime.pause();
     fadingCodeContext->gist = current->codeContextGist();
     current = fadingCodeContext;
 }
@@ -57,6 +58,7 @@ CodeContext::Entering(const Pointer &codeCtx)
     if (current)
         ForgetCurrent(); // ensure orderly closure of the old context
     current = codeCtx;
+    codeCtx->busyTime.resume();
     debugs(1, 5, codeCtx->codeContextGist());
 }
 
