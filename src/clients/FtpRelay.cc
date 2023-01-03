@@ -33,7 +33,7 @@ namespace Ftp
 /// and then relaying FTP replies back to our FTP server.
 class Relay: public Ftp::Client
 {
-    CBDATA_CLASS(Relay);
+    CBDATA_CHILD(Relay);
 
 public:
     explicit Relay(FwdState *const fwdState);

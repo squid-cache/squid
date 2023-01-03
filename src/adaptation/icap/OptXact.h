@@ -24,7 +24,7 @@ namespace Icap
 
 class OptXact: public Xaction
 {
-    CBDATA_CLASS(OptXact);
+    CBDATA_CHILD(OptXact);
 
 public:
     OptXact(ServiceRep::Pointer &aService);
@@ -54,7 +54,7 @@ private:
 // creates OptXact when needed
 class OptXactLauncher: public Launcher
 {
-    CBDATA_CLASS(OptXactLauncher);
+    CBDATA_CHILD(OptXactLauncher);
 
 public:
     OptXactLauncher(Adaptation::ServicePointer aService);

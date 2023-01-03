@@ -29,7 +29,7 @@ class AccessRule;
 // checks adaptation_access rules to find a matching adaptation service
 class AccessCheck: public virtual AsyncJob
 {
-    CBDATA_CLASS(AccessCheck);
+    CBDATA_CHILD(AccessCheck);
 
 public:
     typedef void AccessCheckCallback(ServiceGroupPointer group, void *data);

@@ -29,7 +29,7 @@ namespace Ipc
 ///  Coordinates shared activities of Strands (Squid processes or threads)
 class Coordinator: public Port
 {
-    CBDATA_CLASS(Coordinator);
+    CBDATA_CHILD(Coordinator);
 
 public:
     static Coordinator* Instance();

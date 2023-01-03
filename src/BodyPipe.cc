@@ -15,7 +15,7 @@
 // data from a BodyPipe
 class BodySink: public BodyConsumer
 {
-    CBDATA_CLASS(BodySink);
+    CBDATA_CHILD(BodySink);
 
 public:
     BodySink(const BodyPipe::Pointer &bp): AsyncJob("BodySink"), body_pipe(bp) {}

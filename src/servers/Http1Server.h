@@ -19,7 +19,7 @@ namespace One
 /// Manages a connection from an HTTP/1 or HTTP/0.9 client.
 class Server: public ConnStateData
 {
-    CBDATA_CLASS(Server);
+    CBDATA_CHILD(Server);
 
 public:
     Server(const MasterXaction::Pointer &xact, const bool beHttpsServer);

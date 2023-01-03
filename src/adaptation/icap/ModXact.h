@@ -140,7 +140,7 @@ private:
 
 class ModXact: public Xaction, public BodyProducer, public BodyConsumer
 {
-    CBDATA_CLASS(ModXact);
+    CBDATA_CHILD(ModXact);
 
 public:
     ModXact(Http::Message *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, ServiceRep::Pointer &s);
@@ -377,7 +377,7 @@ private:
 // creates ModXact when needed
 class ModXactLauncher: public Launcher
 {
-    CBDATA_CLASS(ModXactLauncher);
+    CBDATA_CHILD(ModXactLauncher);
 
 public:
     ModXactLauncher(Http::Message *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, Adaptation::ServicePointer s);

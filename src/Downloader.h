@@ -44,7 +44,7 @@ std::ostream &operator <<(std::ostream &, const DownloaderAnswer &);
 /// certificate chains.
 class Downloader: virtual public AsyncJob
 {
-    CBDATA_CLASS(Downloader);
+    CBDATA_CHILD(Downloader);
 public:
     using Answer = DownloaderAnswer;
 

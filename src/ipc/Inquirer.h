@@ -26,8 +26,6 @@ namespace Ipc
 /// aggregating individual strand responses and dumping the result if needed
 class Inquirer: public AsyncJob
 {
-    CBDATA_CLASS(Inquirer);
-
 public:
     Inquirer(Request::Pointer aRequest, const Ipc::StrandCoords& coords, double aTimeout);
     ~Inquirer() override;

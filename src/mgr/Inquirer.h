@@ -25,7 +25,7 @@ namespace Mgr
 /// aggregating individual strand responses and dumping the result if needed
 class Inquirer: public Ipc::Inquirer
 {
-    CBDATA_CLASS(Inquirer);
+    CBDATA_CHILD(Inquirer);
 
 public:
     Inquirer(Action::Pointer anAction, const Request &aCause,

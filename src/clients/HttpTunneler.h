@@ -31,7 +31,7 @@ namespace Http
 /// connection during these negotiations. The caller receives TunnelerAnswer.
 class Tunneler: virtual public AsyncJob
 {
-    CBDATA_CLASS(Tunneler);
+    CBDATA_CHILD(Tunneler);
 
 public:
     using Answer = TunnelerAnswer;

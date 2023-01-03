@@ -21,7 +21,7 @@ class CommConnectCbParams;
 /// Maintains an fixed-size "standby" PconnPool for a single CachePeer.
 class PeerPoolMgr: public AsyncJob
 {
-    CBDATA_CLASS(PeerPoolMgr);
+    CBDATA_CHILD(PeerPoolMgr);
 
 public:
     typedef CbcPointer<PeerPoolMgr> Pointer;

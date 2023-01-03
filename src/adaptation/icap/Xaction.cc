@@ -40,7 +40,7 @@ namespace Ssl
 {
 /// A simple PeerConnector for Secure ICAP services. No SslBump capabilities.
 class IcapPeerConnector: public Security::PeerConnector {
-    CBDATA_CLASS(IcapPeerConnector);
+    CBDATA_CHILD(IcapPeerConnector);
 public:
     IcapPeerConnector(
         Adaptation::Icap::ServiceRep::Pointer &service,

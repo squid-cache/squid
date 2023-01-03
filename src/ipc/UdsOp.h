@@ -67,7 +67,7 @@ struct sockaddr_un PathToAddress(const String &pathAddr);
 /// attempts to send an IPC message a few times, with a timeout
 class UdsSender: public UdsOp
 {
-    CBDATA_CLASS(UdsSender);
+    CBDATA_CHILD(UdsSender);
 
 public:
     UdsSender(const String& pathAddr, const TypedMsgHdr& aMessage);

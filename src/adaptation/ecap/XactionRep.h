@@ -32,7 +32,7 @@ namespace Ecap
 class XactionRep : public Adaptation::Initiate, public libecap::host::Xaction,
     public BodyConsumer, public BodyProducer
 {
-    CBDATA_CLASS(XactionRep);
+    CBDATA_CHILD(XactionRep);
 
 public:
     XactionRep(Http::Message *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, const Adaptation::ServicePointer &service);

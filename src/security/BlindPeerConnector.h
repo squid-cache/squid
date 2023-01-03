@@ -18,7 +18,7 @@ namespace Security
 
 /// A simple PeerConnector for SSL/TLS cache_peers. No SslBump capabilities.
 class BlindPeerConnector: public Security::PeerConnector {
-    CBDATA_CLASS(BlindPeerConnector);
+    CBDATA_CHILD(BlindPeerConnector);
 public:
     BlindPeerConnector(HttpRequestPointer &aRequest,
                        const Comm::ConnectionPointer &aServerConn,

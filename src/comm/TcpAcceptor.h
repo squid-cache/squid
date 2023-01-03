@@ -37,7 +37,7 @@ class AcceptLimiter;
  */
 class TcpAcceptor : public AsyncJob
 {
-    CBDATA_CLASS(TcpAcceptor);
+    CBDATA_CHILD(TcpAcceptor);
 
 public:
     typedef CbcPointer<Comm::TcpAcceptor> Pointer;

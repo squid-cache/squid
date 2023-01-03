@@ -30,7 +30,7 @@ namespace Mgr
  */
 class Forwarder: public Ipc::Forwarder
 {
-    CBDATA_CLASS(Forwarder);
+    CBDATA_CHILD(Forwarder);
 
 public:
     Forwarder(const Comm::ConnectionPointer &aConn, const ActionParams &aParams, HttpRequest* aRequest,

@@ -18,7 +18,7 @@ namespace Ssl
 
 /// A PeerConnector for HTTP origin servers. Capable of SslBumping.
 class PeekingPeerConnector: public Security::PeerConnector {
-    CBDATA_CLASS(PeekingPeerConnector);
+    CBDATA_CHILD(PeekingPeerConnector);
 public:
     PeekingPeerConnector(HttpRequestPointer &aRequest,
                          const Comm::ConnectionPointer &aServerConn,

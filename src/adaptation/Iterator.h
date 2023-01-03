@@ -30,7 +30,7 @@ namespace Adaptation
 /// iterates services in ServiceGroup, starting adaptation launchers
 class Iterator: public Initiate, public Initiator
 {
-    CBDATA_CLASS(Iterator);
+    CBDATA_CHILD(Iterator);
 
 public:
     Iterator(Http::Message *virginHeader, HttpRequest *virginCause,

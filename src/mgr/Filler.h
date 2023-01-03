@@ -22,7 +22,7 @@ namespace Mgr
 /// provides Coordinator with a local cache manager response
 class Filler: public StoreToCommWriter
 {
-    CBDATA_CLASS(Filler);
+    CBDATA_CHILD(Filler);
 
 public:
     Filler(const Action::Pointer &, const Comm::ConnectionPointer &, Ipc::RequestId);

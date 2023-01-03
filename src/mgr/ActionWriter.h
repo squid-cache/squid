@@ -21,7 +21,7 @@ namespace Mgr
 /// Comm-writes it using parent StoreToCommWriter.
 class ActionWriter: public StoreToCommWriter
 {
-    CBDATA_CLASS(ActionWriter);
+    CBDATA_CHILD(ActionWriter);
 
 public:
     ActionWriter(const Action::Pointer &anAction, const Comm::ConnectionPointer &conn);

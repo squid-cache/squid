@@ -21,7 +21,7 @@ class String;
 
 class HttpStateData : public Client
 {
-    CBDATA_CLASS(HttpStateData);
+    CBDATA_CHILD(HttpStateData);
 
 public:
 

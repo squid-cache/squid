@@ -36,7 +36,11 @@ class ClientHttpRequest
       public BodyConsumer     // to receive reply bodies in request satisf. mode
 #endif
 {
+#if USE_ADAPTATION
+    CBDATA_CHILD(ClientHttpRequest);
+#else
     CBDATA_CLASS(ClientHttpRequest);
+#endif
 
 public:
     ClientHttpRequest(ConnStateData *);

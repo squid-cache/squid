@@ -47,8 +47,6 @@ typedef RefCount<IoResult> IoResultPointer;
  */
 class PeerConnector: virtual public AsyncJob, public Acl::ChecklistFiller
 {
-    CBDATA_CLASS(PeerConnector);
-
 public:
     typedef CbcPointer<PeerConnector> Pointer;
 

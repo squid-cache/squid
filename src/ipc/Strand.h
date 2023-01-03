@@ -26,7 +26,7 @@ class StrandCoord;
 /// Receives coordination messages on behalf of its process or thread
 class Strand: public Port
 {
-    CBDATA_CLASS(Strand);
+    CBDATA_CHILD(Strand);
 
 public:
     Strand();

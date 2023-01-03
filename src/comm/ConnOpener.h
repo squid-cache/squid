@@ -23,7 +23,7 @@ namespace Comm
 /// Comm::OK with an open connection or another Comm::Flag with a closed one.
 class ConnOpener : public AsyncJob
 {
-    CBDATA_CLASS(ConnOpener);
+    CBDATA_CHILD(ConnOpener);
 
 public:
     typedef CbcPointer<ConnOpener> Pointer;

@@ -28,7 +28,7 @@ namespace Log
  */
 class TcpLogger : public AsyncJob
 {
-    CBDATA_CLASS(TcpLogger);
+    CBDATA_CHILD(TcpLogger);
 
 public:
     typedef CbcPointer<TcpLogger> Pointer;

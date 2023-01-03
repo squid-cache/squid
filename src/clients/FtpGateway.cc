@@ -90,7 +90,7 @@ typedef void (StateMethod)(Ftp::Gateway *);
 /// converts one or more FTP responses into the final HTTP response.
 class Gateway : public Ftp::Client
 {
-    CBDATA_CLASS(Gateway);
+    CBDATA_CHILD(Gateway);
 
 public:
     Gateway(FwdState *);
