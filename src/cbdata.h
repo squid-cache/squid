@@ -269,12 +269,18 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size)
        static cbdata_type CBDATA_##type;
 
 /// Starts cbdata-protection in a class hierarchy.
-/// Child classes in the same hierarchy should use CBDATA_CHILD().
+/// Intermediate classes in the same hierarchy must use CBDATA_INTERMEDIATE() if
+/// they risk creating cbdata pointers in their constructors.
+/// Final classes in the same hierarchy must use CBDATA_CHILD().
 class CbdataParent
 {
 public:
     virtual ~CbdataParent() {}
     virtual void *toCbdata() = 0;
+
+private:
+    /// hack: ensure CBDATA_CHILD() after a toCbdata()-defining CBDATA_INTERMEDIATE()
+    virtual void finalizedInCbdataChild() = 0;
 };
 
 /// cbdata-enables a stand-alone class that is not a CbdataParent child
@@ -282,10 +288,25 @@ public:
 /// use this at the start of your class declaration for consistency sake
 #define CBDATA_CLASS(type) CBDATA_DECL_(type, noexcept)
 
-/// cbdata-enables a CbdataParent child class (including grandchildren)
+/// cbdata-enables a final CbdataParent-derived class in a hierarchy
 /// sets the class declaration section to "private"
 /// use this at the start of your class declaration for consistency sake
-#define CBDATA_CHILD(type) CBDATA_DECL_(type, override final)
+#define CBDATA_CHILD(type) CBDATA_DECL_(type, final) \
+      void finalizedInCbdataChild() final {}
+
+/// cbdata-enables a non-final CbdataParent-derived class T in a hierarchy.
+/// Using this macro is required to be able to create cbdata pointers in T
+/// constructors, when the current vtable is still pointing to T::toCbdata()
+/// that would have been pure without this macro, leading to FATAL runtime
+/// OnTerminate() calls. However, assuming that the final cbdata pointer will
+/// still point to T::this is risky -- multiple inheritance changes "this"!
+///
+/// sets the class declaration section to "private"
+/// use this at the start of your class declaration for consistency sake
+#define CBDATA_INTERMEDIATE() \
+    public: \
+        void *toCbdata() override { return this; } \
+    private:
 
 /**
  * Creates a global instance pointer for the CBDATA memory allocator

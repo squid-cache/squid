@@ -28,6 +28,8 @@ namespace Ipc
  */
 class Forwarder: public AsyncJob
 {
+    CBDATA_INTERMEDIATE();
+
 public:
     Forwarder(Request::Pointer aRequest, double aTimeout);
     ~Forwarder() override;
@@ -47,8 +49,8 @@ protected:
     bool doneAll() const override;
 
     virtual void handleError();
-    virtual void handleTimeout() = 0;
-    virtual void handleException(const std::exception& e) = 0;
+    virtual void handleTimeout();
+    virtual void handleException(const std::exception& e);
 
 private:
     static void RequestTimedOut(void* param);

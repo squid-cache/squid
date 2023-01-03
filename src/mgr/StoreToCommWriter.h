@@ -28,13 +28,15 @@ namespace Mgr
 /// for the given StoreEntry and client FD
 class StoreToCommWriter: public AsyncJob
 {
+    CBDATA_INTERMEDIATE();
+
 public:
     StoreToCommWriter(const Comm::ConnectionPointer &conn, StoreEntry *anEntry);
     ~StoreToCommWriter() override;
 
 protected:
     /* AsyncJob API */
-    void start() override = 0;
+    void start() override;
     void swanSong() override;
     bool doneAll() const override;
 
