@@ -41,7 +41,11 @@ class ClientHttpRequest
 public:
     ClientHttpRequest(ConnStateData *);
     ClientHttpRequest(ClientHttpRequest &&) = delete;
+#if USE_ADAPTATION
     ~ClientHttpRequest() override;
+#else
+    ~ClientHttpRequest();
+#endif
 
     String rangeBoundaryStr() const;
     void freeResources();

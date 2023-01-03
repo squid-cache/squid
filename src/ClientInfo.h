@@ -36,7 +36,11 @@ class ClientInfo : public hash_link
 
 public:
     explicit ClientInfo(const Ip::Address &);
+#if USE_DELAY_POOLS
     ~ClientInfo() override;
+#else
+    ~ClientInfo();
+#endif
 
     Ip::Address addr;
 
