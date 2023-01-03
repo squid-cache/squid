@@ -17,10 +17,10 @@ class DiskDaemonDiskIOModule : public DiskIOModule
 public:
     static DiskDaemonDiskIOModule &GetInstance();
     DiskDaemonDiskIOModule();
-    virtual void init();
-    virtual void gracefulShutdown();
-    virtual char const *type () const;
-    virtual DiskIOStrategy* createStrategy();
+    void init() override;
+    void gracefulShutdown() override;
+    char const *type () const override;
+    DiskIOStrategy* createStrategy() override;
 
 private:
     static DiskDaemonDiskIOModule Instance;

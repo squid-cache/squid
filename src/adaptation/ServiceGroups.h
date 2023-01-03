@@ -33,7 +33,7 @@ public:
 
 public:
     ServiceGroup(const String &aKind, bool areAllServicesSame);
-    virtual ~ServiceGroup();
+    ~ServiceGroup() override;
 
     virtual void parse();
     virtual void finalize(); // called after all are parsed

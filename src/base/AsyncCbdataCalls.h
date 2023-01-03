@@ -27,7 +27,7 @@ public:
 
     virtual bool canDial(AsyncCall &) { return arg1.valid(); }
     void dial(AsyncCall &) { handler(arg1.get()); }
-    virtual void print(std::ostream &os) const {  os << '(' << arg1 << ')'; }
+    void print(std::ostream &os) const override {  os << '(' << arg1 << ')'; }
 
 public:
     CbcPointer<Argument1> arg1;

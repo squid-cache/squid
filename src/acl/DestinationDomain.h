@@ -21,9 +21,9 @@ class ACLDestinationDomainStrategy : public ACLStrategy<char const *>
 
 public:
     /* ACLStrategy API */
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
-    virtual bool requiresRequest() const {return true;}
-    virtual const Acl::Options &options();
+    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    bool requiresRequest() const override {return true;}
+    const Acl::Options &options() override;
 
 private:
     Acl::BooleanOptionValue lookupBanned; ///< Are DNS lookups allowed?
@@ -35,7 +35,7 @@ class DestinationDomainLookup : public ACLChecklist::AsyncState
 
 public:
     static DestinationDomainLookup *Instance();
-    virtual void checkForAsync(ACLChecklist *)const;
+    void checkForAsync(ACLChecklist *)const override;
 
 private:
     static DestinationDomainLookup instance_;

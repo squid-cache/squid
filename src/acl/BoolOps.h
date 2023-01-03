@@ -28,12 +28,12 @@ public:
 
 private:
     /* ACL API */
-    virtual char const *typeString() const;
-    virtual void parse();
-    virtual SBufList dump() const;
+    char const *typeString() const override;
+    void parse() override;
+    SBufList dump() const override;
 
     /* Acl::InnerNode API */
-    virtual int doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const;
+    int doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const override;
 };
 
 /// An inner ACL expression tree node representing a boolean conjunction (AND)
@@ -45,11 +45,11 @@ class AndNode: public InnerNode
 
 public:
     /* ACL API */
-    virtual char const *typeString() const;
-    virtual void parse();
+    char const *typeString() const override;
+    void parse() override;
 
 private:
-    virtual int doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const;
+    int doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const override;
 };
 
 /// An inner ACL expression tree node representing a boolean disjuction (OR)
@@ -65,14 +65,14 @@ public:
     virtual bool bannedAction(ACLChecklist *, Nodes::const_iterator) const;
 
     /* ACL API */
-    virtual char const *typeString() const;
-    virtual void parse();
+    char const *typeString() const override;
+    void parse() override;
 
 protected:
     mutable Nodes::const_iterator lastMatch_;
 
 private:
-    virtual int doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const;
+    int doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const override;
 };
 
 } // namespace Acl

@@ -37,14 +37,14 @@ public:
     /// to try and reuse a TLS session and sets the hostname to use for
     /// certificate validation
     /// \returns true on successful initialization
-    virtual bool initialize(Security::SessionPointer &);
+    bool initialize(Security::SessionPointer &) override;
 
     /// Return the configured TLS context object
-    virtual Security::ContextPointer getTlsContext();
+    Security::ContextPointer getTlsContext() override;
 
     /// On success, stores the used TLS session for later use.
     /// On error, informs the peer.
-    virtual void noteNegotiationDone(ErrorState *);
+    void noteNegotiationDone(ErrorState *) override;
 };
 
 } // namespace Security

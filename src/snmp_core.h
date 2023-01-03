@@ -55,7 +55,7 @@ void oid2addr(oid *Dest, Ip::Address &addr, u_int code);
 class ACLSNMPCommunityStrategy: public ACLStrategy<char const *>
 {
 public:
-    virtual int match (ACLData<MatchType> *&data, ACLFilledChecklist *checklist) override;
+    int match (ACLData<MatchType> *&data, ACLFilledChecklist *checklist) override;
 };
 
 #endif /* SQUID_SNMP_CORE_H */

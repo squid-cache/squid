@@ -37,17 +37,17 @@ class MemPoolMalloc : public MemImplementingAllocator
 {
 public:
     MemPoolMalloc(char const *label, size_t aSize);
-    ~MemPoolMalloc();
-    virtual bool idleTrigger(int shift) const;
-    virtual void clean(time_t maxage);
+    ~MemPoolMalloc() override;
+    bool idleTrigger(int shift) const override;
+    void clean(time_t maxage) override;
 
     /* Mem::Allocator API */
-    virtual size_t getStats(Mem::PoolStats &);
-    virtual int getInUseCount();
+    size_t getStats(Mem::PoolStats &) override;
+    int getInUseCount() override;
 
 protected:
-    virtual void *allocate();
-    virtual void deallocate(void *, bool aggressive);
+    void *allocate() override;
+    void deallocate(void *, bool aggressive) override;
 private:
     std::stack<void *> freelist;
 };

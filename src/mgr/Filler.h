@@ -29,8 +29,8 @@ public:
 
 protected:
     /* AsyncJob API */
-    virtual void start();
-    virtual void swanSong();
+    void start() override;
+    void swanSong() override;
 
 private:
     Action::Pointer action; ///< action that will run() and sendResponse()

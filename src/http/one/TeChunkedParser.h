@@ -52,7 +52,7 @@ class TeChunkedParser : public Http1::Parser
 {
 public:
     TeChunkedParser();
-    virtual ~TeChunkedParser() { theOut=nullptr; /* we do not own this object */ }
+    ~TeChunkedParser() override { theOut=nullptr; /* we do not own this object */ }
 
     /// set the buffer to be used to store decoded chunk data
     void setPayloadBuffer(MemBuf *parsedContent) {theOut = parsedContent;}
@@ -64,9 +64,9 @@ public:
     bool needsMoreSpace() const;
 
     /* Http1::Parser API */
-    virtual void clear();
-    virtual bool parse(const SBuf &);
-    virtual Parser::size_type firstLineSize() const {return 0;} // has no meaning with multiple chunks
+    void clear() override;
+    bool parse(const SBuf &) override;
+    Parser::size_type firstLineSize() const override {return 0;} // has no meaning with multiple chunks
 
 private:
     bool parseChunkSize(Tokenizer &tok);

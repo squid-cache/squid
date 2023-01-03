@@ -19,19 +19,19 @@ class BodySink: public BodyConsumer
 
 public:
     BodySink(const BodyPipe::Pointer &bp): AsyncJob("BodySink"), body_pipe(bp) {}
-    virtual ~BodySink() { assert(!body_pipe); }
+    ~BodySink() override { assert(!body_pipe); }
 
-    virtual void noteMoreBodyDataAvailable(BodyPipe::Pointer bp) {
+    void noteMoreBodyDataAvailable(BodyPipe::Pointer bp) override {
         size_t contentSize = bp->buf().contentSize();
         bp->consume(contentSize);
     }
-    virtual void noteBodyProductionEnded(BodyPipe::Pointer) {
+    void noteBodyProductionEnded(BodyPipe::Pointer) override {
         stopConsumingFrom(body_pipe);
     }
-    virtual void noteBodyProducerAborted(BodyPipe::Pointer) {
+    void noteBodyProducerAborted(BodyPipe::Pointer) override {
         stopConsumingFrom(body_pipe);
     }
-    bool doneAll() const {return !body_pipe && AsyncJob::doneAll();}
+    bool doneAll() const override {return !body_pipe && AsyncJob::doneAll();}
 
 private:
     BodyPipe::Pointer body_pipe; ///< the pipe we are consuming from
@@ -51,7 +51,7 @@ public:
                        Parent::Method aHandler, BodyPipe::Pointer bp):
         Parent(aProducer, aHandler, bp) {}
 
-    virtual bool canDial(AsyncCall &call);
+    bool canDial(AsyncCall &call) override;
 };
 
 // The BodyConsumerDialer is an AsyncCall class which used to schedule BodyConsumer calls.
@@ -66,7 +66,7 @@ public:
                        Parent::Method aHandler, BodyPipe::Pointer bp):
         Parent(aConsumer, aHandler, bp) {}
 
-    virtual bool canDial(AsyncCall &call);
+    bool canDial(AsyncCall &call) override;
 };
 
 bool

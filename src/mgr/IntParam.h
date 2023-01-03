@@ -24,8 +24,8 @@ class IntParam: public QueryParam
 public:
     IntParam();
     IntParam(const std::vector<int>& anArray);
-    virtual void pack(Ipc::TypedMsgHdr& msg) const;
-    virtual void unpackValue(const Ipc::TypedMsgHdr& msg);
+    void pack(Ipc::TypedMsgHdr& msg) const override;
+    void unpackValue(const Ipc::TypedMsgHdr& msg) override;
     const std::vector<int>& value() const;
 
 private:

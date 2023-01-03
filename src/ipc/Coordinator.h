@@ -42,8 +42,8 @@ public:
     const StrandCoords &strands() const; ///< currently registered strands
 
 protected:
-    virtual void start(); // Port (AsyncJob) API
-    virtual void receive(const TypedMsgHdr& message); // Port API
+    void start() override; // Port (AsyncJob) API
+    void receive(const TypedMsgHdr& message) override; // Port API
 
     StrandCoord* findStrand(int kidId); ///< registered strand or NULL
     void registerStrand(const StrandCoord &); ///< adds or updates existing

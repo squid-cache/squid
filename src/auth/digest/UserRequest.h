@@ -31,18 +31,18 @@ class UserRequest : public Auth::UserRequest
 
 public:
     UserRequest();
-    virtual ~UserRequest();
+    ~UserRequest() override;
 
-    virtual int authenticated() const;
-    virtual void authenticate(HttpRequest * request, ConnStateData * conn, Http::HdrType type);
-    virtual Direction module_direction();
-    virtual void addAuthenticationInfoHeader(HttpReply * rep, int accel);
+    int authenticated() const override;
+    void authenticate(HttpRequest * request, ConnStateData * conn, Http::HdrType type) override;
+    Direction module_direction() override;
+    void addAuthenticationInfoHeader(HttpReply * rep, int accel) override;
 #if WAITING_FOR_TE
     virtual void addAuthenticationInfoTrailer(HttpReply * rep, int accel);
 #endif
 
-    virtual void startHelperLookup(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB *, void *);
-    virtual const char *credentialsStr();
+    void startHelperLookup(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB *, void *) override;
+    const char *credentialsStr() override;
 
     char *noncehex;             /* "dcd98b7102dd2f0e8b11d0f600bfb0c093" */
     char *cnonce;               /* "0a4f113b" */

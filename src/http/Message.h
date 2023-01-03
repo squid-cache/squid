@@ -46,7 +46,7 @@ public:
     };
 
     Message(http_hdr_owner_type);
-    virtual ~Message();
+    ~Message() override;
 
     virtual void reset() = 0; // will have body when http*Clean()s are gone
 

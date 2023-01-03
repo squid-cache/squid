@@ -19,7 +19,7 @@ public:
     StoreSearch() {}
 
     StoreSearch(StoreSearch const &); /* no implementation - trigger link failures */
-    virtual ~StoreSearch() {}
+    ~StoreSearch() override {}
 
     /* not ready yet
     void asList(void (*) (CbDataList<StoreEntryPointer), void *cbdata);

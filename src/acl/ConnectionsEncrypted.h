@@ -21,13 +21,13 @@ class ConnectionsEncrypted : public ACL
 
 public:
     ConnectionsEncrypted(char const *);
-    virtual ~ConnectionsEncrypted();
+    ~ConnectionsEncrypted() override;
 
-    virtual char const *typeString() const;
-    virtual void parse();
-    virtual int match(ACLChecklist *checklist);
-    virtual SBufList dump() const;
-    virtual bool empty () const;
+    char const *typeString() const override;
+    void parse() override;
+    int match(ACLChecklist *checklist) override;
+    SBufList dump() const override;
+    bool empty () const override;
 
 protected:
     char const *class_;

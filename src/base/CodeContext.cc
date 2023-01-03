@@ -15,8 +15,8 @@ class FadingCodeContext: public CodeContext
 {
 public:
     /* CodeContext API */
-    virtual ScopedId codeContextGist() const override { return gist; }
-    virtual std::ostream &detailCodeContext(std::ostream &os) const override { return os << gist; }
+    ScopedId codeContextGist() const override { return gist; }
+    std::ostream &detailCodeContext(std::ostream &os) const override { return os << gist; }
 
     ScopedId gist; ///< identifies the being-forgotten CodeContext
 };

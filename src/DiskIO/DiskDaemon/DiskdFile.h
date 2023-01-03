@@ -27,15 +27,15 @@ class DiskdFile : public DiskFile
 
 public:
     DiskdFile(char const *path, DiskdIOStrategy *);
-    ~DiskdFile();
-    virtual void open(int flags, mode_t aMode, RefCount<IORequestor> callback);
-    virtual void create(int flags, mode_t aMode, RefCount<IORequestor> callback);
-    virtual void read(ReadRequest *);
-    virtual void write(WriteRequest *);
-    virtual void close();
-    virtual bool error() const;
-    virtual bool canRead() const;
-    virtual bool ioInProgress() const;
+    ~DiskdFile() override;
+    void open(int flags, mode_t aMode, RefCount<IORequestor> callback) override;
+    void create(int flags, mode_t aMode, RefCount<IORequestor> callback) override;
+    void read(ReadRequest *) override;
+    void write(WriteRequest *) override;
+    void close() override;
+    bool error() const override;
+    bool canRead() const override;
+    bool ioInProgress() const override;
 
     /* Temporary */
     int getID() const {return id;}

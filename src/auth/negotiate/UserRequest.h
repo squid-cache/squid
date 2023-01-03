@@ -30,16 +30,16 @@ class UserRequest : public Auth::UserRequest
 
 public:
     UserRequest();
-    virtual ~UserRequest();
-    virtual int authenticated() const;
-    virtual void authenticate(HttpRequest * request, ConnStateData * conn, Http::HdrType type);
-    virtual Direction module_direction();
-    virtual void startHelperLookup(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB *, void *);
-    virtual const char *credentialsStr();
+    ~UserRequest() override;
+    int authenticated() const override;
+    void authenticate(HttpRequest * request, ConnStateData * conn, Http::HdrType type) override;
+    Direction module_direction() override;
+    void startHelperLookup(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB *, void *) override;
+    const char *credentialsStr() override;
 
-    virtual const char * connLastHeader();
+    const char * connLastHeader() override;
 
-    void releaseAuthServer(void); ///< Release the authserver helper server properly.
+    void releaseAuthServer(void) override; ///< Release the authserver helper server properly.
 
     /* what connection is this associated with */
     /* ConnStateData * conn;*/

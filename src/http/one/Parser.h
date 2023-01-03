@@ -48,7 +48,7 @@ public:
     Parser &operator =(const Parser &) = default;
     Parser(Parser &&) = default;
     Parser &operator =(Parser &&) = default;
-    virtual ~Parser() {}
+    ~Parser() override {}
 
     /// Set this parser back to a default state.
     /// Will DROP any reference to a buffer (does not free).

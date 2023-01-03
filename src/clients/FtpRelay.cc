@@ -37,7 +37,7 @@ class Relay: public Ftp::Client
 
 public:
     explicit Relay(FwdState *const fwdState);
-    virtual ~Relay();
+    ~Relay() override;
 
 protected:
     const Ftp::MasterState &master() const;
@@ -46,21 +46,21 @@ protected:
     void serverState(const Ftp::ServerState newState);
 
     /* Ftp::Client API */
-    virtual void failed(err_type error = ERR_NONE, int xerrno = 0, ErrorState *ftperr = nullptr);
-    virtual void dataChannelConnected(const CommConnectCbParams &io);
+    void failed(err_type error = ERR_NONE, int xerrno = 0, ErrorState *ftperr = nullptr) override;
+    void dataChannelConnected(const CommConnectCbParams &io) override;
 
     /* Client API */
     virtual void serverComplete();
-    virtual void handleControlReply();
-    virtual void processReplyBody();
-    virtual void handleRequestBodyProducerAborted();
-    virtual bool mayReadVirginReplyBody() const;
-    virtual void completeForwarding();
-    virtual bool abortOnData(const char *reason);
+    void handleControlReply() override;
+    void processReplyBody() override;
+    void handleRequestBodyProducerAborted() override;
+    bool mayReadVirginReplyBody() const override;
+    void completeForwarding() override;
+    bool abortOnData(const char *reason) override;
 
     /* AsyncJob API */
-    virtual void start();
-    virtual void swanSong();
+    void start() override;
+    void swanSong() override;
 
     void forwardReply();
     void forwardError(err_type error = ERR_NONE, int xerrno = 0);

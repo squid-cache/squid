@@ -39,7 +39,7 @@ public:
     void start (HttpRequest *, StoreEntry *);
     void setUriResFromRequest(HttpRequest *);
 
-    virtual ~UrnState();
+    ~UrnState() override;
 
     StoreEntry *entry = nullptr;
     store_client *sc = nullptr;
@@ -53,8 +53,8 @@ public:
 
 private:
     /* StoreClient API */
-    virtual LogTags *loggingTags() const { return ale ? &ale->cache.code : nullptr; }
-    virtual void fillChecklist(ACLFilledChecklist &) const;
+    LogTags *loggingTags() const override { return ale ? &ale->cache.code : nullptr; }
+    void fillChecklist(ACLFilledChecklist &) const override;
 
     char *urlres = nullptr;
 };

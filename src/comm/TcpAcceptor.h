@@ -43,10 +43,10 @@ public:
     typedef CbcPointer<Comm::TcpAcceptor> Pointer;
 
 private:
-    virtual void start();
-    virtual bool doneAll() const;
-    virtual void swanSong();
-    virtual const char *status() const;
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
+    const char *status() const override;
 
     TcpAcceptor(const TcpAcceptor &); // not implemented.
 

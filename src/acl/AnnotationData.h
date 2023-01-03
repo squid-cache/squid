@@ -22,10 +22,10 @@ public:
     ACLAnnotationData();
 
     /* ACLData<M> API */
-    virtual bool match(NotePairs::Entry *) { return true; }
-    virtual SBufList dump() const;
-    virtual void parse();
-    virtual bool empty() const { return notes->empty(); }
+    bool match(NotePairs::Entry *) override { return true; }
+    SBufList dump() const override;
+    void parse() override;
+    bool empty() const override { return notes->empty(); }
 
     /// Stores annotations into pairs.
     void annotate(NotePairs::Pointer pairs, const CharacterSet *delimiters, const AccessLogEntry::Pointer &al);

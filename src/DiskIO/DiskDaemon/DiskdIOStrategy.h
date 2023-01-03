@@ -44,16 +44,16 @@ class DiskdIOStrategy : public DiskIOStrategy
 
 public:
     DiskdIOStrategy();
-    virtual bool shedLoad();
-    virtual int load();
-    virtual RefCount<DiskFile> newFile(char const *path);
-    virtual bool unlinkdUseful() const;
-    virtual void unlinkFile (char const *);
-    virtual ConfigOption *getOptionTree() const;
-    virtual void init();
-    virtual void sync();
-    virtual int callback();
-    virtual void statfs(StoreEntry & sentry) const;
+    bool shedLoad() override;
+    int load() override;
+    RefCount<DiskFile> newFile(char const *path) override;
+    bool unlinkdUseful() const override;
+    void unlinkFile (char const *) override;
+    ConfigOption *getOptionTree() const override;
+    void init() override;
+    void sync() override;
+    int callback() override;
+    void statfs(StoreEntry & sentry) const override;
     int send(int mtype, int id, DiskdFile *theFile, size_t size, off_t offset, ssize_t shm_offset, Lock *requestor);
 
     /** public for accessing return address's */

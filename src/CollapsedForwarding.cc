@@ -176,11 +176,11 @@ class CollapsedForwardingRr: public Ipc::Mem::RegisteredRunner
 public:
     /* RegisteredRunner API */
     CollapsedForwardingRr(): owner(nullptr) {}
-    virtual ~CollapsedForwardingRr();
+    ~CollapsedForwardingRr() override;
 
 protected:
-    virtual void create();
-    virtual void open();
+    void create() override;
+    void open() override;
 
 private:
     Ipc::MultiQueue::Owner *owner;

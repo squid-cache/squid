@@ -73,7 +73,7 @@ class Stream : public RefCountable
 public:
     /// construct with HTTP/1.x details
     Stream(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq);
-    ~Stream();
+    ~Stream() override;
 
     /// register this stream with the Server
     void registerWithConn();

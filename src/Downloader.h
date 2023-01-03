@@ -49,8 +49,8 @@ public:
     using Answer = DownloaderAnswer;
 
     Downloader(const SBuf &url, const AsyncCallback<Answer> &, const MasterXactionPointer &, unsigned int level = 0);
-    virtual ~Downloader();
-    virtual void swanSong();
+    ~Downloader() override;
+    void swanSong() override;
 
     /// delays destruction to protect doCallouts()
     void downloadFinished();
@@ -63,8 +63,8 @@ public:
 protected:
 
     /* AsyncJob API */
-    virtual bool doneAll() const;
-    virtual void start();
+    bool doneAll() const override;
+    void start() override;
 
 private:
 

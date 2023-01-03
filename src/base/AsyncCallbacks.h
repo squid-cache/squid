@@ -85,15 +85,15 @@ public:
     using Handler = void (Argument1 &);
 
     explicit UnaryFunCallbackDialer(Handler * const aHandler): handler(aHandler) {}
-    virtual ~UnaryFunCallbackDialer() = default;
+    ~UnaryFunCallbackDialer() override = default;
 
     /* CallDialer API */
     bool canDial(AsyncCall &) { return bool(handler); }
     void dial(AsyncCall &) { handler(arg1); }
-    virtual void print(std::ostream &os) const final { os << '(' << arg1 << ')'; }
+    void print(std::ostream &os) const final { os << '(' << arg1 << ')'; }
 
     /* WithAnswer API */
-    virtual Argument1 &answer() final { return arg1; }
+    Argument1 &answer() final { return arg1; }
 
 private:
     Handler *handler; ///< the function to call
@@ -112,15 +112,15 @@ public:
     typedef void (Destination::*Method)(Argument1 &);
 
     UnaryCbcCallbackDialer(Method method, Destination *destination): destination_(destination), method_(method) {}
-    virtual ~UnaryCbcCallbackDialer() = default;
+    ~UnaryCbcCallbackDialer() override = default;
 
     /* CallDialer API */
     bool canDial(AsyncCall &) { return destination_.valid(); }
     void dial(AsyncCall &) {((*destination_).*method_)(arg1_); }
-    virtual void print(std::ostream &os) const final { os << '(' << arg1_ << ')'; }
+    void print(std::ostream &os) const final { os << '(' << arg1_ << ')'; }
 
     /* WithAnswer API */
-    virtual Argument1 &answer() final { return arg1_; }
+    Argument1 &answer() final { return arg1_; }
 
 private:
     CbcPointer<Destination> destination_; ///< object to deliver the answer to
@@ -142,7 +142,7 @@ public:
         Base(aJob, aMethod, {}) {}
 
     /* WithAnswer API */
-    virtual Argument1 &answer() final { return this->arg1; }
+    Argument1 &answer() final { return this->arg1; }
 };
 
 /// whether the given type is an AsyncJob

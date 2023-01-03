@@ -21,11 +21,11 @@ class ACLMethodData : public ACLData<HttpRequestMethod>
 
 public:
     ACLMethodData() {}
-    virtual ~ACLMethodData();
-    bool match(HttpRequestMethod);
-    virtual SBufList dump() const;
-    void parse();
-    bool empty() const {return values.empty();}
+    ~ACLMethodData() override;
+    bool match(HttpRequestMethod) override;
+    SBufList dump() const override;
+    void parse() override;
+    bool empty() const override {return values.empty();}
 
     std::list<HttpRequestMethod> values;
 

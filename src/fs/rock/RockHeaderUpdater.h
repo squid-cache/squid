@@ -35,13 +35,13 @@ public:
         ssize_t size;
     };
     HeaderUpdater(const Rock::SwapDir::Pointer &aStore, const Ipc::StoreMapUpdate &update);
-    virtual ~HeaderUpdater() override = default;
+    ~HeaderUpdater() override = default;
 
 protected:
     /* AsyncJob API */
-    virtual void start() override;
-    virtual bool doneAll() const override;
-    virtual void swanSong() override;
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
 
 private:
     static StoreIOState::STRCB NoteRead;

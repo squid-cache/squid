@@ -16,7 +16,7 @@ class ACLLocalPortStrategy : public ACLStrategy<int>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
 };
 
 #endif /* SQUID_ACLLOCALPORT_H */

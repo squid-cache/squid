@@ -15,7 +15,7 @@ class ACLTimeStrategy : public ACLStrategy<time_t>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
 };
 
 #endif /* SQUID_ACLTIME_H */

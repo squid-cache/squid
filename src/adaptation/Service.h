@@ -32,7 +32,7 @@ public:
 
 public:
     explicit Service(const ServiceConfigPointer &aConfig);
-    virtual ~Service();
+    ~Service() override;
 
     virtual bool probed() const = 0; // see comments above
     virtual bool broken() const;

@@ -34,9 +34,9 @@ public:
 
 protected:
     /* Ipc::Forwarder API */
-    virtual void swanSong();
-    virtual void handleTimeout();
-    virtual void handleException(const std::exception& e);
+    void swanSong() override;
+    void handleTimeout() override;
+    void handleException(const std::exception& e) override;
 
 private:
     void noteCommClosed(const CommCloseCbParams& params);

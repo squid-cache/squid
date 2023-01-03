@@ -36,7 +36,7 @@ class ClientInfo : public hash_link
 
 public:
     explicit ClientInfo(const Ip::Address &);
-    ~ClientInfo();
+    ~ClientInfo() override;
 
     Ip::Address addr;
 
@@ -82,11 +82,11 @@ public:
     void writeOrDequeue();
 
     /* BandwidthBucket API */
-    virtual int quota() override; ///< allocate quota for a just dequeued client
-    virtual bool applyQuota(int &nleft, Comm::IoCallback *state) override;
-    virtual void scheduleWrite(Comm::IoCallback *state) override;
-    virtual void onFdClosed() override;
-    virtual void reduceBucket(int len) override;
+    int quota() override; ///< allocate quota for a just dequeued client
+    bool applyQuota(int &nleft, Comm::IoCallback *state) override;
+    void scheduleWrite(Comm::IoCallback *state) override;
+    void onFdClosed() override;
+    void reduceBucket(int len) override;
 
     void quotaDumpQueue(); ///< dumps quota queue for debugging
 

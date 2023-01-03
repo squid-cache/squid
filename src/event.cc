@@ -31,9 +31,9 @@ public:
 
     EventDialer(EVH *aHandler, void *anArg, bool lockedArg);
     EventDialer(const EventDialer &d);
-    virtual ~EventDialer();
+    ~EventDialer() override;
 
-    virtual void print(std::ostream &os) const;
+    void print(std::ostream &os) const override;
     virtual bool canDial(AsyncCall &call);
 
     void dial(AsyncCall &) { theHandler(theArg); }

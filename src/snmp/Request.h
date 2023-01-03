@@ -29,8 +29,8 @@ public:
 
     explicit Request(const Ipc::TypedMsgHdr& msg); ///< from recvmsg()
     /* Ipc::Request API */
-    virtual void pack(Ipc::TypedMsgHdr& msg) const;
-    virtual Pointer clone() const;
+    void pack(Ipc::TypedMsgHdr& msg) const override;
+    Pointer clone() const override;
 
 public:
     Pdu pdu; ///< SNMP protocol data unit

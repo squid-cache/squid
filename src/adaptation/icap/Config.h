@@ -39,7 +39,7 @@ public:
     int repeat_limit; ///< icap_retry_limit in squid.conf
 
     Config();
-    ~Config();
+    ~Config() override;
 
     time_t connect_timeout(bool bypassable) const;
     time_t io_timeout(bool bypassable) const;
@@ -48,7 +48,7 @@ private:
     Config(const Config &); // not implemented
     Config &operator =(const Config &); // not implemented
 
-    virtual Adaptation::ServicePointer createService(const ServiceConfigPointer &cfg);
+    Adaptation::ServicePointer createService(const ServiceConfigPointer &cfg) override;
 };
 
 extern Config TheConfig;

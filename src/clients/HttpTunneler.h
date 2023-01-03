@@ -49,11 +49,11 @@ public:
 
 protected:
     /* AsyncJob API */
-    virtual ~Tunneler();
-    virtual void start();
-    virtual bool doneAll() const;
-    virtual void swanSong();
-    virtual const char *status() const;
+    ~Tunneler() override;
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
+    const char *status() const override;
 
     void handleConnectionClosure(const CommCloseCbParams&);
     void watchForClosures();

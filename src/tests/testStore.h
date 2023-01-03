@@ -47,29 +47,29 @@ public:
 
     bool statsCalled;
 
-    virtual int callback();
+    int callback() override;
 
     virtual StoreEntry* get(const cache_key*);
 
     virtual void get(String, void (*)(StoreEntry*, void*), void*);
 
-    virtual void init();
+    void init() override;
 
-    virtual void maintain() {};
+    void maintain() override {};
 
-    virtual uint64_t maxSize() const;
+    uint64_t maxSize() const override;
 
-    virtual uint64_t minSize() const;
+    uint64_t minSize() const override;
 
-    virtual uint64_t currentSize() const;
+    uint64_t currentSize() const override;
 
-    virtual uint64_t currentCount() const;
+    uint64_t currentCount() const override;
 
-    virtual int64_t maxObjectSize() const;
+    int64_t maxObjectSize() const override;
 
-    virtual void getStats(StoreInfoStats &) const;
+    void getStats(StoreInfoStats &) const override;
 
-    virtual void stat(StoreEntry &) const; /* output stats to the provided store entry */
+    void stat(StoreEntry &) const override; /* output stats to the provided store entry */
 
     virtual void reference(StoreEntry &) {} /* Reference this object */
 

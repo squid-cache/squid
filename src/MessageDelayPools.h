@@ -30,7 +30,7 @@ public:
 
     MessageDelayPool(const SBuf &name, int64_t bucketSpeed, int64_t bucketSize,
                      int64_t aggregateSpeed, int64_t aggregateSize, uint16_t initialBucketPercent);
-    ~MessageDelayPool();
+    ~MessageDelayPool() override;
     MessageDelayPool(const MessageDelayPool &) = delete;
     MessageDelayPool &operator=(const MessageDelayPool &) = delete;
 

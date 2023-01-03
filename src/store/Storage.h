@@ -23,7 +23,7 @@ namespace Store {
 class Storage: public RefCountable
 {
 public:
-    virtual ~Storage() {}
+    ~Storage() override {}
 
     /// create system resources needed for this store to operate in the future
     virtual void create() = 0;

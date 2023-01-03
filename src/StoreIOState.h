@@ -55,7 +55,7 @@ public:
     void operator delete (void *address);
 
     StoreIOState(StoreIOState::STFNCB *cbFile, StoreIOState::STIOCB *cbIo, void *data);
-    virtual ~StoreIOState();
+    ~StoreIOState() override;
 
     off_t offset() const {return offset_;}
 

@@ -47,10 +47,10 @@ public:
     UFSCleanLog(SwapDir *aSwapDir) : sd(aSwapDir) {}
 
     /// Get the next entry that is a candidate for clean log writing
-    virtual const StoreEntry *nextEntry();
+    const StoreEntry *nextEntry() override;
 
     /// "write" an entry to the clean log file.
-    virtual void write(StoreEntry const &);
+    void write(StoreEntry const &) override;
 
     SBuf cur;
     SBuf newLog;

@@ -29,7 +29,7 @@ class testUriScheme : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST_SUITE_END();
 
 public:
-    void setUp();
+    void setUp() override;
 
 protected:
     void testAssignFromprotocol_t();

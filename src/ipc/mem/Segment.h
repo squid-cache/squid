@@ -85,7 +85,7 @@ class RegisteredRunner: public ::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void useConfig();
+    void useConfig() override;
 
 protected:
     /// called when the runner should create a new memory segment

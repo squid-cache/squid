@@ -27,7 +27,7 @@ public:
     ICP3State(icp_common_t &aHeader, HttpRequest *aRequest) :
         ICPState(aHeader, aRequest) {}
 
-    ~ICP3State() = default;
+    ~ICP3State() override = default;
 };
 
 /// \ingroup ServerProtocolICPInternal3

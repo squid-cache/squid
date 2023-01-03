@@ -30,22 +30,22 @@ class Inquirer: public AsyncJob
 
 public:
     Inquirer(Request::Pointer aRequest, const Ipc::StrandCoords& coords, double aTimeout);
-    virtual ~Inquirer();
+    ~Inquirer() override;
 
     /// finds and calls the right Inquirer upon strand's response
     static void HandleRemoteAck(const Response& response);
 
     /* has-to-be-public AsyncJob API */
-    virtual void callException(const std::exception& e);
+    void callException(const std::exception& e) override;
 
     CodeContextPointer codeContext;
 
 protected:
     /* AsyncJob API */
-    virtual void start();
-    virtual void swanSong();
-    virtual bool doneAll() const;
-    virtual const char *status() const;
+    void start() override;
+    void swanSong() override;
+    bool doneAll() const override;
+    const char *status() const override;
 
     /// inquire the next strand
     virtual void inquire();

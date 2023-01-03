@@ -28,12 +28,12 @@ class User : public Auth::User
 
 public:
     User(Auth::SchemeConfig *, const char *requestRealm);
-    virtual ~User();
-    virtual int32_t ttl() const override;
+    ~User() override;
+    int32_t ttl() const override;
 
     /* Auth::User API */
     static CbcPointer<Auth::CredentialsCache> Cache();
-    virtual void addToNameCache() override;
+    void addToNameCache() override;
 
     dlink_list proxy_auth_list;
 };

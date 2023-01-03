@@ -19,7 +19,7 @@ class IdentLookup : public ACLChecklist::AsyncState
 
 public:
     static IdentLookup *Instance();
-    virtual void checkForAsync(ACLChecklist *)const;
+    void checkForAsync(ACLChecklist *)const override;
 
 private:
     static IdentLookup instance_;
@@ -36,19 +36,19 @@ class ACLIdent : public ACL
 
 public:
     ACLIdent(ACLData<char const *> *newData, char const *);
-    ~ACLIdent();
+    ~ACLIdent() override;
 
     /* ACL API */
-    virtual char const *typeString() const;
-    virtual void parse();
-    virtual bool isProxyAuth() const {return true;}
-    virtual int match(ACLChecklist *checklist);
-    virtual SBufList dump() const;
-    virtual bool empty () const;
+    char const *typeString() const override;
+    void parse() override;
+    bool isProxyAuth() const override {return true;}
+    int match(ACLChecklist *checklist) override;
+    SBufList dump() const override;
+    bool empty () const override;
 
 private:
     /* ACL API */
-    virtual const Acl::Options &lineOptions();
+    const Acl::Options &lineOptions() override;
 
     ACLData<char const *> *data;
     char const *type_;

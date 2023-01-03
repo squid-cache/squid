@@ -75,13 +75,13 @@ public:
     /// The ClientBio version of the Ssl::Bio::stateChanged method
     /// When the client hello message retrieved, fill the
     /// "features" member with the client provided information.
-    virtual void stateChanged(const SSL *ssl, int where, int ret);
+    void stateChanged(const SSL *ssl, int where, int ret) override;
     /// The ClientBio version of the Ssl::Bio::write method
-    virtual int write(const char *buf, int size, BIO *table);
+    int write(const char *buf, int size, BIO *table) override;
     /// The ClientBio version of the Ssl::Bio::read method
     /// If the holdRead flag is true then it does not write any data
     /// to socket and sets the "read retry" flag of the BIO to true
-    virtual int read(char *buf, int size, BIO *table);
+    int read(char *buf, int size, BIO *table) override;
     /// Prevents or allow writing on socket.
     void hold(bool h) {holdRead_ = holdWrite_ = h;}
 
@@ -125,18 +125,18 @@ public:
     explicit ServerBio(const int anFd);
 
     /// The ServerBio version of the Ssl::Bio::stateChanged method
-    virtual void stateChanged(const SSL *ssl, int where, int ret);
+    void stateChanged(const SSL *ssl, int where, int ret) override;
     /// The ServerBio version of the Ssl::Bio::write method
     /// If a clientRandom number is set then rewrites the raw hello message
     /// "client random" field with the provided random number.
     /// It may buffer the output packets.
-    virtual int write(const char *buf, int size, BIO *table);
+    int write(const char *buf, int size, BIO *table) override;
     /// The ServerBio version of the Ssl::Bio::read method
     /// If the record flag is set then append the data to the rbuf member
-    virtual int read(char *buf, int size, BIO *table);
+    int read(char *buf, int size, BIO *table) override;
     /// The ServerBio version of the Ssl::Bio::flush method.
     /// Flushes any buffered data
-    virtual void flush(BIO *table);
+    void flush(BIO *table) override;
     /// Sets the random number to use in client SSL HELLO message
     void setClientFeatures(Security::TlsDetails::Pointer const &details, SBuf const &hello);
 

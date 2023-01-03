@@ -28,7 +28,7 @@ public:
 
 protected:
     /* AsyncJob API */
-    virtual void start();
+    void start() override;
 
 private:
     Action::Pointer action; ///< action that fills the entry

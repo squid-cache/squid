@@ -38,8 +38,8 @@ public:
     ShmWriter(MemStore &aStore, StoreEntry *anEntry, const sfileno aFileNo, Ipc::StoreMapSliceId aFirstSlice = -1);
 
     /* Packable API */
-    virtual void append(const char *aBuf, int aSize) override;
-    virtual void vappendf(const char *fmt, va_list ap) override;
+    void append(const char *aBuf, int aSize) override;
+    void vappendf(const char *fmt, va_list ap) override;
 
 public:
     StoreEntry *entry; ///< the entry being updated
@@ -973,14 +973,14 @@ class MemStoreRr: public Ipc::Mem::RegisteredRunner
 public:
     /* RegisteredRunner API */
     MemStoreRr(): spaceOwner(nullptr), mapOwner(nullptr), extrasOwner(nullptr) {}
-    virtual void finalizeConfig();
-    virtual void claimMemoryNeeds();
-    virtual void useConfig();
-    virtual ~MemStoreRr();
+    void finalizeConfig() override;
+    void claimMemoryNeeds() override;
+    void useConfig() override;
+    ~MemStoreRr() override;
 
 protected:
     /* Ipc::Mem::RegisteredRunner API */
-    virtual void create();
+    void create() override;
 
 private:
     Ipc::Mem::Owner<Ipc::Mem::PageStack> *spaceOwner; ///< free slices Owner

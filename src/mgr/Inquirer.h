@@ -33,13 +33,13 @@ public:
 
 protected:
     /* AsyncJob API */
-    virtual void start();
-    virtual bool doneAll() const;
+    void start() override;
+    bool doneAll() const override;
 
     /* Ipc::Inquirer API */
-    virtual void cleanup();
-    virtual void sendResponse();
-    virtual bool aggregate(Ipc::Response::Pointer aResponse);
+    void cleanup() override;
+    void sendResponse() override;
+    bool aggregate(Ipc::Response::Pointer aResponse) override;
 
 private:
     void noteWroteHeader(const CommIoCbParams& params);

@@ -62,7 +62,7 @@ public:
     /// changes the current context; nil argument sets it to nil/unknown
     static void Reset(const Pointer);
 
-    virtual ~CodeContext() {}
+    ~CodeContext() override {}
 
     /// \returns a small, permanent ID of the current context
     /// gists persist forever and are suitable for passing to other SMP workers

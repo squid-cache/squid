@@ -36,7 +36,7 @@ public:
     };
 
     Transients();
-    virtual ~Transients();
+    ~Transients() override;
 
     /// return a local, previously collapsed entry
     StoreEntry *findCollapsed(const sfileno xitIndex);
@@ -58,21 +58,21 @@ public:
     void disconnect(StoreEntry &);
 
     /* Store API */
-    virtual StoreEntry *get(const cache_key *) override;
-    virtual void create() override {}
-    virtual void init() override;
-    virtual uint64_t maxSize() const override;
-    virtual uint64_t minSize() const override;
-    virtual uint64_t currentSize() const override;
-    virtual uint64_t currentCount() const override;
-    virtual int64_t maxObjectSize() const override;
-    virtual void getStats(StoreInfoStats &stats) const override;
-    virtual void stat(StoreEntry &e) const override;
-    virtual void reference(StoreEntry &e) override;
-    virtual bool dereference(StoreEntry &e) override;
-    virtual void evictCached(StoreEntry &) override;
-    virtual void evictIfFound(const cache_key *) override;
-    virtual void maintain() override;
+    StoreEntry *get(const cache_key *) override;
+    void create() override {}
+    void init() override;
+    uint64_t maxSize() const override;
+    uint64_t minSize() const override;
+    uint64_t currentSize() const override;
+    uint64_t currentCount() const override;
+    int64_t maxObjectSize() const override;
+    void getStats(StoreInfoStats &stats) const override;
+    void stat(StoreEntry &e) const override;
+    void reference(StoreEntry &e) override;
+    bool dereference(StoreEntry &e) override;
+    void evictCached(StoreEntry &) override;
+    void evictIfFound(const cache_key *) override;
+    void maintain() override;
 
     /// Whether an entry with the given public key exists and (but) was
     /// marked for removal some time ago; get(key) returns nil in such cases.
@@ -97,7 +97,7 @@ protected:
     void anchorEntry(StoreEntry &, const sfileno, const Ipc::StoreMapAnchor &);
 
     // Ipc::StoreMapCleaner API
-    virtual void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId) override;
+    void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId) override;
 
 private:
     /// shared packed info indexed by Store keys, for creating new StoreEntries

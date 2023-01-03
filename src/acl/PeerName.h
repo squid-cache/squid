@@ -15,7 +15,7 @@ class ACLPeerNameStrategy : public ACLStrategy<const char *>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
 };
 
 #endif /* SQUID_ACLPEERNAME_H */

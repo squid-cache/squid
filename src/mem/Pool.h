@@ -143,11 +143,11 @@ public:
     virtual void clean(time_t maxage) = 0;
 
     /* Mem::Allocator API */
-    virtual PoolMeter const &getMeter() const;
-    virtual void *alloc();
-    virtual void freeOne(void *);
-    virtual size_t objectSize() const;
-    virtual int getInUseCount() = 0;
+    PoolMeter const &getMeter() const override;
+    void *alloc() override;
+    void freeOne(void *) override;
+    size_t objectSize() const override;
+    int getInUseCount() override = 0;
 
 protected:
     virtual void *allocate() = 0;

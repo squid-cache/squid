@@ -21,7 +21,7 @@ class DelayIdComposite : public RefCountable
 
 public:
     typedef RefCount<DelayIdComposite> Pointer;
-    virtual inline ~DelayIdComposite() {}
+    inline ~DelayIdComposite() override {}
 
     virtual int bytesWanted (int min, int max) const =0;
     virtual void bytesIn(int qty) = 0;

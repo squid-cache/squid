@@ -106,7 +106,7 @@ void RunRegistered(const RegisteredRunner::Method &m);
 class IndependentRunner: public RegisteredRunner
 {
 public:
-    virtual ~IndependentRunner() { unregisterRunner(); }
+    ~IndependentRunner() override { unregisterRunner(); }
 
 protected:
     void registerRunner();

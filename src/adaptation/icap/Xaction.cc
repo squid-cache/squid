@@ -52,15 +52,15 @@ public:
         Security::PeerConnector(aServerConn, aCallback, alp, timeout), icapService(service) {}
 
     /* Security::PeerConnector API */
-    virtual bool initialize(Security::SessionPointer &);
-    virtual void noteNegotiationDone(ErrorState *error);
-    virtual Security::ContextPointer getTlsContext() {
+    bool initialize(Security::SessionPointer &) override;
+    void noteNegotiationDone(ErrorState *error) override;
+    Security::ContextPointer getTlsContext() override {
         return icapService->sslContext;
     }
 
 private:
     /* Acl::ChecklistFiller API */
-    virtual void fillChecklist(ACLFilledChecklist &) const;
+    void fillChecklist(ACLFilledChecklist &) const override;
 
     Adaptation::Icap::ServiceRep::Pointer icapService;
 };
