@@ -35,9 +35,18 @@ protected: // prevents accidental creation of Interface instances
     Interface(Interface &&) = default;
 };
 
+/// convenience base for any class to prohibit default move and copy
+class NonCopyable
+{
+protected:
+    NonCopyable() = default;
+    NonCopyable(NonCopyable &&) = delete;
+};
+
 } // namespace TypeTraits_
 
 using Interface = TypeTraits_::Interface;
+using NonCopyable = TypeTraits_::NonCopyable;
 
 #endif /* SQUID_SRC_BASE_TYPETRAITS_H */
 

@@ -11,6 +11,7 @@
 
 #include "acl/forward.h"
 #include "acl/Options.h"
+#include "base/TypeTraits.h"
 #include "cbdata.h"
 #include "defines.h"
 #include "dlink.h"
@@ -36,7 +37,7 @@ void RegisterMaker(TypeName typeName, Maker maker);
 /// Can evaluate itself in FilledChecklist context.
 /// Does not change during evaluation.
 /// \ingroup ACLAPI
-class ACL
+class ACL : NonCopyable
 {
 
 public:
@@ -48,7 +49,6 @@ public:
     static ACL *FindByName(const char *name);
 
     ACL();
-    ACL(ACL &&) = delete; // no copying of any kind
     virtual ~ACL();
 
     /// sets user-specified ACL name and squid.conf context

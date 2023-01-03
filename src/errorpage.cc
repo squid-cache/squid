@@ -67,7 +67,8 @@ const SBuf ErrorState::LogformatMagic("@Squid{");
 /* local types */
 
 /// an error page created from admin-configurable metadata (e.g. deny_info)
-class ErrorDynamicPageInfo {
+class ErrorDynamicPageInfo : NonCopyable
+{
 public:
     ErrorDynamicPageInfo(const int anId, const char *aName, const SBuf &aCfgLocation);
     ~ErrorDynamicPageInfo() { xfree(page_name); }
@@ -92,10 +93,6 @@ public:
     // XXX: Misnamed. Not just for redirects.
     /// admin-configured HTTP status code
     Http::StatusCode page_redirect;
-
-private:
-    // no copying of any kind
-    ErrorDynamicPageInfo(ErrorDynamicPageInfo &&) = delete;
 };
 
 namespace ErrorPage {

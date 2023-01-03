@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "base/TextException.h"
+#include "base/TypeTraits.h"
 #include "debug/Stream.h"
 #include "fd.h"
 #include "ipc/Kids.h"
@@ -78,12 +79,11 @@ static void ResetSections(const int level = DBG_IMPORTANT);
 static bool DidResetSections = false;
 
 /// a named FILE with very-early/late usage safety mechanisms
-class DebugFile
+class DebugFile : NonCopyable
 {
 public:
     DebugFile() {}
     ~DebugFile() { clear(); }
-    DebugFile(DebugFile &&) = delete; // no copying or moving of any kind
 
     /// switches to the new pair, absorbing FILE and duping the name
     void reset(FILE *newFile, const char *newName);
@@ -143,16 +143,13 @@ public:
 using CompiledDebugMessages = std::deque<CompiledDebugMessage>;
 
 /// a receiver of debugs() messages (e.g., stderr or cache.log)
-class DebugChannel
+class DebugChannel : NonCopyable
 {
 public:
     using EarlyMessages = std::unique_ptr<CompiledDebugMessages>;
 
     explicit DebugChannel(const char *aName);
     virtual ~DebugChannel() = default;
-
-    // no copying or moving or any kind (for simplicity sake and to prevent accidental copies)
-    DebugChannel(DebugChannel &&) = delete;
 
     /// whether we are still expecting (and buffering) early messages
     bool collectingEarlyMessages() const { return bool(earlyMessages); }

@@ -14,11 +14,10 @@
 #include "acl/Gadgets.h"
 #include "ssl/gadgets.h"
 
-class sslproxy_cert_sign
+class sslproxy_cert_sign : NonCopyable
 {
 public:
     sslproxy_cert_sign() = default;
-    sslproxy_cert_sign(sslproxy_cert_sign &&) = delete; // prohibit all copy/move
     ~sslproxy_cert_sign() {
         while (const auto first = next) {
             next = first->next;
@@ -35,11 +34,10 @@ public:
     sslproxy_cert_sign *next = nullptr;
 };
 
-class sslproxy_cert_adapt
+class sslproxy_cert_adapt : NonCopyable
 {
 public:
     sslproxy_cert_adapt() = default;
-    sslproxy_cert_adapt(sslproxy_cert_adapt &&) = delete; // prohibit all copy/move
     ~sslproxy_cert_adapt() {
         while (const auto first = next) {
             next = first->next;

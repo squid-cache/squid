@@ -10,16 +10,16 @@
 #define SQUID_ACLDATA_H
 
 #include "acl/Options.h"
+#include "base/TypeTraits.h"
 #include "sbuf/List.h"
 
 /// Configured ACL parameter(s) (e.g., domain names in dstdomain ACL).
 template <class M>
-class ACLData
+class ACLData : NonCopyable
 {
 
 public:
     ACLData() = default;
-    ACLData(ACLData<M> &&) = delete; // no copying of any kind
     virtual ~ACLData() {}
 
     /// supported ACL "line" options (e.g., "-i")
