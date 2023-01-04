@@ -12,7 +12,7 @@
 #include "tests/STUB.h"
 
 #include "ipc/Forwarder.h"
-Ipc::Forwarder::Forwarder(Request::Pointer, double): AsyncJob("Ipc::Forwarder"), timeout(0) STUB
+Ipc::Forwarder::Forwarder(Request::Pointer, double): AsyncJob("Ipc::Forwarder"), timeout(0) {STUB}
 Ipc::Forwarder::~Forwarder() STUB
 void Ipc::Forwarder::start() STUB
 bool Ipc::Forwarder::doneAll() const STUB_RETVAL(false)
