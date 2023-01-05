@@ -2970,7 +2970,8 @@ AS_IF(test "x$enable_zph_qos" = "xyes"],[
 AC_CHECK_LIB(regex, regexec, [REGEXLIB="-lregex"],[REGEXLIB=''])
 SQUID_CHECK_REGEX_WORKS
 AS_IF([test "x$squid_cv_regex_works" = "xno"],[
-  AC_MSG_ERROR(["Could not detect a "])
+  AC_MSG_ERROR([Could not detect a functioning regex library.
+                If your OS does not provide one, please install gnulib and retry the build])
 ])
 AC_SUBST(REGEXLIB)
 
