@@ -12,6 +12,10 @@
 #include "mem/forward.h"
 #include "sbuf/SBuf.h"
 
+#if HAVE_REGEX_H
+#include <regex.h>
+#endif
+
 /**
  * A regular expression,
  * plain text and compiled representations
