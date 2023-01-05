@@ -47,8 +47,13 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
-#include <sys/types.h>
 #include <memory.h>
+
+#if HAVE_REGEX_H
+#include <regex.h>
+#endif
+
+#include <sys/types.h>
 
 int
 readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )

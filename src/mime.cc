@@ -26,6 +26,10 @@
 
 #include <array>
 
+#if HAVE_REGEX_H
+#include <regex.h>
+#endif
+
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
