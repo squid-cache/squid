@@ -1049,6 +1049,7 @@ mainRotate(void)
     externalAclShutdown();
 
     _db_rotate_log();       /* cache.log */
+
     storeDirWriteCleanLogs(1);
     storeLogRotate();       /* store.log */
     accessLogRotate();      /* access.log */
@@ -1062,6 +1063,23 @@ mainRotate(void)
 #endif
     externalAclInit();
 }
+
+
+/// Rotates master process logs; \sa mainRotate()
+static void
+masterRotate()
+{
+    if (AvoidSignalAction("log rotation", do_rotate))
+        return;
+
+    // XXX: When all SMP Squid processes use the same cache.log (default), each
+    // process, including this master process, rotates the same log file,
+    // resulting in K excessive rotations for K kid processes.
+    _db_rotate_log(); // cache.log
+
+    // master process should not have any other logs that mainRotate() rotates
+}
+
 
 static void
 setEffectiveUser(void)
@@ -1837,6 +1855,8 @@ masterCheckAndBroadcastSignals()
         masterShutdownStart();
     if (do_reconfigure)
         masterReconfigureStart();
+    if (do_rotate)
+        masterRotate();
     if (do_revive_kids)
         masterReviveKids();
 

@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include "comm.h"
 #include "fd.h"
 #include "ipc/Kids.h"
 #include "SquidTime.h"
@@ -103,8 +104,10 @@ DebugFile::reset(FILE *newFile, const char *newName)
     }
     file_ = newFile; // may be nil
 
-    if (file_)
-        fd_open(fileno(file_), FD_LOG, Debug::cache_log);
+    if (file_) {
+        commSetCloseOnExec(fileno(file_));
+	fd_open(fileno(file_), FD_LOG, Debug::cache_log);
+    }
 
     xfree(name);
     name = newName ? xstrdup(newName) : nullptr;
