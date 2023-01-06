@@ -1,0 +1,3 @@
+expect-message url_rewrite_timeout.*WARNING:.missing.time.unit.*using.*second
+
+
