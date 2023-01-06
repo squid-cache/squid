@@ -200,6 +200,12 @@ public:
     /// key=value pairs returned from URL rewrite/redirect helper
     NotePairs::Pointer notes;
 
+    /// The total number of finished attempts to establish a connection.
+    /// Excludes discarded HappyConnOpener attempts. Includes failed
+    /// HappyConnOpener attempts and [always successful] persistent connection
+    /// reuse. See %request_attempts.
+    int requestAttempts = 0;
+
     /// see ConnStateData::proxyProtocolHeader_
     ProxyProtocol::HeaderPointer proxyProtocolHeader;
 
