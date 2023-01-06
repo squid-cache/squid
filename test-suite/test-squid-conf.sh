@@ -62,15 +62,15 @@ then
             continue; # skip comment lines
         fi
 
-        if test "$instructionName" = "expect-message"
+        if test "$instructionName" = "expect-failure"
         then
+            expectFailure=yes
             expectMessage "$p1" "$p2" "$here"
             continue;
         fi
 
-        if test "$instructionName" = "expect-failure"
+        if test "$instructionName" = "expect-message"
         then
-            expectFailure=yes
             expectMessage "$p1" "$p2" "$here"
             continue;
         fi
