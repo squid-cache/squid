@@ -12,9 +12,7 @@
 #include "mem/forward.h"
 #include "sbuf/SBuf.h"
 
-#if HAVE_REGEX_H
-#include <regex.h>
-#endif
+#include <regex>
 
 /**
  * A regular expression,
@@ -26,18 +24,17 @@ class RegexPattern
 
 public:
     RegexPattern() = delete;
-    RegexPattern(const SBuf &aPattern, int aFlags);
-    ~RegexPattern();
-
     RegexPattern(RegexPattern &&) = delete; // no copying of any kind
+    RegexPattern(const SBuf &aPattern, const std::regex::flag_type aFlags);
+    ~RegexPattern() = default;
 
     /// whether the regex differentiates letter case
-    bool caseSensitive() const { return !(flags & REG_ICASE); }
+    bool caseSensitive() const { return !(regex.flags() & std::regex::icase); }
 
     /// whether this is an "any single character" regex (".")
     bool isDot() const { return pattern.length() == 1 && pattern[0] == '.'; }
 
-    bool match(const char *str) const {return regexec(&regex,str,0,nullptr,0)==0;}
+    bool match(const char *) const;
 
     /// Attempts to reproduce this regex (context-sensitive) configuration.
     /// If the previous regex is nil, may not report default flags.
@@ -45,14 +42,11 @@ public:
     void print(std::ostream &os, const RegexPattern *previous = nullptr) const;
 
 private:
-    /// a regular expression in the text form, suitable for regcomp(3)
+    /// a regular expression in the text form
     SBuf pattern;
 
-    /// bitmask of REG_* flags for regcomp(3)
-    const int flags;
-
-    /// a "compiled pattern buffer" filled by regcomp(3) for regexec(3)
-    regex_t regex;
+    /// a "compiled pattern buffer"
+    std::regex regex;
 };
 
 inline std::ostream &
