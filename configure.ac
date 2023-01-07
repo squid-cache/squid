@@ -1706,7 +1706,7 @@ AC_MSG_NOTICE([enabling select syscall for net I/O: ${enable_select:=auto}])
 AC_ARG_ENABLE(poll,
   AS_HELP_STRING([--disable-poll],[Disable poll(2) support.]),[
   SQUID_YESNO([$enableval],[--enable-poll])
-  AS_IF(["x$enableval" = "xyes"],[squid_opt_io_loop_engine="poll"])
+  AS_IF([test "x$enableval" = "xyes"],[squid_opt_io_loop_engine="poll"])
 ])
 AC_MSG_NOTICE([enabling poll syscall for net I/O: ${enable_poll:=auto}])
 
