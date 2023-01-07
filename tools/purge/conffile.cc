@@ -50,8 +50,6 @@
 #include <memory.h>
 
 #if HAVE_REGEX_H
-// regex.h requires size_t from sys/types.h
-#include <sys/types.h>
 #include <regex.h>
 #endif
 
