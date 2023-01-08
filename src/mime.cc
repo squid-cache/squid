@@ -9,6 +9,7 @@
 /* DEBUG: section 25    MIME Parsing and Internal Icons */
 
 #include "squid.h"
+#include "base/RegexPattern.h"
 #include "debug/Messages.h"
 #include "fde.h"
 #include "fs_io.h"
@@ -59,15 +60,14 @@ class MimeEntry
     MEMPROXY_CLASS(MimeEntry);
 
 public:
-    explicit MimeEntry(const char *aPattern, const regex_t &compiledPattern,
+    explicit MimeEntry(const SBuf &aPattern,
                        const char *aContentType,
                        const char *aContentEncoding, const char *aTransferMode,
                        bool optionViewEnable, bool optionDownloadEnable,
                        const char *anIconName);
     ~MimeEntry();
 
-    const char *pattern;
-    regex_t compiled_pattern;
+    RegexPattern pattern;
     const char *content_type;
     const char *content_encoding;
     char transfer_mode;
@@ -91,7 +91,7 @@ mimeGetEntry(const char *fn, int skip_encodings)
         t = nullptr;
 
         for (m = MimeTable; m; m = m->next) {
-            if (regexec(&m->compiled_pattern, name, 0, nullptr, 0) == 0)
+            if (m->pattern.match(name))
                 break;
         }
 
@@ -234,7 +234,6 @@ mimeInit(char *filename)
     char buf[BUFSIZ];
     char chopbuf[BUFSIZ];
     char *t;
-    char *pattern;
     char *icon;
     char *type;
     char *encoding;
@@ -242,9 +241,7 @@ mimeInit(char *filename)
     char *option;
     int view_option;
     int download_option;
-    regex_t re;
     MimeEntry *m;
-    int re_flags = REG_EXTENDED | REG_NOSUB | REG_ICASE;
 
     if (filename == nullptr)
         return;
@@ -262,6 +259,9 @@ mimeInit(char *filename)
     mimeFreeMemory();
 
     while (fgets(buf, BUFSIZ, fp)) {
+
+        try {
+
         if ((t = strchr(buf, '#')))
             *t = '\0';
 
@@ -276,7 +276,8 @@ mimeInit(char *filename)
 
         xstrncpy(chopbuf, buf, BUFSIZ);
 
-        if ((pattern = strtok(chopbuf, w_space)) == nullptr) {
+        const auto pattern = SBuf(strtok(chopbuf, w_space));
+        if (pattern.isEmpty()) {
             debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: parse failure: '" << buf << "'");
             continue;
         }
@@ -313,19 +314,18 @@ mimeInit(char *filename)
                 debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: unknown option: '" << buf << "' (" << option << ")");
         }
 
-        if (regcomp(&re, pattern, re_flags) != 0) {
-            debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: regcomp failure: '" << buf << "'");
-            continue;
-        }
-
-        m = new MimeEntry(pattern,re,type,encoding,mode,view_option,
-                          download_option,icon);
+        m = new MimeEntry(SBuf(pattern),type,encoding,mode,view_option,download_option,icon);
 
         *MimeTableTail = m;
 
         MimeTableTail = &m->next;
 
         debugs(25, 5, "mimeInit: added '" << buf << "'");
+
+        } catch(...) {
+            debugs(25, DBG_IMPORTANT, "ERROR: " << CurrentException);
+            continue;
+        }
     }
 
     fclose(fp);
@@ -447,18 +447,15 @@ MimeIcon::fillChecklist(ACLFilledChecklist &) const
 
 MimeEntry::~MimeEntry()
 {
-    xfree(pattern);
     xfree(content_type);
     xfree(content_encoding);
-    regfree(&compiled_pattern);
 }
 
-MimeEntry::MimeEntry(const char *aPattern, const regex_t &compiledPattern,
+MimeEntry::MimeEntry(const SBuf &aPattern,
                      const char *aContentType, const char *aContentEncoding,
                      const char *aTransferMode, bool optionViewEnable,
                      bool optionDownloadEnable, const char *anIconName) :
-    pattern(xstrdup(aPattern)),
-    compiled_pattern(compiledPattern),
+    pattern(aPattern, REG_EXTENDED|REG_NOSUB|REG_ICASE),
     content_type(xstrdup(aContentType)),
     content_encoding(xstrdup(aContentEncoding)),
     view_option(optionViewEnable),
