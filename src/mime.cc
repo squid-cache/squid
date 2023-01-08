@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -262,65 +262,65 @@ mimeInit(char *filename)
 
         try {
 
-        if ((t = strchr(buf, '#')))
-            *t = '\0';
+            if ((t = strchr(buf, '#')))
+                *t = '\0';
 
-        if ((t = strchr(buf, '\r')))
-            *t = '\0';
+            if ((t = strchr(buf, '\r')))
+                *t = '\0';
 
-        if ((t = strchr(buf, '\n')))
-            *t = '\0';
+            if ((t = strchr(buf, '\n')))
+                *t = '\0';
 
-        if (buf[0] == '\0')
-            continue;
+            if (buf[0] == '\0')
+                continue;
 
-        xstrncpy(chopbuf, buf, BUFSIZ);
+            xstrncpy(chopbuf, buf, BUFSIZ);
 
-        const auto pattern = SBuf(strtok(chopbuf, w_space));
-        if (pattern.isEmpty()) {
-            debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: parse failure: '" << buf << "'");
-            continue;
-        }
+            const auto pattern = SBuf(strtok(chopbuf, w_space));
+            if (pattern.isEmpty()) {
+                debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: parse failure: '" << buf << "'");
+                continue;
+            }
 
-        if ((type = strtok(nullptr, w_space)) == nullptr) {
-            debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: parse failure: '" << buf << "'");
-            continue;
-        }
+            if ((type = strtok(nullptr, w_space)) == nullptr) {
+                debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: parse failure: '" << buf << "'");
+                continue;
+            }
 
-        if ((icon = strtok(nullptr, w_space)) == nullptr) {
-            debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: parse failure: '" << buf << "'");
-            continue;
-        }
+            if ((icon = strtok(nullptr, w_space)) == nullptr) {
+                debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: parse failure: '" << buf << "'");
+                continue;
+            }
 
-        if ((encoding = strtok(nullptr, w_space)) == nullptr) {
-            debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: parse failure: '" << buf << "'");
-            continue;
-        }
+            if ((encoding = strtok(nullptr, w_space)) == nullptr) {
+                debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: parse failure: '" << buf << "'");
+                continue;
+            }
 
-        if ((mode = strtok(nullptr, w_space)) == nullptr) {
-            debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: parse failure: '" << buf << "'");
-            continue;
-        }
+            if ((mode = strtok(nullptr, w_space)) == nullptr) {
+                debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: parse failure: '" << buf << "'");
+                continue;
+            }
 
-        download_option = 0;
-        view_option = 0;
+            download_option = 0;
+            view_option = 0;
 
-        while ((option = strtok(nullptr, w_space)) != nullptr) {
-            if (!strcmp(option, "+download"))
-                download_option = 1;
-            else if (!strcmp(option, "+view"))
-                view_option = 1;
-            else
-                debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: unknown option: '" << buf << "' (" << option << ")");
-        }
+            while ((option = strtok(nullptr, w_space)) != nullptr) {
+                if (!strcmp(option, "+download"))
+                    download_option = 1;
+                else if (!strcmp(option, "+view"))
+                    view_option = 1;
+                else
+                    debugs(25, DBG_IMPORTANT, "ERROR: mimeInit: unknown option: '" << buf << "' (" << option << ")");
+            }
 
-        m = new MimeEntry(SBuf(pattern),type,encoding,mode,view_option,download_option,icon);
+            m = new MimeEntry(SBuf(pattern),type,encoding,mode,view_option,download_option,icon);
 
-        *MimeTableTail = m;
+            *MimeTableTail = m;
 
-        MimeTableTail = &m->next;
+            MimeTableTail = &m->next;
 
-        debugs(25, 5, "mimeInit: added '" << buf << "'");
+            debugs(25, 5, "mimeInit: added '" << buf << "'");
 
         } catch(...) {
             debugs(25, DBG_IMPORTANT, "ERROR: " << CurrentException);
