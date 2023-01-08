@@ -64,6 +64,8 @@ public:
     /// The stateful replies should include the reservation ID
     Helper::ReservationId reservationId;
 private:
+    static void CheckReceivedKey(const SBuf &, const SBuf &);
+
     void parseResponseKeys();
 
     /// Return an empty MemBuf.
