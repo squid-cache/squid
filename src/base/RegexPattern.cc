@@ -18,6 +18,7 @@ RegexPattern::RegexPattern(const SBuf &aPattern, const std::regex::flag_type aFl
     regex(aPattern.rawContent(), aPattern.length(), aFlags)
 {
     assert(aFlags != 0);
+    assert((aFlags & (std::regex::basic|std::regex::extended)) != 0);
     debugs(28, 2, *this);
 }
 
