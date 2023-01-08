@@ -46,6 +46,9 @@
 #endif
 
 #include <cerrno>
+#if HAVE_REGEX_H
+#include <regex.h>
+#endif
 
 namespace Ftp
 {

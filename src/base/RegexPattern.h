@@ -9,9 +9,12 @@
 #ifndef SQUID_SRC_BASE_REGEXPATTERN_H
 #define SQUID_SRC_BASE_REGEXPATTERN_H
 
-#include "compat/GnuRegex.h"
 #include "mem/forward.h"
 #include "sbuf/SBuf.h"
+
+#if HAVE_REGEX_H
+#include <regex.h>
+#endif
 
 /**
  * A regular expression,

@@ -2083,7 +2083,6 @@ PREDEFINED             = __cplusplus \
                          USE_ERR_LOCALES \
                          USE_EPOLL \
                          USE_GNUGSS \
-                         USE_GNUREGEX \
                          USE_GNUTLS \
                          USE_HEIMDAL_KRB5 \
                          USE_HEXDUMP \

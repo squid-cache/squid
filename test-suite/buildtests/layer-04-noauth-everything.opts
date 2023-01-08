@@ -57,7 +57,6 @@ MAKETEST="distcheck"
 #     we use it to perform the same duty between our nested scripts.
 DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-shared \
-	--enable-gnuregex \
 	--enable-optimizations \
 	--enable-inline \
 	--enable-xmalloc-statistics \
