@@ -26,7 +26,7 @@ class ServiceConfig: public Adaptation::ServiceConfig
 {
 public:
     // Adaptation::ServiceConfig API
-    virtual bool grokExtension(const char *name, const char *value);
+    bool grokExtension(const char *name, const char *value) override;
 
 public:
     typedef std::pair<std::string, std::string> Extension; // name=value in cfg
@@ -40,18 +40,18 @@ class Config: public Adaptation::Config
 
 public:
     Config();
-    ~Config();
+    ~Config() override;
 
-    virtual bool finalize();
+    bool finalize() override;
 
 protected:
-    virtual Adaptation::ServiceConfig *newServiceConfig() const;
+    Adaptation::ServiceConfig *newServiceConfig() const override;
 
 private:
     Config(const Config &); // not implemented
     Config &operator =(const Config &); // not implemented
 
-    virtual Adaptation::ServicePointer createService(const ServiceConfigPointer &cfg);
+    Adaptation::ServicePointer createService(const ServiceConfigPointer &cfg) override;
 };
 
 extern Config TheConfig;

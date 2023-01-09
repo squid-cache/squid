@@ -218,7 +218,7 @@ public:
     const char *text() { return template_.c_str(); }
 
 protected:
-    virtual void setDefault() override {
+    void setDefault() override {
         template_ = "Internal Error: Missing Template ";
         template_.append(templateName.termedBuf());
     }

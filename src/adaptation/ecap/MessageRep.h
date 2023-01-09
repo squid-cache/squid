@@ -40,13 +40,13 @@ public:
     HeaderRep(Http::Message &aMessage);
 
     /* libecap::Header API */
-    virtual bool hasAny(const Name &name) const;
-    virtual Value value(const Name &name) const;
-    virtual void add(const Name &name, const Value &value);
-    virtual void removeAny(const Name &name);
-    virtual void visitEach(libecap::NamedValueVisitor &visitor) const;
-    virtual Area image() const;
-    virtual void parse(const Area &buf); // throws on failures
+    bool hasAny(const Name &name) const override;
+    Value value(const Name &name) const override;
+    void add(const Name &name, const Value &value) override;
+    void removeAny(const Name &name) override;
+    void visitEach(libecap::NamedValueVisitor &visitor) const override;
+    Area image() const override;
+    void parse(const Area &buf) override; // throws on failures
 
 protected:
     static Http::HdrType TranslateHeaderId(const Name &name);
@@ -88,14 +88,14 @@ public:
     RequestLineRep(HttpRequest &aMessage);
 
     /* libecap::RequestLine API */
-    virtual void uri(const Area &aUri);
-    virtual Area uri() const;
-    virtual void method(const Name &aMethod);
-    virtual Name method() const;
-    virtual libecap::Version version() const;
-    virtual void version(const libecap::Version &aVersion);
-    virtual Name protocol() const;
-    virtual void protocol(const Name &aProtocol);
+    void uri(const Area &aUri) override;
+    Area uri() const override;
+    void method(const Name &aMethod) override;
+    Name method() const override;
+    libecap::Version version() const override;
+    void version(const libecap::Version &aVersion) override;
+    Name protocol() const override;
+    void protocol(const Name &aProtocol) override;
 
 private:
     HttpRequest &theMessage; // the request header being translated to libecap
@@ -112,14 +112,14 @@ public:
     StatusLineRep(HttpReply &aMessage);
 
     /* libecap::StatusLine API */
-    virtual void statusCode(int code);
-    virtual int statusCode() const;
-    virtual void reasonPhrase(const Area &phrase);
-    virtual Area reasonPhrase() const;
-    virtual libecap::Version version() const;
-    virtual void version(const libecap::Version &aVersion);
-    virtual Name protocol() const;
-    virtual void protocol(const Name &aProtocol);
+    void statusCode(int code) override;
+    int statusCode() const override;
+    void reasonPhrase(const Area &phrase) override;
+    Area reasonPhrase() const override;
+    libecap::Version version() const override;
+    void version(const libecap::Version &aVersion) override;
+    Name protocol() const override;
+    void protocol(const Name &aProtocol) override;
 
 private:
     HttpReply &theMessage; // the request header being translated to libecap
@@ -137,7 +137,7 @@ public:
     void tie(const BodyPipe::Pointer &aBody); // late binding if !theBody;
 
     // libecap::Body API
-    virtual BodySize bodySize() const;
+    BodySize bodySize() const override;
 
 private:
     BodyPipe::Pointer theBody; // the body being translated to libecap
@@ -148,17 +148,17 @@ class MessageRep: public libecap::Message
 {
 public:
     explicit MessageRep(Http::Message *rawHeader);
-    virtual ~MessageRep();
+    ~MessageRep() override;
 
     /* libecap::Message API */
-    virtual libecap::shared_ptr<libecap::Message> clone() const;
-    virtual libecap::FirstLine &firstLine();
-    virtual const libecap::FirstLine &firstLine() const;
-    virtual libecap::Header &header();
-    virtual const libecap::Header &header() const;
-    virtual void addBody();
-    virtual libecap::Body *body();
-    virtual const libecap::Body *body() const;
+    libecap::shared_ptr<libecap::Message> clone() const override;
+    libecap::FirstLine &firstLine() override;
+    const libecap::FirstLine &firstLine() const override;
+    libecap::Header &header() override;
+    const libecap::Header &header() const override;
+    void addBody() override;
+    libecap::Body *body() override;
+    const libecap::Body *body() const override;
 
     void tieBody(Ecap::XactionRep *x); // to a specific transaction
 

@@ -20,7 +20,7 @@ class WriteRequest : public RefCountable
 public:
     typedef RefCount<WriteRequest> Pointer;
     WriteRequest(char const *buf, off_t offset, size_t len, FREE *);
-    virtual ~WriteRequest() {}
+    ~WriteRequest() override {}
 
     char const *buf;
     off_t offset;

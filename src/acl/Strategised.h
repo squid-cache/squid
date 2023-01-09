@@ -32,27 +32,27 @@ class ACLStrategised : public ACL
 public:
     typedef M MatchType;
 
-    ~ACLStrategised();
+    ~ACLStrategised() override;
     ACLStrategised(ACLData<MatchType> *, ACLStrategy<MatchType> *, char const *);
 
-    virtual char const *typeString() const;
+    char const *typeString() const override;
 
-    virtual bool requiresRequest() const {return matcher->requiresRequest();}
+    bool requiresRequest() const override {return matcher->requiresRequest();}
 
-    virtual bool requiresReply() const {return matcher->requiresReply();}
+    bool requiresReply() const override {return matcher->requiresReply();}
 
-    virtual void prepareForUse() { data->prepareForUse();}
-    virtual void parse();
-    virtual int match(ACLChecklist *checklist);
+    void prepareForUse() override { data->prepareForUse();}
+    void parse() override;
+    int match(ACLChecklist *checklist) override;
     virtual int match (M const &);
-    virtual SBufList dump() const;
-    virtual bool empty () const;
-    virtual bool valid () const;
+    SBufList dump() const override;
+    bool empty () const override;
+    bool valid () const override;
 
 private:
     /* ACL API */
-    virtual const Acl::Options &options() { return matcher->options(); }
-    virtual const Acl::Options &lineOptions() { return data->lineOptions(); }
+    const Acl::Options &options() override { return matcher->options(); }
+    const Acl::Options &lineOptions() override { return data->lineOptions(); }
 
     ACLData<MatchType> *data;
     char const *type_;

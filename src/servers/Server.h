@@ -30,12 +30,12 @@ class Server : virtual public AsyncJob, public BodyProducer
 {
 public:
     Server(const MasterXactionPointer &xact);
-    virtual ~Server() {}
+    ~Server() override {}
 
     /* AsyncJob API */
-    virtual void start();
-    virtual bool doneAll() const;
-    virtual void swanSong();
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
 
     /// whether to stop serving our client after reading EOF on its connection
     virtual bool shouldCloseOnEof() const = 0;

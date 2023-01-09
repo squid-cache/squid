@@ -56,8 +56,8 @@ public:
 #endif
 
     /* ErrorDetail API */
-    virtual SBuf brief() const;
-    virtual SBuf verbose(const HttpRequestPointer &) const;
+    SBuf brief() const override;
+    SBuf verbose(const HttpRequestPointer &) const override;
 
     /// \returns error category; \see ErrorCode
     ErrorCode errorNo() const { return error_no; }

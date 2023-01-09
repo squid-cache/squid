@@ -19,18 +19,18 @@ class MmappedFile : public DiskFile
 
 public:
     MmappedFile(char const *path);
-    ~MmappedFile();
-    virtual void open(int flags, mode_t mode, RefCount<IORequestor> callback);
-    virtual void create(int flags, mode_t mode, RefCount<IORequestor> callback);
-    virtual void read(ReadRequest *);
-    virtual void write(WriteRequest *);
-    virtual void close();
-    virtual bool error() const;
-    virtual int getFD() const { return fd;}
+    ~MmappedFile() override;
+    void open(int flags, mode_t mode, RefCount<IORequestor> callback) override;
+    void create(int flags, mode_t mode, RefCount<IORequestor> callback) override;
+    void read(ReadRequest *) override;
+    void write(WriteRequest *) override;
+    void close() override;
+    bool error() const override;
+    int getFD() const override { return fd;}
 
-    virtual bool canRead() const;
-    virtual bool canWrite() const;
-    virtual bool ioInProgress() const;
+    bool canRead() const override;
+    bool canWrite() const override;
+    bool ioInProgress() const override;
 
 private:
     char const *path_;

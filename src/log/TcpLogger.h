@@ -28,7 +28,7 @@ namespace Log
  */
 class TcpLogger : public AsyncJob
 {
-    CBDATA_CLASS(TcpLogger);
+    CBDATA_CHILD(TcpLogger);
 
 public:
     typedef CbcPointer<TcpLogger> Pointer;
@@ -38,7 +38,7 @@ public:
 
 protected:
     TcpLogger(size_t, bool, Ip::Address);
-    virtual ~TcpLogger();
+    ~TcpLogger() override;
 
     /// Called when Squid is reconfiguring (or exiting) to give us a chance to
     /// flush remaining buffers and end this job w/o loss of data. No new log
@@ -53,9 +53,9 @@ protected:
     void flush();
 
     /* AsyncJob API */
-    virtual void start();
-    virtual bool doneAll() const;
-    virtual void swanSong();
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
 
 private:
     /* Logfile API. Map c-style Logfile calls to TcpLogger method calls. */

@@ -25,7 +25,7 @@ class ESIStreamContext : public RefCountable
 public:
     typedef RefCount<ESIStreamContext> Pointer;
     ESIStreamContext();
-    ~ESIStreamContext();
+    ~ESIStreamContext() override;
     void freeResources();
     int finished;
     ESIIncludePtr include;
@@ -39,11 +39,11 @@ class ESIInclude : public ESIElement
 
 public:
     ESIInclude(esiTreeParentPtr, int attributes, const char **attr, ESIContext *);
-    ~ESIInclude();
-    void render(ESISegment::Pointer);
-    esiProcessResult_t process (int dovars);
-    Pointer makeCacheable() const;
-    Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const;
+    ~ESIInclude() override;
+    void render(ESISegment::Pointer) override;
+    esiProcessResult_t process (int dovars) override;
+    Pointer makeCacheable() const override;
+    Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const override;
     void subRequestDone (ESIStreamContext::Pointer, bool);
 
     struct {
@@ -58,7 +58,7 @@ public:
     ESIVarState *varState;
     char *srcurl, *alturl;
     void includeFail(ESIStreamContext::Pointer);
-    void finish();
+    void finish() override;
 
 private:
     void Start (ESIStreamContext::Pointer, char const *, ESIVarState *);

@@ -413,11 +413,11 @@ class SharedSessionCacheRr: public Ipc::Mem::RegisteredRunner
 public:
     /* RegisteredRunner API */
     SharedSessionCacheRr(): owner(nullptr) {}
-    virtual void useConfig();
-    virtual ~SharedSessionCacheRr();
+    void useConfig() override;
+    ~SharedSessionCacheRr() override;
 
 protected:
-    virtual void create();
+    void create() override;
 
 private:
     Ipc::MemMap::Owner *owner;

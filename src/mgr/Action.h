@@ -28,7 +28,7 @@ public:
 
 public:
     Action(const CommandPointer &aCmd);
-    virtual ~Action();
+    ~Action() override;
 
     /* for local Cache Manager use */
 

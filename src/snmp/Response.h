@@ -26,8 +26,8 @@ public:
     explicit Response(Ipc::RequestId); ///< sender's constructor
     explicit Response(const Ipc::TypedMsgHdr& msg); ///< from recvmsg()
     /* Ipc::Response API */
-    virtual void pack(Ipc::TypedMsgHdr& msg) const;
-    virtual Ipc::Response::Pointer clone() const;
+    void pack(Ipc::TypedMsgHdr& msg) const override;
+    Ipc::Response::Pointer clone() const override;
 
 public:
     Pdu pdu; ///< SNMP protocol data unit

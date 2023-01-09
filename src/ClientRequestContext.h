@@ -29,7 +29,7 @@ class ClientRequestContext : public RefCountable
 
 public:
     ClientRequestContext(ClientHttpRequest *);
-    ~ClientRequestContext();
+    ~ClientRequestContext() override;
 
     bool httpStateIsValid();
     void hostHeaderVerify();

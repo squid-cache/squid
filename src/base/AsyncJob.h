@@ -74,7 +74,7 @@ public:
 
 protected:
     // external destruction prohibited to ensure swanSong() is called
-    virtual ~AsyncJob();
+    ~AsyncJob() override;
 
     const char *stopReason; ///< reason for forcing done() to be true
     const char *typeName; ///< kid (leaf) class name, for debugging

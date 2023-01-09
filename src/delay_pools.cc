@@ -47,17 +47,17 @@ class Aggregate : public CompositePoolNode
 public:
     typedef RefCount<Aggregate> Pointer;
     Aggregate();
-    ~Aggregate();
+    ~Aggregate() override;
     virtual DelaySpec *rate() {return &spec;}
 
     virtual DelaySpec const *rate() const {return &spec;}
 
-    virtual void stats(StoreEntry * sentry);
-    virtual void dump(StoreEntry *entry) const;
-    virtual void update(int incr);
-    virtual void parse();
+    void stats(StoreEntry * sentry) override;
+    void dump(StoreEntry *entry) const override;
+    void update(int incr) override;
+    void parse() override;
 
-    virtual DelayIdComposite::Pointer id(CompositeSelectionDetails &);
+    DelayIdComposite::Pointer id(CompositeSelectionDetails &) override;
 
 private:
 
@@ -68,9 +68,9 @@ private:
 
     public:
         AggregateId (RefCount<Aggregate>);
-        virtual int bytesWanted (int min, int max) const;
-        virtual void bytesIn(int qty);
-        virtual void delayRead(const AsyncCallPointer &);
+        int bytesWanted (int min, int max) const override;
+        void bytesIn(int qty) override;
+        void delayRead(const AsyncCallPointer &) override;
 
     private:
         RefCount<Aggregate> theAggregate;
@@ -110,15 +110,15 @@ class VectorPool : public CompositePoolNode
 
 public:
     typedef RefCount<VectorPool> Pointer;
-    virtual void dump(StoreEntry *entry) const;
-    virtual void parse();
-    virtual void update(int incr);
-    virtual void stats(StoreEntry * sentry);
+    void dump(StoreEntry *entry) const override;
+    void parse() override;
+    void update(int incr) override;
+    void stats(StoreEntry * sentry) override;
 
-    virtual DelayIdComposite::Pointer id(CompositeSelectionDetails &);
+    DelayIdComposite::Pointer id(CompositeSelectionDetails &) override;
     VectorMap<unsigned char, DelayBucket> buckets;
     VectorPool();
-    ~VectorPool();
+    ~VectorPool() override;
 
 protected:
     bool keyAllocated (unsigned char const key) const;
@@ -139,8 +139,8 @@ protected:
 
     public:
         Id (RefCount<VectorPool>, int);
-        virtual int bytesWanted (int min, int max) const;
-        virtual void bytesIn(int qty);
+        int bytesWanted (int min, int max) const override;
+        void bytesIn(int qty) override;
 
     private:
         RefCount<VectorPool> theVector;
@@ -154,8 +154,8 @@ class IndividualPool : public VectorPool
     MEMPROXY_CLASS(IndividualPool);
 
 protected:
-    virtual char const *label() const {return "Individual";}
-    virtual unsigned int makeKey(Ip::Address &src_addr) const;
+    char const *label() const override {return "Individual";}
+    unsigned int makeKey(Ip::Address &src_addr) const override;
 };
 
 /// \ingroup DelayPoolsInternal
@@ -164,8 +164,8 @@ class ClassCNetPool : public VectorPool
     MEMPROXY_CLASS(ClassCNetPool);
 
 protected:
-    virtual char const *label() const {return "Network";}
-    virtual unsigned int makeKey (Ip::Address &src_addr) const;
+    char const *label() const override {return "Network";}
+    unsigned int makeKey (Ip::Address &src_addr) const override;
 };
 
 /* don't use remote storage for these */
@@ -193,14 +193,14 @@ class ClassCHostPool : public CompositePoolNode
 
 public:
     typedef RefCount<ClassCHostPool> Pointer;
-    virtual void dump(StoreEntry *entry) const;
-    virtual void parse();
-    virtual void update(int incr);
-    virtual void stats(StoreEntry * sentry);
+    void dump(StoreEntry *entry) const override;
+    void parse() override;
+    void update(int incr) override;
+    void stats(StoreEntry * sentry) override;
 
-    virtual DelayIdComposite::Pointer id(CompositeSelectionDetails &);
+    DelayIdComposite::Pointer id(CompositeSelectionDetails &) override;
     ClassCHostPool();
-    ~ClassCHostPool();
+    ~ClassCHostPool() override;
 
 protected:
     bool keyAllocated (unsigned char const key) const;
@@ -228,8 +228,8 @@ protected:
 
     public:
         Id (RefCount<ClassCHostPool>, unsigned char, unsigned char);
-        virtual int bytesWanted (int min, int max) const;
-        virtual void bytesIn(int qty);
+        int bytesWanted (int min, int max) const override;
+        void bytesIn(int qty) override;
 
     private:
         RefCount<ClassCHostPool> theClassCHost;

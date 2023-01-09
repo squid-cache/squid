@@ -25,16 +25,16 @@ class IcmpSquid : public Icmp
 {
 public:
     IcmpSquid();
-    virtual ~IcmpSquid();
+    ~IcmpSquid() override;
 
-    virtual int Open();
-    virtual void Close();
+    int Open() override;
+    void Close() override;
 
     void DomainPing(Ip::Address &to, const char *domain);
 
 #if USE_ICMP
-    virtual void SendEcho(Ip::Address &to, int opcode, const char* payload=nullptr, int len=0);
-    virtual void Recv(void);
+    void SendEcho(Ip::Address &to, int opcode, const char* payload=nullptr, int len=0) override;
+    void Recv(void) override;
 #endif
 };
 

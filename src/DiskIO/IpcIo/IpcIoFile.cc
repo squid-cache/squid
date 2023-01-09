@@ -1015,12 +1015,12 @@ class IpcIoRr: public Ipc::Mem::RegisteredRunner
 public:
     /* RegisteredRunner API */
     IpcIoRr(): owner(nullptr) {}
-    virtual ~IpcIoRr();
-    virtual void claimMemoryNeeds();
+    ~IpcIoRr() override;
+    void claimMemoryNeeds() override;
 
 protected:
     /* Ipc::Mem::RegisteredRunner API */
-    virtual void create();
+    void create() override;
 
 private:
     Ipc::FewToFewBiQueue::Owner *owner;

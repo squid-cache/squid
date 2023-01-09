@@ -21,14 +21,14 @@ namespace Mgr
 /// Comm-writes it using parent StoreToCommWriter.
 class ActionWriter: public StoreToCommWriter
 {
-    CBDATA_CLASS(ActionWriter);
+    CBDATA_CHILD(ActionWriter);
 
 public:
     ActionWriter(const Action::Pointer &anAction, const Comm::ConnectionPointer &conn);
 
 protected:
     /* AsyncJob API */
-    virtual void start();
+    void start() override;
 
 private:
     Action::Pointer action; ///< action that fills the entry

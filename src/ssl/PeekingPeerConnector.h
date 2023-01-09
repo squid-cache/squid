@@ -18,7 +18,7 @@ namespace Ssl
 
 /// A PeerConnector for HTTP origin servers. Capable of SslBumping.
 class PeekingPeerConnector: public Security::PeerConnector {
-    CBDATA_CLASS(PeekingPeerConnector);
+    CBDATA_CHILD(PeekingPeerConnector);
 public:
     PeekingPeerConnector(HttpRequestPointer &aRequest,
                          const Comm::ConnectionPointer &aServerConn,
@@ -28,11 +28,11 @@ public:
                          time_t timeout = 0);
 
     /* Security::PeerConnector API */
-    virtual bool initialize(Security::SessionPointer &);
-    virtual Security::ContextPointer getTlsContext();
-    virtual void noteWantWrite();
-    virtual void noteNegotiationError(const Security::ErrorDetailPointer &);
-    virtual void noteNegotiationDone(ErrorState *error);
+    bool initialize(Security::SessionPointer &) override;
+    Security::ContextPointer getTlsContext() override;
+    void noteWantWrite() override;
+    void noteNegotiationError(const Security::ErrorDetailPointer &) override;
+    void noteNegotiationDone(ErrorState *error) override;
 
     /// Updates associated client connection manager members
     /// if the server certificate was received from the server.

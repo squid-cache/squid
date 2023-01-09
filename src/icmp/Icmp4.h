@@ -134,13 +134,13 @@ class Icmp4 : public Icmp
 {
 public:
     Icmp4();
-    virtual ~Icmp4();
+    ~Icmp4() override;
 
-    virtual int Open();
+    int Open() override;
 
 #if USE_ICMP
-    virtual void SendEcho(Ip::Address &, int, const char*, int);
-    virtual void Recv(void);
+    void SendEcho(Ip::Address &, int, const char*, int) override;
+    void Recv(void) override;
 #endif
 };
 

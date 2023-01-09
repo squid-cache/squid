@@ -47,7 +47,7 @@ public:
         enum Method { mhReplace, mhAppend };
 
         Value(const char *aVal, const bool quoted, const char *descr, const Method method = mhReplace);
-        ~Value();
+        ~Value() override;
         Value(const Value&) = delete;
         Value &operator=(const Value&) = delete;
 
@@ -116,7 +116,7 @@ public:
 
     explicit Notes(const char *aDescr, const Keys *extraReservedKeys = nullptr, bool allowFormatted = true);
     Notes() = default;
-    ~Notes() { notes.clear(); }
+    ~Notes() override { notes.clear(); }
     Notes(const Notes&) = delete;
     Notes &operator=(const Notes&) = delete;
 

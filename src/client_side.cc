@@ -160,7 +160,7 @@ public:
         handler(aHandler), portCfg(aPortCfg), portTypeNote(note), sub(aSub) {}
 
     /* CallDialer API */
-    virtual void print(std::ostream &os) const {
+    void print(std::ostream &os) const override {
         os << '(' << answer_ << ", " << FdNote(portTypeNote) << " port=" << (void*)&portCfg << ')';
     }
 
@@ -168,7 +168,7 @@ public:
     virtual void dial(AsyncCall &) { (handler)(portCfg, portTypeNote, sub); }
 
     /* WithAnswer API */
-    virtual Ipc::StartListeningAnswer &answer() { return answer_; }
+    Ipc::StartListeningAnswer &answer() override { return answer_; }
 
 public:
     Handler handler;

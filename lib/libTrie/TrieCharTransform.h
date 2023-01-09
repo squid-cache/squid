@@ -40,7 +40,7 @@ public:
 
 class TrieCaseless : public TrieCharTransform
 {
-    virtual char operator () (char const aChar) const {return tolower(aChar);}
+    char operator () (char const aChar) const override {return tolower(aChar);}
 };
 
 #endif /* __cplusplus */

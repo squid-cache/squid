@@ -433,7 +433,7 @@ public:
         callback_data = cbdataReference(cb.callback_data);
     }
 
-    virtual ~StoreIOStateCb() {
+    ~StoreIOStateCb() override {
         cbdataReferenceDone(callback_data); // may be nil already
     }
 
@@ -447,7 +447,7 @@ public:
         return cbdataReferenceValid(callback_data) && callback;
     }
 
-    virtual void print(std::ostream &os) const {
+    void print(std::ostream &os) const override {
         os << '(' << callback_data << ", err=" << errflag << ')';
     }
 

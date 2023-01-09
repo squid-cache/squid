@@ -18,7 +18,7 @@ class ACLAdaptationServiceData : public ACLStringData
 {
 public:
     ACLAdaptationServiceData() : ACLStringData() {}
-    virtual void parse();
+    void parse() override;
 };
 
 #endif /* SQUID_ADAPTATIONSERVICEDATA_H */

@@ -126,7 +126,7 @@ class ChunkExtensionValueParser: public Http1::ChunkExtensionValueParser
 {
 public:
     /* Http1::ChunkExtensionValueParser API */
-    virtual void parse(Tokenizer &tok, const SBuf &extName) override;
+    void parse(Tokenizer &tok, const SBuf &extName) override;
 
     bool sawUseOriginalBody() const { return useOriginalBody_ >= 0; }
     uint64_t useOriginalBody() const { assert(sawUseOriginalBody()); return static_cast<uint64_t>(useOriginalBody_); }
@@ -140,25 +140,25 @@ private:
 
 class ModXact: public Xaction, public BodyProducer, public BodyConsumer
 {
-    CBDATA_CLASS(ModXact);
+    CBDATA_CHILD(ModXact);
 
 public:
     ModXact(Http::Message *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, ServiceRep::Pointer &s);
-    virtual ~ModXact();
+    ~ModXact() override;
 
     // BodyProducer methods
-    virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
-    virtual void noteBodyConsumerAborted(BodyPipe::Pointer);
+    void noteMoreBodySpaceAvailable(BodyPipe::Pointer) override;
+    void noteBodyConsumerAborted(BodyPipe::Pointer) override;
 
     // BodyConsumer methods
-    virtual void noteMoreBodyDataAvailable(BodyPipe::Pointer);
-    virtual void noteBodyProductionEnded(BodyPipe::Pointer);
-    virtual void noteBodyProducerAborted(BodyPipe::Pointer);
+    void noteMoreBodyDataAvailable(BodyPipe::Pointer) override;
+    void noteBodyProductionEnded(BodyPipe::Pointer) override;
+    void noteBodyProducerAborted(BodyPipe::Pointer) override;
 
     /* Xaction API */
-    virtual void startShoveling();
-    virtual void handleCommWrote(size_t size);
-    virtual void handleCommRead(size_t size);
+    void startShoveling() override;
+    void handleCommWrote(size_t size) override;
+    void handleCommRead(size_t size) override;
 
     void handleCommWroteHeaders();
     void handleCommWroteBody();
@@ -172,17 +172,17 @@ public:
     InOut adapted;
 
     // bypasses exceptions if needed and possible
-    virtual void callException(const std::exception &e);
+    void callException(const std::exception &e) override;
 
     /// record error detail in the virgin request if possible
-    virtual void detailError(const ErrorDetail::Pointer &errDetail);
+    void detailError(const ErrorDetail::Pointer &errDetail) override;
     // Icap::Xaction API
-    virtual void clearError();
+    void clearError() override;
     /// The master transaction log entry
-    virtual AccessLogEntry::Pointer masterLogEntry() { return alMaster; }
+    AccessLogEntry::Pointer masterLogEntry() override { return alMaster; }
 
 private:
-    virtual void start();
+    void start() override;
 
     /// locates the request, either as a cause or as a virgin message itself
     const HttpRequest &virginRequest() const; // Must always be available
@@ -204,8 +204,8 @@ private:
 
     void startReading();
     void readMore();
-    virtual bool doneReading() const { return commEof || state.doneParsing(); }
-    virtual bool doneWriting() const { return state.doneWriting(); }
+    bool doneReading() const override { return commEof || state.doneParsing(); }
+    bool doneWriting() const override { return state.doneWriting(); }
 
     size_t virginContentSize(const VirginBodyAct &act) const;
     const char *virginContentData(const VirginBodyAct &act) const;
@@ -260,8 +260,8 @@ private:
     void echoMore();
     void updateSources(); ///< Update the Http::Message sources
 
-    virtual bool doneAll() const;
-    virtual void swanSong();
+    bool doneAll() const override;
+    void swanSong() override;
 
     void stopReceiving();
     void stopSending(bool nicely);
@@ -269,9 +269,9 @@ private:
     void stopParsing(const bool checkUnparsedData = true);
     void stopBackup();
 
-    virtual void fillPendingStatus(MemBuf &buf) const;
-    virtual void fillDoneStatus(MemBuf &buf) const;
-    virtual bool fillVirginHttpHeader(MemBuf&) const;
+    void fillPendingStatus(MemBuf &buf) const override;
+    void fillDoneStatus(MemBuf &buf) const override;
+    bool fillVirginHttpHeader(MemBuf&) const override;
 
 private:
     /// parses a message header or trailer
@@ -292,7 +292,7 @@ private:
     bool expectIcapTrailers() const;
     void checkConsuming();
 
-    virtual void finalizeLogInfo();
+    void finalizeLogInfo() override;
 
     SizedEstimate virginBody;
     VirginBodyAct virginBodyWriting; // virgin body writing state
@@ -377,15 +377,15 @@ private:
 // creates ModXact when needed
 class ModXactLauncher: public Launcher
 {
-    CBDATA_CLASS(ModXactLauncher);
+    CBDATA_CHILD(ModXactLauncher);
 
 public:
     ModXactLauncher(Http::Message *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, Adaptation::ServicePointer s);
 
 protected:
-    virtual Xaction *createXaction();
+    Xaction *createXaction() override;
 
-    virtual void swanSong();
+    void swanSong() override;
 
     /// starts or stops transaction accounting in ICAP history
     void updateHistory(bool start);

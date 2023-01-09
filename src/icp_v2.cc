@@ -208,7 +208,7 @@ public:
     ICP2State(icp_common_t & aHeader, HttpRequest *aRequest):
         ICPState(aHeader, aRequest),rtt(0),src_rtt(0),flags(0) {}
 
-    ~ICP2State();
+    ~ICP2State() override;
 
     int rtt;
     int src_rtt;

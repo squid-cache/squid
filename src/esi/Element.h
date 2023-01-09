@@ -32,7 +32,7 @@ struct esiTreeParent : public RefCountable {
 
     virtual void fail(ESIElement * /* source */, char const * /* reason */ = nullptr) {}
 
-    virtual ~esiTreeParent() {}
+    ~esiTreeParent() override {}
 };
 
 typedef RefCount<esiTreeParent> esiTreeParentPtr;

@@ -20,8 +20,6 @@
 #include "Store.h"
 #include "StoreClient.h"
 
-CBDATA_NAMESPACED_CLASS_INIT(Mgr, StoreToCommWriter);
-
 Mgr::StoreToCommWriter::StoreToCommWriter(const Comm::ConnectionPointer &conn, StoreEntry* anEntry):
     AsyncJob("Mgr::StoreToCommWriter"),
     clientConnection(conn), entry(anEntry), sc(nullptr), writeOffset(0), closer(nullptr)

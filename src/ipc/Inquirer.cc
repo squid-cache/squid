@@ -21,8 +21,6 @@
 #include <algorithm>
 #include <unordered_map>
 
-CBDATA_NAMESPACED_CLASS_INIT(Ipc, Inquirer);
-
 Ipc::RequestId::Index Ipc::Inquirer::LastRequestId = 0;
 
 namespace Ipc {

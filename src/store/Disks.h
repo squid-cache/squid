@@ -21,26 +21,26 @@ public:
     Disks();
 
     /* Storage API */
-    virtual void create() override;
-    virtual void init() override;
-    virtual StoreEntry *get(const cache_key *) override;
-    virtual uint64_t maxSize() const override;
-    virtual uint64_t minSize() const override;
-    virtual uint64_t currentSize() const override;
-    virtual uint64_t currentCount() const override;
-    virtual int64_t maxObjectSize() const override;
-    virtual void getStats(StoreInfoStats &stats) const override;
-    virtual void stat(StoreEntry &) const override;
-    virtual void sync() override;
-    virtual void reference(StoreEntry &) override;
-    virtual bool dereference(StoreEntry &e) override;
-    virtual void updateHeaders(StoreEntry *) override;
-    virtual void maintain() override;
-    virtual bool anchorToCache(StoreEntry &) override;
-    virtual bool updateAnchored(StoreEntry &) override;
-    virtual void evictCached(StoreEntry &) override;
-    virtual void evictIfFound(const cache_key *) override;
-    virtual int callback() override;
+    void create() override;
+    void init() override;
+    StoreEntry *get(const cache_key *) override;
+    uint64_t maxSize() const override;
+    uint64_t minSize() const override;
+    uint64_t currentSize() const override;
+    uint64_t currentCount() const override;
+    int64_t maxObjectSize() const override;
+    void getStats(StoreInfoStats &stats) const override;
+    void stat(StoreEntry &) const override;
+    void sync() override;
+    void reference(StoreEntry &) override;
+    bool dereference(StoreEntry &e) override;
+    void updateHeaders(StoreEntry *) override;
+    void maintain() override;
+    bool anchorToCache(StoreEntry &) override;
+    bool updateAnchored(StoreEntry &) override;
+    void evictCached(StoreEntry &) override;
+    void evictIfFound(const cache_key *) override;
+    int callback() override;
 
     /// update configuration, including limits (re)calculation
     void configure();

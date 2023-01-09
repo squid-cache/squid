@@ -29,8 +29,8 @@ public:
     explicit Response(const Ipc::TypedMsgHdr& msg); ///< from recvmsg()
 
     /* Ipc::Response API */
-    virtual void pack(Ipc::TypedMsgHdr& msg) const;
-    virtual Ipc::Response::Pointer clone() const;
+    void pack(Ipc::TypedMsgHdr& msg) const override;
+    Ipc::Response::Pointer clone() const override;
 
     bool hasAction() const; ///< whether response contain action object
     const Action& getAction() const; ///< returns action object

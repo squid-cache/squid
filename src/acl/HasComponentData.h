@@ -21,10 +21,10 @@ public:
     ACLHasComponentData();
 
     /* ACLData<M> API */
-    virtual bool match(ACLChecklist *) override;
-    virtual SBufList dump() const override;
-    virtual void parse() override;
-    virtual bool empty() const override { return false; }
+    bool match(ACLChecklist *) override;
+    SBufList dump() const override;
+    void parse() override;
+    bool empty() const override { return false; }
 
 private:
     enum ComponentKind { coRequest = 0, coResponse, coAle, coEnd };

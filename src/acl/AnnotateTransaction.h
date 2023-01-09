@@ -16,8 +16,8 @@
 class ACLAnnotateTransactionStrategy: public Acl::AnnotationStrategy
 {
 public:
-    virtual int match(ACLData<MatchType> * &, ACLFilledChecklist *);
-    virtual bool requiresRequest() const { return true; }
+    int match(ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    bool requiresRequest() const override { return true; }
 };
 
 #endif /* SQUID_ACLANNOTATETRANSACTION */

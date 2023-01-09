@@ -21,8 +21,8 @@ public:
     explicit NamedErrorDetail(const char *aName): name(aName) {}
 
     /* ErrorDetail API */
-    virtual SBuf brief() const override { return name; }
-    virtual SBuf verbose(const HttpRequestPointer &) const override { return name; }
+    SBuf brief() const override { return name; }
+    SBuf verbose(const HttpRequestPointer &) const override { return name; }
 
 private:
     /// distinguishes us from all other NamedErrorDetail objects

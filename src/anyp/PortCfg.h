@@ -27,14 +27,14 @@ public:
     PortCfg();
     // no public copying/moving but see ipV4clone()
     PortCfg(PortCfg &&) = delete;
-    ~PortCfg();
+    ~PortCfg() override;
 
     /// creates the same port configuration but listening on any IPv4 address
     PortCfg *ipV4clone() const;
 
     /* CodeContext API */
-    virtual ScopedId codeContextGist() const override;
-    virtual std::ostream &detailCodeContext(std::ostream &os) const override;
+    ScopedId codeContextGist() const override;
+    std::ostream &detailCodeContext(std::ostream &os) const override;
 
     PortCfgPointer next;
 

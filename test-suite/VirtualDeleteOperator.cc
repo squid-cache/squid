@@ -68,7 +68,7 @@ class ChildVirtual : public BaseVirtual
 public:
     void *operator new (size_t);
     void operator delete (void *);
-    virtual ~ChildVirtual();
+    ~ChildVirtual() override;
     static CallCounter Calls;
 };
 

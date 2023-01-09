@@ -36,11 +36,11 @@ class StoreFSufs : public StoreFileSystem
 public:
     static StoreFileSystem &GetInstance();
     StoreFSufs(char const *DefaultModuleType, char const *label);
-    virtual ~StoreFSufs() {}
+    ~StoreFSufs() override {}
 
     /* StoreFileSystem API */
-    virtual const char *type() const override;
-    virtual SwapDir *createSwapDir() override;
+    const char *type() const override;
+    SwapDir *createSwapDir() override;
 
 protected:
     DiskIOModule *IO;

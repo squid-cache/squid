@@ -29,8 +29,8 @@ public:
     static SBuf Brief(int errorNo);
 
     /* ErrorDetail API */
-    virtual SBuf brief() const override;
-    virtual SBuf verbose(const HttpRequestPointer &) const override;
+    SBuf brief() const override;
+    SBuf verbose(const HttpRequestPointer &) const override;
 
 private:
     // hidden by NewIfAny() to avoid creating SysErrorDetail from zero errno

@@ -23,23 +23,23 @@ class MemPoolChunked : public MemImplementingAllocator
 public:
     friend class MemChunk;
     MemPoolChunked(const char *label, size_t obj_size);
-    ~MemPoolChunked();
+    ~MemPoolChunked() override;
     void convertFreeCacheToChunkFreeCache();
-    virtual void clean(time_t maxage);
+    void clean(time_t maxage) override;
     void createChunk();
     void *get();
     void push(void *obj);
 
     /* Mem::Allocator API */
-    virtual size_t getStats(Mem::PoolStats &);
-    virtual int getInUseCount();
-    virtual void setChunkSize(size_t);
+    size_t getStats(Mem::PoolStats &) override;
+    int getInUseCount() override;
+    void setChunkSize(size_t) override;
 
 protected:
-    virtual void *allocate();
-    virtual void deallocate(void *, bool aggressive);
+    void *allocate() override;
+    void deallocate(void *, bool aggressive) override;
 public:
-    virtual bool idleTrigger(int shift) const;
+    bool idleTrigger(int shift) const override;
 
     size_t chunk_size;
     int chunk_capacity;

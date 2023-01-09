@@ -25,7 +25,7 @@ public:
     typedef CbcPointer<BodyProducer> Pointer;
 
     BodyProducer():AsyncJob("BodyProducer") {}
-    virtual ~BodyProducer() {}
+    ~BodyProducer() override {}
 
     virtual void noteMoreBodySpaceAvailable(RefCount<BodyPipe> bp) = 0;
     virtual void noteBodyConsumerAborted(RefCount<BodyPipe> bp) = 0;
@@ -45,7 +45,7 @@ public:
     typedef CbcPointer<BodyConsumer> Pointer;
 
     BodyConsumer():AsyncJob("BodyConsumer") {}
-    virtual ~BodyConsumer() {}
+    ~BodyConsumer() override {}
 
     virtual void noteMoreBodyDataAvailable(RefCount<BodyPipe> bp) = 0;
     virtual void noteBodyProductionEnded(RefCount<BodyPipe> bp) = 0;
@@ -103,7 +103,7 @@ public:
 
 public:
     BodyPipe(Producer *aProducer);
-    ~BodyPipe(); // asserts that producer and consumer are cleared
+    ~BodyPipe() override; // asserts that producer and consumer are cleared
 
     void setBodySize(uint64_t aSize); // set body size
     bool bodySizeKnown() const { return theBodySize >= 0; }

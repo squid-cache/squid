@@ -23,14 +23,14 @@ class Host : public libecap::host::Host
 {
 public:
     /* libecap::host::Host API */
-    virtual std::string uri() const; // unique across all vendors
-    virtual void describe(std::ostream &os) const; // free-format info
-    virtual void noteVersionedService(const char *libEcapVersion, const libecap::weak_ptr<libecap::adapter::Service> &s);
-    virtual std::ostream *openDebug(libecap::LogVerbosity lv);
-    virtual void closeDebug(std::ostream *debug);
+    std::string uri() const override; // unique across all vendors
+    void describe(std::ostream &os) const override; // free-format info
+    void noteVersionedService(const char *libEcapVersion, const libecap::weak_ptr<libecap::adapter::Service> &s) override;
+    std::ostream *openDebug(libecap::LogVerbosity lv) override;
+    void closeDebug(std::ostream *debug) override;
     typedef libecap::shared_ptr<libecap::Message> MessagePtr;
-    virtual MessagePtr newRequest() const;
-    virtual MessagePtr newResponse() const;
+    MessagePtr newRequest() const override;
+    MessagePtr newResponse() const override;
 
     static void Register(); ///< register adaptation host
 

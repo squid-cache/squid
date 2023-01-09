@@ -47,7 +47,7 @@ typedef RefCount<IoResult> IoResultPointer;
  */
 class PeerConnector: virtual public AsyncJob, public Acl::ChecklistFiller
 {
-    CBDATA_CLASS(PeerConnector);
+    CBDATA_INTERMEDIATE();
 
 public:
     typedef CbcPointer<PeerConnector> Pointer;
@@ -56,20 +56,20 @@ public:
                   const AsyncCallback<EncryptorAnswer> &,
                   const AccessLogEntryPointer &alp,
                   const time_t timeout = 0);
-    virtual ~PeerConnector();
+    ~PeerConnector() override;
 
     /// hack: whether the connection requires fwdPconnPool->noteUses()
     bool noteFwdPconnUse;
 
 protected:
     // AsyncJob API
-    virtual void start();
-    virtual bool doneAll() const;
-    virtual void swanSong();
-    virtual const char *status() const;
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
+    const char *status() const override;
 
     /* Acl::ChecklistFiller API */
-    virtual void fillChecklist(ACLFilledChecklist &) const;
+    void fillChecklist(ACLFilledChecklist &) const override;
 
     /// The connection read timeout callback handler.
     void commTimeoutHandler(const CommTimeoutCbParams &);
