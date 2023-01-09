@@ -9,9 +9,8 @@
 #ifndef SQUID_SERVERS_FORWARD_H
 #define SQUID_SERVERS_FORWARD_H
 
-class MasterXaction;
-template <class C> class RefCount;
-typedef RefCount<MasterXaction> MasterXactionPointer;
+#include "anyp/forward.h"
+#include "comm/forward.h"
 
 class ConnStateData;
 
@@ -24,7 +23,7 @@ class Server;
 } // namespace One
 
 /// create a new HTTP connection handler; never returns NULL
-ConnStateData *NewServer(const MasterXaction::Pointer &xact);
+ConnStateData *NewServer(const AnyP::PortCfgPointer &, const Comm::ConnectionPointer &);
 
 } // namespace Http
 
@@ -32,7 +31,7 @@ namespace Https
 {
 
 /// create a new HTTPS connection handler; never returns NULL
-ConnStateData *NewServer(const MasterXaction::Pointer &xact);
+ConnStateData *NewServer(const AnyP::PortCfgPointer &, const Comm::ConnectionPointer &);
 
 } // namespace Https
 

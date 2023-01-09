@@ -84,7 +84,7 @@ class ConnStateData:
 {
 
 public:
-    explicit ConnStateData(const MasterXactionPointer &xact);
+    explicit ConnStateData(const AnyP::PortCfgPointer &, const Comm::ConnectionPointer &);
     virtual ~ConnStateData();
 
     /* ::Server API */

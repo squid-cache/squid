@@ -22,7 +22,7 @@ class Server: public ConnStateData
     CBDATA_CLASS(Server);
 
 public:
-    Server(const MasterXaction::Pointer &xact, const bool beHttpsServer);
+    Server(const AnyP::PortCfgPointer &, const Comm::ConnectionPointer &, const bool beHttpsServer);
     virtual ~Server() {}
 
     void readSomeHttpData();

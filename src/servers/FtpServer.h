@@ -35,8 +35,6 @@ typedef enum {
     fssError
 } ServerState;
 
-// TODO: This should become a part of MasterXaction when we start sending
-// master transactions to the clients/ code.
 /// Transaction information shared among our FTP client and server jobs.
 class MasterState: public RefCountable
 {
@@ -59,7 +57,7 @@ class Server: public ConnStateData
     CBDATA_CHILD(Server);
 
 public:
-    explicit Server(const MasterXaction::Pointer &xact);
+    explicit Server(const AnyP::PortCfgPointer &, const Comm::ConnectionPointer &);
     virtual ~Server() override;
 
     /* AsyncJob API */
@@ -74,8 +72,8 @@ public:
     /// responding to the FTP client and closing the data connection.
     void stopWaitingForOrigin(int status);
 
-    // This is a pointer in hope to minimize future changes when MasterState
-    // becomes a part of MasterXaction. Guaranteed not to be nil.
+    // This is a pointer in hope to minimize future changes.
+    // Guaranteed not to be nil.
     MasterState::Pointer master; ///< info shared among our FTP client and server jobs
 
 protected:
