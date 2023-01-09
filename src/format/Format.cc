@@ -1017,6 +1017,11 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             out = hier_code_str[al->hier.code];
             break;
 
+        case LFT_SQUID_REQUEST_ATTEMPTS:
+            outint = al->requestAttempts;
+            doint = 1;
+            break;
+
         case LFT_MIME_TYPE:
             out = al->http.content_type;
             break;

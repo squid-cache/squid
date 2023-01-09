@@ -16,8 +16,6 @@ include $(top_srcdir)/src/Common.am
 
 noinst_LTLIBRARIES = libcompatsquid.la
 libcompatsquid_la_SOURCES = \
-	GnuRegex.c \
-	GnuRegex.h \
 	assert.cc \
 	assert.h \
 	cmsg.h \

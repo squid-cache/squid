@@ -265,6 +265,7 @@ private:
     void cancelStep(const char *reason);
 
     bool exhaustedTries() const;
+    void updateAttempts(int);
 
 public:
     bool keepGoingAfterRead(size_t len, Comm::Flag errcode, int xerrno, Connection &from, Connection &to);
@@ -488,6 +489,21 @@ TunnelStateData::syncHierNote(const Comm::ConnectionPointer &conn, const char *o
 {
     request->hier.resetPeerNotes(conn, origin);
     al->hier.resetPeerNotes(conn, origin);
+}
+
+/// sets n_tries to the given value (while keeping ALE in sync)
+void
+TunnelStateData::updateAttempts(const int newValue)
+{
+    Assure(n_tries <= newValue); // n_tries cannot decrease
+
+    // Squid probably creates at most one FwdState/TunnelStateData object per
+    // ALE, but, unlike an assignment would, this increment logic works even if
+    // Squid uses multiple such objects for a given ALE in some esoteric cases.
+    al->requestAttempts += (newValue - n_tries);
+
+    n_tries = newValue;
+    debugs(26, 5, n_tries);
 }
 
 int
@@ -1052,8 +1068,7 @@ TunnelStateData::noteConnection(HappyConnOpener::Answer &answer)
 {
     transportWait.finish();
 
-    Assure(n_tries <= answer.n_tries); // n_tries cannot decrease
-    n_tries = answer.n_tries;
+    updateAttempts(answer.n_tries);
 
     ErrorState *error = nullptr;
     if ((error = answer.error.get())) {
@@ -1412,7 +1427,7 @@ TunnelStateData::usePinned()
         const auto serverConn = ConnStateData::BorrowPinnedConnection(request.getRaw(), al);
         debugs(26, 7, "pinned peer connection: " << serverConn);
 
-        ++n_tries;
+        updateAttempts(n_tries + 1);
 
         // Set HttpRequest pinned related flags for consistency even if
         // they are not really used by tunnel.cc code.

@@ -39,7 +39,6 @@ MAKETEST="distcheck"
 DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-build-info \
 	--disable-shared \
-	--disable-gnuregex \
 	--disable-xmalloc-statistics \
 	--disable-async-io \
 	--disable-storeio \

@@ -113,6 +113,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#if HAVE_REGEX_H
+#include <regex.h>
+#endif
+
 #if HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
