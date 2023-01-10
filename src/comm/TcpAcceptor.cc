@@ -394,10 +394,13 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
         }
     } else if (conn->flags & COMM_INTERCEPTION) { // request the real client/dest IP address from NAT
         details->flags |= COMM_INTERCEPTION;
+        details->fd = sock; // XXX
         if (!Ip::Interceptor.LookupNat(*details)) {
+            details->fd = -1; // XXX
             debugs(50, DBG_IMPORTANT, "ERROR: NAT lookup failed to locate original IPs on " << details);
             return Comm::NOMESSAGE;
         }
+        details->fd = -1; // XXX
     }
 
 #if USE_SQUID_EUI
