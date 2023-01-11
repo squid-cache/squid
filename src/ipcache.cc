@@ -280,7 +280,7 @@ IpCacheLookupForwarder::forwardLookup(const char *error)
     // are sequential. Give it just the new, yet-unaccounted-for delay.
     if (receiverObj.set()) {
         if (auto receiver = receiverObj.valid()) {
-            receiver->noteLookup(Dns::LookupDetails(error, additionalLookupDelay()));
+            receiver->noteLookup(Dns::LookupDetails(SBuf(error), additionalLookupDelay()));
             lastLookupEnd = current_time;
         }
     }
@@ -620,7 +620,7 @@ ipcache_nbgethostbyname_(const char *name, IpCacheLookupForwarder handler)
     if (name == nullptr || name[0] == '\0') {
         debugs(14, 4, "ipcache_nbgethostbyname: Invalid name!");
         ++IpcacheStats.invalid;
-        const Dns::LookupDetails details("Invalid hostname", -1); // error, no lookup
+        static const Dns::LookupDetails details(SBuf("Invalid hostname"), -1); // error, no lookup
         handler.finalCallback(nullptr, details);
         return;
     }

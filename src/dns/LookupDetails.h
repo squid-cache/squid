@@ -12,6 +12,7 @@
 #define SQUID_DNS_LOOKUPDETAILS_H
 
 #include "sbuf/SBuf.h"
+#include <optional>
 
 namespace Dns
 {
@@ -22,12 +23,11 @@ class LookupDetails
 public:
     LookupDetails() : wait(-1) {} ///< no error, no lookup delay (i.e., no lookup)
     LookupDetails(const SBuf &anError, int aWait) : error(anError), wait(aWait) {}
-    LookupDetails(const char *anError, int aWait) : error(anError), wait(aWait) {}
 
     std::ostream &print(std::ostream &os) const;
 
 public:
-    SBuf error; ///< error message for unsuccessful lookups; empty otherwise
+    std::optional<SBuf> error; ///< error message for unsuccessful lookups; empty otherwise
     int wait; ///< msecs spent waiting for the lookup (if any) or -1 (if none)
 };
 
