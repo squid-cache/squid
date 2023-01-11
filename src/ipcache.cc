@@ -445,7 +445,7 @@ ipcacheCallback(ipcache_entry *i, const bool hit, const int wait)
 
     if (hit)
         i->handler.forwardHits(i->addrs);
-    const Dns::LookupDetails details(i->error_message, wait);
+    const Dns::LookupDetails details(SBuf(i->error_message), wait);
     i->handler.finalCallback(&i->addrs, details);
 
     ipcacheUnlockEntry(i);

@@ -33,6 +33,7 @@
 #include "peer_sourcehash.h"
 #include "peer_userhash.h"
 #include "PeerSelectState.h"
+#include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "time/gadgets.h"
@@ -548,7 +549,7 @@ PeerSelector::noteIps(const Dns::CachedIps *ia, const Dns::LookupDetails &detail
         lastError = nullptr;
         if (fs->code == HIER_DIRECT) {
             lastError = new ErrorState(ERR_DNS_FAIL, Http::scServiceUnavailable, request, al);
-            lastError->dnsError = details.error;
+            lastError->dnsError = SBufToString(details.error);
         }
     }
     // else noteIp() calls have already processed all IPs in *ia
