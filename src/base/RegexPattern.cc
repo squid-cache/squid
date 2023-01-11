@@ -17,6 +17,9 @@ RegexPattern::RegexPattern(const SBuf &aPattern, const std::regex::flag_type aFl
     pattern(aPattern),
     regex(aPattern.rawContent(), aPattern.length(), aFlags)
 {
+    // this class supports other syntax variations, but its current users must
+    // support one of these two for backward compatibility reasons, and we check
+    // that they have not forgotten to do so
     assert((aFlags & (std::regex::basic|std::regex::extended)) != 0);
     debugs(28, 2, *this);
 }
