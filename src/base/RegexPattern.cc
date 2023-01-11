@@ -26,7 +26,7 @@ RegexPattern::match(const char *str) const
 {
     std::cmatch found;
     if (std::regex_search(str, found, regex)) {
-        debugs(0, 9, "matched " << found[0]);
+        debugs(18, 5, "matched " << found[0]);
         return true;
     }
     return false;
