@@ -549,7 +549,7 @@ PeerSelector::noteIps(const Dns::CachedIps *ia, const Dns::LookupDetails &detail
         lastError = nullptr;
         if (fs->code == HIER_DIRECT) {
             lastError = new ErrorState(ERR_DNS_FAIL, Http::scServiceUnavailable, request, al);
-            lastError->dnsError = SBufToString(details.error);
+            lastError->dnsError = details.error;
         }
     }
     // else noteIp() calls have already processed all IPs in *ia
