@@ -304,8 +304,9 @@ Comm::TcpAcceptor::acceptOne()
         notify(Comm::COMM_ERROR, newConnDetails);
     });
 
-    // TODO: Place under AsyncJob call protections and call mustStop() instead.
-    deleteThis("unrecoverable accept failure");
+    // XXX: Not under AsyncJob call protections but, if placed there, may cause
+    // problems like making the corresponding HttpSockets entry (if any) stale.
+    mustStop("unrecoverable accept failure");
 }
 
 void
