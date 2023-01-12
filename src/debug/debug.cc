@@ -781,7 +781,7 @@ Debug::LogMessage(const Context &context)
 
     if (!dbg_mutex) {
         HMODULE krnl_lib = GetModuleHandle("Kernel32");
-        PFInitializeCriticalSectionAndSpinCount InitializeCriticalSectionAndSpinCount = NULL;
+        PFInitializeCriticalSectionAndSpinCount InitializeCriticalSectionAndSpinCount = nullptr;
 
         if (krnl_lib)
             InitializeCriticalSectionAndSpinCount =

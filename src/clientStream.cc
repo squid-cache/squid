@@ -72,9 +72,9 @@
  *
  \code
    mycontext = thisObject->data;
-   thisObject->data = NULL;
+   thisObject->data = nullptr;
    delete thisObject->head;
-   mycontext = NULL;
+   mycontext = nullptr;
    return;
  \endcode
  *

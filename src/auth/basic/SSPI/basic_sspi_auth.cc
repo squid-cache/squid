@@ -132,8 +132,8 @@ main(int argc, char **argv)
     atexit(UnloadSecurityDll);
 
     /* initialize FDescs */
-    setbuf(stdout, NULL);
-    setbuf(stderr, NULL);
+    setbuf(stdout, nullptr);
+    setbuf(stderr, nullptr);
 
     while (fgets(wstr, HELPER_INPUT_BUFFER, stdin) != NULL) {
 

@@ -102,7 +102,7 @@ const char *program_name;
 pid_t mypid;
 char *machinedomain;
 int use_case_insensitive_compare = 0;
-char *DefaultDomain = NULL;
+char *DefaultDomain = nullptr;
 const char NTV_VALID_DOMAIN_SEPARATOR[] = "\\/";
 
 char *
@@ -117,10 +117,10 @@ AllocStrFromLSAStr(LSA_UNICODE_STRING LsaStr)
     safe_free(target);
     target = (char *) xmalloc(len);
     if (target == NULL)
-        return NULL;
+        return nullptr;
 
     /* copy unicode buffer */
-    WideCharToMultiByte(CP_ACP, 0, LsaStr.Buffer, LsaStr.Length, target, len, NULL, NULL);
+    WideCharToMultiByte(CP_ACP, 0, LsaStr.Buffer, LsaStr.Length, target, len, nullptr, nullptr);
 
     /* add null termination */
     target[len - 1] = '\0';
@@ -136,7 +136,7 @@ GetDomainName(void)
     PPOLICY_PRIMARY_DOMAIN_INFO ppdiDomainInfo;
     PWKSTA_INFO_100 pwkiWorkstationInfo;
     DWORD netret;
-    char *DomainName = NULL;
+    char *DomainName = nullptr;
 
     /*
      * Always initialize the object attributes to all zeroes.
@@ -150,7 +150,7 @@ GetDomainName(void)
      * The wki100_computername field contains a pointer to a UNICODE
      * string containing the local computer name.
      */
-    netret = NetWkstaGetInfo(NULL, 100, (LPBYTE *) & pwkiWorkstationInfo);
+    netret = NetWkstaGetInfo(nullptr, 100, (LPBYTE *) & pwkiWorkstationInfo);
     if (netret == NERR_Success) {
         /*
          * We have the workstation name in:
@@ -160,7 +160,7 @@ GetDomainName(void)
          * the LsaOpenPolicy function.
          */
         status = LsaOpenPolicy(
-                     NULL,
+                     nullptr,
                      &ObjectAttributes,
                      GENERIC_READ | POLICY_VIEW_LOCAL_INFORMATION,
                      &PolicyHandle
@@ -199,7 +199,7 @@ GetDomainName(void)
                      */
                     debug("Member of Domain %s\n", DomainName);
                 } else {
-                    DomainName = NULL;
+                    DomainName = nullptr;
                 }
             }
         }
@@ -240,7 +240,7 @@ Valid_Local_Groups(char *UserName, const char **Groups)
     char *Domain_Separator;
     WCHAR wszUserName[UNLEN + 1];   // Unicode user name
 
-    LPLOCALGROUP_USERS_INFO_0 pBuf = NULL;
+    LPLOCALGROUP_USERS_INFO_0 pBuf = nullptr;
     LPLOCALGROUP_USERS_INFO_0 pTmpBuf;
     DWORD dwLevel = 0;
     DWORD dwFlags = LG_INCLUDE_INDIRECT;
@@ -270,7 +270,7 @@ Valid_Local_Groups(char *UserName, const char **Groups)
      * groups in which the user is indirectly a member.
      */
     nStatus = NetUserGetLocalGroups(
-                  NULL,
+                  nullptr,
                   wszUserName,
                   dwLevel,
                   dwFlags,
@@ -323,11 +323,11 @@ Valid_Global_Groups(char *UserName, const char **Groups)
     char User[UNLEN + 1];
     size_t j;
 
-    LPWSTR LclDCptr = NULL;
-    LPWSTR UsrDCptr = NULL;
-    LPGROUP_USERS_INFO_0 pUsrBuf = NULL;
+    LPWSTR LclDCptr = nullptr;
+    LPWSTR UsrDCptr = nullptr;
+    LPGROUP_USERS_INFO_0 pUsrBuf = nullptr;
     LPGROUP_USERS_INFO_0 pTmpBuf;
-    LPSERVER_INFO_101 pSrvBuf = NULL;
+    LPSERVER_INFO_101 pSrvBuf = nullptr;
     DWORD dwLevel = 0;
     DWORD dwPrefMaxLen = -1;
     DWORD dwEntriesRead = 0;
@@ -363,16 +363,16 @@ Valid_Global_Groups(char *UserName, const char **Groups)
 
     /* Call the NetServerGetInfo function for local computer, specifying level 101. */
     dwLevel = 101;
-    nStatus = NetServerGetInfo(NULL, dwLevel, (LPBYTE *) & pSrvBuf);
+    nStatus = NetServerGetInfo(nullptr, dwLevel, (LPBYTE *) & pSrvBuf);
 
     if (nStatus == NERR_Success) {
         /* Check if we are running on a Domain Controller */
         if ((pSrvBuf->sv101_type & SV_TYPE_DOMAIN_CTRL) ||
                 (pSrvBuf->sv101_type & SV_TYPE_DOMAIN_BAKCTRL)) {
-            LclDCptr = NULL;
+            LclDCptr = nullptr;
             debug("Running on a DC.\n");
         } else
-            nStatus = (use_PDC_only ? NetGetDCName(NULL, wszLocalDomain, (LPBYTE *) & LclDCptr) : NetGetAnyDCName(NULL, wszLocalDomain, (LPBYTE *) & LclDCptr));
+            nStatus = (use_PDC_only ? NetGetDCName(nullptr, wszLocalDomain, (LPBYTE *) & LclDCptr) : NetGetAnyDCName(nullptr, wszLocalDomain, (LPBYTE *) & LclDCptr));
     } else {
         fprintf(stderr, "%s: ERROR: NetServerGetInfo() failed.'\n", program_name);
         if (pSrvBuf != NULL)
@@ -525,8 +525,8 @@ main(int argc, char *argv[])
     }
     mypid = getpid();
 
-    setbuf(stdout, NULL);
-    setbuf(stderr, NULL);
+    setbuf(stdout, nullptr);
+    setbuf(stderr, nullptr);
 
     /* Check Command Line */
     process_options(argc, argv);
@@ -576,11 +576,11 @@ main(int argc, char *argv[])
             continue;
         }
         username = strtok(buf, " ");
-        for (n = 0; (group = strtok(NULL, " ")) != NULL; ++n) {
+        for (n = 0; (group = strtok(nullptr, " ")) != NULL; ++n) {
             rfc1738_unescape(group);
             groups[n] = group;
         }
-        groups[n] = NULL;
+        groups[n] = nullptr;
 
         if (NULL == username) {
             SEND_BH(HLP_MSG("Invalid Request. No Username."));

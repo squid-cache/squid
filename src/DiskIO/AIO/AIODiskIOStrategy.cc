@@ -134,8 +134,8 @@ AIODiskIOStrategy::callback()
                 buf = aqe->aq_e_buf;
                 type = aqe->aq_e_type;
                 callback_valid = cbdataReferenceValidDone(aqe->aq_e_callback_data, &cbdata);
-                AIODiskFile * theFile = NULL;
-                void *theFileVoid = NULL;
+                AIODiskFile * theFile = nullptr;
+                void *theFileVoid = nullptr;
                 void *theTmpFile = aqe->theFile;
                 bool fileOk = cbdataReferenceValidDone(theTmpFile, &theFileVoid);
 

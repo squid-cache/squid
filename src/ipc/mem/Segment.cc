@@ -312,7 +312,7 @@ Ipc::Mem::Segment::~Segment()
 {
     if (doUnlink) {
         delete [] static_cast<char *>(theMem);
-        theMem = NULL;
+        theMem = nullptr;
         Segments.erase(theName);
         debugs(54, 3, "unlinked " << theName << " fake segment");
     }

@@ -82,7 +82,7 @@ char *negotiate_check_auth(SSP_blobP auth, int auth_length);
  * -d enable debugging.
  * -v enable verbose Negotiate packet debugging.
  */
-char *my_program_name = NULL;
+char *my_program_name = nullptr;
 
 void
 usage()
@@ -242,12 +242,12 @@ manage_request()
         if (status == SSP_ERROR) {
             FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
                           FORMAT_MESSAGE_IGNORE_INSERTS,
-                          NULL,
+                          nullptr,
                           GetLastError(),
                           MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),    /* Default language */
                           (LPTSTR) & ErrorMessage,
                           0,
-                          NULL);
+                          nullptr);
             if (ErrorMessage[strlen(ErrorMessage) - 1] == '\n')
                 ErrorMessage[strlen(ErrorMessage) - 1] = '\0';
             if (ErrorMessage[strlen(ErrorMessage) - 1] == '\r')
@@ -313,8 +313,8 @@ main(int argc, char *argv[])
     atexit(UnloadSecurityDll);
 
     /* initialize FDescs */
-    setbuf(stdout, NULL);
-    setbuf(stderr, NULL);
+    setbuf(stdout, nullptr);
+    setbuf(stderr, nullptr);
 
     while (manage_request()) {
         /* everything is done within manage_request */

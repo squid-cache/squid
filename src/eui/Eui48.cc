@@ -377,7 +377,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
     mib[5] = RTF_LLINFO;
 #endif
 
-    if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0) {
+    if (sysctl(mib, 6, nullptr, &needed, nullptr, 0) < 0) {
         debugs(28, DBG_CRITICAL, "ERROR: Cannot estimate ARP table size!");
         clear();
         return false;
@@ -389,7 +389,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
         return false;
     }
 
-    if (sysctl(mib, 6, buf, &needed, NULL, 0) < 0) {
+    if (sysctl(mib, 6, buf, &needed, nullptr, 0) < 0) {
         debugs(28, DBG_CRITICAL, "ERROR: Cannot retrieve ARP table!");
         xfree(buf);
         clear();
@@ -446,7 +446,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
 
     DWORD           ipNetTableLen = 0;
 
-    PMIB_IPNETTABLE NetTable = NULL;
+    PMIB_IPNETTABLE NetTable = nullptr;
 
     DWORD            i;
 

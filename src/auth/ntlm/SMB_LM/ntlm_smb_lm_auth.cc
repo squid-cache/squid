@@ -92,7 +92,7 @@ void manage_request(void);
 static unsigned char challenge[NTLM_NONCE_LEN];
 static unsigned char lmencoded_empty_pass[ENCODED_PASS_LEN],
        ntencoded_empty_pass[ENCODED_PASS_LEN];
-SMB_Handle_Type handle = NULL;
+SMB_Handle_Type handle = nullptr;
 int ntlm_errno;
 static char credentials[MAX_USERNAME_LEN+MAX_DOMAIN_LEN+2]; /* we can afford to waste */
 static char my_domain[100], my_domain_controller[100];
@@ -101,7 +101,7 @@ static char errstr[1001];
 char error_messages_buffer[NTLM_BLOB_BUFFER_SIZE];
 #endif
 char load_balance = 0, protocol_pedantic = 0;
-dc *controllers = NULL;
+dc *controllers = nullptr;
 int numcontrollers = 0;
 dc *current_dc;
 char smb_error_buffer[1000];
@@ -113,7 +113,7 @@ dc_disconnect()
 {
     if (handle != NULL)
         SMB_Discon(handle, 0);
-    handle = NULL;
+    handle = nullptr;
 }
 
 int
@@ -126,7 +126,7 @@ connectedp()
 int
 is_dc_ok(char *domain, char *domain_controller)
 {
-    SMB_Handle_Type h = SMB_Connect_Server(NULL, domain_controller, domain);
+    SMB_Handle_Type h = SMB_Connect_Server(nullptr, domain_controller, domain);
     if (h == NULL)
         return 0;
     SMB_Discon(h, 0);
@@ -143,7 +143,7 @@ init_challenge(char *domain, char *domain_controller)
         return 0;
     }
     debug("Connecting to server %s domain %s\n", domain_controller, domain);
-    handle = SMB_Connect_Server(NULL, domain_controller, domain);
+    handle = SMB_Connect_Server(nullptr, domain_controller, domain);
     smberr = SMB_Get_Last_Error();
     SMB_Get_Error_Msg(smberr, errstr, 1000);
 
@@ -154,13 +154,13 @@ init_challenge(char *domain, char *domain_controller)
     if (SMB_Negotiate(handle, SMB_Prots) < 0) {     /* An error */
         debug("Error negotiating protocol with SMB Server\n");
         SMB_Discon(handle, 0);
-        handle = NULL;
+        handle = nullptr;
         return 2;
     }
     if (handle->Security == 0) {    /* share-level security, unusable */
         debug("SMB Server uses share-level security .. we need user security.\n");
         SMB_Discon(handle, 0);
-        handle = NULL;
+        handle = nullptr;
         return 3;
     }
     memcpy(challenge, handle->Encrypt_Key, NTLM_NONCE_LEN);
@@ -180,7 +180,7 @@ make_challenge(char *domain, char *domain_controller)
     my_domain_controller[sizeof(my_domain_controller)-1] = '\0';
 
     if (init_challenge(my_domain, my_domain_controller) > 0) {
-        return NULL;
+        return nullptr;
     }
 
     ntlm_challenge chal;
@@ -198,7 +198,7 @@ make_challenge(char *domain, char *domain_controller)
     static char b64buf[HELPER_INPUT_BUFFER-10]; /* 10 for other line fields, delimiters and terminator */
     if (base64_encode_len(len) < sizeof(b64buf)-1) {
         debug("base64 encoding of the token challenge will exceed %" PRIuSIZE " bytes", sizeof(b64buf));
-        return NULL;
+        return nullptr;
     }
 
     struct base64_encode_ctx ctx;
@@ -227,7 +227,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     if (handle == NULL) {   /*if null we aren't connected, but it shouldn't happen */
         debug("Weird, we've been disconnected\n");
         ntlm_errno = NTLM_ERR_NOT_CONNECTED;
-        return NULL;
+        return nullptr;
     }
 
     /*      debug("fetching domain\n"); */
@@ -235,12 +235,12 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     if (tmp.str == NULL || tmp.l == 0) {
         debug("No domain supplied. Returning no-auth\n");
         ntlm_errno = NTLM_ERR_LOGON;
-        return NULL;
+        return nullptr;
     }
     if (tmp.l > MAX_DOMAIN_LEN) {
         debug("Domain string exceeds %d bytes, rejecting\n", MAX_DOMAIN_LEN);
         ntlm_errno = NTLM_ERR_LOGON;
-        return NULL;
+        return nullptr;
     }
     memcpy(domain, tmp.str, tmp.l);
     user = domain + tmp.l;
@@ -252,12 +252,12 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     if (tmp.str == NULL || tmp.l == 0) {
         debug("No username supplied. Returning no-auth\n");
         ntlm_errno = NTLM_ERR_LOGON;
-        return NULL;
+        return nullptr;
     }
     if (tmp.l > MAX_USERNAME_LEN) {
         debug("Username string exceeds %d bytes, rejecting\n", MAX_USERNAME_LEN);
         ntlm_errno = NTLM_ERR_LOGON;
-        return NULL;
+        return nullptr;
     }
     memcpy(user, tmp.str, tmp.l);
     *(user + tmp.l) = '\0';
@@ -273,7 +273,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
         if (len != ENCODED_PASS_LEN || offset + len > auth_length || offset == 0) {
             debug("LM response: insane data (pkt-sz: %d, fetch len: %d, offset: %d)\n", auth_length, len, offset);
             ntlm_errno = NTLM_ERR_LOGON;
-            return NULL;
+            return nullptr;
         }
         tmp.str = (char *)packet + offset;
         tmp.l = len;
@@ -281,7 +281,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     if (tmp.l > MAX_PASSWD_LEN) {
         debug("Password string exceeds %d bytes, rejecting\n", MAX_PASSWD_LEN);
         ntlm_errno = NTLM_ERR_LOGON;
-        return NULL;
+        return nullptr;
     }
 
     /* Authenticating against the NT response doesn't seem to work... in SMB LM helper. */
@@ -294,7 +294,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
         fprintf(stderr,"Empty LM password supplied for user %s\\%s. "
                 "No-auth\n",domain,user);
         ntlm_errno=NTLM_ERR_LOGON;
-        return NULL;
+        return nullptr;
     }
 
     /* still fetch the NT response and check validity against empty password */
@@ -308,7 +308,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
             if (len != ENCODED_PASS_LEN || offset + len > auth_length || offset == 0) {
                 debug("NT response: insane data (pkt-sz: %d, fetch len: %d, offset: %d)\n", auth_length, len, offset);
                 ntlm_errno = NTLM_ERR_LOGON;
-                return NULL;
+                return nullptr;
             }
             tmp.str = (char *)packet + offset;
             tmp.l = len;
@@ -318,7 +318,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
             if (memcmp(tmp.str,lmencoded_empty_pass,ENCODED_PASS_LEN)==0) {
                 fprintf(stderr,"ERROR: Empty NT password supplied for user %s\\%s. No-auth\n", domain, user);
                 ntlm_errno = NTLM_ERR_LOGON;
-                return NULL;
+                return nullptr;
             }
         }
     }
@@ -330,7 +330,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
 
     if (rv != NTLM_ERR_NONE) {  /* failed */
         ntlm_errno = rv;
-        return NULL;
+        return nullptr;
     }
     *(user - 1) = '\\';     /* hack. Performing, but ugly. */
 
@@ -357,7 +357,7 @@ timeout_during_auth(int)
  * -l last-ditch-mode
  * domain\controller ...
  */
-char *my_program_name = NULL;
+char *my_program_name = nullptr;
 
 void
 usage()
@@ -379,7 +379,7 @@ void
 process_options(int argc, char *argv[])
 {
     int opt, j, had_error = 0;
-    dc *new_dc = NULL, *last_dc = NULL;
+    dc *new_dc = nullptr, *last_dc = nullptr;
     while (-1 != (opt = getopt(argc, argv, "bfld"))) {
         switch (opt) {
         case 'b':
@@ -459,7 +459,7 @@ const char *
 obtain_challenge()
 {
     int j = 0;
-    const char *ch = NULL;
+    const char *ch = nullptr;
     for (j = 0; j < numcontrollers; ++j) {
         debug("obtain_challenge: selecting %s\\%s (attempt #%d)\n",
               current_dc->domain, current_dc->controller, j + 1);
@@ -489,7 +489,7 @@ obtain_challenge()
         current_dc = current_dc->next;
     }
     /* all DCs failed. */
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -498,7 +498,7 @@ manage_request()
     ntlmhdr *fast_header;
     char buf[NTLM_BLOB_BUFFER_SIZE];
     char decoded[NTLM_BLOB_BUFFER_SIZE];
-    char *ch2, *cred = NULL;
+    char *ch2, *cred = nullptr;
 
     if (fgets(buf, NTLM_BLOB_BUFFER_SIZE, stdin) == NULL) {
         fprintf(stderr, "fgets() failed! dying..... errno=%d (%s)\n", errno,
@@ -674,8 +674,8 @@ main(int argc, char *argv[])
     debug("options processed OK\n");
 
     /* initialize FDescs */
-    setbuf(stdout, NULL);
-    setbuf(stderr, NULL);
+    setbuf(stdout, nullptr);
+    setbuf(stderr, nullptr);
 
     /* select the first domain controller we're going to use */
     current_dc = controllers;

@@ -89,7 +89,7 @@ file_close(int fd)
          * open files, so we won't allow delayed close.
          */
         while (!diskWriteIsComplete(fd))
-            diskHandleWrite(fd, NULL);
+            diskHandleWrite(fd, nullptr);
 #else
         F->flags.close_request = true;
         debugs(6, 2, "file_close: FD " << fd << ", delaying close");

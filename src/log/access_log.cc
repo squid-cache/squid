@@ -44,7 +44,7 @@
 #include <unordered_map>
 
 #if HEADERS_LOG
-static Logfile *headerslog = NULL;
+static Logfile *headerslog = nullptr;
 #endif
 
 #if MULTICAST_MISS_STREAM
@@ -214,7 +214,7 @@ accessLogClose(void)
 
     logfileClose(headerslog);
 
-    headerslog = NULL;
+    headerslog = nullptr;
 
 #endif
 }
@@ -544,7 +544,7 @@ headersLog(int cs, int pq, const HttpRequestMethod& method, void *data)
     if (0 == pq) {
         /* reply */
         rep = data;
-        req = NULL;
+        req = nullptr;
         magic = 0x0050;
         hmask = rep->header.mask;
 
@@ -553,7 +553,7 @@ headersLog(int cs, int pq, const HttpRequestMethod& method, void *data)
     } else {
         /* request */
         req = data;
-        rep = NULL;
+        rep = nullptr;
         magic = 0x0051;
         hmask = req->header.mask;
 

@@ -25,7 +25,7 @@
 
 #define PCONN_FDS_SZ    8   /* pconn set size, increase for better memcache hit rate */
 
-//TODO: re-attach to MemPools. WAS: static Mem::Allocator *pconn_fds_pool = NULL;
+//TODO: re-attach to MemPools. WAS: static Mem::Allocator *pconn_fds_pool = nullptr;
 PconnModule * PconnModule::instance = nullptr;
 CBDATA_CLASS_INIT(IdleConnList);
 
