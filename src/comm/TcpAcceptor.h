@@ -100,7 +100,7 @@ private:
     static void doAccept(int fd, void *data);
 
     void acceptOne();
-    Comm::Flag oldAccept(Comm::ConnectionPointer &details);
+    bool acceptInto(Comm::ConnectionPointer &);
     void setListen();
     void handleClosure(const CommCloseCbParams &io);
     /// whether we are listening on one of the squid.conf *ports
