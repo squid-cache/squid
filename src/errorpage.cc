@@ -828,8 +828,8 @@ ErrorState::Dump(MemBuf * mb)
     if (auth_user_request.getRaw() && auth_user_request->denyMessage())
         str.appendf("Auth ErrMsg: %s\r\n", auth_user_request->denyMessage());
 #endif
-    if (dnsError.size() > 0)
-        str.appendf("DNS ErrMsg: %s\r\n", dnsError.termedBuf());
+    if (dnsError && dnsError->length() > 0)
+        str.appendf("DNS ErrMsg: %s\r\n", dnsError->c_str());
 
     /* - TimeStamp */
     str.appendf("TimeStamp: %s\r\n\r\n", Time::FormatRfc1123(squid_curtime));
@@ -1212,8 +1212,8 @@ ErrorState::compileLegacyCode(Build &build)
 
     case 'z':
         if (building_deny_info_url) break;
-        if (dnsError.size() > 0)
-            p = dnsError.termedBuf();
+        if (dnsError && dnsError->length() > 0)
+            p = dnsError->c_str();
         else if (ftp.cwd_msg)
             p = ftp.cwd_msg;
         else
