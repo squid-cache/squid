@@ -12,6 +12,7 @@
 #define SQUID_DNS_LOOKUPDETAILS_H
 
 #include "sbuf/SBuf.h"
+
 #include <optional>
 
 namespace Dns
