@@ -167,10 +167,8 @@ public:
     bool implicit = false;
 };
 
-} // namespace Acl
-
 inline std::ostream &
-operator <<(std::ostream &o, const Acl::Answer a)
+operator <<(std::ostream &o, const Answer a)
 {
     switch (a) {
     case ACCESS_DENIED:
@@ -188,6 +186,8 @@ operator <<(std::ostream &o, const Acl::Answer a)
     }
     return o;
 }
+
+} // namespace Acl
 
 /// \ingroup ACLAPI
 class acl_proxy_auth_match_cache

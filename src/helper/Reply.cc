@@ -249,26 +249,26 @@ Helper::Reply::emptyBuf() const
 }
 
 std::ostream &
-operator <<(std::ostream &os, const Helper::Reply &r)
+Helper::operator <<(std::ostream &os, const Reply &r)
 {
     os << "{result=";
     switch (r.result) {
-    case Helper::Okay:
+    case Okay:
         os << "OK";
         break;
-    case Helper::Error:
+    case Error:
         os << "ERR";
         break;
-    case Helper::BrokenHelper:
+    case BrokenHelper:
         os << "BH";
         break;
-    case Helper::TT:
+    case TT:
         os << "TT";
         break;
-    case Helper::TimedOut:
+    case TimedOut:
         os << "Timeout";
         break;
-    case Helper::Unknown:
+    case Unknown:
         os << "Unknown";
         break;
     }

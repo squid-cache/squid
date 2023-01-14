@@ -193,17 +193,17 @@ private:
     Security::NegotiationHistory *tlsHistory;
 };
 
-}; // namespace Comm
-
-std::ostream &operator << (std::ostream &os, const Comm::Connection &conn);
+std::ostream &operator <<(std::ostream &, const Connection &);
 
 inline std::ostream &
-operator << (std::ostream &os, const Comm::ConnectionPointer &conn)
+operator <<(std::ostream &os, const ConnectionPointer &conn)
 {
     if (conn != nullptr)
         os << *conn;
     return os;
 }
+
+} // namespace Comm
 
 #endif
 

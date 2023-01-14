@@ -62,10 +62,10 @@ const HeaderLookupTable_t HeaderLookupTable;
 }; /* namespace Http */
 
 std::ostream&
-operator<< (std::ostream &s, Http::HdrType id)
+Http::operator<< (std::ostream &s, const HdrType id)
 {
-    if (Http::any_HdrType_enum_value(id))
-        s << Http::HeaderLookupTable.lookup(id).name << '[' << static_cast<int>(id) << ']';
+    if (any_HdrType_enum_value(id))
+        s << HeaderLookupTable.lookup(id).name << '[' << static_cast<int>(id) << ']';
     else
         s << "Invalid-Header[" << static_cast<int>(id) << ']';
     return s;

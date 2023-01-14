@@ -245,14 +245,14 @@ Acl::CaseSensitivityOption()
 }
 
 std::ostream &
-operator <<(std::ostream &os, const Acl::Option &option)
+Acl::operator <<(std::ostream &os, const Option &option)
 {
     option.print(os);
     return os;
 }
 
 std::ostream &
-operator <<(std::ostream &os, const Acl::Options &options)
+Acl::operator <<(std::ostream &os, const Options &options)
 {
     for (const auto option: options)
         os << *option;

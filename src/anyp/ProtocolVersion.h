@@ -92,7 +92,7 @@ public:
 };
 
 inline std::ostream &
-operator << (std::ostream &os, const AnyP::ProtocolVersion &v)
+operator << (std::ostream &os, const ProtocolVersion &v)
 {
     return (os << AnyP::ProtocolType_str[v.protocol] << '/' << v.major << '.' << v.minor);
 }

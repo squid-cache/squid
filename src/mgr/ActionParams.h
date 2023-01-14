@@ -44,7 +44,5 @@ public:
 
 } // namespace Mgr
 
-std::ostream &operator <<(std::ostream &os, const Mgr::ActionParams &params);
-
 #endif /* SQUID_MGR_ACTION_PARAMS_H */
 

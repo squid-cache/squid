@@ -32,9 +32,10 @@ namespace IpcIo
 /// what kind of I/O the disker needs to do or have done
 typedef enum { cmdNone, cmdOpen, cmdRead, cmdWrite } Command;
 
+std::ostream &operator <<(std::ostream &, Command);
+
 } // namespace IpcIo
 
-std::ostream &operator <<(std::ostream &, IpcIo::Command);
 
 /// converts DiskIO requests to IPC queue messages
 class IpcIoMsg

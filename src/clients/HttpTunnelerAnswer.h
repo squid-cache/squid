@@ -47,7 +47,7 @@ public:
     Comm::ConnectionPointer conn;
 };
 
-std::ostream &operator <<(std::ostream &, const Http::TunnelerAnswer &);
+std::ostream &operator <<(std::ostream &, const TunnelerAnswer &);
 
 } // namespace Http
 

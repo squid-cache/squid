@@ -33,7 +33,7 @@ public:
     bool tunneled;
 };
 
-std::ostream &operator <<(std::ostream &, const Security::EncryptorAnswer &);
+std::ostream &operator <<(std::ostream &, const EncryptorAnswer &);
 
 } // namespace Security
 

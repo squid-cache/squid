@@ -212,6 +212,13 @@ public:
 /// initiate an (often) asynchronous DNS lookup; the `receiver` gets the results
 void nbgethostbyname(const char *name, const CbcPointer<IpReceiver> &receiver);
 
+inline std::ostream &
+operator <<(std::ostream &os, const CachedIps &ips)
+{
+    ips.reportCurrent(os);
+    return os;
+}
+
 } // namespace Dns
 
 typedef Dns::CachedIps ipcache_addrs; ///< deprecated alias
@@ -228,13 +235,6 @@ void ipcacheMarkBadAddr(const char *name, const Ip::Address &);
 void ipcacheMarkGoodAddr(const char *name, const Ip::Address &);
 void ipcache_restart(void);
 int ipcacheAddEntryFromHosts(const char *name, const char *ipaddr);
-
-inline std::ostream &
-operator <<(std::ostream &os, const Dns::CachedIps &ips)
-{
-    ips.reportCurrent(os);
-    return os;
-}
 
 /* inlined implementations */
 
