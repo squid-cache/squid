@@ -22,7 +22,12 @@ namespace Dns
 class LookupDetails
 {
 public:
-    LookupDetails() : wait(-1) {} ///< no error, no lookup delay (i.e., no lookup)
+    /// no lookup attempt: no error and no lookup delay
+    LookupDetails(): wait(-1) {}
+
+    /// details a possible lookup attempt
+    /// \param anError either a failed attempt error message or an empty string
+    /// \param aWait either milliseconds spent on the attempt or a negative integer
     LookupDetails(const SBuf &anError, const int aWait):
         error(anError.isEmpty() ? std::nullopt : std::make_optional(anError)),
         wait(aWait)
