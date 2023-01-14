@@ -828,7 +828,7 @@ ErrorState::Dump(MemBuf * mb)
     if (auth_user_request.getRaw() && auth_user_request->denyMessage())
         str.appendf("Auth ErrMsg: %s\r\n", auth_user_request->denyMessage());
 #endif
-    if (dnsError && dnsError->length() > 0)
+    if (dnsError)
         str.appendf("DNS ErrMsg: %s\r\n", dnsError->c_str());
 
     /* - TimeStamp */
@@ -1212,7 +1212,7 @@ ErrorState::compileLegacyCode(Build &build)
 
     case 'z':
         if (building_deny_info_url) break;
-        if (dnsError && dnsError->length() > 0)
+        if (dnsError)
             p = dnsError->c_str();
         else if (ftp.cwd_msg)
             p = ftp.cwd_msg;

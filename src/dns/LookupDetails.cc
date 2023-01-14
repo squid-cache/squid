@@ -16,7 +16,7 @@ Dns::LookupDetails::print(std::ostream &os) const
 {
     if (wait > 0)
         os << "lookup_wait=" << wait;
-    if (error && error->length())
+    if (error)
         os << " lookup_err=" << *error;
     return os;
 }
