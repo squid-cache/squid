@@ -27,7 +27,7 @@ public:
 
     /// details a possible lookup attempt
     /// \param anError either a failed attempt error message or an empty string
-    /// \param aWait either milliseconds spent on the attempt or a negative integer
+    /// \param aWait \copydoc wait
     LookupDetails(const SBuf &anError, const int aWait):
         error(anError.isEmpty() ? std::nullopt : std::make_optional(anError)),
         wait(aWait)
