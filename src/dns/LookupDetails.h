@@ -36,7 +36,7 @@ public:
     std::ostream &print(std::ostream &os) const;
 
 public:
-    std::optional<SBuf> error; ///< error message (if any)
+    const std::optional<SBuf> error; ///< error message (if any)
     int wait; ///< msecs spent waiting for the lookup (if any) or -1 (if none)
 };
 
