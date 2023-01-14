@@ -829,7 +829,7 @@ ErrorState::Dump(MemBuf * mb)
         str.appendf("Auth ErrMsg: %s\r\n", auth_user_request->denyMessage());
 #endif
     if (dnsError)
-        str.appendf("DNS ErrMsg: %s\r\n", dnsError->c_str());
+        str.appendf("DNS ErrMsg: " SQUIDSBUFPH "\r\n", SQUIDSBUFPRINT(*dnsError));
 
     /* - TimeStamp */
     str.appendf("TimeStamp: %s\r\n\r\n", Time::FormatRfc1123(squid_curtime));
