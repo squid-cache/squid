@@ -9,9 +9,9 @@
 #ifndef SQUID_PROXYP_HEADER_H
 #define SQUID_PROXYP_HEADER_H
 
-#include "base/RefCount.h"
 #include "ip/Address.h"
 #include "proxyp/Elements.h"
+#include "proxyp/forward.h"
 #include "sbuf/SBuf.h"
 
 #include <vector>
@@ -22,7 +22,6 @@ namespace ProxyProtocol {
 class Header: public RefCountable
 {
 public:
-    typedef RefCount<Header> Pointer;
     typedef std::vector<Two::Tlv> Tlvs;
 
     Header(const SBuf &ver, const Two::Command cmd);

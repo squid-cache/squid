@@ -36,7 +36,7 @@ static Parsed Parse(const SBuf &buf);
 
 static void ExtractIp(Parser::Tokenizer &tok, Ip::Address &addr);
 static void ExtractPort(Parser::Tokenizer &tok, Ip::Address &addr, const bool trailingSpace);
-static void ParseAddresses(Parser::Tokenizer &tok, Header::Pointer &header);
+static void ParseAddresses(Parser::Tokenizer &tok, HeaderPointer &header);
 }
 
 namespace Two {
@@ -45,8 +45,8 @@ static const SBuf Magic("\x0D\x0A\x0D\x0A\x00\x0D\x0A\x51\x55\x49\x54\x0A", 12);
 /// extracts PROXY protocol v2 header from the given buffer
 static Parsed Parse(const SBuf &buf);
 
-static void ParseAddresses(const uint8_t family, Parser::BinaryTokenizer &tok, Header::Pointer &header);
-static void ParseTLVs(Parser::BinaryTokenizer &tok, Header::Pointer &header);
+static void ParseAddresses(const uint8_t family, Parser::BinaryTokenizer &tok, HeaderPointer &header);
+static void ParseTLVs(Parser::BinaryTokenizer &tok, HeaderPointer &header);
 }
 }
 
@@ -86,7 +86,7 @@ ProxyProtocol::One::ExtractPort(Parser::Tokenizer &tok, Ip::Address &addr, const
 }
 
 void
-ProxyProtocol::One::ParseAddresses(Parser::Tokenizer &tok, Header::Pointer &header)
+ProxyProtocol::One::ParseAddresses(Parser::Tokenizer &tok, HeaderPointer &header)
 {
     static const CharacterSet addressFamilies("Address family", "46");
     SBuf parsedAddressFamily;
@@ -130,7 +130,7 @@ ProxyProtocol::One::Parse(const SBuf &buf)
     // extracted all PROXY protocol bytes
 
     static const SBuf v1("1.0");
-    Header::Pointer header = new Header(v1, Two::cmdProxy);
+    HeaderPointer header = new Header(v1, Two::cmdProxy);
 
     Parser::Tokenizer interiorTok(interior);
 
@@ -151,7 +151,7 @@ ProxyProtocol::One::Parse(const SBuf &buf)
 }
 
 void
-ProxyProtocol::Two::ParseAddresses(const uint8_t family, Parser::BinaryTokenizer &tok, Header::Pointer &header)
+ProxyProtocol::Two::ParseAddresses(const uint8_t family, Parser::BinaryTokenizer &tok, HeaderPointer &header)
 {
     switch (family) {
 
@@ -186,7 +186,7 @@ ProxyProtocol::Two::ParseAddresses(const uint8_t family, Parser::BinaryTokenizer
 }
 
 void
-ProxyProtocol::Two::ParseTLVs(Parser::BinaryTokenizer &tok, Header::Pointer &header) {
+ProxyProtocol::Two::ParseTLVs(Parser::BinaryTokenizer &tok, HeaderPointer &header) {
     while (!tok.atEnd()) {
         const auto type = tok.uint8("pp2_tlv::type");
         header->tlvs.emplace_back(type, tok.pstring16("pp2_tlv::value"));
@@ -221,7 +221,7 @@ ProxyProtocol::Two::Parse(const SBuf &buf)
     const auto rawHeader = tokHeader.pstring16("header");
 
     static const SBuf v2("2.0");
-    Header::Pointer header = new Header(v2, Two::Command(command));
+    HeaderPointer header = new Header(v2, Two::Command(command));
 
     if (proto == tpUnspecified || family == afUnspecified) {
         header->ignoreAddresses();
@@ -267,7 +267,7 @@ ProxyProtocol::Parse(const SBuf &buf)
     throw Parser::BinaryTokenizer::InsufficientInput();
 }
 
-ProxyProtocol::Parsed::Parsed(const Header::Pointer &parsedHeader, const size_t parsedSize):
+ProxyProtocol::Parsed::Parsed(const HeaderPointer &parsedHeader, const size_t parsedSize):
     header(parsedHeader),
     size(parsedSize)
 {
