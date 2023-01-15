@@ -129,13 +129,6 @@ public:
      */
     static bool NextKvPair(char * &key, char * &value);
 
-    // TODO: Convert into a non-static method after exposing the current parser.
-    /// Extract, validate, and store the ACL key parameter for ACL types
-    /// declared using "acl aclname type key argument..." declaration that
-    /// require unique key values for each aclname+type combination.
-    /// Key comparison is case-insensitive.
-    static void SetAclKey(SBuf &keyStorage, const char *keyParameterName);
-
     /**
      * Preview the next token. The next NextToken() and strtokFile() call
      * will return the same token.
