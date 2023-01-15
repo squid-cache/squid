@@ -291,19 +291,12 @@ FwdState::completed()
                 // no flags.dont_retry: completed() is a post-reforward() act
             }
 #endif
-        } else if (!storedWholeReply_) {
-            if (!err) { // message ended prematurely (due to EOF) before an error
-                const auto errorState = new ErrorState(ERR_READ_ERROR, Http::scBadGateway, request, al);
-                static const auto d = MakeNamedErrorDetail("SRV_PREMATURE_EOF");
-                errorState->detailError(d);
-                fail(errorState);
-            }
-            assert(err);
-            updateAleWithFinalError();
-            entry->completeTruncated("FwdState default");
         } else {
             updateAleWithFinalError(); // if any
-            entry->completeSuccessfully(storedWholeReply_);
+            if (storedWholeReply_)
+                entry->completeSuccessfully(storedWholeReply_);
+            else
+                entry->completeTruncated("FwdState default");
         }
     }
 
