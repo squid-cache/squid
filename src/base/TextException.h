@@ -33,8 +33,8 @@ public:
     TextException& operator=(const TextException &) = default;
 
     /* std::runtime_error API */
-    virtual ~TextException() throw() override;
-    virtual const char *what() const throw() override;
+    ~TextException() throw() override;
+    const char *what() const throw() override;
 
     /// same-location exceptions have the same ID
     SourceLocationId id() const { return where.id(); }

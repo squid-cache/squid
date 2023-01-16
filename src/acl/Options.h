@@ -142,16 +142,16 @@ public:
 
     /* Option API */
 
-    virtual bool configured() const override { return recipient_ && recipient_->configured; }
-    virtual bool disabled() const override { return recipient_ && recipient_->disabled && /* paranoid: */ offName; }
-    virtual bool valued() const override { return recipient_ && recipient_->valued; }
+    bool configured() const override { return recipient_ && recipient_->configured; }
+    bool disabled() const override { return recipient_ && recipient_->disabled && /* paranoid: */ offName; }
+    bool valued() const override { return recipient_ && recipient_->valued; }
 
-    virtual void unconfigure() const override {
+    void unconfigure() const override {
         assert(recipient_);
         recipient_->reset();
     }
 
-    virtual void enable() const override
+    void enable() const override
     {
         assert(recipient_);
         recipient_->configured = true;
@@ -160,7 +160,7 @@ public:
         // leave recipient_->value unchanged
     }
 
-    virtual void configureWith(const SBuf &rawValue) const override
+    void configureWith(const SBuf &rawValue) const override
     {
         assert(recipient_);
         recipient_->configured = true;
@@ -169,7 +169,7 @@ public:
         import(rawValue);
     }
 
-    virtual void disable() const override
+    void disable() const override
     {
         assert(recipient_);
         recipient_->configured = true;
@@ -178,7 +178,7 @@ public:
         // leave recipient_->value unchanged
     }
 
-    virtual void print(std::ostream &os) const override
+    void print(std::ostream &os) const override
     {
         if (configured()) {
             os << ' ' << (disabled() ? offName : onName);

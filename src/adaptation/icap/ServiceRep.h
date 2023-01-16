@@ -59,29 +59,29 @@ class OptXact;
 class ServiceRep : public RefCountable, public Adaptation::Service,
     public Adaptation::Initiator
 {
-    CBDATA_CLASS(ServiceRep);
+    CBDATA_CHILD(ServiceRep);
 
 public:
     typedef RefCount<ServiceRep> Pointer;
 
 public:
     explicit ServiceRep(const ServiceConfigPointer &aConfig);
-    virtual ~ServiceRep();
+    ~ServiceRep() override;
 
-    virtual void finalize();
+    void finalize() override;
 
-    virtual bool probed() const; // see comments above
-    virtual bool up() const; // see comments above
+    bool probed() const override; // see comments above
+    bool up() const override; // see comments above
     bool availableForNew() const; ///< a new transaction may start communicating with the service
     bool availableForOld() const; ///< a transaction notified about connection slot availability may start communicating with the service
 
-    virtual Initiate *makeXactLauncher(Http::Message *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp);
+    Initiate *makeXactLauncher(Http::Message *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp) override;
 
     void callWhenAvailable(AsyncCall::Pointer &cb, bool priority = false);
     void callWhenReady(AsyncCall::Pointer &cb);
 
     // the methods below can only be called on an up() service
-    bool wantsUrl(const SBuf &urlPath) const;
+    bool wantsUrl(const SBuf &urlPath) const override;
     bool wantsPreview(const SBuf &urlPath, size_t &wantedSize) const;
     bool allows204() const;
     bool allows206() const;
@@ -91,25 +91,25 @@ public:
     void noteConnectionUse(const Comm::ConnectionPointer &conn);
     void noteConnectionFailed(const char *comment);
 
-    void noteFailure(); // called by transactions to report service failure
+    void noteFailure() override; // called by transactions to report service failure
 
     void noteNewWaiter() {theAllWaiters++;} ///< New xaction waiting for service to be up or available
     void noteGoneWaiter(); ///< An xaction is not waiting any more for service to be available
     bool existWaiters() const {return (theAllWaiters > 0);} ///< if there are xactions waiting for the service to be available
 
     //AsyncJob virtual methods
-    virtual bool doneAll() const { return Adaptation::Initiator::doneAll() && false;}
-    virtual void callException(const std::exception &e);
+    bool doneAll() const override { return Adaptation::Initiator::doneAll() && false;}
+    void callException(const std::exception &e) override;
 
-    virtual void detach();
-    virtual bool detached() const;
+    void detach() override;
+    bool detached() const override;
 
 public: // treat these as private, they are for callbacks only
     void noteTimeToUpdate();
     void noteTimeToNotify();
 
     // receive either an ICAP OPTIONS response header or an abort message
-    virtual void noteAdaptationAnswer(const Answer &answer);
+    void noteAdaptationAnswer(const Answer &answer) override;
 
     Security::ContextPointer sslContext;
     Security::SessionStatePointer sslSession;
@@ -183,7 +183,7 @@ private:
      */
     void busyCheckpoint();
 
-    const char *status() const;
+    const char *status() const override;
 
     mutable bool wasAnnouncedUp; // prevent sequential same-state announcements
     bool isDetached;
@@ -199,7 +199,7 @@ public:
     ServiceRep::Pointer theService;
     ConnWaiterDialer(const CbcPointer<Adaptation::Icap::ModXact> &xact, Adaptation::Icap::ConnWaiterDialer::Parent::Method aHandler);
     ConnWaiterDialer(const Adaptation::Icap::ConnWaiterDialer &aConnWaiter);
-    ~ConnWaiterDialer();
+    ~ConnWaiterDialer() override;
 };
 
 } // namespace Icap

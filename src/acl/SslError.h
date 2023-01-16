@@ -16,7 +16,7 @@ class ACLSslErrorStrategy : public ACLStrategy<const Security::CertErrors *>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
 };
 
 #endif /* SQUID_ACLSSL_ERROR_H */

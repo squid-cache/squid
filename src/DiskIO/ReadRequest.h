@@ -19,7 +19,7 @@ class ReadRequest : public RefCountable
 public:
     typedef RefCount<ReadRequest> Pointer;
     ReadRequest(char *buf, off_t offset, size_t len);
-    virtual ~ReadRequest() {}
+    ~ReadRequest() override {}
 
     char *buf;
     off_t offset;

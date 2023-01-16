@@ -17,10 +17,10 @@ class BlockingDiskIOModule : public DiskIOModule
 public:
     static BlockingDiskIOModule &GetInstance();
     BlockingDiskIOModule();
-    virtual void init();
-    virtual void gracefulShutdown();
-    virtual char const *type () const;
-    virtual DiskIOStrategy* createStrategy();
+    void init() override;
+    void gracefulShutdown() override;
+    char const *type () const override;
+    DiskIOStrategy* createStrategy() override;
 
 private:
     static BlockingDiskIOModule Instance;

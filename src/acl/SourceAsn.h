@@ -18,7 +18,7 @@ class ACLSourceASNStrategy : public ACLStrategy<Ip::Address>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
 };
 
 #endif /* SQUID_ACL_SOURCEASN_H */

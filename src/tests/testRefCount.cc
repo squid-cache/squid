@@ -19,7 +19,7 @@ class _ToRefCount : public RefCountable
 {
 public:
     _ToRefCount () {++Instances;}
-    ~_ToRefCount() {--Instances;}
+    ~_ToRefCount() override {--Instances;}
 
     int someMethod() {
         if (!Instances)

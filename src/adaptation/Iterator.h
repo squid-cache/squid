@@ -30,25 +30,25 @@ namespace Adaptation
 /// iterates services in ServiceGroup, starting adaptation launchers
 class Iterator: public Initiate, public Initiator
 {
-    CBDATA_CLASS(Iterator);
+    CBDATA_CHILD(Iterator);
 
 public:
     Iterator(Http::Message *virginHeader, HttpRequest *virginCause,
              const AccessLogEntryPointer &,
              const Adaptation::ServiceGroupPointer &aGroup);
-    virtual ~Iterator();
+    ~Iterator() override;
 
     // Adaptation::Initiate: asynchronous communication with the initiator
-    void noteInitiatorAborted();
+    void noteInitiatorAborted() override;
 
     // Adaptation::Initiator: asynchronous communication with the current launcher
-    virtual void noteAdaptationAnswer(const Answer &answer);
+    void noteAdaptationAnswer(const Answer &answer) override;
 
 protected:
     // Adaptation::Initiate API implementation
-    virtual void start();
-    virtual bool doneAll() const;
-    virtual void swanSong();
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
 
     /// launches adaptation for the service selected by the plan
     void step();

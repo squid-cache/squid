@@ -29,7 +29,7 @@ public:
 
     ESISegment() : len(0), next(nullptr) {*buf = 0;}
     ESISegment(ESISegment const &);
-    ~ESISegment() {}
+    ~ESISegment() override {}
 
     ESISegment::Pointer cloneList() const;
     char *listToChar() const;

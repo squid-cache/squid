@@ -16,7 +16,7 @@ class ACLSquidErrorStrategy : public ACLStrategy<err_type>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
 };
 
 #endif /* SQUID_ACLSQUIDERROR_H */

@@ -22,7 +22,7 @@ class ErrorDetail: public RefCountable
 public:
     using Pointer = ErrorDetailPointer;
 
-    virtual ~ErrorDetail() {}
+    ~ErrorDetail() override {}
 
     /// \returns a single "token" summarizing available details
     /// suitable as an access.log field and similar output processed by programs

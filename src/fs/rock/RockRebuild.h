@@ -57,15 +57,15 @@ protected:
     static bool IsResponsible(const SwapDir &);
 
     Rebuild(SwapDir *dir, const Ipc::Mem::Pointer<Stats> &);
-    virtual ~Rebuild() override;
+    ~Rebuild() override;
 
     /* Registered Runner API */
-    virtual void startShutdown() override;
+    void startShutdown() override;
 
     /* AsyncJob API */
-    virtual void start() override;
-    virtual bool doneAll() const override;
-    virtual void swanSong() override;
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
 
     bool doneLoading() const;
     bool doneValidating() const;

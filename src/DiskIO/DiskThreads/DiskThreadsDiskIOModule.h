@@ -17,11 +17,11 @@ class DiskThreadsDiskIOModule : public DiskIOModule
 public:
     static DiskThreadsDiskIOModule &GetInstance();
     DiskThreadsDiskIOModule();
-    virtual void init();
+    void init() override;
     //virtual void registerWithCacheManager(void);
-    virtual void gracefulShutdown();
-    virtual char const *type () const;
-    virtual DiskIOStrategy* createStrategy();
+    void gracefulShutdown() override;
+    char const *type () const override;
+    DiskIOStrategy* createStrategy() override;
 
 private:
     static DiskThreadsDiskIOModule Instance;

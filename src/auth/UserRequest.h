@@ -80,7 +80,7 @@ public:
     typedef RefCount<Auth::UserRequest> Pointer;
 
     UserRequest();
-    virtual ~UserRequest();
+    ~UserRequest() override;
     void *operator new(size_t byteCount);
     void operator delete(void *address);
 

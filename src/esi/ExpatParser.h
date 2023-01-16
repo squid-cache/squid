@@ -22,13 +22,13 @@ class ESIExpatParser : public ESIParser
 
 public:
     ESIExpatParser(ESIParserClient *);
-    ~ESIExpatParser();
+    ~ESIExpatParser() override;
 
     /** \retval true    on success */
-    bool parse(char const *dataToParse, size_t const lengthOfData, bool const endOfStream);
+    bool parse(char const *dataToParse, size_t const lengthOfData, bool const endOfStream) override;
 
-    long int lineNumber() const;
-    char const * errorString() const;
+    long int lineNumber() const override;
+    char const * errorString() const override;
 
     EsiParserDeclaration;
 

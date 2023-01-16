@@ -25,14 +25,14 @@ class DiskThreadsIOStrategy : public DiskIOStrategy
 
 public:
     DiskThreadsIOStrategy();
-    virtual bool shedLoad();
-    virtual int load();
-    virtual RefCount<DiskFile> newFile(char const *path);
-    virtual bool unlinkdUseful() const;
-    virtual void unlinkFile (char const *);
-    virtual int callback();
-    virtual void sync();
-    virtual void init();
+    bool shedLoad() override;
+    int load() override;
+    RefCount<DiskFile> newFile(char const *path) override;
+    bool unlinkdUseful() const override;
+    void unlinkFile (char const *) override;
+    int callback() override;
+    void sync() override;
+    void init() override;
     void done();
     /* Todo: add access limitations */
     bool initialised;

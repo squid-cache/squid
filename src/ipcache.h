@@ -194,7 +194,7 @@ private:
 class IpReceiver: public virtual CbdataParent
 {
 public:
-    virtual ~IpReceiver() {}
+    ~IpReceiver() override {}
 
     /// Called when nbgethostbyname() fully resolves the name.
     /// The `ips` may contain both bad and good IP addresses, but each good IP

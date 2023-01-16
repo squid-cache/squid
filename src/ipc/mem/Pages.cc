@@ -94,10 +94,10 @@ class SharedMemPagesRr: public Ipc::Mem::RegisteredRunner
 public:
     /* RegisteredRunner API */
     SharedMemPagesRr(): owner(nullptr) {}
-    virtual void useConfig();
-    virtual void create();
-    virtual void open();
-    virtual ~SharedMemPagesRr();
+    void useConfig() override;
+    void create() override;
+    void open() override;
+    ~SharedMemPagesRr() override;
 
 private:
     Ipc::Mem::PagePool::Owner *owner;

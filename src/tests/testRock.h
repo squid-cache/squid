@@ -24,8 +24,8 @@ class testRock : public CPPUNIT_NS::TestFixture
 
 public:
     testRock() : rr(nullptr) {}
-    virtual void setUp();
-    virtual void tearDown();
+    void setUp() override;
+    void tearDown() override;
 
     typedef RefCount<Rock::SwapDir> SwapDirPointer;
 

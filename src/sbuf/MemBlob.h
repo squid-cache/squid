@@ -59,7 +59,7 @@ public:
     /// create a MemBlob containing a copy of the buffer of a given size
     MemBlob(const char *buffer, const size_type bufferSize);
 
-    virtual ~MemBlob();
+    ~MemBlob() override;
 
     /// the number unused bytes at the end of the allocated blob
     size_type spaceSize() const { return capacity - size; }

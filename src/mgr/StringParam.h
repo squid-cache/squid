@@ -24,8 +24,8 @@ class StringParam: public QueryParam
 public:
     StringParam();
     StringParam(const String& aString);
-    virtual void pack(Ipc::TypedMsgHdr& msg) const;
-    virtual void unpackValue(const Ipc::TypedMsgHdr& msg);
+    void pack(Ipc::TypedMsgHdr& msg) const override;
+    void unpackValue(const Ipc::TypedMsgHdr& msg) override;
     const String& value() const;
 
 private:

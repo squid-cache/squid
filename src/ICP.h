@@ -63,7 +63,7 @@ class ICPState: public StoreClient
 
 public:
     ICPState(icp_common_t &aHeader, HttpRequest *aRequest);
-    virtual ~ICPState();
+    ~ICPState() override;
 
     /// whether the cache contains the requested entry
     bool isHit() const;
@@ -78,8 +78,8 @@ public:
 
 protected:
     /* StoreClient API */
-    virtual LogTags *loggingTags() const override;
-    virtual void fillChecklist(ACLFilledChecklist &) const override;
+    LogTags *loggingTags() const override;
+    void fillChecklist(ACLFilledChecklist &) const override;
 
     /// either confirms and starts processing a cache hit or returns false
     bool confirmAndPrepHit(const StoreEntry &) const;

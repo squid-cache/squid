@@ -39,13 +39,13 @@ public:
     ServerOptions &operator =(const ServerOptions &);
     ServerOptions(ServerOptions &&o) { this->operator =(o); }
     ServerOptions &operator =(ServerOptions &&o) { this->operator =(o); return *this; }
-    virtual ~ServerOptions() = default;
+    ~ServerOptions() override = default;
 
     /* Security::PeerOptions API */
-    virtual void parse(const char *);
-    virtual void clear() {*this = ServerOptions();}
-    virtual Security::ContextPointer createBlankContext() const;
-    virtual void dumpCfg(Packable *, const char *pfx) const;
+    void parse(const char *) override;
+    void clear() override {*this = ServerOptions();}
+    Security::ContextPointer createBlankContext() const override;
+    void dumpCfg(Packable *, const char *pfx) const override;
 
     /// initialize all server contexts as-needed and load PEM files.
     /// if none can be created this may do nothing.

@@ -26,7 +26,7 @@ namespace Snmp
  */
 class Forwarder: public Ipc::Forwarder
 {
-    CBDATA_CLASS(Forwarder);
+    CBDATA_CHILD(Forwarder);
 
 public:
     Forwarder(const Pdu& aPdu, const Session& aSession, int aFd,
@@ -34,9 +34,9 @@ public:
 
 protected:
     /* Ipc::Forwarder API */
-    virtual void swanSong();
-    virtual void handleTimeout();
-    virtual void handleException(const std::exception& e);
+    void swanSong() override;
+    void handleTimeout() override;
+    void handleException(const std::exception& e) override;
 
 private:
     void noteCommClosed(const CommCloseCbParams& params);

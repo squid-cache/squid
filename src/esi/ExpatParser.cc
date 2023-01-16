@@ -23,7 +23,7 @@ namespace Esi
 class ExpatRr : public RegisteredRunner
 {
 public:
-    void finalizeConfig()
+    void finalizeConfig() override
     {
         registration.reset(new ESIParser::Register("expat", &ESIExpatParser::NewParser));
     }

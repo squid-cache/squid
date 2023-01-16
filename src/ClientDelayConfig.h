@@ -27,7 +27,7 @@ public:
 
     ClientDelayPool()
         :   access(nullptr), rate(0), highwatermark(0) {}
-    ~ClientDelayPool();
+    ~ClientDelayPool() override;
     ClientDelayPool(const ClientDelayPool &) = delete;
     ClientDelayPool &operator=(const ClientDelayPool &) = delete;
 

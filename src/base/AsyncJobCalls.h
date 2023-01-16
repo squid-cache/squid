@@ -94,13 +94,13 @@ public:
     explicit NullaryMemFunT(const CbcPointer<Job> &aJob, Method aMethod):
         JobDialer<Job>(aJob), method(aMethod) {}
 
-    virtual void print(std::ostream &os) const {  os << "()"; }
+    void print(std::ostream &os) const override {  os << "()"; }
 
 public:
     Method method;
 
 protected:
-    virtual void doDial() { ((&(*this->job))->*method)(); }
+    void doDial() override { ((&(*this->job))->*method)(); }
 };
 
 template <class Job, class Data, class Argument1 = Data>
@@ -112,14 +112,14 @@ public:
                           const Data &anArg1): JobDialer<Job>(aJob),
         method(aMethod), arg1(anArg1) {}
 
-    virtual void print(std::ostream &os) const {  os << '(' << arg1 << ')'; }
+    void print(std::ostream &os) const override {  os << '(' << arg1 << ')'; }
 
 public:
     Method method;
     Data arg1;
 
 protected:
-    virtual void doDial() { ((&(*this->job))->*method)(arg1); }
+    void doDial() override { ((&(*this->job))->*method)(arg1); }
 };
 
 // ... add more as needed

@@ -29,7 +29,7 @@ public:
     typedef RefCount<DownloaderContext> Pointer;
 
     DownloaderContext(Downloader *dl, ClientHttpRequest *h);
-    ~DownloaderContext();
+    ~DownloaderContext() override;
     void finished();
 
     CbcPointer<Downloader> downloader;

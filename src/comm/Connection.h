@@ -77,7 +77,7 @@ public:
     Connection();
 
     /** Clear the connection properties and close any open socket. */
-    virtual ~Connection();
+    ~Connection() override;
 
     /// To prevent accidental copying of Connection objects that we started to
     /// open or that are open, use cloneProfile() instead.
@@ -138,8 +138,8 @@ public:
     const Security::NegotiationHistory *hasTlsNegotiations() const {return tlsHistory;}
 
     /* CodeContext API */
-    virtual ScopedId codeContextGist() const override;
-    virtual std::ostream &detailCodeContext(std::ostream &os) const override;
+    ScopedId codeContextGist() const override;
+    std::ostream &detailCodeContext(std::ostream &os) const override;
 
 public:
     /** Address/Port for the Squid end of a TCP link. */

@@ -48,8 +48,8 @@ public:
     ConfigRep(const Master &aMaster);
 
     // libecap::Options API
-    virtual const libecap::Area option(const libecap::Name &name) const;
-    virtual void visitEachOption(libecap::NamedValueVisitor &visitor) const;
+    const libecap::Area option(const libecap::Name &name) const override;
+    void visitEachOption(libecap::NamedValueVisitor &visitor) const override;
 
     const Master &master; ///< the configuration being wrapped
 };
@@ -59,7 +59,7 @@ class Engine: public AsyncEngine
 {
 public:
     /* AsyncEngine API */
-    virtual int checkEvents(int timeout);
+    int checkEvents(int timeout) override;
 
 private:
     void kickAsyncServices(timeval &timeout);

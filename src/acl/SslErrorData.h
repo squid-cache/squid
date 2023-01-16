@@ -19,11 +19,11 @@ class ACLSslErrorData : public ACLData<const Security::CertErrors *>
 
 public:
     ACLSslErrorData() = default;
-    virtual ~ACLSslErrorData() {}
-    bool match(const Security::CertErrors *);
-    virtual SBufList dump() const;
-    void parse();
-    bool empty() const { return values.empty(); }
+    ~ACLSslErrorData() override {}
+    bool match(const Security::CertErrors *) override;
+    SBufList dump() const override;
+    void parse() override;
+    bool empty() const override { return values.empty(); }
 
     Security::Errors values;
 };

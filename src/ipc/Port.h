@@ -29,8 +29,8 @@ public:
     static String CoordinatorAddr();
 
 protected:
-    virtual void start() = 0; // UdsOp (AsyncJob) API; has body
-    virtual bool doneAll() const; // UdsOp (AsyncJob) API
+    void start() override = 0; // UdsOp (AsyncJob) API; has body
+    bool doneAll() const override; // UdsOp (AsyncJob) API
 
     /// read the next incoming message
     void doListen();

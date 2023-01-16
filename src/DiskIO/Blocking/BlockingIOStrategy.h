@@ -16,11 +16,11 @@ class BlockingIOStrategy : public DiskIOStrategy
 {
 
 public:
-    virtual bool shedLoad();
-    virtual int load();
-    virtual RefCount<DiskFile> newFile(char const *path);
-    virtual bool unlinkdUseful() const;
-    virtual void unlinkFile (char const *);
+    bool shedLoad() override;
+    int load() override;
+    RefCount<DiskFile> newFile(char const *path) override;
+    bool unlinkdUseful() const override;
+    void unlinkFile (char const *) override;
 };
 
 #endif /* SQUID_BLOCKINGIOSTRATEGY_H */

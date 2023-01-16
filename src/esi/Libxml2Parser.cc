@@ -27,7 +27,7 @@ namespace Esi
 class Libxml2Rr : public RegisteredRunner
 {
 public:
-    void finalizeConfig()
+    void finalizeConfig() override
     {
         registration.reset(new ESIParser::Register("libxml2", &ESILibxml2Parser::NewParser));
     }

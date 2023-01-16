@@ -206,8 +206,8 @@ class ConfigRr : public RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void startReconfigure() override;
-    virtual void endingShutdown() override;
+    void startReconfigure() override;
+    void endingShutdown() override;
 };
 
 RunnerRegistrationEntry(ConfigRr);

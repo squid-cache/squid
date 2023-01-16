@@ -31,8 +31,8 @@ public:
     explicit ErrorDetail(const int code): completionCode(code) {}
 
     /* ErrorDetail API */
-    virtual SBuf brief() const override;
-    virtual SBuf verbose(const HttpRequestPointer &) const override;
+    SBuf brief() const override;
+    SBuf verbose(const HttpRequestPointer &) const override;
 
 private:
     int completionCode; ///< FTP reply completion code
@@ -109,11 +109,9 @@ public:
 /// FTP client functionality shared among FTP Gateway and Relay clients.
 class Client: public ::Client
 {
-    CBDATA_CLASS(Client);
-
 public:
     explicit Client(FwdState *fwdState);
-    virtual ~Client();
+    ~Client() override;
 
     /// handle a fatal transaction error, closing the control connection
     virtual void failed(err_type error = ERR_NONE, int xerrno = 0,
@@ -123,7 +121,7 @@ public:
     virtual void timeout(const CommTimeoutCbParams &io);
 
     /* Client API */
-    virtual void maybeReadVirginBody();
+    void maybeReadVirginBody() override;
 
     void writeCommand(const char *buf);
 
@@ -179,14 +177,14 @@ public:
 
 protected:
     /* AsyncJob API */
-    virtual void start();
+    void start() override;
 
     /* Client API */
-    virtual void closeServer();
-    virtual bool doneWithServer() const;
-    virtual const Comm::ConnectionPointer & dataConnection() const;
-    virtual void abortAll(const char *reason);
-    virtual void noteDelayAwareReadChance();
+    void closeServer() override;
+    bool doneWithServer() const override;
+    const Comm::ConnectionPointer & dataConnection() const override;
+    void abortAll(const char *reason) override;
+    void noteDelayAwareReadChance() override;
 
     virtual Http::StatusCode failedHttpStatus(err_type &error);
     void ctrlClosed(const CommCloseCbParams &io);
@@ -202,8 +200,8 @@ protected:
     void initReadBuf();
 
     // sending of the request body to the server
-    virtual void sentRequestBody(const CommIoCbParams &io);
-    virtual void doneSendingRequestBody();
+    void sentRequestBody(const CommIoCbParams &io) override;
+    void doneSendingRequestBody() override;
 
     /// Waits for an FTP data connection to the server to be established/opened.
     /// This wait only happens in FTP passive mode (via PASV or EPSV).

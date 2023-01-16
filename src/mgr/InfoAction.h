@@ -99,15 +99,15 @@ protected:
 public:
     static Pointer Create(const CommandPointer &cmd);
     /* Action API */
-    virtual void add(const Action& action);
-    virtual void respond(const Request& request);
-    virtual void pack(Ipc::TypedMsgHdr& msg) const;
-    virtual void unpack(const Ipc::TypedMsgHdr& msg);
+    void add(const Action& action) override;
+    void respond(const Request& request) override;
+    void pack(Ipc::TypedMsgHdr& msg) const override;
+    void unpack(const Ipc::TypedMsgHdr& msg) override;
 
 protected:
     /* Action API */
-    virtual void collect();
-    virtual void dump(StoreEntry* entry);
+    void collect() override;
+    void dump(StoreEntry* entry) override;
 
 private:
     InfoActionData data;

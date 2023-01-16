@@ -21,13 +21,13 @@ class ACLStringData : public ACLData<char const *>
 
 public:
     ACLStringData() {}
-    virtual ~ACLStringData() {}
+    ~ACLStringData() override {}
     /// \deprecated use match(SBuf&) instead.
-    bool match(char const *);
+    bool match(char const *) override;
     bool match(const SBuf &);
-    virtual SBufList dump() const;
-    virtual void parse();
-    bool empty() const;
+    SBufList dump() const override;
+    void parse() override;
+    bool empty() const override;
 
     /// Insert a string data value
     void insert(const char *);

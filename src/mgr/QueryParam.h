@@ -25,7 +25,7 @@ public:
 
 public:
     QueryParam(Type aType): type(aType) {}
-    virtual ~QueryParam() {}
+    ~QueryParam() override {}
     virtual void pack(Ipc::TypedMsgHdr& msg) const = 0; ///< store parameter into msg
     virtual void unpackValue(const Ipc::TypedMsgHdr& msg) = 0; ///< load parameter value from msg
 

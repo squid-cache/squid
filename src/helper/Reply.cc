@@ -151,6 +151,58 @@ isKeyNameChar(char c)
     return false;
 }
 
+/// warns admin about problematic key=value pairs
+void
+Helper::Reply::CheckReceivedKey(const SBuf &key, const SBuf &value)
+{
+    // Squid recognizes these keys (by name) in some helper responses
+    static const std::vector<SBuf> recognized = {
+        SBuf("clt_conn_tag"),
+        SBuf("group"),
+        SBuf("ha1"),
+        SBuf("log"),
+        SBuf("message"),
+        SBuf("nonce"),
+        SBuf("password"),
+        SBuf("rewrite-url"),
+        SBuf("status"),
+        SBuf("store-id"),
+        SBuf("tag"),
+        SBuf("token"),
+        SBuf("url"),
+        SBuf("user")
+    };
+
+    // TODO: Merge with Notes::ReservedKeys(). That list has an entry that Squid
+    // sources do _not_ recognize today ("ttl"), and it is missing some
+    // recognized entries ("clt_conn_tag", "nonce", store-id", and "token").
+
+    if (key.isEmpty()) {
+        debugs(84, DBG_IMPORTANT, "WARNING: Deprecated from-helper annotation without a name: " <<
+               key << '=' << value <<
+               Debug::Extra << "advice: Name or remove this annotation");
+        // TODO: Skip/ignore these annotations.
+        return;
+    }
+
+    // We do not check custom keys for repetitions because Squid supports them:
+    // The "note" ACL checks all of them and %note prints all of them.
+    if (*key.rbegin() == '_')
+        return; // a custom key
+
+    // To simplify, we allow all recognized keys, even though some of them are
+    // only expected from certain helpers or even only in certain reply types.
+    // To simplify and optimize, we do not check recognized keys for repetitions
+    // because _some_ of them (e.g., "message") do support repetitions.
+    if (std::find(recognized.begin(), recognized.end(), key) != recognized.end())
+        return; // a Squid-recognized key
+
+    debugs(84, DBG_IMPORTANT, "WARNING: Unsupported or unexpected from-helper annotation with a name reserved for Squid use: " <<
+           key << '=' << value <<
+           Debug::Extra << "advice: If this is a custom annotation, rename it to add a trailing underscore: " <<
+           key << '_');
+}
+
 void
 Helper::Reply::parseResponseKeys()
 {
@@ -176,7 +228,11 @@ Helper::Reply::parseResponseKeys()
         if (v != nullptr && urlDecode && (p-v) > 2) // 1-octet %-escaped requires 3 bytes
             rfc1738_unescape(v);
 
-        notes.add(key, v ? v : ""); // value can be empty, but must not be NULL
+        // TODO: Convert the above code to use Tokenizer and SBuf
+        const SBuf parsedKey(key);
+        const SBuf parsedValue(v); // allow empty values (!v or !*v)
+        CheckReceivedKey(parsedKey, parsedValue);
+        notes.add(parsedKey, parsedValue);
 
         other_.consume(p - other_.content());
         other_.consumeWhitespacePrefix();

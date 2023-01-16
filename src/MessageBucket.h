@@ -27,9 +27,9 @@ public:
     MessageBucket(const int speed, const int initialLevelPercent, const double sizeLimit, MessageDelayPool::Pointer pool);
 
     /* BandwidthBucket API */
-    virtual int quota() override;
-    virtual void scheduleWrite(Comm::IoCallback *state) override;
-    virtual void reduceBucket(int len) override;
+    int quota() override;
+    void scheduleWrite(Comm::IoCallback *state) override;
+    void reduceBucket(int len) override;
 
 private:
     MessageDelayPool::Pointer theAggregate;

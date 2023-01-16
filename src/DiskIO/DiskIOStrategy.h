@@ -62,25 +62,25 @@ class SingletonIOStrategy : public DiskIOStrategy
 public:
     SingletonIOStrategy(DiskIOStrategy *anIO) : io(anIO) {}
 
-    virtual bool shedLoad() { return io->shedLoad(); }
+    bool shedLoad() override { return io->shedLoad(); }
 
-    virtual int load() { return io->load(); }
+    int load() override { return io->load(); }
 
-    virtual RefCount<DiskFile> newFile (char const *path) {return io->newFile(path); }
+    RefCount<DiskFile> newFile (char const *path) override {return io->newFile(path); }
 
-    virtual void sync() { io->sync(); }
+    void sync() override { io->sync(); }
 
-    virtual bool unlinkdUseful() const { return io->unlinkdUseful(); }
+    bool unlinkdUseful() const override { return io->unlinkdUseful(); }
 
-    virtual void unlinkFile(char const *path) { io->unlinkFile(path); }
+    void unlinkFile(char const *path) override { io->unlinkFile(path); }
 
-    virtual int callback() { return io->callback(); }
+    int callback() override { return io->callback(); }
 
-    virtual void init() { io->init(); }
+    void init() override { io->init(); }
 
-    virtual void statfs(StoreEntry & sentry) const { io->statfs(sentry); }
+    void statfs(StoreEntry & sentry) const override { io->statfs(sentry); }
 
-    virtual ConfigOption *getOptionTree() const { return io->getOptionTree(); }
+    ConfigOption *getOptionTree() const override { return io->getOptionTree(); }
 
 private:
     DiskIOStrategy *io;

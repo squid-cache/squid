@@ -36,12 +36,20 @@ class ClientHttpRequest
       public BodyConsumer     // to receive reply bodies in request satisf. mode
 #endif
 {
+#if USE_ADAPTATION
+    CBDATA_CHILD(ClientHttpRequest);
+#else
     CBDATA_CLASS(ClientHttpRequest);
+#endif
 
 public:
     ClientHttpRequest(ConnStateData *);
     ClientHttpRequest(ClientHttpRequest &&) = delete;
+#if USE_ADAPTATION
+    ~ClientHttpRequest() override;
+#else
     ~ClientHttpRequest();
+#endif
 
     String rangeBoundaryStr() const;
     void freeResources();
@@ -200,12 +208,12 @@ public:
     bool requestSatisfactionMode() const { return request_satisfaction_mode; }
 
     /* AsyncJob API */
-    virtual bool doneAll() const {
+    bool doneAll() const override {
         return Initiator::doneAll() &&
                BodyConsumer::doneAll() &&
                false; // TODO: Refactor into a proper AsyncJob
     }
-    virtual void callException(const std::exception &);
+    void callException(const std::exception &) override;
 
 private:
     /// Handles an adaptation client request failure.
@@ -216,13 +224,13 @@ private:
     void handleAdaptationBlock(const Adaptation::Answer &);
 
     /* Adaptation::Initiator API */
-    virtual void noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer);
-    virtual void noteAdaptationAnswer(const Adaptation::Answer &);
+    void noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer) override;
+    void noteAdaptationAnswer(const Adaptation::Answer &) override;
 
     /* BodyConsumer API */
-    virtual void noteMoreBodyDataAvailable(BodyPipe::Pointer);
-    virtual void noteBodyProductionEnded(BodyPipe::Pointer);
-    virtual void noteBodyProducerAborted(BodyPipe::Pointer);
+    void noteMoreBodyDataAvailable(BodyPipe::Pointer) override;
+    void noteBodyProductionEnded(BodyPipe::Pointer) override;
+    void noteBodyProducerAborted(BodyPipe::Pointer) override;
 
     void endRequestSatisfaction();
     /// called by StoreEntry when it has more buffer space available

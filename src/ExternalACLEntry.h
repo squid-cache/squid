@@ -57,7 +57,7 @@ class ExternalACLEntry: public hash_link, public RefCountable
 
 public:
     ExternalACLEntry();
-    ~ExternalACLEntry();
+    ~ExternalACLEntry() override;
 
     void update(ExternalACLEntryData const &);
     dlink_node lru;

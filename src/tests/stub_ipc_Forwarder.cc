@@ -7,12 +7,18 @@
  */
 
 #include "squid.h"
-#include "ipc/Forwarder.h"
 
-//Avoid linker errors about Ipc::Forwarder
-void foo_stub_ipc_forwarder();
-void foo_stub_ipc_forwarder()
-{
-    Ipc::Forwarder foo(nullptr,1.0);
-}
+#define STUB_API "ipc/Forwarder.cc"
+#include "tests/STUB.h"
+
+#include "ipc/Forwarder.h"
+Ipc::Forwarder::Forwarder(Request::Pointer, double): AsyncJob("Ipc::Forwarder"), timeout(0) {STUB}
+Ipc::Forwarder::~Forwarder() STUB
+void Ipc::Forwarder::start() STUB
+bool Ipc::Forwarder::doneAll() const STUB_RETVAL(false)
+void Ipc::Forwarder::swanSong() STUB
+void Ipc::Forwarder::callException(const std::exception &) STUB
+void Ipc::Forwarder::handleError() STUB
+void Ipc::Forwarder::handleTimeout() STUB
+void Ipc::Forwarder::handleException(const std::exception &) STUB
 

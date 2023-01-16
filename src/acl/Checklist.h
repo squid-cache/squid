@@ -56,8 +56,8 @@ public:
 
     public:
         static NullState *Instance();
-        virtual void checkForAsync(ACLChecklist *) const;
-        virtual ~NullState() {}
+        void checkForAsync(ACLChecklist *) const override;
+        ~NullState() override {}
 
     private:
         static NullState _instance;

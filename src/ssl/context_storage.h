@@ -37,12 +37,12 @@ class CertificateStorageAction : public Mgr::Action
 public:
     CertificateStorageAction(const Mgr::Command::Pointer &cmd);
     static Pointer Create(const Mgr::Command::Pointer &cmd);
-    virtual void dump (StoreEntry *sentry);
+    void dump (StoreEntry *sentry) override;
     /**
      * We do not support aggregation of information across workers
      * TODO: aggregate these stats
      */
-    virtual bool aggregatable() const { return false; }
+    bool aggregatable() const override { return false; }
 };
 
 inline uint64_t MemoryUsedByContext(const Security::ContextPointer &) {

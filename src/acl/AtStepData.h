@@ -20,11 +20,11 @@ class ACLAtStepData : public ACLData<XactionStep>
 
 public:
     ACLAtStepData();
-    virtual ~ACLAtStepData();
-    bool match(XactionStep);
-    virtual SBufList dump() const;
-    void parse();
-    bool empty() const;
+    ~ACLAtStepData() override;
+    bool match(XactionStep) override;
+    SBufList dump() const override;
+    void parse() override;
+    bool empty() const override;
 
     std::list<XactionStep> values;
 };

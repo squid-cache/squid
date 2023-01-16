@@ -46,13 +46,13 @@ class Icmp6 : public Icmp
 {
 public:
     Icmp6();
-    virtual ~Icmp6();
+    ~Icmp6() override;
 
-    virtual int Open();
+    int Open() override;
 
 #if USE_ICMP
-    virtual void SendEcho(Ip::Address &, int, const char*, int);
-    virtual void Recv(void);
+    void SendEcho(Ip::Address &, int, const char*, int) override;
+    void Recv(void) override;
 #endif
 };
 
