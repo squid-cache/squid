@@ -1395,8 +1395,9 @@ HttpStateData::truncateVirginBody()
     }
 }
 
-static void
-FailOnPrematureEof(const FwdState::Pointer fwd)
+/// called when an incomplete reply body preliminary ends with unexpected EOF
+void
+HttpStateData::failOnPrematureReplyBodyEof()
 {
     const auto err = new ErrorState(ERR_READ_ERROR, Http::scBadGateway, fwd->request, fwd->al);
     static const auto d = MakeNamedErrorDetail("SRV_PREMATURE_EOF");
@@ -1431,7 +1432,7 @@ HttpStateData::writeReplyBody()
     if (parsedWhole)
         markParsedVirginReplyAsWhole(parsedWhole);
     else if (eof)
-        FailOnPrematureEof(fwd);
+        failOnPrematureReplyBodyEof();
 }
 
 bool
@@ -1451,7 +1452,7 @@ HttpStateData::decodeAndWriteReplyBody()
             flags.do_next_read = false;
             markParsedVirginReplyAsWhole("http parsed last-chunk");
         } else if (eof) {
-            FailOnPrematureEof(fwd);
+            failOnPrematureReplyBodyEof();
         }
         return true;
     }

@@ -140,6 +140,7 @@ private:
     void sendComplete();
     void httpStateConnClosed(const CommCloseCbParams &params);
     void httpTimeout(const CommTimeoutCbParams &params);
+    void failOnPrematureReplyBodyEof();
 
     mb_size_t buildRequestPrefix(MemBuf * mb);
     void forwardUpgrade(HttpHeader&);
