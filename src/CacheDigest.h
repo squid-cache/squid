@@ -11,7 +11,7 @@
 #ifndef SQUID_CACHEDIGEST_H_
 #define SQUID_CACHEDIGEST_H_
 
-#include "mem/forward.h"
+#include "mem/AllocatorProxy.h"
 #include "store_key_md5.h"
 
 class CacheDigestGuessStats;
