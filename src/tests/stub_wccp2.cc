@@ -16,9 +16,6 @@
 
 class StoreEntry;
 
-void wccp2Init(void) STUB
-void wccp2ConnectionOpen(void) STUB
-void wccp2ConnectionClose(void) STUB
 void dump_wccp2_method(StoreEntry *, const char *, int) STUB
 void free_wccp2_method(int *) STUB
 void parse_wccp2_amethod(int *) STUB

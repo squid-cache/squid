@@ -12,6 +12,7 @@
 
 #if USE_WCCPv2
 
+#include "base/RunnersRegistry.h"
 #include "cache_cf.h"
 #include "comm.h"
 #include "comm/Connection.h"
@@ -23,6 +24,7 @@
 #include "Parsing.h"
 #include "SquidConfig.h"
 #include "Store.h"
+#include "tools.h"
 #include "wccp2.h"
 
 #if HAVE_NETDB_H
@@ -466,13 +468,6 @@ static void wccp2_add_service_list(int service, int service_id, int service_prio
                                    int service_proto, int service_flags, int ports[], int security_type, char *password);
 static void wccp2SortCacheList(struct wccp2_cache_list_t *head);
 
-/*
- * The functions used during startup:
- * wccp2Init
- * wccp2ConnectionOpen
- * wccp2ConnectionClose
- */
-
 static void
 wccp2InitServices(void)
 {
@@ -652,8 +647,8 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
     return (memcmp(md5Digest, md5_challenge, SQUID_MD5_DIGEST_LENGTH) == 0);
 }
 
-void
-wccp2Init(void)
+static void
+wccp2Init()
 {
     Ip::Address_list *s;
     char *ptr;
@@ -948,8 +943,8 @@ wccp2Init(void)
     }
 }
 
-void
-wccp2ConnectionOpen(void)
+static void
+wccp2ConnectionOpen()
 {
     struct sockaddr_in router, local, null;
     socklen_t local_len, router_len;
@@ -1036,8 +1031,8 @@ wccp2ConnectionOpen(void)
     wccp2_connected = 1;
 }
 
-void
-wccp2ConnectionClose(void)
+static void
+wccp2ConnectionClose()
 {
 
     struct wccp2_service_list_t *service_list_ptr;
@@ -1104,6 +1099,30 @@ wccp2ConnectionClose(void)
     eventDelete(wccp2HereIam, nullptr);
     wccp2_connected = 0;
 }
+
+class Wccp2Rr : public RegisteredRunner
+{
+public:
+    virtual void useConfig() override {
+        if (IamPrimaryProcess()) {
+            wccp2Init();
+            wccp2ConnectionOpen();
+        }
+    }
+
+    // reconfigure fully shuts down, then restarts WCCP
+    virtual void startReconfigure() override { startShutdown(); }
+    virtual void syncConfig() override { useConfig(); }
+
+    // we use startShutdown() instead of later events because 
+    // Comm socket closures require main loop iterations
+    virtual void startShutdown() override {
+        if (IamPrimaryProcess())
+            wccp2ConnectionClose();
+    }
+};
+
+RunnerRegistrationEntry(Wccp2Rr);
 
 /*
  * Functions for handling the requests.
