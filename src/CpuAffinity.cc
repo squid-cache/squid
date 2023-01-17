@@ -9,8 +9,8 @@
 /* DEBUG: section 54    Interprocess Communication */
 
 #include "squid.h"
+#include "base/RunnersRegistry.h"
 #include "base/TextException.h"
-#include "CpuAffinity.h"
 #include "CpuAffinityMap.h"
 #include "CpuAffinitySet.h"
 #include "debug/Stream.h"
@@ -22,30 +22,8 @@
 
 static CpuAffinitySet *TheCpuAffinitySet = nullptr;
 
-void
-CpuAffinityInit()
-{
-    Must(!TheCpuAffinitySet);
-    if (Config.cpuAffinityMap) {
-        const int processNumber = InDaemonMode() ? KidIdentifier : 1;
-        TheCpuAffinitySet = Config.cpuAffinityMap->calculateSet(processNumber);
-        if (TheCpuAffinitySet)
-            TheCpuAffinitySet->apply();
-    }
-}
-
-void
-CpuAffinityReconfigure()
-{
-    if (TheCpuAffinitySet) {
-        TheCpuAffinitySet->undo();
-        delete TheCpuAffinitySet;
-        TheCpuAffinitySet = nullptr;
-    }
-    CpuAffinityInit();
-}
-
-void
+/// check CPU affinity configuration and print warnings if needed
+static void
 CpuAffinityCheck()
 {
     if (Config.cpuAffinityMap) {
@@ -63,4 +41,39 @@ CpuAffinityCheck()
         }
     }
 }
+
+/// Makes CPU affinity of this process match configured CPU affinity.
+/// Assumes that we have never set the CPU affinity or have cleared it.
+static void
+CpuAffinityInit()
+{
+    if (IamPrimaryProcess())
+        CpuAffinityCheck();
+    Must(!TheCpuAffinitySet);
+    if (Config.cpuAffinityMap) {
+        const int processNumber = InDaemonMode() ? KidIdentifier : 1;
+        TheCpuAffinitySet = Config.cpuAffinityMap->calculateSet(processNumber);
+        if (TheCpuAffinitySet)
+            TheCpuAffinitySet->apply();
+    }
+}
+
+class CpuAffinityRr : public RegisteredRunner
+{
+public:
+    virtual void useConfig() override {
+        CpuAffinityInit();
+    }
+
+    virtual void syncConfig() override {
+        if (TheCpuAffinitySet) {
+            TheCpuAffinitySet->undo();
+            delete TheCpuAffinitySet;
+            TheCpuAffinitySet = nullptr;
+        }
+        CpuAffinityInit();
+    }
+};
+
+RunnerRegistrationEntry(CpuAffinityRr);
 

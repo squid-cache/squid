@@ -28,7 +28,6 @@
 #include "comm.h"
 #include "CommandLine.h"
 #include "ConfigParser.h"
-#include "CpuAffinity.h"
 #include "debug/Messages.h"
 #include "DiskIO/DiskIOModule.h"
 #include "dns/forward.h"
@@ -919,10 +918,6 @@ mainReconfigureFinish(void *)
 
     RunRegisteredHere(RegisteredRunner::syncConfig);
 
-    if (IamPrimaryProcess())
-        CpuAffinityCheck();
-    CpuAffinityReconfigure();
-
     setUmask(Config.umask);
     setEffectiveUser();
     Debug::UseCacheLog();
@@ -1603,10 +1598,6 @@ SquidMain(int argc, char **argv)
 
         return 0;
     }
-
-    if (IamPrimaryProcess())
-        CpuAffinityCheck();
-    CpuAffinityInit();
 
     /* init comm module */
     comm_init();

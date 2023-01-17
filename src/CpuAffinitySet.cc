@@ -12,6 +12,8 @@
 #include "base/TextException.h"
 #include "CpuAffinitySet.h"
 #include "debug/Stream.h"
+#include "globals.h"
+#include "tools.h"
 #include "util.h"
 
 #include <cerrno>
@@ -28,6 +30,10 @@ CpuAffinitySet::apply()
 {
     Must(CPU_COUNT(&theCpuSet) > 0); // CPU affinity mask set
     Must(!applied());
+
+    // TODO: use CAP_SYS_NICE capability instead
+    if (!reconfiguring)
+        enter_suid();
 
     bool success = false;
     if (sched_getaffinity(0, sizeof(theOrigCpuSet), &theOrigCpuSet)) {
@@ -52,12 +58,18 @@ CpuAffinitySet::apply()
     }
     if (!success)
         CPU_ZERO(&theOrigCpuSet);
+
+    if (!reconfiguring)
+        leave_suid();
 }
 
 void
 CpuAffinitySet::undo()
 {
     if (applied()) {
+        // TODO: use CAP_SYS_NICE capability instead
+        if (!reconfiguring)
+            enter_suid();
         if (sched_setaffinity(0, sizeof(theOrigCpuSet), &theOrigCpuSet)) {
             int xerrno = errno;
             debugs(54, DBG_IMPORTANT, "ERROR: failed to restore original CPU "
@@ -65,6 +77,8 @@ CpuAffinitySet::undo()
                    xstrerr(xerrno));
         }
         CPU_ZERO(&theOrigCpuSet);
+        if (!reconfiguring)
+            leave_suid();
     }
 }
 
