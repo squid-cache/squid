@@ -18,7 +18,7 @@ LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 
-EXTRA_PROGRAMS = mem_node_test splay tcp-banger2
+EXTRA_PROGRAMS = mem_node_test splay
 
 EXTRA_DIST = \
 	$(srcdir)/squidconf/* \
@@ -53,9 +53,6 @@ check_PROGRAMS += \
 		splay \
 		syntheticoperators \
 		VirtualDeleteOperator
-
-
-tcp_banger2_LDADD = $(top_builddir)/lib/libmiscutil.la
 
 #do not include stub_libmem.cc here, as it would override libmem.la in
 # several tests whose purpose is testing libmem itself.
