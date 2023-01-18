@@ -1255,8 +1255,6 @@ HttpStateData::readReply(const CommIoCbParams &io)
         debugs(11, 2, io.conn << ": read failure: " << xstrerr(rd.xerrno));
         const auto err = new ErrorState(ERR_READ_ERROR, Http::scBadGateway, fwd->request, fwd->al);
         err->xerrno = rd.xerrno;
-        static const auto d = MakeNamedErrorDetail("SRV_READ_FAILURE");
-        err->detailError(d);
         fwd->fail(err);
         flags.do_next_read = false;
         closeServer();
@@ -1395,9 +1393,9 @@ HttpStateData::truncateVirginBody()
     }
 }
 
-/// called when an incomplete reply body preliminary ends with unexpected EOF
+/// called on a premature EOF discovered when reading response body
 void
-HttpStateData::failOnPrematureReplyBodyEof()
+HttpStateData::markPrematureReplyBodyEofFailure()
 {
     const auto err = new ErrorState(ERR_READ_ERROR, Http::scBadGateway, fwd->request, fwd->al);
     static const auto d = MakeNamedErrorDetail("SRV_PREMATURE_EOF");
@@ -1432,7 +1430,7 @@ HttpStateData::writeReplyBody()
     if (parsedWhole)
         markParsedVirginReplyAsWhole(parsedWhole);
     else if (eof)
-        failOnPrematureReplyBodyEof();
+        markPrematureReplyBodyEofFailure();
 }
 
 bool
@@ -1452,7 +1450,7 @@ HttpStateData::decodeAndWriteReplyBody()
             flags.do_next_read = false;
             markParsedVirginReplyAsWhole("http parsed last-chunk");
         } else if (eof) {
-            failOnPrematureReplyBodyEof();
+            markPrematureReplyBodyEofFailure();
         }
         return true;
     }
