@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 6.0.0 release notes</title>
+<title>Squid 6.0.1 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-6.0.0 for testing.
+<p>The Squid Team are pleased to announce the release of Squid-6.0.1 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v6/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -25,7 +25,14 @@ This new release is available for download from <url url="http://www.squid-cache
 <sect1>Known issues
 <p>Although this release is deemed good enough for use in many setups, please note the existence of
 <url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=6" name="open bugs against Squid-6">.
-<p>Support for compiling on HPUX with the native HP <em>xcc</em> compiler has been removed. To build on that OS/compiler combination, it is possible to pass these environemnt variables to ./configure: <em>CC="cxx -Ae" RANLIB=":"</em>
+
+<p>Support for compiling on HPUX with the native HP <em>xcc</em> compiler has been removed.
+  To build on that OS/compiler combination, it is possible to pass these environment variables
+  to ./configure: <em>CC="cxx -Ae" RANLIB=":"</em>
+
+<p>This release adds a dependency on C++17 support in any compiler used to build Squid.
+  GCC 8+ and Clang 8+ are known to have working C++17 support and are usable.
+  Support for older compilers and OS not supporting these have been removed.
 
 <sect1>Changes since earlier releases of Squid-6
 <p>
