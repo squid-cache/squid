@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -225,7 +225,6 @@ any_registered_header (const Http::HdrType id)
 std::ostream &operator <<(std::ostream &, HdrType);
 
 }; /* namespace Http */
-
 
 #endif /* SQUID_HTTP_REGISTEREDHEADERS_H */
 
