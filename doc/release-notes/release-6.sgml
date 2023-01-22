@@ -116,6 +116,10 @@ This section gives an account of those changes in three categories:
 	<tag>--with-xml2</tag>
 	<p>Replacement for <em>--with-libxml2</em>.
 
+	<tag>--with-ldap</tag>
+	<p>Compile with OpenLDAP, Mozilla LDAP, or Windows LDAP support.
+	<p>LDAP support is enabled by default. Use <em>--without-ldap</e> to disable.
+
 </descrip>
 
 <sect1>Changes to existing options<label id="modifiedoptions">
@@ -137,9 +141,15 @@ This section gives an account of those changes in three categories:
 	<p>This feature has been of limited use since AsyncCalls feature
 	   took over much of the CBDATA functionality.
 
+	<tag>--enable-gnuregex</tag>
+	<p>The GnuRegex library has been removed. C++17 standard library is used instead.
+
 	<tag>--enable-kill-parent-hack</tag>
 	<p>This feature has been deprecated for years. Other features such as
 	   <em>--foreground</em> command line argument should be used instead.
+
+	<tag>--enable-leakfinder</tag>
+	<p>Replaced by Valgrind leak detection.
 
 	<tag>--disable-loadable-modules</tag>
 	<p>This option was performing the same duties as <em>--disable-shared</em>.
