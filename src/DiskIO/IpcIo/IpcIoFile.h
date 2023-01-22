@@ -36,7 +36,6 @@ std::ostream &operator <<(std::ostream &, Command);
 
 } // namespace IpcIo
 
-
 /// converts DiskIO requests to IPC queue messages
 class IpcIoMsg
 {

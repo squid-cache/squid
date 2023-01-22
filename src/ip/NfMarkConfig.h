@@ -46,6 +46,5 @@ std::ostream &operator <<(std::ostream &, NfMarkConfig);
 
 } // namespace Ip
 
-
 #endif // SQUID_NFMARKCONFIG_H
 

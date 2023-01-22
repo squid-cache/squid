@@ -79,6 +79,5 @@ std::ostream &operator <<(std::ostream &, const Reply &);
 
 } // namespace Helper
 
-
 #endif /* _SQUID_SRC_HELPER_REPLY_H */
 

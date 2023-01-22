@@ -226,6 +226,5 @@ std::ostream &operator <<(std::ostream &, HdrType);
 
 }; /* namespace Http */
 
-
 #endif /* SQUID_HTTP_REGISTEREDHEADERS_H */
 
