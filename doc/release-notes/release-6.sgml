@@ -31,8 +31,7 @@ This new release is available for download from <url url="http://www.squid-cache
   to ./configure: <em>CC="cxx -Ae" RANLIB=":"</em>
 
 <p>This release adds a dependency on C++17 support in any compiler used to build Squid.
-  GCC 8+ and Clang 8+ are known to have working C++17 support and are usable.
-  Support for older compilers and OS not supporting these have been removed.
+  GCC 8+ and Clang 8+ support C++17.
 
 <sect1>Changes since earlier releases of Squid-6
 <p>
@@ -142,14 +141,14 @@ This section gives an account of those changes in three categories:
 	   took over much of the CBDATA functionality.
 
 	<tag>--enable-gnuregex</tag>
-	<p>The GnuRegex library has been removed. C++17 standard library is used instead.
+	<p>Squid no longer ships with a built-in GnuRegex implementation.
 
 	<tag>--enable-kill-parent-hack</tag>
 	<p>This feature has been deprecated for years. Other features such as
 	   <em>--foreground</em> command line argument should be used instead.
 
 	<tag>--enable-leakfinder</tag>
-	<p>Replaced by Valgrind leak detection.
+	<p>Removed. Using Valgrind for leak detection is still supported.
 
 	<tag>--disable-loadable-modules</tag>
 	<p>This option was performing the same duties as <em>--disable-shared</em>.
