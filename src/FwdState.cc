@@ -343,8 +343,7 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
      * be allowed.  yuck, I know.
      */
 
-    if ( Config.accessList.miss && !request->client_addr.isNoAddr() &&
-            !request->flags.internal && request->url.getScheme() != AnyP::PROTO_CACHE_OBJECT) {
+    if ( Config.accessList.miss && !request->client_addr.isNoAddr() && !request->flags.internal) {
         /**
          * Check if this host is allowed to fetch MISSES from us (miss_access).
          * Intentionally replace the src_addr automatically selected by the checklist code
@@ -392,11 +391,6 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
     }
 
     switch (request->url.getScheme()) {
-
-    case AnyP::PROTO_CACHE_OBJECT:
-        debugs(17, 2, "calling CacheManager due to request scheme " << request->url.getScheme());
-        CacheManager::GetInstance()->start(clientConn, request, entry, al);
-        return;
 
     case AnyP::PROTO_URN:
         urnStart(request, entry, al);
@@ -1277,8 +1271,6 @@ FwdState::dispatch()
             else
                 Ftp::StartGateway(this);
             break;
-
-        case AnyP::PROTO_CACHE_OBJECT:
 
         case AnyP::PROTO_URN:
             fatal_dump("Should never get here");

@@ -544,6 +544,8 @@ HttpRequest::maybeCacheable()
     if (!flags.hostVerified && (flags.intercepted || flags.interceptTproxy))
         return false;
 
+    /// XXX: handle squid-internal-mgr requests
+
     switch (url.getScheme()) {
     case AnyP::PROTO_HTTP:
     case AnyP::PROTO_HTTPS:
@@ -559,9 +561,6 @@ HttpRequest::maybeCacheable()
         if (!flags.ignoreCc && cache_control && cache_control->hasNoStore())
             return false;
         break;
-
-    case AnyP::PROTO_CACHE_OBJECT:
-        return false;
 
     //case AnyP::PROTO_FTP:
     default:

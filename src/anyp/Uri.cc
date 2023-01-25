@@ -193,9 +193,6 @@ uriParseScheme(Parser::Tokenizer &tok)
      * Scheme names consist of a sequence of characters beginning with a
      * letter and followed by any combination of letters, digits, plus
      * ("+"), period ("."), or hyphen ("-").
-     *
-     * The underscore ("_") required to match "cache_object://" squid
-     * special URI scheme.
      */
     static const auto schemeChars =
 #if USE_HTTP_VIOLATIONS
@@ -859,7 +856,6 @@ urlCheckRequest(const HttpRequest * r)
 
     case AnyP::PROTO_URN:
     case AnyP::PROTO_HTTP:
-    case AnyP::PROTO_CACHE_OBJECT:
         return true;
 
     case AnyP::PROTO_FTP:

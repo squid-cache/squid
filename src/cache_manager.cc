@@ -151,14 +151,8 @@ CacheManager::createRequestedAction(const Mgr::ActionParams &params)
 }
 
 static const CharacterSet &
-MgrFieldChars(const AnyP::ProtocolType &protocol)
+MgrFieldChars()
 {
-    // Deprecated cache_object:// scheme used '@' to delimit passwords
-    if (protocol == AnyP::PROTO_CACHE_OBJECT) {
-        static const CharacterSet fieldChars = CharacterSet("cache-object-field", "@?#").complement();
-        return fieldChars;
-    }
-
     static const CharacterSet actionChars = CharacterSet("mgr-field", "?#").complement();
     return actionChars;
 }
@@ -170,7 +164,7 @@ MgrFieldChars(const AnyP::ProtocolType &protocol)
  *
  * Syntax:
  *
- *  scheme "://" authority [ '/squid-internal-mgr' ] path-absolute [ '@' unreserved ] '?' query-string
+ *  scheme "://" authority [ '/squid-internal-mgr' ] path-absolute '?' query-string
  *
  * see RFC 3986 for definitions of scheme, authority, path-absolute, query-string
  *
@@ -188,17 +182,12 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
     Mgr::Command::Pointer cmd = new Mgr::Command();
     cmd->params.httpUri = SBufToString(uri.absolute());
 
-    const auto &fieldChars = MgrFieldChars(uri.getScheme());
+    const auto &fieldChars = MgrFieldChars();
 
     SBuf action;
     if (!tok.prefix(action, fieldChars)) {
-        if (uri.getScheme() == AnyP::PROTO_CACHE_OBJECT) {
-            static const SBuf menuReport("menu");
-            action = menuReport;
-        } else {
-            static const SBuf indexReport("index");
-            action = indexReport;
-        }
+        static const SBuf indexReport("index");
+        action = indexReport;
     }
     cmd->params.actionName = SBufToString(action);
 
@@ -211,12 +200,6 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
         throw TextException(ToSBuf("action '", action, "' is ", prot), Here());
     cmd->profile = profile;
 
-    SBuf passwd;
-    if (uri.getScheme() == AnyP::PROTO_CACHE_OBJECT && tok.skip('@')) {
-        (void)tok.prefix(passwd, fieldChars);
-        cmd->params.password = SBufToString(passwd);
-    }
-
     // TODO: fix when AnyP::Uri::parse() separates path?query#fragment
     SBuf params;
     if (tok.skip('?')) {
@@ -228,8 +211,7 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
         throw TextException("invalid characters in URL", Here());
     // else ignore #fragment (if any)
 
-    debugs(16, 3, "MGR request: host=" << uri.host() << ", action=" << action <<
-           ", password=" << passwd << ", params=" << params);
+    debugs(16, 3, "MGR request: host=" << uri.host() << ", action=" << action << ", params=" << params);
 
     return cmd;
 }
