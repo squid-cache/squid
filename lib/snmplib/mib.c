@@ -225,6 +225,7 @@ found:
     return (++*out_len);
 }
 
+/// \param out_len number of subid's in "output"
 int
 read_objid(char *input, oid *output, int *out_len)
 {
@@ -257,7 +258,9 @@ read_objid(char *input, oid *output, int *out_len)
     return (1);
 }
 
-void print_objid(oid *objid, int objidlen)
+/// \param objidlen number of subidentifiers
+void
+print_objid(oid *objid, int objidlen)
 {
     char buf[256];
     struct snmp_mib_tree *subtree = Mib;
@@ -268,7 +271,9 @@ void print_objid(oid *objid, int objidlen)
 
 }
 
-void sprint_objid(char *buf, oid *objid, int objidlen)
+/// \param objidlen number of subidentifiers
+void
+sprint_objid(char *buf, oid *objid, int objidlen)
 {
     struct snmp_mib_tree *subtree = Mib;
 
