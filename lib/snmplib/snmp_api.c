@@ -103,11 +103,7 @@
  * occurs, -1 is returned.  If all goes well, 0 is returned.
  */
 int
-snmp_build(session, pdu, packet, out_length)
-struct snmp_session *session;
-struct snmp_pdu *pdu;
-u_char *packet;
-int *out_length;
+snmp_build(struct snmp_session *session, struct snmp_pdu *pdu, u_char *packet, int *out_length)
 {
     u_char *bufp;
 
