@@ -290,10 +290,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
              *  "excluding any userinfo and its "@" delimiter"
              *
              * RFC 3986 section 3.2:    authority = [ userinfo "@" ] host [ ":" port ]
-             *
-             * As an HTTP(S) proxy we assume HTTPS (443) if no port provided.
              */
-            foundPort = 443;
 
             // XXX: use tokenizer
             auto B = tok.buf();
