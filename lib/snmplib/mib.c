@@ -226,10 +226,7 @@ found:
 }
 
 int
-read_objid(input, output, out_len)
-char *input;
-oid *output;
-int *out_len;       /* number of subid's in "output" */
+read_objid(char *input, oid *output, int *out_len)
 {
     struct snmp_mib_tree *root = Mib;
     oid *op = output;
@@ -260,10 +257,7 @@ int *out_len;       /* number of subid's in "output" */
     return (1);
 }
 
-void
-print_objid(objid, objidlen)
-oid *objid;
-int objidlen;       /* number of subidentifiers */
+void print_objid(oid *objid, int objidlen)
 {
     char buf[256];
     struct snmp_mib_tree *subtree = Mib;
@@ -274,11 +268,7 @@ int objidlen;       /* number of subidentifiers */
 
 }
 
-void
-sprint_objid(buf, objid, objidlen)
-char *buf;
-oid *objid;
-int objidlen;       /* number of subidentifiers */
+void sprint_objid(char *buf, oid *objid, int objidlen)
 {
     struct snmp_mib_tree *subtree = Mib;
 
@@ -287,11 +277,7 @@ int objidlen;       /* number of subidentifiers */
 }
 
 static struct snmp_mib_tree *
-get_symbol(objid, objidlen, subtree, buf)
-oid *objid;
-int objidlen;
-struct snmp_mib_tree *subtree;
-char *buf;
+get_symbol(oid *objid, int objidlen, struct snmp_mib_tree *subtree, char *buf)
 {
     struct snmp_mib_tree *return_tree = NULL;
 
