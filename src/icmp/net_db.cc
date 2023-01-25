@@ -227,7 +227,6 @@ netdbPurgeLRU(void)
     netdbEntry **list;
     int k = 0;
     int list_count = 0;
-    int removed = 0;
     list = (netdbEntry **)xcalloc(netdbEntry::UseCount(), sizeof(netdbEntry *));
     hash_first(addr_table);
 
@@ -247,8 +246,6 @@ netdbPurgeLRU(void)
             break;
 
         netdbRelease(*(list + k));
-
-        ++removed;
     }
 
     xfree(list);
