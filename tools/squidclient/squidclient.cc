@@ -424,20 +424,14 @@ main(int argc, char *argv[])
         atexit(Win32SockCleanup);
     }
 #endif
+
     /* Build the HTTP request */
     if (strncmp(url, "mgr:", 4) == 0) {
         char *t = xstrdup(url + 4);
-        const char *at = nullptr;
-        if (!strrchr(t, '@')) { // ignore any -w password if @ is explicit already.
-            at = ProxyAuthorization.password;
-        }
-        // embed the -w proxy password into old-style cachemgr URLs
-        if (at)
-            snprintf(url, sizeof(url), "cache_object://%s/%s@%s", Transport::Config.hostname, t, at);
-        else
-            snprintf(url, sizeof(url), "cache_object://%s/%s", Transport::Config.hostname, t);
+        snprintf(url, sizeof(url), "/squid-internal-mgr/%s", t);
         xfree(t);
     }
+
     if (put_file) {
         put_fd = open(put_file, O_RDONLY);
         set_our_signal();
@@ -457,21 +451,8 @@ main(int argc, char *argv[])
         }
     }
 
-    if (!host) {
-        char *newhost = strstr(url, "://");
-        if (newhost) {
-            char *t;
-            newhost += 3;
-            newhost = xstrdup(newhost);
-            t = newhost + strcspn(newhost, "@/?");
-            if (*t == '@') {
-                newhost = t + 1;
-                t = newhost + strcspn(newhost, "@/?");
-            }
-            *t = '\0';
-            host = newhost;
-        }
-    }
+    if (!host)
+        host = xstrdup(Transport::Config.hostname);
 
     std::stringstream msg;
 
@@ -486,7 +467,7 @@ main(int argc, char *argv[])
             << "\r\n";
 
         if (host) {
-            msg << "Host: " << host << "\r\n";
+            msg << "Host: " << host << ':' << Transport::Config.port << "\r\n";
         }
 
         if (!useragent) {
