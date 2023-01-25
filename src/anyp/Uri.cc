@@ -285,12 +285,8 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
         AnyP::UriScheme scheme;
 
         if (method == Http::METHOD_CONNECT) {
-            /*
-             * RFC 7230 section 5.3.3:  authority-form = authority
-             *  "excluding any userinfo and its "@" delimiter"
-             *
-             * RFC 3986 section 3.2:    authority = [ userinfo "@" ] host [ ":" port ]
-             */
+            // For CONNECTs, RFC 9110 Section 9.3.6 requires "only the host and
+            // port number of the tunnel destination, separated by a colon".
 
             // XXX: use tokenizer
             auto B = tok.buf();
