@@ -150,13 +150,6 @@ CacheManager::createRequestedAction(const Mgr::ActionParams &params)
     return cmd->profile->creator->create(cmd);
 }
 
-static const CharacterSet &
-MgrFieldChars()
-{
-    static const CharacterSet actionChars = CharacterSet("mgr-field", "?#").complement();
-    return actionChars;
-}
-
 /**
  * define whether the URL is a cache-manager URL and parse the action
  * requested by the user. Checks via CacheManager::ActionProtection() that the
@@ -182,7 +175,7 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
     Mgr::Command::Pointer cmd = new Mgr::Command();
     cmd->params.httpUri = SBufToString(uri.absolute());
 
-    const auto &fieldChars = MgrFieldChars();
+    static const auto fieldChars = CharacterSet("mgr-field", "?#").complement();
 
     SBuf action;
     if (!tok.prefix(action, fieldChars)) {
@@ -234,7 +227,7 @@ CacheManager::ParseHeaders(const HttpRequest * request, Mgr::ActionParams &param
     // TODO: use the authentication system decode to retrieve these details properly.
 
     /* base 64 _decoded_ user:passwd pair */
-    const auto basic_cookie(request->header.getAuthToken(Http::HdrType::AUTHORIZATION, "Basic"));
+    const auto basic_cookie(request->header.getAuthToken(Http::HdrType::PROXY_AUTHORIZATION, "Basic"));
 
     if (basic_cookie.isEmpty())
         return;

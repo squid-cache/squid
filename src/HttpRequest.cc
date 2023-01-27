@@ -544,8 +544,6 @@ HttpRequest::maybeCacheable()
     if (!flags.hostVerified && (flags.intercepted || flags.interceptTproxy))
         return false;
 
-    /// XXX: handle squid-internal-mgr requests
-
     switch (url.getScheme()) {
     case AnyP::PROTO_HTTP:
     case AnyP::PROTO_HTTPS:

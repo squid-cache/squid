@@ -194,11 +194,7 @@ uriParseScheme(Parser::Tokenizer &tok)
      * letter and followed by any combination of letters, digits, plus
      * ("+"), period ("."), or hyphen ("-").
      */
-    static const auto schemeChars =
-#if USE_HTTP_VIOLATIONS
-        CharacterSet("special", "_") +
-#endif
-        CharacterSet("scheme", "+.-") + CharacterSet::ALPHA + CharacterSet::DIGIT;
+    static const auto schemeChars = CharacterSet("scheme", "+.-") + CharacterSet::ALPHA + CharacterSet::DIGIT;
 
     SBuf str;
     if (tok.prefix(str, schemeChars, 16) && tok.skip(':') && CharacterSet::ALPHA[str.at(0)]) {

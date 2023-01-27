@@ -96,7 +96,7 @@ testUriScheme::testEqualprotocol_t()
     CPPUNIT_ASSERT(AnyP::UriScheme() == AnyP::PROTO_NONE);
     CPPUNIT_ASSERT(not (AnyP::UriScheme(AnyP::PROTO_WAIS) == AnyP::PROTO_HTTP));
     CPPUNIT_ASSERT(AnyP::PROTO_HTTP == AnyP::UriScheme(AnyP::PROTO_HTTP));
-    CPPUNIT_ASSERT(not (AnyP::PROTO_FTP == AnyP::UriScheme(AnyP::PROTO_HTTP)));
+    CPPUNIT_ASSERT(not (AnyP::PROTO_HTTPS == AnyP::UriScheme(AnyP::PROTO_HTTP)));
 }
 
 /*
