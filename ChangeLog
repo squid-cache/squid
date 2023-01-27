@@ -83,7 +83,6 @@ Changes in squid-6.0.1 (06 Feb 2023):
 	- Log early level-0/1 debugs() messages to cache_log
 	- Support reliable zeroing of sensitive buffers
 	- Do not overwrite caching bans
-	- Avoid level-3 "failed to find or read error text file" WARNINGs
 	- Do not blame cache_peer for 4xx CONNECT responses
 	- Mimic GET reforwarding decisions when our CONNECT fails
 	- Discarded connections do not contribute to forward_max_tries
