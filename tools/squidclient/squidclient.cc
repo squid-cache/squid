@@ -424,12 +424,17 @@ main(int argc, char *argv[])
         atexit(Win32SockCleanup);
     }
 #endif
-
     /* Build the HTTP request */
+    const char *pathPassword = nullptr;
     if (strncmp(url, "mgr:", 4) == 0) {
-        char *t = xstrdup(url + 4);
-        snprintf(url, sizeof(url), "/squid-internal-mgr/%s", t);
-        xfree(t);
+        const auto path = url + 4;
+        const auto at = strrchr(path, '@'); // will ignore any -w password if @ is explicit already
+        int pathLen = at ? (at - path) : strlen(path);
+        if (at && *(at+1))
+            pathPassword = xstrdup(at+1);
+        const auto pathCopy = xstrdup(path);
+        snprintf(url, sizeof(url), "http://%s:%hu/squid-internal-mgr/%.*s", Transport::Config.hostname, Transport::Config.port, pathLen, pathCopy);
+        xfree(pathCopy);
     }
 
     if (put_file) {
@@ -451,8 +456,21 @@ main(int argc, char *argv[])
         }
     }
 
-    if (!host)
-        host = xstrdup(Transport::Config.hostname);
+    if (!host) {
+        char *newhost = strstr(url, "://");
+        if (newhost) {
+            char *t;
+            newhost += 3;
+            newhost = xstrdup(newhost);
+            t = newhost + strcspn(newhost, "@/?");
+            if (*t == '@') {
+                newhost = t + 1;
+                t = newhost + strcspn(newhost, "@/?");
+            }
+            *t = '\0';
+            host = newhost;
+        }
+    }
 
     std::stringstream msg;
 
@@ -467,7 +485,7 @@ main(int argc, char *argv[])
             << "\r\n";
 
         if (host) {
-            msg << "Host: " << host << ':' << Transport::Config.port << "\r\n";
+            msg << "Host: " << host << "\r\n";
         }
 
         if (!useragent) {
@@ -491,8 +509,13 @@ main(int argc, char *argv[])
         if (max_forwards > -1) {
             msg << "Max-Forwards: " << max_forwards << "\r\n";
         }
-        if (ProxyAuthorization.user)
+        if (ProxyAuthorization.user) {
+            const auto savedPassword = ProxyAuthorization.password;
+            if (pathPassword)
+                ProxyAuthorization.password = pathPassword;
             ProxyAuthorization.commit(msg);
+            ProxyAuthorization.password = savedPassword; // restore the global password setting
+        }
         if (OriginAuthorization.user)
             OriginAuthorization.commit(msg);
 #if HAVE_GSSAPI
@@ -529,6 +552,7 @@ main(int argc, char *argv[])
         msg << "\r\n"; // empty line ends MIME header block
     }
 
+    xfree(pathPassword);
     msg.flush();
     const auto messageHeader = msg.str();
     debugVerbose(1, "Request:" << std::endl << messageHeader << std::endl << ".");
