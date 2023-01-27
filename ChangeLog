@@ -6,7 +6,6 @@ Changes in squid-6.0.1 (06 Feb 2023):
 	- Bug 5232: Fix GCC v12 build [-Wuse-after-free]
 	- Bug 5211: support.cc:355: "!filledCheck->sslErrors" assertion
 	- Bug 5194: Remove all unused debug sections
-	- Bug 5192: esi_parser default is incorrect
 	- Bug 5186: noteDestinationsEnd check failed: transportWait
 	- Bug 5177: clientca certificates sent to https_port clients
 	- Bug 5169: StoreMap.cc:517 "!s.reading()" assertion
