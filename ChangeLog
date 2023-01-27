@@ -31,7 +31,7 @@ Changes in squid-6.0.1 (06 Feb 2023):
 	- Remove pconn-banger tool
 	- Remove recv-announce tool
 	- Remove send-announce tool
-	- Remove tcp-banger* tool
+	- Remove tcp-banger* tools
 	- Remove ufsdump tool
 	- Remove support for Gopher protocol
 	- Remove support for unused libbsd
