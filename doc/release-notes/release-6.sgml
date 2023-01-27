@@ -114,7 +114,17 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<p>There have been no options changed.
+	<tag>logformat</tag>
+	<p>More logged <em>Ss</em> code values may contain an <em>_ABORTED</em>
+	suffix because Squid now adds that suffix in more cases where a TCP
+	Squid-to-server connection was closed prematurely (e.g., an EOF in the
+	middle of a chunked HTTP response body transfer). In general, tools
+	processing <em>Ss</em> code values should treat each value as an
+	underscore-delimited list of tags rather than an enumeration of a few
+	hard-coded values.
+
+	<p>This change affects all <em>Ss</em> code uses, not just those specific to
+	the <em>logformat</em> directive.
 
 </descrip>
 </p>
