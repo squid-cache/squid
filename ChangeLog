@@ -26,6 +26,7 @@ Changes in squid-6.0.1 (06 Feb 2023):
 	- Bug 4696: Fix leaky String move assignment operator
 	- Bug 4528: ICAP transactions quit on async DNS lookups
 	- Bug 3193 pt2: NTLM decoder truncating strings
+	- Add scripts/trace-context.pl: a debugging tool
 	- Remove cache_diff tool
 	- Remove membanger tool
 	- Remove pconn-banger tool
@@ -47,7 +48,6 @@ Changes in squid-6.0.1 (06 Feb 2023):
 	- Remove HPUX compiler support
 	- Remove CBDATA debugging
 	- Require C++17
-	- Add Universally Unique IDentifier (UUID) support
 	- ext_kerberos_ldap_group_acl: Support -b with -D
 	- ext_lm_group_acl: Improved username handling
 	- ext_session_acl: fix TDB key lookup
@@ -72,10 +72,13 @@ Changes in squid-6.0.1 (06 Feb 2023):
 	- CI: Add --progress option to test-builds.sh
 	- CI: Change time_units test to also work on 32bit systems
 	- CI: Maintenance: Update astyle version to 3.1
-	- Added a debugging tool: scripts/trace-context.pl
+	- Add cache_log_message directive
+	- Add paranoid_hit_validation directive
+	- Add tls_key_log to report TLS communication secrets
+	- Add %busy_time logformat code
+	- Add %transport::>connection_id logformat code
+	- Add %request_attempts logformat code
 	- Warn about some bad from-helper annotations
-	- Log the number of request sending attempts
-	- %busy_time: Time spent in transaction-related code
 	- Ban acl key changes in req_header, rep_header, and note ACLs
 	- Optimize ephemeral port reuse with IP_BIND_ADDRESS_NO_PORT
 	- Honor httpd_suppress_version_string in more contexts
@@ -97,13 +100,9 @@ Changes in squid-6.0.1 (06 Feb 2023):
 	- Support "file" syntax for 'squid_error' and 'has' ACL parameters
 	- Allow sending "squid -k ..." signals to PID 1
 	- Remove bogus "found KEY_PRIVATE" WARNINGs
-	- Add cache_log_message directive
 	- Avoid "BUG #3329: Lost orphan ..." during accept problems
-	- Add tls_key_log to report TLS communication secrets
 	- Report SMP store queues state (mgr:store_queues)
-	- Add paranoid_hit_validation directive
 	- Remove 8K limit for single access.log line
-	- Add %transport::>connection_id logformat code
 	- Rename ./configure option --with-libxml2 to --with-xml2
 	- Rename ./configure option --with-libcap to --with-cap
 	- Match ./configure --help parameter names with their defaults
