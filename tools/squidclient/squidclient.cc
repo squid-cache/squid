@@ -436,7 +436,6 @@ main(int argc, char *argv[])
         snprintf(url, sizeof(url), "http://%s:%hu/squid-internal-mgr/%.*s", Transport::Config.hostname, Transport::Config.port, pathLen, pathCopy);
         xfree(pathCopy);
     }
-
     if (put_file) {
         put_fd = open(put_file, O_RDONLY);
         set_our_signal();
