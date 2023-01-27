@@ -35,7 +35,7 @@ This new release is available for download from <url url="http://www.squid-cache
 
 <sect1>Changes since earlier releases of Squid-6
 <p>
-The Squid-6 change history can be <url url="http://www.squid-cache.org/Versions/v6/changesets/" name="viewed here">.
+The Squid-6 change history can be <url url="https://github.com/squid-cache/squid/commits/v6" name="viewed here">.
 
 
 <sect>Major new features since Squid-5
@@ -43,10 +43,166 @@ The Squid-6 change history can be <url url="http://www.squid-cache.org/Versions/
 
 <p>The most important of these new features are:
 <itemize>
-	<item>No new features documented yet.
+	<item>OpenSSL 3.0 Support
+	<item>Log TLS Communication Secrets
+	<item>Ban ACL key Changes in ACLs
+	<item>Block to-local Traffic
+	<item>RFC 9211: HTTP Cache-Status support
+	<item>RFC 9111: Stop treating Warning specially
+	<item>ext_kerberos_ldap_group_acl: Support -b with -D
+	<item>Remove Gopher Protocol Support
+	<item>Remove Outdated Tools
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
+
+<sect1>OpenSSL 3.0 Support
+<p>See also <url url="https://github.com/squid-cache/squid/commit/74d7d19689da352281d1045cb8451a8b56028c6d" nam="commit description">
+
+<p>The <em>ENGINE</em> feature of OpenSSL has been deprecated and is no longer
+   supported by Squid. It has been replaced by a <em>Provider</em> feature
+   which is not yet supported.
+
+<p>Configuration of <em>Elliptic Curve</em> ciphers has changed between OpenSSL
+   versions and need further changes. For now the existing configuration
+   settings are being retained for backward compatibility.
+
+<p>Squid is now more lenient towards misconfigured <em>tls-cert=</em> file
+   contents. Squid will attempt to sort the CA chain and send certificates in
+   the order required by TLS.
+
+<p>Squid no longer sends the <em>tls-clientca=</em> on <em>https_port</em>
+   server handshakes. This fix breaks misconfigured Squid deployments that
+   (usually unknowingly) rely on the OpenSSL clientca 'leak' to build a
+   complete https_port server certificate chain sent to TLS clients. Such
+   deployments should add the right intermediate CA certificate(s) to their
+   <em>tls-cert=</em> bundle (or equivalent).
+
+<sect1>Log TLS Communication Secrets
+<p>Squid now records pre-master secret and related encryption details for TLS
+   connections accepted or established by Squid. These connections include
+   connections accepted at <em>https_port</em>, TLS connections opened to
+   origin servers/<em>cache_peer</em>/ICAP services, and TLS tunnels bumped by
+   Squid using the SslBump feature.
+
+<p>Logging of these details are controlled by the <em>tls_key_log</em>. See
+   <url url="http://www.squid-cache.org/Doc/config/tls_key_log/" name="squid.conf documentation">
+   for details.
+
+<sect1>Ban ACL key changes in ACLs
+<p>More info in the <url url="https://github.com/squid-cache/squid/commit/4a3b85322ce5a464175eb49ddb5be413794b25b8" name="commit description">
+
+<p>Certain Squid ACLs can check the value of a specific key=value where
+   the key name is configurable. These ACLs are unable to check multiple
+   different key names.
+
+<p>Squid did write a cache.log ERROR for req_header/rep_header key changes
+   but was silent about the preceding <em>note</em> ACL rules being
+   ineffective after a key name change.
+
+<p>Squid will now actively reject all such configurations.
+
+<sect1>Block to-local Traffic
+<p>More info in the policy change <url url="https://github.com/squid-cache/squid/commit/f13e556e4ce743369dee4782b78c87d65580ab00" name="commit">
+   and the ACL creation <url url="https://github.com/squid-cache/squid/commit/6d2f8ed096bf5c013b8560451e41d8772c64ba66" name="commit">
+
+<p>This Squid introduces the <em>to_linklocal</em> ACL as pre-defined to
+   match requests from 169.254.0.0/16 and fe80::/10.
+
+<p>The default configuration settings are changed to:
+<verbatim>
+    http_access allow localhost
+    http_access deny to_localhost
+    http_access deny to_linklocal
+    # http_access allow localnet
+</verbatim>
+
+<p>These changes only affect the default squid.conf and new installs.
+   Upgraded installations will continue to use their previous settings.
+
+<sect1>RFC 9211: HTTP Cache-Status support
+<p>See also <url url="https://www.rfc-editor.org/rfc/rfc9211" name="RFC 9211">
+
+<p>This HTTP header replaces <em>X-Cache</em> and <em>X-Cache-Lookup</em>
+   which are no longer emitted by Squid. Any tools or management systems
+   relying on those <em>X-</em> headers need to be upgraded to work with
+   the new standardized header.
+
+<sect1>RFC 9111: Stop treating Warning specially
+<p>RFC 9111 obsoletes the Warning header, removing all specification
+requirements about it
+
+<p>This Squid changes behaviour in regards to that header:
+<itemize>
+<item>1) Squid no longer adds Warning headers to generated or forwarded
+   messages. Miss responses from servers/peers and hits cached by an
+   older version of Squid may still have Warning headers.
+
+<item>2) On 304 revalidation, Warning header are treated the same as any
+   other/generic header. They are added or replaced according to their
+   presence in the 304 reply. Absent any Warning update by a 304, Squid
+   may still deliver cached content with old Warning headers.
+
+<item>3) Squid no longer validates received Warning headers. RFC 7234 placed
+   syntax requirements and limits on how old some Warning values could
+   be (when dated). Those checks are no longer being performed. The
+   header value is now treated as an opaque string.
+
+<item>4) Warning header usage and types are no longer tracked in message
+   statistics available through cache manager.
+<itemize>
+
+<sect1>ext_kerberos_ldap_group_acl: Support -b with -D
+<p>Previous versions of this helper ignore the <em>-b</em> option when
+   the <em>-D</em> option is used.
+
+<p>Fixing this limitation adds support for FreeIPA and limited subtree
+   searching.
+
+<sect1>Remove Gopher Protocol Support
+<p>With this change, Gopher requests will be handled like any other request
+with an unknown (to Squid) protocol. For example, HTTP requests with
+<em>gopher://</em> URL scheme result in ERR_UNSUP_REQ.
+
+<p>Default Squid configuration still considers TCP port 70 safe. The
+corresponding Safe_ports ACL rule has not been removed.
+
+<sect1>Removed Outdated Tools
+<p>We do not have enough resources/demand for maintaining these tools, they
+do require maintenance, and there are better tools available.
+
+<itemize>
+	<item><em>cache_diff</em> which has no users according to community
+	  poll results in 2020.
+
+	<item><em>GnuRegex</em> library implementation. Modern operating
+	  systems provide a functioning regex library, so we do not need to
+	  carry one anymore.
+
+	<item><em>membanger</em> which has not built for many years.
+
+	<item><em>pconn-banger<em> lacked build rules since inception (1997)
+	  and probably could not be built manually since at least 2007.
+
+	<item><em>recv-announce</em> which has not built for many years.
+
+	<item><em>send-announce</em> which is very much outdated and unused
+	  since the decline of the <url url="http://ircache.nlanr.net/" name="NLANR IRCache"> service.
+
+	<item><em>tcp-banger2</em> is not built by default and probably could
+	  not be built at all since at least 2006.
+
+	<item><em>tcp-banger3</em> lacked build rules since inception (1998)
+	  and probably could not be built manually (by mimicking tcp-banger2
+	  build commands) without warnings since 2002.
+
+	<item><em>tcp-banger.pl</em> has portability and code quality issues;
+	  its basic functionality is supported by squidclient, wget, curl, and
+	  others.
+
+	<item<em>ufsdump</em> was not built by default since 2010 and its build
+	  has been failing since before 2017.
+</itemize>
 
 
 <sect>Changes to squid.conf since Squid-5
