@@ -427,14 +427,14 @@ main(int argc, char *argv[])
     /* Build the HTTP request */
     const char *pathPassword = nullptr;
     if (strncmp(url, "mgr:", 4) == 0) {
-        const auto path = url + 4;
-        const auto at = strrchr(path, '@'); // will ignore any -w password if @ is explicit already
-        int pathLen = at ? (at - path) : strlen(path);
-        if (at && *(at+1))
-            pathPassword = xstrdup(at+1);
-        const auto pathCopy = xstrdup(path);
-        snprintf(url, sizeof(url), "http://%s:%hu/squid-internal-mgr/%.*s", Transport::Config.hostname, Transport::Config.port, pathLen, pathCopy);
-        xfree(pathCopy);
+        char *t = xstrdup(url + 4);
+        // XXX: Bail on snprintf() failures
+        snprintf(url, sizeof(url), "http://%s:%hu/squid-internal-mgr/%s", Transport::Config.hostname, Transport::Config.port, t);
+        if (const auto at = strrchr(url, '@')) {
+            *at = 0; // send password in Proxy-Authorization header, not URL
+            pathPassword = at + 1; // embedded @password overwrites -w password further below
+        }
+        xfree(t);
     }
     if (put_file) {
         put_fd = open(put_file, O_RDONLY);
@@ -551,7 +551,6 @@ main(int argc, char *argv[])
         msg << "\r\n"; // empty line ends MIME header block
     }
 
-    xfree(pathPassword);
     msg.flush();
     const auto messageHeader = msg.str();
     debugVerbose(1, "Request:" << std::endl << messageHeader << std::endl << ".");
