@@ -60,7 +60,7 @@ public:
         bool invalid_password;
         bool helper_queried;
     } flags;
-    digest_nonce_h *nonce;
+    digest_nonce_h::Pointer nonce;
 
 private:
     static HLPCB HandleReply;

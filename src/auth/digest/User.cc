@@ -12,7 +12,6 @@
 #include "auth/digest/Config.h"
 #include "auth/digest/User.h"
 #include "debug/Stream.h"
-#include "dlink.h"
 
 Auth::Digest::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
     Auth::User(aConfig, aRequestRealm),
@@ -23,16 +22,8 @@ Auth::Digest::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm)
 
 Auth::Digest::User::~User()
 {
-    dlink_node *link, *tmplink;
-    link = nonces.head;
-
-    while (link) {
-        tmplink = link;
-        link = link->next;
-        dlinkDelete(tmplink, &nonces);
-        authDigestNoncePurge(static_cast < digest_nonce_h * >(tmplink->data));
-        authDigestNonceUnlink(static_cast < digest_nonce_h * >(tmplink->data));
-        delete tmplink;
+    for (const auto &nonce: nonces) {
+        nonce->purge();
     }
 }
 
@@ -43,13 +34,10 @@ Auth::Digest::User::ttl() const
 
     /* find the longest lasting nonce. */
     int32_t latest_nonce = -1;
-    dlink_node *link = nonces.head;
-    while (link) {
-        digest_nonce_h *nonce = static_cast<digest_nonce_h *>(link->data);
+
+    for (const auto &nonce: nonces) {
         if (nonce->flags.valid && nonce->noncedata.creationtime > latest_nonce)
             latest_nonce = nonce->noncedata.creationtime;
-
-        link = link->next;
     }
     if (latest_nonce == -1)
         return min(-1, global_ttl);
@@ -59,17 +47,51 @@ Auth::Digest::User::ttl() const
     return min(nonce_ttl, global_ttl);
 }
 
-digest_nonce_h *
+void
+Auth::Digest::User::link(const digest_nonce_h::Pointer &nonce)
+{
+    if (!nonce)
+        return;
+
+    if (std::find_if(nonces.begin(), nonces.end(), [&](const digest_nonce_h::Pointer &n) { return n == nonce; }) != nonces.end())
+        return;
+
+    nonces.push_back(nonce);
+
+    /* we don't lock this reference because removing the user removes the
+     * hash too. Of course if that changes we're stuffed so read the code huh?
+     */
+    nonce->user = this;
+}
+
+void
+Auth::Digest::User::unlink(const digest_nonce_h::Pointer &nonce)
+{
+    if (!nonce)
+        return;
+
+    if (!nonce->user)
+        return;
+    assert(nonce->user == this);
+
+    nonces.remove(nonce);
+
+    /* this reference to user was not locked because freeeing the user frees
+     * the nonce too.
+     */
+    nonce->user = nullptr;
+}
+
+digest_nonce_h::Pointer
 Auth::Digest::User::currentNonce()
 {
-    digest_nonce_h *nonce = nullptr;
-    dlink_node *link = nonces.tail;
-    if (link) {
-        nonce = static_cast<digest_nonce_h *>(link->data);
-        if (authDigestNonceIsStale(nonce))
-            nonce = nullptr;
+    if (!nonces.empty()) {
+        if (const auto nonce = nonces.back()) {
+            if (nonce->validate())
+                return nonce;
+        }
     }
-    return nonce;
+    return nullptr;
 }
 
 CbcPointer<Auth::CredentialsCache>

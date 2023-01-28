@@ -29,8 +29,7 @@ Auth::Digest::UserRequest::UserRequest() :
     pszMethod(nullptr),
     qop(nullptr),
     uri(nullptr),
-    response(nullptr),
-    nonce(nullptr)
+    response(nullptr)
 {
     memset(nc, 0, sizeof(nc));
     memset(&flags, 0, sizeof(flags));
@@ -53,9 +52,6 @@ Auth::Digest::UserRequest::~UserRequest()
     safe_free(qop);
     safe_free(uri);
     safe_free(response);
-
-    if (nonce)
-        authDigestNonceUnlink(nonce);
 }
 
 int
@@ -100,21 +96,21 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
         return;
     }
 
-    if (digest_request->nonce == nullptr) {
+    if (!digest_request->nonce) {
         /* this isn't a nonce we issued */
         auth_user->credentials(Auth::Failed);
         return;
     }
 
+    auto nonceId = digest_request->nonce->hex();
     DigestCalcHA1(digest_request->algorithm, nullptr, nullptr, nullptr,
-                  authenticateDigestNonceNonceHex(digest_request->nonce),
+                  nonceId.c_str(),
                   digest_request->cnonce,
                   digest_user->HA1, SESSIONKEY);
     SBuf sTmp = request->method.image();
-    DigestCalcResponse(SESSIONKEY, authenticateDigestNonceNonceHex(digest_request->nonce),
+    DigestCalcResponse(SESSIONKEY, nonceId.c_str(),
                        digest_request->nc, digest_request->cnonce, digest_request->qop,
                        sTmp.c_str(), digest_request->uri, HA2, Response);
-
     debugs(29, 9, "\nResponse = '" << digest_request->response << "'\nsquid is = '" << Response << "'");
 
     if (strcasecmp(digest_request->response, Response) != 0) {
@@ -133,7 +129,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
              * used.
              */
             sTmp = HttpRequestMethod(Http::METHOD_GET).image();
-            DigestCalcResponse(SESSIONKEY, authenticateDigestNonceNonceHex(digest_request->nonce),
+            DigestCalcResponse(SESSIONKEY, nonceId.c_str(),
                                digest_request->nc, digest_request->cnonce, digest_request->qop,
                                sTmp.c_str(), digest_request->uri, HA2, Response);
 
@@ -173,12 +169,11 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
     /* check for stale nonce */
     /* check Auth::Pending to avoid loop */
 
-    if (!authDigestNonceIsValid(digest_request->nonce, digest_request->nc) && user()->credentials() != Auth::Pending) {
+    if (!digest_request->nonce->validate(digest_request->nc) && user()->credentials() != Auth::Pending) {
         debugs(29, 3, auth_user->username() << "' validated OK but nonce stale: " << digest_request->noncehex);
         /* Pending prevent banner and makes a ldap control */
         auth_user->credentials(Auth::Pending);
-        nonce->flags.valid = false;
-        authDigestNoncePurge(nonce);
+        nonce->purge();
         return;
     }
 
@@ -231,19 +226,19 @@ Auth::Digest::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int acce
         return;
 #endif
 
-    if ((static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->authenticateProgram) && authDigestNonceLastRequest(nonce)) {
+    if ((static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->authenticateProgram) && nonce->lastRequest()) {
         flags.authinfo_sent = true;
         Auth::Digest::User *digest_user = dynamic_cast<Auth::Digest::User *>(user().getRaw());
         if (!digest_user)
             return;
 
-        digest_nonce_h *nextnonce = digest_user->currentNonce();
-        if (!nextnonce || authDigestNonceLastRequest(nonce)) {
-            nextnonce = authenticateDigestNonceNew();
-            authDigestUserLinkNonce(digest_user, nextnonce);
+        digest_nonce_h::Pointer nextnonce = digest_user->currentNonce();
+        if (!nextnonce || nonce->lastRequest()) {
+            nextnonce = digest_nonce_h::Create();
+            digest_user->link(nextnonce);
         }
-        debugs(29, 9, "Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceHex(nextnonce) << "\"");
-        httpHeaderPutStrf(&rep->header, type, "nextnonce=\"%s\"", authenticateDigestNonceNonceHex(nextnonce));
+        debugs(29, 9, "Sending type:" << type << " header: 'nextnonce=\"" << nextnonce->hex() << "\"");
+        httpHeaderPutStrf(&rep->header, type, "nextnonce=\"" SQUIDSBUFPH "\"", SQUIDSBUFPRINT(nextnonce->hex()));
     }
 }
 
@@ -267,15 +262,15 @@ Auth::Digest::UserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int acc
 
     type = accel ? Http::HdrType::AUTHENTICATION_INFO : Http::HdrType::PROXY_AUTHENTICATION_INFO;
 
-    if ((static_cast<Auth::Digest::Config*>(digestScheme::GetInstance()->getConfig())->authenticate) && authDigestNonceLastRequest(nonce)) {
+    if ((static_cast<Auth::Digest::Config*>(digestScheme::GetInstance()->getConfig())->authenticate) && nonce->lastRequest()) {
         Auth::Digest::User *digest_user = dynamic_cast<Auth::Digest::User *>(auth_user_request->user().getRaw());
         nonce = digest_user->currentNonce();
         if (!nonce) {
-            nonce = authenticateDigestNonceNew();
-            authDigestUserLinkNonce(digest_user, nonce);
+            nonce = digest_nonce_h::Create();
+            digest_user->link(nonce);
         }
-        debugs(29, 9, "Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceHex(nonce) << "\"");
-        httpTrailerPutStrf(&rep->header, type, "nextnonce=\"%s\"", authenticateDigestNonceNonceHex(nonce));
+        debugs(29, 9, "Sending type:" << type << " header: 'nextnonce=\"" << nonce->hex() << "\"");
+        httpTrailerPutStrf(&rep->header, type, "nextnonce=\"%s\"", nonce->hex());
     }
 }
 #endif

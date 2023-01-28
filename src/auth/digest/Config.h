@@ -14,6 +14,7 @@
 #include "auth/Gadgets.h"
 #include "auth/SchemeConfig.h"
 #include "auth/UserRequest.h"
+#include "base/RefCount.h"
 #include "helper/forward.h"
 #include "rfc2617.h"
 
@@ -25,43 +26,77 @@ class User;
 }
 }
 
-/* Generic */
-typedef struct _digest_nonce_data digest_nonce_data;
-typedef struct _digest_nonce_h digest_nonce_h;
-
-/* data to be encoded into the nonce's hex representation */
-struct _digest_nonce_data {
-    time_t creationtime;
-    uint32_t randomdata;
-};
-
 /* the nonce structure we'll pass around */
+class digest_nonce_h : public RefCountable
+{
+    MEMPROXY_CLASS(digest_nonce_h);
 
-struct _digest_nonce_h : public hash_link {
-    digest_nonce_data noncedata;
+public:
+    typedef RefCount<digest_nonce_h> Pointer;
+
+    digest_nonce_h() = default;
+    digest_nonce_h(digest_nonce_h &&) = delete; // no copying or moving of any kind
+    ~digest_nonce_h() = default;
+
+    /// Create a new unique nonce
+    static Pointer Create();
+
+    /// set nonce random data and (re)encode the HEX identifier
+    void encode(uint32_t);
+
+    /// The HEX encoded unique identifier for this nonce
+    const SBuf &hex() const { return hexKey; }
+
+    /// Update nonce counter from client and validate
+    /// \return whether the nonce is valid after update
+    bool validate(char clientCount[9]);
+
+    /// Update nonce validity given its current values.
+    /// \return whether the nonce is valid after update
+    bool validate();
+
+    /**
+     * Try to predict what the nonce validity will be if used on the
+     * next HTTP Request.
+     *
+     * \retval false when the nonce is not stale yet
+     * \retval true if the nonce will be stale on the next request
+     */
+    bool lastRequest() const;
+
+    /// add to the nonce cache if not already there
+    void cache();
+
+    /// Forget this nonce permanently. Drop from the nonce cache and
+    /// reject future client requests attempting to use it.
+    /// Only client requests which have already been validated and
+    /// currently tied to this nonce will have any reference to it.
+    void purge();
+
+public:
+    /// HEX encoded representation of this nonce
+    SBuf hexKey;
+
+    /* data to be encoded into the nonce's hex representation */
+    struct _digest_nonce_data {
+        time_t creationtime = 0;
+        uint32_t randomdata = 0;
+    } noncedata;
+
     /* number of uses we've seen of this nonce */
-    unsigned long nc;
-    /* reference count */
-    uint64_t references;
-    /* the auth_user this nonce has been tied to */
-    Auth::Digest::User *user;
-    /* has this nonce been invalidated ? */
+    unsigned long nc = 0;
 
+    /* the auth_user this nonce has been tied to */
+    Auth::Digest::User *user = nullptr;
+
+    /* has this nonce been invalidated ? */
     struct {
-        bool valid;
-        bool incache;
+        mutable bool valid = true;
+        bool incache = false;
     } flags;
 };
 
-void authDigestNonceUnlink(digest_nonce_h * nonce);
-int authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9]);
-int authDigestNonceIsStale(digest_nonce_h * nonce);
-const char *authenticateDigestNonceNonceHex(const digest_nonce_h * nonce);
-int authDigestNonceLastRequest(digest_nonce_h * nonce);
 void authenticateDigestNonceShutdown(void);
-void authDigestNoncePurge(digest_nonce_h * nonce);
-void authDigestUserLinkNonce(Auth::Digest::User * user, digest_nonce_h * nonce);
-digest_nonce_h *authenticateDigestNonceNew(void);
 
 namespace Auth
 {
