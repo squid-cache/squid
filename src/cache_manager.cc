@@ -227,10 +227,13 @@ CacheManager::ParseHeaders(const HttpRequest * request, Mgr::ActionParams &param
     // TODO: use the authentication system decode to retrieve these details properly.
 
     /* base 64 _decoded_ user:passwd pair */
-    const auto basic_cookie(request->header.getAuthToken(Http::HdrType::PROXY_AUTHORIZATION, "Basic"));
+    auto basic_cookie(request->header.getAuthToken(Http::HdrType::AUTHORIZATION, "Basic"));
 
-    if (basic_cookie.isEmpty())
-        return;
+    if (basic_cookie.isEmpty()) {
+        basic_cookie = request->header.getAuthToken(Http::HdrType::PROXY_AUTHORIZATION, "Basic");
+        if (basic_cookie.isEmpty())
+            return;
+    }
 
     const auto colonPos = basic_cookie.find(':');
     if (colonPos == SBuf::npos) {
