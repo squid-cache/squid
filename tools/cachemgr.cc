@@ -861,6 +861,11 @@ process_request(cachemgr_request * req)
 
     Ip::Address::FreeAddr(AI);
 
+    // XXX: This Squid does not support receiving cache_object requests, but
+    // very old Squid versions do not support cache manager requests with an
+    // http scheme. We are using cache_object here per "be very conservative"
+    // recommendation archived at
+    // http://lists.squid-cache.org/pipermail/squid-dev/2023-January/009848.html
     l = snprintf(buf, sizeof(buf),
                  "GET cache_object://%s/%s%s%s HTTP/1.0\r\n"
                  "User-Agent: cachemgr.cgi/%s\r\n"
