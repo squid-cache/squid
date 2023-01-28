@@ -16,8 +16,7 @@
 #include "fs_io.h"
 #include "icmp/net_db.h"
 #include "md5.h"
-#include "mem/forward.h"
-#include "mem/Meter.h"
+#include "mem/Allocator.h"
 #include "mem/Pool.h"
 #include "mem/Stats.h"
 #include "MemBuf.h"
@@ -100,9 +99,9 @@ GetStrPool(size_t type)
             strPools[i] = memPoolCreate(PoolAttrs[i].name, PoolAttrs[i].obj_size);
             strPools[i]->zeroBlocks(false);
 
-            if (strPools[i]->objectSize() != PoolAttrs[i].obj_size)
+            if (strPools[i]->objectSize != PoolAttrs[i].obj_size)
                 debugs(13, DBG_IMPORTANT, "WARNING: " << PoolAttrs[i].name <<
-                       " is " << strPools[i]->objectSize() <<
+                       " is " << strPools[i]->objectSize <<
                        " bytes instead of requested " <<
                        PoolAttrs[i].obj_size << " bytes");
         }
@@ -119,9 +118,9 @@ memFindStringPool(size_t net_size, bool fuzzy)
 {
     for (unsigned int i = 0; i < mem_str_pool_count; ++i) {
         auto &pool = GetStrPool(i);
-        if (fuzzy && net_size < pool.objectSize())
+        if (fuzzy && net_size < pool.objectSize)
             return &pool;
-        if (net_size == pool.objectSize())
+        if (net_size == pool.objectSize)
             return &pool;
     }
     return nullptr;
@@ -139,12 +138,12 @@ memStringStats(std::ostream &stream)
 
     for (i = 0; i < mem_str_pool_count; ++i) {
         const auto &pool = GetStrPool(i);
-        const auto plevel = pool.getMeter().inuse.currentLevel();
-        stream << std::setw(20) << std::left << pool.objectType();
+        const auto plevel = pool.meter.inuse.currentLevel();
+        stream << std::setw(20) << std::left << pool.label;
         stream << std::right << "\t " << xpercentInt(plevel, StrCountMeter.currentLevel());
-        stream << "\t " << xpercentInt(plevel * pool.objectSize(), StrVolumeMeter.currentLevel()) << "\n";
+        stream << "\t " << xpercentInt(plevel * pool.objectSize, StrVolumeMeter.currentLevel()) << "\n";
         pooled_count += plevel;
-        pooled_volume += plevel * pool.objectSize();
+        pooled_volume += plevel * pool.objectSize;
     }
 
     /* malloc strings */
@@ -232,7 +231,7 @@ memAllocString(size_t net_size, size_t * gross_size)
     assert(gross_size);
 
     if (const auto pool = memFindStringPool(net_size, true)) {
-        *gross_size = pool->objectSize();
+        *gross_size = pool->objectSize;
         assert(*gross_size >= net_size);
         ++StrCountMeter;
         StrVolumeMeter += *gross_size;
@@ -252,7 +251,7 @@ memAllocRigid(size_t net_size)
 
     if (const auto pool = memFindStringPool(net_size, true)) {
         ++StrCountMeter;
-        StrVolumeMeter += pool->objectSize();
+        StrVolumeMeter += pool->objectSize;
         return pool->alloc();
     }
 
@@ -267,7 +266,7 @@ memStringCount()
     size_t result = 0;
 
     for (int counter = 0; counter < mem_str_pool_count; ++counter)
-        result += GetStrPool(counter).inUseCount();
+        result += GetStrPool(counter).getInUseCount();
 
     return result;
 }
@@ -294,7 +293,7 @@ memFreeRigid(void *buf, size_t net_size)
 
     if (const auto pool = memFindStringPool(net_size, true)) {
         pool->freeOne(buf);
-        StrVolumeMeter -= pool->objectSize();
+        StrVolumeMeter -= pool->objectSize;
         --StrCountMeter;
         return;
     }
@@ -501,7 +500,7 @@ memClean(void)
 int
 memInUse(mem_type type)
 {
-    return GetPool(type)->inUseCount();
+    return GetPool(type)->getInUseCount();
 }
 
 /* ick */
@@ -689,7 +688,7 @@ Mem::Report(std::ostream &stream)
         PoolStats mp_stats;
         pool->getStats(mp_stats);
 
-        if (mp_stats.pool->getMeter().gb_allocated.count > 0)
+        if (mp_stats.pool->meter.gb_allocated.count > 0)
             usedPools.emplace_back(mp_stats);
         else
             ++not_used;

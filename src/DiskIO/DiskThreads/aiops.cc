@@ -22,6 +22,7 @@
  * struct stat and squidaio_xstrdup use explicit pool alloc()/freeOne().
  * XXX: convert to MEMPROXY_CLASS() API
  */
+#include "mem/Allocator.h"
 #include "mem/Pool.h"
 
 #include <cerrno>

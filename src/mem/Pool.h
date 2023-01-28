@@ -28,7 +28,7 @@
  *     might be the way to go.
  */
 
-#include "mem/Allocator.h"
+#include "mem/forward.h"
 #include "mem/Meter.h"
 #include "util.h"
 
@@ -53,15 +53,6 @@
 /// \ingroup MemPoolsAPI
 #define toKB(size) ( (size + 1024 - 1) / 1024 )
 
-/// \ingroup MemPoolsAPI
-#define MEM_PAGE_SIZE 4096
-/// \ingroup MemPoolsAPI
-#define MEM_MIN_FREE  32
-/// \ingroup MemPoolsAPI
-#define MEM_MAX_FREE  65535 /* unsigned short is max number of items per chunk */
-
-class MemImplementingAllocator;
-
 /// memory usage totals as of latest MemPools::flushMeters() event
 extern Mem::PoolMeter TheMeter;
 
@@ -77,7 +68,7 @@ public:
      * Create an allocator with given name to allocate fixed-size objects
      * of the specified size.
      */
-    MemImplementingAllocator *create(const char *, size_t);
+    Mem::Allocator *create(const char *, size_t);
 
     /**
      * Sets upper limit in bytes to amount of free ram kept in pools. This is
@@ -118,7 +109,7 @@ public:
 
     void setDefaultPoolChunking(bool const &);
 
-    std::list<MemImplementingAllocator *> pools;
+    std::list<Mem::Allocator *> pools;
     bool defaultIsChunked = false;
 
 private:
@@ -126,38 +117,6 @@ private:
     /// Initial value is 2MB until first configuration,
     /// See squid.conf memory_pools_limit directive.
     ssize_t idleLimit_ = (2 << 20);
-};
-
-/// \ingroup MemPoolsAPI
-class MemImplementingAllocator : public Mem::Allocator
-{
-public:
-    typedef Mem::PoolMeter PoolMeter; // TODO remove
-
-    MemImplementingAllocator(char const *aLabel, size_t aSize);
-
-    virtual PoolMeter &getMeter();
-    virtual void flushMetersFull();
-    virtual void flushMeters();
-    virtual bool idleTrigger(int shift) const = 0;
-    virtual void clean(time_t maxage) = 0;
-
-    /* Mem::Allocator API */
-    PoolMeter const &getMeter() const override;
-    void *alloc() override;
-    void freeOne(void *) override;
-    size_t objectSize() const override;
-    int getInUseCount() override = 0;
-
-protected:
-    virtual void *allocate() = 0;
-    virtual void deallocate(void *, bool aggressive) = 0;
-    PoolMeter meter;
-public:
-    size_t alloc_calls;
-    size_t free_calls;
-    size_t saved_calls;
-    size_t obj_size;
 };
 
 /// Creates a named MemPool of elements with the given size

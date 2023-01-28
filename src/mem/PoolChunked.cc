@@ -18,6 +18,9 @@
 #include <cstring>
 
 #define MEM_MAX_MMAP_CHUNKS 2048
+#define MEM_PAGE_SIZE 4096
+#define MEM_MIN_FREE  32
+#define MEM_MAX_FREE  65535 /* unsigned short is max number of items per chunk */
 
 /*
  * Old way:
@@ -120,23 +123,24 @@ MemChunk::MemChunk(MemPoolChunked *aPool)
     void **Free = (void **)freeList;
 
     for (int i = 1; i < pool->chunk_capacity; ++i) {
-        *Free = (void *) ((char *) Free + pool->obj_size);
+        *Free = (void *) ((char *) Free + pool->objectSize);
         void **nextFree = (void **)*Free;
-        (void) VALGRIND_MAKE_MEM_NOACCESS(Free, pool->obj_size);
+        (void) VALGRIND_MAKE_MEM_NOACCESS(Free, pool->objectSize);
         Free = nextFree;
     }
     nextFreeChunk = pool->nextFreeChunk;
     pool->nextFreeChunk = this;
 
-    pool->getMeter().alloc += pool->chunk_capacity;
-    pool->getMeter().idle += pool->chunk_capacity;
+    pool->meter.alloc += pool->chunk_capacity;
+    pool->meter.idle += pool->chunk_capacity;
     ++pool->chunkCount;
     lastref = squid_curtime;
     pool->allChunks.insert(this, memCompChunks);
 }
 
 MemPoolChunked::MemPoolChunked(const char *aLabel, size_t aSize) :
-    MemImplementingAllocator(aLabel, aSize), chunk_size(0),
+    Mem::Allocator(aLabel, aSize),
+    chunk_size(0),
     chunk_capacity(0), chunkCount(0), freeCache(nullptr), nextFreeChunk(nullptr),
     Chunks(nullptr), allChunks(Splay<MemChunk *>())
 {
@@ -149,8 +153,8 @@ MemPoolChunked::MemPoolChunked(const char *aLabel, size_t aSize) :
 
 MemChunk::~MemChunk()
 {
-    pool->getMeter().alloc -= pool->chunk_capacity;
-    pool->getMeter().idle -= pool->chunk_capacity;
+    pool->meter.alloc -= pool->chunk_capacity;
+    pool->meter.idle -= pool->chunk_capacity;
     -- pool->chunkCount;
     pool->allChunks.remove(this, memCompChunks);
     xfree(objCache);
@@ -166,11 +170,11 @@ MemPoolChunked::push(void *obj)
      * the object size here, but such condition is not safe.
      */
     if (doZero)
-        memset(obj, 0, obj_size);
+        memset(obj, 0, objectSize);
     Free = (void **)obj;
     *Free = freeCache;
     freeCache = obj;
-    (void) VALGRIND_MAKE_MEM_NOACCESS(obj, obj_size);
+    (void) VALGRIND_MAKE_MEM_NOACCESS(obj, objectSize);
 }
 
 /*
@@ -184,12 +188,12 @@ MemPoolChunked::get()
 {
     void **Free;
 
-    ++saved_calls;
+    ++countSavedAllocs;
 
     /* first, try cache */
     if (freeCache) {
         Free = (void **)freeCache;
-        (void) VALGRIND_MAKE_MEM_DEFINED(Free, obj_size);
+        (void) VALGRIND_MAKE_MEM_DEFINED(Free, objectSize);
         freeCache = *Free;
         *Free = nullptr;
         return Free;
@@ -197,7 +201,7 @@ MemPoolChunked::get()
     /* then try perchunk freelist chain */
     if (nextFreeChunk == nullptr) {
         /* no chunk with frees, so create new one */
-        -- saved_calls; // compensate for the ++ above
+        --countSavedAllocs; // compensate for the ++ above
         createChunk();
     }
     /* now we have some in perchunk freelist chain */
@@ -213,7 +217,7 @@ MemPoolChunked::get()
         /* last free in this chunk, so remove us from perchunk freelist chain */
         nextFreeChunk = chunk->nextFreeChunk;
     }
-    (void) VALGRIND_MAKE_MEM_DEFINED(Free, obj_size);
+    (void) VALGRIND_MAKE_MEM_DEFINED(Free, objectSize);
     return Free;
 }
 
@@ -269,20 +273,20 @@ MemPoolChunked::setChunkSize(size_t chunksize)
         return;
 
     csize = ((csize + MEM_PAGE_SIZE - 1) / MEM_PAGE_SIZE) * MEM_PAGE_SIZE;  /* round up to page size */
-    cap = csize / obj_size;
+    cap = csize / objectSize;
 
     if (cap < MEM_MIN_FREE)
         cap = MEM_MIN_FREE;
-    if (cap * obj_size > MEM_CHUNK_MAX_SIZE)
-        cap = MEM_CHUNK_MAX_SIZE / obj_size;
+    if (cap * objectSize > MEM_CHUNK_MAX_SIZE)
+        cap = MEM_CHUNK_MAX_SIZE / objectSize;
     if (cap > MEM_MAX_FREE)
         cap = MEM_MAX_FREE;
     if (cap < 1)
         cap = 1;
 
-    csize = cap * obj_size;
+    csize = cap * objectSize;
     csize = ((csize + MEM_PAGE_SIZE - 1) / MEM_PAGE_SIZE) * MEM_PAGE_SIZE;  /* round up to page size */
-    cap = csize / obj_size;
+    cap = csize / objectSize;
 
     chunk_capacity = cap;
     chunk_size = csize;
@@ -296,9 +300,9 @@ MemPoolChunked::~MemPoolChunked()
 {
     MemChunk *chunk, *fchunk;
 
-    flushMetersFull();
+    flushCounters();
     clean(0);
-    assert(meter.inuse.currentLevel() == 0);
+    assert(getInUseCount() == 0);
 
     chunk = Chunks;
     while ( (fchunk = chunk) != nullptr) {
@@ -307,12 +311,6 @@ MemPoolChunked::~MemPoolChunked()
     }
     /* TODO we should be doing something about the original Chunks pointer here. */
 
-}
-
-int
-MemPoolChunked::getInUseCount()
-{
-    return meter.inuse.currentLevel();
 }
 
 void *
@@ -326,7 +324,7 @@ MemPoolChunked::allocate()
 }
 
 void
-MemPoolChunked::deallocate(void *obj, bool)
+MemPoolChunked::deallocate(void *obj)
 {
     push(obj);
     assert(meter.inuse.currentLevel() > 0);
@@ -369,7 +367,7 @@ MemPoolChunked::clean(time_t maxage)
     if (!Chunks)
         return;
 
-    flushMetersFull();
+    flushCounters();
     convertFreeCacheToChunkFreeCache();
     /* Now we have all chunks in this pool cleared up, all free items returned to their home */
     /* We start now checking all chunks to see if we can release any */
@@ -440,9 +438,9 @@ MemPoolChunked::getStats(Mem::PoolStats &stats)
     clean((time_t) 555555); /* don't want to get chunks released before reporting */
 
     stats.pool = this;
-    stats.label = objectType();
+    stats.label = label;
     stats.meter = &meter;
-    stats.obj_size = obj_size;
+    stats.obj_size = objectSize;
     stats.chunk_capacity = chunk_capacity;
 
     /* gather stats for each Chunk */
@@ -464,8 +462,8 @@ MemPoolChunked::getStats(Mem::PoolStats &stats)
     stats.items_inuse += meter.inuse.currentLevel();
     stats.items_idle += meter.idle.currentLevel();
 
-    stats.overhead += sizeof(MemPoolChunked) + chunkCount * sizeof(MemChunk) + strlen(objectType()) + 1;
+    stats.overhead += sizeof(MemPoolChunked) + chunkCount * sizeof(MemChunk) + strlen(label) + 1;
 
-    return meter.inuse.currentLevel();
+    return getInUseCount();
 }
 
