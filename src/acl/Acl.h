@@ -30,6 +30,12 @@ typedef ACL *(*Maker)(TypeName typeName);
 /// use the given ACL Maker for all ACLs of the named type
 void RegisterMaker(TypeName typeName, Maker maker);
 
+/// Validate and store the ACL key parameter for ACL types
+/// declared using "acl aclname type key argument..." declaration that
+/// require unique key values (if any) for each aclname+type combination.
+/// Key comparison is case-insensitive.
+void SetKey(SBuf &keyStorage, const char *keyParameterName, const char *newKey);
+
 } // namespace Acl
 
 /// A configurable condition. A node in the ACL expression tree.

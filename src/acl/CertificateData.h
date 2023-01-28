@@ -23,7 +23,6 @@ class ACLCertificateData : public ACLData<X509 *>
 
 public:
     ACLCertificateData(Ssl::GETX509ATTRIBUTE *, const char *attributes, bool optionalAttr = false);
-    ~ACLCertificateData() override;
     bool match(X509 *) override;
     SBufList dump() const override;
     void parse() override;
@@ -38,7 +37,7 @@ public:
     std::list<std::string> validAttributes;
     /// True if the attribute is optional (-xxx options)
     bool attributeIsOptional;
-    char *attribute;
+    SBuf attribute;
     ACLStringData values;
 
 private:

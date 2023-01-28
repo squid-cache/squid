@@ -75,6 +75,32 @@ Acl::RegisterMaker(TypeName typeName, Maker maker)
     TheMakers().emplace(typeName, maker);
 }
 
+void
+Acl::SetKey(SBuf &keyStorage, const char *keyParameterName, const char *newKey)
+{
+    if (!newKey) {
+        throw TextException(ToSBuf("An acl declaration is missing a ", keyParameterName,
+                                   Debug::Extra, "ACL name: ", AclMatchedName),
+                            Here());
+    }
+
+    if (keyStorage.isEmpty()) {
+        keyStorage = newKey;
+        return;
+    }
+
+    if (keyStorage.caseCmp(newKey) == 0)
+        return; // no change
+
+    throw TextException(ToSBuf("Attempt to change the value of the ", keyParameterName, " argument in a subsequent acl declaration:",
+                               Debug::Extra, "previously seen value: ", keyStorage,
+                               Debug::Extra, "new/conflicting value: ", newKey,
+                               Debug::Extra, "ACL name: ", AclMatchedName,
+                               Debug::Extra, "advice: Use a dedicated ACL name for each distinct ", keyParameterName,
+                               " (and group those ACLs together using an 'any-of' ACL)."),
+                        Here());
+}
+
 void *
 ACL::operator new (size_t)
 {
