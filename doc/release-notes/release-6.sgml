@@ -43,7 +43,7 @@ The Squid-6 change history can be <url url="https://github.com/squid-cache/squid
 
 <p>The most important of these new features are:
 <itemize>
-	<item>OpenSSL 3.0 Support
+	<item>TLS ServerHello
 	<item>Log TLS Communication Secrets
 	<item>Ban ACL key Changes in ACLs
 	<item>Block to-local Traffic
@@ -56,20 +56,10 @@ The Squid-6 change history can be <url url="https://github.com/squid-cache/squid
 
 Most user-facing changes are reflected in squid.conf (see below).
 
-<sect1>OpenSSL 3.0 Support
-<p>See also <url url="https://github.com/squid-cache/squid/commit/74d7d19689da352281d1045cb8451a8b56028c6d" nam="commit description">
-
-<p>The <em>ENGINE</em> feature of OpenSSL has been deprecated and is no longer
-   supported by Squid. It has been replaced by a <em>Provider</em> feature
-   which is not yet supported.
-
-<p>Configuration of <em>Elliptic Curve</em> ciphers has changed between OpenSSL
-   versions and need further changes. For now the existing configuration
-   settings are being retained for backward compatibility.
-
+<sect1>TLS ServerHello
 <p>Squid is now more lenient towards misconfigured <em>tls-cert=</em> file
    contents. Squid will attempt to sort the CA chain and send certificates in
-   the order required by TLS.
+   the order required by TLS ServerHello.
 
 <p>Squid no longer sends the <em>tls-clientca=</em> on <em>https_port</em>
    server handshakes. This fix breaks misconfigured Squid deployments that
