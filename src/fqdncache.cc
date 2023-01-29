@@ -304,7 +304,7 @@ fqdncacheCallback(fqdncache_entry * f, int wait)
     f->handler = nullptr;
 
     if (cbdataReferenceValidDone(f->handlerData, &cbdata)) {
-        const Dns::LookupDetails details(f->error_message, wait);
+        const Dns::LookupDetails details(SBuf(f->error_message), wait);
         callback(f->name_count ? f->names[0] : nullptr, details, cbdata);
     }
 
@@ -422,7 +422,7 @@ fqdncache_nbgethostbyaddr(const Ip::Address &addr, FQDNH * handler, void *handle
 
     if (name[0] == '\0') {
         debugs(35, 4, "fqdncache_nbgethostbyaddr: Invalid name!");
-        const Dns::LookupDetails details("Invalid hostname", -1); // error, no lookup
+        static const Dns::LookupDetails details(SBuf("Invalid hostname"), -1); // error, no lookup
         if (handler)
             handler(nullptr, details, handlerData);
         return;
