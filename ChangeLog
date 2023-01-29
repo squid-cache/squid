@@ -97,7 +97,6 @@ Changes in squid-6.0.1 (06 Feb 2023):
 	- Fix StoreMap.cc "anchorAt(anchorId).reading()" assertions
 	- Fix double-free segmentation fault on shutdown
 	- Fix client_side_request.cc:2028 "request->method.id()" assertion
-	- Fix FATAL ServiceRep::putConnection exception: theBusyConns > 0
 	- Fix reconfiguration leaking tls-cert=... memory
 	- Fix X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY handling
 	- Fix "mem_obj->inmem_lo == 0" assertion in StoreEntry::swapOut()
