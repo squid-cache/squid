@@ -100,12 +100,12 @@ Most user-facing changes are reflected in squid.conf (see below).
    match requests from 169.254.0.0/16 and fe80::/10.
 
 <p>The default configuration settings are changed to:
-<verbatim>
+<verb>
     http_access allow localhost
     http_access deny to_localhost
     http_access deny to_linklocal
     # http_access allow localnet
-</verbatim>
+</verb>
 
 <p>These changes only affect the default squid.conf and new installs.
    Upgraded installations will continue to use their previous settings.
@@ -140,7 +140,7 @@ requirements about it
 
 <item>4) Warning header usage and types are no longer tracked in message
    statistics available through cache manager.
-<itemize>
+</itemize>
 
 <sect1>ext_kerberos_ldap_group_acl: Support -b with -D
 <p>Previous versions of this helper ignore the <em>-b</em> option when
@@ -171,7 +171,7 @@ do require maintenance, and there are better tools available.
 
 	<item><em>membanger</em> which has not built for many years.
 
-	<item><em>pconn-banger<em> lacked build rules since inception (1997)
+	<item><em>pconn-banger</em> lacked build rules since inception (1997)
 	  and probably could not be built manually since at least 2007.
 
 	<item><em>recv-announce</em> which has not built for many years.
@@ -263,7 +263,7 @@ This section gives an account of those changes in three categories:
 
 	<tag>--with-ldap</tag>
 	<p>Compile with OpenLDAP, Mozilla LDAP, or Windows LDAP support.
-	<p>LDAP support is enabled by default. Use <em>--without-ldap</e> to disable.
+	<p>LDAP support is enabled by default. Use <em>--without-ldap</em> to disable.
 
 </descrip>
 
