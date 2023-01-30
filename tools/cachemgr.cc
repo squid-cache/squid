@@ -861,21 +861,20 @@ process_request(cachemgr_request * req)
 
     Ip::Address::FreeAddr(AI);
 
-    // XXX: This Squid does not support receiving cache_object requests, but
-    // very old Squid versions do not support cache manager requests with an
-    // http scheme. We are using cache_object here per "be very conservative"
-    // recommendation archived at
-    // http://lists.squid-cache.org/pipermail/squid-dev/2023-January/009848.html
+    // XXX: missing backward compatibility for old Squid.
+    // Squid-3.1 and older do not support http scheme manager requests.
+    // Squid-3.2 versions have bugs with https scheme manager requests.
     l = snprintf(buf, sizeof(buf),
-                 "GET cache_object://%s/%s%s%s HTTP/1.0\r\n"
+                 "GET /squid-internal-mgr/%s%s%s HTTP/1.0\r\n" // HTTP/1.0 because Transfer-Encoding is not supported by the CGI tool
+                 "Host: %s\r\n"
                  "User-Agent: cachemgr.cgi/%s\r\n"
                  "Accept: */*\r\n"
                  "%s"           /* Authentication info or nothing */
                  "\r\n",
-                 req->hostname,
                  req->action,
                  req->workers? "?workers=" : (req->processes ? "?processes=" : ""),
                  req->workers? req->workers : (req->processes ? req->processes: ""),
+                 req->hostname,
                  VERSION,
                  make_auth_header(req));
     if (write(s, buf, l) < 0) {

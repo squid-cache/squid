@@ -431,7 +431,7 @@ main(int argc, char *argv[])
         // XXX: Bail on snprintf() failures
         snprintf(url, sizeof(url), "http://%s:%hu/squid-internal-mgr/%s", Transport::Config.hostname, Transport::Config.port, t);
         if (const auto at = strrchr(url, '@')) {
-            *at = 0; // send password in Proxy-Authorization header, not URL
+            *at = 0; // send password in Authorization header, not URL
             pathPassword = at + 1; // embedded @password overwrites -w password further below
         }
         xfree(t);
@@ -508,15 +508,15 @@ main(int argc, char *argv[])
         if (max_forwards > -1) {
             msg << "Max-Forwards: " << max_forwards << "\r\n";
         }
-        if (ProxyAuthorization.user) {
-            const auto savedPassword = ProxyAuthorization.password;
-            if (pathPassword)
-                ProxyAuthorization.password = pathPassword;
+        if (ProxyAuthorization.user)
             ProxyAuthorization.commit(msg);
-            ProxyAuthorization.password = savedPassword; // restore the global password setting
-        }
-        if (OriginAuthorization.user)
+        if (OriginAuthorization.user) {
+            const auto savedPassword = OriginAuthorization.password;
+            if (pathPassword)
+                OriginAuthorization.password = pathPassword;
             OriginAuthorization.commit(msg);
+            OriginAuthorization.password = savedPassword; // restore the global password setting
+        }
 #if HAVE_GSSAPI
         if (www_neg) {
             if (host) {

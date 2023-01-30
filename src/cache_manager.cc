@@ -151,15 +151,14 @@ CacheManager::createRequestedAction(const Mgr::ActionParams &params)
 }
 
 /**
- * define whether the URL is a cache-manager URL and parse the action
- * requested by the user. Checks via CacheManager::ActionProtection() that the
- * item is accessible by the user.
+ * Parses the action requested by the user and checks via
+ * CacheManager::ActionProtection() that the item is accessible by the user.
  *
  * Syntax:
  *
- *  scheme "://" authority [ '/squid-internal-mgr' ] path-absolute '?' query-string
+ * [ scheme "://" authority ] '/squid-internal-mgr' path-absolute [ "?" query ] [ "#" fragment ]
  *
- * see RFC 3986 for definitions of scheme, authority, path-absolute, query-string
+ * see RFC 3986 for definitions of scheme, authority, path-absolute, query
  *
  * \returns Mgr::Command object with action to perform and parameters it might use
  */
@@ -169,8 +168,7 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
     Parser::Tokenizer tok(uri.path());
 
     static const SBuf internalMagicPrefix("/squid-internal-mgr/");
-    if (!tok.skip(internalMagicPrefix) && !tok.skip('/'))
-        throw TextException("invalid URL path", Here());
+    Assure(tok.skip(internalMagicPrefix));
 
     Mgr::Command::Pointer cmd = new Mgr::Command();
     cmd->params.httpUri = SBufToString(uri.absolute());
@@ -227,13 +225,10 @@ CacheManager::ParseHeaders(const HttpRequest * request, Mgr::ActionParams &param
     // TODO: use the authentication system decode to retrieve these details properly.
 
     /* base 64 _decoded_ user:passwd pair */
-    auto basic_cookie(request->header.getAuthToken(Http::HdrType::AUTHORIZATION, "Basic"));
+    const auto basic_cookie(request->header.getAuthToken(Http::HdrType::AUTHORIZATION, "Basic"));
 
-    if (basic_cookie.isEmpty()) {
-        basic_cookie = request->header.getAuthToken(Http::HdrType::PROXY_AUTHORIZATION, "Basic");
-        if (basic_cookie.isEmpty())
-            return;
-    }
+    if (basic_cookie.isEmpty())
+        return;
 
     const auto colonPos = basic_cookie.find(':');
     if (colonPos == SBuf::npos) {
