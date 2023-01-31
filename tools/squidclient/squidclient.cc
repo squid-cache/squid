@@ -432,7 +432,7 @@ main(int argc, char *argv[])
         snprintf(url, sizeof(url), "http://%s:%hu/squid-internal-mgr/%s", Transport::Config.hostname, Transport::Config.port, t);
         if (const auto at = strrchr(url, '@')) {
             *at = 0; // send password in Authorization header, not URL
-            pathPassword = at + 1; // embedded @password overwrites -w password further below
+            pathPassword = at + 1; // the now-removed embedded @password overwrites OriginAuthorization.password further below
         }
         xfree(t);
     }
@@ -508,14 +508,21 @@ main(int argc, char *argv[])
         if (max_forwards > -1) {
             msg << "Max-Forwards: " << max_forwards << "\r\n";
         }
-        if (ProxyAuthorization.user)
-            ProxyAuthorization.commit(msg);
+        if (ProxyAuthorization.user) {
+            ProxyAuthorization.commit(msg); // handles missing passwords
+        } else if (ProxyAuthorization.password) {
+            std::cerr << "ERROR: Proxy authentication username is missing\n";
+            exit(EXIT_FAILURE);
+        }
         if (OriginAuthorization.user) {
             const auto savedPassword = OriginAuthorization.password;
             if (pathPassword)
                 OriginAuthorization.password = pathPassword;
-            OriginAuthorization.commit(msg);
+            OriginAuthorization.commit(msg); // handles missing passwords
             OriginAuthorization.password = savedPassword; // restore the global password setting
+        } else if (pathPassword || OriginAuthorization.password) {
+            std::cerr << "ERROR: WWW authentication username is missing\n";
+            exit(EXIT_FAILURE);
         }
 #if HAVE_GSSAPI
         if (www_neg) {

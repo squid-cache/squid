@@ -865,7 +865,7 @@ process_request(cachemgr_request * req)
     // Squid-3.1 and older do not support http scheme manager requests.
     // Squid-3.2 versions have bugs with https scheme manager requests.
     l = snprintf(buf, sizeof(buf),
-                 "GET /squid-internal-mgr/%s%s%s HTTP/1.0\r\n" // HTTP/1.0 because Transfer-Encoding is not supported by the CGI tool
+                 "GET /squid-internal-mgr/%s%s%s HTTP/1.0\r\n" // HTTP/1.0 because this tool does not support Transfer-Encoding
                  "Host: %s\r\n"
                  "User-Agent: cachemgr.cgi/%s\r\n"
                  "Accept: */*\r\n"
