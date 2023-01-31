@@ -209,16 +209,67 @@ This section gives an account of those changes in three categories:
 <sect1>New directives<label id="newdirectives">
 <p>
 <descrip>
-	<p>There have been no directives added.
+	<tag>paranoid_hit_validation</tag>
+	<p>Controls whether to perform extra internal checks when loading
+	   entries from the on-disk cache
+
+	<tag>cache_log_message</tag>
+	<p>Configure logging options on a per-message basis, overriding the
+	   per-section options. Message IDs are guaranteed stable across builds and
+	   releases. Only a few messages support this for now.
 </descrip>
 
 <sect1>Changes to existing directives<label id="modifieddirectives">
 <p>
 <descrip>
-	<p>There have been no directives changed.
+	<tag>time units</tag>
+	<p>All directives accepting time values now accept a time unit suffix
+	   from nanosecond to decade
+
+	<tag>sslcrtvalidator_program</tag>
+	<p>Add cache and ttl specifiers to limit resources allocated
+
+	<tag>logformat</tag>
+	<p>added transport::>connection_id tag to record what transport-level
+	   connection the request was received.
+	<p>added busy_time tag to record the cumulative CPU time spent processing
+	   the request, excluding the time spent waiting for external resources.
+	   WARNING: this time is approximate and is known to have bugs and gaps,
+	   so consider it a lower bound
+	<p>added request_attempts tag to record how mnay forwarding attempts were
+	   done for this request
+
 </descrip>
 
 <sect1>Removed directives<label id="removeddirectives">
+<p>
+<descrip>
+	<tag>announce_file</tag>
+	<p>Obsolete. Squid no longer provides functionality to enroll in the
+	   cache registration service
+</descrip>
+</p>
+<p>
+<descrip>
+	<tag>announce_host</tag>
+	<p>Obsolete. Squid no longer provides functionality to enroll in the
+	   cache registration service
+</descrip>
+</p>
+<p>
+<descrip>
+	<tag>announce_period</tag>
+	<p>Obsolete. Squid no longer provides functionality to enroll in the
+	   cache registration service
+</descrip>
+</p>
+<p>
+<descrip>
+	<tag>announce_port</tag>
+	<p>Obsolete. Squid no longer provides functionality to enroll in the
+	   cache registration service
+</descrip>
+</p>
 <p>
 <descrip>
 	<tag>request_entities</tag>
