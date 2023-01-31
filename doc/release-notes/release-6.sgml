@@ -37,11 +37,13 @@ The Squid-6 change history can be <url url="http://www.squid-cache.org/Versions/
 
 <p>The most important of these new features are:
 <itemize>
-	<item>No new features documented yet.
+	<item>cache_object scheme removal
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
 
+<sect1>cache_object scheme removal
+<p>The Squid cache manager is not accessible by cache_object:// URL scheme anymore. Removed its support from squidclient tool and CGI cache manager tool.
 
 <sect>Changes to squid.conf since Squid-5
 <p>
