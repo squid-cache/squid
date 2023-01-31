@@ -227,17 +227,17 @@ This section gives an account of those changes in three categories:
 	   from nanosecond to decade
 
 	<tag>sslcrtvalidator_program</tag>
-	<p>Add cache and ttl specifiers to limit resources allocated
+	<p>New <em>ttl=infinity</em> option to disable TTL expiry on stored helper responses.
 
 	<tag>logformat</tag>
-	<p>added transport::>connection_id tag to record what transport-level
+	<p>New <em>transport::&gt;connection_id</em> code to display which transport-level
 	   connection the request was received.
-	<p>added busy_time tag to record the cumulative CPU time spent processing
+	<p>New <em>busy_time</em> code to display the cumulative CPU time spent processing
 	   the request, excluding the time spent waiting for external resources.
 	   WARNING: this time is approximate and is known to have bugs and gaps,
 	   so consider it a lower bound
-	<p>added request_attempts tag to record how mnay forwarding attempts were
-	   done for this request
+	<p>New <em>request_attempts</em> code to display how many forwarding attempts were
+	   made for this request.
 
 </descrip>
 
