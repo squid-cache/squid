@@ -416,6 +416,14 @@ main(int argc, char *argv[])
                 break;
             }
         }
+        if (ProxyAuthorization.password && !ProxyAuthorization.user) {
+            std::cerr << "ERROR: Proxy authentication username is missing\n";
+            exit(EXIT_FAILURE);
+        }
+        if (OriginAuthorization.password && !OriginAuthorization.user) {
+            std::cerr << "ERROR: WWW authentication username is missing\n";
+            exit(EXIT_FAILURE);
+        }
     }
 #if _SQUID_WINDOWS_
     {
@@ -431,6 +439,11 @@ main(int argc, char *argv[])
         // XXX: Bail on snprintf() failures
         snprintf(url, sizeof(url), "http://%s:%hu/squid-internal-mgr/%s", Transport::Config.hostname, Transport::Config.port, t);
         if (const auto at = strrchr(url, '@')) {
+            if (!OriginAuthorization.user) {
+                std::cerr << "ERROR: Embedding a password in a cache manager command requires " <<
+                    "providing a username with -U: mgr:" << t << std::endl;
+                exit(EXIT_FAILURE);
+            }
             *at = 0; // send password in Authorization header, not URL
             pathPassword = at + 1; // the now-removed embedded @password overwrites OriginAuthorization.password further below
         }
@@ -508,21 +521,14 @@ main(int argc, char *argv[])
         if (max_forwards > -1) {
             msg << "Max-Forwards: " << max_forwards << "\r\n";
         }
-        if (ProxyAuthorization.user) {
-            ProxyAuthorization.commit(msg); // handles missing passwords
-        } else if (ProxyAuthorization.password) {
-            std::cerr << "ERROR: Proxy authentication username is missing\n";
-            exit(EXIT_FAILURE);
-        }
+        if (ProxyAuthorization.user)
+            ProxyAuthorization.commit(msg);
         if (OriginAuthorization.user) {
             const auto savedPassword = OriginAuthorization.password;
             if (pathPassword)
                 OriginAuthorization.password = pathPassword;
-            OriginAuthorization.commit(msg); // handles missing passwords
+            OriginAuthorization.commit(msg);
             OriginAuthorization.password = savedPassword; // restore the global password setting
-        } else if (pathPassword || OriginAuthorization.password) {
-            std::cerr << "ERROR: WWW authentication username is missing\n";
-            exit(EXIT_FAILURE);
         }
 #if HAVE_GSSAPI
         if (www_neg) {
