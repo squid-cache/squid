@@ -64,8 +64,7 @@ This section gives an account of those changes in three categories:
 <p>
 <descrip>
 	<tag>server_cert_fingerprint</tag>
-	<p>The <em>-sha</em> argument has been removed.
-	<p>The support for this parameter has been broken for years. It has a single-dash syntax that violates the double-dash pattern used for other long <em>ACL</em> options. After removal, Squid behavior will remain the same because <em>SHA1</em> is the default (and the only supported) fingerprinting algorithm.
+	<p>Removed the broken <em>-sha</em> option. <em>SHA1</em> remains the default and only supported fingerprinting algorithm. Configuring it is unnecessary.
 </descrip>
 
 <sect1>Removed directives<label id="removeddirectives">
