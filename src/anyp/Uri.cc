@@ -583,7 +583,16 @@ AnyP::Uri::parseHost(Parser::Tokenizer &tok) const
         if (!tok.skip(']'))
             throw TextException("IPv6 address is missing a closing bracket in uri-host", Here());
 
-        // including bracketed IPv4address because IPv6chars include "."
+        // This rejects bracketed IPv4address and domain names because they lack ":".
+        if (ipv6ish.find(':') == SBuf::npos)
+            throw TextException("bracketed IPv6 address is missing a colon in uri-host", Here());
+
+        // This rejects bracketed non-IP addresses that our caller would have
+        // otherwise mistaken for a domain name (e.g., '[127.0.0:1]').
+        Ip::Address ipv6check;
+        if (!ipv6check.fromHost(ipv6ish.c_str()))
+            throw TextException("malformed bracketed IPv6 address in uri-host", Here());
+
         return ipv6ish;
     }
 
