@@ -558,11 +558,6 @@ AnyP::Uri::parseHost(Parser::Tokenizer &tok) const
 {
     // host = IP-literal / IPv4address / reg-name
 
-    // This code does not detect/reject some bad sequences (e.g. "[:bad:]" and
-    // ".444.555."). Hopefully, they will be rejected during conversion into
-    // Ip::Address and reg-name validation. TODO: Convert/validate here, after
-    // migrating the non-CONNECT uri-host parsing code to use us.
-
     // XXX: CharacterSets below reject uri-host values containing whitespace
     // (e.g., "10.0.0. 1"). That is not a bug, but the uri_whitespace directive
     // can be interpreted as if it applies to uri-host and this code. TODO: Fix
@@ -595,6 +590,12 @@ AnyP::Uri::parseHost(Parser::Tokenizer &tok) const
 
         return ipv6ish;
     }
+
+    // no brackets implies we are looking at IPv4address or reg-name
+
+    // XXX: This code does not detect/reject some bad host values (e.g. "!#$%&"
+    // and "1.2.3.4.5"). TODO: Add more checks here, after migrating the
+    // non-CONNECT uri-host parsing code to use us.
 
     SBuf otherHost; // IPv4address-ish or reg-name-ish;
     // ":" is not in TCHAR so we will stop before any port specification
