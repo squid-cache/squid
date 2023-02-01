@@ -417,11 +417,11 @@ main(int argc, char *argv[])
             }
         }
         if (ProxyAuthorization.password && !ProxyAuthorization.user) {
-            std::cerr << "ERROR: Proxy authentication username is missing\n";
+            std::cerr << "ERROR: Proxy authentication password (-w) is given, but username (-u) is missing\n";
             exit(EXIT_FAILURE);
         }
         if (OriginAuthorization.password && !OriginAuthorization.user) {
-            std::cerr << "ERROR: WWW authentication username is missing\n";
+            std::cerr << "ERROR: WWW authentication password (-W) is given, but username (-U) is missing\n";
             exit(EXIT_FAILURE);
         }
     }
