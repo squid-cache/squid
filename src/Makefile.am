@@ -827,8 +827,7 @@ tests_testClpMap_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_debug.cc \
 	tests/stub_libtime.cc \
-	tests/stub_event.cc \
-	tests/stub_libmem.cc
+	tests/stub_event.cc
 nodist_tests_testClpMap_SOURCES = \
 	base/ClpMap.h
 tests_testClpMap_LDADD = \

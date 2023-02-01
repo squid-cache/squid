@@ -12,17 +12,21 @@
 #include "compat/cppunit.h"
 #include "base/ClpMap.h"
 
-using testMap = ClpMap<std::string, int>;
-
 class testClpMap: public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE(testClpMap);
+    // CPPUNIT_TEST(  );
+    CPPUNIT_TEST( Entries );
     CPPUNIT_TEST_SUITE_END();
 
 protected:
+    using testMap = ClpMap<std::string, int>;
+
     // add a standard set of key-values to the map, up to numElems
     // the keys and values will start at base and count up numElems
     void addData(testMap &m, int numElems=10, int base=0);
+    void Entries();
+    void PutAndGet();
 };
 
 #endif /* SQUID_BASE_TESTCLPMAP_H */
