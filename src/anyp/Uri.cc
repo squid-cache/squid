@@ -16,6 +16,7 @@
 #include "parser/Tokenizer.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
+#include "SquidMath.h"
 #include "SquidString.h"
 
 static const char valid_hostname_chars_u[] =
@@ -288,14 +289,16 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             // For CONNECTs, RFC 9110 Section 9.3.6 requires "only the host and
             // port number of the tunnel destination, separated by a colon".
 
-            // XXX: use tokenizer
-            auto B = tok.buf();
-            const char *url = B.c_str();
+            const auto rawHost = parseHost(tok);
+            Assure(rawHost.length() < sizeof(foundHost));
+            SBufToCstring(foundHost, rawHost);
 
-            if (sscanf(url, "[%[^]]]:%d", foundHost, &foundPort) < 1)
-                if (sscanf(url, "%[^:]:%d", foundHost, &foundPort) < 1)
-                    return false;
+            if (!tok.skip(':'))
+                throw TextException("missing required :port in CONNECT target", Here());
+            foundPort = parsePort(tok);
 
+            if (!tok.remaining().isEmpty())
+                throw TextException("garbage after host:port in CONNECT target", Here());
         } else {
 
             scheme = uriParseScheme(tok);
@@ -545,6 +548,78 @@ AnyP::Uri::parseUrn(Parser::Tokenizer &tok)
     // TODO validate path characters
     path(tok.remaining());
     debugs(23, 3, "Split URI into proto=urn, nid=" << nid << ", " << Raw("path",path().rawContent(),path().length()));
+}
+
+/// Extracts and returns a (suspected but only partially validated) uri-host
+/// IPv6address, IPv4address, or reg-name component. This function uses (and
+/// quotes) RFC 3986, Section 3.2.2 syntax rules.
+SBuf
+AnyP::Uri::parseHost(Parser::Tokenizer &tok) const
+{
+    // host = IP-literal / IPv4address / reg-name
+
+    // This code does not detect/reject some bad sequences (e.g. "[:bad:]" and
+    // ".444.555."). Hopefully, they will be rejected during conversion into
+    // Ip::Address and reg-name validation. TODO: Convert/validate here, after
+    // migrating the non-CONNECT uri-host parsing code to use us.
+
+    // XXX: CharacterSets below reject uri-host values containing whitespace
+    // (e.g., "10.0.0. 1"). That is not a bug, but the uri_whitespace directive
+    // can be interpreted as if it applies to uri-host and this code. TODO: Fix
+    // uri_whitespace and the code using it to exclude uri-host (and URI scheme,
+    // port, etc.) from that directive scope.
+
+    // IP-literal = "[" ( IPv6address / IPvFuture  ) "]"
+    if (tok.skip('[')) {
+        // Add "." because IPv6address in RFC 3986 includes ls32, which includes
+        // IPv4address: ls32 = ( h16 ":" h16 ) / IPv4address
+        // This set rejects IPvFuture that needs a "v" character.
+        static const CharacterSet IPv6chars = (
+            CharacterSet::HEXDIG + CharacterSet("colon", ":") + CharacterSet("period", ".")).rename("IPv6");
+        SBuf ipv6ish;
+        if (!tok.prefix(ipv6ish, IPv6chars))
+            throw TextException("malformed or unsupported bracketed IP address in uri-host", Here());
+
+        if (!tok.skip(']'))
+            throw TextException("IPv6 address is missing a closing bracket in uri-host", Here());
+
+        // including bracketed IPv4address because IPv6chars include "."
+        return ipv6ish;
+    }
+
+    SBuf otherHost; // IPv4address-ish or reg-name-ish;
+    // ":" is not in TCHAR so we will stop before any port specification
+    if (tok.prefix(otherHost, CharacterSet::TCHAR))
+        return otherHost;
+
+    throw TextException("malformed IPv4 address or host name in uri-host", Here());
+}
+
+/// Extracts and returns an RFC 3986 URI authority port value (with additional
+/// restrictions). The RFC defines port as a possibly empty sequence of decimal
+/// digits. We reject certain ports (that are syntactically valid from the RFC
+/// point of view) because we are worried that Squid and other traffic handlers
+/// may dangerously mishandle unusual (and virtually always bogus) port numbers.
+/// Rejected ports cannot be successfully used by Squid itself.
+int
+AnyP::Uri::parsePort(Parser::Tokenizer &tok) const
+{
+    if (tok.skip('0'))
+        throw TextException("zero or zero-prefixed port", Here());
+
+    int64_t rawPort = 0;
+    if (!tok.int64(rawPort, 10, false)) // port = *DIGIT
+        throw TextException("malformed or missing port", Here());
+
+    Assure(rawPort > 0);
+    // TODO: Move to Uri declaration, use std::optional, adjust its many users.
+    using Port = decltype(port_);
+    constexpr auto portMax = 65535; // TODO: Make this a class-scope constant and REuse it.
+    static_assert(std::numeric_limits<Port>::max() >= portMax, "Port type can represent the maximum valid port number");
+    if (Less(portMax, rawPort))
+        throw TextException("huge port", Here());
+
+    return NaturalCast<int>(rawPort);
 }
 
 void
