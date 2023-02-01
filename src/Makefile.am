@@ -819,6 +819,29 @@ tests_testCharacterSet_LDADD = \
 	$(XTRA_LIBS)
 tests_testCharacterSet_LDFLAGS = $(LIBADD_DL)
 
+check_PROGRAMS += tests/testClpMap
+tests_testClpMap_SOURCES = \
+	tests/testClpMap.cc \
+	tests/testClpMap.h \
+	tests/stub_cache_manager.cc \
+	tests/stub_HelperChildConfig.cc \
+	tests/stub_debug.cc \
+	tests/stub_libtime.cc \
+	tests/stub_event.cc \
+	tests/stub_libmem.cc
+nodist_tests_testClpMap_SOURCES = \
+	base/ClpMap.h
+tests_testClpMap_LDADD = \
+	mem/libmem.la \
+	sbuf/libsbuf.la \
+	ip/libip.la \
+	base/libbase.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testClpMap_LDFLAGS = $(LIBADD_DL)
+
 check_PROGRAMS += tests/testEnumIterator
 tests_testEnumIterator_SOURCES = \
 	tests/testEnumIterator.cc \
