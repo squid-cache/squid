@@ -570,7 +570,7 @@ AnyP::Uri::parseHost(Parser::Tokenizer &tok) const
         // IPv4address: ls32 = ( h16 ":" h16 ) / IPv4address
         // This set rejects IPvFuture that needs a "v" character.
         static const CharacterSet IPv6chars = (
-            CharacterSet::HEXDIG + CharacterSet("colon", ":") + CharacterSet("period", ".")).rename("IPv6");
+                CharacterSet::HEXDIG + CharacterSet("colon", ":") + CharacterSet("period", ".")).rename("IPv6");
         SBuf ipv6ish;
         if (!tok.prefix(ipv6ish, IPv6chars))
             throw TextException("malformed or unsupported bracketed IP address in uri-host", Here());
