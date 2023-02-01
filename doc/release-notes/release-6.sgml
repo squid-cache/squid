@@ -63,7 +63,8 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing directives<label id="modifieddirectives">
 <p>
 <descrip>
-	<p>There have been no directives changed.
+	<tag>server_cert_fingerprint</tag>
+	<p>Removed the broken <em>-sha</em> option. <em>SHA1</em> remains the default and only supported fingerprinting algorithm. Configuring it is unnecessary.
 </descrip>
 
 <sect1>Removed directives<label id="removeddirectives">
