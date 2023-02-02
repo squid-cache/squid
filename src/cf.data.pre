@@ -1533,14 +1533,13 @@ IF USE_OPENSSL
 	  # ssl::certUntrusted, and ssl::certSelfSigned can also be used as
 	  # predefined ACLs, just like the 'all' ACL.
 
-	acl aclname server_cert_fingerprint [-sha1] fingerprint
+	acl aclname server_cert_fingerprint fingerprint
 	  # match against server SSL certificate fingerprint [fast]
 	  #
 	  # The fingerprint is the digest of the DER encoded version
 	  # of the whole certificate. The user should use the form: XX:XX:...
-	  # Optional argument specifies the digest algorithm to use.
 	  # The SHA1 digest algorithm is the default and is currently
-	  # the only algorithm supported (-sha1).
+	  # the only algorithm supported.
 
 	acl aclname ssl::server_name [option] .foo.com ...
 	  # matches server name obtained from various sources [fast]
