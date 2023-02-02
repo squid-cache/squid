@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 6.0.0 release notes</title>
+<title>Squid 6.0.1 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-6.0.0 for testing.
+<p>The Squid Team are pleased to announce the release of Squid-6.0.1 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v6/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -25,11 +25,17 @@ This new release is available for download from <url url="http://www.squid-cache
 <sect1>Known issues
 <p>Although this release is deemed good enough for use in many setups, please note the existence of
 <url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=6" name="open bugs against Squid-6">.
-<p>Support for compiling on HPUX with the native HP <em>xcc</em> compiler has been removed. To build on that OS/compiler combination, it is possible to pass these environemnt variables to ./configure: <em>CC="cxx -Ae" RANLIB=":"</em>
+
+<p>Support for compiling on HPUX with the native HP <em>xcc</em> compiler has been removed.
+  To build on that OS/compiler combination, it is possible to pass these environment variables
+  to ./configure: <em>CC="cxx -Ae" RANLIB=":"</em>
+
+<p>This release adds a dependency on C++17 support in any compiler used to build Squid.
+  GCC 8+ and Clang 8+ support C++17.
 
 <sect1>Changes since earlier releases of Squid-6
 <p>
-The Squid-6 change history can be <url url="http://www.squid-cache.org/Versions/v6/changesets/" name="viewed here">.
+The Squid-6 change history can be <url url="https://github.com/squid-cache/squid/commits/v6" name="viewed here">.
 
 
 <sect>Major new features since Squid-5
@@ -37,10 +43,156 @@ The Squid-6 change history can be <url url="http://www.squid-cache.org/Versions/
 
 <p>The most important of these new features are:
 <itemize>
-	<item>No new features documented yet.
+	<item>TLS ServerHello
+	<item>Log TLS Communication Secrets
+	<item>Ban ACL key Changes in ACLs
+	<item>Block to-local Traffic
+	<item>RFC 9211: HTTP Cache-Status support
+	<item>RFC 9111: Stop treating Warning specially
+	<item>ext_kerberos_ldap_group_acl: Support -b with -D
+	<item>Remove Gopher Protocol Support
+	<item>Remove Outdated Tools
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
+
+<sect1>TLS ServerHello
+<p>Squid is now more lenient towards misconfigured <em>tls-cert=</em> file
+   contents. Squid will attempt to sort the CA chain and send certificates in
+   the order required by TLS ServerHello.
+
+<p>Squid no longer sends the <em>tls-clientca=</em> on <em>https_port</em>
+   server handshakes. This fix breaks misconfigured Squid deployments that
+   (usually unknowingly) rely on the OpenSSL clientca 'leak' to build a
+   complete https_port server certificate chain sent to TLS clients. Such
+   deployments should add the right intermediate CA certificate(s) to their
+   <em>tls-cert=</em> bundle (or equivalent).
+
+<sect1>Log TLS Communication Secrets
+<p>Squid now records pre-master secret and related encryption details for TLS
+   connections accepted or established by Squid. These connections include
+   connections accepted at <em>https_port</em>, TLS connections opened to
+   origin servers/<em>cache_peer</em>/ICAP services, and TLS tunnels bumped by
+   Squid using the SslBump feature.
+
+<p>Logging of these details are controlled by the <em>tls_key_log</em>. See
+   <url url="http://www.squid-cache.org/Doc/config/tls_key_log/" name="squid.conf documentation">
+   for details.
+
+<sect1>Ban ACL key changes in ACLs
+<p>More info in the <url url="https://github.com/squid-cache/squid/commit/4a3b85322ce5a464175eb49ddb5be413794b25b8" name="commit description">
+
+<p>Certain Squid ACLs can check the value of a specific key=value where
+   the key name is configurable. These ACLs are unable to check multiple
+   different key names.
+
+<p>Squid did write a cache.log ERROR for req_header/rep_header key changes
+   but was silent about the preceding <em>note</em> ACL rules being
+   ineffective after a key name change.
+
+<p>Squid will now actively reject all such configurations.
+
+<sect1>Block to-local Traffic
+<p>More info in the policy change <url url="https://github.com/squid-cache/squid/commit/f13e556e4ce743369dee4782b78c87d65580ab00" name="commit">
+   and the ACL creation <url url="https://github.com/squid-cache/squid/commit/6d2f8ed096bf5c013b8560451e41d8772c64ba66" name="commit">
+
+<p>This Squid introduces the <em>to_linklocal</em> ACL as pre-defined to
+   match requests from 169.254.0.0/16 and fe80::/10.
+
+<p>The default configuration settings are changed to:
+<verb>
+    http_access allow localhost
+    http_access deny to_localhost
+    http_access deny to_linklocal
+    # http_access allow localnet
+</verb>
+
+<p>These changes only affect the default squid.conf and new installs.
+   Upgraded installations will continue to use their previous settings.
+
+<sect1>RFC 9211: HTTP Cache-Status support
+<p>See also <url url="https://www.rfc-editor.org/rfc/rfc9211" name="RFC 9211">
+
+<p>This HTTP header replaces <em>X-Cache</em> and <em>X-Cache-Lookup</em>
+   which are no longer emitted by Squid. Any tools or management systems
+   relying on those <em>X-</em> headers need to be upgraded to work with
+   the new standardized header.
+
+<sect1>RFC 9111: Stop treating Warning specially
+<p>RFC 9111 obsoletes the Warning header, removing all specification
+requirements about it
+
+<p>This Squid changes behaviour in regards to that header:
+<itemize>
+<item>1) Squid no longer adds Warning headers to generated or forwarded
+   messages. Miss responses from servers/peers and hits cached by an
+   older version of Squid may still have Warning headers.
+
+<item>2) On 304 revalidation, Warning header are treated the same as any
+   other/generic header. They are added or replaced according to their
+   presence in the 304 reply. Absent any Warning update by a 304, Squid
+   may still deliver cached content with old Warning headers.
+
+<item>3) Squid no longer validates received Warning headers. RFC 7234 placed
+   syntax requirements and limits on how old some Warning values could
+   be (when dated). Those checks are no longer being performed. The
+   header value is now treated as an opaque string.
+
+<item>4) Warning header usage and types are no longer tracked in message
+   statistics available through cache manager.
+</itemize>
+
+<sect1>ext_kerberos_ldap_group_acl: Support -b with -D
+<p>Previous versions of this helper ignore the <em>-b</em> option when
+   the <em>-D</em> option is used.
+
+<p>Fixing this limitation adds support for FreeIPA and limited subtree
+   searching.
+
+<sect1>Remove Gopher Protocol Support
+<p>With this change, Gopher requests will be handled like any other request
+with an unknown (to Squid) protocol. For example, HTTP requests with
+<em>gopher://</em> URL scheme result in ERR_UNSUP_REQ.
+
+<p>Default Squid configuration still considers TCP port 70 safe. The
+corresponding Safe_ports ACL rule has not been removed.
+
+<sect1>Removed Outdated Tools
+<p>We do not have enough resources/demand for maintaining these tools, they
+do require maintenance, and there are better tools available.
+
+<itemize>
+	<item><em>cache_diff</em> which has no users according to community
+	  poll results in 2020.
+
+	<item><em>GnuRegex</em> library implementation. Modern operating
+	  systems provide a functioning regex library, so we do not need to
+	  carry one anymore.
+
+	<item><em>membanger</em> which has not built for many years.
+
+	<item><em>pconn-banger</em> lacked build rules since inception (1997)
+	  and probably could not be built manually since at least 2007.
+
+	<item><em>recv-announce</em> which has not built for many years.
+
+	<item><em>send-announce</em> which is very much outdated and unused
+	  since the decline of the <url url="http://ircache.nlanr.net/" name="NLANR IRCache"> service.
+
+	<item><em>tcp-banger2</em> is not built by default and probably could
+	  not be built at all since at least 2006.
+
+	<item><em>tcp-banger3</em> lacked build rules since inception (1998)
+	  and probably could not be built manually (by mimicking tcp-banger2
+	  build commands) without warnings since 2002.
+
+	<item><em>tcp-banger.pl</em> has portability and code quality issues;
+	  its basic functionality is supported by squidclient, wget, curl, and
+	  others.
+
+	<item<em>ufsdump</em> was not built by default since 2010 and its build
+	  has been failing since before 2017.
+</itemize>
 
 
 <sect>Changes to squid.conf since Squid-5
@@ -57,17 +209,69 @@ This section gives an account of those changes in three categories:
 <sect1>New directives<label id="newdirectives">
 <p>
 <descrip>
-	<p>There have been no directives added.
+	<tag>paranoid_hit_validation</tag>
+	<p>Controls whether to perform extra internal checks when loading
+	   entries from the on-disk cache
+
+	<tag>cache_log_message</tag>
+	<p>Configure logging options on a per-message basis, overriding the
+	   per-section options. Message IDs are guaranteed stable across builds and
+	   releases. Only a few messages support this for now.
 </descrip>
 
 <sect1>Changes to existing directives<label id="modifieddirectives">
 <p>
 <descrip>
+	<tag>time units</tag>
+	<p>All directives accepting time values now accept a time unit suffix
+	   from nanosecond to decade
+
+	<tag>sslcrtvalidator_program</tag>
+	<p>New <em>ttl=infinity</em> option to disable TTL expiry on stored helper responses.
+
+	<tag>logformat</tag>
+	<p>New <em>transport::&gt;connection_id</em> code to display which transport-level
+	   connection the request was received.
+	<p>New <em>busy_time</em> code to display the cumulative CPU time spent processing
+	   the request, excluding the time spent waiting for external resources.
+	   WARNING: this time is approximate and is known to have bugs and gaps,
+	   so consider it a lower bound
+	<p>New <em>request_attempts</em> code to display how many forwarding attempts were
+	   made for this request.
+
 	<tag>server_cert_fingerprint</tag>
 	<p>Removed the broken <em>-sha</em> option. <em>SHA1</em> remains the default and only supported fingerprinting algorithm. Configuring it is unnecessary.
 </descrip>
 
 <sect1>Removed directives<label id="removeddirectives">
+<p>
+<descrip>
+	<tag>announce_file</tag>
+	<p>Obsolete. Squid no longer provides functionality to enroll in the
+	   cache registration service
+</descrip>
+</p>
+<p>
+<descrip>
+	<tag>announce_host</tag>
+	<p>Obsolete. Squid no longer provides functionality to enroll in the
+	   cache registration service
+</descrip>
+</p>
+<p>
+<descrip>
+	<tag>announce_period</tag>
+	<p>Obsolete. Squid no longer provides functionality to enroll in the
+	   cache registration service
+</descrip>
+</p>
+<p>
+<descrip>
+	<tag>announce_port</tag>
+	<p>Obsolete. Squid no longer provides functionality to enroll in the
+	   cache registration service
+</descrip>
+</p>
 <p>
 <descrip>
 	<tag>request_entities</tag>
@@ -110,6 +314,10 @@ This section gives an account of those changes in three categories:
 	<tag>--with-xml2</tag>
 	<p>Replacement for <em>--with-libxml2</em>.
 
+	<tag>--with-ldap</tag>
+	<p>Compile with OpenLDAP, Mozilla LDAP, or Windows LDAP support.
+	<p>LDAP support is enabled by default. Use <em>--without-ldap</em> to disable.
+
 </descrip>
 
 <sect1>Changes to existing options<label id="modifiedoptions">
@@ -141,9 +349,15 @@ This section gives an account of those changes in three categories:
 	<p>This feature has been of limited use since AsyncCalls feature
 	   took over much of the CBDATA functionality.
 
+	<tag>--enable-gnuregex</tag>
+	<p>Squid no longer ships with a built-in GnuRegex implementation.
+
 	<tag>--enable-kill-parent-hack</tag>
 	<p>This feature has been deprecated for years. Other features such as
 	   <em>--foreground</em> command line argument should be used instead.
+
+	<tag>--enable-leakfinder</tag>
+	<p>Removed. Using Valgrind for leak detection is still supported.
 
 	<tag>--disable-loadable-modules</tag>
 	<p>This option was performing the same duties as <em>--disable-shared</em>.

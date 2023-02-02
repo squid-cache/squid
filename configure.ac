@@ -132,6 +132,9 @@ AC_SUBST(AR_R)
 AC_PATH_PROG(LINUXDOC, linuxdoc, $FALSE)
 AM_CONDITIONAL(ENABLE_RELEASE_DOCS, test "x${ac_cv_path_LINUXDOC}" != "x$FALSE")
 
+SQUID_RELEASE=`echo $VERSION | cut -d. -f1`
+AC_SUBST(SQUID_RELEASE)
+
 # pre-define DEFAULT_PREFIX, some modules need it.
 AS_IF([test "${prefix}" = "NONE"],[squid_prefix=$ac_default_prefix],[squid_prefix=$prefix])
 AC_DEFINE_UNQUOTED(DEFAULT_PREFIX,[$squid_prefix],[The install prefix])
