@@ -27,6 +27,8 @@ protected:
     void addData(testMap &m, int numElems=10, int base=0);
     void Entries();
     void PutAndGet();
+public:
+    void setUp() override;
 };
 
 #endif /* SQUID_BASE_TESTCLPMAP_H */

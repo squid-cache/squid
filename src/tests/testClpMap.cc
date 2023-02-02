@@ -13,6 +13,7 @@
 #include "SquidConfig.h"
 
 #include <iostream>
+#include <ctime>
 
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testClpMap );
@@ -26,6 +27,12 @@ testClpMap::addData(testMap &m, int numElems, int base)
         CPPUNIT_ASSERT_EQUAL(true, m.add(std::to_string(j), j));
         std::cout << '.';
     }
+}
+
+void
+testClpMap::setUp()
+{
+    squid_curtime = time(nullptr);
 }
 
 void
