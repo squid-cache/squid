@@ -508,7 +508,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_LOCAL_LISTENING_PORT:
             if (const auto port = FindListeningPortNumber(nullptr, al.getRaw())) {
-                outint = port;
+                outint = *port;
                 doint = 1;
             }
             break;

@@ -1669,8 +1669,6 @@ wccp2AssignBuckets(void *)
     int router_len;
     int bucket_counter;
     uint32_t service_flags;
-    unsigned short port = WCCP_PORT;
-
     /* Packet segments */
 
     struct wccp2_message_header_t *main_header;
@@ -1703,7 +1701,7 @@ wccp2AssignBuckets(void *)
     router_len = sizeof(router);
     memset(&router, '\0', router_len);
     router.sin_family = AF_INET;
-    router.sin_port = htons(port);
+    router.sin_port = htons(WCCP_PORT);
 
     /* Start main header - fill in length later */
     offset = 0;
