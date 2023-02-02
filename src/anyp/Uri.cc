@@ -571,10 +571,12 @@ AnyP::Uri::authority(bool requirePort) const
         authorityWithPort_.append(host());
         authorityHttp_ = authorityWithPort_;
 
-        // authorityForm_ only has :port if it is non-default
-        authorityWithPort_.appendf(":%u",port());
-        if (port() != getScheme().defaultPort())
-            authorityHttp_ = authorityWithPort_;
+        if (port().has_value()) {
+            authorityWithPort_.appendf(":%hu", port().value());
+            // authorityHttp_ only has :port for known non-default ports
+            if (port() != getScheme().defaultPort())
+                authorityHttp_ = authorityWithPort_;
+        }
     }
 
     return requirePort ? authorityWithPort_ : authorityHttp_;
@@ -898,8 +900,7 @@ urlCheckRequest(const HttpRequest * r)
 
 AnyP::Uri::Uri(AnyP::UriScheme const &aScheme) :
     scheme_(aScheme),
-    hostIsNumeric_(false),
-    port_(0)
+    hostIsNumeric_(false)
 {
     *host_=0;
 }

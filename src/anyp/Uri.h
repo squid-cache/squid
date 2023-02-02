@@ -21,6 +21,12 @@ class HttpRequestMethod;
 namespace AnyP
 {
 
+/// validated/supported port number; these values are never zero
+using KnownPort = uint16_t;
+
+/// validated/supported port number (if any)
+using Port = std::optional<KnownPort>;
+
 /**
  * Represents a Uniform Resource Identifier.
  * Can store both URL or URN representations.
@@ -32,7 +38,7 @@ class Uri
     MEMPROXY_CLASS(Uri);
 
 public:
-    Uri() : hostIsNumeric_(false), port_(0) {*host_=0;}
+    Uri(): hostIsNumeric_(false) { *host_ = 0; }
     Uri(AnyP::UriScheme const &aScheme);
     Uri(const Uri &other) {
         this->operator =(other);
@@ -54,7 +60,7 @@ public:
         hostIsNumeric_ = false;
         *host_ = 0;
         hostAddr_.setEmpty();
-        port_ = 0;
+        port_ = std::nullopt;
         touch();
     }
     void touch(); ///< clear the cached URI display forms
@@ -91,10 +97,11 @@ public:
     /// [brackets]. See RFC 3986 Section 3.2.2.
     SBuf hostOrIp() const;
 
-    void port(unsigned short p) {port_=p; touch();}
-    unsigned short port() const {return port_;}
+    void port(const Port p) { port_ = p; touch(); }
+    Port port() const { return port_; }
+    // XXX: Convert Scheme::defaultPort() to use Port
     /// reset the port to the default port number for the current scheme
-    void defaultPort() { port(getScheme().defaultPort()); }
+    void defaultPort() { if (const auto dp = getScheme().defaultPort()) port(dp); else port(std::nullopt); }
 
     void path(const char *p) {path_=p; touch();}
     void path(const SBuf &p) {path_=p; touch();}
@@ -175,7 +182,7 @@ private:
     bool hostIsNumeric_;            ///< whether the authority 'host' is a raw-IP
     Ip::Address hostAddr_;          ///< binary representation of the URI authority if it is a raw-IP
 
-    unsigned short port_;   ///< URL port
+    Port port_; ///< authority port subcomponent
 
     // XXX: for now includes query-string.
     SBuf path_;     ///< URI path segment

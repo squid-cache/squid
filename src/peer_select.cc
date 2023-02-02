@@ -530,7 +530,7 @@ PeerSelector::noteIp(const Ip::Address &ip)
 
     Comm::ConnectionPointer p = new Comm::Connection();
     p->remote = ip;
-    p->remote.port(peer ? peer->http_port : request->url.port());
+    p->remote.port(peer ? peer->http_port : request->url.port().value_or(0));
     handlePath(p, *servers);
 }
 
