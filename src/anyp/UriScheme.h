@@ -13,6 +13,7 @@
 #include "sbuf/SBuf.h"
 
 #include <iosfwd>
+#include <optional>
 #include <vector>
 
 namespace AnyP
