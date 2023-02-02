@@ -367,9 +367,6 @@ accessLogInit(void)
 
     accessLogRegisterWithCacheManager();
 
-#if USE_ADAPTATION
-    Log::TheConfig.hasAdaptToken = false;
-#endif
 #if ICAP_CLIENT
     Log::TheConfig.hasIcapToken = false;
 #endif
@@ -390,7 +387,7 @@ accessLogInit(void)
                     curr_token->type == Format::LFT_ADAPTATION_LAST_HEADER_ELEM ||
                     curr_token->type == Format::LFT_ADAPTATION_LAST_ALL_HEADERS||
                     (curr_token->type == Format::LFT_NOTE && !Adaptation::Config::metaHeaders.empty())) {
-                Log::TheConfig.hasAdaptToken = true;
+                Log::TheConfig.needsAdaptationHistory = true;
             }
 #if ICAP_CLIENT
             if (curr_token->type == Format::LFT_ICAP_TOTAL_TIME) {

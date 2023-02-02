@@ -9,6 +9,7 @@
 #include "squid.h"
 
 #if USE_ADAPTATION
+#include "acl/AdaptationRepHeader.h"
 #include "acl/AdaptationService.h"
 #include "acl/AdaptationServiceData.h"
 #endif
@@ -196,6 +197,7 @@ Acl::Init()
 
 #if USE_ADAPTATION
     RegisterMaker("adaptation_service", [](TypeName name)->ACL* { return new ACLStrategised<const char *>(new ACLAdaptationServiceData, new ACLAdaptationServiceStrategy, name); });
+    RegisterMaker("adaptation_rep_header", [](TypeName name)->ACL* { return new ACLStrategised<HttpHeader*>(new ACLHTTPHeaderData, new ACLAdaptationRepHeaderStrategy, name); });
 #endif
 
 #if SQUID_SNMP

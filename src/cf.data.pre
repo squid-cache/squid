@@ -1447,6 +1447,16 @@ endif
 	  # adaptation_meta because it starts matching immediately after
 	  # the service has been selected for adaptation.
 
+	acl aclname adaptation_rep_header header-name [-i] any\.regex\.here
+	  # Regex-matches ICAP reply headers and eCAP reply meta-headers. [fast]
+	  #
+	  # This ACL checks ICAP headers and eCAP meta-headers received (at the
+	  # time of the ACL check) from REQMOD and RESPMOD adaptation services. If
+	  # two received responses contain a header field with the same name, then
+	  # Squid forgets the field received earlier. This ACL will not match if
+	  # no adaptation response headers have been received. Matching ICAP 100
+	  # Continue headers and ICAP response trailers is currently unsupported.
+
 	acl aclname transaction_initiator initiator ...
 	  # Matches transaction's initiator [fast]
 	  #

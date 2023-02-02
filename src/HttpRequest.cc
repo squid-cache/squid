@@ -414,7 +414,7 @@ HttpRequest::adaptHistory(bool createIfNone) const
 Adaptation::History::Pointer
 HttpRequest::adaptLogHistory() const
 {
-    return HttpRequest::adaptHistory(Log::TheConfig.hasAdaptToken);
+    return HttpRequest::adaptHistory(Log::TheConfig.needsAdaptationHistory);
 }
 
 void
