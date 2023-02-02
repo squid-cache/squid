@@ -24,6 +24,8 @@
 /* auth/UserRequest.h is empty unless USE_AUTH is defined */
 #include "auth/UserRequest.h"
 
+#include <optional>
+
 /// error page callback
 typedef void ERCB(int fd, void *, size_t);
 
@@ -176,7 +178,7 @@ public:
     char *url = nullptr;
     int xerrno = 0;
     unsigned short port = 0;
-    String dnsError; ///< DNS lookup error message
+    std::optional<SBuf> dnsError; ///< DNS lookup error message
     time_t ttl = 0;
 
     Ip::Address src_addr;
