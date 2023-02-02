@@ -1145,7 +1145,7 @@ int
 neighborUp(const CachePeer * p)
 {
     if (!p->tcp_up) {
-        // TODO: add and pass the CachePeer context here instead of nullptr
+        // TODO: When CachePeer gets its own CodeContext, pass that context instead of nullptr
         CallService(nullptr, [&] {
             peerProbeConnect(const_cast<CachePeer*>(p));
         });
