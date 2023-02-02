@@ -362,7 +362,11 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
                 return false;
             *dst = '\0';
 
-            foundPort = scheme.defaultPort(); // may be reset later
+            // If the parsed scheme has no (known) default port, and there is no
+            // explicit port, then we will reject the zero port during foundPort
+            // validation, often resulting in a misleading 400/ERR_INVALID_URL.
+            // TODO: Remove this hack when switching to Tokenizer-based parsing.
+            foundPort = scheme.defaultPort().value_or(0); // may be reset later
 
             /* Is there any login information? (we should eventually parse it above) */
             t = strrchr(foundHost, '@');

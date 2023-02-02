@@ -21,12 +21,6 @@ class HttpRequestMethod;
 namespace AnyP
 {
 
-/// validated/supported port number; these values are never zero
-using KnownPort = uint16_t;
-
-/// validated/supported port number (if any)
-using Port = std::optional<KnownPort>;
-
 /**
  * Represents a Uniform Resource Identifier.
  * Can store both URL or URN representations.
@@ -99,9 +93,8 @@ public:
 
     void port(const Port p) { port_ = p; touch(); }
     Port port() const { return port_; }
-    // XXX: Convert Scheme::defaultPort() to use Port
     /// reset the port to the default port number for the current scheme
-    void defaultPort() { if (const auto dp = getScheme().defaultPort()) port(dp); else port(std::nullopt); }
+    void defaultPort() { port(getScheme().defaultPort()); }
 
     void path(const char *p) {path_=p; touch();}
     void path(const SBuf &p) {path_=p; touch();}
