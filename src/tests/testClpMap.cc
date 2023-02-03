@@ -69,3 +69,31 @@ testClpMap::testMemoryCounter()
     CPPUNIT_ASSERT_EQUAL(sizeof(str), static_cast<size_t>(DefaultMemoryUsage(str)));
     CPPUNIT_ASSERT_EQUAL(sizeof(std::string), static_cast<size_t>(DefaultMemoryUsage(std::string())));
 }
+
+void
+testClpMap::testConstructor()
+{
+    testMap nilA(0);
+    CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilA.memLimit());
+    CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilA.freeMem());
+    CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilA.memoryUsed());
+    CPPUNIT_ASSERT_EQUAL(size_t(0), nilA.entries());
+
+    testMap nilB(0, 0);
+    CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilB.memLimit());
+    CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilB.freeMem());
+    CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilB.memoryUsed());
+    CPPUNIT_ASSERT_EQUAL(size_t(0), nilB.entries());
+
+    testMap emptyC(1);
+    CPPUNIT_ASSERT_EQUAL(uint64_t(1), emptyC.memLimit());
+    CPPUNIT_ASSERT_EQUAL(uint64_t(1), emptyC.freeMem());
+    CPPUNIT_ASSERT_EQUAL(uint64_t(0), emptyC.memoryUsed());
+    CPPUNIT_ASSERT_EQUAL(size_t(0), emptyC.entries());
+
+    testMap emptyD(1024);
+    CPPUNIT_ASSERT_EQUAL(uint64_t(1024), emptyD.memLimit());
+    CPPUNIT_ASSERT_EQUAL(uint64_t(1024), emptyD.freeMem());
+    CPPUNIT_ASSERT_EQUAL(uint64_t(0), emptyD.memoryUsed());
+    CPPUNIT_ASSERT_EQUAL(size_t(0), emptyD.entries());
+}

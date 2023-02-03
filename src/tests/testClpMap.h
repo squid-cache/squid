@@ -17,6 +17,7 @@ class testClpMap: public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST_SUITE(testClpMap);
     // CPPUNIT_TEST(  );
     CPPUNIT_TEST(testMemoryCounter);
+    CPPUNIT_TEST(testConstructor);
     CPPUNIT_TEST(Entries);
     CPPUNIT_TEST_SUITE_END();
 
@@ -27,6 +28,7 @@ protected:
     // the keys and values will start at base and count up numElems
     void addData(testMap &m, int numElems = 10, int base = 0);
     void testMemoryCounter();
+    void testConstructor();
     void Entries();
     void PutAndGet();
 public:
