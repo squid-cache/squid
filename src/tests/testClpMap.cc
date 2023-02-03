@@ -27,6 +27,7 @@ testClpMap::addData(testMap &m, int numElems, int base)
     }
 }
 
+
 void
 testClpMap::setUp()
 {
@@ -55,4 +56,16 @@ testClpMap::Entries()
         addData(m, 1000);
         CPPUNIT_ASSERT(m.entries() < 1000);
     }
+}
+
+void
+testClpMap::testMemoryCounter()
+{
+    CPPUNIT_ASSERT_EQUAL(sizeof(int), static_cast<size_t>(DefaultMemoryUsage(int())));
+    CPPUNIT_ASSERT_EQUAL(sizeof(int32_t), static_cast<size_t>(DefaultMemoryUsage(int32_t())));
+    CPPUNIT_ASSERT_EQUAL(sizeof(int64_t), static_cast<size_t>(DefaultMemoryUsage(int64_t())));
+    CPPUNIT_ASSERT_EQUAL(sizeof(char), static_cast<size_t>(DefaultMemoryUsage(char())));
+    char str[10];
+    CPPUNIT_ASSERT_EQUAL(sizeof(str), static_cast<size_t>(DefaultMemoryUsage(str)));
+    CPPUNIT_ASSERT_EQUAL(sizeof(std::string), static_cast<size_t>(DefaultMemoryUsage(std::string())));
 }
