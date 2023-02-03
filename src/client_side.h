@@ -480,6 +480,7 @@ private:
     /// The number of parsed HTTP requests headers on a bumped client connection
     uint64_t parsedBumpedRequestCount = 0;
 
+    // TODO: Replace tlsConnectHostOrIp and tlsConnectPort with CONNECT request AnyP::Uri
     /// The TLS server host name appears in CONNECT request or the server ip address for the intercepted requests
     SBuf tlsConnectHostOrIp; ///< The TLS server host name as passed in the CONNECT request
     AnyP::Port tlsConnectPort; ///< The TLS server port number as passed in the CONNECT request
