@@ -103,3 +103,27 @@ testClpMap::testConstructor()
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), emptyD.memoryUsed());
     CPPUNIT_ASSERT_EQUAL(size_t(0), emptyD.entries());
 }
+
+void
+testClpMap::SetMemLimit()
+{
+    testMap m(2048);
+    addData(m, 1000);
+    auto entriesBefore = m.entries();
+    m.setMemLimit(1024);
+    CPPUNIT_ASSERT(entriesBefore > m.entries());
+}
+
+#include <iostream>
+void
+testClpMap::testIterator()
+{
+    const int numElems = 10;
+    testMap m(2048);
+    addData(m, numElems);
+    int verified[numElems] = {};
+    for (auto j = m.cbegin(); j != m.cend(); ++j)
+        ++verified[j->value];
+    for (int j = 0 ; j < numElems; ++j)
+        CPPUNIT_ASSERT_EQUAL(1, verified[j]);
+}

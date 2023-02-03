@@ -114,8 +114,8 @@ public:
     /// read-only iterator. Entries are owned by the ClpMap, so invalidations
     /// might happen if any non-const operation is performed
     using EntriesConstIterator = typename Entries::const_iterator;
-    EntriesConstIterator begin() { return entries_.begin(); }
-    EntriesConstIterator end() { return entries_.end(); }
+    EntriesConstIterator cbegin() { return entries_.begin(); }
+    EntriesConstIterator cend() { return entries_.end(); }
 
 private:
     static std::optional<uint64_t> MemoryCountedFor(const Key &, const Value &);
