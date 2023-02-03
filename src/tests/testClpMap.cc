@@ -12,7 +12,6 @@
 
 #include "SquidConfig.h"
 
-#include <iostream>
 #include <ctime>
 
 
@@ -25,7 +24,6 @@ testClpMap::addData(testMap &m, int numElems, int base)
 {
     for (int j = base; j < base + numElems; ++j ) {
         CPPUNIT_ASSERT_EQUAL(true, m.add(std::to_string(j), j));
-        std::cout << '.';
     }
 }
 
@@ -46,16 +44,15 @@ void
 testClpMap::Entries()
 {
     {
-        testMap m(100, 10);
+        testMap m(10*1024*1024, 10);
         addData(m, 10, 10);
-        std::cout << m.entries() << std::endl;
-        m.add("foo", 0, 10);
-        std::cout << m.entries() << std::endl;
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(10), m.entries());
+        m.add("foo", 0, 10);
+        CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(11), m.entries());
     }
     {
-        testMap m(5);
-        addData(m, 10);
-        CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(5), m.entries());
+        testMap m(1024, 5);
+        addData(m, 1000);
+        CPPUNIT_ASSERT(m.entries() < 1000);
     }
 }

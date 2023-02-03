@@ -24,7 +24,7 @@ protected:
 
     // add a standard set of key-values to the map, up to numElems
     // the keys and values will start at base and count up numElems
-    void addData(testMap &m, int numElems=10, int base=0);
+    void addData(testMap &m, int numElems = 10, int base = 0);
     void Entries();
     void PutAndGet();
 public:
