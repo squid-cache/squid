@@ -35,10 +35,12 @@ Changes in squid-6.0.1 (06 Feb 2023):
 	- Remove HPUX compiler support
 	- Remove CBDATA debugging
 	- Require C++17
+	- cachemgr.cgi: Remove deprecated cache_object:// support
 	- ext_kerberos_ldap_group_acl: Support -b with -D
 	- ext_lm_group_acl: Improved username handling
 	- negotiate_wrapper: ensure null-termination of strings
 	- pinger: Fix MAX_PKT{4,6}_SZ to account for icmpEchoData padding
+	- squidclient: Remove deprecated cache_object:// support
 	- HTTP: Replaced X-Cache and X-Cache-Lookup headers with Cache-Status
 	- HTTP: Update Host, Via, and other headers in-place when possible
 	- HTTP: Update status code 413 compliance
