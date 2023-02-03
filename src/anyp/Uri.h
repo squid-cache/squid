@@ -91,7 +91,9 @@ public:
     /// [brackets]. See RFC 3986 Section 3.2.2.
     SBuf hostOrIp() const;
 
+    /// reset authority port subcomponent
     void port(const Port p) { port_ = p; touch(); }
+    /// \copydoc port_
     Port port() const { return port_; }
     /// reset the port to the default port number for the current scheme
     void defaultPort() { port(getScheme().defaultPort()); }
