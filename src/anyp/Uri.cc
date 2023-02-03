@@ -581,6 +581,8 @@ AnyP::Uri::authority(bool requirePort) const
             if (port() != getScheme().defaultPort())
                 authorityHttp_ = authorityWithPort_;
         }
+        // else XXX: We made authorityWithPort_ that does not have a port.
+        // TODO: Audit callers and refuse to give out broken authorityWithPort_.
     }
 
     return requirePort ? authorityWithPort_ : authorityHttp_;
