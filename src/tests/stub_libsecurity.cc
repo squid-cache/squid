@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -73,7 +73,6 @@ const char *Security::NegotiationHistory::printTlsVersion(AnyP::ProtocolVersion 
 
 #include "security/PeerConnector.h"
 class TlsNegotiationDetails: public RefCountable {};
-CBDATA_NAMESPACED_CLASS_INIT(Security, PeerConnector);
 namespace Security
 {
 PeerConnector::PeerConnector(const Comm::ConnectionPointer &, const AsyncCallback<EncryptorAnswer> &, const AccessLogEntryPointer &, const time_t):

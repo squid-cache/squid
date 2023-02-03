@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -46,7 +46,7 @@ public:
 
     const char *getMD5Text() const;
     StoreEntry();
-    virtual ~StoreEntry();
+    ~StoreEntry() override;
 
     MemObject &mem() { assert(mem_obj); return *mem_obj; }
     const MemObject &mem() const { assert(mem_obj); return *mem_obj; }
@@ -297,10 +297,10 @@ public:
 #endif
 
     /* Packable API */
-    virtual void append(char const *, int);
-    virtual void vappendf(const char *, va_list);
-    virtual void buffer();
-    virtual void flush();
+    void append(char const *, int) override;
+    void vappendf(const char *, va_list) override;
+    void buffer() override;
+    void flush() override;
 
 protected:
     typedef Store::EntryGuard EntryGuard;

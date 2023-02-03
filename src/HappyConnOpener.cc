@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -101,11 +101,11 @@ public:
     PrimeChanceGiver(): HappyOrderEnforcer("happy_eyeballs_connect_timeout enforcement") {}
 
     /* HappyOrderEnforcer API */
-    virtual bool readyNow(const HappyConnOpener &job) const override;
+    bool readyNow(const HappyConnOpener &job) const override;
 
 private:
     /* HappyOrderEnforcer API */
-    virtual AsyncCall::Pointer notify(const CbcPointer<HappyConnOpener> &) override;
+    AsyncCall::Pointer notify(const CbcPointer<HappyConnOpener> &) override;
 };
 
 /// enforces happy_eyeballs_connect_gap and happy_eyeballs_connect_limit
@@ -115,7 +115,7 @@ public:
     SpareAllowanceGiver(): HappyOrderEnforcer("happy_eyeballs_connect_gap/happy_eyeballs_connect_limit enforcement") {}
 
     /* HappyOrderEnforcer API */
-    virtual bool readyNow(const HappyConnOpener &job) const override;
+    bool readyNow(const HappyConnOpener &job) const override;
 
     /// reacts to HappyConnOpener discovering readyNow() conditions for a spare path
     /// the caller must attempt to open a spare connection immediately
@@ -129,7 +129,7 @@ public:
 
 private:
     /* HappyOrderEnforcer API */
-    virtual AsyncCall::Pointer notify(const CbcPointer<HappyConnOpener> &) override;
+    AsyncCall::Pointer notify(const CbcPointer<HappyConnOpener> &) override;
 
     bool concurrencyLimitReached() const;
     void recordAllowance();

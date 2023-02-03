@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,8 +24,8 @@ class testRock : public CPPUNIT_NS::TestFixture
 
 public:
     testRock() : rr(nullptr) {}
-    virtual void setUp();
-    virtual void tearDown();
+    void setUp() override;
+    void tearDown() override;
 
     typedef RefCount<Rock::SwapDir> SwapDirPointer;
 

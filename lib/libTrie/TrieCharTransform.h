@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -40,7 +40,7 @@ public:
 
 class TrieCaseless : public TrieCharTransform
 {
-    virtual char operator () (char const aChar) const {return tolower(aChar);}
+    char operator () (char const aChar) const override {return tolower(aChar);}
 };
 
 #endif /* __cplusplus */

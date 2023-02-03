@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -603,6 +603,18 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             doSec = 1;
             break;
 
+        case LFT_BUSY_TIME: {
+            const auto &stopwatch = al->busyTime;
+            if (stopwatch.ran()) {
+                // make sure total() returns nanoseconds compatible with outoff
+                using nanos = std::chrono::duration<decltype(outoff), std::nano>;
+                const nanos n = stopwatch.total();
+                outoff = n.count();
+                dooff = true;
+            }
+        }
+        break;
+
         case LFT_TIME_TO_HANDLE_REQUEST:
             outtv = al->cache.trTime;
             doMsec = 1;
@@ -1003,6 +1015,11 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (al->hier.ping.timedout)
                 mb.append("TIMEOUT_", 8);
             out = hier_code_str[al->hier.code];
+            break;
+
+        case LFT_SQUID_REQUEST_ATTEMPTS:
+            outint = al->requestAttempts;
+            doint = 1;
             break;
 
         case LFT_MIME_TYPE:

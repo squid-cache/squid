@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,7 +19,6 @@
 void *Mem::AllocatorProxy::alloc() {return xmalloc(64*1024);}
 void Mem::AllocatorProxy::freeOne(void *address) {xfree(address);}
 int Mem::AllocatorProxy::inUseCount() const {return 0;}
-//Mem::PoolMeter const &Mem::AllocatorProxy::getMeter() const STUB_RETSTATREF(PoolMeter)
 size_t Mem::AllocatorProxy::getStats(PoolStats &) STUB_RETVAL(0)
 
 #include "mem/forward.h"
@@ -82,18 +81,9 @@ static MemPools tmpMemPools;
 MemPools &MemPools::GetInstance() {return tmpMemPools;}
 MemPools::MemPools() STUB_NOP
 void MemPools::flushMeters() STUB
-MemImplementingAllocator * MemPools::create(const char *, size_t) STUB_RETVAL(nullptr);
+Mem::Allocator * MemPools::create(const char *, size_t) STUB_RETVAL(nullptr);
 void MemPools::clean(time_t) STUB
 void MemPools::setDefaultPoolChunking(bool const &) STUB
-
-//MemImplementingAllocator::MemImplementingAllocator(char const *, size_t) STUB_NOP
-Mem::PoolMeter const &MemImplementingAllocator::getMeter() const STUB_RETSTATREF(PoolMeter)
-Mem::PoolMeter &MemImplementingAllocator::getMeter() STUB_RETSTATREF(PoolMeter)
-void MemImplementingAllocator::flushMetersFull() STUB
-void MemImplementingAllocator::flushMeters() STUB
-void *MemImplementingAllocator::alloc() STUB_RETVAL(nullptr)
-void MemImplementingAllocator::freeOne(void *) STUB
-size_t MemImplementingAllocator::objectSize() const { return obj_size; }
 
 #include "mem/Stats.h"
 size_t Mem::GlobalStats(PoolStats &) STUB_RETVAL(0)

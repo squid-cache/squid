@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,10 +17,10 @@ class DiskDaemonDiskIOModule : public DiskIOModule
 public:
     static DiskDaemonDiskIOModule &GetInstance();
     DiskDaemonDiskIOModule();
-    virtual void init();
-    virtual void gracefulShutdown();
-    virtual char const *type () const;
-    virtual DiskIOStrategy* createStrategy();
+    void init() override;
+    void gracefulShutdown() override;
+    char const *type () const override;
+    DiskIOStrategy* createStrategy() override;
 
 private:
     static DiskDaemonDiskIOModule Instance;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 
 #include "base/TypeTraits.h"
 #include "mem/forward.h"
+#include "mem/Meter.h"
 
 namespace Mem
 {
@@ -20,7 +21,13 @@ namespace Mem
 class Allocator : public Interface
 {
 public:
-    explicit Allocator(const char * const aLabel): label(aLabel) {}
+    /// Flush counters to 'meter' after flush limit allocations
+    static const size_t FlushLimit = 1000;
+
+    Allocator(const char * const aLabel, const size_t sz):
+        label(aLabel),
+        objectSize(RoundedSize(sz))
+    {}
 
     // TODO make this method const
     /**
@@ -29,30 +36,51 @@ public:
      */
     virtual size_t getStats(PoolStats &) = 0;
 
-    virtual PoolMeter const &getMeter() const = 0;
-
     /// provide (and reserve) memory suitable for storing one object
-    virtual void *alloc() = 0;
+    void *alloc() {
+        if (++countAlloc == FlushLimit)
+            flushCounters();
+        return allocate();
+    }
 
     /// return memory reserved by alloc()
-    virtual void freeOne(void *) = 0;
-
-    /// brief description of objects returned by alloc()
-    virtual char const *objectType() const { return label; }
-
-    /// the size (in bytes) of objects managed by this allocator
-    virtual size_t objectSize() const = 0;
+    void freeOne(void *obj) {
+        assert(obj != nullptr);
+        (void) VALGRIND_CHECK_MEM_IS_ADDRESSABLE(obj, objectSize);
+        deallocate(obj);
+        ++countFreeOne;
+    }
 
     /// the difference between the number of alloc() and freeOne() calls
-    virtual int getInUseCount() = 0;
+    int getInUseCount() const { return meter.inuse.currentLevel(); }
 
     /// \see doZero
     void zeroBlocks(const bool doIt) { doZero = doIt; }
 
-    int inUseCount() { return getInUseCount(); } // XXX: drop redundant?
-
     /// XXX: Misplaced -- not all allocators have a notion of a "chunk". See MemPoolChunked.
     virtual void setChunkSize(size_t) {}
+
+    virtual bool idleTrigger(int shift) const = 0;
+
+    virtual void clean(time_t maxage) = 0;
+
+    /**
+     * Flush temporary counter values into the statistics held in 'meter'.
+     */
+    void flushCounters() {
+        if (countFreeOne) {
+            meter.gb_freed.update(countFreeOne, objectSize);
+            countFreeOne = 0;
+        }
+        if (countAlloc) {
+            meter.gb_allocated.update(countAlloc, objectSize);
+            countAlloc = 0;
+        }
+        if (countSavedAllocs) {
+            meter.gb_saved.update(countSavedAllocs, objectSize);
+            countSavedAllocs = 0;
+        }
+    }
 
     /**
      * \param minSize Minimum size needed to be allocated.
@@ -60,7 +88,34 @@ public:
      */
     static size_t RoundedSize(const size_t minSize) { return ((minSize + sizeof(void*) - 1) / sizeof(void*)) * sizeof(void*); }
 
+public:
+
+    /// the number of calls to Mem::Allocator::alloc() since last flush
+    size_t countAlloc = 0;
+
+    /// the number of malloc()/calloc() calls avoided since last flush
+    size_t countSavedAllocs = 0;
+
+    /// the number of calls to Mem::Allocator::freeOne() since last flush
+    size_t countFreeOne = 0;
+
+    // XXX: no counter for the number of free() calls avoided
+
+    /// brief description of objects returned by alloc()
+    const char *const label;
+
+    /// the size (in bytes) of objects managed by this allocator
+    const size_t objectSize;
+
+    /// statistics tracked for this allocator
+    PoolMeter meter;
+
 protected:
+    /// \copydoc void *alloc()
+    virtual void *allocate() = 0;
+    /// \copydoc void freeOne(void *)
+    virtual void deallocate(void *) = 0;
+
     /**
      * Whether to zero memory on initial allocation and on return to the pool.
      *
@@ -69,9 +124,6 @@ protected:
      * When possible, set this to false to avoid zeroing overheads.
      */
     bool doZero = true;
-
-private:
-    const char *label = nullptr;
 };
 
 } // namespace Mem

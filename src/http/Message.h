@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -46,7 +46,7 @@ public:
     };
 
     Message(http_hdr_owner_type);
-    virtual ~Message();
+    ~Message() override;
 
     virtual void reset() = 0; // will have body when http*Clean()s are gone
 

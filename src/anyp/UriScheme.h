@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -69,14 +69,14 @@ private:
     SBuf image_;
 };
 
-} // namespace AnyP
-
 inline std::ostream &
-operator << (std::ostream &os, AnyP::UriScheme const &scheme)
+operator <<(std::ostream &os, const UriScheme &scheme)
 {
     os << scheme.image();
     return os;
 }
+
+} // namespace AnyP
 
 #endif /* SQUID_ANYP_URISCHEME_H */
 

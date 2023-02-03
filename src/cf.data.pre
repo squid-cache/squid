@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -1533,14 +1533,13 @@ IF USE_OPENSSL
 	  # ssl::certUntrusted, and ssl::certSelfSigned can also be used as
 	  # predefined ACLs, just like the 'all' ACL.
 
-	acl aclname server_cert_fingerprint [-sha1] fingerprint
+	acl aclname server_cert_fingerprint fingerprint
 	  # match against server SSL certificate fingerprint [fast]
 	  #
 	  # The fingerprint is the digest of the DER encoded version
 	  # of the whole certificate. The user should use the form: XX:XX:...
-	  # Optional argument specifies the digest algorithm to use.
 	  # The SHA1 digest algorithm is the default and is currently
-	  # the only algorithm supported (-sha1).
+	  # the only algorithm supported.
 
 	acl aclname ssl::server_name [option] .foo.com ...
 	  # matches server name obtained from various sources [fast]
@@ -4094,7 +4093,7 @@ DOC_START
 	* unfinished Happy Eyeballs connection attempts (prevented by setting
 	  happy_eyeballs_connect_limit to 0)
 
-	See also: forward_timeout and connect_retries.
+	See also: forward_timeout, connect_retries, and %request_attempts.
 DOC_END
 
 COMMENT_START
@@ -4805,6 +4804,20 @@ DOC_START
 			similar to the default access.log "current time" field
 			(%ts.%03tu).
 
+		busy_time	Time spent in transaction-related code (nanoseconds)
+			This cumulative measurement excludes periods of time when the
+			transaction was waiting (e.g., for a server or helper response)
+			while Squid worked on other transactions or was engaged in
+			transaction-unrelated activities (e.g., generating a cache index).
+			In other words, this measurement represents the total amount of
+			physical time when Squid was busy working on this transaction.
+
+			WARNING: This measurement relies on Squid transaction context
+			tracking features that currently have known context leak bugs and
+			coverage gaps. Until those features are fully implemented, logged
+			values may significantly understate or exaggerate actual times.
+			Do not use this measurement unless you know it works in your case.
+
 	Access Control related format codes:
 
 		et	Tag returned by external acl
@@ -4935,6 +4948,16 @@ DOC_START
 
 		Ss	Squid request status (TCP_MISS etc)
 		Sh	Squid hierarchy status (DEFAULT_PARENT etc)
+
+		[http::]request_attempts	Number of request forwarding attempts
+
+			See forward_max_tries documentation that details what Squid counts
+			as a forwarding attempt. Pure cache hits log zero, but cache hits
+			that triggered HTTP cache revalidation log the number of attempts
+			made when sending an internal revalidation request. DNS, ICMP,
+			ICP, HTCP, ESI, ICAP, eCAP, helper, and other secondary requests
+			sent by Squid as a part of a master transaction do not increment
+			the counter logged for the received request.
 
 	SSL-related format codes:
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 #ifndef _MEM_POOL_CHUNKED_H_
 #define _MEM_POOL_CHUNKED_H_
 
-#include "mem/Pool.h"
+#include "mem/Allocator.h"
 #include "splay.h"
 
 #define MEM_CHUNK_SIZE        4 * 4096  /* 16KB ... 4 * VM_PAGE_SZ */
@@ -18,29 +18,29 @@
 class MemChunk;
 
 /// \ingroup MemPoolsAPI
-class MemPoolChunked : public MemImplementingAllocator
+class MemPoolChunked : public Mem::Allocator
 {
 public:
     friend class MemChunk;
     MemPoolChunked(const char *label, size_t obj_size);
-    ~MemPoolChunked();
+    ~MemPoolChunked() override;
     void convertFreeCacheToChunkFreeCache();
-    virtual void clean(time_t maxage);
     void createChunk();
     void *get();
     void push(void *obj);
 
     /* Mem::Allocator API */
-    virtual size_t getStats(Mem::PoolStats &);
-    virtual int getInUseCount();
-    virtual void setChunkSize(size_t);
+    size_t getStats(Mem::PoolStats &) override;
+    void setChunkSize(size_t) override;
+    bool idleTrigger(int) const override;
+    void clean(time_t) override;
 
 protected:
-    virtual void *allocate();
-    virtual void deallocate(void *, bool aggressive);
-public:
-    virtual bool idleTrigger(int shift) const;
+    /* Mem::Allocator API */
+    void *allocate() override;
+    void deallocate(void *) override;
 
+public:
     size_t chunk_size;
     int chunk_capacity;
     int chunkCount;

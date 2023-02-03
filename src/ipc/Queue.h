@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -284,12 +284,12 @@ public:
     template<class Value> bool findOldest(const int remoteProcessId, Value &value) const;
 
 protected:
-    virtual const OneToOneUniQueue &inQueue(const int remoteProcessId) const;
-    virtual const OneToOneUniQueue &outQueue(const int remoteProcessId) const;
-    virtual const QueueReader &localReader() const;
-    virtual const QueueReader &remoteReader(const int processId) const;
-    virtual int remotesCount() const;
-    virtual int remotesIdOffset() const;
+    const OneToOneUniQueue &inQueue(const int remoteProcessId) const override;
+    const OneToOneUniQueue &outQueue(const int remoteProcessId) const override;
+    const QueueReader &localReader() const override;
+    const QueueReader &remoteReader(const int processId) const override;
+    int remotesCount() const override;
+    int remotesIdOffset() const override;
 
 private:
     bool validProcessId(const Group group, const int processId) const;
@@ -348,12 +348,12 @@ public:
     MultiQueue(const String &id, const int localProcessId);
 
 protected:
-    virtual const OneToOneUniQueue &inQueue(const int remoteProcessId) const;
-    virtual const OneToOneUniQueue &outQueue(const int remoteProcessId) const;
-    virtual const QueueReader &localReader() const;
-    virtual const QueueReader &remoteReader(const int remoteProcessId) const;
-    virtual int remotesCount() const;
-    virtual int remotesIdOffset() const;
+    const OneToOneUniQueue &inQueue(const int remoteProcessId) const override;
+    const OneToOneUniQueue &outQueue(const int remoteProcessId) const override;
+    const QueueReader &localReader() const override;
+    const QueueReader &remoteReader(const int remoteProcessId) const override;
+    int remotesCount() const override;
+    int remotesIdOffset() const override;
 
 private:
     bool validProcessId(const int processId) const;

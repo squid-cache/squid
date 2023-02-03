@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,7 +29,7 @@ class Initiator: virtual public AsyncJob
 {
 public:
     Initiator(): AsyncJob("Initiator") {}
-    virtual ~Initiator() {}
+    ~Initiator() override {}
 
     /// AccessCheck calls this back with a possibly nil service group
     /// to signal whether adaptation is needed and where it should start.

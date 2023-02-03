@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -136,12 +136,12 @@ public:
     }
 
     /* CodeContext API */
-    virtual ScopedId codeContextGist() const; // override
-    virtual std::ostream &detailCodeContext(std::ostream &os) const; // override
+    ScopedId codeContextGist() const override; // override
+    std::ostream &detailCodeContext(std::ostream &os) const override; // override
 
     /* StoreClient API */
-    virtual LogTags *loggingTags() const;
-    virtual void fillChecklist(ACLFilledChecklist &) const;
+    LogTags *loggingTags() const override;
+    void fillChecklist(ACLFilledChecklist &) const override;
 
 public:
     const char *method = nullptr;

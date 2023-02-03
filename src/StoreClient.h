@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,7 +27,7 @@ class StoreClient: public Acl::ChecklistFiller
 {
 
 public:
-    virtual ~StoreClient () {}
+    ~StoreClient () override {}
 
     /// \return LogTags (if the class logs transactions) or nil (otherwise)
     virtual LogTags *loggingTags() const = 0;

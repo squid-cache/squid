@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -47,10 +47,10 @@ public:
     UFSCleanLog(SwapDir *aSwapDir) : sd(aSwapDir) {}
 
     /// Get the next entry that is a candidate for clean log writing
-    virtual const StoreEntry *nextEntry();
+    const StoreEntry *nextEntry() override;
 
     /// "write" an entry to the clean log file.
-    virtual void write(StoreEntry const &);
+    void write(StoreEntry const &) override;
 
     SBuf cur;
     SBuf newLog;

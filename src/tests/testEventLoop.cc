@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,7 +28,7 @@ class RecordingEngine : public AsyncEngine
 public:
     RecordingEngine(int aTimeout = 0) : return_timeout(aTimeout) {}
 
-    virtual int checkEvents(int timeout) {
+    int checkEvents(int timeout) override {
         ++calls;
         lasttimeout = timeout;
         return return_timeout;
@@ -131,7 +131,7 @@ public:
     StubTime() : calls(0) {}
 
     int calls;
-    void tick() {
+    void tick() override {
         ++calls;
     }
 };

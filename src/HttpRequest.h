@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -54,12 +54,12 @@ public:
 
     HttpRequest(const MasterXaction::Pointer &);
     HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *schemeImage, const char *aUrlpath, const MasterXaction::Pointer &);
-    ~HttpRequest();
-    virtual void reset();
+    ~HttpRequest() override;
+    void reset() override;
 
     void initHTTP(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *schemeImage, const char *aUrlpath);
 
-    virtual HttpRequest *clone() const;
+    HttpRequest *clone() const override;
 
     /// Whether response to this request is potentially cachable
     /// \retval false  Not cacheable.
@@ -196,9 +196,9 @@ public:
 public:
     bool multipartRangeRequest() const;
 
-    bool parseFirstLine(const char *start, const char *end);
+    bool parseFirstLine(const char *start, const char *end) override;
 
-    virtual bool expectingBody(const HttpRequestMethod& unused, int64_t&) const;
+    bool expectingBody(const HttpRequestMethod& unused, int64_t&) const override;
 
     bool bodyNibbled() const; // the request has a [partially] consumed body
 
@@ -246,7 +246,7 @@ public:
     NotePairs::Pointer notes();
     bool hasNotes() const { return bool(theNotes) && !theNotes->empty(); }
 
-    virtual void configureContentLengthInterpreter(Http::ContentLengthInterpreter &) {}
+    void configureContentLengthInterpreter(Http::ContentLengthInterpreter &) override {}
 
     /// Check whether the message framing headers are valid.
     /// \returns Http::scNone or an HTTP error status
@@ -266,13 +266,13 @@ private:
     /// and(or) by annotate_transaction/annotate_client ACLs.
     NotePairs::Pointer theNotes;
 protected:
-    virtual void packFirstLineInto(Packable * p, bool full_uri) const;
+    void packFirstLineInto(Packable * p, bool full_uri) const override;
 
-    virtual bool sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *error);
+    bool sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *error) override;
 
-    virtual void hdrCacheInit();
+    void hdrCacheInit() override;
 
-    virtual bool inheritProperties(const Http::Message *);
+    bool inheritProperties(const Http::Message *) override;
 };
 
 class ConnStateData;

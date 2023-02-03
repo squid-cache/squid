@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -186,24 +186,24 @@ private:
     mutable SBuf absolute_;          ///< RFC 7230 section 5.3.2 absolute-URI
 };
 
-} // namespace AnyP
-
 inline std::ostream &
-operator <<(std::ostream &os, const AnyP::Uri &url)
+operator <<(std::ostream &os, const Uri &url)
 {
     // none means explicit empty string for scheme.
-    if (url.getScheme() != AnyP::PROTO_NONE)
+    if (url.getScheme() != PROTO_NONE)
         os << url.getScheme().image();
     os << ":";
 
     // no authority section on URN
-    if (url.getScheme() != AnyP::PROTO_URN)
+    if (url.getScheme() != PROTO_URN)
         os << "//" << url.authority();
 
     // path is what it is - including absent
     os << url.path();
     return os;
 }
+
+} // namespace AnyP
 
 /* Deprecated functions for Legacy code handling URLs */
 

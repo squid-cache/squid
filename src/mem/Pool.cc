@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,14 +11,13 @@
  */
 
 #include "squid.h"
+#include "mem/Pool.h"
 #include "mem/PoolChunked.h"
 #include "mem/PoolMalloc.h"
 #include "mem/Stats.h"
 
 #include <cassert>
 #include <cstring>
-
-#define FLUSH_LIMIT 1000    /* Flush memPool counters to memMeters after flush limit calls */
 
 extern time_t squid_curtime;
 
@@ -44,14 +43,14 @@ MemPools::MemPools()
         defaultIsChunked = atoi(cfg);
 }
 
-MemImplementingAllocator *
+Mem::Allocator *
 MemPools::create(const char *label, size_t obj_size)
 {
     // TODO Use ref-counted Pointer for pool lifecycle management
     // that is complicated by all the global static pool pointers.
     // For now leak these Allocator descendants on shutdown.
 
-    MemImplementingAllocator *newPool;
+    Mem::Allocator *newPool;
     if (defaultIsChunked)
         newPool = new MemPoolChunked(label, obj_size);
     else
@@ -66,77 +65,31 @@ MemPools::setDefaultPoolChunking(bool const &aBool)
     defaultIsChunked = aBool;
 }
 
-void
-MemImplementingAllocator::flushMeters()
-{
-    size_t calls;
-
-    calls = free_calls;
-    if (calls) {
-        meter.gb_freed.count += calls;
-        free_calls = 0;
-    }
-    calls = alloc_calls;
-    if (calls) {
-        meter.gb_allocated.count += calls;
-        alloc_calls = 0;
-    }
-    calls = saved_calls;
-    if (calls) {
-        meter.gb_saved.count += calls;
-        saved_calls = 0;
-    }
-}
-
-void
-MemImplementingAllocator::flushMetersFull()
-{
-    flushMeters();
-    getMeter().gb_allocated.bytes = getMeter().gb_allocated.count * obj_size;
-    getMeter().gb_saved.bytes = getMeter().gb_saved.count * obj_size;
-    getMeter().gb_freed.bytes = getMeter().gb_freed.count * obj_size;
-}
-
 /*
  * Updates all pool counters, and recreates TheMeter totals from all pools
  */
 void
 MemPools::flushMeters()
 {
+    // Does reset of the historic gb_* counters in TheMeter.
+    // This is okay as they get regenerated from pool historic counters.
     TheMeter.flush();
 
     for (const auto pool: pools) {
-        pool->flushMetersFull();
-        // are these TheMeter grow() operations or accumulated volumes ?
-        TheMeter.alloc += pool->getMeter().alloc.currentLevel() * pool->obj_size;
-        TheMeter.inuse += pool->getMeter().inuse.currentLevel() * pool->obj_size;
-        TheMeter.idle += pool->getMeter().idle.currentLevel() * pool->obj_size;
+        // ensure the pool's meter reflect the latest calls
+        pool->flushCounters();
 
-        TheMeter.gb_allocated.count += pool->getMeter().gb_allocated.count;
-        TheMeter.gb_saved.count += pool->getMeter().gb_saved.count;
-        TheMeter.gb_freed.count += pool->getMeter().gb_freed.count;
-        TheMeter.gb_allocated.bytes += pool->getMeter().gb_allocated.bytes;
-        TheMeter.gb_saved.bytes += pool->getMeter().gb_saved.bytes;
-        TheMeter.gb_freed.bytes += pool->getMeter().gb_freed.bytes;
+        // Accumulate current volumes (in bytes) across all pools.
+        TheMeter.alloc += pool->meter.alloc.currentLevel() * pool->objectSize;
+        TheMeter.inuse += pool->meter.inuse.currentLevel() * pool->objectSize;
+        TheMeter.idle += pool->meter.idle.currentLevel() * pool->objectSize;
+        // We cannot calculate the global peak because individual pools peak at different times.
+
+        // regenerate gb_* values from original pool stats
+        TheMeter.gb_allocated += pool->meter.gb_allocated;
+        TheMeter.gb_saved += pool->meter.gb_saved;
+        TheMeter.gb_freed += pool->meter.gb_freed;
     }
-}
-
-void *
-MemImplementingAllocator::alloc()
-{
-    if (++alloc_calls == FLUSH_LIMIT)
-        flushMeters();
-
-    return allocate();
-}
-
-void
-MemImplementingAllocator::freeOne(void *obj)
-{
-    assert(obj != nullptr);
-    (void) VALGRIND_CHECK_MEM_IS_ADDRESSABLE(obj, obj_size);
-    deallocate(obj, MemPools::GetInstance().idleLimit() == 0);
-    ++free_calls;
 }
 
 /*
@@ -164,32 +117,3 @@ MemPools::clean(time_t maxage)
             pool->clean(maxage);
     }
 }
-
-MemImplementingAllocator::MemImplementingAllocator(char const * const aLabel, const size_t aSize):
-    Mem::Allocator(aLabel),
-    alloc_calls(0),
-    free_calls(0),
-    saved_calls(0),
-    obj_size(RoundedSize(aSize))
-{
-    assert(aLabel != nullptr && aSize);
-}
-
-Mem::PoolMeter const &
-MemImplementingAllocator::getMeter() const
-{
-    return meter;
-}
-
-Mem::PoolMeter &
-MemImplementingAllocator::getMeter()
-{
-    return meter;
-}
-
-size_t
-MemImplementingAllocator::objectSize() const
-{
-    return obj_size;
-}
-

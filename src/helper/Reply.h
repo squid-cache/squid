@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -64,6 +64,8 @@ public:
     /// The stateful replies should include the reservation ID
     Helper::ReservationId reservationId;
 private:
+    static void CheckReceivedKey(const SBuf &, const SBuf &);
+
     void parseResponseKeys();
 
     /// Return an empty MemBuf.
@@ -73,9 +75,9 @@ private:
     MemBuf other_;
 };
 
-} // namespace Helper
+std::ostream &operator <<(std::ostream &, const Reply &);
 
-std::ostream &operator <<(std::ostream &os, const Helper::Reply &r);
+} // namespace Helper
 
 #endif /* _SQUID_SRC_HELPER_REPLY_H */
 
