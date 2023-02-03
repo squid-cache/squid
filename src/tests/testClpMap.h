@@ -19,6 +19,7 @@ class testClpMap: public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testMemoryCounter);
     CPPUNIT_TEST(testConstructor);
     CPPUNIT_TEST(Entries);
+    CPPUNIT_TEST(PutGetDelete);
     CPPUNIT_TEST_SUITE_END();
 
 protected:
@@ -30,7 +31,8 @@ protected:
     void testMemoryCounter();
     void testConstructor();
     void Entries();
-    void PutAndGet();
+    void PutGetDelete();
+
 public:
     void setUp() override;
 };

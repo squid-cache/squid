@@ -35,14 +35,20 @@ testClpMap::setUp()
 }
 
 void
-testClpMap::PutAndGet()
+testClpMap::PutGetDelete()
 {
-    testMap m(10);
+    testMap m(1024);
     addData(m, 10);
+    CPPUNIT_ASSERT_EQUAL(static_cast<const int *>(nullptr), m.get("notthere"));
+    CPPUNIT_ASSERT_EQUAL(1, *(m.get("1")));
+    CPPUNIT_ASSERT_EQUAL(9, *(m.get("9")));
+    m.add("1", 99);
+    CPPUNIT_ASSERT_EQUAL(99, *(m.get("1")));
+    m.del("1");
+    CPPUNIT_ASSERT_EQUAL(static_cast<const int *>(nullptr), m.get("1"));
 }
 
-void
-testClpMap::Entries()
+void testClpMap::Entries()
 {
     {
         testMap m(10*1024*1024, 10);
