@@ -92,6 +92,7 @@ Changes in squid-6.0.1 (06 Feb 2023):
 	- Rename ./configure option --with-libxml2 to --with-xml2
 	- Rename ./configure option --with-libcap to --with-cap
 	- Match ./configure --help parameter names with their defaults
+	- Remove broken -sha1 option from server_cert_fingerprint
 	- Fix typo in manager ACL
 	- Fix milliseconds in certain cache.log messages
 	- Fix ignore-cc/act-as-origin in wildcard split-stack ports
