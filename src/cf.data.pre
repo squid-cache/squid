@@ -6454,9 +6454,16 @@ DOC_START
 	to be erroneously cached unless the application designer
 	has taken the appropriate actions.
 
-	'Percent' is a percentage of the objects age (time since last
-	modification age) an object without explicit expiry time
-	will be considered fresh.
+	'Percent' is used to compute the expiration time of responses with a
+	Last-Modified header and without an explicit expiry time: When Squid
+	caches (or updates) such a response, the expiration time is effectively
+	set to the given percentage of the time passed since last modification.
+	For example, if such an object was cached 1000 minutes after its
+	Last-Modified time and percent is set to 20%, then the object will be
+	considered fresh for the first 200 minutes (1000*0.20=200) it spends in
+	the cache. The lm-factor term used in the algorithm sketch below is object
+	age divided by stable-time, where stable-time is the time between the last
+	object modification and the moment the object was cached (or updated).
 
 	'Max' is an upper limit on how long objects without an explicit
 	expiry time will be considered fresh. The value is also used
