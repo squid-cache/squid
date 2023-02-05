@@ -10,6 +10,12 @@ if ENABLE_RELEASE_DOCS
 
 DOC= release-$(SQUID_RELEASE)
 
+%.sgml: %.sgml.in
+	sed \
+        -e "s%[@]SQUID_VERSION[@]%$(VERSION)%g" \
+        -e "s%[@]SQUID_RELEASE[@]%$(SQUID_RELEASE)%g" \
+        < $< >$@
+
 %.txt: %.sgml
 	linuxdoc -B txt --filter $<
 
