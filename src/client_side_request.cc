@@ -2115,11 +2115,13 @@ ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe::Pointer)
         bpc.buf.consume(contentSize);
         bpc.checkIn();
     }
-
-    if (adaptedBodySource->exhausted())
-        endRequestSatisfaction();
-    // else wait for more body data
-}
+    if (adaptedBodySource->exhausted()) {
+        // XXX Setting receivedWholeAdaptedReply here is a workaround for a
+        // regression, as described in https://bugs.squid-cache.org/show_bug.cgi?id=5187#c6
+        receivedWholeAdaptedReply = true;
+         endRequestSatisfaction();
+    }
+    }
 
 void
 ClientHttpRequest::noteBodyProductionEnded(BodyPipe::Pointer)
