@@ -1,0 +1,16 @@
+11522.patch/src/client_side_request.cc
+--- squid-5.6/src/client_side_request.cc        2022-06-06 02:11:52.000000000 +0400
++++ squid-5.6.SHIELD-11522.patch/src/client_side_request.cc     2023-01-30 13:40:00.368686764 +0400
+@@ -2116,8 +2116,12 @@
+         bpc.checkIn();
+     }
+ 
+-    if (adaptedBodySource->exhausted())
++    if (adaptedBodySource->exhausted()) {
++        // XXX Setting receivedWholeAdaptedReply here is a workaround for a
++        // regression, as described in https://bugs.squid-cache.org/show_bug.cgi?id=5187#c6
++        receivedWholeAdaptedReply = true;
+         endRequestSatisfaction();
++    }
+     // else wait for more body data
+ }

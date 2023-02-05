@@ -1,0 +1,50 @@
+Work around in-call job invalidation bugs
+
+Bug 4981 is one known case of such invalidation, but this workaround is
+much broader than that bug context. We can speculate that architectural
+problems described in commit e3b6f15 are behind (some of) these bugs.
+
+diff --git a/src/base/AsyncJobCalls.h b/src/base/AsyncJobCalls.h
+index 608a029..5cd9ece 100644
+--- a/src/base/AsyncJobCalls.h
++++ b/src/base/AsyncJobCalls.h
+@@ -158,28 +158,39 @@ template<class Job>
+ bool
+ JobDialer<Job>::canDial(AsyncCall &call)
+ {
+     if (!job)
+         return call.cancel("job gone");
+ 
+     return job->canBeCalled(call);
+ }
+ 
+ template<class Job>
+ void
+ JobDialer<Job>::dial(AsyncCall &call)
+ {
+     job->callStart(call);
+ 
+     try {
+         doDial();
+     } catch (const std::exception &e) {
+         debugs(call.debugSection, 3,
+                HERE << call.name << " threw exception: " << e.what());
++        if (!job.valid()) {
++            debugs(call.debugSection, DBG_CRITICAL,
++               "BUG: job invalidated during " << call.name << " that threw exception: " << e.what());
++            return; // See also: Bug 4981, commit e3b6f15, and XXX in Http::Stream class description.
++        }
+         job->callException(e);
+     }
+ 
++    if (!job.valid()) {
++        debugs(call.debugSection, DBG_CRITICAL,
++           "BUG 4981: job invalidated during " << call.name);
++        return;
++    }
++
+     job->callEnd(); // may delete job
+ }
+ 
+ #endif /* SQUID_ASYNCJOBCALLS_H */
+ 
