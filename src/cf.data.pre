@@ -6454,9 +6454,9 @@ DOC_START
 	to be erroneously cached unless the application designer
 	has taken the appropriate actions.
 
-	'Percent' is a percentage of the objects age (time since last
-	modification age) an object without explicit expiry time
-	will be considered fresh.
+	'Percent' is used to compute the max-age value for responses
+	with a Last-Modified header and no Cache-Control:max-age nor Expires.
+	  Cache-Control:max-age = ( Date - Last-Modified ) * percent
 
 	'Max' is an upper limit on how long objects without an explicit
 	expiry time will be considered fresh. The value is also used
