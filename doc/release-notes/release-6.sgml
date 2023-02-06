@@ -11,6 +11,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <toc>
 
+
 <sect>Notice
 <p>The Squid Team are pleased to announce the release of Squid-6.0.1 for testing.
 
@@ -54,7 +55,7 @@ The Squid-6 change history can be <url url="https://github.com/squid-cache/squid
 	<item>Remove Outdated Tools
 </itemize>
 
-Most user-facing changes are reflected in squid.conf (see below).
+<p>Most user-facing changes are reflected in squid.conf (see below).
 
 <sect1>TLS ServerHello
 <p>Squid is now more lenient towards misconfigured <em>tls-cert=</em> file
@@ -80,7 +81,7 @@ Most user-facing changes are reflected in squid.conf (see below).
    for details.
 
 <sect1>Ban ACL key changes in ACLs
-<p>More info in the <url url="https://github.com/squid-cache/squid/commit/4a3b85322ce5a464175eb49ddb5be413794b25b8" name="commit description">
+<p>More info in the <url url="https://github.com/squid-cache/squid/commit/4a3b85322ce5a464175eb49ddb5be413794b25b8" name="commit description">.
 
 <p>Certain Squid ACLs can check the value of a specific key=value where
    the key name is configurable. These ACLs are unable to check multiple
@@ -94,7 +95,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <sect1>Block to-local Traffic
 <p>More info in the policy change <url url="https://github.com/squid-cache/squid/commit/f13e556e4ce743369dee4782b78c87d65580ab00" name="commit">
-   and the ACL creation <url url="https://github.com/squid-cache/squid/commit/6d2f8ed096bf5c013b8560451e41d8772c64ba66" name="commit">
+   and the ACL creation <url url="https://github.com/squid-cache/squid/commit/6d2f8ed096bf5c013b8560451e41d8772c64ba66" name="commit">.
 
 <p>This Squid introduces the <em>to_linklocal</em> ACL as pre-defined to
    match requests from 169.254.0.0/16 and fe80::/10.
@@ -111,7 +112,7 @@ Most user-facing changes are reflected in squid.conf (see below).
    Upgraded installations will continue to use their previous settings.
 
 <sect1>RFC 9211: HTTP Cache-Status support
-<p>See also <url url="https://www.rfc-editor.org/rfc/rfc9211" name="RFC 9211">
+<p>See also <url url="https://www.rfc-editor.org/rfc/rfc9211" name="RFC 9211">.
 
 <p>This HTTP header replaces <em>X-Cache</em> and <em>X-Cache-Lookup</em>
    which are no longer emitted by Squid. Any tools or management systems
@@ -120,7 +121,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <sect1>RFC 9111: Stop treating Warning specially
 <p>RFC 9111 obsoletes the Warning header, removing all specification
-requirements about it
+   requirements about it.
 
 <p>This Squid changes behaviour in regards to that header:
 <itemize>
@@ -151,15 +152,15 @@ requirements about it
 
 <sect1>Remove Gopher Protocol Support
 <p>With this change, Gopher requests will be handled like any other request
-with an unknown (to Squid) protocol. For example, HTTP requests with
-<em>gopher://</em> URL scheme result in ERR_UNSUP_REQ.
+   with an unknown (to Squid) protocol. For example, HTTP requests with
+   <em>gopher://</em> URL scheme result in ERR_UNSUP_REQ.
 
 <p>Default Squid configuration still considers TCP port 70 safe. The
-corresponding Safe_ports ACL rule has not been removed.
+   corresponding Safe_ports ACL rule has not been removed.
 
 <sect1>Removed Outdated Tools
 <p>We do not have enough resources/demand for maintaining these tools, they
-do require maintenance, and there are better tools available.
+   do require maintenance, and there are better tools available.
 
 <itemize>
 	<item><em>cache_diff</em> which has no users according to community
@@ -211,7 +212,7 @@ This section gives an account of those changes in three categories:
 <descrip>
 	<tag>paranoid_hit_validation</tag>
 	<p>Controls whether to perform extra internal checks when loading
-	   entries from the on-disk cache
+	   entries from the on-disk cache.
 
 	<tag>cache_log_message</tag>
 	<p>Configure logging options on a per-message basis, overriding the
@@ -224,7 +225,7 @@ This section gives an account of those changes in three categories:
 <descrip>
 	<tag>time units</tag>
 	<p>All directives accepting time values now accept a time unit suffix
-	   from nanosecond to decade
+	   from nanosecond to decade.
 
 	<tag>sslcrtvalidator_program</tag>
 	<p>New <em>ttl=infinity</em> option to disable TTL expiry on stored helper responses.
@@ -235,12 +236,15 @@ This section gives an account of those changes in three categories:
 	<p>New <em>busy_time</em> code to display the cumulative CPU time spent processing
 	   the request, excluding the time spent waiting for external resources.
 	   WARNING: this time is approximate and is known to have bugs and gaps,
-	   so consider it a lower bound
+	   so consider it a lower bound.
 	<p>New <em>request_attempts</em> code to display how many forwarding attempts were
 	   made for this request.
+	<p>Squid now adds <em>ABORTED</em> to values printed by the <em>Ss</e> code in more
+	   cases where a TCP Squid-to-server connection was closed prematurely.
 
 	<tag>server_cert_fingerprint</tag>
-	<p>Removed the broken <em>-sha</em> option. <em>SHA1</em> remains the default and only supported fingerprinting algorithm. Configuring it is unnecessary.
+	<p>Removed the broken <em>-sha</em> option. <em>SHA1</em> remains the default and
+	   only supported fingerprinting algorithm. Configuring it is unnecessary.
 </descrip>
 
 <sect1>Removed directives<label id="removeddirectives">
@@ -248,32 +252,20 @@ This section gives an account of those changes in three categories:
 <descrip>
 	<tag>announce_file</tag>
 	<p>Obsolete. Squid no longer provides functionality to enroll in the
-	   cache registration service
-</descrip>
-</p>
-<p>
-<descrip>
+	   cache registration service.
+
 	<tag>announce_host</tag>
 	<p>Obsolete. Squid no longer provides functionality to enroll in the
-	   cache registration service
-</descrip>
-</p>
-<p>
-<descrip>
+	   cache registration service.
+
 	<tag>announce_period</tag>
 	<p>Obsolete. Squid no longer provides functionality to enroll in the
-	   cache registration service
-</descrip>
-</p>
-<p>
-<descrip>
+	   cache registration service.
+
 	<tag>announce_port</tag>
 	<p>Obsolete. Squid no longer provides functionality to enroll in the
-	   cache registration service
-</descrip>
-</p>
-<p>
-<descrip>
+	   cache registration service.
+
 	<tag>request_entities</tag>
 	<p>Obsolete. Squid accepts an entity (aka payload, body) on
 	   HTTP/1.1 GET or HEAD requests when a Content-Length or
@@ -304,7 +296,6 @@ This section gives an account of those changes in three categories:
 	<item><ref id="removedoptions" name="Removed options">
 </itemize>
 
-
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
@@ -323,17 +314,7 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<tag>logformat</tag>
-	<p>More logged <em>Ss</em> code values may contain an <em>_ABORTED</em>
-	suffix because Squid now adds that suffix in more cases where a TCP
-	Squid-to-server connection was closed prematurely (e.g., an EOF in the
-	middle of a chunked HTTP response body transfer). In general, tools
-	processing <em>Ss</em> code values should treat each value as an
-	underscore-delimited list of tags rather than an enumeration of a few
-	hard-coded values.
-
-	<p>This change affects all <em>Ss</em> code uses, not just those specific to
-	the <em>logformat</em> directive.
+	<p>There are no ./configure options changed.
 
 </descrip>
 </p>
@@ -373,7 +354,7 @@ This section gives an account of those changes in three categories:
 
 <sect>Regressions since Squid-2.7
 
-<p>Some squid.conf options which were available in Squid-2.7 are not yet available in Squid-5
+<p>Some squid.conf options which were available in Squid-2.7 are not yet available in Squid-6.
 
 <p>If you need something to do then porting one of these from Squid-2 is most welcome.
 
@@ -422,6 +403,7 @@ This section gives an account of those changes in three categories:
 	<p>Not yet ported from 2.7
 
 </descrip>
+
 
 <sect>Copyright
 <p>
