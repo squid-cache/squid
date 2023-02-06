@@ -15,6 +15,7 @@ DOC= release-$(SQUID_RELEASE)
         -e "s%[@]SQUID_VERSION[@]%$(VERSION)%g" \
         -e "s%[@]SQUID_RELEASE[@]%$(SQUID_RELEASE)%g" \
         < $< >$@
+	test `grep -c "@SQUID" $@` -eq 0
 
 %.txt: %.sgml
 	linuxdoc -B txt --filter $<
