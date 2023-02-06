@@ -14,6 +14,7 @@ DOC= release-$(SQUID_RELEASE)
 	sed \
         -e "s%[@]SQUID_VERSION[@]%$(VERSION)%g" \
         -e "s%[@]SQUID_RELEASE[@]%$(SQUID_RELEASE)%g" \
+        -e "s%[@]SQUID_RELEASE_OLD[@]%$$(( $(SQUID_RELEASE) - 1 ))%g" \
         < $< >$@
 	test `grep -c "@SQUID" $@` -eq 0
 
