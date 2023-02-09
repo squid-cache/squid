@@ -1,21 +1,20 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 6.0.1 release notes</title>
+<title>Squid @SQUID_VERSION@ release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
-This document contains the release notes for version 6 of Squid.
+This document contains the release notes for version @SQUID_RELEASE@ of Squid.
 Squid is a WWW Cache application developed by the National Laboratory
 for Applied Network Research and members of the Web Caching community.
 </abstract>
 
 <toc>
 
-
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-6.0.1 for testing.
+<p>The Squid Team are pleased to announce the release of Squid-@SQUID_VERSION@ for testing.
 
-This new release is available for download from <url url="http://www.squid-cache.org/Versions/v6/"> or the
+This new release is available for download from <url url="http://www.squid-cache.org/Versions/v@SQUID_RELEASE@/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
 
 <p>While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.
@@ -25,7 +24,7 @@ This new release is available for download from <url url="http://www.squid-cache
 
 <sect1>Known issues
 <p>Although this release is deemed good enough for use in many setups, please note the existence of
-<url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=6" name="open bugs against Squid-6">.
+<url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=@SQUID_RELEASE@" name="open bugs against Squid-@SQUID_RELEASE@">.
 
 <p>Support for compiling on HPUX with the native HP <em>xcc</em> compiler has been removed.
   To build on that OS/compiler combination, it is possible to pass these environment variables
@@ -34,13 +33,13 @@ This new release is available for download from <url url="http://www.squid-cache
 <p>This release adds a dependency on C++17 support in any compiler used to build Squid.
   GCC 8+ and Clang 8+ support C++17.
 
-<sect1>Changes since earlier releases of Squid-6
+<sect1>Changes since earlier releases of Squid-@SQUID_RELEASE@
 <p>
-The Squid-6 change history can be <url url="https://github.com/squid-cache/squid/commits/v6" name="viewed here">.
+The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squid-cache/squid/commits/v@SQUID_RELEASE@" name="viewed here">.
 
 
-<sect>Major new features since Squid-5
-<p>Squid-6 represents a new feature release above Squid-5.
+<sect>Major new features since Squid-@SQUID_RELEASE_OLD@
+<p>Squid-@SQUID_RELEASE@ represents a new feature release above Squid-@SQUID_RELEASE_OLD@.
 
 <p>The most important of these new features are:
 <itemize>
@@ -196,7 +195,7 @@ The Squid-6 change history can be <url url="https://github.com/squid-cache/squid
 </itemize>
 
 
-<sect>Changes to squid.conf since Squid-5
+<sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
 <p>
 This section gives an account of those changes in three categories:
 
@@ -286,7 +285,7 @@ This section gives an account of those changes in three categories:
 </descrip>
 
 
-<sect>Changes to ./configure options since Squid-5
+<sect>Changes to ./configure options since Squid-@SQUID_RELEASE_OLD@
 <p>
 This section gives an account of those changes in three categories:
 
@@ -354,7 +353,7 @@ This section gives an account of those changes in three categories:
 
 <sect>Regressions since Squid-2.7
 
-<p>Some squid.conf options which were available in Squid-2.7 are not yet available in Squid-6.
+<p>Some squid.conf options which were available in Squid-2.7 are not yet available in Squid-@SQUID_RELEASE@.
 
 <p>If you need something to do then porting one of these from Squid-2 is most welcome.
 
