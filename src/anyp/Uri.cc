@@ -576,7 +576,7 @@ AnyP::Uri::authority(bool requirePort) const
         authorityHttp_ = authorityWithPort_;
 
         if (port().has_value()) {
-            authorityWithPort_.appendf(":%hu", port().value());
+            authorityWithPort_.appendf(":%hu", *port());
             // authorityHttp_ only has :port for known non-default ports
             if (port() != getScheme().defaultPort())
                 authorityHttp_ = authorityWithPort_;
