@@ -3197,7 +3197,7 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, const 
     }
 
     debugs(33, 2, "Request tunneling for " << reason);
-    ClientHttpRequest *http = buildFakeRequest(connectHost, *connectPort, payload);
+    const auto http = buildFakeRequest(connectHost, *connectPort, payload);
     HttpRequest::Pointer request = http->request;
     request->flags.forceTunnel = true;
     http->calloutContext = new ClientRequestContext(http);
