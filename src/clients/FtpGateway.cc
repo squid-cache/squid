@@ -143,7 +143,8 @@ public:
     void checkUrlpath();
     void buildTitleUrl();
     void writeReplyBody(const char *, size_t len);
-    void printfReplyBody(const char *fmt, ...);
+    // unused
+    void printfReplyBody(const char *fmt, ...) PRINTF_FORMAT_ARG2;
     void completeForwarding() override;
     void processHeadResponse();
     void processReplyBody() override;
