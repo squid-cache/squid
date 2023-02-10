@@ -376,7 +376,7 @@ acl_ip_data::FactoryParse(const char *t)
         if (hp == nullptr) {
             delete q;
             if (strcmp(addr1, "::1") == 0) {
-                debugs(28, Important(68), "aclIpParseIpData: IPv6 has not been enabled in host DNS resolver.");
+                debugs(28, DBG_IMPORTANT, "aclIpParseIpData: IPv6 has not been enabled in host DNS resolver.");
             } else {
                 debugs(28, DBG_CRITICAL, "ERROR: aclIpParseIpData: Bad host/IP: '" << addr1 <<
                        "' in '" << t << "', flags=" << hints.ai_flags <<
