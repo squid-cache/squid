@@ -239,7 +239,7 @@ This section gives an account of those changes in three categories:
 	   so consider it a lower bound.
 	<p>New <em>request_attempts</em> code to display how many forwarding attempts were
 	   made for this request.
-	<p>Squid now adds <em>ABORTED</em> to values printed by the <em>Ss</e> code in more
+	<p>Squid now adds <em>ABORTED</em> to values printed by the <em>Ss</em> code in more
 	   cases where a TCP Squid-to-server connection was closed prematurely.
 
 	<tag>server_cert_fingerprint</tag>
