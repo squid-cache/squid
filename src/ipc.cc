@@ -20,6 +20,9 @@
 #include "SquidIpc.h"
 #include "tools.h"
 
+#include <chrono>
+#include <thread>
+
 static const char *hello_string = "hi there\n";
 #ifndef HELLO_BUF_SZ
 #define HELLO_BUF_SZ 32
@@ -305,14 +308,8 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
         fd_table[pwfd].flags.ipc = 1;
 
-        if (Config.sleep_after_fork) {
-            /* XXX emulation of usleep() */
-
-            struct timeval sl;
-            sl.tv_sec = Config.sleep_after_fork / 1000000;
-            sl.tv_usec = Config.sleep_after_fork % 1000000;
-            select(0, nullptr, nullptr, nullptr, &sl);
-        }
+        if (Config.sleep_after_fork)
+            std::this_thread::sleep_for(std::chrono::microseconds(Config.sleep_after_fork));
 
         return pid;
     }
