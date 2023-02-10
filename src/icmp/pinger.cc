@@ -48,7 +48,8 @@
 #include "Icmp6.h"
 #include "IcmpPinger.h"
 #include "ip/tools.h"
-#include "time/gadgets.h"
+
+#include <chrono>
 
 #if HAVE_SYS_CAPABILITY_H
 #include <sys/capability.h>
@@ -109,9 +110,6 @@ main(int, char **)
     int x;
     int max_fd = 0;
 
-    struct timeval tv;
-    time_t last_check_time = 0;
-
     /*
      * cevans - do this first. It grabs a raw socket. After this we can
      * drop privs
@@ -121,8 +119,6 @@ main(int, char **)
     int squid_link = -1;
 
     Debug::NameThisHelper("pinger");
-
-    getCurrentTime();
 
     // determine IPv4 or IPv6 capabilities before using sockets.
     Ip::ProbeTransport();
@@ -198,11 +194,10 @@ main(int, char **)
     }
 #endif
 
-    last_check_time = squid_curtime;
+    auto last_check_time = std::chrono::system_clock::now();
 
     for (;;) {
-        tv.tv_sec = PINGER_TIMEOUT;
-        tv.tv_usec = 0;
+        struct timeval tv = { .tv_sec = PINGER_TIMEOUT, .tv_usec = 0 };
         FD_ZERO(&R);
         if (icmp4_worker >= 0) {
             FD_SET(icmp4_worker, &R);
@@ -213,7 +208,6 @@ main(int, char **)
 
         FD_SET(squid_link, &R);
         x = select(max_fd+1, &R, nullptr, nullptr, &tv);
-        getCurrentTime();
 
         if (x < 0) {
             int xerrno = errno;
@@ -233,14 +227,14 @@ main(int, char **)
             icmp4.Recv();
         }
 
-        if (PINGER_TIMEOUT + last_check_time < squid_curtime) {
+        if ((last_check_time + PINGER_TIMEOUT) < std::chrono::system_clock::now()) {
             if (send(LINK_TO_SQUID, &tv, 0, 0) < 0) {
                 debugs(42, DBG_CRITICAL, "Closing. No requests in last " << PINGER_TIMEOUT << " seconds.");
                 control.Close();
                 exit(EXIT_FAILURE);
             }
 
-            last_check_time = squid_curtime;
+            last_check_time = std::chrono::system_clock::now();
         }
     }
 
