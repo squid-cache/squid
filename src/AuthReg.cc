@@ -32,18 +32,18 @@
 void
 Auth::Init()
 {
-    debugs(29, Important(68), "Startup: Initializing Authentication Schemes ...");
+    debugs(29, Important(69), "Startup: Initializing Authentication Schemes ...");
 #if HAVE_AUTH_MODULE_BASIC
     Assure(Basic::Scheme::GetInstance());
-    debugs(29, Important(69), "Startup: Initialized Authentication Scheme 'basic'");
+    debugs(29, Important(70), "Startup: Initialized Authentication Scheme 'basic'");
 #endif
 #if HAVE_AUTH_MODULE_DIGEST
     Assure(Digest::Scheme::GetInstance());
-    debugs(29, Important(70), "Startup: Initialized Authentication Scheme 'digest'");
+    debugs(29, Important(71), "Startup: Initialized Authentication Scheme 'digest'");
 #endif
 #if HAVE_AUTH_MODULE_NEGOTIATE
     Assure(Negotiate::Scheme::GetInstance());
-    debugs(29, Important(71), "Startup: Initialized Authentication Scheme 'negotiate'");
+    debugs(29, Important(72), "Startup: Initialized Authentication Scheme 'negotiate'");
 #endif
 }
 
