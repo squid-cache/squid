@@ -443,7 +443,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
     int err_count = 0;
     int is_pipe = 0;
 
-    debugs(3, Important(74), "Processing Configuration File: " << file_name << " (depth " << depth << ")");
+    debugs(3, Important(73), "Processing Configuration File: " << file_name << " (depth " << depth << ")");
     if (depth > 16) {
         fatalf("WARNING: can't include %s: includes are nested too deeply (>16)!\n", file_name);
         return 1;
@@ -961,7 +961,7 @@ configDoConfigure(void)
 #endif
 
     if (Security::ProxyOutgoingConfig.encryptTransport) {
-        debugs(3, Important(75), "Initializing https:// proxy context");
+        debugs(3, Important(74), "Initializing https:// proxy context");
         Config.ssl_client.sslContext = Security::ProxyOutgoingConfig.createClientContext(false);
         if (!Config.ssl_client.sslContext) {
 #if USE_OPENSSL
@@ -982,7 +982,7 @@ configDoConfigure(void)
             p->secure.sslDomain = p->host;
 
         if (p->secure.encryptTransport) {
-            debugs(3, Important(76), "Initializing TLS context for cache_peer " << *p);
+            debugs(3, Important(75), "Initializing TLS context for cache_peer " << *p);
             p->sslContext = p->secure.createClientContext(true);
             if (!p->sslContext) {
                 debugs(3, DBG_CRITICAL, "ERROR: Could not initialize TLS context for cache_peer " << *p);
@@ -995,7 +995,7 @@ configDoConfigure(void)
     for (AnyP::PortCfgPointer s = HttpPortList; s != nullptr; s = s->next) {
         if (!s->secure.encryptTransport)
             continue;
-        debugs(3, Important(77), "Initializing " << AnyP::UriScheme(s->transport.protocol) << "_port " << s->s << " TLS contexts");
+        debugs(3, Important(76), "Initializing " << AnyP::UriScheme(s->transport.protocol) << "_port " << s->s << " TLS contexts");
         s->secure.initServerContexts(*s);
     }
 
