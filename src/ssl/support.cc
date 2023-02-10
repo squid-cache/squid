@@ -18,6 +18,7 @@
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
 #include "anyp/Uri.h"
+#include "debug/Messages.h"
 #include "fatal.h"
 #include "fd.h"
 #include "fde.h"
@@ -727,7 +728,7 @@ Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &pee
         // TODO: support loading multiple cert/key pairs
         auto &keys = peer.certs.front();
         if (!keys.certFile.isEmpty()) {
-            debugs(83, DBG_IMPORTANT, "Using certificate in " << keys.certFile);
+            debugs(83, Important(78), "Using certificate in " << keys.certFile);
 
             const char *certfile = keys.certFile.c_str();
             if (!SSL_CTX_use_certificate_chain_file(ctx.get(), certfile)) {

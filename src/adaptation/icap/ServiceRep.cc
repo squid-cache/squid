@@ -18,6 +18,7 @@
 #include "base/TextException.h"
 #include "comm/Connection.h"
 #include "ConfigParser.h"
+#include "debug/Messages.h"
 #include "debug/Stream.h"
 #include "fde.h"
 #include "globals.h"
@@ -80,7 +81,7 @@ Adaptation::Icap::ServiceRep::finalize()
         writeableCfg().secure.encryptTransport = true;
 
     if (cfg().secure.encryptTransport) {
-        debugs(3, DBG_IMPORTANT, "Initializing service " << cfg().resource << " SSL context");
+        debugs(3, Important(72), "Initializing service " << cfg().resource << " SSL context");
         sslContext = writeableCfg().secure.createClientContext(true);
     }
 
