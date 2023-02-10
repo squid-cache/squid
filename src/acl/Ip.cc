@@ -13,6 +13,7 @@
 #include "acl/Ip.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
+#include "debug/Messages.h"
 #include "debug/Stream.h"
 #include "ip/tools.h"
 #include "MemBuf.h"
@@ -375,7 +376,7 @@ acl_ip_data::FactoryParse(const char *t)
         if (hp == nullptr) {
             delete q;
             if (strcmp(addr1, "::1") == 0) {
-                debugs(28, DBG_IMPORTANT, "aclIpParseIpData: IPv6 has not been enabled in host DNS resolver.");
+                debugs(28, Important(80), "aclIpParseIpData: IPv6 has not been enabled in host DNS resolver.");
             } else {
                 debugs(28, DBG_CRITICAL, "ERROR: aclIpParseIpData: Bad host/IP: '" << addr1 <<
                        "' in '" << t << "', flags=" << hints.ai_flags <<
