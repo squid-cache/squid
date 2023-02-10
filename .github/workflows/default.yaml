@@ -106,6 +106,7 @@ jobs:
           sudo sed --in-place -E 's/# (deb-src.*updates main)/  \1/g' /etc/apt/sources.list
           sudo apt-get --quiet=2 update
           sudo apt-get --quiet=2 build-dep squid
+          sudo apt-get --quiet=2 install linuxdoc-tools
 
       - name: Checkout sources
         uses: actions/checkout@v3
