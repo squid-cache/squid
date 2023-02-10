@@ -73,7 +73,7 @@ public:
 };
 
 /// Global configuration for DebugMessageLevel() (where/when supported).
-inline static DebugMessages *DebugMessagesConfig = nullptr;
+inline DebugMessages *DebugMessagesConfig = nullptr;
 
 // Using a template allows us to check message ID range at compile time.
 /// \returns configured debugging level for the given message or defaultLevel
