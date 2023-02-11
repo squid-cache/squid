@@ -21,7 +21,6 @@
 #include "auth/negotiate/Scheme.h"
 #endif
 
-#include "base/Assure.h"
 #include "debug/Messages.h"
 #include "debug/Stream.h"
 
@@ -34,16 +33,16 @@ Auth::Init()
 {
     debugs(29, Important(68), "Startup: Initializing Authentication Schemes ...");
 #if HAVE_AUTH_MODULE_BASIC
-    Assure(Basic::Scheme::GetInstance());
-    debugs(29, Important(69), "Startup: Initialized Authentication Scheme 'basic'");
+    static const char *basic_type = Auth::Basic::Scheme::GetInstance()->type();
+    debugs(29, 2, "Startup: Initialized Authentication Scheme '" << basic_type << "'");
 #endif
 #if HAVE_AUTH_MODULE_DIGEST
-    Assure(Digest::Scheme::GetInstance());
-    debugs(29, Important(70), "Startup: Initialized Authentication Scheme 'digest'");
+    static const char *digest_type = Auth::Digest::Scheme::GetInstance()->type();
+    debugs(29, 2, "Startup: Initialized Authentication Scheme '" << digest_type << "'");
 #endif
 #if HAVE_AUTH_MODULE_NEGOTIATE
-    Assure(Negotiate::Scheme::GetInstance());
-    debugs(29, Important(71), "Startup: Initialized Authentication Scheme 'negotiate'");
+    static const char *negotiate_type = Auth::Negotiate::Scheme::GetInstance()->type();
+    debugs(29, 2, "Startup: Initialized Authentication Scheme '" << negotiate_type << "'");
 #endif
 }
 
