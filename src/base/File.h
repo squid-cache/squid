@@ -57,7 +57,7 @@ private:
 #else
     int flockMode = LOCK_UN; ///< 2nd flock(2) parameter
 #endif
-    const unsigned int RetryGapUsec = 500000; ///< pause before each lock retry
+    const unsigned int retryGapUsec = 500000; ///< pause before each lock retry
     unsigned int lockAttempts = 0; ///< how many times to try locking
     bool openByRoot = false;
 };
