@@ -19,7 +19,6 @@
 #include "comm/Connection.h"
 #include "ConfigParser.h"
 #include "debug/Messages.h"
-#include "debug/Stream.h"
 #include "fde.h"
 #include "globals.h"
 #include "HttpReply.h"

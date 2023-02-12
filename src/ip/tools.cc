@@ -10,7 +10,6 @@
 
 #include "squid.h"
 #include "debug/Messages.h"
-#include "debug/Stream.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 
