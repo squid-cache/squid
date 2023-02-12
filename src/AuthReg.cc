@@ -21,7 +21,6 @@
 #include "auth/negotiate/Scheme.h"
 #endif
 
-#include "debug/Messages.h"
 #include "debug/Stream.h"
 
 /**
