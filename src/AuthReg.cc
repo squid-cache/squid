@@ -31,7 +31,7 @@
 void
 Auth::Init()
 {
-    debugs(29, Important(68), "Startup: Initializing Authentication Schemes ...");
+    debugs(29, 2, "Startup: Initializing Authentication Schemes ...");
 #if HAVE_AUTH_MODULE_BASIC
     static const char *basic_type = Auth::Basic::Scheme::GetInstance()->type();
     debugs(29, 2, "Startup: Initialized Authentication Scheme '" << basic_type << "'");
