@@ -49,6 +49,7 @@
 #include "Icmp6.h"
 #include "IcmpPinger.h"
 #include "ip/tools.h"
+#include "time/gadgets.h"
 
 #if HAVE_SYS_CAPABILITY_H
 #include <sys/capability.h>
@@ -118,6 +119,8 @@ main(int, char **)
     int squid_link = -1;
 
     Debug::NameThisHelper("pinger");
+
+    getCurrentTime();
 
     // determine IPv4 or IPv6 capabilities before using sockets.
     Ip::ProbeTransport();
@@ -208,6 +211,7 @@ main(int, char **)
         FD_SET(squid_link, &R);
         Stopwatch timer;
         x = select(max_fd+1, &R, nullptr, nullptr, &tv);
+        getCurrentTime();
 
         if (x < 0) {
             int xerrno = errno;
