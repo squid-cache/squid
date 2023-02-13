@@ -194,7 +194,9 @@ main(int, char **)
 #endif
 
     for (;;) {
-        struct timeval tv = { .tv_sec = PINGER_TIMEOUT, .tv_usec = 0 };
+        struct timeval tv;
+        tv.tv_sec = PINGER_TIMEOUT;
+        tv.tv_usec = 0;
         FD_ZERO(&R);
         if (icmp4_worker >= 0) {
             FD_SET(icmp4_worker, &R);
