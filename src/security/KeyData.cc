@@ -8,7 +8,6 @@
 
 #include "squid.h"
 #include "anyp/PortCfg.h"
-#include "debug/Messages.h"
 #include "fatal.h"
 #include "security/Certificate.h"
 #include "security/KeyData.h"
@@ -21,7 +20,7 @@
 bool
 Security::KeyData::loadCertificates()
 {
-    debugs(83, Important(74), "Using certificate in " << certFile);
+    debugs(83, 2, "from " << certFile);
     cert.reset(); // paranoid: ensure cert is unset
 
 #if USE_OPENSSL
@@ -137,7 +136,7 @@ Security::KeyData::loadCertificates()
 bool
 Security::KeyData::loadX509PrivateKeyFromFile()
 {
-    debugs(83, Important(75), "Using key in " << privateKeyFile);
+    debugs(83, 2, "from " << privateKeyFile);
 
 #if USE_OPENSSL
     const char *keyFilename = privateKeyFile.c_str();
