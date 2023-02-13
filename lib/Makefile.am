@@ -68,8 +68,7 @@ libmiscutil_la_SOURCES = \
 	getfullhostname.c \
 	heap.c \
 	radix.c \
-	util.c \
-	xusleep.c
+	util.c
 
 TESTS += tests/testRFC1738
 
