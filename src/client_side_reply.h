@@ -99,7 +99,6 @@ private:
     void sendStreamError(StoreIOBuffer const &result);
     void pushStreamData(StoreIOBuffer const &result, char *source);
     clientStreamNode * next() const;
-    StoreIOBuffer holdingBuffer;
     HttpReply *reply;
     void processReplyAccess();
     static ACLCB ProcessReplyAccessResult;
