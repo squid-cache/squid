@@ -44,12 +44,11 @@
 
 #if USE_ICMP
 
+#include "base/Stopwatch.h"
 #include "Icmp4.h"
 #include "Icmp6.h"
 #include "IcmpPinger.h"
 #include "ip/tools.h"
-
-#include <chrono>
 
 #if HAVE_SYS_CAPABILITY_H
 #include <sys/capability.h>
@@ -194,8 +193,6 @@ main(int, char **)
     }
 #endif
 
-    auto last_check_time = std::chrono::system_clock::now();
-
     for (;;) {
         struct timeval tv = { .tv_sec = PINGER_TIMEOUT, .tv_usec = 0 };
         FD_ZERO(&R);
@@ -207,6 +204,7 @@ main(int, char **)
         }
 
         FD_SET(squid_link, &R);
+        Stopwatch timer;
         x = select(max_fd+1, &R, nullptr, nullptr, &tv);
 
         if (x < 0) {
@@ -227,14 +225,12 @@ main(int, char **)
             icmp4.Recv();
         }
 
-        if ((last_check_time + PINGER_TIMEOUT) < std::chrono::system_clock::now()) {
+        if (PINGER_TIMEOUT <= timer.total().count()) {
             if (send(LINK_TO_SQUID, &tv, 0, 0) < 0) {
-                debugs(42, DBG_CRITICAL, "Closing. No requests in last " << PINGER_TIMEOUT << " seconds.");
+                debugs(42, DBG_CRITICAL, "Closing. No requests in last " << timer.total().count() << " seconds.");
                 control.Close();
                 exit(EXIT_FAILURE);
             }
-
-            last_check_time = std::chrono::system_clock::now();
         }
     }
 
