@@ -10604,8 +10604,6 @@ DOC_START
 	processes, these sleep delays will add up and your
 	Squid will not service requests for some amount of time
 	until all the child processes have been started.
-	On Windows value less then 1000 (1 milliseconds) are
-	rounded to 1000.
 DOC_END
 
 NAME: windows_ipaddrchangemonitor
