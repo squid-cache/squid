@@ -163,6 +163,12 @@ SGI - http://www.sgi.com/
 	SGI has provided hardware donations for Squid developers.
 
 @Squid-2.3:
+National Laboratory for Applied Network Research
+
+	NLANR funded the early development of Squid from 1996-2005
+	with features for integration with the IRCache network
+	measurement project and High Performance Networking.
+
 The National Science Foundation
 
 	The NSF was the primary funding source for Squid development
