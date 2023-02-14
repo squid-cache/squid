@@ -26,7 +26,6 @@ public:
     RegexPattern() = delete;
     RegexPattern(RegexPattern &&) = delete; // no copying of any kind
     RegexPattern(const SBuf &aPattern, const std::regex::flag_type aFlags);
-    ~RegexPattern() = default;
 
     /// whether the regex differentiates letter case
     bool caseSensitive() const { return !(regex.flags() & std::regex::icase); }
