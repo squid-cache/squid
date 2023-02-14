@@ -66,8 +66,6 @@
 
 #include "fde.h"
 
-#define PINGER_TIMEOUT 5
-
 /* windows uses the control socket for feedback to squid */
 #define LINK_TO_SQUID squid_link
 
@@ -85,12 +83,13 @@ Win32__WSAFDIsSet(int fd, fd_set FAR * set)
 
 #else
 
-#define PINGER_TIMEOUT 10
-
 /* non-windows use STDOUT for feedback to squid */
 #define LINK_TO_SQUID   1
 
 #endif  /* _SQUID_WINDOWS_ */
+
+using namespace std::literals::chrono_literals;
+static const std::chrono::seconds PingerTimeout = 10s;
 
 // ICMP Engines are declared global here so they can call each other easily.
 IcmpPinger control;
@@ -198,7 +197,7 @@ main(int, char **)
 
     for (;;) {
         struct timeval tv;
-        tv.tv_sec = PINGER_TIMEOUT;
+        tv.tv_sec = PingerTimeout.count();
         tv.tv_usec = 0;
         FD_ZERO(&R);
         if (icmp4_worker >= 0) {
@@ -233,7 +232,7 @@ main(int, char **)
         }
 
         const auto delay = std::chrono::duration_cast<std::chrono::seconds>(timer.total());
-        if (delay.count() >= PINGER_TIMEOUT) {
+        if (delay.count() >= PingerTimeout.count()) {
             if (send(LINK_TO_SQUID, &tv, 0, 0) < 0) {
                 debugs(42, DBG_CRITICAL, "Closing. No requests in last " << delay.count() << " seconds.");
                 control.Close();
