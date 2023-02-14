@@ -231,9 +231,10 @@ main(int, char **)
             icmp4.Recv();
         }
 
-        if (PINGER_TIMEOUT <= timer.total().count()) {
+        const auto waited = std::chrono::duration_cast<std::chrono::seconds>(timer.total()).count();
+        if (waited >= PINGER_TIMEOUT) {
             if (send(LINK_TO_SQUID, &tv, 0, 0) < 0) {
-                debugs(42, DBG_CRITICAL, "Closing. No requests in last " << timer.total().count() << " seconds.");
+                debugs(42, DBG_CRITICAL, "Closing. No requests in last " << waited << " seconds.");
                 control.Close();
                 exit(EXIT_FAILURE);
             }
