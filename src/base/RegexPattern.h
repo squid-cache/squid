@@ -45,7 +45,7 @@ private:
     /// a regular expression in the text form
     SBuf pattern;
 
-    /// a "compiled pattern buffer"
+    /// compiled regular expression
     std::regex regex;
 };
 
