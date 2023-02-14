@@ -331,7 +331,7 @@ File::lock(const FileOpeningConfig &cfg)
                    " more time(s) after a failure: " << ex.what());
         }
         Must(attemptsLeft); // the catch statement handles the last attempt
-        xusleep(cfg.RetryGapUsec);
+        xusleep(cfg.retryGapUsec);
     }
     debugs(54, 9, "disabled");
 }
