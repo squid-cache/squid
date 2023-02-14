@@ -332,7 +332,7 @@ File::lock(const FileOpeningConfig &cfg)
                    " more time(s) after a failure: " << ex.what());
         }
         Must(attemptsLeft); // the catch statement handles the last attempt
-        std::this_thread::sleep_for(std::chrono::microseconds(cfg.RetryGapUsec));
+        std::this_thread::sleep_for(std::chrono::microseconds(cfg.retryGapUsec));
     }
     debugs(54, 9, "disabled");
 }
