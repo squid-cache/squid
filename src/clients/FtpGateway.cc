@@ -143,7 +143,6 @@ public:
     void checkUrlpath();
     void buildTitleUrl();
     void writeReplyBody(const char *, size_t len);
-    void printfReplyBody(const char *fmt, ...);
     void completeForwarding() override;
     void processHeadResponse();
     void processReplyBody() override;
@@ -2610,18 +2609,6 @@ Ftp::UrlWith2f(HttpRequest * request)
     }
 
     return request->effectiveRequestUri();
-}
-
-void
-Ftp::Gateway::printfReplyBody(const char *fmt, ...)
-{
-    va_list args;
-    va_start (args, fmt);
-    static char buf[4096];
-    buf[0] = '\0';
-    vsnprintf(buf, 4096, fmt, args);
-    writeReplyBody(buf, strlen(buf));
-    va_end(args);
 }
 
 /**
