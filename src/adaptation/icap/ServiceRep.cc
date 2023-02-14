@@ -80,7 +80,7 @@ Adaptation::Icap::ServiceRep::finalize()
         writeableCfg().secure.encryptTransport = true;
 
     if (cfg().secure.encryptTransport) {
-        debugs(3, DBG_IMPORTANT, "Initializing service " << cfg().resource << " SSL context");
+        debugs(3, 2, "initializing service " << cfg().resource << " SSL context");
         sslContext = writeableCfg().secure.createClientContext(true);
     }
 
