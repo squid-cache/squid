@@ -441,7 +441,7 @@ main(int argc, char *argv[])
         if (const auto at = strrchr(url, '@')) {
             if (!OriginAuthorization.user) {
                 std::cerr << "ERROR: Embedding a password in a cache manager command requires " <<
-                    "providing a username with -U: mgr:" << t << std::endl;
+                          "providing a username with -U: mgr:" << t << std::endl;
                 exit(EXIT_FAILURE);
             }
             *at = 0; // send password in Authorization header, not URL
