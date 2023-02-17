@@ -644,24 +644,6 @@ store_client::readHeader(char const *buf, ssize_t len)
     fileRead();
 }
 
-int
-storeClientCopyPending(store_client * sc, StoreEntry * e, void *data)
-{
-#if STORE_CLIENT_LIST_DEBUG
-    assert(sc == storeClientListSearch(e->mem_obj, data));
-#else
-    (void)data;
-#endif
-
-    assert(sc);
-    assert(sc->entry == e);
-
-    if (!sc->_callback.pending())
-        return 0;
-
-    return 1;
-}
-
 /*
  * This routine hasn't been optimised to take advantage of the
  * passed sc. Yet.
