@@ -54,7 +54,7 @@ Fs::Ufs::UFSStrategy::unlinkFile(char const *path)
 }
 
 StoreIOState::Pointer
-Fs::Ufs::UFSStrategy::open(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB *,
+Fs::Ufs::UFSStrategy::open(SwapDir * const SD, StoreEntry * const e,
                            StoreIOState::STIOCB * aCallback, void *callback_data)
 {
     assert (((UFSSwapDir *)SD)->IO == this);
@@ -90,7 +90,7 @@ Fs::Ufs::UFSStrategy::open(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB *,
 }
 
 StoreIOState::Pointer
-Fs::Ufs::UFSStrategy::create(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB *,
+Fs::Ufs::UFSStrategy::create(SwapDir * const SD, StoreEntry * const e,
                              StoreIOState::STIOCB * aCallback, void *callback_data)
 {
     assert (((UFSSwapDir *)SD)->IO == this);

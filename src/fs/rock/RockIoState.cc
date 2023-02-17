@@ -24,10 +24,9 @@
 
 Rock::IoState::IoState(Rock::SwapDir::Pointer &aDir,
                        StoreEntry *anEntry,
-                       StoreIOState::STFNCB *cbFile,
                        StoreIOState::STIOCB *cbIo,
                        void *data) :
-    StoreIOState(cbFile, cbIo, data),
+    StoreIOState(cbIo, data),
     readableAnchor_(nullptr),
     writeableAnchor_(nullptr),
     splicingPoint(-1),
