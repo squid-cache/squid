@@ -20,6 +20,7 @@
 #include "MemObject.h"
 #include "mime_header.h"
 #include "SquidConfig.h"
+#include "SquidMath.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "store/SwapMetaIn.h"
@@ -368,8 +369,7 @@ store_client::doCopy(StoreEntry *anEntry)
     flags.store_copying = true;
     MemObject *mem = entry->mem_obj;
 
-    debugs(33, 5, "store_client::doCopy: co: " <<
-           copyInto.offset << ", hi: " <<
+    debugs(33, 5, "co: " << copyInto.offset << '+' << copiedSize << ", hi: " <<
            mem->endOffset());
 
     if (!moreToSend()) {
@@ -381,7 +381,7 @@ store_client::doCopy(StoreEntry *anEntry)
     }
 
     /* Check that we actually have data */
-    if (anEntry->store_status == STORE_PENDING && copyInto.offset >= mem->endOffset()) {
+    if (anEntry->store_status == STORE_PENDING && !Less(copyInto.offset + copiedSize, mem->endOffset())) {
         debugs(90, 3, "store_client::doCopy: Waiting for more");
         flags.store_copying = false;
         return;
@@ -449,11 +449,7 @@ store_client::noteSwapInDone(const bool error)
 void
 store_client::scheduleRead()
 {
-    MemObject *mem = entry->mem_obj;
-
-    if (copyInto.offset >= mem->inmem_lo && copyInto.offset < mem->endOffset())
-        scheduleMemRead();
-    else
+    if (!readFromMemory())
         scheduleDiskRead();
 }
 
@@ -479,15 +475,28 @@ store_client::scheduleDiskRead()
     flags.store_copying = false;
 }
 
-void
-store_client::scheduleMemRead()
+/// If possible, copies at least some of the requested bytes from MemObject
+/// memory, satisfying the copy() request. Otherwise, does not change state.
+/// \returns true if the copy() request was satisfied
+bool
+store_client::readFromMemory()
 {
+
+    const auto nextHttpReadOffset = NaturalSum<int64_t>(copyInto.offset, copiedSize).value();
+    const auto &mem = entry->mem();
+    if (!(mem.inmem_lo <= nextHttpReadOffset && nextHttpReadOffset < mem.endOffset()))
+        return false;
+
     /* What the client wants is in memory */
-    /* Old style */
+
+    Assure(copyInto.length > copiedSize);
+    const auto readInto = StoreIOBuffer(copyInto.length - copiedSize, nextHttpReadOffset, copyInto.data + copiedSize);
+
     debugs(90, 3, "store_client::doCopy: Copying normal from memory");
-    const auto sz = entry->mem_obj->data_hdr.copy(copyInto); // may be <= 0 per copy() API
+    const auto sz = entry->mem_obj->data_hdr.copy(readInto); // may be <= 0 per copy() API
     callback(sz);
     flags.store_copying = false;
+    return true;
 }
 
 void
@@ -499,26 +508,38 @@ store_client::fileRead()
     assert(!flags.disk_io_pending);
     flags.disk_io_pending = true;
 
+    // mem->swap_hdr_sz and/or copiedSize are zero here during initial read(s)
+    const auto nextStoreReadOffset = NaturalSum<int64_t>(copyInto.offset, mem->swap_hdr_sz, copiedSize).value();
+    Assure(copyInto.length > copiedSize);
+    const auto readInto = StoreIOBuffer(copyInto.length - copiedSize, nextStoreReadOffset, copyInto.data + copiedSize);
+
+    // TODO: Remove this assertion. Introduced in 1998 commit 3157c72, it
+    // assumes that swapped out memory is freed unconditionally, but we no
+    // longer do that because trimMemory() path checks lowestMemReaderOffset().
+    // It is also misplaced: We are not swapping out anything here and should
+    // not care about any swapout invariants.
     if (mem->swap_hdr_sz != 0)
         if (entry->swappingOut())
-            assert(mem->swapout.sio->offset() > copyInto.offset + (int64_t)mem->swap_hdr_sz);
+            assert(mem->swapout.sio->offset() > nextStoreReadOffset);
 
     storeRead(swapin_sio,
-              copyInto.data,
-              copyInto.length,
-              copyInto.offset + mem->swap_hdr_sz,
+              readInto.data,
+              readInto.length,
+              readInto.offset,
               mem->swap_hdr_sz == 0 ? storeClientReadHeader
               : storeClientReadBody,
               this);
 }
 
 void
-store_client::readBody(const char *, ssize_t len)
+store_client::readBody(const char * const buf, ssize_t len)
 {
     // Don't assert disk_io_pending here.. may be called by read_header
     flags.disk_io_pending = false;
     assert(_callback.pending());
     debugs(90, 3, "storeClientReadBody: len " << len << "");
+
+    Assure(buf == copyInto.data + copiedSize);
 
     if (len < 0)
         return fail();

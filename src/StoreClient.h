@@ -127,7 +127,7 @@ private:
 
     void fileRead();
     void scheduleDiskRead();
-    void scheduleMemRead();
+    bool readFromMemory();
     void scheduleRead();
     bool startSwapin();
 
