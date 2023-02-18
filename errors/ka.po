@@ -290,7 +290,7 @@ msgstr "სერტიფიკატის ხელმოწერის შ�
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.blockquote.p:24-1
 msgid "Connection Lifetime Expired"
-msgstr "მიერთების ვადა ამოიწურა"
+msgstr "მიერთების საარსებო დრო ამოიწურა"
 
 #: templates/ERR_CONNECT_FAIL+html.body.div.blockquote.p:24-1
 msgid "Connection to %I failed."
