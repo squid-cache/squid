@@ -120,7 +120,7 @@ msgstr "%z"
 #: templates/ERR_DIR_LISTING+html.body.div.table.tr.th:29-1
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
 msgstr ""
-"<a href=\"../\">მშობელი საქაღალდე</a> (<a href=\"/\">Root საქაღალდე</a>)"
+"<a href=\"../\">მშობელი დირექტორია</a> (<a href=\"/\">Root დირექტორია</a>)"
 
 #: templates/ERR_INVALID_REQ+html.body.div.p:21-1
 msgid ""
