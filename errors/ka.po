@@ -344,7 +344,7 @@ msgstr "PUT/POST მოთხოვნაში Content-Length მითით�
 #: templates/ERR_ZERO_SIZE_OBJECT+html.head.meta:-1--1
 msgid "Copyright (C) 1996-2017 The Squid Software Foundation and contributors"
 msgstr ""
-"Copyright (C) 1996-2017 The Squid Software Foundation და მოხალისეები, ყველა უფლება "
+"Copyright (C) 1996-2017 The Squid Software Foundation და შემწირველები, ყველა უფლება "
 "დაცულია"
 
 #: templates/error-details.txt+X509_V_ERR_DIFFERENT_CRL_SCOPE.descr:181
@@ -523,7 +523,7 @@ msgstr ""
 
 #: templates/ERR_FORWARDING_DENIED+html.body.div.blockquote.p:24-1
 msgid "Forwarding Denied."
-msgstr "გადამისამართება უარყოფილია."
+msgstr "გადაგზავნა უარყოფილია."
 
 #: templates/ERR_GATEWAY_FAILURE+html.body.div.blockquote.p:24-1
 msgid "Gateway Proxy Failure"
@@ -1028,7 +1028,7 @@ msgstr ""
 
 #: templates/ERR_ICAP_FAILURE+html.body.div.p:29-1
 msgid "This means that some aspect of the ICAP communication failed."
-msgstr "ეს ნიშნავს, რომ ICAP ურთიერთობის რაღაც ასპექტი ავარიულად დასრულდა."
+msgstr "ეს ნიშნავს, რომ ICAP კომუნიკაციის რაღაც ასპექტი ავარიულად დასრულდა."
 
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.p:33-1
 msgid ""
