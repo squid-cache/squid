@@ -7,13 +7,11 @@
  */
 
 #include "squid.h"
+#include "SquidConfig.h"
 #include "testClpMap.h"
 #include "unitTestMain.h"
 
-#include "SquidConfig.h"
-
 #include <ctime>
-
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testClpMap );
 
