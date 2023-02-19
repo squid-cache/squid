@@ -132,6 +132,7 @@ private:
     bool startSwapin();
 
     bool parseHttpHeaders();
+    bool tryParsingHttpHeaders();
     StoreIOBuffer terminateInputBuffer() const;
 
     void fail();

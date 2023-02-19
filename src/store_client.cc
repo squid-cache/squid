@@ -19,6 +19,7 @@
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "mime_header.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
 #include "StatCounters.h"
@@ -945,6 +946,22 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
 bool
 store_client::parseHttpHeaders()
 {
+    try {
+        return tryParsingHttpHeaders();
+    } catch (...) {
+        debugs(90, DBG_CRITICAL, "ERROR: Cannot parse on-disk HTTP headers" <<
+               Debug::Extra << "exception: " << CurrentException <<
+               Debug::Extra << "raw input size: " << copiedSize << " bytes");
+        fail();
+        return false;
+    }
+}
+
+/// parseHttpHeaders() helper
+/// \copydoc parseHttpHeaders()
+bool
+store_client::tryParsingHttpHeaders()
+{
     Assure(!copyInto.offset);
 
     const bool eof = !copiedSize;
@@ -960,13 +977,8 @@ store_client::parseHttpHeaders()
         return true;
     }
 
-    if (error) {
-        debugs(90, DBG_CRITICAL, "ERROR: Malformed HTTP headers in on-disk object" <<
-               Debug::Extra << "parser error code: " << error <<
-               Debug::Extra << "raw input size: " << copiedSize << " bytes");
-        fail();
-        return false;
-    }
+    if (error)
+        throw TextException(ToSBuf("malformed HTTP headers; parser error code: ", error), Here());
 
     // the parse() call above enforces Config.maxReplyHeaderSize limit
     Assure(copiedSize < Config.maxReplyHeaderSize);
