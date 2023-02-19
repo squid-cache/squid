@@ -33,7 +33,7 @@ testClpMap::setUp()
 }
 
 void
-testClpMap::PutGetDelete()
+testClpMap::testPutGetDelete()
 {
     testMap m(1024);
     addData(m, 10);
@@ -46,7 +46,7 @@ testClpMap::PutGetDelete()
     CPPUNIT_ASSERT_EQUAL(static_cast<const int *>(nullptr), m.get("1"));
 }
 
-void testClpMap::Entries()
+void testClpMap::testEntries()
 {
     {
         testMap m(10*1024*1024, 10);
@@ -103,13 +103,13 @@ testClpMap::testConstructor()
 }
 
 void
-testClpMap::SetMemLimit()
+testClpMap::testSetMemLimit()
 {
     testMap m(2048);
     addData(m, 1000);
-    auto entriesBefore = m.entries();
+    auto testEntriesBefore = m.entries();
     m.setMemLimit(1024);
-    CPPUNIT_ASSERT(entriesBefore > m.entries());
+    CPPUNIT_ASSERT(testEntriesBefore > m.entries());
 }
 
 #include <iostream>

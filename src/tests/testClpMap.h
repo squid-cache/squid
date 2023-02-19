@@ -14,13 +14,13 @@
 
 class testClpMap: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE(testClpMap);
-    CPPUNIT_TEST(testMemoryCounter);
-    CPPUNIT_TEST(testConstructor);
-    CPPUNIT_TEST(Entries);
-    CPPUNIT_TEST(PutGetDelete);
-    CPPUNIT_TEST(SetMemLimit);
-    CPPUNIT_TEST(testTtlExpiration);
+    CPPUNIT_TEST_SUITE( testClpMap );
+    CPPUNIT_TEST( testMemoryCounter );
+    CPPUNIT_TEST( testConstructor );
+    CPPUNIT_TEST( testEntries );
+    CPPUNIT_TEST( testPutGetDelete );
+    CPPUNIT_TEST( testSetMemLimit );
+    CPPUNIT_TEST( testTtlExpiration );
     CPPUNIT_TEST_SUITE_END();
 
 protected:
@@ -31,9 +31,9 @@ protected:
     void addData(testMap &m, int numElems=10, int base=0, testMap::Ttl ttl=10);
     void testMemoryCounter();
     void testConstructor();
-    void Entries();
-    void PutGetDelete();
-    void SetMemLimit();
+    void testEntries();
+    void testPutGetDelete();
+    void testSetMemLimit();
     void testTtlExpiration();
 
 public:
