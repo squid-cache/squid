@@ -58,7 +58,7 @@ class store_client
     CBDATA_CLASS(store_client);
 
 public:
-    store_client(StoreEntry *);
+    explicit store_client(StoreEntry *);
     ~store_client();
 
     /// An offset into the stored response bytes, including the HTTP response
