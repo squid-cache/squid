@@ -18,7 +18,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION( testClpMap );
 class SquidConfig Config;
 
 void
-testClpMap::addData(testMap &m, int numElems, int base, testMap::Ttl ttl)
+testClpMap::addData(TestMap &m, int numElems, int base, TestMap::Ttl ttl)
 {
     for (int j = base; j < base + numElems; ++j ) {
         CPPUNIT_ASSERT_EQUAL(true, m.add(std::to_string(j), j, ttl));
@@ -35,7 +35,7 @@ testClpMap::setUp()
 void
 testClpMap::testPutGetDelete()
 {
-    testMap m(1024);
+    TestMap m(1024);
     addData(m, 10);
     CPPUNIT_ASSERT_EQUAL(static_cast<const int *>(nullptr), m.get("notthere"));
     CPPUNIT_ASSERT_EQUAL(1, *(m.get("1")));
@@ -49,14 +49,14 @@ testClpMap::testPutGetDelete()
 void testClpMap::testEntries()
 {
     {
-        testMap m(10*1024*1024, 10);
+        TestMap m(10*1024*1024, 10);
         addData(m, 10, 10);
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(10), m.entries());
         m.add("foo", 0, 10);
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(11), m.entries());
     }
     {
-        testMap m(1024, 5);
+        TestMap m(1024, 5);
         addData(m, 1000);
         CPPUNIT_ASSERT(m.entries() < 1000);
     }
@@ -77,25 +77,25 @@ testClpMap::testMemoryCounter()
 void
 testClpMap::testConstructor()
 {
-    testMap nilA(0);
+    TestMap nilA(0);
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilA.memLimit());
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilA.freeMem());
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilA.memoryUsed());
     CPPUNIT_ASSERT_EQUAL(size_t(0), nilA.entries());
 
-    testMap nilB(0, 0);
+    TestMap nilB(0, 0);
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilB.memLimit());
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilB.freeMem());
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilB.memoryUsed());
     CPPUNIT_ASSERT_EQUAL(size_t(0), nilB.entries());
 
-    testMap emptyC(1);
+    TestMap emptyC(1);
     CPPUNIT_ASSERT_EQUAL(uint64_t(1), emptyC.memLimit());
     CPPUNIT_ASSERT_EQUAL(uint64_t(1), emptyC.freeMem());
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), emptyC.memoryUsed());
     CPPUNIT_ASSERT_EQUAL(size_t(0), emptyC.entries());
 
-    testMap emptyD(1024);
+    TestMap emptyD(1024);
     CPPUNIT_ASSERT_EQUAL(uint64_t(1024), emptyD.memLimit());
     CPPUNIT_ASSERT_EQUAL(uint64_t(1024), emptyD.freeMem());
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), emptyD.memoryUsed());
@@ -105,7 +105,7 @@ testClpMap::testConstructor()
 void
 testClpMap::testSetMemLimit()
 {
-    testMap m(2048);
+    TestMap m(2048);
     addData(m, 1000);
     auto testEntriesBefore = m.entries();
     m.setMemLimit(1024);
@@ -116,7 +116,7 @@ testClpMap::testSetMemLimit()
 void
 testClpMap::testTtlExpiration()
 {
-    testMap m(2048);
+    TestMap m(2048);
     m.add(std::to_string(1), 1, 10);
     CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(1), m.entries());
     CPPUNIT_ASSERT(static_cast<const int *>(nullptr)!=m.get("1"));

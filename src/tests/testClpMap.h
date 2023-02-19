@@ -24,11 +24,11 @@ class testClpMap: public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST_SUITE_END();
 
 protected:
-    using testMap = ClpMap<std::string, int>;
+    using TestMap = ClpMap<std::string, int>;
 
     // add a standard set of key-values to the map, up to numElems
     // the keys and values will start at base and count up numElems
-    void addData(testMap &m, int numElems=10, int base=0, testMap::Ttl ttl=10);
+    void addData(TestMap &m, int numElems=10, int base=0, TestMap::Ttl ttl=10);
     void testMemoryCounter();
     void testConstructor();
     void testEntries();
