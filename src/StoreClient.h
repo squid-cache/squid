@@ -131,6 +131,9 @@ private:
     void scheduleRead();
     bool startSwapin();
 
+    bool parseHttpHeaders();
+    StoreIOBuffer terminateInputBuffer() const;
+
     void fail();
     void callback(ssize_t);
     void noteCopiedBytes(size_t);

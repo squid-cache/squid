@@ -484,6 +484,7 @@ store_client::readFromMemory()
 
     const auto nextHttpReadOffset = NaturalSum<int64_t>(copyInto.offset, copiedSize).value();
     const auto &mem = entry->mem();
+
     if (!(mem.inmem_lo <= nextHttpReadOffset && nextHttpReadOffset < mem.endOffset()))
         return false;
 
@@ -494,6 +495,7 @@ store_client::readFromMemory()
 
     debugs(90, 3, "store_client::doCopy: Copying normal from memory");
     const auto sz = entry->mem_obj->data_hdr.copy(readInto); // may be <= 0 per copy() API
+
     callback(sz);
     flags.store_copying = false;
     return true;
@@ -522,9 +524,16 @@ store_client::fileRead()
         if (entry->swappingOut())
             assert(mem->swapout.sio->offset() > nextStoreReadOffset);
 
+    // XXX: We should let individual cache_dirs limit the read size instead, but
+    // we cannot do that without more fixes and research because:
+    // * larger reads crash code that uses SharedMemory::get() (TODO: confirm!)
+    // * we do not know how to find all I/O code that assumes this limit
+    // * performance effects of larger disk reads may be negative somewhere.
+    const decltype(StoreIOBuffer::length) maxReadSize = SM_PAGE_SIZE;
+
     storeRead(swapin_sio,
               readInto.data,
-              readInto.length,
+              std::min(readInto.length, maxReadSize),
               readInto.offset,
               mem->swap_hdr_sz == 0 ? storeClientReadHeader
               : storeClientReadBody,
@@ -532,40 +541,56 @@ store_client::fileRead()
 }
 
 void
-store_client::readBody(const char * const buf, ssize_t len)
+store_client::readBody(const char * const buf, const ssize_t lastIoResult)
 {
     // Don't assert disk_io_pending here.. may be called by read_header
     flags.disk_io_pending = false;
     assert(_callback.pending());
-    debugs(90, 3, "storeClientReadBody: len " << len << "");
+    debugs(90, 3, "got " << lastIoResult << " on top of " << copiedSize);
 
-    Assure(buf == copyInto.data + copiedSize);
 
-    if (len < 0)
+    if (lastIoResult < 0)
         return fail();
 
-    const auto rep = entry->mem_obj ? &entry->mem().baseReply() : nullptr;
-    if (copyInto.offset == 0 && len > 0 && rep && rep->sline.status() == Http::scNone) {
-        /* Our structure ! */
-        if (!entry->mem_obj->adjustableBaseReply().parseCharBuf(copyInto.data, headersEnd(copyInto.data, len))) {
-            debugs(90, DBG_CRITICAL, "ERROR: Could not parse headers from on disk object");
-        }
+    if (!lastIoResult) {
+        if (!copiedSize)
+            return noteEof();
+
+        debugs(90, DBG_CRITICAL, "ERROR: Truncated HTTP headers in on-disk object");
+        return fail();
     }
 
-    if (len > 0 && rep && entry->mem_obj->inmem_lo == 0 && entry->objectLen() <= (int64_t)Config.Store.maxInMemObjSize && Config.onoff.memory_cache_disk) {
-        storeGetMemSpace(len);
+    Assure(buf == copyInto.data + copiedSize);
+    copiedSize = IncreaseSum(copiedSize, lastIoResult).value();
+
+    // entry->mem_obj will be required to handle our copy() response because it
+    // gives access to mem().baseReply().hdr_sz which determines where the HTTP
+    // response headers end and body starts. We also need it now, to tell
+    // whether we have parsed the response headers already, setting hdr_sz.
+    Assure(entry->mem_obj);
+
+    const auto &reply = entry->mem().baseReply();
+    if (copyInto.offset == 0 && reply.sline.status() == Http::scNone) {
+        if (!parseHttpHeaders())
+            return;
+    }
+
+    if (entry->mem_obj->inmem_lo == 0 && entry->objectLen() <= (int64_t)Config.Store.maxInMemObjSize && Config.onoff.memory_cache_disk) {
+        storeGetMemSpace(copiedSize);
         // recheck for the above call may purge entry's data from the memory cache
         if (entry->mem_obj->inmem_lo == 0) {
             /* Copy read data back into memory.
              * copyInto.offset includes headers, which is what mem cache needs
              */
             if (copyInto.offset == entry->mem_obj->endOffset()) {
-                entry->mem_obj->write(StoreIOBuffer(len, copyInto.offset, copyInto.data));
+                entry->mem_obj->write(StoreIOBuffer(copiedSize, copyInto.offset, copyInto.data));
             }
         }
     }
 
-    callback(len);
+    const auto copiedSizeXXX = copiedSize;
+    copiedSize = 0; // XXX
+    callback(copiedSizeXXX);
 }
 
 void
@@ -912,6 +937,68 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
 
     debugs(90, 3, "quick-abort? YES default");
     return true;
+}
+
+/// parses HTTP header accumulated at the beginning of copyInto
+/// \returns false if fail() or scheduleDiskRead() has been called and, hence,
+/// the caller should just quit without any further action
+bool
+store_client::parseHttpHeaders()
+{
+    Assure(!copyInto.offset);
+
+    const bool eof = !copiedSize;
+    Assure(!eof); // caller handles EOF
+
+    const auto terminatedBuffer = terminateInputBuffer();
+    auto error = Http::scNone;
+    auto &adjustableReply = entry->mem().adjustableBaseReply();
+    if (adjustableReply.parse(terminatedBuffer.data, terminatedBuffer.length, eof, &error)) {
+        Assure(adjustableReply.pstate == Http::Message::psParsed);
+        Assure(adjustableReply.hdr_sz > 0);
+        Assure(!Less(copiedSize, adjustableReply.hdr_sz)); // cannot parse more bytes than we have
+        return true;
+    }
+
+    if (error) {
+        debugs(90, DBG_CRITICAL, "ERROR: Malformed HTTP headers in on-disk object" <<
+               Debug::Extra << "parser error code: " << error <<
+               Debug::Extra << "raw input size: " << copiedSize << " bytes");
+        fail();
+        return false;
+    }
+
+    // the parse() call above enforces Config.maxReplyHeaderSize limit
+    Assure(copiedSize < Config.maxReplyHeaderSize);
+    // caller must supply Config.maxReplyHeaderSize or larger buffer
+    // TODO: Add Assure(copyInto.length <= Config.maxReplyHeaderSize) to copy()
+    // itself when we know that all callers do supply large-enough buffers.
+    Assure(copiedSize < copyInto.length);
+
+    debugs(90, 3, "need more HTTP header bytes after accumulating " << copiedSize <<
+           "; space left:  " << copyInto.length - copiedSize);
+    scheduleDiskRead();
+    return false;
+}
+
+/// terminates copyInto (after copiedSize bytes), avoiding unnecessary copies
+/// \returns a terminated buffer (which may be statically allocated)
+StoreIOBuffer
+store_client::terminateInputBuffer() const
+{
+    Assure(copiedSize <= copyInto.length);
+    if (copiedSize < copyInto.length) {
+        copyInto.data[copiedSize] = 0;
+        return StoreIOBuffer(copiedSize, 0, copyInto.data);
+    }
+
+    const auto terminatedBufferSize = IncreaseSum(copiedSize, 1).value();
+    static std::unique_ptr<MemBlob> TerminatedBuffer;
+    TerminatedBuffer.reset(new MemBlob(terminatedBufferSize));
+    TerminatedBuffer->append(copyInto.data, copiedSize);
+    TerminatedBuffer->append("", 1);
+    Assure(TerminatedBuffer->size == terminatedBufferSize);
+    return StoreIOBuffer(terminatedBufferSize, 0, TerminatedBuffer->mem);
 }
 
 void
