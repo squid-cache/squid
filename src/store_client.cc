@@ -597,7 +597,12 @@ store_client::readBody(const char * const buf, const ssize_t lastIoResult)
 void
 store_client::fail()
 {
-    debugs(90, 3, (object_ok ? "once" : "again"));
+    debugs(90, 3, (object_ok ? "once" : "again") << " after " << copiedSize);
+
+    // copy() callers are not ready to handle a content+error combination. We
+    // must report the error, so we hide copied bytes (if any).
+    copiedSize = 0;
+
     if (!object_ok)
         return; // we failed earlier; nothing to do now
 
