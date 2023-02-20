@@ -222,7 +222,7 @@ ACLRegexData::parse()
 {
     debugs(28, 2, "new Regex line or file");
 
-    auto flagsAtLineStart = std::regex::extended | std::regex::nosubs;
+    auto flagsAtLineStart = std::regex::extended;
     if (CaseInsensitive_)
         flagsAtLineStart |= std::regex::icase;
 

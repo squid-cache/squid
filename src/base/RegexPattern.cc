@@ -17,7 +17,7 @@ RegexPattern::RegexPattern(const SBuf &aPattern, const std::regex::flag_type aFl
     pattern(aPattern)
 {
     try {
-        regex = std::regex(pattern.rawContent(), pattern.length(), aFlags);
+        regex = std::regex(pattern.rawContent(), pattern.length(), aFlags|std::regex::nosubs|std::regex::optimize);
     } catch (const std::regex_error &e) {
         throw TextException(ToSBuf(e.what(), ": ", pattern), Here());
     }

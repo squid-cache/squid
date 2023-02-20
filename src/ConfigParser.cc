@@ -486,7 +486,7 @@ ConfigParser::regex(const char *expectedRegexDescription)
         throw TextException("Cannot read regex expression while configuration_includes_quoted_values is enabled", Here());
 
     SBuf pattern;
-    auto flags = std::regex::extended | std::regex::nosubs;
+    auto flags = std::regex::extended;
 
     ConfigParser::RecognizeQuotedPair_ = true;
     const auto flagOrPattern = token(expectedRegexDescription);
