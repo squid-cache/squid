@@ -32,11 +32,8 @@ RegexPattern::RegexPattern(const SBuf &aPattern, const std::regex::flag_type aFl
 bool
 RegexPattern::match(const char *str) const
 {
-    std::cmatch found;
-    if (std::regex_search(str, found, regex)) {
-        debugs(18, 5, "matched " << found[0]);
+    if (std::regex_search(str, regex))
         return true;
-    }
     return false;
 }
 
