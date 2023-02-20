@@ -23,6 +23,7 @@ private:
     CPPUNIT_TEST( testSetMemLimit );
     CPPUNIT_TEST( testTtlExpiration );
     CPPUNIT_TEST( testReplaceEntryWithShorterTtl );
+    CPPUNIT_TEST( testEntriesWithZeroTtl );
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -39,6 +40,7 @@ protected:
     void testSetMemLimit();
     void testTtlExpiration();
     void testReplaceEntryWithShorterTtl();
+    void testEntriesWithZeroTtl();
 
     /// Generate and insert the given number of elements into the given map.
     /// Each entry is guaranteed to be inserted, but that insertion may purge other entries,

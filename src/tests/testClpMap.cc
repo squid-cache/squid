@@ -156,3 +156,13 @@ testClpMap::testReplaceEntryWithShorterTtl()
     squid_curtime += 20;
     CPPUNIT_ASSERT(!m.get("0")); // should have expired
 }
+
+void
+testClpMap::testEntriesWithZeroTtl()
+{
+    TestMap m(2048);
+    addSequenceOfElementsToMap(m, 1, 0, 0);
+    CPPUNIT_ASSERT(m.get("0"));  // we get something
+    squid_curtime += 1;
+    CPPUNIT_ASSERT(!m.get("0"));  // we get something
+}
