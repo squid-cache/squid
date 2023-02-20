@@ -27,7 +27,7 @@ protected:
     using TestMap = ClpMap<std::string, int>;
 
     // add a standard set of elements to a map
-    void addData(TestMap &, int count, int startWith, TestMap::Ttl);
+    void addSequenceOfElementsToMap(TestMap &, int count, int startWith, TestMap::Ttl);
     void testMemoryCounter();
     void testConstructor();
     void testEntries();

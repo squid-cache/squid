@@ -18,7 +18,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION( testClpMap );
 class SquidConfig Config;
 
 void
-testClpMap::addData(TestMap &m, int count, int startWith, TestMap::Ttl ttl)
+testClpMap::addSequenceOfElementsToMap(TestMap &m, int count, int startWith, TestMap::Ttl ttl)
 {
     for (auto j = startWith; j < startWith + count; ++j)
     {
@@ -37,7 +37,7 @@ void
 testClpMap::testPutGetDelete()
 {
     TestMap m(1024);
-    addData(m, 10, 0, 10);
+    addSequenceOfElementsToMap(m, 10, 0, 10);
     CPPUNIT_ASSERT_EQUAL(static_cast<const int *>(nullptr), m.get("notthere"));
     CPPUNIT_ASSERT_EQUAL(1, *(m.get("1")));
     CPPUNIT_ASSERT_EQUAL(9, *(m.get("9")));
@@ -51,14 +51,14 @@ void testClpMap::testEntries()
 {
     {
         TestMap m(10*1024*1024, 10);
-        addData(m, 10, 10, 10);
+        addSequenceOfElementsToMap(m, 10, 10, 10);
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(10), m.entries());
         m.add("foo", 0);
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(11), m.entries());
     }
     {
         TestMap m(1024, 5);
-        addData(m, 1000, 0, 10);
+        addSequenceOfElementsToMap(m, 1000, 0, 10);
         CPPUNIT_ASSERT(m.entries() < 1000);
     }
 }
@@ -107,7 +107,7 @@ void
 testClpMap::testSetMemLimit()
 {
     TestMap m(2048);
-    addData(m, 1000, 0, 10);
+    addSequenceOfElementsToMap(m, 1000, 0, 10);
     auto testEntriesBefore = m.entries();
     m.setMemLimit(1024);
     CPPUNIT_ASSERT(testEntriesBefore > m.entries());
