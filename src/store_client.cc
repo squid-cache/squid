@@ -589,9 +589,8 @@ store_client::readBody(const char * const buf, const ssize_t lastIoResult)
         }
     }
 
-    const auto copiedSizeXXX = copiedSize;
-    copiedSize = 0; // XXX
-    callback(copiedSizeXXX);
+    // no callback() or noteCopiedBytes(): we updated copiedSize ourselves
+    noteNews();
 }
 
 void
