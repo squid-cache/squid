@@ -994,6 +994,11 @@ store_client::tryParsingHttpHeaders()
 
     debugs(90, 3, "need more HTTP header bytes after accumulating " << copiedSize <<
            "; space left:  " << copyInto.length - copiedSize);
+
+    // Continue on disk-reading path because the current readFromMemory() cannot
+    // give us the missing bytes (or we would not be parsing the header) and any
+    // future shared memory caching improvements will need similar header
+    // parsing logic before they can be used here.
     scheduleDiskRead();
     return false;
 }
