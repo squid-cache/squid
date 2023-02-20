@@ -42,6 +42,8 @@ class ClpMap
 public:
     /// maximum desired entry caching duration (a.k.a. TTL), in seconds
     using Ttl = int;
+    using key_type = Key;
+    using mapped_type = Value;
 
     explicit ClpMap(const uint64_t capacity) { setMemLimit(capacity); }
     ClpMap(uint64_t capacity, Ttl defaultTtl);
