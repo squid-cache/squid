@@ -326,7 +326,7 @@ Fs::Ufs::UFSStoreState::doCloseCallback(int errflag)
 /* ============= THE REAL UFS CODE ================ */
 
 Fs::Ufs::UFSStoreState::UFSStoreState(SwapDir * SD, StoreEntry * anEntry, STIOCB * cbIo, void *data) :
-    StoreIOState(nullptr, cbIo, data),
+    StoreIOState(cbIo, data),
     opening(false),
     creating(false),
     closing(false),
