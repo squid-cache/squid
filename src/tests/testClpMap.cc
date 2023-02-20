@@ -25,6 +25,13 @@ testClpMap::addSequenceOfElementsToMap(TestMap &m, int count, int startWith, Tes
         CPPUNIT_ASSERT(m.add(std::to_string(j), j, ttl));
     }
 }
+
+void
+testClpMap::fillMapWithElements(TestMap &m, TestMap::Ttl ttl)
+{
+    addSequenceOfElementsToMap(m, m.memLimit() / sizeof(TestMap::mapped_type), 0, ttl);
+}
+
 void
 testClpMap::setUp()
 {
@@ -37,12 +44,15 @@ testClpMap::testPutGetDelete()
     TestMap m(1024);
     addSequenceOfElementsToMap(m, 10, 0, 10);
     CPPUNIT_ASSERT(!m.get("notthere"));
-    CPPUNIT_ASSERT_EQUAL(1, *(m.get("1")));
+    CPPUNIT_ASSERT(m.get("1")); // we get something
+    CPPUNIT_ASSERT_EQUAL(1, *(m.get("1"))); // we get what we put in
+    CPPUNIT_ASSERT(m.get("9"));
     CPPUNIT_ASSERT_EQUAL(9, *(m.get("9")));
     m.add("1", 99);
+    CPPUNIT_ASSERT(m.get("1"));
     CPPUNIT_ASSERT_EQUAL(99, *(m.get("1")));
     m.del("1");
-    CPPUNIT_ASSERT_EQUAL(static_cast<const int *>(nullptr), m.get("1"));
+    CPPUNIT_ASSERT(!m.get("1")); // entry has been cleared
 }
 
 void testClpMap::testEntries()
@@ -106,16 +116,16 @@ testClpMap::testSetMemLimit()
 {
     TestMap m(2048);
     // overflow the map with entries to make sure it has lots of entries to purge below
-    addSequenceOfElementsToMap(m, 1000, 0, 10);
+    fillMapWithElements(m, 10);
     const auto testEntriesBefore = m.entries();
     CPPUNIT_ASSERT(testEntriesBefore > 0);
     m.setMemLimit(m.memoryUsed() / 2);
-    CPPUNIT_ASSERT(testEntriesBefore > m.entries());
+    const auto entriesAfterPurge = m.entries();
+    CPPUNIT_ASSERT(testEntriesBefore > entriesAfterPurge);
 
-    const auto entriesAfterPurge = m.entries(); // TODO: Move and use in the above assertion
     m.setMemLimit(m.memLimit() * 2);
     // overflow the map with entries again to make sure it can grow after purging
-    addSequenceOfElementsToMap(m, m.memLimit() / sizeof(int), 0, 10);  // TODO: Extract into overflowMap()
+    fillMapWithElements(m, 10);
     CPPUNIT_ASSERT(entriesAfterPurge < m.entries());
 }
 
