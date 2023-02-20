@@ -115,7 +115,7 @@ testClpMap::testSetMemLimit()
     const auto entriesAfterPurge = m.entries(); // TODO: Move and use in the above assertion
     m.setMemLimit(m.memLimit() * 2);
     // overflow the map with entries again to make sure it can grow after purging
-    addData(m, m.memLimit() / sizeof(int), 0, 10); // TODO: Extract into overflowMap()
+    addSequenceOfElementsToMap(m, m.memLimit() / sizeof(int), 0, 10);  // TODO: Extract into overflowMap()
     CPPUNIT_ASSERT(entriesAfterPurge < m.entries());
 }
 

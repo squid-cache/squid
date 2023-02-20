@@ -30,8 +30,7 @@ public:
 protected:
     using TestMap = ClpMap<std::string, int>;
 
-    // add a standard set of elements to a map
-    void addSequenceOfElementsToMap(TestMap &, int count, int startWith, TestMap::Ttl);
+
     void testMemoryCounter();
     void testConstructor();
     void testEntries();
@@ -39,6 +38,10 @@ protected:
     void testSetMemLimit();
     void testTtlExpiration();
 
+    /// Generate and insert the given number of elements into the given map.
+    /// Each entry is guaranteed to be inserted, but that insertion may purge other entries,
+    /// including entries previously added during the same method call    void addSequenceOfElementsToMap(TestMap &, int count, int startWith, TestMap::Ttl);
+    void addSequenceOfElementsToMap(TestMap &, int count, int startWith, TestMap::Ttl);
 };
 
 #endif /* SQUID_BASE_TESTCLPMAP_H */
