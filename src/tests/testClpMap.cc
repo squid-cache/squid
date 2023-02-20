@@ -140,3 +140,19 @@ testClpMap::testTtlExpiration()
     CPPUNIT_ASSERT(!m.get("1"));
 }
 
+void
+testClpMap::testReplaceEntryWithShorterTtl()
+{
+    TestMap m(2048);
+    addSequenceOfElementsToMap(m, 1, 0, 100);
+    CPPUNIT_ASSERT(m.get("0")); // successfully added one element
+    squid_curtime += 20;
+    CPPUNIT_ASSERT(m.get("0")); // hasn't expired yet
+    squid_curtime += 100;
+    CPPUNIT_ASSERT(!m.get("0")); // has expired
+
+    addSequenceOfElementsToMap(m, 1, 0, 100);
+    addSequenceOfElementsToMap(m, 1, 0, 10); // replaced element with same but shorter ttl
+    squid_curtime += 20;
+    CPPUNIT_ASSERT(!m.get("0")); // should have expired
+}

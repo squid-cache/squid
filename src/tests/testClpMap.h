@@ -22,6 +22,8 @@ private:
     CPPUNIT_TEST( testPutGetDelete );
     CPPUNIT_TEST( testSetMemLimit );
     CPPUNIT_TEST( testTtlExpiration );
+    CPPUNIT_TEST( testReplaceEntryWithShorterTtl );
+
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -30,13 +32,13 @@ public:
 protected:
     using TestMap = ClpMap<std::string, int>;
 
-
     void testMemoryCounter();
     void testConstructor();
     void testEntries();
     void testPutGetDelete();
     void testSetMemLimit();
     void testTtlExpiration();
+    void testReplaceEntryWithShorterTtl();
 
     /// Generate and insert the given number of elements into the given map.
     /// Each entry is guaranteed to be inserted, but that insertion may purge other entries,
