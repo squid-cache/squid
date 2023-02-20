@@ -166,3 +166,15 @@ testClpMap::testEntriesWithZeroTtl()
     squid_curtime += 1;
     CPPUNIT_ASSERT(!m.get("0"));  // we get something
 }
+
+void
+testClpMap::testEntriesWithNegativeTtl()
+{
+    TestMap m(2048);
+    CPPUNIT_ASSERT(!m.add("0", 0, -1)); // failure on insertion
+    CPPUNIT_ASSERT(!m.get("0"));  // we get nothing
+    CPPUNIT_ASSERT(m.add("0", 1, 0));
+    CPPUNIT_ASSERT(m.get("0"));  // we get something
+    CPPUNIT_ASSERT(!m.add("0", 2, -1));  // failure on insertion
+    CPPUNIT_ASSERT(!m.get("0"));  // we get nothing
+}
