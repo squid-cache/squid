@@ -78,25 +78,25 @@ testClpMap::testMemoryCounter()
 void
 testClpMap::testConstructor()
 {
-    TestMap nilA(0);
+    const TestMap nilA(0);
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilA.memLimit());
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilA.freeMem());
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilA.memoryUsed());
     CPPUNIT_ASSERT_EQUAL(size_t(0), nilA.entries());
 
-    TestMap nilB(0, 0);
+    const TestMap nilB(0, 0);
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilB.memLimit());
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilB.freeMem());
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilB.memoryUsed());
     CPPUNIT_ASSERT_EQUAL(size_t(0), nilB.entries());
 
-    TestMap emptyC(1);
+    const TestMap emptyC(1);
     CPPUNIT_ASSERT_EQUAL(uint64_t(1), emptyC.memLimit());
     CPPUNIT_ASSERT_EQUAL(uint64_t(1), emptyC.freeMem());
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), emptyC.memoryUsed());
     CPPUNIT_ASSERT_EQUAL(size_t(0), emptyC.entries());
 
-    TestMap emptyD(1024);
+    const TestMap emptyD(1024);
     CPPUNIT_ASSERT_EQUAL(uint64_t(1024), emptyD.memLimit());
     CPPUNIT_ASSERT_EQUAL(uint64_t(1024), emptyD.freeMem());
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), emptyD.memoryUsed());
@@ -107,6 +107,7 @@ void
 testClpMap::testSetMemLimit()
 {
     TestMap m(2048);
+    // overflow the map with entries to make sure it has lots of entries to purge below
     addSequenceOfElementsToMap(m, 1000, 0, 10);
     auto testEntriesBefore = m.entries();
     m.setMemLimit(1024);
