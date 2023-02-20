@@ -975,6 +975,7 @@ store_client::tryParsingHttpHeaders()
     auto error = Http::scNone;
     auto &adjustableReply = entry->mem().adjustableBaseReply();
     if (adjustableReply.parse(terminatedBuffer.data, terminatedBuffer.length, eof, &error)) {
+        debugs(90, 7, "success after accumulating " << copiedSize);
         Assure(adjustableReply.pstate == Http::Message::psParsed);
         Assure(adjustableReply.hdr_sz > 0);
         Assure(!Less(copiedSize, adjustableReply.hdr_sz)); // cannot parse more bytes than we have
