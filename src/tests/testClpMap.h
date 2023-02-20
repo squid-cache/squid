@@ -9,8 +9,8 @@
 #ifndef SQUID_BASE_TESTCLPMAP_H
 #define SQUID_BASE_TESTCLPMAP_H
 
-#include "compat/cppunit.h"
 #include "base/ClpMap.h"
+#include "compat/cppunit.h"
 
 class testClpMap: public CPPUNIT_NS::TestFixture
 {
