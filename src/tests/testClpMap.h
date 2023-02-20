@@ -14,7 +14,8 @@
 
 class testClpMap: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testClpMap );
+private:
+    CPPUNIT_TEST_SUITE(testClpMap);
     CPPUNIT_TEST( testMemoryCounter );
     CPPUNIT_TEST( testConstructor );
     CPPUNIT_TEST( testEntries );
@@ -22,6 +23,9 @@ class testClpMap: public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testSetMemLimit );
     CPPUNIT_TEST( testTtlExpiration );
     CPPUNIT_TEST_SUITE_END();
+
+public:
+    void setUp() override;
 
 protected:
     using TestMap = ClpMap<std::string, int>;
@@ -35,8 +39,6 @@ protected:
     void testSetMemLimit();
     void testTtlExpiration();
 
-public:
-    void setUp() override;
 };
 
 #endif /* SQUID_BASE_TESTCLPMAP_H */
