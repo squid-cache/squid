@@ -55,7 +55,8 @@ testClpMap::testPutGetDelete()
     CPPUNIT_ASSERT(!m.get("1")); // entry has been cleared
 }
 
-void testClpMap::testEntries()
+void
+testClpMap::testEntries()
 {
     {
         TestMap m(10*1024*1024, 10);
