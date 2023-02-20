@@ -114,7 +114,6 @@ testClpMap::testSetMemLimit()
     CPPUNIT_ASSERT(testEntriesBefore > m.entries());
 }
 
-#include <iostream>
 void
 testClpMap::testTtlExpiration()
 {
