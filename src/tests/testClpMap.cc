@@ -22,7 +22,7 @@ testClpMap::addSequenceOfElementsToMap(TestMap &m, int count, int startWith, Tes
 {
     for (auto j = startWith; j < startWith + count; ++j)
     {
-        CPPUNIT_ASSERT_EQUAL(true, m.add(std::to_string(j), j, ttl));
+        CPPUNIT_ASSERT(m.add(std::to_string(j), j, ttl));
     }
 }
 void
@@ -124,8 +124,7 @@ testClpMap::testTtlExpiration()
 {
     TestMap m(2048);
     m.add(std::to_string(1), 1, 10);
-    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(1), m.entries());
-    CPPUNIT_ASSERT(static_cast<const int *>(nullptr)!=m.get("1"));
+    CPPUNIT_ASSERT(m.get("1"));
     squid_curtime += 100;
     // "1" should have expired
     CPPUNIT_ASSERT(!m.get("1"));
