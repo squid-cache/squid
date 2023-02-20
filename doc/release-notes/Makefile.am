@@ -27,6 +27,14 @@ DOC= release-5
         < $< >$@
 	test `grep -c "@SQUID" $@` -eq 0
 
+%.sgml: %.sgml.in
+	sed \
+        -e "s%[@]SQUID_VERSION[@]%$(VERSION)%g" \
+        -e "s%[@]SQUID_RELEASE[@]%$(SQUID_RELEASE)%g" \
+        -e "s%[@]SQUID_RELEASE_OLD[@]%$$(( $(SQUID_RELEASE) - 1 ))%g" \
+        < $< >$@
+	test `grep -c "@SQUID" $@` -eq 0
+
 %.txt: %.sgml
 	linuxdoc -B txt --filter $<
 
