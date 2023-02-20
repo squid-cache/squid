@@ -14,9 +14,14 @@
 #include <iostream>
 
 RegexPattern::RegexPattern(const SBuf &aPattern, const std::regex::flag_type aFlags):
-    pattern(aPattern),
-    regex(aPattern.rawContent(), aPattern.length(), aFlags)
+    pattern(aPattern)
 {
+    try {
+      regex = std::regex(pattern.rawContent(), pattern.length(), aFlags);
+    } catch (const std::regex_error &e) {
+        throw TextException(ToSBuf(e.what(), ": ", pattern), Here());
+    }
+
     // this class supports other syntax variations, but its current users must
     // support one of these two for backward compatibility reasons, and we check
     // that they have not forgotten to do so
