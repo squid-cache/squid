@@ -74,6 +74,8 @@ public:
     int headers_sz;
     store_client *sc;       /* The store_client we're using */
     size_t reqsize;
+
+    /// the total number of bytes received from our store_client so far
     size_t reqofs;
 
     Store::ReadBuffer storeReadBuffer; ///< XXX

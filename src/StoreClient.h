@@ -83,6 +83,9 @@ public:
     /// XXX: TBD
     StoreIOBuffer legacyReadRequest(const LegacyOffset loffset) { return StoreIOBuffer(serialized_.size(), loffset, serialized_.data()); }
 
+    /// whether this buffer fully contains the given buffer
+    bool contains(const StoreIOBuffer &b) const { return serialized_.data() <= b.data && b.data + b.length <= serialized_.data() + serialized_.size(); }
+
 private:
     /// Serialized Store entry metadata followed by HTTP headers, followed by a
     /// portion of HTTP response body. All components are optional. This buffer

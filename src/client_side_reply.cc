@@ -2061,8 +2061,6 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 
     reqofs += result.length;
 
-    assert(reqofs <= HTTP_REQBUF_SZ || flags.headersSent);
-
     assert(http->request != nullptr);
 
     /* ESI TODO: remove this assert once everything is stable */
