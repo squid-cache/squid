@@ -89,6 +89,7 @@ public:
     int as_number = 0;
     int64_t offset = 0;
     int reqofs = 0;
+    // XXX: Fix asHandleReply() to comply with STCB API and use Store::ReadBuffer.
     char reqbuf[AS_REQBUF_SZ];
     bool dataRead = false;
 };

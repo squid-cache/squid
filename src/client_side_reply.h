@@ -34,7 +34,6 @@ public:
     void saveState();
     void restoreState();
     void purgeRequest ();
-    void sendClientUpstreamResponse();
     void doGetMoreData();
     void identifyStoreObject();
     void identifyFoundObject(StoreEntry *entry, const char *detail);
@@ -76,7 +75,8 @@ public:
     store_client *sc;       /* The store_client we're using */
     size_t reqsize;
     size_t reqofs;
-    char tempbuf[HTTP_REQBUF_SZ];   ///< a temporary buffer if we need working storage
+
+    Store::ReadBuffer storeReadBuffer; ///< XXX
 
     struct Flags {
         Flags() : storelogiccomplete(0), complete(0), headersSent(false) {}
@@ -127,6 +127,7 @@ private:
     void sendPreconditionFailedError();
     void sendNotModified();
     void sendNotModifiedOrPreconditionFailedError();
+    void sendClientUpstreamResponse(const StoreIOBuffer &upstreamResponse);
 
     /// Classification of the initial Store lookup.
     /// This very first lookup happens without the Vary-driven key augmentation.

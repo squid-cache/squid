@@ -370,8 +370,9 @@ store_client::doCopy(StoreEntry *anEntry)
     flags.store_copying = true;
     MemObject *mem = entry->mem_obj;
 
-    debugs(33, 5, "co: " << copyInto.offset << '+' << copiedSize << ", hi: " <<
-           mem->endOffset());
+    debugs(33, 5, "co: " << copyInto.offset << '+' << copiedSize <<
+           " hi: " << mem->endOffset() <<
+           " buffer size: " << copyInto.length);
 
     if (!moreToSend()) {
         /* There is no more to send! */

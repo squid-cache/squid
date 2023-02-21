@@ -51,6 +51,47 @@ protected:
 #include "DelayId.h"
 #endif
 
+namespace Store
+{
+
+/// XXX: TBD
+using LegacyOffset = int64_t;
+
+/// A place for store_client::copy() to put HTTP response parts, containing a
+/// sequential portion of the serialized HTTP response. Upon a successful
+/// store_client::copy() return, this buffer contents matches one of two cases:
+///
+/// 1. Complete serialized HTTP response headers (MemObject::reply->hdr_sz
+///    bytes) followed by zero or more initial HTTP response body bytes
+///    (starting at body offset zero). The offset() value in this case is 0. The
+///    size() value is the sum of those serialized headers (always positive) and
+///    serialized body (may be zero).
+///
+/// 2. Zero or more HTTP response body bytes. The offset() value in this case is
+///    positive. The size() value is the number of body bytes.
+///
+/// Internally, Store also uses this buffer storage for disk cache I/O. During
+/// disk I/O, this buffer may start with serialized Store entry metadata, but
+/// those bytes (if any) are removed before the buffer is returned by copy().
+/// TODO: Separate internally- and externally-used buffers by type!
+class ReadBuffer
+{
+public:
+    /// quickly convert internal representation to a legacy StoreIOBuffer object
+    StoreIOBuffer legacyInitialBuffer() { return StoreIOBuffer(serialized_.size(), 0, serialized_.data()); }
+
+    /// XXX: TBD
+    StoreIOBuffer legacyReadRequest(const LegacyOffset loffset) { return StoreIOBuffer(serialized_.size(), loffset, serialized_.data()); }
+
+private:
+    /// Serialized Store entry metadata followed by HTTP headers, followed by a
+    /// portion of HTTP response body. All components are optional. This buffer
+    /// is not NUL-terminated and may be completely full.
+    std::array<char, HTTP_REQBUF_SZ> serialized_; // TODO: allocate dynamically
+};
+
+} // namespace Store
+
 /* keep track each client receiving data from that particular StoreEntry */
 
 class store_client

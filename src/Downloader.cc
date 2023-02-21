@@ -34,7 +34,7 @@ public:
 
     CbcPointer<Downloader> downloader;
     ClientHttpRequest *http;
-    char requestBuffer[HTTP_REQBUF_SZ];
+    Store::ReadBuffer storeReadBuffer;
 };
 
 DownloaderContext::DownloaderContext(Downloader *dl, ClientHttpRequest *h):
@@ -164,15 +164,12 @@ Downloader::buildRequest()
     http->uri = xstrdup(url_.c_str());
 
     context_ = new DownloaderContext(this, http);
-    StoreIOBuffer tempBuffer;
-    tempBuffer.data = context_->requestBuffer;
-    tempBuffer.length = HTTP_REQBUF_SZ;
 
     ClientStreamData newServer = new clientReplyContext(http);
     ClientStreamData newClient = context_.getRaw();
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
                      clientReplyStatus, newServer, downloaderRecipient,
-                     downloaderDetach, newClient, tempBuffer);
+                     downloaderDetach, newClient, context_->storeReadBuffer.legacyInitialBuffer());
 
     // Build a ClientRequestContext to start doCallouts
     http->calloutContext = new ClientRequestContext(http);
@@ -222,11 +219,7 @@ Downloader::handleReply(clientStreamNode * node, ClientHttpRequest *http, HttpRe
     switch (clientStreamStatus(node, http)) {
     case STREAM_NONE: {
         debugs(33, 3, "Get more data");
-        StoreIOBuffer tempBuffer;
-        tempBuffer.offset = http->out.offset;
-        tempBuffer.data = context_->requestBuffer;
-        tempBuffer.length = HTTP_REQBUF_SZ;
-        clientStreamRead(node, http, tempBuffer);
+        clientStreamRead(node, http, context_->storeReadBuffer.legacyReadRequest(http->out.offset));
     }
     break;
     case STREAM_COMPLETE:

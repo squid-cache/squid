@@ -760,15 +760,11 @@ Ftp::Server::parseOneRequest()
     Http::Stream *const result =
         new Http::Stream(clientConnection, http);
 
-    StoreIOBuffer tempBuffer;
-    tempBuffer.data = result->reqbuf;
-    tempBuffer.length = HTTP_REQBUF_SZ;
-
     ClientStreamData newServer = new clientReplyContext(http);
     ClientStreamData newClient = result;
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
                      clientReplyStatus, newServer, clientSocketRecipient,
-                     clientSocketDetach, newClient, tempBuffer);
+                     clientSocketDetach, newClient, result->storeReadBuffer.legacyInitialBuffer());
 
     result->flags.parsed_ok = 1;
     return result;

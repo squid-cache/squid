@@ -12,6 +12,7 @@
 #include "http/forward.h"
 #include "mem/forward.h"
 #include "StoreIOBuffer.h"
+#include "StoreClient.h" /* XXX: Just for Store::ReadBuffer */
 #if USE_DELAY_POOLS
 #include "MessageBucket.h"
 #endif
@@ -131,7 +132,7 @@ public: // HTTP/1.x state data
     Comm::ConnectionPointer clientConnection; ///< details about the client connection socket
     ClientHttpRequest *http;    /* we pretend to own that Job */
     HttpReply *reply;
-    char reqbuf[HTTP_REQBUF_SZ];
+    Store::ReadBuffer storeReadBuffer; ///< XXX: Document
     struct {
         unsigned deferred:1; ///< This is a pipelined request waiting for the current object to complete
         unsigned parsed_ok:1; ///< Was this parsed correctly?

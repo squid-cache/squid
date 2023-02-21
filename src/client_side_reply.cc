@@ -87,7 +87,6 @@ clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
     deleting(false),
     collapsedRevalidation(crNone)
 {
-    *tempbuf = 0;
 }
 
 /** Create an error in the store awaiting the client side to read it.
@@ -362,15 +361,13 @@ clientReplyContext::processExpired()
 
     {
         /* start counting the length from 0 */
-        StoreIOBuffer localTempBuffer(HTTP_REQBUF_SZ, 0, tempbuf);
-        storeClientCopy(sc, entry, localTempBuffer, HandleIMSReply, this);
+        storeClientCopy(sc, entry, storeReadBuffer.legacyReadRequest(0), HandleIMSReply, this);
     }
 }
 
 void
-clientReplyContext::sendClientUpstreamResponse()
+clientReplyContext::sendClientUpstreamResponse(const StoreIOBuffer &upstreamResponse)
 {
-    StoreIOBuffer tempresult;
     removeStoreReference(&old_sc, &old_entry);
 
     if (collapsedRevalidation)
@@ -384,9 +381,7 @@ clientReplyContext::sendClientUpstreamResponse()
     reqofs = 0;
     assert(!EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED));
     /* TODO: provide sendMoreData with the ready parsed reply */
-    tempresult.length = reqsize;
-    tempresult.data = tempbuf;
-    sendMoreData(tempresult);
+    sendMoreData(upstreamResponse);
 }
 
 void
@@ -416,7 +411,7 @@ clientReplyContext::sendClientOldEntry()
  * IMS request to revalidate a stale entry.
  */
 void
-clientReplyContext::handleIMSReply(StoreIOBuffer result)
+clientReplyContext::handleIMSReply(const StoreIOBuffer result)
 {
     if (deleting)
         return;
@@ -469,7 +464,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         if (http->request->flags.ims && !old_entry->modifiedSince(http->request->ims, http->request->imslen)) {
             // forward the 304 from origin
             debugs(88, 3, "origin replied 304, revalidated existing entry and forwarding 304 to client");
-            sendClientUpstreamResponse();
+            sendClientUpstreamResponse(result);
             return;
         }
 
@@ -494,7 +489,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
 
         http->updateLoggingTags(LOG_TCP_REFRESH_MODIFIED);
         debugs(88, 3, "origin replied " << status << ", forwarding to client");
-        sendClientUpstreamResponse();
+        sendClientUpstreamResponse(result);
         return;
     }
 
@@ -502,7 +497,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     if (http->request->flags.failOnValidationError) {
         http->updateLoggingTags(LOG_TCP_REFRESH_FAIL_ERR);
         debugs(88, 3, "origin replied with error " << status << ", forwarding to client due to fail_on_validation_err");
-        sendClientUpstreamResponse();
+        sendClientUpstreamResponse(result);
         return;
     }
 

@@ -16,8 +16,8 @@
 #include "http/forward.h"
 #include "mgr/Action.h"
 #include "StoreIOBuffer.h"
+#include "StoreClient.h" /* XXX: For Store::ReadBuffer */
 
-class store_client;
 class CommIoCbParams;
 class CommCloseCbParams;
 
@@ -66,7 +66,14 @@ protected:
     int64_t writeOffset; ///< number of bytes written to the client
 
     AsyncCall::Pointer closer; ///< comm_close handler
-    char buffer[HTTP_REQBUF_SZ]; ///< action results; Store fills, Comm writes
+
+    // Unlike most STCB buffers that see HTTP response headers before the body,
+    // some StoreToCommWriter instances may never see HTTP response headers in
+    // this buffer because each SMP kid-specific/non-aggregating cache manager
+    // action response contains just raw cache manager report body fragments.
+    // However, since some instances do see HTTP headers, we use HTTP-focused
+    // Store::ReadBuffer here even though StoreToCommWriter does not speak HTTP.
+    Store::ReadBuffer buffer; ///< action results; Store fills, Comm writes
 };
 
 } // namespace Mgr
