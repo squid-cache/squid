@@ -118,17 +118,51 @@ testClpMap::testSetMemLimit()
     TestMap m(2048);
     // overflow the map with entries to make sure it has lots of entries to purge below
     fillMapWithElements(m, 10);
-    const auto testEntriesBefore = m.entries();
+    auto testEntriesBefore = m.entries();
     CPPUNIT_ASSERT(testEntriesBefore > 0);
 
     m.setMemLimit(m.memoryUsed() / 2);
-    const auto entriesAfterPurge = m.entries();
+    auto entriesAfterPurge = m.entries();
     CPPUNIT_ASSERT(testEntriesBefore > entriesAfterPurge);
 
     m.setMemLimit(m.memLimit() * 2);
     // overflow the map with entries again to make sure it can grow after purging
     fillMapWithElements(m, 10);
     CPPUNIT_ASSERT(entriesAfterPurge < m.entries());
+
+    // progressively shrink to size 0, checking that the number of
+    // entries decreases each time
+    testEntriesBefore = m.entries();
+    const auto singleEntrySizeEstimate = *TestMap::MemoryCountedFor("0", 0) + 10;
+    while (m.memoryUsed() > singleEntrySizeEstimate) {
+        m.setMemLimit(m.memoryUsed() / 2);
+        entriesAfterPurge = m.entries();
+        CPPUNIT_ASSERT(testEntriesBefore > entriesAfterPurge);
+        CPPUNIT_ASSERT(entriesAfterPurge > 0);
+        testEntriesBefore = entriesAfterPurge;
+    }
+
+    // set size to 0, all entries should have been removed
+    m.setMemLimit(0);
+    CPPUNIT_ASSERT_EQUAL(size_t(0), m.entries());
+
+    // test that memory used decreases when shrinking
+    size_t curLimit = 10240;
+    size_t lastMemoryUsed;
+    m.setMemLimit(curLimit);
+    fillMapWithElements(m, 1000);
+    lastMemoryUsed = m.memoryUsed();
+    while (curLimit > 1024) // stop at any practical size
+    {
+        CPPUNIT_ASSERT(m.memoryUsed() < curLimit);
+        CPPUNIT_ASSERT(m.memoryUsed() <= lastMemoryUsed);
+        // also check that we can still add entries - evicting old ones if needed
+        CPPUNIT_ASSERT(m.add(std::to_string(curLimit+1000), 1, 10));
+        CPPUNIT_ASSERT_EQUAL(1, *m.get(std::to_string(curLimit + 1000)));
+        curLimit /= 2;
+        lastMemoryUsed = m.memoryUsed();
+        m.setMemLimit(curLimit);
+    }
 }
 
 void
