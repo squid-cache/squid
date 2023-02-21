@@ -25,6 +25,7 @@ private:
     CPPUNIT_TEST( testReplaceEntryWithShorterTtl );
     CPPUNIT_TEST( testEntriesWithZeroTtl );
     CPPUNIT_TEST( testEntriesWithNegativeTtl );
+    CPPUNIT_TEST( testPurgeIsLRU );
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -43,6 +44,7 @@ protected:
     void testReplaceEntryWithShorterTtl();
     void testEntriesWithZeroTtl();
     void testEntriesWithNegativeTtl();
+    void testPurgeIsLRU();
 
     /// Generate and insert the given number of elements into the given map.
     /// Each entry is guaranteed to be inserted, but that insertion may purge other entries,

@@ -120,6 +120,7 @@ testClpMap::testSetMemLimit()
     fillMapWithElements(m, 10);
     const auto testEntriesBefore = m.entries();
     CPPUNIT_ASSERT(testEntriesBefore > 0);
+
     m.setMemLimit(m.memoryUsed() / 2);
     const auto entriesAfterPurge = m.entries();
     CPPUNIT_ASSERT(testEntriesBefore > entriesAfterPurge);
@@ -178,4 +179,25 @@ testClpMap::testEntriesWithNegativeTtl()
     CPPUNIT_ASSERT(m.get("0"));  // we get something
     CPPUNIT_ASSERT(!m.add("0", 2, -1));  // failure on insertion
     CPPUNIT_ASSERT(!m.get("0"));  // we get nothing
+}
+
+void
+testClpMap::testPurgeIsLRU()
+{
+    TestMap m(2048);
+    // TODO: once we have ClpMap iterators we can inspect the contents instead
+    for (int j = 0; j < 10; ++j)
+        CPPUNIT_ASSERT(m.add(std::to_string(j), j, 10));
+    // this makes it the LRU
+    CPPUNIT_ASSERT(m.get("0"));
+    // now overflow the map, checking "0" each time we add an element
+    for (int j = 100; j < 1000; ++j) {
+        CPPUNIT_ASSERT(m.add(std::to_string(j), j, 10));
+        CPPUNIT_ASSERT(m.get("0"));
+    }
+    CPPUNIT_ASSERT(m.get("0"));
+    CPPUNIT_ASSERT(!m.get("1")); // these should have been aged out
+    CPPUNIT_ASSERT(!m.get("2"));
+    CPPUNIT_ASSERT(!m.get("3"));
+    CPPUNIT_ASSERT(!m.get("4"));
 }
