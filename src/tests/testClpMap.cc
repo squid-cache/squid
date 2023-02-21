@@ -222,16 +222,17 @@ testClpMap::testPurgeIsLRU()
     // TODO: once we have ClpMap iterators we can inspect the contents instead
     for (int j = 0; j < 10; ++j)
         CPPUNIT_ASSERT(m.add(std::to_string(j), j, 10));
-    // this makes it the LRU
-    CPPUNIT_ASSERT(m.get("0"));
-    // now overflow the map, checking "0" each time we add an element
+    // now overflow the map while keeping "0" the Least Recently Used
     for (int j = 100; j < 1000; ++j) {
         CPPUNIT_ASSERT(m.add(std::to_string(j), j, 10));
         CPPUNIT_ASSERT(m.get("0"));
     }
-    CPPUNIT_ASSERT(m.get("0"));
-    CPPUNIT_ASSERT(!m.get("1")); // these should have been aged out
+    // these should have been aged out
+    CPPUNIT_ASSERT(!m.get("1"));
     CPPUNIT_ASSERT(!m.get("2"));
     CPPUNIT_ASSERT(!m.get("3"));
     CPPUNIT_ASSERT(!m.get("4"));
+
+    fillMapWithElements(m, 10);
+    CPPUNIT_ASSERT(!m.get("0")); // removable when not recently used
 }
