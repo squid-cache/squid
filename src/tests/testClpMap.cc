@@ -14,9 +14,9 @@
 
 #include <ctime>
 
-class testClpMap: public CPPUNIT_NS::TestFixture
+class TestClpMap: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testClpMap );
+    CPPUNIT_TEST_SUITE( TestClpMap );
     CPPUNIT_TEST( testMemoryCounter );
     CPPUNIT_TEST( testConstructor );
     CPPUNIT_TEST( testEntries );
@@ -58,25 +58,25 @@ protected:
     void addOneEntry(TestMap &, TestMap::mapped_type, TestMap::Ttl = std::numeric_limits<TestMap::Ttl>::max());
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testClpMap );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestClpMap );
 
 class SquidConfig Config;
 
 void
-testClpMap::addSequenceOfElementsToMap(TestMap &m, size_t count, const TestMap::mapped_type startWith, const TestMap::Ttl ttl)
+TestClpMap::addSequenceOfElementsToMap(TestMap &m, size_t count, const TestMap::mapped_type startWith, const TestMap::Ttl ttl)
 {
     for (auto j = startWith; count; ++j, --count)
         CPPUNIT_ASSERT(m.add(std::to_string(j), j, ttl));
 }
 
 void
-testClpMap::fillMapWithElements(TestMap &m)
+TestClpMap::fillMapWithElements(TestMap &m)
 {
     addSequenceOfElementsToMap(m, m.memLimit() / sizeof(TestMap::mapped_type), 0, 10);
 }
 
 void
-testClpMap::addOneEntry(TestMap &m, const TestMap::mapped_type value, const TestMap::Ttl ttl)
+TestClpMap::addOneEntry(TestMap &m, const TestMap::mapped_type value, const TestMap::Ttl ttl)
 {
     const auto key = std::to_string(value);
     CPPUNIT_ASSERT(m.add(key, value, ttl));
@@ -85,13 +85,13 @@ testClpMap::addOneEntry(TestMap &m, const TestMap::mapped_type value, const Test
 }
 
 void
-testClpMap::setUp()
+TestClpMap::setUp()
 {
     squid_curtime = time(nullptr);
 }
 
 void
-testClpMap::testPutGetDelete()
+TestClpMap::testPutGetDelete()
 {
     TestMap m(1024);
     addSequenceOfElementsToMap(m, 10, 0, 10);
@@ -108,7 +108,7 @@ testClpMap::testPutGetDelete()
 }
 
 void
-testClpMap::testEntries()
+TestClpMap::testEntries()
 {
     {
         TestMap m(10*1024*1024, 10);
@@ -125,7 +125,7 @@ testClpMap::testEntries()
 }
 
 void
-testClpMap::testMemoryCounter()
+TestClpMap::testMemoryCounter()
 {
     CPPUNIT_ASSERT_EQUAL(sizeof(int), static_cast<size_t>(DefaultMemoryUsage(int())));
     CPPUNIT_ASSERT_EQUAL(sizeof(int32_t), static_cast<size_t>(DefaultMemoryUsage(int32_t())));
@@ -137,7 +137,7 @@ testClpMap::testMemoryCounter()
 }
 
 void
-testClpMap::testConstructor()
+TestClpMap::testConstructor()
 {
     const TestMap nilA(0);
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilA.memLimit());
@@ -165,7 +165,7 @@ testClpMap::testConstructor()
 }
 
 void
-testClpMap::testMemoryLimit()
+TestClpMap::testMemoryLimit()
 {
     const size_t initialCapacity = 1024; // bytes
     TestMap m(initialCapacity);
@@ -203,7 +203,7 @@ testClpMap::testMemoryLimit()
 }
 
 void
-testClpMap::testTtlExpiration()
+TestClpMap::testTtlExpiration()
 {
     TestMap m(2048);
     m.add(std::to_string(1), 1, 10);
@@ -214,7 +214,7 @@ testClpMap::testTtlExpiration()
 }
 
 void
-testClpMap::testReplaceEntryWithShorterTtl()
+TestClpMap::testReplaceEntryWithShorterTtl()
 {
     TestMap m(2048);
     addOneEntry(m, 0, 100);
@@ -230,7 +230,7 @@ testClpMap::testReplaceEntryWithShorterTtl()
 }
 
 void
-testClpMap::testEntriesWithZeroTtl()
+TestClpMap::testEntriesWithZeroTtl()
 {
     TestMap m(2048);
     addOneEntry(m, 0, 0);
@@ -239,7 +239,7 @@ testClpMap::testEntriesWithZeroTtl()
 }
 
 void
-testClpMap::testEntriesWithNegativeTtl()
+TestClpMap::testEntriesWithNegativeTtl()
 {
     TestMap m(2048);
     CPPUNIT_ASSERT(!m.add("0", 0, -1)); // failure on insertion
@@ -251,7 +251,7 @@ testClpMap::testEntriesWithNegativeTtl()
 }
 
 void
-testClpMap::testPurgeIsLRU()
+TestClpMap::testPurgeIsLRU()
 {
     TestMap m(2048);
     for (int j = 0; j < 10; ++j)
