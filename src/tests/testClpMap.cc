@@ -254,7 +254,6 @@ void
 testClpMap::testPurgeIsLRU()
 {
     TestMap m(2048);
-    // TODO: once we have ClpMap iterators we can inspect the contents instead
     for (int j = 0; j < 10; ++j)
         addOneEntry(m, j);
     // now overflow the map while keeping "0" the Least Recently Used
