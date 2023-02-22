@@ -33,7 +33,7 @@ public:
     void setUp() override;
 
 protected:
-    using TestMap = ClpMap<std::string, int>;
+    using Map = ClpMap<std::string, int>;
 
     void testMemoryCounter();
     void testConstructor();
@@ -49,13 +49,13 @@ protected:
     /// Generate and insert the given number of elements into the given map.
     /// Each entry is guaranteed to be inserted, but that insertion may purge other entries,
     /// including entries previously added during the same method call
-    void addSequenceOfElementsToMap(TestMap &, size_t count, TestMap::mapped_type startWith, TestMap::Ttl);
+    void addSequenceOfElementsToMap(Map &, size_t count, Map::mapped_type startWith, Map::Ttl);
 
     /// add (more than) enough elements to make the map full
-    void fillMapWithElements(TestMap &);
+    void fillMapWithElements(Map &);
 
     /// generate and add an entry with a given value (and a matching key) to the map
-    void addOneEntry(TestMap &, TestMap::mapped_type, TestMap::Ttl = std::numeric_limits<TestMap::Ttl>::max());
+    void addOneEntry(Map &, Map::mapped_type, Map::Ttl = std::numeric_limits<Map::Ttl>::max());
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestClpMap );
@@ -63,20 +63,20 @@ CPPUNIT_TEST_SUITE_REGISTRATION( TestClpMap );
 class SquidConfig Config;
 
 void
-TestClpMap::addSequenceOfElementsToMap(TestMap &m, size_t count, const TestMap::mapped_type startWith, const TestMap::Ttl ttl)
+TestClpMap::addSequenceOfElementsToMap(Map &m, size_t count, const Map::mapped_type startWith, const Map::Ttl ttl)
 {
     for (auto j = startWith; count; ++j, --count)
         CPPUNIT_ASSERT(m.add(std::to_string(j), j, ttl));
 }
 
 void
-TestClpMap::fillMapWithElements(TestMap &m)
+TestClpMap::fillMapWithElements(Map &m)
 {
-    addSequenceOfElementsToMap(m, m.memLimit() / sizeof(TestMap::mapped_type), 0, 10);
+    addSequenceOfElementsToMap(m, m.memLimit() / sizeof(Map::mapped_type), 0, 10);
 }
 
 void
-TestClpMap::addOneEntry(TestMap &m, const TestMap::mapped_type value, const TestMap::Ttl ttl)
+TestClpMap::addOneEntry(Map &m, const Map::mapped_type value, const Map::Ttl ttl)
 {
     const auto key = std::to_string(value);
     CPPUNIT_ASSERT(m.add(key, value, ttl));
@@ -93,7 +93,7 @@ TestClpMap::setUp()
 void
 TestClpMap::testPutGetDelete()
 {
-    TestMap m(1024);
+    Map m(1024);
     addSequenceOfElementsToMap(m, 10, 0, 10);
     CPPUNIT_ASSERT(!m.get("notthere"));
     CPPUNIT_ASSERT(m.get("1")); // we get something
@@ -111,14 +111,14 @@ void
 TestClpMap::testEntries()
 {
     {
-        TestMap m(10*1024*1024, 10);
+        Map m(10*1024*1024, 10);
         addSequenceOfElementsToMap(m, 10, 10, 10);
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(10), m.entries());
         m.add("foo", 0);
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(11), m.entries());
     }
     {
-        TestMap m(1024, 5);
+        Map m(1024, 5);
         addSequenceOfElementsToMap(m, 1000, 0, 10);
         CPPUNIT_ASSERT(m.entries() < 1000);
     }
@@ -139,25 +139,25 @@ TestClpMap::testMemoryCounter()
 void
 TestClpMap::testConstructor()
 {
-    const TestMap nilA(0);
+    const Map nilA(0);
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilA.memLimit());
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilA.freeMem());
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilA.memoryUsed());
     CPPUNIT_ASSERT_EQUAL(size_t(0), nilA.entries());
 
-    const TestMap nilB(0, 0);
+    const Map nilB(0, 0);
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilB.memLimit());
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilB.freeMem());
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), nilB.memoryUsed());
     CPPUNIT_ASSERT_EQUAL(size_t(0), nilB.entries());
 
-    const TestMap emptyC(1);
+    const Map emptyC(1);
     CPPUNIT_ASSERT_EQUAL(uint64_t(1), emptyC.memLimit());
     CPPUNIT_ASSERT_EQUAL(uint64_t(1), emptyC.freeMem());
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), emptyC.memoryUsed());
     CPPUNIT_ASSERT_EQUAL(size_t(0), emptyC.entries());
 
-    const TestMap emptyD(1024);
+    const Map emptyD(1024);
     CPPUNIT_ASSERT_EQUAL(uint64_t(1024), emptyD.memLimit());
     CPPUNIT_ASSERT_EQUAL(uint64_t(1024), emptyD.freeMem());
     CPPUNIT_ASSERT_EQUAL(uint64_t(0), emptyD.memoryUsed());
@@ -168,7 +168,7 @@ void
 TestClpMap::testMemoryLimit()
 {
     const size_t initialCapacity = 1024; // bytes
-    TestMap m(initialCapacity);
+    Map m(initialCapacity);
     fillMapWithElements(m);
     const auto entriesAtInitialCapacity = m.entries();
 
@@ -205,7 +205,7 @@ TestClpMap::testMemoryLimit()
 void
 TestClpMap::testTtlExpiration()
 {
-    TestMap m(2048);
+    Map m(2048);
     m.add(std::to_string(1), 1, 10);
     CPPUNIT_ASSERT(m.get("1"));
     squid_curtime += 100;
@@ -216,7 +216,7 @@ TestClpMap::testTtlExpiration()
 void
 TestClpMap::testReplaceEntryWithShorterTtl()
 {
-    TestMap m(2048);
+    Map m(2048);
     addOneEntry(m, 0, 100);
     squid_curtime += 20;
     CPPUNIT_ASSERT(m.get("0")); // hasn't expired yet
@@ -232,7 +232,7 @@ TestClpMap::testReplaceEntryWithShorterTtl()
 void
 TestClpMap::testEntriesWithZeroTtl()
 {
-    TestMap m(2048);
+    Map m(2048);
     addOneEntry(m, 0, 0);
     squid_curtime += 1;
     CPPUNIT_ASSERT(!m.get("0")); // expired, we get nothing
@@ -241,7 +241,7 @@ TestClpMap::testEntriesWithZeroTtl()
 void
 TestClpMap::testEntriesWithNegativeTtl()
 {
-    TestMap m(2048);
+    Map m(2048);
 
     // we start with an ordinary-TTL entry to check that it will be purged below
     addOneEntry(m, 0, 10);
@@ -260,7 +260,7 @@ TestClpMap::testEntriesWithNegativeTtl()
 void
 TestClpMap::testPurgeIsLRU()
 {
-    TestMap m(2048);
+    Map m(2048);
     for (int j = 0; j < 10; ++j)
         addOneEntry(m, j);
     // now overflow the map while keeping "0" the Least Recently Used
