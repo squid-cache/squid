@@ -40,10 +40,11 @@ template <class Key, class Value, uint64_t MemoryUsedBy(const Value &) = Default
 class ClpMap
 {
 public:
-    /// maximum desired entry caching duration (a.k.a. TTL), in seconds
-    using Ttl = int;
     using key_type = Key;
     using mapped_type = Value;
+
+    /// maximum desired entry caching duration (a.k.a. TTL), in seconds
+    using Ttl = int;
 
     explicit ClpMap(const uint64_t capacity) { setMemLimit(capacity); }
     ClpMap(uint64_t capacity, Ttl defaultTtl);
