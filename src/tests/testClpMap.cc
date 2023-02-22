@@ -112,9 +112,10 @@ TestClpMap::testEntryCounter()
 {
     {
         Map m(10*1024*1024, 10);
+        CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(0), m.entries());
         addSequenceOfElementsToMap(m, 10, 10, 10);
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(10), m.entries());
-        m.add("foo", 0);
+        m.add("new-key", 0);
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(11), m.entries());
     }
     {
