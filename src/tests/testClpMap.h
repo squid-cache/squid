@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BASE_TESTCLPMAP_H
-#define SQUID_BASE_TESTCLPMAP_H
+#ifndef SQUID_SRC_TESTS_TESTCLPMAP_H
+#define SQUID_SRC_TESTS_TESTCLPMAP_H
 
 #include "base/ClpMap.h"
 #include "compat/cppunit.h"
@@ -53,5 +53,5 @@ protected:
     void fillMapWithElements(TestMap &, TestMap::Ttl);
 };
 
-#endif /* SQUID_BASE_TESTCLPMAP_H */
+#endif /* SQUID_SRC_TESTS_TESTCLPMAP_H */
 
