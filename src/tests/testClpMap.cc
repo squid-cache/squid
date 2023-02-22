@@ -56,8 +56,13 @@ protected:
     /// add (more than) enough entries to make the map full
     void fillMapWithEntries(Map &);
 
-    /// generate and add an entry with a given value (and a matching key) to the map
-    void addOneEntry(Map &, Map::mapped_type, Map::Ttl = std::numeric_limits<Map::Ttl>::max());
+    /// generate and add an entry with a given value (and a matching key) to the
+    /// map using map-default TTL
+    void addOneEntry(Map &, Map::mapped_type);
+
+    /// generate and add an entry with a given value, a matching key, and a
+    /// given TTL to the map
+    void addOneEntry(Map &, Map::mapped_type, Map::Ttl);
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestClpMap );
@@ -75,6 +80,15 @@ void
 TestClpMap::fillMapWithEntries(Map &m)
 {
     addSequenceOfEntriesToMap(m, m.memLimit() / sizeof(Map::mapped_type), 0, 10);
+}
+
+void
+TestClpMap::addOneEntry(Map &m, const Map::mapped_type value)
+{
+    const auto key = std::to_string(value);
+    CPPUNIT_ASSERT(m.add(key, value));
+    CPPUNIT_ASSERT(m.get(key));
+    CPPUNIT_ASSERT_EQUAL(value, *m.get(key));
 }
 
 void
@@ -217,12 +231,34 @@ TestClpMap::testMemoryLimit()
 void
 TestClpMap::testTtlExpiration()
 {
+    {
     Map m(2048);
     addOneEntry(m, 0, 100);
     squid_curtime += 20;
     CPPUNIT_ASSERT(m.get("0")); // still fresh
     squid_curtime += 100;
     CPPUNIT_ASSERT(!m.get("0")); // has expired
+    }
+
+    {
+        // same test, but using a map-specific TTL instead of entry-specific one
+        Map m(2048, 100);
+        addOneEntry(m, 0);
+        squid_curtime += 20;
+        CPPUNIT_ASSERT(m.get("0")); // still fresh
+        squid_curtime += 100;
+        CPPUNIT_ASSERT(!m.get("0")); // has expired
+    }
+
+    {
+        // same test, but using both map-specific and entry-specific TTLs
+        Map m(2048, 1);
+        addOneEntry(m, 0, 100);
+        squid_curtime += 20;
+        CPPUNIT_ASSERT(m.get("0")); // still fresh
+        squid_curtime += 100;
+        CPPUNIT_ASSERT(!m.get("0")); // has expired
+    }
 }
 
 void
@@ -246,10 +282,28 @@ TestClpMap::testReplaceEntryWithShorterTtl()
 void
 TestClpMap::testZeroTtl()
 {
+    {
     Map m(2048);
     addOneEntry(m, 0, 0);
     squid_curtime += 1;
     CPPUNIT_ASSERT(!m.get("0")); // expired, we get nothing
+    }
+
+    {
+        // same test, but using a map-specific TTL instead of entry-specific one
+        Map m(2048, 0);
+        addOneEntry(m, 0);
+        squid_curtime += 1;
+        CPPUNIT_ASSERT(!m.get("0")); // expired, we get nothing
+    }
+
+    {
+        // same test, but using both map-specific and entry-specific TTLs
+        Map m(2048, 10);
+        addOneEntry(m, 0, 0);
+        squid_curtime += 1;
+        CPPUNIT_ASSERT(!m.get("0")); // expired, we get nothing
+    }
 }
 
 void
