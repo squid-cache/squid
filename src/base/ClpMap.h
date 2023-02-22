@@ -87,10 +87,6 @@ public:
     /// The number of currently stored entries, including expired ones
     size_t entries() const { return entries_.size(); }
 
-    /// Return an optional estimate of the total storage
-    /// used for the given key and value, including overhead
-    static std::optional<uint64_t> MemoryCountedFor(const Key &, const Value &);
-
 private:
     /// the keeper of cache entry Key, Value, and caching-related entry metadata
     class Entry
@@ -116,6 +112,8 @@ private:
     /// key:entry_position mapping for fast entry lookups by key
     using Index = std::unordered_map<Key, EntriesIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<IndexItem> >;
     using IndexIterator = typename Index::iterator;
+
+    static std::optional<uint64_t> MemoryCountedFor(const Key &, const Value &);
 
     void trim(uint64_t wantSpace);
     void erase(const IndexIterator &);
