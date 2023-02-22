@@ -18,9 +18,9 @@ CPPUNIT_TEST_SUITE_REGISTRATION( testClpMap );
 class SquidConfig Config;
 
 void
-testClpMap::addSequenceOfElementsToMap(TestMap &m, int count, int startWith, TestMap::Ttl ttl)
+testClpMap::addSequenceOfElementsToMap(TestMap &m, size_t count, const TestMap::mapped_type startWith, const TestMap::Ttl ttl)
 {
-    for (auto j = startWith; j < startWith + count; ++j)
+    for (auto j = startWith; count; ++j, --count)
     {
         CPPUNIT_ASSERT(m.add(std::to_string(j), j, ttl));
     }
