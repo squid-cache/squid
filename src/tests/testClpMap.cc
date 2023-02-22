@@ -218,11 +218,11 @@ void
 TestClpMap::testTtlExpiration()
 {
     Map m(2048);
-    m.add(std::to_string(1), 1, 10);
-    CPPUNIT_ASSERT(m.get("1"));
+    addOneEntry(m, 0, 100);
+    squid_curtime += 20;
+    CPPUNIT_ASSERT(m.get("0")); // still fresh
     squid_curtime += 100;
-    // "1" should have expired
-    CPPUNIT_ASSERT(!m.get("1"));
+    CPPUNIT_ASSERT(!m.get("0")); // has expired
 }
 
 void
@@ -230,15 +230,17 @@ TestClpMap::testReplaceEntryWithShorterTtl()
 {
     Map m(2048);
     addOneEntry(m, 0, 100);
-    squid_curtime += 20;
-    CPPUNIT_ASSERT(m.get("0")); // hasn't expired yet
-    squid_curtime += 100;
-    CPPUNIT_ASSERT(!m.get("0")); // has expired
-
-    addOneEntry(m, 0, 100);
     addOneEntry(m, 0, 10); // same (key, value) entry but with shorter TTL
     squid_curtime += 20;
-    CPPUNIT_ASSERT(!m.get("0")); // should have expired
+    CPPUNIT_ASSERT(!m.get("0")); // has expired
+
+    // now the same sequence but with a time change between additions
+    addOneEntry(m, 0, 100);
+    squid_curtime += 200;
+    addOneEntry(m, 0, 10);
+    CPPUNIT_ASSERT(m.get("0")); // still fresh due to new TTL
+    squid_curtime += 20;
+    CPPUNIT_ASSERT(!m.get("0")); // has expired
 }
 
 void
