@@ -232,12 +232,12 @@ void
 TestClpMap::testTtlExpiration()
 {
     {
-    Map m(2048);
-    addOneEntry(m, 0, 100);
-    squid_curtime += 20;
-    CPPUNIT_ASSERT(m.get("0")); // still fresh
-    squid_curtime += 100;
-    CPPUNIT_ASSERT(!m.get("0")); // has expired
+        Map m(2048);
+        addOneEntry(m, 0, 100);
+        squid_curtime += 20;
+        CPPUNIT_ASSERT(m.get("0")); // still fresh
+        squid_curtime += 100;
+        CPPUNIT_ASSERT(!m.get("0")); // has expired
     }
 
     {
@@ -283,10 +283,10 @@ void
 TestClpMap::testZeroTtl()
 {
     {
-    Map m(2048);
-    addOneEntry(m, 0, 0);
-    squid_curtime += 1;
-    CPPUNIT_ASSERT(!m.get("0")); // expired, we get nothing
+        Map m(2048);
+        addOneEntry(m, 0, 0);
+        squid_curtime += 1;
+        CPPUNIT_ASSERT(!m.get("0")); // expired, we get nothing
     }
 
     {
