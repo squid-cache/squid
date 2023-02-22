@@ -55,7 +55,7 @@ protected:
     void fillMapWithElements(TestMap &);
 
     /// generate and add an entry with a given value (and a matching key) to the map
-    void addOneEntry(TestMap &, TestMap::mapped_type);
+    void addOneEntry(TestMap &, TestMap::mapped_type, TestMap::Ttl = std::numeric_limits<TestMap::Ttl>::max());
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testClpMap );
@@ -76,10 +76,10 @@ testClpMap::fillMapWithElements(TestMap &m)
 }
 
 void
-testClpMap::addOneEntry(TestMap &m, const TestMap::mapped_type value)
+testClpMap::addOneEntry(TestMap &m, const TestMap::mapped_type value, const TestMap::Ttl ttl)
 {
     const auto key = std::to_string(value);
-    CPPUNIT_ASSERT(m.add(key, value));
+    CPPUNIT_ASSERT(m.add(key, value, ttl));
     CPPUNIT_ASSERT(m.get(key));
     CPPUNIT_ASSERT_EQUAL(value, *m.get(key));
 }
@@ -217,15 +217,14 @@ void
 testClpMap::testReplaceEntryWithShorterTtl()
 {
     TestMap m(2048);
-    addSequenceOfElementsToMap(m, 1, 0, 100);
-    CPPUNIT_ASSERT(m.get("0")); // successfully added one element
+    addOneEntry(m, 0, 100);
     squid_curtime += 20;
     CPPUNIT_ASSERT(m.get("0")); // hasn't expired yet
     squid_curtime += 100;
     CPPUNIT_ASSERT(!m.get("0")); // has expired
 
-    addSequenceOfElementsToMap(m, 1, 0, 100);
-    addSequenceOfElementsToMap(m, 1, 0, 10); // replaced element with same but shorter ttl
+    addOneEntry(m, 0, 100);
+    addOneEntry(m, 0, 10); // replaced element with same but shorter ttl
     squid_curtime += 20;
     CPPUNIT_ASSERT(!m.get("0")); // should have expired
 }
@@ -234,8 +233,7 @@ void
 testClpMap::testEntriesWithZeroTtl()
 {
     TestMap m(2048);
-    addSequenceOfElementsToMap(m, 1, 0, 0);
-    CPPUNIT_ASSERT(m.get("0")); // we get something
+    addOneEntry(m, 0, 0);
     squid_curtime += 1;
     CPPUNIT_ASSERT(!m.get("0")); // expired, we get nothing
 }
