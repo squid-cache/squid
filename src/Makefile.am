@@ -824,9 +824,9 @@ tests_testClpMap_SOURCES = \
 	tests/testClpMap.cc
 nodist_tests_testClpMap_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
+	tests/stub_SBuf.cc \
 	tests/stub_libip.cc \
-	tests/stub_libtime.cc \
-	tests/stub_SBuf.cc
+	tests/stub_libtime.cc
 tests_testClpMap_LDADD = \
 	mem/libminimal.la \
 	$(LIBCPPUNIT_LIBS) \

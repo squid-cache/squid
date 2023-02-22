@@ -61,9 +61,7 @@ void
 testClpMap::addSequenceOfElementsToMap(TestMap &m, size_t count, const TestMap::mapped_type startWith, const TestMap::Ttl ttl)
 {
     for (auto j = startWith; count; ++j, --count)
-    {
         CPPUNIT_ASSERT(m.add(std::to_string(j), j, ttl));
-    }
 }
 
 void
@@ -192,8 +190,7 @@ testClpMap::testSetMemLimit()
     m.setMemLimit(curLimit);
     fillMapWithElements(m, 1000);
     lastMemoryUsed = m.memoryUsed();
-    while (curLimit > 1024) // stop at any practical size
-    {
+    while (curLimit > 1024) { // stop at any practical size
         CPPUNIT_ASSERT(m.memoryUsed() < curLimit);
         CPPUNIT_ASSERT(m.memoryUsed() <= lastMemoryUsed);
         // also check that we can still add entries - evicting old ones if needed
