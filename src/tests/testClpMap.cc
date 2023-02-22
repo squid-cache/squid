@@ -50,7 +50,9 @@ protected:
     /// Each entry is guaranteed to be inserted, but that insertion may purge other entries,
     /// including entries previously added during the same method call
     void addSequenceOfElementsToMap(TestMap &, size_t count, TestMap::mapped_type startWith, TestMap::Ttl);
-    void fillMapWithElements(TestMap &, TestMap::Ttl);
+
+    /// add (more than) enough elements to make the map full
+    void fillMapWithElements(TestMap &);
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testClpMap );
@@ -65,9 +67,9 @@ testClpMap::addSequenceOfElementsToMap(TestMap &m, size_t count, const TestMap::
 }
 
 void
-testClpMap::fillMapWithElements(TestMap &m, TestMap::Ttl ttl)
+testClpMap::fillMapWithElements(TestMap &m)
 {
-    addSequenceOfElementsToMap(m, m.memLimit() / sizeof(TestMap::mapped_type), 0, ttl);
+    addSequenceOfElementsToMap(m, m.memLimit() / sizeof(TestMap::mapped_type), 0, 10);
 }
 
 void
@@ -155,7 +157,7 @@ testClpMap::testSetMemLimit()
 {
     TestMap m(2048);
     // overflow the map with entries to make sure it has lots of entries to purge below
-    fillMapWithElements(m, 10);
+    fillMapWithElements(m);
     auto testEntriesBefore = m.entries();
     CPPUNIT_ASSERT(testEntriesBefore > 0);
 
@@ -165,7 +167,7 @@ testClpMap::testSetMemLimit()
 
     m.setMemLimit(m.memLimit() * 2);
     // overflow the map with entries again to make sure it can grow after purging
-    fillMapWithElements(m, 10);
+    fillMapWithElements(m);
     CPPUNIT_ASSERT(entriesAfterPurge < m.entries());
 
     // progressively shrink to size 0, checking that the number of
@@ -188,7 +190,7 @@ testClpMap::testSetMemLimit()
     size_t curLimit = 10240;
     size_t lastMemoryUsed;
     m.setMemLimit(curLimit);
-    fillMapWithElements(m, 1000);
+    fillMapWithElements(m);
     lastMemoryUsed = m.memoryUsed();
     while (curLimit > 1024) { // stop at any practical size
         CPPUNIT_ASSERT(m.memoryUsed() < curLimit);
@@ -270,6 +272,6 @@ testClpMap::testPurgeIsLRU()
     CPPUNIT_ASSERT(!m.get("3"));
     CPPUNIT_ASSERT(!m.get("4"));
 
-    fillMapWithElements(m, 10);
+    fillMapWithElements(m);
     CPPUNIT_ASSERT(!m.get("0")); // removable when not recently used
 }
