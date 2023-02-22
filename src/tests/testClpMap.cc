@@ -216,9 +216,10 @@ TestClpMap::testMemoryLimit()
         const auto memoryUsedBefore = m.memoryUsed();
         const auto entriesBefore = m.entries();
 
-        m.setMemLimit(memoryUsedBefore/2);
+        const auto newMemoryLimit = memoryUsedBefore/2; // may become zero
+        m.setMemLimit(newMemoryLimit);
 
-        CPPUNIT_ASSERT(m.memoryUsed() < memoryUsedBefore);
+        CPPUNIT_ASSERT(m.memoryUsed() <= newMemoryLimit);
         CPPUNIT_ASSERT(m.entries() < entriesBefore);
     }
 
