@@ -21,7 +21,7 @@ class testClpMap: public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testConstructor );
     CPPUNIT_TEST( testEntries );
     CPPUNIT_TEST( testPutGetDelete );
-    CPPUNIT_TEST( testSetMemLimit );
+    CPPUNIT_TEST( testMemoryLimit );
     CPPUNIT_TEST( testTtlExpiration );
     CPPUNIT_TEST( testReplaceEntryWithShorterTtl );
     CPPUNIT_TEST( testEntriesWithZeroTtl );
@@ -39,7 +39,7 @@ protected:
     void testConstructor();
     void testEntries();
     void testPutGetDelete();
-    void testSetMemLimit();
+    void testMemoryLimit();
     void testTtlExpiration();
     void testReplaceEntryWithShorterTtl();
     void testEntriesWithZeroTtl();
@@ -53,6 +53,9 @@ protected:
 
     /// add (more than) enough elements to make the map full
     void fillMapWithElements(TestMap &);
+
+    /// generate and add an entry with a given value (and a matching key) to the map
+    void addOneEntry(TestMap &, TestMap::mapped_type);
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testClpMap );
@@ -70,6 +73,15 @@ void
 testClpMap::fillMapWithElements(TestMap &m)
 {
     addSequenceOfElementsToMap(m, m.memLimit() / sizeof(TestMap::mapped_type), 0, 10);
+}
+
+void
+testClpMap::addOneEntry(TestMap &m, const TestMap::mapped_type value)
+{
+    const auto key = std::to_string(value);
+    CPPUNIT_ASSERT(m.add(key, value));
+    CPPUNIT_ASSERT(m.get(key));
+    CPPUNIT_ASSERT_EQUAL(value, *m.get(key));
 }
 
 void
@@ -153,55 +165,41 @@ testClpMap::testConstructor()
 }
 
 void
-testClpMap::testSetMemLimit()
+testClpMap::testMemoryLimit()
 {
-    TestMap m(2048);
-    // overflow the map with entries to make sure it has lots of entries to purge below
+    const size_t initialCapacity = 1024; // bytes
+    TestMap m(initialCapacity);
     fillMapWithElements(m);
-    auto testEntriesBefore = m.entries();
-    CPPUNIT_ASSERT(testEntriesBefore > 0);
+    const auto entriesAtInitialCapacity = m.entries();
 
-    m.setMemLimit(m.memoryUsed() / 2);
-    auto entriesAfterPurge = m.entries();
-    CPPUNIT_ASSERT(testEntriesBefore > entriesAfterPurge);
-
-    m.setMemLimit(m.memLimit() * 2);
-    // overflow the map with entries again to make sure it can grow after purging
-    fillMapWithElements(m);
-    CPPUNIT_ASSERT(entriesAfterPurge < m.entries());
-
-    // progressively shrink to size 0, checking that the number of
-    // entries decreases each time
-    testEntriesBefore = m.entries();
-    const auto singleEntrySizeEstimate = *TestMap::MemoryCountedFor("0", 0) + 10;
-    while (m.memoryUsed() > singleEntrySizeEstimate) {
-        m.setMemLimit(m.memoryUsed() / 2);
-        entriesAfterPurge = m.entries();
-        CPPUNIT_ASSERT(testEntriesBefore > entriesAfterPurge);
-        CPPUNIT_ASSERT(entriesAfterPurge > 0);
-        testEntriesBefore = entriesAfterPurge;
-    }
-
-    // set size to 0, all entries should have been removed
+    // check that all entries are removed if we prohibit storage of any entries
     m.setMemLimit(0);
     CPPUNIT_ASSERT_EQUAL(size_t(0), m.entries());
 
-    // test that memory used decreases when shrinking
-    size_t curLimit = 10240;
-    size_t lastMemoryUsed;
-    m.setMemLimit(curLimit);
+    // test whether the map can grow after the all-at-once purging above
+    m.setMemLimit(initialCapacity * 2);
     fillMapWithElements(m);
-    lastMemoryUsed = m.memoryUsed();
-    while (curLimit > 1024) { // stop at any practical size
-        CPPUNIT_ASSERT(m.memoryUsed() < curLimit);
-        CPPUNIT_ASSERT(m.memoryUsed() <= lastMemoryUsed);
-        // also check that we can still add entries - evicting old ones if needed
-        CPPUNIT_ASSERT(m.add(std::to_string(curLimit+1000), 1, 10));
-        CPPUNIT_ASSERT_EQUAL(1, *m.get(std::to_string(curLimit + 1000)));
-        curLimit /= 2;
-        lastMemoryUsed = m.memoryUsed();
-        m.setMemLimit(curLimit);
+    CPPUNIT_ASSERT(m.entries() > entriesAtInitialCapacity);
+
+    // test that memory usage and entry count decrease when the map is shrinking
+    while (m.entries()) {
+        // also check that we can still add entries, evicting old ones if needed
+        // (at least as long as there is at least one entry in the map)
+        addOneEntry(m, 0);
+
+        const auto memoryUsedBefore = m.memoryUsed();
+        const auto entriesBefore = m.entries();
+
+        m.setMemLimit(memoryUsedBefore/2);
+
+        CPPUNIT_ASSERT(m.memoryUsed() < memoryUsedBefore);
+        CPPUNIT_ASSERT(m.entries() < entriesBefore);
     }
+
+    // test whether the map can grow after all that gradual purging above
+    m.setMemLimit(initialCapacity * 2);
+    fillMapWithElements(m);
+    CPPUNIT_ASSERT(m.entries() > entriesAtInitialCapacity);
 }
 
 void
@@ -260,10 +258,10 @@ testClpMap::testPurgeIsLRU()
     TestMap m(2048);
     // TODO: once we have ClpMap iterators we can inspect the contents instead
     for (int j = 0; j < 10; ++j)
-        CPPUNIT_ASSERT(m.add(std::to_string(j), j, 10));
+        addOneEntry(m, j);
     // now overflow the map while keeping "0" the Least Recently Used
     for (int j = 100; j < 1000; ++j) {
-        CPPUNIT_ASSERT(m.add(std::to_string(j), j, 10));
+        addOneEntry(m, j);
         CPPUNIT_ASSERT(m.get("0"));
     }
     // these should have been aged out
