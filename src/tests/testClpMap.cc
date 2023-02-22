@@ -16,8 +16,7 @@
 
 class testClpMap: public CPPUNIT_NS::TestFixture
 {
-private:
-    CPPUNIT_TEST_SUITE(testClpMap);
+    CPPUNIT_TEST_SUITE( testClpMap );
     CPPUNIT_TEST( testMemoryCounter );
     CPPUNIT_TEST( testConstructor );
     CPPUNIT_TEST( testEntries );
@@ -28,7 +27,6 @@ private:
     CPPUNIT_TEST( testEntriesWithZeroTtl );
     CPPUNIT_TEST( testEntriesWithNegativeTtl );
     CPPUNIT_TEST( testPurgeIsLRU );
-
     CPPUNIT_TEST_SUITE_END();
 
 public:
