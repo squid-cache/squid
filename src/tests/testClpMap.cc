@@ -7,11 +7,53 @@
  */
 
 #include "squid.h"
+#include "base/ClpMap.h"
+#include "compat/cppunit.h"
 #include "SquidConfig.h"
-#include "testClpMap.h"
 #include "unitTestMain.h"
 
 #include <ctime>
+
+class testClpMap: public CPPUNIT_NS::TestFixture
+{
+private:
+    CPPUNIT_TEST_SUITE(testClpMap);
+    CPPUNIT_TEST( testMemoryCounter );
+    CPPUNIT_TEST( testConstructor );
+    CPPUNIT_TEST( testEntries );
+    CPPUNIT_TEST( testPutGetDelete );
+    CPPUNIT_TEST( testSetMemLimit );
+    CPPUNIT_TEST( testTtlExpiration );
+    CPPUNIT_TEST( testReplaceEntryWithShorterTtl );
+    CPPUNIT_TEST( testEntriesWithZeroTtl );
+    CPPUNIT_TEST( testEntriesWithNegativeTtl );
+    CPPUNIT_TEST( testPurgeIsLRU );
+
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void setUp() override;
+
+protected:
+    using TestMap = ClpMap<std::string, int>;
+
+    void testMemoryCounter();
+    void testConstructor();
+    void testEntries();
+    void testPutGetDelete();
+    void testSetMemLimit();
+    void testTtlExpiration();
+    void testReplaceEntryWithShorterTtl();
+    void testEntriesWithZeroTtl();
+    void testEntriesWithNegativeTtl();
+    void testPurgeIsLRU();
+
+    /// Generate and insert the given number of elements into the given map.
+    /// Each entry is guaranteed to be inserted, but that insertion may purge other entries,
+    /// including entries previously added during the same method call
+    void addSequenceOfElementsToMap(TestMap &, size_t count, TestMap::mapped_type startWith, TestMap::Ttl);
+    void fillMapWithElements(TestMap &, TestMap::Ttl);
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testClpMap );
 

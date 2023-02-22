@@ -821,10 +821,8 @@ tests_testCharacterSet_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testClpMap
 tests_testClpMap_SOURCES = \
-	tests/testClpMap.cc \
-	tests/testClpMap.h
+	tests/testClpMap.cc
 nodist_tests_testClpMap_SOURCES = \
-	base/ClpMap.h \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_libip.cc \
 	tests/stub_libtime.cc \
