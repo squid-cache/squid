@@ -95,7 +95,7 @@ TestClpMap::testPutGetDelete()
 {
     Map m(1024);
     addSequenceOfElementsToMap(m, 10, 0, 10);
-    CPPUNIT_ASSERT(!m.get("notthere"));
+    CPPUNIT_ASSERT(!m.get("not-there"));
     CPPUNIT_ASSERT(m.get("1")); // we get something
     CPPUNIT_ASSERT_EQUAL(1, *(m.get("1"))); // we get what we put in
     CPPUNIT_ASSERT(m.get("9"));
