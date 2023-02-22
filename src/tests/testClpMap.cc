@@ -21,6 +21,7 @@ class TestClpMap: public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testConstructor );
     CPPUNIT_TEST( testEntryCounter );
     CPPUNIT_TEST( testPutGetDelete );
+    CPPUNIT_TEST( testMisses );
     CPPUNIT_TEST( testMemoryLimit );
     CPPUNIT_TEST( testTtlExpiration );
     CPPUNIT_TEST( testReplaceEntryWithShorterTtl );
@@ -39,6 +40,7 @@ protected:
     void testConstructor();
     void testEntryCounter();
     void testPutGetDelete();
+    void testMisses();
     void testMemoryLimit();
     void testTtlExpiration();
     void testReplaceEntryWithShorterTtl();
@@ -95,7 +97,6 @@ TestClpMap::testPutGetDelete()
 {
     Map m(1024);
     addSequenceOfElementsToMap(m, 10, 0, 10);
-    CPPUNIT_ASSERT(!m.get("not-there"));
     CPPUNIT_ASSERT(m.get("1")); // we get something
     CPPUNIT_ASSERT_EQUAL(1, *(m.get("1"))); // we get what we put in
     CPPUNIT_ASSERT(m.get("9"));
@@ -105,6 +106,17 @@ TestClpMap::testPutGetDelete()
     CPPUNIT_ASSERT_EQUAL(99, *(m.get("1")));
     m.del("1");
     CPPUNIT_ASSERT(!m.get("1")); // entry has been cleared
+}
+
+void
+TestClpMap::testMisses()
+{
+    Map m(1024);
+    fillMapWithElements(m);
+    const auto entriesBefore = m.entries();
+    CPPUNIT_ASSERT(!m.get("not-there"));
+    m.del("not-there");
+    CPPUNIT_ASSERT_EQUAL(entriesBefore, m.entries());
 }
 
 void
