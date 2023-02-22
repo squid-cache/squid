@@ -242,12 +242,19 @@ void
 TestClpMap::testEntriesWithNegativeTtl()
 {
     TestMap m(2048);
-    CPPUNIT_ASSERT(!m.add("0", 0, -1)); // failure on insertion
-    CPPUNIT_ASSERT(!m.get("0"));  // we get nothing
-    CPPUNIT_ASSERT(m.add("0", 1, 0));
-    CPPUNIT_ASSERT(m.get("0"));  // we get something
-    CPPUNIT_ASSERT(!m.add("0", 2, -1));  // failure on insertion
-    CPPUNIT_ASSERT(!m.get("0"));  // we get nothing
+
+    // we start with an ordinary-TTL entry to check that it will be purged below
+    addOneEntry(m, 0, 10);
+
+    // check that negative-TTL entries are rejected
+    CPPUNIT_ASSERT(!m.add("0", 0, -1));
+
+    // check that an attempt to add a negative-TTL entry purges the previously
+    // added ordinary-TTL entry
+    CPPUNIT_ASSERT(!m.get("0"));
+
+    // check that the same entry can be re-added with a non-negative TTL
+    addOneEntry(m, 0);
 }
 
 void
