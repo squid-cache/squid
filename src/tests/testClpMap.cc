@@ -48,13 +48,13 @@ protected:
     void testNegativeTtl();
     void testPurgeIsLru();
 
-    /// Generate and insert the given number of elements into the given map.
-    /// Each entry is guaranteed to be inserted, but that insertion may purge other entries,
-    /// including entries previously added during the same method call
-    void addSequenceOfElementsToMap(Map &, size_t count, Map::mapped_type startWith, Map::Ttl);
+    /// Generate and insert the given number of entries into the given map. Each
+    /// entry is guaranteed to be inserted, but that insertion may purge other
+    /// entries, including entries previously added during the same method call.
+    void addSequenceOfEntriesToMap(Map &, size_t count, Map::mapped_type startWith, Map::Ttl);
 
-    /// add (more than) enough elements to make the map full
-    void fillMapWithElements(Map &);
+    /// add (more than) enough entries to make the map full
+    void fillMapWithEntries(Map &);
 
     /// generate and add an entry with a given value (and a matching key) to the map
     void addOneEntry(Map &, Map::mapped_type, Map::Ttl = std::numeric_limits<Map::Ttl>::max());
@@ -65,16 +65,16 @@ CPPUNIT_TEST_SUITE_REGISTRATION( TestClpMap );
 class SquidConfig Config;
 
 void
-TestClpMap::addSequenceOfElementsToMap(Map &m, size_t count, const Map::mapped_type startWith, const Map::Ttl ttl)
+TestClpMap::addSequenceOfEntriesToMap(Map &m, size_t count, const Map::mapped_type startWith, const Map::Ttl ttl)
 {
     for (auto j = startWith; count; ++j, --count)
         CPPUNIT_ASSERT(m.add(std::to_string(j), j, ttl));
 }
 
 void
-TestClpMap::fillMapWithElements(Map &m)
+TestClpMap::fillMapWithEntries(Map &m)
 {
-    addSequenceOfElementsToMap(m, m.memLimit() / sizeof(Map::mapped_type), 0, 10);
+    addSequenceOfEntriesToMap(m, m.memLimit() / sizeof(Map::mapped_type), 0, 10);
 }
 
 void
@@ -96,7 +96,7 @@ void
 TestClpMap::testPutGetDelete()
 {
     Map m(1024);
-    addSequenceOfElementsToMap(m, 10, 0, 10);
+    addSequenceOfEntriesToMap(m, 10, 0, 10);
     CPPUNIT_ASSERT(m.get("1")); // we get something
     CPPUNIT_ASSERT_EQUAL(1, *(m.get("1"))); // we get what we put in
     CPPUNIT_ASSERT(m.get("9"));
@@ -112,7 +112,7 @@ void
 TestClpMap::testMisses()
 {
     Map m(1024);
-    fillMapWithElements(m);
+    fillMapWithEntries(m);
     const auto entriesBefore = m.entries();
     CPPUNIT_ASSERT(!m.get("not-there"));
     m.del("not-there");
@@ -125,14 +125,14 @@ TestClpMap::testEntryCounter()
     {
         Map m(10*1024*1024, 10);
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(0), m.entries());
-        addSequenceOfElementsToMap(m, 10, 10, 10);
+        addSequenceOfEntriesToMap(m, 10, 10, 10);
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(10), m.entries());
         m.add("new-key", 0);
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(11), m.entries());
     }
     {
         Map m(1024, 5);
-        addSequenceOfElementsToMap(m, 1000, 0, 10);
+        addSequenceOfEntriesToMap(m, 1000, 0, 10);
         CPPUNIT_ASSERT(m.entries() < 1000);
     }
 }
@@ -181,7 +181,7 @@ TestClpMap::testMemoryLimit()
 {
     const size_t initialCapacity = 1024; // bytes
     Map m(initialCapacity);
-    fillMapWithElements(m);
+    fillMapWithEntries(m);
     const auto entriesAtInitialCapacity = m.entries();
 
     // check that all entries are removed if we prohibit storage of any entries
@@ -190,7 +190,7 @@ TestClpMap::testMemoryLimit()
 
     // test whether the map can grow after the all-at-once purging above
     m.setMemLimit(initialCapacity * 2);
-    fillMapWithElements(m);
+    fillMapWithEntries(m);
     CPPUNIT_ASSERT(m.entries() > entriesAtInitialCapacity);
 
     // test that memory usage and entry count decrease when the map is shrinking
@@ -210,7 +210,7 @@ TestClpMap::testMemoryLimit()
 
     // test whether the map can grow after all that gradual purging above
     m.setMemLimit(initialCapacity * 2);
-    fillMapWithElements(m);
+    fillMapWithEntries(m);
     CPPUNIT_ASSERT(m.entries() > entriesAtInitialCapacity);
 }
 
@@ -236,7 +236,7 @@ TestClpMap::testReplaceEntryWithShorterTtl()
     CPPUNIT_ASSERT(!m.get("0")); // has expired
 
     addOneEntry(m, 0, 100);
-    addOneEntry(m, 0, 10); // replaced element with same but shorter ttl
+    addOneEntry(m, 0, 10); // same (key, value) entry but with shorter TTL
     squid_curtime += 20;
     CPPUNIT_ASSERT(!m.get("0")); // should have expired
 }
@@ -286,6 +286,6 @@ TestClpMap::testPurgeIsLru()
     CPPUNIT_ASSERT(!m.get("3"));
     CPPUNIT_ASSERT(!m.get("4"));
 
-    fillMapWithElements(m);
+    fillMapWithEntries(m);
     CPPUNIT_ASSERT(!m.get("0")); // removable when not recently used
 }
