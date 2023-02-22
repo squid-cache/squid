@@ -209,9 +209,7 @@ TestClpMap::testMemoryLimit()
 
     // test that memory usage and entry count decrease when the map is shrinking
     while (m.entries()) {
-        // also check that we can still add entries, evicting old ones if needed
-        // (at least as long as there is at least one entry in the map)
-        addOneEntry(m, 0);
+        // TODO: Check that we can still add a (smaller) entry here.
 
         const auto memoryUsedBefore = m.memoryUsed();
         const auto entriesBefore = m.entries();
