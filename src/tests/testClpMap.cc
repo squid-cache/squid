@@ -27,7 +27,7 @@ class TestClpMap: public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testReplaceEntryWithShorterTtl );
     CPPUNIT_TEST( testZeroTtl );
     CPPUNIT_TEST( testNegativeTtl );
-    CPPUNIT_TEST( testPurgeIsLRU );
+    CPPUNIT_TEST( testPurgeIsLru );
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -46,7 +46,7 @@ protected:
     void testReplaceEntryWithShorterTtl();
     void testZeroTtl();
     void testNegativeTtl();
-    void testPurgeIsLRU();
+    void testPurgeIsLru();
 
     /// Generate and insert the given number of elements into the given map.
     /// Each entry is guaranteed to be inserted, but that insertion may purge other entries,
@@ -270,7 +270,7 @@ TestClpMap::testNegativeTtl()
 }
 
 void
-TestClpMap::testPurgeIsLRU()
+TestClpMap::testPurgeIsLru()
 {
     Map m(2048);
     for (int j = 0; j < 10; ++j)
