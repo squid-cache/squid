@@ -19,13 +19,13 @@ class TestClpMap: public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST_SUITE( TestClpMap );
     CPPUNIT_TEST( testMemoryCounter );
     CPPUNIT_TEST( testConstructor );
-    CPPUNIT_TEST( testEntries );
+    CPPUNIT_TEST( testEntryCounter );
     CPPUNIT_TEST( testPutGetDelete );
     CPPUNIT_TEST( testMemoryLimit );
     CPPUNIT_TEST( testTtlExpiration );
     CPPUNIT_TEST( testReplaceEntryWithShorterTtl );
-    CPPUNIT_TEST( testEntriesWithZeroTtl );
-    CPPUNIT_TEST( testEntriesWithNegativeTtl );
+    CPPUNIT_TEST( testZeroTtl );
+    CPPUNIT_TEST( testNegativeTtl );
     CPPUNIT_TEST( testPurgeIsLRU );
     CPPUNIT_TEST_SUITE_END();
 
@@ -37,13 +37,13 @@ protected:
 
     void testMemoryCounter();
     void testConstructor();
-    void testEntries();
+    void testEntryCounter();
     void testPutGetDelete();
     void testMemoryLimit();
     void testTtlExpiration();
     void testReplaceEntryWithShorterTtl();
-    void testEntriesWithZeroTtl();
-    void testEntriesWithNegativeTtl();
+    void testZeroTtl();
+    void testNegativeTtl();
     void testPurgeIsLRU();
 
     /// Generate and insert the given number of elements into the given map.
@@ -108,7 +108,7 @@ TestClpMap::testPutGetDelete()
 }
 
 void
-TestClpMap::testEntries()
+TestClpMap::testEntryCounter()
 {
     {
         Map m(10*1024*1024, 10);
@@ -230,7 +230,7 @@ TestClpMap::testReplaceEntryWithShorterTtl()
 }
 
 void
-TestClpMap::testEntriesWithZeroTtl()
+TestClpMap::testZeroTtl()
 {
     Map m(2048);
     addOneEntry(m, 0, 0);
@@ -239,7 +239,7 @@ TestClpMap::testEntriesWithZeroTtl()
 }
 
 void
-TestClpMap::testEntriesWithNegativeTtl()
+TestClpMap::testNegativeTtl()
 {
     Map m(2048);
 
