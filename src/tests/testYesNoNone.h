@@ -13,7 +13,7 @@
 
 /*
  * demonstration test file, as new idioms are made they will
- * be shown in the testYesNoNone source.
+ * be shown in the TestYesNoNone source.
  */
 
 class TestYesNoNone: public CPPUNIT_NS::TestFixture
