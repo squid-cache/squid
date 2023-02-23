@@ -15,7 +15,7 @@
  * test the ConfigParser framework
  */
 
-class TestConfigParser : public CPPUNIT_NS::TestFixture
+class TestConfigParser: public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( TestConfigParser );
     CPPUNIT_TEST( testParseQuoted );

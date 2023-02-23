@@ -15,7 +15,7 @@
  * test the CacheManager implementation
  */
 
-class TestCacheManager : public CPPUNIT_NS::TestFixture
+class TestCacheManager: public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( TestCacheManager );
     CPPUNIT_TEST( testCreate );

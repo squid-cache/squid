@@ -13,10 +13,10 @@
 
 /*
  * demonstration test file, as new idioms are made they will
- * be shown in the testBoilerplate source.
+ * be shown in the TestBoilerplate source.
  */
 
-class TestBoilerplate : public CPPUNIT_NS::TestFixture
+class TestBoilerplate: public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( TestBoilerplate );
     /* note the statement here and then the actual prototype below */

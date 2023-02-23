@@ -10,7 +10,7 @@
 #include "base/AsyncCallQueue.h"
 #include "event.h"
 #include "MemBuf.h"
-#include "testEvent.h"
+#include "tests/testEvent.h"
 #include "unitTestMain.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestEvent );

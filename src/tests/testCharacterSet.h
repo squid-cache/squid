@@ -6,12 +6,12 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BASE_TestCharacterSet_H
-#define SQUID_BASE_TestCharacterSet_H
+#ifndef SQUID_BASE_TESTCHARACTERSET_H
+#define SQUID_BASE_TESTCHARACTERSET_H
 
 #include "compat/cppunit.h"
 
-class TestCharacterSet : public CPPUNIT_NS::TestFixture
+class TestCharacterSet: public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( TestCharacterSet );
     CPPUNIT_TEST( CharacterSetConstruction );
@@ -33,5 +33,5 @@ protected:
     void CharacterSetSubtract();
 };
 
-#endif /* SQUID_BASE_TestCharacterSet_H */
+#endif /* SQUID_BASE_TESTCHARACTERSET_H */
 

@@ -6,14 +6,14 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_TestEnumIterator_H_
-#define SQUID_TestEnumIterator_H_
+#ifndef SQUID_TESTENUMITERATOR_H_
+#define SQUID_TESTENUMITERATOR_H_
 
 #include "base/EnumIterator.h"
 
 #include "compat/cppunit.h"
 
-class TestEnumIterator : public CPPUNIT_NS::TestFixture
+class TestEnumIterator: public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( TestEnumIterator );
     CPPUNIT_TEST( testForwardIter );
@@ -33,5 +33,5 @@ protected:
     void testUnsignedEnum();
 };
 
-#endif /* SQUID_TestEnumIterator_H_ */
+#endif /* SQUID_TESTENUMITERATOR_H_ */
 

@@ -15,7 +15,7 @@
  * test the event module.
  */
 
-class TestEvent : public CPPUNIT_NS::TestFixture
+class TestEvent: public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( TestEvent );
     CPPUNIT_TEST( testCreate );

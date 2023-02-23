@@ -17,7 +17,7 @@
  * test the auth Config framework
  */
 
-class TestAuth : public CPPUNIT_NS::TestFixture
+class TestAuth: public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( TestAuth );
     CPPUNIT_TEST( instantiate );
@@ -29,7 +29,7 @@ protected:
     void instantiate();
 };
 
-class TestAuthConfig : public CPPUNIT_NS::TestFixture
+class TestAuthConfig: public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( TestAuthConfig );
     CPPUNIT_TEST( create );
@@ -41,7 +41,7 @@ protected:
     void create();
 };
 
-class TestAuthUserRequest : public CPPUNIT_NS::TestFixture
+class TestAuthUserRequest: public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( TestAuthUserRequest );
     CPPUNIT_TEST( scheme );
@@ -56,7 +56,7 @@ protected:
 
 #if HAVE_AUTH_MODULE_BASIC
 #include "auth/basic/UserRequest.h"
-class TestAuthBasicUserRequest : public CPPUNIT_NS::TestFixture
+class TestAuthBasicUserRequest: public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( TestAuthBasicUserRequest );
     CPPUNIT_TEST( construction );
@@ -73,7 +73,7 @@ protected:
 
 #if HAVE_AUTH_MODULE_DIGEST
 #include "auth/digest/UserRequest.h"
-class TestAuthDigestUserRequest : public CPPUNIT_NS::TestFixture
+class TestAuthDigestUserRequest: public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( TestAuthDigestUserRequest );
     CPPUNIT_TEST( construction );
@@ -90,7 +90,7 @@ protected:
 
 #if HAVE_AUTH_MODULE_NTLM
 #include "auth/ntlm/UserRequest.h"
-class TestAuthNTLMUserRequest : public CPPUNIT_NS::TestFixture
+class TestAuthNTLMUserRequest: public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( TestAuthNTLMUserRequest );
     CPPUNIT_TEST( construction );
@@ -107,7 +107,7 @@ protected:
 
 #if HAVE_AUTH_MODULE_NEGOTIATE
 #include "auth/negotiate/UserRequest.h"
-class TestAuthNegotiateUserRequest : public CPPUNIT_NS::TestFixture
+class TestAuthNegotiateUserRequest: public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( TestAuthNegotiateUserRequest );
     CPPUNIT_TEST( construction );

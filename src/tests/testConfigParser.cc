@@ -9,10 +9,10 @@
 #include "squid.h"
 #include "ConfigParser.h"
 #include "SquidString.h"
-#include "testConfigParser.h"
+#include "tests/testConfigParser.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TestConfigParser);
+CPPUNIT_TEST_SUITE_REGISTRATION( TestConfigParser );
 
 int shutting_down = 0;
 

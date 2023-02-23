@@ -15,7 +15,7 @@
  * test the DiskIO framework
  */
 
-class TestDiskIO : public CPPUNIT_NS::TestFixture
+class TestDiskIO: public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( TestDiskIO );
     CPPUNIT_TEST( testFindDefault );

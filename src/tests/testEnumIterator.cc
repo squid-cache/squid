@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "testEnumIterator.h"
+#include "tests/testEnumIterator.h"
 #include "unitTestMain.h"
 
 #include <cppunit/TestAssert.h>
