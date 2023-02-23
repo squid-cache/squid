@@ -1,4 +1,4 @@
-Changes in squid-6.0.1 (06 Feb 2023):
+Changes in squid-6.0.1 (28 Feb 2023):
 
 	- Bug 5256: Intercepting port fails to accept
 	- Bug 5241: Block all non-localhost requests by default
