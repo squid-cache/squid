@@ -18,9 +18,9 @@
  * be shown in the testBoilerplate source.
  */
 
-class testACLMaxUserIP : public CPPUNIT_NS::TestFixture
+class TestACLMaxUserIP : public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testACLMaxUserIP );
+    CPPUNIT_TEST_SUITE( TestACLMaxUserIP );
     /* note the statement here and then the actual prototype below */
     CPPUNIT_TEST( testDefaults );
     CPPUNIT_TEST( testParseLine );
