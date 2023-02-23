@@ -16,9 +16,9 @@
  * be shown in the testYesNoNone source.
  */
 
-class testYesNoNone : public CPPUNIT_NS::TestFixture
+class TestYesNoNone: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testYesNoNone );
+    CPPUNIT_TEST_SUITE( TestYesNoNone );
     /* note the statement here and then the actual prototype below */
     CPPUNIT_TEST( testBasics );
     CPPUNIT_TEST_SUITE_END();

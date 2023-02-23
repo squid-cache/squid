@@ -11,7 +11,7 @@
 #include "testLookupTable.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testLookupTable );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestLookupTable );
 
 enum EnumData {
     ENUM_1,
@@ -36,7 +36,7 @@ static const LookupTable<EnumData>::Record tableData[] = {
 };
 
 void
-testLookupTable::testLookupTableLookup()
+TestLookupTable::testLookupTableLookup()
 {
     LookupTable<EnumData> lt(ENUM_INVALID, tableData);
     // element found

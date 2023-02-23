@@ -15,9 +15,9 @@
  * test the store framework
  */
 
-class testRock : public CPPUNIT_NS::TestFixture
+class TestRock: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testRock );
+    CPPUNIT_TEST_SUITE( TestRock );
     CPPUNIT_TEST( testRockCreate );
     CPPUNIT_TEST( testRockSwapOut );
     CPPUNIT_TEST_SUITE_END();

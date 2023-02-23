@@ -14,10 +14,10 @@
 
 #include <cppunit/TestAssert.h>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testIcmp );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestIcmp );
 
 void
-testIcmp::testChecksum()
+TestIcmp::testChecksum()
 {
 #if USE_ICMP
     stubIcmp icmp;
@@ -72,7 +72,7 @@ testIcmp::testChecksum()
 }
 
 void
-testIcmp::testHops()
+TestIcmp::testHops()
 {
 #if USE_ICMP
     stubIcmp icmp;

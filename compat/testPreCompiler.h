@@ -15,9 +15,9 @@
  * Test the pre-compiler directives used within Squid code actually work.
  */
 
-class testPreCompiler : public CPPUNIT_NS::TestFixture
+class TestPreCompiler: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testPreCompiler );
+    CPPUNIT_TEST_SUITE( TestPreCompiler );
     CPPUNIT_TEST( testIfDef );
     CPPUNIT_TEST( testIfDefAnd );
     CPPUNIT_TEST( testIfDefOr );

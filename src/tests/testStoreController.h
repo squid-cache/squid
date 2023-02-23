@@ -15,9 +15,9 @@
  * test the store framework
  */
 
-class testStoreController : public CPPUNIT_NS::TestFixture
+class TestStoreController: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testStoreController );
+    CPPUNIT_TEST_SUITE( TestStoreController );
     CPPUNIT_TEST( testStats );
     CPPUNIT_TEST( testMaxSize );
     CPPUNIT_TEST( testSearch );
