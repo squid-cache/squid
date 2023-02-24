@@ -78,7 +78,7 @@ public:
     virtual StoreSearch *search();
 };
 
-typedef RefCount<StoreControllerStub> TestStorePointer;
+typedef RefCount<StoreControllerStub> StoreControllerStubPointer;
 
 #endif
 
