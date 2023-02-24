@@ -211,8 +211,7 @@ TestClpMap::testMemoryLimit()
     // test that memory usage and entry count decrease when the map is shrinking
     // but prevent endless loops no matter how broken ClpMap implementation is
     auto iterationsLeft = m.entries();
-    CPPUNIT_ASSERT_MESSAGE("ClpMap::entries() returns bogus numbers",
-                           0 < iterationsLeft && iterationsLeft <= increasedCapacity);
+    CPPUNIT_ASSERT(0 < iterationsLeft && iterationsLeft <= increasedCapacity);
     while (m.entries()) {
         // TODO: Check that we can still add a (smaller) entry here.
 
@@ -225,8 +224,8 @@ TestClpMap::testMemoryLimit()
         CPPUNIT_ASSERT(m.memoryUsed() <= newMemoryLimit);
         CPPUNIT_ASSERT(m.entries() < entriesBefore);
 
-        CPPUNIT_ASSERT_MESSAGE("endless loop detected while shrinking map",
-                               iterationsLeft > 0);
+        // the assertion below may fail if ClpMap::entries() returns bogus numbers
+        CPPUNIT_ASSERT(iterationsLeft > 0);
         --iterationsLeft;
     }
 
