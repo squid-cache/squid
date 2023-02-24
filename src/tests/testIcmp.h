@@ -15,11 +15,11 @@
 
 #include "icmp/Icmp.h"
 
-class stubIcmp : public Icmp
+class IcmpStub: public Icmp
 {
 public:
-    stubIcmp() {};
-    ~stubIcmp() override {};
+    IcmpStub() {};
+    ~IcmpStub() override {};
     int Open() override { return 0; };
     void Close() override {};
 
