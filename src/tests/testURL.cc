@@ -17,12 +17,12 @@
 
 #include <sstream>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TestURL );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestUri );
 
 /* init memory pools */
 
 void
-TestURL::setUp()
+TestUri::setUp()
 {
     Mem::Init();
     AnyP::UriScheme::Init();
@@ -33,7 +33,7 @@ TestURL::setUp()
  * This creates a URL for that scheme.
  */
 void
-TestURL::testConstructScheme()
+TestUri::testConstructScheme()
 {
     AnyP::UriScheme empty_scheme;
     AnyP::Uri protoless_url(AnyP::PROTO_NONE);
@@ -50,7 +50,7 @@ TestURL::testConstructScheme()
  * scheme instances.
  */
 void
-TestURL::testDefaultConstructor()
+TestUri::testDefaultConstructor()
 {
     AnyP::UriScheme aScheme;
     AnyP::Uri aUrl;

@@ -90,9 +90,9 @@ protected:
 
 #if HAVE_AUTH_MODULE_NTLM
 #include "auth/ntlm/UserRequest.h"
-class TestAuthNTLMUserRequest: public CPPUNIT_NS::TestFixture
+class TestAuthNtlmUserRequest: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( TestAuthNTLMUserRequest );
+    CPPUNIT_TEST_SUITE( TestAuthNtlmUserRequest );
     CPPUNIT_TEST( construction );
     CPPUNIT_TEST( username );
     CPPUNIT_TEST_SUITE_END();

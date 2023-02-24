@@ -27,7 +27,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION( TestAuthBasicUserRequest );
 CPPUNIT_TEST_SUITE_REGISTRATION( TestAuthDigestUserRequest );
 #endif
 #if HAVE_AUTH_MODULE_NTLM
-CPPUNIT_TEST_SUITE_REGISTRATION( TestAuthNTLMUserRequest );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestAuthNtlmUserRequest );
 #endif
 #if HAVE_AUTH_MODULE_NEGOTIATE
 CPPUNIT_TEST_SUITE_REGISTRATION( TestAuthNegotiateUserRequest );
@@ -244,7 +244,7 @@ TestAuthDigestUserRequest::username()
 /* AuthNTLMUserRequest::AuthNTLMUserRequest works
  */
 void
-TestAuthNTLMUserRequest::construction()
+TestAuthNtlmUserRequest::construction()
 {
     AuthNTLMUserRequest();
     AuthNTLMUserRequest *temp=new AuthNTLMUserRequest();
@@ -252,7 +252,7 @@ TestAuthNTLMUserRequest::construction()
 }
 
 void
-TestAuthNTLMUserRequest::username()
+TestAuthNtlmUserRequest::username()
 {
     AuthUserRequest::Pointer temp = new AuthNTLMUserRequest();
     Auth::Ntlm::User *nuser=new Auth::Ntlm::User(Auth::Config::Find("ntlm"));
