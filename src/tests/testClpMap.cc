@@ -218,6 +218,7 @@ TestClpMap::testMemoryLimit()
         m.setMemLimit(newMemoryLimit);
 
         CPPUNIT_ASSERT(m.memoryUsed() <= newMemoryLimit);
+        // also prevents us from looping endlessly if ClpMap is broken:
         CPPUNIT_ASSERT(m.entries() < entriesBefore);
     }
 
