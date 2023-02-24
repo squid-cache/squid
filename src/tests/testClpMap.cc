@@ -203,11 +203,16 @@ TestClpMap::testMemoryLimit()
     CPPUNIT_ASSERT_EQUAL(size_t(0), m.entries());
 
     // test whether the map can grow after the all-at-once purging above
-    m.setMemLimit(initialCapacity * 2);
+    const auto increasedCapacity = initialCapacity * 2;
+    m.setMemLimit(increasedCapacity);
     fillMapWithEntries(m);
     CPPUNIT_ASSERT(m.entries() > entriesAtInitialCapacity);
 
     // test that memory usage and entry count decrease when the map is shrinking
+    // but prevent endless loops no matter how broken ClpMap implementation is
+    auto iterationsLeft = m.entries();
+    CPPUNIT_ASSERT_MESSAGE("ClpMap::entries() returns bogus numbers",
+                           0 < iterationsLeft && iterationsLeft <= increasedCapacity);
     while (m.entries()) {
         // TODO: Check that we can still add a (smaller) entry here.
 
@@ -218,12 +223,15 @@ TestClpMap::testMemoryLimit()
         m.setMemLimit(newMemoryLimit);
 
         CPPUNIT_ASSERT(m.memoryUsed() <= newMemoryLimit);
-        // also prevents us from looping endlessly if ClpMap is broken:
         CPPUNIT_ASSERT(m.entries() < entriesBefore);
+
+        CPPUNIT_ASSERT_MESSAGE("ClpMap::entries() returns bogus numbers when the map is shrinking",
+                               iterationsLeft > 0);
+        --iterationsLeft;
     }
 
     // test whether the map can grow after all that gradual purging above
-    m.setMemLimit(initialCapacity * 2);
+    m.setMemLimit(increasedCapacity);
     fillMapWithEntries(m);
     CPPUNIT_ASSERT(m.entries() > entriesAtInitialCapacity);
 }
