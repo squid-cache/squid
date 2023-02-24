@@ -24,7 +24,7 @@
 
 #include <stdexcept>
 
-#define TESTDIR "testUfs_Store"
+#define TESTDIR "TestUfs_Store"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestUfs );
 
