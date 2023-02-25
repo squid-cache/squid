@@ -15,9 +15,9 @@
  * test UriScheme
  */
 
-class testUriScheme : public CPPUNIT_NS::TestFixture
+class TestUriScheme: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testUriScheme );
+    CPPUNIT_TEST_SUITE( TestUriScheme );
     CPPUNIT_TEST( testAssignFromprotocol_t );
     CPPUNIT_TEST( testCastToprotocol_t );
     CPPUNIT_TEST( testConstructprotocol_t );

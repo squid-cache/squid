@@ -16,7 +16,7 @@
 #include "testHttpReply.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testHttpReply );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestHttpReply );
 
 class SquidConfig Config;
 
@@ -32,14 +32,14 @@ MemObject::endOffset() const
 /* end */
 
 void
-testHttpReply::setUp()
+TestHttpReply::setUp()
 {
     Mem::Init();
     httpHeaderInitModule();
 }
 
 void
-testHttpReply::testSanityCheckFirstLine()
+TestHttpReply::testSanityCheckFirstLine()
 {
     MemBuf input;
     HttpReply engine;

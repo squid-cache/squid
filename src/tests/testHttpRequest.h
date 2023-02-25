@@ -15,9 +15,9 @@
  * test HttpRequest
  */
 
-class testHttpRequest : public CPPUNIT_NS::TestFixture
+class TestHttpRequest: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testHttpRequest );
+    CPPUNIT_TEST_SUITE( TestHttpRequest );
     CPPUNIT_TEST( testCreateFromUrl );
     CPPUNIT_TEST( testIPv6HostColonBug );
     CPPUNIT_TEST( testSanityCheckStartLine );

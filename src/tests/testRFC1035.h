@@ -15,9 +15,9 @@
  * test the DNS resolver RFC 1035 Engine
  */
 
-class testRFC1035 : public CPPUNIT_NS::TestFixture
+class TestRfc1035: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testRFC1035 );
+    CPPUNIT_TEST_SUITE( TestRfc1035 );
     CPPUNIT_TEST( testHeaderUnpack );
     CPPUNIT_TEST( testParseAPacket );
 

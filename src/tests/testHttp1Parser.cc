@@ -21,10 +21,10 @@
 #include "testHttp1Parser.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testHttp1Parser );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestHttp1Parser );
 
 void
-testHttp1Parser::globalSetup()
+TestHttp1Parser::globalSetup()
 {
     static bool setup_done = false;
     if (setup_done)
@@ -121,7 +121,7 @@ testResults(int line, const SBuf &input, Http1::RequestParser &output, struct re
 }
 
 void
-testHttp1Parser::testParserConstruct()
+TestHttp1Parser::testParserConstruct()
 {
     // whether the constructor works
     {
@@ -150,7 +150,7 @@ testHttp1Parser::testParserConstruct()
 }
 
 void
-testHttp1Parser::testParseRequestLineProtocols()
+TestHttp1Parser::testParseRequestLineProtocols()
 {
     // ensure MemPools etc exist
     globalSetup();
@@ -432,7 +432,7 @@ testHttp1Parser::testParseRequestLineProtocols()
 }
 
 void
-testHttp1Parser::testParseRequestLineStrange()
+TestHttp1Parser::testParseRequestLineStrange()
 {
     // ensure MemPools etc exist
     globalSetup();
@@ -528,7 +528,7 @@ testHttp1Parser::testParseRequestLineStrange()
 }
 
 void
-testHttp1Parser::testParseRequestLineTerminators()
+TestHttp1Parser::testParseRequestLineTerminators()
 {
     // ensure MemPools etc exist
     globalSetup();
@@ -626,7 +626,7 @@ testHttp1Parser::testParseRequestLineTerminators()
 }
 
 void
-testHttp1Parser::testParseRequestLineMethods()
+TestHttp1Parser::testParseRequestLineMethods()
 {
     // ensure MemPools etc exist
     globalSetup();
@@ -880,7 +880,7 @@ testHttp1Parser::testParseRequestLineMethods()
 }
 
 void
-testHttp1Parser::testParseRequestLineInvalid()
+TestHttp1Parser::testParseRequestLineInvalid()
 {
     // ensure MemPools etc exist
     globalSetup();
@@ -1070,7 +1070,7 @@ testHttp1Parser::testParseRequestLineInvalid()
 }
 
 void
-testHttp1Parser::testDripFeed()
+TestHttp1Parser::testDripFeed()
 {
     // Simulate a client drip-feeding Squid a few bytes at a time.
     // extend the size of the buffer from 0 bytes to full request length

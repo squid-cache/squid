@@ -11,9 +11,9 @@
 
 #include "compat/cppunit.h"
 
-class testSBufList : public CPPUNIT_NS::TestFixture
+class TestSBufList: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testSBufList );
+    CPPUNIT_TEST_SUITE( TestSBufList );
     CPPUNIT_TEST( testSBufListMembership );
     CPPUNIT_TEST( testSBufListJoin );
     CPPUNIT_TEST_SUITE_END();

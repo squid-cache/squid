@@ -14,13 +14,13 @@
 
 #include <cppunit/TestAssert.h>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testIcmp );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestIcmp );
 
 void
-testIcmp::testChecksum()
+TestIcmp::testChecksum()
 {
 #if USE_ICMP
-    stubIcmp icmp;
+    IcmpStub icmp;
     uint16_t buf[10], tmpval;
     for (tmpval=0; tmpval < 10; ++tmpval)
         buf[tmpval]=htons(1+tmpval);
@@ -72,10 +72,10 @@ testIcmp::testChecksum()
 }
 
 void
-testIcmp::testHops()
+TestIcmp::testHops()
 {
 #if USE_ICMP
-    stubIcmp icmp;
+    IcmpStub icmp;
 
     /* test invalid -(under values) */
     // negative     : n > 33
