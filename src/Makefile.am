@@ -2714,8 +2714,7 @@ tests_testStatHist_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testConfigParser
 tests_testConfigParser_SOURCES = \
-	tests/testConfigParser.cc \
-	tests/testConfigParser.h
+	tests/testConfigParser.cc
 nodist_tests_testConfigParser_SOURCES = \
 	ConfigParser.cc \
 	tests/stub_SBuf.cc \
