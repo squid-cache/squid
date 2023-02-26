@@ -9,14 +9,12 @@
 #include "squid.h"
 #include "anyp/Uri.h"
 #include "CacheManager.h"
+#include "compat/cppunit.h"
 #include "mgr/Action.h"
 #include "Store.h"
 #include "unitTestMain.h"
 
 #include <cppunit/TestAssert.h>
-
-#include "compat/cppunit.h"
-
 /*
  * test the CacheManager implementation
  */

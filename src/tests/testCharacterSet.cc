@@ -8,11 +8,10 @@
 
 #include "squid.h"
 #include "base/CharacterSet.h"
+#include "compat/cppunit.h"
 #include "unitTestMain.h"
 
 #include <string>
-
-#include "compat/cppunit.h"
 
 class TestCharacterSet : public CPPUNIT_NS::TestFixture
 {
