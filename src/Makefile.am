@@ -1530,7 +1530,6 @@ tests_testDiskIO_SOURCES = \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	tests/testDiskIO.cc \
-	tests/testDiskIO.h \
 	tests/stub_ETag.cc \
 	EventLoop.cc \
 	FadingCounter.cc \
