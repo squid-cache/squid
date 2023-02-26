@@ -2444,7 +2444,6 @@ tests_testCacheManager_SOURCES = \
 	tests/stub_CacheDigest.cc \
 	CacheDigest.h \
 	tests/testCacheManager.cc \
-	tests/testCacheManager.h \
 	CachePeer.cc \
 	CachePeer.h \
 	ClientInfo.h \
