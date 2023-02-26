@@ -808,8 +808,7 @@ tests_testMem_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testCharacterSet
 tests_testCharacterSet_SOURCES = \
-	tests/testCharacterSet.cc \
-	tests/testCharacterSet.h
+	tests/testCharacterSet.cc
 nodist_tests_testCharacterSet_SOURCES = \
 	base/CharacterSet.h
 tests_testCharacterSet_LDADD = \
