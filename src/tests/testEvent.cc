@@ -7,11 +7,38 @@
  */
 
 #include "squid.h"
-#include "base/AsyncCallQueue.h"
-#include "event.h"
 #include "MemBuf.h"
-#include "tests/testEvent.h"
+#include "base/AsyncCallQueue.h"
+#include "compat/cppunit.h"
+#include "event.h"
 #include "unitTestMain.h"
+
+/*
+ * test the event module.
+ */
+
+class TestEvent : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestEvent);
+    CPPUNIT_TEST(testCreate);
+    CPPUNIT_TEST(testDump);
+    CPPUNIT_TEST(testFind);
+    CPPUNIT_TEST(testCheckEvents);
+    CPPUNIT_TEST(testSingleton);
+    CPPUNIT_TEST(testCancel);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void setUp() override;
+
+protected:
+    void testCreate();
+    void testDump();
+    void testFind();
+    void testCheckEvents();
+    void testSingleton();
+    void testCancel();
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestEvent );
 

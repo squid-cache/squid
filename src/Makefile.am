@@ -2734,8 +2734,7 @@ tests_testConfigParser_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testEvent
 tests_testEvent_SOURCES = \
-	tests/testEvent.cc \
-	tests/testEvent.h
+	tests/testEvent.cc
 nodist_tests_testEvent_SOURCES = \
 	MemBuf.cc \
 	tests/stub_SBuf.cc \
