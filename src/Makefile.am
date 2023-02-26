@@ -827,8 +827,7 @@ tests_testClpMap_LDADD = \
 
 check_PROGRAMS += tests/testEnumIterator
 tests_testEnumIterator_SOURCES = \
-	tests/testEnumIterator.cc \
-	tests/testEnumIterator.h
+	tests/testEnumIterator.cc
 nodist_tests_testEnumIterator_SOURCES = \
 	base/EnumIterator.h
 tests_testEnumIterator_LDADD = \
