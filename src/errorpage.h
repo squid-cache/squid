@@ -177,7 +177,6 @@ public:
     HttpRequestPointer request;
     char *url = nullptr;
     int xerrno = 0;
-    unsigned short port = 0;
     std::optional<SBuf> dnsError; ///< DNS lookup error message
     time_t ttl = 0;
 

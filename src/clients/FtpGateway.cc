@@ -1266,8 +1266,9 @@ Ftp::Gateway::ftpRealm()
         realm.append("unknown", 7);
     else {
         realm.append(request->url.host());
-        if (request->url.port() != 21)
-            realm.appendf(" port %d", request->url.port());
+        const auto &rport = request->url.port();
+        if (rport && *rport != 21)
+            realm.appendf(" port %hu", *rport);
     }
     return realm;
 }

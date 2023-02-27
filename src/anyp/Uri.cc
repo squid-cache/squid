@@ -362,7 +362,11 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
                 return false;
             *dst = '\0';
 
-            foundPort = scheme.defaultPort(); // may be reset later
+            // If the parsed scheme has no (known) default port, and there is no
+            // explicit port, then we will reject the zero port during foundPort
+            // validation, often resulting in a misleading 400/ERR_INVALID_URL.
+            // TODO: Remove this hack when switching to Tokenizer-based parsing.
+            foundPort = scheme.defaultPort().value_or(0); // may be reset later
 
             /* Is there any login information? (we should eventually parse it above) */
             t = strrchr(foundHost, '@');
@@ -571,10 +575,14 @@ AnyP::Uri::authority(bool requirePort) const
         authorityWithPort_.append(host());
         authorityHttp_ = authorityWithPort_;
 
-        // authorityForm_ only has :port if it is non-default
-        authorityWithPort_.appendf(":%u",port());
-        if (port() != getScheme().defaultPort())
-            authorityHttp_ = authorityWithPort_;
+        if (port().has_value()) {
+            authorityWithPort_.appendf(":%hu", *port());
+            // authorityHttp_ only has :port for known non-default ports
+            if (port() != getScheme().defaultPort())
+                authorityHttp_ = authorityWithPort_;
+        }
+        // else XXX: We made authorityWithPort_ that does not have a port.
+        // TODO: Audit callers and refuse to give out broken authorityWithPort_.
     }
 
     return requirePort ? authorityWithPort_ : authorityHttp_;
@@ -898,8 +906,7 @@ urlCheckRequest(const HttpRequest * r)
 
 AnyP::Uri::Uri(AnyP::UriScheme const &aScheme) :
     scheme_(aScheme),
-    hostIsNumeric_(false),
-    port_(0)
+    hostIsNumeric_(false)
 {
     *host_=0;
 }

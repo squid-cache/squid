@@ -1219,8 +1219,12 @@ endif
 	acl aclname urlpath_regex [-i] \.gif$ ...
 	  # regex matching on URL path [fast]
 
-	acl aclname port 80 70 21 0-1024...   # destination TCP port [fast]
-	                                      # ranges are allowed
+	acl aclname port 80 70 21 0-1024 ...
+	  # destination TCP port (or port range) of the request [fast]
+	  #
+	  # Port 0 matches requests that have no explicit and no default destination
+	  # ports (e.g., HTTP requests with URN targets)
+
 	acl aclname localport 3128 ...	      # TCP port the client connected to [fast]
 	                                      # NP: for interception mode this is usually '80'
 
