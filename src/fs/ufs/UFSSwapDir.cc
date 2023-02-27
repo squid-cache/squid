@@ -26,7 +26,6 @@
 #include "SquidMath.h"
 #include "StatCounters.h"
 #include "store_key_md5.h"
-#include "StoreSearchUFS.h"
 #include "StoreSwapLogData.h"
 #include "tools.h"
 #include "UFSSwapDir.h"

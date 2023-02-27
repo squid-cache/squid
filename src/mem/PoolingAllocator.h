@@ -11,6 +11,8 @@
 
 #include "mem/forward.h"
 
+#include <utility>
+
 /// STL Allocator that uses Squid memory pools for memory management
 template <class Value>
 class PoolingAllocator

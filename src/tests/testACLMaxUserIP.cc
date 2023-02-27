@@ -19,13 +19,13 @@
 
 #include <stdexcept>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testACLMaxUserIP );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestACLMaxUserIP );
 
 /* globals required to resolve link issues */
 AnyP::PortCfgPointer HttpPortList;
 
 void
-testACLMaxUserIP::testDefaults()
+TestACLMaxUserIP::testDefaults()
 {
     ACLMaxUserIP anACL("max_user_ip");
     /* 0 is not a valid maximum, so we start at 0 */
@@ -37,14 +37,14 @@ testACLMaxUserIP::testDefaults()
 }
 
 void
-testACLMaxUserIP::setUp()
+TestACLMaxUserIP::setUp()
 {
     CPPUNIT_NS::TestFixture::setUp();
     Acl::RegisterMaker("max_user_ip", [](Acl::TypeName name)->ACL* { return new ACLMaxUserIP(name); });
 }
 
 void
-testACLMaxUserIP::testParseLine()
+TestACLMaxUserIP::testParseLine()
 {
     /* a config line to pass with a lead-in token to seed the parser. */
     char * line = xstrdup("test max_user_ip -s 1");

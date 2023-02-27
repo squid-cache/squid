@@ -15,12 +15,12 @@
 
 /*
  * demonstration test file, as new idioms are made they will
- * be shown in the testBoilerplate source.
+ * be shown in the TestBoilerplate source.
  */
 
-class testACLMaxUserIP : public CPPUNIT_NS::TestFixture
+class TestACLMaxUserIP: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testACLMaxUserIP );
+    CPPUNIT_TEST_SUITE( TestACLMaxUserIP );
     /* note the statement here and then the actual prototype below */
     CPPUNIT_TEST( testDefaults );
     CPPUNIT_TEST( testParseLine );

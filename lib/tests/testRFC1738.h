@@ -14,9 +14,9 @@
 /**
  * Test the URL coder RFC 1738 Engine
  */
-class testRFC1738 : public CPPUNIT_NS::TestFixture
+class TestRfc1738: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testRFC1738 );
+    CPPUNIT_TEST_SUITE( TestRfc1738 );
     CPPUNIT_TEST( testUrlDecode );
     CPPUNIT_TEST( testUrlEncode );
 

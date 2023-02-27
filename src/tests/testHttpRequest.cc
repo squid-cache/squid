@@ -17,7 +17,7 @@
 #include "testHttpRequest.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testHttpRequest );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestHttpRequest );
 
 /** wrapper for testing HttpRequest object private and protected functions */
 class PrivateHttpRequest : public HttpRequest
@@ -30,7 +30,7 @@ public:
 /* init memory pools */
 
 void
-testHttpRequest::setUp()
+TestHttpRequest::setUp()
 {
     Mem::Init();
     AnyP::UriScheme::Init();
@@ -41,7 +41,7 @@ testHttpRequest::setUp()
  * Test creating an HttpRequest object from a Url and method
  */
 void
-testHttpRequest::testCreateFromUrl()
+TestHttpRequest::testCreateFromUrl()
 {
     /* vanilla url, implicit method */
     unsigned short expected_port;
@@ -102,7 +102,7 @@ testHttpRequest::testCreateFromUrl()
  * Test BUG: URL '2000:800:45' opens host 2000 port 800 !!
  */
 void
-testHttpRequest::testIPv6HostColonBug()
+TestHttpRequest::testIPv6HostColonBug()
 {
     unsigned short expected_port;
     HttpRequest *aRequest = nullptr;
@@ -140,7 +140,7 @@ testHttpRequest::testIPv6HostColonBug()
 }
 
 void
-testHttpRequest::testSanityCheckStartLine()
+TestHttpRequest::testSanityCheckStartLine()
 {
     MemBuf input;
     const auto mx = MasterXaction::MakePortless<XactionInitiator::initHtcp>();
