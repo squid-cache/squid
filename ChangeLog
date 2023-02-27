@@ -1,4 +1,4 @@
-Changes in squid-6.0.1 (06 Feb 2023):
+Changes in squid-6.0.1 (28 Feb 2023):
 
 	- Bug 5256: Intercepting port fails to accept
 	- Bug 5241: Block all non-localhost requests by default
@@ -109,6 +109,16 @@ Changes in squid-6.0.1 (06 Feb 2023):
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
 	- ... and all fixes from 5.8
+
+Changes in squid-5.8 (28 Feb 2023):
+
+	- Bug 5162: mgr:index URL do not produce MGR_INDEX template
+	- Bug 5241: Block all non-localhost requests by default
+	- Bug 5241: Block to-localhost, to-link-local requests by default
+	- ext_kerberos_ldap_group_acl: Support -b with -D
+	- Fix ACL type typo in req_header, rep_header key-changing ERRORs
+	- ... and several compile fixes
+	- ... and some code cleanup and polishing
 
 Changes in squid-5.7 (05 Sep 2022):
 

@@ -307,7 +307,7 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<p>There are no ./configure options changed.
+	<p>No ./configure options have been changed.
 
 </descrip>
 </p>
