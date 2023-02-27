@@ -25,6 +25,7 @@ class RegexPattern
 public:
     RegexPattern() = delete;
     RegexPattern(RegexPattern &&) = delete; // no copying of any kind
+    /// std::regex::nosubs and std::regex::optimize flags are added automatically
     RegexPattern(const SBuf &aPattern, std::regex::flag_type);
 
     /// whether the regex differentiates letter case
