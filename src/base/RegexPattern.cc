@@ -32,9 +32,7 @@ RegexPattern::RegexPattern(const SBuf &aPattern, const std::regex::flag_type aFl
 bool
 RegexPattern::match(const char *str) const
 {
-    if (std::regex_search(str, regex))
-        return true;
-    return false;
+    return std::regex_search(str, regex);
 }
 
 void
