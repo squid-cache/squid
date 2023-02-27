@@ -1,3 +1,13 @@
+Changes in squid-5.8 (28 Feb 2023):
+
+	- Bug 5162: mgr:index URL do not produce MGR_INDEX template
+	- Bug 5241: Block all non-localhost requests by default
+	- Bug 5241: Block to-localhost, to-link-local requests by default
+	- ext_kerberos_ldap_group_acl: Support -b with -D
+	- Fix ACL type typo in req_header, rep_header key-changing ERRORs
+	- ... and several compile fixes
+	- ... and some code cleanup and polishing
+
 Changes in squid-5.7 (05 Sep 2022):
 
 	- Regression Fix: Typo in manager ACL
