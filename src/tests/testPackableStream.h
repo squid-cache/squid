@@ -15,9 +15,9 @@
  * test PackableStream
  */
 
-class testPackableStream : public CPPUNIT_NS::TestFixture
+class TestPackableStream: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testPackableStream );
+    CPPUNIT_TEST_SUITE( TestPackableStream );
     CPPUNIT_TEST( testGetStream );
     CPPUNIT_TEST_SUITE_END();
 

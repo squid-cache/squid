@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-// XXX: need src/ to avoid clashes with ip/tools.h in testIpAddress
+// XXX: need src/ to avoid clashes with ip/tools.h in TestIpAddress
 #include "src/tools.h"
 
 #define STUB_API "tools.cc"

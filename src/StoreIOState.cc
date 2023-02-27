@@ -27,13 +27,12 @@ StoreIOState::operator delete (void *)
     assert(0);
 }
 
-StoreIOState::StoreIOState(StoreIOState::STFNCB *cbFile, StoreIOState::STIOCB *cbIo, void *data) :
+StoreIOState::StoreIOState(StoreIOState::STIOCB *cbIo, void *data) :
     swap_dirn(-1),
     swap_filen(-1),
     e(nullptr),
     mode(O_BINARY),
     offset_(0),
-    file_callback(cbFile),
     callback(cbIo),
     callback_data(cbdataReference(data))
 {

@@ -15,9 +15,9 @@
  * test the EventLoop implementation
  */
 
-class testEventLoop : public CPPUNIT_NS::TestFixture
+class TestEventLoop: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testEventLoop );
+    CPPUNIT_TEST_SUITE( TestEventLoop );
     CPPUNIT_TEST( testCreate );
     CPPUNIT_TEST( testRunOnce );
     CPPUNIT_TEST( testEngineTimeout );

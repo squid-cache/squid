@@ -15,9 +15,9 @@
  * test HttpReply
  */
 
-class testHttpReply : public CPPUNIT_NS::TestFixture
+class TestHttpReply: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testHttpReply );
+    CPPUNIT_TEST_SUITE( TestHttpReply );
     CPPUNIT_TEST( testSanityCheckFirstLine );
     CPPUNIT_TEST_SUITE_END();
 

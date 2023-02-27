@@ -17,9 +17,9 @@
  * test the SBuf functionalities
  */
 
-class testSBuf : public CPPUNIT_NS::TestFixture
+class TestSBuf: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testSBuf );
+    CPPUNIT_TEST_SUITE( TestSBuf );
     CPPUNIT_TEST( testSBufConstructDestruct );
     CPPUNIT_TEST( testSBufConstructDestructAfterMemInit );
     CPPUNIT_TEST( testSBufLength );

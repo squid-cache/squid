@@ -12,12 +12,12 @@
 #include "compat/cppunit.h"
 
 /*
- * test the URL class.
+ * test the Anyp::Uri-related classes
  */
 
-class testURL : public CPPUNIT_NS::TestFixture
+class TestUri: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testURL );
+    CPPUNIT_TEST_SUITE( TestUri );
     CPPUNIT_TEST( testConstructScheme );
     CPPUNIT_TEST( testDefaultConstructor );
     CPPUNIT_TEST_SUITE_END();

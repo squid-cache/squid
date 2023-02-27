@@ -93,8 +93,8 @@ protected:
     ConfigOption *getOptionTree() const override;
     bool allowOptionReconfigure(const char *const option) const override;
     bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const override;
-    StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) override;
-    StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) override;
+    StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STIOCB *, void *) override;
+    StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STIOCB *, void *) override;
     void maintain() override;
     void diskFull() override;
     void reference(StoreEntry &e) override;
@@ -125,7 +125,7 @@ protected:
     int64_t diskOffsetLimit() const;
 
     void updateHeadersOrThrow(Ipc::StoreMapUpdate &update);
-    StoreIOState::Pointer createUpdateIO(const Ipc::StoreMapUpdate &update, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
+    StoreIOState::Pointer createUpdateIO(const Ipc::StoreMapUpdate &, StoreIOState::STIOCB *, void *);
 
     void anchorEntry(StoreEntry &e, const sfileno filen, const Ipc::StoreMapAnchor &anchor);
 
