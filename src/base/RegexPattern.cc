@@ -19,7 +19,10 @@ RegexPattern::RegexPattern(const SBuf &aPattern, const std::regex::flag_type aFl
     try {
         regex = std::regex(pattern.rawContent(), pattern.length(), aFlags|std::regex::nosubs|std::regex::optimize);
     } catch (const std::regex_error &e) {
-        throw TextException(ToSBuf(e.what(), ": ", pattern), Here());
+        throw TextException(ToSBuf("bad regular expression",
+                                   Debug::Extra, "message: ", e.what(),
+                                   Debug::Extra, "pattern: ", pattern),
+                            Here());
     }
 
     // this class supports other syntax variations, but its current users must
