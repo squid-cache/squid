@@ -13,13 +13,41 @@
 #define private public
 #define protected public
 
+#include "compat/cppunit.h"
 #include "debug/Stream.h"
 #include "http/one/RequestParser.h"
 #include "http/RequestMethod.h"
 #include "MemBuf.h"
 #include "SquidConfig.h"
-#include "testHttp1Parser.h"
 #include "unitTestMain.h"
+
+class TestHttp1Parser : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestHttp1Parser);
+    // object basics are working, just in case.
+    CPPUNIT_TEST(testParserConstruct);
+    CPPUNIT_TEST(testDripFeed);
+    CPPUNIT_TEST(testParseRequestLineMethods);
+    CPPUNIT_TEST(testParseRequestLineProtocols);
+    CPPUNIT_TEST(testParseRequestLineTerminators);
+    CPPUNIT_TEST(testParseRequestLineStrange);
+    CPPUNIT_TEST(testParseRequestLineInvalid);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void globalSetup();  // MemPools init etc.
+
+    void testParserConstruct();  // whether the constructor works
+
+    // request-line unit tests
+    void testParseRequestLineTerminators();  // terminator detection correct
+    void testParseRequestLineMethods();      // methoid detection correct
+    void testParseRequestLineProtocols();    // protocol tokens handled correctly
+    void testParseRequestLineStrange();      // strange but valid lines accepted
+    void testParseRequestLineInvalid();      // rejection of invalid lines happens
+
+    void testDripFeed();  // test incremental parse works
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestHttp1Parser );
 
