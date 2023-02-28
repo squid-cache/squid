@@ -2175,7 +2175,6 @@ tests_testHttpRequest_SOURCES = \
 	HttpReply.cc \
 	HttpRequest.cc \
 	tests/testHttpRequest.cc \
-	tests/testHttpRequest.h \
 	tests/testHttpRequestMethod.cc \
 	tests/testHttpRequestMethod.h \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
