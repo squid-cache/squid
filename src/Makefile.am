@@ -854,8 +854,7 @@ tests_testLookupTable_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testRefCount
 tests_testRefCount_SOURCES = \
-	tests/testRefCount.cc \
-	tests/testRefCount.h
+	tests/testRefCount.cc
 nodist_tests_testRefCount_SOURCES = \
 	base/RefCount.h
 tests_testRefCount_LDADD = \
