@@ -2176,7 +2176,6 @@ tests_testHttpRequest_SOURCES = \
 	HttpRequest.cc \
 	tests/testHttpRequest.cc \
 	tests/testHttpRequestMethod.cc \
-	tests/testHttpRequestMethod.h \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
 	IoStats.h \
 	tests/stub_IpcIoFile.cc \
