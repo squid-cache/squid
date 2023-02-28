@@ -2058,7 +2058,6 @@ tests_testHttpReply_SOURCES = \
 	HttpReply.cc \
 	tests/testHttpReply.cc \
 	HttpReply.h \
-	tests/testHttpReply.h \
 	tests/stub_HttpRequest.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
