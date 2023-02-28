@@ -1988,7 +1988,6 @@ check_PROGRAMS += tests/testHttp1Parser
 tests_testHttp1Parser_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tests/testHttp1Parser.cc \
-	tests/testHttp1Parser.h \
 	MemBuf.cc \
 	MemBuf.h \
 	tests/stub_MemObject.cc \
@@ -2754,8 +2753,7 @@ tests_testEvent_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testEventLoop
 tests_testEventLoop_SOURCES = \
-	tests/testEventLoop.cc \
-	tests/testEventLoop.h
+	tests/testEventLoop.cc
 nodist_tests_testEventLoop_SOURCES = \
 	EventLoop.cc \
 	tests/stub_SBuf.cc \
