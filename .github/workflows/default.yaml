@@ -1,12 +1,13 @@
-# Test the default branch, supported release branches, and their PRs
 name: GitHub CI
 
 on:
   push:
-    branches: [ "master", "v5", "auto" ]
+    # test this branch and staged PRs based on this branch code
+    branches: [ "master", "auto" ]
 
   pull_request:
-    branches: [ "master", "v5" ]
+    # test PRs targeting this branch code
+    branches: [ "master" ]
 
 env:
   # empty except for pull_request events
