@@ -3,10 +3,10 @@ name: GitHub CI
 
 on:
   push:
-    branches: [ "master", "v5", "auto" ]
+    branches: [ "master", "auto" ]
 
   pull_request:
-    branches: [ "master", "v5" ]
+    branches: [ "master" ]
 
 env:
   # empty except for pull_request events
