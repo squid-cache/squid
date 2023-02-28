@@ -1391,7 +1391,6 @@ tests_testStore_SOURCES = \
 	Notes.cc \
 	Notes.h \
 	tests/testPackableStream.cc \
-	tests/testPackableStream.h \
 	Parsing.cc \
 	tests/stub_Port.cc \
 	RemovalPolicy.cc \

@@ -11,9 +11,6 @@
 #include "http/RequestMethod.h"
 #include "SquidConfig.h"
 
-#include <cppunit/TestAssert.h>
-#include <sstream>
-
 class TestHttpRequestMethod : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE(TestHttpRequestMethod);
