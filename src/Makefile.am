@@ -2391,8 +2391,7 @@ tests_testIpAddress_LDFLAGS = $(LIBADD_DL)
 check_PROGRAMS += tests/testIcmp
 # icmp/libicmpcore.la is used by pinger so SHOULD NOT require more dependancies! :-(
 tests_testIcmp_SOURCES = \
-	tests/testIcmp.cc \
-	tests/testIcmp.h
+	tests/testIcmp.cc
 nodist_tests_testIcmp_SOURCES = \
 	tests/stub_SBuf.cc \
 	tests/stub_debug.cc \
@@ -2410,8 +2409,7 @@ tests_testIcmp_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testNetDb
 tests_testNetDb_SOURCES = \
-	tests/testNetDb.cc \
-	tests/testNetDb.h
+	tests/testNetDb.cc
 nodist_tests_testNetDb_SOURCES = \
 	tests/stub_SBuf.cc \
 	tests/stub_debug.cc \
