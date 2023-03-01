@@ -923,8 +923,7 @@ tests_testURL_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testDns
 tests_testDns_SOURCES = \
-	tests/testRFC1035.cc \
-	tests/testRFC1035.h
+	tests/testRFC1035.cc
 nodist_tests_testDns_SOURCES=
 tests_testDns_LDADD = \
 	dns/libdns.la \
