@@ -956,7 +956,8 @@ store_client::parseHttpHeaders()
     } catch (...) {
         debugs(90, DBG_CRITICAL, "ERROR: Cannot parse on-disk HTTP headers" <<
                Debug::Extra << "exception: " << CurrentException <<
-               Debug::Extra << "raw input size: " << copiedSize << " bytes");
+               Debug::Extra << "raw input size: " << copiedSize << " bytes" <<
+               Debug::Extra << "buffer capacity: " << copyInto.length << " bytes");
         fail();
         return false;
     }
@@ -988,10 +989,13 @@ store_client::tryParsingHttpHeaders()
 
     // the parse() call above enforces Config.maxReplyHeaderSize limit
     Assure(copiedSize < Config.maxReplyHeaderSize);
-    // caller must supply Config.maxReplyHeaderSize or larger buffer
-    // TODO: Add Assure(copyInto.length <= Config.maxReplyHeaderSize) to copy()
-    // itself when we know that all callers do supply large-enough buffers.
-    Assure(copiedSize < copyInto.length);
+
+    Assure(copiedSize <= copyInto.length); // paranoid
+    const auto ranOutOfBufferSpace = copiedSize == copyInto.length;
+    // XXX: With the current copy() API, even if the caller supplies
+    // Config.maxReplyHeaderSize buffer (no caller does!), we may still run out
+    // of space because Config.maxReplyHeaderSize may change while we copy().
+    Assure(!ranOutOfBufferSpace);
 
     debugs(90, 3, "need more HTTP header bytes after accumulating " << copiedSize <<
            "; space left:  " << copyInto.length - copiedSize);
