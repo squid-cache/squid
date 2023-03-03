@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -63,5 +63,8 @@ ID Message gist
 63 Resuming indexing cache_dir # ... from ...
 64 DNS IPv4 socket created at ..., FD ...
 65 WARNING: Indexer ignores a cache_dir entry: ...
+66 WARNING: BCP 177 violation. Detected non-functional IPv6 loopback.
+67 WARNING: BCP 177 violation. IPv6 transport forced OFF by build parameters.
+68 Processing Configuration File: ... (depth ...)
 \endverbatim
 */

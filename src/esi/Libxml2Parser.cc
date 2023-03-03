@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,7 +27,7 @@ namespace Esi
 class Libxml2Rr : public RegisteredRunner
 {
 public:
-    void finalizeConfig()
+    void finalizeConfig() override
     {
         registration.reset(new ESIParser::Register("libxml2", &ESILibxml2Parser::NewParser));
     }

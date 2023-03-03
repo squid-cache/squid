@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -75,7 +75,7 @@ ACLHTTPHeaderData::lineOptions()
 void
 ACLHTTPHeaderData::parse()
 {
-    ConfigParser::SetAclKey(hdrName, "header-name");
+    Acl::SetKey(hdrName, "header-name", ConfigParser::strtokFile());
     hdrId = Http::HeaderLookupTable.lookup(hdrName).id;
     regex_rule->parse();
 }

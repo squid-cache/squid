@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -39,7 +39,7 @@ public:
     void start (HttpRequest *, StoreEntry *);
     void setUriResFromRequest(HttpRequest *);
 
-    virtual ~UrnState();
+    ~UrnState() override;
 
     StoreEntry *entry = nullptr;
     store_client *sc = nullptr;
@@ -53,8 +53,8 @@ public:
 
 private:
     /* StoreClient API */
-    virtual LogTags *loggingTags() const { return ale ? &ale->cache.code : nullptr; }
-    virtual void fillChecklist(ACLFilledChecklist &) const;
+    LogTags *loggingTags() const override { return ale ? &ale->cache.code : nullptr; }
+    void fillChecklist(ACLFilledChecklist &) const override;
 
     char *urlres = nullptr;
 };

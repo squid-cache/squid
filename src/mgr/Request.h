@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,8 +27,8 @@ public:
 
     explicit Request(const Ipc::TypedMsgHdr& msg); ///< from recvmsg()
     /* Ipc::Request API */
-    virtual void pack(Ipc::TypedMsgHdr& msg) const;
-    virtual Pointer clone() const;
+    void pack(Ipc::TypedMsgHdr& msg) const override;
+    Pointer clone() const override;
 
 public:
     Comm::ConnectionPointer conn; ///< HTTP client connection descriptor

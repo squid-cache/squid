@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,8 +15,8 @@ class FadingCodeContext: public CodeContext
 {
 public:
     /* CodeContext API */
-    virtual ScopedId codeContextGist() const override { return gist; }
-    virtual std::ostream &detailCodeContext(std::ostream &os) const override { return os << gist; }
+    ScopedId codeContextGist() const override { return gist; }
+    std::ostream &detailCodeContext(std::ostream &os) const override { return os << gist; }
 
     ScopedId gist; ///< identifies the being-forgotten CodeContext
 };

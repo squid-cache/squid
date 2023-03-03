@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -29,9 +29,6 @@ MAKETEST="distcheck"
 #   --without-aufs-threads \
 #   --without-filedescriptors \
 #   --without-build-environment \
-#
-#  GCC-9 cannot (yet) test this due to segmentation faults in std::string template optimizations (via cppunit)
-#	--disable-optimizations \
 #
 # NP: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the
 #     distcheck target recursive tests beteen scripted runs.
@@ -91,6 +88,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-zph-qos \
 	--disable-auto-locale \
 	--disable-translation \
+	--disable-optimizations \
  \
 	--without-pthreads \
 	--without-aio \

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,9 +11,9 @@
 
 #include "compat/cppunit.h"
 
-class testNetDb : public CPPUNIT_NS::TestFixture
+class TestNetDb: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testNetDb );
+    CPPUNIT_TEST_SUITE( TestNetDb );
     /* note the statement here and then the actual prototype below */
     CPPUNIT_TEST( testConstruct );
     CPPUNIT_TEST_SUITE_END();

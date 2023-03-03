@@ -1,3 +1,125 @@
+Changes in squid-6.0.1 (28 Feb 2023):
+
+	- Bug 5256: Intercepting port fails to accept
+	- Bug 5241: Block all non-localhost requests by default
+	- Bug 5241: Block to-localhost, to-link-local requests by default
+	- Bug 5232: Fix GCC v12 build [-Wuse-after-free]
+	- Bug 5211: support.cc:355: "!filledCheck->sslErrors" assertion
+	- Bug 5194: Remove all unused debug sections
+	- Bug 5162: mgr:index URL do not produce MGR_INDEX template
+	- Bug 5129 pt1: remove Lock use from HttpRequestMethod
+	- Bug 5128: Translation: Fix % i typo in es/ERR_FORWARDING_DENIED
+	- Bug 5021: Add a script to fix spelling error with codespell
+	- Bug 4946: client_side_request.cc: "request != newRequest"
+	- Bug 4832: '!schemeAccess' assertion on exit
+	- Bug 4528: ICAP transactions quit on async DNS lookups
+	- Add scripts/trace-context.pl: a debugging tool
+	- Remove cache_diff tool
+	- Remove membanger tool
+	- Remove pconn-banger tool
+	- Remove recv-announce tool
+	- Remove send-announce tool
+	- Remove tcp-banger* tools
+	- Remove ufsdump tool
+	- Remove support for Gopher protocol
+	- Remove support for unused libbsd
+	- Remove bundled GnuRegex library
+	- Remove CPU profiler mechanism
+	- Remove leakfinder (--enable-leakfinder)
+	- Remove --enable-kill-parent-hack
+	- Remove --disable-loadable-modules
+	- Remove unused/disabled/broken LEAK_CHECK_MODE code
+	- Remove SCO 3.2 support
+	- Remove m88k-specific support
+	- Remove NeXTSTEP support
+	- Remove HPUX compiler support
+	- Remove CBDATA debugging
+	- Require C++17
+	- cachemgr.cgi: Remove deprecated cache_object:// support
+	- ext_kerberos_ldap_group_acl: Support -b with -D
+	- ext_lm_group_acl: Improved username handling
+	- negotiate_wrapper: ensure null-termination of strings
+	- pinger: Fix MAX_PKT{4,6}_SZ to account for icmpEchoData padding
+	- squidclient: Remove deprecated cache_object:// support
+	- HTTP: Replaced X-Cache and X-Cache-Lookup headers with Cache-Status
+	- HTTP: Update Host, Via, and other headers in-place when possible
+	- HTTP: Update status code 413 compliance
+	- RFC 9110: Reject different HTTP requests with unusual framing
+	- RFC 9111: Stop treating Warning specially
+	- RFC 9113: update documentation references
+	- RFC 9218: Priority header registration
+	- SSL-Bump: Remove step2+ stare-and-splice and peek-and-bump support
+	- TLS: Do not send more than one self-signed certificate
+	- TLS: Sort CA certificates in tls-cert=bundle
+	- TLS: Preserve configured order of intermediate CA certificate chain
+	- WCCP: Validate packets better
+	- CI: Support "negative" squid-conf-tests
+	- CI: Maintenance: Support custom astyle versions
+	- CI: test-builds.sh: in case of error dump full log
+	- CI: Add --progress option to test-builds.sh
+	- CI: Change time_units test to also work on 32bit systems
+	- CI: Maintenance: Update astyle version to 3.1
+	- Add cache_log_message directive
+	- Add paranoid_hit_validation directive
+	- Add tls_key_log to report TLS communication secrets
+	- Add %busy_time logformat code
+	- Add %transport::>connection_id logformat code
+	- Add %request_attempts logformat code
+	- Warn about some bad from-helper annotations
+	- Ban acl key changes in req_header, rep_header, and note ACLs
+	- Optimize ephemeral port reuse with IP_BIND_ADDRESS_NO_PORT
+	- Honor httpd_suppress_version_string in more contexts
+	- Honor ftp_port worker-queues option
+	- Log early level-0/1 debugs() messages to cache_log
+	- Support reliable zeroing of sensitive buffers
+	- Do not overwrite caching bans
+	- Do not blame cache_peer for 4xx CONNECT responses
+	- Mimic GET reforwarding decisions when our CONNECT fails
+	- Discarded connections do not contribute to forward_max_tries
+	- Honor assertions during shutdown
+	- Do not stop listening after "ERROR: NAT/TPROXY lookup failed..."
+	- Do not skip problematic regexes in ACLs
+	- Improve coredump_dir on FreeBSD and Solaris based OS
+	- Avoid reverse DNS lookups when logformat %>A is unused
+	- BUG: Unexpected state while connecting to ... server
+	- Properly track (and mark) truncated store entries
+	- Support "file" syntax for 'squid_error' and 'has' ACL parameters
+	- Allow sending "squid -k ..." signals to PID 1
+	- Remove bogus "found KEY_PRIVATE" WARNINGs
+	- Avoid "BUG #3329: Lost orphan ..." during accept problems
+	- Report SMP store queues state (mgr:store_queues)
+	- Remove 8K limit for single access.log line
+	- Rename ./configure option --with-libxml2 to --with-xml2
+	- Rename ./configure option --with-libcap to --with-cap
+	- Match ./configure --help parameter names with their defaults
+	- Remove broken -sha1 option from server_cert_fingerprint
+	- Fix typo in manager ACL
+	- Fix milliseconds in certain cache.log messages
+	- Fix ignore-cc/act-as-origin in wildcard split-stack ports
+	- Fix comm.cc:644: "address.port() != 0" assertion
+	- Fix StoreMap.cc "anchorAt(anchorId).reading()" assertions
+	- Fix double-free segmentation fault on shutdown
+	- Fix client_side_request.cc:2028 "request->method.id()" assertion
+	- Fix reconfiguration leaking tls-cert=... memory
+	- Fix X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY handling
+	- Fix "mem_obj->inmem_lo == 0" assertion in StoreEntry::swapOut()
+	- Fix TCP keepalive
+	- Fix SslBump reconfiguration leaking public key memory
+	- Fix socket accounting for TCP accept()
+	- ... and many documentation changes
+	- ... and much code cleanup and polishing
+	- ... and all fixes from 5.8
+
+Changes in squid-5.8 (28 Feb 2023):
+
+	- Bug 5162: mgr:index URL do not produce MGR_INDEX template
+	- Bug 5241: Block all non-localhost requests by default
+	- Bug 5241: Block to-localhost, to-link-local requests by default
+	- ext_kerberos_ldap_group_acl: Support -b with -D
+	- Fix ACL type typo in req_header, rep_header key-changing ERRORs
+	- ... and several compile fixes
+	- ... and some code cleanup and polishing
+
 Changes in squid-5.7 (05 Sep 2022):
 
 	- Regression Fix: Typo in manager ACL

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,9 +11,9 @@
 
 #include "compat/cppunit.h"
 
-class testCharacterSet : public CPPUNIT_NS::TestFixture
+class TestCharacterSet: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testCharacterSet );
+    CPPUNIT_TEST_SUITE( TestCharacterSet );
     CPPUNIT_TEST( CharacterSetConstruction );
     CPPUNIT_TEST( CharacterSetAdd );
     CPPUNIT_TEST( CharacterSetAddRange );

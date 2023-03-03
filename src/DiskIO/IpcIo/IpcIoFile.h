@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,9 +32,9 @@ namespace IpcIo
 /// what kind of I/O the disker needs to do or have done
 typedef enum { cmdNone, cmdOpen, cmdRead, cmdWrite } Command;
 
-} // namespace IpcIo
+std::ostream &operator <<(std::ostream &, Command);
 
-std::ostream &operator <<(std::ostream &, IpcIo::Command);
+} // namespace IpcIo
 
 /// converts DiskIO requests to IPC queue messages
 class IpcIoMsg
@@ -71,20 +71,20 @@ public:
     typedef RefCount<IpcIoFile> Pointer;
 
     IpcIoFile(char const *aDb);
-    virtual ~IpcIoFile();
+    ~IpcIoFile() override;
 
     /* DiskFile API */
-    virtual void configure(const Config &cfg);
-    virtual void open(int flags, mode_t mode, RefCount<IORequestor> callback);
-    virtual void create(int flags, mode_t mode, RefCount<IORequestor> callback);
-    virtual void read(ReadRequest *);
-    virtual void write(WriteRequest *);
-    virtual void close();
-    virtual bool error() const;
-    virtual int getFD() const;
-    virtual bool canRead() const;
-    virtual bool canWrite() const;
-    virtual bool ioInProgress() const;
+    void configure(const Config &cfg) override;
+    void open(int flags, mode_t mode, RefCount<IORequestor> callback) override;
+    void create(int flags, mode_t mode, RefCount<IORequestor> callback) override;
+    void read(ReadRequest *) override;
+    void write(WriteRequest *) override;
+    void close() override;
+    bool error() const override;
+    int getFD() const override;
+    bool canRead() const override;
+    bool canWrite() const override;
+    bool ioInProgress() const override;
 
     /// handle open response from coordinator
     static void HandleOpenResponse(const Ipc::StrandMessage &);

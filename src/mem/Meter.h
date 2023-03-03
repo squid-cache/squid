@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -55,7 +55,22 @@ class PoolMeter
 {
 public:
     /// Object to track per-pool cumulative counters
-    struct mgb_t {
+    class mgb_t
+    {
+    public:
+        mgb_t &operator +=(const mgb_t &o) {
+            count += o.count;
+            bytes += o.bytes;
+            return *this;
+        }
+
+        /// account for memory actions taking place
+        void update(size_t items, size_t itemSize) {
+            count += items;
+            bytes += (items * itemSize);
+        }
+
+    public:
         double count = 0.0;
         double bytes = 0.0;
     };

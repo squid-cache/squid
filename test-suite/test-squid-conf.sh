@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -15,8 +15,33 @@ top_builddir=$1
 sbindir=$2
 configFile=$3
 
-# If set, expect non-zero Squid exit code, with a matching stderr message
-failureRegex=""
+# If set to yes, expect non-zero Squid exit code,
+# with stderr output matching $messageRegex.
+expectFailure=no
+
+# If set, expect a matching stderr message
+messageRegex=""
+
+expectMessage()
+{
+    local p1="$1"
+    local p2="$2"
+    local where="$3"
+
+    if test -n "$messageRegex"
+    then
+        echo "$where: ERROR: Repeated message-setting instruction";
+        exit 1
+    fi
+
+    messageRegex="$p1"
+
+    if test -n "$p2"
+    then
+        echo "$where: ERROR: Bad message-setting instruction: Unexpected second parameter: $p2"
+        exit 1
+    fi
+}
 
 instructionsFile="$configFile.instructions"
 if test -e $instructionsFile
@@ -39,20 +64,14 @@ then
 
         if test "$instructionName" = "expect-failure"
         then
-            if test -n "$failureRegex"
-            then
-                echo "$here: ERROR: Repeated $instructionName instruction";
-                exit 1;
-            fi
+            expectFailure=yes
+            expectMessage "$p1" "$p2" "$here"
+            continue;
+        fi
 
-            failureRegex="$p1"
-
-            if test -n "$p2"
-            then
-                echo "$here: ERROR: Bad $instructionName instruction: Unexpected second parameter: $p2";
-                exit 1;
-            fi
-
+        if test "$instructionName" = "expect-message"
+        then
+            expectMessage "$p1" "$p2" "$here"
             continue;
         fi
 
@@ -97,27 +116,60 @@ errorLog="squid-stderr.log"
 $sbindir/squid -k parse -f $configFile 2> $errorLog
 result=$?
 
-if test -z "$failureRegex"
+# this is the value we return to our caller;
+# must be set by the code below using updateOutcome
+exitCode=""
+updateOutcome()
+{
+    local newOutcome="$1"
+    # never overwrite non-zero values (i.e. only overwrite null and zero)
+    if test -z "$exitCode" -o "$exitCode" = 0
+    then
+        exitCode="$newOutcome"
+    fi
+}
+
+if test -n "$messageRegex" && ! grep -q -E "$messageRegex" $errorLog
 then
-    # a positive test does not require special $result interpretation
-    exit $?
+    echo "ERROR: Squid did not emit an expected message to stderr"
+    echo "    expected message regex: $messageRegex"
+    updateOutcome 1
 fi
 
-if test "$result" -eq 0
+if test $expectFailure = no
 then
-    echo "ERROR: Squid successfully parsed malformed $configFile instead of rejecting it"
-    exit 1;
+    if test "$result" -ne 0
+    then
+        echo "ERROR: Squid rejected valid $configFile; Squid exit code: $result"
+        updateOutcome $result
+    else
+        # stay silent about ordinary success
+        updateOutcome 0
+    fi
+else
+    if test "$result" -eq 0
+    then
+        echo "ERROR: Squid successfully parsed malformed $configFile instead of rejecting it"
+        updateOutcome 1
+    else
+        # stay silent about this expected failure (invisible in our output)
+        #echo "Squid rejected malformed $configFile as expected; Squid exit code: $result"
+        updateOutcome 0
+    fi
 fi
 
-if ! grep -q -E "$failureRegex" $errorLog
+if test -z "$exitCode"
 then
-    echo "ERROR: Squid rejected malformed $configFile but did not emit an expected message to stderr"
-    echo "    expected error message regex: $failureRegex"
+    echo "ERROR: BUG: Forgot to set \$exitCode: $0"
+    updateOutcome 1
+fi
+
+# after a bad outcome, share Squid output
+if test $exitCode -ne 0
+then
     echo "Squid stderr output:"
     cat $errorLog
-    exit 1;
 fi
 
-echo "Squid rejected malformed $configFile as expected; Squid exit code: $result"
-exit 0
+exit $exitCode
 

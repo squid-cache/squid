@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -413,11 +413,11 @@ class SharedSessionCacheRr: public Ipc::Mem::RegisteredRunner
 public:
     /* RegisteredRunner API */
     SharedSessionCacheRr(): owner(nullptr) {}
-    virtual void useConfig();
-    virtual ~SharedSessionCacheRr();
+    void useConfig() override;
+    ~SharedSessionCacheRr() override;
 
 protected:
-    virtual void create();
+    void create() override;
 
 private:
     Ipc::MemMap::Owner *owner;

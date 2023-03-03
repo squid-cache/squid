@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -1219,8 +1219,12 @@ endif
 	acl aclname urlpath_regex [-i] \.gif$ ...
 	  # regex matching on URL path [fast]
 
-	acl aclname port 80 70 21 0-1024...   # destination TCP port [fast]
-	                                      # ranges are allowed
+	acl aclname port 80 70 21 0-1024 ...
+	  # destination TCP port (or port range) of the request [fast]
+	  #
+	  # Port 0 matches requests that have no explicit and no default destination
+	  # ports (e.g., HTTP requests with URN targets)
+
 	acl aclname localport 3128 ...	      # TCP port the client connected to [fast]
 	                                      # NP: for interception mode this is usually '80'
 
@@ -1533,14 +1537,13 @@ IF USE_OPENSSL
 	  # ssl::certUntrusted, and ssl::certSelfSigned can also be used as
 	  # predefined ACLs, just like the 'all' ACL.
 
-	acl aclname server_cert_fingerprint [-sha1] fingerprint
+	acl aclname server_cert_fingerprint fingerprint
 	  # match against server SSL certificate fingerprint [fast]
 	  #
 	  # The fingerprint is the digest of the DER encoded version
 	  # of the whole certificate. The user should use the form: XX:XX:...
-	  # Optional argument specifies the digest algorithm to use.
 	  # The SHA1 digest algorithm is the default and is currently
-	  # the only algorithm supported (-sha1).
+	  # the only algorithm supported.
 
 	acl aclname ssl::server_name [option] .foo.com ...
 	  # matches server name obtained from various sources [fast]
@@ -5645,7 +5648,7 @@ NAME: cache_log_message
 TYPE: cache_log_message
 DEFAULT: none
 DEFAULT_DOC: Use debug_options.
-LOC: Config.debugMessages
+LOC: DebugMessagesConfig
 DOC_START
 	Configures logging of individual cache.log messages.
 
@@ -6455,9 +6458,9 @@ DOC_START
 	to be erroneously cached unless the application designer
 	has taken the appropriate actions.
 
-	'Percent' is a percentage of the objects age (time since last
-	modification age) an object without explicit expiry time
-	will be considered fresh.
+	'Percent' is used to compute the max-age value for responses
+	with a Last-Modified header and no Cache-Control:max-age nor Expires.
+	  Cache-Control:max-age = ( Date - Last-Modified ) * percent
 
 	'Max' is an upper limit on how long objects without an explicit
 	expiry time will be considered fresh. The value is also used
@@ -10605,8 +10608,6 @@ DOC_START
 	processes, these sleep delays will add up and your
 	Squid will not service requests for some amount of time
 	until all the child processes have been started.
-	On Windows value less then 1000 (1 milliseconds) are
-	rounded to 1000.
 DOC_END
 
 NAME: windows_ipaddrchangemonitor

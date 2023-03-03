@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -93,11 +93,11 @@ typedef void (StateMethod)(Ftp::Gateway *);
 /// converts one or more FTP responses into the final HTTP response.
 class Gateway : public Ftp::Client
 {
-    CBDATA_CLASS(Gateway);
+    CBDATA_CHILD(Gateway);
 
 public:
     Gateway(FwdState *);
-    virtual ~Gateway();
+    ~Gateway() override;
     char user[MAX_URL];
     char password[MAX_URL];
     int password_url;
@@ -125,8 +125,8 @@ public:
 
 public:
     // these should all be private
-    virtual void start();
-    virtual Http::StatusCode failedHttpStatus(err_type &error);
+    void start() override;
+    Http::StatusCode failedHttpStatus(err_type &error) override;
     int restartable();
     void appendSuccessHeader();
     void hackShortcut(StateMethod *nextState);
@@ -143,34 +143,33 @@ public:
     void checkUrlpath();
     void buildTitleUrl();
     void writeReplyBody(const char *, size_t len);
-    void printfReplyBody(const char *fmt, ...);
-    virtual void completeForwarding();
+    void completeForwarding() override;
     void processHeadResponse();
-    void processReplyBody();
+    void processReplyBody() override;
     void setCurrentOffset(int64_t offset) { currentOffset = offset; }
     int64_t getCurrentOffset() const { return currentOffset; }
 
-    virtual void dataChannelConnected(const CommConnectCbParams &io);
+    void dataChannelConnected(const CommConnectCbParams &io) override;
     static PF ftpDataWrite;
-    virtual void timeout(const CommTimeoutCbParams &io);
+    void timeout(const CommTimeoutCbParams &io) override;
     void ftpAcceptDataConnection(const CommAcceptCbParams &io);
 
     static HttpReply *ftpAuthRequired(HttpRequest * request, SBuf &realm, AccessLogEntry::Pointer &);
     SBuf ftpRealm();
     void loginFailed(void);
 
-    virtual void haveParsedReplyHeaders();
+    void haveParsedReplyHeaders() override;
 
     virtual bool haveControlChannel(const char *caller_name) const;
 
 protected:
-    virtual void handleControlReply();
-    virtual void dataClosed(const CommCloseCbParams &io);
+    void handleControlReply() override;
+    void dataClosed(const CommCloseCbParams &io) override;
 
 private:
-    virtual bool mayReadVirginReplyBody() const;
+    bool mayReadVirginReplyBody() const override;
     // BodyConsumer for HTTP: consume request body.
-    virtual void handleRequestBodyProducerAborted();
+    void handleRequestBodyProducerAborted() override;
 
     void loginParser(const SBuf &login, bool escaped);
 };
@@ -1267,8 +1266,9 @@ Ftp::Gateway::ftpRealm()
         realm.append("unknown", 7);
     else {
         realm.append(request->url.host());
-        if (request->url.port() != 21)
-            realm.appendf(" port %d", request->url.port());
+        const auto &rport = request->url.port();
+        if (rport && *rport != 21)
+            realm.appendf(" port %hu", *rport);
     }
     return realm;
 }
@@ -2609,18 +2609,6 @@ Ftp::UrlWith2f(HttpRequest * request)
     }
 
     return request->effectiveRequestUri();
-}
-
-void
-Ftp::Gateway::printfReplyBody(const char *fmt, ...)
-{
-    va_list args;
-    va_start (args, fmt);
-    static char buf[4096];
-    buf[0] = '\0';
-    vsnprintf(buf, 4096, fmt, args);
-    writeReplyBody(buf, strlen(buf));
-    va_end(args);
 }
 
 /**

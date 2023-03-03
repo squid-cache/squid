@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,8 +18,8 @@ class ACLHTTPRepHeaderStrategy : public ACLStrategy<HttpHeader*>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
-    virtual bool requiresReply() const { return true; }
+    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    bool requiresReply() const override { return true; }
 };
 
 #endif /* SQUID_ACLHTTPREPHEADER_H */

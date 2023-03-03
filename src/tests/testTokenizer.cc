@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,7 @@
 #include "tests/testTokenizer.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testTokenizer );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestTokenizer );
 
 SBuf text("GET http://resource.com/path HTTP/1.1\r\n"
           "Host: resource.com\r\n"
@@ -25,7 +25,7 @@ const CharacterSet tab("tab","\t");
 const CharacterSet numbers("numbers","0123456789");
 
 void
-testTokenizer::testTokenizerPrefix()
+TestTokenizer::testTokenizerPrefix()
 {
     const SBuf canary("This text should not be changed.");
 
@@ -77,7 +77,7 @@ testTokenizer::testTokenizerPrefix()
 }
 
 void
-testTokenizer::testTokenizerSkip()
+TestTokenizer::testTokenizerSkip()
 {
     Parser::Tokenizer t(text);
     SBuf s;
@@ -111,7 +111,7 @@ testTokenizer::testTokenizerSkip()
 }
 
 void
-testTokenizer::testTokenizerToken()
+TestTokenizer::testTokenizerToken()
 {
     Parser::Tokenizer t(text);
     SBuf s;
@@ -129,7 +129,7 @@ testTokenizer::testTokenizerToken()
 }
 
 void
-testTokenizer::testTokenizerSuffix()
+TestTokenizer::testTokenizerSuffix()
 {
     const SBuf canary("This text should not be changed.");
 
@@ -189,13 +189,13 @@ testTokenizer::testTokenizerSuffix()
 }
 
 void
-testTokenizer::testCharacterSet()
+TestTokenizer::testCharacterSet()
 {
 
 }
 
 void
-testTokenizer::testTokenizerInt64()
+TestTokenizer::testTokenizerInt64()
 {
     // successful parse in base 10
     {

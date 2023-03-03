@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,13 +15,13 @@
 
 #include <sstream>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testHttpRequestMethod );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestHttpRequestMethod );
 
 /*
  * We should be able to make an HttpRequestMethod straight from a string.
  */
 void
-testHttpRequestMethod::testConstructCharStart()
+TestHttpRequestMethod::testConstructCharStart()
 {
     // string in SBuf
 
@@ -59,7 +59,7 @@ testHttpRequestMethod::testConstructCharStart()
  * We can also parse precise ranges of characters with SBuf
  */
 void
-testHttpRequestMethod::testConstructCharStartEnd()
+TestHttpRequestMethod::testConstructCharStartEnd()
 {
     char const * buffer;
     /* parse an empty string -> Http::METHOD_NONE */
@@ -75,7 +75,7 @@ testHttpRequestMethod::testConstructCharStartEnd()
  * we should be able to assign a Http::MethodType to a HttpRequestMethod
  */
 void
-testHttpRequestMethod::testAssignFrommethod_t()
+TestHttpRequestMethod::testAssignFrommethod_t()
 {
     HttpRequestMethod method;
     method = Http::METHOD_NONE;
@@ -88,7 +88,7 @@ testHttpRequestMethod::testAssignFrommethod_t()
  * a default constructed HttpRequestMethod is == Http::METHOD_NONE
  */
 void
-testHttpRequestMethod::testDefaultConstructor()
+TestHttpRequestMethod::testDefaultConstructor()
 {
     HttpRequestMethod lhs;
     HttpRequestMethod rhs(Http::METHOD_NONE);
@@ -99,7 +99,7 @@ testHttpRequestMethod::testDefaultConstructor()
  * we should be able to construct a HttpRequestMethod from a Http::MethodType
  */
 void
-testHttpRequestMethod::testConstructmethod_t()
+TestHttpRequestMethod::testConstructmethod_t()
 {
     CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_NONE), HttpRequestMethod(Http::METHOD_NONE));
     CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_POST), HttpRequestMethod(Http::METHOD_POST));
@@ -110,7 +110,7 @@ testHttpRequestMethod::testConstructmethod_t()
  * we should be able to get a char const * version of the method.
  */
 void
-testHttpRequestMethod::testImage()
+TestHttpRequestMethod::testImage()
 {
     // relaxed RFC-compliance parse HTTP methods are upgraded to correct case
     Config.onoff.relaxed_header_parser = 1;
@@ -130,7 +130,7 @@ testHttpRequestMethod::testImage()
  * matches
  */
 void
-testHttpRequestMethod::testEqualmethod_t()
+TestHttpRequestMethod::testEqualmethod_t()
 {
     CPPUNIT_ASSERT(HttpRequestMethod(Http::METHOD_NONE) == Http::METHOD_NONE);
     CPPUNIT_ASSERT(not (HttpRequestMethod(Http::METHOD_POST) == Http::METHOD_GET));
@@ -142,7 +142,7 @@ testHttpRequestMethod::testEqualmethod_t()
  * an HttpRequestMethod should testable for inequality without fail maatches
  */
 void
-testHttpRequestMethod::testNotEqualmethod_t()
+TestHttpRequestMethod::testNotEqualmethod_t()
 {
     CPPUNIT_ASSERT(HttpRequestMethod(Http::METHOD_NONE) != Http::METHOD_GET);
     CPPUNIT_ASSERT(not (HttpRequestMethod(Http::METHOD_POST) != Http::METHOD_POST));
@@ -154,7 +154,7 @@ testHttpRequestMethod::testNotEqualmethod_t()
  * we should be able to send it to a stream and get the normalised version
  */
 void
-testHttpRequestMethod::testStream()
+TestHttpRequestMethod::testStream()
 {
     // relaxed RFC-compliance parse HTTP methods are upgraded to correct case
     Config.onoff.relaxed_header_parser = 1;

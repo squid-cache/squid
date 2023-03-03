@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -44,11 +44,11 @@ public:
     typedef RefCount<AccessLogEntry> Pointer;
 
     AccessLogEntry();
-    virtual ~AccessLogEntry();
+    ~AccessLogEntry() override;
 
     /* CodeContext API */
-    virtual std::ostream &detailCodeContext(std::ostream &os) const override;
-    virtual ScopedId codeContextGist() const override;
+    std::ostream &detailCodeContext(std::ostream &os) const override;
+    ScopedId codeContextGist() const override;
 
     /// Fetch the client IP log string into the given buffer.
     /// Knows about several alternate locations of the IP

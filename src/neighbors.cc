@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1145,7 +1145,10 @@ int
 neighborUp(const CachePeer * p)
 {
     if (!p->tcp_up) {
-        peerProbeConnect(const_cast<CachePeer*>(p));
+        // TODO: When CachePeer gets its own CodeContext, pass that context instead of nullptr
+        CallService(nullptr, [&] {
+            peerProbeConnect(const_cast<CachePeer*>(p));
+        });
         return 0;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -63,7 +63,7 @@ public:
     /// changes the current context; nil argument sets it to nil/unknown
     static void Reset(const Pointer);
 
-    virtual ~CodeContext() {}
+    ~CodeContext() override {}
 
     /// \returns a small, permanent ID of the current context
     /// gists persist forever and are suitable for passing to other SMP workers

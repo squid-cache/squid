@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,11 +26,11 @@ public:
     explicit ExceptionErrorDetail(const SourceLocationId id): exceptionId(SQUID_EXCEPTION_START_BASE + id) {}
 
     /* ErrorDetail API */
-    virtual SBuf brief() const override {
+    SBuf brief() const override {
         return ToSBuf("exception=", std::hex, exceptionId);
     }
 
-    virtual SBuf verbose(const HttpRequestPointer &) const override {
+    SBuf verbose(const HttpRequestPointer &) const override {
         return ToSBuf("Exception (ID=", std::hex, exceptionId, ')');
     }
 
