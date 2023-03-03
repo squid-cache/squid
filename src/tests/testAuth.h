@@ -17,9 +17,9 @@
  * test the auth Config framework
  */
 
-class testAuth : public CPPUNIT_NS::TestFixture
+class TestAuth: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testAuth );
+    CPPUNIT_TEST_SUITE( TestAuth );
     CPPUNIT_TEST( instantiate );
     CPPUNIT_TEST_SUITE_END();
 
@@ -29,9 +29,9 @@ protected:
     void instantiate();
 };
 
-class testAuthConfig : public CPPUNIT_NS::TestFixture
+class TestAuthConfig: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testAuthConfig );
+    CPPUNIT_TEST_SUITE( TestAuthConfig );
     CPPUNIT_TEST( create );
     CPPUNIT_TEST_SUITE_END();
 
@@ -41,9 +41,9 @@ protected:
     void create();
 };
 
-class testAuthUserRequest : public CPPUNIT_NS::TestFixture
+class TestAuthUserRequest: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testAuthUserRequest );
+    CPPUNIT_TEST_SUITE( TestAuthUserRequest );
     CPPUNIT_TEST( scheme );
     CPPUNIT_TEST_SUITE_END();
 
@@ -56,9 +56,9 @@ protected:
 
 #if HAVE_AUTH_MODULE_BASIC
 #include "auth/basic/UserRequest.h"
-class testAuthBasicUserRequest : public CPPUNIT_NS::TestFixture
+class TestAuthBasicUserRequest: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testAuthBasicUserRequest );
+    CPPUNIT_TEST_SUITE( TestAuthBasicUserRequest );
     CPPUNIT_TEST( construction );
     CPPUNIT_TEST( username );
     CPPUNIT_TEST_SUITE_END();
@@ -73,9 +73,9 @@ protected:
 
 #if HAVE_AUTH_MODULE_DIGEST
 #include "auth/digest/UserRequest.h"
-class testAuthDigestUserRequest : public CPPUNIT_NS::TestFixture
+class TestAuthDigestUserRequest: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testAuthDigestUserRequest );
+    CPPUNIT_TEST_SUITE( TestAuthDigestUserRequest );
     CPPUNIT_TEST( construction );
     CPPUNIT_TEST( username );
     CPPUNIT_TEST_SUITE_END();
@@ -90,9 +90,9 @@ protected:
 
 #if HAVE_AUTH_MODULE_NTLM
 #include "auth/ntlm/UserRequest.h"
-class testAuthNTLMUserRequest : public CPPUNIT_NS::TestFixture
+class TestAuthNtlmUserRequest: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testAuthNTLMUserRequest );
+    CPPUNIT_TEST_SUITE( TestAuthNtlmUserRequest );
     CPPUNIT_TEST( construction );
     CPPUNIT_TEST( username );
     CPPUNIT_TEST_SUITE_END();
@@ -107,9 +107,9 @@ protected:
 
 #if HAVE_AUTH_MODULE_NEGOTIATE
 #include "auth/negotiate/UserRequest.h"
-class testAuthNegotiateUserRequest : public CPPUNIT_NS::TestFixture
+class TestAuthNegotiateUserRequest: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testAuthNegotiateUserRequest );
+    CPPUNIT_TEST_SUITE( TestAuthNegotiateUserRequest );
     CPPUNIT_TEST( construction );
     CPPUNIT_TEST( username );
     CPPUNIT_TEST_SUITE_END();

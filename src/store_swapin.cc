@@ -16,7 +16,6 @@
 #include "StoreClient.h"
 
 static StoreIOState::STIOCB storeSwapInFileClosed;
-static StoreIOState::STFNCB storeSwapInFileNotify;
 
 void
 storeSwapInStart(store_client * sc)
@@ -44,7 +43,7 @@ storeSwapInStart(store_client * sc)
     }
 
     assert(e->mem_obj != nullptr);
-    sc->swapin_sio = storeOpen(e, storeSwapInFileNotify, storeSwapInFileClosed, sc);
+    sc->swapin_sio = storeOpen(e, storeSwapInFileClosed, sc);
 }
 
 static void
@@ -60,20 +59,5 @@ storeSwapInFileClosed(void *data, int errflag, StoreIOState::Pointer)
     }
 
     ++statCounter.swap.ins;
-}
-
-static void
-storeSwapInFileNotify(void *data, int, StoreIOState::Pointer)
-{
-    store_client *sc = (store_client *)data;
-    StoreEntry *e = sc->entry;
-
-    debugs(1, 3, "storeSwapInFileNotify: changing " << e->swap_filen << "/" <<
-           e->swap_dirn << " to " << sc->swapin_sio->swap_filen << "/" <<
-           sc->swapin_sio->swap_dirn);
-
-    assert(e->swap_filen < 0); // if this fails, call SwapDir::disconnect(e)
-    e->swap_filen = sc->swapin_sio->swap_filen;
-    e->swap_dirn = sc->swapin_sio->swap_dirn;
 }
 

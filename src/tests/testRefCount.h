@@ -11,9 +11,9 @@
 
 #include "compat/cppunit.h"
 
-class testRefCount : public CPPUNIT_NS::TestFixture
+class TestRefCount: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testRefCount );
+    CPPUNIT_TEST_SUITE( TestRefCount );
     CPPUNIT_TEST( testCountability );
     CPPUNIT_TEST( testObjectToRefCounted );
     CPPUNIT_TEST( testStandalonePointer );

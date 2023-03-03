@@ -15,9 +15,9 @@
  * test the store framework
  */
 
-class testStoreHashIndex : public CPPUNIT_NS::TestFixture
+class TestStoreHashIndex: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testStoreHashIndex );
+    CPPUNIT_TEST_SUITE( TestStoreHashIndex );
     CPPUNIT_TEST( testStats );
     CPPUNIT_TEST( testMaxSize );
     CPPUNIT_TEST( testSearch );

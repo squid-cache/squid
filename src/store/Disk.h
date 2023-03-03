@@ -119,8 +119,8 @@ public:
     /// check whether we can store the entry; if we can, report current load
     virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const = 0;
 
-    virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) = 0;
-    virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) = 0;
+    virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STIOCB *, void *) = 0;
+    virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STIOCB *, void *) = 0;
 
     bool canLog(StoreEntry const &e)const;
     virtual void openLog();

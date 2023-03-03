@@ -13,10 +13,10 @@
 
 #include <stdexcept>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testNetDb );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestNetDb );
 
 void
-testNetDb::testConstruct()
+TestNetDb::testConstruct()
 {
     // default construct and destruct
     {

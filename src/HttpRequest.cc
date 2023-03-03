@@ -869,11 +869,16 @@ FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry 
     });
 }
 
-unsigned short
+AnyP::Port
 FindListeningPortNumber(const HttpRequest *callerRequest, const AccessLogEntry *ale)
 {
     const auto ip = FindGoodListeningPortAddress(callerRequest, ale, [](const Ip::Address &address) {
         return address.port() > 0;
     });
-    return ip ? ip->port() : 0;
+
+    if (!ip)
+        return std::nullopt;
+
+    Assure(ip->port() > 0);
+    return ip->port();
 }

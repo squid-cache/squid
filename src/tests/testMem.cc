@@ -15,7 +15,7 @@
 #include <iostream>
 #include <stdexcept>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testMem );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestMem );
 
 class SomethingToAlloc
 {
@@ -32,7 +32,7 @@ public:
 };
 
 void
-testMem::testMemPool()
+TestMem::testMemPool()
 {
     const auto Pool = memPoolCreate("Test Pool", sizeof(SomethingToAlloc));
     CPPUNIT_ASSERT(Pool);
@@ -53,7 +53,7 @@ testMem::testMemPool()
 }
 
 void
-testMem::testMemProxy()
+TestMem::testMemProxy()
 {
     auto *something = new MoreToAlloc;
     CPPUNIT_ASSERT(something);

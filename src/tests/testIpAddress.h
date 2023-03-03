@@ -15,9 +15,9 @@
  * test the IP storage type
  */
 
-class testIpAddress : public CPPUNIT_NS::TestFixture
+class TestIpAddress: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testIpAddress );
+    CPPUNIT_TEST_SUITE( TestIpAddress );
     CPPUNIT_TEST( testDefaults );
     CPPUNIT_TEST( testInAddrConstructor );
     CPPUNIT_TEST( testInAddr6Constructor );

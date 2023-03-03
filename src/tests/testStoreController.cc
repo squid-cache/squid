@@ -15,7 +15,7 @@
 #include "testStoreController.h"
 #include "TestSwapDir.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testStoreController );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestStoreController );
 
 static void
 addSwapDir(TestSwapDirPointer aStore)
@@ -26,7 +26,7 @@ addSwapDir(TestSwapDirPointer aStore)
 }
 
 void
-testStoreController::testStats()
+TestStoreController::testStats()
 {
     Store::Init();
     StoreEntry *logEntry = new StoreEntry;
@@ -67,7 +67,7 @@ commonInit()
 }
 
 void
-testStoreController::testMaxSize()
+TestStoreController::testMaxSize()
 {
     commonInit();
     StoreEntry *logEntry = new StoreEntry;
@@ -126,7 +126,7 @@ searchCallback(void *)
 }
 
 void
-testStoreController::testSearch()
+TestStoreController::testSearch()
 {
     commonInit();
     Store::Init();

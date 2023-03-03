@@ -143,7 +143,7 @@ public:
     struct {
         Comm::ConnectionPointer serverConnection; /* pinned server side connection */
         char *host = nullptr; ///< host name of pinned connection
-        int port = -1; ///< port of pinned connection
+        AnyP::Port port; ///< destination port of the request that caused serverConnection
         bool pinned = false; ///< this connection was pinned
         bool auth = false; ///< pinned for www authentication
         bool reading = false; ///< we are monitoring for peer connection closure
@@ -342,7 +342,7 @@ public:
     bool shouldPreserveClientData() const;
 
     /// build a fake http request
-    ClientHttpRequest *buildFakeRequest(SBuf &useHost, unsigned short usePort, const SBuf &payload);
+    ClientHttpRequest *buildFakeRequest(SBuf &useHost, AnyP::KnownPort usePort, const SBuf &payload);
 
     /// From-client handshake bytes (including bytes at the beginning of a
     /// CONNECT tunnel) which we may need to forward as-is if their syntax does
@@ -480,9 +480,10 @@ private:
     /// The number of parsed HTTP requests headers on a bumped client connection
     uint64_t parsedBumpedRequestCount = 0;
 
+    // TODO: Replace tlsConnectHostOrIp and tlsConnectPort with CONNECT request AnyP::Uri
     /// The TLS server host name appears in CONNECT request or the server ip address for the intercepted requests
     SBuf tlsConnectHostOrIp; ///< The TLS server host name as passed in the CONNECT request
-    unsigned short tlsConnectPort = 0; ///< The TLS server port number as passed in the CONNECT request
+    AnyP::Port tlsConnectPort; ///< The TLS server port number as passed in the CONNECT request
     SBuf sslCommonName_; ///< CN name for SSL certificate generation
 
     /// TLS client delivered SNI value. Empty string if none has been received.

@@ -16,7 +16,7 @@
 
 #include <cppunit/TestAssert.h>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testCacheManager );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestCacheManager );
 
 /// Provides test code access to CacheManager internal symbols
 class CacheManagerInternals : public CacheManager
@@ -27,7 +27,7 @@ public:
 
 /* init memory pools */
 
-void testCacheManager::setUp()
+void TestCacheManager::setUp()
 {
     Mem::Init();
     AnyP::UriScheme::Init();
@@ -37,7 +37,7 @@ void testCacheManager::setUp()
  * Test creating a CacheManager
  */
 void
-testCacheManager::testCreate()
+TestCacheManager::testCreate()
 {
     CacheManager::GetInstance(); //it's a singleton..
 }
@@ -53,7 +53,7 @@ dummy_action(StoreEntry * sentry)
  * registering an action makes it findable.
  */
 void
-testCacheManager::testRegister()
+TestCacheManager::testRegister()
 {
     CacheManager *manager=CacheManager::GetInstance();
     CPPUNIT_ASSERT(manager != nullptr);
@@ -76,7 +76,7 @@ testCacheManager::testRegister()
 }
 
 void
-testCacheManager::testParseUrl()
+TestCacheManager::testParseUrl()
 {
     auto *mgr = static_cast<CacheManagerInternals *>(CacheManager::GetInstance());
     CPPUNIT_ASSERT(mgr != nullptr);

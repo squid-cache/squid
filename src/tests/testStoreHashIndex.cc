@@ -15,7 +15,7 @@
 #include "testStoreHashIndex.h"
 #include "TestSwapDir.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testStoreHashIndex );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestStoreHashIndex );
 
 static void
 addSwapDir(TestSwapDirPointer aStore)
@@ -26,7 +26,7 @@ addSwapDir(TestSwapDirPointer aStore)
 }
 
 void
-testStoreHashIndex::testStats()
+TestStoreHashIndex::testStats()
 {
     StoreEntry *logEntry = new StoreEntry;
     logEntry->createMemObject("dummy_storeId", nullptr, HttpRequestMethod());
@@ -46,7 +46,7 @@ testStoreHashIndex::testStats()
 }
 
 void
-testStoreHashIndex::testMaxSize()
+TestStoreHashIndex::testMaxSize()
 {
     StoreEntry *logEntry = new StoreEntry;
     logEntry->createMemObject("dummy_storeId", nullptr, HttpRequestMethod());
@@ -126,7 +126,7 @@ searchCallback(void *)
 }
 
 void
-testStoreHashIndex::testSearch()
+TestStoreHashIndex::testSearch()
 {
     commonInit();
     Store::Init();

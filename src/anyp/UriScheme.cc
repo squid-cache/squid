@@ -67,7 +67,7 @@ AnyP::UriScheme::FindProtocolType(const SBuf &scheme)
     return AnyP::PROTO_UNKNOWN;
 }
 
-unsigned short
+AnyP::Port
 AnyP::UriScheme::defaultPort() const
 {
     switch (theScheme_) {
@@ -94,7 +94,7 @@ AnyP::UriScheme::defaultPort() const
         return 43;
 
     default:
-        return 0;
+        return std::nullopt;
     }
 }
 
