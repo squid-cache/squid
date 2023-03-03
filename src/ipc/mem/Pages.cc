@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -94,10 +94,10 @@ class SharedMemPagesRr: public Ipc::Mem::RegisteredRunner
 public:
     /* RegisteredRunner API */
     SharedMemPagesRr(): owner(nullptr) {}
-    virtual void useConfig();
-    virtual void create();
-    virtual void open();
-    virtual ~SharedMemPagesRr();
+    void useConfig() override;
+    void create() override;
+    void open() override;
+    ~SharedMemPagesRr() override;
 
 private:
     Ipc::Mem::PagePool::Owner *owner;

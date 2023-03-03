@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1393,6 +1393,16 @@ HttpStateData::truncateVirginBody()
     }
 }
 
+/// called on a premature EOF discovered when reading response body
+void
+HttpStateData::markPrematureReplyBodyEofFailure()
+{
+    const auto err = new ErrorState(ERR_READ_ERROR, Http::scBadGateway, fwd->request, fwd->al);
+    static const auto d = MakeNamedErrorDetail("SRV_PREMATURE_EOF");
+    err->detailError(d);
+    fwd->fail(err);
+}
+
 /**
  * Call this when there is data from the origin server
  * which should be sent to either StoreEntry, or to ICAP...
@@ -1416,8 +1426,11 @@ HttpStateData::writeReplyBody()
         parsedWhole = "http parsed Content-Length body bytes";
     else if (clen < 0 && eof)
         parsedWhole = "http parsed body ending with expected/required EOF";
+
     if (parsedWhole)
         markParsedVirginReplyAsWhole(parsedWhole);
+    else if (eof)
+        markPrematureReplyBodyEofFailure();
 }
 
 bool
@@ -1436,6 +1449,8 @@ HttpStateData::decodeAndWriteReplyBody()
             lastChunk = 1;
             flags.do_next_read = false;
             markParsedVirginReplyAsWhole("http parsed last-chunk");
+        } else if (eof) {
+            markPrematureReplyBodyEofFailure();
         }
         return true;
     }

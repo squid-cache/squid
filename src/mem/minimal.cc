@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -78,6 +78,12 @@ void *
 memAllocRigid(const size_t netSize)
 {
     return xmalloc(netSize);
+}
+
+void
+memFreeRigid(void * const buf, size_t)
+{
+    xfree(buf);
 }
 
 void

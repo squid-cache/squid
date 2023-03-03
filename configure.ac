@@ -1,11 +1,11 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AC_INIT([Squid Web Proxy],[6.0.0-VCS],[http://bugs.squid-cache.org/],[squid])
+AC_INIT([Squid Web Proxy],[7.0.0-VCS],[http://bugs.squid-cache.org/],[squid])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
 AC_CONFIG_AUX_DIR(cfgaux)
@@ -131,6 +131,9 @@ AC_SUBST(AR_R)
 
 AC_PATH_PROG(LINUXDOC, linuxdoc, $FALSE)
 AM_CONDITIONAL(ENABLE_RELEASE_DOCS, test "x${ac_cv_path_LINUXDOC}" != "x$FALSE")
+
+SQUID_RELEASE=`echo $VERSION | cut -d. -f1`
+AC_SUBST(SQUID_RELEASE)
 
 # pre-define DEFAULT_PREFIX, some modules need it.
 AS_IF([test "${prefix}" = "NONE"],[squid_prefix=$ac_default_prefix],[squid_prefix=$prefix])
@@ -1706,7 +1709,7 @@ AC_MSG_NOTICE([enabling select syscall for net I/O: ${enable_select:=auto}])
 AC_ARG_ENABLE(poll,
   AS_HELP_STRING([--disable-poll],[Disable poll(2) support.]),[
   SQUID_YESNO([$enableval],[--enable-poll])
-  AS_IF(["x$enableval" = "xyes"],[squid_opt_io_loop_engine="poll"])
+  AS_IF([test "x$enableval" = "xyes"],[squid_opt_io_loop_engine="poll"])
 ])
 AC_MSG_NOTICE([enabling poll syscall for net I/O: ${enable_poll:=auto}])
 
@@ -2968,36 +2971,6 @@ AS_IF(test "x$enable_zph_qos" = "xyes"],[
 ])
 
 AC_CHECK_LIB(regex, regexec, [REGEXLIB="-lregex"],[REGEXLIB=''])
-AC_ARG_ENABLE(gnuregex,
-  AS_HELP_STRING([--enable-gnuregex],
-                 [Compile GNUregex.  Unless you have reason to use
-                 this option, you should not enable it.
-                 This library file is usually only required on Windows and
-                 very old Unix boxes which do not have their own regex
-                 library built in.]), [
-  SQUID_YESNO([$enableval],[--enable-gnuregex])
-])
-# force-enable on old solaris
-AS_IF([test "x${enable_gnuregex:=auto}" = "xauto"],[
-  AS_CASE(["$host"],
-    [*-sun-solaris2.[[0-4]]],[enable_gnuregex="yes"]
-  )
-])
-
-# try detecting if it is needed
-AS_IF([test "x$enable_gnuregex" = "xauto"],[
-  SQUID_CHECK_REGEX_WORKS
-  AS_IF([test "x$squid_cv_regex_works" = "xyes"],[enable_gnuregex=no],[enable_gnuregex=yes])
-])
-AC_MSG_CHECKING(if GNUregex needs to be compiled)
-AC_MSG_RESULT($enable_gnuregex)
-AS_IF([test "x$enable_gnuregex" = "xyes"],[
-  # for some reason (force-enable, test..) gnuregex was found as needed. Override any system lib
-  REGEXLIB=""
-])
-#if no reason was found to enable gnuregex, disable it
-AS_IF([test "x$enable_gnuregex" = "xauto"],[enable_gnuregex=no])
-SQUID_DEFINE_BOOL(USE_GNUREGEX,$enable_gnuregex,[Define if we should use GNU regex])
 AC_SUBST(REGEXLIB)
 
 SQUID_DETECT_UDP_SND_BUFSIZE

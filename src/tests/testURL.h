@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,18 +12,18 @@
 #include "compat/cppunit.h"
 
 /*
- * test the URL class.
+ * test the Anyp::Uri-related classes
  */
 
-class testURL : public CPPUNIT_NS::TestFixture
+class TestUri: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testURL );
+    CPPUNIT_TEST_SUITE( TestUri );
     CPPUNIT_TEST( testConstructScheme );
     CPPUNIT_TEST( testDefaultConstructor );
     CPPUNIT_TEST_SUITE_END();
 
 public:
-    void setUp();
+    void setUp() override;
 
 protected:
 

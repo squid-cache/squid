@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,19 +15,19 @@
 
 #include "icmp/Icmp.h"
 
-class stubIcmp : public Icmp
+class IcmpStub: public Icmp
 {
 public:
-    stubIcmp() {};
-    virtual ~stubIcmp() {};
-    virtual int Open() { return 0; };
-    virtual void Close() {};
+    IcmpStub() {};
+    ~IcmpStub() override {};
+    int Open() override { return 0; };
+    void Close() override {};
 
     /// Construct ECHO request
-    virtual void SendEcho(Ip::Address &, int, const char *, int) {}
+    void SendEcho(Ip::Address &, int, const char *, int) override {}
 
     /// Handle ICMP responses.
-    virtual void Recv(void) {};
+    void Recv(void) override {};
 
     /* methods to relay test data from tester to private methods being tested */
     int testChecksum(unsigned short *ptr, int size) { return CheckSum(ptr,size); };
@@ -38,9 +38,9 @@ public:
 /**
  * test the ICMP base class.
  */
-class testIcmp : public CPPUNIT_NS::TestFixture
+class TestIcmp: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testIcmp );
+    CPPUNIT_TEST_SUITE( TestIcmp );
     CPPUNIT_TEST( testChecksum );
     CPPUNIT_TEST( testHops );
     CPPUNIT_TEST_SUITE_END();

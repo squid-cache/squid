@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -43,8 +43,6 @@ public:
 };
 
 } // namespace Mgr
-
-std::ostream &operator <<(std::ostream &os, const Mgr::ActionParams &params);
 
 #endif /* SQUID_MGR_ACTION_PARAMS_H */
 

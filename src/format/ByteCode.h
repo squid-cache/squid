@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -166,12 +166,14 @@ typedef enum {
     LFT_PEER_RESPONSE_TIME,
     LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME,
     LFT_DNS_WAIT_TIME,
+    LFT_BUSY_TIME,
 
     /* Squid internal processing details */
     LFT_SQUID_STATUS,
     LFT_SQUID_ERROR,
     LFT_SQUID_ERROR_DETAIL,
     LFT_SQUID_HIERARCHY,
+    LFT_SQUID_REQUEST_ATTEMPTS,
 
     LFT_MIME_TYPE,
     LFT_TAG,

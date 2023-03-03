@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,9 +27,9 @@ public:
     MessageBucket(const int speed, const int initialLevelPercent, const double sizeLimit, MessageDelayPool::Pointer pool);
 
     /* BandwidthBucket API */
-    virtual int quota() override;
-    virtual void scheduleWrite(Comm::IoCallback *state) override;
-    virtual void reduceBucket(int len) override;
+    int quota() override;
+    void scheduleWrite(Comm::IoCallback *state) override;
+    void reduceBucket(int len) override;
 
 private:
     MessageDelayPool::Pointer theAggregate;

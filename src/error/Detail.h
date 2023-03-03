@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,7 +22,7 @@ class ErrorDetail: public RefCountable
 public:
     using Pointer = ErrorDetailPointer;
 
-    virtual ~ErrorDetail() {}
+    ~ErrorDetail() override {}
 
     /// \returns a single "token" summarizing available details
     /// suitable as an access.log field and similar output processed by programs

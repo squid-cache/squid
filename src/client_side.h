@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -85,17 +85,17 @@ class ConnStateData:
 
 public:
     explicit ConnStateData(const MasterXactionPointer &xact);
-    virtual ~ConnStateData();
+    ~ConnStateData() override;
 
     /* ::Server API */
-    virtual void receivedFirstByte();
-    virtual bool handleReadData();
-    virtual void afterClientRead();
-    virtual void afterClientWrite(size_t);
+    void receivedFirstByte() override;
+    bool handleReadData() override;
+    void afterClientRead() override;
+    void afterClientWrite(size_t) override;
 
     /* HttpControlMsgSink API */
-    virtual void sendControlMsg(HttpControlMsg);
-    virtual void doneWithControlMsg();
+    void sendControlMsg(HttpControlMsg) override;
+    void doneWithControlMsg() override;
 
     /// Traffic parsing
     bool clientParseRequests();
@@ -143,7 +143,7 @@ public:
     struct {
         Comm::ConnectionPointer serverConnection; /* pinned server side connection */
         char *host = nullptr; ///< host name of pinned connection
-        int port = -1; ///< port of pinned connection
+        AnyP::Port port; ///< destination port of the request that caused serverConnection
         bool pinned = false; ///< this connection was pinned
         bool auth = false; ///< pinned for www authentication
         bool reading = false; ///< we are monitoring for peer connection closure
@@ -174,8 +174,8 @@ public:
 
     /* BodyPipe API */
     BodyPipe::Pointer expectRequestBody(int64_t size);
-    virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer) = 0;
-    virtual void noteBodyConsumerAborted(BodyPipe::Pointer) = 0;
+    void noteMoreBodySpaceAvailable(BodyPipe::Pointer) override = 0;
+    void noteBodyConsumerAborted(BodyPipe::Pointer) override = 0;
 
     bool handleRequestBodyData();
 
@@ -236,10 +236,10 @@ public:
     void lifetimeTimeout(const CommTimeoutCbParams &params);
 
     // AsyncJob API
-    virtual void start();
-    virtual bool doneAll() const { return BodyProducer::doneAll() && false;}
-    virtual void swanSong();
-    virtual void callException(const std::exception &);
+    void start() override;
+    bool doneAll() const override { return BodyProducer::doneAll() && false;}
+    void swanSong() override;
+    void callException(const std::exception &) override;
 
     /// Changes state so that we close the connection and quit after serving
     /// the client-side-detected error response instead of getting stuck.
@@ -342,7 +342,7 @@ public:
     bool shouldPreserveClientData() const;
 
     /// build a fake http request
-    ClientHttpRequest *buildFakeRequest(SBuf &useHost, unsigned short usePort, const SBuf &payload);
+    ClientHttpRequest *buildFakeRequest(SBuf &useHost, AnyP::KnownPort usePort, const SBuf &payload);
 
     /// From-client handshake bytes (including bytes at the beginning of a
     /// CONNECT tunnel) which we may need to forward as-is if their syntax does
@@ -350,8 +350,8 @@ public:
     SBuf preservedClientData;
 
     /* Registered Runner API */
-    virtual void startShutdown();
-    virtual void endingShutdown();
+    void startShutdown() override;
+    void endingShutdown() override;
 
     /// \returns existing non-empty connection annotations,
     /// creates and returns empty annotations otherwise
@@ -367,7 +367,7 @@ public:
     void updateError(const err_type c, const ErrorDetailPointer &d) { updateError(Error(c, d)); }
 
     /* Acl::ChecklistFiller API */
-    virtual void fillChecklist(ACLFilledChecklist &) const;
+    void fillChecklist(ACLFilledChecklist &) const override;
 
     /// fillChecklist() obligations not fulfilled by the front request
     /// TODO: This is a temporary ACLFilledChecklist::setConn() callback to
@@ -438,8 +438,8 @@ protected:
 
 private:
     /* ::Server API */
-    virtual void terminateAll(const Error &, const LogTagsErrors &);
-    virtual bool shouldCloseOnEof() const;
+    void terminateAll(const Error &, const LogTagsErrors &) override;
+    bool shouldCloseOnEof() const override;
 
     void checkLogging();
 
@@ -480,9 +480,10 @@ private:
     /// The number of parsed HTTP requests headers on a bumped client connection
     uint64_t parsedBumpedRequestCount = 0;
 
+    // TODO: Replace tlsConnectHostOrIp and tlsConnectPort with CONNECT request AnyP::Uri
     /// The TLS server host name appears in CONNECT request or the server ip address for the intercepted requests
     SBuf tlsConnectHostOrIp; ///< The TLS server host name as passed in the CONNECT request
-    unsigned short tlsConnectPort = 0; ///< The TLS server port number as passed in the CONNECT request
+    AnyP::Port tlsConnectPort; ///< The TLS server port number as passed in the CONNECT request
     SBuf sslCommonName_; ///< CN name for SSL certificate generation
 
     /// TLS client delivered SNI value. Empty string if none has been received.

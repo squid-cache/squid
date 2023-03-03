@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,10 +24,9 @@
 
 Rock::IoState::IoState(Rock::SwapDir::Pointer &aDir,
                        StoreEntry *anEntry,
-                       StoreIOState::STFNCB *cbFile,
                        StoreIOState::STIOCB *cbIo,
                        void *data) :
-    StoreIOState(cbFile, cbIo, data),
+    StoreIOState(cbIo, data),
     readableAnchor_(nullptr),
     writeableAnchor_(nullptr),
     splicingPoint(-1),
@@ -433,7 +432,7 @@ public:
         callback_data = cbdataReference(cb.callback_data);
     }
 
-    virtual ~StoreIOStateCb() {
+    ~StoreIOStateCb() override {
         cbdataReferenceDone(callback_data); // may be nil already
     }
 
@@ -447,7 +446,7 @@ public:
         return cbdataReferenceValid(callback_data) && callback;
     }
 
-    virtual void print(std::ostream &os) const {
+    void print(std::ostream &os) const override {
         os << '(' << callback_data << ", err=" << errflag << ')';
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -502,35 +502,6 @@ ConfigParser::regex(const char *expectedRegexDescription)
     ConfigParser::RecognizeQuotedPair_ = false;
 
     return std::unique_ptr<RegexPattern>(new RegexPattern(pattern, flags));
-}
-
-void
-ConfigParser::SetAclKey(SBuf &keyStorage, const char *keyParameterName)
-{
-    extern const char *AclMatchedName;
-
-    const auto newKey = strtokFile();
-    if (!newKey) {
-        throw TextException(ToSBuf("An acl declaration is missing a ", keyParameterName,
-                                   Debug::Extra, "ACL name: ", AclMatchedName),
-                            Here());
-    }
-
-    if (keyStorage.isEmpty()) {
-        keyStorage = newKey;
-        return;
-    }
-
-    if (keyStorage.caseCmp(newKey) == 0)
-        return; // no change
-
-    throw TextException(ToSBuf("Attempt to change the value of the ", keyParameterName, " argument in a subsequent acl declaration:",
-                               Debug::Extra, "previously seen value: ", keyStorage,
-                               Debug::Extra, "new/conflicting value: ", newKey,
-                               Debug::Extra, "ACL name: ", AclMatchedName,
-                               Debug::Extra, "advice: Use a dedicated ACL name for each distinct ", keyParameterName,
-                               " (and group those ACLs together using an 'any-of' ACL)."),
-                        Here());
 }
 
 CachePeer &

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,7 +18,7 @@ class ACLSourceDomainStrategy : public ACLStrategy<char const *>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
 };
 
 class SourceDomainLookup : public ACLChecklist::AsyncState
@@ -26,7 +26,7 @@ class SourceDomainLookup : public ACLChecklist::AsyncState
 
 public:
     static SourceDomainLookup *Instance();
-    virtual void checkForAsync(ACLChecklist *)const;
+    void checkForAsync(ACLChecklist *)const override;
 
 private:
     static SourceDomainLookup instance_;

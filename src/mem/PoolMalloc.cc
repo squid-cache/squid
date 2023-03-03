@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
  */
 
 #include "squid.h"
+#include "mem/Pool.h"
 #include "mem/PoolMalloc.h"
 #include "mem/Stats.h"
 
@@ -29,12 +30,12 @@ MemPoolMalloc::allocate()
     }
     if (obj) {
         --meter.idle;
-        ++saved_calls;
+        ++countSavedAllocs;
     } else {
         if (doZero)
-            obj = xcalloc(1, obj_size);
+            obj = xcalloc(1, objectSize);
         else
-            obj = xmalloc(obj_size);
+            obj = xmalloc(objectSize);
         ++meter.alloc;
     }
     ++meter.inuse;
@@ -42,15 +43,15 @@ MemPoolMalloc::allocate()
 }
 
 void
-MemPoolMalloc::deallocate(void *obj, bool aggressive)
+MemPoolMalloc::deallocate(void *obj)
 {
     --meter.inuse;
-    if (aggressive) {
+    if (MemPools::GetInstance().idleLimit() == 0) {
         xfree(obj);
         --meter.alloc;
     } else {
         if (doZero)
-            memset(obj, 0, obj_size);
+            memset(obj, 0, objectSize);
         ++meter.idle;
         freelist.push(obj);
     }
@@ -61,38 +62,28 @@ size_t
 MemPoolMalloc::getStats(Mem::PoolStats &stats)
 {
     stats.pool = this;
-    stats.label = objectType();
+    stats.label = label;
     stats.meter = &meter;
-    stats.obj_size = obj_size;
+    stats.obj_size = objectSize;
     stats.chunk_capacity = 0;
-
-    stats.chunks_alloc += 0;
-    stats.chunks_inuse += 0;
-    stats.chunks_partial += 0;
-    stats.chunks_free += 0;
 
     stats.items_alloc += meter.alloc.currentLevel();
     stats.items_inuse += meter.inuse.currentLevel();
     stats.items_idle += meter.idle.currentLevel();
 
-    stats.overhead += sizeof(MemPoolMalloc) + strlen(objectType()) + 1;
+    stats.overhead += sizeof(*this) + strlen(label) + 1;
 
-    return meter.inuse.currentLevel();
+    return getInUseCount();
 }
 
-int
-MemPoolMalloc::getInUseCount()
-{
-    return meter.inuse.currentLevel();
-}
-
-MemPoolMalloc::MemPoolMalloc(char const *aLabel, size_t aSize) : MemImplementingAllocator(aLabel, aSize)
+MemPoolMalloc::MemPoolMalloc(char const *aLabel, size_t aSize) :
+    Mem::Allocator(aLabel, aSize)
 {
 }
 
 MemPoolMalloc::~MemPoolMalloc()
 {
-    assert(meter.inuse.currentLevel() == 0);
+    assert(getInUseCount() == 0);
     clean(0);
 }
 

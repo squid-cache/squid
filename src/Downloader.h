@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -44,13 +44,13 @@ std::ostream &operator <<(std::ostream &, const DownloaderAnswer &);
 /// certificate chains.
 class Downloader: virtual public AsyncJob
 {
-    CBDATA_CLASS(Downloader);
+    CBDATA_CHILD(Downloader);
 public:
     using Answer = DownloaderAnswer;
 
     Downloader(const SBuf &url, const AsyncCallback<Answer> &, const MasterXactionPointer &, unsigned int level = 0);
-    virtual ~Downloader();
-    virtual void swanSong();
+    ~Downloader() override;
+    void swanSong() override;
 
     /// delays destruction to protect doCallouts()
     void downloadFinished();
@@ -63,8 +63,8 @@ public:
 protected:
 
     /* AsyncJob API */
-    virtual bool doneAll() const;
-    virtual void start();
+    bool doneAll() const override;
+    void start() override;
 
 private:
 

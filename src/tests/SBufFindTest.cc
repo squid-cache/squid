@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -62,7 +62,7 @@ SBufFindTest::run()
 
                 // the special npos value is not tested as the behavior is
                 //  different from std::string (where the behavior is undefined)
-                //  It is ad-hoc tested in testSBuf instead
+                //  It is ad-hoc tested in TestSBuf instead
                 //thePos = SBuf::npos;
                 //testAllMethods();
             }

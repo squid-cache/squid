@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -48,7 +48,7 @@ public:
     Parser &operator =(const Parser &) = default;
     Parser(Parser &&) = default;
     Parser &operator =(Parser &&) = default;
-    virtual ~Parser() {}
+    ~Parser() override {}
 
     /// Set this parser back to a default state.
     /// Will DROP any reference to a buffer (does not free).

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -67,7 +67,7 @@ HeaderLookupTable_t::HeaderLookupTable_t() {STUB_NOP}
 const HeaderTableRecord& HeaderLookupTable_t::lookup(const char *, const std::size_t) const STUB_RETVAL(BadHdr)
 const HeaderLookupTable_t HeaderLookupTable;
 }
-std::ostream &operator<< (std::ostream&os, Http::HdrType) STUB_RETVAL(os)
+std::ostream &Http::operator <<(std::ostream &os, HdrType) STUB_RETVAL(os)
 
 #include "http/RequestMethod.h"
 HttpRequestMethod::HttpRequestMethod(const SBuf &) {STUB}

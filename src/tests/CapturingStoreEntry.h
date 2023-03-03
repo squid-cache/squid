@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,15 +24,15 @@ public:
     int _buffer_calls;
     int _flush_calls;
 
-    virtual void buffer() {
+    void buffer() override {
         _buffer_calls += 1;
     }
 
-    virtual void flush() {
+    void flush() override {
         _flush_calls += 1;
     }
 
-    virtual void append(char const * buf, int len) {
+    void append(char const * buf, int len) override {
         if (!buf || len < 0) // old 'String' can't handle these cases
             return;
         _appended_text.append(buf, len);

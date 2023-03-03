@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,7 +22,7 @@ class AnnotationStrategy: public ACLStrategy<NotePairs::Entry *>
 public:
     AnnotationStrategy(): delimiters(CharacterSet(__FILE__, ",")) {}
 
-    virtual const Acl::Options &options() override;
+    const Acl::Options &options() override;
 
     Acl::CharacterSetOptionValue delimiters; ///< annotation separators
 };
@@ -34,8 +34,8 @@ class ACLNoteStrategy: public Acl::AnnotationStrategy
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
-    virtual bool requiresRequest() const { return true; }
+    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    bool requiresRequest() const override { return true; }
 
 private:
     bool matchNotes(ACLData<MatchType> *, const NotePairs *) const;
