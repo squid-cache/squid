@@ -42,10 +42,12 @@ ACLRegexData::lineOptions()
 }
 
 bool
-ACLRegexData::match(char const *word)
+ACLRegexData::match(char const *aWord)
 {
-    if (!word)
+    if (!aWord)
         return 0;
+
+    const SBuf word(aWord);
 
     debugs(28, 3, "checking '" << word << "'");
 

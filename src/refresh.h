@@ -11,6 +11,8 @@
 #ifndef SQUID_REFRESH_H_
 #define SQUID_REFRESH_H_
 
+#include "sbuf/forward.h"
+
 class RefreshPattern;
 
 void refreshAddToList(const char *, int, time_t, int, time_t);
@@ -21,7 +23,7 @@ int refreshCheckHTCP(const StoreEntry *, HttpRequest *);
 int refreshCheckDigest(const StoreEntry *, time_t delta);
 time_t getMaxAge(const char *url);
 void refreshInit(void);
-const RefreshPattern *refreshLimits(const char *url);
+const RefreshPattern *refreshLimits(const SBuf &url);
 
 #endif /* SQUID_REFRESH_H_ */
 
