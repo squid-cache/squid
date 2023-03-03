@@ -132,20 +132,6 @@ mem_hdr::appendNode (mem_node *aNode)
     nodes.insert (aNode, NodeCompare);
 }
 
-void
-mem_hdr::makeAppendSpace()
-{
-    if (!nodes.size()) {
-        appendNode (new mem_node (0));
-        return;
-    }
-
-    if (!nodes.finish()->data->space())
-        appendNode (new mem_node (endOffset()));
-
-    assert (nodes.finish()->data->space());
-}
-
 /* returns a mem_node that contains location..
  * If no node contains the start, it returns NULL.
  */
@@ -382,17 +368,6 @@ size_t
 mem_hdr::size() const
 {
     return nodes.size();
-}
-
-mem_node const *
-mem_hdr::start() const
-{
-    const SplayNode<mem_node *> * result = nodes.start();
-
-    if (result)
-        return result->data;
-
-    return nullptr;
 }
 
 const Splay<mem_node *> &

@@ -32,8 +32,6 @@ public:
     bool write (StoreIOBuffer const &);
     void dump() const;
     size_t size() const;
-    /* Not an iterator - thus the start, not begin() */
-    mem_node const *start() const;
     mem_node *getBlockContainingLocation (int64_t location) const;
     /* access the contained nodes - easier than punning
      * as a container ourselves
@@ -46,7 +44,6 @@ public:
 private:
     void debugDump() const;
     bool unlink(mem_node *aNode);
-    void makeAppendSpace();
     void appendNode (mem_node *aNode);
     size_t copyAvailable(mem_node *aNode, int64_t location, size_t amount, char *target) const;
     bool unionNotEmpty (StoreIOBuffer const &);
