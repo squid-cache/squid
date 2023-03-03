@@ -90,7 +90,7 @@ private:
     /// Serialized Store entry metadata followed by HTTP headers, followed by a
     /// portion of HTTP response body. All components are optional. This buffer
     /// is not NUL-terminated and may be completely full.
-    std::array<char, HTTP_REQBUF_SZ> serialized_; // TODO: allocate dynamically
+    std::array<char, 64*1024 /* XXX: HTTP_REQBUF_SZ */ > serialized_; // TODO: allocate dynamically
 };
 
 } // namespace Store
