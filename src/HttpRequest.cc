@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,7 +19,6 @@
 #include "Downloader.h"
 #include "error/Detail.h"
 #include "globals.h"
-#include "gopher.h"
 #include "http.h"
 #include "http/ContentLengthInterpreter.h"
 #include "http/one/RequestParser.h"
@@ -450,7 +449,7 @@ HttpRequest::prepForPeering(const CachePeer &peer)
     peer_login = peer.login;
     peer_domain = peer.domain;
     flags.auth_no_keytab = peer.options.auth_no_keytab;
-    debugs(11, 4, this << " to " << peer.host << (!peer.options.originserver ? " proxy" : " origin"));
+    debugs(11, 4, this << " to " << peer);
 }
 
 void
@@ -551,17 +550,13 @@ HttpRequest::maybeCacheable()
         if (!method.respMaybeCacheable())
             return false;
 
-        // RFC 7234 section 5.2.1.5:
-        // "cache MUST NOT store any part of either this request or any response to it"
+        // RFC 9111 section 5.2.1.5:
+        // "The no-store request directive indicates that a cache MUST NOT
+        //  store any part of either this request or any response to it."
         //
         // NP: refresh_pattern ignore-no-store only applies to response messages
         //     this test is handling request message CC header.
         if (!flags.ignoreCc && cache_control && cache_control->hasNoStore())
-            return false;
-        break;
-
-    case AnyP::PROTO_GOPHER:
-        if (!gopherCachable(this))
             return false;
         break;
 
@@ -877,11 +872,16 @@ FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry 
     });
 }
 
-unsigned short
+AnyP::Port
 FindListeningPortNumber(const HttpRequest *callerRequest, const AccessLogEntry *ale)
 {
     const auto ip = FindGoodListeningPortAddress(callerRequest, ale, [](const Ip::Address &address) {
         return address.port() > 0;
     });
-    return ip ? ip->port() : 0;
+
+    if (!ip)
+        return std::nullopt;
+
+    Assure(ip->port() > 0);
+    return ip->port();
 }

@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -12,26 +12,27 @@ dnl checks for a broken solaris header file, and sets squid_cv_broken_krb5_h
 dnl to yes if that's the case
 AC_DEFUN([SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H], [
   AC_CACHE_CHECK([for broken Solaris krb5.h],squid_cv_broken_krb5_h, [
+    SQUID_STATE_SAVE(squid_krb5_solaris_test)
+    CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <krb5.h>
 int i;
 ]])], [ squid_cv_broken_krb5_h=no ], [
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if defined(__cplusplus)
-#define KRB5INT_BEGIN_DECLS     extern "C" {
-#define KRB5INT_END_DECLS
-KRB5INT_BEGIN_DECLS
-#endif
-#include <krb5.h>
+#define HAVE_BROKEN_SOLARIS_KRB5_H  1
+#include "compat/krb5.h"
 int i;
 ]])], [ squid_cv_broken_krb5_h=yes ], [ squid_cv_broken_krb5_h=no ])
     ])
+    SQUID_STATE_ROLLBACK(squid_krb5_solaris_test)
   ])
 ]) dnl SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H
 
 
 AC_DEFUN([SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H], [
   AC_CACHE_CHECK([for broken Heimdal krb5.h],squid_cv_broken_heimdal_krb5_h, [
+    SQUID_STATE_SAVE(squid_krb5_heimdal_test)
+    CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
     AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <krb5.h>
 int
@@ -45,13 +46,8 @@ main(void)
 }
 ]])], [ squid_cv_broken_heimdal_krb5_h=no ], [
     AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#if defined(__cplusplus)
-extern "C" {
-#endif
-#include <krb5.h>
-#if defined(__cplusplus)
-}
-#endif
+#define HAVE_BROKEN_HEIMDAL_KRB5_H  1
+#include "compat/krb5.h"
 int
 main(void)
 {
@@ -63,6 +59,7 @@ main(void)
 }
 ]])], [ squid_cv_broken_heimdal_krb5_h=yes ], [ squid_cv_broken_heimdal_krb5_h=no ])
     ])
+    SQUID_STATE_ROLLBACK(squid_krb5_heimdal_test)
   ])
 ]) dnl SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
 
@@ -70,23 +67,16 @@ dnl check the max skew in the krb5 context, and sets squid_cv_max_skew_context
 AC_DEFUN([SQUID_CHECK_MAX_SKEW_IN_KRB5_CONTEXT],[
   AC_CACHE_CHECK([for max_skew in struct krb5_context],
                   squid_cv_max_skew_context, [
+    SQUID_STATE_SAVE(squid_krb5_test)
+    CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
     AC_COMPILE_IFELSE([
       AC_LANG_PROGRAM([[
-#if HAVE_BROKEN_SOLARIS_KRB5_H
-#if defined(__cplusplus)
-#define KRB5INT_BEGIN_DECLS     extern "C" {
-#define KRB5INT_END_DECLS
-KRB5INT_BEGIN_DECLS
-#endif
-#endif
-#if USE_APPLE_KRB5
-#define KERBEROS_APPLE_DEPRECATED(x)
-#endif
-#include <krb5.h>
+#include "compat/krb5.h"
 krb5_context kc; kc->max_skew = 1;
       ]])
     ],[ squid_cv_max_skew_context=yes ],
     [ squid_cv_max_skew_context=no ])
+    SQUID_STATE_ROLLBACK(squid_krb5_test)
   ])
 ])
 
@@ -94,19 +84,11 @@ dnl check whether the kerberos context has a memory cache. Sets
 dnl squid_cv_memory_cache if that's the case.
 AC_DEFUN([SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE],[
   AC_CACHE_CHECK([for memory cache], squid_cv_memory_cache, [
+    SQUID_STATE_SAVE(squid_krb5_test)
+    CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
     AC_RUN_IFELSE([
       AC_LANG_SOURCE([[
-#if HAVE_BROKEN_SOLARIS_KRB5_H
-#if defined(__cplusplus)
-#define KRB5INT_BEGIN_DECLS     extern "C" {
-#define KRB5INT_END_DECLS
-KRB5INT_BEGIN_DECLS
-#endif
-#endif
-#if USE_APPLE_KRB5
-#define KERBEROS_APPLE_DEPRECATED(x)
-#endif
-#include <krb5.h>
+#include "compat/krb5.h"
 int main(int argc, char *argv[])
 {
     krb5_context context;
@@ -117,6 +99,7 @@ int main(int argc, char *argv[])
 }
       ]])
     ], [ squid_cv_memory_cache=yes ], [ squid_cv_memory_cache=no ], [:])
+    SQUID_STATE_ROLLBACK(squid_krb5_test)
   ])
 ])
 
@@ -124,19 +107,11 @@ dnl check whether the kerberos context has a memory keytab. Sets
 dnl squid_cv_memory_keytab if that's the case.
 AC_DEFUN([SQUID_CHECK_KRB5_CONTEXT_MEMORY_KEYTAB],[
   AC_CACHE_CHECK([for memory keytab], squid_cv_memory_keytab, [
+    SQUID_STATE_SAVE(squid_krb5_test)
+    CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
     AC_RUN_IFELSE([
       AC_LANG_SOURCE([[
-#if HAVE_BROKEN_SOLARIS_KRB5_H
-#if defined(__cplusplus)
-#define KRB5INT_BEGIN_DECLS     extern "C" {
-#define KRB5INT_END_DECLS
-KRB5INT_BEGIN_DECLS
-#endif
-#endif
-#if USE_APPLE_KRB5
-#define KERBEROS_APPLE_DEPRECATED(x)
-#endif
-#include <krb5.h>
+#include "compat/krb5.h"
 int main(int argc, char *argv[])
 {
     krb5_context context;
@@ -147,6 +122,7 @@ int main(int argc, char *argv[])
 }
       ]])
     ], [ squid_cv_memory_keytab=yes ], [ squid_cv_memory_keytab=no ], [:])
+    SQUID_STATE_ROLLBACK(squid_krb5_test)
   ])
 ])
 
@@ -192,9 +168,9 @@ main(void)
         return 0;
 }
   ]])],  [ squid_cv_working_gssapi=yes ], [ squid_cv_working_gssapi=no ], [:])])
-if test "x$squid_cv_working_gssapi" = "xno" -a `echo $LIBS | grep -i -c "\-L"` -gt 0; then
-  AC_MSG_NOTICE([Check Runtime library path !])
-fi
+  AS_IF([test "x$squid_cv_working_gssapi" = "xno" -a `echo $LIBS | grep -i -c "(-)L"` -gt 0],[
+    AC_MSG_NOTICE([Check Runtime library path !])
+  ])
 ])
 
 dnl check for a working spnego, and set squid_cv_have_spnego
@@ -253,27 +229,10 @@ gss_OID gss_mech_spnego = &_gss_mech_spnego;
 dnl checks that krb5 is functional. Sets squid_cv_working_krb5
 AC_DEFUN([SQUID_CHECK_WORKING_KRB5],[
   AC_CACHE_CHECK([for working krb5], squid_cv_working_krb5, [
+    SQUID_STATE_SAVE(squid_krb5_test)
+    CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
     AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#if USE_APPLE_KRB5
-#define KERBEROS_APPLE_DEPRECATED(x)
-#endif
-#if HAVE_KRB5_H
-#if HAVE_BROKEN_SOLARIS_KRB5_H
-#if defined(__cplusplus)
-#define KRB5INT_BEGIN_DECLS     extern "C" {
-#define KRB5INT_END_DECLS
-KRB5INT_BEGIN_DECLS
-#endif
-#endif
-#if HAVE_BROKEN_HEIMDAL_KRB5_H
-extern "C" {
-#include <krb5.h>
-}
-#else
-#include <krb5.h>
-#endif
-#endif
-
+#include "compat/krb5.h"
 int
 main(void)
 {
@@ -284,9 +243,10 @@ main(void)
         return 0;
 }
   ]])], [ squid_cv_working_krb5=yes ], [ squid_cv_working_krb5=no ],[:])])
-if test "x$squid_cv_working_krb5" = "xno" -a `echo $LIBS | grep -i -c "\-L"` -gt 0; then
-  AC_MSG_NOTICE([Check Runtime library path !])
-fi
+  SQUID_STATE_ROLLBACK(squid_krb5_test)
+  AS_IF([test "x$squid_cv_working_krb5" = "xno" -a `echo $LIBS | grep -i -c "(-)L"` -gt 0],[
+    AC_MSG_NOTICE([Check Runtime library path !])
+  ])
 ])
 
 
@@ -294,21 +254,19 @@ dnl checks for existence of krb5 functions
 AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
 
   ac_com_error_message=no
-  if test "x$ac_cv_header_com_err_h" = "xyes" ; then
-    AC_EGREP_HEADER(error_message,com_err.h,ac_com_error_message=yes)
-  elif test "x$ac_cv_header_et_com_err_h" = "xyes" ; then
+  AS_IF([test "x$ac_cv_header_com_err_h" = "xyes"],[
+    AC_EGREP_HEADER(error_message,com_err.h,ac_com_error_message=yes)],
+  [test "x$ac_cv_header_et_com_err_h" = "xyes"],[
     AC_EGREP_HEADER(error_message,et/com_err.h,ac_com_error_message=yes)
-  fi
+  ])
 
-  if test `echo $KRB5LIBS | grep -c com_err` -ne 0 -a "x$ac_com_error_message" = "xyes" ; then
+  AS_IF([test `echo $KRB5LIBS | grep -c com_err` -ne 0 -a "x$ac_com_error_message" = "xyes"],[
     AC_CHECK_LIB(com_err,error_message,
-      AC_DEFINE(HAVE_ERROR_MESSAGE,1,
-        [Define to 1 if you have error_message]),)
-  elif test  "x$ac_com_error_message" = "xyes" ; then
+      AC_DEFINE(HAVE_ERROR_MESSAGE,1,[Define to 1 if you have error_message]),)
+  ],[test  "x$ac_com_error_message" = "xyes"],[
     AC_CHECK_LIB(krb5,error_message,
-      AC_DEFINE(HAVE_ERROR_MESSAGE,1,
-        [Define to 1 if you have error_message]),)
-  fi
+      AC_DEFINE(HAVE_ERROR_MESSAGE,1,[Define to 1 if you have error_message]),)
+  ])
 
   AC_CHECK_LIB(krb5,krb5_get_err_text,
     AC_DEFINE(HAVE_KRB5_GET_ERR_TEXT,1,
@@ -355,11 +313,10 @@ AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
     AC_DEFINE(HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC,1,
       [Define to 1 if you have krb5_get_init_creds_opt_alloc]),)
   AC_MSG_CHECKING([for krb5_get_init_creds_free requires krb5_context])
+  SQUID_STATE_SAVE(squid_krb5_test)
+  CPPFLAGS="-I${srcdir:-.} $CPPFLAGS"
   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-        #if USE_APPLE_KRB5
-        #define KERBEROS_APPLE_DEPRECATED(x)
-        #endif
-	#include <krb5.h>
+#include "compat/krb5.h"
     ]],[[krb5_context context;
 	 krb5_get_init_creds_opt *options;
 	 krb5_get_init_creds_opt_free(context, options)]])],[
@@ -367,6 +324,7 @@ AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
 		  [Define to 1 if you krb5_get_init_creds_free requires krb5_context])
 	AC_MSG_RESULT(yes)
     ],[AC_MSG_RESULT(no)],[AC_MSG_RESULT(no)])
+  SQUID_STATE_ROLLBACK(squid_krb5_test)
 
   AC_CHECK_FUNCS(gss_map_name_to_any,
     AC_DEFINE(HAVE_GSS_MAP_ANY_TO_ANY,1,

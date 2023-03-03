@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -481,8 +481,10 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
 
     // origin replied with a non-error code
     if (status > Http::scNone && status < Http::scInternalServerError) {
-        // RFC 7234 section 4: a cache MUST use the most recent response
-        // (as determined by the Date header field)
+        // RFC 9111 section 4:
+        // "When more than one suitable response is stored,
+        //  a cache MUST use the most recent one
+        // (as determined by the Date header field)."
         if (new_rep.olderThan(&old_entry->mem().freshestReply())) {
             http->al->cache.code.err.ignored = true;
             debugs(88, 3, "origin replied " << status << " but with an older date header, sending old entry (" << oldStatus << ") to client");
@@ -1316,17 +1318,6 @@ clientReplyContext::buildReplyHeader()
         } else if (http->storeEntry()->timestamp <= squid_curtime) {
             hdr->putInt(Http::HdrType::AGE,
                         squid_curtime - http->storeEntry()->timestamp);
-            /* Signal old objects.  NB: rfc 2616 is not clear,
-             * by implication, on whether we should do this to all
-             * responses, or only cache hits.
-             * 14.46 states it ONLY applies for heuristically calculated
-             * freshness values, 13.2.4 doesn't specify the same limitation.
-             * We interpret RFC 2616 under the combination.
-             */
-            /* TODO: if maxage or s-maxage is present, don't do this */
-
-            if (squid_curtime - http->storeEntry()->timestamp >= 86400)
-                hdr->putWarning(113, "This cache hit is still fresh and more than 1 day old");
         }
     }
 
@@ -1347,13 +1338,6 @@ clientReplyContext::buildReplyHeader()
             /* dump something useful about the problem */
             http->storeEntry()->dump(DBG_IMPORTANT);
         }
-    }
-
-    // add Warnings required by RFC 2616 if serving a stale hit
-    if (http->request->flags.staleIfHit && http->loggingTags().isTcpHit()) {
-        hdr->putWarning(110, "Response is stale");
-        if (http->request->flags.needValidation)
-            hdr->putWarning(111, "Revalidation failed");
     }
 
     /* Filter unproxyable authentication types */
@@ -2116,7 +2100,6 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         sc->setDelayId(DelayId::DelayClient(http,reply));
 #endif
 
-    holdingBuffer = result;
     processReplyAccess();
     return;
 }

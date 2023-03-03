@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,8 +30,8 @@ public:
     Intercept() : transparentActive_(0), interceptActive_(0) {}
     ~Intercept() {};
 
-    /** Perform NAT lookups */
-    bool Lookup(const Comm::ConnectionPointer &newConn, const Comm::ConnectionPointer &listenConn);
+    /// perform NAT lookups for the local address of the given connection
+    bool LookupNat(const Comm::Connection &);
 
     /**
      * Test system networking calls for TPROXY support.
@@ -55,7 +55,7 @@ public:
      * This function should be called during parsing of the squid.conf
      * When any option requiring full-transparency is encountered.
      */
-    inline void StartTransparency() { transparentActive_=1; };
+    void StartTransparency();
 
     /** \par
      * Turn off fully Transparent-Proxy activities on all new connections.
@@ -76,26 +76,9 @@ public:
      * This function should be called during parsing of the squid.conf
      * When any option requiring interception / NAT handling is encountered.
      */
-    inline void StartInterception() { interceptActive_=1; };
-
-    /** \par
-     * Turn off IP-Interception-Proxy activities on all new connections.
-     * Existing transactions and connections are unaffected and will run
-     * to their natural completion.
-     \param str    Reason for stopping. Will be logged to cache.log
-     */
-    inline void StopInterception(const char *str);
+    void StartInterception();
 
 private:
-
-    /**
-     * perform Lookups on fully-transparent interception targets (TPROXY).
-     * Supports Netfilter, PF and IPFW.
-     *
-     * \param newConn  Details known, to be updated where relevant.
-     * \return         Whether successfully located the new address.
-     */
-    bool TproxyTransparent(const Comm::ConnectionPointer &newConn);
 
     /**
      * perform Lookups on Netfilter interception targets (REDIRECT, DNAT).

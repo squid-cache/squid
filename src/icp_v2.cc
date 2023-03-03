@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,17 +17,18 @@
 #include "AccessLogEntry.h"
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
+#include "base/AsyncCallbacks.h"
 #include "client_db.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
-#include "comm/UdpOpenDialer.h"
 #include "fd.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
 #include "ICP.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
+#include "ipc/StartListening.h"
 #include "ipcache.h"
 #include "md5.h"
 #include "multicast.h"
@@ -53,7 +54,7 @@ public:
     struct timeval queue_time = {}; ///< queuing timestamp
 };
 
-static void icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);
+static void icpIncomingConnectionOpened(Ipc::StartListeningAnswer &);
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpLogIcp(const Ip::Address &, const LogTags_ot, int, const char *, const int, AccessLogEntryPointer &);
@@ -207,7 +208,7 @@ public:
     ICP2State(icp_common_t & aHeader, HttpRequest *aRequest):
         ICPState(aHeader, aRequest),rtt(0),src_rtt(0),flags(0) {}
 
-    ~ICP2State();
+    ~ICP2State() override;
 
     int rtt;
     int src_rtt;
@@ -713,10 +714,7 @@ icpOpenPorts(void)
         icpIncomingConn->local.setIPv4();
     }
 
-    AsyncCall::Pointer call = asyncCall(12, 2,
-                                        "icpIncomingConnectionOpened",
-                                        Comm::UdpOpenDialer(&icpIncomingConnectionOpened));
-
+    auto call = asyncCallbackFun(12, 2, icpIncomingConnectionOpened);
     Ipc::StartListening(SOCK_DGRAM,
                         IPPROTO_UDP,
                         icpIncomingConn,
@@ -751,8 +749,10 @@ icpOpenPorts(void)
 }
 
 static void
-icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int)
+icpIncomingConnectionOpened(Ipc::StartListeningAnswer &answer)
 {
+    const auto &conn = answer.conn;
+
     if (!Comm::IsConnOpen(conn))
         fatal("Cannot open ICP Port");
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -47,12 +47,10 @@ void Controller::addReading(StoreEntry *, const cache_key *) STUB
 void Controller::addWriting(StoreEntry *, const cache_key *) STUB
 bool Controller::transientsReader(const StoreEntry &) const STUB_RETVAL(false)
 bool Controller::transientsWriter(const StoreEntry &) const STUB_RETVAL(false)
-void Controller::transientsCompleteWriting(StoreEntry &) STUB
 void Controller::syncCollapsed(const sfileno) STUB
-void Controller::stopSharing(StoreEntry &) STUB
+void Controller::noteStoppedSharedWriting(StoreEntry &) STUB
 int Controller::transientReaders(const StoreEntry &) const STUB_RETVAL(0)
 void Controller::transientsDisconnect(StoreEntry &) STUB
-void Controller::transientsClearCollapsingRequirement(StoreEntry &) STUB
 void Controller::memoryDisconnect(StoreEntry &) STUB
 StoreSearch *Controller::search() STUB_RETVAL(nullptr)
 bool Controller::SmpAware() STUB_RETVAL(false)
@@ -117,7 +115,7 @@ void Disks::reference(StoreEntry &) STUB
 bool Disks::dereference(StoreEntry &) STUB_RETVAL(false)
 void Disks::updateHeaders(StoreEntry *) STUB
 void Disks::maintain() STUB
-bool Disks::anchorToCache(StoreEntry &, bool &) STUB_RETVAL(false)
+bool Disks::anchorToCache(StoreEntry &) STUB_RETVAL(false)
 bool Disks::updateAnchored(StoreEntry &) STUB_RETVAL(false)
 void Disks::evictCached(StoreEntry &) STUB
 void Disks::evictIfFound(const cache_key *) STUB
@@ -145,7 +143,7 @@ StoreSearch *NewLocalSearch() STUB_RETVAL(nullptr)
 
 #include "store/SwapMetaIn.h"
 size_t Store::UnpackSwapMetaSize(const SBuf &) STUB_RETVAL(0)
-uint64_t Store::UnpackIndexSwapMeta(const MemBuf &, StoreEntry &, cache_key *) STUB_RETVAL(0)
+size_t Store::UnpackIndexSwapMeta(const MemBuf &, StoreEntry &, cache_key *) STUB_RETVAL(0)
 void Store::UnpackHitSwapMeta(char const *, ssize_t, StoreEntry &) STUB
 
 #include "store/SwapMetaOut.h"

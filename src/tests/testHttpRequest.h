@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,16 +15,16 @@
  * test HttpRequest
  */
 
-class testHttpRequest : public CPPUNIT_NS::TestFixture
+class TestHttpRequest: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testHttpRequest );
+    CPPUNIT_TEST_SUITE( TestHttpRequest );
     CPPUNIT_TEST( testCreateFromUrl );
     CPPUNIT_TEST( testIPv6HostColonBug );
     CPPUNIT_TEST( testSanityCheckStartLine );
     CPPUNIT_TEST_SUITE_END();
 
 public:
-    void setUp();
+    void setUp() override;
 
 protected:
     void testCreateFromUrl();

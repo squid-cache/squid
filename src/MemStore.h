@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,7 +30,7 @@ class MemStore: public Store::Controlled, public Ipc::StoreMapCleaner
 {
 public:
     MemStore();
-    virtual ~MemStore();
+    ~MemStore() override;
 
     /// whether e should be kept in local RAM for possible future caching
     bool keepInLocalMemory(const StoreEntry &e) const;
@@ -45,24 +45,24 @@ public:
     void disconnect(StoreEntry &e);
 
     /* Storage API */
-    virtual void create() override {}
-    virtual void init() override;
-    virtual StoreEntry *get(const cache_key *) override;
-    virtual uint64_t maxSize() const override;
-    virtual uint64_t minSize() const override;
-    virtual uint64_t currentSize() const override;
-    virtual uint64_t currentCount() const override;
-    virtual int64_t maxObjectSize() const override;
-    virtual void getStats(StoreInfoStats &stats) const override;
-    virtual void stat(StoreEntry &e) const override;
-    virtual void reference(StoreEntry &e) override;
-    virtual bool dereference(StoreEntry &e) override;
-    virtual void updateHeaders(StoreEntry *e) override;
-    virtual void maintain() override;
-    virtual bool anchorToCache(StoreEntry &e, bool &inSync) override;
-    virtual bool updateAnchored(StoreEntry &) override;
-    virtual void evictCached(StoreEntry &) override;
-    virtual void evictIfFound(const cache_key *) override;
+    void create() override {}
+    void init() override;
+    StoreEntry *get(const cache_key *) override;
+    uint64_t maxSize() const override;
+    uint64_t minSize() const override;
+    uint64_t currentSize() const override;
+    uint64_t currentCount() const override;
+    int64_t maxObjectSize() const override;
+    void getStats(StoreInfoStats &stats) const override;
+    void stat(StoreEntry &e) const override;
+    void reference(StoreEntry &e) override;
+    bool dereference(StoreEntry &e) override;
+    void updateHeaders(StoreEntry *e) override;
+    void maintain() override;
+    bool anchorToCache(StoreEntry &) override;
+    bool updateAnchored(StoreEntry &) override;
+    void evictCached(StoreEntry &) override;
+    void evictIfFound(const cache_key *) override;
 
     /// whether Squid is correctly configured to use a shared memory cache
     static bool Enabled() { return EntryLimit() > 0; }
@@ -92,7 +92,7 @@ protected:
     sfileno reserveSapForWriting(Ipc::Mem::PageId &page);
 
     // Ipc::StoreMapCleaner API
-    virtual void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId) override;
+    void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId) override;
 
 private:
     // TODO: move freeSlots into map

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -125,10 +125,9 @@ const auto SwapMetaPrefixSize = sizeof(SwapMetaMagic) + sizeof(RawSwapMetaPrefix
 /// This is not the smallest RawSwapMetaType value (that is usually -128).
 const RawSwapMetaType RawSwapMetaTypeBottom = 0;
 
-// TODO: Use "inline constexpr ..." with C++17.
 /// Maximum value of a serialized SwapMetaType ID.
 /// This is not the largest RawSwapMetaType value (that is usually +127).
-inline RawSwapMetaType
+inline constexpr RawSwapMetaType
 RawSwapMetaTypeTop()
 {
     // This "constant" switch forces developers to update this function when
@@ -136,7 +135,11 @@ RawSwapMetaTypeTop()
     // marker because it does not force us to add that marker to every switch
     // statement, with an assert(false) or similar "unreachable code" handler.
     // Optimizing compilers optimize this statement away into a constant.
-    switch (STORE_META_VOID) {
+    // The non-constant variable is needed for older compilers.
+
+    // always use the last/maximum enum value here
+    auto top = STORE_META_OBJSIZE;
+    switch (top) {
     case STORE_META_VOID:
     case STORE_META_KEY_MD5:
     case STORE_META_URL:
@@ -144,14 +147,14 @@ RawSwapMetaTypeTop()
     case STORE_META_VARY_HEADERS:
     case STORE_META_STD_LFS:
     case STORE_META_OBJSIZE:
-        // always return the last/maximum enum value
-        return STORE_META_OBJSIZE;
+        break;
     }
+    return top;
 }
 
 /// Whether the given raw swap meta field type represents a type that we should
 /// inform the admin about (if found in a store) but can otherwise ignore.
-inline bool
+inline constexpr bool
 DeprecatedSwapMetaType(const RawSwapMetaType type)
 {
     enum class DeprecatedMetas {
@@ -165,7 +168,6 @@ DeprecatedSwapMetaType(const RawSwapMetaType type)
         STORE_META_VALID = 7
     };
     return
-        // TODO: simplify with std::underlying_type_t when switching to C++14
         type == static_cast<RawSwapMetaType>(DeprecatedMetas::STORE_META_KEY_URL) ||
         type == static_cast<RawSwapMetaType>(DeprecatedMetas::STORE_META_KEY_SHA) ||
         type == static_cast<RawSwapMetaType>(DeprecatedMetas::STORE_META_HITMETERING) ||
@@ -174,7 +176,7 @@ DeprecatedSwapMetaType(const RawSwapMetaType type)
 
 /// Whether the given raw swap meta field type represents a type that we should
 /// ignore without informing the admin.
-inline bool
+inline constexpr bool
 ReservedSwapMetaType(const RawSwapMetaType type)
 {
     enum class ReservedMetas {
@@ -191,7 +193,7 @@ ReservedSwapMetaType(const RawSwapMetaType type)
 /// Whether we store the given swap meta field type (and also interpret the
 /// corresponding swap meta field when the Store loads it). Matches all
 /// SwapMetaType enum values except for the never-stored STORE_META_VOID.
-inline bool
+inline constexpr bool
 HonoredSwapMetaType(const RawSwapMetaType type)
 {
     switch (type) {
@@ -213,7 +215,7 @@ HonoredSwapMetaType(const RawSwapMetaType type)
 
 /// Whether the given raw swap meta field type can be safely ignored.
 /// \sa HonoredSwapMetaType()
-inline bool
+inline constexpr bool
 IgnoredSwapMetaType(const RawSwapMetaType type)
 {
     return DeprecatedSwapMetaType(type) || ReservedSwapMetaType(type);

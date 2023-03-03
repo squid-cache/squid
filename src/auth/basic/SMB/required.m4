@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -9,8 +9,8 @@
 # We can install anyway, but warn if smbclient not found already
 #
 AC_PATH_PROG(SMBCLIENT, smbclient)
-if test "x$SMBCLIENT" = "x"; then
+AS_IF([test "x$SMBCLIENT" = "x"],[
   AC_MSG_WARN([Samba smbclient not found in default location. basic_smb_auth may not work on this machine])
-fi
+])
 # allow script install anyway.
 BUILD_HELPER="SMB"

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,15 +29,15 @@ class IoState: public ::StoreIOState
 public:
     typedef RefCount<IoState> Pointer;
 
-    IoState(Rock::SwapDir::Pointer &aDir, StoreEntry *e, StoreIOState::STFNCB *cbFile, StoreIOState::STIOCB *cbIo, void *data);
-    virtual ~IoState();
+    IoState(Rock::SwapDir::Pointer &, StoreEntry *, StoreIOState::STIOCB *, void *cbData);
+    ~IoState() override;
 
     void file(const RefCount<DiskFile> &aFile);
 
     // ::StoreIOState API
-    virtual void read_(char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data);
-    virtual bool write(char const *buf, size_t size, off_t offset, FREE * free_func);
-    virtual void close(int how);
+    void read_(char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data) override;
+    bool write(char const *buf, size_t size, off_t offset, FREE * free_func) override;
+    void close(int how) override;
 
     /// whether we are still waiting for the I/O results (i.e., not closed)
     bool stillWaiting() const { return theFile != nullptr; }

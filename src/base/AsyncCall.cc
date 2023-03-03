@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -91,7 +91,7 @@ AsyncCall::dequeue(AsyncCall::Pointer &head, AsyncCall::Pointer &prev)
 }
 
 bool
-ScheduleCall(const char *fileName, int fileLine, AsyncCall::Pointer &call)
+ScheduleCall(const char *fileName, int fileLine, const AsyncCall::Pointer &call)
 {
     debugs(call->debugSection, call->debugLevel, fileName << "(" << fileLine <<
            ") will call " << *call << " [" << call->id << ']' );

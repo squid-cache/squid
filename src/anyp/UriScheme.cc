@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -67,7 +67,7 @@ AnyP::UriScheme::FindProtocolType(const SBuf &scheme)
     return AnyP::PROTO_UNKNOWN;
 }
 
-unsigned short
+AnyP::Port
 AnyP::UriScheme::defaultPort() const
 {
     switch (theScheme_) {
@@ -87,9 +87,6 @@ AnyP::UriScheme::defaultPort() const
         // Assuming IANA policy of allocating same port for base and TLS protocol versions will occur.
         return 5683;
 
-    case AnyP::PROTO_GOPHER:
-        return 70;
-
     case AnyP::PROTO_WAIS:
         return 210;
 
@@ -100,7 +97,7 @@ AnyP::UriScheme::defaultPort() const
         return 43;
 
     default:
-        return 0;
+        return std::nullopt;
     }
 }
 

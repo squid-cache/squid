@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -693,7 +693,7 @@ read_reply(int s, cachemgr_request * req)
             }
 
             istate = isActions;
-        /* [[fallthrough]] we do not want to lose the first line */
+            [[fallthrough]]; // we do not want to lose the first line
 
         case isActions:
             if (strncmp(buf, "action:", 7) == 0) {
@@ -709,7 +709,7 @@ read_reply(int s, cachemgr_request * req)
             }
 
             istate = isBody;
-        /* [[fallthrough]] we do not want to lose the first line */
+            [[fallthrough]]; // we do not want to lose the first line
 
         case isBody:
         {
@@ -861,16 +861,20 @@ process_request(cachemgr_request * req)
 
     Ip::Address::FreeAddr(AI);
 
+    // XXX: missing backward compatibility for old Squid.
+    // Squid-3.1 and older do not support http scheme manager requests.
+    // Squid-3.2 versions have bugs with https scheme manager requests.
     l = snprintf(buf, sizeof(buf),
-                 "GET cache_object://%s/%s%s%s HTTP/1.0\r\n"
+                 "GET /squid-internal-mgr/%s%s%s HTTP/1.0\r\n" // HTTP/1.0 because this tool does not support Transfer-Encoding
+                 "Host: %s\r\n"
                  "User-Agent: cachemgr.cgi/%s\r\n"
                  "Accept: */*\r\n"
                  "%s"           /* Authentication info or nothing */
                  "\r\n",
-                 req->hostname,
                  req->action,
                  req->workers? "?workers=" : (req->processes ? "?processes=" : ""),
                  req->workers? req->workers : (req->processes ? req->processes: ""),
+                 req->hostname,
                  VERSION,
                  make_auth_header(req));
     if (write(s, buf, l) < 0) {

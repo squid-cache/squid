@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "base/AsyncCallbacks.h"
 #include "base/CodeContext.h"
 #include "CachePeer.h"
 #include "errorpage.h"
@@ -100,11 +101,11 @@ public:
     PrimeChanceGiver(): HappyOrderEnforcer("happy_eyeballs_connect_timeout enforcement") {}
 
     /* HappyOrderEnforcer API */
-    virtual bool readyNow(const HappyConnOpener &job) const override;
+    bool readyNow(const HappyConnOpener &job) const override;
 
 private:
     /* HappyOrderEnforcer API */
-    virtual AsyncCall::Pointer notify(const CbcPointer<HappyConnOpener> &) override;
+    AsyncCall::Pointer notify(const CbcPointer<HappyConnOpener> &) override;
 };
 
 /// enforces happy_eyeballs_connect_gap and happy_eyeballs_connect_limit
@@ -114,7 +115,7 @@ public:
     SpareAllowanceGiver(): HappyOrderEnforcer("happy_eyeballs_connect_gap/happy_eyeballs_connect_limit enforcement") {}
 
     /* HappyOrderEnforcer API */
-    virtual bool readyNow(const HappyConnOpener &job) const override;
+    bool readyNow(const HappyConnOpener &job) const override;
 
     /// reacts to HappyConnOpener discovering readyNow() conditions for a spare path
     /// the caller must attempt to open a spare connection immediately
@@ -128,7 +129,7 @@ public:
 
 private:
     /* HappyOrderEnforcer API */
-    virtual AsyncCall::Pointer notify(const CbcPointer<HappyConnOpener> &) override;
+    AsyncCall::Pointer notify(const CbcPointer<HappyConnOpener> &) override;
 
     bool concurrencyLimitReached() const;
     void recordAllowance();
@@ -326,10 +327,10 @@ HappyConnOpenerAnswer::~HappyConnOpenerAnswer()
 
 /* HappyConnOpener */
 
-HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const AsyncCall::Pointer &aCall, HttpRequest::Pointer &request, const time_t aFwdStart, int tries, const AccessLogEntry::Pointer &anAle):
+HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const AsyncCallback<Answer> &callback, const HttpRequest::Pointer &request, const time_t aFwdStart, const int tries, const AccessLogEntry::Pointer &anAle):
     AsyncJob("HappyConnOpener"),
     fwdStart(aFwdStart),
-    callback_(aCall),
+    callback_(callback),
     destinations(dests),
     prime(&HappyConnOpener::notePrimeConnectDone, "HappyConnOpener::notePrimeConnectDone"),
     spare(&HappyConnOpener::noteSpareConnectDone, "HappyConnOpener::noteSpareConnectDone"),
@@ -338,7 +339,6 @@ HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const Asyn
     n_tries(tries)
 {
     assert(destinations);
-    assert(dynamic_cast<Answer*>(callback_->getDialer()));
 }
 
 HappyConnOpener::~HappyConnOpener()
@@ -453,11 +453,25 @@ HappyConnOpener::status() const
     return buf.c_str();
 }
 
-/// Create "503 Service Unavailable" or "504 Gateway Timeout" error depending
-/// on whether this is a validation request. RFC 7234 section 5.2.2 says that
-/// we MUST reply with "504 Gateway Timeout" if validation fails and cached
-/// reply has proxy-revalidate, must-revalidate or s-maxage Cache-Control
-/// directive.
+/**
+ * Create "503 Service Unavailable" or "504 Gateway Timeout" error depending
+ * on whether this is a validation request.
+ *
+ * RFC 9111 section 5.2.2 Cache-Control response directives
+ *
+ * section 5.2.2.2 must-revalidate
+ * " if a cache is disconnected, the cache MUST generate an error response
+ *   rather than reuse the stale response.  The generated status code
+ *   SHOULD be 504 (Gateway Timeout) unless another error status code is
+ *   more applicable."
+ *
+ * section 5.2.2.8 proxy-revalidate
+ * " analogous to must-revalidate "
+ *
+ * section 5.2.2.10 s-maxage
+ * " incorporates the semantics of the
+ *   proxy-revalidate response directive "
+ */
 ErrorState *
 HappyConnOpener::makeError(const err_type type) const
 {
@@ -471,12 +485,12 @@ HappyConnOpener::Answer *
 HappyConnOpener::futureAnswer(const PeerConnectionPointer &conn)
 {
     if (callback_ && !callback_->canceled()) {
-        const auto answer = dynamic_cast<Answer *>(callback_->getDialer());
-        assert(answer);
-        answer->conn = conn;
-        answer->n_tries = n_tries;
-        return answer;
+        auto &answer = callback_.answer();
+        answer.conn = conn;
+        answer.n_tries = n_tries;
+        return &answer;
     }
+    (void)callback_.release();
     return nullptr;
 }
 
@@ -488,9 +502,8 @@ HappyConnOpener::sendSuccess(const PeerConnectionPointer &conn, const bool reuse
     if (auto *answer = futureAnswer(conn)) {
         answer->reused = reused;
         assert(!answer->error);
-        ScheduleCallHere(callback_);
+        ScheduleCallHere(callback_.release());
     }
-    callback_ = nullptr;
 }
 
 /// cancels the in-progress attempt, making its path a future candidate
@@ -513,9 +526,8 @@ HappyConnOpener::sendFailure()
         answer->error = lastError;
         assert(answer->error.valid());
         lastError = nullptr; // the answer owns it now
-        ScheduleCallHere(callback_);
+        ScheduleCallHere(callback_.release());
     }
-    callback_ = nullptr;
 }
 
 void
@@ -618,8 +630,6 @@ HappyConnOpener::handleConnOpenerAnswer(Attempt &attempt, const CommConnectCbPar
     }
 
     debugs(17, 8, what << " failed: " << params.conn);
-    if (const auto peer = params.conn->getPeer())
-        peerConnectFailed(peer);
 
     // remember the last failure (we forward it if we cannot connect anywhere)
     lastFailedConnection = handledPath;
@@ -627,6 +637,8 @@ HappyConnOpener::handleConnOpenerAnswer(Attempt &attempt, const CommConnectCbPar
     lastError = nullptr; // in case makeError() throws
     lastError = makeError(ERR_CONNECT_FAIL);
     lastError->xerrno = params.xerrno;
+
+    NoteOutgoingConnectionFailure(params.conn->getPeer(), lastError->httpStatus);
 
     if (spareWaiting)
         updateSpareWaitAfterPrimeFailure();

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -59,6 +59,7 @@
 /** StoreEntry uses explicit new/delete operators, which set pool chunk size to 2MB
  * XXX: convert to MEMPROXY_CLASS() API
  */
+#include "mem/Allocator.h"
 #include "mem/Pool.h"
 
 #include <climits>
@@ -117,7 +118,7 @@ static EVH storeLateRelease;
  * local variables
  */
 static std::stack<StoreEntry*> LateReleaseStack;
-MemAllocator *StoreEntry::pool = nullptr;
+Mem::Allocator *StoreEntry::pool = nullptr;
 
 void
 Store::Stats(StoreEntry * output)
@@ -360,10 +361,9 @@ StoreEntry::destroyMemObject()
 {
     debugs(20, 3, mem_obj << " in " << *this);
 
-    // Store::Root() is FATALly missing during shutdown
-    if (hasTransients() && !shutting_down)
+    if (hasTransients())
         Store::Root().transientsDisconnect(*this);
-    if (hasMemStore() && !shutting_down)
+    if (hasMemStore())
         Store::Root().memoryDisconnect(*this);
 
     if (auto memObj = mem_obj) {
@@ -380,8 +380,7 @@ destroyStoreEntry(void *data)
     StoreEntry *e = static_cast<StoreEntry *>(static_cast<hash_link *>(data));
     assert(e != nullptr);
 
-    // Store::Root() is FATALly missing during shutdown
-    if (e->hasDisk() && !shutting_down)
+    if (e->hasDisk())
         e->disk().disconnect(*e);
 
     e->destroyMemObject();
@@ -1095,8 +1094,7 @@ StoreEntry::abort()
 void
 storeGetMemSpace(int size)
 {
-    if (!shutting_down) // Store::Root() is FATALly missing during shutdown
-        Store::Root().freeMemorySpace(size);
+    Store::Root().freeMemorySpace(size);
 }
 
 /* thunk through to Store::Root().maintain(). Note that this would be better still
@@ -1254,6 +1252,9 @@ StoreEntry::memoryCachable()
     if (!checkCachable())
         return 0;
 
+    if (shutting_down)
+        return 0; // avoid heavy optional work during shutdown
+
     if (mem_obj == nullptr)
         return 0;
 
@@ -1305,16 +1306,6 @@ StoreEntry::negativeCache()
         EBIT_SET(flags, ENTRY_NEGCACHED);
         debugs(20, 6, "expires = " << expires << " +" << (expires-squid_curtime) << ' ' << *this);
     }
-}
-
-void
-storeFreeMemory(void)
-{
-    Store::FreeMemory();
-#if USE_CACHE_DIGESTS
-    delete store_digest;
-#endif
-    store_digest = nullptr;
 }
 
 int
@@ -1714,15 +1705,13 @@ StoreEntry::startWriting()
     rep->packHeadersUsingSlowPacker(*this);
     mem_obj->markEndOfReplyHeaders();
 
+    // Same-worker collapsing risks end with the receipt of the headers.
+    // SMP collapsing risks remain until the headers are actually cached, but
+    // that event is announced via CF-agnostic Store writing broadcasts.
+    setCollapsingRequirement(false);
+
     rep->body.packInto(this);
     flush();
-
-    // The entry headers are written, new clients
-    // should not collapse anymore.
-    if (hittingRequiresCollapsing()) {
-        setCollapsingRequirement(false);
-        Store::Root().transientsClearCollapsingRequirement(*this);
-    }
 }
 
 char const *
@@ -1732,37 +1721,61 @@ StoreEntry::getSerialisedMetaData(size_t &length) const
 }
 
 /**
- * Abandon the transient entry our worker has created if neither the shared
- * memory cache nor the disk cache wants to store it. Collapsed requests, if
- * any, should notice and use Plan B instead of getting stuck waiting for us
- * to start swapping the entry out.
+ * If needed, signal transient entry readers that no more cache changes are
+ * expected and, hence, they should switch to Plan B instead of getting stuck
+ * waiting for us to start or finish storing the entry.
  */
 void
-StoreEntry::transientsAbandonmentCheck()
+StoreEntry::storeWritingCheckpoint()
 {
-    if (mem_obj && !Store::Root().transientsReader(*this) && // this worker is responsible
-            hasTransients() && // other workers may be interested
-            !hasMemStore() && // rejected by the shared memory cache
-            mem_obj->swapout.decision == MemObject::SwapOut::swImpossible) {
-        debugs(20, 7, "cannot be shared: " << *this);
-        if (!shutting_down) // Store::Root() is FATALly missing during shutdown
-            Store::Root().stopSharing(*this);
+    if (!hasTransients())
+        return; // no SMP complications
+
+    // writers become readers but only after completeWriting() which we trigger
+    if (Store::Root().transientsReader(*this))
+        return; // readers do not need to inform
+
+    assert(mem_obj);
+    if (mem_obj->memCache.io != Store::ioDone) {
+        debugs(20, 7, "not done with mem-caching " << *this);
+        return;
     }
+
+    const auto doneWithDiskCache =
+        // will not start
+        (mem_obj->swapout.decision == MemObject::SwapOut::swImpossible) ||
+        // or has started but finished already
+        (mem_obj->swapout.decision == MemObject::SwapOut::swStarted && !swappingOut());
+    if (!doneWithDiskCache) {
+        debugs(20, 7, "not done with disk-caching " << *this);
+        return;
+    }
+
+    debugs(20, 7, "done with writing " << *this);
+    Store::Root().noteStoppedSharedWriting(*this);
 }
 
 void
-StoreEntry::memOutDecision(const bool)
+StoreEntry::memOutDecision(const bool willCacheInRam)
 {
-    transientsAbandonmentCheck();
+    if (!willCacheInRam)
+        return storeWritingCheckpoint();
+    assert(mem_obj->memCache.io != Store::ioDone);
+    // and wait for storeWriterDone()
 }
 
 void
 StoreEntry::swapOutDecision(const MemObject::SwapOut::Decision &decision)
 {
-    // Abandon our transient entry if neither shared memory nor disk wants it.
     assert(mem_obj);
     mem_obj->swapout.decision = decision;
-    transientsAbandonmentCheck();
+    storeWritingCheckpoint();
+}
+
+void
+StoreEntry::storeWriterDone()
+{
+    storeWritingCheckpoint();
 }
 
 void
@@ -1967,6 +1980,10 @@ StoreEntry::describeTimestamps() const
 void
 StoreEntry::setCollapsingRequirement(const bool required)
 {
+    if (hittingRequiresCollapsing() == required)
+        return; // no change
+
+    debugs(20, 5, (required ? "adding to " : "removing from ") << *this);
     if (required)
         EBIT_SET(flags, ENTRY_REQUIRES_COLLAPSING);
     else

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,6 +33,7 @@
 #include "http.h"
 #include "http/one/ResponseParser.h"
 #include "http/one/TeChunkedParser.h"
+#include "http/StatusCode.h"
 #include "http/Stream.h"
 #include "HttpControlMsg.h"
 #include "HttpHdrCc.h"
@@ -315,8 +316,10 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
     if (EBIT_TEST(entry->flags, RELEASE_REQUEST))
         return decision.make(ReuseDecision::doNotCacheButShare, "the entry has been released");
 
-    // RFC 7234 section 4: a cache MUST use the most recent response
-    // (as determined by the Date header field)
+    // RFC 9111 section 4:
+    // "When more than one suitable response is stored,
+    //  a cache MUST use the most recent one
+    //  (as determined by the Date header field)."
     // TODO: whether such responses could be shareable?
     if (sawDateGoBack)
         return decision.make(ReuseDecision::reuseNot, "the response has an older date header");
@@ -494,7 +497,7 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
     case Http::scMisdirectedRequest:
         statusAnswer = ReuseDecision::doNotCacheButShare;
         statusReason = shareableError;
-    /* [[fallthrough]] to the actual decision making below */
+        [[fallthrough]]; // to the actual decision making below
 
     case Http::scBadRequest: // no sharing; perhaps the server did not like something specific to this request
 #if USE_HTTP_VIOLATIONS
@@ -714,8 +717,6 @@ HttpStateData::processReplyHeader()
     hp = nullptr;
 
     newrep->sources |= request->url.getScheme() == AnyP::PROTO_HTTPS ? Http::Message::srcHttps : Http::Message::srcHttp;
-
-    newrep->removeStaleWarnings();
 
     if (newrep->sline.version.protocol == AnyP::PROTO_HTTP && Http::Is1xx(newrep->sline.status())) {
         handle1xx(newrep);
@@ -967,7 +968,7 @@ HttpStateData::haveParsedReplyHeaders()
             // TODO: check whether such responses are shareable.
             // Do not share for now.
             entry->makePrivate(false);
-            if (fwd->reforwardableStatus(rep->sline.status()))
+            if (Http::IsReforwardableStatus(rep->sline.status()))
                 EBIT_SET(entry->flags, ENTRY_FWD_HDR_WAIT);
             varyFailure = true;
         } else {
@@ -986,7 +987,7 @@ HttpStateData::haveParsedReplyHeaders()
          * If its not a reply that we will re-forward, then
          * allow the client to get it.
          */
-        if (fwd->reforwardableStatus(rep->sline.status()))
+        if (Http::IsReforwardableStatus(rep->sline.status()))
             EBIT_SET(entry->flags, ENTRY_FWD_HDR_WAIT);
 
         ReuseDecision decision(entry, statusCode);
@@ -1392,6 +1393,16 @@ HttpStateData::truncateVirginBody()
     }
 }
 
+/// called on a premature EOF discovered when reading response body
+void
+HttpStateData::markPrematureReplyBodyEofFailure()
+{
+    const auto err = new ErrorState(ERR_READ_ERROR, Http::scBadGateway, fwd->request, fwd->al);
+    static const auto d = MakeNamedErrorDetail("SRV_PREMATURE_EOF");
+    err->detailError(d);
+    fwd->fail(err);
+}
+
 /**
  * Call this when there is data from the origin server
  * which should be sent to either StoreEntry, or to ICAP...
@@ -1415,8 +1426,11 @@ HttpStateData::writeReplyBody()
         parsedWhole = "http parsed Content-Length body bytes";
     else if (clen < 0 && eof)
         parsedWhole = "http parsed body ending with expected/required EOF";
+
     if (parsedWhole)
         markParsedVirginReplyAsWhole(parsedWhole);
+    else if (eof)
+        markPrematureReplyBodyEofFailure();
 }
 
 bool
@@ -1435,6 +1449,8 @@ HttpStateData::decodeAndWriteReplyBody()
             lastChunk = 1;
             flags.do_next_read = false;
             markParsedVirginReplyAsWhole("http parsed last-chunk");
+        } else if (eof) {
+            markPrematureReplyBodyEofFailure();
         }
         return true;
     }
@@ -1860,7 +1876,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
      */
     if (!we_do_ranges && request->multipartRangeRequest()) {
         /* don't cache the result */
-        request->flags.cachable = false;
+        request->flags.cachable.veto();
         /* pretend it's not a range request */
         request->ignoreRange("want to request the whole object");
         request->flags.isRanged = false;

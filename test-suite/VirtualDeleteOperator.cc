@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -68,7 +68,7 @@ class ChildVirtual : public BaseVirtual
 public:
     void *operator new (size_t);
     void operator delete (void *);
-    virtual ~ChildVirtual();
+    ~ChildVirtual() override;
     static CallCounter Calls;
 };
 

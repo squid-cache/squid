@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,8 +25,6 @@
  *     - I/O (IOCB)
  *     - timeout (CTCB)
  *     - close (CLCB)
- * and a special callback kind for passing pipe FD, disk FD or fd_table index 'FD' to the handler:
- *     - FD passing callback (FDECB)
  */
 
 class CommAcceptCbParams;
@@ -40,9 +38,6 @@ typedef void CTCB(const CommTimeoutCbParams &params);
 
 class CommCloseCbParams;
 typedef void CLCB(const CommCloseCbParams &params);
-
-class FdeCbParams;
-typedef void FDECB(const FdeCbParams &params);
 
 /*
  * TODO: When there are no function-pointer-based callbacks left, all
@@ -141,16 +136,6 @@ public:
     CommTimeoutCbParams(void *aData);
 };
 
-/// Special Calls parameter, for direct use of an FD without a controlling Comm::Connection
-/// This is used for pipe() FD with helpers, and internally by Comm when handling some special FD actions.
-class FdeCbParams: public CommCommonCbParams
-{
-public:
-    FdeCbParams(void *aData);
-    // TODO make this a standalone object with FD value and pointer to fde table entry.
-    // that requires all the existing Comm handlers to be updated first though
-};
-
 // Interface to expose comm callback parameters of all comm dialers.
 // GetCommParams() uses this interface to access comm parameters.
 template <class Params_>
@@ -187,12 +172,12 @@ public:
         CommDialerParamsT<Params_>(aJob->toCbdata()),
         method(aMeth) {}
 
-    virtual bool canDial(AsyncCall &c) {
+    bool canDial(AsyncCall &c) override {
         return JobDialer<C>::canDial(c) &&
                this->params.syncWithComm();
     }
 
-    virtual void print(std::ostream &os) const {
+    void print(std::ostream &os) const override {
         os << '(';
         this->params.print(os);
         os << ')';
@@ -202,7 +187,7 @@ public:
     Method method;
 
 protected:
-    virtual void doDial() { ((&(*this->job))->*method)(this->params); }
+    void doDial() override { ((&(*this->job))->*method)(this->params); }
 };
 
 // accept (IOACB) dialer
@@ -218,7 +203,7 @@ public:
 
     void dial();
 
-    virtual void print(std::ostream &os) const;
+    void print(std::ostream &os) const override;
 
 public:
     IOACB *handler;
@@ -234,7 +219,7 @@ public:
     CommConnectCbPtrFun(CNCB *aHandler, const Params &aParams);
     void dial();
 
-    virtual void print(std::ostream &os) const;
+    void print(std::ostream &os) const override;
 
 public:
     CNCB *handler;
@@ -250,7 +235,7 @@ public:
     CommIoCbPtrFun(IOCB *aHandler, const Params &aParams);
     void dial();
 
-    virtual void print(std::ostream &os) const;
+    void print(std::ostream &os) const override;
 
 public:
     IOCB *handler;
@@ -266,7 +251,7 @@ public:
     CommCloseCbPtrFun(CLCB *aHandler, const Params &aParams);
     void dial();
 
-    virtual void print(std::ostream &os) const;
+    void print(std::ostream &os) const override;
 
 public:
     CLCB *handler;
@@ -281,25 +266,10 @@ public:
     CommTimeoutCbPtrFun(CTCB *aHandler, const Params &aParams);
     void dial();
 
-    virtual void print(std::ostream &os) const;
+    void print(std::ostream &os) const override;
 
 public:
     CTCB *handler;
-};
-
-/// FD event (FDECB) dialer
-class FdeCbPtrFun: public CallDialer,
-    public CommDialerParamsT<FdeCbParams>
-{
-public:
-    typedef FdeCbParams Params;
-
-    FdeCbPtrFun(FDECB *aHandler, const Params &aParams);
-    void dial();
-    virtual void print(std::ostream &os) const;
-
-public:
-    FDECB *handler;
 };
 
 // AsyncCall to comm handlers implemented as global functions.
@@ -320,16 +290,16 @@ public:
         AsyncCall(o.debugSection, o.debugLevel, o.name),
         dialer(o.dialer) {}
 
-    ~CommCbFunPtrCallT() {}
+    ~CommCbFunPtrCallT() override {}
 
-    virtual CallDialer* getDialer() { return &dialer; }
+    CallDialer* getDialer() override { return &dialer; }
 
 public:
     Dialer dialer;
 
 protected:
-    inline virtual bool canFire();
-    inline virtual void fire();
+    inline bool canFire() override;
+    inline void fire() override;
 
 private:
     CommCbFunPtrCallT & operator=(const CommCbFunPtrCallT &); // not defined. not permitted.

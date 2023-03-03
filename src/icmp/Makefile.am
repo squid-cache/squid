@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -62,6 +62,7 @@ pinger_LDADD=\
 	$(top_builddir)/src/time/libtime.la \
 	$(top_builddir)/src/base/libbase.la \
 	$(top_builddir)/src/mem/libminimal.la \
+	$(LIBCAP_LIBS) \
 	$(COMPAT_LIB) \
 	$(SSLLIB) \
 	$(XTRA_LIBS)

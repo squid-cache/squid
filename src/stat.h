@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,6 @@
 #define SQUID_STAT_H_
 
 void statInit(void);
-void statFreeMemory(void);
 double median_svc_get(int, int);
 void pconnHistCount(int, int);
 int stat5minClientRequests(void);

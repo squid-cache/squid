@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,6 +22,7 @@
 #include "auth/State.h"
 #include "auth/toUtf.h"
 #include "base/LookupTable.h"
+#include "base/Random.h"
 #include "cache_cf.h"
 #include "event.h"
 #include "helper.h"
@@ -40,9 +41,8 @@
 /* digest_nonce_h still uses explicit alloc()/freeOne() MemPool calls.
  * XXX: convert to MEMPROXY_CLASS() API
  */
+#include "mem/Allocator.h"
 #include "mem/Pool.h"
-
-#include <random>
 
 static AUTHSSTATS authenticateDigestStats;
 
@@ -51,7 +51,7 @@ helper *digestauthenticators = nullptr;
 static hash_table *digest_nonce_cache;
 
 static int authdigest_initialised = 0;
-static MemAllocator *digest_nonce_pool = nullptr;
+static Mem::Allocator *digest_nonce_pool = nullptr;
 
 enum http_digest_attr_type {
     DIGEST_USERNAME,
@@ -158,10 +158,8 @@ authenticateDigestNonceNew(void)
      * - the timestamp also guarantees local uniqueness in the input to
      * the hash function.
      */
-    // NP: this will likely produce the same randomness sequences for each worker
-    // since they should all start within the 1-second resolution of seed value.
-    static std::mt19937 mt(static_cast<uint32_t>(getCurrentTime() & 0xFFFFFFFF));
-    static xuniform_int_distribution<uint32_t> newRandomData;
+    static std::mt19937 mt(RandomSeed32());
+    static std::uniform_int_distribution<uint32_t> newRandomData;
 
     /* create a new nonce */
     newnonce->nc = 0;

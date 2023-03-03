@@ -1,4 +1,4 @@
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,6 +34,7 @@ and ideas to make Squid available as multi-langual software.
 	Rene Wijninga
 	Robert Forster
 	Takahiro Kambe
+	Temuri Doghonadze
 
 via Rosetta Translation Project and Canonical Ltd.
 

@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -64,8 +64,8 @@ SUBDIRS += esi
 ESI_LIBS = \
 	esi/libesi.la \
 	$(top_builddir)/lib/libTrie/libTrie.a \
-	$(XMLLIB) \
-	$(EXPATLIB)
+	$(LIBEXPAT_LIBS) \
+	$(LIBXML2_LIBS)
 else
 ESI_LIBS =
 endif
@@ -369,8 +369,6 @@ squid_SOURCES = \
 	fs_io.cc \
 	fs_io.h \
 	globals.h \
-	gopher.cc \
-	gopher.h \
 	helper.cc \
 	helper.h \
 	hier_code.h \
@@ -414,8 +412,6 @@ squid_SOURCES = \
 	refresh.h \
 	repl_modules.h \
 	sbuf/StringConvert.h \
-	send-announce.cc \
-	send-announce.h \
 	stat.cc \
 	stat.h \
 	stmem.cc \
@@ -518,7 +514,6 @@ squid_LDADD = \
 	debug/libdebug.la \
 	$(XTRA_OBJS) \
 	$(REPL_OBJS) \
-	$(NETTLELIB) \
 	$(CRYPTLIB) \
 	$(REGEXLIB) \
 	$(ADAPTATION_LIBS) \
@@ -530,12 +525,14 @@ squid_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
+	$(LIBCAP_LIBS) \
 	$(SSLLIB) \
 	$(EPOLL_LIBS) \
 	$(MINGW_LIBS) \
 	$(KRB5LIBS) \
-	$(SYSTEMD_LIBS) \
+	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
 
 if ENABLE_LOADABLE_MODULES
@@ -822,6 +819,20 @@ tests_testCharacterSet_LDADD = \
 	$(XTRA_LIBS)
 tests_testCharacterSet_LDFLAGS = $(LIBADD_DL)
 
+check_PROGRAMS += tests/testClpMap
+tests_testClpMap_SOURCES = \
+	tests/testClpMap.cc
+nodist_tests_testClpMap_SOURCES = \
+	tests/stub_HelperChildConfig.cc \
+	tests/stub_SBuf.cc \
+	tests/stub_libip.cc \
+	tests/stub_libtime.cc
+tests_testClpMap_LDADD = \
+	mem/libminimal.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+
 check_PROGRAMS += tests/testEnumIterator
 tests_testEnumIterator_SOURCES = \
 	tests/testEnumIterator.cc \
@@ -1098,6 +1109,7 @@ tests_testRock_SOURCES = \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
+	tests/stub_libip.cc \
 	tests/stub_liblog.cc \
 	tests/stub_libmgr.cc \
 	tests/stub_libsecurity.cc \
@@ -1134,7 +1146,6 @@ tests_testRock_LDADD = \
 	parser/libparser.la \
 	libsquid.la \
 	comm/libcomm.la \
-	ip/libip.la \
 	fs/libfs.la \
 	$(COMMON_LIBS) \
 	$(REPL_OBJS) \
@@ -1155,11 +1166,11 @@ tests_testRock_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(NETTLELIB) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
 tests_testRock_LDFLAGS = $(AM_CPPFLAGS) $(LIBADD_DL)
 else
@@ -1272,6 +1283,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
+	tests/stub_libip.cc \
 	tests/stub_liblog.cc \
 	tests/stub_libsecurity.cc \
 	log/access_log.h \
@@ -1313,7 +1325,6 @@ tests_testUfs_LDADD = \
 	acl/libstate.la \
 	acl/libapi.la \
 	libsquid.la \
-	ip/libip.la \
 	fs/libfs.la \
 	mgr/libmgr.la \
 	$(REPL_OBJS) \
@@ -1326,7 +1337,6 @@ tests_testUfs_LDADD = \
 	comm/libcomm.la \
 	dns/libdns.la \
 	base/libbase.la \
-	ip/libip.la \
 	mem/libmem.la \
 	store/libstore.la \
 	$(ADAPTATION_LIBS) \
@@ -1335,11 +1345,11 @@ tests_testUfs_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(NETTLELIB) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
 tests_testUfs_LDFLAGS = $(LIBADD_DL)
 else
@@ -1357,6 +1367,7 @@ tests_testStore_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	tests/stub_CacheDigest.cc \
 	CacheDigest.h \
+	tests/stub_CachePeer.cc \
 	ClientInfo.h \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
@@ -1451,6 +1462,7 @@ tests_testStore_SOURCES = \
 	mem_node.cc \
 	tests/stub_mime.cc \
 	mime.h \
+	tests/stub_neighbors.cc \
 	refresh.cc \
 	refresh.h \
 	repl_modules.h \
@@ -1500,12 +1512,12 @@ tests_testStore_LDADD= \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(NETTLELIB) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	CommCalls.o \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
 tests_testStore_LDFLAGS = $(LIBADD_DL)
 
@@ -1616,6 +1628,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
+	tests/stub_libip.cc \
 	tests/stub_liblog.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
@@ -1660,7 +1673,6 @@ tests_testDiskIO_LDADD = \
 	acl/libacls.la \
 	acl/libstate.la \
 	comm/libcomm.la \
-	ip/libip.la \
 	fs/libfs.la \
 	ipc/libipc.la \
 	$(REPL_OBJS) \
@@ -1678,11 +1690,11 @@ tests_testDiskIO_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(NETTLELIB) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
 tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 
@@ -1694,6 +1706,7 @@ tests_testACLMaxUserIP_SOURCES = \
 	tests/testACLMaxUserIP.cc \
 	tests/testACLMaxUserIP.h
 nodist_tests_testACLMaxUserIP_SOURCES = \
+	tests/stub_CachePeer.cc \
 	ConfigParser.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_HttpHeader.cc \
@@ -1712,9 +1725,11 @@ nodist_tests_testACLMaxUserIP_SOURCES = \
 	tests/stub_fatal.cc \
 	globals.cc \
 	tests/stub_libauth.cc \
+	tests/stub_libcomm.cc \
 	tests/stub_libhttp.cc \
 	tests/stub_libmem.cc \
-	tests/stub_libsecurity.cc
+	tests/stub_libsecurity.cc \
+	tests/stub_neighbors.cc
 tests_testACLMaxUserIP_LDADD = \
 	$(AUTH_ACL_LIBS) \
 	acl/libapi.la \
@@ -1850,8 +1865,6 @@ tests_test_http_range_SOURCES = \
 	fqdncache.h \
 	fs_io.cc \
 	fs_io.h \
-	tests/stub_gopher.cc \
-	gopher.h \
 	helper.cc \
 	hier_code.h \
 	http.cc \
@@ -1963,13 +1976,14 @@ tests_test_http_range_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(NETTLELIB) \
+	$(LIBCAP_LIBS) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
-	$(SYSTEMD_LIBS) \
+	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
 tests_test_http_range_LDFLAGS = $(LIBADD_DL)
 
@@ -2021,6 +2035,7 @@ tests_testHttp1Parser_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttpReply
 tests_testHttpReply_SOURCES = \
+	tests/stub_CachePeer.cc \
 	ConfigParser.cc \
 	tests/stub_ETag.cc \
 	tests/stub_HelperChildConfig.cc \
@@ -2082,12 +2097,14 @@ tests_testHttpReply_SOURCES = \
 	tests/stub_libcomm.cc \
 	tests/stub_liberror.cc \
 	tests/stub_libformat.cc \
+	tests/stub_libmem.cc \
 	tests/stub_libmgr.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libsslsquid.cc \
 	log/access_log.h \
 	mime_header.cc \
 	mime_header.h \
+	tests/stub_neighbors.cc \
 	repl_modules.h \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
@@ -2110,15 +2127,14 @@ tests_testHttpReply_LDADD=\
 	ip/libip.la \
 	base/libbase.la \
 	ipc/libipc.la \
-	mem/libmem.la \
 	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(NETTLELIB) \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
 tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 
@@ -2235,8 +2251,6 @@ tests_testHttpRequest_SOURCES = \
 	fqdncache.h \
 	fs_io.cc \
 	fs_io.h \
-	tests/stub_gopher.cc \
-	gopher.h \
 	helper.cc \
 	hier_code.h \
 	http.cc \
@@ -2349,13 +2363,14 @@ tests_testHttpRequest_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(NETTLELIB) \
+	$(LIBCAP_LIBS) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
-	$(SYSTEMD_LIBS) \
+	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 
@@ -2535,8 +2550,6 @@ tests_testCacheManager_SOURCES = \
 	fqdncache.h \
 	fs_io.cc \
 	fs_io.h \
-	tests/stub_gopher.cc \
-	gopher.h \
 	helper.cc \
 	hier_code.h \
 	http.cc \
@@ -2649,13 +2662,14 @@ tests_testCacheManager_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(NETTLELIB) \
+	$(LIBCAP_LIBS) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
-	$(SYSTEMD_LIBS) \
+	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
 
@@ -2712,7 +2726,8 @@ nodist_tests_testConfigParser_SOURCES = \
 	tests/stub_cache_cf.cc \
 	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
-	tests/stub_libmem.cc
+	tests/stub_libmem.cc \
+	tests/stub_neighbors.cc
 tests_testConfigParser_LDADD = \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \

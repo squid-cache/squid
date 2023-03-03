@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,10 +25,10 @@
 #include <netdb.h>
 #endif
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testIpAddress );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestIpAddress );
 
 void
-testIpAddress::testDefaults()
+TestIpAddress::testDefaults()
 {
     Ip::Address anIPA;
 
@@ -42,7 +42,7 @@ testIpAddress::testDefaults()
 }
 
 void
-testIpAddress::testInAddrConstructor()
+TestIpAddress::testInAddrConstructor()
 {
     struct in_addr inval;
     struct in_addr outval;
@@ -64,7 +64,7 @@ testIpAddress::testInAddrConstructor()
 }
 
 void
-testIpAddress::testInAddr6Constructor()
+TestIpAddress::testInAddr6Constructor()
 {
     struct in6_addr inval;
     struct in6_addr outval = IN6ADDR_ANY_INIT;
@@ -88,7 +88,7 @@ testIpAddress::testInAddr6Constructor()
 }
 
 void
-testIpAddress::testSockAddrConstructor()
+TestIpAddress::testSockAddrConstructor()
 {
     struct sockaddr_in insock;
     struct sockaddr_in outsock;
@@ -117,7 +117,7 @@ testIpAddress::testSockAddrConstructor()
 }
 
 void
-testIpAddress::testSockAddr6Constructor()
+TestIpAddress::testSockAddr6Constructor()
 {
     struct sockaddr_in6 insock;
     struct sockaddr_in6 outsock;
@@ -149,7 +149,7 @@ testIpAddress::testSockAddr6Constructor()
 }
 
 void
-testIpAddress::testCopyConstructor()
+TestIpAddress::testCopyConstructor()
 {
     struct sockaddr_in insock;
     struct sockaddr_in outsock;
@@ -179,7 +179,7 @@ testIpAddress::testCopyConstructor()
 }
 
 void
-testIpAddress::testHostentConstructor()
+TestIpAddress::testHostentConstructor()
 {
     struct hostent *hp = nullptr;
     struct in_addr outval;
@@ -204,7 +204,7 @@ testIpAddress::testHostentConstructor()
 }
 
 void
-testIpAddress::testStringConstructor()
+TestIpAddress::testStringConstructor()
 {
     struct in_addr outval;
     struct in_addr expectval;
@@ -267,7 +267,7 @@ testIpAddress::testStringConstructor()
 }
 
 void
-testIpAddress::testsetEmpty()
+TestIpAddress::testsetEmpty()
 {
     Ip::Address anIPA;
     struct in_addr inval;
@@ -296,7 +296,7 @@ testIpAddress::testsetEmpty()
 }
 
 void
-testIpAddress::testBooleans()
+TestIpAddress::testBooleans()
 {
     Ip::Address lhsIPA;
     Ip::Address rhsIPA;
@@ -408,7 +408,7 @@ testIpAddress::testBooleans()
 }
 
 void
-testIpAddress::testtoStr()
+TestIpAddress::testtoStr()
 {
     struct in_addr inval;
     char buf[MAX_IPSTRLEN];
@@ -432,7 +432,7 @@ testIpAddress::testtoStr()
 }
 
 void
-testIpAddress::testtoUrl_fromInAddr()
+TestIpAddress::testtoUrl_fromInAddr()
 {
     char buf[MAX_IPSTRLEN];
     buf[0] = '\0';
@@ -461,7 +461,7 @@ testIpAddress::testtoUrl_fromInAddr()
 }
 
 void
-testIpAddress::testtoUrl_fromSockAddr()
+TestIpAddress::testtoUrl_fromSockAddr()
 {
     struct sockaddr_in sock;
     sock.sin_addr.s_addr = htonl(0xC0A8640C);
@@ -498,7 +498,7 @@ testIpAddress::testtoUrl_fromSockAddr()
 }
 
 void
-testIpAddress::testgetReverseString()
+TestIpAddress::testgetReverseString()
 {
     char buf[MAX_IPSTRLEN];
 
@@ -532,7 +532,7 @@ testIpAddress::testgetReverseString()
 }
 
 void
-testIpAddress::testMasking()
+TestIpAddress::testMasking()
 {
     char buf[MAX_IPSTRLEN];
     Ip::Address anIPA;
@@ -613,7 +613,7 @@ testIpAddress::testMasking()
 }
 
 void
-testIpAddress::testAddrInfo()
+TestIpAddress::testAddrInfo()
 {
     struct addrinfo *expect;
     struct addrinfo *ipval = nullptr;
@@ -677,7 +677,7 @@ testIpAddress::testAddrInfo()
 }
 
 void
-testIpAddress::testBugNullingDisplay()
+TestIpAddress::testBugNullingDisplay()
 {
     // Weird Bug: address set to empty during string conversion somewhere.
     // initial string gets created and returned OK.

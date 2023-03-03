@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #ifndef SQUID_DOWNLOADER_H
 #define SQUID_DOWNLOADER_H
 
+#include "base/AsyncCallbacks.h"
 #include "base/AsyncJob.h"
 #include "defines.h"
 #include "http/forward.h"
@@ -23,33 +24,33 @@ typedef RefCount<DownloaderContext> DownloaderContextPointer;
 class MasterXaction;
 using MasterXactionPointer = RefCount<MasterXaction>;
 
+/// download result
+class DownloaderAnswer {
+public:
+    // The content of a successfully received HTTP 200 OK reply to our GET request.
+    // Unused unless outcome is Http::scOkay.
+    SBuf resource;
+
+    /// Download result summary.
+    /// May differ from the status code of the downloaded HTTP reply.
+    Http::StatusCode outcome = Http::scNone;
+};
+
+std::ostream &operator <<(std::ostream &, const DownloaderAnswer &);
+
 /// The Downloader class fetches SBuf-storable things for other Squid
 /// components/transactions using internal requests. For example, it is used
 /// to fetch missing intermediate certificates when validating origin server
 /// certificate chains.
 class Downloader: virtual public AsyncJob
 {
-    CBDATA_CLASS(Downloader);
+    CBDATA_CHILD(Downloader);
 public:
+    using Answer = DownloaderAnswer;
 
-    /// Callback data to use with Downloader callbacks.
-    class CbDialer: public CallDialer {
-    public:
-        CbDialer(): status(Http::scNone) {}
-        virtual ~CbDialer() {}
-
-        /* CallDialer API */
-        virtual bool canDial(AsyncCall &call) = 0;
-        virtual void dial(AsyncCall &call) = 0;
-        virtual void print(std::ostream &os) const;
-
-        SBuf object;
-        Http::StatusCode status;
-    };
-
-    Downloader(const SBuf &url, const AsyncCall::Pointer &aCallback, const MasterXactionPointer &, unsigned int level = 0);
-    virtual ~Downloader();
-    virtual void swanSong();
+    Downloader(const SBuf &url, const AsyncCallback<Answer> &, const MasterXactionPointer &, unsigned int level = 0);
+    ~Downloader() override;
+    void swanSong() override;
 
     /// delays destruction to protect doCallouts()
     void downloadFinished();
@@ -62,8 +63,8 @@ public:
 protected:
 
     /* AsyncJob API */
-    virtual bool doneAll() const;
-    virtual void start();
+    bool doneAll() const override;
+    void start() override;
 
 private:
 
@@ -74,7 +75,10 @@ private:
     static const size_t MaxObjectSize = 1*1024*1024;
 
     SBuf url_; ///< the url to download
-    AsyncCall::Pointer callback_; ///< callback to call when download finishes
+
+    /// answer destination
+    AsyncCallback<Answer> callback_;
+
     SBuf object_; ///< the object body data
     const unsigned int level_; ///< holds the nested downloads level
     MasterXactionPointer masterXaction_; ///< download transaction context

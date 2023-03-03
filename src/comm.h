@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -39,7 +39,6 @@ void comm_import_opened(const Comm::ConnectionPointer &, const char *note, struc
 
 /**
  * Open a port specially bound for listening or sending through a specific port.
- * This is a wrapper providing IPv4/IPv6 failover around comm_openex().
  * Please use for all listening sockets and bind() outbound sockets.
  *
  * It will open a socket bound for:
@@ -55,7 +54,6 @@ void comm_import_opened(const Comm::ConnectionPointer &, const char *note, struc
 int comm_open_listener(int sock_type, int proto, Ip::Address &addr, int flags, const char *note);
 void comm_open_listener(int sock_type, int proto, Comm::ConnectionPointer &conn, const char *note);
 
-int comm_openex(int, int, Ip::Address &, int, const char *);
 unsigned short comm_local_port(int fd);
 
 int comm_udp_sendto(int sock, const Ip::Address &to, const void *buf, int buflen);
@@ -102,7 +100,7 @@ class CommSelectEngine : public AsyncEngine
 {
 
 public:
-    virtual int checkEvents(int timeout);
+    int checkEvents(int timeout) override;
 };
 
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -334,7 +334,7 @@ static struct ssl_option {
 #endif
 #if defined(SSL_OP_ALL)
     {
-        "ALL", (long)SSL_OP_ALL
+        "ALL", SSL_OP_ALL
     },
 #endif
 #if defined(SSL_OP_SINGLE_DH_USE)

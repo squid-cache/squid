@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -249,7 +249,7 @@ peerDigestCheck(void *data)
         return;
     }
 
-    debugs(72, 3, "peerDigestCheck: peer " <<  pd->peer->host << ":" << pd->peer->http_port);
+    debugs(72, 3, "cache_peer " << *pd->peer);
     debugs(72, 3, "peerDigestCheck: time: " << squid_curtime <<
            ", last received: " << (long int) pd->times.received << "  (" <<
            std::showpos << (int) (squid_curtime - pd->times.received) << ")");
@@ -332,7 +332,7 @@ peerDigestRequest(PeerDigest * pd)
     /* update timestamps */
     pd->times.requested = squid_curtime;
     pd_last_req_time = squid_curtime;
-    req->flags.cachable = true;
+    req->flags.cachable.support(); // prevent RELEASE_REQUEST in storeCreateEntry()
 
     /* the rest is based on clientReplyContext::processExpired() */
     req->flags.refresh = true;

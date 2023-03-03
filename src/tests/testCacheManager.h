@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,16 +15,16 @@
  * test the CacheManager implementation
  */
 
-class testCacheManager : public CPPUNIT_NS::TestFixture
+class TestCacheManager: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testCacheManager );
+    CPPUNIT_TEST_SUITE( TestCacheManager );
     CPPUNIT_TEST( testCreate );
     CPPUNIT_TEST( testRegister );
     CPPUNIT_TEST( testParseUrl );
     CPPUNIT_TEST_SUITE_END();
 
 public:
-    void setUp();
+    void setUp() override;
 
 protected:
     void testCreate();

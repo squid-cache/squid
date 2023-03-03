@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -60,6 +60,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
+#include "base/AsyncCallbacks.h"
 #include "base/Subscription.h"
 #include "base/TextException.h"
 #include "CachePeer.h"
@@ -145,26 +146,36 @@
 #include <systemd/sd-daemon.h>
 #endif
 
+// TODO: Remove this custom dialer and simplify by creating the TcpAcceptor
+// subscription later, inside clientListenerConnectionOpened() callback, just
+// like htcpOpenPorts(), icpOpenPorts(), and snmpPortOpened() do it.
 /// dials clientListenerConnectionOpened call
-class ListeningStartedDialer: public CallDialer, public Ipc::StartListeningCb
+class ListeningStartedDialer:
+    public CallDialer,
+    public WithAnswer<Ipc::StartListeningAnswer>
 {
 public:
     typedef void (*Handler)(AnyP::PortCfgPointer &portCfg, const Ipc::FdNoteId note, const Subscription::Pointer &sub);
     ListeningStartedDialer(Handler aHandler, AnyP::PortCfgPointer &aPortCfg, const Ipc::FdNoteId note, const Subscription::Pointer &aSub):
         handler(aHandler), portCfg(aPortCfg), portTypeNote(note), sub(aSub) {}
 
-    virtual void print(std::ostream &os) const {
-        startPrint(os) <<
-                       ", " << FdNote(portTypeNote) << " port=" << (void*)&portCfg << ')';
+    /* CallDialer API */
+    void print(std::ostream &os) const override {
+        os << '(' << answer_ << ", " << FdNote(portTypeNote) << " port=" << (void*)&portCfg << ')';
     }
 
     virtual bool canDial(AsyncCall &) const { return true; }
     virtual void dial(AsyncCall &) { (handler)(portCfg, portTypeNote, sub); }
 
+    /* WithAnswer API */
+    Ipc::StartListeningAnswer &answer() override { return answer_; }
+
 public:
     Handler handler;
 
 private:
+    // answer_.conn (set/updated by IPC code) is portCfg.listenConn (used by us)
+    Ipc::StartListeningAnswer answer_; ///< StartListening() results
     AnyP::PortCfgPointer portCfg;   ///< from HttpPortList
     Ipc::FdNoteId portTypeNote;    ///< Type of IPC socket being opened
     Subscription::Pointer sub; ///< The handler to be subscribed for this connection listener
@@ -793,7 +804,7 @@ String
 ClientHttpRequest::rangeBoundaryStr() const
 {
     const char *key;
-    String b(APP_FULLNAME);
+    String b(visible_appname_string);
     b.append(":",1);
     key = storeEntry()->getMD5Text();
     b.append(key, strlen(key));
@@ -1247,10 +1258,10 @@ ConnStateData::prepareTlsSwitchingURL(const Http1::RequestParserPointer &hp)
         const SBuf &scheme = AnyP::UriScheme(transferProtocol.protocol).image();
         const int url_sz = scheme.length() + useHost.length() + hp->requestUri().length() + 32;
         uri = static_cast<char *>(xcalloc(url_sz, 1));
-        snprintf(uri, url_sz, SQUIDSBUFPH "://" SQUIDSBUFPH ":%d" SQUIDSBUFPH,
+        snprintf(uri, url_sz, SQUIDSBUFPH "://" SQUIDSBUFPH ":%hu" SQUIDSBUFPH,
                  SQUIDSBUFPRINT(scheme),
                  SQUIDSBUFPRINT(useHost),
-                 tlsConnectPort,
+                 *tlsConnectPort,
                  SQUIDSBUFPRINT(hp->requestUri()));
     }
 #endif
@@ -3153,12 +3164,13 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, const 
 {
     // fake a CONNECT request to force connState to tunnel
     SBuf connectHost;
-    unsigned short connectPort = 0;
+    AnyP::Port connectPort;
 
     if (pinning.serverConnection != nullptr) {
         static char ip[MAX_IPSTRLEN];
         connectHost = pinning.serverConnection->remote.toStr(ip, sizeof(ip));
-        connectPort = pinning.serverConnection->remote.port();
+        if (const auto remotePort = pinning.serverConnection->remote.port())
+            connectPort = remotePort;
     } else if (cause) {
         connectHost = cause->url.hostOrIp();
         connectPort = cause->url.port();
@@ -3171,7 +3183,9 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, const 
         static char ip[MAX_IPSTRLEN];
         connectHost = clientConnection->local.toStr(ip, sizeof(ip));
         connectPort = clientConnection->local.port();
-    } else {
+    }
+
+    if (!connectPort) {
         // Typical cases are malformed HTTP requests on http_port and malformed
         // TLS handshakes on non-bumping https_port. TODO: Discover these
         // problems earlier so that they can be classified/detailed better.
@@ -3183,7 +3197,7 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, const 
     }
 
     debugs(33, 2, "Request tunneling for " << reason);
-    ClientHttpRequest *http = buildFakeRequest(connectHost, connectPort, payload);
+    const auto http = buildFakeRequest(connectHost, *connectPort, payload);
     HttpRequest::Pointer request = http->request;
     request->flags.forceTunnel = true;
     http->calloutContext = new ClientRequestContext(http);
@@ -3222,7 +3236,7 @@ ConnStateData::fakeAConnectRequest(const char *reason, const SBuf &payload)
 }
 
 ClientHttpRequest *
-ConnStateData::buildFakeRequest(SBuf &useHost, unsigned short usePort, const SBuf &payload)
+ConnStateData::buildFakeRequest(SBuf &useHost, const AnyP::KnownPort usePort, const SBuf &payload)
 {
     ClientHttpRequest *http = new ClientHttpRequest(this);
     Http::Stream *stream = new Http::Stream(clientConnection, http);
@@ -3364,11 +3378,12 @@ clientStartListeningOn(AnyP::PortCfgPointer &port, const RefCount< CommCbFunPtrC
     // route new connections to subCall
     typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
     Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
-    AsyncCall::Pointer listenCall =
+    const auto listenCall =
         asyncCall(33, 2, "clientListenerConnectionOpened",
                   ListeningStartedDialer(&clientListenerConnectionOpened,
                                          port, fdNote, sub));
-    Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, port->listenConn, fdNote, listenCall);
+    AsyncCallback<Ipc::StartListeningAnswer> callback(listenCall);
+    Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, port->listenConn, fdNote, callback);
 
     assert(NHttpSockets < MAXTCPLISTENPORTS);
     HttpSockets[NHttpSockets] = -1;
@@ -3852,7 +3867,8 @@ ConnStateData::handleIdleClientPinnedTlsRead()
     switch(const int error = SSL_get_error(ssl, readResult)) {
     case SSL_ERROR_WANT_WRITE:
         debugs(83, DBG_IMPORTANT, pinning.serverConnection << " TLS SSL_ERROR_WANT_WRITE request for idle pinned connection");
-    // fall through to restart monitoring, for now
+        [[fallthrough]]; // to restart monitoring, for now
+
     case SSL_ERROR_NONE:
     case SSL_ERROR_WANT_READ:
         startPinnedConnectionMonitoring();

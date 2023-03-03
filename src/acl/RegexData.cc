@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -79,6 +79,9 @@ ACLRegexData::dump() const
 static const char *
 removeUnnecessaryWildcards(char * t)
 {
+    if (strcmp(t, ".*") == 0) // we cannot simplify that further
+        return t; // avoid "WARNING: ... Using '.*' instead" below
+
     char * orig = t;
 
     if (strncmp(t, "^.*", 3) == 0)

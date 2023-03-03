@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,7 +18,7 @@ class ACLSourceASNStrategy : public ACLStrategy<Ip::Address>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
 };
 
 #endif /* SQUID_ACL_SOURCEASN_H */

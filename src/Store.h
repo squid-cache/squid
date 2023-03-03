@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -46,7 +46,7 @@ public:
 
     const char *getMD5Text() const;
     StoreEntry();
-    virtual ~StoreEntry();
+    ~StoreEntry() override;
 
     MemObject &mem() { assert(mem_obj); return *mem_obj; }
     const MemObject &mem() const { assert(mem_obj); return *mem_obj; }
@@ -93,6 +93,8 @@ public:
     void memOutDecision(const bool willCacheInRam);
     // called when a decision to cache on disk has been made
     void swapOutDecision(const MemObject::SwapOut::Decision &decision);
+    /// called when a store writer ends its work (successfully or not)
+    void storeWriterDone();
 
     void abort();
     bool makePublic(const KeyScope keyScope = ksDefault);
@@ -295,15 +297,15 @@ public:
 #endif
 
     /* Packable API */
-    virtual void append(char const *, int);
-    virtual void vappendf(const char *, va_list);
-    virtual void buffer();
-    virtual void flush();
+    void append(char const *, int) override;
+    void vappendf(const char *, va_list) override;
+    void buffer() override;
+    void flush() override;
 
 protected:
     typedef Store::EntryGuard EntryGuard;
 
-    void transientsAbandonmentCheck();
+    void storeWritingCheckpoint();
     /// does nothing except throwing if disk-associated data members are inconsistent
     void checkDisk() const;
 
@@ -317,7 +319,7 @@ private:
     /// flags [truncated or too big] entry with ENTRY_BAD_LENGTH and releases it
     void lengthWentBad(const char *reason);
 
-    static MemAllocator *pool;
+    static Mem::Allocator *pool;
 
     unsigned short lock_count;      /* Assume < 65536! */
 
@@ -424,9 +426,6 @@ void storeInit(void);
 
 /// \ingroup StoreAPI
 void storeConfigure(void);
-
-/// \ingroup StoreAPI
-void storeFreeMemory(void);
 
 /// \ingroup StoreAPI
 int expiresMoreThan(time_t, time_t);

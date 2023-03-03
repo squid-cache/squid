@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,21 +18,21 @@ namespace Ssl
 
 /// A PeerConnector for HTTP origin servers. Capable of SslBumping.
 class PeekingPeerConnector: public Security::PeerConnector {
-    CBDATA_CLASS(PeekingPeerConnector);
+    CBDATA_CHILD(PeekingPeerConnector);
 public:
     PeekingPeerConnector(HttpRequestPointer &aRequest,
                          const Comm::ConnectionPointer &aServerConn,
                          const Comm::ConnectionPointer &aClientConn,
-                         AsyncCall::Pointer &aCallback,
+                         const AsyncCallback<Security::EncryptorAnswer> &aCallback,
                          const AccessLogEntryPointer &alp,
                          time_t timeout = 0);
 
     /* Security::PeerConnector API */
-    virtual bool initialize(Security::SessionPointer &);
-    virtual Security::ContextPointer getTlsContext();
-    virtual void noteWantWrite();
-    virtual void noteNegotiationError(const Security::ErrorDetailPointer &);
-    virtual void noteNegotiationDone(ErrorState *error);
+    bool initialize(Security::SessionPointer &) override;
+    Security::ContextPointer getTlsContext() override;
+    void noteWantWrite() override;
+    void noteNegotiationError(const Security::ErrorDetailPointer &) override;
+    void noteNegotiationDone(ErrorState *error) override;
 
     /// Updates associated client connection manager members
     /// if the server certificate was received from the server.

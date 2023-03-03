@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -177,7 +177,7 @@ peerSourceHashSelectParent(PeerSelector *ps)
         combined_hash += combined_hash * 0x62531965;
         combined_hash = ROTATE_LEFT(combined_hash, 21);
         score = combined_hash * tp->sourcehash.load_multiplier;
-        debugs(39, 3, "peerSourceHashSelectParent: " << tp->name << " combined_hash " << combined_hash  <<
+        debugs(39, 3, *tp << " combined_hash " << combined_hash  <<
                " score " << std::setprecision(0) << score);
 
         if ((score > high_score) && peerHTTPOkay(tp, ps)) {
@@ -187,7 +187,7 @@ peerSourceHashSelectParent(PeerSelector *ps)
     }
 
     if (p)
-        debugs(39, 2, "peerSourceHashSelectParent: selected " << p->name);
+        debugs(39, 2, "selected " << *p);
 
     return p;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -110,11 +110,9 @@ MemObject::~MemObject()
     checkUrlChecksum();
 #endif
 
-    if (!shutting_down) { // Store::Root() is FATALly missing during shutdown
-        assert(xitTable.index < 0);
-        assert(memCache.index < 0);
-        assert(swapout.sio == nullptr);
-    }
+    assert(xitTable.index < 0);
+    assert(memCache.index < 0);
+    assert(swapout.sio == nullptr);
 
     data_hdr.freeContent();
 }

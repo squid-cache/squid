@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,7 +19,7 @@ class ReadRequest : public RefCountable
 public:
     typedef RefCount<ReadRequest> Pointer;
     ReadRequest(char *buf, off_t offset, size_t len);
-    virtual ~ReadRequest() {}
+    ~ReadRequest() override {}
 
     char *buf;
     off_t offset;

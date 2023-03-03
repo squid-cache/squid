@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,7 +25,7 @@
 
 #define PCONN_FDS_SZ    8   /* pconn set size, increase for better memcache hit rate */
 
-//TODO: re-attach to MemPools. WAS: static MemAllocator *pconn_fds_pool = NULL;
+//TODO: re-attach to MemPools. WAS: static Mem::Allocator *pconn_fds_pool = NULL;
 PconnModule * PconnModule::instance = nullptr;
 CBDATA_CLASS_INIT(IdleConnList);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,19 +15,19 @@
 
 /*
  * demonstration test file, as new idioms are made they will
- * be shown in the testBoilerplate source.
+ * be shown in the TestBoilerplate source.
  */
 
-class testACLMaxUserIP : public CPPUNIT_NS::TestFixture
+class TestACLMaxUserIP: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testACLMaxUserIP );
+    CPPUNIT_TEST_SUITE( TestACLMaxUserIP );
     /* note the statement here and then the actual prototype below */
     CPPUNIT_TEST( testDefaults );
     CPPUNIT_TEST( testParseLine );
     CPPUNIT_TEST_SUITE_END();
 
 public:
-    virtual void setUp() override;
+    void setUp() override;
 
 protected:
     void testDefaults();

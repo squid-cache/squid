@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,7 +26,6 @@
 
 static void storeSwapOutStart(StoreEntry * e);
 static StoreIOState::STIOCB storeSwapOutFileClosed;
-static StoreIOState::STFNCB storeSwapOutFileNotify;
 
 // wrapper to cross C/C++ ABI boundary. xfree is extern "C" for libraries.
 static void xfree_cppwrapper(void *x)
@@ -47,7 +46,6 @@ storeSwapOutStart(StoreEntry * e)
     debugs(20, 5, "storeSwapOutStart: Begin SwapOut '" << e->url() << "' to dirno " <<
            e->swap_dirn << ", fileno " << std::hex << std::setw(8) << std::setfill('0') <<
            std::uppercase << e->swap_filen);
-    e->swapOutDecision(MemObject::SwapOut::swStarted);
     /* If we start swapping out objects with OutOfBand Metadata,
      * then this code needs changing
      */
@@ -62,7 +60,7 @@ storeSwapOutStart(StoreEntry * e)
 
     /* Create the swap file */
     generic_cbdata *c = new generic_cbdata(e);
-    sio = storeCreate(e, storeSwapOutFileNotify, storeSwapOutFileClosed, c);
+    sio = storeCreate(e, storeSwapOutFileClosed, c);
 
     if (sio == nullptr) {
         assert(!e->hasDisk());
@@ -82,15 +80,10 @@ storeSwapOutStart(StoreEntry * e)
     /* Pick up the file number if it was assigned immediately */
     e->attachToDisk(mem->swapout.sio->swap_dirn, mem->swapout.sio->swap_filen, SWAPOUT_WRITING);
 
+    e->swapOutDecision(MemObject::SwapOut::swStarted); // after SWAPOUT_WRITING
+
     /* write out the swap metadata */
     storeIOWrite(mem->swapout.sio, buf, mem->swap_hdr_sz, 0, xfree_cppwrapper);
-}
-
-/// XXX: unused, see a related StoreIOState::file_callback
-static void
-storeSwapOutFileNotify(void *, int, StoreIOState::Pointer)
-{
-    assert(false);
 }
 
 static bool
@@ -326,9 +319,9 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
         ++statCounter.swap.outs;
     }
 
-    Store::Root().transientsCompleteWriting(*e);
     debugs(20, 3, "storeSwapOutFileClosed: " << __FILE__ << ":" << __LINE__);
     mem->swapout.sio = nullptr;
+    e->storeWriterDone(); // after updating swap_status
     e->unlock("storeSwapOutFileClosed");
 }
 
@@ -351,17 +344,22 @@ StoreEntry::mayStartSwapOut()
         return false;
     }
 
-    // if we are swapping out or swapped out already, do not start over
-    if (hasDisk() || Store::Root().hasReadableDiskEntry(*this)) {
-        debugs(20, 3, "already did");
+    // If we have started swapping out, do not start over. Most likely, we have
+    // finished swapping out by now because we are not currently swappingOut().
+    if (decision == MemObject::SwapOut::swStarted) {
+        debugs(20, 3, "already started");
+        return false;
+    }
+
+    if (shutting_down) {
+        debugs(20, 3, "avoid heavy optional work during shutdown");
         swapOutDecision(MemObject::SwapOut::swImpossible);
         return false;
     }
 
-    // if we have just stared swapping out (attachToDisk() has not been
-    // called), do not start over
-    if (decision == MemObject::SwapOut::swStarted) {
-        debugs(20, 3, "already started");
+    // if there is a usable disk entry already, do not start over
+    if (hasDisk() || Store::Root().hasReadableDiskEntry(*this)) {
+        debugs(20, 3, "already did"); // we or somebody else created that entry
         swapOutDecision(MemObject::SwapOut::swImpossible);
         return false;
     }
@@ -376,6 +374,15 @@ StoreEntry::mayStartSwapOut()
     if (decision == MemObject::SwapOut::swPossible) {
         debugs(20, 3, "already allowed");
         return true;
+    }
+
+    // To avoid SMP workers releasing each other caching attempts, restrict disk
+    // caching to StoreEntry publisher. This check goes before checkCachable()
+    // that may incorrectly release() publisher's entry.
+    if (Store::Root().transientsReader(*this)) {
+        debugs(20, 5, "yield to entry publisher");
+        swapOutDecision(MemObject::SwapOut::swImpossible);
+        return false;
     }
 
     if (!checkCachable()) {

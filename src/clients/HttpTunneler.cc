@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,7 +26,7 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Http, Tunneler);
 
-Http::Tunneler::Tunneler(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req, AsyncCall::Pointer &aCallback, time_t timeout, const AccessLogEntryPointer &alp):
+Http::Tunneler::Tunneler(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req, const AsyncCallback<Answer> &aCallback, const time_t timeout, const AccessLogEntryPointer &alp):
     AsyncJob("Http::Tunneler"),
     noteFwdPconnUse(false),
     connection(conn),
@@ -39,11 +39,8 @@ Http::Tunneler::Tunneler(const Comm::ConnectionPointer &conn, const HttpRequest:
     tunnelEstablished(false)
 {
     debugs(83, 5, "Http::Tunneler constructed, this=" << (void*)this);
-    // detect callers supplying cb dialers that are not our CbDialer
     assert(request);
     assert(connection);
-    assert(callback);
-    assert(dynamic_cast<Http::TunnelerAnswer *>(callback->getDialer()));
     url = request->url.authority(true);
     watchForClosures();
 }
@@ -57,16 +54,6 @@ bool
 Http::Tunneler::doneAll() const
 {
     return !callback || (requestWritten && tunnelEstablished);
-}
-
-/// convenience method to get to the answer fields
-Http::TunnelerAnswer &
-Http::Tunneler::answer()
-{
-    Must(callback);
-    const auto tunnelerAnswer = dynamic_cast<Http::TunnelerAnswer *>(callback->getDialer());
-    Must(tunnelerAnswer);
-    return *tunnelerAnswer;
 }
 
 void
@@ -103,7 +90,7 @@ Http::Tunneler::handleConnectionClosure(const CommCloseCbParams &)
 {
     closer = nullptr;
     if (connection) {
-        countFailingConnection();
+        countFailingConnection(nullptr);
         connection->noteClosure();
         connection = nullptr;
     }
@@ -322,7 +309,7 @@ Http::Tunneler::handleResponse(const bool eof)
     }
 
     // CONNECT response was successfully parsed
-    auto &futureAnswer = answer();
+    auto &futureAnswer = callback.answer();
     futureAnswer.peerResponseStatus = rep->sline.status();
     request->hier.peer_reply_status = rep->sline.status();
 
@@ -364,11 +351,11 @@ void
 Http::Tunneler::bailWith(ErrorState *error)
 {
     Must(error);
-    answer().squidError = error;
+    callback.answer().squidError = error;
 
     if (const auto failingConnection = connection) {
         // TODO: Reuse to-peer connections after a CONNECT error response.
-        countFailingConnection();
+        countFailingConnection(error);
         disconnect();
         failingConnection->close();
     }
@@ -379,19 +366,18 @@ Http::Tunneler::bailWith(ErrorState *error)
 void
 Http::Tunneler::sendSuccess()
 {
-    assert(answer().positive());
+    assert(callback.answer().positive());
     assert(Comm::IsConnOpen(connection));
-    answer().conn = connection;
+    callback.answer().conn = connection;
     disconnect();
     callBack();
 }
 
 void
-Http::Tunneler::countFailingConnection()
+Http::Tunneler::countFailingConnection(const ErrorState * const error)
 {
     assert(connection);
-    if (const auto p = connection->getPeer())
-        peerConnectFailed(p);
+    NoteOutgoingConnectionFailure(connection->getPeer(), error ? error->httpStatus : Http::scNone);
     if (noteFwdPconnUse && connection->isOpen())
         fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);
 }
@@ -422,11 +408,9 @@ Http::Tunneler::disconnect()
 void
 Http::Tunneler::callBack()
 {
-    debugs(83, 5, answer().conn << status());
-    assert(!connection); // returned inside answer() or gone
-    auto cb = callback;
-    callback = nullptr;
-    ScheduleCallHere(cb);
+    debugs(83, 5, callback.answer().conn << status());
+    assert(!connection); // returned inside callback.answer() or gone
+    ScheduleCallHere(callback.release());
 }
 
 void

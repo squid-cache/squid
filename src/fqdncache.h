@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,7 +27,6 @@ typedef void FQDNH(const char *, const Dns::LookupDetails &details, void *);
 
 void fqdncache_init(void);
 void fqdnStats(StoreEntry *);
-void fqdncacheFreeMemory(void);
 void fqdncache_restart(void);
 void fqdncache_purgelru(void *);
 void fqdncacheAddEntryFromHosts(char *addr, SBufList &hostnames);

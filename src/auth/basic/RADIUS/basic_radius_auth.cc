@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -56,6 +56,7 @@
 #include "squid.h"
 #include "auth/basic/RADIUS/radius-util.h"
 #include "auth/basic/RADIUS/radius.h"
+#include "base/Random.h"
 #include "helper/protocol_defines.h"
 #include "md5.h"
 
@@ -63,7 +64,6 @@
 #include <cerrno>
 #include <cstring>
 #include <ctime>
-#include <random>
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -206,8 +206,8 @@ result_recv(char *buffer, int length)
 static void
 random_vector(char *aVector)
 {
-    static std::mt19937 mt(time(nullptr));
-    static xuniform_int_distribution<uint8_t> dist;
+    static std::mt19937 mt(RandomSeed32());
+    static std::uniform_int_distribution<uint8_t> dist;
 
     for (int i = 0; i < AUTH_VECTOR_LEN; ++i)
         aVector[i] = static_cast<char>(dist(mt) & 0xFF);

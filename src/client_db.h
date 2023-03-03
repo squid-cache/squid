@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,7 +30,6 @@ class ClientInfo;
 void clientdbUpdate(const Ip::Address &, const LogTags &, AnyP::ProtocolType, size_t);
 int clientdbCutoffDenied(const Ip::Address &);
 void clientdbDump(StoreEntry *);
-void clientdbFreeMemory(void);
 int clientdbEstablished(const Ip::Address &, int);
 
 #if USE_DELAY_POOLS

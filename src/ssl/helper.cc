@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "../helper.h"
 #include "anyp/PortCfg.h"
+#include "base/AsyncCallbacks.h"
 #include "cache_cf.h"
 #include "fs_io.h"
 #include "helper/Reply.h"
@@ -258,7 +259,7 @@ class submitData
 
 public:
     SBuf query;
-    AsyncCall::Pointer callback;
+    Ssl::CertValidationHelper::Callback callback;
     Security::SessionPointer ssl;
 };
 CBDATA_CLASS_INIT(submitData);
@@ -285,10 +286,8 @@ sslCrtvdHandleReplyWrapper(void *data, const ::Helper::Reply &reply)
     } else
         validationResponse->resultCode = reply.result;
 
-    Ssl::CertValidationHelper::CbDialer *dialer = dynamic_cast<Ssl::CertValidationHelper::CbDialer*>(crtdvdData->callback->getDialer());
-    Must(dialer);
-    dialer->arg1 = validationResponse;
-    ScheduleCallHere(crtdvdData->callback);
+    crtdvdData->callback.answer() = validationResponse;
+    ScheduleCallHere(crtdvdData->callback.release());
 
     if (Ssl::CertValidationHelper::HelperCache &&
             (validationResponse->resultCode == ::Helper::Okay || validationResponse->resultCode == ::Helper::Error)) {
@@ -298,7 +297,8 @@ sslCrtvdHandleReplyWrapper(void *data, const ::Helper::Reply &reply)
     delete crtdvdData;
 }
 
-void Ssl::CertValidationHelper::Submit(Ssl::CertValidationRequest const &request, AsyncCall::Pointer &callback)
+void
+Ssl::CertValidationHelper::Submit(const Ssl::CertValidationRequest &request, const Callback &callback)
 {
     Ssl::CertValidationMsg message(Ssl::CrtdMessage::REQUEST);
     message.setCode(Ssl::CertValidationMsg::code_cert_validate);
@@ -315,10 +315,8 @@ void Ssl::CertValidationHelper::Submit(Ssl::CertValidationRequest const &request
     if (CertValidationHelper::HelperCache &&
             (validationResponse = CertValidationHelper::HelperCache->get(crtdvdData->query))) {
 
-        CertValidationHelper::CbDialer *dialer = dynamic_cast<CertValidationHelper::CbDialer*>(callback->getDialer());
-        Must(dialer);
-        dialer->arg1 = *validationResponse;
-        ScheduleCallHere(callback);
+        crtdvdData->callback.answer() = *validationResponse;
+        ScheduleCallHere(crtdvdData->callback.release());
         delete crtdvdData;
         return;
     }
@@ -330,10 +328,8 @@ void Ssl::CertValidationHelper::Submit(Ssl::CertValidationRequest const &request
 
     Ssl::CertValidationResponse::Pointer resp = new Ssl::CertValidationResponse(crtdvdData->ssl);
     resp->resultCode = ::Helper::BrokenHelper;
-    Ssl::CertValidationHelper::CbDialer *dialer = dynamic_cast<Ssl::CertValidationHelper::CbDialer*>(callback->getDialer());
-    Must(dialer);
-    dialer->arg1 = resp;
-    ScheduleCallHere(callback);
+    crtdvdData->callback.answer() = resp;
+    ScheduleCallHere(crtdvdData->callback.release());
     delete crtdvdData;
     return;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,10 +19,11 @@
 
 typedef Ipc::StoreMap TransientsMap;
 
-/// Keeps track of store entries being delivered to clients that arrived before
-/// those entries were [fully] cached. This SMP-shared table is necessary to
-/// * sync an entry-writing worker with entry-reading worker(s); and
-/// * sync an entry-deleting worker with both entry-reading/writing workers.
+/// A Transients entry allows workers to Broadcast() DELETE requests and swapout
+/// progress updates. In a collapsed forwarding context, it also represents a CF
+/// initiating worker promise to either cache the response or inform the waiting
+/// slaves (via false EntryStatus::hasWriter) that caching will not happen. A
+/// Transients entry itself does not carry response- or Store-specific metadata.
 class Transients: public Store::Controlled, public Ipc::StoreMapCleaner
 {
 public:
@@ -30,19 +31,15 @@ public:
     class EntryStatus
     {
     public:
-        bool abortedByWriter = false; ///< whether the entry was aborted
+        bool hasWriter = false; ///< whether some worker is storing the entry
         bool waitingToBeFreed = false; ///< whether the entry was marked for deletion
-        bool collapsed = false; ///< whether the entry allows collapsing
     };
 
     Transients();
-    virtual ~Transients();
+    ~Transients() override;
 
     /// return a local, previously collapsed entry
     StoreEntry *findCollapsed(const sfileno xitIndex);
-
-    /// removes collapsing requirement (for future hits)
-    void clearCollapsingRequirement(const StoreEntry &e);
 
     /// start listening for remote DELETE requests targeting either a complete
     /// StoreEntry (ioReading) or a being-formed miss StoreEntry (ioWriting)
@@ -61,21 +58,21 @@ public:
     void disconnect(StoreEntry &);
 
     /* Store API */
-    virtual StoreEntry *get(const cache_key *) override;
-    virtual void create() override {}
-    virtual void init() override;
-    virtual uint64_t maxSize() const override;
-    virtual uint64_t minSize() const override;
-    virtual uint64_t currentSize() const override;
-    virtual uint64_t currentCount() const override;
-    virtual int64_t maxObjectSize() const override;
-    virtual void getStats(StoreInfoStats &stats) const override;
-    virtual void stat(StoreEntry &e) const override;
-    virtual void reference(StoreEntry &e) override;
-    virtual bool dereference(StoreEntry &e) override;
-    virtual void evictCached(StoreEntry &) override;
-    virtual void evictIfFound(const cache_key *) override;
-    virtual void maintain() override;
+    StoreEntry *get(const cache_key *) override;
+    void create() override {}
+    void init() override;
+    uint64_t maxSize() const override;
+    uint64_t minSize() const override;
+    uint64_t currentSize() const override;
+    uint64_t currentCount() const override;
+    int64_t maxObjectSize() const override;
+    void getStats(StoreInfoStats &stats) const override;
+    void stat(StoreEntry &e) const override;
+    void reference(StoreEntry &e) override;
+    bool dereference(StoreEntry &e) override;
+    void evictCached(StoreEntry &) override;
+    void evictIfFound(const cache_key *) override;
+    void maintain() override;
 
     /// Whether an entry with the given public key exists and (but) was
     /// marked for removal some time ago; get(key) returns nil in such cases.
@@ -100,7 +97,7 @@ protected:
     void anchorEntry(StoreEntry &, const sfileno, const Ipc::StoreMapAnchor &);
 
     // Ipc::StoreMapCleaner API
-    virtual void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId) override;
+    void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId) override;
 
 private:
     /// shared packed info indexed by Store keys, for creating new StoreEntries

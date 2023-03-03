@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,6 +13,8 @@
 #include "adaptation/icap/Config.h"
 #include "adaptation/icap/Launcher.h"
 #include "adaptation/icap/Xaction.h"
+#include "base/AsyncCallbacks.h"
+#include "base/IoManip.h"
 #include "base/JobWait.h"
 #include "base/TextException.h"
 #include "comm.h"
@@ -32,43 +34,33 @@
 #include "security/PeerConnector.h"
 #include "SquidConfig.h"
 
-/// Gives Security::PeerConnector access to Answer in the PeerPoolMgr callback dialer.
-class MyIcapAnswerDialer: public UnaryMemFunT<Adaptation::Icap::Xaction, Security::EncryptorAnswer, Security::EncryptorAnswer&>,
-    public Security::PeerConnector::CbDialer
-{
-public:
-    MyIcapAnswerDialer(const JobPointer &aJob, Method aMethod):
-        UnaryMemFunT<Adaptation::Icap::Xaction, Security::EncryptorAnswer, Security::EncryptorAnswer&>(aJob, aMethod, Security::EncryptorAnswer()) {}
-
-    /* Security::PeerConnector::CbDialer API */
-    virtual Security::EncryptorAnswer &answer() { return arg1; }
-};
+#include <optional>
 
 namespace Ssl
 {
 /// A simple PeerConnector for Secure ICAP services. No SslBump capabilities.
 class IcapPeerConnector: public Security::PeerConnector {
-    CBDATA_CLASS(IcapPeerConnector);
+    CBDATA_CHILD(IcapPeerConnector);
 public:
     IcapPeerConnector(
         Adaptation::Icap::ServiceRep::Pointer &service,
         const Comm::ConnectionPointer &aServerConn,
-        AsyncCall::Pointer &aCallback,
+        const AsyncCallback<Security::EncryptorAnswer> &aCallback,
         AccessLogEntry::Pointer const &alp,
         const time_t timeout = 0):
         AsyncJob("Ssl::IcapPeerConnector"),
         Security::PeerConnector(aServerConn, aCallback, alp, timeout), icapService(service) {}
 
     /* Security::PeerConnector API */
-    virtual bool initialize(Security::SessionPointer &);
-    virtual void noteNegotiationDone(ErrorState *error);
-    virtual Security::ContextPointer getTlsContext() {
+    bool initialize(Security::SessionPointer &) override;
+    void noteNegotiationDone(ErrorState *error) override;
+    Security::ContextPointer getTlsContext() override {
         return icapService->sslContext;
     }
 
 private:
     /* Acl::ChecklistFiller API */
-    virtual void fillChecklist(ACLFilledChecklist &) const;
+    void fillChecklist(ACLFilledChecklist &) const override;
 
     Adaptation::Icap::ServiceRep::Pointer icapService;
 };
@@ -142,13 +134,28 @@ void Adaptation::Icap::Xaction::start()
     Adaptation::Initiate::start();
 }
 
+// TODO: Make reusable by moving this (and the printing operator from
+// ip/Address.h that this code is calling) into ip/print.h or similar.
+namespace Ip {
+
+inline std::ostream &
+operator <<(std::ostream &os, const std::optional<Address> &optional)
+{
+    if (optional.has_value())
+        os << optional.value();
+    else
+        os << "[no IP]";
+    return os;
+}
+
+}
+
 static void
 icapLookupDnsResults(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data)
 {
     Adaptation::Icap::Xaction *xa = static_cast<Adaptation::Icap::Xaction *>(data);
-    /// TODO: refactor with CallJobHere1, passing either std::optional (after upgrading to C++17)
-    /// or Optional<Ip::Address> (when it can take non-trivial types)
-    xa->dnsLookupDone(ia);
+    const auto &addr = ia ? std::optional<Ip::Address>(ia->current()) : std::optional<Ip::Address>();
+    CallJobHere1(93, 5, CbcPointer<Adaptation::Icap::Xaction>(xa), Adaptation::Icap::Xaction, dnsLookupDone, addr);
 }
 
 // TODO: obey service-specific, OPTIONS-reported connection limit
@@ -179,14 +186,14 @@ Adaptation::Icap::Xaction::openConnection()
 }
 
 void
-Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
+Adaptation::Icap::Xaction::dnsLookupDone(std::optional<Ip::Address> addr)
 {
     assert(waitingForDns);
     waitingForDns = false;
 
     Adaptation::Icap::ServiceRep &s = service();
 
-    if (ia == nullptr) {
+    if (!addr.has_value()) {
         debugs(44, DBG_IMPORTANT, "ERROR: ICAP: Unknown service host: " << s.cfg().host);
 
 #if WHEN_IPCACHE_NBGETHOSTBYNAME_USES_ASYNC_CALLS
@@ -198,7 +205,7 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
     }
 
     const Comm::ConnectionPointer conn = new Comm::Connection();
-    conn->remote = ia->current();
+    conn->remote = addr.value();
     conn->remote.port(s.cfg().port);
     getOutgoingAddress(nullptr, conn);
 
@@ -270,10 +277,7 @@ Adaptation::Icap::Xaction::useTransportConnection(const Comm::ConnectionPointer 
     const auto &ssl = fd_table[conn->fd].ssl;
     if (!ssl && service().cfg().secure.encryptTransport) {
         // XXX: Exceptions orphan conn.
-        CbcPointer<Adaptation::Icap::Xaction> me(this);
-        AsyncCall::Pointer callback = asyncCall(93, 4, "Adaptation::Icap::Xaction::handleSecuredPeer",
-                                                MyIcapAnswerDialer(me, &Adaptation::Icap::Xaction::handleSecuredPeer));
-
+        const auto callback = asyncCallback(93, 4, Adaptation::Icap::Xaction::handleSecuredPeer, this);
         const auto sslConnector = new Ssl::IcapPeerConnector(theService, conn, callback, masterLogEntry(), TheConfig.connect_timeout(service().cfg().bypass));
 
         encryptionWait.start(sslConnector, callback);

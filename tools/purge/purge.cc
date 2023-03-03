@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -112,6 +112,10 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <unistd.h>
+
+#if HAVE_REGEX_H
+#include <regex.h>
+#endif
 
 #if HAVE_SIGINFO_H
 #include <siginfo.h>

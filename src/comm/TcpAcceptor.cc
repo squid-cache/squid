@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,6 +28,7 @@
 #include "ip/QosConfig.h"
 #include "log/access_log.h"
 #include "MasterXaction.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 
@@ -271,33 +272,41 @@ Comm::TcpAcceptor::acceptOne()
 
     /* Accept a new connection */
     ConnectionPointer newConnDetails = new Connection();
-    const Comm::Flag flag = oldAccept(newConnDetails);
+    try {
+        if (acceptInto(newConnDetails)) {
+            Assure(newConnDetails->isOpen());
+            CallBack(newConnDetails, [&] {
+                debugs(5, 5, "Listener: " << conn <<
+                       " accepted new connection " << newConnDetails <<
+                       " handler Subscription: " << theCallSub);
+                notify(Comm::OK, newConnDetails);
+            });
+        } else {
+            debugs(5, 5, "try later: " << conn << " handler Subscription: " << theCallSub);
+            newConnDetails->close(); // paranoid manual closure (and may already be closed)
+        }
 
-    if (flag == Comm::COMM_ERROR) {
-        // A non-recoverable error; notify the caller */
-        debugs(5, 5, "non-recoverable error:" << status() << " handler Subscription: " << theCallSub);
-        if (intendedForUserConnections())
-            logAcceptError(newConnDetails);
-        notify(flag, newConnDetails);
-        // XXX: not under async job call protections
-        mustStop("Listener socket closed");
+        SetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
         return;
+    } catch (...) {
+        const auto debugLevel = intendedForUserConnections() ? DBG_CRITICAL : 3;
+        debugs(5, debugLevel, "ERROR: Stopped accepting connections:" <<
+               Debug::Extra << "error: " << CurrentException);
     }
 
-    if (flag == Comm::NOMESSAGE) {
-        /* register interest again */
-        debugs(5, 5, "try later: " << conn << " handler Subscription: " << theCallSub);
-    } else {
-        // TODO: When ALE, MasterXaction merge, use them or ClientConn instead.
-        CallBack(newConnDetails, [&] {
-            debugs(5, 5, "Listener: " << conn <<
-                   " accepted new connection " << newConnDetails <<
-                   " handler Subscription: " << theCallSub);
-            notify(flag, newConnDetails);
-        });
-    }
+    if (intendedForUserConnections())
+        logAcceptError(newConnDetails);
 
-    SetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
+    // do not expose subscribers to a "usable" descriptor of a failed connection
+    newConnDetails->close(); // may already be closed
+
+    CallBack(newConnDetails, [&] {
+        notify(Comm::COMM_ERROR, newConnDetails);
+    });
+
+    // XXX: Not under AsyncJob call protections but, if placed there, may cause
+    // problems like making the corresponding HttpSockets entry (if any) stale.
+    mustStop("unrecoverable accept failure");
 }
 
 void
@@ -329,47 +338,37 @@ Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &
     }
 }
 
-/**
- * accept() and process
- * Wait for an incoming connection on our listener socket.
- *
- * \retval Comm::OK          success. details parameter filled.
- * \retval Comm::NOMESSAGE   attempted accept() but nothing useful came in.
- *                           Or this client has too many connections already.
- * \retval Comm::COMM_ERROR  an outright failure occurred.
- */
-Comm::Flag
-Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
+/// acceptOne() helper: accept(2) a new TCP connection and fill in its details
+/// \retval false indicates that details do not contain a usable TCP connection,
+/// but future attempts to accept may still be successful
+bool
+Comm::TcpAcceptor::acceptInto(Comm::ConnectionPointer &details)
 {
     ++statCounter.syscalls.sock.accepts;
-    int sock;
     struct addrinfo *gai = nullptr;
     Ip::Address::InitAddr(gai);
 
     errcode = 0; // reset local errno copy.
-    if ((sock = accept(conn->fd, gai->ai_addr, &gai->ai_addrlen)) < 0) {
+    const auto rawSock = accept(conn->fd, gai->ai_addr, &gai->ai_addrlen);
+    if (rawSock < 0) {
         errcode = errno; // store last accept errno locally.
 
         Ip::Address::FreeAddr(gai);
 
         if (ignoreErrno(errcode) || errcode == ECONNABORTED) {
             debugs(50, 5, status() << ": " << xstrerr(errcode));
-            return Comm::NOMESSAGE;
-        } else if (errcode == ENFILE || errcode == EMFILE) {
-            debugs(50, 3, status() << ": " << xstrerr(errcode));
-            return Comm::COMM_ERROR;
+            return false;
         } else {
-            debugs(50, DBG_IMPORTANT, "ERROR: failed to accept an incoming connection: " << xstrerr(errcode));
-            return Comm::COMM_ERROR;
+            throw TextException(ToSBuf("Failed to accept an incoming connection: ", xstrerr(errcode)), Here());
         }
     }
 
-    Must(sock >= 0);
     ++incoming_sockets_accepted;
 
     // Sync with Comm ASAP so that abandoned details can properly close().
     // XXX : these are not all HTTP requests. use a note about type and ip:port details->
     // so we end up with a uniform "(HTTP|FTP-data|HTTPS|...) remote-ip:remote-port"
+    const auto sock = rawSock;
     fd_open(sock, FD_SOCKET, "HTTP Request");
     details->fd = sock;
     details->enterOrphanage();
@@ -381,17 +380,25 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     details->local.setEmpty();
     if (getsockname(sock, gai->ai_addr, &gai->ai_addrlen) != 0) {
         int xerrno = errno;
-        debugs(50, DBG_IMPORTANT, "ERROR: getsockname() failed to locate local-IP on " << details << ": " << xstrerr(xerrno));
         Ip::Address::FreeAddr(gai);
-        return Comm::COMM_ERROR;
+        throw TextException(ToSBuf("getsockname() failed to locate local-IP on ", details, ": ", xstrerr(xerrno)), Here());
     }
     details->local = *gai;
     Ip::Address::FreeAddr(gai);
 
-    // Perform NAT or TPROXY operations to retrieve the real client/dest IP addresses
-    if (conn->flags&(COMM_TRANSPARENT|COMM_INTERCEPTION) && !Ip::Interceptor.Lookup(details, conn)) {
-        debugs(50, DBG_IMPORTANT, "ERROR: NAT/TPROXY lookup failed to locate original IPs on " << details);
-        return Comm::NOMESSAGE;
+    if (conn->flags & COMM_TRANSPARENT) { // the real client/dest IP address must be already available via getsockname()
+        details->flags |= COMM_TRANSPARENT;
+        if (!Ip::Interceptor.TransparentActive()) {
+            debugs(50, DBG_IMPORTANT, "ERROR: Cannot use transparent " << details << " because TPROXY mode became inactive");
+            // TODO: consider throwing instead
+            return false;
+        }
+    } else if (conn->flags & COMM_INTERCEPTION) { // request the real client/dest IP address from NAT
+        details->flags |= COMM_INTERCEPTION;
+        if (!Ip::Interceptor.LookupNat(*details)) {
+            debugs(50, DBG_IMPORTANT, "ERROR: NAT lookup failed to locate original IPs on " << details);
+            return false;
+        }
     }
 
 #if USE_SQUID_EUI
@@ -409,7 +416,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     if (Config.client_ip_max_connections >= 0) {
         if (clientdbEstablished(details->remote, 0) > Config.client_ip_max_connections) {
             debugs(50, DBG_IMPORTANT, "WARNING: " << details->remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
-            return Comm::NOMESSAGE;
+            return false;
         }
     }
 
@@ -428,6 +435,6 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     /* IFF the socket is (tproxy) transparent, pass the flag down to allow spoofing */
     F->flags.transparent = fd_table[conn->fd].flags.transparent; // XXX: can we remove this line yet?
 
-    return Comm::OK;
+    return true;
 }
 

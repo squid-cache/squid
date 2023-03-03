@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,7 +16,6 @@ bool Dns::ResolveClientAddressesAsap = false;
 
 void fqdncache_init(void) STUB
 void fqdnStats(StoreEntry *) STUB
-void fqdncacheFreeMemory(void) STUB
 void fqdncache_restart(void) STUB
 void fqdncache_purgelru(void *) STUB
 void fqdncacheAddEntryFromHosts(char *, SBufList &) STUB

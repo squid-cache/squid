@@ -1,29 +1,9 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
-
-dnl check whether regex works by actually compiling one
-dnl sets squid_cv_regex_works to either yes or no
-
-AC_DEFUN([SQUID_CHECK_REGEX_WORKS],[
-  AC_CACHE_CHECK([if the system-supplied regex lib actually works],squid_cv_regex_works,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#if HAVE_REGEX_H
-#include <regex.h>
-#endif
-]], [[
-regex_t t; regcomp(&t,"",0);]])],
-    [ squid_cv_regex_works=yes ],
-    [ squid_cv_regex_works=no ])
-  ])
-])
-
 
 AC_DEFUN([SQUID_CHECK_LIBIPHLPAPI],[
   AC_CACHE_CHECK([for libIpHlpApi],squid_cv_have_libiphlpapi,[
@@ -126,9 +106,7 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
   AH_TEMPLATE(SQUID_USE_SSLGETCERTIFICATE_HACK, "Define to 1 to use squid workaround for SSL_get_certificate")
   SQUID_STATE_SAVE(check_SSL_get_certificate)
   LIBS="$SSLLIB $LIBS"
-  if test "x$SSLLIBDIR" != "x"; then
-     LIBS="$LIBS -Wl,-rpath -Wl,$SSLLIBDIR"
-  fi
+  AS_IF([test "x$SSLLIBDIR" != "x"],[LIBS="$LIBS -Wl,-rpath -Wl,$SSLLIBDIR"])
 
   AC_MSG_CHECKING(whether the SSL_get_certificate is buggy)
   AC_RUN_IFELSE([
@@ -320,75 +298,57 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_TXTDB],[
   LIBS="$LIBS $SSLLIB"
   squid_cv_check_openssl_pstring="no"
   AC_MSG_CHECKING(whether the TXT_DB use OPENSSL_PSTRING data member)
-  AC_COMPILE_IFELSE([
-  AC_LANG_PROGRAM(
-    [
-     #include <openssl/txt_db.h>
-    ],
-    [
-    TXT_DB *db = NULL;
-    int i = sk_OPENSSL_PSTRING_num(db->data);
-    return 0;
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
+      #include <openssl/txt_db.h>
+    ],[
+      TXT_DB *db = NULL;
+      int i = sk_OPENSSL_PSTRING_num(db->data);
+      return 0;
     ])
-  ],
-  [
-   AC_DEFINE(SQUID_SSLTXTDB_PSTRINGDATA, 1)
-   AC_MSG_RESULT([yes])
-   squid_cv_check_openssl_pstring="yes"
-  ],
-  [
-   AC_MSG_RESULT([no])
-  ],
-  [])
+  ],[
+    AC_DEFINE(SQUID_SSLTXTDB_PSTRINGDATA, 1)
+    AC_MSG_RESULT([yes])
+    squid_cv_check_openssl_pstring="yes"
+  ],[
+    AC_MSG_RESULT([no])
+  ],[])
 
-  if test x"$squid_cv_check_openssl_pstring" = "xyes"; then
-     AC_MSG_CHECKING(whether the squid workaround for buggy versions of sk_OPENSSL_PSTRING_value should used)
-     AC_COMPILE_IFELSE([
-     AC_LANG_PROGRAM(
-       [
+  AS_IF([test "x$squid_cv_check_openssl_pstring" = "xyes"],[
+    AC_MSG_CHECKING(whether the squid workaround for buggy versions of sk_OPENSSL_PSTRING_value should used)
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
         #include <openssl/txt_db.h>
-       ],
-       [
+      ],[
        TXT_DB *db = NULL;
        const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db->data, 0));
        return (current_row != NULL);
-       ])
-     ],
-     [
+      ])
+    ],[
       AC_MSG_RESULT([no])
-     ],
-     [
+    ],[
       AC_DEFINE(SQUID_STACKOF_PSTRINGDATA_HACK, 1)
       AC_MSG_RESULT([yes])
-     ],
-     [])
-  fi
+    ],[])
+  ])
 
   AC_MSG_CHECKING(whether the workaround for OpenSSL IMPLEMENT_LHASH_  macros should used)
-  AC_COMPILE_IFELSE([
-  AC_LANG_PROGRAM(
-    [
-     #include <openssl/txt_db.h>
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
+      #include <openssl/txt_db.h>
 
-     static unsigned long index_serial_hash(const char **a){}
-     static int index_serial_cmp(const char **a, const char **b){}
-     static IMPLEMENT_LHASH_HASH_FN(index_serial_hash,const char **)
-     static IMPLEMENT_LHASH_COMP_FN(index_serial_cmp,const char **)
-    ],
-    [
-    TXT_DB *db = NULL;
-    TXT_DB_create_index(db, 1, NULL, LHASH_HASH_FN(index_serial_hash), LHASH_COMP_FN(index_serial_cmp));
+      static unsigned long index_serial_hash(const char **a){}
+      static int index_serial_cmp(const char **a, const char **b){}
+      static IMPLEMENT_LHASH_HASH_FN(index_serial_hash,const char **)
+      static IMPLEMENT_LHASH_COMP_FN(index_serial_cmp,const char **)
+    ],[
+      TXT_DB *db = NULL;
+      TXT_DB_create_index(db, 1, NULL, LHASH_HASH_FN(index_serial_hash), LHASH_COMP_FN(index_serial_cmp));
     ])
-  ],
-  [
-   AC_MSG_RESULT([no])
-  ],
-  [
-   AC_MSG_RESULT([yes])
-   AC_DEFINE(SQUID_USE_SSLLHASH_HACK, 1)
-  ],
-[])
+  ],[
+    AC_MSG_RESULT([no])
+  ],[
+    AC_MSG_RESULT([yes])
+    AC_DEFINE(SQUID_USE_SSLLHASH_HACK, 1)
+  ],[])
 
-SQUID_STATE_ROLLBACK(check_TXTDB)
+  SQUID_STATE_ROLLBACK(check_TXTDB)
 ])
 

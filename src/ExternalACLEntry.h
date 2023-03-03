@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -57,7 +57,7 @@ class ExternalACLEntry: public hash_link, public RefCountable
 
 public:
     ExternalACLEntry();
-    ~ExternalACLEntry();
+    ~ExternalACLEntry() override;
 
     void update(ExternalACLEntryData const &);
     dlink_node lru;

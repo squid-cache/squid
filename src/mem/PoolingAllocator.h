@@ -1,5 +1,5 @@
 /*
-+ * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
++ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 + *
 + * Squid software is distributed under GPLv2+ license and includes
 + * contributions from numerous individuals and organizations.
@@ -10,6 +10,8 @@
 #define SQUID_MEM_POOLINGALLOCATOR_H
 
 #include "mem/forward.h"
+
+#include <utility>
 
 /// STL Allocator that uses Squid memory pools for memory management
 template <class Value>
@@ -22,17 +24,6 @@ public:
     template <class Other> PoolingAllocator(const PoolingAllocator<Other> &) noexcept {}
     value_type *allocate(std::size_t n) { return static_cast<value_type*>(memAllocRigid(n*sizeof(value_type))); }
     void deallocate(value_type *vp, std::size_t n) noexcept { memFreeRigid(vp, n*sizeof(value_type)); }
-
-    // The following declarations are only necessary for compilers that do not
-    // fully support C++11 Allocator-related APIs, such as GCC v4.8.
-    // The corresponding std::allocator declarations are deprecated in C++17.
-    // TODO: Remove after dropping support for deficient compilers.
-
-    using size_type = size_t;
-    using pointer = Value*;
-    using const_pointer = const Value*;
-    using reference = Value&;
-    using const_reference = const Value&;
 
     template <class OtherValue>
     struct rebind {

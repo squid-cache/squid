@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -43,23 +43,6 @@
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
-
-/*
- * sys/capability.h is only needed in Linux apparently.
- *
- * HACK: LIBCAP_BROKEN Ugly glue to get around linux header madness colliding with glibc
- */
-#if HAVE_SYS_CAPABILITY_H
-
-#if LIBCAP_BROKEN
-#undef _POSIX_SOURCE
-#define _LINUX_TYPES_H
-#define _LINUX_FS_H
-typedef uint32_t __u32;
-#endif
-
-#include <sys/capability.h>
-#endif /* HAVE_SYS_CAPABILITY_H */
 
 /*
  * glob.h is provided by GNU on Linux and contains some unavoidable preprocessor

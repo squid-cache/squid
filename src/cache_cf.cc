@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -443,7 +443,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
     int err_count = 0;
     int is_pipe = 0;
 
-    debugs(3, DBG_IMPORTANT, "Processing Configuration File: " << file_name << " (depth " << depth << ")");
+    debugs(3, Important(68), "Processing Configuration File: " << file_name << " (depth " << depth << ")");
     if (depth > 16) {
         fatalf("WARNING: can't include %s: includes are nested too deeply (>16)!\n", file_name);
         return 1;
@@ -731,13 +731,6 @@ configDoConfigure(void)
     }
 #endif
 
-    if (Config.Announce.period > 0) {
-        Config.onoff.announce = 1;
-    } else {
-        Config.Announce.period = 86400 * 365;   /* one year */
-        Config.onoff.announce = 0;
-    }
-
     if (Config.onoff.httpd_suppress_version_string)
         visible_appname_string = (char *)appname_string;
     else
@@ -784,7 +777,7 @@ configDoConfigure(void)
      * the extra space is for loop detection in client_side.c -- we search
      * for substrings in the Via header.
      */
-    snprintf(ThisCache2, sizeof(ThisCache), " %s (%s)",
+    snprintf(ThisCache2, sizeof(ThisCache2), " %s (%s)",
              uniqueHostname(),
              visible_appname_string);
 
@@ -968,7 +961,7 @@ configDoConfigure(void)
 #endif
 
     if (Security::ProxyOutgoingConfig.encryptTransport) {
-        debugs(3, DBG_IMPORTANT, "Initializing https:// proxy context");
+        debugs(3, 2, "initializing https:// proxy context");
         Config.ssl_client.sslContext = Security::ProxyOutgoingConfig.createClientContext(false);
         if (!Config.ssl_client.sslContext) {
 #if USE_OPENSSL
@@ -989,10 +982,10 @@ configDoConfigure(void)
             p->secure.sslDomain = p->host;
 
         if (p->secure.encryptTransport) {
-            debugs(3, DBG_IMPORTANT, "Initializing cache_peer " << p->name << " TLS context");
+            debugs(3, 2, "initializing TLS context for cache_peer " << *p);
             p->sslContext = p->secure.createClientContext(true);
             if (!p->sslContext) {
-                debugs(3, DBG_CRITICAL, "ERROR: Could not initialize cache_peer " << p->name << " TLS context");
+                debugs(3, DBG_CRITICAL, "ERROR: Could not initialize TLS context for cache_peer " << *p);
                 self_destruct();
                 return;
             }
@@ -1002,7 +995,7 @@ configDoConfigure(void)
     for (AnyP::PortCfgPointer s = HttpPortList; s != nullptr; s = s->next) {
         if (!s->secure.encryptTransport)
             continue;
-        debugs(3, DBG_IMPORTANT, "Initializing " << AnyP::UriScheme(s->transport.protocol) << "_port " << s->s << " TLS contexts");
+        debugs(3, 2, "initializing " << AnyP::UriScheme(s->transport.protocol) << "_port " << s->s << " TLS contexts");
         s->secure.initServerContexts(*s);
     }
 
@@ -2181,10 +2174,8 @@ parse_peer(CachePeer ** head)
         return;
     }
 
-    CachePeer *p = new CachePeer;
-    p->host = xstrdup(host_str);
-    Tolower(p->host);
-    p->name = xstrdup(host_str);
+    const auto p = new CachePeer(host_str);
+
     p->type = parseNeighborType(token);
 
     if (p->type == PEER_MULTICAST) {
@@ -2278,12 +2269,12 @@ parse_peer(CachePeer ** head)
 
         } else if (!strcmp(token, "carp")) {
             if (p->type != PEER_PARENT)
-                fatalf("parse_peer: non-parent carp peer %s/%d\n", p->host, p->http_port);
+                throw TextException(ToSBuf("non-parent carp cache_peer ", *p), Here());
 
             p->options.carp = true;
         } else if (!strncmp(token, "carp-key=", 9)) {
             if (p->options.carp != true)
-                fatalf("parse_peer: carp-key specified on non-carp peer %s/%d\n", p->host, p->http_port);
+                throw TextException(ToSBuf("carp-key specified on non-carp cache_peer ", *p), Here());
             p->options.carp_key.set = true;
             char *nextkey=token+strlen("carp-key="), *key=nextkey;
             for (; key; key = nextkey) {
@@ -2306,15 +2297,15 @@ parse_peer(CachePeer ** head)
         } else if (!strcmp(token, "userhash")) {
 #if USE_AUTH
             if (p->type != PEER_PARENT)
-                fatalf("parse_peer: non-parent userhash peer %s/%d\n", p->host, p->http_port);
+                throw TextException(ToSBuf("non-parent userhash cache_peer ", *p), Here());
 
             p->options.userhash = true;
 #else
-            fatalf("parse_peer: userhash requires authentication. peer %s/%d\n", p->host, p->http_port);
+            throw TextException(ToSBuf("missing authentication support; required for userhash cache_peer ", *p), Here());
 #endif
         } else if (!strcmp(token, "sourcehash")) {
             if (p->type != PEER_PARENT)
-                fatalf("parse_peer: non-parent sourcehash peer %s/%d\n", p->host, p->http_port);
+                throw TextException(ToSBuf("non-parent sourcehash cache_peer ", *p), Here());
 
             p->options.sourcehash = true;
 
@@ -2347,10 +2338,7 @@ parse_peer(CachePeer ** head)
         } else if (!strcmp(token, "originserver")) {
             p->options.originserver = true;
         } else if (!strncmp(token, "name=", 5)) {
-            safe_free(p->name);
-
-            if (token[5])
-                p->name = xstrdup(token + 5);
+            p->rename(token + 5);
         } else if (!strncmp(token, "forceddomain=", 13)) {
             safe_free(p->domain);
             if (token[13])
@@ -2388,11 +2376,12 @@ parse_peer(CachePeer ** head)
         }
     }
 
-    if (peerFindByName(p->name))
-        fatalf("ERROR: cache_peer %s specified twice\n", p->name);
+    if (findCachePeerByName(p->name))
+        throw TextException(ToSBuf("cache_peer ", *p, " specified twice"), Here());
 
     if (p->max_conn > 0 && p->max_conn < p->standby.limit)
-        fatalf("ERROR: cache_peer %s max-conn=%d is lower than its standby=%d\n", p->host, p->max_conn, p->standby.limit);
+        throw TextException(ToSBuf("cache_peer ", *p, " max-conn=", p->max_conn,
+                                   " is lower than its standby=", p->standby.limit), Here());
 
     if (p->weight < 1)
         p->weight = 1;
@@ -2516,31 +2505,16 @@ free_denyinfo(AclDenyInfoList ** list)
 static void
 parse_peer_access(void)
 {
-    char *host = ConfigParser::NextToken();
-    if (!host) {
-        self_destruct();
-        return;
-    }
-
-    CachePeer *p = peerFindByName(host);
-    if (!p) {
-        debugs(15, DBG_CRITICAL, "ERROR: " << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
-        return;
-    }
-
+    auto &p = LegacyParser.cachePeer("cache_peer_access peer-name");
     std::string directive = "peer_access ";
-    directive += host;
-    aclParseAccessLine(directive.c_str(), LegacyParser, &p->access);
+    directive += p.name;
+    aclParseAccessLine(directive.c_str(), LegacyParser, &p.access);
 }
 
 static void
 parse_hostdomaintype(void)
 {
-    char *host = ConfigParser::NextToken();
-    if (!host) {
-        self_destruct();
-        return;
-    }
+    auto &p = LegacyParser.cachePeer("neighbor_type_domain peer-name");
 
     char *type = ConfigParser::NextToken();
     if (!type) {
@@ -2550,18 +2524,12 @@ parse_hostdomaintype(void)
 
     char *domain = nullptr;
     while ((domain = ConfigParser::NextToken())) {
-        CachePeer *p = peerFindByName(host);
-        if (!p) {
-            debugs(15, DBG_CRITICAL, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
-            return;
-        }
-
         auto *l = static_cast<NeighborTypeDomainList *>(xcalloc(1, sizeof(NeighborTypeDomainList)));
         l->type = parseNeighborType(type);
         l->domain = xstrdup(domain);
 
         NeighborTypeDomainList **L = nullptr;
-        for (L = &(p->typelist); *L; L = &((*L)->next));
+        for (L = &p.typelist; *L; L = &((*L)->next));
         *L = l;
     }
 }
@@ -4401,7 +4369,7 @@ class sslBumpCfgRr: public ::RegisteredRunner
 public:
     static Ssl::BumpMode lastDeprecatedRule;
     /* RegisteredRunner API */
-    virtual void finalizeConfig();
+    void finalizeConfig() override;
 };
 
 Ssl::BumpMode sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpEnd;

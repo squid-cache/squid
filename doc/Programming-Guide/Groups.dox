@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,11 +31,6 @@
  *   caches.
  *   All requests to other proxies are sent as HTTP requests.
  *   All requests to origin-server are sent in that servers protocol.
- *
- \par
- *   Wais and Gopher don't receive much
- *   attention because they comprise a relatively insignificant
- *   portion of Internet traffic.
  */
 
 /**

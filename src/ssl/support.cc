@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -660,8 +660,8 @@ Ssl::Initialize(void)
     if (::Config.SSL.ssl_engine) {
 #if OPENSSL_VERSION_MAJOR < 3
         debugs(83, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Support for ssl_engine is deprecated " <<
-               "in Squids built with OpenSSL v1 (like this Squid). " <<
-               "It is removed in Squids built with OpenSSL v3+.");
+               "in Squids built with OpenSSL 1.x (like this Squid). " <<
+               "It is removed in Squids built with OpenSSL 3.0 or newer.");
 #if !defined(OPENSSL_NO_ENGINE)
         ENGINE_load_builtin_engines();
         ENGINE *e;
@@ -677,7 +677,7 @@ Ssl::Initialize(void)
 #endif
 
 #else /* OPENSSL_VERSION_MAJOR */
-        throw TextException("Cannot use ssl_engine in Squid built with OpenSSL v3+", Here());
+        throw TextException("Cannot use ssl_engine in Squid built with OpenSSL 3.0 or newer", Here());
 #endif
     }
 
@@ -727,7 +727,7 @@ Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &pee
         // TODO: support loading multiple cert/key pairs
         auto &keys = peer.certs.front();
         if (!keys.certFile.isEmpty()) {
-            debugs(83, DBG_IMPORTANT, "Using certificate in " << keys.certFile);
+            debugs(83, 2, "loading client certificate from " << keys.certFile);
 
             const char *certfile = keys.certFile.c_str();
             if (!SSL_CTX_use_certificate_chain_file(ctx.get(), certfile)) {
@@ -736,7 +736,7 @@ Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &pee
                        certfile, Security::ErrorString(ssl_error));
             }
 
-            debugs(83, DBG_IMPORTANT, "Using private key in " << keys.privateKeyFile);
+            debugs(83, 2, "loading private key from " << keys.privateKeyFile);
             const char *keyfile = keys.privateKeyFile.c_str();
             ssl_ask_password(ctx.get(), keyfile);
 

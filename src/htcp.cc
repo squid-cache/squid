@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,11 +12,11 @@
 #include "AccessLogEntry.h"
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
+#include "base/AsyncCallbacks.h"
 #include "CachePeer.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
-#include "comm/UdpOpenDialer.h"
 #include "compat/xalloc.h"
 #include "debug/Messages.h"
 #include "globals.h"
@@ -26,6 +26,7 @@
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
 #include "ip/tools.h"
+#include "ipc/StartListening.h"
 #include "md5.h"
 #include "mem/forward.h"
 #include "MemBuf.h"
@@ -135,12 +136,12 @@ public:
     }
 
     /* CodeContext API */
-    virtual ScopedId codeContextGist() const; // override
-    virtual std::ostream &detailCodeContext(std::ostream &os) const; // override
+    ScopedId codeContextGist() const override; // override
+    std::ostream &detailCodeContext(std::ostream &os) const override; // override
 
     /* StoreClient API */
-    virtual LogTags *loggingTags() const;
-    virtual void fillChecklist(ACLFilledChecklist &) const;
+    LogTags *loggingTags() const override;
+    void fillChecklist(ACLFilledChecklist &) const override;
 
 public:
     const char *method = nullptr;
@@ -232,7 +233,7 @@ enum {
     RR_RESPONSE
 };
 
-static void htcpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);
+static void htcpIncomingConnectionOpened(Ipc::StartListeningAnswer&);
 static uint32_t msg_id_counter = 0;
 
 static Comm::ConnectionPointer htcpOutgoingConn = nullptr;
@@ -1459,10 +1460,7 @@ htcpOpenPorts(void)
         htcpIncomingConn->local.setIPv4();
     }
 
-    AsyncCall::Pointer call = asyncCall(31, 2,
-                                        "htcpIncomingConnectionOpened",
-                                        Comm::UdpOpenDialer(&htcpIncomingConnectionOpened));
-
+    auto call = asyncCallbackFun(31, 2, htcpIncomingConnectionOpened);
     Ipc::StartListening(SOCK_DGRAM,
                         IPPROTO_UDP,
                         htcpIncomingConn,
@@ -1497,8 +1495,10 @@ htcpOpenPorts(void)
 }
 
 static void
-htcpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int)
+htcpIncomingConnectionOpened(Ipc::StartListeningAnswer &answer)
 {
+    const auto &conn = answer.conn;
+
     if (!Comm::IsConnOpen(conn))
         fatal("Cannot open HTCP Socket");
 

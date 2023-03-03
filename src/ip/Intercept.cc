@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -119,15 +119,6 @@ Ip::Intercept::StopTransparency(const char *str)
     }
 }
 
-void
-Ip::Intercept::StopInterception(const char *str)
-{
-    if (interceptActive_) {
-        debugs(89, DBG_IMPORTANT, "Stopping IP interception: " << str);
-        interceptActive_ = 0;
-    }
-}
-
 bool
 Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn)
 {
@@ -157,21 +148,32 @@ Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn)
     return false;
 }
 
-bool
-Ip::Intercept::TproxyTransparent(const Comm::ConnectionPointer &newConn)
+void
+Ip::Intercept::StartTransparency()
 {
+    // --enable-linux-netfilter
+    // --enable-pf-transparent
+    // --enable-ipfw-transparent
 #if (LINUX_NETFILTER && defined(IP_TRANSPARENT)) || \
     (PF_TRANSPARENT && defined(SO_BINDANY)) || \
     (IPFW_TRANSPARENT && defined(IP_BINDANY))
-
-    /* Trust the user configured properly. If not no harm done.
-     * We will simply attempt a bind outgoing on our own IP.
-     */
-    debugs(89, 5, "address TPROXY: " << newConn);
-    return true;
+    transparentActive_ = 1;
 #else
-    (void)newConn;
-    return false;
+    throw TextException("requires TPROXY feature to be enabled by ./configure", Here());
+#endif
+}
+
+void
+Ip::Intercept::StartInterception()
+{
+    // --enable-linux-netfilter
+    // --enable-ipfw-transparent
+    // --enable-ipf-transparent
+    // --enable-pf-transparent
+#if IPF_TRANSPARENT || LINUX_NETFILTER || IPFW_TRANSPARENT || PF_TRANSPARENT
+    interceptActive_ = 1;
+#else
+    throw TextException("requires NAT Interception feature to be enabled by ./configure", Here());
 #endif
 }
 
@@ -377,40 +379,14 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn)
 }
 
 bool
-Ip::Intercept::Lookup(const Comm::ConnectionPointer &newConn, const Comm::ConnectionPointer &listenConn)
+Ip::Intercept::LookupNat(const Comm::Connection &aConn)
 {
-    /* --enable-linux-netfilter    */
-    /* --enable-ipfw-transparent   */
-    /* --enable-ipf-transparent    */
-    /* --enable-pf-transparent     */
-#if IPF_TRANSPARENT || LINUX_NETFILTER || IPFW_TRANSPARENT || PF_TRANSPARENT
+    debugs(89, 5, "address BEGIN: me/client= " << aConn.local << ", destination/me= " << aConn.remote);
+    assert(interceptActive_);
 
-    debugs(89, 5, "address BEGIN: me/client= " << newConn->local << ", destination/me= " << newConn->remote);
-
-    newConn->flags |= (listenConn->flags & (COMM_TRANSPARENT|COMM_INTERCEPTION));
-
-    /* NP: try TPROXY first, its much quieter than NAT when non-matching */
-    if (transparentActive_ && listenConn->flags&COMM_TRANSPARENT) {
-        if (TproxyTransparent(newConn)) return true;
-    }
-
-    if (interceptActive_ && listenConn->flags&COMM_INTERCEPTION) {
-        /* NAT methods that use sock-opts to return client address */
-        if (NetfilterInterception(newConn)) return true;
-        if (IpfwInterception(newConn)) return true;
-
-        /* NAT methods that use ioctl to return client address AND destination address */
-        if (PfInterception(newConn)) return true;
-        if (IpfInterception(newConn)) return true;
-    }
-
-#else /* none of the transparent options configured */
-    (void)newConn;
-    (void)listenConn;
-    debugs(89, DBG_IMPORTANT, "WARNING: transparent proxying not supported");
-#endif
-
-    return false;
+    Comm::ConnectionPointer newConn = &aConn;
+    return NetfilterInterception(newConn) || IpfwInterception(newConn) || // use sock-opts to return client address
+           PfInterception(newConn) || IpfInterception(newConn); // use ioctl to return client address AND destination address
 }
 
 bool
@@ -500,7 +476,7 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
     }
 
 #else
-    debugs(3, 3, "TPROXY setsockopt() not supported on this platform. Disabling TPROXY.");
+    debugs(3, 3, "TPROXY setsockopt() not supported on this platform. Disabling TPROXY on port " << test);
 
 #endif
     if (doneSuid)

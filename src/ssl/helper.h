@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -43,14 +43,15 @@ class CertValidationResponse;
 class CertValidationHelper
 {
 public:
-    typedef UnaryMemFunT<Security::PeerConnector, CertValidationResponse::Pointer> CbDialer;
+    using Answer = CertValidationResponse::Pointer;
+    using Callback = AsyncCallback<Answer>;
 
     typedef void CVHCB(void *, Ssl::CertValidationResponse const &);
     static void Init(); ///< Init helper structure.
     static void Shutdown(); ///< Shutdown helper structure.
     static void Reconfigure(); ///< Reconfigure helper structure
     /// Submit crtd request message to external crtd server.
-    static void Submit(Ssl::CertValidationRequest const & request, AsyncCall::Pointer &);
+    static void Submit(const Ssl::CertValidationRequest &, const Callback &);
 private:
     static helper * ssl_crt_validator; ///< helper for management of ssl_crtd.
 public:

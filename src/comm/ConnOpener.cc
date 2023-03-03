@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -284,7 +284,7 @@ Comm::ConnOpener::createFd()
     if (callback_ == nullptr || callback_->canceled())
         return false;
 
-    temporaryFd_ = comm_openex(SOCK_STREAM, IPPROTO_TCP, conn_->local, conn_->flags, host_);
+    temporaryFd_ = comm_open(SOCK_STREAM, IPPROTO_TCP, conn_->local, conn_->flags, host_);
     if (temporaryFd_ < 0) {
         sendAnswer(Comm::ERR_CONNECT, 0, "Comm::ConnOpener::createFd");
         return false;

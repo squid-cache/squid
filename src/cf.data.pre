@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -182,6 +182,30 @@ DOC_START
 DOC_END
 
 # Options removed in 6.x
+NAME: announce_file
+TYPE: obsolete
+DOC_START
+	Remove this line. Squid no longer supports this feature.
+DOC_END
+
+NAME: announce_host
+TYPE: obsolete
+DOC_START
+	Remove this line. Squid no longer supports this feature.
+DOC_END
+
+NAME: announce_period
+TYPE: obsolete
+DOC_START
+	Remove this line. Squid no longer supports this feature.
+DOC_END
+
+NAME: announce_port
+TYPE: obsolete
+DOC_START
+	Remove this line. Squid no longer supports this feature.
+DOC_END
+
 NAME: request_entities
 TYPE: obsolete
 DOC_START
@@ -1044,11 +1068,12 @@ DEFAULT: ssl::certUntrusted ssl_error X509_V_ERR_INVALID_CA X509_V_ERR_SELF_SIGN
 DEFAULT: ssl::certSelfSigned ssl_error X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT
 ENDIF
 DEFAULT: all src all
-DEFAULT: manager url_regex -i ^cache_object:// +i ^https?://[^/]+/squid-internal-mgr/
+DEFAULT: manager url_regex -i ^cache_object:// +i ^[^:]+://[^/]+/squid-internal-mgr/
 DEFAULT: localhost src 127.0.0.1/32 ::1
 DEFAULT: to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1/128 ::/128
+DEFAULT: to_linklocal dst 169.254.0.0/16 fe80::/10
 DEFAULT: CONNECT method CONNECT
-DEFAULT_DOC: ACLs all, manager, localhost, to_localhost, and CONNECT are predefined.
+DEFAULT_DOC: ACLs all, manager, localhost, to_localhost, to_linklocal, and CONNECT are predefined.
 DOC_START
 	Defining an Access List
 
@@ -1194,8 +1219,12 @@ endif
 	acl aclname urlpath_regex [-i] \.gif$ ...
 	  # regex matching on URL path [fast]
 
-	acl aclname port 80 70 21 0-1024...   # destination TCP port [fast]
-	                                      # ranges are allowed
+	acl aclname port 80 70 21 0-1024 ...
+	  # destination TCP port (or port range) of the request [fast]
+	  #
+	  # Port 0 matches requests that have no explicit and no default destination
+	  # ports (e.g., HTTP requests with URN targets)
+
 	acl aclname localport 3128 ...	      # TCP port the client connected to [fast]
 	                                      # NP: for interception mode this is usually '80'
 
@@ -1508,14 +1537,13 @@ IF USE_OPENSSL
 	  # ssl::certUntrusted, and ssl::certSelfSigned can also be used as
 	  # predefined ACLs, just like the 'all' ACL.
 
-	acl aclname server_cert_fingerprint [-sha1] fingerprint
+	acl aclname server_cert_fingerprint fingerprint
 	  # match against server SSL certificate fingerprint [fast]
 	  #
 	  # The fingerprint is the digest of the DER encoded version
 	  # of the whole certificate. The user should use the form: XX:XX:...
-	  # Optional argument specifies the digest algorithm to use.
 	  # The SHA1 digest algorithm is the default and is currently
-	  # the only algorithm supported (-sha1).
+	  # the only algorithm supported.
 
 	acl aclname ssl::server_name [option] .foo.com ...
 	  # matches server name obtained from various sources [fast]
@@ -1868,20 +1896,30 @@ http_access deny CONNECT !SSL_ports
 http_access allow localhost manager
 http_access deny manager
 
-# We strongly recommend the following be uncommented to protect innocent
-# web applications running on the proxy server who think the only
-# one who can access services on "localhost" is a local user
-#http_access deny to_localhost
+# This default configuration only allows localhost requests because a more
+# permissive Squid installation could introduce new attack vectors into the
+# network by proxying external TCP connections to unprotected services.
+http_access allow localhost
+
+# The two deny rules below are unnecessary in this default configuration
+# because they are followed by a "deny all" rule. However, they may become
+# critically important when you start allowing external requests below them.
+
+# Protect web applications running on the same server as Squid. They often
+# assume that only local users can access them at "localhost" ports.
+http_access deny to_localhost
+
+# Protect cloud servers that provide local users with sensitive info about
+# their server via certain well-known link-local (a.k.a. APIPA) addresses.
+http_access deny to_linklocal
 
 #
 # INSERT YOUR OWN RULE(S) HERE TO ALLOW ACCESS FROM YOUR CLIENTS
 #
 
-# Example rule allowing access from your local networks.
-# Adapt localnet in the ACL section to list your (internal) IP networks
-# from where browsing should be allowed
-http_access allow localnet
-http_access allow localhost
+# For example, to allow access from your local networks, you may uncomment the
+# following rule (and/or add rules that match your definition of "local"):
+# http_access allow localnet
 
 # And finally deny all other access to this proxy
 http_access deny all
@@ -3062,7 +3100,7 @@ DOC_START
 	The OpenSSL engine to use. You will need to set this if you
 	would like to use hardware SSL acceleration for example.
 
-	Not supported in builds with OpenSSL v3 or newer.
+	Not supported in builds with OpenSSL 3.0 or newer.
 DOC_END
 
 NAME: sslproxy_session_ttl
@@ -3924,12 +3962,20 @@ DOC_START
 			configuration.
 
 	name=xxx	Unique name for the peer.
-			Required if you have multiple peers on the same host
-			but different ports.
-			This name can be used in cache_peer_access and similar
-			directives to identify the peer.
+			Required if you have multiple cache_peers with the same hostname.
+			Defaults to cache_peer hostname when not explicitly specified.
+
+			Other directives (e.g., cache_peer_access), cache manager reports,
+			and cache.log messages use this name to refer to this cache_peer.
+
+			The cache_peer name value affects hashing-based peer selection
+			methods (e.g., carp and sourcehash).
+
 			Can be used by outgoing access controls through the
 			peername ACL type.
+
+			The name value preserves configured spelling, but name uniqueness
+			checks and name-based search are case-insensitive.
 
 	no-tproxy	Do not use the client-spoof TPROXY support when forwarding
 			requests to this peer. Use normal address selection instead.
@@ -3991,7 +4037,11 @@ DOC_START
 	about specific domains to the peer.
 
 	Usage:
-		 neighbor_type_domain neighbor parent|sibling domain domain ...
+		neighbor_type_domain peer-name parent|sibling domain...
+
+	For the required peer-name parameter, use either the value of the
+	cache_peer name=value parameter or, if name=value is missing, the
+	cache_peer hostname parameter.
 
 	For example:
 		cache_peer foo.example.com parent 3128 3130
@@ -4038,7 +4088,7 @@ DOC_START
 	* unfinished Happy Eyeballs connection attempts (prevented by setting
 	  happy_eyeballs_connect_limit to 0)
 
-	See also: forward_timeout and connect_retries.
+	See also: forward_timeout, connect_retries, and %request_attempts.
 DOC_END
 
 COMMENT_START
@@ -4749,6 +4799,20 @@ DOC_START
 			similar to the default access.log "current time" field
 			(%ts.%03tu).
 
+		busy_time	Time spent in transaction-related code (nanoseconds)
+			This cumulative measurement excludes periods of time when the
+			transaction was waiting (e.g., for a server or helper response)
+			while Squid worked on other transactions or was engaged in
+			transaction-unrelated activities (e.g., generating a cache index).
+			In other words, this measurement represents the total amount of
+			physical time when Squid was busy working on this transaction.
+
+			WARNING: This measurement relies on Squid transaction context
+			tracking features that currently have known context leak bugs and
+			coverage gaps. Until those features are fully implemented, logged
+			values may significantly understate or exaggerate actual times.
+			Do not use this measurement unless you know it works in your case.
+
 	Access Control related format codes:
 
 		et	Tag returned by external acl
@@ -4862,7 +4926,7 @@ DOC_START
 		[http::]<bs	Number of HTTP-equivalent message body bytes
 				received from the next hop, excluding chunked
 				transfer encoding and control messages.
-				Generated FTP/Gopher listings are treated as
+				Generated FTP listings are treated as
 				received bodies.
 
 	    TIMING
@@ -4879,6 +4943,16 @@ DOC_START
 
 		Ss	Squid request status (TCP_MISS etc)
 		Sh	Squid hierarchy status (DEFAULT_PARENT etc)
+
+		[http::]request_attempts	Number of request forwarding attempts
+
+			See forward_max_tries documentation that details what Squid counts
+			as a forwarding attempt. Pure cache hits log zero, but cache hits
+			that triggered HTTP cache revalidation log the number of attempts
+			made when sending an internal revalidation request. DNS, ICMP,
+			ICP, HTCP, ESI, ICAP, eCAP, helper, and other secondary requests
+			sent by Squid as a part of a master transaction do not increment
+			the counter logged for the received request.
 
 	SSL-related format codes:
 
@@ -5574,7 +5648,7 @@ NAME: cache_log_message
 TYPE: cache_log_message
 DEFAULT: none
 DEFAULT_DOC: Use debug_options.
-LOC: Config.debugMessages
+LOC: DebugMessagesConfig
 DOC_START
 	Configures logging of individual cache.log messages.
 
@@ -6384,9 +6458,9 @@ DOC_START
 	to be erroneously cached unless the application designer
 	has taken the appropriate actions.
 
-	'Percent' is a percentage of the objects age (time since last
-	modification age) an object without explicit expiry time
-	will be considered fresh.
+	'Percent' is used to compute the max-age value for responses
+	with a Last-Modified header and no Cache-Control:max-age nor Expires.
+	  Cache-Control:max-age = ( Date - Last-Modified ) * percent
 
 	'Max' is an upper limit on how long objects without an explicit
 	expiry time will be considered fresh. The value is also used
@@ -6476,7 +6550,6 @@ CONFIG_START
 # Add any of your own refresh_pattern entries above these.
 #
 refresh_pattern ^ftp:		1440	20%	10080
-refresh_pattern ^gopher:	1440	0%	1440
 refresh_pattern -i (/cgi-bin/|\?) 0	0%	0
 refresh_pattern .		0	20%	4320
 CONFIG_END
@@ -7447,7 +7520,10 @@ TYPE: onoff
 DEFAULT: off
 LOC: Config.onoff.httpd_suppress_version_string
 DOC_START
-	Suppress Squid version string info in HTTP headers and HTML error pages.
+	Do not send Squid version string in HTTP metadata and generated content
+	such as HTML error pages. Squid version string is still present in certain
+	SNMP responses, cachemgr.cgi output, squidclient User-Agent request header
+	field, various console output, and cache.log.
 DOC_END
 
 NAME: visible_hostname
@@ -7492,73 +7568,6 @@ DOC_START
 
 	For a traditional octal representation of umasks, start
         your value with 0.
-DOC_END
-
-COMMENT_START
- OPTIONS FOR THE CACHE REGISTRATION SERVICE
- -----------------------------------------------------------------------------
-
-	This section contains parameters for the (optional) cache
-	announcement service.  This service is provided to help
-	cache administrators locate one another in order to join or
-	create cache hierarchies.
-
-	An 'announcement' message is sent (via UDP) to the registration
-	service by Squid.  By default, the announcement message is NOT
-	SENT unless you enable it with 'announce_period' below.
-
-	The announcement message includes your hostname, plus the
-	following information from this configuration file:
-
-		http_port
-		icp_port
-		cache_mgr
-
-	All current information is processed regularly and made
-	available on the Web at http://www.ircache.net/Cache/Tracker/.
-COMMENT_END
-
-NAME: announce_period
-TYPE: time_t
-LOC: Config.Announce.period
-DEFAULT: 0
-DEFAULT_DOC: Announcement messages disabled.
-DOC_START
-	This is how frequently to send cache announcements.
-
-	To enable announcing your cache, just set an announce period.
-
-	Example:
-		announce_period 1 day
-DOC_END
-
-NAME: announce_host
-TYPE: string
-DEFAULT: tracker.ircache.net
-LOC: Config.Announce.host
-DOC_START
-	Set the hostname where announce registration messages will be sent.
-
-	See also announce_port and announce_file
-DOC_END
-
-NAME: announce_file
-TYPE: string
-DEFAULT: none
-LOC: Config.Announce.file
-DOC_START
-	The contents of this file will be included in the announce
-	registration messages.
-DOC_END
-
-NAME: announce_port
-TYPE: u_short
-DEFAULT: 3131
-LOC: Config.Announce.port
-DOC_START
-	Set the port where announce registration messages will be sent.
-
-	See also announce_host and announce_file
 DOC_END
 
 COMMENT_START
@@ -9215,7 +9224,7 @@ DOC_START
 	client IP can use. Any more than this and Squid will begin to drop
 	new connections from the client until it closes some links.
 
-	Note that this is a global limit. It affects all HTTP, HTCP, Gopher and FTP
+	Note that this is a global limit. It affects all HTTP, HTCP, and FTP
 	connections from the client. For finer control use the ACL access controls.
 
 	Requires client_db to be enabled (the default).
@@ -10599,8 +10608,6 @@ DOC_START
 	processes, these sleep delays will add up and your
 	Squid will not service requests for some amount of time
 	until all the child processes have been started.
-	On Windows value less then 1000 (1 milliseconds) are
-	rounded to 1000.
 DOC_END
 
 NAME: windows_ipaddrchangemonitor

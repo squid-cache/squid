@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 55    HTTP Header */
 
 #include "squid.h"
+#include "base/Assure.h"
 #include "base/CharacterSet.h"
 #include "base/EnumIterator.h"
 #include "base/Raw.h"
@@ -75,17 +76,18 @@ static HttpHeaderMask ReplyHeadersMask;     /* set run-time using ReplyHeaders *
 
 /* header accounting */
 // NP: keep in sync with enum http_hdr_owner_type
-static std::array<HttpHeaderStat, hoEnd> HttpHeaderStats = {
-    HttpHeaderStat(/*hoNone*/ "all", nullptr),
+static std::array<HttpHeaderStat, hoEnd> HttpHeaderStats = {{
+        HttpHeaderStat(/*hoNone*/ "all", nullptr),
 #if USE_HTCP
-    HttpHeaderStat(/*hoHtcpReply*/ "HTCP reply", &ReplyHeadersMask),
+        HttpHeaderStat(/*hoHtcpReply*/ "HTCP reply", &ReplyHeadersMask),
 #endif
-    HttpHeaderStat(/*hoRequest*/ "request", &RequestHeadersMask),
-    HttpHeaderStat(/*hoReply*/ "reply", &ReplyHeadersMask)
+        HttpHeaderStat(/*hoRequest*/ "request", &RequestHeadersMask),
+        HttpHeaderStat(/*hoReply*/ "reply", &ReplyHeadersMask)
 #if USE_OPENSSL
-    , HttpHeaderStat(/*hoErrorDetail*/ "error detail templates", nullptr)
+        , HttpHeaderStat(/*hoErrorDetail*/ "error detail templates", nullptr)
 #endif
-    /* hoEnd */
+        /* hoEnd */
+    }
 };
 
 static int HeaderEntryParsedCount = 0;
@@ -248,13 +250,6 @@ HttpHeader::append(const HttpHeader * src)
 bool
 HttpHeader::needUpdate(HttpHeader const *fresh) const
 {
-    // our 1xx Warnings must be removed
-    for (const auto e: entries) {
-        // TODO: Move into HttpHeaderEntry::is1xxWarning() before official commit.
-        if (e && e->id == Http::HdrType::WARNING && (e->getInt()/100 == 1))
-            return true;
-    }
-
     for (const auto e: fresh->entries) {
         if (!e || skipUpdateHeader(e->id))
             continue;
@@ -266,25 +261,10 @@ HttpHeader::needUpdate(HttpHeader const *fresh) const
     return false;
 }
 
-void
-HttpHeader::updateWarnings()
-{
-    int count = 0;
-    HttpHeaderPos pos = HttpHeaderInitPos;
-
-    // RFC 7234, section 4.3.4: delete 1xx warnings and retain 2xx warnings
-    while (HttpHeaderEntry *e = getEntry(&pos)) {
-        if (e->id == Http::HdrType::WARNING && (e->getInt()/100 == 1) )
-            delAt(pos, count);
-    }
-}
-
 bool
 HttpHeader::skipUpdateHeader(const Http::HdrType id) const
 {
     return
-        // RFC 7234, section 4.3.4: use header fields other than Warning
-        (id == Http::HdrType::WARNING) ||
         // TODO: Consider updating Vary headers after comparing the magnitude of
         // the required changes (and/or cache losses) with compliance gains.
         (id == Http::HdrType::VARY);
@@ -295,8 +275,6 @@ HttpHeader::update(HttpHeader const *fresh)
 {
     assert(fresh);
     assert(this != fresh);
-
-    updateWarnings();
 
     const HttpHeaderEntry *e;
     HttpHeaderPos pos = HttpHeaderInitPos;
@@ -1014,10 +992,7 @@ HttpHeader::addVia(const AnyP::ProtocolVersion &ver, const HttpHeader *from)
         if (!strVia.isEmpty())
             strVia.append(", ", 2);
         strVia.append(buf);
-        // XXX: putStr() still suffers from String size limits
-        Must(strVia.length() < String::SizeMaxXXX());
-        delById(Http::HdrType::VIA);
-        putStr(Http::HdrType::VIA, strVia.c_str());
+        updateOrAddStr(Http::HdrType::VIA, strVia);
     }
 }
 
@@ -1128,14 +1103,6 @@ HttpHeader::putSc(HttpHdrSc *sc)
     mb.clean();
 }
 
-void
-HttpHeader::putWarning(const int code, const char *const text)
-{
-    char buf[512];
-    snprintf(buf, sizeof(buf), "%i %s \"%s\"", code, visible_appname_string, text);
-    putStr(Http::HdrType::WARNING, buf);
-}
-
 /* add extension header (these fields are not parsed/analyzed/joined, etc.) */
 void
 HttpHeader::putExt(const char *name, const char *value)
@@ -1143,6 +1110,43 @@ HttpHeader::putExt(const char *name, const char *value)
     assert(name && value);
     debugs(55, 8, this << " adds ext entry " << name << " : " << value);
     addEntry(new HttpHeaderEntry(Http::HdrType::OTHER, SBuf(name), value));
+}
+
+void
+HttpHeader::updateOrAddStr(const Http::HdrType id, const SBuf &newValue)
+{
+    assert(any_registered_header(id));
+    assert(Http::HeaderLookupTable.lookup(id).type == Http::HdrFieldType::ftStr);
+
+    // XXX: HttpHeaderEntry::value suffers from String size limits
+    Assure(newValue.length() < String::SizeMaxXXX());
+
+    if (!CBIT_TEST(mask, id)) {
+        auto newValueCopy = newValue; // until HttpHeaderEntry::value becomes SBuf
+        addEntry(new HttpHeaderEntry(id, SBuf(), newValueCopy.c_str()));
+        return;
+    }
+
+    auto foundSameName = false;
+    for (auto &e: entries) {
+        if (!e || e->id != id)
+            continue;
+
+        if (foundSameName) {
+            // get rid of this repeated same-name entry
+            delete e;
+            e = nullptr;
+            continue;
+        }
+
+        if (newValue.cmp(e->value.termedBuf()) != 0)
+            e->value.assign(newValue.rawContent(), newValue.plength());
+
+        foundSameName = true;
+        // continue to delete any repeated same-name entries
+    }
+    assert(foundSameName);
+    debugs(55, 5, "synced: " << Http::HeaderLookupTable.lookup(id).name << ": " << newValue);
 }
 
 int

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -164,15 +164,6 @@ Transients::get(const cache_key *key)
         return nullptr;
     }
 
-    // store hadWriter before checking ENTRY_REQUIRES_COLLAPSING to avoid racing
-    // the writer that clears that flag and then leaves
-    const auto hadWriter = map->peekAtWriter(index);
-    if (!hadWriter && EBIT_TEST(anchor->basics.flags, ENTRY_REQUIRES_COLLAPSING)) {
-        debugs(20, 3, "not joining abandoned entry " << index);
-        map->closeForReadingAndFreeIdle(index);
-        return nullptr;
-    }
-
     StoreEntry *e = new StoreEntry();
     e->createMemObject();
     anchorEntry(*e, index, *anchor);
@@ -195,20 +186,6 @@ Transients::findCollapsed(const sfileno index)
 
     debugs(20, 3, "no entry at " << index << " in " << MapLabel);
     return nullptr;
-}
-
-void
-Transients::clearCollapsingRequirement(const StoreEntry &e)
-{
-    assert(map);
-    assert(e.hasTransients());
-    assert(isWriter(e));
-    const auto idx = e.mem_obj->xitTable.index;
-    auto &anchor = map->writeableEntry(idx);
-    if (EBIT_TEST(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING)) {
-        EBIT_CLR(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING);
-        CollapsedForwarding::Broadcast(e);
-    }
 }
 
 void
@@ -291,11 +268,7 @@ Transients::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapA
     xitTable.index = index;
     xitTable.io = Store::ioReading;
 
-    const auto hadWriter = hasWriter(e); // before computing collapsingRequired
     anchor.exportInto(e);
-    const bool collapsingRequired = EBIT_TEST(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING);
-    assert(!collapsingRequired || hadWriter);
-    e.setCollapsingRequirement(collapsingRequired);
 }
 
 bool
@@ -320,18 +293,19 @@ Transients::status(const StoreEntry &entry, Transients::EntryStatus &entryStatus
     const auto idx = entry.mem_obj->xitTable.index;
     const auto &anchor = isWriter(entry) ?
                          map->writeableEntry(idx) : map->readableEntry(idx);
-    entryStatus.abortedByWriter = anchor.writerHalted;
+    entryStatus.hasWriter = anchor.writing();
     entryStatus.waitingToBeFreed = anchor.waitingToBeFreed;
-    entryStatus.collapsed = EBIT_TEST(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING);
 }
 
 void
 Transients::completeWriting(const StoreEntry &e)
 {
+    debugs(20, 5, e);
     assert(e.hasTransients());
     assert(isWriter(e));
     map->switchWritingToReading(e.mem_obj->xitTable.index);
     e.mem_obj->xitTable.io = Store::ioReading;
+    CollapsedForwarding::Broadcast(e);
 }
 
 int
@@ -377,7 +351,12 @@ Transients::disconnect(StoreEntry &entry)
         auto &xitTable = entry.mem_obj->xitTable;
         assert(map);
         if (isWriter(entry)) {
-            map->abortWriting(xitTable.index);
+            // completeWriting() was not called, so there could be an active
+            // Store writer out there, but we should not abortWriting() here
+            // because another writer may have succeeded, making readers happy.
+            // If none succeeded, the readers will notice the lack of writers.
+            map->closeForWriting(xitTable.index);
+            CollapsedForwarding::Broadcast(entry);
         } else {
             assert(isReader(entry));
             map->closeForReadingAndFreeIdle(xitTable.index);
@@ -420,11 +399,11 @@ class TransientsRr: public Ipc::Mem::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void useConfig();
-    virtual ~TransientsRr();
+    void useConfig() override;
+    ~TransientsRr() override;
 
 protected:
-    virtual void create();
+    void create() override;
 
 private:
     TransientsMap::Owner *mapOwner = nullptr;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -47,26 +47,6 @@ void Fs::Init()
 
 #if HAVE_FS_ROCK
     RockInstance = new Rock::StoreFileSystem();
-#endif
-
-}
-
-void Fs::Clean()
-{
-#if HAVE_FS_UFS
-    delete UfsInstance;
-#endif
-
-#if HAVE_FS_AUFS
-    delete AufsInstance;
-#endif
-
-#if HAVE_FS_DISKD
-    delete DiskdInstance;
-#endif
-
-#if HAVE_FS_ROCK
-    delete RockInstance;
 #endif
 
 }

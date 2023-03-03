@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,7 +27,7 @@ public:
     ICP3State(icp_common_t &aHeader, HttpRequest *aRequest) :
         ICPState(aHeader, aRequest) {}
 
-    ~ICP3State() = default;
+    ~ICP3State() override = default;
 };
 
 /// \ingroup ServerProtocolICPInternal3

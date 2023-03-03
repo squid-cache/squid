@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,19 +20,19 @@ class ACLUserData : public ACLData<char const *>
     MEMPROXY_CLASS(ACLUserData);
 
 public:
-    virtual ~ACLUserData() {}
+    ~ACLUserData() override {}
     ACLUserData();
-    bool match(char const *user);
-    virtual SBufList dump() const;
-    virtual void parse();
-    bool empty() const;
+    bool match(char const *user) override;
+    SBufList dump() const override;
+    void parse() override;
+    bool empty() const override;
 
 private:
     /// whether parse() is called in a case insensitive context
     static Acl::BooleanOptionValue CaseInsensitive_;
 
     /* ACLData API */
-    virtual const Acl::Options &lineOptions();
+    const Acl::Options &lineOptions() override;
 
     typedef std::set<SBuf,bool(*)(const SBuf&, const SBuf&)> UserDataNames_t;
     UserDataNames_t userDataNames;

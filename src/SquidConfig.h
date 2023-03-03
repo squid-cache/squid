@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -229,13 +229,6 @@ public:
     char *errHtmlText;
 
     struct {
-        char *host;
-        char *file;
-        time_t period;
-        unsigned short port;
-    } Announce;
-
-    struct {
 
         Ip::Address udp_incoming;
         Ip::Address udp_outgoing;
@@ -289,7 +282,6 @@ public:
         int buffered_logs;
         int common_log;
         int log_mime_hdrs;
-        int announce;
         int mem_pools;
         int test_reachability;
         int half_closed_clients;
@@ -560,8 +552,6 @@ public:
         int connect_gap;
         int connect_timeout;
     } happyEyeballs;
-
-    DebugMessages *debugMessages; ///< cache_log_message
 };
 
 extern SquidConfig Config;

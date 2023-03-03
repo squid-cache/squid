@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,23 +20,23 @@ public:
     bool statsCalled;
 
     /* Store::Disk API */
-    virtual uint64_t maxSize() const override;
-    virtual uint64_t currentSize() const override;
-    virtual uint64_t currentCount() const override;
-    virtual void stat(StoreEntry &) const override;
-    virtual void finalizeSwapoutSuccess(const StoreEntry &) override {}
-    virtual void finalizeSwapoutFailure(StoreEntry &) override {}
-    virtual void reconfigure() override;
-    virtual void init() override;
-    virtual bool unlinkdUseful() const override;
-    virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const override;
-    virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) override;
-    virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) override;
-    virtual void parse(int, char*) override;
-    virtual void evictCached(StoreEntry &) override {}
-    virtual void evictIfFound(const cache_key *) override {}
-    virtual bool hasReadableEntry(const StoreEntry &) const override { return false; }
-    virtual bool smpAware() const override { return false; }
+    uint64_t maxSize() const override;
+    uint64_t currentSize() const override;
+    uint64_t currentCount() const override;
+    void stat(StoreEntry &) const override;
+    void finalizeSwapoutSuccess(const StoreEntry &) override {}
+    void finalizeSwapoutFailure(StoreEntry &) override {}
+    void reconfigure() override;
+    void init() override;
+    bool unlinkdUseful() const override;
+    bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const override;
+    StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STIOCB *, void *) override;
+    StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STIOCB *, void *) override;
+    void parse(int, char*) override;
+    void evictCached(StoreEntry &) override {}
+    void evictIfFound(const cache_key *) override {}
+    bool hasReadableEntry(const StoreEntry &) const override { return false; }
+    bool smpAware() const override { return false; }
 };
 
 typedef RefCount<TestSwapDir> TestSwapDirPointer;

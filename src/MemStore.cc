@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -38,8 +38,8 @@ public:
     ShmWriter(MemStore &aStore, StoreEntry *anEntry, const sfileno aFileNo, Ipc::StoreMapSliceId aFirstSlice = -1);
 
     /* Packable API */
-    virtual void append(const char *aBuf, int aSize) override;
-    virtual void vappendf(const char *fmt, va_list ap) override;
+    void append(const char *aBuf, int aSize) override;
+    void vappendf(const char *fmt, va_list ap) override;
 
 public:
     StoreEntry *entry; ///< the entry being updated
@@ -390,8 +390,11 @@ MemStore::updateHeadersOrThrow(Ipc::StoreMapUpdate &update)
 }
 
 bool
-MemStore::anchorToCache(StoreEntry &entry, bool &inSync)
+MemStore::anchorToCache(StoreEntry &entry)
 {
+    Assure(!entry.hasMemStore());
+    Assure(entry.mem().memCache.io != MemObject::ioDone);
+
     if (!map)
         return false;
 
@@ -402,8 +405,9 @@ MemStore::anchorToCache(StoreEntry &entry, bool &inSync)
         return false;
 
     anchorEntry(entry, index, *slot);
-    inSync = updateAnchoredWith(entry, index, *slot);
-    return true; // even if inSync is false
+    if (!updateAnchoredWith(entry, index, *slot))
+        throw TextException("updateAnchoredWith() failure", Here());
+    return true;
 }
 
 bool
@@ -513,6 +517,12 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
         return true;
     }
 
+    if (anchor.writerHalted) {
+        debugs(20, 5, "mem-loaded aborted " << e.mem_obj->endOffset() << '/' <<
+               anchor.basics.swap_file_sz << " bytes of " << e);
+        return false;
+    }
+
     debugs(20, 5, "mem-loaded all " << e.mem_obj->endOffset() << '/' <<
            anchor.basics.swap_file_sz << " bytes of " << e);
 
@@ -578,6 +588,19 @@ MemStore::shouldCache(StoreEntry &e) const
 
     if (e.mem_obj && e.mem_obj->memCache.offset > 0) {
         debugs(20, 5, "already written to mem-cache: " << e);
+        return false;
+    }
+
+    if (shutting_down) {
+        debugs(20, 5, "avoid heavy optional work during shutdown: " << e);
+        return false;
+    }
+
+    // To avoid SMP workers releasing each other caching attempts, restrict disk
+    // caching to StoreEntry publisher. This check goes before memoryCachable()
+    // that may incorrectly release() publisher's entry via checkCachable().
+    if (Store::Root().transientsReader(e)) {
+        debugs(20, 5, "yield to entry publisher: " << e);
         return false;
     }
 
@@ -873,8 +896,8 @@ MemStore::completeWriting(StoreEntry &e)
     e.mem_obj->memCache.io = MemObject::ioDone;
     map->closeForWriting(index);
 
-    CollapsedForwarding::Broadcast(e); // before we close our transient entry!
-    Store::Root().transientsCompleteWriting(e);
+    CollapsedForwarding::Broadcast(e);
+    e.storeWriterDone();
 }
 
 void
@@ -913,7 +936,8 @@ MemStore::disconnect(StoreEntry &e)
             map->abortWriting(mem_obj.memCache.index);
             mem_obj.memCache.index = -1;
             mem_obj.memCache.io = MemObject::ioDone;
-            Store::Root().stopSharing(e); // broadcasts after the change
+            CollapsedForwarding::Broadcast(e);
+            e.storeWriterDone();
         } else {
             assert(mem_obj.memCache.io == MemObject::ioReading);
             map->closeForReading(mem_obj.memCache.index);
@@ -949,14 +973,14 @@ class MemStoreRr: public Ipc::Mem::RegisteredRunner
 public:
     /* RegisteredRunner API */
     MemStoreRr(): spaceOwner(nullptr), mapOwner(nullptr), extrasOwner(nullptr) {}
-    virtual void finalizeConfig();
-    virtual void claimMemoryNeeds();
-    virtual void useConfig();
-    virtual ~MemStoreRr();
+    void finalizeConfig() override;
+    void claimMemoryNeeds() override;
+    void useConfig() override;
+    ~MemStoreRr() override;
 
 protected:
     /* Ipc::Mem::RegisteredRunner API */
-    virtual void create();
+    void create() override;
 
 private:
     Ipc::Mem::Owner<Ipc::Mem::PageStack> *spaceOwner; ///< free slices Owner

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,9 +24,9 @@
 
 #include <stdexcept>
 
-#define TESTDIR "testUfs_Store"
+#define TESTDIR "TestUfs_Store"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testUfs );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestUfs );
 
 typedef RefCount<Fs::Ufs::UFSSwapDir> MySwapDirPointer;
 extern REMOVALPOLICYCREATE createRemovalPolicy_lru; /* XXX fails with --enable-removal-policies=heap */
@@ -48,7 +48,7 @@ searchCallback(void *)
 }
 
 void
-testUfs::commonInit()
+TestUfs::commonInit()
 {
     static bool inited = false;
 
@@ -81,7 +81,7 @@ testUfs::commonInit()
 }
 
 void
-testUfs::testUfsSearch()
+TestUfs::testUfsSearch()
 {
     /* test sequence
      * make a valid working ufs swapdir
@@ -145,7 +145,7 @@ testUfs::testUfsSearch()
     {
         /* Create "vary" base object */
         RequestFlags flags;
-        flags.cachable = true;
+        flags.cachable.support();
         StoreEntry *pe = storeCreateEntry("dummy url", "dummy log url", flags, Http::METHOD_GET);
         auto &reply = pe->mem().adjustableBaseReply();
         reply.setHeaders(Http::scOkay, "dummy test object", "x-squid-internal/test", 0, -1, squid_curtime + 100000);
@@ -160,7 +160,7 @@ testUfs::testUfsSearch()
         pe->swapOut();
         CPPUNIT_ASSERT_EQUAL(0, pe->swap_dirn);
         CPPUNIT_ASSERT_EQUAL(0, pe->swap_filen);
-        pe->unlock("testUfs::testUfsSearch vary");
+        pe->unlock("TestUfs::testUfsSearch vary");
     }
 
     storeDirWriteCleanLogs(0);
@@ -213,7 +213,7 @@ testUfs::testUfsSearch()
  * supplied on the configuration line.
  */
 void
-testUfs::testUfsDefaultEngine()
+TestUfs::testUfsDefaultEngine()
 {
     /* boring common test boilerplate */
     if (0 > system ("rm -rf " TESTDIR))

@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -16,8 +16,6 @@ include $(top_srcdir)/src/Common.am
 
 noinst_LTLIBRARIES = libcompatsquid.la
 libcompatsquid_la_SOURCES = \
-	GnuRegex.c \
-	GnuRegex.h \
 	assert.cc \
 	assert.h \
 	cmsg.h \
@@ -40,6 +38,7 @@ libcompatsquid_la_SOURCES = \
 	inet_pton.cc \
 	inet_pton.h \
 	initgroups.h \
+	krb5.h \
 	memrchr.cc \
 	memrchr.h \
 	mswindows.cc \

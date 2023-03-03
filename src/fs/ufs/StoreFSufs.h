@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,15 +36,11 @@ class StoreFSufs : public StoreFileSystem
 public:
     static StoreFileSystem &GetInstance();
     StoreFSufs(char const *DefaultModuleType, char const *label);
-    virtual ~StoreFSufs() {}
+    ~StoreFSufs() override {}
 
-    virtual char const *type() const;
-    virtual SwapDir *createSwapDir();
-    virtual void done();
-    virtual void setup();
-    /** Not implemented */
-    StoreFSufs (StoreFSufs const &);
-    StoreFSufs &operator=(StoreFSufs const &);
+    /* StoreFileSystem API */
+    const char *type() const override;
+    SwapDir *createSwapDir() override;
 
 protected:
     DiskIOModule *IO;
@@ -71,21 +67,6 @@ StoreFSufs<C>::createSwapDir()
 {
     C *result = new C(type(), moduleName);
     return result;
-}
-
-template <class C>
-void
-StoreFSufs<C>::done()
-{
-    initialised = false;
-}
-
-template <class C>
-void
-StoreFSufs<C>::setup()
-{
-    assert(!initialised);
-    initialised = true;
 }
 
 } /* namespace Ufs */

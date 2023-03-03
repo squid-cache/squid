@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -14,8 +14,7 @@ ext_edirectory_userip_acl_SOURCES = \
 
 ext_edirectory_userip_acl_LDADD = \
 	$(COMPAT_LIB) \
-	$(LDAPLIB) \
-	$(LBERLIB) \
+	$(LIBLDAP_LIBS) \
 	$(XTRA_LIBS)
 
 man_MANS = ext_edirectory_userip_acl.8

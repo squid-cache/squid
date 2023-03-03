@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -101,7 +101,6 @@ Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
         err_type errPage = ERR_INVALID_REQ;
         switch (parser_->parseStatusCode) {
         case Http::scRequestHeaderFieldsTooLarge:
-        // fall through to next case
         case Http::scUriTooLong:
             errPage = ERR_TOO_BIG;
             break;
@@ -185,11 +184,8 @@ Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
     // some code still uses Host directly so normalize it using the previously
     // sanitized URL authority value.
     // For now preserve the case where Host is completely absent. That matters.
-    if (const auto x = request->header.delById(Http::HOST)) {
-        debugs(33, 5, "normalize " << x << " Host header using " << request->url.authority());
-        SBuf tmp(request->url.authority());
-        request->header.putStr(Http::HOST, tmp.c_str());
-    }
+    if (request->header.has(Http::HdrType::HOST))
+        request->header.updateOrAddStr(Http::HdrType::HOST, request->url.authority());
 
     // TODO: We fill request notes here until we find a way to verify whether
     // no ACL checking is performed before ClientHttpRequest::doCallouts().

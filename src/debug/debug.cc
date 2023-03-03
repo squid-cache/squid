@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,6 @@
 /* DEBUG: section 00    Debug Routines */
 
 #include "squid.h"
-#include "base/Optional.h"
 #include "base/TextException.h"
 #include "debug/Stream.h"
 #include "fd.h"
@@ -21,6 +20,7 @@
 #include <deque>
 #include <functional>
 #include <memory>
+#include <optional>
 
 char *Debug::debugOptions = nullptr;
 int Debug::override_X = 0;
@@ -40,7 +40,7 @@ static DebugModule *Module_ = nullptr;
 /// Explicitly configured maximum level for debugs() messages written to stderr.
 /// debugs() messages with this (or lower) level will be written to stderr (and
 /// possibly other channels).
-static Optional<int> ExplicitStderrLevel;
+static std::optional<int> ExplicitStderrLevel;
 
 /// ExplicitStderrLevel preference or default: Just like with
 /// ExplicitStderrLevel, debugs() messages with this (or lower) level will be
@@ -56,7 +56,7 @@ static constexpr int EarlyMessagesLevel = DBG_IMPORTANT;
 /// pre-formatted name of the current process for debugs() messages (or empty)
 static std::string ProcessLabel;
 
-static const char *debugLogTime(time_t t);
+static const char *debugLogTime(const timeval &);
 
 #if HAVE_SYSLOG
 #ifdef LOG_LOCAL4
@@ -109,7 +109,7 @@ public:
     DebugMessageHeader(const DebugRecordCount aRecordNumber, const Debug::Context &);
 
     DebugRecordCount recordNumber; ///< LogMessage() calls before this message
-    time_t timestamp; ///< approximate debugs() call time
+    struct timeval timestamp; ///< approximate debugs() call time
     int section; ///< debugs() section
     int level; ///< debugs() level
     bool forceAlert; ///< debugs() forceAlert flag
@@ -241,8 +241,8 @@ public:
 
 protected:
     /* DebugChannel API */
-    virtual bool shouldWrite(const DebugMessageHeader &) const final;
-    virtual void write(const DebugMessageHeader &, const CompiledDebugMessageBody &) final;
+    bool shouldWrite(const DebugMessageHeader &) const final;
+    void write(const DebugMessageHeader &, const CompiledDebugMessageBody &) final;
 };
 
 /// DebugChannel managing messages destined for "standard error stream" (stderr)
@@ -262,8 +262,8 @@ public:
 
 protected:
     /* DebugChannel API */
-    virtual bool shouldWrite(const DebugMessageHeader &) const final;
-    virtual void write(const DebugMessageHeader &, const CompiledDebugMessageBody &) final;
+    bool shouldWrite(const DebugMessageHeader &) const final;
+    void write(const DebugMessageHeader &, const CompiledDebugMessageBody &) final;
 
 private:
     /// whether we are the last resort for logging debugs() messages
@@ -280,8 +280,8 @@ public:
 
 protected:
     /* DebugChannel API */
-    virtual bool shouldWrite(const DebugMessageHeader &) const final;
-    virtual void write(const DebugMessageHeader &, const CompiledDebugMessageBody &) final;
+    bool shouldWrite(const DebugMessageHeader &) const final;
+    void write(const DebugMessageHeader &, const CompiledDebugMessageBody &) final;
 
 private:
     bool opened = false; ///< whether openlog() was called
@@ -365,7 +365,7 @@ ResetSections(const int level)
 
 /// optimization: formats ProcessLabel once for frequent debugs() reuse
 static void
-LabelThisProcess(const char * const name, const Optional<int> id = Optional<int>())
+LabelThisProcess(const char * const name, const std::optional<int> id = std::optional<int>())
 {
     assert(name);
     assert(strlen(name));
@@ -407,7 +407,7 @@ Debug::NameThisKid(const int kidIdentifier)
     // to reduce noise and for backward compatibility, do not label kid messages
     // in non-SMP mode
     if (kidIdentifier)
-        LabelThisProcess("kid", Optional<int>(kidIdentifier));
+        LabelThisProcess("kid", std::optional<int>(kidIdentifier));
     else
         ProcessLabel.clear(); // probably already empty
 }
@@ -731,11 +731,12 @@ Debug::StderrEnabled()
 
 DebugMessageHeader::DebugMessageHeader(const DebugRecordCount aRecordNumber, const Debug::Context &context):
     recordNumber(aRecordNumber),
-    timestamp(getCurrentTime()),
     section(context.section),
     level(context.level),
     forceAlert(context.forceAlert)
 {
+    (void)getCurrentTime(); // update current_time
+    timestamp = current_time;
 }
 
 /* CompiledDebugMessage */
@@ -1219,9 +1220,8 @@ _db_rotate_log(void)
 }
 
 static const char *
-debugLogTime(const time_t t)
+debugLogTime(const timeval &t)
 {
-    struct tm *tm;
     static char buf[128]; // arbitrary size, big enough for the below timestamp strings.
     static time_t last_t = 0;
 
@@ -1229,17 +1229,18 @@ debugLogTime(const time_t t)
         // 4 bytes smaller than buf to ensure .NNN catenation by snprintf()
         // is safe and works even if strftime() fills its buffer.
         char buf2[sizeof(buf)-4];
-        tm = localtime(&t);
+        const auto tm = localtime(&t.tv_sec);
         strftime(buf2, sizeof(buf2), "%Y/%m/%d %H:%M:%S", tm);
         buf2[sizeof(buf2)-1] = '\0';
-        const int sz = snprintf(buf, sizeof(buf), "%s.%03d", buf2, static_cast<int>(current_time.tv_usec / 1000));
+        const auto sz = snprintf(buf, sizeof(buf), "%s.%03d", buf2, static_cast<int>(t.tv_usec / 1000));
         assert(0 < sz && sz < static_cast<int>(sizeof(buf)));
-        last_t = t;
-    } else if (t != last_t) {
-        tm = localtime(&t);
+        // force buf reset for subsequent level-0/1 messages that should have no milliseconds
+        last_t = 0;
+    } else if (t.tv_sec != last_t) {
+        const auto tm = localtime(&t.tv_sec);
         const int sz = strftime(buf, sizeof(buf), "%Y/%m/%d %H:%M:%S", tm);
         assert(0 < sz && sz <= static_cast<int>(sizeof(buf)));
-        last_t = t;
+        last_t = t.tv_sec;
     }
 
     buf[sizeof(buf)-1] = '\0';

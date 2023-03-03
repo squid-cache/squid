@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 05    Socket Functions */
 
 #include "squid.h"
+#include "base/AsyncFunCalls.h"
 #include "ClientInfo.h"
 #include "comm/AcceptLimiter.h"
 #include "comm/comm_internal.h"
@@ -57,6 +58,7 @@
  */
 
 static IOCB commHalfClosedReader;
+static int comm_openex(int sock_type, int proto, Ip::Address &, int flags, const char *note);
 static void comm_init_opened(const Comm::ConnectionPointer &conn, const char *note, struct addrinfo *AI);
 static int comm_apply_flags(int new_socket, Ip::Address &addr, int flags, struct addrinfo *AI);
 
@@ -74,6 +76,7 @@ static EVH commHalfClosedCheck;
 static void commPlanHalfClosedCheck();
 
 static Comm::Flag commBind(int s, struct addrinfo &);
+static void commSetBindAddressNoPort(int);
 static void commSetReuseAddr(int);
 static void commSetNoLinger(int);
 #ifdef TCP_NODELAY
@@ -200,6 +203,22 @@ comm_local_port(int fd)
     return F->local_addr.port();
 }
 
+/// sets the IP_BIND_ADDRESS_NO_PORT socket option to optimize ephemeral port
+/// reuse by outgoing TCP connections that must bind(2) to a source IP address
+static void
+commSetBindAddressNoPort(const int fd)
+{
+#if defined(IP_BIND_ADDRESS_NO_PORT)
+    int flag = 1;
+    if (setsockopt(fd, IPPROTO_IP, IP_BIND_ADDRESS_NO_PORT, reinterpret_cast<char*>(&flag), sizeof(flag)) < 0) {
+        const auto savedErrno = errno;
+        debugs(50, DBG_IMPORTANT, "ERROR: setsockopt(IP_BIND_ADDRESS_NO_PORT) failure: " << xstrerr(savedErrno));
+    }
+#else
+    (void)fd;
+#endif
+}
+
 static Comm::Flag
 commBind(int s, struct addrinfo &inaddr)
 {
@@ -226,6 +245,10 @@ comm_open(int sock_type,
           int flags,
           const char *note)
 {
+    // assume zero-port callers do not need to know the assigned port right away
+    if (sock_type == SOCK_STREAM && addr.port() == 0 && ((flags & COMM_DOBIND) || !addr.isAnyAddr()))
+        flags |= COMM_DOBIND_PORT_LATER;
+
     return comm_openex(sock_type, proto, addr, flags, note);
 }
 
@@ -307,6 +330,7 @@ comm_set_transparent(int fd)
 
 #else
     debugs(50, DBG_CRITICAL, "WARNING: comm_open: setsockopt(TPROXY) not supported on this platform");
+    (void)fd;
 #endif /* sockopt */
 
 #if defined(soLevel) && defined(soFlag)
@@ -327,7 +351,7 @@ comm_set_transparent(int fd)
  * Create a socket. Default is blocking, stream (TCP) socket.  IO_TYPE
  * is OR of flags specified in defines.h:COMM_*
  */
-int
+static int
 comm_openex(int sock_type,
             int proto,
             Ip::Address &addr,
@@ -482,6 +506,10 @@ comm_apply_flags(int new_socket,
             }
         }
 #endif
+
+        if ((flags & COMM_DOBIND_PORT_LATER))
+            commSetBindAddressNoPort(new_socket);
+
         if (commBind(new_socket, *AI) != Comm::OK) {
             comm_close(new_socket);
             return -1;
@@ -779,19 +807,19 @@ old_comm_reset_close(int fd)
 }
 
 static void
-commStartTlsClose(const FdeCbParams &params)
+commStartTlsClose(const int fd)
 {
-    Security::SessionSendGoodbye(fd_table[params.fd].ssl);
+    Security::SessionSendGoodbye(fd_table[fd].ssl);
 }
 
 static void
-comm_close_complete(const FdeCbParams &params)
+comm_close_complete(const int fd)
 {
-    fde *F = &fd_table[params.fd];
+    auto F = &fd_table[fd];
     F->ssl.reset();
     F->dynamicTlsContext.reset();
-    fd_close(params.fd);        /* update fdstat */
-    close(params.fd);
+    fd_close(fd); /* update fdstat */
+    close(fd);
 
     ++ statCounter.syscalls.sock.closes;
 
@@ -843,10 +871,8 @@ _comm_close(int fd, char const *file, int line)
     // allowing individual advanced callbacks to overwrite it.
 
     if (F->ssl) {
-        AsyncCall::Pointer startCall=commCbCall(5,4, "commStartTlsClose",
-                                                FdeCbPtrFun(commStartTlsClose, nullptr));
-        FdeCbParams &startParams = GetCommParams<FdeCbParams>(startCall);
-        startParams.fd = fd;
+        const auto startCall = asyncCall(5, 4, "commStartTlsClose",
+                                         callDialer(commStartTlsClose, fd));
         ScheduleCallHere(startCall);
     }
 
@@ -876,12 +902,10 @@ _comm_close(int fd, char const *file, int line)
 
     comm_empty_os_read_buffers(fd);
 
-    AsyncCall::Pointer completeCall=commCbCall(5,4, "comm_close_complete",
-                                    FdeCbPtrFun(comm_close_complete, nullptr));
-    FdeCbParams &completeParams = GetCommParams<FdeCbParams>(completeCall);
-    completeParams.fd = fd;
     // must use async call to wait for all callbacks
     // scheduled before comm_close() to finish
+    const auto completeCall = asyncCall(5, 4, "comm_close_complete",
+                                        callDialer(comm_close_complete, fd));
     ScheduleCallHere(completeCall);
 }
 

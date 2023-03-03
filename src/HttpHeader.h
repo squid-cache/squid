@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -83,8 +83,7 @@ public:
     void clean();
     void append(const HttpHeader * src);
     /// replaces fields with matching names and adds fresh fields with new names
-    /// also updates Http::HdrType::WARNINGs, assuming `fresh` is a 304 reply
-    /// TODO: Refactor most callers to avoid special handling of WARNINGs.
+    /// assuming `fresh` is a 304 reply
     void update(const HttpHeader *fresh);
     /// \returns whether calling update(fresh) would change our set of fields
     bool needUpdate(const HttpHeader *fresh) const;
@@ -142,8 +141,12 @@ public:
     void putContRange(const HttpHdrContRange * cr);
     void putRange(const HttpHdrRange * range);
     void putSc(HttpHdrSc *sc);
-    void putWarning(const int code, const char *const text); ///< add a Warning header
     void putExt(const char *name, const char *value);
+
+    /// Ensures that the header has the given field, removing or replacing any
+    /// same-name fields with conflicting values as needed.
+    void updateOrAddStr(Http::HdrType, const SBuf &);
+
     int getInt(Http::HdrType id) const;
     int64_t getInt64(Http::HdrType id) const;
     time_t getTime(Http::HdrType id) const;
@@ -184,7 +187,6 @@ protected:
     /// If block starts where it ends, then there are no fields in the header.
     static bool Isolate(const char **parse_start, size_t l, const char **blk_start, const char **blk_end);
     bool skipUpdateHeader(const Http::HdrType id) const;
-    void updateWarnings();
 
 private:
     HttpHeaderEntry *findLastEntry(Http::HdrType id) const;

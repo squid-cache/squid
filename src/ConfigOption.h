@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -68,9 +68,9 @@ class ConfigOptionVector : public ConfigOption
 {
 
 public:
-    virtual ~ConfigOptionVector();
-    virtual bool parse(char const *option, const char *value, int reconfiguring);
-    virtual void dump(StoreEntry * e) const;
+    ~ConfigOptionVector() override;
+    bool parse(char const *option, const char *value, int reconfiguring) override;
+    void dump(StoreEntry * e) const override;
     std::vector<ConfigOption *>options;
 };
 
@@ -81,14 +81,14 @@ class ConfigOptionAdapter : public ConfigOption
 public:
     ConfigOptionAdapter(C& theObject, bool (C::*parseFP)(char const *option, const char *value, int reconfiguring), void (C::*dumpFP)(StoreEntry * e) const) : object(theObject), parser(parseFP), dumper(dumpFP) {}
 
-    bool parse(char const *option, const char *value, int isaReconf) {
+    bool parse(char const *option, const char *value, int isaReconf) override {
         if (parser)
             return (object.*parser)(option, value, isaReconf);
 
         return false;
     }
 
-    void dump(StoreEntry * e) const {
+    void dump(StoreEntry * e) const override {
         if (dumper)
             (object.*dumper)(e);
     }

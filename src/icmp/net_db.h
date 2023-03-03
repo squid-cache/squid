@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,7 +37,9 @@ public:
 class net_db_peer
 {
 public:
+    /// associated CachePeer::host (i.e. cache_peer hostname, not name=value!)
     const char *peername;
+
     double hops;
     double rtt;
     time_t expires;
@@ -71,7 +73,6 @@ void netdbHandlePingReply(const Ip::Address &from, int hops, int rtt);
 void netdbPingSite(const char *hostname);
 void netdbDump(StoreEntry *);
 
-void netdbFreeMemory(void);
 int netdbHostHops(const char *host);
 int netdbHostRtt(const char *host);
 void netdbUpdatePeer(const AnyP::Uri &, CachePeer *, int rtt, int hops);

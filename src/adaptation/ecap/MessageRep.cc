@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -140,8 +140,6 @@ Adaptation::Ecap::FirstLineRep::protocol() const
         return libecap::protocolHttps;
     case AnyP::PROTO_FTP:
         return libecap::protocolFtp;
-    case AnyP::PROTO_GOPHER:
-        return libecap::protocolGopher;
     case AnyP::PROTO_WAIS:
         return libecap::protocolWais;
     case AnyP::PROTO_WHOIS:

@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -53,7 +53,7 @@ translate-warn:
 
 $(TRANSLATE_LANGUAGES): $(ERROR_TEMPLATES)
 
-NOTIDY=`$(PO2HTML) --help | grep -o "\-\-notidy"`
+NOTIDY=`$(PO2HTML) --help | grep -o "[-]-notidy"`
 
 .po.lang:
 	if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \

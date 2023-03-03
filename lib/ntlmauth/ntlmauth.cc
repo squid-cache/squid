@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -108,10 +108,19 @@ ntlm_fetch_string(const ntlmhdr *packet, const int32_t packet_size, const strhdr
     int32_t o = le32toh(str->offset);
     // debug("ntlm_fetch_string(plength=%d,l=%d,o=%d)\n",packet_size,l,o);
 
-    if (l < 0 || l > NTLM_MAX_FIELD_LENGTH || o + l > packet_size || o == 0) {
-        debug("ntlm_fetch_string: insane data (pkt-sz: %d, fetch len: %d, offset: %d)\n", packet_size,l,o);
+    if (l < 0 || l > NTLM_MAX_FIELD_LENGTH) {
+        debug("ntlm_fetch_string: insane string length (pkt-sz: %d, fetch len: %d, offset: %d)\n", packet_size,l,o);
         return rv;
     }
+    else if (o <= 0 || o > packet_size) {
+        debug("ntlm_fetch_string: insane string offset (pkt-sz: %d, fetch len: %d, offset: %d)\n", packet_size,l,o);
+        return rv;
+    }
+    else if (l > packet_size - o) {
+        debug("ntlm_fetch_string: truncated string data (pkt-sz: %d, fetch len: %d, offset: %d)\n", packet_size,l,o);
+        return rv;
+    }
+
     rv.str = (char *)packet + o;
     rv.l = 0;
     if ((flags & NTLM_NEGOTIATE_ASCII) == 0) {
@@ -186,7 +195,7 @@ void
 ntlm_make_nonce(char *nonce)
 {
     static std::mt19937 mt(time(nullptr));
-    static xuniform_int_distribution<uint8_t> dist;
+    static std::uniform_int_distribution<uint8_t> dist;
 
     for (int i = 0; i < NTLM_NONCE_LEN; ++i)
         nonce[i] = static_cast<char>(dist(mt) & 0xFF);

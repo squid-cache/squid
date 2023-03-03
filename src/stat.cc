@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,6 +24,7 @@
 #include "HttpRequest.h"
 #include "IoStats.h"
 #include "mem/Pool.h"
+#include "mem/Stats.h"
 #include "mem_node.h"
 #include "MemBuf.h"
 #include "MemObject.h"
@@ -200,12 +201,6 @@ GetIoStats(Mgr::IoActionData& stats)
     for (i = 0; i < IoStats::histSize; ++i) {
         stats.ftp_read_hist[i] = IOStats.Ftp.read_hist[i];
     }
-
-    stats.gopher_reads = IOStats.Gopher.reads;
-
-    for (i = 0; i < IoStats::histSize; ++i) {
-        stats.gopher_read_hist[i] = IOStats.Gopher.read_hist[i];
-    }
 }
 
 void
@@ -236,19 +231,6 @@ DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry)
                           1 << i,
                           stats.ftp_read_hist[i],
                           Math::doublePercent(stats.ftp_read_hist[i], stats.ftp_reads));
-    }
-
-    storeAppendPrintf(sentry, "\n");
-    storeAppendPrintf(sentry, "Gopher I/O\n");
-    storeAppendPrintf(sentry, "number of reads: %.0f\n", stats.gopher_reads);
-    storeAppendPrintf(sentry, "Read Histogram:\n");
-
-    for (i = 0; i < IoStats::histSize; ++i) {
-        storeAppendPrintf(sentry, "%5d-%5d: %9.0f %2.0f%%\n",
-                          i ? (1 << (i - 1)) + 1 : 1,
-                          1 << i,
-                          stats.gopher_read_hist[i],
-                          Math::doublePercent(stats.gopher_read_hist[i], stats.gopher_reads));
     }
 
     storeAppendPrintf(sentry, "\n");
@@ -551,13 +533,12 @@ GetInfo(Mgr::InfoActionData& stats)
 
 #endif
 
-    stats.total_accounted = statMemoryAccounted();
-
     {
-        MemPoolGlobalStats mp_stats;
-        memPoolGetGlobalStats(&mp_stats);
-        stats.gb_saved_count = mp_stats.TheMeter->gb_saved.count;
-        stats.gb_freed_count = mp_stats.TheMeter->gb_freed.count;
+        Mem::PoolStats mp_stats;
+        Mem::GlobalStats(mp_stats);
+        stats.gb_saved_count = mp_stats.meter->gb_saved.count;
+        stats.gb_freed_count = mp_stats.meter->gb_freed.count;
+        stats.total_accounted = mp_stats.meter->alloc.currentLevel();
     }
 
     stats.max_fd = Squid_MaxFD;
@@ -743,8 +724,8 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "\tTotal accounted:       %6.0f KB\n",
                       stats.total_accounted / 1024);
     {
-        MemPoolGlobalStats mp_stats;
-        memPoolGetGlobalStats(&mp_stats);
+        Mem::PoolStats mp_stats;
+        Mem::GlobalStats(mp_stats); // XXX: called just for its side effects
         storeAppendPrintf(sentry, "\tmemPoolAlloc calls: %9.0f\n",
                           stats.gb_saved_count);
         storeAppendPrintf(sentry, "\tmemPoolFree calls:  %9.0f\n",
@@ -1588,17 +1569,6 @@ DumpCountersStats(Mgr::CountersActionData& stats, StoreEntry* sentry)
                       stats.hitValidationFailures);
 }
 
-void
-statFreeMemory(void)
-{
-    // TODO: replace with delete[]
-    for (int i = 0; i < N_COUNT_HIST; ++i)
-        CountHist[i] = StatCounters();
-
-    for (int i = 0; i < N_COUNT_HOUR_HIST; ++i)
-        CountHourHist[i] = StatCounters();
-}
-
 static void
 statPeerSelect(StoreEntry * sentry)
 {
@@ -1947,10 +1917,4 @@ statGraphDump(StoreEntry * e)
 }
 
 #endif /* STAT_GRAPHS */
-
-int
-statMemoryAccounted(void)
-{
-    return memPoolsTotalAllocated();
-}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,6 +22,9 @@
 #include "tools.h"
 
 #include <cerrno>
+#include <chrono>
+#include <thread>
+
 #if HAVE_MSWSOCK_H
 #include <mswsock.h>
 #endif
@@ -127,11 +130,11 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     }
 
     if (type == IPC_TCP_SOCKET) {
-        crfd = cwfd = comm_open(SOCK_STREAM,
-                                IPPROTO_TCP,
-                                local_addr,
-                                COMM_NOCLOEXEC,
-                                name);
+        crfd = cwfd = comm_open_listener(SOCK_STREAM,
+                                         IPPROTO_TCP,
+                                         local_addr,
+                                         COMM_NOCLOEXEC,
+                                         name);
         prfd = pwfd = comm_open(SOCK_STREAM,
                                 IPPROTO_TCP,    /* protocol */
                                 local_addr,
@@ -313,16 +316,8 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     fd_table[crfd].flags.ipc = true;
     fd_table[cwfd].flags.ipc = true;
 
-    if (Config.sleep_after_fork) {
-        /* XXX emulation of usleep() */
-        DWORD sl;
-        sl = Config.sleep_after_fork / 1000;
-
-        if (sl == 0)
-            sl = 1;
-
-        Sleep(sl);
-    }
+    if (Config.sleep_after_fork)
+        std::this_thread::sleep_for(std::chrono::microseconds(Config.sleep_after_fork));
 
     if (GetExitCodeThread((HANDLE) thread, &ecode) && ecode == STILL_ACTIVE) {
         if (hIpc)
