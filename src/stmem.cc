@@ -100,13 +100,6 @@ mem_hdr::freeDataUpto(int64_t target_offset)
     return lowestOffset ();
 }
 
-int
-mem_hdr::appendToNode(mem_node *aNode, const char *data, int maxLength)
-{
-    size_t result = writeAvailable (aNode, aNode->nodeBuffer.offset + aNode->nodeBuffer.length,maxLength, data);
-    return result;
-}
-
 size_t
 mem_hdr::writeAvailable(mem_node *aNode, int64_t location, size_t amount, char const *source)
 {
@@ -151,21 +144,6 @@ mem_hdr::makeAppendSpace()
         appendNode (new mem_node (endOffset()));
 
     assert (nodes.finish()->data->space());
-}
-
-void
-mem_hdr::internalAppend(const char *data, int len)
-{
-    debugs(19, 6, "memInternalAppend: " << this << " len " << len);
-
-    while (len > 0) {
-        makeAppendSpace();
-        int copied = appendToNode (nodes.finish()->data, data, len);
-        assert (copied);
-
-        len -= copied;
-        data += copied;
-    }
 }
 
 /* returns a mem_node that contains location..

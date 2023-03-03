@@ -41,16 +41,12 @@ public:
     const Splay<mem_node *> &getNodes() const;
     char * NodeGet(mem_node * aNode);
 
-    /* Only for use of MemObject */
-    void internalAppend(const char *data, int len);
-
     static Splay<mem_node *>::SPLAYCMP NodeCompare;
 
 private:
     void debugDump() const;
     bool unlink(mem_node *aNode);
     void makeAppendSpace();
-    int appendToNode(mem_node *aNode, const char *data, int maxLength);
     void appendNode (mem_node *aNode);
     size_t copyAvailable(mem_node *aNode, int64_t location, size_t amount, char *target) const;
     bool unionNotEmpty (StoreIOBuffer const &);
