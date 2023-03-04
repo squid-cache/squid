@@ -81,7 +81,7 @@ xmlEntityPtr esi_getEntitySAXFunc(void * ctx,  const xmlChar * name)
 ESILibxml2Parser::ESILibxml2Parser(ESIParserClient *aClient) : theClient (aClient)
 {
     xmlSAXHandler sax;
-    htmlDefaultSAXHandlerInit();
+    xmlInitParser();
     memset(&sax, 0, sizeof(sax));
     sax.startElement = esi_startElementSAXFunc;
     sax.endElement = esi_endElementSAXFunc;
