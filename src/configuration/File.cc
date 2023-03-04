@@ -40,10 +40,10 @@ Configuration::File::load()
     debugs(3, 2, "Loading " << (isPipe ? "pipe" : "file") << " " << filePath);
 
     if (isPipe && !(fd = popen(filePath.c_str(), "r")))
-        throw TextException(ToSBuf("configuration pipe :", filePath, " not found"), lineInfo());
+        throw TextException(ToSBuf("configuration pipe : ", filePath, " not found"), lineInfo());
 
     else if (!(fd = fopen(filePath.c_str(), "r")))
-        throw TextException(ToSBuf("configuration file :", filePath, " not found"), lineInfo());
+        throw TextException(ToSBuf("configuration file : ", filePath, " not found"), lineInfo());
 
 #if _SQUID_WINDOWS_
     setmode(fileno(fd), O_TEXT);
