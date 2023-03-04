@@ -111,17 +111,21 @@ ltpath=`find_path ${LIBTOOL_BIN}${ltver}`
 # Set environment variable to tell automake which autoconf to use.
 AUTOCONF="autoconf${acver}" ; export AUTOCONF
 
-echo "automake ($amversion) : automake$amver"
-echo "autoconf ($acversion) : autoconf$acver"
-echo "libtool  ($ltversion) : ${LIBTOOL_BIN}${ltver}"
-echo "libtool path : $ltpath"
+verbose=0
+if test "x$1" != "x--quiet" ; then
+    verbose=1
+    echo "automake ($amversion) : automake$amver"
+    echo "autoconf ($acversion) : autoconf$acver"
+    echo "libtool  ($ltversion) : ${LIBTOOL_BIN}${ltver}"
+    echo "libtool path : $ltpath"
+fi
 
 for dir in \
 	""
 do
     if [ -z "$dir" ] || [ -d $dir ]; then
 	if (
-	echo "Bootstrapping $dir"
+	test $verbose -eq 1 && echo "Bootstrapping $dir"
 	cd ./$dir
 	if [ -n "$dir" ] && [ -f bootstrap.sh ]; then
 	    ./bootstrap.sh
@@ -158,7 +162,7 @@ fi
 # autoconf should inherit this option whe recursing into subdirectories
 # but it currently doesn't for some reason.
 if ! grep  "configure_args --quiet" configure >/dev/null; then
-echo "Fixing configure recursion"
+test $verbose -eq 1 && echo "Fixing configure recursion"
 ed -s configure <<'EOS' >/dev/null || true
 /ac_sub_configure_args=/
 +1
@@ -171,4 +175,4 @@ w
 EOS
 fi
 
-echo "Autotool bootstrapping complete."
+test $verbose -eq 1 && echo "Autotool bootstrapping complete."
