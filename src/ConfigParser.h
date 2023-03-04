@@ -152,7 +152,6 @@ public:
 
 protected:
     /**
-     * Wrapper class around Configuration::File for ConfigParser API internal use.
      * Presents configuration syntax as a series of token/element rather than lines.
      */
     class CfgFile
