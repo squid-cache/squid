@@ -158,8 +158,8 @@ inet_ntop6(const u_char *src, char *dst, size_t size)
 {
     /*
      * Note that int32_t and int16_t need only be "at least" large enough
-     * to contain a value of the specified size.  On some systems
-     * there is no such thing as an integer variable with 16 bits.
+     * to contain a value of the specified size.  On some systems, like
+     * Crays, there is no such thing as an integer variable with 16 bits.
      * Keep this in mind if you think this function should have been coded
      * to use pointer overlays.  All the world's not a VAX.
      */
