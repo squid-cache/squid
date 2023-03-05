@@ -385,6 +385,7 @@ comm_openex(int sock_type,
         AI->ai_protocol = proto;
         debugs(50, 3, "Attempt fallback open socket for: " << addr );
         new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+        xerrno = errno;
         debugs(50, 2, "attempt open " << note << " socket on: " << addr);
     }
 
@@ -393,7 +394,7 @@ comm_openex(int sock_type,
          * are failing because the open file table is full.  This
          * limits the number of simultaneous clients */
 
-        if (limitError(errno)) {
+        if (limitError(xerrno)) {
             debugs(50, DBG_IMPORTANT, MYNAME << "socket failure: " << xstrerr(xerrno));
             fdAdjustReserved();
         } else {
@@ -884,11 +885,11 @@ _comm_close(int fd, char const *file, int line)
     // notify read/write handlers after canceling select reservations, if any
     if (COMMIO_FD_WRITECB(fd)->active()) {
         Comm::SetSelect(fd, COMM_SELECT_WRITE, nullptr, nullptr, 0);
-        COMMIO_FD_WRITECB(fd)->finish(Comm::ERR_CLOSING, errno);
+        COMMIO_FD_WRITECB(fd)->finish(Comm::ERR_CLOSING, 0);
     }
     if (COMMIO_FD_READCB(fd)->active()) {
         Comm::SetSelect(fd, COMM_SELECT_READ, nullptr, nullptr, 0);
-        COMMIO_FD_READCB(fd)->finish(Comm::ERR_CLOSING, errno);
+        COMMIO_FD_READCB(fd)->finish(Comm::ERR_CLOSING, 0);
     }
 
 #if USE_DELAY_POOLS
