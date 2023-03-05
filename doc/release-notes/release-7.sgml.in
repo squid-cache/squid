@@ -30,13 +30,13 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 <p>The most important of these new features are:
 <itemize>
-	<item>cache_object scheme removal
+	<item>removed support for the cache_object URI scheme
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
 
 <sect1>cache_object scheme removal
-<p>The Squid cache manager is not accessible by cache_object:// URL scheme anymore. Removed its support from squidclient tool and CGI cache manager tool.
+<p>Squid cache manager is no longer accessible by URIs with cache_object scheme.
 
 <sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
 <p>
