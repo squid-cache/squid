@@ -211,6 +211,7 @@ diskHandleWrite(int fd, void *)
     len = FD_WRITE_METHOD(fd,
                           fdd->write_q->buf + fdd->write_q->buf_offset,
                           fdd->write_q->len - fdd->write_q->buf_offset);
+    const auto xerrno = errno;
 
     debugs(6, 3, "diskHandleWrite: FD " << fd << " len = " << len);
 
@@ -219,9 +220,8 @@ diskHandleWrite(int fd, void *)
     fd_bytes(fd, len, FD_WRITE);
 
     if (len < 0) {
-        if (!ignoreErrno(errno)) {
-            status = errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
-            int xerrno = errno;
+        if (!ignoreErrno(xerrno)) {
+            status = xerrno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
             debugs(50, DBG_IMPORTANT, "ERROR: diskHandleWrite: FD " << fd << ": disk write failure: " << xstrerr(xerrno));
 
             /*
@@ -494,7 +494,7 @@ FileRename(const SBuf &from, const SBuf &to)
         return true;
 
     int xerrno = errno;
-    debugs(21, (errno == ENOENT ? 2 : DBG_IMPORTANT), "ERROR: Cannot rename " << from << " to " << to << ": " << xstrerr(xerrno));
+    debugs(21, (xerrno == ENOENT ? 2 : DBG_IMPORTANT), "ERROR: Cannot rename " << from << " to " << to << ": " << xstrerr(xerrno));
 
     return false;
 }
