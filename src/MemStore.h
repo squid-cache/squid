@@ -80,7 +80,7 @@ protected:
     void copyToShm(StoreEntry &e);
     void copyToShmSlice(StoreEntry &e, Ipc::StoreMapAnchor &anchor, Ipc::StoreMap::Slice &slice);
     bool copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor);
-    bool copyFromShmSlice(StoreEntry &e, const StoreIOBuffer &buf, bool eof);
+    void copyFromShmSlice(StoreEntry &e, const StoreIOBuffer &buf);
 
     void updateHeadersOrThrow(Ipc::StoreMapUpdate &update);
 
