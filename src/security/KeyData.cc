@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,7 +20,7 @@
 bool
 Security::KeyData::loadCertificates()
 {
-    debugs(83, DBG_IMPORTANT, "Using certificate in " << certFile);
+    debugs(83, 2, "from " << certFile);
     cert.reset(); // paranoid: ensure cert is unset
 
 #if USE_OPENSSL
@@ -136,7 +136,7 @@ Security::KeyData::loadCertificates()
 bool
 Security::KeyData::loadX509PrivateKeyFromFile()
 {
-    debugs(83, DBG_IMPORTANT, "Using key in " << privateKeyFile);
+    debugs(83, 2, "from " << privateKeyFile);
 
 #if USE_OPENSSL
     const char *keyFilename = privateKeyFile.c_str();

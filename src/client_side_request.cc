@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -560,6 +560,7 @@ ClientRequestContext::hostHeaderVerify()
         return;
     }
 
+    // TODO: Unify Host value parsing below with AnyP::Uri authority parsing
     // Locate if there is a port attached, strip ready for IP lookup
     char *portStr = nullptr;
     char *hostB = xstrdup(host);
@@ -614,14 +615,17 @@ ClientRequestContext::hostHeaderVerify()
         // Verify forward-proxy requested URL domain matches the Host: header
         debugs(85, 3, "FAIL on validate URL domain " << http->request->url.host() << " matches Host: " << host);
         hostHeaderVerifyFailed(host, http->request->url.host());
-    } else if (portStr && port != http->request->url.port()) {
+    } else if (portStr && !http->request->url.port()) {
+        debugs(85, 3, "FAIL on validate portless URI matches Host: " << portStr);
+        hostHeaderVerifyFailed("portless URI", portStr);
+    } else if (portStr && port != *http->request->url.port()) {
         // Verify forward-proxy requested URL domain matches the Host: header
-        debugs(85, 3, "FAIL on validate URL port " << http->request->url.port() << " matches Host: port " << portStr);
+        debugs(85, 3, "FAIL on validate URL port " << *http->request->url.port() << " matches Host: port " << portStr);
         hostHeaderVerifyFailed("URL port", portStr);
     } else if (!portStr && http->request->method != Http::METHOD_CONNECT && http->request->url.port() != http->request->url.getScheme().defaultPort()) {
         // Verify forward-proxy requested URL domain matches the Host: header
         // Special case: we don't have a default-port to check for CONNECT. Assume URL is correct.
-        debugs(85, 3, "FAIL on validate URL port " << http->request->url.port() << " matches Host: default port " << http->request->url.getScheme().defaultPort());
+        debugs(85, 3, "FAIL on validate URL port " << http->request->url.port().value_or(0) << " matches Host: default port " << http->request->url.getScheme().defaultPort().value_or(0));
         hostHeaderVerifyFailed("URL port", "default port");
     } else {
         // Okay no problem.

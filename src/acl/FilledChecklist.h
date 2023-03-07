@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,7 +36,7 @@ class ACLFilledChecklist: public ACLChecklist
 public:
     ACLFilledChecklist();
     ACLFilledChecklist(const acl_access *, HttpRequest *, const char *ident = nullptr);
-    ~ACLFilledChecklist();
+    ~ACLFilledChecklist() override;
 
     /// configure client request-related fields for the first time
     void setRequest(HttpRequest *);
@@ -63,11 +63,11 @@ public:
     void markSourceDomainChecked();
 
     // ACLChecklist API
-    virtual bool hasRequest() const { return request != nullptr; }
-    virtual bool hasReply() const { return reply != nullptr; }
-    virtual bool hasAle() const { return al != nullptr; }
-    virtual void syncAle(HttpRequest *adaptedRequest, const char *logUri) const;
-    virtual void verifyAle() const;
+    bool hasRequest() const override { return request != nullptr; }
+    bool hasReply() const override { return reply != nullptr; }
+    bool hasAle() const override { return al != nullptr; }
+    void syncAle(HttpRequest *adaptedRequest, const char *logUri) const override;
+    void verifyAle() const override;
 
 public:
     Ip::Address src_addr;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -227,7 +227,6 @@ netdbPurgeLRU(void)
     netdbEntry **list;
     int k = 0;
     int list_count = 0;
-    int removed = 0;
     list = (netdbEntry **)xcalloc(netdbEntry::UseCount(), sizeof(netdbEntry *));
     hash_first(addr_table);
 
@@ -247,8 +246,6 @@ netdbPurgeLRU(void)
             break;
 
         netdbRelease(*(list + k));
-
-        ++removed;
     }
 
     xfree(list);

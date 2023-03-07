@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -326,7 +326,7 @@ Fs::Ufs::UFSStoreState::doCloseCallback(int errflag)
 /* ============= THE REAL UFS CODE ================ */
 
 Fs::Ufs::UFSStoreState::UFSStoreState(SwapDir * SD, StoreEntry * anEntry, STIOCB * cbIo, void *data) :
-    StoreIOState(nullptr, cbIo, data),
+    StoreIOState(cbIo, data),
     opening(false),
     creating(false),
     closing(false),

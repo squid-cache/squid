@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,12 +20,12 @@ class AppendingStreamBuf : public std::streambuf
 {
 public:
     explicit AppendingStreamBuf(Buffer &p): buf_(p) { postInit(); }
-    virtual ~AppendingStreamBuf() = default;
+    ~AppendingStreamBuf() override = default;
 
 protected:
     /* std::streambuf API */
 
-    virtual int_type overflow(int_type aChar = traits_type::eof()) override {
+    int_type overflow(int_type aChar = traits_type::eof()) override {
         std::streamsize pending(pptr() - pbase());
 
         if (pending && sync())
@@ -40,14 +40,14 @@ protected:
         return aChar;
     }
 
-    virtual int sync() override {
+    int sync() override {
         std::streamsize pending(pptr() - pbase());
         lowAppend(pbase(), pending);
         postSync();
         return 0;
     }
 
-    virtual std::streamsize xsputn(const char * chars, std::streamsize number) override {
+    std::streamsize xsputn(const char * chars, std::streamsize number) override {
         lowAppend(chars, number);
         return number;
     }

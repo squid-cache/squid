@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,7 +27,7 @@ namespace Esi
 class Libxml2Rr : public RegisteredRunner
 {
 public:
-    void finalizeConfig()
+    void finalizeConfig() override
     {
         registration.reset(new ESIParser::Register("libxml2", &ESILibxml2Parser::NewParser));
     }
@@ -108,7 +108,7 @@ esi_getEntitySAXFunc(void * /* ctx */, const xmlChar *name)
 ESILibxml2Parser::ESILibxml2Parser(ESIParserClient *aClient) : theClient (aClient)
 {
     xmlSAXHandler sax;
-    htmlDefaultSAXHandlerInit();
+    xmlInitParser();
     memset(&sax, 0, sizeof(sax));
     sax.startElement = esi_startElementSAXFunc;
     sax.endElement = esi_endElementSAXFunc;

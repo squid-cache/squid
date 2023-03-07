@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,8 +21,8 @@ public:
     explicit NamedErrorDetail(const char *aName): name(aName) {}
 
     /* ErrorDetail API */
-    virtual SBuf brief() const override { return name; }
-    virtual SBuf verbose(const HttpRequestPointer &) const override { return name; }
+    SBuf brief() const override { return name; }
+    SBuf verbose(const HttpRequestPointer &) const override { return name; }
 
 private:
     /// distinguishes us from all other NamedErrorDetail objects

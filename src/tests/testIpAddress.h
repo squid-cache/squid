@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,9 +15,9 @@
  * test the IP storage type
  */
 
-class testIpAddress : public CPPUNIT_NS::TestFixture
+class TestIpAddress: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testIpAddress );
+    CPPUNIT_TEST_SUITE( TestIpAddress );
     CPPUNIT_TEST( testDefaults );
     CPPUNIT_TEST( testInAddrConstructor );
     CPPUNIT_TEST( testInAddr6Constructor );

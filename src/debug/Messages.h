@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,6 @@
 #define SQUID_DEBUG_MESSAGES_H
 
 #include "debug/Stream.h"
-#include "SquidConfig.h"
 
 #include <array>
 #include <limits>
@@ -62,7 +61,7 @@ private:
 };
 
 /// The maximum used DebugMessage::id plus 1. Increase as you add new IDs.
-constexpr DebugMessageId DebugMessageIdUpperBound = 66;
+constexpr DebugMessageId DebugMessageIdUpperBound = 69;
 
 /// a collection of DebugMessage objects (with fast access by message IDs)
 class DebugMessages
@@ -73,6 +72,9 @@ public:
     Storage messages;
 };
 
+/// Global configuration for DebugMessageLevel() (where/when supported).
+inline DebugMessages *DebugMessagesConfig = nullptr;
+
 // Using a template allows us to check message ID range at compile time.
 /// \returns configured debugging level for the given message or defaultLevel
 template <DebugMessageId id>
@@ -81,7 +83,7 @@ DebugMessageLevel(const int defaultLevel)
 {
     static_assert(id > 0, "debugs() message ID must be positive");
     static_assert(id < DebugMessageIdUpperBound, "debugs() message ID must be smaller than DebugMessageIdUpperBound");
-    if (const auto configured = Config.debugMessages)
+    if (const auto configured = DebugMessagesConfig)
         return (configured->messages)[id].currentLevel(defaultLevel);
     return defaultLevel;
 }

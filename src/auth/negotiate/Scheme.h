@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,12 +25,12 @@ class Scheme : public Auth::Scheme
 public:
     static Auth::Scheme::Pointer GetInstance();
     Scheme() {};
-    virtual ~Scheme() {};
+    ~Scheme() override {};
 
     /* per scheme */
-    virtual char const *type() const;
-    virtual void shutdownCleanup();
-    virtual Auth::SchemeConfig *createConfig();
+    char const *type() const override;
+    void shutdownCleanup() override;
+    Auth::SchemeConfig *createConfig() override;
 
     /* Not implemented */
     Scheme (Scheme const &);

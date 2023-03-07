@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,8 +7,8 @@
  */
 
 #include "squid.h"
+#include "mem/Allocator.h"
 #include "mem/AllocatorProxy.h"
-#include "mem/Meter.h"
 #include "mem/Pool.h"
 #include "mem/Stats.h"
 
@@ -43,7 +43,7 @@ Mem::AllocatorProxy::inUseCount() const
     if (!theAllocator)
         return 0;
     else
-        return theAllocator->inUseCount();
+        return theAllocator->getInUseCount();
 }
 
 void
@@ -55,7 +55,7 @@ Mem::AllocatorProxy::zeroBlocks(bool doIt)
 Mem::PoolMeter const &
 Mem::AllocatorProxy::getMeter() const
 {
-    return getAllocator()->getMeter();
+    return getAllocator()->meter;
 }
 
 size_t

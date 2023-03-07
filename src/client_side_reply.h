@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,7 +29,7 @@ public:
     static STCB SendMoreData;
 
     clientReplyContext(ClientHttpRequest *);
-    ~clientReplyContext();
+    ~clientReplyContext() override;
 
     void saveState();
     void restoreState();
@@ -66,7 +66,7 @@ public:
     Http::StatusCode purgeStatus;
 
     /* StoreClient API */
-    virtual LogTags *loggingTags() const;
+    LogTags *loggingTags() const override;
 
     ClientHttpRequest *http;
     /// Base reply header bytes received from Store.
@@ -91,7 +91,7 @@ public:
 
 private:
     /* StoreClient API */
-    virtual void fillChecklist(ACLFilledChecklist &) const;
+    void fillChecklist(ACLFilledChecklist &) const override;
 
     clientStreamNode *getNextNode() const;
     void makeThisHead();
@@ -99,7 +99,6 @@ private:
     void sendStreamError(StoreIOBuffer const &result);
     void pushStreamData(StoreIOBuffer const &result, char *source);
     clientStreamNode * next() const;
-    StoreIOBuffer holdingBuffer;
     HttpReply *reply;
     void processReplyAccess();
     static ACLCB ProcessReplyAccessResult;

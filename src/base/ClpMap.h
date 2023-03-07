@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -40,6 +40,9 @@ template <class Key, class Value, uint64_t MemoryUsedBy(const Value &) = Default
 class ClpMap
 {
 public:
+    using key_type = Key;
+    using mapped_type = Value;
+
     /// maximum desired entry caching duration (a.k.a. TTL), in seconds
     using Ttl = int;
 

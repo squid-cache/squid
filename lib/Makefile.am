@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -68,8 +68,7 @@ libmiscutil_la_SOURCES = \
 	getfullhostname.c \
 	heap.c \
 	radix.c \
-	util.c \
-	xusleep.c
+	util.c
 
 TESTS += tests/testRFC1738
 

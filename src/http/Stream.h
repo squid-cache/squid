@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -73,7 +73,7 @@ class Stream : public RefCountable
 public:
     /// construct with HTTP/1.x details
     Stream(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq);
-    ~Stream();
+    ~Stream() override;
 
     /// register this stream with the Server
     void registerWithConn();

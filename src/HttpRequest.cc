@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -872,11 +872,16 @@ FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry 
     });
 }
 
-unsigned short
+AnyP::Port
 FindListeningPortNumber(const HttpRequest *callerRequest, const AccessLogEntry *ale)
 {
     const auto ip = FindGoodListeningPortAddress(callerRequest, ale, [](const Ip::Address &address) {
         return address.port() > 0;
     });
-    return ip ? ip->port() : 0;
+
+    if (!ip)
+        return std::nullopt;
+
+    Assure(ip->port() > 0);
+    return ip->port();
 }

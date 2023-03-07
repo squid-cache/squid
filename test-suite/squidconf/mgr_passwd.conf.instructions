@@ -1,0 +1,2 @@
+expect-message ERROR:.*menu.*already.has.a.password
+

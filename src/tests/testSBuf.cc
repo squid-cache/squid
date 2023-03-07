@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,7 +20,7 @@
 #include <stdexcept>
 #include <unordered_map>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testSBuf );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestSBuf );
 
 /* let this test link sanely */
 #include "event.h"
@@ -45,7 +45,7 @@ SBuf empty_sbuf;
 SBuf literal("The quick brown fox jumped over the lazy dog");
 
 void
-testSBuf::testSBufConstructDestruct()
+TestSBuf::testSBufConstructDestruct()
 {
     /* NOTE: Do not initialize memory here because we need
      * to test correct operation before and after Mem::Init
@@ -125,14 +125,14 @@ testSBuf::testSBufConstructDestruct()
 }
 
 void
-testSBuf::testSBufConstructDestructAfterMemInit()
+TestSBuf::testSBufConstructDestructAfterMemInit()
 {
     Mem::Init();
     testSBufConstructDestruct();
 }
 
 void
-testSBuf::testEqualityTest()
+TestSBuf::testEqualityTest()
 {
     SBuf s1(fox),s2(fox);
     CPPUNIT_ASSERT_EQUAL(s1,s1); //self-equality
@@ -150,7 +150,7 @@ testSBuf::testEqualityTest()
 }
 
 void
-testSBuf::testAppendSBuf()
+TestSBuf::testAppendSBuf()
 {
     const SBuf appendix(fox1);
     const char * const rawAppendix = appendix.rawContent();
@@ -171,7 +171,7 @@ testSBuf::testAppendSBuf()
 }
 
 void
-testSBuf::testPrintf()
+TestSBuf::testPrintf()
 {
     SBuf s1,s2;
     s1.Printf("%s:%d:%03.3f","fox",10,12345.67);
@@ -180,7 +180,7 @@ testSBuf::testPrintf()
 }
 
 void
-testSBuf::testAppendCString()
+TestSBuf::testAppendCString()
 {
     SBuf s1(fox1);
     s1.append(fox2);
@@ -188,7 +188,7 @@ testSBuf::testAppendCString()
 }
 
 void
-testSBuf::testAppendStdString()
+TestSBuf::testAppendStdString()
 {
     const char *alphabet="abcdefghijklmnopqrstuvwxyz";
     {
@@ -213,7 +213,7 @@ testSBuf::testAppendStdString()
 }
 
 void
-testSBuf::testAppendf()
+TestSBuf::testAppendf()
 {
     SBuf s1,s2;
     s1.appendf("%s:%d:%03.2f",fox,1234,1234.56);
@@ -222,7 +222,7 @@ testSBuf::testAppendf()
 }
 
 void
-testSBuf::testDumpStats()
+TestSBuf::testDumpStats()
 {
     SBuf::GetStats().dump(std::cout);
     MemBlob::GetStats().dump(std::cout);
@@ -231,7 +231,7 @@ testSBuf::testDumpStats()
 }
 
 void
-testSBuf::testSubscriptOp()
+TestSBuf::testSubscriptOp()
 {
     SBuf chg(literal);
     CPPUNIT_ASSERT_EQUAL(chg[5],'u');
@@ -243,7 +243,7 @@ testSBuf::testSubscriptOp()
 // note: can't use cppunit's CPPUNIT_TEST_EXCEPTION because TextException asserts, and
 // so the test can't be properly completed.
 void
-testSBuf::testSubscriptOpFail()
+TestSBuf::testSubscriptOpFail()
 {
     char c;
     c=literal.at(literal.length()); //out of bounds by 1
@@ -318,7 +318,7 @@ testComparisonStd(const char *s1, const char *s2)
 }
 
 void
-testSBuf::testComparisons()
+TestSBuf::testComparisons()
 {
     //same length
     SBuf s1("foo"),s2("foe");
@@ -389,7 +389,7 @@ testSBuf::testComparisons()
 }
 
 void
-testSBuf::testConsume()
+TestSBuf::testConsume()
 {
     SBuf s1(literal),s2,s3;
     s2=s1.consume(4);
@@ -402,7 +402,7 @@ testSBuf::testConsume()
 }
 
 void
-testSBuf::testRawContent()
+TestSBuf::testRawContent()
 {
     SBuf s1(literal);
     SBuf s2(s1);
@@ -415,7 +415,7 @@ testSBuf::testRawContent()
 }
 
 void
-testSBuf::testRawSpace()
+TestSBuf::testRawSpace()
 {
     SBuf s1(literal);
     SBuf s2(fox1);
@@ -426,7 +426,7 @@ testSBuf::testRawSpace()
 }
 
 void
-testSBuf::testChop()
+TestSBuf::testChop()
 {
     SBuf s1(literal),s2;
     s1.chop(4,5);
@@ -490,7 +490,7 @@ testSBuf::testChop()
 }
 
 void
-testSBuf::testChomp()
+TestSBuf::testChomp()
 {
     SBuf s1("complete string");
     SBuf s2(s1);
@@ -527,7 +527,7 @@ public:
 };
 
 void
-testSBuf::testSubstr()
+TestSBuf::testSubstr()
 {
     SBuf s1(literal),s2,s3;
     s2=s1.substr(4,5);
@@ -539,7 +539,7 @@ testSBuf::testSubstr()
 }
 
 void
-testSBuf::testFindChar()
+TestSBuf::testFindChar()
 {
     const char *alphabet="abcdefghijklmnopqrstuvwxyz";
     SBuf s1(alphabet);
@@ -596,7 +596,7 @@ testSBuf::testFindChar()
 }
 
 void
-testSBuf::testFindSBuf()
+TestSBuf::testFindSBuf()
 {
     const char *alphabet="abcdefghijklmnopqrstuvwxyz";
     SBuf haystack(alphabet);
@@ -705,7 +705,7 @@ testSBuf::testFindSBuf()
 }
 
 void
-testSBuf::testRFindChar()
+TestSBuf::testRFindChar()
 {
     SBuf s1(literal);
     SBuf::size_type idx;
@@ -715,7 +715,7 @@ testSBuf::testRFindChar()
 }
 
 void
-testSBuf::testRFindSBuf()
+TestSBuf::testRFindSBuf()
 {
     SBuf haystack(literal),afox("fox");
     SBuf goobar("goobar");
@@ -760,14 +760,14 @@ testSBuf::testRFindSBuf()
 }
 
 void
-testSBuf::testSBufLength()
+TestSBuf::testSBufLength()
 {
     SBuf s(fox);
     CPPUNIT_ASSERT_EQUAL(strlen(fox),(size_t)s.length());
 }
 
 void
-testSBuf::testCopy()
+TestSBuf::testCopy()
 {
     char buf[40]; //shorter than literal()
     SBuf s(fox1),s2;
@@ -781,7 +781,7 @@ testSBuf::testCopy()
 }
 
 void
-testSBuf::testStringOps()
+TestSBuf::testStringOps()
 {
     SBuf sng(ToLower(literal)),
          ref("the quick brown fox jumped over the lazy dog");
@@ -795,7 +795,7 @@ testSBuf::testStringOps()
 }
 
 void
-testSBuf::testGrow()
+TestSBuf::testGrow()
 {
     SBuf t;
     t.assign("foo");
@@ -810,7 +810,7 @@ testSBuf::testGrow()
 }
 
 void
-testSBuf::testReserve()
+TestSBuf::testReserve()
 {
     SBufReservationRequirements requirements;
     // use unusual numbers to ensure we do not hit a lucky boundary situation
@@ -944,7 +944,7 @@ testSBuf::testReserve()
 }
 
 void
-testSBuf::testStartsWith()
+TestSBuf::testStartsWith()
 {
     static SBuf casebuf("THE QUICK");
     CPPUNIT_ASSERT(literal.startsWith(SBuf(fox1)));
@@ -961,7 +961,7 @@ testSBuf::testStartsWith()
 }
 
 void
-testSBuf::testSBufStream()
+TestSBuf::testSBufStream()
 {
     SBuf b("const.string, int 10 and a float 10.5");
     SBufStream ss;
@@ -979,7 +979,7 @@ testSBuf::testSBufStream()
 }
 
 void
-testSBuf::testFindFirstOf()
+TestSBuf::testFindFirstOf()
 {
     SBuf haystack(literal);
     SBuf::size_type idx;
@@ -1002,7 +1002,7 @@ testSBuf::testFindFirstOf()
 }
 
 void
-testSBuf::testFindFirstNotOf()
+TestSBuf::testFindFirstNotOf()
 {
     SBuf haystack(literal);
     SBuf::size_type idx;
@@ -1025,14 +1025,14 @@ testSBuf::testFindFirstNotOf()
 }
 
 void
-testSBuf::testAutoFind()
+TestSBuf::testAutoFind()
 {
     SBufFindTest test;
     test.run();
 }
 
 void
-testSBuf::testStdStringOps()
+TestSBuf::testStdStringOps()
 {
     const char *alphabet="abcdefghijklmnopqrstuvwxyz";
     std::string astr(alphabet);
@@ -1041,7 +1041,7 @@ testSBuf::testStdStringOps()
 }
 
 void
-testSBuf::testIterators()
+TestSBuf::testIterators()
 {
     SBuf text("foo"), text2("foo");
     CPPUNIT_ASSERT(text.begin() == text.begin());
@@ -1078,7 +1078,7 @@ testSBuf::testIterators()
 }
 
 void
-testSBuf::testSBufHash()
+TestSBuf::testSBufHash()
 {
     // same SBuf must have same hash
     auto hasher=std::hash<SBuf>();

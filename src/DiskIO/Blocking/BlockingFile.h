@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,17 +22,17 @@ class BlockingFile : public DiskFile
 
 public:
     BlockingFile(char const *path);
-    ~BlockingFile();
-    virtual void open(int flags, mode_t mode, RefCount<IORequestor> callback);
-    virtual void create(int flags, mode_t mode, RefCount<IORequestor> callback);
-    virtual void read(ReadRequest *);
-    virtual void write(WriteRequest *);
-    virtual void close();
-    virtual bool error() const;
-    virtual int getFD() const { return fd;}
+    ~BlockingFile() override;
+    void open(int flags, mode_t mode, RefCount<IORequestor> callback) override;
+    void create(int flags, mode_t mode, RefCount<IORequestor> callback) override;
+    void read(ReadRequest *) override;
+    void write(WriteRequest *) override;
+    void close() override;
+    bool error() const override;
+    int getFD() const override { return fd;}
 
-    virtual bool canRead() const;
-    virtual bool ioInProgress() const;
+    bool canRead() const override;
+    bool ioInProgress() const override;
 
 private:
     static DRCB ReadDone;

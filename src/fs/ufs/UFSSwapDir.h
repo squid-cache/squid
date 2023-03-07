@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -41,41 +41,41 @@ public:
     static bool FilenoBelongsHere(int fn, int cachedir, int level1dir, int level2dir);
 
     UFSSwapDir(char const *aType, const char *aModuleType);
-    virtual ~UFSSwapDir();
+    ~UFSSwapDir() override;
 
     /* Store::Disk API */
-    virtual void create() override;
-    virtual void init() override;
-    virtual void dump(StoreEntry &) const override;
-    virtual bool doubleCheck(StoreEntry &) override;
-    virtual bool unlinkdUseful() const override;
-    virtual void statfs(StoreEntry &) const override;
-    virtual void maintain() override;
-    virtual void evictCached(StoreEntry &) override;
-    virtual void evictIfFound(const cache_key *) override;
-    virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const override;
-    virtual void reference(StoreEntry &) override;
-    virtual bool dereference(StoreEntry &) override;
-    virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) override;
-    virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) override;
-    virtual void openLog() override;
-    virtual void closeLog() override;
-    virtual int writeCleanStart() override;
-    virtual void writeCleanDone() override;
-    virtual void logEntry(const StoreEntry & e, int op) const override;
-    virtual void parse(int index, char *path) override;
-    virtual void reconfigure() override;
-    virtual int callback() override;
-    virtual void sync() override;
-    virtual void finalizeSwapoutSuccess(const StoreEntry &) override;
-    virtual void finalizeSwapoutFailure(StoreEntry &) override;
-    virtual uint64_t currentSize() const override { return cur_size; }
-    virtual uint64_t currentCount() const override { return n_disk_objects; }
-    virtual ConfigOption *getOptionTree() const override;
-    virtual bool smpAware() const override { return false; }
+    void create() override;
+    void init() override;
+    void dump(StoreEntry &) const override;
+    bool doubleCheck(StoreEntry &) override;
+    bool unlinkdUseful() const override;
+    void statfs(StoreEntry &) const override;
+    void maintain() override;
+    void evictCached(StoreEntry &) override;
+    void evictIfFound(const cache_key *) override;
+    bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const override;
+    void reference(StoreEntry &) override;
+    bool dereference(StoreEntry &) override;
+    StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STIOCB *, void *) override;
+    StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STIOCB *, void *) override;
+    void openLog() override;
+    void closeLog() override;
+    int writeCleanStart() override;
+    void writeCleanDone() override;
+    void logEntry(const StoreEntry & e, int op) const override;
+    void parse(int index, char *path) override;
+    void reconfigure() override;
+    int callback() override;
+    void sync() override;
+    void finalizeSwapoutSuccess(const StoreEntry &) override;
+    void finalizeSwapoutFailure(StoreEntry &) override;
+    uint64_t currentSize() const override { return cur_size; }
+    uint64_t currentCount() const override { return n_disk_objects; }
+    ConfigOption *getOptionTree() const override;
+    bool smpAware() const override { return false; }
     /// as long as ufs relies on the global store_table to index entries,
     /// it is wrong to ask individual ufs cache_dirs whether they have an entry
-    virtual bool hasReadableEntry(const StoreEntry &) const override { return false; }
+    bool hasReadableEntry(const StoreEntry &) const override { return false; }
 
     void unlinkFile(sfileno f);
     // move down when unlink is a virtual method

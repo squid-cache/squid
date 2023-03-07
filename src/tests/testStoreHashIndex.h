@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,9 +15,9 @@
  * test the store framework
  */
 
-class testStoreHashIndex : public CPPUNIT_NS::TestFixture
+class TestStoreHashIndex: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testStoreHashIndex );
+    CPPUNIT_TEST_SUITE( TestStoreHashIndex );
     CPPUNIT_TEST( testStats );
     CPPUNIT_TEST( testMaxSize );
     CPPUNIT_TEST( testSearch );

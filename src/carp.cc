@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -179,7 +179,7 @@ carpSelectParent(PeerSelector *ps)
                 key.append(request->url.host());
             }
             if (tp->options.carp_key.port) {
-                key.appendf(":%u", request->url.port());
+                key.appendf(":%hu", request->url.port().value_or(0));
             }
             if (tp->options.carp_key.path) {
                 // XXX: fix when path and query are separate

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -242,8 +242,8 @@ public:
 
 protected:
     /* DebugChannel API */
-    virtual bool shouldWrite(const DebugMessageHeader &) const final;
-    virtual void write(const DebugMessageHeader &, const CompiledDebugMessageBody &) final;
+    bool shouldWrite(const DebugMessageHeader &) const final;
+    void write(const DebugMessageHeader &, const CompiledDebugMessageBody &) final;
 };
 
 /// DebugChannel managing messages destined for "standard error stream" (stderr)
@@ -263,8 +263,8 @@ public:
 
 protected:
     /* DebugChannel API */
-    virtual bool shouldWrite(const DebugMessageHeader &) const final;
-    virtual void write(const DebugMessageHeader &, const CompiledDebugMessageBody &) final;
+    bool shouldWrite(const DebugMessageHeader &) const final;
+    void write(const DebugMessageHeader &, const CompiledDebugMessageBody &) final;
 
 private:
     /// whether we are the last resort for logging debugs() messages
@@ -281,8 +281,8 @@ public:
 
 protected:
     /* DebugChannel API */
-    virtual bool shouldWrite(const DebugMessageHeader &) const final;
-    virtual void write(const DebugMessageHeader &, const CompiledDebugMessageBody &) final;
+    bool shouldWrite(const DebugMessageHeader &) const final;
+    void write(const DebugMessageHeader &, const CompiledDebugMessageBody &) final;
 
 private:
     bool opened = false; ///< whether openlog() was called

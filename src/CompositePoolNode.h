@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,11 +28,11 @@ class CompositePoolNode : public RefCountable, public Updateable
 
 public:
     typedef RefCount<CompositePoolNode> Pointer;
-    virtual ~CompositePoolNode() {}
+    ~CompositePoolNode() override {}
 
     virtual void stats(StoreEntry * sentry) =0;
     virtual void dump(StoreEntry *entry) const =0;
-    virtual void update(int incr) =0;
+    void update(int incr) override =0;
     virtual void parse() = 0;
 
     class CompositeSelectionDetails;

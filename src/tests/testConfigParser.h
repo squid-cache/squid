@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,14 +15,14 @@
  * test the ConfigParser framework
  */
 
-class testConfigParser : public CPPUNIT_NS::TestFixture
+class TestConfigParser: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testConfigParser );
+    CPPUNIT_TEST_SUITE( TestConfigParser );
     CPPUNIT_TEST( testParseQuoted );
     CPPUNIT_TEST_SUITE_END();
 
 public:
-    void setUp();
+    void setUp() override;
 
 protected:
     bool doParseQuotedTest(const char *, const char *);

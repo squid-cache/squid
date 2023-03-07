@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -134,13 +134,13 @@ class Icmp4 : public Icmp
 {
 public:
     Icmp4();
-    virtual ~Icmp4();
+    ~Icmp4() override;
 
-    virtual int Open();
+    int Open() override;
 
 #if USE_ICMP
-    virtual void SendEcho(Ip::Address &, int, const char*, int);
-    virtual void Recv(void);
+    void SendEcho(Ip::Address &, int, const char*, int) override;
+    void Recv(void) override;
 #endif
 };
 

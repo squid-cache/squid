@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,7 +15,6 @@ namespace Comm
 typedef enum {
     OK = 0,
     COMM_ERROR = -1,
-    NOMESSAGE = -3,
     TIMEOUT = -4,
     SHUTDOWN = -5,
     IDLE = -6, /* there are no active fds and no pending callbacks. */

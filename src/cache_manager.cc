@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -51,7 +51,7 @@ public:
 public:
     ClassActionCreator(Handler *aHandler): handler(aHandler) {}
 
-    virtual Mgr::Action::Pointer create(const Mgr::Command::Pointer &cmd) const {
+    Mgr::Action::Pointer create(const Mgr::Command::Pointer &cmd) const override {
         return handler(cmd);
     }
 
