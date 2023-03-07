@@ -57,7 +57,7 @@ char* Ip::Address::toStr(char *, const unsigned int, int) const STUB_RETVAL(null
 char* Ip::Address::toUrl(char *, unsigned int) const STUB_RETVAL(nullptr)
 unsigned int Ip::Address::toHostStr(char *, const unsigned int) const STUB_RETVAL(0)
 bool Ip::Address::fromHost(const char *) STUB_RETVAL(false)
-bool Ip::Address::getReverseString(char [], int) const STUB_RETVAL(false)
+bool Ip::Address::getReverseString(char [MAX_IPSTRLEN], int) const STUB_RETVAL(false)
 int Ip::Address::matchIPAddr(const Ip::Address &) const STUB_RETVAL(0)
 int Ip::Address::compareWhole(const Ip::Address &) const STUB_RETVAL(0)
 void Ip::Address::getAddrInfo(struct addrinfo *&, int) const STUB
