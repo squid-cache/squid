@@ -50,7 +50,7 @@ find_variant()
   done
   if [ "x$found" = "xNOT_FOUND" ]; then
     echo "WARNING: Cannot find $tool version $versions" >&2
-    ($tool --version | head -1) >&2
+    echo "Trying `$tool --version 2>&1 | head -1`" >&2
     found=""
   fi
   echo $found
