@@ -252,12 +252,80 @@ acl_ip_data::FactoryParse(const char *t)
         return q;
     }
 
-    /* Special ACL RHS "ipv6" matches IPv6-Unicast Internet */
+    /* Special ACL RHS "ipv6" matches IPv6 Internet */
     if (strcmp(t, "ipv6") == 0) {
         debugs(28, 9, "aclIpParseIpData: magic 'ipv6' found.");
         r = q; // save head of the list for result.
 
-        /* 0000::/4 is a mix of localhost and obsolete IPv4-mapping space. Not valid outside this host. */
+        /* RFC 4291 section 2.5.2. The Unspecified Address: ::/128 */
+
+        /* RFC 4291 section 2.5.3. The Loopback Address : ::1/128 */
+
+        /* RFC 4291 IPv4-compatible IPv6 addres (deprecated): ::/96 */
+
+        /* undefined: default global unicast space with 000* binary prefix */
+        q->addr1 = "::1:0:0";
+        q->addr2 = "::FFFE:FFFF:FFFF";
+        q->mask.setNoAddr();
+        q->mask.applyMask(96, AF_INET6);
+
+        /* RFC 4291 IPv4 mapped address:  ::FFFF:0:0/96 */
+
+        /* undefined: default global unicast space with 000* binary prefix */
+        q->addr1 = "::1:0:0:0";
+        q->addr2 = "64:FF9A:FFFF:FFFF:FFFF::";
+        q->mask.setNoAddr();
+        q->mask.applyMask(80, AF_INET6);
+
+        /* RFC 6052 Well Known Prefix for algorithmic IPv4 to IPv6 mapping: 64:ff9b::/96 */
+        // XXX: Squid does not support this mapping, treat as IPv6 for now
+        q->addr1 = "64:FF9B::";
+        q->mask.setNoAddr();
+        q->mask.applyMask(96, AF_INET6);
+
+        /* undefined: default global unicast space with 000* binary prefix */
+        q->addr1 = "64:ff9b:0:0:0:1::";
+        q->addr2 = "64:ff9b:0:FFFF:FFFF:FFFF::";
+        q->mask.setNoAddr();
+        q->mask.applyMask(96, AF_INET6);
+
+        /* RFC 8215 reserved for Local-Use IPv4/IPv6 Translation: 64:ff9b:1::/48 */
+        // XXX: Squid does not support this mapping, treat as IPv6 for now
+        q->addr1 = "64:FF9B:1:";
+        q->mask.setNoAddr();
+        q->mask.applyMask(48, AF_INET6);
+
+        /* undefined: default global unicast space with 000* binary prefix */
+        q->addr1 = "64:ff9b:2::";
+        q->addr2 = "FF:FFFF:FFFF::";
+        q->mask.setNoAddr();
+        q->mask.applyMask(48, AF_INET6);
+
+        /* RFC 6666 Discard-Only: 0100::/64 */
+        q->addr1 = "100::";
+        q->mask.setNoAddr();
+        q->mask.applyMask(64, AF_INET6);
+
+        /* undefined: default global unicast space with 000* binary prefix */
+        q->addr1 = "100:0:0:1::";
+        q->addr2 = "100:FFFF:FFFF:FFFF::";
+        q->mask.setNoAddr();
+        q->mask.applyMask(64, AF_INET6);
+
+        /* undefined: default global unicast space with 000* binary prefix */
+        q->addr1 = "200::";
+        q->mask.setNoAddr();
+        q->mask.applyMask(7, AF_INET6);
+
+        /* undefined: default global unicast space with 000* binary prefix */
+        q->addr1 = "400::";
+        q->mask.setNoAddr();
+        q->mask.applyMask(6, AF_INET6);
+
+        /* undefined: default global unicast space with 000* binary prefix */
+        q->addr1 = "800::";
+        q->mask.setNoAddr();
+        q->mask.applyMask(5, AF_INET6);
 
         /* Future global unicast space: 1000::/4 */
         q->addr1 = "1000::";
@@ -299,7 +367,15 @@ acl_ip_data::FactoryParse(const char *t)
         q->mask.setNoAddr();
         q->mask.applyMask(4, AF_INET6);
 
-        /* F000::/4 is mostly reserved non-unicast. With some exceptions ... */
+        /* undefined: default global unicast space with 11110* binary prefix */
+        q->addr1 = "F000::";
+        q->mask.setNoAddr();
+        q->mask.applyMask(5, AF_INET6);
+
+        /* undefined: default global unicast space with 11110* binary prefix */
+        q->addr1 = "F800::";
+        q->mask.setNoAddr();
+        q->mask.applyMask(6, AF_INET6);
 
         /* RFC 4193 Unique-Local unicast space: FC00::/7 */
         q->next = new acl_ip_data;
@@ -308,12 +384,28 @@ acl_ip_data::FactoryParse(const char *t)
         q->mask.setNoAddr();
         q->mask.applyMask(7, AF_INET6);
 
+        /* undefined: default global unicast space with 11110* binary prefix */
+        q->addr1 = "FE00::";
+        q->mask.setNoAddr();
+        q->mask.applyMask(9, AF_INET6);
+
         /* Link-Local unicast space: FE80::/10 */
         q->next = new acl_ip_data;
         q = q->next;
         q->addr1 = "FE80::";
         q->mask.setNoAddr();
         q->mask.applyMask(10, AF_INET6);
+
+        /* undefined: default global unicast space with 11110* binary prefix */
+        q->addr1 = "FEC0::";
+        q->mask.setNoAddr();
+        q->mask.applyMask(10, AF_INET6);
+
+        /* RFC 4291 IPv6 Multicast */
+        q->addr1 = "FF00::";
+        q->addr1 = "FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFE";
+        q->mask.setNoAddr();
+        q->mask.applyMask(127, AF_INET6);
 
         return r;
     }
