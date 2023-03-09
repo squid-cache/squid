@@ -13,10 +13,10 @@
 
 #include <stdexcept>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testYesNoNone );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestYesNoNone );
 
 void
-testYesNoNone::testBasics()
+TestYesNoNone::testBasics()
 {
     // unconfigured, non-implicit
     {

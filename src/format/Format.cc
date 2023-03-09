@@ -508,7 +508,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_LOCAL_LISTENING_PORT:
             if (const auto port = FindListeningPortNumber(nullptr, al.getRaw())) {
-                outint = port;
+                outint = *port;
                 doint = 1;
             }
             break;
@@ -1058,8 +1058,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_CLIENT_REQ_URLPORT:
-            if (al->request) {
-                outint = al->request->url.port();
+            if (al->request && al->request->url.port()) {
+                outint = *al->request->url.port();
                 doint = 1;
             }
             break;
@@ -1134,8 +1134,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_SERVER_REQ_URLPORT:
-            if (al->adapted_request) {
-                outint = al->adapted_request->url.port();
+            if (al->adapted_request && al->adapted_request->url.port()) {
+                outint = *al->adapted_request->url.port();
                 doint = 1;
             }
             break;

@@ -32,7 +32,7 @@ class Uri
     MEMPROXY_CLASS(Uri);
 
 public:
-    Uri() : hostIsNumeric_(false), port_(0) {*host_=0;}
+    Uri(): hostIsNumeric_(false) { *host_ = 0; }
     Uri(AnyP::UriScheme const &aScheme);
     Uri(const Uri &other) {
         this->operator =(other);
@@ -54,7 +54,7 @@ public:
         hostIsNumeric_ = false;
         *host_ = 0;
         hostAddr_.setEmpty();
-        port_ = 0;
+        port_ = std::nullopt;
         touch();
     }
     void touch(); ///< clear the cached URI display forms
@@ -91,8 +91,10 @@ public:
     /// [brackets]. See RFC 3986 Section 3.2.2.
     SBuf hostOrIp() const;
 
-    void port(unsigned short p) {port_=p; touch();}
-    unsigned short port() const {return port_;}
+    /// reset authority port subcomponent
+    void port(const Port p) { port_ = p; touch(); }
+    /// \copydoc port_
+    Port port() const { return port_; }
     /// reset the port to the default port number for the current scheme
     void defaultPort() { port(getScheme().defaultPort()); }
 
@@ -178,7 +180,7 @@ private:
     bool hostIsNumeric_;            ///< whether the authority 'host' is a raw-IP
     Ip::Address hostAddr_;          ///< binary representation of the URI authority if it is a raw-IP
 
-    unsigned short port_;   ///< URL port
+    Port port_; ///< authority port subcomponent
 
     // XXX: for now includes query-string.
     SBuf path_;     ///< URI path segment

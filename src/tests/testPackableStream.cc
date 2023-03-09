@@ -16,11 +16,11 @@
 #include <iomanip>
 #include <cppunit/TestAssert.h>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testPackableStream );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestPackableStream );
 
 /* init memory pools */
 
-void testPackableStream::setUp()
+void TestPackableStream::setUp()
 {
     Mem::Init();
 }
@@ -28,7 +28,7 @@ void testPackableStream::setUp()
 // TODO: test streaming to a MemBuf as well.
 
 void
-testPackableStream::testGetStream()
+TestPackableStream::testGetStream()
 {
     /* Setup a store root so we can create a StoreEntry */
     Store::Init();

@@ -11,9 +11,9 @@
 
 #include "compat/cppunit.h"
 
-class testLookupTable : public CPPUNIT_NS::TestFixture
+class TestLookupTable: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testLookupTable );
+    CPPUNIT_TEST_SUITE( TestLookupTable );
     CPPUNIT_TEST( testLookupTableLookup );
     CPPUNIT_TEST_SUITE_END();
 public:

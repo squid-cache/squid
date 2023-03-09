@@ -15,9 +15,9 @@
 
 #include "compat/cppunit.h"
 
-class testStatHist : public CPPUNIT_NS::TestFixture
+class TestStatHist: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testStatHist );
+    CPPUNIT_TEST_SUITE( TestStatHist );
     CPPUNIT_TEST( testStatHistBaseEquality );
     CPPUNIT_TEST( testStatHistBaseAssignment );
     CPPUNIT_TEST( testStatHistLog );

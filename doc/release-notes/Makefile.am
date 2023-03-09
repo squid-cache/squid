@@ -8,16 +8,15 @@
 # requires the linuxdoc tools
 if ENABLE_RELEASE_DOCS
 
-DOC= release-6
+DOC= release-$(SQUID_RELEASE)
 
-%.ps: %.sgml
-	linuxdoc -B latex -o ps $(DOC)
-
-#$(DOC).dvi: $(DOC).tex
-#	latex $(DOC).tex
-#	latex $(DOC).tex
-#	latex $(DOC).tex
-#
+%.sgml: %.sgml.in
+	sed \
+        -e "s%[@]SQUID_VERSION[@]%$(VERSION)%g" \
+        -e "s%[@]SQUID_RELEASE[@]%$(SQUID_RELEASE)%g" \
+        -e "s%[@]SQUID_RELEASE_OLD[@]%$$(( $(SQUID_RELEASE) - 1 ))%g" \
+        < $< >$@
+	test `grep -c "@SQUID" $@` -eq 0
 
 %.txt: %.sgml
 	linuxdoc -B txt --filter $<
@@ -28,7 +27,10 @@ DOC= release-6
 	cp -p $@ $(top_builddir)/RELEASENOTES.html
 
 %.man: %.sgml
-	linuxdoc -B txt -T 2 -m $(DOC)
+	linuxdoc -B txt --manpage $<
+
+%.info: %.sgml
+	linuxdoc -B info $<
 
 dist-hook: $(DOC).html
 	@if test -f $(builddir)/$(DOC).html; then \

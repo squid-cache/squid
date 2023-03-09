@@ -15,10 +15,10 @@
 
 #include <cppunit/TestAssert.h>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testEventLoop );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestEventLoop );
 
 void
-testEventLoop::testCreate()
+TestEventLoop::testCreate()
 {
     EventLoop();
 }
@@ -43,7 +43,7 @@ public:
  * we do this with an instrumented async engine.
  */
 void
-testEventLoop::testRunOnce()
+TestEventLoop::testRunOnce()
 {
     {
         /* trivial case - no engine, should quit immediately */
@@ -89,7 +89,7 @@ testEventLoop::testRunOnce()
  * tracked, and the lowest non-negative value given to the last engine.
  */
 void
-testEventLoop::testEngineTimeout()
+TestEventLoop::testEngineTimeout()
 {
     EventLoop theLoop;
     RecordingEngine engineOne(5);
@@ -108,7 +108,7 @@ testEventLoop::testEngineTimeout()
  * hard-coded into EventLoop::runOnce()
  */
 void
-testEventLoop::testEngineErrors()
+TestEventLoop::testEngineErrors()
 {
     EventLoop theLoop;
     RecordingEngine failing_engine(AsyncEngine::EVENT_ERROR);
@@ -137,7 +137,7 @@ public:
 };
 
 void
-testEventLoop::testSetTimeService()
+TestEventLoop::testSetTimeService()
 {
     EventLoop theLoop;
     StubTime myTime;
@@ -157,7 +157,7 @@ testEventLoop::testSetTimeService()
  * this defaults to the last added one, but can be explicitly nominated
  */
 void
-testEventLoop::testSetPrimaryEngine()
+TestEventLoop::testSetPrimaryEngine()
 {
     EventLoop theLoop;
     RecordingEngine first_engine(10);

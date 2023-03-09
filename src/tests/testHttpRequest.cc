@@ -17,7 +17,7 @@
 #include "testHttpRequest.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testHttpRequest );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestHttpRequest );
 
 /** wrapper for testing HttpRequest object private and protected functions */
 class PrivateHttpRequest : public HttpRequest
@@ -30,7 +30,7 @@ public:
 /* init memory pools */
 
 void
-testHttpRequest::setUp()
+TestHttpRequest::setUp()
 {
     Mem::Init();
     AnyP::UriScheme::Init();
@@ -41,16 +41,15 @@ testHttpRequest::setUp()
  * Test creating an HttpRequest object from a Url and method
  */
 void
-testHttpRequest::testCreateFromUrl()
+TestHttpRequest::testCreateFromUrl()
 {
     /* vanilla url, implicit method */
-    unsigned short expected_port;
     SBuf url("http://foo:90/bar");
     const auto mx = MasterXaction::MakePortless<XactionInitiator::initHtcp>();
     HttpRequest *aRequest = HttpRequest::FromUrl(url, mx);
-    expected_port = 90;
+    AnyP::KnownPort expected_port = 90;
     CPPUNIT_ASSERT(aRequest != nullptr);
-    CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
+    CPPUNIT_ASSERT_EQUAL(expected_port, *aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->url.host()));
     CPPUNIT_ASSERT_EQUAL(SBuf("/bar"), aRequest->url.path());
@@ -61,7 +60,7 @@ testHttpRequest::testCreateFromUrl()
     aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_GET);
     expected_port = 90;
     CPPUNIT_ASSERT(aRequest != nullptr);
-    CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
+    CPPUNIT_ASSERT_EQUAL(expected_port, *aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->url.host()));
     CPPUNIT_ASSERT_EQUAL(SBuf("/bar"), aRequest->url.path());
@@ -72,7 +71,7 @@ testHttpRequest::testCreateFromUrl()
     aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_PUT);
     expected_port = 80;
     CPPUNIT_ASSERT(aRequest != nullptr);
-    CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
+    CPPUNIT_ASSERT_EQUAL(expected_port, *aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_PUT);
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->url.host()));
     CPPUNIT_ASSERT_EQUAL(SBuf("/bar"), aRequest->url.path());
@@ -89,7 +88,7 @@ testHttpRequest::testCreateFromUrl()
     aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_CONNECT);
     expected_port = 45;
     CPPUNIT_ASSERT(aRequest != nullptr);
-    CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
+    CPPUNIT_ASSERT_EQUAL(expected_port, *aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_CONNECT);
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->url.host()));
     CPPUNIT_ASSERT_EQUAL(SBuf(), aRequest->url.path());
@@ -102,17 +101,16 @@ testHttpRequest::testCreateFromUrl()
  * Test BUG: URL '2000:800:45' opens host 2000 port 800 !!
  */
 void
-testHttpRequest::testIPv6HostColonBug()
+TestHttpRequest::testIPv6HostColonBug()
 {
-    unsigned short expected_port;
     HttpRequest *aRequest = nullptr;
 
     /* valid IPv6 address without port */
     SBuf url("http://[2000:800::45]/foo");
     const auto mx = MasterXaction::MakePortless<XactionInitiator::initHtcp>();
     aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_GET);
-    expected_port = 80;
-    CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
+    AnyP::KnownPort expected_port = 80;
+    CPPUNIT_ASSERT_EQUAL(expected_port, *aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("[2000:800::45]"), String(aRequest->url.host()));
     CPPUNIT_ASSERT_EQUAL(SBuf("/foo"), aRequest->url.path());
@@ -122,7 +120,7 @@ testHttpRequest::testIPv6HostColonBug()
     url = "http://[2000:800::45]:90/foo";
     aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_GET);
     expected_port = 90;
-    CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
+    CPPUNIT_ASSERT_EQUAL(expected_port, *aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("[2000:800::45]"), String(aRequest->url.host()));
     CPPUNIT_ASSERT_EQUAL(SBuf("/foo"), aRequest->url.path());
@@ -132,7 +130,7 @@ testHttpRequest::testIPv6HostColonBug()
     url = "http://2000:800::45/foo";
     aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_GET);
     expected_port = 80;
-    CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
+    CPPUNIT_ASSERT_EQUAL(expected_port, *aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("[2000:800::45]"), String(aRequest->url.host()));
     CPPUNIT_ASSERT_EQUAL(SBuf("/foo"), aRequest->url.path());
@@ -140,7 +138,7 @@ testHttpRequest::testIPv6HostColonBug()
 }
 
 void
-testHttpRequest::testSanityCheckStartLine()
+TestHttpRequest::testSanityCheckStartLine()
 {
     MemBuf input;
     const auto mx = MasterXaction::MakePortless<XactionInitiator::initHtcp>();

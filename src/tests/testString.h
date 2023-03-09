@@ -15,9 +15,9 @@
  * test the store framework
  */
 
-class testString : public CPPUNIT_NS::TestFixture
+class TestString: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testString );
+    CPPUNIT_TEST_SUITE( TestString );
     CPPUNIT_TEST( testCmpDefault );
     CPPUNIT_TEST( testCmpEmptyString );
     CPPUNIT_TEST( testCmpNotEmptyDefault );

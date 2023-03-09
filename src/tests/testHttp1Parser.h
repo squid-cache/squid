@@ -11,9 +11,9 @@
 
 #include "compat/cppunit.h"
 
-class testHttp1Parser : public CPPUNIT_NS::TestFixture
+class TestHttp1Parser: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testHttp1Parser );
+    CPPUNIT_TEST_SUITE( TestHttp1Parser );
     // object basics are working, just in case.
     CPPUNIT_TEST( testParserConstruct );
     CPPUNIT_TEST( testDripFeed );
