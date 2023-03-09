@@ -626,13 +626,14 @@ AnyP::Uri::parsePort(Parser::Tokenizer &tok) const
         throw TextException("malformed or missing port", Here());
 
     Assure(rawPort > 0);
-    // TODO: Move to Uri declaration, use std::optional, adjust its many users.
-    using Port = decltype(port_);
-    constexpr auto portMax = 65535; // TODO: Make this a class-scope constant and REuse it.
-    static_assert(std::numeric_limits<Port>::max() >= portMax, "Port type can represent the maximum valid port number");
+    constexpr KnownPort portMax = 65535; // TODO: Make this a class-scope constant and REuse it.
+    constexpr auto portStorageMax = std::numeric_limits<Port::value_type>::max();
+    static_assert(!Less(portStorageMax, portMax), "Port type can represent the maximum valid port number");
     if (Less(portMax, rawPort))
         throw TextException("huge port", Here());
 
+    // TODO: Return KnownPort after migrating the non-CONNECT uri-host parsing
+    // code to use us (so that foundPort "int" disappears or starts using Port).
     return NaturalCast<int>(rawPort);
 }
 
