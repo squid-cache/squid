@@ -73,12 +73,19 @@ public:
     /// Not to be confused with ClientHttpRequest::Out::headers_sz.
     int headers_sz;
     store_client *sc;       /* The store_client we're using */
+    /// The number of bytes in the first store_client response
     size_t reqsize;
 
     /// the total number of bytes received from our store_client so far
     size_t reqofs;
 
     Store::ReadBuffer storeReadBuffer; ///< XXX
+
+    /// Buffer dedicated to receiving Store responses to generated revalidation
+    /// requests. It has to be different from storeReadBuffer because the latter
+    /// keeps the contents of the stale HTTP response during revalidation.
+    /// sendClientOldEntry() uses that contents if things go wrong.
+    char tempbuf[HTTP_REQBUF_SZ];
 
     struct Flags {
         Flags() : storelogiccomplete(0), complete(0), headersSent(false) {}

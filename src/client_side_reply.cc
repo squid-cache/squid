@@ -87,6 +87,7 @@ clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
     deleting(false),
     collapsedRevalidation(crNone)
 {
+    *tempbuf = 0;
 }
 
 /** Create an error in the store awaiting the client side to read it.
@@ -360,8 +361,10 @@ clientReplyContext::processExpired()
         debugs(88, DBG_CRITICAL, "clientReplyContext::processExpired: Found ENTRY_ABORTED object");
 
     {
+        static_assert(sizeof(tempbuf) >= HTTP_REQBUF_SZ);
         /* start counting the length from 0 */
-        storeClientCopy(sc, entry, storeReadBuffer.legacyReadRequest(0), HandleIMSReply, this);
+        StoreIOBuffer localTempBuffer(HTTP_REQBUF_SZ, 0, tempbuf);
+        storeClientCopy(sc, entry, localTempBuffer, HandleIMSReply, this);
     }
 }
 
