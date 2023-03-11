@@ -362,7 +362,7 @@ acl_ip_data::FactoryParse(const char *t)
         q->mask.setNoAddr();
         q->mask.applyMask(4, AF_INET6);
 
-        /* Current global unicast space: 2000::/4 = (2000::/4 - 3000::/4) */
+        /* Current global unicast space: 2000::/3 = (2000::/4 - 3000::/4) */
         q->next = new acl_ip_data;
         q = q->next;
         q->addr1 = "2000::";
