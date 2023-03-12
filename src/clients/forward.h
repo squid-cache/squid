@@ -9,7 +9,6 @@
 #ifndef SQUID_CLIENTS_FORWARD_H
 #define SQUID_CLIENTS_FORWARD_H
 
-#include "base/forward.h"
 #include "sbuf/forward.h"
 
 class FwdState;
