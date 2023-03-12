@@ -16,6 +16,7 @@ man_MANS=
 DISTCLEANFILES=
 
 LDADD= \
+	$(top_builddir)/src/html/libhtml.la \
 	$(top_builddir)/src/ip/libip.la \
 	$(top_builddir)/src/mem/libminimal.la \
 	$(top_builddir)/src/time/libtime.la \

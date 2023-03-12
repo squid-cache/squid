@@ -9,7 +9,7 @@
 #include "squid.h"
 #include "base/IoManip.h"
 #include "error/SysErrorDetail.h"
-#include "html_quote.h"
+#include "html/forward.h"
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
 #include "security/Certificate.h"

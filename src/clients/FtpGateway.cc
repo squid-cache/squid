@@ -23,7 +23,7 @@
 #include "fd.h"
 #include "fde.h"
 #include "FwdState.h"
-#include "html_quote.h"
+#include "html/forward.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeader.h"
 #include "HttpHeaderRange.h"

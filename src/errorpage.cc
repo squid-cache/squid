@@ -20,7 +20,7 @@
 #include "fde.h"
 #include "format/Format.h"
 #include "fs_io.h"
-#include "html_quote.h"
+#include "html/forward.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"

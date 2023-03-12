@@ -10,7 +10,7 @@
 #include "base/CharacterSet.h"
 #include "base64.h"
 #include "getfullhostname.h"
-#include "html_quote.h"
+#include "html/forward.h"
 #include "ip/Address.h"
 #include "MemBuf.h"
 #include "rfc1738.h"

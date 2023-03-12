@@ -7,11 +7,7 @@
  */
 
 #include "squid.h"
-#include "html_quote.h"
-
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#include "html/forward.h"
 
 /*
  *  HTML defines these characters as special entities that should be quoted.
@@ -52,7 +48,7 @@ static struct {
 char *
 html_quote(const char *string)
 {
-    static char *buf;
+    static char *buf = nullptr;
     static size_t bufsize = 0;
     const char *src;
     char *dst;
@@ -61,10 +57,10 @@ html_quote(const char *string)
     /* XXX This really should be implemented using a MemPool, but
      * MemPools are not yet available in lib...
      */
-    if (buf == NULL || strlen(string) * 6 > bufsize) {
+    if (!buf || strlen(string) * 6 > bufsize) {
         xfree(buf);
         bufsize = strlen(string) * 6 + 1;
-        buf = xcalloc(bufsize, 1);
+        buf = static_cast<char *>(xcalloc(bufsize, 1));
     }
     for (src = string, dst = buf; *src; src++) {
         const char *escape = NULL;
