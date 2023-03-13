@@ -267,8 +267,6 @@ acl_ip_data::FactoryParse(const char *t)
         // shared with IPv4 0.0.0.0/0
 
         /* undefined: default global unicast space with 000* binary prefix */
-        q->next = new acl_ip_data;
-        q = q->next;
         q->addr1 = "::1:0:0";
         q->addr2 = "::FFFE:FFFF:FFFF";
         q->mask.setNoAddr();
