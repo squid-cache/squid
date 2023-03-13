@@ -11,9 +11,9 @@
 
 #include "compat/cppunit.h"
 
-class testMem : public CPPUNIT_NS::TestFixture
+class TestMem: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testMem );
+    CPPUNIT_TEST_SUITE( TestMem );
     /* note the statement here and then the actual prototype below */
     CPPUNIT_TEST( testMemPool );
     CPPUNIT_TEST( testMemProxy );

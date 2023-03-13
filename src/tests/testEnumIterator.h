@@ -13,9 +13,9 @@
 
 #include "compat/cppunit.h"
 
-class testEnumIterator : public CPPUNIT_NS::TestFixture
+class TestEnumIterator: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testEnumIterator );
+    CPPUNIT_TEST_SUITE( TestEnumIterator );
     CPPUNIT_TEST( testForwardIter );
     CPPUNIT_TEST( testReverseIter );
     CPPUNIT_TEST( testBidirectionalIter );

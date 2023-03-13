@@ -22,7 +22,7 @@ RemovalPolicy * mem_policy = nullptr;
 int64_t
 MemObject::endOffset() const
 {
-    // XXX: required by testStore
+    // XXX: required by TestStore
     return data_hdr.endOffset();
 }
 

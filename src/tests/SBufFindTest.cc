@@ -62,7 +62,7 @@ SBufFindTest::run()
 
                 // the special npos value is not tested as the behavior is
                 //  different from std::string (where the behavior is undefined)
-                //  It is ad-hoc tested in testSBuf instead
+                //  It is ad-hoc tested in TestSBuf instead
                 //thePos = SBuf::npos;
                 //testAllMethods();
             }

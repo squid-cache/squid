@@ -66,7 +66,6 @@ clientReplyContext::~clientReplyContext()
     /* old_entry might still be set if we didn't yet get the reply
      * code in HandleIMSReply() */
     removeStoreReference(&old_sc, &old_entry);
-    safe_free(tempBuffer.data);
     cbdataReferenceDone(http);
     HTTPMSGUNLOCK(reply);
 }
@@ -76,7 +75,6 @@ clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
     http(cbdataReference(clientContext)),
     headers_sz(0),
     sc(nullptr),
-    old_reqsize(0),
     reqsize(0),
     reqofs(0),
     ourNode(nullptr),
@@ -84,6 +82,8 @@ clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
     old_entry(nullptr),
     old_sc(nullptr),
     old_lastmod(-1),
+    old_reqofs(0),
+    old_reqsize(0),
     deleting(false),
     collapsedRevalidation(crNone)
 {
@@ -202,7 +202,7 @@ clientReplyContext::saveState()
     old_lastmod = http->request->lastmod;
     old_etag = http->request->etag;
     old_reqsize = reqsize;
-    tempBuffer.offset = reqofs;
+    old_reqofs = reqofs;
     /* Prevent accessing the now saved entries */
     http->storeEntry(nullptr);
     sc = nullptr;
@@ -219,7 +219,7 @@ clientReplyContext::restoreState()
     http->storeEntry(old_entry);
     sc = old_sc;
     reqsize = old_reqsize;
-    reqofs = tempBuffer.offset;
+    reqofs = old_reqofs;
     http->request->lastmod = old_lastmod;
     http->request->etag = old_etag;
     /* Prevent accessed the old saved entries */
@@ -228,7 +228,7 @@ clientReplyContext::restoreState()
     old_lastmod = -1;
     old_etag.clean();
     old_reqsize = 0;
-    tempBuffer.offset = 0;
+    old_reqofs = 0;
 }
 
 void
@@ -377,7 +377,7 @@ clientReplyContext::sendClientUpstreamResponse()
         http->storeEntry()->clearPublicKeyScope();
 
     /* here the data to send is the data we just received */
-    tempBuffer.offset = 0;
+    old_reqofs = 0;
     old_reqsize = 0;
     /* sendMoreData tracks the offset as well.
      * Force it back to zero */
@@ -2100,7 +2100,6 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         sc->setDelayId(DelayId::DelayClient(http,reply));
 #endif
 
-    holdingBuffer = result;
     processReplyAccess();
     return;
 }

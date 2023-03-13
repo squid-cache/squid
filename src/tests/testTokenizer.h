@@ -11,9 +11,9 @@
 
 #include "compat/cppunit.h"
 
-class testTokenizer : public CPPUNIT_NS::TestFixture
+class TestTokenizer: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testTokenizer );
+    CPPUNIT_TEST_SUITE( TestTokenizer );
     CPPUNIT_TEST ( testCharacterSet );
     CPPUNIT_TEST ( testTokenizerPrefix );
     CPPUNIT_TEST ( testTokenizerSuffix );

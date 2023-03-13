@@ -55,13 +55,13 @@ TestSwapDir::canStore(const StoreEntry &, int64_t, int &load) const
 }
 
 StoreIOState::Pointer
-TestSwapDir::createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *)
+TestSwapDir::createStoreIO(StoreEntry &, StoreIOState::STIOCB *, void *)
 {
     return nullptr;
 }
 
 StoreIOState::Pointer
-TestSwapDir::openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *)
+TestSwapDir::openStoreIO(StoreEntry &, StoreIOState::STIOCB *, void *)
 {
     return nullptr;
 }

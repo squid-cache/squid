@@ -58,7 +58,7 @@ class store_client
     CBDATA_CLASS(store_client);
 
 public:
-    store_client(StoreEntry *);
+    explicit store_client(StoreEntry *);
     ~store_client();
 
     /// An offset into the stored response bytes, including the HTTP response
@@ -175,7 +175,6 @@ public:
 
 void storeClientCopy(store_client *, StoreEntry *, StoreIOBuffer, STCB *, void *);
 store_client* storeClientListAdd(StoreEntry * e, void *data);
-int storeClientCopyPending(store_client *, StoreEntry * e, void *data);
 int storeUnregister(store_client * sc, StoreEntry * e, void *data);
 int storePendingNClients(const StoreEntry * e);
 int storeClientIsThisAClient(store_client * sc, void *someClient);

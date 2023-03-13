@@ -1086,8 +1086,8 @@ ErrorState::compileLegacyCode(Build &build)
         break;
 
     case 'p':
-        if (request) {
-            mb.appendf("%u", request->url.port());
+        if (request && request->url.port()) {
+            mb.appendf("%hu", *request->url.port());
         } else if (!building_deny_info_url) {
             p = "[unknown port]";
         }

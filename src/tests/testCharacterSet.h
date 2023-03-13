@@ -11,9 +11,9 @@
 
 #include "compat/cppunit.h"
 
-class testCharacterSet : public CPPUNIT_NS::TestFixture
+class TestCharacterSet: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testCharacterSet );
+    CPPUNIT_TEST_SUITE( TestCharacterSet );
     CPPUNIT_TEST( CharacterSetConstruction );
     CPPUNIT_TEST( CharacterSetAdd );
     CPPUNIT_TEST( CharacterSetAddRange );

@@ -11,9 +11,9 @@
 
 #include "compat/cppunit.h"
 
-class testNetDb : public CPPUNIT_NS::TestFixture
+class TestNetDb: public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testNetDb );
+    CPPUNIT_TEST_SUITE( TestNetDb );
     /* note the statement here and then the actual prototype below */
     CPPUNIT_TEST( testConstruct );
     CPPUNIT_TEST_SUITE_END();

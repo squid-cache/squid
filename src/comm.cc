@@ -372,7 +372,7 @@ comm_openex(int sock_type,
     debugs(50, 3, "comm_openex: Attempt open socket for: " << addr );
 
     new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
-    int xerrno = errno;
+    const auto firstErrNo = errno;
 
     /* under IPv6 there is the possibility IPv6 is present but disabled. */
     /* try again as IPv4-native if possible */
@@ -385,6 +385,8 @@ comm_openex(int sock_type,
         AI->ai_protocol = proto;
         debugs(50, 3, "Attempt fallback open socket for: " << addr );
         new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+        // TODO: Report failures of this second socket() call.
+        // if both socket() calls fail, we use firstErrNo
         debugs(50, 2, "attempt open " << note << " socket on: " << addr);
     }
 
@@ -393,16 +395,16 @@ comm_openex(int sock_type,
          * are failing because the open file table is full.  This
          * limits the number of simultaneous clients */
 
-        if (limitError(errno)) {
-            debugs(50, DBG_IMPORTANT, MYNAME << "socket failure: " << xstrerr(xerrno));
+        if (limitError(firstErrNo)) {
+            debugs(50, DBG_IMPORTANT, MYNAME << "socket failure: " << xstrerr(firstErrNo));
             fdAdjustReserved();
         } else {
-            debugs(50, DBG_CRITICAL, MYNAME << "socket failure: " << xstrerr(xerrno));
+            debugs(50, DBG_CRITICAL, MYNAME << "socket failure: " << xstrerr(firstErrNo));
         }
 
         Ip::Address::FreeAddr(AI);
 
-        errno = xerrno; // restore for caller
+        errno = firstErrNo; // restore for caller
         return -1;
     }
 
@@ -428,7 +430,9 @@ comm_openex(int sock_type,
 
     // XXX transition only. prevent conn from closing the new FD on function exit.
     conn->fd = -1;
-    errno = xerrno; // restore for caller
+    // XXX: firstErrNo is not applicable here -- socket() calls succeeded above!
+    // TODO: Stop reporting error codes via errno.
+    errno = firstErrNo;
     return new_socket;
 }
 
@@ -884,11 +888,11 @@ _comm_close(int fd, char const *file, int line)
     // notify read/write handlers after canceling select reservations, if any
     if (COMMIO_FD_WRITECB(fd)->active()) {
         Comm::SetSelect(fd, COMM_SELECT_WRITE, nullptr, nullptr, 0);
-        COMMIO_FD_WRITECB(fd)->finish(Comm::ERR_CLOSING, errno);
+        COMMIO_FD_WRITECB(fd)->finish(Comm::ERR_CLOSING, 0);
     }
     if (COMMIO_FD_READCB(fd)->active()) {
         Comm::SetSelect(fd, COMM_SELECT_READ, nullptr, nullptr, 0);
-        COMMIO_FD_READCB(fd)->finish(Comm::ERR_CLOSING, errno);
+        COMMIO_FD_READCB(fd)->finish(Comm::ERR_CLOSING, 0);
     }
 
 #if USE_DELAY_POOLS

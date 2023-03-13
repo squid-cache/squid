@@ -26,7 +26,6 @@
 #include "SquidMath.h"
 #include "StatCounters.h"
 #include "store_key_md5.h"
-#include "StoreSearchUFS.h"
 #include "StoreSwapLogData.h"
 #include "tools.h"
 #include "UFSSwapDir.h"
@@ -543,15 +542,15 @@ Fs::Ufs::UFSSwapDir::dereference(StoreEntry & e)
 }
 
 StoreIOState::Pointer
-Fs::Ufs::UFSSwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB * file_callback, StoreIOState::STIOCB * aCallback, void *callback_data)
+Fs::Ufs::UFSSwapDir::createStoreIO(StoreEntry &e, StoreIOState::STIOCB * const aCallback, void * const callback_data)
 {
-    return IO->create (this, &e, file_callback, aCallback, callback_data);
+    return IO->create(this, &e, aCallback, callback_data);
 }
 
 StoreIOState::Pointer
-Fs::Ufs::UFSSwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB * file_callback, StoreIOState::STIOCB * aCallback, void *callback_data)
+Fs::Ufs::UFSSwapDir::openStoreIO(StoreEntry &e, StoreIOState::STIOCB * const aCallback, void * const callback_data)
 {
-    return IO->open (this, &e, file_callback, aCallback, callback_data);
+    return IO->open(this, &e, aCallback, callback_data);
 }
 
 int
