@@ -2871,6 +2871,11 @@ DOC_START
 	Processing proceeds in the order specified, and stops at first fully
 	matching line.
 
+	The ipaddr may be one of the following labels (instead of a literal IP address):
+	    transparent: Sets the outgoing IP address to the same IP as the client's connection to the proxy.
+	                 For example, Squid may be listening on both 10.1.0.1 and 10.1.0.2. This label will set
+	                 the outgoing IP to whichever Squid IP the request came in through.
+
 	Squid will add an implicit IP version test to each line.
 	Requests going to IPv4 websites will use the outgoing 10.1.0.* addresses.
 	Requests going to IPv6 websites will use the outgoing 2001:db8:* addresses.
@@ -2954,15 +2959,6 @@ DOC_START
 	as from where it was loaded at the IP level. The Host: header may
 	be different from the connected IP and approved origin.
 
-DOC_END
-
-NAME: transparent_outgoing_ip
-TYPE: onoff
-LOC: Config.onoff.transparent_outgoing_ip
-DEFAULT: off
-DOC_START
-	If this is enabled, the outgoing IP address will match the
-	local IP address that the request came in through.
 DOC_END
 
 NAME: client_dst_passthru

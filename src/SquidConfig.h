@@ -333,7 +333,6 @@ public:
         int memory_cache_first;
         int memory_cache_disk;
         int hostStrictVerify;
-        int transparent_outgoing_ip;
         int client_dst_passthru;
         int dns_mdns;
 #if USE_OPENSSL

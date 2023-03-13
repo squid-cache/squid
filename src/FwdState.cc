@@ -1508,12 +1508,6 @@ getOutgoingAddress(HttpRequest * request, const Comm::ConnectionPointer &conn)
         // else no tproxy today ...
     }
 
-    if(Config.onoff.transparent_outgoing_ip) {
-        conn->local = request->clientConnectionManager->clientConnection->local;
-        conn->local.port(0);
-        return;
-    }
-
     if (!Config.accessList.outgoing_address) {
         return; // anything will do.
     }
@@ -1526,13 +1520,22 @@ getOutgoingAddress(HttpRequest * request, const Comm::ConnectionPointer &conn)
     // needs a bit of rework in ACLFilledChecklist to use Comm::Connection instead of ConnStateData
 
     for (Acl::Address *l = Config.accessList.outgoing_address; l; l = l->next) {
+        Ip::Address localAddr = l->addr;
+
+        /* the transparent label sets the outgoing local addr to the same addr as the client's connection to the proxy */
+        if (l->label == "transparent") {
+            if(request->clientConnectionManager.valid() && request->clientConnectionManager->clientConnection != nullptr) {
+                localAddr = request->clientConnectionManager->clientConnection->local;
+                localAddr.port(0);
+            }
+        }
 
         /* check if the outgoing address is usable to the destination */
-        if (conn->remote.isIPv4() != l->addr.isIPv4()) continue;
+        if (conn->remote.isIPv4() != localAddr.isIPv4()) continue;
 
         /* check ACLs for this outgoing address */
         if (!l->aclList || ch.fastCheck(l->aclList).allowed()) {
-            conn->local = l->addr;
+            conn->local = localAddr;
             return;
         }
     }

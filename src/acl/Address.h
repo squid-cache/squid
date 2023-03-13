@@ -11,6 +11,7 @@
 
 #include "acl/Acl.h"
 #include "ip/Address.h"
+#include "SquidString.h"
 
 namespace Acl
 {
@@ -28,6 +29,7 @@ public:
     ACLList *aclList;
 
     Ip::Address addr;
+    String label;
 };
 
 } // namespace Acl

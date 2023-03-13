@@ -1551,6 +1551,8 @@ parse_address(Ip::Address *addr)
         addr->setAnyAddr();
     else if ( (!strcmp(token,"no_addr")) || (!strcmp(token,"full_mask")) )
         addr->setNoAddr();
+    else if (!strcmp(token,"transparent"))
+        (void) 0;
     else if ( (*addr = token) ) // try parse numeric/IPA
         (void) 0;
     else if (addr->GetHostByName(token)) // do not use ipcache
@@ -1588,6 +1590,12 @@ static void
 parse_acl_address(Acl::Address ** head)
 {
     Acl::Address *l = new Acl::Address;
+
+    char *token = ConfigParser::PeekAtToken();
+    if (token && !strcmp(token, "transparent")) {
+        l->label = "transparent";
+    }
+
     parse_address(&l->addr);
     aclParseAclList(LegacyParser, &l->aclList, l->addr);
 
