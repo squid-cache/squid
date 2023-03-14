@@ -290,7 +290,7 @@ StoreEntry::storeClientType() const
     /*
      * If this is the first client, let it be the mem client
      */
-    if (mem_obj->nclients == 1)
+    if (mem_obj->nclients == 1) // XXX: nclients is incremented after we are called
         return STORE_MEM_CLIENT;
 
     /*
@@ -301,6 +301,12 @@ StoreEntry::storeClientType() const
      */
     if (swap_status == SWAPOUT_NONE)
         return STORE_MEM_CLIENT;
+
+    // TODO: The above "must make this a mem client" logic contradicts "Slight
+    // weirdness" logic in store_client::doCopy() that converts hits to misses
+    // on startSwapin() failures. We should probably attempt to open a swapin
+    // file _here_ instead (and avoid STORE_DISK_CLIENT designation for clients
+    // that fail to do so).
 
     /*
      * otherwise, make subsequent clients read from disk so they
