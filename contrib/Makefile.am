@@ -22,7 +22,7 @@ EXTRA_DIST = \
 
 all:
 
-install: install-@host_os@
+#install: install-@host_os@
 
 install-hpux10.10 install-hpux10.20:
 	$(INSTALL_BIN) $(SQUID_RC) /sbin/init.d/squid
