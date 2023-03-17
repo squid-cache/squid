@@ -795,7 +795,12 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STIOCB * const cbIo, voi
     // public key, but it could have gone private since then (while keeping the
     // anchor lock). The stale anchor key is not (and cannot be) erased (until
     // the marked-for-deletion/release anchor/entry is unlocked is recycled).
-    assert(EBIT_TEST(e.flags, KEY_PRIVATE) || slot->sameKey(static_cast<const cache_key*>(e.key)));
+    const auto ourAnchor = [&]() {
+        if (const auto publicKey = e.publicKey())
+            return slot->sameKey(publicKey);
+        return true; // cannot check
+    };
+    assert(ourAnchor());
 
     // For collapsed disk hits: e.swap_file_sz and slot->basics.swap_file_sz
     // may still be zero and basics.swap_file_sz may grow.
