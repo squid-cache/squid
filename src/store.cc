@@ -256,6 +256,8 @@ StoreEntry::storeClientType() const
 
     assert(mem_obj);
 
+    debugs(20, 7, *this << " inmem_lo=" << mem_obj->inmem_lo);
+
     if (mem_obj->inmem_lo)
         return STORE_DISK_CLIENT;
 
@@ -283,6 +285,7 @@ StoreEntry::storeClientType() const
                 return STORE_MEM_CLIENT;
             }
         }
+        debugs(20, 7, "STORE_OK STORE_DISK_CLIENT");
         return STORE_DISK_CLIENT;
     }
 
@@ -308,10 +311,15 @@ StoreEntry::storeClientType() const
     // file _here_ instead (and avoid STORE_DISK_CLIENT designation for clients
     // that fail to do so).
 
+    // XXX: Same for Rock store that does not yet support swapin during swapout.
+    // if (swap_status == SWAPOUT_WRITING)
+    //    return STORE_MEM_CLIENT;
+
     /*
      * otherwise, make subsequent clients read from disk so they
      * can not delay the first, and vice-versa.
      */
+    debugs(20, 7, "STORE_PENDING STORE_DISK_CLIENT");
     return STORE_DISK_CLIENT;
 }
 
@@ -1803,7 +1811,8 @@ StoreEntry::trimMemory(const bool preserveSwappable)
     else
         mem_obj->trimUnSwappable();
 
-    debugs(88, 7, *this << " inmem_lo=" << mem_obj->inmem_lo);
+    debugs(88, 7, *this << " inmem_lo=" << mem_obj->inmem_lo <<
+           (preserveSwappable ? " swappable" : ""));
 }
 
 bool

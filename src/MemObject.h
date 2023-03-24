@@ -89,6 +89,12 @@ public:
     bool appliedUpdates = false;
 
     void stat (MemBuf * mb) const;
+
+    /// The offset of the last memory-stored HTTP response byte plus one.
+    /// * HTTP response headers are stored at offset zero.
+    /// * If HTTP ranges are not involved, then HTTP response body bytes start
+    ///   at baseReply().hdr_sz offset.
+    /// * Otherwise, document (XXX).
     int64_t endOffset () const;
 
     /// sets baseReply().hdr_sz (i.e. written reply headers size) to endOffset()

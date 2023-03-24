@@ -132,7 +132,6 @@ public:
 
     void dumpStats(MemBuf * output, int clientNumber) const;
 
-    int64_t cmp_offset;
 #if STORE_CLIENT_LIST_DEBUG
 
     void *owner;
@@ -168,10 +167,12 @@ public:
 
 private:
     bool moreToSend() const;
+    bool canReadFromMemory() const;
+    int64_t nextHttpReadOffset() const;
 
     void fileRead();
     void scheduleDiskRead();
-    bool readFromMemory();
+    void readFromMemory();
     void scheduleRead();
     bool startSwapin();
 
@@ -197,6 +198,16 @@ private:
     /// The number of bytes loaded from Store into copyInto while answering the
     /// current copy() request. Ought to be ignored when not answering.
     size_t copiedSize;
+
+    /// The total number of HTTP header bytes received from Store
+    size_t httpHeaderBytesReceived_;
+
+    /// The total number of HTTP body bytes delivered in all copy() answers.
+    uint64_t httpBodyBytesCopied_;
+
+    // TODO: Try to replace with some other existing counter
+    /// finishCallback() has been called at least once
+    bool answeredOnce = false;
 
     /* Until we finish stuffing code into store_client */
 

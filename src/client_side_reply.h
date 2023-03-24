@@ -59,7 +59,7 @@ public:
     void processExpired();
     clientStream_status_t replyStatus();
     void processMiss();
-    void traceReply(clientStreamNode * node);
+    void traceReply();
     const char *storeId() const { return (http->store_id.size() > 0 ? http->store_id.termedBuf() : http->uri); }
 
     Http::StatusCode purgeStatus;
@@ -73,19 +73,18 @@ public:
     /// Not to be confused with ClientHttpRequest::Out::headers_sz.
     int headers_sz;
     store_client *sc;       /* The store_client we're using */
-    /// The number of bytes in the first store_client response
-    size_t reqsize;
 
-    /// the total number of bytes received from our store_client so far
+    // XXX: Rename to bufferedBodySize or some such!
+    /// the number of response body bytes available in storeReadBuffer
     size_t reqofs;
 
-    Store::ReadBuffer storeReadBuffer; ///< XXX
+    Store::ReadBuffer storeReadBuffer; ///< XXX: Document (or restore the old code).
 
     /// Buffer dedicated to receiving Store responses to generated revalidation
     /// requests. It has to be different from storeReadBuffer because the latter
     /// keeps the contents of the stale HTTP response during revalidation.
     /// sendClientOldEntry() uses that contents if things go wrong.
-    char tempbuf[HTTP_REQBUF_SZ];
+    char tempbuf[HTTP_REQBUF_SZ]; // TODO: Cannot exceed storeReadBuffer capacity
 
     struct Flags {
         Flags() : storelogiccomplete(0), complete(0), headersSent(false) {}
@@ -102,7 +101,7 @@ private:
 
     clientStreamNode *getNextNode() const;
     void makeThisHead();
-    bool errorInStream(StoreIOBuffer const &result, size_t const &sizeToProcess)const ;
+    bool errorInStream(const StoreIOBuffer &result) const;
     void sendStreamError(StoreIOBuffer const &result);
     void pushStreamData(StoreIOBuffer const &result, char *source);
     clientStreamNode * next() const;
@@ -149,7 +148,6 @@ private:
     time_t old_lastmod;
     String old_etag;
     size_t old_reqofs;
-    size_t old_reqsize;
 
     bool deleting;
 
