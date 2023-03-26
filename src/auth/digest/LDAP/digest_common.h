@@ -20,9 +20,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+#include <cunistd>
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif

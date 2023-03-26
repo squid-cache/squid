@@ -15,9 +15,7 @@
 #include "sbuf/Stream.h"
 
 #include <cerrno>
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
+#include <cctype>
 
 /// convenience method: consumes up to n bytes, counts, and returns them
 SBuf

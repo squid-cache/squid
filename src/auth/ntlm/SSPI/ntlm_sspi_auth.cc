@@ -82,9 +82,7 @@
 #include <windows.h>
 #include <sspi.h>
 #include <security.h>
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
+#include <cctype>
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif

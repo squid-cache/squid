@@ -15,9 +15,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+#include <cunistd>
 #if HAVE_GNUMALLLOC_H
 #include <gnumalloc.h>
 #elif HAVE_MALLOC_H

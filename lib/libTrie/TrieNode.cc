@@ -9,9 +9,7 @@
 #include "squid.h"
 #include "TrieCharTransform.h"
 #include "TrieNode.h"
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+#include <cunistd>
 
 TrieNode::TrieNode() : _privateData(nullptr)
 {
