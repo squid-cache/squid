@@ -13,9 +13,7 @@
 #include "ip/Address.h"
 #include "ip/tools.h"
 
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+#include <cunistd>
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif

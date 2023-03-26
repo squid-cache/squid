@@ -12,9 +12,7 @@
 #include <cerrno>
 #include <csignal>
 #include <cstring>
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+#include <cunistd>
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #endif

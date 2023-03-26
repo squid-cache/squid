@@ -22,9 +22,7 @@
 #include <climits>
 #include <iosfwd>
 #include <iterator>
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+#include <cunistd>
 
 /* SBuf placeholder for printf */
 #ifndef SQUIDSBUFPH

@@ -11,9 +11,7 @@
 #include "TrieCharTransform.h"
 #include "TrieNode.h"
 
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+#include <cunistd>
 
 Trie::Trie(TrieCharTransform *aTransform) : head(nullptr), transform(aTransform)
 {}

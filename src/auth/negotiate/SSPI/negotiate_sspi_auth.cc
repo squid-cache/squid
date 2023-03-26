@@ -57,9 +57,7 @@
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
+#include <cctype>
 
 int Negotiate_packet_debug_enabled = 0;
 static int have_serverblob;

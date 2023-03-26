@@ -22,9 +22,7 @@
 #include <csignal>
 #include <cstring>
 #include <ctime>
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+#include <cunistd>
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #endif

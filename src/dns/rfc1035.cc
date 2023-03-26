@@ -19,18 +19,12 @@
 #include "dns/rfc2671.h"
 #include "util.h"
 
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+#include <cstring>
+#include <cunistd>
 #if HAVE_MEMORY_H
 #include <memory.h>
 #endif
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
+#include <cassert>
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif

@@ -46,9 +46,7 @@
 #if HAVE_TDB_H
 #include <tdb.h>
 #endif
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+#include <cunistd>
 
 /* At this point all Bit Types are already defined, so we must
    protect from multiple type definition on platform where
