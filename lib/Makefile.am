@@ -7,7 +7,6 @@
 
 include $(top_srcdir)/src/Common.am
 
-DIST_SUBDIRS = ntlmauth rfcnb smblib libTrie snmplib
 SUBDIRS=
 EXTRA_DIST=
 

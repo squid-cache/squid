@@ -8,7 +8,6 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
-DIST_SUBDIRS= ecap icap
 SUBDIRS =
 
 noinst_LTLIBRARIES = libadaptation.la
