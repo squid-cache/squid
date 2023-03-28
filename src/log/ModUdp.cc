@@ -101,8 +101,10 @@ logfile_mod_udp_linestart(Logfile *)
 }
 
 static void
-logfile_mod_udp_lineend(Logfile *)
+logfile_mod_udp_lineend(Logfile *lf)
 {
+    if (!Config.onoff.buffered_logs)
+        lf->f_flush(lf);
 }
 
 static void
