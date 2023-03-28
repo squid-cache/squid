@@ -57,7 +57,8 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing directives<label id="modifieddirectives">
 <p>
 <descrip>
-	<p>No changed directives in this version.
+	<tag>buffered_logs</tag>
+	<p>Support <em>off</em> to disable UDP log buffering.
 
 </descrip>
 
