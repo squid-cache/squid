@@ -128,60 +128,9 @@ public:
 
     ~SBuf();
 
-    /** Explicit assignment.
-     *
-     * Current SBuf will share backing store with the assigned one.
-     */
-    SBuf& assign(const SBuf &S);
-
-    /** Assignment operator.
-     *
-     * Current SBuf will share backing store with the assigned one.
-     */
-    SBuf& operator =(const SBuf & S) {return assign(S);}
-    SBuf& operator =(SBuf &&S) {
-        ++stats.moves;
-        if (this != &S) {
-            store_ = std::move(S.store_);
-            off_ = S.off_;
-            len_ = S.len_;
-            S.store_ = nullptr; //RefCount supports NULL, and S is about to be destructed
-            S.off_ = 0;
-            S.len_ = 0;
-        }
-        return *this;
-    }
-
     // XXX: assign(s,n)/append(s,n) calls do not assign or append a c-string as
     // documented -- they do not stop at the first NUL character! They assign or
     // append the entire raw memory area, including any embedded NUL characters.
-
-    /** Import a c-string into a SBuf, copying the data.
-     *
-     * It is the caller's duty to free the imported string, if needed.
-     * \param S the c string to be copied
-     * \param n how many bytes to import into the SBuf. If it is npos
-     *              or unspecified, imports to end-of-cstring
-     * \note it is the caller's responsibility not to go out of bounds
-     * \note to assign a std::string use the pattern:
-     *    assign(stdstr.data(), stdstd.length())
-     */
-    SBuf& assign(const char *S, size_type n);
-    SBuf& assign(const char *S) {return assign(S,npos);}
-
-    /** Assignment operator. Copy a NULL-terminated c-style string into a SBuf.
-     *
-     * Copy a c-style string into a SBuf. Shortcut for SBuf.assign(S)
-     * It is the caller's duty to free the imported string, if needed.
-     * \note not \0-clean
-     */
-    SBuf& operator =(const char *S) {return assign(S);}
-
-    /** reset the SBuf as if it was just created.
-     *
-     * Resets the SBuf to empty, memory is freed lazily.
-     */
-    void clear();
 
     /** Append operation
      *
@@ -191,21 +140,6 @@ public:
 
     /// Append a single character. The character may be NUL (\0).
     SBuf& append(const char c);
-
-    /** Append operation for C-style strings.
-     *
-     * Append the supplied c-string to the SBuf; extend storage
-     * as needed.
-     *
-     * \param S the c string to be copied. Can be NULL.
-     * \param Ssize how many bytes to import into the SBuf. If it is npos
-     *              or unspecified, imports to end-of-cstring. If S is NULL,
-     *              Ssize is ignored.
-     * \note to append a std::string use the pattern
-     *     cstr_append(stdstr.data(), stdstd.length())
-     */
-    SBuf& append(const char * S, size_type Ssize);
-    SBuf& append(const char * S) { return append(S,npos); }
 
     /** Assignment operation with printf(3)-style definition
      * \note arguments may be evaluated more than once, be careful
@@ -234,19 +168,6 @@ public:
      * including low-level details and statistics.
      */
     std::ostream& dump(std::ostream &os) const;
-
-    /** random-access read to any char within the SBuf
-     *
-     * does not check access bounds. If you need that, use at()
-     */
-    char operator [](size_type pos) const {++stats.getChar; return store_->mem[off_+pos];}
-
-    /** random-access read to any char within the SBuf.
-     *
-     * \throw std::exception when access is out of bounds
-     * \note bounds is 0 <= pos < length(); caller must pay attention to signedness
-     */
-    char at(size_type pos) const {checkAccessBounds(pos); return operator[](pos);}
 
     /** direct-access set a byte at a specified operation.
      *
@@ -411,9 +332,6 @@ public:
      */
     const char* c_str();
 
-    /// Returns the number of bytes stored in SBuf.
-    size_type length() const {return len_;}
-
     /** Get the length of the SBuf, as a signed integer
      *
      * Compatibility function for printf(3) which requires a signed int
@@ -484,53 +402,6 @@ public:
      */
     SBuf& trim(const SBuf &toRemove, bool atBeginning = true, bool atEnd = true);
 
-    /** Extract a part of the current SBuf.
-     *
-     * Return a fresh a fresh copy of a portion the current SBuf, which is
-     * left untouched. The same parameter convetions apply as for chop.
-     * \see trim, chop
-     */
-    SBuf substr(size_type pos, size_type n = npos) const;
-
-    /** Find first occurrence of character in SBuf
-     *
-     * Returns the index in the SBuf of the first occurrence of char c.
-     * \return npos if the char was not found
-     * \param startPos if specified, ignore any occurrences before that position
-     *     if startPos is npos or greater than length() npos is always returned
-     *     if startPos is less than zero, it is ignored
-     */
-    size_type find(char c, size_type startPos = 0) const;
-
-    /** Find first occurrence of SBuf in SBuf.
-     *
-     * Returns the index in the SBuf of the first occurrence of the
-     * sequence contained in the str argument.
-     * \param startPos if specified, ignore any occurrences before that position
-     *     if startPos is npos or greater than length() npos is always returned
-     * \return npos if the SBuf was not found
-     */
-    size_type find(const SBuf & str, size_type startPos = 0) const;
-
-    /** Find last occurrence of character in SBuf
-     *
-     * Returns the index in the SBuf of the last occurrence of char c.
-     * \return npos if the char was not found
-     * \param endPos if specified, ignore any occurrences after that position.
-     *   if npos or greater than length(), the whole SBuf is considered
-     */
-    size_type rfind(char c, size_type endPos = npos) const;
-
-    /** Find last occurrence of SBuf in SBuf
-     *
-     * Returns the index in the SBuf of the last occurrence of the
-     * sequence contained in the str argument.
-     * \return npos if the sequence  was not found
-     * \param endPos if specified, ignore any occurrences after that position
-     *   if npos or greater than length(), the whole SBuf is considered
-     */
-    size_type rfind(const SBuf &str, size_type endPos = npos) const;
-
     /** Find first occurrence of character of set in SBuf
      *
      * Finds the first occurrence of ANY of the characters in the supplied set in
@@ -580,28 +451,50 @@ public:
     /// std::string export function
     std::string toStdString() const { return std::string(buf(),length()); }
 
-    const_iterator begin() const {
-        return const_iterator(*this, 0);
-    }
-
-    const_iterator end() const {
-        return const_iterator(*this, length());
-    }
-
-    const_reverse_iterator rbegin() const {
-        return const_reverse_iterator(*this, length());
-    }
-
-    const_reverse_iterator rend() const {
-        return const_reverse_iterator(*this, 0);
-    }
-
-    // TODO: possibly implement erase() similar to std::string's erase
-    // TODO: possibly implement a replace() call
-
     /// SBuf object identifier meant for test cases and debugging.
     /// Does not change when object does, including during assignment.
     const InstanceId<SBuf> id;
+
+    /* std::string API */
+    SBuf& operator =(const SBuf &S) { return assign(S); } ///< \sa SBuf::assign
+    SBuf& operator =(SBuf &&S) /**< \sa SBuf::assign */ {
+        ++stats.moves;
+        if (this != &S) {
+            store_ = std::move(S.store_);
+            off_ = S.off_;
+            len_ = S.len_;
+            S.store_ = nullptr; //RefCount supports NULL, and S is about to be destructed
+            S.off_ = 0;
+            S.len_ = 0;
+        }
+        return *this;
+    }
+    SBuf& operator =(const char *S) {return assign(S);} ///< \sa SBuf::assign
+    const_iterator begin() const { return const_iterator(*this, 0); }
+    const_iterator end() const { return const_iterator(*this, length()); }
+    const_reverse_iterator rbegin() const { return const_reverse_iterator(*this, length()); }
+    const_reverse_iterator rend() const { return const_reverse_iterator(*this, 0); }
+    // size_type size() const noexcept { return length(); } // XXX: prohibited by QA reviewer 2014
+    size_type length() const noexcept { return len_; } ///< \returns the number of bytes stored in SBuf
+    // TODO: size_t max_size() const noexcept { return SBuf::maxSize; }
+    void clear() noexcept;
+    // TODO: bool empty() const noexcept { return isEmpty(); }
+    char &operator [](size_type pos) { ++stats.getChar; return store_->mem[off_+pos]; }
+    const char &operator [](size_type pos) const { ++stats.getChar; return store_->mem[off_+pos]; }
+    char &at(size_type pos) { checkAccessBounds(pos); return operator[](pos); }
+    const char &at(size_type pos) const { checkAccessBounds(pos); return operator[](pos); }
+    SBuf& append(const char *, size_type = SBuf::npos);
+    // TODO: void push_back(char c) { append(c); }
+    SBuf& assign(const SBuf &);
+    SBuf& assign(const char *, size_type = SBuf::npos);
+    // TODO: SBuf &assign(SBuf &&) noexcept;
+    // TODO: possibly implement erase() similar to std::string's erase
+    // TODO: possibly implement a replace() call
+    size_type find(char, size_type = 0) const noexcept;
+    size_type find(const SBuf &, size_type = 0) const noexcept;
+    size_type rfind(char, size_type = npos) const noexcept;
+    size_type rfind(const SBuf &, size_type = npos) const noexcept;
+    SBuf substr(size_type, size_type = npos) const;
 
 private:
 

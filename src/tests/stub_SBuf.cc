@@ -32,7 +32,7 @@ SBuf::SBuf(const std::string &) {}
 SBuf::~SBuf() {}
 SBuf& SBuf::assign(const SBuf &) STUB_RETVAL(*this)
 SBuf& SBuf::assign(const char *, size_type) STUB_RETVAL(*this)
-void SBuf::clear() STUB
+void SBuf::clear() noexcept STUB
 SBuf& SBuf::append(const SBuf &) STUB_RETVAL(*this)
 SBuf& SBuf::append(const char *, size_type) STUB_RETVAL(*this)
 SBuf& SBuf::append(const char) STUB_RETVAL(*this)
@@ -59,10 +59,10 @@ SBuf::size_type SBuf::reserve(const SBufReservationRequirements &) STUB_RETVAL(0
 SBuf& SBuf::chop(size_type, size_type) STUB_RETVAL(*this)
 SBuf& SBuf::trim(const SBuf &, bool, bool) STUB_RETVAL(*this)
 SBuf SBuf::substr(size_type, size_type) const STUB_RETVAL(*this)
-SBuf::size_type SBuf::find(char, size_type) const STUB_RETVAL(SBuf::npos)
-SBuf::size_type SBuf::find(const SBuf &, size_type) const STUB_RETVAL(SBuf::npos)
-SBuf::size_type SBuf::rfind(char, size_type) const STUB_RETVAL(SBuf::npos)
-SBuf::size_type SBuf::rfind(const SBuf &, size_type) const STUB_RETVAL(SBuf::npos)
+SBuf::size_type SBuf::find(char, size_type) const noexcept STUB_RETVAL(SBuf::npos)
+SBuf::size_type SBuf::find(const SBuf &, size_type) const noexcept STUB_RETVAL(SBuf::npos)
+SBuf::size_type SBuf::rfind(char, size_type) const noexcept STUB_RETVAL(SBuf::npos)
+SBuf::size_type SBuf::rfind(const SBuf &, size_type) const noexcept STUB_RETVAL(SBuf::npos)
 SBuf::size_type SBuf::findFirstOf(const CharacterSet &, size_type) const STUB_RETVAL(SBuf::npos)
 SBuf::size_type SBuf::findLastOf(const CharacterSet &, size_type) const STUB_RETVAL(SBuf::npos)
 SBuf::size_type SBuf::findFirstNotOf(const CharacterSet &, size_type) const STUB_RETVAL(SBuf::npos)
