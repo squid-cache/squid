@@ -58,7 +58,7 @@ This section gives an account of those changes in three categories:
 <p>
 <descrip>
 	<tag>buffered_logs</tag>
-	<p>Support <em>off</em> to disable UDP log buffering..
+	<p>Support <em>off</em> to disable UDP log buffering.
 
 </descrip>
 
