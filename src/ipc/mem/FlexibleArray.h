@@ -31,7 +31,6 @@ public:
     }
 
     Item &operator [](const int idx) { return *(raw() + idx); }
-    const Item &operator [](const int idx) const { return *(raw() + idx); }
 
     Item *raw() { return reinterpret_cast<Item*>(&raw_); }
 
