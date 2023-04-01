@@ -32,10 +32,10 @@ public:
 
     Item &operator [](const int idx) { return *(raw() + idx); }
 
-    Item *raw() { return reinterpret_cast<Item*>(&raw_); }
+    Item *raw() { return reinterpret_cast<Item*>(&start_); }
 
 private:
-    alignas(Item) std::byte raw_; // ensures proper alignment of array elements
+    alignas(Item) std::byte start_; ///< the first byte of the first array item
 };
 
 } // namespace Mem
