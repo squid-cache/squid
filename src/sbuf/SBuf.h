@@ -474,7 +474,6 @@ public:
     const_iterator end() const { return const_iterator(*this, length()); }
     const_reverse_iterator rbegin() const { return const_reverse_iterator(*this, length()); }
     const_reverse_iterator rend() const { return const_reverse_iterator(*this, 0); }
-    // size_type size() const noexcept { return length(); } // XXX: prohibited by QA reviewer 2014
     size_type length() const noexcept { return len_; } ///< \returns the number of bytes stored in SBuf
     // TODO: size_t max_size() const noexcept { return SBuf::maxSize; }
     void clear() noexcept;
