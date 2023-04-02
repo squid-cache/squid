@@ -21,6 +21,7 @@
 #include "HttpRequest.h"
 #include "ipcache.h"
 #include "MasterXaction.h"
+#include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "radix.h"
 #include "RequestFlags.h"
@@ -88,10 +89,11 @@ public:
     HttpRequest::Pointer request;
     int as_number = 0;
     int64_t offset = 0;
-    int reqofs = 0;
     // XXX: Fix asHandleReply() to comply with STCB API and use Store::ReadBuffer.
     char reqbuf[AS_REQBUF_SZ];
     bool dataRead = false;
+    /// the unparsed (yet) bytes kept between two asHandleReply() calls
+    MemBuf leftovers;
 };
 
 CBDATA_CLASS_INIT(ASState);
@@ -303,7 +305,7 @@ asHandleReply(void *data, StoreIOBuffer result)
      */
     s = buf;
 
-    while ((size_t)(s - buf) < result.length + asState->reqofs && *s != '\0') {
+    while ((size_t)(s - buf) < result.length && *s != '\0') {
         while (*s && xisspace(*s))
             ++s;
 
@@ -319,7 +321,14 @@ asHandleReply(void *data, StoreIOBuffer result)
 
         *t = '\0';
         debugs(53, 3, "asHandleReply: AS# " << s << " (" << asState->as_number << ")");
-        asnAddNet(s, asState->as_number);
+        if (asState->leftovers.contentSize()) {
+            asState->leftovers.append(s, strlen(s));
+            asState->leftovers.terminate();
+            asnAddNet(asState->leftovers.content(), asState->as_number);
+            asState->leftovers.reset();
+        } else {
+            asnAddNet(s, asState->as_number);
+        }
         s = t + 1;
         asState->dataRead = true;
     }
@@ -329,30 +338,27 @@ asHandleReply(void *data, StoreIOBuffer result)
      * out how much data is left in our buffer, which we need to keep
      * around for the next request
      */
-    leftoversz = (asState->reqofs + result.length) - (s - buf);
+    leftoversz = result.length - (s - buf);
 
     assert(leftoversz >= 0);
 
-    /*
-     * Next, copy the left over data, from s to s + leftoversz to the
-     * beginning of the buffer
-     */
-    memmove(buf, s, leftoversz);
+    if (leftoversz > 0) {
+        asState->leftovers.reset(); // must be empty already
+        asState->leftovers.append(s, leftoversz); // save the left over data, from s to s + leftoversz
+    }
 
     /*
      * Next, update our offset and reqofs, and kick off a copy if required
      */
     asState->offset += result.length;
 
-    asState->reqofs = leftoversz;
-
     debugs(53, 3, "asState->offset = " << asState->offset);
 
     if (e->store_status == STORE_PENDING) {
         debugs(53, 3, "asHandleReply: store_status == STORE_PENDING: " << e->url()  );
-        StoreIOBuffer tempBuffer (AS_REQBUF_SZ - asState->reqofs,
+        StoreIOBuffer tempBuffer (AS_REQBUF_SZ,
                                   asState->offset,
-                                  asState->reqbuf + asState->reqofs);
+                                  asState->reqbuf);
         storeClientCopy(asState->sc,
                         e,
                         tempBuffer,
@@ -362,8 +368,8 @@ asHandleReply(void *data, StoreIOBuffer result)
         StoreIOBuffer tempBuffer;
         debugs(53, 3, "asHandleReply: store complete, but data received " << e->url()  );
         tempBuffer.offset = asState->offset;
-        tempBuffer.length = AS_REQBUF_SZ - asState->reqofs;
-        tempBuffer.data = asState->reqbuf + asState->reqofs;
+        tempBuffer.length = AS_REQBUF_SZ;
+        tempBuffer.data = asState->reqbuf;
         storeClientCopy(asState->sc,
                         e,
                         tempBuffer,
