@@ -80,11 +80,15 @@ public:
     /// quickly convert internal representation to a legacy StoreIOBuffer object
     StoreIOBuffer legacyInitialBuffer() { return StoreIOBuffer(serialized_.size(), 0, serialized_.data()); }
 
+    StoreIOBuffer legacyInitialBuffer(const LegacyOffset loffset) { return StoreIOBuffer(serialized_.size() - loffset, loffset, serialized_.data() + loffset); }
+
     /// XXX: TBD
     StoreIOBuffer legacyReadRequest(const LegacyOffset loffset) { return StoreIOBuffer(serialized_.size(), loffset, serialized_.data()); }
 
     /// whether this buffer fully contains the given buffer
     bool contains(const StoreIOBuffer &b) const { return serialized_.data() <= b.data && b.data + b.length <= serialized_.data() + serialized_.size(); }
+
+    size_t size() const { return serialized_.size(); }
 
 private:
     /// Serialized Store entry metadata followed by HTTP headers, followed by a

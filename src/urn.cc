@@ -22,6 +22,7 @@
 #include "MemBuf.h"
 #include "mime_header.h"
 #include "RequestFlags.h"
+#include "SquidMath.h"
 #include "Store.h"
 #include "StoreClient.h"
 #include "tools.h"
@@ -49,6 +50,7 @@ public:
     AccessLogEntry::Pointer ale; ///< details of the requesting transaction
 
     char reqbuf[URN_REQBUF_SZ] = { '\0' };
+    Store::ReadBuffer storeReadBuffer;
     int reqofs = 0;
     bool gotHeaders = false;
 
@@ -191,12 +193,8 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
     }
 
     reqofs = 0;
-    StoreIOBuffer tempBuffer;
-    tempBuffer.offset = reqofs;
-    tempBuffer.length = URN_REQBUF_SZ;
-    tempBuffer.data = reqbuf;
     storeClientCopy(sc, urlres_e,
-                    tempBuffer,
+                    storeReadBuffer.legacyInitialBuffer(),
                     urnHandleReply,
                     this);
 }
@@ -264,19 +262,13 @@ urnHandleReply(void *data, StoreIOBuffer result)
     urnState->reqofs += result.length;
 
     /* Handle reqofs being bigger than normal */
-    if (urnState->reqofs >= URN_REQBUF_SZ) {
-        delete urnState;
-        return;
-    }
+    Must(Less(urnState->reqofs - 1, urnState->storeReadBuffer.size()));
 
     /* If we haven't received the entire object (urn), copy more */
     if (urlres_e->store_status == STORE_PENDING || (result.length == 0 && !urnState->gotHeaders)) { // initial zero length implies just headers have been got
         urnState->gotHeaders = true;
-        tempBuffer.offset = urnState->reqofs;
-        tempBuffer.length = URN_REQBUF_SZ - urnState->reqofs;
-        tempBuffer.data = urnState->reqbuf + urnState->reqofs;
         storeClientCopy(urnState->sc, urlres_e,
-                        tempBuffer,
+                        urnState->storeReadBuffer.legacyInitialBuffer(urnState->reqofs),
                         urnHandleReply,
                         urnState);
         return;
