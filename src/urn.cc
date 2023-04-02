@@ -262,13 +262,13 @@ urnHandleReply(void *data, StoreIOBuffer result)
     urnState->reqofs += result.length;
 
     /* Handle reqofs being bigger than normal */
-    Must(Less(urnState->reqofs - 1, urnState->storeReadBuffer.size()));
+    Must(!Less(urnState->storeReadBuffer.size(), urnState->reqofs));
 
     /* If we haven't received the entire object (urn), copy more */
     if (urlres_e->store_status == STORE_PENDING || (result.length == 0 && !urnState->gotHeaders)) { // initial zero length implies just headers have been got
         urnState->gotHeaders = true;
         storeClientCopy(urnState->sc, urlres_e,
-                        urnState->storeReadBuffer.legacyInitialBuffer(urnState->reqofs),
+                        urnState->storeReadBuffer.legacyOffsetBuffer(urnState->reqofs),
                         urnHandleReply,
                         urnState);
         return;
