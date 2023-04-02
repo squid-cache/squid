@@ -72,9 +72,6 @@ class ASState
     CBDATA_CLASS(ASState);
 
 public:
-    ASState() {
-        memset(reqbuf, 0, sizeof(reqbuf));
-    }
     ~ASState() {
         if (entry) {
             debugs(53, 3, entry->url());
@@ -89,8 +86,7 @@ public:
     HttpRequest::Pointer request;
     int as_number = 0;
     int64_t offset = 0;
-    // XXX: Fix asHandleReply() to comply with STCB API and use Store::ReadBuffer.
-    char reqbuf[AS_REQBUF_SZ];
+    Store::ReadBuffer storeReadBuffer;
     bool dataRead = false;
     /// the unparsed (yet) bytes kept between two asHandleReply() calls
     MemBuf leftovers;
@@ -261,8 +257,7 @@ asnCacheStart(int as)
     xfree(asres);
 
     asState->entry = e;
-    StoreIOBuffer readBuffer (AS_REQBUF_SZ, asState->offset, asState->reqbuf);
-    storeClientCopy(asState->sc, e, readBuffer, asHandleReply, asState);
+    storeClientCopy(asState->sc, e, asState->storeReadBuffer.legacyInitialBuffer(), asHandleReply, asState);
 }
 
 static void
@@ -272,7 +267,7 @@ asHandleReply(void *data, StoreIOBuffer result)
     StoreEntry *e = asState->entry;
     char *s;
     char *t;
-    char *buf = asState->reqbuf;
+    auto buf = result.data;
     int leftoversz = -1;
 
     debugs(53, 3, "asHandleReply: Called with size=" << (unsigned int)result.length);
@@ -354,28 +349,8 @@ asHandleReply(void *data, StoreIOBuffer result)
 
     debugs(53, 3, "asState->offset = " << asState->offset);
 
-    if (e->store_status == STORE_PENDING) {
-        debugs(53, 3, "asHandleReply: store_status == STORE_PENDING: " << e->url()  );
-        StoreIOBuffer tempBuffer (AS_REQBUF_SZ,
-                                  asState->offset,
-                                  asState->reqbuf);
-        storeClientCopy(asState->sc,
-                        e,
-                        tempBuffer,
-                        asHandleReply,
-                        asState);
-    } else {
-        StoreIOBuffer tempBuffer;
-        debugs(53, 3, "asHandleReply: store complete, but data received " << e->url()  );
-        tempBuffer.offset = asState->offset;
-        tempBuffer.length = AS_REQBUF_SZ;
-        tempBuffer.data = asState->reqbuf;
-        storeClientCopy(asState->sc,
-                        e,
-                        tempBuffer,
-                        asHandleReply,
-                        asState);
-    }
+    debugs(53, 3, (e->store_status == STORE_PENDING ? "STORE_PENDING" : "STORE_OK") << " " << e->url());
+    storeClientCopy(asState->sc, e, asState->storeReadBuffer.legacyReadRequest(asState->offset), asHandleReply, asState);
 }
 
 /**
