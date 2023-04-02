@@ -2068,7 +2068,6 @@ PREDEFINED             = __cplusplus \
                          FORW_VIA_DB \
                          ICAP_CLIENT \
                          LINUX_NETFILTER \
-                         MULTICAST_MISS_STREAM \
                          SQUID_SNMP \
                          USE_ADAPTATION \
                          USE_APPLE_KRB5 \
