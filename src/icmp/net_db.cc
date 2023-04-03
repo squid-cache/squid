@@ -694,19 +694,16 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         return;
     }
 
-    /* Check if we're still doing headers */
-
     const auto &reply = ex->e->mem().baseReply();
 
     if (ex->connstate == STATE_HEADER) {
         const auto scode = reply.sline.status();
         assert(scode != Http::scNone);
-        debugs(38, 3, "netdbExchangeHandleReply: reply status " << scode);
+        debugs(38, 3, "reply status " << scode);
         if (scode != Http::scOkay) {
             delete ex;
             return;
         }
-        /* Finally, set the conn state mode to STATE_BODY */
         ex->connstate = STATE_BODY;
         storeClientCopy(ex->sc, ex->e, ex->storeReadBuffer.legacyReadRequest(0), netdbExchangeHandleReply, ex);
         return;
@@ -717,9 +714,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
     /* If we get here, we have some body to parse .. */
 
     auto start = receivedData.data;
-    /* Get the size of the buffer now */
     int size = receivedData.length;
-
     if (ex->leftovers.size) {
         assert(ex->leftovers.size < rec_sz);
         const auto sz = rec_sz - ex->leftovers.size;
@@ -786,7 +781,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
     }
 
     if (size) {
-        ex->leftovers.reset();
+        ex->leftovers.reset(); // must be empty already
         ex->leftovers.append(receivedData.data + (receivedData.length - size), size);
     }
 

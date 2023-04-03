@@ -273,11 +273,11 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     urnState->gotHeaders = true;
 
-    auto serverRep = &(urlres_e->mem_obj->baseReply());
+    const auto &serverRep = urlres_e->mem().baseReply();
 
-    debugs(52, 3, "reply exists, code=" << serverRep->sline.status() << ".");
+    debugs(52, 3, "reply exists, code=" << serverRep.sline.status() << ".");
 
-    if (serverRep->sline.status() != Http::scOkay) {
+    if (serverRep.sline.status() != Http::scOkay) {
         debugs(52, 3, "urnHandleReply: failed.");
         err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request.getRaw(), urnState->ale);
         err->url = xstrdup(e->url());
