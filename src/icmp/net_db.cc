@@ -49,8 +49,6 @@
 #include "ipcache.h"
 #include "StoreClient.h"
 
-#define NETDB_REQBUF_SZ 4096
-
 typedef enum {
     STATE_NONE,
     STATE_HEADER,
@@ -66,7 +64,6 @@ public:
         p(aPeer),
         r(theReq)
     {
-        *buf = 0;
         assert(r);
         // TODO: check if we actually need to do this. should be implicit
         r->http_ver = Http::ProtocolVersion();
@@ -82,8 +79,7 @@ public:
     StoreEntry *e = nullptr;
     store_client *sc = nullptr;
     HttpRequestPointer r;
-    size_t buf_sz = NETDB_REQBUF_SZ;
-    char buf[NETDB_REQBUF_SZ];
+    Store::ReadBuffer storeReadBuffer;
     netdb_conn_state_t connstate = STATE_HEADER;
     /// the unparsed (yet) bytes kept between two successive netdbExchangeHandleReply() calls
     MemBuf leftovers;
@@ -712,14 +708,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         }
         /* Finally, set the conn state mode to STATE_BODY */
         ex->connstate = STATE_BODY;
-
-        StoreIOBuffer tempBuffer;
-        tempBuffer.offset = 0;
-        tempBuffer.length = ex->buf_sz;
-        tempBuffer.data = ex->buf;
-        /* Have more headers .. */
-        storeClientCopy(ex->sc, ex->e, tempBuffer,
-                        netdbExchangeHandleReply, ex);
+        storeClientCopy(ex->sc, ex->e, ex->storeReadBuffer.legacyReadRequest(0), netdbExchangeHandleReply, ex);
         return;
     }
 
@@ -727,7 +716,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
     /* If we get here, we have some body to parse .. */
 
-    auto start = ex->buf;
+    auto start = receivedData.data;
     /* Get the size of the buffer now */
     int size = receivedData.length;
 
@@ -812,11 +801,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         delete ex;
     }
 
-    StoreIOBuffer tempBuffer;
-    tempBuffer.offset = receivedData.offset + receivedData.length;
-    tempBuffer.length = ex->buf_sz;
-    tempBuffer.data = ex->buf;
-    storeClientCopy(ex->sc, ex->e, tempBuffer, netdbExchangeHandleReply, ex);
+    storeClientCopy(ex->sc, ex->e, ex->storeReadBuffer.legacyReadRequest(receivedData.offset + receivedData.length), netdbExchangeHandleReply, ex);
 }
 
 #endif /* USE_ICMP */
@@ -1237,14 +1222,9 @@ netdbExchangeStart(void *data)
     ex->e = storeCreateEntry(uri, uri, RequestFlags(), Http::METHOD_GET);
     assert(nullptr != ex->e);
 
-    StoreIOBuffer tempBuffer;
-    tempBuffer.length = ex->buf_sz;
-    tempBuffer.data = ex->buf;
-
     ex->sc = storeClientListAdd(ex->e, ex);
+    storeClientCopy(ex->sc, ex->e, ex->storeReadBuffer.legacyInitialBuffer(), netdbExchangeHandleReply, ex);
 
-    storeClientCopy(ex->sc, ex->e, tempBuffer,
-                    netdbExchangeHandleReply, ex);
     ex->r->flags.loopDetected = true;   /* cheat! -- force direct */
 
     // XXX: send as Proxy-Authenticate instead
