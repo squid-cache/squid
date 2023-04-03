@@ -49,7 +49,6 @@ public:
     HttpRequest::Pointer urlres_r;
     AccessLogEntry::Pointer ale; ///< details of the requesting transaction
 
-    char reqbuf[URN_REQBUF_SZ] = { '\0' };
     Store::ReadBuffer storeReadBuffer;
     int reqofs = 0;
     bool gotHeaders = false;
@@ -276,7 +275,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     urnState->gotHeaders = true;
 
-    auto serverRep = &(urlres_e->mem_obj->freshestReply());
+    auto serverRep = &(urlres_e->mem_obj->baseReply());
 
     debugs(52, 3, "reply exists, code=" << serverRep->sline.status() << ".");
 
