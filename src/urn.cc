@@ -28,8 +28,6 @@
 #include "tools.h"
 #include "urn.h"
 
-#define URN_REQBUF_SZ   4096
-
 class UrnState : public StoreClient
 {
     CBDATA_CLASS(UrnState);

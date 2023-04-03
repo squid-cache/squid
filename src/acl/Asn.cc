@@ -29,10 +29,6 @@
 #include "Store.h"
 #include "StoreClient.h"
 
-#ifndef AS_REQBUF_SZ
-#define AS_REQBUF_SZ    4096
-#endif
-
 /* BEGIN of definitions for radix tree entries */
 
 /* 32/128 bits address in memory with length */

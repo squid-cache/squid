@@ -80,7 +80,8 @@ public:
     /// quickly convert internal representation to a legacy StoreIOBuffer object
     StoreIOBuffer legacyInitialBuffer() { return StoreIOBuffer(serialized_.size(), 0, serialized_.data()); }
 
-    StoreIOBuffer legacyInitialBuffer(const LegacyOffset loffset) { return StoreIOBuffer(serialized_.size() - loffset, loffset, serialized_.data() + loffset); }
+    /// XXX: TBD
+    StoreIOBuffer legacyOffsetBuffer(const LegacyOffset loffset);
 
     /// XXX: TBD
     StoreIOBuffer legacyReadRequest(const LegacyOffset loffset) { return StoreIOBuffer(serialized_.size(), loffset, serialized_.data()); }

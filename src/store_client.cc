@@ -141,6 +141,12 @@ storeClientListAdd(StoreEntry * e, void *data)
     return sc;
 }
 
+StoreIOBuffer
+Store::ReadBuffer::legacyOffsetBuffer(const LegacyOffset loffset) {
+    assert(!Less(size(), loffset));
+    return StoreIOBuffer(serialized_.size() - loffset, loffset, serialized_.data() + loffset);
+}
+
 /// schedules asynchronous STCB call to relay disk or memory read results
 /// \param outcome an error signal (if negative), an EOF signal (if zero), or the number of bytes read
 void
