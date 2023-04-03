@@ -82,10 +82,8 @@ public:
     StoreEntry *e = nullptr;
     store_client *sc = nullptr;
     HttpRequestPointer r;
-    int64_t used = 0;
     size_t buf_sz = NETDB_REQBUF_SZ;
     char buf[NETDB_REQBUF_SZ];
-    int buf_ofs = 0;
     netdb_conn_state_t connstate = STATE_HEADER;
     /// the unparsed (yet) bytes kept between two successive netdbExchangeHandleReply() calls
     MemBuf leftovers;
@@ -684,7 +682,6 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
     rec_sz += 1 + sizeof(int);
     rec_sz += 1 + sizeof(int);
 
-
     debugs(38, 3, "netdbExchangeHandleReply: " << receivedData.length << " read bytes");
 
     if (!ex->p.valid()) {
@@ -700,7 +697,6 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         delete ex;
         return;
     }
-
 
     /* Check if we're still doing headers */
 
@@ -724,6 +720,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         /* Have more headers .. */
         storeClientCopy(ex->sc, ex->e, tempBuffer,
                         netdbExchangeHandleReply, ex);
+        return;
     }
 
     assert(ex->connstate == STATE_BODY);
@@ -788,8 +785,6 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
         assert(o == rec_sz);
 
-        ex->used += rec_sz;
-
         if (ex->leftovers.size) {
             ex->leftovers.reset();
             p = start;
@@ -801,25 +796,10 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         ++nused;
     }
 
-    /*
-     * Copy anything that is left over to the beginning of the buffer,
-     * and adjust buf_ofs accordingly
-     */
-
-    /*
-     * Evilly, size refers to the buf size left now,
-     * ex->buf_ofs is the original buffer size, so just copy that
-     * much data over
-     */
     if (size) {
         ex->leftovers.reset();
         ex->leftovers.append(receivedData.data + (receivedData.length - size), size);
     }
-
-    /*
-     * And don't re-copy the remaining data ..
-     */
-    ex->used += size;
 
     debugs(38, 3, "netdbExchangeHandleReply: size left over in this buffer: " << size << " bytes");
 
@@ -827,20 +807,16 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
            " entries, (x " << rec_sz << " bytes) == " << nused * rec_sz <<
            " bytes total");
 
-    debugs(38, 3, "netdbExchangeHandleReply: used " << ex->used);
-
     if (EBIT_TEST(ex->e->flags, ENTRY_ABORTED)) {
         debugs(38, 3, "netdbExchangeHandleReply: ENTRY_ABORTED");
         delete ex;
-    } else if (ex->e->store_status == STORE_PENDING) {
-        StoreIOBuffer tempBuffer;
-        tempBuffer.offset = receivedData.offset + receivedData.length;
-        tempBuffer.length = ex->buf_sz - tempBuffer.offset;
-        tempBuffer.data = ex->buf + tempBuffer.offset;
-        debugs(38, 3, "netdbExchangeHandleReply: EOF not received");
-        storeClientCopy(ex->sc, ex->e, tempBuffer,
-                        netdbExchangeHandleReply, ex);
     }
+
+    StoreIOBuffer tempBuffer;
+    tempBuffer.offset = receivedData.offset + receivedData.length;
+    tempBuffer.length = ex->buf_sz;
+    tempBuffer.data = ex->buf;
+    storeClientCopy(ex->sc, ex->e, tempBuffer, netdbExchangeHandleReply, ex);
 }
 
 #endif /* USE_ICMP */
