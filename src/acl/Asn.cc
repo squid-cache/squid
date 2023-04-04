@@ -83,7 +83,6 @@ public:
     int as_number = 0;
     int64_t offset = 0;
     Store::ReadBuffer storeReadBuffer;
-    bool dataRead = false;
     /// the unparsed (yet) bytes kept between two asHandleReply() calls
     MemBuf leftovers;
 };
@@ -274,12 +273,6 @@ asHandleReply(void *data, StoreIOBuffer result)
     if (EBIT_TEST(e->flags, ENTRY_ABORTED)) {
         delete asState;
         return;
-    }
-
-    if (result.length == 0 && asState->dataRead) {
-        debugs(53, 3, "asHandleReply: Done: " << e->url());
-        delete asState;
-        return;
     } else if (result.flags.error) {
         debugs(53, DBG_IMPORTANT, "ERROR: asHandleReply: Called with Error set and size=" << (unsigned int) result.length);
         delete asState;
@@ -287,6 +280,14 @@ asHandleReply(void *data, StoreIOBuffer result)
     } else if (e->mem().baseReply().sline.status() != Http::scOkay) {
         debugs(53, DBG_IMPORTANT, "WARNING: AS " << asState->as_number << " whois request failed");
         delete asState;
+        return;
+    }
+
+    if (result.length == 0) {
+        if (result.flags.eof)
+            delete asState; // done
+        else
+            storeClientCopy(asState->sc, e, asState->storeReadBuffer.legacyReadRequest(result.offset), asHandleReply, asState);
         return;
     }
 
@@ -321,7 +322,6 @@ asHandleReply(void *data, StoreIOBuffer result)
             asnAddNet(s, asState->as_number);
         }
         s = t + 1;
-        asState->dataRead = true;
     }
 
     /*
@@ -338,15 +338,10 @@ asHandleReply(void *data, StoreIOBuffer result)
         asState->leftovers.append(s, leftoversz); // save the left over data, from s to s + leftoversz
     }
 
-    /*
-     * Next, update our offset and reqofs, and kick off a copy if required
-     */
-    asState->offset += result.length;
-
-    debugs(53, 3, "asState->offset = " << asState->offset);
-
     debugs(53, 3, (e->store_status == STORE_PENDING ? "STORE_PENDING" : "STORE_OK") << " " << e->url());
-    storeClientCopy(asState->sc, e, asState->storeReadBuffer.legacyReadRequest(asState->offset), asHandleReply, asState);
+
+    if (!result.flags.eof)
+        storeClientCopy(asState->sc, e, asState->storeReadBuffer.legacyReadRequest(result.offset + result.length), asHandleReply, asState);
 }
 
 /**

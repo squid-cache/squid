@@ -48,8 +48,6 @@ public:
     AccessLogEntry::Pointer ale; ///< details of the requesting transaction
 
     Store::ReadBuffer storeReadBuffer;
-    int reqofs = 0;
-    bool gotHeaders = false;
 
 private:
     /* StoreClient API */
@@ -189,7 +187,6 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
         sc = storeClientListAdd(urlres_e, this);
     }
 
-    reqofs = 0;
     storeClientCopy(sc, urlres_e,
                     storeReadBuffer.legacyInitialBuffer(),
                     urnHandleReply,
@@ -255,23 +252,19 @@ urnHandleReply(void *data, StoreIOBuffer result)
         return;
     }
 
-    /* Update reqofs to point to where in the buffer we'd be */
-    urnState->reqofs += result.length;
-
-    /* Handle reqofs being bigger than normal */
-    Must(!Less(urnState->storeReadBuffer.size(), urnState->reqofs));
+    if (!Less(result.offset + result.length, urnState->storeReadBuffer.size())) {
+        delete urnState;
+        return;
+    }
 
     /* If we haven't received the entire object (urn), copy more */
-    if (urlres_e->store_status == STORE_PENDING || (result.length == 0 && !urnState->gotHeaders)) { // initial zero length implies just headers have been got
-        urnState->gotHeaders = true;
+    if (!result.flags.eof) {
         storeClientCopy(urnState->sc, urlres_e,
-                        urnState->storeReadBuffer.legacyOffsetBuffer(urnState->reqofs),
+                        urnState->storeReadBuffer.legacyOffsetBuffer(result.offset + result.length),
                         urnHandleReply,
                         urnState);
         return;
     }
-
-    urnState->gotHeaders = true;
 
     const auto &serverRep = urlres_e->mem().baseReply();
 
@@ -286,7 +279,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
         return;
     }
 
-    s = result.data;
+    s = urnState->storeReadBuffer.legacyInitialBuffer().data;
     while (xisspace(*s))
         ++s;
 

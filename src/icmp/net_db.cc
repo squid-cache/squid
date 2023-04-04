@@ -688,9 +688,22 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
     debugs(38, 3, "for " << *ex->p);
 
-    if (receivedData.length == 0 && !receivedData.flags.error && ex->connstate != STATE_HEADER) {
-        debugs(38, 3, "netdbExchangeHandleReply: Done");
+    if (EBIT_TEST(ex->e->flags, ENTRY_ABORTED)) {
+        debugs(38, 3, "netdbExchangeHandleReply: ENTRY_ABORTED");
         delete ex;
+        return;
+    }
+
+    if (receivedData.flags.error) {
+        delete ex;
+        return;
+    }
+
+    if (receivedData.length == 0) {
+        if (receivedData.flags.eof)
+            delete ex; // done
+        else
+            storeClientCopy(ex->sc, ex->e, ex->storeReadBuffer.legacyReadRequest(receivedData.offset), netdbExchangeHandleReply, ex);
         return;
     }
 
@@ -705,8 +718,6 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
             return;
         }
         ex->connstate = STATE_BODY;
-        storeClientCopy(ex->sc, ex->e, ex->storeReadBuffer.legacyReadRequest(0), netdbExchangeHandleReply, ex);
-        return;
     }
 
     assert(ex->connstate == STATE_BODY);
@@ -791,12 +802,8 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
            " entries, (x " << rec_sz << " bytes) == " << nused * rec_sz <<
            " bytes total");
 
-    if (EBIT_TEST(ex->e->flags, ENTRY_ABORTED)) {
-        debugs(38, 3, "netdbExchangeHandleReply: ENTRY_ABORTED");
-        delete ex;
-    }
-
-    storeClientCopy(ex->sc, ex->e, ex->storeReadBuffer.legacyReadRequest(receivedData.offset + receivedData.length), netdbExchangeHandleReply, ex);
+    if (!receivedData.flags.eof)
+        storeClientCopy(ex->sc, ex->e, ex->storeReadBuffer.legacyReadRequest(receivedData.offset + receivedData.length), netdbExchangeHandleReply, ex);
 }
 
 #endif /* USE_ICMP */
