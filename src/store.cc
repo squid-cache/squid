@@ -35,7 +35,9 @@
 #include "mgr/StoreIoAction.h"
 #include "repl_modules.h"
 #include "RequestFlags.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
+#include "SquidMath.h"
 #include "StatCounters.h"
 #include "stmem.h"
 #include "Store.h"
@@ -2079,6 +2081,171 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
 
     return os << '/' << &e << '*' << e.locks();
 }
+
+/* XXX: Move to a dedicated .cc file */
+/* Store::ParsingBuffer */
+
+Store::ParsingBuffer::ParsingBuffer(StoreIOBuffer &unterminatedInput):
+    readerSuppliedMemory_(unterminatedInput)
+{
+    terminate();
+}
+
+/// currently in-use buffer; hides readerSuppliedMemory_->extraMemory_ switch
+char *
+Store::ParsingBuffer::memory() const
+{
+    return extraMemory_ ? extraMemory_->memory() : readerSuppliedMemory_.data;
+}
+
+size_t
+Store::ParsingBuffer::capacity() const
+{
+    return extraMemory_ ? extraMemory_->capacity() : readerSuppliedMemory_.length;
+}
+
+void
+Store::ParsingBuffer::appended(const char * const newBytes, const size_t newByteCount)
+{
+    Assure(memory() + size_ == newBytes); // the new bytes start in memory()
+    size_ = *IncreaseSum(size_, newByteCount);
+    Assure(size_ <= capacity()); // the new bytes end in memory()
+    terminate();
+}
+
+void
+Store::ParsingBuffer::consume(const size_t parsedBytes)
+{
+    if (parsedBytes) {
+        Assure(size_ >= parsedBytes);
+        size_ -= parsedBytes;
+        if (size_)
+            memmove(memory(), memory() + parsedBytes, size_);
+    }
+}
+
+StoreIOBuffer
+Store::ParsingBuffer::currentSpace()
+{
+    return StoreIOBuffer(spaceSize(), size_ /* XXX: check and document */, memory() + size_);
+}
+
+StoreIOBuffer
+Store::ParsingBuffer::makeSpace(const size_t pageSize)
+{
+    growSpace(pageSize);
+    Assure(pageSize <= spaceSize());
+    return currentSpace();
+}
+
+StoreIOBuffer
+Store::ParsingBuffer::content(const int64_t offset) // TODO: Use ParsingBuffer::Offset
+{
+    return StoreIOBuffer(contentSize(), offset, memory());
+}
+
+/// makes sure we have the requested number of bytes, allocates enough memory if needed
+void
+Store::ParsingBuffer::growSpace(const size_t minimumSpaceSize)
+{
+    const auto capacityIncreaseAttempt = IncreaseSum(size_, minimumSpaceSize);
+    if (!capacityIncreaseAttempt)
+        throw TextException(ToSBuf("no support for a single memory block of ", size_, '+', minimumSpaceSize, " bytes"), Here());
+    const auto newCapacity = *capacityIncreaseAttempt;
+
+    if (newCapacity <= capacity())
+        return; // already have enough space; no reallocation is needed
+
+    Mem::Allocation newStorage(newCapacity);
+    if (size_) {
+        Assure(size_ < newStorage.capacity());
+        memcpy(newStorage.memory(), memory(), size_);
+    }
+    extraMemory_ = std::move(newStorage);
+    Assure(spaceSize() >= minimumSpaceSize);
+}
+
+size_t
+Store::ParsingBuffer::spaceSize() const
+{
+    Assure(size_ < capacity());
+    return capacity() - size_;
+}
+
+/// 0-terminates stored byte sequence, allocating more memory if needed, but
+/// without increasing the number of stored bytes
+void
+Store::ParsingBuffer::terminate()
+{
+    *makeSpace(1).data = 0;
+}
+
+StoreIOBuffer
+Store::ParsingBuffer::packBack()
+{
+    auto result = readerSuppliedMemory_;
+
+    // if we accumulated more bytes at some point, any extra metadata should
+    // have been consume()d by now, allowing readerSuppliedMemory_.data reuse
+    Assure(size_ <= result.length);
+
+    if (!extraMemory_) {
+        // no accumulated bytes copying because they are in readerSuppliedMemory_
+        debugs(90, 7, "quickly exporting " << size_ << " bytes via " << readerSuppliedMemory_);
+    } else {
+        debugs(90, 7, "slowly exporting " << size_ << " from " << (void*)memory() << " back into " << result);
+        memcpy(result.data, extraMemory_->memory(), size_);
+    }
+
+    result.length = size_;
+    return result;
+}
+
+void
+Store::ParsingBuffer::print(std::ostream &os) const
+{
+    os << "size=" << contentSize();
+    os << " capacity=" << capacity();
+    if (extraMemory_)
+        os << " extra=" << (void*)memory() << "original:";
+    os << ' ' << readerSuppliedMemory_;
+}
+
+/* Mem::Allocation */
+
+Mem::Allocation::Allocation(const size_t aCapacity):
+    // TODO: Use memAllocBuf()/memFreeBuf() when they stop zeroing memory
+    memory_(static_cast<char*>(memAllocRigid(aCapacity))),
+    capacity_(aCapacity)
+{
+}
+
+Mem::Allocation::~Allocation()
+{
+    if (memory_)
+        memFreeRigid(memory_, capacity_);
+}
+
+Mem::Allocation::Allocation(Allocation &&other):
+    memory_(other.memory_),
+    capacity_(other.capacity_)
+{
+    other.memory_ = nullptr;
+    other.capacity_ = 0;
+}
+
+Mem::Allocation &
+Mem::Allocation::operator =(Allocation &&other)
+{
+    if (memory_)
+        memFreeRigid(memory_, capacity_);
+    memory_ = other.memory_;
+    capacity_ = other.capacity_;
+    other.memory_ = nullptr;
+    other.capacity_ = 0;
+    return *this;
+}
+
 
 void
 Store::EntryGuard::onException() noexcept

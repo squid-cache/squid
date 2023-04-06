@@ -43,6 +43,9 @@ public:
         return Range<int64_t>(offset, offset + length);
     }
 
+    /// convenience method for changing the offset of a being-configured buffer
+    StoreIOBuffer &positionAt(const int64_t newOffset) { offset = newOffset; return *this; }
+
     void dump() const {
         if (fwrite(data, length, 1, stderr)) {}
         if (fwrite("\n", 1, 1, stderr)) {}
@@ -71,6 +74,126 @@ operator <<(std::ostream &os, const StoreIOBuffer &b)
            (b.flags.eof ? ", EOF" : "") <<
            ')';
 }
+
+namespace Mem
+{
+
+// TODO: Use in MemBlob (at least).
+/// A single continuous memory buffer allocated by pooling-aware code.
+class Allocation
+{
+public:
+    /// allocates a single continuous buffer suitable for storing at least the
+    /// given number of bytes
+    explicit Allocation(size_t);
+    ~Allocation();
+
+    // no copying but moving is supported
+    Allocation(const Allocation &) = delete;
+    Allocation &operator =(const Allocation &) = delete;
+    Allocation(Allocation &&);
+    Allocation &operator =(Allocation &&);
+
+    /// XXX: Document both
+    char *memory() const { return memory_; }
+    size_t capacity() const { return capacity_; }
+
+private:
+    char *memory_;
+
+    /// allocated memory_ capacity
+    size_t capacity_;
+};
+
+} // namespace Mem
+
+#include <optional> // XXX: misplaced
+
+namespace Store
+{
+
+/// A continuous buffer for efficient accumulation and NUL-termination of
+/// Store-read bytes. Store readers supply their StoreIOBuffer. That buffer is
+/// enough to hold the result of a single Store read. However, the supplied
+/// StoreIOBuffer capacity may be exceeded when parsing requires multiple Store
+/// reads and/or NUL-termination. This class seamlessly transitions from the
+/// supplied buffer to a bigger one if that transition is needed. This delayed
+/// transition prevents unnecessary allocations and associated memory copies.
+class ParsingBuffer
+{
+public:
+    /// The constructor links this buffer and the reader-supplied StoreIOBuffer.
+    /// The supplied input buffer may be modified to assure NUL-termination.
+    /// \param unterminatedInput can store up to unterminatedInput.length bytes
+    /// \param inputSize is the number of bytes stored in unterminatedInput
+    explicit ParsingBuffer(StoreIOBuffer &unterminatedInput);
+
+    /// A terminated version of unterminatedInput.data. The returned memory
+    /// might differ from unterminatedInput.data, but will contain the same
+    /// first .length bytes (followed by the terminating NUL). External
+    /// unterminatedInput changes invalidate the returned buffer. The validity
+    /// of the returned buffer is also limited by this object lifetime.
+    const char *c_str() { terminate(); return memory(); }
+
+    /// the total number of append()ed bytes that were not consume()d
+    size_t contentSize() const { return size_; }
+
+    /// the total number of bytes we can store
+    size_t capacity() const;
+
+    /// A (possibly empty) buffer for reading the next byte(s). The returned
+    /// buffer offset is set to contentSize() but callers notion of the correct
+    /// Store offset is likely to be different. The returned buffer is
+    /// invalidated by calling any non-constant method.
+    StoreIOBuffer currentSpace();
+
+    /// A buffer for reading the exact number of next byte(s). The method may
+    /// allocate new memory and copy previously appended() bytes as needed. The
+    /// returned buffer is invalidated by calling any non-constant method.
+    /// \param pageSize the exact number of bytes the caller wants to read
+    StoreIOBuffer makeSpace(size_t pageSize);
+
+    /// append()ed bytes that were not consume()d
+    /// \param offset requested StoreIOBuffer::offset field value
+    StoreIOBuffer content(int64_t offset);
+
+    /// remember the new bytes received into the previously provided space()
+    void appended(const char *, size_t);
+
+    /// get rid of previously appended() prefix of a given size
+    void consume(size_t);
+
+    /// Returns stored content, reusing the StoreIOBuffer given at the
+    /// construction time. Copying is avoided if we did not allocate extra
+    /// memory since construction.
+    StoreIOBuffer packBack();
+
+    /// summarizes object state (for debugging/reporting)
+    void print(std::ostream &) const;
+
+private:
+    char *memory() const;
+    size_t spaceSize() const;
+    void terminate();
+    void growSpace(size_t);
+
+private:
+    StoreIOBuffer readerSuppliedMemory_;
+    std::optional<Mem::Allocation> extraMemory_;
+
+    /// \copydoc contentSize()
+    size_t size_ = 0;
+};
+
+inline std::ostream &
+operator <<(std::ostream &os, const ParsingBuffer &b)
+{
+    b.print(os);
+    return os;
+}
+
+
+} // namespace Store
 
 #endif /* SQUID_STOREIOBUFFER_H */
 
