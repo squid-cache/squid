@@ -141,21 +141,23 @@ public:
     /// the total number of bytes we can store
     size_t capacity() const;
 
+    /// Stored append()ed bytes that have not been consume()d. The returned
+    /// buffer offset is set to zero; the caller is responsible for adjusting
+    /// the offset if needed (TODO: Add/return a no-offset Mem::View instead).
+    /// The returned buffer is invalidated by calling any non-constant method.
+    StoreIOBuffer content();
+
     /// A (possibly empty) buffer for reading the next byte(s). The returned
-    /// buffer offset is set to contentSize() but callers notion of the correct
-    /// Store offset is likely to be different. The returned buffer is
-    /// invalidated by calling any non-constant method.
-    StoreIOBuffer currentSpace();
+    /// buffer offset is set to zero; the caller is responsible for adjusting
+    /// the offset if needed (TODO: Add/return a no-offset Mem::Area instead).
+    /// The returned buffer is invalidated by calling any non-constant method.
+    StoreIOBuffer space();
 
     /// A buffer for reading the exact number of next byte(s). The method may
-    /// allocate new memory and copy previously appended() bytes as needed. The
-    /// returned buffer is invalidated by calling any non-constant method.
+    /// allocate new memory and copy previously appended() bytes as needed.
     /// \param pageSize the exact number of bytes the caller wants to read
+    /// \returns space() after any necessary allocations
     StoreIOBuffer makeSpace(size_t pageSize);
-
-    /// append()ed bytes that were not consume()d
-    /// \param offset requested StoreIOBuffer::offset field value
-    StoreIOBuffer content(int64_t offset);
 
     /// remember the new bytes received into the previously provided space()
     void appended(const char *, size_t);

@@ -2125,9 +2125,9 @@ Store::ParsingBuffer::consume(const size_t parsedBytes)
 }
 
 StoreIOBuffer
-Store::ParsingBuffer::currentSpace()
+Store::ParsingBuffer::space()
 {
-    return StoreIOBuffer(spaceSize(), size_ /* XXX: check and document */, memory() + size_);
+    return StoreIOBuffer(spaceSize(), 0, memory() + size_);
 }
 
 StoreIOBuffer
@@ -2135,13 +2135,13 @@ Store::ParsingBuffer::makeSpace(const size_t pageSize)
 {
     growSpace(pageSize);
     Assure(pageSize <= spaceSize());
-    return currentSpace();
+    return space();
 }
 
 StoreIOBuffer
-Store::ParsingBuffer::content(const int64_t offset) // TODO: Use ParsingBuffer::Offset
+Store::ParsingBuffer::content()
 {
-    return StoreIOBuffer(contentSize(), offset, memory());
+    return StoreIOBuffer(contentSize(), 0, memory());
 }
 
 /// makes sure we have the requested number of bytes, allocates enough memory if needed

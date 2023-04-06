@@ -519,7 +519,7 @@ void
 store_client::readFromMemory()
 {
     Assure(parsingBuffer);
-    const auto readInto = parsingBuffer->currentSpace().positionAt(nextHttpReadOffset());
+    const auto readInto = parsingBuffer->space().positionAt(nextHttpReadOffset());
 
     debugs(90, 3, "XXX: hdr_sz: " << entry->mem().baseReply().hdr_sz);
     debugs(90, 3, "copying HTTP body bytes from memory into " << readInto);
@@ -731,7 +731,7 @@ store_client::readHeader(char const *buf, ssize_t len)
         return;
     }
 
-    maybeWriteBodyToMemory(parsingBuffer->content(0));
+    maybeWriteBodyToMemory(parsingBuffer->content());
     handleBodyFromDisk();
 }
 
