@@ -802,8 +802,12 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
            " entries, (x " << rec_sz << " bytes) == " << nused * rec_sz <<
            " bytes total");
 
-    if (!receivedData.flags.eof)
+    if (receivedData.flags.eof) {
+        // discard incomplete leftovers
+        delete ex;
+    } else {
         storeClientCopy(ex->sc, ex->e, ex->storeReadBuffer.legacyReadRequest(receivedData.offset + receivedData.length), netdbExchangeHandleReply, ex);
+    }
 }
 
 #endif /* USE_ICMP */

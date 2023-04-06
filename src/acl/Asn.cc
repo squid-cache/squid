@@ -26,6 +26,7 @@
 #include "radix.h"
 #include "RequestFlags.h"
 #include "SquidConfig.h"
+#include "SquidMath.h"
 #include "Store.h"
 #include "StoreClient.h"
 
@@ -255,13 +256,18 @@ asnCacheStart(int as)
     storeClientCopy(asState->sc, e, asState->storeReadBuffer.legacyInitialBuffer(), asHandleReply, asState);
 }
 
+static bool
+InBuf(StoreIOBuffer buf, char *s)
+{
+    return Less((s - buf.data), buf.length);
+}
+
 static void
 asHandleReply(void *data, StoreIOBuffer result)
 {
     ASState *asState = (ASState *)data;
     StoreEntry *e = asState->entry;
     char *s;
-    char *t;
     auto buf = result.data;
     int leftoversz = -1;
 
@@ -297,21 +303,21 @@ asHandleReply(void *data, StoreIOBuffer result)
      */
     s = buf;
 
-    while ((size_t)(s - buf) < result.length && *s != '\0') {
-        while (*s && xisspace(*s))
+    while (InBuf(result, s)) {
+        while (InBuf(result, s) && xisspace(*s))
             ++s;
 
-        for (t = s; *t; ++t) {
-            if (xisspace(*t))
-                break;
-        }
+        auto t = s;
+        while (InBuf(result, t) && !xisspace(*t))
+            ++t;
 
-        if (*t == '\0') {
+        if (InBuf(result, t)) {
+            *t = '\0';
+        } else {
             /* oof, word should continue on next block */
             break;
         }
 
-        *t = '\0';
         debugs(53, 3, "asHandleReply: AS# " << s << " (" << asState->as_number << ")");
         if (asState->leftovers.contentSize()) {
             asState->leftovers.append(s, strlen(s));
@@ -340,8 +346,15 @@ asHandleReply(void *data, StoreIOBuffer result)
 
     debugs(53, 3, (e->store_status == STORE_PENDING ? "STORE_PENDING" : "STORE_OK") << " " << e->url());
 
-    if (!result.flags.eof)
+    if (!result.flags.eof) {
         storeClientCopy(asState->sc, e, asState->storeReadBuffer.legacyReadRequest(result.offset + result.length), asHandleReply, asState);
+    } else {
+        if (asState->leftovers.size) {
+            asState->leftovers.terminate();
+            asnAddNet(asState->leftovers.content(), asState->as_number);
+        }
+        delete asState;
+    }
 }
 
 /**
