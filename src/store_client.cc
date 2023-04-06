@@ -370,12 +370,12 @@ store_client::doCopy(StoreEntry *anEntry)
     }
 
     // Send (at least) HTTP headers if we have not done so, and we have them.
-    // Here, "sending" essentially means calling the callback _without_ waiting
-    // for the requested body bytes if none of the body bytes are available.
-    const auto sendHttpHeaders = !answeredOnce && mem && mem->baseReply().hdr_sz > 0;
+    // Here, "sending HTTP headers" essentially means calling the callback when
+    // the corresponding MemObject has parsed HTTP response headers.
+    const auto sendHttpHeaders = !answeredOnce && mem->baseReply().hdr_sz > 0;
 
-    // if we are not sending HTTP headers, check that we have HTTP body data
-    if (!sendHttpHeaders && anEntry->store_status == STORE_PENDING && !Less(copyInto.offset + mem->baseReply().hdr_sz, mem->endOffset())) {
+    // if we cannot just send HTTP headers, bail if we have no requested HTTP bytes
+    if (!sendHttpHeaders && anEntry->store_status == STORE_PENDING && nextHttpReadOffset() >= mem->endOffset()) {
         debugs(90, 3, "store_client::doCopy: Waiting for more");
         flags.store_copying = false;
         return;
@@ -401,6 +401,8 @@ store_client::doCopy(StoreEntry *anEntry)
     // send any immediately available body bytes even if we also sendHttpHeaders
     if (canReadFromMemory()) {
         readFromMemory();
+        noteNews(); // will sendHttpHeaders (if needed) as well
+        flags.store_copying = false;
         return;
     }
 
@@ -456,16 +458,6 @@ store_client::noteSwapInDone(const bool error)
 }
 
 void
-store_client::scheduleRead()
-{
-    assert(false); // XXX: remove this method as unused
-    if (canReadFromMemory())
-        readFromMemory();
-    else
-        scheduleDiskRead();
-}
-
-void
 store_client::scheduleDiskRead()
 {
     /* What the client wants is not in memory. Schedule a disk read */
@@ -511,30 +503,19 @@ store_client::nextHttpReadOffset() const
     return NaturalSum<int64_t>(hdr_sz, copyInto.offset, parsingBuffer->contentSize()).value();
 }
 
-// XXX: Update description.
-/// If possible, copies at least some of the requested body bytes from MemObject
-/// memory, satisfying the copy() request. Otherwise, does not change state.
-/// \returns true if the copy() request was satisfied
+/// Copies at least some of the requested body bytes from MemObject memory,
+/// satisfying the copy() request.
+/// \pre canReadFromMemory() is true
 void
 store_client::readFromMemory()
 {
     Assure(parsingBuffer);
     const auto readInto = parsingBuffer->space().positionAt(nextHttpReadOffset());
 
-    debugs(90, 3, "XXX: hdr_sz: " << entry->mem().baseReply().hdr_sz);
     debugs(90, 3, "copying HTTP body bytes from memory into " << readInto);
-    const auto sz = entry->mem_obj->data_hdr.copy(readInto); // may be <= 0 per copy() API
-
-    if (sz > 0) { // XXX: This should be the only outcome due to canReadFromMemory() check.
-        parsingBuffer->appended(readInto.data, sz);
-        noteNews();
-    } else if (sz == 0) {
-        noteEof();
-    } else {
-        fail();
-    }
-
-    flags.store_copying = false;
+    const auto sz = entry->mem_obj->data_hdr.copy(readInto);
+    Assure(sz > 0); // our canReadFromMemory() precondition guarantees that
+    parsingBuffer->appended(readInto.data, sz);
 }
 
 void
@@ -1033,7 +1014,7 @@ store_client::tryParsingHttpHeaders()
            " out of " << Config.maxReplyHeaderSize);
 
     // Continue on the disk-reading path because readFromMemory() cannot give us
-    // the missing header bytes. We would not be _parsing_ the header otherwise.
+    // the missing header bytes: We would not be _parsing_ the header otherwise.
     scheduleDiskRead();
     return false;
 }
