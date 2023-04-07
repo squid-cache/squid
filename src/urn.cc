@@ -230,7 +230,6 @@ urnHandleReply(void *data, StoreIOBuffer result)
     UrnState *urnState = static_cast<UrnState *>(data);
     StoreEntry *e = urnState->entry;
     StoreEntry *urlres_e = urnState->urlres_e;
-    char *s = nullptr;
     url_entry *urls;
     url_entry *u;
     url_entry *min_u;
@@ -252,7 +251,8 @@ urnHandleReply(void *data, StoreIOBuffer result)
         return;
     }
 
-    if (!Less(result.offset + result.length, urnState->storeReadBuffer.size())) {
+    const auto totalBytes = result.offset + result.length;
+    if (!Less(totalBytes, urnState->storeReadBuffer.size())) {
         delete urnState;
         return;
     }
@@ -260,7 +260,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
     /* If we haven't received the entire object (urn), copy more */
     if (!result.flags.eof) {
         storeClientCopy(urnState->sc, urlres_e,
-                        urnState->storeReadBuffer.legacyOffsetBuffer(result.offset + result.length),
+                        urnState->storeReadBuffer.legacyOffsetBuffer(totalBytes),
                         urnHandleReply,
                         urnState);
         return;
@@ -279,7 +279,8 @@ urnHandleReply(void *data, StoreIOBuffer result)
         return;
     }
 
-    s = urnState->storeReadBuffer.legacyInitialBuffer().data;
+    auto s = urnState->storeReadBuffer.legacyInitialBuffer().data;
+    s[totalBytes] = '\0';
     while (xisspace(*s))
         ++s;
 
