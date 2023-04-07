@@ -98,7 +98,9 @@ This section gives an account of those changes in three categories:
 <sect1>Removed options<label id="removedoptions">
 <p>
 <descrip>
-	<p>No removed options in this version.
+	<tag>CPPFLAGS=-DHEADERS_LOG</tag>
+	<p>The code enabled by this preprocessor macro has not built for many
+	   years, indicating that the feature is unused.
 
 </descrip>
 
