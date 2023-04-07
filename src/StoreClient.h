@@ -178,7 +178,7 @@ private:
     void scheduleRead();
     bool startSwapin();
     void handleBodyFromDisk();
-    void maybeWriteBodyToMemory(const StoreIOBuffer &);
+    void maybeWriteFromDiskToMemory(const StoreIOBuffer &);
 
     bool parseHttpHeaders();
     bool tryParsingHttpHeaders();

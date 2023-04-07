@@ -588,7 +588,7 @@ store_client::readBody(const char * const buf, const ssize_t lastIoResult)
 
     parsingBuffer->appended(buf, lastIoResult);
 
-    maybeWriteBodyToMemory(lastRead_);
+    maybeWriteFromDiskToMemory(lastRead_);
     handleBodyFromDisk();
 }
 
@@ -610,22 +610,28 @@ store_client::handleBodyFromDisk()
     noteNews();
 }
 
-// XXX: Document.
+/// Adds HTTP response data loaded from disk to the memory cache (if
+/// needed/possible). The given part may contain portions of HTTP response
+/// headers and/or HTTP response body.
 void
-store_client::maybeWriteBodyToMemory(const StoreIOBuffer &httpResponsePart)
+store_client::maybeWriteFromDiskToMemory(const StoreIOBuffer &httpResponsePart)
 {
-    if (entry->mem_obj->inmem_lo == 0 && entry->objectLen() <= (int64_t)Config.Store.maxInMemObjSize && Config.onoff.memory_cache_disk) {
+    // XXX: Reject [memory-]uncachable/unshareable responses instead of assuming
+    // that any HTTP response loaded from disk should be written to MemObject's
+    // data_hdr (and that it may purge already cached entries). Cachability
+    // decision(s) should be made outside (and obeyed by) this low-level code.
+    if (httpResponsePart.length && entry->mem_obj->inmem_lo == 0 && entry->objectLen() <= (int64_t)Config.Store.maxInMemObjSize && Config.onoff.memory_cache_disk) {
         storeGetMemSpace(httpResponsePart.length);
+        // XXX: The "recheck" below is not needed because nobody can purge
+        // mem_hdr bytes of a locked entry, and we do lock our entry. Moreover,
+        // inmem_lo offset itself should not be relevant to appending new bytes.
         // recheck for the above call may purge entry's data from the memory cache
         if (entry->mem_obj->inmem_lo == 0) {
-            // copy HTTP data just read from disk into local memory if possible
             // XXX: This code assumes a non-shared memory cache.
-            if (httpResponsePart.offset == entry->mem_obj->endOffset()) {
+            if (httpResponsePart.offset == entry->mem_obj->endOffset())
                 entry->mem_obj->write(httpResponsePart);
-            }
         }
     }
-
 }
 
 void
@@ -712,7 +718,7 @@ store_client::readHeader(char const *buf, ssize_t len)
         return;
     }
 
-    maybeWriteBodyToMemory(parsingBuffer->content());
+    maybeWriteFromDiskToMemory(parsingBuffer->content());
     handleBodyFromDisk();
 }
 
