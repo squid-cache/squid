@@ -20,10 +20,5 @@ void fvdbCountVia(const SBuf &);
 /// count occurrences of the given X-Forwarded-For header value
 void fvdbCountForwarded(const SBuf &);
 
-#if HEADERS_LOG
-class HttpRequestMethod;
-void headersLog(int cs, int pq, const HttpRequestMethod& m, void *data);
-#endif
-
 #endif /* SQUID_LOG_ACCESS_LOG_H_ */
 
