@@ -13,4 +13,11 @@ DEFAULT_ERROR_DIR       = $(datadir)/errors
 
 EXTRA_DIST = \
 	debug-messages.dox \
-	debug-sections.txt
+	debug-sections.txt \
+	SPONSORS.in
+
+data_DATA = SPONSORS
+CLEANFILES = $(data_DATA)
+
+SPONSORS: SPONSORS.in
+	sed -e 's/@Squid-[0-9\.]*://' <$< >$@

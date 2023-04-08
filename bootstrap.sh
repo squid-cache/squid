@@ -149,11 +149,6 @@ do
     fi
 done
 
-# Make a copy of SPONSORS we can package
-if test -f SPONSORS.list; then
-  sed -e 's/@Squid-[0-9\.]*://' <SPONSORS.list > SPONSORS || (rm -f SPONSORS && exit 1)
-fi
-
 # Fixup autoconf recursion using --silent/--quiet option
 # autoconf should inherit this option whe recursing into subdirectories
 # but it currently doesn't for some reason.

@@ -7,16 +7,11 @@ The Squid Software Foundation - http://foundation.squid-cache.org/
 	providing the infrastructure and support framework for Squid
 	developers and users.
 
-@Squid-6:
-DigitalOcean - https://www.digitalocean.com/
+@Squid-7:
+GitHub - https://github.com/
 
-	DigitalOcean has donated droplets from their cloud infrastructure
-	to host most of Squid Project's continuous integration farm.
-
-SpinUp - https://SpinUp.com
-
-	SpinUp has donated cloud resources to host our main website, wiki
-	and mailing lists.
+	GitHub provide git repository mirroring services for the
+	Squid-3+ development code.
 
 The Measurement Factory - http://www.measurement-factory.com/
 
@@ -28,6 +23,17 @@ Treehouse Networks, NZ - http://treenet.co.nz/
 	Treehouse Networks has contributed significant resources
 	toward Squid-3+ development and maintenance for their customer
 	gateways and CDN.
+
+@Squid-6:
+DigitalOcean - https://www.digitalocean.com/
+
+	DigitalOcean has donated droplets from their cloud infrastructure
+	to host most of Squid Project's continuous integration farm.
+
+SpinUp - https://SpinUp.com
+
+	SpinUp has donated cloud resources to host our main website, wiki
+	and mailing lists.
 
 @Squid-5:
 RackSpace - https://www.rackspace.com/
