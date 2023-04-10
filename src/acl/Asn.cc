@@ -47,6 +47,9 @@ public:
 
 static const char * const SpaceChars = " \f\r\n\t\v";
 static const CharacterSet SpaceCharacterSet = CharacterSet("Asn::space", SpaceChars);
+// TODO: adjust the value
+/// limits the total of AS numbers to be parsed
+static const size_t AsNumbersMax = 100000;
 
 /* END of definitions for radix tree entries */
 
@@ -92,6 +95,8 @@ public:
     Store::ReadBuffer storeReadBuffer;
     /// the unparsed (yet) bytes by asHandleReply()
     SBuf unparsedBuffer;
+    /// how many AS numbers have been parsed
+    size_t parsedNumbers = 0;
 };
 
 CBDATA_CLASS_INIT(ASState);
@@ -281,13 +286,19 @@ asHandleReply(void *data, StoreIOBuffer result)
         debugs(53, DBG_IMPORTANT, "WARNING: AS " << asState->as_number << " whois request failed");
         delete asState;
         return;
+    } else if (asState->parsedNumbers > AsNumbersMax) {
+        debugs(53, DBG_IMPORTANT, "WARNING: parsed more than maximum allowed " << AsNumbersMax << " AS numbers");
+        delete asState;
+        return;
     }
 
     asState->unparsedBuffer.append(result.data, result.length);
     Parser::Tokenizer tok(asState->unparsedBuffer);
     SBuf v;
-    while (tok.token(v, SpaceCharacterSet))
-        asnAddNet(v, asState->as_number);
+    while (tok.token(v, SpaceCharacterSet)) {
+        if (asnAddNet(v, asState->as_number))
+            asState->parsedNumbers++;
+    }
 
     asState->unparsedBuffer = tok.remaining();
 
