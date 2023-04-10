@@ -2085,11 +2085,15 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
 /* XXX: Move to a dedicated .cc file */
 /* Store::ParsingBuffer */
 
-Store::ParsingBuffer::ParsingBuffer(StoreIOBuffer &unterminatedInput):
-    readerSuppliedMemory_(unterminatedInput)
+Store::ParsingBuffer::ParsingBuffer(StoreIOBuffer &initialSpace):
+    readerSuppliedMemory_(initialSpace)
 {
-    // XXX: Decide whether the argument is "input". If it is, then increment
-    // size_! Otherwise, rename to initialSpace or something like that!
+}
+
+Store::ParsingBuffer::ParsingBuffer(const char *const initialContent, const size_t initialSize):
+    readerSuppliedMemory_(StoreIOBuffer(initialSize, 0, const_cast<char*>(initialContent)))
+{
+    appended(initialContent, initialSize);
 }
 
 /// currently in-use buffer; hides readerSuppliedMemory_->extraMemory_ switch
@@ -2111,7 +2115,15 @@ Store::ParsingBuffer::appended(const char * const newBytes, const size_t newByte
     Assure(memory() + size_ == newBytes); // the new bytes start in memory()
     size_ = *IncreaseSum(size_, newByteCount);
     Assure(size_ <= capacity()); // the new bytes end in memory()
-    terminate();
+    terminate(); // XXX: Why?!
+}
+
+void
+Store::ParsingBuffer::append(const char * const newBytes, const size_t newByteCount)
+{
+    growSpace(newByteCount); // does nothing if we already have enough space
+    memmove(space().data, newBytes, newByteCount); // does nothing if space is already newBytes
+    size_ = *IncreaseSum(size_, newByteCount);
 }
 
 void
@@ -2156,6 +2168,8 @@ Store::ParsingBuffer::growSpace(const size_t minimumSpaceSize)
 
     if (newCapacity <= capacity())
         return; // already have enough space; no reallocation is needed
+
+    debugs(90, 7, "growing to provide " << minimumSpaceSize << " in " << *this);
 
     Mem::Allocation newStorage(newCapacity);
     if (size_) {

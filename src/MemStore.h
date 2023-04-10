@@ -14,6 +14,7 @@
 #include "ipc/StoreMap.h"
 #include "Store.h"
 #include "store/Controlled.h"
+#include "store/forward.h"
 
 // StoreEntry restoration info not already stored by Ipc::StoreMap
 struct MemStoreMapExtraItem {
@@ -82,6 +83,7 @@ protected:
     bool copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor);
     void copyFromShmSlice(StoreEntry &e, const StoreIOBuffer &buf);
 
+    void parseHttpHeaders(StoreEntry &, Store::ParsingBuffer &);
     void updateHeadersOrThrow(Ipc::StoreMapUpdate &update);
 
     void anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor);

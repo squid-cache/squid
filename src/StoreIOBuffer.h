@@ -122,11 +122,10 @@ namespace Store
 class ParsingBuffer
 {
 public:
-    /// The constructor links this buffer and the reader-supplied StoreIOBuffer.
-    /// The supplied input buffer may be modified to assure NUL-termination.
-    /// \param unterminatedInput can store up to unterminatedInput.length bytes
-    /// \param inputSize is the number of bytes stored in unterminatedInput
-    explicit ParsingBuffer(StoreIOBuffer &unterminatedInput);
+    /// initializes this buffer with the caller-supplied buffer space
+    explicit ParsingBuffer(StoreIOBuffer &space);
+    /// XXX: Remove as unused or refactor.
+    ParsingBuffer(const char *initialContent, size_t initialSize);
 
     /// A terminated version of unterminatedInput.data. The returned memory
     /// might differ from unterminatedInput.data, but will contain the same
@@ -161,6 +160,9 @@ public:
 
     /// remember the new bytes received into the previously provided space()
     void appended(const char *, size_t);
+
+    /// remember the new bytes (received in an external to us buffer)
+    void append(const char *, size_t);
 
     /// get rid of previously appended() prefix of a given size
     void consume(size_t);
