@@ -16,15 +16,18 @@
 #include "acl/DestinationIp.h"
 #include "acl/SourceAsn.h"
 #include "acl/Strategised.h"
+#include "base/CharacterSet.h"
 #include "FwdState.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ipcache.h"
 #include "MasterXaction.h"
-#include "MemBuf.h"
 #include "mgr/Registration.h"
+#include "parser/forward.h"
+#include "parser/Tokenizer.h"
 #include "radix.h"
 #include "RequestFlags.h"
+#include "sbuf/SBuf.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
 #include "Store.h"
@@ -41,6 +44,9 @@ public:
 
     m_ADDR() : len(sizeof(Ip::Address)) {};
 };
+
+static const char * const SpaceChars = " \f\r\n\t\v";
+static const CharacterSet SpaceCharacterSet = CharacterSet("Asn::space", SpaceChars);
 
 /* END of definitions for radix tree entries */
 
@@ -84,8 +90,8 @@ public:
     int as_number = 0;
     int64_t offset = 0;
     Store::ReadBuffer storeReadBuffer;
-    /// the unparsed (yet) bytes kept between two asHandleReply() calls
-    MemBuf leftovers;
+    /// the unparsed (yet) bytes by asHandleReply()
+    SBuf unparsedBuffer;
 };
 
 CBDATA_CLASS_INIT(ASState);
@@ -98,7 +104,7 @@ struct rtentry_t {
     m_ADDR e_mask;
 };
 
-static int asnAddNet(char *, int);
+static int asnAddNet(const SBuf &, int);
 
 static void asnCacheStart(int as);
 
@@ -256,25 +262,13 @@ asnCacheStart(int as)
     storeClientCopy(asState->sc, e, asState->storeReadBuffer.legacyInitialBuffer(), asHandleReply, asState);
 }
 
-static bool
-InBuf(StoreIOBuffer buf, char *s)
-{
-    return Less((s - buf.data), buf.length);
-}
-
 static void
 asHandleReply(void *data, StoreIOBuffer result)
 {
     ASState *asState = (ASState *)data;
     StoreEntry *e = asState->entry;
-    char *s;
-    auto buf = result.data;
-    int leftoversz = -1;
 
     debugs(53, 3, "asHandleReply: Called with size=" << (unsigned int)result.length);
-    debugs(53, 3, "asHandleReply: buffer='" << buf << "'");
-
-    /* First figure out whether we should abort the request */
 
     if (EBIT_TEST(e->flags, ENTRY_ABORTED)) {
         delete asState;
@@ -289,79 +283,32 @@ asHandleReply(void *data, StoreIOBuffer result)
         return;
     }
 
-    if (result.length == 0) {
-        if (result.flags.eof)
-            delete asState; // done
-        else
-            storeClientCopy(asState->sc, e, asState->storeReadBuffer.legacyReadRequest(result.offset), asHandleReply, asState);
-        return;
-    }
+    asState->unparsedBuffer.append(result.data, result.length);
+    Parser::Tokenizer tok(asState->unparsedBuffer);
+    SBuf v;
+    while (tok.token(v, SpaceCharacterSet))
+        asnAddNet(v, asState->as_number);
 
-    /*
-     * Next, attempt to parse our request
-     * Remembering that the actual buffer size is retsize + reqofs!
-     */
-    s = buf;
-
-    while (InBuf(result, s)) {
-        while (InBuf(result, s) && xisspace(*s))
-            ++s;
-
-        auto t = s;
-        while (InBuf(result, t) && !xisspace(*t))
-            ++t;
-
-        if (InBuf(result, t)) {
-            *t = '\0';
-        } else {
-            /* oof, word should continue on next block */
-            break;
-        }
-
-        debugs(53, 3, "asHandleReply: AS# " << s << " (" << asState->as_number << ")");
-        if (asState->leftovers.contentSize()) {
-            asState->leftovers.append(s, strlen(s));
-            asState->leftovers.terminate();
-            asnAddNet(asState->leftovers.content(), asState->as_number);
-            asState->leftovers.reset();
-        } else {
-            asnAddNet(s, asState->as_number);
-        }
-        s = t + 1;
-    }
-
-    /*
-     * Next, grab the end of the 'valid data' in the buffer, and figure
-     * out how much data is left in our buffer, which we need to keep
-     * around for the next request
-     */
-    leftoversz = result.length - (s - buf);
-
-    assert(leftoversz >= 0);
-
-    if (leftoversz > 0) {
-        asState->leftovers.reset(); // must be empty already
-        asState->leftovers.append(s, leftoversz); // save the left over data, from s to s + leftoversz
-    }
+    asState->unparsedBuffer = tok.remaining();
 
     debugs(53, 3, (e->store_status == STORE_PENDING ? "STORE_PENDING" : "STORE_OK") << " " << e->url());
 
     if (!result.flags.eof) {
         storeClientCopy(asState->sc, e, asState->storeReadBuffer.legacyReadRequest(result.offset + result.length), asHandleReply, asState);
-    } else {
-        if (asState->leftovers.size) {
-            asState->leftovers.terminate();
-            asnAddNet(asState->leftovers.content(), asState->as_number);
-        }
-        delete asState;
+        return;
     }
+
+    if (!asState->unparsedBuffer.isEmpty())
+        asnAddNet(asState->unparsedBuffer, asState->as_number);
+
+    delete asState;
 }
 
 /**
  * add a network (addr, mask) to the radix tree, with matching AS number
  */
 static int
-asnAddNet(char *as_string, int as_number)
+asnAddNet(const SBuf &as_string, int as_number)
 {
     struct squid_radix_node *rn;
     CbDataList<int> **Tail = nullptr;
@@ -369,30 +316,24 @@ asnAddNet(char *as_string, int as_number)
     as_info *asinfo = nullptr;
 
     Ip::Address mask;
-    Ip::Address addr;
-    char *t;
-    int bitl;
 
-    t = strchr(as_string, '/');
-
-    if (t == nullptr) {
+    static const CharacterSet NonSlashSet = CharacterSet("Asn::slash", "/").complement("Asn::non-slash");
+    Parser::Tokenizer tok(as_string);
+    SBuf addrTok;
+    if (!(tok.prefix(addrTok, NonSlashSet) && tok.skip('/'))) {
         debugs(53, 3, "asnAddNet: failed, invalid response from whois server.");
         return 0;
     }
 
-    *t = '\0';
-    addr = as_string;
-    bitl = atoi(t + 1);
+    int64_t bitl = 0;
+    (void)tok.int64(bitl, 10, false);
 
-    if (bitl < 0)
-        bitl = 0;
-
-    // INET6 TODO : find a better way of identifying the base IPA family for mask than this.
-    t = strchr(as_string, '.');
+    Ip::Address addr = addrTok.c_str();
 
     // generate Netbits Format Mask
     mask.setNoAddr();
-    mask.applyMask(bitl, (t!=nullptr?AF_INET:AF_INET6) );
+    // INET6 TODO : find a better way of identifying the base IPA family for mask than this.
+    mask.applyMask(bitl, tok.skip('.') ? AF_INET : AF_INET6);
 
     debugs(53, 3, "asnAddNet: called for " << addr << "/" << mask );
 
