@@ -1019,6 +1019,10 @@ store_client::tryParsingHttpHeaders()
     debugs(90, 3, "need more HTTP header bytes after accumulating " << bufferedSize <<
            " out of " << Config.maxReplyHeaderSize);
 
+    // XXX: Check that an unexpected *disk* EOF with unparsed HTTP headers
+    // results in flags.error rather than in (flags.eof with unparsed HTTP
+    // headers). In other words, disk code path must _require_ parsed headers.
+
     // Continue on the disk-reading path because readFromMemory() cannot give us
     // the missing header bytes: We would not be _parsing_ the header otherwise.
     scheduleDiskRead();
