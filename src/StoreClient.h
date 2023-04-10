@@ -16,7 +16,19 @@
 #include "StoreIOBuffer.h"
 #include "StoreIOState.h"
 
-typedef void STCB(void *, StoreIOBuffer);   /* store callback */
+/// A storeClientCopy() callback function.
+///
+/// Upon storeClientCopy() success, StoreIOBuffer::flags.error is zero, and
+/// * HTTP response headers (if any) are available via MemObject::baseReply().
+/// * HTTP response body bytes (if any) are available via StoreIOBuffer.
+/// * If no more HTTP response body bytes are expected, StoreIOBuffer::flags.eof
+///   is set. Zero StoreIOBuffer::length does not imply an EOF condition and is
+///   typical for the first storeClientCopy() response delivering _immediately_
+///   available HTTP response headers (while body bytes require disk I/O).
+///
+/// Errors are indicated by setting StoreIOBuffer flags.error.
+typedef void STCB(void *, StoreIOBuffer);
+// TODO: Move StoreIOBuffer::flags outside StoreIOBuffer?
 
 class StoreEntry;
 class ACLFilledChecklist;
@@ -57,23 +69,10 @@ namespace Store
 /// XXX: TBD
 using LegacyOffset = int64_t;
 
-/// A place for store_client::copy() to put HTTP response parts, containing a
-/// sequential portion of the serialized HTTP response. Upon a successful
-/// store_client::copy() return, this buffer contents matches one of two cases:
+/// A space for storing HTTP body bytes returned by storeClientCopy().
 ///
-/// 1. Complete serialized HTTP response headers (MemObject::reply->hdr_sz
-///    bytes) followed by zero or more initial HTTP response body bytes
-///    (starting at body offset zero). The offset() value in this case is 0. The
-///    size() value is the sum of those serialized headers (always positive) and
-///    serialized body (may be zero).
-///
-/// 2. Zero or more HTTP response body bytes. The offset() value in this case is
-///    positive. The size() value is the number of body bytes.
-///
-/// Internally, Store also uses this buffer storage for disk cache I/O. During
-/// disk I/O, this buffer may start with serialized Store entry metadata, but
-/// those bytes (if any) are removed before the buffer is returned by copy().
-/// TODO: Separate internally- and externally-used buffers by type!
+/// During internal store_client operations, this buffer may also be temporary
+/// used for serialized swap entry metadata and/or serialized HTTP headers.
 class ReadBuffer
 {
 public:
@@ -92,10 +91,8 @@ public:
     size_t size() const { return serialized_.size(); }
 
 private:
-    /// Serialized Store entry metadata followed by HTTP headers, followed by a
-    /// portion of HTTP response body. All components are optional. This buffer
-    /// is not NUL-terminated and may be completely full.
-    std::array<char, 64*1024 /* XXX: HTTP_REQBUF_SZ */ > serialized_; // TODO: allocate dynamically
+    /// space for storing serialized Store entry bytes
+    std::array<char, HTTP_REQBUF_SZ> serialized_;
 };
 
 } // namespace Store
@@ -180,10 +177,11 @@ private:
     void readFromMemory();
     void scheduleRead();
     bool startSwapin();
+    void handleBodyFromDisk();
+    void maybeWriteFromDiskToMemory(const StoreIOBuffer &);
 
     bool parseHttpHeaders();
     bool tryParsingHttpHeaders();
-    StoreIOBuffer terminateInputBuffer() const;
 
     void fail();
     void callback(ssize_t);
@@ -200,19 +198,17 @@ private:
     /// to be ignored when not answering a copy() request.
     StoreIOBuffer copyInto;
 
-    /// The number of bytes loaded from Store into copyInto while answering the
-    /// current copy() request. Ought to be ignored when not answering.
-    size_t copiedSize;
-
-    /// The total number of HTTP header bytes received from Store
-    size_t httpHeaderBytesReceived_;
-
-    /// The total number of HTTP body bytes delivered in all copy() answers.
-    uint64_t httpBodyBytesCopied_;
-
     // TODO: Try to replace with some other existing counter
     /// finishCallback() has been called at least once
     bool answeredOnce = false;
+
+    /// Accumulates raw bytes read from Store while answering the current copy()
+    /// request. Buffer contents depends on the source and parsing stage; it may
+    /// hold (parts of) swap metadata, HTTP response headers, and/or HTTP
+    /// response body bytes.
+    std::optional<Store::ParsingBuffer> parsingBuffer;
+
+    StoreIOBuffer lastRead_; ///< buffer used for the last storeRead() call
 
     /* Until we finish stuffing code into store_client */
 
@@ -237,7 +233,18 @@ public:
     } _callback;
 };
 
+/// Asynchronously read HTTP response headers and/or body bytes from Store.
+///
+/// The requested zero-based HTTP body offset is specified via the
+/// StoreIOBuffer::offset field. The first call (for a given store_client
+/// object) must specify zero offset.
+///
+/// The requested HTTP body portion size is specified via the
+/// StoreIOBuffer::length field. The function may return fewer body bytes.
+///
+/// See STCB for result delivery details.
 void storeClientCopy(store_client *, StoreEntry *, StoreIOBuffer, STCB *, void *);
+
 store_client* storeClientListAdd(StoreEntry * e, void *data);
 int storeUnregister(store_client * sc, StoreEntry * e, void *data);
 int storePendingNClients(const StoreEntry * e);
