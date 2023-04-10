@@ -2088,7 +2088,8 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
 Store::ParsingBuffer::ParsingBuffer(StoreIOBuffer &unterminatedInput):
     readerSuppliedMemory_(unterminatedInput)
 {
-    terminate();
+    // XXX: Decide whether the argument is "input". If it is, then increment
+    // size_! Otherwise, rename to initialSpace or something like that!
 }
 
 /// currently in-use buffer; hides readerSuppliedMemory_->extraMemory_ switch
