@@ -289,36 +289,27 @@ store_client::copy(StoreEntry * anEntry,
     // Add no code here. This object may no longer exist.
 }
 
-/// Whether there is (or will be) more entry data for us.
+/// Whether Store has (or possibly will have) more entry data for us.
 bool
-store_client::moreToSend() const
+store_client::moreToRead() const
 {
     if (entry->store_status == STORE_PENDING)
         return true; // there may be more coming
 
     /* STORE_OK, including aborted entries: no more data is coming */
 
-    // we have more to send if we have the first byte wanted by the client
     if (canReadFromMemory())
-        return true;
+        return true; // memory has the first byte wanted by the client
 
-    // If we have not sent anything, then we have to send the response headers
-    // (at least). The header-less/memory-pass-through case is handled above.
-    if (!answeredOnce)
-        return true;
+    if (!entry->hasDisk())
+        return false; // cannot read anything from disk either
 
-    const int64_t len = entry->objectLen();
+    if (entry->objectLen() >= 0 && copyInto.offset >= entry->contentLen())
+        return false; // the disk cannot have byte(s) wanted by the client
 
-    // If we do not know the entry length, then we have to open the swap file.
-    const bool canSwapIn = entry->hasDisk();
-    if (len < 0)
-        return canSwapIn;
-
-    if (copyInto.offset >= entry->contentLen())
-        return false; // sent everything there is
-
-    // if we can read more bytes from disk, we may have more bytes to send
-    return canSwapIn;
+    // we cannot be sure until we swap in metadata and learn contentLen(),
+    // but the disk may have the byte(s) wanted by the client
+    return true;
 }
 
 static void
@@ -361,18 +352,18 @@ store_client::doCopy(StoreEntry *anEntry)
            " objectLen: " << entry->objectLen() <<
            " first: " << !answeredOnce);
 
-    if (!moreToSend()) {
+    // Send (at least) HTTP headers if we have not done so, and we have them.
+    // Here, "sending HTTP headers" essentially means calling the callback when
+    // the corresponding MemObject has parsed HTTP response headers.
+    const auto sendHttpHeaders = !answeredOnce && mem->baseReply().hdr_sz > 0;
+
+    if (!sendHttpHeaders && !moreToRead()) {
         /* There is no more to send! */
         debugs(33, 3, "There is no more to send!");
         noteEof();
         flags.store_copying = false;
         return;
     }
-
-    // Send (at least) HTTP headers if we have not done so, and we have them.
-    // Here, "sending HTTP headers" essentially means calling the callback when
-    // the corresponding MemObject has parsed HTTP response headers.
-    const auto sendHttpHeaders = !answeredOnce && mem->baseReply().hdr_sz > 0;
 
     // if we cannot just send HTTP headers, bail if we have no requested HTTP bytes
     if (!sendHttpHeaders && anEntry->store_status == STORE_PENDING && nextHttpReadOffset() >= mem->endOffset()) {
@@ -408,7 +399,7 @@ store_client::doCopy(StoreEntry *anEntry)
 
     if (sendHttpHeaders) {
         debugs(33, 5, "just send headers: " << mem->baseReply().hdr_sz);
-        noteNews(); // just deliver the headers
+        noteNews();
         flags.store_copying = false;
         return;
     }

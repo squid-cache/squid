@@ -168,7 +168,7 @@ public:
     dlink_node node;
 
 private:
-    bool moreToSend() const;
+    bool moreToRead() const;
     bool canReadFromMemory() const;
     int64_t nextHttpReadOffset() const;
 
