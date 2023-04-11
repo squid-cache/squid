@@ -32,9 +32,7 @@
 #include "mgr/Registration.h"
 #include "mime_header.h"
 #include "neighbors.h"
-#include "parser/BinaryTokenizer.h"
 #include "PeerSelectState.h"
-#include "sbuf/SBuf.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
 #include "Store.h"
@@ -83,8 +81,8 @@ public:
     HttpRequestPointer r;
     Store::ReadBuffer storeReadBuffer;
     netdb_conn_state_t connstate = STATE_HEADER;
-    /// the unparsed (yet) bytes by netdbExchangeHandleReply()
-    SBuf unparsedBuffer;
+    /// the unparsed (yet) bytes kept between two successive netdbExchangeHandleReply() calls
+    MemBuf leftovers;
 };
 
 CBDATA_CLASS_INIT(netdbExchangeState);
@@ -666,12 +664,16 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
     Ip::Address addr;
 
     netdbExchangeState *ex = (netdbExchangeState *)data;
+    int rec_sz = 0;
+    int o;
 
+    struct in_addr line_addr;
     double rtt;
     double hops;
+    int j;
     int nused = 0;
 
-    size_t rec_sz = 0;
+    rec_sz = 0;
     rec_sz += 1 + sizeof(struct in_addr);
     rec_sz += 1 + sizeof(int);
     rec_sz += 1 + sizeof(int);
@@ -722,32 +724,48 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
     /* If we get here, we have some body to parse .. */
 
-    ex->unparsedBuffer.append(receivedData.data, receivedData.length);
+    auto start = receivedData.data;
+    int size = receivedData.length;
+    if (ex->leftovers.size) {
+        assert(ex->leftovers.size < rec_sz);
+        const auto sz = rec_sz - ex->leftovers.size;
+        ex->leftovers.append(receivedData.data, Less(receivedData.length, sz) ? receivedData.length : sz);
+        start += sz;
+        size -= sz;
+    }
 
-    debugs(38, 5, "start parsing loop, size = " << ex->unparsedBuffer.length());
+    auto p = ex->leftovers.size ? ex->leftovers.content() : start;
 
-    Parser::BinaryTokenizer tok(ex->unparsedBuffer);
-    while (ex->unparsedBuffer.length() >= rec_sz) {
+    debugs(38, 5, "start parsing loop, size = " << size);
+
+    while (ex->leftovers.size == rec_sz || size >= rec_sz) {
+        debugs(38, 5, "netdbExchangeHandleReply: in parsing loop, size = " << size);
         addr.setAnyAddr();
         hops = rtt = 0.0;
-        auto blob = tok.area(rec_sz, "netdb rec_sz bytes");
-        Parser::BinaryTokenizer dataTok(blob);
 
-        while (!dataTok.atEnd()) {
-            const auto o = dataTok.uint32("NetDB field indicator");
-            switch(o) {
+        for (o = 0; o < rec_sz;) {
+            switch ((int) *(p + o)) {
 
             case NETDB_EX_NETWORK:
+                ++o;
                 // XXX: NetDB can still only send IPv4
-                addr = dataTok.inet4("NETDB_EX_NETWORK");
+                memcpy(&line_addr, p + o, sizeof(struct in_addr));
+                addr = line_addr;
+                o += sizeof(struct in_addr);
                 break;
 
             case NETDB_EX_RTT:
-                rtt = static_cast<double>(ntohl(dataTok.uint32("NETDB_EX_RTT"))) / 1000.0;
+                ++o;
+                memcpy(&j, p + o, sizeof(int));
+                o += sizeof(int);
+                rtt = (double) ntohl(j) / 1000.0;
                 break;
 
             case NETDB_EX_HOPS:
-                hops = static_cast<double>(ntohl(dataTok.uint32("NETDB_EX_HOPS"))) / 1000.0;
+                ++o;
+                memcpy(&j, p + o, sizeof(int));
+                o += sizeof(int);
+                hops = (double) ntohl(j) / 1000.0;
                 break;
 
             default:
@@ -760,12 +778,25 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         if (!addr.isAnyAddr() && rtt > 0)
             netdbExchangeUpdatePeer(addr, ex->p.get(), rtt, hops);
 
+        assert(o == rec_sz);
+
+        if (ex->leftovers.size) {
+            ex->leftovers.reset();
+            p = start;
+        } else {
+            size -= rec_sz;
+            p += rec_sz;
+        }
+
         ++nused;
     }
 
-    ex->unparsedBuffer = tok.leftovers();
+    if (size) {
+        ex->leftovers.reset(); // must be empty already
+        ex->leftovers.append(receivedData.data + (receivedData.length - size), size);
+    }
 
-    debugs(38, 3, "size left over in this buffer: " << ex->unparsedBuffer.length() << " bytes");
+    debugs(38, 3, "netdbExchangeHandleReply: size left over in this buffer: " << size << " bytes");
 
     debugs(38, 3, "netdbExchangeHandleReply: used " << nused <<
            " entries, (x " << rec_sz << " bytes) == " << nused * rec_sz <<
