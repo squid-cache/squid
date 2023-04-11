@@ -33,6 +33,7 @@
 #include "mime_header.h"
 #include "neighbors.h"
 #include "PeerSelectState.h"
+#include "sbuf/SBuf.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
 #include "Store.h"
@@ -81,8 +82,8 @@ public:
     HttpRequestPointer r;
     Store::ReadBuffer storeReadBuffer;
     netdb_conn_state_t connstate = STATE_HEADER;
-    /// the unparsed (yet) bytes kept between two successive netdbExchangeHandleReply() calls
-    MemBuf leftovers;
+    /// the unparsed (yet) bytes by netdbExchangeHandleReply()
+    SBuf unparsedBuffer;
 };
 
 CBDATA_CLASS_INIT(netdbExchangeState);
@@ -664,8 +665,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
     Ip::Address addr;
 
     netdbExchangeState *ex = (netdbExchangeState *)data;
-    int rec_sz = 0;
-    int o;
+    size_t o;
 
     struct in_addr line_addr;
     double rtt;
@@ -673,7 +673,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
     int j;
     int nused = 0;
 
-    rec_sz = 0;
+    size_t rec_sz = 0;
     rec_sz += 1 + sizeof(struct in_addr);
     rec_sz += 1 + sizeof(int);
     rec_sz += 1 + sizeof(int);
@@ -699,14 +699,6 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         return;
     }
 
-    if (receivedData.length == 0) {
-        if (receivedData.flags.eof)
-            delete ex; // done
-        else
-            storeClientCopy(ex->sc, ex->e, ex->storeReadBuffer.legacyReadRequest(receivedData.offset), netdbExchangeHandleReply, ex);
-        return;
-    }
-
     const auto &reply = ex->e->mem().baseReply();
 
     if (ex->connstate == STATE_HEADER) {
@@ -724,21 +716,13 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
     /* If we get here, we have some body to parse .. */
 
-    auto start = receivedData.data;
-    int size = receivedData.length;
-    if (ex->leftovers.size) {
-        assert(ex->leftovers.size < rec_sz);
-        const auto sz = rec_sz - ex->leftovers.size;
-        ex->leftovers.append(receivedData.data, Less(receivedData.length, sz) ? receivedData.length : sz);
-        start += sz;
-        size -= sz;
-    }
-
-    auto p = ex->leftovers.size ? ex->leftovers.content() : start;
+    ex->unparsedBuffer.append(receivedData.data, receivedData.length);
+    auto p = ex->unparsedBuffer.c_str();
+    auto size = ex->unparsedBuffer.length();
 
     debugs(38, 5, "start parsing loop, size = " << size);
 
-    while (ex->leftovers.size == rec_sz || size >= rec_sz) {
+    while (size >= rec_sz) {
         debugs(38, 5, "netdbExchangeHandleReply: in parsing loop, size = " << size);
         addr.setAnyAddr();
         hops = rtt = 0.0;
@@ -780,30 +764,24 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
         assert(o == rec_sz);
 
-        if (ex->leftovers.size) {
-            ex->leftovers.reset();
-            p = start;
-        } else {
-            size -= rec_sz;
-            p += rec_sz;
-        }
+        size -= rec_sz;
+
+        p += rec_sz;
 
         ++nused;
     }
 
-    if (size) {
-        ex->leftovers.reset(); // must be empty already
-        ex->leftovers.append(receivedData.data + (receivedData.length - size), size);
-    }
+    ex->unparsedBuffer.consume(ex->unparsedBuffer.length() - size);
 
-    debugs(38, 3, "netdbExchangeHandleReply: size left over in this buffer: " << size << " bytes");
+    debugs(38, 3, "size left over in this buffer: " << size << " bytes");
 
     debugs(38, 3, "netdbExchangeHandleReply: used " << nused <<
            " entries, (x " << rec_sz << " bytes) == " << nused * rec_sz <<
            " bytes total");
 
     if (receivedData.flags.eof) {
-        // discard incomplete leftovers
+        if (!ex->unparsedBuffer.isEmpty())
+            debugs(38, 3, "discarding " << ex->unparsedBuffer.length() << " leftover bytes due to EOF");
         delete ex;
     } else {
         storeClientCopy(ex->sc, ex->e, ex->storeReadBuffer.legacyReadRequest(receivedData.offset + receivedData.length), netdbExchangeHandleReply, ex);
