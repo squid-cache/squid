@@ -2090,12 +2090,6 @@ Store::ParsingBuffer::ParsingBuffer(StoreIOBuffer &initialSpace):
 {
 }
 
-Store::ParsingBuffer::ParsingBuffer(const char *const initialContent, const size_t initialSize):
-    readerSuppliedMemory_(StoreIOBuffer(initialSize, 0, const_cast<char*>(initialContent)))
-{
-    appended(initialContent, initialSize);
-}
-
 /// currently in-use buffer; hides readerSuppliedMemory_->extraMemory_ switch
 char *
 Store::ParsingBuffer::memory() const
@@ -2116,14 +2110,6 @@ Store::ParsingBuffer::appended(const char * const newBytes, const size_t newByte
     size_ = *IncreaseSum(size_, newByteCount);
     Assure(size_ <= capacity()); // the new bytes end in memory()
     terminate(); // XXX: Why?!
-}
-
-void
-Store::ParsingBuffer::append(const char * const newBytes, const size_t newByteCount)
-{
-    growSpace(newByteCount); // does nothing if we already have enough space
-    memmove(space().data, newBytes, newByteCount); // does nothing if space is already newBytes
-    size_ = *IncreaseSum(size_, newByteCount);
 }
 
 void

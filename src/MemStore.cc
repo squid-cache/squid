@@ -17,10 +17,10 @@
 #include "MemObject.h"
 #include "MemStore.h"
 #include "mime_header.h"
+#include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
-#include "StoreIOBuffer.h" // replace
 #include "StoreStats.h"
 #include "tools.h"
 
@@ -476,8 +476,7 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
     bool wasEof = anchor.complete() && sid < 0;
     int64_t sliceOffset = 0;
 
-    std::optional<Store::ParsingBuffer> parsingBuffer;
-
+    SBuf httpHeaderParsingBuffer;
     while (sid >= 0) {
         const Ipc::StoreMapSlice &slice = map->readableSlice(index, sid);
         // slice state may change during copying; take snapshots now
@@ -508,18 +507,8 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
             // parse headers if needed; they might span multiple slices!
             auto &reply = e.mem().adjustableBaseReply();
             if (reply.pstate != Http::Message::psParsed) {
-                if (!parsingBuffer) {
-                    // XXX: This works well from performance point of view, but
-                    // treating shm page as "space" is wrong: We may start
-                    // writing into that "space" (e.g. to terminate!) instead of
-                    // allocating extraMemory to preserve (newer) shm content).
-                    StoreIOBuffer currentPage(Ipc::Mem::PageSize(), 0, page);
-                    parsingBuffer.emplace(currentPage);
-                    parsingBuffer->appended(page, wasSize);
-                } else {
-                    parsingBuffer->append(sliceBuf.data, sliceBuf.length);
-                }
-                parseHttpHeaders(e, *parsingBuffer);
+                httpHeaderParsingBuffer.append(sliceBuf.data, sliceBuf.length);
+                parseHttpHeaders(e, httpHeaderParsingBuffer);
             }
         }
         // else skip a [possibly incomplete] slice that we copied earlier
@@ -552,10 +541,8 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
     debugs(20, 5, "mem-loaded all " << e.mem_obj->endOffset() << '/' <<
            anchor.basics.swap_file_sz << " bytes of " << e);
 
-    if (parsingBuffer && e.mem().adjustableBaseReply().pstate != Http::Message::psParsed) {
-        throw TextException(ToSBuf("truncated mem-cached headers",
-            Debug::Extra, "parsing buffer: ", *parsingBuffer), Here());
-    }
+    if (e.mem().adjustableBaseReply().pstate != Http::Message::psParsed)
+        throw TextException(ToSBuf("truncated mem-cached headers; accumulated: ", httpHeaderParsingBuffer.length()), Here());
 
     // from StoreEntry::complete()
     e.mem_obj->object_sz = e.mem_obj->endOffset();
@@ -571,41 +558,36 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
     return true;
 }
 
-/// parses (a portion of) HTTP headers serialized in the given shared memory slice
+/// parses (a portion of) serialized HTTP headers
 void
-MemStore::parseHttpHeaders(StoreEntry &entry, Store::ParsingBuffer &parsingBuffer)
+MemStore::parseHttpHeaders(StoreEntry &entry, SBuf &parsingBuffer)
 {
-    const auto bufferedSize = parsingBuffer.contentSize();
-
     auto error = Http::scNone;
     auto &adjustableReply = entry.mem().adjustableBaseReply();
     const bool eof = false; // TODO: Remove after removing atEnd from HttpHeader::parse()
-    if (adjustableReply.parse(parsingBuffer.c_str(), bufferedSize, eof, &error)) {
-        debugs(90, 7, "success after accumulating " << bufferedSize << " bytes and parsing " << adjustableReply.hdr_sz);
+    if (adjustableReply.parse(parsingBuffer.c_str(), parsingBuffer.length(), eof, &error)) {
+        debugs(90, 7, "success after accumulating " << parsingBuffer.length() << " bytes and parsing " << adjustableReply.hdr_sz);
         Assure(adjustableReply.pstate == Http::Message::psParsed);
         Assure(adjustableReply.hdr_sz > 0);
-        Assure(!Less(bufferedSize, adjustableReply.hdr_sz)); // cannot parse more bytes than we have
-        parsingBuffer.consume(adjustableReply.hdr_sz); // skip parsed HTTP headers
-
-        const auto httpBodyBytesAfterHeader = parsingBuffer.contentSize();
-        debugs(90, 5, "buffered HTTP body prefix: " << httpBodyBytesAfterHeader);
-        Assure(adjustableReply.pstate == Http::Message::psParsed);
+        Assure(!Less(parsingBuffer.length(), adjustableReply.hdr_sz)); // cannot parse more bytes than we have
+        parsingBuffer = SBuf(); // we do not need these bytes anymore
         return; // success
     }
 
     if (error) {
-        throw TextException(ToSBuf("cannot parse in-memory HTTP headers",
+        throw TextException(ToSBuf("failed to parse in-memory HTTP headers",
            Debug::Extra, "parser error code: ", error,
-           Debug::Extra, "parsing buffer: ", parsingBuffer),
+           Debug::Extra, "accumulated unparsed bytes: ", parsingBuffer.length(),
+           Debug::Extra, "reply_header_max_size: ", Config.maxReplyHeaderSize),
            Here());
     }
 
-    debugs(90, 3, "need more HTTP header bytes after accumulating " << bufferedSize <<
+    debugs(90, 3, "need more HTTP header bytes after accumulating " << parsingBuffer.length() <<
            " out of " << Config.maxReplyHeaderSize);
 
     // the parse() call above enforces Config.maxReplyHeaderSize limit
     // XXX: Make this a strict comparison after fixing Http::Message::parse() enforcement
-    Assure(bufferedSize <= Config.maxReplyHeaderSize);
+    Assure(parsingBuffer.length() <= Config.maxReplyHeaderSize);
 
     Assure(adjustableReply.pstate != Http::Message::psParsed);
 }

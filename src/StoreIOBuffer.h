@@ -122,10 +122,8 @@ namespace Store
 class ParsingBuffer
 {
 public:
-    /// initializes this buffer with the caller-supplied buffer space
+    /// seeds this buffer with the caller-supplied buffer space
     explicit ParsingBuffer(StoreIOBuffer &space);
-    /// XXX: Remove as unused or refactor.
-    ParsingBuffer(const char *initialContent, size_t initialSize);
 
     /// A terminated version of unterminatedInput.data. The returned memory
     /// might differ from unterminatedInput.data, but will contain the same
@@ -161,9 +159,6 @@ public:
     /// remember the new bytes received into the previously provided space()
     void appended(const char *, size_t);
 
-    /// remember the new bytes (received in an external to us buffer)
-    void append(const char *, size_t);
-
     /// get rid of previously appended() prefix of a given size
     void consume(size_t);
 
@@ -182,7 +177,11 @@ private:
     void growSpace(size_t);
 
 private:
+    /// externally allocated buffer that we were seeded with
     StoreIOBuffer readerSuppliedMemory_;
+
+    /// our internal buffer that takes over readerSuppliedMemory_ when the
+    /// latter becomes full and more memory is needed
     std::optional<Mem::Allocation> extraMemory_;
 
     /// \copydoc contentSize()
