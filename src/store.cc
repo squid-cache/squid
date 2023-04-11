@@ -2109,7 +2109,6 @@ Store::ParsingBuffer::appended(const char * const newBytes, const size_t newByte
     Assure(memory() + size_ == newBytes); // the new bytes start in memory()
     size_ = *IncreaseSum(size_, newByteCount);
     Assure(size_ <= capacity()); // the new bytes end in memory()
-    terminate(); // XXX: Why?!
 }
 
 void
