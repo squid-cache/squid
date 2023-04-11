@@ -508,7 +508,8 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
             auto &reply = e.mem().adjustableBaseReply();
             if (reply.pstate != Http::Message::psParsed) {
                 httpHeaderParsingBuffer.append(sliceBuf.data, sliceBuf.length);
-                parseHttpHeaders(e, httpHeaderParsingBuffer);
+                if (reply.parseTerminatedPrefix(httpHeaderParsingBuffer.c_str(), httpHeaderParsingBuffer.length()))
+                    httpHeaderParsingBuffer = SBuf(); // we do not need these bytes anymore
             }
         }
         // else skip a [possibly incomplete] slice that we copied earlier
@@ -556,40 +557,6 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
     // we read the entire response into the local memory; no more need to lock
     disconnect(e);
     return true;
-}
-
-/// parses (a portion of) serialized HTTP headers
-void
-MemStore::parseHttpHeaders(StoreEntry &entry, SBuf &parsingBuffer)
-{
-    auto error = Http::scNone;
-    auto &adjustableReply = entry.mem().adjustableBaseReply();
-    const bool eof = false; // TODO: Remove after removing atEnd from HttpHeader::parse()
-    if (adjustableReply.parse(parsingBuffer.c_str(), parsingBuffer.length(), eof, &error)) {
-        debugs(90, 7, "success after accumulating " << parsingBuffer.length() << " bytes and parsing " << adjustableReply.hdr_sz);
-        Assure(adjustableReply.pstate == Http::Message::psParsed);
-        Assure(adjustableReply.hdr_sz > 0);
-        Assure(!Less(parsingBuffer.length(), adjustableReply.hdr_sz)); // cannot parse more bytes than we have
-        parsingBuffer = SBuf(); // we do not need these bytes anymore
-        return; // success
-    }
-
-    if (error) {
-        throw TextException(ToSBuf("failed to parse in-memory HTTP headers",
-           Debug::Extra, "parser error code: ", error,
-           Debug::Extra, "accumulated unparsed bytes: ", parsingBuffer.length(),
-           Debug::Extra, "reply_header_max_size: ", Config.maxReplyHeaderSize),
-           Here());
-    }
-
-    debugs(90, 3, "need more HTTP header bytes after accumulating " << parsingBuffer.length() <<
-           " out of " << Config.maxReplyHeaderSize);
-
-    // the parse() call above enforces Config.maxReplyHeaderSize limit
-    // XXX: Make this a strict comparison after fixing Http::Message::parse() enforcement
-    Assure(parsingBuffer.length() <= Config.maxReplyHeaderSize);
-
-    Assure(adjustableReply.pstate != Http::Message::psParsed);
 }
 
 /// imports one shared memory slice into local memory

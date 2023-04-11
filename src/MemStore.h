@@ -12,7 +12,6 @@
 #include "ipc/mem/Page.h"
 #include "ipc/mem/PageStack.h"
 #include "ipc/StoreMap.h"
-#include "sbuf/forward.h"
 #include "Store.h"
 #include "store/Controlled.h"
 
@@ -83,7 +82,6 @@ protected:
     bool copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor);
     void copyFromShmSlice(StoreEntry &e, const StoreIOBuffer &buf);
 
-    void parseHttpHeaders(StoreEntry &, SBuf &);
     void updateHeadersOrThrow(Ipc::StoreMapUpdate &update);
 
     void anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor);

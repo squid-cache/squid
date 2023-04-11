@@ -988,36 +988,17 @@ store_client::parseHttpHeaders()
 bool
 store_client::tryParsingHttpHeaders()
 {
-    Assure(!copyInto.offset);
-
     Assure(parsingBuffer);
-    const auto bufferedSize = parsingBuffer->contentSize();
-
-    auto error = Http::scNone;
+    Assure(!copyInto.offset); // otherwise, parsingBuffer cannot have HTTP response headers
     auto &adjustableReply = entry->mem().adjustableBaseReply();
-    const bool eof = false; // TODO: Remove after removing atEnd from HttpHeader::parse()
-    if (adjustableReply.parse(parsingBuffer->c_str(), bufferedSize, eof, &error)) {
-        debugs(90, 7, "success after accumulating " << bufferedSize << " bytes and parsing " << adjustableReply.hdr_sz);
-        Assure(adjustableReply.pstate == Http::Message::psParsed);
-        Assure(adjustableReply.hdr_sz > 0);
-        Assure(!Less(bufferedSize, adjustableReply.hdr_sz)); // cannot parse more bytes than we have
-        parsingBuffer->consume(adjustableReply.hdr_sz); // skip parsed HTTP headers
+    if (const auto hdr_sz = adjustableReply.parseTerminatedPrefix(parsingBuffer->c_str(), parsingBuffer->contentSize())) {
+        parsingBuffer->consume(hdr_sz); // skip parsed HTTP headers
 
         const auto httpBodyBytesAfterHeader = parsingBuffer->contentSize();
         Assure(httpBodyBytesAfterHeader <= copyInto.length);
         debugs(90, 5, "buffered HTTP body prefix: " << httpBodyBytesAfterHeader);
         return true;
     }
-
-    if (error)
-        throw TextException(ToSBuf("malformed HTTP headers; parser error code: ", error), Here());
-
-    // the parse() call above enforces Config.maxReplyHeaderSize limit
-    // XXX: Make this a strict comparison after fixing Http::Message::parse() enforcement
-    Assure(bufferedSize <= Config.maxReplyHeaderSize);
-
-    debugs(90, 3, "need more HTTP header bytes after accumulating " << bufferedSize <<
-           " out of " << Config.maxReplyHeaderSize);
 
     // XXX: Check that an unexpected *disk* EOF with unparsed HTTP headers
     // results in flags.error rather than in (flags.eof with unparsed HTTP
