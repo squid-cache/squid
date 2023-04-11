@@ -125,11 +125,7 @@ public:
     /// seeds this buffer with the caller-supplied buffer space
     explicit ParsingBuffer(StoreIOBuffer &space);
 
-    /// A terminated version of unterminatedInput.data. The returned memory
-    /// might differ from unterminatedInput.data, but will contain the same
-    /// first .length bytes (followed by the terminating NUL). External
-    /// unterminatedInput changes invalidate the returned buffer. The validity
-    /// of the returned buffer is also limited by this object lifetime.
+    /// a NUL-terminated version of content(); same lifetime as content()
     const char *c_str() { terminate(); return memory(); }
 
     /// the total number of append()ed bytes that were not consume()d
@@ -141,13 +137,15 @@ public:
     /// Stored append()ed bytes that have not been consume()d. The returned
     /// buffer offset is set to zero; the caller is responsible for adjusting
     /// the offset if needed (TODO: Add/return a no-offset Mem::View instead).
-    /// The returned buffer is invalidated by calling any non-constant method.
-    StoreIOBuffer content();
+    /// The returned buffer is invalidated by calling a non-constant method or
+    /// by changing the StoreIOBuffer contents given to our constructor.
+    StoreIOBuffer content() const;
 
     /// A (possibly empty) buffer for reading the next byte(s). The returned
     /// buffer offset is set to zero; the caller is responsible for adjusting
     /// the offset if needed (TODO: Add/return a no-offset Mem::Area instead).
-    /// The returned buffer is invalidated by calling any non-constant method.
+    /// The returned buffer is invalidated by calling a non-constant method or
+    /// by changing the StoreIOBuffer contents given to our constructor.
     StoreIOBuffer space();
 
     /// A buffer for reading the exact number of next byte(s). The method may
@@ -167,7 +165,7 @@ public:
     /// memory since construction.
     StoreIOBuffer packBack();
 
-    /// summarizes object state (for debugging/reporting)
+    /// summarizes object state (for debugging)
     void print(std::ostream &) const;
 
 private:

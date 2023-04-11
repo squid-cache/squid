@@ -2137,7 +2137,7 @@ Store::ParsingBuffer::makeSpace(const size_t pageSize)
 }
 
 StoreIOBuffer
-Store::ParsingBuffer::content()
+Store::ParsingBuffer::content() const
 {
     return StoreIOBuffer(contentSize(), 0, memory());
 }
@@ -2173,7 +2173,7 @@ Store::ParsingBuffer::spaceSize() const
 }
 
 /// 0-terminates stored byte sequence, allocating more memory if needed, but
-/// without increasing the number of stored bytes
+/// without increasing the number of stored content bytes
 void
 Store::ParsingBuffer::terminate()
 {
