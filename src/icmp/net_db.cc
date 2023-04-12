@@ -56,6 +56,9 @@ typedef enum {
     STATE_BODY
 } netdb_conn_state_t;
 
+/// the maximum AS incoming message size in bytes
+static const size_t MessageSizeMax = 100000;
+
 class netdbExchangeState
 {
     CBDATA_CLASS(netdbExchangeState);
@@ -84,6 +87,8 @@ public:
     netdb_conn_state_t connstate = STATE_HEADER;
     /// the unparsed (yet) bytes by netdbExchangeHandleReply()
     SBuf unparsedBuffer;
+    /// how many NetDB message bytes have been parsed
+    size_t parsedBytes = 0;
 };
 
 CBDATA_CLASS_INIT(netdbExchangeState);
@@ -699,6 +704,12 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         return;
     }
 
+    if (ex->parsedBytes > MessageSizeMax) {
+        debugs(53, DBG_IMPORTANT, "WARNING: parsed more than maximum allowed " << MessageSizeMax << " bytes");
+        delete ex;
+        return;
+    }
+
     const auto &reply = ex->e->mem().baseReply();
 
     if (ex->connstate == STATE_HEADER) {
@@ -771,7 +782,9 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         ++nused;
     }
 
-    ex->unparsedBuffer.consume(ex->unparsedBuffer.length() - size);
+    const auto parsedSize = ex->unparsedBuffer.length() - size;
+    ex->parsedBytes += parsedSize;
+    ex->unparsedBuffer.consume(parsedSize);
 
     debugs(38, 3, "size left over in this buffer: " << size << " bytes");
 
