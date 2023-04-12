@@ -132,29 +132,6 @@ MemObject::replaceBaseReply(const HttpReplyPointer &r)
     updatedReply_ = nullptr;
 }
 
-#if XXX_FUTURE
-bool
-MemObject::parseBaseReply(StoreIOBuffer &serialized, const bool eof)
-{
-    Store::TerminatedBuffer terminatedBuffer(serialized);
-    auto error = Http::scNone;
-    auto &adjustableReply = adjustableBaseReply();
-    if (adjustableReply.parse(terminatedBuffer.data, terminatedBuffer.length, eof, &error)) {
-        debugs(90, 7, "success after accumulating " << serialized.length);
-        Assure(adjustableReply.pstate == Http::Message::psParsed);
-        Assure(adjustableReply.hdr_sz > 0);
-        Assure(!Less(serialized.length, adjustableReply.hdr_sz)); // cannot parse more bytes than we have
-        return true;
-    }
-
-    if (error)
-        throw TextException(ToSBuf("malformed HTTP headers; parser error code: ", error), Here());
-
-
-    return *reply_;
-}
-#endif // XXX_FUTURE
-
 void
 MemObject::write(const StoreIOBuffer &writeBuffer)
 {

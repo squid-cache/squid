@@ -17,6 +17,8 @@
 #include "MemObject.h"
 #include "MemStore.h"
 #include "mime_header.h"
+#include "sbuf/SBuf.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
 #include "StoreStats.h"
@@ -311,19 +313,23 @@ MemStore::get(const cache_key *key)
     // create a brand new store entry and initialize it with stored info
     StoreEntry *e = new StoreEntry();
 
-    // XXX: We do not know the URLs yet, only the key, but we need to parse and
-    // store the response for the Root().find() callers to be happy because they
-    // expect IN_MEMORY entries to already have the response headers and body.
-    e->createMemObject();
+    try {
+        // XXX: We do not know the URLs yet, only the key, but we need to parse and
+        // store the response for the Root().find() callers to be happy because they
+        // expect IN_MEMORY entries to already have the response headers and body.
+        e->createMemObject();
 
-    anchorEntry(*e, index, *slot);
+        anchorEntry(*e, index, *slot);
 
-    const bool copied = copyFromShm(*e, index, *slot);
+        // TODO: make copyFromShm() throw on all failures, simplifying this code
+        if (copyFromShm(*e, index, *slot))
+            return e;
+        debugs(20, 3, "failed for " << *e);
+    } catch (...) {
+        debugs(20, 3, "failed for " << *e <<
+               Debug::Extra << "exception: " << CurrentException);
+    }
 
-    if (copied)
-        return e;
-
-    debugs(20, 3, "failed for " << *e);
     map->freeEntry(index); // do not let others into the same trap
     destroyStoreEntry(static_cast<hash_link *>(e));
     return nullptr;
@@ -470,13 +476,7 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
     bool wasEof = anchor.complete() && sid < 0;
     int64_t sliceOffset = 0;
 
-    MemBuf replyBuffer;
-    // XXX: the sum might overflow; std::min() assumes Config.maxReplyHeaderSize type is size_t
-    const auto maxSize = Config.maxReplyHeaderSize + 1; // NUL-termination
-    const auto initialSize = std::min(size_t(SM_PAGE_SIZE), maxSize);
-    replyBuffer.init(initialSize, maxSize);
-    const auto rep = &e.mem().adjustableBaseReply();
-
+    SBuf httpHeaderParsingBuffer;
     while (sid >= 0) {
         const Ipc::StoreMapSlice &slice = map->readableSlice(index, sid);
         // slice state may change during copying; take snapshots now
@@ -505,20 +505,11 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
                    " from " << extra.page << '+' << prefixSize);
 
             // parse headers if needed; they might span multiple slices!
-            if (rep->pstate < Http::Message::psParsed) {
-                // XXX: have to copy because httpMsgParseStep() requires 0-termination
-                replyBuffer.append(sliceBuf.data, sliceBuf.length);
-                replyBuffer.terminate();
-                auto error = Http::scNone;
-
-                if (rep->parse(replyBuffer.buf, replyBuffer.size, wasEof, &error)) {
-                    assert(rep->pstate == Http::Message::psParsed);
-                } else if (error) {
-                    debugs(20, DBG_IMPORTANT, "BUG: Corrupted mem-cached headers: " << e);
-                    return false;
-                } else {
-                    assert(!wasEof); // more data needed
-                }
+            auto &reply = e.mem().adjustableBaseReply();
+            if (reply.pstate != Http::Message::psParsed) {
+                httpHeaderParsingBuffer.append(sliceBuf.data, sliceBuf.length);
+                if (reply.parseTerminatedPrefix(httpHeaderParsingBuffer.c_str(), httpHeaderParsingBuffer.length()))
+                    httpHeaderParsingBuffer = SBuf(); // we do not need these bytes anymore
             }
         }
         // else skip a [possibly incomplete] slice that we copied earlier
@@ -550,6 +541,9 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
 
     debugs(20, 5, "mem-loaded all " << e.mem_obj->endOffset() << '/' <<
            anchor.basics.swap_file_sz << " bytes of " << e);
+
+    if (e.mem().adjustableBaseReply().pstate != Http::Message::psParsed)
+        throw TextException(ToSBuf("truncated mem-cached headers; accumulated: ", httpHeaderParsingBuffer.length()), Here());
 
     // from StoreEntry::complete()
     e.mem_obj->object_sz = e.mem_obj->endOffset();
