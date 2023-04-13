@@ -2531,11 +2531,7 @@ handle_on_failure_jump:
  * doesn't let you say where to stop matching. */
 
 static int
-re_search(bufp, string, size, startpos, range, regs)
-struct re_pattern_buffer *bufp;
-const char *string;
-int size, startpos, range;
-struct re_registers *regs;
+re_search(struct re_pattern_buffer *bufp, const char *string, int size, int startpos, int range, struct re_registers *regs)
 {
     return re_search_2(bufp, NULL, 0, string, size, startpos, range,
                        regs, size);
@@ -2563,14 +2559,7 @@ struct re_registers *regs;
  * stack overflow).  */
 
 static int
-re_search_2(bufp, string1, size1, string2, size2, startpos, range, regs, stop)
-struct re_pattern_buffer *bufp;
-const char *string1, *string2;
-int size1, size2;
-int startpos;
-int range;
-struct re_registers *regs;
-int stop;
+re_search_2(struct re_pattern_buffer *bufp, const char *string1, int size1, const char *string2, int size2, int startpos, int range, struct re_registers *regs, int stop)
 {
     int val;
     register char *fastmap = bufp->fastmap;
@@ -2820,14 +2809,7 @@ wordchar_p(const char *d, const char *end1, const char *string2)
  * failure stack overflowing).  Otherwise, we return the length of the
  * matched substring.  */
 
-int
-re_match_2(bufp, string1, size1, string2, size2, pos, regs, stop)
-struct re_pattern_buffer *bufp;
-const char *string1, *string2;
-int size1, size2;
-int pos;
-struct re_registers *regs;
-int stop;
+int re_match_2(struct re_pattern_buffer *bufp, const char *string1, int size1, const char *string2, int size2, int pos, struct re_registers *regs, int stop)
 {
     /* General temporaries.  */
     int mcnt;
@@ -4123,11 +4105,7 @@ bcmp_translate(unsigned char const *s1, unsigned char const*s2, register int len
  * It returns 0 if it succeeds, nonzero if it doesn't.  (See regex.h for
  * the return codes and their meanings.)  */
 
-int
-regcomp(preg, pattern, cflags)
-regex_t *preg;
-const char *pattern;
-int cflags;
+int regcomp(regex_t *preg, const char *pattern, int cflags)
 {
     reg_errcode_t ret;
     unsigned syntax
@@ -4194,13 +4172,7 @@ int cflags;
  *
  * We return 0 if we find a match and REG_NOMATCH if not.  */
 
-int
-regexec(preg, string, nmatch, pmatch, eflags)
-const regex_t *preg;
-const char *string;
-size_t nmatch;
-regmatch_t pmatch[];
-int eflags;
+int regexec(const regex_t *preg, const char *string, size_t nmatch, regmatch_t pmatch[], int eflags)
 {
     int ret;
     struct re_registers regs;
@@ -4286,9 +4258,7 @@ regerror(int errcode, const regex_t *preg, char *errbuf, size_t errbuf_size)
 
 /* Free dynamically allocated space used by PREG.  */
 
-void
-regfree(preg)
-regex_t *preg;
+void regfree(regex_t * preg)
 {
     if (preg->buffer != NULL)
         free(preg->buffer);
