@@ -5,7 +5,9 @@
 # replacing these includes with the sequivalent standard c++ header.
 
 
-#header files to consider (without the .h extension)
+# header files to consider (without the .h extension)
+# stdbool, complex, tgmath, iso646, and stdalign are deprecated in c++20
+# and not used in squid
 @headers=qw(
 assert
 ctype
