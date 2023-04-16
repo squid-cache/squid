@@ -40,7 +40,9 @@
 #if HAVE_NETDB_H
 #include <netdb.h>
 #endif
-#include <cunistd>
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 
 #include "base64.h"
 #include "compat/krb5.h"

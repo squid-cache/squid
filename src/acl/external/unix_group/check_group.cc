@@ -71,7 +71,9 @@
 #if HAVE_GRP_H
 #include <grp.h>
 #endif
-#include <cunistd>
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #if HAVE_PWD_H
 #include <pwd.h>
 #endif
