@@ -14,8 +14,8 @@
 #include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
 
-#include <cerrno>
 #include <cctype>
+#include <cerrno>
 
 /// convenience method: consumes up to n bytes, counts, and returns them
 SBuf

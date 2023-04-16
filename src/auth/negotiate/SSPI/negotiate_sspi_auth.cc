@@ -51,13 +51,13 @@
 #include "sspwin32.h"
 #include "util.h"
 
-#include <windows.h>
-#include <sspi.h>
-#include <security.h>
+#include <cctype>
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-#include <cctype>
+#include <security.h>
+#include <sspi.h>
+#include <windows.h>
 
 int Negotiate_packet_debug_enabled = 0;
 static int have_serverblob;
