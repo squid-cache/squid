@@ -17,7 +17,9 @@
 
 #include <cstdlib>
 #include <functional>
-#include <cunistd>
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #include <random>
 
 class intnode

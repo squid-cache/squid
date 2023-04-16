@@ -19,7 +19,9 @@
 
 #include <cstdlib>
 #include <cstring>
-#include <cunistd>
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif

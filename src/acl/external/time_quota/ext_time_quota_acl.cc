@@ -35,7 +35,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <cunistd>
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif

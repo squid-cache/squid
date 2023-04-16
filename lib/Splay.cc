@@ -14,7 +14,9 @@
 #include "squid.h"
 
 #include <cstdlib>
-#include <cunistd>
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 
 #include "splay.h"
 #include "util.h"

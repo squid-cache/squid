@@ -18,7 +18,9 @@ void unlinkdClose(void);
 void unlinkdUnlink(const char *);
 #else /* USE_UNLINKD */
 
-#include <cunistd>
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 inline bool unlinkdNeeded(void) { return false; }
 inline void unlinkdInit(void) { return; }
 inline void unlinkdClose(void) { return; }
