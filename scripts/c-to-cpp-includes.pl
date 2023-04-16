@@ -10,9 +10,13 @@
 assert
 ctype
 errno
+fenv
+float
 inttypes
 limits
+locale
 math
+setjmp
 signal
 stdarg
 stddef
@@ -21,7 +25,9 @@ stdio
 stdlib
 string
 time
-unistd
+uchar
+wchar
+wctype
 );
 
 foreach $header (@headers) {
@@ -29,7 +35,7 @@ foreach $header (@headers) {
     print "headerguard: $headerguard\n";
     @files=`git grep -lF $headerguard -- *.cc *.h *.cci| grep -v -e ^compat`;
     chomp(@files);
-    foreach $file (@files) { 
+    foreach $file (@files) {
         print "file: $file\n";
         $pre="";
         open(FILE,"<", $file);
