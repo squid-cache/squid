@@ -13,8 +13,8 @@
  *  Adapted from HTSUtils.c in CERN httpd 3.0 (http://info.cern.ch/httpd/)
  *  by Darren Hardy <hardy@cs.colorado.edu>, November 1994.
  */
-#include <cstring>
 #include <cctype>
+#include <cstring>
 #include <ctime>
 
 #define RFC850_STRFTIME "%A, %d-%b-%y %H:%M:%S GMT"
