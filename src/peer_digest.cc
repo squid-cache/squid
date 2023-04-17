@@ -517,12 +517,6 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 
         if (status == Http::scNotModified) {
             /* our old entry is fine */
-
-            if (!fetch->pd->cd) {
-                peerDigestFetchAbort(fetch, buf, "304 without the old in-memory digest");
-                return -1;
-            }
-
             assert(fetch->old_entry);
 
             if (!fetch->old_entry->mem_obj->request)
@@ -544,6 +538,11 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
             /* preserve request -- we need its size to update counters */
             /* requestUnlink(r); */
             /* fetch->entry->mem_obj->request = NULL; */
+
+            if (!fetch->pd->cd) {
+                peerDigestFetchAbort(fetch, buf, "304 without the old in-memory digest");
+                return -1;
+            }
 
             // stay with the old in-memory digest
             peerDigestFetchStop(fetch, buf, "Not modified");
