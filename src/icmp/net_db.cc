@@ -670,7 +670,6 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
     Ip::Address addr;
 
     netdbExchangeState *ex = (netdbExchangeState *)data;
-    size_t o;
 
     struct in_addr line_addr;
     double rtt;
@@ -678,11 +677,10 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
     int j;
     int nused = 0;
 
-    size_t rec_sz = 0;
+    size_t rec_sz = 0; // received record size (TODO: make const)
     rec_sz += 1 + sizeof(struct in_addr);
     rec_sz += 1 + sizeof(int);
     rec_sz += 1 + sizeof(int);
-
     debugs(38, 3, "netdbExchangeHandleReply: " << receivedData.length << " read bytes");
 
     if (!ex->p.valid()) {
@@ -719,19 +717,19 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
     assert(ex->connstate == STATE_BODY);
 
-    /* If we get here, we have some body to parse .. */
-
     ex->unparsedBuffer.append(receivedData.data, receivedData.length);
-    auto p = ex->unparsedBuffer.c_str();
-    auto size = ex->unparsedBuffer.length();
+    auto p = ex->unparsedBuffer.c_str(); // current parsing position
+    auto size = ex->unparsedBuffer.length(); // bytes we still need to parse
 
-    debugs(38, 5, "start parsing loop, size = " << size);
+    /* If we get here, we have some body to parse .. */
+    debugs(38, 5, "netdbExchangeHandleReply: start parsing loop, size = " << size);
 
     while (size >= rec_sz) {
         debugs(38, 5, "netdbExchangeHandleReply: in parsing loop, size = " << size);
         addr.setAnyAddr();
         hops = rtt = 0.0;
 
+        size_t o; // current record parsing offset
         for (o = 0; o < rec_sz;) {
             switch ((int) *(p + o)) {
 
@@ -780,7 +778,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
     ex->parsedBytes += parsedSize;
     ex->unparsedBuffer.consume(parsedSize);
 
-    debugs(38, 3, "size left over in this buffer: " << size << " bytes");
+    debugs(38, 3, "netdbExchangeHandleReply: size left over in this buffer: " << size << " bytes");
 
     debugs(38, 3, "netdbExchangeHandleReply: used " << nused <<
            " entries, (x " << rec_sz << " bytes) == " << nused * rec_sz <<
@@ -794,11 +792,12 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
     if (receivedData.flags.eof) {
         if (!ex->unparsedBuffer.isEmpty())
-            debugs(38, 3, "discarding " << ex->unparsedBuffer.length() << " leftover bytes due to EOF");
+            debugs(38, 2, "discarding a partially received record due to Store EOF: " << ex->unparsedBuffer.length());
         delete ex;
-    } else {
-        storeClientCopy(ex->sc, ex->e, ex->storeReadBuffer.legacyReadRequest(receivedData.offset + receivedData.length), netdbExchangeHandleReply, ex);
+        return;
     }
+
+    storeClientCopy(ex->sc, ex->e, ex->storeReadBuffer.legacyReadRequest(receivedData.offset + receivedData.length), netdbExchangeHandleReply, ex);
 }
 
 #endif /* USE_ICMP */
