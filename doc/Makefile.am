@@ -16,7 +16,7 @@ EXTRA_DIST = \
 	debug-sections.txt \
 	SPONSORS.in
 
-data_DATA = SPONSORS
+noinst_data_DATA = SPONSORS
 CLEANFILES = $(data_DATA)
 
 SPONSORS: SPONSORS.in
