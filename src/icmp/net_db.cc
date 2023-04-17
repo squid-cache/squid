@@ -693,12 +693,6 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
     debugs(38, 3, "for " << *ex->p);
 
-    if (EBIT_TEST(ex->e->flags, ENTRY_ABORTED)) {
-        debugs(38, 3, "netdbExchangeHandleReply: ENTRY_ABORTED");
-        delete ex;
-        return;
-    }
-
     if (receivedData.flags.error) {
         delete ex;
         return;
@@ -791,6 +785,12 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
     debugs(38, 3, "netdbExchangeHandleReply: used " << nused <<
            " entries, (x " << rec_sz << " bytes) == " << nused * rec_sz <<
            " bytes total");
+
+    if (EBIT_TEST(ex->e->flags, ENTRY_ABORTED)) {
+        debugs(38, 3, "netdbExchangeHandleReply: ENTRY_ABORTED");
+        delete ex;
+        return;
+    }
 
     if (receivedData.flags.eof) {
         if (!ex->unparsedBuffer.isEmpty())
