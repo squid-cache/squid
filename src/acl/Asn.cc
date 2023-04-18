@@ -45,8 +45,10 @@ public:
     m_ADDR() : len(sizeof(Ip::Address)) {};
 };
 
-static const char * const SpaceChars = " \f\r\n\t\v";
-static const CharacterSet SpaceCharacterSet = CharacterSet("Asn::space", SpaceChars);
+/// Word delimiters in WHOIS ASN replies. RFC 3912 mentions SP, CR, and LF.
+/// Others are added to mimic an earlier isspace()-based implementation.
+static const auto WhoisSpaces = CharacterSet("ASCII_spaces", " \f\r\n\t\v");
+
 // TODO: adjust the value
 /// the maximum AS incoming message size in bytes
 static const size_t MessageSizeMax = 100000;
@@ -92,10 +94,13 @@ public:
     HttpRequest::Pointer request;
     int as_number = 0;
     int64_t offset = 0;
+
     Store::ReadBuffer storeReadBuffer;
-    /// the unparsed (yet) bytes by asHandleReply()
+
+    /// WHOIS response body bytes left unparsed by the last asHandleReply() call
     SBuf unparsedBuffer;
-    /// how many AS message bytes have been parsed
+
+    /// the total number of parsed WHOIS response body bytes
     size_t parsedBytes = 0;
 };
 
@@ -273,12 +278,16 @@ asHandleReply(void *data, StoreIOBuffer result)
     ASState *asState = (ASState *)data;
     StoreEntry *e = asState->entry;
 
-    debugs(53, 3, "asHandleReply: Called with size=" << (unsigned int)result.length);
+    debugs(53, 3, result << " for " << asState->as_number << " with " << *e);
+
+    /* First figure out whether we should abort the request */
 
     if (EBIT_TEST(e->flags, ENTRY_ABORTED)) {
         delete asState;
         return;
-    } else if (result.flags.error) {
+    }
+
+    if (result.flags.error) {
         debugs(53, DBG_IMPORTANT, "ERROR: asHandleReply: Called with Error set and size=" << (unsigned int) result.length);
         delete asState;
         return;
@@ -286,64 +295,62 @@ asHandleReply(void *data, StoreIOBuffer result)
         debugs(53, DBG_IMPORTANT, "WARNING: AS " << asState->as_number << " whois request failed");
         delete asState;
         return;
-    } else if (asState->parsedBytes > MessageSizeMax) {
-        debugs(53, DBG_IMPORTANT, "WARNING: parsed more than maximum allowed " << MessageSizeMax << " bytes");
-        delete asState;
-        return;
     }
 
     asState->unparsedBuffer.append(result.data, result.length);
     Parser::Tokenizer tok(asState->unparsedBuffer);
-    SBuf v;
-    while (tok.token(v, SpaceCharacterSet))
-        asnAddNet(v, asState->as_number);
-
+    SBuf address;
+    while (tok.token(address, WhoisSpaces)) {
+        (void)asnAddNet(address, asState->as_number);
+    }
     asState->parsedBytes += tok.parsedSize();
     asState->unparsedBuffer = tok.remaining();
 
-    debugs(53, 3, (e->store_status == STORE_PENDING ? "STORE_PENDING" : "STORE_OK") << " " << e->url());
-
-    if (!result.flags.eof) {
-        storeClientCopy(asState->sc, e, asState->storeReadBuffer.legacyReadRequest(result.offset + result.length), asHandleReply, asState);
+    if (asState->parsedBytes > MessageSizeMax) {
+        debugs(53, DBG_IMPORTANT, "WARNING: Ignoring the tail of a huge WHOIS AS response after parsing more than " << MessageSizeMax << " bytes");
+        delete asState;
         return;
     }
 
-    if (!asState->unparsedBuffer.isEmpty())
-        asnAddNet(asState->unparsedBuffer, asState->as_number);
+    if (result.flags.eof) {
+        if (!asState->unparsedBuffer.isEmpty()) // unterminated token
+            (void)asnAddNet(asState->unparsedBuffer, asState->as_number);
+        delete asState;
+        return;
+    }
 
-    delete asState;
+    storeClientCopy(asState->sc, e, asState->storeReadBuffer.legacyReadRequest(result.offset + result.length), asHandleReply, asState);
 }
 
 /**
  * add a network (addr, mask) to the radix tree, with matching AS number
+ * TODO: Return void.
  */
 static int
-asnAddNet(const SBuf &as_string, int as_number)
+asnAddNet(const SBuf &as_string, const int as_number)
 {
     struct squid_radix_node *rn;
     CbDataList<int> **Tail = nullptr;
     CbDataList<int> *q = nullptr;
     as_info *asinfo = nullptr;
 
-    Ip::Address mask;
-
-    static const CharacterSet NonSlashSet = CharacterSet("Asn::slash", "/").complement("Asn::non-slash");
+    static const CharacterSet NonSlashSet = CharacterSet("slash", "/").complement("non-slash");
     Parser::Tokenizer tok(as_string);
-    SBuf addrTok;
-    if (!(tok.prefix(addrTok, NonSlashSet) && tok.skip('/'))) {
+    SBuf firstToken;
+    if (!(tok.prefix(firstToken, NonSlashSet) && tok.skip('/'))) {
         debugs(53, 3, "asnAddNet: failed, invalid response from whois server.");
         return 0;
     }
-
-    int64_t bitl = 0;
-    (void)tok.int64(bitl, 10, false);
-
-    Ip::Address addr = addrTok.c_str();
+    const Ip::Address addr = firstToken.c_str();
 
     // generate Netbits Format Mask
+    Ip::Address mask;
     mask.setNoAddr();
-    // INET6 TODO : find a better way of identifying the base IPA family for mask than this.
-    mask.applyMask(bitl, tok.skip('.') ? AF_INET : AF_INET6);
+    int64_t bitl = 0;
+    if (tok.int64(bitl, 10, false)) {
+        // INET6 TODO : find a better way of identifying the base IPA family for mask than this.
+        mask.applyMask(bitl, tok.skip('.') ? AF_INET : AF_INET6);
+    }
 
     debugs(53, 3, "asnAddNet: called for " << addr << "/" << mask );
 
