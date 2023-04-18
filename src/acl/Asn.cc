@@ -91,9 +91,6 @@ public:
 
     /// WHOIS response body bytes left unparsed by the last asHandleReply() call
     SBuf unparsedBuffer;
-
-    /// the total number of parsed WHOIS response body bytes
-    size_t parsedBytes = 0;
 };
 
 CBDATA_CLASS_INIT(ASState);
@@ -298,12 +295,12 @@ asHandleReply(void *data, StoreIOBuffer result)
     while (tok.token(address, WhoisSpaces)) {
         (void)asnAddNet(address, asState->as_number);
     }
-    asState->parsedBytes += tok.parsedSize();
     asState->unparsedBuffer = tok.remaining();
 
-    const size_t maxBytes = 100000; // an arbitrary "huge enough" limit
-    if (asState->parsedBytes > maxBytes) {
-        debugs(53, DBG_IMPORTANT, "WARNING: Ignoring the tail of a huge WHOIS AS response after parsing more than " << maxBytes << " bytes");
+    const decltype(StoreIOBuffer::offset) stillReasonableOffset = 100000; // an arbitrary limit in bytes
+    if (result.offset > stillReasonableOffset) {
+        // stop suspicious accumulation of unparsed bytes, parsed addresses, and/or work
+        debugs(53, DBG_IMPORTANT, "WARNING: Ignoring the tail of a suspiciously large WHOIS AS response exceeding " << stillReasonableOffset << " bytes");
         delete asState;
         return;
     }
