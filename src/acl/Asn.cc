@@ -45,14 +45,6 @@ public:
     m_ADDR() : len(sizeof(Ip::Address)) {};
 };
 
-/// Word delimiters in WHOIS ASN replies. RFC 3912 mentions SP, CR, and LF.
-/// Others are added to mimic an earlier isspace()-based implementation.
-static const auto WhoisSpaces = CharacterSet("ASCII_spaces", " \f\r\n\t\v");
-
-// TODO: adjust the value
-/// the maximum AS incoming message size in bytes
-static const size_t MessageSizeMax = 100000;
-
 /* END of definitions for radix tree entries */
 
 /* Head for ip to asn radix tree */
@@ -300,14 +292,18 @@ asHandleReply(void *data, StoreIOBuffer result)
     asState->unparsedBuffer.append(result.data, result.length);
     Parser::Tokenizer tok(asState->unparsedBuffer);
     SBuf address;
+    // Word delimiters in WHOIS ASN replies. RFC 3912 mentions SP, CR, and LF.
+    // Others are added to mimic an earlier isspace()-based implementation.
+    static const auto WhoisSpaces = CharacterSet("ASCII_spaces", " \f\r\n\t\v");
     while (tok.token(address, WhoisSpaces)) {
         (void)asnAddNet(address, asState->as_number);
     }
     asState->parsedBytes += tok.parsedSize();
     asState->unparsedBuffer = tok.remaining();
 
-    if (asState->parsedBytes > MessageSizeMax) {
-        debugs(53, DBG_IMPORTANT, "WARNING: Ignoring the tail of a huge WHOIS AS response after parsing more than " << MessageSizeMax << " bytes");
+    const size_t maxBytes = 100000; // an arbitrary "huge enough" limit
+    if (asState->parsedBytes > maxBytes) {
+        debugs(53, DBG_IMPORTANT, "WARNING: Ignoring the tail of a huge WHOIS AS response after parsing more than " << maxBytes << " bytes");
         delete asState;
         return;
     }
