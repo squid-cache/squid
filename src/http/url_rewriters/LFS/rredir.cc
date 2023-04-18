@@ -44,8 +44,8 @@
  */
 
 #include <unistd.h>
-#include <string.h>
-#include <ctype.h>
+#include <cstring>
+#include <cctype>
 
 #define ACCESS_LOCAL_DIR        "/var/lib/httpd/htdocs/local/rredir"
 #define REDIRECT_TO_URL         "http://www.hacom.nl/local/rredir"
