@@ -22,7 +22,6 @@
 #include "MemBuf.h"
 #include "mime_header.h"
 #include "RequestFlags.h"
-#include "SquidMath.h"
 #include "Store.h"
 #include "StoreClient.h"
 #include "tools.h"
@@ -33,7 +32,7 @@ class UrnState : public StoreClient
     CBDATA_CLASS(UrnState);
 
 public:
-    explicit UrnState(const AccessLogEntry::Pointer &anAle): ale(anAle) {}
+    explicit UrnState(const AccessLogEntry::Pointer &);
 
     void start (HttpRequest *, StoreEntry *);
     void setUriResFromRequest(HttpRequest *);
@@ -47,7 +46,9 @@ public:
     HttpRequest::Pointer urlres_r;
     AccessLogEntry::Pointer ale; ///< details of the requesting transaction
 
-    Store::ReadBuffer storeReadBuffer;
+    Store::ReadBuffer storeReadBuffer; /// XXX: Unused. Merge with parsingBuffer.
+    StoreIOBuffer hackBufferXXX; // XXX: Remove.
+    Store::ParsingBuffer parsingBuffer; /// XXX: TBD
 
 private:
     /* StoreClient API */
@@ -68,10 +69,17 @@ typedef struct {
 } url_entry;
 
 static STCB urnHandleReply;
-static url_entry *urnParseReply(const char *inbuf, const HttpRequestMethod&);
+static url_entry *urnParseReply(const StoreIOBuffer &, const HttpRequestMethod &);
 static const char *const crlf = "\r\n";
 
 CBDATA_CLASS_INIT(UrnState);
+
+UrnState::UrnState(const AccessLogEntry::Pointer &anAle):
+    ale(anAle),
+    hackBufferXXX(storeReadBuffer.legacyInitialBuffer()),
+    parsingBuffer(hackBufferXXX)
+{
+}
 
 UrnState::~UrnState()
 {
@@ -188,7 +196,7 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
     }
 
     storeClientCopy(sc, urlres_e,
-                    storeReadBuffer.legacyInitialBuffer(),
+                    parsingBuffer.space(),
                     urnHandleReply,
                     this);
 }
@@ -250,9 +258,12 @@ urnHandleReply(void *data, StoreIOBuffer result)
         return;
     }
 
-    const auto totalBytes = result.offset + result.length;
-    if (!Less(totalBytes, urnState->storeReadBuffer.size())) {
-        debugs(52, 3, "ran out of buffer space after " << totalBytes << " bytes");
+    urnState->parsingBuffer.appended(result.data, result.length);
+    const auto bufferedBytes = urnState->parsingBuffer.contentSize();
+
+    // TODO: Grow space (within reason) after switching to tokenizer-based parsing.
+    if (!urnState->parsingBuffer.space().length) {
+        debugs(52, 3, "ran out of buffer space after " << bufferedBytes << " bytes");
         // TODO: Here and in other error cases, send ERR_URN_RESOLVE to client.
         delete urnState;
         return;
@@ -261,7 +272,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
     /* If we haven't received the entire object (urn), copy more */
     if (!result.flags.eof) {
         storeClientCopy(urnState->sc, urlres_e,
-                        urnState->storeReadBuffer.legacyOffsetBuffer(totalBytes),
+                        urnState->parsingBuffer.space().positionAt(bufferedBytes),
                         urnHandleReply,
                         urnState);
         return;
@@ -278,12 +289,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
         return;
     }
 
-    auto s = urnState->storeReadBuffer.legacyInitialBuffer().data; // reply body start
-    s[totalBytes] = '\0';
-    while (xisspace(*s))
-        ++s;
-
-    urls = urnParseReply(s, urnState->request->method);
+    urls = urnParseReply(urnState->parsingBuffer.content(), urnState->request->method);
 
     if (!urls) {     /* unknown URN error */
         debugs(52, 3, "urnTranslateDone: unknown URN " << e->url());
@@ -353,9 +359,8 @@ urnHandleReply(void *data, StoreIOBuffer result)
 }
 
 static url_entry *
-urnParseReply(const char *inbuf, const HttpRequestMethod& m)
+urnParseReply(const StoreIOBuffer &inBuf, const HttpRequestMethod &m)
 {
-    char *buf = xstrdup(inbuf);
     char *token;
     url_entry *list;
     url_entry *old;
@@ -363,6 +368,13 @@ urnParseReply(const char *inbuf, const HttpRequestMethod& m)
     int i = 0;
     debugs(52, 3, "urnParseReply");
     list = (url_entry *)xcalloc(n + 1, sizeof(*list));
+
+    // XXX: Switch to tokenizer-based parsing.
+    char *allocated = SBufToCstring(SBuf(inBuf.data, inBuf.length));
+
+    auto buf = allocated;
+    while (xisspace(*buf))
+        ++buf;
 
     for (token = strtok(buf, crlf); token; token = strtok(nullptr, crlf)) {
         debugs(52, 3, "urnParseReply: got '" << token << "'");
@@ -399,7 +411,7 @@ urnParseReply(const char *inbuf, const HttpRequestMethod& m)
     }
 
     debugs(52, 3, "urnParseReply: Found " << i << " URLs");
-    xfree(buf);
+    xfree(allocated);
     return list;
 }
 
