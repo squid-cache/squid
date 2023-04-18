@@ -35,7 +35,8 @@ wctype
 foreach $header (@headers) {
     $headerguard="HAVE_".uc($header)."_H";
     print "headerguard: $headerguard\n";
-    @files=`git grep -lF $headerguard -- *.cc *.h *.cci| grep -v -e ^compat`;
+    @files=`git grep -lF $headerguard -- *.cc *.h *.cci`;
+    @files=grep (!/^compat/, @files);
     chomp(@files);
     foreach $file (@files) {
         print "file: $file\n";
