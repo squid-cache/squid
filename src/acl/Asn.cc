@@ -313,8 +313,8 @@ asHandleReply(void *data, StoreIOBuffer result)
     }
 
     if (result.flags.eof) {
-        if (!asState->unparsedBuffer.isEmpty()) // unterminated token
-            (void)asnAddNet(asState->unparsedBuffer, asState->as_number);
+        if (!asState->unparsedBuffer.isEmpty())
+            debugs(53, 2, "discarding a partially received WHOIS AS response line due to Store EOF: " << asState->unparsedBuffer.length());
         delete asState;
         return;
     }
