@@ -9,9 +9,12 @@
 #ifndef SQUID_COMPAT_CPU_H
 #define SQUID_COMPAT_CPU_H
 
-#if HAVE_ERRNO_H
-#include <errno.h> /* for ENOTSUP */
+#ifndef __cplusplus
+#error "This header is only meant to be used from c++ source files"
 #endif
+
+#include <cerrno>
+
 #if HAVE_SCHED_H
 #include <sched.h>
 #endif

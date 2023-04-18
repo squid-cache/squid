@@ -9,11 +9,9 @@
 #ifndef _SQUID_COMPAT_XIS_H
 #define _SQUID_COMPAT_XIS_H
 
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
-
 #if __cplusplus
+#include <cctype>
+
 #define xisspace(x) isspace(static_cast<unsigned char>(x))
 #define xtoupper(x) toupper(static_cast<unsigned char>(x))
 #define xtolower(x) tolower(static_cast<unsigned char>(x))
