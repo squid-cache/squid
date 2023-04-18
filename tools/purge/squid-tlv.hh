@@ -51,10 +51,10 @@ typedef int bool;
 #endif
 #endif /* __cplusplus */
 
+#include <ctime>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <time.h>
 
 // taken from Squid-2.x
 // NOTE!  We must preserve the order of this list!
