@@ -9,6 +9,10 @@
 #ifndef _SQUID_COMPAT_XIS_H
 #define _SQUID_COMPAT_XIS_H
 
+#if HAVE_CTYPE_H
+#include <ctype.h>
+#endif
+
 #if __cplusplus
 
 #define xisspace(x) isspace(static_cast<unsigned char>(x))
