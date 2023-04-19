@@ -14,6 +14,7 @@
 #endif
 
 #if __cplusplus
+#include <cctype>
 
 #define xisspace(x) isspace(static_cast<unsigned char>(x))
 #define xtoupper(x) toupper(static_cast<unsigned char>(x))
