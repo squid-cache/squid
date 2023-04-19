@@ -9,10 +9,6 @@
 #ifndef SQUID_COMPAT_CPU_H
 #define SQUID_COMPAT_CPU_H
 
-#ifndef __cplusplus
-#error "This header is only meant to be used from c++ source files"
-#endif
-
 #include <cerrno>
 
 #if HAVE_SCHED_H

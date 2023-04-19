@@ -9,10 +9,6 @@
 #ifndef SQUID_COMPAT_SHM_H
 #define SQUID_COMPAT_SHM_H
 
-#ifndef __cplusplus
-#error "This header is only meant to be used from c++ source files"
-#endif
-
 #if HAVE_SHM
 
 #if HAVE_SYS_STAT_H
@@ -51,7 +47,6 @@ extern "C" {
 
 /// Determines whether segment names are iterpreted as full file paths.
 bool shm_portable_segment_name_is_path();
-
 
 #endif /* SQUID_COMPAT_CPU_H */
 
