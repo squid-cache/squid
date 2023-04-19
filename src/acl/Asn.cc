@@ -72,6 +72,12 @@ class ASState
     CBDATA_CLASS(ASState);
 
 public:
+    ASState():
+        hackBufferXXX(storeReadBuffer.legacyInitialBuffer()),
+        parsingBuffer(hackBufferXXX)
+    {
+    }
+
     ~ASState() {
         if (entry) {
             debugs(53, 3, entry->url());
@@ -88,9 +94,8 @@ public:
     int64_t offset = 0;
 
     Store::ReadBuffer storeReadBuffer;
-
-    /// WHOIS response body bytes left unparsed by the last asHandleReply() call
-    SBuf unparsedBuffer;
+    StoreIOBuffer hackBufferXXX;
+    Store::ParsingBuffer parsingBuffer; ///< WHOIS response body buffer/bytes
 };
 
 CBDATA_CLASS_INIT(ASState);
@@ -258,7 +263,7 @@ asnCacheStart(int as)
     xfree(asres);
 
     asState->entry = e;
-    storeClientCopy(asState->sc, e, asState->storeReadBuffer.legacyInitialBuffer(), asHandleReply, asState);
+    storeClientCopy(asState->sc, e, asState->parsingBuffer.space(), asHandleReply, asState);
 }
 
 static void
@@ -286,8 +291,8 @@ asHandleReply(void *data, StoreIOBuffer result)
         return;
     }
 
-    asState->unparsedBuffer.append(result.data, result.length);
-    Parser::Tokenizer tok(asState->unparsedBuffer);
+    asState->parsingBuffer.appended(result.data, result.length);
+    Parser::Tokenizer tok(SBuf(asState->parsingBuffer.content().data, asState->parsingBuffer.contentSize()));
     SBuf address;
     // Word delimiters in WHOIS ASN replies. RFC 3912 mentions SP, CR, and LF.
     // Others are added to mimic an earlier isspace()-based implementation.
@@ -295,7 +300,7 @@ asHandleReply(void *data, StoreIOBuffer result)
     while (tok.token(address, WhoisSpaces)) {
         (void)asnAddNet(address, asState->as_number);
     }
-    asState->unparsedBuffer = tok.remaining();
+    asState->parsingBuffer.consume(tok.parsedSize());
 
     const decltype(StoreIOBuffer::offset) stillReasonableOffset = 100000; // an arbitrary limit in bytes
     if (result.offset > stillReasonableOffset) {
@@ -306,13 +311,13 @@ asHandleReply(void *data, StoreIOBuffer result)
     }
 
     if (result.flags.eof) {
-        if (!asState->unparsedBuffer.isEmpty())
-            debugs(53, 2, "discarding a partially received WHOIS AS response line due to Store EOF: " << asState->unparsedBuffer.length());
+        if (const auto leftoverBytes = asState->parsingBuffer.contentSize())
+            debugs(53, 2, "discarding a partially received WHOIS AS response line due to Store EOF: " << leftoverBytes);
         delete asState;
         return;
     }
 
-    storeClientCopy(asState->sc, e, asState->storeReadBuffer.legacyReadRequest(result.offset + result.length), asHandleReply, asState);
+    storeClientCopy(asState->sc, e, asState->parsingBuffer.space().positionAt(result.offset + result.length), asHandleReply, asState);
 }
 
 /**
