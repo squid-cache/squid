@@ -63,7 +63,9 @@ class netdbExchangeState
 public:
     netdbExchangeState(CachePeer *aPeer, const HttpRequestPointer &theReq) :
         p(aPeer),
-        r(theReq)
+        r(theReq),
+        hackBufferXXX(storeReadBuffer.legacyInitialBuffer()),
+        parsingBuffer(hackBufferXXX)
     {
         assert(r);
         // TODO: check if we actually need to do this. should be implicit
@@ -81,10 +83,9 @@ public:
     store_client *sc = nullptr;
     HttpRequestPointer r;
     Store::ReadBuffer storeReadBuffer;
+    StoreIOBuffer hackBufferXXX;
+    Store::ParsingBuffer parsingBuffer; ///< NetDB response body buffer/bytes
     netdb_conn_state_t connstate = STATE_HEADER;
-
-    /// NetDB response body bytes left unparsed by the last netdbExchangeHandleReply() call
-    SBuf unparsedBuffer;
 };
 
 CBDATA_CLASS_INIT(netdbExchangeState);
@@ -707,9 +708,9 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
     assert(ex->connstate == STATE_BODY);
 
-    ex->unparsedBuffer.append(receivedData.data, receivedData.length);
-    auto p = ex->unparsedBuffer.c_str(); // current parsing position
-    auto size = ex->unparsedBuffer.length(); // bytes we still need to parse
+    ex->parsingBuffer.appended(receivedData.data, receivedData.length);
+    auto p = ex->parsingBuffer.c_str(); // current parsing position
+    auto size = ex->parsingBuffer.contentSize(); // bytes we still need to parse
 
     /* If we get here, we have some body to parse .. */
     debugs(38, 5, "netdbExchangeHandleReply: start parsing loop, size = " << size);
@@ -764,8 +765,8 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         ++nused;
     }
 
-    const auto parsedSize = ex->unparsedBuffer.length() - size;
-    ex->unparsedBuffer.consume(parsedSize);
+    const auto parsedSize = ex->parsingBuffer.contentSize() - size;
+    ex->parsingBuffer.consume(parsedSize);
 
     debugs(38, 3, "netdbExchangeHandleReply: size left over in this buffer: " << size << " bytes");
 
@@ -780,8 +781,8 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
     }
 
     if (receivedData.flags.eof) {
-        if (!ex->unparsedBuffer.isEmpty())
-            debugs(38, 2, "discarding a partially received record due to Store EOF: " << ex->unparsedBuffer.length());
+        if (const auto leftoverBytes = ex->parsingBuffer.contentSize())
+            debugs(38, 2, "discarding a partially received record due to Store EOF: " << leftoverBytes);
         delete ex;
         return;
     }
