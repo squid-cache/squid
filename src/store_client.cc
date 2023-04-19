@@ -592,9 +592,13 @@ store_client::handleBodyFromDisk()
     Assure(entry->mem_obj);
     Assure(entry->mem_obj->swap_hdr_sz > 0);
 
-    if (!answeredOnce && entry->mem_obj->baseReply().pstate != Http::Message::psParsed) {
-        if (!parseHttpHeaders())
+    if (!answeredOnce) {
+        // All on-disk responses have HTTP headers. First disk body read(s)
+        // include HTTP headers that we must parse (if needed) and skip.
+        const auto haveHttpHeaders = entry->mem_obj->baseReply().pstate == Http::Message::psParsed;
+        if (!haveHttpHeaders && !parseHttpHeadersFromDisk())
             return;
+        skipHttpHeadersFromDisk();
     }
 
     // no callback(): we handled negative/zero lastIoResult ourselves
@@ -956,11 +960,11 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
     return true;
 }
 
-/// parses HTTP header accumulated at the beginning of copyInto
+/// parses HTTP header bytes loaded from disk
 /// \returns false if fail() or scheduleDiskRead() has been called and, hence,
 /// the caller should just quit without any further action
 bool
-store_client::parseHttpHeaders()
+store_client::parseHttpHeadersFromDisk()
 {
     try {
         return tryParsingHttpHeaders();
@@ -974,7 +978,7 @@ store_client::parseHttpHeaders()
     }
 }
 
-/// parseHttpHeaders() helper
+/// parseHttpHeadersFromDisk() helper
 /// \copydoc parseHttpHeaders()
 bool
 store_client::tryParsingHttpHeaders()
@@ -982,19 +986,34 @@ store_client::tryParsingHttpHeaders()
     Assure(parsingBuffer);
     Assure(!copyInto.offset); // otherwise, parsingBuffer cannot have HTTP response headers
     auto &adjustableReply = entry->mem().adjustableBaseReply();
-    if (const auto hdr_sz = adjustableReply.parseTerminatedPrefix(parsingBuffer->c_str(), parsingBuffer->contentSize())) {
-        parsingBuffer->consume(hdr_sz); // skip parsed HTTP headers
-
-        const auto httpBodyBytesAfterHeader = parsingBuffer->contentSize();
-        Assure(httpBodyBytesAfterHeader <= copyInto.length);
-        debugs(90, 5, "buffered HTTP body prefix: " << httpBodyBytesAfterHeader);
+    if (adjustableReply.parseTerminatedPrefix(parsingBuffer->c_str(), parsingBuffer->contentSize()))
         return true;
-    }
 
+    // XXX: The "would not be..." logic below is flawed: A concurrent request
+    // could have read the same bytes into memory while we were waiting for the
+    // disk response carrying HTTP header bytes.
+    //
     // Continue on the disk-reading path because readFromMemory() cannot give us
     // the missing header bytes: We would not be _parsing_ the header otherwise.
     scheduleDiskRead();
     return false;
+}
+
+/// skips HTTP header bytes previously loaded from disk
+void
+store_client::skipHttpHeadersFromDisk()
+{
+    const auto hdr_sz = entry->mem_obj->baseReply().hdr_sz;
+    Assure(hdr_sz > 0); // all on-disk responses have HTTP headers
+    if (Less(parsingBuffer->contentSize(), hdr_sz)) {
+        debugs(90, 5, "discovered " << hdr_sz << "-byte HTTP headers in memory after reading some of them from disk: " << *parsingBuffer);
+        parsingBuffer->consume(parsingBuffer->contentSize()); // skip loaded HTTP header prefix
+    } else {
+        parsingBuffer->consume(hdr_sz); // skip loaded HTTP headers
+        const auto httpBodyBytesAfterHeader = parsingBuffer->contentSize(); // may be zero
+        Assure(httpBodyBytesAfterHeader <= copyInto.length);
+        debugs(90, 5, "read HTTP body prefix: " << httpBodyBytesAfterHeader);
+    }
 }
 
 void

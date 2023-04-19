@@ -180,8 +180,9 @@ private:
     void handleBodyFromDisk();
     void maybeWriteFromDiskToMemory(const StoreIOBuffer &);
 
-    bool parseHttpHeaders();
+    bool parseHttpHeadersFromDisk();
     bool tryParsingHttpHeaders();
+    void skipHttpHeadersFromDisk();
 
     void fail();
     void callback(ssize_t);
