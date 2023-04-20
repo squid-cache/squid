@@ -16,27 +16,27 @@ class StoreIOBuffer
 {
 
 public:
-    StoreIOBuffer(): flags{}, length(0), offset (0), data (nullptr) {}
+    StoreIOBuffer():length(0), offset (0), data (nullptr) {flags.error = 0;}
 
     StoreIOBuffer(size_t aLength, int64_t anOffset, char *someData) :
-        flags{},
         length (aLength), offset (anOffset), data (someData) {
+        flags.error = 0;
     }
 
     /* Create a StoreIOBuffer from a MemBuf and offset */
     /* NOTE that MemBuf still "owns" the pointers, StoreIOBuffer is just borrowing them */
     StoreIOBuffer(MemBuf *aMemBuf, int64_t anOffset) :
-        flags{},
         length(aMemBuf->contentSize()),
         offset (anOffset),
         data(aMemBuf->content()) {
+        flags.error = 0;
     }
 
     StoreIOBuffer(MemBuf *aMemBuf, int64_t anOffset, size_t anLength) :
-        flags{},
         length(anLength),
         offset (anOffset),
         data(aMemBuf->content()) {
+        flags.error = 0;
     }
 
     Range<int64_t> range() const {
@@ -52,12 +52,7 @@ public:
     }
 
     struct {
-        /// whether storeClientCopy() failed
-        /// a true value essentially invalidates other flags and fields
         unsigned error:1;
-
-        /// whether this storeClientCopy() answer delivered the last HTTP response body byte
-        unsigned eof:1;
     } flags;
     size_t length;
     int64_t offset;
@@ -69,10 +64,7 @@ std::ostream &
 operator <<(std::ostream &os, const StoreIOBuffer &b)
 {
     return os << "ioBuf(@" << b.offset << ", len=" << b.length << ", " <<
-           (void*)b.data <<
-           (b.flags.error ? ", ERR" : "") <<
-           (b.flags.eof ? ", EOF" : "") <<
-           ')';
+           (void*)b.data << (b.flags.error ? ", ERR" : "") << ')';
 }
 
 namespace Mem

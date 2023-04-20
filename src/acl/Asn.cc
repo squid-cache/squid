@@ -91,7 +91,6 @@ public:
     store_client *sc = nullptr;
     HttpRequest::Pointer request;
     int as_number = 0;
-    int64_t offset = 0;
 
     Store::ReadBuffer storeReadBuffer;
     StoreIOBuffer hackBufferXXX;
@@ -310,7 +309,7 @@ asHandleReply(void *data, StoreIOBuffer result)
         return;
     }
 
-    if (result.flags.eof) {
+    if (asState->sc->atEof(result)) {
         if (const auto leftoverBytes = asState->parsingBuffer.contentSize())
             debugs(53, 2, "discarding a partially received WHOIS AS response line due to Store EOF: " << leftoverBytes);
         delete asState;

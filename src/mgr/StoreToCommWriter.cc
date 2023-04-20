@@ -98,14 +98,6 @@ Mgr::StoreToCommWriter::noteStoreCopied(StoreIOBuffer ioBuf)
         return;
     }
 
-    // TODO: Either honor ioBuf.flags.eof or perhaps get rid of that flag. We
-    // could also add something like sc->mayHaveMoreAt(writeOffset). As is, this
-    // code is ignoring that flag but appears to be more-or-less "correct",
-    // suggesting that the flag itself might not be needed at all. Why do we
-    // need a flag to indicate that there is nothing to read at the requested
-    // offset? Why not just use a zero-length return in that case?
-    // doneReadingFromStore = ioBuf.flags.eof;
-
     if (ioBuf.length > 0)
         scheduleCommWrite(ioBuf); // write received action results to client
     else

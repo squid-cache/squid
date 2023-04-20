@@ -21,10 +21,9 @@
 /// Upon storeClientCopy() success, StoreIOBuffer::flags.error is zero, and
 /// * HTTP response headers (if any) are available via MemObject::baseReply().
 /// * HTTP response body bytes (if any) are available via StoreIOBuffer.
-/// * If no more HTTP response body bytes are expected, StoreIOBuffer::flags.eof
-///   is set. Zero StoreIOBuffer::length does not imply an EOF condition and is
-///   typical for the first storeClientCopy() response delivering _immediately_
-///   available HTTP response headers (while body bytes require disk I/O).
+/// * EOF condition can be detected by calling store_client::atEof() method, but
+///   it currently boils down to "zero body bytes after the first callback".
+///   N.B. clientStreamCallback() calls effectively use the same EOF condition.
 ///
 /// Errors are indicated by setting StoreIOBuffer flags.error.
 typedef void STCB(void *, StoreIOBuffer);
@@ -134,6 +133,9 @@ public:
 
     void dumpStats(MemBuf * output, int clientNumber) const;
 
+    /// whether the last storeClientCopy() result implies no more data is coming
+    bool atEof(const StoreIOBuffer &result) const { return !result.length && answeredOnce(); }
+
 #if STORE_CLIENT_LIST_DEBUG
 
     void *owner;
@@ -168,6 +170,8 @@ public:
     dlink_node node;
 
 private:
+    bool answeredOnce() const { return answers_ >= 1; }
+
     bool moreToRead() const;
     bool canReadFromMemory() const;
     int64_t nextHttpReadOffset() const;
@@ -199,9 +203,8 @@ private:
     /// to be ignored when not answering a copy() request.
     StoreIOBuffer copyInto;
 
-    // TODO: Try to replace with some other existing counter
-    /// finishCallback() has been called at least once
-    bool answeredOnce = false;
+    /// the total number of finishCallback() calls
+    unsigned int answers_ = 0;
 
     /// Accumulates raw bytes read from Store while answering the current copy()
     /// request. Buffer contents depends on the source and parsing stage; it may

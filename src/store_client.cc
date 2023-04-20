@@ -165,10 +165,9 @@ store_client::finishCallback()
     if (object_ok && parsingBuffer)
         result = parsingBuffer->packBack();
     result.flags.error = object_ok ? 0 : 1;
-    result.flags.eof = copyInto.flags.eof;
     parsingBuffer.reset();
 
-    answeredOnce = true;
+    ++answers_;
 
     STCB *temphandler = _callback.callback_handler;
     void *cbdata = _callback.callback_data;
@@ -181,11 +180,11 @@ store_client::finishCallback()
     cbdataReferenceDone(cbdata);
 }
 
+// TODO: Replace with noteNews()?
 void
 store_client::noteEof()
 {
     debugs(90, 5, this);
-    copyInto.flags.eof = 1;
     noteNews();
 }
 
@@ -261,7 +260,7 @@ store_client::copy(StoreEntry * anEntry,
     // would only be useful when reading responses from memory: We would not
     // _delay_ the response (to read the requested HTTP body bytes from disk)
     // when we already can respond with HTTP headers.
-    Assure(!copyInto.offset || answeredOnce);
+    Assure(!copyInto.offset || answeredOnce());
 
     parsingBuffer.emplace(copyInto);
 
@@ -350,12 +349,12 @@ store_client::doCopy(StoreEntry *anEntry)
     debugs(33, 5, this << " into " << copyInto <<
            " hi: " << mem->endOffset() <<
            " objectLen: " << entry->objectLen() <<
-           " first: " << !answeredOnce);
+           " past_answers: " << answers_);
 
     // Send (at least) HTTP headers if we have not done so, and we have them.
     // Here, "sending HTTP headers" essentially means calling the callback when
     // the corresponding MemObject has parsed HTTP response headers.
-    const auto sendHttpHeaders = !answeredOnce && mem->baseReply().hdr_sz > 0;
+    const auto sendHttpHeaders = !answeredOnce() && mem->baseReply().hdr_sz > 0;
 
     if (!sendHttpHeaders && !moreToRead()) {
         /* There is no more to send! */
@@ -567,7 +566,7 @@ store_client::readBody(const char * const buf, const ssize_t lastIoResult)
         return fail();
 
     if (!lastIoResult) {
-        if (answeredOnce)
+        if (answeredOnce())
             return noteEof();
 
         debugs(90, DBG_CRITICAL, "ERROR: Truncated HTTP headers in on-disk object");
@@ -592,7 +591,7 @@ store_client::handleBodyFromDisk()
     Assure(entry->mem_obj);
     Assure(entry->mem_obj->swap_hdr_sz > 0);
 
-    if (!answeredOnce) {
+    if (!answeredOnce()) {
         // All on-disk responses have HTTP headers. First disk body read(s)
         // include HTTP headers that we must parse (if needed) and skip.
         const auto haveHttpHeaders = entry->mem_obj->baseReply().pstate == Http::Message::psParsed;

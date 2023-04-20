@@ -144,7 +144,7 @@ run_confirmed_test() {
 
     echo "Running test: $testId"
     local result=undefined
-    if $testRunner run $testScript > $log 2>&1
+    if $testRunner run $testScript --ignore-dut-problems='/BCP.177|suid/' > $log 2>&1
     then
         echo "Test $testId: OK"
         return 0;

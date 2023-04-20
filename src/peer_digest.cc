@@ -395,7 +395,6 @@ peerDigestHandleReply(void *data, StoreIOBuffer receivedData)
         peerDigestFetchAbort(fetch, fetch->buf, "failure loading digest reply from Store");
         return;
     }
-    // TODO: Handle receivedData.flags.eof. See EOF code further below.
 
     assert(fetch->pd && receivedData.data);
     /* The existing code assumes that the received pointer is
@@ -472,7 +471,7 @@ peerDigestHandleReply(void *data, StoreIOBuffer receivedData)
     // checking at the beginning of this function. However, in this case, we would have to require
     // that the parser does not regard EOF as a special condition (it is true now but may change
     // in the future).
-    if (!receivedData.length) { // EOF
+    if (fetch->sc->atEof(receivedData)) {
         peerDigestFetchAbort(fetch, fetch->buf, "premature end of digest reply");
         return;
     }

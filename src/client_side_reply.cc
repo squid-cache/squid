@@ -1747,13 +1747,16 @@ clientReplyContext::sendStreamError(StoreIOBuffer const &result)
 void
 clientReplyContext::pushStreamData(StoreIOBuffer const &result, char *source)
 {
-    debugs(88, 5, result << " and " << static_cast<void*>(source));
-
     StoreIOBuffer localTempBuffer;
+
+    if (result.length == 0) {
+        debugs(88, 5, "clientReplyContext::pushStreamData: marking request as complete due to 0 length store result");
+        flags.complete = 1;
+    }
+
     assert(result.offset == next()->readBuffer.offset);
     localTempBuffer.offset = result.offset;
     localTempBuffer.length = result.length;
-    localTempBuffer.flags.eof = flags.complete;
 
     if (localTempBuffer.length)
         localTempBuffer.data = source;
@@ -1978,7 +1981,6 @@ clientReplyContext::processReplyAccessResult(const Acl::Answer &accessAllowed)
         localTempBuffer.data = body_buf;
     }
 
-    localTempBuffer.flags.eof = flags.complete;
     clientStreamCallback((clientStreamNode *)http->client_stream.head->data,
                          http, reply, localTempBuffer);
 
@@ -2039,9 +2041,6 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     makeThisHead();
 
     debugs(88, 5, http->uri << " result: " << result);
-
-    if (result.flags.eof)
-        flags.complete = 1; // TODO: Rename to flags.gotEverythingFromStore or some such
 
     if (errorInStream(result)) {
         sendStreamError(result);
