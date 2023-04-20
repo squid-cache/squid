@@ -2297,12 +2297,8 @@ typedef struct {
  * the pattern buffer.
  *
  * Returns 0 if we succeed, -2 if an internal error.   */
-#ifdef STDC_HEADERS
 int
 re_compile_fastmap(struct re_pattern_buffer *bufp)
-#else
-int re_compile_fastmap(struct re_pattern_buffer *bufp)
-#endif
 {
     int j, k;
     fail_stack_type fail_stack;
@@ -2807,7 +2803,8 @@ wordchar_p(const char *d, const char *end1, const char *string2)
  * failure stack overflowing).  Otherwise, we return the length of the
  * matched substring.  */
 
-int re_match_2(struct re_pattern_buffer *bufp, const char *string1, int size1, const char *string2, int size2, int pos, struct re_registers *regs, int stop)
+int
+re_match_2(struct re_pattern_buffer *bufp, const char *string1, int size1, const char *string2, int size2, int pos, struct re_registers *regs, int stop)
 {
     /* General temporaries.  */
     int mcnt;
@@ -4103,7 +4100,8 @@ bcmp_translate(unsigned char const *s1, unsigned char const*s2, register int len
  * It returns 0 if it succeeds, nonzero if it doesn't.  (See regex.h for
  * the return codes and their meanings.)  */
 
-int regcomp(regex_t *preg, const char *pattern, int cflags)
+int
+regcomp(regex_t *preg, const char *pattern, int cflags)
 {
     reg_errcode_t ret;
     unsigned syntax
@@ -4170,7 +4168,8 @@ int regcomp(regex_t *preg, const char *pattern, int cflags)
  *
  * We return 0 if we find a match and REG_NOMATCH if not.  */
 
-int regexec(const regex_t *preg, const char *string, size_t nmatch, regmatch_t pmatch[], int eflags)
+int
+regexec(const regex_t *preg, const char *string, size_t nmatch, regmatch_t pmatch[], int eflags)
 {
     int ret;
     struct re_registers regs;
@@ -4256,7 +4255,8 @@ regerror(int errcode, const regex_t *preg, char *errbuf, size_t errbuf_size)
 
 /* Free dynamically allocated space used by PREG.  */
 
-void regfree(regex_t * preg)
+void
+regfree(regex_t * preg)
 {
     if (preg->buffer != NULL)
         free(preg->buffer);
