@@ -2301,9 +2301,7 @@ typedef struct {
 int
 re_compile_fastmap(struct re_pattern_buffer *bufp)
 #else
-int
-re_compile_fastmap(bufp)
-struct re_pattern_buffer *bufp;
+int re_compile_fastmap(struct re_pattern_buffer *bufp)
 #endif
 {
     int j, k;
