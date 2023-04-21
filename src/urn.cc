@@ -46,7 +46,7 @@ public:
     HttpRequest::Pointer urlres_r;
     AccessLogEntry::Pointer ale; ///< details of the requesting transaction
 
-    Store::ReadBuffer storeReadBuffer; /// XXX: Unused. Merge with parsingBuffer.
+    Store::ReadBuffer storeReadBuffer; /// XXX: Merge with parsingBuffer.
     StoreIOBuffer hackBufferXXX; // XXX: Remove.
     Store::ParsingBuffer parsingBuffer; /// XXX: TBD
 

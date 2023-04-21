@@ -27,7 +27,6 @@
 ///
 /// Errors are indicated by setting StoreIOBuffer flags.error.
 typedef void STCB(void *, StoreIOBuffer);
-// TODO: Move StoreIOBuffer::flags outside StoreIOBuffer?
 
 class StoreEntry;
 class ACLFilledChecklist;

@@ -311,11 +311,8 @@ StoreEntry::storeClientType() const
     // weirdness" logic in store_client::doCopy() that converts hits to misses
     // on startSwapin() failures. We should probably attempt to open a swapin
     // file _here_ instead (and avoid STORE_DISK_CLIENT designation for clients
-    // that fail to do so).
-
-    // XXX: Same for Rock store that does not yet support swapin during swapout.
-    // if (swap_status == SWAPOUT_WRITING)
-    //    return STORE_MEM_CLIENT;
+    // that fail to do so). That would also address a similar problem with Rock
+    // store that does not yet support swapin during SWAPOUT_WRITING.
 
     /*
      * otherwise, make subsequent clients read from disk so they
@@ -1813,8 +1810,7 @@ StoreEntry::trimMemory(const bool preserveSwappable)
     else
         mem_obj->trimUnSwappable();
 
-    debugs(88, 7, *this << " inmem_lo=" << mem_obj->inmem_lo <<
-           (preserveSwappable ? " swappable" : ""));
+    debugs(88, 7, *this << " inmem_lo=" << mem_obj->inmem_lo);
 }
 
 bool
