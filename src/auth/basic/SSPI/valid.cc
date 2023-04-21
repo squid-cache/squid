@@ -44,7 +44,7 @@
 #endif
 
 #if _SQUID_CYGWIN_
-#include <wchar.h>
+#include <cwchar>
 #endif
 #include "auth/basic/SSPI/valid.h"
 

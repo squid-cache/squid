@@ -69,12 +69,8 @@ static const char rcsid[] = "inet_pton.c,v 1.2.206.2 2005/07/28 07:43:18 marka E
 #if HAVE_ARPA_NAMESER_H
 #include <arpa/nameser.h>
 #endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cstring>
+#include <cerrno>
 
 #if ! defined(NS_INADDRSZ)
 #define NS_INADDRSZ      4
