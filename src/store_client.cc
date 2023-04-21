@@ -517,10 +517,14 @@ store_client::fileRead()
     assert(!flags.disk_io_pending);
     flags.disk_io_pending = true;
 
-    // XXX: If startSwapin() is called in the middle of a copy() sequence, we
-    // must ignore copyInto.offset/nextHttpReadOffset() and read from zero!
     // mem->swap_hdr_sz is zero here during initial read(s)
     const auto nextStoreReadOffset = NaturalSum<int64_t>(mem->swap_hdr_sz, nextHttpReadOffset()).value();
+
+    // XXX: If fileRead() is called when we do not yet know mem->swap_hdr_sz,
+    // then we must read from disk offset zero to learn it. We cannot compute
+    // correct HTTP response start offset on disk without it. However, late
+    // startSwapin() calls imply that the assertion below may fail.
+    Assure(mem->swap_hdr_sz > 0 || !nextStoreReadOffset);
 
     // TODO: Remove this assertion. Introduced in 1998 commit 3157c72, it
     // assumes that swapped out memory is freed unconditionally, but we no
