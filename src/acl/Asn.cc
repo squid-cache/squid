@@ -321,10 +321,9 @@ asHandleReply(void *data, StoreIOBuffer result)
 
 /**
  * add a network (addr, mask) to the radix tree, with matching AS number
- * TODO: Return void.
  */
 static int
-asnAddNet(const SBuf &as_string, const int as_number)
+asnAddNet(const SBuf &addressAndMask, const int as_number)
 {
     struct squid_radix_node *rn;
     CbDataList<int> **Tail = nullptr;
@@ -332,22 +331,23 @@ asnAddNet(const SBuf &as_string, const int as_number)
     as_info *asinfo = nullptr;
 
     static const CharacterSet NonSlashSet = CharacterSet("slash", "/").complement("non-slash");
-    Parser::Tokenizer tok(as_string);
-    SBuf firstToken;
-    if (!(tok.prefix(firstToken, NonSlashSet) && tok.skip('/'))) {
+    Parser::Tokenizer tok(addressAndMask);
+    SBuf addressToken;
+    if (!(tok.prefix(addressToken, NonSlashSet) && tok.skip('/'))) {
         debugs(53, 3, "asnAddNet: failed, invalid response from whois server.");
         return 0;
     }
-    const Ip::Address addr = firstToken.c_str();
+    const Ip::Address addr = addressToken.c_str();
+
+    // INET6 TODO : find a better way of identifying the base IPA family for mask than this.
+    const auto addrFamily = (addressToken.find('.') != SBuf::npos) ? AF_INET : AF_INET6;
 
     // generate Netbits Format Mask
     Ip::Address mask;
     mask.setNoAddr();
     int64_t bitl = 0;
-    if (tok.int64(bitl, 10, false)) {
-        // INET6 TODO : find a better way of identifying the base IPA family for mask than this.
-        mask.applyMask(bitl, tok.skip('.') ? AF_INET : AF_INET6);
-    }
+    if (tok.int64(bitl, 10, false))
+        mask.applyMask(bitl, addrFamily);
 
     debugs(53, 3, "asnAddNet: called for " << addr << "/" << mask );
 
