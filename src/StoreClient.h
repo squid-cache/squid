@@ -21,8 +21,8 @@
 /// Upon storeClientCopy() success, StoreIOBuffer::flags.error is zero, and
 /// * HTTP response headers (if any) are available via MemObject::baseReply().
 /// * HTTP response body bytes (if any) are available via StoreIOBuffer.
-/// * EOF condition can be detected by calling store_client::atEof() method, but
-///   it currently boils down to "zero body bytes after the first callback".
+/// * EOF condition can be detected by calling store_client::atEof() method. It
+///   currently boils down to "zero body bytes after the headers (if any)".
 ///   N.B. clientStreamCallback() calls effectively use the same EOF condition.
 ///
 /// Errors are indicated by setting StoreIOBuffer flags.error.
@@ -132,6 +132,8 @@ public:
 
     void dumpStats(MemBuf * output, int clientNumber) const;
 
+    // XXX: This implementation does not match STCB docs when dealing with
+    // headerless (i.e. SMP cache mgr) responses.
     /// whether the last storeClientCopy() result implies no more data is coming
     bool atEof(const StoreIOBuffer &result) const { return !result.length && answeredOnce(); }
 
