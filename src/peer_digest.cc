@@ -471,7 +471,7 @@ peerDigestHandleReply(void *data, StoreIOBuffer receivedData)
     // checking at the beginning of this function. However, in this case, we would have to require
     // that the parser does not regard EOF as a special condition (it is true now but may change
     // in the future).
-    if (fetch->sc->atEof(receivedData)) {
+    if (fetch->sc->atEof()) {
         peerDigestFetchAbort(fetch, fetch->buf, "premature end of digest reply");
         return;
     }

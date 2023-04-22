@@ -780,7 +780,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         return;
     }
 
-    if (ex->sc->atEof(receivedData)) {
+    if (ex->sc->atEof()) {
         if (const auto leftoverBytes = ex->parsingBuffer.contentSize())
             debugs(38, 2, "discarding a partially received record due to Store EOF: " << leftoverBytes);
         delete ex;

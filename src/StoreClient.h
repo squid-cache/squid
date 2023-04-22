@@ -19,11 +19,13 @@
 /// A storeClientCopy() callback function.
 ///
 /// Upon storeClientCopy() success, StoreIOBuffer::flags.error is zero, and
-/// * HTTP response headers (if any) are available via MemObject::baseReply().
+/// * HTTP response headers (if any) are available via MemObject::freshestReply();
 /// * HTTP response body bytes (if any) are available via StoreIOBuffer.
-/// * EOF condition can be detected by calling store_client::atEof() method. It
-///   currently boils down to "zero body bytes after the headers (if any)".
-///   N.B. clientStreamCallback() calls effectively use the same EOF condition.
+///
+/// STCB callbacks may use response semantics to detect certain EOF conditions.
+/// Callbacks that expect HTTP headers may call store_client::atEof(). Similar
+/// to clientStreamCallback() callbacks, callbacks dedicated to receiving HTTP
+/// bodies may use zero StoreIOBuffer::length as an EOF condition.
 ///
 /// Errors are indicated by setting StoreIOBuffer flags.error.
 typedef void STCB(void *, StoreIOBuffer);
@@ -132,10 +134,12 @@ public:
 
     void dumpStats(MemBuf * output, int clientNumber) const;
 
-    // XXX: This implementation does not match STCB docs when dealing with
-    // headerless (i.e. SMP cache mgr) responses.
-    /// whether the last storeClientCopy() result implies no more data is coming
-    bool atEof(const StoreIOBuffer &result) const { return !result.length && answeredOnce(); }
+    // TODO: When STCB gets a dedicated Answer type, move this info there.
+    /// Whether the last successful storeClientCopy() answer was known to
+    /// contain the last body bytes of the HTTP response
+    /// \retval true requesting bytes at higher offsets is futile
+    /// \sa STCB
+    bool atEof() const { return atEof_; }
 
 #if STORE_CLIENT_LIST_DEBUG
 
@@ -171,10 +175,10 @@ public:
     dlink_node node;
 
 private:
-    bool answeredOnce() const { return answers_ >= 1; }
-
     bool moreToRead() const;
     bool canReadFromMemory() const;
+    bool answeredOnce() const { return answers_ >= 1; }
+    bool sendingHttpHeaders() const;
     int64_t nextHttpReadOffset() const;
 
     void fileRead();
@@ -192,7 +196,6 @@ private:
     void fail();
     void callback(ssize_t);
     void noteCopiedBytes(size_t);
-    void noteEof();
     void noteNews();
     void finishCallback();
     static void FinishCallback(store_client *);
@@ -200,12 +203,15 @@ private:
     int type;
     bool object_ok;
 
+    /// \copydoc atEof()
+    bool atEof_;
+
     /// Storage and metadata associated with the current copy() request. Ought
     /// to be ignored when not answering a copy() request.
     StoreIOBuffer copyInto;
 
     /// the total number of finishCallback() calls
-    unsigned int answers_ = 0;
+    unsigned int answers_;
 
     /// Accumulates raw bytes read from Store while answering the current copy()
     /// request. Buffer contents depends on the source and parsing stage; it may

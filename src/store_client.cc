@@ -165,8 +165,10 @@ store_client::finishCallback()
     if (object_ok && parsingBuffer)
         result = parsingBuffer->packBack();
     result.flags.error = object_ok ? 0 : 1;
-    parsingBuffer.reset();
 
+    atEof_ = !sendingHttpHeaders() && !result.length; // no HTTP headers and no body bytes
+
+    parsingBuffer.reset();
     ++answers_;
 
     STCB *temphandler = _callback.callback_handler;
@@ -180,21 +182,15 @@ store_client::finishCallback()
     cbdataReferenceDone(cbdata);
 }
 
-// TODO: Replace with noteNews()?
-void
-store_client::noteEof()
-{
-    debugs(90, 5, this);
-    noteNews();
-}
-
 store_client::store_client(StoreEntry *e) :
 #if STORE_CLIENT_LIST_DEBUG
     owner(cbdataReference(data)),
 #endif
     entry(e),
     type(e->storeClientType()),
-    object_ok(true)
+    object_ok(true),
+    atEof_(false),
+    answers_(0)
 {
     Assure(entry);
     entry->lock("store_client");
@@ -335,6 +331,14 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     sc->doCopy(e);
 }
 
+/// Whether our answer, if sent right now, will announce the availability of
+/// HTTP response headers (to the STCB callback) for the first time.
+bool
+store_client::sendingHttpHeaders() const
+{
+    return !answeredOnce() && entry->mem().baseReply().hdr_sz > 0;
+}
+
 void
 store_client::doCopy(StoreEntry *anEntry)
 {
@@ -351,20 +355,16 @@ store_client::doCopy(StoreEntry *anEntry)
            " objectLen: " << entry->objectLen() <<
            " past_answers: " << answers_);
 
-    // Send (at least) HTTP headers if we have not done so, and we have them.
-    // Here, "sending HTTP headers" essentially means calling the callback when
-    // the corresponding MemObject has parsed HTTP response headers.
-    const auto sendHttpHeaders = !answeredOnce() && mem->baseReply().hdr_sz > 0;
+    const auto sendHttpHeaders = sendingHttpHeaders();
 
     if (!sendHttpHeaders && !moreToRead()) {
         /* There is no more to send! */
         debugs(33, 3, "There is no more to send!");
-        noteEof();
+        noteNews();
         flags.store_copying = false;
         return;
     }
 
-    // if we cannot just send HTTP headers, bail if we have no requested HTTP bytes
     if (!sendHttpHeaders && anEntry->store_status == STORE_PENDING && nextHttpReadOffset() >= mem->endOffset()) {
         debugs(90, 3, "store_client::doCopy: Waiting for more");
         flags.store_copying = false;
@@ -397,7 +397,7 @@ store_client::doCopy(StoreEntry *anEntry)
     }
 
     if (sendHttpHeaders) {
-        debugs(33, 5, "just send headers: " << mem->baseReply().hdr_sz);
+        debugs(33, 5, "just send HTTP headers: " << mem->baseReply().hdr_sz);
         noteNews();
         flags.store_copying = false;
         return;
@@ -444,7 +444,7 @@ store_client::noteSwapInDone(const bool error)
     if (error)
         fail();
     else
-        noteEof();
+        noteNews();
 }
 
 void
@@ -571,7 +571,7 @@ store_client::readBody(const char * const buf, const ssize_t lastIoResult)
 
     if (!lastIoResult) {
         if (answeredOnce())
-            return noteEof();
+            return noteNews();
 
         debugs(90, DBG_CRITICAL, "ERROR: Truncated HTTP headers in on-disk object");
         return fail();

@@ -270,7 +270,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
     }
 
     /* If we haven't received the entire object (urn), copy more */
-    if (!urnState->sc->atEof(result)) {
+    if (!urnState->sc->atEof()) {
         storeClientCopy(urnState->sc, urlres_e,
                         urnState->parsingBuffer.space().positionAt(bufferedBytes),
                         urnHandleReply,

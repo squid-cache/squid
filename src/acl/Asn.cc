@@ -309,7 +309,7 @@ asHandleReply(void *data, StoreIOBuffer result)
         return;
     }
 
-    if (asState->sc->atEof(result)) {
+    if (asState->sc->atEof()) {
         if (const auto leftoverBytes = asState->parsingBuffer.contentSize())
             debugs(53, 2, "discarding a partially received WHOIS AS response line due to Store EOF: " << leftoverBytes);
         delete asState;
