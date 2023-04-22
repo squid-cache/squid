@@ -950,7 +950,6 @@ tests_testTokenizer_LDFLAGS = $(LIBADD_DL)
 check_PROGRAMS += tests/testSBuf
 tests_testSBuf_SOURCES = \
 	tests/testSBuf.cc \
-	tests/testSBuf.h \
 	tests/SBufFindTest.cc \
 	tests/SBufFindTest.h
 nodist_tests_testSBuf_SOURCES = \
