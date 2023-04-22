@@ -372,7 +372,6 @@ clientReplyContext::sendClientUpstreamResponse(const StoreIOBuffer &upstreamResp
      * Force it back to zero */
     reqofs = 0;
     assert(!EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED));
-    /* TODO: provide sendMoreData with the ready parsed reply */
     sendMoreData(upstreamResponse);
 }
 
