@@ -2358,8 +2358,7 @@ tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testIpAddress
 tests_testIpAddress_SOURCES = \
-	tests/testIpAddress.cc \
-	tests/testIpAddress.h
+	tests/testIpAddress.cc
 nodist_tests_testIpAddress_SOURCES = \
 	tests/stub_SBuf.cc \
 	tests/stub_debug.cc \
