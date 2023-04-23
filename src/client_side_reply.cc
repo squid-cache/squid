@@ -989,7 +989,7 @@ clientReplyContext::traceReply()
 {
     createStoreEntry(http->request->method, RequestFlags());
     storeClientCopy(sc, http->storeEntry(),
-                    storeReadBuffer.legacyInitialBuffer(), SendMoreData, this);
+                    storeReadBuffer.initialSpace(), SendMoreData, this);
     http->storeEntry()->releaseRequest();
     http->storeEntry()->buffer();
     const HttpReplyPointer rep(new HttpReply);

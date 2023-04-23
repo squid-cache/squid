@@ -72,7 +72,7 @@ Mgr::StoreToCommWriter::scheduleStoreCopy()
     debugs(16, 6, MYNAME);
     Must(entry != nullptr);
     Must(sc != nullptr);
-    storeClientCopy(sc, entry, buffer.legacyReadRequest(writeOffset), &NoteStoreCopied, this);
+    storeClientCopy(sc, entry, buffer.spaceFor(writeOffset), &NoteStoreCopied, this);
 }
 
 void

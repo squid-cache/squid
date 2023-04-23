@@ -1043,7 +1043,7 @@ ConnStateData::abortRequestParsing(const char *const uri)
     auto *context = new Http::Stream(clientConnection, http);
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
                      clientReplyStatus, new clientReplyContext(http), clientSocketRecipient,
-                     clientSocketDetach, context, context->storeReadBuffer.legacyInitialBuffer());
+                     clientSocketDetach, context, context->storeReadBuffer.initialSpace());
     return context;
 }
 
@@ -1374,7 +1374,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
     ClientStreamData newClient = result;
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
                      clientReplyStatus, newServer, clientSocketRecipient,
-                     clientSocketDetach, newClient, result->storeReadBuffer.legacyInitialBuffer());
+                     clientSocketDetach, newClient, result->storeReadBuffer.initialSpace());
 
     /* set url */
     debugs(33,5, "Prepare absolute URL from " <<
@@ -3238,7 +3238,7 @@ ConnStateData::buildFakeRequest(SBuf &useHost, const AnyP::KnownPort usePort, co
     ClientStreamData newClient = stream;
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
                      clientReplyStatus, newServer, clientSocketRecipient,
-                     clientSocketDetach, newClient, stream->storeReadBuffer.legacyInitialBuffer());
+                     clientSocketDetach, newClient, stream->storeReadBuffer.initialSpace());
 
     stream->flags.parsed_ok = 1; // Do we need it?
     stream->mayUseConnection(true);

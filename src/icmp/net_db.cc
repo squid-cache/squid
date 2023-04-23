@@ -64,7 +64,7 @@ public:
     netdbExchangeState(CachePeer *aPeer, const HttpRequestPointer &theReq) :
         p(aPeer),
         r(theReq),
-        hackBufferXXX(storeReadBuffer.legacyInitialBuffer()),
+        hackBufferXXX(storeReadBuffer.initialSpace()),
         parsingBuffer(hackBufferXXX)
     {
         assert(r);
@@ -789,7 +789,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
     // TODO: To protect us from a broken peer sending an "infinite" stream of
     // new addresses, limit the cumulative number of received bytes or records?
-    storeClientCopy(ex->sc, ex->e, ex->storeReadBuffer.legacyReadRequest(receivedData.offset + receivedData.length), netdbExchangeHandleReply, ex);
+    storeClientCopy(ex->sc, ex->e, ex->storeReadBuffer.spaceFor(receivedData.offset + receivedData.length), netdbExchangeHandleReply, ex);
 }
 
 #endif /* USE_ICMP */
@@ -1211,7 +1211,7 @@ netdbExchangeStart(void *data)
     assert(nullptr != ex->e);
 
     ex->sc = storeClientListAdd(ex->e, ex);
-    storeClientCopy(ex->sc, ex->e, ex->storeReadBuffer.legacyInitialBuffer(), netdbExchangeHandleReply, ex);
+    storeClientCopy(ex->sc, ex->e, ex->storeReadBuffer.initialSpace(), netdbExchangeHandleReply, ex);
 
     ex->r->flags.loopDetected = true;   /* cheat! -- force direct */
 

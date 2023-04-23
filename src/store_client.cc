@@ -141,12 +141,6 @@ storeClientListAdd(StoreEntry * e, void *data)
     return sc;
 }
 
-StoreIOBuffer
-Store::ReadBuffer::legacyOffsetBuffer(const LegacyOffset loffset) {
-    assert(!Less(size(), loffset));
-    return StoreIOBuffer(serialized_.size() - loffset, loffset, serialized_.data() + loffset);
-}
-
 /// finishCallback() wrapper; TODO: Add NullaryMemFunT for non-jobs.
 void
 store_client::FinishCallback(store_client * const sc)

@@ -764,7 +764,7 @@ Ftp::Server::parseOneRequest()
     ClientStreamData newClient = result;
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
                      clientReplyStatus, newServer, clientSocketRecipient,
-                     clientSocketDetach, newClient, result->storeReadBuffer.legacyInitialBuffer());
+                     clientSocketDetach, newClient, result->storeReadBuffer.initialSpace());
 
     result->flags.parsed_ok = 1;
     return result;

@@ -76,7 +76,7 @@ CBDATA_CLASS_INIT(UrnState);
 
 UrnState::UrnState(const AccessLogEntry::Pointer &anAle):
     ale(anAle),
-    hackBufferXXX(storeReadBuffer.legacyInitialBuffer()),
+    hackBufferXXX(storeReadBuffer.initialSpace()),
     parsingBuffer(hackBufferXXX)
 {
 }

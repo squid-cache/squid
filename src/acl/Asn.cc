@@ -73,7 +73,7 @@ class ASState
 
 public:
     ASState():
-        hackBufferXXX(storeReadBuffer.legacyInitialBuffer()),
+        hackBufferXXX(storeReadBuffer.initialSpace()),
         parsingBuffer(hackBufferXXX)
     {
     }

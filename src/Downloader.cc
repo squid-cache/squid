@@ -169,7 +169,7 @@ Downloader::buildRequest()
     ClientStreamData newClient = context_.getRaw();
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
                      clientReplyStatus, newServer, downloaderRecipient,
-                     downloaderDetach, newClient, context_->storeReadBuffer.legacyInitialBuffer());
+                     downloaderDetach, newClient, context_->storeReadBuffer.initialSpace());
 
     // Build a ClientRequestContext to start doCallouts
     http->calloutContext = new ClientRequestContext(http);
@@ -219,7 +219,7 @@ Downloader::handleReply(clientStreamNode * node, ClientHttpRequest *http, HttpRe
     switch (clientStreamStatus(node, http)) {
     case STREAM_NONE: {
         debugs(33, 3, "Get more data");
-        clientStreamRead(node, http, context_->storeReadBuffer.legacyReadRequest(http->out.offset));
+        clientStreamRead(node, http, context_->storeReadBuffer.spaceFor(http->out.offset));
     }
     break;
     case STREAM_COMPLETE:

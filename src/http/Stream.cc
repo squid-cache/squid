@@ -114,7 +114,7 @@ Http::Stream::pullData()
     /* XXX: length = getmaximumrangelenfgth */
     const auto nextOffset = getNextRangeOffset();
     /* we may note we have reached the end of the wanted ranges */
-    clientStreamRead(getTail(), http, storeReadBuffer.legacyReadRequest(nextOffset));
+    clientStreamRead(getTail(), http, storeReadBuffer.spaceFor(nextOffset));
 }
 
 bool

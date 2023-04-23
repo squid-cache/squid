@@ -76,19 +76,18 @@ using LegacyOffset = int64_t;
 class ReadBuffer
 {
 public:
-    /// quickly convert internal representation to a legacy StoreIOBuffer object
-    StoreIOBuffer legacyInitialBuffer() { return StoreIOBuffer(serialized_.size(), 0, serialized_.data()); }
+    /// A StoreIOBuffer object for making the first storeClientCopy() request,
+    /// providing our buffer space for storing any copied HTTP response body
+    /// bytes. Current storeClientCopy() implementation does not support
+    /// (positive) HTTP response body offsets for such first requests. Using
+    /// this method instead of its spaceFor(0) equivalent clarifies that the
+    /// caller may not be interested in body bytes at that zero offset.
+    StoreIOBuffer initialSpace() { return spaceFor(0); }
 
-    /// XXX: TBD
-    StoreIOBuffer legacyOffsetBuffer(const LegacyOffset loffset);
-
-    /// XXX: TBD
-    StoreIOBuffer legacyReadRequest(const LegacyOffset loffset) { return StoreIOBuffer(serialized_.size(), loffset, serialized_.data()); }
-
-    /// whether this buffer fully contains the given buffer
-    bool contains(const StoreIOBuffer &b) const { return serialized_.data() <= b.data && b.data + b.length <= serialized_.data() + serialized_.size(); }
-
-    size_t size() const { return serialized_.size(); }
+    /// A StoreIOBuffer object for making a storeClientCopy() request for HTTP
+    /// data at a given offset, providing our buffer space for storing any
+    /// copied HTTP response body bytes. \sa initialSpace()
+    StoreIOBuffer spaceFor(const LegacyOffset loffset) { return StoreIOBuffer(serialized_.size(), loffset, serialized_.data()); }
 
 private:
     /// space for storing serialized Store entry bytes
