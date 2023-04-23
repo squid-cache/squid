@@ -74,7 +74,6 @@ clientReplyContext::~clientReplyContext()
 clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
     purgeStatus(Http::scNone),
     http(cbdataReference(clientContext)),
-    headers_sz(0),
     sc(nullptr),
     reqofs(0),
     ourNode(nullptr),
@@ -1000,8 +999,6 @@ clientReplyContext::traceReply()
     http->storeEntry()->complete();
 }
 
-#define SENDING_BODY 0
-#define SENDING_HDRSONLY 1
 int
 clientReplyContext::checkTransferDone()
 {
@@ -1039,6 +1036,7 @@ int
 clientReplyContext::storeOKTransferDone() const
 {
     assert(http->storeEntry()->objectLen() >= 0);
+    const auto headers_sz = http->storeEntry()->mem().baseReply().hdr_sz;
     assert(http->storeEntry()->objectLen() >= headers_sz);
     const auto done = http->out.offset >= http->storeEntry()->objectLen() - headers_sz;
     const auto debugLevel = done ? 3 : 5;
@@ -1059,8 +1057,7 @@ clientReplyContext::storeNotOKTransferDone() const
     assert(mem != nullptr);
     assert(http->request != nullptr);
 
-    /* mem->reply was wrong because it uses the UPSTREAM header length!!! */
-    if (headers_sz == 0)
+    if (mem->baseReply().pstate != Http::Message::psParsed)
         /* haven't found end of headers yet */
         return 0;
 
@@ -1085,8 +1082,7 @@ clientReplyContext::storeNotOKTransferDone() const
     const auto debugLevel = done ? 3 : 5;
     debugs(88, debugLevel, done <<
            " out.offset=" << http->out.offset <<
-           " expectedBodySize=" << expectedBodySize <<
-           " headers_sz=" << headers_sz);
+           " expectedBodySize=" << expectedBodySize);
     return done ? 1 : 0;
 }
 
@@ -1848,7 +1844,6 @@ clientReplyContext::processReplyAccess ()
     if (http->loggingTags().oldType == LOG_TCP_DENIED ||
             http->loggingTags().oldType == LOG_TCP_DENIED_REPLY ||
             alwaysAllowResponse(reply->sline.status())) {
-        headers_sz = reply->hdr_sz;
         processReplyAccessResult(ACCESS_ALLOWED);
         return;
     }
@@ -1858,8 +1853,6 @@ clientReplyContext::processReplyAccess ()
         sendBodyTooLargeError();
         return;
     }
-
-    headers_sz = reply->hdr_sz;
 
     /** check for absent access controls (permit by default) */
     if (!Config.accessList.reply) {

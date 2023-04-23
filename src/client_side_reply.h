@@ -68,10 +68,6 @@ public:
     LogTags *loggingTags() const override;
 
     ClientHttpRequest *http;
-    /// Base reply header bytes received from Store.
-    /// Compatible with ClientHttpRequest::Out::offset.
-    /// Not to be confused with ClientHttpRequest::Out::headers_sz.
-    int headers_sz;
     store_client *sc;       /* The store_client we're using */
 
     // XXX: Rename to bufferedBodySize or some such!
