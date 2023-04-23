@@ -838,8 +838,7 @@ tests_testEnumIterator_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testLookupTable
 tests_testLookupTable_SOURCES = \
-	tests/testLookupTable.cc \
-	tests/testLookupTable.h
+	tests/testLookupTable.cc
 nodist_tests_testLookupTable_SOURCES = \
 	base/LookupTable.h \
 	tests/stub_debug.cc \

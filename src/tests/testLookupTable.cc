@@ -8,10 +8,19 @@
 
 #include "squid.h"
 #include "base/LookupTable.h"
-#include "testLookupTable.h"
+#include "compat/cppunit.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TestLookupTable );
+class TestLookupTable : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestLookupTable);
+    CPPUNIT_TEST(testLookupTableLookup);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void testLookupTableLookup();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestLookupTable);
 
 enum EnumData {
     ENUM_1,
