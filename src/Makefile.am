@@ -1399,7 +1399,6 @@ tests_testStore_SOURCES = \
 	tests/testStore.cc \
 	tests/testStore.h \
 	tests/testStoreController.cc \
-	tests/testStoreController.h \
 	StoreFileSystem.cc \
 	tests/testStoreHashIndex.cc \
 	tests/testStoreHashIndex.h \
