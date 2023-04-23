@@ -301,10 +301,22 @@ asHandleReply(void *data, StoreIOBuffer result)
     }
     asState->parsingBuffer.consume(tok.parsedSize());
 
+    const auto remainingSpace = asState->parsingBuffer.space().positionAt(result.offset + result.length);
+
+    if (!remainingSpace.length) {
+        Assure(asState->parsingBuffer.content().length);
+        debugs(53, DBG_IMPORTANT, "WARNING: Ignoring the tail of a WHOIS AS response" <<
+               " with an unparseable section of " << asState->parsingBuffer.content().length <<
+               " bytes ending at offset " << remainingSpace.offset);
+        delete asState;
+        return;
+    }
+
     const decltype(StoreIOBuffer::offset) stillReasonableOffset = 100000; // an arbitrary limit in bytes
-    if (result.offset > stillReasonableOffset) {
-        // stop suspicious accumulation of unparsed bytes, parsed addresses, and/or work
-        debugs(53, DBG_IMPORTANT, "WARNING: Ignoring the tail of a suspiciously large WHOIS AS response exceeding " << stillReasonableOffset << " bytes");
+    if (remainingSpace.offset > stillReasonableOffset) {
+        // stop suspicious accumulation of parsed addresses and/or work
+        debugs(53, DBG_IMPORTANT, "WARNING: Ignoring the tail of a suspiciously large WHOIS AS response" <<
+               " exceeding " << stillReasonableOffset << " bytes");
         delete asState;
         return;
     }
@@ -316,9 +328,7 @@ asHandleReply(void *data, StoreIOBuffer result)
         return;
     }
 
-    // XXX: Either makeSpace() or check for a full buffer!
-
-    storeClientCopy(asState->sc, e, asState->parsingBuffer.space().positionAt(result.offset + result.length), asHandleReply, asState);
+    storeClientCopy(asState->sc, e, remainingSpace, asHandleReply, asState);
 }
 
 /**
