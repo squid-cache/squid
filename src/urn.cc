@@ -262,7 +262,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
     const auto bufferedBytes = urnState->parsingBuffer.contentSize();
 
     // TODO: Grow space (within reason) after switching to tokenizer-based parsing.
-    if (!urnState->parsingBuffer.space().length) {
+    if (!urnState->parsingBuffer.spaceSize()) {
         debugs(52, 3, "ran out of buffer space after " << bufferedBytes << " bytes");
         // TODO: Here and in other error cases, send ERR_URN_RESOLVE to client.
         delete urnState;

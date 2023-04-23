@@ -282,6 +282,9 @@ store_client::copy(StoreEntry * anEntry,
 bool
 store_client::moreToRead() const
 {
+    if (!copyInto.length)
+        return false; // the client supplied a zero-size buffer (TODO: Warn!)
+
     if (entry->store_status == STORE_PENDING)
         return true; // there may be more coming
 
@@ -469,7 +472,8 @@ store_client::canReadFromMemory() const
 {
     const auto &mem = entry->mem();
     const auto readOffset = nextHttpReadOffset();
-    return mem.inmem_lo <= readOffset && readOffset < mem.endOffset();
+    return mem.inmem_lo <= readOffset && readOffset < mem.endOffset() &&
+        parsingBuffer->spaceSize();
 }
 
 /// The offset of the next stored HTTP response byte wanted by the client.

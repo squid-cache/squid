@@ -123,6 +123,9 @@ public:
     /// the total number of append()ed bytes that were not consume()d
     size_t contentSize() const { return size_; }
 
+    /// the number of bytes in the space() buffer
+    size_t spaceSize() const;
+
     /// the total number of bytes we can store
     size_t capacity() const;
 
@@ -162,7 +165,6 @@ public:
 
 private:
     char *memory() const;
-    size_t spaceSize() const;
     void terminate();
     void growSpace(size_t);
 
