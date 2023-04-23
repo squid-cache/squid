@@ -350,7 +350,6 @@ clientReplyContext::processExpired()
         debugs(88, DBG_CRITICAL, "clientReplyContext::processExpired: Found ENTRY_ABORTED object");
 
     {
-        static_assert(sizeof(tempbuf) >= HTTP_REQBUF_SZ);
         /* start counting the length from 0 */
         StoreIOBuffer localTempBuffer(HTTP_REQBUF_SZ, 0, tempbuf);
         storeClientCopy(sc, entry, localTempBuffer, HandleIMSReply, this);
@@ -985,11 +984,16 @@ clientReplyContext::purgeEntry(StoreEntry &entry, const Http::MethodType methodT
 }
 
 void
-clientReplyContext::traceReply()
+clientReplyContext::traceReply(clientStreamNode * node)
 {
+    clientStreamNode *nextNode = (clientStreamNode *)node->node.next->data;
+    StoreIOBuffer localTempBuffer;
     createStoreEntry(http->request->method, RequestFlags());
+    localTempBuffer.offset = 0;
+    localTempBuffer.length = nextNode->readBuffer.length;
+    localTempBuffer.data = nextNode->readBuffer.data;
     storeClientCopy(sc, http->storeEntry(),
-                    storeReadBuffer.initialSpace(), SendMoreData, this);
+                    localTempBuffer, SendMoreData, this);
     http->storeEntry()->releaseRequest();
     http->storeEntry()->buffer();
     const HttpReplyPointer rep(new HttpReply);
@@ -1632,7 +1636,7 @@ clientGetMoreData(clientStreamNode * aNode, ClientHttpRequest * http)
 
     if (context->http->request->method == Http::METHOD_TRACE) {
         if (context->http->request->header.getInt64(Http::HdrType::MAX_FORWARDS) == 0) {
-            context->traceReply();
+            context->traceReply(aNode);
             return;
         }
 
@@ -2014,7 +2018,13 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     char *buf = next()->readBuffer.data;
 
     if (buf != result.data) {
-        /* we've got to copy some data */
+        // sendMoreData() code path expects response body to be in buf, and buf
+        // to be Http::Stream::storeReadBuffer. When sendMoreData() is called
+        // with tempbuf instead, we copy to meet those expectations. The
+        // compiler cannot check whether buf is that storeReadBuffer and whether
+        // the alternative result.data buffer is our tempbuf, so we rely on a
+        // weaker compiler-time check and add a minimal run-time assertion.
+        static_assert(sizeof(tempbuf) == sizeof(Http::Stream::storeReadBuffer));
         assert(result.length <= next()->readBuffer.length);
         memcpy(buf, result.data, result.length);
     }

@@ -59,7 +59,7 @@ public:
     void processExpired();
     clientStream_status_t replyStatus();
     void processMiss();
-    void traceReply();
+    void traceReply(clientStreamNode * node);
     const char *storeId() const { return (http->store_id.size() > 0 ? http->store_id.termedBuf() : http->uri); }
 
     Http::StatusCode purgeStatus;
@@ -71,16 +71,14 @@ public:
     store_client *sc;       /* The store_client we're using */
 
     // XXX: Rename to bufferedBodySize or some such!
-    /// the number of response body bytes available in storeReadBuffer
+    /// the number of response body bytes available in next()->readBuffer
     size_t reqofs;
 
-    Store::ReadBuffer storeReadBuffer; ///< XXX: Document (or restore the old code).
-
-    /// Buffer dedicated to receiving Store responses to generated revalidation
-    /// requests. It has to be different from storeReadBuffer because the latter
-    /// keeps the contents of the stale HTTP response during revalidation.
-    /// sendClientOldEntry() uses that contents if things go wrong.
-    char tempbuf[HTTP_REQBUF_SZ]; // TODO: Cannot exceed storeReadBuffer capacity
+    /// Buffer dedicated to receiving storeClientCopy() responses to generated
+    /// revalidation requests. These requests cannot use next()->readBuffer
+    /// because the latter keeps the contents of the stale HTTP response during
+    /// revalidation. sendClientOldEntry() uses that contents.
+    char tempbuf[HTTP_REQBUF_SZ];
 
     struct Flags {
         Flags() : storelogiccomplete(0), complete(0), headersSent(false) {}
