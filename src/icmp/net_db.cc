@@ -693,10 +693,8 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         return;
     }
 
-    const auto &reply = ex->e->mem().baseReply();
-
     if (ex->connstate == STATE_HEADER) {
-        const auto scode = reply.sline.status();
+        const auto scode = ex->e->mem().baseReply().sline.status();
         assert(scode != Http::scNone);
         debugs(38, 3, "reply status " << scode);
         if (scode != Http::scOkay) {
