@@ -537,7 +537,7 @@ store_client::fileRead()
     const decltype(StoreIOBuffer::length) maxReadSize = SM_PAGE_SIZE;
 
     Assure(parsingBuffer);
-    // copyInto.length bytes is the maximum we can give back to the caller
+    // also, do not read more than we can return (via a copyInto.length buffer)
     const auto readSize = std::min(copyInto.length, maxReadSize);
     lastRead_ = parsingBuffer->makeSpace(readSize).positionAt(nextStoreReadOffset);
     debugs(90, 5, "into " << lastRead_);

@@ -2102,6 +2102,9 @@ Store::ParsingBuffer::capacity() const
 void
 Store::ParsingBuffer::appended(const char * const newBytes, const size_t newByteCount)
 {
+    // XXX: Check _before_ changing. And these ought to be asserts -- the
+    // (unknown to us) damage has been done; there is no safe recovery from
+    // this.
     Assure(memory() + size_ == newBytes); // the new bytes start in memory()
     size_ = *IncreaseSum(size_, newByteCount);
     Assure(size_ <= capacity()); // the new bytes end in memory()
@@ -2129,7 +2132,7 @@ Store::ParsingBuffer::makeSpace(const size_t pageSize)
 {
     growSpace(pageSize);
     Assure(pageSize <= spaceSize());
-    return space();
+    return space(); // XXX: We promised exactly pageSize bytes, but a returning pageSize or more
 }
 
 StoreIOBuffer

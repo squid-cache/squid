@@ -316,6 +316,8 @@ asHandleReply(void *data, StoreIOBuffer result)
         return;
     }
 
+    // XXX: Either makeSpace() or check for a full buffer!
+
     storeClientCopy(asState->sc, e, asState->parsingBuffer.space().positionAt(result.offset + result.length), asHandleReply, asState);
 }
 

@@ -789,6 +789,12 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
     // TODO: To protect us from a broken peer sending an "infinite" stream of
     // new addresses, limit the cumulative number of received bytes or records?
+
+    // TODO: Assert that there is space to avoid creating a false impression
+    // that the buffer may remain full after the rec_sz-consuming loop.
+
+    // XXX: ex->storeReadBuffer.spaceFor() does not preserve accumulated leftovers
+
     storeClientCopy(ex->sc, ex->e, ex->storeReadBuffer.spaceFor(receivedData.offset + receivedData.length), netdbExchangeHandleReply, ex);
 }
 
