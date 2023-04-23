@@ -2018,13 +2018,9 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     char *buf = next()->readBuffer.data;
 
     if (buf != result.data) {
-        // sendMoreData() code path expects response body to be in buf, and buf
-        // to be Http::Stream::storeReadBuffer. When sendMoreData() is called
-        // with tempbuf instead, we copy to meet those expectations. The
-        // compiler cannot check whether buf is that storeReadBuffer and whether
-        // the alternative result.data buffer is our tempbuf, so we rely on a
-        // weaker compiler-time check and add a minimal run-time assertion.
-        static_assert(sizeof(tempbuf) == sizeof(Http::Stream::storeReadBuffer));
+        // sendMoreData() code path expects response body to be in buf. When
+        // sendMoreData() is called with a different buffer (e.g., our tempbuf),
+        // we copy to meet those expectations.
         assert(result.length <= next()->readBuffer.length);
         memcpy(buf, result.data, result.length);
     }
