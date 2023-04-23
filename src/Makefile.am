@@ -1689,8 +1689,7 @@ tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 if ENABLE_AUTH
 check_PROGRAMS += tests/testACLMaxUserIP
 tests_testACLMaxUserIP_SOURCES = \
-	tests/testACLMaxUserIP.cc \
-	tests/testACLMaxUserIP.h
+	tests/testACLMaxUserIP.cc
 nodist_tests_testACLMaxUserIP_SOURCES = \
 	tests/stub_CachePeer.cc \
 	ConfigParser.cc \
@@ -1733,8 +1732,7 @@ tests_testACLMaxUserIP_LDADD = \
 tests_testACLMaxUserIP_LDFLAGS = $(LIBADD_DL)
 else
 EXTRA_DIST += \
-	tests/testACLMaxUserIP.cc \
-	tests/testACLMaxUserIP.h
+	tests/testACLMaxUserIP.cc
 endif
 
 ## Tests of http/* and HTTP Protocol objects
