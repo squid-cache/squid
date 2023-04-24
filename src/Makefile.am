@@ -980,8 +980,7 @@ tests_testSBufList_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testString
 tests_testString_SOURCES = \
-	tests/testString.cc \
-	tests/testString.h
+	tests/testString.cc
 nodist_tests_testString_SOURCES = \
 	tests/stub_SBuf.cc \
 	String.cc \
@@ -2655,7 +2654,6 @@ tests_testStatHist_SOURCES = \
 	StatHist.cc \
 	tests/testStatHist.cc \
 	StatHist.h \
-	tests/testStatHist.h \
 	String.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_cbdata.cc \
