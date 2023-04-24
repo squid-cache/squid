@@ -927,8 +927,7 @@ tests_testDns_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testTokenizer
 tests_testTokenizer_SOURCES = \
-	tests/testTokenizer.cc \
-	tests/testTokenizer.h
+	tests/testTokenizer.cc
 nodist_tests_testTokenizer_SOURCES = \
 	tests/stub_StatHist.cc \
 	tests/stub_debug.cc \
