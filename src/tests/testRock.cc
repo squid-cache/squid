@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "ConfigParser.h"
 #include "DiskIO/DiskIOModule.h"
 #include "fde.h"
@@ -22,7 +23,6 @@
 #include "store/Disks.h"
 #include "StoreFileSystem.h"
 #include "StoreSearch.h"
-#include "testRock.h"
 #include "testStoreSupport.h"
 #include "unitTestMain.h"
 
@@ -36,7 +36,38 @@
 
 #define TESTDIR "tr"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TestRock );
+/*
+ * test the store framework
+ */
+
+class TestRock : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestRock);
+    CPPUNIT_TEST(testRockCreate);
+    CPPUNIT_TEST(testRockSwapOut);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    TestRock() : rr(nullptr) {}
+    void setUp() override;
+    void tearDown() override;
+
+    typedef RefCount<Rock::SwapDir> SwapDirPointer;
+
+protected:
+    void commonInit();
+    void storeInit();
+    StoreEntry *createEntry(const int i);
+    StoreEntry *addEntry(const int i);
+    StoreEntry *getEntry(const int i);
+    void testRockCreate();
+    void testRockSwapOut();
+
+private:
+    SwapDirPointer store;
+    Rock::SwapDirRr *rr;
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestRock);
 
 extern REMOVALPOLICYCREATE createRemovalPolicy_lru;
 

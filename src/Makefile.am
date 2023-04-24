@@ -1045,7 +1045,6 @@ tests_testRock_SOURCES = \
 	ResolvedPeers.cc \
 	ResolvedPeers.h \
 	tests/testRock.cc \
-	tests/testRock.h \
 	StatCounters.cc \
 	StatCounters.h \
 	tests/stub_StatHist.cc \
@@ -1398,7 +1397,6 @@ tests_testStore_SOURCES = \
 	tests/testStoreController.cc \
 	StoreFileSystem.cc \
 	tests/testStoreHashIndex.cc \
-	tests/testStoreHashIndex.h \
 	StoreIOState.cc \
 	tests/testStoreSupport.cc \
 	tests/testStoreSupport.h \
