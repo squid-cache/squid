@@ -14,6 +14,10 @@
 /*
  * demonstration test file, as new idioms are made they will
  * be shown in the TestBoilerplate source.
+ *
+ * If the header file is only used in one implementation file,
+ * add the declarations to the implemenation file and skip the
+ * header
  */
 
 class TestBoilerplate: public CPPUNIT_NS::TestFixture
