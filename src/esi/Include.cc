@@ -97,11 +97,6 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
                 return;
             }
 
-#if HEADERS_LOG
-            /* should be done in the store rather than every recipient?  */
-            headersLog(0, 0, http->request->method, rep);
-
-#endif
             rep = nullptr;
         }
     }

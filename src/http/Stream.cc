@@ -271,9 +271,6 @@ Http::Stream::sendStartOfMessage(HttpReply *rep, StoreIOBuffer bodyData)
 
     /* Save length of headers for persistent conn checks */
     http->out.headers_sz = mb->contentSize();
-#if HEADERS_LOG
-    headersLog(0, 0, http->request->method, rep);
-#endif
 
     if (bodyData.data && bodyData.length) {
         if (multipartRangeRequest())

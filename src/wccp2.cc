@@ -1452,7 +1452,7 @@ wccp2HandleUdp(int sock, void *)
         ptr += sizeof(*routerCountRaw);
         const auto ipCount = ntohl(*routerCountRaw);
         const auto ipsSize = ipCount * sizeof(struct in_addr); // we check for unsigned overflow below
-        Must3(ipsSize / sizeof(struct in_addr) != ipCount, "huge IP address count", Here());
+        Must3(ipsSize / sizeof(struct in_addr) == ipCount, "huge IP address count", Here());
         CheckSectionLength(ptr, ipsSize, router_view_header, router_view_size, "invalid IP address count");
         ptr += ipsSize;
 
