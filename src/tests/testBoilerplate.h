@@ -15,9 +15,8 @@
  * demonstration test file, as new idioms are made they will
  * be shown in the TestBoilerplate source.
  *
- * If the header file is only used in one implementation file,
- * add the declarations to the implemenation file and skip the
- * header
+ * If a class declaration is only used in one source file, then declare
+ * that class where it is used instead of adding a dedicated header file.
  */
 
 class TestBoilerplate: public CPPUNIT_NS::TestFixture

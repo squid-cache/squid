@@ -15,7 +15,6 @@
 
 #include <cppunit/TestAssert.h>
 
-
 /*
  * test the EventLoop implementation
  */
