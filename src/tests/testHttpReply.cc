@@ -29,7 +29,6 @@ protected:
     void testSanityCheckFirstLine();
 };
 
-
 CPPUNIT_TEST_SUITE_REGISTRATION( TestHttpReply );
 
 class SquidConfig Config;

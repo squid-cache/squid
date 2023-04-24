@@ -23,7 +23,6 @@ protected:
     void testConstruct();
 };
 
-
 CPPUNIT_TEST_SUITE_REGISTRATION( TestNetDb );
 
 void

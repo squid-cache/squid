@@ -33,7 +33,6 @@ protected:
     void testUnsignedEnum();
 };
 
-
 CPPUNIT_TEST_SUITE_REGISTRATION( TestEnumIterator );
 
 enum class TestEnum {
