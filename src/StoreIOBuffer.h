@@ -105,15 +105,26 @@ namespace Store
 {
 
 /// A continuous buffer for efficient accumulation and NUL-termination of
-/// Store-read bytes. Store readers supply their StoreIOBuffer. That buffer is
-/// enough to hold the result of a single Store read. However, the supplied
-/// StoreIOBuffer capacity may be exceeded when parsing requires multiple Store
-/// reads and/or NUL-termination. This class seamlessly transitions from the
-/// supplied buffer to a bigger one if that transition is needed. This delayed
-/// transition prevents unnecessary allocations and associated memory copies.
+/// Store-read bytes. The buffer accumulates two kinds of Store readers:
+///
+/// * Readers that do not have any external buffer to worry about but need to
+///   accumulate, terminate, and/or consume buffered content read by Store.
+///   These readers use the default constructor and then allocate the initial
+///   buffer space for their first read (if any).
+///
+/// * Readers that supply their StoreIOBuffer at construction time. That buffer
+///   is enough to handle the majority of use cases. However, the supplied
+///   StoreIOBuffer capacity may be exceeded when parsing requires accumulating
+///   multiple Store read results and/or NUL-termination of a full buffer.
+///
+/// This buffer seamlessly grows as needed, reducing memory over-allocation and,
+/// in case of StoreIOBuffer-seeded construction, memory copies.
 class ParsingBuffer
 {
 public:
+    /// creates buffer without any space or content
+    ParsingBuffer();
+
     /// seeds this buffer with the caller-supplied buffer space
     explicit ParsingBuffer(StoreIOBuffer &space);
 
@@ -149,6 +160,13 @@ public:
     /// \returns space() after any necessary allocations
     StoreIOBuffer makeSpace(size_t pageSize);
 
+    /// A buffer suitable for the first storeClientCopy() call. The method may
+    /// allocate new memory and copy previously appended() bytes as needed.
+    /// \returns space() after any necessary allocations
+    /// \deprecated New clients should call makeSpace() with client-specific
+    /// pageSize instead of this one-size-fits-all legacy method.
+    StoreIOBuffer makeInitialSpace() { return makeSpace(4096); }
+
     /// remember the new bytes received into the previously provided space()
     void appended(const char *, size_t);
 
@@ -157,7 +175,7 @@ public:
 
     /// Returns stored content, reusing the StoreIOBuffer given at the
     /// construction time. Copying is avoided if we did not allocate extra
-    /// memory since construction.
+    /// memory since construction. Not meant for default-constructed buffers.
     StoreIOBuffer packBack();
 
     /// summarizes object state (for debugging)
@@ -169,7 +187,7 @@ private:
     void growSpace(size_t);
 
 private:
-    /// externally allocated buffer that we were seeded with
+    /// externally allocated buffer we were seeded with (or a zero-size one)
     StoreIOBuffer readerSuppliedMemory_;
 
     /// our internal buffer that takes over readerSuppliedMemory_ when the

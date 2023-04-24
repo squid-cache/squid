@@ -2081,6 +2081,18 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
 /* XXX: Move to a dedicated .cc file */
 /* Store::ParsingBuffer */
 
+/// A helper buffer for the default Store::ParsingBuffer constructor.
+static char EmptyBuffer[1]; // 1 because C++ prohibits zero-size arrays
+
+/// The default constructor uses EmptyBuffer to avoid nil memory() values that
+/// would complicate Store::ParsingBuffer implementation and/or user code. We
+/// could also pre-allocate memory, but that will result in at least some wasted
+/// allocations and violate the pay-only-for-what-you-use principle.
+Store::ParsingBuffer::ParsingBuffer():
+    readerSuppliedMemory_(0, 0, EmptyBuffer)
+{
+}
+
 Store::ParsingBuffer::ParsingBuffer(StoreIOBuffer &initialSpace):
     readerSuppliedMemory_(initialSpace)
 {

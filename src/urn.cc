@@ -32,7 +32,7 @@ class UrnState : public StoreClient
     CBDATA_CLASS(UrnState);
 
 public:
-    explicit UrnState(const AccessLogEntry::Pointer &);
+    explicit UrnState(const AccessLogEntry::Pointer &anAle): ale(anAle) {}
 
     void start (HttpRequest *, StoreEntry *);
     void setUriResFromRequest(HttpRequest *);
@@ -46,9 +46,8 @@ public:
     HttpRequest::Pointer urlres_r;
     AccessLogEntry::Pointer ale; ///< details of the requesting transaction
 
-    Store::ReadBuffer storeReadBuffer; /// XXX: Merge with parsingBuffer.
-    StoreIOBuffer hackBufferXXX; // XXX: Remove.
-    Store::ParsingBuffer parsingBuffer; /// XXX: TBD
+    /// for receiving a URN resolver reply body from Store and interpreting it
+    Store::ParsingBuffer parsingBuffer;
 
 private:
     /* StoreClient API */
@@ -73,13 +72,6 @@ static url_entry *urnParseReply(const StoreIOBuffer &, const HttpRequestMethod &
 static const char *const crlf = "\r\n";
 
 CBDATA_CLASS_INIT(UrnState);
-
-UrnState::UrnState(const AccessLogEntry::Pointer &anAle):
-    ale(anAle),
-    hackBufferXXX(storeReadBuffer.initialSpace()),
-    parsingBuffer(hackBufferXXX)
-{
-}
 
 UrnState::~UrnState()
 {
@@ -196,7 +188,7 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
     }
 
     storeClientCopy(sc, urlres_e,
-                    parsingBuffer.space(),
+                    parsingBuffer.makeInitialSpace(),
                     urnHandleReply,
                     this);
 }

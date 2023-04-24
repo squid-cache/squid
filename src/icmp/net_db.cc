@@ -63,9 +63,7 @@ class netdbExchangeState
 public:
     netdbExchangeState(CachePeer *aPeer, const HttpRequestPointer &theReq) :
         p(aPeer),
-        r(theReq),
-        hackBufferXXX(storeReadBuffer.initialSpace()),
-        parsingBuffer(hackBufferXXX)
+        r(theReq)
     {
         assert(r);
         // TODO: check if we actually need to do this. should be implicit
@@ -82,9 +80,10 @@ public:
     StoreEntry *e = nullptr;
     store_client *sc = nullptr;
     HttpRequestPointer r;
-    Store::ReadBuffer storeReadBuffer;
-    StoreIOBuffer hackBufferXXX;
-    Store::ParsingBuffer parsingBuffer; ///< NetDB response body buffer/bytes
+
+    /// for receiving a NetDB reply body from Store and interpreting it
+    Store::ParsingBuffer parsingBuffer;
+
     netdb_conn_state_t connstate = STATE_HEADER;
 };
 
@@ -1215,7 +1214,7 @@ netdbExchangeStart(void *data)
     assert(nullptr != ex->e);
 
     ex->sc = storeClientListAdd(ex->e, ex);
-    storeClientCopy(ex->sc, ex->e, ex->storeReadBuffer.initialSpace(), netdbExchangeHandleReply, ex);
+    storeClientCopy(ex->sc, ex->e, ex->parsingBuffer.makeInitialSpace(), netdbExchangeHandleReply, ex);
 
     ex->r->flags.loopDetected = true;   /* cheat! -- force direct */
 

@@ -72,12 +72,6 @@ class ASState
     CBDATA_CLASS(ASState);
 
 public:
-    ASState():
-        hackBufferXXX(storeReadBuffer.initialSpace()),
-        parsingBuffer(hackBufferXXX)
-    {
-    }
-
     ~ASState() {
         if (entry) {
             debugs(53, 3, entry->url());
@@ -92,9 +86,8 @@ public:
     HttpRequest::Pointer request;
     int as_number = 0;
 
-    Store::ReadBuffer storeReadBuffer;
-    StoreIOBuffer hackBufferXXX;
-    Store::ParsingBuffer parsingBuffer; ///< WHOIS response body buffer/bytes
+    /// for receiving a WHOIS reply body from Store and interpreting it
+    Store::ParsingBuffer parsingBuffer;
 };
 
 CBDATA_CLASS_INIT(ASState);
@@ -262,7 +255,7 @@ asnCacheStart(int as)
     xfree(asres);
 
     asState->entry = e;
-    storeClientCopy(asState->sc, e, asState->parsingBuffer.space(), asHandleReply, asState);
+    storeClientCopy(asState->sc, e, asState->parsingBuffer.makeInitialSpace(), asHandleReply, asState);
 }
 
 static void
