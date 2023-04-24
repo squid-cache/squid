@@ -863,8 +863,7 @@ tests_testRefCount_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testYesNoNone
 tests_testYesNoNone_SOURCES = \
-	tests/testYesNoNone.cc \
-	tests/testYesNoNone.h
+	tests/testYesNoNone.cc
 nodist_tests_testYesNoNone_SOURCES = \
 	tests/stub_SBuf.cc \
 	base/YesNoNone.h \
@@ -881,7 +880,6 @@ tests_testYesNoNone_LDFLAGS = $(LIBADD_DL)
 check_PROGRAMS += tests/testURL
 tests_testURL_SOURCES = \
 	tests/testURL.cc \
-	tests/testURL.h \
 	tests/testUriScheme.cc
 nodist_tests_testURL_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
