@@ -74,8 +74,7 @@ TESTS += tests/testRFC1738
 check_PROGRAMS += tests/testRFC1738
 
 tests_testRFC1738_SOURCES = \
-	tests/testRFC1738.cc \
-	tests/testRFC1738.h
+	tests/testRFC1738.cc
 
 tests_testRFC1738_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \
