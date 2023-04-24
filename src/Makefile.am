@@ -965,8 +965,7 @@ tests_testSBuf_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testSBufList
 tests_testSBufList_SOURCES = \
-	tests/testSBufList.cc \
-	tests/testSBufList.h
+	tests/testSBufList.cc
 nodist_tests_testSBufList_SOURCES = \
 	tests/stub_StatHist.cc \
 	tests/stub_debug.cc \
