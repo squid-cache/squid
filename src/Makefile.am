@@ -1224,7 +1224,7 @@ tests_testUfs_SOURCES = \
 	Transients.cc \
 	tests/stub_UdsOp.cc \
 	tests/testUfs.cc \
-]	tests/stub_access_log.cc \
+	tests/stub_access_log.cc \
 	tests/stub_cache_cf.cc \
 	cache_cf.h \
 	tests/stub_cache_manager.cc \
