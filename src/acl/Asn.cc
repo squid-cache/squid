@@ -294,6 +294,13 @@ asHandleReply(void *data, StoreIOBuffer result)
     }
     asState->parsingBuffer.consume(tok.parsedSize());
 
+    if (asState->sc->atEof()) {
+        if (const auto leftoverBytes = asState->parsingBuffer.contentSize())
+            debugs(53, 2, "discarding a partially received WHOIS AS response line due to Store EOF: " << leftoverBytes);
+        delete asState;
+        return;
+    }
+
     const auto remainingSpace = asState->parsingBuffer.space().positionAt(result.offset + result.length);
 
     if (!remainingSpace.length) {
@@ -310,13 +317,6 @@ asHandleReply(void *data, StoreIOBuffer result)
         // stop suspicious accumulation of parsed addresses and/or work
         debugs(53, DBG_IMPORTANT, "WARNING: Ignoring the tail of a suspiciously large WHOIS AS response" <<
                " exceeding " << stillReasonableOffset << " bytes");
-        delete asState;
-        return;
-    }
-
-    if (asState->sc->atEof()) {
-        if (const auto leftoverBytes = asState->parsingBuffer.contentSize())
-            debugs(53, 2, "discarding a partially received WHOIS AS response line due to Store EOF: " << leftoverBytes);
         delete asState;
         return;
     }
