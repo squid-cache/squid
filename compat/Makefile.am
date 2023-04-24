@@ -90,8 +90,7 @@ check_PROGRAMS += testPreCompiler
 TESTS += testPreCompiler
 
 testPreCompiler_SOURCES = \
-	testPreCompiler.cc \
-	testPreCompiler.h
+	testPreCompiler.cc
 testPreCompiler_LDADD= $(LIBCPPUNIT_LIBS)
 testPreCompiler_LDFLAGS=
 

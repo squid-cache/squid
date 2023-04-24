@@ -8,16 +8,33 @@
 
 #include "squid.h"
 
-#include <cppunit/TestAssert.h>
-
 #include "anyp/Uri.h"
+#include "compat/cppunit.h"
 #include "debug/Stream.h"
-#include "tests/testURL.h"
 #include "unitTestMain.h"
 
+#include <cppunit/TestAssert.h>
 #include <sstream>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TestUri );
+/*
+ * test the Anyp::Uri-related classes
+ */
+
+class TestUri : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestUri);
+    CPPUNIT_TEST(testConstructScheme);
+    CPPUNIT_TEST(testDefaultConstructor);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void setUp() override;
+
+protected:
+    void testConstructScheme();
+    void testDefaultConstructor();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestUri);
 
 /* init memory pools */
 
