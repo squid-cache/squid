@@ -1155,7 +1155,6 @@ tests_testRock_LDFLAGS = $(AM_CPPFLAGS) $(LIBADD_DL)
 else
 EXTRA_DIST += \
         tests/testRock.cc \
-        tests/testRock.h \
         tests/testStoreSupport.cc \
         tests/testStoreSupport.h
 endif
