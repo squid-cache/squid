@@ -9,12 +9,8 @@
 #include "squid.h"
 #include "time/gadgets.h"
 
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
+#include <cctype>
+#include <cstring>
 
 #define ASCII_DIGIT(c) ((c)-48)
 
