@@ -678,6 +678,8 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
     rec_sz += 1 + sizeof(struct in_addr);
     rec_sz += 1 + sizeof(int);
     rec_sz += 1 + sizeof(int);
+    // to make progress without growing buffer space, we must parse at least one record per call
+    Assure(rec_sz <= ex->parsingBuffer.capacity());
     debugs(38, 3, "netdbExchangeHandleReply: " << receivedData.length << " read bytes");
 
     if (!ex->p.valid()) {
@@ -788,12 +790,10 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
     // TODO: To protect us from a broken peer sending an "infinite" stream of
     // new addresses, limit the cumulative number of received bytes or records?
 
-    // TODO: Assert that there is space to avoid creating a false impression
-    // that the buffer may remain full after the rec_sz-consuming loop.
-
-    // XXX: ex->storeReadBuffer.spaceFor() does not preserve accumulated leftovers
-
-    storeClientCopy(ex->sc, ex->e, ex->storeReadBuffer.spaceFor(receivedData.offset + receivedData.length), netdbExchangeHandleReply, ex);
+    const auto remainingSpace = ex->parsingBuffer.space().positionAt(receivedData.offset + receivedData.length);
+    // rec_sz is at most buffer capacity, and we consume all fully loaded records
+    Assure(remainingSpace.length);
+    storeClientCopy(ex->sc, ex->e, remainingSpace, netdbExchangeHandleReply, ex);
 }
 
 #endif /* USE_ICMP */
