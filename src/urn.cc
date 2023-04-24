@@ -251,18 +251,19 @@ urnHandleReply(void *data, StoreIOBuffer result)
     }
 
     urnState->parsingBuffer.appended(result.data, result.length);
-    const auto bufferedBytes = urnState->parsingBuffer.contentSize();
-    const auto remainingSpace = urnState->parsingBuffer.space().positionAt(bufferedBytes);
-
-    if (!remainingSpace.length) {
-        debugs(52, 3, "ran out of buffer space after " << bufferedBytes << " bytes");
-        // TODO: Here and in other error cases, send ERR_URN_RESOLVE to client.
-        delete urnState;
-        return;
-    }
 
     /* If we haven't received the entire object (urn), copy more */
     if (!urnState->sc->atEof()) {
+        const auto bufferedBytes = urnState->parsingBuffer.contentSize();
+        const auto remainingSpace = urnState->parsingBuffer.space().positionAt(bufferedBytes);
+
+        if (!remainingSpace.length) {
+            debugs(52, 3, "ran out of buffer space after " << bufferedBytes << " bytes");
+            // TODO: Here and in other error cases, send ERR_URN_RESOLVE to client.
+            delete urnState;
+            return;
+        }
+
         storeClientCopy(urnState->sc, urlres_e,
                         remainingSpace,
                         urnHandleReply,
