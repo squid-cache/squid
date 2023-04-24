@@ -785,8 +785,7 @@ tests_testRandomUuid_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testMem
 tests_testMem_SOURCES = \
-	tests/testMem.cc \
-	tests/testMem.h
+	tests/testMem.cc
 nodist_tests_testMem_SOURCES = \
 	tests/stub_libtime.cc
 tests_testMem_LDADD = \
