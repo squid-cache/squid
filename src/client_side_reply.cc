@@ -75,13 +75,11 @@ clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
     purgeStatus(Http::scNone),
     http(cbdataReference(clientContext)),
     sc(nullptr),
-    reqofs(0),
     ourNode(nullptr),
     reply(nullptr),
     old_entry(nullptr),
     old_sc(nullptr),
     old_lastmod(-1),
-    old_reqofs(0),
     deleting(false),
     collapsedRevalidation(crNone)
 {
@@ -159,7 +157,6 @@ void clientReplyContext::setReplyToStoreEntry(StoreEntry *entry, const char *rea
 #if USE_DELAY_POOLS
     sc->setDelayId(DelayId::DelayClient(http));
 #endif
-    reqofs = 0;
     if (http->request)
         http->request->ignoreRange(reason);
     flags.storelogiccomplete = 1;
@@ -198,11 +195,9 @@ clientReplyContext::saveState()
     old_sc = sc;
     old_lastmod = http->request->lastmod;
     old_etag = http->request->etag;
-    old_reqofs = reqofs;
     /* Prevent accessing the now saved entries */
     http->storeEntry(nullptr);
     sc = nullptr;
-    reqofs = 0;
 }
 
 void
@@ -213,7 +208,6 @@ clientReplyContext::restoreState()
     removeClientStoreReference(&sc, http);
     http->storeEntry(old_entry);
     sc = old_sc;
-    reqofs = old_reqofs;
     http->request->lastmod = old_lastmod;
     http->request->etag = old_etag;
     /* Prevent accessed the old saved entries */
@@ -221,7 +215,6 @@ clientReplyContext::restoreState()
     old_sc = nullptr;
     old_lastmod = -1;
     old_etag.clean();
-    old_reqofs = 0;
 }
 
 void
@@ -238,14 +231,27 @@ clientReplyContext::getNextNode() const
     return (clientStreamNode *)ourNode->node.next->data;
 }
 
-/* This function is wrong - the client parameters don't include the
- * header offset
- */
+/// Request HTTP response headers from Store, to be sent to the given recipient.
+/// That recipient also gets zero, some, or all HTTP response body bytes (into
+/// next()->readBuffer).
 void
-clientReplyContext::triggerInitialStoreRead()
+clientReplyContext::triggerInitialStoreRead(const STCB recipient)
 {
+    Assure(recipient != HandleIMSReply);
+    lastStreamBufferedBytes = StoreIOBuffer(); // storeClientCopy(next()->readBuffer) invalidates
     StoreIOBuffer localTempBuffer (next()->readBuffer.length, 0, next()->readBuffer.data);
-    storeClientCopy(sc, http->storeEntry(), localTempBuffer, SendMoreData, this);
+    storeClientCopy(sc, http->storeEntry(), localTempBuffer, recipient, this);
+}
+
+/// Request HTTP response body bytes from Store into next()->readBuffer. This
+/// method requests body bytes at readerBuffer.offset and, hence, it should only
+/// be called after we triggerInitialStoreRead() and get the requested HTTP
+/// response headers (using zero offset).
+void
+clientReplyContext::requestMoreBodyFromStore()
+{
+    lastStreamBufferedBytes = StoreIOBuffer(); // storeClientCopy(next()->readBuffer) invalidates
+    storeClientCopy(sc, http->storeEntry(), next()->readBuffer, SendMoreData, this);
 }
 
 /* there is an expired entry in the store.
@@ -365,10 +371,6 @@ clientReplyContext::sendClientUpstreamResponse(const StoreIOBuffer &upstreamResp
         http->storeEntry()->clearPublicKeyScope();
 
     /* here the data to send is the data we just received */
-    old_reqofs = 0;
-    /* sendMoreData tracks the offset as well.
-     * Force it back to zero */
-    reqofs = 0;
     assert(!EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED));
     sendMoreData(upstreamResponse);
 }
@@ -387,8 +389,9 @@ clientReplyContext::sendClientOldEntry()
     restoreState();
     /* here the data to send is in the next nodes buffers already */
     assert(!EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED));
-    StoreIOBuffer tempresult(reqofs, 0, next()->readBuffer.data);
-    sendMoreData(tempresult);
+    Assure(lastStreamBufferedBytes.data == next()->readBuffer.data);
+    Assure(!lastStreamBufferedBytes.offset);
+    sendMoreData(lastStreamBufferedBytes);
 }
 
 /* This is the workhorse of the HandleIMSReply callback.
@@ -493,13 +496,7 @@ clientReplyContext::handleIMSReply(const StoreIOBuffer result)
 SQUIDCEXTERN CSR clientGetMoreData;
 SQUIDCEXTERN CSD clientReplyDetach;
 
-/**
- * clientReplyContext::cacheHit Should only be called until the HTTP reply headers
- * have been parsed.  Normally this should be a single call, but
- * it might take more than one.  As soon as we have the headers,
- * we hand off to clientSendMoreData, processExpired, or
- * processMiss.
- */
+/// Only used once, to process HTTP reply headers received from Store.
 void
 clientReplyContext::CacheHit(void *data, StoreIOBuffer result)
 {
@@ -561,6 +558,8 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
         processMiss();
         return;
     }
+
+    noteStreamBufferredBytes(result);
 
     switch (varyEvaluateMatch(e, r)) {
 
@@ -984,16 +983,10 @@ clientReplyContext::purgeEntry(StoreEntry &entry, const Http::MethodType methodT
 }
 
 void
-clientReplyContext::traceReply(clientStreamNode * node)
+clientReplyContext::traceReply()
 {
-    clientStreamNode *nextNode = (clientStreamNode *)node->node.next->data;
-    StoreIOBuffer localTempBuffer;
     createStoreEntry(http->request->method, RequestFlags());
-    localTempBuffer.offset = 0;
-    localTempBuffer.length = nextNode->readBuffer.length;
-    localTempBuffer.data = nextNode->readBuffer.data;
-    storeClientCopy(sc, http->storeEntry(),
-                    localTempBuffer, SendMoreData, this);
+    triggerInitialStoreRead();
     http->storeEntry()->releaseRequest();
     http->storeEntry()->buffer();
     const HttpReplyPointer rep(new HttpReply);
@@ -1610,20 +1603,12 @@ clientGetMoreData(clientStreamNode * aNode, ClientHttpRequest * http)
     assert (context);
     assert(context->http == http);
 
-    clientStreamNode *next = ( clientStreamNode *)aNode->node.next->data;
-
     if (!context->ourNode)
         context->ourNode = aNode;
 
     /* no cbdatareference, this is only used once, and safely */
     if (context->flags.storelogiccomplete) {
-        StoreIOBuffer tempBuffer;
-        tempBuffer.offset = next->readBuffer.offset;
-        tempBuffer.length = next->readBuffer.length;
-        tempBuffer.data = next->readBuffer.data;
-
-        storeClientCopy(context->sc, http->storeEntry(),
-                        tempBuffer, clientReplyContext::SendMoreData, context);
+        context->requestMoreBodyFromStore();
         return;
     }
 
@@ -1636,7 +1621,7 @@ clientGetMoreData(clientStreamNode * aNode, ClientHttpRequest * http)
 
     if (context->http->request->method == Http::METHOD_TRACE) {
         if (context->http->request->header.getInt64(Http::HdrType::MAX_FORWARDS) == 0) {
-            context->traceReply(aNode);
+            context->traceReply();
             return;
         }
 
@@ -1666,7 +1651,6 @@ clientReplyContext::doGetMoreData()
 #endif
 
         assert(http->loggingTags().oldType == LOG_TCP_HIT);
-        reqofs = 0;
         /* guarantee nothing has been sent yet! */
         assert(http->out.size == 0);
         assert(http->out.offset == 0);
@@ -1681,10 +1665,7 @@ clientReplyContext::doGetMoreData()
             }
         }
 
-        localTempBuffer.offset = 0;
-        localTempBuffer.length = getNextNode()->readBuffer.length;
-        localTempBuffer.data = getNextNode()->readBuffer.data;
-        storeClientCopy(sc, http->storeEntry(), localTempBuffer, CacheHit, this);
+        triggerInitialStoreRead(CacheHit);
     } else {
         /* MISS CASE, http->loggingTags() are already set! */
         processMiss();
@@ -1911,11 +1892,9 @@ clientReplyContext::processReplyAccessResult(const Acl::Answer &accessAllowed)
     /* Ok, the reply is allowed, */
     http->loggingEntry(http->storeEntry());
 
-    // The number of HTTP response body bytes received in a storeClientCopy()
-    // reply. May be zero (e.g., if Store happened to get just the HTTP response
-    // header during the first read), may correspond to the entire HTTP response
-    // body (including an empty one), or something in-between.
-    auto body_size = reqofs;
+    Assure(lastStreamBufferedBytes.data == next()->readBuffer.data);
+    Assure(!lastStreamBufferedBytes.offset);
+    auto body_size = lastStreamBufferedBytes.length; // may be zero
 
     debugs(88, 3, "clientReplyContext::sendMoreData: Appending " <<
            (int) body_size << " bytes after " << reply->hdr_sz <<
@@ -1940,23 +1919,22 @@ clientReplyContext::processReplyAccessResult(const Acl::Answer &accessAllowed)
         flags.complete = 1;
     }
 
-    // This assertion ensures that this (asynchronous) callback never reads from
-    // next()->readBuffer twice. XXX: However, nothing protects that buffer from
-    // being written after we set reqofs. Our own startError() code above and
-    // any code that manages to reach triggerInitialStoreRead()/etc. must clear
-    // reqofs, but nothing ensures that it does not forget to do so. TODO: Hide
-    // write access to next()->readBuffer behind a method that resets reqofs.
     assert (!flags.headersSent);
     flags.headersSent = true;
 
-    // The following code assumes the following:
-    // * next()->readBuffer.offset may be positive for Range requests, but
-    // * next()->readBuffer.data points to the response body at offset 0
-    //   because the first storeClientCopy() request always has offset 0
-    //   (i.e. that first Store request never uses next()->readBuffer.offset).
+    // next()->readBuffer.offset may be positive for Range requests, but our
+    // localTempBuffer initialization code assumes that next()->readBuffer.data
+    // points to the response body at offset 0 because the first
+    // storeClientCopy() request always has offset 0 (i.e. our first Store
+    // request ignores next()->readBuffer.offset).
+    //
+    // XXX: We cannot fully check that assumption: readBuffer.offset field is
+    // often out of sync with the buffer content, and if some buggy code updates
+    // the buffer while we were waiting for the processReplyAccessResult()
+    // callback, we may not notice.
 
     StoreIOBuffer localTempBuffer;
-    auto body_buf = next()->readBuffer.data;
+    const auto body_buf = next()->readBuffer.data;
 
     //Server side may disable ranges under some circumstances.
 
@@ -2028,8 +2006,6 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     /* We've got the final data to start pushing... */
     flags.storelogiccomplete = 1;
 
-    reqofs = result.length;
-
     assert(http->request != nullptr);
 
     /* ESI TODO: remove this assert once everything is stable */
@@ -2045,6 +2021,8 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         return;
     }
 
+    noteStreamBufferredBytes(result);
+
     if (flags.headersSent) {
         pushStreamData (result, buf);
         return;
@@ -2059,6 +2037,14 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 
     processReplyAccess();
     return;
+}
+
+void
+clientReplyContext::noteStreamBufferredBytes(const StoreIOBuffer &result)
+{
+    Assure(result.data == next()->readBuffer.data);
+    Assure(!result.flags.error);
+    lastStreamBufferedBytes = result; // may be unchanged and/or zero-length
 }
 
 void
@@ -2107,11 +2093,6 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
     sc->setDelayId(DelayId::DelayClient(http));
 #endif
 
-    reqofs = 0;
-
-    /* I don't think this is actually needed! -- adrian */
-    /* http->reqbuf = http->norm_reqbuf; */
-    //    assert(http->reqbuf == http->norm_reqbuf);
     /* The next line is illegal because we don't know if the client stream
      * buffers have been set up
      */

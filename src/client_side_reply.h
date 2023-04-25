@@ -59,7 +59,7 @@ public:
     void processExpired();
     clientStream_status_t replyStatus();
     void processMiss();
-    void traceReply(clientStreamNode * node);
+    void traceReply();
     const char *storeId() const { return (http->store_id.size() > 0 ? http->store_id.termedBuf() : http->uri); }
 
     Http::StatusCode purgeStatus;
@@ -69,10 +69,6 @@ public:
 
     ClientHttpRequest *http;
     store_client *sc;       /* The store_client we're using */
-
-    // XXX: Rename to bufferedBodySize or some such!
-    /// the number of response body bytes available in next()->readBuffer
-    size_t reqofs;
 
     /// Buffer dedicated to receiving storeClientCopy() responses to generated
     /// revalidation requests. These requests cannot use next()->readBuffer
@@ -109,10 +105,12 @@ private:
     int checkTransferDone();
     void processOnlyIfCachedMiss();
     bool processConditional();
+    void noteStreamBufferredBytes(const StoreIOBuffer &);
     void cacheHit(StoreIOBuffer result);
     void handleIMSReply(StoreIOBuffer result);
     void sendMoreData(StoreIOBuffer result);
-    void triggerInitialStoreRead();
+    void triggerInitialStoreRead(STCB = SendMoreData);
+    void requestMoreBodyFromStore();
     void sendClientOldEntry();
     void purgeAllCached();
     /// attempts to release the cached entry
@@ -141,7 +139,6 @@ private:
     store_client *old_sc;
     time_t old_lastmod;
     String old_etag;
-    size_t old_reqofs;
 
     bool deleting;
 
@@ -152,6 +149,12 @@ private:
     } CollapsedRevalidation;
 
     CollapsedRevalidation collapsedRevalidation;
+
+    /// HTTP response body bytes stored in our Client Stream buffer (if any)
+    StoreIOBuffer lastStreamBufferedBytes;
+
+    // TODO: Remove after moving the meat of this function into a method.
+    friend CSR clientGetMoreData;
 };
 
 // TODO: move to SideAgent parent, when we have one
