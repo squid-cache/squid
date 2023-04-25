@@ -154,7 +154,7 @@ public:
     void print(std::ostream &) const;
 
 private:
-    char *memory() const;
+    const char *memory() const;
     void terminate();
     void growSpace(size_t);
 

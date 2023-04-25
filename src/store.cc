@@ -2104,12 +2104,11 @@ Store::ParsingBuffer::ParsingBuffer(StoreIOBuffer &initialSpace):
 {
 }
 
-/// currently in-use buffer; hides readerSuppliedMemory_->extraMemory_ switch
-char *
+/// read-only content address
+const char *
 Store::ParsingBuffer::memory() const
 {
-    // XXX: Refactor to remove const_cast!
-    return extraMemory_ ? const_cast<char*>(extraMemory_->rawContent()) : readerSuppliedMemory_.data;
+    return extraMemory_ ? extraMemory_->rawContent() : readerSuppliedMemory_.data;
 }
 
 size_t
@@ -2147,14 +2146,18 @@ Store::ParsingBuffer::consume(const size_t parsedBytes)
     } else {
         readerSuppliedMemoryContentSize_ -= parsedBytes;
         if (parsedBytes && readerSuppliedMemoryContentSize_)
-            memmove(memory(), memory() + parsedBytes, readerSuppliedMemoryContentSize_);
+            memmove(readerSuppliedMemory_.data, memory() + parsedBytes, readerSuppliedMemoryContentSize_);
     }
 }
 
 StoreIOBuffer
 Store::ParsingBuffer::space()
 {
-    return StoreIOBuffer(spaceSize(), 0, memory() + contentSize());
+    const auto size = spaceSize();
+    const auto start = extraMemory_ ?
+        extraMemory_->rawAppendStart(size) :
+        (readerSuppliedMemory_.data + readerSuppliedMemoryContentSize_);
+    return StoreIOBuffer(spaceSize(), 0, start);
 }
 
 StoreIOBuffer
@@ -2170,7 +2173,9 @@ Store::ParsingBuffer::makeSpace(const size_t pageSize)
 StoreIOBuffer
 Store::ParsingBuffer::content() const
 {
-    return StoreIOBuffer(contentSize(), 0, memory());
+    // This const_cast is a StoreIOBuffer API limitation: That class does not
+    // support a "constant content view", even though it is used as such a view.
+    return StoreIOBuffer(contentSize(), 0, const_cast<char*>(memory()));
 }
 
 /// makes sure we have the requested number of bytes, allocates enough memory if needed
