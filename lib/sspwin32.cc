@@ -50,8 +50,18 @@ INITIALIZE_SECURITY_CONTEXT_FN _InitializeSecurityContext = nullptr;
 QUERY_SECURITY_PACKAGE_INFO_FN _QuerySecurityPackageInfo = nullptr;
 #ifdef UNICODE
 QUERY_CONTEXT_ATTRIBUTES_FN_W _QueryContextAttributes = nullptr;
+static const char
+    *AcquireCredentialsHandleFunctionName = "AcquireCredentialsHandleW",
+    *QueryContextAttributesFunctionName = "QueryContextAttributesW",
+    *QuerySecurityPackageInfoFunctionName = "QuerySecurityPackageInfoW",
+    *InitializeSecurityContextFunctioName = "InitializeSecurityContextW";
 #else
 QUERY_CONTEXT_ATTRIBUTES_FN_A _QueryContextAttributes = nullptr;
+static const char
+    *AcquireCredentialsHandleFunctionName = "AcquireCredentialsHandleA",
+    *QueryContextAttributesFunctionName = "QueryContextAttributesA",
+    *QuerySecurityPackageInfoFunctionName = "QuerySecurityPackageInfoA",
+    *InitializeSecurityContextFunctioName = "InitializeSecurityContextA";
 #endif
 
 void UnloadSecurityDll(void)
@@ -81,11 +91,13 @@ void UnloadSecurityDll(void)
     hModule = nullptr;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
 HMODULE LoadSecurityDll(int mode, const char * SSP_Package)
 {
     TCHAR lpszDLL[MAX_PATH];
     OSVERSIONINFO VerInfo;
-    PSecPkgInfo pSPI       = nullptr;
+    PSecPkgInfo pSPI = nullptr;
 
     /*
     *  Find out which security DLL to use, depending on
@@ -110,85 +122,56 @@ HMODULE LoadSecurityDll(int mode, const char * SSP_Package)
     }
     hModule = LoadLibrary(lpszDLL);
     if (!hModule)
-        return hModule;
-    _AcceptSecurityContext = (ACCEPT_SECURITY_CONTEXT_FN)
-                             GetProcAddress(hModule, "AcceptSecurityContext");
+        return nullptr;
+    _AcceptSecurityContext = reinterpret_cast <decltype(_AcceptSecurityContext)>(GetProcAddress(hModule, "AcceptSecurityContext"));
     if (!_AcceptSecurityContext) {
         UnloadSecurityDll();
         hModule = nullptr;
-        return hModule;
+        return nullptr;
     }
-#ifdef UNICODE
-    _AcquireCredentialsHandle = (ACQUIRE_CREDENTIALS_HANDLE_FN)
-                                GetProcAddress(hModule, "AcquireCredentialsHandleW");
-#else
-    _AcquireCredentialsHandle = (ACQUIRE_CREDENTIALS_HANDLE_FN)
-                                GetProcAddress(hModule, "AcquireCredentialsHandleA");
-#endif
+    _AcquireCredentialsHandle = reinterpret_cast <decltype(_AcquireCredentialsHandle)>(GetProcAddress(hModule, AcquireCredentialsHandleFunctionName));
     if (!_AcquireCredentialsHandle) {
         UnloadSecurityDll();
         hModule = nullptr;
-        return hModule;
+        return nullptr;
     }
-    _CompleteAuthToken = (COMPLETE_AUTH_TOKEN_FN)
-                         GetProcAddress(hModule, "CompleteAuthToken");
+    _CompleteAuthToken = reinterpret_cast<decltype(_CompleteAuthToken)>(GetProcAddress(hModule, "CompleteAuthToken"));
     if (!_CompleteAuthToken) {
         UnloadSecurityDll();
         hModule = nullptr;
-        return hModule;
+        return nullptr;
     }
-    _DeleteSecurityContext = (DELETE_SECURITY_CONTEXT_FN)
-                             GetProcAddress(hModule, "DeleteSecurityContext");
+    _DeleteSecurityContext = reinterpret_cast<decltype(_DeleteSecurityContext)>(GetProcAddress(hModule, "DeleteSecurityContext"));
     if (!_DeleteSecurityContext) {
         UnloadSecurityDll();
         hModule = nullptr;
-        return hModule;
+        return nullptr;
     }
-    _FreeContextBuffer = (FREE_CONTEXT_BUFFER_FN)
-                         GetProcAddress(hModule, "FreeContextBuffer");
+    _FreeContextBuffer = reinterpret_cast<decltype(_FreeContextBuffer)>(GetProcAddress(hModule, "FreeContextBuffer"));
     if (!_FreeContextBuffer) {
         UnloadSecurityDll();
         hModule = nullptr;
-        return hModule;
+        return nullptr;
     }
-    _FreeCredentialsHandle = (FREE_CREDENTIALS_HANDLE_FN)
-                             GetProcAddress(hModule, "FreeCredentialsHandle");
+    _FreeCredentialsHandle = reinterpret_cast<decltype(_FreeCredentialsHandle)>(GetProcAddress(hModule, "FreeCredentialsHandle"));
     if (!_FreeCredentialsHandle) {
         UnloadSecurityDll();
         hModule = nullptr;
-        return hModule;
+        return nullptr;
     }
-#ifdef UNICODE
-    _InitializeSecurityContext = (INITIALIZE_SECURITY_CONTEXT_FN)
-                                 GetProcAddress(hModule, "InitializeSecurityContextW");
-#else
-    _InitializeSecurityContext = (INITIALIZE_SECURITY_CONTEXT_FN)
-                                 GetProcAddress(hModule, "InitializeSecurityContextA");
-#endif
+    _InitializeSecurityContext = reinterpret_cast<decltype(_InitializeSecurityContext)>(GetProcAddress(hModule, InitializeSecurityContextFunctioName));
     if (!_InitializeSecurityContext) {
         UnloadSecurityDll();
         hModule = nullptr;
-        return hModule;
+        return nullptr;
     }
-#ifdef UNICODE
-    _QuerySecurityPackageInfo = (QUERY_SECURITY_PACKAGE_INFO_FN)
-                                GetProcAddress(hModule, "QuerySecurityPackageInfoW");
-#else
-    _QuerySecurityPackageInfo = (QUERY_SECURITY_PACKAGE_INFO_FN)
-                                GetProcAddress(hModule, "QuerySecurityPackageInfoA");
-#endif
+    _QuerySecurityPackageInfo = reinterpret_cast<decltype(_QuerySecurityPackageInfo)>(GetProcAddress(hModule, QuerySecurityPackageInfoFunctionName));
     if (!_QuerySecurityPackageInfo) {
         UnloadSecurityDll();
         hModule = nullptr;
     }
 
-#ifdef UNICODE
-    _QueryContextAttributes = (QUERY_CONTEXT_ATTRIBUTES_FN_W)
-                              GetProcAddress(hModule, "QueryContextAttributesW");
-#else
-    _QueryContextAttributes = (QUERY_CONTEXT_ATTRIBUTES_FN_A)
-                              GetProcAddress(hModule, "QueryContextAttributesA");
-#endif
+    _QueryContextAttributes = reinterpret_cast<decltype(_QueryContextAttributes)>(GetProcAddress(hModule, QueryContextAttributesFunctionName));
     if (!_QueryContextAttributes) {
         UnloadSecurityDll();
         hModule = nullptr;
@@ -206,6 +189,8 @@ HMODULE LoadSecurityDll(int mode, const char * SSP_Package)
 
     return hModule;
 }
+
+#pragma GCC diagnostic pop
 
 BOOL GenClientContext(PAUTH_SEQ pAS, PSEC_WINNT_AUTH_IDENTITY pAuthIdentity,
                       PVOID pIn, DWORD cbIn, PVOID pOut, PDWORD pcbOut, PBOOL pfDone)
