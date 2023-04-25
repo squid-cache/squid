@@ -1,3 +1,9 @@
+Changes in squid-6.0.2 (30 Apr 2023):
+
+	- Avoid excessive disk I/O in some environments
+	- ... and several build and portability fixes
+	- ... and all fixes from 5.9
+
 Changes in squid-6.0.1 (28 Feb 2023):
 
 	- Bug 5256: Intercepting port fails to accept
