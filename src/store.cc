@@ -2158,8 +2158,10 @@ StoreIOBuffer
 Store::ParsingBuffer::makeSpace(const size_t pageSize)
 {
     growSpace(pageSize);
-    Assure(pageSize <= spaceSize());
-    return space(); // XXX: We promised exactly pageSize bytes, but a returning pageSize or more
+    auto result = space();
+    Assure(result.length >= pageSize);
+    result.length = pageSize;
+    return result;
 }
 
 StoreIOBuffer
