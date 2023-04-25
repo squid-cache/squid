@@ -2242,7 +2242,7 @@ Store::ParsingBuffer::packBack()
         debugs(90, 7, "quickly exporting " << result.length << " bytes via " << readerSuppliedMemory_);
     } else {
         debugs(90, 7, "slowly exporting " << result.length << " bytes from " << extraMemory_->id << " back into " << readerSuppliedMemory_);
-        memcpy(result.data, extraMemory_->rawContent(), result.length); // XXX: memmove
+        memmove(result.data, extraMemory_->rawContent(), result.length);
     }
 
     return result;
