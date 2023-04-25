@@ -505,7 +505,6 @@ write(int fd, const void * buf, size_t siz)
 namespace Squid
 {
 /** \endcond */
-
 /*
  * Each of these functions is defined in the Squid namespace so as not to
  * clash with the winsock.h and winsock2.h definitions.
@@ -904,6 +903,7 @@ geteuid(void)
 static inline int
 seteuid (uid_t euid)
 {
+    (void) euid;
     return 0;
 }
 static inline uid_t
@@ -914,6 +914,7 @@ getuid(void)
 static inline int
 setuid (uid_t uid)
 {
+    (void) uid;
     return 0;
 }
 static inline gid_t
@@ -924,6 +925,7 @@ getegid(void)
 static inline int
 setegid (gid_t egid)
 {
+    (void) egid;
     return 0;
 }
 static inline int
@@ -934,6 +936,7 @@ getgid(void)
 static inline int
 setgid (gid_t gid)
 {
+    (void) gid;
     return 0;
 }
 

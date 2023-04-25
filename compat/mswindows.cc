@@ -79,6 +79,8 @@ GetProcessName(pid_t pid, char *ProcessName)
     } else
         return;
     CloseHandle(hProcess);
+#else
+    (void) pid;
 #endif /* HAVE_WIN32_PSAPI */
 }
 
@@ -174,13 +176,13 @@ WIN32_truncate(const char *pathname, off_t length)
 #endif /* !_SQUID_MINGW_ */
 
 struct passwd *
-getpwnam(char *unused) {
+getpwnam(char *) {
     static struct passwd pwd = {nullptr, nullptr, 100, 100, nullptr, nullptr, nullptr};
     return &pwd;
 }
 
 struct group *
-getgrnam(char *unused) {
+getgrnam(char *) {
     static struct group grp = {nullptr, nullptr, 100, nullptr};
     return &grp;
 }
@@ -294,7 +296,7 @@ WIN32_maperror(unsigned long WIN32_oserrno)
 static HANDLE ms_eventlog;
 
 void
-openlog(const char *ident, int logopt, int facility)
+openlog(const char *ident, int, int)
 {
     if (ms_eventlog)
         return;
