@@ -15,7 +15,6 @@
 class TestTokenizer : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE(TestTokenizer);
-    CPPUNIT_TEST(testCharacterSet);
     CPPUNIT_TEST(testTokenizerPrefix);
     CPPUNIT_TEST(testTokenizerSuffix);
     CPPUNIT_TEST(testTokenizerSkip);
@@ -28,7 +27,6 @@ protected:
     void testTokenizerSuffix();
     void testTokenizerSkip();
     void testTokenizerToken();
-    void testCharacterSet();
     void testTokenizerInt64();
 };
 CPPUNIT_TEST_SUITE_REGISTRATION(TestTokenizer);
@@ -205,12 +203,6 @@ TestTokenizer::testTokenizerSuffix()
 
     // we cannot skip an empty suffix, even in an empty buffer
     CPPUNIT_ASSERT(!t.skipSuffix(SBuf()));
-}
-
-void
-TestTokenizer::testCharacterSet()
-{
-
 }
 
 void
