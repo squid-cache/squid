@@ -67,38 +67,7 @@ operator <<(std::ostream &os, const StoreIOBuffer &b)
            (void*)b.data << (b.flags.error ? ", ERR" : "") << ')';
 }
 
-namespace Mem
-{
-
-// TODO: Use in MemBlob (at least).
-/// A single continuous memory buffer allocated by pooling-aware code.
-class Allocation
-{
-public:
-    /// allocates a single continuous buffer suitable for storing at least the
-    /// given number of bytes
-    explicit Allocation(size_t);
-    ~Allocation();
-
-    // no copying but moving is supported
-    Allocation(const Allocation &) = delete;
-    Allocation &operator =(const Allocation &) = delete;
-    Allocation(Allocation &&);
-    Allocation &operator =(Allocation &&);
-
-    /// XXX: Document both
-    char *memory() const { return memory_; }
-    size_t capacity() const { return capacity_; }
-
-private:
-    char *memory_;
-
-    /// allocated memory_ capacity
-    size_t capacity_;
-};
-
-} // namespace Mem
-
+#include "sbuf/SBuf.h" // XXX: misplaced
 #include <optional> // XXX: misplaced
 
 namespace Store
@@ -137,7 +106,7 @@ public:
     /// the number of bytes in the space() buffer
     size_t spaceSize() const;
 
-    /// the total number of bytes we can store
+    /// the maximum number of bytes we can store without allocating more space
     size_t capacity() const;
 
     /// Stored append()ed bytes that have not been consume()d. The returned
@@ -192,7 +161,7 @@ private:
 
     /// our internal buffer that takes over readerSuppliedMemory_ when the
     /// latter becomes full and more memory is needed
-    std::optional<Mem::Allocation> extraMemory_;
+    std::optional<SBuf> extraMemory_;
 
     /// \copydoc contentSize()
     size_t size_ = 0;

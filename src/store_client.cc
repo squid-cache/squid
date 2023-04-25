@@ -575,12 +575,24 @@ store_client::readBody(const char * const buf, const ssize_t lastIoResult)
         return fail();
     }
 
+    // TODO: Rename lastRead_ to lastDiskRead_.
     assert(lastRead_.data == buf);
     lastRead_.length = lastIoResult;
 
     parsingBuffer->appended(buf, lastIoResult);
 
-    maybeWriteFromDiskToMemory(lastRead_);
+    // we know swap_hdr_sz by now and were reading beyond swap metadata because
+    // readHead() would have been called otherwise (to read swap metadata)
+    const auto swap_hdr_sz = entry->mem().swap_hdr_sz;
+    Assure(swap_hdr_sz > 0);
+    Assure(!Less(lastRead_.offset, swap_hdr_sz));
+
+    // Map lastRead_ (i.e. the disk area we just read) to an HTTP reply part.
+    // The bytes are the same, but disk and HTTP offsets differ by swap_hdr_sz.
+    const auto httpOffset = lastRead_.offset - swap_hdr_sz;
+    const auto httpPart = StoreIOBuffer(lastRead_).positionAt(httpOffset);
+
+    maybeWriteFromDiskToMemory(httpPart);
     handleBodyFromDisk();
 }
 

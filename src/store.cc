@@ -2102,13 +2102,14 @@ Store::ParsingBuffer::ParsingBuffer(StoreIOBuffer &initialSpace):
 char *
 Store::ParsingBuffer::memory() const
 {
-    return extraMemory_ ? extraMemory_->memory() : readerSuppliedMemory_.data;
+    // XXX: Refactor to remove const_cast!
+    return extraMemory_ ? const_cast<char*>(extraMemory_->rawContent()) : readerSuppliedMemory_.data;
 }
 
 size_t
 Store::ParsingBuffer::capacity() const
 {
-    return extraMemory_ ? extraMemory_->capacity() : readerSuppliedMemory_.length;
+    return extraMemory_ ? (extraMemory_->length() + extraMemory_->spaceSize()) : readerSuppliedMemory_.length;
 }
 
 void
@@ -2168,12 +2169,14 @@ Store::ParsingBuffer::growSpace(const size_t minimumSpaceSize)
 
     debugs(90, 7, "growing to provide " << minimumSpaceSize << " in " << *this);
 
-    Mem::Allocation newStorage(newCapacity);
-    if (size_) {
-        Assure(size_ < newStorage.capacity());
-        memcpy(newStorage.memory(), memory(), size_);
+    if (extraMemory_) {
+        extraMemory_->reserveCapacity(newCapacity);
+    } else {
+        SBuf newStorage;
+        newStorage.reserveCapacity(newCapacity);
+        newStorage.append(memory(), size_);
+        extraMemory_ = std::move(newStorage);
     }
-    extraMemory_ = std::move(newStorage);
     Assure(spaceSize() >= minimumSpaceSize);
 }
 
@@ -2206,7 +2209,7 @@ Store::ParsingBuffer::packBack()
         debugs(90, 7, "quickly exporting " << size_ << " bytes via " << readerSuppliedMemory_);
     } else {
         debugs(90, 7, "slowly exporting " << size_ << " from " << (void*)memory() << " back into " << result);
-        memcpy(result.data, extraMemory_->memory(), size_);
+        memcpy(result.data, extraMemory_->rawContent(), size_);
     }
 
     result.length = size_;
@@ -2222,42 +2225,6 @@ Store::ParsingBuffer::print(std::ostream &os) const
         os << " extra=" << (void*)memory() << "original:";
     os << ' ' << readerSuppliedMemory_;
 }
-
-/* Mem::Allocation */
-
-Mem::Allocation::Allocation(const size_t aCapacity):
-    // TODO: Use memAllocBuf()/memFreeBuf() when they stop zeroing memory
-    memory_(static_cast<char*>(memAllocRigid(aCapacity))),
-    capacity_(aCapacity)
-{
-}
-
-Mem::Allocation::~Allocation()
-{
-    if (memory_)
-        memFreeRigid(memory_, capacity_);
-}
-
-Mem::Allocation::Allocation(Allocation &&other):
-    memory_(other.memory_),
-    capacity_(other.capacity_)
-{
-    other.memory_ = nullptr;
-    other.capacity_ = 0;
-}
-
-Mem::Allocation &
-Mem::Allocation::operator =(Allocation &&other)
-{
-    if (memory_)
-        memFreeRigid(memory_, capacity_);
-    memory_ = other.memory_;
-    capacity_ = other.capacity_;
-    other.memory_ = nullptr;
-    other.capacity_ = 0;
-    return *this;
-}
-
 
 void
 Store::EntryGuard::onException() noexcept
