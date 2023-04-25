@@ -2114,12 +2114,13 @@ Store::ParsingBuffer::capacity() const
 void
 Store::ParsingBuffer::appended(const char * const newBytes, const size_t newByteCount)
 {
-    // XXX: Check _before_ changing. And these ought to be asserts -- the
-    // (unknown to us) damage has been done; there is no safe recovery from
-    // this.
-    Assure(memory() + size_ == newBytes); // the new bytes start in memory()
+    // We assert() here because a failure means there is a good chance that
+    // somebody have read from or written to the wrong memory location already.
+    // No Assure() handling code can safely recover from such failures.
+    assert(memory() + size_ == newBytes); // the new bytes start in our space
+    assert(newByteCount <= spaceSize()); // the new bytes end in our space
     size_ = *IncreaseSum(size_, newByteCount);
-    Assure(size_ <= capacity()); // the new bytes end in memory()
+    assert(size_ <= capacity()); // paranoid
 }
 
 void
