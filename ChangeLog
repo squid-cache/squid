@@ -110,6 +110,12 @@ Changes in squid-6.0.1 (28 Feb 2023):
 	- ... and much code cleanup and polishing
 	- ... and all fixes from 5.8
 
+Changes in squid-5.9 (30 Apr 2023):
+
+	- Improve reply_body_max_size matching accuracy
+	- ... and some documentation changes
+	- ... and many portability fixes
+
 Changes in squid-5.8 (28 Feb 2023):
 
 	- Bug 5162: mgr:index URL do not produce MGR_INDEX template
