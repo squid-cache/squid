@@ -2112,33 +2112,46 @@ Store::ParsingBuffer::capacity() const
     return extraMemory_ ? (extraMemory_->length() + extraMemory_->spaceSize()) : readerSuppliedMemory_.length;
 }
 
+size_t
+Store::ParsingBuffer::contentSize() const
+{
+    return extraMemory_ ? extraMemory_->length() : readerSuppliedMemoryContentSize_;
+}
+
 void
 Store::ParsingBuffer::appended(const char * const newBytes, const size_t newByteCount)
 {
     // We assert() here because a failure means there is a good chance that
     // somebody have read from or written to the wrong memory location already.
     // No Assure() handling code can safely recover from such failures.
-    assert(memory() + size_ == newBytes); // the new bytes start in our space
+    assert(memory() + contentSize() == newBytes); // the new bytes start in our space
     assert(newByteCount <= spaceSize()); // the new bytes end in our space
-    size_ = *IncreaseSum(size_, newByteCount);
-    assert(size_ <= capacity()); // paranoid
+
+    if (extraMemory_)
+        extraMemory_->rawAppendFinish(newBytes, newByteCount);
+    else
+        readerSuppliedMemoryContentSize_ = *IncreaseSum(readerSuppliedMemoryContentSize_, newByteCount);
+
+    assert(contentSize() <= capacity()); // paranoid
 }
 
 void
 Store::ParsingBuffer::consume(const size_t parsedBytes)
 {
-    if (parsedBytes) {
-        Assure(size_ >= parsedBytes);
-        size_ -= parsedBytes;
-        if (size_)
-            memmove(memory(), memory() + parsedBytes, size_);
+    Assure(contentSize() >= parsedBytes); // more conservative than extraMemory_->consume()
+    if (extraMemory_) {
+        extraMemory_->consume(parsedBytes);
+    } else {
+        readerSuppliedMemoryContentSize_ -= parsedBytes;
+        if (parsedBytes && readerSuppliedMemoryContentSize_)
+            memmove(memory(), memory() + parsedBytes, readerSuppliedMemoryContentSize_);
     }
 }
 
 StoreIOBuffer
 Store::ParsingBuffer::space()
 {
-    return StoreIOBuffer(spaceSize(), 0, memory() + size_);
+    return StoreIOBuffer(spaceSize(), 0, memory() + contentSize());
 }
 
 StoreIOBuffer
@@ -2159,9 +2172,9 @@ Store::ParsingBuffer::content() const
 void
 Store::ParsingBuffer::growSpace(const size_t minimumSpaceSize)
 {
-    const auto capacityIncreaseAttempt = IncreaseSum(size_, minimumSpaceSize);
+    const auto capacityIncreaseAttempt = IncreaseSum(contentSize(), minimumSpaceSize);
     if (!capacityIncreaseAttempt)
-        throw TextException(ToSBuf("no support for a single memory block of ", size_, '+', minimumSpaceSize, " bytes"), Here());
+        throw TextException(ToSBuf("no support for a single memory block of ", contentSize(), '+', minimumSpaceSize, " bytes"), Here());
     const auto newCapacity = *capacityIncreaseAttempt;
 
     if (newCapacity <= capacity())
@@ -2174,17 +2187,26 @@ Store::ParsingBuffer::growSpace(const size_t minimumSpaceSize)
     } else {
         SBuf newStorage;
         newStorage.reserveCapacity(newCapacity);
-        newStorage.append(memory(), size_);
+        newStorage.append(readerSuppliedMemory_.data, readerSuppliedMemoryContentSize_);
         extraMemory_ = std::move(newStorage);
     }
     Assure(spaceSize() >= minimumSpaceSize);
 }
 
+SBuf
+Store::ParsingBuffer::toSBuf() const
+{
+    return extraMemory_ ? *extraMemory_ : SBuf(content().data, content().length);
+}
+
 size_t
 Store::ParsingBuffer::spaceSize() const
 {
-    Assure(size_ < capacity());
-    return capacity() - size_;
+    if (extraMemory_)
+        return extraMemory_->spaceSize();
+
+    Assure(readerSuppliedMemoryContentSize_ < readerSuppliedMemory_.length); // XXX: Too strict! And use assert() (and more the explanation why we assert to apply to all asserts in this class).
+    return readerSuppliedMemory_.length - readerSuppliedMemoryContentSize_;
 }
 
 /// 0-terminates stored byte sequence, allocating more memory if needed, but
@@ -2199,20 +2221,20 @@ StoreIOBuffer
 Store::ParsingBuffer::packBack()
 {
     auto result = readerSuppliedMemory_;
+    result.length = contentSize();
 
     // if we accumulated more bytes at some point, any extra metadata should
     // have been consume()d by now, allowing readerSuppliedMemory_.data reuse
-    Assure(size_ <= result.length);
+    Assure(result.length <= readerSuppliedMemory_.length);
 
     if (!extraMemory_) {
         // no accumulated bytes copying because they are in readerSuppliedMemory_
-        debugs(90, 7, "quickly exporting " << size_ << " bytes via " << readerSuppliedMemory_);
+        debugs(90, 7, "quickly exporting " << result.length << " bytes via " << readerSuppliedMemory_);
     } else {
-        debugs(90, 7, "slowly exporting " << size_ << " from " << (void*)memory() << " back into " << result);
-        memcpy(result.data, extraMemory_->rawContent(), size_);
+        debugs(90, 7, "slowly exporting " << result.length << " bytes from " << extraMemory_->id << " back into " << readerSuppliedMemory_);
+        memcpy(result.data, extraMemory_->rawContent(), result.length); // XXX: memmove
     }
 
-    result.length = size_;
     return result;
 }
 
@@ -2220,10 +2242,16 @@ void
 Store::ParsingBuffer::print(std::ostream &os) const
 {
     os << "size=" << contentSize();
-    os << " capacity=" << capacity();
-    if (extraMemory_)
-        os << " extra=" << (void*)memory() << "original:";
-    os << ' ' << readerSuppliedMemory_;
+
+    if (extraMemory_) {
+        os << " capacity=" << capacity();
+        os << " extra=" << extraMemory_->id;
+    }
+
+    // report readerSuppliedMemory_ (if any) even if we are no longer using it
+    // for content storage; it affects packBack() and related parsing logic
+    if (readerSuppliedMemory_.length)
+        os << ' ' << readerSuppliedMemory_;
 }
 
 void

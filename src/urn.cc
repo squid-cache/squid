@@ -68,7 +68,7 @@ typedef struct {
 } url_entry;
 
 static STCB urnHandleReply;
-static url_entry *urnParseReply(const StoreIOBuffer &, const HttpRequestMethod &);
+static url_entry *urnParseReply(const SBuf &, const HttpRequestMethod &);
 static const char *const crlf = "\r\n";
 
 CBDATA_CLASS_INIT(UrnState);
@@ -282,7 +282,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
         return;
     }
 
-    urls = urnParseReply(urnState->parsingBuffer.content(), urnState->request->method);
+    urls = urnParseReply(urnState->parsingBuffer.toSBuf(), urnState->request->method);
 
     if (!urls) {     /* unknown URN error */
         debugs(52, 3, "urnTranslateDone: unknown URN " << e->url());
@@ -352,7 +352,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 }
 
 static url_entry *
-urnParseReply(const StoreIOBuffer &inBuf, const HttpRequestMethod &m)
+urnParseReply(const SBuf &inBuf, const HttpRequestMethod &m)
 {
     char *token;
     url_entry *list;
@@ -363,7 +363,7 @@ urnParseReply(const StoreIOBuffer &inBuf, const HttpRequestMethod &m)
     list = (url_entry *)xcalloc(n + 1, sizeof(*list));
 
     // XXX: Switch to tokenizer-based parsing.
-    char *allocated = SBufToCstring(SBuf(inBuf.data, inBuf.length));
+    char *allocated = SBufToCstring(inBuf);
 
     auto buf = allocated;
     while (xisspace(*buf))

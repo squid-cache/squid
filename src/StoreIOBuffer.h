@@ -100,8 +100,11 @@ public:
     /// a NUL-terminated version of content(); same lifetime as content()
     const char *c_str() { terminate(); return memory(); }
 
+    /// export content() into SBuf, avoiding content copying when possible
+    SBuf toSBuf() const;
+
     /// the total number of append()ed bytes that were not consume()d
-    size_t contentSize() const { return size_; }
+    size_t contentSize() const;
 
     /// the number of bytes in the space() buffer
     size_t spaceSize() const;
@@ -159,12 +162,12 @@ private:
     /// externally allocated buffer we were seeded with (or a zero-size one)
     StoreIOBuffer readerSuppliedMemory_;
 
+    /// append()ed to readerSuppliedMemory_ bytes that were not consume()d
+    size_t readerSuppliedMemoryContentSize_ = 0;
+
     /// our internal buffer that takes over readerSuppliedMemory_ when the
     /// latter becomes full and more memory is needed
     std::optional<SBuf> extraMemory_;
-
-    /// \copydoc contentSize()
-    size_t size_ = 0;
 };
 
 inline std::ostream &
