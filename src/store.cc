@@ -2081,6 +2081,12 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
 /* XXX: Move to a dedicated .cc file */
 /* Store::ParsingBuffer */
 
+// Several Store::ParsingBuffer() methods use assert() because the corresponding
+// failure means there is a good chance that somebody have already read from (or
+// written to) the wrong memory location. Since this buffer is used for storing
+// HTTP response bytes, such failures may corrupt traffic. No Assure() handling
+// code can safely recover from such failures.
+
 /// A helper buffer for the default Store::ParsingBuffer constructor.
 static char EmptyBuffer[1]; // 1 because C++ prohibits zero-size arrays
 
@@ -2121,9 +2127,6 @@ Store::ParsingBuffer::contentSize() const
 void
 Store::ParsingBuffer::appended(const char * const newBytes, const size_t newByteCount)
 {
-    // We assert() here because a failure means there is a good chance that
-    // somebody have read from or written to the wrong memory location already.
-    // No Assure() handling code can safely recover from such failures.
     assert(memory() + contentSize() == newBytes); // the new bytes start in our space
     assert(newByteCount <= spaceSize()); // the new bytes end in our space
 
@@ -2207,7 +2210,7 @@ Store::ParsingBuffer::spaceSize() const
     if (extraMemory_)
         return extraMemory_->spaceSize();
 
-    Assure(readerSuppliedMemoryContentSize_ < readerSuppliedMemory_.length); // XXX: Too strict! And use assert() (and more the explanation why we assert to apply to all asserts in this class).
+    assert(readerSuppliedMemoryContentSize_ <= readerSuppliedMemory_.length);
     return readerSuppliedMemory_.length - readerSuppliedMemoryContentSize_;
 }
 
