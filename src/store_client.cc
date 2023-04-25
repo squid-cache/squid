@@ -160,7 +160,8 @@ store_client::finishCallback()
         result = parsingBuffer->packBack();
     result.flags.error = object_ok ? 0 : 1;
 
-    atEof_ = !sendingHttpHeaders() && !result.length; // no HTTP headers and no body bytes
+    // no HTTP headers and no body bytes (but not because there was no space)
+    atEof_ = !sendingHttpHeaders() && !result.length && copyInto.length;
 
     parsingBuffer.reset();
     ++answers_;
@@ -244,6 +245,15 @@ store_client::copy(StoreEntry * anEntry,
     copyInto.length = copyRequest.length;
     copyInto.offset = copyRequest.offset;
     Assure(copyInto.offset >= 0);
+
+    if (!copyInto.length) {
+        // During the first storeClientCopy() call, a zero-size buffer means
+        // that we will have to drop any HTTP response body bytes we read (with
+        // the HTTP headers from disk). After that, it means we cannot return
+        // anything to the caller at all.
+        debugs(90, 2, "WARNING: zero-size storeClientCopy() buffer: " << copyInto);
+        // keep going; moreToRead() should prevent any from-Store reading
+    }
 
     // Our nextHttpReadOffset() expects the first copy() call to have zero
     // offset. More complex code could handle a positive first offset, but it
