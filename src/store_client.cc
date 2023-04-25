@@ -1002,12 +1002,10 @@ store_client::tryParsingHttpHeaders()
     if (adjustableReply.parseTerminatedPrefix(parsingBuffer->c_str(), parsingBuffer->contentSize()))
         return true;
 
-    // XXX: The "would not be..." logic below is flawed: A concurrent request
-    // could have read the same bytes into memory while we were waiting for the
-    // disk response carrying HTTP header bytes.
-    //
-    // Continue on the disk-reading path because readFromMemory() cannot give us
-    // the missing header bytes: We would not be _parsing_ the header otherwise.
+    // TODO: Optimize by checking memory as well. For simplicity sake, we
+    // continue on the disk-reading path, but readFromMemory() can give us the
+    // missing header bytes immediately if a concurrent request put those bytes
+    // into memory while we were waiting for our disk response.
     scheduleDiskRead();
     return false;
 }
