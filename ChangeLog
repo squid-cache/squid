@@ -12,6 +12,7 @@ Changes in squid-6.0.1 (28 Feb 2023):
 	- Bug 5021: Add a script to fix spelling error with codespell
 	- Bug 4946: client_side_request.cc: "request != newRequest"
 	- Bug 4832: '!schemeAccess' assertion on exit
+	- Bug 4572: squidclient: Remove deprecated cache_object:// support
 	- Bug 4528: ICAP transactions quit on async DNS lookups
 	- Add scripts/trace-context.pl: a debugging tool
 	- Remove cache_diff tool
@@ -40,7 +41,6 @@ Changes in squid-6.0.1 (28 Feb 2023):
 	- ext_lm_group_acl: Improved username handling
 	- negotiate_wrapper: ensure null-termination of strings
 	- pinger: Fix MAX_PKT{4,6}_SZ to account for icmpEchoData padding
-	- squidclient: Remove deprecated cache_object:// support
 	- HTTP: Replaced X-Cache and X-Cache-Lookup headers with Cache-Status
 	- HTTP: Update Host, Via, and other headers in-place when possible
 	- HTTP: Update status code 413 compliance
