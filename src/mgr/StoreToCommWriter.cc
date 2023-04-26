@@ -91,13 +91,8 @@ Mgr::StoreToCommWriter::NoteStoreCopied(void* data, StoreIOBuffer ioBuf)
 void
 Mgr::StoreToCommWriter::noteStoreCopied(StoreIOBuffer ioBuf)
 {
-    debugs(16, 6, ioBuf);
-
-    if (ioBuf.flags.error) {
-        mustStop("storeClientCopy() failure");
-        return;
-    }
-
+    debugs(16, 6, MYNAME);
+    Must(!ioBuf.flags.error);
     if (ioBuf.length > 0)
         scheduleCommWrite(ioBuf); // write received action results to client
     else
