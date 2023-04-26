@@ -13,6 +13,7 @@
 #include "base/AsyncCall.h"
 #include "base/forward.h"
 #include "dlink.h"
+#include "store/ParsingBuffer.h"
 #include "StoreIOBuffer.h"
 #include "StoreIOState.h"
 
