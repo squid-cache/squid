@@ -845,7 +845,7 @@ MemStore::write(StoreEntry &e)
 {
     assert(e.mem_obj);
 
-    debugs(20, 7, "entry " << e << " m" << e.mem_obj->memCache.io);
+    debugs(20, 7, "entry " << e);
 
     switch (e.mem_obj->memCache.io) {
     case MemObject::ioUndecided:

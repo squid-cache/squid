@@ -28,7 +28,7 @@
 /// bodies may use zero StoreIOBuffer::length as an EOF condition.
 ///
 /// Errors are indicated by setting StoreIOBuffer flags.error.
-typedef void STCB(void *, StoreIOBuffer);
+using STCB = void (void *, StoreIOBuffer);
 
 class StoreEntry;
 class ACLFilledChecklist;
@@ -176,7 +176,7 @@ public:
 private:
     bool moreToRead() const;
     bool canReadFromMemory() const;
-    bool answeredOnce() const { return answers_ >= 1; }
+    bool answeredOnce() const { return answers >= 1; }
     bool sendingHttpHeaders() const;
     int64_t nextHttpReadOffset() const;
 
@@ -210,7 +210,7 @@ private:
     StoreIOBuffer copyInto;
 
     /// the total number of finishCallback() calls
-    unsigned int answers_;
+    uint64_t answers;
 
     /// Accumulates raw bytes read from Store while answering the current copy()
     /// request. Buffer contents depends on the source and parsing stage; it may
@@ -218,7 +218,7 @@ private:
     /// response body bytes.
     std::optional<Store::ParsingBuffer> parsingBuffer;
 
-    StoreIOBuffer lastRead_; ///< buffer used for the last storeRead() call
+    StoreIOBuffer lastDiskRead; ///< buffer used for the last storeRead() call
 
     /* Until we finish stuffing code into store_client */
 

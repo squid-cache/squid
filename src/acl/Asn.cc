@@ -23,13 +23,11 @@
 #include "ipcache.h"
 #include "MasterXaction.h"
 #include "mgr/Registration.h"
-#include "parser/forward.h"
 #include "parser/Tokenizer.h"
 #include "radix.h"
 #include "RequestFlags.h"
 #include "sbuf/SBuf.h"
 #include "SquidConfig.h"
-#include "SquidMath.h"
 #include "Store.h"
 #include "StoreClient.h"
 
@@ -72,6 +70,8 @@ class ASState
     CBDATA_CLASS(ASState);
 
 public:
+    ASState() = default;
+
     ~ASState() {
         if (entry) {
             debugs(53, 3, entry->url());
@@ -293,9 +293,10 @@ asHandleReply(void *data, StoreIOBuffer result)
         (void)asnAddNet(address, asState->as_number);
     }
     asState->parsingBuffer.consume(tok.parsedSize());
+    const auto leftoverBytes = asState->parsingBuffer.contentSize();
 
     if (asState->sc->atEof()) {
-        if (const auto leftoverBytes = asState->parsingBuffer.contentSize())
+        if (leftoverBytes)
             debugs(53, 2, "discarding a partially received WHOIS AS response line due to Store EOF: " << leftoverBytes);
         delete asState;
         return;
@@ -304,9 +305,9 @@ asHandleReply(void *data, StoreIOBuffer result)
     const auto remainingSpace = asState->parsingBuffer.space().positionAt(result.offset + result.length);
 
     if (!remainingSpace.length) {
-        Assure(asState->parsingBuffer.content().length);
+        Assure(leftoverBytes);
         debugs(53, DBG_IMPORTANT, "WARNING: Ignoring the tail of a WHOIS AS response" <<
-               " with an unparseable section of " << asState->parsingBuffer.content().length <<
+               " with an unparsable section of " << leftoverBytes <<
                " bytes ending at offset " << remainingSpace.offset);
         delete asState;
         return;

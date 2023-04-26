@@ -164,7 +164,7 @@ store_client::finishCallback()
     atEof_ = !sendingHttpHeaders() && !result.length && copyInto.length;
 
     parsingBuffer.reset();
-    ++answers_;
+    ++answers;
 
     STCB *temphandler = _callback.callback_handler;
     void *cbdata = _callback.callback_data;
@@ -185,7 +185,7 @@ store_client::store_client(StoreEntry *e) :
     type(e->storeClientType()),
     object_ok(true),
     atEof_(false),
-    answers_(0)
+    answers(0)
 {
     Assure(entry);
     entry->lock("store_client");
@@ -293,7 +293,7 @@ bool
 store_client::moreToRead() const
 {
     if (!copyInto.length)
-        return false; // the client supplied a zero-size buffer (TODO: Warn!)
+        return false; // the client supplied a zero-size buffer
 
     if (entry->store_status == STORE_PENDING)
         return true; // there may be more coming
@@ -360,7 +360,7 @@ store_client::doCopy(StoreEntry *anEntry)
     debugs(33, 5, this << " into " << copyInto <<
            " hi: " << mem->endOffset() <<
            " objectLen: " << entry->objectLen() <<
-           " past_answers: " << answers_);
+           " past_answers: " << answers);
 
     const auto sendHttpHeaders = sendingHttpHeaders();
 
@@ -553,13 +553,13 @@ store_client::fileRead()
     Assure(parsingBuffer);
     // also, do not read more than we can return (via a copyInto.length buffer)
     const auto readSize = std::min(copyInto.length, maxReadSize);
-    lastRead_ = parsingBuffer->makeSpace(readSize).positionAt(nextStoreReadOffset);
-    debugs(90, 5, "into " << lastRead_);
+    lastDiskRead = parsingBuffer->makeSpace(readSize).positionAt(nextStoreReadOffset);
+    debugs(90, 5, "into " << lastDiskRead);
 
     storeRead(swapin_sio,
-              lastRead_.data,
-              lastRead_.length,
-              lastRead_.offset,
+              lastDiskRead.data,
+              lastDiskRead.length,
+              lastDiskRead.offset,
               mem->swap_hdr_sz == 0 ? storeClientReadHeader
               : storeClientReadBody,
               this);
@@ -568,7 +568,7 @@ store_client::fileRead()
 void
 store_client::readBody(const char * const buf, const ssize_t lastIoResult)
 {
-    assert(flags.disk_io_pending);
+    Assure(flags.disk_io_pending);
     flags.disk_io_pending = false;
     assert(_callback.pending());
     Assure(parsingBuffer);
@@ -585,9 +585,8 @@ store_client::readBody(const char * const buf, const ssize_t lastIoResult)
         return fail();
     }
 
-    // TODO: Rename lastRead_ to lastDiskRead_.
-    assert(lastRead_.data == buf);
-    lastRead_.length = lastIoResult;
+    assert(lastDiskRead.data == buf);
+    lastDiskRead.length = lastIoResult;
 
     parsingBuffer->appended(buf, lastIoResult);
 
@@ -595,12 +594,12 @@ store_client::readBody(const char * const buf, const ssize_t lastIoResult)
     // readHead() would have been called otherwise (to read swap metadata)
     const auto swap_hdr_sz = entry->mem().swap_hdr_sz;
     Assure(swap_hdr_sz > 0);
-    Assure(!Less(lastRead_.offset, swap_hdr_sz));
+    Assure(!Less(lastDiskRead.offset, swap_hdr_sz));
 
-    // Map lastRead_ (i.e. the disk area we just read) to an HTTP reply part.
+    // Map lastDiskRead (i.e. the disk area we just read) to an HTTP reply part.
     // The bytes are the same, but disk and HTTP offsets differ by swap_hdr_sz.
-    const auto httpOffset = lastRead_.offset - swap_hdr_sz;
-    const auto httpPart = StoreIOBuffer(lastRead_).positionAt(httpOffset);
+    const auto httpOffset = lastDiskRead.offset - swap_hdr_sz;
+    const auto httpPart = StoreIOBuffer(lastDiskRead).positionAt(httpOffset);
 
     maybeWriteFromDiskToMemory(httpPart);
     handleBodyFromDisk();
@@ -624,7 +623,6 @@ store_client::handleBodyFromDisk()
         skipHttpHeadersFromDisk();
     }
 
-    // no callback(): we handled negative/zero lastIoResult ourselves
     noteNews();
 }
 
@@ -656,7 +654,6 @@ void
 store_client::fail()
 {
     debugs(90, 3, (object_ok ? "once" : "again"));
-
     if (!object_ok)
         return; // we failed earlier; nothing to do now
 

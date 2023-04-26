@@ -35,7 +35,6 @@
 #include "PeerSelectState.h"
 #include "sbuf/SBuf.h"
 #include "SquidConfig.h"
-#include "SquidMath.h"
 #include "Store.h"
 #include "StoreClient.h"
 #include "tools.h"

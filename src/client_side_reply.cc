@@ -544,7 +544,6 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
         return;
     }
 
-    Assure(e->mem_obj);
     assert(!EBIT_TEST(e->flags, ENTRY_ABORTED));
 
     /*
@@ -996,6 +995,8 @@ clientReplyContext::traceReply()
     http->storeEntry()->complete();
 }
 
+#define SENDING_BODY 0
+#define SENDING_HDRSONLY 1
 int
 clientReplyContext::checkTransferDone()
 {
