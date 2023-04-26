@@ -1974,7 +1974,9 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
             return;
         }
 
-        if (!result.offset && !http->loggingTags().isTcpHit()) {
+        if (!flags.headersSent && !http->loggingTags().isTcpHit()) {
+            // We get here twice if processReplyAccessResult() calls startError().
+            // TODO: Revise when we check/change QoS markings to reduce syscalls.
             if (Ip::Qos::TheConfig.isHitTosActive()) {
                 Ip::Qos::doTosLocalMiss(conn->clientConnection, http->request->hier.code);
             }
