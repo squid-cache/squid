@@ -483,7 +483,7 @@ store_client::canReadFromMemory() const
     const auto &mem = entry->mem();
     const auto readOffset = nextHttpReadOffset();
     return mem.inmem_lo <= readOffset && readOffset < mem.endOffset() &&
-        parsingBuffer->spaceSize();
+           parsingBuffer->spaceSize();
 }
 
 /// The offset of the next stored HTTP response byte wanted by the client.

@@ -87,8 +87,8 @@ Store::ParsingBuffer::space()
 {
     const auto size = spaceSize();
     const auto start = extraMemory_ ?
-        extraMemory_->rawAppendStart(size) :
-        (readerSuppliedMemory_.data + readerSuppliedMemoryContentSize_);
+                       extraMemory_->rawAppendStart(size) :
+                       (readerSuppliedMemory_.data + readerSuppliedMemoryContentSize_);
     return StoreIOBuffer(spaceSize(), 0, start);
 }
 

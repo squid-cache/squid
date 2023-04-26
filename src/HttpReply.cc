@@ -476,10 +476,10 @@ HttpReply::parseTerminatedPrefix(const char * const terminatedBuf, const size_t 
 
     if (error) {
         throw TextException(ToSBuf("failed to parse HTTP headers",
-           Debug::Extra, "parser error code: ", error,
-           Debug::Extra, "accumulated unparsed bytes: ", bufSize,
-           Debug::Extra, "reply_header_max_size: ", Config.maxReplyHeaderSize),
-           Here());
+                                   Debug::Extra, "parser error code: ", error,
+                                   Debug::Extra, "accumulated unparsed bytes: ", bufSize,
+                                   Debug::Extra, "reply_header_max_size: ", Config.maxReplyHeaderSize),
+                            Here());
     }
 
     debugs(58, 3, "need more bytes after accumulating " << bufSize << " out of " << Config.maxReplyHeaderSize);
