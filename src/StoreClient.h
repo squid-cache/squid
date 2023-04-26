@@ -64,39 +64,6 @@ protected:
 #include "DelayId.h"
 #endif
 
-namespace Store
-{
-
-/// XXX: TBD
-using LegacyOffset = int64_t;
-
-/// A space for storing HTTP body bytes returned by storeClientCopy().
-///
-/// During internal store_client operations, this buffer may also be temporary
-/// used for serialized swap entry metadata and/or serialized HTTP headers.
-class ReadBuffer
-{
-public:
-    /// A StoreIOBuffer object for making the first storeClientCopy() request,
-    /// providing our buffer space for storing any copied HTTP response body
-    /// bytes. Current storeClientCopy() implementation does not support
-    /// (positive) HTTP response body offsets for such first requests. Using
-    /// this method instead of its spaceFor(0) equivalent clarifies that the
-    /// caller may not be interested in body bytes at that zero offset.
-    StoreIOBuffer initialSpace() { return spaceFor(0); }
-
-    /// A StoreIOBuffer object for making a storeClientCopy() request for HTTP
-    /// data at a given offset, providing our buffer space for storing any
-    /// copied HTTP response body bytes. \sa initialSpace()
-    StoreIOBuffer spaceFor(const LegacyOffset loffset) { return StoreIOBuffer(serialized_.size(), loffset, serialized_.data()); }
-
-private:
-    /// space for storing serialized Store entry bytes
-    std::array<char, HTTP_REQBUF_SZ> serialized_;
-};
-
-} // namespace Store
-
 /* keep track each client receiving data from that particular StoreEntry */
 
 class store_client

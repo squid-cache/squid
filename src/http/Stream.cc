@@ -29,6 +29,7 @@ Http::Stream::Stream(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aR
     connRegistered_(false)
 {
     assert(http != nullptr);
+    memset(reqbuf, '\0', sizeof (reqbuf));
     flags.deferred = 0;
     flags.parsed_ok = 0;
     deferredparams.node = nullptr;
@@ -110,11 +111,14 @@ Http::Stream::pullData()
     debugs(33, 5, reply << " written " << http->out.size << " into " << clientConnection);
 
     /* More data will be coming from the stream. */
+    StoreIOBuffer readBuffer;
     /* XXX: Next requested byte in the range sequence */
     /* XXX: length = getmaximumrangelenfgth */
-    const auto nextOffset = getNextRangeOffset();
+    readBuffer.offset = getNextRangeOffset();
+    readBuffer.length = HTTP_REQBUF_SZ;
+    readBuffer.data = reqbuf;
     /* we may note we have reached the end of the wanted ranges */
-    clientStreamRead(getTail(), http, storeReadBuffer.spaceFor(nextOffset));
+    clientStreamRead(getTail(), http, readBuffer);
 }
 
 bool

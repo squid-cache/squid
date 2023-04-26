@@ -16,8 +16,8 @@
 #include "http/forward.h"
 #include "mgr/Action.h"
 #include "StoreIOBuffer.h"
-#include "StoreClient.h" /* XXX: For Store::ReadBuffer */
 
+class store_client;
 class CommIoCbParams;
 class CommCloseCbParams;
 
@@ -66,8 +66,7 @@ protected:
     int64_t writeOffset; ///< number of bytes written to the client
 
     AsyncCall::Pointer closer; ///< comm_close handler
-
-    Store::ReadBuffer buffer; ///< action results; Store fills, Comm writes
+    char buffer[HTTP_REQBUF_SZ]; ///< action results; Store fills, Comm writes
 };
 
 } // namespace Mgr

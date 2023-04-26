@@ -46,7 +46,6 @@ class Disks;
 class Disk;
 class DiskConfig;
 class EntryGuard;
-class ReadBuffer;
 class ParsingBuffer;
 
 typedef ::StoreEntry Entry;
