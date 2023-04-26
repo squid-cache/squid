@@ -1726,24 +1726,16 @@ clientReplyContext::sendStreamError(StoreIOBuffer const &result)
 }
 
 void
-clientReplyContext::pushStreamData(StoreIOBuffer const &result, char *source)
+clientReplyContext::pushStreamData(const StoreIOBuffer &result)
 {
-    StoreIOBuffer localTempBuffer;
-
     if (result.length == 0) {
         debugs(88, 5, "clientReplyContext::pushStreamData: marking request as complete due to 0 length store result");
         flags.complete = 1;
     }
 
     assert(result.offset == next()->readBuffer.offset);
-    localTempBuffer.offset = result.offset;
-    localTempBuffer.length = result.length;
-
-    if (localTempBuffer.length)
-        localTempBuffer.data = source;
-
     clientStreamCallback((clientStreamNode*)http->client_stream.head->data, http, nullptr,
-                         localTempBuffer);
+                         result);
 }
 
 clientStreamNode *
@@ -1968,6 +1960,8 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     if (deleting)
         return;
 
+    debugs(88, 5, http->uri << " result: " << result);
+
     StoreEntry *entry = http->storeEntry();
 
     if (ConnStateData * conn = http->getConn()) {
@@ -2002,6 +1996,8 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         // we copy to meet those expectations.
         assert(result.length <= next()->readBuffer.length);
         memcpy(buf, result.data, result.length);
+        // allow the code below to treat this unusual answer as a regular one
+        result.data = buf;
     }
 
     /* We've got the final data to start pushing... */
@@ -2015,8 +2011,6 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 
     makeThisHead();
 
-    debugs(88, 5, http->uri << " result: " << result);
-
     if (errorInStream(result)) {
         sendStreamError(result);
         return;
@@ -2025,7 +2019,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     noteStreamBufferredBytes(result);
 
     if (flags.headersSent) {
-        pushStreamData (result, buf);
+        pushStreamData(result);
         return;
     }
 

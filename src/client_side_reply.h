@@ -93,7 +93,7 @@ private:
     void makeThisHead();
     bool errorInStream(const StoreIOBuffer &result) const;
     void sendStreamError(StoreIOBuffer const &result);
-    void pushStreamData(StoreIOBuffer const &result, char *source);
+    void pushStreamData(const StoreIOBuffer &);
     clientStreamNode * next() const;
     HttpReply *reply;
     void processReplyAccess();
