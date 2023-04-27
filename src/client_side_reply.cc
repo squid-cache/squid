@@ -389,7 +389,7 @@ clientReplyContext::sendClientOldEntry()
     restoreState();
     /* here the data to send is in the next nodes buffers already */
     assert(!EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED));
-    Assure(lastStreamBufferedBytes.data == next()->readBuffer.data);
+    Assure(matchesStreamBodyBuffer(lastStreamBufferedBytes));
     Assure(!lastStreamBufferedBytes.offset);
     sendMoreData(lastStreamBufferedBytes);
 }
@@ -1885,7 +1885,7 @@ clientReplyContext::processReplyAccessResult(const Acl::Answer &accessAllowed)
     /* Ok, the reply is allowed, */
     http->loggingEntry(http->storeEntry());
 
-    Assure(lastStreamBufferedBytes.data == next()->readBuffer.data);
+    Assure(matchesStreamBodyBuffer(lastStreamBufferedBytes));
     Assure(!lastStreamBufferedBytes.offset);
     auto body_size = lastStreamBufferedBytes.length; // may be zero
 
@@ -1990,18 +1990,6 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
                " out.offset=" << http->out.offset);
     }
 
-    char *buf = next()->readBuffer.data;
-
-    if (buf != result.data) {
-        // sendMoreData() code path expects response body to be in buf. When
-        // sendMoreData() is called with a different buffer (e.g., our tempbuf),
-        // we copy to meet those expectations.
-        assert(result.length <= next()->readBuffer.length);
-        memcpy(buf, result.data, result.length);
-        // allow the code below to treat this unusual answer as a regular one
-        result.data = buf;
-    }
-
     /* We've got the final data to start pushing... */
     flags.storelogiccomplete = 1;
 
@@ -2016,6 +2004,16 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     if (errorInStream(result)) {
         sendStreamError(result);
         return;
+    }
+
+    if (!matchesStreamBodyBuffer(result)) {
+        // Subsequent processing expects response body bytes to be at the start
+        // of our Client Stream buffer. When given something else (e.g., bytes
+        // in our tempbuf), we copy and adjust to meet those expectations.
+        const auto &ourClientStreamsBuffer = next()->readBuffer;
+        assert(result.length <= ourClientStreamsBuffer.length);
+        memcpy(ourClientStreamsBuffer.data, result.data, result.length);
+        result.data = ourClientStreamsBuffer.data;
     }
 
     noteStreamBufferredBytes(result);
@@ -2036,11 +2034,29 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     return;
 }
 
+/// Whether the given body area describes the start of our Client Stream buffer.
+/// An empty area does.
+bool
+clientReplyContext::matchesStreamBodyBuffer(const StoreIOBuffer &their) const
+{
+    // the answer is undefined for errors; they are not really "body buffers"
+    Assure(!their.flags.error);
+
+    if (!their.data || !their.length)
+        return true; // an empty body area always matches our body area
+
+    if (their.data != next()->readBuffer.data) {
+        debugs(88, 7, "mismatching body starts: " << their << " vs. " << next()->readBuffer);
+        return false;
+    }
+
+    return true;
+}
+
 void
 clientReplyContext::noteStreamBufferredBytes(const StoreIOBuffer &result)
 {
-    Assure(!result.data || result.data == next()->readBuffer.data);
-    Assure(!result.flags.error);
+    Assure(matchesStreamBodyBuffer(result));
     lastStreamBufferedBytes = result; // may be unchanged and/or zero-length
 }
 

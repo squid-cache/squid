@@ -92,6 +92,7 @@ private:
     clientStreamNode *getNextNode() const;
     void makeThisHead();
     bool errorInStream(const StoreIOBuffer &result) const;
+    bool matchesStreamBodyBuffer(const StoreIOBuffer &) const;
     void sendStreamError(StoreIOBuffer const &result);
     void pushStreamData(const StoreIOBuffer &);
     clientStreamNode * next() const;
