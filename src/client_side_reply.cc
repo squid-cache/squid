@@ -1733,7 +1733,7 @@ clientReplyContext::pushStreamData(const StoreIOBuffer &result)
         flags.complete = 1;
     }
 
-    assert(result.offset == next()->readBuffer.offset);
+    assert(!result.length || result.offset == next()->readBuffer.offset);
     clientStreamCallback((clientStreamNode*)http->client_stream.head->data, http, nullptr,
                          result);
 }

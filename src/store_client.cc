@@ -155,8 +155,11 @@ store_client::finishCallback()
     Assure(_callback.callback_handler);
     Assure(_callback.notifier);
 
-    StoreIOBuffer result;
-    if (object_ok && parsingBuffer)
+    // XXX: Some legacy code relies on zero-length buffers having nil data
+    // pointers. Some other legacy code expects "correct" result.offset even
+    // when there is no body to return. Accommodate all those expectations.
+    auto result = StoreIOBuffer(0, copyInto.offset, nullptr);
+    if (object_ok && parsingBuffer && parsingBuffer->contentSize())
         result = parsingBuffer->packBack();
     result.flags.error = object_ok ? 0 : 1;
 

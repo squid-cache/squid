@@ -158,11 +158,8 @@ StoreIOBuffer
 Store::ParsingBuffer::packBack()
 {
     const auto bytesToBack = contentSize();
-
-    // XXX: Several StoreIOBuffer users rely on zero-length buffers also having
-    // nil data pointers, so we have to treat zero contentSize() specially
-    if (!bytesToBack)
-        return StoreIOBuffer();
+    // until our callers do not have to work around legacy code expectations
+    Assure(bytesToBack);
 
     // if we accumulated more bytes at some point, any extra metadata should
     // have been consume()d by now, allowing readerSuppliedMemory_.data reuse

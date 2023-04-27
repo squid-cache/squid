@@ -92,6 +92,7 @@ public:
     /// Returns stored content, reusing the StoreIOBuffer given at the
     /// construction time. Copying is avoided if we did not allocate extra
     /// memory since construction. Not meant for default-constructed buffers.
+    /// \prec positive contentSize() (\sa store_client::finishCallback())
     StoreIOBuffer packBack();
 
     /// summarizes object state (for debugging)
