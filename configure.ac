@@ -1083,7 +1083,6 @@ SQUID_CHECK_LIB_WORKS(nettle,[
   SQUID_CHECK_NETTLE_BASE64
   SQUID_STATE_ROLLBACK(squid_nettle_state)
 ])
-AC_MSG_NOTICE([Using Nettle cryptographic library: ${with_nettle:=yes}])
 AC_SUBST(LIBNETTLE_LIBS)
 
 dnl Check for libcrypt
@@ -1125,7 +1124,6 @@ SQUID_CHECK_LIB_WORKS(gnutls,[
     AC_DEFINE(USE_GNUTLS,1,[GnuTLS support is available])
   ])
 ])
-AC_MSG_NOTICE([GnuTLS library support: ${with_gnutls:=auto} ${LIBGNUTLS_PATH} ${LIBGNUTLS_LIBS}])
 
 dnl User may specify OpenSSL is needed from a non-standard location
 SQUID_OPTIONAL_LIB(openssl,[OpenSSL],[LIBOPENSSL])
@@ -1672,7 +1670,6 @@ SQUID_CHECK_LIB_WORKS(systemd,[
     AC_DEFINE(USE_SYSTEMD,1,[systemd support is available])
   ])
 ])
-AC_MSG_NOTICE([systemd library support: $with_systemd $LIBSYSTEMD_LIBS])
 
 AC_ARG_ENABLE(forw-via-db,
   AS_HELP_STRING([--enable-forw-via-db],[Enable Forw/Via database]), [
@@ -2443,7 +2440,6 @@ SQUID_CHECK_LIB_WORKS(cap,[
     AC_DEFINE(USE_LIBCAP,1,[Linux capabilities library support])
   ])
 ])
-AC_MSG_NOTICE([Linux capabilities support enabled: ${with_cap} ${LIBCAP_LIBS}])
 
 dnl Check for needed libraries
 AC_SEARCH_LIBS([gethostbyname],[nsl resolv bind])
