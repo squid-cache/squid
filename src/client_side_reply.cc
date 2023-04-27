@@ -2039,7 +2039,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 void
 clientReplyContext::noteStreamBufferredBytes(const StoreIOBuffer &result)
 {
-    Assure(result.data == next()->readBuffer.data);
+    Assure(!result.data || result.data == next()->readBuffer.data);
     Assure(!result.flags.error);
     lastStreamBufferedBytes = result; // may be unchanged and/or zero-length
 }
