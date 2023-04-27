@@ -545,8 +545,8 @@ store_client::fileRead()
 
     // XXX: We should let individual cache_dirs limit the read size instead, but
     // we cannot do that without more fixes and research because:
-    // * larger reads crash code that uses SharedMemory::get() (TODO: confirm!)
-    // * we do not know how to find all I/O code that assumes this limit
+    // * larger reads corrupt responses when cache_dir uses SharedMemory::get();
+    // * we do not know how to find all I/O code that assumes this limit;
     // * performance effects of larger disk reads may be negative somewhere.
     const decltype(StoreIOBuffer::length) maxReadSize = SM_PAGE_SIZE;
 
