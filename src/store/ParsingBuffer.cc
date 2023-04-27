@@ -19,24 +19,12 @@
 // HTTP response bytes, such failures may corrupt traffic. No Assure() handling
 // code can safely recover from such failures.
 
-/// A helper buffer for the default Store::ParsingBuffer constructor.
-static char EmptyBuffer[1]; // 1 because C++ prohibits zero-size arrays
-
-/// The default constructor uses EmptyBuffer to avoid nil memory() values that
-/// would complicate Store::ParsingBuffer implementation and/or user code. We
-/// could also pre-allocate memory, but that will result in at least some wasted
-/// allocations and violate the pay-only-for-what-you-use principle.
-Store::ParsingBuffer::ParsingBuffer():
-    readerSuppliedMemory_(0, 0, EmptyBuffer)
-{
-}
-
 Store::ParsingBuffer::ParsingBuffer(StoreIOBuffer &initialSpace):
     readerSuppliedMemory_(initialSpace)
 {
 }
 
-/// read-only content address
+/// a read-only content start (or nil for some zero-size buffers)
 const char *
 Store::ParsingBuffer::memory() const
 {
@@ -58,8 +46,15 @@ Store::ParsingBuffer::contentSize() const
 void
 Store::ParsingBuffer::appended(const char * const newBytes, const size_t newByteCount)
 {
-    assert(memory() + contentSize() == newBytes); // the new bytes start in our space
+    // a positive newByteCount guarantees that, after the first assertion below
+    // succeeds, the second assertion will not increment a nil memory() pointer
+    if (!newByteCount)
+        return;
+
+    // these checks order guarantees that memory() is not nil in the second assertion
     assert(newByteCount <= spaceSize()); // the new bytes end in our space
+    assert(memory() + contentSize() == newBytes); // the new bytes start in our space
+    // and now we know that newBytes is not nil either
 
     if (extraMemory_)
         extraMemory_->rawAppendFinish(newBytes, newByteCount);
@@ -162,12 +157,19 @@ Store::ParsingBuffer::terminate()
 StoreIOBuffer
 Store::ParsingBuffer::packBack()
 {
-    auto result = readerSuppliedMemory_;
-    result.length = contentSize();
+    const auto bytesToBack = contentSize();
+
+    // XXX: Several StoreIOBuffer users rely on zero-length buffers also having
+    // nil data pointers, so we have to treat zero contentSize() specially
+    if (!bytesToBack)
+        return StoreIOBuffer();
 
     // if we accumulated more bytes at some point, any extra metadata should
     // have been consume()d by now, allowing readerSuppliedMemory_.data reuse
-    Assure(result.length <= readerSuppliedMemory_.length);
+    Assure(bytesToBack <= readerSuppliedMemory_.length);
+
+    auto result = readerSuppliedMemory_;
+    result.length = bytesToBack;
 
     if (!extraMemory_) {
         // no accumulated bytes copying because they are in readerSuppliedMemory_

@@ -36,7 +36,7 @@ class ParsingBuffer
 {
 public:
     /// creates buffer without any space or content
-    ParsingBuffer();
+    ParsingBuffer() = default;
 
     /// seeds this buffer with the caller-supplied buffer space
     explicit ParsingBuffer(StoreIOBuffer &space);
