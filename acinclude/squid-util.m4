@@ -214,6 +214,17 @@ AC_DEFUN([SQUID_YESNO],[
   AS_IF([test "$1" != "yes" -a "$1" != "no"],[AC_MSG_ERROR([Bad argument for $2: "$1". Expecting "yes", "no", or no argument.])])
 ])
 
+dnl Check that a library is actually available, useable,
+dnl and where its pieces are (eg headers and hack macros)
+dnl Parameters for this macro are:
+dnl 1) binary library name (without 'lib' prefix)
+dnl 2) logic to run checks
+AC_DEFUN([SQUID_CHECK_LIB_WORKS],[
+AS_IF([m4_translit([test "x$with_$1" != "xno"], [-+.], [___])],[
+  $2
+])
+])
+
 dnl check the build parameters for a library to auto-enable
 dnl Parameters for this macro are:
 dnl 1) binary library name (without 'lib' prefix)

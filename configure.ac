@@ -391,7 +391,7 @@ AS_IF([test "x$squid_opt_aufs_threads" != "x"],[
 
 ## TODO check if this is necessary, LT_INIT does these checks
 SQUID_AUTO_LIB(dl,[dynamic linking],[LIBDL])
-AS_IF([test "x$with_dl" != "xno"],[
+SQUID_CHECK_LIB_WORKS(dl,[
   CXXFLAGS="$LIBDL_CFLAGS $CXXFLAGS"
   LDFLAGS="$LIBDL_PATH $LDFLAGS"
   AC_CHECK_LIB(dl, dlopen)
@@ -1073,7 +1073,7 @@ AC_MSG_NOTICE([HTCP support enabled: $enable_htcp])
 
 # Cryptograhic libraries
 SQUID_AUTO_LIB(nettle,[Nettle crypto],[LIBNETTLE])
-AS_IF(test "x$with_nettle" != "xno"],[
+SQUID_CHECK_LIB_WORKS(nettle,[
   SQUID_STATE_SAVE(squid_nettle_state)
   PKG_CHECK_MODULES([LIBNETTLE],[nettle >= 3.4],[],[
     CPPFLAGS="$LIBNETTLE_CFLAGS $CPPFLAGS"
@@ -1107,7 +1107,7 @@ SSLLIB=""
 
 SQUID_AUTO_LIB(gnutls,[GnuTLS crypto],[LIBGNUTLS])
 AH_TEMPLATE(USE_GNUTLS,[GnuTLS support is available])
-AS_IF([test "x$with_gnutls" != "xno"],[
+SQUID_CHECK_LIB_WORKS(gnutls,[
   SQUID_STATE_SAVE(squid_gnutls_state)
 
   # User may have provided a custom location for GnuTLS. Otherwise...
@@ -1640,7 +1640,7 @@ AC_SUBST(KRB5INCS)
 AC_SUBST(KRB5LIBS)
 
 SQUID_AUTO_LIB(ldap,[LDAP],[LIBLDAP])
-AS_IF([test "x$with_ldap" != "xno"],[
+SQUID_CHECK_LIB_WORKS(ldap,[
   dnl On MinGW OpenLDAP is not available, so LDAP helpers can be linked
   dnl only with Windows LDAP libraries using -lwldap32
   AS_IF([test "$squid_host_os" = "mingw"],[
@@ -1681,7 +1681,7 @@ AC_SUBST(LIBLDAP_LIBS)
 
 SQUID_AUTO_LIB(systemd,[systemd API for start-up notification],[LIBSYSTEMD])
 AH_TEMPLATE(USE_SYSTEMD,[systemd support is available])
-AS_IF([test "x$with_systemd" != "xno"],[
+SQUID_CHECK_LIB_WORKS(systemd,[
   SQUID_STATE_SAVE(squid_systemd_state)
   LIBS="$LIBS $LIBSYSTEMD_PATH"
   PKG_CHECK_MODULES(LIBSYSTEMD,[libsystemd],,[
@@ -1893,7 +1893,7 @@ AC_MSG_NOTICE([Linux Netfilter support requested: ${enable_linux_netfilter:=auto
 dnl Look for libnetfilter_conntrack options (needed for QOS netfilter marking)
 SQUID_AUTO_LIB(netfilter-conntrack,[Netfilter conntrack],[LIBNETFILTER_CONNTRACK])
 AC_MSG_NOTICE([Linux Netfilter Conntrack support requested: ${with_netfilter_conntrack:=auto}])
-AS_IF([test "x$with_netfilter_conntrack" != "xno"],[
+SQUID_CHECK_LIB_WORKS(netfilter-conntrack,[
   LDFLAGS="$LIBNETFILTER_CONNTRACK_PATH $LDFLAGS"
   CPPFLAGS="$LIBNETFILTER_CONNTRACK_CFLAGS $CPPFLAGS"
   AC_SEARCH_LIBS([nfct_query], [netfilter_conntrack],,[
@@ -2241,7 +2241,7 @@ SQUID_DEFINE_BOOL(X_ACCELERATOR_VARY,${enable_x_accelerator_vary:=no},
 AC_MSG_NOTICE([X-Accelerator-Vary support enabled: $enable_x_accelerator_vary])
 
 SQUID_AUTO_LIB(cppunit,[cppunit test framework],[LIBCPPUNIT])
-AS_IF([test "x$with_cppunit" != "xno"],[
+SQUID_CHECK_LIB_WORKS(cppunit,[
   LIBCPPUNIT_LIBS="$LIBCPPUNIT_PATH -lcppunit"
   PKG_CHECK_MODULES([LIBCPPUNIT],[cppunit],[
     squid_cv_cppunit_version="`pkg-config --modversion cppunit`"
@@ -2466,7 +2466,7 @@ dnl Check for special functions
 AC_FUNC_ALLOCA
 
 SQUID_AUTO_LIB(cap,[Linux capabilities],[LIBCAP])
-AS_IF([test "x$with_cap" != "xno"],[
+SQUID_CHECK_LIB_WORKS(cap,[
   SQUID_STATE_SAVE(squid_libcap_state)
   CXXFLAGS="$LIBCAP_CFLAGS $CXXFLAGS"
   LDFLAGS="$LIBCAP_PATH $LDFLAGS"
