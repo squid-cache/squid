@@ -326,8 +326,10 @@ MemStore::get(const cache_key *key)
             return e;
         debugs(20, 3, "failed for " << *e);
     } catch (...) {
-        debugs(20, 3, "failed for " << *e <<
-               Debug::Extra << "exception: " << CurrentException);
+        // see store_client::parseHttpHeadersFromDisk() for problems this may log
+        debugs(20, DBG_IMPORTANT, "ERROR: Cannot load a cache hit from shared memory" <<
+               Debug::Extra << "exception: " << CurrentException <<
+               Debug::Extra << "cache_mem entry: " << *e);
     }
 
     map->freeEntry(index); // do not let others into the same trap
