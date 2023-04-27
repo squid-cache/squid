@@ -405,10 +405,10 @@ clientReplyContext::handleIMSReply(const StoreIOBuffer result)
     if (deleting)
         return;
 
-    debugs(88, 3, http->storeEntry()->url() << ", " << (long unsigned) result.length << " bytes");
-
     if (http->storeEntry() == nullptr)
         return;
+
+    debugs(88, 3, http->storeEntry()->url() << " got " << result);
 
     if (result.flags.error && !EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED))
         return;
@@ -520,7 +520,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
 
     HttpRequest *r = http->request;
 
-    debugs(88, 3, "clientCacheHit: " << http->uri << ", " << result.length << " bytes");
+    debugs(88, 3, http->uri << " got " << result);
 
     if (http->storeEntry() == nullptr) {
         debugs(88, 3, "clientCacheHit: request aborted");
@@ -1960,7 +1960,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     if (deleting)
         return;
 
-    debugs(88, 5, http->uri << " result: " << result);
+    debugs(88, 5, http->uri << " got " << result);
 
     StoreEntry *entry = http->storeEntry();
 
