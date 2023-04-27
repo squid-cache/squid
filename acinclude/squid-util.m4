@@ -222,6 +222,15 @@ dnl 2) logic to run checks
 AC_DEFUN([SQUID_CHECK_LIB_WORKS],[
 AS_IF([m4_translit([test "x$with_$1" != "xno"], [-+.], [___])],[
   $2
+  AS_IF([! test -z m4_toupper(m4_translit(["$LIB$1_LIBS"], [-+.], [___]))],[
+    m4_translit([with_$1], [-+.], [___])=yes
+    m4_toupper(m4_translit([CXXFLAGS="$LIB$1_CFLAGS $CXXFLAGS"], [-+.], [___]))
+    m4_toupper(m4_translit([LIB$1_LIBS="$LIB$1_PATH $LIB$1_LIBS"], [-+.], [___]))
+  ],[m4_translit([test "x$with_$1" = "xyes"], [-+.], [___])],[
+    AC_MSG_ERROR([Required library '$1' not found])
+  ],[
+    m4_translit([with_$1], [-+.], [___])=no
+  ])
 ])
 ])
 

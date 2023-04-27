@@ -392,9 +392,9 @@ AS_IF([test "x$squid_opt_aufs_threads" != "x"],[
 ## TODO check if this is necessary, LT_INIT does these checks
 SQUID_AUTO_LIB(dl,[dynamic linking],[LIBDL])
 SQUID_CHECK_LIB_WORKS(dl,[
-  CXXFLAGS="$LIBDL_CFLAGS $CXXFLAGS"
   LDFLAGS="$LIBDL_PATH $LDFLAGS"
-  AC_CHECK_LIB(dl, dlopen)
+  AC_CHECK_LIB(dl, dlopen,[LIBDL_LIBS="-ldl"])
+  LIBS="$LIBDL_LIBS $LIBS"
 ])
 
 AC_DEFUN([LIBATOMIC_CHECKER],[
@@ -1082,14 +1082,6 @@ SQUID_CHECK_LIB_WORKS(nettle,[
   AC_CHECK_HEADERS(nettle/base64.h nettle/md5.h)
   SQUID_CHECK_NETTLE_BASE64
   SQUID_STATE_ROLLBACK(squid_nettle_state)
-  AS_IF([test "x$LIBNETTLE_LIBS" != "x"],[
-    CXXFLAGS="$LIBNETTLE_CFLAGS $CXXFLAGS"
-    LIBNETTLE_LIBS="$LIBNETTLE_PATH $LIBNETTLE_LIBS"
-  ],[test "x$with_nettle" = "xyes"],[
-    AC_MSG_ERROR([Required library nettle not found])
-  ],[
-    AC_MSG_NOTICE([Library nettle not found.])
-  ])
 ])
 AC_MSG_NOTICE([Using Nettle cryptographic library: ${with_nettle:=yes}])
 AC_SUBST(LIBNETTLE_LIBS)
@@ -1128,15 +1120,9 @@ SQUID_CHECK_LIB_WORKS(gnutls,[
 
   SQUID_STATE_ROLLBACK(squid_gnutls_state) #de-pollute LIBS
 
-  AS_IF([test "x$with_gnutls" = "xyes" -a "x$LIBGNUTLS_LIBS" = "x"],[
-    AC_MSG_ERROR([Required GnuTLS library not found])
-  ])
   AS_IF([test "x$LIBGNUTLS_LIBS" != "x"],[
-    CXXFLAGS="$LIBGNUTLS_CFLAGS $CXXFLAGS"
     SSLLIB="$LIBGNUTLS_PATH $LIBGNUTLS_LIBS $SSLLIB"
     AC_DEFINE(USE_GNUTLS,1,[GnuTLS support is available])
-  ],[
-    with_gnutls=no
   ])
 ])
 AC_MSG_NOTICE([GnuTLS library support: ${with_gnutls:=auto} ${LIBGNUTLS_PATH} ${LIBGNUTLS_LIBS}])
@@ -1667,15 +1653,6 @@ SQUID_CHECK_LIB_WORKS(ldap,[
     AC_CHECK_HEADERS(mozldap/ldap.h)
     SQUID_CHECK_LDAP_API
   ])
-
-  AS_IF([test "x$LIBLDAP_LIBS" != "x"],[
-    CPPFLAGS="$LIBLDAP_CFLAGS $CPPFLAGS"
-    LIBLDAP_LIBS="$LIBLDAP_PATH $LIBLDAP_LIBS"
-  ],[test "x$with_ldap" = "xyes"],[
-    AC_MSG_ERROR([Required library ldap not found])
-  ],[
-    AC_MSG_NOTICE([Library ldap not found.])
-  ])
 ])
 AC_SUBST(LIBLDAP_LIBS)
 
@@ -1692,13 +1669,7 @@ SQUID_CHECK_LIB_WORKS(systemd,[
   SQUID_STATE_ROLLBACK(squid_systemd_state)
 
   AS_IF([test "x$LIBSYSTEMD_LIBS" != "x"],[
-    CXXFLAGS="$LIBSYSTEMD_CFLAGS $CXXFLAGS"
-    LIBSYSTEMD_LIBS="$LIBSYSTEMD_PATH $LIBSYSTEMD_LIBS"
     AC_DEFINE(USE_SYSTEMD,1,[systemd support is available])
-  ],[test "x$with_systemd" = "xyes"],[
-    AC_MSG_ERROR([Required systemd library not found])
-  ],[
-    AC_MSG_NOTICE([Library for systemd support not found])
   ])
 ])
 AC_MSG_NOTICE([systemd library support: $with_systemd $LIBSYSTEMD_LIBS])
@@ -1896,22 +1867,11 @@ AC_MSG_NOTICE([Linux Netfilter Conntrack support requested: ${with_netfilter_con
 SQUID_CHECK_LIB_WORKS(netfilter-conntrack,[
   LDFLAGS="$LIBNETFILTER_CONNTRACK_PATH $LDFLAGS"
   CPPFLAGS="$LIBNETFILTER_CONNTRACK_CFLAGS $CPPFLAGS"
-  AC_SEARCH_LIBS([nfct_query], [netfilter_conntrack],,[
-    AS_IF([test "x$with_netfilter_conntrack" = "xyes"],[
-      AC_MSG_ERROR([--with-netfilter-conntrack specified but libnetfilter-conntrack library not found])
-    ])
-    with_netfilter_conntrack=no
-  ])
+  AC_SEARCH_LIBS([nfct_query],[netfilter_conntrack],[LIBNETFILTER_CONNTRACK_LIBS="-lnetfilter_conntrack"])
   AC_CHECK_HEADERS([ \
     libnetfilter_conntrack/libnetfilter_conntrack.h \
     libnetfilter_conntrack/libnetfilter_conntrack_tcp.h
-  ],,[
-    AS_IF([test "x$with_netfilter_conntrack" = "xyes"],[
-      AC_MSG_ERROR([--with-netfilter-conntrack specified but libnetfilter-conntrack headers not found])
-    ])
-    with_netfilter_conntrack=no
-  ])
-  AS_IF([test "x$with_netfilter_conntrack" != "xno"],[with_netfilter_conntrack=yes])
+  ],,[LIBNETFILTER_CONNTRACK_LIBS=""])
 ])
 
 dnl Enable Large file support
@@ -2480,15 +2440,7 @@ SQUID_CHECK_LIB_WORKS(cap,[
   SQUID_STATE_ROLLBACK(squid_libcap_state)
 
   AS_IF([test "x$LIBCAP_LIBS" != "x"],[
-    with_cap=yes
-    CPPFLAGS="$LIBCAP_CFLAGS $CPPFLAGS"
-    LIBCAP_LIBS="$LIBCAP_PATH $LIBCAP_LIBS"
     AC_DEFINE(USE_LIBCAP,1,[Linux capabilities library support])
-  ],[test "x$with_cap" = "xyes"],[
-    AC_MSG_ERROR([Required library libcap not found])
-  ],[
-    AC_MSG_NOTICE([Library libcap not found])
-    with_cap=no
   ])
 ])
 AC_MSG_NOTICE([Linux capabilities support enabled: ${with_cap} ${LIBCAP_LIBS}])
