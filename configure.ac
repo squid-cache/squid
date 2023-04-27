@@ -1094,7 +1094,7 @@ AS_IF([test "x$with_gnutls" != "xno"],[
     AC_CHECK_LIB(gnutls,gnutls_pcert_export_x509,[LIBGNUTLS_LIBS="-lgnutls"])
   ])
   # if any of the required headers is not found, signal we can't support gnutls
-  AC_CHECK_HEADERS(gnutls/gnutls.h gnutls/x509.h gnutls/abstract.h, [], [LIBGNUTLS_LIBS=""])
+  AC_CHECK_HEADERS([gnutls/gnutls.h gnutls/x509.h gnutls/abstract.h], [], [LIBGNUTLS_LIBS=""])
 
   SQUID_STATE_ROLLBACK(squid_gnutls_state) #de-pollute LIBS
 
