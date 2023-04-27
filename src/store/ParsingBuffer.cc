@@ -170,6 +170,7 @@ Store::ParsingBuffer::packBack()
 
     auto result = readerSuppliedMemory_;
     result.length = bytesToBack;
+    Assure(result.data);
 
     if (!extraMemory_) {
         // no accumulated bytes copying because they are in readerSuppliedMemory_
