@@ -529,9 +529,9 @@ store_client::fileRead()
     const auto nextStoreReadOffset = NaturalSum<int64_t>(mem->swap_hdr_sz, nextHttpReadOffset()).value();
 
     // XXX: If fileRead() is called when we do not yet know mem->swap_hdr_sz,
-    // then we must read from disk offset zero to learn it. We cannot compute
-    // correct HTTP response start offset on disk without it. However, late
-    // startSwapin() calls imply that the assertion below may fail.
+    // then we must start reading from disk offset zero to learn it: we cannot
+    // compute correct HTTP response start offset on disk without it. However,
+    // late startSwapin() calls imply that the assertion below might fail.
     Assure(mem->swap_hdr_sz > 0 || !nextStoreReadOffset);
 
     // TODO: Remove this assertion. Introduced in 1998 commit 3157c72, it
