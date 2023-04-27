@@ -989,6 +989,9 @@ store_client::parseHttpHeadersFromDisk()
     try {
         return tryParsingHttpHeaders();
     } catch (...) {
+        // XXX: Our parser enforces Config.maxReplyHeaderSize limit, but our
+        // packer does not. Since packing might increase header size, we may
+        // cache a header that we cannot parse and get here. Same for MemStore.
         debugs(90, DBG_CRITICAL, "ERROR: Cannot parse on-disk HTTP headers" <<
                Debug::Extra << "exception: " << CurrentException <<
                Debug::Extra << "raw input size: " << parsingBuffer->contentSize() << " bytes" <<
