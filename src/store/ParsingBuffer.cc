@@ -157,16 +157,16 @@ Store::ParsingBuffer::terminate()
 StoreIOBuffer
 Store::ParsingBuffer::packBack()
 {
-    const auto bytesToBack = contentSize();
+    const auto bytesToPack = contentSize();
     // until our callers do not have to work around legacy code expectations
-    Assure(bytesToBack);
+    Assure(bytesToPack);
 
     // if we accumulated more bytes at some point, any extra metadata should
     // have been consume()d by now, allowing readerSuppliedMemory_.data reuse
-    Assure(bytesToBack <= readerSuppliedMemory_.length);
+    Assure(bytesToPack <= readerSuppliedMemory_.length);
 
     auto result = readerSuppliedMemory_;
-    result.length = bytesToBack;
+    result.length = bytesToPack;
     Assure(result.data);
 
     if (!extraMemory_) {
