@@ -2041,11 +2041,11 @@ clientReplyContext::matchesStreamBodyBuffer(const StoreIOBuffer &their) const
     // the answer is undefined for errors; they are not really "body buffers"
     Assure(!their.flags.error);
 
-    if (!their.data || !their.length)
+    if (!their.length)
         return true; // an empty body area always matches our body area
 
     if (their.data != next()->readBuffer.data) {
-        debugs(88, 7, "mismatching body starts: " << their << " vs. " << next()->readBuffer);
+        debugs(88, 7, "no: " << their << " vs. " << next()->readBuffer);
         return false;
     }
 
