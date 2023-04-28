@@ -7,15 +7,31 @@
  */
 
 #include "squid.h"
-
-#include <cppunit/TestAssert.h>
-
+#include "compat/cppunit.h"
 #include "HttpHeader.h"
 #include "HttpRequest.h"
 #include "MasterXaction.h"
 #include "mime_header.h"
-#include "testHttpRequest.h"
 #include "unitTestMain.h"
+
+#include <cppunit/TestAssert.h>
+
+class TestHttpRequest : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestHttpRequest);
+    CPPUNIT_TEST(testCreateFromUrl);
+    CPPUNIT_TEST(testIPv6HostColonBug);
+    CPPUNIT_TEST(testSanityCheckStartLine);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void setUp() override;
+
+protected:
+    void testCreateFromUrl();
+    void testIPv6HostColonBug();
+    void testSanityCheckStartLine();
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestHttpRequest );
 

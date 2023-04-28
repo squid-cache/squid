@@ -7,12 +7,29 @@
  */
 
 #include "squid.h"
-#include "testPreCompiler.h"
 #include "unitTestMain.h"
 
 #include <cassert>
+#include <cppunit/extensions/HelperMacros.h>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TestPreCompiler );
+/*
+ * Test the pre-compiler directives used within Squid code actually work.
+ */
+
+class TestPreCompiler : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestPreCompiler);
+    CPPUNIT_TEST(testIfDef);
+    CPPUNIT_TEST(testIfDefAnd);
+    CPPUNIT_TEST(testIfDefOr);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void testIfDef();
+    void testIfDefAnd();
+    void testIfDefOr();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestPreCompiler);
 
 /**
  * Test several ways of defining pre-compiler directives.

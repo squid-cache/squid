@@ -7,10 +7,28 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "ConfigParser.h"
 #include "SquidString.h"
-#include "tests/testConfigParser.h"
 #include "unitTestMain.h"
+
+/*
+ * test the ConfigParser framework
+ */
+
+class TestConfigParser : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestConfigParser);
+    CPPUNIT_TEST(testParseQuoted);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void setUp() override;
+
+protected:
+    bool doParseQuotedTest(const char *, const char *);
+    void testParseQuoted();
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestConfigParser );
 

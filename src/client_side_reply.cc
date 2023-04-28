@@ -1150,8 +1150,7 @@ clientReplyContext::replyStatus()
     }
 
     // XXX: Should this be checked earlier? We could return above w/o checking.
-    if (reply->receivedBodyTooLarge(*http->request, http->out.offset - 4096)) {
-        /* 4096 is a margin for the HTTP headers included in out.offset */
+    if (reply->receivedBodyTooLarge(*http->request, http->out.offset)) {
         debugs(88, 5, "clientReplyStatus: client reply body is too large");
         return STREAM_FAILED;
     }

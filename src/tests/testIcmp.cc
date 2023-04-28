@@ -9,10 +9,49 @@
 #define SQUID_HELPER 1
 
 #include "squid.h"
-#include "tests/testIcmp.h"
+#include "compat/cppunit.h"
 #include "unitTestMain.h"
 
 #include <cppunit/TestAssert.h>
+
+#if USE_ICMP
+
+#include "icmp/Icmp.h"
+
+class IcmpStub : public Icmp
+{
+public:
+    IcmpStub() {};
+    ~IcmpStub() override {};
+    int Open() override { return 0; };
+    void Close() override {};
+
+    /// Construct ECHO request
+    void SendEcho(Ip::Address &, int, const char *, int) override {}
+
+    /// Handle ICMP responses.
+    void Recv(void) override {};
+
+    /* methods to relay test data from tester to private methods being tested */
+    int testChecksum(unsigned short *ptr, int size) { return CheckSum(ptr, size); };
+    int testHops(int ttl) { return ipHops(ttl); };
+};
+#endif
+
+/**
+ * test the ICMP base class.
+ */
+class TestIcmp : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestIcmp);
+    CPPUNIT_TEST(testChecksum);
+    CPPUNIT_TEST(testHops);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void testChecksum();
+    void testHops();
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestIcmp );
 
