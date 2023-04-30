@@ -297,7 +297,7 @@ asHandleReply(void *data, StoreIOBuffer result)
 
     if (asState->sc->atEof()) {
         if (leftoverBytes)
-            debugs(53, 2, "discarding a partially received WHOIS AS response line due to Store EOF: " << leftoverBytes);
+            debugs(53, 2, "WHOIS: Discarding the last " << leftoverBytes << " received bytes of a truncated AS response");
         delete asState;
         return;
     }
