@@ -636,9 +636,11 @@ void
 store_client::maybeWriteFromDiskToMemory(const StoreIOBuffer &httpResponsePart)
 {
     // XXX: Reject [memory-]uncachable/unshareable responses instead of assuming
-    // that any HTTP response loaded from disk should be written to MemObject's
-    // data_hdr (and that it may purge already cached entries). Cachability
-    // decision(s) should be made outside (and obeyed by) this low-level code.
+    // that an HTTP response should be written to MemObject's data_hdr (and that
+    // it may purge already cached entries) just because it "fits" and was
+    // loaded from disk. For example, this response may already be marked for
+    // release. The (complex) cachability decision(s) should be made outside
+    // (and obeyed by) this low-level code.
     if (httpResponsePart.length && entry->mem_obj->inmem_lo == 0 && entry->objectLen() <= (int64_t)Config.Store.maxInMemObjSize && Config.onoff.memory_cache_disk) {
         storeGetMemSpace(httpResponsePart.length);
         // XXX: The "recheck" below is not needed because nobody can purge
