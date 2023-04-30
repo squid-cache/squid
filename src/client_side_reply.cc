@@ -235,7 +235,7 @@ clientReplyContext::getNextNode() const
 /// That recipient also gets zero, some, or all HTTP response body bytes (into
 /// next()->readBuffer).
 void
-clientReplyContext::triggerInitialStoreRead(const STCB recipient)
+clientReplyContext::triggerInitialStoreRead(STCB const recipient)
 {
     Assure(recipient != HandleIMSReply);
     lastStreamBufferedBytes = StoreIOBuffer(); // storeClientCopy(next()->readBuffer) invalidates
