@@ -643,9 +643,10 @@ store_client::maybeWriteFromDiskToMemory(const StoreIOBuffer &httpResponsePart)
     // (and obeyed by) this low-level code.
     if (httpResponsePart.length && entry->mem_obj->inmem_lo == 0 && entry->objectLen() <= (int64_t)Config.Store.maxInMemObjSize && Config.onoff.memory_cache_disk) {
         storeGetMemSpace(httpResponsePart.length);
-        // XXX: The "recheck" below is not needed because nobody can purge
-        // mem_hdr bytes of a locked entry, and we do lock our entry. Moreover,
+        // XXX: This "recheck" is not needed because storeGetMemSpace() cannot
+        // purge mem_hdr bytes of a locked entry, and we do lock ours. And
         // inmem_lo offset itself should not be relevant to appending new bytes.
+        //
         // recheck for the above call may purge entry's data from the memory cache
         if (entry->mem_obj->inmem_lo == 0) {
             // XXX: This code assumes a non-shared memory cache.
