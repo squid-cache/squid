@@ -39,7 +39,7 @@ public:
     ParsingBuffer() = default;
 
     /// seeds this buffer with the caller-supplied buffer space
-    explicit ParsingBuffer(StoreIOBuffer &space);
+    explicit ParsingBuffer(StoreIOBuffer &);
 
     /// a NUL-terminated version of content(); same lifetime as content()
     const char *c_str() { terminate(); return memory(); }
