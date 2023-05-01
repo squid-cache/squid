@@ -496,7 +496,7 @@ clientReplyContext::handleIMSReply(const StoreIOBuffer result)
 SQUIDCEXTERN CSR clientGetMoreData;
 SQUIDCEXTERN CSD clientReplyDetach;
 
-/// Only used once, to process HTTP reply headers received from Store.
+/// \copydoc clientReplyContext::cacheHit()
 void
 clientReplyContext::CacheHit(void *data, StoreIOBuffer result)
 {
@@ -504,9 +504,9 @@ clientReplyContext::CacheHit(void *data, StoreIOBuffer result)
     context->cacheHit(result);
 }
 
-/**
- * Process a possible cache HIT.
- */
+/// Processes HTTP response headers received from Store on a suspected cache hit
+/// path. May be called several times (e.g., a Vary marker object hit followed
+/// by the corresponding variant hit).
 void
 clientReplyContext::cacheHit(StoreIOBuffer result)
 {
