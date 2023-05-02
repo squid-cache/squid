@@ -15,9 +15,9 @@ EXTRA_DIST = \
 	debug-messages.dox \
 	debug-sections.txt \
 	SPONSORS.in
+CLEANFILES = SPONSORS
 
-noinst_data_DATA = SPONSORS
-CLEANFILES = $(data_DATA)
+all: SPONSORS
 
 SPONSORS: SPONSORS.in
 	sed -e 's/@Squid-[0-9\.]*://' <$< >$@
