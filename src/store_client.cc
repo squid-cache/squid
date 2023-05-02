@@ -484,8 +484,8 @@ bool
 store_client::canReadFromMemory() const
 {
     const auto &mem = entry->mem();
-    const auto readOffset = nextHttpReadOffset();
-    return mem.inmem_lo <= readOffset && readOffset < mem.endOffset() &&
+    const auto memReadOffset = nextHttpReadOffset();
+    return mem.inmem_lo <= memReadOffset && memReadOffset < mem.endOffset() &&
            parsingBuffer->spaceSize();
 }
 
