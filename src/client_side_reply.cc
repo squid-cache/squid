@@ -508,7 +508,7 @@ clientReplyContext::CacheHit(void *data, StoreIOBuffer result)
 /// path. May be called several times (e.g., a Vary marker object hit followed
 /// by the corresponding variant hit).
 void
-clientReplyContext::cacheHit(StoreIOBuffer result)
+clientReplyContext::cacheHit(const StoreIOBuffer result)
 {
     /** Ignore if the HIT object is being deleted. */
     if (deleting) {
