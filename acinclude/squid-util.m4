@@ -219,8 +219,8 @@ dnl and where its pieces are (eg headers and hack macros)
 dnl Parameters for this macro are:
 dnl 1) library name (without 'lib' prefix)
 dnl 2) necessary library checks (to be executed by this macro unless the use of the library is disabled)
-dnl   These checks should set LIBFOO_LIBS variable for automake
-dnl   and ensure that it is empty on detection/validation failures.
+dnl   These checks should set LIBFOO_LIBS automake variable (on success)
+dnl   and ensure that it is empty or unset (on failures).
 AC_DEFUN([SQUID_CHECK_LIB_WORKS],[
 AS_IF([m4_translit([test "x$with_$1" != "xno"], [-+.], [___])],[
   $2
