@@ -363,7 +363,7 @@ urnParseReply(const SBuf &inBuf, const HttpRequestMethod &m)
     list = (url_entry *)xcalloc(n + 1, sizeof(*list));
 
     // XXX: Switch to tokenizer-based parsing.
-    char *allocated = SBufToCstring(inBuf);
+    const auto allocated = SBufToCstring(inBuf);
 
     auto buf = allocated;
     while (xisspace(*buf))
