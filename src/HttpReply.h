@@ -129,7 +129,7 @@ public:
     /// NUL-terminated buffer of the given size. Respects reply_header_max_size.
     /// Assures pstate becomes Http::Message::psParsed on (and only on) success.
     /// \returns the number of bytes in a successfully parsed prefix (or zero)
-    /// \reval 0 implies that more data is needed to parse the response prefix
+    /// \retval 0 implies that more data is needed to parse the response prefix
     size_t parseTerminatedPrefix(const char *, size_t);
 
 private:
