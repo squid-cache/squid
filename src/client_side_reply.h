@@ -130,6 +130,12 @@ private:
     void sendNotModifiedOrPreconditionFailedError();
     void sendClientUpstreamResponse(const StoreIOBuffer &upstreamResponse);
 
+    /// Reduces a chance of an accidental direct storeClientCopy() call that
+    /// (should but) forgets to invalidate our lastStreamBufferedBytes. This
+    /// function is not defined; decltype() syntax prohibits "= delete", but
+    /// function usage will trigger deprecation warnings and linking errors.
+    static decltype(::storeClientCopy) storeClientCopy [[deprecated]];
+
     /// Classification of the initial Store lookup.
     /// This very first lookup happens without the Vary-driven key augmentation.
     /// TODO: Exclude internal Store match bans from the "mismatch" category.

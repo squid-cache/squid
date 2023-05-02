@@ -240,7 +240,7 @@ clientReplyContext::triggerInitialStoreRead(STCB recipient)
     Assure(recipient != HandleIMSReply);
     lastStreamBufferedBytes = StoreIOBuffer(); // storeClientCopy(next()->readBuffer) invalidates
     StoreIOBuffer localTempBuffer (next()->readBuffer.length, 0, next()->readBuffer.data);
-    storeClientCopy(sc, http->storeEntry(), localTempBuffer, recipient, this);
+    ::storeClientCopy(sc, http->storeEntry(), localTempBuffer, recipient, this);
 }
 
 /// Request HTTP response body bytes from Store into next()->readBuffer. This
@@ -251,7 +251,7 @@ void
 clientReplyContext::requestMoreBodyFromStore()
 {
     lastStreamBufferedBytes = StoreIOBuffer(); // storeClientCopy(next()->readBuffer) invalidates
-    storeClientCopy(sc, http->storeEntry(), next()->readBuffer, SendMoreData, this);
+    ::storeClientCopy(sc, http->storeEntry(), next()->readBuffer, SendMoreData, this);
 }
 
 /* there is an expired entry in the store.
@@ -358,7 +358,8 @@ clientReplyContext::processExpired()
     {
         /* start counting the length from 0 */
         StoreIOBuffer localTempBuffer(HTTP_REQBUF_SZ, 0, tempbuf);
-        storeClientCopy(sc, entry, localTempBuffer, HandleIMSReply, this);
+        // keep lastStreamBufferedBytes: tempbuf is not a Client Stream buffer
+        ::storeClientCopy(sc, entry, localTempBuffer, HandleIMSReply, this);
     }
 }
 
