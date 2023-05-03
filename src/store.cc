@@ -915,7 +915,7 @@ StoreEntry::checkCachable()
         return 0; // avoid rerequesting release below
     }
 
-    if (store_status == STORE_OK && EBIT_TEST(flags, ENTRY_BAD_LENGTH)) {
+    if (EBIT_TEST(flags, ENTRY_BAD_LENGTH)) {
         debugs(20, 2, "StoreEntry::checkCachable: NO: wrong content-length");
         ++store_check_cachable_hist.no.wrong_content_length;
     } else if (!mem_obj) {
