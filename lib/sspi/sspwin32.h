@@ -14,26 +14,27 @@
 #ifndef _LIBSSPWIN32_H_
 #define _LIBSSPWIN32_H_
 
-#if _SQUID_WINDOWS_
-
-#if defined(__cplusplus)
-extern "C" {
-#endif
+#if HAVE_WINDOWS_H && HAVE_SSPI_H
 
 #define SECURITY_WIN32
 #define NTLM_PACKAGE_NAME "NTLM"
 #define NEGOTIATE_PACKAGE_NAME "Negotiate"
 
-#if _SQUID_CYGWIN_
-#include <wchar.h>
-#define _T(x) TEXT(x)
-#else
+#if HAVE_TCHAR_H
 #include <tchar.h>
 #endif
+#if HAVE_WINDOWS_H
 #include <windows.h>
+#endif
+#if HAVE_NTSECAPI_H
 #include <ntsecapi.h>
+#endif
+#if HAVE_SECURITY_H
 #include <security.h>
+#endif
+#if HAVE_SSPI_H
 #include <sspi.h>
+#endif
 
 typedef char * SSP_blobP;
 
@@ -61,10 +62,6 @@ const char * WINAPI SSP_MakeNegotiateBlob(PVOID, int, PBOOL, int *, char *);
 extern BOOL Use_Unicode;
 extern BOOL NTLM_LocalCall;
 
-#if defined(__cplusplus)
-}
-#endif
-
-#endif /* _SQUID_WINDOWS_ */
+#endif /* HAVE_WINDOWS_H && HAVE_SSPI_H */
 #endif /* LIBSSPWIN32_H_ */
 

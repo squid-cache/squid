@@ -28,6 +28,7 @@ m4_include([acinclude/pkg.m4])
 m4_include([acinclude/tdb.m4])
 m4_include([acinclude/lib-checks.m4])
 m4_include([acinclude/ax_cxx_compile_stdcxx.m4])
+m4_include([acinclude/win32-sspi.m4])
 
 PRESET_CFLAGS="$CFLAGS"
 PRESET_CXXFLAGS="$CXXFLAGS"
@@ -3080,6 +3081,7 @@ AC_CONFIG_FILES([
 	lib/rfcnb/Makefile
 	lib/smblib/Makefile
 	lib/snmplib/Makefile
+	lib/sspi/Makefile
 	scripts/Makefile
 	src/Makefile
 	src/acl/Makefile

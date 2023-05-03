@@ -9,8 +9,10 @@
 #include "squid.h"
 #include "base64.h"
 #include "ntlmauth/ntlmauth.h"
-#include "sspwin32.h"
+#include "sspi/sspwin32.h"
 #include "util.h"
+
+#if HAVE_WINDOWS_H && HAVE_SSPI_H
 
 typedef struct _AUTH_SEQ {
     BOOL fInitialized;
@@ -603,3 +605,4 @@ const char * WINAPI SSP_ValidateNegotiateCredentials(PVOID PAutenticateBuf, int 
     return NULL;
 }
 
+#endif /* HAVE_WINDOWS_H && HAVE_SSPI_H */
