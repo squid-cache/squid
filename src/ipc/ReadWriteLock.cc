@@ -127,6 +127,28 @@ Ipc::ReadWriteLock::startAppending()
     appending = true;
 }
 
+bool
+Ipc::ReadWriteLock::stopAppendingAndRestoreExclusive()
+{
+    assert(writing);
+
+    // avoid more expensive and less readable compare_exchange_strong() because
+    // only the writer (i.e. us) can change appending
+    if (!appending) {
+        assert(!readers);
+        return true; // we are not appending and have exclusive access already
+    }
+    appending = false;
+
+    // Checking `readers` here would mishandle a lockShared() call that started
+    // before we banned appending above, saw still true `appending`, got on a
+    // "success" code path, but had not incremented the `readers` counter yet.
+    // Checking `readLevel` mishandles lockShared() that saw false `appending`,
+    // got on a "failure" code path, but had not decremented `readLevel` yet.
+    // Our callers prefer the wrong "false" to the wrong "true" result.
+    return !readLevel;
+}
+
 void
 Ipc::ReadWriteLock::updateStats(ReadWriteLockStats &stats) const
 {

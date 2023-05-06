@@ -253,15 +253,14 @@ Ipc::StoreMap::abortWriting(const sfileno fileno)
     debugs(54, 5, "aborting entry " << fileno << " for writing " << path);
     Anchor &s = anchorAt(fileno);
     assert(s.writing());
-    s.lock.appending = false; // locks out any new readers
-    if (!s.lock.readers) {
+    if (s.lock.stopAppendingAndRestoreExclusive()) {
         freeChain(fileno, s, false);
-        debugs(54, 5, "closed clean entry " << fileno << " for writing " << path);
+        debugs(54, 5, "closed idle entry " << fileno << " for writing " << path);
     } else {
         s.waitingToBeFreed = true;
         s.writerHalted = true;
         s.lock.unlockExclusive();
-        debugs(54, 5, "closed dirty entry " << fileno << " for writing " << path);
+        debugs(54, 5, "closed busy entry " << fileno << " for writing " << path);
     }
 }
 
