@@ -238,7 +238,7 @@ Transients::addWriterEntry(StoreEntry &e, const cache_key *key)
     xitTable.index = index;
     xitTable.io = Store::ioWriting;
 
-    anchor->set(e, key);
+    anchor->setKey(key);
     // allow reading and receive remote DELETE events, but do not switch to
     // the reading lock because transientReaders() callers want true readers
     map->startAppending(index);
@@ -260,15 +260,13 @@ Transients::addReaderEntry(StoreEntry &e, const cache_key *key)
 
 /// fills (recently created) StoreEntry with information currently in Transients
 void
-Transients::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor)
+Transients::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor & /* XXX: remove */)
 {
     // set ASAP in hope to unlock the slot if something throws
     // and to provide index to such methods as hasWriter()
     auto &xitTable = e.mem_obj->xitTable;
     xitTable.index = index;
     xitTable.io = Store::ioReading;
-
-    anchor.exportInto(e);
 }
 
 bool

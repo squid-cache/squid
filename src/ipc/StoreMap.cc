@@ -100,7 +100,7 @@ Ipc::StoreMap::forgetWritingEntry(sfileno fileno)
 }
 
 const Ipc::StoreMap::Anchor *
-Ipc::StoreMap::openOrCreateForReading(const cache_key *const key, sfileno &fileno, const StoreEntry &entry)
+Ipc::StoreMap::openOrCreateForReading(const cache_key *const key, sfileno &fileno, const StoreEntry & /* XXX: remove */)
 {
     debugs(54, 5, "opening/creating entry with key " << storeKeyText(key)
            << " for reading " << path);
@@ -115,7 +115,7 @@ Ipc::StoreMap::openOrCreateForReading(const cache_key *const key, sfileno &filen
     // the competing openOrCreateForReading() workers race to create a new entry
     idx = fileNoByKey(key);
     if (auto anchor = openForWritingAt(idx)) {
-        anchor->set(entry, key);
+        anchor->setKey(key);
         anchor->lock.switchExclusiveToShared();
         // race ended
         assert(anchor->complete());
