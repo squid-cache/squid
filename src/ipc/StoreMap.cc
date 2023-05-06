@@ -100,7 +100,7 @@ Ipc::StoreMap::forgetWritingEntry(sfileno fileno)
 }
 
 const Ipc::StoreMap::Anchor *
-Ipc::StoreMap::openOrCreateForReading(const cache_key *const key, sfileno &fileno, const StoreEntry & /* XXX: remove */)
+Ipc::StoreMap::openOrCreateForReading(const cache_key *const key, sfileno &fileno)
 {
     debugs(54, 5, "opening/creating entry with key " << storeKeyText(key)
            << " for reading " << path);
