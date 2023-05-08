@@ -160,17 +160,6 @@ Ipc::ReadWriteLock::updateStats(ReadWriteLockStats &stats) const
     ++stats.count;
 }
 
-void
-Ipc::ReadWriteLock::print(std::ostream &os) const
-{
-    os << readers << 'R';
-    if (writing)
-        os << 'W';
-    if (appending)
-        os << 'A';
-    // impossible to report updating without setting/clearing that flag
-}
-
 /* Ipc::ReadWriteLockStats */
 
 Ipc::ReadWriteLockStats::ReadWriteLockStats()
@@ -203,3 +192,13 @@ Ipc::ReadWriteLockStats::dump(StoreEntry &e) const
                           appenders, appPerc);
     }
 }
+
+std::ostream &
+Ipc::operator <<(std::ostream &os, const Ipc::ReadWriteLock &lock)
+{
+    return os << lock.readers << 'R' <<
+           (lock.writing ? "W" : "") <<
+           (lock.appending ? "A" : "");
+    // impossible to report lock.updating without setting/clearing that flag
+}
+

@@ -50,29 +50,21 @@ public:
     /// adds approximate current stats to the supplied ones
     void updateStats(ReadWriteLockStats &stats) const;
 
-    /// dumps approximate lock state (for debugging)
-    void print(std::ostream &) const;
-
 public:
     mutable std::atomic<uint32_t> readers; ///< number of reading users
     std::atomic<bool> writing; ///< there is a writing user (there can be at most 1)
+    std::atomic<bool> appending; ///< the writer has promised to only append
     std::atomic_flag updating; ///< a reader is updating metadata/headers
 
 private:
     bool finalizeExclusive();
 
-    std::atomic<bool> appending; ///< the writer has promised to only append
     mutable std::atomic<uint32_t> readLevel; ///< number of users reading (or trying to)
     std::atomic<uint32_t> writeLevel; ///< number of users writing (or trying to write)
 };
 
-/// \copydoc ReadWriteLock::print()
-inline std::ostream &
-operator <<(std::ostream &os, const ReadWriteLock &lock)
-{
-    lock.print(os);
-    return os;
-}
+/// dumps approximate lock state (for debugging)
+std::ostream &operator <<(std::ostream &, const ReadWriteLock &);
 
 /// approximate stats of a set of ReadWriteLocks
 class ReadWriteLockStats
