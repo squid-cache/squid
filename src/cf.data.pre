@@ -5554,7 +5554,7 @@ DOC_START
 	records if it cannot write/send them immediately due to pending I/Os
 	(e.g., the I/O writing the previous log record) or connectivity loss.
 
-	Currently honored by 'daemon' and 'tcp' access_log modules only.
+	Currently honored by 'daemon', 'tcp' and 'udp' access_log modules only.
 DOC_END
 
 NAME: netdb_filename

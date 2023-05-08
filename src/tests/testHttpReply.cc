@@ -9,12 +9,25 @@
 #include "squid.h"
 #include <cppunit/TestAssert.h>
 
+#include "compat/cppunit.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "mime_header.h"
 #include "SquidConfig.h"
-#include "testHttpReply.h"
 #include "unitTestMain.h"
+
+class TestHttpReply : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestHttpReply);
+    CPPUNIT_TEST(testSanityCheckFirstLine);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void setUp() override;
+
+protected:
+    void testSanityCheckFirstLine();
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestHttpReply );
 

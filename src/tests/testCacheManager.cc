@@ -9,12 +9,32 @@
 #include "squid.h"
 #include "anyp/Uri.h"
 #include "CacheManager.h"
+#include "compat/cppunit.h"
 #include "mgr/Action.h"
 #include "Store.h"
-#include "testCacheManager.h"
 #include "unitTestMain.h"
 
 #include <cppunit/TestAssert.h>
+/*
+ * test the CacheManager implementation
+ */
+
+class TestCacheManager : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestCacheManager);
+    CPPUNIT_TEST(testCreate);
+    CPPUNIT_TEST(testRegister);
+    CPPUNIT_TEST(testParseUrl);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void setUp() override;
+
+protected:
+    void testCreate();
+    void testRegister();
+    void testParseUrl();
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestCacheManager );
 

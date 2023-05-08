@@ -17,9 +17,7 @@
 #if HAVE_MEMORY_H
 #include <memory.h>
 #endif
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
+#include <cassert>
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
