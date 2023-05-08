@@ -132,13 +132,11 @@ Ipc::ReadWriteLock::stopAppendingAndRestoreExclusive()
 {
     assert(writing);
 
-    // avoid more expensive and less readable compare_exchange_strong() because
-    // only the writer (i.e. us) can change appending
-    if (!appending) {
-        assert(!readers);
-        return true; // we are not appending and have exclusive access already
-    }
-    appending = false;
+    // We could immediately return true if appending is already false, but that
+    // would require ensuring that this method is never called twice in a row
+    // for the same lock, and we have no good way to ensure that. Instead, we
+    // accept a few wrong "false" results below.
+    appending = false; // might already be false
 
     // Checking `readers` here would mishandle a lockShared() call that started
     // before we banned appending above, saw still true `appending`, got on a
