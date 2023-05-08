@@ -43,7 +43,8 @@ public:
     void startAppending(); ///< writer keeps its lock but also allows reading
 
     /// writer keeps its lock and disallows future readers
-    /// \returns whether access became exclusive (i.e. no concurrent readers)
+    /// \returns whether access became exclusive (i.e. no readers)
+    /// \prec appending is true
     bool stopAppendingAndRestoreExclusive();
 
     /// adds approximate current stats to the supplied ones
