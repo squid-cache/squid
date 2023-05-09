@@ -62,7 +62,6 @@ public:
         friend class DebugMessageHeader;
 
         void rewind(const int aSection, const int aLevel);
-        void formatStream();
         Context *upper; ///< previous or parent record in nested debugging calls
         std::ostringstream buf; ///< debugs() output sink
         bool forceAlert; ///< the current debugs() will be a syslog ALERT
@@ -110,8 +109,9 @@ public:
     /// configures the active debugging context to write syslog ALERT
     static void ForceAlert();
 
-    /// prefixes each grouped debugs() line after the first one in the group
-    static std::ostream& Extra(std::ostream &os) { return os << "\n    "; }
+    /// Prefixes each grouped debugs() line after the first one in the group.
+    /// Resets debugging stream format to the initial/default one.
+    static std::ostream& Extra(std::ostream &os);
 
     /// silently erases saved early debugs() messages (if any)
     static void ForgetSaved();
@@ -170,6 +170,7 @@ public:
     static void SettleSyslog();
 
 private:
+    static void FormatStream(std::ostream &);
     static void LogMessage(const Context &);
 
     static Context *Current; ///< deepest active context; nil outside debugs()
