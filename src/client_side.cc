@@ -1524,11 +1524,10 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
             bool allowDomainMismatch = false;
             if (Config.ssl_client.cert_error) {
                 ACLFilledChecklist check(Config.ssl_client.cert_error, nullptr);
-                check.sslErrors = new Security::CertErrors(Security::CertError(SQUID_X509_V_ERR_DOMAIN_MISMATCH, srvCert));
+                const auto sslErrors = std::make_unique<Security::CertErrors>(Security::CertError(SQUID_X509_V_ERR_DOMAIN_MISMATCH, srvCert));
+                check.sslErrors = sslErrors.get();
                 clientAclChecklistFill(check, http);
                 allowDomainMismatch = check.fastCheck().allowed();
-                delete check.sslErrors;
-                check.sslErrors = nullptr;
             }
 
             if (!allowDomainMismatch) {
@@ -3583,7 +3582,7 @@ ConnStateData::fillConnectionLevelDetails(ACLFilledChecklist &checklist) const
 
 #if USE_OPENSSL
     if (!checklist.sslErrors && sslServerBump)
-        checklist.sslErrors = cbdataReference(sslServerBump->sslErrors());
+        checklist.sslErrors = sslServerBump->sslErrors();
 #endif
 
     if (!checklist.rfc931[0]) // checklist creator may have supplied it already
