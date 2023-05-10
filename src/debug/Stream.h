@@ -111,7 +111,7 @@ public:
 
     /// Prefixes each grouped debugs() line after the first one in the group.
     /// Resets debugging stream format to the initial/default one.
-    static std::ostream& Extra(std::ostream &os);
+    static std::ostream& Extra(std::ostream &);
 
     /// silently erases saved early debugs() messages (if any)
     static void ForgetSaved();
