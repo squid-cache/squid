@@ -155,7 +155,7 @@ private:
 public:
 
     struct Callback {
-        Callback ():callback_handler(nullptr), callback_data(nullptr) {}
+        Callback() = default;
 
         Callback (STCB *, void *);
 
@@ -164,8 +164,8 @@ public:
         /// delivery to the STCB callback_handler.
         bool pending() const;
 
-        STCB *callback_handler;
-        void *callback_data;
+        STCB *callback_handler = nullptr; ///< where to deliver the answer
+        CallbackData cbData; ///< the first STCB callback parameter
         CodeContextPointer codeContext; ///< Store client context
 
         /// a scheduled asynchronous finishCallback() call (or nil)
