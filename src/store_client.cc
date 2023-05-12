@@ -177,7 +177,7 @@ store_client::finishCallback()
     cmp_offset = result.offset + result.length;
     STCB *temphandler = _callback.callback_handler;
     const auto cbdata = _callback.cbData.validDone();
-    _callback = Callback(nullptr, nullptr);
+    _callback = Callback();
     copyInto.data = nullptr;
 
     if (cbdata)
