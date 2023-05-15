@@ -9,7 +9,6 @@
 #ifndef SQUID_ACLHIERCODEDATA_H
 #define SQUID_ACLHIERCODEDATA_H
 
-#include "acl/Acl.h"
 #include "acl/Data.h"
 #include "hier_code.h"
 

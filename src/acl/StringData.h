@@ -9,7 +9,6 @@
 #ifndef SQUID_ACLSTRINGDATA_H
 #define SQUID_ACLSTRINGDATA_H
 
-#include "acl/Acl.h"
 #include "acl/Data.h"
 #include "sbuf/SBuf.h"
 

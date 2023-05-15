@@ -9,10 +9,9 @@
 #ifndef SQUID_ACLCERTIFICATEDATA_H
 #define SQUID_ACLCERTIFICATEDATA_H
 
-#include "acl/Acl.h"
-#include "acl/Data.h"
 #include "acl/StringData.h"
 #include "ssl/support.h"
+
 #include <string>
 #include <list>
 

@@ -12,8 +12,6 @@
 #include "tests/STUB.h"
 
 #if USE_AUTH
-#include "acl/Acl.h" /* for Acl::Answer */
-
 #include "auth/Acl.h"
 Acl::Answer AuthenticateAcl(ACLChecklist *) STUB_RETVAL(ACCESS_DENIED)
 

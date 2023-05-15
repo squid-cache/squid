@@ -11,7 +11,7 @@
 
 #if USE_AUTH
 
-#include "acl/Acl.h"
+#include "acl/Node.h"
 
 // ACL-related code used by authentication-related code. This code is not in
 // auth/Gadgets to avoid making auth/libauth dependent on acl/libstate because

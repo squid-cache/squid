@@ -9,7 +9,6 @@
 /* DEBUG: section 53    AS Number handling */
 
 #include "squid.h"
-#include "acl/Acl.h"
 #include "acl/Asn.h"
 #include "acl/DestinationAsn.h"
 #include "acl/DestinationIp.h"
@@ -116,7 +115,7 @@ static int printRadixNode(struct squid_radix_node *rn, void *sentry);
 }
 #endif
 
-void asnAclInitialize(ACL * acls);
+void asnAclInitialize(Acl::Node *);
 
 static void destroyRadixNodeInfo(as_info *);
 

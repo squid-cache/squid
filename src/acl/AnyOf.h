@@ -15,7 +15,7 @@ namespace Acl
 {
 
 /// Configurable any-of ACL. Each ACL line is a disjuction of ACLs.
-class AnyOf: public Acl::OrNode
+class AnyOf: public OrNode
 {
     MEMPROXY_CLASS(AnyOf);
 

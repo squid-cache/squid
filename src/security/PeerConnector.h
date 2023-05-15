@@ -9,7 +9,6 @@
 #ifndef SQUID_SRC_SECURITY_PEERCONNECTOR_H
 #define SQUID_SRC_SECURITY_PEERCONNECTOR_H
 
-#include "acl/Acl.h"
 #include "acl/ChecklistFiller.h"
 #include "base/AsyncCallbacks.h"
 #include "base/AsyncJob.h"

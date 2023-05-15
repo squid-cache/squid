@@ -7,7 +7,6 @@
  */
 
 #include "squid.h"
-#include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
 #include "auth/Acl.h"
 #include "auth/AclProxyAuth.h"

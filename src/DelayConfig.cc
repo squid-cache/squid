@@ -11,8 +11,8 @@
 #include "squid.h"
 
 #if USE_DELAY_POOLS
-#include "acl/Acl.h"
 #include "acl/Gadgets.h"
+#include "acl/Node.h"
 #include "ConfigParser.h"
 #include "DelayConfig.h"
 #include "DelayPool.h"

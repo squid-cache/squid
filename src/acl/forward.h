@@ -11,7 +11,6 @@
 
 #include "base/RefCount.h"
 
-class ACL;
 class ACLChecklist;
 class ACLFilledChecklist;
 class ACLList;
@@ -27,6 +26,7 @@ class AndNode;
 class Answer;
 class ChecklistFiller;
 class InnerNode;
+class Node;
 class NotNode;
 class OrNode;
 class Tree;

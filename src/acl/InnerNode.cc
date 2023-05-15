@@ -7,7 +7,6 @@
  */
 
 #include "squid.h"
-#include "acl/Acl.h"
 #include "acl/BoolOps.h"
 #include "acl/Checklist.h"
 #include "acl/Gadgets.h"
@@ -32,7 +31,7 @@ Acl::InnerNode::empty() const
 }
 
 void
-Acl::InnerNode::add(ACL *node)
+Acl::InnerNode::add(Node *node)
 {
     assert(node != nullptr);
     nodes.push_back(node);
@@ -56,9 +55,8 @@ Acl::InnerNode::lineParse()
             ++t;
 
         debugs(28, 3, "looking for ACL " << t);
-        ACL *a = ACL::FindByName(t);
-
-        if (a == nullptr) {
+        auto *a = FindByName(t);
+        if (!a) {
             debugs(28, DBG_CRITICAL, "ERROR: ACL not found: " << t);
             self_destruct();
             return count; // not reached

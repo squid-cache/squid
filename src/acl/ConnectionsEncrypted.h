@@ -9,13 +9,13 @@
 #ifndef SQUID_ACL_CONNECTIONS_ENCRYPTED_H
 #define SQUID_ACL_CONNECTIONS_ENCRYPTED_H
 
-#include "acl/Acl.h"
+#include "acl/Node.h"
 #include "acl/Checklist.h"
 
 namespace Acl
 {
 
-class ConnectionsEncrypted : public ACL
+class ConnectionsEncrypted : public Node
 {
     MEMPROXY_CLASS(ConnectionsEncrypted);
 

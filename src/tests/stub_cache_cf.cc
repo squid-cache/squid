@@ -9,7 +9,7 @@
 /* DEBUG: section 03    Configuration File Parsing */
 
 #include "squid.h"
-#include "acl/Acl.h"
+#include "acl/Node.h"
 #include "acl/Gadgets.h"
 #include "ConfigParser.h"
 #include "wordlist.h"

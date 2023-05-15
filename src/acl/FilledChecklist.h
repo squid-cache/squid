@@ -11,7 +11,6 @@
 
 #include "AccessLogEntry.h"
 #include "acl/Checklist.h"
-#include "acl/forward.h"
 #include "base/CbcPointer.h"
 #include "error/forward.h"
 #include "ip/Address.h"

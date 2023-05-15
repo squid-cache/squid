@@ -10,9 +10,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
-//#include "acl/Acl.h"
 #include "acl/Asn.h"
-#include "acl/forward.h"
 #include "anyp/UriScheme.h"
 #include "auth/Config.h"
 #include "auth/Gadgets.h"
@@ -806,7 +804,7 @@ serverConnectionsOpen(void)
         icmpEngine.Open();
         netdbInit();
         asnInit();
-        ACL::Initialize();
+        Acl::Node::Initialize();
         peerSelectInit();
 
         carpInit();

@@ -9,15 +9,15 @@
 #ifndef SQUID_ACL_TRANSACTION_INITIATOR_H
 #define SQUID_ACL_TRANSACTION_INITIATOR_H
 
-#include "acl/Acl.h"
 #include "acl/Checklist.h"
+#include "acl/Node.h"
 #include "XactionInitiator.h"
 
 namespace Acl
 {
 
 /// transaction_initiator ACL
-class TransactionInitiator : public ACL
+class TransactionInitiator : public Node
 {
     MEMPROXY_CLASS(TransactionInitiator);
 
