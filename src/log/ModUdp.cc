@@ -12,7 +12,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "fatal.h"
-#include "fd.h"
+#include "fde.h"
 #include "fs_io.h"
 #include "log/File.h"
 #include "log/ModUdp.h"
@@ -42,7 +42,9 @@ logfile_mod_udp_write(Logfile * lf, const char *buf, size_t len)
     l_udp_t *ll = (l_udp_t *) lf->data;
     ssize_t s;
     s = write(ll->fd, (char const *) buf, len);
-    fd_bytes(ll->fd, s, FD_WRITE);
+    // XXX: convert to FD_WRITE_METHOD instead of write(2)
+    if (s > 0)
+        fd_table[ll->fd].bytesWritten(s);
 #if 0
     // TODO: Enable after polishing to properly log these errors.
     if (s < 0) {

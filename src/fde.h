@@ -84,8 +84,25 @@ public:
     /// use I/O methods that maintain an internal-to-them buffer
     void useBufferedIo(READ_HANDLER *, WRITE_HANDLER *);
 
-    int read(int fd, char *buf, int len) { return readMethod_(fd, buf, len); }
-    int write(int fd, const char *buf, int len) { return writeMethod_(fd, buf, len); }
+    /// Call the previously set read I/O method.
+    /// Performs I/O counting for all bytes received.
+    /// \returns the read method result
+    int read(int fd, char *buf, int len) {
+        auto n = readMethod_(fd, buf, len);
+        if (n > 0)
+            bytesRead(n);
+        return n;
+    }
+
+    /// Call the previously set write I/O method.
+    /// Performs I/O counting for all bytes sent.
+    /// \returns the write method result
+    int write(int fd, const char *buf, int len) {
+        auto n = writeMethod_(fd, buf, len);
+        if (n > 0)
+            bytesWritten(n);
+        return n;
+    }
 
     /* NOTE: memset is used on fdes today. 20030715 RBC */
     static void DumpStats(StoreEntry *);
@@ -96,6 +113,20 @@ public:
 
     /// record a transaction on this FD
     void noteUse() { ++pconn.uses; }
+
+    /// Record bytes received from a single I/O call.
+    /// Whenever possible, configure I/O methods and use read() instead.
+    void bytesRead(const size_t n) { totalBytesRead_ += n; }
+
+    /// \copydoc totalBytesRead_
+    uint64_t totalBytesRead() const { return totalBytesRead_; }
+
+    /// Record bytes sent by a single I/O call.
+    /// Whenever possible, configure I/O methods and use write() instead.
+    void bytesWritten(const size_t n) { totalBytesWritten_ += n; }
+
+    /// \copydoc totalBytesWritten_
+    uint64_t totalBytesWritten() const { return totalBytesWritten_; }
 
 public:
 
@@ -130,9 +161,6 @@ public:
         //bool write_pending; //XXX seems not to be used
         bool transparent = false;
     } flags;
-
-    int64_t bytes_read = 0;
-    int64_t bytes_written = 0;
 
     struct {
         int uses = 0;                   /* ie # req's over persistent conn */
@@ -184,6 +212,9 @@ private:
     // I/O methods connect Squid to the device/stack/library fde represents
     READ_HANDLER *readMethod_ = nullptr; ///< imports bytes into Squid
     WRITE_HANDLER *writeMethod_ = nullptr; ///< exports Squid bytes
+
+    uint64_t totalBytesRead_ = 0; ///< aggregate bytes read
+    uint64_t totalBytesWritten_ = 0; ///< aggregate bytes written
 };
 
 #define fd_table fde::Table

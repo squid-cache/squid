@@ -18,7 +18,6 @@ fde *fde::Table = nullptr;
 int fdNFree(void) STUB_RETVAL(-1)
 void fd_open(int, unsigned int, const char *) STUB
 void fd_close(int) STUB
-void fd_bytes(int, int, unsigned int) STUB
 void fd_note(int, const char *) STUB
 void fdAdjustReserved() STUB
 

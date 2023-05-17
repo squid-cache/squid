@@ -1781,8 +1781,8 @@ statClientRequests(StoreEntry * s)
 
         if (conn != nullptr) {
             const int fd = conn->clientConnection->fd;
-            storeAppendPrintf(s, "\tFD %d, read %" PRId64 ", wrote %" PRId64 "\n", fd,
-                              fd_table[fd].bytes_read, fd_table[fd].bytes_written);
+            storeAppendPrintf(s, "\tFD %d, read %" PRIu64 ", wrote %" PRIu64 "\n", fd,
+                              fd_table[fd].totalBytesRead(), fd_table[fd].totalBytesWritten());
             storeAppendPrintf(s, "\tFD desc: %s\n", fd_table[fd].desc);
             storeAppendPrintf(s, "\tin: buf %p, used %ld, free %ld\n",
                               conn->inBuf.rawContent(), (long int) conn->inBuf.length(), (long int) conn->inBuf.spaceSize());

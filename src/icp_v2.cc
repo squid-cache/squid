@@ -23,6 +23,7 @@
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "fd.h"
+#include "fde.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
 #include "ICP.h"
@@ -332,6 +333,8 @@ icpUdpSend(int fd,
 
     if (x >= 0) {
         /* successfully written */
+        // XXX: setup fd_table[] properly so we can use FD_WRITE_METHOD()
+        fd_table[fd].bytesWritten(x);
         const auto logcode = icpLogFromICPCode(static_cast<icp_opcode>(msg->opcode));
         icpLogIcp(to, logcode, len, (char *) (msg + 1), delay, al);
         icpCount(msg, SENT, (size_t) len, delay);
@@ -661,6 +664,9 @@ icpHandleUdp(int sock, void *)
 
             break;
         }
+
+        // XXX: setup fd_table[] properly so we can use FD_READ_METHOD()
+        fd_table[sock].bytesRead(len);
 
         ++(*N);
         icpCount(buf, RECV, (size_t) len, 0);

@@ -599,8 +599,11 @@ htcpSend(const char *buf, int len, Ip::Address &to)
     if (comm_udp_sendto(htcpOutgoingConn->fd, to, buf, len) < 0) {
         int xerrno = errno;
         debugs(31, 3, htcpOutgoingConn << " sendto: " << xstrerr(xerrno));
-    } else
+    } else {
         ++statCounter.htcp.pkts_sent;
+        // XXX: setup fd_table[] properly so we can use FD_WRITE_METHOD()
+        fd_table[htcpOutgoingConn->fd].bytesWritten(len);
+    }
 }
 
 /*
@@ -1427,6 +1430,11 @@ htcpRecv(int fd, void *)
 
     if (len)
         ++statCounter.htcp.pkts_recv;
+
+    if (len > 0) {
+        // XXX: setup fd_table[] properly so we can use FD_READ_METHOD()
+        fd_table[fd].bytesRead(len);
+    }
 
     htcpHandleMsg(buf, len, from);
 

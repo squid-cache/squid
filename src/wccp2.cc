@@ -18,6 +18,7 @@
 #include "comm/Loops.h"
 #include "ConfigParser.h"
 #include "event.h"
+#include "fde.h"
 #include "ip/Address.h"
 #include "md5.h"
 #include "Parsing.h"
@@ -1217,6 +1218,8 @@ wccp2HandleUdp(int sock, void *)
     if (lenOrError < 0)
         return;
     const auto len = static_cast<size_t>(lenOrError);
+    // XXX: setup fd_table[] properly so we can use FD_READ_METHOD()
+    fd_table[sock].bytesRead(len);
 
     try {
         // TODO: Remove wccp2_i_see_you.data and use a buffer to read messages.
@@ -1640,12 +1643,19 @@ wccp2HereIam(void *)
                                 router,
                                 &service_list_ptr->wccp_packet,
                                 service_list_ptr->wccp_packet_size);
+                // XXX: setup fd_table[] properly so we can use FD_WRITE_METHOD()
+                fd_table[theWccp2Connection].bytesWritten(service_list_ptr->wccp_packet_size);
             } else {
-                if (send(theWccp2Connection, &service_list_ptr->wccp_packet, service_list_ptr->wccp_packet_size, 0) < static_cast<int>(service_list_ptr->wccp_packet_size)) {
+                const auto x = send(theWccp2Connection, &service_list_ptr->wccp_packet, service_list_ptr->wccp_packet_size, 0);
+                if (x < static_cast<int>(service_list_ptr->wccp_packet_size)) {
                     int xerrno = errno;
                     debugs(80, 2, "ERROR: failed to send WCCPv2 HERE_I_AM packet to " << router << " : " << xstrerr(xerrno));
+                } else {
+                    // XXX: setup fd_table[] properly so we can use FD_WRITE_METHOD()
+                    fd_table[theWccp2Connection].bytesWritten(x);
                 }
             }
+
         }
 
         service_list_ptr = service_list_ptr->next;
@@ -2024,10 +2034,16 @@ wccp2AssignBuckets(void *)
                                     tmp_rtr,
                                     &wccp_packet,
                                     offset);
+                    // XXX: setup fd_table[] properly so we can use FD_WRITE_METHOD()
+                    fd_table[theWccp2Connection].bytesWritten(offset);
                 } else {
-                    if (send(theWccp2Connection, &wccp_packet, offset, 0) < static_cast<int>(offset)) {
+                    const auto x = send(theWccp2Connection, &wccp_packet, offset, 0);
+                    if (x < static_cast<int>(offset)) {
                         int xerrno = errno;
                         debugs(80, 2, "ERROR: failed to send WCCPv2 HERE_I_AM packet to " << tmp_rtr << " : " << xstrerr(xerrno));
+                    } else {
+                        // XXX: setup fd_table[] properly so we can use FD_WRITE_METHOD()
+                        fd_table[theWccp2Connection].bytesWritten(x);
                     }
                 }
             }

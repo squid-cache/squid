@@ -223,22 +223,6 @@ fd_note(int fd, const char *s)
 }
 
 void
-fd_bytes(int fd, int len, unsigned int type)
-{
-    fde *F = &fd_table[fd];
-
-    if (len < 0)
-        return;
-
-    assert(type == FD_READ || type == FD_WRITE);
-
-    if (type == FD_READ)
-        F->bytes_read += len;
-    else
-        F->bytes_written += len;
-}
-
-void
 fdDumpOpen(void)
 {
     int i;
@@ -254,8 +238,8 @@ fdDumpOpen(void)
             continue;
 
         debugs(51, Important(17), "Open FD "<< std::left<< std::setw(10) <<
-               (F->bytes_read && F->bytes_written ? "READ/WRITE" :
-                F->bytes_read ? "READING" : F->bytes_written ? "WRITING" :
+               (F->totalBytesRead() && F->totalBytesWritten() ? "READ/WRITE" :
+                F->totalBytesRead() ? "READING" : F->totalBytesWritten() ? "WRITING" :
                 "UNSTARTED")  <<
                " "<< std::right << std::setw(4) << i  << " " << F->desc);
     }

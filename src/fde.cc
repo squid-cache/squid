@@ -79,14 +79,14 @@ fde::dumpStats(StoreEntry &dumpEntry, int fdNumber) const
                       fdNumber,
                       win32.handle,
 #else
-    storeAppendPrintf(&dumpEntry, "%4d %-6.6s %4d %7" PRId64 "%c %7" PRId64 "%c %-21s %s\n",
+    storeAppendPrintf(&dumpEntry, "%4d %-6.6s %4d %7" PRIu64 "%c %7" PRIu64 "%c %-21s %s\n",
                       fdNumber,
 #endif
                       fdTypeStr[type],
                       timeoutHandler ? (int) (timeout - squid_curtime) : 0,
-                      bytes_read,
+                      totalBytesRead(),
                       readPending(fdNumber) ? '*' : ' ',
-                      bytes_written,
+                      totalBytesWritten(),
                       write_handler ? '*' : ' ',
                       remoteAddr(),
                       desc);

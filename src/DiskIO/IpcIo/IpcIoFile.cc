@@ -17,7 +17,7 @@
 #include "DiskIO/IpcIo/IpcIoFile.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
-#include "fd.h"
+#include "fde.h"
 #include "fs_io.h"
 #include "globals.h"
 #include "ipc/mem/Pages.h"
@@ -741,7 +741,6 @@ diskerRead(IpcIoMsg &ipcIo)
     char *const buf = Ipc::Mem::PagePointer(ipcIo.page);
     const ssize_t read = pread(TheFile, buf, min(ipcIo.len, Ipc::Mem::PageSize()), ipcIo.offset);
     ++statCounter.syscalls.disk.reads;
-    fd_bytes(TheFile, read, FD_READ);
 
     if (read >= 0) {
         ipcIo.xerrno = 0;
@@ -749,6 +748,8 @@ diskerRead(IpcIoMsg &ipcIo)
         debugs(47,8, "disker" << KidIdentifier << " read " <<
                (len == ipcIo.len ? "all " : "just ") << read);
         ipcIo.len = len;
+        // XXX: setup fd_table[TheFile] properly in DiskerOpen so we can use FD_READ_METHOD().
+        fd_table[TheFile].bytesRead(read);
     } else {
         ipcIo.xerrno = errno;
         ipcIo.len = 0;
@@ -773,7 +774,6 @@ diskerWriteAttempts(IpcIoMsg &ipcIo)
     for (int attempts = 1; attempts <= attemptLimit; ++attempts) {
         const ssize_t result = pwrite(TheFile, buf, toWrite, offset);
         ++statCounter.syscalls.disk.writes;
-        fd_bytes(TheFile, result, FD_WRITE);
 
         if (result < 0) {
             ipcIo.xerrno = errno;
@@ -788,6 +788,8 @@ diskerWriteAttempts(IpcIoMsg &ipcIo)
 
         const size_t wroteNow = static_cast<size_t>(result); // result >= 0
         ipcIo.xerrno = 0;
+        // XXX: setup fd_table[TheFile] properly in DiskerOpen so we can use FD_WRITE_METHOD().
+        fd_table[TheFile].bytesWritten(wroteNow);
 
         debugs(47,3, "disker" << KidIdentifier << " wrote " <<
                (wroteNow >= toWrite ? "all " : "just ") << wroteNow <<
