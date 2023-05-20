@@ -249,8 +249,8 @@ Transport::Write(const void *buf, size_t len)
 #endif
     } else {
 
-#if _SQUID_WINDOWS_
-        return send(conn, buf, len, 0);
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
+        return send(conn, static_cast<const char *>(buf), len, 0);
 #else
         alarm(Config.ioTimeout);
         return write(conn, buf, len);
@@ -272,8 +272,8 @@ Transport::Read(void *buf, size_t len)
 #endif
     } else {
 
-#if _SQUID_WINDOWS_
-        return recv(conn, buf, len, 0);
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
+        return recv(conn, static_cast<char *>(buf), len, 0);
 #else
         alarm(Config.ioTimeout);
         return read(conn, buf, len);
