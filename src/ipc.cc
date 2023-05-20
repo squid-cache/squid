@@ -159,22 +159,22 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         }
 
         errno = 0;
-        if (setsockopt(fds[0], SOL_SOCKET, SO_SNDBUF, (void *) &buflen, sizeof(buflen)) == -1)  {
+        if (setsockopt(fds[0], SOL_SOCKET, SO_SNDBUF, reinterpret_cast<char *>(&buflen), sizeof(buflen)) == -1)  {
             xerrno = errno;
             debugs(54, DBG_IMPORTANT, "ERROR: setsockopt failed: " << xstrerr(xerrno));
             errno = 0;
         }
-        if (setsockopt(fds[0], SOL_SOCKET, SO_RCVBUF, (void *) &buflen, sizeof(buflen)) == -1) {
+        if (setsockopt(fds[0], SOL_SOCKET, SO_RCVBUF, reinterpret_cast<char *>(&buflen), sizeof(buflen)) == -1) {
             xerrno = errno;
             debugs(54, DBG_IMPORTANT, "ERROR: setsockopt failed: " << xstrerr(xerrno));
             errno = 0;
         }
-        if (setsockopt(fds[1], SOL_SOCKET, SO_SNDBUF, (void *) &buflen, sizeof(buflen)) == -1) {
+        if (setsockopt(fds[1], SOL_SOCKET, SO_SNDBUF, reinterpret_cast<char *>(&buflen), sizeof(buflen)) == -1) {
             xerrno = errno;
             debugs(54, DBG_IMPORTANT, "ERROR: setsockopt failed: " << xstrerr(xerrno));
             errno = 0;
         }
-        if (setsockopt(fds[1], SOL_SOCKET, SO_RCVBUF, (void *) &buflen, sizeof(buflen)) == -1) {
+        if (setsockopt(fds[1], SOL_SOCKET, SO_RCVBUF, reinterpret_cast<char *>(&buflen), sizeof(buflen)) == -1) {
             xerrno = errno;
             debugs(54, DBG_IMPORTANT, "ERROR: setsockopt failed: " << xstrerr(xerrno));
             errno = 0;

@@ -45,9 +45,8 @@ Ip::Qos::getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde)
 #if USE_QOS_TOS && _SQUID_LINUX_
     /* Bug 2537: This part of ZPH only applies to patched Linux kernels. */
     tos_t tos = 1;
-    int tos_len = sizeof(tos);
     clientFde->tosFromServer = 0;
-    if (setsockopt(server->fd,SOL_IP,IP_RECVTOS,&tos,tos_len)==0) {
+    if (setsockopt(server->fd, SOL_IP, IP_RECVTOS, reinterpret_cast<char *>(&tos), sizeof(tos)) == 0) {
         unsigned char buf[512];
         int len = 512;
         if (getsockopt(server->fd,SOL_IP,IP_PKTOPTIONS,buf,(socklen_t*)&len) == 0) {
@@ -531,15 +530,13 @@ Ip::Qos::setSockTos(const int fd, tos_t tos, int type)
 {
     // Bug 3731: FreeBSD produces 'invalid option'
     // unless we pass it a 32-bit variable storing 8-bits of data.
-    // NP: it is documented as 'int' for all systems, even those like Linux which accept 8-bit char
-    //     so we convert to a int before setting.
     int bTos = tos;
 
     debugs(50, 3, "for FD " << fd << " to " << bTos);
 
     if (type == AF_INET) {
 #if defined(IP_TOS)
-        const int x = setsockopt(fd, IPPROTO_IP, IP_TOS, &bTos, sizeof(bTos));
+        const int x = setsockopt(fd, IPPROTO_IP, IP_TOS, reinterpret_cast<char *>(&bTos), sizeof(bTos));
         if (x < 0) {
             int xerrno = errno;
             debugs(50, 2, "setsockopt(IP_TOS) on " << fd << ": " << xstrerr(xerrno));
@@ -551,7 +548,7 @@ Ip::Qos::setSockTos(const int fd, tos_t tos, int type)
 #endif
     } else { // type == AF_INET6
 #if defined(IPV6_TCLASS)
-        const int x = setsockopt(fd, IPPROTO_IPV6, IPV6_TCLASS, &bTos, sizeof(bTos));
+        const int x = setsockopt(fd, IPPROTO_IPV6, IPV6_TCLASS, reinterpret_cast<char *>(&bTos), sizeof(bTos));
         if (x < 0) {
             int xerrno = errno;
             debugs(50, 2, "setsockopt(IPV6_TCLASS) on " << fd << ": " << xstrerr(xerrno));
@@ -579,7 +576,7 @@ Ip::Qos::setSockNfmark(const int fd, nfmark_t mark)
 {
 #if SO_MARK && USE_LIBCAP
     debugs(50, 3, "for FD " << fd << " to " << mark);
-    const int x = setsockopt(fd, SOL_SOCKET, SO_MARK, &mark, sizeof(nfmark_t));
+    const int x = setsockopt(fd, SOL_SOCKET, SO_MARK, reinterpret_cast<char *>(&mark), sizeof(mark));
     if (x < 0) {
         int xerrno = errno;
         debugs(50, 2, "setsockopt(SO_MARK) on " << fd << ": " << xstrerr(xerrno));

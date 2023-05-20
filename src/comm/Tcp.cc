@@ -30,7 +30,7 @@ SetSocketOption(const int fd, const int level, const int optName, const Option &
 {
     static_assert(std::is_trivially_copyable<Option>::value, "setsockopt() expects POD-like options");
     static_assert(!std::is_same<Option, bool>::value, "setsockopt() uses int to represent boolean options");
-    if (setsockopt(fd, level, optName, &optValue, sizeof(optValue)) < 0) {
+    if (setsockopt(fd, level, optName, reinterpret_cast<char *>(const_cast<Option *>(&optValue)), sizeof(optValue)) < 0) {
         const auto xerrno = errno;
         debugs(5, DBG_IMPORTANT, "ERROR: setsockopt(2) failure: " << xstrerr(xerrno));
         // TODO: Generalize to throw on errors when some callers need that.

@@ -70,14 +70,12 @@ setSocketBuffers( int sockfd, int size )
 // returns: -1 on setsockopt() errors, 0 otherwise
 // warning: prints error message on stderr, errno will be changed
 {
-    if ( setsockopt( sockfd, SOL_SOCKET, SO_RCVBUF,
-                     (char*) &size, sizeof(size) ) == -1 ) {
+    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, reinterpret_cast<char *>(&size), sizeof(size)) == -1) {
         perror( "setsockopt( SO_RCVBUF )" );
         return -1;
     }
 
-    if ( setsockopt( sockfd, SOL_SOCKET, SO_SNDBUF,
-                     (char*) &size, sizeof(size) ) == -1 ) {
+    if (setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, reinterpret_cast<char *>(&size), sizeof(size)) == -1) {
         perror( "setsockopt( SO_SNDBUF )" );
         return -1;
     }
@@ -111,9 +109,8 @@ setSocketNoDelay( int sockfd, bool)
 // returns: 0, if everything worked out o.k.
 //         -1, if an error occurred (e.g. datagram socket)
 {
-    const int delay = 1;
-    if ( setsockopt( sockfd, IPPROTO_TCP, TCP_NODELAY,
-                     (const char*) &delay, sizeof(delay) ) == -1 ) {
+    int delay = 1;
+    if (setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char *>(&delay), sizeof(delay)) == -1) {
         perror( "setsockopt( TCP_NODELAY ) failed" );
         return -1;
     } else
@@ -133,9 +130,8 @@ commonCode(int &sockfd, bool nodelay, int sendBufferSize, int recvBufferSize)
     // set TCP_NODELAY option, if that is wanted.
     // The socket API default is unset.
     if ( nodelay ) {
-        const int delay = 1;
-        if ( setsockopt( sockfd, IPPROTO_TCP, TCP_NODELAY,
-                         (const char*) &delay, sizeof(delay) ) == -1 ) {
+        int delay = 1;
+        if (setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char *>(&delay), sizeof(delay)) == -1) {
             perror( "setsockopt( TCP_NODELAY ) failed" );
             close(sockfd);
             return -1;
@@ -144,8 +140,7 @@ commonCode(int &sockfd, bool nodelay, int sendBufferSize, int recvBufferSize)
 
     // set the socket send buffer size explicitly, or use the system default
     if ( sendBufferSize >= 0 ) {
-        if ( setsockopt( sockfd, SOL_SOCKET, SO_SNDBUF, (char*) &sendBufferSize,
-                         sizeof(sendBufferSize) ) == -1 ) {
+        if (setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, reinterpret_cast<char *>(&sendBufferSize), sizeof(sendBufferSize)) == -1) {
             perror( "setsockopt( SO_SNDBUF )" );
             close(sockfd);
             return -1;
@@ -154,8 +149,7 @@ commonCode(int &sockfd, bool nodelay, int sendBufferSize, int recvBufferSize)
 
     // set the socket recv buffer size explicitly, or use the system default
     if ( recvBufferSize >= 0 ) {
-        if ( setsockopt( sockfd, SOL_SOCKET, SO_RCVBUF, (char*) &recvBufferSize,
-                         sizeof(recvBufferSize) ) == -1 ) {
+        if (setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, reinterpret_cast<char *>(&recvBufferSize), sizeof(recvBufferSize)) == -1) {
             perror( "setsockopt( SO_RCVBUF )" );
             close(sockfd);
             return -1;
@@ -223,8 +217,7 @@ serverSocket( struct in_addr host, unsigned short port,
 
     if ( reuse ) {
         int opt = 1;
-        if ( setsockopt( sockfd, SOL_SOCKET, SO_REUSEADDR,
-                         (char*) &opt, sizeof(int) ) == -1) {
+        if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char *>(&opt), sizeof(opt)) == -1) {
             perror( "setsockopt( SO_REUSEADDR )" );
             close( sockfd );
             return -1;
