@@ -60,9 +60,6 @@ using namespace Squid;
 /* Local functions */
 static void usage(const char *progname);
 
-void pipe_handler(int sig);
-static void set_our_signal(void);
-
 Parameters scParams;
 
 static int put_fd;
@@ -227,6 +224,34 @@ Authorization::commit(std::ostream &os)
 
 static Authorization ProxyAuthorization("Proxy-Authorization", "proxy");
 static Authorization OriginAuthorization("Authorization", "origin server");
+
+#if defined(SIGPIPE)
+static void
+pipe_handler(int)
+{
+    std::cerr << "SIGPIPE received." << std::endl;
+}
+#endif
+
+static void
+set_our_signal(void)
+{
+#if defined(SIGPIPE)
+#if HAVE_SIGACTION
+    struct sigaction sa;
+    sa.sa_handler = pipe_handler;
+    sa.sa_flags = SA_RESTART;
+    sigemptyset(&sa.sa_mask);
+
+    if (sigaction(SIGPIPE, &sa, nullptr) < 0) {
+        std::cerr << "ERROR: Cannot set PIPE signal." << std::endl;
+        exit(EXIT_FAILURE);
+    }
+#else
+    signal(SIGPIPE, pipe_handler);
+#endif
+#endif /* !SIGPIPE */
+}
 
 int
 main(int argc, char *argv[])
@@ -655,28 +680,3 @@ main(int argc, char *argv[])
     Transport::ShutdownTls();
     return EXIT_SUCCESS;
 }
-
-void
-pipe_handler(int)
-{
-    std::cerr << "SIGPIPE received." << std::endl;
-}
-
-static void
-set_our_signal(void)
-{
-#if HAVE_SIGACTION
-    struct sigaction sa;
-    sa.sa_handler = pipe_handler;
-    sa.sa_flags = SA_RESTART;
-    sigemptyset(&sa.sa_mask);
-
-    if (sigaction(SIGPIPE, &sa, nullptr) < 0) {
-        std::cerr << "ERROR: Cannot set PIPE signal." << std::endl;
-        exit(EXIT_FAILURE);
-    }
-#else
-    signal(SIGPIPE, pipe_handler);
-#endif
-}
-
