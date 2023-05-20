@@ -1186,7 +1186,7 @@ WaitForOnePid(pid_t pid, PidStatus &status, int flags)
 #endif
 }
 
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
 SBuf
 WindowsErrorMessage(DWORD errorId)
 {
@@ -1209,5 +1209,5 @@ WindowsErrorMessage(DWORD errorId)
     LocalFree(rawMessage);
     return result;
 }
-#endif // _SQUID_WINDOWS_
+#endif // _SQUID_WINDOWS_ || _SQUID_MINGW_
 

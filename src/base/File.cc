@@ -34,7 +34,7 @@ FileOpeningConfig::ReadOnly()
     FileOpeningConfig cfg;
 
     /* I/O */
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     cfg.desiredAccess = GENERIC_READ;
     cfg.shareMode = FILE_SHARE_READ;
 #else
@@ -42,7 +42,7 @@ FileOpeningConfig::ReadOnly()
 #endif
 
     /* locking (if enabled later) */
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     cfg.lockFlags = 0; // no named constant for a shared lock
 #elif _SQUID_SOLARIS_
     cfg.lockType = F_RDLCK;
@@ -59,7 +59,7 @@ FileOpeningConfig::ReadWrite()
     FileOpeningConfig cfg;
 
     /* I/O */
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     cfg.desiredAccess = GENERIC_READ | GENERIC_WRITE;
     cfg.shareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
 #else
@@ -67,7 +67,7 @@ FileOpeningConfig::ReadWrite()
 #endif
 
     /* locking (if enabled later) */
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     cfg.lockFlags = LOCKFILE_EXCLUSIVE_LOCK;
 #elif _SQUID_SOLARIS_
     cfg.lockType = F_WRLCK;
@@ -89,7 +89,7 @@ FileOpeningConfig::locked(unsigned int attempts)
 FileOpeningConfig &
 FileOpeningConfig::createdIfMissing()
 {
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     Must((desiredAccess & GENERIC_WRITE) == GENERIC_WRITE);
     creationDisposition = OPEN_ALWAYS;
 #else
@@ -170,7 +170,7 @@ File::operator = (File &&other)
 void
 File::open(const FileOpeningConfig &cfg)
 {
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     fd_ = CreateFile(TEXT(name_.c_str()), cfg.desiredAccess, cfg.shareMode, nullptr, cfg.creationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (fd_ == InvalidHandle) {
         const auto savedError = GetLastError();
@@ -197,7 +197,7 @@ File::close()
 {
     if (!isOpen())
         return;
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     if (!CloseHandle(fd_)) {
         const auto savedError = GetLastError();
         debugs(54, DBG_IMPORTANT, sysCallFailure("CloseHandle", WindowsErrorMessage(savedError)));
@@ -214,7 +214,7 @@ File::close()
 void
 File::truncate()
 {
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     if (!SetFilePointer(fd_, 0, nullptr, FILE_BEGIN)) {
         const auto savedError = GetLastError();
         throw TexcHere(sysCallFailure("SetFilePointer", WindowsErrorMessage(savedError)));
@@ -243,7 +243,7 @@ File::readSmall(const SBuf::size_type minBytes, const SBuf::size_type maxBytes)
     SBuf buf;
     const auto readLimit = maxBytes + 1; // to detect excessively large files that we do not handle
     char *rawBuf = buf.rawAppendStart(readLimit);
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     DWORD result = 0;
     if (!ReadFile(fd_, rawBuf, readLimit, &result, nullptr)) {
         const auto savedError = GetLastError();
@@ -279,7 +279,7 @@ File::readSmall(const SBuf::size_type minBytes, const SBuf::size_type maxBytes)
 void
 File::writeAll(const SBuf &data)
 {
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     DWORD nBytesWritten = 0;
     if (!WriteFile(fd_, data.rawContent(), data.length(), &nBytesWritten, nullptr)) {
         const auto savedError = GetLastError();
@@ -303,7 +303,7 @@ File::writeAll(const SBuf &data)
 void
 File::synchronize()
 {
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     if (!FlushFileBuffers(fd_)) {
         const auto savedError = GetLastError();
         throw TexcHere(sysCallFailure("FlushFileBuffers", WindowsErrorMessage(savedError)));
@@ -341,7 +341,7 @@ File::lock(const FileOpeningConfig &cfg)
 void
 File::lockOnce(const FileOpeningConfig &cfg)
 {
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     if (!LockFileEx(fd_, cfg.lockFlags, 0, 0, 1, 0)) {
         const auto savedError = GetLastError();
         throw TexcHere(sysCallFailure("LockFileEx", WindowsErrorMessage(savedError)));
@@ -374,7 +374,7 @@ File::sysCallError(const char *callName, const int savedErrno) const
     return sysCallFailure(callName, SBuf(xstrerr(savedErrno)));
 }
 
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
 const HANDLE File::InvalidHandle = INVALID_HANDLE_VALUE;
-#endif /* _SQUID_WINDOWS_ */
+#endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_*/
 

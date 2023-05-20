@@ -39,7 +39,7 @@ private:
     friend class File;
 
     /* file opening parameters */
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     DWORD desiredAccess = 0; ///< 2nd CreateFile() parameter
     DWORD shareMode = 0; ///< 3rd CreateFile() parameter
     DWORD creationDisposition = OPEN_EXISTING; ///< 5th CreateFile() parameter
@@ -50,7 +50,7 @@ private:
 #endif
 
     /* file locking (disabled unless lock(n) sets positive lockAttempts) */
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     DWORD lockFlags = 0; ///< 2nd LockFileEx() parameter
 #elif _SQUID_SOLARIS_
     int lockType = F_UNLCK; ///< flock::type member for fcntl(F_SETLK)
@@ -92,7 +92,7 @@ public:
 
 protected:
     bool isOpen() const {
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
         return fd_ != InvalidHandle;
 #else
         return fd_ >= 0;
@@ -113,7 +113,7 @@ private:
     SBuf name_; ///< location on disk
 
     // Windows-specific HANDLE is needed because LockFileEx() does not take POSIX FDs.
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
     typedef HANDLE Handle;
     static const Handle InvalidHandle;
 #else

@@ -109,10 +109,10 @@ inline pid_t WaitForAnyPid(PidStatus &status, int flags)
     return WaitForOnePid(-1, status, flags);
 }
 
-#if _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
 /// xstrerror(errno) equivalent for Windows errors returned by GetLastError()
 SBuf WindowsErrorMessage(DWORD errorId);
-#endif // _SQUID_WINDOWS_
+#endif // _SQUID_WINDOWS_ || _SQUID_MINGW_
 
 #endif /* SQUID_TOOLS_H_ */
 
