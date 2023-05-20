@@ -87,7 +87,7 @@ SBuf
 ErrorDetails::brief() const
 {
     SBuf buf;
-    for (const auto detail: details) {
+    for (const auto &detail: details) {
         if (buf.length())
             buf.append('+');
         buf.append(detail->brief());
@@ -99,7 +99,7 @@ SBuf
 ErrorDetails::verbose(const HttpRequestPointer &request) const
 {
     SBuf buf;
-    for (const auto detail: details) {
+    for (const auto &detail: details) {
         if (buf.length()) {
             static const SBuf delimiter("; ");
             buf.append(delimiter);
