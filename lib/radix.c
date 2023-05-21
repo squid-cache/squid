@@ -98,7 +98,7 @@ static char *rn_zeros, *rn_ones;
 #define rm_leaf rm_rmu.rmu_leaf /* extra field would make 32 bytes */
 
 /* Helper macros */
-#define squid_Bcmp(a, b, l) (l == 0 ? 0 : memcmp((caddr_t)(a), (caddr_t)(b), (u_long)l))
+#define squid_Bcmp(a, b, l) (l == 0 ? 0 : memcmp((char *)(a), (char *)(b), (u_long)l))
 #define squid_R_Malloc(p, t, n) (p = (t) xmalloc((unsigned int)(n)))
 #define squid_Free(p) xfree((char *)p)
 #define squid_MKGet(m) {\
@@ -151,7 +151,7 @@ static char *rn_zeros, *rn_ones;
 struct squid_radix_node *
 squid_rn_search(void *v_arg, struct squid_radix_node *head) {
     register struct squid_radix_node *x;
-    register caddr_t v;
+    register char *v;
 
     for (x = head, v = v_arg; x->rn_b >= 0;) {
         if (x->rn_bmask & v[x->rn_off])
@@ -165,7 +165,7 @@ squid_rn_search(void *v_arg, struct squid_radix_node *head) {
 struct squid_radix_node *
 squid_rn_search_m(void *v_arg, struct squid_radix_node *head, void *m_arg) {
     register struct squid_radix_node *x;
-    register caddr_t v = v_arg, m = m_arg;
+    register char *v = v_arg, *m = m_arg;
 
     for (x = head; x->rn_b >= 0;) {
         if ((x->rn_bmask & m[x->rn_off]) &&
@@ -180,8 +180,8 @@ squid_rn_search_m(void *v_arg, struct squid_radix_node *head, void *m_arg) {
 int
 squid_rn_refines(void *m_arg, void *n_arg)
 {
-    register caddr_t m = m_arg, n = n_arg;
-    register caddr_t lim, lim2 = lim = n + *(u_char *) n;
+    register char *m = m_arg, *n = n_arg;
+    register char *lim, *lim2 = lim = n + *(u_char *) n;
     int longer = (*(u_char *) n++) - (int) (*(u_char *) m++);
     int masks_are_equal = 1;
 
@@ -206,7 +206,7 @@ squid_rn_refines(void *m_arg, void *n_arg)
 struct squid_radix_node *
 squid_rn_lookup(void *v_arg, void *m_arg, struct squid_radix_node_head *head) {
     register struct squid_radix_node *x;
-    caddr_t netmask = 0;
+    char *netmask = NULL;
 
     if (m_arg) {
         if ((x = squid_rn_addmask(m_arg, 1, head->rnh_treetop->rn_off)) == 0)
@@ -243,10 +243,10 @@ rn_satsifies_leaf(char *trial, register struct squid_radix_node *leaf, int skip)
 
 struct squid_radix_node *
 squid_rn_match(void *v_arg, struct squid_radix_node_head *head) {
-    caddr_t v = v_arg;
+    char *v = v_arg;
     register struct squid_radix_node *t = head->rnh_treetop, *x;
-    register caddr_t cp = v, cp2;
-    caddr_t cplim;
+    register char *cp = v, *cp2;
+    char *cplim;
     struct squid_radix_node *saved_t, *top = t;
     int off = t->rn_off, vlen = *(u_char *) cp, matched_off;
     register int test, b, rn_b;
@@ -348,7 +348,7 @@ squid_rn_newpair(void *v, int b, struct squid_radix_node nodes[2]) {
     t->rn_l = tt;
     t->rn_off = b >> 3;
     tt->rn_b = -1;
-    tt->rn_key = (caddr_t) v;
+    tt->rn_key = (char *) v;
     tt->rn_p = t;
     tt->rn_flags = t->rn_flags = RNF_ACTIVE;
     return t;
@@ -356,20 +356,20 @@ squid_rn_newpair(void *v, int b, struct squid_radix_node nodes[2]) {
 
 struct squid_radix_node *
 squid_rn_insert(void *v_arg, struct squid_radix_node_head *head, int *dupentry, struct squid_radix_node nodes[2]) {
-    caddr_t v = v_arg;
+    char *v = v_arg;
     struct squid_radix_node *top = head->rnh_treetop;
     int head_off = top->rn_off, vlen = (int) *((u_char *) v);
     register struct squid_radix_node *t = squid_rn_search(v_arg, top);
-    register caddr_t cp = v + head_off;
+    register char *cp = v + head_off;
     register int b;
     struct squid_radix_node *tt;
     /*
      * Find first bit at which v and t->rn_key differ
      */
     {
-        register caddr_t cp2 = t->rn_key + head_off;
+        register char *cp2 = t->rn_key + head_off;
         register int cmp_res;
-        caddr_t cplim = v + vlen;
+        char *cplim = v + vlen;
 
         while (cp < cplim)
             if (*cp2++ != *cp++)
@@ -412,9 +412,9 @@ on1:
 
 struct squid_radix_node *
 squid_rn_addmask(void *n_arg, int search, int skip) {
-    caddr_t netmask = (caddr_t) n_arg;
+    char *netmask = (char *) n_arg;
     register struct squid_radix_node *x;
-    register caddr_t cp, cplim;
+    register char *cp, *cplim;
     register int b = 0, mlen, j;
     int maskduplicated, m0, isnormal;
     struct squid_radix_node *saved_x;
@@ -453,7 +453,7 @@ squid_rn_addmask(void *n_arg, int search, int skip) {
     if ((saved_x = x) == 0)
         return (0);
     memset(x, '\0', squid_max_keylen + 2 * sizeof(*x));
-    netmask = cp = (caddr_t) (x + 2);
+    netmask = cp = (char *) (x + 2);
     memcpy(cp, addmask_key, mlen);
     x = squid_rn_insert(cp, squid_mask_rnhead, &maskduplicated, x);
     if (maskduplicated) {
@@ -518,12 +518,12 @@ rn_new_radix_mask(struct squid_radix_node *tt, struct squid_radix_mask *next) {
 
 struct squid_radix_node *
 squid_rn_addroute(void *v_arg, void *n_arg, struct squid_radix_node_head *head, struct squid_radix_node treenodes[2]) {
-    caddr_t v = (caddr_t) v_arg, netmask = (caddr_t) n_arg;
+    char *v = (char *) v_arg, *netmask = (char *) n_arg;
     register struct squid_radix_node *t, *x = NULL, *tt;
     struct squid_radix_node *saved_tt, *top = head->rnh_treetop;
     short b = 0, b_leaf = 0;
     int keyduplicated;
-    caddr_t mmask;
+    char *mmask;
     struct squid_radix_mask *m, **mp;
 
     /*
@@ -583,7 +583,7 @@ squid_rn_addroute(void *v_arg, void *n_arg, struct squid_radix_node_head *head, 
             tt->rn_dupedkey = t->rn_dupedkey;
             t->rn_dupedkey = tt;
         }
-        tt->rn_key = (caddr_t) v;
+        tt->rn_key = (char *) v;
         tt->rn_b = -1;
         tt->rn_flags = RNF_ACTIVE;
     }
@@ -666,7 +666,7 @@ squid_rn_delete(void *v_arg, void *netmask_arg, struct squid_radix_node_head *he
     register struct squid_radix_node *t, *p, *x, *tt;
     struct squid_radix_mask *m, *saved_m, **mp;
     struct squid_radix_node *dupedkey, *saved_tt, *top;
-    caddr_t v, netmask;
+    char *v, *netmask;
     int b, head_off, vlen;
 
     v = v_arg;
