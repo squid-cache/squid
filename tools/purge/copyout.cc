@@ -252,17 +252,15 @@ copy_out( size_t filesize, size_t metasize, unsigned debug,
     }
 
     // create source mmap to copy from (mmap complete file)
-    caddr_t src = (caddr_t) mmap( nullptr, filesize, PROT_READ,
-                                  MAP_FILE | MAP_SHARED, input, 0 );
-    if ( src == (caddr_t) -1 ) {
+    const auto src = static_cast<char *>(mmap(nullptr, filesize, PROT_READ, MAP_FILE | MAP_SHARED, input, 0));
+    if (src == reinterpret_cast<const char *>(-1)) {
         perror( "mmap input" );
         BAUTZ(false);
     }
 
     // create destination mmap to copy into (mmap data portion)
-    caddr_t dst = (caddr_t) mmap( nullptr, filesize-metasize, PROT_READ | PROT_WRITE,
-                                  MAP_FILE | MAP_SHARED, out, 0 );
-    if ( dst == (caddr_t) -1 ) {
+    auto dst = static_cast<char *>(mmap(nullptr, filesize-metasize, PROT_READ | PROT_WRITE, MAP_FILE | MAP_SHARED, out, 0));
+    if (dst == reinterpret_cast<char *>(-1)) {
         perror( "mmap output" );
         munmap( src, filesize );
         BAUTZ(false);

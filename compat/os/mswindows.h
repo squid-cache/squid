@@ -311,8 +311,6 @@ struct timezone {
 
 #include <io.h>
 
-typedef char * caddr_t;
-
 #ifndef _PATH_DEVNULL
 #define _PATH_DEVNULL "NUL"
 #endif
