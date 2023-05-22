@@ -123,9 +123,6 @@ jobs:
 
   CodeQL-tests:
 
-    strategy:
-      fail-fast: true
-
     runs-on: [ ubuntu-22.04 ]
 
     permissions:
