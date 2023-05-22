@@ -98,7 +98,6 @@ static char *rn_zeros, *rn_ones;
 #define rm_leaf rm_rmu.rmu_leaf /* extra field would make 32 bytes */
 
 /* Helper macros */
-#define squid_Bcmp(a, b, l) (l == 0 ? 0 : memcmp((char *)(a), (char *)(b), (u_long)l))
 #define squid_R_Malloc(p, t, n) (p = (t) xmalloc((unsigned int)(n)))
 #define squid_Free(p) xfree((char *)p)
 #define squid_MKGet(m) {\
