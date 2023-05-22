@@ -121,7 +121,7 @@ jobs:
           name: build-logs-${{ runner.os }}
           path: btlayer-*.log
 
-  static-analysis:
+  CodeQL-tests:
 
     strategy:
       fail-fast: true
