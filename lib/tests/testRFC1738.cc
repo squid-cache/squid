@@ -7,15 +7,35 @@
  */
 
 #include "squid.h"
-#include "testRFC1738.h"
 #include "unitTestMain.h"
 
 #include <cassert>
+#include <cppunit/extensions/HelperMacros.h>
 
 /* Being a C library code it is best bodily included and tested with C++ type-safe techniques. */
 #include "lib/rfc1738.c"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TestRfc1738 );
+/**
+ * Test the URL coder RFC 1738 Engine
+ */
+class TestRfc1738 : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestRfc1738);
+    CPPUNIT_TEST(testUrlDecode);
+    CPPUNIT_TEST(testUrlEncode);
+
+    CPPUNIT_TEST(PercentZeroNullDecoding);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+protected:
+    void testUrlDecode();
+    void testUrlEncode();
+
+    // bugs.
+    void PercentZeroNullDecoding();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestRfc1738);
 
 /* Regular Format de-coding tests */
 void TestRfc1738::testUrlDecode()

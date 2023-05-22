@@ -8,12 +8,28 @@
 
 #include "squid.h"
 #include "base/YesNoNone.h"
-#include "tests/testYesNoNone.h"
+#include "compat/cppunit.h"
 #include "unitTestMain.h"
 
 #include <stdexcept>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TestYesNoNone );
+/*
+ * demonstration test file, as new idioms are made they will
+ * be shown in the TestYesNoNone source.
+ */
+
+class TestYesNoNone : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestYesNoNone);
+    /* note the statement here and then the actual prototype below */
+    CPPUNIT_TEST(testBasics);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+protected:
+    void testBasics();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestYesNoNone);
 
 void
 TestYesNoNone::testBasics()

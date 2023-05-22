@@ -7,12 +7,35 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "mem/forward.h"
 #include "SquidString.h"
-#include "testString.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TestString );
+/*
+ * test the store framework
+ */
+
+class TestString : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestString);
+    CPPUNIT_TEST(testCmpDefault);
+    CPPUNIT_TEST(testCmpEmptyString);
+    CPPUNIT_TEST(testCmpNotEmptyDefault);
+    CPPUNIT_TEST(testSubstr);
+
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void setUp() override;
+
+protected:
+    void testCmpDefault();
+    void testCmpEmptyString();
+    void testCmpNotEmptyDefault();
+    void testSubstr();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestString);
 
 /* init memory pools */
 

@@ -14,10 +14,8 @@
 #include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
 
+#include <cctype>
 #include <cerrno>
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
 
 /// convenience method: consumes up to n bytes, counts, and returns them
 SBuf

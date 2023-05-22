@@ -9,12 +9,25 @@
 #include "squid.h"
 #include "base/PackableStream.h"
 #include "CapturingStoreEntry.h"
+#include "compat/cppunit.h"
 #include "Store.h"
-#include "testPackableStream.h"
 #include "testStore.h"
 
 #include <iomanip>
 #include <cppunit/TestAssert.h>
+
+class TestPackableStream : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestPackableStream);
+    CPPUNIT_TEST(testGetStream);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void setUp() override;
+
+protected:
+    void testGetStream();
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestPackableStream );
 

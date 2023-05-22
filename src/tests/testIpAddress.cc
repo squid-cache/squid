@@ -7,9 +7,9 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
-#include "tests/testIpAddress.h"
 #include "unitTestMain.h"
 
 #include <cstring>
@@ -24,6 +24,60 @@
 #if HAVE_NETDB_H
 #include <netdb.h>
 #endif
+
+/*
+ * test the IP storage type
+ */
+
+class TestIpAddress : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestIpAddress);
+    CPPUNIT_TEST(testDefaults);
+    CPPUNIT_TEST(testInAddrConstructor);
+    CPPUNIT_TEST(testInAddr6Constructor);
+    CPPUNIT_TEST(testSockAddrConstructor);
+    CPPUNIT_TEST(testSockAddr6Constructor);
+    CPPUNIT_TEST(testHostentConstructor);
+    CPPUNIT_TEST(testStringConstructor);
+    CPPUNIT_TEST(testCopyConstructor);
+    CPPUNIT_TEST(testsetEmpty);
+    CPPUNIT_TEST(testBooleans);
+    CPPUNIT_TEST(testAddrInfo);
+    CPPUNIT_TEST(testtoStr);
+    CPPUNIT_TEST(testtoUrl_fromInAddr);
+    CPPUNIT_TEST(testtoUrl_fromSockAddr);
+    CPPUNIT_TEST(testgetReverseString);
+    CPPUNIT_TEST(testMasking);
+
+    CPPUNIT_TEST(testBugNullingDisplay);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+protected:
+    void testDefaults();
+
+    void testInAddrConstructor();
+    void testInAddr6Constructor();
+    void testSockAddrConstructor();
+    void testSockAddr6Constructor();
+    void testHostentConstructor();
+    void testStringConstructor();
+    void testCopyConstructor();
+
+    void testsetEmpty();
+    void testBooleans();
+
+    void testAddrInfo();
+
+    void testtoStr();
+    void testtoUrl_fromInAddr();
+    void testtoUrl_fromSockAddr();
+    void testgetReverseString();
+    void testMasking();
+
+    // bugs.
+    void testBugNullingDisplay();
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestIpAddress );
 
