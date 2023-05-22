@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -500,9 +500,12 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
         debugs(85, 3, "SECURITY ALERT: Host header forgery detected on " << http->getConn()->clientConnection <<
                " (" << A << " does not match " << B << ") on URL: " << http->request->effectiveRequestUri());
 
-        // NP: it is tempting to use 'flags.noCache' but that is all about READing cache data.
-        // The problems here are about WRITE for new cache content, which means flags.cachable
-        http->request->flags.cachable = false; // MUST NOT cache (for now)
+        // MUST NOT cache (for now). It is tempting to set flags.noCache, but
+        // that flag is about satisfying _this_ request. We are actually OK with
+        // satisfying this request from the cache, but want to prevent _other_
+        // requests from being satisfied using this response.
+        http->request->flags.cachable.veto();
+
         // XXX: when we have updated the cache key to base on raw-IP + URI this cacheable limit can go.
         http->request->flags.hierarchical = false; // MUST NOT pass to peers (for now)
         // XXX: when we have sorted out the best way to relay requests properly to peers this hierarchical limit can go.
@@ -557,6 +560,7 @@ ClientRequestContext::hostHeaderVerify()
         return;
     }
 
+    // TODO: Unify Host value parsing below with AnyP::Uri authority parsing
     // Locate if there is a port attached, strip ready for IP lookup
     char *portStr = nullptr;
     char *hostB = xstrdup(host);
@@ -611,14 +615,17 @@ ClientRequestContext::hostHeaderVerify()
         // Verify forward-proxy requested URL domain matches the Host: header
         debugs(85, 3, "FAIL on validate URL domain " << http->request->url.host() << " matches Host: " << host);
         hostHeaderVerifyFailed(host, http->request->url.host());
-    } else if (portStr && port != http->request->url.port()) {
+    } else if (portStr && !http->request->url.port()) {
+        debugs(85, 3, "FAIL on validate portless URI matches Host: " << portStr);
+        hostHeaderVerifyFailed("portless URI", portStr);
+    } else if (portStr && port != *http->request->url.port()) {
         // Verify forward-proxy requested URL domain matches the Host: header
-        debugs(85, 3, "FAIL on validate URL port " << http->request->url.port() << " matches Host: port " << portStr);
+        debugs(85, 3, "FAIL on validate URL port " << *http->request->url.port() << " matches Host: port " << portStr);
         hostHeaderVerifyFailed("URL port", portStr);
     } else if (!portStr && http->request->method != Http::METHOD_CONNECT && http->request->url.port() != http->request->url.getScheme().defaultPort()) {
         // Verify forward-proxy requested URL domain matches the Host: header
         // Special case: we don't have a default-port to check for CONNECT. Assume URL is correct.
-        debugs(85, 3, "FAIL on validate URL port " << http->request->url.port() << " matches Host: default port " << http->request->url.getScheme().defaultPort());
+        debugs(85, 3, "FAIL on validate URL port " << http->request->url.port().value_or(0) << " matches Host: default port " << http->request->url.getScheme().defaultPort().value_or(0));
         hostHeaderVerifyFailed("URL port", "default port");
     } else {
         // Okay no problem.
@@ -1095,7 +1102,10 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
 #endif
 
-    request->flags.cachable = http->request->maybeCacheable();
+    if (http->request->maybeCacheable())
+        request->flags.cachable.support();
+    else
+        request->flags.cachable.veto();
 
     if (clientHierarchical(http))
         request->flags.hierarchical = true;
@@ -1300,9 +1310,7 @@ ClientRequestContext::clientStoreIdDone(const Helper::Reply &reply)
     http->doCallouts();
 }
 
-/** Test cache allow/deny configuration
- *  Sets flags.cachable=1 if caching is not denied.
- */
+/// applies "cache allow/deny" rules, asynchronously if needed
 void
 ClientRequestContext::checkNoCache()
 {
@@ -1331,8 +1339,7 @@ ClientRequestContext::checkNoCacheDone(const Acl::Answer &answer)
 {
     acl_checklist = nullptr;
     if (answer.denied()) {
-        http->request->flags.noCache = true; // do not read reply from cache
-        http->request->flags.cachable = false; // do not store reply into cache
+        http->request->flags.disableCacheUse("a cache deny rule matched");
     }
     http->doCallouts();
 }
@@ -1831,10 +1838,6 @@ ClientHttpRequest::doCallouts()
     cbdataReferenceDone(calloutContext->http);
     delete calloutContext;
     calloutContext = nullptr;
-#if HEADERS_LOG
-
-    headersLog(0, 1, request->method, request);
-#endif
 
     debugs(83, 3, "calling processRequest()");
     processRequest();

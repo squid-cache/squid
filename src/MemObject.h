@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -169,6 +169,20 @@ public:
     class XitTable
     {
     public:
+        /// associate our StoreEntry with a Transients entry at the given index
+        void open(const int32_t anIndex, const Io anIo)
+        {
+            index = anIndex;
+            io = anIo;
+        }
+
+        /// stop associating our StoreEntry with a Transients entry
+        void close()
+        {
+            index = -1;
+            io = Store::ioDone;
+        }
+
         int32_t index = -1; ///< entry position inside the in-transit table
         Io io = ioUndecided; ///< current I/O state
     };

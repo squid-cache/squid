@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -216,6 +216,9 @@ store_client::store_client(StoreEntry *e) :
     object_ok(true),
     copiedSize(0)
 {
+    Assure(entry);
+    entry->lock("store_client");
+
     flags.disk_io_pending = false;
     flags.store_copying = false;
     ++ entry->refcount;
@@ -228,7 +231,10 @@ store_client::store_client(StoreEntry *e) :
 }
 
 store_client::~store_client()
-{}
+{
+    assert(entry);
+    entry->unlock("store_client");
+}
 
 /* copy bytes requested by the client */
 void
@@ -527,7 +533,7 @@ store_client::readBody(const char *, ssize_t len)
 
     if (len > 0 && rep && entry->mem_obj->inmem_lo == 0 && entry->objectLen() <= (int64_t)Config.Store.maxInMemObjSize && Config.onoff.memory_cache_disk) {
         storeGetMemSpace(len);
-        // The above may start to free our object so we need to check again
+        // recheck for the above call may purge entry's data from the memory cache
         if (entry->mem_obj->inmem_lo == 0) {
             /* Copy read data back into memory.
              * copyInto.offset includes headers, which is what mem cache needs
@@ -644,24 +650,6 @@ store_client::readHeader(char const *buf, ssize_t len)
     fileRead();
 }
 
-int
-storeClientCopyPending(store_client * sc, StoreEntry * e, void *data)
-{
-#if STORE_CLIENT_LIST_DEBUG
-    assert(sc == storeClientListSearch(e->mem_obj, data));
-#else
-    (void)data;
-#endif
-
-    assert(sc);
-    assert(sc->entry == e);
-
-    if (!sc->_callback.pending())
-        return 0;
-
-    return 1;
-}
-
 /*
  * This routine hasn't been optimised to take advantage of the
  * passed sc. Yet.
@@ -717,14 +705,13 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 
 #endif
 
+    // We must lock to safely dereference e below, after deleting sc and after
+    // calling CheckQuickAbortIsReasonable().
+    e->lock("storeUnregister");
+
     // XXX: We might be inside sc store_client method somewhere up the call
     // stack. TODO: Convert store_client to AsyncJob to make destruction async.
     delete sc;
-
-    assert(e->locked());
-    // An entry locked by others may be unlocked (and destructed) by others, so
-    // we must lock again to safely dereference e after CheckQuickAbortIsReasonable().
-    e->lock("storeUnregister");
 
     if (CheckQuickAbortIsReasonable(e))
         e->abort();

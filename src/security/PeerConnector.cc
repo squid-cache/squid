@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "base/AsyncCallbacks.h"
 #include "base/IoManip.h"
+#include "CachePeer.h"
 #include "comm/Loops.h"
 #include "comm/Read.h"
 #include "Downloader.h"
@@ -33,8 +34,6 @@
 #include "ssl/Config.h"
 #include "ssl/helper.h"
 #endif
-
-CBDATA_NAMESPACED_CLASS_INIT(Security, PeerConnector);
 
 Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, const AsyncCallback<EncryptorAnswer> &aCallback, const AccessLogEntryPointer &alp, const time_t timeout):
     AsyncJob("Security::PeerConnector"),
@@ -110,15 +109,17 @@ Security::PeerConnector::commCloseHandler(const CommCloseCbParams &params)
     debugs(83, 5, "FD " << params.fd << ", Security::PeerConnector=" << params.data);
 
     closeHandler = nullptr;
-    if (serverConn) {
-        countFailingConnection();
-        serverConn->noteClosure();
-        serverConn = nullptr;
-    }
 
     const auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request.getRaw(), al);
     static const auto d = MakeNamedErrorDetail("TLS_CONNECT_CLOSE");
     err->detailError(d);
+
+    if (serverConn) {
+        countFailingConnection(err);
+        serverConn->noteClosure();
+        serverConn = nullptr;
+    }
+
     bail(err);
 }
 
@@ -401,9 +402,11 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
         if (!errDetails) {
             bool allowed = false;
             if (check) {
-                check->sslErrors = new Security::CertErrors(Security::CertError(i->error_no, i->cert, i->error_depth));
+                const auto sslErrors = std::make_unique<Security::CertErrors>(Security::CertError(i->error_no, i->cert, i->error_depth));
+                check->sslErrors = sslErrors.get();
                 if (check->fastCheck().allowed())
                     allowed = true;
+                check->sslErrors.clear();
             }
             // else the Config.ssl_client.cert_error access list is not defined
             // and the first error will cause the error page
@@ -416,10 +419,6 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
                 Security::CertPointer peerCert(SSL_get_peer_certificate(session.get()));
                 const char *aReason = i->error_reason.empty() ? nullptr : i->error_reason.c_str();
                 errDetails = new ErrorDetail(i->error_no, peerCert, brokenCert, aReason);
-            }
-            if (check) {
-                delete check->sslErrors;
-                check->sslErrors = nullptr;
             }
         }
 
@@ -508,7 +507,7 @@ Security::PeerConnector::bail(ErrorState *error)
     answer().error = error;
 
     if (const auto failingConnection = serverConn) {
-        countFailingConnection();
+        countFailingConnection(error);
         disconnect();
         failingConnection->close();
     }
@@ -526,11 +525,10 @@ Security::PeerConnector::sendSuccess()
 }
 
 void
-Security::PeerConnector::countFailingConnection()
+Security::PeerConnector::countFailingConnection(const ErrorState * const error)
 {
     assert(serverConn);
-    if (const auto p = serverConn->getPeer())
-        peerConnectFailed(p);
+    NoteOutgoingConnectionFailure(serverConn->getPeer(), error ? error->httpStatus : Http::scNone);
     // TODO: Calling PconnPool::noteUses() should not be our responsibility.
     if (noteFwdPconnUse && serverConn->isOpen())
         fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);

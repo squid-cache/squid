@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -206,8 +206,8 @@ class ConfigRr : public RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void startReconfigure() override;
-    virtual void endingShutdown() override;
+    void startReconfigure() override;
+    void endingShutdown() override;
 };
 
 RunnerRegistrationEntry(ConfigRr);
@@ -345,11 +345,11 @@ idnsAddNameserver(const char *buf)
         return;
     }
 
-    nameservers.emplace_back(ns());
+    auto &nameserver = nameservers.emplace_back(ns());
     A.port(NS_DEFAULTPORT);
-    nameservers.back().S = A;
+    nameserver.S = A;
 #if WHEN_EDNS_RESPONSES_ARE_PARSED
-    nameservers.back().last_seen_edns = RFC1035_DEFAULT_PACKET_SZ;
+    nameserver.last_seen_edns = RFC1035_DEFAULT_PACKET_SZ;
     // TODO generate a test packet to probe this NS from EDNS size and ability.
 #endif
     debugs(78, 3, "Added nameserver #" << nameservers.size()-1 << " (" << A << ")");

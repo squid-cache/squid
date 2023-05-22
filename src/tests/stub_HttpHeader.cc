@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -64,6 +64,7 @@ void HttpHeader::putContRange(const HttpHdrContRange *) STUB
 void HttpHeader::putRange(const HttpHdrRange *) STUB
 void HttpHeader::putSc(HttpHdrSc *) STUB
 void HttpHeader::putExt(const char *, const char *) STUB
+void HttpHeader::updateOrAddStr(Http::HdrType, const SBuf &) STUB
 int HttpHeader::getInt(Http::HdrType) const STUB_RETVAL(0)
 int64_t HttpHeader::getInt64(Http::HdrType) const STUB_RETVAL(0)
 time_t HttpHeader::getTime(Http::HdrType) const STUB_RETVAL(0)

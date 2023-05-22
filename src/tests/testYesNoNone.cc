@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,15 +8,31 @@
 
 #include "squid.h"
 #include "base/YesNoNone.h"
-#include "tests/testYesNoNone.h"
+#include "compat/cppunit.h"
 #include "unitTestMain.h"
 
 #include <stdexcept>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testYesNoNone );
+/*
+ * demonstration test file, as new idioms are made they will
+ * be shown in the TestYesNoNone source.
+ */
+
+class TestYesNoNone : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestYesNoNone);
+    /* note the statement here and then the actual prototype below */
+    CPPUNIT_TEST(testBasics);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+protected:
+    void testBasics();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestYesNoNone);
 
 void
-testYesNoNone::testBasics()
+TestYesNoNone::testBasics()
 {
     // unconfigured, non-implicit
     {

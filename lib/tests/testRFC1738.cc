@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,18 +7,38 @@
  */
 
 #include "squid.h"
-#include "testRFC1738.h"
 #include "unitTestMain.h"
 
 #include <cassert>
+#include <cppunit/extensions/HelperMacros.h>
 
 /* Being a C library code it is best bodily included and tested with C++ type-safe techniques. */
 #include "lib/rfc1738.c"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testRFC1738 );
+/**
+ * Test the URL coder RFC 1738 Engine
+ */
+class TestRfc1738 : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestRfc1738);
+    CPPUNIT_TEST(testUrlDecode);
+    CPPUNIT_TEST(testUrlEncode);
+
+    CPPUNIT_TEST(PercentZeroNullDecoding);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+protected:
+    void testUrlDecode();
+    void testUrlEncode();
+
+    // bugs.
+    void PercentZeroNullDecoding();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestRfc1738);
 
 /* Regular Format de-coding tests */
-void testRFC1738::testUrlDecode()
+void TestRfc1738::testUrlDecode()
 {
     char *unescaped_str;
 
@@ -87,7 +107,7 @@ void testRFC1738::testUrlDecode()
  * rfc1738_escape_unescaped == -1
  * rfc1738_escape_part == 1
  */
-void testRFC1738::testUrlEncode()
+void TestRfc1738::testUrlEncode()
 {
     char *result;
 
@@ -124,7 +144,7 @@ void testRFC1738::testUrlEncode()
 }
 
 /** SECURITY BUG TESTS: avoid null truncation attacks by skipping %00 bytes */
-void testRFC1738::PercentZeroNullDecoding()
+void TestRfc1738::PercentZeroNullDecoding()
 {
     char *unescaped_str;
 

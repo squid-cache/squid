@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -142,6 +142,11 @@ public:
     void putRange(const HttpHdrRange * range);
     void putSc(HttpHdrSc *sc);
     void putExt(const char *name, const char *value);
+
+    /// Ensures that the header has the given field, removing or replacing any
+    /// same-name fields with conflicting values as needed.
+    void updateOrAddStr(Http::HdrType, const SBuf &);
+
     int getInt(Http::HdrType id) const;
     int64_t getInt64(Http::HdrType id) const;
     time_t getTime(Http::HdrType id) const;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,13 +27,13 @@ class User : public Auth::User
 
 public:
     User(Auth::SchemeConfig *, const char *requestRealm);
-    virtual ~User();
+    ~User() override;
     int authenticated() const;
-    virtual int32_t ttl() const override;
+    int32_t ttl() const override;
 
     /* Auth::User API */
     static CbcPointer<Auth::CredentialsCache> Cache();
-    virtual void addToNameCache() override;
+    void addToNameCache() override;
 
     HASH HA1;
     int HA1created;

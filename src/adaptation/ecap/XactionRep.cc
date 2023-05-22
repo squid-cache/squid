@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,7 +37,7 @@ public:
     OptionsExtractor(HttpHeader &aMeta): meta(aMeta) {}
 
     // libecap::NamedValueVisitor API
-    virtual void visit(const Name &name, const Area &value) {
+    void visit(const Name &name, const Area &value) override {
         meta.putExt(name.image().c_str(), value.toString().c_str());
     }
 

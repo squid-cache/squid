@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -1219,8 +1219,12 @@ endif
 	acl aclname urlpath_regex [-i] \.gif$ ...
 	  # regex matching on URL path [fast]
 
-	acl aclname port 80 70 21 0-1024...   # destination TCP port [fast]
-	                                      # ranges are allowed
+	acl aclname port 80 70 21 0-1024 ...
+	  # destination TCP port (or port range) of the request [fast]
+	  #
+	  # Port 0 matches requests that have no explicit and no default destination
+	  # ports (e.g., HTTP requests with URN targets)
+
 	acl aclname localport 3128 ...	      # TCP port the client connected to [fast]
 	                                      # NP: for interception mode this is usually '80'
 
@@ -1533,14 +1537,13 @@ IF USE_OPENSSL
 	  # ssl::certUntrusted, and ssl::certSelfSigned can also be used as
 	  # predefined ACLs, just like the 'all' ACL.
 
-	acl aclname server_cert_fingerprint [-sha1] fingerprint
+	acl aclname server_cert_fingerprint fingerprint
 	  # match against server SSL certificate fingerprint [fast]
 	  #
 	  # The fingerprint is the digest of the DER encoded version
 	  # of the whole certificate. The user should use the form: XX:XX:...
-	  # Optional argument specifies the digest algorithm to use.
 	  # The SHA1 digest algorithm is the default and is currently
-	  # the only algorithm supported (-sha1).
+	  # the only algorithm supported.
 
 	acl aclname ssl::server_name [option] .foo.com ...
 	  # matches server name obtained from various sources [fast]
@@ -1893,6 +1896,15 @@ http_access deny CONNECT !SSL_ports
 http_access allow localhost manager
 http_access deny manager
 
+# This default configuration only allows localhost requests because a more
+# permissive Squid installation could introduce new attack vectors into the
+# network by proxying external TCP connections to unprotected services.
+http_access allow localhost
+
+# The two deny rules below are unnecessary in this default configuration
+# because they are followed by a "deny all" rule. However, they may become
+# critically important when you start allowing external requests below them.
+
 # Protect web applications running on the same server as Squid. They often
 # assume that only local users can access them at "localhost" ports.
 http_access deny to_localhost
@@ -1905,11 +1917,9 @@ http_access deny to_linklocal
 # INSERT YOUR OWN RULE(S) HERE TO ALLOW ACCESS FROM YOUR CLIENTS
 #
 
-# Example rule allowing access from your local networks.
-# Adapt localnet in the ACL section to list your (internal) IP networks
-# from where browsing should be allowed
-http_access allow localnet
-http_access allow localhost
+# For example, to allow access from your local networks, you may uncomment the
+# following rule (and/or add rules that match your definition of "local"):
+# http_access allow localnet
 
 # And finally deny all other access to this proxy
 http_access deny all
@@ -3952,12 +3962,20 @@ DOC_START
 			configuration.
 
 	name=xxx	Unique name for the peer.
-			Required if you have multiple peers on the same host
-			but different ports.
-			This name can be used in cache_peer_access and similar
-			directives to identify the peer.
+			Required if you have multiple cache_peers with the same hostname.
+			Defaults to cache_peer hostname when not explicitly specified.
+
+			Other directives (e.g., cache_peer_access), cache manager reports,
+			and cache.log messages use this name to refer to this cache_peer.
+
+			The cache_peer name value affects hashing-based peer selection
+			methods (e.g., carp and sourcehash).
+
 			Can be used by outgoing access controls through the
 			peername ACL type.
+
+			The name value preserves configured spelling, but name uniqueness
+			checks and name-based search are case-insensitive.
 
 	no-tproxy	Do not use the client-spoof TPROXY support when forwarding
 			requests to this peer. Use normal address selection instead.
@@ -4019,7 +4037,11 @@ DOC_START
 	about specific domains to the peer.
 
 	Usage:
-		 neighbor_type_domain neighbor parent|sibling domain domain ...
+		neighbor_type_domain peer-name parent|sibling domain...
+
+	For the required peer-name parameter, use either the value of the
+	cache_peer name=value parameter or, if name=value is missing, the
+	cache_peer hostname parameter.
 
 	For example:
 		cache_peer foo.example.com parent 3128 3130
@@ -4066,7 +4088,7 @@ DOC_START
 	* unfinished Happy Eyeballs connection attempts (prevented by setting
 	  happy_eyeballs_connect_limit to 0)
 
-	See also: forward_timeout and connect_retries.
+	See also: forward_timeout, connect_retries, and %request_attempts.
 DOC_END
 
 COMMENT_START
@@ -4777,6 +4799,20 @@ DOC_START
 			similar to the default access.log "current time" field
 			(%ts.%03tu).
 
+		busy_time	Time spent in transaction-related code (nanoseconds)
+			This cumulative measurement excludes periods of time when the
+			transaction was waiting (e.g., for a server or helper response)
+			while Squid worked on other transactions or was engaged in
+			transaction-unrelated activities (e.g., generating a cache index).
+			In other words, this measurement represents the total amount of
+			physical time when Squid was busy working on this transaction.
+
+			WARNING: This measurement relies on Squid transaction context
+			tracking features that currently have known context leak bugs and
+			coverage gaps. Until those features are fully implemented, logged
+			values may significantly understate or exaggerate actual times.
+			Do not use this measurement unless you know it works in your case.
+
 	Access Control related format codes:
 
 		et	Tag returned by external acl
@@ -4907,6 +4943,16 @@ DOC_START
 
 		Ss	Squid request status (TCP_MISS etc)
 		Sh	Squid hierarchy status (DEFAULT_PARENT etc)
+
+		[http::]request_attempts	Number of request forwarding attempts
+
+			See forward_max_tries documentation that details what Squid counts
+			as a forwarding attempt. Pure cache hits log zero, but cache hits
+			that triggered HTTP cache revalidation log the number of attempts
+			made when sending an internal revalidation request. DNS, ICMP,
+			ICP, HTCP, ESI, ICAP, eCAP, helper, and other secondary requests
+			sent by Squid as a part of a master transaction do not increment
+			the counter logged for the received request.
 
 	SSL-related format codes:
 
@@ -5508,7 +5554,7 @@ DOC_START
 	records if it cannot write/send them immediately due to pending I/Os
 	(e.g., the I/O writing the previous log record) or connectivity loss.
 
-	Currently honored by 'daemon' and 'tcp' access_log modules only.
+	Currently honored by 'daemon', 'tcp' and 'udp' access_log modules only.
 DOC_END
 
 NAME: netdb_filename
@@ -5602,7 +5648,7 @@ NAME: cache_log_message
 TYPE: cache_log_message
 DEFAULT: none
 DEFAULT_DOC: Use debug_options.
-LOC: Config.debugMessages
+LOC: DebugMessagesConfig
 DOC_START
 	Configures logging of individual cache.log messages.
 
@@ -6412,9 +6458,9 @@ DOC_START
 	to be erroneously cached unless the application designer
 	has taken the appropriate actions.
 
-	'Percent' is a percentage of the objects age (time since last
-	modification age) an object without explicit expiry time
-	will be considered fresh.
+	'Percent' is used to compute the max-age value for responses
+	with a Last-Modified header and no Cache-Control:max-age nor Expires.
+	  Cache-Control:max-age = ( Date - Last-Modified ) * percent
 
 	'Max' is an upper limit on how long objects without an explicit
 	expiry time will be considered fresh. The value is also used
@@ -10562,8 +10608,6 @@ DOC_START
 	processes, these sleep delays will add up and your
 	Squid will not service requests for some amount of time
 	until all the child processes have been started.
-	On Windows value less then 1000 (1 milliseconds) are
-	rounded to 1000.
 DOC_END
 
 NAME: windows_ipaddrchangemonitor

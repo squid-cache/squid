@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,11 +7,27 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "StatHist.h"
-#include "testStatHist.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION(testStatHist);
+class TestStatHist : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestStatHist);
+    CPPUNIT_TEST(testStatHistBaseEquality);
+    CPPUNIT_TEST(testStatHistBaseAssignment);
+    CPPUNIT_TEST(testStatHistLog);
+    CPPUNIT_TEST(testStatHistSum);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+protected:
+    void testStatHistBaseEquality();
+    void testStatHistBaseAssignment();
+    void testStatHistLog();
+    void testStatHistSum();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION( TestStatHist );
 
 typedef enum {
     ZERO, ONE, TWO, THREE, FOUR, FIVE
@@ -41,7 +57,7 @@ InspectingStatHist::operator ==(const InspectingStatHist & src)
 }
 
 void
-testStatHist::testStatHistBaseEquality()
+TestStatHist::testStatHistBaseEquality()
 {
     InspectingStatHist raw, test;
     raw.enumInit(FIVE);
@@ -52,7 +68,7 @@ testStatHist::testStatHistBaseEquality()
 }
 
 void
-testStatHist::testStatHistBaseAssignment()
+TestStatHist::testStatHistBaseAssignment()
 {
     InspectingStatHist raw, test;
     raw.enumInit(FIVE);
@@ -64,7 +80,7 @@ testStatHist::testStatHistBaseAssignment()
 }
 
 void
-testStatHist::testStatHistLog()
+TestStatHist::testStatHistLog()
 {
     const double min=0.0, max=10000.0;
     const int capacity=10;
@@ -83,7 +99,7 @@ testStatHist::testStatHistLog()
 }
 
 void
-testStatHist::testStatHistSum()
+TestStatHist::testStatHistSum()
 {
     InspectingStatHist s1, s2;
     s1.logInit(30,1.0,100.0);

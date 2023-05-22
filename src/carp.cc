@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -179,7 +179,7 @@ carpSelectParent(PeerSelector *ps)
                 key.append(request->url.host());
             }
             if (tp->options.carp_key.port) {
-                key.appendf(":%u", request->url.port());
+                key.appendf(":%hu", request->url.port().value_or(0));
             }
             if (tp->options.carp_key.path) {
                 // XXX: fix when path and query are separate
@@ -205,7 +205,7 @@ carpSelectParent(PeerSelector *ps)
         combined_hash += combined_hash * 0x62531965;
         combined_hash = ROTATE_LEFT(combined_hash, 21);
         score = combined_hash * tp->carp.load_multiplier;
-        debugs(39, 3, "carpSelectParent: key=" << key << " name=" << tp->name << " combined_hash=" << combined_hash  <<
+        debugs(39, 3, *tp << " key=" << key << " combined_hash=" << combined_hash  <<
                " score=" << std::setprecision(0) << score);
 
         if ((score > high_score) && peerHTTPOkay(tp, ps)) {
@@ -215,7 +215,7 @@ carpSelectParent(PeerSelector *ps)
     }
 
     if (p)
-        debugs(39, 2, "carpSelectParent: selected " << p->name);
+        debugs(39, 2, "selected " << *p);
 
     return p;
 }

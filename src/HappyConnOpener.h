@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -107,7 +107,7 @@ public:
 
 public:
     HappyConnOpener(const ResolvedPeersPointer &, const AsyncCallback<Answer> &, const HttpRequestPointer &, time_t aFwdStart, int tries, const AccessLogEntryPointer &);
-    virtual ~HappyConnOpener() override;
+    ~HappyConnOpener() override;
 
     /// configures reuse of old connections
     void allowPersistent(bool permitted) { allowPconn_ = permitted; }
@@ -158,10 +158,10 @@ private:
     friend std::ostream &operator <<(std::ostream &, const Attempt &);
 
     /* AsyncJob API */
-    virtual void start() override;
-    virtual bool doneAll() const override;
-    virtual void swanSong() override;
-    virtual const char *status() const override;
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
+    const char *status() const override;
 
     void maybeOpenPrimeConnection();
     void maybeOpenSpareConnection();

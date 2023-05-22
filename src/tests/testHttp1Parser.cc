@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,18 +13,46 @@
 #define private public
 #define protected public
 
+#include "compat/cppunit.h"
 #include "debug/Stream.h"
 #include "http/one/RequestParser.h"
 #include "http/RequestMethod.h"
 #include "MemBuf.h"
 #include "SquidConfig.h"
-#include "testHttp1Parser.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testHttp1Parser );
+class TestHttp1Parser : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestHttp1Parser);
+    // object basics are working, just in case.
+    CPPUNIT_TEST(testParserConstruct);
+    CPPUNIT_TEST(testDripFeed);
+    CPPUNIT_TEST(testParseRequestLineMethods);
+    CPPUNIT_TEST(testParseRequestLineProtocols);
+    CPPUNIT_TEST(testParseRequestLineTerminators);
+    CPPUNIT_TEST(testParseRequestLineStrange);
+    CPPUNIT_TEST(testParseRequestLineInvalid);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void globalSetup();  // MemPools init etc.
+
+    void testParserConstruct();  // whether the constructor works
+
+    // request-line unit tests
+    void testParseRequestLineTerminators();  // terminator detection correct
+    void testParseRequestLineMethods();      // methoid detection correct
+    void testParseRequestLineProtocols();    // protocol tokens handled correctly
+    void testParseRequestLineStrange();      // strange but valid lines accepted
+    void testParseRequestLineInvalid();      // rejection of invalid lines happens
+
+    void testDripFeed();  // test incremental parse works
+};
+
+CPPUNIT_TEST_SUITE_REGISTRATION( TestHttp1Parser );
 
 void
-testHttp1Parser::globalSetup()
+TestHttp1Parser::globalSetup()
 {
     static bool setup_done = false;
     if (setup_done)
@@ -121,7 +149,7 @@ testResults(int line, const SBuf &input, Http1::RequestParser &output, struct re
 }
 
 void
-testHttp1Parser::testParserConstruct()
+TestHttp1Parser::testParserConstruct()
 {
     // whether the constructor works
     {
@@ -150,7 +178,7 @@ testHttp1Parser::testParserConstruct()
 }
 
 void
-testHttp1Parser::testParseRequestLineProtocols()
+TestHttp1Parser::testParseRequestLineProtocols()
 {
     // ensure MemPools etc exist
     globalSetup();
@@ -432,7 +460,7 @@ testHttp1Parser::testParseRequestLineProtocols()
 }
 
 void
-testHttp1Parser::testParseRequestLineStrange()
+TestHttp1Parser::testParseRequestLineStrange()
 {
     // ensure MemPools etc exist
     globalSetup();
@@ -528,7 +556,7 @@ testHttp1Parser::testParseRequestLineStrange()
 }
 
 void
-testHttp1Parser::testParseRequestLineTerminators()
+TestHttp1Parser::testParseRequestLineTerminators()
 {
     // ensure MemPools etc exist
     globalSetup();
@@ -626,7 +654,7 @@ testHttp1Parser::testParseRequestLineTerminators()
 }
 
 void
-testHttp1Parser::testParseRequestLineMethods()
+TestHttp1Parser::testParseRequestLineMethods()
 {
     // ensure MemPools etc exist
     globalSetup();
@@ -880,7 +908,7 @@ testHttp1Parser::testParseRequestLineMethods()
 }
 
 void
-testHttp1Parser::testParseRequestLineInvalid()
+TestHttp1Parser::testParseRequestLineInvalid()
 {
     // ensure MemPools etc exist
     globalSetup();
@@ -1070,7 +1098,7 @@ testHttp1Parser::testParseRequestLineInvalid()
 }
 
 void
-testHttp1Parser::testDripFeed()
+TestHttp1Parser::testDripFeed()
 {
     // Simulate a client drip-feeding Squid a few bytes at a time.
     // extend the size of the buffer from 0 bytes to full request length

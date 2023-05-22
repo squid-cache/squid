@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,6 +19,9 @@
 #include "SquidConfig.h"
 #include "SquidIpc.h"
 #include "tools.h"
+
+#include <chrono>
+#include <thread>
 
 static const char *hello_string = "hi there\n";
 #ifndef HELLO_BUF_SZ
@@ -96,10 +99,10 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     if (type == IPC_TCP_SOCKET) {
         crfd = cwfd = comm_open_listener(SOCK_STREAM,
-                                0,
-                                local_addr,
-                                COMM_NOCLOEXEC,
-                                name);
+                                         0,
+                                         local_addr,
+                                         COMM_NOCLOEXEC,
+                                         name);
         prfd = pwfd = comm_open(SOCK_STREAM,
                                 0,          /* protocol */
                                 local_addr,
@@ -305,14 +308,8 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
         fd_table[pwfd].flags.ipc = 1;
 
-        if (Config.sleep_after_fork) {
-            /* XXX emulation of usleep() */
-
-            struct timeval sl;
-            sl.tv_sec = Config.sleep_after_fork / 1000000;
-            sl.tv_usec = Config.sleep_after_fork % 1000000;
-            select(0, nullptr, nullptr, nullptr, &sl);
-        }
+        if (Config.sleep_after_fork)
+            std::this_thread::sleep_for(std::chrono::microseconds(Config.sleep_after_fork));
 
         return pid;
     }

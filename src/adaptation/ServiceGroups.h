@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,7 +33,7 @@ public:
 
 public:
     ServiceGroup(const String &aKind, bool areAllServicesSame);
-    virtual ~ServiceGroup();
+    ~ServiceGroup() override;
 
     virtual void parse();
     virtual void finalize(); // called after all are parsed

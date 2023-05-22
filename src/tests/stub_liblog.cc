@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,9 +32,6 @@ const char *accessLogTime(time_t) STUB_RETVAL(nullptr)
 
 #include "log/access_log.h"
 void fvdbCountVia(const SBuf &) STUB
-#if HEADERS_LOG
-void headersLog(int, int, const HttpRequestMethod &, void *) STUB
-#endif
 
 #include "log/Config.h"
 namespace Log

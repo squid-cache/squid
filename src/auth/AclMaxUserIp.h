@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,14 +21,14 @@ class ACLMaxUserIP : public ACL
 public:
     explicit ACLMaxUserIP(char const *theClass);
 
-    virtual char const *typeString() const;
-    virtual const Acl::Options &options();
-    virtual void parse();
-    virtual int match(ACLChecklist *cl);
-    virtual SBufList dump() const;
-    virtual bool empty() const;
-    virtual bool valid() const;
-    virtual bool requiresRequest() const {return true;}
+    char const *typeString() const override;
+    const Acl::Options &options() override;
+    void parse() override;
+    int match(ACLChecklist *cl) override;
+    SBufList dump() const override;
+    bool empty() const override;
+    bool valid() const override;
+    bool requiresRequest() const override {return true;}
 
     int getMaximum() const {return maximum;}
 

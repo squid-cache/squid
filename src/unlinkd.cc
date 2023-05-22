@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,7 +21,9 @@
 #include "store/Disk.h"
 #include "tools.h"
 #include "unlinkd.h"
-#include "xusleep.h"
+
+#include <chrono>
+#include <thread>
 
 /* This code gets linked to Squid */
 
@@ -60,7 +62,7 @@ unlinkdUnlink(const char *path)
          * We can't use fd_set when using epoll() or kqueue().  In
          * these cases we block for 10 ms.
          */
-        xusleep(10000);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
 #else
         /*
          * DPW 2007-04-23
@@ -222,7 +224,7 @@ unlinkdInit(void)
     if (pid < 0)
         fatal("Failed to create unlinkd subprocess");
 
-    xusleep(250000);
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
     fd_note(unlinkd_wfd, "squid -> unlinkd");
 

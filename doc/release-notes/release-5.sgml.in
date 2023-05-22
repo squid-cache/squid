@@ -1,36 +1,30 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 5.7 release notes</title>
+<title>Squid @SQUID_VERSION@ release notes</title>
 <author>Squid Developers</author>
-
-<abstract>
-This document contains the release notes for version 5 of Squid.
-Squid is a WWW Cache application developed by the National Laboratory
-for Applied Network Research and members of the Web Caching community.
-</abstract>
 
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-5.7.
+<p>The Squid Team are pleased to announce the release of Squid-@SQUID_VERSION@.
 
-This new release is available for download from <url url="http://www.squid-cache.org/Versions/v5/"> or the
+This new release is available for download from <url url="http://www.squid-cache.org/Versions/v@SQUID_RELEASE@/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
 
-<p>We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/BugReporting">
+<p>We welcome feedback and bug reports. If you find a bug, please see <url url="https://wiki.squid-cache.org/SquidFaq/BugReporting">
    for how to submit a report with a stack trace.
 
 <sect1>Known issues
 <p>Although this release is deemed good enough for use in many setups, please note the existence of 
-<url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=5" name="open bugs against Squid-5">.
+<url url="https://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=@SQUID_RELEASE@" name="open bugs against Squid-@SQUID_RELEASE@">.
 
-<sect1>Changes since earlier releases of Squid-5
+<sect1>Changes since earlier releases of Squid-@SQUID_RELEASE@
 <p>
-The Squid-5 change history can be <url url="http://www.squid-cache.org/Versions/v5/changesets/" name="viewed here">.
+The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squid-cache/squid/commits/v@SQUID_RELEASE@" name="viewed here">.
 
 
-<sect>Major new features since Squid-4
-<p>Squid-5 represents a new feature release above Squid-4.
+<sect>Major new features since Squid-@SQUID_RELEASE_OLD@
+<p>Squid-@SQUID_RELEASE@ represents a new feature release above Squid-@SQUID_RELEASE_OLD@.
 
 <p>The most important of these new features are:
 <itemize>
@@ -165,9 +159,9 @@ Most user-facing changes are reflected in squid.conf (see below).
 <p>OpenSSL 3.0 uses new licensing terms.
 
 
-<sect>Changes to squid.conf since Squid-4
+<sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
 <p>
-There have been changes to Squid's configuration file since Squid-4.
+There have been changes to Squid's configuration file since Squid-@SQUID_RELEASE_OLD@.
 
 This section gives a thorough account of those changes in three categories:
 
@@ -326,9 +320,9 @@ This section gives a thorough account of those changes in three categories:
 </descrip>
 
 
-<sect>Changes to ./configure options since Squid-4
+<sect>Changes to ./configure options since Squid-@SQUID_RELEASE_OLD@
 <p>
-There have been some changes to Squid's build configuration since Squid-4.
+There have been some changes to Squid's build configuration since Squid-@SQUID_RELEASE_OLD@.
 
 This section gives an account of those changes in three categories:
 
@@ -385,7 +379,7 @@ This section gives an account of those changes in three categories:
 
 <sect>Regressions since Squid-2.7
 
-<p>Some squid.conf options which were available in Squid-2.7 are not yet available in Squid-5
+<p>Some squid.conf options which were available in Squid-2.7 are not yet available in Squid-@SQUID_RELEASE@
 
 <p>If you need something to do then porting one of these from Squid-2 is most welcome.
 
@@ -437,7 +431,7 @@ This section gives an account of those changes in three categories:
 
 <sect>Copyright
 <p>
-Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 <p>
 Squid software is distributed under GPLv2+ license and includes
 contributions from numerous individuals and organizations.

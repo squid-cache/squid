@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -75,22 +75,8 @@ ACLHTTPHeaderData::lineOptions()
 void
 ACLHTTPHeaderData::parse()
 {
-    char* t = ConfigParser::strtokFile();
-    if (!t) {
-        debugs(28, DBG_CRITICAL, "ERROR: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(28, DBG_CRITICAL, "ERROR: Missing header name in ACL");
-        return;
-    }
-
-    if (hdrName.isEmpty()) {
-        hdrName = t;
-        hdrId = Http::HeaderLookupTable.lookup(hdrName).id;
-    } else if (hdrName.caseCmp(t) != 0) {
-        debugs(28, DBG_CRITICAL, "ERROR: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(28, DBG_CRITICAL, "ERROR: ACL cannot match both " << hdrName << " and " << t << " headers. Use 'anyof' ACL instead.");
-        return;
-    }
-
+    Acl::SetKey(hdrName, "header-name", ConfigParser::strtokFile());
+    hdrId = Http::HeaderLookupTable.lookup(hdrName).id;
     regex_rule->parse();
 }
 

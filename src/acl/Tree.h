@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -41,7 +41,7 @@ public:
 
 protected:
     /// Acl::OrNode API
-    virtual bool bannedAction(ACLChecklist *, Nodes::const_iterator) const override;
+    bool bannedAction(ACLChecklist *, Nodes::const_iterator) const override;
     Answer actionAt(const Nodes::size_type pos) const;
 
     /// if not empty, contains actions corresponding to InnerNode::nodes

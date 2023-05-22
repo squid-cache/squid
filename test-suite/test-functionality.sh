@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -170,12 +170,7 @@ check_pconn() {
 }
 
 check_busy_restart() {
-    if ! run_confirmed_test busy-restart
-    then
-        # XXX: Make the test stable instead!
-        echo_warning "Ignoring unstable test failure: busy-restart"
-    fi
-    return 0
+    run_confirmed_test busy-restart
 }
 
 check_proxy_collapsed_forwarding() {
@@ -203,6 +198,10 @@ check_upgrade_protocols() {
         return 0;
     fi
     run_confirmed_test upgrade-protocols
+}
+
+check_truncated_responses() {
+    run_confirmed_test truncated-responses
 }
 
 # executes a single check_name test named by the parameter
@@ -253,6 +252,7 @@ main() {
             upgrade-protocols
             proxy-collapsed-forwarding
             busy-restart
+            truncated-responses
         "
         tests="$default_tests"
     fi
@@ -260,5 +260,5 @@ main() {
     run_tests $tests
 }
 
-main
+main "$@"
 exit $?

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,8 @@
 
 #ifndef SQUID_REQUESTFLAGS_H_
 #define SQUID_REQUESTFLAGS_H_
+
+#include "base/SupportOrVeto.h"
 
 /** request-related flags
  *
@@ -28,8 +30,10 @@ public:
     bool auth = false;
     /** do not use keytabs for peer Kerberos authentication */
     bool auth_no_keytab = false;
-    /** he response to the request may be stored in the cache */
-    bool cachable = false;
+
+    /// whether the response may be stored in the cache
+    SupportOrVeto cachable;
+
     /** the request can be forwarded through the hierarchy */
     bool hierarchical = false;
     /** a loop was detected on this request */
@@ -124,6 +128,11 @@ public:
     bool noCacheHack() const {
         return USE_HTTP_VIOLATIONS && nocacheHack;
     }
+
+    /// ban satisfying the request from the cache and ban storing the response
+    /// in the cache
+    /// \param reason summarizes the marking decision context (for debugging)
+    void disableCacheUse(const char *reason);
 };
 
 #endif /* SQUID_REQUESTFLAGS_H_ */

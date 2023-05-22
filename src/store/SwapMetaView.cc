@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -88,7 +88,7 @@ Store::SwapMetaView::checkExpectedLength(const size_t expectedLength) const
 }
 
 std::ostream &
-operator <<(std::ostream &os, const Store::SwapMetaView &meta)
+Store::operator <<(std::ostream &os, const SwapMetaView &meta)
 {
     os << "type=" << int(meta.rawType);
     // XXX: Change Raw constructor to take void* data instead of casting here.

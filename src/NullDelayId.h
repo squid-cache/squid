@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,9 +19,9 @@ class NullDelayId : public DelayIdComposite
     MEMPROXY_CLASS(NullDelayId);
 
 public:
-    virtual int bytesWanted (int minimum, int maximum) const {return max(minimum,maximum);}
+    int bytesWanted (int minimum, int maximum) const override {return max(minimum,maximum);}
 
-    virtual void bytesIn(int) {}
+    void bytesIn(int) override {}
 };
 #endif
 #endif /* NULLDELAYID_H */

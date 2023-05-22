@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -38,6 +38,8 @@
 #if USE_OPENSSL
 #include "ssl/ErrorDetailManager.h"
 #endif
+
+#include <array>
 
 /**
  \defgroup ErrorPageInternal Error Page Internals
@@ -142,47 +144,49 @@ static void ValidateStaticError(const int page_id, const SBuf &inputLocation);
 
 /* local constant and vars */
 
-/**
- \ingroup ErrorPageInternal
- *
- \note  hard coded error messages are not appended with %S
- *      automagically to give you more control on the format
- */
-static const struct {
-    int type;           /* and page_id */
-    const char *text;
-}
+/// an error page (or a part of an error page) with hard-coded template text
+class HardCodedError {
+public:
+    err_type type; ///< identifies the error (or a special error template part)
+    const char *text; ///< a string literal containing the error template
+};
 
-error_hard_text[] = {
-
+/// error messages that cannot be configured/customized externally
+static const std::array<HardCodedError, 7> HardCodedErrors = {
     {
-        ERR_SQUID_SIGNATURE,
-        "\n<br>\n"
-        "<hr>\n"
-        "<div id=\"footer\">\n"
-        "Generated %T by %h (%s)\n"
-        "</div>\n"
-        "</body></html>\n"
-    },
-    {
-        TCP_RESET,
-        "reset"
-    },
-    {
-        ERR_CLIENT_GONE,
-        "unexpected client disconnect"
-    },
-    {
-        ERR_SECURE_ACCEPT_FAIL,
-        "secure accept fail"
-    },
-    {
-        ERR_REQUEST_START_TIMEOUT,
-        "request start timedout"
-    },
-    {
-        MGR_INDEX,
-        "mgr_index"
+        {
+            ERR_SQUID_SIGNATURE,
+            "\n<br>\n"
+            "<hr>\n"
+            "<div id=\"footer\">\n"
+            "Generated %T by %h (%s)\n"
+            "</div>\n"
+            "</body></html>\n"
+        },
+        {
+            TCP_RESET,
+            "reset"
+        },
+        {
+            ERR_CLIENT_GONE,
+            "unexpected client disconnect"
+        },
+        {
+            ERR_SECURE_ACCEPT_FAIL,
+            "secure accept fail"
+        },
+        {
+            ERR_REQUEST_START_TIMEOUT,
+            "request start timedout"
+        },
+        {
+            ERR_REQUEST_PARSE_TIMEOUT,
+            "request parse timedout"
+        },
+        {
+            ERR_RELAY_REMOTE,
+            "relay server response"
+        }
     }
 };
 
@@ -190,9 +194,6 @@ error_hard_text[] = {
 static std::vector<ErrorDynamicPageInfo *> ErrorDynamicPages;
 
 /* local prototypes */
-
-/// \ingroup ErrorPageInternal
-static const int error_hard_text_count = sizeof(error_hard_text) / sizeof(*error_hard_text);
 
 /// \ingroup ErrorPageInternal
 static char **error_text = nullptr;
@@ -217,7 +218,7 @@ public:
     const char *text() { return template_.c_str(); }
 
 protected:
-    virtual void setDefault() override {
+    void setDefault() override {
         template_ = "Internal Error: Missing Template ";
         template_.append(templateName.termedBuf());
     }
@@ -339,12 +340,10 @@ errorClean(void)
 static const char *
 errorFindHardText(err_type type)
 {
-    int i;
-
-    for (i = 0; i < error_hard_text_count; ++i)
-        if (error_hard_text[i].type == type)
-            return error_hard_text[i].text;
-
+    for (const auto &m: HardCodedErrors) {
+        if (m.type == type)
+            return m.text;
+    }
     return nullptr;
 }
 
@@ -829,8 +828,8 @@ ErrorState::Dump(MemBuf * mb)
     if (auth_user_request.getRaw() && auth_user_request->denyMessage())
         str.appendf("Auth ErrMsg: %s\r\n", auth_user_request->denyMessage());
 #endif
-    if (dnsError.size() > 0)
-        str.appendf("DNS ErrMsg: %s\r\n", dnsError.termedBuf());
+    if (dnsError)
+        str.appendf("DNS ErrMsg: " SQUIDSBUFPH "\r\n", SQUIDSBUFPRINT(*dnsError));
 
     /* - TimeStamp */
     str.appendf("TimeStamp: %s\r\n\r\n", Time::FormatRfc1123(squid_curtime));
@@ -1079,7 +1078,7 @@ ErrorState::compileLegacyCode(Build &build)
     case 'O':
         if (!building_deny_info_url)
             do_quote = 0;
-    /* [[fallthrough]] */
+        [[fallthrough]];
     case 'o':
         p = request ? request->extacl_message.termedBuf() : external_acl_message;
         if (!p && !building_deny_info_url)
@@ -1087,8 +1086,8 @@ ErrorState::compileLegacyCode(Build &build)
         break;
 
     case 'p':
-        if (request) {
-            mb.appendf("%u", request->url.port());
+        if (request && request->url.port()) {
+            mb.appendf("%hu", *request->url.port());
         } else if (!building_deny_info_url) {
             p = "[unknown port]";
         }
@@ -1213,8 +1212,8 @@ ErrorState::compileLegacyCode(Build &build)
 
     case 'z':
         if (building_deny_info_url) break;
-        if (dnsError.size() > 0)
-            p = dnsError.termedBuf();
+        if (dnsError)
+            p = dnsError->c_str();
         else if (ftp.cwd_msg)
             p = ftp.cwd_msg;
         else
@@ -1327,8 +1326,8 @@ ErrorState::BuildHttpReply()
          */
         if (!Config.errorDirectory) {
             /* We 'negotiated' this ONLY from the Accept-Language. */
-            rep->header.delById(Http::HdrType::VARY);
-            rep->header.putStr(Http::HdrType::VARY, "Accept-Language");
+            static const SBuf acceptLanguage("Accept-Language");
+            rep->header.updateOrAddStr(Http::HdrType::VARY, acceptLanguage);
         }
 
         /* add the Content-Language header according to RFC section 14.12 */

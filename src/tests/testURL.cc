@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,21 +8,38 @@
 
 #include "squid.h"
 
-#include <cppunit/TestAssert.h>
-
 #include "anyp/Uri.h"
+#include "compat/cppunit.h"
 #include "debug/Stream.h"
-#include "tests/testURL.h"
 #include "unitTestMain.h"
 
+#include <cppunit/TestAssert.h>
 #include <sstream>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testURL );
+/*
+ * test the Anyp::Uri-related classes
+ */
+
+class TestUri : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestUri);
+    CPPUNIT_TEST(testConstructScheme);
+    CPPUNIT_TEST(testDefaultConstructor);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void setUp() override;
+
+protected:
+    void testConstructScheme();
+    void testDefaultConstructor();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestUri);
 
 /* init memory pools */
 
 void
-testURL::setUp()
+TestUri::setUp()
 {
     Mem::Init();
     AnyP::UriScheme::Init();
@@ -33,7 +50,7 @@ testURL::setUp()
  * This creates a URL for that scheme.
  */
 void
-testURL::testConstructScheme()
+TestUri::testConstructScheme()
 {
     AnyP::UriScheme empty_scheme;
     AnyP::Uri protoless_url(AnyP::PROTO_NONE);
@@ -50,7 +67,7 @@ testURL::testConstructScheme()
  * scheme instances.
  */
 void
-testURL::testDefaultConstructor()
+TestUri::testDefaultConstructor()
 {
     AnyP::UriScheme aScheme;
     AnyP::Uri aUrl;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,8 +15,8 @@ class ACLUrlPathStrategy : public ACLStrategy<char const *>
 {
 
 public:
-    virtual int match (ACLData<char const *> * &, ACLFilledChecklist *);
-    virtual bool requiresRequest() const {return true;}
+    int match (ACLData<char const *> * &, ACLFilledChecklist *) override;
+    bool requiresRequest() const override {return true;}
 };
 
 #endif /* SQUID_ACLURLPATH_H */

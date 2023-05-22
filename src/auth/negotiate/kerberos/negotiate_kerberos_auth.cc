@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -95,7 +95,7 @@ gethost_name(void)
      */
     char hostname[1024];
     struct addrinfo *hres = nullptr, *hres_list;
-    int rc, count;
+    int rc;
 
     rc = gethostname(hostname, sizeof(hostname)-1);
     if (rc) {
@@ -114,9 +114,7 @@ gethost_name(void)
         return nullptr;
     }
     hres_list = hres;
-    count = 0;
     while (hres_list) {
-        ++count;
         hres_list = hres_list->ai_next;
     }
     rc = getnameinfo(hres->ai_addr, hres->ai_addrlen, hostname,

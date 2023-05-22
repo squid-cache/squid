@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -449,7 +449,7 @@ HttpRequest::prepForPeering(const CachePeer &peer)
     peer_login = peer.login;
     peer_domain = peer.domain;
     flags.auth_no_keytab = peer.options.auth_no_keytab;
-    debugs(11, 4, this << " to " << peer.host << (!peer.options.originserver ? " proxy" : " origin"));
+    debugs(11, 4, this << " to " << peer);
 }
 
 void
@@ -872,11 +872,16 @@ FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry 
     });
 }
 
-unsigned short
+AnyP::Port
 FindListeningPortNumber(const HttpRequest *callerRequest, const AccessLogEntry *ale)
 {
     const auto ip = FindGoodListeningPortAddress(callerRequest, ale, [](const Ip::Address &address) {
         return address.port() > 0;
     });
-    return ip ? ip->port() : 0;
+
+    if (!ip)
+        return std::nullopt;
+
+    Assure(ip->port() > 0);
+    return ip->port();
 }

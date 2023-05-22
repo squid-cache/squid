@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -176,11 +176,11 @@ class CollapsedForwardingRr: public Ipc::Mem::RegisteredRunner
 public:
     /* RegisteredRunner API */
     CollapsedForwardingRr(): owner(nullptr) {}
-    virtual ~CollapsedForwardingRr();
+    ~CollapsedForwardingRr() override;
 
 protected:
-    virtual void create();
-    virtual void open();
+    void create() override;
+    void open() override;
 
 private:
     Ipc::MultiQueue::Owner *owner;

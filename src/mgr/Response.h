@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,8 +29,8 @@ public:
     explicit Response(const Ipc::TypedMsgHdr& msg); ///< from recvmsg()
 
     /* Ipc::Response API */
-    virtual void pack(Ipc::TypedMsgHdr& msg) const;
-    virtual Ipc::Response::Pointer clone() const;
+    void pack(Ipc::TypedMsgHdr& msg) const override;
+    Ipc::Response::Pointer clone() const override;
 
     bool hasAction() const; ///< whether response contain action object
     const Action& getAction() const; ///< returns action object

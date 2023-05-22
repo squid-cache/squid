@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -227,7 +227,6 @@ netdbPurgeLRU(void)
     netdbEntry **list;
     int k = 0;
     int list_count = 0;
-    int removed = 0;
     list = (netdbEntry **)xcalloc(netdbEntry::UseCount(), sizeof(netdbEntry *));
     hash_first(addr_table);
 
@@ -247,8 +246,6 @@ netdbPurgeLRU(void)
             break;
 
         netdbRelease(*(list + k));
-
-        ++removed;
     }
 
     xfree(list);
@@ -695,7 +692,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         return;
     }
 
-    debugs(38, 3, "netdbExchangeHandleReply: for '" << ex->p->host << ":" << ex->p->http_port << "'");
+    debugs(38, 3, "for " << *ex->p);
 
     if (receivedData.length == 0 && !receivedData.flags.error) {
         debugs(38, 3, "netdbExchangeHandleReply: Done");
@@ -1296,6 +1293,31 @@ netdbExchangeStart(void *data)
 #endif
 }
 
+#if USE_ICMP
+/// a netdbClosestParent() helper to find the first usable parent CachePeer
+/// responsible for the given hostname
+static CachePeer *
+findUsableParentAtHostname(PeerSelector *ps, const char * const hostname, const HttpRequest &request)
+{
+    for (auto p = Config.peers; p; p = p->next) {
+        // Both fields should be lowercase, but no code ensures that invariant.
+        // TODO: net_db_peer should point to CachePeer instead of its hostname!
+        if (strcasecmp(p->host, hostname) != 0)
+            continue;
+
+        if (neighborType(p, request.url) != PEER_PARENT)
+            continue;
+
+        if (!peerHTTPOkay(p, ps))
+            continue;
+
+        return p;
+    }
+
+    return nullptr;
+}
+#endif
+
 CachePeer *
 netdbClosestParent(PeerSelector *ps)
 {
@@ -1303,7 +1325,6 @@ netdbClosestParent(PeerSelector *ps)
     assert(ps);
     HttpRequest *request = ps->request;
 
-    CachePeer *p = nullptr;
     netdbEntry *n;
     const ipcache_addrs *ia;
     net_db_peer *h;
@@ -1338,18 +1359,8 @@ netdbClosestParent(PeerSelector *ps)
             if (n->rtt < h->rtt)
                 break;
 
-        p = peerFindByName(h->peername);
-
-        if (nullptr == p)      /* not found */
-            continue;
-
-        if (neighborType(p, request->url) != PEER_PARENT)
-            continue;
-
-        if (!peerHTTPOkay(p, ps))  /* not allowed */
-            continue;
-
-        return p;
+        if (const auto p = findUsableParentAtHostname(ps, h->peername, *request))
+            return p;
     }
 
 #else

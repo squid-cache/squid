@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -59,6 +59,7 @@
 /** StoreEntry uses explicit new/delete operators, which set pool chunk size to 2MB
  * XXX: convert to MEMPROXY_CLASS() API
  */
+#include "mem/Allocator.h"
 #include "mem/Pool.h"
 
 #include <climits>
@@ -117,7 +118,7 @@ static EVH storeLateRelease;
  * local variables
  */
 static std::stack<StoreEntry*> LateReleaseStack;
-MemAllocator *StoreEntry::pool = nullptr;
+Mem::Allocator *StoreEntry::pool = nullptr;
 
 void
 Store::Stats(StoreEntry * output)
@@ -289,7 +290,7 @@ StoreEntry::storeClientType() const
     /*
      * If this is the first client, let it be the mem client
      */
-    if (mem_obj->nclients == 1)
+    if (mem_obj->nclients == 0)
         return STORE_MEM_CLIENT;
 
     /*
@@ -914,7 +915,7 @@ StoreEntry::checkCachable()
         return 0; // avoid rerequesting release below
     }
 
-    if (store_status == STORE_OK && EBIT_TEST(flags, ENTRY_BAD_LENGTH)) {
+    if (EBIT_TEST(flags, ENTRY_BAD_LENGTH)) {
         debugs(20, 2, "StoreEntry::checkCachable: NO: wrong content-length");
         ++store_check_cachable_hist.no.wrong_content_length;
     } else if (!mem_obj) {

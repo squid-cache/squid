@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,13 +25,13 @@ class UFSStoreState : public StoreIOState, public IORequestor
 
 public:
     UFSStoreState(SwapDir * SD, StoreEntry * anEntry, STIOCB * callback_, void *callback_data_);
-    ~UFSStoreState();
-    virtual void close(int how);
-    virtual void closeCompleted();
+    ~UFSStoreState() override;
+    void close(int how) override;
+    void closeCompleted() override;
     // protected:
-    virtual void ioCompletedNotification();
-    virtual void readCompleted(const char *buf, int len, int errflag, RefCount<ReadRequest>);
-    virtual void writeCompleted(int errflag, size_t len, RefCount<WriteRequest>);
+    void ioCompletedNotification() override;
+    void readCompleted(const char *buf, int len, int errflag, RefCount<ReadRequest>) override;
+    void writeCompleted(int errflag, size_t len, RefCount<WriteRequest>) override;
     RefCount<DiskFile> theFile;
     bool opening;
     bool creating;
@@ -39,8 +39,8 @@ public:
     bool reading;
     bool writing;
     /* StoreIOState API */
-    void read_(char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data);
-    virtual bool write(char const *buf, size_t size, off_t offset, FREE * free_func);
+    void read_(char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data) override;
+    bool write(char const *buf, size_t size, off_t offset, FREE * free_func) override;
 
 protected:
     virtual void doCloseCallback (int errflag);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -163,13 +163,13 @@ Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Http
             /* here it makes sense to drop the connection, as auth is
              * tied to it, even if MAYBE the client could handle it - Kinkie */
             request->flags.proxyKeepalive = false;
-        /* [[fallthrough]] */
+            [[fallthrough]];
 
         case Auth::Ok:
-        /* Special case: authentication finished OK but disallowed by ACL.
-         * Need to start over to give the client another chance.
-         */
-        /* [[fallthrough]] */
+            /* Special case: authentication finished OK but disallowed by ACL.
+             * Need to start over to give the client another chance.
+             */
+            [[fallthrough]];
 
         case Auth::Unchecked:
             /* semantic change: do not drop the connection.

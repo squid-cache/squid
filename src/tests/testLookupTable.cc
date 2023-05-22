@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,10 +8,19 @@
 
 #include "squid.h"
 #include "base/LookupTable.h"
-#include "testLookupTable.h"
+#include "compat/cppunit.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testLookupTable );
+class TestLookupTable : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestLookupTable);
+    CPPUNIT_TEST(testLookupTableLookup);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void testLookupTableLookup();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestLookupTable);
 
 enum EnumData {
     ENUM_1,
@@ -36,7 +45,7 @@ static const LookupTable<EnumData>::Record tableData[] = {
 };
 
 void
-testLookupTable::testLookupTableLookup()
+TestLookupTable::testLookupTableLookup()
 {
     LookupTable<EnumData> lt(ENUM_INVALID, tableData);
     // element found

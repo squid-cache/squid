@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,7 +20,7 @@ class WriteRequest : public RefCountable
 public:
     typedef RefCount<WriteRequest> Pointer;
     WriteRequest(char const *buf, off_t offset, size_t len, FREE *);
-    virtual ~WriteRequest() {}
+    ~WriteRequest() override {}
 
     char const *buf;
     off_t offset;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -160,7 +160,7 @@ public:
         handler(aHandler), portCfg(aPortCfg), portTypeNote(note), sub(aSub) {}
 
     /* CallDialer API */
-    virtual void print(std::ostream &os) const {
+    void print(std::ostream &os) const override {
         os << '(' << answer_ << ", " << FdNote(portTypeNote) << " port=" << (void*)&portCfg << ')';
     }
 
@@ -168,7 +168,7 @@ public:
     virtual void dial(AsyncCall &) { (handler)(portCfg, portTypeNote, sub); }
 
     /* WithAnswer API */
-    virtual Ipc::StartListeningAnswer &answer() { return answer_; }
+    Ipc::StartListeningAnswer &answer() override { return answer_; }
 
 public:
     Handler handler;
@@ -1258,10 +1258,10 @@ ConnStateData::prepareTlsSwitchingURL(const Http1::RequestParserPointer &hp)
         const SBuf &scheme = AnyP::UriScheme(transferProtocol.protocol).image();
         const int url_sz = scheme.length() + useHost.length() + hp->requestUri().length() + 32;
         uri = static_cast<char *>(xcalloc(url_sz, 1));
-        snprintf(uri, url_sz, SQUIDSBUFPH "://" SQUIDSBUFPH ":%d" SQUIDSBUFPH,
+        snprintf(uri, url_sz, SQUIDSBUFPH "://" SQUIDSBUFPH ":%hu" SQUIDSBUFPH,
                  SQUIDSBUFPRINT(scheme),
                  SQUIDSBUFPRINT(useHost),
-                 tlsConnectPort,
+                 *tlsConnectPort,
                  SQUIDSBUFPRINT(hp->requestUri()));
     }
 #endif
@@ -1524,11 +1524,10 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
             bool allowDomainMismatch = false;
             if (Config.ssl_client.cert_error) {
                 ACLFilledChecklist check(Config.ssl_client.cert_error, nullptr);
-                check.sslErrors = new Security::CertErrors(Security::CertError(SQUID_X509_V_ERR_DOMAIN_MISMATCH, srvCert));
+                const auto sslErrors = std::make_unique<Security::CertErrors>(Security::CertError(SQUID_X509_V_ERR_DOMAIN_MISMATCH, srvCert));
+                check.sslErrors = sslErrors.get();
                 clientAclChecklistFill(check, http);
                 allowDomainMismatch = check.fastCheck().allowed();
-                delete check.sslErrors;
-                check.sslErrors = nullptr;
             }
 
             if (!allowDomainMismatch) {
@@ -3164,12 +3163,13 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, const 
 {
     // fake a CONNECT request to force connState to tunnel
     SBuf connectHost;
-    unsigned short connectPort = 0;
+    AnyP::Port connectPort;
 
     if (pinning.serverConnection != nullptr) {
         static char ip[MAX_IPSTRLEN];
         connectHost = pinning.serverConnection->remote.toStr(ip, sizeof(ip));
-        connectPort = pinning.serverConnection->remote.port();
+        if (const auto remotePort = pinning.serverConnection->remote.port())
+            connectPort = remotePort;
     } else if (cause) {
         connectHost = cause->url.hostOrIp();
         connectPort = cause->url.port();
@@ -3182,7 +3182,9 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, const 
         static char ip[MAX_IPSTRLEN];
         connectHost = clientConnection->local.toStr(ip, sizeof(ip));
         connectPort = clientConnection->local.port();
-    } else {
+    }
+
+    if (!connectPort) {
         // Typical cases are malformed HTTP requests on http_port and malformed
         // TLS handshakes on non-bumping https_port. TODO: Discover these
         // problems earlier so that they can be classified/detailed better.
@@ -3194,7 +3196,7 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, const 
     }
 
     debugs(33, 2, "Request tunneling for " << reason);
-    ClientHttpRequest *http = buildFakeRequest(connectHost, connectPort, payload);
+    const auto http = buildFakeRequest(connectHost, *connectPort, payload);
     HttpRequest::Pointer request = http->request;
     request->flags.forceTunnel = true;
     http->calloutContext = new ClientRequestContext(http);
@@ -3233,7 +3235,7 @@ ConnStateData::fakeAConnectRequest(const char *reason, const SBuf &payload)
 }
 
 ClientHttpRequest *
-ConnStateData::buildFakeRequest(SBuf &useHost, unsigned short usePort, const SBuf &payload)
+ConnStateData::buildFakeRequest(SBuf &useHost, const AnyP::KnownPort usePort, const SBuf &payload)
 {
     ClientHttpRequest *http = new ClientHttpRequest(this);
     Http::Stream *stream = new Http::Stream(clientConnection, http);
@@ -3583,7 +3585,7 @@ ConnStateData::fillConnectionLevelDetails(ACLFilledChecklist &checklist) const
 
 #if USE_OPENSSL
     if (!checklist.sslErrors && sslServerBump)
-        checklist.sslErrors = cbdataReference(sslServerBump->sslErrors());
+        checklist.sslErrors = sslServerBump->sslErrors();
 #endif
 
     if (!checklist.rfc931[0]) // checklist creator may have supplied it already
@@ -3864,7 +3866,8 @@ ConnStateData::handleIdleClientPinnedTlsRead()
     switch(const int error = SSL_get_error(ssl, readResult)) {
     case SSL_ERROR_WANT_WRITE:
         debugs(83, DBG_IMPORTANT, pinning.serverConnection << " TLS SSL_ERROR_WANT_WRITE request for idle pinned connection");
-    // fall through to restart monitoring, for now
+        [[fallthrough]]; // to restart monitoring, for now
+
     case SSL_ERROR_NONE:
     case SSL_ERROR_WANT_READ:
         startPinnedConnectionMonitoring();

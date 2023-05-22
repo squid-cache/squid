@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,7 +19,7 @@ public:
     StoreSearch() {}
 
     StoreSearch(StoreSearch const &); /* no implementation - trigger link failures */
-    virtual ~StoreSearch() {}
+    ~StoreSearch() override {}
 
     /* not ready yet
     void asList(void (*) (CbDataList<StoreEntryPointer), void *cbdata);

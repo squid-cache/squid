@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
 #include "base/EnumIterator.h"
+#include "base/IoManip.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
 #include "comm/Connection.h"
@@ -145,7 +146,7 @@ peerAllowedToUse(const CachePeer * p, PeerSelector * ps)
 #if PEER_MULTICAST_SIBLINGS
         if (p->type == PEER_MULTICAST && p->options.mcast_siblings &&
                 (request->flags.noCache || request->flags.refresh || request->flags.loopDetected || request->flags.needValidation))
-            debugs(15, 2, "peerAllowedToUse(" << p->name << ", " << request->url.authority() << ") : multicast-siblings optimization match");
+            debugs(15, 2, "multicast-siblings optimization match for " << *p << ", " << request->url.authority());
 #endif
         if (request->flags.noCache)
             return false;
@@ -305,7 +306,7 @@ getFirstUpParent(PeerSelector *ps)
         break;
     }
 
-    debugs(15, 3, "getFirstUpParent: returning " << (p ? p->host : "NULL"));
+    debugs(15, 3, "returning " << RawPointer(p).orNil());
     return p;
 }
 
@@ -346,7 +347,7 @@ getRoundRobinParent(PeerSelector *ps)
     if (q)
         ++ q->rr_count;
 
-    debugs(15, 3, "returning " << (q ? q->host : "NULL"));
+    debugs(15, 3, "returning " << RawPointer(q).orNil());
 
     return q;
 }
@@ -399,7 +400,7 @@ getWeightedRoundRobinParent(PeerSelector *ps)
         debugs(15, 3, "getWeightedRoundRobinParent: weighted_rtt " << weighted_rtt);
     }
 
-    debugs(15, 3, "getWeightedRoundRobinParent: returning " << (q ? q->host : "NULL"));
+    debugs(15, 3, "returning " << RawPointer(q).orNil());
     return q;
 }
 
@@ -452,14 +453,11 @@ peerClearRR()
     }
 }
 
-/**
- * Perform all actions when a CachePeer is detected revived.
- */
-static void
+void
 peerAlive(CachePeer *p)
 {
     if (p->stats.logged_state == PEER_DEAD && p->tcp_up) {
-        debugs(15, DBG_IMPORTANT, "Detected REVIVED " << neighborTypeStr(p) << ": " << p->name);
+        debugs(15, DBG_IMPORTANT, "Detected REVIVED " << neighborTypeStr(p) << ": " << *p);
         p->stats.logged_state = PEER_ALIVE;
         peerClearRR();
         if (p->standby.mgr.valid())
@@ -468,6 +466,10 @@ peerAlive(CachePeer *p)
 
     p->stats.last_reply = squid_curtime;
     p->stats.probe_start = 0;
+
+    // TODO: Remove or explain how we could detect an alive peer without IP addresses
+    if (!p->n_addresses)
+        ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
 }
 
 CachePeer *
@@ -488,12 +490,13 @@ getDefaultParent(PeerSelector *ps)
         if (!peerHTTPOkay(p, ps))
             continue;
 
-        debugs(15, 3, "getDefaultParent: returning " << p->host);
+        debugs(15, 3, "returning " << *p);
 
         return p;
     }
 
-    debugs(15, 3, "getDefaultParent: returning NULL");
+    // TODO: Refactor similar get*() functions to use our return/reporting style
+    debugs(15, 3, "none found");
     return nullptr;
 }
 
@@ -573,10 +576,7 @@ neighbors_init(void)
                     continue;
 
                 debugs(15, DBG_IMPORTANT, "WARNING: Peer looks like this host." <<
-                       Debug::Extra << "Ignoring " <<
-                       neighborTypeStr(thisPeer) << " " << thisPeer->host <<
-                       "/" << thisPeer->http_port << "/" <<
-                       thisPeer->icp.port);
+                       Debug::Extra << "Ignoring cache_peer " << *thisPeer);
 
                 neighborRemove(thisPeer);
             }
@@ -605,7 +605,6 @@ neighborsUdpPing(HttpRequest * request,
     int i;
     int reqnum = 0;
     int flags;
-    int queries_sent = 0;
     int peers_pinged = 0;
     int parent_timeout = 0, parent_exprep = 0;
     int sibling_timeout = 0, sibling_exprep = 0;
@@ -628,14 +627,14 @@ neighborsUdpPing(HttpRequest * request,
         if (p == nullptr)
             p = Config.peers;
 
-        debugs(15, 5, "neighborsUdpPing: Peer " << p->host);
+        debugs(15, 5, "candidate: " << *p);
 
         if (!peerWouldBePinged(p, ps))
             continue;       /* next CachePeer */
 
         ++peers_pinged;
 
-        debugs(15, 4, "neighborsUdpPing: pinging peer " << p->host << " for '" << url << "'");
+        debugs(15, 4, "pinging cache_peer " << *p << " for '" << url << "'");
 
         debugs(15, 3, "neighborsUdpPing: key = '" << entry->getMD5Text() << "'");
 
@@ -681,8 +680,6 @@ neighborsUdpPing(HttpRequest * request,
             }
         }
 
-        ++queries_sent;
-
         ++ p->stats.pings_sent;
 
         if (p->type == PEER_MULTICAST) {
@@ -703,7 +700,7 @@ neighborsUdpPing(HttpRequest * request,
             /* log it once at the threshold */
 
             if (p->stats.logged_state == PEER_ALIVE) {
-                debugs(15, DBG_IMPORTANT, "Detected DEAD " << neighborTypeStr(p) << ": " << p->name);
+                debugs(15, DBG_IMPORTANT, "Detected DEAD " << neighborTypeStr(p) << ": " << *p);
                 p->stats.logged_state = PEER_DEAD;
             }
         }
@@ -764,7 +761,7 @@ peerDigestLookup(CachePeer * p, PeerSelector * ps)
     const cache_key *key = request ? storeKeyPublicByRequest(request) : nullptr;
     assert(p);
     assert(request);
-    debugs(15, 5, "peerDigestLookup: peer " << p->host);
+    debugs(15, 5, "cache_peer " << *p);
     /* does the peeer have a valid digest? */
 
     if (!p->digest) {
@@ -782,14 +779,14 @@ peerDigestLookup(CachePeer * p, PeerSelector * ps)
         return LOOKUP_NONE;
     }
 
-    debugs(15, 5, "peerDigestLookup: OK to lookup peer " << p->host);
+    debugs(15, 5, "OK to lookup cache_peer " << *p);
     assert(p->digest->cd);
     /* does digest predict a hit? */
 
     if (!p->digest->cd->contains(key))
         return LOOKUP_MISS;
 
-    debugs(15, 5, "peerDigestLookup: peer " << p->host << " says HIT!");
+    debugs(15, 5, "HIT for cache_peer " << *p);
 
     return LOOKUP_HIT;
 #else
@@ -842,7 +839,7 @@ neighborsDigestSelect(PeerSelector *ps)
 
         p_rtt = netdbHostRtt(p->host);
 
-        debugs(15, 5, "neighborsDigestSelect: peer " << p->host << " rtt: " << p_rtt);
+        debugs(15, 5, "cache_peer " << *p << " rtt: " << p_rtt);
 
         /* is this CachePeer better than others in terms of rtt ? */
         if (!best_p || (p_rtt && p_rtt < best_rtt)) {
@@ -852,7 +849,7 @@ neighborsDigestSelect(PeerSelector *ps)
             if (p_rtt)      /* informative choice (aka educated guess) */
                 ++ichoice_count;
 
-            debugs(15, 4, "neighborsDigestSelect: peer " << p->host << " leads with rtt " << best_rtt);
+            debugs(15, 4, "cache_peer " << *p << " leads with rtt " << best_rtt);
         }
     }
 
@@ -878,7 +875,7 @@ peerNoteDigestLookup(HttpRequest * request, CachePeer * p, lookup_t lookup)
         *request->hier.cd_host = '\0';
 
     request->hier.cd_lookup = lookup;
-    debugs(15, 4, "peerNoteDigestLookup: peer " << (p? p->host : "<none>") << ", lookup: " << lookup_t_str[lookup]  );
+    debugs(15, 4, "cache_peer " << RawPointer(p).orNil() << ", lookup: " << lookup_t_str[lookup]);
 #else
     (void)request;
     (void)p;
@@ -963,12 +960,12 @@ neighborIgnoreNonPeer(const Ip::Address &from, icp_opcode opcode)
     }
 
     if (np == nullptr) {
-        np = new CachePeer;
+        char fromStr[MAX_IPSTRLEN];
+        from.toStr(fromStr, sizeof(fromStr));
+        np = new CachePeer(fromStr);
         np->in_addr = from;
         np->icp.port = from.port();
         np->type = PEER_NONE;
-        np->host = new char[MAX_IPSTRLEN];
-        from.toStr(np->host,MAX_IPSTRLEN);
         np->next = non_peers;
         non_peers = np;
     }
@@ -976,7 +973,7 @@ neighborIgnoreNonPeer(const Ip::Address &from, icp_opcode opcode)
     ++ np->icp.counts[opcode];
 
     if (isPowTen(++np->stats.ignored_replies))
-        debugs(15, DBG_IMPORTANT, "WARNING: Ignored " << np->stats.ignored_replies << " replies from non-peer " << np->host);
+        debugs(15, DBG_IMPORTANT, "WARNING: Ignored " << np->stats.ignored_replies << " replies from non-peer " << *np);
 }
 
 /* ignoreMulticastReply
@@ -1071,7 +1068,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
         return;
     }
 
-    debugs(15, 3, "neighborsUdpAck: " << opcode_d << " for '" << storeKeyText(key) << "' from " << (p ? p->host : "source") << " ");
+    debugs(15, 3, opcode_d << " for " << storeKeyText(key) << " from " << RawPointer(p).orNil("source"));
 
     if (p) {
         ntype = neighborType(p, mem->request->url);
@@ -1103,7 +1100,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
         }
     } else if (opcode == ICP_SECHO) {
         if (p) {
-            debugs(15, DBG_IMPORTANT, "Ignoring SECHO from neighbor " << p->host);
+            debugs(15, DBG_IMPORTANT, "Ignoring SECHO from neighbor " << *p);
             neighborCountIgnored(p);
         } else {
             debugs(15, DBG_IMPORTANT, "Unsolicited SECHO from " << from);
@@ -1113,8 +1110,8 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
             neighborIgnoreNonPeer(from, opcode);
         } else if (p->stats.pings_acked > 100) {
             if (100 * p->icp.counts[ICP_DENIED] / p->stats.pings_acked > 95) {
-                debugs(15, DBG_CRITICAL, "95%% of replies from '" << p->host << "' are UDP_DENIED");
-                debugs(15, DBG_CRITICAL, "Disabling '" << p->host << "', please check your configuration.");
+                debugs(15, DBG_CRITICAL, "Disabling cache_peer " << *p <<
+                       " because over 95% of its replies are UDP_DENIED");
                 neighborRemove(p);
                 p = nullptr;
             } else {
@@ -1129,7 +1126,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
 }
 
 CachePeer *
-peerFindByName(const char *name)
+findCachePeerByName(const char * const name)
 {
     CachePeer *p = nullptr;
 
@@ -1141,29 +1138,14 @@ peerFindByName(const char *name)
     return p;
 }
 
-CachePeer *
-peerFindByNameAndPort(const char *name, unsigned short port)
-{
-    CachePeer *p = nullptr;
-
-    for (p = Config.peers; p; p = p->next) {
-        if (strcasecmp(name, p->name))
-            continue;
-
-        if (port != p->http_port)
-            continue;
-
-        break;
-    }
-
-    return p;
-}
-
 int
 neighborUp(const CachePeer * p)
 {
     if (!p->tcp_up) {
-        peerProbeConnect(const_cast<CachePeer*>(p));
+        // TODO: When CachePeer gets its own CodeContext, pass that context instead of nullptr
+        CallService(nullptr, [&] {
+            peerProbeConnect(const_cast<CachePeer*>(p));
+        });
         return 0;
     }
 
@@ -1172,22 +1154,22 @@ neighborUp(const CachePeer * p)
      * for it.
      */
     if (0 == p->n_addresses) {
-        debugs(15, 8, "neighborUp: DOWN (no-ip): " << p->host << " (" << p->in_addr << ")");
+        debugs(15, 8, "DOWN (no-ip): " << *p);
         return 0;
     }
 
     if (p->options.no_query) {
-        debugs(15, 8, "neighborUp: UP (no-query): " << p->host << " (" << p->in_addr << ")");
+        debugs(15, 8, "UP (no-query): " << *p);
         return 1;
     }
 
     if (p->stats.probe_start != 0 &&
             squid_curtime - p->stats.probe_start > Config.Timeout.deadPeer) {
-        debugs(15, 8, "neighborUp: DOWN (dead): " << p->host << " (" << p->in_addr << ")");
+        debugs(15, 8, "DOWN (dead): " << *p);
         return 0;
     }
 
-    debugs(15, 8, "neighborUp: UP: " << p->host << " (" << p->in_addr << ")");
+    debugs(15, 8, "UP: " << *p);
     return 1;
 }
 
@@ -1206,7 +1188,7 @@ peerDNSConfigure(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data
     CachePeer *p = (CachePeer *)data;
 
     if (p->n_addresses == 0) {
-        debugs(15, Important(29), "Configuring " << neighborTypeStr(p) << " " << p->host << "/" << p->http_port << "/" << p->icp.port);
+        debugs(15, Important(29), "Configuring " << neighborTypeStr(p) << " " << *p);
 
         if (p->type == PEER_MULTICAST)
             debugs(15, DBG_IMPORTANT, "    Multicast TTL = " << p->mcast.ttl);
@@ -1215,12 +1197,12 @@ peerDNSConfigure(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data
     p->n_addresses = 0;
 
     if (ia == nullptr) {
-        debugs(0, DBG_CRITICAL, "WARNING: DNS lookup for '" << p->host << "' failed!");
+        debugs(0, DBG_CRITICAL, "WARNING: DNS lookup for '" << *p << "' failed!");
         return;
     }
 
     if (ia->empty()) {
-        debugs(0, DBG_CRITICAL, "WARNING: No IP address found for '" << p->host << "'!");
+        debugs(0, DBG_CRITICAL, "WARNING: No IP address found for '" << *p << "'!");
         return;
     }
 
@@ -1275,48 +1257,6 @@ peerRefreshDNS(void *data)
     eventAddIsh("peerRefreshDNS", peerRefreshDNS, nullptr, 3600.0, 1);
 }
 
-// TODO: Move to CachePeer::noteFailure() or similar.
-// TODO: Require callers to detail failures instead of using one (and often
-// misleading!) "TCP" label for all of them.
-void
-peerConnectFailed(CachePeer * const p)
-{
-    p->stats.last_connect_failure = squid_curtime;
-    if (p->tcp_up > 0)
-        --p->tcp_up;
-
-    // TODO: Report peer name. Same-addresses peers often have different names.
-
-    const auto consideredAliveByAdmin = p->stats.logged_state == PEER_ALIVE;
-    const auto level = consideredAliveByAdmin ? DBG_IMPORTANT : 2;
-    debugs(15, level, "ERROR: TCP connection to " << p->host << "/" << p->http_port << " failed");
-
-    if (consideredAliveByAdmin) {
-        if (!p->tcp_up) {
-            debugs(15, DBG_IMPORTANT, "Detected DEAD " << neighborTypeStr(p) << ": " << p->name);
-            p->stats.logged_state = PEER_DEAD;
-        } else {
-            debugs(15, 2, "additional failures needed to mark this cache_peer DEAD: " << p->tcp_up);
-        }
-    } else {
-        assert(!p->tcp_up);
-        debugs(15, 2, "cache_peer " << p->host << "/" << p->http_port << " is still DEAD");
-    }
-}
-
-void
-peerConnectSucceded(CachePeer * p)
-{
-    if (!p->tcp_up) {
-        debugs(15, 2, "TCP connection to " << p->host << "/" << p->http_port << " succeeded");
-        p->tcp_up = p->connect_fail_limit; // NP: so peerAlive(p) works properly.
-        peerAlive(p);
-        if (!p->n_addresses)
-            ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
-    } else
-        p->tcp_up = p->connect_fail_limit;
-}
-
 /// whether new TCP probes are currently banned
 static bool
 peerProbeIsBusy(const CachePeer *p)
@@ -1368,11 +1308,10 @@ peerProbeConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int
 {
     CachePeer *p = (CachePeer*)data;
 
-    if (status == Comm::OK) {
-        peerConnectSucceded(p);
-    } else {
-        peerConnectFailed(p);
-    }
+    if (status == Comm::OK)
+        p->noteSuccess();
+    else
+        p->noteFailure(Http::scNone);
 
     -- p->testing_now;
     conn->close();
@@ -1474,7 +1413,7 @@ peerCountMcastPeersAbort(PeerSelector * const psstate)
         CachePeer *p = (CachePeer *)psstate->peerCountMcastPeerXXX;
         p->mcast.flags.counting = false;
         p->mcast.avg_n_members = Math::doubleAverage(p->mcast.avg_n_members, (double) psstate->ping.n_recv, ++p->mcast.n_times_counted, 10);
-        debugs(15, DBG_IMPORTANT, "Group " << p->host  << ": " << psstate->ping.n_recv  <<
+        debugs(15, DBG_IMPORTANT, "Group " << *p  << ": " << psstate->ping.n_recv  <<
                " replies, "<< std::setw(4)<< std::setprecision(2) <<
                p->mcast.avg_n_members <<" average, RTT " << p->stats.rtt);
         p->mcast.n_replies_expected = (int) p->mcast.avg_n_members;

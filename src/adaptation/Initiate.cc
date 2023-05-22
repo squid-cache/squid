@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,11 +25,11 @@ class AnswerCall: public AsyncCallT<AnswerDialer>
 public:
     AnswerCall(const char *aName, const AnswerDialer &aDialer) :
         AsyncCallT<AnswerDialer>(93, 5, aName, aDialer), fired(false) {}
-    virtual void fire() {
+    void fire() override {
         fired = true;
         AsyncCallT<AnswerDialer>::fire();
     }
-    virtual ~AnswerCall() {
+    ~AnswerCall() override {
         if (!fired && dialer.arg1.message != nullptr && dialer.arg1.message->body_pipe != nullptr)
             dialer.arg1.message->body_pipe->expectNoConsumption();
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,14 +9,27 @@
 #include "squid.h"
 #include <cppunit/TestAssert.h>
 
+#include "compat/cppunit.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "mime_header.h"
 #include "SquidConfig.h"
-#include "testHttpReply.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testHttpReply );
+class TestHttpReply : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestHttpReply);
+    CPPUNIT_TEST(testSanityCheckFirstLine);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void setUp() override;
+
+protected:
+    void testSanityCheckFirstLine();
+};
+
+CPPUNIT_TEST_SUITE_REGISTRATION( TestHttpReply );
 
 class SquidConfig Config;
 
@@ -32,14 +45,14 @@ MemObject::endOffset() const
 /* end */
 
 void
-testHttpReply::setUp()
+TestHttpReply::setUp()
 {
     Mem::Init();
     httpHeaderInitModule();
 }
 
 void
-testHttpReply::testSanityCheckFirstLine()
+TestHttpReply::testSanityCheckFirstLine()
 {
     MemBuf input;
     HttpReply engine;

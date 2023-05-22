@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,9 +31,9 @@ public:
 
     EventDialer(EVH *aHandler, void *anArg, bool lockedArg);
     EventDialer(const EventDialer &d);
-    virtual ~EventDialer();
+    ~EventDialer() override;
 
-    virtual void print(std::ostream &os) const;
+    void print(std::ostream &os) const override;
     virtual bool canDial(AsyncCall &call);
 
     void dial(AsyncCall &) { theHandler(theArg); }
@@ -116,7 +116,7 @@ eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int weigh
     if (delta_ish >= 3.0) {
         static std::mt19937 rng(RandomSeed32());
         auto third = (delta_ish/3.0);
-        xuniform_real_distribution<> thirdIsh(delta_ish - third, delta_ish + third);
+        std::uniform_real_distribution<> thirdIsh(delta_ish - third, delta_ish + third);
         delta_ish = thirdIsh(rng);
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -79,17 +79,15 @@
 #include "sspwin32.h"
 #include "util.h"
 
-#include <windows.h>
+#include <cctype>
+#include <lm.h>
+#include <ntsecapi.h>
 #include <sspi.h>
 #include <security.h>
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-#include <lm.h>
-#include <ntsecapi.h>
+#include <windows.h>
 
 int NTLM_packet_debug_enabled = 0;
 static int have_challenge;
@@ -402,7 +400,7 @@ process_options(int argc, char *argv[])
             exit(EXIT_SUCCESS);
         case '?':
             opt = optopt;
-        /* [[fallthrough]] */
+            [[fallthrough]];
         default:
             fprintf(stderr, "unknown option: -%c. Exiting\n", opt);
             usage();

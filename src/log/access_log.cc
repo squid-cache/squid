@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -42,10 +42,6 @@
 #endif
 
 #include <unordered_map>
-
-#if HEADERS_LOG
-static Logfile *headerslog = NULL;
-#endif
 
 #if MULTICAST_MISS_STREAM
 static int mcast_miss_fd = -1;
@@ -190,12 +186,6 @@ accessLogRotate(void)
     for (log = Config.Log.accesslogs; log; log = log->next) {
         log->rotate();
     }
-
-#if HEADERS_LOG
-
-    logfileRotate(headerslog, Config.Log.rotateNumber);
-
-#endif
 }
 
 void
@@ -209,14 +199,6 @@ accessLogClose(void)
             log->logfile = nullptr;
         }
     }
-
-#if HEADERS_LOG
-
-    logfileClose(headerslog);
-
-    headerslog = NULL;
-
-#endif
 }
 
 HierarchyLogEntry::HierarchyLogEntry() :
@@ -401,13 +383,6 @@ accessLogInit(void)
 #endif
     }
 
-#if HEADERS_LOG
-
-    headerslog = logfileOpen("/usr/local/squid/logs/headers.log", 512);
-
-    assert(NULL != headerslog);
-
-#endif
 #if MULTICAST_MISS_STREAM
 
     if (Config.mcast_miss.addr.s_addr != no_addr.s_addr) {
@@ -526,61 +501,6 @@ mcast_encode(unsigned int *ibuf, size_t isize, const unsigned int *key)
         ibuf[i] = htonl(y);
         ibuf[i + 1] = htonl(z);
     }
-}
-
-#endif
-
-#if HEADERS_LOG
-void
-headersLog(int cs, int pq, const HttpRequestMethod& method, void *data)
-{
-    HttpReply *rep;
-    HttpRequest *req;
-    unsigned short magic = 0;
-    unsigned char M = (unsigned char) m;
-    char *hmask;
-    int ccmask = 0;
-
-    if (0 == pq) {
-        /* reply */
-        rep = data;
-        req = NULL;
-        magic = 0x0050;
-        hmask = rep->header.mask;
-
-        if (rep->cache_control)
-            ccmask = rep->cache_control->mask;
-    } else {
-        /* request */
-        req = data;
-        rep = NULL;
-        magic = 0x0051;
-        hmask = req->header.mask;
-
-        if (req->cache_control)
-            ccmask = req->cache_control->mask;
-    }
-
-    if (0 == cs) {
-        /* client */
-        magic |= 0x4300;
-    } else {
-        /* server */
-        magic |= 0x5300;
-    }
-
-    magic = htons(magic);
-    ccmask = htonl(ccmask);
-
-    unsigned short S = 0;
-    if (0 == pq)
-        S = static_cast<unsigned short>(rep->sline.status());
-
-    logfileWrite(headerslog, &magic, sizeof(magic));
-    logfileWrite(headerslog, &M, sizeof(M));
-    logfileWrite(headerslog, &S, sizeof(S));
-    logfileWrite(headerslog, hmask, sizeof(HttpHeaderMask));
-    logfileWrite(headerslog, &ccmask, sizeof(int));
 }
 
 #endif

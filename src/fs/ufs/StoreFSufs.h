@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,11 +36,11 @@ class StoreFSufs : public StoreFileSystem
 public:
     static StoreFileSystem &GetInstance();
     StoreFSufs(char const *DefaultModuleType, char const *label);
-    virtual ~StoreFSufs() {}
+    ~StoreFSufs() override {}
 
     /* StoreFileSystem API */
-    virtual const char *type() const override;
-    virtual SwapDir *createSwapDir() override;
+    const char *type() const override;
+    SwapDir *createSwapDir() override;
 
 protected:
     DiskIOModule *IO;

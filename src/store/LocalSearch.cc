@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,11 +23,11 @@ class LocalSearch : public StoreSearch
 
 public:
     /* StoreSearch API */
-    virtual void next(void (callback)(void *cbdata), void *cbdata) override;
-    virtual bool next() override;
-    virtual bool error() const override;
-    virtual bool isDone() const override;
-    virtual StoreEntry *currentItem() override;
+    void next(void (callback)(void *cbdata), void *cbdata) override;
+    bool next() override;
+    bool error() const override;
+    bool isDone() const override;
+    StoreEntry *currentItem() override;
 
 private:
     void copyBucket();

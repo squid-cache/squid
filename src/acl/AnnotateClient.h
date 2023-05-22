@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,8 +16,8 @@
 class ACLAnnotateClientStrategy : public Acl::AnnotationStrategy
 {
 public:
-    virtual bool requiresRequest() const { return true; }
-    virtual int match(ACLData<MatchType> * &, ACLFilledChecklist *);
+    bool requiresRequest() const override { return true; }
+    int match(ACLData<MatchType> * &, ACLFilledChecklist *) override;
 };
 
 #endif /* SQUID_ACLANNOTATECLIENT */

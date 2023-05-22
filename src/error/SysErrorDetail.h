@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,8 +29,8 @@ public:
     static SBuf Brief(int errorNo);
 
     /* ErrorDetail API */
-    virtual SBuf brief() const override;
-    virtual SBuf verbose(const HttpRequestPointer &) const override;
+    SBuf brief() const override;
+    SBuf verbose(const HttpRequestPointer &) const override;
 
 private:
     // hidden by NewIfAny() to avoid creating SysErrorDetail from zero errno

@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -21,8 +21,6 @@ EXTRA_DIST = \
 	solaris/solaris-krb5-include.patch
 
 all:
-
-install: install-@host_os@
 
 install-hpux10.10 install-hpux10.20:
 	$(INSTALL_BIN) $(SQUID_RC) /sbin/init.d/squid

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -51,10 +51,10 @@ typedef int bool;
 #endif
 #endif /* __cplusplus */
 
+#include <ctime>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <time.h>
 
 // taken from Squid-2.x
 // NOTE!  We must preserve the order of this list!

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -368,7 +368,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
 
     case Helper::Unknown:
         debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication Helper crashed (" << reply.reservationId << ")");
-    /* [[fallthrough]] */
+        [[fallthrough]];
 
     case Helper::TimedOut:
     case Helper::BrokenHelper:

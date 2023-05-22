@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -85,6 +85,18 @@ public:
 
     bool operator != (const RefCount &p) const {
         return p.p_ != p_;
+    }
+
+    template <class Other>
+    bool operator ==(const Other * const p) const
+    {
+        return p == p_;
+    }
+
+    template <class Other>
+    bool operator !=(const Other * const p) const
+    {
+        return p != p_;
     }
 
 private:

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,8 +29,8 @@ public:
     static String CoordinatorAddr();
 
 protected:
-    virtual void start() = 0; // UdsOp (AsyncJob) API; has body
-    virtual bool doneAll() const; // UdsOp (AsyncJob) API
+    void start() override = 0; // UdsOp (AsyncJob) API; has body
+    bool doneAll() const override; // UdsOp (AsyncJob) API
 
     /// read the next incoming message
     void doListen();

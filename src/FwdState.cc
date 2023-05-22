@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -241,7 +241,10 @@ FwdState::updateAleWithFinalError()
         return;
 
     LogTagsErrors lte;
-    lte.timedout = (err->xerrno == ETIMEDOUT || err->type == ERR_READ_TIMEOUT);
+    if (err->xerrno == ETIMEDOUT || err->type == ERR_READ_TIMEOUT)
+        lte.timedout = true;
+    else if (err->type != ERR_NONE)
+        lte.aborted = true;
     al->cache.code.err.update(lte);
     if (!err->detail) {
         static const auto d = MakeNamedErrorDetail("WITH_SERVER");
@@ -847,8 +850,7 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
 
     transportWait.finish();
 
-    Must(n_tries <= answer.n_tries); // n_tries cannot decrease
-    n_tries = answer.n_tries;
+    updateAttempts(answer.n_tries);
 
     ErrorState *error = nullptr;
     if ((error = answer.error.get())) {
@@ -1060,8 +1062,7 @@ FwdState::successfullyConnectedToPeer(const Comm::ConnectionPointer &conn)
     CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
                  ConnStateData::notePeerConnection, serverConnection());
 
-    if (serverConnection()->getPeer())
-        peerConnectSucceded(serverConnection()->getPeer());
+    NoteOutgoingConnectionSuccess(serverConnection()->getPeer());
 
     dispatch();
 }
@@ -1094,6 +1095,22 @@ FwdState::syncHierNote(const Comm::ConnectionPointer &server, const char *host)
         request->hier.resetPeerNotes(server, host);
     if (al)
         al->hier.resetPeerNotes(server, host);
+}
+
+/// sets n_tries to the given value (while keeping ALE, if any, in sync)
+void
+FwdState::updateAttempts(const int newValue)
+{
+    Assure(n_tries <= newValue); // n_tries cannot decrease
+
+    // Squid probably creates at most one FwdState/TunnelStateData object per
+    // ALE, but, unlike an assignment would, this increment logic works even if
+    // Squid uses multiple such objects for a given ALE in some esoteric cases.
+    if (al)
+        al->requestAttempts += (newValue - n_tries);
+
+    n_tries = newValue;
+    debugs(17, 5, n_tries);
 }
 
 /**
@@ -1159,7 +1176,8 @@ FwdState::usePinned()
         return;
     }
 
-    ++n_tries;
+    updateAttempts(n_tries + 1);
+
     request->flags.pinned = true;
 
     assert(connManager);
@@ -1339,7 +1357,7 @@ FwdState::reforward()
 
     const auto s = entry->mem().baseReply().sline.status();
     debugs(17, 3, "status " << s);
-    return reforwardableStatus(s);
+    return Http::IsReforwardableStatus(s);
 }
 
 static void
@@ -1370,32 +1388,6 @@ fwdStats(StoreEntry * s)
 }
 
 /**** STATIC MEMBER FUNCTIONS *************************************************/
-
-bool
-FwdState::reforwardableStatus(const Http::StatusCode s) const
-{
-    switch (s) {
-
-    case Http::scBadGateway:
-
-    case Http::scGatewayTimeout:
-        return true;
-
-    case Http::scForbidden:
-
-    case Http::scInternalServerError:
-
-    case Http::scNotImplemented:
-
-    case Http::scServiceUnavailable:
-        return Config.retry.onerror;
-
-    default:
-        return false;
-    }
-
-    /* NOTREACHED */
-}
 
 void
 FwdState::initModule()

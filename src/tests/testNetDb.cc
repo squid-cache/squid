@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,16 +7,26 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "icmp/net_db.h"
-#include "tests/testNetDb.h"
 #include "unitTestMain.h"
 
-#include <stdexcept>
+class TestNetDb : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestNetDb);
+    /* note the statement here and then the actual prototype below */
+    CPPUNIT_TEST(testConstruct);
+    CPPUNIT_TEST_SUITE_END();
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testNetDb );
+public:
+protected:
+    void testConstruct();
+};
+
+CPPUNIT_TEST_SUITE_REGISTRATION( TestNetDb );
 
 void
-testNetDb::testConstruct()
+TestNetDb::testConstruct()
 {
     // default construct and destruct
     {

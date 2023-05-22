@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -106,18 +106,10 @@
 #if HAVE_RESOLV_H
 #include <resolv.h>
 #endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_STDDEF_H
-#include <stddef.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
-#if HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
+#include <cstring>
+#include <cstddef>
+#include <cerrno>
+#include <cinttypes>
 
 #if _SQUID_WINDOWS_
 #undef IN_ADDR

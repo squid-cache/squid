@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -86,7 +86,7 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
     }
 
     if (params.flag != Comm::OK) {
-        peerConnectFailed(peer);
+        NoteOutgoingConnectionFailure(peer, Http::scNone);
         checkpoint("conn opening failure"); // may retry
         return;
     }
@@ -134,7 +134,7 @@ PeerPoolMgr::handleSecuredPeer(Security::EncryptorAnswer &answer)
     assert(!answer.tunneled);
     if (answer.error.get()) {
         assert(!answer.conn);
-        // PeerConnector calls peerConnectFailed() for us;
+        // PeerConnector calls NoteOutgoingConnectionFailure() for us
         checkpoint("conn securing failure"); // may retry
         return;
     }
@@ -235,8 +235,8 @@ class PeerPoolMgrsRr: public RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void useConfig() { syncConfig(); }
-    virtual void syncConfig();
+    void useConfig() override { syncConfig(); }
+    void syncConfig() override;
 };
 
 RunnerRegistrationEntry(PeerPoolMgrsRr);

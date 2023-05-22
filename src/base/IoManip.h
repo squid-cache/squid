@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,12 +25,19 @@ public:
     /// Report the pointed-to-object on a dedicated Debug::Extra line.
     RawPointerT<Pointer> &asExtra() { onExtraLine = true; return *this; }
 
+    /// enable and, optionally, customize reporting of nil pointers
+    RawPointerT<Pointer> &orNil(const char *nilTextToUse = "[nil]") { nilText = nilTextToUse; return *this; }
+
     const char *label; /// the name or description of the being-debugged object
+
+    /// whether and how to report a nil pointer; use orNil() to enable
+    const char *nilText = nullptr;
+
     const Pointer &ptr; /// a possibly nil pointer to the being-debugged object
     bool onExtraLine = false;
 };
 
-/// convenience wrapper for creating  RawPointerT<> objects
+/// convenience wrapper for creating RawPointerT<> objects
 template <class Pointer>
 inline RawPointerT<Pointer>
 RawPointer(const char *label, const Pointer &ptr)
@@ -38,13 +45,24 @@ RawPointer(const char *label, const Pointer &ptr)
     return RawPointerT<Pointer>(label, ptr);
 }
 
+/// convenience wrapper for creating RawPointerT<> objects without a label
+template <class Pointer>
+inline RawPointerT<Pointer>
+RawPointer(const Pointer &ptr)
+{
+    return RawPointerT<Pointer>(nullptr, ptr);
+}
+
 /// prints RawPointerT<>, dereferencing the io_manip pointer if possible
 template <class Pointer>
 inline std::ostream &
 operator <<(std::ostream &os, const RawPointerT<Pointer> &pd)
 {
-    if (!pd.ptr)
+    if (!pd.ptr) {
+        if (pd.nilText)
+            os << pd.nilText;
         return os;
+    }
 
     if (pd.onExtraLine)
         os << Debug::Extra;

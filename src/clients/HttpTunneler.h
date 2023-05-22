@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,7 +31,7 @@ namespace Http
 /// connection during these negotiations. The caller receives TunnelerAnswer.
 class Tunneler: virtual public AsyncJob
 {
-    CBDATA_CLASS(Tunneler);
+    CBDATA_CHILD(Tunneler);
 
 public:
     using Answer = TunnelerAnswer;
@@ -49,11 +49,11 @@ public:
 
 protected:
     /* AsyncJob API */
-    virtual ~Tunneler();
-    virtual void start();
-    virtual bool doneAll() const;
-    virtual void swanSong();
-    virtual const char *status() const;
+    ~Tunneler() override;
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
+    const char *status() const override;
 
     void handleConnectionClosure(const CommCloseCbParams&);
     void watchForClosures();
@@ -80,7 +80,7 @@ private:
     void disconnect();
 
     /// updates connection usage history before the connection is closed
-    void countFailingConnection();
+    void countFailingConnection(const ErrorState *);
 
     AsyncCall::Pointer writer; ///< called when the request has been written
     AsyncCall::Pointer reader; ///< called when the response should be read

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -248,7 +248,7 @@ storeDigestAddable(const StoreEntry * e)
         return 0;
     }
 
-    if (e->store_status == STORE_OK && EBIT_TEST(e->flags, ENTRY_BAD_LENGTH)) {
+    if (EBIT_TEST(e->flags, ENTRY_BAD_LENGTH)) {
         debugs(71, 6, "storeDigestAddable: NO: wrong content-length");
         return 0;
     }
@@ -421,7 +421,7 @@ storeDigestRewriteStart(void *)
     auto req = HttpRequest::FromUrlXXX(url, mx);
 
     RequestFlags flags;
-    flags.cachable = true;
+    flags.cachable.support(); // prevent RELEASE_REQUEST in storeCreateEntry()
 
     StoreEntry *e = storeCreateEntry(url, url, flags, Http::METHOD_GET);
     assert(e);

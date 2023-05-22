@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,28 +24,28 @@ namespace Icap
 
 class OptXact: public Xaction
 {
-    CBDATA_CLASS(OptXact);
+    CBDATA_CHILD(OptXact);
 
 public:
     OptXact(ServiceRep::Pointer &aService);
 
 protected:
     /* Xaction API */
-    virtual void start();
-    virtual void startShoveling();
-    virtual void handleCommWrote(size_t size);
-    virtual void handleCommRead(size_t size);
+    void start() override;
+    void startShoveling() override;
+    void handleCommWrote(size_t size) override;
+    void handleCommRead(size_t size) override;
 
     void makeRequest(MemBuf &buf);
     bool parseResponse();
 
     void startReading();
-    virtual bool doneReading() const { return commEof || readAll; }
+    bool doneReading() const override { return commEof || readAll; }
 
-    virtual void swanSong();
+    void swanSong() override;
 
 private:
-    virtual void finalizeLogInfo();
+    void finalizeLogInfo() override;
 
     bool readAll; ///< read the entire OPTIONS response
 };
@@ -54,13 +54,13 @@ private:
 // creates OptXact when needed
 class OptXactLauncher: public Launcher
 {
-    CBDATA_CLASS(OptXactLauncher);
+    CBDATA_CHILD(OptXactLauncher);
 
 public:
     OptXactLauncher(Adaptation::ServicePointer aService);
 
 protected:
-    virtual Xaction *createXaction();
+    Xaction *createXaction() override;
 };
 
 } // namespace Icap

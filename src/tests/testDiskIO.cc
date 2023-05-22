@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,29 +7,46 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "DiskIO/DiskIOModule.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "MemObject.h"
 #include "Store.h"
 #include "StoreFileSystem.h"
-#include "testDiskIO.h"
 #include "testStoreSupport.h"
 #include "unitTestMain.h"
 
 #include <stdexcept>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testDiskIO );
+/*
+ * test the DiskIO framework
+ */
+
+class TestDiskIO : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestDiskIO);
+    CPPUNIT_TEST(testFindDefault);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void setUp() override;
+
+protected:
+    void testFindDefault();
+};
+
+CPPUNIT_TEST_SUITE_REGISTRATION( TestDiskIO );
 
 void
-testDiskIO::setUp()
+TestDiskIO::setUp()
 {
     Mem::Init();
     DiskIOModule::SetupAllModules();
 }
 
 void
-testDiskIO::testFindDefault()
+TestDiskIO::testFindDefault()
 {
     DiskIOModule * module = DiskIOModule::FindDefault();
 #if USE_DISKIO

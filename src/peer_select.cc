@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -94,7 +94,7 @@ operator <<(std::ostream &os, const PeerSelectionDumper &fsd)
     os << hier_code_str[fsd.code];
 
     if (fsd.peer)
-        os << '/' << fsd.peer->host;
+        os << '/' << *fsd.peer;
     else if (fsd.selector) // useful for DIRECT and gone PINNED destinations
         os << '#' << fsd.selector->request->url.host();
 
@@ -530,7 +530,10 @@ PeerSelector::noteIp(const Ip::Address &ip)
 
     Comm::ConnectionPointer p = new Comm::Connection();
     p->remote = ip;
-    p->remote.port(peer ? peer->http_port : request->url.port());
+    // XXX: We return a (non-peer) destination with a zero port if the selection
+    // initiator supplied a request target without a port. If there are no valid
+    // use cases for this behavior, stop _selecting_ such destinations.
+    p->remote.port(peer ? peer->http_port : request->url.port().value_or(0));
     handlePath(p, *servers);
 }
 

@@ -1,11 +1,11 @@
-## Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AC_INIT([Squid Web Proxy],[6.0.0-VCS],[http://bugs.squid-cache.org/],[squid])
+AC_INIT([Squid Web Proxy],[7.0.0-VCS],[http://bugs.squid-cache.org/],[squid])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
 AC_CONFIG_AUX_DIR(cfgaux)
@@ -27,8 +27,7 @@ m4_include([acinclude/pam.m4])
 m4_include([acinclude/pkg.m4])
 m4_include([acinclude/tdb.m4])
 m4_include([acinclude/lib-checks.m4])
-m4_include([acinclude/ax_cxx_compile_stdcxx_11.m4])
-m4_include([acinclude/ax_cxx_0x_types.m4])
+m4_include([acinclude/ax_cxx_compile_stdcxx.m4])
 
 PRESET_CFLAGS="$CFLAGS"
 PRESET_CXXFLAGS="$CXXFLAGS"
@@ -55,9 +54,7 @@ AM_PROG_CC_C_O
 AC_PROG_CXX
 
 # AC_USE_SYSTEM_EXTENSIONS should be called before any macros that run the C compiler.
-AS_IF([test "x$squid_host_os" = "solaris" -a "x$GCC" = "xyes"],[
-  AC_USE_SYSTEM_EXTENSIONS
-])
+AC_USE_SYSTEM_EXTENSIONS
 
 AC_LANG([C++])
 
@@ -77,8 +74,16 @@ AS_IF([test "x${enable_arch_native}" != "xno"],[
   SQUID_CC_CHECK_ARGUMENT([squid_cv_check_marchnative],[-march=native])
 ])
 
-# might be cross-compiling.
-# NP: BUILDCXXFLAGS defined at the end of configure after CXXFLAGS fully known.
+# If the user did not specify a C++ version.
+user_cxx=`echo "$PRESET_CXXFLAGS" | grep -o -E "(-)std="`
+AS_IF([test "x$user_cxx" = "x"],[
+  # Check for C++17 compiler support
+  # May change CXX.
+  AX_CXX_COMPILE_STDCXX([17],[noext],[mandatory])
+])
+
+# Prerequisite: CXX has been finalized.
+# BUILDCXXFLAGS are defined later, after CXXFLAGS have been finalized.
 AC_ARG_VAR([BUILDCXX],[path to compiler for building compile-time tools. e.g. cf_gen])
 AS_IF([test "x$HOSTCXX" != "x" -a "x$BUILDCXX" = "x"],[
   AC_MSG_WARN([Cross-compiling with HOSTCXX is deprecated. Use BUILDCXX instead.])
@@ -91,13 +96,6 @@ AS_IF([test "x$BUILDCXX" = "x"],[
   ])
 ])
 AC_SUBST(BUILDCXX)
-
-# If the user did not specify a C++ version.
-user_cxx=`echo "$PRESET_CXXFLAGS" | grep -o -E "(-)std="`
-AS_IF([test "x$user_cxx" = "x"],[
-  # Check for C++11 compiler support
-  AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
-])
 
 # test for programs
 AC_PROG_RANLIB
@@ -133,6 +131,9 @@ AC_SUBST(AR_R)
 
 AC_PATH_PROG(LINUXDOC, linuxdoc, $FALSE)
 AM_CONDITIONAL(ENABLE_RELEASE_DOCS, test "x${ac_cv_path_LINUXDOC}" != "x$FALSE")
+
+SQUID_RELEASE=`echo $VERSION | cut -d. -f1`
+AC_SUBST(SQUID_RELEASE)
 
 # pre-define DEFAULT_PREFIX, some modules need it.
 AS_IF([test "${prefix}" = "NONE"],[squid_prefix=$ac_default_prefix],[squid_prefix=$prefix])
@@ -305,10 +306,9 @@ AS_IF([test "$squid_cv_cc_simplified" = "gcc-4"],[
     #    in unit tests. Disable that
     SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wno-unused-private-field])
 
-    # ...=2: This flexibility level allows GCC to "understand" our fallthrough
-    # comments. TODO: Switch to [[fallthrough]] attributes with C++17.
-    SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wimplicit-fallthrough=2])
-    AS_IF([test "x$squid_cv_cc_arg_wimplicit_fallthrough_2" != "xyes"], [
+    # ...=5: Do not trust comments about fallthrough cases (GCC).
+    SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wimplicit-fallthrough=5])
+    AS_IF([test "x$squid_cv_cc_arg_wimplicit_fallthrough_5" != "xyes"], [
         SQUID_CC_ADD_CXXFLAG_WARNING_IF_SUPPORTED([-Wno-implicit-fallthrough])
     ])
 ])
@@ -354,16 +354,6 @@ AC_ARG_ENABLE(optimizations,
   ])
 ])
 
-AC_ARG_ENABLE(debug-cbdata,
-  AS_HELP_STRING([--enable-debug-cbdata],
-      [Provide some debug information in cbdata]), [
-  SQUID_YESNO([$enableval],[--enable-debug-cbdata])
-])
-SQUID_DEFINE_BOOL(USE_CBDATA_DEBUG,${enable_debug_cbdata:=no},
-    [Enable support for cbdata debug information])
-AC_MSG_NOTICE([cbdata debugging enabled: $enable_debug_cbdata])
-
-
 dnl Nasty hack to get autoconf 2.64 on Linux to run.
 dnl all other uses of RUN_IFELSE are wrapped inside CACHE_CHECK which breaks on 2.64
 AC_RUN_IFELSE([AC_LANG_SOURCE([[ int main(int argc, char **argv) { return 0; } ]])],[],[],[:])
@@ -383,7 +373,7 @@ AC_ARG_WITH(aufs-threads,
   AS_HELP_STRING([--with-aufs-threads=N_THREADS],
     [Tune the number of worker threads for the aufs object store.]), [
   AS_CASE([$withval],
-    [[[0-9]]*],[squid_opt_aufs_threads=$withval],
+    [@<:@0-9@:>@*],[squid_opt_aufs_threads=$withval],
     AC_MSG_ERROR(--with-aufs-threads expects a numeric argument)
   )
 ])
@@ -962,16 +952,6 @@ SQUID_DEFINE_BOOL(USE_WCCPv2,${enable_wccpv2:=yes},
             [Define to enable WCCP V2])
 AC_MSG_NOTICE([Web Cache Coordination V2 Protocol enabled: $enable_wccpv2])
 
-AC_ARG_ENABLE(kill-parent-hack,
-  AS_HELP_STRING([--enable-kill-parent-hack],[Kill parent on shutdown]), [
-  SQUID_YESNO([$enableval],[--enable-kill-parent-hack])
-])
-SQUID_DEFINE_BOOL(KILL_PARENT_OPT,${enable_kill_parent_hack:=no},
-                   [A dangerous feature which causes Squid to kill its parent
-                    process (presumably the RunCache script) upon receipt
-                    of SIGTERM or SIGINT. Deprecated, Use with caution.])
-AC_MSG_NOTICE([Kill parent on shutdown hack enabled: $enable_kill_parent_hack])
-
 AC_ARG_ENABLE(snmp,
   AS_HELP_STRING([--disable-snmp],[Disable SNMP monitoring support]), [
   SQUID_YESNO([$enableval],[--enable-snmp])
@@ -1113,7 +1093,8 @@ AS_IF([test "x$with_gnutls" != "xno"],[
     ## by testing for a 3.4.0+ function which we use
     AC_CHECK_LIB(gnutls,gnutls_pcert_export_x509,[LIBGNUTLS_LIBS="-lgnutls"])
   ])
-  AC_CHECK_HEADERS(gnutls/gnutls.h gnutls/x509.h gnutls/abstract.h)
+  # if any of the required headers is not found, signal we can't support gnutls
+  AC_CHECK_HEADERS([gnutls/gnutls.h gnutls/x509.h gnutls/abstract.h], [], [LIBGNUTLS_LIBS=""])
 
   SQUID_STATE_ROLLBACK(squid_gnutls_state) #de-pollute LIBS
 
@@ -1729,7 +1710,7 @@ AC_MSG_NOTICE([enabling select syscall for net I/O: ${enable_select:=auto}])
 AC_ARG_ENABLE(poll,
   AS_HELP_STRING([--disable-poll],[Disable poll(2) support.]),[
   SQUID_YESNO([$enableval],[--enable-poll])
-  AS_IF(["x$enableval" = "xyes"],[squid_opt_io_loop_engine="poll"])
+  AS_IF([test "x$enableval" = "xyes"],[squid_opt_io_loop_engine="poll"])
 ])
 AC_MSG_NOTICE([enabling poll syscall for net I/O: ${enable_poll:=auto}])
 
@@ -2425,11 +2406,6 @@ AC_CHECK_SIZEOF(size_t)
 AC_CHECK_SIZEOF(off_t)
 AC_CHECK_SIZEOF(size_t)
 
-dnl Some C++11 types we try to use
-AX_CXX_TYPE_UNIFORM_DISTRIBUTIONS
-SQUID_CXX_STD_UNDERLYING_TYPE
-SQUID_CXX_STD_IS_TRIVIALLY_COPYABLE
-
 dnl On Solaris 9 x86, gcc may includes a "fixed" set of old system include files
 dnl that is incompatible with the updated Solaris header files.
 dnl For this reason, we must check if pad128_t and upad128_t are defined.
@@ -2561,7 +2537,7 @@ dnl --with-maxfd present for compatibility with Squid-2.
 dnl undocumented in ./configure --help  to encourage using the Squid-3 directive
 AC_ARG_WITH(maxfd,,[
   AS_CASE([$withval],
-    [[[0-9]]*],[
+    [@<:@0-9@:>@*],[
       squid_filedescriptors_num=$withval
       AC_MSG_NOTICE([forcing default of $squid_filedescriptors_num filedescriptors (user-forced)])
     ],
@@ -2571,14 +2547,14 @@ AC_ARG_WITH(maxfd,,[
 
 AC_ARG_WITH(filedescriptors,
   AS_HELP_STRING([--with-filedescriptors=NUMBER],
-    [Force squid to support NUMBER filedescriptors]),
+    [Force squid to support NUMBER filedescriptors]),[
   AS_CASE([$withval],
-    [[[0-9]]*],[
+    [@<:@0-9@:>@*],[
       squid_filedescriptors_num=$withval
       AC_MSG_NOTICE([forcing default of $squid_filedescriptors_num filedescriptors (user-forced)])],
     [AC_MSG_ERROR([--with-filedescriptors expects a numeric argument])]
   )
-)
+])
 
 SQUID_CHECK_DEFAULT_FD_SETSIZE
 SQUID_CHECK_MAXFD
@@ -2996,36 +2972,6 @@ AS_IF(test "x$enable_zph_qos" = "xyes"],[
 ])
 
 AC_CHECK_LIB(regex, regexec, [REGEXLIB="-lregex"],[REGEXLIB=''])
-AC_ARG_ENABLE(gnuregex,
-  AS_HELP_STRING([--enable-gnuregex],
-                 [Compile GNUregex.  Unless you have reason to use
-                 this option, you should not enable it.
-                 This library file is usually only required on Windows and
-                 very old Unix boxes which do not have their own regex
-                 library built in.]), [
-  SQUID_YESNO([$enableval],[--enable-gnuregex])
-])
-# force-enable on old solaris
-AS_IF([test "x${enable_gnuregex:=auto}" = "xauto"],[
-  AS_CASE(["$host"],
-    [*-sun-solaris2.[[0-4]]],[enable_gnuregex="yes"]
-  )
-])
-
-# try detecting if it is needed
-AS_IF([test "x$enable_gnuregex" = "xauto"],[
-  SQUID_CHECK_REGEX_WORKS
-  AS_IF([test "x$squid_cv_regex_works" = "xyes"],[enable_gnuregex=no],[enable_gnuregex=yes])
-])
-AC_MSG_CHECKING(if GNUregex needs to be compiled)
-AC_MSG_RESULT($enable_gnuregex)
-AS_IF([test "x$enable_gnuregex" = "xyes"],[
-  # for some reason (force-enable, test..) gnuregex was found as needed. Override any system lib
-  REGEXLIB=""
-])
-#if no reason was found to enable gnuregex, disable it
-AS_IF([test "x$enable_gnuregex" = "xauto"],[enable_gnuregex=no])
-SQUID_DEFINE_BOOL(USE_GNUREGEX,$enable_gnuregex,[Define if we should use GNU regex])
 AC_SUBST(REGEXLIB)
 
 SQUID_DETECT_UDP_SND_BUFSIZE
@@ -3096,6 +3042,7 @@ AC_SUBST(XTRA_LIBS)
 AC_SUBST(SQUID_CFLAGS)
 AC_SUBST(SQUID_CXXFLAGS)
 
+# Prerequisite: CXXFLAGS have been finalized.
 AC_ARG_VAR([BUILDCXXFLAGS],[C++ compiler flags for building compile-time tools. e.g. cf_gen])
 AS_IF([test "x$BUILDCXXFLAGS" = "x"],[
   # if we are NOT cross-compiling, use the default build flags for cf_gen and friends

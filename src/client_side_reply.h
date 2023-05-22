@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,7 +29,7 @@ public:
     static STCB SendMoreData;
 
     clientReplyContext(ClientHttpRequest *);
-    ~clientReplyContext();
+    ~clientReplyContext() override;
 
     void saveState();
     void restoreState();
@@ -66,7 +66,7 @@ public:
     Http::StatusCode purgeStatus;
 
     /* StoreClient API */
-    virtual LogTags *loggingTags() const;
+    LogTags *loggingTags() const override;
 
     ClientHttpRequest *http;
     /// Base reply header bytes received from Store.
@@ -74,8 +74,6 @@ public:
     /// Not to be confused with ClientHttpRequest::Out::headers_sz.
     int headers_sz;
     store_client *sc;       /* The store_client we're using */
-    StoreIOBuffer tempBuffer;   /* For use in validating requests via IMS */
-    int old_reqsize;        /* ... again, for the buffer */
     size_t reqsize;
     size_t reqofs;
     char tempbuf[HTTP_REQBUF_SZ];   ///< a temporary buffer if we need working storage
@@ -91,7 +89,7 @@ public:
 
 private:
     /* StoreClient API */
-    virtual void fillChecklist(ACLFilledChecklist &) const;
+    void fillChecklist(ACLFilledChecklist &) const override;
 
     clientStreamNode *getNextNode() const;
     void makeThisHead();
@@ -99,7 +97,6 @@ private:
     void sendStreamError(StoreIOBuffer const &result);
     void pushStreamData(StoreIOBuffer const &result, char *source);
     clientStreamNode * next() const;
-    StoreIOBuffer holdingBuffer;
     HttpReply *reply;
     void processReplyAccess();
     static ACLCB ProcessReplyAccessResult;
@@ -136,11 +133,13 @@ private:
     /// TODO: Exclude internal Store match bans from the "mismatch" category.
     const char *firstStoreLookup_ = nullptr;
 
+    /* (stale) cache hit information preserved during IMS revalidation */
     StoreEntry *old_entry;
-    /* ... for entry to be validated */
     store_client *old_sc;
     time_t old_lastmod;
     String old_etag;
+    size_t old_reqofs;
+    size_t old_reqsize;
 
     bool deleting;
 

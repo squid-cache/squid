@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -81,7 +81,7 @@
 #include "util.h"
 
 #if _SQUID_CYGWIN_
-#include <wchar.h>
+#include <cwchar>
 int _wcsicmp(const wchar_t *, const wchar_t *);
 #endif
 
@@ -495,7 +495,7 @@ process_options(int argc, char *argv[])
             exit(EXIT_SUCCESS);
         case '?':
             opt = optopt;
-        /* [[fallthrough]] */
+            [[fallthrough]];
         default:
             fprintf(stderr, "%s: FATAL: Unknown option: -%c. Exiting\n", program_name, opt);
             usage(argv[0]);

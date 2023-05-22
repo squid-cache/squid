@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -41,6 +41,7 @@
 /* digest_nonce_h still uses explicit alloc()/freeOne() MemPool calls.
  * XXX: convert to MEMPROXY_CLASS() API
  */
+#include "mem/Allocator.h"
 #include "mem/Pool.h"
 
 static AUTHSSTATS authenticateDigestStats;
@@ -50,7 +51,7 @@ helper *digestauthenticators = nullptr;
 static hash_table *digest_nonce_cache;
 
 static int authdigest_initialised = 0;
-static MemAllocator *digest_nonce_pool = nullptr;
+static Mem::Allocator *digest_nonce_pool = nullptr;
 
 enum http_digest_attr_type {
     DIGEST_USERNAME,
@@ -158,7 +159,7 @@ authenticateDigestNonceNew(void)
      * the hash function.
      */
     static std::mt19937 mt(RandomSeed32());
-    static xuniform_int_distribution<uint32_t> newRandomData;
+    static std::uniform_int_distribution<uint32_t> newRandomData;
 
     /* create a new nonce */
     newnonce->nc = 0;

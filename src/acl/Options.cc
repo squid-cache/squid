@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -245,14 +245,14 @@ Acl::CaseSensitivityOption()
 }
 
 std::ostream &
-operator <<(std::ostream &os, const Acl::Option &option)
+Acl::operator <<(std::ostream &os, const Option &option)
 {
     option.print(os);
     return os;
 }
 
 std::ostream &
-operator <<(std::ostream &os, const Acl::Options &options)
+Acl::operator <<(std::ostream &os, const Options &options)
 {
     for (const auto option: options)
         os << *option;

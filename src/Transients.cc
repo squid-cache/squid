@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2022 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -166,7 +166,7 @@ Transients::get(const cache_key *key)
 
     StoreEntry *e = new StoreEntry();
     e->createMemObject();
-    anchorEntry(*e, index, *anchor);
+    e->mem_obj->xitTable.open(index, Store::ioReading);
 
     // keep read lock to receive updates from others
     return e;
@@ -234,11 +234,9 @@ Transients::addWriterEntry(StoreEntry &e, const cache_key *key)
 
     // set ASAP in hope to unlock the slot if something throws
     // and to provide index to such methods as hasWriter()
-    auto &xitTable = e.mem_obj->xitTable;
-    xitTable.index = index;
-    xitTable.io = Store::ioWriting;
+    e.mem_obj->xitTable.open(index, Store::ioWriting);
 
-    anchor->set(e, key);
+    anchor->setKey(key);
     // allow reading and receive remote DELETE events, but do not switch to
     // the reading lock because transientReaders() callers want true readers
     map->startAppending(index);
@@ -250,25 +248,12 @@ void
 Transients::addReaderEntry(StoreEntry &e, const cache_key *key)
 {
     sfileno index = 0;
-    const auto anchor = map->openOrCreateForReading(key, index, e);
+    const auto anchor = map->openOrCreateForReading(key, index);
     if (!anchor)
         throw TextException("reader collision", Here());
 
-    anchorEntry(e, index, *anchor);
+    e.mem_obj->xitTable.open(index, Store::ioReading);
     // keep the entry locked (for reading) to receive remote DELETE events
-}
-
-/// fills (recently created) StoreEntry with information currently in Transients
-void
-Transients::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor)
-{
-    // set ASAP in hope to unlock the slot if something throws
-    // and to provide index to such methods as hasWriter()
-    auto &xitTable = e.mem_obj->xitTable;
-    xitTable.index = index;
-    xitTable.io = Store::ioReading;
-
-    anchor.exportInto(e);
 }
 
 bool
@@ -362,8 +347,7 @@ Transients::disconnect(StoreEntry &entry)
             map->closeForReadingAndFreeIdle(xitTable.index);
         }
         locals->at(xitTable.index) = nullptr;
-        xitTable.index = -1;
-        xitTable.io = Store::ioDone;
+        xitTable.close();
     }
 }
 
@@ -399,11 +383,11 @@ class TransientsRr: public Ipc::Mem::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void useConfig();
-    virtual ~TransientsRr();
+    void useConfig() override;
+    ~TransientsRr() override;
 
 protected:
-    virtual void create();
+    void create() override;
 
 private:
     TransientsMap::Owner *mapOwner = nullptr;
