@@ -4686,7 +4686,13 @@ DOC_START
 		sn	Unique sequence number per log line entry
 		err_code    The ID of an error response served by Squid or
 				a similar internal error identifier.
-		err_detail  Additional err_code-dependent error information.
+
+		err_detail  Additional err_code-dependent error information. Multiple
+			details are separated by the plus sign ('+'). Admins should not
+			rely on a particular detail listing order, the uniqueness of the
+			entries, or individual detail text stability. All those properties
+			depend on many unstable factors, including external libraries.
+
 		note	The annotation specified by the argument. Also
 			logs the adaptation meta headers set by the
 			adaptation_meta configuration parameter.
