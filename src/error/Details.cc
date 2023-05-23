@@ -16,9 +16,14 @@ bool
 Same(const ErrorDetail &d1, const ErrorDetail &d2)
 {
     // Duplicate details for the same error typically happen when we update some
-    // error storage (e.g., ALE) twice from the same source or retag the error
-    // with the same context information (e.g., WITH_CLIENT). In all those
-    // cases, comparing detail object addresses is enough to detect duplicates.
+    // error storage (e.g., ALE) twice from the same detail source (e.g., the
+    // same HttpRequest object reachable via two different code/pointer paths)
+    // or retag the error with the same context information (e.g., WITH_CLIENT).
+    // In all those cases, comparing detail object addresses is enough to detect
+    // duplicates. In other cases (if they exist), a duplicate detail would
+    // imply inefficient or buggy error detailing code. Instead of spending ink
+    // and CPU cycles on hiding them, this comparison may expose those (minor)
+    // problems (in hope that they get fixed). Detail consumers should not care.
     return &d1 == &d2;
 }
 
