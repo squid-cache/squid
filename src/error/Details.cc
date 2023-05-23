@@ -65,7 +65,10 @@ ErrorDetails::Merge(ErrorDetailPointer &storage, const ErrorDetailPointer &lates
 void
 ErrorDetails::mergeOne(const ErrorDetail &detail)
 {
-    Assure(!Same(*this, detail)); // nobody should add a detail to itself
+    // brief()/verbose() do not support nested details or detail groups (yet?)
+    Assure(!dynamic_cast<const ErrorDetails*>(&detail));
+    // nobody should add a detail to itself
+    Assure(!Same(*this, detail)); // paranoid due to the above Assure()
 
     // an error can only have a few details so vector+linear search is faster
     for (const auto &existingDetail: details) {
