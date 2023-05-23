@@ -32,7 +32,10 @@ protected:
     // use Merge() instead
     ErrorDetails() = default;
 
+    /// adds the given detail unless we already have it
     void mergeOne(const ErrorDetail &);
+
+    /// adds unique details (if any) from the given collection
     void mergeMany(const ErrorDetails &);
 
     /* ErrorDetail API */

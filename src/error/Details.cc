@@ -61,7 +61,6 @@ ErrorDetails::Merge(ErrorDetailPointer &storage, const ErrorDetailPointer &lates
         storedGroup->mergeMany(*latestGroup); // x + n
 }
 
-/// adds the given detail unless we already have it
 void
 ErrorDetails::mergeOne(const ErrorDetail &detail)
 {
@@ -78,7 +77,6 @@ ErrorDetails::mergeOne(const ErrorDetail &detail)
     details.emplace_back(&detail);
 }
 
-/// adds unique details (if any) from the given collection
 void
 ErrorDetails::mergeMany(const ErrorDetails &others)
 {
