@@ -14,9 +14,9 @@
 
 #include <vector>
 
-/// Multiple details of a single error, in "canonical" order. Our "canonical"
-/// order is the approximate discovery order (e.g., the order of Error::update()
-/// calls) with no duplicates. This class isolates multi-detail storage
+/// Multiple details of a single error, in "canonical" order without duplicates.
+/// Our "canonical" order is the approximate detail discovery order (e.g., the
+/// order of Error::update() calls). This class isolates multi-detail storage
 /// overheads from a common case of storing a single error detail.
 class ErrorDetails: public ErrorDetail
 {
