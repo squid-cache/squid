@@ -10,6 +10,7 @@
 #define SQUID_SRC_ERROR_DETAILS_H
 
 #include "error/Detail.h"
+#include "mem/PoolingAllocator.h"
 
 #include <vector>
 
@@ -40,7 +41,7 @@ protected:
 
 private:
     /// known unique details in canonical order
-    std::vector<ErrorDetailPointer> details;
+    std::vector<ErrorDetailPointer, PoolingAllocator<ErrorDetailPointer> > details;
 };
 
 #endif /* SQUID_SRC_ERROR_DETAILS_H */
