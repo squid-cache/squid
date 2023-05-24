@@ -79,7 +79,6 @@ inst $tmpdir/${name}.tar.gz	$dst/${name}.tar.gz
 inst $tmpdir/${name}.tar.bz2	$dst/${name}.tar.bz2
 inst $tmpdir/ChangeLog		$dst/ChangeLog.txt
 if [ -f $tmpdir/doc/release-notes/release-$RELEASE.html ]; then
-    touch -r $tmpdir/doc/release-notes/release-$RELEASE.html $tmpdir/RELEASENOTES.html
     inst $tmpdir/RELEASENOTES.html $dst/${name}-RELEASENOTES.html
     ln -sf ${name}-RELEASENOTES.html $dst/RELEASENOTES.html
 fi
