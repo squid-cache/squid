@@ -1612,7 +1612,7 @@ MainSafe(int argc, char **argv)
         /* BINARY DEBUGGING *
                     local_printfx("while() -> bufa[%" PRIuSIZE "]: %s", k, bufa);
                     for (i = 0; i < k; ++i)
-                      local_printfx("%02X", bufa[i]);
+                      local_printfx("%02X", static_cast<unsigned int>(static_cast<unsigned char>(bufa[i])));
                     local_printfx("\n");
         * BINARY DEBUGGING */
         /* Check for CRLF */
