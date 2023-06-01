@@ -656,7 +656,7 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
      * cases marked with '?!' should not happen */
 
     if (!reason) {
-        if (!(pd = fetch->pd))
+        if (!pdcb_valid || !(pd = fetch->pd))
             reason = "peer digest disappeared?!";
         else
             host = pd->host;
