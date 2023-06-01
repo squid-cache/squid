@@ -167,6 +167,8 @@ peerDigestDestroy(PeerDigest * pd)
 
 PeerDigest::~PeerDigest()
 {
+    if (times.next_check && eventFind(peerDigestCheck, this))
+        eventDelete(peerDigestCheck, this);
     delete cd;
     // req_result pointer is not owned by us
 }
