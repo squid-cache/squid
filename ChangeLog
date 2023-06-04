@@ -1,3 +1,13 @@
+Changes in squid-6.0.3 (05 Jun 2023):
+
+	- Bug 5148: Log %Ss of failed tunnels as TCP_TUNNEL
+	- Do not leak Security::CertErrors created in X509_verify_cert()
+	- Do not erase aborted StoreMap entries that are still being read
+	- Fix build in environments lacking syslog
+	- Fix build failures in some environments due to time_t type conflicts in libdebug
+	- Remove obsolete caddr_t
+	- ... and some documentation changes
+
 Changes in squid-6.0.2 (30 Apr 2023):
 
 	- Avoid excessive disk I/O in some environments
