@@ -189,6 +189,19 @@ AS_CASE(["$squid_host_os"],
   [mingw],[
     CFLAGS="$CFLAGS -mthreads"
     CXXFLAGS="$CXXFLAGS -mthreads -static-libgcc -static-libstdc++"
+    dnl Check for Winsock only on MinGW
+    SQUID_CHECK_WINSOCK_LIB
+    AC_CHECK_HEADERS([winsock2.h windows.h ws2tcpip.h],,,[
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
+#if HAVE_WINDOWS_H
+#include <windows.h>
+#endif
+#if HAVE_WS2TCPIP_H
+#include <ws2tcpip.h>
+#endif
+    ])
     MINGW_LIBS="-lmingwex"
     AC_SUBST(MINGW_LIBS)
   ],
@@ -2487,24 +2500,6 @@ AC_SEARCH_LIBS([__res_search],[resolv])
 AC_SEARCH_LIBS([bind],[socket])
 AC_SEARCH_LIBS([opcom_stack_trace],[opcom_stack])
 AC_SEARCH_LIBS([yp_match], [nsl nss_nis nss_nisplus])
-dnl Check for Winsock only on MinGW, on Cygwin we must use emulated BSD socket API
-AS_IF([test "x$squid_host_os" = "xmingw"],[
-  SQUID_CHECK_WINSOCK_LIB
-  AC_CHECK_HEADERS( \
-    windows.h \
-    ws2tcpip.h \
-    iphlpapi.h ,,,[
-#if HAVE_WINSOCK2_H
-#include <winsock2.h>
-#endif
-#if HAVE_WINDOWS_H
-#include <windows.h>
-#endif
-#if HAVE_WS2TCPIP_H
-#include <ws2tcpip.h>
-#endif
-  ])
-])
 
 # check that we have unix sockets
 SQUID_CHECK_UNIX_SOCKET
