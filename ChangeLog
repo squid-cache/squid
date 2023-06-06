@@ -1,4 +1,4 @@
-Changes in squid-6.0.3 (05 Jun 2023):
+Changes in squid-6.0.3 (07 Jun 2023):
 
 	- Bug 5148: Log %Ss of failed tunnels as TCP_TUNNEL
 	- Do not leak Security::CertErrors created in X509_verify_cert()
