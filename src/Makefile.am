@@ -798,6 +798,23 @@ tests_testMem_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of base/*
 
+check_PROGRAMS += tests/testCbcPointer
+tests_testCbcPointer_SOURCES = \
+	tests/testCbcPointer.cc
+nodist_tests_testCbcPointer_SOURCES = \
+	base/CbcPointer.h \
+	cbdata.cc \
+	tests/stub_debug.cc \
+	tests/stub_libtime.cc
+tests_testCbcPointer_LDADD = \
+	base/libbase.la \
+	mem/libmem.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testCbcPointer_LDFLAGS = $(LIBADD_DL)
+
 check_PROGRAMS += tests/testCharacterSet
 tests_testCharacterSet_SOURCES = \
 	tests/testCharacterSet.cc
