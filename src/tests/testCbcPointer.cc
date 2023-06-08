@@ -143,7 +143,7 @@ TestCbcPointer::testCounting()
         copyable = empty;
         CPPUNIT_ASSERT_EQUAL(0, Blob::Instances);
 
-        // move from nil should not allocate
+        // moving nil should not allocate
         CbcPointer<Blob> moveable(std::move(copyable));
         CPPUNIT_ASSERT_EQUAL(0, Blob::Instances);
         moveable = std::move(copyable);
