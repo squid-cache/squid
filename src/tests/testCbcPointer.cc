@@ -65,7 +65,7 @@ TestCbcPointer::testConstruction()
 
     {
         auto expect = new Blob;
-        // delayed assignment from raw-pointer
+        // construction from a raw pointer
         CbcPointer<Blob> ptr(expect);
         CPPUNIT_ASSERT_EQUAL(expect, ptr.raw());
         CPPUNIT_ASSERT_EQUAL(true, ptr.set());
