@@ -137,7 +137,7 @@ TestCbcPointer::testCounting()
         const CbcPointer<Blob> empty;
         CPPUNIT_ASSERT_EQUAL(0, Blob::Instances);
 
-        // copy from nil should not allocate
+        // copying nil should not allocate
         CbcPointer<Blob> copyable(empty);
         CPPUNIT_ASSERT_EQUAL(0, Blob::Instances);
         copyable = empty;
