@@ -62,6 +62,7 @@ This section gives an account of those changes in three categories:
 
 	<tag>cachemgr_passwd</tag>
 	<p>Removed the <em>non_peers</em> action.
+
 </descrip>
 
 <sect1>Removed directives<label id="removeddirectives">
