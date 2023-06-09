@@ -30,7 +30,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 <p>The most important of these new features are:
 <itemize>
-	<item> cache manager non_peers report removal
+	<item>
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
