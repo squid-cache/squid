@@ -30,7 +30,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 <p>The most important of these new features are:
 <itemize>
-	<item>
+	<item> cache manager non_peers report removal
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -60,6 +60,8 @@ This section gives an account of those changes in three categories:
 	<tag>buffered_logs</tag>
 	<p>Honor the <em>off</em> setting in 'udp' access_log module.
 
+	<tag>cachemgr_passwd</tag>
+	<p>Removed the <em>non_peers</em> action.
 </descrip>
 
 <sect1>Removed directives<label id="removeddirectives">
