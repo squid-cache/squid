@@ -61,7 +61,8 @@ This section gives an account of those changes in three categories:
 	<p>Honor the <em>off</em> setting in 'udp' access_log module.
 
 	<tag>cachemgr_passwd</tag>
-	<p>Removed the <em>non_peers</em> action.
+	<p>Removed the <em>non_peers</em> action. See the Cache Manager
+	<ref id="mgr" name="section"> for details.
 
 </descrip>
 
@@ -104,6 +105,17 @@ This section gives an account of those changes in three categories:
 	<tag>CPPFLAGS=-DHEADERS_LOG</tag>
 	<p>The code enabled by this preprocessor macro has not built for many
 	   years, indicating that the feature is unused.
+
+</descrip>
+
+<sect>Cache Manager changes since Squid-@SQUID_RELEASE_OLD@<label id="mgr">
+<p>
+<descrip>
+	<tag>non_peers</tag>
+	<p>Removed the <em>mgr:non_peers</em> report. Squid still ignores
+	unexpected ICP responses but no longer remembers the details that comprised
+	the removed report. The senders of these ICP messages are still reported to
+	cache.log at debugging level 1 (with an exponential backoff).
 
 </descrip>
 
