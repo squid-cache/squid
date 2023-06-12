@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #if USE_CACHE_DIGESTS
+#include "base/IoManip.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
 #include "event.h"
@@ -65,19 +66,10 @@ static const time_t GlobDigestReqMinGap = 1 * 60;   /* seconds */
 
 static time_t pd_last_req_time = 0; /* last call to Check */
 
-PeerDigest::PeerDigest(CachePeer * p)
+PeerDigest::PeerDigest(CachePeer * const p):
+    peer(p),
+    host(peer->host) // if peer disappears, we will know its name
 {
-    assert(p);
-
-    /*
-     * DPW 2007-04-12
-     * Lock on to the peer here.  The corresponding cbdataReferenceDone()
-     * is in peerDigestDestroy().
-     */
-    peer = cbdataReference(p);
-    /* if peer disappears, we will know it's name */
-    host = p->host;
-
     times.initialized = squid_curtime;
 }
 
@@ -122,47 +114,6 @@ DigestFetchState::~DigestFetchState()
     HTTPMSGUNLOCK(request);
 
     assert(pd == nullptr);
-}
-
-/* allocate new peer digest, call Init, and lock everything */
-void
-peerDigestCreate(CachePeer * p)
-{
-    assert(p);
-
-    PeerDigest *pd = new PeerDigest(p);
-
-    // TODO: make CachePeer member a CbcPointer
-    p->digest = cbdataReference(pd);
-
-    // lock a reference to pd again to prevent the PeerDigest
-    // disappearing during peerDigestDestroy() when
-    // cbdataReferenceValidDone is called.
-    // TODO test if it can be moved into peerDigestDestroy() or
-    //      if things can break earlier (eg CachePeer death).
-    (void)cbdataReference(pd);
-}
-
-/* call Clean and free/unlock everything */
-static void
-peerDigestDestroy(PeerDigest * pd)
-{
-    void *p;
-    assert(pd);
-    void * peerTmp = pd->peer;
-
-    /*
-     * DPW 2007-04-12
-     * We locked the peer in PeerDigest constructor, this is
-     * where we unlock it.
-     */
-    if (cbdataReferenceValidDone(peerTmp, &p)) {
-        // we locked the p->digest in peerDigestCreate()
-        // this is where we unlock that
-        cbdataReferenceDone(static_cast<CachePeer *>(p)->digest);
-    }
-
-    delete pd;
 }
 
 PeerDigest::~PeerDigest()
@@ -229,7 +180,7 @@ peerDigestNotePeerGone(PeerDigest * pd)
         /* do nothing now, the fetching chain will notice and take action */
     } else {
         debugs(72, 2, "peerDigest: peer " << pd->host << " is gone, destroying now.");
-        peerDigestDestroy(pd);
+        delete pd;
     }
 }
 
@@ -246,12 +197,12 @@ peerDigestCheck(void *data)
 
     pd->times.next_check = 0;   /* unknown */
 
-    if (!cbdataReferenceValid(pd->peer)) {
+    if (pd->peer.set() && !pd->peer.valid()) {
         peerDigestNotePeerGone(pd);
         return;
     }
 
-    debugs(72, 3, "cache_peer " << *pd->peer);
+    debugs(72, 3, "cache_peer " << RawPointer(pd->peer).orNil());
     debugs(72, 3, "peerDigestCheck: time: " << squid_curtime <<
            ", last received: " << (long int) pd->times.received << "  (" <<
            std::showpos << (int) (squid_curtime - pd->times.received) << ")");
@@ -291,7 +242,7 @@ peerDigestCheck(void *data)
 static void
 peerDigestRequest(PeerDigest * pd)
 {
-    CachePeer *p = pd->peer;
+    const auto p = pd->peer.get(); // TODO: Replace with a reference.
     StoreEntry *e, *old_e;
     char *url = nullptr;
     HttpRequest *req;
@@ -701,13 +652,13 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     const char *reason = nullptr;  /* reason for completion */
     const char *no_bug = nullptr;  /* successful completion if set */
     const int pdcb_valid = cbdataReferenceValid(fetch->pd);
-    const int pcb_valid = cbdataReferenceValid(fetch->pd->peer);
+    const int pcb_valid = pdcb_valid && fetch->pd->peer.valid();
 
     /* test possible exiting conditions (the same for most steps!)
      * cases marked with '?!' should not happen */
 
     if (!reason) {
-        if (!(pd = fetch->pd))
+        if (!pdcb_valid || !(pd = fetch->pd))
             reason = "peer digest disappeared?!";
         else
             host = pd->host;
@@ -719,7 +670,7 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     /* continue checking (with pd and host known and valid) */
 
     if (!reason) {
-        if (!cbdataReferenceValid(pd->peer))
+        if (!pd->peer)
             reason = "peer disappeared";
         else if (size < 0)
             reason = "swap failure";
