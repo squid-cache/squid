@@ -136,12 +136,7 @@ public:
 
     hash_link hash;     /* must be first */
     time_t lastref;
-
-    /// The earliest time this entry will be considered stale. Entries without
-    /// an expiration time (e.g., current "static" entries) are considered
-    /// fresh. \sa ipcacheExpiredEntry()
-    std::optional<time_t> expires;
-
+    time_t expires;
     ipcache_addrs addrs;
     IpCacheLookupForwarder handler;
     char *error_message;
@@ -335,8 +330,7 @@ ipcache_get(const char *name)
 static int
 ipcacheExpiredEntry(ipcache_entry * i)
 {
-    if (!i->expires)
-        return 0; // presumably a current "static" entry
+    /* all static entries are locked, so this takes care of them too */
 
     if (i->locks != 0)
         return 0;
@@ -345,7 +339,7 @@ ipcacheExpiredEntry(ipcache_entry * i)
         if (0 == i->flags.negcached)
             return 1;
 
-    if (*i->expires > squid_curtime)
+    if (i->expires > squid_curtime)
         return 0;
 
     return 1;
@@ -411,11 +405,13 @@ purge_entries_fromhosts(void)
 
 ipcache_entry::ipcache_entry(const char *aName):
     lastref(0),
+    expires(0),
     error_message(nullptr),
     locks(0) // XXX: use Lock type ?
 {
     hash.key = xstrdup(aName);
     Tolower(static_cast<char*>(hash.key));
+    expires = squid_curtime + Config.negativeDnsTtl;
 }
 
 /// \ingroup IPCacheInternal
@@ -547,14 +543,12 @@ ipcache_entry::updateTtl(const unsigned int rrTtl)
                                 Config.positiveDnsTtl); // largest value allowed
 
     const time_t rrExpires = squid_curtime + ttl;
-    if (!expires) {
-        debugs(14, 5, "use " << ttl << " from RR TTL " << rrTtl);
-        expires = rrExpires;
-    } else if (rrExpires < *expires) {
-        debugs(14, 5, "use " << ttl << " from RR TTL " << rrTtl << "; was: " << (*expires - squid_curtime));
+    const auto firstRr = addrs.size() <= 1;
+    if (firstRr || rrExpires < expires) {
+        debugs(14, 5, "use " << ttl << " from RR TTL " << rrTtl << "; was: " << (expires - squid_curtime));
         expires = rrExpires;
     } else {
-        debugs(14, 7, "keep old " << (*expires - squid_curtime) << " < " << ttl);
+        debugs(14, 7, "keep old " << (expires - squid_curtime) << " < " << ttl);
     }
 }
 
@@ -788,7 +782,7 @@ ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
                       i->flags.fromhosts ? 'H' : ' ',
                       i->flags.negcached ? 'N' : ' ',
                       (int) (squid_curtime - i->lastref),
-                      static_cast<int>(!i->expires ? -1 : (*i->expires - squid_curtime)),
+                      (int) ((i->flags.fromhosts ? -1 : i->expires - squid_curtime)),
                       static_cast<int>(i->addrs.size()),
                       static_cast<int>(i->addrs.badCount()));
 
@@ -1145,8 +1139,6 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
 
     if ((i = ipcache_get(name))) {
         if (1 == i->flags.fromhosts) {
-            // improve ipcacheUnlockEntry() chances of reaching ipcacheRelease()
-            i->expires = squid_curtime;
             ipcacheUnlockEntry(i);
         } else if (i->locks > 0) {
             debugs(14, DBG_IMPORTANT, "ERROR: ipcacheAddEntryFromHosts: cannot add static entry for locked name '" << name << "'");
