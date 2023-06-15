@@ -543,12 +543,15 @@ ipcache_entry::updateTtl(const unsigned int rrTtl)
                                 Config.positiveDnsTtl); // largest value allowed
 
     const time_t rrExpires = squid_curtime + ttl;
-    const auto firstRr = addrs.size() <= 1;
-    if (firstRr || rrExpires < expires) {
-        debugs(14, 5, "use " << ttl << " from RR TTL " << rrTtl << "; was: " << (expires - squid_curtime));
+    const auto firstUpdate = addrs.size() <= 1;
+    if (firstUpdate) {
+        debugs(14, 5, "use first " << ttl << " from RR TTL " << rrTtl);
+        expires = rrExpires;
+    } else if (rrExpires < expires) {
+        debugs(14, 5, "use smaller " << ttl << " from RR TTL " << rrTtl << "; was: " << (expires - squid_curtime));
         expires = rrExpires;
     } else {
-        debugs(14, 7, "keep old " << (expires - squid_curtime) << " < " << ttl);
+        debugs(14, 7, "ignore " << ttl << " from RR TTL " << rrTtl << "; keep: " << (expires - squid_curtime));
     }
 }
 
