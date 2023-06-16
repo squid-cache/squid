@@ -543,8 +543,7 @@ ipcache_entry::updateTtl(const unsigned int rrTtl)
                                 Config.positiveDnsTtl); // largest value allowed
 
     const time_t rrExpires = squid_curtime + ttl;
-    const auto firstUpdate = addrs.size() <= 1;
-    if (firstUpdate) {
+    if (addrs.size() <= 1) {
         debugs(14, 5, "use first " << ttl << " from RR TTL " << rrTtl);
         expires = rrExpires;
     } else if (rrExpires < expires) {
