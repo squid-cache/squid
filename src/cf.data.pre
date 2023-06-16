@@ -10354,7 +10354,6 @@ DOC_START
 		mem
 		menu
 		netdb
-		non_peers
 		objects
 		offline_toggle *
 		pconn
