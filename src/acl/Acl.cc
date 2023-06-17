@@ -187,28 +187,19 @@ void
 ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
 {
     /* we're already using strtok() to grok the line */
-    char *t = nullptr;
     ACL *A = nullptr;
     LOCAL_ARRAY(char, aclname, ACL_NAME_SZ);
     int new_acl = 0;
 
-    /* snarf the ACL name */
-
-    if (!(t = ConfigParser::NextToken()))
-        throw Cfg::FatalError("missing ACL name");
-
-    if (strlen(t) >= ACL_NAME_SZ)
+    const auto t = parser.token("acl-name");
+    if (t.length() >= ACL_NAME_SZ)
         throw Cfg::FatalError(ToSBuf("ACL name '", t, "' too long, max ", (ACL_NAME_SZ-1), " characters supported"));
+    t.copy(aclname, ACL_NAME_SZ);
 
-    xstrncpy(aclname, t, ACL_NAME_SZ);
-    /* snarf the ACL type */
-    const char *theType;
-
-    if (!(theType = ConfigParser::NextToken()))
-        throw Cfg::FatalError("missing ACL type");
+    auto theType = parser.token("acl-type");
 
     // Is this ACL going to work?
-    if (strcmp(theType, "myip") == 0) {
+    if (theType.cmp("myip") == 0) {
         AnyP::PortCfgPointer p = HttpPortList;
         while (p != nullptr) {
             // Bug 3239: not reliable when there is interception traffic coming
@@ -218,7 +209,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         }
         debugs(28, DBG_IMPORTANT, "WARNING: UPGRADE: ACL 'myip' type has been renamed to 'localip' and matches the IP the client connected to.");
         theType = "localip";
-    } else if (strcmp(theType, "myport") == 0) {
+    } else if (theType.cmp("myport") == 0) {
         AnyP::PortCfgPointer p = HttpPortList;
         while (p != nullptr) {
             // Bug 3239: not reliable when there is interception traffic coming
@@ -229,22 +220,22 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         }
         theType = "localport";
         debugs(28, DBG_IMPORTANT, "WARNING: UPGRADE: ACL 'myport' type has been renamed to 'localport' and matches the port the client connected to.");
-    } else if (strcmp(theType, "proto") == 0 && strcmp(aclname, "manager") == 0) {
+    } else if (theType.cmp("proto") == 0 && strcmp(aclname, "manager") == 0) {
         // ACL manager is now a built-in and has a different type.
         debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: UPGRADE: ACL 'manager' is now a built-in ACL. Remove it from your config file.");
         return; // ignore the line
-    } else if (strcmp(theType, "clientside_mark") == 0) {
+    } else if (theType.cmp("clientside_mark") == 0) {
         debugs(28, DBG_IMPORTANT, "WARNING: UPGRADE: ACL 'clientside_mark' type has been renamed to 'client_connection_mark'.");
         theType = "client_connection_mark";
     }
 
     if ((A = FindByName(aclname)) == nullptr) {
         debugs(28, 3, "aclParseAclLine: Creating ACL '" << aclname << "'");
-        A = Acl::Make(theType);
+        A = Acl::Make(theType.c_str());
         A->context(aclname, config_input_line);
         new_acl = 1;
     } else {
-        if (strcmp(A->typeString(), theType) != 0)
+        if (theType.cmp(A->typeString()) != 0)
             throw Cfg::FatalError(ToSBuf("ACL '", A->name, "' already exists with different type"));
 
         debugs(28, 3, "aclParseAclLine: Appending to '" << aclname << "'");

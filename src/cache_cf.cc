@@ -1378,11 +1378,7 @@ parseBytesOptionValue(size_t * bptr, const char *units, char const * value)
     number.assign(number_begin, number_end - number_begin);
 
     int d = xatoi(number.termedBuf());
-    int m;
-    if ((m = parseBytesUnits(number_end)) == 0) {
-        self_destruct();
-        return;
-    }
+    int m = parseBytesUnits(number_end);
 
     *bptr = static_cast<size_t>(m * d / u);
     if (static_cast<double>(*bptr) * 2 != (m * d / u) * 2)

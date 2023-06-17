@@ -1120,8 +1120,7 @@ nodist_tests_testRock_SOURCES = \
 	SquidMath.cc \
 	SquidMath.h \
 	hier_code.cc \
-	swap_log_op.cc \
-	tests/stub_libcfg.cc
+	swap_log_op.cc
 tests_testRock_LDADD = \
 	http/libhttp.la \
 	parser/libparser.la \
