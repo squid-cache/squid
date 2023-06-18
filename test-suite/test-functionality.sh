@@ -165,14 +165,6 @@ run_confirmed_test() {
     return $result
 }
 
-check_pconn() {
-    run_confirmed_test pconn
-}
-
-check_busy_restart() {
-    run_confirmed_test busy-restart
-}
-
 check_proxy_collapsed_forwarding() {
     if ! has_commit_by_message 1af789e 'Do not stall if xactions overwrite a recently active'
     then
@@ -200,19 +192,20 @@ check_upgrade_protocols() {
     run_confirmed_test upgrade-protocols
 }
 
-check_truncated_responses() {
-    run_confirmed_test truncated-responses
-}
-
-# executes a single check_name test named by the parameter
+# executes a single test named by the parameter
 run_one_test() {
     local testName=$1
 
-    # convert a test name foo into a check_foo() function name suffix; e.g.
-    # busy-restart becomes busy_restart (to be called below as check_busy_restart)
-    check=`echo $testName | sed s/-/_/g`
+    # convert the given foo-bar test name into a check_foo_bar() function name
+    checkFunction=`echo "check_$testName" | sed s/-/_/g`
 
-    check_$check
+    if type $checkFunction 1> /dev/null 2> /dev/null
+    then
+        # a custom test wrapper exists
+        $checkFunction
+    else
+        run_confirmed_test $testName
+    fi
 }
 
 # executes all of the given tests, providing a summary of their failures
