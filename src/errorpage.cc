@@ -114,7 +114,12 @@ public:
 class BuildErrorPrinter
 {
 public:
-    BuildErrorPrinter(const SBuf &anInputLocation, int aPage, const char *aMsg, const char *aNear): inputLocation(anInputLocation), page_id(aPage), msg(aMsg), near(aNear) {}
+    BuildErrorPrinter(const SBuf &anInputLocation, int aPage, const char *aMsg, const char *aData):
+        inputLocation(anInputLocation),
+        page_id(aPage),
+        msg(aMsg),
+        data(aData)
+    {}
 
     /// reports error details (for admin-visible exceptions and debugging)
     std::ostream &print(std::ostream &) const;
@@ -126,7 +131,7 @@ public:
     const SBuf &inputLocation;
     const int page_id;
     const char *msg;
-    const char *near;
+    const char *data;
 };
 
 static inline std::ostream &
@@ -1430,13 +1435,13 @@ ErrorState::compile(const char *input, bool building_deny_info_url, bool allowRe
 
 /// react to a compile() error
 /// \param msg  description of what went wrong
-/// \param near  approximate start of the problematic input
+/// \param data  approximate start of the problematic input
 /// \param  forceBypass whether detection of this error was introduced late,
 /// after old configurations containing this error could have been
 /// successfully validated and deployed (i.e. the admin may not be
 /// able to fix this newly detected but old problem quickly)
 void
-ErrorState::noteBuildError_(const char *msg, const char *near, const bool forceBypass)
+ErrorState::noteBuildError_(const char *msg, const char *data, const bool forceBypass)
 {
     using ErrorPage::BuildErrorPrinter;
     const auto runtime = !starting_up;
@@ -1457,9 +1462,9 @@ ErrorState::noteBuildError_(const char *msg, const char *near, const bool forceB
         if (starting_up && seenErrors <= 10)
             debugs(4, debugLevel, "WARNING: The following configuration error will be fatal in future Squid versions");
 
-        debugs(4, debugLevel, "ERROR: " << BuildErrorPrinter(inputLocation, page_id, msg, near));
+        debugs(4, debugLevel, "ERROR: " << BuildErrorPrinter(inputLocation, page_id, msg, data));
     } else {
-        throw TexcHere(ToSBuf(BuildErrorPrinter(inputLocation, page_id, msg, near)));
+        throw TexcHere(ToSBuf(BuildErrorPrinter(inputLocation, page_id, msg, data)));
     }
 }
 
@@ -1485,11 +1490,11 @@ ErrorPage::BuildErrorPrinter::print(std::ostream &os) const {
 
     // TODO: Add support for prefix printing to Raw
     const size_t maxContextLength = 15; // plus "..."
-    if (strlen(near) > maxContextLength) {
-        os.write(near, maxContextLength);
+    if (strlen(data) > maxContextLength) {
+        os.write(data, maxContextLength);
         os << "...";
     } else {
-        os << near;
+        os << data;
     }
 
     // XXX: We should not be converting (inner) exception to text if we are
