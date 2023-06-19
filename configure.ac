@@ -25,6 +25,7 @@ m4_include([acinclude/ldap.m4])
 m4_include([acinclude/nettle.m4])
 m4_include([acinclude/pam.m4])
 m4_include([acinclude/pkg.m4])
+m4_include([acinclude/printf.m4])
 m4_include([acinclude/tdb.m4])
 m4_include([acinclude/lib-checks.m4])
 m4_include([acinclude/ax_cxx_compile_stdcxx.m4])
@@ -2393,6 +2394,8 @@ AC_TYPE_INT64_T
 AC_TYPE_UINT64_T
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
+AC_CHECK_SIZEOF(size_t)
+SQUID_CHECK_PRINTF_CODES([size_t],[PRIuSIZE],[zu llu lu u I64u I32u])
 AC_TYPE_SSIZE_T
 AC_TYPE_OFF_T
 AC_TYPE_UID_T
@@ -2402,7 +2405,6 @@ AC_CHECK_SIZEOF(int64_t)
 AC_CHECK_SIZEOF(long)
 #need the define for overflow checks
 AC_CHECK_SIZEOF(off_t)
-AC_CHECK_SIZEOF(size_t)
 
 dnl On Solaris 9 x86, gcc may includes a "fixed" set of old system include files
 dnl that is incompatible with the updated Solaris header files.
