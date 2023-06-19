@@ -281,8 +281,6 @@ struct timezone {
 #include <errno.h>
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
-#elif HAVE_WINSOCK_H
-#include <winsock.h>
 #endif
 
 #if !_SQUID_CYGWIN_
@@ -506,7 +504,7 @@ namespace Squid
 
 /*
  * Each of these functions is defined in the Squid namespace so as not to
- * clash with the winsock.h and winsock2.h definitions.
+ * clash with the winsock2.h definitions.
  * It is then paired with a #define to cause these wrappers to be used by
  * the main code instead of those system definitions.
  *

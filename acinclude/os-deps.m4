@@ -143,8 +143,6 @@ AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #endif
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
-#elif HAVE_WINSOCK_H
-#include <winsock.h>
 #endif
 int main(int argc, char **argv) {
 	FILE *fp = fopen("conftestval", "w");
@@ -332,8 +330,6 @@ AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #endif
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
-#elif HAVE_WINSOCK_H
-#include <winsock.h>
 #endif
 int main(int argc, char **argv)
 {
@@ -382,8 +378,6 @@ AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #endif
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
-#elif HAVE_WINSOCK_H
-#include <winsock.h>
 #endif
 int main(int argc, char **argv)
 {
@@ -432,8 +426,6 @@ AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #endif
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
-#elif HAVE_WINSOCK_H
-#include <winsock.h>
 #endif
 int main(int argc, char **argv)
 {
@@ -486,8 +478,6 @@ AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #endif
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
-#elif HAVE_WINSOCK_H
-#include <winsock.h>
 #endif
 int main(int argc, char **argv)
 {
@@ -715,16 +705,14 @@ AC_CACHE_CHECK(for _res.nsaddr_list, ac_cv_have_res_nsaddr_list,
 ])
 
 
-dnl checks the winsock library to use (ws2_32 or wsock32)
+dnl checks the ws2_32 library to use
 dnl may set ac_cv_func_select as a side effect
 AC_DEFUN([SQUID_CHECK_WINSOCK_LIB],[
-  AC_CHECK_HEADERS(winsock2.h winsock.h)
+  AC_CHECK_HEADERS(winsock2.h)
   SQUID_STATE_SAVE(winsock)
-  SQUID_SEARCH_LIBS([squid_getprotobynumber],[ws2_32 wsock32],,,,[
+  SQUID_SEARCH_LIBS([squid_getprotobynumber],[ws2_32],,,,[
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
-#elif HAVE_WINSOCK_H
-#include <winsock.h>
 #endif
 /* ugly hack. */
 void squid_getprotobynumber(void) {
@@ -738,11 +726,6 @@ void squid_getprotobynumber(void) {
     ["-lws2_32"],[
       AC_MSG_RESULT([winsock2])
       XTRA_LIBS="-lws2_32 $XTRA_LIBS"
-      ac_cv_func_select="yes"
-    ],
-    ["-lwsock32"],[
-      AC_MSG_RESULT([winsock])
-      XTRA_LIBS="-lwsock32 $XTRA_LIBS"
       ac_cv_func_select="yes"
     ]
   )
