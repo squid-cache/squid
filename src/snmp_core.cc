@@ -18,6 +18,7 @@
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "fatal.h"
+#include "fde.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "ipc/StartListening.h"
