@@ -6,17 +6,27 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_ACLTIME_H
-#define SQUID_ACLTIME_H
-#include "acl/Data.h"
-#include "acl/Strategised.h"
+#ifndef SQUID_SRC_ACL_TIME_H
+#define SQUID_SRC_ACL_TIME_H
 
-class ACLTimeStrategy : public ACLStrategy<time_t>
+#include "acl/ParameterizedNode.h"
+#include "acl/TimeData.h"
+#include "mem/AllocatorProxy.h"
+
+namespace Acl
 {
 
+class Time: public ParameterizedNode<ACLTimeData>
+{
+    MEMPROXY_CLASS(Acl::Time);
+
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* ACL API */
+    char const *typeString() const override { return "time"; }
+    int match(ACLChecklist *) override;
 };
 
-#endif /* SQUID_ACLTIME_H */
+} // namespace Acl
+
+#endif /* SQUID_SRC_ACL_TIME_H */
 

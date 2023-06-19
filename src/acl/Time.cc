@@ -10,11 +10,11 @@
 
 #include "squid.h"
 #include "acl/Time.h"
-#include "acl/TimeData.h"
+#include "time/gadgets.h"
 
 int
-ACLTimeStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *)
+Acl::Time::match(ACLChecklist *)
 {
-    return data->match(squid_curtime);
+    return parameters.match(squid_curtime);
 }
 

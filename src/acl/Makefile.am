@@ -38,6 +38,7 @@ libstate_la_SOURCES = \
 	Data.h \
 	FilledChecklist.cc \
 	FilledChecklist.h \
+	ParameterizedNode.h \
 	Strategised.cc \
 	Strategised.h \
 	Strategy.h
