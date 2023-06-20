@@ -81,7 +81,7 @@ xcalloc(size_t n, size_t sz)
     if (!p) {
         if (failure_notify) {
             static char msg[128];
-            snprintf(msg, 128, "xcalloc: Unable to allocate %" PRIuSIZE " blocks of %" PRIuSIZE " bytes!\n", n, sz);
+            snprintf(msg, 128, "xcalloc: Unable to allocate %zu blocks of %zu bytes!\n", n, sz);
             failure_notify(msg);
         } else {
             perror("xcalloc");
@@ -107,7 +107,7 @@ xmalloc(size_t sz)
     if (!p) {
         if (failure_notify) {
             static char msg[128];
-            snprintf(msg, 128, "xmalloc: Unable to allocate %" PRIuSIZE " bytes!\n", sz);
+            snprintf(msg, 128, "xmalloc: Unable to allocate %zu bytes!\n", sz);
             failure_notify(msg);
         } else {
             perror("malloc");
@@ -133,7 +133,7 @@ xrealloc(void *s, size_t sz)
     if (!p) {
         if (failure_notify) {
             static char msg[128];
-            snprintf(msg, 128, "xrealloc: Unable to reallocate %" PRIuSIZE " bytes!\n", sz);
+            snprintf(msg, 128, "xrealloc: Unable to reallocate %zu bytes!\n", sz);
             failure_notify(msg);
         } else {
             perror("realloc");
