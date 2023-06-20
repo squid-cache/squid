@@ -18,13 +18,7 @@ namespace Acl
 
 class Time: public ParameterizedNode<ACLTimeData>
 {
-    MEMPROXY_CLASS(Acl::Time);
-
 public:
-    /// delegate construction details to our parent class
-    template <class... Args>
-    explicit Time(Args&&... args): ParameterizedNode<ACLTimeData>(std::forward<Args>(args)...) {}
-
     /* ACL API */
     int match(ACLChecklist *) override;
 };

@@ -18,27 +18,17 @@
 namespace Acl
 {
 
-/// An ACL that manages configured parameters using a given Parameters class.
+/// An ACL that manages configured parameters using a given Parameters class P.
 /// That Parameters class must support an AclData<> or equivalent API.
-template <class Parameters>
+template <class P>
 class ParameterizedNode: public ACL
 {
 public:
-    /// constructor for kids that support multiple Parameters-derived types
-    /// and/or need custom Parameters construction code
-    ParameterizedNode(char const *typeName, Parameters *params):
-        parameters(params),
-        typeName_(typeName)
-    {
-    }
+    using Parameters = P;
 
-    /// convenience constructor for kids that specify specific/leaf Parameters
-    /// type (that also has the right default constructor)
-    explicit ParameterizedNode(char const *typeName):
-        ParameterizedNode(typeName, new Parameters())
-    {
-    }
-
+    // to avoid dragging construction parameters through derived classes, they
+    // are set in a leaf class constructor; \sa Acl::FinalizedParameterizedNode
+    ParameterizedNode() = default;
     ~ParameterizedNode() override = default;
 
 protected:
@@ -48,14 +38,9 @@ protected:
     SBufList dump() const override { return parameters->dump(); }
     bool empty() const override { return parameters->empty(); }
     const Acl::Options &lineOptions() override { return parameters->lineOptions(); }
-    char const *typeString() const override { return typeName_; }
 
-    /// items this ACL is configured to match; never nil
-    const std::unique_ptr<Parameters> parameters;
-
-private:
-    /// the "acltype" name that our creator uses for this ACL type
-    const TypeName typeName_;
+    /// items this ACL is configured to match; never nil after construction
+    std::unique_ptr<Parameters> parameters;
 };
 
 } // namespace Acl
