@@ -8,18 +8,22 @@
 
 #ifndef SQUID_ACLSOURCEDOMAIN_H
 #define SQUID_ACLSOURCEDOMAIN_H
-#include "acl/Acl.h"
-#include "acl/Checklist.h"
+
 #include "acl/Data.h"
-#include "acl/Strategy.h"
+#include "acl/ParameterizedNode.h"
 #include "dns/forward.h"
 
-class ACLSourceDomainStrategy : public ACLStrategy<char const *>
+namespace Acl
 {
 
+class SourceDomainCheck: public ParameterizedNode< ACLData<const char *> >
+{
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* ACL API */
+    int match(ACLChecklist *) override;
 };
+
+} // namespace Acl
 
 class SourceDomainLookup : public ACLChecklist::AsyncState
 {

@@ -186,8 +186,8 @@ Acl::Init()
     RegisterMaker("referer_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLRequestHeaderStrategy<Http::HdrType::REFERER>, name); });
     RegisterMaker("rep_mime_type", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLReplyHeaderStrategy<Http::HdrType::CONTENT_TYPE>, name); });
     RegisterMaker("req_mime_type", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLRequestHeaderStrategy<Http::HdrType::CONTENT_TYPE>, name); });
-    RegisterMaker("srcdomain", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLDomainData, new ACLSourceDomainStrategy, name); });
-    RegisterMaker("srcdom_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLSourceDomainStrategy, name); });
+    RegisterMaker("srcdomain", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::SourceDomainCheck>(name, new ACLDomainData); });
+    RegisterMaker("srcdom_regex", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::SourceDomainCheck>(name, new ACLRegexData); });
     RegisterMaker("src", [](TypeName)->ACL* { return new ACLSourceIP; }); // XXX: Add name parameter to ctor
     RegisterMaker("url_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLUrlStrategy, name); });
     RegisterMaker("urllogin", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLUrlLoginStrategy, name); });

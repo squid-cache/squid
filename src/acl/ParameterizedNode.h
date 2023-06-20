@@ -41,6 +41,14 @@ protected:
 
     /// items this ACL is configured to match; never nil after construction
     std::unique_ptr<Parameters> parameters;
+
+    // XXX: This is a diff reduction hack. Official code often uses poorly named
+    // "data" for a data member that should have been named "parameters". New PR
+    // code uses "parameters", but we keep this reference to avoid modifying
+    // otherwise unchanged official code that uses "data". Before merging this
+    // PR, rename new `parameters` to old `data` or vice versa!
+    decltype(parameters) &data = parameters;
+
 };
 
 } // namespace Acl
