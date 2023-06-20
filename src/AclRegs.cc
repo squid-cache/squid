@@ -122,7 +122,7 @@ Acl::Init()
     RegisterMaker("all-of", [](TypeName)->ACL* { return new Acl::AllOf; }); // XXX: Add name parameter to ctor
     RegisterMaker("any-of", [](TypeName)->ACL* { return new Acl::AnyOf; }); // XXX: Add name parameter to ctor
     RegisterMaker("random", [](TypeName name)->ACL* { return new ACLRandom(name); });
-    RegisterMaker("time", [](TypeName)->ACL* { return new Acl::Time(); });
+    RegisterMaker("time", [](TypeName name)->ACL* { return new Acl::Time(name); });
     RegisterMaker("src_as", [](TypeName name)->ACL* { return new ACLStrategised<Ip::Address>(new ACLASN, new ACLSourceASNStrategy, name); });
     RegisterMaker("dst_as", [](TypeName name)->ACL* { return new ACLStrategised<Ip::Address>(new ACLASN, new ACLDestinationASNStrategy, name); });
     RegisterMaker("browser", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLRequestHeaderStrategy<Http::HdrType::USER_AGENT>, name); });

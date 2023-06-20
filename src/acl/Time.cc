@@ -15,6 +15,6 @@
 int
 Acl::Time::match(ACLChecklist *)
 {
-    return parameters.match(squid_curtime);
+    return parameters->match(squid_curtime);
 }
 

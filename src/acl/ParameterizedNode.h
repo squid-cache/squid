@@ -12,6 +12,9 @@
 #include "acl/Acl.h"
 #include "acl/Data.h"
 
+#include <memory>
+#include <utility>
+
 namespace Acl
 {
 
@@ -21,18 +24,38 @@ template <class Parameters>
 class ParameterizedNode: public ACL
 {
 public:
-    ParameterizedNode() = default;
+    /// constructor for kids that support multiple Parameters-derived types
+    /// and/or need custom Parameters construction code
+    ParameterizedNode(char const *typeName, Parameters *params):
+        parameters(params),
+        typeName_(typeName)
+    {
+    }
+
+    /// convenience constructor for kids that specify specific/leaf Parameters
+    /// type (that also has the right default constructor)
+    explicit ParameterizedNode(char const *typeName):
+        ParameterizedNode(typeName, new Parameters())
+    {
+    }
+
     ~ParameterizedNode() override = default;
 
 protected:
     /* ACL API */
-    void prepareForUse() override { parameters.prepareForUse();}
-    void parse() override { parameters.parse(); }
-    SBufList dump() const override { return parameters.dump(); }
-    bool empty() const override { return parameters.empty(); }
-    const Acl::Options &lineOptions() override { return parameters.lineOptions(); }
+    void prepareForUse() override { parameters->prepareForUse(); }
+    void parse() override { parameters->parse(); }
+    SBufList dump() const override { return parameters->dump(); }
+    bool empty() const override { return parameters->empty(); }
+    const Acl::Options &lineOptions() override { return parameters->lineOptions(); }
+    char const *typeString() const override { return typeName_; }
 
-    Parameters parameters;
+    /// items this ACL is configured to match; never nil
+    const std::unique_ptr<Parameters> parameters;
+
+private:
+    /// the "acltype" name that our creator uses for this ACL type
+    const TypeName typeName_;
 };
 
 } // namespace Acl
