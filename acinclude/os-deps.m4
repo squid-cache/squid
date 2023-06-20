@@ -705,7 +705,7 @@ AC_CACHE_CHECK(for _res.nsaddr_list, ac_cv_have_res_nsaddr_list,
 ])
 
 
-dnl checks the ws2_32 library to use
+dnl checks whether to use the ws2_32 library
 dnl may set ac_cv_func_select as a side effect
 AC_DEFUN([SQUID_CHECK_WINSOCK_LIB],[
   AC_CHECK_HEADERS(winsock2.h)
