@@ -13,7 +13,7 @@
 #include "time/gadgets.h"
 
 int
-Acl::Time::match(ACLChecklist *)
+Acl::CurrentTimeCheck::match(ACLChecklist *)
 {
     return parameters->match(squid_curtime);
 }

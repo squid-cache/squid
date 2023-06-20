@@ -16,7 +16,7 @@
 namespace Acl
 {
 
-class Time: public ParameterizedNode<ACLTimeData>
+class CurrentTimeCheck: public ParameterizedNode<ACLTimeData>
 {
 public:
     /* ACL API */
