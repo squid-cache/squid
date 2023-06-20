@@ -575,8 +575,10 @@ ACLASN::parse()
 template class ACLStrategised<Ip::Address>;
 
 int
-ACLSourceASNStrategy::match (ACLData<Ip::Address> * &data, ACLFilledChecklist *checklist)
+Acl::SourceAsnCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     return data->match(checklist->src_addr);
 }
 

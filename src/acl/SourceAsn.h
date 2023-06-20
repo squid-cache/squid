@@ -9,17 +9,21 @@
 #ifndef SQUID_ACL_SOURCEASN_H
 #define SQUID_ACL_SOURCEASN_H
 
-#include "acl/Strategy.h"
-#include "ip/Address.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
+#include "ip/forward.h"
 
-class ACLChecklist;
-
-class ACLSourceASNStrategy : public ACLStrategy<Ip::Address>
+namespace Acl
 {
 
+class SourceAsnCheck: public ParameterizedNode< ACLData<Ip::Address> >
+{
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* ACL API */
+    int match(ACLChecklist *) override;
 };
+
+} // namespace Acl
 
 #endif /* SQUID_ACL_SOURCEASN_H */
 
