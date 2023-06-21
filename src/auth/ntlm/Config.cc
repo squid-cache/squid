@@ -33,7 +33,7 @@
 /* NTLM Scheme */
 static AUTHSSTATS authenticateNTLMStats;
 
-StatefulHelperPointer ntlmauthenticators = nullptr;
+StatefulHelperPointer ntlmauthenticators;
 static int authntlm_initialised = 0;
 
 static hash_table *proxy_auth_cache = nullptr;

@@ -36,7 +36,7 @@
 /* Basic Scheme */
 static AUTHSSTATS authenticateBasicStats;
 
-HelperPointer basicauthenticators = nullptr;
+HelperPointer basicauthenticators;
 
 static int authbasic_initialised = 0;
 

@@ -54,8 +54,8 @@ public:
 
 static HLPCB redirectHandleReply;
 static HLPCB storeIdHandleReply;
-static helper::Pointer redirectors = nullptr;
-static helper::Pointer storeIds = nullptr;
+static helper::Pointer redirectors;
+static helper::Pointer storeIds;
 static OBJH redirectStats;
 static OBJH storeIdStats;
 static int redirectorBypassed = 0;
