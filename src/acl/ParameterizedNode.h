@@ -13,20 +13,19 @@
 #include "acl/Data.h"
 
 #include <memory>
-#include <utility>
 
 namespace Acl
 {
 
 /// An ACL that manages configured parameters using a given Parameters class P.
-/// That Parameters class must support an AclData<> or equivalent API.
+/// That Parameters class must support an ACLData<> or equivalent API.
 template <class P>
 class ParameterizedNode: public ACL
 {
 public:
     using Parameters = P;
 
-    // to avoid dragging construction parameters through derived classes, they
+    // to avoid dragging constructor parameters through each derived class, they
     // are set in a leaf class constructor; \sa Acl::FinalizedParameterizedNode
     ParameterizedNode() = default;
     ~ParameterizedNode() override = default;

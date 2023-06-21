@@ -112,32 +112,23 @@
 namespace Acl
 {
 
-/// Constructs ParameterizedNode-derived ACLs (specified as a Parent class).
-/// This template exists to avoid placing a variant of this construction code in
-/// each ParameterizedNode-derived ACL, passing TypeName and, in many cases,
-/// Parameters to ParameterizedNode.
+/// Constructs a ParameterizedNode-derived ACL (specified as a Parent class).
+/// This template exists to avoid placing a variant of this ACL construction
+/// code in each ParameterizedNode-derived ACL class just to pass through
+/// TypeName and Parameters onto ParameterizedNode (and add MEMPROXY_CLASS).
 template <class Parent>
 class FinalizedParameterizedNode: public Parent
 {
-    // TODO: Provide TypeName instead of macro #CLASS-based pool name?
+    // TODO: Provide TypeName instead of macro #CLASS-based pool name.
     MEMPROXY_CLASS(Acl::FinalizedParameterizedNode<Parent>);
 
 public:
     using Parameters = typename Parent::Parameters;
 
-    /// constructor for ACLs that support multiple Parameters-derived types
-    /// and/or need custom Parameters construction code
     FinalizedParameterizedNode(TypeName typeName, Parameters * const params):
         typeName_(typeName)
     {
         this->parameters.reset(params);
-    }
-
-    /// convenience constructor for ACLs that specify specific/leaf Parameters
-    /// type (that also has the right default constructor)
-    explicit FinalizedParameterizedNode(TypeName typeName):
-        FinalizedParameterizedNode(typeName, new Parameters())
-    {
     }
 
     ~FinalizedParameterizedNode() override = default;
@@ -146,6 +137,8 @@ public:
     char const *typeString() const override { return typeName_; }
 
 private:
+    // TODO: Consider storing the spelling used by the admin instead.
+    /// the "acltype" name in its canonical spelling
     TypeName typeName_;
 };
 
@@ -164,7 +157,7 @@ Acl::Init()
     RegisterMaker("all-of", [](TypeName)->ACL* { return new Acl::AllOf; }); // XXX: Add name parameter to ctor
     RegisterMaker("any-of", [](TypeName)->ACL* { return new Acl::AnyOf; }); // XXX: Add name parameter to ctor
     RegisterMaker("random", [](TypeName name)->ACL* { return new ACLRandom(name); });
-    RegisterMaker("time", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::CurrentTimeCheck>(name); });
+    RegisterMaker("time", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::CurrentTimeCheck>(name, new ACLTimeData); });
     RegisterMaker("src_as", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::SourceAsnCheck>(name, new ACLASN); });
     RegisterMaker("dst_as", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::DestinationAsnCheck>(name, new ACLASN); });
     RegisterMaker("browser", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLRequestHeaderStrategy<Http::HdrType::USER_AGENT>, name); });

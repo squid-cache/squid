@@ -16,12 +16,13 @@
 namespace Acl
 {
 
+/// a "dst_as" ACL
 class DestinationAsnCheck: public ParameterizedNode< ACLData<Ip::Address> >
 {
 public:
     /* ACL API */
     int match(ACLChecklist *) override;
-    bool requiresRequest() const override { return true; }
+    bool requiresRequest() const override {return true;}
 };
 
 } // namespace Acl

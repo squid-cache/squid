@@ -16,6 +16,7 @@
 namespace Acl
 {
 
+/// a "srcdomain" or "srcdom_regex" ACL
 class SourceDomainCheck: public ParameterizedNode< ACLData<const char *> >
 {
 public:

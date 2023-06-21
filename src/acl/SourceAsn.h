@@ -16,6 +16,7 @@
 namespace Acl
 {
 
+/// a "src_as" ACL
 class SourceAsnCheck: public ParameterizedNode< ACLData<Ip::Address> >
 {
 public:
