@@ -32,7 +32,7 @@
 
 static AUTHSSTATS authenticateNegotiateStats;
 
-statefulhelper *negotiateauthenticators = nullptr;
+StatefulHelperPointer negotiateauthenticators = nullptr;
 
 static int authnegotiate_initialised = 0;
 
@@ -63,7 +63,6 @@ Auth::Negotiate::Config::done()
     if (!shutting_down)
         return;
 
-    delete negotiateauthenticators;
     negotiateauthenticators = nullptr;
 
     if (authenticateProgram)
@@ -90,7 +89,7 @@ Auth::Negotiate::Config::init(Auth::SchemeConfig *)
         authnegotiate_initialised = 1;
 
         if (negotiateauthenticators == nullptr)
-            negotiateauthenticators = new statefulhelper("negotiateauthenticator");
+            negotiateauthenticators = statefulhelper::Make("negotiateauthenticator");
 
         if (!proxy_auth_cache)
             proxy_auth_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);

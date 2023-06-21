@@ -9,6 +9,8 @@
 #ifndef SQUID_SRC_HELPER_FORWARD_H
 #define SQUID_SRC_HELPER_FORWARD_H
 
+#include "base/forward.h"
+
 class helper;
 class statefulhelper;
 
@@ -23,6 +25,9 @@ class Reply;
 class Request;
 
 } // namespace Helper
+
+using HelperPointer = RefCount<helper>;
+using StatefulHelperPointer = RefCount<statefulhelper>;
 
 typedef void HLPCB(void *, const Helper::Reply &);
 

@@ -46,7 +46,7 @@
 
 static AUTHSSTATS authenticateDigestStats;
 
-helper *digestauthenticators = nullptr;
+HelperPointer digestauthenticators = nullptr;
 
 static hash_table *digest_nonce_cache;
 
@@ -525,7 +525,7 @@ Auth::Digest::Config::init(Auth::SchemeConfig *)
         authdigest_initialised = 1;
 
         if (digestauthenticators == nullptr)
-            digestauthenticators = new helper("digestauthenticator");
+            digestauthenticators = helper::Make("digestauthenticator");
 
         digestauthenticators->cmdline = authenticateProgram;
 
@@ -559,7 +559,6 @@ Auth::Digest::Config::done()
     if (!shutting_down)
         return;
 
-    delete digestauthenticators;
     digestauthenticators = nullptr;
 
     if (authenticateProgram)

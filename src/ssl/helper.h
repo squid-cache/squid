@@ -34,7 +34,7 @@ public:
     /// Submit crtd message to external crtd server.
     static void Submit(CrtdMessage const & message, HLPCB * callback, void *data);
 private:
-    static helper * ssl_crtd; ///< helper for management of ssl_crtd.
+    static HelperPointer ssl_crtd; ///< helper for management of ssl_crtd.
 };
 #endif
 
@@ -53,7 +53,7 @@ public:
     /// Submit crtd request message to external crtd server.
     static void Submit(const Ssl::CertValidationRequest &, const Callback &);
 private:
-    static helper * ssl_crt_validator; ///< helper for management of ssl_crtd.
+    static HelperPointer ssl_crt_validator; ///< helper for management of ssl_crtd.
 public:
     typedef ClpMap<SBuf, CertValidationResponse::Pointer, CertValidationResponse::MemoryUsedByResponse> CacheType;
     static CacheType *HelperCache; ///< cache for cert validation helper
