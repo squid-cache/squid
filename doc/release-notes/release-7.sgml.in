@@ -99,7 +99,8 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
-	<p>No new options in this version.
+	<tag>--without-psapi</tag>
+	<p>Disable auto-detection of Windows PSAPI library.
 
 </descrip>
 
