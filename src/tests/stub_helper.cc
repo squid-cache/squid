@@ -13,7 +13,7 @@
 #include "tests/STUB.h"
 
 void helperSubmit(const helper::Pointer &, const char *, HLPCB *, void *) STUB
-void helperStatefulSubmit(const statefulhelper::Pointer &, const char *, HLPCB *, void *, helper_stateful_server *) STUB
+void helperStatefulSubmit(const statefulhelper::Pointer &, const char *, HLPCB *, void *, const Helper::ReservationId &) STUB
 helper::~helper() STUB
 void helper::packStatsInto(Packable *, const char *) const STUB
 
@@ -21,5 +21,4 @@ void helperShutdown(const helper::Pointer &) STUB
 void helperStatefulShutdown(const statefulhelper::Pointer &) STUB
 void helperOpenServers(const helper::Pointer &) STUB
 void helperStatefulOpenServers(const statefulhelper::Pointer &) STUB
-CBDATA_CLASS_INIT(statefulhelper);
 
