@@ -9,18 +9,22 @@
 #ifndef SQUID_ACLDESTINATIONASN_H
 #define SQUID_ACLDESTINATIONASN_H
 
-#include "acl/Asn.h"
-#include "acl/Strategy.h"
-#include "ip/Address.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
+#include "ip/forward.h"
 
-/// \ingroup ACLAPI
-class ACLDestinationASNStrategy : public ACLStrategy<Ip::Address>
+namespace Acl
 {
 
+class DestinationAsnCheck: public ParameterizedNode< ACLData<Ip::Address> >
+{
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
-    bool requiresRequest() const override {return true;}
+    /* ACL API */
+    int match(ACLChecklist *) override;
+    bool requiresRequest() const override { return true; }
 };
+
+} // namespace Acl
 
 #endif /* SQUID_ACLDESTINATIONASN_H */
 

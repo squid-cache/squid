@@ -166,7 +166,7 @@ Acl::Init()
     RegisterMaker("random", [](TypeName name)->ACL* { return new ACLRandom(name); });
     RegisterMaker("time", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::CurrentTimeCheck>(name); });
     RegisterMaker("src_as", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::SourceAsnCheck>(name, new ACLASN); });
-    RegisterMaker("dst_as", [](TypeName name)->ACL* { return new ACLStrategised<Ip::Address>(new ACLASN, new ACLDestinationASNStrategy, name); });
+    RegisterMaker("dst_as", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::DestinationAsnCheck>(name, new ACLASN); });
     RegisterMaker("browser", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLRequestHeaderStrategy<Http::HdrType::USER_AGENT>, name); });
     RegisterMaker("dstdomain", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLDomainData, new ACLDestinationDomainStrategy, name); });
     RegisterMaker("dstdom_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLDestinationDomainStrategy, name); });

@@ -583,8 +583,10 @@ Acl::SourceAsnCheck::match(ACLChecklist * const ch)
 }
 
 int
-ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::DestinationAsnCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->url.host(), IP_LOOKUP_IF_MISS);
 
     if (ia) {
