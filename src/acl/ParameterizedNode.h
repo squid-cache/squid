@@ -11,6 +11,7 @@
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
+#include "base/Assure.h"
 
 #include <memory>
 
@@ -32,8 +33,8 @@ public:
 
 protected:
     /* ACL API */
+    void parse() override { Assure(parameters); parameters->parse(); }
     void prepareForUse() override { parameters->prepareForUse(); }
-    void parse() override { parameters->parse(); }
     SBufList dump() const override { return parameters->dump(); }
     bool empty() const override { return parameters->empty(); }
     const Acl::Options &lineOptions() override { return parameters->lineOptions(); }
