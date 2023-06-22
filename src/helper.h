@@ -105,7 +105,7 @@ public:
 
     /// Reacts to unexpected server death(s), including a failure to start server(s)
     /// and an unexpected exit of a previously started server. \sa handleKilledServer()
-    /// \param madeProgress whether the died server responded to any requests
+    /// \param madeProgress whether the died server(s) responded to any requests
     void handleFewerServers(bool madeProgress);
 
 public:
