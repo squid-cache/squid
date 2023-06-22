@@ -45,7 +45,7 @@
 #if HAVE_PRIV_H
 #include <priv.h>
 #endif
-#if HAVE_WIN32_PSAPI
+#if HAVE_PSAPI_H
 #include <psapi.h>
 #endif
 #if HAVE_SYS_STAT_H
@@ -180,7 +180,7 @@ void
 squid_getrusage(struct rusage *r)
 {
     memset(r, '\0', sizeof(struct rusage));
-#if HAVE_GETRUSAGE && defined(RUSAGE_SELF) && !_SQUID_WINDOWS_
+#if HAVE_GETRUSAGE && defined(RUSAGE_SELF)
 #if _SQUID_SOLARIS_
     /* Solaris 2.5 has getrusage() permission bug -- Arjan de Vet */
     enter_suid();
@@ -192,7 +192,7 @@ squid_getrusage(struct rusage *r)
     leave_suid();
 #endif
 
-#elif _SQUID_WINDOWS_ && HAVE_WIN32_PSAPI
+#elif defined(PSAPI_VERSION)
     // Windows has an alternative method if there is no POSIX getrusage defined.
     if (WIN32_OS_version >= _WIN_OS_WINNT) {
         /* On Windows NT and later call PSAPI.DLL for process Memory */
