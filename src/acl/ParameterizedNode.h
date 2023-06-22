@@ -39,7 +39,8 @@ protected:
     bool empty() const override { return parameters->empty(); }
     const Acl::Options &lineOptions() override { return parameters->lineOptions(); }
 
-    /// items this ACL is configured to match; never nil after construction
+    /// Points to items this ACL is configured to match. A derived class ensures
+    /// that this pointer is never nil after the ACL object construction ends.
     std::unique_ptr<Parameters> parameters;
 
     // XXX: This is a diff reduction hack. Official code often uses poorly named
