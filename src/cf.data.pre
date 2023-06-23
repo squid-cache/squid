@@ -4300,9 +4300,11 @@ DOC_START
 	The directory must exist and be writable by the Squid
 	process.  Squid will NOT create this directory for you.
 
-	In SMP configurations, cache_dir must not precede the workers option
-	and should use configuration macros or conditionals to give each
-	worker interested in disk caching a dedicated cache directory.
+	Rock is currently the only SMP-aware cache_dir type. Using other
+	store types in configurations with multiple workers is not
+	supported and may lead to HTTP violations or undefined behavior,
+	even when each such cache_dir is given a dedicated worker using
+	configuration conditionals.
 
 
 	====  The ufs store type  ====
