@@ -1,2 +1,1 @@
-expect-failure ERROR:.configuration.failure:.Mismatched.'.'.and.'.'.in.regular.expression:
-
+expect-failure ERROR:.configuration.failure:.bad.regular.expression
