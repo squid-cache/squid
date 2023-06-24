@@ -21,7 +21,9 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
+#include "SquidMath.h"
 #include "Store.h"
 #include "StrList.h"
 
@@ -454,6 +456,38 @@ bool
 HttpReply::parseFirstLine(const char *blk_start, const char *blk_end)
 {
     return sline.parse(protoPrefix, blk_start, blk_end);
+}
+
+size_t
+HttpReply::parseTerminatedPrefix(const char * const terminatedBuf, const size_t bufSize)
+{
+    auto error = Http::scNone;
+    const bool eof = false; // TODO: Remove after removing atEnd from HttpHeader::parse()
+    if (parse(terminatedBuf, bufSize, eof, &error)) {
+        debugs(58, 7, "success after accumulating " << bufSize << " bytes and parsing " << hdr_sz);
+        Assure(pstate == Http::Message::psParsed);
+        Assure(hdr_sz > 0);
+        Assure(!Less(bufSize, hdr_sz)); // cannot parse more bytes than we have
+        return hdr_sz; // success
+    }
+
+    Assure(pstate != Http::Message::psParsed);
+    hdr_sz = 0;
+
+    if (error) {
+        throw TextException(ToSBuf("failed to parse HTTP headers",
+                                   Debug::Extra, "parser error code: ", error,
+                                   Debug::Extra, "accumulated unparsed bytes: ", bufSize,
+                                   Debug::Extra, "reply_header_max_size: ", Config.maxReplyHeaderSize),
+                            Here());
+    }
+
+    debugs(58, 3, "need more bytes after accumulating " << bufSize << " out of " << Config.maxReplyHeaderSize);
+
+    // the parse() call above enforces Config.maxReplyHeaderSize limit
+    // XXX: Make this a strict comparison after fixing Http::Message::parse() enforcement
+    Assure(bufSize <= Config.maxReplyHeaderSize);
+    return 0; // parsed nothing, need more data
 }
 
 void
