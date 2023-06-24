@@ -147,7 +147,6 @@ public:
         /// Response header and body bytes written to the client connection.
         uint64_t size = 0;
         /// Response header bytes written to the client connection.
-        /// Not to be confused with clientReplyContext::headers_sz.
         size_t headers_sz = 0;
     } out;
 
