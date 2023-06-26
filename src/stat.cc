@@ -1583,7 +1583,7 @@ statPeerSelect(StoreEntry * sentry)
     /* per-peer */
     storeAppendPrintf(sentry, "\nPer-peer statistics:\n");
 
-    for (peer = getFirstPeer(); peer; peer = getNextPeer(peer)) {
+    for (const auto &peer: Config.cachePeers) {
         if (peer->digest)
             peerDigestStatsReport(peer->digest, sentry);
         else

@@ -23,9 +23,7 @@ class CachePeer;
 class StoreEntry;
 class PeerSelector;
 
-CachePeer *getFirstPeer(void);
 CachePeer *getFirstUpParent(PeerSelector *);
-CachePeer *getNextPeer(CachePeer *);
 CachePeer *getSingleParent(PeerSelector *);
 int neighborsCount(PeerSelector *);
 int neighborsUdpPing(HttpRequest *,

@@ -47,8 +47,6 @@ carpInit(void)
     int K;
     int k;
     double P_last, X_last, Xn;
-    CachePeer *p;
-    CachePeer **P;
     char *t;
     /* Clean up */
 
@@ -64,7 +62,7 @@ carpInit(void)
 
     /* find out which peers we have */
 
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &p: Config.cachePeers) {
         if (!p->options.carp)
             continue;
 
@@ -83,8 +81,9 @@ carpInit(void)
 
     carp_peers = (CachePeer **)xcalloc(n_carp_peers, sizeof(*carp_peers));
 
+    auto P = carp_peers;
     /* Build a list of the found peers and calculate hashes and load factors */
-    for (P = carp_peers, p = Config.peers; p; p = p->next) {
+    for (const auto &p: Config.cachePeers) {
         if (!p->options.carp)
             continue;
 
@@ -108,7 +107,7 @@ carpInit(void)
             p->carp.load_factor = 0.0;
 
         /* add it to our list of peers */
-        *P = cbdataReference(p);
+        *P = cbdataReference(p.get());
         ++P;
     }
 
@@ -133,7 +132,7 @@ carpInit(void)
 
     for (k = 1; k <= K; ++k) {
         double Kk1 = (double) (K - k + 1);
-        p = carp_peers[k - 1];
+        auto p = carp_peers[k - 1];
         p->carp.load_multiplier = (Kk1 * (p->carp.load_factor - P_last)) / Xn;
         p->carp.load_multiplier += pow(X_last, Kk1);
         p->carp.load_multiplier = pow(p->carp.load_multiplier, 1.0 / Kk1);
@@ -223,7 +222,6 @@ carpSelectParent(PeerSelector *ps)
 static void
 carpCachemgr(StoreEntry * sentry)
 {
-    CachePeer *p;
     int sumfetches = 0;
     storeAppendPrintf(sentry, "%24s %10s %10s %10s %10s\n",
                       "Hostname",
@@ -232,10 +230,10 @@ carpCachemgr(StoreEntry * sentry)
                       "Factor",
                       "Actual");
 
-    for (p = Config.peers; p; p = p->next)
+    for (const auto &p: Config.cachePeers)
         sumfetches += p->stats.fetches;
 
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &p: Config.cachePeers) {
         storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",
                           p->name, p->carp.hash,
                           p->carp.load_multiplier,

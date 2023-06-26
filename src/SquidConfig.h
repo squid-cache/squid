@@ -12,6 +12,7 @@
 #include "acl/forward.h"
 #include "base/RefCount.h"
 #include "base/YesNoNone.h"
+#include "CachePeer.h"
 #if USE_DELAY_POOLS
 #include "ClientDelayConfig.h"
 #include "DelayConfig.h"
@@ -43,6 +44,7 @@ namespace Mgr
 class ActionPasswordList;
 } // namespace Mgr
 class CachePeer;
+class CachePeers;
 class CustomLog;
 class CpuAffinityMap;
 class DebugMessages;
@@ -243,6 +245,7 @@ public:
     size_t udpMaxHitObjsz;
     wordlist *mcast_group_list;
     CachePeer *peers;
+    CachePeers cachePeers;
     int npeers;
 
     struct {

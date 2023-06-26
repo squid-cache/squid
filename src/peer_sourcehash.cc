@@ -42,8 +42,6 @@ peerSourceHashInit(void)
     int K;
     int k;
     double P_last, X_last, Xn;
-    CachePeer *p;
-    CachePeer **P;
     char *t;
     /* Clean up */
 
@@ -55,7 +53,7 @@ peerSourceHashInit(void)
     n_sourcehash_peers = 0;
     /* find out which peers we have */
 
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &p: Config.cachePeers) {
         if (!p->options.sourcehash)
             continue;
 
@@ -76,8 +74,9 @@ peerSourceHashInit(void)
 
     sourcehash_peers = (CachePeer **)xcalloc(n_sourcehash_peers, sizeof(*sourcehash_peers));
 
+    auto P = sourcehash_peers;
     /* Build a list of the found peers and calculate hashes and load factors */
-    for (P = sourcehash_peers, p = Config.peers; p; p = p->next) {
+    for (const auto &p: Config.cachePeers) {
         if (!p->options.sourcehash)
             continue;
 
@@ -101,7 +100,7 @@ peerSourceHashInit(void)
             p->sourcehash.load_factor = 0.0;
 
         /* add it to our list of peers */
-        *P++ = cbdataReference(p);
+        *P++ = cbdataReference(p.get());
     }
 
     /* Sort our list on weight */
@@ -125,7 +124,7 @@ peerSourceHashInit(void)
 
     for (k = 1; k <= K; ++k) {
         double Kk1 = (double) (K - k + 1);
-        p = sourcehash_peers[k - 1];
+        auto p = sourcehash_peers[k - 1];
         p->sourcehash.load_multiplier = (Kk1 * (p->sourcehash.load_factor - P_last)) / Xn;
         p->sourcehash.load_multiplier += pow(X_last, Kk1);
         p->sourcehash.load_multiplier = pow(p->sourcehash.load_multiplier, 1.0 / Kk1);
@@ -195,7 +194,6 @@ peerSourceHashSelectParent(PeerSelector *ps)
 static void
 peerSourceHashCachemgr(StoreEntry * sentry)
 {
-    CachePeer *p;
     int sumfetches = 0;
     storeAppendPrintf(sentry, "%24s %10s %10s %10s %10s\n",
                       "Hostname",
@@ -204,10 +202,10 @@ peerSourceHashCachemgr(StoreEntry * sentry)
                       "Factor",
                       "Actual");
 
-    for (p = Config.peers; p; p = p->next)
+    for (const auto &p: Config.cachePeers)
         sumfetches += p->stats.fetches;
 
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &p: Config.cachePeers) {
         storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",
                           p->name, p->sourcehash.hash,
                           p->sourcehash.load_multiplier,

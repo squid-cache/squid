@@ -15,9 +15,11 @@
 #include "http/StatusCode.h"
 #include "icp_opcode.h"
 #include "ip/Address.h"
+#include "mem/PoolingAllocator.h"
 #include "security/PeerOptions.h"
 
 #include <iosfwd>
+#include <vector>
 
 //TODO: remove, it is unconditionally defined and always used.
 #define PEER_MULTICAST_SIBLINGS 1
@@ -225,6 +227,32 @@ public:
 
 private:
     void countFailure();
+};
+
+class CachePeers
+{
+public:
+    using CachePeerList = std::vector< std::unique_ptr<CachePeer>, PoolingAllocator< std::unique_ptr<CachePeer> > >;
+    using iterator = CachePeerList::iterator;
+    using const_iterator = CachePeerList::const_iterator;
+
+    static peer_t parseNeighborType(const char *);
+
+    void parse(ConfigParser &parser);
+    void dump(StoreEntry *, const char *name);
+    void clean();
+
+    iterator begin() { return cachePeers->begin(); }
+    iterator end() { return cachePeers->end(); }
+    const_iterator cbegin() const { return cachePeers->cbegin(); }
+    const_iterator cend() const { return cachePeers->cend(); }
+
+    size_t size() const { return cachePeers->size(); }
+    const CachePeerList::value_type &at(const size_t pos);
+
+private:
+    CachePeerList *cachePeers = nullptr;
+    iterator first_ping ;
 };
 
 /// reacts to a successful establishment of a connection to an origin server or cache_peer

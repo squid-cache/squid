@@ -865,10 +865,10 @@ PeerSelector::selectSomeParent()
 void
 PeerSelector::selectAllParents()
 {
-    CachePeer *p;
     /* Add all alive parents */
 
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &peer: Config.cachePeers) {
+        const auto p = peer.get();
         /* XXX: neighbors.c lacks a public interface for enumerating
          * parents to a request so we have to dig some here..
          */
@@ -887,7 +887,7 @@ PeerSelector::selectAllParents()
      * simply are not configured to handle the request.
      */
     /* Add default parent as a last resort */
-    if ((p = getDefaultParent(this))) {
+    if (auto p = getDefaultParent(this)) {
         addSelection(p, DEFAULT_PARENT);
     }
 }

@@ -724,9 +724,8 @@ static oid *
 peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
 {
     oid *instance = nullptr;
-    CachePeer *peers = Config.peers;
 
-    if (peers == nullptr) {
+    if (!Config.cachePeers.size()) {
         debugs(49, 6, "snmp peer_Inst: No Peers.");
         current = current->parent->parent->parent->leaves[1];
         while ((current) && (!current->parsefunction))
@@ -743,18 +742,17 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
         instance[*len] = 1 ;
         *len += 1;
     } else {
-        int no = name[current->len] ;
-        int i;
+        const auto no = name[current->len] ;
         // Note: This works because the Config.peers keeps its index according to its position.
-        for ( i=0 ; peers && (i < no) ; peers = peers->next, ++i ) ;
+        const auto &peers = Config.cachePeers.at(static_cast<size_t>(no));
 
         if (peers) {
-            debugs(49, 6, "snmp peer_Inst: Encode peer #" << i);
+            debugs(49, 6, "snmp peer_Inst: Encode peer #" << no);
             instance = (oid *)xmalloc(sizeof(*name) * (current->len + 1 ));
             memcpy(instance, name, (sizeof(*name) * current->len ));
             instance[current->len] = no + 1 ; // i.e. the next index on cache_peeer table.
         } else {
-            debugs(49, 6, "snmp peer_Inst: We have " << i << " peers. Can't find #" << no);
+            debugs(49, 6, "snmp peer_Inst: We have " << Config.cachePeers.size() << " peers. Can't find #" << no);
             return (instance);
         }
     }

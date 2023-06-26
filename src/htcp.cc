@@ -1272,9 +1272,7 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
 static void
 htcpForwardClr(char *buf, int sz)
 {
-    CachePeer *p;
-
-    for (p = Config.peers; p; p = p->next) {
+    for (const auto &p: Config.cachePeers) {
         if (!p->options.htcp) {
             continue;
         }
