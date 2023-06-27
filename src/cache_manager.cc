@@ -481,6 +481,7 @@ CacheManager::PutCommonResponseHeaders(HttpReply &response, const char *httpOrig
     }
 
     std::unique_ptr<HttpHdrCc> cc(new HttpHdrCc());
+    cc->noCache(String());
     cc->noStore(true);
     response.putCc(cc.release());
 }
