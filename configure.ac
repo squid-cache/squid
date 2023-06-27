@@ -2859,7 +2859,6 @@ esac
 
 dnl Check for headers
 AC_HEADER_DIRENT
-AC_HEADER_STDC
 
 AC_CHECK_HEADERS( \
   arpa/inet.h \
@@ -3069,10 +3068,9 @@ AC_CHECK_TYPE(fd_mask,  AC_DEFINE(HAVE_FD_MASK,1,[fd_mask is defined by the syst
 AC_CHECK_TYPE(socklen_t,AC_DEFINE(HAVE_SOCKLEN_T,1,[socklen_t is defined by the system headers]),,[
 #include <sys/types.h>
 #include <sys/socket.h>
-#if STDC_HEADERS
 #include <stdlib.h>
 #include <stddef.h>
-#endif])
+])
 
 AC_CHECK_TYPE(mtyp_t,AC_DEFINE(HAVE_MTYP_T,1,
    [mtyp_t is defined by the system headers]),,[#include <sys/types.h>
