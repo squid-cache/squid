@@ -30,11 +30,23 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 <p>The most important of these new features are:
 <itemize>
-	<item>
+	<item>Cache Manager changes
 </itemize>
 
-Most user-facing changes are reflected in squid.conf (see below).
+<p>Most user-facing changes are reflected in squid.conf (see further below).
 
+<sect1>Cache Manager changes<label id="mgr">
+<p>For more information about the Cache Manager feature, see <url url="https://wiki.squid-cache.org/Features/CacheManager/Index" name="wiki">.
+
+<p>
+<descrip>
+	<tag>non_peers</tag>
+	<p>Removed the <em>mgr:non_peers</em> report. Squid still ignores
+	unexpected ICP responses but no longer remembers the details that comprised
+	the removed report. The senders of these ICP messages are still reported to
+	cache.log at debugging level 1 (with an exponential backoff).
+
+</descrip>
 
 <sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
 <p>
@@ -60,6 +72,10 @@ This section gives an account of those changes in three categories:
 	<tag>buffered_logs</tag>
 	<p>Honor the <em>off</em> setting in 'udp' access_log module.
 
+	<tag>cachemgr_passwd</tag>
+	<p>Removed the <em>non_peers</em> action. See the Cache Manager
+	<ref id="mgr" name="section"> for details.
+
 </descrip>
 
 <sect1>Removed directives<label id="removeddirectives">
@@ -83,7 +99,8 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
-	<p>No new options in this version.
+	<tag>--without-psapi</tag>
+	<p>Disable auto-detection of Windows PSAPI library.
 
 </descrip>
 
