@@ -320,8 +320,13 @@ ipcacheRelease(ipcache_entry * i, bool dofree)
 static ipcache_entry *
 ipcache_get(const char *name)
 {
-    if (ip_table != nullptr)
-        return (ipcache_entry *) hash_lookup(ip_table, name);
+    if (ip_table != NULL){
+        char *newName = xstrdup(name);
+        Tolower(static_cast<char*>(newName));
+        ipcache_entry *entry = (ipcache_entry *) hash_lookup(ip_table, newName);
+        free(newName);
+        return entry;
+    }
     else
         return nullptr;
 }
