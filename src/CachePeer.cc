@@ -54,8 +54,6 @@ CachePeer::~CachePeer()
     xfree(digest_url);
 #endif
 
-    delete next;
-
     xfree(login);
 
     delete standby.pool;
