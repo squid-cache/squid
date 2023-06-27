@@ -170,14 +170,12 @@ store_client::finishCallback()
     ++answers;
 
     STCB *temphandler = _callback.callback_handler;
-    void *cbdata = _callback.callback_data;
-    _callback = Callback(nullptr, nullptr);
+    const auto cbdata = _callback.cbData.validDone();
+    _callback = Callback();
     copyInto.data = nullptr;
 
-    if (cbdataReferenceValid(cbdata))
+    if (cbdata)
         temphandler(cbdata, result);
-
-    cbdataReferenceDone(cbdata);
 }
 
 store_client::store_client(StoreEntry *e) :
@@ -243,7 +241,7 @@ store_client::copy(StoreEntry * anEntry,
 #endif
 
     assert(!_callback.pending());
-    _callback = Callback (callback_fn, cbdataReference(data));
+    _callback = Callback(callback_fn, data);
     copyInto.data = copyRequest.data;
     copyInto.length = copyRequest.length;
     copyInto.offset = copyRequest.offset;
@@ -1049,7 +1047,7 @@ store_client::dumpStats(MemBuf * output, int clientNumber) const
     if (_callback.pending())
         return;
 
-    output->appendf("\tClient #%d, %p\n", clientNumber, _callback.callback_data);
+    output->appendf("\tClient #%d, %p\n", clientNumber, this);
     output->appendf("\t\tcopy_offset: %" PRId64 "\n", copyInto.offset);
     output->appendf("\t\tcopy_size: %zu\n", copyInto.length);
     output->append("\t\tflags:", 8);
@@ -1074,7 +1072,7 @@ store_client::Callback::pending() const
 
 store_client::Callback::Callback(STCB *function, void *data):
     callback_handler(function),
-    callback_data(data),
+    cbData(data),
     codeContext(CodeContext::Current())
 {
 }
