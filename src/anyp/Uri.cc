@@ -71,7 +71,7 @@ AnyP::Uri::Encode(const SBuf &buf, const CharacterSet &ignore)
     while (!tk.atEnd()) {
         // TODO: Add Tokenizer::parseOne(void).
         const auto ch = tk.remaining()[0];
-        output.appendf("%%%02X", static_cast<unsigned int>(ch)); // TODO: Optimize using a table
+        output.appendf("%%%02X", static_cast<unsigned int>(static_cast<unsigned char>(ch))); // TODO: Optimize using a table
         (void)tk.skip(ch);
 
         if (tk.prefix(goodSection, ignore))

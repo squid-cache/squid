@@ -23,7 +23,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <sys/timeb.h>
-#if HAVE_WIN32_PSAPI
+#if HAVE_PSAPI_H
 #include <psapi.h>
 #endif
 #ifndef _MSWSOCK_
@@ -62,7 +62,7 @@ void
 GetProcessName(pid_t pid, char *ProcessName)
 {
     strcpy(ProcessName, "unknown");
-#if HAVE_WIN32_PSAPI
+#if defined(PSAPI_VERSION)
     /* Get a handle to the process. */
     HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
     /* Get the process name. */
@@ -79,7 +79,7 @@ GetProcessName(pid_t pid, char *ProcessName)
     } else
         return;
     CloseHandle(hProcess);
-#endif /* HAVE_WIN32_PSAPI */
+#endif
 }
 
 int

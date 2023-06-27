@@ -38,7 +38,7 @@ public:
     explicit ServerBump(ClientHttpRequest *http, StoreEntry *e = nullptr, Ssl::BumpMode mode = Ssl::bumpServerFirst);
     ~ServerBump();
     void attachServerSession(const Security::SessionPointer &); ///< Sets the server TLS session object
-    const Security::CertErrors *sslErrors() const; ///< SSL [certificate validation] errors
+    Security::CertErrors *sslErrors() const; ///< SSL [certificate validation] errors
 
     /// whether there was a successful connection to (and peeking at) the origin server
     bool connectedOk() const {return entry && entry->isEmpty();}

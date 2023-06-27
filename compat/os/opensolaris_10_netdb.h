@@ -74,14 +74,20 @@
  * End BIND 4.9.3
  */
 
+#ifndef _NETDB_H
+#define _NETDB_H
+
+/****************************************************************************
+ *--------------------------------------------------------------------------*
+ * DO *NOT* MAKE ANY CHANGES below here unless you know what you're doing...*
+ *--------------------------------------------------------------------------*
+ ****************************************************************************/
+
 /*
  * Structures returned by network data base library.
  * All addresses are supplied in host order, and
  * returned in network order (suitable for use in system calls).
  */
-
-#ifndef _NETDB_H
-#define _NETDB_H
 
 #include <sys/types.h>
 #include <netinet/in.h>

@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "debug/Stream.h"
+#include "fatal.h"
 #include "fd.h"
 #include "ipc/Kids.h"
 #include "time/gadgets.h"
@@ -1226,10 +1227,11 @@ debugLogTime(const timeval &t)
     static time_t last_t = 0;
 
     if (Debug::Level() > 1) {
+        last_t = t.tv_sec;
         // 4 bytes smaller than buf to ensure .NNN catenation by snprintf()
         // is safe and works even if strftime() fills its buffer.
         char buf2[sizeof(buf)-4];
-        const auto tm = localtime(&t.tv_sec);
+        const auto tm = localtime(&last_t);
         strftime(buf2, sizeof(buf2), "%Y/%m/%d %H:%M:%S", tm);
         buf2[sizeof(buf2)-1] = '\0';
         const auto sz = snprintf(buf, sizeof(buf), "%s.%03d", buf2, static_cast<int>(t.tv_usec / 1000));
@@ -1237,10 +1239,10 @@ debugLogTime(const timeval &t)
         // force buf reset for subsequent level-0/1 messages that should have no milliseconds
         last_t = 0;
     } else if (t.tv_sec != last_t) {
-        const auto tm = localtime(&t.tv_sec);
+        last_t = t.tv_sec;
+        const auto tm = localtime(&last_t);
         const int sz = strftime(buf, sizeof(buf), "%Y/%m/%d %H:%M:%S", tm);
         assert(0 < sz && sz <= static_cast<int>(sizeof(buf)));
-        last_t = t.tv_sec;
     }
 
     buf[sizeof(buf)-1] = '\0';
@@ -1277,7 +1279,7 @@ Debug::Context::Context(const int aSection, const int aLevel):
     forceAlert(false),
     waitingForIdle(false)
 {
-    formatStream();
+    FormatStream(buf);
 }
 
 /// Optimization: avoids new Context creation for every debugs().
@@ -1292,14 +1294,12 @@ Debug::Context::rewind(const int aSection, const int aLevel)
 
     buf.str(CompiledDebugMessageBody());
     buf.clear();
-    // debugs() users are supposed to preserve format, but
-    // some do not, so we have to waste cycles resetting it for all.
-    formatStream();
+    FormatStream(buf);
 }
 
 /// configures default formatting for the debugging stream
 void
-Debug::Context::formatStream()
+Debug::FormatStream(std::ostream &buf)
 {
     const static std::ostringstream cleanStream;
     buf.flags(cleanStream.flags() | std::ios::fixed);
@@ -1307,6 +1307,17 @@ Debug::Context::formatStream()
     buf.precision(2);
     buf.fill(' ');
     // If this is not enough, use copyfmt(cleanStream) which is ~10% slower.
+}
+
+std::ostream &
+Debug::Extra(std::ostream &os)
+{
+    // Prevent previous line formats bleeding onto this line: Previous line code
+    // may not even be aware of some detailing code automatically adding extras.
+    FormatStream(os);
+
+    os << "\n    ";
+    return os;
 }
 
 void

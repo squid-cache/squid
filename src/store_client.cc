@@ -19,7 +19,9 @@
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "mime_header.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
+#include "SquidMath.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "store/SwapMetaIn.h"
@@ -139,20 +141,6 @@ storeClientListAdd(StoreEntry * e, void *data)
     return sc;
 }
 
-/// schedules asynchronous STCB call to relay disk or memory read results
-/// \param outcome an error signal (if negative), an EOF signal (if zero), or the number of bytes read
-void
-store_client::callback(const ssize_t outcome)
-{
-    if (outcome > 0)
-        return noteCopiedBytes(outcome);
-
-    if (outcome < 0)
-        return fail();
-
-    noteEof();
-}
-
 /// finishCallback() wrapper; TODO: Add NullaryMemFunT for non-jobs.
 void
 store_client::FinishCallback(store_client * const sc)
@@ -167,14 +155,20 @@ store_client::finishCallback()
     Assure(_callback.callback_handler);
     Assure(_callback.notifier);
 
-    // callers are not ready to handle a content+error combination
-    Assure(object_ok || !copiedSize);
-
-    StoreIOBuffer result(copiedSize, copyInto.offset, copyInto.data);
+    // XXX: Some legacy code relies on zero-length buffers having nil data
+    // pointers. Some other legacy code expects "correct" result.offset even
+    // when there is no body to return. Accommodate all those expectations.
+    auto result = StoreIOBuffer(0, copyInto.offset, nullptr);
+    if (object_ok && parsingBuffer && parsingBuffer->contentSize())
+        result = parsingBuffer->packBack();
     result.flags.error = object_ok ? 0 : 1;
-    copiedSize = 0;
 
-    cmp_offset = result.offset + result.length;
+    // no HTTP headers and no body bytes (but not because there was no space)
+    atEof_ = !sendingHttpHeaders() && !result.length && copyInto.length;
+
+    parsingBuffer.reset();
+    ++answers;
+
     STCB *temphandler = _callback.callback_handler;
     void *cbdata = _callback.callback_data;
     _callback = Callback(nullptr, nullptr);
@@ -186,35 +180,15 @@ store_client::finishCallback()
     cbdataReferenceDone(cbdata);
 }
 
-/// schedules asynchronous STCB call to relay a successful disk or memory read
-/// \param bytesCopied the number of response bytes copied into copyInto
-void
-store_client::noteCopiedBytes(const size_t bytesCopied)
-{
-    debugs(90, 5, bytesCopied);
-    Assure(bytesCopied > 0);
-    Assure(!copiedSize);
-    copiedSize = bytesCopied;
-    noteNews();
-}
-
-void
-store_client::noteEof()
-{
-    debugs(90, 5, copiedSize);
-    Assure(!copiedSize);
-    noteNews();
-}
-
 store_client::store_client(StoreEntry *e) :
-    cmp_offset(0),
 #if STORE_CLIENT_LIST_DEBUG
     owner(cbdataReference(data)),
 #endif
     entry(e),
     type(e->storeClientType()),
     object_ok(true),
-    copiedSize(0)
+    atEof_(false),
+    answers(0)
 {
     Assure(entry);
     entry->lock("store_client");
@@ -269,16 +243,29 @@ store_client::copy(StoreEntry * anEntry,
 #endif
 
     assert(!_callback.pending());
-#if ONLYCONTIGUOUSREQUESTS
-
-    assert(cmp_offset == copyRequest.offset);
-#endif
-    /* range requests will skip into the body */
-    cmp_offset = copyRequest.offset;
     _callback = Callback (callback_fn, cbdataReference(data));
     copyInto.data = copyRequest.data;
     copyInto.length = copyRequest.length;
     copyInto.offset = copyRequest.offset;
+    Assure(copyInto.offset >= 0);
+
+    if (!copyInto.length) {
+        // During the first storeClientCopy() call, a zero-size buffer means
+        // that we will have to drop any HTTP response body bytes we read (with
+        // the HTTP headers from disk). After that, it means we cannot return
+        // anything to the caller at all.
+        debugs(90, 2, "WARNING: zero-size storeClientCopy() buffer: " << copyInto);
+        // keep going; moreToRead() should prevent any from-Store reading
+    }
+
+    // Our nextHttpReadOffset() expects the first copy() call to have zero
+    // offset. More complex code could handle a positive first offset, but it
+    // would only be useful when reading responses from memory: We would not
+    // _delay_ the response (to read the requested HTTP body bytes from disk)
+    // when we already can respond with HTTP headers.
+    Assure(!copyInto.offset || answeredOnce());
+
+    parsingBuffer.emplace(copyInto);
 
     static bool copying (false);
     assert (!copying);
@@ -304,33 +291,30 @@ store_client::copy(StoreEntry * anEntry,
     // Add no code here. This object may no longer exist.
 }
 
-/// Whether there is (or will be) more entry data for us.
+/// Whether Store has (or possibly will have) more entry data for us.
 bool
-store_client::moreToSend() const
+store_client::moreToRead() const
 {
+    if (!copyInto.length)
+        return false; // the client supplied a zero-size buffer
+
     if (entry->store_status == STORE_PENDING)
         return true; // there may be more coming
 
     /* STORE_OK, including aborted entries: no more data is coming */
 
-    const int64_t len = entry->objectLen();
+    if (canReadFromMemory())
+        return true; // memory has the first byte wanted by the client
 
-    // If we do not know the entry length, then we have to open the swap file.
-    const bool canSwapIn = entry->hasDisk();
-    if (len < 0)
-        return canSwapIn;
+    if (!entry->hasDisk())
+        return false; // cannot read anything from disk either
 
-    if (copyInto.offset >= len)
-        return false; // sent everything there is
+    if (entry->objectLen() >= 0 && copyInto.offset >= entry->contentLen())
+        return false; // the disk cannot have byte(s) wanted by the client
 
-    if (canSwapIn)
-        return true; // if we lack prefix, we can swap it in
-
-    // If we cannot swap in, make sure we have what we want in RAM. Otherwise,
-    // scheduleRead calls scheduleDiskRead which asserts without a swap file.
-    const MemObject *mem = entry->mem_obj;
-    return mem &&
-           mem->inmem_lo <= copyInto.offset && copyInto.offset < mem->endOffset();
+    // we cannot be sure until we swap in metadata and learn contentLen(),
+    // but the disk may have the byte(s) wanted by the client
+    return true;
 }
 
 static void
@@ -357,6 +341,14 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     sc->doCopy(e);
 }
 
+/// Whether our answer, if sent right now, will announce the availability of
+/// HTTP response headers (to the STCB callback) for the first time.
+bool
+store_client::sendingHttpHeaders() const
+{
+    return !answeredOnce() && entry->mem().baseReply().hdr_sz > 0;
+}
+
 void
 store_client::doCopy(StoreEntry *anEntry)
 {
@@ -368,20 +360,22 @@ store_client::doCopy(StoreEntry *anEntry)
     flags.store_copying = true;
     MemObject *mem = entry->mem_obj;
 
-    debugs(33, 5, "store_client::doCopy: co: " <<
-           copyInto.offset << ", hi: " <<
-           mem->endOffset());
+    debugs(33, 5, this << " into " << copyInto <<
+           " hi: " << mem->endOffset() <<
+           " objectLen: " << entry->objectLen() <<
+           " past_answers: " << answers);
 
-    if (!moreToSend()) {
+    const auto sendHttpHeaders = sendingHttpHeaders();
+
+    if (!sendHttpHeaders && !moreToRead()) {
         /* There is no more to send! */
         debugs(33, 3, "There is no more to send!");
-        noteEof();
+        noteNews();
         flags.store_copying = false;
         return;
     }
 
-    /* Check that we actually have data */
-    if (anEntry->store_status == STORE_PENDING && copyInto.offset >= mem->endOffset()) {
+    if (!sendHttpHeaders && anEntry->store_status == STORE_PENDING && nextHttpReadOffset() >= mem->endOffset()) {
         debugs(90, 3, "store_client::doCopy: Waiting for more");
         flags.store_copying = false;
         return;
@@ -403,7 +397,24 @@ store_client::doCopy(StoreEntry *anEntry)
         if (!startSwapin())
             return; // failure
     }
-    scheduleRead();
+
+    // send any immediately available body bytes even if we also sendHttpHeaders
+    if (canReadFromMemory()) {
+        readFromMemory();
+        noteNews(); // will sendHttpHeaders (if needed) as well
+        flags.store_copying = false;
+        return;
+    }
+
+    if (sendHttpHeaders) {
+        debugs(33, 5, "just send HTTP headers: " << mem->baseReply().hdr_sz);
+        noteNews();
+        flags.store_copying = false;
+        return;
+    }
+
+    // no information that the client needs is available immediately
+    scheduleDiskRead();
 }
 
 /// opens the swapin "file" if possible; otherwise, fail()s and returns false
@@ -443,18 +454,7 @@ store_client::noteSwapInDone(const bool error)
     if (error)
         fail();
     else
-        noteEof();
-}
-
-void
-store_client::scheduleRead()
-{
-    MemObject *mem = entry->mem_obj;
-
-    if (copyInto.offset >= mem->inmem_lo && copyInto.offset < mem->endOffset())
-        scheduleMemRead();
-    else
-        scheduleDiskRead();
+        noteNews();
 }
 
 void
@@ -479,15 +479,44 @@ store_client::scheduleDiskRead()
     flags.store_copying = false;
 }
 
-void
-store_client::scheduleMemRead()
+/// whether at least one byte wanted by the client is in memory
+bool
+store_client::canReadFromMemory() const
 {
-    /* What the client wants is in memory */
-    /* Old style */
-    debugs(90, 3, "store_client::doCopy: Copying normal from memory");
-    const auto sz = entry->mem_obj->data_hdr.copy(copyInto); // may be <= 0 per copy() API
-    callback(sz);
-    flags.store_copying = false;
+    const auto &mem = entry->mem();
+    const auto memReadOffset = nextHttpReadOffset();
+    return mem.inmem_lo <= memReadOffset && memReadOffset < mem.endOffset() &&
+           parsingBuffer->spaceSize();
+}
+
+/// The offset of the next stored HTTP response byte wanted by the client.
+int64_t
+store_client::nextHttpReadOffset() const
+{
+    Assure(parsingBuffer);
+    const auto &mem = entry->mem();
+    const auto hdr_sz = mem.baseReply().hdr_sz;
+    // Certain SMP cache manager transactions do not store HTTP headers in
+    // mem_hdr; they store just a kid-specific piece of the future report body.
+    // In such cases, hdr_sz ought to be zero. In all other (known) cases,
+    // mem_hdr contains HTTP response headers (positive hdr_sz if parsed)
+    // followed by HTTP response body. This code math accommodates all cases.
+    return NaturalSum<int64_t>(hdr_sz, copyInto.offset, parsingBuffer->contentSize()).value();
+}
+
+/// Copies at least some of the requested body bytes from MemObject memory,
+/// satisfying the copy() request.
+/// \pre canReadFromMemory() is true
+void
+store_client::readFromMemory()
+{
+    Assure(parsingBuffer);
+    const auto readInto = parsingBuffer->space().positionAt(nextHttpReadOffset());
+
+    debugs(90, 3, "copying HTTP body bytes from memory into " << readInto);
+    const auto sz = entry->mem_obj->data_hdr.copy(readInto);
+    Assure(sz > 0); // our canReadFromMemory() precondition guarantees that
+    parsingBuffer->appended(readInto.data, sz);
 }
 
 void
@@ -499,52 +528,132 @@ store_client::fileRead()
     assert(!flags.disk_io_pending);
     flags.disk_io_pending = true;
 
+    // mem->swap_hdr_sz is zero here during initial read(s)
+    const auto nextStoreReadOffset = NaturalSum<int64_t>(mem->swap_hdr_sz, nextHttpReadOffset()).value();
+
+    // XXX: If fileRead() is called when we do not yet know mem->swap_hdr_sz,
+    // then we must start reading from disk offset zero to learn it: we cannot
+    // compute correct HTTP response start offset on disk without it. However,
+    // late startSwapin() calls imply that the assertion below might fail.
+    Assure(mem->swap_hdr_sz > 0 || !nextStoreReadOffset);
+
+    // TODO: Remove this assertion. Introduced in 1998 commit 3157c72, it
+    // assumes that swapped out memory is freed unconditionally, but we no
+    // longer do that because trimMemory() path checks lowestMemReaderOffset().
+    // It is also misplaced: We are not swapping out anything here and should
+    // not care about any swapout invariants.
     if (mem->swap_hdr_sz != 0)
         if (entry->swappingOut())
-            assert(mem->swapout.sio->offset() > copyInto.offset + (int64_t)mem->swap_hdr_sz);
+            assert(mem->swapout.sio->offset() > nextStoreReadOffset);
+
+    // XXX: We should let individual cache_dirs limit the read size instead, but
+    // we cannot do that without more fixes and research because:
+    // * larger reads corrupt responses when cache_dir uses SharedMemory::get();
+    // * we do not know how to find all I/O code that assumes this limit;
+    // * performance effects of larger disk reads may be negative somewhere.
+    const decltype(StoreIOBuffer::length) maxReadSize = SM_PAGE_SIZE;
+
+    Assure(parsingBuffer);
+    // also, do not read more than we can return (via a copyInto.length buffer)
+    const auto readSize = std::min(copyInto.length, maxReadSize);
+    lastDiskRead = parsingBuffer->makeSpace(readSize).positionAt(nextStoreReadOffset);
+    debugs(90, 5, "into " << lastDiskRead);
 
     storeRead(swapin_sio,
-              copyInto.data,
-              copyInto.length,
-              copyInto.offset + mem->swap_hdr_sz,
+              lastDiskRead.data,
+              lastDiskRead.length,
+              lastDiskRead.offset,
               mem->swap_hdr_sz == 0 ? storeClientReadHeader
               : storeClientReadBody,
               this);
 }
 
 void
-store_client::readBody(const char *, ssize_t len)
+store_client::readBody(const char * const buf, const ssize_t lastIoResult)
 {
-    // Don't assert disk_io_pending here.. may be called by read_header
+    Assure(flags.disk_io_pending);
     flags.disk_io_pending = false;
     assert(_callback.pending());
-    debugs(90, 3, "storeClientReadBody: len " << len << "");
+    Assure(parsingBuffer);
+    debugs(90, 3, "got " << lastIoResult << " using " << *parsingBuffer);
 
-    if (len < 0)
+    if (lastIoResult < 0)
         return fail();
 
-    const auto rep = entry->mem_obj ? &entry->mem().baseReply() : nullptr;
-    if (copyInto.offset == 0 && len > 0 && rep && rep->sline.status() == Http::scNone) {
-        /* Our structure ! */
-        if (!entry->mem_obj->adjustableBaseReply().parseCharBuf(copyInto.data, headersEnd(copyInto.data, len))) {
-            debugs(90, DBG_CRITICAL, "ERROR: Could not parse headers from on disk object");
-        }
+    if (!lastIoResult) {
+        if (answeredOnce())
+            return noteNews();
+
+        debugs(90, DBG_CRITICAL, "ERROR: Truncated HTTP headers in on-disk object");
+        return fail();
     }
 
-    if (len > 0 && rep && entry->mem_obj->inmem_lo == 0 && entry->objectLen() <= (int64_t)Config.Store.maxInMemObjSize && Config.onoff.memory_cache_disk) {
-        storeGetMemSpace(len);
+    assert(lastDiskRead.data == buf);
+    lastDiskRead.length = lastIoResult;
+
+    parsingBuffer->appended(buf, lastIoResult);
+
+    // we know swap_hdr_sz by now and were reading beyond swap metadata because
+    // readHead() would have been called otherwise (to read swap metadata)
+    const auto swap_hdr_sz = entry->mem().swap_hdr_sz;
+    Assure(swap_hdr_sz > 0);
+    Assure(!Less(lastDiskRead.offset, swap_hdr_sz));
+
+    // Map lastDiskRead (i.e. the disk area we just read) to an HTTP reply part.
+    // The bytes are the same, but disk and HTTP offsets differ by swap_hdr_sz.
+    const auto httpOffset = lastDiskRead.offset - swap_hdr_sz;
+    const auto httpPart = StoreIOBuffer(lastDiskRead).positionAt(httpOffset);
+
+    maybeWriteFromDiskToMemory(httpPart);
+    handleBodyFromDisk();
+}
+
+/// de-serializes HTTP response (partially) read from disk storage
+void
+store_client::handleBodyFromDisk()
+{
+    // We cannot de-serialize on-disk HTTP response without MemObject because
+    // without MemObject::swap_hdr_sz we cannot know where that response starts.
+    Assure(entry->mem_obj);
+    Assure(entry->mem_obj->swap_hdr_sz > 0);
+
+    if (!answeredOnce()) {
+        // All on-disk responses have HTTP headers. First disk body read(s)
+        // include HTTP headers that we must parse (if needed) and skip.
+        const auto haveHttpHeaders = entry->mem_obj->baseReply().pstate == Http::Message::psParsed;
+        if (!haveHttpHeaders && !parseHttpHeadersFromDisk())
+            return;
+        skipHttpHeadersFromDisk();
+    }
+
+    noteNews();
+}
+
+/// Adds HTTP response data loaded from disk to the memory cache (if
+/// needed/possible). The given part may contain portions of HTTP response
+/// headers and/or HTTP response body.
+void
+store_client::maybeWriteFromDiskToMemory(const StoreIOBuffer &httpResponsePart)
+{
+    // XXX: Reject [memory-]uncachable/unshareable responses instead of assuming
+    // that an HTTP response should be written to MemObject's data_hdr (and that
+    // it may purge already cached entries) just because it "fits" and was
+    // loaded from disk. For example, this response may already be marked for
+    // release. The (complex) cachability decision(s) should be made outside
+    // (and obeyed by) this low-level code.
+    if (httpResponsePart.length && entry->mem_obj->inmem_lo == 0 && entry->objectLen() <= (int64_t)Config.Store.maxInMemObjSize && Config.onoff.memory_cache_disk) {
+        storeGetMemSpace(httpResponsePart.length);
+        // XXX: This "recheck" is not needed because storeGetMemSpace() cannot
+        // purge mem_hdr bytes of a locked entry, and we do lock ours. And
+        // inmem_lo offset itself should not be relevant to appending new bytes.
+        //
         // recheck for the above call may purge entry's data from the memory cache
         if (entry->mem_obj->inmem_lo == 0) {
-            /* Copy read data back into memory.
-             * copyInto.offset includes headers, which is what mem cache needs
-             */
-            if (copyInto.offset == entry->mem_obj->endOffset()) {
-                entry->mem_obj->write(StoreIOBuffer(len, copyInto.offset, copyInto.data));
-            }
+            // XXX: This code assumes a non-shared memory cache.
+            if (httpResponsePart.offset == entry->mem_obj->endOffset())
+                entry->mem_obj->write(httpResponsePart);
         }
     }
-
-    callback(len);
 }
 
 void
@@ -613,41 +722,25 @@ store_client::readHeader(char const *buf, ssize_t len)
     if (!object_ok)
         return;
 
+    Assure(parsingBuffer);
+    debugs(90, 3, "got " << len << " using " << *parsingBuffer);
+
     if (len < 0)
         return fail();
 
     try {
+        Assure(!parsingBuffer->contentSize());
+        parsingBuffer->appended(buf, len);
         Store::UnpackHitSwapMeta(buf, len, *entry);
+        parsingBuffer->consume(mem->swap_hdr_sz);
     } catch (...) {
         debugs(90, DBG_IMPORTANT, "ERROR: Failed to unpack Store entry metadata: " << CurrentException);
         fail();
         return;
     }
 
-    /*
-     * If our last read got some data the client wants, then give
-     * it to them, otherwise schedule another read.
-     */
-    size_t body_sz = len - mem->swap_hdr_sz;
-
-    if (copyInto.offset < static_cast<int64_t>(body_sz)) {
-        /*
-         * we have (part of) what they want
-         */
-        size_t copy_sz = min(copyInto.length, body_sz);
-        debugs(90, 3, "storeClientReadHeader: copying " << copy_sz << " bytes of body");
-        memmove(copyInto.data, copyInto.data + mem->swap_hdr_sz, copy_sz);
-
-        readBody(copyInto.data, copy_sz);
-
-        return;
-    }
-
-    /*
-     * we don't have what the client wants, but at least we now
-     * know the swap header size.
-     */
-    fileRead();
+    maybeWriteFromDiskToMemory(parsingBuffer->content());
+    handleBodyFromDisk();
 }
 
 /*
@@ -893,6 +986,63 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
     return true;
 }
 
+/// parses HTTP header bytes loaded from disk
+/// \returns false if fail() or scheduleDiskRead() has been called and, hence,
+/// the caller should just quit without any further action
+bool
+store_client::parseHttpHeadersFromDisk()
+{
+    try {
+        return tryParsingHttpHeaders();
+    } catch (...) {
+        // XXX: Our parser enforces Config.maxReplyHeaderSize limit, but our
+        // packer does not. Since packing might increase header size, we may
+        // cache a header that we cannot parse and get here. Same for MemStore.
+        debugs(90, DBG_CRITICAL, "ERROR: Cannot parse on-disk HTTP headers" <<
+               Debug::Extra << "exception: " << CurrentException <<
+               Debug::Extra << "raw input size: " << parsingBuffer->contentSize() << " bytes" <<
+               Debug::Extra << "current buffer capacity: " << parsingBuffer->capacity() << " bytes");
+        fail();
+        return false;
+    }
+}
+
+/// parseHttpHeadersFromDisk() helper
+/// \copydoc parseHttpHeaders()
+bool
+store_client::tryParsingHttpHeaders()
+{
+    Assure(parsingBuffer);
+    Assure(!copyInto.offset); // otherwise, parsingBuffer cannot have HTTP response headers
+    auto &adjustableReply = entry->mem().adjustableBaseReply();
+    if (adjustableReply.parseTerminatedPrefix(parsingBuffer->c_str(), parsingBuffer->contentSize()))
+        return true;
+
+    // TODO: Optimize by checking memory as well. For simplicity sake, we
+    // continue on the disk-reading path, but readFromMemory() can give us the
+    // missing header bytes immediately if a concurrent request put those bytes
+    // into memory while we were waiting for our disk response.
+    scheduleDiskRead();
+    return false;
+}
+
+/// skips HTTP header bytes previously loaded from disk
+void
+store_client::skipHttpHeadersFromDisk()
+{
+    const auto hdr_sz = entry->mem_obj->baseReply().hdr_sz;
+    Assure(hdr_sz > 0); // all on-disk responses have HTTP headers
+    if (Less(parsingBuffer->contentSize(), hdr_sz)) {
+        debugs(90, 5, "discovered " << hdr_sz << "-byte HTTP headers in memory after reading some of them from disk: " << *parsingBuffer);
+        parsingBuffer->consume(parsingBuffer->contentSize()); // skip loaded HTTP header prefix
+    } else {
+        parsingBuffer->consume(hdr_sz); // skip loaded HTTP headers
+        const auto httpBodyBytesAfterHeader = parsingBuffer->contentSize(); // may be zero
+        Assure(httpBodyBytesAfterHeader <= copyInto.length);
+        debugs(90, 5, "read HTTP body prefix: " << httpBodyBytesAfterHeader);
+    }
+}
+
 void
 store_client::dumpStats(MemBuf * output, int clientNumber) const
 {
@@ -901,7 +1051,7 @@ store_client::dumpStats(MemBuf * output, int clientNumber) const
 
     output->appendf("\tClient #%d, %p\n", clientNumber, _callback.callback_data);
     output->appendf("\t\tcopy_offset: %" PRId64 "\n", copyInto.offset);
-    output->appendf("\t\tcopy_size: %" PRIuSIZE "\n", copyInto.length);
+    output->appendf("\t\tcopy_size: %zu\n", copyInto.length);
     output->append("\t\tflags:", 8);
 
     if (flags.disk_io_pending)

@@ -1520,11 +1520,10 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
             bool allowDomainMismatch = false;
             if (Config.ssl_client.cert_error) {
                 ACLFilledChecklist check(Config.ssl_client.cert_error, nullptr);
-                check.sslErrors = new Security::CertErrors(Security::CertError(SQUID_X509_V_ERR_DOMAIN_MISMATCH, srvCert));
+                const auto sslErrors = std::make_unique<Security::CertErrors>(Security::CertError(SQUID_X509_V_ERR_DOMAIN_MISMATCH, srvCert));
+                check.sslErrors = sslErrors.get();
                 clientAclChecklistFill(check, http);
                 allowDomainMismatch = check.fastCheck().allowed();
-                delete check.sslErrors;
-                check.sslErrors = nullptr;
             }
 
             if (!allowDomainMismatch) {
@@ -1651,9 +1650,15 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
             http->setLogUriToRequestUri();
         } else
             debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (not this proxy)");
+
+        if (ForSomeCacheManager(request->url.path()))
+            request->flags.disableCacheUse("cache manager URL");
     }
 
     request->flags.internal = http->flags.internal;
+
+    if (request->url.getScheme() == AnyP::PROTO_CACHE_OBJECT)
+        request->flags.disableCacheUse("cache_object URL scheme");
 
     if (!isFtp) {
         // XXX: for non-HTTP messages instantiate a different Http::Message child type
@@ -3582,7 +3587,7 @@ ConnStateData::fillConnectionLevelDetails(ACLFilledChecklist &checklist) const
 
 #if USE_OPENSSL
     if (!checklist.sslErrors && sslServerBump)
-        checklist.sslErrors = cbdataReference(sslServerBump->sslErrors());
+        checklist.sslErrors = sslServerBump->sslErrors();
 #endif
 
     if (!checklist.rfc931[0]) // checklist creator may have supplied it already

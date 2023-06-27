@@ -16,7 +16,7 @@
 #include "win32.h"
 
 #include <csignal>
-#if HAVE_WIN32_PSAPI
+#if HAVE_PSAPI_H
 #include <psapi.h>
 #endif
 #if HAVE_MSWSOCK_H

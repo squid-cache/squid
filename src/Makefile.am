@@ -526,6 +526,7 @@ squid_LDADD = \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
 
 if ENABLE_LOADABLE_MODULES
@@ -1954,6 +1955,7 @@ tests_test_http_range_LDADD = \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
 tests_test_http_range_LDFLAGS = $(LIBADD_DL)
 
@@ -2337,6 +2339,7 @@ tests_testHttpRequest_LDADD = \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 
@@ -2632,6 +2635,7 @@ tests_testCacheManager_LDADD = \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
 
