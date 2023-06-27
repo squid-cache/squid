@@ -867,7 +867,7 @@ PeerSelector::selectAllParents()
 {
     /* Add all alive parents */
 
-    for (const auto &peer: Config.cachePeers) {
+    for (const auto &peer: cachePeers()) {
         const auto p = peer.get();
         /* XXX: neighbors.c lacks a public interface for enumerating
          * parents to a request so we have to dig some here..

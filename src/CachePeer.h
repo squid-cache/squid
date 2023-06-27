@@ -229,6 +229,7 @@ private:
     void countFailure();
 };
 
+/// cache_peer configuration storage
 class CachePeers
 {
 public:
@@ -238,22 +239,34 @@ public:
 
     static peer_t parseNeighborType(const char *);
 
+    /// parses a cache_peer line and stores the parsed CachePeer object
     void parse(ConfigParser &parser);
-    void dump(StoreEntry *, const char *name);
-    void clean();
+    /// dumps the cache peer list into the StoreEntry object
+    void dump(StoreEntry *, const char *name) const;
+    /// cleans the cache peer list
+    void clear() { cachePeers.clear(); }
 
-    iterator begin() { return cachePeers->begin(); }
-    iterator end() { return cachePeers->end(); }
-    const_iterator cbegin() const { return cachePeers->cbegin(); }
-    const_iterator cend() const { return cachePeers->cend(); }
+    iterator begin() { return cachePeers.begin(); }
+    iterator end() { return cachePeers.end(); }
+    const_iterator cbegin() const { return cachePeers.cbegin(); }
+    const_iterator cend() const { return cachePeers.cend(); }
 
-    size_t size() const { return cachePeers->size(); }
-    const CachePeerList::value_type &at(const size_t pos);
+    /// the current number of CachePeer objects
+    size_t size() const { return cachePeers.size(); }
+
+    /// deletes a CachePeer object
+    void remove(CachePeer *);
+
+    const_iterator firstPing() const;
+    void advanceFirstPing();
 
 private:
-    CachePeerList *cachePeers = nullptr;
-    iterator first_ping ;
+    CachePeerList cachePeers; ///< the list of parsed CachePeer objects
+    // TODO: document this field
+    size_t firstPing_ = 0;
 };
+
+CachePeers & cachePeers();
 
 /// reacts to a successful establishment of a connection to an origin server or cache_peer
 /// \param peer nil if Squid established a connection to an origin server

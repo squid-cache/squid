@@ -23,6 +23,8 @@
 #include "Store.h"
 #include "util.h"
 
+#include <iterator>
+
 CBDATA_CLASS_INIT(CachePeer);
 
 CachePeer::CachePeer(const char * const hostname):
@@ -246,12 +248,12 @@ CachePeers::parseNeighborType(const char *s)
 }
 
 void
-CachePeers::dump(StoreEntry * entry, const char *name)
+CachePeers::dump(StoreEntry *entry, const char *name) const
 {
     NeighborTypeDomainList *t;
     LOCAL_ARRAY(char, xname, 128);
 
-    for (const auto &peer: *cachePeers) {
+    for (const auto &peer: cachePeers) {
         const auto p = peer.get();
         storeAppendPrintf(entry, "%s %s %s %d %d name=%s",
                           name,
@@ -277,25 +279,15 @@ CachePeers::dump(StoreEntry * entry, const char *name)
 }
 
 void
-CachePeers::clean()
-{
-    if (cachePeers) {
-        cachePeers->clear();
-        delete cachePeers;
-        cachePeers = nullptr;
-    }
-}
-
-void
 CachePeers::parse(ConfigParser &)
 {
     char *host_str = ConfigParser::NextToken();
     if (!host_str)
-        throw TextException("cache_peer hostname is missing", Here());
+        throw TextException("hostname is missing", Here());
 
     char *token = ConfigParser::NextToken();
     if (!token)
-        throw TextException("cache_peer type is missing", Here());
+        throw TextException("type is missing", Here());
 
     const auto p = new CachePeer(host_str);
 
@@ -310,7 +302,7 @@ CachePeers::parse(ConfigParser &)
 
     if (!p->http_port) {
         delete p;
-        throw TextException("cache_peer port is missing", Here());
+        throw TextException("port is missing", Here());
     }
 
     p->icp.port = GetUdpService();
@@ -519,19 +511,48 @@ CachePeers::parse(ConfigParser &)
     if (p->secure.encryptTransport)
         p->secure.parseOptions();
 
-    if (!cachePeers)
-        cachePeers = new CachePeerList;
+    cachePeers.emplace_back(p);
 
-    cachePeers->emplace_back(p);
-
-    p->index =  cachePeers->size();
+    p->index = cachePeers.size();
 
     peerClearRRStart();
 }
 
-const CachePeers::CachePeerList::value_type &
-CachePeers::at(const size_t pos)
+CachePeers::CachePeerList::const_iterator
+CachePeers::firstPing() const
 {
-    static const CachePeerList::value_type noPeer;
-    return cachePeers->size() < pos ? cachePeers->at(pos) : noPeer;
+    auto it = cachePeers.begin();
+    std::advance(it, firstPing_);
+    return it;
 }
+
+void
+CachePeers::advanceFirstPing()
+{
+    assert(firstPing_ <= size());
+    if (++firstPing_== size())
+        firstPing_ = 0;
+}
+
+void
+CachePeers::remove(CachePeer *p)
+{
+    for (auto it = cachePeers.begin(); it != cachePeers.end(); ++it) {
+        if (it->get() == p) {
+            cachePeers.erase(it);
+            break;
+        }
+    }
+    firstPing_ = 0;
+}
+
+CachePeers &
+cachePeers()
+{
+    if (!Config.cachePeers) {
+        static CachePeers peers;
+        return peers;
+    }
+    return *Config.cachePeers;
+}
+

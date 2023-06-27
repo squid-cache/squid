@@ -60,7 +60,7 @@ peerUserHashInit(void)
 
     peerUserHashRegisterWithCacheManager();
 
-    for (const auto &p: Config.cachePeers) {
+    for (const auto &p: cachePeers()) {
         if (!p->options.userhash)
             continue;
 
@@ -81,7 +81,7 @@ peerUserHashInit(void)
 
     auto P = userhash_peers;
     /* Build a list of the found peers and calculate hashes and load factors */
-    for (const auto &p: Config.cachePeers) {
+    for (const auto &p: cachePeers()) {
         if (!p->options.userhash)
             continue;
 
@@ -210,10 +210,10 @@ peerUserHashCachemgr(StoreEntry * sentry)
                       "Factor",
                       "Actual");
 
-    for (const auto &p: Config.cachePeers)
+    for (const auto &p: cachePeers())
         sumfetches += p->stats.fetches;
 
-    for (const auto &p: Config.cachePeers) {
+    for (const auto &p: cachePeers()) {
         storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",
                           p->name, p->userhash.hash,
                           p->userhash.load_multiplier,

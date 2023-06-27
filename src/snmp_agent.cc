@@ -194,7 +194,7 @@ snmp_meshPtblFn(variable_list * Var, snint * ErrP)
     *ErrP = SNMP_ERR_NOERROR;
 
     u_int index = Var->name[LEN_SQ_MESH + 3] ;
-    for (const auto &peer: Config.cachePeers) {
+    for (const auto &peer: cachePeers()) {
         if (p->index == index) {
             laddr = peer->in_addr ;
             p = peer.get();

@@ -244,7 +244,7 @@ RunnerRegistrationEntry(PeerPoolMgrsRr);
 void
 PeerPoolMgrsRr::syncConfig()
 {
-    for (const auto &peer: Config.cachePeers) {
+    for (const auto &peer: cachePeers()) {
         const auto p = peer.get();
         // On reconfigure, Squid deletes the old config (and old peers in it),
         // so should always be dealing with a brand new configuration.

@@ -24,7 +24,6 @@
 #include "base/PackableStream.h"
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
-#include "CachePeer.h"
 #include "ConfigOption.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
@@ -973,7 +972,7 @@ configDoConfigure(void)
 #endif
     }
 
-    for (const auto &p: Config.cachePeers) {
+    for (const auto &p: cachePeers()) {
 
         // default value for ssldomain= is the peer host/IP
         if (p->secure.sslDomain.isEmpty())
@@ -2039,21 +2038,32 @@ parse_cachedir(Store::DiskConfig *swap)
 }
 
 static void
-dump_peer(StoreEntry * entry, const char *name, CachePeers &p)
+dump_peer(StoreEntry * entry, const char *name, const CachePeers *peers)
 {
-    p.dump(entry, name);
-}
-
-static void parse_peer(CachePeers *peers)
-{
-    assert(peers);
-    peers->parse(LegacyParser);
+    if (peers)
+        peers->dump(entry, name);
 }
 
 static void
-free_peer(CachePeers *peers)
+free_peer(CachePeers **peers)
 {
-    peers->clean();
+    if (const auto p = *peers) {
+        p->clear();
+        delete p;
+        *peers = nullptr;
+    }
+}
+
+static void parse_peer(CachePeers **peers)
+{
+    try {
+        if (!*peers)
+            *peers = new CachePeers;
+        (*peers)->parse(LegacyParser);
+    } catch (...) {
+        free_peer(peers);
+        throw;
+    }
 }
 
 static void

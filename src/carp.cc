@@ -62,7 +62,7 @@ carpInit(void)
 
     /* find out which peers we have */
 
-    for (const auto &p: Config.cachePeers) {
+    for (const auto &p: cachePeers()) {
         if (!p->options.carp)
             continue;
 
@@ -83,7 +83,7 @@ carpInit(void)
 
     auto P = carp_peers;
     /* Build a list of the found peers and calculate hashes and load factors */
-    for (const auto &p: Config.cachePeers) {
+    for (const auto &p: cachePeers()) {
         if (!p->options.carp)
             continue;
 
@@ -107,8 +107,7 @@ carpInit(void)
             p->carp.load_factor = 0.0;
 
         /* add it to our list of peers */
-        *P = cbdataReference(p.get());
-        ++P;
+        *P++ = cbdataReference(p.get());
     }
 
     /* Sort our list on weight */
@@ -230,10 +229,10 @@ carpCachemgr(StoreEntry * sentry)
                       "Factor",
                       "Actual");
 
-    for (const auto &p: Config.cachePeers)
+    for (const auto &p: cachePeers())
         sumfetches += p->stats.fetches;
 
-    for (const auto &p: Config.cachePeers) {
+    for (const auto &p: cachePeers()) {
         storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",
                           p->name, p->carp.hash,
                           p->carp.load_multiplier,

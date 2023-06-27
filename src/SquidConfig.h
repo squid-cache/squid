@@ -244,8 +244,7 @@ public:
     size_t tcpRcvBufsz;
     size_t udpMaxHitObjsz;
     wordlist *mcast_group_list;
-    CachePeer *peers;
-    CachePeers cachePeers;
+    CachePeers *cachePeers;
     int npeers;
 
     struct {
