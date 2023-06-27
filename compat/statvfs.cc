@@ -21,7 +21,7 @@
 int
 xstatvfs(const char *path, struct statvfs *sfs)
 {
-#if !HAVE_STATFS && _SQUID_WINDOWS_
+#if !HAVE_STATFS && (_SQUID_MINGW_ || _SQUID_WINDOWS_)
     char drive[4];
     DWORD spc, bps, freec, totalc;
     DWORD vsn, maxlen, flags;
