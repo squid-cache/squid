@@ -481,7 +481,10 @@ CacheManager::PutCommonResponseHeaders(HttpReply &response, const char *httpOrig
     }
 
     std::unique_ptr<HttpHdrCc> cc(new HttpHdrCc());
+    // this is honored by more caches but allows pointless revalidation;
+    // revalidation will always fail because we do not support it (yet?)
     cc->noCache(String());
+    // this is honored by fewer caches but prohibits pointless revalidation
     cc->noStore(true);
     response.putCc(cc.release());
 }
