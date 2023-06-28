@@ -68,6 +68,7 @@
 #include "compat/os/hpux.h"
 #include "compat/os/linux.h"
 #include "compat/os/macosx.h"
+#include "compat/os/mingw.h"
 #include "compat/os/mswindows.h"
 #include "compat/os/netbsd.h"
 #include "compat/os/openbsd.h"

@@ -13,10 +13,23 @@
 #include "base/AsyncCall.h"
 #include "base/forward.h"
 #include "dlink.h"
+#include "store/ParsingBuffer.h"
 #include "StoreIOBuffer.h"
 #include "StoreIOState.h"
 
-typedef void STCB(void *, StoreIOBuffer);   /* store callback */
+/// A storeClientCopy() callback function.
+///
+/// Upon storeClientCopy() success, StoreIOBuffer::flags.error is zero, and
+/// * HTTP response headers (if any) are available via MemObject::freshestReply();
+/// * HTTP response body bytes (if any) are available via StoreIOBuffer.
+///
+/// STCB callbacks may use response semantics to detect certain EOF conditions.
+/// Callbacks that expect HTTP headers may call store_client::atEof(). Similar
+/// to clientStreamCallback() callbacks, callbacks dedicated to receiving HTTP
+/// bodies may use zero StoreIOBuffer::length as an EOF condition.
+///
+/// Errors are indicated by setting StoreIOBuffer flags.error.
+using STCB = void (void *, StoreIOBuffer);
 
 class StoreEntry;
 class ACLFilledChecklist;
@@ -88,7 +101,13 @@ public:
 
     void dumpStats(MemBuf * output, int clientNumber) const;
 
-    int64_t cmp_offset;
+    // TODO: When STCB gets a dedicated Answer type, move this info there.
+    /// Whether the last successful storeClientCopy() answer was known to
+    /// contain the last body bytes of the HTTP response
+    /// \retval true requesting bytes at higher offsets is futile
+    /// \sa STCB
+    bool atEof() const { return atEof_; }
+
 #if STORE_CLIENT_LIST_DEBUG
 
     void *owner;
@@ -123,18 +142,27 @@ public:
     dlink_node node;
 
 private:
-    bool moreToSend() const;
+    bool moreToRead() const;
+    bool canReadFromMemory() const;
+    bool answeredOnce() const { return answers >= 1; }
+    bool sendingHttpHeaders() const;
+    int64_t nextHttpReadOffset() const;
 
     void fileRead();
     void scheduleDiskRead();
-    void scheduleMemRead();
+    void readFromMemory();
     void scheduleRead();
     bool startSwapin();
+    void handleBodyFromDisk();
+    void maybeWriteFromDiskToMemory(const StoreIOBuffer &);
+
+    bool parseHttpHeadersFromDisk();
+    bool tryParsingHttpHeaders();
+    void skipHttpHeadersFromDisk();
 
     void fail();
     void callback(ssize_t);
     void noteCopiedBytes(size_t);
-    void noteEof();
     void noteNews();
     void finishCallback();
     static void FinishCallback(store_client *);
@@ -142,20 +170,30 @@ private:
     int type;
     bool object_ok;
 
+    /// \copydoc atEof()
+    bool atEof_;
+
     /// Storage and metadata associated with the current copy() request. Ought
     /// to be ignored when not answering a copy() request.
     StoreIOBuffer copyInto;
 
-    /// The number of bytes loaded from Store into copyInto while answering the
-    /// current copy() request. Ought to be ignored when not answering.
-    size_t copiedSize;
+    /// the total number of finishCallback() calls
+    uint64_t answers;
+
+    /// Accumulates raw bytes read from Store while answering the current copy()
+    /// request. Buffer contents depends on the source and parsing stage; it may
+    /// hold (parts of) swap metadata, HTTP response headers, and/or HTTP
+    /// response body bytes.
+    std::optional<Store::ParsingBuffer> parsingBuffer;
+
+    StoreIOBuffer lastDiskRead; ///< buffer used for the last storeRead() call
 
     /* Until we finish stuffing code into store_client */
 
 public:
 
     struct Callback {
-        Callback ():callback_handler(nullptr), callback_data(nullptr) {}
+        Callback() = default;
 
         Callback (STCB *, void *);
 
@@ -164,8 +202,8 @@ public:
         /// delivery to the STCB callback_handler.
         bool pending() const;
 
-        STCB *callback_handler;
-        void *callback_data;
+        STCB *callback_handler = nullptr; ///< where to deliver the answer
+        CallbackData cbData; ///< the first STCB callback parameter
         CodeContextPointer codeContext; ///< Store client context
 
         /// a scheduled asynchronous finishCallback() call (or nil)
@@ -173,7 +211,18 @@ public:
     } _callback;
 };
 
+/// Asynchronously read HTTP response headers and/or body bytes from Store.
+///
+/// The requested zero-based HTTP body offset is specified via the
+/// StoreIOBuffer::offset field. The first call (for a given store_client
+/// object) must specify zero offset.
+///
+/// The requested HTTP body portion size is specified via the
+/// StoreIOBuffer::length field. The function may return fewer body bytes.
+///
+/// See STCB for result delivery details.
 void storeClientCopy(store_client *, StoreEntry *, StoreIOBuffer, STCB *, void *);
+
 store_client* storeClientListAdd(StoreEntry * e, void *data);
 int storeUnregister(store_client * sc, StoreEntry * e, void *data);
 int storePendingNClients(const StoreEntry * e);

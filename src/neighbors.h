@@ -60,7 +60,6 @@ void peerAlive(CachePeer *);
 lookup_t peerDigestLookup(CachePeer * p, PeerSelector *);
 CachePeer *neighborsDigestSelect(PeerSelector *);
 void peerNoteDigestLookup(HttpRequest * request, CachePeer * p, lookup_t lookup);
-void peerNoteDigestGone(CachePeer * p);
 int neighborUp(const CachePeer * e);
 const char *neighborTypeStr(const CachePeer * e);
 peer_t neighborType(const CachePeer *, const AnyP::Uri &);

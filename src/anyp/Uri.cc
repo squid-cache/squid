@@ -16,6 +16,7 @@
 #include "parser/Tokenizer.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
+#include "SquidMath.h"
 #include "SquidString.h"
 
 static const char valid_hostname_chars_u[] =
@@ -71,7 +72,7 @@ AnyP::Uri::Encode(const SBuf &buf, const CharacterSet &ignore)
     while (!tk.atEnd()) {
         // TODO: Add Tokenizer::parseOne(void).
         const auto ch = tk.remaining()[0];
-        output.appendf("%%%02X", static_cast<unsigned int>(ch)); // TODO: Optimize using a table
+        output.appendf("%%%02X", static_cast<unsigned int>(static_cast<unsigned char>(ch))); // TODO: Optimize using a table
         (void)tk.skip(ch);
 
         if (tk.prefix(goodSection, ignore))
@@ -285,24 +286,19 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
         AnyP::UriScheme scheme;
 
         if (method == Http::METHOD_CONNECT) {
-            /*
-             * RFC 7230 section 5.3.3:  authority-form = authority
-             *  "excluding any userinfo and its "@" delimiter"
-             *
-             * RFC 3986 section 3.2:    authority = [ userinfo "@" ] host [ ":" port ]
-             *
-             * As an HTTP(S) proxy we assume HTTPS (443) if no port provided.
-             */
-            foundPort = 443;
+            // For CONNECTs, RFC 9110 Section 9.3.6 requires "only the host and
+            // port number of the tunnel destination, separated by a colon".
 
-            // XXX: use tokenizer
-            auto B = tok.buf();
-            const char *url = B.c_str();
+            const auto rawHost = parseHost(tok);
+            Assure(rawHost.length() < sizeof(foundHost));
+            SBufToCstring(foundHost, rawHost);
 
-            if (sscanf(url, "[%[^]]]:%d", foundHost, &foundPort) < 1)
-                if (sscanf(url, "%[^:]:%d", foundHost, &foundPort) < 1)
-                    return false;
+            if (!tok.skip(':'))
+                throw TextException("missing required :port in CONNECT target", Here());
+            foundPort = parsePort(tok);
 
+            if (!tok.remaining().isEmpty())
+                throw TextException("garbage after host:port in CONNECT target", Here());
         } else {
 
             scheme = uriParseScheme(tok);
@@ -556,6 +552,89 @@ AnyP::Uri::parseUrn(Parser::Tokenizer &tok)
     // TODO validate path characters
     path(tok.remaining());
     debugs(23, 3, "Split URI into proto=urn, nid=" << nid << ", " << Raw("path",path().rawContent(),path().length()));
+}
+
+/// Extracts and returns a (suspected but only partially validated) uri-host
+/// IPv6address, IPv4address, or reg-name component. This function uses (and
+/// quotes) RFC 3986, Section 3.2.2 syntax rules.
+SBuf
+AnyP::Uri::parseHost(Parser::Tokenizer &tok) const
+{
+    // host = IP-literal / IPv4address / reg-name
+
+    // XXX: CharacterSets below reject uri-host values containing whitespace
+    // (e.g., "10.0.0. 1"). That is not a bug, but the uri_whitespace directive
+    // can be interpreted as if it applies to uri-host and this code. TODO: Fix
+    // uri_whitespace and the code using it to exclude uri-host (and URI scheme,
+    // port, etc.) from that directive scope.
+
+    // IP-literal = "[" ( IPv6address / IPvFuture  ) "]"
+    if (tok.skip('[')) {
+        // Add "." because IPv6address in RFC 3986 includes ls32, which includes
+        // IPv4address: ls32 = ( h16 ":" h16 ) / IPv4address
+        // This set rejects IPvFuture that needs a "v" character.
+        static const CharacterSet IPv6chars = (
+                CharacterSet::HEXDIG + CharacterSet("colon", ":") + CharacterSet("period", ".")).rename("IPv6");
+        SBuf ipv6ish;
+        if (!tok.prefix(ipv6ish, IPv6chars))
+            throw TextException("malformed or unsupported bracketed IP address in uri-host", Here());
+
+        if (!tok.skip(']'))
+            throw TextException("IPv6 address is missing a closing bracket in uri-host", Here());
+
+        // This rejects bracketed IPv4address and domain names because they lack ":".
+        if (ipv6ish.find(':') == SBuf::npos)
+            throw TextException("bracketed IPv6 address is missing a colon in uri-host", Here());
+
+        // This rejects bracketed non-IP addresses that our caller would have
+        // otherwise mistaken for a domain name (e.g., '[127.0.0:1]').
+        Ip::Address ipv6check;
+        if (!ipv6check.fromHost(ipv6ish.c_str()))
+            throw TextException("malformed bracketed IPv6 address in uri-host", Here());
+
+        return ipv6ish;
+    }
+
+    // no brackets implies we are looking at IPv4address or reg-name
+
+    // XXX: This code does not detect/reject some bad host values (e.g. "!#$%&"
+    // and "1.2.3.4.5"). TODO: Add more checks here, after migrating the
+    // non-CONNECT uri-host parsing code to use us.
+
+    SBuf otherHost; // IPv4address-ish or reg-name-ish;
+    // ":" is not in TCHAR so we will stop before any port specification
+    if (tok.prefix(otherHost, CharacterSet::TCHAR))
+        return otherHost;
+
+    throw TextException("malformed IPv4 address or host name in uri-host", Here());
+}
+
+/// Extracts and returns an RFC 3986 URI authority port value (with additional
+/// restrictions). The RFC defines port as a possibly empty sequence of decimal
+/// digits. We reject certain ports (that are syntactically valid from the RFC
+/// point of view) because we are worried that Squid and other traffic handlers
+/// may dangerously mishandle unusual (and virtually always bogus) port numbers.
+/// Rejected ports cannot be successfully used by Squid itself.
+int
+AnyP::Uri::parsePort(Parser::Tokenizer &tok) const
+{
+    if (tok.skip('0'))
+        throw TextException("zero or zero-prefixed port", Here());
+
+    int64_t rawPort = 0;
+    if (!tok.int64(rawPort, 10, false)) // port = *DIGIT
+        throw TextException("malformed or missing port", Here());
+
+    Assure(rawPort > 0);
+    constexpr KnownPort portMax = 65535; // TODO: Make this a class-scope constant and REuse it.
+    constexpr auto portStorageMax = std::numeric_limits<Port::value_type>::max();
+    static_assert(!Less(portStorageMax, portMax), "Port type can represent the maximum valid port number");
+    if (Less(portMax, rawPort))
+        throw TextException("huge port", Here());
+
+    // TODO: Return KnownPort after migrating the non-CONNECT uri-host parsing
+    // code to use us (so that foundPort "int" disappears or starts using Port).
+    return NaturalCast<int>(rawPort);
 }
 
 void

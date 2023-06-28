@@ -1013,14 +1013,6 @@ or obtained by writing to the Free Software Foundation, Inc.,
 
 ==============================================================================
 
-src/access_log.cc:
-
-mcast_encode() in src/access_log.c is derived from Mark Atkinson's
-(mark_a@cix.compulink.co.uk) "Tiny Encryption Algorithm".
-http://www.io.com/~paulhart/game/algorithms/tea.html
-
-==============================================================================
-
 src/acl/external/AD_group/:
 
  * (C)2008-2009 Guido Serassio - Acme Consulting S.r.l.

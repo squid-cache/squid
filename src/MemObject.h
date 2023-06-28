@@ -89,6 +89,15 @@ public:
     bool appliedUpdates = false;
 
     void stat (MemBuf * mb) const;
+
+    /// The offset of the last memory-stored HTTP response byte plus one.
+    /// * HTTP response headers (if any) are stored at offset zero.
+    /// * HTTP response body byte[n] usually has offset (hdr_sz + n), where
+    ///   hdr_sz is the size of stored HTTP response headers (zero if none); and
+    ///   n is the corresponding byte offset in the whole resource body.
+    ///   However, some 206 (Partial Content) response bodies are stored (and
+    ///   retrieved) as regular 200 response bodies, disregarding offsets of
+    ///   their body parts. \sa HttpStateData::decideIfWeDoRanges().
     int64_t endOffset () const;
 
     /// sets baseReply().hdr_sz (i.e. written reply headers size) to endOffset()
