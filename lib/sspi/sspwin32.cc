@@ -20,7 +20,7 @@ template <typename T>
 T
 farproc_cast(FARPROC in)
 {
-#if defined(__GCC__)
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-function-type"
     return reinterpret_cast<T>(in);
