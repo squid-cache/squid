@@ -13,6 +13,7 @@
 #include "base/AsyncCallbacks.h"
 #include "base/CbcPointer.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "client_db.h"
 #include "comm.h"
 #include "comm/Connection.h"
@@ -725,7 +726,7 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
 {
     oid *instance = nullptr;
 
-    if (!cachePeers().size()) {
+    if (!CurrentCachePeers().size()) {
         debugs(49, 6, "snmp peer_Inst: No Peers.");
         current = current->parent->parent->parent->leaves[1];
         while ((current) && (!current->parsefunction))
@@ -743,13 +744,13 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
         *len += 1;
     } else {
         const auto no = name[current->len];
-        if (no < cachePeers().size()) {
+        if (no < CurrentCachePeers().size()) {
             debugs(49, 6, "snmp peer_Inst: Encode peer #" << no);
             instance = (oid *)xmalloc(sizeof(*name) * (current->len + 1 ));
             memcpy(instance, name, (sizeof(*name) * current->len ));
             instance[current->len] = no + 1 ; // i.e. the next index on cache_peeer table.
         } else {
-            debugs(49, 6, "snmp peer_Inst: We have " << cachePeers().size() << " peers. Can't find #" << no);
+            debugs(49, 6, "snmp peer_Inst: We have " << CurrentCachePeers().size() << " peers. Can't find #" << no);
             return (instance);
         }
     }

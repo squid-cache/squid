@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "carp.h"
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
@@ -62,7 +63,7 @@ carpInit(void)
 
     /* find out which peers we have */
 
-    for (const auto &p: cachePeers()) {
+    for (const auto &p: CurrentCachePeers()) {
         if (!p->options.carp)
             continue;
 
@@ -83,7 +84,7 @@ carpInit(void)
 
     auto P = carp_peers;
     /* Build a list of the found peers and calculate hashes and load factors */
-    for (const auto &p: cachePeers()) {
+    for (const auto &p: CurrentCachePeers()) {
         if (!p->options.carp)
             continue;
 
@@ -229,10 +230,10 @@ carpCachemgr(StoreEntry * sentry)
                       "Factor",
                       "Actual");
 
-    for (const auto &p: cachePeers())
+    for (const auto &p: CurrentCachePeers())
         sumfetches += p->stats.fetches;
 
-    for (const auto &p: cachePeers()) {
+    for (const auto &p: CurrentCachePeers()) {
         storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",
                           p->name, p->carp.hash,
                           p->carp.load_multiplier,

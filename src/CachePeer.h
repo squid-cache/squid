@@ -15,11 +15,9 @@
 #include "http/StatusCode.h"
 #include "icp_opcode.h"
 #include "ip/Address.h"
-#include "mem/PoolingAllocator.h"
 #include "security/PeerOptions.h"
 
 #include <iosfwd>
-#include <vector>
 
 //TODO: remove, it is unconditionally defined and always used.
 #define PEER_MULTICAST_SIBLINGS 1
@@ -227,45 +225,6 @@ public:
 private:
     void countFailure();
 };
-
-/// cache_peer configuration storage
-class CachePeers
-{
-public:
-    using CachePeerList = std::vector< std::unique_ptr<CachePeer>, PoolingAllocator< std::unique_ptr<CachePeer> > >;
-    using iterator = CachePeerList::iterator;
-    using const_iterator = CachePeerList::const_iterator;
-
-    static peer_t parseNeighborType(const char *);
-
-    /// parses a cache_peer line and stores the parsed CachePeer object
-    void parse(ConfigParser &parser);
-    /// dumps the cache peer list into the StoreEntry object
-    void dump(StoreEntry *, const char *name) const;
-    /// cleans the cache peer list
-    void clear() { cachePeers.clear(); }
-
-    iterator begin() { return cachePeers.begin(); }
-    iterator end() { return cachePeers.end(); }
-    const_iterator cbegin() const { return cachePeers.cbegin(); }
-    const_iterator cend() const { return cachePeers.cend(); }
-
-    /// the current number of CachePeer objects
-    size_t size() const { return cachePeers.size(); }
-
-    /// deletes a CachePeer object
-    void remove(CachePeer *);
-
-    const_iterator firstPing() const;
-    void advanceFirstPing();
-
-private:
-    CachePeerList cachePeers; ///< the list of parsed CachePeer objects
-    // TODO: document this field
-    size_t firstPing_ = 0;
-};
-
-CachePeers & cachePeers();
 
 /// reacts to a successful establishment of a connection to an origin server or cache_peer
 /// \param peer nil if Squid established a connection to an origin server

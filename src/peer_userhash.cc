@@ -14,6 +14,7 @@
 
 #include "auth/UserRequest.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "globals.h"
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
@@ -60,7 +61,7 @@ peerUserHashInit(void)
 
     peerUserHashRegisterWithCacheManager();
 
-    for (const auto &p: cachePeers()) {
+    for (const auto &p: CurrentCachePeers()) {
         if (!p->options.userhash)
             continue;
 
@@ -81,7 +82,7 @@ peerUserHashInit(void)
 
     auto P = userhash_peers;
     /* Build a list of the found peers and calculate hashes and load factors */
-    for (const auto &p: cachePeers()) {
+    for (const auto &p: CurrentCachePeers()) {
         if (!p->options.userhash)
             continue;
 
@@ -210,10 +211,10 @@ peerUserHashCachemgr(StoreEntry * sentry)
                       "Factor",
                       "Actual");
 
-    for (const auto &p: cachePeers())
+    for (const auto &p: CurrentCachePeers())
         sumfetches += p->stats.fetches;
 
-    for (const auto &p: cachePeers()) {
+    for (const auto &p: CurrentCachePeers()) {
         storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",
                           p->name, p->userhash.hash,
                           p->userhash.load_multiplier,

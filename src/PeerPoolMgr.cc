@@ -11,6 +11,7 @@
 #include "base/AsyncCallbacks.h"
 #include "base/RunnersRegistry.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "debug/Stream.h"
@@ -244,7 +245,7 @@ RunnerRegistrationEntry(PeerPoolMgrsRr);
 void
 PeerPoolMgrsRr::syncConfig()
 {
-    for (const auto &peer: cachePeers()) {
+    for (const auto &peer: CurrentCachePeers()) {
         const auto p = peer.get();
         // On reconfigure, Squid deletes the old config (and old peers in it),
         // so should always be dealing with a brand new configuration.

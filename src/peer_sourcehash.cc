@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
 #include "neighbors.h"
@@ -53,7 +54,7 @@ peerSourceHashInit(void)
     n_sourcehash_peers = 0;
     /* find out which peers we have */
 
-    for (const auto &p: cachePeers()) {
+    for (const auto &p: CurrentCachePeers()) {
         if (!p->options.sourcehash)
             continue;
 
@@ -76,7 +77,7 @@ peerSourceHashInit(void)
 
     auto P = sourcehash_peers;
     /* Build a list of the found peers and calculate hashes and load factors */
-    for (const auto &p: cachePeers()) {
+    for (const auto &p: CurrentCachePeers()) {
         if (!p->options.sourcehash)
             continue;
 
@@ -202,10 +203,10 @@ peerSourceHashCachemgr(StoreEntry * sentry)
                       "Factor",
                       "Actual");
 
-    for (const auto &p: cachePeers())
+    for (const auto &p: CurrentCachePeers())
         sumfetches += p->stats.fetches;
 
-    for (const auto &p: cachePeers()) {
+    for (const auto &p: CurrentCachePeers()) {
         storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",
                           p->name, p->sourcehash.hash,
                           p->sourcehash.load_multiplier,

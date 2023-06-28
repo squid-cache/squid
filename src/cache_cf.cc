@@ -24,6 +24,7 @@
 #include "base/PackableStream.h"
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
+#include "CachePeers.h"
 #include "ConfigOption.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
@@ -972,7 +973,7 @@ configDoConfigure(void)
 #endif
     }
 
-    for (const auto &p: cachePeers()) {
+    for (const auto &p: CurrentCachePeers()) {
 
         // default value for ssldomain= is the peer host/IP
         if (p->secure.sslDomain.isEmpty())

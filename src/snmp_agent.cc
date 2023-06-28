@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "cache_snmp.h"
 #include "CachePeer.h"
+#include "CachePeers.h"
 #include "globals.h"
 #include "mem/Meter.h"
 #include "mem/Stats.h"
@@ -194,7 +195,7 @@ snmp_meshPtblFn(variable_list * Var, snint * ErrP)
     *ErrP = SNMP_ERR_NOERROR;
 
     u_int index = Var->name[LEN_SQ_MESH + 3] ;
-    for (const auto &peer: cachePeers()) {
+    for (const auto &peer: CurrentCachePeers()) {
         if (p->index == index) {
             laddr = peer->in_addr ;
             p = peer.get();
