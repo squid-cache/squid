@@ -17,6 +17,7 @@
 #include "error/ExceptionErrorDetail.h"
 #include "errorpage.h"
 #include "fde.h"
+#include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "mgr/Action.h"
@@ -38,6 +39,7 @@
 #include "wordlist.h"
 
 #include <algorithm>
+#include <memory>
 
 /// \ingroup CacheManagerInternal
 #define MGR_PASSWD_SZ 128
@@ -369,14 +371,9 @@ CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request,
          */
         rep->header.putAuth("Basic", actionName);
 #endif
-        // Allow cachemgr and other XHR scripts access to our version string
-        if (request->header.has(Http::HdrType::ORIGIN)) {
-            rep->header.putExt("Access-Control-Allow-Origin",request->header.getStr(Http::HdrType::ORIGIN));
-#if HAVE_AUTH_MODULE_BASIC
-            rep->header.putExt("Access-Control-Allow-Credentials","true");
-#endif
-            rep->header.putExt("Access-Control-Expose-Headers","Server");
-        }
+
+        const auto originOrNil = request->header.getStr(Http::HdrType::ORIGIN);
+        PutCommonResponseHeaders(*rep, originOrNil);
 
         /* store the reply */
         entry->replaceHttpReply(rep);
@@ -404,14 +401,10 @@ CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request,
         HttpReply *rep = err.BuildHttpReply();
         if (strncmp(rep->body.content(),"Internal Error:", 15) == 0)
             rep->sline.set(Http::ProtocolVersion(1,1), Http::scNotFound);
-        // Allow cachemgr and other XHR scripts access to our version string
-        if (request->header.has(Http::HdrType::ORIGIN)) {
-            rep->header.putExt("Access-Control-Allow-Origin",request->header.getStr(Http::HdrType::ORIGIN));
-#if HAVE_AUTH_MODULE_BASIC
-            rep->header.putExt("Access-Control-Allow-Credentials","true");
-#endif
-            rep->header.putExt("Access-Control-Expose-Headers","Server");
-        }
+
+        const auto originOrNil = request->header.getStr(Http::HdrType::ORIGIN);
+        PutCommonResponseHeaders(*rep, originOrNil);
+
         entry->replaceHttpReply(rep);
         entry->complete();
         return;
@@ -473,6 +466,27 @@ CacheManager::PasswdGet(Mgr::ActionPasswordList * a, const char *action)
     }
 
     return nullptr;
+}
+
+void
+CacheManager::PutCommonResponseHeaders(HttpReply &response, const char *httpOrigin)
+{
+    // Allow cachemgr and other XHR scripts access to our version string
+    if (httpOrigin) {
+        response.header.putExt("Access-Control-Allow-Origin", httpOrigin);
+#if HAVE_AUTH_MODULE_BASIC
+        response.header.putExt("Access-Control-Allow-Credentials", "true");
+#endif
+        response.header.putExt("Access-Control-Expose-Headers", "Server");
+    }
+
+    std::unique_ptr<HttpHdrCc> cc(new HttpHdrCc());
+    // this is honored by more caches but allows pointless revalidation;
+    // revalidation will always fail because we do not support it (yet?)
+    cc->noCache(String());
+    // this is honored by fewer caches but prohibits pointless revalidation
+    cc->noStore(true);
+    response.putCc(cc.release());
 }
 
 CacheManager*

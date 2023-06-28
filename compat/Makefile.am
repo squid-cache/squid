@@ -50,6 +50,7 @@ libcompatsquid_la_SOURCES = \
 	os/hpux.h \
 	os/linux.h \
 	os/macosx.h \
+	os/mingw.h \
 	os/mswindows.h \
 	os/netbsd.h \
 	os/openbsd.h \

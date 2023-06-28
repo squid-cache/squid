@@ -66,7 +66,6 @@
 
 #elif defined(__MINGW32__) || defined(__MINGW__)
 #define _SQUID_MINGW_ 1
-#define _SQUID_WINDOWS_ 1
 
 #elif defined(WIN32) || defined(WINNT) || defined(__WIN32__) || defined(__WIN32)
 #define _SQUID_WINDOWS_ 1
