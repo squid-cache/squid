@@ -5,11 +5,9 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-# check if the Windows SSPI requirements are available and work.
-# first argument is the variable containing the result
-#   (will be set to "yes" or "no")
-# second argument is the commands to run on success
-#
+# Checks whether the Windows SSPI requirements are available and work.
+# Sets squid_cv_win32_sspi to "yes" or "no".
+# The argument is the commands to run on success.
 AC_DEFUN([SQUID_CHECK_WIN32_SSPI],[
   AC_CHECK_HEADERS([w32api/windows.h windows.h],[
     squid_cv_win32_sspi=yes
