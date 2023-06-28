@@ -2033,6 +2033,7 @@ SQUID_DEFINE_BOOL(USE_AUTH,$enable_auth,[Enable support for authentication])
 AM_CONDITIONAL(ENABLE_AUTH, test "x$enable_auth" != "xno")
 AUTH_MODULES=""
 require_smblib="no"
+require_sspi="no"
 
 AC_ARG_ENABLE(auth-basic,
   AS_HELP_STRING([--enable-auth-basic="list of helpers"],
@@ -2093,6 +2094,7 @@ done
 AC_SUBST(AUTH_MODULES)
 AC_SUBST(AUTH_LIBS_TO_BUILD)
 AM_CONDITIONAL(ENABLE_SMBLIB, test "x$require_smblib" = "xyes")
+AM_CONDITIONAL(ENABLE_SSPI, test "x$require_sspi" = "xyes")
 
 dnl Select logging daemon helpers to build
 AC_ARG_ENABLE(log-daemon-helpers,

@@ -16,7 +16,9 @@ endif
 if ENABLE_SNMP
 SUBDIRS += snmplib
 endif
+if ENABLE_SSPI
 SUBDIRS += sspi
+endif
 
 install: all
 install-strip: all

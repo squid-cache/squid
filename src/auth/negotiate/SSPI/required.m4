@@ -5,4 +5,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-SQUID_CHECK_WIN32_SSPI([BUILD_HELPER="SSPI"])
+SQUID_CHECK_WIN32_SSPI([
+  BUILD_HELPER="SSPI"
+  require_sspi="yes"
+])
