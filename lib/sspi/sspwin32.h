@@ -14,8 +14,6 @@
 #ifndef _LIBSSPWIN32_H_
 #define _LIBSSPWIN32_H_
 
-#if HAVE_WINDOWS_H && HAVE_SSPI_H
-
 #define SECURITY_WIN32
 #define NTLM_PACKAGE_NAME "NTLM"
 #define NEGOTIATE_PACKAGE_NAME "Negotiate"
@@ -69,6 +67,5 @@ const char * WINAPI SSP_MakeNegotiateBlob(PVOID, int, PBOOL, int *, char *);
 const char * WINAPI SSP_ValidateNegotiateCredentials(PVOID, int, PBOOL, int *, char *);
 #endif
 
-#endif /* HAVE_WINDOWS_H && HAVE_SSPI_H */
 #endif /* LIBSSPWIN32_H_ */
 

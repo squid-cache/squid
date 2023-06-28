@@ -14,18 +14,20 @@
 #include "sspi/sspwin32.h"
 #include "util.h"
 
-#if HAVE_WINDOWS_H && HAVE_SSPI_H
-
 // FARPROC is an exception on Windows to the -Wcast-function-type sanity check.
 // suppress the warning only when casting FARPROC
 template <typename T>
 T
 farproc_cast(FARPROC in)
 {
+#if defined(__GCC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-function-type"
     return reinterpret_cast<T>(in);
 #pragma GCC diagnostic pop
+#else
+    return reinterpret_cast<T>(in);
+#endif
 }
 
 typedef struct _AUTH_SEQ {
@@ -611,5 +613,3 @@ const char * WINAPI SSP_ValidateNegotiateCredentials(PVOID PAutenticateBuf, int 
     return NULL;
 }
 #endif /* HAVE_AUTH_MODULE_NEGOTIATE */
-
-#endif /* HAVE_WINDOWS_H && HAVE_SSPI_H */
