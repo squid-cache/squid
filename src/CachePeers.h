@@ -41,12 +41,19 @@ public:
     void remove(CachePeer *);
 
     /// the CachePeer used first in neighborsUdpPing() peer poll
-    const_iterator nextPollStart() const;
+    const_iterator nextPollStart();
+
+    /// a CachePeer used next in neighborsUdpPing() peer poll
+    const_iterator nextPeerToPoll();
 
 private:
+    void setNextPing(size_t &) const;
+
     CachePeerList cachePeers; ///< the list of parsed CachePeer objects
     /// approximate starting point for the next neighborsUdpPing() peer poll
     size_t firstPing_ = 0;
+    /// the current peer index being polled in neighborsUdpPing()
+    size_t currentPing_ = 0;
 };
 
 const CachePeers &CurrentCachePeers();

@@ -565,7 +565,7 @@ neighborsUdpPing(HttpRequest * request,
 
     reqnum = icpSetCacheKey((const cache_key *)entry->key);
 
-    for (auto peer = CurrentCachePeers().nextPollStart(); peer != CurrentCachePeers().end(); ++peer) {
+    for (const auto peer = Config.cachePeers->nextPollStart(); peer != Config.cachePeers->end(); peer = Config.cachePeers->nextPeerToPoll()) {
         auto p = peer->get();
 
         debugs(15, 5, "candidate: " << *p);

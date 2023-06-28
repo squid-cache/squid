@@ -401,14 +401,34 @@ CachePeers::parse(ConfigParser &)
     peerClearRRStart();
 }
 
-CachePeers::CachePeerList::const_iterator
-CachePeers::nextPollStart() const
+void
+CachePeers::setNextPing(size_t &p) const
 {
-    auto it = cachePeers.begin();
-    std::advance(it, firstPing_);
-    auto &p = const_cast<decltype(firstPing_) &>(firstPing_);
     if (++p >= size())
         p = 0;
+}
+
+CachePeers::CachePeerList::const_iterator
+CachePeers::nextPollStart()
+{
+    Assure(size());
+    auto it = cachePeers.begin() + firstPing_;
+    currentPing_ = firstPing_;
+    setNextPing(currentPing_);
+    return it;
+}
+
+CachePeers::CachePeerList::const_iterator
+CachePeers::nextPeerToPoll()
+{
+    Assure(size());
+    if (currentPing_ == firstPing_) {
+        setNextPing(firstPing_);
+        currentPing_ = firstPing_;
+        return end();
+    }
+    auto it = cachePeers.begin() + currentPing_;
+    setNextPing(currentPing_);
     return it;
 }
 
