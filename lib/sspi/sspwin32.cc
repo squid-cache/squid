@@ -8,7 +8,9 @@
 
 #include "squid.h"
 #include "base64.h"
+#if HAVE_AUTH_MODULE_NTLM
 #include "ntlmauth/ntlmauth.h"
+#endif
 #include "sspi/sspwin32.h"
 #include "util.h"
 
@@ -51,7 +53,9 @@ static uint8_t * pServerBuf = NULL;
 static AUTH_SEQ NTLM_asServer = {};
 
 BOOL Use_Unicode = FALSE;
+#if HAVE_AUTH_MODULE_NTLM
 BOOL NTLM_LocalCall = FALSE;
+#endif
 
 /* Function pointers */
 ACCEPT_SECURITY_CONTEXT_FN _AcceptSecurityContext = NULL;
@@ -456,6 +460,7 @@ BOOL WINAPI SSP_LogonUser(PTSTR szUser, PTSTR szPassword, PTSTR szDomain)
     return fResult;
 }
 
+#if HAVE_AUTH_MODULE_NTLM
 const char * WINAPI SSP_MakeChallenge(PVOID PNegotiateBuf, int NegotiateLen)
 {
     BOOL        fDone      = FALSE;
@@ -527,7 +532,9 @@ BOOL WINAPI SSP_ValidateNTLMCredentials(PVOID PAutenticateBuf, int AutenticateLe
 
     return fResult;
 }
+#endif /* HAVE_AUTH_MODULE_NTLM */
 
+#if HAVE_AUTH_MODULE_NEGOTIATE
 const char * WINAPI SSP_MakeNegotiateBlob(PVOID PNegotiateBuf, int NegotiateLen, PBOOL fDone, int * Status, char * credentials)
 {
     DWORD       cbOut      = 0;
@@ -603,5 +610,6 @@ const char * WINAPI SSP_ValidateNegotiateCredentials(PVOID PAutenticateBuf, int 
     }
     return NULL;
 }
+#endif /* HAVE_AUTH_MODULE_NEGOTIATE */
 
 #endif /* HAVE_WINDOWS_H && HAVE_SSPI_H */

@@ -53,14 +53,21 @@ typedef char * SSP_blobP;
 
 HMODULE LoadSecurityDll(int, const char *);
 void UnloadSecurityDll(void);
-BOOL WINAPI SSP_LogonUser(PTSTR, PTSTR, PTSTR);
-BOOL WINAPI SSP_ValidateNTLMCredentials(PVOID, int, char *);
-const char * WINAPI SSP_ValidateNegotiateCredentials(PVOID, int, PBOOL, int *, char *);
-const char * WINAPI SSP_MakeChallenge(PVOID, int);
-const char * WINAPI SSP_MakeNegotiateBlob(PVOID, int, PBOOL, int *, char *);
 
-extern BOOL Use_Unicode;
+#if HAVE_AUTH_MODULE_BASIC
+BOOL WINAPI SSP_LogonUser(PTSTR, PTSTR, PTSTR);
+#endif
+
+#if HAVE_AUTH_MODULE_NTLM
+const char * WINAPI SSP_MakeChallenge(PVOID, int);
+BOOL WINAPI SSP_ValidateNTLMCredentials(PVOID, int, char *);
 extern BOOL NTLM_LocalCall;
+#endif
+
+#if HAVE_AUTH_MODULE_NEGOTIATE
+const char * WINAPI SSP_MakeNegotiateBlob(PVOID, int, PBOOL, int *, char *);
+const char * WINAPI SSP_ValidateNegotiateCredentials(PVOID, int, PBOOL, int *, char *);
+#endif
 
 #endif /* HAVE_WINDOWS_H && HAVE_SSPI_H */
 #endif /* LIBSSPWIN32_H_ */
