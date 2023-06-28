@@ -5,7 +5,11 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-SQUID_CHECK_WIN32_SSPI([
-  BUILD_HELPER="SSPI"
-  require_sspi="yes"
-])
+include $(top_srcdir)/src/Common.am
+include $(top_srcdir)/src/TestHeaders.am
+
+noinst_LTLIBRARIES = libsspwin32.la
+
+libsspwin32_la_SOURCES = \
+	sspwin32.cc \
+	sspwin32.h

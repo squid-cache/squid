@@ -36,11 +36,8 @@
 #ifndef _VALID_H_
 #define _VALID_H_
 
-#include "sspwin32.h"
+#include "sspi/sspwin32.h"
 
-#if HAVE_WINDOWS_H
-#include <windows.h>
-#endif
 #include <lm.h>
 #include <sys/types.h>
 #undef debug

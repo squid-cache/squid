@@ -28,6 +28,7 @@ m4_include([acinclude/pkg.m4])
 m4_include([acinclude/tdb.m4])
 m4_include([acinclude/lib-checks.m4])
 m4_include([acinclude/ax_cxx_compile_stdcxx.m4])
+m4_include([acinclude/win32-sspi.m4])
 
 PRESET_CFLAGS="$CFLAGS"
 PRESET_CXXFLAGS="$CXXFLAGS"
@@ -2032,6 +2033,7 @@ SQUID_DEFINE_BOOL(USE_AUTH,$enable_auth,[Enable support for authentication])
 AM_CONDITIONAL(ENABLE_AUTH, test "x$enable_auth" != "xno")
 AUTH_MODULES=""
 require_smblib="no"
+require_sspi="no"
 
 AC_ARG_ENABLE(auth-basic,
   AS_HELP_STRING([--enable-auth-basic="list of helpers"],
@@ -2092,6 +2094,7 @@ done
 AC_SUBST(AUTH_MODULES)
 AC_SUBST(AUTH_LIBS_TO_BUILD)
 AM_CONDITIONAL(ENABLE_SMBLIB, test "x$require_smblib" = "xyes")
+AM_CONDITIONAL(ENABLE_SSPI, test "x$require_sspi" = "xyes")
 
 dnl Select logging daemon helpers to build
 AC_ARG_ENABLE(log-daemon-helpers,
@@ -3080,6 +3083,7 @@ AC_CONFIG_FILES([
 	lib/rfcnb/Makefile
 	lib/smblib/Makefile
 	lib/snmplib/Makefile
+	lib/sspi/Makefile
 	scripts/Makefile
 	src/Makefile
 	src/acl/Makefile
