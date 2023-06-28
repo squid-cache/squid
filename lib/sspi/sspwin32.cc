@@ -16,7 +16,7 @@
 
 // FARPROC is an exception on Windows to the -Wcast-function-type sanity check.
 // suppress the warning only when casting FARPROC
-template<typename T>
+template <typename T>
 T
 farproc_cast(FARPROC in)
 {
