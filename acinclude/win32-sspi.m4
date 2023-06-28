@@ -11,13 +11,12 @@
 # second argument is the commands to run on success
 #
 AC_DEFUN([SQUID_CHECK_WIN32_SSPI],[
-  AC_CACHE_CHECK([whether Windows SSPI is available],[$1],[
-    AC_CHECK_HEADERS([w32api/windows.h windows.h],[
-      $1=yes
-      # optional headers
-      AC_CHECK_HEADERS([wchar.h tchar.h])
-      # required headers
-      AC_CHECK_HEADERS([ntsecapi.h security.h sspi.h],,[$1=no],[
+  AC_CHECK_HEADERS([w32api/windows.h windows.h],[
+    squid_cv_win32_sspi=yes
+    # optional headers
+    AC_CHECK_HEADERS([wchar.h tchar.h])
+    # required headers
+    AC_CHECK_HEADERS([ntsecapi.h security.h sspi.h],,[squid_cv_win32_sspi=no],[
 #define SECURITY_WIN32
 #if HAVE_WINDOWS_H
 #include <windows.h>
@@ -33,8 +32,7 @@ AC_DEFUN([SQUID_CHECK_WIN32_SSPI],[
 #if HAVE_SSPI_H
 #include <sspi.h>
 #endif
-      ])
     ])
   ])
-  AS_IF([test "x$$1" = "xyes"],[$2])
+  AS_IF([test "x$squid_cv_win32_sspi" = "xyes"],[$1])
 ])
