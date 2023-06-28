@@ -8706,51 +8706,6 @@ DOC_START
 	By default, Squid doesn't listen on any multicast groups.
 DOC_END
 
-NAME: mcast_miss_addr
-IFDEF: MULTICAST_MISS_STREAM
-TYPE: address
-LOC: Config.mcast_miss.addr
-DEFAULT: no_addr
-DEFAULT_DOC: disabled.
-DOC_START
-	If you enable this option, every "cache miss" URL will
-	be sent out on the specified multicast address.
-
-	Do not enable this option unless you are are absolutely
-	certain you understand what you are doing.
-DOC_END
-
-NAME: mcast_miss_ttl
-IFDEF: MULTICAST_MISS_STREAM
-TYPE: u_short
-LOC: Config.mcast_miss.ttl
-DEFAULT: 16
-DOC_START
-	This is the time-to-live value for packets multicasted
-	when multicasting off cache miss URLs is enabled.  By
-	default this is set to 'site scope', i.e. 16.
-DOC_END
-
-NAME: mcast_miss_port
-IFDEF: MULTICAST_MISS_STREAM
-TYPE: u_short
-LOC: Config.mcast_miss.port
-DEFAULT: 3135
-DOC_START
-	This is the port number to be used in conjunction with
-	'mcast_miss_addr'.
-DOC_END
-
-NAME: mcast_miss_encode_key
-IFDEF: MULTICAST_MISS_STREAM
-TYPE: string
-LOC: Config.mcast_miss.encode_key
-DEFAULT: XXXXXXXXXXXXXXXX
-DOC_START
-	The URLs that are sent in the multicast miss stream are
-	encrypted.  This is the encryption key.
-DOC_END
-
 NAME: mcast_icp_query_timeout
 COMMENT: (msec)
 DEFAULT: 2000

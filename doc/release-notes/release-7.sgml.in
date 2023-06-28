@@ -81,7 +81,21 @@ This section gives an account of those changes in three categories:
 <sect1>Removed directives<label id="removeddirectives">
 <p>
 <descrip>
-	<p>No removed directives in this version.
+	<tag>mcast_miss_addr</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
+
+	<tag>mcast_miss_ttl</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
+
+	<tag>mcast_miss_port</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
+
+	<tag>mcast_miss_encode_key</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
 
 </descrip>
 
@@ -116,6 +130,10 @@ This section gives an account of those changes in three categories:
 <p>
 <descrip>
 	<tag>CPPFLAGS=-DHEADERS_LOG</tag>
+	<p>The code enabled by this preprocessor macro has not built for many
+	   years, indicating that the feature is unused.
+
+	<tag>CPPFLAGS=-DMULTICAST_MISS_STREAM</tag>
 	<p>The code enabled by this preprocessor macro has not built for many
 	   years, indicating that the feature is unused.
 
