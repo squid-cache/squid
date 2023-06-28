@@ -14,6 +14,7 @@
 #include "neighbors.h"
 #include "NeighborTypeDomainList.h"
 #include "Parsing.h"
+#include "PeerDigest.h"
 #include "rfc1738.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
