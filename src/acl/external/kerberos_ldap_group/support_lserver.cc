@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -43,9 +43,9 @@ struct lsstruct *
 init_ls(void) {
     struct lsstruct *lssp;
     lssp = (struct lsstruct *) xmalloc(sizeof(struct lsstruct));
-    lssp->lserver = NULL;
-    lssp->domain = NULL;
-    lssp->next = NULL;
+    lssp->lserver = nullptr;
+    lssp->domain = nullptr;
+    lssp->next = nullptr;
     return lssp;
 }
 
@@ -66,7 +66,7 @@ create_ls(struct main_args *margs)
 {
     char *np, *dp;
     char *p;
-    struct lsstruct *lssp = NULL, *lsspn = NULL;
+    struct lsstruct *lssp = nullptr, *lsspn = nullptr;
     /*
      *  netbios list format:
      *
@@ -80,7 +80,7 @@ create_ls(struct main_args *margs)
     p = margs->llist;
     np = margs->llist;
     debug((char *) "%s| %s: DEBUG: ldap server list %s\n", LogTime(), PROGRAM, margs->llist ? margs->llist : "NULL");
-    dp = NULL;
+    dp = nullptr;
 
     if (!p) {
         debug((char *) "%s| %s: DEBUG: No ldap servers defined.\n", LogTime(), PROGRAM);
@@ -118,7 +118,7 @@ create_ls(struct main_args *margs)
             ++p;
             if (dp) {       /* end of domain name */
                 lssp->domain = xstrdup(dp);
-                dp = NULL;
+                dp = nullptr;
             } else {        /* end of group name and no domain name */
                 lssp = init_ls();
                 lssp->lserver = xstrdup(np);

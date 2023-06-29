@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,15 +9,28 @@
 #include "squid.h"
 #include "auth/ntlm/Config.h"
 #include "auth/ntlm/Scheme.h"
-#include "Debug.h"
+#include "base/RunnersRegistry.h"
+#include "debug/Messages.h"
+#include "debug/Stream.h"
 #include "helper.h"
 
-Auth::Scheme::Pointer Auth::Ntlm::Scheme::_instance = NULL;
+class NtlmAuthRr : public RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    void bootstrapConfig() override {
+        const char *type = Auth::Ntlm::Scheme::GetInstance()->type();
+        debugs(29, 2, "Initialized Authentication Scheme '" << type << "'");
+    }
+};
+RunnerRegistrationEntry(NtlmAuthRr);
 
 Auth::Scheme::Pointer
 Auth::Ntlm::Scheme::GetInstance()
 {
-    if (_instance == NULL) {
+    static Auth::Scheme::Pointer _instance;
+
+    if (!_instance) {
         _instance = new Auth::Ntlm::Scheme();
         AddScheme(_instance);
     }
@@ -33,11 +46,8 @@ Auth::Ntlm::Scheme::type() const
 void
 Auth::Ntlm::Scheme::shutdownCleanup()
 {
-    if (_instance == NULL)
-        return;
-
-    _instance = NULL;
-    debugs(29, DBG_CRITICAL, "Shutdown: NTLM authentication.");
+    // TODO: destruct any active Ntlm::Config objects via runner
+    debugs(29, 2, "Shutdown: NTLM authentication.");
 }
 
 Auth::SchemeConfig *

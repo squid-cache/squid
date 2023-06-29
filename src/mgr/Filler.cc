@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "comm/Connection.h"
+#include "ipc/RequestId.h"
 #include "mgr/Filler.h"
 #include "mgr/Response.h"
 #include "Store.h"
@@ -18,20 +19,20 @@
 CBDATA_NAMESPACED_CLASS_INIT(Mgr, Filler);
 
 Mgr::Filler::Filler(const Action::Pointer &anAction, const Comm::ConnectionPointer &conn,
-                    unsigned int aRequestId):
+                    const Ipc::RequestId aRequestId):
     StoreToCommWriter(conn, anAction->createStoreEntry()),
     action(anAction),
     requestId(aRequestId)
 {
-    debugs(16, 5, HERE << conn << " action: " << action);
+    debugs(16, 5, conn << " action: " << action);
 }
 
 void
 Mgr::Filler::start()
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     Must(requestId != 0);
-    Must(action != NULL);
+    Must(action != nullptr);
 
     StoreToCommWriter::start();
     action->run(entry, false);
@@ -40,7 +41,7 @@ Mgr::Filler::start()
 void
 Mgr::Filler::swanSong()
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     action->sendResponse(requestId);
     StoreToCommWriter::swanSong();
 }

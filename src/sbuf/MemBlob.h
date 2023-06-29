@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -59,7 +59,7 @@ public:
     /// create a MemBlob containing a copy of the buffer of a given size
     MemBlob(const char *buffer, const size_type bufferSize);
 
-    virtual ~MemBlob();
+    ~MemBlob() override;
 
     /// the number unused bytes at the end of the allocated blob
     size_type spaceSize() const { return capacity - size; }
@@ -91,8 +91,18 @@ public:
      */
     void append(const char *source, const size_type n);
 
+    /* non-const methods below require exclusive object ownership */
+
     /// extends the available space to the entire allocated blob
     void clear() { size = 0; }
+
+    /// keep the first n bytes and forget the rest of data
+    /// cannot be used to increase our size; use append*() methods for that
+    void syncSize(const size_type n);
+
+    /// forget the first n bytes, moving the rest of data (if any) to the start
+    /// forgets all data (i.e. empties the buffer) if n exceeds size
+    void consume(const size_type n);
 
     /// dump debugging information
     std::ostream & dump(std::ostream &os) const;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,7 +36,11 @@ class ClientInfo : public hash_link
 
 public:
     explicit ClientInfo(const Ip::Address &);
+#if USE_DELAY_POOLS
+    ~ClientInfo() override;
+#else
     ~ClientInfo();
+#endif
 
     Ip::Address addr;
 
@@ -74,24 +78,26 @@ public:
     bool hasQueue() const;  ///< whether any clients are waiting for write quota
     bool hasQueue(const CommQuotaQueue*) const;  ///< has a given queue
     unsigned int quotaEnqueue(int fd); ///< client starts waiting in queue; create the queue if necessary
-    int quotaPeekFd() const; ///< retuns the next fd reservation
+    int quotaPeekFd() const; ///< returns the next fd reservation
     unsigned int quotaPeekReserv() const; ///< returns the next reserv. to pop
     void quotaDequeue(); ///< pops queue head from queue
     void kickQuotaQueue(); ///< schedule commHandleWriteHelper call
+    /// either selects the head descriptor for writing or calls quotaDequeue()
+    void writeOrDequeue();
 
     /* BandwidthBucket API */
-    virtual int quota() override; ///< allocate quota for a just dequeued client
-    virtual bool applyQuota(int &nleft, Comm::IoCallback *state) override;
-    virtual void scheduleWrite(Comm::IoCallback *state) override;
-    virtual void onFdClosed() override;
-    virtual void reduceBucket(int len) override;
+    int quota() override; ///< allocate quota for a just dequeued client
+    bool applyQuota(int &nleft, Comm::IoCallback *state) override;
+    void scheduleWrite(Comm::IoCallback *state) override;
+    void onFdClosed() override;
+    void reduceBucket(int len) override;
 
     void quotaDumpQueue(); ///< dumps quota queue for debugging
 
     /**
      * Configure client write limiting (note:"client" here means - IP). It is called
      * by httpAccept in client_side.cc, where the initial bucket size (anInitialBurst)
-     * computed, using the configured maximum bucket vavlue and configured initial
+     * computed, using the configured maximum bucket value and configured initial
      * bucket value(50% by default).
      *
      * \param  writeSpeedLimit is speed limit configured in config for this pool

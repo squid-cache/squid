@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 50    Log file handling */
 
 #include "squid.h"
+#include "debug/Messages.h"
 #include "fatal.h"
 #include "fde.h"
 #include "log/File.h"
@@ -17,18 +18,19 @@
 #include "log/ModSyslog.h"
 #include "log/ModUdp.h"
 #include "log/TcpLogger.h"
+#include "sbuf/SBuf.h"
 
 CBDATA_CLASS_INIT(Logfile);
 
 Logfile::Logfile(const char *aPath) :
     sequence_number(0),
-    data(NULL),
-    f_linestart(NULL),
-    f_linewrite(NULL),
-    f_lineend(NULL),
-    f_flush(NULL),
-    f_rotate(NULL),
-    f_close(NULL)
+    data(nullptr),
+    f_linestart(nullptr),
+    f_linewrite(nullptr),
+    f_lineend(nullptr),
+    f_flush(nullptr),
+    f_rotate(nullptr),
+    f_close(nullptr)
 {
     xstrncpy(path, aPath, sizeof(path));
     flags.fatal = 0;
@@ -40,7 +42,7 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
     int ret;
     const char *patharg;
 
-    debugs(50, DBG_IMPORTANT, "Logfile: opening log " << path);
+    debugs(50, Important(26), "Logfile: opening log " << path);
 
     Logfile *lf = new Logfile(path);
     patharg = path;
@@ -71,12 +73,12 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
         if (fatal_flag)
             fatalf("logfileOpen: %s: couldn't open!\n", path);
         else
-            debugs(50, DBG_IMPORTANT, "logfileOpen: " << path << ": couldn't open!");
+            debugs(50, DBG_IMPORTANT, "ERROR: logfileOpen: " << path << ": could not open!");
         lf->f_close(lf);
         delete lf;
-        return NULL;
+        return nullptr;
     }
-    assert(lf->data != NULL);
+    assert(lf->data != nullptr);
 
     if (fatal_flag)
         lf->flags.fatal = 1;
@@ -89,7 +91,7 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
 void
 logfileClose(Logfile * lf)
 {
-    debugs(50, DBG_IMPORTANT, "Logfile: closing log " << lf->path);
+    debugs(50, Important(27), "Logfile: closing log " << lf->path);
     lf->f_flush(lf);
     lf->f_close(lf);
     delete lf;
@@ -103,7 +105,7 @@ logfileRotate(Logfile * lf, int16_t rotateCount)
 }
 
 void
-logfileWrite(Logfile * lf, char *buf, size_t len)
+logfileWrite(Logfile * lf, const char *buf, size_t len)
 {
     lf->f_linewrite(lf, buf, len);
 }
@@ -112,21 +114,11 @@ void
 logfilePrintf(Logfile * lf, const char *fmt,...)
 {
     va_list args;
-    char buf[8192];
-    int s;
-
     va_start(args, fmt);
-
-    s = vsnprintf(buf, 8192, fmt, args);
-
-    if (s > 8192) {
-        s = 8192;
-
-        if (fmt[strlen(fmt) - 1] == '\n')
-            buf[8191] = '\n';
-    }
-
-    logfileWrite(lf, buf, (size_t) s);
+    static SBuf sbuf;
+    sbuf.clear();
+    sbuf.vappendf(fmt, args); // Throws on overflow. TODO: handle that better
+    logfileWrite(lf, sbuf.c_str(), sbuf.length());
     va_end(args);
 }
 

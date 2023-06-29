@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -51,9 +51,6 @@
 
 #elif defined(__sgi__)  || defined(sgi) || defined(__sgi)   /* SGI */
 #define _SQUID_SGI_ 1
-
-#elif defined(__NeXT__)
-#define _SQUID_NEXT_ 1
 
 #elif defined(__NetBSD__)
 #define _SQUID_NETBSD_ 1

@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -13,16 +13,28 @@ DEFAULT_ERROR_DIR	= $(errordir)
 DEFAULT_STYLESHEET	= $(sysconfdir)/errorpage.css
 
 ## List of automated translations possible:
-include $(srcdir)/template.list
-include $(srcdir)/language.list
+include $(srcdir)/template.am
+include $(srcdir)/language.am
+
+if ENABLE_TRANSLATION
+TRANSLATE_LANGUAGES = $(LANGUAGE_FILES)
+else !ENABLE_TRANSLATION
+TRANSLATE_LANGUAGES =
+endif
 
 CLEANFILES = $(TRANSLATE_LANGUAGES) translate-warn
 EXTRA_DIST = \
 	$(ERROR_TEMPLATES) \
 	templates/error-details.txt \
-	language.list \
-	template.list \
+	language.am \
+	template.am \
 	aliases alias-link.sh alias-upgrade errorpage.css TRANSLATORS COPYRIGHT
+
+if ENABLE_TRANSLATION
+ALIAS_LINKER=$(SHELL) $(srcdir)/alias-link.sh "$(LN)" "$(RM)" "$(DESTDIR)$(DEFAULT_ERROR_DIR)"
+else !ENABLE_TRANSLATION
+ALIAS_LINKER=$(TRUE)
+endif
 
 all: all-am
 
@@ -41,7 +53,7 @@ translate-warn:
 
 $(TRANSLATE_LANGUAGES): $(ERROR_TEMPLATES)
 
-NOTIDY=`$(PO2HTML) --help | grep -o "\-\-notidy"`
+NOTIDY=`$(PO2HTML) --help | grep -o "[-]-notidy"`
 
 .po.lang:
 	if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
@@ -88,7 +100,7 @@ install-data-local: translate
 	$(INSTALL_DATA) $(srcdir)/TRANSLATORS $(DESTDIR)$(DEFAULT_ERROR_DIR)/TRANSLATORS; \
 	$(INSTALL_DATA) $(srcdir)/COPYRIGHT $(DESTDIR)$(DEFAULT_ERROR_DIR)/COPYRIGHT; \
 	$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET).default; \
-	$(SHELL) $(srcdir)/alias-link.sh "$(LN)" "$(RM)" "$(DESTDIR)$(DEFAULT_ERROR_DIR)" "$(srcdir)/aliases" || exit 1 ;
+	$(ALIAS_LINKER) "$(srcdir)/aliases" || exit 1 ;
 
 uninstall-local:
 	for l in $(TRANSLATE_LANGUAGES) templates; do \
@@ -116,7 +128,7 @@ uninstall-local:
 
 ## Upgrade requires the new files to be pre-installed
 upgrade: install
-	$(SHELL) $(srcdir)/alias-link.sh "$(LN)" "$(RM)" "$(DESTDIR)$(DEFAULT_ERROR_DIR)" "$(srcdir)/alias-upgrade" || exit 1 ;
+	$(ALIAS_LINKER) "$(srcdir)/alias-upgrade" || exit 1 ;
 
 dist-hook: translate
 	for lang in $(TRANSLATE_LANGUAGES); do \

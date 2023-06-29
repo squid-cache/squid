@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,8 +7,10 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "ConfigParser.h"
 #include "DiskIO/DiskIOModule.h"
+#include "fde.h"
 #include "fs/rock/RockSwapDir.h"
 #include "globals.h"
 #include "HttpHeader.h"
@@ -21,7 +23,6 @@
 #include "store/Disks.h"
 #include "StoreFileSystem.h"
 #include "StoreSearch.h"
-#include "testRock.h"
 #include "testStoreSupport.h"
 #include "unitTestMain.h"
 
@@ -35,22 +36,53 @@
 
 #define TESTDIR "tr"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testRock );
+/*
+ * test the store framework
+ */
+
+class TestRock : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestRock);
+    CPPUNIT_TEST(testRockCreate);
+    CPPUNIT_TEST(testRockSwapOut);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    TestRock() : rr(nullptr) {}
+    void setUp() override;
+    void tearDown() override;
+
+    typedef RefCount<Rock::SwapDir> SwapDirPointer;
+
+protected:
+    void commonInit();
+    void storeInit();
+    StoreEntry *createEntry(const int i);
+    StoreEntry *addEntry(const int i);
+    StoreEntry *getEntry(const int i);
+    void testRockCreate();
+    void testRockSwapOut();
+
+private:
+    SwapDirPointer store;
+    Rock::SwapDirRr *rr;
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestRock);
 
 extern REMOVALPOLICYCREATE createRemovalPolicy_lru;
 
 static char cwd[MAXPATHLEN];
 
 static void
-addSwapDir(testRock::SwapDirPointer aStore)
+addSwapDir(TestRock::SwapDirPointer aStore)
 {
-    allocate_new_swapdir(&Config.cacheSwap);
+    allocate_new_swapdir(Config.cacheSwap);
     Config.cacheSwap.swapDirs[Config.cacheSwap.n_configured] = aStore.getRaw();
     ++Config.cacheSwap.n_configured;
 }
 
 void
-testRock::setUp()
+TestRock::setUp()
 {
     CPPUNIT_NS::TestFixture::setUp();
 
@@ -62,7 +94,7 @@ testRock::setUp()
 
     // use current directory for shared segments (on path-based OSes)
     Ipc::Mem::Segment::BasePath = getcwd(cwd,MAXPATHLEN);
-    if (Ipc::Mem::Segment::BasePath == NULL)
+    if (Ipc::Mem::Segment::BasePath == nullptr)
         Ipc::Mem::Segment::BasePath = ".";
 
     Store::Init();
@@ -94,18 +126,18 @@ testRock::setUp()
 }
 
 void
-testRock::tearDown()
+TestRock::tearDown()
 {
     CPPUNIT_NS::TestFixture::tearDown();
 
     Store::FreeMemory();
 
-    store = NULL;
+    store = nullptr;
 
     free_cachedir(&Config.cacheSwap);
 
     rr->finishShutdown(); // deletes rr
-    rr = NULL;
+    rr = nullptr;
 
     // TODO: do this once, or each time.
     // safe_free(Config.replPolicy->type);
@@ -116,14 +148,12 @@ testRock::tearDown()
 }
 
 void
-testRock::commonInit()
+TestRock::commonInit()
 {
     static bool inited = false;
 
     if (inited)
         return;
-
-    StoreFileSystem::SetupAllFs();
 
     Config.Store.avgObjectSize = 1024;
     Config.Store.objectsPerBucket = 20;
@@ -133,7 +163,7 @@ testRock::commonInit()
 
     Config.replPolicy = new RemovalPolicySettings;
     Config.replPolicy->type = xstrdup("lru");
-    Config.replPolicy->args = NULL;
+    Config.replPolicy->args = nullptr;
 
     /* garh garh */
     storeReplAdd("lru", createRemovalPolicy_lru);
@@ -141,6 +171,8 @@ testRock::commonInit()
     visible_appname_string = xstrdup(APP_FULLNAME);
 
     Mem::Init();
+
+    fde::Init();
 
     comm_init();
 
@@ -152,7 +184,7 @@ testRock::commonInit()
 }
 
 void
-testRock::storeInit()
+TestRock::storeInit()
 {
     /* ok, ready to use */
     Store::Root().init();
@@ -183,10 +215,10 @@ storeId(const int i)
 }
 
 StoreEntry *
-testRock::createEntry(const int i)
+TestRock::createEntry(const int i)
 {
     RequestFlags flags;
-    flags.cachable = true;
+    flags.cachable.support();
     StoreEntry *const pe =
         storeCreateEntry(storeId(i), "dummy log url", flags, Http::METHOD_GET);
     auto &rep = pe->mem().adjustableBaseReply();
@@ -198,7 +230,7 @@ testRock::createEntry(const int i)
 }
 
 StoreEntry *
-testRock::addEntry(const int i)
+TestRock::addEntry(const int i)
 {
     StoreEntry *const pe = createEntry(i);
 
@@ -213,13 +245,13 @@ testRock::addEntry(const int i)
 }
 
 StoreEntry *
-testRock::getEntry(const int i)
+TestRock::getEntry(const int i)
 {
     return storeGetPublic(storeId(i), Http::METHOD_GET);
 }
 
 void
-testRock::testRockCreate()
+TestRock::testRockCreate()
 {
     struct stat sb;
 
@@ -231,7 +263,7 @@ testRock::testRockCreate()
 }
 
 void
-testRock::testRockSwapOut()
+TestRock::testRockSwapOut()
 {
     storeInit();
 
@@ -252,7 +284,7 @@ testRock::testRockSwapOut()
 
         CPPUNIT_ASSERT_EQUAL(SWAPOUT_DONE, pe->swap_status);
 
-        pe->unlock("testRock::testRockSwapOut priming");
+        pe->unlock("TestRock::testRockSwapOut priming");
     }
 
     CPPUNIT_ASSERT_EQUAL((uint64_t)5, store->currentCount());
@@ -265,7 +297,7 @@ testRock::testRockSwapOut()
         CPPUNIT_ASSERT_EQUAL(SWAPOUT_NONE, pe->swap_status);
         CPPUNIT_ASSERT_EQUAL(-1, pe->swap_dirn);
         CPPUNIT_ASSERT_EQUAL(-1, pe->swap_filen);
-        pe->unlock("testRock::testRockSwapOut e#3");
+        pe->unlock("TestRock::testRockSwapOut e#3");
 
         // after marking the old entry as deleted
         StoreEntry *const pe2 = getEntry(4);
@@ -282,7 +314,7 @@ testRock::testRockSwapOut()
 
         CPPUNIT_ASSERT_EQUAL(SWAPOUT_DONE, pe3->swap_status);
 
-        pe->unlock("testRock::testRockSwapOut e#4");
+        pe->unlock("TestRock::testRockSwapOut e#4");
     }
 
     // try to swap out entry to a used locked slot
@@ -303,8 +335,8 @@ testRock::testRockSwapOut()
         StockEventLoop loop;
         loop.run();
 
-        pe->unlock("testRock::testRockSwapOut e#5.1");
-        pe2->unlock("testRock::testRockSwapOut e#5.2");
+        pe->unlock("TestRock::testRockSwapOut e#5.1");
+        pe2->unlock("TestRock::testRockSwapOut e#5.2");
 
         // pe2 has the same public key as pe so it marks old pe for release
         // here, we add another entry #5 into the now-available slot
@@ -314,7 +346,7 @@ testRock::testRockSwapOut()
         CPPUNIT_ASSERT(pe3->swap_filen >= 0);
         loop.run();
         CPPUNIT_ASSERT_EQUAL(SWAPOUT_DONE, pe3->swap_status);
-        pe3->unlock("testRock::testRockSwapOut e#5.3");
+        pe3->unlock("TestRock::testRockSwapOut e#5.3");
     }
 
     CPPUNIT_ASSERT_EQUAL((uint64_t)6, store->currentCount());
@@ -322,12 +354,12 @@ testRock::testRockSwapOut()
     // try to get and release all entries
     for (int i = 0; i < 6; ++i) {
         StoreEntry *const pe = getEntry(i);
-        CPPUNIT_ASSERT(pe != NULL);
+        CPPUNIT_ASSERT(pe != nullptr);
 
         pe->release(); // destroys pe
 
         StoreEntry *const pe2 = getEntry(i);
-        CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(NULL), pe2);
+        CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(nullptr), pe2);
     }
 }
 

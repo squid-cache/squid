@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,7 +24,7 @@ class Trie
 {
 
 public:
-    Trie(TrieCharTransform *aTransform = 0);
+    Trie(TrieCharTransform *aTransform = nullptr);
     ~Trie();
     Trie (Trie const &);
     Trie &operator= (Trie const &);
@@ -59,7 +59,7 @@ Trie::find (char const *aString, size_t theLength)
     if (head)
         return head->find (aString, theLength, transform, false);
 
-    return NULL;
+    return nullptr;
 }
 
 void *
@@ -68,7 +68,7 @@ Trie::findPrefix (char const *aString, size_t theLength)
     if (head)
         return head->find (aString, theLength, transform, true);
 
-    return NULL;
+    return nullptr;
 }
 
 #endif /* LIBTRIE_SQUID_H */

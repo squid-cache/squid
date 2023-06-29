@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,7 @@
 #include "base/TextException.h"
 #include "comm/Connection.h"
 #include "globals.h"
+#include "ipc/RequestId.h"
 #include "ipc/UdsOp.h"
 #include "mgr/Command.h"
 #include "mgr/Filler.h"
@@ -29,14 +30,14 @@ Mgr::FunAction::Create(const Command::Pointer &aCmd, OBJH* aHandler)
 Mgr::FunAction::FunAction(const Command::Pointer &aCmd, OBJH* aHandler):
     Action(aCmd), handler(aHandler)
 {
-    Must(handler != NULL);
-    debugs(16, 5, HERE);
+    Must(handler != nullptr);
+    debugs(16, 5, MYNAME);
 }
 
 void
 Mgr::FunAction::respond(const Request& request)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     Ipc::ImportFdIntoComm(request.conn, SOCK_STREAM, IPPROTO_TCP, Ipc::fdnHttpSocket);
     Must(Comm::IsConnOpen(request.conn));
     Must(request.requestId != 0);
@@ -46,8 +47,8 @@ Mgr::FunAction::respond(const Request& request)
 void
 Mgr::FunAction::dump(StoreEntry* entry)
 {
-    debugs(16, 5, HERE);
-    Must(entry != NULL);
+    debugs(16, 5, MYNAME);
+    Must(entry != nullptr);
     if (UsingSmp())
         storeAppendPrintf(entry, "by kid%d {\n", KidIdentifier);
     handler(entry);

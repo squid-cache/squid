@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,8 +11,40 @@
 
 #include "base/InstanceId.h"
 #include "base/RefCount.h"
+#include "base/Stopwatch.h"
 
 #include <iosfwd>
+
+/** \file
+ *
+ * Most error-reporting code cannot know what transaction or task Squid was
+ * working on when the error occurred. For example, when Squid HTTP request
+ * parser discovers a malformed header field, the parser can report the field
+ * contents, but that information is often useless for the admin without
+ * processing context details like which client sent the request or what the
+ * requested URL was. Moreover, even when the error reporting code does have
+ * access to some context details, it cannot separate important facts from noise
+ * because such classification is usually deployment-specific (i.e. cannot be
+ * hard-coded) and requires human expertise. The situation is aggravated by a
+ * busy Squid instance constantly switching from one processing context to
+ * another.
+ *
+ * To solve these problems, Squid assigns a CodeContext object to a processing
+ * context. When Squid switches to another processing context, it switches the
+ * current CodeContext object as well. When Squid prints a level-0 or level-1
+ * message to cache.log, it asks the current CodeContext object (if any) to
+ * report context details, allowing the admin to correlate the cache.log message
+ * with an access.log record.
+ *
+ * Squid also reports processing context changes to cache.log when Squid
+ * level-5+ debugging is enabled.
+ *
+ * CodeContext is being retrofitted into existing code with lots of places that
+ * switch processing context. Identifying and adjusting all those places takes
+ * time. Until then, there will be incorrect and missing context attributions.
+ *
+ * @{
+ **/
 
 /// Interface for reporting what Squid code is working on.
 /// Such reports are usually requested outside creator's call stack.
@@ -31,7 +63,7 @@ public:
     /// changes the current context; nil argument sets it to nil/unknown
     static void Reset(const Pointer);
 
-    virtual ~CodeContext() {}
+    ~CodeContext() override {}
 
     /// \returns a small, permanent ID of the current context
     /// gists persist forever and are suitable for passing to other SMP workers
@@ -39,6 +71,9 @@ public:
 
     /// appends human-friendly context description line(s) to a cache.log record
     virtual std::ostream &detailCodeContext(std::ostream &os) const = 0;
+
+    /// time spent in this context (see also: %busy_time)
+    Stopwatch busyTime;
 
 private:
     static void ForgetCurrent();
@@ -116,6 +151,8 @@ CallContextCreator(Fun &&creator)
     creator();
     CodeContext::Reset(savedCodeContext);
 }
+
+/// @}
 
 #endif
 

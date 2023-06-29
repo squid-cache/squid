@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -56,14 +56,14 @@ passwd_auth(char *user, char *passwd)
 {
     struct passwd *pwd;
     pwd = getpwnam(user);
-    if (pwd == NULL) {
+    if (pwd == nullptr) {
         return 0;       /* User does not exist */
     } else {
         char *crypted = crypt(passwd, pwd->pw_passwd);
         if (!crypted || strcmp(pwd->pw_passwd, crypted)) {
             return 2;       /* Wrong password */
         } else {
-            return 1;       /* Authentication Sucessful */
+            return 1;       /* Authentication Successful */
         }
     }
 }
@@ -74,14 +74,14 @@ shadow_auth(char *user, char *passwd)
 {
     struct spwd *pwd;
     pwd = getspnam(user);
-    if (pwd == NULL) {
+    if (pwd == nullptr) {
         return passwd_auth(user, passwd);   /* Fall back to passwd_auth */
     } else {
         char *crypted = crypt(passwd, pwd->sp_pwdp);
         if (!crypted || strcmp(pwd->sp_pwdp, crypted)) {
             return 2;       /* Wrong password */
         } else {
-            return 1;       /* Authentication Sucessful */
+            return 1;       /* Authentication Successful */
         }
     }
 }
@@ -94,17 +94,17 @@ main(int, char **)
     char buf[HELPER_INPUT_BUFFER];
     char *user, *passwd, *p;
 
-    setbuf(stdout, NULL);
-    while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != NULL) {
+    setbuf(stdout, nullptr);
+    while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != nullptr) {
 
-        if ((p = strchr(buf, '\n')) != NULL)
+        if ((p = strchr(buf, '\n')) != nullptr)
             *p = '\0';      /* strip \n */
 
-        if ((user = strtok(buf, " ")) == NULL) {
+        if ((user = strtok(buf, " ")) == nullptr) {
             SEND_ERR("No Username");
             continue;
         }
-        if ((passwd = strtok(NULL, "")) == NULL) {
+        if ((passwd = strtok(nullptr, "")) == nullptr) {
             SEND_ERR("No Password");
             continue;
         }

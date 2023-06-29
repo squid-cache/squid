@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,13 +9,13 @@
 #include "squid.h"
 #include "base/RunnersRegistry.h"
 #include "base/TextException.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include <set>
 
 /// a collection of unique runners, in no particular order
 typedef std::set<RegisteredRunner*> Runners;
 /// all known runners
-static Runners *TheRunners = NULL;
+static Runners *TheRunners = nullptr;
 /// used to avoid re-creating deleted TheRunners after shutdown finished.
 static bool RunnersGone = false;
 

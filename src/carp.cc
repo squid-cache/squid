@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "CachePeer.h"
+#include "carp.h"
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
 #include "neighbors.h"
@@ -22,7 +23,7 @@
 #define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
 
 static int n_carp_peers = 0;
-static CachePeer **carp_peers = NULL;
+static CachePeer **carp_peers = nullptr;
 static OBJH carpCachemgr;
 
 static int
@@ -149,7 +150,7 @@ carpSelectParent(PeerSelector *ps)
     HttpRequest *request = ps->request;
 
     int k;
-    CachePeer *p = NULL;
+    CachePeer *p = nullptr;
     CachePeer *tp;
     unsigned int user_hash = 0;
     unsigned int combined_hash;
@@ -157,7 +158,7 @@ carpSelectParent(PeerSelector *ps)
     double high_score = 0;
 
     if (n_carp_peers == 0)
-        return NULL;
+        return nullptr;
 
     /* calculate hash key */
     debugs(39, 2, "carpSelectParent: Calculating hash for " << request->effectiveRequestUri());
@@ -178,7 +179,7 @@ carpSelectParent(PeerSelector *ps)
                 key.append(request->url.host());
             }
             if (tp->options.carp_key.port) {
-                key.appendf(":%u", request->url.port());
+                key.appendf(":%hu", request->url.port().value_or(0));
             }
             if (tp->options.carp_key.path) {
                 // XXX: fix when path and query are separate
@@ -204,7 +205,7 @@ carpSelectParent(PeerSelector *ps)
         combined_hash += combined_hash * 0x62531965;
         combined_hash = ROTATE_LEFT(combined_hash, 21);
         score = combined_hash * tp->carp.load_multiplier;
-        debugs(39, 3, "carpSelectParent: key=" << key << " name=" << tp->name << " combined_hash=" << combined_hash  <<
+        debugs(39, 3, *tp << " key=" << key << " combined_hash=" << combined_hash  <<
                " score=" << std::setprecision(0) << score);
 
         if ((score > high_score) && peerHTTPOkay(tp, ps)) {
@@ -214,7 +215,7 @@ carpSelectParent(PeerSelector *ps)
     }
 
     if (p)
-        debugs(39, 2, "carpSelectParent: selected " << p->name);
+        debugs(39, 2, "selected " << *p);
 
     return p;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,6 +20,7 @@
 #include "StatCounters.h"
 #include "Store.h"
 #include "tools.h"
+#include "whois.h"
 
 #include <cerrno>
 
@@ -71,7 +72,7 @@ whoisStart(FwdState * fwd)
 
     AsyncCall::Pointer writeCall = commCbCall(5,5, "whoisWriteComplete",
                                    CommIoCbPtrFun(whoisWriteComplete, p));
-    Comm::Write(fwd->serverConnection(), buf, strlen(buf), writeCall, NULL);
+    Comm::Write(fwd->serverConnection(), buf, strlen(buf), writeCall, nullptr);
     AsyncCall::Pointer readCall = commCbCall(5,4, "whoisReadReply",
                                   CommIoCbPtrFun(whoisReadReply, p));
     comm_read(fwd->serverConnection(), p->buf, BUFSIZ, readCall);
@@ -86,7 +87,7 @@ static void
 whoisTimeout(const CommTimeoutCbParams &io)
 {
     WhoisState *p = static_cast<WhoisState *>(io.data);
-    debugs(75, 3, HERE << io.conn << ", URL " << p->entry->url());
+    debugs(75, 3, io.conn << ", URL " << p->entry->url());
     io.conn->close();
 }
 
@@ -115,8 +116,18 @@ WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t
         return;
 
     aBuffer[aBufferLength] = '\0';
-    debugs(75, 3, HERE << conn << " read " << aBufferLength << " bytes");
+    debugs(75, 3, conn << " read " << aBufferLength << " bytes");
     debugs(75, 5, "{" << aBuffer << "}");
+
+    // TODO: Honor delay pools.
+
+    // XXX: Update statCounter before bailing
+    if (!entry->isAccepting()) {
+        debugs(52, 3, "terminating due to bad " << *entry);
+        // TODO: Do not abuse connection for triggering cleanup.
+        conn->close();
+        return;
+    }
 
     if (flag != Comm::OK) {
         debugs(50, 2, conn << ": read failure: " << xstrerr(xerrno));
@@ -159,6 +170,11 @@ WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t
     if (!entry->makePublic())
         entry->makePrivate(true);
 
+    if (dataWritten) // treat zero-length responses as incomplete
+        fwd->markStoredReplyAsWhole("whois received/stored the entire response");
+    else
+        fwd->fail(new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scBadGateway, fwd->request, fwd->al));
+
     fwd->complete();
     debugs(75, 3, "whoisReadReply: Done: " << entry->url());
     conn->close();
@@ -169,6 +185,7 @@ whoisClose(const CommCloseCbParams &params)
 {
     WhoisState *p = (WhoisState *)params.data;
     debugs(75, 3, "whoisClose: FD " << params.fd);
+    // We do not own a Connection. Assume that FwdState is also monitoring.
     p->entry->unlock("whoisClose");
     delete p;
 }

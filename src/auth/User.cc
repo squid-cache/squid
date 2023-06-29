@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,7 +18,6 @@
 #include "auth/UserRequest.h"
 #include "event.h"
 #include "globals.h"
-#include "SquidTime.h"
 #include "Store.h"
 
 Auth::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
@@ -30,9 +29,9 @@ Auth::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
     username_(nullptr),
     requestRealm_(aRequestRealm)
 {
-    proxy_match_cache.head = proxy_match_cache.tail = NULL;
-    ip_list.head = ip_list.tail = NULL;
-    debugs(29, 5, HERE << "Initialised auth_user '" << this << "'.");
+    proxy_match_cache.head = proxy_match_cache.tail = nullptr;
+    ip_list.head = ip_list.tail = nullptr;
+    debugs(29, 5, "Initialised auth_user '" << this << "'.");
 }
 
 Auth::CredentialState
@@ -64,14 +63,14 @@ Auth::User::absorb(Auth::User::Pointer from)
      *  dlink_list proxy_match_cache;
      */
 
-    debugs(29, 5, HERE << "auth_user '" << from << "' into auth_user '" << this << "'.");
+    debugs(29, 5, "auth_user '" << from << "' into auth_user '" << this << "'.");
 
     // combine the helper response annotations. Ensuring no duplicates are copied.
     notes.appendNewOnly(&from->notes);
 
     /* absorb the list of IP address sources (for max_user_ip controls) */
     AuthUserIP *new_ipdata;
-    while (from->ip_list.head != NULL) {
+    while (from->ip_list.head != nullptr) {
         new_ipdata = static_cast<AuthUserIP *>(from->ip_list.head->data);
 
         /* If this IP has expired - ignore the expensive merge actions. */
@@ -120,7 +119,7 @@ Auth::User::absorb(Auth::User::Pointer from)
 
 Auth::User::~User()
 {
-    debugs(29, 5, HERE << "Freeing auth_user '" << this << "'.");
+    debugs(29, 5, "Freeing auth_user '" << this << "'.");
     assert(LockCount() == 0);
 
     /* free cached acl results */
@@ -223,7 +222,7 @@ Auth::User::addIp(Ip::Address ipaddr)
 
     ++ipcount;
 
-    debugs(29, 2, HERE << "user '" << username() << "' has been seen at a new IP address (" << ipaddr << ")");
+    debugs(29, 2, "user '" << username() << "' has been seen at a new IP address (" << ipaddr << ")");
 }
 
 SBuf
@@ -238,7 +237,7 @@ Auth::User::BuildUserKey(const char *username, const char *realm)
 }
 
 /**
- * Dump the username cache statictics for viewing...
+ * Dump the username cache statistics for viewing...
  */
 void
 Auth::User::CredentialsCacheStats(StoreEntry *output)
@@ -271,7 +270,7 @@ Auth::User::username(char const *aString)
         assert(!username_);
         username_ = xstrdup(aString);
         // NP: param #2 is working around a c_str() data-copy performance regression
-        userKey_ = BuildUserKey(username_, (!requestRealm_.isEmpty() ? requestRealm_.c_str() : NULL));
+        userKey_ = BuildUserKey(username_, (!requestRealm_.isEmpty() ? requestRealm_.c_str() : nullptr));
     } else {
         safe_free(username_);
         userKey_.clear();

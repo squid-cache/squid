@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -42,8 +42,8 @@
 char *
 get_nis_password(char *user, char *nisdomain, char *nismap)
 {
-    static char *val = NULL;
-    char *password = NULL;
+    static char *val = nullptr;
+    char *password = nullptr;
     int vallen, res;
 
 #ifdef DEBUG
@@ -54,7 +54,7 @@ get_nis_password(char *user, char *nisdomain, char *nismap)
     /* Free last entry */
     if (val) {
         free(val);
-        val = NULL;
+        val = nullptr;
     }
 
     /* Get NIS entry */
@@ -64,15 +64,15 @@ get_nis_password(char *user, char *nisdomain, char *nismap)
     case NO_YPERR:
         /* username = */
         (void) strtok(val, ":");
-        password = strtok(NULL, ",:");
+        password = strtok(nullptr, ",:");
         return password;
     case YPERR_YPBIND:
         syslog(LOG_ERR, "Squid Authentication through ypbind failure: can't communicate with ypbind");
-        return NULL;
+        return nullptr;
     case YPERR_KEY:     /* No such key in map */
-        return NULL;
+        return nullptr;
     default:
-        return NULL;
+        return nullptr;
     }
 }
 

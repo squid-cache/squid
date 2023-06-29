@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 #include "auth/CredentialsCache.h"
 #include "auth/ntlm/User.h"
 #include "auth/SchemeConfig.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 Auth::Ntlm::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
     Auth::User(aConfig, aRequestRealm)
@@ -19,7 +19,7 @@ Auth::Ntlm::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
 
 Auth::Ntlm::User::~User()
 {
-    debugs(29, 5, HERE << "doing nothing to clear NTLM scheme data for '" << this << "'");
+    debugs(29, 5, "doing nothing to clear NTLM scheme data for '" << this << "'");
 }
 
 int32_t

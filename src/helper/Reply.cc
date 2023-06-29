@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "helper.h"
 #include "helper/Reply.h"
 #include "rfc1738.h"
@@ -75,8 +75,8 @@ Helper::Reply::finalize()
             result = Helper::TT;
             p+=3;
             // followed by an auth token
-            char *w1 = strwordtok(NULL, &p);
-            if (w1 != NULL) {
+            char *w1 = strwordtok(nullptr, &p);
+            if (w1 != nullptr) {
                 const char *authToken = w1;
                 notes.add("token",authToken);
             } else {
@@ -86,15 +86,15 @@ Helper::Reply::finalize()
             }
 
         } else if (!strncmp(p,"AF ",3)) {
-            // NTLM/Negotate OK response
+            // NTLM/Negotiate OK response
             result = Helper::Okay;
             p+=3;
             // followed by:
             //  an optional auth token and user field
             // or, an optional username field
-            char *w1 = strwordtok(NULL, &p);
-            char *w2 = strwordtok(NULL, &p);
-            if (w2 != NULL) {
+            char *w1 = strwordtok(nullptr, &p);
+            char *w2 = strwordtok(nullptr, &p);
+            if (w2 != nullptr) {
                 // Negotiate "token user"
                 const char *authToken = w1;
                 notes.add("token",authToken);
@@ -102,7 +102,7 @@ Helper::Reply::finalize()
                 const char *user = w2;
                 notes.add("user",user);
 
-            } else if (w1 != NULL) {
+            } else if (w1 != nullptr) {
                 // NTLM "user"
                 const char *user = w1;
                 notes.add("user",user);
@@ -151,6 +151,58 @@ isKeyNameChar(char c)
     return false;
 }
 
+/// warns admin about problematic key=value pairs
+void
+Helper::Reply::CheckReceivedKey(const SBuf &key, const SBuf &value)
+{
+    // Squid recognizes these keys (by name) in some helper responses
+    static const std::vector<SBuf> recognized = {
+        SBuf("clt_conn_tag"),
+        SBuf("group"),
+        SBuf("ha1"),
+        SBuf("log"),
+        SBuf("message"),
+        SBuf("nonce"),
+        SBuf("password"),
+        SBuf("rewrite-url"),
+        SBuf("status"),
+        SBuf("store-id"),
+        SBuf("tag"),
+        SBuf("token"),
+        SBuf("url"),
+        SBuf("user")
+    };
+
+    // TODO: Merge with Notes::ReservedKeys(). That list has an entry that Squid
+    // sources do _not_ recognize today ("ttl"), and it is missing some
+    // recognized entries ("clt_conn_tag", "nonce", store-id", and "token").
+
+    if (key.isEmpty()) {
+        debugs(84, DBG_IMPORTANT, "WARNING: Deprecated from-helper annotation without a name: " <<
+               key << '=' << value <<
+               Debug::Extra << "advice: Name or remove this annotation");
+        // TODO: Skip/ignore these annotations.
+        return;
+    }
+
+    // We do not check custom keys for repetitions because Squid supports them:
+    // The "note" ACL checks all of them and %note prints all of them.
+    if (*key.rbegin() == '_')
+        return; // a custom key
+
+    // To simplify, we allow all recognized keys, even though some of them are
+    // only expected from certain helpers or even only in certain reply types.
+    // To simplify and optimize, we do not check recognized keys for repetitions
+    // because _some_ of them (e.g., "message") do support repetitions.
+    if (std::find(recognized.begin(), recognized.end(), key) != recognized.end())
+        return; // a Squid-recognized key
+
+    debugs(84, DBG_IMPORTANT, "WARNING: Unsupported or unexpected from-helper annotation with a name reserved for Squid use: " <<
+           key << '=' << value <<
+           Debug::Extra << "advice: If this is a custom annotation, rename it to add a trailing underscore: " <<
+           key << '_');
+}
+
 void
 Helper::Reply::parseResponseKeys()
 {
@@ -172,11 +224,15 @@ Helper::Reply::parseResponseKeys()
 
         // the value may be a quoted string or a token
         const bool urlDecode = (*p != '"'); // check before moving p.
-        char *v = strwordtok(NULL, &p);
-        if (v != NULL && urlDecode && (p-v) > 2) // 1-octet %-escaped requires 3 bytes
+        char *v = strwordtok(nullptr, &p);
+        if (v != nullptr && urlDecode && (p-v) > 2) // 1-octet %-escaped requires 3 bytes
             rfc1738_unescape(v);
 
-        notes.add(key, v ? v : ""); // value can be empty, but must not be NULL
+        // TODO: Convert the above code to use Tokenizer and SBuf
+        const SBuf parsedKey(key);
+        const SBuf parsedValue(v); // allow empty values (!v or !*v)
+        CheckReceivedKey(parsedKey, parsedValue);
+        notes.add(parsedKey, parsedValue);
 
         other_.consume(p - other_.content());
         other_.consumeWhitespacePrefix();
@@ -193,26 +249,26 @@ Helper::Reply::emptyBuf() const
 }
 
 std::ostream &
-operator <<(std::ostream &os, const Helper::Reply &r)
+Helper::operator <<(std::ostream &os, const Reply &r)
 {
     os << "{result=";
     switch (r.result) {
-    case Helper::Okay:
+    case Okay:
         os << "OK";
         break;
-    case Helper::Error:
+    case Error:
         os << "ERR";
         break;
-    case Helper::BrokenHelper:
+    case BrokenHelper:
         os << "BH";
         break;
-    case Helper::TT:
+    case TT:
         os << "TT";
         break;
-    case Helper::TimedOut:
+    case TimedOut:
         os << "Timeout";
         break;
-    case Helper::Unknown:
+    case Unknown:
         os << "Unknown";
         break;
     }

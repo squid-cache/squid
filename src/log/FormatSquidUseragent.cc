@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,12 +13,11 @@
 #include "HttpRequest.h"
 #include "log/File.h"
 #include "log/Formats.h"
-#include "SquidTime.h"
 
 void
 Log::Format::SquidUserAgent(const AccessLogEntry::Pointer &al, Logfile * logfile)
 {
-    const char *agent = NULL;
+    const char *agent = nullptr;
 
     if (al->request)
         agent = al->request->header.getStr(Http::HdrType::USER_AGENT);

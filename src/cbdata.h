@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,17 +37,17 @@
 
  \subsection AsyncOpWithoutCBDATA Asynchronous operation without cbdata, showing why cbdata is needed
  \par
-   For a asyncronous operation with callback functions, the normal
+   For a asynchronous operation with callback functions, the normal
    sequence of events in programs NOT using cbdata is as follows:
 
  \code
     // initialization
     type_of_data our_data = new ...;
     ...
-    // Initiate a asyncronous operation, with our_data as callback_data
+    // Initiate a asynchronous operation, with our_data as callback_data
     fooOperationStart(bar, callback_func, our_data);
     ...
-    // The asyncronous operation completes and makes the callback
+    // The asynchronous operation completes and makes the callback
     callback_func(callback_data, ....);
     // Some time later we clean up our data
     delete our_data;
@@ -65,7 +65,7 @@
     // initialization
     type_of_data our_data = new ...;
     ...
-    // Initiate a asyncronous operation, with our_data as callback_data
+    // Initiate a asynchronous operation, with our_data as callback_data
     fooOperationStart(bar, callback_func, our_data);
     ...
     // ouch, something bad happened elsewhere.. try to cleanup
@@ -75,19 +75,19 @@
     // pending operations.
     delete our_data;
     ...
-    // The asyncronous operation completes and makes the callback
+    // The asynchronous operation completes and makes the callback
     callback_func(callback_data, ....);
     // CRASH, the memory pointer to by callback_data is no longer valid
     // at the time of the callback
  \endcode
 
- \subsection AsyncOpWithCBDATA Asyncronous operation with cbdata
+ \subsection AsyncOpWithCBDATA Asynchronous operation with cbdata
 
  \par
    The callback data allocator lets us do this in a uniform and
    safe manner.  The callback data allocator is used to allocate,
    track and free memory pool objects used during callback
-   operations.  Allocated memory is locked while the asyncronous
+   operations.  Allocated memory is locked while the asynchronous
    operation executes elsewhere, and is freed when the operation
    completes.  The normal sequence of events is:
 
@@ -95,13 +95,13 @@
     // initialization
     type_of_data our_data = new type_of_data;
     ...
-    // Initiate a asyncronous operation, with our_data as callback_data
+    // Initiate a asynchronous operation, with our_data as callback_data
     fooOperationStart(..., callback_func, our_data);
     ...
     // foo
     void *local_pointer = cbdataReference(callback_data);
     ....
-    // The asyncronous operation completes and makes the callback
+    // The asynchronous operation completes and makes the callback
     void *cbdata;
     if (cbdataReferenceValidDone(local_pointer, &amp;cbdata))
         callback_func(...., cbdata);
@@ -114,12 +114,12 @@
    With this scheme, nothing bad happens if delete gets called
    before fooOperantionComplete(...).
 
- \par   Initalization
+ \par   Initialization
  \code
     // initialization
     type_of_data our_data = new type_of_data;
     ...
-    // Initiate a asyncronous operation, with our_data as callback_data
+    // Initiate a asynchronous operation, with our_data as callback_data
     fooOperationStart(..., callback_func, our_data);
     ...
     // do some stuff with it
@@ -128,7 +128,7 @@
     // something bad happened elsewhere.. cleanup
     delete our_data;
     ....
-    // The asyncronous operation completes and makes the callback
+    // The asynchronous operation completes and makes the callback
     void *cbdata;
     if (cbdataReferenceValidDone(local_pointer, &amp;cbdata))
         // won't be called, as the data is no longer valid
@@ -196,17 +196,11 @@ typedef int cbdata_type;
 static const cbdata_type CBDATA_UNKNOWN = 0;
 
 /**
- * Create a run-time registration of CBDATA component with
- * the Squid cachemgr
- */
-void cbdataRegisterWithCacheManager(void);
-
-/**
  * Allocates a new entry of a registered CBDATA type.
  *
  * \note For internal CBDATA use only.
  */
-void *cbdataInternalAlloc(cbdata_type type, const char *, int);
+void *cbdataInternalAlloc(cbdata_type type);
 
 /**
  * Frees a entry allocated by cbdataInternalAlloc().
@@ -221,19 +215,8 @@ void *cbdataInternalAlloc(cbdata_type type, const char *, int);
  *
  * \note For internal CBDATA use only.
  */
-void *cbdataInternalFree(void *p, const char *, int);
+void *cbdataInternalFree(void *p);
 
-#if USE_CBDATA_DEBUG
-void cbdataInternalLockDbg(const void *p, const char *, int);
-#define cbdataInternalLock(a) cbdataInternalLockDbg(a,__FILE__,__LINE__)
-
-void cbdataInternalUnlockDbg(const void *p, const char *, int);
-#define cbdataInternalUnlock(a) cbdataInternalUnlockDbg(a,__FILE__,__LINE__)
-
-int cbdataInternalReferenceDoneValidDbg(void **p, void **tp, const char *, int);
-#define cbdataReferenceValidDone(var, ptr) cbdataInternalReferenceDoneValidDbg((void **)&(var), (ptr), __FILE__,__LINE__)
-
-#else
 void cbdataInternalLock(const void *p);
 void cbdataInternalUnlock(const void *p);
 
@@ -245,17 +228,15 @@ void cbdataInternalUnlock(const void *p);
  \code
         void *cbdata;
         ...
-        if (cbdataReferenceValidDone(reference, &cbdata)) != NULL)
+        if (cbdataReferenceValidDone(reference, &cbdata)))
             callback(..., cbdata);
  \endcode
  *
- * \param var The reference variable. Will be automatically cleared to NULL.
+ * \param var The reference variable. Will be automatically cleared to nullptr
  * \param ptr A temporary pointer to the referenced data (if valid).
  */
 int cbdataInternalReferenceDoneValid(void **p, void **tp);
 #define cbdataReferenceValidDone(var, ptr) cbdataInternalReferenceDoneValid((void **)&(var), (ptr))
-
-#endif /* !CBDATA_DEBUG */
 
 /**
  * \param p A cbdata entry reference pointer.
@@ -278,22 +259,28 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size)
         void *operator new(size_t size) { \
           assert(size == sizeof(type)); \
           if (!CBDATA_##type) CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type)); \
-          return (type *)cbdataInternalAlloc(CBDATA_##type,__FILE__,__LINE__); \
+          return (type *)cbdataInternalAlloc(CBDATA_##type); \
         } \
         void operator delete (void *address) { \
-          if (address) cbdataInternalFree(address,__FILE__,__LINE__); \
+          if (address) cbdataInternalFree(address); \
         } \
         void *toCbdata() methodSpecifiers { return this; } \
     private: \
        static cbdata_type CBDATA_##type;
 
 /// Starts cbdata-protection in a class hierarchy.
-/// Child classes in the same hierarchy should use CBDATA_CHILD().
+/// Intermediate classes in the same hierarchy must use CBDATA_INTERMEDIATE() if
+/// they risk creating cbdata pointers in their constructors.
+/// Final classes in the same hierarchy must use CBDATA_CHILD().
 class CbdataParent
 {
 public:
     virtual ~CbdataParent() {}
     virtual void *toCbdata() = 0;
+
+private:
+    /// hack: ensure CBDATA_CHILD() after a toCbdata()-defining CBDATA_INTERMEDIATE()
+    virtual void finalizedInCbdataChild() = 0;
 };
 
 /// cbdata-enables a stand-alone class that is not a CbdataParent child
@@ -301,10 +288,25 @@ public:
 /// use this at the start of your class declaration for consistency sake
 #define CBDATA_CLASS(type) CBDATA_DECL_(type, noexcept)
 
-/// cbdata-enables a CbdataParent child class (including grandchildren)
+/// cbdata-enables a final CbdataParent-derived class in a hierarchy
 /// sets the class declaration section to "private"
 /// use this at the start of your class declaration for consistency sake
-#define CBDATA_CHILD(type) CBDATA_DECL_(type, override final)
+#define CBDATA_CHILD(type) CBDATA_DECL_(type, final) \
+      void finalizedInCbdataChild() final {}
+
+/// cbdata-enables a non-final CbdataParent-derived class T in a hierarchy.
+/// Using this macro is required to be able to create cbdata pointers in T
+/// constructors, when the current vtable is still pointing to T::toCbdata()
+/// that would have been pure without this macro, leading to FATAL runtime
+/// OnTerminate() calls. However, assuming that the final cbdata pointer will
+/// still point to T::this is risky -- multiple inheritance changes "this"!
+///
+/// sets the class declaration section to "private"
+/// use this at the start of your class declaration for consistency sake
+#define CBDATA_INTERMEDIATE() \
+    public: \
+        void *toCbdata() override { return this; } \
+    private:
 
 /**
  * Creates a global instance pointer for the CBDATA memory allocator
@@ -345,9 +347,9 @@ public:
  *
  * \deprecated Prefer the use of CbcPointer<> smart pointer.
  *
- * \param var The reference variable. Will be automatically cleared to NULL.
+ * \param var The reference variable. Will be automatically cleared to nullptr
  */
-#define cbdataReferenceDone(var) do {if (var) {cbdataInternalUnlock(var); var = NULL;}} while(0)
+#define cbdataReferenceDone(var) do {if (var) {cbdataInternalUnlock(var); var = nullptr;}} while(0)
 
 /**
  * A generic wrapper for passing object pointers through cbdata.

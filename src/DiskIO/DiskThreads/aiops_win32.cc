@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,7 +14,6 @@
 #include "fd.h"
 #include "mem/Pool.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 
 #include <cerrno>
@@ -103,15 +102,15 @@ static int squidaio_initialised = 0;
 #define AIO_TINY_BUFS   AIO_LARGE_BUFS >> 3
 #define AIO_MICRO_BUFS  128
 
-static MemAllocator *squidaio_large_bufs = NULL;    /* 16K */
-static MemAllocator *squidaio_medium_bufs = NULL;   /* 8K */
-static MemAllocator *squidaio_small_bufs = NULL;    /* 4K */
-static MemAllocator *squidaio_tiny_bufs = NULL; /* 2K */
-static MemAllocator *squidaio_micro_bufs = NULL;    /* 128K */
+static Mem::Allocator *squidaio_large_bufs = nullptr; /* 16K */
+static Mem::Allocator *squidaio_medium_bufs = nullptr; /* 8K */
+static Mem::Allocator *squidaio_small_bufs = nullptr; /* 4K */
+static Mem::Allocator *squidaio_tiny_bufs = nullptr; /* 2K */
+static Mem::Allocator *squidaio_micro_bufs = nullptr; /* 128K */
 
 static int request_queue_len = 0;
-static MemAllocator *squidaio_request_pool = NULL;
-static MemAllocator *squidaio_thread_pool = NULL;
+static Mem::Allocator *squidaio_request_pool = nullptr;
+static Mem::Allocator *squidaio_thread_pool = nullptr;
 static squidaio_request_queue_t request_queue;
 
 static struct {
@@ -135,7 +134,7 @@ done_requests = {
 
 static HANDLE main_thread;
 
-static MemAllocator *
+static Mem::Allocator *
 squidaio_get_pool(int size)
 {
     if (size <= AIO_LARGE_BUFS) {
@@ -158,9 +157,7 @@ void *
 squidaio_xmalloc(int size)
 {
     void *p;
-    MemAllocator *pool;
-
-    if ((pool = squidaio_get_pool(size)) != NULL) {
+    if (const auto pool = squidaio_get_pool(size)) {
         p = pool->alloc();
     } else
         p = xmalloc(size);
@@ -183,9 +180,7 @@ squidaio_xstrdup(const char *str)
 void
 squidaio_xfree(void *p, int size)
 {
-    MemAllocator *pool;
-
-    if ((pool = squidaio_get_pool(size)) != NULL) {
+    if (const auto pool = squidaio_get_pool(size)) {
         pool->freeOne(p);
     } else
         xfree(p);
@@ -194,10 +189,9 @@ squidaio_xfree(void *p, int size)
 static void
 squidaio_xstrfree(char *str)
 {
-    MemAllocator *pool;
     int len = strlen(str) + 1;
 
-    if ((pool = squidaio_get_pool(len)) != NULL) {
+    if (const auto pool = squidaio_get_pool(len)) {
         pool->freeOne(str);
     } else
         xfree(str);
@@ -279,7 +273,7 @@ squidaio_init(void)
     /* Create threads and get them to sit in their wait loop */
     squidaio_thread_pool = memPoolCreate("aio_thread", sizeof(squidaio_thread_t));
 
-    assert(NUMTHREADS);
+    assert(NUMTHREADS > 0);
 
     for (i = 0; i < NUMTHREADS; ++i) {
         threadp = (squidaio_thread_t *)squidaio_thread_pool->alloc();
@@ -588,7 +582,7 @@ squidaio_queue_request(squidaio_request_t * request)
         if (++filter >= filter_limit) {
             filter_limit += filter;
             filter = 0;
-            debugs(43, DBG_IMPORTANT, "squidaio_queue_request: WARNING - Queue congestion (growing to " << filter_limit << ")");
+            debugs(43, DBG_IMPORTANT, "WARNING: squidaio_queue_request: Queue congestion (growing to " << filter_limit << ")");
         }
     }
 
@@ -611,7 +605,7 @@ squidaio_queue_request(squidaio_request_t * request)
 
         if (squid_curtime >= (last_warn + 15) &&
                 squid_curtime >= (high_start + 5)) {
-            debugs(43, DBG_IMPORTANT, "squidaio_queue_request: WARNING - Disk I/O overloading");
+            debugs(43, DBG_IMPORTANT, "WARNING: squidaio_queue_request: Disk I/O overloading");
 
             if (squid_curtime >= (high_start + 15))
                 debugs(43, DBG_IMPORTANT, "squidaio_queue_request: Queue Length: current=" <<

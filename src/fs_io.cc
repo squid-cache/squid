@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,7 +15,6 @@
 #include "fs_io.h"
 #include "globals.h"
 #include "MemBuf.h"
-#include "profiler/Profiler.h"
 #include "StatCounters.h"
 
 #include <cerrno>
@@ -46,7 +45,6 @@ int
 file_open(const char *path, int mode)
 {
     int fd;
-    PROF_start(file_open);
 
     if (FILE_MODE(mode) == O_WRONLY)
         mode |= O_APPEND;
@@ -67,7 +65,6 @@ file_open(const char *path, int mode)
         fd_open(fd, FD_FILE, path);
     }
 
-    PROF_stop(file_open);
     return fd;
 }
 
@@ -77,12 +74,11 @@ file_close(int fd)
 {
     fde *F = &fd_table[fd];
     PF *read_callback;
-    PROF_start(file_close);
     assert(fd >= 0);
     assert(F->flags.open);
 
     if ((read_callback = F->read_handler)) {
-        F->read_handler = NULL;
+        F->read_handler = nullptr;
         read_callback(-1, F->read_data);
     }
 
@@ -97,7 +93,6 @@ file_close(int fd)
 #else
         F->flags.close_request = true;
         debugs(6, 2, "file_close: FD " << fd << ", delaying close");
-        PROF_stop(file_close);
         return;
 #endif
 
@@ -107,13 +102,7 @@ file_close(int fd)
      * Assert there is no write callback.  Otherwise we might be
      * leaking write state data by closing the descriptor
      */
-    assert(F->write_handler == NULL);
-
-#if CALL_FSYNC_BEFORE_CLOSE
-
-    fsync(fd);
-
-#endif
+    assert(F->write_handler == nullptr);
 
     close(fd);
 
@@ -122,8 +111,6 @@ file_close(int fd)
     fd_close(fd);
 
     ++ statCounter.syscalls.disk.closes;
-
-    PROF_stop(file_close);
 }
 
 /*
@@ -145,10 +132,10 @@ diskCombineWrites(_fde_disk *fdd)
      * XXX This currently ignores any seeks (file_offset)
      */
 
-    if (fdd->write_q != NULL && fdd->write_q->next != NULL) {
+    if (fdd->write_q != nullptr && fdd->write_q->next != nullptr) {
         int len = 0;
 
-        for (dwrite_q *q = fdd->write_q; q != NULL; q = q->next)
+        for (dwrite_q *q = fdd->write_q; q != nullptr; q = q->next)
             len += q->len - q->buf_offset;
 
         dwrite_q *wq = (dwrite_q *)memAllocate(MEM_DWRITE_Q);
@@ -159,11 +146,11 @@ diskCombineWrites(_fde_disk *fdd)
 
         wq->buf_offset = 0;
 
-        wq->next = NULL;
+        wq->next = nullptr;
 
         wq->free_func = cxx_xfree;
 
-        while (fdd->write_q != NULL) {
+        while (fdd->write_q != nullptr) {
             dwrite_q *q = fdd->write_q;
 
             len = q->len - q->buf_offset;
@@ -195,16 +182,14 @@ diskHandleWrite(int fd, void *)
     int status = DISK_OK;
     bool do_close;
 
-    if (NULL == q)
+    if (nullptr == q)
         return;
-
-    PROF_start(diskHandleWrite);
 
     debugs(6, 3, "diskHandleWrite: FD " << fd);
 
     F->flags.write_daemon = false;
 
-    assert(fdd->write_q != NULL);
+    assert(fdd->write_q != nullptr);
 
     assert(fdd->write_q->len > fdd->write_q->buf_offset);
 
@@ -218,7 +203,7 @@ diskHandleWrite(int fd, void *)
         errno = 0;
         if (lseek(fd, fdd->write_q->file_offset, SEEK_SET) == -1) {
             int xerrno = errno;
-            debugs(50, DBG_IMPORTANT, "error in seek for FD " << fd << ": " << xstrerr(xerrno));
+            debugs(50, DBG_IMPORTANT, "ERROR: in seek for FD " << fd << ": " << xstrerr(xerrno));
             // XXX: handle error?
         }
     }
@@ -226,6 +211,7 @@ diskHandleWrite(int fd, void *)
     len = FD_WRITE_METHOD(fd,
                           fdd->write_q->buf + fdd->write_q->buf_offset,
                           fdd->write_q->len - fdd->write_q->buf_offset);
+    const auto xerrno = errno;
 
     debugs(6, 3, "diskHandleWrite: FD " << fd << " len = " << len);
 
@@ -234,10 +220,9 @@ diskHandleWrite(int fd, void *)
     fd_bytes(fd, len, FD_WRITE);
 
     if (len < 0) {
-        if (!ignoreErrno(errno)) {
-            status = errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
-            int xerrno = errno;
-            debugs(50, DBG_IMPORTANT, "diskHandleWrite: FD " << fd << ": disk write error: " << xstrerr(xerrno));
+        if (!ignoreErrno(xerrno)) {
+            status = xerrno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
+            debugs(50, DBG_IMPORTANT, "ERROR: diskHandleWrite: FD " << fd << ": disk write failure: " << xstrerr(xerrno));
 
             /*
              * If there is no write callback, then this file is
@@ -249,7 +234,7 @@ diskHandleWrite(int fd, void *)
              * a fatal message.
              */
 
-            if (fdd->wrt_handle == NULL)
+            if (fdd->wrt_handle == nullptr)
                 fatal("Write failure -- check your disk space and cache.log");
 
             /*
@@ -269,7 +254,7 @@ diskHandleWrite(int fd, void *)
 
                 if (q) {
                     memFree(q, MEM_DWRITE_Q);
-                    q = NULL;
+                    q = nullptr;
                 }
             } while ((q = fdd->write_q));
         }
@@ -277,7 +262,7 @@ diskHandleWrite(int fd, void *)
         len = 0;
     }
 
-    if (q != NULL) {
+    if (q != nullptr) {
         /* q might become NULL from write failure above */
         q->buf_offset += len;
 
@@ -297,18 +282,18 @@ diskHandleWrite(int fd, void *)
 
             if (q) {
                 memFree(q, MEM_DWRITE_Q);
-                q = NULL;
+                q = nullptr;
             }
         }
     }
 
-    if (fdd->write_q == NULL) {
+    if (fdd->write_q == nullptr) {
         /* no more data */
-        fdd->write_q_tail = NULL;
+        fdd->write_q_tail = nullptr;
     } else {
         /* another block is queued */
         diskCombineWrites(fdd);
-        Comm::SetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
+        Comm::SetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, nullptr, 0);
         F->flags.write_daemon = true;
     }
 
@@ -317,7 +302,7 @@ diskHandleWrite(int fd, void *)
     if (fdd->wrt_handle) {
         DWCB *callback = fdd->wrt_handle;
         void *cbdata;
-        fdd->wrt_handle = NULL;
+        fdd->wrt_handle = nullptr;
 
         if (cbdataReferenceValidDone(fdd->wrt_handle_data, &cbdata)) {
             callback(fd, status, len, cbdata);
@@ -325,7 +310,6 @@ diskHandleWrite(int fd, void *)
              * NOTE, this callback can close the FD, so we must
              * not touch 'F', 'fdd', etc. after this.
              */
-            PROF_stop(diskHandleWrite);
             return;
             /* XXX But what about close_request??? */
         }
@@ -333,8 +317,6 @@ diskHandleWrite(int fd, void *)
 
     if (do_close)
         file_close(fd);
-
-    PROF_stop(diskHandleWrite);
 }
 
 /* write block to a file */
@@ -349,9 +331,8 @@ file_write(int fd,
            void *handle_data,
            FREE * free_func)
 {
-    dwrite_q *wq = NULL;
+    dwrite_q *wq = nullptr;
     fde *F = &fd_table[fd];
-    PROF_start(file_write);
     assert(fd >= 0);
     assert(F->flags.open);
     /* if we got here. Caller is eligible to write. */
@@ -360,7 +341,7 @@ file_write(int fd,
     wq->buf = (char *)ptr_to_buf;
     wq->len = len;
     wq->buf_offset = 0;
-    wq->next = NULL;
+    wq->next = nullptr;
     wq->free_func = free_func;
 
     if (!F->disk.wrt_handle_data) {
@@ -372,7 +353,7 @@ file_write(int fd,
     }
 
     /* add to queue */
-    if (F->disk.write_q == NULL) {
+    if (F->disk.write_q == nullptr) {
         /* empty queue */
         F->disk.write_q = F->disk.write_q_tail = wq;
     } else {
@@ -381,10 +362,8 @@ file_write(int fd,
     }
 
     if (!F->flags.write_daemon) {
-        diskHandleWrite(fd, NULL);
+        diskHandleWrite(fd, nullptr);
     }
-
-    PROF_stop(file_write);
 }
 
 /*
@@ -417,8 +396,6 @@ diskHandleRead(int fd, void *data)
         return;
     }
 
-    PROF_start(diskHandleRead);
-
 #if WRITES_MAINTAIN_DISK_OFFSET
     if (F->disk.offset != ctrl_dat->offset) {
 #else
@@ -429,7 +406,7 @@ diskHandleRead(int fd, void *data)
         if (lseek(fd, ctrl_dat->offset, SEEK_SET) == -1) {
             xerrno = errno;
             // shouldn't happen, let's detect that
-            debugs(50, DBG_IMPORTANT, "error in seek for FD " << fd << ": " << xstrerr(xerrno));
+            debugs(50, DBG_IMPORTANT, "ERROR: in seek for FD " << fd << ": " << xstrerr(xerrno));
             // XXX handle failures?
         }
         ++ statCounter.syscalls.disk.seeks;
@@ -450,7 +427,6 @@ diskHandleRead(int fd, void *data)
     if (len < 0) {
         if (ignoreErrno(xerrno)) {
             Comm::SetSelect(fd, COMM_SELECT_READ, diskHandleRead, ctrl_dat, 0);
-            PROF_stop(diskHandleRead);
             return;
         }
 
@@ -467,8 +443,6 @@ diskHandleRead(int fd, void *data)
     cbdataReferenceDone(ctrl_dat->client_data);
 
     memFree(ctrl_dat, MEM_DREAD_CTRL);
-
-    PROF_stop(diskHandleRead);
 }
 
 /* start read operation */
@@ -479,7 +453,6 @@ void
 file_read(int fd, char *buf, int req_len, off_t offset, DRCB * handler, void *client_data)
 {
     dread_ctrl *ctrl_dat;
-    PROF_start(file_read);
     assert(fd >= 0);
     ctrl_dat = (dread_ctrl *)memAllocate(MEM_DREAD_CTRL);
     ctrl_dat->fd = fd;
@@ -490,7 +463,6 @@ file_read(int fd, char *buf, int req_len, off_t offset, DRCB * handler, void *cl
     ctrl_dat->handler = handler;
     ctrl_dat->client_data = cbdataReference(client_data);
     diskHandleRead(fd, ctrl_dat);
-    PROF_stop(file_read);
 }
 
 void
@@ -500,7 +472,7 @@ safeunlink(const char *s, int quiet)
 
     if (unlink(s) < 0 && !quiet) {
         int xerrno = errno;
-        debugs(50, DBG_IMPORTANT, "safeunlink: Couldn't delete " << s << ": " << xstrerr(xerrno));
+        debugs(50, DBG_IMPORTANT, "ERROR: safeunlink: Could not delete " << s << ": " << xstrerr(xerrno));
     }
 }
 
@@ -522,7 +494,7 @@ FileRename(const SBuf &from, const SBuf &to)
         return true;
 
     int xerrno = errno;
-    debugs(21, (errno == ENOENT ? 2 : DBG_IMPORTANT), "Cannot rename " << from << " to " << to << ": " << xstrerr(xerrno));
+    debugs(21, (xerrno == ENOENT ? 2 : DBG_IMPORTANT), "ERROR: Cannot rename " << from << " to " << to << ": " << xstrerr(xerrno));
 
     return false;
 }

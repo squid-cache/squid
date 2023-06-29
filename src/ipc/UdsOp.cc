@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,15 +21,15 @@ Ipc::UdsOp::UdsOp(const String& pathAddr):
     address(PathToAddress(pathAddr)),
     options(COMM_NONBLOCKING)
 {
-    debugs(54, 5, HERE << '[' << this << "] pathAddr=" << pathAddr);
+    debugs(54, 5, '[' << this << "] pathAddr=" << pathAddr);
 }
 
 Ipc::UdsOp::~UdsOp()
 {
-    debugs(54, 5, HERE << '[' << this << ']');
+    debugs(54, 5, '[' << this << ']');
     if (Comm::IsConnOpen(conn_))
         conn_->close();
-    conn_ = NULL;
+    conn_ = nullptr;
 }
 
 void Ipc::UdsOp::setOptions(int newOptions)
@@ -43,7 +43,7 @@ Ipc::UdsOp::conn()
     if (!Comm::IsConnOpen(conn_)) {
         if (options & COMM_DOBIND)
             unlink(address.sun_path);
-        if (conn_ == NULL)
+        if (conn_ == nullptr)
             conn_ = new Comm::Connection;
         conn_->fd = comm_open_uds(SOCK_DGRAM, 0, &address, options);
         Must(Comm::IsConnOpen(conn_));
@@ -83,6 +83,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Ipc, UdsSender);
 
 Ipc::UdsSender::UdsSender(const String& pathAddr, const TypedMsgHdr& aMessage):
     UdsOp(pathAddr),
+    codeContext(CodeContext::Current()),
     message(aMessage),
     retries(10), // TODO: make configurable?
     timeout(10), // TODO: make configurable?
@@ -116,17 +117,17 @@ bool Ipc::UdsSender::doneAll() const
 
 void Ipc::UdsSender::write()
 {
-    debugs(54, 5, HERE);
+    debugs(54, 5, MYNAME);
     typedef CommCbMemFunT<UdsSender, CommIoCbParams> Dialer;
     AsyncCall::Pointer writeHandler = JobCallback(54, 5,
                                       Dialer, this, UdsSender::wrote);
-    Comm::Write(conn(), message.raw(), message.size(), writeHandler, NULL);
+    Comm::Write(conn(), message.raw(), message.size(), writeHandler, nullptr);
     writing = true;
 }
 
 void Ipc::UdsSender::wrote(const CommIoCbParams& params)
 {
-    debugs(54, 5, HERE << params.conn << " flag " << params.flag << " retries " << retries << " [" << this << ']');
+    debugs(54, 5, params.conn << " flag " << params.flag << " retries " << retries << " [" << this << ']');
     writing = false;
     if (params.flag != Comm::OK && retries-- > 0) {
         // perhaps a fresh connection and more time will help?
@@ -161,10 +162,9 @@ void Ipc::UdsSender::DelayedRetry(void *data)
     Pointer *ptr = static_cast<Pointer*>(data);
     assert(ptr);
     if (UdsSender *us = dynamic_cast<UdsSender*>(ptr->valid())) {
-        // get back inside AsyncJob protection by scheduling an async job call
-        typedef NullaryMemFunT<Ipc::UdsSender> Dialer;
-        AsyncCall::Pointer call = JobCallback(54, 4, Dialer, us, Ipc::UdsSender::delayedRetry);
-        ScheduleCallHere(call);
+        CallBack(us->codeContext, [&us] {
+            CallJobHere(54, 4, us, UdsSender, delayedRetry);
+        });
     }
     delete ptr;
 }
@@ -172,7 +172,7 @@ void Ipc::UdsSender::DelayedRetry(void *data)
 /// make another sending attempt after a pause
 void Ipc::UdsSender::delayedRetry()
 {
-    debugs(54, 5, HERE << sleeping);
+    debugs(54, 5, sleeping);
     if (sleeping) {
         sleeping = false;
         write(); // reopens the connection if needed
@@ -181,7 +181,7 @@ void Ipc::UdsSender::delayedRetry()
 
 void Ipc::UdsSender::timedout()
 {
-    debugs(54, 5, HERE);
+    debugs(54, 5, MYNAME);
     mustStop("timedout");
 }
 
@@ -197,7 +197,7 @@ Ipc::ImportFdIntoComm(const Comm::ConnectionPointer &conn, int socktype, int pro
     socklen_t len = sizeof(addr);
     if (getsockname(conn->fd, reinterpret_cast<sockaddr*>(&addr), &len) == 0) {
         conn->remote = addr;
-        struct addrinfo* addr_info = NULL;
+        struct addrinfo* addr_info = nullptr;
         conn->remote.getAddrInfo(addr_info);
         addr_info->ai_socktype = socktype;
         addr_info->ai_protocol = protocol;

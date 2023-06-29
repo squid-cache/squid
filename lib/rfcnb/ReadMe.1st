@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -53,8 +53,4 @@ rfcnb-io.c:           all IO to network occurs here
 test_rfcnb.c:         a small test program
 
 session.c:            all session routine code is here
-
-todo:                 a list of things I would like to do ...
-
-
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -44,7 +44,7 @@ public:
 
     /// Flushes any buffered data to socket.
     /// The Ssl::Bio does not buffer any data, so this method has nothing to do
-    virtual void flush(BIO *table) {}
+    virtual void flush(BIO *) {}
 
     int fd() const { return fd_; } ///< The SSL socket descriptor
 
@@ -74,15 +74,15 @@ public:
 
     /// The ClientBio version of the Ssl::Bio::stateChanged method
     /// When the client hello message retrieved, fill the
-    /// "features" member with the client provided informations.
-    virtual void stateChanged(const SSL *ssl, int where, int ret);
+    /// "features" member with the client provided information.
+    void stateChanged(const SSL *ssl, int where, int ret) override;
     /// The ClientBio version of the Ssl::Bio::write method
-    virtual int write(const char *buf, int size, BIO *table);
+    int write(const char *buf, int size, BIO *table) override;
     /// The ClientBio version of the Ssl::Bio::read method
     /// If the holdRead flag is true then it does not write any data
     /// to socket and sets the "read retry" flag of the BIO to true
-    virtual int read(char *buf, int size, BIO *table);
-    /// Prevents or allow writting on socket.
+    int read(char *buf, int size, BIO *table) override;
+    /// Prevents or allow writing on socket.
     void hold(bool h) {holdRead_ = holdWrite_ = h;}
 
     /// Sets the buffered input data (Bio::rbuf).
@@ -98,7 +98,6 @@ private:
 
     bool holdRead_; ///< The read hold state of the bio.
     bool holdWrite_;  ///< The write hold state of the bio.
-    int helloSize; ///< The SSL hello message sent by client size
     FadingCounter renegotiations; ///< client requested renegotiations limit control
 
     /// why we should terminate the connection during next TLS operation (or nil)
@@ -109,9 +108,9 @@ private:
 /// If bumping is enabled, analyses the SSL hello message sent by squid OpenSSL
 /// subsystem (step3 bumping step) against bumping mode:
 ///   * Peek mode:  Send client hello message instead of the openSSL generated
-///                 hello message and normaly denies bumping and allow only
+///                 hello message and normally denies bumping and allow only
 ///                 splice or terminate the SSL connection
-///   * Stare mode: Sends the openSSL generated hello message and normaly
+///   * Stare mode: Sends the openSSL generated hello message and normally
 ///                 denies splicing and allow bump or terminate the SSL
 ///                 connection
 ///  If SQUID_USE_OPENSSL_HELLO_OVERWRITE_HACK is enabled also checks if the
@@ -126,31 +125,31 @@ public:
     explicit ServerBio(const int anFd);
 
     /// The ServerBio version of the Ssl::Bio::stateChanged method
-    virtual void stateChanged(const SSL *ssl, int where, int ret);
+    void stateChanged(const SSL *ssl, int where, int ret) override;
     /// The ServerBio version of the Ssl::Bio::write method
     /// If a clientRandom number is set then rewrites the raw hello message
     /// "client random" field with the provided random number.
     /// It may buffer the output packets.
-    virtual int write(const char *buf, int size, BIO *table);
+    int write(const char *buf, int size, BIO *table) override;
     /// The ServerBio version of the Ssl::Bio::read method
     /// If the record flag is set then append the data to the rbuf member
-    virtual int read(char *buf, int size, BIO *table);
+    int read(char *buf, int size, BIO *table) override;
     /// The ServerBio version of the Ssl::Bio::flush method.
     /// Flushes any buffered data
-    virtual void flush(BIO *table);
+    void flush(BIO *table) override;
     /// Sets the random number to use in client SSL HELLO message
     void setClientFeatures(Security::TlsDetails::Pointer const &details, SBuf const &hello);
 
     bool resumingSession();
 
+    /// whether the server encrypts its certificate (e.g., TLS v1.3)
+    /// \retval false the server uses plain certs or its intent is unknown
+    bool encryptedCertificates() const;
+
     /// The write hold state
     bool holdWrite() const {return holdWrite_;}
     /// Enables or disables the write hold state
     void holdWrite(bool h) {holdWrite_ = h;}
-    /// The read hold state
-    bool holdRead() const {return holdRead_;}
-    /// Enables or disables the read hold state
-    void holdRead(bool h) {holdRead_ = h;}
     /// Enables or disables the input data recording, for internal analysis.
     void recordInput(bool r) {record_ = r;}
     /// Whether we can splice or not the SSL stream
@@ -166,9 +165,6 @@ public:
 
     /// Return true if the Server Hello parsing failed
     bool gotHelloFailed() const { return (parsedHandshake && parseError); }
-
-    /// \return the server certificates list if received and parsed correctly
-    const Security::CertList &serverCertificatesIfAny() { return parser_.serverCertificates; }
 
     /// \return the TLS Details advertised by TLS server.
     const Security::TlsDetails::Pointer &receivedHelloDetails() const {return parser_.details;}
@@ -189,7 +185,6 @@ private:
     bool allowSplice; ///< True if the SSL stream can be spliced
     bool allowBump;  ///< True if the SSL stream can be bumped
     bool holdWrite_;  ///< The write hold state of the bio.
-    bool holdRead_;  ///< The read hold state of the bio.
     bool record_; ///< If true the input data recorded to rbuf for internal use
     bool parsedHandshake; ///< whether we are done parsing TLS Hello
     bool parseError; ///< error while parsing server hello message

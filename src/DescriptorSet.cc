@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,7 @@
 #include "globals.h" /* for Squid_MaxFD */
 
 // pre-allocates descriptor store and index for Squid_MaxFD descriptors
-DescriptorSet::DescriptorSet(): descriptors_(NULL), index_(NULL),
+DescriptorSet::DescriptorSet(): descriptors_(nullptr), index_(nullptr),
     capacity_(0), size_(0)
 {
     // we allocate once and never realloc, at least for now
@@ -37,12 +37,12 @@ DescriptorSet::~DescriptorSet()
 bool
 DescriptorSet::add(int fd)
 {
-    assert(0 <= fd && fd < capacity_); // \todo: replace with Must()
+    assert(0 <= fd && fd < capacity_); // TODO: replace with Must()
 
     if (has(fd))
         return false; // already have it
 
-    assert(size_ < capacity_); // \todo: replace with Must()
+    assert(size_ < capacity_); // TODO: replace with Must()
     const int pos = size_;
     ++size_;
     index_[fd] = pos;
@@ -54,7 +54,7 @@ DescriptorSet::add(int fd)
 bool
 DescriptorSet::del(int fd)
 {
-    assert(0 <= fd && fd < capacity_); // \todo: here and below, use Must()
+    assert(0 <= fd && fd < capacity_); // TODO: here and below, use Must()
 
     if (!has(fd))
         return false; // we do not have it
@@ -97,7 +97,7 @@ DescriptorSet::pop()
 void
 DescriptorSet::print(std::ostream &os) const
 {
-    // \todo add "name" if the set is used for more than just half-closed FDs
+    // TODO: add "name" if the set is used for more than just half-closed FDs
     os << size_ << " FDs";
 }
 

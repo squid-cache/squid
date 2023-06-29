@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_MEM_METER_H
 #define SQUID_SRC_MEM_METER_H
 
-#include "SquidTime.h"
+#include "time/gadgets.h"
 
 namespace Mem
 {
@@ -20,8 +20,6 @@ namespace Mem
 class Meter
 {
 public:
-    Meter() : level(0), hwater_level(0), hwater_stamp(0) {}
-
     /// flush the meter level back to 0, but leave peak records
     void flush() {level=0;}
 
@@ -41,13 +39,66 @@ private:
     void checkHighWater() {
         if (hwater_level < level) {
             hwater_level = level;
-            hwater_stamp = squid_curtime ? squid_curtime : time(NULL);
+            hwater_stamp = squid_curtime ? squid_curtime : time(nullptr);
         }
     }
 
-    ssize_t level;          ///< current level (count or volume)
-    ssize_t hwater_level;   ///< high water mark
-    time_t hwater_stamp;    ///< timestamp of last high water mark change
+    ssize_t level = 0; ///< current level (count or volume)
+    ssize_t hwater_level = 0; ///< high water mark
+    time_t hwater_stamp = 0; ///< timestamp of last high water mark change
+};
+
+/**
+ * Object to track per-pool memory usage (alloc = inuse+idle)
+ */
+class PoolMeter
+{
+public:
+    /// Object to track per-pool cumulative counters
+    class mgb_t
+    {
+    public:
+        mgb_t &operator +=(const mgb_t &o) {
+            count += o.count;
+            bytes += o.bytes;
+            return *this;
+        }
+
+        /// account for memory actions taking place
+        void update(size_t items, size_t itemSize) {
+            count += items;
+            bytes += (items * itemSize);
+        }
+
+    public:
+        double count = 0.0;
+        double bytes = 0.0;
+    };
+
+    /// flush counters back to 0, but leave historic peak records
+    void flush() {
+        alloc.flush();
+        inuse.flush();
+        idle.flush();
+        gb_allocated = mgb_t();
+        gb_oallocated = mgb_t();
+        gb_saved = mgb_t();
+        gb_freed = mgb_t();
+    }
+
+    Meter alloc;
+    Meter inuse;
+    Meter idle;
+
+    /** history Allocations */
+    mgb_t gb_allocated;
+    mgb_t gb_oallocated;
+
+    /** account Saved Allocations */
+    mgb_t gb_saved;
+
+    /** account Free calls */
+    mgb_t gb_freed;
 };
 
 } // namespace Mem

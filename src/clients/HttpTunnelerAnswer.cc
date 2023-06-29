@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,6 +31,9 @@ Http::operator <<(std::ostream &os, const TunnelerAnswer &answer)
 
     if (answer.peerResponseStatus != Http::scNone)
         os << ' ' << answer.peerResponseStatus;
+
+    if (answer.conn)
+        os << ' ' << answer.conn;
 
     os << ']';
     return os;

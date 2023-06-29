@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,14 +12,36 @@
 
 #if USE_SQUID_ESI && HAVE_LIBEXPAT
 
+#include "base/RunnersRegistry.h"
 #include "esi/ExpatParser.h"
+
+#include <memory>
+
+namespace Esi
+{
+
+class ExpatRr : public RegisteredRunner
+{
+public:
+    void finalizeConfig() override
+    {
+        registration.reset(new ESIParser::Register("expat", &ESIExpatParser::NewParser));
+    }
+
+private:
+    std::unique_ptr<ESIParser::Register> registration;
+};
+
+RunnerRegistrationEntry(ExpatRr);
+
+}
 
 EsiParserDefinition(ESIExpatParser);
 
 ESIExpatParser::ESIExpatParser(ESIParserClient *aClient) : theClient (aClient)
 {
     /* TODO: grab the document encoding from the headers */
-    p = XML_ParserCreateNS(NULL,'|');
+    p = XML_ParserCreateNS(nullptr,'|');
     XML_SetUserData (myParser(), static_cast<void *>(this));
     XML_SetElementHandler(myParser(), Start, End);
     XML_SetDefaultHandler(myParser(), Default);
@@ -30,7 +52,7 @@ ESIExpatParser::ESIExpatParser(ESIParserClient *aClient) : theClient (aClient)
 ESIExpatParser::~ESIExpatParser()
 {
     XML_ParserFree (myParser());
-    p = NULL;
+    p = nullptr;
 }
 
 void

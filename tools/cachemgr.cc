@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,14 +7,14 @@
  */
 
 #include "squid.h"
-#include "base64.h"
 #include "base/CharacterSet.h"
+#include "base64.h"
 #include "getfullhostname.h"
 #include "html_quote.h"
 #include "ip/Address.h"
 #include "MemBuf.h"
-#include "rfc1123.h"
 #include "rfc1738.h"
+#include "time/gadgets.h"
 #include "util.h"
 
 #include <cctype>
@@ -105,7 +105,7 @@ typedef struct {
  */
 static const time_t passwd_ttl = 60 * 60 * 3;   /* in sec */
 static const char *script_name = "/cgi-bin/cachemgr.cgi";
-static const char *progname = NULL;
+static const char *progname = nullptr;
 static time_t now;
 
 /*
@@ -144,7 +144,7 @@ int Win32SockInit(void)
     } else if (s_iInitCount < 0)
         return (s_iInitCount);
 
-    /* s_iInitCount == 0. Do the initailization */
+    /* s_iInitCount == 0. Do the initialization */
     iVersionRequested = MAKEWORD(2, 0);
 
     err = WSAStartup((WORD) iVersionRequested, &wsaData);
@@ -200,7 +200,7 @@ xstrtok(char **str, char del)
             *str = p + 1;
             *p = '\0';
         } else
-            *str = NULL;
+            *str = nullptr;
 
         /* trim */
         len = strlen(tok);
@@ -216,16 +216,16 @@ xstrtok(char **str, char del)
         return "";
 }
 
-bool
+static bool
 hostname_check(const char *uri)
 {
     static CharacterSet hostChars = CharacterSet("host",".:[]_") +
-            CharacterSet::ALPHA + CharacterSet::DIGIT;
+                                    CharacterSet::ALPHA + CharacterSet::DIGIT;
 
     const auto limit = strlen(uri);
     for (size_t i = 0; i < limit; i++) {
         if (!hostChars[uri[i]]) {
-              return false;
+            return false;
         }
     }
     return true;
@@ -237,7 +237,7 @@ print_trailer(void)
     printf("<HR noshade size=\"1px\">\n");
     printf("<ADDRESS>\n");
     printf("Generated %s, by %s/%s@%s\n",
-           mkrfc1123(now), progname, VERSION, getfullhostname());
+           Time::FormatRfc1123(now), progname, VERSION, getfullhostname());
     printf("</ADDRESS></BODY></HTML>\n");
 }
 
@@ -255,10 +255,10 @@ auth_html(const char *host, int port, const char *user_name)
 
     fp = fopen("cachemgr.conf", "r");
 
-    if (fp == NULL)
+    if (fp == nullptr)
         fp = fopen(DEFAULT_CACHEMGR_CONFIG, "r");
 
-    if (fp == NULL)
+    if (fp == nullptr)
         printf("X-Error: message=\"Unable to open config %s\"", DEFAULT_CACHEMGR_CONFIG);
 
     printf("Content-Type: text/html\r\n\r\n");
@@ -304,7 +304,7 @@ auth_html(const char *host, int port, const char *user_name)
 
     printf("<TABLE BORDER=\"0\" CELLPADDING=\"10\" CELLSPACING=\"1\">\n");
 
-    if (fp != NULL) {
+    if (fp != nullptr) {
         int servers = 0;
         char config_line[BUFSIZ];
 
@@ -319,7 +319,7 @@ auth_html(const char *host, int port, const char *user_name)
             if (config_line[0] == '\0')
                 continue;
 
-            if ((server = strtok(config_line, " \t")) == NULL)
+            if ((server = strtok(config_line, " \t")) == nullptr)
                 continue;
 
             if (strchr(server, '*') || strchr(server, '[') || strchr(server, '?')) {
@@ -327,7 +327,7 @@ auth_html(const char *host, int port, const char *user_name)
                 continue;
             }
 
-            comment = strtok(NULL, "");
+            comment = strtok(nullptr, "");
 
             if (comment)
                 while (*comment == ' ' || *comment == '\t')
@@ -412,7 +412,7 @@ parse_status_line(const char *sline, const char **statusStr)
     const char *sp = strchr(sline, ' ');
 
     if (statusStr)
-        *statusStr = NULL;
+        *statusStr = nullptr;
 
     if (strncasecmp(sline, "HTTP/", 5) || !sp)
         return -1;
@@ -601,7 +601,7 @@ read_reply(int s, cachemgr_request * req)
     } istate = isStatusLine;
     int parse_menu = 0;
     const char *action = req->action;
-    const char *statusStr = NULL;
+    const char *statusStr = nullptr;
     int status = -1;
 
     if (0 == strlen(req->action))
@@ -609,7 +609,7 @@ read_reply(int s, cachemgr_request * req)
     else if (0 == strcasecmp(req->action, "menu"))
         parse_menu = 1;
 
-    if (fp == NULL) {
+    if (fp == nullptr) {
 #if _SQUID_WINDOWS_
         perror(tmpfile);
         xfree(tmpfile);
@@ -651,7 +651,7 @@ read_reply(int s, cachemgr_request * req)
 
             if (status == 401 || status == 407) {
                 reset_auth(req);
-                status = 403;   /* Forbiden, see comments in case isForward: */
+                status = 403;   /* Forbidden, see comments in case isForward: */
             }
 
             /* this is a way to pass HTTP status to the Web server */
@@ -693,7 +693,7 @@ read_reply(int s, cachemgr_request * req)
             }
 
             istate = isActions;
-        /* yes, fall through, we do not want to loose the first line */
+            [[fallthrough]]; // we do not want to lose the first line
 
         case isActions:
             if (strncmp(buf, "action:", 7) == 0) {
@@ -709,7 +709,7 @@ read_reply(int s, cachemgr_request * req)
             }
 
             istate = isBody;
-        /* yes, fall through, we do not want to loose the first line */
+            [[fallthrough]]; // we do not want to lose the first line
 
         case isBody:
         {
@@ -781,19 +781,19 @@ process_request(cachemgr_request * req)
 {
 
     char ipbuf[MAX_IPSTRLEN];
-    struct addrinfo *AI = NULL;
+    struct addrinfo *AI = nullptr;
     Ip::Address S;
     int s;
     int l;
 
     static char buf[2 * 1024];
 
-    if (req == NULL) {
+    if (req == nullptr) {
         auth_html(CACHEMGR_HOSTNAME, CACHE_HTTP_PORT, "");
         return 1;
     }
 
-    if (req->hostname == NULL) {
+    if (req->hostname == nullptr) {
         req->hostname = xstrdup(CACHEMGR_HOSTNAME);
     }
 
@@ -801,7 +801,7 @@ process_request(cachemgr_request * req)
         req->port = CACHE_HTTP_PORT;
     }
 
-    if (req->action == NULL) {
+    if (req->action == nullptr) {
         req->action = xstrdup("");
     }
 
@@ -861,16 +861,20 @@ process_request(cachemgr_request * req)
 
     Ip::Address::FreeAddr(AI);
 
+    // XXX: missing backward compatibility for old Squid.
+    // Squid-3.1 and older do not support http scheme manager requests.
+    // Squid-3.2 versions have bugs with https scheme manager requests.
     l = snprintf(buf, sizeof(buf),
-                 "GET cache_object://%s/%s%s%s HTTP/1.0\r\n"
+                 "GET /squid-internal-mgr/%s%s%s HTTP/1.0\r\n" // HTTP/1.0 because this tool does not support Transfer-Encoding
+                 "Host: %s\r\n"
                  "User-Agent: cachemgr.cgi/%s\r\n"
                  "Accept: */*\r\n"
                  "%s"           /* Authentication info or nothing */
                  "\r\n",
-                 req->hostname,
                  req->action,
                  req->workers? "?workers=" : (req->processes ? "?processes=" : ""),
                  req->workers? req->workers : (req->processes ? req->processes: ""),
+                 req->hostname,
                  VERSION,
                  make_auth_header(req));
     if (write(s, buf, l) < 0) {
@@ -887,7 +891,7 @@ main(int argc, char *argv[])
     char *s;
     cachemgr_request *req;
 
-    now = time(NULL);
+    now = time(nullptr);
 #if _SQUID_WINDOWS_
 
     Win32SockInit();
@@ -906,28 +910,17 @@ main(int argc, char *argv[])
     else
         progname = xstrdup(argv[0]);
 
-    if ((s = getenv("SCRIPT_NAME")) != NULL)
+    if ((s = getenv("SCRIPT_NAME")) != nullptr)
         script_name = xstrdup(s);
 
     char **args = argv;
     while (argc > 1 && args[1][0] == '-') {
-//        const char *value = "";
         char option = args[1][1];
         switch (option) {
         case 'd':
             debug_enabled = 1;
             break;
         default:
-#if 0 // unused for now.
-            if (strlen(args[1]) > 2) {
-                value = args[1] + 2;
-            } else if (argc > 2) {
-                value = args[2];
-                ++args;
-                --argc;
-            } else
-                value = "";
-#endif
             break;
         }
         ++args;
@@ -944,23 +937,23 @@ read_post_request(void)
 {
     char *s;
 
-    if ((s = getenv("REQUEST_METHOD")) == NULL)
-        return NULL;
+    if ((s = getenv("REQUEST_METHOD")) == nullptr)
+        return nullptr;
 
     if (0 != strcasecmp(s, "POST"))
-        return NULL;
+        return nullptr;
 
-    if ((s = getenv("CONTENT_LENGTH")) == NULL)
-        return NULL;
+    if ((s = getenv("CONTENT_LENGTH")) == nullptr)
+        return nullptr;
 
     if (*s == '-') // negative length content huh?
-        return NULL;
+        return nullptr;
 
     uint64_t len;
 
     char *endptr = s+ strlen(s);
     if ((len = strtoll(s, &endptr, 10)) <= 0)
-        return NULL;
+        return nullptr;
 
     // limit the input to something reasonable.
     // 4KB should be enough for the GET/POST data length, but may be extended.
@@ -970,7 +963,7 @@ read_post_request(void)
     size_t readLen = fread(buf, 1, bufLen, stdin);
     if (readLen == 0) {
         xfree(buf);
-        return NULL;
+        return nullptr;
     }
     buf[readLen] = '\0';
     len -= readLen;
@@ -990,8 +983,8 @@ read_get_request(void)
 {
     char *s;
 
-    if ((s = getenv("QUERY_STRING")) == NULL)
-        return NULL;
+    if ((s = getenv("QUERY_STRING")) == nullptr)
+        return nullptr;
 
     return xstrdup(s);
 }
@@ -1003,15 +996,15 @@ read_request(void)
 
     cachemgr_request *req;
     char *s;
-    char *t = NULL;
+    char *t = nullptr;
     char *q;
 
-    if ((buf = read_post_request()) != NULL)
+    if ((buf = read_post_request()) != nullptr)
         (void) 0;
-    else if ((buf = read_get_request()) != NULL)
+    else if ((buf = read_get_request()) != nullptr)
         (void) 0;
     else
-        return NULL;
+        return nullptr;
 
 #if _SQUID_WINDOWS_
 
@@ -1022,16 +1015,16 @@ read_request(void)
 #endif
     {
         xfree(buf);
-        return NULL;
+        return nullptr;
     }
 
     req = (cachemgr_request *)xcalloc(1, sizeof(cachemgr_request));
 
-    for (s = strtok(buf, "&"); s != NULL; s = strtok(NULL, "&")) {
+    for (s = strtok(buf, "&"); s != nullptr; s = strtok(nullptr, "&")) {
         safe_free(t);
         t = xstrdup(s);
 
-        if ((q = strchr(t, '=')) == NULL)
+        if ((q = strchr(t, '=')) == nullptr)
             continue;
 
         *q = '\0';
@@ -1066,7 +1059,7 @@ read_request(void)
         char *p;
         req->hostname = strtok(req->server, ":");
 
-        if ((p = strtok(NULL, ":")))
+        if ((p = strtok(nullptr, ":")))
             req->port = atoi(p);
     }
 
@@ -1092,13 +1085,19 @@ make_pub_auth(cachemgr_request * req)
     if (!req->passwd || !strlen(req->passwd))
         return;
 
+    auto *rfc1738_username = xstrdup(rfc1738_escape(safe_str(req->user_name)));
+    auto *rfc1738_passwd = xstrdup(rfc1738_escape(req->passwd));
+
     /* host | time | user | passwd */
     const int bufLen = snprintf(buf, sizeof(buf), "%s|%d|%s|%s",
                                 req->hostname,
                                 (int) now,
-                                rfc1738_escape(safe_str(req->user_name)),
-                                rfc1738_escape(req->passwd));
+                                rfc1738_username,
+                                rfc1738_passwd);
     debug("cmgr: pre-encoded for pub: %s\n", buf);
+
+    safe_free(rfc1738_username);
+    safe_free(rfc1738_passwd);
 
     const int encodedLen = base64_encode_len(bufLen);
     req->pub_auth = (char *) xmalloc(encodedLen);
@@ -1137,14 +1136,14 @@ decode_pub_auth(cachemgr_request * req)
     debug("cmgr: length ok\n");
 
     /* parse ( a lot of memory leaks, but that is cachemgr style :) */
-    if ((host_name = strtok(buf, "|")) == NULL) {
+    if ((host_name = strtok(buf, "|")) == nullptr) {
         xfree(buf);
         return;
     }
 
     debug("cmgr: decoded host: '%s'\n", host_name);
 
-    if ((time_str = strtok(NULL, "|")) == NULL) {
+    if ((time_str = strtok(nullptr, "|")) == nullptr) {
         xfree(buf);
         return;
     }
@@ -1152,7 +1151,7 @@ decode_pub_auth(cachemgr_request * req)
     debug("cmgr: decoded time: '%s' (now: %d)\n", time_str, (int) now);
 
     char *user_name;
-    if ((user_name = strtok(NULL, "|")) == NULL) {
+    if ((user_name = strtok(nullptr, "|")) == nullptr) {
         xfree(buf);
         return;
     }
@@ -1161,7 +1160,7 @@ decode_pub_auth(cachemgr_request * req)
     debug("cmgr: decoded uname: '%s'\n", user_name);
 
     char *passwd;
-    if ((passwd = strtok(NULL, "|")) == NULL) {
+    if ((passwd = strtok(nullptr, "|")) == nullptr) {
         xfree(buf);
         return;
     }
@@ -1237,16 +1236,16 @@ static int
 check_target_acl(const char *hostname, int port)
 {
     char config_line[BUFSIZ];
-    FILE *fp = NULL;
+    FILE *fp = nullptr;
     int ret = 0;
     fp = fopen("cachemgr.conf", "r");
 
-    if (fp == NULL)
+    if (fp == nullptr)
         fp = fopen(DEFAULT_CACHEMGR_CONFIG, "r");
 
-    if (fp == NULL) {
+    if (fp == nullptr) {
 #ifdef CACHEMGR_HOSTNAME_DEFINED
-
+        // TODO: simplify and maybe get rid of CACHEMGR_HOSTNAME altogether
         if (strcmp(hostname, CACHEMGR_HOSTNAME) == 0 && port == CACHE_HTTP_PORT)
             return 1;
 
@@ -1264,7 +1263,7 @@ check_target_acl(const char *hostname, int port)
     }
 
     while (fgets(config_line, BUFSIZ, fp)) {
-        char *token = NULL;
+        char *token = nullptr;
         strtok(config_line, " \r\n\t");
 
         if (config_line[0] == '#')
@@ -1273,7 +1272,7 @@ check_target_acl(const char *hostname, int port)
         if (config_line[0] == '\0')
             continue;
 
-        if ((token = strtok(config_line, ":")) == NULL)
+        if ((token = strtok(config_line, ":")) == nullptr)
             continue;
 
 #if HAVE_FNMATCH_H
@@ -1288,7 +1287,7 @@ check_target_acl(const char *hostname, int port)
 
 #endif
 
-        if ((token = strtok(NULL, ":")) != NULL) {
+        if ((token = strtok(nullptr, ":")) != nullptr) {
             int i;
 
             if (strcmp(token, "*") == 0)

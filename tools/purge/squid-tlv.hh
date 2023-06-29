@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -51,16 +51,16 @@ typedef int bool;
 #endif
 #endif /* __cplusplus */
 
+#include <ctime>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <time.h>
 
 // taken from Squid-2.x
 // NOTE!  We must preserve the order of this list!
 enum SquidMetaType {
-  STORE_META_VOID,		// should not come up 
-  STORE_META_KEY_URL,		// key w/ keytype 
+  STORE_META_VOID,		// should not come up
+  STORE_META_KEY_URL,		// key w/ keytype
   STORE_META_KEY_SHA,
   STORE_META_KEY_MD5,
   STORE_META_URL,		// the url , if not in the header
@@ -96,7 +96,7 @@ struct StoreMetaStdLFS {
 struct SquidTLV {
   // create a shallow reference pointing into the "buffer" variable
   // do not copy --> saves times, saves memory.
-  SquidTLV( SquidMetaType _type, size_t _size = 0, void* _data = 0 );
+  SquidTLV( SquidMetaType _type, size_t _size = 0, void* _data = nullptr );
   ~SquidTLV() {}
 
   SquidTLV*      next;

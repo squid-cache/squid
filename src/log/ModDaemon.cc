@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,7 +19,6 @@
 #include "log/ModDaemon.h"
 #include "SquidConfig.h"
 #include "SquidIpc.h"
-#include "SquidTime.h"
 
 #include <cerrno>
 
@@ -66,9 +65,9 @@ logfileNewBuffer(Logfile * lf)
     debugs(50, 5, "logfileNewBuffer: " << lf->path << ": new buffer");
 
     b = static_cast<logfile_buffer_t*>(xcalloc(1, sizeof(logfile_buffer_t)));
-    assert(b != NULL);
+    assert(b != nullptr);
     b->buf = static_cast<char*>(xcalloc(1, LOGFILE_BUFSZ));
-    assert(b->buf != NULL);
+    assert(b->buf != nullptr);
     b->size = LOGFILE_BUFSZ;
     b->written_len = 0;
     b->len = 0;
@@ -80,7 +79,7 @@ static void
 logfileFreeBuffer(Logfile * lf, logfile_buffer_t * b)
 {
     l_daemon_t *ll = (l_daemon_t *) lf->data;
-    assert(b != NULL);
+    assert(b != nullptr);
     dlinkDelete(&b->node, &ll->bufs);
     -- ll->nbufs;
     xfree(b->buf);
@@ -102,7 +101,7 @@ logfileHandleWrite(int, void *data)
         return;
 
     logfile_buffer_t *b = static_cast<logfile_buffer_t*>(ll->bufs.head->data);
-    assert(b != NULL);
+    assert(b != nullptr);
     ll->flush_pending = 0;
 
     int ret = FD_WRITE_METHOD(ll->wfd, b->buf + b->written_len, b->len - b->written_len);
@@ -115,7 +114,7 @@ logfileHandleWrite(int, void *data)
             ll->flush_pending = 1;
             return;
         }
-        debugs(50, DBG_IMPORTANT,"logfileHandleWrite: " << lf->path << ": error writing (" << xstrerr(xerrno) << ")");
+        debugs(50, DBG_IMPORTANT, "ERROR: logfileHandleWrite: " << lf->path << ": error writing (" << xstrerr(xerrno) << ")");
         /* XXX should handle this better */
         fatal("I don't handle this error well!");
     }
@@ -131,7 +130,7 @@ logfileHandleWrite(int, void *data)
     if (b->written_len == b->len) {
         /* written the whole buffer! */
         logfileFreeBuffer(lf, b);
-        b = NULL;
+        b = nullptr;
     }
     /* Is there more to write? */
     if (!ll->bufs.head)
@@ -147,7 +146,7 @@ static void
 logfileQueueWrite(Logfile * lf)
 {
     l_daemon_t *ll = (l_daemon_t *) lf->data;
-    if (ll->flush_pending || ll->bufs.head == NULL) {
+    if (ll->flush_pending || ll->bufs.head == nullptr) {
         return;
     }
     ll->flush_pending = 1;
@@ -168,7 +167,7 @@ logfile_mod_daemon_append(Logfile * lf, const char *buf, int len)
     int s;
 
     /* Is there a buffer? If not, create one */
-    if (ll->bufs.head == NULL) {
+    if (ll->bufs.head == nullptr) {
         logfileNewBuffer(lf);
     }
     debugs(50, 3, "logfile_mod_daemon_append: " << lf->path << ": appending " << len << " bytes");
@@ -230,9 +229,9 @@ logfile_mod_daemon_open(Logfile * lf, const char *path, size_t, int)
         Ip::Address localhost;
         args[0] = "(logfile-daemon)";
         args[1] = path;
-        args[2] = NULL;
+        args[2] = nullptr;
         localhost.setLocalhost();
-        ll->pid = ipcCreate(IPC_STREAM, Log::TheConfig.logfile_daemon, args, "logfile-daemon", localhost, &ll->rfd, &ll->wfd, NULL);
+        ll->pid = ipcCreate(IPC_STREAM, Log::TheConfig.logfile_daemon, args, "logfile-daemon", localhost, &ll->rfd, &ll->wfd, nullptr);
         if (ll->pid < 0)
             fatal("Couldn't start logfile helper");
     }
@@ -265,7 +264,7 @@ logfile_mod_daemon_close(Logfile * lf)
     kill(ll->pid, SIGTERM);
     eventDelete(logfileFlushEvent, lf);
     xfree(ll);
-    lf->data = NULL;
+    lf->data = nullptr;
     cbdataInternalUnlock(lf); // WTF??
 }
 
@@ -298,8 +297,14 @@ logfile_mod_daemon_writeline(Logfile * lf, const char *buf, size_t len)
         }
         return;
     }
-    /* Append this data to the end buffer; create a new one if needed */
+
     /* Are we eol? If so, prefix with our logfile command byte */
+    if (ll->eol == 1) {
+        logfile_mod_daemon_append(lf, "L", 1);
+        ll->eol = 0;
+    }
+
+    /* Append this data to the end buffer; create a new one if needed */
     logfile_mod_daemon_append(lf, buf, len);
 }
 
@@ -307,12 +312,8 @@ static void
 logfile_mod_daemon_linestart(Logfile * lf)
 {
     l_daemon_t *ll = static_cast<l_daemon_t *>(lf->data);
-    char tb[2];
     assert(ll->eol == 1);
-    ll->eol = 0;
-    tb[0] = 'L';
-    tb[1] = '\0';
-    logfile_mod_daemon_append(lf, tb, 1);
+    // logfile_mod_daemon_writeline() sends the starting command
 }
 
 static void
@@ -320,12 +321,13 @@ logfile_mod_daemon_lineend(Logfile * lf)
 {
     l_daemon_t *ll = static_cast<l_daemon_t *>(lf->data);
     logfile_buffer_t *b;
-    assert(ll->eol == 0);
+    if (ll->eol == 1) // logfile_mod_daemon_writeline() wrote nothing
+        return;
     ll->eol = 1;
     /* Kick a write off if the head buffer is -full- */
-    if (ll->bufs.head != NULL) {
+    if (ll->bufs.head != nullptr) {
         b = static_cast<logfile_buffer_t*>(ll->bufs.head->data);
-        if (b->node.next != NULL || !Config.onoff.buffered_logs)
+        if (b->node.next != nullptr || !Config.onoff.buffered_logs)
             logfileQueueWrite(lf);
     }
 }
@@ -335,10 +337,10 @@ logfile_mod_daemon_flush(Logfile * lf)
 {
     l_daemon_t *ll = static_cast<l_daemon_t *>(lf->data);
     if (commUnsetNonBlocking(ll->wfd)) {
-        debugs(50, DBG_IMPORTANT, "Logfile Daemon: Couldn't set the pipe blocking for flush! You're now missing some log entries.");
+        debugs(50, DBG_IMPORTANT, "ERROR: Logfile Daemon: Could not set the pipe blocking for flush! You are now missing some log entries.");
         return;
     }
-    while (ll->bufs.head != NULL) {
+    while (ll->bufs.head != nullptr) {
         logfileHandleWrite(ll->wfd, lf);
     }
     if (commSetNonBlocking(ll->wfd)) {

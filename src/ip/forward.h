@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,12 +16,13 @@
 namespace Ip
 {
 class Address;
+class NfMarkConfig;
 }
+class acl_nfmark;
 
 /// Length of buffer that needs to be allocated to old a null-terminated IP-string
 // Yuck. But there are still structures that need it to be an 'integer constant'.
 #define MAX_IPSTRLEN  75
-
 typedef uint32_t nfmark_t;
 typedef unsigned char tos_t;
 

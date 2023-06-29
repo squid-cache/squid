@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,19 +10,14 @@
 #include "acl/AllOf.h"
 #include "acl/BoolOps.h"
 #include "acl/Checklist.h"
-#include "globals.h"
+#include "cache_cf.h"
 #include "MemBuf.h"
+#include "sbuf/SBuf.h"
 
 char const *
 Acl::AllOf::typeString() const
 {
     return "all-of";
-}
-
-ACL *
-Acl::AllOf::clone() const
-{
-    return new AllOf;
 }
 
 SBufList
@@ -50,8 +45,8 @@ Acl::AllOf::doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const
 void
 Acl::AllOf::parse()
 {
-    Acl::InnerNode *whole = NULL;
-    ACL *oldNode = empty() ? NULL : nodes.front();
+    Acl::InnerNode *whole = nullptr;
+    ACL *oldNode = empty() ? nullptr : nodes.front();
 
     // optimization: this logic reduces subtree hight (number of tree levels)
     if (Acl::OrNode *oldWhole = dynamic_cast<Acl::OrNode*>(oldNode)) {

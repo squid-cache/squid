@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,7 +7,8 @@
  */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Messages.h"
+#include "debug/Stream.h"
 #include "LoadableModule.h"
 #include "LoadableModules.h"
 #include "wordlist.h"
@@ -30,6 +31,6 @@ LoadableModulesConfigure(const wordlist *names)
     int count = 0;
     for (const wordlist *i = names; i; i = i->next, ++count)
         LoadModule(i->key);
-    debugs(1, DBG_IMPORTANT, "Squid plugin modules loaded: " << count);
+    debugs(1, Important(25), "Squid plugin modules loaded: " << count);
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,9 +19,7 @@
 #include "globals.h"
 #include "ICP.h"
 #include "mgr/Registration.h"
-#include "profiler/Profiler.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 
@@ -71,7 +69,7 @@ static void comm_poll_dns_incoming(void);
  * The variables 'incoming_icp_interval' and 'incoming_http_interval'
  * determine how many normal I/O events to process before checking
  * incoming sockets again.  Note we store the incoming_interval
- * multipled by a factor of (2^INCOMING_FACTOR) to have some
+ * multiplied by a factor of (2^INCOMING_FACTOR) to have some
  * pseudo-floating point precision.
  *
  * The variable 'udp_io_events' and 'tcp_io_events' counts how many normal
@@ -126,7 +124,7 @@ Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time
     fde *F = &fd_table[fd];
     assert(fd >= 0);
     assert(F->flags.open || (!handler && !client_data && !timeout));
-    debugs(5, 5, HERE << "FD " << fd << ", type=" << type <<
+    debugs(5, 5, "FD " << fd << ", type=" << type <<
            ", handler=" << handler << ", client_data=" << client_data <<
            ", timeout=" << timeout);
 
@@ -147,10 +145,10 @@ Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time
 static int
 fdIsUdpListen(int fd)
 {
-    if (icpIncomingConn != NULL && icpIncomingConn->fd == fd)
+    if (icpIncomingConn != nullptr && icpIncomingConn->fd == fd)
         return 1;
 
-    if (icpOutgoingConn != NULL && icpOutgoingConn->fd == fd)
+    if (icpOutgoingConn != nullptr && icpOutgoingConn->fd == fd)
         return 1;
 
     return 0;
@@ -171,8 +169,8 @@ fdIsDns(int fd)
 static int
 fdIsTcpListen(int fd)
 {
-    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
-        if (s->listenConn != NULL && s->listenConn->fd == fd)
+    for (AnyP::PortCfgPointer s = HttpPortList; s != nullptr; s = s->next) {
+        if (s->listenConn != nullptr && s->listenConn->fd == fd)
             return 1;
     }
 
@@ -184,11 +182,10 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
 {
     int i;
     int fd;
-    PF *hdl = NULL;
+    PF *hdl = nullptr;
     int npfds;
 
     struct pollfd pfds[3 + MAXTCPLISTENPORTS];
-    PROF_start(comm_check_incoming);
     incoming_sockets_accepted = 0;
 
     for (i = npfds = 0; i < nfds; ++i) {
@@ -210,18 +207,14 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
         }
     }
 
-    if (!nfds) {
-        PROF_stop(comm_check_incoming);
+    if (!nfds)
         return -1;
-    }
 
     getCurrentTime();
     ++ statCounter.syscalls.selects;
 
-    if (poll(pfds, npfds, 0) < 1) {
-        PROF_stop(comm_check_incoming);
+    if (poll(pfds, npfds, 0) < 1)
         return incoming_sockets_accepted;
-    }
 
     for (i = 0; i < npfds; ++i) {
         int revents;
@@ -231,7 +224,7 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
 
         if (revents & (POLLRDNORM | POLLIN | POLLHUP | POLLERR)) {
             if ((hdl = fd_table[fd].read_handler)) {
-                fd_table[fd].read_handler = NULL;
+                fd_table[fd].read_handler = nullptr;
                 hdl(fd, fd_table[fd].read_data);
             } else if (pfds[i].events & POLLRDNORM)
                 debugs(5, DBG_IMPORTANT, "comm_poll_incoming: FD " << fd << " NULL read handler");
@@ -239,14 +232,13 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
 
         if (revents & (POLLWRNORM | POLLOUT | POLLHUP | POLLERR)) {
             if ((hdl = fd_table[fd].write_handler)) {
-                fd_table[fd].write_handler = NULL;
+                fd_table[fd].write_handler = nullptr;
                 hdl(fd, fd_table[fd].write_data);
             } else if (pfds[i].events & POLLWRNORM)
                 debugs(5, DBG_IMPORTANT, "comm_poll_incoming: FD " << fd << " NULL write_handler");
         }
     }
 
-    PROF_stop(comm_check_incoming);
     return incoming_sockets_accepted;
 }
 
@@ -328,7 +320,7 @@ Comm::DoSelect(int msec)
 {
     struct pollfd pfds[SQUID_MAXFD];
 
-    PF *hdl = NULL;
+    PF *hdl = nullptr;
     int fd;
     int maxfd;
     unsigned long nfds;
@@ -350,8 +342,6 @@ Comm::DoSelect(int msec)
 
         if (commCheckTcpIncoming)
             comm_poll_tcp_incoming();
-
-        PROF_start(comm_poll_prep_pfds);
 
         calldns = calludp = calltcp = 0;
 
@@ -383,8 +373,6 @@ Comm::DoSelect(int msec)
             }
         }
 
-        PROF_stop(comm_poll_prep_pfds);
-
         if (npending)
             msec = 0;
 
@@ -404,12 +392,10 @@ Comm::DoSelect(int msec)
         }
 
         for (;;) {
-            PROF_start(comm_poll_normal);
             ++ statCounter.syscalls.selects;
             num = poll(pfds, nfds, msec);
             int xerrno = errno;
             ++ statCounter.select_loops;
-            PROF_stop(comm_poll_normal);
 
             if (num >= 0 || npending > 0)
                 break;
@@ -437,7 +423,6 @@ Comm::DoSelect(int msec)
         /* scan each socket but the accept socket. Poll this
          * more frequently to minimize losses due to the 5 connect
          * limit in SunOS */
-        PROF_start(comm_handle_ready_fd);
 
         for (size_t loopIndex = 0; loopIndex < nfds; ++loopIndex) {
             fde *F;
@@ -474,10 +459,8 @@ Comm::DoSelect(int msec)
                 debugs(5, 6, "comm_poll: FD " << fd << " ready for reading");
 
                 if ((hdl = F->read_handler)) {
-                    PROF_start(comm_read_handler);
-                    F->read_handler = NULL;
+                    F->read_handler = nullptr;
                     hdl(fd, F->read_data);
-                    PROF_stop(comm_read_handler);
                     ++ statCounter.select_fds;
 
                     if (commCheckUdpIncoming)
@@ -495,10 +478,8 @@ Comm::DoSelect(int msec)
                 debugs(5, 6, "comm_poll: FD " << fd << " ready for writing");
 
                 if ((hdl = F->write_handler)) {
-                    PROF_start(comm_write_handler);
-                    F->write_handler = NULL;
+                    F->write_handler = nullptr;
                     hdl(fd, F->write_data);
-                    PROF_stop(comm_write_handler);
                     ++ statCounter.select_fds;
 
                     if (commCheckUdpIncoming)
@@ -520,27 +501,25 @@ Comm::DoSelect(int msec)
                 debugs(5, DBG_CRITICAL, "tmout:" << F->timeoutHandler << "read:" <<
                        F->read_handler << " write:" << F->write_handler);
 
-                for (ch = F->closeHandler; ch != NULL; ch = ch->Next())
+                for (ch = F->closeHandler; ch != nullptr; ch = ch->Next())
                     debugs(5, DBG_CRITICAL, " close handler: " << ch);
 
-                if (F->closeHandler != NULL) {
+                if (F->closeHandler != nullptr) {
                     commCallCloseHandlers(fd);
-                } else if (F->timeoutHandler != NULL) {
+                } else if (F->timeoutHandler != nullptr) {
                     debugs(5, DBG_CRITICAL, "comm_poll: Calling Timeout Handler");
                     ScheduleCallHere(F->timeoutHandler);
                 }
 
-                F->closeHandler = NULL;
-                F->timeoutHandler = NULL;
-                F->read_handler = NULL;
-                F->write_handler = NULL;
+                F->closeHandler = nullptr;
+                F->timeoutHandler = nullptr;
+                F->read_handler = nullptr;
+                F->write_handler = nullptr;
 
                 if (F->flags.open)
                     fd_close(fd);
             }
         }
-
-        PROF_stop(comm_handle_ready_fd);
 
         if (calludp)
             comm_poll_udp_incoming();

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,8 @@
 #define _SQUID_SRC_LOG_TCPLOGGER_H
 
 #include "base/AsyncJob.h"
+#include "base/JobWait.h"
+#include "comm/forward.h"
 #include "ip/Address.h"
 
 #include <list>
@@ -26,7 +28,7 @@ namespace Log
  */
 class TcpLogger : public AsyncJob
 {
-    CBDATA_CLASS(TcpLogger);
+    CBDATA_CHILD(TcpLogger);
 
 public:
     typedef CbcPointer<TcpLogger> Pointer;
@@ -36,7 +38,7 @@ public:
 
 protected:
     TcpLogger(size_t, bool, Ip::Address);
-    virtual ~TcpLogger();
+    ~TcpLogger() override;
 
     /// Called when Squid is reconfiguring (or exiting) to give us a chance to
     /// flush remaining buffers and end this job w/o loss of data. No new log
@@ -51,9 +53,9 @@ protected:
     void flush();
 
     /* AsyncJob API */
-    virtual void start();
-    virtual bool doneAll() const;
-    virtual void swanSong();
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
 
 private:
     /* Logfile API. Map c-style Logfile calls to TcpLogger method calls. */
@@ -102,6 +104,9 @@ private:
     Comm::ConnectionPointer conn; ///< opened connection to the remote logger
     Ip::Address remote; ///< where the remote logger expects our records
     AsyncCall::Pointer closer; ///< handles unexpected/external conn closures
+
+    /// waits for a connection to the remote logger to be established/opened
+    JobWait<Comm::ConnOpener> connWait;
 
     uint64_t connectFailures; ///< number of sequential connection failures
     uint64_t drops; ///< number of records dropped during the current outage

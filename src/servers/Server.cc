@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,10 +11,12 @@
 #include "client_side.h"
 #include "comm.h"
 #include "comm/Read.h"
-#include "Debug.h"
+#include "debug/Stream.h"
+#include "error/SysErrorDetail.h"
 #include "fd.h"
 #include "fde.h"
 #include "http/Stream.h"
+#include "LogTags.h"
 #include "MasterXaction.h"
 #include "servers/Server.h"
 #include "SquidConfig.h"
@@ -27,7 +29,9 @@ Server::Server(const MasterXaction::Pointer &xact) :
     transferProtocol(xact->squidPort->transport),
     port(xact->squidPort),
     receivedFirstByte_(false)
-{}
+{
+    clientConnection->leaveOrphanage();
+}
 
 bool
 Server::doneAll() const
@@ -57,7 +61,7 @@ Server::stopReading()
 {
     if (reading()) {
         Comm::ReadCancel(clientConnection->fd, reader);
-        reader = NULL;
+        reader = nullptr;
     }
 }
 
@@ -103,7 +107,7 @@ Server::doClientRead(const CommIoCbParams &io)
 {
     debugs(33,5, io.conn);
     Must(reading());
-    reader = NULL;
+    reader = nullptr;
 
     /* Bail out quickly on Comm::ERR_CLOSING - close handlers will tidy up */
     if (io.flag == Comm::ERR_CLOSING) {
@@ -146,8 +150,10 @@ Server::doClientRead(const CommIoCbParams &io)
     case Comm::ENDFILE: // close detected by 0-byte read
         debugs(33, 5, io.conn << " closed?");
 
-        if (connFinishedWithConn(rd.size)) {
-            clientConnection->close();
+        if (shouldCloseOnEof()) {
+            LogTagsErrors lte;
+            lte.aborted = true;
+            terminateAll(ERR_CLIENT_GONE, lte);
             return;
         }
 
@@ -167,9 +173,10 @@ Server::doClientRead(const CommIoCbParams &io)
     // case Comm::COMM_ERROR:
     default: // no other flags should ever occur
         debugs(33, 2, io.conn << ": got flag " << rd.flag << "; " << xstrerr(rd.xerrno));
-        checkLogging();
-        pipeline.terminateAll(rd.xerrno);
-        io.conn->close();
+        LogTagsErrors lte;
+        lte.timedout = rd.xerrno == ETIMEDOUT;
+        lte.aborted = !lte.timedout; // intentionally true for zero rd.xerrno
+        terminateAll(Error(ERR_CLIENT_GONE, SysErrorDetail::NewIfAny(rd.xerrno)), lte);
         return;
     }
 

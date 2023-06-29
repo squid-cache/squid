@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,7 +30,7 @@ CommIO::Initialize()
     fd_open(DoneFD, FD_PIPE, "async-io completion event: threads");
     commSetNonBlocking(DoneReadFD);
     commSetNonBlocking(DoneFD);
-    Comm::SetSelect(DoneReadFD, COMM_SELECT_READ, NULLFDHandler, NULL, 0);
+    Comm::SetSelect(DoneReadFD, COMM_SELECT_READ, NULLFDHandler, nullptr, 0);
     Initialized = true;
 }
 
@@ -62,7 +62,7 @@ void
 CommIO::NULLFDHandler(int fd, void *)
 {
     FlushPipe();
-    Comm::SetSelect(fd, COMM_SELECT_READ, NULLFDHandler, NULL, 0);
+    Comm::SetSelect(fd, COMM_SELECT_READ, NULLFDHandler, nullptr, 0);
 }
 
 void

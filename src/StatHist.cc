@@ -1,12 +1,10 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
-
-/* DEBUG: section 62    Generic Histogram */
 
 #include "squid.h"
 #include "StatHist.h"
@@ -39,7 +37,7 @@ StatHist::init(unsigned int newCapacity, hbase_f * val_in_, hbase_f * val_out_, 
 }
 
 StatHist::StatHist(const StatHist &src) :
-    bins(NULL),
+    bins(nullptr),
     capacity_(src.capacity_),
     min_(src.min_),
     max_(src.max_),
@@ -47,7 +45,7 @@ StatHist::StatHist(const StatHist &src) :
     val_in(src.val_in),
     val_out(src.val_out)
 {
-    if (src.bins!=NULL) {
+    if (src.bins!=nullptr) {
         bins = static_cast<bins_type *>(xcalloc(src.capacity_, sizeof(bins_type)));
         memcpy(bins,src.bins,capacity_*sizeof(*bins));
     }
@@ -56,7 +54,7 @@ StatHist::StatHist(const StatHist &src) :
 void
 StatHist::count(double v)
 {
-    if (bins==NULL) //do not count before initialization or after destruction
+    if (bins==nullptr) //do not count before initialization or after destruction
         return;
     const unsigned int bin = findBin(v);
     ++bins[bin];
@@ -192,10 +190,10 @@ StatHist::operator += (const StatHist &B)
     Must(min_ == B.min_);
     Must(max_ == B.max_);
 
-    if (B.bins == NULL) { // B was not yet initializted
+    if (B.bins == nullptr) { // B was not yet initializted
         return *this;
     }
-    if (bins == NULL) { // this histogram was not yet initialized
+    if (bins == nullptr) { // this histogram was not yet initialized
         *this = B;
         return *this;
     }

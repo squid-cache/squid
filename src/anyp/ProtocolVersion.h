@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -39,6 +39,9 @@ public:
     ProtocolType protocol; ///< which protocol this version is for
     unsigned int major;    ///< major version number
     unsigned int minor;    ///< minor version number
+
+    /// whether the version is "known" (e.g., has been parsed or explicitly set)
+    explicit operator bool() const { return protocol != PROTO_NONE; }
 
     bool operator==(const ProtocolVersion& that) const {
         if (this->protocol != that.protocol)
@@ -89,7 +92,7 @@ public:
 };
 
 inline std::ostream &
-operator << (std::ostream &os, const AnyP::ProtocolVersion &v)
+operator << (std::ostream &os, const ProtocolVersion &v)
 {
     return (os << AnyP::ProtocolType_str[v.protocol] << '/' << v.major << '.' << v.minor);
 }

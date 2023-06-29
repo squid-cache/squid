@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -42,7 +42,7 @@ public:
     unsigned int quotaQueueReserv; ///< reservation ID from CommQuotaQueue
 #endif
 
-    bool active() const { return callback != NULL; }
+    bool active() const { return callback != nullptr; }
     void setCallback(iocb_type type, AsyncCall::Pointer &cb, char *buf, FREE *func, int sz);
 
     /// called when fd needs to write but may need to wait in line for its quota
@@ -51,7 +51,7 @@ public:
     /// Actively cancel the given callback
     void cancel(const char *reason);
 
-    /// finish the IO operation imediately and schedule the callback with the current state.
+    /// finish the IO operation immediately and schedule the callback with the current state.
     void finish(Comm::Flag code, int xerrn);
 
 private:

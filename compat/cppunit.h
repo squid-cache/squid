@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,7 @@
 // CPPUNIT test suite uses auto_ptr which is deprecated in C++0x
 
 #if HAVE_CPPUNIT_EXTENSIONS_HELPERMACROS_H
-#if defined(__cplusplus) && HAVE_UNIQUE_PTR
+#if defined(__cplusplus)
 #include <cppunit/extensions/HelperMacros.h>
 
 #undef CPPUNIT_TEST_SUITE_END
@@ -36,7 +36,7 @@
   private: /* dummy typedef so that the macro can still end with ';'*/         \
     typedef int CppUnitDummyTypedefForSemiColonEnding__
 
-#endif /* HAVE_UNIQUE_PTR */
+#endif /* __cplusplus */
 #endif /* HAVE_CPPUNIT_EXTENSIONS_HELPERMACROS_H */
 #endif /* SQUID_COMPAT_CPPUNIT_H */
 

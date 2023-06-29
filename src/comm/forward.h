@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,10 +23,9 @@ namespace Comm
 
 class Connection;
 class ConnOpener;
+class TcpKeepAlive;
 
 typedef RefCount<Comm::Connection> ConnectionPointer;
-
-typedef std::vector<Comm::ConnectionPointer> ConnectionList;
 
 bool IsConnOpen(const Comm::ConnectionPointer &conn);
 

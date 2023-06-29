@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,12 +24,11 @@
 
 Rock::IoState::IoState(Rock::SwapDir::Pointer &aDir,
                        StoreEntry *anEntry,
-                       StoreIOState::STFNCB *cbFile,
                        StoreIOState::STIOCB *cbIo,
                        void *data) :
-    StoreIOState(cbFile, cbIo, data),
-    readableAnchor_(NULL),
-    writeableAnchor_(NULL),
+    StoreIOState(cbIo, data),
+    readableAnchor_(nullptr),
+    writeableAnchor_(nullptr),
     splicingPoint(-1),
     staleSplicingPointNext(-1),
     dir(aDir),
@@ -61,7 +60,7 @@ Rock::IoState::~IoState()
 
     if (callback_data)
         cbdataReferenceDone(callback_data);
-    theFile = NULL;
+    theFile = nullptr;
 
     e->unlock("rock I/O");
 }
@@ -70,7 +69,7 @@ void
 Rock::IoState::file(const RefCount<DiskFile> &aFile)
 {
     assert(!theFile);
-    assert(aFile != NULL);
+    assert(aFile != nullptr);
     theFile = aFile;
 }
 
@@ -100,8 +99,10 @@ Rock::IoState::read_(char *buf, size_t len, off_t coreOff, STRCB *cb, void *data
 {
     debugs(79, 7, swap_filen << " reads from " << coreOff);
 
-    assert(theFile != NULL);
+    assert(theFile != nullptr);
     assert(coreOff >= 0);
+
+    bool writerLeft = readAnchor().writerHalted; // before the sidCurrent change
 
     // if we are dealing with the first read or
     // if the offset went backwords, start searching from the beginning
@@ -112,14 +113,22 @@ Rock::IoState::read_(char *buf, size_t len, off_t coreOff, STRCB *cb, void *data
     }
 
     while (sidCurrent >= 0 && coreOff >= objOffset + currentReadableSlice().size) {
+        writerLeft = readAnchor().writerHalted; // before the sidCurrent change
         objOffset += currentReadableSlice().size;
         sidCurrent = currentReadableSlice().next;
     }
 
-    assert(read.callback == NULL);
-    assert(read.callback_data == NULL);
+    assert(read.callback == nullptr);
+    assert(read.callback_data == nullptr);
     read.callback = cb;
     read.callback_data = cbdataReference(data);
+
+    // quit if we cannot read what they want, and the writer cannot add more
+    if (sidCurrent < 0 && writerLeft) {
+        debugs(79, 5, "quitting at " << coreOff << " in " << *e);
+        callReaderBack(buf, -1);
+        return;
+    }
 
     // punt if read offset is too big (because of client bugs or collapsing)
     if (sidCurrent < 0) {
@@ -165,7 +174,7 @@ Rock::IoState::callReaderBack(const char *buf, int rlen)
         staleSplicingPointNext = currentReadableSlice().next;
     StoreIOState::STRCB *callb = read.callback;
     assert(callb);
-    read.callback = NULL;
+    read.callback = nullptr;
     void *cbdata;
     if (cbdataReferenceValidDone(read.callback_data, &cbdata))
         callb(cbdata, buf, rlen, this);
@@ -214,7 +223,7 @@ Rock::IoState::tryWrite(char const *buf, size_t size, off_t coreOff)
 
     // buffer incoming data in slot buffer and write overflowing or final slots
     // quit when no data left or we stopped writing on reentrant error
-    while (size > 0 && theFile != NULL) {
+    while (size > 0 && theFile != nullptr) {
         const size_t processed = writeToBuffer(buf, size);
         buf += processed;
         size -= processed;
@@ -257,7 +266,7 @@ Rock::IoState::writeToBuffer(char const *buf, size_t size)
 void
 Rock::IoState::writeToDisk()
 {
-    assert(theFile != NULL);
+    assert(theFile != nullptr);
     assert(theBuf.size >= sizeof(DbCellHeader));
 
     assert((sidFirst < 0) == (sidCurrent < 0));
@@ -301,7 +310,7 @@ Rock::IoState::writeToDisk()
     memcpy(wBuf, theBuf.mem, theBuf.size);
 
     const uint64_t diskOffset = dir->diskOffset(sidCurrent);
-    debugs(79, 5, HERE << swap_filen << " at " << diskOffset << '+' <<
+    debugs(79, 5, swap_filen << " at " << diskOffset << '+' <<
            theBuf.size);
     const auto id = ++requestsSent;
     WriteRequest *const r = new WriteRequest(
@@ -317,7 +326,7 @@ Rock::IoState::writeToDisk()
 
     theBuf.clear();
 
-    // theFile->write may call writeCompleted immediatelly
+    // theFile->write may call writeCompleted immediately
     theFile->write(r);
 }
 
@@ -404,8 +413,8 @@ class StoreIOStateCb: public CallDialer
 {
 public:
     StoreIOStateCb(StoreIOState::STIOCB *cb, void *data, int err, const Rock::IoState::Pointer &anSio):
-        callback(NULL),
-        callback_data(NULL),
+        callback(nullptr),
+        callback_data(nullptr),
         errflag(err),
         sio(anSio) {
 
@@ -414,8 +423,8 @@ public:
     }
 
     StoreIOStateCb(const StoreIOStateCb &cb):
-        callback(NULL),
-        callback_data(NULL),
+        callback(nullptr),
+        callback_data(nullptr),
         errflag(cb.errflag),
         sio(cb.sio) {
 
@@ -423,7 +432,7 @@ public:
         callback_data = cbdataReference(cb.callback_data);
     }
 
-    virtual ~StoreIOStateCb() {
+    ~StoreIOStateCb() override {
         cbdataReferenceDone(callback_data); // may be nil already
     }
 
@@ -437,7 +446,7 @@ public:
         return cbdataReferenceValid(callback_data) && callback;
     }
 
-    virtual void print(std::ostream &os) const {
+    void print(std::ostream &os) const override {
         os << '(' << callback_data << ", err=" << errflag << ')';
     }
 
@@ -453,14 +462,14 @@ private:
 void
 Rock::IoState::callBack(int errflag)
 {
-    debugs(79,3, HERE << "errflag=" << errflag);
-    theFile = NULL;
+    debugs(79,3, "errflag=" << errflag);
+    theFile = nullptr;
 
     AsyncCall::Pointer call = asyncCall(79,3, "SomeIoStateCloseCb",
                                         StoreIOStateCb(callback, callback_data, errflag, this));
     ScheduleCallHere(call);
 
-    callback = NULL;
+    callback = nullptr;
     cbdataReferenceDone(callback_data);
 }
 

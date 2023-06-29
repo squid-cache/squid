@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,18 +9,19 @@
 #ifndef SQUID_FORWARD_H
 #define SQUID_FORWARD_H
 
-#include "base/CbcPointer.h"
 #include "base/forward.h"
+#include "base/JobWait.h"
 #include "base/RefCount.h"
 #include "clients/forward.h"
 #include "comm.h"
 #include "comm/Connection.h"
-#include "comm/ConnOpener.h"
-#include "err_type.h"
+#include "error/forward.h"
 #include "fde.h"
 #include "http/StatusCode.h"
 #include "ip/Address.h"
+#include "ip/forward.h"
 #include "PeerSelectState.h"
+#include "ResolvedPeers.h"
 #include "security/forward.h"
 #if USE_OPENSSL
 #include "ssl/support.h"
@@ -30,23 +31,13 @@
 
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
-class ErrorState;
 class HttpRequest;
 class PconnPool;
 class ResolvedPeers;
 typedef RefCount<ResolvedPeers> ResolvedPeersPointer;
 
 class HappyConnOpener;
-typedef CbcPointer<HappyConnOpener> HappyConnOpenerPointer;
 class HappyConnOpenerAnswer;
-
-#if USE_OPENSSL
-namespace Ssl
-{
-class ErrorDetail;
-class CertValidationResponse;
-};
-#endif
 
 /// Sets initial TOS value and Netfilter for the future outgoing connection.
 /// Updates the given Connection object, not the future transport connection.
@@ -64,7 +55,7 @@ class FwdState: public RefCountable, public PeerSelectionInitiator
 
 public:
     typedef RefCount<FwdState> Pointer;
-    virtual ~FwdState();
+    ~FwdState() override;
     static void initModule();
 
     /// Initiates request forwarding to a peer or origin server.
@@ -86,10 +77,14 @@ public:
     void unregister(Comm::ConnectionPointer &conn);
     void unregister(int fd);
     void complete();
+
+    /// Mark reply as written to Store in its entirety, including the header and
+    /// any body. If the reply has a body, the entire body has to be stored.
+    void markStoredReplyAsWhole(const char *whyWeAreSure);
+
     void handleUnregisteredServerEnd();
     int reforward();
-    bool reforwardableStatus(const Http::StatusCode s) const;
-    void serverClosed(int fd);
+    void serverClosed();
     void connectStart();
     void connectDone(const Comm::ConnectionPointer & conn, Comm::Flag status, int xerrno);
     bool checkRetry();
@@ -102,6 +97,9 @@ public:
 
     void dontRetry(bool val) { flags.dont_retry = val; }
 
+    /// get rid of a to-server connection that failed to become serverConn
+    void closePendingConnection(const Comm::ConnectionPointer &conn, const char *reason);
+
     /** return a ConnectionPointer to the current server connection (may or may not be open) */
     Comm::ConnectionPointer const & serverConnection() const { return serverConn; };
 
@@ -112,8 +110,10 @@ private:
     void stopAndDestroy(const char *reason);
 
     /* PeerSelectionInitiator API */
-    virtual void noteDestination(Comm::ConnectionPointer conn) override;
-    virtual void noteDestinationsEnd(ErrorState *selectionError) override;
+    void noteDestination(Comm::ConnectionPointer conn) override;
+    void noteDestinationsEnd(ErrorState *selectionError) override;
+
+    bool transporting() const;
 
     void noteConnection(HappyConnOpenerAnswer &);
 
@@ -131,14 +131,18 @@ private:
     /// (in order to retry or reforward a failed request)
     bool pinnedCanRetry() const;
 
+    template <typename StepStart>
+    void advanceDestination(const char *stepDescription, const Comm::ConnectionPointer &conn, const StepStart &startStep);
+
     ErrorState *makeConnectingError(const err_type type) const;
     void connectedToPeer(Security::EncryptorAnswer &answer);
     static void RegisterWithCacheManager(void);
 
-    void establishTunnelThruProxy();
+    void establishTunnelThruProxy(const Comm::ConnectionPointer &);
     void tunnelEstablishmentDone(Http::TunnelerAnswer &answer);
-    void secureConnectionToPeerIfNeeded();
-    void successfullyConnectedToPeer();
+    void secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &);
+    void secureConnectionToPeer(const Comm::ConnectionPointer &);
+    void successfullyConnectedToPeer(const Comm::ConnectionPointer &);
 
     /// stops monitoring server connection for closure and updates pconn stats
     void closeServerConnection(const char *reason);
@@ -148,24 +152,25 @@ private:
 
     /// whether we have used up all permitted forwarding attempts
     bool exhaustedTries() const;
+    void updateAttempts(int);
 
     /// \returns the time left for this connection to become connected or 1 second if it is less than one second left
     time_t connectingTimeout(const Comm::ConnectionPointer &conn) const;
 
-    /// whether we are waiting for HappyConnOpener
-    /// same as calls.connector but may differ from connOpener.valid()
-    bool opening() const { return connOpener.set(); }
-
-    void cancelOpening(const char *reason);
+    void cancelStep(const char *reason);
 
     void notifyConnOpener();
+    void reactToZeroSizeObject();
+
+    void updateAleWithFinalError();
 
 public:
     StoreEntry *entry;
     HttpRequest *request;
     AccessLogEntryPointer al; ///< info for the future access.log entry
 
-    static void abort(void*);
+    /// called by Store if the entry is no longer usable
+    static void HandleStoreAbort(FwdState *);
 
 private:
     Pointer self;
@@ -174,11 +179,6 @@ private:
     time_t start_t;
     int n_tries; ///< the number of forwarding attempts so far
 
-    // AsyncCalls which we set and may need cancelling.
-    struct {
-        AsyncCall::Pointer connector;  ///< a call linking us to the ConnOpener producing serverConn.
-    } calls;
-
     struct {
         bool connected_okay; ///< TCP link ever opened properly. This affects retry of POST,PUT,CONNECT,etc
         bool dont_retry;
@@ -186,18 +186,39 @@ private:
         bool destinationsFound; ///< at least one candidate path found
     } flags;
 
-    HappyConnOpenerPointer connOpener; ///< current connection opening job
+    /// waits for a transport connection to the peer to be established/opened
+    JobWait<HappyConnOpener> transportWait;
+
+    /// waits for the established transport connection to be secured/encrypted
+    JobWait<Security::PeerConnector> encryptionWait;
+
+    /// waits for an HTTP CONNECT tunnel through a cache_peer to be negotiated
+    /// over the (encrypted, if needed) transport connection to that cache_peer
+    JobWait<Http::Tunneler> peerWait;
+
+    /// whether we are waiting for the last dispatch()ed activity to end
+    bool waitingForDispatched;
+
     ResolvedPeersPointer destinations; ///< paths for forwarding the request
     Comm::ConnectionPointer serverConn; ///< a successfully opened connection to a server.
+    PeerConnectionPointer destinationReceipt; ///< peer selection result (or nil)
 
     AsyncCall::Pointer closeHandler; ///< The serverConn close handler
 
     /// possible pconn race states
     typedef enum { raceImpossible, racePossible, raceHappened } PconnRace;
     PconnRace pconnRace; ///< current pconn race state
+
+    /// Whether the entire reply (including any body) was written to Store.
+    /// The string literal value is only used for debugging.
+    const char *storedWholeReply_;
 };
 
-void getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn);
+class acl_tos;
+tos_t aclMapTOS(acl_tos *, ACLChecklist *);
+
+Ip::NfMarkConfig aclFindNfMarkConfig(acl_nfmark *, ACLChecklist *);
+void getOutgoingAddress(HttpRequest *, const Comm::ConnectionPointer &);
 
 /// a collection of previously used persistent Squid-to-peer HTTP(S) connections
 extern PconnPool *fwdPconnPool;

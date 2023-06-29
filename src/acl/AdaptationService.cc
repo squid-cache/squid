@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,10 +18,10 @@ int
 ACLAdaptationServiceStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
     HttpRequest::Pointer request = checklist->request;
-    if (request == NULL)
+    if (request == nullptr)
         return 0;
     Adaptation::History::Pointer ah = request->adaptHistory();
-    if (ah == NULL)
+    if (ah == nullptr)
         return 0;
 
     Adaptation::History::AdaptationServices::iterator it;

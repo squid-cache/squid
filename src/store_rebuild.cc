@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,28 +9,30 @@
 /* DEBUG: section 20    Store Rebuild Routines */
 
 #include "squid.h"
+#include "debug/Messages.h"
 #include "event.h"
+#include "fde.h"
 #include "globals.h"
 #include "md5.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "store/Disk.h"
+#include "store/SwapMetaIn.h"
 #include "store_digest.h"
 #include "store_key_md5.h"
 #include "store_rebuild.h"
 #include "StoreSearch.h"
-// for tvSubDsec() which should be in SquidTime.h
-#include "util.h"
+#include "time/gadgets.h"
 
 #include <cerrno>
 
 static StoreRebuildData counts;
 
-static struct timeval rebuild_start;
 static void storeCleanup(void *);
 
+// TODO: Either convert to Progress or replace with StoreRebuildData.
+// TODO: Handle unknown totals (UFS cache_dir that lost swap.state) correctly.
 typedef struct {
     /* total number of "swap.state" entries that will be read */
     int total;
@@ -38,13 +40,12 @@ typedef struct {
     int scanned;
 } store_rebuild_progress;
 
-static store_rebuild_progress *RebuildProgress = NULL;
+static store_rebuild_progress *RebuildProgress = nullptr;
 
-static int
-storeCleanupDoubleCheck(StoreEntry * e)
+void
+StoreRebuildData::updateStartTime(const timeval &dirStartTime)
 {
-    SwapDir *SD = dynamic_cast<SwapDir *>(INDEXSD(e->swap_dirn));
-    return (SD->doubleCheck(*e));
+    startTime = started() ? std::min(startTime, dirStartTime) : dirStartTime;
 }
 
 static void
@@ -55,7 +56,7 @@ storeCleanup(void *)
     static int validated = 0;
     static int seen = 0;
 
-    if (currentSearch == NULL || currentSearch->isDone())
+    if (currentSearch == nullptr || currentSearch->isDone())
         currentSearch = Store::Root().search();
 
     size_t statCount = 500;
@@ -79,7 +80,7 @@ storeCleanup(void *)
             continue;
 
         if (opt_store_doublecheck)
-            if (storeCleanupDoubleCheck(e))
+            if (e->disk().doubleCheck(*e))
                 ++store_errors;
 
         EBIT_SET(e->flags, ENTRY_VALIDATED);
@@ -96,9 +97,9 @@ storeCleanup(void *)
 
     if (currentSearch->isDone()) {
         debugs(20, 2, "Seen: " << seen << " entries");
-        debugs(20, DBG_IMPORTANT, "  Completed Validation Procedure");
-        debugs(20, DBG_IMPORTANT, "  Validated " << validated << " Entries");
-        debugs(20, DBG_IMPORTANT, "  store_swap_size = " << Store::Root().currentSize() / 1024.0 << " KB");
+        debugs(20, Important(43), "Completed Validation Procedure" <<
+               Debug::Extra << "Validated " << validated << " Entries" <<
+               Debug::Extra << "store_swap_size = " << (Store::Root().currentSize()/1024.0) << " KB");
         --StoreController::store_dirs_rebuilding;
         assert(0 == StoreController::store_dirs_rebuilding);
 
@@ -112,9 +113,9 @@ storeCleanup(void *)
         if (store_digest)
             storeDigestNoteStoreReady();
 
-        currentSearch = NULL;
+        currentSearch = nullptr;
     } else
-        eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
+        eventAdd("storeCleanup", storeCleanup, nullptr, 0.0, 1);
 }
 
 /* meta data recreated from disk image in swap directory */
@@ -122,17 +123,25 @@ void
 
 storeRebuildComplete(StoreRebuildData *dc)
 {
-    double dt;
-    counts.objcount += dc->objcount;
-    counts.expcount += dc->expcount;
-    counts.scancount += dc->scancount;
-    counts.clashcount += dc->clashcount;
-    counts.dupcount += dc->dupcount;
-    counts.cancelcount += dc->cancelcount;
-    counts.invalid += dc->invalid;
-    counts.badflags += dc->badflags;
-    counts.bad_log_op += dc->bad_log_op;
-    counts.zero_object_sz += dc->zero_object_sz;
+    if (dc) {
+        counts.objcount += dc->objcount;
+        counts.expcount += dc->expcount;
+        counts.scancount += dc->scancount;
+        counts.clashcount += dc->clashcount;
+        counts.dupcount += dc->dupcount;
+        counts.cancelcount += dc->cancelcount;
+        counts.invalid += dc->invalid;
+        counts.badflags += dc->badflags;
+        counts.bad_log_op += dc->bad_log_op;
+        counts.zero_object_sz += dc->zero_object_sz;
+        counts.validations += dc->validations;
+        counts.updateStartTime(dc->startTime);
+    }
+    // else the caller was not responsible for indexing its cache_dir
+
+    assert(StoreController::store_dirs_rebuilding > 1);
+    --StoreController::store_dirs_rebuilding;
+
     /*
      * When store_dirs_rebuilding == 1, it means we are done reading
      * or scanning all cache_dirs.  Now report the stats and start
@@ -142,26 +151,26 @@ storeRebuildComplete(StoreRebuildData *dc)
     if (StoreController::store_dirs_rebuilding > 1)
         return;
 
-    dt = tvSubDsec(rebuild_start, current_time);
+    const auto dt = tvSubDsec(counts.startTime, current_time);
 
-    debugs(20, DBG_IMPORTANT, "Finished rebuilding storage from disk.");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.scancount  << " Entries scanned");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.invalid  << " Invalid entries.");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.badflags  << " With invalid flags.");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.objcount  << " Objects loaded.");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.expcount  << " Objects expired.");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.cancelcount  << " Objects cancelled.");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.dupcount  << " Duplicate URLs purged.");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.clashcount  << " Swapfile clashes avoided.");
-    debugs(20, DBG_IMPORTANT, "  Took "<< std::setw(3)<< std::setprecision(2) << dt << " seconds ("<< std::setw(6) <<
+    debugs(20, Important(46), "Finished rebuilding storage from disk." <<
+           Debug::Extra << std::setw(7) << counts.scancount << " Entries scanned" <<
+           Debug::Extra << std::setw(7) << counts.invalid << " Invalid entries" <<
+           Debug::Extra << std::setw(7) << counts.badflags << " With invalid flags" <<
+           Debug::Extra << std::setw(7) << counts.objcount << " Objects loaded" <<
+           Debug::Extra << std::setw(7) << counts.expcount << " Objects expired" <<
+           Debug::Extra << std::setw(7) << counts.cancelcount << " Objects canceled" <<
+           Debug::Extra << std::setw(7) << counts.dupcount << " Duplicate URLs purged" <<
+           Debug::Extra << std::setw(7) << counts.clashcount << " Swapfile clashes avoided" <<
+           Debug::Extra << "Took " << std::setprecision(2) << dt << " seconds (" <<
            ((double) counts.objcount / (dt > 0.0 ? dt : 1.0)) << " objects/sec).");
-    debugs(20, DBG_IMPORTANT, "Beginning Validation Procedure");
+    debugs(20, Important(56), "Beginning Validation Procedure");
 
-    eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
+    eventAdd("storeCleanup", storeCleanup, nullptr, 0.0, 1);
 
     xfree(RebuildProgress);
 
-    RebuildProgress = NULL;
+    RebuildProgress = nullptr;
 }
 
 /*
@@ -173,7 +182,6 @@ void
 storeRebuildStart(void)
 {
     counts = StoreRebuildData(); // reset counters
-    rebuild_start = current_time;
     /*
      * Note: store_dirs_rebuilding is initialized to 1.
      *
@@ -197,6 +205,7 @@ void
 storeRebuildProgress(int sd_index, int total, int sofar)
 {
     static time_t last_report = 0;
+    // TODO: Switch to int64_t and fix handling of unknown totals.
     double n = 0.0;
     double d = 0.0;
 
@@ -206,7 +215,7 @@ storeRebuildProgress(int sd_index, int total, int sofar)
     if (sd_index >= Config.cacheSwap.n_configured)
         return;
 
-    if (NULL == RebuildProgress)
+    if (nullptr == RebuildProgress)
         return;
 
     RebuildProgress[sd_index].total = total;
@@ -221,60 +230,25 @@ storeRebuildProgress(int sd_index, int total, int sofar)
         d += (double) RebuildProgress[sd_index].total;
     }
 
-    debugs(20, DBG_IMPORTANT, "Store rebuilding is "<< std::setw(4)<< std::setprecision(2) << 100.0 * n / d << "% complete");
+    debugs(20, Important(57), "Indexing cache entries: " << Progress(n, d));
     last_report = squid_curtime;
 }
 
-#include "fde.h"
-#include "Generic.h"
-#include "StoreMeta.h"
-#include "StoreMetaUnpacker.h"
-
-struct InitStoreEntry : public unary_function<StoreMeta, void> {
-    InitStoreEntry(StoreEntry *anEntry, cache_key *aKey):what(anEntry),index(aKey) {}
-
-    void operator()(StoreMeta const &x) {
-        switch (x.getType()) {
-
-        case STORE_META_KEY:
-            assert(x.length == SQUID_MD5_DIGEST_LENGTH);
-            memcpy(index, x.value, SQUID_MD5_DIGEST_LENGTH);
-            break;
-
-        case STORE_META_STD:
-            struct old_metahdr {
-                time_t timestamp;
-                time_t lastref;
-                time_t expires;
-                time_t lastmod;
-                size_t swap_file_sz;
-                uint16_t refcount;
-                uint16_t flags;
-            } *tmp;
-            tmp = (struct old_metahdr *)x.value;
-            assert(x.length == STORE_HDR_METASIZE_OLD);
-            what->timestamp = tmp->timestamp;
-            what->lastref = tmp->lastref;
-            what->expires = tmp->expires;
-            what->lastModified(tmp->lastmod);
-            what->swap_file_sz = tmp->swap_file_sz;
-            what->refcount = tmp->refcount;
-            what->flags = tmp->flags;
-            break;
-
-        case STORE_META_STD_LFS:
-            assert(x.length == STORE_HDR_METASIZE);
-            memcpy(&what->timestamp, x.value, STORE_HDR_METASIZE);
-            break;
-
-        default:
-            break;
-        }
+void
+Progress::print(std::ostream &os) const
+{
+    if (goal > 0) {
+        const auto savedPrecision = os.precision(2);
+        const auto percent = 100.0 * completed / goal;
+        os << percent << "% (" << completed << " out of " << goal << ")";
+        (void)os.precision(savedPrecision);
+    } else if (!completed && !goal) {
+        os << "nothing to do";
+    } else {
+        // unknown (i.e. negative) or buggy (i.e. zero when completed != 0) goal
+        os << completed;
     }
-
-    StoreEntry *what;
-    cache_key *index;
-};
+}
 
 bool
 storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, StoreRebuildData &)
@@ -302,38 +276,26 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
                        StoreRebuildData &stats,
                        uint64_t expectedSize)
 {
-    int swap_hdr_len = 0;
-    StoreMetaUnpacker aBuilder(buf.content(), buf.contentSize(), &swap_hdr_len);
-    if (aBuilder.isBufferZero()) {
-        debugs(47,5, HERE << "skipping empty record.");
-        return false;
-    }
+    uint64_t swap_hdr_len = 0;
 
-    StoreMeta *tlv_list = nullptr;
+    tmpe.key = nullptr;
+
     try {
-        tlv_list = aBuilder.createStoreMeta();
-    } catch (const std::exception &e) {
-        debugs(47, DBG_IMPORTANT, "WARNING: Ignoring store entry because " << e.what());
+        swap_hdr_len = Store::UnpackIndexSwapMeta(buf, tmpe, key);
+    } catch (...) {
+        debugs(47, Important(65), "WARNING: Indexer ignores a cache_dir entry: " << CurrentException);
         return false;
     }
-    assert(tlv_list);
 
     // TODO: consume parsed metadata?
 
     debugs(47,7, "successful swap meta unpacking; swap_file_sz=" << tmpe.swap_file_sz);
-    memset(key, '\0', SQUID_MD5_DIGEST_LENGTH);
 
-    InitStoreEntry visitor(&tmpe, key);
-    for_each(*tlv_list, visitor);
-    storeSwapTLVFree(tlv_list);
-    tlv_list = NULL;
-
-    if (storeKeyNull(key)) {
+    if (!tmpe.key) {
         debugs(47, DBG_IMPORTANT, "WARNING: Ignoring keyless cache entry");
         return false;
     }
 
-    tmpe.key = key;
     /* check sizes */
 
     if (expectedSize > 0) {

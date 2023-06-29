@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,10 +23,10 @@ CBDATA_NAMESPACED_CLASS_INIT(Snmp, Forwarder);
 
 Snmp::Forwarder::Forwarder(const Pdu& aPdu, const Session& aSession, int aFd,
                            const Ip::Address& anAddress):
-    Ipc::Forwarder(new Request(KidIdentifier, 0, aPdu, aSession, aFd, anAddress), 2),
+    Ipc::Forwarder(new Request(KidIdentifier, Ipc::RequestId(), aPdu, aSession, aFd, anAddress), 2),
     fd(aFd)
 {
-    debugs(49, 5, HERE << "FD " << aFd);
+    debugs(49, 5, "FD " << aFd);
     Must(fd >= 0);
     closer = asyncCall(49, 5, "Snmp::Forwarder::noteCommClosed",
                        CommCbMemFunT<Forwarder, CommCloseCbParams>(this, &Forwarder::noteCommClosed));
@@ -38,9 +38,9 @@ void
 Snmp::Forwarder::swanSong()
 {
     if (fd >= 0) {
-        if (closer != NULL) {
+        if (closer != nullptr) {
             comm_remove_close_handler(fd, closer);
-            closer = NULL;
+            closer = nullptr;
         }
         fd = -1;
     }
@@ -51,8 +51,9 @@ Snmp::Forwarder::swanSong()
 void
 Snmp::Forwarder::noteCommClosed(const CommCloseCbParams& params)
 {
-    debugs(49, 5, HERE);
+    debugs(49, 5, MYNAME);
     Must(fd == params.fd);
+    closer = nullptr;
     fd = -1;
     mustStop("commClosed");
 }
@@ -67,9 +68,8 @@ Snmp::Forwarder::handleTimeout()
 void
 Snmp::Forwarder::handleException(const std::exception& e)
 {
-    debugs(49, 3, HERE << e.what());
-    if (fd >= 0)
-        sendError(SNMP_ERR_GENERR);
+    debugs(49, 3, e.what());
+    sendError(SNMP_ERR_GENERR);
     Ipc::Forwarder::handleException(e);
 }
 
@@ -77,7 +77,11 @@ Snmp::Forwarder::handleException(const std::exception& e)
 void
 Snmp::Forwarder::sendError(int error)
 {
-    debugs(49, 3, HERE);
+    debugs(49, 3, MYNAME);
+
+    if (fd < 0)
+        return; // client gone
+
     Snmp::Request& req = static_cast<Snmp::Request&>(*request);
     req.pdu.command = SNMP_PDU_RESPONSE;
     req.pdu.errstat = error;
@@ -88,20 +92,20 @@ Snmp::Forwarder::sendError(int error)
 }
 
 void
-Snmp::SendResponse(unsigned int requestId, const Pdu& pdu)
+Snmp::SendResponse(const Ipc::RequestId requestId, const Pdu &pdu)
 {
-    debugs(49, 5, HERE);
+    debugs(49, 5, MYNAME);
     // snmpAgentResponse() can modify arg
     Pdu tmp = pdu;
     Snmp::Response response(requestId);
-    snmp_pdu* response_pdu = NULL;
+    snmp_pdu* response_pdu = nullptr;
     try {
         response_pdu = snmpAgentResponse(&tmp);
-        Must(response_pdu != NULL);
+        Must(response_pdu != nullptr);
         response.pdu = static_cast<Pdu&>(*response_pdu);
         snmp_free_pdu(response_pdu);
     } catch (const std::exception& e) {
-        debugs(49, DBG_CRITICAL, HERE << e.what());
+        debugs(49, DBG_CRITICAL, e.what());
         response.pdu.command = SNMP_PDU_RESPONSE;
         response.pdu.errstat = SNMP_ERR_GENERR;
     }

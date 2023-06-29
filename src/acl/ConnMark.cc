@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,8 +11,9 @@
 #include "squid.h"
 #include "acl/ConnMark.h"
 #include "acl/FilledChecklist.h"
+#include "base/IoManip.h"
 #include "client_side.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "http/Stream.h"
 #include "sbuf/Stream.h"
 

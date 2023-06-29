@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,10 +26,10 @@ ESIAssign::~ESIAssign()
         delete value;
 }
 
-ESIAssign::ESIAssign (ESIAssign const &old) : parent (NULL), varState (NULL), name (old.name), value (old.value ? new ESIVariableExpression (*old.value): NULL), variable (NULL), unevaluatedVariable(old.unevaluatedVariable)
+ESIAssign::ESIAssign (ESIAssign const &old) : parent (nullptr), varState (nullptr), name (old.name), value (old.value ? new ESIVariableExpression (*old.value): nullptr), variable (nullptr), unevaluatedVariable(old.unevaluatedVariable)
 {}
 
-ESIAssign::ESIAssign (esiTreeParentPtr aParent, int attrcount, char const **attr, ESIContext *aContext) : parent (aParent), varState (NULL), name(), value (NULL), variable (NULL), unevaluatedVariable()
+ESIAssign::ESIAssign (esiTreeParentPtr aParent, int attrcount, char const **attr, ESIContext *aContext) : parent (aParent), varState (nullptr), name(), value (nullptr), variable (nullptr), unevaluatedVariable()
 {
     /* TODO: grab content IFF no value was specified */
     assert (aContext);
@@ -62,7 +62,7 @@ ESIAssign::evaluateVariable()
     if (variable.getRaw())
         variable->process (false);
 
-    variable = NULL;
+    variable = nullptr;
 
     if (unevaluatedVariable.size()) {
         varState->feedData(unevaluatedVariable.rawBuf(), unevaluatedVariable.size());
@@ -89,7 +89,7 @@ ESIAssign::provideData (ESISegment::Pointer data, ESIElement * source)
 }
 
 esiProcessResult_t
-ESIAssign::process (int dovars)
+ESIAssign::process (int)
 {
     assert (varState);
 
@@ -101,7 +101,7 @@ ESIAssign::process (int dovars)
 
     varState->addVariable (name.rawBuf(), name.size(), value);
 
-    value = NULL;
+    value = nullptr;
 
     debugs(86, 5, "ESIAssign: Processed " << this);
 
@@ -143,7 +143,7 @@ ESIAssign::finish()
         cbdataReferenceDone (varState);
 
     if (parent.getRaw())
-        parent = NULL;
+        parent = nullptr;
 }
 
 bool
@@ -167,7 +167,7 @@ ESIVariableExpression::ESIVariableExpression (String const &aString) : expressio
 {}
 
 void
-ESIVariableExpression::eval (ESIVarState &state, char const *subref, char const *defaultOnEmpty) const
+ESIVariableExpression::eval (ESIVarState &state, char const *, char const *) const
 {
     /* XXX: Implement evaluation of the expression */
     ESISegment::ListAppend (state.getOutput(), expression.rawBuf(), expression.size());

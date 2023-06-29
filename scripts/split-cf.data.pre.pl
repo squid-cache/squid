@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -50,37 +50,37 @@ my $name;
 my $top = dirname($0);
 
 GetOptions(
-	'verbose' => \$verbose, 'v' => \$verbose,
-	'out=s' => \$path,
-	);
+    'verbose' => \$verbose, 'v' => \$verbose,
+    'out=s' => \$path,
+    );
 
 sub filename($)
 {
-	my ($name) = @_;
-	return $path . "/" . $name . ".txt";
+    my ($name) = @_;
+    return $path . "/" . $name . ".txt";
 }
 
 $index->open(filename("0-index"), "w") || die "Couldn't open ".filename("0-index").": $!\n";
 
 while (<>) {
-	chomp;
-	print $index $_."\n" if !defined $name;
-	last if (/^EOF$/);
-	if ($_ =~ /^NAME: (.*)$/) {
-		print "DEBUG: new option: $name\n" if $verbose;
+    chomp;
+    print $index $_."\n" if !defined $name;
+    last if (/^EOF$/);
+    if ($_ =~ /^NAME: (.*)$/) {
+        print "DEBUG: new option: $name\n" if $verbose;
 
-		my (@aliases) = split(/ /, $1);
-		$name = shift @aliases;
+        my (@aliases) = split(/ /, $1);
+        $name = shift @aliases;
 
-		$out->open(filename($name), "w") || die "Couldn't open ".filename($name).": $!\n";
-	}
-	print $out $_."\n" if defined $name;
+        $out->open(filename($name), "w") || die "Couldn't open ".filename($name).": $!\n";
+    }
+    print $out $_."\n" if defined $name;
 
-	if ($_ =~ /^DOC_END/ ||
-	    $_ =~ /^DOC_NONE/) {
-		$out->close();
-		undef $name;
-	}
+    if ($_ =~ /^DOC_END/ ||
+        $_ =~ /^DOC_NONE/) {
+        $out->close();
+        undef $name;
+    }
 }
 undef $out;
 $index->close;

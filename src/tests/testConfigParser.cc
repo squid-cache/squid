@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,24 +7,38 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "ConfigParser.h"
-#include "event.h"
 #include "SquidString.h"
-#include "testConfigParser.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testConfigParser);
+/*
+ * test the ConfigParser framework
+ */
 
-/* let this test link sanely */
-void
-eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata)
-{}
+class TestConfigParser : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestConfigParser);
+    CPPUNIT_TEST(testParseQuoted);
+    CPPUNIT_TEST_SUITE_END();
 
-void testConfigParser::setUp()
+public:
+    void setUp() override;
+
+protected:
+    bool doParseQuotedTest(const char *, const char *);
+    void testParseQuoted();
+};
+
+CPPUNIT_TEST_SUITE_REGISTRATION( TestConfigParser );
+
+int shutting_down = 0;
+
+void TestConfigParser::setUp()
 {
 }
 
-bool testConfigParser::doParseQuotedTest(const char *s, const char *expectInterp)
+bool TestConfigParser::doParseQuotedTest(const char *s, const char *expectInterp)
 {
     char cfgline[2048];
     char cfgparam[2048];
@@ -58,7 +72,7 @@ bool testConfigParser::doParseQuotedTest(const char *s, const char *expectInterp
     return quotedOk && interpOk ;
 }
 
-void testConfigParser::testParseQuoted()
+void TestConfigParser::testParseQuoted()
 {
     // SingleToken
     CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("SingleToken", "SingleToken"));

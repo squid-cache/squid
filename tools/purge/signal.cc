@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -98,7 +98,7 @@ Signal( int signo, SigFunc* newhandler, bool doInterrupt )
            (SigFunc*) old.sa_handler;
 }
 
-SIGRETTYPE
+void
 sigChild( int signo )
 // purpose: supply ad hoc child handler with output on stderr
 // paramtr: signo (IN): == SIGCHLD
@@ -128,9 +128,5 @@ sigChild( int signo )
         }
     }
     errno = saveerr;
-
-#if SIGRETTYPE != void
-    return 0;
-#endif
 }
 

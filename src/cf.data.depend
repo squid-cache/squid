@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -43,6 +43,7 @@ hostdomain		cache_peer
 hostdomaintype		cache_peer
 http_header_access	acl
 http_header_replace
+http_upgrade_request_protocols acl
 HeaderWithAclList	acl
 adaptation_access_type	adaptation_service_set adaptation_service_chain acl icap_service icap_class
 adaptation_service_set_type	icap_service ecap_service
@@ -73,12 +74,14 @@ TokenOrQuotedString
 refreshpattern
 removalpolicy
 securePeerOptions
+Security::KeyLog* acl
 size_t
 IpAddress_list
 string
 string
 time_msec
 time_t
+time_nanoseconds
 tristate
 uri_whitespace
 UrlHelperTimeout	acl
@@ -94,3 +97,4 @@ sslproxy_ssl_bump_peeked acl
 sslproxy_cert_sign	acl
 sslproxy_cert_adapt	acl
 ftp_epsv                acl
+cache_log_message

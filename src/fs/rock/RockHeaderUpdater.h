@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,13 +35,13 @@ public:
         ssize_t size;
     };
     HeaderUpdater(const Rock::SwapDir::Pointer &aStore, const Ipc::StoreMapUpdate &update);
-    virtual ~HeaderUpdater() override = default;
+    ~HeaderUpdater() override = default;
 
 protected:
     /* AsyncJob API */
-    virtual void start() override;
-    virtual bool doneAll() const override;
-    virtual void swanSong() override;
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
 
 private:
     static StoreIOState::STRCB NoteRead;
@@ -68,7 +68,7 @@ private:
     SBuf exchangeBuffer; ///< bytes read but not yet discarded or written
     uint64_t bytesRead; ///< total entry bytes read from Store so far
 
-    int staleSwapHeaderSize; ///< stored size of the stale entry metadata
+    size_t staleSwapHeaderSize; ///< stored size of the stale entry metadata
 
     SlotId staleSplicingPointNext; ///< non-updatable old HTTP body suffix start
 };

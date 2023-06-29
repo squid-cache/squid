@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 #include "squid.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "format/Config.h"
 #include <list>
 
@@ -51,6 +51,6 @@ Format::FmtConfig::registerTokens(const SBuf &nsName, TokenTableEntry const *tok
     if (tokenArray)
         tokens.emplace_back(TokenNamespace(nsName, tokenArray));
     else
-        debugs(0, DBG_CRITICAL, "BUG: format tokens for '" << nsName << "' missing!");
+        debugs(0, DBG_CRITICAL, "ERROR: Squid BUG: format tokens for '" << nsName << "' missing!");
 }
 

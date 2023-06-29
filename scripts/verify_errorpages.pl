@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -22,16 +22,16 @@ foreach $page (@pages) {
 }
 
 foreach $lang (@ARGV) {
-  foreach $page (@pages) {
-    undef %codes;
-    open(IN, "<$lang/$page") || die;
-    $file = join("", <IN>);
-    close(IN);
-    $file =~ s/%(.)/$codes{$1}++/ge;
-    foreach $code (keys %codes, keys %{$english{$page}}) {
-	if ($codes{$code} ne $english{$page}{$code}) {
-	    print("$lang/$page %$code mismatch (found $codes{$code}, expected $english{$page}{$code})\n");
-	}
+    foreach $page (@pages) {
+        undef %codes;
+        open(IN, "<$lang/$page") || die;
+        $file = join("", <IN>);
+        close(IN);
+        $file =~ s/%(.)/$codes{$1}++/ge;
+        foreach $code (keys %codes, keys %{$english{$page}}) {
+            if ($codes{$code} ne $english{$page}{$code}) {
+                print("$lang/$page %$code mismatch (found $codes{$code}, expected $english{$page}{$code})\n");
+            }
+        }
     }
-  }
 }

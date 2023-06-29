@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -114,24 +114,24 @@ get1byt(void)
     return var;
 }
 
-char *
+static char *
 pstrcpy( char *src, const char *dst)
 {
     if (dst) {
         if (strlen(dst)>MAX_PAC_GROUP_SIZE)
-            return NULL;
+            return nullptr;
         else
             return strcpy(src,dst);
     } else
         return src;
 }
 
-char *
+static char *
 pstrcat( char *src, const char *dst)
 {
     if (dst) {
         if (strlen(src)+strlen(dst)+1>MAX_PAC_GROUP_SIZE)
-            return NULL;
+            return nullptr;
         else
             return strcat(src,dst);
     } else
@@ -175,7 +175,7 @@ getgids(char **Rids, uint32_t GroupIds, uint32_t  GroupCount)
         if ( ngroup != GroupCount) {
             debug((char *) "%s| %s: ERROR: Group encoding error => GroupCount: %d Array size: %d\n",
                   LogTime(), PROGRAM, GroupCount, ngroup);
-            return NULL;
+            return nullptr;
         }
         debug((char *) "%s| %s: INFO: Found %d rids\n", LogTime(), PROGRAM, GroupCount);
 
@@ -199,7 +199,7 @@ getdomaingids(char *ad_groups, uint32_t DomainLogonId, char **Rids, uint32_t Gro
     if (!ad_groups) {
         debug((char *) "%s| %s: ERR: No space to store groups\n",
               LogTime(), PROGRAM);
-        return NULL;
+        return nullptr;
     }
 
     if (DomainLogonId!= 0) {
@@ -218,7 +218,7 @@ getdomaingids(char *ad_groups, uint32_t DomainLogonId, char **Rids, uint32_t Gro
         if (nauth > maxGidCount) {
             debug((char *) "%s| %s: ERROR: Too many groups ! count > %d : %s\n",
                   LogTime(), PROGRAM, maxGidCount, ad_groups);
-            return NULL;
+            return nullptr;
         }
         size_t length = 1+1+6+nauth*4;
 
@@ -286,7 +286,7 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
         if ( ngroup != SidCount) {
             debug((char *) "%s| %s: ERROR: Group encoding error => SidCount: %d Array size: %d\n",
                   LogTime(), PROGRAM, SidCount, ngroup);
-            return NULL;
+            return nullptr;
         }
         debug((char *) "%s| %s: INFO: Found %d ExtraSIDs\n", LogTime(), PROGRAM, SidCount);
 
@@ -311,7 +311,7 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
                     debug((char *) "%s| %s: ERROR: Too many extra groups ! count > %d : %s\n",
                           LogTime(), PROGRAM, maxGidCount, ad_groups);
                     xfree(pa);
-                    return NULL;
+                    return nullptr;
                 }
 
                 size_t length = 1+1+6+nauth*4;
@@ -322,7 +322,7 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
                           LogTime(), PROGRAM);
                     xfree(pa);
                     xfree(ag);
-                    return NULL;
+                    return nullptr;
                 } else {
                     if (!pstrcat(ad_groups," group=")) {
                         debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
@@ -384,13 +384,13 @@ get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
     uint32_t ResourceGroupCount=0;
     uint32_t ResourceGroupIds=0;
     */
-    char **Rids=NULL;
+    char **Rids=nullptr;
     int l=0;
 
     if (!ad_groups) {
         debug((char *) "%s| %s: ERR: No space to store groups\n",
               LogTime(), PROGRAM);
-        return NULL;
+        return nullptr;
     }
 
     ad_data = (krb5_data *)xcalloc(1,sizeof(krb5_data));
@@ -480,7 +480,7 @@ get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
     if (checkustr(&LogonDomainName)<0)
         goto k5clean;
     ad_groups = getdomaingids(ad_groups,LogonDomainId,Rids,GroupCount);
-    if ((ad_groups = getextrasids(ad_groups,ExtraSids,SidCount))==NULL)
+    if ((ad_groups = getextrasids(ad_groups,ExtraSids,SidCount))==nullptr)
         goto k5clean;
 
     debug((char *) "%s| %s: INFO: Read %d of %d bytes \n", LogTime(), PROGRAM, bpos, (int)ad_data->length);
@@ -500,7 +500,7 @@ k5clean:
         xfree(Rids);
     }
     krb5_free_data(context, ad_data);
-    return NULL;
+    return nullptr;
 }
 #endif
 

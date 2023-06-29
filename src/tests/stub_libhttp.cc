@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,7 @@
 #include "SquidConfig.h"
 
 #define STUB_API "http/libhttp.la"
-#include "STUB.h"
+#include "tests/STUB.h"
 
 #include "http/ContentLengthInterpreter.h"
 namespace Http
@@ -61,14 +61,13 @@ const SBuf MethodType_sb[1] = {SBuf()};
 #include "http/RegisteredHeaders.h"
 namespace Http
 {
-HeaderTableRecord::HeaderTableRecord() {STUB_NOP}
 HeaderTableRecord::HeaderTableRecord(const char *) {STUB_NOP}
 HeaderTableRecord::HeaderTableRecord(const char *, Http::HdrType, Http::HdrFieldType, int) {STUB}
 HeaderLookupTable_t::HeaderLookupTable_t() {STUB_NOP}
 const HeaderTableRecord& HeaderLookupTable_t::lookup(const char *, const std::size_t) const STUB_RETVAL(BadHdr)
 const HeaderLookupTable_t HeaderLookupTable;
 }
-std::ostream &operator<< (std::ostream&os, Http::HdrType) STUB_RETVAL(os)
+std::ostream &Http::operator <<(std::ostream &os, HdrType) STUB_RETVAL(os)
 
 #include "http/RequestMethod.h"
 HttpRequestMethod::HttpRequestMethod(const SBuf &) {STUB}
@@ -118,7 +117,7 @@ void Stream::buildRangeHeader(HttpReply *) STUB
 clientStreamNode *Stream::getTail() const STUB_RETVAL(nullptr)
 clientStreamNode *Stream::getClientReplyContext() const STUB_RETVAL(nullptr)
 ConnStateData *Stream::getConn() const STUB_RETVAL(nullptr)
-void Stream::noteIoError(const int) STUB
+void Stream::noteIoError(const Error &, const LogTagsErrors &) STUB
 void Stream::finished() STUB
 void Stream::initiateClose(const char *) STUB
 void Stream::deferRecipientForLater(clientStreamNode *, HttpReply *, StoreIOBuffer) STUB

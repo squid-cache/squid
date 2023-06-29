@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,7 +21,7 @@ class ExternalACLLookup : public ACLChecklist::AsyncState
 
 public:
     static ExternalACLLookup *Instance();
-    virtual void checkForAsync(ACLChecklist *)const;
+    void checkForAsync(ACLChecklist *)const override;
 
     // If possible, starts an asynchronous lookup of an external ACL.
     // Otherwise, asserts (or bails if background refresh is requested).
@@ -42,24 +42,21 @@ public:
     static void ExternalAclLookup(ACLChecklist * ch, ACLExternal *);
 
     ACLExternal(char const *);
-    ACLExternal(ACLExternal const &);
-    ~ACLExternal();
-    ACLExternal&operator=(ACLExternal const &);
+    ~ACLExternal() override;
 
-    virtual ACL *clone()const;
-    virtual char const *typeString() const;
-    virtual void parse();
-    virtual int match(ACLChecklist *checklist);
+    char const *typeString() const override;
+    void parse() override;
+    int match(ACLChecklist *checklist) override;
     /* This really should be dynamic based on the external class defn */
-    virtual bool requiresAle() const {return true;}
-    virtual bool requiresRequest() const {return true;}
+    bool requiresAle() const override {return true;}
+    bool requiresRequest() const override {return true;}
 
     /* when requiresRequest is made dynamic, review this too */
     //    virtual bool requiresReply() const {return true;}
-    virtual bool isProxyAuth() const;
-    virtual SBufList dump() const;
-    virtual bool valid () const;
-    virtual bool empty () const;
+    bool isProxyAuth() const override;
+    SBufList dump() const override;
+    bool valid () const override;
+    bool empty () const override;
 
 protected:
     external_acl_data *data;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,11 +20,8 @@
 #if HAVE_AUTH_MODULE_NEGOTIATE
 #include "auth/negotiate/Scheme.h"
 #endif
-#if HAVE_AUTH_MODULE_NTLM
-#include "auth/ntlm/Scheme.h"
-#endif
 
-#include "Debug.h"
+#include "debug/Stream.h"
 
 /**
  * Initialize the authentication modules (if any)
@@ -33,24 +30,19 @@
 void
 Auth::Init()
 {
-    debugs(29,DBG_IMPORTANT,"Startup: Initializing Authentication Schemes ...");
+    debugs(29, 2, "Initializing Authentication Schemes ...");
 #if HAVE_AUTH_MODULE_BASIC
     static const char *basic_type = Auth::Basic::Scheme::GetInstance()->type();
-    debugs(29,DBG_IMPORTANT,"Startup: Initialized Authentication Scheme '" << basic_type << "'");
+    debugs(29, 2, "Initialized Authentication Scheme '" << basic_type << "'");
 #endif
 #if HAVE_AUTH_MODULE_DIGEST
     static const char *digest_type = Auth::Digest::Scheme::GetInstance()->type();
-    debugs(29,DBG_IMPORTANT,"Startup: Initialized Authentication Scheme '" << digest_type << "'");
+    debugs(29, 2, "Initialized Authentication Scheme '" << digest_type << "'");
 #endif
 #if HAVE_AUTH_MODULE_NEGOTIATE
     static const char *negotiate_type = Auth::Negotiate::Scheme::GetInstance()->type();
-    debugs(29,DBG_IMPORTANT,"Startup: Initialized Authentication Scheme '" << negotiate_type << "'");
+    debugs(29, 2, "Initialized Authentication Scheme '" << negotiate_type << "'");
 #endif
-#if HAVE_AUTH_MODULE_NTLM
-    static const char *ntlm_type = Auth::Ntlm::Scheme::GetInstance()->type();
-    debugs(29,DBG_IMPORTANT,"Startup: Initialized Authentication Scheme '" << ntlm_type << "'");
-#endif
-    debugs(29,DBG_IMPORTANT,"Startup: Initialized Authentication.");
 }
 
 #endif /* USE_AUTH */

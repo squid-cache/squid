@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -55,7 +55,7 @@ void safeunlink(const char *path, int quiet);
  * consequences of errors.
  *
  * \retval true successful rename
- * \retval false an error occured
+ * \retval false an error occurred
  */
 bool FileRename(const SBuf &from, const SBuf &to);
 

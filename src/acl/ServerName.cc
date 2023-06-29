@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,7 +36,7 @@ aclHostDomainCompare( char *const &a, char * const &b)
 bool
 ACLServerNameData::match(const char *host)
 {
-    if (host == NULL)
+    if (host == nullptr)
         return 0;
 
     debugs(28, 3, "checking '" << host << "'");
@@ -46,16 +46,8 @@ ACLServerNameData::match(const char *host)
 
     debugs(28, 3, "'" << host << "' " << (result ? "found" : "NOT found"));
 
-    return (result != NULL);
+    return (result != nullptr);
 
-}
-
-ACLData<char const *> *
-ACLServerNameData::clone() const
-{
-    /* Splay trees don't clone yet. */
-    assert (!domains);
-    return new ACLServerNameData;
 }
 
 /// A helper function to be used with Ssl::matchX509CommonNames().
@@ -88,7 +80,7 @@ check_cert_domain( void *check_data, ASN1_STRING *cn_data)
 int
 ACLServerNameStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
-    assert(checklist != NULL && checklist->request != NULL);
+    assert(checklist != nullptr && checklist->request != nullptr);
 
     const char *serverName = nullptr;
     SBuf clientSniKeeper; // because c_str() is not constant
@@ -127,15 +119,10 @@ ACLServerNameStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *ch
 const Acl::Options &
 ACLServerNameStrategy::options()
 {
-    static const Acl::BooleanOption ClientRequested;
-    static const Acl::BooleanOption ServerProvided;
-    static const Acl::BooleanOption Consensus;
-    static const Acl::Options MyOptions = {
-        {"--client-requested", &ClientRequested},
-        {"--server-provided", &ServerProvided},
-        {"--consensus", &Consensus}
-    };
-
+    static const Acl::BooleanOption ClientRequested("--client-requested");
+    static const Acl::BooleanOption ServerProvided("--server-provided");
+    static const Acl::BooleanOption Consensus("--consensus");
+    static const Acl::Options MyOptions = { &ClientRequested, &ServerProvided, &Consensus };
     ClientRequested.linkWith(&useClientRequested);
     ServerProvided.linkWith(&useServerProvided);
     Consensus.linkWith(&useConsensus);

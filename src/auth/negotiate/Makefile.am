@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -15,10 +15,10 @@ EXTRA_DIST= helpers.m4
 noinst_LTLIBRARIES = libnegotiate.la
 
 libnegotiate_la_SOURCES = \
-	Scheme.cc \
-	Scheme.h \
 	Config.cc \
 	Config.h \
+	Scheme.cc \
+	Scheme.h \
 	User.cc \
 	User.h \
 	UserRequest.cc \

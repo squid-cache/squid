@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,8 +11,9 @@
 #include "squid.h"
 
 #if USE_DELAY_POOLS
+#include "base/AsyncCall.h"
+#include "base/DelayedAsyncCalls.h"
 #include "comm/Connection.h"
-#include "CommRead.h"
 #include "DelayVector.h"
 
 DelayVector::DelayVector()
@@ -48,7 +49,7 @@ DelayVector::dump(StoreEntry *entry) const
 }
 
 void
-DelayVector::update(int incr)
+DelayVector::update(int)
 {
     /*
      * Each pool updates itself,
@@ -126,7 +127,7 @@ DelayVector::Id::bytesIn(int qty)
 }
 
 void
-DelayVector::Id::delayRead(DeferredRead const &aRead)
+DelayVector::Id::delayRead(const AsyncCallPointer &aRead)
 {
     theVector->delayRead(aRead);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,11 +18,7 @@ class ACLAdaptationServiceData : public ACLStringData
 {
 public:
     ACLAdaptationServiceData() : ACLStringData() {}
-    ACLAdaptationServiceData(ACLAdaptationServiceData const &old) : ACLStringData(old) {};
-    // Not implemented
-    ACLAdaptationServiceData &operator= (ACLAdaptationServiceData const &);
-    virtual void parse();
-    virtual ACLData<char const *> *clone() const;
+    void parse() override;
 };
 
 #endif /* SQUID_ADAPTATIONSERVICEDATA_H */

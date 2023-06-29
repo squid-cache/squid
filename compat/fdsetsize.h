@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,17 +15,6 @@
  *--------------------------------------------------------------------------*
  ****************************************************************************/
 
-/* FD_SETSIZE must be redefined before including sys/types.h */
-#if 0
-/* AYJ: would dearly like to use this to enforce include order
-    but at present some helpers don't follow the squid include methodology.
-    that will need fixing later.
-*/
-#ifdef _SYS_TYPES_H
-#error squid_fdsetsize.h for FDSETSIZE must be included before sys/types.h
-#error Make sure that squid.h is the first file included by your .cc
-#endif
-#endif /* 0 */
 /*
  * On some systems, FD_SETSIZE is set to something lower than the
  * actual number of files which can be opened.  IRIX is one case,

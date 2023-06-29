@@ -1,13 +1,13 @@
 #!/bin/sh
 #
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-# test all header files (.h) for dependancy issues.
+# test all header files (.h) for dependency issues.
 #
 # Ideally this test should be performed twice before any code is accepted.
 # With or without inline enabled.  This is needed because the .cci files
@@ -35,7 +35,7 @@ for f in $@; do
 #include "${f}"
 int main( int argc, char* argv[] ) { return 0; }
 EOF
-        if ${cc} -c -o $t.o $t.cc ; then 
+        if ${cc} -c -o $t.o $t.cc ; then
             echo "Ok."
         else
             echo "Fail."

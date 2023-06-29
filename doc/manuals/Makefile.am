@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 ## None of the .po or .pot are distributed for builds at this stage.
 ##
 
-include $(srcdir)/language.list
+include $(srcdir)/language.am
 
 EXTRA_DIST = \
-	language.list
+	language.am

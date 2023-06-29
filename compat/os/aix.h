@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,11 +23,6 @@
 #if HAVE_SYSLOG_H
 #define _XOPEN_EXTENDED_SOURCE
 #define _XOPEN_SOURCE_EXTENDED 1
-#endif
-
-/* AIX 6.1 does not define recvmsg() flag MSG_DONTWAIT */
-#if !defined(MSG_DONTWAIT)
-#define MSG_DONTWAIT 0
 #endif
 
 #endif /* _SQUID_AIX_ */

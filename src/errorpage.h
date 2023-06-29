@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,8 +13,8 @@
 
 #include "cbdata.h"
 #include "comm/forward.h"
-#include "err_detail_type.h"
-#include "err_type.h"
+#include "error/Detail.h"
+#include "error/forward.h"
 #include "http/forward.h"
 #include "http/StatusCode.h"
 #include "ip/Address.h"
@@ -23,9 +23,8 @@
 #include "SquidString.h"
 /* auth/UserRequest.h is empty unless USE_AUTH is defined */
 #include "auth/UserRequest.h"
-#if USE_OPENSSL
-#include "ssl/ErrorDetail.h"
-#endif
+
+#include <optional>
 
 /// error page callback
 typedef void ERCB(int fd, void *, size_t);
@@ -109,7 +108,7 @@ public:
     HttpReply *BuildHttpReply(void);
 
     /// set error type-specific detail code
-    void detailError(int dCode) {detailCode = dCode;}
+    void detailError(const ErrorDetail::Pointer &dCode) { detail = dCode; }
 
     /// ensures that a future BuildHttpReply() is likely to succeed
     void validate();
@@ -178,8 +177,7 @@ public:
     HttpRequestPointer request;
     char *url = nullptr;
     int xerrno = 0;
-    unsigned short port = 0;
-    String dnsError; ///< DNS lookup error message
+    std::optional<SBuf> dnsError; ///< DNS lookup error message
     time_t ttl = 0;
 
     Ip::Address src_addr;
@@ -200,12 +198,11 @@ public:
 
     AccessLogEntryPointer ale; ///< transaction details (or nil)
 
-#if USE_OPENSSL
-    Ssl::ErrorDetail *detail = nullptr;
-#endif
+    // TODO: Replace type, xerrno and detail with Error while adding a virtual
+    // Error::Detail::sysError() method to extract errno in detailError().
     /// type-specific detail about the transaction error;
-    /// overwrites xerrno; overwritten by detail, if any.
-    int detailCode = ERR_DETAIL_NONE;
+    /// overwrites xerrno;
+    ErrorDetail::Pointer detail;
 
     HttpReplyPointer response_;
 
@@ -354,6 +351,8 @@ protected:
  * \return true if something looking like a language token has been placed in lang, false otherwise
  */
 bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &pos);
+
+std::ostream &operator <<(std::ostream &, const ErrorState *);
 
 #endif /* SQUID_ERRORPAGE_H */
 

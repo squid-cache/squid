@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -47,6 +47,13 @@ CharacterSet &
 CharacterSet::add(const unsigned char c)
 {
     chars_[static_cast<uint8_t>(c)] = 1;
+    return *this;
+}
+
+CharacterSet &
+CharacterSet::remove(const unsigned char c)
+{
+    chars_[static_cast<uint8_t>(c)] = 0;
     return *this;
 }
 

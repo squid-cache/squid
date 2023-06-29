@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,12 +12,31 @@
 #define SQUID_FTP_CLIENT_H
 
 #include "clients/Client.h"
+#include "error/Detail.h"
 
 class String;
 namespace Ftp
 {
 
 extern const char *const crlf;
+
+/// Holds FTP server reply error code
+/// Squid needs to interpret internally FTP reply codes and respond with
+/// custom error (eg in the case of Ftp::Gateway), however still we need
+/// to log the exact FTP server error reply code as the reason of error.
+class ErrorDetail: public ::ErrorDetail {
+    MEMPROXY_CLASS(Ftp::ErrorDetail);
+
+public:
+    explicit ErrorDetail(const int code): completionCode(code) {}
+
+    /* ErrorDetail API */
+    SBuf brief() const override;
+    SBuf verbose(const HttpRequestPointer &) const override;
+
+private:
+    int completionCode; ///< FTP reply completion code
+};
 
 /// Common code for FTP server control and data channels.
 /// Does not own the channel descriptor, which is managed by Ftp::Client.
@@ -45,7 +64,6 @@ public:
      */
     Comm::ConnectionPointer listenConn;
 
-    AsyncCall::Pointer opener; ///< Comm opener handler callback.
 private:
     AsyncCall::Pointer closer; ///< Comm close handler callback
 };
@@ -91,11 +109,9 @@ public:
 /// FTP client functionality shared among FTP Gateway and Relay clients.
 class Client: public ::Client
 {
-    CBDATA_CLASS(Client);
-
 public:
     explicit Client(FwdState *fwdState);
-    virtual ~Client();
+    ~Client() override;
 
     /// handle a fatal transaction error, closing the control connection
     virtual void failed(err_type error = ERR_NONE, int xerrno = 0,
@@ -105,7 +121,7 @@ public:
     virtual void timeout(const CommTimeoutCbParams &io);
 
     /* Client API */
-    virtual void maybeReadVirginBody();
+    void maybeReadVirginBody() override;
 
     void writeCommand(const char *buf);
 
@@ -161,13 +177,14 @@ public:
 
 protected:
     /* AsyncJob API */
-    virtual void start();
+    void start() override;
 
     /* Client API */
-    virtual void closeServer();
-    virtual bool doneWithServer() const;
-    virtual const Comm::ConnectionPointer & dataConnection() const;
-    virtual void abortAll(const char *reason);
+    void closeServer() override;
+    bool doneWithServer() const override;
+    const Comm::ConnectionPointer & dataConnection() const override;
+    void abortAll(const char *reason) override;
+    void noteDelayAwareReadChance() override;
 
     virtual Http::StatusCode failedHttpStatus(err_type &error);
     void ctrlClosed(const CommCloseCbParams &io);
@@ -183,8 +200,12 @@ protected:
     void initReadBuf();
 
     // sending of the request body to the server
-    virtual void sentRequestBody(const CommIoCbParams &io);
-    virtual void doneSendingRequestBody();
+    void sentRequestBody(const CommIoCbParams &io) override;
+    void doneSendingRequestBody() override;
+
+    /// Waits for an FTP data connection to the server to be established/opened.
+    /// This wait only happens in FTP passive mode (via PASV or EPSV).
+    JobWait<Comm::ConnOpener> dataConnWait;
 
 private:
     bool parseControlReply(size_t &bytesUsed);

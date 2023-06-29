@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 #define SQUID_NTLMAUTH_H
 
 /* NP: All of this cruft is little endian */
-/* Endian functions are usualy handled by the OS but not always. */
+/* Endian functions are usually handled by the OS but not always. */
 #include "ntlmauth/support_endian.h"
 
 #ifdef __cplusplus

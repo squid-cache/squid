@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,8 +20,8 @@
 
 // TODO: make pool id more unique so it does not conflict with other Squids?
 static const char *PagePoolId = "squid-page-pool";
-static Ipc::Mem::PagePool *ThePagePool = 0;
-static int TheLimits[Ipc::Mem::PageId::maxPurpose];
+static Ipc::Mem::PagePool *ThePagePool = nullptr;
+static int TheLimits[Ipc::Mem::PageId::maxPurpose+1];
 
 // TODO: make configurable to avoid waste when mem-cached objects are small/big
 size_t
@@ -55,7 +55,7 @@ size_t
 Ipc::Mem::PageLimit()
 {
     size_t limit = 0;
-    for (int i = 0; i < PageId::maxPurpose; ++i)
+    for (int i = 0; i <= PageId::maxPurpose; ++i)
         limit += PageLimit(i);
     return limit;
 }
@@ -93,11 +93,11 @@ class SharedMemPagesRr: public Ipc::Mem::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    SharedMemPagesRr(): owner(NULL) {}
-    virtual void useConfig();
-    virtual void create();
-    virtual void open();
-    virtual ~SharedMemPagesRr();
+    SharedMemPagesRr(): owner(nullptr) {}
+    void useConfig() override;
+    void create() override;
+    void open() override;
+    ~SharedMemPagesRr() override;
 
 private:
     Ipc::Mem::PagePool::Owner *owner;
@@ -118,7 +118,9 @@ void
 SharedMemPagesRr::create()
 {
     Must(!owner);
-    owner = Ipc::Mem::PagePool::Init(PagePoolId, Ipc::Mem::PageLimit(),
+    owner = Ipc::Mem::PagePool::Init(PagePoolId,
+                                     Ipc::Mem::PageStack::IdForMultipurposePool(),
+                                     Ipc::Mem::PageLimit(),
                                      Ipc::Mem::PageSize());
 }
 
@@ -132,7 +134,7 @@ SharedMemPagesRr::open()
 SharedMemPagesRr::~SharedMemPagesRr()
 {
     delete ThePagePool;
-    ThePagePool = NULL;
+    ThePagePool = nullptr;
     delete owner;
 }
 

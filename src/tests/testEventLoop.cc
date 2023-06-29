@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,148 +7,103 @@
  */
 
 #include "squid.h"
+#include "AsyncEngine.h"
+#include "compat/cppunit.h"
+#include "EventLoop.h"
+#include "time/Engine.h"
+#include "unitTestMain.h"
 
 #include <cppunit/TestAssert.h>
 
-#include "AsyncEngine.h"
-#include "EventLoop.h"
-#include "mem/forward.h"
-#include "SquidTime.h"
-#include "stat.h"
-#include "testEventLoop.h"
-#include "unitTestMain.h"
-
-CPPUNIT_TEST_SUITE_REGISTRATION( testEventLoop );
-
-/* init legacy static-initialized modules */
-
-void
-testEventLoop::setUp()
-{
-    Mem::Init();
-    statInit();
-}
-
 /*
- * Test creating a EventLoop
+ * test the EventLoop implementation
  */
+
+class TestEventLoop : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestEventLoop);
+    CPPUNIT_TEST(testCreate);
+    CPPUNIT_TEST(testRunOnce);
+    CPPUNIT_TEST(testEngineTimeout);
+    CPPUNIT_TEST(testEngineErrors);
+    CPPUNIT_TEST(testSetTimeService);
+    CPPUNIT_TEST(testSetPrimaryEngine);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void testCreate();
+    void testRunOnce();
+    void testEngineTimeout();
+    void testEngineErrors();
+    void testSetTimeService();
+    void testSetPrimaryEngine();
+    /* TODO:
+     * test that engine which errors a couple of times, then returns 0, then
+     * errors 10 times in a row triggers a fail on the 10th time around
+     */
+};
+
+CPPUNIT_TEST_SUITE_REGISTRATION( TestEventLoop );
+
 void
-testEventLoop::testCreate()
+TestEventLoop::testCreate()
 {
     EventLoop();
 }
 
-#if POLISHED_MAIN_LOOP
-
-/*
- * Running the loop once is useful for integration with other loops, such as
- * migrating to it in incrementally.
- *
- * This test works by having a custom dispatcher and engine which record how
- * many times they are called.
- */
-
-class RecordDispatcher : public CompletionDispatcher
-{
-
-public:
-    int calls;
-    RecordDispatcher(): calls(0) {}
-
-    bool dispatch() {
-        ++calls;
-        /* claim we dispatched calls to be useful for the testStopOnIdle test.
-         */
-        return true;
-    }
-};
-
-#endif /* POLISHED_MAIN_LOOP */
-
 class RecordingEngine : public AsyncEngine
 {
-
 public:
-    int calls;
-    int lasttimeout;
-    int return_timeout;
-    RecordingEngine(int aTimeout=0): calls(0), lasttimeout(0), return_timeout(aTimeout) {}
+    RecordingEngine(int aTimeout = 0) : return_timeout(aTimeout) {}
 
-    virtual int checkEvents(int timeout) {
+    int checkEvents(int timeout) override {
         ++calls;
         lasttimeout = timeout;
         return return_timeout;
     }
+
+    int calls = 0;
+    int lasttimeout = 0;
+    int return_timeout = 0;
 };
-
-#if POLISHED_MAIN_LOOP
-
-void
-testEventLoop::testRunOnce()
-{
-    EventLoop theLoop;
-    RecordDispatcher dispatcher;
-    theLoop.registerDispatcher(&dispatcher);
-    RecordingEngine engine;
-    theLoop.registerEngine(&engine);
-    theLoop.runOnce();
-    CPPUNIT_ASSERT_EQUAL(1, dispatcher.calls);
-    CPPUNIT_ASSERT_EQUAL(1, engine.calls);
-}
-
-/*
- * completion dispatchers registered with the event loop are invoked by the
- * event loop.
- *
- * This test works by having a customer dispatcher which shuts the loop down
- * once its been invoked twice.
- *
- * It also tests that loop.run() and loop.stop() work, because if they do not
- * work, this test will either hang, or fail.
- */
-
-class ShutdownDispatcher : public CompletionDispatcher
-{
-
-public:
-    EventLoop &theLoop;
-    int calls;
-    ShutdownDispatcher(EventLoop & theLoop):theLoop(theLoop), calls(0) {}
-
-    bool dispatch() {
-        if (++calls == 2)
-            theLoop.stop();
-
-        return true;
-    }
-};
-
-void
-testEventLoop::testRegisterDispatcher()
-{
-    EventLoop theLoop;
-    ShutdownDispatcher testDispatcher(theLoop);
-    theLoop.registerDispatcher(&testDispatcher);
-    theLoop.run();
-    /* we should get two calls because the test dispatched returns true from
-     * dispatch(), and calls stop on the second call.
-     */
-    CPPUNIT_ASSERT_EQUAL(2, testDispatcher.calls);
-}
 
 /* test that a registered async engine is invoked on each loop run
- * we do this with an intstrumented async engine.
+ * we do this with an instrumented async engine.
  */
 void
-testEventLoop::testRegisterEngine()
+TestEventLoop::testRunOnce()
 {
-    EventLoop theLoop;
-    ShutdownDispatcher testDispatcher(theLoop);
-    theLoop.registerDispatcher(&testDispatcher);
-    RecordingEngine testEngine;
-    theLoop.registerEngine(&testEngine);
-    theLoop.run();
-    CPPUNIT_ASSERT_EQUAL(2, testEngine.calls);
+    {
+        /* trivial case - no engine, should quit immediately */
+        EventLoop theLoop;
+        CPPUNIT_ASSERT_EQUAL(true, theLoop.runOnce());
+    }
+
+    {
+        /* An event loop with all idle engines, and nothing dispatched in a run should
+         * automatically quit. The runOnce call should return True when the loop is
+         * entirely idle to make it easy for people running the loop by hand.
+         */
+        EventLoop theLoop;
+        RecordingEngine engine(AsyncEngine::EVENT_IDLE);
+        theLoop.registerEngine(&engine);
+        CPPUNIT_ASSERT_EQUAL(true, theLoop.runOnce());
+        CPPUNIT_ASSERT_EQUAL(1, engine.calls);
+        theLoop.run();
+        CPPUNIT_ASSERT_EQUAL(2, engine.calls);
+    }
+
+    {
+        /* an engine that asks for a timeout should not be detected as idle:
+         * use runOnce which should return false
+         */
+        EventLoop theLoop;
+        RecordingEngine engine;
+        theLoop.registerEngine(&engine);
+        CPPUNIT_ASSERT_EQUAL(false, theLoop.runOnce());
+        CPPUNIT_ASSERT_EQUAL(1, engine.calls);
+        CPPUNIT_ASSERT_EQUAL(EVENT_LOOP_TIMEOUT, engine.lasttimeout);
+    }
 }
 
 /* each AsyncEngine needs to be given a timeout. We want one engine in each
@@ -162,7 +117,7 @@ testEventLoop::testRegisterEngine()
  * tracked, and the lowest non-negative value given to the last engine.
  */
 void
-testEventLoop::testEngineTimeout()
+TestEventLoop::testEngineTimeout()
 {
     EventLoop theLoop;
     RecordingEngine engineOne(5);
@@ -170,76 +125,47 @@ testEventLoop::testEngineTimeout()
     theLoop.registerEngine(&engineOne);
     theLoop.registerEngine(&engineTwo);
     theLoop.runOnce();
+    CPPUNIT_ASSERT_EQUAL(1, engineOne.calls);
     CPPUNIT_ASSERT_EQUAL(0, engineOne.lasttimeout);
+    CPPUNIT_ASSERT_EQUAL(1, engineTwo.calls);
     CPPUNIT_ASSERT_EQUAL(5, engineTwo.lasttimeout);
 }
 
-/* An event loop with all idle engines, and nothing dispatched in a run should
- * automatically quit. The runOnce call should return True when the loop is
- * entirely idle to make it easy for people running the loop by hand.
+/* An engine which is suffering errors. This should result in 10
+ * loops until the loop stops - because that's the error retry amount
+ * hard-coded into EventLoop::runOnce()
  */
 void
-testEventLoop::testStopOnIdle()
+TestEventLoop::testEngineErrors()
 {
     EventLoop theLoop;
-    /* trivial case - no dispatchers or engines, should quit immediately */
-    CPPUNIT_ASSERT_EQUAL(true, theLoop.runOnce());
-    theLoop.run();
-    /* add a dispatcher with nothing to dispatch - use an EventDispatcher as its
-     * sufficient and handy
-     */
-    EventDispatcher dispatcher;
-    theLoop.registerDispatcher(&dispatcher);
-    CPPUNIT_ASSERT_EQUAL(true, theLoop.runOnce());
-    theLoop.run();
-    /* add an engine which is idle.
-     */
-    RecordingEngine engine(AsyncEngine::EVENT_IDLE);
-    theLoop.registerEngine(&engine);
-    CPPUNIT_ASSERT_EQUAL(true, theLoop.runOnce());
-    CPPUNIT_ASSERT_EQUAL(1, engine.calls);
-    theLoop.run();
-    CPPUNIT_ASSERT_EQUAL(2, engine.calls);
-    /* add an engine which is suffering errors. This should result in 10
-     * loops until the loop stops - because thats the error retry amount
-     */
     RecordingEngine failing_engine(AsyncEngine::EVENT_ERROR);
     theLoop.registerEngine(&failing_engine);
     CPPUNIT_ASSERT_EQUAL(false, theLoop.runOnce());
     CPPUNIT_ASSERT_EQUAL(1, failing_engine.calls);
+    CPPUNIT_ASSERT_EQUAL(1, theLoop.errcount);
     theLoop.run();
     /* run resets the error count ... */
+    CPPUNIT_ASSERT_EQUAL(10, theLoop.errcount);
     CPPUNIT_ASSERT_EQUAL(11, failing_engine.calls);
-
-    /* an engine that asks for a timeout should not be detected as idle:
-     * use runOnce which should return false
-     */
-    theLoop = EventLoop();
-    RecordingEngine non_idle_engine(1000);
-    theLoop.registerEngine(&non_idle_engine);
-    CPPUNIT_ASSERT_EQUAL(false, theLoop.runOnce());
 }
-
-#endif /* POLISHED_MAIN_LOOP */
 
 /* An event loop has a time service which is like an async engine but never
  * generates events and there can only be one such service.
  */
-
-class StubTime : public TimeEngine
+class StubTime : public Time::Engine
 {
-
 public:
     StubTime() : calls(0) {}
 
     int calls;
-    void tick() {
+    void tick() override {
         ++calls;
     }
 };
 
 void
-testEventLoop::testSetTimeService()
+TestEventLoop::testSetTimeService()
 {
     EventLoop theLoop;
     StubTime myTime;
@@ -259,7 +185,7 @@ testEventLoop::testSetTimeService()
  * this defaults to the last added one, but can be explicitly nominated
  */
 void
-testEventLoop::testSetPrimaryEngine()
+TestEventLoop::testSetPrimaryEngine()
 {
     EventLoop theLoop;
     RecordingEngine first_engine(10);

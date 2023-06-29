@@ -1,49 +1,20 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 64    HTTP Range Header */
-
 #include "squid.h"
 #include "fatal.h"
 #include "HttpHeader.h"
 #include "HttpHeaderRange.h"
+#include "HttpHeaderTools.h"
 
-/** \todo CLEANUP: This file should be called something_stub.cc */
+// TODO: refactor as cppunit test
 
-void httpHeaderPutStr(HttpHeader * hdr, Http::HdrType type, const char *str)
-{
-    fatal ("dummy function\n");
-}
-
-HttpHeaderEntry *httpHeaderGetEntry(const HttpHeader * hdr, HttpHeaderPos * pos)
-{
-    fatal ("dummy function\n");
-    return NULL;
-}
-
-String httpHeaderGetList(const HttpHeader * hdr, Http::HdrType id)
-{
-    fatal ("dummy function\n");
-    return String();
-}
-
-int httpHeaderHas(const HttpHeader * hdr, Http::HdrType type)
-{
-    fatal ("dummy function\n");
-    return 0;
-}
-
-void httpHeaderPutContRange(HttpHeader * hdr, const HttpHdrContRange * cr)
-{
-    fatal ("dummy function\n");
-}
-
-void
+static void
 testRangeParser(char const *rangestring)
 {
     String aString (rangestring);
@@ -63,7 +34,7 @@ testRangeParser(char const *rangestring)
     delete range;
 }
 
-HttpHdrRange *
+static HttpHdrRange *
 rangeFromString(char const *rangestring)
 {
     String aString (rangestring);
@@ -75,7 +46,7 @@ rangeFromString(char const *rangestring)
     return range;
 }
 
-void
+static void
 testRangeIter ()
 {
     HttpHdrRange *range=rangeFromString("bytes=0-3, 1-, -2");
@@ -96,7 +67,7 @@ testRangeIter ()
     assert (i - range->end() == -2);
 }
 
-void
+static void
 testRangeCanonization()
 {
     HttpHdrRange *range=rangeFromString("bytes=0-3, 1-, -2");
@@ -155,13 +126,13 @@ testRangeCanonization()
 }
 
 int
-main(int argc, char **argv)
+main(int, char **)
 {
     try {
         Mem::Init();
         /* enable for debugging to console */
-        //    _db_init (NULL, NULL);
-        //    Debug::Levels[64] = 9;
+        // Debug::debugOptions = xstrdup("ALL,1 64,9");
+        // Debug::BanCacheLogUse();
         testRangeParser("bytes=0-3");
         testRangeParser("bytes=-3");
         testRangeParser("bytes=1-");

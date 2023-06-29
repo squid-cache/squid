@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,7 +14,7 @@
 #include "auth/SchemeConfig.h"
 #include "globals.h"
 
-std::vector<Auth::Scheme::Pointer> *Auth::Scheme::_Schemes = NULL;
+std::vector<Auth::Scheme::Pointer> *Auth::Scheme::_Schemes = nullptr;
 
 void
 Auth::Scheme::AddScheme(Auth::Scheme::Pointer instance)
@@ -37,7 +37,7 @@ Auth::Scheme::Find(const char *typestr)
             return *i;
     }
 
-    return Auth::Scheme::Pointer(NULL);
+    return Auth::Scheme::Pointer(nullptr);
 }
 
 std::vector<Auth::Scheme::Pointer> &

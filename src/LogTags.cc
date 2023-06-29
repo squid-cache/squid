@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,8 +7,18 @@
  */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "LogTags.h"
+
+void
+LogTagsErrors::update(const LogTagsErrors &other)
+{
+    ignored = ignored || other.ignored;
+    timedout = timedout || other.timedout;
+    aborted = aborted || other.aborted;
+}
+
+/* LogTags */
 
 // old deprecated tag strings
 const char * LogTags::Str_[] = {
@@ -99,5 +109,79 @@ LogTags::isTcpHit() const
         (oldType == LOG_TCP_NEGATIVE_HIT) ||
         (oldType == LOG_TCP_MEM_HIT) ||
         (oldType == LOG_TCP_OFFLINE_HIT);
+}
+
+const char *
+LogTags::cacheStatusSource() const
+{
+    // see draft-ietf-httpbis-cache-header for the (quoted below) specs
+    switch (oldType) {
+    case LOG_TAG_NONE:
+        return nullptr;
+
+    case LOG_TCP_HIT:
+    case LOG_TCP_IMS_HIT:
+    case LOG_TCP_INM_HIT:
+    case LOG_TCP_REFRESH_FAIL_OLD:
+    case LOG_TCP_REFRESH_UNMODIFIED:
+    case LOG_TCP_NEGATIVE_HIT:
+    case LOG_TCP_MEM_HIT:
+    case LOG_TCP_OFFLINE_HIT:
+        // We put LOG_TCP_REFRESH_UNMODIFIED and LOG_TCP_REFRESH_FAIL_OLD here
+        // because the specs probably classify master transactions where the
+        // client request did "go forward" but the to-client response was
+        // ultimately "obtained from the cache" as "hit" transactions.
+        return ";hit";
+
+    case LOG_TCP_MISS:
+#if USE_DELAY_POOLS
+        // do not lie until we get a better solution for bugs 1000, 2096
+        return nullptr;
+#else
+        // TODO: "distinguish between uri-miss and vary-miss"
+        return ";fwd=miss";
+#endif
+
+    case LOG_TCP_REFRESH_MODIFIED:
+    case LOG_TCP_REFRESH:
+        return ";fwd=stale";
+
+    case LOG_TCP_CLIENT_REFRESH_MISS:
+        return ";fwd=request";
+
+    case LOG_TCP_REFRESH_FAIL_ERR:
+    case LOG_TCP_SWAPFAIL_MISS:
+        // Ignore "to be used when the implementation cannot distinguish between
+        // uri-miss and vary-miss" specs condition as being too restrictive,
+        // especially when there is no fwd=other or a more suitable parameter.
+        return ";fwd=miss";
+
+    case LOG_TCP_DENIED:
+    case LOG_TCP_DENIED_REPLY:
+    case LOG_TCP_REDIRECT:
+        // We served a Squid-generated response (with or without forwarding).
+        // The response itself should provide enough classification clues.
+        return nullptr;
+
+    case LOG_TCP_TUNNEL:
+        // could use fwd=bypass, but the CONNECT request was not really bypassed
+        return nullptr;
+
+    case LOG_UDP_HIT:
+    case LOG_UDP_MISS:
+    case LOG_UDP_DENIED:
+    case LOG_UDP_INVALID:
+    case LOG_UDP_MISS_NOFETCH:
+    case LOG_ICP_QUERY:
+        // do not bother classifying these non-HTTP outcomes for now
+        return nullptr;
+
+    case LOG_TYPE_MAX:
+        // should not happen
+        return nullptr;
+    }
+
+    // should not happen
+    return nullptr;
 }
 

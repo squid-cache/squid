@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,7 +28,7 @@ public:
 
 public:
     Action(const CommandPointer &aCmd);
-    virtual ~Action();
+    ~Action() override;
 
     /* for local Cache Manager use */
 
@@ -55,7 +55,7 @@ public:
     virtual void unpack(const Ipc::TypedMsgHdr &) {}
 
     /// notify Coordinator that this action is done with local processing
-    void sendResponse(unsigned int requestId);
+    void sendResponse(Ipc::RequestId);
 
     /* Action properties */
 

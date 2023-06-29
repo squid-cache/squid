@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,7 @@
 
 #include <iostream>
 
-bool
+static bool
 CaseSensitiveCheck()
 {
     Trie aTrie;
@@ -60,7 +60,7 @@ CaseSensitiveCheck()
     return 0;
 }
 
-bool
+static bool
 CaseInsensitiveCheck()
 {
     Trie aTrie(new TrieCaseless);
@@ -108,7 +108,7 @@ CaseInsensitiveCheck()
     return 0;
 }
 
-int main (int argc, char **argv)
+int main (int, char **)
 {
     if (CaseSensitiveCheck()) {
         std::cerr << "Case sensitive check failure." << std::endl;

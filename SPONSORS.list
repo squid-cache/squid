@@ -1,6 +1,42 @@
 The following organizations have supported the Squid Project by providing
 their resources or funding various Squid development activities:
 
+The Squid Software Foundation - http://foundation.squid-cache.org/
+
+	The Foundation governs and facilitates Squid project activities,
+	providing the infrastructure and support framework for Squid
+	developers and users.
+
+@Squid-6:
+DigitalOcean - https://www.digitalocean.com/
+
+	DigitalOcean has donated droplets from their cloud infrastructure
+	to host most of Squid Project's continuous integration farm.
+
+SpinUp
+
+	SpinUp has donated cloud resources to host our main website, wiki
+	and mailing lists.
+
+The Measurement Factory - http://www.measurement-factory.com/
+
+	The Measurement Factory has contributed significant resources to
+	Squid development and Squid Project infrastructure and support.
+
+Treehouse Networks, NZ - http://treenet.co.nz/
+
+	Treehouse Networks has contributed significant resources
+	toward Squid-3+ development and maintenance for their customer
+	gateways and CDN.
+
+@Squid-5:
+RackSpace - https://www.rackspace.com/
+
+	RackSpace donated a number of virtual machines from their cloud
+	infrastructure to support and extend our continuous integration
+	testing infrastructure and, in 2014-2019, to host many of the
+	Squid Project services.
+
 @Squid-4:
 Augur TBBS Pty Limited
 
@@ -17,34 +53,10 @@ LaunchPad - http://launchpad.net/
 	Provide Bazaar mirroring services and host the Squid-3+ developer
 	project code.
 
-RackSpace - http://www.rackspace.com/
-
-	RackSpace donated a number of virtual machines from their cloud
-	infrastructure to support and extend the continuous integration
-	testing infrastructure, and since late 2014 to host many of the
-	Squid Project services.
-
 RM Education - http://www.rm.com/
 
 	RM Education has sponsored Squid performance optimizations and
 	stability improvements.
-
-Squid Software Foundation - http://foundation.squid-cache.org/
-
-	The Foundation governs and facilitates Squid project activities,
-	providing the infrastructure and support framework for Squid
-	developers and users.
-
-The Measurement Factory - http://www.measurement-factory.com/
-
-	Measurement Factory has contributed significant resources
-	toward Squid-3+ development and server maintenance.
-
-Treehouse Networks, NZ - http://treenet.co.nz/
-
-	Treehouse Networks has contributed significant resources
-	toward Squid-3+ development and maintenance for their customer
-	gateways and CDN.
 
 @Squid-3.5:
 Messagenet - http://messagenet.it/
@@ -151,6 +163,12 @@ SGI - http://www.sgi.com/
 	SGI has provided hardware donations for Squid developers.
 
 @Squid-2.3:
+National Laboratory for Applied Network Research
+
+	NLANR coordinated the early development of Squid
+	with features for integration with the IRCache network
+	measurement project and High Performance Networking.
+
 The National Science Foundation
 
 	The NSF was the primary funding source for Squid development

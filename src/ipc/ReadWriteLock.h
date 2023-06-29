@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 #define SQUID_IPC_READ_WRITE_LOCK_H
 
 #include <atomic>
+#include <iosfwd>
 
 class StoreEntry;
 
@@ -35,8 +36,16 @@ public:
     void unlockExclusive(); ///< undo successful exclusiveLock()
     void unlockHeaders(); ///< undo successful lockHeaders()
     void switchExclusiveToShared(); ///< stop writing, start reading
+    /// same as unlockShared() but also attempts to get a writer lock beforehand
+    /// \returns whether the writer lock was acquired
+    bool unlockSharedAndSwitchToExclusive();
 
     void startAppending(); ///< writer keeps its lock but also allows reading
+
+    /// writer keeps its lock and disallows future readers
+    /// \returns whether access became exclusive (i.e. no readers)
+    /// \prec appending is true
+    bool stopAppendingAndRestoreExclusive();
 
     /// adds approximate current stats to the supplied ones
     void updateStats(ReadWriteLockStats &stats) const;
@@ -48,9 +57,14 @@ public:
     std::atomic_flag updating; ///< a reader is updating metadata/headers
 
 private:
+    bool finalizeExclusive();
+
     mutable std::atomic<uint32_t> readLevel; ///< number of users reading (or trying to)
     std::atomic<uint32_t> writeLevel; ///< number of users writing (or trying to write)
 };
+
+/// dumps approximate lock state (for debugging)
+std::ostream &operator <<(std::ostream &, const ReadWriteLock &);
 
 /// approximate stats of a set of ReadWriteLocks
 class ReadWriteLockStats

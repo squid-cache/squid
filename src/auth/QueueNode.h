@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,7 +36,7 @@ private:
 
 public:
     QueueNode(Auth::UserRequest *aRequest, AUTHCB *aHandler, void *aData) :
-        next(NULL),
+        next(nullptr),
         auth_user_request(aRequest),
         handler(aHandler),
         data(cbdataReference(aData)) {}
@@ -44,7 +44,7 @@ public:
         cbdataReferenceDone(data);
         while (next) {
             QueueNode *tmp = next->next;
-            next->next = NULL;
+            next->next = nullptr;
             delete next;
             next = tmp;
         };

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 #define SQUID_INCLUDE_UNITTESTMAIN_H
 
 #if ENABLE_DEBUG_SECTION
-#include "Debug.h"
+#include "debug/Stream.h"
 #endif /* ENABLE_DEBUG_SECTION */
 
 #include <cppunit/BriefTestProgressListener.h>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -75,14 +75,14 @@ public:
      \param proxy_auth  Login Pattern to parse.
      \retval *      Details needed to authenticate.
      */
-    virtual UserRequest::Pointer decode(char const *proxy_auth, const char *requestRealm) = 0;
+    virtual UserRequest::Pointer decode(char const *proxy_auth, const HttpRequest *request, const char *requestRealm) = 0;
 
     /**
      * squid is finished with this config, release any unneeded resources.
      * If a singleton, delete will not occur. if not a singleton (future),
      * delete will occur when no references are held.
      *
-     \todo we need a 'done for reconfigure' and a 'done permanently' concept.
+     * TODO: need a 'done for reconfigure' and a 'done permanently' concept.
      */
     virtual void done();
 
@@ -130,9 +130,18 @@ public:
     String keyExtrasLine;  ///< The format of the request to the auth helper
     Format::Format *keyExtras = nullptr; ///< The compiled request format
     int keep_alive = 1; ///< whether to close the connection on auth challenges. default: on
-    int utf8 = 0; ///< wheter to accept UTF-8 characterset instead of ASCII. default: off
+    int utf8 = 0; ///< whether to accept UTF-8 characterset instead of ASCII. default: off
 
 protected:
+    /**
+     * Parse Accept-Language header and return whether a CP1251 encoding
+     * allowed or not.
+     *
+     * CP1251 (aka Windows-1251) is an 8-bit character encoding, designed
+     * to cover languages that use the Cyrillic script.
+     */
+    bool isCP1251EncodingAllowed(const HttpRequest *request);
+
     /// RFC 7235 section 2.2 - Protection Space (Realm)
     SBuf realm;
 };

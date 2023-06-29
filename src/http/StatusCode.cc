@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,8 +7,9 @@
  */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "http/StatusCode.h"
+#include "SquidConfig.h"
 
 const char *
 Http::StatusCodeString(const Http::StatusCode status)
@@ -164,8 +165,8 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Precondition Failed";
         break;
 
-    case Http::scPayloadTooLarge:
-        return "Payload Too Large";
+    case Http::scContentTooLarge:
+        return "Content Too Large";
         break;
 
     case Http::scUriTooLong:
@@ -268,11 +269,33 @@ Http::StatusCodeString(const Http::StatusCode status)
     // 600+
     case Http::scInvalidHeader:
     case Http::scHeaderTooLarge:
-    // fall through to default.
+        [[fallthrough]];
 
     default:
         debugs(57, 3, "Unassigned HTTP status code: " << status);
     }
     return "Unassigned";
+}
+
+bool
+Http::IsReforwardableStatus(const StatusCode s)
+{
+    switch (s) {
+
+    case scBadGateway:
+    case scGatewayTimeout:
+        return true;
+
+    case scForbidden:
+    case scInternalServerError:
+    case scNotImplemented:
+    case scServiceUnavailable:
+        return Config.retry.onerror;
+
+    default:
+        return false;
+    }
+
+    /* NOTREACHED */
 }
 

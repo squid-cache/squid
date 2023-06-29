@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 
 #if USE_DELAY_POOLS
 
+#include "base/forward.h"
 #include "DelayIdComposite.h"
 
 class ClientHttpRequest;
@@ -34,7 +35,7 @@ public:
     int bytesWanted(int min, int max) const;
     void bytesIn (int qty);
     void setNoDelay(bool const);
-    void delayRead(DeferredRead const &);
+    void delayRead(const AsyncCallPointer &);
 
 private:
     unsigned short pool_;

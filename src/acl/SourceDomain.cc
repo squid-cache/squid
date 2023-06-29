@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -43,13 +43,13 @@ SourceDomainLookup::LookupDone(const char *, const Dns::LookupDetails &details, 
 int
 ACLSourceDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
-    const char *fqdn = NULL;
+    const char *fqdn = nullptr;
     fqdn = fqdncache_gethostbyaddr(checklist->src_addr, FQDN_LOOKUP_IF_MISS);
 
     if (fqdn) {
         return data->match(fqdn);
     } else if (!checklist->sourceDomainChecked()) {
-        /* FIXME: Using AclMatchedName here is not OO correct. Should find a way to the current acl */
+        // TODO: Using AclMatchedName here is not OO correct. Should find a way to the current acl
         debugs(28, 3, "aclMatchAcl: Can't yet compare '" << AclMatchedName << "' ACL for '" << checklist->src_addr << "'");
         if (checklist->goAsync(SourceDomainLookup::Instance()))
             return -1;

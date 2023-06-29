@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,6 +17,7 @@
 #include "BodyPipe.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
+#include "log/forward.h"
 #include "Pipeline.h"
 #include "sbuf/SBuf.h"
 #include "servers/forward.h"
@@ -29,15 +30,15 @@ class Server : virtual public AsyncJob, public BodyProducer
 {
 public:
     Server(const MasterXactionPointer &xact);
-    virtual ~Server() {}
+    ~Server() override {}
 
     /* AsyncJob API */
-    virtual void start();
-    virtual bool doneAll() const;
-    virtual void swanSong();
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
 
-    /// ??
-    virtual bool connFinishedWithConn(int size) = 0;
+    /// whether to stop serving our client after reading EOF on its connection
+    virtual bool shouldCloseOnEof() const = 0;
 
     /// maybe grow the inBuf and schedule Comm::Read()
     void readSomeData();
@@ -54,7 +55,7 @@ public:
     virtual void afterClientRead() = 0;
 
     /// whether Comm::Read() is scheduled
-    bool reading() const {return reader != NULL;}
+    bool reading() const {return reader != nullptr;}
 
     /// cancels Comm::Read() if it is scheduled
     void stopReading();
@@ -83,7 +84,7 @@ public:
     virtual void afterClientWrite(size_t) {}
 
     /// whether Comm::Write() is scheduled
-    bool writing() const {return writer != NULL;}
+    bool writing() const {return writer != nullptr;}
 
 // XXX: should be 'protected:' for child access only,
 //      but all sorts of code likes to play directly
@@ -115,11 +116,11 @@ public:
     Pipeline pipeline;
 
 protected:
+    /// abort any pending transactions and prevent new ones (by closing)
+    virtual void terminateAll(const Error &, const LogTagsErrors &) = 0;
+
     void doClientRead(const CommIoCbParams &io);
     void clientWriteDone(const CommIoCbParams &io);
-
-    /// Log the current [attempt at] transaction if nobody else will.
-    virtual void checkLogging() = 0;
 
     AsyncCall::Pointer reader; ///< set when we are reading
     AsyncCall::Pointer writer; ///< set when we are writing

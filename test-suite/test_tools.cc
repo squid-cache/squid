@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,20 +11,12 @@
 
 #include "squid.h"
 #include "dlink.h"
-#include <iostream>
-
-void
-xassert(const char *msg, const char *file, int line)
-{
-    std::cout << "Assertion failed: (" << msg << ") at " << file << ":" << line << std::endl;
-    exit (1);
-}
 
 void
 dlinkAdd(void *data, dlink_node * m, dlink_list * list)
 {
     m->data = data;
-    m->prev = NULL;
+    m->prev = nullptr;
     m->next = list->head;
 
     if (list->head)
@@ -32,7 +24,7 @@ dlinkAdd(void *data, dlink_node * m, dlink_list * list)
 
     list->head = m;
 
-    if (list->tail == NULL)
+    if (list->tail == nullptr)
         list->tail = m;
 }
 
@@ -57,7 +49,7 @@ void
 dlinkAddTail(void *data, dlink_node * m, dlink_list * list)
 {
     m->data = data;
-    m->next = NULL;
+    m->next = nullptr;
     m->prev = list->tail;
 
     if (list->tail)
@@ -65,7 +57,7 @@ dlinkAddTail(void *data, dlink_node * m, dlink_list * list)
 
     list->tail = m;
 
-    if (list->head == NULL)
+    if (list->head == nullptr)
         list->head = m;
 }
 
@@ -84,6 +76,6 @@ dlinkDelete(dlink_node * m, dlink_list * list)
     if (m == list->tail)
         list->tail = m->prev;
 
-    m->next = m->prev = NULL;
+    m->next = m->prev = nullptr;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -80,6 +80,11 @@ public:
     double swap_ins;
     double swap_files_cleaned;
     double aborted_requests;
+    double hitValidationAttempts;
+    double hitValidationRefusalsDueToLocking;
+    double hitValidationRefusalsDueToZeroSize;
+    double hitValidationRefusalsDueToTimeLimit;
+    double hitValidationFailures;
 };
 
 /// implement aggregated 'counters' action
@@ -91,14 +96,14 @@ protected:
 public:
     static Pointer Create(const CommandPointer &cmd);
     /* Action API */
-    virtual void add(const Action& action);
-    virtual void pack(Ipc::TypedMsgHdr& msg) const;
-    virtual void unpack(const Ipc::TypedMsgHdr& msg);
+    void add(const Action& action) override;
+    void pack(Ipc::TypedMsgHdr& msg) const override;
+    void unpack(const Ipc::TypedMsgHdr& msg) override;
 
 protected:
     /* Action API */
-    virtual void collect();
-    virtual void dump(StoreEntry* entry);
+    void collect() override;
+    void dump(StoreEntry* entry) override;
 
 private:
     CountersActionData data;

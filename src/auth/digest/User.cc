@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 #include "auth/CredentialsCache.h"
 #include "auth/digest/Config.h"
 #include "auth/digest/User.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "dlink.h"
 
 Auth::Digest::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
@@ -62,12 +62,12 @@ Auth::Digest::User::ttl() const
 digest_nonce_h *
 Auth::Digest::User::currentNonce()
 {
-    digest_nonce_h *nonce = NULL;
+    digest_nonce_h *nonce = nullptr;
     dlink_node *link = nonces.tail;
     if (link) {
         nonce = static_cast<digest_nonce_h *>(link->data);
         if (authDigestNonceIsStale(nonce))
-            nonce = NULL;
+            nonce = nullptr;
     }
     return nonce;
 }

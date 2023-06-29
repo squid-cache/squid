@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #ifndef SQUID__TEXTEXCEPTION_H
 #define SQUID__TEXTEXCEPTION_H
 
+#include "base/Assure.h"
 #include "base/Here.h"
 
 #include <stdexcept>
@@ -32,8 +33,8 @@ public:
     TextException& operator=(const TextException &) = default;
 
     /* std::runtime_error API */
-    virtual ~TextException() throw() override;
-    virtual const char *what() const throw() override;
+    ~TextException() throw() override;
+    const char *what() const throw() override;
 
     /// same-location exceptions have the same ID
     SourceLocationId id() const { return where.id(); }
@@ -51,22 +52,23 @@ public:
 /// prints active (i.e., thrown but not yet handled) exception
 std::ostream &CurrentException(std::ostream &);
 
+/// efficiently prints TextException
+std::ostream &operator <<(std::ostream &, const TextException &);
+
 /// legacy convenience macro; it is not difficult to type Here() now
 #define TexcHere(msg) TextException((msg), Here())
 
-/// Like assert() but throws an exception instead of aborting the process
-/// and allows the caller to specify a custom exception message.
-#define Must2(condition, message) \
-    do { \
-        if (!(condition)) { \
-            const TextException Must_ex_((message), Here()); \
-            debugs(0, 3, Must_ex_.what()); \
-            throw Must_ex_; \
-        } \
-    } while (/*CONSTCOND*/ false)
+/// Like Must() but supports custom exception message and location.
+/// \param description string literal describing the condition; what MUST happen
+/// Deprecated: Use Assure2() for code logic checks and throw explicitly when
+/// input validation fails.
+#define Must3(condition, description, location) \
+    Assure_(3, (condition), ("check failed: " description), (location))
 
-/// Like assert() but throws an exception instead of aborting the process.
-#define Must(condition) Must2((condition), "check failed: " #condition)
+/// Like Assure() but only logs the exception if level-3 debugging is enabled
+/// and runs even when NDEBUG macro is defined. Deprecated: Use Assure() for
+/// code logic checks and throw explicitly when input validation fails.
+#define Must(condition) Must3((condition), #condition, Here())
 
 /// Reports and swallows all exceptions to prevent compiler warnings and runtime
 /// errors related to throwing class destructors. Should be used for most dtors.
@@ -74,7 +76,7 @@ std::ostream &CurrentException(std::ostream &);
     try { \
         code \
     } catch (...) { \
-        debugs(0, DBG_IMPORTANT, "BUG: ignoring exception;" << \
+        debugs(0, DBG_IMPORTANT, "ERROR: Squid BUG: ignoring exception;" << \
                Debug::Extra << "bug location: " << Here() << \
                Debug::Extra << "ignored exception: " << CurrentException); \
     }

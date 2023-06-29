@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -40,7 +40,7 @@ typedef unsigned int InstanceIdDefaultValueType;
  *   - useful for debugging and insecure request/response matching;
  *   - sequential IDs within a class except when wrapping;
  *   - always positive IDs.
- *  \todo: add creation/destruction debugging?
+ * TODO: add creation/destruction debugging?
  */
 template <class Class, class ValueType = InstanceIdDefaultValueType>
 class InstanceId

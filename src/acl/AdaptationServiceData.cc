@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,7 +16,7 @@
 #include "adaptation/ServiceGroups.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 void
 ACLAdaptationServiceData::parse()
@@ -25,22 +25,16 @@ ACLAdaptationServiceData::parse()
     while (char *t = ConfigParser::strtokFile()) {
         if (
 #if USE_ECAP
-            Adaptation::Ecap::TheConfig.findServiceConfig(t) == NULL &&
+            Adaptation::Ecap::TheConfig.findServiceConfig(t) == nullptr &&
 #endif
 #if ICAP_CLIENT
-            Adaptation::Icap::TheConfig.findServiceConfig(t) == NULL &&
+            Adaptation::Icap::TheConfig.findServiceConfig(t) == nullptr &&
 #endif
-            Adaptation::FindGroup(t) == NULL) {
+            Adaptation::FindGroup(t) == nullptr) {
             debugs(28, DBG_CRITICAL, "FATAL: Adaptation service/group " << t << " in adaptation_service acl is not defined");
             self_destruct();
         }
         insert(t);
     }
-}
-
-ACLData<char const *> *
-ACLAdaptationServiceData::clone() const
-{
-    return new ACLAdaptationServiceData(*this);
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -43,11 +43,13 @@ public:
 
     /// the status code of the successfully parsed CONNECT response (or scNone)
     StatusCode peerResponseStatus = scNone;
+
+    Comm::ConnectionPointer conn;
 };
 
-std::ostream &operator <<(std::ostream &, const Http::TunnelerAnswer &);
+std::ostream &operator <<(std::ostream &, const TunnelerAnswer &);
 
-} // namepace Http
+} // namespace Http
 
 #endif /* SQUID_SRC_CLIENTS_HTTP_TUNNELERANSWER_H */
 

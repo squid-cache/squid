@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,45 +7,63 @@
  */
 
 #include "squid.h"
-#include "event.h"
+#include "compat/cppunit.h"
+#include "mem/forward.h"
 #include "SquidString.h"
-#include "testString.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testString );
+/*
+ * test the store framework
+ */
 
-/* let this test link sanely */
-void
-eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata)
-{}
+class TestString : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestString);
+    CPPUNIT_TEST(testCmpDefault);
+    CPPUNIT_TEST(testCmpEmptyString);
+    CPPUNIT_TEST(testCmpNotEmptyDefault);
+    CPPUNIT_TEST(testSubstr);
+
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void setUp() override;
+
+protected:
+    void testCmpDefault();
+    void testCmpEmptyString();
+    void testCmpNotEmptyDefault();
+    void testSubstr();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestString);
 
 /* init memory pools */
 
 void
-testString::setUp()
+TestString::setUp()
 {
     Mem::Init();
 }
 
 void
-testString::testCmpDefault()
+TestString::testCmpDefault()
 {
     String left, right;
     /* two default strings are equal */
     CPPUNIT_ASSERT(!left.cmp(right));
-    CPPUNIT_ASSERT(!left.cmp(NULL));
-    CPPUNIT_ASSERT(!left.cmp(NULL, 1));
+    CPPUNIT_ASSERT(!left.cmp(nullptr));
+    CPPUNIT_ASSERT(!left.cmp(nullptr, 1));
 }
 
 void
-testString::testCmpEmptyString()
+TestString::testCmpEmptyString()
 {
     String left("");
     String right;
     /* an empty string ("") is equal to a default string */
     CPPUNIT_ASSERT(!left.cmp(right));
-    CPPUNIT_ASSERT(!left.cmp(NULL));
-    CPPUNIT_ASSERT(!left.cmp(NULL, 1));
+    CPPUNIT_ASSERT(!left.cmp(nullptr));
+    CPPUNIT_ASSERT(!left.cmp(nullptr, 1));
     /* reverse the order to catch corners */
     CPPUNIT_ASSERT(!right.cmp(left));
     CPPUNIT_ASSERT(!right.cmp(""));
@@ -53,21 +71,21 @@ testString::testCmpEmptyString()
 }
 
 void
-testString::testCmpNotEmptyDefault()
+TestString::testCmpNotEmptyDefault()
 {
     String left("foo");
     String right;
     /* empty string sorts before everything */
     CPPUNIT_ASSERT(left.cmp(right) > 0);
-    CPPUNIT_ASSERT(left.cmp(NULL) > 0);
-    CPPUNIT_ASSERT(left.cmp(NULL, 1) > 0);
+    CPPUNIT_ASSERT(left.cmp(nullptr) > 0);
+    CPPUNIT_ASSERT(left.cmp(nullptr, 1) > 0);
     /* reverse for symmetry tests */
     CPPUNIT_ASSERT(right.cmp(left) < 0);
     CPPUNIT_ASSERT(right.cmp("foo") < 0);
     CPPUNIT_ASSERT(right.cmp("foo", 1) < 0);
 }
 
-void testString::testSubstr()
+void TestString::testSubstr()
 {
     String s("0123456789");
     String check=s.substr(3,5);

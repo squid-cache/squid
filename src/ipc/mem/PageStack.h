@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,8 +10,10 @@
 #define SQUID_IPC_MEM_PAGE_STACK_H
 
 #include "ipc/mem/FlexibleArray.h"
+#include "ipc/mem/forward.h"
 
 #include <atomic>
+#include <limits>
 
 namespace Ipc
 {
@@ -21,21 +23,119 @@ namespace Mem
 
 class PageId;
 
-/// Atomic container of "free" page numbers inside a single SharedMemory space.
-/// Assumptions: all page numbers are unique, positive, have an known maximum,
-/// and can be temporary unavailable as long as they are never trully lost.
+class IdSetPosition;
+typedef enum { dirNone, dirLeft, dirRight, dirEnd } IdSetNavigationDirection;
+
+/// basic IdSet storage parameters, extracted here to keep them constant
+class IdSetMeasurements
+{
+public:
+    /// we need to fit two size_type counters into one 64-bit lockless atomic
+    typedef uint32_t size_type;
+
+    explicit IdSetMeasurements(size_type capacity);
+
+    /// the maximum number of pages our tree is allowed to store
+    size_type capacity = 0;
+
+    /// the number of leaf nodes that satisfy capacity requirements
+    size_type requestedLeafNodeCount = 0;
+
+    size_type treeHeight = 0; ///< total number of levels, including the leaf level
+    size_type leafNodeCount = 0; ///< the number of nodes at the leaf level
+    size_type innerLevelCount = 0; ///< all levels except the leaf level
+
+    /// the total number of nodes at all levels
+    size_type nodeCount() const { return leafNodeCount ? leafNodeCount*2 -1 : 0; }
+};
+
+/// a shareable set of positive uint32_t IDs with O(1) insertion/removal ops
+class IdSet
+{
+public:
+    using size_type = IdSetMeasurements::size_type;
+    using Position = IdSetPosition;
+    using NavigationDirection = IdSetNavigationDirection;
+
+    /// memory size required to store a tree with the given capacity
+    static size_t MemorySize(size_type capacity);
+
+    explicit IdSet(size_type capacity);
+
+    /// populates the allocated tree with the requested capacity IDs
+    /// optimized to run without atomic protection
+    void makeFullBeforeSharing();
+
+    /// finds/extracts (into the given `id`) an ID value and returns true
+    /// \retval false no IDs are left
+    bool pop(size_type &id);
+
+    /// makes `id` value available to future pop() callers
+    void push(size_type id);
+
+    const IdSetMeasurements measurements;
+
+private:
+    typedef uint64_t Node; ///< either leaf or intermediate node
+    typedef std::atomic<Node> StoredNode; ///< a Node stored in shared memory
+
+    /* optimization: these initialization methods bypass atomic protections */
+    void fillAllNodes();
+    void truncateExtras();
+    Node *valueAddress(Position);
+    size_type innerTruncate(Position pos, NavigationDirection dir, size_type toSubtract);
+    void leafTruncate(Position pos, size_type idsToKeep);
+
+    void innerPush(Position, NavigationDirection);
+    NavigationDirection innerPop(Position);
+
+    void leafPush(Position, size_type id);
+    size_type leafPop(Position);
+
+    Position ascend(Position);
+    Position descend(Position, NavigationDirection);
+
+    StoredNode &nodeAt(Position);
+
+    /// the entire binary tree flattened into an array
+    FlexibleArray<StoredNode> nodes_;
+    // No more data members should follow! See FlexibleArray<> for details.
+};
+
+/// Atomic container of "free" PageIds. Detects (some) double-free bugs.
+/// Assumptions: All page numbers are unique, positive, with a known maximum.
+/// A pushed page may not become available immediately but is never truly lost.
 class PageStack
 {
 public:
-    typedef uint32_t Value; ///< stack item type (a free page number)
     typedef std::atomic<size_t> Levels_t;
 
-    PageStack(const uint32_t aPoolId, const unsigned int aCapacity, const size_t aPageSize);
+    // XXX: The actual type may have been on PagePool::Init() but may conflict
+    // with PageLimit(), StoreMapSliceId, Rock::SwapDirRr::slotLimitActual(),
+    // Rock::SlotId, PageId::number, etc.
+    /// the number of (free and/or used) pages in a stack
+    typedef unsigned int PageCount;
 
-    unsigned int capacity() const { return theCapacity; }
-    size_t pageSize() const { return thePageSize; }
-    /// lower bound for the number of free pages
-    unsigned int size() const { return max(0, theSize.load()); }
+    // XXX: poolId, pageSize look misplaced due to messy separation of PagePool
+    // (which should support multiple Segments but does not) and PageStack
+    // (which should not calculate the Segment size but does) duties.
+    /// PageStack construction and SharedMemorySize calculation parameters
+    class Config {
+    public:
+        uint32_t poolId = 0; ///< pool ID
+        size_t pageSize = 0; ///< page size, used to calculate shared memory size
+        PageCount capacity = 0; ///< the maximum number of pages
+
+        /// whether a newly created PageStack should be prefilled with PageIds
+        bool createFull = false;
+    };
+
+    explicit PageStack(const Config &);
+
+    PageCount capacity() const { return config_.capacity; }
+    size_t pageSize() const { return config_.pageSize; }
+    /// an approximate number of free pages
+    PageCount size() const { return size_.load(); }
 
     /// sets value and returns true unless no free page numbers are found
     bool pop(PageId &page);
@@ -45,39 +145,38 @@ public:
     bool pageIdIsValid(const PageId &page) const;
 
     /// total shared memory size required to share
-    static size_t SharedMemorySize(const uint32_t aPoolId, const unsigned int capacity, const size_t pageSize);
+    static size_t SharedMemorySize(const Config &);
     size_t sharedMemorySize() const;
 
     /// shared memory size required only by PageStack, excluding
     /// shared counters and page data
-    static size_t StackSize(const unsigned int capacity);
+    static size_t StackSize(const PageCount capacity);
     size_t stackSize() const;
 
     /// \returns the number of padding bytes to align PagePool::theLevels array
-    static size_t LevelsPaddingSize(const unsigned int capacity);
-    size_t levelsPaddingSize() const { return LevelsPaddingSize(theCapacity); }
+    static size_t LevelsPaddingSize(const PageCount capacity);
+    size_t levelsPaddingSize() const { return LevelsPaddingSize(config_.capacity); }
+
+    /**
+     * The following functions return PageStack IDs for the corresponding
+     * PagePool or a similar PageStack user. The exact values are unimportant,
+     * but their uniqueness and stability eases debugging.
+     */
+
+    /// stack of free cache_mem slot positions
+    static PoolId IdForMemStoreSpace() { return 10; }
+    /// multipurpose PagePool of shared memory pages
+    static PoolId IdForMultipurposePool() { return 200; } // segments could use 2xx
+    /// stack of free rock cache_dir slot numbers
+    static PoolId IdForSwapDirSpace(const int dirIdx) { return 900 + dirIdx + 1; }
 
 private:
-    /// stack index and size type (may temporary go negative)
-    typedef int Offset;
+    const Config config_;
+    /// a lower bound for the number of free pages (for debugging purposes)
+    std::atomic<PageCount> size_;
 
-    // these help iterate the stack in search of a free spot or a page
-    Offset next(const Offset idx) const { return (idx + 1) % theCapacity; }
-    Offset prev(const Offset idx) const { return (theCapacity + idx - 1) % theCapacity; }
-
-    const uint32_t thePoolId; ///< pool ID
-    const Offset theCapacity; ///< stack capacity, i.e. theItems size
-    const size_t thePageSize; ///< page size, used to calculate shared memory size
-    /// lower bound for the number of free pages (may get negative!)
-    std::atomic<Offset> theSize;
-
-    /// last readable item index; just a hint, not a guarantee
-    std::atomic<Offset> theLastReadable;
-    /// first writable item index; just a hint, not a guarantee
-    std::atomic<Offset> theFirstWritable;
-
-    typedef std::atomic<Value> Item;
-    Ipc::Mem::FlexibleArray<Item> theItems; ///< page number storage
+    IdSet ids_; ///< free pages (valid with positive capacity_)
+    // No more data members should follow! See IdSet for details.
 };
 
 } // namespace Mem

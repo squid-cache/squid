@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,7 @@
 #define SQUID_IPC_ASYNCUDSOP_H
 
 #include "base/AsyncJob.h"
+#include "base/forward.h"
 #include "cbdata.h"
 #include "comm/forward.h"
 #include "ipc/FdNotes.h"
@@ -30,7 +31,7 @@ class UdsOp: public AsyncJob
 {
 public:
     UdsOp(const String &pathAddr);
-    virtual ~UdsOp();
+    ~UdsOp() override;
 
 public:
     struct sockaddr_un address; ///< UDS address from path; treat as read-only
@@ -66,16 +67,18 @@ struct sockaddr_un PathToAddress(const String &pathAddr);
 /// attempts to send an IPC message a few times, with a timeout
 class UdsSender: public UdsOp
 {
-    CBDATA_CLASS(UdsSender);
+    CBDATA_CHILD(UdsSender);
 
 public:
     UdsSender(const String& pathAddr, const TypedMsgHdr& aMessage);
 
+    CodeContextPointer codeContext;
+
 protected:
-    virtual void swanSong(); // UdsOp (AsyncJob) API
-    virtual void start(); // UdsOp (AsyncJob) API
-    virtual bool doneAll() const; // UdsOp (AsyncJob) API
-    virtual void timedout(); // UdsOp API
+    void swanSong() override; // UdsOp (AsyncJob) API
+    void start() override; // UdsOp (AsyncJob) API
+    bool doneAll() const override; // UdsOp (AsyncJob) API
+    void timedout() override; // UdsOp API
 
 private:
     void startSleep();

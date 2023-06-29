@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -56,8 +56,8 @@ public:
 
     public:
         static NullState *Instance();
-        virtual void checkForAsync(ACLChecklist *) const;
-        virtual ~NullState() {}
+        void checkForAsync(ACLChecklist *) const override;
+        ~NullState() override {}
 
     private:
         static NullState _instance;
@@ -206,11 +206,11 @@ private: /* internal methods */
     class Breadcrumb
     {
     public:
-        Breadcrumb(): parent(NULL) {}
+        Breadcrumb(): parent(nullptr) {}
         Breadcrumb(const Acl::InnerNode *aParent, Acl::Nodes::const_iterator aPos): parent(aParent), position(aPos) {}
         bool operator ==(const Breadcrumb &b) const { return parent == b.parent && (!parent || position == b.position); }
         bool operator !=(const Breadcrumb &b) const { return !this->operator ==(b); }
-        void clear() { parent = NULL; }
+        void clear() { parent = nullptr; }
         const Acl::InnerNode *parent; ///< intermediate node in the ACL tree
         Acl::Nodes::const_iterator position; ///< child position inside parent
     };

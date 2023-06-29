@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,29 +19,26 @@
 namespace Comm
 {
 
-/**
- * Async-opener of a Comm connection.
- */
+/// Asynchronously opens a TCP connection. Returns CommConnectCbParams: either
+/// Comm::OK with an open connection or another Comm::Flag with a closed one.
 class ConnOpener : public AsyncJob
 {
-    CBDATA_CLASS(ConnOpener);
+    CBDATA_CHILD(ConnOpener);
 
 public:
-    void noteAbort() { mustStop("externally aborted"); }
-
     typedef CbcPointer<ConnOpener> Pointer;
 
-    virtual bool doneAll() const;
+    bool doneAll() const override;
 
-    ConnOpener(Comm::ConnectionPointer &, const AsyncCall::Pointer &handler, time_t connect_timeout);
-    ~ConnOpener();
+    ConnOpener(const Comm::ConnectionPointer &, const AsyncCall::Pointer &handler, time_t connect_timeout);
+    ~ConnOpener() override;
 
     void setHost(const char *);    ///< set the hostname note for this connection
     const char * getHost() const;  ///< get the hostname noted for this connection
 
 protected:
-    virtual void start();
-    virtual void swanSong();
+    void start() override;
+    void swanSong() override;
 
 private:
     // Undefined because two openers cannot share a connection

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,19 +13,39 @@
 #include "acl/Acl.h"
 #include "auth/AclMaxUserIp.h"
 #include "auth/UserRequest.h"
+#include "compat/cppunit.h"
 #include "ConfigParser.h"
-#include "tests/testACLMaxUserIP.h"
 #include "unitTestMain.h"
 
 #include <stdexcept>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testACLMaxUserIP );
+/*
+ * demonstration test file, as new idioms are made they will
+ * be shown in the TestBoilerplate source.
+ */
+
+class TestACLMaxUserIP : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestACLMaxUserIP);
+    /* note the statement here and then the actual prototype below */
+    CPPUNIT_TEST(testDefaults);
+    CPPUNIT_TEST(testParseLine);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void setUp() override;
+
+protected:
+    void testDefaults();
+    void testParseLine();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION( TestACLMaxUserIP );
 
 /* globals required to resolve link issues */
 AnyP::PortCfgPointer HttpPortList;
 
 void
-testACLMaxUserIP::testDefaults()
+TestACLMaxUserIP::testDefaults()
 {
     ACLMaxUserIP anACL("max_user_ip");
     /* 0 is not a valid maximum, so we start at 0 */
@@ -37,20 +57,20 @@ testACLMaxUserIP::testDefaults()
 }
 
 void
-testACLMaxUserIP::setUp()
+TestACLMaxUserIP::setUp()
 {
     CPPUNIT_NS::TestFixture::setUp();
     Acl::RegisterMaker("max_user_ip", [](Acl::TypeName name)->ACL* { return new ACLMaxUserIP(name); });
 }
 
 void
-testACLMaxUserIP::testParseLine()
+TestACLMaxUserIP::testParseLine()
 {
     /* a config line to pass with a lead-in token to seed the parser. */
     char * line = xstrdup("test max_user_ip -s 1");
     /* seed the parser */
     ConfigParser::SetCfgLine(line);
-    ACL *anACL = NULL;
+    ACL *anACL = nullptr;
     ConfigParser LegacyParser;
     ACL::ParseAclLine(LegacyParser, &anACL);
     ACLMaxUserIP *maxUserIpACL = dynamic_cast<ACLMaxUserIP *>(anACL);

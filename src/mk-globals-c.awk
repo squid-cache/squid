@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -21,7 +21,6 @@ Copyright != 1			{		 print; next }
 
 # arrays defined elsewhere
 /\[\];/				{			next }
-/^extern \"C\"/			{		 print; next }
 
 #
 # Check exactly for lines beginning with "    extern", generated

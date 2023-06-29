@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,15 +9,13 @@
 /* DEBUG: section 24    SBuf */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "parser/forward.h"
 #include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
 
+#include <cctype>
 #include <cerrno>
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
 
 /// convenience method: consumes up to n bytes, counts, and returns them
 SBuf
@@ -232,7 +230,7 @@ Parser::Tokenizer::int64(int64_t & result, int base, bool allowSign, const SBuf:
 
     const SBuf range(buf_.substr(0,limit));
 
-    //fixme: account for buf_.size()
+    // XXX: account for buf_.size()
     bool neg = false;
     const char *s = range.rawContent();
     const char *end = range.rawContent() + range.length();

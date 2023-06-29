@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,7 +20,7 @@ namespace Http
 {
 
 /**
- * Holds the values parsed from an HTTP reply status line.
+ * Holds the values parsed from an HTTP-like reply status line.
  *
  * For example: HTTP/1.1 200 OK
  */
@@ -36,7 +36,7 @@ public:
     /// set this status-line to the given values
     /// when reason is NULL the default message text for this StatusCode will be used
     /// when reason is not NULL, it must not point to a dynamically allocated value
-    void set(const AnyP::ProtocolVersion &newVersion, Http::StatusCode newStatus, const char *newReason = NULL);
+    void set(const AnyP::ProtocolVersion &newVersion, Http::StatusCode newStatus, const char *newReason = nullptr);
 
     /// reset the reason phrase to its default status code-derived value
     void resetReason() { reason_ = nullptr; }
@@ -59,22 +59,14 @@ public:
 public:
     /* public, read only */
 
-    /**
-     * By rights protocol name should be a constant "HTTP", with no need for this field to exist.
-     * However there are protocols which violate HTTP by sending their own custom formats
-     * back with other protocol names (ICY streaming format being the current major problem).
-     */
-    // XXX: protocol is part of AnyP::ProtocolVersion. We should be able to use version.protocol instead now.
-    AnyP::ProtocolType protocol;
-
     AnyP::ProtocolVersion version;     ///< breakdown of protocol version label: (HTTP/ICY) and (0.9/1.0/1.1)
 
 private:
     /// status code. ie 100 ... 200 ... 404 ... 599
-    Http::StatusCode status_;
+    Http::StatusCode status_ = scNone;
 
     /// points to a _constant_ string (default or supplied), never free()d
-    const char *reason_;
+    const char *reason_ = nullptr;
 };
 
 } // namespace Http

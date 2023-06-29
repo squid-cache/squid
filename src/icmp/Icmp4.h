@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -66,8 +66,6 @@
 
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
-#elif HAVE_WINSOCK_H
-#include <winsock.h>
 #endif
 #include <process.h>
 
@@ -128,19 +126,19 @@ typedef struct icmphdr {
 
 /**
  * Class partially implementing RFC 792 - ICMP for IP version 4.
- * Provides ECHO-REQUEST, ECHO-REPLY (secion 4.1)
+ * Provides ECHO-REQUEST, ECHO-REPLY (section 4.1)
  */
 class Icmp4 : public Icmp
 {
 public:
     Icmp4();
-    virtual ~Icmp4();
+    ~Icmp4() override;
 
-    virtual int Open();
+    int Open() override;
 
 #if USE_ICMP
-    virtual void SendEcho(Ip::Address &, int, const char*, int);
-    virtual void Recv(void);
+    void SendEcho(Ip::Address &, int, const char*, int) override;
+    void Recv(void) override;
 #endif
 };
 

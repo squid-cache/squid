@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,4 +14,5 @@
 
 void CollapsedForwarding::Broadcast(StoreEntry const&, const bool) STUB
 void CollapsedForwarding::Broadcast(const sfileno, const bool) STUB
+void CollapsedForwarding::StatQueue(std::ostream &) STUB
 

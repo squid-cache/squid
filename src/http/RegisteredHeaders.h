@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,12 +26,13 @@ enum HdrType {
     /*ACCEPT_FEATURES,*/            /* RFC 2295 */
     ACCEPT_LANGUAGE,                /**< RFC 7231 */
     ACCEPT_RANGES,                  /**< RFC 7233 */
-    AGE,                            /**< RFC 7234 */
+    AGE,                            /**< RFC 9111 */
     ALLOW,                          /**< RFC 7231 */
     ALTERNATE_PROTOCOL,             /**< GFE custom header we may have to erase */
     AUTHENTICATION_INFO,            /**< RFC 2617 */
     AUTHORIZATION,                  /**< RFC 7235, 4559 */
-    CACHE_CONTROL,                  /**< RFC 7234 */
+    CACHE_CONTROL,                  /**< RFC 9111 */
+    CACHE_STATUS,                   /**< draft-ietf-httpbis-cache-header */
     CDN_LOOP,                       /**< RFC 8586 */
     CONNECTION,                     /**< RFC 7230 */
     CONTENT_BASE,                   /**< obsoleted RFC 2068 */
@@ -52,11 +53,11 @@ enum HdrType {
     /*DESTINATION,*/                /* RFC 2518 */
     ETAG,                           /**< RFC 7232 */
     EXPECT,                         /**< RFC 7231 */
-    EXPIRES,                        /**< RFC 7234 */
+    EXPIRES,                        /**< RFC 9111 */
     FORWARDED,                      /**< RFC 7239 */
     FROM,                           /**< RFC 7231 */
     HOST,                           /**< RFC 7230 */
-    HTTP2_SETTINGS,                 /**< RFC 7540 */
+    /*HTTP2_SETTINGS,*/             /* obsolete RFC 7540 */
     /*IF,*/                         /* RFC 2518 */
     IF_MATCH,                       /**< RFC 7232 */
     IF_MODIFIED_SINCE,              /**< RFC 7232 */
@@ -74,7 +75,8 @@ enum HdrType {
     NEGOTIATE,                      /**< experimental RFC 2295. Why only this one from 2295? */
     /*OVERWRITE,*/                  /* RFC 2518 */
     ORIGIN,                         /* CORS Draft specification (see http://www.w3.org/TR/cors/) */
-    PRAGMA,                         /**< RFC 7234 */
+    PRAGMA,                         /**< deprecated RFC 7234 header */
+    PRIORITY,                       /**< RFC 9218 */
     PROXY_AUTHENTICATE,             /**< RFC 7235 */
     PROXY_AUTHENTICATION_INFO,      /**< RFC 2617 */
     PROXY_AUTHORIZATION,            /**< RFC 7235 */
@@ -102,10 +104,7 @@ enum HdrType {
     /*VARIANT_VARY,*/               /* experimental RFC 2295 */
     VARY,                           /**< RFC 7231 */
     VIA,                            /**< RFC 7230 */
-    WARNING,                        /**< RFC 7234 */
     WWW_AUTHENTICATE,               /**< RFC 7235, 4559 */
-    X_CACHE,                        /**< Squid custom header */
-    X_CACHE_LOOKUP,                 /**< Squid custom header. temporary hack that became de-facto. TODO remove */
     X_FORWARDED_FOR,                /**< obsolete Squid custom header, RFC 7239 */
     X_REQUEST_URI,                  /**< Squid custom header appended if ADD_X_REQUEST_URI is defined */
     X_SQUID_ERROR,                  /**< Squid custom header on generated error responses */
@@ -153,20 +152,19 @@ enum HdrKind {
 /* POD for HeaderTable */
 class HeaderTableRecord {
 public:
-    HeaderTableRecord();
+    HeaderTableRecord() = default;
     HeaderTableRecord(const char *n);
     HeaderTableRecord(const char *, Http::HdrType, Http::HdrFieldType, int /* HdrKind */);
 
-public:
-    const char *name;
-    Http::HdrType id;
-    Http::HdrFieldType type;
+    const char *name = "";
+    Http::HdrType id = HdrType::BAD_HDR;
+    Http::HdrFieldType type = HdrFieldType::ftInvalid;
     // flags set by constructor from HdrKind parameter
-    bool list;       ///<header with field values defined as #(values) in HTTP/1.1
-    bool request;    ///<header is a request header
-    bool reply;      ///<header is a reply header
-    bool hopbyhop;   ///<header is hop by hop
-    bool denied304;  ///<header is not to be updated on receiving a 304 in cache revalidation (see HttpReply.cc)
+    bool list = false;; ///< header with field values defined as #(values) in HTTP/1.1
+    bool request = false; ///< header is a request header
+    bool reply = false; ///< header is a reply header
+    bool hopbyhop = false; ///< header is hop by hop
+    bool denied304 = false; ///< header is not to be updated on receiving a 304 in cache revalidation (see HttpReply.cc)
 };
 
 /** Class for looking up registered header definitions
@@ -224,11 +222,9 @@ any_registered_header (const Http::HdrType id)
     return (id >= Http::HdrType::ACCEPT && id < Http::HdrType::OTHER);
 }
 
-}; /* namespace Http */
+std::ostream &operator <<(std::ostream &, HdrType);
 
-/* ostream output for Http::HdrType */
-std::ostream &
-operator<< (std::ostream&, Http::HdrType);
+}; /* namespace Http */
 
 #endif /* SQUID_HTTP_REGISTEREDHEADERS_H */
 

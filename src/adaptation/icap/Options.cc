@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,6 @@
 #include "adaptation/icap/Options.h"
 #include "base/TextException.h"
 #include "HttpReply.h"
-#include "SquidTime.h"
 #include "StrList.h"
 #include "wordlist.h"
 
@@ -84,7 +83,7 @@ time_t Adaptation::Icap::Options::expire() const
 
 void Adaptation::Icap::Options::configure(const HttpReply *reply)
 {
-    error = NULL; // reset initial "unconfigured" value (or an old error?)
+    error = nullptr; // reset initial "unconfigured" value (or an old error?)
 
     const HttpHeader *h = &reply->header;
 
@@ -151,7 +150,7 @@ void Adaptation::Icap::Options::cfgIntHeader(const HttpHeader *h, const char *fn
     else
         value = -1;
 
-    debugs(93,5, HERE << "int header: " << fname << ": " << value);
+    debugs(93,5, "int header: " << fname << ": " << value);
 }
 
 void Adaptation::Icap::Options::cfgTransferList(const HttpHeader *h, TransferList &list)
@@ -162,7 +161,7 @@ void Adaptation::Icap::Options::cfgTransferList(const HttpHeader *h, TransferLis
 
     if (foundStar) {
         theTransfers.byDefault = &list;
-        debugs(93,5, HERE << "set default transfer to " << list.name);
+        debugs(93,5, "set default transfer to " << list.name);
     }
 
     list.report(5, "Adaptation::Icap::Options::cfgTransferList: ");
@@ -170,7 +169,7 @@ void Adaptation::Icap::Options::cfgTransferList(const HttpHeader *h, TransferLis
 
 /* Adaptation::Icap::Options::TransferList */
 
-Adaptation::Icap::Options::TransferList::TransferList(): extensions(NULL), name(NULL),
+Adaptation::Icap::Options::TransferList::TransferList(): extensions(nullptr), name(nullptr),
     kind(xferNone)
 {
 };
@@ -211,7 +210,7 @@ void Adaptation::Icap::Options::TransferList::parse(const String &buf, bool &fou
     foundStar = false;
 
     const char *item;
-    const char *pos = NULL;
+    const char *pos = nullptr;
     int ilen;
     while (strListGetItem(&buf, ',', &item, &ilen, &pos)) {
         if (ilen == 1 && *item == '*')

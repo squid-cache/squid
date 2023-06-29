@@ -144,7 +144,7 @@ msgid ""
 "or server may be down or congested. Please retry your request."
 msgstr ""
 "Превышен интервал времени ожидания при получении данных из сети. Сеть или "
-"сервер могут бытьнедоступны или перегружены. Повторите попытку позже."
+"сервер могут быть недоступны или перегружены. Повторите попытку позже."
 
 #: templates/ERR_URN_RESOLVE+html.body.div.h2:16-1
 msgid "A URL for the requested URN could not be retrieved"
@@ -825,8 +825,7 @@ msgid ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
 msgstr ""
-"Squid не поддерживает все методы запросов для всех протоколов. К примеру, "
-"для протокола Gopher Вы не можете выполнить запрос POST."
+"Squid не поддерживает все методы запросов для всех протоколов."
 
 #: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1
 #, fuzzy
@@ -834,8 +833,7 @@ msgid ""
 "Squid does not support some access protocols. For example, the SSH protocol "
 "is currently not supported."
 msgstr ""
-"Squid не поддерживает все методы запросов для всех протоколов. К примеру, "
-"для протокола Gopher Вы не можете выполнить запрос POST."
+"Squid не поддерживает все методы запросов для всех протоколов."
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:27-1
 msgid ""

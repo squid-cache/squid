@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,6 +8,8 @@
 
 #include "squid.h"
 #include "base/HardFun.h"
+#include "base/TextException.h"
+#include "sbuf/Stream.h"
 #include "security/cert_generators/file/certificate_db.h"
 
 #include <cerrno>
@@ -23,8 +25,6 @@
 #if HAVE_SYS_FILE_H
 #include <sys/file.h>
 #endif
-
-#define HERE "(security_file_certgen) " << __FILE__ << ':' << __LINE__ << ": "
 
 Ssl::Lock::Lock(std::string const &aFilename) :
     filename(aFilename),
@@ -55,7 +55,7 @@ void Ssl::Lock::lock()
     fd = open(filename.c_str(), O_RDWR);
     if (fd == -1)
 #endif
-        throw std::runtime_error("Failed to open file " + filename);
+        throw TextException(ToSBuf("Failed to open file ", filename), Here());
 
 #if _SQUID_WINDOWS_
     if (!LockFile(hFile, 0, 0, 1, 0))
@@ -64,7 +64,7 @@ void Ssl::Lock::lock()
 #else
     if (flock(fd, LOCK_EX) != 0)
 #endif
-        throw std::runtime_error("Failed to get a lock of " + filename);
+        throw TextException(ToSBuf("Failed to get a lock of ", filename), Here());
 }
 
 void Ssl::Lock::unlock()
@@ -87,7 +87,7 @@ void Ssl::Lock::unlock()
     }
 #endif
     else
-        throw std::runtime_error("Lock is already unlocked for " + filename);
+        throw TextException(ToSBuf("Lock is already unlocked for ", filename), Here());
 }
 
 Ssl::Lock::~Lock()
@@ -96,8 +96,10 @@ Ssl::Lock::~Lock()
         unlock();
 }
 
-Ssl::Locker::Locker(Lock &aLock, const char *aFileName, int aLineNo):
-    weLocked(false), lock(aLock), fileName(aFileName), lineNo(aLineNo)
+Ssl::Locker::Locker(Lock &aLock, const SourceLocation &aCaller):
+    weLocked(false),
+    lock(aLock),
+    caller(aCaller)
 {
     if (!lock.locked()) {
         lock.lock();
@@ -111,12 +113,11 @@ Ssl::Locker::~Locker()
         lock.unlock();
 }
 
-Ssl::CertificateDb::Row::Row()
-    :   width(cnlNumber)
+Ssl::CertificateDb::Row::Row() : width(cnlNumber)
 {
     row = (char **)OPENSSL_malloc(sizeof(char *) * (width + 1));
     for (size_t i = 0; i < width + 1; ++i)
-        row[i] = NULL;
+        row[i] = nullptr;
 }
 
 Ssl::CertificateDb::Row::Row(char **aRow, size_t aWidth): width(aWidth)
@@ -130,13 +131,13 @@ Ssl::CertificateDb::Row::~Row()
         return;
 
     void *max;
-    if ((max = (void *)row[width]) != NULL) {
+    if ((max = (void *)row[width]) != nullptr) {
         // It is an openSSL allocated row. The TXT_DB_read function stores the
         // index and row items one one memory segment. The row[width] points
         // to the end of buffer. We have to check for items in the array which
         // are not stored in this segment. These items should released.
         for (size_t i = 0; i < width + 1; ++i) {
-            if (((row[i] < (char *)row) || (row[i] > max)) && (row[i] != NULL))
+            if (((row[i] < (char *)row) || (row[i] > max)) && (row[i] != nullptr))
                 OPENSSL_free(row[i]);
         }
     } else {
@@ -150,7 +151,7 @@ Ssl::CertificateDb::Row::~Row()
 
 void Ssl::CertificateDb::Row::reset()
 {
-    row = NULL;
+    row = nullptr;
 }
 
 void Ssl::CertificateDb::Row::setValue(size_t cell, char const * value)
@@ -163,7 +164,7 @@ void Ssl::CertificateDb::Row::setValue(size_t cell, char const * value)
         row[cell] = static_cast<char *>(OPENSSL_malloc(sizeof(char) * (strlen(value) + 1)));
         memcpy(row[cell], value, sizeof(char) * (strlen(value) + 1));
     } else
-        row[cell] = NULL;
+        row[cell] = nullptr;
 }
 
 char ** Ssl::CertificateDb::Row::getRow()
@@ -210,7 +211,7 @@ void Ssl::CertificateDb::sq_TXT_DB_delete_row(TXT_DB *db, int idx) {
 
     const Columns db_indexes[]= {cnlSerial, cnlKey};
     for (unsigned int i = 0; i < countof(db_indexes); ++i) {
-        void *data = NULL;
+        void *data = nullptr;
 #if SQUID_SSLTXTDB_PSTRINGDATA
         if (LHASH_OF(OPENSSL_STRING) *fieldIndex =  db->index[db_indexes[i]])
             data = lh_OPENSSL_STRING_delete(fieldIndex, rrow);
@@ -262,13 +263,13 @@ Ssl::CertificateDb::CertificateDb(std::string const & aDb_path, size_t aMax_db_s
 bool
 Ssl::CertificateDb::find(std::string const &key, const Security::CertPointer &expectedOrig, Security::CertPointer &cert, Security::PrivateKeyPointer &pkey)
 {
-    const Locker locker(dbLock, Here);
+    const Locker locker(dbLock, Here());
     load();
     return pure_find(key, expectedOrig, cert, pkey);
 }
 
 bool Ssl::CertificateDb::purgeCert(std::string const & key) {
-    const Locker locker(dbLock, Here);
+    const Locker locker(dbLock, Here());
     load();
     if (!db)
         return false;
@@ -283,7 +284,7 @@ bool Ssl::CertificateDb::purgeCert(std::string const & key) {
 bool
 Ssl::CertificateDb::addCertAndPrivateKey(std::string const &useKey, const Security::CertPointer &cert, const Security::PrivateKeyPointer &pkey, const Security::CertPointer &orig)
 {
-    const Locker locker(dbLock, Here);
+    const Locker locker(dbLock, Here());
     load();
     if (!db || !cert || !pkey)
         return false;
@@ -291,22 +292,19 @@ Ssl::CertificateDb::addCertAndPrivateKey(std::string const &useKey, const Securi
     if(useKey.empty())
         return false;
 
-    // Functor to wrap xfree() for std::unique_ptr
-    typedef HardFun<void, const void*, &xfree> CharDeleter;
-
     Row row;
     ASN1_INTEGER * ai = X509_get_serialNumber(cert.get());
     std::string serial_string;
-    Ssl::BIGNUM_Pointer serial(ASN1_INTEGER_to_BN(ai, NULL));
+    Ssl::BIGNUM_Pointer serial(ASN1_INTEGER_to_BN(ai, nullptr));
     {
-        std::unique_ptr<char, CharDeleter> hex_bn(BN_bn2hex(serial.get()));
+        const UniqueCString hex_bn(BN_bn2hex(serial.get()));
         serial_string = std::string(hex_bn.get());
     }
     row.setValue(cnlSerial, serial_string.c_str());
     char ** rrow = TXT_DB_get_by_index(db.get(), cnlSerial, row.getRow());
     // We are creating certificates with unique serial numbers. If the serial
     // number is found in the database, the same certificate is already stored.
-    if (rrow != NULL) {
+    if (rrow != nullptr) {
         // TODO: check if the stored row is valid.
         return true;
     }
@@ -338,7 +336,7 @@ Ssl::CertificateDb::addCertAndPrivateKey(std::string const &useKey, const Securi
 
     const auto tm = X509_getm_notAfter(cert.get());
     row.setValue(cnlExp_date, std::string(reinterpret_cast<char *>(tm->data), tm->length).c_str());
-    std::unique_ptr<char, CharDeleter> subject(X509_NAME_oneline(X509_get_subject_name(cert.get()), nullptr, 0));
+    const auto subject = OneLineSummary(*X509_get_subject_name(cert.get()));
     row.setValue(cnlName, subject.get());
     row.setValue(cnlKey, useKey.c_str());
 
@@ -367,25 +365,25 @@ Ssl::CertificateDb::addCertAndPrivateKey(std::string const &useKey, const Securi
 void
 Ssl::CertificateDb::Create(std::string const & db_path) {
     if (db_path == "")
-        throw std::runtime_error("Path to db is empty");
+        throw TextException("Path to db is empty", Here());
     std::string db_full(db_path + "/" + db_file);
     std::string cert_full(db_path + "/" + cert_dir);
     std::string size_full(db_path + "/" + size_file);
 
     if (mkdir(db_path.c_str(), 0777))
-        throw std::runtime_error("Cannot create " + db_path);
+        throw TextException(ToSBuf("Cannot create ", db_path), Here());
 
     if (mkdir(cert_full.c_str(), 0777))
-        throw std::runtime_error("Cannot create " + cert_full);
+        throw TextException(ToSBuf("Cannot create ", cert_full), Here());
 
     std::ofstream size(size_full.c_str());
     if (size)
         size << 0;
     else
-        throw std::runtime_error("Cannot open " + size_full + " to open");
+        throw TextException(ToSBuf("Cannot open ", size_full, " to open"), Here());
     std::ofstream db(db_full.c_str());
     if (!db)
-        throw std::runtime_error("Cannot open " + db_full + " to open");
+        throw TextException(ToSBuf("Cannot open ", db_full, " to open"), Here());
 }
 
 void
@@ -429,7 +427,7 @@ Ssl::CertificateDb::pure_find(std::string const &key, const Security::CertPointe
     row.setValue(cnlKey, key.c_str());
 
     char **rrow = TXT_DB_get_by_index(db.get(), cnlKey, row.getRow());
-    if (rrow == NULL)
+    if (rrow == nullptr)
         return false;
 
     if (!sslDateIsInTheFuture(rrow[cnlExp_date]))
@@ -477,7 +475,7 @@ size_t Ssl::CertificateDb::readSize() {
 void Ssl::CertificateDb::writeSize(size_t db_size) {
     std::ofstream ofstr(size_full.c_str());
     if (!ofstr)
-        throw std::runtime_error("cannot write \"" + size_full + "\" file");
+        throw TextException(ToSBuf("cannot write \"", size_full, "\" file"), Here());
     ofstr << db_size;
 }
 
@@ -496,7 +494,7 @@ void Ssl::CertificateDb::load() {
     // Load db from file.
     Ssl::BIO_Pointer in(BIO_new(BIO_s_file()));
     if (!in || BIO_read_filename(in.get(), db_full.c_str()) <= 0)
-        throw std::runtime_error("Uninitialized SSL certificate database directory: " + db_path + ". To initialize, run \"security_file_certgen -c -s " + db_path + "\".");
+        throw TextException(ToSBuf("Uninitialized SSL certificate database directory: ", db_path, ". To initialize, run \"security_file_certgen -c -s ", db_path, "\"."), Here());
 
     bool corrupt = false;
     Ssl::TXT_DB_Pointer temp_db(TXT_DB_read(in.get(), cnlNumber));
@@ -504,29 +502,29 @@ void Ssl::CertificateDb::load() {
         corrupt = true;
 
     // Create indexes in db.
-    if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlSerial, NULL, LHASH_HASH_FN(index_serial_hash), LHASH_COMP_FN(index_serial_cmp)))
+    if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlSerial, nullptr, LHASH_HASH_FN(index_serial_hash), LHASH_COMP_FN(index_serial_cmp)))
         corrupt = true;
 
-    if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlKey, NULL, LHASH_HASH_FN(index_name_hash), LHASH_COMP_FN(index_name_cmp)))
+    if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlKey, nullptr, LHASH_HASH_FN(index_name_hash), LHASH_COMP_FN(index_name_cmp)))
         corrupt = true;
 
     if (corrupt)
-        throw std::runtime_error("The SSL certificate database " + db_path + " is corrupted. Please rebuild");
+        throw TextException(ToSBuf("The SSL certificate database ", db_path, " is corrupted. Please rebuild"), Here());
 
     db.reset(temp_db.release());
 }
 
 void Ssl::CertificateDb::save() {
     if (!db)
-        throw std::runtime_error("The certificates database is not loaded");;
+        throw TextException("The certificates database is not loaded", Here());
 
     // To save the db to file,  create a new BIO with BIO file methods.
     Ssl::BIO_Pointer out(BIO_new(BIO_s_file()));
     if (!out || !BIO_write_filename(out.get(), const_cast<char *>(db_full.c_str())))
-        throw std::runtime_error("Failed to initialize " + db_full + " file for writing");;
+        throw TextException(ToSBuf("Failed to initialize ", db_full, " file for writing"), Here());
 
     if (TXT_DB_write(out.get(), db.get()) < 0)
-        throw std::runtime_error("Failed to write " + db_full + " file");
+        throw TextException(ToSBuf("Failed to write ", db_full, " file"), Here());
 }
 
 // Normally defined in defines.h file
@@ -537,7 +535,7 @@ void Ssl::CertificateDb::deleteRow(const char **row, int rowIndex) {
     subSize(filename);
     int ret = remove(filename.c_str());
     if (ret < 0 && errno != ENOENT)
-        throw std::runtime_error("Failed to remove certficate file " + filename + " from db");
+        throw TextException(ToSBuf("Failed to remove certificate file ", filename, " from db"), Here());
 }
 
 bool Ssl::CertificateDb::deleteInvalidCertificate() {
@@ -648,12 +646,14 @@ Ssl::CertificateDb::ReadEntry(std::string filename, Security::CertPointer &cert,
     Ssl::BIO_Pointer bio;
     if (!Ssl::OpenCertsFileForReading(bio, filename.c_str()))
         return false;
-    if (!Ssl::ReadX509Certificate(bio, cert))
+
+    cert = Ssl::ReadCertificate(bio);
+
+    if (!Ssl::ReadPrivateKey(bio, pkey, nullptr))
         return false;
-    if (!Ssl::ReadPrivateKey(bio, pkey, NULL))
-        return false;
-    // The orig certificate is not mandatory
-    (void)Ssl::ReadX509Certificate(bio, orig);
+
+    orig = Ssl::ReadOptionalCertificate(bio);
+
     return true;
 }
 

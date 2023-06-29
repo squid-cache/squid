@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,8 +17,8 @@ namespace Ssl
 class CertificateProperties;
 
 /**
- * This class is responsible for composing and parsing messages destined to, or comming
- * from an ssl_crtd server. Format of these mesages is:
+ * This class is responsible for composing and parsing messages destined to, or coming
+ * from an ssl_crtd server. Format of these messages is:
  *   response/request-code SP body length SP body
  */
 class CrtdMessage
@@ -69,7 +69,7 @@ public:
     void composeBody(BodyParams const & map, std::string const & other_part);
 
     /// orchestrates entire request parsing
-    bool parseRequest(Ssl::CertificateProperties &, std::string &error);
+    void parseRequest(CertificateProperties &);
     void composeRequest(Ssl::CertificateProperties const &); // throws
 
     /// String code for "new_certificate" messages

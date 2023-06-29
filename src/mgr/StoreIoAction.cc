@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -41,13 +41,13 @@ Mgr::StoreIoAction::Create(const CommandPointer &cmd)
 Mgr::StoreIoAction::StoreIoAction(const CommandPointer &aCmd):
     Action(aCmd), data()
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
 }
 
 void
 Mgr::StoreIoAction::add(const Action& action)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     data += dynamic_cast<const StoreIoAction&>(action).data;
 }
 
@@ -63,8 +63,8 @@ Mgr::StoreIoAction::collect()
 void
 Mgr::StoreIoAction::dump(StoreEntry* entry)
 {
-    debugs(16, 5, HERE);
-    Must(entry != NULL);
+    debugs(16, 5, MYNAME);
+    Must(entry != nullptr);
     storeAppendPrintf(entry, "Store IO Interface Stats\n");
     storeAppendPrintf(entry, "create.calls %.0f\n", data.create_calls);
     storeAppendPrintf(entry, "create.select_fail %.0f\n", data.create_select_fail);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,7 +25,7 @@ namespace Ssl
 class ErrorDetailEntry
 {
 public:
-    Security::ErrorCode error_no; ///< The SSL error code
+    Security::ErrorCode error_no = 0; ///< TLS error; \see Security::ErrorCode
     String name; ///< a name for the error
     String detail; ///< for error page %D macro expansion; may contain macros
     String descr;  ///< short error description (for use in debug messages or error pages)

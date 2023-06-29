@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,7 +21,7 @@ rfc2671RROptPack(char *buf, size_t sz, ssize_t edns_sz)
     opt.type = RFC1035_TYPE_OPT;
     opt._class = min(edns_sz, (ssize_t)SQUID_UDP_SO_RCVBUF-1);
     opt.ttl = 0; // relevant?
-    opt.rdata = NULL;
+    opt.rdata = nullptr;
     opt.rdlength = 0;
 
     return rfc1035RRPack(buf, sz, &opt);

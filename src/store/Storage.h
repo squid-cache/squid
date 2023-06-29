@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,7 +23,7 @@ namespace Store {
 class Storage: public RefCountable
 {
 public:
-    virtual ~Storage() {}
+    ~Storage() override {}
 
     /// create system resources needed for this store to operate in the future
     virtual void create() = 0;
@@ -55,7 +55,7 @@ public:
 
     /**
      * Output stats to the provided store entry.
-     \todo make these calls asynchronous
+     * TODO: make these calls asynchronous
      */
     virtual void stat(StoreEntry &e) const = 0;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,12 +9,12 @@
 #ifndef SQUID_ASSERT_H
 #define SQUID_ASSERT_H
 
-#if defined(NODEBUG)
+#if PURIFY
 #define assert(EX) ((void)0)
-#elif STDC_HEADERS
-#define assert(EX)  ((EX)?((void)0):xassert( # EX , __FILE__, __LINE__))
+#elif defined(NODEBUG)
+#define assert(EX) ((void)0)
 #else
-#define assert(EX)  ((EX)?((void)0):xassert("EX", __FILE__, __LINE__))
+#define assert(EX)  ((EX)?((void)0):xassert( # EX , __FILE__, __LINE__))
 #endif
 
 #ifdef __cplusplus

@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -8,10 +8,12 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
-noinst_LTLIBRARIES = libcomm.la
+noinst_LTLIBRARIES = \
+	libcomm.la \
+	libminimal.la
 
 ## Library holding comm socket handlers
-libcomm_la_SOURCES= \
+libcomm_la_SOURCES = \
 	AcceptLimiter.cc \
 	AcceptLimiter.h \
 	ConnOpener.cc \
@@ -19,7 +21,6 @@ libcomm_la_SOURCES= \
 	Connection.cc \
 	Connection.h \
 	Flag.h \
-	forward.h \
 	IoCallback.cc \
 	IoCallback.h \
 	Loops.h \
@@ -31,10 +32,15 @@ libcomm_la_SOURCES= \
 	ModSelectWin32.cc \
 	Read.cc \
 	Read.h \
+	Tcp.cc \
+	Tcp.h \
 	TcpAcceptor.cc \
 	TcpAcceptor.h \
-	UdpOpenDialer.h \
 	Write.cc \
 	Write.h \
-	\
-	comm_internal.h
+	comm_internal.h \
+	forward.h
+
+# a bare-bones implementation of few Comm APIs sufficient for helpers use
+libminimal_la_SOURCES = \
+	minimal.cc

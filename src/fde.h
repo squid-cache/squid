@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -52,6 +52,13 @@ class fde
 {
 
 public:
+
+    // TODO: Merge with comm_init() to reduce initialization order dependencies.
+    /// Configures fd_table (a.k.a. fde::Table).
+    /// Call once, after learning the number of supported descriptors (i.e.
+    /// setMaxFD()) and before dereferencing fd_table (e.g., before Comm I/O).
+    static void Init();
+
     fde() {
         *ipaddr = 0;
         *desc = 0;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,7 +25,7 @@ BuildPrefixLength()
     const char *full = __FILE__;
 
     // Disable heuristic if it does not work.
-    if (strstr(full, tail) == 0)
+    if (strstr(full, tail) == nullptr)
         return 0;
 
     return strlen(full) - strlen(tail);

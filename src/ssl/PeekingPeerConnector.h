@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,30 +18,21 @@ namespace Ssl
 
 /// A PeerConnector for HTTP origin servers. Capable of SslBumping.
 class PeekingPeerConnector: public Security::PeerConnector {
-    CBDATA_CLASS(PeekingPeerConnector);
+    CBDATA_CHILD(PeekingPeerConnector);
 public:
     PeekingPeerConnector(HttpRequestPointer &aRequest,
                          const Comm::ConnectionPointer &aServerConn,
                          const Comm::ConnectionPointer &aClientConn,
-                         AsyncCall::Pointer &aCallback,
+                         const AsyncCallback<Security::EncryptorAnswer> &aCallback,
                          const AccessLogEntryPointer &alp,
-                         const time_t timeout = 0) :
-        AsyncJob("Ssl::PeekingPeerConnector"),
-        Security::PeerConnector(aServerConn, aCallback, alp, timeout),
-        clientConn(aClientConn),
-        splice(false),
-        resumingSession(false),
-        serverCertificateHandled(false)
-    {
-        request = aRequest;
-    }
+                         time_t timeout = 0);
 
     /* Security::PeerConnector API */
-    virtual bool initialize(Security::SessionPointer &);
-    virtual Security::ContextPointer getTlsContext();
-    virtual void noteWantWrite();
-    virtual void noteNegotiationError(const int result, const int ssl_error, const int ssl_lib_error);
-    virtual void noteNegotiationDone(ErrorState *error);
+    bool initialize(Security::SessionPointer &) override;
+    Security::ContextPointer getTlsContext() override;
+    void noteWantWrite() override;
+    void noteNegotiationError(const Security::ErrorDetailPointer &) override;
+    void noteNegotiationDone(ErrorState *error) override;
 
     /// Updates associated client connection manager members
     /// if the server certificate was received from the server.
@@ -52,7 +43,7 @@ public:
     void checkForPeekAndSplice();
 
     /// Callback function for ssl_bump acl check in step3  SSL bump step.
-    void checkForPeekAndSpliceDone(Acl::Answer answer);
+    void checkForPeekAndSpliceDone(Acl::Answer);
 
     /// Handles the final bumping decision.
     void checkForPeekAndSpliceMatched(const Ssl::BumpMode finalMode);
@@ -64,8 +55,11 @@ public:
     /// connection manager members
     void serverCertificateVerified();
 
+    /// Abruptly stops TLS negotiation and starts tunneling.
+    void startTunneling();
+
     /// A wrapper function for checkForPeekAndSpliceDone for use with acl
-    static void cbCheckForPeekAndSpliceDone(Acl::Answer answer, void *data);
+    static void cbCheckForPeekAndSpliceDone(Acl::Answer, void *data);
 
 private:
 
@@ -75,7 +69,6 @@ private:
     Comm::ConnectionPointer clientConn; ///< TCP connection to the client
     AsyncCall::Pointer closeHandler; ///< we call this when the connection closed
     bool splice; ///< whether we are going to splice or not
-    bool resumingSession; ///< whether it is an SSL resuming session connection
     bool serverCertificateHandled; ///< whether handleServerCertificate() succeeded
 };
 

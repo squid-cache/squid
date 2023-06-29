@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,7 +30,7 @@ public:
 
     MessageDelayPool(const SBuf &name, int64_t bucketSpeed, int64_t bucketSize,
                      int64_t aggregateSpeed, int64_t aggregateSize, uint16_t initialBucketPercent);
-    ~MessageDelayPool();
+    ~MessageDelayPool() override;
     MessageDelayPool(const MessageDelayPool &) = delete;
     MessageDelayPool &operator=(const MessageDelayPool &) = delete;
 
@@ -98,7 +98,7 @@ class MessageDelayConfig
 {
 public:
     void parseResponseDelayPool();
-    void dumpResponseDelayPoolParameters(StoreEntry *e, const char *name);
+    void dumpResponseDelayPoolParameters(StoreEntry *);
     void parseResponseDelayPoolAccess();
     void freePools();
 };
@@ -113,9 +113,9 @@ free_response_delay_pool_parameters(MessageDelayConfig * cfg)
 }
 
 inline void
-dump_response_delay_pool_parameters(StoreEntry *entry, const char *name, MessageDelayConfig &cfg)
+dump_response_delay_pool_parameters(StoreEntry *entry, const char *, MessageDelayConfig &cfg)
 {
-    cfg.dumpResponseDelayPoolParameters(entry, name);
+    cfg.dumpResponseDelayPoolParameters(entry);
 }
 
 inline void

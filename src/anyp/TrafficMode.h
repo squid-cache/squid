@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,7 @@ namespace AnyP
 {
 
 /**
- * Set of 'mode' flags defining types of trafic which can be received.
+ * Set of 'mode' flags defining types of traffic which can be received.
  *
  * Use to determine the processing steps which need to be applied
  * to this traffic under any special circumstances which may apply.

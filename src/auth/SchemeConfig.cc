@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,7 +15,8 @@
 #include "auth/UserRequest.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
+#include "errorpage.h"
 #include "format/Format.h"
 #include "globals.h"
 #include "Store.h"
@@ -31,15 +32,15 @@
 Auth::UserRequest::Pointer
 Auth::SchemeConfig::CreateAuthUser(const char *proxy_auth, AccessLogEntry::Pointer &al)
 {
-    assert(proxy_auth != NULL);
-    debugs(29, 9, HERE << "header = '" << proxy_auth << "'");
+    assert(proxy_auth != nullptr);
+    debugs(29, 9, "header = '" << proxy_auth << "'");
 
     Auth::SchemeConfig *config = Find(proxy_auth);
 
-    if (config == NULL || !config->active()) {
+    if (config == nullptr || !config->active()) {
         debugs(29, (shutting_down?3:DBG_IMPORTANT), (shutting_down?"":"WARNING: ") <<
                "Unsupported or unconfigured/inactive proxy-auth scheme, '" << proxy_auth << "'");
-        return NULL;
+        return nullptr;
     }
     static MemBuf rmb;
     rmb.reset();
@@ -51,7 +52,7 @@ Auth::SchemeConfig::CreateAuthUser(const char *proxy_auth, AccessLogEntry::Point
         config->keyExtras->assemble(rmb, al, 0);
     }
 
-    return config->decode(proxy_auth, rmb.hasContent() ? rmb.content() : NULL);
+    return config->decode(proxy_auth, al->request, rmb.hasContent() ? rmb.content() : nullptr);
 }
 
 Auth::SchemeConfig *
@@ -62,7 +63,7 @@ Auth::SchemeConfig::Find(const char *proxy_auth)
             return scheme;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 Auth::SchemeConfig *
@@ -122,7 +123,7 @@ Auth::SchemeConfig::parse(Auth::SchemeConfig * scheme, int, char *param_str)
 
         keyExtras = nlf;
 
-        if (char *t = strtok(NULL, w_space)) {
+        if (char *t = strtok(nullptr, w_space)) {
             debugs(29, DBG_CRITICAL, "FATAL: Unexpected argument '" << t << "' after request_format specification");
             self_destruct();
         }
@@ -131,7 +132,7 @@ Auth::SchemeConfig::parse(Auth::SchemeConfig * scheme, int, char *param_str)
     } else if (strcmp(param_str, "utf8") == 0) {
         parse_onoff(&utf8);
     } else {
-        debugs(29, DBG_CRITICAL, "Unrecognised " << scheme->type() << " auth scheme parameter '" << param_str << "'");
+        debugs(29, DBG_CRITICAL, "ERROR: Unrecognised " << scheme->type() << " auth scheme parameter '" << param_str << "'");
     }
 }
 
@@ -145,7 +146,7 @@ Auth::SchemeConfig::dump(StoreEntry *entry, const char *name, Auth::SchemeConfig
 
     wordlist *list = authenticateProgram;
     storeAppendPrintf(entry, "%s %s", name, schemeType);
-    while (list != NULL) {
+    while (list != nullptr) {
         storeAppendPrintf(entry, " %s", list->key);
         list = list->next;
     }
@@ -174,7 +175,43 @@ void
 Auth::SchemeConfig::done()
 {
     delete keyExtras;
-    keyExtras = NULL;
+    keyExtras = nullptr;
     keyExtrasLine.clean();
+}
+
+bool
+Auth::SchemeConfig::isCP1251EncodingAllowed(const HttpRequest *request)
+{
+    String hdr;
+
+    if (!request || !request->header.getList(Http::HdrType::ACCEPT_LANGUAGE, &hdr))
+        return false;
+
+    char lang[256];
+    size_t pos = 0; // current parsing position in header string
+
+    while (strHdrAcptLangGetItem(hdr, lang, 256, pos)) {
+
+        /* wildcard uses the configured default language */
+        if (lang[0] == '*' && lang[1] == '\0')
+            return false;
+
+        if ((strncmp(lang, "ru", 2) == 0 // Russian
+                || strncmp(lang, "uk", 2) == 0 // Ukrainian
+                || strncmp(lang, "be", 2) == 0 // Belorussian
+                || strncmp(lang, "bg", 2) == 0 // Bulgarian
+                || strncmp(lang, "sr", 2) == 0)) { // Serbian
+            if (lang[2] == '-') {
+                if (strcmp(lang + 3, "latn") == 0) // not Cyrillic
+                    return false;
+            } else if (xisalpha(lang[2])) {
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    return false;
 }
 

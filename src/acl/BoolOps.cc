@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 #include "squid.h"
 #include "acl/BoolOps.h"
 #include "acl/Checklist.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "sbuf/SBuf.h"
 
 /* Acl::NotNode */
@@ -52,16 +52,6 @@ Acl::NotNode::typeString() const
     return "!";
 }
 
-ACL *
-Acl::NotNode::clone() const
-{
-    // Not implemented: we are not a named ACL type in squid.conf so nobody
-    // should try to create a NotNode instance by ACL type name (which is
-    // what clone() API is for -- it does not really clone anything).
-    assert(false);
-    return NULL;
-}
-
 SBufList
 Acl::NotNode::dump() const
 {
@@ -76,12 +66,6 @@ char const *
 Acl::AndNode::typeString() const
 {
     return "and";
-}
-
-ACL *
-Acl::AndNode::clone() const
-{
-    return new AndNode;
 }
 
 int
@@ -110,12 +94,6 @@ char const *
 Acl::OrNode::typeString() const
 {
     return "any-of";
-}
-
-ACL *
-Acl::OrNode::clone() const
-{
-    return new OrNode;
 }
 
 bool

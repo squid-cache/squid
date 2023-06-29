@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -79,17 +79,15 @@
 #include "sspwin32.h"
 #include "util.h"
 
-#include <windows.h>
+#include <cctype>
+#include <lm.h>
+#include <ntsecapi.h>
 #include <sspi.h>
 #include <security.h>
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-#include <lm.h>
-#include <ntsecapi.h>
+#include <windows.h>
 
 int NTLM_packet_debug_enabled = 0;
 static int have_challenge;
@@ -248,7 +246,7 @@ char * GetDomainName(void)
                 debug("LsaQueryInformationPolicy Error: %ld\n", status);
             } else  {
 
-                /* Get name in useable format */
+                /* Get name in usable format */
                 DomainName = AllocStrFromLSAStr(ppdiDomainInfo->Name);
 
                 /*
@@ -402,7 +400,7 @@ process_options(int argc, char *argv[])
             exit(EXIT_SUCCESS);
         case '?':
             opt = optopt;
-        /* fall thru to default */
+            [[fallthrough]];
         default:
             fprintf(stderr, "unknown option: -%c. Exiting\n", opt);
             usage();
@@ -418,7 +416,7 @@ token_decode(size_t *decodedLen, uint8_t decoded[], const char *buf)
 {
     struct base64_decode_ctx ctx;
     base64_decode_init(&ctx);
-    if (!base64_decode_update(&ctx, decodedLen, decoded, strlen(buf), reinterpret_cast<const uint8_t*>(buf)) ||
+    if (!base64_decode_update(&ctx, decodedLen, decoded, strlen(buf), buf) ||
             !base64_decode_final(&ctx)) {
         SEND_BH("message=\"base64 decode failed\"");
         fprintf(stderr, "ERROR: base64 decoding failed for: '%s'\n", buf);
@@ -460,7 +458,7 @@ manage_request()
         char *c = static_cast<char*>(memchr(buf, '\n', sizeof(buf)));
         if (c) {
             if (oversized) {
-                helperfail("messge=\"illegal request received\"");
+                helperfail("message=\"illegal request received\"");
                 fprintf(stderr, "Illegal request received: '%s'\n", buf);
                 return 1;
             }

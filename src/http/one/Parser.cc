@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "base/CharacterSet.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "http/one/Parser.h"
 #include "mime_header.h"
 #include "parser/Tokenizer.h"
@@ -27,7 +27,7 @@ void
 Http::One::Parser::clear()
 {
     parsingStage_ = HTTP_PARSE_NONE;
-    buf_ = NULL;
+    buf_ = nullptr;
     msgProtocol_ = AnyP::ProtocolVersion();
     mimeHeaderBlock_.clear();
 }
@@ -219,7 +219,7 @@ char *
 Http::One::Parser::getHostHeaderField()
 {
     if (!headerBlockSize())
-        return NULL;
+        return nullptr;
 
     LOCAL_ARRAY(char, header, GET_HDR_SZ);
     const char *name = "Host";
@@ -233,7 +233,7 @@ Http::One::Parser::getHostHeaderField()
 
     while (tok.prefix(p, LineCharacters())) {
         if (!tok.skipOne(CharacterSet::LF)) // move tokenizer past the LF
-            break; // error. reached invalid octet or end of buffer insted of an LF ??
+            break; // error. reached invalid octet or end of buffer instead of an LF ??
 
         // header lines must start with the name (case insensitive)
         if (p.substr(0, namelen).caseCmp(name, namelen))
@@ -268,7 +268,7 @@ Http::One::Parser::getHostHeaderField()
         return header;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 int

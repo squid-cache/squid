@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -98,7 +98,7 @@ heap_add(RemovalPolicy * policy, StoreEntry * entry, RemovalPolicyNode * node)
 }
 
 static void
-heap_remove(RemovalPolicy * policy, StoreEntry * entry,
+heap_remove(RemovalPolicy * policy, StoreEntry *,
             RemovalPolicyNode * node)
 {
     HeapPolicyData *h = (HeapPolicyData *)policy->_data;
@@ -109,7 +109,7 @@ heap_remove(RemovalPolicy * policy, StoreEntry * entry,
 
     heap_delete(h->theHeap, hnode);
 
-    node->data = NULL;
+    node->data = nullptr;
 
     h->count -= 1;
 }
@@ -144,7 +144,7 @@ heap_walkNext(RemovalPolicyWalker * walker)
     StoreEntry *entry;
 
     if (heap_walk->current >= heap_nodes(h->theHeap))
-        return NULL;        /* done */
+        return nullptr;        /* done */
 
     entry = (StoreEntry *) heap_peep(h->theHeap, heap_walk->current++);
 
@@ -201,7 +201,7 @@ heap_purgeNext(RemovalPurgeWalker * walker)
 try_again:
 
     if (heap_empty(h->theHeap))
-        return NULL;        /* done */
+        return nullptr;        /* done */
 
     age = heap_peepminkey(h->theHeap);
 
@@ -216,7 +216,7 @@ try_again:
     }
 
     heap_walker->min_age = age;
-    h->setPolicyNode(entry, NULL);
+    h->setPolicyNode(entry, nullptr);
     return entry;
 }
 
@@ -306,7 +306,7 @@ createRemovalPolicy_heap(wordlist * args)
     else if (!strcmp(keytype, "LRU"))
         heap_data->keyfunc = HeapKeyGen_StoreEntry_LRU;
     else {
-        debugs(81, DBG_CRITICAL, "createRemovalPolicy_heap: Unknown key type \"" << keytype << "\". Using LRU");
+        debugs(81, DBG_CRITICAL, "ERROR: createRemovalPolicy_heap: Unknown key type \"" << keytype << "\". Using LRU");
         heap_data->keyfunc = HeapKeyGen_StoreEntry_LRU;
     }
 
@@ -331,7 +331,7 @@ createRemovalPolicy_heap(wordlist * args)
 
     policy->Remove = heap_remove;
 
-    policy->Referenced = NULL;
+    policy->Referenced = nullptr;
 
     policy->Dereferenced = heap_referenced;
 

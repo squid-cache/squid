@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,7 +25,7 @@ namespace Format
 {
 
 /*
- * Bytecodes for the configureable format stuff
+ * Bytecodes for the configurable format stuff
  */
 typedef enum {
     LFT_NONE,           /* dummy */
@@ -46,6 +46,8 @@ typedef enum {
     LFT_CLIENT_LOCAL_TOS,
     LFT_CLIENT_LOCAL_NFMARK,
 
+    LFT_TRANSPORT_CLIENT_CONNECTION_ID,
+
     LFT_CLIENT_HANDSHAKE,
 
     /* client connection local squid.conf details */
@@ -65,7 +67,7 @@ typedef enum {
     LFT_SERVER_LOCAL_TOS,
     LFT_SERVER_LOCAL_NFMARK,
 
-    /* original Request-Line details recieved from client */
+    /* original Request-Line details received from client */
     LFT_CLIENT_REQ_METHOD,
     LFT_CLIENT_REQ_URI,
     LFT_CLIENT_REQ_URLSCHEME,
@@ -75,7 +77,7 @@ typedef enum {
     /* LFT_CLIENT_REQ_QUERY, */
     LFT_CLIENT_REQ_VERSION,
 
-    /* Request-Line details recieved from client (legacy, filtered) */
+    /* Request-Line details received from client (legacy, filtered) */
     LFT_REQUEST_METHOD,
     LFT_REQUEST_URI,
     LFT_REQUEST_URLPATH_OLD_31,
@@ -110,11 +112,11 @@ typedef enum {
     /*LFT_REQUEST_SIZE_BODY, */
     /*LFT_REQUEST_SIZE_BODY_NO_TE, */
 
-    /* original Status-Line details recieved from server */
-    // XXX: todo
+    /* original Status-Line details received from server */
+    // TODO: implement server detail logging
 
     /* Status-Line details sent to the client */
-    // XXX: todo
+    // TODO: implement server detail logging
 
     /* response Status-Line details (legacy, filtered) */
     LFT_HTTP_SENT_STATUS_CODE_OLD_30,
@@ -164,12 +166,14 @@ typedef enum {
     LFT_PEER_RESPONSE_TIME,
     LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME,
     LFT_DNS_WAIT_TIME,
+    LFT_BUSY_TIME,
 
     /* Squid internal processing details */
     LFT_SQUID_STATUS,
     LFT_SQUID_ERROR,
     LFT_SQUID_ERROR_DETAIL,
     LFT_SQUID_HIERARCHY,
+    LFT_SQUID_REQUEST_ATTEMPTS,
 
     LFT_MIME_TYPE,
     LFT_TAG,

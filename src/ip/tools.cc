@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 /* DEBUG: section 21    Misc Functions */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Messages.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 
@@ -64,7 +64,7 @@ Ip::ProbeTransport()
         struct sockaddr_in6 sin;
         ip.getSockAddr(sin);
         if (bind(s, reinterpret_cast<struct sockaddr *>(&sin), sizeof(sin)) != 0) {
-            debugs(3, DBG_CRITICAL, "WARNING: BCP 177 violation. Detected non-functional IPv6 loopback.");
+            debugs(3, Critical(66), "WARNING: BCP 177 violation. Detected non-functional IPv6 loopback.");
             EnableIpv6 = IPV6_OFF;
         } else {
             debugs(3, 2, "Detected functional IPv6 loopback ...");
@@ -78,7 +78,7 @@ Ip::ProbeTransport()
 #else
     debugs(3, 2, "IPv6 transport " << (EnableIpv6?"Available":"Disabled"));
     if (EnableIpv6 != IPV6_OFF) {
-        debugs(3, DBG_CRITICAL, "WARNING: BCP 177 violation. IPv6 transport forced OFF by build parameters.");
+        debugs(3, Critical(67), "WARNING: BCP 177 violation. IPv6 transport forced OFF by build parameters.");
         EnableIpv6 = IPV6_OFF;
     }
 #endif

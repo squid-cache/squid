@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,11 +22,5 @@ int
 ACLLocalIP::match(ACLChecklist *checklist)
 {
     return ACLIP::match (Filled(checklist)->my_addr);
-}
-
-ACL *
-ACLLocalIP::clone() const
-{
-    return new ACLLocalIP(*this);
 }
 

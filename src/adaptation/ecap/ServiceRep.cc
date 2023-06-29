@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,7 +15,7 @@
 #include "adaptation/ecap/XactionRep.h"
 #include "AsyncEngine.h"
 #include "base/TextException.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "EventLoop.h"
 
 #include <libecap/adapter/service.h>
@@ -48,8 +48,8 @@ public:
     ConfigRep(const Master &aMaster);
 
     // libecap::Options API
-    virtual const libecap::Area option(const libecap::Name &name) const;
-    virtual void visitEachOption(libecap::NamedValueVisitor &visitor) const;
+    const libecap::Area option(const libecap::Name &name) const override;
+    void visitEachOption(libecap::NamedValueVisitor &visitor) const override;
 
     const Master &master; ///< the configuration being wrapped
 };
@@ -59,7 +59,7 @@ class Engine: public AsyncEngine
 {
 public:
     /* AsyncEngine API */
-    virtual int checkEvents(int timeout);
+    int checkEvents(int timeout) override;
 
 private:
     void kickAsyncServices(timeval &timeout);
@@ -152,7 +152,7 @@ Adaptation::Ecap::Engine::kickAsyncServices(timeval &timeout)
 /* Adaptation::Ecap::ServiceRep */
 
 Adaptation::Ecap::ServiceRep::ServiceRep(const ServiceConfigPointer &cfg):
-/*AsyncJob("Adaptation::Ecap::ServiceRep"),*/ Adaptation::Service(cfg),
+    /*AsyncJob("Adaptation::Ecap::ServiceRep"),*/ Adaptation::Service(cfg),
     isDetached(false)
 {
 }
@@ -194,7 +194,7 @@ Adaptation::Ecap::ServiceRep::finalize()
 void
 Adaptation::Ecap::ServiceRep::tryConfigureAndStart()
 {
-    debugs(93,2, HERE << "configuring eCAP service: " << theService->uri());
+    debugs(93,2, "configuring eCAP service: " << theService->uri());
     const ConfigRep cfgRep(dynamic_cast<const ServiceConfig&>(cfg()));
     theService->configure(cfgRep);
 
@@ -255,7 +255,7 @@ Adaptation::Ecap::ServiceRep::makeXactLauncher(Http::Message *virgin,
 
     // register now because (a) we need EventLoop::Running and (b) we do not
     // want to add more main loop overheads unless an async service is used.
-    static AsyncEngine *TheEngine = NULL;
+    static AsyncEngine *TheEngine = nullptr;
     if (AsyncServices.size() && !TheEngine && EventLoop::Running) {
         TheEngine = new Engine;
         EventLoop::Running->registerEngine(TheEngine);
@@ -343,7 +343,7 @@ Adaptation::Ecap::CheckUnusedAdapterServices(const Adaptation::Services& cfgs)
             found = (*cfged)->cfg().uri == loaded->second->uri().c_str();
         }
         if (!found)
-            debugs(93, DBG_IMPORTANT, "Warning: loaded eCAP service has no matching " <<
+            debugs(93, DBG_IMPORTANT, "WARNING: loaded eCAP service has no matching " <<
                    "ecap_service config option: " << loaded->second->uri());
     }
 }

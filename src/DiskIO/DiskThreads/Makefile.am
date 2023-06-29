@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -11,7 +11,6 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libDiskThreads.la
 
 libDiskThreads_la_SOURCES = \
-	async_io.cc \
 	CommIO.cc \
 	CommIO.h \
 	DiskThreads.h \
@@ -20,7 +19,8 @@ libDiskThreads_la_SOURCES = \
 	DiskThreadsDiskIOModule.cc \
 	DiskThreadsDiskIOModule.h \
 	DiskThreadsIOStrategy.cc \
-	DiskThreadsIOStrategy.h
+	DiskThreadsIOStrategy.h \
+	async_io.cc
 
 if ENABLE_WIN32_AIOPS
 libDiskThreads_la_SOURCES += aiops_win32.cc

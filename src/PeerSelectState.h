@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,7 +32,7 @@ void peerSelectInit(void);
 class PeerSelectionInitiator: public CbdataParent
 {
 public:
-    virtual ~PeerSelectionInitiator() = default;
+    ~PeerSelectionInitiator() override = default;
 
     /// called when a new unique destination has been found
     virtual void noteDestination(Comm::ConnectionPointer path) = 0;
@@ -62,12 +62,12 @@ class PeerSelector: public Dns::IpReceiver
 
 public:
     explicit PeerSelector(PeerSelectionInitiator*);
-    virtual ~PeerSelector() override;
+    ~PeerSelector() override;
 
     /* Dns::IpReceiver API */
-    virtual void noteIp(const Ip::Address &ip) override;
-    virtual void noteIps(const Dns::CachedIps *ips, const Dns::LookupDetails &details) override;
-    virtual void noteLookup(const Dns::LookupDetails &details) override;
+    void noteIp(const Ip::Address &ip) override;
+    void noteIps(const Dns::CachedIps *ips, const Dns::LookupDetails &details) override;
+    void noteLookup(const Dns::LookupDetails &details) override;
 
     // Produce a URL for display identifying the transaction we are
     // trying to locate a peer for.
@@ -84,6 +84,15 @@ public:
 
     /// a single selection loop iteration: attempts to add more destinations
     void selectMore();
+
+    /// switches into the PING_WAITING state (and associated timeout monitoring)
+    void startPingWaiting();
+
+    /// terminates ICP ping timeout monitoring
+    void cancelPingTimeoutMonitoring();
+
+    /// called when the given selector should stop expecting ICP ping responses
+    static void HandlePingTimeout(PeerSelector *);
 
     HttpRequest *request;
     AccessLogEntry::Pointer al; ///< info for the future access.log entry
@@ -122,7 +131,6 @@ protected:
     static IRCB HandlePingReply;
     static ACLCB CheckAlwaysDirectDone;
     static ACLCB CheckNeverDirectDone;
-    static EVH HandlePingTimeout;
 
 private:
     Acl::Answer always_direct;

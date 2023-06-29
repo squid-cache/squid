@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,7 +15,7 @@
 int
 ACLTagStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
-    if (checklist->request != NULL)
+    if (checklist->request != nullptr)
         return data->match (checklist->request->tag.termedBuf());
     return 0;
 }

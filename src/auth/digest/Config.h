@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,8 +32,6 @@ typedef struct _digest_nonce_h digest_nonce_h;
 /* data to be encoded into the nonce's hex representation */
 struct _digest_nonce_data {
     time_t creationtime;
-    /* in memory address of the nonce struct (similar purpose to an ETag) */
-    digest_nonce_h *self;
     uint32_t randomdata;
 };
 
@@ -44,7 +42,7 @@ struct _digest_nonce_h : public hash_link {
     /* number of uses we've seen of this nonce */
     unsigned long nc;
     /* reference count */
-    short references;
+    uint64_t references;
     /* the auth_user this nonce has been tied to */
     Auth::Digest::User *user;
     /* has this nonce been invalidated ? */
@@ -75,17 +73,17 @@ class Config : public Auth::SchemeConfig
 {
 public:
     Config();
-    virtual bool active() const;
-    virtual bool configured() const;
-    virtual Auth::UserRequest::Pointer decode(char const *proxy_auth, const char *requestRealm);
-    virtual void done();
-    virtual void rotateHelpers();
-    virtual bool dump(StoreEntry *, const char *, Auth::SchemeConfig *) const;
-    virtual void fixHeader(Auth::UserRequest::Pointer, HttpReply *, Http::HdrType, HttpRequest *);
-    virtual void init(Auth::SchemeConfig *);
-    virtual void parse(Auth::SchemeConfig *, int, char *);
-    virtual void registerWithCacheManager(void);
-    virtual const char * type() const;
+    bool active() const override;
+    bool configured() const override;
+    Auth::UserRequest::Pointer decode(char const *proxy_auth, const HttpRequest *request, const char *requestRealm) override;
+    void done() override;
+    void rotateHelpers() override;
+    bool dump(StoreEntry *, const char *, Auth::SchemeConfig *) const override;
+    void fixHeader(Auth::UserRequest::Pointer, HttpReply *, Http::HdrType, HttpRequest *) override;
+    void init(Auth::SchemeConfig *) override;
+    void parse(Auth::SchemeConfig *, int, char *) override;
+    void registerWithCacheManager(void) override;
+    const char * type() const override;
 
 public:
     time_t nonceGCInterval;

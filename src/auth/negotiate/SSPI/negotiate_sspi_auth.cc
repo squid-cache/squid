@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -51,15 +51,13 @@
 #include "sspwin32.h"
 #include "util.h"
 
-#include <windows.h>
-#include <sspi.h>
-#include <security.h>
+#include <cctype>
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
+#include <security.h>
+#include <sspi.h>
+#include <windows.h>
 
 int Negotiate_packet_debug_enabled = 0;
 static int have_serverblob;
@@ -115,7 +113,7 @@ process_options(int argc, char *argv[])
             exit(EXIT_SUCCESS);
         case '?':
             opt = optopt;
-        /* fall thru to default */
+            [[fallthrough]];
         default:
             fprintf(stderr, "ERROR: unknown option: -%c. Exiting\n", opt);
             usage();
@@ -131,7 +129,7 @@ token_decode(size_t *decodedLen, uint8_t decoded[], const char *buf)
 {
     struct base64_decode_ctx ctx;
     base64_decode_init(&ctx);
-    if (!base64_decode_update(&ctx, decodedLen, decoded, strlen(buf), reinterpret_cast<const uint8_t*>(buf)) ||
+    if (!base64_decode_update(&ctx, decodedLen, decoded, strlen(buf), buf) ||
             !base64_decode_final(&ctx)) {
         SEND("BH base64 decode failed");
         fprintf(stderr, "ERROR: base64 decoding failed for: '%s'\n", buf);

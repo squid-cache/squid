@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -10,8 +10,8 @@
 #
 # Author: Tsantilas Christos
 # (C) 2011 The Measurement Factory
-# 
-# Usage: 
+#
+# Usage:
 #     mk-error-details-po.pl error-details.txt
 #
 # This script read the error-details.txt error details template, and prints to the
@@ -19,7 +19,7 @@
 # The error-details.txt file consist of records like the following:
 #
 #  name: X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT
-#  detail: "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name"
+#  detail: "SSL Certificate error: certificate issuer (CA) not known: %ssl_ca_name"
 #  descr: "Unable to get issuer certificate"
 #
 # The records separated with an empty line.
@@ -32,7 +32,7 @@ use strict;
 my $File;
 my $mode;
 
-$File = shift @ARGV or 
+$File = shift @ARGV or
     die "Usage: \n ".$0." error-detail-file\n\n";
 
 open(IN, "<$File") or
@@ -55,7 +55,7 @@ while(my $line = <IN>) {
         $rec = $rec.$line;
         $line = <IN>;
         $lineOffset++;
-    } while($line && $line !~ /^\s*$/);
+        } while($line && $line !~ /^\s*$/);
 
     processRecord(\@PO_RECORDS, $rec, $lineNumber);
     $lineNumber= $lineNumber + $lineOffset;
@@ -98,7 +98,7 @@ sub processRecord
     }
 
     my (%poRecDetail, %poRecDescr);
-    
+
     $poRecDetail{"comment"} = "#: $File+".$currentRec{"name"}.".detail:$lnumber\n";
     $poRecDetail{"msgid"} = $currentRec{"detail"};
     merge(\@$RECS, \%poRecDetail);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,12 +25,12 @@ class AnswerCall: public AsyncCallT<AnswerDialer>
 public:
     AnswerCall(const char *aName, const AnswerDialer &aDialer) :
         AsyncCallT<AnswerDialer>(93, 5, aName, aDialer), fired(false) {}
-    virtual void fire() {
+    void fire() override {
         fired = true;
         AsyncCallT<AnswerDialer>::fire();
     }
-    virtual ~AnswerCall() {
-        if (!fired && dialer.arg1.message != NULL && dialer.arg1.message->body_pipe != NULL)
+    ~AnswerCall() override {
+        if (!fired && dialer.arg1.message != nullptr && dialer.arg1.message->body_pipe != nullptr)
             dialer.arg1.message->body_pipe->expectNoConsumption();
     }
 
@@ -61,14 +61,14 @@ Adaptation::Initiate::initiator(const CbcPointer<Initiator> &i)
 // internal cleanup
 void Adaptation::Initiate::swanSong()
 {
-    debugs(93, 5, HERE << "swan sings" << status());
+    debugs(93, 5, "swan sings" << status());
 
     if (theInitiator.set()) {
-        debugs(93, 3, HERE << "fatal failure; sending abort notification");
+        debugs(93, 3, "fatal failure; sending abort notification");
         tellQueryAborted(true); // final by default
     }
 
-    debugs(93, 5, HERE << "swan sang" << status());
+    debugs(93, 5, "swan sang" << status());
 }
 
 void Adaptation::Initiate::clearInitiator()

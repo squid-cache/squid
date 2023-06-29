@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,9 +8,9 @@
 
 #include "squid.h"
 #include "base/CharacterSet.h"
+#include "base/Raw.h"
 #include "base/RefCount.h"
-#include "Debug.h"
-#include "sbuf/DetailedStats.h"
+#include "debug/Stream.h"
 #include "sbuf/SBuf.h"
 #include "util.h"
 
@@ -69,7 +69,7 @@ SBuf::~SBuf()
 {
     debugs(24, 8, id << " destructed");
     --stats.live;
-    recordSBufSizeAtDestruct(len_);
+    SBufStats::RecordSBufSizeAtDestruct(len_);
 }
 
 MemBlob::Pointer
@@ -148,7 +148,7 @@ SBuf::rawAppendFinish(const char *start, size_type actualSize)
     debugs(24, 8, id << " finish appending " << actualSize << " bytes");
 
     size_type newSize = length() + actualSize;
-    Must2(newSize <= min(maxSize,store_->capacity-off_), "raw append overflow");
+    Must3(newSize <= min(maxSize, store_->capacity-off_), "raw append fits", Here());
     len_ = newSize;
     store_->size = off_ + newSize;
 }
@@ -167,9 +167,6 @@ SBuf::rawSpace(size_type minSpace)
         debugs(24, 7, id << " not growing");
         return bufEnd();
     }
-    // TODO: we may try to memmove before realloc'ing in order to avoid
-    //   one allocation operation, if we're the sole owners of a MemBlob.
-    //   Maybe some heuristic on off_ and length()?
     cow(minSpace+length());
     return bufEnd();
 }
@@ -177,15 +174,8 @@ SBuf::rawSpace(size_type minSpace)
 void
 SBuf::clear()
 {
-#if 0
-    //enabling this code path, the store will be freed and reinitialized
-    store_ = GetStorePrototype(); //uncomment to actually free storage upon clear()
-#else
-    //enabling this code path, we try to release the store without deallocating it.
-    // will be lazily reallocated if needed.
     if (store_->LockCount() == 1)
         store_->clear();
-#endif
     len_ = 0;
     off_ = 0;
     ++stats.clear;
@@ -205,7 +195,7 @@ SBuf &
 SBuf::append(const char * S, size_type Ssize)
 {
     const Locker blobKeeper(this, S);
-    if (S == NULL)
+    if (S == nullptr)
         return *this;
     if (Ssize == SBuf::npos)
         Ssize = strlen(S);
@@ -224,7 +214,7 @@ SBuf&
 SBuf::Printf(const char *fmt, ...)
 {
     // with printf() the fmt or an arg might be a dangerous char*
-    // NP: cant rely on vappendf() Locker because of clear()
+    // NP: can't rely on vappendf() Locker because of clear()
     const Locker blobKeeper(this, buf());
 
     va_list args;
@@ -251,7 +241,7 @@ SBuf::vappendf(const char *fmt, va_list vargs)
     // with (v)appendf() the fmt or an arg might be a dangerous char*
     const Locker blobKeeper(this, buf());
 
-    Must(fmt != NULL);
+    Must(fmt != nullptr);
     int sz = 0;
     //reserve twice the format-string size, it's a likely heuristic
     size_type requiredSpaceEstimate = strlen(fmt)*2;
@@ -261,7 +251,7 @@ SBuf::vappendf(const char *fmt, va_list vargs)
     va_copy(ap, vargs);
     sz = vsnprintf(space, spaceSize(), fmt, ap);
     va_end(ap);
-    Must2(sz >= 0, "vsnprintf() output error");
+    Must3(sz >= 0, "vsnprintf() succeeds", Here());
 
     /* check for possible overflow */
     /* snprintf on Linux returns -1 on output errors, or the size
@@ -273,7 +263,7 @@ SBuf::vappendf(const char *fmt, va_list vargs)
         requiredSpaceEstimate = sz*2; // TODO: tune heuristics
         space = rawSpace(requiredSpaceEstimate);
         sz = vsnprintf(space, spaceSize(), fmt, vargs);
-        Must2(sz >= 0, "vsnprintf() output error despite increased buffer space");
+        Must3(sz >= 0, "vsnprintf() succeeds (with increased buffer space)", Here());
     }
 
     // data was appended, update internal state
@@ -528,7 +518,7 @@ SBuf::c_str()
     ++stats.rawAccess;
     /* null-terminate the current buffer, by hand-appending a \0 at its tail but
      * without increasing its length. May COW, the side-effect is to guarantee that
-     * the MemBlob's tail is availabe for us to use */
+     * the MemBlob's tail is available for us to use */
     *rawSpace(1) = '\0';
     ++store_->size;
     ++stats.setChar;
@@ -563,7 +553,7 @@ SBuf::trim(const SBuf &toRemove, bool atBeginning, bool atEnd)
     ++stats.trim;
     if (atEnd) {
         const char *p = bufEnd()-1;
-        while (!isEmpty() && memchr(toRemove.buf(), *p, toRemove.length()) != NULL) {
+        while (!isEmpty() && memchr(toRemove.buf(), *p, toRemove.length()) != nullptr) {
             //current end-of-buf is in the searched set
             --len_;
             --p;
@@ -571,7 +561,7 @@ SBuf::trim(const SBuf &toRemove, bool atBeginning, bool atEnd)
     }
     if (atBeginning) {
         const char *p = buf();
-        while (!isEmpty() && memchr(toRemove.buf(), *p, toRemove.length()) != NULL) {
+        while (!isEmpty() && memchr(toRemove.buf(), *p, toRemove.length()) != nullptr) {
             --len_;
             ++off_;
             ++p;
@@ -604,7 +594,7 @@ SBuf::find(char c, size_type startPos) const
 
     const void *i = memchr(buf()+startPos, (int)c, (size_type)length()-startPos);
 
-    if (i == NULL)
+    if (i == nullptr)
         return npos;
 
     return (static_cast<const char *>(i)-buf());
@@ -647,11 +637,11 @@ SBuf::find(const SBuf &needle, size_type startPos) const
         debugs(24, 8, " begin=" << (void *) start <<
                ", lastPossible=" << (void*) lastPossible );
         tmp = static_cast<char *>(memchr(start, needleBegin, lastPossible-start));
-        if (tmp == NULL) {
+        if (tmp == nullptr) {
             debugs(24, 8, "First byte not found");
             return npos;
         }
-        // lastPossible guarrantees no out-of-bounds with memcmp()
+        // lastPossible guarantees no out-of-bounds with memcmp()
         if (0 == memcmp(needle.buf(), tmp, needle.length())) {
             debugs(24, 8, "Found at " << (tmp-buf()));
             return (tmp-buf());
@@ -723,7 +713,7 @@ SBuf::rfind(char c, SBuf::size_type endPos) const
 
     const void *i = memrchr(buf(), (int)c, (size_type)endPos);
 
-    if (i == NULL)
+    if (i == nullptr)
         return npos;
 
     return (static_cast<const char *>(i)-buf());
@@ -849,19 +839,23 @@ SBuf::toUpper()
  * NO verifications are made on the size parameters, it's up to the caller to
  * make sure that the new size is big enough to hold the copied contents.
  * The re-allocated storage MAY be bigger than the requested size due to size-chunking
- * algorithms in MemBlock, it is guarranteed NOT to be smaller.
+ * algorithms in MemBlock, it is guaranteed NOT to be smaller.
  */
 void
 SBuf::reAlloc(size_type newsize)
 {
     debugs(24, 8, id << " new size: " << newsize);
     Must(newsize <= maxSize);
+    // TODO: Consider realloc(3)ing in some cases instead.
     MemBlob::Pointer newbuf = new MemBlob(newsize);
-    if (length() > 0)
+    if (length() > 0) {
         newbuf->append(buf(), length());
+        ++stats.cowAllocCopy;
+    } else {
+        ++stats.cowJustAlloc;
+    }
     store_ = newbuf;
     off_ = 0;
-    ++stats.cowSlow;
     debugs(24, 7, id << " new store capacity: " << store_->capacity);
 }
 
@@ -887,10 +881,27 @@ SBuf::cow(SBuf::size_type newsize)
     if (newsize == npos || newsize < length())
         newsize = length();
 
-    if (store_->LockCount() == 1 && newsize == length()) {
-        debugs(24, 8, id << " no cow needed");
-        ++stats.cowFast;
-        return;
+    if (store_->LockCount() == 1) {
+        // MemBlob::size reflects past owners. Refresh to maximize spaceSize().
+        store_->syncSize(off_ + length());
+
+        const auto availableSpace = spaceSize();
+        const auto neededSpace = newsize - length();
+        if (neededSpace <= availableSpace) {
+            debugs(24, 8, id << " no cow needed; have " << availableSpace);
+            ++stats.cowAvoided;
+            return;
+        }
+        // consume idle leading space if doing so avoids reallocation
+        // this case is typical for fill-consume-fill-consume-... I/O buffers
+        if (neededSpace <= availableSpace + off_) {
+            debugs(24, 8, id << " no cow after shifting " << off_ << " to get " << (availableSpace + off_));
+            store_->consume(off_);
+            off_ = 0;
+            ++stats.cowShift;
+            assert(neededSpace <= spaceSize());
+            return;
+        }
     }
     reAlloc(newsize);
 }

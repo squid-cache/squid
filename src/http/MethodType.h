@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,11 +31,9 @@ typedef enum _method_t {
     METHOD_OPTIONS,
     METHOD_DELETE,
 
-#if NO_SPECIAL_HANDLING
     // RFC 2068
     METHOD_LINK,
     METHOD_UNLINK,
-#endif
 
     // RFC 3253
     METHOD_CHECKOUT,
@@ -87,7 +85,7 @@ typedef enum _method_t {
     METHOD_UNBIND,
 #endif
 
-    // RFC 7540
+    // RFC 9113
     METHOD_PRI,
 
     // Squid extension methods

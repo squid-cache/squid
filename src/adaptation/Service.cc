@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,8 +15,8 @@
 
 Adaptation::Service::Service(const ServiceConfigPointer &aConfig): theConfig(aConfig)
 {
-    Must(theConfig != NULL);
-    debugs(93,3, HERE << "creating adaptation service " << cfg().key);
+    Must(theConfig != nullptr);
+    debugs(93,3, "creating adaptation service " << cfg().key);
 }
 
 Adaptation::Service::~Service()
@@ -72,7 +72,7 @@ Adaptation::FindService(const Service::Id& key)
         if ((*i)->cfg().key == key)
             return *i;
     }
-    return NULL;
+    return nullptr;
 }
 
 void Adaptation::DetachServices()

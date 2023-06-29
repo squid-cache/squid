@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 
 #if USE_DELAY_POOLS
 
+#include "base/forward.h"
 #include "CompositePoolNode.h"
 
 /// \ingroup DelayPoolsAPI
@@ -21,13 +22,13 @@ class DelayVector : public CompositePoolNode
 public:
     typedef RefCount<DelayVector> Pointer;
     DelayVector();
-    virtual ~DelayVector();
-    virtual void stats(StoreEntry * sentry);
-    virtual void dump(StoreEntry *entry) const;
-    virtual void update(int incr);
-    virtual void parse();
+    ~DelayVector() override;
+    void stats(StoreEntry * sentry) override;
+    void dump(StoreEntry *entry) const override;
+    void update(int incr) override;
+    void parse() override;
 
-    virtual DelayIdComposite::Pointer id(CompositeSelectionDetails &);
+    DelayIdComposite::Pointer id(CompositeSelectionDetails &) override;
     void push_back (CompositePoolNode::Pointer);
 
 private:
@@ -39,10 +40,10 @@ private:
 
     public:
         Id (RefCount<DelayVector>,CompositeSelectionDetails &);
-        ~Id();
-        virtual int bytesWanted (int min, int max) const;
-        virtual void bytesIn(int qty);
-        virtual void delayRead(DeferredRead const &);
+        ~Id() override;
+        int bytesWanted (int min, int max) const override;
+        void bytesIn(int qty) override;
+        void delayRead(const AsyncCallPointer &) override;
 
     private:
         RefCount<DelayVector> theVector;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,12 +30,13 @@ public:
     Nodes::size_type childrenCount() const { return nodes.size(); }
 
     /* ACL API */
-    virtual void prepareForUse();
-    virtual bool empty() const;
-    virtual SBufList dump() const;
+    void prepareForUse() override;
+    bool empty() const override;
+    SBufList dump() const override;
 
-    /// parses one "acl name type acl1 acl2..." line, appending to nodes
-    void lineParse();
+    /// parses a [ [!]acl1 [!]acl2... ] sequence, appending to nodes
+    /// \returns the number of parsed ACL names
+    size_t lineParse();
 
     /// appends the node to the collection and takes control over it
     void add(ACL *node);
@@ -46,7 +47,7 @@ protected:
     virtual int doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const = 0;
 
     /* ACL API */
-    virtual int match(ACLChecklist *checklist);
+    int match(ACLChecklist *checklist) override;
 
     // XXX: use refcounting instead of raw pointers
     std::vector<ACL*> nodes; ///< children nodes of this intermediate node

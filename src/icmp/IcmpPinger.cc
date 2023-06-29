@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,11 +14,10 @@
 
 #if USE_ICMP
 
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "Icmp4.h"
 #include "Icmp6.h"
 #include "IcmpPinger.h"
-#include "SquidTime.h"
 
 #include <cerrno>
 
@@ -60,7 +59,10 @@ IcmpPinger::Open(void)
     atexit(Win32SockCleanup);
 
     getCurrentTime();
-    _db_init(NULL, "ALL,1");
+
+    Debug::debugOptions = xstrdup("ALL,1");
+    Debug::BanCacheLogUse();
+
     setmode(0, O_BINARY);
     setmode(1, O_BINARY);
     x = read(0, buf, sizeof(wpi));
@@ -127,7 +129,7 @@ IcmpPinger::Open(void)
     }
 
     getCurrentTime();
-    debugs(42, DBG_IMPORTANT, "pinger: Squid socket opened");
+    debugs(42, DBG_IMPORTANT, "Squid socket opened");
 
     /* windows uses a socket stream as a dual-direction channel */
     socket_to_squid = icmp_sock;
@@ -186,14 +188,14 @@ IcmpPinger::Recv(void)
     guess_size = n - (sizeof(pingerEchoData) - PINGER_PAYLOAD_SZ);
 
     if (guess_size != pecho.psize) {
-        debugs(42, 2, HERE << "size mismatch, guess=" << guess_size << ", psize=" << pecho.psize);
+        debugs(42, 2, "size mismatch, guess=" << guess_size << ", psize=" << pecho.psize);
         /* don't process this message, but keep running */
         return;
     }
 
     /* pass request for ICMPv6 handing */
     if (pecho.to.isIPv6()) {
-        debugs(42, 2, HERE << " Pass " << pecho.to << " off to ICMPv6 module.");
+        debugs(42, 2, " Pass " << pecho.to << " off to ICMPv6 module.");
         icmp6.SendEcho(pecho.to,
                        pecho.opcode,
                        pecho.payload,
@@ -202,24 +204,24 @@ IcmpPinger::Recv(void)
 
     /* pass the packet for ICMP handling */
     else if (pecho.to.isIPv4()) {
-        debugs(42, 2, HERE << " Pass " << pecho.to << " off to ICMPv4 module.");
+        debugs(42, 2, " Pass " << pecho.to << " off to ICMPv4 module.");
         icmp4.SendEcho(pecho.to,
                        pecho.opcode,
                        pecho.payload,
                        pecho.psize);
     } else {
-        debugs(42, DBG_IMPORTANT, HERE << " IP has unknown Type. " << pecho.to );
+        debugs(42, DBG_IMPORTANT, "ERROR: IP has unknown Type. " << pecho.to );
     }
 }
 
 void
 IcmpPinger::SendResult(pingerReplyData &preply, int len)
 {
-    debugs(42, 2, HERE << "return result to squid. len=" << len);
+    debugs(42, 2, "return result to squid. len=" << len);
 
     if (send(socket_to_squid, &preply, len, 0) < 0) {
         int xerrno = errno;
-        debugs(42, DBG_CRITICAL, "pinger: FATAL error on send: " << xstrerr(xerrno));
+        debugs(42, DBG_CRITICAL, "FATAL: send failure: " << xstrerr(xerrno));
         Close();
         exit(EXIT_FAILURE);
     }

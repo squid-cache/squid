@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,13 +19,12 @@
 #include "mgr/Command.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
-#include "SquidTime.h"
 #include "Store.h"
 
 Mgr::Action::Action(const Command::Pointer &aCmd): cmd(aCmd)
 {
-    Must(cmd != NULL);
-    Must(cmd->profile != NULL);
+    Must(cmd != nullptr);
+    Must(cmd->profile != nullptr);
 }
 
 Mgr::Action::~Action()
@@ -35,7 +34,7 @@ Mgr::Action::~Action()
 const Mgr::Command &
 Mgr::Action::command() const
 {
-    Must(cmd != NULL);
+    Must(cmd != nullptr);
     return *cmd;
 }
 
@@ -67,7 +66,7 @@ Mgr::Action::add(const Action &)
 void
 Mgr::Action::respond(const Request &request)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
 
     // Assume most kid classes are fully aggregatable (i.e., they do not dump
     // local info at all). Do not import the remote HTTP fd into our Comm
@@ -79,7 +78,7 @@ Mgr::Action::respond(const Request &request)
 }
 
 void
-Mgr::Action::sendResponse(unsigned int requestId)
+Mgr::Action::sendResponse(const Ipc::RequestId requestId)
 {
     Response response(requestId, this);
     Ipc::TypedMsgHdr message;
@@ -90,7 +89,7 @@ Mgr::Action::sendResponse(unsigned int requestId)
 void
 Mgr::Action::run(StoreEntry* entry, bool writeHttpHeader)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     collect();
     fillEntry(entry, writeHttpHeader);
 }
@@ -98,12 +97,12 @@ Mgr::Action::run(StoreEntry* entry, bool writeHttpHeader)
 void
 Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     entry->buffer();
 
     if (writeHttpHeader) {
         HttpReply *rep = new HttpReply;
-        rep->setHeaders(Http::scOkay, NULL, contentType(), -1, squid_curtime, squid_curtime);
+        rep->setHeaders(Http::scOkay, nullptr, contentType(), -1, squid_curtime, squid_curtime);
         // Allow cachemgr and other XHR scripts access to our version string
         const ActionParams &params = command().params;
         if (params.httpOrigin.size() > 0) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,7 +27,7 @@ shm_portable_segment_name_is_path()
 #elif _SQUID_FREEBSD_
     int jailed = 0;
     size_t len = sizeof(jailed);
-    ::sysctlbyname("security.jail.jailed", &jailed, &len, NULL, 0);
+    ::sysctlbyname("security.jail.jailed", &jailed, &len, nullptr, 0);
     return !jailed;
 #else
     return false;

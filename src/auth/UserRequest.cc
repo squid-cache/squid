@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,10 +31,10 @@
 char const *
 Auth::UserRequest::username() const
 {
-    if (user() != NULL)
+    if (user() != nullptr)
         return user()->username();
     else
-        return NULL;
+        return nullptr;
 }
 
 /**** PUBLIC FUNCTIONS (ALL GENERIC!)  ****/
@@ -52,27 +52,27 @@ Auth::UserRequest::start(HttpRequest *request, AccessLogEntry::Pointer &al, AUTH
 bool
 Auth::UserRequest::valid() const
 {
-    debugs(29, 9, HERE << "Validating Auth::UserRequest '" << this << "'.");
+    debugs(29, 9, "Validating Auth::UserRequest '" << this << "'.");
 
-    if (user() == NULL) {
-        debugs(29, 4, HERE << "No associated Auth::User data");
+    if (user() == nullptr) {
+        debugs(29, 4, "No associated Auth::User data");
         return false;
     }
 
     if (user()->auth_type == Auth::AUTH_UNKNOWN) {
-        debugs(29, 4, HERE << "Auth::User '" << user() << "' uses unknown scheme.");
+        debugs(29, 4, "Auth::User '" << user() << "' uses unknown scheme.");
         return false;
     }
 
     if (user()->auth_type == Auth::AUTH_BROKEN) {
-        debugs(29, 4, HERE << "Auth::User '" << user() << "' is broken for it's scheme.");
+        debugs(29, 4, "Auth::User '" << user() << "' is broken for it's scheme.");
         return false;
     }
 
     /* any other sanity checks that we need in the future */
 
     /* finally return ok */
-    debugs(29, 5, HERE << "Validated. Auth::UserRequest '" << this << "'.");
+    debugs(29, 5, "Validated. Auth::UserRequest '" << this << "'.");
     return true;
 }
 
@@ -90,21 +90,21 @@ Auth::UserRequest::operator delete (void *)
 }
 
 Auth::UserRequest::UserRequest():
-    _auth_user(NULL),
-    message(NULL),
+    _auth_user(nullptr),
+    message(nullptr),
     lastReply(AUTH_ACL_CANNOT_AUTHENTICATE)
 {
-    debugs(29, 5, HERE << "initialised request " << this);
+    debugs(29, 5, "initialised request " << this);
 }
 
 Auth::UserRequest::~UserRequest()
 {
     assert(LockCount()==0);
-    debugs(29, 5, HERE << "freeing request " << this);
+    debugs(29, 5, "freeing request " << this);
 
-    if (user() != NULL) {
+    if (user() != nullptr) {
         /* release our references to the user credentials */
-        user(NULL);
+        user(nullptr);
     }
 
     safe_free(message);
@@ -126,7 +126,7 @@ Auth::UserRequest::getDenyMessage() const
 char const *
 Auth::UserRequest::denyMessage(char const * const default_message) const
 {
-    if (getDenyMessage() == NULL)
+    if (getDenyMessage() == nullptr)
         return default_message;
 
     return getDenyMessage();
@@ -157,15 +157,15 @@ authenticateAuthUserRequestRemoveIp(Auth::UserRequest::Pointer auth_user_request
 void
 authenticateAuthUserRequestClearIp(Auth::UserRequest::Pointer auth_user_request)
 {
-    if (auth_user_request != NULL)
+    if (auth_user_request != nullptr)
         auth_user_request->user()->clearIp();
 }
 
 int
 authenticateAuthUserRequestIPCount(Auth::UserRequest::Pointer auth_user_request)
 {
-    assert(auth_user_request != NULL);
-    assert(auth_user_request->user() != NULL);
+    assert(auth_user_request != nullptr);
+    assert(auth_user_request->user() != nullptr);
     return auth_user_request->user()->ipcount;
 }
 
@@ -175,7 +175,7 @@ authenticateAuthUserRequestIPCount(Auth::UserRequest::Pointer auth_user_request)
 int
 authenticateUserAuthenticated(Auth::UserRequest::Pointer auth_user_request)
 {
-    if (auth_user_request == NULL || !auth_user_request->valid())
+    if (auth_user_request == nullptr || !auth_user_request->valid())
         return 0;
 
     return auth_user_request->authenticated();
@@ -184,7 +184,7 @@ authenticateUserAuthenticated(Auth::UserRequest::Pointer auth_user_request)
 Auth::Direction
 Auth::UserRequest::direction()
 {
-    if (user() == NULL)
+    if (user() == nullptr)
         return Auth::CRED_ERROR; // No credentials. Should this be a CHALLENGE instead?
 
     if (authenticateUserAuthenticated(this))
@@ -209,7 +209,7 @@ const char *
 Auth::UserRequest::connLastHeader()
 {
     fatal("Auth::UserRequest::connLastHeader should always be overridden by conn based auth schemes");
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -221,7 +221,7 @@ Auth::UserRequest::connLastHeader()
 static void
 authenticateAuthenticateUser(Auth::UserRequest::Pointer auth_user_request, HttpRequest * request, ConnStateData * conn, Http::HdrType type)
 {
-    assert(auth_user_request.getRaw() != NULL);
+    assert(auth_user_request.getRaw() != nullptr);
 
     auth_user_request->authenticate(request, conn, type);
 }
@@ -231,16 +231,16 @@ authTryGetUser(Auth::UserRequest::Pointer auth_user_request, ConnStateData * con
 {
     Auth::UserRequest::Pointer res;
 
-    if (auth_user_request != NULL)
+    if (auth_user_request != nullptr)
         res = auth_user_request;
-    else if (request != NULL && request->auth_user_request != NULL)
+    else if (request != nullptr && request->auth_user_request != nullptr)
         res = request->auth_user_request;
-    else if (conn != NULL)
+    else if (conn != nullptr)
         res = conn->getAuth();
 
     // attach the credential notes from helper to the transaction
-    if (request != NULL && res != NULL && res->user() != NULL) {
-        // XXX: we have no access to the transaction / AccessLogEntry so cant SyncNotes().
+    if (request != nullptr && res != nullptr && res->user() != nullptr) {
+        // XXX: we have no access to the transaction / AccessLogEntry so can't SyncNotes().
         // workaround by using anything already set in HttpRequest
         // OR use new and rely on a later Sync copying these to AccessLogEntry
 
@@ -283,22 +283,22 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
      * a note on proxy_auth logix here:
      * proxy_auth==NULL -> unauthenticated request || already
      * authenticated connection so we test for an authenticated
-     * connection when we recieve no authentication header.
+     * connection when we receive no authentication header.
      */
 
     /* a) can we find other credentials to use? and b) are they logged in already? */
-    if (proxy_auth == NULL && !authenticateUserAuthenticated(authTryGetUser(*auth_user_request,conn,request))) {
+    if (proxy_auth == nullptr && !authenticateUserAuthenticated(authTryGetUser(*auth_user_request,conn,request))) {
         /* no header or authentication failed/got corrupted - restart */
-        debugs(29, 4, HERE << "No Proxy-Auth header and no working alternative. Requesting auth header.");
+        debugs(29, 4, "No Proxy-Auth header and no working alternative. Requesting auth header.");
 
         /* something wrong with the AUTH credentials. Force a new attempt */
 
         /* connection auth we must reset on auth errors */
-        if (conn != NULL) {
-            conn->setAuth(NULL, "HTTP request missing credentials");
+        if (conn != nullptr) {
+            conn->setAuth(nullptr, "HTTP request missing credentials");
         }
 
-        *auth_user_request = NULL;
+        *auth_user_request = nullptr;
         return AUTH_ACL_CHALLENGE;
     }
 
@@ -307,9 +307,9 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
      * No check for function required in the if: its compulsory for conn based
      * auth modules
      */
-    if (proxy_auth && conn != NULL && conn->getAuth() != NULL &&
+    if (proxy_auth && conn != nullptr && conn->getAuth() != nullptr &&
             authenticateUserAuthenticated(conn->getAuth()) &&
-            conn->getAuth()->connLastHeader() != NULL &&
+            conn->getAuth()->connLastHeader() != nullptr &&
             strcmp(proxy_auth, conn->getAuth()->connLastHeader())) {
         debugs(29, 2, "WARNING: DUPLICATE AUTH - authentication header on already authenticated connection!. AU " <<
                conn->getAuth() << ", Current user '" <<
@@ -321,38 +321,38 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
         /* This should _only_ ever occur on the first pass through
          * authenticateAuthenticate
          */
-        assert(*auth_user_request == NULL);
-        conn->setAuth(NULL, "changed credentials token");
+        assert(*auth_user_request == nullptr);
+        conn->setAuth(nullptr, "changed credentials token");
     }
 
     /* we have a proxy auth header and as far as we know this connection has
      * not had bungled connection oriented authentication happen on it. */
-    debugs(29, 9, HERE << "header " << (proxy_auth ? proxy_auth : "-") << ".");
+    debugs(29, 9, "header " << (proxy_auth ? proxy_auth : "-") << ".");
 
-    if (*auth_user_request == NULL) {
-        if (conn != NULL) {
-            debugs(29, 9, HERE << "This is a new checklist test on:" << conn->clientConnection);
+    if (*auth_user_request == nullptr) {
+        if (conn != nullptr) {
+            debugs(29, 9, "This is a new checklist test on:" << conn->clientConnection);
         }
 
-        if (proxy_auth && request->auth_user_request == NULL && conn != NULL && conn->getAuth() != NULL) {
+        if (proxy_auth && request->auth_user_request == nullptr && conn != nullptr && conn->getAuth() != nullptr) {
             Auth::SchemeConfig * scheme = Auth::SchemeConfig::Find(proxy_auth);
 
-            if (conn->getAuth()->user() == NULL || conn->getAuth()->user()->config != scheme) {
+            if (conn->getAuth()->user() == nullptr || conn->getAuth()->user()->config != scheme) {
                 debugs(29, DBG_IMPORTANT, "WARNING: Unexpected change of authentication scheme from '" <<
-                       (conn->getAuth()->user()!=NULL?conn->getAuth()->user()->config->type():"[no user]") <<
+                       (conn->getAuth()->user()!=nullptr?conn->getAuth()->user()->config->type():"[no user]") <<
                        "' to '" << proxy_auth << "' (client " <<
                        src_addr << ")");
 
-                conn->setAuth(NULL, "changed auth scheme");
+                conn->setAuth(nullptr, "changed auth scheme");
             }
         }
 
-        if (request->auth_user_request == NULL && (conn == NULL || conn->getAuth() == NULL)) {
+        if (request->auth_user_request == nullptr && (conn == nullptr || conn->getAuth() == nullptr)) {
             /* beginning of a new request check */
-            debugs(29, 4, HERE << "No connection authentication type");
+            debugs(29, 4, "No connection authentication type");
 
             *auth_user_request = Auth::SchemeConfig::CreateAuthUser(proxy_auth, al);
-            if (*auth_user_request == NULL)
+            if (*auth_user_request == nullptr)
                 return AUTH_ACL_CHALLENGE;
             else if (!(*auth_user_request)->valid()) {
                 /* the decode might have left a username for logging, or a message to
@@ -362,20 +362,20 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
                     request->auth_user_request = *auth_user_request;
                 }
 
-                *auth_user_request = NULL;
+                *auth_user_request = nullptr;
                 return AUTH_ACL_CHALLENGE;
             }
 
-        } else if (request->auth_user_request != NULL) {
+        } else if (request->auth_user_request != nullptr) {
             *auth_user_request = request->auth_user_request;
         } else {
-            assert (conn != NULL);
-            if (conn->getAuth() != NULL) {
+            assert (conn != nullptr);
+            if (conn->getAuth() != nullptr) {
                 *auth_user_request = conn->getAuth();
             } else {
                 /* failed connection based authentication */
-                debugs(29, 4, HERE << "Auth user request " << *auth_user_request << " conn-auth missing and failed to authenticate.");
-                *auth_user_request = NULL;
+                debugs(29, 4, "Auth user request " << *auth_user_request << " conn-auth missing and failed to authenticate.");
+                *auth_user_request = nullptr;
                 return AUTH_ACL_CHALLENGE;
             }
         }
@@ -389,15 +389,15 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
 
         case Auth::CRED_CHALLENGE:
 
-            if (request->auth_user_request == NULL) {
+            if (request->auth_user_request == nullptr) {
                 request->auth_user_request = *auth_user_request;
             }
-
-        /* fallthrough to ERROR case and do the challenge */
+            *auth_user_request = nullptr;
+            return AUTH_ACL_CHALLENGE;
 
         case Auth::CRED_ERROR:
             /* this ACL check is finished. */
-            *auth_user_request = NULL;
+            *auth_user_request = nullptr;
             return AUTH_ACL_CHALLENGE;
 
         case Auth::CRED_LOOKUP:
@@ -416,7 +416,7 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
                     }
                 }
 
-                *auth_user_request = NULL;
+                *auth_user_request = nullptr;
                 return AUTH_ACL_CHALLENGE;
             }
             // otherwise fallthrough to acceptance.
@@ -425,7 +425,7 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
 
     /* copy username to request for logging on client-side */
     /* the credentials are correct at this point */
-    if (request->auth_user_request == NULL) {
+    if (request->auth_user_request == nullptr) {
         request->auth_user_request = *auth_user_request;
         authenticateAuthUserRequestSetIp(*auth_user_request, src_addr);
     }
@@ -439,11 +439,11 @@ Auth::UserRequest::tryToAuthenticateAndSetAuthUser(Auth::UserRequest::Pointer * 
     // If we have already been called, return the cached value
     Auth::UserRequest::Pointer t = authTryGetUser(*aUR, conn, request);
 
-    if (t != NULL && t->lastReply != AUTH_ACL_CANNOT_AUTHENTICATE && t->lastReply != AUTH_ACL_HELPER) {
-        if (*aUR == NULL)
+    if (t != nullptr && t->lastReply != AUTH_ACL_CANNOT_AUTHENTICATE && t->lastReply != AUTH_ACL_HELPER) {
+        if (*aUR == nullptr)
             *aUR = t;
 
-        if (request->auth_user_request == NULL && t->lastReply == AUTH_AUTHENTICATED) {
+        if (request->auth_user_request == nullptr && t->lastReply == AUTH_AUTHENTICATED) {
             request->auth_user_request = t;
         }
         return t->lastReply;
@@ -455,7 +455,7 @@ Auth::UserRequest::tryToAuthenticateAndSetAuthUser(Auth::UserRequest::Pointer * 
     // auth process may have changed the UserRequest we are dealing with
     t = authTryGetUser(*aUR, conn, request);
 
-    if (t != NULL && result != AUTH_ACL_CANNOT_AUTHENTICATE && result != AUTH_ACL_HELPER)
+    if (t != nullptr && result != AUTH_ACL_CANNOT_AUTHENTICATE && result != AUTH_ACL_HELPER)
         t->lastReply = result;
 
     return result;
@@ -465,7 +465,7 @@ static Auth::ConfigVector &
 schemesConfig(HttpRequest *request, HttpReply *rep)
 {
     if (!Auth::TheConfig.schemeLists.empty() && Auth::TheConfig.schemeAccess) {
-        ACLFilledChecklist ch(NULL, request, NULL);
+        ACLFilledChecklist ch(nullptr, request, nullptr);
         ch.reply = rep;
         HTTPMSGLOCK(ch.reply);
         const auto answer = ch.fastCheck(Auth::TheConfig.schemeAccess);
@@ -507,7 +507,7 @@ Auth::UserRequest::AddReplyAuthHeader(HttpReply * rep, Auth::UserRequest::Pointe
         /* this is a authenticate-needed response */
     {
 
-        if (auth_user_request != NULL && auth_user_request->direction() == Auth::CRED_CHALLENGE)
+        if (auth_user_request != nullptr && auth_user_request->direction() == Auth::CRED_CHALLENGE)
             /* add the scheme specific challenge header to the response */
             auth_user_request->user()->config->fixHeader(auth_user_request, rep, type, request);
         else {
@@ -515,12 +515,12 @@ Auth::UserRequest::AddReplyAuthHeader(HttpReply * rep, Auth::UserRequest::Pointe
             Auth::ConfigVector &configs = schemesConfig(request, rep);
             for (auto *scheme : configs) {
                 if (scheme->active()) {
-                    if (auth_user_request != NULL && auth_user_request->scheme()->type() == scheme->type())
+                    if (auth_user_request != nullptr && auth_user_request->scheme()->type() == scheme->type())
                         scheme->fixHeader(auth_user_request, rep, type, request);
                     else
-                        scheme->fixHeader(NULL, rep, type, request);
+                        scheme->fixHeader(nullptr, rep, type, request);
                 } else
-                    debugs(29, 4, HERE << "Configured scheme " << scheme->type() << " not Active");
+                    debugs(29, 4, "Configured scheme " << scheme->type() << " not Active");
             }
         }
 
@@ -530,7 +530,7 @@ Auth::UserRequest::AddReplyAuthHeader(HttpReply * rep, Auth::UserRequest::Pointe
      * allow protocol specific headers to be _added_ to the existing
      * response - currently Digest or Negotiate auth
      */
-    if (auth_user_request != NULL) {
+    if (auth_user_request != nullptr) {
         auth_user_request->addAuthenticationInfoHeader(rep, accelerated);
         if (auth_user_request->lastReply != AUTH_AUTHENTICATED)
             auth_user_request->lastReply = AUTH_ACL_CANNOT_AUTHENTICATE;
@@ -557,7 +557,7 @@ Auth::UserRequest::helperRequestKeyExtras(HttpRequest *request, AccessLogEntry::
         debugs(29, 5, "Assembled line to send :" << mb.content());
         return mb.content();
     }
-    return NULL;
+    return nullptr;
 }
 
 void

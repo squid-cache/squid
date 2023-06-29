@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,7 @@
 #include "anyp/Uri.h"
 #include "base/CbcPointer.h"
 #include "dns/forward.h"
-#include "err_type.h"
+#include "error/Error.h"
 #include "HierarchyLogEntry.h"
 #include "http/Message.h"
 #include "http/RequestMethod.h"
@@ -54,12 +54,12 @@ public:
 
     HttpRequest(const MasterXaction::Pointer &);
     HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *schemeImage, const char *aUrlpath, const MasterXaction::Pointer &);
-    ~HttpRequest();
-    virtual void reset();
+    ~HttpRequest() override;
+    void reset() override;
 
     void initHTTP(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *schemeImage, const char *aUrlpath);
 
-    virtual HttpRequest *clone() const;
+    HttpRequest *clone() const override;
 
     /// Whether response to this request is potentially cachable
     /// \retval false  Not cacheable.
@@ -98,7 +98,7 @@ public:
     void recordLookup(const Dns::LookupDetails &detail);
 
     /// sets error detail if no earlier detail was available
-    void detailError(err_type aType, int aDetail);
+    void detailError(const err_type c, const ErrorDetail::Pointer &d) { error.update(c, d); }
     /// clear error details, useful for retries/repeats
     void clearError();
 
@@ -158,8 +158,7 @@ public:
 
     int dnsWait; ///< sum of DNS lookup delays in milliseconds, for %dt
 
-    err_type errType;
-    int errDetail; ///< errType-specific detail about the transaction error
+    Error error; ///< the first transaction problem encountered (or falsy)
 
     char *peer_login;       /* Configured peer login:password */
 
@@ -197,9 +196,9 @@ public:
 public:
     bool multipartRangeRequest() const;
 
-    bool parseFirstLine(const char *start, const char *end);
+    bool parseFirstLine(const char *start, const char *end) override;
 
-    virtual bool expectingBody(const HttpRequestMethod& unused, int64_t&) const;
+    bool expectingBody(const HttpRequestMethod& unused, int64_t&) const override;
 
     bool bodyNibbled() const; // the request has a [partially] consumed body
 
@@ -247,7 +246,11 @@ public:
     NotePairs::Pointer notes();
     bool hasNotes() const { return bool(theNotes) && !theNotes->empty(); }
 
-    virtual void configureContentLengthInterpreter(Http::ContentLengthInterpreter &) {}
+    void configureContentLengthInterpreter(Http::ContentLengthInterpreter &) override {}
+
+    /// Check whether the message framing headers are valid.
+    /// \returns Http::scNone or an HTTP error status
+    Http::StatusCode checkEntityFraming() const;
 
     /// Parses request header using Parser.
     /// Use it in contexts where the Parser object is available.
@@ -263,13 +266,13 @@ private:
     /// and(or) by annotate_transaction/annotate_client ACLs.
     NotePairs::Pointer theNotes;
 protected:
-    virtual void packFirstLineInto(Packable * p, bool full_uri) const;
+    void packFirstLineInto(Packable * p, bool full_uri) const override;
 
-    virtual bool sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *error);
+    bool sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *error) override;
 
-    virtual void hdrCacheInit();
+    void hdrCacheInit() override;
 
-    virtual bool inheritProperties(const Http::Message *);
+    bool inheritProperties(const Http::Message *) override;
 };
 
 class ConnStateData;
@@ -281,6 +284,10 @@ void UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs cons
 /// \returns listening/*_port address used by the client connection (or nil)
 /// nil parameter(s) indicate missing caller information and are handled safely
 const Ip::Address *FindListeningPortAddress(const HttpRequest *, const AccessLogEntry *);
+
+/// \returns listening/*_port port number used by the client connection (or nothing)
+/// nil parameter(s) indicate missing caller information and are handled safely
+AnyP::Port FindListeningPortNumber(const HttpRequest *, const AccessLogEntry *);
 
 #endif /* SQUID_HTTPREQUEST_H */
 

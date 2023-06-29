@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,18 +13,46 @@
 #define private public
 #define protected public
 
-#include "Debug.h"
+#include "compat/cppunit.h"
+#include "debug/Stream.h"
 #include "http/one/RequestParser.h"
 #include "http/RequestMethod.h"
 #include "MemBuf.h"
 #include "SquidConfig.h"
-#include "testHttp1Parser.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testHttp1Parser );
+class TestHttp1Parser : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestHttp1Parser);
+    // object basics are working, just in case.
+    CPPUNIT_TEST(testParserConstruct);
+    CPPUNIT_TEST(testDripFeed);
+    CPPUNIT_TEST(testParseRequestLineMethods);
+    CPPUNIT_TEST(testParseRequestLineProtocols);
+    CPPUNIT_TEST(testParseRequestLineTerminators);
+    CPPUNIT_TEST(testParseRequestLineStrange);
+    CPPUNIT_TEST(testParseRequestLineInvalid);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void globalSetup();  // MemPools init etc.
+
+    void testParserConstruct();  // whether the constructor works
+
+    // request-line unit tests
+    void testParseRequestLineTerminators();  // terminator detection correct
+    void testParseRequestLineMethods();      // methoid detection correct
+    void testParseRequestLineProtocols();    // protocol tokens handled correctly
+    void testParseRequestLineStrange();      // strange but valid lines accepted
+    void testParseRequestLineInvalid();      // rejection of invalid lines happens
+
+    void testDripFeed();  // test incremental parse works
+};
+
+CPPUNIT_TEST_SUITE_REGISTRATION( TestHttp1Parser );
 
 void
-testHttp1Parser::globalSetup()
+TestHttp1Parser::globalSetup()
 {
     static bool setup_done = false;
     if (setup_done)
@@ -83,6 +111,8 @@ testResults(int line, const SBuf &input, Http1::RequestParser &output, struct re
 {
 #ifdef SQUID_DEBUG_TESTS
     std::cerr << "TEST @" << line << ", in=" << Pretty(input) << "\n";
+#else
+    (void)line;
 #endif
 
     const bool parsed = output.parse(input);
@@ -104,7 +134,7 @@ testResults(int line, const SBuf &input, Http1::RequestParser &output, struct re
     // if parsing was successful, check easily visible field outputs
     if (parsed) {
         CPPUNIT_ASSERT_EQUAL(expect.method, output.method_);
-        if (expect.uri != NULL)
+        if (expect.uri != nullptr)
             CPPUNIT_ASSERT_EQUAL(0, output.uri_.cmp(expect.uri));
         CPPUNIT_ASSERT_EQUAL(expect.version, output.msgProtocol_);
     }
@@ -119,7 +149,7 @@ testResults(int line, const SBuf &input, Http1::RequestParser &output, struct re
 }
 
 void
-testHttp1Parser::testParserConstruct()
+TestHttp1Parser::testParserConstruct()
 {
     // whether the constructor works
     {
@@ -148,7 +178,7 @@ testHttp1Parser::testParserConstruct()
 }
 
 void
-testHttp1Parser::testParseRequestLineProtocols()
+TestHttp1Parser::testParseRequestLineProtocols()
 {
     // ensure MemPools etc exist
     globalSetup();
@@ -187,7 +217,7 @@ testHttp1Parser::testParseRequestLineProtocols()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(Http::METHOD_POST),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -430,7 +460,7 @@ testHttp1Parser::testParseRequestLineProtocols()
 }
 
 void
-testHttp1Parser::testParseRequestLineStrange()
+TestHttp1Parser::testParseRequestLineStrange()
 {
     // ensure MemPools etc exist
     globalSetup();
@@ -464,7 +494,7 @@ testHttp1Parser::testParseRequestLineStrange()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -497,7 +527,7 @@ testHttp1Parser::testParseRequestLineStrange()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -526,7 +556,7 @@ testHttp1Parser::testParseRequestLineStrange()
 }
 
 void
-testHttp1Parser::testParseRequestLineTerminators()
+TestHttp1Parser::testParseRequestLineTerminators()
 {
     // ensure MemPools etc exist
     globalSetup();
@@ -560,7 +590,7 @@ testHttp1Parser::testParseRequestLineTerminators()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -595,7 +625,7 @@ testHttp1Parser::testParseRequestLineTerminators()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -614,7 +644,7 @@ testHttp1Parser::testParseRequestLineTerminators()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -624,7 +654,7 @@ testHttp1Parser::testParseRequestLineTerminators()
 }
 
 void
-testHttp1Parser::testParseRequestLineMethods()
+TestHttp1Parser::testParseRequestLineMethods()
 {
     // ensure MemPools etc exist
     globalSetup();
@@ -704,26 +734,6 @@ testHttp1Parser::testParseRequestLineMethods()
         input.clear();
     }
 
-#if 0
-    // too-long method (over 16 bytes)
-    {
-        input.append("HELLOSTRANGEWORLD / HTTP/1.1\r\n", 31);
-        struct resultSet expect = {
-            .parsed = false,
-            .needsMore = false,
-            .parserState = Http1::HTTP_PARSE_DONE,
-            .status = Http::scNotImplemented,
-            .suffixSz = input.length(),
-            .method = HttpRequestMethod(),
-            .uri = NULL,
-            .version = AnyP::ProtocolVersion()
-        };
-        output.clear();
-        testResults(__LINE__, input, output, expect);
-        input.clear();
-    }
-#endif
-
     // method-only
     {
         input.append("A\n", 2);
@@ -734,7 +744,7 @@ testHttp1Parser::testParseRequestLineMethods()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -751,7 +761,7 @@ testHttp1Parser::testParseRequestLineMethods()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -769,7 +779,7 @@ testHttp1Parser::testParseRequestLineMethods()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -802,7 +812,7 @@ testHttp1Parser::testParseRequestLineMethods()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -820,7 +830,7 @@ testHttp1Parser::testParseRequestLineMethods()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -854,7 +864,7 @@ testHttp1Parser::testParseRequestLineMethods()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -888,7 +898,7 @@ testHttp1Parser::testParseRequestLineMethods()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -898,7 +908,7 @@ testHttp1Parser::testParseRequestLineMethods()
 }
 
 void
-testHttp1Parser::testParseRequestLineInvalid()
+TestHttp1Parser::testParseRequestLineInvalid()
 {
     // ensure MemPools etc exist
     globalSetup();
@@ -917,7 +927,7 @@ testHttp1Parser::testParseRequestLineInvalid()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -935,7 +945,7 @@ testHttp1Parser::testParseRequestLineInvalid()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -953,7 +963,7 @@ testHttp1Parser::testParseRequestLineInvalid()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -971,7 +981,7 @@ testHttp1Parser::testParseRequestLineInvalid()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -991,7 +1001,7 @@ testHttp1Parser::testParseRequestLineInvalid()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -1005,7 +1015,7 @@ testHttp1Parser::testParseRequestLineInvalid()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -1024,7 +1034,7 @@ testHttp1Parser::testParseRequestLineInvalid()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -1042,7 +1052,7 @@ testHttp1Parser::testParseRequestLineInvalid()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -1060,7 +1070,7 @@ testHttp1Parser::testParseRequestLineInvalid()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -1078,7 +1088,7 @@ testHttp1Parser::testParseRequestLineInvalid()
             .status = Http::scBadRequest,
             .suffixSz = input.length(),
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
@@ -1088,7 +1098,7 @@ testHttp1Parser::testParseRequestLineInvalid()
 }
 
 void
-testHttp1Parser::testDripFeed()
+TestHttp1Parser::testDripFeed()
 {
     // Simulate a client drip-feeding Squid a few bytes at a time.
     // extend the size of the buffer from 0 bytes to full request length
@@ -1123,7 +1133,7 @@ testHttp1Parser::testDripFeed()
             .status = Http::scNone,
             .suffixSz = 0,
             .method = HttpRequestMethod(),
-            .uri = NULL,
+            .uri = nullptr,
             .version = AnyP::ProtocolVersion()
         };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,7 @@
 #include "base/TextException.h"
 #include "CpuAffinityMap.h"
 #include "CpuAffinitySet.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 bool
 CpuAffinityMap::add(const std::vector<int> &aProcesses, const std::vector<int> &aCores)
@@ -48,7 +48,7 @@ CpuAffinityMap::calculateSet(const int targetProcess) const
             core = theCores[i];
         }
     }
-    CpuAffinitySet *cpuAffinitySet = NULL;
+    CpuAffinitySet *cpuAffinitySet = nullptr;
     if (core > 0) {
         cpuAffinitySet = new CpuAffinitySet;
         cpu_set_t cpuSet;

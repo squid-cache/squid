@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,14 +11,13 @@
 
 #if USE_OPENSSL
 
-#include "base/LruMap.h"
+#include "base/ClpMap.h"
 #include "CacheManager.h"
 #include "compat/openssl.h"
 #include "ip/Address.h"
 #include "mgr/Action.h"
 #include "mgr/Command.h"
 #include "security/forward.h"
-#include "SquidTime.h"
 #include "ssl/gadgets.h"
 
 #include <list>
@@ -26,9 +25,6 @@
 #if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
 #endif
-
-/// TODO: Replace on real size.
-#define SSL_CTX_SIZE 1024
 
 namespace  Ssl
 {
@@ -41,15 +37,18 @@ class CertificateStorageAction : public Mgr::Action
 public:
     CertificateStorageAction(const Mgr::Command::Pointer &cmd);
     static Pointer Create(const Mgr::Command::Pointer &cmd);
-    virtual void dump (StoreEntry *sentry);
+    void dump (StoreEntry *sentry) override;
     /**
      * We do not support aggregation of information across workers
      * TODO: aggregate these stats
      */
-    virtual bool aggregatable() const { return false; }
+    bool aggregatable() const override { return false; }
 };
 
-typedef LruMap<SBuf, Security::ContextPointer, SSL_CTX_SIZE> LocalContextStorage;
+inline uint64_t MemoryUsedByContext(const Security::ContextPointer &) {
+    return 1024; // TODO: Calculate approximate memory usage by the context.
+}
+using LocalContextStorage = ClpMap<SBuf, Security::ContextPointer, MemoryUsedByContext>;
 
 /// Class for storing/manipulating LocalContextStorage per local listening address/port.
 class GlobalContextStorage

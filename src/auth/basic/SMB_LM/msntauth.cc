@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -45,7 +45,7 @@
 #include <cstring>
 #include <iostream>
 #include <string>
-#include <vector> //todo: turn into multimap
+#include <vector>
 #include <syslog.h>
 
 #include "auth/basic/SMB_LM/msntauth.h"

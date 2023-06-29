@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -61,7 +61,7 @@ void htcpOpenPorts(void);
 int htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p);
 
 /// \ingroup ServerProtocolHTCP
-void htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestMethod &method, CachePeer * p, htcp_clr_reason reason);
+void htcpClear(StoreEntry * e, HttpRequest * req, const HttpRequestMethod &method, CachePeer * p, htcp_clr_reason reason);
 
 /// \ingroup ServerProtocolHTCP
 void htcpSocketShutdown(void);

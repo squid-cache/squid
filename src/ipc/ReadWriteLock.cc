@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,6 +20,23 @@ void Ipc::AssertFlagIsSet(std::atomic_flag &flag)
     assert(flag.test_and_set(std::memory_order_relaxed));
 }
 
+/// common lockExclusive() and unlockSharedAndSwitchToExclusive() logic:
+/// either finish exclusive locking or bail properly
+/// \pre The caller must (be the first to) increment writeLevel.
+/// \returns whether we got the exclusive lock
+bool
+Ipc::ReadWriteLock::finalizeExclusive()
+{
+    assert(writeLevel); // "new" readers are locked out by the caller
+    assert(!appending); // nobody can be appending without an exclusive lock
+    if (!readLevel) { // no old readers and nobody is becoming a reader
+        writing = true;
+        return true;
+    }
+    --writeLevel;
+    return false;
+}
+
 bool
 Ipc::ReadWriteLock::lockShared()
 {
@@ -35,12 +52,9 @@ Ipc::ReadWriteLock::lockShared()
 bool
 Ipc::ReadWriteLock::lockExclusive()
 {
-    if (!writeLevel++) { // we are the first writer + lock "new" readers out
-        if (!readLevel) { // no old readers and nobody is becoming one
-            writing = true;
-            return true;
-        }
-    }
+    if (!writeLevel++) // we are the first writer + lock "new" readers out
+        return finalizeExclusive(); // decrements writeLevel on failures
+
     --writeLevel;
     return false;
 }
@@ -91,11 +105,43 @@ Ipc::ReadWriteLock::switchExclusiveToShared()
     unlockExclusive();
 }
 
+bool
+Ipc::ReadWriteLock::unlockSharedAndSwitchToExclusive()
+{
+    assert(readers > 0);
+    if (!writeLevel++) { // we are the first writer + lock "new" readers out
+        unlockShared();
+        return finalizeExclusive(); // decrements writeLevel on failures
+    }
+
+    // somebody is still writing, so we just stop reading
+    unlockShared();
+    --writeLevel;
+    return false;
+}
+
 void
 Ipc::ReadWriteLock::startAppending()
 {
     assert(writing);
     appending = true;
+}
+
+bool
+Ipc::ReadWriteLock::stopAppendingAndRestoreExclusive()
+{
+    assert(writing);
+    assert(appending);
+
+    appending = false;
+
+    // Checking `readers` here would mishandle a lockShared() call that started
+    // before we banned appending above, saw still true `appending`, got on a
+    // "success" code path, but had not incremented the `readers` counter yet.
+    // Checking `readLevel` mishandles lockShared() that saw false `appending`,
+    // got on a "failure" code path, but had not decremented `readLevel` yet.
+    // Our callers prefer the wrong "false" to the wrong "true" result.
+    return !readLevel;
 }
 
 void
@@ -145,5 +191,14 @@ Ipc::ReadWriteLockStats::dump(StoreEntry &e) const
                           writers, (100.0 * writers / locked),
                           appenders, appPerc);
     }
+}
+
+std::ostream &
+Ipc::operator <<(std::ostream &os, const Ipc::ReadWriteLock &lock)
+{
+    return os << lock.readers << 'R' <<
+           (lock.writing ? "W" : "") <<
+           (lock.appending ? "A" : "");
+    // impossible to report lock.updating without setting/clearing that flag
 }
 

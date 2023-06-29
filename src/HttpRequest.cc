@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,9 +17,8 @@
 #include "client_side_request.h"
 #include "dns/LookupDetails.h"
 #include "Downloader.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
 #include "globals.h"
-#include "gopher.h"
 #include "http.h"
 #include "http/ContentLengthInterpreter.h"
 #include "http/one/RequestParser.h"
@@ -54,7 +53,7 @@ HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aP
 {
     assert(mx);
     static unsigned int id = 1;
-    debugs(93,7, HERE << "constructed, this=" << this << " id=" << ++id);
+    debugs(93,7, "constructed, this=" << this << " id=" << ++id);
     init();
     initHTTP(aMethod, aProtocol, aSchemeImg, aUrlpath);
 }
@@ -62,7 +61,7 @@ HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aP
 HttpRequest::~HttpRequest()
 {
     clean();
-    debugs(93,7, HERE << "destructed, this=" << this);
+    debugs(93,7, "destructed, this=" << this);
 }
 
 void
@@ -79,23 +78,22 @@ HttpRequest::init()
     method = Http::METHOD_NONE;
     url.clear();
 #if USE_AUTH
-    auth_user_request = NULL;
+    auth_user_request = nullptr;
 #endif
     flags = RequestFlags();
-    range = NULL;
+    range = nullptr;
     ims = -1;
     imslen = 0;
     lastmod = -1;
     client_addr.setEmpty();
     my_addr.setEmpty();
-    body_pipe = NULL;
+    body_pipe = nullptr;
     // hier
     dnsWait = -1;
-    errType = ERR_NONE;
-    errDetail = ERR_DETAIL_NONE;
-    peer_login = NULL;      // not allocated/deallocated by this class
-    peer_domain = NULL;     // not allocated/deallocated by this class
-    peer_host = NULL;
+    error.clear();
+    peer_login = nullptr;      // not allocated/deallocated by this class
+    peer_domain = nullptr;     // not allocated/deallocated by this class
+    peer_host = nullptr;
     vary_headers = SBuf();
     myportname = null_string;
     tag = null_string;
@@ -110,10 +108,10 @@ HttpRequest::init()
     indirect_client_addr.setEmpty();
 #endif /* FOLLOW_X_FORWARDED_FOR */
 #if USE_ADAPTATION
-    adaptHistory_ = NULL;
+    adaptHistory_ = nullptr;
 #endif
 #if ICAP_CLIENT
-    icapHistory_ = NULL;
+    icapHistory_ = nullptr;
 #endif
     rangeOffsetLimit = -2; //a value of -2 means not checked yet
     forcedBodyContinuation = false;
@@ -124,9 +122,9 @@ HttpRequest::clean()
 {
     // we used to assert that the pipe is NULL, but now the request only
     // points to a pipe that is owned and initiated by another object.
-    body_pipe = NULL;
+    body_pipe = nullptr;
 #if USE_AUTH
-    auth_user_request = NULL;
+    auth_user_request = nullptr;
 #endif
     vary_headers.clear();
     url.clear();
@@ -135,12 +133,12 @@ HttpRequest::clean()
 
     if (cache_control) {
         delete cache_control;
-        cache_control = NULL;
+        cache_control = nullptr;
     }
 
     if (range) {
         delete range;
-        range = NULL;
+        range = nullptr;
     }
 
     myportname.clean();
@@ -159,10 +157,10 @@ HttpRequest::clean()
     etag.clean();
 
 #if USE_ADAPTATION
-    adaptHistory_ = NULL;
+    adaptHistory_ = nullptr;
 #endif
 #if ICAP_CLIENT
-    icapHistory_ = NULL;
+    icapHistory_ = nullptr;
 #endif
 }
 
@@ -193,7 +191,7 @@ HttpRequest::clone() const
     copy->imslen = imslen;
     copy->hier = hier; // Is it safe to copy? Should we?
 
-    copy->errType = errType;
+    copy->error = error;
 
     // XXX: what to do with copy->peer_login?
 
@@ -238,8 +236,7 @@ HttpRequest::inheritProperties(const Http::Message *aMsg)
     // may eventually need cloneNullAdaptationImmune() for that.
     flags = aReq->flags.cloneAdaptationImmune();
 
-    errType = aReq->errType;
-    errDetail = aReq->errDetail;
+    error = aReq->error;
 #if USE_AUTH
     auth_user_request = aReq->auth_user_request;
     extacl_user = aReq->extacl_user;
@@ -268,15 +265,15 @@ HttpRequest::inheritProperties(const Http::Message *aMsg)
  * NP: Other errors are left for detection later in the parse.
  */
 bool
-HttpRequest::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *error)
+HttpRequest::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *scode)
 {
     // content is long enough to possibly hold a reply
     // 2 being magic size of a 1-byte request method plus space delimiter
     if (hdr_len < 2) {
-        // this is ony a real error if the headers apparently complete.
+        // this is only a real error if the headers apparently complete.
         if (hdr_len > 0) {
-            debugs(58, 3, HERE << "Too large request header (" << hdr_len << " bytes)");
-            *error = Http::scInvalidHeader;
+            debugs(58, 3, "Too large request header (" << hdr_len << " bytes)");
+            *scode = Http::scInvalidHeader;
         }
         return false;
     }
@@ -286,7 +283,7 @@ HttpRequest::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::S
     m.HttpRequestMethodXXX(buf);
     if (m == Http::METHOD_NONE) {
         debugs(73, 3, "HttpRequest::sanityCheckStartLine: did not find HTTP request method");
-        *error = Http::scInvalidHeader;
+        *scode = Http::scInvalidHeader;
         return false;
     }
 
@@ -318,7 +315,7 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
         ++end;                 // back to space
 
         if (2 != sscanf(ver + 5, "%d.%d", &http_ver.major, &http_ver.minor)) {
-            debugs(73, DBG_IMPORTANT, "parseRequestLine: Invalid HTTP identifier.");
+            debugs(73, DBG_IMPORTANT, "ERROR: parseRequestLine: Invalid HTTP identifier.");
             return false;
         }
     } else {
@@ -394,7 +391,7 @@ HttpRequest::icapHistory() const
     if (!icapHistory_) {
         if (Log::TheConfig.hasIcapToken || IcapLogfileStatus == LOG_ENABLE) {
             icapHistory_ = new Adaptation::Icap::History();
-            debugs(93,4, HERE << "made " << icapHistory_ << " for " << this);
+            debugs(93,4, "made " << icapHistory_ << " for " << this);
         }
     }
 
@@ -408,7 +405,7 @@ HttpRequest::adaptHistory(bool createIfNone) const
 {
     if (!adaptHistory_ && createIfNone) {
         adaptHistory_ = new Adaptation::History();
-        debugs(93,4, HERE << "made " << adaptHistory_ << " for " << this);
+        debugs(93,4, "made " << adaptHistory_ << " for " << this);
     }
 
     return adaptHistory_;
@@ -442,7 +439,7 @@ HttpRequest::multipartRangeRequest() const
 bool
 HttpRequest::bodyNibbled() const
 {
-    return body_pipe != NULL && body_pipe->consumedSize() > 0;
+    return body_pipe != nullptr && body_pipe->consumedSize() > 0;
 }
 
 void
@@ -452,7 +449,7 @@ HttpRequest::prepForPeering(const CachePeer &peer)
     peer_login = peer.login;
     peer_domain = peer.domain;
     flags.auth_no_keytab = peer.options.auth_no_keytab;
-    debugs(11, 4, this << " to " << peer.host << (!peer.options.originserver ? " proxy" : " origin"));
+    debugs(11, 4, this << " to " << peer);
 }
 
 void
@@ -465,25 +462,10 @@ HttpRequest::prepForDirect()
 }
 
 void
-HttpRequest::detailError(err_type aType, int aDetail)
-{
-    if (errType || errDetail)
-        debugs(11, 5, HERE << "old error details: " << errType << '/' << errDetail);
-    debugs(11, 5, HERE << "current error details: " << aType << '/' << aDetail);
-    // checking type and detail separately may cause inconsistency, but
-    // may result in more details available if they only become available later
-    if (!errType)
-        errType = aType;
-    if (!errDetail)
-        errDetail = aDetail;
-}
-
-void
 HttpRequest::clearError()
 {
-    debugs(11, 7, HERE << "old error details: " << errType << '/' << errDetail);
-    errType = ERR_NONE;
-    errDetail = ERR_DETAIL_NONE;
+    debugs(11, 7, "old: " << error);
+    error.clear();
 }
 
 void
@@ -557,7 +539,7 @@ HttpRequest::maybeCacheable()
 {
     // Intercepted request with Host: header which cannot be trusted.
     // Because it failed verification, or someone bypassed the security tests
-    // we cannot cache the reponse for sharing between clients.
+    // we cannot cache the response for sharing between clients.
     // TODO: update cache to store for particular clients only (going to same Host: and destination IP)
     if (!flags.hostVerified && (flags.intercepted || flags.interceptTproxy))
         return false;
@@ -568,17 +550,13 @@ HttpRequest::maybeCacheable()
         if (!method.respMaybeCacheable())
             return false;
 
-        // RFC 7234 section 5.2.1.5:
-        // "cache MUST NOT store any part of either this request or any response to it"
+        // RFC 9111 section 5.2.1.5:
+        // "The no-store request directive indicates that a cache MUST NOT
+        //  store any part of either this request or any response to it."
         //
         // NP: refresh_pattern ignore-no-store only applies to response messages
         //     this test is handling request message CC header.
         if (!flags.ignoreCc && cache_control && cache_control->hasNoStore())
-            return false;
-        break;
-
-    case AnyP::PROTO_GOPHER:
-        if (!gopherCachable(this))
             return false;
         break;
 
@@ -626,7 +604,7 @@ HttpRequest::getRangeOffsetLimit()
 
     rangeOffsetLimit = 0; // default value for rangeOffsetLimit
 
-    ACLFilledChecklist ch(NULL, this, NULL);
+    ACLFilledChecklist ch(nullptr, this, nullptr);
     ch.src_addr = client_addr;
     ch.my_addr =  my_addr;
 
@@ -648,7 +626,7 @@ HttpRequest::ignoreRange(const char *reason)
     if (range) {
         debugs(73, 3, static_cast<void*>(range) << " for " << reason);
         delete range;
-        range = NULL;
+        range = nullptr;
     }
     // Some callers also reset isRanged but it may not be safe for all callers:
     // isRanged is used to determine whether a weak ETag comparison is allowed,
@@ -666,6 +644,70 @@ HttpRequest::canHandle1xx() const
 
     // others must support 1xx control messages
     return true;
+}
+
+Http::StatusCode
+HttpRequest::checkEntityFraming() const
+{
+    // RFC 7230 section 3.3.1:
+    // "
+    //  A server that receives a request message with a transfer coding it
+    //  does not understand SHOULD respond with 501 (Not Implemented).
+    // "
+    if (header.unsupportedTe())
+        return Http::scNotImplemented;
+
+    // RFC 7230 section 3.3.3 #3 paragraph 3:
+    // Transfer-Encoding overrides Content-Length
+    if (header.chunked())
+        return Http::scNone;
+
+    // RFC 7230 Section 3.3.3 #4:
+    // conflicting Content-Length(s) mean a message framing error
+    if (header.conflictingContentLength())
+        return Http::scBadRequest;
+
+    // HTTP/1.0 requirements differ from HTTP/1.1
+    if (http_ver <= Http::ProtocolVersion(1,0)) {
+        const auto m = method.id();
+
+        // RFC 1945 section 8.3:
+        // "
+        //   A valid Content-Length is required on all HTTP/1.0 POST requests.
+        // "
+        // RFC 1945 Appendix D.1.1:
+        // "
+        //   The fundamental difference between the POST and PUT requests is
+        //   reflected in the different meaning of the Request-URI.
+        // "
+        if (m == Http::METHOD_POST || m == Http::METHOD_PUT)
+            return (content_length >= 0 ? Http::scNone : Http::scLengthRequired);
+
+        // RFC 1945 section 7.2:
+        // "
+        //   An entity body is included with a request message only when the
+        //   request method calls for one.
+        // "
+        // section 8.1-2: GET and HEAD do not define ('call for') an entity
+        if (m == Http::METHOD_GET || m == Http::METHOD_HEAD)
+            return (content_length < 0 ? Http::scNone : Http::scBadRequest);
+        // appendix D1.1.2-4: DELETE, LINK, UNLINK do not define ('call for') an entity
+        if (m == Http::METHOD_DELETE || m == Http::METHOD_LINK || m == Http::METHOD_UNLINK)
+            return (content_length < 0 ? Http::scNone : Http::scBadRequest);
+
+        // other methods are not defined in RFC 1945
+        // assume they support an (optional) entity
+        return Http::scNone;
+    }
+
+    // RFC 7230 section 3.3
+    // "
+    //   The presence of a message body in a request is signaled by a
+    //   Content-Length or Transfer-Encoding header field.  Request message
+    //   framing is independent of method semantics, even if the method does
+    //   not define any use for a message body.
+    // "
+    return Http::scNone;
 }
 
 bool
@@ -687,7 +729,7 @@ HttpRequest::pinnedConnection()
 {
     if (clientConnectionManager.valid() && clientConnectionManager->pinning.pinned)
         return clientConnectionManager.get();
-    return NULL;
+    return nullptr;
 }
 
 const SBuf
@@ -777,30 +819,25 @@ HttpRequest::canonicalCleanUrl() const
     return urlCanonicalCleanWithoutRequest(effectiveRequestUri(), method, url.getScheme());
 }
 
-/// a helper for validating FindListeningPortAddress()-found address candidates
-static const Ip::Address *
-FindListeningPortAddressInAddress(const Ip::Address *ip)
-{
-    // FindListeningPortAddress() callers do not want INADDR_ANY addresses
-    return (ip && !ip->isAnyAddr()) ? ip : nullptr;
-}
-
 /// a helper for handling PortCfg cases of FindListeningPortAddress()
+template <typename Filter>
 static const Ip::Address *
-FindListeningPortAddressInPort(const AnyP::PortCfgPointer &port)
+FindGoodListeningPortAddressInPort(const AnyP::PortCfgPointer &port, const Filter isGood)
 {
-    return port ? FindListeningPortAddressInAddress(&port->s) : nullptr;
+    return (port && isGood(port->s)) ? &port->s : nullptr;
 }
 
 /// a helper for handling Connection cases of FindListeningPortAddress()
+template <typename Filter>
 static const Ip::Address *
-FindListeningPortAddressInConn(const Comm::ConnectionPointer &conn)
+FindGoodListeningPortAddressInConn(const Comm::ConnectionPointer &conn, const Filter isGood)
 {
-    return conn ? FindListeningPortAddressInAddress(&conn->local) : nullptr;
+    return (conn && isGood(conn->local)) ? &conn->local : nullptr;
 }
 
+template <typename Filter>
 const Ip::Address *
-FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry *ale)
+FindGoodListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry *ale, const Filter filter)
 {
     // Check all sources of usable listening port information, giving
     // HttpRequest and masterXaction a preference over ALE.
@@ -811,18 +848,40 @@ FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry 
     if (!request)
         return nullptr; // not enough information
 
-    const Ip::Address *ip = FindListeningPortAddressInPort(request->masterXaction->squidPort);
+    auto ip = FindGoodListeningPortAddressInPort(request->masterXaction->squidPort, filter);
     if (!ip && ale)
-        ip = FindListeningPortAddressInPort(ale->cache.port);
+        ip = FindGoodListeningPortAddressInPort(ale->cache.port, filter);
 
     // XXX: also handle PROXY protocol here when we have a flag to identify such request
     if (ip || request->flags.interceptTproxy || request->flags.intercepted)
         return ip;
 
     /* handle non-intercepted cases that were not handled above */
-    ip = FindListeningPortAddressInConn(request->masterXaction->tcpClient);
+    ip = FindGoodListeningPortAddressInConn(request->masterXaction->tcpClient, filter);
     if (!ip && ale)
-        ip = FindListeningPortAddressInConn(ale->tcpClient);
+        ip = FindGoodListeningPortAddressInConn(ale->tcpClient, filter);
     return ip; // may still be nil
 }
 
+const Ip::Address *
+FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry *ale)
+{
+    return FindGoodListeningPortAddress(callerRequest, ale, [](const Ip::Address &address) {
+        // FindListeningPortAddress() callers do not want INADDR_ANY addresses
+        return !address.isAnyAddr();
+    });
+}
+
+AnyP::Port
+FindListeningPortNumber(const HttpRequest *callerRequest, const AccessLogEntry *ale)
+{
+    const auto ip = FindGoodListeningPortAddress(callerRequest, ale, [](const Ip::Address &address) {
+        return address.port() > 0;
+    });
+
+    if (!ip)
+        return std::nullopt;
+
+    Assure(ip->port() > 0);
+    return ip->port();
+}

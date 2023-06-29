@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,7 +15,6 @@
 #include "HttpReply.h"
 #include "MemBuf.h"
 #include "MemObject.h"
-#include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "StoreClient.h"
@@ -42,7 +41,7 @@ url_checksum(const char *url)
 
 #endif
 
-RemovalPolicy * mem_policy = NULL;
+RemovalPolicy * mem_policy = nullptr;
 
 size_t
 MemObject::inUseCount()
@@ -54,7 +53,7 @@ const char *
 MemObject::storeId() const
 {
     if (!storeId_.size()) {
-        debugs(20, DBG_IMPORTANT, "Bug: Missing MemObject::storeId value");
+        debugs(20, DBG_IMPORTANT, "ERROR: Squid BUG: Missing MemObject::storeId value");
         dump();
         storeId_ = "[unknown_URI]";
     }
@@ -106,30 +105,16 @@ MemObject::MemObject()
 MemObject::~MemObject()
 {
     debugs(20, 3, "MemObject destructed, this=" << this);
-    const Ctx ctx = ctx_enter(hasUris() ? urlXXX() : "[unknown_ctx]");
 
 #if URL_CHECKSUM_DEBUG
     checkUrlChecksum();
 #endif
 
-    if (!shutting_down) { // Store::Root() is FATALly missing during shutdown
-        assert(xitTable.index < 0);
-        assert(memCache.index < 0);
-        assert(swapout.sio == NULL);
-    }
+    assert(xitTable.index < 0);
+    assert(memCache.index < 0);
+    assert(swapout.sio == nullptr);
 
     data_hdr.freeContent();
-
-#if 0
-    /*
-     * There is no way to abort FD-less clients, so they might
-     * still have mem->clients set.
-     */
-    assert(clients.head == NULL);
-
-#endif
-
-    ctx_exit(ctx);              /* must exit before we free mem->url */
 }
 
 HttpReply &
@@ -150,7 +135,6 @@ MemObject::replaceBaseReply(const HttpReplyPointer &r)
 void
 MemObject::write(const StoreIOBuffer &writeBuffer)
 {
-    PROF_start(MemObject_write);
     debugs(19, 6, "memWrite: offset " << writeBuffer.offset << " len " << writeBuffer.length);
 
     /* We don't separate out mime headers yet, so ensure that the first
@@ -159,19 +143,14 @@ MemObject::write(const StoreIOBuffer &writeBuffer)
     assert (data_hdr.endOffset() || writeBuffer.offset == 0);
 
     assert (data_hdr.write (writeBuffer));
-    PROF_stop(MemObject_write);
 }
 
 void
 MemObject::dump() const
 {
     data_hdr.dump();
-#if 0
-    /* do we want this one? */
-    debugs(20, DBG_IMPORTANT, "MemObject->data.origin_offset: " << (data_hdr.head ? data_hdr.head->nodeBuffer.offset : 0));
-#endif
 
-    debugs(20, DBG_IMPORTANT, "MemObject->start_ping: " << start_ping.tv_sec  << "."<< std::setfill('0') << std::setw(6) << start_ping.tv_usec);
+    debugs(20, DBG_IMPORTANT, "MemObject->start_ping: " << start_ping);
     debugs(20, DBG_IMPORTANT, "MemObject->inmem_hi: " << data_hdr.endOffset());
     debugs(20, DBG_IMPORTANT, "MemObject->inmem_lo: " << inmem_lo);
     debugs(20, DBG_IMPORTANT, "MemObject->nclients: " << nclients);
@@ -187,8 +166,8 @@ struct LowestMemReader : public unary_function<store_client, void> {
     LowestMemReader(int64_t seed):current(seed) {}
 
     void operator() (store_client const &x) {
-        if (x.memReaderHasLowerOffset(current))
-            current = x.copyInto.offset;
+        if (x.getType() == STORE_MEM_CLIENT)
+            current = std::min(current, x.readOffset());
     }
 
     int64_t current;
@@ -284,7 +263,7 @@ MemObject::expectedReplySize() const
 void
 MemObject::reset()
 {
-    assert(swapout.sio == NULL);
+    assert(swapout.sio == nullptr);
     data_hdr.freeContent();
     inmem_lo = 0;
     /* Should we check for clients? */
@@ -354,7 +333,7 @@ MemObject::objectBytesOnDisk() const
      * yet.
      */
 
-    if (swapout.sio.getRaw() == NULL)
+    if (swapout.sio.getRaw() == nullptr)
         return 0;
 
     int64_t nwritten = swapout.sio->offset();
@@ -435,6 +414,8 @@ MemObject::mostBytesWanted(int max, bool ignoreDelayPools) const
         DelayId largestAllowance = mostBytesAllowed ();
         return largestAllowance.bytesWanted(0, max);
     }
+#else
+    (void)ignoreDelayPools;
 #endif
 
     return max;
@@ -449,12 +430,13 @@ MemObject::setNoDelay(bool const newValue)
         store_client *sc = (store_client *) node->data;
         sc->delayId.setNoDelay(newValue);
     }
-
+#else
+    (void)newValue;
 #endif
 }
 
 void
-MemObject::delayRead(DeferredRead const &aRead)
+MemObject::delayRead(const AsyncCall::Pointer &aRead)
 {
 #if USE_DELAY_POOLS
     if (readAheadPolicyCanRead()) {
@@ -464,13 +446,13 @@ MemObject::delayRead(DeferredRead const &aRead)
         }
     }
 #endif
-    deferredReads.delayRead(aRead);
+    deferredReads.delay(aRead);
 }
 
 void
 MemObject::kickReads()
 {
-    deferredReads.kickReads(-1);
+    deferredReads.schedule();
 }
 
 #if USE_DELAY_POOLS
@@ -483,21 +465,8 @@ MemObject::mostBytesAllowed() const
 
     for (dlink_node *node = clients.head; node; node = node->next) {
         store_client *sc = (store_client *) node->data;
-#if 0
-        /* This test is invalid because the client may be writing data
-         * and thus will want data immediately.
-         * If we include the test, there is a race condition when too much
-         * data is read - if all sc's are writing when a read is scheduled.
-         * XXX: fixme.
-         */
 
-        if (!sc->callbackPending())
-            /* not waiting for more data */
-            continue;
-
-#endif
-
-        j = sc->delayId.bytesWanted(0, sc->copyInto.length);
+        j = sc->bytesWanted();
 
         if (j > jmax) {
             jmax = j;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,10 +16,9 @@
 #include "anyp/PortCfg.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "fatal.h"
 #include "globals.h"
-#include "profiler/Profiler.h"
 #include "sbuf/List.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
@@ -27,7 +26,7 @@
 #include <algorithm>
 #include <map>
 
-const char *AclMatchedName = NULL;
+const char *AclMatchedName = nullptr;
 
 namespace Acl {
 
@@ -76,6 +75,32 @@ Acl::RegisterMaker(TypeName typeName, Maker maker)
     TheMakers().emplace(typeName, maker);
 }
 
+void
+Acl::SetKey(SBuf &keyStorage, const char *keyParameterName, const char *newKey)
+{
+    if (!newKey) {
+        throw TextException(ToSBuf("An acl declaration is missing a ", keyParameterName,
+                                   Debug::Extra, "ACL name: ", AclMatchedName),
+                            Here());
+    }
+
+    if (keyStorage.isEmpty()) {
+        keyStorage = newKey;
+        return;
+    }
+
+    if (keyStorage.caseCmp(newKey) == 0)
+        return; // no change
+
+    throw TextException(ToSBuf("Attempt to change the value of the ", keyParameterName, " argument in a subsequent acl declaration:",
+                               Debug::Extra, "previously seen value: ", keyStorage,
+                               Debug::Extra, "new/conflicting value: ", newKey,
+                               Debug::Extra, "ACL name: ", AclMatchedName,
+                               Debug::Extra, "advice: Use a dedicated ACL name for each distinct ", keyParameterName,
+                               " (and group those ACLs together using an 'any-of' ACL)."),
+                        Here());
+}
+
 void *
 ACL::operator new (size_t)
 {
@@ -101,7 +126,7 @@ ACL::FindByName(const char *name)
 
     debugs(28, 9, "ACL::FindByName found no match");
 
-    return NULL;
+    return nullptr;
 }
 
 ACL::ACL() :
@@ -120,7 +145,6 @@ bool ACL::valid () const
 bool
 ACL::matches(ACLChecklist *checklist) const
 {
-    PROF_start(ACL_matches);
     debugs(28, 5, "checking " << name);
 
     // XXX: AclMatchedName does not contain a matched ACL name when the acl
@@ -149,7 +173,6 @@ ACL::matches(ACLChecklist *checklist) const
 
     const char *extra = checklist->asyncInProgress() ? " async" : "";
     debugs(28, 3, "checked: " << name << " = " << result << extra);
-    PROF_stop(ACL_matches);
     return result == 1; // true for match; false for everything else
 }
 
@@ -168,15 +191,15 @@ void
 ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
 {
     /* we're already using strtok() to grok the line */
-    char *t = NULL;
-    ACL *A = NULL;
+    char *t = nullptr;
+    ACL *A = nullptr;
     LOCAL_ARRAY(char, aclname, ACL_NAME_SZ);
     int new_acl = 0;
 
     /* snarf the ACL name */
 
-    if ((t = ConfigParser::NextToken()) == NULL) {
-        debugs(28, DBG_CRITICAL, "aclParseAclLine: missing ACL name.");
+    if ((t = ConfigParser::NextToken()) == nullptr) {
+        debugs(28, DBG_CRITICAL, "ERROR: aclParseAclLine: missing ACL name.");
         parser.destruct();
         return;
     }
@@ -192,8 +215,8 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
     /* snarf the ACL type */
     const char *theType;
 
-    if ((theType = ConfigParser::NextToken()) == NULL) {
-        debugs(28, DBG_CRITICAL, "aclParseAclLine: missing ACL type.");
+    if ((theType = ConfigParser::NextToken()) == nullptr) {
+        debugs(28, DBG_CRITICAL, "ERROR: aclParseAclLine: missing ACL type.");
         parser.destruct();
         return;
     }
@@ -201,17 +224,17 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
     // Is this ACL going to work?
     if (strcmp(theType, "myip") == 0) {
         AnyP::PortCfgPointer p = HttpPortList;
-        while (p != NULL) {
+        while (p != nullptr) {
             // Bug 3239: not reliable when there is interception traffic coming
             if (p->flags.natIntercept)
                 debugs(28, DBG_CRITICAL, "WARNING: 'myip' ACL is not reliable for interception proxies. Please use 'myportname' instead.");
             p = p->next;
         }
-        debugs(28, DBG_IMPORTANT, "UPGRADE: ACL 'myip' type is has been renamed to 'localip' and matches the IP the client connected to.");
+        debugs(28, DBG_IMPORTANT, "WARNING: UPGRADE: ACL 'myip' type has been renamed to 'localip' and matches the IP the client connected to.");
         theType = "localip";
     } else if (strcmp(theType, "myport") == 0) {
         AnyP::PortCfgPointer p = HttpPortList;
-        while (p != NULL) {
+        while (p != nullptr) {
             // Bug 3239: not reliable when there is interception traffic coming
             // Bug 3239: myport - not reliable (yet) when there is interception traffic coming
             if (p->flags.natIntercept)
@@ -219,17 +242,17 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
             p = p->next;
         }
         theType = "localport";
-        debugs(28, DBG_IMPORTANT, "UPGRADE: ACL 'myport' type is has been renamed to 'localport' and matches the port the client connected to.");
+        debugs(28, DBG_IMPORTANT, "WARNING: UPGRADE: ACL 'myport' type has been renamed to 'localport' and matches the port the client connected to.");
     } else if (strcmp(theType, "proto") == 0 && strcmp(aclname, "manager") == 0) {
         // ACL manager is now a built-in and has a different type.
-        debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "UPGRADE: ACL 'manager' is now a built-in ACL. Remove it from your config file.");
+        debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: UPGRADE: ACL 'manager' is now a built-in ACL. Remove it from your config file.");
         return; // ignore the line
     } else if (strcmp(theType, "clientside_mark") == 0) {
-        debugs(28, DBG_IMPORTANT, "UPGRADE: ACL 'clientside_mark' type has been renamed to 'client_connection_mark'.");
+        debugs(28, DBG_IMPORTANT, "WARNING: UPGRADE: ACL 'clientside_mark' type has been renamed to 'client_connection_mark'.");
         theType = "client_connection_mark";
     }
 
-    if ((A = FindByName(aclname)) == NULL) {
+    if ((A = FindByName(aclname)) == nullptr) {
         debugs(28, 3, "aclParseAclLine: Creating ACL '" << aclname << "'");
         A = Acl::Make(theType);
         A->context(aclname, config_input_line);
@@ -259,13 +282,13 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
     /*
      * Clear AclMatchedName from our temporary hack
      */
-    AclMatchedName = NULL;  /* ugly */
+    AclMatchedName = nullptr;  /* ugly */
 
     if (!new_acl)
         return;
 
     if (A->empty()) {
-        debugs(28, DBG_CRITICAL, "Warning: empty ACL: " << A->cfgline);
+        debugs(28, DBG_CRITICAL, "WARNING: empty ACL: " << A->cfgline);
     }
 
     if (!A->valid()) {
@@ -291,15 +314,23 @@ ACL::isProxyAuth() const
 void
 ACL::parseFlags()
 {
-    // ACL kids that carry ACLData which supports parameter flags override this
-    Acl::ParseFlags(options(), Acl::NoFlags());
+    Acl::Options allOptions = options();
+    for (const auto lineOption: lineOptions()) {
+        lineOption->unconfigure(); // forget any previous "acl ..." line effects
+        allOptions.push_back(lineOption);
+    }
+    Acl::ParseFlags(allOptions);
 }
 
 SBufList
 ACL::dumpOptions()
 {
     SBufList result;
+
     const auto &myOptions = options();
+    // XXX: No lineOptions() call here because we do not remember ACL "line"
+    // boundaries and associated "line" options; we cannot report them.
+
     // optimization: most ACLs do not have myOptions
     // this check also works around dump_SBufList() adding ' ' after empty items
     if (!myOptions.empty()) {
@@ -400,7 +431,7 @@ ACL::~ACL()
 {
     debugs(28, 3, "freeing ACL " << name);
     safe_free(cfgline);
-    AclMatchedName = NULL; // in case it was pointing to our name
+    AclMatchedName = nullptr; // in case it was pointing to our name
 }
 
 void

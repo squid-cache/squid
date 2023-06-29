@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,9 +9,7 @@
 #ifndef SQUID_LIBNTLMAUTH_SUPPORT_BITS_CCI
 #define SQUID_LIBNTLMAUTH_SUPPORT_BITS_CCI
 
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#include <cstring>
 
 /*
  * Defines several functions which are used and mutually shared by the NTLM helpers
@@ -98,9 +96,9 @@ hex_dump(unsigned char *data, int size)
     }
 
     if (0) { //temporary hack to keep the linker happy
-        uc(NULL);
-        lc(NULL);
-        hex_dump(NULL,0);
+        uc(nullptr);
+        lc(nullptr);
+        hex_dump(nullptr,0);
     }
 
 }

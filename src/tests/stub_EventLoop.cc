@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,11 +12,11 @@
 #define STUB_API "EventLoop.cc"
 #include "tests/STUB.h"
 
-EventLoop *EventLoop::Running = NULL;
+EventLoop *EventLoop::Running = nullptr;
 
-EventLoop::EventLoop(): errcount(0), last_loop(false), timeService(NULL),
-    primaryEngine(NULL), loop_delay(0), error(false), runOnceResult(false)
+EventLoop::EventLoop(): errcount(0), last_loop(false), timeService(nullptr),
+    primaryEngine(nullptr), loop_delay(0), error(false), runOnceResult(false)
     STUB_NOP
 
-    void EventLoop::registerEngine(AsyncEngine *engine) STUB
+    void EventLoop::registerEngine(AsyncEngine *) STUB
 

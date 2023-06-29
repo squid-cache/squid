@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -75,7 +75,7 @@ TrieNode::find (char const *aString, size_t theLength, TrieCharTransform *transf
         if (prefix)
             return _privateData;
 
-        return NULL;
+        return nullptr;
     } else {
         /* terminal node */
         return _privateData;

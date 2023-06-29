@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,25 +17,25 @@
 #include "testAuth.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testAuth );
-CPPUNIT_TEST_SUITE_REGISTRATION( testAuthConfig );
-CPPUNIT_TEST_SUITE_REGISTRATION( testAuthUserRequest );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestAuth );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestAuthConfig );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestAuthUserRequest );
 #if HAVE_AUTH_MODULE_BASIC
-CPPUNIT_TEST_SUITE_REGISTRATION( testAuthBasicUserRequest );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestAuthBasicUserRequest );
 #endif
 #if HAVE_AUTH_MODULE_DIGEST
-CPPUNIT_TEST_SUITE_REGISTRATION( testAuthDigestUserRequest );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestAuthDigestUserRequest );
 #endif
 #if HAVE_AUTH_MODULE_NTLM
-CPPUNIT_TEST_SUITE_REGISTRATION( testAuthNTLMUserRequest );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestAuthNtlmUserRequest );
 #endif
 #if HAVE_AUTH_MODULE_NEGOTIATE
-CPPUNIT_TEST_SUITE_REGISTRATION( testAuthNegotiateUserRequest );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestAuthNegotiateUserRequest );
 #endif
 
 /* Instantiate all auth framework types */
 void
-testAuth::instantiate()
+TestAuth::instantiate()
 {}
 
 char const * stub_config="auth_param digest program /home/robertc/install/squid/libexec/digest_pw_auth /home/robertc/install/squid/etc/digest.pwd\n"
@@ -160,7 +160,7 @@ fake_auth_setup()
  * authentication types
  */
 void
-testAuthConfig::create()
+TestAuthConfig::create()
 {
     Debug::Levels[29]=9;
     fake_auth_setup();
@@ -177,7 +177,7 @@ testAuthConfig::create()
  * authentication types
  */
 void
-testAuthUserRequest::scheme()
+TestAuthUserRequest::scheme()
 {
     Debug::Levels[29]=9;
     fake_auth_setup();
@@ -196,7 +196,7 @@ testAuthUserRequest::scheme()
 /* AuthBasicUserRequest::AuthBasicUserRequest works
  */
 void
-testAuthBasicUserRequest::construction()
+TestAuthBasicUserRequest::construction()
 {
     AuthBasicUserRequest();
     AuthBasicUserRequest *temp=new AuthBasicUserRequest();
@@ -204,7 +204,7 @@ testAuthBasicUserRequest::construction()
 }
 
 void
-testAuthBasicUserRequest::username()
+TestAuthBasicUserRequest::username()
 {
     AuthUserRequest::Pointer temp = new AuthBasicUserRequest();
     Auth::Basic::User *basic_auth=new Auth::Basic::User(Auth::Config::Find("basic"));
@@ -220,7 +220,7 @@ testAuthBasicUserRequest::username()
 /* AuthDigestUserRequest::AuthDigestUserRequest works
  */
 void
-testAuthDigestUserRequest::construction()
+TestAuthDigestUserRequest::construction()
 {
     AuthDigestUserRequest();
     AuthDigestUserRequest *temp=new AuthDigestUserRequest();
@@ -228,7 +228,7 @@ testAuthDigestUserRequest::construction()
 }
 
 void
-testAuthDigestUserRequest::username()
+TestAuthDigestUserRequest::username()
 {
     AuthUserRequest::Pointer temp = new AuthDigestUserRequest();
     Auth::Digest::User *duser=new Auth::Digest::User(Auth::Config::Find("digest"));
@@ -244,7 +244,7 @@ testAuthDigestUserRequest::username()
 /* AuthNTLMUserRequest::AuthNTLMUserRequest works
  */
 void
-testAuthNTLMUserRequest::construction()
+TestAuthNtlmUserRequest::construction()
 {
     AuthNTLMUserRequest();
     AuthNTLMUserRequest *temp=new AuthNTLMUserRequest();
@@ -252,7 +252,7 @@ testAuthNTLMUserRequest::construction()
 }
 
 void
-testAuthNTLMUserRequest::username()
+TestAuthNtlmUserRequest::username()
 {
     AuthUserRequest::Pointer temp = new AuthNTLMUserRequest();
     Auth::Ntlm::User *nuser=new Auth::Ntlm::User(Auth::Config::Find("ntlm"));
@@ -268,7 +268,7 @@ testAuthNTLMUserRequest::username()
 /* AuthNegotiateUserRequest::AuthNegotiateUserRequest works
  */
 void
-testAuthNegotiateUserRequest::construction()
+TestAuthNegotiateUserRequest::construction()
 {
     AuthNegotiateUserRequest();
     AuthNegotiateUserRequest *temp=new AuthNegotiateUserRequest();
@@ -276,7 +276,7 @@ testAuthNegotiateUserRequest::construction()
 }
 
 void
-testAuthNegotiateUserRequest::username()
+TestAuthNegotiateUserRequest::username()
 {
     AuthUserRequest::Pointer temp = new AuthNegotiateUserRequest();
     Auth::Negotiate::User *nuser=new Auth::Negotiate::User(Auth::Config::Find("negotiate"));

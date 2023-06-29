@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -13,12 +13,12 @@ noinst_LTLIBRARIES = libhelper.la
 libhelper_la_SOURCES = \
 	ChildConfig.cc \
 	ChildConfig.h \
-	forward.h \
 	Reply.cc \
 	Reply.h \
 	Request.h \
-	ResultCode.h \
+	ReservationId.cc \
 	ReservationId.h \
-	ReservationId.cc
+	ResultCode.h \
+	forward.h
 
 EXTRA_DIST= protocol_defines.h

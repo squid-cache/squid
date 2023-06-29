@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "base/Raw.h"
 #include "CachePeer.h"
 #include "clients/HttpTunneler.h"
 #include "comm/Read.h"
@@ -18,13 +19,16 @@
 #include "http/one/ResponseParser.h"
 #include "http/StateFlags.h"
 #include "HttpRequest.h"
+#include "neighbors.h"
+#include "pconn.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Http, Tunneler);
 
-Http::Tunneler::Tunneler(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req, AsyncCall::Pointer &aCallback, time_t timeout, const AccessLogEntryPointer &alp):
+Http::Tunneler::Tunneler(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req, const AsyncCallback<Answer> &aCallback, const time_t timeout, const AccessLogEntryPointer &alp):
     AsyncJob("Http::Tunneler"),
+    noteFwdPconnUse(false),
     connection(conn),
     request(req),
     callback(aCallback),
@@ -35,12 +39,10 @@ Http::Tunneler::Tunneler(const Comm::ConnectionPointer &conn, const HttpRequest:
     tunnelEstablished(false)
 {
     debugs(83, 5, "Http::Tunneler constructed, this=" << (void*)this);
-    // detect callers supplying cb dialers that are not our CbDialer
     assert(request);
     assert(connection);
-    assert(callback);
-    assert(dynamic_cast<Http::TunnelerAnswer *>(callback->getDialer()));
-    url = request->url.authority();
+    url = request->url.authority(true);
+    watchForClosures();
 }
 
 Http::Tunneler::~Tunneler()
@@ -54,16 +56,6 @@ Http::Tunneler::doneAll() const
     return !callback || (requestWritten && tunnelEstablished);
 }
 
-/// convenience method to get to the answer fields
-Http::TunnelerAnswer &
-Http::Tunneler::answer()
-{
-    Must(callback);
-    const auto tunnelerAnswer = dynamic_cast<Http::TunnelerAnswer *>(callback->getDialer());
-    Must(tunnelerAnswer);
-    return *tunnelerAnswer;
-}
-
 void
 Http::Tunneler::start()
 {
@@ -73,20 +65,36 @@ Http::Tunneler::start()
     Must(url.length());
     Must(lifetimeLimit >= 0);
 
+    // we own this Comm::Connection object and its fd exclusively, but must bail
+    // if others started closing the socket while we were waiting to start()
+    assert(Comm::IsConnOpen(connection));
+    if (fd_table[connection->fd].closing()) {
+        bailWith(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al));
+        return;
+    }
+
     const auto peer = connection->getPeer();
-    Must(peer); // bail if our peer was reconfigured away
+    // bail if our peer was reconfigured away
+    if (!peer) {
+        bailWith(new ErrorState(ERR_CONNECT_FAIL, Http::scInternalServerError, request.getRaw(), al));
+        return;
+    }
     request->prepForPeering(*peer);
 
-    watchForClosures();
     writeRequest();
     startReadingResponse();
 }
 
 void
-Http::Tunneler::handleConnectionClosure(const CommCloseCbParams &params)
+Http::Tunneler::handleConnectionClosure(const CommCloseCbParams &)
 {
-    mustStop("server connection gone");
-    callback = nullptr; // the caller must monitor closures
+    closer = nullptr;
+    if (connection) {
+        countFailingConnection(nullptr);
+        connection->noteClosure();
+        connection = nullptr;
+    }
+    bailWith(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al));
 }
 
 /// make sure we quit if/when the connection is gone
@@ -104,12 +112,11 @@ Http::Tunneler::watchForClosures()
     comm_add_close_handler(connection->fd, closer);
 }
 
+/// The connection read timeout callback handler.
 void
-Http::Tunneler::handleException(const std::exception& e)
+Http::Tunneler::handleTimeout(const CommTimeoutCbParams &)
 {
-    debugs(83, 2, e.what() << status());
-    connection->close();
-    bailWith(new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al));
+    bailWith(new ErrorState(ERR_CONNECT_FAIL, Http::scGatewayTimeout, request.getRaw(), al));
 }
 
 void
@@ -206,6 +213,7 @@ Http::Tunneler::handleReadyRead(const CommIoCbParams &io)
 #else
     rd.size = readBuf.spaceSize();
 #endif
+    // XXX: defer read if rd.size <= 0
 
     switch (Comm::ReadNow(rd, readBuf)) {
     case Comm::INPROGRESS:
@@ -254,8 +262,11 @@ Http::Tunneler::readMore()
     Comm::Read(connection, reader);
 
     AsyncCall::Pointer nil;
+    typedef CommCbMemFunT<Http::Tunneler, CommTimeoutCbParams> TimeoutDialer;
+    AsyncCall::Pointer timeoutCall = JobCallback(93, 5,
+                                     TimeoutDialer, this, Http::Tunneler::handleTimeout);
     const auto timeout = Comm::MortalReadTimeout(startTime, lifetimeLimit);
-    commSetConnTimeout(connection, timeout, nil);
+    commSetConnTimeout(connection, timeout, timeoutCall);
 }
 
 /// Parses [possibly incomplete] CONNECT response and reacts to it.
@@ -298,7 +309,7 @@ Http::Tunneler::handleResponse(const bool eof)
     }
 
     // CONNECT response was successfully parsed
-    auto &futureAnswer = answer();
+    auto &futureAnswer = callback.answer();
     futureAnswer.peerResponseStatus = rep->sline.status();
     request->hier.peer_reply_status = rep->sline.status();
 
@@ -340,17 +351,66 @@ void
 Http::Tunneler::bailWith(ErrorState *error)
 {
     Must(error);
-    answer().squidError = error;
+    callback.answer().squidError = error;
+
+    if (const auto failingConnection = connection) {
+        // TODO: Reuse to-peer connections after a CONNECT error response.
+        countFailingConnection(error);
+        disconnect();
+        failingConnection->close();
+    }
+
     callBack();
+}
+
+void
+Http::Tunneler::sendSuccess()
+{
+    assert(callback.answer().positive());
+    assert(Comm::IsConnOpen(connection));
+    callback.answer().conn = connection;
+    disconnect();
+    callBack();
+}
+
+void
+Http::Tunneler::countFailingConnection(const ErrorState * const error)
+{
+    assert(connection);
+    NoteOutgoingConnectionFailure(connection->getPeer(), error ? error->httpStatus : Http::scNone);
+    if (noteFwdPconnUse && connection->isOpen())
+        fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);
+}
+
+void
+Http::Tunneler::disconnect()
+{
+    const auto stillOpen = Comm::IsConnOpen(connection);
+
+    if (closer) {
+        if (stillOpen)
+            comm_remove_close_handler(connection->fd, closer);
+        closer = nullptr;
+    }
+
+    if (reader) {
+        if (stillOpen)
+            Comm::ReadCancel(connection->fd, reader);
+        reader = nullptr;
+    }
+
+    if (stillOpen)
+        commUnsetConnTimeout(connection);
+
+    connection = nullptr; // may still be open
 }
 
 void
 Http::Tunneler::callBack()
 {
-    debugs(83, 5, connection << status());
-    auto cb = callback;
-    callback = nullptr;
-    ScheduleCallHere(cb);
+    debugs(83, 5, callback.answer().conn << status());
+    assert(!connection); // returned inside callback.answer() or gone
+    ScheduleCallHere(callback.release());
 }
 
 void
@@ -359,25 +419,13 @@ Http::Tunneler::swanSong()
     AsyncJob::swanSong();
 
     if (callback) {
-        if (requestWritten && tunnelEstablished) {
-            assert(answer().positive());
-            callBack(); // success
+        if (requestWritten && tunnelEstablished && Comm::IsConnOpen(connection)) {
+            sendSuccess();
         } else {
-            // we should have bailed when we discovered the job-killing problem
-            debugs(83, DBG_IMPORTANT, "BUG: Unexpected state while establishing a CONNECT tunnel " << connection << status());
+            // job-ending emergencies like handleStopRequest() or callException()
             bailWith(new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al));
         }
         assert(!callback);
-    }
-
-    if (closer) {
-        comm_remove_close_handler(connection->fd, closer);
-        closer = nullptr;
-    }
-
-    if (reader) {
-        Comm::ReadCancel(connection->fd, reader);
-        reader = nullptr;
     }
 }
 

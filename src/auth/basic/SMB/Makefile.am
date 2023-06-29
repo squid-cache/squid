@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -12,8 +12,10 @@ libexec_SCRIPTS	= basic_smb_auth.sh
 libexec_PROGRAMS = basic_smb_auth
 endif
 
-basic_smb_auth_SOURCES= basic_smb_auth.cc
-basic_smb_auth_CXXFLAGS = -DHELPERSCRIPT=\"$(libexecdir)/basic_smb_auth.sh\"
+basic_smb_auth_SOURCES = basic_smb_auth.cc
+basic_smb_auth_CXXFLAGS = \
+	$(AM_CXXFLAGS) \
+	-DHELPERSCRIPT=\"$(libexecdir)/basic_smb_auth.sh\"
 basic_smb_auth_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \

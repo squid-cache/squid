@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,52 +8,50 @@
 
 #include "squid.h"
 
-#include <cppunit/TestAssert.h>
-
 #include "anyp/UriScheme.h"
-#include "tests/testUriScheme.h"
+#include "compat/cppunit.h"
 
+#include <cppunit/TestAssert.h>
 #include <sstream>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testUriScheme );
-
-#if 0
 /*
- * We should be able to make an HttpRequestMethod straight from a string.
+ * test UriScheme
  */
-void
-testHttpRequestMethod::testConstructCharStart()
-{
-    /* parse an empty string -> METHOD_NONE */
-    CPPUNIT_ASSERT(METHOD_NONE == HttpRequestMethod(NULL));
-    /* parsing a literal should work */
-    CPPUNIT_ASSERT(METHOD_GET == HttpRequestMethod("GET", NULL));
-}
 
-/*
- * We can also parse precise ranges of characters
- */
-void
-testHttpRequestMethod::testConstructCharStartEnd()
+class TestUriScheme : public CPPUNIT_NS::TestFixture
 {
-    char const * buffer;
-    /* parse an empty string -> METHOD_NONE */
-    CPPUNIT_ASSERT(METHOD_NONE == HttpRequestMethod(NULL, NULL));
-    /* parsing a literal should work */
-    CPPUNIT_ASSERT(METHOD_GET == HttpRequestMethod("GET", NULL));
-    /* parsing with an explicit end should work */
-    buffer = "POSTPLUS";
-    CPPUNIT_ASSERT(METHOD_POST == HttpRequestMethod(buffer, buffer + 4));
-}
+    CPPUNIT_TEST_SUITE(TestUriScheme);
+    CPPUNIT_TEST(testAssignFromprotocol_t);
+    CPPUNIT_TEST(testCastToprotocol_t);
+    CPPUNIT_TEST(testConstructprotocol_t);
+    CPPUNIT_TEST(testDefaultConstructor);
+    CPPUNIT_TEST(testEqualprotocol_t);
+    CPPUNIT_TEST(testNotEqualprotocol_t);
+    CPPUNIT_TEST(testC_str);
+    CPPUNIT_TEST(testStream);
+    CPPUNIT_TEST_SUITE_END();
 
-#endif
+public:
+    void setUp() override;
+
+protected:
+    void testAssignFromprotocol_t();
+    void testCastToprotocol_t();
+    void testConstructprotocol_t();
+    void testC_str();
+    void testDefaultConstructor();
+    void testEqualprotocol_t();
+    void testNotEqualprotocol_t();
+    void testStream();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestUriScheme);
 
 /*
  * we should be able to assign a protocol_t to a AnyP::UriScheme for ease
  * of code conversion
  */
 void
-testUriScheme::testAssignFromprotocol_t()
+TestUriScheme::testAssignFromprotocol_t()
 {
     AnyP::UriScheme empty_scheme;
     AnyP::UriScheme scheme;
@@ -70,7 +68,7 @@ testUriScheme::testAssignFromprotocol_t()
  * of migration
  */
 void
-testUriScheme::testCastToprotocol_t()
+TestUriScheme::testCastToprotocol_t()
 {
     /* explicit cast */
     AnyP::ProtocolType protocol = static_cast<AnyP::ProtocolType>(AnyP::UriScheme());
@@ -84,7 +82,7 @@ testUriScheme::testCastToprotocol_t()
  * a default constructed AnyP::UriScheme is == AnyP::PROTO_NONE
  */
 void
-testUriScheme::testDefaultConstructor()
+TestUriScheme::testDefaultConstructor()
 {
     AnyP::UriScheme lhs;
     AnyP::UriScheme rhs(AnyP::PROTO_NONE);
@@ -95,7 +93,7 @@ testUriScheme::testDefaultConstructor()
  * we should be able to construct a AnyP::UriScheme from the old 'protocol_t' enum.
  */
 void
-testUriScheme::testConstructprotocol_t()
+TestUriScheme::testConstructprotocol_t()
 {
     AnyP::UriScheme lhs_none(AnyP::PROTO_NONE), rhs_none(AnyP::PROTO_NONE);
     CPPUNIT_ASSERT_EQUAL(lhs_none, rhs_none);
@@ -109,7 +107,7 @@ testUriScheme::testConstructprotocol_t()
  * we should be able to get a char const * version of the method.
  */
 void
-testUriScheme::testC_str()
+TestUriScheme::testC_str()
 {
     SBuf lhs("wais");
     AnyP::UriScheme wais(AnyP::PROTO_WAIS);
@@ -122,7 +120,7 @@ testUriScheme::testC_str()
  * either the left or right hand side seamlessly.
  */
 void
-testUriScheme::testEqualprotocol_t()
+TestUriScheme::testEqualprotocol_t()
 {
     CPPUNIT_ASSERT(AnyP::UriScheme() == AnyP::PROTO_NONE);
     CPPUNIT_ASSERT(not (AnyP::UriScheme(AnyP::PROTO_WAIS) == AnyP::PROTO_HTTP));
@@ -134,7 +132,7 @@ testUriScheme::testEqualprotocol_t()
  * a AnyP::UriScheme should testable for inequality with a protocol_t.
  */
 void
-testUriScheme::testNotEqualprotocol_t()
+TestUriScheme::testNotEqualprotocol_t()
 {
     CPPUNIT_ASSERT(AnyP::UriScheme(AnyP::PROTO_NONE) != AnyP::PROTO_HTTP);
     CPPUNIT_ASSERT(not (AnyP::UriScheme(AnyP::PROTO_HTTP) != AnyP::PROTO_HTTP));
@@ -146,12 +144,19 @@ testUriScheme::testNotEqualprotocol_t()
  * we should be able to send it to a stream and get the normalised version
  */
 void
-testUriScheme::testStream()
+TestUriScheme::testStream()
 {
     std::ostringstream buffer;
     buffer << AnyP::UriScheme(AnyP::PROTO_HTTP);
     SBuf http_str("http");
     SBuf from_buf(buffer.str());
     CPPUNIT_ASSERT_EQUAL(http_str, from_buf);
+}
+
+void
+TestUriScheme::setUp()
+{
+    Mem::Init();
+    AnyP::UriScheme::Init();
 }
 

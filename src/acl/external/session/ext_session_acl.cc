@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -60,12 +60,12 @@
 
 static int session_ttl = 3600;
 static int fixed_timeout = 0;
-char *db_path = NULL;
+char *db_path = nullptr;
 const char *program_name;
 
 #if USE_BERKLEYDB
-DB *db = NULL;
-DB_ENV *db_env = NULL;
+DB *db = nullptr;
+DB_ENV *db_env = nullptr;
 typedef DBT DB_ENTRY;
 
 #elif USE_TRIVIALDB
@@ -73,7 +73,7 @@ TDB_CONTEXT *db = nullptr;
 typedef TDB_DATA DB_ENTRY;
 
 #else
-#error "Either Berkley DB or Trivial DB must be available"
+#error "Either Berkeley DB or Trivial DB must be available"
 #endif
 
 static void
@@ -124,19 +124,23 @@ static void init_db(void)
 
 #if USE_BERKLEYDB
     if (db_env) {
-        if (db->open(db, NULL, "session", NULL, DB_BTREE, DB_CREATE, 0666)) {
+        if (db->open(db, nullptr, "session", nullptr, DB_BTREE, DB_CREATE, 0666)) {
             fprintf(stderr, "FATAL: %s: Failed to open db file '%s' in dir '%s'\n",
                     program_name, "session", db_path);
             db_env->close(db_env, 0);
             exit(EXIT_FAILURE);
         }
     } else {
-        db_create(&db, NULL, 0);
-        if (db->open(db, NULL, db_path, NULL, DB_BTREE, DB_CREATE, 0666)) {
+        db_create(&db, nullptr, 0);
+        if (db->open(db, nullptr, db_path, nullptr, DB_BTREE, DB_CREATE, 0666)) {
             db = nullptr;
         }
     }
 #elif USE_TRIVIALDB
+#if _SQUID_FREEBSD_ && !defined(O_DSYNC)
+    // FreeBSD lacks O_DSYNC, O_SYNC is closest to correct behaviour
+#define O_DSYNC O_SYNC
+#endif
     db = tdb_open(db_path, 0, TDB_CLEAR_IF_FIRST, O_CREAT|O_DSYNC, 0666);
 #endif
     if (!db) {
@@ -193,13 +197,19 @@ copyValue(void *dst, const DB_ENTRY *src, size_t sz)
 static int session_active(const char *details, size_t len)
 {
 #if USE_BERKLEYDB
-    DBT key = {0};
-    DBT data = {0};
-    key.data = (void *)details;
+    DBT key = {};
+    key.data = const_cast<char*>(details);
     key.size = len;
+
+    DBT data = {};
 #elif USE_TRIVIALDB
-    TDB_DATA key;
-    TDB_DATA data;
+    TDB_DATA key = {};
+    key.dptr = reinterpret_cast<decltype(key.dptr)>(const_cast<char*>(details));
+    key.dsize = len;
+
+    TDB_DATA data = {};
+#else
+    (void)len;
 #endif
     if (fetchKey(key, &data)) {
         time_t timestamp;
@@ -209,7 +219,7 @@ static int session_active(const char *details, size_t len)
             return 0;
         }
         copyValue(&timestamp, &data, sizeof(timestamp));
-        if (timestamp + session_ttl >= time(NULL))
+        if (timestamp + session_ttl >= time(nullptr))
             return 1;
     }
     return 0;
@@ -218,15 +228,15 @@ static int session_active(const char *details, size_t len)
 static void
 session_login(/*const*/ char *details, size_t len)
 {
-    DB_ENTRY key = {0};
-    DB_ENTRY data = {0};
-    time_t now = time(0);
+    DB_ENTRY key = {};
+    DB_ENTRY data = {};
+    time_t now = time(nullptr);
 #if USE_BERKLEYDB
     key.data = static_cast<decltype(key.data)>(details);
     key.size = len;
     data.data = &now;
     data.size = sizeof(now);
-    db->put(db, NULL, &key, &data, 0);
+    db->put(db, nullptr, &key, &data, 0);
 #elif USE_TRIVIALDB
     key.dptr = reinterpret_cast<decltype(key.dptr)>(details);
     key.dsize = len;
@@ -239,7 +249,7 @@ session_login(/*const*/ char *details, size_t len)
 static void
 session_logout(/*const*/ char *details, size_t len)
 {
-    DB_ENTRY key = {0};
+    DB_ENTRY key = {};
 #if USE_BERKLEYDB
     key.data = static_cast<decltype(key.data)>(details);
     key.size = len;
@@ -270,8 +280,9 @@ int main(int argc, char **argv)
         switch (opt) {
         case 'T':
             fixed_timeout = 1;
+            [[fallthrough]];
         case 't':
-            session_ttl = strtol(optarg, NULL, 0);
+            session_ttl = strtol(optarg, nullptr, 0);
             break;
         case 'b':
             db_path = xstrdup(optarg);
@@ -286,16 +297,16 @@ int main(int argc, char **argv)
         }
     }
 
-    setbuf(stdout, NULL);
+    setbuf(stdout, nullptr);
 
     init_db();
 
     while (fgets(request, HELPER_INPUT_BUFFER, stdin)) {
         int action = 0;
         const char *channel_id = strtok(request, " ");
-        char *detail = strtok(NULL, "\n");
-        if (detail == NULL) {
-            // Only 1 paramater supplied. We are expecting at least 2 (including the channel ID)
+        char *detail = strtok(nullptr, "\n");
+        if (detail == nullptr) {
+            // Only 1 parameter supplied. We are expecting at least 2 (including the channel ID)
             fprintf(stderr, "FATAL: %s is concurrent and requires the concurrency option to be specified.\n", program_name);
             shutdown_db();
             exit(EXIT_FAILURE);

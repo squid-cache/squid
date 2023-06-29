@@ -1,29 +1,9 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
-
-dnl check whether regex works by actually compiling one
-dnl sets squid_cv_regex_works to either yes or no
-
-AC_DEFUN([SQUID_CHECK_REGEX_WORKS],[
-  AC_CACHE_CHECK([if the system-supplied regex lib actually works],squid_cv_regex_works,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#if HAVE_REGEX_H
-#include <regex.h> 
-#endif
-]], [[
-regex_t t; regcomp(&t,"",0);]])],
-    [ squid_cv_regex_works=yes ],
-    [ squid_cv_regex_works=no ])
-  ])
-])
-
 
 AC_DEFUN([SQUID_CHECK_LIBIPHLPAPI],[
   AC_CACHE_CHECK([for libIpHlpApi],squid_cv_have_libiphlpapi,[
@@ -71,10 +51,13 @@ AC_DEFUN([SQUID_CHECK_LIBCRYPTO_API],[
   AH_TEMPLATE(HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_CERT, "Define to 1 if the X509_STORE_CTX_get0_cert() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_X509_VERIFY_PARAM_GET_DEPTH, "Define to 1 if the X509_VERIFY_PARAM_get_depth() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_UNTRUSTED, "Define to 1 if the X509_STORE_CTX_get0_untrusted() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_X509_VERIFY_PARAM_SET_AUTH_LEVEL, "Define to 1 if the X509_VERIFY_PARAM_set_auth_level() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_X509_UP_REF, "Define to 1 if the X509_up_ref() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBCRYPTO_X509_CHAIN_UP_REF, "Define to 1 if the X509_chain_up_ref() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_X509_CRL_UP_REF, "Define to 1 if the X509_CRL_up_ref() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_DH_UP_REF, "Define to 1 if the DH_up_ref() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_X509_GET0_SIGNATURE, "Define to 1 if the X509_get0_signature() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_SSL_GET0_PARAM, "Define to 1 of the SSL_get0_param() OpenSSL API function exists")
   SQUID_STATE_SAVE(check_openssl_libcrypto_api)
   LIBS="$LIBS $SSLLIB"
   AC_CHECK_LIB(crypto, OPENSSL_LH_strhash, AC_DEFINE(HAVE_LIBCRYPTO_OPENSSL_LH_STRHASH, 1))
@@ -87,10 +70,13 @@ AC_DEFUN([SQUID_CHECK_LIBCRYPTO_API],[
   AC_CHECK_LIB(crypto, X509_STORE_CTX_get0_cert, AC_DEFINE(HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_CERT, 1))
   AC_CHECK_LIB(crypto, X509_VERIFY_PARAM_get_depth, AC_DEFINE(HAVE_LIBCRYPTO_X509_VERIFY_PARAM_GET_DEPTH, 1))
   AC_CHECK_LIB(crypto, X509_STORE_CTX_get0_untrusted, AC_DEFINE(HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_UNTRUSTED, 1))
+  AC_CHECK_LIB(crypto,  X509_VERIFY_PARAM_set_auth_level, AC_DEFINE(HAVE_X509_VERIFY_PARAM_SET_AUTH_LEVEL))
   AC_CHECK_LIB(crypto, X509_up_ref, AC_DEFINE(HAVE_LIBCRYPTO_X509_UP_REF, 1))
+  AC_CHECK_LIB(crypto, X509_chain_up_ref, AC_DEFINE(HAVE_LIBCRYPTO_X509_CHAIN_UP_REF, 1))
   AC_CHECK_LIB(crypto, X509_CRL_up_ref, AC_DEFINE(HAVE_LIBCRYPTO_X509_CRL_UP_REF, 1))
   AC_CHECK_LIB(crypto, DH_up_ref, AC_DEFINE(HAVE_LIBCRYPTO_DH_UP_REF, 1))
   AC_CHECK_LIB(crypto, X509_get0_signature, AC_DEFINE(HAVE_LIBCRYPTO_X509_GET0_SIGNATURE, 1), AC_DEFINE(SQUID_CONST_X509_GET0_SIGNATURE_ARGS,))
+  AC_CHECK_LIB(crypto, SSL_get0_param, AC_DEFINE(HAVE_SSL_GET0_PARAM, 1))
   SQUID_STATE_ROLLBACK(check_openssl_libcrypto_api)
 ])
 
@@ -100,12 +86,16 @@ AC_DEFUN([SQUID_CHECK_LIBSSL_API],[
   AH_TEMPLATE(HAVE_LIBSSL_SSL_CIPHER_FIND, "Define to 1 if the SSL_CIPHER_find() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK, "Define to 1 if the SSL_CTX_set_tmp_rsa_callback() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBSSL_SSL_SESSION_GET_ID, "Define to 1 if the SSL_SESSION_get_id() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBSSL_SSL_GET_CLIENT_RANDOM, "Define to 1 if the SSL_get_client_random() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBSSL_SSL_SESSION_GET_MASTER_KEY, "Define to 1 if the SSL_SESSION_get_master_key() OpenSSL API function exists")
   SQUID_STATE_SAVE(check_openssl_libssl_api)
   LIBS="$LIBS $SSLLIB"
   AC_CHECK_LIB(ssl, OPENSSL_init_ssl, AC_DEFINE(HAVE_LIBSSL_OPENSSL_INIT_SSL, 1))
   AC_CHECK_LIB(ssl, SSL_CIPHER_find, AC_DEFINE(HAVE_LIBSSL_SSL_CIPHER_FIND, 1))
   AC_CHECK_LIB(ssl, SSL_CTX_set_tmp_rsa_callback, AC_DEFINE(HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK, 1))
   AC_CHECK_LIB(ssl, SSL_SESSION_get_id, AC_DEFINE(HAVE_LIBSSL_SSL_SESSION_GET_ID, 1))
+  AC_CHECK_LIB(ssl, SSL_get_client_random, AC_DEFINE(HAVE_LIBSSL_SSL_GET_CLIENT_RANDOM, 1))
+  AC_CHECK_LIB(ssl, SSL_SESSION_get_master_key, AC_DEFINE(HAVE_LIBSSL_SSL_SESSION_GET_MASTER_KEY, 1))
   SQUID_STATE_ROLLBACK(check_openssl_libssl_api)
 ])
 
@@ -116,9 +106,7 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
   AH_TEMPLATE(SQUID_USE_SSLGETCERTIFICATE_HACK, "Define to 1 to use squid workaround for SSL_get_certificate")
   SQUID_STATE_SAVE(check_SSL_get_certificate)
   LIBS="$SSLLIB $LIBS"
-  if test "x$SSLLIBDIR" != "x"; then
-     LIBS="$LIBS -Wl,-rpath -Wl,$SSLLIBDIR"
-  fi
+  AS_IF([test "x$SSLLIBDIR" != "x"],[LIBS="$LIBS -Wl,-rpath -Wl,$SSLLIBDIR"])
 
   AC_MSG_CHECKING(whether the SSL_get_certificate is buggy)
   AC_RUN_IFELSE([
@@ -191,7 +179,7 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
 SQUID_STATE_ROLLBACK(check_SSL_get_certificate)
 ])
 
-dnl Checks whether the  SSL_CTX_new and similar functions require 
+dnl Checks whether the  SSL_CTX_new and similar functions require
 dnl a const 'SSL_METHOD *' argument
 AC_DEFUN([SQUID_CHECK_OPENSSL_CONST_SSL_METHOD],[
   AH_TEMPLATE(SQUID_USE_CONST_SSL_METHOD, "Define to 1 if the SSL_CTX_new and similar openSSL API functions require 'const SSL_METHOD *'")
@@ -310,117 +298,57 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_TXTDB],[
   LIBS="$LIBS $SSLLIB"
   squid_cv_check_openssl_pstring="no"
   AC_MSG_CHECKING(whether the TXT_DB use OPENSSL_PSTRING data member)
-  AC_COMPILE_IFELSE([
-  AC_LANG_PROGRAM(
-    [
-     #include <openssl/txt_db.h>
-    ],
-    [
-    TXT_DB *db = NULL;
-    int i = sk_OPENSSL_PSTRING_num(db->data);
-    return 0;
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
+      #include <openssl/txt_db.h>
+    ],[
+      TXT_DB *db = NULL;
+      int i = sk_OPENSSL_PSTRING_num(db->data);
+      return 0;
     ])
-  ],
-  [
-   AC_DEFINE(SQUID_SSLTXTDB_PSTRINGDATA, 1)
-   AC_MSG_RESULT([yes])
-   squid_cv_check_openssl_pstring="yes"
-  ],
-  [
-   AC_MSG_RESULT([no])
-  ],
-  [])
+  ],[
+    AC_DEFINE(SQUID_SSLTXTDB_PSTRINGDATA, 1)
+    AC_MSG_RESULT([yes])
+    squid_cv_check_openssl_pstring="yes"
+  ],[
+    AC_MSG_RESULT([no])
+  ],[])
 
-  if test x"$squid_cv_check_openssl_pstring" = "xyes"; then
-     AC_MSG_CHECKING(whether the squid workaround for buggy versions of sk_OPENSSL_PSTRING_value should used)
-     AC_COMPILE_IFELSE([
-     AC_LANG_PROGRAM(
-       [
+  AS_IF([test "x$squid_cv_check_openssl_pstring" = "xyes"],[
+    AC_MSG_CHECKING(whether the squid workaround for buggy versions of sk_OPENSSL_PSTRING_value should used)
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
         #include <openssl/txt_db.h>
-       ],
-       [
+      ],[
        TXT_DB *db = NULL;
        const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db->data, 0));
        return (current_row != NULL);
-       ])
-     ],
-     [
+      ])
+    ],[
       AC_MSG_RESULT([no])
-     ],
-     [
+    ],[
       AC_DEFINE(SQUID_STACKOF_PSTRINGDATA_HACK, 1)
       AC_MSG_RESULT([yes])
-     ],
-     [])
-  fi
+    ],[])
+  ])
 
   AC_MSG_CHECKING(whether the workaround for OpenSSL IMPLEMENT_LHASH_  macros should used)
-  AC_COMPILE_IFELSE([
-  AC_LANG_PROGRAM(
-    [
-     #include <openssl/txt_db.h>
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
+      #include <openssl/txt_db.h>
 
-     static unsigned long index_serial_hash(const char **a){}
-     static int index_serial_cmp(const char **a, const char **b){}
-     static IMPLEMENT_LHASH_HASH_FN(index_serial_hash,const char **)
-     static IMPLEMENT_LHASH_COMP_FN(index_serial_cmp,const char **)
-    ],
-    [
-    TXT_DB *db = NULL;
-    TXT_DB_create_index(db, 1, NULL, LHASH_HASH_FN(index_serial_hash), LHASH_COMP_FN(index_serial_cmp));
+      static unsigned long index_serial_hash(const char **a){}
+      static int index_serial_cmp(const char **a, const char **b){}
+      static IMPLEMENT_LHASH_HASH_FN(index_serial_hash,const char **)
+      static IMPLEMENT_LHASH_COMP_FN(index_serial_cmp,const char **)
+    ],[
+      TXT_DB *db = NULL;
+      TXT_DB_create_index(db, 1, NULL, LHASH_HASH_FN(index_serial_hash), LHASH_COMP_FN(index_serial_cmp));
     ])
-  ],
-  [
-   AC_MSG_RESULT([no])
-  ],
-  [
-   AC_MSG_RESULT([yes])
-   AC_DEFINE(SQUID_USE_SSLLHASH_HACK, 1)
-  ],
-[])
+  ],[
+    AC_MSG_RESULT([no])
+  ],[
+    AC_MSG_RESULT([yes])
+    AC_DEFINE(SQUID_USE_SSLLHASH_HACK, 1)
+  ],[])
 
-SQUID_STATE_ROLLBACK(check_TXTDB)
+  SQUID_STATE_ROLLBACK(check_TXTDB)
 ])
 
-dnl Check if we can rewrite the hello message stored in an SSL object.
-dnl The tests are very basic, just check if the required members exist in
-dnl SSL structure.
-AC_DEFUN([SQUID_CHECK_OPENSSL_HELLO_OVERWRITE_HACK],[
-  AH_TEMPLATE(SQUID_USE_OPENSSL_HELLO_OVERWRITE_HACK, "Define to 1 if hello message can be overwritten in SSL struct")
-  SQUID_STATE_SAVE(check_openSSL_overwrite_hack)
-  AC_MSG_CHECKING(whether hello message can be overwritten in SSL struct)
-
-  AC_COMPILE_IFELSE([
-  AC_LANG_PROGRAM(
-    [
-     #include <openssl/ssl.h>
-     #include <openssl/err.h>
-     #include <assert.h>
-    ],
-    [
-    SSL *ssl;
-    char *random, *msg;
-    memcpy(ssl->s3->client_random, random, SSL3_RANDOM_SIZE);
-    SSL3_BUFFER *wb=&(ssl->s3->wbuf);
-    assert(wb->len == 0);
-    memcpy(wb->buf, msg, 0);
-    assert(wb->left == 0);
-    memcpy(ssl->init_buf->data, msg, 0);
-    ssl->init_num = 0;
-    ssl->s3->wpend_ret = 0;
-    ssl->s3->wpend_tot = 0;
-    SSL_CIPHER *cipher = 0;
-    assert(SSL_CIPHER_get_id(cipher));
-    ])
-  ],
-  [
-   AC_MSG_RESULT([possibly; to try, set SQUID_USE_OPENSSL_HELLO_OVERWRITE_HACK macro value to 1])
-  ],
-  [
-   AC_MSG_RESULT([no])
-  ],
-  [])
-
-SQUID_STATE_ROLLBACK(check_openSSL_overwrite_hack)
-]
-)

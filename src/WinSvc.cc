@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 /* Inspired by previous work by Romeo Anghelache & Eric Stern. */
 
 #include "squid.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "globals.h"
 #include "protos.h"
 #include "SquidConfig.h"
@@ -428,7 +428,7 @@ WIN32_IpAddrChangeMonitor(LPVOID lpParam)
     while (1) {
         Result = NotifyAddrChange(NULL, NULL);
         if (Result != NO_ERROR) {
-            debugs(1, DBG_IMPORTANT, "NotifyAddrChange error " << Result);
+            debugs(1, DBG_IMPORTANT, "ERROR: NotifyAddrChange error " << Result);
             return 1;
         }
         debugs(1, DBG_IMPORTANT, "Notification of IP address change received, requesting Squid reconfiguration ...");
@@ -449,7 +449,7 @@ WIN32_IpAddrChangeMonitorInit()
         if (NotifyAddrChange_thread == NULL) {
             status = GetLastError();
             NotifyAddrChange_thread = INVALID_HANDLE_VALUE;
-            debugs(1, DBG_IMPORTANT, "Failed to start IP monitor thread.");
+            debugs(1, DBG_IMPORTANT, "ERROR: Failed to start IP monitor thread.");
         } else
             debugs(1, 2, "Starting IP monitor thread [" << threadID << "] ...");
     }
@@ -494,7 +494,7 @@ int WIN32_Subsystem_Init(int * argc, char *** argv)
         if (svcHandle == 0)
             return 1;
 
-        /* Set Process work dir to directory cointaining squid.exe */
+        /* Set Process work dir to directory containing squid.exe */
         GetModuleFileName(NULL, path, 512);
 
         WIN32_module_name=xstrdup(path);
@@ -593,7 +593,7 @@ WIN32_svcHandler(DWORD Opcode)
 
         if (!SetServiceStatus(svcHandle, &svcStatus)) {
             status = GetLastError();
-            debugs(1, DBG_IMPORTANT, "SetServiceStatus error " << status);
+            debugs(1, DBG_IMPORTANT, "ERROR: SetServiceStatus error " << status);
         }
 
         debugs(1, DBG_IMPORTANT, "Leaving Squid service");
@@ -604,7 +604,7 @@ WIN32_svcHandler(DWORD Opcode)
 
         if (!SetServiceStatus(svcHandle, &svcStatus)) {
             status = GetLastError();
-            debugs(1, DBG_IMPORTANT, "SetServiceStatus error " << status);
+            debugs(1, DBG_IMPORTANT, "ERROR: SetServiceStatus error " << status);
         }
 
         break;
@@ -631,7 +631,7 @@ WIN32_svcHandler(DWORD Opcode)
 
         if (!SetServiceStatus(svcHandle, &svcStatus)) {
             status = GetLastError();
-            debugs(1, DBG_IMPORTANT, "SetServiceStatus error " << status);
+            debugs(1, DBG_IMPORTANT, "ERROR: SetServiceStatus error " << status);
         }
 
         debugs(1, DBG_IMPORTANT, "Leaving Squid service");
@@ -940,7 +940,7 @@ static int Win32SockInit(void)
     } else if (s_iInitCount < 0)
         return (s_iInitCount);
 
-    /* s_iInitCount == 0. Do the initailization */
+    /* s_iInitCount == 0. Do the initialization */
     iVersionRequested = MAKEWORD(2, 0);
 
     err = WSAStartup((WORD) iVersionRequested, &wsaData);

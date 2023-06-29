@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -55,15 +55,15 @@ TestSwapDir::canStore(const StoreEntry &, int64_t, int &load) const
 }
 
 StoreIOState::Pointer
-TestSwapDir::createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *)
+TestSwapDir::createStoreIO(StoreEntry &, StoreIOState::STIOCB *, void *)
 {
-    return NULL;
+    return nullptr;
 }
 
 StoreIOState::Pointer
-TestSwapDir::openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *)
+TestSwapDir::openStoreIO(StoreEntry &, StoreIOState::STIOCB *, void *)
 {
-    return NULL;
+    return nullptr;
 }
 
 void

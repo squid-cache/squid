@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,6 +14,7 @@
 #include "comm/Read.h"
 #include "CommCalls.h"
 #include "ipc/Port.h"
+#include "sbuf/Stream.h"
 #include "tools.h"
 #include "util.h"
 
@@ -35,7 +36,7 @@ void Ipc::Port::start()
 
 void Ipc::Port::doListen()
 {
-    debugs(54, 6, HERE);
+    debugs(54, 6, MYNAME);
     buf.prepForReading();
     typedef CommCbMemFunT<Port, CommIoCbParams> Dialer;
     AsyncCall::Pointer readHandler = JobCallback(54, 6,
@@ -73,13 +74,33 @@ Ipc::Port::CoordinatorAddr()
     return coordinatorAddr;
 }
 
+void
+Ipc::Port::receive(const TypedMsgHdr &message)
+{
+    throw TextException(ToSBuf("bad IPC message type: ", message.rawType()), Here());
+}
+
+/// receive() but ignore any errors
+void
+Ipc::Port::receiveOrIgnore(const TypedMsgHdr &message)
+{
+    try {
+        receive(message);
+    } catch (...) {
+        debugs(54, DBG_IMPORTANT, "WARNING: Ignoring IPC message" <<
+               Debug::Extra << "message type: " << message.rawType() <<
+               Debug::Extra << "problem: " << CurrentException);
+    }
+}
+
 void Ipc::Port::noteRead(const CommIoCbParams& params)
 {
-    debugs(54, 6, HERE << params.conn << " flag " << params.flag <<
+    debugs(54, 6, params.conn << " flag " << params.flag <<
            " [" << this << ']');
     if (params.flag == Comm::OK) {
         assert(params.buf == buf.raw());
-        receive(buf);
+        debugs(54, 6, "message type: " << buf.rawType());
+        receiveOrIgnore(buf);
     }
     // TODO: if there was a fatal error on our socket, close the socket before
     // trying to listen again and print a level-1 error message.

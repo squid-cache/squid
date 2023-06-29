@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,16 +24,13 @@ class ACLEui64 : public ACL
 
 public:
     ACLEui64(char const *);
-    ACLEui64(ACLEui64 const &);
-    ~ACLEui64() {}
-    ACLEui64&operator=(ACLEui64 const &);
+    ~ACLEui64() override {}
 
-    virtual ACL *clone()const;
-    virtual char const *typeString() const;
-    virtual void parse();
-    virtual int match(ACLChecklist *checklist);
-    virtual SBufList dump() const;
-    virtual bool empty () const;
+    char const *typeString() const override;
+    void parse() override;
+    int match(ACLChecklist *checklist) override;
+    SBufList dump() const override;
+    bool empty () const override;
 
 protected:
     typedef std::set<Eui::Eui64> Eui64Data_t;

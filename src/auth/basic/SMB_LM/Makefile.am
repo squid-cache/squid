@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@ include $(top_srcdir)/src/Common.am
 
 libexec_PROGRAMS= basic_smb_lm_auth
 
-basic_smb_lm_auth_SOURCES= \
+basic_smb_lm_auth_SOURCES = \
 	msntauth.cc \
 	msntauth.h \
 	valid.cc \

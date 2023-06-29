@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,11 +10,10 @@
 
 #include "squid.h"
 #include "comm/Read.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
-#include "SquidTime.h"
 #include "Store.h"
 
 fde *fde::Table = nullptr;
@@ -136,5 +135,12 @@ fde::remoteAddr() const
     }
 
     return buf;
+}
+
+void
+fde::Init()
+{
+    assert(!Table);
+    Table = static_cast<fde *>(xcalloc(Squid_MaxFD, sizeof(fde)));
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,9 +10,8 @@
 #define SQUID_EVENT_H
 
 #include "AsyncEngine.h"
+#include "base/Packable.h"
 #include "mem/forward.h"
-
-class StoreEntry;
 
 /* event scheduling facilities - run a callback after a given time period. */
 
@@ -22,7 +21,6 @@ void eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cb
 void eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int);
 void eventDelete(EVH * func, void *arg);
 void eventInit(void);
-void eventFreeMemory(void);
 int eventFind(EVH *, void *);
 
 class ev_entry
@@ -49,7 +47,7 @@ class EventScheduler : public AsyncEngine
 
 public:
     EventScheduler();
-    ~EventScheduler();
+    ~EventScheduler() override;
     /* cancel a scheduled but not dispatched event */
     void cancel(EVH * func, void * arg);
     /* clean up the used memory in the scheduler */
@@ -57,12 +55,12 @@ public:
     /* either EVENT_IDLE or milliseconds remaining until the next event */
     int timeRemaining() const;
     /* cache manager output for the event queue */
-    void dump(StoreEntry *);
+    void dump(Packable *);
     /* find a scheduled event */
     bool find(EVH * func, void * arg);
     /* schedule a callback function to run in when seconds */
     void schedule(const char *name, EVH * func, void *arg, double when, int weight, bool cbdata=true);
-    int checkEvents(int timeout);
+    int checkEvents(int timeout) override;
     static EventScheduler *GetInstance();
 
 private:

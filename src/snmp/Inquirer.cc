@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,7 +29,7 @@ Snmp::Inquirer::Inquirer(const Request& aRequest, const Ipc::StrandCoords& coord
     conn->fd = aRequest.fd;
     ImportFdIntoComm(conn, SOCK_DGRAM, IPPROTO_UDP, Ipc::fdnInSnmpSocket);
 
-    debugs(49, 5, HERE);
+    debugs(49, 5, MYNAME);
     closer = asyncCall(49, 5, "Snmp::Inquirer::noteCommClosed",
                        CommCbMemFunT<Inquirer, CommCloseCbParams>(this, &Inquirer::noteCommClosed));
     comm_add_close_handler(conn->fd, closer);
@@ -44,19 +44,19 @@ void
 Snmp::Inquirer::cleanup()
 {
     if (Comm::IsConnOpen(conn)) {
-        if (closer != NULL) {
+        if (closer != nullptr) {
             comm_remove_close_handler(conn->fd, closer);
-            closer = NULL;
+            closer = nullptr;
         }
         conn->close();
     }
-    conn = NULL;
+    conn = nullptr;
 }
 
 void
 Snmp::Inquirer::start()
 {
-    debugs(49, 5, HERE);
+    debugs(49, 5, MYNAME);
     Ipc::Inquirer::start();
     Must(Comm::IsConnOpen(conn));
     inquire();
@@ -86,9 +86,13 @@ Snmp::Inquirer::aggregate(Response::Pointer aResponse)
 void
 Snmp::Inquirer::noteCommClosed(const CommCloseCbParams& params)
 {
-    debugs(49, 5, HERE);
+    debugs(49, 5, MYNAME);
     Must(!Comm::IsConnOpen(conn) || conn->fd == params.conn->fd);
-    conn = NULL;
+    closer = nullptr;
+    if (conn) {
+        conn->noteClosure();
+        conn = nullptr;
+    }
     mustStop("commClosed");
 }
 
@@ -101,7 +105,11 @@ Snmp::Inquirer::doneAll() const
 void
 Snmp::Inquirer::sendResponse()
 {
-    debugs(49, 5, HERE);
+    debugs(49, 5, MYNAME);
+
+    if (!Comm::IsConnOpen(conn))
+        return; // client gone
+
     aggrPdu.fixAggregate();
     aggrPdu.command = SNMP_PDU_RESPONSE;
     u_char buffer[SNMP_REQUEST_SIZE];

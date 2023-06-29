@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -65,13 +65,13 @@ DiskdAction::Create(const Mgr::CommandPointer &aCmd)
 DiskdAction::DiskdAction(const Mgr::CommandPointer &aCmd):
     Action(aCmd), data()
 {
-    debugs(79, 5, HERE);
+    debugs(79, 5, MYNAME);
 }
 
 void
 DiskdAction::add(const Action& action)
 {
-    debugs(79, 5, HERE);
+    debugs(79, 5, MYNAME);
     data += dynamic_cast<const DiskdAction&>(action).data;
 }
 
@@ -114,8 +114,8 @@ DiskdAction::collect()
 void
 DiskdAction::dump(StoreEntry* entry)
 {
-    debugs(79, 5, HERE);
-    Must(entry != NULL);
+    debugs(79, 5, MYNAME);
+    Must(entry != nullptr);
     storeAppendPrintf(entry, "sent_count: %.0f\n", data.sent_count);
     storeAppendPrintf(entry, "recv_count: %.0f\n", data.recv_count);
     storeAppendPrintf(entry, "max_away: %.0f\n", data.max_away);

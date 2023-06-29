@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,7 @@
 #include "acl/NoteData.h"
 #include "acl/StringData.h"
 #include "ConfigParser.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "sbuf/StringConvert.h"
 #include "wordlist.h"
 
@@ -47,9 +47,7 @@ ACLNoteData::dump() const
 void
 ACLNoteData::parse()
 {
-    char* t = ConfigParser::strtokFile();
-    assert (t != NULL);
-    name = t;
+    Acl::SetKey(name, "annotation name", ConfigParser::strtokFile());
     values->parse();
 }
 
@@ -57,15 +55,5 @@ bool
 ACLNoteData::empty() const
 {
     return name.isEmpty();
-}
-
-ACLData<NotePairs::Entry *> *
-ACLNoteData::clone() const
-{
-    ACLNoteData * result = new ACLNoteData;
-    result->values = dynamic_cast<ACLStringData*>(values->clone());
-    assert(result->values);
-    result->name = name;
-    return result;
 }
 

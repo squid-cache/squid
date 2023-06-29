@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,7 +23,7 @@ void MemBuf::init() STUB
 void MemBuf::clean() STUB
 void MemBuf::reset() STUB
 int MemBuf::isNull() const STUB_RETVAL(1)
-FREE *MemBuf::freeFunc() STUB_RETVAL(NULL)
+FREE *MemBuf::freeFunc() STUB_RETVAL(nullptr)
 void MemBuf::append(const char *, int) STUB
 void MemBuf::vappendf(const char *, va_list) STUB
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,15 +8,15 @@
 
 #include "squid.h"
 #include "base/CodeContext.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 
 /// represents a being-forgotten CodeContext (while it may be being destroyed)
 class FadingCodeContext: public CodeContext
 {
 public:
     /* CodeContext API */
-    virtual ScopedId codeContextGist() const override { return gist; }
-    virtual std::ostream &detailCodeContext(std::ostream &os) const override { return os << gist; }
+    ScopedId codeContextGist() const override { return gist; }
+    std::ostream &detailCodeContext(std::ostream &os) const override { return os << gist; }
 
     ScopedId gist; ///< identifies the being-forgotten CodeContext
 };
@@ -44,6 +44,7 @@ CodeContext::ForgetCurrent()
     static const RefCount<FadingCodeContext> fadingCodeContext = new FadingCodeContext();
     auto &current = Instance();
     assert(current);
+    current->busyTime.pause();
     fadingCodeContext->gist = current->codeContextGist();
     current = fadingCodeContext;
 }
@@ -57,6 +58,7 @@ CodeContext::Entering(const Pointer &codeCtx)
     if (current)
         ForgetCurrent(); // ensure orderly closure of the old context
     current = codeCtx;
+    codeCtx->busyTime.resume();
     debugs(1, 5, codeCtx->codeContextGist());
 }
 

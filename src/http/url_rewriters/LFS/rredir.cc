@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -44,8 +44,8 @@
  */
 
 #include <unistd.h>
-#include <string.h>
-#include <ctype.h>
+#include <cstring>
+#include <cctype>
 
 #define ACCESS_LOCAL_DIR        "/var/lib/httpd/htdocs/local/rredir"
 #define REDIRECT_TO_URL         "http://www.hacom.nl/local/rredir"

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,20 +34,25 @@ public:
     ResponseParser &operator =(const ResponseParser &) = default;
     ResponseParser(ResponseParser &&) = default;
     ResponseParser &operator =(ResponseParser &&) = default;
-    virtual ~ResponseParser() {}
+    ~ResponseParser() override {}
 
     /* Http::One::Parser API */
-    virtual void clear() {*this=ResponseParser();}
-    virtual Http1::Parser::size_type firstLineSize() const;
-    virtual bool parse(const SBuf &aBuf);
+    void clear() override {*this=ResponseParser();}
+    Http1::Parser::size_type firstLineSize() const override;
+    bool parse(const SBuf &aBuf) override;
 
     /* respone specific fields, read-only */
     Http::StatusCode messageStatus() const { return statusCode_;}
     SBuf reasonPhrase() const { return reasonPhrase_;}
 
+    /// extracts response status-code and the following delimiter; validates status-code
+    /// \param[out] code syntactically valid status-code (unchanged on syntax errors)
+    /// \throws InsuffientInput and other exceptions on syntax and validation errors
+    static void ParseResponseStatus(Tokenizer &, StatusCode &code);
+
 private:
     int parseResponseFirstLine();
-    int parseResponseStatusAndReason(Tokenizer&, const CharacterSet &);
+    int parseResponseStatusAndReason(Tokenizer &);
 
     /// magic prefix for identifying ICY response messages
     static const SBuf IcyMagic;

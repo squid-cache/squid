@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 79    Squid-side DISKD I/O functions. */
 
 #include "squid.h"
+#include "comm.h"
 #include "comm/Loops.h"
 #include "ConfigOption.h"
 #include "diomsg.h"
@@ -18,7 +19,6 @@
 #include "fd.h"
 #include "SquidConfig.h"
 #include "SquidIpc.h"
-#include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "unlinkd.h"
@@ -80,7 +80,7 @@ DiskdIOStrategy::newFile(char const *path)
 {
     if (shedLoad()) {
         openFailed();
-        return NULL;
+        return nullptr;
     }
 
     return new DiskdFile (path, this);
@@ -118,7 +118,7 @@ DiskdIOStrategy::unlinkFile(char const *path)
 
     x = send(_MQD_UNLINK,
              0,
-             (StoreIOState::Pointer )NULL,
+             (StoreIOState::Pointer )nullptr,
              0,
              0,
              shm_offset);
@@ -172,7 +172,7 @@ DiskdIOStrategy::init()
     args[1] = skey1;
     args[2] = skey2;
     args[3] = skey3;
-    args[4] = NULL;
+    args[4] = nullptr;
     localhost.setLocalhost();
     pid = ipcCreate(IPC_STREAM,
                     Config.Program.diskd,
@@ -216,7 +216,7 @@ void *
 
 SharedMemory::get(ssize_t * shm_offset)
 {
-    char *aBuf = NULL;
+    char *aBuf = nullptr;
     int i;
 
     for (i = 0; i < nbufs; ++i) {
@@ -256,7 +256,7 @@ SharedMemory::init(int ikey, int magic2)
         fatal("shmget failed");
     }
 
-    buf = (char *)shmat(id, NULL, 0);
+    buf = (char *)shmat(id, nullptr, 0);
 
     if (buf == (void *) -1) {
         int xerrno = errno;
@@ -409,7 +409,7 @@ DiskdIOStrategy::SEND(diomsg *M, int mtype, int id, size_t size, off_t offset, s
     struct timeval delay = {0, 1};
 
     while (away > magic2) {
-        select(0, NULL, NULL, NULL, &delay);
+        select(0, nullptr, nullptr, nullptr, &delay);
         Store::Root().callback();
 
         if (delay.tv_usec < 1000000)
@@ -544,10 +544,6 @@ DiskdIOStrategy::callback()
     }
 
     while (1) {
-#ifdef  ALWAYS_ZERO_BUFFERS
-        memset(&M, '\0', sizeof(M));
-#endif
-
         x = msgrcv(rmsgid, &M, diomsg::msg_snd_rcv_sz, 0, IPC_NOWAIT);
 
         if (x < 0)

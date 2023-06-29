@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -8,7 +8,6 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
-DIST_SUBDIRS= ecap icap
 SUBDIRS =
 
 noinst_LTLIBRARIES = libadaptation.la
@@ -26,7 +25,8 @@ libadaptation_la_SOURCES = \
 	DynamicGroupCfg.h \
 	Elements.cc \
 	Elements.h \
-	forward.h \
+	History.cc \
+	History.h \
 	Initiate.cc \
 	Initiate.h \
 	Initiator.cc \
@@ -39,12 +39,11 @@ libadaptation_la_SOURCES = \
 	Service.h \
 	ServiceConfig.cc \
 	ServiceConfig.h \
-	ServiceGroups.cc \
-	ServiceGroups.h \
 	ServiceFilter.cc \
 	ServiceFilter.h \
-	History.cc \
-	History.h
+	ServiceGroups.cc \
+	ServiceGroups.h \
+	forward.h
 
 libadaptation_la_LIBADD =
 

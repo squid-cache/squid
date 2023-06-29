@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,8 +30,6 @@ const cache_key *storeKeyPublicByRequest(HttpRequest *, const KeyScope keyScope 
 const cache_key *storeKeyPublicByRequestMethod(HttpRequest *, const HttpRequestMethod&, const KeyScope keyScope = ksDefault);
 const cache_key *storeKeyPrivate();
 int storeKeyHashBuckets(int);
-int storeKeyNull(const cache_key *);
-void storeKeyInit(void);
 
 extern HASHHASH storeKeyHashHash;
 extern HASHCMP storeKeyHashCmp;

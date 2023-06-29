@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,28 +19,30 @@ namespace One
 /// Manages a connection from an HTTP/1 or HTTP/0.9 client.
 class Server: public ConnStateData
 {
-    CBDATA_CLASS(Server);
+    CBDATA_CHILD(Server);
 
 public:
     Server(const MasterXaction::Pointer &xact, const bool beHttpsServer);
-    virtual ~Server() {}
+    ~Server() override {}
 
     void readSomeHttpData();
 
 protected:
     /* ConnStateData API */
-    virtual Http::Stream *parseOneRequest();
-    virtual void processParsedRequest(Http::StreamPointer &context);
-    virtual void handleReply(HttpReply *rep, StoreIOBuffer receivedData);
-    virtual bool writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call);
-    virtual time_t idleTimeout() const;
+    Http::Stream *parseOneRequest() override;
+    void processParsedRequest(Http::StreamPointer &context) override;
+    void handleReply(HttpReply *rep, StoreIOBuffer receivedData) override;
+    bool writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call) override;
+    int pipelinePrefetchMax() const override;
+    time_t idleTimeout() const override;
+    void noteTakeServerConnectionControl(ServerConnectionContext) override;
 
     /* BodyPipe API */
-    virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
-    virtual void noteBodyConsumerAborted(BodyPipe::Pointer);
+    void noteMoreBodySpaceAvailable(BodyPipe::Pointer) override;
+    void noteBodyConsumerAborted(BodyPipe::Pointer) override;
 
     /* AsyncJob API */
-    virtual void start();
+    void start() override;
 
     void proceedAfterBodyContinuation(Http::StreamPointer context);
 
@@ -54,7 +56,7 @@ private:
     /// Return false if parsing is failed, true otherwise.
     bool buildHttpRequest(Http::StreamPointer &context);
 
-    void setReplyError(Http::StreamPointer &context, HttpRequest::Pointer &request, const HttpRequestMethod& method, err_type requestError, Http::StatusCode errStatusCode, const char *requestErrorBytes);
+    void setReplyError(Http::StreamPointer &context, HttpRequest::Pointer &request, err_type requestError, Http::StatusCode errStatusCode, const char *requestErrorBytes);
 
     Http1::RequestParserPointer parser_;
     HttpRequestMethod method_; ///< parsed HTTP method

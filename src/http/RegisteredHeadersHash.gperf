@@ -1,8 +1,6 @@
 %{
-/* AUTO GENERATED FROM RegisteredHeadersHash.gperf. DO NOT EDIT */
-
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,8 +18,8 @@
 %enum
 %global-table
 %ignore-case
-%struct-type 
-struct HeaderTableRecord;
+%struct-type
+class HeaderTableRecord;
 %%
 Accept, Http::HdrType::ACCEPT, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader
 Accept-Charset, Http::HdrType::ACCEPT_CHARSET, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader
@@ -34,6 +32,7 @@ Alternate-Protocol, Http::HdrType::ALTERNATE_PROTOCOL, Http::HdrFieldType::ftStr
 Authentication-Info, Http::HdrType::AUTHENTICATION_INFO, Http::HdrFieldType::ftStr, HdrKind::ListHeader
 Authorization, Http::HdrType::AUTHORIZATION, Http::HdrFieldType::ftStr, HdrKind::RequestHeader
 Cache-Control, Http::HdrType::CACHE_CONTROL, Http::HdrFieldType::ftPCc, HdrKind::ListHeader|HdrKind::GeneralHeader
+Cache-Status, Http::HdrType::CACHE_STATUS, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader
 CDN-Loop, Http::HdrType::CDN_LOOP, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader
 Connection, Http::HdrType::CONNECTION, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader|HdrKind::HopByHopHeader
 Content-Base, Http::HdrType::CONTENT_BASE, Http::HdrFieldType::ftStr, HdrKind::EntityHeader
@@ -54,7 +53,6 @@ Expires, Http::HdrType::EXPIRES, Http::HdrFieldType::ftDate_1123, HdrKind::Entit
 Forwarded, Http::HdrType::FORWARDED, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader
 From, Http::HdrType::FROM, Http::HdrFieldType::ftStr, HdrKind::RequestHeader
 Host, Http::HdrType::HOST, Http::HdrFieldType::ftStr, HdrKind::RequestHeader
-HTTP2-Settings, Http::HdrType::HTTP2_SETTINGS, Http::HdrFieldType::ftStr, HdrKind::RequestHeader|HdrKind::HopByHopHeader
 If-Match, Http::HdrType::IF_MATCH, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader
 If-Modified-Since, Http::HdrType::IF_MODIFIED_SINCE, Http::HdrFieldType::ftDate_1123, HdrKind::RequestHeader
 If-None-Match, Http::HdrType::IF_NONE_MATCH, Http::HdrFieldType::ftStr, HdrKind::ListHeader
@@ -70,6 +68,7 @@ Mime-Version, Http::HdrType::MIME_VERSION, Http::HdrFieldType::ftStr, HdrKind::G
 Negotiate, Http::HdrType::NEGOTIATE, Http::HdrFieldType::ftStr, HdrKind::None
 Origin, Http::HdrType::ORIGIN, Http::HdrFieldType::ftStr, HdrKind::RequestHeader
 Pragma, Http::HdrType::PRAGMA, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader
+Priority, Http::HdrType::PRIORITY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader
 Proxy-Authenticate, Http::HdrType::PROXY_AUTHENTICATE, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader
 Proxy-Authentication-Info, Http::HdrType::PROXY_AUTHENTICATION_INFO, Http::HdrFieldType::ftStr, HdrKind::ListHeader
 Proxy-Authorization, Http::HdrType::PROXY_AUTHORIZATION, Http::HdrFieldType::ftStr, HdrKind::RequestHeader|HdrKind::HopByHopHeader
@@ -93,10 +92,7 @@ Upgrade, Http::HdrType::UPGRADE, Http::HdrFieldType::ftStr, HdrKind::ListHeader|
 User-Agent, Http::HdrType::USER_AGENT, Http::HdrFieldType::ftStr, HdrKind::RequestHeader
 Vary, Http::HdrType::VARY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader
 Via, Http::HdrType::VIA, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader
-Warning, Http::HdrType::WARNING, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader
 WWW-Authenticate, Http::HdrType::WWW_AUTHENTICATE, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader
-X-Cache, Http::HdrType::X_CACHE, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader
-X-Cache-Lookup, Http::HdrType::X_CACHE_LOOKUP, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader
 X-Forwarded-For, Http::HdrType::X_FORWARDED_FOR, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader
 X-Request-URI, Http::HdrType::X_REQUEST_URI, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader
 X-Squid-Error, Http::HdrType::X_SQUID_ERROR, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader

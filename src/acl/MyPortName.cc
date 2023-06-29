@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,9 +18,9 @@
 int
 ACLMyPortNameStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
-    if (checklist->conn() != NULL && checklist->conn()->port != NULL)
+    if (checklist->conn() != nullptr && checklist->conn()->port != nullptr)
         return data->match(checklist->conn()->port->name);
-    if (checklist->request != NULL)
+    if (checklist->request != nullptr)
         return data->match(checklist->request->myportname.termedBuf());
     return 0;
 }

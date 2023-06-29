@@ -2,16 +2,20 @@ name: SQUID_X509_V_ERR_INFINITE_VALIDATION
 detail: "%ssl_error_descr: %ssl_subject"
 descr: "Cert validation infinite loop detected"
 
-name: SQUID_ERR_SSL_HANDSHAKE
+name: SQUID_TLS_ERR_ACCEPT
 detail: "%ssl_error_descr: %ssl_lib_error"
-descr: "Handshake with SSL server failed"
+descr: "Failed to accept a secure connection"
+
+name: SQUID_TLS_ERR_CONNECT
+detail: "%ssl_error_descr: %ssl_lib_error"
+descr: "Failed to establish a secure connection"
 
 name: SQUID_X509_V_ERR_DOMAIN_MISMATCH
 detail: "%ssl_error_descr: %ssl_subject"
 descr: "Certificate does not match domainname"
 
 name: X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT
-detail: "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name"
+detail: "SSL Certificate error: certificate issuer (CA) not known: %ssl_ca_name"
 descr: "Unable to get issuer certificate"
 
 name: X509_V_ERR_UNABLE_TO_GET_CRL
@@ -39,7 +43,7 @@ detail: "%ssl_error_descr: %ssl_subject"
 descr: "CRL signature failure"
 
 name: X509_V_ERR_CERT_NOT_YET_VALID
-detail: "SSL Certficate is not valid before: %ssl_notbefore"
+detail: "SSL Certificate is not valid before: %ssl_notbefore"
 descr: "Certificate is not yet valid"
 
 name: X509_V_ERR_CERT_HAS_EXPIRED
@@ -83,7 +87,7 @@ detail: "Self-signed SSL Certificate in chain: %ssl_subject"
 descr: "Self signed certificate in certificate chain"
 
 name: X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY
-detail: "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name"
+detail: "SSL Certificate error: certificate issuer (CA) not known: %ssl_ca_name"
 descr: "Unable to get local issuer certificate"
 
 name: X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE

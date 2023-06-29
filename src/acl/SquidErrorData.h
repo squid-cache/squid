@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 
 #include "acl/Data.h"
 #include "base/CbDataList.h"
-#include "err_type.h"
+#include "error/forward.h"
 
 /// \ingroup ACLAPI
 class ACLSquidErrorData : public ACLData<err_type>
@@ -20,12 +20,11 @@ class ACLSquidErrorData : public ACLData<err_type>
 public:
     ACLSquidErrorData(): ACLData<err_type>() {};
 
-    virtual ~ACLSquidErrorData() {}
-    virtual bool match(err_type err);
-    virtual SBufList dump() const;
-    virtual void parse();
-    virtual bool empty() const;
-    virtual ACLData<err_type> *clone() const;
+    ~ACLSquidErrorData() override {}
+    bool match(err_type err) override;
+    SBufList dump() const override;
+    void parse() override;
+    bool empty() const override;
 
 private:
     CbDataListContainer <err_type> errors;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "acl/Gadgets.h"
+#include "base/IoManip.h"
 #include "cache_cf.h"
 #include "comm/Connection.h"
 #include "compat/cmsg.h"
@@ -20,6 +21,7 @@
 #include "Parsing.h"
 
 #include <cerrno>
+#include <limits>
 
 CBDATA_CLASS_INIT(acl_tos);
 
@@ -68,12 +70,15 @@ Ip::Qos::getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde)
             }
         } else {
             int xerrno = errno;
-            debugs(33, DBG_IMPORTANT, "QOS: error in getsockopt(IP_PKTOPTIONS) on " << server << " " << xstrerr(xerrno));
+            debugs(33, DBG_IMPORTANT, "ERROR: QOS: getsockopt(IP_PKTOPTIONS) failure on " << server << " " << xstrerr(xerrno));
         }
     } else {
         int xerrno = errno;
-        debugs(33, DBG_IMPORTANT, "QOS: error in setsockopt(IP_RECVTOS) on " << server << " " << xstrerr(xerrno));
+        debugs(33, DBG_IMPORTANT, "ERROR: QOS: setsockopt(IP_RECVTOS) failure on " << server << " " << xstrerr(xerrno));
     }
+#else
+    (void)server;
+    (void)clientFde;
 #endif
 }
 
@@ -165,6 +170,9 @@ Ip::Qos::getNfConnmark(const Comm::ConnectionPointer &conn, const Ip::Qos::Conne
     } else {
         debugs(17, 2, "QOS: Failed to allocate new conntrack for netfilter CONNMARK retrieval.");
     }
+#else
+    (void)conn;
+    (void)connDir;
 #endif
     return mark;
 }
@@ -206,7 +214,11 @@ Ip::Qos::setNfConnmark(Comm::ConnectionPointer &conn, const Ip::Qos::ConnectionD
     } else {
         debugs(17, 2, "QOS: Failed to allocate new conntrack for netfilter CONNMARK modification.");
     }
-#endif
+#else /* USE_LIBNETFILTERCONNTRACK */
+    (void)conn;
+    (void)connDir;
+    (void)cm;
+#endif /* USE_LIBNETFILTERCONNTRACK */
     return ret;
 }
 
@@ -275,8 +287,8 @@ Ip::Qos::Config::Config() : tosLocalHit(0), tosSiblingHit(0), tosParentHit(0),
     preserveMissTosMask(0xFF), markLocalHit(0), markSiblingHit(0),
     markParentHit(0), markMiss(0), markMissMask(0),
     preserveMissMark(false), preserveMissMarkMask(0xFFFFFFFF),
-    tosToServer(NULL), tosToClient(NULL), nfmarkToServer(NULL),
-    nfmarkToClient(NULL)
+    tosToServer(nullptr), tosToClient(nullptr), nfmarkToServer(nullptr),
+    nfmarkToClient(nullptr)
 {
 }
 
@@ -331,13 +343,13 @@ Ip::Qos::Config::parseConfigLine()
         if (strncmp(token, "local-hit=",10) == 0) {
 
             if (mark) {
-                if (!xstrtoui(&token[10], NULL, &markLocalHit, 0, std::numeric_limits<nfmark_t>::max())) {
+                if (!xstrtoui(&token[10], nullptr, &markLocalHit, 0, std::numeric_limits<nfmark_t>::max())) {
                     debugs(3, DBG_CRITICAL, "ERROR: Bad mark local-hit value " << &token[10]);
                     self_destruct();
                 }
             } else {
                 unsigned int v = 0;
-                if (!xstrtoui(&token[10], NULL, &v, 0, std::numeric_limits<tos_t>::max())) {
+                if (!xstrtoui(&token[10], nullptr, &v, 0, std::numeric_limits<tos_t>::max())) {
                     debugs(3, DBG_CRITICAL, "ERROR: Bad TOS local-hit value " << &token[10]);
                     self_destruct();
                 }
@@ -347,13 +359,13 @@ Ip::Qos::Config::parseConfigLine()
         } else if (strncmp(token, "sibling-hit=",12) == 0) {
 
             if (mark) {
-                if (!xstrtoui(&token[12], NULL, &markSiblingHit, 0, std::numeric_limits<nfmark_t>::max())) {
+                if (!xstrtoui(&token[12], nullptr, &markSiblingHit, 0, std::numeric_limits<nfmark_t>::max())) {
                     debugs(3, DBG_CRITICAL, "ERROR: Bad mark sibling-hit value " << &token[12]);
                     self_destruct();
                 }
             } else {
                 unsigned int v = 0;
-                if (!xstrtoui(&token[12], NULL, &v, 0, std::numeric_limits<tos_t>::max())) {
+                if (!xstrtoui(&token[12], nullptr, &v, 0, std::numeric_limits<tos_t>::max())) {
                     debugs(3, DBG_CRITICAL, "ERROR: Bad TOS sibling-hit value " << &token[12]);
                     self_destruct();
                 }
@@ -363,13 +375,13 @@ Ip::Qos::Config::parseConfigLine()
         } else if (strncmp(token, "parent-hit=",11) == 0) {
 
             if (mark) {
-                if (!xstrtoui(&token[11], NULL, &markParentHit, 0, std::numeric_limits<nfmark_t>::max())) {
+                if (!xstrtoui(&token[11], nullptr, &markParentHit, 0, std::numeric_limits<nfmark_t>::max())) {
                     debugs(3, DBG_CRITICAL, "ERROR: Bad mark parent-hit value " << &token[11]);
                     self_destruct();
                 }
             } else {
                 unsigned int v = 0;
-                if (!xstrtoui(&token[11], NULL, &v, 0, std::numeric_limits<tos_t>::max())) {
+                if (!xstrtoui(&token[11], nullptr, &v, 0, std::numeric_limits<tos_t>::max())) {
                     debugs(3, DBG_CRITICAL, "ERROR: Bad TOS parent-hit value " << &token[11]);
                     self_destruct();
                 }
@@ -385,7 +397,7 @@ Ip::Qos::Config::parseConfigLine()
                     self_destruct();
                 }
                 if (*end == '/') {
-                    if (!xstrtoui(end + 1, NULL, &markMissMask, 0, std::numeric_limits<nfmark_t>::max())) {
+                    if (!xstrtoui(end + 1, nullptr, &markMissMask, 0, std::numeric_limits<nfmark_t>::max())) {
                         debugs(3, DBG_CRITICAL, "ERROR: Bad mark miss mask value " << (end + 1) << ". Using 0xFFFFFFFF instead.");
                         markMissMask = 0xFFFFFFFF;
                     }
@@ -400,7 +412,7 @@ Ip::Qos::Config::parseConfigLine()
                 }
                 tosMiss = (tos_t)v;
                 if (*end == '/') {
-                    if (!xstrtoui(end + 1, NULL, &v, 0, std::numeric_limits<tos_t>::max())) {
+                    if (!xstrtoui(end + 1, nullptr, &v, 0, std::numeric_limits<tos_t>::max())) {
                         debugs(3, DBG_CRITICAL, "ERROR: Bad TOS miss mask value " << (end + 1) << ". Using 0xFF instead.");
                         tosMissMask = 0xFF;
                     } else
@@ -427,13 +439,13 @@ Ip::Qos::Config::parseConfigLine()
         } else if (strncmp(token, "miss-mask=",10) == 0) {
 
             if (mark && preserveMissMark) {
-                if (!xstrtoui(&token[10], NULL, &preserveMissMarkMask, 0, std::numeric_limits<nfmark_t>::max())) {
+                if (!xstrtoui(&token[10], nullptr, &preserveMissMarkMask, 0, std::numeric_limits<nfmark_t>::max())) {
                     debugs(3, DBG_CRITICAL, "ERROR: Bad mark miss-mark value " << &token[10]);
                     self_destruct();
                 }
             } else if (preserveMissTos) {
                 unsigned int v = 0;
-                if (!xstrtoui(&token[10], NULL, &v, 0, std::numeric_limits<tos_t>::max())) {
+                if (!xstrtoui(&token[10], nullptr, &v, 0, std::numeric_limits<tos_t>::max())) {
                     debugs(3, DBG_CRITICAL, "ERROR: Bad TOS miss-mark value " << &token[10]);
                     self_destruct();
                 }
@@ -450,7 +462,7 @@ Ip::Qos::Config::parseConfigLine()
 /**
  * NOTE: Due to the low-level nature of the library these
  * objects are part of the dump function must be self-contained.
- * which means no StoreEntry refrences. Just a basic char* buffer.
+ * which means no StoreEntry references. Just a basic char* buffer.
 */
 void
 Ip::Qos::Config::dumpConfigLine(char *entry, const char *name) const
@@ -574,9 +586,13 @@ Ip::Qos::setSockNfmark(const int fd, nfmark_t mark)
     }
     return x;
 #elif USE_LIBCAP
+    (void)mark;
+    (void)fd;
     debugs(50, DBG_IMPORTANT, "WARNING: setsockopt(SO_MARK) not supported on this platform");
     return -1;
 #else
+    (void)mark;
+    (void)fd;
     debugs(50, DBG_IMPORTANT, "WARNING: Netfilter marking disabled (netfilter marking requires build with LIBCAP)");
     return -1;
 #endif

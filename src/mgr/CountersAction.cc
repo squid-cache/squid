@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,6 @@
 #include "ipc/Messages.h"
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/CountersAction.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 
@@ -85,6 +84,11 @@ Mgr::CountersActionData::operator += (const CountersActionData& stats)
     swap_ins += stats.swap_ins;
     swap_files_cleaned += stats.swap_files_cleaned;
     aborted_requests += stats.aborted_requests;
+    hitValidationAttempts += stats.hitValidationAttempts;
+    hitValidationRefusalsDueToLocking += stats.hitValidationRefusalsDueToLocking;
+    hitValidationRefusalsDueToZeroSize += stats.hitValidationRefusalsDueToZeroSize;
+    hitValidationRefusalsDueToTimeLimit += stats.hitValidationRefusalsDueToTimeLimit;
+    hitValidationFailures += stats.hitValidationFailures;
 
     return *this;
 }
@@ -98,28 +102,28 @@ Mgr::CountersAction::Create(const CommandPointer &cmd)
 Mgr::CountersAction::CountersAction(const CommandPointer &aCmd):
     Action(aCmd), data()
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
 }
 
 void
 Mgr::CountersAction::add(const Action& action)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     data += dynamic_cast<const CountersAction&>(action).data;
 }
 
 void
 Mgr::CountersAction::collect()
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, MYNAME);
     GetCountersStats(data);
 }
 
 void
 Mgr::CountersAction::dump(StoreEntry* entry)
 {
-    debugs(16, 5, HERE);
-    Must(entry != NULL);
+    debugs(16, 5, MYNAME);
+    Must(entry != nullptr);
     DumpCountersStats(data, entry);
 }
 

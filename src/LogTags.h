@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,21 @@
 #define SQUID_SRC_LOGTAGS_H
 
 #include "CollapsingHistory.h"
+
+/// Things that may happen to a transaction while it is being
+/// processed according to its LOG_* category. Logged as _SUFFIX(es).
+/// Unlike LOG_* categories, these flags may not be mutually exclusive.
+class LogTagsErrors
+{
+public:
+    /// Update each of this object flags to "set" if the corresponding
+    /// flag of the given object is set
+    void update(const LogTagsErrors &other);
+
+    bool ignored = false; ///< _IGNORED: the response was not used for anything
+    bool timedout = false; ///< _TIMEDOUT: terminated due to a lifetime or I/O timeout
+    bool aborted = false;  ///< _ABORTED: other abnormal termination (e.g., I/O error)
+};
 
 /** Squid transaction result code/tag set.
  *
@@ -38,7 +53,7 @@ typedef enum {
     LOG_TCP_DENIED_REPLY,
     LOG_TCP_OFFLINE_HIT,
     LOG_TCP_REDIRECT,
-    LOG_TCP_TUNNEL,             // a binary tunnel was established for this transaction
+    LOG_TCP_TUNNEL, ///< an attempt to establish a bidirectional TCP tunnel
     LOG_UDP_HIT,
     LOG_UDP_MISS,
     LOG_UDP_DENIED,
@@ -62,17 +77,11 @@ public:
     /// determine if the log tag code indicates a cache HIT
     bool isTcpHit() const;
 
-    /// Things that may happen to a transaction while it is being
-    /// processed according to its LOG_* category. Logged as _SUFFIX(es).
-    /// Unlike LOG_* categories, these flags may not be mutually exclusive.
-    class Errors {
-    public:
-        Errors() : ignored(false), timedout(false), aborted(false) {}
+    /// \returns Cache-Status "hit" or "fwd=..." parameter (or nil)
+    const char *cacheStatusSource() const;
 
-        bool ignored; ///< _IGNORED: the response was not used for anything
-        bool timedout; ///< _TIMEDOUT: terminated due to a lifetime or I/O timeout
-        bool aborted;  ///< _ABORTED: other abnormal termination (e.g., I/O error)
-    } err;
+    /// various problems augmenting the primary log tag
+    LogTagsErrors err;
 
 private:
     /// list of string representations for LogTags_ot

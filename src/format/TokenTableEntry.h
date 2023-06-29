@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,7 +30,7 @@ namespace Format
 class TokenTableEntry
 {
 public:
-    TokenTableEntry() : configTag(NULL), tokenType(LFT_NONE), options(0) {}
+    TokenTableEntry() : configTag(nullptr), tokenType(LFT_NONE), options(0) {}
     TokenTableEntry(const char *aTag, const ByteCode_t &aType) : configTag(aTag), tokenType(aType), options(0) {}
     // nothing to destruct configTag is pointer to global const string
     ~TokenTableEntry() {}

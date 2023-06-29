@@ -22,7 +22,7 @@ B<ext_kerberos_sid_group_acl> is an installed executable script.
 It uses B<ldapsearch> from Openldap to lookup the name of a AD group sid.
 
 This helper must be used in with the negotiate_kerberos_auth helper in a
-Microsft AD or Samba environement.
+Microsoft AD or Samba environment.
 
 It reads from the standard input the domain username and a list of group sids
 and tries to match the group SIDs to the AD group sids.
@@ -79,7 +79,7 @@ This manual was written by Markus Moeller <markus_moeller@compuserve.com>
 
 =head1 COPYRIGHT
 
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -140,25 +140,25 @@ $|=1;
 
 sub debug()
 {
-	my @lt = localtime;
-	print STDERR strftime("%Y/%m/%d %H:%M:%S", @lt)." | $name: @_\n" if $opt{d};
+    my @lt = localtime;
+    print STDERR strftime("%Y/%m/%d %H:%M:%S", @lt)." | $name: @_\n" if $opt{d};
 }
 
 sub info()
 {
-	my @lt = localtime;
-	print STDERR strftime("%Y/%m/%d %H:%M:%S", @lt)." | $name: @_\n";
+    my @lt = localtime;
+    print STDERR strftime("%Y/%m/%d %H:%M:%S", @lt)." | $name: @_\n";
 }
 
 sub check()
 {
-	if ( grep( /^@_$/, @ADgroupSIDs) ) {
-		&debug("DEBUG: Found @_ in AD group SID");
-		return "OK";
-	} else {
-		&debug("DEBUG: Did not find @_ in AD group SID");
-		return "ERR";
-	}
+    if ( grep( /^@_$/, @ADgroupSIDs) ) {
+        &debug("DEBUG: Found @_ in AD group SID");
+        return "OK";
+    } else {
+        &debug("DEBUG: Did not find @_ in AD group SID");
+        return "ERR";
+    }
 }
 
 #
@@ -166,50 +166,50 @@ sub check()
 #
 sub init()
 {
-	use Getopt::Std;
-	my $errmsg;
-	my $opt_string = 'hdD:p:b:G:';
-	getopts( "$opt_string", \%opt ) or usage();
-	Pod::Usage::pod2usage(1) if $opt{h};
-	Pod::Usage::pod2usage(1) if not defined $opt{D};
-	Pod::Usage::pod2usage(1) if not defined $opt{b};
-	Pod::Usage::pod2usage(1) if not defined $opt{p};
-	Pod::Usage::pod2usage(1) if not defined $opt{G};
+    use Getopt::Std;
+    my $errmsg;
+    my $opt_string = 'hdD:p:b:G:';
+    getopts( "$opt_string", \%opt ) or usage();
+    Pod::Usage::pod2usage(1) if $opt{h};
+    Pod::Usage::pod2usage(1) if not defined $opt{D};
+    Pod::Usage::pod2usage(1) if not defined $opt{b};
+    Pod::Usage::pod2usage(1) if not defined $opt{p};
+    Pod::Usage::pod2usage(1) if not defined $opt{G};
 
-	$ENV{'KRB5CCNAME'} = $ccname;
+    $ENV{'KRB5CCNAME'} = $ccname;
 
-	@groups = split(/:/,$opt{G});
-	$errmsg=`kinit -k $opt{p} 2>&1`;
-	&info("ERROR: $errmsg") if $errmsg;
-	exit 99 if $errmsg;
+    @groups = split(/:/,$opt{G});
+    $errmsg=`kinit -k $opt{p} 2>&1`;
+    &info("ERROR: $errmsg") if $errmsg;
+    exit 99 if $errmsg;
 
-	$errmsg="";
-	foreach my $group (@groups) {
-		open(LDAP, "ldapsearch -LLL -Ygssapi -H ldap://$opt{D}:389 -s sub -b \"$opt{b}\" \"(CN=$group)\" objectsid 2>&1 |");
-		my $sid;
-		while (<LDAP>) {
-			chomp($_);
-			if ( $_ =~ /^object/ && defined $sid ) {
-				&info("ERROR: multiple SIDs returned for group $group");
-			} elsif ( $_ =~ /^object/ ) {
-				$sid=$_;
-				$sid=~s/^[^\s]+\s+//;
-			} else {
-				$errmsg=$errmsg.";".$_;
-			}
-		}
-		close(LDAP);
-		if ( ! defined $sid ) {
-			$errmsg=~s/^;//;
-			&info("ERROR: $errmsg");
-			&info("ERROR: no SID returned for group $group");
-		} else {
-			&info("INFO:ldapsearch result Group=$group, SID=$sid");
-			push @ADgroupSIDs, $sid;
-		}
-	}
-	&info("ERROR: Exit as no sid was found for any group") if ! @ADgroupSIDs;
-	exit 99 if ! @ADgroupSIDs;
+    $errmsg="";
+    foreach my $group (@groups) {
+        open(LDAP, "ldapsearch -LLL -Ygssapi -H ldap://$opt{D}:389 -s sub -b \"$opt{b}\" \"(CN=$group)\" objectsid 2>&1 |");
+        my $sid;
+        while (<LDAP>) {
+            chomp($_);
+            if ( $_ =~ /^object/ && defined $sid ) {
+                &info("ERROR: multiple SIDs returned for group $group");
+            } elsif ( $_ =~ /^object/ ) {
+                $sid=$_;
+                $sid=~s/^[^\s]+\s+//;
+            } else {
+                $errmsg=$errmsg.";".$_;
+            }
+        }
+        close(LDAP);
+        if ( ! defined $sid ) {
+            $errmsg=~s/^;//;
+            &info("ERROR: $errmsg");
+            &info("ERROR: no SID returned for group $group");
+        } else {
+            &info("INFO:ldapsearch result Group=$group, SID=$sid");
+            push @ADgroupSIDs, $sid;
+        }
+    }
+    &info("ERROR: Exit as no sid was found for any group") if ! @ADgroupSIDs;
+    exit 99 if ! @ADgroupSIDs;
 }
 
 init();
@@ -219,22 +219,22 @@ init();
 # Main loop
 #
 while (<STDIN>) {
-        chop;
-        &debug("DEBUG: Got $_ from squid");
-        ($user, $groupSIDs) = split(/\s+/);
-        if ( defined $user && defined $groupSIDs ) {
-		&debug("DEBUG: user=$user");
-		&debug("DEBUG: groups=$groupSIDs");
-		# test for each group squid send in it's request
-		foreach my $group (split(/,/,$groupSIDs)) {
-			$ans = &check($group);
-			last if $ans eq "OK";
-		}
-		&debug("DEBUG: Sending $ans to squid");
-		print "$ans\n";
-        } else {
-		&debug("DEBUG: Sending ERR to squid");
-		print "ERR\n";
-	}
+    chop;
+    &debug("DEBUG: Got $_ from squid");
+    ($user, $groupSIDs) = split(/\s+/);
+    if ( defined $user && defined $groupSIDs ) {
+        &debug("DEBUG: user=$user");
+        &debug("DEBUG: groups=$groupSIDs");
+        # test for each group squid send in it's request
+        foreach my $group (split(/,/,$groupSIDs)) {
+            $ans = &check($group);
+            last if $ans eq "OK";
+        }
+        &debug("DEBUG: Sending $ans to squid");
+        print "$ans\n";
+    } else {
+        &debug("DEBUG: Sending ERR to squid");
+        print "ERR\n";
+    }
 }
 

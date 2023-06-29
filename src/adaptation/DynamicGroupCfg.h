@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,6 +27,10 @@ public:
     Store services; ///< services in the group
 
     bool empty() const { return services.empty(); } ///< no services added
+
+    /// configured service IDs in X-Next-Services value (comma-separated) format
+    const String &serviceIds() const { return id; }
+
     void add(const String &item); ///< updates group id and services
     void clear(); ///< makes the config empty
 };

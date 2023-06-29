@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,12 +22,11 @@ class ACLNoteData : public ACLData<NotePairs::Entry *>
 
 public:
     ACLNoteData();
-    virtual ~ACLNoteData();
-    virtual bool match(NotePairs::Entry *);
-    virtual SBufList dump() const;
-    virtual void parse();
-    virtual bool empty() const;
-    virtual ACLData<NotePairs::Entry *> *clone() const;
+    ~ACLNoteData() override;
+    bool match(NotePairs::Entry *) override;
+    SBufList dump() const override;
+    void parse() override;
+    bool empty() const override;
 
 private:
     SBuf name;                   ///< Note name to check. It is always set
