@@ -2185,3 +2185,4 @@ ClientHttpRequest::calloutsError(const err_type error, const ErrorDetail::Pointe
     }
     //else if(calloutContext == NULL) is it possible?
 }
+
