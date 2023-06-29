@@ -3135,6 +3135,7 @@ AC_CONFIG_FILES([
 	src/base/Makefile
 	src/clients/Makefile
 	src/comm/Makefile
+	src/configuration/Makefile
 	src/debug/Makefile
 	src/dns/Makefile
 	src/DiskIO/Makefile

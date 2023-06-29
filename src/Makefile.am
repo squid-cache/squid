@@ -16,7 +16,7 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.cc \
 	LoadableModules.h
 
-SUBDIRS = mem time debug base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
+SUBDIRS = mem time debug base configuration anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -515,6 +515,7 @@ squid_LDADD = \
 	mem/libmem.la \
 	store/libstore.la \
 	time/libtime.la \
+	configuration/libconfiguration.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1141,6 +1142,7 @@ tests_testRock_LDADD = \
 	mem/libmem.la \
 	store/libstore.la \
 	$(ADAPTATION_LIBS) \
+	configuration/libconfiguration.la \
 	sbuf/libsbuf.la \
 	time/libtime.la \
 	$(top_builddir)/lib/libmisccontainers.la \
@@ -1318,6 +1320,7 @@ tests_testUfs_LDADD = \
 	mem/libmem.la \
 	store/libstore.la \
 	$(ADAPTATION_LIBS) \
+	configuration/libconfiguration.la \
 	sbuf/libsbuf.la \
 	time/libtime.la \
 	$(top_builddir)/lib/libmisccontainers.la \
@@ -1483,6 +1486,7 @@ tests_testStore_LDADD= \
 	sbuf/libsbuf.la \
 	DiskIO/libdiskio.la \
 	ipc/libipc.la \
+	configuration/libconfiguration.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1659,6 +1663,7 @@ tests_testDiskIO_LDADD = \
 	dns/libdns.la \
 	base/libbase.la \
 	mem/libmem.la \
+	configuration/libconfiguration.la \
 	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
@@ -1709,6 +1714,7 @@ tests_testACLMaxUserIP_LDADD = \
 	acl/libacls.la \
 	SquidConfig.o \
 	ip/libip.la \
+	configuration/libconfiguration.la \
 	parser/libparser.la \
 	sbuf/libsbuf.la \
 	base/libbase.la \
@@ -1943,6 +1949,7 @@ tests_test_http_range_LDADD = \
 	sbuf/libsbuf.la \
 	debug/libdebug.la \
 	store/libstore.la \
+	configuration/libconfiguration.la \
 	$(SNMP_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
@@ -2097,6 +2104,7 @@ tests_testHttpReply_LDADD=\
 	ip/libip.la \
 	base/libbase.la \
 	ipc/libipc.la \
+	configuration/libconfiguration.la \
 	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
@@ -2328,6 +2336,7 @@ tests_testHttpRequest_LDADD = \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
+	configuration/libconfiguration.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -2598,7 +2607,6 @@ tests_testCacheManager_LDADD = \
 	helper/libhelper.la \
 	http/libhttp.la \
 	proxyp/libproxyp.la \
-	parser/libparser.la \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -2622,6 +2630,8 @@ tests_testCacheManager_LDADD = \
 	$(SNMP_LIBS) \
 	mem/libmem.la \
 	store/libstore.la \
+	configuration/libconfiguration.la \
+	parser/libparser.la \
 	sbuf/libsbuf.la \
 	debug/libdebug.la \
 	$(top_builddir)/lib/libmisccontainers.la \
@@ -2693,6 +2703,8 @@ nodist_tests_testConfigParser_SOURCES = \
 	tests/stub_libmem.cc \
 	tests/stub_neighbors.cc
 tests_testConfigParser_LDADD = \
+	configuration/libconfiguration.la \
+	parser/libparser.la \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
