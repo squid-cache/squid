@@ -137,7 +137,7 @@ CachePeers::dump(StoreEntry *entry, const char *name) const
     NeighborTypeDomainList *t;
     LOCAL_ARRAY(char, xname, 128);
 
-    for (const auto &peer: cachePeers) {
+    for (const auto &peer: storage) {
         const auto p = peer.get();
         storeAppendPrintf(entry, "%s %s %s %d %d name=%s",
                           name,
@@ -395,54 +395,31 @@ CachePeers::parse(ConfigParser &)
     if (p->secure.encryptTransport)
         p->secure.parseOptions();
 
-    cachePeers.emplace_back(p);
+    storage.emplace_back(p);
 
-    p->index = cachePeers.size();
+    p->index = storage.size();
 
     peerClearRRStart();
 }
 
-void
-CachePeers::setNextPing(size_t &p) const
-{
-    if (++p >= size())
-        p = 0;
-}
-
-CachePeers::CachePeerList::const_iterator
-CachePeers::nextPollStart()
-{
-    Assure(size());
-    auto it = cachePeers.begin() + firstPing_;
-    currentPing_ = firstPing_;
-    setNextPing(currentPing_);
-    return it;
-}
-
-CachePeers::CachePeerList::const_iterator
+CachePeers::Storage::const_iterator
 CachePeers::nextPeerToPoll()
 {
     Assure(size());
-    if (currentPing_ == firstPing_) {
-        setNextPing(firstPing_);
-        currentPing_ = firstPing_;
-        return end();
-    }
-    auto it = cachePeers.begin() + currentPing_;
-    setNextPing(currentPing_);
-    return it;
+    const auto pos = peersPinged_ % size();
+    ++peersPinged_;
+    return storage.begin() + pos;
 }
 
 void
 CachePeers::remove(CachePeer *p)
 {
-    for (auto it = cachePeers.begin(); it != cachePeers.end(); ++it) {
+    for (auto it = storage.begin(); it != storage.end(); ++it) {
         if (it->get() == p) {
-            cachePeers.erase(it);
+            storage.erase(it);
             break;
         }
     }
-    firstPing_ = 0;
 }
 
 const CachePeers &

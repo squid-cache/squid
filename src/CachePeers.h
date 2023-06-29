@@ -19,8 +19,8 @@
 class CachePeers
 {
 public:
-    using CachePeerList = std::vector< std::unique_ptr<CachePeer>, PoolingAllocator< std::unique_ptr<CachePeer> > >;
-    using const_iterator = CachePeerList::const_iterator;
+    using Storage = std::vector< std::unique_ptr<CachePeer>, PoolingAllocator< std::unique_ptr<CachePeer> > >;
+    using const_iterator = Storage::const_iterator;
 
     static peer_t parseNeighborType(const char *);
 
@@ -29,31 +29,23 @@ public:
     /// dumps the cache peer list into the StoreEntry object
     void dump(StoreEntry *, const char *name) const;
     /// cleans the cache peer list
-    void clear() { cachePeers.clear(); }
+    void clear() { storage.clear(); }
 
-    const_iterator begin() const { return cachePeers.cbegin(); }
-    const_iterator end() const { return cachePeers.cend(); }
+    const_iterator begin() const { return storage.cbegin(); }
+    const_iterator end() const { return storage.cend(); }
 
     /// the current number of CachePeer objects
-    size_t size() const { return cachePeers.size(); }
+    size_t size() const { return storage.size(); }
 
     /// deletes a CachePeer object
     void remove(CachePeer *);
-
-    /// the CachePeer used first in neighborsUdpPing() peer poll
-    const_iterator nextPollStart();
 
     /// a CachePeer used next in neighborsUdpPing() peer poll
     const_iterator nextPeerToPoll();
 
 private:
-    void setNextPing(size_t &) const;
-
-    CachePeerList cachePeers; ///< the list of parsed CachePeer objects
-    /// approximate starting point for the next neighborsUdpPing() peer poll
-    size_t firstPing_ = 0;
-    /// the current peer index being polled in neighborsUdpPing()
-    size_t currentPing_ = 0;
+    Storage storage; ///< cache_peers in configuration/parsing order
+    uint64_t peersPinged_ = 0; ///< total poll attempts by neighborsUdpPing() calls
 };
 
 const CachePeers &CurrentCachePeers();
