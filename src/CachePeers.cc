@@ -12,7 +12,7 @@
 #include "SquidConfig.h"
 
 CachePeers::Storage::const_iterator
-CachePeers::nextPeerToPoll()
+CachePeers::nextPeerToPing()
 {
     Assure(size());
     const auto pos = peersPinged_ % size();

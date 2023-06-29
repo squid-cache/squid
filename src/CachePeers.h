@@ -41,12 +41,12 @@ public:
     /// deletes a CachePeer object
     void remove(CachePeer *);
 
-    /// a CachePeer used next in neighborsUdpPing() peer poll
-    const_iterator nextPeerToPoll();
+    /// a CachePeer used next in neighborsUdpPing() peer ping
+    const_iterator nextPeerToPing();
 
 private:
     Storage storage; ///< cache_peers in configuration/parsing order
-    uint64_t peersPinged_ = 0; ///< total poll attempts by neighborsUdpPing() calls
+    uint64_t peersPinged_ = 0; ///< total ping attempts made in neighborsUdpPing()
 };
 
 const CachePeers &CurrentCachePeers();
