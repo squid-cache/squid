@@ -24,6 +24,7 @@ public:
 
     static peer_t parseNeighborType(const char *);
 
+    void add(CachePeer *p) { storage.emplace_back(p); }
     /// parses a cache_peer line and stores the parsed CachePeer object
     void parse(ConfigParser &parser);
     /// dumps the cache peer list into the StoreEntry object
