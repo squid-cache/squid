@@ -1657,9 +1657,6 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
 
     request->flags.internal = http->flags.internal;
 
-    if (request->url.getScheme() == AnyP::PROTO_CACHE_OBJECT)
-        request->flags.disableCacheUse("cache_object URL scheme");
-
     if (!isFtp) {
         // XXX: for non-HTTP messages instantiate a different Http::Message child type
         // for now Squid only supports HTTP requests
