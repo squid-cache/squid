@@ -59,7 +59,8 @@ public:
     void packInto(Packable *p) const;
     int getInt() const;
     int64_t getInt64() const;
-    /// packed length, including ": " and CRLF
+
+    /// expected number of bytes written by packInto(), including ": " and CRLF
     size_t length() const { return name.length() + 2 + value.size() + 2; }
 
     Http::HdrType id;

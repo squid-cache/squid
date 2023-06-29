@@ -1433,7 +1433,7 @@ StoreEntry::updateOnNotModified(const StoreEntry &e304)
     const auto updatedReply = oldReply.recreateOnNotModified(e304.mem_obj->baseReply());
     if (updatedReply) { // HTTP 304 brought in new information
         if (updatedReply->header.tooLarge())
-            throw TextException("cannot update the header because the header length became too large", Here());
+            throw TextException("cannot update the cached response because its header would become too large", Here());
         mem_obj->updateReply(*updatedReply);
     }
     // else continue to use the previous update, if any

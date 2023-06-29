@@ -483,9 +483,8 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
             try {
                 Store::Root().updateOnNotModified(fetch->old_entry, *fetch->entry);
             } catch (...) {
-                static const char *reason = "error when updating entry";
-                debugs(20, DBG_IMPORTANT, reason << *fetch->old_entry << ": " << CurrentException);
-                peerDigestFetchAbort(fetch, buf, reason);
+                debugs(20, DBG_IMPORTANT, "ERROR: Cannot update cached entry: " << CurrentException);
+                peerDigestFetchAbort(fetch, buf, "header update failure after a 304 response");
                 return -1;
             }
 

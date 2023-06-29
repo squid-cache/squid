@@ -743,13 +743,28 @@ HttpHeader::tooLarge() const
     switch (owner) {
     case hoRequest:
         max = Config.maxRequestHeaderSize;
+        break;
     case hoReply:
-         max = Config.maxReplyHeaderSize;
-    default:
+        max = Config.maxReplyHeaderSize;
+        break;
+#if USE_HTCP
+    case hoHtcpReply:
+        // HTCP messages have a fixed header length
         return false;
+#endif
+#if USE_OPENSSL
+    case hoErrorDetail:
+        // this case should not happen
+        return false;
+#endif
+    case hoNone:
+        // this case should not happen
+        return false;
+    case hoEnd:
+        Assure(!"bad HttpHeader owner");
     }
     debugs(55, 3, "hdr: " << this << ", owner: " << owner << ", len: " << len << ", max: " << max);
-    return len >=0 && static_cast<size_t>(len) > max;
+    return len >= 0 && static_cast<size_t>(len) > max;
 }
 
 /* appends an entry;
