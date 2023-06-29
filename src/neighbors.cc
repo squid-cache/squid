@@ -514,7 +514,7 @@ neighbors_init(void)
     if (Comm::IsConnOpen(icpIncomingConn)) {
 
         for (const auto &thisPeer: CurrentCachePeers()) {
-            if (0 != strcasecmp(thisPeer->host, me))
+            if (0 != strcmp(thisPeer->host, me))
                 continue;
 
             for (AnyP::PortCfgPointer s = HttpPortList; s != nullptr; s = s->next) {
