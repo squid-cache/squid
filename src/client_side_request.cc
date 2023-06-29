@@ -913,9 +913,6 @@ clientHierarchical(ClientHttpRequest * http)
     if (request->url.getScheme() == AnyP::PROTO_HTTP)
         return method.respMaybeCacheable();
 
-    if (request->url.getScheme() == AnyP::PROTO_CACHE_OBJECT)
-        return 0;
-
     return 1;
 }
 

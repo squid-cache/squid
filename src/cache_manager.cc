@@ -152,29 +152,15 @@ CacheManager::createRequestedAction(const Mgr::ActionParams &params)
     return cmd->profile->creator->create(cmd);
 }
 
-static const CharacterSet &
-MgrFieldChars(const AnyP::ProtocolType &protocol)
-{
-    // Deprecated cache_object:// scheme used '@' to delimit passwords
-    if (protocol == AnyP::PROTO_CACHE_OBJECT) {
-        static const CharacterSet fieldChars = CharacterSet("cache-object-field", "@?#").complement();
-        return fieldChars;
-    }
-
-    static const CharacterSet actionChars = CharacterSet("mgr-field", "?#").complement();
-    return actionChars;
-}
-
 /**
- * define whether the URL is a cache-manager URL and parse the action
- * requested by the user. Checks via CacheManager::ActionProtection() that the
- * item is accessible by the user.
+ * Parses the action requested by the user and checks via
+ * CacheManager::ActionProtection() that the item is accessible by the user.
  *
  * Syntax:
  *
- *  scheme "://" authority [ '/squid-internal-mgr' ] path-absolute [ '@' unreserved ] '?' query-string
+ * [ scheme "://" authority ] '/squid-internal-mgr' path-absolute [ "?" query ] [ "#" fragment ]
  *
- * see RFC 3986 for definitions of scheme, authority, path-absolute, query-string
+ * see RFC 3986 for definitions of scheme, authority, path-absolute, query
  *
  * \returns Mgr::Command object with action to perform and parameters it might use
  */
@@ -184,23 +170,17 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
     Parser::Tokenizer tok(uri.path());
 
     static const SBuf internalMagicPrefix("/squid-internal-mgr/");
-    if (!tok.skip(internalMagicPrefix) && !tok.skip('/'))
-        throw TextException("invalid URL path", Here());
+    Assure(tok.skip(internalMagicPrefix));
 
     Mgr::Command::Pointer cmd = new Mgr::Command();
     cmd->params.httpUri = SBufToString(uri.absolute());
 
-    const auto &fieldChars = MgrFieldChars(uri.getScheme());
+    static const auto fieldChars = CharacterSet("mgr-field", "?#").complement();
 
     SBuf action;
     if (!tok.prefix(action, fieldChars)) {
-        if (uri.getScheme() == AnyP::PROTO_CACHE_OBJECT) {
-            static const SBuf menuReport("menu");
-            action = menuReport;
-        } else {
-            static const SBuf indexReport("index");
-            action = indexReport;
-        }
+        static const SBuf indexReport("index");
+        action = indexReport;
     }
     cmd->params.actionName = SBufToString(action);
 
@@ -213,12 +193,6 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
         throw TextException(ToSBuf("action '", action, "' is ", prot), Here());
     cmd->profile = profile;
 
-    SBuf passwd;
-    if (uri.getScheme() == AnyP::PROTO_CACHE_OBJECT && tok.skip('@')) {
-        (void)tok.prefix(passwd, fieldChars);
-        cmd->params.password = SBufToString(passwd);
-    }
-
     // TODO: fix when AnyP::Uri::parse() separates path?query#fragment
     SBuf params;
     if (tok.skip('?')) {
@@ -230,8 +204,7 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
         throw TextException("invalid characters in URL", Here());
     // else ignore #fragment (if any)
 
-    debugs(16, 3, "MGR request: host=" << uri.host() << ", action=" << action <<
-           ", password=" << passwd << ", params=" << params);
+    debugs(16, 3, "MGR request: host=" << uri.host() << ", action=" << action << ", params=" << params);
 
     return cmd;
 }

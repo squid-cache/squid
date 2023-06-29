@@ -1120,10 +1120,6 @@ prepareAcceleratedURL(ConnStateData * conn, const Http1::RequestParserPointer &h
 
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
 
-    static const SBuf cache_object("cache_object://");
-    if (hp->requestUri().startsWith(cache_object))
-        return nullptr; /* already in good shape */
-
     // XXX: re-use proper URL parser for this
     SBuf url = hp->requestUri(); // use full provided URI if we abort
     do { // use a loop so we can break out of it
@@ -1660,9 +1656,6 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
     }
 
     request->flags.internal = http->flags.internal;
-
-    if (request->url.getScheme() == AnyP::PROTO_CACHE_OBJECT)
-        request->flags.disableCacheUse("cache_object URL scheme");
 
     if (!isFtp) {
         // XXX: for non-HTTP messages instantiate a different Http::Message child type
