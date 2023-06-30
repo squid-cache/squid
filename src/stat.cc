@@ -12,6 +12,9 @@
 #include "AccessLogEntry.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
+#if USE_CACHE_DIGESTS
+#include "CachePeers.h"
+#endif
 #include "client_side.h"
 #include "client_side_request.h"
 #include "comm/Connection.h"
@@ -1574,7 +1577,6 @@ statPeerSelect(StoreEntry * sentry)
 {
 #if USE_CACHE_DIGESTS
     StatCounters *f = &statCounter;
-    CachePeer *peer;
     const int tot_used = f->cd.times_used + f->icp.times_used;
 
     /* totals */
@@ -1583,7 +1585,7 @@ statPeerSelect(StoreEntry * sentry)
     /* per-peer */
     storeAppendPrintf(sentry, "\nPer-peer statistics:\n");
 
-    for (const auto &peer: Config.cachePeers) {
+    for (const auto &peer: CurrentCachePeers()) {
         if (peer->digest)
             peerDigestStatsReport(peer->digest, sentry);
         else

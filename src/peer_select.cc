@@ -888,7 +888,7 @@ PeerSelector::selectAllParents()
      * simply are not configured to handle the request.
      */
     /* Add default parent as a last resort */
-    if (auto p = getDefaultParent(this)) {
+    if (const auto p = getDefaultParent(this)) {
         addSelection(p, DEFAULT_PARENT);
     }
 }

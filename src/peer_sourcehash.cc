@@ -125,7 +125,7 @@ peerSourceHashInit(void)
 
     for (k = 1; k <= K; ++k) {
         double Kk1 = (double) (K - k + 1);
-        auto p = sourcehash_peers[k - 1];
+        const auto p = sourcehash_peers[k - 1];
         p->sourcehash.load_multiplier = (Kk1 * (p->sourcehash.load_factor - P_last)) / Xn;
         p->sourcehash.load_multiplier += pow(X_last, Kk1);
         p->sourcehash.load_multiplier = pow(p->sourcehash.load_multiplier, 1.0 / Kk1);

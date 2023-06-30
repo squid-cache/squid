@@ -51,6 +51,7 @@ private:
 
 const CachePeers &CurrentCachePeers();
 
+// TODO: rename
 void NeighborRemove(CachePeer *);
 
 #endif /* SQUID_CACHEPEERS_H_ */

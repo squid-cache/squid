@@ -130,7 +130,7 @@ peerUserHashInit(void)
 
     for (k = 1; k <= K; ++k) {
         double Kk1 = (double) (K - k + 1);
-        auto p = userhash_peers[k - 1];
+        const auto p = userhash_peers[k - 1];
         p->userhash.load_multiplier = (Kk1 * (p->userhash.load_factor - P_last)) / Xn;
         p->userhash.load_multiplier += pow(X_last, Kk1);
         p->userhash.load_multiplier = pow(p->userhash.load_multiplier, 1.0 / Kk1);

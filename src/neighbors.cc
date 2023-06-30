@@ -288,7 +288,7 @@ getFirstUpParent(PeerSelector *ps)
     HttpRequest *request = ps->request;
 
     for (const auto &peer: CurrentCachePeers()) {
-        auto p = peer.get();
+        const auto p = peer.get();
 
         if (!neighborUp(p))
             continue;
@@ -315,7 +315,7 @@ getRoundRobinParent(PeerSelector *ps)
     CachePeer *q = nullptr;
 
     for (const auto &peer: CurrentCachePeers()) {
-        auto p = peer.get();
+        const auto p = peer.get();
         if (!p->options.roundrobin)
             continue;
 
@@ -358,7 +358,7 @@ getWeightedRoundRobinParent(PeerSelector *ps)
     int weighted_rtt;
 
     for (const auto &peer: CurrentCachePeers()) {
-        auto p = peer.get();
+        const auto p = peer.get();
 
         if (!p->options.weighted_roundrobin)
             continue;
@@ -512,6 +512,8 @@ neighbors_init(void)
     neighborsRegisterWithCacheManager();
 
     if (Comm::IsConnOpen(icpIncomingConn)) {
+        using RawCachePeers = std::vector<CachePeer *, PoolingAllocator<CachePeer*> >;
+        RawCachePeers peersToRemove;
 
         for (const auto &thisPeer: CurrentCachePeers()) {
             if (0 != strcmp(thisPeer->host, me))
@@ -524,9 +526,13 @@ neighbors_init(void)
                 debugs(15, DBG_IMPORTANT, "WARNING: Peer looks like this host." <<
                        Debug::Extra << "Ignoring cache_peer " << *thisPeer);
 
-                NeighborRemove(thisPeer.get());
+                peersToRemove.push_back(thisPeer.get());
+                break;
             }
         }
+
+        for (const auto &p: peersToRemove)
+            NeighborRemove(p);
     }
 
     peerRefreshDNS((void *) 1);
@@ -552,7 +558,7 @@ neighborsUdpPing(HttpRequest * request,
     int sibling_timeout = 0, sibling_exprep = 0;
     int mcast_timeout = 0, mcast_exprep = 0;
 
-    if (!CurrentCachePeers().size())
+    if (Config.cachePeers == nullptr)
         return 0;
 
     assert(!entry->hasDisk());
@@ -566,7 +572,7 @@ neighborsUdpPing(HttpRequest * request,
     reqnum = icpSetCacheKey((const cache_key *)entry->key);
 
     for (size_t i = 0; i < Config.cachePeers->size(); ++i) {
-        auto p = Config.cachePeers->nextPeerToPing()->get();
+        const auto p = Config.cachePeers->nextPeerToPing()->get();
 
         debugs(15, 5, "candidate: " << *p);
 
@@ -754,9 +760,10 @@ neighborsDigestSelect(PeerSelector *ps)
 
     storeKeyPublicByRequest(request);
 
-    for (auto peer = CurrentCachePeers().firstPing(); peer != CurrentCachePeers().end(); ++peer) {
+    for (size_t i = 0; i < Config.cachePeers->size(); ++i) {
+        const auto p = Config.cachePeers->nextPeerToPing()->get();
+
         lookup_t lookup;
-        auto p = peer->get();
 
         lookup = peerDigestLookup(p, ps);
 

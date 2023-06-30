@@ -23,12 +23,8 @@ CachePeers::nextPeerToPing()
 void
 CachePeers::remove(CachePeer *p)
 {
-    for (auto it = storage.begin(); it != storage.end(); ++it) {
-        if (it->get() == p) {
-            storage.erase(it);
-            break;
-        }
-    }
+    storage.erase(std::remove_if(storage.begin(), storage.end(), [&](const auto &el) {
+                return el.get() == p; }), storage.end());
 }
 
 const CachePeers &
