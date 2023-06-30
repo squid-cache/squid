@@ -913,9 +913,6 @@ clientHierarchical(ClientHttpRequest * http)
     if (request->url.getScheme() == AnyP::PROTO_HTTP)
         return method.respMaybeCacheable();
 
-    if (request->url.getScheme() == AnyP::PROTO_CACHE_OBJECT)
-        return 0;
-
     return 1;
 }
 
@@ -1838,10 +1835,6 @@ ClientHttpRequest::doCallouts()
     cbdataReferenceDone(calloutContext->http);
     delete calloutContext;
     calloutContext = nullptr;
-#if HEADERS_LOG
-
-    headersLog(0, 1, request->method, request);
-#endif
 
     debugs(83, 3, "calling processRequest()");
     processRequest();

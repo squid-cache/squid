@@ -351,7 +351,8 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
             if (check) {
                 ACLFilledChecklist *filledCheck = Filled(check);
                 const auto savedErrors = filledCheck->sslErrors;
-                filledCheck->sslErrors = new Security::CertErrors(Security::CertError(error_no, broken_cert));
+                const auto sslErrors = std::make_unique<Security::CertErrors>(Security::CertError(error_no, broken_cert));
+                filledCheck->sslErrors = sslErrors.get();
                 filledCheck->serverCert = peer_cert;
                 if (check->fastCheck().allowed()) {
                     debugs(83, 3, "bypassing SSL error " << error_no << " in " << *peer_cert);
@@ -359,7 +360,6 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
                 } else {
                     debugs(83, 5, "confirming SSL error " << error_no);
                 }
-                delete filledCheck->sslErrors;
                 filledCheck->sslErrors = savedErrors;
                 filledCheck->serverCert.reset();
             }

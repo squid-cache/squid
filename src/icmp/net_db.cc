@@ -33,6 +33,7 @@
 #include "mime_header.h"
 #include "neighbors.h"
 #include "PeerSelectState.h"
+#include "sbuf/SBuf.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "StoreClient.h"
@@ -47,8 +48,6 @@
 #include "icmp/IcmpSquid.h"
 #include "ipcache.h"
 #include "StoreClient.h"
-
-#define NETDB_REQBUF_SZ 4096
 
 typedef enum {
     STATE_NONE,
@@ -65,7 +64,6 @@ public:
         p(aPeer),
         r(theReq)
     {
-        *buf = 0;
         assert(r);
         // TODO: check if we actually need to do this. should be implicit
         r->http_ver = Http::ProtocolVersion();
@@ -81,10 +79,10 @@ public:
     StoreEntry *e = nullptr;
     store_client *sc = nullptr;
     HttpRequestPointer r;
-    int64_t used = 0;
-    size_t buf_sz = NETDB_REQBUF_SZ;
-    char buf[NETDB_REQBUF_SZ];
-    int buf_ofs = 0;
+
+    /// for receiving a NetDB reply body from Store and interpreting it
+    Store::ParsingBuffer parsingBuffer;
+
     netdb_conn_state_t connstate = STATE_HEADER;
 };
 
@@ -667,23 +665,19 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
     Ip::Address addr;
 
     netdbExchangeState *ex = (netdbExchangeState *)data;
-    int rec_sz = 0;
-    int o;
 
     struct in_addr line_addr;
     double rtt;
     double hops;
-    char *p;
     int j;
-    size_t hdr_sz;
     int nused = 0;
-    int size;
-    int oldbufofs = ex->buf_ofs;
 
-    rec_sz = 0;
+    size_t rec_sz = 0; // received record size (TODO: make const)
     rec_sz += 1 + sizeof(struct in_addr);
     rec_sz += 1 + sizeof(int);
     rec_sz += 1 + sizeof(int);
+    // to make progress without growing buffer space, we must parse at least one record per call
+    Assure(rec_sz <= ex->parsingBuffer.capacity());
     debugs(38, 3, "netdbExchangeHandleReply: " << receivedData.length << " read bytes");
 
     if (!ex->p.valid()) {
@@ -694,63 +688,27 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
     debugs(38, 3, "for " << *ex->p);
 
-    if (receivedData.length == 0 && !receivedData.flags.error) {
-        debugs(38, 3, "netdbExchangeHandleReply: Done");
+    if (receivedData.flags.error) {
         delete ex;
         return;
     }
 
-    p = ex->buf;
-
-    /* Get the size of the buffer now */
-    size = ex->buf_ofs + receivedData.length;
-    debugs(38, 3, "netdbExchangeHandleReply: " << size << " bytes buf");
-
-    /* Check if we're still doing headers */
-
     if (ex->connstate == STATE_HEADER) {
-
-        ex->buf_ofs += receivedData.length;
-
-        /* skip reply headers */
-
-        if ((hdr_sz = headersEnd(p, ex->buf_ofs))) {
-            debugs(38, 5, "netdbExchangeHandleReply: hdr_sz = " << hdr_sz);
-            const auto scode = ex->e->mem().baseReply().sline.status();
-            assert(scode != Http::scNone);
-            debugs(38, 3, "netdbExchangeHandleReply: reply status " << scode);
-
-            if (scode != Http::scOkay) {
-                delete ex;
-                return;
-            }
-
-            assert((size_t)ex->buf_ofs >= hdr_sz);
-
-            /*
-             * Now, point p to the part of the buffer where the data
-             * starts, and update the size accordingly
-             */
-            assert(ex->used == 0);
-            ex->used = hdr_sz;
-            size = ex->buf_ofs - hdr_sz;
-            p += hdr_sz;
-
-            /* Finally, set the conn state mode to STATE_BODY */
-            ex->connstate = STATE_BODY;
-        } else {
-            StoreIOBuffer tempBuffer;
-            tempBuffer.offset = ex->buf_ofs;
-            tempBuffer.length = ex->buf_sz - ex->buf_ofs;
-            tempBuffer.data = ex->buf + ex->buf_ofs;
-            /* Have more headers .. */
-            storeClientCopy(ex->sc, ex->e, tempBuffer,
-                            netdbExchangeHandleReply, ex);
+        const auto scode = ex->e->mem().baseReply().sline.status();
+        assert(scode != Http::scNone);
+        debugs(38, 3, "reply status " << scode);
+        if (scode != Http::scOkay) {
+            delete ex;
             return;
         }
+        ex->connstate = STATE_BODY;
     }
 
     assert(ex->connstate == STATE_BODY);
+
+    ex->parsingBuffer.appended(receivedData.data, receivedData.length);
+    auto p = ex->parsingBuffer.c_str(); // current parsing position
+    auto size = ex->parsingBuffer.contentSize(); // bytes we still need to parse
 
     /* If we get here, we have some body to parse .. */
     debugs(38, 5, "netdbExchangeHandleReply: start parsing loop, size = " << size);
@@ -760,6 +718,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         addr.setAnyAddr();
         hops = rtt = 0.0;
 
+        size_t o; // current record parsing offset
         for (o = 0; o < rec_sz;) {
             switch ((int) *(p + o)) {
 
@@ -797,8 +756,6 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
         assert(o == rec_sz);
 
-        ex->used += rec_sz;
-
         size -= rec_sz;
 
         p += rec_sz;
@@ -806,32 +763,8 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         ++nused;
     }
 
-    /*
-     * Copy anything that is left over to the beginning of the buffer,
-     * and adjust buf_ofs accordingly
-     */
-
-    /*
-     * Evilly, size refers to the buf size left now,
-     * ex->buf_ofs is the original buffer size, so just copy that
-     * much data over
-     */
-    memmove(ex->buf, ex->buf + (ex->buf_ofs - size), size);
-
-    ex->buf_ofs = size;
-
-    /*
-     * And don't re-copy the remaining data ..
-     */
-    ex->used += size;
-
-    /*
-     * Now the tricky bit - size _included_ the leftover bit from the _last_
-     * storeClientCopy. We don't want to include that, or our offset will be wrong.
-     * So, don't count the size of the leftover buffer we began with.
-     * This can _disappear_ when we're not tracking offsets ..
-     */
-    ex->used -= oldbufofs;
+    const auto parsedSize = ex->parsingBuffer.contentSize() - size;
+    ex->parsingBuffer.consume(parsedSize);
 
     debugs(38, 3, "netdbExchangeHandleReply: size left over in this buffer: " << size << " bytes");
 
@@ -839,20 +772,26 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
            " entries, (x " << rec_sz << " bytes) == " << nused * rec_sz <<
            " bytes total");
 
-    debugs(38, 3, "netdbExchangeHandleReply: used " << ex->used);
-
     if (EBIT_TEST(ex->e->flags, ENTRY_ABORTED)) {
         debugs(38, 3, "netdbExchangeHandleReply: ENTRY_ABORTED");
         delete ex;
-    } else if (ex->e->store_status == STORE_PENDING) {
-        StoreIOBuffer tempBuffer;
-        tempBuffer.offset = ex->used;
-        tempBuffer.length = ex->buf_sz - ex->buf_ofs;
-        tempBuffer.data = ex->buf + ex->buf_ofs;
-        debugs(38, 3, "netdbExchangeHandleReply: EOF not received");
-        storeClientCopy(ex->sc, ex->e, tempBuffer,
-                        netdbExchangeHandleReply, ex);
+        return;
     }
+
+    if (ex->sc->atEof()) {
+        if (const auto leftoverBytes = ex->parsingBuffer.contentSize())
+            debugs(38, 2, "discarding a partially received record due to Store EOF: " << leftoverBytes);
+        delete ex;
+        return;
+    }
+
+    // TODO: To protect us from a broken peer sending an "infinite" stream of
+    // new addresses, limit the cumulative number of received bytes or records?
+
+    const auto remainingSpace = ex->parsingBuffer.space().positionAt(receivedData.offset + receivedData.length);
+    // rec_sz is at most buffer capacity, and we consume all fully loaded records
+    Assure(remainingSpace.length);
+    storeClientCopy(ex->sc, ex->e, remainingSpace, netdbExchangeHandleReply, ex);
 }
 
 #endif /* USE_ICMP */
@@ -1273,14 +1212,9 @@ netdbExchangeStart(void *data)
     ex->e = storeCreateEntry(uri, uri, RequestFlags(), Http::METHOD_GET);
     assert(nullptr != ex->e);
 
-    StoreIOBuffer tempBuffer;
-    tempBuffer.length = ex->buf_sz;
-    tempBuffer.data = ex->buf;
-
     ex->sc = storeClientListAdd(ex->e, ex);
+    storeClientCopy(ex->sc, ex->e, ex->parsingBuffer.makeInitialSpace(), netdbExchangeHandleReply, ex);
 
-    storeClientCopy(ex->sc, ex->e, tempBuffer,
-                    netdbExchangeHandleReply, ex);
     ex->r->flags.loopDetected = true;   /* cheat! -- force direct */
 
     // XXX: send as Proxy-Authenticate instead

@@ -1057,11 +1057,6 @@ HttpStateData::haveParsedReplyHeaders()
         }
 #endif
     }
-
-#if HEADERS_LOG
-    headersLog(1, 0, request->method, rep);
-
-#endif
 }
 
 HttpStateData::ConnectionStatus

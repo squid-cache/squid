@@ -2391,7 +2391,7 @@ parse_peer(CachePeer ** head)
 
 #if USE_CACHE_DIGESTS
     if (!p->options.no_digest)
-        peerDigestCreate(p);
+        p->digest = new PeerDigest(p);
 #endif
 
     if (p->secure.encryptTransport)

@@ -43,6 +43,9 @@ public:
         return Range<int64_t>(offset, offset + length);
     }
 
+    /// convenience method for changing the offset of a being-configured buffer
+    StoreIOBuffer &positionAt(const int64_t newOffset) { offset = newOffset; return *this; }
+
     void dump() const {
         if (fwrite(data, length, 1, stderr)) {}
         if (fwrite("\n", 1, 1, stderr)) {}

@@ -12,7 +12,7 @@
 #include "squid.h"
 
 // The following code section is part of an EXPERIMENTAL native Windows NT/2000 Squid port.
-// Compiles only on MS Visual C++ or MinGW
+// Compiles only on MS Visual C++
 // CygWin appears not to need any of these
 #if _SQUID_WINDOWS_ && !_SQUID_CYGWIN_
 
@@ -23,7 +23,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <sys/timeb.h>
-#if HAVE_WIN32_PSAPI
+#if HAVE_PSAPI_H
 #include <psapi.h>
 #endif
 #ifndef _MSWSOCK_
@@ -62,7 +62,7 @@ void
 GetProcessName(pid_t pid, char *ProcessName)
 {
     strcpy(ProcessName, "unknown");
-#if HAVE_WIN32_PSAPI
+#if defined(PSAPI_VERSION)
     /* Get a handle to the process. */
     HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
     /* Get the process name. */
@@ -79,7 +79,7 @@ GetProcessName(pid_t pid, char *ProcessName)
     } else
         return;
     CloseHandle(hProcess);
-#endif /* HAVE_WIN32_PSAPI */
+#endif
 }
 
 int
@@ -123,7 +123,6 @@ gettimeofday(struct timeval *pcur_time, void *tzp)
 }
 #endif /* !HAVE_GETTIMEOFDAY */
 
-#if !_SQUID_MINGW_
 int
 WIN32_ftruncate(int fd, off_t size)
 {
@@ -171,7 +170,6 @@ WIN32_truncate(const char *pathname, off_t length)
 
     return res;
 }
-#endif /* !_SQUID_MINGW_ */
 
 struct passwd *
 getpwnam(char *unused) {
@@ -184,34 +182,6 @@ getgrnam(char *unused) {
     static struct group grp = {nullptr, nullptr, 100, nullptr};
     return &grp;
 }
-
-#if _SQUID_MINGW_
-int
-_free_osfhnd(int filehandle)
-{
-    if (((unsigned) filehandle < SQUID_MAXFD) &&
-            (_osfile(filehandle) & FOPEN) &&
-            (_osfhnd(filehandle) != (long) INVALID_HANDLE_VALUE)) {
-        switch (filehandle) {
-        case 0:
-            SetStdHandle(STD_INPUT_HANDLE, nullptr);
-            break;
-        case 1:
-            SetStdHandle(STD_OUTPUT_HANDLE, nullptr);
-            break;
-        case 2:
-            SetStdHandle(STD_ERROR_HANDLE, nullptr);
-            break;
-        }
-        _osfhnd(filehandle) = (long) INVALID_HANDLE_VALUE;
-        return (0);
-    } else {
-        errno = EBADF;      /* bad handle */
-        _doserrno = 0L;     /* not an OS error */
-        return -1;
-    }
-}
-#endif /* _SQUID_MINGW_ */
 
 struct errorentry {
     unsigned long WIN32_code;

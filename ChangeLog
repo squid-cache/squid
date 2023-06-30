@@ -1,3 +1,19 @@
+Changes in squid-6.0.3 (05 Jun 2023):
+
+	- Bug 5148: Log %Ss of failed tunnels as TCP_TUNNEL
+	- Do not leak Security::CertErrors created in X509_verify_cert()
+	- Do not erase aborted StoreMap entries that are still being read
+	- Fix build in environments lacking syslog
+	- Fix build failures in some environments due to time_t type conflicts in libdebug
+	- Remove obsolete caddr_t
+	- ... and some documentation changes
+
+Changes in squid-6.0.2 (30 Apr 2023):
+
+	- Avoid excessive disk I/O in some environments
+	- ... and several build and portability fixes
+	- ... and all fixes from 5.9
+
 Changes in squid-6.0.1 (28 Feb 2023):
 
 	- Bug 5256: Intercepting port fails to accept
@@ -12,6 +28,7 @@ Changes in squid-6.0.1 (28 Feb 2023):
 	- Bug 5021: Add a script to fix spelling error with codespell
 	- Bug 4946: client_side_request.cc: "request != newRequest"
 	- Bug 4832: '!schemeAccess' assertion on exit
+	- Bug 4572: squidclient: Remove deprecated cache_object:// support
 	- Bug 4528: ICAP transactions quit on async DNS lookups
 	- Add scripts/trace-context.pl: a debugging tool
 	- Remove cache_diff tool
@@ -40,7 +57,6 @@ Changes in squid-6.0.1 (28 Feb 2023):
 	- ext_lm_group_acl: Improved username handling
 	- negotiate_wrapper: ensure null-termination of strings
 	- pinger: Fix MAX_PKT{4,6}_SZ to account for icmpEchoData padding
-	- squidclient: Remove deprecated cache_object:// support
 	- HTTP: Replaced X-Cache and X-Cache-Lookup headers with Cache-Status
 	- HTTP: Update Host, Via, and other headers in-place when possible
 	- HTTP: Update status code 413 compliance
@@ -109,6 +125,12 @@ Changes in squid-6.0.1 (28 Feb 2023):
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
 	- ... and all fixes from 5.8
+
+Changes in squid-5.9 (30 Apr 2023):
+
+	- Improve reply_body_max_size matching accuracy
+	- ... and some documentation changes
+	- ... and many portability fixes
 
 Changes in squid-5.8 (28 Feb 2023):
 

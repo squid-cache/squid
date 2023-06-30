@@ -76,20 +76,14 @@
 #include "helper/protocol_defines.h"
 #include "ntlmauth/ntlmauth.h"
 #include "ntlmauth/support_bits.cci"
-#include "sspwin32.h"
+#include "sspi/sspwin32.h"
 #include "util.h"
 
-#include <windows.h>
-#include <sspi.h>
-#include <security.h>
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
+#include <cctype>
+#include <lm.h>
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-#include <lm.h>
-#include <ntsecapi.h>
 
 int NTLM_packet_debug_enabled = 0;
 static int have_challenge;

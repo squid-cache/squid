@@ -242,7 +242,7 @@ local_printfx(const char *msg,...)
         *(dbuf) = '\0';
     } else {
         /* FAIL */
-        debug("local_printfx() FAILURE: %" PRIuSIZE "\n", x);
+        debug("local_printfx() FAILURE: %zu\n", x);
     }
 
     /* stdout needs to be flushed for it to work with Squid */
@@ -1086,7 +1086,7 @@ SearchIPLDAP(edui_ldap_t *l)
                     memcpy(bufa, l->val[i]->bv_val, j);
                     z = BinarySplit(bufa, j, '#', bufb, sizeof(bufb));
                     /* BINARY DEBUGGING *
-                                              local_printfx("value[%" PRIuSIZE "]: BinarySplit(", (size_t) i);
+                                              local_printfx("value[%zu]: BinarySplit(", (size_t) i);
                                               for (k = 0; k < z; ++k) {
                                                 c = (int) bufb[k];
                                                 if (c < 0)
@@ -1100,7 +1100,7 @@ SearchIPLDAP(edui_ldap_t *l)
                                                   c = c + 256;
                                                 local_printfx("%02X", c);
                                               }
-                                              local_printfx("): %" PRIuSIZE "\n", (size_t) z);
+                                              local_printfx("): %zu\n", (size_t) z);
                     * BINARY DEBUGGING */
                     z = j - z - 1;
                     j = atoi(bufb);
@@ -1553,9 +1553,9 @@ MainSafe(int argc, char **argv)
             edui_elap = 0;
         k = strlen(bufa);
         /* BINARY DEBUGGING *
-                    local_printfx("while() -> bufa[%" PRIuSIZE "]: %s", k, bufa);
+                    local_printfx("while() -> bufa[%zu]: %s", k, bufa);
                     for (i = 0; i < k; ++i)
-                      local_printfx("%02X", bufa[i]);
+                      local_printfx("%02X", static_cast<unsigned int>(static_cast<unsigned char>(bufa[i])));
                     local_printfx("\n");
         * BINARY DEBUGGING */
         /* Check for CRLF */
@@ -1660,10 +1660,10 @@ MainSafe(int argc, char **argv)
         /* If we got a group string, split it */
         if (p != nullptr) {
             /* Split string */
-            debug("StringSplit(%s, ' ', %s, %" PRIuSIZE ")\n", bufa, bufb, sizeof(bufb));
+            debug("StringSplit(%s, ' ', %s, %zu)\n", bufa, bufb, sizeof(bufb));
             i = StringSplit(bufa, ' ', bufb, sizeof(bufb));
             if (i > 0) {
-                debug("StringSplit(%s, %s) done.  Result: %" PRIuSIZE "\n", bufa, bufb, i);
+                debug("StringSplit(%s, %s) done.  Result: %zu\n", bufa, bufb, i);
                 /* Got a group to match against */
                 x = ConvertIP(&edui_ldap, bufb);
                 if (x < 0) {
@@ -1704,8 +1704,8 @@ MainSafe(int argc, char **argv)
                     }
                 }
             } else {
-                debug("StringSplit() -> Error: %" PRIuSIZE "\n", i);
-                local_printfx("BH message=\"(StringSplit Error %" PRIuSIZE ")\"\n", i);
+                debug("StringSplit() -> Error: %zu\n", i);
+                local_printfx("BH message=\"(StringSplit Error %zu)\"\n", i);
             }
         } else {
             /* No group to match against, only an IP */

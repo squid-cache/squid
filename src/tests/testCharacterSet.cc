@@ -8,10 +8,32 @@
 
 #include "squid.h"
 #include "base/CharacterSet.h"
-#include "testCharacterSet.h"
+#include "compat/cppunit.h"
 #include "unitTestMain.h"
 
 #include <string>
+
+class TestCharacterSet : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestCharacterSet);
+    CPPUNIT_TEST(CharacterSetConstruction);
+    CPPUNIT_TEST(CharacterSetAdd);
+    CPPUNIT_TEST(CharacterSetAddRange);
+    CPPUNIT_TEST(CharacterSetEqualityOp);
+    CPPUNIT_TEST(CharacterSetConstants);
+    CPPUNIT_TEST(CharacterSetUnion);
+    CPPUNIT_TEST(CharacterSetSubtract);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void CharacterSetConstruction();
+    void CharacterSetAdd();
+    void CharacterSetAddRange();
+    void CharacterSetConstants();
+    void CharacterSetUnion();
+    void CharacterSetEqualityOp();
+    void CharacterSetSubtract();
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestCharacterSet );
 

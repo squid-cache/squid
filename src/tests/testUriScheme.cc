@@ -8,14 +8,43 @@
 
 #include "squid.h"
 
-#include <cppunit/TestAssert.h>
-
 #include "anyp/UriScheme.h"
-#include "tests/testUriScheme.h"
+#include "compat/cppunit.h"
 
+#include <cppunit/TestAssert.h>
 #include <sstream>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TestUriScheme );
+/*
+ * test UriScheme
+ */
+
+class TestUriScheme : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestUriScheme);
+    CPPUNIT_TEST(testAssignFromprotocol_t);
+    CPPUNIT_TEST(testCastToprotocol_t);
+    CPPUNIT_TEST(testConstructprotocol_t);
+    CPPUNIT_TEST(testDefaultConstructor);
+    CPPUNIT_TEST(testEqualprotocol_t);
+    CPPUNIT_TEST(testNotEqualprotocol_t);
+    CPPUNIT_TEST(testC_str);
+    CPPUNIT_TEST(testStream);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void setUp() override;
+
+protected:
+    void testAssignFromprotocol_t();
+    void testCastToprotocol_t();
+    void testConstructprotocol_t();
+    void testC_str();
+    void testDefaultConstructor();
+    void testEqualprotocol_t();
+    void testNotEqualprotocol_t();
+    void testStream();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestUriScheme);
 
 /*
  * we should be able to assign a protocol_t to a AnyP::UriScheme for ease
@@ -69,7 +98,7 @@ TestUriScheme::testConstructprotocol_t()
     AnyP::UriScheme lhs_none(AnyP::PROTO_NONE), rhs_none(AnyP::PROTO_NONE);
     CPPUNIT_ASSERT_EQUAL(lhs_none, rhs_none);
 
-    AnyP::UriScheme lhs_cacheobj(AnyP::PROTO_CACHE_OBJECT), rhs_cacheobj(AnyP::PROTO_CACHE_OBJECT);
+    AnyP::UriScheme lhs_cacheobj(AnyP::PROTO_HTTP), rhs_cacheobj(AnyP::PROTO_HTTP);
     CPPUNIT_ASSERT_EQUAL(lhs_cacheobj, rhs_cacheobj);
     CPPUNIT_ASSERT(lhs_none != rhs_cacheobj);
 }
@@ -96,7 +125,7 @@ TestUriScheme::testEqualprotocol_t()
     CPPUNIT_ASSERT(AnyP::UriScheme() == AnyP::PROTO_NONE);
     CPPUNIT_ASSERT(not (AnyP::UriScheme(AnyP::PROTO_WAIS) == AnyP::PROTO_HTTP));
     CPPUNIT_ASSERT(AnyP::PROTO_HTTP == AnyP::UriScheme(AnyP::PROTO_HTTP));
-    CPPUNIT_ASSERT(not (AnyP::PROTO_CACHE_OBJECT == AnyP::UriScheme(AnyP::PROTO_HTTP)));
+    CPPUNIT_ASSERT(not (AnyP::PROTO_HTTPS == AnyP::UriScheme(AnyP::PROTO_HTTP)));
 }
 
 /*

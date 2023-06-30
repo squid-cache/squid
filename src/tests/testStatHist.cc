@@ -7,10 +7,26 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "StatHist.h"
-#include "testStatHist.h"
 #include "unitTestMain.h"
 
+class TestStatHist : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestStatHist);
+    CPPUNIT_TEST(testStatHistBaseEquality);
+    CPPUNIT_TEST(testStatHistBaseAssignment);
+    CPPUNIT_TEST(testStatHistLog);
+    CPPUNIT_TEST(testStatHistSum);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+protected:
+    void testStatHistBaseEquality();
+    void testStatHistBaseAssignment();
+    void testStatHistLog();
+    void testStatHistSum();
+};
 CPPUNIT_TEST_SUITE_REGISTRATION( TestStatHist );
 
 typedef enum {

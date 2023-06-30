@@ -70,7 +70,7 @@ public:
     }
 
 private:
-    typedef std::unordered_map<const SBuf, EnumType, Hasher> lookupTable_t;
+    using lookupTable_t = std::unordered_map<const SBuf, EnumType, Hasher, CaseInsensitiveSBufEqual>;
     lookupTable_t lookupTable;
     EnumType invalidValue;
 };

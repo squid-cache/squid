@@ -1352,6 +1352,11 @@ ErrorState::BuildHttpReply()
             request->detailError(type, detail);
         else
             request->detailError(type, SysErrorDetail::NewIfAny(xerrno));
+    } else if (ale) {
+        if (detail)
+            ale->updateError(Error(type, detail));
+        else
+            ale->updateError(Error(type, SysErrorDetail::NewIfAny(xerrno)));
     }
 
     return rep;

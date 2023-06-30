@@ -152,8 +152,6 @@ Adaptation::Ecap::FirstLineRep::protocol() const
     case AnyP::PROTO_HTCP:
         return protocolHtcp;
 #endif
-    case AnyP::PROTO_CACHE_OBJECT:
-        return protocolCacheObj;
     case AnyP::PROTO_ICY:
         return protocolIcy;
     case AnyP::PROTO_COAP:

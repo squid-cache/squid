@@ -106,18 +106,10 @@
 #if HAVE_RESOLV_H
 #include <resolv.h>
 #endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_STDDEF_H
-#include <stddef.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
-#if HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
+#include <cstring>
+#include <cstddef>
+#include <cerrno>
+#include <cinttypes>
 
 #if _SQUID_WINDOWS_
 #undef IN_ADDR

@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #if USE_CACHE_DIGESTS
+#include "base/IoManip.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
 #include "event.h"
@@ -38,7 +39,6 @@ static EVH peerDigestCheck;
 static void peerDigestRequest(PeerDigest * pd);
 static STCB peerDigestHandleReply;
 static int peerDigestFetchReply(void *, char *, ssize_t);
-int peerDigestSwapInHeaders(void *, char *, ssize_t);
 int peerDigestSwapInCBlock(void *, char *, ssize_t);
 int peerDigestSwapInMask(void *, char *, ssize_t);
 static int peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const char *step_name);
@@ -65,19 +65,10 @@ static const time_t GlobDigestReqMinGap = 1 * 60;   /* seconds */
 
 static time_t pd_last_req_time = 0; /* last call to Check */
 
-PeerDigest::PeerDigest(CachePeer * p)
+PeerDigest::PeerDigest(CachePeer * const p):
+    peer(p),
+    host(peer->host) // if peer disappears, we will know its name
 {
-    assert(p);
-
-    /*
-     * DPW 2007-04-12
-     * Lock on to the peer here.  The corresponding cbdataReferenceDone()
-     * is in peerDigestDestroy().
-     */
-    peer = cbdataReference(p);
-    /* if peer disappears, we will know it's name */
-    host = p->host;
-
     times.initialized = squid_curtime;
 }
 
@@ -124,49 +115,10 @@ DigestFetchState::~DigestFetchState()
     assert(pd == nullptr);
 }
 
-/* allocate new peer digest, call Init, and lock everything */
-void
-peerDigestCreate(CachePeer * p)
-{
-    assert(p);
-
-    PeerDigest *pd = new PeerDigest(p);
-
-    // TODO: make CachePeer member a CbcPointer
-    p->digest = cbdataReference(pd);
-
-    // lock a reference to pd again to prevent the PeerDigest
-    // disappearing during peerDigestDestroy() when
-    // cbdataReferenceValidDone is called.
-    // TODO test if it can be moved into peerDigestDestroy() or
-    //      if things can break earlier (eg CachePeer death).
-    (void)cbdataReference(pd);
-}
-
-/* call Clean and free/unlock everything */
-static void
-peerDigestDestroy(PeerDigest * pd)
-{
-    void *p;
-    assert(pd);
-    void * peerTmp = pd->peer;
-
-    /*
-     * DPW 2007-04-12
-     * We locked the peer in PeerDigest constructor, this is
-     * where we unlock it.
-     */
-    if (cbdataReferenceValidDone(peerTmp, &p)) {
-        // we locked the p->digest in peerDigestCreate()
-        // this is where we unlock that
-        cbdataReferenceDone(static_cast<CachePeer *>(p)->digest);
-    }
-
-    delete pd;
-}
-
 PeerDigest::~PeerDigest()
 {
+    if (times.next_check && eventFind(peerDigestCheck, this))
+        eventDelete(peerDigestCheck, this);
     delete cd;
     // req_result pointer is not owned by us
 }
@@ -227,7 +179,7 @@ peerDigestNotePeerGone(PeerDigest * pd)
         /* do nothing now, the fetching chain will notice and take action */
     } else {
         debugs(72, 2, "peerDigest: peer " << pd->host << " is gone, destroying now.");
-        peerDigestDestroy(pd);
+        delete pd;
     }
 }
 
@@ -244,12 +196,12 @@ peerDigestCheck(void *data)
 
     pd->times.next_check = 0;   /* unknown */
 
-    if (!cbdataReferenceValid(pd->peer)) {
+    if (pd->peer.set() && !pd->peer.valid()) {
         peerDigestNotePeerGone(pd);
         return;
     }
 
-    debugs(72, 3, "cache_peer " << *pd->peer);
+    debugs(72, 3, "cache_peer " << RawPointer(pd->peer).orNil());
     debugs(72, 3, "peerDigestCheck: time: " << squid_curtime <<
            ", last received: " << (long int) pd->times.received << "  (" <<
            std::showpos << (int) (squid_curtime - pd->times.received) << ")");
@@ -289,7 +241,7 @@ peerDigestCheck(void *data)
 static void
 peerDigestRequest(PeerDigest * pd)
 {
-    CachePeer *p = pd->peer;
+    const auto p = pd->peer.get(); // TODO: Replace with a reference.
     StoreEntry *e, *old_e;
     char *url = nullptr;
     HttpRequest *req;
@@ -355,6 +307,9 @@ peerDigestRequest(PeerDigest * pd)
     fetch->sc = storeClientListAdd(e, fetch);
     /* set lastmod to trigger IMS request if possible */
 
+    // TODO: Also check for fetch->pd->cd presence as a precondition for sending
+    // IMS requests because peerDigestFetchReply() does not accept 304 responses
+    // without an in-memory cache digest.
     if (old_e)
         e->lastModified(old_e->lastModified());
 
@@ -388,6 +343,11 @@ peerDigestHandleReply(void *data, StoreIOBuffer receivedData)
     int retsize = -1;
     digest_read_state_t prevstate;
     int newsize;
+
+    if (receivedData.flags.error) {
+        peerDigestFetchAbort(fetch, fetch->buf, "failure loading digest reply from Store");
+        return;
+    }
 
     assert(fetch->pd && receivedData.data);
     /* The existing code assumes that the received pointer is
@@ -423,10 +383,6 @@ peerDigestHandleReply(void *data, StoreIOBuffer receivedData)
 
         case DIGEST_READ_REPLY:
             retsize = peerDigestFetchReply(fetch, fetch->buf, fetch->bufofs);
-            break;
-
-        case DIGEST_READ_HEADERS:
-            retsize = peerDigestSwapInHeaders(fetch, fetch->buf, fetch->bufofs);
             break;
 
         case DIGEST_READ_CBLOCK:
@@ -468,7 +424,7 @@ peerDigestHandleReply(void *data, StoreIOBuffer receivedData)
     // checking at the beginning of this function. However, in this case, we would have to require
     // that the parser does not regard EOF as a special condition (it is true now but may change
     // in the future).
-    if (!receivedData.length) { // EOF
+    if (fetch->sc->atEof()) {
         peerDigestFetchAbort(fetch, fetch->buf, "premature end of digest reply");
         return;
     }
@@ -487,19 +443,12 @@ peerDigestHandleReply(void *data, StoreIOBuffer receivedData)
     }
 }
 
-/* wait for full http headers to be received then parse them */
-/*
- * This routine handles parsing the reply line.
- * If the reply line indicates an OK, the same data is thrown
- * to SwapInHeaders(). If the reply line is a NOT_MODIFIED,
- * we simply stop parsing.
- */
+/// handle HTTP response headers in the initial storeClientCopy() response
 static int
 peerDigestFetchReply(void *data, char *buf, ssize_t size)
 {
     DigestFetchState *fetch = (DigestFetchState *)data;
     PeerDigest *pd = fetch->pd;
-    size_t hdr_size;
     assert(pd && buf);
     assert(!fetch->offset);
 
@@ -508,7 +457,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
     if (peerDigestFetchedEnough(fetch, buf, size, "peerDigestFetchReply"))
         return -1;
 
-    if ((hdr_size = headersEnd(buf, size))) {
+    {
         const auto &reply = fetch->entry->mem().freshestReply();
         const auto status = reply.sline.status();
         assert(status != Http::scNone);
@@ -540,7 +489,16 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 
             /* preserve request -- we need its size to update counters */
             /* requestUnlink(r); */
-            /* fetch->entry->mem_obj->request = nullptr; */
+            /* fetch->entry->mem_obj->request = NULL; */
+
+            if (!fetch->pd->cd) {
+                peerDigestFetchAbort(fetch, buf, "304 without the old in-memory digest");
+                return -1;
+            }
+
+            // stay with the old in-memory digest
+            peerDigestFetchStop(fetch, buf, "Not modified");
+            fetch->state = DIGEST_READ_DONE;
         } else if (status == Http::scOkay) {
             /* get rid of old entry if any */
 
@@ -551,70 +509,16 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
                 fetch->old_entry->unlock("peerDigestFetchReply 200");
                 fetch->old_entry = nullptr;
             }
+
+            fetch->state = DIGEST_READ_CBLOCK;
         } else {
             /* some kind of a bug */
             peerDigestFetchAbort(fetch, buf, reply.sline.reason());
             return -1;      /* XXX -1 will abort stuff in ReadReply! */
         }
-
-        /* must have a ready-to-use store entry if we got here */
-        /* can we stay with the old in-memory digest? */
-        if (status == Http::scNotModified && fetch->pd->cd) {
-            peerDigestFetchStop(fetch, buf, "Not modified");
-            fetch->state = DIGEST_READ_DONE;
-        } else {
-            fetch->state = DIGEST_READ_HEADERS;
-        }
-    } else {
-        /* need more data, do we have space? */
-
-        if (size >= SM_PAGE_SIZE)
-            peerDigestFetchAbort(fetch, buf, "reply header too big");
     }
 
-    /* We don't want to actually ack that we've handled anything,
-     * otherwise SwapInHeaders() won't get the reply line .. */
-    return 0;
-}
-
-/* fetch headers from disk, pass on to SwapInCBlock */
-int
-peerDigestSwapInHeaders(void *data, char *buf, ssize_t size)
-{
-    DigestFetchState *fetch = (DigestFetchState *)data;
-    size_t hdr_size;
-
-    assert(fetch->state == DIGEST_READ_HEADERS);
-
-    if (peerDigestFetchedEnough(fetch, buf, size, "peerDigestSwapInHeaders"))
-        return -1;
-
-    assert(!fetch->offset);
-
-    if ((hdr_size = headersEnd(buf, size))) {
-        const auto &reply = fetch->entry->mem().freshestReply();
-        const auto status = reply.sline.status();
-        assert(status != Http::scNone);
-
-        if (status != Http::scOkay) {
-            debugs(72, DBG_IMPORTANT, "peerDigestSwapInHeaders: " << fetch->pd->host <<
-                   " status " << status << " got cached!");
-
-            peerDigestFetchAbort(fetch, buf, "internal status error");
-            return -1;
-        }
-
-        fetch->state = DIGEST_READ_CBLOCK;
-        return hdr_size;    /* Say how much data we read */
-    }
-
-    /* need more data, do we have space? */
-    if (size >= SM_PAGE_SIZE) {
-        peerDigestFetchAbort(fetch, buf, "stored header too big");
-        return -1;
-    }
-
-    return 0;       /* We need to read more to parse .. */
+    return 0; // we consumed/used no buffered bytes
 }
 
 int
@@ -699,13 +603,13 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     const char *reason = nullptr;  /* reason for completion */
     const char *no_bug = nullptr;  /* successful completion if set */
     const int pdcb_valid = cbdataReferenceValid(fetch->pd);
-    const int pcb_valid = cbdataReferenceValid(fetch->pd->peer);
+    const int pcb_valid = pdcb_valid && fetch->pd->peer.valid();
 
     /* test possible exiting conditions (the same for most steps!)
      * cases marked with '?!' should not happen */
 
     if (!reason) {
-        if (!(pd = fetch->pd))
+        if (!pdcb_valid || !(pd = fetch->pd))
             reason = "peer digest disappeared?!";
         else
             host = pd->host;
@@ -717,7 +621,7 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     /* continue checking (with pd and host known and valid) */
 
     if (!reason) {
-        if (!cbdataReferenceValid(pd->peer))
+        if (!pd->peer)
             reason = "peer disappeared";
         else if (size < 0)
             reason = "swap failure";
