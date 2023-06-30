@@ -90,9 +90,6 @@ AnyP::UriScheme::defaultPort() const
     case AnyP::PROTO_WAIS:
         return 210;
 
-    case AnyP::PROTO_CACHE_OBJECT:
-        return CACHE_HTTP_PORT;
-
     case AnyP::PROTO_WHOIS:
         return 43;
 

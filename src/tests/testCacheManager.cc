@@ -102,7 +102,6 @@ TestCacheManager::testParseUrl()
     CPPUNIT_ASSERT(mgr != nullptr);
 
     std::vector<AnyP::ProtocolType> validSchemes = {
-        AnyP::PROTO_CACHE_OBJECT,
         AnyP::PROTO_HTTP,
         AnyP::PROTO_HTTPS,
         AnyP::PROTO_FTP
@@ -182,8 +181,8 @@ TestCacheManager::testParseUrl()
 
         for (const auto *magic : magicPrefixes) {
 
-            // all schemes except cache_object require magic path prefix bytes
-            if (scheme != AnyP::PROTO_CACHE_OBJECT && strlen(magic) <= 2)
+            // all schemes require magic path prefix bytes
+            if (strlen(magic) <= 2)
                 continue;
 
             /* Check the parser accepts all the valid cases */
