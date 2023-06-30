@@ -22,7 +22,7 @@ class ErrorDetails: public ErrorDetail
 {
 public:
     /// Combines the already stored and the latest error details while
-    /// preserving uniqueness and canonical order. Each parameter may point to a
+    /// preserving uniqueness and correct order. Each parameter may point to a
     /// single detail or to an ErrorDetails object (with multiple details).
     static void Merge(ErrorDetailPointer &storage, const ErrorDetailPointer &latest);
 
@@ -43,7 +43,7 @@ protected:
     virtual SBuf verbose(const HttpRequestPointer &) const override;
 
 private:
-    /// known unique details in canonical order
+    /// known unique details in correct order
     std::vector<ErrorDetailPointer, PoolingAllocator<ErrorDetailPointer> > details;
 };
 
