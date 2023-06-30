@@ -589,7 +589,7 @@ read_reply(int s, cachemgr_request * req)
 #if _SQUID_WINDOWS_
 
     int reply;
-    char *tmpfile = tempnam(NULL, "tmp0000");
+    char *tmpfile = tempnam(nullptr, "tmp0000");
     FILE *fp = fopen(tmpfile, "w+");
 #else
 

@@ -49,8 +49,8 @@ static char * SSP_Package_InUse;
 SECURITY_STATUS SecurityStatus = SEC_E_OK;
 
 static DWORD cbMaxToken = 0;
-static uint8_t * pClientBuf = NULL;
-static uint8_t * pServerBuf = NULL;
+static uint8_t * pClientBuf = nullptr;
+static uint8_t * pServerBuf = nullptr;
 
 static AUTH_SEQ NTLM_asServer = {};
 
@@ -60,18 +60,18 @@ BOOL NTLM_LocalCall = FALSE;
 #endif
 
 /* Function pointers */
-ACCEPT_SECURITY_CONTEXT_FN _AcceptSecurityContext = NULL;
-ACQUIRE_CREDENTIALS_HANDLE_FN _AcquireCredentialsHandle = NULL;
-COMPLETE_AUTH_TOKEN_FN _CompleteAuthToken = NULL;
-DELETE_SECURITY_CONTEXT_FN _DeleteSecurityContext = NULL;
-FREE_CONTEXT_BUFFER_FN _FreeContextBuffer = NULL;
-FREE_CREDENTIALS_HANDLE_FN _FreeCredentialsHandle = NULL;
-INITIALIZE_SECURITY_CONTEXT_FN _InitializeSecurityContext = NULL;
-QUERY_SECURITY_PACKAGE_INFO_FN _QuerySecurityPackageInfo = NULL;
+ACCEPT_SECURITY_CONTEXT_FN _AcceptSecurityContext = nullptr;
+ACQUIRE_CREDENTIALS_HANDLE_FN _AcquireCredentialsHandle = nullptr;
+COMPLETE_AUTH_TOKEN_FN _CompleteAuthToken = nullptr;
+DELETE_SECURITY_CONTEXT_FN _DeleteSecurityContext = nullptr;
+FREE_CONTEXT_BUFFER_FN _FreeContextBuffer = nullptr;
+FREE_CREDENTIALS_HANDLE_FN _FreeCredentialsHandle = nullptr;
+INITIALIZE_SECURITY_CONTEXT_FN _InitializeSecurityContext = nullptr;
+QUERY_SECURITY_PACKAGE_INFO_FN _QuerySecurityPackageInfo = nullptr;
 #ifdef UNICODE
-QUERY_CONTEXT_ATTRIBUTES_FN_W _QueryContextAttributes = NULL;
+QUERY_CONTEXT_ATTRIBUTES_FN_W _QueryContextAttributes = nullptr;
 #else
-QUERY_CONTEXT_ATTRIBUTES_FN_A _QueryContextAttributes = NULL;
+QUERY_CONTEXT_ATTRIBUTES_FN_A _QueryContextAttributes = nullptr;
 #endif
 
 void UnloadSecurityDll(void)
@@ -88,24 +88,24 @@ void UnloadSecurityDll(void)
     xfree(pClientBuf);
     xfree(pServerBuf);
 
-    _AcceptSecurityContext      = NULL;
-    _AcquireCredentialsHandle   = NULL;
-    _CompleteAuthToken          = NULL;
-    _DeleteSecurityContext      = NULL;
-    _FreeContextBuffer          = NULL;
-    _FreeCredentialsHandle      = NULL;
-    _InitializeSecurityContext  = NULL;
-    _QuerySecurityPackageInfo   = NULL;
-    _QueryContextAttributes     = NULL;
+    _AcceptSecurityContext      = nullptr;
+    _AcquireCredentialsHandle   = nullptr;
+    _CompleteAuthToken          = nullptr;
+    _DeleteSecurityContext      = nullptr;
+    _FreeContextBuffer          = nullptr;
+    _FreeCredentialsHandle      = nullptr;
+    _InitializeSecurityContext  = nullptr;
+    _QuerySecurityPackageInfo   = nullptr;
+    _QueryContextAttributes     = nullptr;
 
-    hModule = NULL;
+    hModule = nullptr;
 }
 
 HMODULE LoadSecurityDll(int mode, const char * SSP_Package)
 {
     TCHAR lpszDLL[MAX_PATH];
     OSVERSIONINFO VerInfo;
-    PSecPkgInfo pSPI       = NULL;
+    PSecPkgInfo pSPI       = nullptr;
 
     /*
     *  Find out which security DLL to use, depending on
@@ -113,7 +113,7 @@ HMODULE LoadSecurityDll(int mode, const char * SSP_Package)
     *  We have to use security.dll on Windows NT 4.0.
     *  All other operating systems, we have to use Secur32.dll
     */
-    hModule = NULL;
+    hModule = nullptr;
     if ((mode != SSP_BASIC) && (mode != SSP_NTLM))
         return hModule;
     NTLM_mode = mode;
@@ -134,7 +134,7 @@ HMODULE LoadSecurityDll(int mode, const char * SSP_Package)
     _AcceptSecurityContext = farproc_cast<ACCEPT_SECURITY_CONTEXT_FN>(GetProcAddress(hModule, "AcceptSecurityContext"));
     if (!_AcceptSecurityContext) {
         UnloadSecurityDll();
-        hModule = NULL;
+        hModule = nullptr;
         return hModule;
     }
 #ifdef UNICODE
@@ -144,31 +144,31 @@ HMODULE LoadSecurityDll(int mode, const char * SSP_Package)
 #endif
     if (!_AcquireCredentialsHandle) {
         UnloadSecurityDll();
-        hModule = NULL;
+        hModule = nullptr;
         return hModule;
     }
     _CompleteAuthToken = farproc_cast<COMPLETE_AUTH_TOKEN_FN>(GetProcAddress(hModule, "CompleteAuthToken"));
     if (!_CompleteAuthToken) {
         UnloadSecurityDll();
-        hModule = NULL;
+        hModule = nullptr;
         return hModule;
     }
     _DeleteSecurityContext = farproc_cast<DELETE_SECURITY_CONTEXT_FN>(GetProcAddress(hModule, "DeleteSecurityContext"));
     if (!_DeleteSecurityContext) {
         UnloadSecurityDll();
-        hModule = NULL;
+        hModule = nullptr;
         return hModule;
     }
     _FreeContextBuffer = farproc_cast<FREE_CONTEXT_BUFFER_FN>(GetProcAddress(hModule, "FreeContextBuffer"));
     if (!_FreeContextBuffer) {
         UnloadSecurityDll();
-        hModule = NULL;
+        hModule = nullptr;
         return hModule;
     }
     _FreeCredentialsHandle = farproc_cast<FREE_CREDENTIALS_HANDLE_FN>(GetProcAddress(hModule, "FreeCredentialsHandle"));
     if (!_FreeCredentialsHandle) {
         UnloadSecurityDll();
-        hModule = NULL;
+        hModule = nullptr;
         return hModule;
     }
 #ifdef UNICODE
@@ -178,7 +178,7 @@ HMODULE LoadSecurityDll(int mode, const char * SSP_Package)
 #endif
     if (!_InitializeSecurityContext) {
         UnloadSecurityDll();
-        hModule = NULL;
+        hModule = nullptr;
         return hModule;
     }
 #ifdef UNICODE
@@ -188,7 +188,7 @@ HMODULE LoadSecurityDll(int mode, const char * SSP_Package)
 #endif
     if (!_QuerySecurityPackageInfo) {
         UnloadSecurityDll();
-        hModule = NULL;
+        hModule = nullptr;
     }
 
 #ifdef UNICODE
@@ -198,7 +198,7 @@ HMODULE LoadSecurityDll(int mode, const char * SSP_Package)
 #endif
     if (!_QueryContextAttributes) {
         UnloadSecurityDll();
-        hModule = NULL;
+        hModule = nullptr;
     }
 
     /* Get max token size */
@@ -235,8 +235,8 @@ BOOL GenClientContext(PAUTH_SEQ pAS, PSEC_WINNT_AUTH_IDENTITY pAuthIdentity,
     ULONG           fContextAttr;
 
     if (!pAS->fInitialized) {
-        SecurityStatus = _AcquireCredentialsHandle(NULL, (SEC_CHAR*) _T(SSP_Package_InUse),
-                         SECPKG_CRED_OUTBOUND, NULL, (NTLM_mode == SSP_NTLM) ? NULL : pAuthIdentity, NULL, NULL,
+        SecurityStatus = _AcquireCredentialsHandle(nullptr, (SEC_CHAR*) _T(SSP_Package_InUse),
+                         SECPKG_CRED_OUTBOUND, nullptr, (NTLM_mode == SSP_NTLM) ? NULL : pAuthIdentity, nullptr, nullptr,
                          &pAS->hcred, &tsExpiry);
         if (SecurityStatus < 0)
             return FALSE;
@@ -261,7 +261,7 @@ BOOL GenClientContext(PAUTH_SEQ pAS, PSEC_WINNT_AUTH_IDENTITY pAuthIdentity,
         sbIn.pvBuffer = pIn;
     }
     SecurityStatus = _InitializeSecurityContext(&pAS->hcred,
-                     pAS->fInitialized ? &pAS->hctxt : NULL, NULL, 0, 0,
+                     pAS->fInitialized ? &pAS->hctxt : NULL, nullptr, 0, 0,
                      SECURITY_NATIVE_DREP, pAS->fInitialized ? &sbdIn : NULL,
                      0, &pAS->hctxt, &sbdOut, &fContextAttr, &tsExpiry);
     if (SecurityStatus < 0)
@@ -305,8 +305,8 @@ BOOL GenServerContext(PAUTH_SEQ pAS, PVOID pIn, DWORD cbIn, PVOID pOut,
     SecPkgContext_Names namebuffer;
 
     if (!pAS->fInitialized)  {
-        SecurityStatus = _AcquireCredentialsHandle(NULL, (SEC_CHAR*) _T(SSP_Package_InUse),
-                         SECPKG_CRED_INBOUND, NULL, NULL, NULL, NULL, &pAS->hcred,
+        SecurityStatus = _AcquireCredentialsHandle(nullptr, (SEC_CHAR*) _T(SSP_Package_InUse),
+                         SECPKG_CRED_INBOUND, nullptr, nullptr, nullptr, nullptr, &pAS->hcred,
                          &pAS->hcredLifeTime);
 #if SSP_DEBUG
         fprintf(stderr, "AcquireCredentialsHandle returned: %x\n", SecurityStatus);
@@ -418,14 +418,14 @@ BOOL WINAPI SSP_LogonUser(PTSTR szUser, PTSTR szPassword, PTSTR szDomain)
 
         /* Prepare client message (negotiate) */
         cbOut = cbMaxToken;
-        if (!GenClientContext(&asClient, &ai, NULL, 0, pClientBuf, &cbOut, &fDone))
+        if (!GenClientContext(&asClient, &ai, nullptr, 0, pClientBuf, &cbOut, &fDone))
             break;
 
         /* Prepare server message (challenge) */
         cbIn = cbOut;
         cbOut = cbMaxToken;
         if (!GenServerContext(&asServer, pClientBuf, cbIn, pServerBuf, &cbOut,
-                              &fDone, NULL))
+                              &fDone, nullptr))
             break;
         /* Most likely failure: AcceptServerContext fails with SEC_E_LOGON_DENIED
          * in the case of bad szUser or szPassword.
@@ -444,7 +444,7 @@ BOOL WINAPI SSP_LogonUser(PTSTR szUser, PTSTR szPassword, PTSTR szDomain)
         cbIn = cbOut;
         cbOut = cbMaxToken;
         if (!GenServerContext(&asServer, pClientBuf, cbIn, pServerBuf, &cbOut,
-                              &fDone, NULL))
+                              &fDone, nullptr))
             break;
         fResult = TRUE;
     } while (0);
@@ -466,7 +466,7 @@ BOOL WINAPI SSP_LogonUser(PTSTR szUser, PTSTR szPassword, PTSTR szDomain)
 const char * WINAPI SSP_MakeChallenge(PVOID PNegotiateBuf, int NegotiateLen)
 {
     BOOL        fDone      = FALSE;
-    uint8_t  * fResult = NULL;
+    uint8_t  * fResult = nullptr;
     DWORD       cbOut      = 0;
     DWORD       cbIn       = 0;
     ntlm_challenge * challenge;
@@ -489,7 +489,7 @@ const char * WINAPI SSP_MakeChallenge(PVOID PNegotiateBuf, int NegotiateLen)
         cbIn = NegotiateLen;
         cbOut = cbMaxToken;
         if (!GenServerContext(&NTLM_asServer, pClientBuf, cbIn, pServerBuf, &cbOut,
-                              &fDone, NULL))
+                              &fDone, nullptr))
             break;
         fResult = pServerBuf;
     } while (0);
@@ -507,7 +507,7 @@ const char * WINAPI SSP_MakeChallenge(PVOID PNegotiateBuf, int NegotiateLen)
         encoded[dstLen] = '\0';
         return encoded;
     }
-    return NULL;
+    return nullptr;
 }
 
 BOOL WINAPI SSP_ValidateNTLMCredentials(PVOID PAutenticateBuf, int AutenticateLen, char * credentials)
@@ -575,7 +575,7 @@ const char * WINAPI SSP_MakeNegotiateBlob(PVOID PNegotiateBuf, int NegotiateLen,
         encoded[dstLen] = '\0';
         return encoded;
     }
-    return NULL;
+    return nullptr;
 }
 
 const char * WINAPI SSP_ValidateNegotiateCredentials(PVOID PAutenticateBuf, int AutenticateLen, PBOOL fDone, int * Status, char * credentials)
@@ -610,6 +610,6 @@ const char * WINAPI SSP_ValidateNegotiateCredentials(PVOID PAutenticateBuf, int 
         encoded[dstLen] = '\0';
         return encoded;
     }
-    return NULL;
+    return nullptr;
 }
 #endif /* HAVE_AUTH_MODULE_NEGOTIATE */

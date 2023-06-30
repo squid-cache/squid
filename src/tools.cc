@@ -137,7 +137,7 @@ mail_warranty(void)
     char *filename;
     // XXX tempnam is obsolete since POSIX.2008-1
     // tmpfile is not an option, we want the created files to stick around
-    if ((filename = tempnam(NULL, APP_SHORTNAME)) == NULL ||
+    if ((filename = tempnam(nullptr, APP_SHORTNAME)) == NULL ||
             (fp = fopen(filename, "w")) == NULL) {
         umask(prev_umask);
         return;

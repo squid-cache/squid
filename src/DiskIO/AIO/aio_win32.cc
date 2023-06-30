@@ -287,7 +287,7 @@ int aio_open(const char *path, int mode)
     if ((hndl = CreateFile(path,                    /* file name               */
                            dwDesiredAccess,         /* access mode             */
                            0,                       /* share mode              */
-                           NULL,                    /* SD                      */
+                           nullptr,                    /* SD                      */
                            dwCreationDisposition,   /* how to create           */
                            FILE_FLAG_OVERLAPPED,    /* file attributes         */
                            NULL                     /* handle to template file */

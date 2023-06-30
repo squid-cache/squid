@@ -97,7 +97,7 @@ static store_client *
 storeClientListSearch(const MemObject * mem, void *data)
 {
     dlink_node *node;
-    store_client *sc = NULL;
+    store_client *sc = nullptr;
 
     for (node = mem->clients.head; node; node = node->next) {
         sc = node->data;
@@ -106,7 +106,7 @@ storeClientListSearch(const MemObject * mem, void *data)
             return sc;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 int

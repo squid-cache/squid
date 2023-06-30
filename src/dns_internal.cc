@@ -496,26 +496,26 @@ idnsParseWIN32SearchList(const char * Separator)
         DWORD Type = 0;
         DWORD Size = 0;
         LONG Result;
-        Result = RegQueryValueEx(hndKey, "Domain", NULL, &Type, NULL, &Size);
+        Result = RegQueryValueEx(hndKey, "Domain", nullptr, &Type, nullptr, &Size);
 
         if (Result == ERROR_SUCCESS && Size) {
             t = (char *) xmalloc(Size);
-            RegQueryValueEx(hndKey, "Domain", NULL, &Type, (LPBYTE) t, &Size);
+            RegQueryValueEx(hndKey, "Domain", nullptr, &Type, (LPBYTE) t, &Size);
             debugs(78, DBG_IMPORTANT, "Adding domain " << t << " from Registry");
             idnsAddPathComponent(t);
             xfree(t);
         }
-        Result = RegQueryValueEx(hndKey, "SearchList", NULL, &Type, NULL, &Size);
+        Result = RegQueryValueEx(hndKey, "SearchList", nullptr, &Type, nullptr, &Size);
 
         if (Result == ERROR_SUCCESS && Size) {
             t = (char *) xmalloc(Size);
-            RegQueryValueEx(hndKey, "SearchList", NULL, &Type, (LPBYTE) t, &Size);
+            RegQueryValueEx(hndKey, "SearchList", nullptr, &Type, (LPBYTE) t, &Size);
             token = strtok(t, Separator);
 
             while (token) {
                 idnsAddPathComponent(token);
                 debugs(78, DBG_IMPORTANT, "Adding domain " << token << " from Registry");
-                token = strtok(NULL, Separator);
+                token = strtok(nullptr, Separator);
             }
             xfree(t);
         }
@@ -546,34 +546,34 @@ idnsParseWIN32Registry(void)
             DWORD Type = 0;
             DWORD Size = 0;
             LONG Result;
-            Result = RegQueryValueEx(hndKey, "DhcpNameServer", NULL, &Type, NULL, &Size);
+            Result = RegQueryValueEx(hndKey, "DhcpNameServer", nullptr, &Type, nullptr, &Size);
 
             if (Result == ERROR_SUCCESS && Size) {
                 t = (char *) xmalloc(Size);
-                RegQueryValueEx(hndKey, "DhcpNameServer", NULL, &Type, (LPBYTE) t, &Size);
+                RegQueryValueEx(hndKey, "DhcpNameServer", nullptr, &Type, (LPBYTE) t, &Size);
                 token = strtok(t, ", ");
 
                 while (token) {
                     idnsAddNameserver(token);
                     result = true;
                     debugs(78, DBG_IMPORTANT, "Adding DHCP nameserver " << token << " from Registry");
-                    token = strtok(NULL, ",");
+                    token = strtok(nullptr, ",");
                 }
                 xfree(t);
             }
 
-            Result = RegQueryValueEx(hndKey, "NameServer", NULL, &Type, NULL, &Size);
+            Result = RegQueryValueEx(hndKey, "NameServer", nullptr, &Type, nullptr, &Size);
 
             if (Result == ERROR_SUCCESS && Size) {
                 t = (char *) xmalloc(Size);
-                RegQueryValueEx(hndKey, "NameServer", NULL, &Type, (LPBYTE) t, &Size);
+                RegQueryValueEx(hndKey, "NameServer", nullptr, &Type, (LPBYTE) t, &Size);
                 token = strtok(t, ", ");
 
                 while (token) {
                     debugs(78, DBG_IMPORTANT, "Adding nameserver " << token << " from Registry");
                     idnsAddNameserver(token);
                     result = true;
-                    token = strtok(NULL, ", ");
+                    token = strtok(nullptr, ", ");
                 }
                 xfree(t);
             }
@@ -603,12 +603,12 @@ idnsParseWIN32Registry(void)
             char *keyname;
             FILETIME ftLastWriteTime;
 
-            if (RegQueryInfoKey(hndKey, NULL, NULL, NULL, &InterfacesCount, &MaxSubkeyLen, NULL, NULL, NULL, NULL, NULL, NULL) == ERROR_SUCCESS) {
+            if (RegQueryInfoKey(hndKey, nullptr, nullptr, nullptr, &InterfacesCount, &MaxSubkeyLen, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr) == ERROR_SUCCESS) {
                 keyname = (char *) xmalloc(++MaxSubkeyLen);
                 for (i = 0; i < (int) InterfacesCount; ++i) {
                     DWORD j;
                     j = MaxSubkeyLen;
-                    if (RegEnumKeyEx(hndKey, i, keyname, &j, NULL, NULL, NULL, &ftLastWriteTime) == ERROR_SUCCESS) {
+                    if (RegEnumKeyEx(hndKey, i, keyname, &j, nullptr, nullptr, nullptr, &ftLastWriteTime) == ERROR_SUCCESS) {
                         char *newkeyname;
                         newkeyname = (char *) xmalloc(sizeof(REG_TCPIP_PARA_INTERFACES) + j + 2);
                         strcpy(newkeyname, REG_TCPIP_PARA_INTERFACES);
@@ -618,30 +618,30 @@ idnsParseWIN32Registry(void)
                             DWORD Type = 0;
                             DWORD Size = 0;
                             LONG Result;
-                            Result = RegQueryValueEx(hndKey2, "DhcpNameServer", NULL, &Type, NULL, &Size);
+                            Result = RegQueryValueEx(hndKey2, "DhcpNameServer", nullptr, &Type, nullptr, &Size);
                             if (Result == ERROR_SUCCESS && Size) {
                                 t = (char *) xmalloc(Size);
-                                RegQueryValueEx(hndKey2, "DhcpNameServer", NULL, &Type, (LPBYTE)t, &Size);
+                                RegQueryValueEx(hndKey2, "DhcpNameServer", nullptr, &Type, (LPBYTE)t, &Size);
                                 token = strtok(t, ", ");
                                 while (token) {
                                     debugs(78, DBG_IMPORTANT, "Adding DHCP nameserver " << token << " from Registry");
                                     idnsAddNameserver(token);
                                     result = true;
-                                    token = strtok(NULL, ", ");
+                                    token = strtok(nullptr, ", ");
                                 }
                                 xfree(t);
                             }
 
-                            Result = RegQueryValueEx(hndKey2, "NameServer", NULL, &Type, NULL, &Size);
+                            Result = RegQueryValueEx(hndKey2, "NameServer", nullptr, &Type, nullptr, &Size);
                             if (Result == ERROR_SUCCESS && Size) {
                                 t = (char *) xmalloc(Size);
-                                RegQueryValueEx(hndKey2, "NameServer", NULL, &Type, (LPBYTE)t, &Size);
+                                RegQueryValueEx(hndKey2, "NameServer", nullptr, &Type, (LPBYTE)t, &Size);
                                 token = strtok(t, ", ");
                                 while (token) {
                                     debugs(78, DBG_IMPORTANT, "Adding nameserver " << token << " from Registry");
                                     idnsAddNameserver(token);
                                     result = true;
-                                    token = strtok(NULL, ", ");
+                                    token = strtok(nullptr, ", ");
                                 }
 
                                 xfree(t);
@@ -675,18 +675,18 @@ idnsParseWIN32Registry(void)
             DWORD Type = 0;
             DWORD Size = 0;
             LONG Result;
-            Result = RegQueryValueEx(hndKey, "NameServer", NULL, &Type, NULL, &Size);
+            Result = RegQueryValueEx(hndKey, "NameServer", nullptr, &Type, nullptr, &Size);
 
             if (Result == ERROR_SUCCESS && Size) {
                 t = (char *) xmalloc(Size);
-                RegQueryValueEx(hndKey, "NameServer", NULL, &Type, (LPBYTE) t, &Size);
+                RegQueryValueEx(hndKey, "NameServer", nullptr, &Type, (LPBYTE) t, &Size);
                 token = strtok(t, ", ");
 
                 while (token) {
                     debugs(78, DBG_IMPORTANT, "Adding nameserver " << token << " from Registry");
                     idnsAddNameserver(token);
                     result = true;
-                    token = strtok(NULL, ", ");
+                    token = strtok(nullptr, ", ");
                 }
                 xfree(t);
             }

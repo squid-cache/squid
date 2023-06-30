@@ -350,7 +350,7 @@ krb5_create_cache(char *domain, char *service_principal_name)
                 creds->client = principal;
                 code = krb5_parse_name(kparam.context, service, &creds->server);
                 xfree(service);
-                code = krb5_get_in_tkt_with_keytab(kparam.context, 0, NULL, NULL, NULL, keytab, NULL, creds, 0);
+                code = krb5_get_in_tkt_with_keytab(kparam.context, 0, nullptr, nullptr, nullptr, keytab, nullptr, creds, 0);
 #endif
 
                 if (code) {
@@ -435,7 +435,7 @@ krb5_create_cache(char *domain, char *service_principal_name)
                 creds->client = principal_list[i];
                 code = krb5_parse_name(kparam.context, service, &creds->server);
                 xfree(service);
-                code = krb5_get_in_tkt_with_keytab(kparam.context, 0, NULL, NULL, NULL, keytab, NULL, creds, 0);
+                code = krb5_get_in_tkt_with_keytab(kparam.context, 0, nullptr, nullptr, nullptr, keytab, nullptr, creds, 0);
 #endif
                 if (code) {
                     k5_error("Error while initialising credentials from keytab", code);

@@ -887,8 +887,8 @@ cleanup:
 int
 main(int argc, char *const argv[])
 {
-    setbuf(stdout, NULL);
-    setbuf(stdin, NULL);
+    setbuf(stdout, nullptr);
+    setbuf(stdin, nullptr);
     char buf[MAX_AUTHTOKEN_LEN];
     while (1) {
         if (fgets(buf, sizeof(buf) - 1, stdin) == NULL) {
