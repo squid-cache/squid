@@ -558,7 +558,7 @@ neighborsUdpPing(HttpRequest * request,
     int sibling_timeout = 0, sibling_exprep = 0;
     int mcast_timeout = 0, mcast_exprep = 0;
 
-    if (Config.cachePeers == nullptr)
+    if (Config.peers == nullptr)
         return 0;
 
     assert(!entry->hasDisk());
@@ -571,8 +571,8 @@ neighborsUdpPing(HttpRequest * request,
 
     reqnum = icpSetCacheKey((const cache_key *)entry->key);
 
-    for (size_t i = 0; i < Config.cachePeers->size(); ++i) {
-        const auto p = Config.cachePeers->nextPeerToPing()->get();
+    for (size_t i = 0; i < Config.peers->size(); ++i) {
+        const auto p = Config.peers->nextPeerToPing()->get();
 
         debugs(15, 5, "candidate: " << *p);
 
@@ -760,8 +760,8 @@ neighborsDigestSelect(PeerSelector *ps)
 
     storeKeyPublicByRequest(request);
 
-    for (size_t i = 0; i < Config.cachePeers->size(); ++i) {
-        const auto p = Config.cachePeers->nextPeerToPing()->get();
+    for (size_t i = 0; i < Config.peers->size(); ++i) {
+        const auto p = Config.peers->nextPeerToPing()->get();
 
         lookup_t lookup;
 

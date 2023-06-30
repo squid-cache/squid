@@ -3549,7 +3549,7 @@ COMMENT_END
 NAME: cache_peer
 TYPE: peer
 DEFAULT: none
-LOC: Config.cachePeers
+LOC: Config.peers
 DOC_START
 	To specify other caches in a hierarchy, use the format:
 

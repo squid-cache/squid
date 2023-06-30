@@ -30,17 +30,17 @@ CachePeers::remove(CachePeer *p)
 const CachePeers &
 CurrentCachePeers()
 {
-    if (!Config.cachePeers) {
+    if (!Config.peers) {
         static CachePeers peers;
         return peers;
     }
-    return *Config.cachePeers;
+    return *Config.peers;
 }
 
 void
 NeighborRemove(CachePeer *peer)
 {
-    Assure(Config.cachePeers);
-    Config.cachePeers->remove(peer);
+    Assure(Config.peers);
+    Config.peers->remove(peer);
 }
 
