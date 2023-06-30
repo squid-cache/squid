@@ -14,10 +14,10 @@
 
 #include <vector>
 
-/// Multiple details of a single error, in temporal order of discovery without duplicates.
-/// The order/timing of Error::update() calls is used to approximate detail discovery time.
-/// This class isolates multi-detail storage
-/// overheads from a common case of storing a single error detail.
+/// Multiple details of a single error, in temporal order of discovery without
+/// duplicates. The order/timing of Error::update() calls is used to approximate
+/// detail discovery time. This class isolates multi-detail storage overheads
+/// from a common case of storing a single error detail.
 class ErrorDetails: public ErrorDetail
 {
 public:
