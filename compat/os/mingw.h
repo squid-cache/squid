@@ -32,17 +32,5 @@
 #include <windows.h>
 #endif
 
-#if defined(__GNUC__)
-#if !defined(PRINTF_FORMAT_ARG1)
-#define PRINTF_FORMAT_ARG1 __attribute__ ((format (gnu_printf, 1, 2)))
-#endif
-#if !defined(PRINTF_FORMAT_ARG2)
-#define PRINTF_FORMAT_ARG2 __attribute__ ((format (gnu_printf, 2, 3)))
-#endif
-#if !defined(PRINTF_FORMAT_ARG3)
-#define PRINTF_FORMAT_ARG3 __attribute__ ((format (gnu_printf, 3, 4)))
-#endif
-#endif /* __GNUC__ */
-
 #endif /* _SQUID_MINGW_*/
 #endif /* SQUID_OS_MINGW_H */

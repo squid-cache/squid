@@ -239,15 +239,15 @@ const char * squid_strnstr(const char *s, const char *find, size_t slen);
 #endif
 
 #if __GNUC__
-#if !defined(PRINTF_FORMAT_ARG1)
+#if _SQUID_MINGW_
+#define PRINTF_FORMAT_ARG1 __attribute__ ((format (gnu_printf, 1, 2)))
+#define PRINTF_FORMAT_ARG2 __attribute__ ((format (gnu_printf, 2, 3)))
+#define PRINTF_FORMAT_ARG3 __attribute__ ((format (gnu_printf, 3, 4)))
+#else
 #define PRINTF_FORMAT_ARG1 __attribute__ ((format (printf, 1, 2)))
-#endif
-#if !defined(PRINTF_FORMAT_ARG2)
 #define PRINTF_FORMAT_ARG2 __attribute__ ((format (printf, 2, 3)))
-#endif
-#if !defined(PRINTF_FORMAT_ARG3)
 #define PRINTF_FORMAT_ARG3 __attribute__ ((format (printf, 3, 4)))
-#endif
+#endif /* !_SQUID_MINGW_ */
 #else /* !__GNU__ */
 #define PRINTF_FORMAT_ARG1
 #define PRINTF_FORMAT_ARG2
