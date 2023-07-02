@@ -29,10 +29,6 @@ libcompatsquid_la_SOURCES = \
 	eui64_aton.c \
 	eui64_aton.h \
 	fdsetsize.h \
-	inet_ntop.cc \
-	inet_ntop.h \
-	inet_pton.cc \
-	inet_pton.h \
 	initgroups.h \
 	krb5.h \
 	memrchr.cc \
