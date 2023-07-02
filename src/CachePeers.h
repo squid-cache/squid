@@ -27,13 +27,6 @@ public:
     /// deletes a CachePeer object
     void remove(CachePeer *);
 
-    /// parses a cache_peer line and stores the parsed CachePeer object
-    void parse(ConfigParser &parser);
-    /// dumps the cache peer list into the StoreEntry object
-    void dump(StoreEntry *, const char *name) const;
-    /// cleans the cache peer list
-    void clear() { storage.clear(); }
-
     const_iterator begin() const { return storage.cbegin(); }
     const_iterator end() const { return storage.cend(); }
 
