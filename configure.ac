@@ -389,7 +389,7 @@ AC_DEFUN([LIBATOMIC_CHECKER],[
   AC_LINK_IFELSE([
     AC_LANG_SOURCE([[
 #include <atomic>
-#include <cstdint>
+#include <cinttypes>
       int
       main(int argc, char **) {
           return (
@@ -2264,6 +2264,7 @@ AC_CHECK_HEADERS( \
   gnumalloc.h \
   grp.h \
   ipl.h \
+  inttypes.h \
   libc.h \
   limits.h \
   linux/posix_types.h \
@@ -2320,8 +2321,6 @@ AC_CHECK_HEADERS( \
   varargs.h \
   byteswap.h \
   glib.h \
-  stdint.h \
-  inttypes.h \
   wchar.h
 )
 

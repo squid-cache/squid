@@ -31,7 +31,9 @@
 #if HAVE_STDDEF_H
 #include <stddef.h>
 #endif
-#if HAVE_INTTYPES_H
+#if __cplusplus
+#include <cinttypes>
+#elif HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif
 #if HAVE_SYS_BITYPES_H
@@ -48,15 +50,6 @@
 /******************************************************/
 /* Typedefs for missing entries on a system           */
 /******************************************************/
-
-/*
- * Ensure that standard type limits are defined for use
- */
-#if __cplusplus
-#include <cstdint>
-#elif HAVE_STDINT_H
-#include <stdint.h>
-#endif
 
 /* explicit bit sizes */
 #if !defined(UINT32_MIN)

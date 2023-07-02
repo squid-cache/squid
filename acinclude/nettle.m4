@@ -15,8 +15,8 @@ AC_DEFUN([SQUID_CHECK_NETTLE_BASE64],[
   AH_TEMPLATE(HAVE_NETTLE34_BASE64,[set to 1 if Nettle 3.4 API will link])
   SQUID_STATE_SAVE(squid_nettle_base64_state)
   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#   include <cinttypes>
 #   include <cstddef>
-#   include <cstdint>
 #   include <nettle/base64.h>
   ]],[[
     char inData[10]; inData[0] = '\0';
