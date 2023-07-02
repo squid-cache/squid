@@ -21,7 +21,7 @@ CachePeers::nextPeerToPing()
 }
 
 void
-CachePeers::remove(CachePeer *p)
+CachePeers::remove(const CachePeer *p)
 {
     Assure(Config.peers);
     // replace with storage.erase_if() after migrating to C++20
@@ -40,7 +40,7 @@ CurrentCachePeers()
 }
 
 void
-DeleteConfigured(CachePeer *peer)
+DeleteConfigured(const CachePeer *peer)
 {
     Assure(Config.peers);
     Config.peers->remove(peer);

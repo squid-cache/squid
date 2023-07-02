@@ -25,7 +25,7 @@ public:
     /// appends a CachePeer object to the storage
     void add(CachePeer *p) { storage.emplace_back(p); }
     /// deletes a CachePeer object
-    void remove(CachePeer *);
+    void remove(const CachePeer *);
 
     const_iterator begin() const { return storage.cbegin(); }
     const_iterator end() const { return storage.cend(); }
@@ -44,7 +44,7 @@ private:
 const CachePeers &CurrentCachePeers();
 
 /// destroys the given peer after removing it from the set of configured peers
-void DeleteConfigured(CachePeer *);
+void DeleteConfigured(const CachePeer *);
 
 #endif /* SQUID_CACHEPEERS_H_ */
 
