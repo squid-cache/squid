@@ -286,6 +286,7 @@ getFirstUpParent(PeerSelector *ps)
 {
     assert(ps);
     HttpRequest *request = ps->request;
+
     CachePeer *p = nullptr;
 
     for (const auto &peer: CurrentCachePeers()) {

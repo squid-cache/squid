@@ -24,6 +24,7 @@ void
 CachePeers::remove(CachePeer *p)
 {
     Assure(Config.peers);
+    // replace with storage.erase_if() after migrating to C++20
     storage.erase(std::remove_if(storage.begin(), storage.end(), [&](const auto &el) {
                 return el.get() == p; }), storage.end());
 }
@@ -32,7 +33,7 @@ const CachePeers &
 CurrentCachePeers()
 {
     if (!Config.peers) {
-        static CachePeers peers;
+        static const CachePeers peers;
         return peers;
     }
     return *Config.peers;

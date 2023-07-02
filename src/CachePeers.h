@@ -22,7 +22,11 @@ public:
     using Storage = std::vector< std::unique_ptr<CachePeer>, PoolingAllocator< std::unique_ptr<CachePeer> > >;
     using const_iterator = Storage::const_iterator;
 
+    /// appends a CachePeer object to the storage
     void add(CachePeer *p) { storage.emplace_back(p); }
+    /// deletes a CachePeer object
+    void remove(CachePeer *);
+
     /// parses a cache_peer line and stores the parsed CachePeer object
     void parse(ConfigParser &parser);
     /// dumps the cache peer list into the StoreEntry object
@@ -35,9 +39,6 @@ public:
 
     /// the current number of CachePeer objects
     size_t size() const { return storage.size(); }
-
-    /// deletes a CachePeer object
-    void remove(CachePeer *);
 
     /// a CachePeer used next in neighborsUdpPing() peer ping
     CachePeer *nextPeerToPing();

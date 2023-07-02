@@ -12,7 +12,6 @@
 #include "acl/forward.h"
 #include "base/RefCount.h"
 #include "base/YesNoNone.h"
-#include "CachePeer.h"
 #if USE_DELAY_POOLS
 #include "ClientDelayConfig.h"
 #include "DelayConfig.h"
