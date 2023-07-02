@@ -70,7 +70,7 @@ static IRCB peerCountHandleIcpReply;
 
 static void neighborIgnoreNonPeer(const Ip::Address &, icp_opcode);
 static OBJH neighborDumpPeers;
-static void dump_peers(StoreEntry *);
+static void dump_peers(StoreEntry *, CachePeers *);
 
 static unsigned short echo_port;
 
@@ -286,9 +286,10 @@ getFirstUpParent(PeerSelector *ps)
 {
     assert(ps);
     HttpRequest *request = ps->request;
+    CachePeer *p = nullptr;
 
     for (const auto &peer: CurrentCachePeers()) {
-        const auto p = peer.get();
+        p = peer.get();
 
         if (!neighborUp(p))
             continue;
@@ -299,11 +300,11 @@ getFirstUpParent(PeerSelector *ps)
         if (!peerHTTPOkay(p, ps))
             continue;
 
-        debugs(15, 3, "returning " << RawPointer(p).orNil());
-        return p;
+        break;
     }
 
-    return nullptr;
+    debugs(15, 3, "returning " << RawPointer(p).orNil());
+    return p;
 }
 
 CachePeer *
@@ -532,7 +533,7 @@ neighbors_init(void)
         }
 
         for (const auto &p: peersToRemove)
-            NeighborRemove(p);
+            DeleteConfigured(p);
     }
 
     peerRefreshDNS((void *) 1);
@@ -572,7 +573,7 @@ neighborsUdpPing(HttpRequest * request,
     reqnum = icpSetCacheKey((const cache_key *)entry->key);
 
     for (size_t i = 0; i < Config.peers->size(); ++i) {
-        const auto p = Config.peers->nextPeerToPing()->get();
+        const auto p = Config.peers->nextPeerToPing();
 
         debugs(15, 5, "candidate: " << *p);
 
@@ -761,11 +762,9 @@ neighborsDigestSelect(PeerSelector *ps)
     storeKeyPublicByRequest(request);
 
     for (size_t i = 0; i < Config.peers->size(); ++i) {
-        const auto p = Config.peers->nextPeerToPing()->get();
+        const auto p = Config.peers->nextPeerToPing();
 
-        lookup_t lookup;
-
-        lookup = peerDigestLookup(p, ps);
+        const auto lookup = peerDigestLookup(p, ps);
 
         if (lookup == LOOKUP_NONE)
             continue;
@@ -1027,7 +1026,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
             if (100 * p->icp.counts[ICP_DENIED] / p->stats.pings_acked > 95) {
                 debugs(15, DBG_CRITICAL, "Disabling cache_peer " << *p <<
                        " because over 95% of its replies are UDP_DENIED");
-                NeighborRemove(p);
+                DeleteConfigured(p);
                 p = nullptr;
             } else {
                 neighborCountIgnored(p);
@@ -1358,7 +1357,7 @@ peerCountHandleIcpReply(CachePeer * p, peer_t, AnyP::ProtocolType proto, void *,
 static void
 neighborDumpPeers(StoreEntry * sentry)
 {
-    dump_peers(sentry);
+    dump_peers(sentry, Config.peers);
 }
 
 void
@@ -1491,15 +1490,15 @@ dump_peer_options(StoreEntry * sentry, CachePeer * p)
 }
 
 static void
-dump_peers(StoreEntry *sentry)
+dump_peers(StoreEntry *sentry, CachePeers *peers)
 {
     char ntoabuf[MAX_IPSTRLEN];
     int i;
 
-    if (!CurrentCachePeers().size())
+    if (peers == nullptr)
         storeAppendPrintf(sentry, "There are no neighbors installed.\n");
 
-    for (const auto &peer: CurrentCachePeers()) {
+    for (const auto &peer: *peers) {
         const auto e = peer.get();
         assert(e->host != nullptr);
         storeAppendPrintf(sentry, "\n%-11.11s: %s\n",

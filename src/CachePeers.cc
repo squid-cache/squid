@@ -11,18 +11,19 @@
 #include "CachePeers.h"
 #include "SquidConfig.h"
 
-CachePeers::Storage::const_iterator
+CachePeer *
 CachePeers::nextPeerToPing()
 {
     Assure(size());
     const auto pos = peersPinged_ % size();
     ++peersPinged_;
-    return storage.begin() + pos;
+    return (storage.begin() + pos)->get();
 }
 
 void
 CachePeers::remove(CachePeer *p)
 {
+    Assure(Config.peers);
     storage.erase(std::remove_if(storage.begin(), storage.end(), [&](const auto &el) {
                 return el.get() == p; }), storage.end());
 }
@@ -38,7 +39,7 @@ CurrentCachePeers()
 }
 
 void
-NeighborRemove(CachePeer *peer)
+DeleteConfigured(CachePeer *peer)
 {
     Assure(Config.peers);
     Config.peers->remove(peer);

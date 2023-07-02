@@ -2128,9 +2128,10 @@ GetService(const char *proto)
     struct servent *port = nullptr;
     /** Parses a port number or service name from the squid.conf */
     char *token = ConfigParser::NextToken();
-    if (token == nullptr)
-        throw TextException("cache_peer port is missing", Here());
-
+    if (token == nullptr) {
+        self_destruct();
+        return 0; /* NEVER REACHED */
+    }
     /** Returns either the service port number from /etc/services */
     if ( !isUnsignedNumeric(token, strlen(token)) )
         port = getservbyname(token, proto);
@@ -2412,11 +2413,8 @@ parse_peer(CachePeers **peers)
 static void
 free_peer(CachePeers **peers)
 {
-    if (const auto p = *peers) {
-        p->clear();
-        delete p;
-        *peers = nullptr;
-    }
+    delete *peers;
+    *peers = nullptr;
 }
 
 static void

@@ -27,6 +27,7 @@
 #include "snmp_core.h"
 #include "SnmpRequest.h"
 #include "SquidConfig.h"
+#include "SquidMath.h"
 #include "tools.h"
 
 static void snmpPortOpened(Ipc::StartListeningAnswer&);
@@ -725,8 +726,9 @@ static oid *
 peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
 {
     oid *instance = nullptr;
+    const auto peersAvailable = CurrentCachePeers().size();
 
-    if (!CurrentCachePeers().size()) {
+    if (!peersAvailable) {
         debugs(49, 6, "snmp peer_Inst: No Peers.");
         current = current->parent->parent->parent->leaves[1];
         while ((current) && (!current->parsefunction))
@@ -743,14 +745,18 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
         instance[*len] = 1 ;
         *len += 1;
     } else {
-        const auto no = name[current->len];
-        if (no < CurrentCachePeers().size()) {
-            debugs(49, 6, "snmp peer_Inst: Encode peer #" << no);
+        int no = name[current->len] ;
+        int i;
+        // Note: This works because the Config.peers keeps its index according to its position.
+        for (i = 0; Less(i, peersAvailable) && Less(i, no); ++i);
+
+        if (Less(i, peersAvailable)) {
+            debugs(49, 6, "snmp peer_Inst: Encode peer #" << i);
             instance = (oid *)xmalloc(sizeof(*name) * (current->len + 1 ));
             memcpy(instance, name, (sizeof(*name) * current->len ));
             instance[current->len] = no + 1 ; // i.e. the next index on cache_peeer table.
         } else {
-            debugs(49, 6, "snmp peer_Inst: We have " << CurrentCachePeers().size() << " peers. Can't find #" << no);
+            debugs(49, 6, "snmp peer_Inst: We have " << i << " peers. Can't find #" << no);
             return (instance);
         }
     }

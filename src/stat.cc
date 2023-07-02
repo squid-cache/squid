@@ -12,9 +12,7 @@
 #include "AccessLogEntry.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
-#if USE_CACHE_DIGESTS
 #include "CachePeers.h"
-#endif
 #include "client_side.h"
 #include "client_side_request.h"
 #include "comm/Connection.h"

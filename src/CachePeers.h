@@ -22,8 +22,6 @@ public:
     using Storage = std::vector< std::unique_ptr<CachePeer>, PoolingAllocator< std::unique_ptr<CachePeer> > >;
     using const_iterator = Storage::const_iterator;
 
-    static peer_t parseNeighborType(const char *);
-
     void add(CachePeer *p) { storage.emplace_back(p); }
     /// parses a cache_peer line and stores the parsed CachePeer object
     void parse(ConfigParser &parser);
@@ -42,7 +40,7 @@ public:
     void remove(CachePeer *);
 
     /// a CachePeer used next in neighborsUdpPing() peer ping
-    const_iterator nextPeerToPing();
+    CachePeer *nextPeerToPing();
 
 private:
     Storage storage; ///< cache_peers in configuration/parsing order
@@ -51,8 +49,8 @@ private:
 
 const CachePeers &CurrentCachePeers();
 
-// TODO: rename
-void NeighborRemove(CachePeer *);
+/// destroys the given peer after removing it from the set of configured peers
+void DeleteConfigured(CachePeer *);
 
 #endif /* SQUID_CACHEPEERS_H_ */
 

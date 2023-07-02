@@ -84,7 +84,9 @@ carpInit(void)
 
     auto P = carp_peers;
     /* Build a list of the found peers and calculate hashes and load factors */
-    for (const auto &p: CurrentCachePeers()) {
+    for (const auto &peer: CurrentCachePeers()) {
+        auto p = peer.get();
+
         if (!p->options.carp)
             continue;
 
@@ -108,7 +110,8 @@ carpInit(void)
             p->carp.load_factor = 0.0;
 
         /* add it to our list of peers */
-        *P++ = cbdataReference(p.get());
+        *P = cbdataReference(p);
+        ++P;
     }
 
     /* Sort our list on weight */
