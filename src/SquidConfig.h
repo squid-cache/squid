@@ -42,7 +42,7 @@ namespace Mgr
 {
 class ActionPasswordList;
 } // namespace Mgr
-class CachePeer;
+
 class CachePeers;
 class CustomLog;
 class CpuAffinityMap;
