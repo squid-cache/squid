@@ -13,7 +13,7 @@
 #if defined(__cplusplus)
 
 /**
- * xstrtou{i,l} - string to number conversion
+ * xstrtoui - string to number conversion
  * \param s     input string
  * \param end   like strtoul's "end" pointer
  * \param value pointer for result. Undefined on failure
@@ -28,9 +28,6 @@
  * \return true/false whether number was accepted. On failure, *value has
  * undefined contents.
  */
-bool xstrtoul(const char *s, char **end, unsigned long *value,
-              unsigned long min, unsigned long max);
-
 bool xstrtoui(const char *s, char **end, unsigned int *value,
               unsigned int min, unsigned int max);
 
