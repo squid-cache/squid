@@ -25,7 +25,7 @@ public:
     /// appends a CachePeer object to the storage
     void add(CachePeer *p) { storage.emplace_back(p); }
     /// deletes a CachePeer object
-    void remove(const CachePeer *);
+    void remove(CachePeer *);
 
     const_iterator begin() const { return storage.cbegin(); }
     const_iterator end() const { return storage.cend(); }
@@ -33,18 +33,20 @@ public:
     /// the current number of CachePeer objects
     size_t size() const { return storage.size(); }
 
-    /// a CachePeer used next in neighborsUdpPing() peer ping
-    CachePeer *nextPeerToPing();
+    /// \returns a CachePeer used next in neighborsUdpPing() peer ping
+    /// \param pollIndex a number in the 0..size()-1 range
+    /// of a CachePeer selected for pinging
+    CachePeer *nextPeerToPing(size_t pollIndex);
 
 private:
     Storage storage; ///< cache_peers in configuration/parsing order
-    uint64_t peersPinged_ = 0; ///< total ping attempts made in neighborsUdpPing()
+    uint64_t peerPolls_ = 0; ///< total poll attempts made in neighborsUdpPing()
 };
 
 const CachePeers &CurrentCachePeers();
 
 /// destroys the given peer after removing it from the set of configured peers
-void DeleteConfigured(const CachePeer *);
+void DeleteConfigured(CachePeer *);
 
 #endif /* SQUID_CACHEPEERS_H_ */
 

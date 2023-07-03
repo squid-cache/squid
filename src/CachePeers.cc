@@ -12,21 +12,27 @@
 #include "SquidConfig.h"
 
 CachePeer *
-CachePeers::nextPeerToPing()
+CachePeers::nextPeerToPing(const size_t pollIndex)
 {
     Assure(size());
-    const auto pos = peersPinged_ % size();
-    ++peersPinged_;
-    return (storage.begin() + pos)->get();
+    const auto pos = (peerPolls_ + pollIndex) % size();
+
+    // Remember the number of polls to keep shifting each poll starting point,
+    // to avoid always polling the same group of peers before other peers and
+    // risk overloading that first group with requests.
+    if (!pollIndex)
+        ++peerPolls_; // increment after computing pos to set the very first pos to zero
+
+    return storage[pos].get();
 }
 
 void
-CachePeers::remove(const CachePeer *p)
+CachePeers::remove(CachePeer * const p)
 {
-    Assure(Config.peers);
-    // replace with storage.erase_if() after migrating to C++20
-    storage.erase(std::remove_if(storage.begin(), storage.end(), [&](const auto &el) {
-                return el.get() == p; }), storage.end());
+    const auto peer = std::find_if(storage.begin(), storage.end(), [&](const auto &el) {
+            return el.get() == p; });
+    Assure(peer != storage.end());
+    storage.erase(peer);
 }
 
 const CachePeers &
@@ -40,7 +46,7 @@ CurrentCachePeers()
 }
 
 void
-DeleteConfigured(const CachePeer *peer)
+DeleteConfigured(CachePeer * const peer)
 {
     Assure(Config.peers);
     Config.peers->remove(peer);

@@ -2077,7 +2077,7 @@ dump_peer(StoreEntry * entry, const char *name, const CachePeers *peers)
     NeighborTypeDomainList *t;
     LOCAL_ARRAY(char, xname, 128);
 
-    for (const auto &peer: (*peers)) {
+    for (const auto &peer: *peers) {
         const auto p = peer.get();
         storeAppendPrintf(entry, "%s %s %s %d %d name=%s",
                           name,
@@ -2411,7 +2411,7 @@ parse_peer(CachePeers **peers)
 }
 
 static void
-free_peer(CachePeers **peers)
+free_peer(CachePeers ** const peers)
 {
     delete *peers;
     *peers = nullptr;

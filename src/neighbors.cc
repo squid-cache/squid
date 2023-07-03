@@ -529,12 +529,15 @@ neighbors_init(void)
                        Debug::Extra << "Ignoring cache_peer " << *thisPeer);
 
                 peersToRemove.push_back(thisPeer.get());
-                break;
+                break; // avoid warning about (and removing) the same CachePeer twice
             }
         }
 
-        for (const auto &p: peersToRemove)
+        while (peersToRemove.size()) {
+            const auto p = peersToRemove.back();
+            peersToRemove.pop_back();
             DeleteConfigured(p);
+        }
     }
 
     peerRefreshDNS((void *) 1);
@@ -574,7 +577,7 @@ neighborsUdpPing(HttpRequest * request,
     reqnum = icpSetCacheKey((const cache_key *)entry->key);
 
     for (size_t i = 0; i < Config.peers->size(); ++i) {
-        const auto p = Config.peers->nextPeerToPing();
+        const auto p = Config.peers->nextPeerToPing(i);
 
         debugs(15, 5, "candidate: " << *p);
 
