@@ -580,19 +580,6 @@ getsockopt(int s, int l, int o, void * v, socklen_t * n)
 }
 #define getsockopt(s,l,o,v,n) Squid::getsockopt(s,l,o,v,n)
 
-#if HAVE_DECL_INETNTOPA || HAVE_DECL_INET_NTOP
-inline char *
-inet_ntop(int af, const void *src, char *dst, size_t size)
-{
-#if HAVE_DECL_INETNTOPA
-    return (char*)InetNtopA(af, const_cast<void*>(src), dst, size);
-#else // HAVE_DECL_INET_NTOP
-    return ::inet_ntop(af, src, dst, size);
-#endif
-}
-#define inet_ntop(a,s,d,l) Squid::inet_ntop(a,s,d,l)
-#endif // let compat/inet_ntop.h deal with it
-
 #if HAVE_DECL_INETPTONA || HAVE_DECL_INET_PTON
 inline char *
 inet_pton(int af, const void *src, char *dst)
