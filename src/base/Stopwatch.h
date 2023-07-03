@@ -10,7 +10,6 @@
 #define SQUID_SRC_BASE_STOPWATCH_H
 
 #include <chrono>
-#include <cinttypes>
 
 /// Quickly accumulates related real-time (a.k.a. "physical time" or "wall
 /// clock") periods. Continues to run if the caller is blocked on a system call.
