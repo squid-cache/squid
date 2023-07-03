@@ -38,11 +38,11 @@ CachePeers::remove(CachePeer * const peer)
 const CachePeers &
 CurrentCachePeers()
 {
-    if (!Config.peers) {
-        static const CachePeers peers;
-        return peers;
-    }
-    return *Config.peers;
+    if (Config.peers)
+        return *Config.peers;
+
+    static const CachePeers empty;
+    return empty;
 }
 
 void

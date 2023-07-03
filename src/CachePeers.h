@@ -19,10 +19,10 @@
 class CachePeers
 {
 public:
-    /// owns all CachePeer objects
+    /// owns stored CachePeer objects
     using Storage = std::vector< std::unique_ptr<CachePeer>, PoolingAllocator< std::unique_ptr<CachePeer> > >;
 
-    /// appends a being-configured cache_peer to the storage
+    /// stores a being-configured cache_peer
     void add(CachePeer *p) { storage.emplace_back(p); }
 
     /// deletes a previously add()ed CachePeer object
@@ -31,7 +31,7 @@ public:
     /// the number of currently stored (i.e. added and not removed) cache_peers
     size_t size() const { return storage.size(); }
 
-    /* iterators forming a sequence compatible with C++ range-based for loop API */
+    /* peer iterators forming a sequence for C++ range-based for loop API */
     using const_iterator = Storage::const_iterator;
     const_iterator begin() const { return storage.cbegin(); }
     const_iterator end() const { return storage.cend(); }
