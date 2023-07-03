@@ -85,7 +85,7 @@ carpInit(void)
     auto P = carp_peers;
     /* Build a list of the found peers and calculate hashes and load factors */
     for (const auto &peer: CurrentCachePeers()) {
-        auto p = peer.get();
+        const auto p = peer.get();
 
         if (!p->options.carp)
             continue;

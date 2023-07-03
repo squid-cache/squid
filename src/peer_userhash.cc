@@ -82,7 +82,9 @@ peerUserHashInit(void)
 
     auto P = userhash_peers;
     /* Build a list of the found peers and calculate hashes and load factors */
-    for (const auto &p: CurrentCachePeers()) {
+    for (const auto &peer: CurrentCachePeers()) {
+        const auto p = peer.get();
+
         if (!p->options.userhash)
             continue;
 
@@ -106,7 +108,7 @@ peerUserHashInit(void)
             p->userhash.load_factor = 0.0;
 
         /* add it to our list of peers */
-        *P++ = cbdataReference(p.get());
+        *P++ = cbdataReference(p);
     }
 
     /* Sort our list on weight */
