@@ -7,7 +7,6 @@
  */
 
 #include "squid.h"
-
 #include "CachePeers.h"
 #include "SquidConfig.h"
 
@@ -27,12 +26,13 @@ CachePeers::nextPeerToPing(const size_t pollIndex)
 }
 
 void
-CachePeers::remove(CachePeer * const p)
+CachePeers::remove(CachePeer * const peer)
 {
-    const auto peer = std::find_if(storage.begin(), storage.end(), [&](const auto &el) {
-            return el.get() == p; });
-    Assure(peer != storage.end());
-    storage.erase(peer);
+    const auto pos = std::find_if(storage.begin(), storage.end(), [&](const auto &storePeer) {
+        return storePeer.get() == peer;
+    });
+    Assure(pos != storage.end());
+    storage.erase(pos);
 }
 
 const CachePeers &
