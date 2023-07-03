@@ -29,14 +29,6 @@ libcompatsquid_la_SOURCES = \
 	eui64_aton.c \
 	eui64_aton.h \
 	fdsetsize.h \
-	getaddrinfo.cc \
-	getaddrinfo.h \
-	getnameinfo.cc \
-	getnameinfo.h \
-	inet_ntop.cc \
-	inet_ntop.h \
-	inet_pton.cc \
-	inet_pton.h \
 	initgroups.h \
 	krb5.h \
 	memrchr.cc \
@@ -54,7 +46,6 @@ libcompatsquid_la_SOURCES = \
 	os/mswindows.h \
 	os/netbsd.h \
 	os/openbsd.h \
-	os/opensolaris_10_netdb.h \
 	os/os2.h \
 	os/qnx.h \
 	os/sgi.h \
