@@ -75,7 +75,6 @@ class HttpHeader
 {
 
 public:
-    HttpHeader();
     explicit HttpHeader(const http_hdr_owner_type owner);
     HttpHeader(const HttpHeader &other);
     ~HttpHeader();

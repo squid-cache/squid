@@ -145,12 +145,6 @@ httpHeaderInitModule(void)
  * HttpHeader Implementation
  */
 
-HttpHeader::HttpHeader() : owner (hoNone), len (0), conflictingContentLength_(false)
-{
-    entries.reserve(32);
-    httpHeaderMaskInit(&mask, 0);
-}
-
 HttpHeader::HttpHeader(const http_hdr_owner_type anOwner): owner(anOwner), len(0), conflictingContentLength_(false)
 {
     assert(anOwner > hoNone && anOwner < hoEnd);
@@ -749,17 +743,15 @@ HttpHeader::tooLarge() const
         break;
 #if USE_HTCP
     case hoHtcpReply:
-        // HTCP messages have a fixed header length
+        max = Config.maxReplyHeaderSize;
         return false;
 #endif
 #if USE_OPENSSL
     case hoErrorDetail:
-        // this case should not happen
-        return false;
+        max = Config.maxReplyHeaderSize;
+        break;
 #endif
     case hoNone:
-        // this case should not happen
-        return false;
     case hoEnd:
         Assure(!"bad HttpHeader owner");
     }
