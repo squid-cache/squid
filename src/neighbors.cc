@@ -766,7 +766,7 @@ neighborsDigestSelect(PeerSelector *ps)
     storeKeyPublicByRequest(request);
 
     for (size_t i = 0; i < Config.peers->size(); ++i) {
-        const auto p = Config.peers->nextPeerToPing();
+        const auto p = Config.peers->nextPeerToPing(i);
 
         const auto lookup = peerDigestLookup(p, ps);
 
