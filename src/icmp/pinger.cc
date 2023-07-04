@@ -44,6 +44,7 @@
 
 #if USE_ICMP
 
+#include "base/Stopwatch.h"
 #include "Icmp4.h"
 #include "Icmp6.h"
 #include "IcmpPinger.h"
@@ -56,16 +57,9 @@
 
 #if _SQUID_WINDOWS_
 
-#if HAVE_WINSOCK2_H
-#include <winsock2.h>
-#elif HAVE_WINSOCK_H
-#include <winsock.h>
-#endif
 #include <process.h>
 
 #include "fde.h"
-
-#define PINGER_TIMEOUT 5
 
 /* windows uses the control socket for feedback to squid */
 #define LINK_TO_SQUID squid_link
@@ -84,12 +78,13 @@ Win32__WSAFDIsSet(int fd, fd_set FAR * set)
 
 #else
 
-#define PINGER_TIMEOUT 10
-
 /* non-windows use STDOUT for feedback to squid */
 #define LINK_TO_SQUID   1
 
 #endif  /* _SQUID_WINDOWS_ */
+
+using namespace std::literals::chrono_literals;
+static const auto PingerTimeout = 10s;
 
 // ICMP Engines are declared global here so they can call each other easily.
 IcmpPinger control;
@@ -108,9 +103,6 @@ main(int, char **)
     fd_set R;
     int x;
     int max_fd = 0;
-
-    struct timeval tv;
-    time_t last_check_time = 0;
 
     /*
      * cevans - do this first. It grabs a raw socket. After this we can
@@ -198,10 +190,9 @@ main(int, char **)
     }
 #endif
 
-    last_check_time = squid_curtime;
-
     for (;;) {
-        tv.tv_sec = PINGER_TIMEOUT;
+        struct timeval tv;
+        tv.tv_sec = std::chrono::seconds(PingerTimeout).count();
         tv.tv_usec = 0;
         FD_ZERO(&R);
         if (icmp4_worker >= 0) {
@@ -212,6 +203,8 @@ main(int, char **)
         }
 
         FD_SET(squid_link, &R);
+        Stopwatch timer;
+        timer.resume();
         x = select(max_fd+1, &R, nullptr, nullptr, &tv);
         getCurrentTime();
 
@@ -233,14 +226,13 @@ main(int, char **)
             icmp4.Recv();
         }
 
-        if (PINGER_TIMEOUT + last_check_time < squid_curtime) {
+        const auto delay = std::chrono::duration_cast<std::chrono::seconds>(timer.total());
+        if (delay >= PingerTimeout) {
             if (send(LINK_TO_SQUID, &tv, 0, 0) < 0) {
-                debugs(42, DBG_CRITICAL, "Closing. No requests in last " << PINGER_TIMEOUT << " seconds.");
+                debugs(42, DBG_CRITICAL, "Closing. No requests in last " << delay.count() << " seconds.");
                 control.Close();
                 exit(EXIT_FAILURE);
             }
-
-            last_check_time = squid_curtime;
         }
     }
 

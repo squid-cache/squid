@@ -248,7 +248,7 @@ storeDigestAddable(const StoreEntry * e)
         return 0;
     }
 
-    if (e->store_status == STORE_OK && EBIT_TEST(e->flags, ENTRY_BAD_LENGTH)) {
+    if (EBIT_TEST(e->flags, ENTRY_BAD_LENGTH)) {
         debugs(71, 6, "storeDigestAddable: NO: wrong content-length");
         return 0;
     }

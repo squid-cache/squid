@@ -7,15 +7,33 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "MemObject.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "store/Disks.h"
 #include "StoreSearch.h"
-#include "testStoreHashIndex.h"
 #include "TestSwapDir.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testStoreHashIndex );
+/*
+ * test the store framework
+ */
+
+class TestStoreHashIndex : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestStoreHashIndex);
+    CPPUNIT_TEST(testStats);
+    CPPUNIT_TEST(testMaxSize);
+    CPPUNIT_TEST(testSearch);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+protected:
+    void testStats();
+    void testMaxSize();
+    void testSearch();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestStoreHashIndex);
 
 static void
 addSwapDir(TestSwapDirPointer aStore)
@@ -26,7 +44,7 @@ addSwapDir(TestSwapDirPointer aStore)
 }
 
 void
-testStoreHashIndex::testStats()
+TestStoreHashIndex::testStats()
 {
     StoreEntry *logEntry = new StoreEntry;
     logEntry->createMemObject("dummy_storeId", nullptr, HttpRequestMethod());
@@ -46,7 +64,7 @@ testStoreHashIndex::testStats()
 }
 
 void
-testStoreHashIndex::testMaxSize()
+TestStoreHashIndex::testMaxSize()
 {
     StoreEntry *logEntry = new StoreEntry;
     logEntry->createMemObject("dummy_storeId", nullptr, HttpRequestMethod());
@@ -126,7 +144,7 @@ searchCallback(void *)
 }
 
 void
-testStoreHashIndex::testSearch()
+TestStoreHashIndex::testSearch()
 {
     commonInit();
     Store::Init();

@@ -1086,8 +1086,8 @@ ErrorState::compileLegacyCode(Build &build)
         break;
 
     case 'p':
-        if (request) {
-            mb.appendf("%u", request->url.port());
+        if (request && request->url.port()) {
+            mb.appendf("%hu", *request->url.port());
         } else if (!building_deny_info_url) {
             p = "[unknown port]";
         }
@@ -1352,6 +1352,11 @@ ErrorState::BuildHttpReply()
             request->detailError(type, detail);
         else
             request->detailError(type, SysErrorDetail::NewIfAny(xerrno));
+    } else if (ale) {
+        if (detail)
+            ale->updateError(Error(type, detail));
+        else
+            ale->updateError(Error(type, SysErrorDetail::NewIfAny(xerrno)));
     }
 
     return rep;

@@ -50,6 +50,7 @@ libcompatsquid_la_SOURCES = \
 	os/hpux.h \
 	os/linux.h \
 	os/macosx.h \
+	os/mingw.h \
 	os/mswindows.h \
 	os/netbsd.h \
 	os/openbsd.h \
@@ -90,8 +91,7 @@ check_PROGRAMS += testPreCompiler
 TESTS += testPreCompiler
 
 testPreCompiler_SOURCES = \
-	testPreCompiler.cc \
-	testPreCompiler.h
+	testPreCompiler.cc
 testPreCompiler_LDADD= $(LIBCPPUNIT_LIBS)
 testPreCompiler_LDFLAGS=
 

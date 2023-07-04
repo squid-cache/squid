@@ -48,17 +48,12 @@
 #include "helper/protocol_defines.h"
 #include "ntlmauth/ntlmauth.h"
 #include "ntlmauth/support_bits.cci"
-#include "sspwin32.h"
+#include "sspi/sspwin32.h"
 #include "util.h"
 
-#include <windows.h>
-#include <sspi.h>
-#include <security.h>
+#include <cctype>
 #if HAVE_GETOPT_H
 #include <getopt.h>
-#endif
-#if HAVE_CTYPE_H
-#include <ctype.h>
 #endif
 
 int Negotiate_packet_debug_enabled = 0;

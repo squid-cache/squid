@@ -7,12 +7,23 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "sbuf/Algorithms.h"
 #include "sbuf/List.h"
-#include "tests/testSBufList.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testSBufList );
+class TestSBufList : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestSBufList);
+    CPPUNIT_TEST(testSBufListMembership);
+    CPPUNIT_TEST(testSBufListJoin);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void testSBufListMembership();
+    void testSBufListJoin();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION( TestSBufList );
 
 SBuf literal("The quick brown fox jumped over the lazy dog");
 static int sbuf_tokens_number=9;
@@ -23,7 +34,7 @@ static SBuf tokens[]= {
 };
 
 void
-testSBufList::testSBufListMembership()
+TestSBufList::testSBufListMembership()
 {
     SBufList foo;
     for (int j=0; j<sbuf_tokens_number; ++j)
@@ -34,7 +45,7 @@ testSBufList::testSBufListMembership()
 }
 
 void
-testSBufList::testSBufListJoin()
+TestSBufList::testSBufListJoin()
 {
     SBufList foo;
     CPPUNIT_ASSERT_EQUAL(SBuf(""),JoinContainerToSBuf(foo.begin(), foo.end(),SBuf()));

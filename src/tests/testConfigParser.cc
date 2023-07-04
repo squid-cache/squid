@@ -7,20 +7,38 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "ConfigParser.h"
 #include "SquidString.h"
-#include "tests/testConfigParser.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testConfigParser);
+/*
+ * test the ConfigParser framework
+ */
+
+class TestConfigParser : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestConfigParser);
+    CPPUNIT_TEST(testParseQuoted);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void setUp() override;
+
+protected:
+    bool doParseQuotedTest(const char *, const char *);
+    void testParseQuoted();
+};
+
+CPPUNIT_TEST_SUITE_REGISTRATION( TestConfigParser );
 
 int shutting_down = 0;
 
-void testConfigParser::setUp()
+void TestConfigParser::setUp()
 {
 }
 
-bool testConfigParser::doParseQuotedTest(const char *s, const char *expectInterp)
+bool TestConfigParser::doParseQuotedTest(const char *s, const char *expectInterp)
 {
     char cfgline[2048];
     char cfgparam[2048];
@@ -54,7 +72,7 @@ bool testConfigParser::doParseQuotedTest(const char *s, const char *expectInterp
     return quotedOk && interpOk ;
 }
 
-void testConfigParser::testParseQuoted()
+void TestConfigParser::testParseQuoted()
 {
     // SingleToken
     CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("SingleToken", "SingleToken"));

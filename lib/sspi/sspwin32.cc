@@ -8,9 +8,27 @@
 
 #include "squid.h"
 #include "base64.h"
+#if HAVE_AUTH_MODULE_NTLM
 #include "ntlmauth/ntlmauth.h"
-#include "sspwin32.h"
+#endif
+#include "sspi/sspwin32.h"
 #include "util.h"
+
+// FARPROC is an exception on Windows to the -Wcast-function-type sanity check.
+// suppress the warning only when casting FARPROC
+template <typename T>
+T
+farproc_cast(FARPROC in)
+{
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+    return reinterpret_cast<T>(in);
+#pragma GCC diagnostic pop
+#else
+    return reinterpret_cast<T>(in);
+#endif
+}
 
 typedef struct _AUTH_SEQ {
     BOOL fInitialized;
@@ -34,10 +52,12 @@ static DWORD cbMaxToken = 0;
 static uint8_t * pClientBuf = NULL;
 static uint8_t * pServerBuf = NULL;
 
-static AUTH_SEQ NTLM_asServer = {0};
+static AUTH_SEQ NTLM_asServer = {};
 
 BOOL Use_Unicode = FALSE;
+#if HAVE_AUTH_MODULE_NTLM
 BOOL NTLM_LocalCall = FALSE;
+#endif
 
 /* Function pointers */
 ACCEPT_SECURITY_CONTEXT_FN _AcceptSecurityContext = NULL;
@@ -111,59 +131,50 @@ HMODULE LoadSecurityDll(int mode, const char * SSP_Package)
     hModule = LoadLibrary(lpszDLL);
     if (!hModule)
         return hModule;
-    _AcceptSecurityContext = (ACCEPT_SECURITY_CONTEXT_FN)
-                             GetProcAddress(hModule, "AcceptSecurityContext");
+    _AcceptSecurityContext = farproc_cast<ACCEPT_SECURITY_CONTEXT_FN>(GetProcAddress(hModule, "AcceptSecurityContext"));
     if (!_AcceptSecurityContext) {
         UnloadSecurityDll();
         hModule = NULL;
         return hModule;
     }
 #ifdef UNICODE
-    _AcquireCredentialsHandle = (ACQUIRE_CREDENTIALS_HANDLE_FN)
-                                GetProcAddress(hModule, "AcquireCredentialsHandleW");
+    _AcquireCredentialsHandle = farproc_cast<ACQUIRE_CREDENTIALS_HANDLE_FN>(GetProcAddress(hModule, "AcquireCredentialsHandleW"));
 #else
-    _AcquireCredentialsHandle = (ACQUIRE_CREDENTIALS_HANDLE_FN)
-                                GetProcAddress(hModule, "AcquireCredentialsHandleA");
+    _AcquireCredentialsHandle = farproc_cast<ACQUIRE_CREDENTIALS_HANDLE_FN>(GetProcAddress(hModule, "AcquireCredentialsHandleA"));
 #endif
     if (!_AcquireCredentialsHandle) {
         UnloadSecurityDll();
         hModule = NULL;
         return hModule;
     }
-    _CompleteAuthToken = (COMPLETE_AUTH_TOKEN_FN)
-                         GetProcAddress(hModule, "CompleteAuthToken");
+    _CompleteAuthToken = farproc_cast<COMPLETE_AUTH_TOKEN_FN>(GetProcAddress(hModule, "CompleteAuthToken"));
     if (!_CompleteAuthToken) {
         UnloadSecurityDll();
         hModule = NULL;
         return hModule;
     }
-    _DeleteSecurityContext = (DELETE_SECURITY_CONTEXT_FN)
-                             GetProcAddress(hModule, "DeleteSecurityContext");
+    _DeleteSecurityContext = farproc_cast<DELETE_SECURITY_CONTEXT_FN>(GetProcAddress(hModule, "DeleteSecurityContext"));
     if (!_DeleteSecurityContext) {
         UnloadSecurityDll();
         hModule = NULL;
         return hModule;
     }
-    _FreeContextBuffer = (FREE_CONTEXT_BUFFER_FN)
-                         GetProcAddress(hModule, "FreeContextBuffer");
+    _FreeContextBuffer = farproc_cast<FREE_CONTEXT_BUFFER_FN>(GetProcAddress(hModule, "FreeContextBuffer"));
     if (!_FreeContextBuffer) {
         UnloadSecurityDll();
         hModule = NULL;
         return hModule;
     }
-    _FreeCredentialsHandle = (FREE_CREDENTIALS_HANDLE_FN)
-                             GetProcAddress(hModule, "FreeCredentialsHandle");
+    _FreeCredentialsHandle = farproc_cast<FREE_CREDENTIALS_HANDLE_FN>(GetProcAddress(hModule, "FreeCredentialsHandle"));
     if (!_FreeCredentialsHandle) {
         UnloadSecurityDll();
         hModule = NULL;
         return hModule;
     }
 #ifdef UNICODE
-    _InitializeSecurityContext = (INITIALIZE_SECURITY_CONTEXT_FN)
-                                 GetProcAddress(hModule, "InitializeSecurityContextW");
+    _InitializeSecurityContext = farproc_cast<INITIALIZE_SECURITY_CONTEXT_FN>(GetProcAddress(hModule, "InitializeSecurityContextW"));
 #else
-    _InitializeSecurityContext = (INITIALIZE_SECURITY_CONTEXT_FN)
-                                 GetProcAddress(hModule, "InitializeSecurityContextA");
+    _InitializeSecurityContext = farproc_cast<INITIALIZE_SECURITY_CONTEXT_FN>(GetProcAddress(hModule, "InitializeSecurityContextA"));
 #endif
     if (!_InitializeSecurityContext) {
         UnloadSecurityDll();
@@ -171,11 +182,9 @@ HMODULE LoadSecurityDll(int mode, const char * SSP_Package)
         return hModule;
     }
 #ifdef UNICODE
-    _QuerySecurityPackageInfo = (QUERY_SECURITY_PACKAGE_INFO_FN)
-                                GetProcAddress(hModule, "QuerySecurityPackageInfoW");
+    _QuerySecurityPackageInfo = farproc_cast<QUERY_SECURITY_PACKAGE_INFO_FN>(GetProcAddress(hModule, "QuerySecurityPackageInfoW"));
 #else
-    _QuerySecurityPackageInfo = (QUERY_SECURITY_PACKAGE_INFO_FN)
-                                GetProcAddress(hModule, "QuerySecurityPackageInfoA");
+    _QuerySecurityPackageInfo = farproc_cast<QUERY_SECURITY_PACKAGE_INFO_FN>(GetProcAddress(hModule, "QuerySecurityPackageInfoA"));
 #endif
     if (!_QuerySecurityPackageInfo) {
         UnloadSecurityDll();
@@ -183,11 +192,9 @@ HMODULE LoadSecurityDll(int mode, const char * SSP_Package)
     }
 
 #ifdef UNICODE
-    _QueryContextAttributes = (QUERY_CONTEXT_ATTRIBUTES_FN_W)
-                              GetProcAddress(hModule, "QueryContextAttributesW");
+    _QueryContextAttributes = farproc_cast<QUERY_CONTEXT_ATTRIBUTES_FN_W>(GetProcAddress(hModule, "QueryContextAttributesW"));
 #else
-    _QueryContextAttributes = (QUERY_CONTEXT_ATTRIBUTES_FN_A)
-                              GetProcAddress(hModule, "QueryContextAttributesA");
+    _QueryContextAttributes = farproc_cast<QUERY_CONTEXT_ATTRIBUTES_FN_A>(GetProcAddress(hModule, "QueryContextAttributesA"));
 #endif
     if (!_QueryContextAttributes) {
         UnloadSecurityDll();
@@ -382,8 +389,8 @@ BOOL GenServerContext(PAUTH_SEQ pAS, PVOID pIn, DWORD cbIn, PVOID pOut,
 
 BOOL WINAPI SSP_LogonUser(PTSTR szUser, PTSTR szPassword, PTSTR szDomain)
 {
-    AUTH_SEQ    asServer   = {0};
-    AUTH_SEQ    asClient   = {0};
+    AUTH_SEQ    asServer   = {};
+    AUTH_SEQ    asClient   = {};
     BOOL        fDone      = FALSE;
     BOOL        fResult    = FALSE;
     DWORD       cbOut      = 0;
@@ -455,6 +462,7 @@ BOOL WINAPI SSP_LogonUser(PTSTR szUser, PTSTR szPassword, PTSTR szDomain)
     return fResult;
 }
 
+#if HAVE_AUTH_MODULE_NTLM
 const char * WINAPI SSP_MakeChallenge(PVOID PNegotiateBuf, int NegotiateLen)
 {
     BOOL        fDone      = FALSE;
@@ -526,7 +534,9 @@ BOOL WINAPI SSP_ValidateNTLMCredentials(PVOID PAutenticateBuf, int AutenticateLe
 
     return fResult;
 }
+#endif /* HAVE_AUTH_MODULE_NTLM */
 
+#if HAVE_AUTH_MODULE_NEGOTIATE
 const char * WINAPI SSP_MakeNegotiateBlob(PVOID PNegotiateBuf, int NegotiateLen, PBOOL fDone, int * Status, char * credentials)
 {
     DWORD       cbOut      = 0;
@@ -602,4 +612,4 @@ const char * WINAPI SSP_ValidateNegotiateCredentials(PVOID PAutenticateBuf, int 
     }
     return NULL;
 }
-
+#endif /* HAVE_AUTH_MODULE_NEGOTIATE */

@@ -530,7 +530,10 @@ PeerSelector::noteIp(const Ip::Address &ip)
 
     Comm::ConnectionPointer p = new Comm::Connection();
     p->remote = ip;
-    p->remote.port(peer ? peer->http_port : request->url.port());
+    // XXX: We return a (non-peer) destination with a zero port if the selection
+    // initiator supplied a request target without a port. If there are no valid
+    // use cases for this behavior, stop _selecting_ such destinations.
+    p->remote.port(peer ? peer->http_port : request->url.port().value_or(0));
     handlePath(p, *servers);
 }
 

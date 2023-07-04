@@ -8,15 +8,37 @@
 
 #include "squid.h"
 #include "base/CharacterSet.h"
-#include "testCharacterSet.h"
+#include "compat/cppunit.h"
 #include "unitTestMain.h"
 
 #include <string>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testCharacterSet );
+class TestCharacterSet : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestCharacterSet);
+    CPPUNIT_TEST(CharacterSetConstruction);
+    CPPUNIT_TEST(CharacterSetAdd);
+    CPPUNIT_TEST(CharacterSetAddRange);
+    CPPUNIT_TEST(CharacterSetEqualityOp);
+    CPPUNIT_TEST(CharacterSetConstants);
+    CPPUNIT_TEST(CharacterSetUnion);
+    CPPUNIT_TEST(CharacterSetSubtract);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void CharacterSetConstruction();
+    void CharacterSetAdd();
+    void CharacterSetAddRange();
+    void CharacterSetConstants();
+    void CharacterSetUnion();
+    void CharacterSetEqualityOp();
+    void CharacterSetSubtract();
+};
+
+CPPUNIT_TEST_SUITE_REGISTRATION( TestCharacterSet );
 
 void
-testCharacterSet::CharacterSetConstruction()
+TestCharacterSet::CharacterSetConstruction()
 {
     {
         CharacterSet t(nullptr,"");
@@ -45,7 +67,7 @@ testCharacterSet::CharacterSetConstruction()
 }
 
 void
-testCharacterSet::CharacterSetAdd()
+TestCharacterSet::CharacterSetAdd()
 {
     CharacterSet t("test","0");
     t.add(0);
@@ -54,7 +76,7 @@ testCharacterSet::CharacterSetAdd()
 }
 
 void
-testCharacterSet::CharacterSetAddRange()
+TestCharacterSet::CharacterSetAddRange()
 {
     CharacterSet t("test","");
     t.addRange('0','9');
@@ -65,7 +87,7 @@ testCharacterSet::CharacterSetAddRange()
 }
 
 void
-testCharacterSet::CharacterSetConstants()
+TestCharacterSet::CharacterSetConstants()
 {
     CPPUNIT_ASSERT_EQUAL(true,CharacterSet::ALPHA['a']);
     CPPUNIT_ASSERT_EQUAL(true,CharacterSet::ALPHA['z']);
@@ -75,7 +97,7 @@ testCharacterSet::CharacterSetConstants()
 }
 
 void
-testCharacterSet::CharacterSetUnion()
+TestCharacterSet::CharacterSetUnion()
 {
     {
         CharacterSet hex("hex","");
@@ -94,7 +116,7 @@ testCharacterSet::CharacterSetUnion()
 }
 
 void
-testCharacterSet::CharacterSetEqualityOp()
+TestCharacterSet::CharacterSetEqualityOp()
 {
     CPPUNIT_ASSERT_EQUAL(CharacterSet::ALPHA, CharacterSet::ALPHA);
     CPPUNIT_ASSERT_EQUAL(CharacterSet::BIT, CharacterSet(nullptr,"01"));
@@ -106,7 +128,7 @@ testCharacterSet::CharacterSetEqualityOp()
 }
 
 void
-testCharacterSet::CharacterSetSubtract()
+TestCharacterSet::CharacterSetSubtract()
 {
     CharacterSet sample(nullptr, "0123456789aAbBcCdDeEfFz");
 

@@ -1,0 +1,154 @@
+<!doctype linuxdoc system>
+<article>
+<title>Squid @SQUID_VERSION@ release notes</title>
+<author>Squid Developers</author>
+
+<toc>
+
+<sect>Notice
+<p>The Squid Team are pleased to announce the release of Squid-@PACKAGE_VERSION@ for testing.
+
+This new release is available for download from <url url="http://www.squid-cache.org/Versions/v@SQUID_RELEASE@/"> or the
+ <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
+
+<p>While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.
+
+<p>We welcome feedback and bug reports. If you find a bug, please see <url url="https://wiki.squid-cache.org/SquidFaq/BugReporting">
+   for how to submit a report with a stack trace.
+
+<sect1>Known issues
+<p>Although this release is deemed good enough for use in many setups, please note the existence of
+<url url="https://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=@SQUID_RELEASE@" name="open bugs against Squid-@SQUID_RELEASE@">.
+
+<sect1>Changes since earlier releases of Squid-@SQUID_RELEASE@
+<p>
+The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squid-cache/squid/commits/v@SQUID_RELEASE@" name="viewed here">.
+
+
+<sect>Major new features since Squid-@SQUID_RELEASE_OLD@
+<p>Squid-@SQUID_RELEASE@ represents a new feature release above Squid-@SQUID_RELEASE_OLD@.
+
+<p>The most important of these new features are:
+<itemize>
+	<item>removed support for the cache_object URI scheme
+	<item>Cache Manager changes
+</itemize>
+
+<p>Most user-facing changes are reflected in squid.conf (see further below).
+
+<sect1>Cache Manager changes<label id="mgr">
+<p>For more information about the Cache Manager feature, see <url url="https://wiki.squid-cache.org/Features/CacheManager/Index" name="wiki">.
+
+<p>
+<descrip>
+	<tag>cache_object URI</tag>
+	<p>Cache manager is no longer accessible by URIs with cache_object scheme.
+
+	<tag>non_peers</tag>
+	<p>Removed the <em>mgr:non_peers</em> report. Squid still ignores
+	unexpected ICP responses but no longer remembers the details that comprised
+	the removed report. The senders of these ICP messages are still reported to
+	cache.log at debugging level 1 (with an exponential backoff).
+
+</descrip>
+
+<sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
+<p>
+This section gives an account of those changes in three categories:
+
+<itemize>
+	<item><ref id="newdirectives" name="New directives">
+	<item><ref id="modifieddirectives" name="Changes to existing directives">
+	<item><ref id="removeddirectives" name="Removed directives">
+</itemize>
+<p>
+
+<sect1>New directives<label id="newdirectives">
+<p>
+<descrip>
+	<p>No new directives in this version.
+
+</descrip>
+
+<sect1>Changes to existing directives<label id="modifieddirectives">
+<p>
+<descrip>
+	<tag>buffered_logs</tag>
+	<p>Honor the <em>off</em> setting in 'udp' access_log module.
+
+	<tag>cachemgr_passwd</tag>
+	<p>Removed the <em>non_peers</em> action. See the Cache Manager
+	<ref id="mgr" name="section"> for details.
+
+</descrip>
+
+<sect1>Removed directives<label id="removeddirectives">
+<p>
+<descrip>
+	<tag>mcast_miss_addr</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
+
+	<tag>mcast_miss_ttl</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
+
+	<tag>mcast_miss_port</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
+
+	<tag>mcast_miss_encode_key</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
+
+</descrip>
+
+
+<sect>Changes to ./configure options since Squid-@SQUID_RELEASE_OLD@
+<p>
+This section gives an account of those changes in three categories:
+
+<itemize>
+	<item><ref id="newoptions" name="New options">
+	<item><ref id="modifiedoptions" name="Changes to existing options">
+	<item><ref id="removedoptions" name="Removed options">
+</itemize>
+
+<sect1>New options<label id="newoptions">
+<p>
+<descrip>
+	<tag>--without-psapi</tag>
+	<p>Disable auto-detection of Windows PSAPI library.
+
+</descrip>
+
+<sect1>Changes to existing options<label id="modifiedoptions">
+<p>
+<descrip>
+	<p>No changed options in this version.
+
+</descrip>
+</p>
+
+<sect1>Removed options<label id="removedoptions">
+<p>
+<descrip>
+	<tag>CPPFLAGS=-DHEADERS_LOG</tag>
+	<p>The code enabled by this preprocessor macro has not built for many
+	   years, indicating that the feature is unused.
+
+	<tag>CPPFLAGS=-DMULTICAST_MISS_STREAM</tag>
+	<p>The code enabled by this preprocessor macro has not built for many
+	   years, indicating that the feature is unused.
+
+</descrip>
+
+<sect>Copyright
+<p>
+Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+<p>
+Squid software is distributed under GPLv2+ license and includes
+contributions from numerous individuals and organizations.
+Please see the COPYING and CONTRIBUTORS files for details.
+
+</article>

@@ -8,10 +8,19 @@
 
 #include "squid.h"
 #include "base/LookupTable.h"
-#include "testLookupTable.h"
+#include "compat/cppunit.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testLookupTable );
+class TestLookupTable : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestLookupTable);
+    CPPUNIT_TEST(testLookupTableLookup);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void testLookupTableLookup();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestLookupTable);
 
 enum EnumData {
     ENUM_1,
@@ -36,7 +45,7 @@ static const LookupTable<EnumData>::Record tableData[] = {
 };
 
 void
-testLookupTable::testLookupTableLookup()
+TestLookupTable::testLookupTableLookup()
 {
     LookupTable<EnumData> lt(ENUM_INVALID, tableData);
     // element found
@@ -47,6 +56,11 @@ testLookupTable::testLookupTableLookup()
     CPPUNIT_ASSERT_EQUAL(lt.lookup(SBuf("five")), ENUM_5);
     CPPUNIT_ASSERT_EQUAL(lt.lookup(SBuf("six")), ENUM_6);
     CPPUNIT_ASSERT_EQUAL(lt.lookup(SBuf("seven")), ENUM_7);
+
+    // element found despite a different key spelling
+    CPPUNIT_ASSERT_EQUAL(lt.lookup(SBuf("One")), ENUM_1);
+    CPPUNIT_ASSERT_EQUAL(lt.lookup(SBuf("fOUr")), ENUM_4);
+    CPPUNIT_ASSERT_EQUAL(lt.lookup(SBuf("seveN")), ENUM_7);
 
     // element not found
     CPPUNIT_ASSERT_EQUAL(lt.lookup(SBuf("eleventy")), ENUM_INVALID);

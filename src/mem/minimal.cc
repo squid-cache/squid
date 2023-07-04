@@ -81,7 +81,7 @@ memAllocRigid(const size_t netSize)
 }
 
 void
-memFreeRigid(void *buf, size_t)
+memFreeRigid(void * const buf, size_t)
 {
     xfree(buf);
 }

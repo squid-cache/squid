@@ -57,15 +57,9 @@
 #undef _POSIX_C_SOURCE
 #undef _XOPEN_SOURCE
 
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cstring>
+#include <cctype>
+#include <cerrno>
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif

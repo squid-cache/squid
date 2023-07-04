@@ -7,23 +7,46 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "mem/forward.h"
 #include "SquidString.h"
-#include "testString.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testString );
+/*
+ * test the store framework
+ */
+
+class TestString : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestString);
+    CPPUNIT_TEST(testCmpDefault);
+    CPPUNIT_TEST(testCmpEmptyString);
+    CPPUNIT_TEST(testCmpNotEmptyDefault);
+    CPPUNIT_TEST(testSubstr);
+
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void setUp() override;
+
+protected:
+    void testCmpDefault();
+    void testCmpEmptyString();
+    void testCmpNotEmptyDefault();
+    void testSubstr();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestString);
 
 /* init memory pools */
 
 void
-testString::setUp()
+TestString::setUp()
 {
     Mem::Init();
 }
 
 void
-testString::testCmpDefault()
+TestString::testCmpDefault()
 {
     String left, right;
     /* two default strings are equal */
@@ -33,7 +56,7 @@ testString::testCmpDefault()
 }
 
 void
-testString::testCmpEmptyString()
+TestString::testCmpEmptyString()
 {
     String left("");
     String right;
@@ -48,7 +71,7 @@ testString::testCmpEmptyString()
 }
 
 void
-testString::testCmpNotEmptyDefault()
+TestString::testCmpNotEmptyDefault()
 {
     String left("foo");
     String right;
@@ -62,7 +85,7 @@ testString::testCmpNotEmptyDefault()
     CPPUNIT_ASSERT(right.cmp("foo", 1) < 0);
 }
 
-void testString::testSubstr()
+void TestString::testSubstr()
 {
     String s("0123456789");
     String check=s.substr(3,5);

@@ -13,10 +13,17 @@
 #include "sbuf/SBuf.h"
 
 #include <iosfwd>
+#include <optional>
 #include <vector>
 
 namespace AnyP
 {
+
+/// validated/supported port number; these values are never zero
+using KnownPort = uint16_t;
+
+/// validated/supported port number (if any)
+using Port = std::optional<KnownPort>;
 
 /** This class represents a URI Scheme such as http:// https://, wais://, urn: etc.
  * It does not represent the PROTOCOL that such schemes refer to.
@@ -49,7 +56,7 @@ public:
      */
     SBuf image() const {return image_;}
 
-    unsigned short defaultPort() const;
+    Port defaultPort() const;
 
     /// initializes down-cased protocol scheme names array
     static void Init();

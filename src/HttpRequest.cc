@@ -560,9 +560,6 @@ HttpRequest::maybeCacheable()
             return false;
         break;
 
-    case AnyP::PROTO_CACHE_OBJECT:
-        return false;
-
     //case AnyP::PROTO_FTP:
     default:
         break;
@@ -872,11 +869,16 @@ FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry 
     });
 }
 
-unsigned short
+AnyP::Port
 FindListeningPortNumber(const HttpRequest *callerRequest, const AccessLogEntry *ale)
 {
     const auto ip = FindGoodListeningPortAddress(callerRequest, ale, [](const Ip::Address &address) {
         return address.port() > 0;
     });
-    return ip ? ip->port() : 0;
+
+    if (!ip)
+        return std::nullopt;
+
+    Assure(ip->port() > 0);
+    return ip->port();
 }

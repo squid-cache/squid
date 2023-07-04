@@ -33,10 +33,8 @@ public:
     StoreIOState::Pointer createState(SwapDir *SD, StoreEntry *e, StoreIOState::STIOCB * callback, void *callback_data) const;
     /* UFS specific */
     virtual RefCount<DiskFile> newFile (char const *path);
-    StoreIOState::Pointer open(SwapDir *, StoreEntry *, StoreIOState::STFNCB *,
-                               StoreIOState::STIOCB *, void *);
-    StoreIOState::Pointer create(SwapDir *, StoreEntry *, StoreIOState::STFNCB *,
-                                 StoreIOState::STIOCB *, void *);
+    StoreIOState::Pointer open(SwapDir *, StoreEntry *, StoreIOState::STIOCB *, void *);
+    StoreIOState::Pointer create(SwapDir *, StoreEntry *, StoreIOState::STIOCB *, void *);
 
     virtual void unlinkFile (char const *);
     virtual void sync();
