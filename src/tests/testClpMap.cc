@@ -363,8 +363,8 @@ TestClpMap::testConstIterator()
     int count = 0, current = entriesToAdd-1;
     Map m(2048);
     addSequenceOfEntriesToMap(m, entriesToAdd, 0, 50);
-    for (auto &i : m ) {
-        CPPUNIT_ASSERT_EQUAL(current, i.value);
+    for (auto i = m.cbegin(); i != m.cend(); ++i ) {
+        CPPUNIT_ASSERT_EQUAL(current, i->value);
         ++count;
         --current;
     }

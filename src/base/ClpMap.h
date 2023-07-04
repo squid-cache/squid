@@ -65,6 +65,7 @@ public:
     /// Entries in LRU order
     using Entries = std::list<Entry, PoolingAllocator<Entry>>;
     using EntriesIterator = typename Entries::iterator;
+    using ConstEntriesIterator = typename Entries::const_iterator;
 
     using IndexItem = std::pair<const Key, EntriesIterator>;
     /// key:entry_position mapping for fast entry lookups by key
@@ -115,8 +116,8 @@ public:
 
     /// read-only iterator. Entries are owned by the ClpMap, so invalidations
     /// might happen if any non-const operation is performed
-    EntriesIterator begin() { return entries_.begin(); }
-    EntriesIterator end() { return entries_.end(); }
+    ConstEntriesIterator cbegin() { return entries_.cbegin(); }
+    ConstEntriesIterator cend() { return entries_.cend(); }
 
     static std::optional<uint64_t> MemoryCountedFor(const Key &, const Value &);
 
@@ -124,6 +125,7 @@ public:
     void erase(const IndexIterator &);
     IndexIterator find(const Key &);
 
+private:
     /// cached entries, including expired ones, in LRU order
     Entries entries_;
 
