@@ -21,7 +21,6 @@
 #include "MasterXaction.h"
 
 const libecap::Name Adaptation::Ecap::protocolInternal("internal", libecap::Name::NextId());
-const libecap::Name Adaptation::Ecap::protocolCacheObj("cache_object", libecap::Name::NextId());
 const libecap::Name Adaptation::Ecap::protocolIcp("ICP", libecap::Name::NextId());
 #if USE_HTCP
 const libecap::Name Adaptation::Ecap::protocolHtcp("Htcp", libecap::Name::NextId());
@@ -52,7 +51,6 @@ Adaptation::Ecap::Host::Host()
     libecap::protocolWais.assignHostId(AnyP::PROTO_WAIS);
     libecap::protocolUrn.assignHostId(AnyP::PROTO_URN);
     libecap::protocolWhois.assignHostId(AnyP::PROTO_WHOIS);
-    protocolCacheObj.assignHostId(AnyP::PROTO_CACHE_OBJECT);
     protocolIcp.assignHostId(AnyP::PROTO_ICP);
 #if USE_HTCP
     protocolHtcp.assignHostId(AnyP::PROTO_HTCP);

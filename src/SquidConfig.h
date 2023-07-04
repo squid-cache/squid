@@ -454,16 +454,6 @@ public:
     int max_open_disk_fds;
     int uri_whitespace;
     AclSizeLimit *rangeOffsetLimit;
-#if MULTICAST_MISS_STREAM
-
-    struct {
-
-        Ip::Address addr;
-        int ttl;
-        unsigned short port;
-        char *encode_key;
-    } mcast_miss;
-#endif
 
     /// request_header_access and request_header_replace
     HeaderManglers *request_header_access;

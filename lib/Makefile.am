@@ -16,6 +16,9 @@ endif
 if ENABLE_SNMP
 SUBDIRS += snmplib
 endif
+if ENABLE_SSPI
+SUBDIRS += sspi
+endif
 
 install: all
 install-strip: all
@@ -25,16 +28,6 @@ noinst_LTLIBRARIES = \
 	libmisccontainers.la \
 	libmiscutil.la
 
-#
-# Some libraries are only available on Windows
-# and others are unable to be built.
-#
-if ENABLE_WIN32SPECIFIC
-noinst_LTLIBRARIES += libsspwin32.la
-libsspwin32_la_SOURCES = sspwin32.cc
-else
-EXTRA_DIST += sspwin32.cc
-endif
 if ENABLE_SMBLIB
 # smblib is the only user of the rfcnb library
 SUBDIRS += rfcnb smblib

@@ -154,8 +154,7 @@ clientStreamCallback(clientStreamNode * thisObject, ClientHttpRequest * http,
     assert(thisObject && http && thisObject->node.next);
     next = thisObject->next();
 
-    debugs(87, 3, "clientStreamCallback: Calling " << next->callback << " with cbdata " <<
-           next->data.getRaw() << " from node " << thisObject);
+    debugs(87, 3, thisObject << " gives " << next->data << ' ' << replyBuffer);
     next->callback(next, http, rep, replyBuffer);
 }
 

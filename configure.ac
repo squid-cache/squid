@@ -28,6 +28,7 @@ m4_include([acinclude/pkg.m4])
 m4_include([acinclude/tdb.m4])
 m4_include([acinclude/lib-checks.m4])
 m4_include([acinclude/ax_cxx_compile_stdcxx.m4])
+m4_include([acinclude/win32-sspi.m4])
 
 PRESET_CFLAGS="$CFLAGS"
 PRESET_CXXFLAGS="$CXXFLAGS"
@@ -186,15 +187,20 @@ AM_CONDITIONAL(ENABLE_WIN32_IPC,[test "x$squid_host_os" = "xmingw"])
 
 AS_CASE(["$squid_host_os"],
   [mingw],[
-    AC_PATH_PROG(WIN32_PSAPI, psapi.dll, none)
     CFLAGS="$CFLAGS -mthreads"
     CXXFLAGS="$CXXFLAGS -mthreads -static-libgcc -static-libstdc++"
-    AS_IF([test "x$ac_cv_path_WIN32_PSAPI" = "xnone"],[
-      AC_MSG_NOTICE([PSAPI.DLL is recommended to run Squid on Windows NT Platform])
-      AC_MSG_NOTICE([Please see PSAPI.DLL section on doc/win32-relnotes.html.])
-    ],[
-      AC_DEFINE(HAVE_WIN32_PSAPI,1,[Define if you have PSAPI.DLL on Windows systems])
-      LIBS="$LIBS -lpsapi"
+    dnl Check for Winsock only on MinGW
+    SQUID_CHECK_WINSOCK_LIB
+    AC_CHECK_HEADERS([ws2tcpip.h winsock2.h windows.h],,,[
+#if HAVE_WS2TCPIP_H
+#include <ws2tcpip.h>
+#endif
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
+#if HAVE_WINDOWS_H
+#include <windows.h>
+#endif
     ])
     MINGW_LIBS="-lmingwex"
     AC_SUBST(MINGW_LIBS)
@@ -423,6 +429,30 @@ AS_IF([test "x$libatomic_checker_result" = "xno"],[
 ])])
 SQUID_STATE_ROLLBACK(LIBATOMIC)
 AC_SUBST(ATOMICLIB)
+
+SQUID_AUTO_LIB(psapi,[Windows PSAPI.dll],[LIBPSAPI])
+AS_IF([test "x$with_psapi" != "xno"],[
+  SQUID_STATE_SAVE(squid_psapi_state)
+  CPPFLAGS="$LIBPSAPI_CFLAGS $CPPFLAGS"
+  LIBS="$LIBPSAPI_PATH $LIBS"
+  AC_CHECK_LIB([psapi],[K32GetProcessMemoryInfo],[LIBPSAPI_LIBS="-lpsapi"])
+  AC_CHECK_HEADER([psapi.h],,,[
+#if HAVE_WINDOWS_H
+#include <windows.h>
+#endif
+  ])
+  SQUID_STATE_ROLLBACK(squid_psapi_state)
+  AS_IF([test "x$LIBPSAPI_LIBS" != "x"],[
+    CXXFLAGS="$LIBPSAPI_CFLAGS $CXXFLAGS"
+    LIBPSAPI_LIBS="$LIBPSAPI_PATH $LIBPSAPI_LIBS"
+  ],[test "x$with_psapi" = "xyes"],[
+    AC_MSG_ERROR([Required library PSAPI.dll not found])
+  ],[
+    AC_MSG_NOTICE([Library PSAPI.dll not found.])
+  ])
+])
+AC_MSG_NOTICE([Using Windows PSAPI.dll library: ${with_psapi:=auto}])
+AC_SUBST(LIBPSAPI_LIBS)
 
 AC_SEARCH_LIBS([shm_open], [rt])
 AS_IF([test "x$ac_cv_search_shm_open" != "xno"],[
@@ -2016,6 +2046,7 @@ SQUID_DEFINE_BOOL(USE_AUTH,$enable_auth,[Enable support for authentication])
 AM_CONDITIONAL(ENABLE_AUTH, test "x$enable_auth" != "xno")
 AUTH_MODULES=""
 require_smblib="no"
+require_sspi="no"
 
 AC_ARG_ENABLE(auth-basic,
   AS_HELP_STRING([--enable-auth-basic="list of helpers"],
@@ -2076,6 +2107,7 @@ done
 AC_SUBST(AUTH_MODULES)
 AC_SUBST(AUTH_LIBS_TO_BUILD)
 AM_CONDITIONAL(ENABLE_SMBLIB, test "x$require_smblib" = "xyes")
+AM_CONDITIONAL(ENABLE_SSPI, test "x$require_sspi" = "xyes")
 
 dnl Select logging daemon helpers to build
 AC_ARG_ENABLE(log-daemon-helpers,
@@ -2347,20 +2379,13 @@ AC_CHECK_MEMBERS([struct tm.tm_gmtoff],,,[
 #endif
 ])
 
-dnl Override rusage() detect on MinGW because is emulated in source code
-AS_IF([test "$squid_host_os" = "mingw"],[
-  AC_DEFINE(HAVE_STRUCT_RUSAGE)
-  ac_cv_func_getrusage="yes"
-  AC_MSG_NOTICE([Using own rusage on Windows.])
-],[
-  AC_CHECK_TYPE(struct rusage,AC_DEFINE(HAVE_STRUCT_RUSAGE,1,[The system provides struct rusage]),,[
+AC_CHECK_TYPE(struct rusage,AC_DEFINE(HAVE_STRUCT_RUSAGE,1,[The system provides struct rusage]),,[
 #if HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
 #if HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
 #endif
-  ])
 ])
 
 AC_CHECK_MEMBERS([struct iphdr.ip_hl],,,[
@@ -2400,8 +2425,6 @@ AC_CHECK_TYPE([bool])
 #need the defines for PRId64
 AC_CHECK_SIZEOF(int64_t)
 AC_CHECK_SIZEOF(long)
-#need the defines for PRIuSIZE
-AC_CHECK_SIZEOF(size_t)
 #need the define for overflow checks
 AC_CHECK_SIZEOF(off_t)
 AC_CHECK_SIZEOF(size_t)
@@ -2438,17 +2461,6 @@ AC_CHECK_TYPE(cpu_set_t,
 #include <sched.h>
 #endif
 ])
-
-# check for compiler support of %zu printf macro
-AH_TEMPLATE(PRIuSIZE,[Compiler supports %zu printf macro])
-AC_MSG_CHECKING([for compiler %zu support])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include <stdio.h>
-  ]],[[size_t n=1;printf("%zu",n);]])],[
-    AC_DEFINE(PRIuSIZE,"zu")
-    AC_MSG_RESULT(yes)
-  ],[AC_MSG_RESULT(no)],[AC_MSG_RESULT(no)])
-
 
 dnl Check for special functions
 AC_FUNC_ALLOCA
@@ -2488,24 +2500,6 @@ AC_SEARCH_LIBS([__res_search],[resolv])
 AC_SEARCH_LIBS([bind],[socket])
 AC_SEARCH_LIBS([opcom_stack_trace],[opcom_stack])
 AC_SEARCH_LIBS([yp_match], [nsl nss_nis nss_nisplus])
-dnl Check for Winsock only on MinGW, on Cygwin we must use emulated BSD socket API
-AS_IF([test "x$squid_host_os" = "xmingw"],[
-  SQUID_CHECK_WINSOCK_LIB
-  AC_CHECK_HEADERS( \
-    windows.h \
-    ws2tcpip.h \
-    iphlpapi.h ,,,[
-#if HAVE_WINSOCK2_H
-#include <winsock2.h>
-#endif
-#if HAVE_WINDOWS_H
-#include <windows.h>
-#endif
-#if HAVE_WS2TCPIP_H
-#include <ws2tcpip.h>
-#endif
-  ])
-])
 
 # check that we have unix sockets
 SQUID_CHECK_UNIX_SOCKET
@@ -3084,6 +3078,7 @@ AC_CONFIG_FILES([
 	lib/rfcnb/Makefile
 	lib/smblib/Makefile
 	lib/snmplib/Makefile
+	lib/sspi/Makefile
 	scripts/Makefile
 	src/Makefile
 	src/acl/Makefile
