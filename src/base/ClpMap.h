@@ -46,7 +46,6 @@ public:
     /// maximum desired entry caching duration (a.k.a. TTL), in seconds
     using Ttl = int;
 
-private:
     /// the keeper of cache entry Key, Value, and caching-related entry metadata
     class Entry
     {
@@ -116,11 +115,9 @@ public:
 
     /// read-only iterator. Entries are owned by the ClpMap, so invalidations
     /// might happen if any non-const operation is performed
-    using EntriesConstIterator = typename Entries::const_iterator;
-    EntriesConstIterator cbegin() { return entries_.begin(); }
-    EntriesConstIterator cend() { return entries_.end(); }
+    EntriesIterator begin() { return entries_.begin(); }
+    EntriesIterator end() { return entries_.end(); }
 
-private:
     static std::optional<uint64_t> MemoryCountedFor(const Key &, const Value &);
 
     void trim(uint64_t wantSpace);

@@ -28,6 +28,7 @@ class TestClpMap: public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testZeroTtl );
     CPPUNIT_TEST( testNegativeTtl );
     CPPUNIT_TEST( testPurgeIsLru );
+    CPPUNIT_TEST( testConstIterator );
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -47,11 +48,13 @@ protected:
     void testZeroTtl();
     void testNegativeTtl();
     void testPurgeIsLru();
+    void testConstIterator();
 
     /// Generate and insert the given number of entries into the given map. Each
     /// entry is guaranteed to be inserted, but that insertion may purge other
     /// entries, including entries previously added during the same method call.
-    void addSequenceOfEntriesToMap(Map &, size_t count, Map::mapped_type startWith, Map::Ttl);
+    void
+    addSequenceOfEntriesToMap(Map &, size_t count, Map::mapped_type startWith, Map::Ttl);
 
     /// add (more than) enough entries to make the map full
     void fillMapWithEntries(Map &);
@@ -351,4 +354,19 @@ TestClpMap::testPurgeIsLru()
 
     fillMapWithEntries(m);
     CPPUNIT_ASSERT(!m.get("0")); // removable when not recently used
+}
+
+void
+TestClpMap::testConstIterator()
+{
+    const int entriesToAdd = 10;
+    int count = 0, current = entriesToAdd-1;
+    Map m(2048);
+    addSequenceOfEntriesToMap(m, entriesToAdd, 0, 50);
+    for (auto &i : m ) {
+        CPPUNIT_ASSERT_EQUAL(current, i.value);
+        ++count;
+        --current;
+    }
+    CPPUNIT_ASSERT_EQUAL(entriesToAdd, count);
 }
