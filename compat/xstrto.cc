@@ -57,7 +57,7 @@
 
 #include <cerrno>
 
-bool
+static bool
 xstrtoul(const char *s, char **end, unsigned long *value,
          unsigned long min, unsigned long max)
 {
