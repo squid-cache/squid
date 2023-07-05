@@ -98,8 +98,9 @@ public:
 
     uint32_t sources = 0; ///< The message sources
 
-    /// copies Cache-Control header to this message
-    void putCc(const HttpHdrCc *otherCc);
+    /// copies Cache-Control header to this message,
+    /// overwriting existing Cache-Control header(s), if any
+    void putCc(const HttpHdrCc &);
 
     // returns true and sets hdr_sz on success
     // returns false and sets *error to zero when needs more data

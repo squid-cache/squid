@@ -137,7 +137,7 @@ public:
     void putTime(Http::HdrType id, time_t htime);
     void putStr(Http::HdrType id, const char *str);
     void putAuth(const char *auth_scheme, const char *realm);
-    void putCc(const HttpHdrCc * cc);
+    void putCc(const HttpHdrCc &cc);
     void putContRange(const HttpHdrContRange * cr);
     void putRange(const HttpHdrRange * range);
     void putSc(HttpHdrSc *sc);
