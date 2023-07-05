@@ -148,7 +148,8 @@ HttpReply::make304() const
             rv->header.addEntry(e->clone());
     }
 
-    rv->putCc(cache_control);
+    if (cache_control)
+        rv->putCc(*cache_control);
 
     /* rv->body */
     return rv;
