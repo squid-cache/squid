@@ -165,33 +165,6 @@ run_confirmed_test() {
     return $result
 }
 
-check_proxy_collapsed_forwarding() {
-    if ! has_commit_by_message 1af789e 'Do not stall if xactions overwrite a recently active'
-    then
-        echo "No proxy-collapsed-forwarding due to stalling transactions"
-        return 0;
-    fi
-    run_confirmed_test proxy-collapsed-forwarding
-}
-
-check_proxy_update_headers_after_304() {
-    if grep 'AC_INIT.*Proxy.,.[1234][.]' configure.ac
-    then
-        echo "No proxy-update-headers-after-304 until v5";
-        return 0;
-    fi
-    run_confirmed_test proxy-update-headers-after-304
-}
-
-check_upgrade_protocols() {
-    if ! grep -q http_upgrade_request_protocols src/cf.data.pre
-    then
-        echo "No upgrade-protocols without http_upgrade_request_protocols support";
-        return 0;
-    fi
-    run_confirmed_test upgrade-protocols
-}
-
 # executes a single test named by the parameter
 run_one_test() {
     local testName=$1
