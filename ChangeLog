@@ -1,3 +1,11 @@
+Changes in squid-6.1 (06 Jul 2023):
+
+	- Bug 5278: Log %err_code for "early" request handling errors
+	- Do not cache (and do not serve cached) cache manager responses
+	- Fix key equality comparison in LookupTable map
+	- Honor DNS RR TTLs larger than negative_dns_ttl
+	- ... and some documentation changes
+
 Changes in squid-6.0.3 (07 Jun 2023):
 
 	- Bug 5148: Log %Ss of failed tunnels as TCP_TUNNEL
