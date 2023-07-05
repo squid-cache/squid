@@ -59,7 +59,7 @@ void HttpHeader::putInt64(Http::HdrType, int64_t ) STUB
 void HttpHeader::putTime(Http::HdrType, time_t) STUB
 void HttpHeader::putStr(Http::HdrType, const char *) STUB
 void HttpHeader::putAuth(const char *, const char *) STUB
-void HttpHeader::putCc(const HttpHdrCc *) STUB
+void HttpHeader::putCc(const HttpHdrCc &) STUB
 void HttpHeader::putContRange(const HttpHdrContRange *) STUB
 void HttpHeader::putRange(const HttpHdrRange *) STUB
 void HttpHeader::putSc(HttpHdrSc *) STUB
