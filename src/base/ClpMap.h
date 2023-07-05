@@ -115,7 +115,8 @@ public:
     size_t entries() const { return entries_.size(); }
 
     /// read-only iterator. Entries are owned by the ClpMap, so invalidations
-    /// might happen if any non-const operation is performed
+    /// might happen if any non-const operation is performed on the map.
+    /// It may return expired entries. Order is not guaranteed
     ConstEntriesIterator cbegin() { return entries_.cbegin(); }
     ConstEntriesIterator cend() { return entries_.cend(); }
 
