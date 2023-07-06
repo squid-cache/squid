@@ -113,6 +113,7 @@ public:
     /// modification may invalidate these iterators and their derivatives.
     ConstEntriesIterator cbegin() const { return entries_.cbegin(); }
     ConstEntriesIterator cend() const { return entries_.cend(); }
+    /// range-based `for` loop support; \sa cbegin()
     ConstEntriesIterator begin() const { return cbegin(); }
     ConstEntriesIterator end() const { return cend(); }
 
