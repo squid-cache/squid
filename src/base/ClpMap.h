@@ -119,6 +119,8 @@ public:
     /// It may return expired entries. Order is not guaranteed
     ConstEntriesIterator cbegin() { return entries_.cbegin(); }
     ConstEntriesIterator cend() { return entries_.cend(); }
+    ConstEntriesIterator begin() { return cbegin(); }
+    ConstEntriesIterator end() { return cend(); }
 
     static std::optional<uint64_t> MemoryCountedFor(const Key &, const Value &);
 
