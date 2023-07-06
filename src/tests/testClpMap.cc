@@ -360,16 +360,17 @@ TestClpMap::testPurgeIsLru()
 void
 TestClpMap::testConstIterator()
 {
-    const int entriesToAdd = 10;
-    int count = 0, current = entriesToAdd-1;
     Map m(2048);
-    addSequenceOfEntriesToMap(m, entriesToAdd, 0, 50);
+    const size_t expectedEntryCount = 10;
+    addSequenceOfEntriesToMap(m, expectedEntryCount, 0, 50);
+    size_t iterations = 0;
+    auto expectedValue = static_cast<Map::mapped_type>(expectedEntryCount - 1);
     for (auto i = m.cbegin(); i != m.cend(); ++i ) {
-        CPPUNIT_ASSERT_EQUAL(current, i->value);
-        ++count;
-        --current;
+        CPPUNIT_ASSERT_EQUAL(expectedValue, i->value);
+        --expectedValue;
+        ++iterations;
     }
-    CPPUNIT_ASSERT_EQUAL(entriesToAdd, count);
+    CPPUNIT_ASSERT_EQUAL(expectedEntryCount, iterations);
 }
 
 void
@@ -379,7 +380,7 @@ TestClpMap::testRangeLoop()
     const size_t expectedEntryCount = 10;
     addSequenceOfEntriesToMap(m, expectedEntryCount, 0, 50);
     size_t iterations = 0;
-    int expectedValue = expectedEntryCount - 1;
+    auto expectedValue = static_cast<Map::mapped_type>(expectedEntryCount - 1);
     for (const auto &entry: m) {
         CPPUNIT_ASSERT_EQUAL(expectedValue, entry.value);
         --expectedValue;
