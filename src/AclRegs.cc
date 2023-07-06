@@ -176,8 +176,8 @@ Acl::Init()
     RegisterMaker("localip", [](TypeName)->ACL* { return new ACLLocalIP; }); // XXX: Add name parameter to ctor
     RegisterMaker("localport", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::LocalPortCheck>(name, new ACLIntRange); });
     RegisterMaker("myportname", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::MyPortNameCheck>(name, new ACLStringData); });
-    RegisterMaker("peername", [](TypeName name)->ACL* { return new ACLStrategised<const char *>(new ACLStringData, new ACLPeerNameStrategy, name); });
-    RegisterMaker("peername_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLPeerNameStrategy, name); });
+    RegisterMaker("peername", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::PeerNameCheck>(name, new ACLStringData); });
+    RegisterMaker("peername_regex", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::PeerNameCheck>(name, new ACLRegexData); });
     RegisterMaker("proto", [](TypeName name)->ACL* { return new ACLStrategised<AnyP::ProtocolType>(new ACLProtocolData, new ACLProtocolStrategy, name); });
     RegisterMaker("referer_regex", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::RequestHeaderCheck<Http::HdrType::REFERER> >(name, new ACLRegexData); });
     RegisterMaker("rep_mime_type", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLReplyHeaderStrategy<Http::HdrType::CONTENT_TYPE>, name); });
