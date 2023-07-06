@@ -180,7 +180,7 @@ Acl::Init()
     RegisterMaker("peername_regex", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::PeerNameCheck>(name, new ACLRegexData); });
     RegisterMaker("proto", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::ProtocolCheck>(name, new ACLProtocolData); });
     RegisterMaker("referer_regex", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::RequestHeaderCheck<Http::HdrType::REFERER> >(name, new ACLRegexData); });
-    RegisterMaker("rep_mime_type", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLReplyHeaderStrategy<Http::HdrType::CONTENT_TYPE>, name); });
+    RegisterMaker("rep_mime_type", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::ReplyHeaderCheck<Http::HdrType::CONTENT_TYPE> >(name, new ACLRegexData); });
     RegisterMaker("req_mime_type", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::RequestHeaderCheck<Http::HdrType::CONTENT_TYPE> >(name, new ACLRegexData); });
     RegisterMaker("srcdomain", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::SourceDomainCheck>(name, new ACLDomainData); });
     RegisterMaker("srcdom_regex", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::SourceDomainCheck>(name, new ACLRegexData); });
