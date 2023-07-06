@@ -8,14 +8,22 @@
 
 #ifndef SQUID_ACLMYPORTNAME_H
 #define SQUID_ACLMYPORTNAME_H
-#include "acl/Strategy.h"
 
-class ACLMyPortNameStrategy : public ACLStrategy<const char *>
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
+
+namespace Acl
 {
 
+/// a "myportname" ACL
+class MyPortNameCheck: public ParameterizedNode< ACLData<const char *> >
+{
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* ACL API */
+    int match(ACLChecklist *) override;
 };
+
+} // namespace Acl
 
 #endif /* SQUID_ACLMYPORTNAME_H */
 
