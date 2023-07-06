@@ -117,10 +117,10 @@ public:
     /// read-only iterator. Entries are owned by the ClpMap, so invalidations
     /// might happen if any non-const operation is performed on the map.
     /// It may return expired entries. Order is not guaranteed
-    ConstEntriesIterator cbegin() { return entries_.cbegin(); }
-    ConstEntriesIterator cend() { return entries_.cend(); }
-    ConstEntriesIterator begin() { return cbegin(); }
-    ConstEntriesIterator end() { return cend(); }
+    ConstEntriesIterator cbegin() const { return entries_.cbegin(); }
+    ConstEntriesIterator cend() const { return entries_.cend(); }
+    ConstEntriesIterator begin() const { return cbegin(); }
+    ConstEntriesIterator end() const { return cend(); }
 
     static std::optional<uint64_t> MemoryCountedFor(const Key &, const Value &);
 
