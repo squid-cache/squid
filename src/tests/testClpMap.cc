@@ -364,7 +364,7 @@ TestClpMap::testClassicLoopTraversal()
     const size_t expectedEntryCount = 10;
     addSequenceOfEntriesToMap(m, expectedEntryCount, 0, 50);
     size_t iterations = 0;
-    for (auto i = m.cbegin(); i != m.cend(); ++i ) {
+    for (auto i = m.cbegin(); i != m.cend(); ++i) {
         ++iterations;
         const auto expectedValue = static_cast<Map::mapped_type>(expectedEntryCount - iterations);
         CPPUNIT_ASSERT_EQUAL(expectedValue, i->value);
