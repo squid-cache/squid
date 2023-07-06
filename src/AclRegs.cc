@@ -174,7 +174,7 @@ Acl::Init()
     RegisterMaker("maxconn", [](TypeName name)->ACL* { return new ACLMaxConnection(name); });
     RegisterMaker("method", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::MethodCheck>(name, new ACLMethodData); });
     RegisterMaker("localip", [](TypeName)->ACL* { return new ACLLocalIP; }); // XXX: Add name parameter to ctor
-    RegisterMaker("localport", [](TypeName name)->ACL* { return new ACLStrategised<int>(new ACLIntRange, new ACLLocalPortStrategy, name); });
+    RegisterMaker("localport", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::LocalPortCheck>(name, new ACLIntRange); });
     RegisterMaker("myportname", [](TypeName name)->ACL* { return new ACLStrategised<const char *>(new ACLStringData, new ACLMyPortNameStrategy, name); });
     RegisterMaker("peername", [](TypeName name)->ACL* { return new ACLStrategised<const char *>(new ACLStringData, new ACLPeerNameStrategy, name); });
     RegisterMaker("peername_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLPeerNameStrategy, name); });

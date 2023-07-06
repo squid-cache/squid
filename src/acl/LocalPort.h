@@ -9,15 +9,21 @@
 #ifndef SQUID_ACLLOCALPORT_H
 #define SQUID_ACLLOCALPORT_H
 
-#include "acl/Strategy.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
 
-/// \ingroup ACLAPI
-class ACLLocalPortStrategy : public ACLStrategy<int>
+namespace Acl
 {
 
+/// a "localport" ACL
+class LocalPortCheck: public ParameterizedNode< ACLData<int> >
+{
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* ACL API */
+    int match(ACLChecklist *) override;
 };
+
+} // namespace Acl
 
 #endif /* SQUID_ACLLOCALPORT_H */
 
