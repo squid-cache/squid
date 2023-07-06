@@ -55,8 +55,7 @@ protected:
     /// Generate and insert the given number of entries into the given map. Each
     /// entry is guaranteed to be inserted, but that insertion may purge other
     /// entries, including entries previously added during the same method call.
-    void
-    addSequenceOfEntriesToMap(Map &, size_t count, Map::mapped_type startWith, Map::Ttl);
+    void addSequenceOfEntriesToMap(Map &, size_t count, Map::mapped_type startWith, Map::Ttl);
 
     /// add (more than) enough entries to make the map full
     void fillMapWithEntries(Map &);

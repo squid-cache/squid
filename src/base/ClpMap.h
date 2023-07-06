@@ -56,23 +56,17 @@ public:
         bool expired() const { return expires < squid_curtime; }
 
     public:
-        Key key;                 ///< the entry search key; see ClpMap::get()
-        Value value;             ///< cached value provided by the map user
-        time_t expires = 0;      ///< get() stops returning the entry after this time
+        Key key; ///< the entry search key; see ClpMap::get()
+        Value value; ///< cached value provided by the map user
+        time_t expires = 0; ///< get() stops returning the entry after this time
         uint64_t memCounted = 0; ///< memory accounted for this entry in our ClpMap
     };
 
     /// Entries in LRU order
-    using Entries = std::list<Entry, PoolingAllocator<Entry>>;
+    using Entries = std::list<Entry, PoolingAllocator<Entry> >;
     using EntriesIterator = typename Entries::iterator;
     using ConstEntriesIterator = typename Entries::const_iterator;
 
-    using IndexItem = std::pair<const Key, EntriesIterator>;
-    /// key:entry_position mapping for fast entry lookups by key
-    using Index = std::unordered_map<Key, EntriesIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<IndexItem>>;
-    using IndexIterator = typename Index::iterator;
-
-public:
     explicit ClpMap(const uint64_t capacity) { setMemLimit(capacity); }
     ClpMap(uint64_t capacity, Ttl defaultTtl);
     ~ClpMap() = default;
@@ -122,13 +116,18 @@ public:
     ConstEntriesIterator begin() const { return cbegin(); }
     ConstEntriesIterator end() const { return cend(); }
 
+private:
+    using IndexItem = std::pair<const Key, EntriesIterator>;
+    /// key:entry_position mapping for fast entry lookups by key
+    using Index = std::unordered_map<Key, EntriesIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<IndexItem> >;
+    using IndexIterator = typename Index::iterator;
+
     static std::optional<uint64_t> MemoryCountedFor(const Key &, const Value &);
 
     void trim(uint64_t wantSpace);
     void erase(const IndexIterator &);
     IndexIterator find(const Key &);
 
-private:
     /// cached entries, including expired ones, in LRU order
     Entries entries_;
 
