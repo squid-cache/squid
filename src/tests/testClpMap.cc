@@ -364,11 +364,10 @@ TestClpMap::testConstIterator()
     const size_t expectedEntryCount = 10;
     addSequenceOfEntriesToMap(m, expectedEntryCount, 0, 50);
     size_t iterations = 0;
-    auto expectedValue = static_cast<Map::mapped_type>(expectedEntryCount - 1);
     for (auto i = m.cbegin(); i != m.cend(); ++i ) {
-        CPPUNIT_ASSERT_EQUAL(expectedValue, i->value);
-        --expectedValue;
         ++iterations;
+        const auto expectedValue = static_cast<Map::mapped_type>(expectedEntryCount - iterations);
+        CPPUNIT_ASSERT_EQUAL(expectedValue, i->value);
     }
     CPPUNIT_ASSERT_EQUAL(expectedEntryCount, iterations);
 }
@@ -380,11 +379,10 @@ TestClpMap::testRangeLoop()
     const size_t expectedEntryCount = 10;
     addSequenceOfEntriesToMap(m, expectedEntryCount, 0, 50);
     size_t iterations = 0;
-    auto expectedValue = static_cast<Map::mapped_type>(expectedEntryCount - 1);
     for (const auto &entry: m) {
-        CPPUNIT_ASSERT_EQUAL(expectedValue, entry.value);
-        --expectedValue;
         ++iterations;
+        const auto expectedValue = static_cast<Map::mapped_type>(expectedEntryCount - iterations);
+        CPPUNIT_ASSERT_EQUAL(expectedValue, entry.value);
     }
     CPPUNIT_ASSERT_EQUAL(expectedEntryCount, iterations);
 }
