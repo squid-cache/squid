@@ -13,8 +13,10 @@
 #include "HttpRequest.h"
 
 int
-ACLHTTPReqHeaderStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::HttpReqHeaderCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     return data->match (&checklist->request->header);
 }
 
