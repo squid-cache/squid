@@ -168,7 +168,7 @@ Acl::Init()
     RegisterMaker("dstdom_regex", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::DestinationDomainCheck>(name, new ACLRegexData); });
     RegisterMaker("dst", [](TypeName)->ACL* { return new ACLDestinationIP; }); // XXX: Add name parameter to ctor
     RegisterMaker("hier_code", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::HierCodeCheck>(name, new ACLHierCodeData); });
-    RegisterMaker("rep_header", [](TypeName name)->ACL* { return new ACLStrategised<HttpHeader*>(new ACLHTTPHeaderData, new ACLHTTPRepHeaderStrategy, name); });
+    RegisterMaker("rep_header", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::HttpRepHeaderCheck>(name, new ACLHTTPHeaderData); });
     RegisterMaker("req_header", [](TypeName name)->ACL* { return new ACLStrategised<HttpHeader*>(new ACLHTTPHeaderData, new ACLHTTPReqHeaderStrategy, name); });
     RegisterMaker("http_status", [](TypeName name)->ACL* { return new ACLHTTPStatus(name); });
     RegisterMaker("maxconn", [](TypeName name)->ACL* { return new ACLMaxConnection(name); });
