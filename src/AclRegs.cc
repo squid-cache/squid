@@ -172,7 +172,7 @@ Acl::Init()
     RegisterMaker("req_header", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::HttpReqHeaderCheck>(name, new ACLHTTPHeaderData); });
     RegisterMaker("http_status", [](TypeName name)->ACL* { return new ACLHTTPStatus(name); });
     RegisterMaker("maxconn", [](TypeName name)->ACL* { return new ACLMaxConnection(name); });
-    RegisterMaker("method", [](TypeName name)->ACL* { return new ACLStrategised<HttpRequestMethod>(new ACLMethodData, new ACLMethodStrategy, name); });
+    RegisterMaker("method", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::MethodCheck>(name, new ACLMethodData); });
     RegisterMaker("localip", [](TypeName)->ACL* { return new ACLLocalIP; }); // XXX: Add name parameter to ctor
     RegisterMaker("localport", [](TypeName name)->ACL* { return new ACLStrategised<int>(new ACLIntRange, new ACLLocalPortStrategy, name); });
     RegisterMaker("myportname", [](TypeName name)->ACL* { return new ACLStrategised<const char *>(new ACLStringData, new ACLMyPortNameStrategy, name); });

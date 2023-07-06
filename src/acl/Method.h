@@ -9,17 +9,23 @@
 #ifndef SQUID_ACLMETHOD_H
 #define SQUID_ACLMETHOD_H
 
-#include "acl/Strategy.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
 #include "http/RequestMethod.h"
 
-/// \ingroup ACLAPI
-class ACLMethodStrategy : public ACLStrategy<HttpRequestMethod>
+namespace Acl
 {
 
+/// a "method" ACL
+class MethodCheck: public ParameterizedNode< ACLData<HttpRequestMethod> >
+{
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* ACL API */
+    int match(ACLChecklist *) override;
     bool requiresRequest() const override {return true;}
 };
+
+} // namespace Acl
 
 #endif /* SQUID_ACLMETHOD_H */
 
