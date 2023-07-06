@@ -14,13 +14,15 @@ CachePeer *
 CachePeers::nextPeerToPing(const size_t pollIndex)
 {
     Assure(size());
-    const auto pos = (peerPolls_ + pollIndex) % size();
 
     // Remember the number of polls to keep shifting each poll starting point,
     // to avoid always polling the same group of peers before other peers and
     // risk overloading that first group with requests.
     if (!pollIndex)
-        ++peerPolls_; // increment after computing pos to set the very first pos to zero
+        ++peerPolls_;
+
+    // subtract 1 to set the very first pos to zero
+    const auto pos = (peerPolls_ - 1 + pollIndex) % size();
 
     return storage[pos].get();
 }
