@@ -114,9 +114,9 @@ public:
     /// The number of currently stored entries, including expired ones
     size_t entries() const { return entries_.size(); }
 
-    /// read-only iterator. Entries are owned by the ClpMap, so invalidations
-    /// might happen if any non-const operation is performed on the map.
-    /// It may return expired entries. Order is not guaranteed
+    /// Read-only traversal of all cached entries in LRU order, least recently
+    /// used entry first. Stored expired entries (if any) are included. Any map
+    /// modification may invalidate these iterators and their derivatives.
     ConstEntriesIterator cbegin() const { return entries_.cbegin(); }
     ConstEntriesIterator cend() const { return entries_.cend(); }
     ConstEntriesIterator begin() const { return cbegin(); }
