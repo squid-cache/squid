@@ -9,16 +9,23 @@
 #ifndef SQUID_ACLPROTOCOL_H
 #define SQUID_ACLPROTOCOL_H
 
-#include "acl/Strategy.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
 #include "anyp/ProtocolType.h"
 
-class ACLProtocolStrategy : public ACLStrategy<AnyP::ProtocolType>
+namespace Acl
 {
 
+/// a "proto" ACL
+class ProtocolCheck: public ParameterizedNode< ACLData<AnyP::ProtocolType> >
+{
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* ACL API */
+    int match(ACLChecklist *) override;
     bool requiresRequest() const override {return true;}
 };
+
+} // namespace Acl
 
 #endif /* SQUID_ACLPROTOCOL_H */
 
