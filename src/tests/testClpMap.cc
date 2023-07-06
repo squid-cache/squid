@@ -28,6 +28,8 @@ class TestClpMap: public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testZeroTtl );
     CPPUNIT_TEST( testNegativeTtl );
     CPPUNIT_TEST( testPurgeIsLru );
+    CPPUNIT_TEST( testClassicLoopTraversal );
+    CPPUNIT_TEST( testRangeLoopTraversal );
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -47,6 +49,8 @@ protected:
     void testZeroTtl();
     void testNegativeTtl();
     void testPurgeIsLru();
+    void testClassicLoopTraversal();
+    void testRangeLoopTraversal();
 
     /// Generate and insert the given number of entries into the given map. Each
     /// entry is guaranteed to be inserted, but that insertion may purge other
@@ -352,3 +356,34 @@ TestClpMap::testPurgeIsLru()
     fillMapWithEntries(m);
     CPPUNIT_ASSERT(!m.get("0")); // removable when not recently used
 }
+
+void
+TestClpMap::testClassicLoopTraversal()
+{
+    Map m(2048);
+    const size_t expectedEntryCount = 10;
+    addSequenceOfEntriesToMap(m, expectedEntryCount, 0, 50);
+    size_t iterations = 0;
+    for (auto i = m.cbegin(); i != m.cend(); ++i) {
+        ++iterations;
+        const auto expectedValue = static_cast<Map::mapped_type>(expectedEntryCount - iterations);
+        CPPUNIT_ASSERT_EQUAL(expectedValue, i->value);
+    }
+    CPPUNIT_ASSERT_EQUAL(expectedEntryCount, iterations);
+}
+
+void
+TestClpMap::testRangeLoopTraversal()
+{
+    Map m(2048);
+    const size_t expectedEntryCount = 10;
+    addSequenceOfEntriesToMap(m, expectedEntryCount, 0, 50);
+    size_t iterations = 0;
+    for (const auto &entry: m) {
+        ++iterations;
+        const auto expectedValue = static_cast<Map::mapped_type>(expectedEntryCount - iterations);
+        CPPUNIT_ASSERT_EQUAL(expectedValue, entry.value);
+    }
+    CPPUNIT_ASSERT_EQUAL(expectedEntryCount, iterations);
+}
+
