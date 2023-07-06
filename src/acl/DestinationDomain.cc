@@ -9,9 +9,9 @@
 /* DEBUG: section 28    Access Control */
 
 #include "squid.h"
-#include "acl/Checklist.h"
 #include "acl/DestinationDomain.h"
 #include "acl/DomainData.h"
+#include "acl/FilledChecklist.h"
 #include "acl/RegexData.h"
 #include "fqdncache.h"
 #include "HttpRequest.h"
@@ -40,10 +40,10 @@ DestinationDomainLookup::LookupDone(const char *, const Dns::LookupDetails &deta
     checklist->resumeNonBlockingCheck(DestinationDomainLookup::Instance());
 }
 
-/* ACLDestinationDomainStrategy */
+/* Acl::DestinationDomainCheck */
 
 const Acl::Options &
-ACLDestinationDomainStrategy::options()
+Acl::DestinationDomainCheck::options()
 {
     static const Acl::BooleanOption LookupBanFlag("-n");
     static const Acl::Options MyOptions = { &LookupBanFlag };
@@ -52,8 +52,10 @@ ACLDestinationDomainStrategy::options()
 }
 
 int
-ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::DestinationDomainCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     assert(checklist != nullptr && checklist->request != nullptr);
 
     if (data->match(checklist->request->url.host())) {

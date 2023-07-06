@@ -9,25 +9,27 @@
 #ifndef SQUID_ACLDESTINATIONDOMAIN_H
 #define SQUID_ACLDESTINATIONDOMAIN_H
 
-#include "acl/Acl.h"
-#include "acl/Checklist.h"
 #include "acl/Data.h"
-#include "acl/Strategised.h"
+#include "acl/ParameterizedNode.h"
 #include "dns/forward.h"
 
-/// \ingroup ACLAPI
-class ACLDestinationDomainStrategy : public ACLStrategy<char const *>
+namespace Acl
 {
 
+/// "dstdomain" and "dstdom_regex" ACLs
+class DestinationDomainCheck: public ParameterizedNode< ACLData<char const *> >
+{
 public:
-    /* ACLStrategy API */
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* ACL API */
+    int match(ACLChecklist *) override;
     bool requiresRequest() const override {return true;}
     const Acl::Options &options() override;
 
 private:
     Acl::BooleanOptionValue lookupBanned; ///< Are DNS lookups allowed?
 };
+
+} // namespace Acl
 
 /// \ingroup ACLAPI
 class DestinationDomainLookup : public ACLChecklist::AsyncState

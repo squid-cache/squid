@@ -164,8 +164,8 @@ Acl::Init()
     RegisterMaker("src_as", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::SourceAsnCheck>(name, new ACLASN); });
     RegisterMaker("dst_as", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::DestinationAsnCheck>(name, new ACLASN); });
     RegisterMaker("browser", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::RequestHeaderCheck<Http::HdrType::USER_AGENT> >(name, new ACLRegexData); });
-    RegisterMaker("dstdomain", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLDomainData, new ACLDestinationDomainStrategy, name); });
-    RegisterMaker("dstdom_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLDestinationDomainStrategy, name); });
+    RegisterMaker("dstdomain", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::DestinationDomainCheck>(name, new ACLDomainData); });
+    RegisterMaker("dstdom_regex", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::DestinationDomainCheck>(name, new ACLRegexData); });
     RegisterMaker("dst", [](TypeName)->ACL* { return new ACLDestinationIP; }); // XXX: Add name parameter to ctor
     RegisterMaker("hier_code", [](TypeName name)->ACL* { return new ACLStrategised<hier_code>(new ACLHierCodeData, new ACLHierCodeStrategy, name); });
     RegisterMaker("rep_header", [](TypeName name)->ACL* { return new ACLStrategised<HttpHeader*>(new ACLHTTPHeaderData, new ACLHTTPRepHeaderStrategy, name); });
