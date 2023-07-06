@@ -28,8 +28,8 @@ class TestClpMap: public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testZeroTtl );
     CPPUNIT_TEST( testNegativeTtl );
     CPPUNIT_TEST( testPurgeIsLru );
-    CPPUNIT_TEST( testConstIterator );
-    CPPUNIT_TEST( testRangeLoop );
+    CPPUNIT_TEST( testClassicLoopTraversal );
+    CPPUNIT_TEST( testRangeLoopTraversal );
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -49,8 +49,8 @@ protected:
     void testZeroTtl();
     void testNegativeTtl();
     void testPurgeIsLru();
-    void testConstIterator();
-    void testRangeLoop();
+    void testClassicLoopTraversal();
+    void testRangeLoopTraversal();
 
     /// Generate and insert the given number of entries into the given map. Each
     /// entry is guaranteed to be inserted, but that insertion may purge other
@@ -358,7 +358,7 @@ TestClpMap::testPurgeIsLru()
 }
 
 void
-TestClpMap::testConstIterator()
+TestClpMap::testClassicLoopTraversal()
 {
     Map m(2048);
     const size_t expectedEntryCount = 10;
@@ -373,7 +373,7 @@ TestClpMap::testConstIterator()
 }
 
 void
-TestClpMap::testRangeLoop()
+TestClpMap::testRangeLoopTraversal()
 {
     Map m(2048);
     const size_t expectedEntryCount = 10;
