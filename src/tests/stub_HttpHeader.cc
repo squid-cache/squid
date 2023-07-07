@@ -21,7 +21,6 @@ HttpHeaderEntry *HttpHeaderEntry::clone() const STUB_RETVAL(nullptr)
 void HttpHeaderEntry::packInto(Packable *) const STUB
 int HttpHeaderEntry::getInt() const STUB_RETVAL(0)
 int64_t HttpHeaderEntry::getInt64() const STUB_RETVAL(0)
-HttpHeader::HttpHeader() {STUB}
 HttpHeader::HttpHeader(const http_hdr_owner_type) {STUB}
 HttpHeader::HttpHeader(const HttpHeader &) {STUB}
 HttpHeader::~HttpHeader() {STUB}

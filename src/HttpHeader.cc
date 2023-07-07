@@ -730,35 +730,6 @@ HttpHeader::refreshMask()
     }
 }
 
-bool
-HttpHeader::tooLarge() const
-{
-    size_t max = 0;
-    switch (owner) {
-    case hoRequest:
-        max = Config.maxRequestHeaderSize;
-        break;
-    case hoReply:
-        max = Config.maxReplyHeaderSize;
-        break;
-#if USE_HTCP
-    case hoHtcpReply:
-        max = Config.maxReplyHeaderSize;
-        return false;
-#endif
-#if USE_OPENSSL
-    case hoErrorDetail:
-        max = Config.maxReplyHeaderSize;
-        break;
-#endif
-    case hoNone:
-    case hoEnd:
-        Assure(!"bad HttpHeader owner");
-    }
-    debugs(55, 3, "hdr: " << this << ", owner: " << owner << ", len: " << len << ", max: " << max);
-    return len >= 0 && static_cast<size_t>(len) > max;
-}
-
 /* appends an entry;
  * does not call e->clone() so one should not reuse "*e"
  */

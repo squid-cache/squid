@@ -164,8 +164,6 @@ public:
     int hasByNameListMember(const char *name, const char *member, const char separator) const;
     void removeHopByHopEntries();
 
-    bool tooLarge() const; ///< whether the packed length exceeds the configured limit
-
     /// whether the message uses chunked Transfer-Encoding
     /// optimized implementation relies on us rejecting/removing other codings
     bool chunked() const { return has(Http::HdrType::TRANSFER_ENCODING); }

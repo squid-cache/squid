@@ -491,7 +491,7 @@ HttpReply::parseTerminatedPrefix(const char * const terminatedBuf, const size_t 
     return 0; // parsed nothing, need more data
 }
 
-int
+size_t
 HttpReply::prefixLen() const
 {
     const auto reason = sline.reason();

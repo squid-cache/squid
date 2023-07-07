@@ -133,7 +133,7 @@ public:
     size_t parseTerminatedPrefix(const char *, size_t);
 
     /// \returns the length of status line + headers + crlf
-    int prefixLen() const;
+    size_t prefixLen() const;
 
 private:
     /** initialize */
