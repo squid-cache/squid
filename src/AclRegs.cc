@@ -193,9 +193,9 @@ Acl::Init()
     RegisterMaker("squid_error", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::SquidErrorCheck>(name, new ACLSquidErrorData); });
     RegisterMaker("connections_encrypted", [](TypeName name)->ACL* { return new Acl::ConnectionsEncrypted(name); });
     RegisterMaker("tag", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::TagCheck>(name, new ACLStringData); });
-    RegisterMaker("note", [](TypeName name)->ACL* { return new ACLStrategised<NotePairs::Entry*>(new ACLNoteData, new ACLNoteStrategy, name); });
-    RegisterMaker("annotate_client", [](TypeName name)->ACL* { return new ACLStrategised<NotePairs::Entry*>(new ACLAnnotationData, new ACLAnnotateClientStrategy, name); });
-    RegisterMaker("annotate_transaction", [](TypeName name)->ACL* { return new ACLStrategised<NotePairs::Entry*>(new ACLAnnotationData, new ACLAnnotateTransactionStrategy, name); });
+    RegisterMaker("note", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::NoteCheck>(name, new ACLNoteData); });
+    RegisterMaker("annotate_client", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::AnnotateClientCheck>(name, new ACLAnnotationData); });
+    RegisterMaker("annotate_transaction", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::AnnotateTransactionCheck>(name, new ACLAnnotationData); });
     RegisterMaker("has", [](TypeName name)->ACL* {return new ACLStrategised<ACLChecklist *>(new ACLHasComponentData, new ACLHasComponentStrategy, name); });
     RegisterMaker("transaction_initiator", [](TypeName name)->ACL* {return new TransactionInitiator(name);});
 

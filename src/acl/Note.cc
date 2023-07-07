@@ -13,10 +13,10 @@
 #include "acl/NoteData.h"
 #include "HttpRequest.h"
 
-/* Acl::AnnotationStrategy */
+/* Acl::AnnotationCheck */
 
 const Acl::Options &
-Acl::AnnotationStrategy::options()
+Acl::AnnotationCheck::options()
 {
     static const Acl::CharacterSetOption Delimiters("-m");
     static const Acl::Options MyOptions = { &Delimiters };
@@ -24,17 +24,19 @@ Acl::AnnotationStrategy::options()
     return MyOptions;
 }
 
-/* ACLNoteStrategy */
+/* Acl::NoteCheck */
 
 int
-ACLNoteStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::NoteCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     if (const auto request = checklist->request) {
-        if (request->hasNotes() && matchNotes(data, request->notes().getRaw()))
+        if (request->hasNotes() && matchNotes(request->notes().getRaw()))
             return 1;
 #if USE_ADAPTATION
         const Adaptation::History::Pointer ah = request->adaptLogHistory();
-        if (ah != nullptr && ah->metaHeaders != nullptr && matchNotes(data, ah->metaHeaders.getRaw()))
+        if (ah != nullptr && ah->metaHeaders != nullptr && matchNotes(ah->metaHeaders.getRaw()))
             return 1;
 #endif
     }
@@ -42,11 +44,11 @@ ACLNoteStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist
 }
 
 bool
-ACLNoteStrategy::matchNotes(ACLData<MatchType> *noteData, const NotePairs *note) const
+Acl::NoteCheck::matchNotes(const NotePairs *note) const
 {
     const NotePairs::Entries &entries = note->expandListEntries(&delimiters.value);
     for (auto e: entries)
-        if (noteData->match(e.getRaw()))
+        if (data->match(e.getRaw()))
             return true;
     return false;
 }

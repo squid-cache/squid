@@ -11,35 +11,35 @@
 
 #include "acl/CharacterSetOption.h"
 #include "acl/Data.h"
-#include "acl/Strategy.h"
+#include "acl/ParameterizedNode.h"
 #include "Notes.h"
 
 namespace Acl {
 
 /// common parent of several ACLs dealing with transaction annotations
-class AnnotationStrategy: public ACLStrategy<NotePairs::Entry *>
+class AnnotationCheck: public ParameterizedNode< ACLData<NotePairs::Entry *> >
 {
 public:
-    AnnotationStrategy(): delimiters(CharacterSet(__FILE__, ",")) {}
+    AnnotationCheck(): delimiters(CharacterSet(__FILE__, ",")) {}
 
     const Acl::Options &options() override;
 
     Acl::CharacterSetOptionValue delimiters; ///< annotation separators
 };
 
-} // namespace Acl
-
-/// \ingroup ACLAPI
-class ACLNoteStrategy: public Acl::AnnotationStrategy
+/// a "note" ACL
+class NoteCheck: public Acl::AnnotationCheck
 {
-
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* ACL API */
+    int match(ACLChecklist *) override;
     bool requiresRequest() const override { return true; }
 
 private:
-    bool matchNotes(ACLData<MatchType> *, const NotePairs *) const;
+    bool matchNotes(const NotePairs *) const;
 };
+
+} // namespace Acl
 
 #endif /* SQUID_ACLNOTE_H */
 
