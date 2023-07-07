@@ -187,7 +187,7 @@ Acl::Init()
     RegisterMaker("src", [](TypeName)->ACL* { return new ACLSourceIP; }); // XXX: Add name parameter to ctor
     RegisterMaker("url_regex", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::UrlCheck>(name, new ACLRegexData); });
     RegisterMaker("urllogin", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::UrlLoginCheck>(name, new ACLRegexData); });
-    RegisterMaker("urlpath_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLUrlPathStrategy, name); });
+    RegisterMaker("urlpath_regex", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::UrlPathCheck>(name, new ACLRegexData); });
     RegisterMaker("port", [](TypeName name)->ACL* { return new ACLStrategised<int>(new ACLIntRange, new ACLUrlPortStrategy, name); });
     RegisterMaker("external", [](TypeName name)->ACL* { return new ACLExternal(name); });
     RegisterMaker("squid_error", [](TypeName name)->ACL* { return new ACLStrategised<err_type>(new ACLSquidErrorData, new ACLSquidErrorStrategy, name); });
