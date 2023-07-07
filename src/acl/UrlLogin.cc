@@ -10,14 +10,15 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "acl/RegexData.h"
 #include "acl/UrlLogin.h"
 #include "HttpRequest.h"
 #include "rfc1738.h"
 
 int
-ACLUrlLoginStrategy::match(ACLData<char const *> * &data, ACLFilledChecklist *checklist)
+Acl::UrlLoginCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     if (checklist->request->url.userInfo().isEmpty()) {
         debugs(28, 5, "URL has no user-info details. cannot match");
         return 0; // nothing can match
