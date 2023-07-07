@@ -196,7 +196,7 @@ Acl::Init()
     RegisterMaker("note", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::NoteCheck>(name, new ACLNoteData); });
     RegisterMaker("annotate_client", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::AnnotateClientCheck>(name, new ACLAnnotationData); });
     RegisterMaker("annotate_transaction", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::AnnotateTransactionCheck>(name, new ACLAnnotationData); });
-    RegisterMaker("has", [](TypeName name)->ACL* {return new ACLStrategised<ACLChecklist *>(new ACLHasComponentData, new ACLHasComponentStrategy, name); });
+    RegisterMaker("has", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::HasComponentCheck>(name, new ACLHasComponentData); });
     RegisterMaker("transaction_initiator", [](TypeName name)->ACL* {return new TransactionInitiator(name);});
 
 #if USE_LIBNETFILTERCONNTRACK
