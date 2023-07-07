@@ -32,23 +32,15 @@ public:
 
 protected:
     /* ACL API */
-    void parse() override { Assure(parameters); parameters->parse(); }
-    void prepareForUse() override { parameters->prepareForUse(); }
-    SBufList dump() const override { return parameters->dump(); }
-    bool empty() const override { return parameters->empty(); }
-    const Acl::Options &lineOptions() override { return parameters->lineOptions(); }
+    void parse() override { Assure(data); data->parse(); }
+    void prepareForUse() override { data->prepareForUse(); }
+    SBufList dump() const override { return data->dump(); }
+    bool empty() const override { return data->empty(); }
+    const Acl::Options &lineOptions() override { return data->lineOptions(); }
 
     /// Points to items this ACL is configured to match. A derived class ensures
     /// that this pointer is never nil after the ACL object construction ends.
-    std::unique_ptr<Parameters> parameters;
-
-    // XXX: This is a diff reduction hack. Official code often uses poorly named
-    // "data" for a data member that should have been named "parameters". New PR
-    // code uses "parameters", but we keep this reference to avoid modifying
-    // otherwise unchanged official code that uses "data". Before merging this
-    // PR, rename new `parameters` to old `data` or vice versa!
-    decltype(parameters) &data = parameters;
-
+    std::unique_ptr<Parameters> data;
 };
 
 } // namespace Acl

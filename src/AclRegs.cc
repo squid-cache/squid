@@ -122,14 +122,14 @@ class FinalizedParameterizedNode: public Parent
 
 public:
     using Parameters = typename Parent::Parameters;
-    using Parent::parameters;
+    using Parent::data;
 
     FinalizedParameterizedNode(TypeName typeName, Parameters * const params):
         typeName_(typeName)
     {
-        Assure(!parameters); // base classes never set parameters
-        parameters.reset(params);
-        Assure(parameters); // ... but we always do
+        Assure(!data); // base classes never set this data member
+        data.reset(params);
+        Assure(data); // ... but we always do
     }
 
     ~FinalizedParameterizedNode() override = default;
