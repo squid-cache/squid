@@ -9,15 +9,22 @@
 #ifndef SQUID_ACLSSL_ERROR_H
 #define SQUID_ACLSSL_ERROR_H
 
-#include "acl/Strategy.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
 #include "security/forward.h"
 
-class ACLSslErrorStrategy : public ACLStrategy<const Security::CertErrors *>
+namespace Acl
 {
 
+/// a "ssl_error" ACL
+class CertificateErrorCheck: public ParameterizedNode< ACLData<const Security::CertErrors *> >
+{
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* ACL API */
+    int match(ACLChecklist *) override;
 };
+
+} // namespace Acl
 
 #endif /* SQUID_ACLSSL_ERROR_H */
 
