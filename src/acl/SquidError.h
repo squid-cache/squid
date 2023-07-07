@@ -9,15 +9,22 @@
 #ifndef SQUID_ACLSQUIDERROR_H
 #define SQUID_ACLSQUIDERROR_H
 
-#include "acl/Strategy.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
 #include "error/forward.h"
 
-class ACLSquidErrorStrategy : public ACLStrategy<err_type>
+namespace Acl
 {
 
+/// a "squid_error" ACL
+class SquidErrorCheck: public ParameterizedNode< ACLData<err_type> >
+{
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* ACL API */
+    int match(ACLChecklist *) override;
 };
+
+} // namespace Acl
 
 #endif /* SQUID_ACLSQUIDERROR_H */
 
