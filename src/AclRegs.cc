@@ -233,7 +233,7 @@ Acl::Init()
 #endif
 
 #if USE_ADAPTATION
-    RegisterMaker("adaptation_service", [](TypeName name)->ACL* { return new ACLStrategised<const char *>(new ACLAdaptationServiceData, new ACLAdaptationServiceStrategy, name); });
+    RegisterMaker("adaptation_service", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::AdaptationServiceCheck>(name, new ACLAdaptationServiceData); });
 #endif
 
 #if SQUID_SNMP

@@ -9,14 +9,14 @@
 #include "squid.h"
 #include "acl/AdaptationService.h"
 #include "acl/FilledChecklist.h"
-#include "acl/IntRange.h"
-#include "adaptation/Config.h"
 #include "adaptation/History.h"
 #include "HttpRequest.h"
 
 int
-ACLAdaptationServiceStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::AdaptationServiceCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     HttpRequest::Pointer request = checklist->request;
     if (request == nullptr)
         return 0;
