@@ -185,7 +185,7 @@ Acl::Init()
     RegisterMaker("srcdomain", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::SourceDomainCheck>(name, new ACLDomainData); });
     RegisterMaker("srcdom_regex", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::SourceDomainCheck>(name, new ACLRegexData); });
     RegisterMaker("src", [](TypeName)->ACL* { return new ACLSourceIP; }); // XXX: Add name parameter to ctor
-    RegisterMaker("url_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLUrlStrategy, name); });
+    RegisterMaker("url_regex", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::UrlCheck>(name, new ACLRegexData); });
     RegisterMaker("urllogin", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLUrlLoginStrategy, name); });
     RegisterMaker("urlpath_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLUrlPathStrategy, name); });
     RegisterMaker("port", [](TypeName name)->ACL* { return new ACLStrategised<int>(new ACLIntRange, new ACLUrlPortStrategy, name); });

@@ -10,14 +10,15 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "acl/RegexData.h"
 #include "acl/Url.h"
 #include "HttpRequest.h"
 #include "rfc1738.h"
 
 int
-ACLUrlStrategy::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist)
+Acl::UrlCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     char *esc_buf = SBufToCstring(checklist->request->effectiveRequestUri());
     rfc1738_unescape(esc_buf);
     int result = data->match(esc_buf);
