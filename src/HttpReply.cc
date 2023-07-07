@@ -14,6 +14,7 @@
 #include "base/EnumIterator.h"
 #include "globals.h"
 #include "http/ContentLengthInterpreter.h"
+#include "http/one/ResponseParser.h"
 #include "HttpBody.h"
 #include "HttpHdrCc.h"
 #include "HttpHdrContRange.h"
@@ -488,6 +489,14 @@ HttpReply::parseTerminatedPrefix(const char * const terminatedBuf, const size_t 
     // XXX: Make this a strict comparison after fixing Http::Message::parse() enforcement
     Assure(bufSize <= Config.maxReplyHeaderSize);
     return 0; // parsed nothing, need more data
+}
+
+int
+HttpReply::prefixLen() const
+{
+    const auto reason = sline.reason();
+    assert(reason);
+    return Http::One::ResponseParser::FirstLineSize(sline.version, strlen(reason)) + header.len + 2;
 }
 
 void

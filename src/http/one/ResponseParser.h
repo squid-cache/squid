@@ -50,6 +50,9 @@ public:
     /// \throws InsuffientInput and other exceptions on syntax and validation errors
     static void ParseResponseStatus(Tokenizer &, StatusCode &code);
 
+    /// \copydoc Http::One::Parser::firstLineSize()
+    static Http1::Parser::size_type FirstLineSize(const AnyP::ProtocolVersion &msgProtocol, size_t reasonLength);
+
 private:
     int parseResponseFirstLine();
     int parseResponseStatusAndReason(Tokenizer &);

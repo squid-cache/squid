@@ -132,6 +132,9 @@ public:
     /// \retval 0 implies that more data is needed to parse the response prefix
     size_t parseTerminatedPrefix(const char *, size_t);
 
+    /// \returns the length of status line + headers + crlf
+    int prefixLen() const;
+
 private:
     /** initialize */
     void init();
