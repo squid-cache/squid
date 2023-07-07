@@ -206,8 +206,8 @@ Acl::Init()
 
 #if USE_OPENSSL
     RegisterMaker("ssl_error", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::CertificateErrorCheck>(name, new ACLSslErrorData); });
-    RegisterMaker("user_cert", [](TypeName name)->ACL* { return new ACLStrategised<X509*>(new ACLCertificateData(Ssl::GetX509UserAttribute, "*"), new ACLCertificateStrategy, name); });
-    RegisterMaker("ca_cert", [](TypeName name)->ACL* { return new ACLStrategised<X509*>(new ACLCertificateData(Ssl::GetX509CAAttribute, "*"), new ACLCertificateStrategy, name); });
+    RegisterMaker("user_cert", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::ClientCertificateCheck>(name, new ACLCertificateData(Ssl::GetX509UserAttribute, "*")); });
+    RegisterMaker("ca_cert", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::ClientCertificateCheck>(name, new ACLCertificateData(Ssl::GetX509CAAttribute, "*")); });
     RegisterMaker("server_cert_fingerprint", [](TypeName name)->ACL* { return new ACLStrategised<X509*>(new ACLCertificateData(Ssl::GetX509Fingerprint, nullptr, true), new ACLServerCertificateStrategy, name); });
     RegisterMaker("at_step", [](TypeName name)->ACL* { return new ACLStrategised<XactionStep>(new ACLAtStepData, new ACLAtStepStrategy, name); });
     RegisterMaker("ssl::server_name", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLServerNameData, new ACLServerNameStrategy, name); });
