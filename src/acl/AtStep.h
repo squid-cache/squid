@@ -16,7 +16,7 @@
 namespace Acl
 {
 
-/// a "at_step" ACL
+/// an "at_step" ACL
 class AtStepCheck: public ParameterizedNode< ACLData<XactionStep> >
 {
 public:

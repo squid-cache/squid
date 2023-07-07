@@ -17,7 +17,7 @@
 namespace Acl
 {
 
-/// "dstdomain" and "dstdom_regex" ACLs
+/// a "dstdomain" or "dstdom_regex" ACL
 class DestinationDomainCheck: public ParameterizedNode< ACLData<char const *> >
 {
 public:

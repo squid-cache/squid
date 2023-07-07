@@ -16,7 +16,7 @@
 namespace Acl
 {
 
-/// a "ssl_error" ACL
+/// an "ssl_error" ACL
 class CertificateErrorCheck: public ParameterizedNode< ACLData<const Security::CertErrors *> >
 {
 public:

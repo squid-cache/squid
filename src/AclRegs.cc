@@ -113,7 +113,7 @@ namespace Acl
 /// Constructs a ParameterizedNode-derived ACL (specified as a Parent class).
 /// This template exists to avoid placing a variant of this ACL construction
 /// code in each ParameterizedNode-derived ACL class just to pass through
-/// TypeName and Parameters onto ParameterizedNode (and add MEMPROXY_CLASS).
+/// TypeName and Parameters onto ParameterizedNode (and to add MEMPROXY_CLASS).
 template <class Parent>
 class FinalizedParameterizedNode: public Parent
 {

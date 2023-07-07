@@ -22,7 +22,7 @@ public:
 namespace Acl
 {
 
-/// a "ssl::server_name" or "ssl::server_name_regex" ACL
+/// an "ssl::server_name" or "ssl::server_name_regex" ACL
 class ServerNameCheck: public ParameterizedNode< ACLData<const char *> >
 {
 public:

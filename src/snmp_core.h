@@ -56,7 +56,7 @@ void oid2addr(oid *Dest, Ip::Address &addr, u_int code);
 namespace Acl
 {
 
-/// a "snmp_community" ACL
+/// an "snmp_community" ACL
 class SnmpCommunityCheck: public ParameterizedNode< ACLData<const char *> >
 {
 public:
