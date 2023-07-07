@@ -219,6 +219,7 @@ main() {
             proxy-collapsed-forwarding
             busy-restart
             truncated-responses
+            malformed-request
         "
         tests="$default_tests"
     fi
