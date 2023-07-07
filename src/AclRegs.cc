@@ -81,8 +81,6 @@
 #include "acl/SslError.h"
 #include "acl/SslErrorData.h"
 #endif
-#include "acl/Strategised.h"
-#include "acl/Strategy.h"
 #include "acl/StringData.h"
 #if USE_OPENSSL
 #include "acl/ServerCertificate.h"
