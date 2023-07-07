@@ -9,7 +9,6 @@
 #include "squid.h"
 
 #include "acl/AtStep.h"
-#include "acl/AtStepData.h"
 #include "acl/FilledChecklist.h"
 #include "client_side.h"
 #include "http/Stream.h"
@@ -18,8 +17,10 @@
 #endif
 
 int
-ACLAtStepStrategy::match(ACLData<XactionStep> * &data, ACLFilledChecklist *checklist)
+Acl::AtStepCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
 #if USE_OPENSSL
     // We use step1 for all these very different cases:
     // - The transaction is not subject to ssl_bump rules (if any).

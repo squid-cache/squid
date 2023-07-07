@@ -9,16 +9,22 @@
 #ifndef SQUID_ACLATSTEP_H
 #define SQUID_ACLATSTEP_H
 
-#include "acl/Strategy.h"
+#include "acl/Data.h"
+#include "acl/ParameterizedNode.h"
 #include "XactionStep.h"
 
-/// \ingroup ACLAPI
-class ACLAtStepStrategy: public ACLStrategy<XactionStep>
+namespace Acl
 {
 
+/// a "at_step" ACL
+class AtStepCheck: public ParameterizedNode< ACLData<XactionStep> >
+{
 public:
-    int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* ACL API */
+    int match(ACLChecklist *) override;
 };
+
+} // namespace Acl
 
 #endif /* SQUID_ACLATSTEP_H */
 
