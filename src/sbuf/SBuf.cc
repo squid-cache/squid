@@ -711,7 +711,7 @@ SBuf::rfind(char c, SBuf::size_type endPos) const
     if (length() == 0)
         return endPos;
 
-    const void *i = memrchr(buf(), (int)c, (size_type)endPos);
+    const void *i = *memrchr(buf(), (int)c, (size_type)endPos);
 
     if (i == nullptr)
         return npos;
