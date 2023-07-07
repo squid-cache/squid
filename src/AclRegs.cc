@@ -237,7 +237,7 @@ Acl::Init()
 #endif
 
 #if SQUID_SNMP
-    RegisterMaker("snmp_community", [](TypeName name)->ACL* { return new ACLStrategised<const char *>(new ACLStringData, new ACLSNMPCommunityStrategy, name); });
+    RegisterMaker("snmp_community", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::SnmpCommunityCheck>(name, new ACLStringData); });
 #endif
 }
 
