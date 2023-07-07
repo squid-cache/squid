@@ -11,11 +11,10 @@
 #include "squid.h"
 #include "acl/Acl.h"
 #include "acl/Asn.h"
-#include "acl/Checklist.h"
 #include "acl/DestinationAsn.h"
 #include "acl/DestinationIp.h"
+#include "acl/FilledChecklist.h"
 #include "acl/SourceAsn.h"
-#include "acl/Strategised.h"
 #include "FwdState.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -569,10 +568,6 @@ ACLASN::parse()
         Tail = &q->next;
     }
 }
-
-/* explicit template instantiation required for some systems */
-
-template class ACLStrategised<Ip::Address>;
 
 int
 Acl::SourceAsnCheck::match(ACLChecklist * const ch)
