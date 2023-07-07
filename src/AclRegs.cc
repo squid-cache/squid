@@ -188,7 +188,7 @@ Acl::Init()
     RegisterMaker("url_regex", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::UrlCheck>(name, new ACLRegexData); });
     RegisterMaker("urllogin", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::UrlLoginCheck>(name, new ACLRegexData); });
     RegisterMaker("urlpath_regex", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::UrlPathCheck>(name, new ACLRegexData); });
-    RegisterMaker("port", [](TypeName name)->ACL* { return new ACLStrategised<int>(new ACLIntRange, new ACLUrlPortStrategy, name); });
+    RegisterMaker("port", [](TypeName name)->ACL* { return new Acl::FinalizedParameterizedNode<Acl::UrlPortCheck>(name, new ACLIntRange); });
     RegisterMaker("external", [](TypeName name)->ACL* { return new ACLExternal(name); });
     RegisterMaker("squid_error", [](TypeName name)->ACL* { return new ACLStrategised<err_type>(new ACLSquidErrorData, new ACLSquidErrorStrategy, name); });
     RegisterMaker("connections_encrypted", [](TypeName name)->ACL* { return new Acl::ConnectionsEncrypted(name); });

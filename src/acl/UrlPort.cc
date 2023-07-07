@@ -12,8 +12,10 @@
 #include "HttpRequest.h"
 
 int
-ACLUrlPortStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::UrlPortCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     return data->match(checklist->request->url.port().value_or(0));
 }
 
