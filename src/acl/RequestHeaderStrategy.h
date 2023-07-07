@@ -19,7 +19,7 @@ namespace Acl
 
 /// matches the value of a given request header (e.g., "browser" or "referer_regex")
 template <Http::HdrType header>
-class RequestHeaderCheck: public ParameterizedNode< ACLData<char const *> >
+class RequestHeaderCheck: public ParameterizedNode< ACLData<const char *> >
 {
 public:
     /* ACL API */

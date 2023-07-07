@@ -135,7 +135,7 @@ public:
     ~FinalizedParameterizedNode() override = default;
 
     /* ACL API */
-    char const *typeString() const override { return typeName_; }
+    const char *typeString() const override { return typeName_; }
 
 private:
     // TODO: Consider storing the spelling used by the admin instead.

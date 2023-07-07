@@ -20,7 +20,7 @@ namespace Acl
 
 /// matches the value of a given reply header (e.g., "rep_mime_type" ACL)
 template <Http::HdrType header>
-class ReplyHeaderCheck: public ParameterizedNode< ACLData<char const *> >
+class ReplyHeaderCheck: public ParameterizedNode< ACLData<const char *> >
 {
 public:
     /* ACL API */
