@@ -61,8 +61,6 @@ Mem::AllocatorProxy::getMeter() const
 size_t
 Mem::AllocatorProxy::getStats(PoolStats &stats)
 {
-    const auto result = getAllocator()->getStats(stats);
-    stats.label = label; // honor any relabel() calls
-    return result;
+    return getAllocator()->getStats(stats);
 }
 
