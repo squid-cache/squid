@@ -22,16 +22,6 @@
  *--------------------------------------------------------------------------*
  ****************************************************************************/
 
-/* we target Windows XP and later - some API are missing otherwise */
-#if _SQUID_MINGW_
-#if WINVER < 0x0501
-#undef WINVER
-#define WINVER 0x0501
-#undef _WIN32_WINNT
-#define _WIN32_WINNT WINVER
-#endif
-#endif /* _SQUID_MINGW_ */
-
 #include "compat/initgroups.h"
 
 #if HAVE_DIRECT_H
@@ -54,19 +44,6 @@
 #pragma warning( disable : 4290 )
 #pragma warning( disable : 4996 )
 #endif
-#endif
-
-/* Some MinGW version defines min() and max() as macros
-   causing the fail of the build process. The following
-   #define will disable that definition
- */
-#if defined(__GNUC__) && !NOMINMAX
-#define NOMINMAX
-#endif
-
-/// some builds of MinGW do not define IPV6_V6ONLY socket option
-#if !defined(IPV6_V6ONLY)
-#define IPV6_V6ONLY 27
 #endif
 
 #if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
@@ -112,7 +89,7 @@ typedef unsigned long ino_t;
 #define vsnprintf _vsnprintf
 #endif
 
-/*  Microsoft C Compiler and CygWin need these. MinGW does not */
+/*  Microsoft C Compiler and CygWin need these. */
 #if defined(_MSC_VER) || _SQUID_CYGWIN_
 SQUIDCEXTERN int WIN32_ftruncate(int fd, off_t size);
 #define ftruncate WIN32_ftruncate
@@ -236,12 +213,6 @@ SQUIDCEXTERN int WIN32_truncate(const char *pathname, off_t length);
 #define SIGCHLD 20  /* to parent on child stop or exit */
 #define SIGUSR1 30  /* user defined signal 1 */
 #define SIGUSR2 31  /* user defined signal 2 */
-
-#if _SQUID_MINGW_
-typedef unsigned char boolean;
-typedef unsigned char u_char;
-typedef unsigned int u_int;
-#endif
 
 #if defined(_MSC_VER)
 typedef int uid_t;
@@ -420,11 +391,6 @@ typedef struct {
 #if defined(_MSC_VER)
 SQUIDCEXTERN _CRTIMP ioinfo * __pioinfo[];
 SQUIDCEXTERN int __cdecl _free_osfhnd(int);
-#endif
-
-#if _SQUID_MINGW_
-__MINGW_IMPORT ioinfo * __pioinfo[];
-SQUIDCEXTERN int _free_osfhnd(int);
 #endif
 
 SQUIDCEXTERN THREADLOCAL int ws32_result;
@@ -613,32 +579,6 @@ getsockopt(int s, int l, int o, void * v, socklen_t * n)
         return 0;
 }
 #define getsockopt(s,l,o,v,n) Squid::getsockopt(s,l,o,v,n)
-
-#if HAVE_DECL_INETNTOPA || HAVE_DECL_INET_NTOP
-inline char *
-inet_ntop(int af, const void *src, char *dst, size_t size)
-{
-#if HAVE_DECL_INETNTOPA
-    return (char*)InetNtopA(af, const_cast<void*>(src), dst, size);
-#else // HAVE_DECL_INET_NTOP
-    return ::inet_ntop(af, src, dst, size);
-#endif
-}
-#define inet_ntop(a,s,d,l) Squid::inet_ntop(a,s,d,l)
-#endif // let compat/inet_ntop.h deal with it
-
-#if HAVE_DECL_INETPTONA || HAVE_DECL_INET_PTON
-inline char *
-inet_pton(int af, const void *src, char *dst)
-{
-#if HAVE_DECL_INETPTONA
-    return (char*)InetPtonA(af, const_cast<void*>(src), dst);
-#else // HAVE_DECL_INET_PTON
-    return ::inet_pton(af, src, dst);
-#endif
-}
-#define inet_pton(a,s,d) Squid::inet_pton(a,s,d)
-#endif // let compat/inet_pton.h deal with it
 
 /* Simple ioctl() emulation */
 inline int
@@ -935,11 +875,6 @@ setgid (gid_t gid)
     return 0;
 }
 
-/* for some reason autoconf misdetects getpagesize.. */
-#if HAVE_GETPAGESIZE && _SQUID_MINGW_
-#undef HAVE_GETPAGESIZE
-#endif
-
 #if !HAVE_GETPAGESIZE
 /* And now we define a compatibility layer */
 size_t getpagesize();
@@ -990,24 +925,6 @@ SQUIDCEXTERN DWORD WIN32_IpAddrChangeMonitorInit();
 
 void openlog(const char *ident, int logopt, int facility);
 void syslog(int priority, const char *fmt, ...);
-#endif
-
-#if _SQUID_MINGW_
-/* MinGW missing bits from sys/wait.h */
-/* A status looks like:
- *  <2 bytes info> <2 bytes code>
- *
- *  <code> == 0, child has exited, info is the exit value
- *  <code> == 1..7e, child has exited, info is the signal number.
- *  <code> == 7f, child has stopped, info was the signal number.
- *  <code> == 80, there was a core dump.
- */
-#define WIFEXITED(w)    (((w) & 0xff) == 0)
-#define WIFSIGNALED(w)  (((w) & 0x7f) > 0 && (((w) & 0x7f) < 0x7f))
-#define WIFSTOPPED(w)   (((w) & 0xff) == 0x7f)
-#define WEXITSTATUS(w)  (((w) >> 8) & 0xff)
-#define WTERMSIG(w) ((w) & 0x7f)
-#define WSTOPSIG    WEXITSTATUS
 #endif
 
 /* prototypes */

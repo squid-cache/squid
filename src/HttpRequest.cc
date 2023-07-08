@@ -560,9 +560,6 @@ HttpRequest::maybeCacheable()
             return false;
         break;
 
-    case AnyP::PROTO_CACHE_OBJECT:
-        return false;
-
     //case AnyP::PROTO_FTP:
     default:
         break;

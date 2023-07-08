@@ -10,8 +10,8 @@ AC_DEFUN([SQUID_CHECK_LIBIPHLPAPI],[
     SQUID_STATE_SAVE(iphlpapi)
     LIBS="$LIBS -liphlpapi"
     AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#include <windows.h>
 #include <winsock2.h>
+#include <windows.h>
 #include <iphlpapi.h>
 ]], [[
   MIB_IPNETTABLE i;

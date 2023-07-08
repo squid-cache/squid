@@ -30,6 +30,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 <p>The most important of these new features are:
 <itemize>
+	<item>removed support for the cache_object URI scheme
 	<item>Cache Manager changes
 </itemize>
 
@@ -40,6 +41,9 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 <p>
 <descrip>
+	<tag>cache_object URI</tag>
+	<p>Cache manager is no longer accessible by URIs with cache_object scheme.
+
 	<tag>non_peers</tag>
 	<p>Removed the <em>mgr:non_peers</em> report. Squid still ignores
 	unexpected ICP responses but no longer remembers the details that comprised
@@ -81,7 +85,21 @@ This section gives an account of those changes in three categories:
 <sect1>Removed directives<label id="removeddirectives">
 <p>
 <descrip>
-	<p>No removed directives in this version.
+	<tag>mcast_miss_addr</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
+
+	<tag>mcast_miss_ttl</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
+
+	<tag>mcast_miss_port</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
+
+	<tag>mcast_miss_encode_key</tag>
+	<p>The corresponding code has not built for many years, indicating that the
+	feature is unused.
 
 </descrip>
 
@@ -99,7 +117,8 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
-	<p>No new options in this version.
+	<tag>--without-psapi</tag>
+	<p>Disable auto-detection of Windows PSAPI library.
 
 </descrip>
 
@@ -115,6 +134,10 @@ This section gives an account of those changes in three categories:
 <p>
 <descrip>
 	<tag>CPPFLAGS=-DHEADERS_LOG</tag>
+	<p>The code enabled by this preprocessor macro has not built for many
+	   years, indicating that the feature is unused.
+
+	<tag>CPPFLAGS=-DMULTICAST_MISS_STREAM</tag>
 	<p>The code enabled by this preprocessor macro has not built for many
 	   years, indicating that the feature is unused.
 

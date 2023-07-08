@@ -1120,10 +1120,6 @@ prepareAcceleratedURL(ConnStateData * conn, const Http1::RequestParserPointer &h
 
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
 
-    static const SBuf cache_object("cache_object://");
-    if (hp->requestUri().startsWith(cache_object))
-        return nullptr; /* already in good shape */
-
     // XXX: re-use proper URL parser for this
     SBuf url = hp->requestUri(); // use full provided URI if we abort
     do { // use a loop so we can break out of it
@@ -1654,6 +1650,9 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
             http->setLogUriToRequestUri();
         } else
             debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (not this proxy)");
+
+        if (ForSomeCacheManager(request->url.path()))
+            request->flags.disableCacheUse("cache manager URL");
     }
 
     request->flags.internal = http->flags.internal;
