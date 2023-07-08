@@ -82,9 +82,9 @@ public:
 
     void zeroBlocks(bool doIt);
 
-private:
     Allocator *getAllocator() const;
 
+private:
     const char *label;
     size_t size;
     mutable Allocator *theAllocator;
