@@ -52,6 +52,13 @@ Mem::AllocatorProxy::zeroBlocks(bool doIt)
     getAllocator()->zeroBlocks(doIt);
 }
 
+void
+Mem::AllocatorProxy::relabel(const char * const aLabel)
+{
+    getAllocator()->relabel(aLabel);
+    label = aLabel;
+}
+
 Mem::PoolMeter const &
 Mem::AllocatorProxy::getMeter() const
 {
