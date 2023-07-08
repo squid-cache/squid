@@ -100,7 +100,6 @@
 #endif
 #include "base/RegexPattern.h"
 #include "ExternalACL.h"
-#include "mem/Allocator.h"
 #if USE_IDENT
 #include "ident/AclIdent.h"
 #endif
@@ -171,7 +170,7 @@ private:
         assert(typeName);
         const auto label = ToSBuf("acltype=", PreferredAllocatorLabelSuffix ? PreferredAllocatorLabelSuffix : typeName);
         FinalPoolLabel = SBufToCstring(label);
-        Pool().getAllocator()->relabel(FinalPoolLabel);
+        Pool().relabel(FinalPoolLabel);
     }
 
     /// if set, overrules FinalizePoolLabel() argument

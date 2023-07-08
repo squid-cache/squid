@@ -82,9 +82,13 @@ public:
 
     void zeroBlocks(bool doIt);
 
-    Allocator *getAllocator() const;
+    /// change the allocator description for getStats() if we were only able to
+    /// provide an approximate description at object construction time
+    void relabel(const char * const aLabel) { label = aLabel; }
 
 private:
+    Allocator *getAllocator() const;
+
     const char *label;
     size_t size;
     mutable Allocator *theAllocator;

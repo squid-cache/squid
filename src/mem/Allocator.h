@@ -29,10 +29,6 @@ public:
         objectSize(RoundedSize(sz))
     {}
 
-    /// change the allocator description if we were only able to provide an
-    /// approximate description at object construction time
-    void relabel(const char * const aLabel) { label = aLabel; }
-
     // TODO make this method const
     /**
      * fill the given object with statistical data about pool
@@ -106,7 +102,7 @@ public:
     // XXX: no counter for the number of free() calls avoided
 
     /// brief description of objects returned by alloc()
-    const char *label;
+    const char *const label;
 
     /// the size (in bytes) of objects managed by this allocator
     const size_t objectSize;
