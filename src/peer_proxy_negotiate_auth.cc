@@ -75,7 +75,7 @@ gss_OID gss_mech_spnego = &_gss_mech_spnego;
 #if USE_IBM_KERBEROS
 #include <ibm_svc/krb5_svc.h>
 const char *KRB5_CALLCONV error_message(long code) {
-    char *msg = NULL;
+    char *msg = nullptr;
     krb5_svc_get_msg(code, &msg);
     return msg;
 }
@@ -251,7 +251,7 @@ restart:
             code =
                 krb5_make_principal(kparam.context, &creds2.server,
                                     (krb5_const_realm)&client_realm, KRB5_TGS_NAME,
-                                    (krb5_const_realm)&client_realm, NULL);
+                                    (krb5_const_realm)&client_realm, nullptr);
             if (code) {
                 debugs(11, 5,
                        "Error while getting krbtgt principal : " <<
@@ -259,8 +259,8 @@ restart:
                 return (1);
             }
             code =
-                krb5_get_kdc_cred(kparam.context, kparam.cc, flags, NULL,
-                                  NULL, &creds2, &creds);
+                krb5_get_kdc_cred(kparam.context, kparam.cc, flags, nullptr,
+                                  nullptr, &creds2, &creds);
             krb5_free_creds(kparam.context, &creds2);
 #endif
             if (code) {
@@ -418,7 +418,7 @@ restart:
         krb5_get_init_creds_opt_set_renew_life(&options, rlife);
         code =
             krb5_get_init_creds_keytab(kparam.context, creds, principal,
-                                       keytab, 0, NULL, &options);
+                                       keytab, 0, nullptr, &options);
 #endif
         if (code) {
             debugs(11, 5,

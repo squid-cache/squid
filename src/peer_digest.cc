@@ -489,7 +489,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 
             /* preserve request -- we need its size to update counters */
             /* requestUnlink(r); */
-            /* fetch->entry->mem_obj->request = NULL; */
+            /* fetch->entry->mem_obj->request = nullptr; */
 
             if (!fetch->pd->cd) {
                 peerDigestFetchAbort(fetch, buf, "304 without the old in-memory digest");

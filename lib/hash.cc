@@ -327,7 +327,7 @@ main(void)
     hash_table *hid;
     LOCAL_ARRAY(char, buf, BUFSIZ);
     LOCAL_ARRAY(char, todelete, BUFSIZ);
-    hash_link *walker = NULL;
+    hash_link *walker = nullptr;
 
     todelete[0] = '\0';
     printf("init\n");

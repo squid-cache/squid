@@ -71,7 +71,7 @@ main(int, char *argv[])
     }
 
 #if SASL_VERSION_MAJOR < 2
-    rc = sasl_server_new( APP_NAME_SASL, NULL, NULL, NULL, 0, &conn );
+    rc = sasl_server_new( APP_NAME_SASL, nullptr, nullptr, nullptr, 0, &conn );
 #else
     rc = sasl_server_new( APP_NAME_SASL, nullptr, nullptr, nullptr, nullptr, nullptr, 0, &conn );
 #endif
@@ -114,8 +114,8 @@ main(int, char *argv[])
                 debug("errstr %s\n", errstr);
             }
             if ( rc != SASL_BADAUTH ) {
-                debug("ERROR: %d %s\n", rc, sasl_errstring(rc, NULL, NULL));
-                SEND_ERR(sasl_errstring(rc, NULL, NULL));
+                debug("ERROR: %d %s\n", rc, sasl_errstring(rc, nullptr, nullptr));
+                SEND_ERR(sasl_errstring(rc, nullptr, nullptr));
             } else
 #endif
                 SEND_ERR("");

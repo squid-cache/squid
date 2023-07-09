@@ -75,7 +75,7 @@ int total_bytes = 0;
 /* Bug 3854: AIX 6.1 tries to link in this fde.h global symbol
  * despite squidclient not using any of the fd_* code.
  */
-fde *fde::Table = NULL;
+fde *fde::Table = nullptr;
 #endif
 
 #if _SQUID_WINDOWS_
