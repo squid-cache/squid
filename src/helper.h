@@ -103,6 +103,11 @@ public:
     /// \param needsNewServers true if new servers must started, false otherwise
     void handleKilledServer(HelperServerBase *srv, bool &needsNewServers);
 
+    /// Reacts to unexpected server death(s), including a failure to start server(s)
+    /// and an unexpected exit of a previously started server. \sa handleKilledServer()
+    /// \param madeProgress whether the died server(s) responded to any requests
+    void handleFewerServers(bool madeProgress);
+
 public:
     wordlist *cmdline;
     dlink_list servers;
