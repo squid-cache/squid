@@ -44,6 +44,7 @@ SQUIDCEXTERN void hashFreeMemory(hash_table *);
 SQUIDCEXTERN void hashFreeItems(hash_table *, HASHFREE *);
 SQUIDCEXTERN HASHHASH hash_string;
 SQUIDCEXTERN HASHHASH hash4;
+SQUIDCEXTERN HASHHASH casehash4;
 SQUIDCEXTERN const char *hashKeyStr(const hash_link *);
 
 /*

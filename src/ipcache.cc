@@ -410,7 +410,6 @@ ipcache_entry::ipcache_entry(const char *aName):
     locks(0) // XXX: use Lock type ?
 {
     hash.key = xstrdup(aName);
-    Tolower(static_cast<char*>(hash.key));
     expires = squid_curtime + Config.negativeDnsTtl;
 }
 
@@ -702,7 +701,7 @@ ipcache_init(void)
     ipcache_low = (long) (((float) Config.ipcache.size *
                            (float) Config.ipcache.low) / (float) 100);
     n = hashPrime(ipcache_high / 4);
-    ip_table = hash_create((HASHCMP *) strcmp, n, hash4);
+    ip_table = hash_create((HASHCMP *) strcasecmp, n, casehash4);
 
     ipcacheRegisterWithCacheManager();
 }
