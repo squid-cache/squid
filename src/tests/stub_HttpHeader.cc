@@ -21,7 +21,6 @@ HttpHeaderEntry *HttpHeaderEntry::clone() const STUB_RETVAL(nullptr)
 void HttpHeaderEntry::packInto(Packable *) const STUB
 int HttpHeaderEntry::getInt() const STUB_RETVAL(0)
 int64_t HttpHeaderEntry::getInt64() const STUB_RETVAL(0)
-HttpHeader::HttpHeader() {STUB}
 HttpHeader::HttpHeader(const http_hdr_owner_type) {STUB}
 HttpHeader::HttpHeader(const HttpHeader &) {STUB}
 HttpHeader::~HttpHeader() {STUB}
@@ -40,7 +39,6 @@ int HttpHeader::delById(Http::HdrType) STUB_RETVAL(0)
 void HttpHeader::delAt(HttpHeaderPos, int &) STUB
 void HttpHeader::refreshMask() STUB
 void HttpHeader::addEntry(HttpHeaderEntry *) STUB
-void HttpHeader::insertEntry(HttpHeaderEntry *) STUB
 String HttpHeader::getList(Http::HdrType) const STUB_RETVAL(String())
 bool HttpHeader::getList(Http::HdrType, String *) const STUB_RETVAL(false)
 String HttpHeader::getStrOrList(Http::HdrType) const STUB_RETVAL(String())
