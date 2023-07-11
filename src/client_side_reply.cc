@@ -611,7 +611,7 @@ clientReplyContext::cacheHit(const StoreIOBuffer result)
         http->updateLoggingTags(LOG_TCP_MISS);
         processMiss();
         return;
-    } else if (!http->flags.internal && refreshCheckHTTP(e, r)) {
+    } else if (!r->flags.internal && refreshCheckHTTP(e, r)) {
         debugs(88, 5, "clientCacheHit: in refreshCheck() block");
         /*
          * We hold a stale copy; it needs to be validated
@@ -834,7 +834,7 @@ clientReplyContext::blockedHit() const
     if (!Config.accessList.sendHit)
         return false; // hits are not blocked by default
 
-    if (http->flags.internal)
+    if (http->request->flags.internal)
         return false; // internal content "hits" cannot be blocked
 
     const auto &rep = http->storeEntry()->mem().freshestReply();

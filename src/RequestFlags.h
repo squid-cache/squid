@@ -75,7 +75,6 @@ public:
 
     /// whether the request targets a /squid-internal- resource (e.g., a MIME
     /// icon or a cache manager page) served by this Squid instance
-    /// \sa ClientHttpRequest::flags.internal
     /// TODO: Rename to avoid a false implication that this flag is true for
     /// requests for /squid-internal- resources served by other Squid instances.
     bool internal = false;

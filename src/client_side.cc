@@ -1405,9 +1405,6 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
         /* internal URL mode */
         /* prepend our name & port */
         http->uri = xstrdup(internalLocalUri(nullptr, hp->requestUri()));
-        // We just re-wrote the URL. Must replace the Host: header.
-        //  But have not parsed there yet!! flag for local-only handling.
-        http->flags.internal = true;
 
     } else if (port->flags.accelSurrogate) {
         /* accelerator mode */
@@ -1640,22 +1637,20 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
     if (internalCheck(request->url.path())) {
         if (internalHostnameIs(request->url.host()) && request->url.port() == getMyPort()) {
             debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true));
-            http->flags.internal = true;
+            request->flags.internal = true;
         } else if (Config.onoff.global_internal_static && internalStaticCheck(request->url.path())) {
             debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (global_internal_static on)");
             request->url.setScheme(AnyP::PROTO_HTTP, "http");
             request->url.host(internalHostname());
             request->url.port(getMyPort());
-            http->flags.internal = true;
             http->setLogUriToRequestUri();
+            request->flags.internal = true;
         } else
             debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (not this proxy)");
 
         if (ForSomeCacheManager(request->url.path()))
             request->flags.disableCacheUse("cache manager URL");
     }
-
-    request->flags.internal = http->flags.internal;
 
     if (!isFtp) {
         // XXX: for non-HTTP messages instantiate a different Http::Message child type

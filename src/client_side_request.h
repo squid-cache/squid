@@ -157,7 +157,6 @@ public:
 
     struct Flags {
         bool accel = false;
-        bool internal = false;
         bool done_copying = false;
     } flags;
 
