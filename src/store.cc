@@ -1440,7 +1440,6 @@ StoreEntry::updateOnNotModified(const StoreEntry &e304)
     assert(mem_obj);
     assert(e304.mem_obj);
 
-
     // update reply before calling timestampsSet() below
     const auto &oldReply = mem_obj->freshestReply();
     const auto updatedReply = oldReply.recreateOnNotModified(e304.mem_obj->baseReply());
