@@ -89,7 +89,10 @@ public:
     void memoryOut(StoreEntry &, const bool preserveSwappable);
 
     /// using a 304 response, update the old entry (metadata and reply headers)
-    void updateOnNotModified(StoreEntry *old, StoreEntry &e304);
+    /// \returns false on a failure and true otherwise (which does not
+    /// necessarily mean that the entry has been updated, e.g., if called
+    /// several times with the same entry)
+    bool updateOnNotModified(StoreEntry *old, StoreEntry &e304);
 
     /// tries to make the entry available for collapsing future requests
     bool allowCollapsing(StoreEntry *, const RequestFlags &, const HttpRequestMethod &);

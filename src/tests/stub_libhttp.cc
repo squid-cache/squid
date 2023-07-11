@@ -37,10 +37,7 @@ bool ContentLengthInterpreter::checkList(const String &) STUB_RETVAL(false)
 #include "http/Message.h"
 namespace Http
 {
-Message::Message(http_hdr_owner_type owner):
-    http_ver(Http::ProtocolVersion()),
-    header(owner)
-{}
+Message::Message(http_hdr_owner_type) {STUB}
 Message::~Message() {STUB}
 void Message::packInto(Packable *, bool) const STUB
 void Message::setContentLength(int64_t) STUB

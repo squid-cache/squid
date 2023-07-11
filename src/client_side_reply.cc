@@ -440,12 +440,9 @@ clientReplyContext::handleIMSReply(const StoreIOBuffer result)
 
     // origin replied 304
     if (status == Http::scNotModified) {
-        try {
-            // TODO: The update may not be instantaneous. Should we wait for its
-            // completion to avoid spawning too much client-disassociated work?
-            Store::Root().updateOnNotModified(old_entry, *http->storeEntry());
-        } catch (...) {
-            debugs(20, DBG_IMPORTANT, "error when updating entry " << *old_entry << ": " << CurrentException);
+        // TODO: The update may not be instantaneous. Should we wait for its
+        // completion to avoid spawning too much client-disassociated work?
+        if (!Store::Root().updateOnNotModified(old_entry, *http->storeEntry())) {
             old_entry->release(true);
             restoreState();
             http->updateLoggingTags(LOG_TCP_MISS);

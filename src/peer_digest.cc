@@ -476,10 +476,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 
             assert(fetch->old_entry->mem_obj->request);
 
-            try {
-                Store::Root().updateOnNotModified(fetch->old_entry, *fetch->entry);
-            } catch (...) {
-                debugs(20, DBG_IMPORTANT, "ERROR: Cannot update cached entry: " << CurrentException);
+            if (!Store::Root().updateOnNotModified(fetch->old_entry, *fetch->entry)) {
                 peerDigestFetchAbort(fetch, buf, "header update failure after a 304 response");
                 return -1;
             }

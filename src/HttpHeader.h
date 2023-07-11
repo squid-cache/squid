@@ -60,9 +60,6 @@ public:
     int getInt() const;
     int64_t getInt64() const;
 
-    /// expected number of bytes written by packInto(), including ": " and CRLF
-    size_t length() const { return name.length() + 2 + value.size() + 2; }
-
     Http::HdrType id;
     SBuf name;
     String value;
@@ -75,6 +72,7 @@ class HttpHeader
 {
 
 public:
+    HttpHeader();
     explicit HttpHeader(const http_hdr_owner_type owner);
     HttpHeader(const HttpHeader &other);
     ~HttpHeader();
@@ -108,6 +106,7 @@ public:
     void delAt(HttpHeaderPos pos, int &headers_deleted);
     void refreshMask();
     void addEntry(HttpHeaderEntry * e);
+    void insertEntry(HttpHeaderEntry * e);
     String getList(Http::HdrType id) const;
     bool getList(Http::HdrType id, String *s) const;
     bool conflictingContentLength() const { return conflictingContentLength_; }
