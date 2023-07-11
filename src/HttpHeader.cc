@@ -758,8 +758,7 @@ HttpHeader::addEntry(HttpHeaderEntry * e)
 
     entries.push_back(e);
 
-    /* increment header length, allow for ": " and crlf */
-    len += e->name.length() + 2 + e->value.size() + 2;
+    len += e->length();
 }
 
 /* inserts an entry;
@@ -782,8 +781,7 @@ HttpHeader::insertEntry(HttpHeaderEntry * e)
 
     entries.insert(entries.begin(),e);
 
-    /* increment header length, allow for ": " and crlf */
-    len += e->name.length() + 2 + e->value.size() + 2;
+    len += e->length();
 }
 
 bool

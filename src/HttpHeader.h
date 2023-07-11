@@ -60,6 +60,9 @@ public:
     int getInt() const;
     int64_t getInt64() const;
 
+    /// expected number of bytes written by packInto(), including ": " and CRLF
+    size_t length() const { return name.length() + 2 + value.size() + 2; }
+
     Http::HdrType id;
     SBuf name;
     String value;
