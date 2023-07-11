@@ -1403,7 +1403,8 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
 
     } else if (internalCheck(hp->requestUri())) { // NP: only matches relative-URI
         /* internal URL mode */
-        /* prepend our name & port */
+        // XXX: By prepending our name and port, we create an absolute URL
+        // that may mismatch the (yet unparsed) Host header in the request.
         http->uri = xstrdup(internalLocalUri(nullptr, hp->requestUri()));
 
     } else if (port->flags.accelSurrogate) {
@@ -1643,8 +1644,8 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
             request->url.setScheme(AnyP::PROTO_HTTP, "http");
             request->url.host(internalHostname());
             request->url.port(getMyPort());
-            http->setLogUriToRequestUri();
             request->flags.internal = true;
+            http->setLogUriToRequestUri();
         } else
             debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (not this proxy)");
 
