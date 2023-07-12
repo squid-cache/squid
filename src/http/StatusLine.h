@@ -44,7 +44,7 @@ public:
     /// retrieve the status code for this status line
     Http::StatusCode status() const { return status_; }
 
-    /// retrieve the reason string for this status line
+    /// the reason-phrase string; never nil
     const char *reason() const;
 
     /// pack fields into a Packable object
