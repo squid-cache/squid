@@ -1730,10 +1730,7 @@ dnl override those handled earlier for io loop method manual override
 AC_ARG_ENABLE(select,
   AS_HELP_STRING([--disable-select],[Disable select(2) support.]),[
   SQUID_YESNO([$enableval],[--enable-select])
-  AS_IF([test "x$enableval" = "xyes"],[
-    squid_opt_io_loop_engine="select"
-    AS_IF([test "x$squid_host_os" = "xmingw"],[squid_opt_io_loop_engine="select_win32"])
-  ])
+  AS_IF([test "x$enableval" = "xyes"],[squid_opt_io_loop_engine="select"])
 ])
 AC_MSG_NOTICE([enabling select syscall for net I/O: ${enable_select:=auto}])
 
@@ -2734,8 +2731,6 @@ AS_IF([test "x$squid_opt_io_loop_engine" != "x"],
   squid_opt_io_loop_engine="poll",
   [test "x$enable_select" != "xno" -a "x$ac_cv_func_select" = "xyes"],
   squid_opt_io_loop_engine="select",
-  [test "x$enable_select" != "xno" -a "x$squid_host_os" = "xmingw"],
-  squid_opt_io_loop_engine="select_win32",
   [
     AC_MSG_WARN([Eep!  Cannot find epoll, kqueue, /dev/poll, poll or select!])
     AC_MSG_WARN([Will try select and hope for the best.])
@@ -2748,7 +2743,6 @@ AC_MSG_NOTICE([Using ${squid_opt_io_loop_engine} for the IO loop.])
 AM_CONDITIONAL(ENABLE_POLL, test "x$squid_opt_io_loop_engine" = "xpoll")
 AM_CONDITIONAL(ENABLE_EPOLL, test "x$squid_opt_io_loop_engine" = "xepoll")
 AM_CONDITIONAL(ENABLE_SELECT, test "x$squid_opt_io_loop_engine" = "xselect")
-AM_CONDITIONAL(ENABLE_SELECT_WIN32, test "x$squid_opt_io_loop_engine" = "xselect_win32")
 AM_CONDITIONAL(ENABLE_KQUEUE, test "x$squid_opt_io_loop_engine" = "xkqueue")
 AM_CONDITIONAL(ENABLE_DEVPOLL, test "x$squid_opt_io_loop_engine" = "xdevpoll")
 
@@ -2757,7 +2751,6 @@ AS_CASE([$squid_opt_io_loop_engine],
   [devpoll],[AC_DEFINE(USE_DEVPOLL,1,[Use /dev/poll for the IO loop])],
   [poll],[AC_DEFINE(USE_POLL,1,[Use poll() for the IO loop])],
   [kqueue],[AC_DEFINE(USE_KQUEUE,1,[Use kqueue() for the IO loop])],
-  [select_win32],[AC_DEFINE(USE_SELECT_WIN32,1,[Use Winsock select() for the IO loop])],
   [select],[AC_DEFINE(USE_SELECT,1,[Use select() for the IO loop])],
 )
 
