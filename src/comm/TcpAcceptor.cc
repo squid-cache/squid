@@ -349,7 +349,7 @@ Comm::TcpAcceptor::acceptInto(Comm::ConnectionPointer &details)
     Ip::Address::InitAddr(gai);
 
     errcode = 0; // reset local errno copy.
-    const auto rawSock = accept(conn->fd, gai->ai_addr, &gai->ai_addrlen);
+    const auto rawSock = accept(conn->fd, gai->ai_addr, reinterpret_cast<socklen_t*>(&(gai->ai_addrlen)));
     if (rawSock < 0) {
         errcode = errno; // store last accept errno locally.
 
@@ -378,7 +378,7 @@ Comm::TcpAcceptor::acceptInto(Comm::ConnectionPointer &details)
     // lookup the local-end details of this new connection
     Ip::Address::InitAddr(gai);
     details->local.setEmpty();
-    if (getsockname(sock, gai->ai_addr, &gai->ai_addrlen) != 0) {
+    if (getsockname(sock, gai->ai_addr, reinterpret_cast<socklen_t*>(&(gai->ai_addrlen))) != 0) {
         int xerrno = errno;
         Ip::Address::FreeAddr(gai);
         throw TextException(ToSBuf("getsockname() failed to locate local-IP on ", details, ": ", xstrerr(xerrno)), Here());
