@@ -17,8 +17,8 @@
 namespace Acl
 {
 
-/// An ACL that manages configured parameters using a given Parameters class P.
-/// That Parameters class must support an ACLData<> or equivalent API.
+/// An ACL that manages squid.conf-configured ACL parameters using a given class
+/// P. Class P must support an ACLData<> or equivalent API.
 template <class P>
 class ParameterizedNode: public ACL
 {
