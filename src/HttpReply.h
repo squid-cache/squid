@@ -132,7 +132,8 @@ public:
     /// \retval 0 implies that more data is needed to parse the response prefix
     size_t parseTerminatedPrefix(const char *, size_t);
 
-    /// \returns the length of status line + headers + crlf
+    /// approximate size of a "status-line CRLF headers CRLF" sequence
+    /// \sa HttpRequest::prefixLen()
     size_t prefixLen() const;
 
 private:
