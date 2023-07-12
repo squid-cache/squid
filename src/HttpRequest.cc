@@ -368,7 +368,7 @@ httpRequestPack(void *obj, Packable *p)
 int
 HttpRequest::prefixLen() const
 {
-    return Http::One::RequestParser::FirstLineSize(method.image().length(), url.path().length()) +
+    return Http::One::RequestParser::RequestLineSize(method.image().length(), url.path().length()) +
            header.len + 2;
 }
 

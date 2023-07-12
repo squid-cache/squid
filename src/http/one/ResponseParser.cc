@@ -18,7 +18,7 @@
 const SBuf Http::One::ResponseParser::IcyMagic("ICY ");
 
 Http1::Parser::size_type
-Http::One::ResponseParser::FirstLineSize(const AnyP::ProtocolVersion &msgProtocol, const size_t reasonLength)
+Http::One::ResponseParser::StatusLineSize(const AnyP::ProtocolVersion &msgProtocol, const size_t reasonLength)
 {
     Http1::Parser::size_type result = 0;
 
@@ -48,7 +48,7 @@ Http::One::ResponseParser::FirstLineSize(const AnyP::ProtocolVersion &msgProtoco
 Http1::Parser::size_type
 Http::One::ResponseParser::firstLineSize() const
 {
-    return FirstLineSize(msgProtocol_, reasonPhrase_.length());
+    return StatusLineSize(msgProtocol_, reasonPhrase_.length());
 }
 
 // NP: we found the protocol version and consumed it already.

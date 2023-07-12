@@ -51,7 +51,7 @@ public:
     static void ParseResponseStatus(Tokenizer &, StatusCode &code);
 
     /// \copydoc Http::One::Parser::firstLineSize()
-    static Http1::Parser::size_type FirstLineSize(const AnyP::ProtocolVersion &msgProtocol, size_t reasonLength);
+    static size_type StatusLineSize(const AnyP::ProtocolVersion &, size_t reasonPhraseLength);
 
 private:
     int parseResponseFirstLine();
