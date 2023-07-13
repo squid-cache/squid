@@ -405,6 +405,18 @@ Ip::Address::lookupHostIP(const char *s, bool nodns)
         if (maybeIpv4 != nullptr)
             res = maybeIpv4;
         // else IPv6-only host, let the caller deal with first-IP anyway.
+        else {
+            /*
+            *  NP: =(sockaddr_*) may alter the port. we don't want that.
+            *      all we have been given as input was an IPA.
+            */
+            short portSaved = port();
+            operator=(*res);
+            port(portSaved);
+
+            freeaddrinfo(resHead);
+            return false;
+        }
     }
 
     /*
