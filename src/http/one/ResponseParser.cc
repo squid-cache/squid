@@ -18,7 +18,7 @@
 const SBuf Http::One::ResponseParser::IcyMagic("ICY ");
 
 Http1::Parser::size_type
-Http::One::ResponseParser::StatusLineSize(const AnyP::ProtocolVersion &msgProtocol, const size_t reasonLength)
+Http::One::ResponseParser::StatusLineSize(const AnyP::ProtocolVersion &msgProtocol, const size_t reasonPhraseLength)
 {
     Http1::Parser::size_type result = 0;
 
@@ -40,7 +40,7 @@ Http::One::ResponseParser::StatusLineSize(const AnyP::ProtocolVersion &msgProtoc
         result += 1;
 
     result += 5; /* 5 octets in: SP status SP */
-    result += reasonLength;
+    result += reasonPhraseLength;
     result += 2; /* CRLF terminator */
     return result;
 }
