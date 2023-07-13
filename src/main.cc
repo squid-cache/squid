@@ -1437,16 +1437,24 @@ StartUsingConfig()
     }
 }
 
+/// register all known modules for handling future RegisteredRunner events
+static void
+RegisterModules()
+{
+    // These registration calls do not represent a RegisteredRunner "event". The
+    // modules registered here should be initialized later, during those events.
+#if HAVE_AUTH_MODULE_NTLM
+    CallRunnerRegistrator(NtlmAuthRr);
+#endif
+}
+
 int
 SquidMain(int argc, char **argv)
 {
     // We must register all modules before the first RunRegisteredHere() call.
     // We do it ASAP/here so that we do not need to move this code when we add
-    // earlier hooks to the RegisteredRunner API. This collection of
-    // registration calls is not a RegisteredRunner "event" in itself.
-#if HAVE_AUTH_MODULE_NTLM
-    CallRunnerRegistrator(NtlmAuthRr);
-#endif
+    // earlier hooks to the RegisteredRunner API.
+    RegisterModules();
 
     const CommandLine cmdLine(argc, argv, shortOpStr, squidOptions);
 
