@@ -145,12 +145,6 @@ httpHeaderInitModule(void)
  * HttpHeader Implementation
  */
 
-HttpHeader::HttpHeader() : owner (hoNone), len (0), conflictingContentLength_(false)
-{
-    entries.reserve(32);
-    httpHeaderMaskInit(&mask, 0);
-}
-
 HttpHeader::HttpHeader(const http_hdr_owner_type anOwner): owner(anOwner), len(0), conflictingContentLength_(false)
 {
     assert(anOwner > hoNone && anOwner < hoEnd);
@@ -757,30 +751,6 @@ HttpHeader::addEntry(HttpHeaderEntry * e)
     }
 
     entries.push_back(e);
-
-    /* increment header length, allow for ": " and crlf */
-    len += e->name.length() + 2 + e->value.size() + 2;
-}
-
-/* inserts an entry;
- * does not call e->clone() so one should not reuse "*e"
- */
-void
-HttpHeader::insertEntry(HttpHeaderEntry * e)
-{
-    assert(e);
-    assert(any_valid_header(e->id));
-
-    debugs(55, 7, this << " adding entry: " << e->id << " at " << entries.size());
-
-    // Http::HdrType::BAD_HDR is filtered out by assert_any_valid_header
-    if (CBIT_TEST(mask, e->id)) {
-        ++ headerStatsTable[e->id].repCount;
-    } else {
-        CBIT_SET(mask, e->id);
-    }
-
-    entries.insert(entries.begin(),e);
 
     /* increment header length, allow for ": " and crlf */
     len += e->name.length() + 2 + e->value.size() + 2;
