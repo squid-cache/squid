@@ -1440,6 +1440,14 @@ StartUsingConfig()
 int
 SquidMain(int argc, char **argv)
 {
+    // We must register all modules before the first RunRegisteredHere() call.
+    // We do it ASAP/here so that we do not need to move this code when we add
+    // earlier hooks to the RegisteredRunner API. This collection of
+    // registration calls is not a RegisteredRunner "event" in itself.
+#if HAVE_AUTH_MODULE_NTLM
+    CallRunnerRegistrator(NtlmAuthRr);
+#endif
+
     const CommandLine cmdLine(argc, argv, shortOpStr, squidOptions);
 
     ConfigureCurrentKid(cmdLine);
