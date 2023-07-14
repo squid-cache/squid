@@ -1443,8 +1443,25 @@ RegisterModules()
 {
     // These registration calls do not represent a RegisteredRunner "event". The
     // modules registered here should be initialized later, during those events.
+
+    // RegisteredRunner event handlers should not depend on handler call order
+    // and, hence, should not depend on the registration call order below.
+
+    CallRunnerRegistrator(ClientDbRr);
+    CallRunnerRegistrator(CollapsedForwardingRr);
+    CallRunnerRegistrator(IpcIoRr);
+    CallRunnerRegistrator(MemStoreRr);
+    CallRunnerRegistrator(PeerPoolMgrsRr);
+    CallRunnerRegistrator(SharedMemPagesRr);
+    CallRunnerRegistrator(SharedSessionCacheRr);
+    CallRunnerRegistrator(TransientsRr);
+
 #if HAVE_AUTH_MODULE_NTLM
     CallRunnerRegistrator(NtlmAuthRr);
+#endif
+
+#if USE_OPENSSL
+    CallRunnerRegistrator(sslBumpCfgRr);
 #endif
 }
 

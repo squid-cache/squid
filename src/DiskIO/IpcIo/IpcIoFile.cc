@@ -1026,7 +1026,7 @@ private:
     Ipc::FewToFewBiQueue::Owner *owner;
 };
 
-RunnerRegistrationEntry(IpcIoRr);
+DefineRunnerRegistrator(IpcIoRr);
 
 void
 IpcIoRr::claimMemoryNeeds()
