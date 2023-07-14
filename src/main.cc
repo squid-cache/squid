@@ -1449,14 +1449,24 @@ RegisterModules()
 
     CallRunnerRegistrator(ClientDbRr);
     CallRunnerRegistrator(CollapsedForwardingRr);
-    CallRunnerRegistrator(IpcIoRr);
     CallRunnerRegistrator(MemStoreRr);
     CallRunnerRegistrator(PeerPoolMgrsRr);
     CallRunnerRegistrator(SharedMemPagesRr);
     CallRunnerRegistrator(SharedSessionCacheRr);
     CallRunnerRegistrator(TransientsRr);
     CallRunnerRegistratorIn(Dns, ConfigRr);
-    CallRunnerRegistratorIn(Rock, SwapDirRr);
+
+#if HAVE_DISKIO_MODULE_IPCIO
+    CallRunnerRegistrator(IpcIoRr);
+#endif
+
+#if HAVE_AUTH_MODULE_NTLM
+    CallRunnerRegistrator(NtlmAuthRr);
+#endif
+
+#if USE_OPENSSL
+    CallRunnerRegistrator(sslBumpCfgRr);
+#endif
 
 #if USE_SQUID_ESI && HAVE_LIBEXPAT
     CallRunnerRegistratorIn(Esi, ExpatRr);
@@ -1466,12 +1476,8 @@ RegisterModules()
     CallRunnerRegistratorIn(Esi, Libxml2Rr);
 #endif
 
-#if HAVE_AUTH_MODULE_NTLM
-    CallRunnerRegistrator(NtlmAuthRr);
-#endif
-
-#if USE_OPENSSL
-    CallRunnerRegistrator(sslBumpCfgRr);
+#if HAVE_FS_ROCK
+    CallRunnerRegistratorIn(Rock, SwapDirRr);
 #endif
 }
 
