@@ -210,9 +210,9 @@ public:
     void endingShutdown() override;
 };
 
-RunnerRegistrationEntry(ConfigRr);
-
 } // namespace Dns
+
+DefineRunnerRegistratorIn(Dns, ConfigRr);
 
 struct _sp {
     char domain[NS_MAXDNAME];
