@@ -118,16 +118,6 @@ protected:
     debugs(1, 2, "running " # m); \
     RunRegistered(&m)
 
-/// convenience function to "use" an otherwise unreferenced static variable
-bool UseThisStatic(const void *);
-
-// TODO: Remove, together with UseThisStatic(), after migrating to DefineRunnerRegistrator()
-/// convenience macro: register one RegisteredRunner kid as early as possible
-#define RunnerRegistrationEntry(Who) \
-    static const bool Who ## _Registered_ = \
-        RegisterRunner(new Who) > 0 && \
-        UseThisStatic(& Who ## _Registered_);
-
 /// helps DefineRunnerRegistrator() and CallRunnerRegistrator() (and their
 /// namespace-sensitive variants) to use the same registration function name
 #define NameRunnerRegistrator_(Namespace, ClassName) \
