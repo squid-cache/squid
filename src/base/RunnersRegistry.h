@@ -128,27 +128,46 @@ bool UseThisStatic(const void *);
         RegisterRunner(new Who) > 0 && \
         UseThisStatic(& Who ## _Registered_);
 
-/// helps DefineRunnerRegistrator() and CallRunnerRegistrator() to use the same
-/// registration function name
-#define DeclareRunnerRegistrator(Who) \
-    void Register ## Who ## Now()
+/// helps DefineRunnerRegistrator() and CallRunnerRegistrator() (and their
+/// namespace-sensitive variants) to use the same registration function name
+#define NameRunnerRegistrator_(Namespace, ClassName) \
+    Register ## ClassName ## In ## Namespace()
 
-/// Define registration code for the given RegisteredRunner class. A matching
-/// CallRunnerRegistrator(Who) call should run this code before any possible use
-/// of the being-registered module.
-#define DefineRunnerRegistrator(Who) \
-    DeclareRunnerRegistrator(Who); \
-    void Register ## Who ## Now() { \
-        const auto registered = RegisterRunner(new Who); \
+/// helper macro that implements DefineRunnerRegistrator() and
+/// DefineRunnerRegistratorIn() using supplied constructor expression
+#define DefineRunnerRegistrator_(Namespace, ClassName, Constructor) \
+    void NameRunnerRegistrator_(Namespace, ClassName); \
+    void NameRunnerRegistrator_(Namespace, ClassName) { \
+        const auto registered = RegisterRunner(new Constructor); \
         assert(registered); \
     }
 
-/// convenience macro: register one RegisteredRunner kid
-#define CallRunnerRegistrator(Who) \
+/// Define registration code for the given RegisteredRunner-derived class known
+/// as ClassName in Namespace. A matching CallRunnerRegistratorIn() call should
+/// run this code before any possible use of the being-registered module.
+/// \sa DefineRunnerRegistrator() for classes declared in the global namespace.
+#define DefineRunnerRegistratorIn(Namespace, ClassName) \
+    DefineRunnerRegistrator_(Namespace, ClassName, Namespace::ClassName)
+
+/// Define registration code for the given RegisteredRunner-derived class known
+/// as ClassName (in global namespace). A matching CallRunnerRegistrator() call
+/// should run this code before any possible use of the being-registered module.
+/// \sa DefineRunnerRegistratorIn() for classes declared in named namespaces.
+#define DefineRunnerRegistrator(ClassName) \
+    DefineRunnerRegistrator_(Global, ClassName, ClassName)
+
+/// Register one RegisteredRunner kid, known as ClassName in Namespace.
+/// \sa CallRunnerRegistrator() for classes declared in the global namespace.
+#define CallRunnerRegistratorIn(Namespace, ClassName) \
     do { \
-        DeclareRunnerRegistrator(Who); \
-        Register ## Who ## Now(); \
+        void NameRunnerRegistrator_(Namespace, ClassName); \
+        NameRunnerRegistrator_(Namespace, ClassName); \
     } while (false)
+
+/// Register one RegisteredRunner kid, known as ClassName (in the global namespace).
+/// \sa CallRunnerRegistratorIn() for classes declared in named namespaces.
+#define CallRunnerRegistrator(ClassName) \
+    CallRunnerRegistratorIn(Global, ClassName)
 
 #endif /* SQUID_BASE_RUNNERSREGISTRY_H */
 

@@ -1455,6 +1455,16 @@ RegisterModules()
     CallRunnerRegistrator(SharedMemPagesRr);
     CallRunnerRegistrator(SharedSessionCacheRr);
     CallRunnerRegistrator(TransientsRr);
+    CallRunnerRegistratorIn(Dns, ConfigRr);
+    CallRunnerRegistratorIn(Rock, SwapDirRr);
+
+#if USE_SQUID_ESI && HAVE_LIBEXPAT
+    CallRunnerRegistratorIn(Esi, ExpatRr);
+#endif
+
+#if USE_SQUID_ESI && HAVE_LIBXML2
+    CallRunnerRegistratorIn(Esi, Libxml2Rr);
+#endif
 
 #if HAVE_AUTH_MODULE_NTLM
     CallRunnerRegistrator(NtlmAuthRr);
