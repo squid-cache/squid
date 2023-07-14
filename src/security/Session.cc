@@ -423,7 +423,7 @@ private:
     Ipc::MemMap::Owner *owner;
 };
 
-RunnerRegistrationEntry(SharedSessionCacheRr);
+DefineRunnerRegistrator(SharedSessionCacheRr);
 
 void
 SharedSessionCacheRr::useConfig()
