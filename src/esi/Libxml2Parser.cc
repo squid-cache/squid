@@ -36,9 +36,9 @@ private:
     std::unique_ptr<ESIParser::Register> registration;
 };
 
-RunnerRegistrationEntry(Libxml2Rr);
-
 }
+
+DefineRunnerRegistratorIn(Esi, Libxml2Rr);
 
 // the global document that will store the resolved entity
 // definitions

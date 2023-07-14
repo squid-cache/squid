@@ -1107,10 +1107,7 @@ Rock::SwapDir::hasReadableEntry(const StoreEntry &e) const
     return map->hasReadableEntry(reinterpret_cast<const cache_key*>(e.key));
 }
 
-namespace Rock
-{
-RunnerRegistrationEntry(SwapDirRr);
-}
+DefineRunnerRegistratorIn(Rock, SwapDirRr);
 
 void Rock::SwapDirRr::create()
 {

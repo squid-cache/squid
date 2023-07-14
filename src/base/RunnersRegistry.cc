@@ -108,9 +108,3 @@ IndependentRunner::registerRunner()
     // else do nothing past finishShutdown
 }
 
-bool
-UseThisStatic(const void *)
-{
-    return true;
-}
-
