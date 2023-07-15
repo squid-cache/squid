@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,11 +8,12 @@
 
 #include "squid.h"
 #include "base/File.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "sbuf/Stream.h"
 #include "tools.h"
-#include "xusleep.h"
 
+#include <chrono>
+#include <thread>
 #include <utility>
 
 #if HAVE_FCNTL_H
@@ -107,7 +108,7 @@ FileOpeningConfig::createdIfMissing()
 // nothing better on Solaris, but do not be tempted to use this elsewhere. For
 // more info, see http://bugs.squid-cache.org/show_bug.cgi?id=4212#c14
 /// fcntl(... struct flock) convenience wrapper
-int
+static int
 fcntlLock(const int fd, const short lockType)
 {
     // the exact composition and order of flock data members is unknown!
@@ -331,7 +332,7 @@ File::lock(const FileOpeningConfig &cfg)
                    " more time(s) after a failure: " << ex.what());
         }
         Must(attemptsLeft); // the catch statement handles the last attempt
-        xusleep(cfg.RetryGapUsec);
+        std::this_thread::sleep_for(std::chrono::microseconds(cfg.retryGapUsec));
     }
     debugs(54, 9, "disabled");
 }

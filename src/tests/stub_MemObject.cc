@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,12 +17,12 @@
 #define STUB_API "MemObject.cc"
 #include "tests/STUB.h"
 
-RemovalPolicy * mem_policy = NULL;
+RemovalPolicy * mem_policy = nullptr;
 
 int64_t
 MemObject::endOffset() const
 {
-    // XXX: required by testStore
+    // XXX: required by TestStore
     return data_hdr.endOffset();
 }
 
@@ -34,11 +34,11 @@ MemObject::MemObject() {
     memset(&start_ping, 0, sizeof(start_ping));
 } // NOP instead of elided due to Store
 
-const char *MemObject::storeId() const STUB_RETVAL(NULL)
-const char *MemObject::logUri() const STUB_RETVAL(NULL)
+const char *MemObject::storeId() const STUB_RETVAL(nullptr)
+const char *MemObject::logUri() const STUB_RETVAL(nullptr)
 void MemObject::setUris(char const *, char const *, const HttpRequestMethod &) STUB
 void MemObject::reset() STUB
-void MemObject::delayRead(DeferredRead const &) STUB
+void MemObject::delayRead(const AsyncCallPointer &) STUB
 bool MemObject::readAheadPolicyCanRead() const STUB_RETVAL(false)
 void MemObject::setNoDelay(bool const) STUB
 MemObject::~MemObject() STUB

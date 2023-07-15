@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,7 +16,7 @@
 #include "adaptation/ServiceGroups.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "globals.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -25,7 +25,7 @@
 #include <algorithm>
 
 bool Adaptation::Config::Enabled = false;
-char *Adaptation::Config::masterx_shared_name = NULL;
+char *Adaptation::Config::masterx_shared_name = nullptr;
 int Adaptation::Config::service_iteration_limit = 16;
 int Adaptation::Config::send_client_ip = false;
 int Adaptation::Config::send_username = false;
@@ -96,7 +96,7 @@ Adaptation::Config::findServiceConfig(const String &service)
         if ((*cfg)->key == service)
             return *cfg;
     }
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -120,14 +120,14 @@ Adaptation::Config::removeRule(const String& id)
 void
 Adaptation::Config::clear()
 {
-    debugs(93, 3, HERE << "rules: " << AllRules().size() << ", groups: " <<
+    debugs(93, 3, "rules: " << AllRules().size() << ", groups: " <<
            AllGroups().size() << ", services: " << serviceConfigs.size());
     typedef ServiceConfigs::const_iterator SCI;
     const ServiceConfigs& configs = serviceConfigs;
     for (SCI cfg = configs.begin(); cfg != configs.end(); ++cfg)
         removeService((*cfg)->key);
     serviceConfigs.clear();
-    debugs(93, 3, HERE << "rules: " << AllRules().size() << ", groups: " <<
+    debugs(93, 3, "rules: " << AllRules().size() << ", groups: " <<
            AllGroups().size() << ", services: " << serviceConfigs.size());
 }
 
@@ -195,19 +195,19 @@ Adaptation::Config::finalize()
     const ServiceConfigs &configs = serviceConfigs;
     for (VISCI i = configs.begin(); i != configs.end(); ++i) {
         const ServiceConfigPointer cfg = *i;
-        if (FindService(cfg->key) != NULL) {
+        if (FindService(cfg->key) != nullptr) {
             debugs(93, DBG_CRITICAL, "ERROR: Duplicate adaptation service name: " <<
                    cfg->key);
             continue; // TODO: make fatal
         }
         ServicePointer s = createService(cfg);
-        if (s != NULL) {
+        if (s != nullptr) {
             AllServices().push_back(s);
             ++created;
         }
     }
 
-    debugs(93,3, HERE << "Created " << created << " adaptation services");
+    debugs(93,3, "Created " << created << " adaptation services");
 
     // services remember their configs; we do not have to
     serviceConfigs.clear();
@@ -223,7 +223,7 @@ FinalizeEach(Collection &collection, const char *label)
     for (CI i = collection.begin(); i != collection.end(); ++i)
         (*i)->finalize();
 
-    debugs(93,2, HERE << "Initialized " << collection.size() << ' ' << label);
+    debugs(93,2, "Initialized " << collection.size() << ' ' << label);
 }
 
 void
@@ -252,7 +252,7 @@ Adaptation::Config::ParseServiceChain()
 void
 Adaptation::Config::ParseServiceGroup(ServiceGroupPointer g)
 {
-    assert(g != NULL);
+    assert(g != nullptr);
     g->parse();
     AllGroups().push_back(g);
 }

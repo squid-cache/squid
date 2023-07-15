@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -53,7 +53,7 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &) S
 bool ConnStateData::serveDelayedError(Http::Stream *) STUB_RETVAL(false)
 #endif
 
-const char *findTrailingHTTPVersion(const char *, const char *) STUB_RETVAL(NULL)
+const char *findTrailingHTTPVersion(const char *, const char *) STUB_RETVAL(nullptr)
 int varyEvaluateMatch(StoreEntry *, HttpRequest *) STUB_RETVAL(0)
 void clientOpenListenSockets(void) STUB
 void httpRequestFree(void *) STUB

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,23 +29,23 @@ class ESIContext : public esiTreeParent, public ESIParserClient
 public:
     typedef RefCount<ESIContext> Pointer;
     ESIContext() :
-        thisNode(NULL),
-        http(NULL),
+        thisNode(nullptr),
+        http(nullptr),
         errorpage(ERR_NONE),
         errorstatus(Http::scNone),
-        errormessage(NULL),
-        rep(NULL),
+        errormessage(nullptr),
+        rep(nullptr),
         outbound_offset(0),
         readpos(0),
         pos(0),
-        varState(NULL),
+        varState(nullptr),
         cachedASTInUse(false),
         reading_(true),
         processing(false) {
         memset(&flags, 0, sizeof(flags));
     }
 
-    ~ESIContext();
+    ~ESIContext() override;
 
     enum esiKick_t {
         ESI_KICK_FAILED,
@@ -55,8 +55,8 @@ public:
     };
 
     /* when esi processing completes */
-    void provideData(ESISegment::Pointer, ESIElement *source);
-    void fail (ESIElement *source, char const*anError = NULL);
+    void provideData(ESISegment::Pointer, ESIElement *source) override;
+    void fail (ESIElement *source, char const*anError = nullptr) override;
     void startRead();
     void finishRead();
     bool reading() const;
@@ -153,10 +153,10 @@ private:
     void updateCachedAST();
     bool hasCachedAST() const;
     void getCachedAST();
-    virtual void start(const char *el, const char **attr, size_t attrCount);
-    virtual void end(const char *el);
-    virtual void parserDefault (const char *s, int len);
-    virtual void parserComment (const char *s);
+    void start(const char *el, const char **attr, size_t attrCount) override;
+    void end(const char *el) override;
+    void parserDefault (const char *s, int len) override;
+    void parserComment (const char *s) override;
     bool processing;
 };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -40,7 +40,7 @@ Ftp::HttpReplyWrapper(const int ftpStatus, const char *ftpReason, const Http::St
     {
         HttpHdrCc cc;
         cc.Private(String());
-        header.putCc(&cc);
+        header.putCc(cc);
     }
     if (ftpStatus > 0)
         header.putInt(Http::HdrType::FTP_STATUS, ftpStatus);

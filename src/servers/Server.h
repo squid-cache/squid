@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,12 +30,12 @@ class Server : virtual public AsyncJob, public BodyProducer
 {
 public:
     Server(const MasterXactionPointer &xact);
-    virtual ~Server() {}
+    ~Server() override {}
 
     /* AsyncJob API */
-    virtual void start();
-    virtual bool doneAll() const;
-    virtual void swanSong();
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
 
     /// whether to stop serving our client after reading EOF on its connection
     virtual bool shouldCloseOnEof() const = 0;
@@ -55,7 +55,7 @@ public:
     virtual void afterClientRead() = 0;
 
     /// whether Comm::Read() is scheduled
-    bool reading() const {return reader != NULL;}
+    bool reading() const {return reader != nullptr;}
 
     /// cancels Comm::Read() if it is scheduled
     void stopReading();
@@ -84,7 +84,7 @@ public:
     virtual void afterClientWrite(size_t) {}
 
     /// whether Comm::Write() is scheduled
-    bool writing() const {return writer != NULL;}
+    bool writing() const {return writer != nullptr;}
 
 // XXX: should be 'protected:' for child access only,
 //      but all sorts of code likes to play directly

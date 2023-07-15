@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,9 +22,9 @@
 #include "ssl/Config.h"
 Ssl::Config::Config():
 #if USE_SSL_CRTD
-    ssl_crtd(NULL),
+    ssl_crtd(nullptr),
 #endif
-    ssl_crt_validator(NULL)
+    ssl_crt_validator(nullptr)
 {
     ssl_crt_validator_Children.concurrency = 1;
     STUB_NOP

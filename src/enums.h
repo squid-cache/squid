@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -202,7 +202,6 @@ enum {
 typedef enum {
     DIGEST_READ_NONE,
     DIGEST_READ_REPLY,
-    DIGEST_READ_HEADERS,
     DIGEST_READ_CBLOCK,
     DIGEST_READ_MASK,
     DIGEST_READ_DONE

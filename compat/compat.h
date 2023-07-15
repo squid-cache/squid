@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -68,9 +68,9 @@
 #include "compat/os/hpux.h"
 #include "compat/os/linux.h"
 #include "compat/os/macosx.h"
+#include "compat/os/mingw.h"
 #include "compat/os/mswindows.h"
 #include "compat/os/netbsd.h"
-#include "compat/os/next.h"
 #include "compat/os/openbsd.h"
 #include "compat/os/os2.h"
 #include "compat/os/qnx.h"
@@ -85,10 +85,6 @@
 
 #include "compat/assert.h"
 #include "compat/compat_shared.h"
-#include "compat/getaddrinfo.h"
-#include "compat/getnameinfo.h"
-#include "compat/inet_ntop.h"
-#include "compat/inet_pton.h"
 #include "compat/stdvarargs.h"
 
 /* cstdio has a bunch of problems with 64-bit definitions */
@@ -106,13 +102,6 @@
 
 /* Valgrind API macros changed between two versions squid supports */
 #include "compat/valgrind.h"
-
-/**
- * A Regular Expression library is bundled with Squid.
- * Default is to use a system provided one, but the bundle
- * may be used instead with explicit configuration.
- */
-#include "compat/GnuRegex.h"
 
 #endif /* _SQUID_COMPAT_H */
 

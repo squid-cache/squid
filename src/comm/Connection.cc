@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,7 +17,7 @@
 #include "neighbors.h"
 #include "security/NegotiationHistory.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
+
 #include <ostream>
 
 InstanceIdDefinitions(Comm::Connection, "conn", uint64_t);
@@ -26,7 +26,7 @@ class CachePeer;
 bool
 Comm::IsConnOpen(const Comm::ConnectionPointer &conn)
 {
-    return conn != NULL && conn->isOpen();
+    return conn != nullptr && conn->isOpen();
 }
 
 Comm::Connection::Connection() :
@@ -126,7 +126,7 @@ Comm::Connection::getPeer() const
     if (cbdataReferenceValid(peer_))
         return peer_;
 
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -192,7 +192,7 @@ Comm::Connection::detailCodeContext(std::ostream &os) const
 }
 
 std::ostream &
-operator << (std::ostream &os, const Comm::Connection &conn)
+Comm::operator << (std::ostream &os, const Connection &conn)
 {
     os << conn.id;
     if (!conn.local.isNoAddr() || conn.local.port())

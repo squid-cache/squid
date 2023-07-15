@@ -3868,7 +3868,7 @@ msgid ""
 "blocking process."
 msgstr ""
 "B<squid> ist ein leistungsfähiger Proxy caching Server für Web Clients, "
-"welcher FTP, gopher, ICAP, ICP, HTCP and HTTP Data Objects unterstützt. Im "
+"welcher FTP, ICAP, ICP, HTCP and HTTP Data Objects unterstützt. Im "
 "Unterschied zu traditioneller caching Software verarbeitet B<squid> alle "
 "Anfragen in einem einzigen non-blocking Prozess."
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,7 @@
 #include "anyp/PortCfg.h"
 #include "base/RunnersRegistry.h"
 #include "CachePeer.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "fd.h"
 #include "fde.h"
 #include "ipc/MemMap.h"
@@ -115,7 +115,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
     if (!session) {
         errCode = ERR_get_error();
         errAction = "failed to allocate handle";
-        debugs(83, DBG_IMPORTANT, "TLS error: " << errAction << ": " << Security::ErrorString(errCode));
+        debugs(83, DBG_IMPORTANT, "ERROR: TLS failure: " << errAction << ": " << Security::ErrorString(errCode));
     }
 #elif USE_GNUTLS
     gnutls_session_t tmp;
@@ -128,7 +128,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
     if (errCode != GNUTLS_E_SUCCESS) {
         session.reset();
         errAction = "failed to initialize session";
-        debugs(83, DBG_IMPORTANT, "TLS error: " << errAction << ": " << Security::ErrorString(errCode));
+        debugs(83, DBG_IMPORTANT, "ERROR: TLS failure: " << errAction << ": " << Security::ErrorString(errCode));
     }
 #endif /* USE_GNUTLS */
 
@@ -383,10 +383,10 @@ Security::SetSessionCacheCallbacks(Security::ContextPointer &ctx)
 }
 #endif /* USE_OPENSSL */
 
+#if USE_OPENSSL
 static void
 initializeSessionCache()
 {
-#if USE_OPENSSL
     // Check if the MemMap keys and data are enough big to hold
     // session ids and session data
     assert(SSL_SESSION_ID_SIZE >= MEMMAP_SLOT_KEY_SIZE);
@@ -404,8 +404,8 @@ initializeSessionCache()
         if (s->secure.staticContext)
             Security::SetSessionCacheCallbacks(s->secure.staticContext);
     }
-#endif
 }
+#endif
 
 /// initializes shared memory segments used by MemStore
 class SharedSessionCacheRr: public Ipc::Mem::RegisteredRunner
@@ -413,11 +413,11 @@ class SharedSessionCacheRr: public Ipc::Mem::RegisteredRunner
 public:
     /* RegisteredRunner API */
     SharedSessionCacheRr(): owner(nullptr) {}
-    virtual void useConfig();
-    virtual ~SharedSessionCacheRr();
+    void useConfig() override;
+    ~SharedSessionCacheRr() override;
 
 protected:
-    virtual void create();
+    void create() override;
 
 private:
     Ipc::MemMap::Owner *owner;

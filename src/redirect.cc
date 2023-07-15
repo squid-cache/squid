@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -54,21 +54,21 @@ public:
 
 static HLPCB redirectHandleReply;
 static HLPCB storeIdHandleReply;
-static helper *redirectors = NULL;
-static helper *storeIds = NULL;
+static helper *redirectors = nullptr;
+static helper *storeIds = nullptr;
 static OBJH redirectStats;
 static OBJH storeIdStats;
 static int redirectorBypassed = 0;
 static int storeIdBypassed = 0;
-static Format::Format *redirectorExtrasFmt = NULL;
-static Format::Format *storeIdExtrasFmt = NULL;
+static Format::Format *redirectorExtrasFmt = nullptr;
+static Format::Format *storeIdExtrasFmt = nullptr;
 
 CBDATA_CLASS_INIT(RedirectStateData);
 
 RedirectStateData::RedirectStateData(const char *url) :
-    data(NULL),
+    data(nullptr),
     orig_url(url),
-    handler(NULL)
+    handler(nullptr)
 {
 }
 
@@ -80,7 +80,7 @@ static void
 redirectHandleReply(void *data, const Helper::Reply &reply)
 {
     RedirectStateData *r = static_cast<RedirectStateData *>(data);
-    debugs(61, 5, HERE << "reply=" << reply);
+    debugs(61, 5, "reply=" << reply);
 
     // XXX: This function is now kept only to check for and display the garbage use-case
     // and to map the old helper response format(s) into new format result code and key=value pairs
@@ -99,7 +99,7 @@ redirectHandleReply(void *data, const Helper::Reply &reply)
             size_t replySize = 0;
             if (const char *t = strchr(res, ' ')) {
                 static int warn = 0;
-                debugs(61, (!(warn++%50)? DBG_CRITICAL:2), "UPGRADE WARNING: URL rewriter reponded with garbage '" << t <<
+                debugs(61, (!(warn++%50)? DBG_CRITICAL:2), "WARNING: UPGRADE: URL rewriter reponded with garbage '" << t <<
                        "'. Future Squid will treat this as part of the URL.");
                 replySize = t - res;
             } else
@@ -125,7 +125,7 @@ redirectHandleReply(void *data, const Helper::Reply &reply)
                 if (*result == '!') {
                     static int urlgroupWarning = 0;
                     if (!urlgroupWarning++)
-                        debugs(85, DBG_IMPORTANT, "UPGRADE WARNING: URL rewriter using obsolete Squid-2 urlgroup feature needs updating.");
+                        debugs(85, DBG_IMPORTANT, "WARNING: UPGRADE: URL rewriter using obsolete Squid-2 urlgroup feature needs updating.");
                     if (char *t = strchr(result+1, '!')) {
                         *t = '\0';
                         newReply.notes.add("urlgroup", result+1);
@@ -195,7 +195,7 @@ storeIdHandleReply(void *data, const Helper::Reply &reply)
 static void
 redirectStats(StoreEntry * sentry)
 {
-    if (redirectors == NULL) {
+    if (redirectors == nullptr) {
         storeAppendPrintf(sentry, "No redirectors defined\n");
         return;
     }
@@ -210,7 +210,7 @@ redirectStats(StoreEntry * sentry)
 static void
 storeIdStats(StoreEntry * sentry)
 {
-    if (storeIds == NULL) {
+    if (storeIds == nullptr) {
         storeAppendPrintf(sentry, "No StoreId helpers defined\n");
         return;
     }
@@ -259,15 +259,15 @@ constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientH
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(ERR_GATEWAY_FAILURE, status,
-                                    http->request->method, NULL,
+                                    nullptr,
                                     http->getConn(),
                                     http->request,
-                                    NULL,
+                                    nullptr,
 #if USE_AUTH
-                                    http->getConn() != NULL && http->getConn()->getAuth() != NULL ?
+                                    http->getConn() != nullptr && http->getConn()->getAuth() != nullptr ?
                                     http->getConn()->getAuth() : http->request->auth_user_request);
 #else
-                                    NULL);
+                                    nullptr);
 #endif
 
         node = (clientStreamNode *)http->client_stream.tail->data;
@@ -275,7 +275,7 @@ constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientH
         return;
     }
 
-    debugs(61,6, HERE << "sending '" << buf << "' to the " << name << " helper");
+    debugs(61,6, "sending '" << buf << "' to the " << name << " helper");
     helperSubmit(hlp, buf, replyHandler, r);
 }
 
@@ -341,7 +341,7 @@ redirectInit(void)
 
     if (Config.Program.redirect) {
 
-        if (redirectors == NULL)
+        if (redirectors == nullptr)
             redirectors = new helper("redirector");
 
         redirectors->cmdline = Config.Program.redirect;
@@ -368,7 +368,7 @@ redirectInit(void)
 
     if (Config.Program.store_id) {
 
-        if (storeIds == NULL)
+        if (storeIds == nullptr)
             storeIds = new helper("store_id");
 
         storeIds->cmdline = Config.Program.store_id;
@@ -419,16 +419,16 @@ redirectShutdown(void)
         return;
 
     delete redirectors;
-    redirectors = NULL;
+    redirectors = nullptr;
 
     delete storeIds;
-    storeIds = NULL;
+    storeIds = nullptr;
 
     delete redirectorExtrasFmt;
-    redirectorExtrasFmt = NULL;
+    redirectorExtrasFmt = nullptr;
 
     delete storeIdExtrasFmt;
-    storeIdExtrasFmt = NULL;
+    storeIdExtrasFmt = nullptr;
 }
 
 void

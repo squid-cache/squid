@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,9 +27,9 @@ public:
     static void ListAppend (Pointer &, char const *, size_t);
     static void ListTransfer (Pointer &from, Pointer &to);
 
-    ESISegment() : len(0), next(NULL) {*buf = 0;}
+    ESISegment() : len(0), next(nullptr) {*buf = 0;}
     ESISegment(ESISegment const &);
-    ~ESISegment() {}
+    ~ESISegment() override {}
 
     ESISegment::Pointer cloneList() const;
     char *listToChar() const;

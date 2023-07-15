@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,7 +36,7 @@ public:
     /// set this status-line to the given values
     /// when reason is NULL the default message text for this StatusCode will be used
     /// when reason is not NULL, it must not point to a dynamically allocated value
-    void set(const AnyP::ProtocolVersion &newVersion, Http::StatusCode newStatus, const char *newReason = NULL);
+    void set(const AnyP::ProtocolVersion &newVersion, Http::StatusCode newStatus, const char *newReason = nullptr);
 
     /// reset the reason phrase to its default status code-derived value
     void resetReason() { reason_ = nullptr; }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -83,7 +83,7 @@ Ssl::LocalContextStorage *Ssl::GlobalContextStorage::getLocalStorage(Ip::Address
     std::map<Ip::Address, LocalContextStorage *>::iterator i = storage.find(address);
 
     if (i == storage.end())
-        return NULL;
+        return nullptr;
     else
         return i->second;
 }

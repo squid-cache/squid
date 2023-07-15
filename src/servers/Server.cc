@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 #include "client_side.h"
 #include "comm.h"
 #include "comm/Read.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "error/SysErrorDetail.h"
 #include "fd.h"
 #include "fde.h"
@@ -61,7 +61,7 @@ Server::stopReading()
 {
     if (reading()) {
         Comm::ReadCancel(clientConnection->fd, reader);
-        reader = NULL;
+        reader = nullptr;
     }
 }
 
@@ -107,7 +107,7 @@ Server::doClientRead(const CommIoCbParams &io)
 {
     debugs(33,5, io.conn);
     Must(reading());
-    reader = NULL;
+    reader = nullptr;
 
     /* Bail out quickly on Comm::ERR_CLOSING - close handlers will tidy up */
     if (io.flag == Comm::ERR_CLOSING) {

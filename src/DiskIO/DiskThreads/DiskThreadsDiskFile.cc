@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 79    Disk IO Routines */
 
 #include "squid.h"
+#include "comm.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
@@ -66,7 +67,7 @@ DiskThreadsDiskFile::open(int flags, mode_t mode, RefCount<IORequestor> callback
 
 #else
 
-    openDone(fd, NULL, fd, 0);
+    openDone(fd, nullptr, fd, 0);
 
 #endif
 }
@@ -115,7 +116,7 @@ DiskThreadsDiskFile::create(int flags, mode_t mode, RefCount<IORequestor> callba
 
 #else
 
-    openDone (fd, NULL, fd, 0);
+    openDone (fd, nullptr, fd, 0);
 
 #endif
 }
@@ -184,11 +185,11 @@ DiskThreadsDiskFile::close()
 
     if (!ioInProgress()) {
         doClose();
-        assert (ioRequestor != NULL);
+        assert (ioRequestor != nullptr);
         ioRequestor->closeCompleted();
         return;
     } else {
-        debugs(79, DBG_CRITICAL, HERE << "DiskThreadsDiskFile::close: " <<
+        debugs(79, DBG_CRITICAL, "DiskThreadsDiskFile::close: " <<
                "did NOT close because ioInProgress() is true.  now what?");
     }
 }
