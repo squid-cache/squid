@@ -236,6 +236,7 @@ AS_IF([m4_translit([test "x$with_$1" != "xno"], [-+.], [___])],[
     AC_MSG_NOTICE([Library '$1' support: no (auto)])
   ])
 ])
+AC_SUBST(m4_toupper(m4_translit([LIB$1_LIBS], [-+.], [___])))
 ])
 
 dnl check the build parameters for a library to auto-enable

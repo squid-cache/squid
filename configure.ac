@@ -1083,7 +1083,6 @@ SQUID_CHECK_LIB_WORKS(nettle,[
   SQUID_CHECK_NETTLE_BASE64
   SQUID_STATE_ROLLBACK(squid_nettle_state)
 ])
-AC_SUBST(LIBNETTLE_LIBS)
 
 dnl Check for libcrypt
 CRYPTLIB=
@@ -1652,7 +1651,6 @@ SQUID_CHECK_LIB_WORKS(ldap,[
     SQUID_CHECK_LDAP_API
   ])
 ])
-AC_SUBST(LIBLDAP_LIBS)
 
 SQUID_AUTO_LIB(systemd,[systemd API for start-up notification],[LIBSYSTEMD])
 AH_TEMPLATE(USE_SYSTEMD,[systemd support is available])
