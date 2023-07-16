@@ -75,7 +75,6 @@ class HttpHeader
 {
 
 public:
-    HttpHeader();
     explicit HttpHeader(const http_hdr_owner_type owner);
     HttpHeader(const HttpHeader &other);
     ~HttpHeader();
@@ -109,7 +108,6 @@ public:
     void delAt(HttpHeaderPos pos, int &headers_deleted);
     void refreshMask();
     void addEntry(HttpHeaderEntry * e);
-    void insertEntry(HttpHeaderEntry * e);
     String getList(Http::HdrType id) const;
     bool getList(Http::HdrType id, String *s) const;
     bool conflictingContentLength() const { return conflictingContentLength_; }
