@@ -92,6 +92,7 @@ void StatusLine::init() STUB
 void StatusLine::clean() STUB
 void StatusLine::set(const AnyP::ProtocolVersion &, Http::StatusCode, const char *) STUB
 const char *StatusLine::reason() const STUB_RETVAL(nullptr)
+size_t StatusLine::packedLength() const STUB_RETVAL(0)
 void StatusLine::packInto(Packable *) const STUB
 bool StatusLine::parse(const String &, const char *, const char *) STUB_RETVAL(false)
 }
