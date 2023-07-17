@@ -494,9 +494,7 @@ HttpReply::parseTerminatedPrefix(const char * const terminatedBuf, const size_t 
 size_t
 HttpReply::prefixLen() const
 {
-    const auto reason = sline.reason();
-    assert(reason);
-    return Http::One::ResponseParser::StatusLineSize(sline.version, strlen(reason)) + header.len + 2;
+    return sline.packedLength() + header.len + 2;
 }
 
 void

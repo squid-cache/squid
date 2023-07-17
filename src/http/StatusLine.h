@@ -47,6 +47,9 @@ public:
     /// the reason-phrase string; never nil
     const char *reason() const;
 
+    /// expected size of packInto() output
+    size_t packedLength() const;
+
     /// pack fields into a Packable object
     void packInto(Packable *) const;
 
