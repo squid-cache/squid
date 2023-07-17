@@ -52,9 +52,6 @@ public:
     /// the accumulated parsed bytes
     const SBuf &parsed() const { Must(preserveParsed_); return parsed_; }
 
-    /// \copydoc Http::One::Parser::firstLineSize()
-    static size_type RequestLineSize(size_t methodLength, size_t requestTargetLength);
-
 private:
     void skipGarbageLines();
     int parseRequestFirstLine();

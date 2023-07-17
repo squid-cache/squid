@@ -18,11 +18,11 @@
 const SBuf Http::One::ResponseParser::IcyMagic("ICY ");
 
 Http1::Parser::size_type
-Http::One::ResponseParser::StatusLineSize(const AnyP::ProtocolVersion &msgProtocol, const size_t reasonPhraseLength)
+Http::One::ResponseParser::firstLineSize() const
 {
     Http1::Parser::size_type result = 0;
 
-    switch (msgProtocol.protocol)
+    switch (msgProtocol_.protocol)
     {
     case AnyP::PROTO_HTTP:
         result += Http1magic.length();
@@ -34,21 +34,15 @@ Http::One::ResponseParser::StatusLineSize(const AnyP::ProtocolVersion &msgProtoc
         return result;
     }
     // NP: the parser does not accept >2 DIGIT for version numbers
-    if (msgProtocol.minor > 9)
+    if (msgProtocol_.minor > 9)
         result += 2;
     else
         result += 1;
 
     result += 5; /* 5 octets in: SP status SP */
-    result += reasonPhraseLength;
+    result += reasonPhrase_.length();
     result += 2; /* CRLF terminator */
     return result;
-}
-
-Http1::Parser::size_type
-Http::One::ResponseParser::firstLineSize() const
-{
-    return StatusLineSize(msgProtocol_, reasonPhrase_.length());
 }
 
 // NP: we found the protocol version and consumed it already.
