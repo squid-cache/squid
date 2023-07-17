@@ -718,9 +718,7 @@ Store::Controller::updateOnNotModified(StoreEntry *old, StoreEntry &e304)
             return true;
         }
     } catch (...) {
-        debugs(20, DBG_IMPORTANT, "ERROR: Failed to update a cached response: " << CurrentException <<
-               Debug::Extra << "cache entry that needed revalidation: " << *old <<
-               Debug::Extra << "304/revalidation response: " << e304);
+        debugs(20, DBG_IMPORTANT, "ERROR: Failed to update a cached response: " << CurrentException);
         return false;
     }
 
