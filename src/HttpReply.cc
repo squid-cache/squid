@@ -490,6 +490,12 @@ HttpReply::parseTerminatedPrefix(const char * const terminatedBuf, const size_t 
     return 0; // parsed nothing, need more data
 }
 
+size_t
+HttpReply::prefixLen() const
+{
+    return sline.packedLength() + header.len + 2;
+}
+
 void
 HttpReply::configureContentLengthInterpreter(Http::ContentLengthInterpreter &interpreter)
 {
