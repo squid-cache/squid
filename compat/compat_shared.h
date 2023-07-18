@@ -61,7 +61,7 @@ extern void (*failure_notify) (const char *);
  *     Linux and others including FreeBSD <7, define it as signed.
  *     If this causes any issues please contact squid-dev mailing list.
  */
-#if defined(USE_SELECT) || defined(USE_SELECT_WIN32)
+#if defined(USE_SELECT)
 /* Limited by design */
 # define SQUID_MAXFD_LIMIT    ((signed int)FD_SETSIZE)
 
