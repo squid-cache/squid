@@ -81,14 +81,22 @@ addSwapDir(TestRock::SwapDirPointer aStore)
     ++Config.cacheSwap.n_configured;
 }
 
-void
-TestRock::setUp()
+/// customizes our test setup
+class MyTestProgram: public TestProgram
 {
-    CPPUNIT_NS::TestFixture::setUp();
+public:
+    virtual ~MyTestProgram() = default;
 
-    if (0 > system ("rm -rf " TESTDIR))
-        throw std::runtime_error("Failed to clean test work directory");
+    /* TestProgram API */
+    void startup() override;
 
+private:
+    void finishStartup();
+};
+
+void
+MyTestProgram::startup()
+{
     Config.memShared.defaultTo(false);
     Config.shmLocking.defaultTo(false);
 
@@ -97,13 +105,23 @@ TestRock::setUp()
     if (Ipc::Mem::Segment::BasePath == nullptr)
         Ipc::Mem::Segment::BasePath = ".";
 
+    // diff reduction; TODO: inline
+    finishStartup();
+}
+
+void
+TestRock::setUp()
+{
+    CPPUNIT_NS::TestFixture::setUp();
+
+    if (0 > system ("rm -rf " TESTDIR))
+        throw std::runtime_error("Failed to clean test work directory");
+
     Store::Init();
 
     store = new Rock::SwapDir();
 
     addSwapDir(store);
-
-    commonInit();
 
     char *path=xstrdup(TESTDIR);
 
@@ -147,14 +165,10 @@ TestRock::tearDown()
         throw std::runtime_error("Failed to clean test work directory");
 }
 
+/// temporary diff reduction; TODO: inline into the caller
 void
-TestRock::commonInit()
+MyTestProgram::finishStartup()
 {
-    static bool inited = false;
-
-    if (inited)
-        return;
-
     Config.Store.avgObjectSize = 1024;
     Config.Store.objectsPerBucket = 20;
     Config.Store.maxObjectSize = 2048;
@@ -179,8 +193,6 @@ TestRock::commonInit()
     httpHeaderInitModule(); /* must go before any header processing (e.g. the one in errorInitialize) */
 
     mem_policy = createRemovalPolicy(Config.replPolicy);
-
-    inited = true;
 }
 
 void
@@ -366,6 +378,6 @@ TestRock::testRockSwapOut()
 int
 main(int argc, char *argv[])
 {
-    return TestProgram().run(argc, argv);
+    return MyTestProgram().run(argc, argv);
 }
 
