@@ -27,19 +27,24 @@ class TestUri : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testDefaultConstructor);
     CPPUNIT_TEST_SUITE_END();
 
-public:
-    void setUp() override;
-
 protected:
     void testConstructScheme();
     void testDefaultConstructor();
 };
 CPPUNIT_TEST_SUITE_REGISTRATION(TestUri);
 
-/* init memory pools */
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    virtual ~MyTestProgram() = default;
+
+    /* TestProgram API */
+    void startup() override;
+};
 
 void
-TestUri::setUp()
+MyTestProgram::startup()
 {
     Mem::Init();
     AnyP::UriScheme::Init();
@@ -81,6 +86,6 @@ TestUri::testDefaultConstructor()
 int
 main(int argc, char *argv[])
 {
-    return TestProgram().run(argc, argv);
+    return MyTestProgram().run(argc, argv);
 }
 

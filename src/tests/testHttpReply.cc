@@ -22,9 +22,6 @@ class TestHttpReply : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testSanityCheckFirstLine);
     CPPUNIT_TEST_SUITE_END();
 
-public:
-    void setUp() override;
-
 protected:
     void testSanityCheckFirstLine();
 };
@@ -44,8 +41,18 @@ MemObject::endOffset() const
 
 /* end */
 
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    virtual ~MyTestProgram() = default;
+
+    /* TestProgram API */
+    void startup() override;
+};
+
 void
-TestHttpReply::setUp()
+MyTestProgram::startup()
 {
     Mem::Init();
     httpHeaderInitModule();
@@ -218,6 +225,6 @@ TestHttpReply::testSanityCheckFirstLine()
 int
 main(int argc, char *argv[])
 {
-    return TestProgram().run(argc, argv);
+    return MyTestProgram().run(argc, argv);
 }
 

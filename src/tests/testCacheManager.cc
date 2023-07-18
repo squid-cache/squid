@@ -27,9 +27,6 @@ class TestCacheManager : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testParseUrl);
     CPPUNIT_TEST_SUITE_END();
 
-public:
-    void setUp() override;
-
 protected:
     void testCreate();
     void testRegister();
@@ -45,9 +42,18 @@ public:
     void ParseUrl(const AnyP::Uri &u) { CacheManager::ParseUrl(u); }
 };
 
-/* init memory pools */
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    virtual ~MyTestProgram() = default;
 
-void TestCacheManager::setUp()
+    /* TestProgram API */
+    void startup() override;
+};
+
+void
+MyTestProgram::startup()
 {
     Mem::Init();
     AnyP::UriScheme::Init();
@@ -241,6 +247,6 @@ TestCacheManager::testParseUrl()
 int
 main(int argc, char *argv[])
 {
-    return TestProgram().run(argc, argv);
+    return MyTestProgram().run(argc, argv);
 }
 

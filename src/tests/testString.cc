@@ -26,9 +26,6 @@ class TestString : public CPPUNIT_NS::TestFixture
 
     CPPUNIT_TEST_SUITE_END();
 
-public:
-    void setUp() override;
-
 protected:
     void testCmpDefault();
     void testCmpEmptyString();
@@ -37,10 +34,18 @@ protected:
 };
 CPPUNIT_TEST_SUITE_REGISTRATION(TestString);
 
-/* init memory pools */
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    virtual ~MyTestProgram() = default;
+
+    /* TestProgram API */
+    void startup() override;
+};
 
 void
-TestString::setUp()
+MyTestProgram::startup()
 {
     Mem::Init();
 }
@@ -96,6 +101,6 @@ void TestString::testSubstr()
 int
 main(int argc, char *argv[])
 {
-    return TestProgram().run(argc, argv);
+    return MyTestProgram().run(argc, argv);
 }
 
