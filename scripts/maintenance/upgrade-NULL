@@ -1,0 +1,29 @@
+#!/usr/bin/awk -f
+#
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+
+/NULL/ {
+  # NULL is deprecated in C++11 by nullptr.
+  if ( FILENAME ~ /(\.cci?|src\/|tools\/)$/ ) {
+    gsub(/return[ ]+\(?NULL\)?;/, "return nullptr;");
+    gsub(/RETVAL\([ ]?NULL[ ]?\)/, "RETVAL(nullptr)");
+    gsub(/[ ]=[ ]?NULL[;]/, " = nullptr;");
+    gsub(/[ ]=[ ]?NULL[,]/, " = nullptr,");
+    gsub(/[ ]=[ ]?NULL[)]/, " = nullptr)");
+    gsub(/\([ ]?NULL[ ]?,/, "(nullptr,");
+    gsub(/{[ ]?NULL[ ]?,/, "{nullptr,");
+    gsub(/,[ ]?NULL[ ]?,/, ", nullptr,");
+    gsub("  NULL,", "  nullptr,");
+    gsub(/,[ ]?NULL[ ]?}/, ", nullptr}");
+    gsub(/,[ ]?NULL[ ]?\)/, ", nullptr)");
+    gsub("    NULL)", "    nullptr)");
+    # special case: ", NULL, NULL,"
+    gsub(/,[ ]?NULL[ ]?,/, ", nullptr,");
+  }
+}
+{ print }
