@@ -32,11 +32,11 @@ public:
 
     /// Runs before all tests.
     /// Does nothing by default.
-    virtual void startup() {std::cerr << "XXX1: Default Before\n";}
+    virtual void startup() {}
 
     /// Runs after all tests, regardless of their outcome.
     /// Does nothing by default.
-    virtual void shutdown() {std::cerr << "XXX9: Default After\n";}
+    virtual void shutdown() {}
 
     /// Implements main(), combining all the steps.
     /// Must be called from main().

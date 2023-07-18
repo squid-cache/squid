@@ -24,10 +24,6 @@ class TestHttpRequest : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testSanityCheckStartLine);
     CPPUNIT_TEST_SUITE_END();
 
-public:
-    TestHttpRequest() { std::cerr << "XXX2: Default TestHttpRequest ctor\n"; }
-    ~TestHttpRequest() override { std::cerr << "XXX8: Default TestHttpRequest dtor\n"; }
-
 protected:
     void testCreateFromUrl();
     void testIPv6HostColonBug();
@@ -59,7 +55,6 @@ RegisterTestProgram(MyProgram);
 void
 MyProgram::startup()
 {
-    std::cerr << "XXX1b: Custom Before\n";
     Mem::Init();
     AnyP::UriScheme::Init();
     httpHeaderInitModule();
