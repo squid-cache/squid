@@ -54,17 +54,17 @@ TestACLMaxUserIP::testDefaults()
 }
 
 /// customizes our test setup
-class MyProgram: public TestProgram
+class MyTestProgram: public TestProgram
 {
 public:
-    virtual ~MyProgram() = default;
+    virtual ~MyTestProgram() = default;
 
     /* TestProgram API */
     void startup() override;
 };
 
 void
-MyProgram::startup()
+MyTestProgram::startup()
 {
     Acl::RegisterMaker("max_user_ip", [](Acl::TypeName name)->ACL* { return new ACLMaxUserIP(name); });
 }
@@ -95,7 +95,7 @@ TestACLMaxUserIP::testParseLine()
 int
 main(int argc, char *argv[])
 {
-    return MyProgram().run(argc, argv);
+    return MyTestProgram().run(argc, argv);
 }
 
 #endif /* USE_AUTH */

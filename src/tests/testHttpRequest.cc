@@ -41,17 +41,17 @@ public:
 };
 
 /// customizes our test setup
-class MyProgram: public TestProgram
+class MyTestProgram: public TestProgram
 {
 public:
-    virtual ~MyProgram() = default;
+    virtual ~MyTestProgram() = default;
 
     /* TestProgram API */
     void startup() override;
 };
 
 void
-MyProgram::startup()
+MyTestProgram::startup()
 {
     Mem::Init();
     AnyP::UriScheme::Init();
@@ -219,6 +219,6 @@ TestHttpRequest::testSanityCheckStartLine()
 int
 main(int argc, char *argv[])
 {
-    return MyProgram().run(argc, argv);
+    return MyTestProgram().run(argc, argv);
 }
 
