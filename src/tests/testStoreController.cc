@@ -199,3 +199,4 @@ TestStoreController::testSearch()
     Store::FreeMemory();
 }
 
+// This test uses main() from ./testStore.cc.

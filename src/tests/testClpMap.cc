@@ -387,3 +387,9 @@ TestClpMap::testRangeLoopTraversal()
     CPPUNIT_ASSERT_EQUAL(expectedEntryCount, iterations);
 }
 
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
+}
+

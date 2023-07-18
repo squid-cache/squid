@@ -96,3 +96,9 @@ void TestConfigParser::testParseQuoted()
     CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("\"\\\\\"", "\\"));
 }
 
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
+}
+

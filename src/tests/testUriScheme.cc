@@ -160,3 +160,4 @@ TestUriScheme::setUp()
     AnyP::UriScheme::Init();
 }
 
+// This test uses main() from ./testURL.cc.

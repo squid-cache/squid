@@ -93,3 +93,9 @@ void TestString::testSubstr()
     CPPUNIT_ASSERT(check == ref);
 }
 
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
+}
+

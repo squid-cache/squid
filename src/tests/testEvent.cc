@@ -180,3 +180,9 @@ TestEvent::testSingleton()
     CPPUNIT_ASSERT(nullptr != scheduler);
 }
 
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
+}
+
