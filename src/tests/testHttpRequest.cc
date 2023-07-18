@@ -50,8 +50,6 @@ public:
     void startup() override;
 };
 
-RegisterTestProgram(MyProgram);
-
 void
 MyProgram::startup()
 {
@@ -216,5 +214,11 @@ TestHttpRequest::testSanityCheckStartLine()
     CPPUNIT_ASSERT_EQUAL(error, Http::scInvalidHeader);
     input.reset();
     error = Http::scNone;
+}
+
+int
+main(int argc, char *argv[])
+{
+    return MyProgram().run(argc, argv);
 }
 

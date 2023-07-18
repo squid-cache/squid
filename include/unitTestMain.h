@@ -21,9 +21,6 @@
 #include <cppunit/TestResultCollector.h>
 #include <cppunit/TestRunner.h>
 
-#include <memory>
-#include <stdexcept>
-
 /// implements test program's main() function while enabling customization
 class TestProgram
 {
@@ -37,14 +34,14 @@ public:
     /// Implements main(), combining all the steps.
     /// Must be called from main().
     /// \returns desired main() result.
-    int run();
+    int run(int argc, char *argv[]);
 
 private:
     bool runTests();
 };
 
 int
-TestProgram::run()
+TestProgram::run(int, char *[])
 {
 #if ENABLE_DEBUG_SECTION
     Debug::Levels[ENABLE_DEBUG_SECTION] = 99;
@@ -84,37 +81,6 @@ TestProgram::runTests()
     outputter.write();
 
     return result.wasSuccessful();
-}
-
-/// TestProgram object registered by RegisterTestProgram() (or nil).
-static std::unique_ptr<TestProgram> TestProgram_;
-
-/// Creates and registers a CustomTestProgram object. Optionally "uses" the
-/// static defined by RegisterTestProgram (by taking that variable address).
-/// Use RegisterTestProgram_() instead.
-template <class CustomTestProgram>
-static bool
-RegisterTestProgram_(void * = nullptr)
-{
-    // Avoid assert(): Some tests do not link with libcompatsquid.la (XXX?).
-    // assert(!TestProgram_);
-    if (TestProgram_)
-        throw std::runtime_error("attempt to register more than one TestProgram");
-
-    TestProgram_.reset(new CustomTestProgram());
-    return true;
-}
-
-/// A helper macro to create and register a CustomTestProgram object.
-#define RegisterTestProgram(CustomTestProgram) \
-    static bool CustomTestProgramRegistration_ = RegisterTestProgram_<CustomTestProgram>(&CustomTestProgramRegistration_)
-
-int
-main(int, char *[])
-{
-    if (!TestProgram_)
-        RegisterTestProgram(TestProgram);
-    return TestProgram_->run();
 }
 
 #endif /* SQUID_INCLUDE_UNITTESTMAIN_H */

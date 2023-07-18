@@ -63,8 +63,6 @@ public:
     void startup() override;
 };
 
-RegisterTestProgram(MyProgram);
-
 void
 MyProgram::startup()
 {
@@ -92,6 +90,12 @@ TestACLMaxUserIP::testParseLine()
     }
     delete anACL;
     xfree(line);
+}
+
+int
+main(int argc, char *argv[])
+{
+    return MyProgram().run(argc, argv);
 }
 
 #endif /* USE_AUTH */
