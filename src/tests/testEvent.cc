@@ -43,8 +43,6 @@ CPPUNIT_TEST_SUITE_REGISTRATION( TestEvent );
 class MyTestProgram: public TestProgram
 {
 public:
-    virtual ~MyTestProgram() = default;
-
     /* TestProgram API */
     void startup() override;
 };

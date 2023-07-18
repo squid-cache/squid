@@ -105,8 +105,6 @@ TestClpMap::addOneEntry(Map &m, const Map::mapped_type value, const Map::Ttl ttl
 class MyTestProgram: public TestProgram
 {
 public:
-    virtual ~MyTestProgram() = default;
-
     /* TestProgram API */
     void startup() override;
 };

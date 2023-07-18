@@ -57,8 +57,6 @@ TestACLMaxUserIP::testDefaults()
 class MyTestProgram: public TestProgram
 {
 public:
-    virtual ~MyTestProgram() = default;
-
     /* TestProgram API */
     void startup() override;
 };
