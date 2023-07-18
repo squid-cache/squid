@@ -31,9 +31,6 @@ class TestUriScheme : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testStream);
     CPPUNIT_TEST_SUITE_END();
 
-public:
-    void setUp() override;
-
 protected:
     void testAssignFromprotocol_t();
     void testCastToprotocol_t();
@@ -151,13 +148,6 @@ TestUriScheme::testStream()
     SBuf http_str("http");
     SBuf from_buf(buffer.str());
     CPPUNIT_ASSERT_EQUAL(http_str, from_buf);
-}
-
-void
-TestUriScheme::setUp()
-{
-    Mem::Init();
-    AnyP::UriScheme::Init();
 }
 
 // This test uses main() from ./testURL.cc.
