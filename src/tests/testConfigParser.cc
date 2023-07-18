@@ -22,9 +22,6 @@ class TestConfigParser : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testParseQuoted);
     CPPUNIT_TEST_SUITE_END();
 
-public:
-    void setUp() override;
-
 protected:
     bool doParseQuotedTest(const char *, const char *);
     void testParseQuoted();
@@ -33,10 +30,6 @@ protected:
 CPPUNIT_TEST_SUITE_REGISTRATION( TestConfigParser );
 
 int shutting_down = 0;
-
-void TestConfigParser::setUp()
-{
-}
 
 bool TestConfigParser::doParseQuotedTest(const char *s, const char *expectInterp)
 {
