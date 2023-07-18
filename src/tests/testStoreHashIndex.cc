@@ -200,3 +200,4 @@ TestStoreHashIndex::testSearch()
 }
 
 // This test uses main() from ./testStore.cc.
+
