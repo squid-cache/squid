@@ -32,9 +32,6 @@ class TestACLMaxUserIP : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testParseLine);
     CPPUNIT_TEST_SUITE_END();
 
-public:
-    void setUp() override;
-
 protected:
     void testDefaults();
     void testParseLine();
@@ -56,10 +53,21 @@ TestACLMaxUserIP::testDefaults()
     CPPUNIT_ASSERT_EQUAL(false,anACL.valid());
 }
 
-void
-TestACLMaxUserIP::setUp()
+/// customizes our test setup
+class MyProgram: public TestProgram
 {
-    CPPUNIT_NS::TestFixture::setUp();
+public:
+    virtual ~MyProgram() = default;
+
+    /* TestProgram API */
+    void startup() override;
+};
+
+RegisterTestProgram(MyProgram);
+
+void
+MyProgram::startup()
+{
     Acl::RegisterMaker("max_user_ip", [](Acl::TypeName name)->ACL* { return new ACLMaxUserIP(name); });
 }
 

@@ -25,7 +25,8 @@ class TestHttpRequest : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST_SUITE_END();
 
 public:
-    void setUp() override;
+    TestHttpRequest() { std::cerr << "XXX2: Default TestHttpRequest ctor\n"; }
+    ~TestHttpRequest() override { std::cerr << "XXX8: Default TestHttpRequest dtor\n"; }
 
 protected:
     void testCreateFromUrl();
@@ -43,11 +44,22 @@ public:
     bool doSanityCheckStartLine(const char *b, const size_t h, Http::StatusCode *e) { return sanityCheckStartLine(b,h,e); };
 };
 
-/* init memory pools */
+/// customizes our test setup
+class MyProgram: public TestProgram
+{
+public:
+    virtual ~MyProgram() = default;
+
+    /* TestProgram API */
+    void startup() override;
+};
+
+RegisterTestProgram(MyProgram);
 
 void
-TestHttpRequest::setUp()
+MyProgram::startup()
 {
+    std::cerr << "XXX1b: Custom Before\n";
     Mem::Init();
     AnyP::UriScheme::Init();
     httpHeaderInitModule();
