@@ -34,10 +34,6 @@ public:
     /// Does nothing by default.
     virtual void startup() {}
 
-    /// Runs after all tests, regardless of their outcome.
-    /// Does nothing by default.
-    virtual void shutdown() {}
-
     /// Implements main(), combining all the steps.
     /// Must be called from main().
     /// \returns desired main() result.
@@ -56,8 +52,6 @@ TestProgram::run()
 
     startup();
     const auto result = runTests();
-    shutdown();
-
     return result ? 0 : 1;
 }
 
