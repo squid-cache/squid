@@ -203,9 +203,25 @@ TestStore::testSwapMetaTypeClassification()
     CPPUNIT_ASSERT(Store::HonoredSwapMetaType(Store::RawSwapMetaTypeTop()));
 }
 
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    virtual ~MyTestProgram() = default;
+
+    /* TestProgram API */
+    void startup() override;
+};
+
+void
+MyTestProgram::startup()
+{
+    Mem::Init();
+}
+
 int
 main(int argc, char *argv[])
 {
-    return TestProgram().run(argc, argv);
+    return MyTestProgram().run(argc, argv);
 }
 
