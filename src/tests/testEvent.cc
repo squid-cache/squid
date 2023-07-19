@@ -44,14 +44,8 @@ class MyTestProgram: public TestProgram
 {
 public:
     /* TestProgram API */
-    void startup() override;
+    void startup() override { Mem::Init(); }
 };
-
-void
-MyTestProgram::startup()
-{
-    Mem::Init();
-}
 
 /*
  * Test creating a Scheduler

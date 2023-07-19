@@ -106,14 +106,8 @@ class MyTestProgram: public TestProgram
 {
 public:
     /* TestProgram API */
-    void startup() override;
+    void startup() override { squid_curtime = time(nullptr); }
 };
-
-void
-MyTestProgram::startup()
-{
-    squid_curtime = time(nullptr);
-}
 
 void
 TestClpMap::testPutGetDelete()
