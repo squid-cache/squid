@@ -1858,7 +1858,6 @@ AC_MSG_NOTICE([Linux Netfilter support requested: ${enable_linux_netfilter:=auto
 
 dnl Look for libnetfilter_conntrack options (needed for QOS netfilter marking)
 SQUID_AUTO_LIB(netfilter-conntrack,[Netfilter conntrack],[LIBNETFILTER_CONNTRACK])
-AC_MSG_NOTICE([Linux Netfilter Conntrack support requested: ${with_netfilter_conntrack:=auto}])
 SQUID_CHECK_LIB_WORKS(netfilter-conntrack,[
   LDFLAGS="$LIBNETFILTER_CONNTRACK_PATH $LDFLAGS"
   CPPFLAGS="$LIBNETFILTER_CONNTRACK_CFLAGS $CPPFLAGS"
