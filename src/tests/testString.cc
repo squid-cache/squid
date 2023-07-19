@@ -34,14 +34,6 @@ protected:
 };
 CPPUNIT_TEST_SUITE_REGISTRATION(TestString);
 
-/// customizes our test setup
-class MyTestProgram: public TestProgram
-{
-public:
-    /* TestProgram API */
-    void startup() override { Mem::Init(); }
-};
-
 void
 TestString::testCmpDefault()
 {
@@ -89,6 +81,14 @@ void TestString::testSubstr()
     String ref("34");
     CPPUNIT_ASSERT(check == ref);
 }
+
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override { Mem::Init(); }
+};
 
 int
 main(int argc, char *argv[])
