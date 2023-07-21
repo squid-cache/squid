@@ -203,27 +203,27 @@ TestCacheManager::testParseUrl()
 
     const auto &magic = CacheManager::MagicUrlPathPrefix();
 
+    assert(magic.length());
+    const auto insufficientMagic = magic.substr(0, magic.length()-1);
+
     for (const auto &scheme : validSchemes) {
         mgrUrl.setScheme(scheme);
 
-        // check the parser accepts URLs that have nothing after magic
-        mgrUrl.path(magic);
-        mgr->testValidUrl(mgrUrl);
-
-        // check that parser rejects URLs that are missing a slash after magic
+        // Check that the parser rejects URLs that lack the full magic prefix.
+        // These negative tests log "Squid BUG: assurance failed" ERRORs because
+        // they violate CacheManager::ParseUrl()'s ForSomeCacheManager()
+        // precondition. TODO: Consider integrating that precondition into
+        // CacheManager::ParseUrl() and using that method for routing decisions.
         for (const auto *action : validActions) {
             for (const auto *param : validParams) {
                 for (const auto *frag : validFragments) {
                     SBuf bits;
-                    bits.append(magic);
-                    // no slash here
+                    bits.append(insufficientMagic);
                     bits.append(action);
                     bits.append(param);
                     bits.append(frag);
-                    if (bits == magic)
-                        continue; // all other components were empty
                     mgrUrl.path(bits);
-                    mgr->testInvalidUrl(mgrUrl, "missing slash after magic");
+                    mgr->testInvalidUrl(mgrUrl, "insufficient magic");
                 }
             }
         }
@@ -236,7 +236,6 @@ TestCacheManager::testParseUrl()
                     for (const auto *frag : validFragments) {
                         SBuf bits;
                         bits.append(magic);
-                        bits.append("/");
                         bits.append(action);
                         bits.append(param);
                         bits.append(frag);
@@ -253,7 +252,6 @@ TestCacheManager::testParseUrl()
                     for (const auto *frag : validFragments) {
                         SBuf bits;
                         bits.append(magic);
-                        bits.append("/");
                         bits.append(action);
                         bits.append(param);
                         bits.append(frag);

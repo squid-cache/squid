@@ -155,7 +155,7 @@ CacheManager::createRequestedAction(const Mgr::ActionParams &params)
 const SBuf &
 CacheManager::MagicUrlPathPrefix()
 {
-    static const SBuf magic("/squid-internal-mgr"); // no terminating slash
+    static const SBuf magic("/squid-internal-mgr/");
     return magic;
 }
 
@@ -165,7 +165,7 @@ CacheManager::MagicUrlPathPrefix()
  *
  * Syntax:
  *
- * [ scheme "://" authority ] '/squid-internal-mgr' [ path-absolute [ "?" query ] [ "#" fragment ] ]
+ * [ scheme "://" authority ] '/squid-internal-mgr' path-absolute [ "?" query ] [ "#" fragment ]
  *
  * see RFC 3986 for definitions of scheme, authority, path-absolute, query
  *
@@ -177,10 +177,6 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
     Parser::Tokenizer tok(uri.path());
 
     Assure(tok.skip(MagicUrlPathPrefix()));
-
-    // path-absolute is required unless the URL ends at the magic prefix
-    if (!tok.skip('/') && !tok.atEnd())
-        throw TextException("unexpected post-magic character in URL", Here());
 
     Mgr::Command::Pointer cmd = new Mgr::Command();
     cmd->params.httpUri = SBufToString(uri.absolute());
