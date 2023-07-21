@@ -10,6 +10,7 @@
 #include "acl/AllOf.h"
 #include "acl/BoolOps.h"
 #include "acl/Checklist.h"
+#include "acl/Gadgets.h"
 #include "cache_cf.h"
 #include "MemBuf.h"
 #include "sbuf/SBuf.h"
@@ -61,6 +62,7 @@ Acl::AllOf::parse()
         wholeCtx.terminate();
 
         Acl::OrNode *newWhole = new Acl::OrNode;
+        aclRegister(newWhole);
         newWhole->context(wholeCtx.content(), oldNode->cfgline);
         newWhole->add(oldNode); // old (i.e. first) line
         nodes.front() = whole = newWhole;
