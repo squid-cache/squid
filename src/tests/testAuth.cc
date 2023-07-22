@@ -286,5 +286,12 @@ TestAuthNegotiateUserRequest::username()
 }
 
 #endif /* HAVE_AUTH_MODULE_NEGOTIATE */
+
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
+}
+
 #endif /* USE_AUTH */
 
