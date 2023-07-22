@@ -162,18 +162,31 @@ internalHostname(void)
     return host;
 }
 
-int
-internalHostnameIs(const char *arg)
+bool
+internalWithMyHostname(const AnyP::Uri &url, const AnyP::PortCfg &listener)
 {
-    wordlist *w;
+    // different ports is a fast NO
+    if (url.port() != listener.s.port())
+        return false;
 
-    if (0 == strcmp(arg, internalHostname()))
-        return 1;
+    // "localhost" in URL can match wildcard IP, or explicit localhost-IP listeners
+    const bool receivedAtLocalhost = (listener.s.isLocalhost() || listener.s.isAnyAddr());
+    if (receivedAtLocalhost && strcasecmp(url.host(), "localhost") == 0)
+        return true;
 
-    for (w = Config.hostnameAliases; w; w = w->next)
-        if (0 == strcmp(arg, w->key))
-            return 1;
+    // accel ports with defaultsite= can also match
+    if (listener.defaultsite && strcasecmp(url.host(), listener.defaultsite) == 0)
+        return true;
 
-    return 0;
+    // accept visible_hostname, unique_hostname, or machines hostname()
+    if (strcasecmp(url.host(), internalHostname()) == 0)
+        return true;
+
+    // accept hostname_aliases directive
+    for (const auto *w = Config.hostnameAliases; w; w = w->next) {
+        if (strcasecmp(url.host(), w->key) == 0)
+            return true;
+    }
+
+    return false; // no match
 }
-

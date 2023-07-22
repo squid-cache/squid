@@ -1636,10 +1636,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
 #endif
 
     if (internalCheck(request->url.path())) {
-        const bool receivedAtLocalhost = (conn->port->s.isLocalhost() || conn->port->s.isAnyAddr());
-        const bool isMyHostname = (receivedAtLocalhost && strcmp(request->url.host(), "localhost") == 0) ||
-                                  internalHostnameIs(request->url.host());
-        if (request->url.port() == conn->port->s.port() && isMyHostname) {
+        if (internalWithMyHostname(request->url, *(conn->port))) {
             debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true));
             request->flags.internal = true;
         } else if (Config.onoff.global_internal_static && internalStaticCheck(request->url.path())) {
