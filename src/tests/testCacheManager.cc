@@ -63,7 +63,7 @@ CacheManagerInternals::testValidUrl(const AnyP::Uri &url)
 }
 
 void
-CacheManagerInternals::testInvalidUrl(const AnyP::Uri &url, const char *problem)
+CacheManagerInternals::testInvalidUrl(const AnyP::Uri &url, const char *const problem)
 {
     try {
         (void)ParseUrl(url);
