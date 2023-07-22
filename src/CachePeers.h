@@ -37,9 +37,9 @@ public:
     const_iterator end() const { return storage.cend(); }
 
     /// A CachePeer to query next when scanning all peer caches in hope to fetch
-    /// a remote cache hit. Never nil. \sa neighborsUdpPing()
+    /// a remote cache hit. \sa neighborsUdpPing()
     /// \param iteration a 0-based index of a loop scanning all peers
-    CachePeer *nextPeerToPing(size_t iteration);
+    CachePeer &nextPeerToPing(size_t iteration);
 
 private:
     /// cache_peers in configuration/parsing order

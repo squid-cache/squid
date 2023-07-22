@@ -577,7 +577,7 @@ neighborsUdpPing(HttpRequest * request,
     reqnum = icpSetCacheKey((const cache_key *)entry->key);
 
     for (size_t i = 0; i < Config.peers->size(); ++i) {
-        const auto p = Config.peers->nextPeerToPing(i);
+        const auto p = &Config.peers->nextPeerToPing(i);
 
         debugs(15, 5, "candidate: " << *p);
 
@@ -766,7 +766,7 @@ neighborsDigestSelect(PeerSelector *ps)
     storeKeyPublicByRequest(request);
 
     for (size_t i = 0; i < Config.peers->size(); ++i) {
-        const auto p = Config.peers->nextPeerToPing(i);
+        const auto p = &Config.peers->nextPeerToPing(i);
 
         const auto lookup = peerDigestLookup(p, ps);
 

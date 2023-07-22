@@ -10,7 +10,7 @@
 #include "CachePeers.h"
 #include "SquidConfig.h"
 
-CachePeer *
+CachePeer &
 CachePeers::nextPeerToPing(const size_t pollIndex)
 {
     Assure(size());
@@ -24,7 +24,7 @@ CachePeers::nextPeerToPing(const size_t pollIndex)
     // subtract 1 to set the very first pos to zero
     const auto pos = (peerPolls_ - 1 + pollIndex) % size();
 
-    return storage[pos].get();
+    return *storage[pos];
 }
 
 void
