@@ -29,17 +29,22 @@ class TestDiskIO : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testFindDefault);
     CPPUNIT_TEST_SUITE_END();
 
-public:
-    void setUp() override;
-
 protected:
     void testFindDefault();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestDiskIO );
 
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override;
+};
+
 void
-TestDiskIO::setUp()
+MyTestProgram::startup()
 {
     Mem::Init();
     DiskIOModule::SetupAllModules();
@@ -56,5 +61,11 @@ TestDiskIO::testFindDefault()
     /* disabled. we don't expect ANY */
     CPPUNIT_ASSERT(module == NULL);
 #endif
+}
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 

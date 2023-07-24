@@ -2098,7 +2098,6 @@ PREDEFINED             = __cplusplus \
                          USE_POLL \
                          USE_QOS_TOS \
                          USE_SELECT \
-                         USE_SELECT_WIN32 \
                          USE_SOLARIS_KRB5 \
                          USE_SQUID_ESI \
                          USE_SQUID_EUI \

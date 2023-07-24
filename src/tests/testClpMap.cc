@@ -32,9 +32,6 @@ class TestClpMap: public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testRangeLoopTraversal );
     CPPUNIT_TEST_SUITE_END();
 
-public:
-    void setUp() override;
-
 protected:
     using Map = ClpMap<std::string, int>;
 
@@ -102,12 +99,6 @@ TestClpMap::addOneEntry(Map &m, const Map::mapped_type value, const Map::Ttl ttl
     CPPUNIT_ASSERT(m.add(key, value, ttl));
     CPPUNIT_ASSERT(m.get(key));
     CPPUNIT_ASSERT_EQUAL(value, *m.get(key));
-}
-
-void
-TestClpMap::setUp()
-{
-    squid_curtime = time(nullptr);
 }
 
 void
@@ -385,5 +376,19 @@ TestClpMap::testRangeLoopTraversal()
         CPPUNIT_ASSERT_EQUAL(expectedValue, entry.value);
     }
     CPPUNIT_ASSERT_EQUAL(expectedEntryCount, iterations);
+}
+
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override { squid_curtime = time(nullptr); }
+};
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 

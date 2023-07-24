@@ -776,7 +776,7 @@ setMaxFD(void)
         int xerrno = errno;
         debugs(50, DBG_CRITICAL, "getrlimit: RLIMIT_NOFILE: " << xstrerr(xerrno));
     } else if (Config.max_filedescriptors > 0) {
-#if USE_SELECT || USE_SELECT_WIN32
+#if USE_SELECT
         /* select() breaks if this gets set too big */
         if (Config.max_filedescriptors > FD_SETSIZE) {
             rl.rlim_cur = FD_SETSIZE;

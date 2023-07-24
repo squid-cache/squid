@@ -155,3 +155,9 @@ TestIcmp::testHops()
 #endif
 }
 
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
+}
+

@@ -22,9 +22,6 @@ class TestHttpReply : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testSanityCheckFirstLine);
     CPPUNIT_TEST_SUITE_END();
 
-public:
-    void setUp() override;
-
 protected:
     void testSanityCheckFirstLine();
 };
@@ -44,8 +41,16 @@ MemObject::endOffset() const
 
 /* end */
 
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override;
+};
+
 void
-TestHttpReply::setUp()
+MyTestProgram::startup()
 {
     Mem::Init();
     httpHeaderInitModule();
@@ -213,5 +218,11 @@ TestHttpReply::testSanityCheckFirstLine()
     CPPUNIT_ASSERT_EQUAL(error, Http::scInvalidHeader);
     input.reset();
     error = Http::scNone;
+}
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 

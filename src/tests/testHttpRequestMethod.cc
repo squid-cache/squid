@@ -194,3 +194,5 @@ TestHttpRequestMethod::testStream()
     CPPUNIT_ASSERT_EQUAL(String("get"), String(buffer2.str().c_str()));
 }
 
+// This test uses main() from ./testHttpRequest.cc.
+

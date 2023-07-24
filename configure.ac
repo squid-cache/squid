@@ -391,10 +391,10 @@ AS_IF([test "x$squid_opt_aufs_threads" != "x"],[
 
 ## TODO check if this is necessary, LT_INIT does these checks
 SQUID_AUTO_LIB(dl,[dynamic linking],[LIBDL])
-AS_IF([test "x$with_dl" != "xno"],[
-  CXXFLAGS="$LIBDL_CFLAGS $CXXFLAGS"
+SQUID_CHECK_LIB_WORKS(dl,[
   LDFLAGS="$LIBDL_PATH $LDFLAGS"
-  AC_CHECK_LIB(dl, dlopen)
+  AC_CHECK_LIB(dl, dlopen,[LIBDL_LIBS="-ldl"])
+  LIBS="$LIBDL_LIBS $LIBS"
 ])
 
 AC_DEFUN([LIBATOMIC_CHECKER],[
@@ -1073,7 +1073,7 @@ AC_MSG_NOTICE([HTCP support enabled: $enable_htcp])
 
 # Cryptograhic libraries
 SQUID_AUTO_LIB(nettle,[Nettle crypto],[LIBNETTLE])
-AS_IF(test "x$with_nettle" != "xno"],[
+SQUID_CHECK_LIB_WORKS(nettle,[
   SQUID_STATE_SAVE(squid_nettle_state)
   PKG_CHECK_MODULES([LIBNETTLE],[nettle >= 3.4],[],[
     CPPFLAGS="$LIBNETTLE_CFLAGS $CPPFLAGS"
@@ -1082,17 +1082,7 @@ AS_IF(test "x$with_nettle" != "xno"],[
   AC_CHECK_HEADERS(nettle/base64.h nettle/md5.h)
   SQUID_CHECK_NETTLE_BASE64
   SQUID_STATE_ROLLBACK(squid_nettle_state)
-  AS_IF([test "x$LIBNETTLE_LIBS" != "x"],[
-    CXXFLAGS="$LIBNETTLE_CFLAGS $CXXFLAGS"
-    LIBNETTLE_LIBS="$LIBNETTLE_PATH $LIBNETTLE_LIBS"
-  ],[test "x$with_nettle" = "xyes"],[
-    AC_MSG_ERROR([Required library nettle not found])
-  ],[
-    AC_MSG_NOTICE([Library nettle not found.])
-  ])
 ])
-AC_MSG_NOTICE([Using Nettle cryptographic library: ${with_nettle:=yes}])
-AC_SUBST(LIBNETTLE_LIBS)
 
 dnl Check for libcrypt
 CRYPTLIB=
@@ -1107,7 +1097,7 @@ SSLLIB=""
 
 SQUID_AUTO_LIB(gnutls,[GnuTLS crypto],[LIBGNUTLS])
 AH_TEMPLATE(USE_GNUTLS,[GnuTLS support is available])
-AS_IF([test "x$with_gnutls" != "xno"],[
+SQUID_CHECK_LIB_WORKS(gnutls,[
   SQUID_STATE_SAVE(squid_gnutls_state)
 
   # User may have provided a custom location for GnuTLS. Otherwise...
@@ -1128,18 +1118,11 @@ AS_IF([test "x$with_gnutls" != "xno"],[
 
   SQUID_STATE_ROLLBACK(squid_gnutls_state) #de-pollute LIBS
 
-  AS_IF([test "x$with_gnutls" = "xyes" -a "x$LIBGNUTLS_LIBS" = "x"],[
-    AC_MSG_ERROR([Required GnuTLS library not found])
-  ])
   AS_IF([test "x$LIBGNUTLS_LIBS" != "x"],[
-    CXXFLAGS="$LIBGNUTLS_CFLAGS $CXXFLAGS"
     SSLLIB="$LIBGNUTLS_PATH $LIBGNUTLS_LIBS $SSLLIB"
     AC_DEFINE(USE_GNUTLS,1,[GnuTLS support is available])
-  ],[
-    with_gnutls=no
   ])
 ])
-AC_MSG_NOTICE([GnuTLS library support: ${with_gnutls:=auto} ${LIBGNUTLS_PATH} ${LIBGNUTLS_LIBS}])
 
 dnl User may specify OpenSSL is needed from a non-standard location
 SQUID_OPTIONAL_LIB(openssl,[OpenSSL],[LIBOPENSSL])
@@ -1640,7 +1623,7 @@ AC_SUBST(KRB5INCS)
 AC_SUBST(KRB5LIBS)
 
 SQUID_AUTO_LIB(ldap,[LDAP],[LIBLDAP])
-AS_IF([test "x$with_ldap" != "xno"],[
+SQUID_CHECK_LIB_WORKS(ldap,[
   dnl On MinGW OpenLDAP is not available, so LDAP helpers can be linked
   dnl only with Windows LDAP libraries using -lwldap32
   AS_IF([test "$squid_host_os" = "mingw"],[
@@ -1667,21 +1650,11 @@ AS_IF([test "x$with_ldap" != "xno"],[
     AC_CHECK_HEADERS(mozldap/ldap.h)
     SQUID_CHECK_LDAP_API
   ])
-
-  AS_IF([test "x$LIBLDAP_LIBS" != "x"],[
-    CPPFLAGS="$LIBLDAP_CFLAGS $CPPFLAGS"
-    LIBLDAP_LIBS="$LIBLDAP_PATH $LIBLDAP_LIBS"
-  ],[test "x$with_ldap" = "xyes"],[
-    AC_MSG_ERROR([Required library ldap not found])
-  ],[
-    AC_MSG_NOTICE([Library ldap not found.])
-  ])
 ])
-AC_SUBST(LIBLDAP_LIBS)
 
 SQUID_AUTO_LIB(systemd,[systemd API for start-up notification],[LIBSYSTEMD])
 AH_TEMPLATE(USE_SYSTEMD,[systemd support is available])
-AS_IF([test "x$with_systemd" != "xno"],[
+SQUID_CHECK_LIB_WORKS(systemd,[
   SQUID_STATE_SAVE(squid_systemd_state)
   LIBS="$LIBS $LIBSYSTEMD_PATH"
   PKG_CHECK_MODULES(LIBSYSTEMD,[libsystemd],,[
@@ -1692,16 +1665,9 @@ AS_IF([test "x$with_systemd" != "xno"],[
   SQUID_STATE_ROLLBACK(squid_systemd_state)
 
   AS_IF([test "x$LIBSYSTEMD_LIBS" != "x"],[
-    CXXFLAGS="$LIBSYSTEMD_CFLAGS $CXXFLAGS"
-    LIBSYSTEMD_LIBS="$LIBSYSTEMD_PATH $LIBSYSTEMD_LIBS"
     AC_DEFINE(USE_SYSTEMD,1,[systemd support is available])
-  ],[test "x$with_systemd" = "xyes"],[
-    AC_MSG_ERROR([Required systemd library not found])
-  ],[
-    AC_MSG_NOTICE([Library for systemd support not found])
   ])
 ])
-AC_MSG_NOTICE([systemd library support: $with_systemd $LIBSYSTEMD_LIBS])
 
 AC_ARG_ENABLE(forw-via-db,
   AS_HELP_STRING([--enable-forw-via-db],[Enable Forw/Via database]), [
@@ -1730,10 +1696,7 @@ dnl override those handled earlier for io loop method manual override
 AC_ARG_ENABLE(select,
   AS_HELP_STRING([--disable-select],[Disable select(2) support.]),[
   SQUID_YESNO([$enableval],[--enable-select])
-  AS_IF([test "x$enableval" = "xyes"],[
-    squid_opt_io_loop_engine="select"
-    AS_IF([test "x$squid_host_os" = "xmingw"],[squid_opt_io_loop_engine="select_win32"])
-  ])
+  AS_IF([test "x$enableval" = "xyes"],[squid_opt_io_loop_engine="select"])
 ])
 AC_MSG_NOTICE([enabling select syscall for net I/O: ${enable_select:=auto}])
 
@@ -1892,26 +1855,14 @@ AC_MSG_NOTICE([Linux Netfilter support requested: ${enable_linux_netfilter:=auto
 
 dnl Look for libnetfilter_conntrack options (needed for QOS netfilter marking)
 SQUID_AUTO_LIB(netfilter-conntrack,[Netfilter conntrack],[LIBNETFILTER_CONNTRACK])
-AC_MSG_NOTICE([Linux Netfilter Conntrack support requested: ${with_netfilter_conntrack:=auto}])
-AS_IF([test "x$with_netfilter_conntrack" != "xno"],[
+SQUID_CHECK_LIB_WORKS(netfilter-conntrack,[
   LDFLAGS="$LIBNETFILTER_CONNTRACK_PATH $LDFLAGS"
   CPPFLAGS="$LIBNETFILTER_CONNTRACK_CFLAGS $CPPFLAGS"
-  AC_SEARCH_LIBS([nfct_query], [netfilter_conntrack],,[
-    AS_IF([test "x$with_netfilter_conntrack" = "xyes"],[
-      AC_MSG_ERROR([--with-netfilter-conntrack specified but libnetfilter-conntrack library not found])
-    ])
-    with_netfilter_conntrack=no
-  ])
+  AC_SEARCH_LIBS([nfct_query],[netfilter_conntrack],[LIBNETFILTER_CONNTRACK_LIBS="-lnetfilter_conntrack"])
   AC_CHECK_HEADERS([ \
     libnetfilter_conntrack/libnetfilter_conntrack.h \
     libnetfilter_conntrack/libnetfilter_conntrack_tcp.h
-  ],,[
-    AS_IF([test "x$with_netfilter_conntrack" = "xyes"],[
-      AC_MSG_ERROR([--with-netfilter-conntrack specified but libnetfilter-conntrack headers not found])
-    ])
-    with_netfilter_conntrack=no
-  ])
-  AS_IF([test "x$with_netfilter_conntrack" != "xno"],[with_netfilter_conntrack=yes])
+  ],,[LIBNETFILTER_CONNTRACK_LIBS=""])
 ])
 
 dnl Enable Large file support
@@ -2241,7 +2192,7 @@ SQUID_DEFINE_BOOL(X_ACCELERATOR_VARY,${enable_x_accelerator_vary:=no},
 AC_MSG_NOTICE([X-Accelerator-Vary support enabled: $enable_x_accelerator_vary])
 
 SQUID_AUTO_LIB(cppunit,[cppunit test framework],[LIBCPPUNIT])
-AS_IF([test "x$with_cppunit" != "xno"],[
+SQUID_CHECK_LIB_WORKS(cppunit,[
   LIBCPPUNIT_LIBS="$LIBCPPUNIT_PATH -lcppunit"
   PKG_CHECK_MODULES([LIBCPPUNIT],[cppunit],[
     squid_cv_cppunit_version="`pkg-config --modversion cppunit`"
@@ -2466,7 +2417,7 @@ dnl Check for special functions
 AC_FUNC_ALLOCA
 
 SQUID_AUTO_LIB(cap,[Linux capabilities],[LIBCAP])
-AS_IF([test "x$with_cap" != "xno"],[
+SQUID_CHECK_LIB_WORKS(cap,[
   SQUID_STATE_SAVE(squid_libcap_state)
   CXXFLAGS="$LIBCAP_CFLAGS $CXXFLAGS"
   LDFLAGS="$LIBCAP_PATH $LDFLAGS"
@@ -2480,18 +2431,9 @@ AS_IF([test "x$with_cap" != "xno"],[
   SQUID_STATE_ROLLBACK(squid_libcap_state)
 
   AS_IF([test "x$LIBCAP_LIBS" != "x"],[
-    with_cap=yes
-    CPPFLAGS="$LIBCAP_CFLAGS $CPPFLAGS"
-    LIBCAP_LIBS="$LIBCAP_PATH $LIBCAP_LIBS"
     AC_DEFINE(USE_LIBCAP,1,[Linux capabilities library support])
-  ],[test "x$with_cap" = "xyes"],[
-    AC_MSG_ERROR([Required library libcap not found])
-  ],[
-    AC_MSG_NOTICE([Library libcap not found])
-    with_cap=no
   ])
 ])
-AC_MSG_NOTICE([Linux capabilities support enabled: ${with_cap} ${LIBCAP_LIBS}])
 
 dnl Check for needed libraries
 AC_SEARCH_LIBS([gethostbyname],[nsl resolv bind])
@@ -2734,8 +2676,6 @@ AS_IF([test "x$squid_opt_io_loop_engine" != "x"],
   squid_opt_io_loop_engine="poll",
   [test "x$enable_select" != "xno" -a "x$ac_cv_func_select" = "xyes"],
   squid_opt_io_loop_engine="select",
-  [test "x$enable_select" != "xno" -a "x$squid_host_os" = "xmingw"],
-  squid_opt_io_loop_engine="select_win32",
   [
     AC_MSG_WARN([Eep!  Cannot find epoll, kqueue, /dev/poll, poll or select!])
     AC_MSG_WARN([Will try select and hope for the best.])
@@ -2748,7 +2688,6 @@ AC_MSG_NOTICE([Using ${squid_opt_io_loop_engine} for the IO loop.])
 AM_CONDITIONAL(ENABLE_POLL, test "x$squid_opt_io_loop_engine" = "xpoll")
 AM_CONDITIONAL(ENABLE_EPOLL, test "x$squid_opt_io_loop_engine" = "xepoll")
 AM_CONDITIONAL(ENABLE_SELECT, test "x$squid_opt_io_loop_engine" = "xselect")
-AM_CONDITIONAL(ENABLE_SELECT_WIN32, test "x$squid_opt_io_loop_engine" = "xselect_win32")
 AM_CONDITIONAL(ENABLE_KQUEUE, test "x$squid_opt_io_loop_engine" = "xkqueue")
 AM_CONDITIONAL(ENABLE_DEVPOLL, test "x$squid_opt_io_loop_engine" = "xdevpoll")
 
@@ -2757,7 +2696,6 @@ AS_CASE([$squid_opt_io_loop_engine],
   [devpoll],[AC_DEFINE(USE_DEVPOLL,1,[Use /dev/poll for the IO loop])],
   [poll],[AC_DEFINE(USE_POLL,1,[Use poll() for the IO loop])],
   [kqueue],[AC_DEFINE(USE_KQUEUE,1,[Use kqueue() for the IO loop])],
-  [select_win32],[AC_DEFINE(USE_SELECT_WIN32,1,[Use Winsock select() for the IO loop])],
   [select],[AC_DEFINE(USE_SELECT,1,[Use select() for the IO loop])],
 )
 

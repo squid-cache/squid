@@ -27,9 +27,6 @@ class TestCacheManager : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testParseUrl);
     CPPUNIT_TEST_SUITE_END();
 
-public:
-    void setUp() override;
-
 protected:
     void testCreate();
     void testRegister();
@@ -75,9 +72,16 @@ CacheManagerInternals::testInvalidUrl(const AnyP::Uri &url, const char *const pr
     CPPUNIT_FAIL("failed to reject an invalid URL");
 }
 
-/* init memory pools */
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override;
+};
 
-void TestCacheManager::setUp()
+void
+MyTestProgram::startup()
 {
     Mem::Init();
     AnyP::UriScheme::Init();
@@ -262,5 +266,11 @@ TestCacheManager::testParseUrl()
         }
 
     }
+}
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 

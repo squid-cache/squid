@@ -143,3 +143,9 @@ TestCharacterSet::CharacterSetSubtract()
     CPPUNIT_ASSERT_EQUAL(CharacterSet::HEXDIG, sample - CharacterSet(nullptr, "qz"));
 }
 
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
+}
+
