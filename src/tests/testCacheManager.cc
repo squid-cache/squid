@@ -264,7 +264,6 @@ TestCacheManager::testParseUrl()
                 }
             }
         }
-
     }
 }
 
