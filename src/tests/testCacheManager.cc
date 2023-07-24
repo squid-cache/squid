@@ -212,8 +212,7 @@ TestCacheManager::testParseUrl()
         // Check that the parser rejects URLs that lack the full magic prefix.
         // These negative tests log "Squid BUG: assurance failed" ERRORs because
         // they violate CacheManager::ParseUrl()'s ForSomeCacheManager()
-        // precondition. TODO: Consider integrating that precondition into
-        // CacheManager::ParseUrl() and using that method for routing decisions.
+        // precondition.
         for (const auto *action : validActions) {
             for (const auto *param : validParams) {
                 for (const auto *frag : validFragments) {
