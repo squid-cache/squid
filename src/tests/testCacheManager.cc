@@ -205,15 +205,15 @@ TestCacheManager::testParseUrl()
         "#fragment"
     };
 
-    const auto &magic = CacheManager::MagicUrlPathPrefix();
+    const auto &prefix = CacheManager::WellKnownUrlPathPrefix();
 
-    assert(magic.length());
-    const auto insufficientMagic = magic.substr(0, magic.length()-1);
+    assert(prefix.length());
+    const auto insufficientPrefix = prefix.substr(0, prefix.length()-1);
 
     for (const auto &scheme : validSchemes) {
         mgrUrl.setScheme(scheme);
 
-        // Check that the parser rejects URLs that lack the full magic prefix.
+        // Check that the parser rejects URLs that lack the full prefix prefix.
         // These negative tests log "Squid BUG: assurance failed" ERRORs because
         // they violate CacheManager::ParseUrl()'s ForSomeCacheManager()
         // precondition.
@@ -221,12 +221,12 @@ TestCacheManager::testParseUrl()
             for (const auto *param : validParams) {
                 for (const auto *frag : validFragments) {
                     SBuf bits;
-                    bits.append(insufficientMagic);
+                    bits.append(insufficientPrefix);
                     bits.append(action);
                     bits.append(param);
                     bits.append(frag);
                     mgrUrl.path(bits);
-                    mgr->testInvalidUrl(mgrUrl, "insufficient magic");
+                    mgr->testInvalidUrl(mgrUrl, "insufficient prefix");
                 }
             }
         }
@@ -238,7 +238,7 @@ TestCacheManager::testParseUrl()
                 for (const auto *param : validParams) {
                     for (const auto *frag : validFragments) {
                         SBuf bits;
-                        bits.append(magic);
+                        bits.append(prefix);
                         bits.append(action);
                         bits.append(param);
                         bits.append(frag);
@@ -254,7 +254,7 @@ TestCacheManager::testParseUrl()
                 for (const auto *param : invalidParams) {
                     for (const auto *frag : validFragments) {
                         SBuf bits;
-                        bits.append(magic);
+                        bits.append(prefix);
                         bits.append(action);
                         bits.append(param);
                         bits.append(frag);

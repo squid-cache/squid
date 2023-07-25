@@ -153,10 +153,10 @@ CacheManager::createRequestedAction(const Mgr::ActionParams &params)
 }
 
 const SBuf &
-CacheManager::MagicUrlPathPrefix()
+CacheManager::WellKnownUrlPathPrefix()
 {
-    static const SBuf magic("/squid-internal-mgr/");
-    return magic;
+    static const SBuf prefix("/squid-internal-mgr/");
+    return prefix;
 }
 
 /**
@@ -176,7 +176,7 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
 {
     Parser::Tokenizer tok(uri.path());
 
-    Assure(tok.skip(MagicUrlPathPrefix()));
+    Assure(tok.skip(WellKnownUrlPathPrefix()));
 
     Mgr::Command::Pointer cmd = new Mgr::Command();
     cmd->params.httpUri = SBufToString(uri.absolute());

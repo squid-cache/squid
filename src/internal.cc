@@ -86,7 +86,7 @@ internalStaticCheck(const SBuf &urlPath)
 bool
 ForSomeCacheManager(const SBuf &urlPath)
 {
-    return urlPath.startsWith(CacheManager::MagicUrlPathPrefix());
+    return urlPath.startsWith(CacheManager::WellKnownUrlPathPrefix());
 }
 
 /*
