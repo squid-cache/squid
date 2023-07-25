@@ -1538,15 +1538,8 @@ dump_address(StoreEntry * entry, const char *name, Ip::Address &addr)
 }
 
 static void
-parse_address(Ip::Address *addr)
+parseAddressToken(Ip::Address *addr, const char *token)
 {
-    char *token = ConfigParser::NextToken();
-
-    if (!token) {
-        self_destruct();
-        return;
-    }
-
     if (!strcmp(token,"any_addr"))
         addr->setAnyAddr();
     else if ( (!strcmp(token,"no_addr")) || (!strcmp(token,"full_mask")) )
@@ -1562,6 +1555,19 @@ parse_address(Ip::Address *addr)
 }
 
 static void
+parse_address(Ip::Address *addr)
+{
+    char *token = ConfigParser::NextToken();
+
+    if (!token) {
+        self_destruct();
+        return;
+    }
+
+    parseAddressToken(addr, token);
+}
+
+static void
 free_address(Ip::Address *addr)
 {
     addr->setEmpty();
@@ -1573,11 +1579,16 @@ dump_acl_address(StoreEntry * entry, const char *name, Acl::Address * head)
     char buf[MAX_IPSTRLEN];
 
     for (Acl::Address *l = head; l; l = l->next) {
-        Ip::Address addr = std::get<Ip::Address>(l->addr);
-        if (!addr.isAnyAddr())
-            storeAppendPrintf(entry, "%s %s", name, addr.toStr(buf,MAX_IPSTRLEN));
-        else
-            storeAppendPrintf(entry, "%s autoselect", name);
+        if (l->addr.index() > 0) {
+            if (std::holds_alternative<Acl::Address::UseClientAddress>(l->addr))
+                storeAppendPrintf(entry, "%s transparent", name);
+        } else {
+            Ip::Address addr = std::get<Ip::Address>(l->addr);
+            if (!addr.isAnyAddr())
+                storeAppendPrintf(entry, "%s %s", name, addr.toStr(buf,MAX_IPSTRLEN));
+            else
+                storeAppendPrintf(entry, "%s autoselect", name);
+        }
 
         dump_acl_list(entry, l->aclList);
 
@@ -1590,12 +1601,13 @@ parse_acl_address(Acl::Address ** head)
 {
     Acl::Address *l = new Acl::Address;
 
-    char *token = ConfigParser::PeekAtToken();
+    char *token = ConfigParser::NextToken();
     if (token && !strcmp(token, "transparent")) {
         l->addr = Acl::Address::UseClientAddress{};
+        aclParseAclList(LegacyParser, &l->aclList, "transparent");
     } else {
         Ip::Address addr = std::get<Ip::Address>(l->addr);
-        parse_address(&addr);
+        parseAddressToken(&addr, token);
         aclParseAclList(LegacyParser, &l->aclList, addr);
     }
 
