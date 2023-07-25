@@ -231,36 +231,32 @@ TestCacheManager::testParseUrl()
             }
         }
 
-        {
-            /* Check the parser accepts all the valid cases */
-
-            for (const auto *action : validActions) {
-                for (const auto *param : validParams) {
-                    for (const auto *frag : validFragments) {
-                        SBuf bits;
-                        bits.append(prefix);
-                        bits.append(action);
-                        bits.append(param);
-                        bits.append(frag);
-                        mgrUrl.path(bits);
-                        mgr->testValidUrl(mgrUrl);
-                    }
+        // Check that the parser accepts valid URLs.
+        for (const auto action: validActions) {
+            for (const auto param: validParams) {
+                for (const auto frag: validFragments) {
+                    SBuf bits;
+                    bits.append(prefix);
+                    bits.append(action);
+                    bits.append(param);
+                    bits.append(frag);
+                    mgrUrl.path(bits);
+                    mgr->testValidUrl(mgrUrl);
                 }
             }
+        }
 
-            /* Check that invalid parameters are rejected */
-
-            for (const auto *action : validActions) {
-                for (const auto *param : invalidParams) {
-                    for (const auto *frag : validFragments) {
-                        SBuf bits;
-                        bits.append(prefix);
-                        bits.append(action);
-                        bits.append(param);
-                        bits.append(frag);
-                        mgrUrl.path(bits);
-                        mgr->testInvalidUrl(mgrUrl, param);
-                    }
+        // Check that the parser rejects URLs with invalid parameters.
+        for (const auto action: validActions) {
+            for (const auto invalidParam: invalidParams) {
+                for (const auto frag: validFragments) {
+                    SBuf bits;
+                    bits.append(prefix);
+                    bits.append(action);
+                    bits.append(invalidParam);
+                    bits.append(frag);
+                    mgrUrl.path(bits);
+                    mgr->testInvalidUrl(mgrUrl, invalidParam);
                 }
             }
         }
