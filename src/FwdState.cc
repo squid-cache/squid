@@ -1512,14 +1512,15 @@ getOutgoingAddress(HttpRequest * request, const Comm::ConnectionPointer &conn)
     // needs a bit of rework in ACLFilledChecklist to use Comm::Connection instead of ConnStateData
 
     for (Acl::Address *l = Config.accessList.outgoing_address; l; l = l->next) {
-        Ip::Address localAddr = l->addr;
+        Ip::Address localAddr;
 
-        /* the transparent label sets the outgoing local addr to the same addr as the client's connection to the proxy */
-        if (l->label == "transparent") {
+        if (std::holds_alternative<Acl::Address::UseClientAddress>(l->addr)) {
             if(request->clientConnectionManager.valid() && request->clientConnectionManager->clientConnection != nullptr) {
                 localAddr = request->clientConnectionManager->clientConnection->local;
                 localAddr.port(0);
             }
+        } else {
+            localAddr = std::get<Ip::Address>(l->addr);
         }
 
         /* check if the outgoing address is usable to the destination */

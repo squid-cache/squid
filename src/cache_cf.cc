@@ -1551,8 +1551,6 @@ parse_address(Ip::Address *addr)
         addr->setAnyAddr();
     else if ( (!strcmp(token,"no_addr")) || (!strcmp(token,"full_mask")) )
         addr->setNoAddr();
-    else if (!strcmp(token,"transparent"))
-        (void) 0;
     else if ( (*addr = token) ) // try parse numeric/IPA
         (void) 0;
     else if (addr->GetHostByName(token)) // do not use ipcache
@@ -1575,8 +1573,9 @@ dump_acl_address(StoreEntry * entry, const char *name, Acl::Address * head)
     char buf[MAX_IPSTRLEN];
 
     for (Acl::Address *l = head; l; l = l->next) {
-        if (!l->addr.isAnyAddr())
-            storeAppendPrintf(entry, "%s %s", name, l->addr.toStr(buf,MAX_IPSTRLEN));
+        Ip::Address addr = std::get<Ip::Address>(l->addr);
+        if (!addr.isAnyAddr())
+            storeAppendPrintf(entry, "%s %s", name, addr.toStr(buf,MAX_IPSTRLEN));
         else
             storeAppendPrintf(entry, "%s autoselect", name);
 
@@ -1593,11 +1592,12 @@ parse_acl_address(Acl::Address ** head)
 
     char *token = ConfigParser::PeekAtToken();
     if (token && !strcmp(token, "transparent")) {
-        l->label = "transparent";
+        l->addr = Acl::Address::UseClientAddress{};
+    } else {
+        Ip::Address addr = std::get<Ip::Address>(l->addr);
+        parse_address(&addr);
+        aclParseAclList(LegacyParser, &l->aclList, addr);
     }
-
-    parse_address(&l->addr);
-    aclParseAclList(LegacyParser, &l->aclList, l->addr);
 
     Acl::Address **tail = head;
     while (*tail)

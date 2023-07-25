@@ -13,6 +13,8 @@
 #include "ip/Address.h"
 #include "SquidString.h"
 
+#include <variant>
+
 namespace Acl
 {
 
@@ -28,8 +30,9 @@ public:
     Acl::Address *next;
     ACLList *aclList;
 
-    Ip::Address addr;
-    String label;
+    struct UseClientAddress {};
+    using AddressSource = std::variant<Ip::Address, UseClientAddress>;
+    AddressSource addr; ///< Ip::Address provider
 };
 
 } // namespace Acl
