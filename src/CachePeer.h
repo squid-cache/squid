@@ -52,16 +52,14 @@ public:
 
     /// cache_peer name (if explicitly configured) or hostname (otherwise).
     /// Unique across already configured cache_peers in the current configuration.
-    /// Not necessarily unique across discovered non-peers (see mgr:non_peers).
     /// The value may change during CachePeer configuration.
     /// The value affects various peer selection hashes (e.g., carp.hash).
     /// Preserves configured spelling (i.e. does not lower letters case).
     /// Never nil.
     char *name = nullptr;
 
-    /// The lowercase version of the configured cache_peer hostname or
-    /// the IP address of a non-peer (see mgr:non_peers).
-    /// May not be unique among cache_peers and non-peers.
+    /// The lowercase version of the configured cache_peer hostname.
+    /// May not be unique among cache_peers.
     /// Never nil.
     char *host = nullptr;
 

@@ -251,6 +251,8 @@ helperOpenServers(helper * hlp)
 
     assert(nargs <= HELPER_MAX_ARGS);
 
+    int successfullyStarted = 0;
+
     for (k = 0; k < need_new; ++k) {
         getCurrentTime();
         rfd = wfd = -1;
@@ -268,6 +270,7 @@ helperOpenServers(helper * hlp)
             continue;
         }
 
+        ++successfullyStarted;
         ++ hlp->childs.n_running;
         ++ hlp->childs.n_active;
         srv = new helper_server;
@@ -316,6 +319,13 @@ helperOpenServers(helper * hlp)
                                              CommIoCbPtrFun(helperHandleRead, srv));
         comm_read(srv->readPipe, srv->rbuf, srv->rbuf_sz - 1, call);
     }
+
+    // Call handleFewerServers() before hlp->last_restart is updated because
+    // that method uses last_restart to measure the delay since previous start.
+    // TODO: Refactor last_restart code to measure failure frequency rather than
+    // detecting a helper #X failure that is being close to the helper #Y start.
+    if (successfullyStarted < need_new)
+        hlp->handleFewerServers(false);
 
     hlp->last_restart = squid_curtime;
     safe_free(shortname);
@@ -376,6 +386,8 @@ helperStatefulOpenServers(statefulhelper * hlp)
 
     assert(nargs <= HELPER_MAX_ARGS);
 
+    int successfullyStarted = 0;
+
     for (int k = 0; k < need_new; ++k) {
         getCurrentTime();
         int rfd = -1;
@@ -395,6 +407,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
             continue;
         }
 
+        ++successfullyStarted;
         ++ hlp->childs.n_running;
         ++ hlp->childs.n_active;
         helper_stateful_server *srv = new helper_stateful_server;
@@ -435,6 +448,13 @@ helperStatefulOpenServers(statefulhelper * hlp)
                                              CommIoCbPtrFun(helperStatefulHandleRead, srv));
         comm_read(srv->readPipe, srv->rbuf, srv->rbuf_sz - 1, call);
     }
+
+    // Call handleFewerServers() before hlp->last_restart is updated because
+    // that method uses last_restart to measure the delay since previous start.
+    // TODO: Refactor last_restart code to measure failure frequency rather than
+    // detecting a helper #X failure that is being close to the helper #Y start.
+    if (successfullyStarted < need_new)
+        hlp->handleFewerServers(false);
 
     hlp->last_restart = squid_curtime;
     safe_free(shortname);
@@ -838,18 +858,32 @@ helper::handleKilledServer(HelperServerBase *srv, bool &needsNewServers)
         --childs.n_active;
         debugs(84, DBG_CRITICAL, "WARNING: " << id_name << " #" << srv->index << " exited");
 
-        if (childs.needNew() > 0) {
-            debugs(80, DBG_IMPORTANT, "Too few " << id_name << " processes are running (need " << childs.needNew() << "/" << childs.n_max << ")");
+        handleFewerServers(srv->stats.replies >= 1);
 
-            if (childs.n_active < childs.n_startup && last_restart > squid_curtime - 30) {
-                if (srv->stats.replies < 1)
-                    fatalf("The %s helpers are crashing too rapidly, need help!\n", id_name);
-                else
-                    debugs(80, DBG_CRITICAL, "ERROR: The " << id_name << " helpers are crashing too rapidly, need help!");
-            }
+        if (childs.needNew() > 0) {
             srv->flags.shutdown = true;
             needsNewServers = true;
         }
+    }
+}
+
+void
+helper::handleFewerServers(const bool madeProgress)
+{
+    const auto needNew = childs.needNew();
+
+    if (!needNew)
+        return; // some server(s) have died, but we still have enough
+
+    debugs(80, DBG_IMPORTANT, "Too few " << id_name << " processes are running (need " << needNew << "/" << childs.n_max << ")" <<
+           Debug::Extra << "active processes: " << childs.n_active <<
+           Debug::Extra << "processes configured to start at (re)configuration: " << childs.n_startup);
+
+    if (childs.n_active < childs.n_startup && last_restart > squid_curtime - 30) {
+        if (madeProgress)
+            debugs(80, DBG_CRITICAL, "ERROR: The " << id_name << " helpers are crashing too rapidly, need help!");
+        else
+            fatalf("The %s helpers are crashing too rapidly, need help!", id_name);
     }
 }
 

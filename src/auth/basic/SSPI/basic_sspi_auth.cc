@@ -42,12 +42,6 @@
 #include <getopt.h>
 #endif
 
-/* Check if we try to compile on a Windows Platform */
-#if !_SQUID_WINDOWS_
-/* NON Windows Platform !!! */
-#error NON WINDOWS PLATFORM
-#endif
-
 static char NTGroup[256];
 char * NTAllowedGroup;
 char * NTDisAllowedGroup;
@@ -73,7 +67,7 @@ usage(const char *name)
             name);
 }
 
-void
+static void
 process_options(int argc, char *argv[])
 {
     int opt;
@@ -132,8 +126,8 @@ main(int argc, char **argv)
     atexit(UnloadSecurityDll);
 
     /* initialize FDescs */
-    setbuf(stdout, NULL);
-    setbuf(stderr, NULL);
+    setbuf(stdout, nullptr);
+    setbuf(stderr, nullptr);
 
     while (fgets(wstr, HELPER_INPUT_BUFFER, stdin) != NULL) {
 

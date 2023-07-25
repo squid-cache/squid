@@ -9,12 +9,22 @@
 #include "squid.h"
 #include <cppunit/TestAssert.h>
 
+#include "compat/cppunit.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "mime_header.h"
 #include "SquidConfig.h"
-#include "testHttpReply.h"
 #include "unitTestMain.h"
+
+class TestHttpReply : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestHttpReply);
+    CPPUNIT_TEST(testSanityCheckFirstLine);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void testSanityCheckFirstLine();
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestHttpReply );
 
@@ -31,8 +41,16 @@ MemObject::endOffset() const
 
 /* end */
 
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override;
+};
+
 void
-TestHttpReply::setUp()
+MyTestProgram::startup()
 {
     Mem::Init();
     httpHeaderInitModule();
@@ -200,5 +218,11 @@ TestHttpReply::testSanityCheckFirstLine()
     CPPUNIT_ASSERT_EQUAL(error, Http::scInvalidHeader);
     input.reset();
     error = Http::scNone;
+}
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 

@@ -9,21 +9,24 @@
 #include "squid.h"
 #include "base/PackableStream.h"
 #include "CapturingStoreEntry.h"
+#include "compat/cppunit.h"
 #include "Store.h"
-#include "testPackableStream.h"
 #include "testStore.h"
 
 #include <iomanip>
 #include <cppunit/TestAssert.h>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TestPackableStream );
-
-/* init memory pools */
-
-void TestPackableStream::setUp()
+class TestPackableStream : public CPPUNIT_NS::TestFixture
 {
-    Mem::Init();
-}
+    CPPUNIT_TEST_SUITE(TestPackableStream);
+    CPPUNIT_TEST(testGetStream);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void testGetStream();
+};
+
+CPPUNIT_TEST_SUITE_REGISTRATION( TestPackableStream );
 
 // TODO: test streaming to a MemBuf as well.
 
@@ -58,4 +61,6 @@ TestPackableStream::testGetStream()
     delete anEntry; // does the unlock()
     Store::FreeMemory();
 }
+
+// This test uses main() from ./testStore.cc.
 

@@ -35,18 +35,10 @@
 */
 
 #include "squid.h"
+#include "auth/basic/SSPI/valid.h"
 #include "util.h"
 
-/* Check if we try to compile on a Windows Platform */
-#if !_SQUID_WINDOWS_
-/* NON Windows Platform !!! */
-#error NON WINDOWS PLATFORM
-#endif
-
-#if _SQUID_CYGWIN_
-#include <wchar.h>
-#endif
-#include "auth/basic/SSPI/valid.h"
+#include <cwchar>
 
 char Default_NTDomain[DNLEN+1] = NTV_DEFAULT_DOMAIN;
 const char * errormsg;
@@ -57,14 +49,14 @@ const char NTV_LOGON_ERROR_MSG[] = "No such user or wrong password";
 const char NTV_VALID_DOMAIN_SEPARATOR[] = "\\/";
 
 /* returns 1 on success, 0 on failure */
-int
+static int
 Valid_Group(char *UserName, char *Group)
 {
     int result = FALSE;
     WCHAR wszUserName[256]; // Unicode user name
     WCHAR wszGroup[256];    // Unicode Group
 
-    LPLOCALGROUP_USERS_INFO_0 pBuf = NULL;
+    LPLOCALGROUP_USERS_INFO_0 pBuf = nullptr;
     LPLOCALGROUP_USERS_INFO_0 pTmpBuf;
     DWORD dwLevel = 0;
     DWORD dwFlags = LG_INCLUDE_INDIRECT;
@@ -91,7 +83,7 @@ Valid_Group(char *UserName, char *Group)
      * function should also return the names of the local
      * groups in which the user is indirectly a member.
      */
-    nStatus = NetUserGetLocalGroups(NULL,
+    nStatus = NetUserGetLocalGroups(nullptr,
                                     wszUserName,
                                     dwLevel,
                                     dwFlags,
@@ -125,17 +117,17 @@ Valid_Group(char *UserName, char *Group)
 }
 
 int
-Valid_User(char *UserName, char *Password, char *Group)
+Valid_User(char *UserName, char *Password, char *)
 {
     int result = NTV_SERVER_ERROR;
     size_t i;
     char NTDomain[256];
-    char *domain_qualify = NULL;
+    char *domain_qualify = nullptr;
     char DomainUser[256];
     char User[256];
 
     errormsg = NTV_SERVER_ERROR_MSG;
-    strncpy(NTDomain, UserName, sizeof(NTDomain));
+    xstrncpy(NTDomain, UserName, sizeof(NTDomain));
 
     for (i=0; i < strlen(NTV_VALID_DOMAIN_SEPARATOR); ++i) {
         if ((domain_qualify = strchr(NTDomain, NTV_VALID_DOMAIN_SEPARATOR[i])) != NULL)

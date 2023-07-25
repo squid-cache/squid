@@ -13,12 +13,29 @@
 #include "acl/Acl.h"
 #include "auth/AclMaxUserIp.h"
 #include "auth/UserRequest.h"
+#include "compat/cppunit.h"
 #include "ConfigParser.h"
-#include "tests/testACLMaxUserIP.h"
 #include "unitTestMain.h"
 
 #include <stdexcept>
 
+/*
+ * demonstration test file, as new idioms are made they will
+ * be shown in the TestBoilerplate source.
+ */
+
+class TestACLMaxUserIP : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestACLMaxUserIP);
+    /* note the statement here and then the actual prototype below */
+    CPPUNIT_TEST(testDefaults);
+    CPPUNIT_TEST(testParseLine);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void testDefaults();
+    void testParseLine();
+};
 CPPUNIT_TEST_SUITE_REGISTRATION( TestACLMaxUserIP );
 
 /* globals required to resolve link issues */
@@ -36,10 +53,17 @@ TestACLMaxUserIP::testDefaults()
     CPPUNIT_ASSERT_EQUAL(false,anACL.valid());
 }
 
-void
-TestACLMaxUserIP::setUp()
+/// customizes our test setup
+class MyTestProgram: public TestProgram
 {
-    CPPUNIT_NS::TestFixture::setUp();
+public:
+    /* TestProgram API */
+    void startup() override;
+};
+
+void
+MyTestProgram::startup()
+{
     Acl::RegisterMaker("max_user_ip", [](Acl::TypeName name)->ACL* { return new ACLMaxUserIP(name); });
 }
 
@@ -64,6 +88,12 @@ TestACLMaxUserIP::testParseLine()
     }
     delete anACL;
     xfree(line);
+}
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 
 #endif /* USE_AUTH */

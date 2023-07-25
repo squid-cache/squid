@@ -314,7 +314,7 @@ public:
     void closeForReadingAndFreeIdle(const sfileno fileno);
 
     /// openForReading() but creates a new entry if there is no old one
-    const Anchor *openOrCreateForReading(const cache_key *, sfileno &, const StoreEntry &);
+    const Anchor *openOrCreateForReading(const cache_key *, sfileno &);
 
     /// writeable slice within an entry chain created by openForWriting()
     Slice &writeableSlice(const AnchorId anchorId, const SliceId sliceId);

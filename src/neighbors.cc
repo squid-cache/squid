@@ -70,7 +70,6 @@ static IRCB peerCountHandleIcpReply;
 
 static void neighborIgnoreNonPeer(const Ip::Address &, icp_opcode);
 static OBJH neighborDumpPeers;
-static OBJH neighborDumpNonPeers;
 static void dump_peers(StoreEntry * sentry, CachePeer * peers);
 
 static unsigned short echo_port;
@@ -545,12 +544,6 @@ neighborsRegisterWithCacheManager()
     Mgr::RegisterAction("server_list",
                         "Peer Cache Statistics",
                         neighborDumpPeers, 0, 1);
-
-    if (Comm::IsConnOpen(icpIncomingConn)) {
-        Mgr::RegisterAction("non_peers",
-                            "List of Unknown sites sending ICP messages",
-                            neighborDumpNonPeers, 0, 1);
-    }
 }
 
 void
@@ -942,38 +935,15 @@ neighborCountIgnored(CachePeer * p)
     ++NLateReplies;
 }
 
-static CachePeer *non_peers = nullptr;
-
 static void
 neighborIgnoreNonPeer(const Ip::Address &from, icp_opcode opcode)
 {
-    CachePeer *np;
-
-    for (np = non_peers; np; np = np->next) {
-        if (np->in_addr != from)
-            continue;
-
-        if (np->in_addr.port() != from.port())
-            continue;
-
-        break;
+    static uint64_t ignoredReplies = 0;
+    if (isPowTen(++ignoredReplies)) {
+        debugs(15, DBG_IMPORTANT, "WARNING: Ignored " << ignoredReplies << " ICP replies from non-peers" <<
+               Debug::Extra << "last seen non-peer source address: " << from <<
+               Debug::Extra << "last seen ICP reply opcode: " << icp_opcode_str[opcode]);
     }
-
-    if (np == nullptr) {
-        char fromStr[MAX_IPSTRLEN];
-        from.toStr(fromStr, sizeof(fromStr));
-        np = new CachePeer(fromStr);
-        np->in_addr = from;
-        np->icp.port = from.port();
-        np->type = PEER_NONE;
-        np->next = non_peers;
-        non_peers = np;
-    }
-
-    ++ np->icp.counts[opcode];
-
-    if (isPowTen(++np->stats.ignored_replies))
-        debugs(15, DBG_IMPORTANT, "WARNING: Ignored " << np->stats.ignored_replies << " replies from non-peer " << *np);
 }
 
 /* ignoreMulticastReply
@@ -1449,12 +1419,6 @@ static void
 neighborDumpPeers(StoreEntry * sentry)
 {
     dump_peers(sentry, Config.peers);
-}
-
-static void
-neighborDumpNonPeers(StoreEntry * sentry)
-{
-    dump_peers(sentry, non_peers);
 }
 
 void

@@ -17,17 +17,14 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h
 
 SUBDIRS = mem time debug base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
-DIST_SUBDIRS = mem time debug base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
 
 if ENABLE_AUTH
 SUBDIRS += auth
 AUTH_LIBS= auth/libauth.la
 AUTH_ACL_LIBS= auth/libacls.la
 endif
-DIST_SUBDIRS += auth
 
 SUBDIRS	+= http ip icmp ident log ipc mgr
-DIST_SUBDIRS += http ip icmp ident log ipc mgr
 
 SSL_LIBS=
 if ENABLE_SSL
@@ -36,7 +33,6 @@ SSL_LIBS += \
 	ssl/libsslsquid.la \
 	ssl/libsslutil.la
 endif
-DIST_SUBDIRS += ssl security
 SUBDIRS += security
 
 SNMP_ALL_SOURCE = \
@@ -52,12 +48,10 @@ SNMP_LIBS = snmp/libsnmp.la $(SNMPLIB)
 else
 SNMP_SOURCE =
 endif
-DIST_SUBDIRS += snmp
 
 if ENABLE_ADAPTATION
 SUBDIRS += adaptation
 endif
-DIST_SUBDIRS += adaptation
 
 if ENABLE_ESI
 SUBDIRS += esi
@@ -69,7 +63,6 @@ ESI_LIBS = \
 else
 ESI_LIBS =
 endif
-DIST_SUBDIRS += esi
 
 DELAY_POOL_ALL_SOURCE = \
 	BandwidthBucket.cc \
@@ -533,6 +526,7 @@ squid_LDADD = \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
 
 if ENABLE_LOADABLE_MODULES
@@ -792,8 +786,7 @@ tests_testRandomUuid_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testMem
 tests_testMem_SOURCES = \
-	tests/testMem.cc \
-	tests/testMem.h
+	tests/testMem.cc
 nodist_tests_testMem_SOURCES = \
 	tests/stub_libtime.cc
 tests_testMem_LDADD = \
@@ -808,8 +801,7 @@ tests_testMem_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testCharacterSet
 tests_testCharacterSet_SOURCES = \
-	tests/testCharacterSet.cc \
-	tests/testCharacterSet.h
+	tests/testCharacterSet.cc
 nodist_tests_testCharacterSet_SOURCES = \
 	base/CharacterSet.h
 tests_testCharacterSet_LDADD = \
@@ -835,8 +827,7 @@ tests_testClpMap_LDADD = \
 
 check_PROGRAMS += tests/testEnumIterator
 tests_testEnumIterator_SOURCES = \
-	tests/testEnumIterator.cc \
-	tests/testEnumIterator.h
+	tests/testEnumIterator.cc
 nodist_tests_testEnumIterator_SOURCES = \
 	base/EnumIterator.h
 tests_testEnumIterator_LDADD = \
@@ -847,8 +838,7 @@ tests_testEnumIterator_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testLookupTable
 tests_testLookupTable_SOURCES = \
-	tests/testLookupTable.cc \
-	tests/testLookupTable.h
+	tests/testLookupTable.cc
 nodist_tests_testLookupTable_SOURCES = \
 	base/LookupTable.h \
 	tests/stub_debug.cc \
@@ -863,8 +853,7 @@ tests_testLookupTable_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testRefCount
 tests_testRefCount_SOURCES = \
-	tests/testRefCount.cc \
-	tests/testRefCount.h
+	tests/testRefCount.cc
 nodist_tests_testRefCount_SOURCES = \
 	base/RefCount.h
 tests_testRefCount_LDADD = \
@@ -875,8 +864,7 @@ tests_testRefCount_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testYesNoNone
 tests_testYesNoNone_SOURCES = \
-	tests/testYesNoNone.cc \
-	tests/testYesNoNone.h
+	tests/testYesNoNone.cc
 nodist_tests_testYesNoNone_SOURCES = \
 	tests/stub_SBuf.cc \
 	base/YesNoNone.h \
@@ -893,9 +881,7 @@ tests_testYesNoNone_LDFLAGS = $(LIBADD_DL)
 check_PROGRAMS += tests/testURL
 tests_testURL_SOURCES = \
 	tests/testURL.cc \
-	tests/testURL.h \
-	tests/testUriScheme.cc \
-	tests/testUriScheme.h
+	tests/testUriScheme.cc
 nodist_tests_testURL_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_HttpHeader.cc \
@@ -926,8 +912,7 @@ tests_testURL_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testDns
 tests_testDns_SOURCES = \
-	tests/testRFC1035.cc \
-	tests/testRFC1035.h
+	tests/testRFC1035.cc
 nodist_tests_testDns_SOURCES=
 tests_testDns_LDADD = \
 	dns/libdns.la \
@@ -940,8 +925,7 @@ tests_testDns_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testTokenizer
 tests_testTokenizer_SOURCES = \
-	tests/testTokenizer.cc \
-	tests/testTokenizer.h
+	tests/testTokenizer.cc
 nodist_tests_testTokenizer_SOURCES = \
 	tests/stub_StatHist.cc \
 	tests/stub_debug.cc \
@@ -961,7 +945,6 @@ tests_testTokenizer_LDFLAGS = $(LIBADD_DL)
 check_PROGRAMS += tests/testSBuf
 tests_testSBuf_SOURCES = \
 	tests/testSBuf.cc \
-	tests/testSBuf.h \
 	tests/SBufFindTest.cc \
 	tests/SBufFindTest.h
 nodist_tests_testSBuf_SOURCES = \
@@ -978,8 +961,7 @@ tests_testSBuf_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testSBufList
 tests_testSBufList_SOURCES = \
-	tests/testSBufList.cc \
-	tests/testSBufList.h
+	tests/testSBufList.cc
 nodist_tests_testSBufList_SOURCES = \
 	tests/stub_StatHist.cc \
 	tests/stub_debug.cc \
@@ -994,8 +976,7 @@ tests_testSBufList_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testString
 tests_testString_SOURCES = \
-	tests/testString.cc \
-	tests/testString.h
+	tests/testString.cc
 nodist_tests_testString_SOURCES = \
 	tests/stub_SBuf.cc \
 	String.cc \
@@ -1061,7 +1042,6 @@ tests_testRock_SOURCES = \
 	ResolvedPeers.cc \
 	ResolvedPeers.h \
 	tests/testRock.cc \
-	tests/testRock.h \
 	StatCounters.cc \
 	StatCounters.h \
 	tests/stub_StatHist.cc \
@@ -1176,7 +1156,6 @@ tests_testRock_LDFLAGS = $(AM_CPPFLAGS) $(LIBADD_DL)
 else
 EXTRA_DIST += \
         tests/testRock.cc \
-        tests/testRock.h \
         tests/testStoreSupport.cc \
         tests/testStoreSupport.h
 endif
@@ -1245,7 +1224,6 @@ tests_testUfs_SOURCES = \
 	Transients.cc \
 	tests/stub_UdsOp.cc \
 	tests/testUfs.cc \
-	tests/testUfs.h \
 	tests/stub_access_log.cc \
 	tests/stub_cache_cf.cc \
 	cache_cf.h \
@@ -1354,8 +1332,7 @@ tests_testUfs_LDADD = \
 tests_testUfs_LDFLAGS = $(LIBADD_DL)
 else
 EXTRA_DIST += \
-	tests/testUfs.cc \
-	tests/testUfs.h
+	tests/testUfs.cc
 endif
 
 ## Tests of store/* and Store objects
@@ -1400,7 +1377,6 @@ tests_testStore_SOURCES = \
 	Notes.cc \
 	Notes.h \
 	tests/testPackableStream.cc \
-	tests/testPackableStream.h \
 	Parsing.cc \
 	tests/stub_Port.cc \
 	RemovalPolicy.cc \
@@ -1413,10 +1389,8 @@ tests_testStore_SOURCES = \
 	tests/testStore.cc \
 	tests/testStore.h \
 	tests/testStoreController.cc \
-	tests/testStoreController.h \
 	StoreFileSystem.cc \
 	tests/testStoreHashIndex.cc \
-	tests/testStoreHashIndex.h \
 	StoreIOState.cc \
 	tests/testStoreSupport.cc \
 	tests/testStoreSupport.h \
@@ -1538,7 +1512,6 @@ tests_testDiskIO_SOURCES = \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	tests/testDiskIO.cc \
-	tests/testDiskIO.h \
 	tests/stub_ETag.cc \
 	EventLoop.cc \
 	FadingCounter.cc \
@@ -1703,8 +1676,7 @@ tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 if ENABLE_AUTH
 check_PROGRAMS += tests/testACLMaxUserIP
 tests_testACLMaxUserIP_SOURCES = \
-	tests/testACLMaxUserIP.cc \
-	tests/testACLMaxUserIP.h
+	tests/testACLMaxUserIP.cc
 nodist_tests_testACLMaxUserIP_SOURCES = \
 	tests/stub_CachePeer.cc \
 	ConfigParser.cc \
@@ -1747,8 +1719,7 @@ tests_testACLMaxUserIP_LDADD = \
 tests_testACLMaxUserIP_LDFLAGS = $(LIBADD_DL)
 else
 EXTRA_DIST += \
-	tests/testACLMaxUserIP.cc \
-	tests/testACLMaxUserIP.h
+	tests/testACLMaxUserIP.cc
 endif
 
 ## Tests of http/* and HTTP Protocol objects
@@ -1984,6 +1955,7 @@ tests_test_http_range_LDADD = \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
 tests_test_http_range_LDFLAGS = $(LIBADD_DL)
 
@@ -1991,7 +1963,6 @@ check_PROGRAMS += tests/testHttp1Parser
 tests_testHttp1Parser_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tests/testHttp1Parser.cc \
-	tests/testHttp1Parser.h \
 	MemBuf.cc \
 	MemBuf.h \
 	tests/stub_MemObject.cc \
@@ -2062,7 +2033,6 @@ tests_testHttpReply_SOURCES = \
 	HttpReply.cc \
 	tests/testHttpReply.cc \
 	HttpReply.h \
-	tests/testHttpReply.h \
 	tests/stub_HttpRequest.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
@@ -2187,9 +2157,7 @@ tests_testHttpRequest_SOURCES = \
 	HttpReply.cc \
 	HttpRequest.cc \
 	tests/testHttpRequest.cc \
-	tests/testHttpRequest.h \
 	tests/testHttpRequestMethod.cc \
-	tests/testHttpRequestMethod.h \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
 	IoStats.h \
 	tests/stub_IpcIoFile.cc \
@@ -2371,6 +2339,7 @@ tests_testHttpRequest_LDADD = \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 
@@ -2378,8 +2347,7 @@ tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testIpAddress
 tests_testIpAddress_SOURCES = \
-	tests/testIpAddress.cc \
-	tests/testIpAddress.h
+	tests/testIpAddress.cc
 nodist_tests_testIpAddress_SOURCES = \
 	tests/stub_SBuf.cc \
 	tests/stub_debug.cc \
@@ -2398,8 +2366,7 @@ tests_testIpAddress_LDFLAGS = $(LIBADD_DL)
 check_PROGRAMS += tests/testIcmp
 # icmp/libicmpcore.la is used by pinger so SHOULD NOT require more dependancies! :-(
 tests_testIcmp_SOURCES = \
-	tests/testIcmp.cc \
-	tests/testIcmp.h
+	tests/testIcmp.cc
 nodist_tests_testIcmp_SOURCES = \
 	tests/stub_SBuf.cc \
 	tests/stub_debug.cc \
@@ -2417,8 +2384,7 @@ tests_testIcmp_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testNetDb
 tests_testNetDb_SOURCES = \
-	tests/testNetDb.cc \
-	tests/testNetDb.h
+	tests/testNetDb.cc
 nodist_tests_testNetDb_SOURCES = \
 	tests/stub_SBuf.cc \
 	tests/stub_debug.cc \
@@ -2451,7 +2417,6 @@ tests_testCacheManager_SOURCES = \
 	tests/stub_CacheDigest.cc \
 	CacheDigest.h \
 	tests/testCacheManager.cc \
-	tests/testCacheManager.h \
 	CachePeer.cc \
 	CachePeer.h \
 	ClientInfo.h \
@@ -2670,6 +2635,7 @@ tests_testCacheManager_LDADD = \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
 
@@ -2682,7 +2648,6 @@ tests_testStatHist_SOURCES = \
 	StatHist.cc \
 	tests/testStatHist.cc \
 	StatHist.h \
-	tests/testStatHist.h \
 	String.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_cbdata.cc \
@@ -2716,8 +2681,7 @@ tests_testStatHist_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testConfigParser
 tests_testConfigParser_SOURCES = \
-	tests/testConfigParser.cc \
-	tests/testConfigParser.h
+	tests/testConfigParser.cc
 nodist_tests_testConfigParser_SOURCES = \
 	ConfigParser.cc \
 	tests/stub_SBuf.cc \
@@ -2739,8 +2703,7 @@ tests_testConfigParser_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testEvent
 tests_testEvent_SOURCES = \
-	tests/testEvent.cc \
-	tests/testEvent.h
+	tests/testEvent.cc
 nodist_tests_testEvent_SOURCES = \
 	MemBuf.cc \
 	tests/stub_SBuf.cc \
@@ -2760,8 +2723,7 @@ tests_testEvent_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testEventLoop
 tests_testEventLoop_SOURCES = \
-	tests/testEventLoop.cc \
-	tests/testEventLoop.h
+	tests/testEventLoop.cc
 nodist_tests_testEventLoop_SOURCES = \
 	EventLoop.cc \
 	tests/stub_SBuf.cc \

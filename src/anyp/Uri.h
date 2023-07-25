@@ -147,6 +147,9 @@ public:
 private:
     void parseUrn(Parser::Tokenizer&);
 
+    SBuf parseHost(Parser::Tokenizer &) const;
+    int parsePort(Parser::Tokenizer &) const;
+
     /**
      \par
      * The scheme of this URL. This has the 'type code' smell about it.

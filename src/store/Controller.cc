@@ -691,7 +691,7 @@ Store::Controller::handleIdleEntry(StoreEntry &e)
     // and keep the entry in store_table for its on-disk data
 }
 
-void
+bool
 Store::Controller::updateOnNotModified(StoreEntry *old, StoreEntry &e304)
 {
     Must(old);
@@ -708,13 +708,18 @@ Store::Controller::updateOnNotModified(StoreEntry *old, StoreEntry &e304)
     //         sake, it is best to detect and skip such repeated update calls.
     if (e304.mem_obj->appliedUpdates) {
         debugs(20, 5, "ignored repeated update of " << *old << " with " << e304);
-        return;
+        return true;
     }
     e304.mem_obj->appliedUpdates = true;
 
-    if (!old->updateOnNotModified(e304)) {
-        debugs(20, 5, "updated nothing in " << *old << " with " << e304);
-        return;
+    try {
+        if (!old->updateOnNotModified(e304)) {
+            debugs(20, 5, "updated nothing in " << *old << " with " << e304);
+            return true;
+        }
+    } catch (...) {
+        debugs(20, DBG_IMPORTANT, "ERROR: Failed to update a cached response: " << CurrentException);
+        return false;
     }
 
     if (sharedMemStore && old->mem_status == IN_MEMORY && !EBIT_TEST(old->flags, ENTRY_SPECIAL))
@@ -722,6 +727,8 @@ Store::Controller::updateOnNotModified(StoreEntry *old, StoreEntry &e304)
 
     if (old->swap_dirn > -1)
         swapDir->updateHeaders(old);
+
+    return true;
 }
 
 bool

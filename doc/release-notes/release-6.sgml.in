@@ -234,6 +234,8 @@ This section gives an account of those changes in three categories:
 	   made for this request.
 	<p>Squid now adds <em>ABORTED</em> to values printed by the <em>Ss</em> code in more
 	   cases where a TCP Squid-to-server connection was closed prematurely.
+	<p>Squid now logs <em>TCP_TUNNEL</em> with the <em>Ss</em> code when a CONNECT tunnel
+	   is attempted, not just on successful tunnel setup.
 
 	<tag>server_cert_fingerprint</tag>
 	<p>Removed the broken <em>-sha</em> option. <em>SHA1</em> remains the default and

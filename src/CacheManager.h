@@ -20,6 +20,7 @@
 #include <vector>
 
 class HttpRequest;
+class HttpReply;
 
 /**
  * a CacheManager - the menu system for interacting with squid.
@@ -48,6 +49,11 @@ public:
 
     static CacheManager* GetInstance();
     const char *ActionProtection(const Mgr::ActionProfilePointer &profile);
+
+    /// Add HTTP response headers specific/common to all cache manager replies,
+    /// including cache manager errors and Action reports.
+    /// \param httpOrigin the value of Origin header in the trigger HTTP request (or nil)
+    static void PutCommonResponseHeaders(HttpReply &, const char *httpOrigin);
 
 protected:
     CacheManager() {} ///< use Instance() instead

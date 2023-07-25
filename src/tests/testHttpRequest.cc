@@ -7,15 +7,28 @@
  */
 
 #include "squid.h"
-
-#include <cppunit/TestAssert.h>
-
+#include "compat/cppunit.h"
 #include "HttpHeader.h"
 #include "HttpRequest.h"
 #include "MasterXaction.h"
 #include "mime_header.h"
-#include "testHttpRequest.h"
 #include "unitTestMain.h"
+
+#include <cppunit/TestAssert.h>
+
+class TestHttpRequest : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestHttpRequest);
+    CPPUNIT_TEST(testCreateFromUrl);
+    CPPUNIT_TEST(testIPv6HostColonBug);
+    CPPUNIT_TEST(testSanityCheckStartLine);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void testCreateFromUrl();
+    void testIPv6HostColonBug();
+    void testSanityCheckStartLine();
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestHttpRequest );
 
@@ -27,10 +40,16 @@ public:
     bool doSanityCheckStartLine(const char *b, const size_t h, Http::StatusCode *e) { return sanityCheckStartLine(b,h,e); };
 };
 
-/* init memory pools */
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override;
+};
 
 void
-TestHttpRequest::setUp()
+MyTestProgram::startup()
 {
     Mem::Init();
     AnyP::UriScheme::Init();
@@ -193,5 +212,11 @@ TestHttpRequest::testSanityCheckStartLine()
     CPPUNIT_ASSERT_EQUAL(error, Http::scInvalidHeader);
     input.reset();
     error = Http::scNone;
+}
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 

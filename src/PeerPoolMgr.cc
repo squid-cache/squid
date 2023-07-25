@@ -239,7 +239,7 @@ public:
     void syncConfig() override;
 };
 
-RunnerRegistrationEntry(PeerPoolMgrsRr);
+DefineRunnerRegistrator(PeerPoolMgrsRr);
 
 void
 PeerPoolMgrsRr::syncConfig()

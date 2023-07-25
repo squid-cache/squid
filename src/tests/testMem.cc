@@ -7,15 +7,28 @@
  */
 
 #include "squid.h"
+#include "compat/cppunit.h"
 #include "mem/Allocator.h"
 #include "mem/Pool.h"
-#include "tests/testMem.h"
 #include "unitTestMain.h"
 
 #include <iostream>
 #include <stdexcept>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TestMem );
+class TestMem : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestMem);
+    /* note the statement here and then the actual prototype below */
+    CPPUNIT_TEST(testMemPool);
+    CPPUNIT_TEST(testMemProxy);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+protected:
+    void testMemPool();
+    void testMemProxy();
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(TestMem);
 
 class SomethingToAlloc
 {
@@ -65,5 +78,11 @@ TestMem::testMemProxy()
     auto *otherthing = new MoreToAlloc;
     CPPUNIT_ASSERT_EQUAL(otherthing, something);
     CPPUNIT_ASSERT_EQUAL(otherthing->aValue, 0);
+}
+
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
 }
 

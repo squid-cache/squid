@@ -9,12 +9,29 @@
 #include "squid.h"
 #include "anyp/Uri.h"
 #include "CacheManager.h"
+#include "compat/cppunit.h"
 #include "mgr/Action.h"
 #include "Store.h"
-#include "testCacheManager.h"
 #include "unitTestMain.h"
 
 #include <cppunit/TestAssert.h>
+/*
+ * test the CacheManager implementation
+ */
+
+class TestCacheManager : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestCacheManager);
+    CPPUNIT_TEST(testCreate);
+    CPPUNIT_TEST(testRegister);
+    CPPUNIT_TEST(testParseUrl);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void testCreate();
+    void testRegister();
+    void testParseUrl();
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestCacheManager );
 
@@ -25,9 +42,16 @@ public:
     void ParseUrl(const AnyP::Uri &u) { CacheManager::ParseUrl(u); }
 };
 
-/* init memory pools */
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override;
+};
 
-void TestCacheManager::setUp()
+void
+MyTestProgram::startup()
 {
     Mem::Init();
     AnyP::UriScheme::Init();
@@ -82,7 +106,6 @@ TestCacheManager::testParseUrl()
     CPPUNIT_ASSERT(mgr != nullptr);
 
     std::vector<AnyP::ProtocolType> validSchemes = {
-        AnyP::PROTO_CACHE_OBJECT,
         AnyP::PROTO_HTTP,
         AnyP::PROTO_HTTPS,
         AnyP::PROTO_FTP
@@ -162,8 +185,8 @@ TestCacheManager::testParseUrl()
 
         for (const auto *magic : magicPrefixes) {
 
-            // all schemes except cache_object require magic path prefix bytes
-            if (scheme != AnyP::PROTO_CACHE_OBJECT && strlen(magic) <= 2)
+            // all schemes require magic path prefix bytes
+            if (strlen(magic) <= 2)
                 continue;
 
             /* Check the parser accepts all the valid cases */
@@ -217,5 +240,11 @@ TestCacheManager::testParseUrl()
             }
         }
     }
+}
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 

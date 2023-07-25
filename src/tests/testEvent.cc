@@ -8,20 +8,36 @@
 
 #include "squid.h"
 #include "base/AsyncCallQueue.h"
+#include "compat/cppunit.h"
 #include "event.h"
 #include "MemBuf.h"
-#include "tests/testEvent.h"
 #include "unitTestMain.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TestEvent );
+/*
+ * test the event module.
+ */
 
-/* init legacy static-initialized modules */
-
-void
-TestEvent::setUp()
+class TestEvent : public CPPUNIT_NS::TestFixture
 {
-    Mem::Init();
-}
+    CPPUNIT_TEST_SUITE(TestEvent);
+    CPPUNIT_TEST(testCreate);
+    CPPUNIT_TEST(testDump);
+    CPPUNIT_TEST(testFind);
+    CPPUNIT_TEST(testCheckEvents);
+    CPPUNIT_TEST(testSingleton);
+    CPPUNIT_TEST(testCancel);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void testCreate();
+    void testDump();
+    void testFind();
+    void testCheckEvents();
+    void testSingleton();
+    void testCancel();
+};
+
+CPPUNIT_TEST_SUITE_REGISTRATION( TestEvent );
 
 /*
  * Test creating a Scheduler
@@ -151,5 +167,19 @@ TestEvent::testSingleton()
 {
     EventScheduler *scheduler = dynamic_cast<EventScheduler *>(EventScheduler::GetInstance());
     CPPUNIT_ASSERT(nullptr != scheduler);
+}
+
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override { Mem::Init(); }
+};
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 
