@@ -2872,9 +2872,9 @@ DOC_START
 	matching line.
 
 	The ipaddr may be one of the following labels (instead of a literal IP address):
-	    transparent: Sets the outgoing IP address to the same IP as the client's connection to the proxy.
-	                 For example, Squid may be listening on both 10.1.0.1 and 10.1.0.2. This label will set
-	                 the outgoing IP to whichever Squid IP the request came in through.
+	     match_client_tcp_dst: Sets the outgoing IP address to the same IP as the client's TCP destination.
+                               For example, Squid may be listening on both 10.1.0.1 and 10.1.0.2. This label will set
+                               the outgoing IP to whichever Squid IP the request came in through.
 
 	Squid will add an implicit IP version test to each line.
 	Requests going to IPv4 websites will use the outgoing 10.1.0.* addresses.

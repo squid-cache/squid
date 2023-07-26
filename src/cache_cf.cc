@@ -1581,7 +1581,7 @@ dump_acl_address(StoreEntry * entry, const char *name, Acl::Address * head)
     for (Acl::Address *l = head; l; l = l->next) {
         if (l->addr.index() > 0) {
             if (std::holds_alternative<Acl::Address::UseClientAddress>(l->addr))
-                storeAppendPrintf(entry, "%s transparent", name);
+                storeAppendPrintf(entry, "%s match_client_tcp_dst", name);
         } else {
             Ip::Address addr = std::get<Ip::Address>(l->addr);
             if (!addr.isAnyAddr())
@@ -1602,9 +1602,9 @@ parse_acl_address(Acl::Address ** head)
     Acl::Address *l = new Acl::Address;
 
     char *token = ConfigParser::NextToken();
-    if (token && !strcmp(token, "transparent")) {
+    if (token && !strcmp(token, "match_client_tcp_dst")) {
         l->addr = Acl::Address::UseClientAddress{};
-        aclParseAclList(LegacyParser, &l->aclList, "transparent");
+        aclParseAclList(LegacyParser, &l->aclList, "match_client_tcp_dst");
     } else {
         Ip::Address addr = std::get<Ip::Address>(l->addr);
         parseAddressToken(&addr, token);
