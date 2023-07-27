@@ -76,6 +76,20 @@ public:
 class SquidConfig
 {
 public:
+    /// similar to a constructor; called at the start of each (re)configuration
+    /// exists because (re)configuration does not create SquidConfig objects
+    void lifecycleStart();
+
+    /// similar to a destructor
+    /// exists because (re)configuration does not create SquidConfig objects
+    void lifecycleEnd();
+
+    /// Opaque value suitable for detecting Squid process (re)configuration.
+    /// \returns an identifier that changes with each lifecycleStart() call
+    /// Returned value changes even if a reconfiguration changed nothing (that
+    /// Squid could detect). The value sequence never repeats within a process.
+    uint64_t id() const { return lifecycles_; }
+
     struct {
         /* These should be for the Store::Root instance.
         * this needs pluggable parsing to be done smoothly.
@@ -542,6 +556,9 @@ public:
         int connect_gap;
         int connect_timeout;
     } happyEyeballs;
+
+private:
+    uint64_t lifecycles_; ///< the total number of lifecycleStart() calls
 };
 
 extern SquidConfig Config;
