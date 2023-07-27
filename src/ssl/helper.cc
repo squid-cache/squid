@@ -62,7 +62,7 @@ public:
 using GeneratorRequests = std::unordered_map<GeneratorRequest::Key, GeneratorRequest*,
       std::hash<GeneratorRequest::Key>,
       std::equal_to<GeneratorRequest::Key>,
-      PoolingAllocator< std::pair<GeneratorRequest::Key, GeneratorRequest*> >
+      PoolingAllocator< std::pair<const GeneratorRequest::Key, GeneratorRequest*> >
       >;
 
 static void HandleGeneratorReply(void *data, const ::Helper::Reply &reply);
