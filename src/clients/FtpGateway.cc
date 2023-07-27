@@ -358,6 +358,8 @@ Ftp::Gateway::Gateway(FwdState *fwdState):
     if (request->method == Http::METHOD_PUT)
         flags.put = 1;
 
+    watchForCtrlClosure();
+
     initReadBuf();
 }
 

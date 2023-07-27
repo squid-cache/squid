@@ -164,6 +164,8 @@ Ftp::Relay::Relay(FwdState *const fwdState):
     entry->releaseRequest();
     AsyncCall::Pointer call = asyncCall(9, 4, "Ftp::Relay::Abort", cbdataDialer(&Relay::HandleStoreAbort, this));
     entry->registerAbortCallback(call);
+
+    watchForCtrlClosure();
 }
 
 Ftp::Relay::~Relay()
