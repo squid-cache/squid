@@ -178,14 +178,14 @@ JobDialer<Job>::dial(AsyncCall &call)
                call.name << " threw exception: " << e.what());
         if (!job.valid()) {
             debugs(call.debugSection, DBG_CRITICAL,
-                   "BUG: job invalidated during " << call.name << " that threw exception: " << e.what());
+                   "ERROR: Squid BUG: Job invalidated during " << call.name << " that threw exception: " << e.what());
             return; // See also: Bug 4981, commit e3b6f15, and XXX in Http::Stream class description.
         }
         job->callException(e);
     }
     if (!job.valid()) {
         debugs(call.debugSection, DBG_CRITICAL,
-               "BUG 4981: job invalidated during " << call.name);
+               "ERROR: Squid BUG 4981: Job invalidated during " << call.name);
         return;
     }
     job->callEnd(); // may delete job
