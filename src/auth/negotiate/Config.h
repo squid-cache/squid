@@ -39,7 +39,7 @@ public:
 } // namespace Negotiate
 } // namespace Auth
 
-extern StatefulHelperPointer negotiateauthenticators;
+extern Helper::StatefulClientPointer negotiateauthenticators;
 
 #endif /* HAVE_AUTH_MODULE_NEGOTIATE */
 #endif

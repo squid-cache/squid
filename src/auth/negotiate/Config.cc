@@ -32,7 +32,7 @@
 
 static AUTHSSTATS authenticateNegotiateStats;
 
-StatefulHelperPointer negotiateauthenticators;
+Helper::StatefulClientPointer negotiateauthenticators;
 
 static int authnegotiate_initialised = 0;
 

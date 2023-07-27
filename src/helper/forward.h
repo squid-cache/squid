@@ -24,10 +24,10 @@ namespace Helper
 class Reply;
 class Request;
 
-} // namespace Helper
+using ClientPointer = RefCount<helper>;
+using StatefulClientPointer = RefCount<statefulhelper>;
 
-using HelperPointer = RefCount<helper>;
-using StatefulHelperPointer = RefCount<statefulhelper>;
+} // namespace Helper
 
 typedef void HLPCB(void *, const Helper::Reply &);
 

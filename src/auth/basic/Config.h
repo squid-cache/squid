@@ -50,7 +50,7 @@ private:
 } // namespace Basic
 } // namespace Auth
 
-extern HelperPointer basicauthenticators;
+extern Helper::ClientPointer basicauthenticators;
 
 #endif /* HAVE_AUTH_MODULE_BASIC */
 #endif /* __AUTH_BASIC_H__ */

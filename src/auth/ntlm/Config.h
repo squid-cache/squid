@@ -42,7 +42,7 @@ public:
 } // namespace Ntlm
 } // namespace Auth
 
-extern StatefulHelperPointer ntlmauthenticators;
+extern Helper::StatefulClientPointer ntlmauthenticators;
 
 #endif /* HAVE_AUTH_MODULE_NTLM */
 #endif

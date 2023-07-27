@@ -36,7 +36,7 @@
 /* Basic Scheme */
 static AUTHSSTATS authenticateBasicStats;
 
-HelperPointer basicauthenticators;
+Helper::ClientPointer basicauthenticators;
 
 static int authbasic_initialised = 0;
 

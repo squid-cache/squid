@@ -46,7 +46,7 @@
 
 static AUTHSSTATS authenticateDigestStats;
 
-HelperPointer digestauthenticators;
+Helper::ClientPointer digestauthenticators;
 
 static hash_table *digest_nonce_cache;
 

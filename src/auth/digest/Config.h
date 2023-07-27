@@ -100,7 +100,7 @@ public:
 /* strings */
 #define QOP_AUTH "auth"
 
-extern HelperPointer digestauthenticators;
+extern Helper::ClientPointer digestauthenticators;
 
 #endif /* HAVE_AUTH_MODULE_DIGEST */
 #endif
