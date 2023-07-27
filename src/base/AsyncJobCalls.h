@@ -22,7 +22,7 @@
  * below implement for us, calling the job's method with the right params.
  */
 template <class Job>
-class JobDialer : public CallDialer
+class JobDialer: public CallDialer
 {
 public:
     typedef Job DestClass;
@@ -41,7 +41,7 @@ protected:
 
 private:
     // not implemented and should not be needed
-    JobDialer &operator=(const JobDialer &);
+    JobDialer &operator =(const JobDialer &);
 };
 
 /// schedule an async job call using a dialer; use CallJobHere macros instead
@@ -56,19 +56,19 @@ CallJob(int debugSection, int debugLevel, const char *fileName, int fileLine,
 }
 
 #define CallJobHere(debugSection, debugLevel, job, Class, method) \
-    CallJob((debugSection), (debugLevel), __FILE__, __LINE__,     \
-            (#Class "::" #method),                                \
-            JobMemFun<Class>((job), &Class::method))
+    CallJob((debugSection), (debugLevel), __FILE__, __LINE__, \
+        (#Class "::" #method), \
+        JobMemFun<Class>((job), &Class::method))
 
 #define CallJobHere1(debugSection, debugLevel, job, Class, method, arg1) \
-    CallJob((debugSection), (debugLevel), __FILE__, __LINE__,            \
-            (#Class "::" #method),                                       \
-            JobMemFun((job), &Class::method, (arg1)))
+    CallJob((debugSection), (debugLevel), __FILE__, __LINE__, \
+        (#Class "::" #method), \
+        JobMemFun((job), &Class::method, (arg1)))
 
 /// Convenience macro to create a Dialer-based job callback
 #define JobCallback(dbgSection, dbgLevel, Dialer, job, method) \
-    asyncCall((dbgSection), (dbgLevel), #method,               \
-              Dialer(CbcPointer<Dialer::DestClass>(job), &method))
+    asyncCall((dbgSection), (dbgLevel), #method, \
+        Dialer(CbcPointer<Dialer::DestClass>(job), &method))
 
 /*
  * *MemFunT are member function (i.e., class method) wrappers. They store
@@ -87,13 +87,14 @@ CallJob(int debugSection, int debugLevel, const char *fileName, int fileLine,
 // Arity names are from http://en.wikipedia.org/wiki/Arity
 
 template <class Job>
-class NullaryMemFunT : public JobDialer<Job>
+class NullaryMemFunT: public JobDialer<Job>
 {
 public:
     typedef void (Job::*Method)();
-    explicit NullaryMemFunT(const CbcPointer<Job> &aJob, Method aMethod) : JobDialer<Job>(aJob), method(aMethod) {}
+    explicit NullaryMemFunT(const CbcPointer<Job> &aJob, Method aMethod):
+        JobDialer<Job>(aJob), method(aMethod) {}
 
-    void print(std::ostream &os) const override { os << "()"; }
+    void print(std::ostream &os) const override {  os << "()"; }
 
 public:
     Method method;
@@ -103,15 +104,15 @@ protected:
 };
 
 template <class Job, class Data, class Argument1 = Data>
-class UnaryMemFunT : public JobDialer<Job>
+class UnaryMemFunT: public JobDialer<Job>
 {
 public:
     typedef void (Job::*Method)(Argument1);
     explicit UnaryMemFunT(const CbcPointer<Job> &aJob, Method aMethod,
-                          const Data &anArg1) : JobDialer<Job>(aJob),
-                                                method(aMethod), arg1(anArg1) {}
+                          const Data &anArg1): JobDialer<Job>(aJob),
+        method(aMethod), arg1(anArg1) {}
 
-    void print(std::ostream &os) const override { os << '(' << arg1 << ')'; }
+    void print(std::ostream &os) const override {  os << '(' << arg1 << ')'; }
 
 public:
     Method method;
@@ -144,18 +145,19 @@ JobMemFun(const CbcPointer<C> &job, typename UnaryMemFunT<C, Argument1>::Method 
 
 // inlined methods
 
-template <class Job>
-JobDialer<Job>::JobDialer(const JobPointer &aJob) : job(aJob)
+template<class Job>
+JobDialer<Job>::JobDialer(const JobPointer &aJob): job(aJob)
 {
 }
 
-template <class Job>
-JobDialer<Job>::JobDialer(const JobDialer<Job> &d) : CallDialer(d), job(d.job)
+template<class Job>
+JobDialer<Job>::JobDialer(const JobDialer<Job> &d): CallDialer(d), job(d.job)
 {
 }
 
-template <class Job>
-bool JobDialer<Job>::canDial(AsyncCall &call)
+template<class Job>
+bool
+JobDialer<Job>::canDial(AsyncCall &call)
 {
     if (!job)
         return call.cancel("job gone");
@@ -163,17 +165,15 @@ bool JobDialer<Job>::canDial(AsyncCall &call)
     return job->canBeCalled(call);
 }
 
-template <class Job>
-void JobDialer<Job>::dial(AsyncCall &call)
+template<class Job>
+void
+JobDialer<Job>::dial(AsyncCall &call)
 {
     job->callStart(call);
 
-    try
-    {
+    try {
         doDial();
-    }
-    catch (const std::exception &e)
-    {
+    } catch (const std::exception &e) {
         debugs(call.debugSection, 3,
                call.name << " threw exception: " << e.what());
         if (!job.valid())
