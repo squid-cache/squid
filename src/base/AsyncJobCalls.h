@@ -183,6 +183,7 @@ JobDialer<Job>::dial(AsyncCall &call)
         }
         job->callException(e);
     }
+
     if (!job) {
         debugs(call.debugSection, DBG_CRITICAL,
                "ERROR: Squid BUG 4981: Job invalidated during " << call.name);
@@ -192,3 +193,4 @@ JobDialer<Job>::dial(AsyncCall &call)
 }
 
 #endif /* SQUID_ASYNCJOBCALLS_H */
+
