@@ -196,16 +196,10 @@ Ftp::Client::Client(FwdState *fwdState):
 
     ctrl.last_command = xstrdup("Connect to server");
 
-    // and hope that the caller calls watchForCtrlClosure()
-}
-
-void
-Ftp::Client::watchForCtrlClosure()
-{
     typedef CommCbMemFunT<Client, CommCloseCbParams> Dialer;
     const AsyncCall::Pointer closer = JobCallback(9, 5, Dialer, this,
                                       Ftp::Client::ctrlClosed);
-    ctrl.opened(fwd->serverConnection(), closer);
+    ctrl.opened(fwdState->serverConnection(), closer);
 }
 
 Ftp::Client::~Client()

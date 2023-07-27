@@ -109,6 +109,8 @@ public:
 /// FTP client functionality shared among FTP Gateway and Relay clients.
 class Client: public ::Client
 {
+    CBDATA_INTERMEDIATE();
+
 public:
     explicit Client(FwdState *fwdState);
     ~Client() override;
@@ -185,10 +187,6 @@ protected:
     const Comm::ConnectionPointer & dataConnection() const override;
     void abortAll(const char *reason) override;
     void noteDelayAwareReadChance() override;
-
-    /// Makes sure we know if/when the control connection is gone. Must be
-    /// called from the constructor of the final derived class.
-    void watchForCtrlClosure();
 
     virtual Http::StatusCode failedHttpStatus(err_type &error);
     void ctrlClosed(const CommCloseCbParams &io);
