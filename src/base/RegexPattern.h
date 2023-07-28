@@ -46,7 +46,7 @@ private:
     SBuf pattern;
 
     /// compiled regular expression
-    std::regex regex;
+    const std::regex regex;
 };
 
 inline std::ostream &
