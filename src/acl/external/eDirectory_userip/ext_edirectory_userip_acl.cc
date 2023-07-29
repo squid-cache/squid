@@ -1722,7 +1722,7 @@ MainSafe(int argc, char **argv)
                     local_printfx("BH message=\"(SearchFilterLDAP: %s)\"\n", ErrLDAP(x));
                 } else {
                     edui_ldap.err = -1;
-                    debug("SearchFilterLDAP(-, NULL) -> Length: %u\n", x);
+                    debug("SearchFilterLDAP(-, nullptr) -> Length: %u\n", x);
                     x = SearchLDAP(&edui_ldap, edui_ldap.scope, edui_ldap.search_filter, (char **) &search_attrib);
                     if (x != LDAP_ERR_SUCCESS) {
                         debug("SearchLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(x));

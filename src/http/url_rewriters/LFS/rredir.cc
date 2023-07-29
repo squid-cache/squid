@@ -59,7 +59,7 @@ main()
     int tlu = 0;
 
     /* make standard output line buffered */
-    if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
+    if (setvbuf(stdout, nullptr, _IOLBF, 0) != 0)
         exit(EXIT_FAILURE);
 
     /* speed up the access() calls below */

@@ -110,7 +110,7 @@ Valid_Group(char *UserName, char *Group)
     WCHAR wszUserName[UNLEN+1]; // Unicode user name
     WCHAR wszGroup[GNLEN+1];    // Unicode Group
 
-    LPLOCALGROUP_USERS_INFO_0 pBuf = NULL;
+    LPLOCALGROUP_USERS_INFO_0 pBuf = nullptr;
     LPLOCALGROUP_USERS_INFO_0 pTmpBuf;
     DWORD dwLevel = 0;
     DWORD dwFlags = LG_INCLUDE_INDIRECT;
@@ -137,7 +137,7 @@ Valid_Group(char *UserName, char *Group)
      * function should also return the names of the local
      * groups in which the user is indirectly a member.
      */
-    nStatus = NetUserGetLocalGroups(NULL,
+    nStatus = NetUserGetLocalGroups(nullptr,
                                     wszUserName,
                                     dwLevel,
                                     dwFlags,
@@ -181,10 +181,10 @@ char * AllocStrFromLSAStr(LSA_UNICODE_STRING LsaStr)
     safe_free(target);
     target = (char *)xmalloc(len);
     if (target == NULL)
-        return NULL;
+        return nullptr;
 
     /* copy unicode buffer */
-    WideCharToMultiByte(CP_ACP, 0, LsaStr.Buffer, LsaStr.Length, target, len, NULL, NULL );
+    WideCharToMultiByte(CP_ACP, 0, LsaStr.Buffer, LsaStr.Length, target, len, nullptr, nullptr);
 
     /* add null termination */
     target[len-1] = '\0';
@@ -200,7 +200,7 @@ char * GetDomainName(void)
     PPOLICY_PRIMARY_DOMAIN_INFO ppdiDomainInfo;
     PWKSTA_INFO_100 pwkiWorkstationInfo;
     DWORD netret;
-    char * DomainName = NULL;
+    char * DomainName = nullptr;
 
     /*
      * Always initialize the object attributes to all zeroes.
@@ -214,7 +214,7 @@ char * GetDomainName(void)
      * The wki100_computername field contains a pointer to a UNICODE
      * string containing the local computer name.
      */
-    netret = NetWkstaGetInfo(NULL, 100, (LPBYTE *)&pwkiWorkstationInfo);
+    netret = NetWkstaGetInfo(nullptr, 100, (LPBYTE *)&pwkiWorkstationInfo);
     if (netret == NERR_Success) {
         /*
          * We have the workstation name in:
@@ -224,7 +224,7 @@ char * GetDomainName(void)
          * the LsaOpenPolicy function.
          */
         status = LsaOpenPolicy(
-                     NULL,
+                     nullptr,
                      &ObjectAttributes,
                      GENERIC_READ | POLICY_VIEW_LOCAL_INFORMATION,
                      &PolicyHandle
@@ -263,7 +263,7 @@ char * GetDomainName(void)
                      */
                     debug("Member of Domain %s\n",DomainName);
                 } else {
-                    DomainName = NULL;
+                    DomainName = nullptr;
                 }
             }
         }
@@ -357,7 +357,7 @@ helperfail(const char *reason)
   -A can specify a Windows Local Group name allowed to authenticate.
   -D can specify a Windows Local Group name not allowed to authenticate.
  */
-char *my_program_name = NULL;
+char *my_program_name = nullptr;
 
 void
 usage()
@@ -591,12 +591,12 @@ manage_request()
                         FORMAT_MESSAGE_ALLOCATE_BUFFER |
                         FORMAT_MESSAGE_FROM_SYSTEM |
                         FORMAT_MESSAGE_IGNORE_INSERTS,
-                        NULL,
+                        nullptr,
                         GetLastError(),
                         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
                         (LPTSTR) &ErrorMessage,
                         0,
-                        NULL);
+                        nullptr);
                     if (ErrorMessage[strlen(ErrorMessage) - 1] == '\n')
                         ErrorMessage[strlen(ErrorMessage) - 1] = '\0';
                     if (ErrorMessage[strlen(ErrorMessage) - 1] == '\r')
@@ -648,8 +648,8 @@ main(int argc, char *argv[])
     atexit(UnloadSecurityDll);
 
     /* initialize FDescs */
-    setbuf(stdout, NULL);
-    setbuf(stderr, NULL);
+    setbuf(stdout, nullptr);
+    setbuf(stderr, nullptr);
 
     while (manage_request()) {
         /* everything is done within manage_request */

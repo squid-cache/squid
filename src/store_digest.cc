@@ -142,7 +142,7 @@ storeDigestInit(void)
 
     sd_state = StoreDigestState();
 #else
-    store_digest = NULL;
+    store_digest = nullptr;
     debugs(71, 3, "Local cache digest is 'off'");
 #endif
 }

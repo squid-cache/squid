@@ -532,7 +532,7 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
                                 http->getConn() != nullptr && http->getConn()->getAuth() != nullptr ?
                                 http->getConn()->getAuth() : http->request->auth_user_request);
 #else
-                                NULL);
+                                nullptr);
 #endif
     node = (clientStreamNode *)http->client_stream.tail->data;
     clientStreamRead(node, http, node->readBuffer);
