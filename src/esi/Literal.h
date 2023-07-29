@@ -32,7 +32,7 @@ public:
     ESISegment::Pointer buffer;
 
     struct {
-        int donevars:1;
+        unsigned int donevars:1;
     } flags;
 
     ESIVarState *varState;
