@@ -97,7 +97,7 @@
 #endif
 
 #if _SQUID_SOLARIS_
-static char *password = NULL;   /* Workaround for Solaris 2.6 brokenness */
+static char *password = nullptr;   /* Workaround for Solaris 2.6 brokenness */
 #endif
 
 extern "C" int password_conversation(int num_msg, PAM_CONV_FUNC_CONST_PARM struct pam_message **msg,
@@ -160,7 +160,7 @@ static void usage(char *program)
 int
 main(int argc, char *argv[])
 {
-    pam_handle_t *pamh = NULL;
+    pam_handle_t *pamh = nullptr;
     int retval = PAM_SUCCESS;
     char *user;
     char *password_buf;
@@ -172,7 +172,7 @@ main(int argc, char *argv[])
     int no_realm = 0;
 
     /* make standard output line buffered */
-    setvbuf(stdout, NULL, _IOLBF, 0);
+    setvbuf(stdout, nullptr, _IOLBF, 0);
 
     while (1) {
         int ch = getopt(argc, argv, "1n:t:or");
@@ -258,7 +258,7 @@ start:
                 if (retval != PAM_SUCCESS) {
                     debug("WARNING: failed to release PAM authenticator\n");
                 }
-                pamh = NULL;
+                pamh = nullptr;
             }
             /* Initialize persistent PAM connection */
             retval = pam_start(service, "squid@", &conv, &pamh);
@@ -289,7 +289,7 @@ error:
         retval = PAM_SUCCESS;
 #if defined(PAM_AUTHTOK)
         if (ttl != 0 && pamh) {
-            retval = pam_set_item(pamh, PAM_AUTHTOK, NULL);
+            retval = pam_set_item(pamh, PAM_AUTHTOK, nullptr);
         }
 #endif
         if (pamh && (ttl == 0 || retval != PAM_SUCCESS)) {
@@ -297,14 +297,14 @@ error:
             if (retval != PAM_SUCCESS) {
                 debug("WARNING: failed to release PAM authenticator\n");
             }
-            pamh = NULL;
+            pamh = nullptr;
         }
     }
 
     if (pamh) {
         retval = pam_end(pamh, retval);
         if (retval != PAM_SUCCESS) {
-            pamh = NULL;
+            pamh = nullptr;
             debug("ERROR: failed to release PAM authenticator\n");
         }
     }

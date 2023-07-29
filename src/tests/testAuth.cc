@@ -61,7 +61,7 @@ find_proxy_auth(char const *type)
             return proxy_auths[count][1];
     }
 
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -77,7 +77,7 @@ getConfig(char const *type_str)
         Auth::Scheme::Pointer theScheme = Auth::Scheme::Find(type_str);
 
         if (theScheme == NULL) {
-            return NULL;
+            return nullptr;
             //fatalf("Unknown authentication scheme '%s'.\n", type_str);
         }
 
@@ -98,7 +98,7 @@ setup_scheme(Auth::Config *scheme, char const **params, unsigned param_count)
     for (unsigned position=0; position < param_count; ++position) {
         char *param_str=xstrdup(params[position]);
         strtok(param_str, w_space);
-        ConfigParser::SetCfgLine(strtok(NULL, ""));
+        ConfigParser::SetCfgLine(strtok(nullptr, ""));
         scheme->parse(scheme, config.size(), param_str);
     }
 }

@@ -1877,7 +1877,7 @@ watch_child(const CommandLine &masterCommand)
 #ifdef TIOCNOTTY
 
     if ((i = open("/dev/tty", O_RDWR | O_TEXT)) >= 0) {
-        ioctl(i, TIOCNOTTY, NULL);
+        ioctl(i, TIOCNOTTY, nullptr);
         close(i);
     }
 

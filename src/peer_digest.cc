@@ -540,7 +540,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 
             /* preserve request -- we need its size to update counters */
             /* requestUnlink(r); */
-            /* fetch->entry->mem_obj->request = NULL; */
+            /* fetch->entry->mem_obj->request = nullptr; */
         } else if (status == Http::scOkay) {
             /* get rid of old entry if any */
 

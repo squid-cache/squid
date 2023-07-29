@@ -320,7 +320,7 @@ parseManyConfigFiles(char* files, int depth)
     char* file = strwordtok(files, &saveptr);
     while (file != NULL) {
         error_count += parseOneConfigFile(file, depth);
-        file = strwordtok(NULL, &saveptr);
+        file = strwordtok(nullptr, &saveptr);
     }
 #endif /* HAVE_GLOB */
     return error_count;

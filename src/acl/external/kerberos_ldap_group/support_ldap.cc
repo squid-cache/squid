@@ -117,8 +117,8 @@ ldap_simple_rebind(LDAP * ld,
     credp = credp;
     methodp = methodp;
     freeit = freeit;
-    return ldap_sasl_bind_s(ld, cp->dn, LDAP_SASL_SIMPLE, &cred, NULL, NULL,
-                            NULL);
+    return ldap_sasl_bind_s(ld, cp->dn, LDAP_SASL_SIMPLE, &cred, nullptr, nullptr,
+                            nullptr);
 }
 #elif HAVE_LDAP_REBIND_PROC
 #if HAVE_SASL_H || HAVE_SASL_SASL_H || HAVE_SASL_DARWIN
@@ -145,8 +145,8 @@ ldap_simple_rebind(LDAP * ld,
         cred.bv_val = cp->pw;
         cred.bv_len = strlen(cp->pw);
     }
-    return ldap_sasl_bind_s(ld, cp->dn, LDAP_SASL_SIMPLE, &cred, NULL, NULL,
-                            NULL);
+    return ldap_sasl_bind_s(ld, cp->dn, LDAP_SASL_SIMPLE, &cred, nullptr, nullptr,
+                            nullptr);
 }
 
 #elif HAVE_LDAP_REBIND_FUNCTION
@@ -185,8 +185,8 @@ ldap_simple_rebind(LDAP * ld,
     credp = credp;
     methodp = methodp;
     freeit = freeit;
-    return ldap_sasl_bind_s(ld, cp->dn, LDAP_SASL_SIMPLE, &cred, NULL, NULL,
-                            NULL);
+    return ldap_sasl_bind_s(ld, cp->dn, LDAP_SASL_SIMPLE, &cred, nullptr, nullptr,
+                            nullptr);
 }
 #else
 #error "No rebind functione defined"
@@ -533,7 +533,7 @@ ldap_set_ssl_defaults(struct main_args *margs)
 #if HAVE_OPENLDAP
     int val;
 #elif HAVE_LDAPSSL_CLIENT_INIT
-    char *ssl_certdbpath = NULL;
+    char *ssl_certdbpath = nullptr;
 #endif
 
 #if HAVE_OPENLDAP
@@ -616,8 +616,8 @@ ldap_set_ssl_defaults(struct main_args *margs)
      *  Solaris SSL ldap calls require path to certificate database
      */
     /*
-     * rc = ldapssl_client_init( ssl_certdbpath, NULL );
-     * rc = ldapssl_advclientauth_init( ssl_certdbpath, NULL , 0 , NULL, NULL, 0, NULL, 2);
+     * rc = ldapssl_client_init( ssl_certdbpath, nullptr);
+     * rc = ldapssl_advclientauth_init( ssl_certdbpath, nullptr, 0 , nullptr, nullptr, 0, nullptr, 2);
      */
     ssl_certdbpath = getenv("SSL_CERTDBPATH");
     if (!ssl_certdbpath) {
@@ -627,11 +627,11 @@ ldap_set_ssl_defaults(struct main_args *margs)
           "%s| %s: DEBUG: Set certificate database path for ldap server to %s. (Changeable through setting environment variable SSL_CERTDBPATH)\n",
           LogTime(), PROGRAM, ssl_certdbpath);
     if (!margs->rc_allow) {
-        rc = ldapssl_advclientauth_init(ssl_certdbpath, NULL, 0, NULL, NULL, 0,
-                                        NULL, 2);
+        rc = ldapssl_advclientauth_init(ssl_certdbpath, nullptr, 0, nullptr, nullptr, 0,
+                                        nullptr, 2);
     } else {
-        rc = ldapssl_advclientauth_init(ssl_certdbpath, NULL, 0, NULL, NULL, 0,
-                                        NULL, 0);
+        rc = ldapssl_advclientauth_init(ssl_certdbpath, nullptr, 0, nullptr, nullptr, 0,
+                                        nullptr, 0);
         debug((char *)
               "%s| %s: DEBUG: Disable server certificate check for ldap server.\n",
               LogTime(), PROGRAM);
@@ -846,7 +846,7 @@ tool_ldap_open(struct main_args * margs, char *host, int port, char *ssl)
               LogTime(), PROGRAM, ldap_err2string(rc));
         xfree(ldapuri);
         ldap_free_urldesc(url);
-        return NULL;
+        return nullptr;
     }
 #else
 #error "No URL parsing function"
@@ -920,7 +920,7 @@ tool_ldap_open(struct main_args * margs, char *host, int port, char *ssl)
                       LogTime(), PROGRAM, ldap_err2string(rc));
                 xfree(ldapuri);
                 ldap_free_urldesc(url);
-                return NULL;
+                return nullptr;
             }
 #else
 #error "No URL parsing function"
@@ -952,18 +952,18 @@ tool_ldap_open(struct main_args * margs, char *host, int port, char *ssl)
             error((char *)
                   "%s| %s: ERROR: Error while setting SSL for ldap server: %s\n",
                   LogTime(), PROGRAM, ldapssl_err2string(rc));
-            ldap_unbind_ext(ld, NULL, NULL);
-            ld = NULL;
-            return NULL;
+            ldap_unbind_ext(ld, nullptr, nullptr);
+            ld = nullptr;
+            return nullptr;
         }
         rc = ldap_set_defaults(ld);
         if (rc != LDAP_SUCCESS) {
             error((char *)
                   "%s| %s: ERROR: Error while setting default options for ldap server: %s\n",
                   LogTime(), PROGRAM, ldap_err2string(rc));
-            ldap_unbind_ext(ld, NULL, NULL);
-            ld = NULL;
-            return NULL;
+            ldap_unbind_ext(ld, nullptr, nullptr);
+            ld = nullptr;
+            return nullptr;
         }
 #else
         error((char *) "%s| %s: ERROR: SSL not supported by ldap library\n",
@@ -1102,8 +1102,8 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
                 break;
             }
 #else
-            ldap_unbind_ext(ld, NULL, NULL);
-            ld = NULL;
+            ldap_unbind_ext(ld, nullptr, nullptr);
+            ld = nullptr;
             error((char *) "%s| %s: ERROR: SASL not supported on system\n",
                   LogTime(), PROGRAM);
             continue;

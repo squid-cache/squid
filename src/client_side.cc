@@ -2120,7 +2120,7 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
                                     repContext->http->uri,
                                     CachePeer,
                                     repContext->http->request,
-                                    inBuf, NULL);
+                                    inBuf, nullptr);
         context->pullData();
     } else {
         // close or otherwise we may get stuck as nobody will notice the error?
@@ -2817,7 +2817,7 @@ ConnStateData::getSslContextDone(Security::ContextPointer &ctx)
         debugs(33, 2, "Failed to generate TLS context for " << tlsConnectHostOrIp);
     }
 
-    // If generated ssl context = NULL, try to use static ssl context.
+    // If generated ssl context = nullptr, try to use static ssl context.
     if (!ctx) {
         if (!port->secure.staticContext) {
             debugs(83, DBG_IMPORTANT, "Closing " << clientConnection->remote << " as lacking TLS context");
