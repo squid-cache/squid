@@ -109,6 +109,8 @@ public:
 /// FTP client functionality shared among FTP Gateway and Relay clients.
 class Client: public ::Client
 {
+    CBDATA_INTERMEDIATE();
+
 public:
     explicit Client(FwdState *fwdState);
     ~Client() override;
