@@ -26,7 +26,7 @@ class String
 {
 
 public:
-    String();
+    String() = default;
     String(char const *);
     String(String const &);
     String(String && S) : size_(S.size_), len_(S.len_), buf_(S.buf_) {
