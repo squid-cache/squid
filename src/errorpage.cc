@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "clients/forward.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
@@ -590,9 +591,6 @@ ErrorDynamicPageInfo::ErrorDynamicPageInfo(const int anId, const char *aName, co
         filename = filenameOrUri;
     }
 
-    const auto info = this; // source code change reduction hack
-    // TODO: Move and refactor to avoid self_destruct()s in reconfigure.
-
     /* WARNING on redirection status:
      * 2xx are permitted, but not documented officially.
      * - might be useful for serving static files (PAC etc) in special cases
@@ -604,24 +602,24 @@ ErrorDynamicPageInfo::ErrorDynamicPageInfo(const int anId, const char *aName, co
      * - current result is Squid crashing or XSS problems as dynamic deny_info load random disk files.
      * - a future redesign of the file loading may result in loading remote objects sent inline as local body.
      */
-    if (info->page_redirect == Http::scNone)
+    if (page_redirect == Http::scNone)
         ; // special case okay.
-    else if (info->page_redirect < 200 || info->page_redirect > 599) {
+
+    else if (page_redirect < 200 || page_redirect > 599) {
         // out of range
-        debugs(0, DBG_CRITICAL, "FATAL: status " << info->page_redirect << " is not valid on '" << page_name << "'");
-        self_destruct();
-    } else if ( /* >= 200 && */ info->page_redirect < 300 && strchr(&(page_name[4]), ':')) {
+        throw Cfg::FatalError(ToSBuf("status ", page_redirect, " is not valid on '", page_name, "'"));
+
+    } else if ( /* >= 200 && */ page_redirect < 300 && strchr(&(page_name[4]), ':')) {
         // 2xx require a local template file
-        debugs(0, DBG_CRITICAL, "FATAL: status " << info->page_redirect << " requires a template on '" << page_name << "'");
-        self_destruct();
-    } else if (info->page_redirect >= 300 && info->page_redirect <= 399 && !strchr(&(page_name[4]), ':')) {
+        throw Cfg::FatalError(ToSBuf("status ", page_redirect, " requires a template on '", page_name, "'"));
+
+    } else if (page_redirect >= 300 && page_redirect <= 399 && !strchr(&(page_name[4]), ':')) {
         // 3xx require an absolute URL
-        debugs(0, DBG_CRITICAL, "FATAL: status " << info->page_redirect << " requires a URL on '" << page_name << "'");
-        self_destruct();
-    } else if (info->page_redirect >= 400 /* && <= 599 */ && strchr(&(page_name[4]), ':')) {
+        throw Cfg::FatalError(ToSBuf("status ", page_redirect, " requires a URL on '", page_name, "'"));
+
+    } else if (page_redirect >= 400 /* && <= 599 */ && strchr(&(page_name[4]), ':')) {
         // 4xx/5xx require a local template file
-        debugs(0, DBG_CRITICAL, "FATAL: status " << info->page_redirect << " requires a template on '" << page_name << "'");
-        self_destruct();
+        throw Cfg::FatalError(ToSBuf("status ", page_redirect, " requires a template on '", page_name, "'"));
     }
     // else okay.
 }

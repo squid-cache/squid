@@ -12,6 +12,7 @@
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "client_side.h"
 #include "client_side_request.h"
 #include "comm/Connection.h"
@@ -181,10 +182,8 @@ parse_externalAclHelper(external_acl ** list)
 {
     char *token = ConfigParser::NextToken();
 
-    if (!token) {
-        self_destruct();
-        return;
-    }
+    if (!token)
+        throw Cfg::FatalError("missing helper name parameter");
 
     external_acl *a = new external_acl;
     a->name = xstrdup(token);
@@ -342,8 +341,7 @@ parse_externalAclHelper(external_acl ** list)
     /* There must be at least one format token */
     if (!a->format.format) {
         delete a;
-        self_destruct();
-        return;
+        throw Cfg::FatalError("missing format specification");
     }
 
     // format has implicit %DATA on the end if not used explicitly
@@ -356,8 +354,7 @@ parse_externalAclHelper(external_acl ** list)
     /* helper */
     if (!token) {
         delete a;
-        self_destruct();
-        return;
+        throw Cfg::FatalError("missing helper specification");
     }
 
     wordlistAdd(&a->cmdline, token);
@@ -508,31 +505,24 @@ external_acl_data::~external_acl_data()
 void
 ACLExternal::parse()
 {
-    if (data) {
-        self_destruct();
-        return;
-    }
+    if (data)
+        throw Cfg::FatalError("external ACL already configured");
 
-    char *token = ConfigParser::strtokFile();
+    if (const auto *token = ConfigParser::strtokFile()) {
+        data = new external_acl_data(find_externalAclHelper(token));
+        if (!data->def) {
+            delete data;
+            throw Cfg::FatalError(ToSBuf("missing external ACL definition: ", token));
+        }
 
-    if (!token) {
-        self_destruct();
-        return;
-    }
-
-    data = new external_acl_data(find_externalAclHelper(token));
-
-    if (!data->def) {
-        delete data;
-        self_destruct();
-        return;
-    }
+    } else
+        throw Cfg::FatalError("missing external ACL definition name");
 
     // def->name is the name of the external_acl_type.
     // this is the name of the 'acl' directive being tested
     data->name = xstrdup(AclMatchedName);
 
-    while ((token = ConfigParser::strtokFile())) {
+    while (const auto *token = ConfigParser::strtokFile()) {
         wordlistAdd(&data->arguments, token);
     }
 }

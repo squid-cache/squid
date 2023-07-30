@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "acl/HasComponentData.h"
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "ConfigParser.h"
 #include "sbuf/Algorithms.h"
 
@@ -24,19 +25,13 @@ void
 ACLHasComponentData::parse()
 {
     const auto tok = ConfigParser::strtokFile();
-    if (!tok) {
-        debugs(28, DBG_CRITICAL, "FATAL: \"has\" acl argument missing");
-        self_destruct();
-        return;
-    }
+    if (!tok)
+        throw Cfg::FatalError("'has' ACL argument missing");
 
     parseComponent(tok);
 
-    if (ConfigParser::strtokFile()) {
-        debugs(28, DBG_CRITICAL, "FATAL: multiple components not supported for \"has\" acl");
-        self_destruct();
-        return;
-    }
+    if (ConfigParser::strtokFile())
+        throw Cfg::FatalError("multiple components not supported for 'has' ACL");
 }
 
 bool
@@ -70,9 +65,7 @@ ACLHasComponentData::parseComponent(const char *token)
         componentMethods[coResponse] = &ACLChecklist::hasReply;
     else if (AleStr.cmp(token) == 0)
         componentMethods[coAle] = &ACLChecklist::hasAle;
-    else {
-        debugs(28, DBG_CRITICAL, "FATAL: unsupported component '" << token << "' for 'has' acl");
-        self_destruct();
-    }
+    else
+        throw Cfg::FatalError(ToSBuf("unsupported component '", token, "' for 'has' ACL"));
 }
 

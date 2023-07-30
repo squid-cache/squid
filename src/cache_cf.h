@@ -14,7 +14,6 @@
 class wordlist;
 
 void configFreeMemory(void);
-void self_destruct(void);
 void add_http_port(char *portspec);
 
 /* extra functions from cache_cf.c useful for lib modules */

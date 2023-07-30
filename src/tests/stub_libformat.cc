@@ -13,7 +13,7 @@
 #include "tests/STUB.h"
 
 void Format::Format::assemble(MemBuf &, const AccessLogEntryPointer &, int) const STUB
-bool Format::Format::parse(char const*) STUB_RETVAL(false)
+void Format::Format::parse(char const*) STUB
 Format::Format::Format(char const*) STUB
 Format::Format::~Format() STUB
 

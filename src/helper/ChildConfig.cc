@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
 #include "globals.h"
@@ -71,55 +72,44 @@ Helper::ChildConfig::needNew() const
 void
 Helper::ChildConfig::parseConfig()
 {
-    char const *token = ConfigParser::NextToken();
+    /* starts with a parameter for the max processes ... back-compatible */
+    if (const auto *token = ConfigParser::NextToken())
+        Cfg::RequireRangedInt("helper children ", token, n_max, 1);
+    else
+        throw Cfg::FatalError("missing helper children parameter");
 
-    if (!token) {
-        self_destruct();
-        return;
-    }
+    /* Parse options */
+    while(const auto *token = ConfigParser::NextToken()) {
 
-    /* starts with a bare number for the max... back-compatible */
-    n_max = xatoui(token);
-
-    if (n_max < 1) {
-        debugs(0, DBG_CRITICAL, "ERROR: The maximum number of processes cannot be less than 1.");
-        self_destruct();
-        return;
-    }
-
-    /* Parse extension options */
-    for (; (token = ConfigParser::NextToken()) ;) {
         if (strncmp(token, "startup=", 8) == 0) {
-            n_startup = xatoui(token + 8);
+            Cfg::RequireRangedInt("startup=", &token[8], n_startup);
+
         } else if (strncmp(token, "idle=", 5) == 0) {
-            n_idle = xatoui(token + 5);
-            if (n_idle < 1) {
-                debugs(0, DBG_CRITICAL, "WARNING: OVERRIDE: Using idle=0 for helpers causes request failures. Overriding to use idle=1 instead.");
-                n_idle = 1;
-            }
+            Cfg::RequireRangedInt("idle=", &token[5], n_idle, 1);
+
         } else if (strncmp(token, "concurrency=", 12) == 0) {
-            concurrency = xatoui(token + 12);
+            Cfg::RequireRangedInt("concurrency=", &token[12], concurrency);
+
         } else if (strncmp(token, "queue-size=", 11) == 0) {
-            queue_size = xatoui(token + 11);
+            Cfg::RequireRangedInt("queue-size=", &token[11], queue_size);
             defaultQueueSize = false;
+
         } else if (strncmp(token, "on-persistent-overload=", 23) == 0) {
             const SBuf action(token + 23);
             if (action.cmp("ERR") == 0)
                 onPersistentOverload = actErr;
             else if (action.cmp("die") == 0)
                 onPersistentOverload = actDie;
-            else {
-                debugs(0, DBG_CRITICAL, "ERROR: Unsupported on-persistent-overloaded action: " << action);
-                self_destruct();
-                return;
-            }
-        } else if (strncmp(token, "reservation-timeout=", 20) == 0)
-            reservationTimeout = xatoui(token + 20);
-        else {
-            debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Undefined option: " << token << ".");
-            self_destruct();
-            return;
-        }
+            else
+                throw Cfg::FatalError(ToSBuf("unsupported action: on-persistent-overloaded=", action));
+
+        } else if (strncmp(token, "reservation-timeout=", 20) == 0) {
+            uint32_t v = 0;
+            Cfg::RequireRangedInt("reservation-timeout=", &token[20], v);
+            reservationTimeout = v;
+
+        } else
+            throw Cfg::FatalError(ToSBuf("undefined option: ", token));
     }
 
     /* simple sanity. */

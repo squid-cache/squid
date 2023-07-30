@@ -16,7 +16,7 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.cc \
 	LoadableModules.h
 
-SUBDIRS = mem time debug base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
+SUBDIRS = mem time debug base cfg anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -515,6 +515,7 @@ squid_LDADD = \
 	mem/libmem.la \
 	store/libstore.la \
 	time/libtime.la \
+	cfg/libcfg.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1141,6 +1142,7 @@ tests_testRock_LDADD = \
 	mem/libmem.la \
 	store/libstore.la \
 	$(ADAPTATION_LIBS) \
+	cfg/libcfg.la \
 	sbuf/libsbuf.la \
 	time/libtime.la \
 	$(top_builddir)/lib/libmisccontainers.la \
@@ -1293,7 +1295,8 @@ nodist_tests_testUfs_SOURCES = \
 	SquidMath.cc \
 	SquidMath.h \
 	hier_code.cc \
-	swap_log_op.cc
+	swap_log_op.cc \
+	tests/stub_libcfg.cc
 tests_testUfs_LDADD = \
 	http/libhttp.la \
 	parser/libparser.la \
@@ -1463,7 +1466,8 @@ nodist_tests_testStore_SOURCES = \
 	SquidMath.cc \
 	SquidMath.h \
 	tests/stub_libtime.cc \
-	swap_log_op.cc
+	swap_log_op.cc \
+	tests/stub_libcfg.cc
 tests_testStore_LDADD= \
 	libsquid.la \
 	http/libhttp.la \
@@ -1635,7 +1639,8 @@ nodist_tests_testDiskIO_SOURCES = \
 	SquidMath.h \
 	hier_code.cc \
 	tests/stub_libtime.cc \
-	swap_log_op.cc
+	swap_log_op.cc \
+	tests/stub_libcfg.cc
 tests_testDiskIO_LDADD = \
 	libsquid.la \
 	http/libhttp.la \
@@ -1697,6 +1702,7 @@ nodist_tests_testACLMaxUserIP_SOURCES = \
 	tests/stub_fatal.cc \
 	globals.cc \
 	tests/stub_libauth.cc \
+	tests/stub_libcfg.cc \
 	tests/stub_libcomm.cc \
 	tests/stub_libhttp.cc \
 	tests/stub_libmem.cc \
@@ -1910,6 +1916,7 @@ tests_test_http_range_SOURCES = \
 	wordlist.h
 nodist_tests_test_http_range_SOURCES = \
 	$(BUILT_SOURCES) \
+	tests/stub_libcfg.cc \
 	tests/stub_libtime.cc
 tests_test_http_range_LDADD = \
 	libsquid.la \
@@ -2085,6 +2092,7 @@ tests_testHttpReply_SOURCES = \
 nodist_tests_testHttpReply_SOURCES = \
 	$(TESTSOURCES) \
 	hier_code.cc \
+	tests/stub_libcfg.cc \
 	tests/stub_libtime.cc
 tests_testHttpReply_LDADD=\
 	CommCalls.o \
@@ -2294,6 +2302,7 @@ tests_testHttpRequest_SOURCES = \
 	wordlist.h
 nodist_tests_testHttpRequest_SOURCES = \
 	$(BUILT_SOURCES) \
+	tests/stub_libcfg.cc \
 	tests/stub_libtime.cc
 tests_testHttpRequest_LDADD = \
 	libsquid.la \
@@ -2588,6 +2597,7 @@ tests_testCacheManager_SOURCES = \
 	wordlist.h
 nodist_tests_testCacheManager_SOURCES = \
 	$(BUILT_SOURCES) \
+	tests/stub_libcfg.cc \
 	tests/stub_libtime.cc
 # comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
@@ -2693,6 +2703,7 @@ nodist_tests_testConfigParser_SOURCES = \
 	tests/stub_libmem.cc \
 	tests/stub_neighbors.cc
 tests_testConfigParser_LDADD = \
+	cfg/libcfg.la \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
@@ -2711,6 +2722,7 @@ nodist_tests_testEvent_SOURCES = \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
 	event.cc \
+	tests/stub_libcfg.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libtime.cc \
 	tests/stub_tools.cc
@@ -2729,6 +2741,7 @@ nodist_tests_testEventLoop_SOURCES = \
 	tests/stub_SBuf.cc \
 	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
+	tests/stub_libcfg.cc \
 	tests/stub_libtime.cc
 tests_testEventLoop_LDADD = \
 	base/libbase.la \

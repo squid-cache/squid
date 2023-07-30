@@ -900,14 +900,14 @@ mainReconfigureFinish(void *)
     const int oldWorkers = Config.workers;
     try {
         if (parseConfigFile(ConfigFile) != 0) {
-            // for now any errors are a fatal condition...
-            self_destruct();
+            // for now any errors that reach here are a fatal condition...
+            ConfigParser::LegacyInstance().destruct();
         }
     } catch (...) {
         // for now any errors are a fatal condition...
         debugs(1, DBG_CRITICAL, "FATAL: Unhandled exception parsing config file. " <<
                " Run squid -k parse and check for errors.");
-        self_destruct();
+            ConfigParser::LegacyInstance().destruct();
     }
 
     if (oldWorkers != Config.workers) {

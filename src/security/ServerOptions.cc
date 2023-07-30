@@ -10,6 +10,7 @@
 #include "anyp/PortCfg.h"
 #include "base/Packable.h"
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "error/SysErrorDetail.h"
 #include "fatal.h"
 #include "globals.h"
@@ -103,7 +104,7 @@ Security::ServerOptions::parse(const char *token)
 
     } else if (strncmp(token, "dynamic_cert_mem_cache_size=", 28) == 0) {
         parseBytesOptionValue(&dynamicCertMemCacheSize, "bytes", token + 28);
-        // XXX: parseBytesOptionValue() self_destruct()s on invalid values,
+        // XXX: parseBytesOptionValue() throws on invalid values,
         // probably making this comparison and misleading ERROR unnecessary.
         if (dynamicCertMemCacheSize == std::numeric_limits<size_t>::max()) {
             debugs(3, DBG_CRITICAL, "ERROR: Cannot allocate memory for '" << token << "'. Using default of 4MB instead.");
@@ -121,10 +122,8 @@ Security::ServerOptions::parse(const char *token)
 #if USE_OPENSSL
         staticContextSessionId = SBuf(token+8);
         // to hide its arguably sensitive value, do not print token in these debugs
-        if (staticContextSessionId.length() > SSL_MAX_SSL_SESSION_ID_LENGTH) {
-            debugs(83, DBG_CRITICAL, "FATAL: Option 'context=' value is too long. Maximum " << SSL_MAX_SSL_SESSION_ID_LENGTH << " characters.");
-            self_destruct();
-        }
+        if (staticContextSessionId.length() > SSL_MAX_SSL_SESSION_ID_LENGTH)
+            throw Cfg::FatalError(ToSBuf("Value for 'context=' is too long. Maximum ", SSL_MAX_SSL_SESSION_ID_LENGTH, " characters."));
 #else
         debugs(83, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Option 'context=' requires --with-openssl. Ignoring.");
 #endif

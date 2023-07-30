@@ -8,9 +8,11 @@
 
 #include "squid.h"
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
 #include "format/Config.h"
+
 #include <list>
 
 Format::FmtConfig Format::TheConfig;
@@ -18,26 +20,19 @@ Format::FmtConfig Format::TheConfig;
 void
 Format::FmtConfig::parseFormats()
 {
-    char *name, *def;
+    char *name = ConfigParser::NextToken();
+    if (!name)
+        throw Cfg::FatalError("missing format name");
 
-    if ((name = ConfigParser::NextToken()) == nullptr) {
-        self_destruct();
-        return;
-    }
+    char *def = ConfigParser::NextQuotedOrToEol();
 
-    if ((def = ConfigParser::NextQuotedOrToEol()) == nullptr) {
-        self_destruct();
-        return;
-    }
+    if (!def)
+        throw Cfg::FatalError("missing format specification");
 
     debugs(3, 2, "Custom Format for '" << name << "' is '" << def << "'");
 
     Format *nlf = new Format(name);
-
-    if (!nlf->parse(def)) {
-        self_destruct();
-        return;
-    }
+    nlf->parse(def);// XXX: throws and leaks nlf on errors
 
     // add to global config list
     nlf->next = formats;

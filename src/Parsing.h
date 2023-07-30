@@ -29,7 +29,7 @@ int64_t GetInteger64(void);
 /**
  * Parses an integer value.
  * Uses a method that obeys hexadecimal 0xN syntax needed for certain bitmasks.
- * self_destruct() will be called to abort when invalid tokens are encountered.
+ * A Cfg::FatalError exception will be thrown when invalid tokens are encountered.
  */
 int GetInteger(void);
 

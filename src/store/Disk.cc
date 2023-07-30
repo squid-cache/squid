@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "compat/strtoll.h"
 #include "ConfigOption.h"
 #include "ConfigParser.h"
@@ -267,12 +268,12 @@ void
 Store::Disk::parseOptions(int isaReconfig)
 {
     const bool old_read_only = flags.read_only;
-    char *name, *value;
 
     ConfigOption *newOption = getOptionTree();
 
-    while ((name = ConfigParser::NextToken()) != nullptr) {
-        value = strchr(name, '=');
+    while (char *token = ConfigParser::NextToken()) {
+        const char *name = token;
+        char *value = strchr(token, '=');
 
         if (value) {
             *value = '\0';  /* cut on = */
@@ -281,11 +282,8 @@ Store::Disk::parseOptions(int isaReconfig)
 
         debugs(3,2, "cache_dir " << name << '=' << (value ? value : ""));
 
-        if (newOption)
-            if (!newOption->parse(name, value, isaReconfig)) {
-                self_destruct();
-                return;
-            }
+        if (newOption && !newOption->parse(name, value, isaReconfig))
+            throw Cfg::FatalError(ToSBuf("unknown option: ", token));
     }
 
     delete newOption;
@@ -354,10 +352,7 @@ Store::Disk::optionObjectSizeParse(char const *option, const char *value, int is
     } else
         return false;
 
-    if (!value) {
-        self_destruct();
-        return false;
-    }
+    Cfg::RequireValue(option, value);
 
     int64_t size = strtoll(value, nullptr, 10);
 
