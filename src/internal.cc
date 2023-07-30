@@ -86,8 +86,7 @@ internalStaticCheck(const SBuf &urlPath)
 bool
 ForSomeCacheManager(const SBuf &urlPath)
 {
-    static const SBuf mgrPfx("/squid-internal-mgr");
-    return urlPath.startsWith(mgrPfx);
+    return urlPath.startsWith(CacheManager::WellKnownUrlPathPrefix());
 }
 
 /*
