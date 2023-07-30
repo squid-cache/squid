@@ -165,6 +165,13 @@ MgrFieldChars(const AnyP::ProtocolType &protocol)
     return actionChars;
 }
 
+const SBuf &
+CacheManager::WellKnownUrlPathPrefix()
+{
+    static const SBuf prefix("/squid-internal-mgr/");
+    return prefix;
+}
+
 /**
  * define whether the URL is a cache-manager URL and parse the action
  * requested by the user. Checks via CacheManager::ActionProtection() that the
@@ -183,9 +190,7 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
 {
     Parser::Tokenizer tok(uri.path());
 
-    static const SBuf internalMagicPrefix("/squid-internal-mgr/");
-    if (!tok.skip(internalMagicPrefix) && !tok.skip('/'))
-        throw TextException("invalid URL path", Here());
+    Assure(tok.skip(WellKnownUrlPathPrefix()));
 
     Mgr::Command::Pointer cmd = new Mgr::Command();
     cmd->params.httpUri = SBufToString(uri.absolute());
@@ -394,7 +399,7 @@ CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request,
            client << " requesting '" <<
            actionName << "'" );
 
-    // special case: /squid-internal-mgr/ index page
+    // special case: an index page
     if (!strcmp(cmd->profile->name, "index")) {
         ErrorState err(MGR_INDEX, Http::scOkay, request, ale);
         err.url = xstrdup(entry->url());

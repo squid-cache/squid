@@ -2608,8 +2608,7 @@ tests_testCacheManager_SOURCES = \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testCacheManager_SOURCES = \
-	$(BUILT_SOURCES) \
-	tests/stub_libtime.cc
+	$(BUILT_SOURCES)
 # comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
 	libsquid.la \
@@ -2644,6 +2643,7 @@ tests_testCacheManager_LDADD = \
 	mem/libmem.la \
 	store/libstore.la \
 	sbuf/libsbuf.la \
+	time/libtime.la \
 	debug/libdebug.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
