@@ -844,9 +844,13 @@ helper::~helper()
 {
     /* note, don't free id_name, it probably points to static memory */
 
-    // TODO: if the queue is not empty it will leak Helper::Request's
-    if (!queue.empty())
-        debugs(84, DBG_CRITICAL, "WARNING: freeing " << id_name << " helper with " << stats.queue_size << " requests queued");
+    // An non-empty queue would leak Helper::Xaction objects, stalling any
+    // pending (and even future collapsed) transactions. A live server will keep
+    // us, its parent, alive due to reference counting. The idle=1 minimum means
+    // that either there has to be at least one server alive, or the last
+    // attempt to start a server has failed. If such an attempt fails,
+    // handleFewerServers() is called to drain the queue.
+    assert(queue.empty());
 }
 
 void
@@ -884,6 +888,21 @@ helper::handleFewerServers(const bool madeProgress)
             debugs(80, DBG_CRITICAL, "ERROR: The " << id_name << " helpers are crashing too rapidly, need help!");
         else
             fatalf("The %s helpers are crashing too rapidly, need help!", id_name);
+    }
+
+    // no helper servers means nobody can advance our queued transactions
+    if (!childs.n_active && queue.size()) {
+        debugs(80, DBG_CRITICAL, "ERROR: Dropping " << queue.size() << ' ' <<
+               id_name << " helper requests due to lack of helper processes");
+        // similar to HelperServerBase::dropQueued()
+        while (const auto r = nextRequest()) {
+            void *cbdata;
+            if (cbdataReferenceValidDone(r->request.data, &cbdata)) {
+                r->reply.result = Helper::Unknown;
+                r->request.callback(cbdata, r->reply);
+            }
+            delete r;
+        }
     }
 }
 
