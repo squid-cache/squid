@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,13 +15,45 @@
 #include "ipc/Inquirer.h"
 #include "ipc/Port.h"
 #include "ipc/TypedMsgHdr.h"
+#include "mem/PoolingAllocator.h"
 #include "MemBuf.h"
+
 #include <algorithm>
+#include <unordered_map>
 
-CBDATA_NAMESPACED_CLASS_INIT(Ipc, Inquirer);
-
-Ipc::Inquirer::RequestsMap Ipc::Inquirer::TheRequestsMap;
 Ipc::RequestId::Index Ipc::Inquirer::LastRequestId = 0;
+
+namespace Ipc {
+
+/// maps request->id to the Inquirer waiting for the response to that request
+using InquirerPointer = CbcPointer<Inquirer>;
+using WaitingInquiriesItem = std::pair<const RequestId::Index, InquirerPointer>;
+using WaitingInquiries = std::unordered_map<
+                         RequestId::Index,
+                         InquirerPointer,
+                         std::hash<RequestId::Index>,
+                         std::equal_to<RequestId::Index>,
+                         PoolingAllocator<WaitingInquiriesItem> >;
+
+/// pending Inquirer requests for this process
+static WaitingInquiries TheWaitingInquirers;
+
+/// returns and forgets the Inquirer waiting for the given requests
+static InquirerPointer
+DequeueRequest(const RequestId::Index requestId)
+{
+    debugs(54, 3, "requestId " << requestId);
+    Assure(requestId != 0);
+    const auto request = TheWaitingInquirers.find(requestId);
+    if (request != TheWaitingInquirers.end()) {
+        const auto inquirer = request->second;
+        TheWaitingInquirers.erase(request);
+        return inquirer; // may already be gone by now
+    }
+    return nullptr;
+}
+
+} // namespace Ipc
 
 /// compare Ipc::StrandCoord using kidId, for std::sort() below
 static bool
@@ -36,7 +68,7 @@ Ipc::Inquirer::Inquirer(Request::Pointer aRequest, const StrandCoords& coords,
     codeContext(CodeContext::Current()),
     request(aRequest), strands(coords), pos(strands.begin()), timeout(aTimeout)
 {
-    debugs(54, 5, HERE);
+    debugs(54, 5, MYNAME);
 
     // order by ascending kid IDs; useful for non-aggregatable stats
     std::sort(strands.begin(), strands.end(), LesserStrandByKidId);
@@ -44,7 +76,7 @@ Ipc::Inquirer::Inquirer(Request::Pointer aRequest, const StrandCoords& coords,
 
 Ipc::Inquirer::~Inquirer()
 {
-    debugs(54, 5, HERE);
+    debugs(54, 5, MYNAME);
     cleanup();
 }
 
@@ -68,14 +100,12 @@ Ipc::Inquirer::inquire()
     }
 
     Must(request->requestId == 0);
-    AsyncCall::Pointer callback = asyncCall(54, 5, "Mgr::Inquirer::handleRemoteAck",
-                                            HandleAckDialer(this, &Inquirer::handleRemoteAck, NULL));
     if (++LastRequestId == 0) // don't use zero value as request->requestId
         ++LastRequestId;
     request->requestId = LastRequestId;
     const int kidId = pos->kidId;
-    debugs(54, 4, HERE << "inquire kid: " << kidId << status());
-    TheRequestsMap[request->requestId] = callback;
+    debugs(54, 4, "inquire kid: " << kidId << status());
+    TheWaitingInquirers[request->requestId] = this;
     TypedMsgHdr message;
     request->pack(message);
     SendMessage(Port::MakeAddr(strandAddrLabel, kidId), message);
@@ -87,7 +117,7 @@ Ipc::Inquirer::inquire()
 void
 Ipc::Inquirer::handleRemoteAck(Response::Pointer response)
 {
-    debugs(54, 4, HERE << status());
+    debugs(54, 4, status());
     request->requestId = 0;
     removeTimeoutEvent();
     if (aggregate(response)) {
@@ -102,7 +132,7 @@ Ipc::Inquirer::handleRemoteAck(Response::Pointer response)
 void
 Ipc::Inquirer::swanSong()
 {
-    debugs(54, 5, HERE);
+    debugs(54, 5, MYNAME);
     removeTimeoutEvent();
     if (request->requestId > 0) {
         DequeueRequest(request->requestId);
@@ -121,48 +151,33 @@ Ipc::Inquirer::doneAll() const
 void
 Ipc::Inquirer::handleException(const std::exception& e)
 {
-    debugs(54, 3, HERE << e.what());
+    debugs(54, 3, e.what());
     mustStop("exception");
 }
 
 void
 Ipc::Inquirer::callException(const std::exception& e)
 {
-    debugs(54, 3, HERE);
+    debugs(54, 3, MYNAME);
     try {
         handleException(e);
     } catch (const std::exception& ex) {
-        debugs(54, DBG_CRITICAL, HERE << ex.what());
+        debugs(54, DBG_CRITICAL, ex.what());
     }
     AsyncJob::callException(e);
-}
-
-/// returns and forgets the right Inquirer callback for strand request
-AsyncCall::Pointer
-Ipc::Inquirer::DequeueRequest(const RequestId::Index requestId)
-{
-    debugs(54, 3, HERE << " requestId " << requestId);
-    Must(requestId != 0);
-    AsyncCall::Pointer call;
-    RequestsMap::iterator request = TheRequestsMap.find(requestId);
-    if (request != TheRequestsMap.end()) {
-        call = request->second;
-        Must(call != NULL);
-        TheRequestsMap.erase(request);
-    }
-    return call;
 }
 
 void
 Ipc::Inquirer::HandleRemoteAck(const Response& response)
 {
     Must(response.requestId != 0);
-    AsyncCall::Pointer call = DequeueRequest(response.requestId);
-    if (call != NULL) {
-        HandleAckDialer* dialer = dynamic_cast<HandleAckDialer*>(call->getDialer());
-        Must(dialer);
-        dialer->arg1 = response.clone();
-        ScheduleCallHere(call);
+    const auto inquirer = DequeueRequest(response.requestId);
+    if (inquirer.valid()) {
+        CallService(inquirer->codeContext, [&] {
+            const auto call = asyncCall(54, 5, "Ipc::Inquirer::handleRemoteAck",
+                                        JobMemFun(inquirer, &Inquirer::handleRemoteAck, response.clone()));
+            ScheduleCallHere(call);
+        });
     }
 }
 
@@ -178,8 +193,8 @@ Ipc::Inquirer::removeTimeoutEvent()
 void
 Ipc::Inquirer::RequestTimedOut(void* param)
 {
-    debugs(54, 3, HERE);
-    Must(param != NULL);
+    debugs(54, 3, MYNAME);
+    Must(param != nullptr);
     Inquirer* cmi = static_cast<Inquirer*>(param);
     // use async call to enable job call protection that time events lack
     CallBack(cmi->codeContext, [&cmi] {
@@ -191,7 +206,7 @@ Ipc::Inquirer::RequestTimedOut(void* param)
 void
 Ipc::Inquirer::requestTimedOut()
 {
-    debugs(54, 3, HERE);
+    debugs(54, 3, MYNAME);
     if (request->requestId != 0) {
         DequeueRequest(request->requestId);
         request->requestId = 0;

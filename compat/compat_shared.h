@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -40,36 +40,18 @@ extern void (*failure_notify) (const char *);
 #include <sys/resource.h>       /* needs sys/time.h above it */
 #endif
 
-/*
- * DIRENT functionality can apparently come from many places.
- * With various complaints by different compilers
- */
-#if HAVE_DIRENT_H
-#include <dirent.h>
-#define NAMLEN(dirent) strlen((dirent)->d_name)
-#else /* if not HAVE_DIRENT_H */
-#define dirent direct
-#define NAMLEN(dirent) (dirent)->d_namlen
-#if HAVE_SYS_NDIR_H
-#include <sys/ndir.h>
-#endif /* HAVE_SYS_NDIR_H */
-#if HAVE_SYS_DIR_H
-#include <sys/dir.h>
-#endif /* HAVE_SYS_DIR_H */
-#if HAVE_NDIR_H
-#include <ndir.h>
-#endif /* HAVE_NDIR_H */
-#endif /* HAVE_DIRENT_H */
-
 /* The structure dirent also varies between 64-bit and 32-bit environments.
  * Define our own dirent_t type for consistent simple internal use.
  * NP: GCC seems not to care about the type naming differences.
  */
+#if HAVE_DIRENT_H
+#include <dirent.h>
 #if defined(__USE_FILE_OFFSET64) && !defined(__GNUC__)
 #define dirent_t struct dirent64
 #else
 #define dirent_t struct dirent
 #endif
+#endif /* HAVE_DIRENT_H */
 
 /*
  * Filedescriptor limits in the different select loops
@@ -79,7 +61,7 @@ extern void (*failure_notify) (const char *);
  *     Linux and others including FreeBSD <7, define it as signed.
  *     If this causes any issues please contact squid-dev mailing list.
  */
-#if defined(USE_SELECT) || defined(USE_SELECT_WIN32)
+#if defined(USE_SELECT)
 /* Limited by design */
 # define SQUID_MAXFD_LIMIT    ((signed int)FD_SETSIZE)
 
@@ -257,15 +239,15 @@ const char * squid_strnstr(const char *s, const char *find, size_t slen);
 #endif
 
 #if __GNUC__
-#if !defined(PRINTF_FORMAT_ARG1)
+#if _SQUID_MINGW_
+#define PRINTF_FORMAT_ARG1 __attribute__ ((format (gnu_printf, 1, 2)))
+#define PRINTF_FORMAT_ARG2 __attribute__ ((format (gnu_printf, 2, 3)))
+#define PRINTF_FORMAT_ARG3 __attribute__ ((format (gnu_printf, 3, 4)))
+#else
 #define PRINTF_FORMAT_ARG1 __attribute__ ((format (printf, 1, 2)))
-#endif
-#if !defined(PRINTF_FORMAT_ARG2)
 #define PRINTF_FORMAT_ARG2 __attribute__ ((format (printf, 2, 3)))
-#endif
-#if !defined(PRINTF_FORMAT_ARG3)
 #define PRINTF_FORMAT_ARG3 __attribute__ ((format (printf, 3, 4)))
-#endif
+#endif /* !_SQUID_MINGW_ */
 #else /* !__GNU__ */
 #define PRINTF_FORMAT_ARG1
 #define PRINTF_FORMAT_ARG2

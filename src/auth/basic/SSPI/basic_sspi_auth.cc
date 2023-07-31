@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -42,12 +42,6 @@
 #include <getopt.h>
 #endif
 
-/* Check if we try to compile on a Windows Platform */
-#if !_SQUID_WINDOWS_
-/* NON Windows Platform !!! */
-#error NON WINDOWS PLATFORM
-#endif
-
 static char NTGroup[256];
 char * NTAllowedGroup;
 char * NTDisAllowedGroup;
@@ -73,7 +67,7 @@ usage(const char *name)
             name);
 }
 
-void
+static void
 process_options(int argc, char *argv[])
 {
     int opt;
@@ -100,7 +94,7 @@ process_options(int argc, char *argv[])
             exit(EXIT_SUCCESS);
         case '?':
             opt = optopt;
-        /* fall thru to default */
+            [[fallthrough]];
         default:
             fprintf(stderr, "FATAL: Unknown option: -%c\n", opt);
             usage(argv[0]);
@@ -132,8 +126,8 @@ main(int argc, char **argv)
     atexit(UnloadSecurityDll);
 
     /* initialize FDescs */
-    setbuf(stdout, NULL);
-    setbuf(stderr, NULL);
+    setbuf(stdout, nullptr);
+    setbuf(stderr, nullptr);
 
     while (fgets(wstr, HELPER_INPUT_BUFFER, stdin) != NULL) {
 

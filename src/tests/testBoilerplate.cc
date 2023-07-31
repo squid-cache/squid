@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,11 +12,17 @@
 
 #include <stdexcept>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testBoilerplate );
+CPPUNIT_TEST_SUITE_REGISTRATION( TestBoilerplate );
 
 void
-testBoilerplate::testDemonstration()
+TestBoilerplate::testDemonstration()
 {
     CPPUNIT_ASSERT_EQUAL(0, 0);
+}
+
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
 }
 

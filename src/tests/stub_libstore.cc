@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -41,18 +41,16 @@ void Controller::configure() STUB
 void Controller::handleIdleEntry(StoreEntry &) STUB
 void Controller::freeMemorySpace(const int) STUB
 void Controller::memoryOut(StoreEntry &, const bool) STUB
-void Controller::updateOnNotModified(StoreEntry *, StoreEntry &) STUB
+bool Controller::updateOnNotModified(StoreEntry *, StoreEntry &) STUB
 bool Controller::allowCollapsing(StoreEntry *, const RequestFlags &, const HttpRequestMethod &) STUB_RETVAL(false)
 void Controller::addReading(StoreEntry *, const cache_key *) STUB
 void Controller::addWriting(StoreEntry *, const cache_key *) STUB
 bool Controller::transientsReader(const StoreEntry &) const STUB_RETVAL(false)
 bool Controller::transientsWriter(const StoreEntry &) const STUB_RETVAL(false)
-void Controller::transientsCompleteWriting(StoreEntry &) STUB
 void Controller::syncCollapsed(const sfileno) STUB
-void Controller::stopSharing(StoreEntry &) STUB
+void Controller::noteStoppedSharedWriting(StoreEntry &) STUB
 int Controller::transientReaders(const StoreEntry &) const STUB_RETVAL(0)
 void Controller::transientsDisconnect(StoreEntry &) STUB
-void Controller::transientsClearCollapsingRequirement(StoreEntry &) STUB
 void Controller::memoryDisconnect(StoreEntry &) STUB
 StoreSearch *Controller::search() STUB_RETVAL(nullptr)
 bool Controller::SmpAware() STUB_RETVAL(false)
@@ -117,7 +115,7 @@ void Disks::reference(StoreEntry &) STUB
 bool Disks::dereference(StoreEntry &) STUB_RETVAL(false)
 void Disks::updateHeaders(StoreEntry *) STUB
 void Disks::maintain() STUB
-bool Disks::anchorToCache(StoreEntry &, bool &) STUB_RETVAL(false)
+bool Disks::anchorToCache(StoreEntry &) STUB_RETVAL(false)
 bool Disks::updateAnchored(StoreEntry &) STUB_RETVAL(false)
 void Disks::evictCached(StoreEntry &) STUB
 void Disks::evictIfFound(const cache_key *) STUB
@@ -127,7 +125,7 @@ int64_t Disks::accumulateMore(const StoreEntry&) const STUB_RETVAL(0)
 bool Disks::SmpAware() STUB_RETVAL(false)
 bool Disks::hasReadableEntry(const StoreEntry &) const STUB_RETVAL(false)
 void Disks::Parse(DiskConfig &) STUB
-void Disks::Dump(const DiskConfig &, StoreEntry &, const char *name) STUB
+void Disks::Dump(const DiskConfig &, StoreEntry &, const char *) STUB
 SwapDir *Disks::SelectSwapDir(const StoreEntry *) STUB_RETVAL(nullptr)
 }
 void storeDirOpenSwapLogs(void) STUB
@@ -142,4 +140,12 @@ namespace Store
 {
 StoreSearch *NewLocalSearch() STUB_RETVAL(nullptr)
 }
+
+#include "store/SwapMetaIn.h"
+size_t Store::UnpackSwapMetaSize(const SBuf &) STUB_RETVAL(0)
+size_t Store::UnpackIndexSwapMeta(const MemBuf &, StoreEntry &, cache_key *) STUB_RETVAL(0)
+void Store::UnpackHitSwapMeta(char const *, ssize_t, StoreEntry &) STUB
+
+#include "store/SwapMetaOut.h"
+AllocedBuf Store::PackSwapMeta(const StoreEntry &, size_t &) STUB_RETVAL(nullptr)
 

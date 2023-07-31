@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,11 +28,12 @@
 #include "ConfigOption.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
-#include "DebugMessages.h"
+#include "debug/Messages.h"
 #include "DiskIO/DiskIOModule.h"
 #include "eui/Config.h"
 #include "ExternalACL.h"
 #include "format/Format.h"
+#include "fqdncache.h"
 #include "ftp/Elements.h"
 #include "globals.h"
 #include "HttpHeaderTools.h"
@@ -158,8 +159,6 @@ static const char *const B_KBYTES_STR = "KB";
 static const char *const B_MBYTES_STR = "MB";
 static const char *const B_GBYTES_STR = "GB";
 
-static const char *const list_sep = ", \t\n\r";
-
 // std::chrono::years requires C++20. Do our own rough calculation for now.
 static const double HoursPerYear = 24*365.2522;
 
@@ -268,6 +267,11 @@ static void free_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **prot
  */
 static ConfigParser LegacyParser = ConfigParser();
 
+const char *cfg_directive = nullptr;
+const char *cfg_filename = nullptr;
+int config_lineno = 0;
+char config_input_line[BUFSIZ] = {};
+
 void
 self_destruct(void)
 {
@@ -296,14 +300,14 @@ static int
 parseManyConfigFiles(char* files, int depth)
 {
     int error_count = 0;
-    char* saveptr = NULL;
+    char* saveptr = nullptr;
 #if HAVE_GLOB
     char *path;
     glob_t globbuf;
     int i;
     memset(&globbuf, 0, sizeof(globbuf));
-    for (path = strwordtok(files, &saveptr); path; path = strwordtok(NULL, &saveptr)) {
-        if (glob(path, globbuf.gl_pathc ? GLOB_APPEND : 0, NULL, &globbuf) != 0) {
+    for (path = strwordtok(files, &saveptr); path; path = strwordtok(nullptr, &saveptr)) {
+        if (glob(path, globbuf.gl_pathc ? GLOB_APPEND : 0, nullptr, &globbuf) != 0) {
             int xerrno = errno;
             fatalf("Unable to find configuration file: %s: %s", path, xstrerr(xerrno));
         }
@@ -316,7 +320,7 @@ parseManyConfigFiles(char* files, int depth)
     char* file = strwordtok(files, &saveptr);
     while (file != NULL) {
         error_count += parseOneConfigFile(file, depth);
-        file = strwordtok(NULL, &saveptr);
+        file = strwordtok(nullptr, &saveptr);
     }
 #endif /* HAVE_GLOB */
     return error_count;
@@ -325,8 +329,8 @@ parseManyConfigFiles(char* files, int depth)
 static void
 ReplaceSubstr(char*& str, int& len, unsigned substrIdx, unsigned substrLen, const char* newSubstr)
 {
-    assert(str != NULL);
-    assert(newSubstr != NULL);
+    assert(str != nullptr);
+    assert(newSubstr != nullptr);
 
     unsigned newSubstrLen = strlen(newSubstr);
     if (newSubstrLen > substrLen)
@@ -343,9 +347,9 @@ ReplaceSubstr(char*& str, int& len, unsigned substrIdx, unsigned substrLen, cons
 static void
 SubstituteMacro(char*& line, int& len, const char* macroName, const char* substStr)
 {
-    assert(line != NULL);
-    assert(macroName != NULL);
-    assert(substStr != NULL);
+    assert(line != nullptr);
+    assert(macroName != nullptr);
+    assert(substStr != nullptr);
     unsigned macroNameLen = strlen(macroName);
     while (const char* macroPos = strstr(line, macroName)) // we would replace all occurrences
         ReplaceSubstr(line, len, macroPos - line, macroNameLen, substStr);
@@ -362,7 +366,7 @@ ProcessMacros(char*& line, int& len)
 static void
 trim_trailing_ws(char* str)
 {
-    assert(str != NULL);
+    assert(str != nullptr);
     unsigned i = strlen(str);
     while ((i > 0) && xisspace(str[i - 1]))
         --i;
@@ -372,8 +376,8 @@ trim_trailing_ws(char* str)
 static const char*
 FindStatement(const char* line, const char* statement)
 {
-    assert(line != NULL);
-    assert(statement != NULL);
+    assert(line != nullptr);
+    assert(statement != nullptr);
 
     const char* str = skip_ws(line);
     unsigned len = strlen(statement);
@@ -385,13 +389,13 @@ FindStatement(const char* line, const char* statement)
             return skip_ws(str);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 static bool
 StrToInt(const char* str, long& number)
 {
-    assert(str != NULL);
+    assert(str != nullptr);
 
     char* end;
     number = strtol(str, &end, 0);
@@ -402,7 +406,7 @@ StrToInt(const char* str, long& number)
 static bool
 EvalBoolExpr(const char* expr)
 {
-    assert(expr != NULL);
+    assert(expr != nullptr);
     if (strcmp(expr, "true") == 0) {
         return true;
     } else if (strcmp(expr, "false") == 0) {
@@ -430,16 +434,16 @@ EvalBoolExpr(const char* expr)
 static int
 parseOneConfigFile(const char *file_name, unsigned int depth)
 {
-    FILE *fp = NULL;
+    FILE *fp = nullptr;
     const char *orig_cfg_filename = cfg_filename;
     const int orig_config_lineno = config_lineno;
-    char *token = NULL;
-    char *tmp_line = NULL;
+    char *token = nullptr;
+    char *tmp_line = nullptr;
     int tmp_line_len = 0;
     int err_count = 0;
     int is_pipe = 0;
 
-    debugs(3, DBG_IMPORTANT, "Processing Configuration File: " << file_name << " (depth " << depth << ")");
+    debugs(3, Important(68), "Processing Configuration File: " << file_name << " (depth " << depth << ")");
     if (depth > 16) {
         fatalf("WARNING: can't include %s: includes are nested too deeply (>16)!\n", file_name);
         return 1;
@@ -560,7 +564,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
                     }
                 } catch (...) {
                     // fatal for now
-                    debugs(3, DBG_CRITICAL, "configuration error: " << CurrentException);
+                    debugs(3, DBG_CRITICAL, "ERROR: configuration failure: " << CurrentException);
                     self_destruct();
                 }
             }
@@ -595,7 +599,7 @@ parseConfigFileOrThrow(const char *file_name)
 {
     int err_count = 0;
 
-    debugs(5, 4, HERE);
+    debugs(5, 4, MYNAME);
 
     configFreeMemory();
 
@@ -727,13 +731,6 @@ configDoConfigure(void)
     }
 #endif
 
-    if (Config.Announce.period > 0) {
-        Config.onoff.announce = 1;
-    } else {
-        Config.Announce.period = 86400 * 365;   /* one year */
-        Config.onoff.announce = 0;
-    }
-
     if (Config.onoff.httpd_suppress_version_string)
         visible_appname_string = (char *)appname_string;
     else
@@ -757,14 +754,14 @@ configDoConfigure(void)
         if (*Config.appendDomain != '.')
             fatal("append_domain must begin with a '.'");
 
-    if (Config.errHtmlText == NULL)
+    if (Config.errHtmlText == nullptr)
         Config.errHtmlText = xstrdup(null_string);
 
 #if !HAVE_SETRLIMIT || !defined(RLIMIT_NOFILE)
     if (Config.max_filedescriptors > 0) {
         debugs(0, DBG_IMPORTANT, "WARNING: max_filedescriptors disabled. Operating System setrlimit(RLIMIT_NOFILE) is missing.");
     }
-#elif USE_SELECT || USE_SELECT_WIN32
+#elif USE_SELECT
     if (Config.max_filedescriptors > FD_SETSIZE) {
         debugs(0, DBG_IMPORTANT, "WARNING: max_filedescriptors limited to " << FD_SETSIZE << " by select() algorithm.");
     }
@@ -780,7 +777,7 @@ configDoConfigure(void)
      * the extra space is for loop detection in client_side.c -- we search
      * for substrings in the Via header.
      */
-    snprintf(ThisCache2, sizeof(ThisCache), " %s (%s)",
+    snprintf(ThisCache2, sizeof(ThisCache2), " %s (%s)",
              uniqueHostname(),
              visible_appname_string);
 
@@ -903,11 +900,11 @@ configDoConfigure(void)
     Config2.onoff.enable_purge = (ACLMethodData::ThePurgeCount > 0);
 
     if (geteuid() == 0) {
-        if (NULL != Config.effectiveUser) {
+        if (nullptr != Config.effectiveUser) {
 
             struct passwd *pwd = getpwnam(Config.effectiveUser);
 
-            if (NULL == pwd) {
+            if (nullptr == pwd) {
                 /*
                  * Andres Kroonmaa <andre@online.ee>:
                  * Some getpwnam() implementations (Solaris?) require
@@ -945,11 +942,11 @@ configDoConfigure(void)
         Config2.effectiveGroupID = getegid();
     }
 
-    if (NULL != Config.effectiveGroup) {
+    if (nullptr != Config.effectiveGroup) {
 
         struct group *grp = getgrnam(Config.effectiveGroup);
 
-        if (NULL == grp) {
+        if (nullptr == grp) {
             fatalf("getgrnam failed to find groupid for effective group '%s'",
                    Config.effectiveGroup);
             return;
@@ -964,7 +961,7 @@ configDoConfigure(void)
 #endif
 
     if (Security::ProxyOutgoingConfig.encryptTransport) {
-        debugs(3, DBG_IMPORTANT, "Initializing https:// proxy context");
+        debugs(3, 2, "initializing https:// proxy context");
         Config.ssl_client.sslContext = Security::ProxyOutgoingConfig.createClientContext(false);
         if (!Config.ssl_client.sslContext) {
 #if USE_OPENSSL
@@ -978,27 +975,27 @@ configDoConfigure(void)
 #endif
     }
 
-    for (CachePeer *p = Config.peers; p != NULL; p = p->next) {
+    for (CachePeer *p = Config.peers; p != nullptr; p = p->next) {
 
         // default value for ssldomain= is the peer host/IP
         if (p->secure.sslDomain.isEmpty())
             p->secure.sslDomain = p->host;
 
         if (p->secure.encryptTransport) {
-            debugs(3, DBG_IMPORTANT, "Initializing cache_peer " << p->name << " TLS context");
+            debugs(3, 2, "initializing TLS context for cache_peer " << *p);
             p->sslContext = p->secure.createClientContext(true);
             if (!p->sslContext) {
-                debugs(3, DBG_CRITICAL, "ERROR: Could not initialize cache_peer " << p->name << " TLS context");
+                debugs(3, DBG_CRITICAL, "ERROR: Could not initialize TLS context for cache_peer " << *p);
                 self_destruct();
                 return;
             }
         }
     }
 
-    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
+    for (AnyP::PortCfgPointer s = HttpPortList; s != nullptr; s = s->next) {
         if (!s->secure.encryptTransport)
             continue;
-        debugs(3, DBG_IMPORTANT, "Initializing " << AnyP::UriScheme(s->transport.protocol) << "_port " << s->s << " TLS contexts");
+        debugs(3, 2, "initializing " << AnyP::UriScheme(s->transport.protocol) << "_port " << s->s << " TLS contexts");
         s->secure.initServerContexts(*s);
     }
 
@@ -1256,7 +1253,7 @@ parseBytesLine64(int64_t * bptr, const char *units)
         return;
     }
 
-    if ((token = ConfigParser::NextToken()) == NULL) {
+    if ((token = ConfigParser::NextToken()) == nullptr) {
         self_destruct();
         return;
     }
@@ -1272,7 +1269,7 @@ parseBytesLine64(int64_t * bptr, const char *units)
 
     if (0.0 == d)
         (void) 0;
-    else if ((token = ConfigParser::NextToken()) == NULL)
+    else if ((token = ConfigParser::NextToken()) == nullptr)
         debugs(3, DBG_CRITICAL, "WARNING: No units on '" <<
                config_input_line << "', assuming " <<
                d << " " <<  units  );
@@ -1303,7 +1300,7 @@ parseBytesLine(size_t * bptr, const char *units)
         return;
     }
 
-    if ((token = ConfigParser::NextToken()) == NULL) {
+    if ((token = ConfigParser::NextToken()) == nullptr) {
         self_destruct();
         return;
     }
@@ -1319,7 +1316,7 @@ parseBytesLine(size_t * bptr, const char *units)
 
     if (0.0 == d)
         (void) 0;
-    else if ((token = ConfigParser::NextToken()) == NULL)
+    else if ((token = ConfigParser::NextToken()) == nullptr)
         debugs(3, DBG_CRITICAL, "WARNING: No units on '" <<
                config_input_line << "', assuming " <<
                d << " " <<  units  );
@@ -1350,7 +1347,7 @@ parseBytesLineSigned(ssize_t * bptr, const char *units)
         return;
     }
 
-    if ((token = ConfigParser::NextToken()) == NULL) {
+    if ((token = ConfigParser::NextToken()) == nullptr) {
         self_destruct();
         return;
     }
@@ -1366,7 +1363,7 @@ parseBytesLineSigned(ssize_t * bptr, const char *units)
 
     if (0.0 == d)
         (void) 0;
-    else if ((token = ConfigParser::NextToken()) == NULL)
+    else if ((token = ConfigParser::NextToken()) == nullptr)
         debugs(3, DBG_CRITICAL, "WARNING: No units on '" <<
                config_input_line << "', assuming " <<
                d << " " <<  units  );
@@ -1480,7 +1477,7 @@ free_SBufList(SBufList *list)
 static void
 dump_acl(StoreEntry * entry, const char *name, ACL * ae)
 {
-    while (ae != NULL) {
+    while (ae != nullptr) {
         debugs(3, 3, "dump_acl: " << name << " " << ae->name);
         storeAppendPrintf(entry, "%s %s %s ",
                           name,
@@ -1605,7 +1602,7 @@ static void
 free_acl_address(Acl::Address ** head)
 {
     delete *head;
-    *head = NULL;
+    *head = nullptr;
 }
 
 static void
@@ -1636,7 +1633,7 @@ parse_acl_tos(acl_tos ** head)
         return;
     }
 
-    if (!xstrtoui(token, NULL, &tos, 0, std::numeric_limits<tos_t>::max())) {
+    if (!xstrtoui(token, nullptr, &tos, 0, std::numeric_limits<tos_t>::max())) {
         self_destruct();
         return;
     }
@@ -1664,7 +1661,7 @@ static void
 free_acl_tos(acl_tos ** head)
 {
     delete *head;
-    *head = NULL;
+    *head = nullptr;
 }
 
 #if SO_MARK && USE_LIBCAP
@@ -1708,7 +1705,7 @@ static void
 free_acl_nfmark(acl_nfmark ** head)
 {
     delete *head;
-    *head = NULL;
+    *head = nullptr;
 }
 #endif /* SO_MARK */
 
@@ -1747,7 +1744,7 @@ static void
 free_acl_b_size_t(AclSizeLimit ** head)
 {
     delete *head;
-    *head = NULL;
+    *head = nullptr;
 }
 
 #if USE_DELAY_POOLS
@@ -1855,11 +1852,11 @@ dump_http_header_access(StoreEntry * entry, const char *name, const HeaderMangle
 static void
 parse_http_header_access(HeaderManglers **pm)
 {
-    char *t = NULL;
+    char *t = nullptr;
 
-    if ((t = ConfigParser::NextToken()) == NULL) {
+    if ((t = ConfigParser::NextToken()) == nullptr) {
         debugs(3, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(3, DBG_CRITICAL, "parse_http_header_access: missing header name.");
+        debugs(3, DBG_CRITICAL, "ERROR: parse_http_header_access: missing header name.");
         return;
     }
 
@@ -1880,7 +1877,7 @@ free_HeaderManglers(HeaderManglers **pm)
     // we delete the entire http_header_* mangler configuration at once
     if (const HeaderManglers *manglers = *pm) {
         delete manglers;
-        *pm = NULL;
+        *pm = nullptr;
     }
 }
 
@@ -1894,11 +1891,11 @@ dump_http_header_replace(StoreEntry * entry, const char *name, const HeaderMangl
 static void
 parse_http_header_replace(HeaderManglers **pm)
 {
-    char *t = NULL;
+    char *t = nullptr;
 
-    if ((t = ConfigParser::NextToken()) == NULL) {
+    if ((t = ConfigParser::NextToken()) == nullptr) {
         debugs(3, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(3, DBG_CRITICAL, "parse_http_header_replace: missing header name.");
+        debugs(3, DBG_CRITICAL, "ERROR: parse_http_header_replace: missing header name.");
         return;
     }
 
@@ -1921,7 +1918,7 @@ dump_cachedir(StoreEntry * entry, const char *name, const Store::DiskConfig &swa
 static int
 check_null_string(char *s)
 {
-    return s == NULL;
+    return s == nullptr;
 }
 
 #if USE_AUTH
@@ -1943,19 +1940,19 @@ parse_authparam(Auth::ConfigVector * config)
     /* find a configuration for the scheme in the currently parsed configs... */
     Auth::SchemeConfig *schemeCfg = Auth::SchemeConfig::Find(type_str);
 
-    if (schemeCfg == NULL) {
+    if (schemeCfg == nullptr) {
         /* Create a configuration based on the scheme info */
         Auth::Scheme::Pointer theScheme = Auth::Scheme::Find(type_str);
 
-        if (theScheme == NULL) {
-            debugs(3, DBG_CRITICAL, "Parsing Config File: Unknown authentication scheme '" << type_str << "'.");
+        if (theScheme == nullptr) {
+            debugs(3, DBG_CRITICAL, "ERROR: Failure while parsing Config File: Unknown authentication scheme '" << type_str << "'.");
             self_destruct();
             return;
         }
 
         config->push_back(theScheme->createConfig());
         schemeCfg = Auth::SchemeConfig::Find(type_str);
-        if (schemeCfg == NULL) {
+        if (schemeCfg == nullptr) {
             debugs(3, DBG_CRITICAL, "Parsing Config File: Corruption configuring authentication scheme '" << type_str << "'.");
             self_destruct();
             return;
@@ -2076,7 +2073,7 @@ dump_peer(StoreEntry * entry, const char *name, CachePeer * p)
     NeighborTypeDomainList *t;
     LOCAL_ARRAY(char, xname, 128);
 
-    while (p != NULL) {
+    while (p != nullptr) {
         storeAppendPrintf(entry, "%s %s %s %d %d name=%s",
                           name,
                           p->host,
@@ -2125,17 +2122,17 @@ isUnsignedNumeric(const char *str, size_t len)
 static unsigned short
 GetService(const char *proto)
 {
-    struct servent *port = NULL;
+    struct servent *port = nullptr;
     /** Parses a port number or service name from the squid.conf */
     char *token = ConfigParser::NextToken();
-    if (token == NULL) {
+    if (token == nullptr) {
         self_destruct();
         return 0; /* NEVER REACHED */
     }
     /** Returns either the service port number from /etc/services */
     if ( !isUnsignedNumeric(token, strlen(token)) )
         port = getservbyname(token, proto);
-    if (port != NULL) {
+    if (port != nullptr) {
         return ntohs((unsigned short)port->s_port);
     }
     /** Or a numeric translation of the config text. */
@@ -2177,10 +2174,8 @@ parse_peer(CachePeer ** head)
         return;
     }
 
-    CachePeer *p = new CachePeer;
-    p->host = xstrdup(host_str);
-    Tolower(p->host);
-    p->name = xstrdup(host_str);
+    const auto p = new CachePeer(host_str);
+
     p->type = parseNeighborType(token);
 
     if (p->type == PEER_MULTICAST) {
@@ -2274,12 +2269,12 @@ parse_peer(CachePeer ** head)
 
         } else if (!strcmp(token, "carp")) {
             if (p->type != PEER_PARENT)
-                fatalf("parse_peer: non-parent carp peer %s/%d\n", p->host, p->http_port);
+                throw TextException(ToSBuf("non-parent carp cache_peer ", *p), Here());
 
             p->options.carp = true;
         } else if (!strncmp(token, "carp-key=", 9)) {
             if (p->options.carp != true)
-                fatalf("parse_peer: carp-key specified on non-carp peer %s/%d\n", p->host, p->http_port);
+                throw TextException(ToSBuf("carp-key specified on non-carp cache_peer ", *p), Here());
             p->options.carp_key.set = true;
             char *nextkey=token+strlen("carp-key="), *key=nextkey;
             for (; key; key = nextkey) {
@@ -2302,15 +2297,15 @@ parse_peer(CachePeer ** head)
         } else if (!strcmp(token, "userhash")) {
 #if USE_AUTH
             if (p->type != PEER_PARENT)
-                fatalf("parse_peer: non-parent userhash peer %s/%d\n", p->host, p->http_port);
+                throw TextException(ToSBuf("non-parent userhash cache_peer ", *p), Here());
 
             p->options.userhash = true;
 #else
-            fatalf("parse_peer: userhash requires authentication. peer %s/%d\n", p->host, p->http_port);
+            throw TextException(ToSBuf("missing authentication support; required for userhash cache_peer ", *p), Here());
 #endif
         } else if (!strcmp(token, "sourcehash")) {
             if (p->type != PEER_PARENT)
-                fatalf("parse_peer: non-parent sourcehash peer %s/%d\n", p->host, p->http_port);
+                throw TextException(ToSBuf("non-parent sourcehash cache_peer ", *p), Here());
 
             p->options.sourcehash = true;
 
@@ -2343,10 +2338,7 @@ parse_peer(CachePeer ** head)
         } else if (!strcmp(token, "originserver")) {
             p->options.originserver = true;
         } else if (!strncmp(token, "name=", 5)) {
-            safe_free(p->name);
-
-            if (token[5])
-                p->name = xstrdup(token + 5);
+            p->rename(token + 5);
         } else if (!strncmp(token, "forceddomain=", 13)) {
             safe_free(p->domain);
             if (token[13])
@@ -2384,11 +2376,12 @@ parse_peer(CachePeer ** head)
         }
     }
 
-    if (peerFindByName(p->name))
-        fatalf("ERROR: cache_peer %s specified twice\n", p->name);
+    if (findCachePeerByName(p->name))
+        throw TextException(ToSBuf("cache_peer ", *p, " specified twice"), Here());
 
     if (p->max_conn > 0 && p->max_conn < p->standby.limit)
-        fatalf("ERROR: cache_peer %s max-conn=%d is lower than its standby=%d\n", p->host, p->max_conn, p->standby.limit);
+        throw TextException(ToSBuf("cache_peer ", *p, " max-conn=", p->max_conn,
+                                   " is lower than its standby=", p->standby.limit), Here());
 
     if (p->weight < 1)
         p->weight = 1;
@@ -2398,7 +2391,7 @@ parse_peer(CachePeer ** head)
 
 #if USE_CACHE_DIGESTS
     if (!p->options.no_digest)
-        peerDigestCreate(p);
+        p->digest = new PeerDigest(p);
 #endif
 
     if (p->secure.encryptTransport)
@@ -2406,7 +2399,7 @@ parse_peer(CachePeer ** head)
 
     p->index =  ++Config.npeers;
 
-    while (*head != NULL)
+    while (*head != nullptr)
         head = &(*head)->next;
 
     *head = p;
@@ -2418,7 +2411,7 @@ static void
 free_peer(CachePeer ** P)
 {
     delete *P;
-    *P = NULL;
+    *P = nullptr;
     Config.npeers = 0;
 }
 
@@ -2484,7 +2477,7 @@ free_cachemgrpasswd(Mgr::ActionPasswordList ** head)
 static void
 dump_denyinfo(StoreEntry * entry, const char *name, AclDenyInfoList * var)
 {
-    while (var != NULL) {
+    while (var != nullptr) {
         storeAppendPrintf(entry, "%s %s", name, var->err_page_name);
 
         for (const auto &aclName: var->acl_list)
@@ -2512,31 +2505,16 @@ free_denyinfo(AclDenyInfoList ** list)
 static void
 parse_peer_access(void)
 {
-    char *host = ConfigParser::NextToken();
-    if (!host) {
-        self_destruct();
-        return;
-    }
-
-    CachePeer *p = peerFindByName(host);
-    if (!p) {
-        debugs(15, DBG_CRITICAL, "ERROR: " << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
-        return;
-    }
-
+    auto &p = LegacyParser.cachePeer("cache_peer_access peer-name");
     std::string directive = "peer_access ";
-    directive += host;
-    aclParseAccessLine(directive.c_str(), LegacyParser, &p->access);
+    directive += p.name;
+    aclParseAccessLine(directive.c_str(), LegacyParser, &p.access);
 }
 
 static void
 parse_hostdomaintype(void)
 {
-    char *host = ConfigParser::NextToken();
-    if (!host) {
-        self_destruct();
-        return;
-    }
+    auto &p = LegacyParser.cachePeer("neighbor_type_domain peer-name");
 
     char *type = ConfigParser::NextToken();
     if (!type) {
@@ -2546,18 +2524,12 @@ parse_hostdomaintype(void)
 
     char *domain = nullptr;
     while ((domain = ConfigParser::NextToken())) {
-        CachePeer *p = peerFindByName(host);
-        if (!p) {
-            debugs(15, DBG_CRITICAL, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
-            return;
-        }
-
         auto *l = static_cast<NeighborTypeDomainList *>(xcalloc(1, sizeof(NeighborTypeDomainList)));
         l->type = parseNeighborType(type);
         l->domain = xstrdup(domain);
 
         NeighborTypeDomainList **L = nullptr;
-        for (L = &(p->typelist); *L; L = &((*L)->next));
+        for (L = &p.typelist; *L; L = &((*L)->next));
         *L = l;
     }
 }
@@ -2588,7 +2560,7 @@ dump_int64_t(StoreEntry * entry, const char *name, int64_t var)
     storeAppendPrintf(entry, "%s %" PRId64 "\n", name, var);
 }
 
-void
+static void
 parse_int64_t(int64_t *var)
 {
     int64_t i;
@@ -2679,7 +2651,7 @@ parse_tristate(int *var)
 
 #define free_tristate free_int
 
-void
+static void
 parse_pipelinePrefetch(int *var)
 {
     char *token = ConfigParser::PeekAtToken();
@@ -2708,14 +2680,10 @@ parse_pipelinePrefetch(int *var)
 static void
 dump_refreshpattern(StoreEntry * entry, const char *name, RefreshPattern * head)
 {
-    while (head != NULL) {
-        storeAppendPrintf(entry, "%s%s %s %d %d%% %d",
-                          name,
-                          head->pattern.flags&REG_ICASE ? " -i" : null_string,
-                          head->pattern.c_str(),
-                          (int) head->min / 60,
-                          (int) (100.0 * head->pct + 0.5),
-                          (int) head->max / 60);
+    while (head != nullptr) {
+        PackableStream os(*entry);
+        os << name << ' ';
+        head->printHead(os);
 
         if (head->max_stale >= 0)
             storeAppendPrintf(entry, " max-stale=%d", head->max_stale);
@@ -2757,7 +2725,6 @@ static void
 parse_refreshpattern(RefreshPattern ** head)
 {
     char *token;
-    char *pattern;
     time_t min = 0;
     double pct = 0.0;
     time_t max = 0;
@@ -2777,29 +2744,8 @@ parse_refreshpattern(RefreshPattern ** head)
 
     int i;
     RefreshPattern *t;
-    regex_t comp;
-    int errcode;
-    int flags = REG_EXTENDED | REG_NOSUB;
 
-    if ((token = ConfigParser::RegexPattern()) != NULL) {
-
-        if (strcmp(token, "-i") == 0) {
-            flags |= REG_ICASE;
-            token = ConfigParser::RegexPattern();
-        } else if (strcmp(token, "+i") == 0) {
-            flags &= ~REG_ICASE;
-            token = ConfigParser::RegexPattern();
-        }
-
-    }
-
-    if (token == NULL) {
-        debugs(3, DBG_CRITICAL, "FATAL: refresh_pattern missing the regex pattern parameter");
-        self_destruct();
-        return;
-    }
-
-    pattern = xstrdup(token);
+    auto regex = LegacyParser.regex("refresh_pattern regex");
 
     i = GetInteger();       /* token: min */
 
@@ -2832,7 +2778,7 @@ parse_refreshpattern(RefreshPattern ** head)
     max = (time_t) (i * 60);    /* convert minutes to seconds */
 
     /* Options */
-    while ((token = ConfigParser::NextToken()) != NULL) {
+    while ((token = ConfigParser::NextToken()) != nullptr) {
         if (!strcmp(token, "refresh-ims")) {
             refresh_ims = 1;
         } else if (!strcmp(token, "store-stale")) {
@@ -2866,22 +2812,12 @@ parse_refreshpattern(RefreshPattern ** head)
                   ) {
             debugs(22, DBG_PARSE_NOTE(2), "UPGRADE: refresh_pattern option '" << token << "' is obsolete. Remove it.");
         } else
-            debugs(22, DBG_CRITICAL, "refreshAddToList: Unknown option '" << pattern << "': " << token);
-    }
-
-    if ((errcode = regcomp(&comp, pattern, flags)) != 0) {
-        char errbuf[256];
-        regerror(errcode, &comp, errbuf, sizeof errbuf);
-        debugs(22, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(22, DBG_CRITICAL, "refreshAddToList: Invalid regular expression '" << pattern << "': " << errbuf);
-        xfree(pattern);
-        return;
+            debugs(22, DBG_CRITICAL, "ERROR: Unknown refresh_pattern option: " << token);
     }
 
     pct = pct < 0.0 ? 0.0 : pct;
     max = max < 0 ? 0 : max;
-    t = new RefreshPattern(pattern, flags);
-    t->pattern.regex = comp;
+    t = new RefreshPattern(std::move(regex));
     t->min = min;
     t->pct = pct;
     t->max = max;
@@ -2915,14 +2851,12 @@ parse_refreshpattern(RefreshPattern ** head)
         t->flags.ignore_private = true;
 #endif
 
-    t->next = NULL;
+    t->next = nullptr;
 
     while (*head)
         head = &(*head)->next;
 
     *head = t;
-
-    xfree(pattern);
 }
 
 static void
@@ -2940,7 +2874,7 @@ free_refreshpattern(RefreshPattern ** head)
 static void
 dump_string(StoreEntry * entry, const char *name, char *var)
 {
-    if (var != NULL)
+    if (var != nullptr)
         storeAppendPrintf(entry, "%s %s\n", name, var);
 }
 
@@ -3042,8 +2976,8 @@ dump_time_msec(StoreEntry * entry, const char *name, time_msec_t var)
         storeAppendPrintf(entry, "%s %d seconds\n", name, (int)(var/1000) );
 }
 
-void
-parse_time_msec(time_msec_t * var)
+static void
+parse_time_msec(time_msec_t *var)
 {
     *var = parseTimeLine<std::chrono::milliseconds>().count();
 }
@@ -3186,7 +3120,7 @@ ConfigParser::ParseBool(bool *var)
 static void
 dump_wordlist(StoreEntry * entry, const char *name, wordlist * list)
 {
-    while (list != NULL) {
+    while (list != nullptr) {
         storeAppendPrintf(entry, "%s %s\n", name, list->key);
         list = list->next;
     }
@@ -3209,7 +3143,7 @@ parse_wordlist(wordlist ** list)
 static int
 check_null_acl_access(acl_access * a)
 {
-    return a == NULL;
+    return a == nullptr;
 }
 
 #define free_wordlist wordlistDestroy
@@ -3272,7 +3206,7 @@ free_removalpolicy(RemovalPolicySettings ** settings)
 
     delete *settings;
 
-    *settings = NULL;
+    *settings = nullptr;
 }
 
 static void
@@ -3435,7 +3369,7 @@ static void
 free_IpAddress_list(Ip::Address_list ** head)
 {
     if (*head) delete *head;
-    *head = NULL;
+    *head = nullptr;
 }
 
 #if CURRENTLY_UNUSED
@@ -3454,10 +3388,10 @@ check_null_IpAddress_list(const Ip::Address_list * s)
 static void
 parsePortSpecification(const AnyP::PortCfgPointer &s, char *token)
 {
-    char *host = NULL;
+    char *host = nullptr;
     unsigned short port = 0;
-    char *t = NULL;
-    char *junk = NULL;
+    char *t = nullptr;
+    char *junk = nullptr;
 
     s->disable_pmtu_discovery = DISABLE_PMTU_OFF;
     s->name = xstrdup(token);
@@ -3503,13 +3437,13 @@ parsePortSpecification(const AnyP::PortCfgPointer &s, char *token)
         return;
     }
 
-    if (port == 0 && host != NULL) {
+    if (port == 0 && host != nullptr) {
         debugs(3, DBG_CRITICAL, "FATAL: " << portType << "_port: Port cannot be 0: " << token);
         self_destruct();
         return;
     }
 
-    if (NULL == host) {
+    if (nullptr == host) {
         s->s.setAnyAddr();
         s->s.port(port);
         if (!Ip::EnableIpv6)
@@ -3724,7 +3658,7 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
     } else if (strncmp(token, "key=", 4) == 0) {
         s->secure.parse(token);
     } else if (strncmp(token, "version=", 8) == 0) {
-        debugs(3, DBG_PARSE_NOTE(1), "UPGRADE WARNING: '" << token << "' is deprecated " <<
+        debugs(3, DBG_PARSE_NOTE(1), "WARNING: UPGRADE: '" << token << "' is deprecated " <<
                "in " << cfg_directive << ". Use 'options=' instead.");
         s->secure.parse(token);
     } else if (strncmp(token, "options=", 8) == 0) {
@@ -3734,7 +3668,7 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
     } else if (strncmp(token, "clientca=", 9) == 0) {
         s->secure.parse(token);
     } else if (strncmp(token, "cafile=", 7) == 0) {
-        debugs(3, DBG_PARSE_NOTE(1), "UPGRADE WARNING: '" << token << "' is deprecated " <<
+        debugs(3, DBG_PARSE_NOTE(1), "WARNING: UPGRADE: '" << token << "' is deprecated " <<
                "in " << cfg_directive << ". Use 'tls-cafile=' instead.");
         s->secure.parse(token);
     } else if (strncmp(token, "capath=", 7) == 0) {
@@ -3781,7 +3715,7 @@ add_http_port(char *portspec)
     s->transport = parsePortProtocol(SBuf("HTTP"));
     parsePortSpecification(s, portspec);
     // we may need to merge better if the above returns a list with clones
-    assert(s->next == NULL);
+    assert(s->next == nullptr);
     s->next = HttpPortList;
     HttpPortList = s;
 }
@@ -3867,13 +3801,10 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
 
     // *_port line should now be fully valid so we can clone it if necessary
     if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && s->s.isAnyAddr()) {
-        // clone the port options from *s to *(s->next)
-        s->next = s->clone();
-        s->next->s.setIPv4();
-        debugs(3, 3, AnyP::UriScheme(s->transport.protocol).image() << "_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
+        s->next = s->ipV4clone();
     }
 
-    while (*head != NULL)
+    while (*head != nullptr)
         head = &((*head)->next);
 
     *head = s;
@@ -3972,7 +3903,7 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
 static void
 dump_PortCfg(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
 {
-    for (AnyP::PortCfgPointer p = s; p != NULL; p = p->next) {
+    for (AnyP::PortCfgPointer p = s; p != nullptr; p = p->next) {
         dump_generic_port(e, n, p);
         storeAppendPrintf(e, "\n");
     }
@@ -3982,6 +3913,7 @@ void
 configFreeMemory(void)
 {
     free_all();
+    Dns::ResolveClientAddressesAsap = false;
     Config.ssl_client.sslContext.reset();
 #if USE_OPENSSL
     Ssl::unloadSquidUntrusted();
@@ -3994,7 +3926,7 @@ requirePathnameExists(const char *name, const char *path)
 
     struct stat sb;
     char pathbuf[BUFSIZ];
-    assert(path != NULL);
+    assert(path != nullptr);
 
     if (Config.chroot_dir && (geteuid() == 0)) {
         snprintf(pathbuf, BUFSIZ, "%s/%s", Config.chroot_dir, path);
@@ -4087,7 +4019,7 @@ parse_access_log(CustomLog ** logs)
 static int
 check_null_access_log(CustomLog *customlog_definitions)
 {
-    return customlog_definitions == NULL;
+    return customlog_definitions == nullptr;
 }
 
 static void
@@ -4146,6 +4078,7 @@ static void
 parse_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap)
 {
 #if !HAVE_CPU_AFFINITY
+    (void)cpuAffinityMap;
     debugs(3, DBG_CRITICAL, "FATAL: Squid built with no CPU affinity " <<
            "support, do not set 'cpu_affinity_map'");
     self_destruct();
@@ -4196,7 +4129,7 @@ static void
 free_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap)
 {
     delete *cpuAffinityMap;
-    *cpuAffinityMap = NULL;
+    *cpuAffinityMap = nullptr;
 }
 
 #if USE_ADAPTATION
@@ -4286,7 +4219,7 @@ static void parse_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
     char *token;
     cfg->service_failure_limit = GetInteger();
 
-    if ((token = ConfigParser::NextToken()) == NULL)
+    if ((token = ConfigParser::NextToken()) == nullptr)
         return;
 
     if (strcmp(token,"in") != 0) {
@@ -4317,10 +4250,8 @@ static void free_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
 #if USE_OPENSSL
 static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 {
-    char *al;
-    sslproxy_cert_adapt *ca = (sslproxy_cert_adapt *) xcalloc(1, sizeof(sslproxy_cert_adapt));
-    if ((al = ConfigParser::NextToken()) == NULL) {
-        xfree(ca);
+    auto *al = ConfigParser::NextToken();
+    if (!al) {
         self_destruct();
         return;
     }
@@ -4332,14 +4263,14 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
         param = s;
         s = strchr(s, '}');
         if (!s) {
-            xfree(ca);
             self_destruct();
             return;
         }
         *s = '\0';
     } else
-        param = NULL;
+        param = nullptr;
 
+    std::unique_ptr<sslproxy_cert_adapt> ca(new sslproxy_cert_adapt);
     if (strcmp(al, Ssl::CertAdaptAlgorithmStr[Ssl::algSetValidAfter]) == 0) {
         ca->alg = Ssl::algSetValidAfter;
         ca->param = xstrdup("on");
@@ -4351,7 +4282,6 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
         if (param) {
             if (strlen(param) > 64) {
                 debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_adapt: setCommonName{" <<param << "} : using common name longer than 64 bytes is not supported");
-                xfree(ca);
                 self_destruct();
                 return;
             }
@@ -4359,7 +4289,6 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
         }
     } else {
         debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_adapt: unknown cert adaptation algorithm: " << al);
-        xfree(ca);
         self_destruct();
         return;
     }
@@ -4369,12 +4298,12 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
     while (*cert_adapt)
         cert_adapt = &(*cert_adapt)->next;
 
-    *cert_adapt = ca;
+    *cert_adapt = ca.release();
 }
 
 static void dump_sslproxy_cert_adapt(StoreEntry *entry, const char *name, sslproxy_cert_adapt *cert_adapt)
 {
-    for (sslproxy_cert_adapt *ca = cert_adapt; ca != NULL; ca = ca->next) {
+    for (const auto *ca = cert_adapt; ca; ca = ca->next) {
         storeAppendPrintf(entry, "%s ", name);
         storeAppendPrintf(entry, "%s{%s} ", Ssl::sslCertAdaptAlgoritm(ca->alg), ca->param);
         if (ca->aclList)
@@ -4385,28 +4314,19 @@ static void dump_sslproxy_cert_adapt(StoreEntry *entry, const char *name, sslpro
 
 static void free_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 {
-    while (*cert_adapt) {
-        sslproxy_cert_adapt *ca = *cert_adapt;
-        *cert_adapt = ca->next;
-        safe_free(ca->param);
-
-        if (ca->aclList)
-            aclDestroyAclList(&ca->aclList);
-
-        safe_free(ca);
-    }
+    delete *cert_adapt;
+    *cert_adapt = nullptr;
 }
 
 static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
 {
-    char *al;
-    sslproxy_cert_sign *cs = (sslproxy_cert_sign *) xcalloc(1, sizeof(sslproxy_cert_sign));
-    if ((al = ConfigParser::NextToken()) == NULL) {
-        xfree(cs);
+    const auto al = ConfigParser::NextToken();
+    if (!al) {
         self_destruct();
         return;
     }
 
+    std::unique_ptr<sslproxy_cert_sign> cs(new sslproxy_cert_sign);
     if (strcmp(al, Ssl::CertSignAlgorithmStr[Ssl::algSignTrusted]) == 0)
         cs->alg = Ssl::algSignTrusted;
     else if (strcmp(al, Ssl::CertSignAlgorithmStr[Ssl::algSignUntrusted]) == 0)
@@ -4415,7 +4335,6 @@ static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
         cs->alg = Ssl::algSignSelf;
     else {
         debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_sign: unknown cert signing algorithm: " << al);
-        xfree(cs);
         self_destruct();
         return;
     }
@@ -4425,13 +4344,12 @@ static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
     while (*cert_sign)
         cert_sign = &(*cert_sign)->next;
 
-    *cert_sign = cs;
+    *cert_sign = cs.release();
 }
 
 static void dump_sslproxy_cert_sign(StoreEntry *entry, const char *name, sslproxy_cert_sign *cert_sign)
 {
-    sslproxy_cert_sign *cs;
-    for (cs = cert_sign; cs != NULL; cs = cs->next) {
+    for (const auto *cs = cert_sign; cs; cs = cs->next) {
         storeAppendPrintf(entry, "%s ", name);
         storeAppendPrintf(entry, "%s ", Ssl::certSignAlgorithm(cs->alg));
         if (cs->aclList)
@@ -4442,15 +4360,8 @@ static void dump_sslproxy_cert_sign(StoreEntry *entry, const char *name, sslprox
 
 static void free_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
 {
-    while (*cert_sign) {
-        sslproxy_cert_sign *cs = *cert_sign;
-        *cert_sign = cs->next;
-
-        if (cs->aclList)
-            aclDestroyAclList(&cs->aclList);
-
-        safe_free(cs);
-    }
+    delete *cert_sign;
+    *cert_sign = nullptr;
 }
 
 class sslBumpCfgRr: public ::RegisteredRunner
@@ -4458,12 +4369,12 @@ class sslBumpCfgRr: public ::RegisteredRunner
 public:
     static Ssl::BumpMode lastDeprecatedRule;
     /* RegisteredRunner API */
-    virtual void finalizeConfig();
+    void finalizeConfig() override;
 };
 
 Ssl::BumpMode sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpEnd;
 
-RunnerRegistrationEntry(sslBumpCfgRr);
+DefineRunnerRegistrator(sslBumpCfgRr);
 
 void
 sslBumpCfgRr::finalizeConfig()
@@ -4490,19 +4401,19 @@ sslBumpCfgRr::finalizeConfig()
 static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
 {
     typedef const char *BumpCfgStyle;
-    BumpCfgStyle bcsNone = NULL;
+    BumpCfgStyle bcsNone = nullptr;
     BumpCfgStyle bcsNew = "new client/server-first/none";
     BumpCfgStyle bcsOld = "deprecated allow/deny";
     static BumpCfgStyle bumpCfgStyleLast = bcsNone;
     BumpCfgStyle bumpCfgStyleNow = bcsNone;
     char *bm;
-    if ((bm = ConfigParser::NextToken()) == NULL) {
+    if ((bm = ConfigParser::NextToken()) == nullptr) {
         self_destruct();
         return;
     }
 
     // if this is the first rule processed
-    if (*ssl_bump == NULL) {
+    if (*ssl_bump == nullptr) {
         bumpCfgStyleLast = bcsNone;
         sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpEnd;
     }
@@ -4601,7 +4512,7 @@ static void parse_HeaderWithAclList(HeaderWithAclList **headers)
     if (!*headers) {
         *headers = new HeaderWithAclList;
     }
-    if ((fn = ConfigParser::NextToken()) == NULL) {
+    if ((fn = ConfigParser::NextToken()) == nullptr) {
         self_destruct();
         return;
     }
@@ -4640,11 +4551,11 @@ static void free_HeaderWithAclList(HeaderWithAclList **header)
 
         if (hwa->valueFormat) {
             delete hwa->valueFormat;
-            hwa->valueFormat = NULL;
+            hwa->valueFormat = nullptr;
         }
     }
     delete *header;
-    *header = NULL;
+    *header = nullptr;
 }
 
 static void parse_note(Notes *notes)
@@ -4785,7 +4696,7 @@ static void parse_ftp_epsv(acl_access **ftp_epsv)
     //   2) if this line is "ftp_epsv on|off" and already exist rules of "ftp_epsv allow|deny ..."
     // then abort
     if ((!ftpEpsvIsDeprecatedRule && FtpEspvDeprecated) ||
-            (ftpEpsvIsDeprecatedRule && !FtpEspvDeprecated && *ftp_epsv != NULL)) {
+            (ftpEpsvIsDeprecatedRule && !FtpEspvDeprecated && *ftp_epsv != nullptr)) {
         debugs(3, DBG_CRITICAL, "FATAL: do not mix \"ftp_epsv on|off\" cfg lines with \"ftp_epsv allow|deny ...\" cfg lines. Update your ftp_epsv rules.");
         self_destruct();
         return;
@@ -4955,7 +4866,7 @@ static void
 parse_on_unsupported_protocol(acl_access **access)
 {
     char *tm;
-    if ((tm = ConfigParser::NextToken()) == NULL) {
+    if ((tm = ConfigParser::NextToken()) == nullptr) {
         self_destruct();
         return;
     }

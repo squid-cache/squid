@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,7 +23,7 @@
 #include "ip/Address.h"
 #include "ip/forward.h"
 #include "mem/forward.h"
-#include "SquidTime.h"
+#include "time/gadgets.h"
 
 #include <iosfwd>
 #include <ostream>
@@ -51,7 +51,9 @@ namespace Comm
 #define COMM_INTERCEPTION       0x20  // arrived via NAT
 #define COMM_REUSEPORT          0x40 //< needs SO_REUSEPORT
 /// not registered with Comm and not owned by any connection-closing code
-#define COMM_ORPHANED           0x40
+#define COMM_ORPHANED           0x80
+/// Internal Comm optimization: Keep the source port unassigned until connect(2)
+#define COMM_DOBIND_PORT_LATER 0x100
 
 /**
  * Store data about the physical and logical attributes of a connection.
@@ -75,15 +77,14 @@ public:
     Connection();
 
     /** Clear the connection properties and close any open socket. */
-    virtual ~Connection();
+    ~Connection() override;
 
-    /// Create a new (closed) IDENT Connection object based on our from-Squid
-    /// connection properties.
-    ConnectionPointer cloneIdentDetails() const;
+    /// To prevent accidental copying of Connection objects that we started to
+    /// open or that are open, use cloneProfile() instead.
+    Connection(const Connection &&) = delete;
 
-    /// Create a new (closed) Connection object pointing to the same destination
-    /// as this from-Squid connection.
-    ConnectionPointer cloneDestinationDetails() const;
+    /// Create a new closed Connection with the same configuration as this one.
+    ConnectionPointer cloneProfile() const;
 
     /// close the still-open connection when its last reference is gone
     void enterOrphanage() { flags |= COMM_ORPHANED; }
@@ -137,19 +138,8 @@ public:
     const Security::NegotiationHistory *hasTlsNegotiations() const {return tlsHistory;}
 
     /* CodeContext API */
-    virtual ScopedId codeContextGist() const override;
-    virtual std::ostream &detailCodeContext(std::ostream &os) const override;
-
-private:
-    /** These objects may not be exactly duplicated. Use cloneIdentDetails() or
-     * cloneDestinationDetails() instead.
-     */
-    Connection(const Connection &c);
-
-    /** These objects may not be exactly duplicated. Use cloneIdentDetails() or
-     * cloneDestinationDetails() instead.
-     */
-    Connection & operator =(const Connection &c);
+    ScopedId codeContextGist() const override;
+    std::ostream &detailCodeContext(std::ostream &os) const override;
 
 public:
     /** Address/Port for the Squid end of a TCP link. */
@@ -203,17 +193,17 @@ private:
     Security::NegotiationHistory *tlsHistory;
 };
 
-}; // namespace Comm
-
-std::ostream &operator << (std::ostream &os, const Comm::Connection &conn);
+std::ostream &operator <<(std::ostream &, const Connection &);
 
 inline std::ostream &
-operator << (std::ostream &os, const Comm::ConnectionPointer &conn)
+operator <<(std::ostream &os, const ConnectionPointer &conn)
 {
-    if (conn != NULL)
+    if (conn != nullptr)
         os << *conn;
     return os;
 }
+
+} // namespace Comm
 
 #endif
 

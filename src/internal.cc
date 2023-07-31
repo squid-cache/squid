@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,15 +10,16 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "base/Assure.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
 #include "errorpage.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
+#include "internal.h"
 #include "MemBuf.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 #include "util.h"
@@ -32,12 +33,15 @@ void
 internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, StoreEntry * entry, const AccessLogEntry::Pointer &ale)
 {
     ErrorState *err;
+
+    Assure(request);
     const SBuf upath = request->url.path();
     debugs(76, 3, clientConn << " requesting '" << upath << "'");
 
+    Assure(request->flags.internal);
+
     static const SBuf netdbUri("/squid-internal-dynamic/netdb");
     static const SBuf storeDigestUri("/squid-internal-periodic/store_digest");
-    static const SBuf mgrPfx("/squid-internal-mgr/");
 
     if (upath == netdbUri) {
         netdbBinaryExchange(entry);
@@ -54,8 +58,8 @@ internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, 
         entry->replaceHttpReply(reply);
         entry->append(msgbuf, strlen(msgbuf));
         entry->complete();
-    } else if (upath.startsWith(mgrPfx)) {
-        debugs(17, 2, "calling CacheManager due to URL-path " << mgrPfx);
+    } else if (ForSomeCacheManager(upath)) {
+        debugs(17, 2, "calling CacheManager due to URL-path");
         CacheManager::GetInstance()->start(clientConn, request, entry, ale);
     } else {
         debugObj(76, 1, "internalStart: unknown request:\n",
@@ -77,6 +81,13 @@ internalStaticCheck(const SBuf &urlPath)
 {
     static const SBuf InternalStaticPfx("/squid-internal-static");
     return urlPath.startsWith(InternalStaticPfx);
+}
+
+bool
+ForSomeCacheManager(const SBuf &urlPath)
+{
+    static const SBuf mgrPfx("/squid-internal-mgr");
+    return urlPath.startsWith(mgrPfx);
 }
 
 /*

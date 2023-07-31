@@ -24,7 +24,7 @@
 # for the list of possible encodings.
 # The default value is: UTF-8.
 
-## Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2023 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -2068,7 +2068,6 @@ PREDEFINED             = __cplusplus \
                          FORW_VIA_DB \
                          ICAP_CLIENT \
                          LINUX_NETFILTER \
-                         MULTICAST_MISS_STREAM \
                          SQUID_SNMP \
                          USE_ADAPTATION \
                          USE_APPLE_KRB5 \
@@ -2083,7 +2082,6 @@ PREDEFINED             = __cplusplus \
                          USE_ERR_LOCALES \
                          USE_EPOLL \
                          USE_GNUGSS \
-                         USE_GNUREGEX \
                          USE_GNUTLS \
                          USE_HEIMDAL_KRB5 \
                          USE_HEXDUMP \
@@ -2100,7 +2098,6 @@ PREDEFINED             = __cplusplus \
                          USE_POLL \
                          USE_QOS_TOS \
                          USE_SELECT \
-                         USE_SELECT_WIN32 \
                          USE_SOLARIS_KRB5 \
                          USE_SQUID_ESI \
                          USE_SQUID_EUI \
@@ -2110,7 +2107,6 @@ PREDEFINED             = __cplusplus \
                          USE_WCCP \
                          USE_WCCPv2 \
                          USE_WIN32_SERVICE \
-                         USE_XPROF_STATS \
                          WITH_VALGRIND \
                          X_ACCELERATOR_VARY
 

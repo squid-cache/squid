@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -45,8 +45,8 @@ DestinationDomainLookup::LookupDone(const char *, const Dns::LookupDetails &deta
 const Acl::Options &
 ACLDestinationDomainStrategy::options()
 {
-    static const Acl::BooleanOption LookupBanFlag;
-    static const Acl::Options MyOptions = { { "-n", &LookupBanFlag } };
+    static const Acl::BooleanOption LookupBanFlag("-n");
+    static const Acl::Options MyOptions = { &LookupBanFlag };
     LookupBanFlag.linkWith(&lookupBanned);
     return MyOptions;
 }
@@ -54,7 +54,7 @@ ACLDestinationDomainStrategy::options()
 int
 ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
-    assert(checklist != NULL && checklist->request != NULL);
+    assert(checklist != nullptr && checklist->request != nullptr);
 
     if (data->match(checklist->request->url.host())) {
         return 1;

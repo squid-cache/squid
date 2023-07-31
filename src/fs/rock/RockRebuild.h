@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -53,19 +53,19 @@ public:
     static bool Start(SwapDir &dir);
 
 protected:
-    /// whether the current kid is responsible for rebuilding this db file
+    /// whether the current kid is responsible for rebuilding the given cache_dir
     static bool IsResponsible(const SwapDir &);
 
     Rebuild(SwapDir *dir, const Ipc::Mem::Pointer<Stats> &);
-    virtual ~Rebuild() override;
+    ~Rebuild() override;
 
     /* Registered Runner API */
-    virtual void startShutdown() override;
+    void startShutdown() override;
 
     /* AsyncJob API */
-    virtual void start() override;
-    virtual bool doneAll() const override;
-    virtual void swanSong() override;
+    void start() override;
+    bool doneAll() const override;
+    void swanSong() override;
 
     bool doneLoading() const;
     bool doneValidating() const;

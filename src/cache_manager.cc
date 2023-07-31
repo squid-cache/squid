@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,10 +13,11 @@
 #include "base/TextException.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "error/ExceptionErrorDetail.h"
 #include "errorpage.h"
 #include "fde.h"
+#include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "mgr/Action.h"
@@ -33,12 +34,12 @@
 #include "sbuf/Stream.h"
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 #include "wordlist.h"
 
 #include <algorithm>
+#include <memory>
 
 /// \ingroup CacheManagerInternal
 #define MGR_PASSWD_SZ 128
@@ -52,7 +53,7 @@ public:
 public:
     ClassActionCreator(Handler *aHandler): handler(aHandler) {}
 
-    virtual Mgr::Action::Pointer create(const Mgr::Command::Pointer &cmd) const {
+    Mgr::Action::Pointer create(const Mgr::Command::Pointer &cmd) const override {
         return handler(cmd);
     }
 
@@ -64,12 +65,12 @@ private:
 void
 CacheManager::registerProfile(const Mgr::ActionProfile::Pointer &profile)
 {
-    Must(profile != NULL);
+    Must(profile != nullptr);
     if (!CacheManager::findAction(profile->name)) {
         menu_.push_back(profile);
-        debugs(16, 3, HERE << "registered profile: " << *profile);
+        debugs(16, 3, "registered profile: " << *profile);
     } else {
-        debugs(16, 2, HERE << "skipped duplicate profile: " << *profile);
+        debugs(16, 2, "skipped duplicate profile: " << *profile);
     }
 }
 
@@ -82,7 +83,7 @@ CacheManager::registerProfile(const Mgr::ActionProfile::Pointer &profile)
 void
 CacheManager::registerProfile(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic)
 {
-    debugs(16, 3, HERE << "registering legacy " << action);
+    debugs(16, 3, "registering legacy " << action);
     const Mgr::ActionProfile::Pointer profile = new Mgr::ActionProfile(action,
             desc, pw_req_flag, atomic, new Mgr::FunActionCreator(handler));
     registerProfile(profile);
@@ -113,7 +114,7 @@ CacheManager::registerProfile(char const * action, char const * desc,
 Mgr::ActionProfile::Pointer
 CacheManager::findAction(char const * action) const
 {
-    Must(action != NULL);
+    Must(action != nullptr);
     Menu::const_iterator a;
 
     debugs(16, 5, "CacheManager::findAction: looking for action " << action);
@@ -137,7 +138,7 @@ CacheManager::createNamedAction(const char *actionName)
     cmd->profile = findAction(actionName);
     cmd->params.actionName = actionName;
 
-    Must(cmd->profile != NULL);
+    Must(cmd->profile != nullptr);
     return cmd->profile->creator->create(cmd);
 }
 
@@ -147,33 +148,19 @@ CacheManager::createRequestedAction(const Mgr::ActionParams &params)
     Mgr::Command::Pointer cmd = new Mgr::Command;
     cmd->params = params;
     cmd->profile = findAction(params.actionName.termedBuf());
-    Must(cmd->profile != NULL);
+    Must(cmd->profile != nullptr);
     return cmd->profile->creator->create(cmd);
 }
 
-static const CharacterSet &
-MgrFieldChars(const AnyP::ProtocolType &protocol)
-{
-    // Deprecated cache_object:// scheme used '@' to delimit passwords
-    if (protocol == AnyP::PROTO_CACHE_OBJECT) {
-        static const CharacterSet fieldChars = CharacterSet("cache-object-field", "@?#").complement();
-        return fieldChars;
-    }
-
-    static const CharacterSet actionChars = CharacterSet("mgr-field", "?#").complement();
-    return actionChars;
-}
-
 /**
- * define whether the URL is a cache-manager URL and parse the action
- * requested by the user. Checks via CacheManager::ActionProtection() that the
- * item is accessible by the user.
+ * Parses the action requested by the user and checks via
+ * CacheManager::ActionProtection() that the item is accessible by the user.
  *
  * Syntax:
  *
- *  scheme "://" authority [ '/squid-internal-mgr' ] path-absolute [ '@' unreserved ] '?' query-string
+ * [ scheme "://" authority ] '/squid-internal-mgr' path-absolute [ "?" query ] [ "#" fragment ]
  *
- * see RFC 3986 for definitions of scheme, authority, path-absolute, query-string
+ * see RFC 3986 for definitions of scheme, authority, path-absolute, query
  *
  * \returns Mgr::Command object with action to perform and parameters it might use
  */
@@ -183,23 +170,17 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
     Parser::Tokenizer tok(uri.path());
 
     static const SBuf internalMagicPrefix("/squid-internal-mgr/");
-    if (!tok.skip(internalMagicPrefix) && !tok.skip('/'))
-        throw TextException("invalid URL path", Here());
+    Assure(tok.skip(internalMagicPrefix));
 
     Mgr::Command::Pointer cmd = new Mgr::Command();
     cmd->params.httpUri = SBufToString(uri.absolute());
 
-    const auto &fieldChars = MgrFieldChars(uri.getScheme());
+    static const auto fieldChars = CharacterSet("mgr-field", "?#").complement();
 
     SBuf action;
     if (!tok.prefix(action, fieldChars)) {
-        if (uri.getScheme() == AnyP::PROTO_CACHE_OBJECT) {
-            static const SBuf menuReport("menu");
-            action = menuReport;
-        } else {
-            static const SBuf indexReport("index");
-            action = indexReport;
-        }
+        static const SBuf indexReport("index");
+        action = indexReport;
     }
     cmd->params.actionName = SBufToString(action);
 
@@ -212,12 +193,6 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
         throw TextException(ToSBuf("action '", action, "' is ", prot), Here());
     cmd->profile = profile;
 
-    SBuf passwd;
-    if (uri.getScheme() == AnyP::PROTO_CACHE_OBJECT && tok.skip('@')) {
-        (void)tok.prefix(passwd, fieldChars);
-        cmd->params.password = SBufToString(passwd);
-    }
-
     // TODO: fix when AnyP::Uri::parse() separates path?query#fragment
     SBuf params;
     if (tok.skip('?')) {
@@ -229,8 +204,7 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
         throw TextException("invalid characters in URL", Here());
     // else ignore #fragment (if any)
 
-    debugs(16, 3, "MGR request: host=" << uri.host() << ", action=" << action <<
-           ", password=" << passwd << ", params=" << params);
+    debugs(16, 3, "MGR request: host=" << uri.host() << ", action=" << action << ", params=" << params);
 
     return cmd;
 }
@@ -260,7 +234,7 @@ CacheManager::ParseHeaders(const HttpRequest * request, Mgr::ActionParams &param
 
     const auto colonPos = basic_cookie.find(':');
     if (colonPos == SBuf::npos) {
-        debugs(16, DBG_IMPORTANT, "CacheManager::ParseHeaders: unknown basic_cookie format '" << basic_cookie << "'");
+        debugs(16, DBG_IMPORTANT, "ERROR: CacheManager::ParseHeaders: unknown basic_cookie format '" << basic_cookie << "'");
         return;
     }
 
@@ -284,13 +258,13 @@ CacheManager::ParseHeaders(const HttpRequest * request, Mgr::ActionParams &param
 int
 CacheManager::CheckPassword(const Mgr::Command &cmd)
 {
-    assert(cmd.profile != NULL);
+    assert(cmd.profile != nullptr);
     const char *action = cmd.profile->name;
     char *pwd = PasswdGet(Config.passwd_list, action);
 
     debugs(16, 4, "CacheManager::CheckPassword for action " << action);
 
-    if (pwd == NULL)
+    if (pwd == nullptr)
         return cmd.profile->isPwReq;
 
     if (strcmp(pwd, "disable") == 0)
@@ -370,14 +344,9 @@ CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request,
          */
         rep->header.putAuth("Basic", actionName);
 #endif
-        // Allow cachemgr and other XHR scripts access to our version string
-        if (request->header.has(Http::HdrType::ORIGIN)) {
-            rep->header.putExt("Access-Control-Allow-Origin",request->header.getStr(Http::HdrType::ORIGIN));
-#if HAVE_AUTH_MODULE_BASIC
-            rep->header.putExt("Access-Control-Allow-Credentials","true");
-#endif
-            rep->header.putExt("Access-Control-Expose-Headers","Server");
-        }
+
+        const auto originOrNil = request->header.getStr(Http::HdrType::ORIGIN);
+        PutCommonResponseHeaders(*rep, originOrNil);
 
         /* store the reply */
         entry->replaceHttpReply(rep);
@@ -405,14 +374,10 @@ CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request,
         HttpReply *rep = err.BuildHttpReply();
         if (strncmp(rep->body.content(),"Internal Error:", 15) == 0)
             rep->sline.set(Http::ProtocolVersion(1,1), Http::scNotFound);
-        // Allow cachemgr and other XHR scripts access to our version string
-        if (request->header.has(Http::HdrType::ORIGIN)) {
-            rep->header.putExt("Access-Control-Allow-Origin",request->header.getStr(Http::HdrType::ORIGIN));
-#if HAVE_AUTH_MODULE_BASIC
-            rep->header.putExt("Access-Control-Allow-Credentials","true");
-#endif
-            rep->header.putExt("Access-Control-Expose-Headers","Server");
-        }
+
+        const auto originOrNil = request->header.getStr(Http::HdrType::ORIGIN);
+        PutCommonResponseHeaders(*rep, originOrNil);
+
         entry->replaceHttpReply(rep);
         entry->complete();
         return;
@@ -425,7 +390,7 @@ CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request,
     }
 
     Mgr::Action::Pointer action = cmd->profile->creator->create(cmd);
-    Must(action != NULL);
+    Must(action != nullptr);
     action->run(entry, true);
 }
 
@@ -437,7 +402,7 @@ CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request,
 const char *
 CacheManager::ActionProtection(const Mgr::ActionProfile::Pointer &profile)
 {
-    assert(profile != NULL);
+    assert(profile != nullptr);
     const char *pwd = PasswdGet(Config.passwd_list, profile->name);
 
     if (!pwd)
@@ -473,7 +438,28 @@ CacheManager::PasswdGet(Mgr::ActionPasswordList * a, const char *action)
         a = a->next;
     }
 
-    return NULL;
+    return nullptr;
+}
+
+void
+CacheManager::PutCommonResponseHeaders(HttpReply &response, const char *httpOrigin)
+{
+    // Allow cachemgr and other XHR scripts access to our version string
+    if (httpOrigin) {
+        response.header.putExt("Access-Control-Allow-Origin", httpOrigin);
+#if HAVE_AUTH_MODULE_BASIC
+        response.header.putExt("Access-Control-Allow-Credentials", "true");
+#endif
+        response.header.putExt("Access-Control-Expose-Headers", "Server");
+    }
+
+    HttpHdrCc cc;
+    // this is honored by more caches but allows pointless revalidation;
+    // revalidation will always fail because we do not support it (yet?)
+    cc.noCache(String());
+    // this is honored by fewer caches but prohibits pointless revalidation
+    cc.noStore(true);
+    response.putCc(cc);
 }
 
 CacheManager*

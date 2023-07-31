@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,7 +24,7 @@ Mgr::QueryParams::get(const String& name) const
 {
     Must(name.size() != 0);
     Params::const_iterator pos = find(name);
-    return (pos == params.end() ? NULL : pos->second);
+    return (pos == params.end() ? nullptr : pos->second);
 }
 
 void
@@ -34,7 +34,7 @@ Mgr::QueryParams::pack(Ipc::TypedMsgHdr& msg) const
     for (Params::const_iterator iter = params.begin(); iter != params.end(); ++iter) {
         Must(iter->first.size() != 0);
         msg.putString(iter->first);
-        Must(iter->second != NULL);
+        Must(iter->second != nullptr);
         iter->second->pack(msg);
     }
 }
@@ -77,7 +77,7 @@ Mgr::QueryParams::find(const String& name) const
  *
  * \note opaque string may be a list with a non-integer (e.g., "1,2,3,z")
  */
-Mgr::QueryParam::Pointer
+static Mgr::QueryParam::Pointer
 ParseParamValue(const SBuf &rawValue)
 {
     static const CharacterSet comma("comma", ",");
@@ -155,6 +155,6 @@ Mgr::QueryParams::CreateParam(QueryParam::Type aType)
         throw TexcHere("unknown parameter type");
         break;
     }
-    return NULL;
+    return nullptr;
 }
 

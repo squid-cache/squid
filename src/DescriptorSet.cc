@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,7 @@
 #include "globals.h" /* for Squid_MaxFD */
 
 // pre-allocates descriptor store and index for Squid_MaxFD descriptors
-DescriptorSet::DescriptorSet(): descriptors_(NULL), index_(NULL),
+DescriptorSet::DescriptorSet(): descriptors_(nullptr), index_(nullptr),
     capacity_(0), size_(0)
 {
     // we allocate once and never realloc, at least for now

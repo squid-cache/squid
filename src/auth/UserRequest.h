@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -80,7 +80,7 @@ public:
     typedef RefCount<Auth::UserRequest> Pointer;
 
     UserRequest();
-    virtual ~UserRequest();
+    ~UserRequest() override;
     void *operator new(size_t byteCount);
     void operator delete(void *address);
 
@@ -179,7 +179,7 @@ public:
      */
     void start(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB *handler, void *data);
 
-    char const * denyMessage(char const * const default_message = NULL) const;
+    char const * denyMessage(char const * const default_message = nullptr) const;
 
     /** Possibly overridable in future */
     void setDenyMessage(char const *);

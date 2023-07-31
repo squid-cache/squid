@@ -1485,7 +1485,7 @@ msgid ""
 "non-blocking process."
 msgstr ""
 "B<squid> è un server proxy con cache ad alte prestazioni per client WWW, con "
-"supporto supporta i protocolli FTP, gopher, ICAP, ICP, HTCP e HTTP. A "
+"supporto supporta i protocolli FTP, ICAP, ICP, HTCP e HTTP. A "
 "differenza di altri software, Squid gestisce tutte operazioni all'interno di "
 "un singolo processo con I/O non bloccante."
 

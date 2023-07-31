@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "base/AsyncCbdataCalls.h"
 #include "base/InstanceId.h"
+#include "base/TypeTraits.h"
 #include "CachePeer.h"
 #include "carp.h"
 #include "client_side.h"
@@ -33,9 +34,8 @@
 #include "peer_userhash.h"
 #include "PeerSelectState.h"
 #include "SquidConfig.h"
-#include "SquidTime.h"
 #include "Store.h"
-#include "util.h" // for tvSubDsec() which should be in SquidTime.h
+#include "time/gadgets.h"
 
 /**
  * A CachePeer which has been selected as a possible destination.
@@ -94,7 +94,7 @@ operator <<(std::ostream &os, const PeerSelectionDumper &fsd)
     os << hier_code_str[fsd.code];
 
     if (fsd.peer)
-        os << '/' << fsd.peer->host;
+        os << '/' << *fsd.peer;
     else if (fsd.selector) // useful for DIRECT and gone PINNED destinations
         os << '#' << fsd.selector->request->url.host();
 
@@ -243,7 +243,7 @@ PeerSelector::~PeerSelector()
     }
 
     if (acl_checklist) {
-        debugs(44, DBG_IMPORTANT, "BUG: peer selector gone while waiting for a slow ACL");
+        debugs(44, DBG_IMPORTANT, "ERROR: Squid BUG: peer selector gone while waiting for a slow ACL");
         delete acl_checklist;
     }
 
@@ -252,7 +252,7 @@ PeerSelector::~PeerSelector()
     if (entry) {
         assert(entry->ping_status != PING_WAITING);
         entry->unlock("peerSelect");
-        entry = NULL;
+        entry = nullptr;
     }
 
     delete lastError;
@@ -530,7 +530,10 @@ PeerSelector::noteIp(const Ip::Address &ip)
 
     Comm::ConnectionPointer p = new Comm::Connection();
     p->remote = ip;
-    p->remote.port(peer ? peer->http_port : request->url.port());
+    // XXX: We return a (non-peer) destination with a zero port if the selection
+    // initiator supplied a request target without a port. If there are no valid
+    // use cases for this behavior, stop _selecting_ such destinations.
+    p->remote.port(peer ? peer->http_port : request->url.port().value_or(0));
     handlePath(p, *servers);
 }
 
@@ -545,7 +548,7 @@ PeerSelector::noteIps(const Dns::CachedIps *ia, const Dns::LookupDetails &detail
         debugs(44, 3, "Unknown host: " << (fs->_peer.valid() ? fs->_peer->host : request->url.host()));
         // discard any previous error.
         delete lastError;
-        lastError = NULL;
+        lastError = nullptr;
         if (fs->code == HIER_DIRECT) {
             lastError = new ErrorState(ERR_DNS_FAIL, Http::scServiceUnavailable, request, al);
             lastError->dnsError = details.error;
@@ -590,7 +593,7 @@ PeerSelector::checkNetdbDirect()
 
     p = whichPeer(closest_parent_miss);
 
-    if (p == NULL)
+    if (p == nullptr)
         return 0;
 
     debugs(44, 3, "closest_parent_miss RTT = " << ping.p_rtt << " msec");
@@ -616,7 +619,7 @@ PeerSelector::selectMore()
         if (always_direct == ACCESS_DUNNO) {
             debugs(44, 3, "direct = " << DirectStr[direct] << " (always_direct to be checked)");
             /** check always_direct; */
-            ACLFilledChecklist *ch = new ACLFilledChecklist(Config.accessList.AlwaysDirect, request, NULL);
+            ACLFilledChecklist *ch = new ACLFilledChecklist(Config.accessList.AlwaysDirect, request, nullptr);
             ch->al = al;
             acl_checklist = ch;
             acl_checklist->syncAle(request, nullptr);
@@ -625,7 +628,7 @@ PeerSelector::selectMore()
         } else if (never_direct == ACCESS_DUNNO) {
             debugs(44, 3, "direct = " << DirectStr[direct] << " (never_direct to be checked)");
             /** check never_direct; */
-            ACLFilledChecklist *ch = new ACLFilledChecklist(Config.accessList.NeverDirect, request, NULL);
+            ACLFilledChecklist *ch = new ACLFilledChecklist(Config.accessList.NeverDirect, request, nullptr);
             ch->al = al;
             acl_checklist = ch;
             acl_checklist->syncAle(request, nullptr);
@@ -652,7 +655,7 @@ PeerSelector::selectMore()
 
     if (!entry || entry->ping_status == PING_NONE)
         selectPinned();
-    if (entry == NULL) {
+    if (entry == nullptr) {
         (void) 0;
     } else if (entry->ping_status == PING_NONE) {
         selectSomeNeighbor();
@@ -784,7 +787,7 @@ PeerSelector::selectSomeNeighbor()
 void
 PeerSelector::selectSomeNeighborReplies()
 {
-    CachePeer *p = NULL;
+    CachePeer *p = nullptr;
     hier_code code = HIER_NONE;
     assert(entry->ping_status == PING_WAITING);
     assert(direct != DIRECT_YES);
@@ -940,6 +943,8 @@ PeerSelector::handleIcpParentMiss(CachePeer *p, icp_common_t *header)
             }
         }
     }
+#else
+    (void)header;
 #endif /* USE_ICMP */
 
     /* if closest-only is set, then don't allow FIRST_PARENT_MISS */
@@ -1034,6 +1039,8 @@ PeerSelector::handleHtcpParentMiss(CachePeer *p, HtcpReplyData *htcp)
             }
         }
     }
+#else
+    (void)htcp;
 #endif /* USE_ICMP */
 
     /* if closest-only is set, then don't allow FIRST_PARENT_MISS */
@@ -1101,17 +1108,17 @@ PeerSelector::addSelection(CachePeer *peer, const hier_code code)
 
 PeerSelector::PeerSelector(PeerSelectionInitiator *initiator):
     request(nullptr),
-    entry (NULL),
+    entry (nullptr),
     always_direct(Config.accessList.AlwaysDirect?ACCESS_DUNNO:ACCESS_DENIED),
     never_direct(Config.accessList.NeverDirect?ACCESS_DUNNO:ACCESS_DENIED),
     direct(DIRECT_UNKNOWN),
-    lastError(NULL),
-    servers (NULL),
+    lastError(nullptr),
+    servers (nullptr),
     first_parent_miss(),
     closest_parent_miss(),
-    hit(NULL),
+    hit(nullptr),
     hit_type(PEER_NONE),
-    acl_checklist (NULL),
+    acl_checklist (nullptr),
     initiator_(initiator)
 {
     ; // no local defaults.
@@ -1153,8 +1160,7 @@ PeerSelector::interestedInitiator()
 bool
 PeerSelector::wantsMoreDestinations() const {
     const auto maxCount = Config.forward_max_tries;
-    return maxCount >= 0 && foundPaths <
-           static_cast<std::make_unsigned<decltype(maxCount)>::type>(maxCount);
+    return maxCount >= 0 && foundPaths < static_cast<size_t>(maxCount);
 }
 
 void

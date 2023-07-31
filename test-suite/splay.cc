@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,16 +33,16 @@ public:
     int i;
 };
 
-int
-compareintvoid(void * const &a, void * const &n)
+static int
+compareintvoid(void *const &a, void *const &n)
 {
     intnode *A = (intnode *)a;
     intnode *B = (intnode *)n;
     return A->i - B->i;
 }
 
-int
-compareint(intnode * const &a, intnode * const &b)
+static int
+compareint(intnode *const &a, intnode *const &b)
 {
     return a->i - b->i;
 }
@@ -104,39 +104,39 @@ SplayCheck::WalkNodeRef (intnode const &a, void *)
     CheckNode (a);
 }
 
-void
-destintvoid(void * &data)
+static void
+destintvoid(void *&data)
 {
     intnode *i = (intnode *)data;
     xfree (i);
 }
 
-void
-destint(intnode * &data)
+static void
+destint(intnode *&data)
 {
     delete data;
 }
 
-int
+static int
 compareintref(intnode const &a, intnode const &b)
 {
     return a.i - b.i;
 }
 
-void
-destintref (intnode &)
+static void
+destintref(intnode &)
 {}
 
 int
 main(int, char *[])
 {
     std::mt19937 generator;
-    xuniform_int_distribution<int> distribution;
+    std::uniform_int_distribution<int> distribution;
     auto nextRandom = std::bind (distribution, generator);
 
     {
         /* test void * splay containers */
-        splayNode *top = NULL;
+        splayNode *top = nullptr;
 
         for (int i = 0; i < 100; ++i) {
             intnode *I = (intnode *)xcalloc(sizeof(intnode), 1);
@@ -148,10 +148,10 @@ main(int, char *[])
         }
 
         SplayCheck::BeginWalk();
-        top->walk(SplayCheck::WalkVoid, NULL);
+        top->walk(SplayCheck::WalkVoid, nullptr);
 
         SplayCheck::BeginWalk();
-        top->walk(SplayCheck::WalkVoid, NULL);
+        top->walk(SplayCheck::WalkVoid, nullptr);
         top->destroy(destintvoid);
     }
 
@@ -168,7 +168,7 @@ main(int, char *[])
         }
 
         SplayCheck::BeginWalk();
-        safeTop->walk(SplayCheck::WalkNode, NULL);
+        safeTop->walk(SplayCheck::WalkNode, nullptr);
 
         safeTop->destroy(destint);
     }
@@ -183,7 +183,7 @@ main(int, char *[])
         }
 
         SplayCheck::BeginWalk();
-        safeTop->walk(SplayCheck::WalkNodeRef, NULL);
+        safeTop->walk(SplayCheck::WalkNodeRef, nullptr);
 
         safeTop->destroy(destintref);
     }
@@ -194,20 +194,20 @@ main(int, char *[])
         intnode I;
         I.i = 1;
         /* check we don't segfault on NULL splay calls */
-        SplayCheck::WalkNodeRef(I, NULL);
+        SplayCheck::WalkNodeRef(I, nullptr);
         I.i = 0;
         SplayCheck::ExpectedFail = true;
-        SplayCheck::WalkNodeRef(I, NULL);
+        SplayCheck::WalkNodeRef(I, nullptr);
     }
 
     {
         /* check for begin() */
         Splay<intnode> *safeTop = new Splay<intnode>();
 
-        if (safeTop->start() != NULL)
+        if (safeTop->start() != nullptr)
             exit(EXIT_FAILURE);
 
-        if (safeTop->finish() != NULL)
+        if (safeTop->finish() != nullptr)
             exit(EXIT_FAILURE);
 
         for (int i = 0; i < 100; ++i) {
@@ -244,7 +244,7 @@ main(int, char *[])
     {
         Splay<intnode *> aSplay;
 
-        if (aSplay.start() != NULL)
+        if (aSplay.start() != nullptr)
             exit(EXIT_FAILURE);
 
         if (aSplay.size() != 0)
@@ -252,7 +252,7 @@ main(int, char *[])
 
         aSplay.insert (new intnode(5), compareint);
 
-        if (aSplay.start() == NULL)
+        if (aSplay.start() == nullptr)
             exit(EXIT_FAILURE);
 
         if (aSplay.size() != 1)
@@ -260,7 +260,7 @@ main(int, char *[])
 
         aSplay.destroy(destint);
 
-        if (aSplay.start() != NULL)
+        if (aSplay.start() != nullptr)
             exit(EXIT_FAILURE);
 
         if (aSplay.size() != 0)

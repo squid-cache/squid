@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,12 +29,11 @@ public:
     static STCB SendMoreData;
 
     clientReplyContext(ClientHttpRequest *);
-    ~clientReplyContext();
+    ~clientReplyContext() override;
 
     void saveState();
     void restoreState();
     void purgeRequest ();
-    void sendClientUpstreamResponse();
     void doGetMoreData();
     void identifyStoreObject();
     void identifyFoundObject(StoreEntry *entry, const char *detail);
@@ -43,7 +42,7 @@ public:
     /// replaces current response store entry with the given one
     void setReplyToStoreEntry(StoreEntry *e, const char *reason);
     /// builds error using clientBuildError() and calls setReplyToError() below
-    void setReplyToError(err_type, Http::StatusCode, const HttpRequestMethod&, char const *, const ConnStateData *, HttpRequest *, const char *,
+    void setReplyToError(err_type, Http::StatusCode, char const *, const ConnStateData *, HttpRequest *, const char *,
 #if USE_AUTH
                          Auth::UserRequest::Pointer);
 #else
@@ -60,25 +59,22 @@ public:
     void processExpired();
     clientStream_status_t replyStatus();
     void processMiss();
-    void traceReply(clientStreamNode * node);
+    void traceReply();
     const char *storeId() const { return (http->store_id.size() > 0 ? http->store_id.termedBuf() : http->uri); }
 
     Http::StatusCode purgeStatus;
 
     /* StoreClient API */
-    virtual LogTags *loggingTags() const;
+    LogTags *loggingTags() const override;
 
     ClientHttpRequest *http;
-    /// Base reply header bytes received from Store.
-    /// Compatible with ClientHttpRequest::Out::offset.
-    /// Not to be confused with ClientHttpRequest::Out::headers_sz.
-    int headers_sz;
     store_client *sc;       /* The store_client we're using */
-    StoreIOBuffer tempBuffer;   /* For use in validating requests via IMS */
-    int old_reqsize;        /* ... again, for the buffer */
-    size_t reqsize;
-    size_t reqofs;
-    char tempbuf[HTTP_REQBUF_SZ];   ///< a temporary buffer if we need working storage
+
+    /// Buffer dedicated to receiving storeClientCopy() responses to generated
+    /// revalidation requests. These requests cannot use next()->readBuffer
+    /// because the latter keeps the contents of the stale HTTP response during
+    /// revalidation. sendClientOldEntry() uses that contents.
+    char tempbuf[HTTP_REQBUF_SZ];
 
     struct Flags {
         Flags() : storelogiccomplete(0), complete(0), headersSent(false) {}
@@ -91,15 +87,15 @@ public:
 
 private:
     /* StoreClient API */
-    virtual void fillChecklist(ACLFilledChecklist &) const;
+    void fillChecklist(ACLFilledChecklist &) const override;
 
     clientStreamNode *getNextNode() const;
     void makeThisHead();
-    bool errorInStream(StoreIOBuffer const &result, size_t const &sizeToProcess)const ;
+    bool errorInStream(const StoreIOBuffer &result) const;
+    bool matchesStreamBodyBuffer(const StoreIOBuffer &) const;
     void sendStreamError(StoreIOBuffer const &result);
-    void pushStreamData(StoreIOBuffer const &result, char *source);
+    void pushStreamData(const StoreIOBuffer &);
     clientStreamNode * next() const;
-    StoreIOBuffer holdingBuffer;
     HttpReply *reply;
     void processReplyAccess();
     static ACLCB ProcessReplyAccessResult;
@@ -109,11 +105,13 @@ private:
     bool alwaysAllowResponse(Http::StatusCode sline) const;
     int checkTransferDone();
     void processOnlyIfCachedMiss();
-    bool processConditional(StoreIOBuffer &result);
+    bool processConditional();
+    void noteStreamBufferredBytes(const StoreIOBuffer &);
     void cacheHit(StoreIOBuffer result);
     void handleIMSReply(StoreIOBuffer result);
     void sendMoreData(StoreIOBuffer result);
-    void triggerInitialStoreRead();
+    void triggerInitialStoreRead(STCB = SendMoreData);
+    void requestMoreBodyFromStore();
     void sendClientOldEntry();
     void purgeAllCached();
     /// attempts to release the cached entry
@@ -130,14 +128,21 @@ private:
     void sendPreconditionFailedError();
     void sendNotModified();
     void sendNotModifiedOrPreconditionFailedError();
+    void sendClientUpstreamResponse(const StoreIOBuffer &upstreamResponse);
+
+    /// Reduces a chance of an accidental direct storeClientCopy() call that
+    /// (should but) forgets to invalidate our lastStreamBufferedBytes. This
+    /// function is not defined; decltype() syntax prohibits "= delete", but
+    /// function usage will trigger deprecation warnings and linking errors.
+    static decltype(::storeClientCopy) storeClientCopy [[deprecated]];
 
     /// Classification of the initial Store lookup.
     /// This very first lookup happens without the Vary-driven key augmentation.
     /// TODO: Exclude internal Store match bans from the "mismatch" category.
     const char *firstStoreLookup_ = nullptr;
 
+    /* (stale) cache hit information preserved during IMS revalidation */
     StoreEntry *old_entry;
-    /* ... for entry to be validated */
     store_client *old_sc;
     time_t old_lastmod;
     String old_etag;
@@ -151,7 +156,16 @@ private:
     } CollapsedRevalidation;
 
     CollapsedRevalidation collapsedRevalidation;
+
+    /// HTTP response body bytes stored in our Client Stream buffer (if any)
+    StoreIOBuffer lastStreamBufferedBytes;
+
+    // TODO: Remove after moving the meat of this function into a method.
+    friend CSR clientGetMoreData;
 };
+
+// TODO: move to SideAgent parent, when we have one
+void purgeEntriesByUrl(HttpRequest *, const char *);
 
 #endif /* SQUID_CLIENTSIDEREPLY_H */
 

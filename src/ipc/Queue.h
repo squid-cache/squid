@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 #define SQUID_IPC_QUEUE_H
 
 #include "base/InstanceId.h"
-#include "Debug.h"
+#include "debug/Stream.h"
 #include "ipc/mem/FlexibleArray.h"
 #include "ipc/mem/Pointer.h"
 #include "util.h"
@@ -32,6 +32,9 @@ public:
 
     /// whether the reader is waiting for a notification signal
     bool blocked() const { return popBlocked.load(); }
+
+    /// \copydoc popSignal
+    bool signaled() const { return popSignal.load(); }
 
     /// marks the reader as blocked, waiting for a notification signal
     void block() { popBlocked.store(true); }
@@ -107,10 +110,10 @@ public:
     static int Items2Bytes(const unsigned int maxItemSize, const int size);
 
     /// returns true iff the value was set; [un]blocks the reader as needed
-    template<class Value> bool pop(Value &value, QueueReader *const reader = NULL);
+    template<class Value> bool pop(Value &value, QueueReader *const reader = nullptr);
 
     /// returns true iff the caller must notify the reader of the pushed item
-    template<class Value> bool push(const Value &value, QueueReader *const reader = NULL);
+    template<class Value> bool push(const Value &value, QueueReader *const reader = nullptr);
 
     /// returns true iff the value was set; the value may be stale!
     template<class Value> bool peek(Value &value) const;
@@ -169,6 +172,9 @@ public:
 
     /// clears the reader notification received by the local process from the remote process
     void clearReaderSignal(const int remoteProcessId);
+
+    /// clears all reader notifications received by the local process
+    void clearAllReaderSignals();
 
     /// picks a process and calls OneToOneUniQueue::pop() using its queue
     template <class Value> bool pop(int &remoteProcessId, Value &value);
@@ -278,12 +284,12 @@ public:
     template<class Value> bool findOldest(const int remoteProcessId, Value &value) const;
 
 protected:
-    virtual const OneToOneUniQueue &inQueue(const int remoteProcessId) const;
-    virtual const OneToOneUniQueue &outQueue(const int remoteProcessId) const;
-    virtual const QueueReader &localReader() const;
-    virtual const QueueReader &remoteReader(const int processId) const;
-    virtual int remotesCount() const;
-    virtual int remotesIdOffset() const;
+    const OneToOneUniQueue &inQueue(const int remoteProcessId) const override;
+    const OneToOneUniQueue &outQueue(const int remoteProcessId) const override;
+    const QueueReader &localReader() const override;
+    const QueueReader &remoteReader(const int processId) const override;
+    int remotesCount() const override;
+    int remotesIdOffset() const override;
 
 private:
     bool validProcessId(const Group group, const int processId) const;
@@ -342,12 +348,12 @@ public:
     MultiQueue(const String &id, const int localProcessId);
 
 protected:
-    virtual const OneToOneUniQueue &inQueue(const int remoteProcessId) const;
-    virtual const OneToOneUniQueue &outQueue(const int remoteProcessId) const;
-    virtual const QueueReader &localReader() const;
-    virtual const QueueReader &remoteReader(const int remoteProcessId) const;
-    virtual int remotesCount() const;
-    virtual int remotesIdOffset() const;
+    const OneToOneUniQueue &inQueue(const int remoteProcessId) const override;
+    const OneToOneUniQueue &outQueue(const int remoteProcessId) const override;
+    const QueueReader &localReader() const override;
+    const QueueReader &remoteReader(const int remoteProcessId) const override;
+    int remotesCount() const override;
+    int remotesIdOffset() const override;
 
 private:
     bool validProcessId(const int processId) const;
@@ -540,7 +546,7 @@ BaseMultiQueue::pop(int &remoteProcessId, Value &value)
         OneToOneUniQueue &queue = inQueue(theLastPopProcessId);
         if (queue.pop(value, &localReader())) {
             remoteProcessId = theLastPopProcessId;
-            debugs(54, 7, HERE << "popped from " << remoteProcessId << " to " << theLocalProcessId << " at " << queue.size());
+            debugs(54, 7, "popped from " << remoteProcessId << " to " << theLocalProcessId << " at " << queue.size());
             return true;
         }
     }
@@ -553,7 +559,7 @@ BaseMultiQueue::push(const int remoteProcessId, const Value &value)
 {
     OneToOneUniQueue &remoteQueue = outQueue(remoteProcessId);
     QueueReader &reader = remoteReader(remoteProcessId);
-    debugs(54, 7, HERE << "pushing from " << theLocalProcessId << " to " << remoteProcessId << " at " << remoteQueue.size());
+    debugs(54, 7, "pushing from " << theLocalProcessId << " to " << remoteProcessId << " at " << remoteQueue.size());
     return remoteQueue.push(value, &reader);
 }
 
@@ -590,6 +596,12 @@ BaseMultiQueue::stat(std::ostream &os) const
         const auto &queue = outQueue(processId);
         queue.statOut<Value>(os, theLocalProcessId, processId);
     }
+
+    os << "\n";
+
+    const auto &reader = localReader();
+    os << "  kid" << theLocalProcessId << " reader flags: " <<
+       "{ blocked: " << reader.blocked() << ", signaled: " << reader.signaled() << " }\n";
 }
 
 // FewToFewBiQueue
@@ -604,14 +616,14 @@ FewToFewBiQueue::findOldest(const int remoteProcessId, Value &value) const
 
     // we need the oldest value, so start with the incoming, them-to-us queue:
     const OneToOneUniQueue &in = inQueue(remoteProcessId);
-    debugs(54, 2, HERE << "peeking from " << remoteProcessId << " to " <<
+    debugs(54, 2, "peeking from " << remoteProcessId << " to " <<
            theLocalProcessId << " at " << in.size());
     if (in.peek(value))
         return true;
 
     // if the incoming queue is empty, check the outgoing, us-to-them queue:
     const OneToOneUniQueue &out = outQueue(remoteProcessId);
-    debugs(54, 2, HERE << "peeking from " << theLocalProcessId << " to " <<
+    debugs(54, 2, "peeking from " << theLocalProcessId << " to " <<
            remoteProcessId << " at " << out.size());
     return out.peek(value);
 }

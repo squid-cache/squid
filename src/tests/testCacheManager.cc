@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,14 +9,31 @@
 #include "squid.h"
 #include "anyp/Uri.h"
 #include "CacheManager.h"
+#include "compat/cppunit.h"
 #include "mgr/Action.h"
 #include "Store.h"
-#include "testCacheManager.h"
 #include "unitTestMain.h"
 
 #include <cppunit/TestAssert.h>
+/*
+ * test the CacheManager implementation
+ */
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testCacheManager );
+class TestCacheManager : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE(TestCacheManager);
+    CPPUNIT_TEST(testCreate);
+    CPPUNIT_TEST(testRegister);
+    CPPUNIT_TEST(testParseUrl);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
+    void testCreate();
+    void testRegister();
+    void testParseUrl();
+};
+
+CPPUNIT_TEST_SUITE_REGISTRATION( TestCacheManager );
 
 /// Provides test code access to CacheManager internal symbols
 class CacheManagerInternals : public CacheManager
@@ -25,9 +42,16 @@ public:
     void ParseUrl(const AnyP::Uri &u) { CacheManager::ParseUrl(u); }
 };
 
-/* init memory pools */
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override;
+};
 
-void testCacheManager::setUp()
+void
+MyTestProgram::startup()
 {
     Mem::Init();
     AnyP::UriScheme::Init();
@@ -37,7 +61,7 @@ void testCacheManager::setUp()
  * Test creating a CacheManager
  */
 void
-testCacheManager::testCreate()
+TestCacheManager::testCreate()
 {
     CacheManager::GetInstance(); //it's a singleton..
 }
@@ -53,18 +77,18 @@ dummy_action(StoreEntry * sentry)
  * registering an action makes it findable.
  */
 void
-testCacheManager::testRegister()
+TestCacheManager::testRegister()
 {
     CacheManager *manager=CacheManager::GetInstance();
-    CPPUNIT_ASSERT(manager != NULL);
+    CPPUNIT_ASSERT(manager != nullptr);
 
     manager->registerProfile("sample", "my sample", &dummy_action, false, false);
     Mgr::Action::Pointer action = manager->createNamedAction("sample");
-    CPPUNIT_ASSERT(action != NULL);
+    CPPUNIT_ASSERT(action != nullptr);
 
     const Mgr::ActionProfile::Pointer profile = action->command().profile;
-    CPPUNIT_ASSERT(profile != NULL);
-    CPPUNIT_ASSERT(profile->creator != NULL);
+    CPPUNIT_ASSERT(profile != nullptr);
+    CPPUNIT_ASSERT(profile->creator != nullptr);
     CPPUNIT_ASSERT_EQUAL(false, profile->isPwReq);
     CPPUNIT_ASSERT_EQUAL(false, profile->isAtomic);
     CPPUNIT_ASSERT_EQUAL(String("sample"), String(action->name()));
@@ -76,13 +100,12 @@ testCacheManager::testRegister()
 }
 
 void
-testCacheManager::testParseUrl()
+TestCacheManager::testParseUrl()
 {
     auto *mgr = static_cast<CacheManagerInternals *>(CacheManager::GetInstance());
     CPPUNIT_ASSERT(mgr != nullptr);
 
     std::vector<AnyP::ProtocolType> validSchemes = {
-        AnyP::PROTO_CACHE_OBJECT,
         AnyP::PROTO_HTTP,
         AnyP::PROTO_HTTPS,
         AnyP::PROTO_FTP
@@ -162,8 +185,8 @@ testCacheManager::testParseUrl()
 
         for (const auto *magic : magicPrefixes) {
 
-            // all schemes except cache_object require magic path prefix bytes
-            if (scheme != AnyP::PROTO_CACHE_OBJECT && strlen(magic) <= 2)
+            // all schemes require magic path prefix bytes
+            if (strlen(magic) <= 2)
                 continue;
 
             /* Check the parser accepts all the valid cases */
@@ -217,5 +240,11 @@ testCacheManager::testParseUrl()
             }
         }
     }
+}
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 

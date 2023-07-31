@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -60,6 +60,9 @@ public:
     int getInt() const;
     int64_t getInt64() const;
 
+    /// expected number of bytes written by packInto(), including ": " and CRLF
+    size_t length() const { return name.length() + 2 + value.size() + 2; }
+
     Http::HdrType id;
     SBuf name;
     String value;
@@ -72,7 +75,6 @@ class HttpHeader
 {
 
 public:
-    HttpHeader();
     explicit HttpHeader(const http_hdr_owner_type owner);
     HttpHeader(const HttpHeader &other);
     ~HttpHeader();
@@ -83,8 +85,7 @@ public:
     void clean();
     void append(const HttpHeader * src);
     /// replaces fields with matching names and adds fresh fields with new names
-    /// also updates Http::HdrType::WARNINGs, assuming `fresh` is a 304 reply
-    /// TODO: Refactor most callers to avoid special handling of WARNINGs.
+    /// assuming `fresh` is a 304 reply
     void update(const HttpHeader *fresh);
     /// \returns whether calling update(fresh) would change our set of fields
     bool needUpdate(const HttpHeader *fresh) const;
@@ -107,7 +108,6 @@ public:
     void delAt(HttpHeaderPos pos, int &headers_deleted);
     void refreshMask();
     void addEntry(HttpHeaderEntry * e);
-    void insertEntry(HttpHeaderEntry * e);
     String getList(Http::HdrType id) const;
     bool getList(Http::HdrType id, String *s) const;
     bool conflictingContentLength() const { return conflictingContentLength_; }
@@ -120,9 +120,9 @@ public:
     bool getByIdIfPresent(Http::HdrType id, String *result) const;
     /// returns true iff a [possibly empty] named field is there
     /// when returning true, also sets the `value` parameter (if it is not nil)
-    bool hasNamed(const SBuf &s, String *value = 0) const;
+    bool hasNamed(const SBuf &s, String *value = nullptr) const;
     /// \deprecated use SBuf method instead.
-    bool hasNamed(const char *name, unsigned int namelen, String *value = 0) const;
+    bool hasNamed(const char *name, unsigned int namelen, String *value = nullptr) const;
     /// searches for the first matching key=value pair within the name-identified field
     /// \returns the value of the found pair or an empty string
     SBuf getByNameListMember(const char *name, const char *member, const char separator) const;
@@ -132,18 +132,22 @@ public:
     int has(Http::HdrType id) const;
     /// Appends "this cache" information to VIA header field.
     /// Takes the initial VIA value from "from" parameter, if provided.
-    void addVia(const AnyP::ProtocolVersion &ver, const HttpHeader *from = 0);
+    void addVia(const AnyP::ProtocolVersion &ver, const HttpHeader *from = nullptr);
     void putInt(Http::HdrType id, int number);
     void putInt64(Http::HdrType id, int64_t number);
     void putTime(Http::HdrType id, time_t htime);
     void putStr(Http::HdrType id, const char *str);
     void putAuth(const char *auth_scheme, const char *realm);
-    void putCc(const HttpHdrCc * cc);
+    void putCc(const HttpHdrCc &cc);
     void putContRange(const HttpHdrContRange * cr);
     void putRange(const HttpHdrRange * range);
     void putSc(HttpHdrSc *sc);
-    void putWarning(const int code, const char *const text); ///< add a Warning header
     void putExt(const char *name, const char *value);
+
+    /// Ensures that the header has the given field, removing or replacing any
+    /// same-name fields with conflicting values as needed.
+    void updateOrAddStr(Http::HdrType, const SBuf &);
+
     int getInt(Http::HdrType id) const;
     int64_t getInt64(Http::HdrType id) const;
     time_t getTime(Http::HdrType id) const;
@@ -184,7 +188,6 @@ protected:
     /// If block starts where it ends, then there are no fields in the header.
     static bool Isolate(const char **parse_start, size_t l, const char **blk_start, const char **blk_end);
     bool skipUpdateHeader(const Http::HdrType id) const;
-    void updateWarnings();
 
 private:
     HttpHeaderEntry *findLastEntry(Http::HdrType id) const;

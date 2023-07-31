@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2023 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -47,8 +47,13 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
-#include <sys/types.h>
 #include <memory.h>
+
+#if HAVE_REGEX_H
+#include <regex.h>
+#endif
+
+#include <sys/types.h>
 
 int
 readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
@@ -155,7 +160,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
                                       (int)subs[offset].rm_so,
                                       (int)subs[offset].rm_eo,
                                       line+subs[offset].rm_so );
-            cd.size = strtoul( line+subs[offset].rm_so, 0, 10 );
+            cd.size = strtoul( line+subs[offset].rm_so, nullptr, 10 );
             ++offset;
 
             // extract 1st level directories
@@ -164,7 +169,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
                                       (int)subs[offset].rm_so,
                                       (int)subs[offset].rm_eo,
                                       line+subs[offset].rm_so );
-            cd.level[0] = strtoul( line+subs[offset].rm_so, 0, 10 );
+            cd.level[0] = strtoul( line+subs[offset].rm_so, nullptr, 10 );
             ++offset;
 
             // extract 2nd level directories
@@ -173,7 +178,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
                                       (int)subs[offset].rm_so,
                                       (int)subs[offset].rm_eo,
                                       line+subs[offset].rm_so );
-            cd.level[1] = strtoul( line+subs[offset].rm_so, 0, 10 );
+            cd.level[1] = strtoul( line+subs[offset].rm_so, nullptr, 10 );
             ++offset;
 
             cachedir.push_back( cd );
