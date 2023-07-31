@@ -84,12 +84,6 @@ public:
     /// exists because (re)configuration does not create SquidConfig objects
     void lifecycleEnd();
 
-    /// Opaque value suitable for detecting Squid process (re)configuration.
-    /// \returns an identifier that changes with each lifecycleStart() call
-    /// Returned value changes even if a reconfiguration changed nothing (that
-    /// Squid could detect). The value sequence never repeats within a process.
-    uint64_t id() const { return lifecycles_; }
-
     struct {
         /* These should be for the Store::Root instance.
         * this needs pluggable parsing to be done smoothly.
@@ -557,8 +551,11 @@ public:
         int connect_timeout;
     } happyEyeballs;
 
-private:
-    uint64_t lifecycles_; ///< the total number of lifecycleStart() calls
+    using Id = InstanceId<SquidConfig>;
+    /// A Squid process (re)configuration identifier.
+    /// Changes with each lifecycleStart() call even if
+    /// reconfiguration changed nothing (that Squid could detect).
+    Id id;
 };
 
 extern SquidConfig Config;

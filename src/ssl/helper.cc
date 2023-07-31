@@ -44,7 +44,7 @@ class GeneratorRequest {
 
 public:
     /// helper query contents plus Squid configuration ID
-    using Key = SBuf;
+    using Key = std::pair<SBuf, SquidConfig::Id::Value>;
 
     explicit GeneratorRequest(const Key &aKey): key(aKey) {}
 
@@ -58,9 +58,17 @@ public:
     GeneratorRequestors requestors;
 };
 
+struct GeneratorRequestKeyHash
+{
+    template <class T1, class T2>
+    std::size_t operator() (const std::pair<T1, T2> &pair) const {
+        return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
+    }
+};
+
 /// indexes GeneratorRequests
 using GeneratorRequests = std::unordered_map<GeneratorRequest::Key, GeneratorRequest*,
-      std::hash<GeneratorRequest::Key>,
+      GeneratorRequestKeyHash,
       std::equal_to<GeneratorRequest::Key>,
       PoolingAllocator< std::pair<const GeneratorRequest::Key, GeneratorRequest*> >
       >;
@@ -75,7 +83,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Ssl, GeneratorRequest);
 static std::ostream &
 operator <<(std::ostream &os, const Ssl::GeneratorRequest &gr)
 {
-    return os << "crtGenRq" << gr.key.id.value << "/" << gr.requestors.size();
+    return os << "crtGenRq" << gr.key.first << gr.key.second << "/" << gr.requestors.size();
 }
 
 /// pending Ssl::Helper requests (to all certificate generator helpers combined)
@@ -136,16 +144,13 @@ void Ssl::Helper::Submit(CrtdMessage const & message, HLPCB * callback, void * d
     SBuf rawMessage(message.compose().c_str()); // XXX: helpers cannot use SBuf
     rawMessage.append("\n", 1);
 
-    // Appending a numerical ID will not result in key clashes regardless of the
-    // message contents because we always separate the two with a LF (above).
-    // TODO: Optimize by using a (message,id) tuple instead of ToSBuf().
-    const auto key = ToSBuf(rawMessage, ::Config.id());
+    const auto key = GeneratorRequest::Key(rawMessage, ::Config.id.value);
 
     const auto pending = TheGeneratorRequests.find(key);
     if (pending != TheGeneratorRequests.end()) {
         pending->second->emplace(callback, data);
         debugs(83, 5, "collapsed request from " << data << " onto " << *pending->second <<
-               " with cfg" << ::Config.id()); // TODO: Use (static) InstanceId for Config.id()
+               " with " << ::Config.id);
         return;
     }
 
@@ -153,7 +158,7 @@ void Ssl::Helper::Submit(CrtdMessage const & message, HLPCB * callback, void * d
     request->emplace(callback, data);
     TheGeneratorRequests.emplace(key, request);
     debugs(83, 5, "request from " << data << " as " << *request <<
-           " with cfg" << ::Config.id());
+           " with " << ::Config.id);
 
     // ssl_crtd becomes nil if Squid is reconfigured without SslBump or
     // certificate generation disabled in the new configuration

@@ -9,6 +9,8 @@
 #include "squid.h"
 #include "SquidConfig.h"
 
+InstanceIdDefinitions(SquidConfig, "config");
+
 class SquidConfig Config;
 
 class SquidConfig2 Config2;

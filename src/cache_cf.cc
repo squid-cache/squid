@@ -3926,9 +3926,7 @@ configFreeMemory(void)
 void
 SquidConfig::lifecycleStart()
 {
-    static uint64_t callCount = 0;
-    ++callCount;
-    lifecycles_ = callCount;
+    id.change();
 }
 
 void
