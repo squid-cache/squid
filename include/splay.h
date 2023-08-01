@@ -42,6 +42,18 @@ public:
 
     /// left-to-right visit of all nodes using Morris Traversal
     template <class Visitor> void visit(Visitor &v) const;
+private:
+    mutable SplayNode<V> *visit_thread_up;
+
+    struct SplayNodeWalkeeVisitor {
+        SPLAYWALKEE* walkee;
+        void *       state;
+        explicit SplayNodeWalkeeVisitor(SPLAYWALKEE* w, void *s): walkee{w}, state{s} {}
+        void operator() (Value const &data) {
+            walkee(data, state);
+        }
+    };
+
 };
 
 typedef SplayNode<void *> splayNode;
@@ -50,16 +62,12 @@ template <class V>
 class SplayConstIterator;
 
 template <class V>
-class SplayIterator;
-
-template <class V>
 class Splay
 {
 public:
     typedef V Value;
     typedef int SPLAYCMP(Value const &a, Value const &b);
     typedef void SPLAYFREE(Value &);
-    typedef SplayIterator<V> iterator;
     typedef const SplayConstIterator<V> const_iterator;
     Splay():head(nullptr), elements (0) {}
 
@@ -96,53 +104,20 @@ SQUIDCEXTERN int splayLastResult;
 template<class V>
 SplayNode<V>::SplayNode (Value const &someData) : data(someData), left(nullptr), right (nullptr) {}
 
+
 template<class V>
 void
 SplayNode<V>::walk(SPLAYWALKEE * walkee, void *state)
 {
-    // in-order walk through tree using Morris Traversal
-    SplayNode<V> *cur = const_cast<SplayNode<V> *>(this);
-    while (cur != nullptr) {
-        if (cur->left == nullptr) {
-            // no left subtree, call walkee on cur->data and
-            // descent into right subtree
-            walkee(cur->data, state);
-            cur = cur->right;
-        } else {
-            // first descent into left subtree
-
-            // find right-most child in left tree
-            SplayNode<V> *rmc = cur->left;
-            while (rmc->right && rmc->right != cur)
-                rmc = rmc->right;
-
-            if (rmc->right == nullptr) {
-                // found the right most node in the left subtree:
-                // create a temporay thread back to cur to have
-                // a way back out of the subtree
-                rmc->right = cur;
-                // descent into left subtree
-                cur = cur->left;
-            } else {
-                // found thread in left subtree pointing back to cur:
-                // this means we moved back up a thread to cur
-                // in the last "descent into right" and completed
-                // the left subtree of cur.
-                // cut the temporary thread and call walkee on cur->data
-                rmc->right = nullptr;
-                walkee(cur->data, state);
-                // and descent into right subtree
-                cur = cur->right;
-            }
-        }
-    }
+    SplayNodeWalkeeVisitor visitor(walkee, state);
+    visit(visitor);
 }
 
 template<class V>
 SplayNode<V> const *
 SplayNode<V>::start() const
 {
-    SplayNode<V> *cur = const_cast<SplayNode<V> *>(this);
+    auto cur = this;
     while (cur->left)
         cur = cur->left;
 
@@ -153,7 +128,7 @@ template<class V>
 SplayNode<V> const *
 SplayNode<V>::finish() const
 {
-    SplayNode<V> *cur = const_cast<SplayNode<V> *>(this);
+    auto cur = this;
     while (cur->right)
         cur = cur->right;
 
@@ -164,8 +139,9 @@ template<class V>
 void
 SplayNode<V>::destroy(SPLAYFREE * free_func)
 {
-    // to delete all nodes we use a modification of
-    // the Morris Traversal algorithm:
+    // Use a modified Morris Traversal because a destroy function
+    // based on a visit()-like traversal with a visitor would have to
+    // call delete on the root SplayNode-object (this) in-order, not last.
     //
     // Start with the top node as current node C.
     //
@@ -190,23 +166,21 @@ SplayNode<V>::destroy(SPLAYFREE * free_func)
     // As every node is at most visited once for RMN search and once for deletion,
     // cpu need is O(n).
 
-    SplayNode<V> *cur = const_cast<SplayNode<V> *>(this);
-    SplayNode<V> *old = nullptr;
+    auto cur = this;
     while (cur != nullptr) {
         if (cur->left == nullptr) {
-            // no left tree -> descent into right subtree and delete old root
-            free_func(cur->data);
-            old = cur;
+            // no left tree -> descent into right subtree and delete old top
+            auto top = cur;
             cur = cur->right;
-            old->right = nullptr;
-            if (old != this)
-                delete old;
+            free_func(top->data);
+            top->right = nullptr;
+            if (top != this)
+                delete top;
         } else {
-            // there is no need to move the right subtree,
-            // if there is no right subtree
             if (cur->right) {
                 // find right-most child in left tree
-                SplayNode<V> *rmc = cur->left;
+                // to store a link to right subtree
+                auto rmc = cur->left;
                 while (rmc->right)
                     rmc = rmc->right;
 
@@ -215,13 +189,13 @@ SplayNode<V>::destroy(SPLAYFREE * free_func)
                 cur->right = nullptr;
             }
 
-            // descent into left subtree and delete old root
-            free_func(cur->data);
-            old = cur;
+            // descent into left subtree and delete old top
+            auto top = cur;
             cur = cur->left;
-            old->left = nullptr;
-            if (old != this)
-                delete old;
+            free_func(top->data);
+            top->left = nullptr;
+            if (top != this)
+                delete top;
         }
     }
 
@@ -348,41 +322,53 @@ template <class Visitor>
 void
 SplayNode<V>::visit(Visitor &visitor) const
 {
-    // in-order walk through tree using Morris Traversal
+    // in-order walk through tree using modified Morris Traversal:
+    // to avoid a left-over thread up due to an exception in
+    // visit (and therefor a fatal loop in the tree), we use
+    // an extra pointer visit_thread_up, that doesn't interfere
+    // with other methods.
+    // This also helps to distinguish between up and down movements
+    // and therefor we do not need to descent into left subtree
+    // a second time after traversing the thread to find the loop
+    // cut the thread.
     SplayNode<V> *cur = const_cast<SplayNode<V> *>(this);
+    bool moved_up = false;
+    visit_thread_up = nullptr;
+
     while (cur != nullptr) {
-        if (cur->left == nullptr) {
-            // no left subtree, call visitor on cur->data and
-            // decent into right subtree
+        if (cur->left == nullptr or moved_up) {
+            // no (unvisited) left subtree, so
+            // handle current node ...
             visitor(cur->data);
-            cur = cur->right;
+            if (cur->right) {
+                // ... and descent into right subtree
+                cur = cur->right;
+                moved_up = false;
+            }
+            else if (cur->visit_thread_up) {
+                // .. or back up the thread
+                cur = cur->visit_thread_up;
+                moved_up = true;
+            } else {
+                // end of traversal
+                cur = nullptr;
+                break;
+            }
         } else {
             // first descent into left subtree
 
             // find right-most child in left tree
-            SplayNode<V> *rmc = cur->left;
-            while (rmc->right && rmc->right != cur) {
+            auto rmc = cur->left;
+            while (rmc->right) {
+                rmc->visit_thread_up = nullptr; // cleanup old threads on the way
                 rmc = rmc->right;
             }
+            // create thread up back to cur
+            rmc->visit_thread_up = cur;
 
-            if (rmc->right == nullptr) {
-                // found the right most node in the left subtree:
-                // create a temporay thread back to cur to have
-                // a way back out of the subtree
-                rmc->right = cur;
-                // descent into left subtree
-                cur = cur->left;
-            } else {
-                // found thread in left subtree pointing to cur:
-                // this means we moved back up a thread to cur
-                // in the last "descent into right" and completed
-                // the left subtree of cur.
-                // cut the temporary thread and call visitor on cur->data
-                rmc->right = nullptr;
-                visitor(cur->data);
-                // and descent into right subtree
-                cur = cur->right;
-            }
+            // finally descent into left subtree
+            cur = cur->left;
+            moved_up = false;
         }
     }
 }
