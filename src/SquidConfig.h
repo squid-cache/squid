@@ -80,10 +80,6 @@ public:
     /// exists because (re)configuration does not create SquidConfig objects
     void lifecycleStart();
 
-    /// similar to a destructor
-    /// exists because (re)configuration does not create SquidConfig objects
-    void lifecycleEnd();
-
     struct {
         /* These should be for the Store::Root instance.
         * this needs pluggable parsing to be done smoothly.
@@ -552,10 +548,12 @@ public:
     } happyEyeballs;
 
     using Id = InstanceId<SquidConfig>;
-    /// A Squid process (re)configuration identifier.
-    /// Changes with each lifecycleStart() call even if
-    /// reconfiguration changed nothing (that Squid could detect).
-    Id id;
+
+    const Id &id() const { return id_; }
+
+private:
+    /// configuration ID that changes with each lifecycleStart() call
+    Id id_;
 };
 
 extern SquidConfig Config;

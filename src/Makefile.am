@@ -895,8 +895,7 @@ nodist_tests_testURL_SOURCES = \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
 	tests/stub_libhttp.cc \
-	tests/stub_libmem.cc \
-	tests/stub_SquidConfig.cc
+	tests/stub_libmem.cc
 tests_testURL_LDADD = \
 	libsquid.la \
 	anyp/libanyp.la \
@@ -1113,7 +1112,6 @@ tests_testRock_SOURCES = \
 	store_rebuild.h \
 	tests/stub_store_stats.cc \
 	store_swapout.cc \
-	tests/stub_SquidConfig.cc \
 	tests/stub_tools.cc \
 	tools.h \
 	wordlist.cc \
@@ -1285,7 +1283,6 @@ tests_testUfs_SOURCES = \
 	store_key_md5.h \
 	tests/stub_store_rebuild.cc \
 	store_rebuild.h \
-	tests/stub_SquidConfig.cc \
 	tests/stub_store_stats.cc \
 	store_swapout.cc \
 	tests/stub_tools.cc \
@@ -1451,7 +1448,6 @@ tests_testStore_SOURCES = \
 	store_io.cc \
 	store_key_md5.cc \
 	store_key_md5.h \
-	tests/stub_SquidConfig.cc \
 	tests/stub_store_rebuild.cc \
 	store_rebuild.h \
 	tests/stub_store_stats.cc \
@@ -1706,8 +1702,7 @@ nodist_tests_testACLMaxUserIP_SOURCES = \
 	tests/stub_libhttp.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
-	tests/stub_neighbors.cc \
-	tests/stub_SquidConfig.cc
+	tests/stub_neighbors.cc
 tests_testACLMaxUserIP_LDADD = \
 	$(AUTH_ACL_LIBS) \
 	acl/libapi.la \
@@ -1985,7 +1980,6 @@ tests_testHttp1Parser_SOURCES = \
 	tests/stub_libsecurity.cc \
 	mime_header.cc \
 	mime_header.h \
-	tests/stub_SquidConfig.cc \
 	tests/stub_stmem.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \

@@ -51,7 +51,7 @@ public:
     /// adds a GeneratorRequestor
     void emplace(HLPCB *callback, void *data) { requestors.emplace_back(callback, data); }
 
-    Key key; ///< for the GeneratorRequestors index
+    const Key key; ///< for the GeneratorRequestors index
 
     /// Ssl::Helper request initiators waiting for the same answer (FIFO).
     typedef std::vector<GeneratorRequestor> GeneratorRequestors;
@@ -61,11 +61,11 @@ public:
 struct GeneratorRequestKeyHash
 {
     std::size_t operator() (const GeneratorRequest::Key &pair) const {
-        return std::hash()(pair.first) ^ std::hash()(pair.second);
+        return std::hash<decltype(pair.first)>()(pair.first) ^ std::hash<decltype(pair.second)>()(pair.second);
     }
 };
 
-/// indexes GeneratorRequests
+/// a fast way to locate an existing GeneratorRequest for the new Ssl::Helper query
 using GeneratorRequests = std::unordered_map<GeneratorRequest::Key, GeneratorRequest*,
       GeneratorRequestKeyHash,
       std::equal_to<GeneratorRequest::Key>,
@@ -82,7 +82,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Ssl, GeneratorRequest);
 static std::ostream &
 operator <<(std::ostream &os, const Ssl::GeneratorRequest &gr)
 {
-    return os << "crtGenRq" << gr.key.first << gr.key.second << "/" << gr.requestors.size();
+    return os << "crtGenRq" << gr.key.first.id.value << "/" << gr.requestors.size();
 }
 
 /// pending Ssl::Helper requests (to all certificate generator helpers combined)
@@ -143,21 +143,19 @@ void Ssl::Helper::Submit(CrtdMessage const & message, HLPCB * callback, void * d
     SBuf rawMessage(message.compose().c_str()); // XXX: helpers cannot use SBuf
     rawMessage.append("\n", 1);
 
-    const auto key = GeneratorRequest::Key(rawMessage, ::Config.id.value);
+    const auto key = GeneratorRequest::Key(rawMessage, ::Config.id().value);
 
     const auto pending = TheGeneratorRequests.find(key);
     if (pending != TheGeneratorRequests.end()) {
         pending->second->emplace(callback, data);
-        debugs(83, 5, "collapsed request from " << data << " onto " << *pending->second <<
-               " with " << ::Config.id);
+        debugs(83, 5, "collapsed request from " << data << " onto " << *pending->second);
         return;
     }
 
     const auto request = new GeneratorRequest(key);
     request->emplace(callback, data);
     TheGeneratorRequests.emplace(key, request);
-    debugs(83, 5, "request from " << data << " as " << *request <<
-           " with " << ::Config.id);
+    debugs(83, 5, "request from " << data << " as " << *request);
 
     // ssl_crtd becomes nil if Squid is reconfigured without SslBump or
     // certificate generation disabled in the new configuration

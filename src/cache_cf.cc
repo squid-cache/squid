@@ -3920,20 +3920,6 @@ configFreeMemory(void)
 #if USE_OPENSSL
     Ssl::unloadSquidUntrusted();
 #endif
-    Config.lifecycleEnd();
-}
-
-void
-SquidConfig::lifecycleStart()
-{
-    id.change();
-}
-
-void
-SquidConfig::lifecycleEnd()
-{
-    // if we decide to cache an SBuf representation of lifecycles_, then we can
-    // delete that object here
 }
 
 void

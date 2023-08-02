@@ -10,5 +10,5 @@
 
 #include "SquidConfig.h"
 
-InstanceIdDefinitions(SquidConfig, "config");
+InstanceIdDefinitions(SquidConfig, "cfg");
 
