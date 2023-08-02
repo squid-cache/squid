@@ -1518,6 +1518,10 @@ getOutgoingAddress(HttpRequest * request, const Comm::ConnectionPointer &conn)
             if (request && request->clientConnectionManager.valid()) {
                 localAddr = request->clientConnectionManager->clientConnection->local;
                 localAddr.port(0);
+            } else {
+                // not DBG_IMPORTANT or Assure() because the client may simply be gone by now
+                debugs(17, 3, "WARNING: Skipping tcp_outgoing_address match_client_tcp_dst rule");
+                continue;
             }
         } else {
             localAddr = std::get<Ip::Address>(l->addr);
