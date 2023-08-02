@@ -1605,13 +1605,13 @@ parse_acl_address(Acl::Address ** head)
     char *token = ConfigParser::NextToken();
     if (token && !strcmp(token, "match_client_tcp_dst")) {
         l->addr = Acl::Address::UseClientAddress{};
-        aclParseAclList(LegacyParser, &l->aclList, "match_client_tcp_dst");
     } else {
         Ip::Address addr;
         parseAddressToken(&addr, token);
         l->addr = addr;
-        aclParseAclList(LegacyParser, &l->aclList, addr);
     }
+
+    aclParseAclList(LegacyParser, &l->aclList, token);
 
     Acl::Address **tail = head;
     while (*tail)
