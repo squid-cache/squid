@@ -39,8 +39,38 @@ CPPUNIT_TEST_SUITE_REGISTRATION( TestCacheManager );
 class CacheManagerInternals : public CacheManager
 {
 public:
-    void ParseUrl(const AnyP::Uri &u) { CacheManager::ParseUrl(u); }
+    /// checks CacheManager parsing of the given valid URL
+    void testValidUrl(const AnyP::Uri &);
+
+    /// checks CacheManager parsing of the given invalid URL
+    /// \param problem a bad part of the URL or its description
+    void testInvalidUrl(const AnyP::Uri &, const char *problem);
 };
+
+void
+CacheManagerInternals::testValidUrl(const AnyP::Uri &url)
+{
+    try {
+        (void)ParseUrl(url);
+    } catch (...) {
+        std::cerr << "\nFAIL: " << url <<
+            Debug::Extra << "error: " << CurrentException << "\n";
+        CPPUNIT_FAIL("rejected a valid URL");
+    }
+}
+
+void
+CacheManagerInternals::testInvalidUrl(const AnyP::Uri &url, const char *const problem)
+{
+    try {
+        (void)ParseUrl(url);
+        std::cerr << "\nFAIL: " << url <<
+            Debug::Extra << "error: should be rejected due to '" << problem << "'\n";
+    } catch (const TextException &) {
+        return; // success -- the parser signaled bad input
+    }
+    CPPUNIT_FAIL("failed to reject an invalid URL");
+}
 
 /// customizes our test setup
 class MyTestProgram: public TestProgram
@@ -115,11 +145,6 @@ TestCacheManager::testParseUrl()
     mgrUrl.host("localhost");
     mgrUrl.port(3128);
 
-    const std::vector<const char *> magicPrefixes = {
-        "/",
-        "/squid-internal-mgr/"
-    };
-
     const std::vector<const char *> validActions = {
         "",
         "menu"
@@ -180,62 +205,58 @@ TestCacheManager::testParseUrl()
         "#fragment"
     };
 
+    const auto &prefix = CacheManager::WellKnownUrlPathPrefix();
+
+    assert(prefix.length());
+    const auto insufficientPrefix = prefix.substr(0, prefix.length()-1);
+
     for (const auto &scheme : validSchemes) {
         mgrUrl.setScheme(scheme);
 
-        for (const auto *magic : magicPrefixes) {
-
-            // all schemes require magic path prefix bytes
-            if (strlen(magic) <= 2)
-                continue;
-
-            /* Check the parser accepts all the valid cases */
-
-            for (const auto *action : validActions) {
-                for (const auto *param : validParams) {
-                    for (const auto *frag : validFragments) {
-                        try {
-                            SBuf bits;
-                            bits.append(magic);
-                            bits.append(action);
-                            bits.append(param);
-                            bits.append(frag);
-                            mgrUrl.path(bits);
-
-                            (void)mgr->ParseUrl(mgrUrl);
-                        } catch (...) {
-                            std::cerr << std::endl
-                                      << "FAIL: " << mgrUrl
-                                      << Debug::Extra << "error: " << CurrentException << std::endl;
-                            CPPUNIT_FAIL("rejected a valid URL");
-                        }
-                    }
+        // Check that the parser rejects URLs that lack the full prefix prefix.
+        // These negative tests log "Squid BUG: assurance failed" ERRORs because
+        // they violate CacheManager::ParseUrl()'s ForSomeCacheManager()
+        // precondition.
+        for (const auto *action : validActions) {
+            for (const auto *param : validParams) {
+                for (const auto *frag : validFragments) {
+                    SBuf bits;
+                    bits.append(insufficientPrefix);
+                    bits.append(action);
+                    bits.append(param);
+                    bits.append(frag);
+                    mgrUrl.path(bits);
+                    mgr->testInvalidUrl(mgrUrl, "insufficient prefix");
                 }
             }
+        }
 
-            /* Check that invalid parameters are rejected */
+        // Check that the parser accepts valid URLs.
+        for (const auto action: validActions) {
+            for (const auto param: validParams) {
+                for (const auto frag: validFragments) {
+                    SBuf bits;
+                    bits.append(prefix);
+                    bits.append(action);
+                    bits.append(param);
+                    bits.append(frag);
+                    mgrUrl.path(bits);
+                    mgr->testValidUrl(mgrUrl);
+                }
+            }
+        }
 
-            for (const auto *action : validActions) {
-                for (const auto *param : invalidParams) {
-                    for (const auto *frag : validFragments) {
-                        try {
-                            SBuf bits;
-                            bits.append(magic);
-                            bits.append(action);
-                            bits.append(param);
-                            bits.append(frag);
-                            mgrUrl.path(bits);
-
-                            (void)mgr->ParseUrl(mgrUrl);
-
-                            std::cerr << std::endl
-                                      << "FAIL: " << mgrUrl
-                                      << Debug::Extra << "error: should be rejected due to '" << param << "'" << std::endl;
-                        } catch (const TextException &e) {
-                            continue; // success. caught bad input
-                        }
-                        CPPUNIT_FAIL("failed to reject an invalid URL");
-                    }
+        // Check that the parser rejects URLs with invalid parameters.
+        for (const auto action: validActions) {
+            for (const auto invalidParam: invalidParams) {
+                for (const auto frag: validFragments) {
+                    SBuf bits;
+                    bits.append(prefix);
+                    bits.append(action);
+                    bits.append(invalidParam);
+                    bits.append(frag);
+                    mgrUrl.path(bits);
+                    mgr->testInvalidUrl(mgrUrl, invalidParam);
                 }
             }
         }

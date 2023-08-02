@@ -152,6 +152,13 @@ CacheManager::createRequestedAction(const Mgr::ActionParams &params)
     return cmd->profile->creator->create(cmd);
 }
 
+const SBuf &
+CacheManager::WellKnownUrlPathPrefix()
+{
+    static const SBuf prefix("/squid-internal-mgr/");
+    return prefix;
+}
+
 /**
  * Parses the action requested by the user and checks via
  * CacheManager::ActionProtection() that the item is accessible by the user.
@@ -169,8 +176,7 @@ CacheManager::ParseUrl(const AnyP::Uri &uri)
 {
     Parser::Tokenizer tok(uri.path());
 
-    static const SBuf internalMagicPrefix("/squid-internal-mgr/");
-    Assure(tok.skip(internalMagicPrefix));
+    Assure(tok.skip(WellKnownUrlPathPrefix()));
 
     Mgr::Command::Pointer cmd = new Mgr::Command();
     cmd->params.httpUri = SBufToString(uri.absolute());
@@ -367,7 +373,7 @@ CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request,
            client << " requesting '" <<
            actionName << "'" );
 
-    // special case: /squid-internal-mgr/ index page
+    // special case: an index page
     if (!strcmp(cmd->profile->name, "index")) {
         ErrorState err(MGR_INDEX, Http::scOkay, request, ale);
         err.url = xstrdup(entry->url());

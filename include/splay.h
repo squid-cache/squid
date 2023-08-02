@@ -20,7 +20,6 @@ public:
     typedef V Value;
     typedef int SPLAYCMP(Value const &a, Value const &b);
     typedef void SPLAYFREE(Value &);
-    typedef void SPLAYWALKEE(Value const & nodedata, void *state);
     static void DefaultFree (Value &aValue) {delete aValue;}
 
     SplayNode<V> (Value const &);
@@ -28,7 +27,6 @@ public:
     mutable SplayNode<V> *left;
     mutable SplayNode<V> *right;
     void destroy(SPLAYFREE * = DefaultFree);
-    void walk(SPLAYWALKEE *, void *callerState);
     SplayNode<V> const * start() const;
     SplayNode<V> const * finish() const;
 
@@ -44,16 +42,6 @@ public:
     template <class Visitor> void visit(Visitor &v) const;
 private:
     mutable SplayNode<V> *visit_thread_up;
-
-    struct SplayNodeWalkeeVisitor {
-        SPLAYWALKEE* walkee;
-        void *       state;
-        explicit SplayNodeWalkeeVisitor(SPLAYWALKEE* w, void *s): walkee{w}, state{s} {}
-        void operator() (Value const &data) {
-            walkee(data, state);
-        }
-    };
-
 };
 
 typedef SplayNode<void *> splayNode;
@@ -104,14 +92,6 @@ SQUIDCEXTERN int splayLastResult;
 template<class V>
 SplayNode<V>::SplayNode (Value const &someData) : data(someData), left(nullptr), right (nullptr) {}
 
-
-template<class V>
-void
-SplayNode<V>::walk(SPLAYWALKEE * walkee, void *state)
-{
-    SplayNodeWalkeeVisitor visitor(walkee, state);
-    visit(visitor);
-}
 
 template<class V>
 SplayNode<V> const *
