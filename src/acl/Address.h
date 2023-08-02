@@ -17,7 +17,7 @@
 namespace Acl
 {
 
-/// list of address-based ACLs.
+/// an invasive list of tcp_outgoing_address directives
 class Address
 {
     CBDATA_CLASS(Address);
@@ -29,9 +29,14 @@ public:
     Acl::Address *next;
     ACLList *aclList;
 
+    /// an AddressSource variant representing match_client_tcp_dst configuration
     struct UseClientAddress {};
+
+    /// an outgoing address value or value computation algorithm
     using AddressSource = std::variant<Ip::Address, UseClientAddress>;
-    AddressSource addr; ///< Ip::Address provider
+
+    /// configured Ip::Address provider
+    AddressSource addr;
 };
 
 } // namespace Acl

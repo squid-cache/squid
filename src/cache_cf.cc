@@ -1537,6 +1537,7 @@ dump_address(StoreEntry * entry, const char *name, Ip::Address &addr)
     storeAppendPrintf(entry, "%s %s\n", name, addr.toStr(buf,MAX_IPSTRLEN) );
 }
 
+/// parses a given "TYPE: address" directive value token (or equivalent)
 static void
 parseAddressToken(Ip::Address *addr, const char *token)
 {
