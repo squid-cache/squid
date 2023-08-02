@@ -11,7 +11,6 @@
 
 #include "acl/Acl.h"
 #include "ip/Address.h"
-#include "SquidString.h"
 
 #include <variant>
 
