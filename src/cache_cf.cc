@@ -1603,7 +1603,7 @@ parse_acl_address(Acl::Address ** head)
     Acl::Address *l = new Acl::Address;
 
     char *token = ConfigParser::NextToken();
-    if (token && !strcmp(token, "match_client_tcp_dst")) {
+    if (token && strcmp(token, "match_client_tcp_dst") == 0) {
         l->addr = Acl::Address::UseClientAddress{};
     } else {
         Ip::Address addr;
