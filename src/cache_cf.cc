@@ -1607,8 +1607,9 @@ parse_acl_address(Acl::Address ** head)
         l->addr = Acl::Address::UseClientAddress{};
         aclParseAclList(LegacyParser, &l->aclList, "match_client_tcp_dst");
     } else {
-        Ip::Address addr = std::get<Ip::Address>(l->addr);
+        Ip::Address addr;
         parseAddressToken(&addr, token);
+        l->addr = addr;
         aclParseAclList(LegacyParser, &l->aclList, addr);
     }
 
