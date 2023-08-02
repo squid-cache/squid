@@ -549,10 +549,10 @@ public:
 
     using Id = InstanceId<SquidConfig>;
 
+    /// configuration ID that changes with each lifecycleStart() call
     const Id &id() const { return id_; }
 
 private:
-    /// configuration ID that changes with each lifecycleStart() call
     Id id_;
 };
 

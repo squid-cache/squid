@@ -51,7 +51,7 @@ public:
     /// adds a GeneratorRequestor
     void emplace(HLPCB *callback, void *data) { requestors.emplace_back(callback, data); }
 
-    const Key key; ///< for the GeneratorRequestors index
+    const Key key; ///< identifies this request in TheGeneratorRequests collection
 
     /// Ssl::Helper request initiators waiting for the same answer (FIFO).
     typedef std::vector<GeneratorRequestor> GeneratorRequestors;
