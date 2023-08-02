@@ -139,6 +139,7 @@ static void dump_ecap_service_type(StoreEntry *, const char *, const Adaptation:
 static void free_ecap_service_type(Adaptation::Ecap::Config *);
 #endif
 
+static void parseAddressToken(Ip::Address *, const char *);
 static peer_t parseNeighborType(const char *s);
 
 static const char *const T_NANOSECOND_STR = "nanosecond";
@@ -1537,6 +1538,19 @@ dump_address(StoreEntry * entry, const char *name, Ip::Address &addr)
     storeAppendPrintf(entry, "%s %s\n", name, addr.toStr(buf,MAX_IPSTRLEN) );
 }
 
+static void
+parse_address(Ip::Address *addr)
+{
+    char *token = ConfigParser::NextToken();
+
+    if (!token) {
+        self_destruct();
+        return;
+    }
+
+    parseAddressToken(addr, token);
+}
+
 /// parses a given "TYPE: address" directive value token (or equivalent)
 static void
 parseAddressToken(Ip::Address *addr, const char *token)
@@ -1553,19 +1567,6 @@ parseAddressToken(Ip::Address *addr, const char *token)
         debugs(3, DBG_CRITICAL, "FATAL: invalid IP address or domain name '" << token << "'");
         self_destruct();
     }
-}
-
-static void
-parse_address(Ip::Address *addr)
-{
-    char *token = ConfigParser::NextToken();
-
-    if (!token) {
-        self_destruct();
-        return;
-    }
-
-    parseAddressToken(addr, token);
 }
 
 static void
