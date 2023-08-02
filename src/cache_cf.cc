@@ -1581,9 +1581,8 @@ dump_acl_address(StoreEntry * entry, const char *name, Acl::Address * head)
     char buf[MAX_IPSTRLEN];
 
     for (Acl::Address *l = head; l; l = l->next) {
-        if (l->addr.index() > 0) {
-            if (std::holds_alternative<Acl::Address::UseClientAddress>(l->addr))
-                storeAppendPrintf(entry, "%s match_client_tcp_dst", name);
+        if (std::holds_alternative<Acl::Address::UseClientAddress>(l->addr)) {
+            storeAppendPrintf(entry, "%s match_client_tcp_dst", name);
         } else {
             Ip::Address addr = std::get<Ip::Address>(l->addr);
             if (!addr.isAnyAddr())
