@@ -1515,7 +1515,7 @@ getOutgoingAddress(HttpRequest * request, const Comm::ConnectionPointer &conn)
         Ip::Address localAddr;
 
         if (std::holds_alternative<Acl::Address::UseClientAddress>(l->addr)) {
-            if(request->clientConnectionManager.valid() && request->clientConnectionManager->clientConnection != nullptr) {
+            if (request && request->clientConnectionManager.valid()) {
                 localAddr = request->clientConnectionManager->clientConnection->local;
                 localAddr.port(0);
             }
