@@ -19,14 +19,13 @@ class SplayNode
 public:
     typedef V Value;
     typedef int SPLAYCMP(Value const &a, Value const &b);
-    typedef void SPLAYFREE(Value &);
-    static void DefaultFree (Value &aValue) {delete aValue;}
 
     SplayNode<V> (Value const &);
     Value data;
     mutable SplayNode<V> *left;
     mutable SplayNode<V> *right;
-    void destroy(SPLAYFREE * = DefaultFree);
+    mutable SplayNode<V> *visit_thread_up;
+
     SplayNode<V> const * start() const;
     SplayNode<V> const * finish() const;
 
@@ -37,14 +36,7 @@ public:
     /// look in the splay for data for where compare(data,candidate) == true.
     /// return NULL if not found, a pointer to the sought data if found.
     template <class FindValue> SplayNode<V> * splay(const FindValue &data, int( * compare)(FindValue const &a, Value const &b)) const;
-
-    /// left-to-right visit of all nodes using Morris Traversal
-    template <class Visitor> void visit(Visitor &v) const;
-private:
-    mutable SplayNode<V> *visit_thread_up;
 };
-
-typedef SplayNode<void *> splayNode;
 
 template <class V>
 class SplayConstIterator;
@@ -56,6 +48,7 @@ public:
     typedef V Value;
     typedef int SPLAYCMP(Value const &a, Value const &b);
     typedef void SPLAYFREE(Value &);
+    static void DefaultFree (Value &aValue) {delete aValue;}
     typedef const SplayConstIterator<V> const_iterator;
     Splay():head(nullptr), elements (0) {}
 
@@ -65,7 +58,7 @@ public:
 
     void remove(Value const &, SPLAYCMP *compare);
 
-    void destroy(SPLAYFREE * = SplayNode<V>::DefaultFree);
+    void destroy(SPLAYFREE * = DefaultFree);
 
     SplayNode<V> const * start() const;
 
@@ -85,13 +78,16 @@ public:
 private:
     mutable SplayNode<V> * head;
     size_t elements;
+
+    /// internal left-to-right walk through all nodes
+    // used by visit() and also by destroy()
+    template <class Visitor> void visit_or_destroy(Visitor &v, bool deleteNode = false);
 };
 
 SQUIDCEXTERN int splayLastResult;
 
 template<class V>
-SplayNode<V>::SplayNode (Value const &someData) : data(someData), left(nullptr), right (nullptr) {}
-
+SplayNode<V>::SplayNode (Value const &someData) : data(someData), left(nullptr), right(nullptr), visit_thread_up(nullptr) {}
 
 template<class V>
 SplayNode<V> const *
@@ -113,74 +109,6 @@ SplayNode<V>::finish() const
         cur = cur->right;
 
     return cur;
-}
-
-template<class V>
-void
-SplayNode<V>::destroy(SPLAYFREE * free_func)
-{
-    // Use a modified Morris Traversal because a destroy function
-    // based on a visit()-like traversal with a visitor would have to
-    // call delete on the root SplayNode-object (this) in-order, not last.
-    //
-    // Start with the top node as current node C.
-    //
-    // Repeat, until no more child nodes exist:
-    // a) If C has no left child, set C to the C->right
-    //    and delete the previous node C.
-    // b) If C has a left child C->left, find the right-most node RMN in the
-    //    left subtree of C.
-    //    - RMN can't have a right child!
-    //    - Instead of linking RMN->right to C as a way back up like in Morris
-    //      Traversal, we MOVE C->right to RMN->right.
-    //    - As C now has only a single child (C->left),
-    //      move C to C->left an delete the previous node C.
-    //
-    // Because we move the right subtree down into the left subtree and remove
-    // the parent from the tree, there is - in contrast to the Morris
-    // Traversal - no way up and no need to check for this loop case.
-    // We only need to avoid deleting the original top node (this) until all
-    // other nodes are deleted.
-    //
-    // There is no need for additional data structures, so storage need is O(1).
-    // As every node is at most visited once for RMN search and once for deletion,
-    // cpu need is O(n).
-
-    auto cur = this;
-    while (cur != nullptr) {
-        if (cur->left == nullptr) {
-            // no left tree -> descent into right subtree and delete old top
-            auto top = cur;
-            cur = cur->right;
-            free_func(top->data);
-            top->right = nullptr;
-            if (top != this)
-                delete top;
-        } else {
-            if (cur->right) {
-                // find right-most child in left tree
-                // to store a link to right subtree
-                auto rmc = cur->left;
-                while (rmc->right)
-                    rmc = rmc->right;
-
-                // move right subtree into left subtree
-                rmc->right = cur->right;
-                cur->right = nullptr;
-            }
-
-            // descent into left subtree and delete old top
-            auto top = cur;
-            cur = cur->left;
-            free_func(top->data);
-            top->left = nullptr;
-            if (top != this)
-                delete top;
-        }
-    }
-
-    // finally delete this node
-    delete this;
 }
 
 template<class V>
@@ -300,26 +228,31 @@ SplayNode<V>::splay(FindValue const &dataToFind, int( * compare)(FindValue const
 template <class V>
 template <class Visitor>
 void
-SplayNode<V>::visit(Visitor &visitor) const
+Splay<V>::visit_or_destroy(Visitor &visitor, bool deleteNode)
 {
     // in-order walk through tree using modified Morris Traversal:
-    // to avoid a left-over thread up due to an exception in
-    // visit (and therefor a fatal loop in the tree), we use
+    // to avoid a left-over thread up due to an exception in this
+    // method (and therefor a fatal loop in the tree), we use
     // an extra pointer visit_thread_up, that doesn't interfere
-    // with other methods.
+    // with other methods instead of manipulating the right child
+    // link.
     // This also helps to distinguish between up and down movements
     // and therefor we do not need to descent into left subtree
     // a second time after traversing the thread to find the loop
     // cut the thread.
-    SplayNode<V> *cur = const_cast<SplayNode<V> *>(this);
+
+    if (head == nullptr)
+        return;
+
+    auto cur = head;
     bool moved_up = false;
-    visit_thread_up = nullptr;
+    cur->visit_thread_up = nullptr;
 
     while (cur != nullptr) {
         if (cur->left == nullptr or moved_up) {
             // no (unvisited) left subtree, so
             // handle current node ...
-            visitor(cur->data);
+            auto old = cur;
             if (cur->right) {
                 // ... and descent into right subtree
                 cur = cur->right;
@@ -332,8 +265,10 @@ SplayNode<V>::visit(Visitor &visitor) const
             } else {
                 // end of traversal
                 cur = nullptr;
-                break;
             }
+            visitor(old->data);
+            if (deleteNode)
+                delete old;
         } else {
             // first descent into left subtree
 
@@ -358,8 +293,8 @@ template <class Visitor>
 void
 Splay<V>::visit(Visitor &visitor) const
 {
-    if (head)
-        head->visit(visitor);
+    // we have to remove const-ness at this stage to use non-const visit_or_destroy
+    const_cast<Splay<V> *>(this)->visit_or_destroy(visitor, false);
 }
 
 template <class V>
@@ -429,12 +364,14 @@ template <class V>
 void
 Splay<V>:: destroy(SPLAYFREE *free_func)
 {
-    if (head)
-        head->destroy(free_func);
+    if (free_func) {
+        visit_or_destroy(free_func, true);
 
-    head = nullptr;
+        // cleanup
+        head = nullptr;
 
-    elements = 0;
+        elements = 0;
+    }
 }
 
 template <class V>

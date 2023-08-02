@@ -136,15 +136,13 @@ main(int, char *[])
 
     {
         /* test void * splay containers */
-        splayNode *top = nullptr;
+        Splay<void *> *top = new Splay<void *>();
+        top->insert(static_cast<void*>(new intnode(101)), compareintvoid);
 
         for (int i = 0; i < 100; ++i) {
             intnode *I = (intnode *)xcalloc(sizeof(intnode), 1);
             I->i = nextRandom();
-            if (top)
-                top = top->insert(I, compareintvoid);
-            else
-                top = new splayNode(static_cast<void*>(new intnode(101)));
+            top->insert(I, compareintvoid);
         }
 
         SplayCheck::BeginWalk();
@@ -158,13 +156,14 @@ main(int, char *[])
     /* test typesafe splay containers */
     {
         /* intnode* */
-        SplayNode<intnode *> *safeTop = new SplayNode<intnode *>(new intnode(101));
+        Splay<intnode *> *safeTop = new Splay<intnode *>();
+        safeTop->insert(new intnode(101), compareint);
 
         for ( int i = 0; i < 100; ++i) {
             intnode *I;
             I = new intnode;
             I->i = nextRandom();
-            safeTop = safeTop->insert(I, compareint);
+            safeTop->insert(I, compareint);
         }
 
         SplayCheck::BeginWalk();
@@ -174,12 +173,13 @@ main(int, char *[])
     }
     {
         /* intnode */
-        SplayNode<intnode> *safeTop = new SplayNode<intnode>(101);
+        Splay<intnode> *safeTop = new Splay<intnode>();
+        safeTop->insert(101, compareintref);
 
         for (int i = 0; i < 100; ++i) {
             intnode I;
             I.i = nextRandom();
-            safeTop = safeTop->insert(I, compareintref);
+            safeTop->insert(I, compareintref);
         }
 
         SplayCheck::BeginWalk();
