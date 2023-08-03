@@ -2851,7 +2851,7 @@ DOC_START
 	based on the username or source address of the user making
 	the request.
 
-	tcp_outgoing_address ipaddr [[!]aclname] ...
+	tcp_outgoing_address <address> [[!]aclname] ...
 
 	For example;
 		Forwarding clients with dedicated IPs for certain subnets.
@@ -2871,10 +2871,28 @@ DOC_START
 	Processing proceeds in the order specified, and stops at first fully
 	matching line.
 
-	The ipaddr may be one of the following labels (instead of a literal IP address):
-	     match_client_tcp_dst: Sets the outgoing IP address to the same IP as the client's TCP destination.
-                               For example, Squid may be listening on both 10.1.0.1 and 10.1.0.2. This label will set
-                               the outgoing IP to whichever Squid IP the request came in through.
+	The required address parameter must be one of the following:
+
+		IP: A literal IP address.
+
+		domain: A domain name that Squid attempts to resolve once, at each
+			(re)configuration time, using getaddrinfo(3) or a similar blocking
+			service. DNS resolution errors are fatal.
+
+		match_client_tcp_dst: This keyword instructs Squid to postpone
+			outgoing address determination until this directive is actually
+			used for forwarding a client request. At that time, Squid attempts
+			to set the outgoing IP address to the TCP client destination
+			address. Squid silently skips these rules if it cannot determine
+			the corresponding client request or its destination address at
+			tcp_outgoing_address application time.
+
+			For example, if Squid listens on both 10.0.0.1 and 10.0.0.2, but
+			accepts an HTTP request at 10.0.0.2, then matching a
+			tcp_outgoing_address rule with this keyword will set the source
+			address of the outgoing request connection to 10.0.0.2.
+
+		other: Squid also accepts a few currently undocumented keywords.
 
 	Squid will add an implicit IP version test to each line.
 	Requests going to IPv4 websites will use the outgoing 10.1.0.* addresses.
