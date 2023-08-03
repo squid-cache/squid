@@ -1581,10 +1581,10 @@ dump_acl_address(StoreEntry * entry, const char *name, Acl::Address * head)
     char buf[MAX_IPSTRLEN];
 
     for (Acl::Address *l = head; l; l = l->next) {
-        if (std::holds_alternative<Acl::Address::UseClientAddress>(l->addr)) {
+        if (std::holds_alternative<Acl::Address::UseClientAddress>(l->addressSource)) {
             storeAppendPrintf(entry, "%s match_client_tcp_dst", name);
         } else {
-            const auto &addr = std::get<Ip::Address>(l->addr);
+            const auto &addr = std::get<Ip::Address>(l->addressSource);
             if (!addr.isAnyAddr())
                 storeAppendPrintf(entry, "%s %s", name, addr.toStr(buf,MAX_IPSTRLEN));
             else
@@ -1604,11 +1604,11 @@ parse_acl_address(Acl::Address ** head)
 
     const auto token = ConfigParser::NextToken();
     if (token && strcmp(token, "match_client_tcp_dst") == 0) {
-        l->addr = Acl::Address::UseClientAddress{};
+        l->addressSource = Acl::Address::UseClientAddress{};
     } else {
         Ip::Address addr;
         parseAddressToken(&addr, token);
-        l->addr = addr;
+        l->addressSource = addr;
     }
 
     aclParseAclList(LegacyParser, &l->aclList, token);

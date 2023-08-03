@@ -36,7 +36,7 @@ public:
     using AddressSource = std::variant<Ip::Address, UseClientAddress>;
 
     /// configured Ip::Address provider
-    AddressSource addr;
+    AddressSource addressSource;
 };
 
 } // namespace Acl

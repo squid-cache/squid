@@ -1514,7 +1514,7 @@ getOutgoingAddress(HttpRequest * request, const Comm::ConnectionPointer &conn)
     for (Acl::Address *l = Config.accessList.outgoing_address; l; l = l->next) {
         Ip::Address localAddr;
 
-        if (std::holds_alternative<Acl::Address::UseClientAddress>(l->addr)) {
+        if (std::holds_alternative<Acl::Address::UseClientAddress>(l->addressSource)) {
             if (request && request->clientConnectionManager.valid()) {
                 localAddr = request->clientConnectionManager->clientConnection->local;
                 localAddr.port(0);
@@ -1524,7 +1524,7 @@ getOutgoingAddress(HttpRequest * request, const Comm::ConnectionPointer &conn)
                 continue;
             }
         } else {
-            localAddr = std::get<Ip::Address>(l->addr);
+            localAddr = std::get<Ip::Address>(l->addressSource);
         }
 
         /* check if the outgoing address is usable to the destination */
