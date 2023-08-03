@@ -1553,7 +1553,7 @@ parse_address(Ip::Address *addr)
 
 /// parses a given "TYPE: address" directive value token (or equivalent)
 static void
-parseAddressToken(Ip::Address *addr, const char *token)
+parseAddressToken(Ip::Address * const addr, const char * const token)
 {
     if (!strcmp(token,"any_addr"))
         addr->setAnyAddr();
@@ -1584,7 +1584,7 @@ dump_acl_address(StoreEntry * entry, const char *name, Acl::Address * head)
         if (std::holds_alternative<Acl::Address::UseClientAddress>(l->addr)) {
             storeAppendPrintf(entry, "%s match_client_tcp_dst", name);
         } else {
-            Ip::Address addr = std::get<Ip::Address>(l->addr);
+            const auto &addr = std::get<Ip::Address>(l->addr);
             if (!addr.isAnyAddr())
                 storeAppendPrintf(entry, "%s %s", name, addr.toStr(buf,MAX_IPSTRLEN));
             else
@@ -1602,7 +1602,7 @@ parse_acl_address(Acl::Address ** head)
 {
     Acl::Address *l = new Acl::Address;
 
-    char *token = ConfigParser::NextToken();
+    const auto token = ConfigParser::NextToken();
     if (token && strcmp(token, "match_client_tcp_dst") == 0) {
         l->addr = Acl::Address::UseClientAddress{};
     } else {
