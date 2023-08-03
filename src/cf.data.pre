@@ -2853,24 +2853,6 @@ DOC_START
 
 	tcp_outgoing_address <address> [[!]aclname] ...
 
-	For example;
-		Forwarding clients with dedicated IPs for certain subnets.
-
-	  acl normal_service_net src 10.0.0.0/24
-	  acl good_service_net src 10.0.2.0/24
-
-	  tcp_outgoing_address 2001:db8::c001 good_service_net
-	  tcp_outgoing_address 10.1.0.2 good_service_net
-
-	  tcp_outgoing_address 2001:db8::beef normal_service_net
-	  tcp_outgoing_address 10.1.0.1 normal_service_net
-
-	  tcp_outgoing_address 2001:db8::1
-	  tcp_outgoing_address 10.1.0.3
-
-	Processing proceeds in the order specified, and stops at first fully
-	matching line.
-
 	The required address parameter must be one of the following:
 
 		IP: A literal IP address.
@@ -2894,7 +2876,30 @@ DOC_START
 
 		other: Squid also accepts a few currently undocumented keywords.
 
-	Squid will add an implicit IP version test to each line.
+	Directives with (hard-coded or computed) IP addresses that have a
+	different version than the destination IP address of the intended
+	Squid-to-server connection are silently skipped. For example, when going
+	to an IPv4 server, Squid skips tcp_outgoing_address directives with IPv6
+	addresses. A directive is skipped before its ACLs (if any) are evaluated.
+
+	Individual tcp_outgoing_address directives are evaluated in configuration
+	order. Evaluation stops at the first fully matching directive.
+
+	For example;
+		Forwarding clients with dedicated IPs for certain subnets.
+
+	  acl normal_service_net src 10.0.0.0/24
+	  acl good_service_net src 10.0.2.0/24
+
+	  tcp_outgoing_address 2001:db8::c001 good_service_net
+	  tcp_outgoing_address 10.1.0.2 good_service_net
+
+	  tcp_outgoing_address 2001:db8::beef normal_service_net
+	  tcp_outgoing_address 10.1.0.1 normal_service_net
+
+	  tcp_outgoing_address 2001:db8::1
+	  tcp_outgoing_address 10.1.0.3
+
 	Requests going to IPv4 websites will use the outgoing 10.1.0.* addresses.
 	Requests going to IPv6 websites will use the outgoing 2001:db8:* addresses.
 
