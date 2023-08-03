@@ -37,10 +37,10 @@ public:
     ACLList *aclList;
 
     /// an AddressSource variant representing match_client_tcp_dst configuration
-    struct UseClientAddress {};
+    struct MatchClientTcpDst {};
 
     /// an outgoing address value or value computation algorithm
-    using AddressSource = std::variant<Ip::Address, UseClientAddress>;
+    using AddressSource = std::variant<Ip::Address, MatchClientTcpDst>;
 
     /// configured Ip::Address provider
     AddressSource addressSource;

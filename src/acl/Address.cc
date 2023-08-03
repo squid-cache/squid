@@ -25,7 +25,7 @@ Acl::Address::~Address()
 std::optional<Ip::Address>
 Acl::Address::findAddressCandidate(HttpRequest * const request) const
 {
-    if (std::holds_alternative<UseClientAddress>(addressSource)) {
+    if (std::holds_alternative<MatchClientTcpDst>(addressSource)) {
         if (request && request->clientConnectionManager.valid()) {
             auto localAddr = request->clientConnectionManager->clientConnection->local;
             localAddr.port(0);
@@ -43,7 +43,7 @@ Acl::Address::findAddressCandidate(HttpRequest * const request) const
 std::ostream &
 Acl::operator <<(std::ostream &os, const Address::AddressSource &source)
 {
-    if (std::holds_alternative<Address::UseClientAddress>(source)) {
+    if (std::holds_alternative<Address::MatchClientTcpDst>(source)) {
         os << "match_client_tcp_dst";
         return os;
     }
