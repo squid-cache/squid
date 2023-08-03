@@ -10,9 +10,11 @@
 #define _SQUID_SRC_ACL_ADDRESS_H
 
 #include "acl/Acl.h"
+#include "http/forward.h"
 #include "ip/Address.h"
 
 #include <variant>
+#include <optional>
 
 namespace Acl
 {
@@ -25,6 +27,11 @@ class Address
 public:
     Address() : next(nullptr), aclList(nullptr) {}
     ~Address();
+
+    /// computes Ip::Address corresponding to this tcp_outgoing_address directive
+    /// \param request optional (adapted) client request
+    /// \returns std::nullopt if this directive should be skipped
+    std::optional<Ip::Address> findAddressCandidate(HttpRequest *) const;
 
     Acl::Address *next;
     ACLList *aclList;

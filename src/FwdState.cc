@@ -1512,20 +1512,11 @@ getOutgoingAddress(HttpRequest * request, const Comm::ConnectionPointer &conn)
     // needs a bit of rework in ACLFilledChecklist to use Comm::Connection instead of ConnStateData
 
     for (Acl::Address *l = Config.accessList.outgoing_address; l; l = l->next) {
-        Ip::Address localAddr;
+        const auto candidate = l->findAddressCandidate(request);
+        if (!candidate)
+            continue;
 
-        if (std::holds_alternative<Acl::Address::UseClientAddress>(l->addressSource)) {
-            if (request && request->clientConnectionManager.valid()) {
-                localAddr = request->clientConnectionManager->clientConnection->local;
-                localAddr.port(0);
-            } else {
-                // not DBG_IMPORTANT or Assure() because the client may simply be gone by now
-                debugs(17, 3, "WARNING: Skipping tcp_outgoing_address match_client_tcp_dst rule");
-                continue;
-            }
-        } else {
-            localAddr = std::get<Ip::Address>(l->addressSource);
-        }
+        const auto localAddr = *candidate;
 
         /* check if the outgoing address is usable to the destination */
         if (conn->remote.isIPv4() != localAddr.isIPv4()) continue;
