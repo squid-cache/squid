@@ -39,6 +39,9 @@ public:
     AddressSource addressSource;
 };
 
+/// reports AddressSource configuration using squid.conf syntax
+std::ostream &operator <<(std::ostream &, const Address::AddressSource &);
+
 } // namespace Acl
 
 #endif /* _SQUID_SRC_ACL_ADDRESS_H */

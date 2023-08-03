@@ -18,3 +18,24 @@ Acl::Address::~Address()
     delete next;
 }
 
+std::ostream &
+Acl::operator <<(std::ostream &os, const Address::AddressSource &source)
+{
+    if (std::holds_alternative<Address::UseClientAddress>(source)) {
+        os << "match_client_tcp_dst";
+        return os;
+    }
+
+    const auto &addr = std::get<Ip::Address>(source);
+
+    if (addr.isAnyAddr()) {
+        // XXX: Use squid.conf syntax (e.g., "any_addr") for all special values
+        os << "autoselect";
+        return os;
+    }
+
+    char buf[MAX_IPSTRLEN];
+    os << addr.toStr(buf, MAX_IPSTRLEN);
+    return os;
+}
+

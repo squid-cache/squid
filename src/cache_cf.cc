@@ -1578,18 +1578,9 @@ free_address(Ip::Address *addr)
 static void
 dump_acl_address(StoreEntry * entry, const char *name, Acl::Address * head)
 {
-    char buf[MAX_IPSTRLEN];
-
     for (Acl::Address *l = head; l; l = l->next) {
-        if (std::holds_alternative<Acl::Address::UseClientAddress>(l->addressSource)) {
-            storeAppendPrintf(entry, "%s match_client_tcp_dst", name);
-        } else {
-            const auto &addr = std::get<Ip::Address>(l->addressSource);
-            if (!addr.isAnyAddr())
-                storeAppendPrintf(entry, "%s %s", name, addr.toStr(buf,MAX_IPSTRLEN));
-            else
-                storeAppendPrintf(entry, "%s autoselect", name);
-        }
+        PackableStream os(*entry);
+        os << name << ' ' << l->addressSource;
 
         dump_acl_list(entry, l->aclList);
 
