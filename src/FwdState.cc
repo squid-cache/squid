@@ -1516,14 +1516,14 @@ getOutgoingAddress(HttpRequest * request, const Comm::ConnectionPointer &conn)
         if (!candidate)
             continue;
 
-        const auto localAddr = *candidate;
+        const auto outgoingAddress = *candidate;
 
         /* check if the outgoing address is usable to the destination */
-        if (conn->remote.isIPv4() != localAddr.isIPv4()) continue;
+        if (conn->remote.isIPv4() != outgoingAddress.isIPv4()) continue;
 
         /* check ACLs for this outgoing address */
         if (!l->aclList || ch.fastCheck(l->aclList).allowed()) {
-            conn->local = localAddr;
+            conn->local = outgoingAddress;
             return;
         }
     }
