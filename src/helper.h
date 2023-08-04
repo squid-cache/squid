@@ -108,6 +108,11 @@ public:
     /// \param madeProgress whether the died server(s) responded to any requests
     void handleFewerServers(bool madeProgress);
 
+    /// de-queues and sends a Helper::Unknown answer to all queued requests
+    /// if there are no active servers
+    /// \sa HelperServerBase::dropQueued()
+    void handleNoServers();
+
 public:
     wordlist *cmdline;
     dlink_list servers;

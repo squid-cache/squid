@@ -327,6 +327,8 @@ helperOpenServers(helper * hlp)
     if (successfullyStarted < need_new)
         hlp->handleFewerServers(false);
 
+    hlp->handleNoServers();
+
     hlp->last_restart = squid_curtime;
     safe_free(shortname);
     safe_free(procname);
@@ -889,7 +891,11 @@ helper::handleFewerServers(const bool madeProgress)
         else
             fatalf("The %s helpers are crashing too rapidly, need help!", id_name);
     }
+}
 
+void
+helper::handleNoServers()
+{
     // no helper servers means nobody can advance our queued transactions
     if (!childs.n_active && queue.size()) {
         debugs(80, DBG_CRITICAL, "ERROR: Dropping " << queue.size() << ' ' <<
