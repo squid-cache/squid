@@ -1579,6 +1579,12 @@ checkTimeouts(void)
 void
 commStartHalfClosedMonitor(int fd)
 {
+    if (!TheHalfClosed->empty()) {
+        debugs(5, 5, HERE << "half_closed is on fd = " << fd );
+        commCallCloseHandlers(fd);
+        commStopHalfClosedMonitor(fd);
+    }
+
     debugs(5, 5, "adding FD " << fd << " to " << *TheHalfClosed);
     assert(isOpen(fd) && !commHasHalfClosedMonitor(fd));
     (void)TheHalfClosed->add(fd); // could also assert the result
