@@ -817,10 +817,10 @@ tests_testClpMap_SOURCES = \
 nodist_tests_testClpMap_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_SBuf.cc \
-	tests/stub_SquidConfig.cc \
 	tests/stub_libip.cc \
 	tests/stub_libtime.cc
 tests_testClpMap_LDADD = \
+	SquidConfig.o \
 	mem/libminimal.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
@@ -2077,7 +2077,6 @@ tests_testHttpReply_SOURCES = \
 	mime_header.h \
 	tests/stub_neighbors.cc \
 	repl_modules.h \
-	tests/stub_SquidConfig.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_tools.cc \
@@ -2090,6 +2089,7 @@ nodist_tests_testHttpReply_SOURCES = \
 	tests/stub_libtime.cc
 tests_testHttpReply_LDADD=\
 	CommCalls.o \
+	SquidConfig.o \
 	http/libhttp.la \
 	parser/libparser.la \
 	acl/libacls.la \
