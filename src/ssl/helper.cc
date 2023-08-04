@@ -82,7 +82,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Ssl, GeneratorRequest);
 static std::ostream &
 operator <<(std::ostream &os, const Ssl::GeneratorRequest &gr)
 {
-    return os << "crtGenRq" << gr.key.first.id.value << "/" << gr.requestors.size();
+    return os << "crtGenRq" << "/" << gr.key.first.id.detach() << "/" << gr.requestors.size();
 }
 
 /// pending Ssl::Helper requests (to all certificate generator helpers combined)
