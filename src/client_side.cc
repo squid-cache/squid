@@ -1984,6 +1984,13 @@ ConnStateData::afterClientRead()
     if (!isOpen())
         return;
 
+    // XXX: ConnStateData::kick() needs a similar check.
+    if (flags.readMore && commIsHalfClosed(clientConnection->fd)) {
+        // we parsed what we could, and no more data is coming
+        debugs(33, 5, "will not read from half-closed " << clientConnection);
+        flags.readMore = false;
+    }
+
     clientAfterReadingRequests();
 }
 
