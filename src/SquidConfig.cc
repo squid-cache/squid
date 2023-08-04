@@ -11,13 +11,13 @@
 
 InstanceIdDefinitions(SquidConfig, "cfg");
 
+class SquidConfig Config;
+
+class SquidConfig2 Config2;
+
 void
 SquidConfig::lifecycleStart()
 {
     id_.change();
 }
-
-class SquidConfig Config;
-
-class SquidConfig2 Config2;
 
