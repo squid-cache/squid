@@ -932,7 +932,7 @@ ConnStateData::kick()
      * We are done with the response, and we are either still receiving request
      * body (early response!) or have already stopped receiving anything.
      *
-     * If we are still receiving, then clientParseRequest() below will fail.
+     * If we are still receiving, then parseRequests() below will fail.
      * (XXX: but then we will call readNextRequest() which may succeed and
      * execute a smuggled request as we are not done with the current request).
      *
@@ -952,28 +952,12 @@ ConnStateData::kick()
      * Attempt to parse a request from the request buffer.
      * If we've been fed a pipelined request it may already
      * be in our read buffer.
-     *
-     \par
-     * This needs to fall through - if we're unlucky and parse the _last_ request
-     * from our read buffer we may never re-register for another client read.
      */
 
-    if (clientParseRequests()) {
-        debugs(33, 3, clientConnection << ": parsed next request from buffer");
-    }
+    parseRequests();
 
-    /** \par
-     * Either we need to kick-start another read or, if we have
-     * a half-closed connection, kill it after the last request.
-     * This saves waiting for half-closed connections to finished being
-     * half-closed _AND_ then, sometimes, spending "Timeout" time in
-     * the keepalive "Waiting for next request" state.
-     */
-    if (commIsHalfClosed(clientConnection->fd) && pipeline.empty()) {
-        debugs(33, 3, "half-closed client with no pending requests, closing");
-        clientConnection->close();
+    if (!isOpen())
         return;
-    }
 
     /** \par
      * At this point we either have a parsed request (which we've
@@ -1882,13 +1866,10 @@ ConnStateData::receivedFirstByte()
     resetReadTimeout(Config.Timeout.request);
 }
 
-/**
- * Attempt to parse one or more requests from the input buffer.
- * Returns true after completing parsing of at least one request [header]. That
- * includes cases where parsing ended with an error (e.g., a huge request).
- */
-bool
-ConnStateData::clientParseRequests()
+/// Attempt to parse one or more requests from the input buffer.
+/// May close the connection.
+void
+ConnStateData::parseRequests()
 {
     bool parsed_req = false;
 
@@ -1950,8 +1931,19 @@ ConnStateData::clientParseRequests()
         }
     }
 
-    /* XXX where to 'finish' the parsing pass? */
-    return parsed_req;
+    debugs(33, 7, "parsed request(s): " << parsed_req << "; buffered leftovers: " << inBuf.length());
+
+    if (isOpen() && commIsHalfClosed(clientConnection->fd)) {
+        if (pipeline.empty()) {
+            // we processed what we could parse, and no more data is coming
+            debugs(33, 5, "closing half-closed without parsed requests: " << clientConnection);
+            clientConnection->close();
+        } else {
+            // we parsed what we could, and no more data is coming
+            debugs(33, 5, "monitoring half-closed while processing parsed requests: " << clientConnection);
+            flags.readMore = false; // may already be false
+        }
+    }
 }
 
 void
@@ -1968,28 +1960,10 @@ ConnStateData::afterClientRead()
     if (pipeline.empty())
         fd_note(clientConnection->fd, "Reading next request");
 
-    if (!clientParseRequests()) {
-        if (!isOpen())
-            return;
-        // We may get here if the client half-closed after sending a partial
-        // request. See doClientRead() and shouldCloseOnEof().
-        // XXX: This partially duplicates ConnStateData::kick().
-        if (pipeline.empty() && commIsHalfClosed(clientConnection->fd)) {
-            debugs(33, 5, clientConnection << ": half-closed connection, no completed request parsed, connection closing.");
-            clientConnection->close();
-            return;
-        }
-    }
+    parseRequests();
 
     if (!isOpen())
         return;
-
-    // XXX: ConnStateData::kick() needs a similar check.
-    if (flags.readMore && commIsHalfClosed(clientConnection->fd)) {
-        // we parsed what we could, and no more data is coming
-        debugs(33, 5, "will not read from half-closed " << clientConnection);
-        flags.readMore = false;
-    }
 
     clientAfterReadingRequests();
 }
@@ -3774,7 +3748,7 @@ ConnStateData::notePinnedConnectionBecameIdle(PinnedIdleContext pic)
     startPinnedConnectionMonitoring();
 
     if (pipeline.empty())
-        kick(); // in case clientParseRequests() was blocked by a busy pic.connection
+        kick(); // in case parseRequests() was blocked by a busy pic.connection
 }
 
 /// Forward future client requests using the given server connection.
