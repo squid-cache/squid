@@ -61,7 +61,7 @@ public:
 struct GeneratorRequestKeyHash
 {
     std::size_t operator() (const GeneratorRequest::Key &pair) const {
-        return std::hash<decltype(pair.first)>()(pair.first) ^ std::hash<decltype(pair.second)>()(pair.second);
+        return std::hash<SBuf>()(pair.first) ^ std::hash<SquidConfig::Id::Value>()(pair.second);
     }
 };
 
