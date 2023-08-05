@@ -22,6 +22,7 @@ class PeekingPeerConnector: public Security::PeerConnector {
 public:
     PeekingPeerConnector(HttpRequestPointer &aRequest,
                          const Comm::ConnectionPointer &aServerConn,
+                         const Security::PeerOptionsPointer &,
                          const Comm::ConnectionPointer &aClientConn,
                          const AsyncCallback<Security::EncryptorAnswer> &aCallback,
                          const AccessLogEntryPointer &alp,

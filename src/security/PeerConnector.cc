@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "base/AsyncCallbacks.h"
+#include "base/Assure.h"
 #include "base/IoManip.h"
 #include "CachePeer.h"
 #include "comm/Loops.h"
@@ -35,11 +36,18 @@
 #include "ssl/helper.h"
 #endif
 
-Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, const AsyncCallback<EncryptorAnswer> &aCallback, const AccessLogEntryPointer &alp, const time_t timeout):
+Security::PeerConnector::PeerConnector(
+    const Comm::ConnectionPointer &aServerConn,
+    const Security::PeerOptionsPointer &tlsOptions,
+    const AsyncCallback<EncryptorAnswer> &aCallback,
+    const AccessLogEntryPointer &alp,
+    const time_t timeout):
+
     AsyncJob("Security::PeerConnector"),
     noteFwdPconnUse(false),
     serverConn(aServerConn),
     al(alp),
+    tlsOptions_(tlsOptions),
     callback(aCallback),
     negotiationTimeout(timeout),
     startTime(squid_curtime),

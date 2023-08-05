@@ -53,6 +53,7 @@ public:
     typedef CbcPointer<PeerConnector> Pointer;
 
     PeerConnector(const Comm::ConnectionPointer &aServerConn,
+                  const Security::PeerOptionsPointer &,
                   const AsyncCallback<EncryptorAnswer> &,
                   const AccessLogEntryPointer &alp,
                   const time_t timeout = 0);
@@ -165,6 +166,9 @@ protected:
     HttpRequestPointer request; ///< peer connection trigger or cause
     Comm::ConnectionPointer serverConn; ///< TCP connection to the peer
     AccessLogEntryPointer al; ///< info for the future access.log entry
+
+    /// TLS configuration for peer connection
+    Security::PeerOptionsPointer tlsOptions_;
 
     /// answer destination
     AsyncCallback<EncryptorAnswer> callback;

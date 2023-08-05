@@ -200,6 +200,7 @@ typedef long ParsedPortFlags;
 class PeerConnector;
 class BlindPeerConnector;
 class PeerOptions;
+using PeerOptionsPointer = RefCount<PeerOptions>;
 
 class ServerOptions;
 

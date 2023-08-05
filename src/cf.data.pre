@@ -3076,6 +3076,19 @@ DOC_START
 			used.
 DOC_END
 
+NAME: tls_outgoing_options_for_retries
+IFDEF: USE_GNUTLS||USE_OPENSSL
+TYPE: securePeerOptions
+DEFAULT: none
+LOC: Security::ProxyOutgoingConfigForRetries
+DOC_START
+	XXX: Document.
+
+	    tls_outgoing_options_for_retries [option]... [if [!]acl...]
+
+	See tls_outgoing_options for options documentation.
+DOC_END
+
 COMMENT_START
  SSL OPTIONS
  -----------------------------------------------------------------------------

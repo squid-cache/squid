@@ -975,6 +975,22 @@ configDoConfigure(void)
 #endif
     }
 
+    // XXX: Duplicates the above `if`
+    if (Security::ProxyOutgoingConfigForRetries.encryptTransport) {
+        debugs(3, 2, "initializing https:// proxy context");
+        Config.ssl_client.sslContextForRetries = Security::ProxyOutgoingConfigForRetries.createClientContext(false);
+        if (!Config.ssl_client.sslContextForRetries) {
+#if USE_OPENSSL
+            fatal("ERROR: Could not initialize https:// proxy context");
+#else
+            debugs(3, DBG_IMPORTANT, "ERROR: proxying https:// currently still requires --with-openssl");
+#endif
+        }
+#if USE_OPENSSL
+        Ssl::useSquidUntrusted(Config.ssl_client.sslContextForRetries.get());
+#endif
+    }
+
     for (CachePeer *p = Config.peers; p != nullptr; p = p->next) {
 
         // default value for ssldomain= is the peer host/IP

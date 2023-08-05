@@ -28,9 +28,12 @@ ResolvedPeers::reinstatePath(const PeerConnectionPointer &path)
     const auto pos = path.position_;
     assert(pos < paths_.size());
 
-    assert(!paths_[pos].available);
-    paths_[pos].available = true;
+    // XXX: Undo out-of-scope refactoring in this method
+    auto &storedPath = paths_[pos];
+    assert(!storedPath.available);
+    storedPath.available = true;
     increaseAvailability();
+    // the other reinstatePath() method updates storedPath.tlsOptions
 
     // if we restored availability of a path that we used to skip, update
     const auto pathsToTheLeft = pos;
@@ -40,6 +43,13 @@ ResolvedPeers::reinstatePath(const PeerConnectionPointer &path)
         // *found was unavailable so pathsToSkip could not end at it
         Must(pathsToTheLeft != pathsToSkip);
     }
+}
+
+void
+ResolvedPeers::reinstatePath(const PeerConnectionPointer &path, const Security::PeerOptionsPointer &tlsOptions)
+{
+    reinstatePath(path);
+    paths_[path.position_].tlsOptions = tlsOptions;
 }
 
 void
@@ -152,7 +162,7 @@ ResolvedPeers::extractFound(const char *description, const Paths::iterator &foun
     }
 
     const auto cleanPath = path.connection->cloneProfile();
-    return PeerConnectionPointer(cleanPath, found - paths_.begin());
+    return PeerConnectionPointer(cleanPath, found - paths_.begin(), path.tlsOptions);
 }
 
 bool
@@ -235,6 +245,9 @@ PeerConnectionPointer::print(std::ostream &os) const
 
     if (connection_)
         os << connection_;
+
+    if (tlsOptions_)
+        os << " +tls";
 
     if (position_ != npos)
         os << " @" << position_;

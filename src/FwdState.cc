@@ -472,6 +472,8 @@ FwdState::fail(ErrorState * errorState)
 
     if (err->type == ERR_ZERO_SIZE_OBJECT)
         reactToZeroSizeObject();
+    else if (err->type == ERR_SECURE_CONNECT_FAIL)
+        reactToSecureConnectFailure();
 
     destinationReceipt = nullptr; // may already be nil
 }
@@ -495,6 +497,33 @@ FwdState::reactToZeroSizeObject()
         pinned_connection->pinning.zeroReply = true;
         debugs(17, 4, "zero reply on pinned connection");
     }
+}
+
+/// ERR_SECURE_CONNECT_FAIL requires special adjustments
+void
+FwdState::reactToSecureConnectFailure()
+{
+    // TODO: Replace .encryptTransport with std::optional<Security::PeerOptions>
+    if (!Security::ProxyOutgoingConfigForRetries.encryptTransport)
+        return; // admin did not allow ERR_SECURE_CONNECT_FAIL retries
+
+    if (!destinationReceipt) {
+        debugs(17, DBG_IMPORTANT, "ERROR: Squid BUG: destinationReceipt loss prevents ERR_SECURE_CONNECT_FAIL retries");
+        return;
+    }
+
+    if (destinationReceipt.tlsOptions()) {
+        debugs(17, 3, "refusing to use the same destination thrice: " << destinationReceipt);
+        return;
+    }
+
+    // XXX: Check ACLs!
+    // XXX: Apply new options!
+
+    debugs(17, 3, "will retry the same destination: " << destinationReceipt);
+    static auto customXXX = new Security::PeerOptionsPointer(&Security::ProxyOutgoingConfigForRetries);
+    destinations->reinstatePath(destinationReceipt, *customXXX);
+    destinationReceipt = nullptr;
 }
 
 /**
@@ -999,13 +1028,14 @@ FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
     HttpRequest::Pointer requestPointer = request;
     const auto callback = asyncCallback(17, 4, FwdState::connectedToPeer, this);
     const auto sslNegotiationTimeout = connectingTimeout(conn);
+    const auto &tlsOptions = destinationReceipt.tlsOptions();
     Security::PeerConnector *connector = nullptr;
 #if USE_OPENSSL
     if (request->flags.sslPeek)
-        connector = new Ssl::PeekingPeerConnector(requestPointer, conn, clientConn, callback, al, sslNegotiationTimeout);
+        connector = new Ssl::PeekingPeerConnector(requestPointer, conn, tlsOptions, clientConn, callback, al, sslNegotiationTimeout);
     else
 #endif
-        connector = new Security::BlindPeerConnector(requestPointer, conn, callback, al, sslNegotiationTimeout);
+        connector = new Security::BlindPeerConnector(requestPointer, conn, tlsOptions, callback, al, sslNegotiationTimeout);
     connector->noteFwdPconnUse = true;
     encryptionWait.start(connector, callback);
 }
@@ -1420,18 +1450,23 @@ FwdState::pinnedCanRetry() const
 
     // pconn race on pinned connection: Currently we do not have any mechanism
     // to retry current pinned connection path.
-    if (pconnRace == raceHappened)
+    if (pconnRace == raceHappened) {
+        debugs(17, 5, "no: raceHappened"); // XXX: Remove out-of-scope debugging in this method
         return false;
+    }
 
     // If a bumped connection was pinned, then the TLS client was given our peer
     // details. Do not retry because we do not ensure that those details stay
     // constant. Step1-bumped connections do not get our TLS peer details, are
     // never pinned, and, hence, never reach this method.
-    if (request->flags.sslBumped)
+    if (request->flags.sslBumped) {
+        debugs(17, 5, "no: flags.sslBumped");
         return false;
+    }
 
     // The other pinned cases are FTP proxying and connection-based HTTP
     // authentication. TODO: Do these cases have restrictions?
+    debugs(17, 5, "yes: default");
     return true;
 }
 

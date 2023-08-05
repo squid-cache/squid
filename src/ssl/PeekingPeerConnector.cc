@@ -27,12 +27,13 @@ CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeekingPeerConnector);
 
 Ssl::PeekingPeerConnector::PeekingPeerConnector(HttpRequestPointer &aRequest,
         const Comm::ConnectionPointer &aServerConn,
+        const Security::PeerOptionsPointer &aPeerOptionsPointer,
         const Comm::ConnectionPointer &aClientConn,
         const AsyncCallback<Security::EncryptorAnswer> &aCallback,
         const AccessLogEntryPointer &alp,
         const time_t timeout):
     AsyncJob("Ssl::PeekingPeerConnector"),
-    Security::PeerConnector(aServerConn, aCallback, alp, timeout),
+    Security::PeerConnector(aServerConn, aPeerOptionsPointer, aCallback, alp, timeout),
     clientConn(aClientConn),
     splice(false),
     serverCertificateHandled(false)
@@ -145,7 +146,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceGuess() const
 Security::ContextPointer
 Ssl::PeekingPeerConnector::getTlsContext()
 {
-    return ::Config.ssl_client.sslContext;
+    return tlsOptions_ ? ::Config.ssl_client.sslContextForRetries : ::Config.ssl_client.sslContext;
 }
 
 bool
@@ -182,7 +183,12 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
         if (hostName)
             SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, (void*)hostName);
 
+        auto &tlsOptions = tlsOptions_ ? *tlsOptions_ : Security::ProxyOutgoingConfig;
+
         if (csd->sslBumpMode == Ssl::bumpPeek || csd->sslBumpMode == Ssl::bumpStare) {
+            if (csd->sslBumpMode == Ssl::bumpStare)
+                tlsOptions.updateSessionOptions(serverSession);
+
             auto clientSession = fd_table[clientConn->fd].ssl.get();
             Must(clientSession);
             BIO *bc = SSL_get_rbio(clientSession);
@@ -200,7 +206,7 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
             srvBio->mode(csd->sslBumpMode);
         } else {
             // Set client SSL options
-            ::Security::ProxyOutgoingConfig.updateSessionOptions(serverSession);
+            tlsOptions.updateSessionOptions(serverSession);
 
             const bool redirected = request->flags.redirected && ::Config.onoff.redir_rewrites_host;
             const char *sniServer = (!hostName || redirected) ?

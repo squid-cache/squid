@@ -22,6 +22,7 @@
 #include <bitset>
 
 Security::PeerOptions Security::ProxyOutgoingConfig;
+Security::PeerOptions Security::ProxyOutgoingConfigForRetries;
 
 Security::PeerOptions::PeerOptions()
 {

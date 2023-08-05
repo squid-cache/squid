@@ -20,7 +20,7 @@ namespace Security
 {
 
 /// TLS squid.conf settings for a remote server peer
-class PeerOptions
+class PeerOptions: public RefCountable
 {
 public:
     PeerOptions();
@@ -147,6 +147,9 @@ public:
 
 /// configuration options for DIRECT server access
 extern PeerOptions ProxyOutgoingConfig;
+
+/// configuration options for retrying DIRECT server access
+extern PeerOptions ProxyOutgoingConfigForRetries;
 
 } // namespace Security
 

@@ -49,7 +49,7 @@ public:
         AccessLogEntry::Pointer const &alp,
         const time_t timeout = 0):
         AsyncJob("Ssl::IcapPeerConnector"),
-        Security::PeerConnector(aServerConn, aCallback, alp, timeout), icapService(service) {}
+        Security::PeerConnector(aServerConn, nullptr, aCallback, alp, timeout), icapService(service) {}
 
     /* Security::PeerConnector API */
     bool initialize(Security::SessionPointer &) override;
