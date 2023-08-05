@@ -54,7 +54,7 @@ CacheManagerInternals::testValidUrl(const AnyP::Uri &url)
         (void)ParseUrl(url);
     } catch (...) {
         std::cerr << "\nFAIL: " << url <<
-            Debug::Extra << "error: " << CurrentException << "\n";
+                  Debug::Extra << "error: " << CurrentException << "\n";
         CPPUNIT_FAIL("rejected a valid URL");
     }
 }
@@ -65,7 +65,7 @@ CacheManagerInternals::testInvalidUrl(const AnyP::Uri &url, const char *const pr
     try {
         (void)ParseUrl(url);
         std::cerr << "\nFAIL: " << url <<
-            Debug::Extra << "error: should be rejected due to '" << problem << "'\n";
+                  Debug::Extra << "error: should be rejected due to '" << problem << "'\n";
     } catch (const TextException &) {
         return; // success -- the parser signaled bad input
     }
