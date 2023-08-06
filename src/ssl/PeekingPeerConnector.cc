@@ -183,12 +183,7 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
         if (hostName)
             SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, (void*)hostName);
 
-        auto &tlsOptions = tlsOptions_ ? *tlsOptions_ : Security::ProxyOutgoingConfig;
-
         if (csd->sslBumpMode == Ssl::bumpPeek || csd->sslBumpMode == Ssl::bumpStare) {
-            if (csd->sslBumpMode == Ssl::bumpStare)
-                tlsOptions.updateSessionOptions(serverSession);
-
             auto clientSession = fd_table[clientConn->fd].ssl.get();
             Must(clientSession);
             BIO *bc = SSL_get_rbio(clientSession);
@@ -205,9 +200,6 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
             srvBio->recordInput(true);
             srvBio->mode(csd->sslBumpMode);
         } else {
-            // Set client SSL options
-            tlsOptions.updateSessionOptions(serverSession);
-
             const bool redirected = request->flags.redirected && ::Config.onoff.redir_rewrites_host;
             const char *sniServer = (!hostName || redirected) ?
                                     request->url.host() :
