@@ -1,3 +1,11 @@
+Changes in squid-6.2 (06 Aug 2023):
+
+	- Bug 5187: Work around REQMOD satisfaction regression
+	- Bug 5290: pure virtual call in Ftp::Client constructor
+	- Fix memory leak when reconfiguring multiline all-of ACLs
+	- ... and a lot of code cleanups
+	- ... and some portability fixes on GNU/Hurd and MSWindows
+
 Changes in squid-6.1 (06 Jul 2023):
 
 	- Bug 5278: Log %err_code for "early" request handling errors
