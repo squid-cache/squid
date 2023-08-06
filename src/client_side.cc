@@ -1871,8 +1871,6 @@ ConnStateData::receivedFirstByte()
 void
 ConnStateData::parseRequests()
 {
-    bool parsed_req = false;
-
     debugs(33, 5, clientConnection << ": attempting to parse");
 
     // Loop while we have read bytes that are not needed for producing the body
@@ -1917,8 +1915,6 @@ ConnStateData::parseRequests()
 
             processParsedRequest(context);
 
-            parsed_req = true; // XXX: do we really need to parse everything right NOW ?
-
             if (context->mayUseConnection()) {
                 debugs(33, 3, "Not parsing new requests, as this request may need the connection");
                 break;
@@ -1931,7 +1927,7 @@ ConnStateData::parseRequests()
         }
     }
 
-    debugs(33, 7, "parsed request(s): " << parsed_req << "; buffered leftovers: " << inBuf.length());
+    debugs(33, 7, "buffered leftovers: " << inBuf.length());
 
     if (isOpen() && commIsHalfClosed(clientConnection->fd)) {
         if (pipeline.empty()) {
