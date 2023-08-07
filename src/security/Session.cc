@@ -185,6 +185,7 @@ Security::CreateClientSession(const Security::ContextPointer &ctx, const Comm::C
     if (!c || !c->getPeer())
         return CreateSession(ctx, c, Security::ProxyOutgoingConfig, Security::Io::BIO_TO_SERVER, squidCtx);
 
+    // Bug 5293 - peer->secure is empty/wrong when c is a tunnel through a cache_peer
     auto *peer = c->getPeer();
     return CreateSession(ctx, c, peer->secure, Security::Io::BIO_TO_SERVER, squidCtx);
 }
