@@ -64,8 +64,8 @@ IcmpSquid::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
         len = 0;
 
     /** \li Otherwise if len is 0, uses strlen() to detect length of payload.
-     \bug This will result in part of the payload being truncated if it contains a NULL character.
-     \bug Or it may result in a buffer over-run if the payload is not nul-terminated properly.
+     * XXX: This will result in part of the payload being truncated if it contains a NUL character.
+     *      Or it may result in a buffer over-read if the payload is not NUL-terminated properly.
      */
     else if (payload && len == 0)
         len = strlen(payload);
