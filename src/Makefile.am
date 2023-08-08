@@ -199,6 +199,7 @@ squid_SOURCES = \
 	CacheManager.h \
 	CachePeer.cc \
 	CachePeer.h \
+	CachePeers.h \
 	ClientInfo.h \
 	ClientRequestContext.h \
 	CollapsedForwarding.cc \
