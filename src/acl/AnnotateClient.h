@@ -10,15 +10,20 @@
 #define SQUID_ACLANNOTATECLIENT
 
 #include "acl/Note.h"
-#include "Notes.h"
 
-/// \ingroup ACLAPI
-class ACLAnnotateClientStrategy : public Acl::AnnotationStrategy
+namespace Acl
+{
+
+/// an "annotate_client" ACL
+class AnnotateClientCheck: public Acl::AnnotationCheck
 {
 public:
+    /* ACL API */
+    int match(ACLChecklist *) override;
     bool requiresRequest() const override { return true; }
-    int match(ACLData<MatchType> * &, ACLFilledChecklist *) override;
 };
+
+} // namespace Acl
 
 #endif /* SQUID_ACLANNOTATECLIENT */
 

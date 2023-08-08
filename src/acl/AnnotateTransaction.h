@@ -10,15 +10,20 @@
 #define SQUID_ACLANNOTATETRANSACTION
 
 #include "acl/Note.h"
-#include "Notes.h"
 
-/// \ingroup ACLAPI
-class ACLAnnotateTransactionStrategy: public Acl::AnnotationStrategy
+namespace Acl
+{
+
+/// an "annotate_transaction" ACL
+class AnnotateTransactionCheck: public Acl::AnnotationCheck
 {
 public:
-    int match(ACLData<MatchType> * &, ACLFilledChecklist *) override;
+    /* ACL API */
+    int match(ACLChecklist *) override;
     bool requiresRequest() const override { return true; }
 };
+
+} // namespace Acl
 
 #endif /* SQUID_ACLANNOTATETRANSACTION */
 

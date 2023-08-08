@@ -13,8 +13,10 @@
 #include "HttpReply.h"
 
 int
-ACLHTTPRepHeaderStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::HttpRepHeaderCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     return data->match (&checklist->reply->header);
 }
 

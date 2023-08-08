@@ -82,6 +82,9 @@ public:
 
     void zeroBlocks(bool doIt);
 
+    /// \copydoc Mem::Allocator::relabel()
+    void relabel(const char * const aLabel);
+
 private:
     Allocator *getAllocator() const;
 

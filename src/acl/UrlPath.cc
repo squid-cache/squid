@@ -10,14 +10,15 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "acl/RegexData.h"
 #include "acl/UrlPath.h"
 #include "HttpRequest.h"
 #include "rfc1738.h"
 
 int
-ACLUrlPathStrategy::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist)
+Acl::UrlPathCheck::match(ACLChecklist * const ch)
 {
+    const auto checklist = Filled(ch);
+
     if (checklist->request->url.path().isEmpty())
         return -1;
 
