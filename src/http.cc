@@ -1100,11 +1100,10 @@ HttpStateData::statusIfComplete() const
     /** \par
      * What does the reply have to say about keep-alive?
      */
-    /**
-     \bug XXX BUG?
+    /* XXX: BUG?
      * If the origin server (HTTP/1.0) does not send a keep-alive
      * header, but keeps the connection open anyway, what happens?
-     * We'll return here and http.c waits for an EOF before changing
+     * We'll return here and wait for an EOF before changing
      * store_status to STORE_OK.   Combine this with ENTRY_FWD_HDR_WAIT
      * and an error status code, and we might have to wait until
      * the server times out the socket.
