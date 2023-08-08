@@ -730,7 +730,7 @@ msgid ""
 "SquidFaq/BugReporting for details of what you need to include with your bug "
 "report."
 msgstr ""
-"Отчёты об ошибках должны быть написаны на английском языке. См. на http://"
+"Отчёты об ошибках должны быть написаны на английском языке. См. на https://"
 "wiki.squid-cache.org/SquidFaq/BugReporting, что нужно включать в отчёт."
 
 #. type: Plain text
