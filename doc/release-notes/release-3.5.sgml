@@ -99,7 +99,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <sect1>Support named services
 <p>Details at <url url="https://wiki.squid-cache.org/MultipleInstances">.
-<p>Terminology details at <url url="https://wiki.squid-cache.org/Features/SmpScale#Terminology">.
+<p>Terminology details at <url url="https://wiki.squid-cache.org/Features/SmpScale#terminology">.
 
 <p>The command line option <em>-n</em> assigns a name to the Squid service
    instance to be used as a unique identifier for all SMP processes run as
