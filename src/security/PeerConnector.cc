@@ -38,7 +38,7 @@
 
 Security::PeerConnector::PeerConnector(
     const Comm::ConnectionPointer &aServerConn,
-    const Security::PeerOptionsPointer &tlsOptions,
+    const Security::FuturePeerContextPointer &tlsContext,
     const AsyncCallback<EncryptorAnswer> &aCallback,
     const AccessLogEntryPointer &alp,
     const time_t timeout):
@@ -47,7 +47,7 @@ Security::PeerConnector::PeerConnector(
     noteFwdPconnUse(false),
     serverConn(aServerConn),
     al(alp),
-    tlsOptions_(tlsOptions),
+    tlsContext_(tlsContext),
     callback(aCallback),
     negotiationTimeout(timeout),
     startTime(squid_curtime),
@@ -69,6 +69,15 @@ Security::PeerConnector::~PeerConnector() = default;
 bool Security::PeerConnector::doneAll() const
 {
     return (!callback || callback->canceled()) && AsyncJob::doneAll();
+}
+
+// XXX: Remove this diff reducer
+Security::ContextPointer
+Security::PeerConnector::getTlsContext()
+{
+    const auto context = peerContext();
+    Assure(context);
+    return context->raw;
 }
 
 /// Preps connection and SSL state. Calls negotiate().
@@ -146,8 +155,8 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
 {
     Must(Comm::IsConnOpen(serverConnection()));
 
-    Security::ContextPointer ctx(getTlsContext());
-    debugs(83, 5, serverConnection() << ", ctx=" << (void*)ctx.get());
+    auto ctx = peerContext();
+    debugs(83, 5, serverConnection() << ", ctx=" << ctx);
 
     if (!ctx || !Security::CreateClientSession(ctx, serverConnection(), "server https start")) {
         const auto xerrno = errno;

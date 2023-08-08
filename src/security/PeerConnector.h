@@ -53,7 +53,7 @@ public:
     typedef CbcPointer<PeerConnector> Pointer;
 
     PeerConnector(const Comm::ConnectionPointer &aServerConn,
-                  const Security::PeerOptionsPointer &,
+                  const Security::FuturePeerContextPointer &,
                   const AsyncCallback<EncryptorAnswer> &,
                   const AccessLogEntryPointer &alp,
                   const time_t timeout = 0);
@@ -131,9 +131,8 @@ protected:
     /// \param error if not NULL the SSL negotiation was aborted with an error
     virtual void noteNegotiationDone(ErrorState *) {}
 
-    /// Must implemented by the kid classes to return the TLS context object to use
-    /// for building the encryption context objects.
-    virtual Security::ContextPointer getTlsContext() = 0;
+    /// peer's security context (or nil)
+    virtual FuturePeerContextPointer peerContext() = 0;
 
     /// mimics FwdState to minimize changes to FwdState::initiate/negotiateSsl
     Comm::ConnectionPointer const &serverConnection() const { return serverConn; }
@@ -168,7 +167,7 @@ protected:
     AccessLogEntryPointer al; ///< info for the future access.log entry
 
     /// TLS configuration for peer connection
-    Security::PeerOptionsPointer tlsOptions_;
+    FuturePeerContextPointer tlsContext_;
 
     /// answer destination
     AsyncCallback<EncryptorAnswer> callback;
@@ -176,6 +175,9 @@ protected:
 private:
     PeerConnector(const PeerConnector &); // not implemented
     PeerConnector &operator =(const PeerConnector &); // not implemented
+
+    /// raw encryption context object (or nil)
+    ContextPointer getTlsContext();
 
 #if USE_OPENSSL
     unsigned int certDownloadNestingLevel() const;

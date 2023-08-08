@@ -20,7 +20,7 @@ namespace Security
 {
 
 /// TLS squid.conf settings for a remote server peer
-class PeerOptions: public RefCountable
+class PeerOptions
 {
 public:
     PeerOptions();
@@ -145,11 +145,35 @@ public:
     bool encryptTransport = false;
 };
 
+// TODO: Move this declaration?
+/// A combination of PeerOptions and the corresponding Context. Used by Squid
+/// TLS client code.
+class PeerContext: public RefCountable
+{
+public:
+    // TODO PeerContext(...);
+
+    /// XXX: Document.
+    void open();
+
+    PeerOptions options; ///< context configuration
+    ContextPointer raw; ///< context configured using options
+};
+
+// XXX: Remove this shim after upgrading legacy code to store PeerContext
+// objects instead of disjoint PeerOptons and Context objects.
+/// A combination of PeerOptions and the corresponding Context. Used by Squid
+/// TLS client code.
+class FuturePeerContext: public RefCountable
+{
+public:
+    FuturePeerContext(PeerOptions &, ContextPointer &);
+    PeerOptions &options; ///< context configuration
+    ContextPointer &raw; ///< context configured using options
+};
+
 /// configuration options for DIRECT server access
 extern PeerOptions ProxyOutgoingConfig;
-
-/// configuration options for retrying DIRECT server access
-extern PeerOptions ProxyOutgoingConfigForRetries;
 
 } // namespace Security
 
@@ -157,6 +181,14 @@ extern PeerOptions ProxyOutgoingConfigForRetries;
 void parse_securePeerOptions(Security::PeerOptions *);
 #define free_securePeerOptions(x) Security::ProxyOutgoingConfig.clear()
 #define dump_securePeerOptions(e,n,x) do { (e)->appendf(n); (x).dumpCfg((e),""); (e)->append("\n",1); } while(false)
+void parse_securePeerRetries(Security::PeerContext **);
+void free_securePeerRetries(Security::PeerContext **);
+void dump_securePeerRetries(StoreEntry *, const char *, const Security::PeerContext *);
+
+// for modern code forced to use this shim
+Security::FuturePeerContextPointer MakeFuture(Security::PeerContextPointer &);
+// for legacy code that will be refactored/removed together with this shim
+Security::FuturePeerContextPointer MakeFuture(Security::PeerOptions &, Security::ContextPointer &);
 
 #endif /* SQUID_SRC_SECURITY_PEEROPTIONS_H */
 

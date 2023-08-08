@@ -963,6 +963,7 @@ configDoConfigure(void)
     if (Security::ProxyOutgoingConfig.encryptTransport) {
         debugs(3, 2, "initializing https:// proxy context");
         Config.ssl_client.sslContext = Security::ProxyOutgoingConfig.createClientContext(false);
+        Config.ssl_client.defaultContext = MakeFuture(Security::ProxyOutgoingConfig, Config.ssl_client.sslContext);
         if (!Config.ssl_client.sslContext) {
 #if USE_OPENSSL
             fatal("ERROR: Could not initialize https:// proxy context");
@@ -975,19 +976,11 @@ configDoConfigure(void)
 #endif
     }
 
-    // XXX: Duplicates the above `if`
-    if (Security::ProxyOutgoingConfigForRetries.encryptTransport) {
-        debugs(3, 2, "initializing https:// proxy context");
-        Config.ssl_client.sslContextForRetries = Security::ProxyOutgoingConfigForRetries.createClientContext(false);
-        if (!Config.ssl_client.sslContextForRetries) {
+    if (Config.ssl_client.retriesContext) {
+        Config.ssl_client.retriesContext->open();
 #if USE_OPENSSL
-            fatal("ERROR: Could not initialize https:// proxy context");
-#else
-            debugs(3, DBG_IMPORTANT, "ERROR: proxying https:// currently still requires --with-openssl");
-#endif
-        }
-#if USE_OPENSSL
-        Ssl::useSquidUntrusted(Config.ssl_client.sslContextForRetries.get());
+        // XXX: Check whether this is needed for retries.
+        Ssl::useSquidUntrusted(Config.ssl_client.retriesContext->raw.get());
 #endif
     }
 
@@ -3931,6 +3924,7 @@ configFreeMemory(void)
     free_all();
     Dns::ResolveClientAddressesAsap = false;
     Config.ssl_client.sslContext.reset();
+    Config.ssl_client.defaultContext = nullptr;
 #if USE_OPENSSL
     Ssl::unloadSquidUntrusted();
 #endif

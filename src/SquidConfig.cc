@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "security/PeerOptions.h" /* XXX */
 #include "SquidConfig.h"
 
 class SquidConfig Config;

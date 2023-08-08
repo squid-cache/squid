@@ -14,6 +14,7 @@
 #include "parser/Tokenizer.h"
 #include "Parsing.h"
 #include "security/PeerOptions.h"
+#include "Store.h"
 
 #if USE_OPENSSL
 #include "ssl/support.h"
@@ -22,7 +23,6 @@
 #include <bitset>
 
 Security::PeerOptions Security::ProxyOutgoingConfig;
-Security::PeerOptions Security::ProxyOutgoingConfigForRetries;
 
 Security::PeerOptions::PeerOptions()
 {
@@ -808,5 +808,79 @@ parse_securePeerOptions(Security::PeerOptions *opt)
     while(const char *token = ConfigParser::NextToken())
         opt->parse(token);
     opt->parseOptions();
+}
+
+/* Security::PeerContext */
+
+void
+Security::PeerContext::open()
+{
+    assert(!raw);
+
+    if (!options.encryptTransport)
+        return; // disabled by the admin
+
+#if USE_OPENSSL
+    debugs(3, 2, "initializing TLS context");
+#else
+    throw TextException("proxying https:// currently still requires --with-openssl", Here());
+#endif
+
+    raw = options.createClientContext(false);
+    if (!raw) // TODO: createClientContext() should throw on failures instead
+        throw TextException("failed to initialize a TLS context for Squid-originated connections", Here());
+}
+
+void
+parse_securePeerRetries(Security::PeerContext ** const contextStorage)
+{
+    assert(contextStorage);
+    auto &context = *contextStorage;
+    if (!context) {
+        context = new Security::PeerContext();
+        static Security::PeerContextPointer refcountingProtectionXXX;
+        refcountingProtectionXXX = context;
+    }
+    parse_securePeerOptions(&context->options);
+}
+
+void
+free_securePeerRetries(Security::PeerContext ** const contextStorage)
+{
+    assert(contextStorage);
+    auto &context = *contextStorage;
+    delete context;
+    context = nullptr;
+}
+
+void
+dump_securePeerRetries(StoreEntry *e, const char *directiveName, const Security::PeerContext *context)
+{
+    e->appendf("%s", directiveName);
+    context->options.dumpCfg(e, "");
+    // XXX: Dump ACLs.
+    e->append("\n", 1);
+}
+
+/* Security::FuturePeerContext */
+
+Security::FuturePeerContext::FuturePeerContext(PeerOptions &o, ContextPointer &c):
+    options(o),
+    raw(c)
+{
+}
+
+Security::FuturePeerContextPointer
+MakeFuture(Security::PeerContextPointer &ctx)
+{
+    if (!ctx)
+        return nullptr;
+    return new Security::FuturePeerContext(ctx->options, ctx->raw);
+}
+
+Security::FuturePeerContextPointer
+MakeFuture(Security::PeerOptions &options, Security::ContextPointer &rawContext)
+{
+    return new Security::FuturePeerContext(options, rawContext);
 }
 

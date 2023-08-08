@@ -180,14 +180,10 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
 }
 
 bool
-Security::CreateClientSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &c, const char *squidCtx)
+Security::CreateClientSession(FuturePeerContextPointer &ctx, const Comm::ConnectionPointer &c, const char *squidCtx)
 {
-    if (!c || !c->getPeer())
-        return CreateSession(ctx, c, Security::ProxyOutgoingConfig, Security::Io::BIO_TO_SERVER, squidCtx);
-
-    // Bug 5293 - peer->secure is empty/wrong when c is a tunnel through a cache_peer
-    auto *peer = c->getPeer();
-    return CreateSession(ctx, c, peer->secure, Security::Io::BIO_TO_SERVER, squidCtx);
+    Assure(ctx); // this should be a reference then
+    return CreateSession(ctx->raw, c, ctx->options, Security::Io::BIO_TO_SERVER, squidCtx);
 }
 
 bool

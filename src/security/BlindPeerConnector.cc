@@ -20,14 +20,15 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Security, BlindPeerConnector);
 
-Security::ContextPointer
-Security::BlindPeerConnector::getTlsContext()
+Security::FuturePeerContextPointer
+Security::BlindPeerConnector::peerContext()
 {
-    const CachePeer *peer = serverConnection()->getPeer();
+    const auto peer = serverConnection()->getPeer();
     if (peer && peer->secure.encryptTransport)
-        return peer->sslContext;
+        return peer->peerContext();
 
-    return tlsOptions_ ? ::Config.ssl_client.sslContextForRetries : ::Config.ssl_client.sslContext;
+    return tlsContext_ ? tlsContext_ :
+        MakeFuture(ProxyOutgoingConfig, ::Config.ssl_client.sslContext);
 }
 
 bool

@@ -502,7 +502,8 @@ public:
 
     struct {
         Security::ContextPointer sslContext;
-        Security::ContextPointer sslContextForRetries; // XXX
+        Security::FuturePeerContextPointer defaultContext;
+        Security::PeerContext *retriesContext; // XXX: there are many of these
 #if USE_OPENSSL
         char *foreignIntermediateCertsPath;
         acl_access *cert_error;

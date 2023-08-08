@@ -504,7 +504,7 @@ void
 FwdState::reactToSecureConnectFailure()
 {
     // TODO: Replace .encryptTransport with std::optional<Security::PeerOptions>
-    if (!Security::ProxyOutgoingConfigForRetries.encryptTransport)
+    if (!Config.ssl_client.retriesContext)
         return; // admin did not allow ERR_SECURE_CONNECT_FAIL retries
 
     if (!destinationReceipt) {
@@ -512,7 +512,7 @@ FwdState::reactToSecureConnectFailure()
         return;
     }
 
-    if (destinationReceipt.tlsOptions()) {
+    if (destinationReceipt.tlsContext()) {
         debugs(17, 3, "refusing to use the same destination thrice: " << destinationReceipt);
         return;
     }
@@ -521,8 +521,7 @@ FwdState::reactToSecureConnectFailure()
     // XXX: Apply new options!
 
     debugs(17, 3, "will retry the same destination: " << destinationReceipt);
-    static auto customXXX = new Security::PeerOptionsPointer(&Security::ProxyOutgoingConfigForRetries);
-    destinations->reinstatePath(destinationReceipt, *customXXX);
+    destinations->reinstatePath(destinationReceipt, Config.ssl_client.retriesContext);
     destinationReceipt = nullptr;
 }
 
@@ -1028,14 +1027,14 @@ FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
     HttpRequest::Pointer requestPointer = request;
     const auto callback = asyncCallback(17, 4, FwdState::connectedToPeer, this);
     const auto sslNegotiationTimeout = connectingTimeout(conn);
-    const auto &tlsOptions = destinationReceipt.tlsOptions();
+    auto &tlsOptions = destinationReceipt.tlsContext();
     Security::PeerConnector *connector = nullptr;
 #if USE_OPENSSL
     if (request->flags.sslPeek)
-        connector = new Ssl::PeekingPeerConnector(requestPointer, conn, tlsOptions, clientConn, callback, al, sslNegotiationTimeout);
+        connector = new Ssl::PeekingPeerConnector(requestPointer, conn, MakeFuture(tlsOptions), clientConn, callback, al, sslNegotiationTimeout);
     else
 #endif
-        connector = new Security::BlindPeerConnector(requestPointer, conn, tlsOptions, callback, al, sslNegotiationTimeout);
+        connector = new Security::BlindPeerConnector(requestPointer, conn, MakeFuture(tlsOptions), callback, al, sslNegotiationTimeout);
     connector->noteFwdPconnUse = true;
     encryptionWait.start(connector, callback);
 }

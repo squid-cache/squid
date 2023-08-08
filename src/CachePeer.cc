@@ -59,6 +59,12 @@ CachePeer::~CachePeer()
     xfree(domain);
 }
 
+Security::FuturePeerContextPointer
+CachePeer::peerContext()
+{
+    return new Security::FuturePeerContext(secure, sslContext);
+}
+
 void
 CachePeer::noteSuccess()
 {

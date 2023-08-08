@@ -22,7 +22,7 @@ public:
     explicit ResolvedPeerPath(const Comm::ConnectionPointer &conn): connection(conn) {}
 
     Comm::ConnectionPointer connection; ///< (the address of) a path
-    Security::PeerOptionsPointer tlsOptions; ///< custom TLS session options (or nil)
+    Security::PeerContextPointer tlsContext; ///< custom TLS session options (or nil)
     bool available = true; ///< whether this path may be extracted
 };
 
@@ -54,7 +54,7 @@ public:
 
     /// makes the previously extracted path available for extraction at its
     /// original position and resets TLS parameters to use for that path
-    void reinstatePath(const PeerConnectionPointer &, const Security::PeerOptionsPointer &tlsOptions);
+    void reinstatePath(const PeerConnectionPointer &, const Security::PeerContextPointer &tlsContext);
 
     /// extracts and returns the first queued address
     PeerConnectionPointer extractFront();
@@ -129,7 +129,7 @@ public:
 
     PeerConnectionPointer() = default;
     PeerConnectionPointer(std::nullptr_t): PeerConnectionPointer() {} ///< implicit nullptr conversion
-    PeerConnectionPointer(const Comm::ConnectionPointer &conn, const size_type pos, const Security::PeerOptionsPointer &tlsParameters): connection_(conn), position_(pos), tlsOptions_(tlsParameters) {}
+    PeerConnectionPointer(const Comm::ConnectionPointer &conn, const size_type pos, const Security::PeerContextPointer &tlsParameters): connection_(conn), position_(pos), tlsContext_(tlsParameters) {}
 
     /* read-only pointer API; for Connection assignment, see finalize() */
     explicit operator bool() const { return static_cast<bool>(connection_); }
@@ -140,7 +140,7 @@ public:
     operator const Comm::ConnectionPointer&() const { return connection_; }
 
     /// custom TLS session options (or nil)
-    auto &tlsOptions() const { return tlsOptions_; }
+    auto &tlsContext() { return tlsContext_; }
 
     /// upgrade stored peer selection details with a matching actual connection
     void finalize(const Comm::ConnectionPointer &conn) { connection_ = conn; }
@@ -159,8 +159,8 @@ private:
     size_type position_ = npos;
     friend class ResolvedPeers;
 
-    /// \copydoc tlsOptions()
-    Security::PeerOptionsPointer tlsOptions_;
+    /// \copydoc tlsContext()
+    Security::PeerContextPointer tlsContext_;
 };
 
 /// summarized ResolvedPeers (for debugging)

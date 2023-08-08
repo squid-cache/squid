@@ -22,12 +22,12 @@ class BlindPeerConnector: public Security::PeerConnector {
 public:
     BlindPeerConnector(HttpRequestPointer &aRequest,
                        const Comm::ConnectionPointer &aServerConn,
-                       const Security::PeerOptionsPointer &aPeerOptionsPointer,
+                       const Security::FuturePeerContextPointer &aPeerContextPointer,
                        const AsyncCallback<EncryptorAnswer> &aCallback,
                        const AccessLogEntryPointer &alp,
                        const time_t timeout = 0) :
         AsyncJob("Security::BlindPeerConnector"),
-        Security::PeerConnector(aServerConn, aPeerOptionsPointer, aCallback, alp, timeout)
+        Security::PeerConnector(aServerConn, aPeerContextPointer, aCallback, alp, timeout)
     {
         request = aRequest;
     }
@@ -40,8 +40,7 @@ public:
     /// \returns true on successful initialization
     bool initialize(Security::SessionPointer &) override;
 
-    /// Return the configured TLS context object
-    Security::ContextPointer getTlsContext() override;
+    FuturePeerContextPointer peerContext() override;
 
     /// On success, stores the used TLS session for later use.
     /// On error, informs the peer.

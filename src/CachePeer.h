@@ -48,6 +48,8 @@ public:
     /// \returns the effective connect timeout for the given peer
     time_t connectTimeout() const;
 
+    Security::FuturePeerContextPointer peerContext();
+
     u_int index = 0;
 
     /// cache_peer name (if explicitly configured) or hostname (otherwise).

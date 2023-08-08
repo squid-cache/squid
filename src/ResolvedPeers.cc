@@ -33,7 +33,7 @@ ResolvedPeers::reinstatePath(const PeerConnectionPointer &path)
     assert(!storedPath.available);
     storedPath.available = true;
     increaseAvailability();
-    // the other reinstatePath() method updates storedPath.tlsOptions
+    // the other reinstatePath() method updates storedPath.tlsContext
 
     // if we restored availability of a path that we used to skip, update
     const auto pathsToTheLeft = pos;
@@ -46,10 +46,10 @@ ResolvedPeers::reinstatePath(const PeerConnectionPointer &path)
 }
 
 void
-ResolvedPeers::reinstatePath(const PeerConnectionPointer &path, const Security::PeerOptionsPointer &tlsOptions)
+ResolvedPeers::reinstatePath(const PeerConnectionPointer &path, const Security::PeerContextPointer &tlsContext)
 {
     reinstatePath(path);
-    paths_[path.position_].tlsOptions = tlsOptions;
+    paths_[path.position_].tlsContext = tlsContext;
 }
 
 void
@@ -162,7 +162,7 @@ ResolvedPeers::extractFound(const char *description, const Paths::iterator &foun
     }
 
     const auto cleanPath = path.connection->cloneProfile();
-    return PeerConnectionPointer(cleanPath, found - paths_.begin(), path.tlsOptions);
+    return PeerConnectionPointer(cleanPath, found - paths_.begin(), path.tlsContext);
 }
 
 bool
@@ -246,7 +246,7 @@ PeerConnectionPointer::print(std::ostream &os) const
     if (connection_)
         os << connection_;
 
-    if (tlsOptions_)
+    if (tlsContext_)
         os << " +tls";
 
     if (position_ != npos)
