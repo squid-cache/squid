@@ -25,7 +25,7 @@ We welcome feedback and bug reports. If you find a new bug, please see <url url=
 <sect1>Known issues
 <p>
 Although this release is deemed good enough for use in many setups, please note the existence of 
-<url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;target_milestone=3.1&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;cmdtype=doit&amp;order=bugs.bug_severity" name="open bugs against Squid-3.1">.
+<url url="https://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;target_milestone=3.1&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;cmdtype=doit&amp;order=bugs.bug_severity" name="open bugs against Squid-3.1">.
 
 <p>Some issues to note as currently known in this release which are not able to be fixed in the 3.1 series are:
 
