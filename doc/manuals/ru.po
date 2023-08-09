@@ -757,9 +757,9 @@ msgstr ""
 #: src/security/cert_generators/file/security_file_certgen.8.in:169
 #: src/squid.8.in:263 tools/cachemgr.cgi.8.in:72 tools/purge/purge.1:278
 #: tools/squidclient/squidclient.1:254
-msgid "Report bugs or bug fixes using http://bugs.squid-cache.org/"
+msgid "Report bugs or bug fixes using https://bugs.squid-cache.org/"
 msgstr ""
-"Сообщите об ошибках или их исправлениях используя http://bugs.squid-cache."
+"Сообщите об ошибках или их исправлениях используя https://bugs.squid-cache."
 "org/"
 
 #. type: Plain text

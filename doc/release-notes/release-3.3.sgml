@@ -27,7 +27,7 @@ While this release is not fully bug-free we believe it is ready for use in produ
 <sect1>Known issues
 <p>
 Although this release is deemed good enough for use in many setups, please note the existence of 
-<url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=3.3" name="open bugs against Squid-3.3">.
+<url url="https://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=3.3" name="open bugs against Squid-3.3">.
 
 
 <sect1>Changes since earlier releases of Squid-3.3
