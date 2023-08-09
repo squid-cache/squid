@@ -28,7 +28,7 @@ class CommonPool
 
 public:
     static CommonPool *Factory (unsigned char _class, CompositePoolNode::Pointer&);
-    const SBuf theClassTypeLabel() const {return typeLabel;}
+    const SBuf &theClassTypeLabel() const { return typeLabel; }
 
 protected:
     CommonPool();
