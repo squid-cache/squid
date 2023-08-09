@@ -13,7 +13,7 @@
 
 #if USE_DELAY_POOLS
 #include "CompositePoolNode.h"
-#include "SquidString.h"
+#include "sbuf/SBuf.h"
 
 /*
  \ingroup DelayPoolsAPI
@@ -28,11 +28,11 @@ class CommonPool
 
 public:
     static CommonPool *Factory (unsigned char _class, CompositePoolNode::Pointer&);
-    char const* theClassTypeLabel() const {return typeLabel.termedBuf();}
+    const SBuf theClassTypeLabel() const {return typeLabel;}
 
 protected:
     CommonPool();
-    String typeLabel;
+    SBuf typeLabel;
 };
 
 #endif /* USE_DELAY_POOLS */

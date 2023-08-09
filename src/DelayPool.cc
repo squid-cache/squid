@@ -44,7 +44,7 @@ DelayPool::dump(StoreEntry *entry, unsigned int i) const
     if (theComposite() == nullptr)
         return;
 
-    storeAppendPrintf(entry, "delay_class %d %s\n", i + 1, pool->theClassTypeLabel());
+    storeAppendPrintf(entry, "delay_class %d " SQUIDSBUFPH "\n", i + 1, SQUIDSBUFPRINT(pool->theClassTypeLabel()));
 
     LOCAL_ARRAY(char, nom, 32);
 
