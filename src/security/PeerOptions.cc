@@ -901,6 +901,9 @@ dump_securePeerRetries(StoreEntry *e, const char *directiveName, const Security:
             // TODO: Use Acl::dump() after fixing the XXX in dump_acl_list().
             for (const auto &acl: context->preconditions->treeDump("if", &Acl::AllowOrDeny))
                 os << ' ' << acl;
+            // the treeDump() hack above adds a new line
+        } else {
+            os << '\n';
         }
     }
 }
