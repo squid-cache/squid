@@ -504,7 +504,7 @@ void
 FwdState::reactToSecureConnectFailure()
 {
     // TODO: Replace .encryptTransport with std::optional<Security::PeerOptions>
-    if (!Config.ssl_client.retriesContext)
+    if (!Config.ssl_client.retriesContexts)
         return; // admin did not allow ERR_SECURE_CONNECT_FAIL retries
 
     if (!destinationReceipt) {
@@ -517,21 +517,19 @@ FwdState::reactToSecureConnectFailure()
         return;
     }
 
-    // TODO: This will be moved inside Config.ssl_client.retriesContexts.
-    if (const auto acls = Config.ssl_client.retriesContext->preconditions) {
-        ACLFilledChecklist ch(acls, request, nullptr);
-        ch.al = al;
-        ch.syncAle(request, nullptr);
-        ch.dst_peer_name = destinationReceipt->getPeer() ? destinationReceipt->getPeer()->name : nullptr;
-        ch.dst_addr = destinationReceipt->remote;
-        if (!ch.fastCheck().allowed()) {
-            debugs(17, 3, "no matching TLS options: " << destinationReceipt);
-            return;
-        }
+    ACLFilledChecklist ch(nullptr, request, nullptr);
+    ch.al = al;
+    ch.syncAle(request, nullptr);
+    ch.dst_peer_name = destinationReceipt->getPeer() ? destinationReceipt->getPeer()->name : nullptr;
+    ch.dst_addr = destinationReceipt->remote;
+    const auto matchingContext = Config.ssl_client.retriesContexts->findContext(ch);
+    if (!matchingContext) {
+        debugs(17, 3, "no matching TLS options: " << destinationReceipt);
+        return;
     }
 
     debugs(17, 3, "will retry the same destination with different TLS options: " << destinationReceipt);
-    destinations->reinstatePath(destinationReceipt, Config.ssl_client.retriesContext);
+    destinations->reinstatePath(destinationReceipt, matchingContext);
     destinationReceipt = nullptr;
 }
 

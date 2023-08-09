@@ -3080,7 +3080,7 @@ NAME: tls_outgoing_options_for_retries
 IFDEF: USE_GNUTLS||USE_OPENSSL
 TYPE: securePeerRetries
 DEFAULT: none
-LOC: Config.ssl_client.retriesContext
+LOC: Config.ssl_client.retriesContexts
 DOC_START
 	XXX: Document.
 

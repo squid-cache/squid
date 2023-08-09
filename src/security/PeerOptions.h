@@ -11,8 +11,11 @@
 
 #include "base/YesNoNone.h"
 #include "ConfigParser.h"
+#include "mem/PoolingAllocator.h"
 #include "security/forward.h"
 #include "security/KeyData.h"
+
+#include <vector>
 
 class Packable;
 
@@ -164,6 +167,29 @@ public:
     ACLList *preconditions; // XXX: Use std::unique_ptr<>
 };
 
+// TODO: Move this declaration
+
+/// Manages PeerContext objects representing all
+/// tls_outgoing_options_for_retries directives in squid.conf.
+class PeerContexts
+{
+public:
+    /// parses a single tls_outgoing_options_for_retries directive
+    void parseOneDirective(ConfigParser &);
+
+    /// XXX: Document.
+    void open();
+
+    /// report configured contexts using squid.conf syntax
+    // TODO: void dump(std::ostream &) const;
+
+    /// transaction-matching PeerContext (or nil)
+    PeerContextPointer findContext(ACLChecklist &) const;
+
+    /// configured contexts in squid.conf directives order
+    std::vector< PeerContextPointer, PoolingAllocator<PeerContextPointer> > contexts;
+};
+
 // XXX: Remove this shim after upgrading legacy code to store PeerContext
 // objects instead of disjoint PeerOptons and Context objects.
 /// A combination of PeerOptions and the corresponding Context. Used by Squid
@@ -185,9 +211,9 @@ extern PeerOptions ProxyOutgoingConfig;
 void parse_securePeerOptions(Security::PeerOptions *);
 #define free_securePeerOptions(x) Security::ProxyOutgoingConfig.clear()
 #define dump_securePeerOptions(e,n,x) do { (e)->appendf(n); (x).dumpCfg((e),""); (e)->append("\n",1); } while(false)
-void parse_securePeerRetries(Security::PeerContext **);
-void free_securePeerRetries(Security::PeerContext **);
-void dump_securePeerRetries(StoreEntry *, const char *, const Security::PeerContext *);
+void parse_securePeerRetries(Security::PeerContexts **);
+void free_securePeerRetries(Security::PeerContexts **);
+void dump_securePeerRetries(StoreEntry *, const char *, const Security::PeerContexts *);
 
 // for modern code forced to use this shim
 Security::FuturePeerContextPointer MakeFuture(Security::PeerContextPointer &);

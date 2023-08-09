@@ -976,13 +976,8 @@ configDoConfigure(void)
 #endif
     }
 
-    if (Config.ssl_client.retriesContext) {
-        Config.ssl_client.retriesContext->open();
-#if USE_OPENSSL
-        // XXX: Check whether this is needed for retries.
-        Ssl::useSquidUntrusted(Config.ssl_client.retriesContext->raw.get());
-#endif
-    }
+    if (Config.ssl_client.retriesContexts)
+        Config.ssl_client.retriesContexts->open();
 
     for (CachePeer *p = Config.peers; p != nullptr; p = p->next) {
 
@@ -2522,14 +2517,13 @@ parse_peer_access(void)
 
 // XXX: Convert to new namespace-based Configuration API. See KeyLog.
 void
-parse_securePeerRetries(Security::PeerContext ** const contextStorage)
+parse_securePeerRetries(Security::PeerContexts ** const contextStorage)
 {
     assert(contextStorage);
-    auto &context = *contextStorage;
-    Assure(!context); // XXX: Until we support multiple directives
-    context = new Security::PeerContext(LegacyParser);
-    static Security::PeerContextPointer refcountingProtectionXXX;
-    refcountingProtectionXXX = context;
+    auto &contexts = *contextStorage;
+    if (!contexts)
+        contexts = new Security::PeerContexts();
+    contexts->parseOneDirective(LegacyParser);
 }
 
 static void

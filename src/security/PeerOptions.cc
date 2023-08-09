@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "acl/Checklist.h"
 #include "acl/Tree.h"
 #include "base/Packable.h"
 #include "base/PackableStream.h"
@@ -847,10 +848,41 @@ Security::PeerContext::open()
     raw = options.createClientContext(false);
     if (!raw) // TODO: createClientContext() should throw on failures instead
         throw TextException("failed to initialize a TLS context for Squid-originated connections", Here());
+
+#if USE_OPENSSL
+    // XXX: Check whether this is needed for retries.
+    Ssl::useSquidUntrusted(raw.get());
+#endif
+}
+
+/* Security::PeerContexts */
+
+void
+Security::PeerContexts::parseOneDirective(ConfigParser &parser)
+{
+    const PeerContextPointer context = new PeerContext(parser);
+    contexts.emplace_back(context);
 }
 
 void
-free_securePeerRetries(Security::PeerContext ** const contextStorage)
+Security::PeerContexts::open()
+{
+    for (auto &context: contexts)
+        context->open();
+}
+
+Security::PeerContextPointer
+Security::PeerContexts::findContext(ACLChecklist &checklist) const
+{
+    for (const auto &context: contexts) {
+        if (!context->preconditions || checklist.fastCheck(context->preconditions).allowed())
+            return context;
+    }
+    return nullptr;
+}
+
+void
+free_securePeerRetries(Security::PeerContexts ** const contextStorage)
 {
     assert(contextStorage);
     auto &context = *contextStorage;
@@ -859,15 +891,17 @@ free_securePeerRetries(Security::PeerContext ** const contextStorage)
 }
 
 void
-dump_securePeerRetries(StoreEntry *e, const char *directiveName, const Security::PeerContext *context)
+dump_securePeerRetries(StoreEntry *e, const char *directiveName, const Security::PeerContexts *contexts)
 {
     PackableStream os(*e);
-    os << directiveName;
-    context->options.dumpCfg(e, "");
-    if (context->preconditions) {
-        // TODO: Use Acl::dump() after fixing the XXX in dump_acl_list().
-        for (const auto &acl: context->preconditions->treeDump("if", &Acl::AllowOrDeny))
-            os << ' ' << acl;
+    for (const auto &context: contexts->contexts) {
+        os << directiveName;
+        context->options.dumpCfg(e, "");
+        if (context->preconditions) {
+            // TODO: Use Acl::dump() after fixing the XXX in dump_acl_list().
+            for (const auto &acl: context->preconditions->treeDump("if", &Acl::AllowOrDeny))
+                os << ' ' << acl;
+        }
     }
 }
 
