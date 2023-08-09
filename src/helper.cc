@@ -327,8 +327,6 @@ helperOpenServers(helper * hlp)
     if (successfullyStarted < need_new)
         hlp->handleFewerServers(false);
 
-    hlp->handleNoServers();
-
     hlp->last_restart = squid_curtime;
     safe_free(shortname);
     safe_free(procname);
@@ -896,8 +894,9 @@ helper::handleFewerServers(const bool madeProgress)
 void
 helper::handleNoServers()
 {
+    Assure(!childs.n_active);
     // no helper servers means nobody can advance our queued transactions
-    if (!childs.n_active && queue.size()) {
+    if (queue.size()) {
         debugs(80, DBG_CRITICAL, "ERROR: Dropping " << queue.size() << ' ' <<
                id_name << " helper requests due to lack of helper processes");
         // similar to HelperServerBase::dropQueued()
@@ -1543,10 +1542,15 @@ static void
 helperKickQueue(helper * hlp)
 {
     Helper::Xaction *r;
-    helper_server *srv;
 
-    while ((srv = GetFirstAvailable(hlp)) && (r = hlp->nextRequest()))
-        helperDispatch(srv, r);
+    if (auto *srv = GetFirstAvailable(hlp)) {
+        while (srv && (r = hlp->nextRequest())) {
+            helperDispatch(srv, r);
+            srv = GetFirstAvailable(hlp);
+        }
+    } else {
+        hlp->handleNoServers();
+    }
 }
 
 static void
