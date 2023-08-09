@@ -17,7 +17,7 @@
 #include "DelayIdComposite.h"
 #include "DelayPools.h"
 #include "ip/Address.h"
-#include "SquidString.h"
+#include "sbuf/SBuf.h"
 
 class StoreEntry;
 
@@ -50,7 +50,7 @@ public:
 #if USE_AUTH
         Auth::UserRequest::Pointer user;
 #endif
-        String tag;
+        SBuf tag;
     };
 
 protected:

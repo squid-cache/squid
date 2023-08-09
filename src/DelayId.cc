@@ -23,6 +23,7 @@
 #include "http/Stream.h"
 #include "HttpRequest.h"
 #include "SquidConfig.h"
+#include "sbuf/StringConvert.h"
 
 DelayId::DelayId () : pool_ (0), compositeId(nullptr), markedAsNoDelay(false)
 {}
@@ -107,7 +108,7 @@ DelayId::DelayClient(ClientHttpRequest * http, HttpReply *reply)
 #if USE_AUTH
             details.user = r->auth_user_request;
 #endif
-            details.tag = r->tag;
+            details.tag = StringToSBuf(r->tag);
             result.compositePosition(DelayPools::delay_data[pool].theComposite()->id(details));
             return result;
         }

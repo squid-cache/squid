@@ -20,6 +20,7 @@
 #include "DelayIdComposite.h"
 #include "DelaySpec.h"
 #include "splay.h"
+#include "sbuf/StringConvert.h"
 
 /// \ingroup DelayPoolsAPI
 class DelayTaggedBucket : public RefCountable
@@ -30,10 +31,10 @@ public:
     typedef RefCount<DelayTaggedBucket> Pointer;
 
     void stats(StoreEntry *)const;
-    DelayTaggedBucket(String &aTag);
+    DelayTaggedBucket(const SBuf &aTag);
     ~DelayTaggedBucket() override;
     DelayBucket theBucket;
-    String tag;
+    SBuf tag;
 };
 
 /// \ingroup DelayPoolsAPI
@@ -61,7 +62,7 @@ private:
         MEMPROXY_CLASS(DelayTagged::Id);
 
     public:
-        Id (RefCount<DelayTagged>, String &);
+        Id (RefCount<DelayTagged>, const SBuf &);
         ~Id() override;
         int bytesWanted (int min, int max) const override;
         void bytesIn(int qty) override;
