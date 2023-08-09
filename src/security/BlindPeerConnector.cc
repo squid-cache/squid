@@ -27,8 +27,7 @@ Security::BlindPeerConnector::peerContext()
     if (peer && peer->secure.encryptTransport)
         return peer->peerContext();
 
-    return tlsContext_ ? tlsContext_ :
-        MakeFuture(ProxyOutgoingConfig, ::Config.ssl_client.sslContext);
+    return tlsContext_ ? tlsContext_ : ::Config.ssl_client.defaultContext;
 }
 
 bool

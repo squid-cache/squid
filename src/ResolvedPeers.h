@@ -54,7 +54,7 @@ public:
 
     /// makes the previously extracted path available for extraction at its
     /// original position and resets TLS parameters to use for that path
-    void reinstatePath(const PeerConnectionPointer &, const Security::PeerContextPointer &tlsContext);
+    void reinstatePath(const PeerConnectionPointer &, const Security::PeerContextPointer &);
 
     /// extracts and returns the first queued address
     PeerConnectionPointer extractFront();
@@ -139,7 +139,7 @@ public:
     /// convenience conversion to Comm::ConnectionPointer
     operator const Comm::ConnectionPointer&() const { return connection_; }
 
-    /// custom TLS session options (or nil)
+    /// custom TLS communication settings (or nil)
     auto &tlsContext() { return tlsContext_; }
 
     /// upgrade stored peer selection details with a matching actual connection

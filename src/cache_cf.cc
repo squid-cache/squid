@@ -963,7 +963,6 @@ configDoConfigure(void)
     if (Security::ProxyOutgoingConfig.encryptTransport) {
         debugs(3, 2, "initializing https:// proxy context");
         Config.ssl_client.sslContext = Security::ProxyOutgoingConfig.createClientContext(false);
-        Config.ssl_client.defaultContext = MakeFuture(Security::ProxyOutgoingConfig, Config.ssl_client.sslContext);
         if (!Config.ssl_client.sslContext) {
 #if USE_OPENSSL
             fatal("ERROR: Could not initialize https:// proxy context");
@@ -974,6 +973,7 @@ configDoConfigure(void)
 #if USE_OPENSSL
         Ssl::useSquidUntrusted(Config.ssl_client.sslContext.get());
 #endif
+        Config.ssl_client.defaultContext = MakeFuture(Security::ProxyOutgoingConfig, Config.ssl_client.sslContext);
     }
 
     if (Config.ssl_client.retriesContexts)

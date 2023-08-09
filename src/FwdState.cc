@@ -503,17 +503,16 @@ FwdState::reactToZeroSizeObject()
 void
 FwdState::reactToSecureConnectFailure()
 {
-    // TODO: Replace .encryptTransport with std::optional<Security::PeerOptions>
     if (!Config.ssl_client.retriesContexts)
-        return; // admin did not allow ERR_SECURE_CONNECT_FAIL retries
+        return; // admin did not enable ERR_SECURE_CONNECT_FAIL retries
 
     if (!destinationReceipt) {
-        debugs(17, DBG_IMPORTANT, "ERROR: Squid BUG: destinationReceipt loss prevents ERR_SECURE_CONNECT_FAIL retries");
+        debugs(17, DBG_CRITICAL, "ERROR: Squid BUG: destinationReceipt loss prevents ERR_SECURE_CONNECT_FAIL retries");
         return;
     }
 
     if (destinationReceipt.tlsContext()) {
-        debugs(17, 3, "refusing to use the same destination thrice: " << destinationReceipt);
+        debugs(17, 3, "will not retry twice: " << destinationReceipt);
         return;
     }
 
@@ -524,11 +523,11 @@ FwdState::reactToSecureConnectFailure()
     ch.dst_addr = destinationReceipt->remote;
     const auto matchingContext = Config.ssl_client.retriesContexts->findContext(ch);
     if (!matchingContext) {
-        debugs(17, 3, "no matching TLS options: " << destinationReceipt);
+        debugs(17, 3, "no TLS options to retry with: " << destinationReceipt);
         return;
     }
 
-    debugs(17, 3, "will retry the same destination with different TLS options: " << destinationReceipt);
+    debugs(17, 3, "will retry the same destination with custom TLS options: " << destinationReceipt);
     destinations->reinstatePath(destinationReceipt, matchingContext);
     destinationReceipt = nullptr;
 }
@@ -1457,23 +1456,18 @@ FwdState::pinnedCanRetry() const
 
     // pconn race on pinned connection: Currently we do not have any mechanism
     // to retry current pinned connection path.
-    if (pconnRace == raceHappened) {
-        debugs(17, 5, "no: raceHappened"); // XXX: Remove out-of-scope debugging in this method
+    if (pconnRace == raceHappened)
         return false;
-    }
 
     // If a bumped connection was pinned, then the TLS client was given our peer
     // details. Do not retry because we do not ensure that those details stay
     // constant. Step1-bumped connections do not get our TLS peer details, are
     // never pinned, and, hence, never reach this method.
-    if (request->flags.sslBumped) {
-        debugs(17, 5, "no: flags.sslBumped");
+    if (request->flags.sslBumped)
         return false;
-    }
 
     // The other pinned cases are FTP proxying and connection-based HTTP
     // authentication. TODO: Do these cases have restrictions?
-    debugs(17, 5, "yes: default");
     return true;
 }
 

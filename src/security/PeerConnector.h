@@ -131,7 +131,7 @@ protected:
     /// \param error if not NULL the SSL negotiation was aborted with an error
     virtual void noteNegotiationDone(ErrorState *) {}
 
-    /// peer's security context (or nil)
+    /// peer's security context; never nil
     virtual FuturePeerContextPointer peerContext() = 0;
 
     /// mimics FwdState to minimize changes to FwdState::initiate/negotiateSsl
@@ -175,9 +175,6 @@ protected:
 private:
     PeerConnector(const PeerConnector &); // not implemented
     PeerConnector &operator =(const PeerConnector &); // not implemented
-
-    /// raw encryption context object (or nil)
-    ContextPointer getTlsContext();
 
 #if USE_OPENSSL
     unsigned int certDownloadNestingLevel() const;

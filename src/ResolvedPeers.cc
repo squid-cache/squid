@@ -28,12 +28,10 @@ ResolvedPeers::reinstatePath(const PeerConnectionPointer &path)
     const auto pos = path.position_;
     assert(pos < paths_.size());
 
-    // XXX: Undo out-of-scope refactoring in this method
-    auto &storedPath = paths_[pos];
-    assert(!storedPath.available);
-    storedPath.available = true;
+    assert(!paths_[pos].available);
+    paths_[pos].available = true;
     increaseAvailability();
-    // the other reinstatePath() method updates storedPath.tlsContext
+    // this reinstatePath() variation preserves paths_[pos].tlsContext
 
     // if we restored availability of a path that we used to skip, update
     const auto pathsToTheLeft = pos;

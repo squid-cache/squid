@@ -11,7 +11,6 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "base/AsyncCallbacks.h"
-#include "base/Assure.h"
 #include "base/IoManip.h"
 #include "CachePeer.h"
 #include "comm/Loops.h"
@@ -69,15 +68,6 @@ Security::PeerConnector::~PeerConnector() = default;
 bool Security::PeerConnector::doneAll() const
 {
     return (!callback || callback->canceled()) && AsyncJob::doneAll();
-}
-
-// XXX: Remove this diff reducer
-Security::ContextPointer
-Security::PeerConnector::getTlsContext()
-{
-    const auto context = peerContext();
-    Assure(context);
-    return context->raw;
 }
 
 /// Preps connection and SSL state. Calls negotiate().
@@ -664,7 +654,7 @@ Security::PeerConnector::certDownloadingDone(DownloaderAnswer &downloaderAnswer)
             downloadedCerts.reset(sk_X509_new_null());
         sk_X509_push(downloadedCerts.get(), cert);
 
-        ContextPointer ctx(getTlsContext());
+        const auto ctx = peerContext()->raw;
         const auto certsList = SSL_get_peer_cert_chain(&sconn);
         if (!Ssl::findIssuerCertificate(cert, certsList, ctx)) {
             if (const auto issuerUri = Ssl::findIssuerUri(cert)) {
@@ -729,7 +719,7 @@ Security::PeerConnector::computeMissingCertificateUrls(const Connection &sconn)
     }
     debugs(83, 5, "server certificates: " << sk_X509_num(certs));
 
-    const auto ctx = getTlsContext();
+    const auto ctx = peerContext()->raw;
     if (!Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, *certs, ctx))
         return false; // missingChainCertificatesUrls() reports the exact reason
 

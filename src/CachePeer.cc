@@ -62,7 +62,9 @@ CachePeer::~CachePeer()
 Security::FuturePeerContextPointer
 CachePeer::peerContext()
 {
-    return new Security::FuturePeerContext(secure, sslContext);
+    if (secure.encryptTransport)
+        return new Security::FuturePeerContext(secure, sslContext);
+    return nullptr;
 }
 
 void
