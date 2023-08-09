@@ -894,7 +894,7 @@ helper::handleFewerServers(const bool madeProgress)
 void
 helper::handleNoServers()
 {
-    Assure(!childs.n_active);
+    Assure(!GetFirstAvailable(this));
     // no helper servers means nobody can advance our queued transactions
     if (queue.size()) {
         debugs(80, DBG_CRITICAL, "ERROR: Dropping " << queue.size() << ' ' <<
