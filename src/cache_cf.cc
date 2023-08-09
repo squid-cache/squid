@@ -2520,6 +2520,18 @@ parse_peer_access(void)
     aclParseAccessLine(directive.c_str(), LegacyParser, &p.access);
 }
 
+// XXX: Convert to new namespace-based Configuration API. See KeyLog.
+void
+parse_securePeerRetries(Security::PeerContext ** const contextStorage)
+{
+    assert(contextStorage);
+    auto &context = *contextStorage;
+    Assure(!context); // XXX: Until we support multiple directives
+    context = new Security::PeerContext(LegacyParser);
+    static Security::PeerContextPointer refcountingProtectionXXX;
+    refcountingProtectionXXX = context;
+}
+
 static void
 parse_hostdomaintype(void)
 {

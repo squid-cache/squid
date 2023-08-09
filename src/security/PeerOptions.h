@@ -151,13 +151,17 @@ public:
 class PeerContext: public RefCountable
 {
 public:
-    // TODO PeerContext(...);
+    explicit PeerContext(ConfigParser &);
+    ~PeerContext() override;
 
     /// XXX: Document.
     void open();
 
     PeerOptions options; ///< context configuration
     ContextPointer raw; ///< context configured using options
+
+    /// restrict usage to matching transactions
+    ACLList *preconditions; // XXX: Use std::unique_ptr<>
 };
 
 // XXX: Remove this shim after upgrading legacy code to store PeerContext

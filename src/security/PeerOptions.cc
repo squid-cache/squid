@@ -7,7 +7,9 @@
  */
 
 #include "squid.h"
+#include "acl/Tree.h"
 #include "base/Packable.h"
+#include "base/PackableStream.h"
 #include "debug/Stream.h"
 #include "fatal.h"
 #include "globals.h"
@@ -812,6 +814,22 @@ parse_securePeerOptions(Security::PeerOptions *opt)
 
 /* Security::PeerContext */
 
+Security::PeerContext::PeerContext(ConfigParser &parser)
+{
+    while (!(preconditions = parser.optionalAclList())) {
+        if (const auto token = parser.NextToken())
+            options.parse(token);
+        else
+            break; // no options and no ACLs
+    }
+    options.parseOptions();
+}
+
+Security::PeerContext::~PeerContext()
+{
+    delete preconditions; // TODO: use std::unique_ptr<> instead
+}
+
 void
 Security::PeerContext::open()
 {
@@ -832,19 +850,6 @@ Security::PeerContext::open()
 }
 
 void
-parse_securePeerRetries(Security::PeerContext ** const contextStorage)
-{
-    assert(contextStorage);
-    auto &context = *contextStorage;
-    if (!context) {
-        context = new Security::PeerContext();
-        static Security::PeerContextPointer refcountingProtectionXXX;
-        refcountingProtectionXXX = context;
-    }
-    parse_securePeerOptions(&context->options);
-}
-
-void
 free_securePeerRetries(Security::PeerContext ** const contextStorage)
 {
     assert(contextStorage);
@@ -856,10 +861,14 @@ free_securePeerRetries(Security::PeerContext ** const contextStorage)
 void
 dump_securePeerRetries(StoreEntry *e, const char *directiveName, const Security::PeerContext *context)
 {
-    e->appendf("%s", directiveName);
+    PackableStream os(*e);
+    os << directiveName;
     context->options.dumpCfg(e, "");
-    // XXX: Dump ACLs.
-    e->append("\n", 1);
+    if (context->preconditions) {
+        // TODO: Use Acl::dump() after fixing the XXX in dump_acl_list().
+        for (const auto &acl: context->preconditions->treeDump("if", &Acl::AllowOrDeny))
+            os << ' ' << acl;
+    }
 }
 
 /* Security::FuturePeerContext */

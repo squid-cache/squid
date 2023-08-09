@@ -517,10 +517,20 @@ FwdState::reactToSecureConnectFailure()
         return;
     }
 
-    // XXX: Check ACLs!
-    // XXX: Apply new options!
+    // TODO: This will be moved inside Config.ssl_client.retriesContexts.
+    if (const auto acls = Config.ssl_client.retriesContext->preconditions) {
+        ACLFilledChecklist ch(acls, request, nullptr);
+        ch.al = al;
+        ch.syncAle(request, nullptr);
+        ch.dst_peer_name = destinationReceipt->getPeer() ? destinationReceipt->getPeer()->name : nullptr;
+        ch.dst_addr = destinationReceipt->remote;
+        if (!ch.fastCheck().allowed()) {
+            debugs(17, 3, "no matching TLS options: " << destinationReceipt);
+            return;
+        }
+    }
 
-    debugs(17, 3, "will retry the same destination: " << destinationReceipt);
+    debugs(17, 3, "will retry the same destination with different TLS options: " << destinationReceipt);
     destinations->reinstatePath(destinationReceipt, Config.ssl_client.retriesContext);
     destinationReceipt = nullptr;
 }

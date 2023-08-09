@@ -3084,7 +3084,7 @@ LOC: Config.ssl_client.retriesContext
 DOC_START
 	XXX: Document.
 
-	    tls_outgoing_options_for_retries [option]... [if [!]acl...]
+	    tls_outgoing_options_for_retries [option]... [if [!]<acl>...]
 
 	See tls_outgoing_options for options documentation.
 DOC_END
