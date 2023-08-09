@@ -140,7 +140,7 @@ public:
     operator const Comm::ConnectionPointer&() const { return connection_; }
 
     /// custom TLS communication settings (or nil)
-    auto &tlsContext() { return tlsContext_; }
+    auto &tlsContext() const { return tlsContext_; }
 
     /// upgrade stored peer selection details with a matching actual connection
     void finalize(const Comm::ConnectionPointer &conn) { connection_ = conn; }

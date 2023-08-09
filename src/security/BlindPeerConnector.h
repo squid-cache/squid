@@ -40,7 +40,7 @@ public:
     /// \returns true on successful initialization
     bool initialize(Security::SessionPointer &) override;
 
-    FuturePeerContextPointer peerContext() override;
+    FuturePeerContextPointer peerContext() const override;
 
     /// On success, stores the used TLS session for later use.
     /// On error, informs the peer.

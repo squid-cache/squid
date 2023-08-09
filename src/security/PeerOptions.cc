@@ -867,7 +867,7 @@ Security::PeerContexts::parseOneDirective(ConfigParser &parser)
 void
 Security::PeerContexts::open()
 {
-    for (auto &context: contexts)
+    for (const auto &context: contexts)
         context->open();
 }
 
@@ -910,14 +910,14 @@ dump_securePeerRetries(StoreEntry *e, const char *directiveName, const Security:
 
 /* Security::FuturePeerContext */
 
-Security::FuturePeerContext::FuturePeerContext(PeerOptions &o, ContextPointer &c):
+Security::FuturePeerContext::FuturePeerContext(PeerOptions &o, const ContextPointer &c):
     options(o),
     raw(c)
 {
 }
 
 Security::FuturePeerContextPointer
-MakeFuture(Security::PeerContextPointer &ctx)
+MakeFuture(const Security::PeerContextPointer &ctx)
 {
     if (!ctx)
         return nullptr;
@@ -925,7 +925,7 @@ MakeFuture(Security::PeerContextPointer &ctx)
 }
 
 Security::FuturePeerContextPointer
-MakeFuture(Security::PeerOptions &options, Security::ContextPointer &rawContext)
+MakeFuture(Security::PeerOptions &options, const Security::ContextPointer &rawContext)
 {
     return new Security::FuturePeerContext(options, rawContext);
 }

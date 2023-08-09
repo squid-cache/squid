@@ -145,7 +145,7 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
 {
     Must(Comm::IsConnOpen(serverConnection()));
 
-    auto ctx = peerContext();
+    const auto ctx = peerContext();
     debugs(83, 5, serverConnection() << ", ctx=" << ctx);
 
     if (!ctx || !Security::CreateClientSession(ctx, serverConnection(), "server https start")) {

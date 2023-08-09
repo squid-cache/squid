@@ -54,7 +54,7 @@ public:
     /* Security::PeerConnector API */
     bool initialize(Security::SessionPointer &) override;
     void noteNegotiationDone(ErrorState *error) override;
-    Security::FuturePeerContextPointer peerContext() override {
+    Security::FuturePeerContextPointer peerContext() const override {
         // XXX: We should be able to keep the options part constant.
         auto &cfg = const_cast<Adaptation::ServiceConfig&>(icapService->cfg());
         return MakeFuture(cfg.secure, icapService->sslContext);

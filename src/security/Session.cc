@@ -180,7 +180,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
 }
 
 bool
-Security::CreateClientSession(FuturePeerContextPointer &ctx, const Comm::ConnectionPointer &c, const char *squidCtx)
+Security::CreateClientSession(const FuturePeerContextPointer &ctx, const Comm::ConnectionPointer &c, const char *squidCtx)
 {
     Assure(ctx); // this should be a reference then
     return CreateSession(ctx->raw, c, ctx->options, Security::Io::BIO_TO_SERVER, squidCtx);

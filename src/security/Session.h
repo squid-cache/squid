@@ -38,7 +38,7 @@ using FuturePeerContextPointer = RefCount<FuturePeerContext>;
 
 /// Creates TLS Client connection structure (aka 'session' state) and initializes TLS/SSL I/O (Comm and BIO).
 /// On errors, emits DBG_IMPORTANT with details and returns false.
-bool CreateClientSession(FuturePeerContextPointer &, const Comm::ConnectionPointer &, const char *squidCtx);
+bool CreateClientSession(const FuturePeerContextPointer &, const Comm::ConnectionPointer &, const char *squidCtx);
 
 class PeerOptions;
 

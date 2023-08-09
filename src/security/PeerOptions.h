@@ -197,9 +197,9 @@ public:
 class FuturePeerContext: public RefCountable
 {
 public:
-    FuturePeerContext(PeerOptions &, ContextPointer &);
+    FuturePeerContext(PeerOptions &, const ContextPointer &);
     PeerOptions &options; ///< context configuration
-    ContextPointer &raw; ///< context configured using options
+    const ContextPointer &raw; ///< context configured using options
 };
 
 /// configuration options for DIRECT server access
@@ -216,9 +216,9 @@ void free_securePeerRetries(Security::PeerContexts **);
 void dump_securePeerRetries(StoreEntry *, const char *, const Security::PeerContexts *);
 
 // for modern code forced to use this shim
-Security::FuturePeerContextPointer MakeFuture(Security::PeerContextPointer &);
+Security::FuturePeerContextPointer MakeFuture(const Security::PeerContextPointer &);
 // for legacy code that will be refactored/removed together with this shim
-Security::FuturePeerContextPointer MakeFuture(Security::PeerOptions &, Security::ContextPointer &);
+Security::FuturePeerContextPointer MakeFuture(Security::PeerOptions &, const Security::ContextPointer &);
 
 #endif /* SQUID_SRC_SECURITY_PEEROPTIONS_H */
 

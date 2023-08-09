@@ -132,7 +132,7 @@ protected:
     virtual void noteNegotiationDone(ErrorState *) {}
 
     /// peer's security context; never nil
-    virtual FuturePeerContextPointer peerContext() = 0;
+    virtual FuturePeerContextPointer peerContext() const = 0;
 
     /// mimics FwdState to minimize changes to FwdState::initiate/negotiateSsl
     Comm::ConnectionPointer const &serverConnection() const { return serverConn; }

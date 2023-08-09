@@ -144,7 +144,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceGuess() const
 }
 
 Security::FuturePeerContextPointer
-Ssl::PeekingPeerConnector::peerContext()
+Ssl::PeekingPeerConnector::peerContext() const
 {
     if (tlsContext_)
         return tlsContext_;
