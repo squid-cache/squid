@@ -12,6 +12,7 @@
 #include "base/RefCount.h"
 #include "HttpRequest.h"
 #include "SquidString.h"
+#include "sbuf/SBuf.h"
 #include "ssl/support.h"
 
 #include <map>
@@ -26,9 +27,9 @@ class ErrorDetailEntry
 {
 public:
     Security::ErrorCode error_no = 0; ///< TLS error; \see Security::ErrorCode
-    String name; ///< a name for the error
-    String detail; ///< for error page %D macro expansion; may contain macros
-    String descr;  ///< short error description (for use in debug messages or error pages)
+    SBuf name; ///< a name for the error
+    SBuf detail; ///< for error page %D macro expansion; may contain macros
+    SBuf descr;  ///< short error description (for use in debug messages or error pages)
 };
 
 /**

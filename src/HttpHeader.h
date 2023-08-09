@@ -198,6 +198,7 @@ private:
 };
 
 int httpHeaderParseQuotedString(const char *start, const int len, String *val);
+int httpHeaderParseQuotedString(const char *start, const int len, SBuf &val);
 
 /// quotes string using RFC 7230 quoted-string rules
 SBuf httpHeaderQuoteString(const char *raw);

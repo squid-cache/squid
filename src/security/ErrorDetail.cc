@@ -534,7 +534,7 @@ Security::ErrorDetail::verbose(const HttpRequestPointer &request) const
     char const *format = nullptr;
 #if USE_OPENSSL
     if (Ssl::ErrorDetailsManager::GetInstance().getErrorDetail(error_no, request, detailEntry))
-        format = detailEntry.detail.termedBuf();
+        format = detailEntry.detail.c_str();
 #else
     (void)request;
 #endif
@@ -662,7 +662,7 @@ Security::ErrorDetail::err_code() const
 {
 #if USE_OPENSSL
     // try detailEntry first because it is faster
-    if (const char *err = detailEntry.name.termedBuf())
+    if (const char *err = detailEntry.name.c_str())
         return err;
 #endif
 

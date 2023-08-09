@@ -27,6 +27,7 @@
 #include "HttpHeaderTools.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "StrList.h"
@@ -231,6 +232,19 @@ httpHeaderParseQuotedString(const char *start, const int len, String *val)
     if (!val->termedBuf())
         val->assign("", 0);
     return 1;
+}
+
+/**
+ * Temporary bridge for the String-based variant to support conversion
+ * from SquidString to SBuf
+ * TODO: make this the primary implementation
+ */
+int httpHeaderParseQuotedString(const char *start, const int len, SBuf &val)
+{
+    String s;
+    auto rv = httpHeaderParseQuotedString(start, len, &s);
+    val = StringToSBuf(s);
+    return rv;
 }
 
 SBuf

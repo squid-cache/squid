@@ -13,6 +13,7 @@
 #include "errorpage.h"
 #include "http/ContentLengthInterpreter.h"
 #include "mime_header.h"
+#include "sbuf/StringConvert.h"
 
 void Ssl::errorDetailInitialize()
 {
@@ -61,7 +62,8 @@ Ssl::ErrorDetailsList::getErrorDescr(Security::ErrorCode value)
 {
     const ErrorDetails::const_iterator it = theList.find(value);
     if (it != theList.end()) {
-        return it->second.descr.termedBuf();
+        SBuf rv(it->second.descr);
+        return rv.c_str();
     }
 
     return nullptr;
@@ -72,7 +74,8 @@ Ssl::ErrorDetailsList::getErrorDetail(Security::ErrorCode value)
 {
     const ErrorDetails::const_iterator it = theList.find(value);
     if (it != theList.end()) {
-        return it->second.detail.termedBuf();
+        SBuf rv(it->second.detail);
+        return rv.c_str();
     }
 
     return nullptr;
@@ -233,11 +236,11 @@ Ssl::ErrorDetailFile::parse()
 
                 ErrorDetailEntry &entry = theDetails->theList[ssl_error];
                 entry.error_no = ssl_error;
-                entry.name = errorName;
+                entry.name = StringToSBuf(errorName);
                 String tmp = parser.getByName("detail");
-                const int detailsParseOk = httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), &entry.detail);
+                const int detailsParseOk = httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), entry.detail);
                 tmp = parser.getByName("descr");
-                const int descrParseOk = httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), &entry.descr);
+                const int descrParseOk = httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), entry.descr);
                 // TODO: Validate "descr" and "detail" field values.
 
                 if (!detailsParseOk || !descrParseOk) {
