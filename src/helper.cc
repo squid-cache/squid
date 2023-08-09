@@ -1557,11 +1557,14 @@ static void
 helperStatefulKickQueue(statefulhelper * hlp)
 {
     Helper::Xaction *r;
-    helper_stateful_server *srv;
-    while ((srv = StatefulGetFirstAvailable(hlp)) && (r = hlp->nextRequest())) {
-        debugs(84, 5, "found srv-" << srv->index);
-        hlp->reserveServer(srv);
-        helperStatefulDispatch(srv, r);
+
+    if (auto *srv = StatefulGetFirstAvailable(hlp)) {
+        while (srv && (r = hlp->nextRequest())) {
+            helperStatefulDispatch(srv, r);
+            srv = StatefulGetFirstAvailable(hlp);
+        }
+    } else {
+        hlp->handleNoServers();
     }
 }
 
