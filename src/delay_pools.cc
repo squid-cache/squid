@@ -544,7 +544,7 @@ DelayPools::Stats(StoreEntry * sentry)
 
     for (unsigned short i = 0; i < DelayPools::pools(); ++i) {
         if (DelayPools::delay_data[i].theComposite().getRaw()) {
-            storeAppendPrintf(sentry, "Pool: %d\n\tClass: " SQUIDSBUFPH "\n\n", i + 1, SQUIDSBUFPRINT(DelayPools::delay_data[i].pool->theClassTypeLabel()));
+            storeAppendPrintf(sentry, "Pool: %d\n\tClass: " SQUIDSBUFPH "\n\n", i + 1, SQUIDSBUFPRINT(DelayPools::delay_data[i].pool->classTypeLabel()));
             DelayPools::delay_data[i].theComposite()->stats (sentry);
         } else
             storeAppendPrintf(sentry, "\tMisconfigured pool.\n\n");
