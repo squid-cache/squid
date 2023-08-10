@@ -14,7 +14,7 @@ man_MANS = negotiate_sspi_auth.8
 negotiate_sspi_auth_SOURCES = \
 	negotiate_sspi_auth.cc
 negotiate_sspi_auth_LDADD = \
-	$(top_builddir)/lib/libsspwin32.la \
+	$(top_builddir)/lib/sspi/libsspwin32.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	-ladvapi32 \

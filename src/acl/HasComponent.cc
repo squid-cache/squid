@@ -11,9 +11,9 @@
 #include "acl/HasComponentData.h"
 
 int
-ACLHasComponentStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+Acl::HasComponentCheck::match(ACLChecklist * const checklist)
 {
-    ACLHasComponentData *cdata = dynamic_cast<ACLHasComponentData*>(data);
+    const auto cdata = dynamic_cast<ACLHasComponentData*>(data.get());
     assert(cdata);
     return cdata->match(checklist);
 }

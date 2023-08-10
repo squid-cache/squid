@@ -20,3 +20,9 @@ TestBoilerplate::testDemonstration()
     CPPUNIT_ASSERT_EQUAL(0, 0);
 }
 
+int
+main(int argc, char *argv[])
+{
+    return TestProgram().run(argc, argv);
+}
+

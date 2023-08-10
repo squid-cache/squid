@@ -46,9 +46,47 @@ Http::StatusLine::reason() const
     return reason_ ? reason_ : Http::StatusCodeString(status());
 }
 
+size_t
+Http::StatusLine::packedLength() const
+{
+    // Keep in sync with packInto(). TODO: Refactor to avoid code duplication.
+
+    auto packedStatus = status();
+    auto packedReason = reason();
+
+    if (packedStatus == scNone) {
+        packedStatus = scInternalServerError;
+        packedReason = StatusCodeString(packedStatus);
+    }
+
+    // "ICY %3d %s\r\n"
+    if (version.protocol == AnyP::PROTO_ICY) {
+        return
+            + 3 // ICY
+            + 1 // SP
+            + 3 // %3d (packedStatus)
+            + 1 // SP
+            + strlen(packedReason) // %s
+            + 2; // CRLF
+    }
+
+    // "HTTP/%d.%d %3d %s\r\n"
+    return
+        + 4 // HTTP
+        + 1 // "/"
+        + 3 // %d.%d (version.major and version.minor)
+        + 1 // SP
+        + 3 // %3d (packedStatus)
+        + 1 // SP
+        + strlen(packedReason) // %s
+        + 2; // CRLF
+}
+
 void
 Http::StatusLine::packInto(Packable * p) const
 {
+    // Keep in sync with packedLength().
+
     assert(p);
 
     auto packedStatus = status();

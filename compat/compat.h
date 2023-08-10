@@ -68,6 +68,7 @@
 #include "compat/os/hpux.h"
 #include "compat/os/linux.h"
 #include "compat/os/macosx.h"
+#include "compat/os/mingw.h"
 #include "compat/os/mswindows.h"
 #include "compat/os/netbsd.h"
 #include "compat/os/openbsd.h"
@@ -84,10 +85,6 @@
 
 #include "compat/assert.h"
 #include "compat/compat_shared.h"
-#include "compat/getaddrinfo.h"
-#include "compat/getnameinfo.h"
-#include "compat/inet_ntop.h"
-#include "compat/inet_pton.h"
 #include "compat/stdvarargs.h"
 
 /* cstdio has a bunch of problems with 64-bit definitions */

@@ -46,6 +46,27 @@ public:
     /// maximum desired entry caching duration (a.k.a. TTL), in seconds
     using Ttl = int;
 
+    /// the keeper of cache entry Key, Value, and caching-related entry metadata
+    class Entry
+    {
+    public:
+        Entry(const Key &, const Value &, const Ttl);
+
+        /// whether the entry is stale
+        bool expired() const { return expires < squid_curtime; }
+
+    public:
+        Key key; ///< the entry search key; see ClpMap::get()
+        Value value; ///< cached value provided by the map user
+        time_t expires = 0; ///< get() stops returning the entry after this time
+        uint64_t memCounted = 0; ///< memory accounted for this entry in our ClpMap
+    };
+
+    /// Entries in LRU order
+    using Entries = std::list<Entry, PoolingAllocator<Entry> >;
+    using EntriesIterator = typename Entries::iterator;
+    using ConstEntriesIterator = typename Entries::const_iterator;
+
     explicit ClpMap(const uint64_t capacity) { setMemLimit(capacity); }
     ClpMap(uint64_t capacity, Ttl defaultTtl);
     ~ClpMap() = default;
@@ -87,27 +108,16 @@ public:
     /// The number of currently stored entries, including expired ones
     size_t entries() const { return entries_.size(); }
 
+    /// Read-only traversal of all cached entries in LRU order, least recently
+    /// used entry first. Stored expired entries (if any) are included. Any map
+    /// modification may invalidate these iterators and their derivatives.
+    ConstEntriesIterator cbegin() const { return entries_.cbegin(); }
+    ConstEntriesIterator cend() const { return entries_.cend(); }
+    /// range-based `for` loop support; \sa cbegin()
+    ConstEntriesIterator begin() const { return cbegin(); }
+    ConstEntriesIterator end() const { return cend(); }
+
 private:
-    /// the keeper of cache entry Key, Value, and caching-related entry metadata
-    class Entry
-    {
-    public:
-        Entry(const Key &, const Value &, const Ttl);
-
-        /// whether the entry is stale
-        bool expired() const { return expires < squid_curtime; }
-
-    public:
-        Key key; ///< the entry search key; see ClpMap::get()
-        Value value; ///< cached value provided by the map user
-        time_t expires = 0; ///< get() stops returning the entry after this time
-        uint64_t memCounted = 0; ///< memory accounted for this entry in our ClpMap
-    };
-
-    /// Entries in LRU order
-    using Entries = std::list<Entry, PoolingAllocator<Entry> >;
-    using EntriesIterator = typename Entries::iterator;
-
     using IndexItem = std::pair<const Key, EntriesIterator>;
     /// key:entry_position mapping for fast entry lookups by key
     using Index = std::unordered_map<Key, EntriesIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<IndexItem> >;

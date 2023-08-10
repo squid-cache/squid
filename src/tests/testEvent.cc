@@ -28,9 +28,6 @@ class TestEvent : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testCancel);
     CPPUNIT_TEST_SUITE_END();
 
-public:
-    void setUp() override;
-
 protected:
     void testCreate();
     void testDump();
@@ -41,14 +38,6 @@ protected:
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TestEvent );
-
-/* init legacy static-initialized modules */
-
-void
-TestEvent::setUp()
-{
-    Mem::Init();
-}
 
 /*
  * Test creating a Scheduler
@@ -178,5 +167,19 @@ TestEvent::testSingleton()
 {
     EventScheduler *scheduler = dynamic_cast<EventScheduler *>(EventScheduler::GetInstance());
     CPPUNIT_ASSERT(nullptr != scheduler);
+}
+
+/// customizes our test setup
+class MyTestProgram: public TestProgram
+{
+public:
+    /* TestProgram API */
+    void startup() override { Mem::Init(); }
+};
+
+int
+main(int argc, char *argv[])
+{
+    return MyTestProgram().run(argc, argv);
 }
 
