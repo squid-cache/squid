@@ -3078,7 +3078,8 @@ DOC_END
 
 NAME: tls_outgoing_options_for_retries
 IFDEF: USE_GNUTLS||USE_OPENSSL
-TYPE: securePeerRetries
+TYPE: Security::PeerContexts*
+REPETITIONS: update
 DEFAULT: none
 LOC: Config.ssl_client.retriesContexts
 DOC_START

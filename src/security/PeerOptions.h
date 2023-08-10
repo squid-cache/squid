@@ -212,9 +212,6 @@ extern PeerOptions ProxyOutgoingConfig;
 void parse_securePeerOptions(Security::PeerOptions *);
 #define free_securePeerOptions(x) Security::ProxyOutgoingConfig.clear()
 #define dump_securePeerOptions(e,n,x) do { (e)->appendf(n); (x).dumpCfg((e),""); (e)->append("\n",1); } while(false)
-void parse_securePeerRetries(Security::PeerContexts **);
-void free_securePeerRetries(Security::PeerContexts **);
-void dump_securePeerRetries(StoreEntry *, const char *, const Security::PeerContexts *);
 
 // for modern code forced to use this shim
 Security::FuturePeerContextPointer MakeFuture(const Security::PeerContextPointer &);

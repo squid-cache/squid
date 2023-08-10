@@ -11,6 +11,7 @@
 #include "acl/Tree.h"
 #include "base/Packable.h"
 #include "base/PackableStream.h"
+#include "ConfigOption.h"
 #include "debug/Stream.h"
 #include "fatal.h"
 #include "globals.h"
@@ -882,22 +883,32 @@ Security::PeerContexts::findContext(ACLChecklist &checklist) const
     return nullptr;
 }
 
-void
-free_securePeerRetries(Security::PeerContexts ** const contextStorage)
+// this namespace opening is a GCC v6 workaround documented in KeyLog.cc
+namespace Configuration {
+
+template <>
+Security::PeerContexts *
+Configuration::Component<Security::PeerContexts*>::Create()
 {
-    assert(contextStorage);
-    auto &context = *contextStorage;
-    delete context;
-    context = nullptr;
+    return new Security::PeerContexts();
 }
 
+template <>
 void
-dump_securePeerRetries(StoreEntry *e, const char *directiveName, const Security::PeerContexts *contexts)
+Configuration::Component<Security::PeerContexts*>::ParseAndUpdate(Security::PeerContexts * &contexts, ConfigParser &parser)
 {
-    PackableStream os(*e);
+    Assure(contexts);
+    contexts->parseOneDirective(parser);
+}
+
+template <>
+void
+Configuration::Component<Security::PeerContexts*>::PrintDirectives(std::ostream &os, Security::PeerContexts * const & contexts, const char * const directiveName)
+{
+    Assure(contexts);
     for (const auto &context: contexts->contexts) {
         os << directiveName;
-        context->options.dumpCfg(e, "");
+        // XXX refactor: context->options.dumpCfg(os, "");
         if (context->preconditions) {
             // TODO: Use Acl::dump() after fixing the XXX in dump_acl_list().
             for (const auto &acl: context->preconditions->treeDump("if", &Acl::AllowOrDeny))
@@ -908,6 +919,15 @@ dump_securePeerRetries(StoreEntry *e, const char *directiveName, const Security:
         }
     }
 }
+
+template <>
+void
+Configuration::Component<Security::PeerContexts*>::Free(Security::PeerContexts * const contexts)
+{
+    delete contexts;
+}
+
+} // namespace Configuration
 
 /* Security::FuturePeerContext */
 
