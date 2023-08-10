@@ -180,10 +180,14 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
 }
 
 bool
-Security::CreateClientSession(const FuturePeerContextPointer &ctx, const Comm::ConnectionPointer &c, const char *squidCtx)
+Security::CreateClientSession(FuturePeerContext &ctx, const Comm::ConnectionPointer &c, const char *squidCtx)
 {
-    Assure(ctx); // this should be a reference then
-    return CreateSession(ctx->raw, c, ctx->options, Security::Io::BIO_TO_SERVER, squidCtx);
+    // TODO: We cannot make ctx constant because CreateSession() takes
+    // non-constant ctx.options (PeerOptions). It does that because GnuTLS
+    // needs to call PeerOptions::updateSessionOptions(), which is not constant
+    // because it compiles options (just in case) every time. To achieve
+    // const-correctness, we should compile PeerOptions once, not every time.
+    return CreateSession(ctx.raw, c, ctx.options, Security::Io::BIO_TO_SERVER, squidCtx);
 }
 
 bool

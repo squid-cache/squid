@@ -198,8 +198,8 @@ class FuturePeerContext: public RefCountable
 {
 public:
     FuturePeerContext(PeerOptions &, const ContextPointer &);
-    PeerOptions &options; ///< context configuration
-    const ContextPointer &raw; ///< context configured using options
+    PeerOptions &options; ///< TLS context configuration
+    const ContextPointer &raw; ///< TLS context configured using options
 };
 
 /// configuration options for DIRECT server access

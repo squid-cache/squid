@@ -148,7 +148,7 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
     const auto ctx = peerContext();
     debugs(83, 5, serverConnection() << ", ctx=" << ctx);
 
-    if (!ctx || !Security::CreateClientSession(ctx, serverConnection(), "server https start")) {
+    if (!ctx || !Security::CreateClientSession(*ctx, serverConnection(), "server https start")) {
         const auto xerrno = errno;
         if (!ctx) {
             debugs(83, DBG_IMPORTANT, "ERROR: initializing TLS connection: No security context.");
