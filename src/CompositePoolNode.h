@@ -44,13 +44,15 @@ public:
     {
 
     public:
-        CompositeSelectionDetails() {}
+        CompositeSelectionDetails(const Ip::Address& aSrcAddr, const SBuf &aTag) :
+            src_addr(aSrcAddr), tag(aTag)
+            {}
 
         Ip::Address src_addr;
 #if USE_AUTH
         Auth::UserRequest::Pointer user;
 #endif
-        SBuf tag;
+        const SBuf tag;
     };
 
 protected:
