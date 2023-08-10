@@ -1683,7 +1683,7 @@ AC_MSG_NOTICE([Forw/Via database enabled: $enable_forw_via_db])
 
 AC_ARG_ENABLE(cache-digests,
   AS_HELP_STRING([--enable-cache-digests],
-   [Use Cache Digests. See http://wiki.squid-cache.org/SquidFaq/CacheDigests]),[
+   [Use Cache Digests. See https://wiki.squid-cache.org/SquidFaq/CacheDigests]),[
   SQUID_YESNO([$enableval],[--enable-cache-digests])
 ])
 SQUID_DEFINE_BOOL(USE_CACHE_DIGESTS,${enable_cache_digests:=no},

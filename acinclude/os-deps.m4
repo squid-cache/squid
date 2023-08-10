@@ -251,7 +251,7 @@ AS_IF([ test `expr $squid_filedescriptors_num % 64` != 0 ],[
 AS_IF([ test "$squid_filedescriptors_num" -lt 512 ],[
   AC_MSG_WARN([$squid_filedescriptors_num may not be enough filedescriptors if your])
   AC_MSG_WARN([cache will be very busy.  Please see the FAQ page])
-  AC_MSG_WARN([http://wiki.squid-cache.org/SquidFaq/TroubleShooting])
+  AC_MSG_WARN([https://wiki.squid-cache.org/SquidFaq/TroubleShooting])
   AC_MSG_WARN([on how to increase your filedescriptor limit])
 ])
 AC_DEFINE_UNQUOTED(SQUID_MAXFD,$squid_filedescriptors_num,[Maximum number of open filedescriptors])
