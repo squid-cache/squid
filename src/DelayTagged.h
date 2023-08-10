@@ -30,11 +30,11 @@ class DelayTaggedBucket : public RefCountable
 public:
     typedef RefCount<DelayTaggedBucket> Pointer;
 
-    void stats(StoreEntry *)const;
+    void stats(StoreEntry *) const;
     DelayTaggedBucket(const SBuf &aTag);
     ~DelayTaggedBucket() override;
     DelayBucket theBucket;
-    SBuf tag;
+    const SBuf tag;
 };
 
 /// \ingroup DelayPoolsAPI
