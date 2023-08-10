@@ -688,9 +688,7 @@ gen_dump(const EntryList &head, std::ostream &fout)
          "static void" << std::endl <<
          "dump_config(StoreEntry *entry)" << std::endl <<
          "{" << std::endl <<
-         "    debugs(5, 4, MYNAME);" << std::endl <<
-         "    assert(entry);" << std::endl <<
-         "    PackableStream osCfg(*entry);" << std::endl;
+         "    debugs(5, 4, MYNAME);" << std::endl;
 
     for (const auto &e : head) {
 
@@ -705,7 +703,7 @@ gen_dump(const EntryList &head, std::ostream &fout)
 
         if (e.type.find("::") != std::string::npos) {
             const auto method = e.mayBeSeenMultipleTimes ? "DumpUpdatingDirective" : "DumpUniqueDirective";
-            fout << "    " << method << "<" << e.type << ">(" << e.loc << ", osCfg, \"" << e.name << "\");\n";
+            fout << "    " << method << "<" << e.type << ">(" << e.loc << ", entry, \"" << e.name << "\");\n";
         } else
             fout << "    dump_" << e.type << "(entry, \"" << e.name << "\", " << e.loc << ");" << std::endl;
 

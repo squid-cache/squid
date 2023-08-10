@@ -694,30 +694,31 @@ ParseUpdatingDirective(T &raw, ConfigParser &parser)
 /// \param name the name of the configuration directive being dumped
 template <typename T>
 static void
-DumpUniqueDirective(const T &raw, std::ostream &osLine, const char * const directiveName)
+DumpUniqueDirective(const T &raw, StoreEntry * const entry, const char * const name)
 {
     if (!SawDirective(raw))
         return; // not configured
 
-    osLine << directiveName;
+    entry->append(name, strlen(name));
     SBufStream os;
     Configuration::Component<T>::Print(os, raw);
     const auto buf = os.buf();
-    if (buf.length())
-        osLine << ' ' << buf;
-    osLine << '\n';
+    if (buf.length()) {
+        entry->append(" ", 1);
+        entry->append(buf.rawContent(), buf.length());
+    }
+    entry->append("\n", 1);
 }
 
-/// reports raw SquidConfig data member configuration using squid.conf syntax
-/// \param name the name of the configuration directive being dumped
+/// Like DumpUniqueDirective() but supports multiple same-name directive occurrences.
 template <typename T>
 static void
-DumpUpdatingDirective(const T &raw, std::ostream &os, const char * const directiveName)
+DumpUpdatingDirective(const T &raw, StoreEntry * const entry, const char * const directiveName)
 {
     if (!SawDirective(raw))
         return; // not configured
 
-    Configuration::Component<T>::PrintDirectives(os, raw, directiveName);
+    Configuration::Component<T>::PrintDirectives(entry, raw, directiveName);
 }
 
 /// frees any resources associated with the given raw SquidConfig data member

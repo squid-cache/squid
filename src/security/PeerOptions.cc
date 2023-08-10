@@ -903,12 +903,15 @@ Configuration::Component<Security::PeerContexts*>::ParseAndUpdate(Security::Peer
 
 template <>
 void
-Configuration::Component<Security::PeerContexts*>::PrintDirectives(std::ostream &os, Security::PeerContexts * const & contexts, const char * const directiveName)
+Configuration::Component<Security::PeerContexts*>::PrintDirectives(StoreEntry * const e, Security::PeerContexts * const & contexts, const char * const directiveName)
 {
+    Assure(e);
+    PackableStream os(*e);
+
     Assure(contexts);
     for (const auto &context: contexts->contexts) {
         os << directiveName;
-        // XXX refactor: context->options.dumpCfg(os, "");
+        context->options.dumpCfg(e, "");
         if (context->preconditions) {
             // TODO: Use Acl::dump() after fixing the XXX in dump_acl_list().
             for (const auto &acl: context->preconditions->treeDump("if", &Acl::AllowOrDeny))
