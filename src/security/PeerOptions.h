@@ -9,12 +9,14 @@
 #ifndef SQUID_SRC_SECURITY_PEEROPTIONS_H
 #define SQUID_SRC_SECURITY_PEEROPTIONS_H
 
+#include "acl/Tree.h"
 #include "base/YesNoNone.h"
 #include "ConfigParser.h"
 #include "mem/PoolingAllocator.h"
 #include "security/forward.h"
 #include "security/KeyData.h"
 
+#include <memory>
 #include <vector>
 
 class Packable;
@@ -155,7 +157,6 @@ class PeerContext: public RefCountable
 {
 public:
     explicit PeerContext(ConfigParser &);
-    ~PeerContext() override;
 
     /// XXX: Document.
     void open();
@@ -164,7 +165,7 @@ public:
     ContextPointer raw; ///< context configured using options
 
     /// restrict usage to matching transactions
-    ACLList *preconditions; // XXX: Use std::unique_ptr<>
+    std::unique_ptr<ACLList> preconditions; // XXX: Use std::unique_ptr<>
 };
 
 // TODO: Move this declaration

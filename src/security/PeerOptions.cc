@@ -817,18 +817,20 @@ parse_securePeerOptions(Security::PeerOptions *opt)
 
 Security::PeerContext::PeerContext(ConfigParser &parser)
 {
-    while (!(preconditions = parser.optionalAclList())) {
+    // we keep trying to parse "if acl..." suffix because TLS options do not use
+    // key=value syntax which would have allowed us to use optionalKvPair()
+    const auto parsePreconditions = [&]() {
+        assert(!preconditions);
+        preconditions.reset(parser.optionalAclList());
+        return bool(preconditions);
+    };
+    while (!parsePreconditions()) {
         if (const auto token = parser.NextToken())
             options.parse(token);
         else
-            break; // no options and no ACLs
+            break; // no more options and no ACLs
     }
     options.parseOptions();
-}
-
-Security::PeerContext::~PeerContext()
-{
-    delete preconditions; // TODO: use std::unique_ptr<> instead
 }
 
 void
@@ -875,7 +877,7 @@ Security::PeerContextPointer
 Security::PeerContexts::findContext(ACLChecklist &checklist) const
 {
     for (const auto &context: contexts) {
-        if (!context->preconditions || checklist.fastCheck(context->preconditions).allowed())
+        if (!context->preconditions || checklist.fastCheck(context->preconditions.get()).allowed())
             return context;
     }
     return nullptr;
